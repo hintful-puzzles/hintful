@@ -55,41 +55,6 @@ omitting `dist/` had the spec naming the empty directory and not the real one.
 - **THEN** `npm install` is the entire setup
 - **AND** the root holds no `Brewfile` or other native-package manifest
 
-### Requirement: Cloudflare Pages tooling is not maintained in-tree
-
-The repository SHALL NOT ship Cloudflare Pages configuration or local
-preview tooling. The CF Pages workflow is disabled in this fork (per
-PLAN.md "What's been done"), and the user's current hosting plan does
-not include CF Pages.
-
-Specifically:
-
-- No `wrangler.toml` at the repository root.
-- No `wrangler` package in `dependencies` or `devDependencies` of
-  `package.json`.
-- No `preview:pages` (or similarly named) script that invokes
-  `wrangler`.
-
-Standard Vite preview (`npm run preview`) covers the local-preview
-need for the PWA.
-
-#### Scenario: Wrangler is absent from the repo
-
-- **WHEN** the change has landed
-- **THEN** `git grep -i 'wrangler\|cloudflare'` returns no hits in
-  tracked files outside `openspec/changes/archive/` (where historical
-  proposals may reference removed setups)
-- **AND** `npm install` does not pull wrangler into `node_modules/`
-
-#### Scenario: Reviving CF Pages is a new proposal
-
-- **WHEN** a contributor wants to restore CF Pages support
-- **THEN** they SHALL open a new openspec change that re-adds
-  `wrangler.toml`, the wrangler devDep, and a `preview:pages` script,
-  along with whatever production deploy workflow is intended
-- **AND** they SHALL NOT just resurrect the removed files in a regular
-  PR
-
 ### Requirement: Source tree under `src/` groups files by UI role
 
 `src/` SHALL group TypeScript files by the role they play, not by
@@ -100,12 +65,10 @@ filename pattern. The role-based subdirectories are:
   `home-screen.ts`, `puzzle-screen.ts`. Future per-screen Lit
   components belong here.
 - `src/dialogs/` — modal / popover Lit components shown as overlays from
-  one or more screens. Currently: `about-dialog.ts`, `alert-dialog.ts`,
-  `crash-dialog.ts`, `enter-gameid-dialog.ts`,
-  `saved-game-dialogs.ts`, `settings-dialog.ts`, `share-dialog.ts`.
+  one or more screens, such as `about-dialog.ts`, `settings-dialog.ts` and
+  `share-dialog.ts`.
 - `src/components/` — reusable leaf Lit components that don't fit
-  screen-or-dialog. Currently: `catalog-card.ts`, `command-link.ts`,
-  `dynamic-content.ts`, `head-matter.ts`, `help-viewer.ts`,
+  screen-or-dialog, such as `catalog-card.ts`, `help-viewer.ts` and
   `saved-game-list.ts`.
 
 The following kinds of files SHALL stay at `src/` root, not under a
@@ -115,12 +78,13 @@ subdirectory, because they are entry points or cross-cutting:
   `home-page.ts`, `puzzle-page.ts`).
 - The main bootstrap (`main.ts`), the old-browser preflight gate
   (`preflight.ts`), and the service worker (`sw.ts`).
-- Cross-cutting modules with no single-screen owner: `routing.ts`,
-  `color-scheme.ts`, `color-scheme-init.ts`, `icons.ts`.
+- Cross-cutting modules with no single-screen owner, such as `routing.ts`,
+  `color-scheme.ts`, `color-scheme-init.ts`, `icons.ts` and
+  `project-identity.ts`.
 - Ambient-type files such as `vite-env.d.ts`.
 
 Existing subdirectories with non-UI scope SHALL keep their shape:
-`src/assets/` (generated), `src/css/` (styles), `src/store/` (Dexie
+`src/assets/` (committed icons and images), `src/css/` (styles), `src/store/` (Dexie
 schema), `src/utils/` (general-purpose helpers).
 
 `src/puzzle/` SHALL separate its two roles into the directory root and one
@@ -2009,3 +1973,33 @@ say different things.
   resolves through the citation scan rather than needing a scan of its own
 - **AND** where the tag appears in test titles, the change is named once in the
   file's header comment, so no test title changes and no snapshot key is orphaned
+
+### Requirement: Cloudflare Pages deploy tooling lives in the CI deploy job
+
+The app SHALL be published to Cloudflare Pages by direct upload from the CI
+workflow's deploy job, which runs `cloudflare/wrangler-action` at a pinned
+`wranglerVersion` against the gate's own build artifact; `build-pipeline` "The
+app is published from a green gate, and the publish is verified on the deployed
+origin" governs the gating and the verification.
+
+The repository SHALL NOT otherwise carry Cloudflare Pages tooling:
+
+- No `wrangler.toml` at the repository root.
+- No `wrangler` package in `dependencies` or `devDependencies` of
+  `package.json`.
+- No `preview:pages` (or similarly named) script that invokes
+  `wrangler`.
+
+Wrangler is invoked by the deploy job alone, and the action provisions it at the
+pinned version, so a dependency would install a CLI that no local command uses.
+Standard Vite preview (`npm run preview`) covers the local-preview need for the
+PWA.
+
+#### Scenario: Wrangler is confined to the deploy job
+
+- **WHEN** the repository is inspected
+- **THEN** there is no `wrangler.toml` and `package.json` names no `wrangler`
+  package or script
+- **AND** the only invocation of wrangler is the deploy job's
+  `cloudflare/wrangler-action` step in `.github/workflows/ci.yml`, with its
+  version pinned

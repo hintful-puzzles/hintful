@@ -274,7 +274,7 @@ export class DominosaSolver {
     }
   }
 
-  // --- Trivial ------------------------------------------------------------
+  // --- Easy ---------------------------------------------------------------
 
   private deduceDominoSinglePlacement(di: number): boolean {
     const d = this.dominoes[di];
@@ -306,7 +306,7 @@ export class DominosaSolver {
     return true;
   }
 
-  // --- Basic --------------------------------------------------------------
+  // --- Normal -------------------------------------------------------------
 
   private deduceSquareSingleDomino(si: number): boolean {
     const sq = this.squares[si];
@@ -454,7 +454,7 @@ export class DominosaSolver {
     return done;
   }
 
-  // --- Hard / Extreme: set analysis --------------------------------------
+  // --- Tricky / Unreasonable: set analysis --------------------------------
 
   private deduceSet(doubles: boolean): boolean {
     if (!this.squaresByNumber) {
@@ -811,14 +811,14 @@ export class DominosaSolver {
         evidence: this.recEvidence.slice(),
       });
 
-      // Trivial
+      // Easy
       for (let si = 0; si < this.wh; si++) {
         this.resetRec();
         if (this.deduceSquareSinglePlacement(si)) return place("squareOnly");
       }
       if (maxDiffAllowed <= DIFF_TRIVIAL) return null;
 
-      // Basic
+      // Normal
       for (let si = 0; si < this.wh; si++) {
         this.resetRec();
         if (this.deduceSquareSingleDomino(si)) return barrier("squareSingleDomino");
@@ -839,12 +839,12 @@ export class DominosaSolver {
       if (this.deduceParity()) return barrier("parity");
       if (maxDiffAllowed <= DIFF_BASIC) return null;
 
-      // Hard
+      // Tricky
       this.resetRec();
       if (this.deduceSet(false)) return barrier("set");
       if (maxDiffAllowed <= DIFF_HARD) return null;
 
-      // Extreme
+      // Unreasonable
       this.resetRec();
       if (this.deduceSet(true)) return barrier("set");
 

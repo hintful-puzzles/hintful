@@ -247,7 +247,7 @@ function solverNormal(solver: LatinSolver): number {
 }
 
 /**
- * Hard deduction (`solver_hard`): systematically rule out identities in
+ * Tricky deduction (`solver_hard`): systematically rule out identities in
  * identity-hidden mode. A filled `ab` that is neither `a` nor `b` proves that
  * *neither* `a` nor `b` is the identity — so neither can act as the identity on
  * any element, and we strike `ij = j` / `ji = j` candidates directly on the

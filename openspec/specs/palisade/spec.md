@@ -6,7 +6,9 @@ given size, each numbered square having that many of its edges walled. This
 capability specifies its port to the TS engine, with three-valued shared edges,
 mistake-checking and shading of completed regions, and the deduction hint that
 sets this collection's bar for what an explained hint is.
+
 ## Requirements
+
 ### Requirement: Palisade game implements the Game interface
 
 The engine SHALL provide a registered `palisade` game implementing
@@ -217,10 +219,12 @@ step), and `"off"` otherwise.
 The renderer SHALL paint **every** edge the current step's firing forces — the
 action edge and the firing's other forced edges alike — in `COL_HINT`: they
 share a fate (all walls or all open), so they share a color, signaling the
-player to treat them as one set. It SHALL shade every referenced cell in a
-`COL_HINT_CELL` background, folding the highlight into the per-tile cache so it
+player to treat them as one set. It SHALL outline every referenced cell in
+`COL_HINT_CELL`, inset inside the cell body because the cell's border is where
+walls and the hint's forced edges are drawn, folding the highlight into the
+per-tile cache so it
 appears when shown and clears when the midend drops the plan. For the
-`equivalentEdges` deduction the shaded cells SHALL be the region the edges
+`equivalentEdges` deduction the outlined cells SHALL be the region the edges
 border, **not** the clue cell that decides the edges. Seeding the hint from the
 player's state SHALL NOT mutate that state, and running the solver without a
 recorder SHALL behave exactly as before (the `solve`, `findMistakes`, and
@@ -271,7 +275,7 @@ generator paths are unchanged).
   the firing's other forced edge, and referenced cells)
 - **THEN** both forced edges are painted in `COL_HINT` (the same color, since
   they share a fate)
-- **AND** every referenced cell is shaded in `COL_HINT_CELL`
+- **AND** every referenced cell is outlined in `COL_HINT_CELL`
 - **AND** with no hint step the tiles draw without any of those hint colors
 
 ### Requirement: Palisade hint color legend
@@ -284,9 +288,9 @@ non-color cue:
   the relevant cell borders. A firing that forces several equivalent edges draws
   them all in the same `COL_HINT` (equivalent moves share one color — the legend
   governs element *types*, not distinct cells of one type).
-- A cited **region** the deduction reasons over SHALL be shaded `COL_HINT_CELL`
-  across its cells.
-- A cited **clue** is identified by its **drawn digit** on the (shaded) cell — it
+- A cited **region** the deduction reasons over SHALL be outlined in
+  `COL_HINT_CELL`, each of its cells outlined inside the cell body.
+- A cited **clue** is identified by its **drawn digit** on the (outlined) cell — it
   is not given a separate fill color, the same way a number premise is treated
   elsewhere; the digit is the non-color cue.
 
@@ -298,8 +302,8 @@ across the deduction rules.
 
 - **WHEN** a `notTooBig`/`notTooSmall`/`equivalentEdges` hint names a region and
   the edge(s) it forces
-- **THEN** the forced edge(s) draw `COL_HINT` and the cited region shades
-  `COL_HINT_CELL`, in different colors
+- **THEN** the forced edge(s) draw `COL_HINT` and the cited region is
+  outlined in `COL_HINT_CELL`, in different colors
 
 #### Scenario: Equivalent forced edges share one color
 
@@ -377,4 +381,3 @@ color: sharing the look either changes no draw call or it is wrong.
   three-valued states
 - **AND** the cells it references are outlined inside the cell body
 - **AND** its narration is unchanged
-

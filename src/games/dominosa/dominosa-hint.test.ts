@@ -82,7 +82,7 @@ describe("dominosa hint — narration + plan", () => {
     expect(place?.explanation).toMatch(/\d[–-]\d/);
   });
 
-  it("the plan solves a Hard board from empty, one recomputed step at a time", () => {
+  it("the plan solves a Tricky board from empty, one recomputed step at a time", () => {
     const state = freshState(6, DIFF_HARD, "hint-hard-plan");
     let s = state;
     let barrierSeen = false;
@@ -95,7 +95,7 @@ describe("dominosa hint — narration + plan", () => {
       s = dominosaGame.executeMove(s, res.steps[0].move);
     }
     expect(dominosaGame.status(s)).toBe("solved");
-    // A Hard board should require at least one teaching barrier along the way.
+    // A Tricky board should require at least one teaching barrier along the way.
     expect(barrierSeen).toBe(true);
   });
 });

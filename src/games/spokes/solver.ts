@@ -11,7 +11,7 @@
  *   satisfied, mark the rest.
  * - {@link spokesSolverDiagonal} — mark the diagonal that would cross an
  *   existing diagonal line in the same cell corner.
- * - {@link spokesSolverAttempt} (Tricky and Unreasonable) — contradiction
+ * - {@link spokesSolverAttempt} (Normal and Unreasonable) — contradiction
  *   look-ahead: try a spoke both ways, and if one provably leads to an invalid
  *   board, commit the other.
  *
@@ -21,7 +21,7 @@
  * separates them is how much reasoning the *player* has to carry to check that
  * proof, and only the sub-tier argument says so:
  *
- * - **Tricky** passes `DIFF_LIMITED`, an Easy pass that stops at
+ * - **Normal** passes `DIFF_LIMITED`, an Easy pass that stops at
  *   `ACTION_LIMIT`: a bounded chain a player can walk. A *Tactic*, and legal
  *   at a middle tier.
  * - **Unreasonable** passes `DIFF_EASY`, the same pass with no bound, which can
@@ -624,7 +624,7 @@ function applyFiring(b: SpokesBoard, f: SpokesFiring): void {
  * only needs each firing to be *forced*, not to match the solver's internal
  * order, and leading with connections keeps the plan from dribbling out
  * busywork marks. `s` must already hold `b`'s recounted tallies (`full = false`);
- * `copy` is contradiction scratch, and `null` below Tricky.
+ * `copy` is contradiction scratch, and `null` below Normal.
  *
  * **The `Unreasonable` rung is deliberately absent.** `spokesSolve` runs the
  * look-ahead a second time at `DIFF_EASY` — the same trial with no bound on the
@@ -651,7 +651,7 @@ function nextSpokesFiring(
  * the ordered plan. Pure on its argument: it clones first.
  *
  * The default is `DIFF_TRICKY`, not the top tier: the hint reasons as hard as it
- * is *allowed* to, and the rung above Tricky is a search
+ * is *allowed* to, and the rung above Normal is a search
  * ({@link nextSpokesFiring}). Passing `DIFF_HARD` changes nothing.
  */
 export function deduceSpokesPlan(
@@ -701,11 +701,11 @@ export function spokesSolve(
   //    Easy's, and the bound is what makes it Limited. So the two cheap
   //    techniques declare `tier: DIFF_EASY` (Limited is a budget, not a set of
   //    techniques) and the cap floors at Easy.
-  //  - **The bounded look-ahead runs at *exactly* Tricky**, so the ladder is not
+  //  - **The bounded look-ahead runs at *exactly* Normal**, so the ladder is not
   //    a tier prefix and the technique guards itself in `run`. As a prefix, the
-  //    bounded trial would run before the unbounded one at Hard; the trial
-  //    mutates the board, so a different contradiction would be committed first
-  //    and every Hard board would move.
+  //    bounded trial would run before the unbounded one at Unreasonable; the
+  //    trial mutates the board, so a different contradiction would be committed
+  //    first and every Unreasonable board would move.
   //
   // This solver reports a *status*, so the runner's grade is unused.
   runDeductionFixpoint({

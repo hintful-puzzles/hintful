@@ -16,7 +16,7 @@
  * **`upstreamLooseGate` is set here and nowhere else.** The shipped generator
  * rejects a board that the tier below already solves, which upstream never
  * checks (see `SaladGenerateOptions.upstreamLooseGate`). That correction changes
- * every Extreme description, so the byte-match is preserved by running the
+ * every Normal description, so the byte-match is preserved by running the
  * fixtures against upstream's original gate — the shape `spokes` established.
  * The `extra` check below is what the fixtures now say about difficulty: they
  * record C's own grading, misgrades and all, which is the evidence for the

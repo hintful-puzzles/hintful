@@ -8,7 +8,9 @@ one. This capability specifies its port to the TS engine, with sightline tracing
 through the mirrors, pencil and clue moves, live legality errors,
 mistake-checking, on-screen key labels, and an explained deduction hint that
 stops, rather than searches, where deduction runs out.
+
 ## Requirements
+
 ### Requirement: Undead game implements the Game interface
 
 The engine SHALL provide a registered `undead` game implementing
@@ -16,19 +18,20 @@ The engine SHALL provide a registered `undead` game implementing
 UndeadMistake>`: a grid in which every cell is either a fixed diagonal mirror
 (`\` or `/`) or a monster cell, and the player places one of three monsters —
 Ghost, Vampire, or Zombie — in every monster cell. Params SHALL be `w`, `h`, and
-`diff` (Easy, Normal, or `Unreasonable`), encoded `{w}x{h}` without `full` and
-`{w}x{h}d{c}` with `full` (`c` = `e`/`n`/`t`), with the upstream preset list. The
-top tier is named `Unreasonable` rather than upstream's `Tricky` because its
-boards can require the forcing rung, which runs the deduction fixpoint from a
-hypothesis; its difficulty character stays `t`, so an existing game ID names the
-same board. `validateParams` SHALL require `w ≥ 3`, `h ≥ 3`, `w·h ≤ 54`, and a
-known difficulty. The game SHALL report `wantsStatusbar = false`,
-`isTimed = false`, `canSolve = true`, `canFormatAsText = true`, and
-`canMarkAll = true`.
+`diff` (Easy, Normal, or `Unreasonable`, held as the values `"easy"`, `"normal"`
+and `"tricky"`), encoded `{w}x{h}` without `full` and `{w}x{h}d{c}` with `full`
+(`c` = `e`/`n`/`t`), with the upstream preset list. The top tier is named
+`Unreasonable` rather than upstream's `Tricky` because its boards can require
+the forcing rung, which runs the deduction fixpoint from a hypothesis; its
+difficulty character stays `t`, so an existing game ID names the same board.
+`validateParams` SHALL require `w ≥ 3`, `h ≥ 3`, `w·h ≤ 54`, and a known
+difficulty. The game SHALL report `wantsStatusbar = false`, `isTimed = false`,
+`canSolve = true`, `canFormatAsText = true`, and `canMarkAll = true`.
 
 #### Scenario: Params round-trip
 
-- **WHEN** params `{ w: 5, h: 5, diff: "tricky" }` are encoded with `full = true`
+- **WHEN** params `{ w: 5, h: 5, diff: "tricky" }` (the `Unreasonable` tier) are
+  encoded with `full = true`
 - **THEN** the result is `5x5dt`
 - **AND** decoding it round-trips the params
 - **AND** encoding with `full = false` yields `5x5`
@@ -321,15 +324,14 @@ so a hint refused for mistakes highlights those cells for free.
 
 ### Requirement: Undead provides on-screen key labels
 
-Undead SHALL implement `requestKeys()` returning its four monster-entry keys —
-`G` labeled `"Ghost"`, `V` labeled `"Vampire"`, `Z` labeled `"Zombie"` — followed
-by a clear key (button code `8`, labeled `"Clear"`), reproducing upstream
-`game_request_keys` so the keypad matches the C build. (The keys carry the monster
-letters regardless of the pictures/letters display preference, matching upstream.)
+Undead SHALL implement `requestKeys()` returning four keys: its three
+monster-entry keys — `G` labeled `"Ghost"`, `V` labeled `"Vampire"`, `Z` labeled
+`"Zombie"` — followed by a clear key (button code `8`, labeled `"Clear"`), in the
+order of upstream's `game_request_keys`. (The keys carry the monster letters
+regardless of the pictures/letters display preference, matching upstream.)
 
 #### Scenario: The keypad is the three monsters plus clear
 
 - **WHEN** the key labels are requested for any Undead board
 - **THEN** the result is exactly the buttons `G` ("Ghost"), `V` ("Vampire"),
   `Z` ("Zombie"), and a clear key
-

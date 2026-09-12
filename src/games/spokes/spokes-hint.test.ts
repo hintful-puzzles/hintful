@@ -428,7 +428,7 @@ describe("the top tier's look-ahead never reaches a hint", () => {
    * consequence a player would feel: **asking for the top tier's reasoning buys
    * the plan nothing.** The control below is what stops it passing vacuously.
    */
-  it("planning at the top tier gives the same plan as planning at Tricky", () => {
+  it("planning at the top tier gives the same plan as planning at Normal", () => {
     let sawTricky = false;
     for (let seed = 0; seed < 12; seed++) {
       const { desc } = newSpokesDesc(UNREASONABLE, randomNew(`no-search-rung-${seed}`));
@@ -439,9 +439,9 @@ describe("the top tier's look-ahead never reaches a hint", () => {
       expect(kinds(DIFF_HARD), `seed ${seed}`).toEqual(kinds(DIFF_TRICKY));
       if (kinds(DIFF_TRICKY).length > kinds(DIFF_EASY).length) sawTricky = true;
     }
-    // The control: the Tricky rung really does add firings an Easy plan lacks,
+    // The control: the Normal rung really does add firings an Easy plan lacks,
     // so the equality above is a live fact about the top tier rather than an
     // artifact of every tier producing the same plan.
-    expect(sawTricky, "no board where the Tricky rung adds a firing").toBe(true);
+    expect(sawTricky, "no board where the Normal rung adds a firing").toBe(true);
   });
 });

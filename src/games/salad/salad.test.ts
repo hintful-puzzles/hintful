@@ -247,12 +247,12 @@ describe("salad generator", () => {
     }
   }
 
-  // The tier gate. Upstream has none, so its Extreme is mostly Normal: 12 of
-  // its 13 frozen Extreme fixtures, and 71 of 80 freshly generated boards, fall
-  // to the Normal solver.
+  // The tier gate. Upstream has none, so its Extreme (our Normal) is mostly its
+  // Normal (our Easy): 12 of its 13 frozen Extreme fixtures, and 71 of 80
+  // freshly generated boards, fall to the Easy solver.
   for (const preset of PRESETS) {
     const p = { ...preset, diff: DIFF_HARD };
-    it(`generates an Extreme ${presetLabel(p)} that Normal cannot solve`, () => {
+    it(`generates a Normal ${presetLabel(p)} that Easy cannot solve`, () => {
       const { desc } = newSaladDesc(
         p,
         randomNew(`salad-tier-${p.order}-${p.nums}-${p.mode}`),

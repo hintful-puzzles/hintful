@@ -6,34 +6,17 @@ have two-way rotational symmetry about the one dot they contain. This capability
 specifies its port to the TS engine, with uniquely solvable boards at each
 difficulty, a two-way drag that assigns squares to dots, mistake highlighting,
 and a deduction hint narrated in terms of which dot a square belongs to.
+
 ## Requirements
-### Requirement: Galaxies is served by the native TS engine
-
-The `galaxies` puzzle SHALL be implemented as a native TS `Game`
-registered in the engine registry, so the worker serves `galaxies`
-via the TS midend and not via C/WASM. Its C source SHALL be deleted
-from `puzzles/` (per the `ts-migration` per-game C-deletion rule).
-Registration and C deletion SHALL be the last steps in the change,
-gated on owner acceptance of full behavioral parity with the C
-build per `ts-migration` "Per-game hybrid; C deleted per game". All
-other catalog games SHALL continue to load via the existing C/WASM
-path in the same session.
-
-#### Scenario: Galaxies loads on the TS engine, others on C/WASM
-
-- **WHEN** the app opens `galaxies`
-- **THEN** it is constructed by the TS-midend-backed puzzle
-- **AND** opening any non-ported game in the same session still uses
-  its C/WASM implementation
-- **AND** `puzzles/galaxies.c` no longer exists
 
 ### Requirement: Galaxies parameters and presets
 
 Galaxies SHALL support a width, a height, and a difficulty of
-`Normal` or `Unreasonable`. It SHALL offer the presets 7×7, 10×10,
-15×15 in each of Normal and Unreasonable. Parameter decoding SHALL
+`Easy` or `Unreasonable`. It SHALL offer the presets 7×7, 10×10,
+15×15 in each of Easy and Unreasonable. Parameter decoding SHALL
 accept the upstream lenient forms (`"7"` ⇒ 7×7, `"7x7"`, optional
-trailing `dn`/`du` for difficulty); encoding SHALL round-trip a
+trailing `dn`/`du` for difficulty, the `n` kept from upstream's name for the
+Easy tier); encoding SHALL round-trip a
 decoded parameter set. Invalid parameters (width or height < 3, or
 unreasonably large) SHALL be rejected with a human-readable reason.
 
@@ -51,7 +34,7 @@ unreasonably large) SHALL be rejected with a human-readable reason.
 For every preset, `newDesc` SHALL produce a board whose layout of
 dots admits exactly one valid tile-to-dot association under
 180°-rotational-symmetry-around-each-dot, and whose minimum solver
-difficulty matches the requested `Normal` or `Unreasonable`. The
+difficulty matches the requested `Easy` or `Unreasonable`. The
 generator SHALL retry until the solver-verified difficulty matches;
 boards that the solver diagnoses as `Ambiguous`, `Impossible`, or
 at a different difficulty than requested SHALL NOT be returned.
@@ -70,8 +53,8 @@ The Galaxies solver SHALL implement the upstream difficulty-graded
 deduction chain — `solver_obvious`, lines-opposite,
 spaces-oneposs, expand-from-dot, extend-exclaves — and, for
 `Unreasonable`, bounded recursion. It SHALL return one of
-`Normal`, `Unreasonable`, `Ambiguous`, `Impossible`, or
-`Unfinished`. `executeMove` SHALL be pure (return a new state) for
+the `GalaxiesDiff` verdicts `Normal` (solvable at the Easy tier),
+`Unreasonable`, `Ambiguous`, `Impossible`, or `Unfinished`. `executeMove` SHALL be pure (return a new state) for
 every move type: edge toggle (`E`), add-association during a drag
 (`A`/`a`), remove-association with opposite (`U`), dot-hold toggle
 (`M`), and solver application (`s`). Moving the keyboard cursor
@@ -335,7 +318,18 @@ cleared on the next transition by the engine's mistake lifecycle.
 - **THEN** mistake-checking reports zero (and the engine's lifecycle has
   already cleared any prior highlight on the solving move)
 
-### Requirement: Galaxies offers a deduction-based hint in association vocabulary
+### Requirement: Galaxies is registered in the engine registry
+
+The `galaxies` puzzle SHALL be implemented as a native TS `Game`
+registered in the engine registry, so the worker serves `galaxies`
+via the TS midend.
+
+#### Scenario: Galaxies loads on the TS engine
+
+- **WHEN** the app opens `galaxies`
+- **THEN** it is constructed by the TS-midend-backed puzzle
+
+### Requirement: Galaxies explains its deductions in association vocabulary
 
 Galaxies SHALL implement the engine's `hint()` hook as a recorded
 projection of its own solver: the same difficulty-graded deduction chain
@@ -370,7 +364,7 @@ and the plan advances. Every step the hint offers SHALL be a deduction the playe
 from the board in front of them. It SHALL NOT guess: where the remaining
 progress can only be found by hypothesizing a cell's dot and propagating
 until something breaks, the hint SHALL refuse, and the refusal SHALL say
-that deduction has run out and what the player can do instead. A Normal
+that deduction has run out and what the player can do instead. An Easy
 board SHALL be carried all the way to solved by deduction alone; only an
 Unreasonable board may reach that refusal, which is what the tier means.
 Galaxies SHALL be enrolled in the cross-game hint guards
@@ -414,9 +408,8 @@ Galaxies SHALL be enrolled in the cross-game hint guards
   it does not report the survivor of a search as though it were a
   technique
 
-#### Scenario: A Normal board is always finished by deduction
+#### Scenario: An Easy board is always finished by deduction
 
-- **WHEN** hints are followed from a fresh board at the Normal tier
+- **WHEN** hints are followed from a fresh board at the Easy tier
 - **THEN** every step is a deduction whose premise is visible on the board
   as it stands, and the board reaches solved
-

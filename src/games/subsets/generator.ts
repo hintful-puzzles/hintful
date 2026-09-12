@@ -34,7 +34,7 @@ import {
  * **The Easy tier is upstream byte-for-byte.** `DIFF_EASY` is upstream's
  * shipped solver strength, the RNG draw order is untouched, and tier 0 needs
  * no "and not easier" gate — so the differential fixtures still bind. Only
- * Tricky is new.
+ * Normal is new.
  */
 export function generateCandidate(p: SubsetsParams, rng: RandomState): SubsetsState {
   const state = blankState(p);

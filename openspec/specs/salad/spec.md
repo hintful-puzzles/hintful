@@ -72,7 +72,7 @@ so that the cube's own positional, numeric and set eliminations reason about
 empty squares directly; a cross SHALL be that symbol placed and a ball that symbol
 struck, and the board's marker array SHALL be read back off the solved cube.
 
-The solver SHALL provide two difficulties, Normal and Extreme, and both SHALL be
+The solver SHALL provide two difficulties, Easy and Normal, and both SHALL be
 solvable by pure deduction without guessing. The generator SHALL use the solver to
 keep every board uniquely solvable: it SHALL generate a full Latin square, then
 remove clues in a randomized order, keeping a removal only while the puzzle stays
@@ -204,32 +204,6 @@ recorder the hint reads SHALL be inert on the generator's solving path.
 - **THEN** the descriptions Salad generates for a given seed are byte-for-byte
   unchanged from those recorded from the C reference
 
-### Requirement: Salad grades its difficulty tiers honestly
-
-A Salad board generated at Extreme SHALL NOT be soluble at Normal.
-
-This diverges from upstream, which has no difficulty gate at all: it strips clues
-while the board still solves at the target tier and publishes the result. The
-setting therefore did not bind — **12 of the 13 Extreme boards in this game's own
-frozen reference fixtures are soluble at Normal**, as were 71 of 80 freshly
-generated boards, and in the Number Ball mode at 5×5 and 6×6 it was every board
-sampled.
-
-Because generation is solver-gated at every clue removal, the correction changes
-every Extreme description; the byte-for-byte differential SHALL retain a way to run
-upstream's original gate, used by that differential alone.
-
-Extreme boards are genuinely rare in the Number Ball mode — a median of 486
-candidate boards per success at 5×5, and a worst measured case of 4,419 — so the
-generation retry bound SHALL be set high enough that a legal seed cannot exhaust
-it. Exhaustion is a failure a player sees.
-
-#### Scenario: An Extreme board genuinely needs the Extreme tier
-
-- **WHEN** a board generated at Extreme is solved at Normal
-- **THEN** the solver does not reach a solution
-- **AND** solving the same board at Extreme does
-
 ### Requirement: Salad reasons about the empty square directly
 
 Salad's solver SHALL express the empty square as a shared-cube symbol carrying a
@@ -271,3 +245,29 @@ to replace it.)
   upstream's loose tier gate
 - **THEN** every description is reproduced exactly, and the recorded solver
   verdicts hold
+
+### Requirement: Salad's Normal tier is never soluble at Easy
+
+A Salad board generated at Normal SHALL NOT be soluble at Easy.
+
+This diverges from upstream, which has no difficulty gate at all: it strips clues
+while the board still solves at the target tier and publishes the result. The
+setting therefore did not bind — **12 of the 13 Normal-tier boards in this game's
+own frozen reference fixtures are soluble at Easy**, as were 71 of 80 freshly
+generated boards, and in the Number Ball mode at 5×5 and 6×6 it was every board
+sampled.
+
+Because generation is solver-gated at every clue removal, the correction changes
+every Normal-tier description; the byte-for-byte differential SHALL retain a way
+to run upstream's original gate, used by that differential alone.
+
+Normal-tier boards are genuinely rare in the Number Ball mode — a median of 486
+candidate boards per success at 5×5, and a worst measured case of 4,419 — so the
+generation retry bound SHALL be set high enough that a legal seed cannot exhaust
+it. Exhaustion is a failure a player sees.
+
+#### Scenario: A Normal board genuinely needs the Normal tier
+
+- **WHEN** a board generated at Normal is solved at Easy
+- **THEN** the solver does not reach a solution
+- **AND** solving the same board at Normal does

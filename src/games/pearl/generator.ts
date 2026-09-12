@@ -142,10 +142,10 @@ function pearlLoopgen(
 
 /**
  * Build a puzzle: a random loop, its maximal clue set, solver-gated to a
- * unique solution at `difficulty` (and — for Tricky — not solvable one tier
+ * unique solution at `difficulty` (and — for Normal — not solvable one tier
  * easier), then greedily minimized. Writes `clues` and the solution
  * `gridOut` (both length w*h). Follows `new_clues`, including the upstream
- * `corners`-array duplication quirk and the 5×5-Tricky→Easy downgrade.
+ * `corners`-array duplication quirk and the 5×5-Normal→Easy downgrade.
  */
 function newClues(
   params: PearlParams,
@@ -158,7 +158,7 @@ function newClues(
   let diff = params.difficulty;
   const g = gridNewSquare(w - 1, h - 1);
 
-  // 5x5 Tricky is not generable (spins forever), so fudge it to Easy.
+  // 5x5 Normal is not generable (spins forever), so fudge it to Easy.
   if (w === 5 && h === 5 && diff > DIFF_EASY) diff = DIFF_EASY;
 
   const attempt = retryLimit("pearl: newClues");

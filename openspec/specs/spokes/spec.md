@@ -7,7 +7,9 @@ group. This capability specifies its port to the TS engine, with honestly graded
 tiers, diagonals that rule out their crossing, and a hint that explains why each
 move is forced, stops at bounded reasoning, and refuses a position it cannot
 vouch for.
+
 ## Requirements
+
 ### Requirement: Spokes explains why each hinted move is forced
 
 Spokes SHALL implement the hint hooks, and each hint SHALL narrate the argument
@@ -99,7 +101,7 @@ propose it.
 The engine SHALL provide `src/games/spokes/` implementing the `Game`
 interface for Spokes, registered so the puzzle is served by the TypeScript engine.
 
-Parameters SHALL be a width, a height, and a difficulty (Easy, Tricky or
+Parameters SHALL be a width, a height, and a difficulty (Easy, Normal or
 `Unreasonable`). The top tier is named `Unreasonable` rather than upstream's
 `Hard` because its look-ahead runs an unbounded sub-solve from a hypothesis; its
 internal key and encoded difficulty character are unchanged, so an existing game
@@ -151,7 +153,7 @@ one.
 ### Requirement: Spokes ports the tiered deductive solver and solver-gated generator
 
 Spokes SHALL provide a solver that draws the forced lines and marks for a board, or
-reports the board invalid or incomplete, at a requested difficulty of Easy, Tricky
+reports the board invalid or incomplete, at a requested difficulty of Easy, Normal
 or `Unreasonable`. The solver SHALL apply hub saturation and exhaustion,
 diagonal-crossing marks, and the two-ones rule; the two harder tiers SHALL
 additionally apply contradiction look-ahead. The solver SHALL determine board
@@ -164,7 +166,7 @@ tier: a value is committed only when the opposite value provably leads to an inv
 board. It SHALL nevertheless be applied at **two distinct strengths**, and they are
 two rungs rather than one:
 
-- at **Tricky**, the sub-solve that tests the hypothesis SHALL be bounded by a
+- at **Normal**, the sub-solve that tests the hypothesis SHALL be bounded by a
   fixed deduction limit, so the reasoning is a chain a player could follow;
 - at **`Unreasonable`**, the sub-solve SHALL be unbounded, which is what the tier's
   name reports.
@@ -206,7 +208,7 @@ SHALL retain a way to run upstream's original check, used by that differential a
 
 #### Scenario: An Unreasonable board genuinely needs its own tier
 
-- **WHEN** a board generated at `Unreasonable` is solved at Tricky
+- **WHEN** a board generated at `Unreasonable` is solved at Normal
 - **THEN** the solver does not reach a solution
 - **AND** solving the same board at `Unreasonable` does reach one
 
@@ -303,9 +305,8 @@ control that prevents it holding vacuously.
 #### Scenario: Planning at the top tier buys the plan nothing
 
 - **WHEN** a hint plan is computed for the same board at the top tier and at
-  Tricky
+  Normal
 - **THEN** the two plans are the same sequence of firings
-- **AND** on at least one sampled board the Tricky plan is longer than the Easy
+- **AND** on at least one sampled board the Normal plan is longer than the Easy
   one, so the equality is a fact about the top tier rather than about every tier
   producing the same plan
-

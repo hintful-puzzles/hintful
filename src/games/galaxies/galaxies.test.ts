@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { difficultyTiers } from "../../engine/difficulty.ts";
 import { UI_UPDATE } from "../../engine/index.ts";
 import {
   CURSOR_SELECT,
@@ -47,7 +48,7 @@ const SMOKE_PARAMS: GalaxiesParams[] = [
 
 describe("Galaxies generator integration", () => {
   for (const p of SMOKE_PARAMS) {
-    it(`${p.w}x${p.h} Normal: produces a uniquely-solvable board at exactly the requested difficulty`, () => {
+    it(`${p.w}x${p.h} Easy: produces a uniquely-solvable board at exactly the requested difficulty`, () => {
       const rng = randomNew(`gen-${p.w}x${p.h}-normal`);
       const desc = newGameDesc(p, rng);
       // The desc must decode and round-trip.
@@ -56,7 +57,7 @@ describe("Galaxies generator integration", () => {
       expect(err).toBeNull();
       fresh.dots = rebuildDots(fresh);
 
-      // Solver run from clean state must complete at exactly Normal.
+      // Solver run from clean state must complete at exactly the Easy tier.
       clearForSolve(fresh);
       const diff = solverState(fresh, GalaxiesDiff.Unreasonable);
       expect(diff).toBe(GalaxiesDiff.Normal);
@@ -137,6 +138,22 @@ describe("Galaxies game flow", () => {
     expect(
       galaxiesGame.validateParams({ w: 2, h: 2, diff: GalaxiesDiff.Normal }, true),
     ).toContain("at least 3");
+  });
+
+  it("names a tier in the status bar and the refusal with the menu's words", () => {
+    // The status bar's verdict and the refusal once restated the tier names and
+    // kept upstream's "Normal" after the menu had moved to "Easy".
+    const tiers = difficultyTiers(galaxiesGame) ?? [];
+    expect(tiers).toHaveLength(2);
+    const p: GalaxiesParams = { w: 5, h: 5, diff: GalaxiesDiff.Normal };
+    const { desc } = galaxiesGame.newDesc(p, randomNew("statusbar-tier"));
+    const s = galaxiesGame.newState(p, desc);
+    expect(galaxiesGame.statusbarText?.(s, galaxiesGame.newUi(s))).toBe(
+      `Difficulty ${tiers[0]}.`,
+    );
+    expect(galaxiesGame.validateParams({ ...p, diff: 7 as GalaxiesDiff }, true)).toBe(
+      `Difficulty must be ${tiers[0]} or ${tiers[1]}`,
+    );
   });
 
   it("an edge toggle move flips F_EDGE_SET", () => {

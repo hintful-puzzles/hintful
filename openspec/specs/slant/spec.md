@@ -6,7 +6,9 @@ no loop forms and each numbered point meets that many lines. This capability
 specifies its port to the TS engine, with live errors, its two preferences,
 mistake-checking, and an explained deductive hint drawn in the element-type
 legend.
+
 ## Requirements
+
 ### Requirement: Slant game implements the Game interface
 
 The engine SHALL provide a registered `slant` game implementing
@@ -14,16 +16,17 @@ The engine SHALL provide a registered `slant` game implementing
 every square of a `w × h` grid with a `/` or `\` diagonal so that every
 numbered vertex clue (0–4, on the `(w+1) × (h+1)` point grid) is met by
 exactly that many incident diagonals and the diagonals form no closed loop.
-Params SHALL be `w`, `h` and `diff` (Easy / Hard), encoded `{w}x{h}d{e|h}`
+Params SHALL be `w`, `h` and `diff` (Easy / Normal), encoded `{w}x{h}d{e|h}`
 (short form `{w}x{h}`, square shorthand `{n}`). All 6 upstream presets
-(5×5, 8×8, 12×10 × Easy/Hard) SHALL be offered. `validateParams` SHALL
+(5×5, 8×8, 12×10 × Easy/Normal) SHALL be offered. `validateParams` SHALL
 enforce minimum size 2×2. The game SHALL report `canSolve = true` and
 `canFormatAsText = true` and SHALL drive a solve-completion flash suppressed
 after Solve.
 
 #### Scenario: Params round-trip
 
-- **WHEN** params `{ w: 12, h: 10, diff: HARD }` are encoded in full
+- **WHEN** params `{ w: 12, h: 10, diff: DIFF_HARD }` (the Normal tier) are
+  encoded in full
 - **THEN** the result is `12x10dh` and decoding it round-trips the params
 
 #### Scenario: Invalid params are rejected
@@ -57,7 +60,7 @@ The port SHALL implement the upstream solver with its exact deductive power
 at each difficulty. At Easy: the clue-point counting deduction (a clue whose
 remaining lines equal zero or its remaining undecided neighbors fills all
 of them) and immediate loop avoidance (a square whose one orientation would
-close a loop takes the other). At Hard, additionally: single-pair
+close a loop takes the other). At Normal, additionally: single-pair
 equivalence tracking around clue points (two adjacent undecided
 equivalent squares count jointly as one line; a 2-clue with two undecided
 adjacent neighbors marks them equivalent), slash-value propagation through
@@ -73,8 +76,8 @@ NOT active). The solver SHALL be reused by `solve()` and `findMistakes`.
 
 #### Scenario: Generated boards solve at exactly their difficulty
 
-- **WHEN** a board generated at Hard is solved
-- **THEN** the Hard solver reaches the unique solution
+- **WHEN** a board generated at Normal is solved
+- **THEN** the Normal solver reaches the unique solution
 - **AND** the Easy solver fails to converge on it
 
 #### Scenario: Solve recovers from a wrong mid-game state
@@ -149,7 +152,7 @@ Clicks outside the grid SHALL be ignored.
 
 ### Requirement: Slant ships findMistakes
 
-`findMistakes(state)` SHALL re-solve the board's clues with the Hard solver
+`findMistakes(state)` SHALL re-solve the board's clues with the Normal solver
 and, when a unique solution exists, return one mistake per square whose
 placed diagonal differs from that solution (blank squares are never
 mistakes), rendered with the existing red error styling; it SHALL return an
@@ -250,7 +253,7 @@ ported solver.
 
 #### Scenario: The plan completes deductive boards
 
-- **WHEN** the plan is computed on any generated Easy or Hard board
+- **WHEN** the plan is computed on any generated Easy or Normal board
 - **THEN** following it step-by-step solves the board with no un-narrated step
 
 ### Requirement: Slant hint rendering follows the element-type legend
@@ -277,4 +280,3 @@ hint bit SHALL participate in the per-tile render-cache diff key.
 - **WHEN** any glance-able-technique step is displayed
 - **THEN** it carries a non-empty evidence area or a ringed anchor, never a
   bare conclusion
-

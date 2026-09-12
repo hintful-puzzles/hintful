@@ -6,15 +6,17 @@ game with mistake-checking, leaves the checkpoint untouched while the board has
 mistakes, with its keyboard shortcut and non-blocking confirmations. It exists
 so a player can mark a position, checked wherever the game can check it, and
 come back to it without managing save files.
+
 ## Requirements
+
 ### Requirement: A single quick-save slot per puzzle
 
 The app SHALL provide one dedicated quick-save slot per `puzzleId`,
 persisted in IndexedDB as a distinct save type, separate from the named
 save library and from autosave. Saving to the slot SHALL overwrite the
 previous quick-save for that puzzle. The slot SHALL be readable back into
-the puzzle via the same engine-agnostic save codec the library uses, so
-it works for both TS-engine and C/WASM games. The presence of a slot for
+the puzzle via the same save codec the library uses, so it works for
+every game without per-game code. The presence of a slot for
 a puzzle SHALL be observable reactively so a quick-load control can
 enable/disable itself.
 
@@ -96,4 +98,3 @@ checkpoint was written and the offending cells are highlighted.
 
 - **WHEN** Check-&-Save finds mistakes and refuses to save
 - **THEN** a modal alert reports the count and that nothing was saved
-

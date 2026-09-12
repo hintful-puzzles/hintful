@@ -7,7 +7,9 @@ catalog citizen served by the TS engine, reusing the shared `engine/latin.ts`
 solver framework and adding Group's own associativity/identity deductions, the
 row/column-reorder and subgroup-divider visual aids, and Check & Save mistake
 detection.
+
 ## Requirements
+
 ### Requirement: Group game implements the Game interface
 
 The engine SHALL provide `src/games/group/` implementing the `Game`
@@ -16,10 +18,10 @@ group Cayley table (Latin **and** associative) — registered so the puzzle is
 served by the TypeScript engine.
 
 Group SHALL accept a grid size (group order) between 3 and 26, a difficulty of
-Trivial, Normal, Hard, Extreme or Unreasonable, and a "show identity" flag. It
-SHALL reject an identity-hidden Trivial puzzle and an identity-hidden 3×3 puzzle,
+Easy, Normal, Tricky, Hard or Unreasonable, and a "show identity" flag. It
+SHALL reject an identity-hidden Easy puzzle and an identity-hidden 3×3 puzzle,
 because such puzzles cannot be made: identity-hidden puzzles leave two rows and
-columns blank, and only a non-Trivial deduction can distinguish them.
+columns blank, and only a deduction above Easy can distinguish them.
 
 The element-numbering used for display and keyboard input SHALL depend on the
 "show identity" flag — with identity shown, the identity element is presented
@@ -35,7 +37,7 @@ SHALL NOT affect the grid description.
 
 #### Scenario: Impossible identity-hidden parameters are rejected
 
-- **WHEN** parameters request an identity-hidden Trivial puzzle, or an
+- **WHEN** parameters request an identity-hidden Easy puzzle, or an
   identity-hidden 3×3 puzzle
 - **THEN** validation rejects them with a reason
 
@@ -69,8 +71,8 @@ out-of-range numbers and unknown characters.
 Group SHALL solve using the shared `src/engine/latin.ts` engine, supplying
 only its group-specific deductions and validator: at Normal, an associativity
 forward-deduction ((ab)c = a(bc)) together with filling the identity's row and
-column once the identity is known; at Hard, ruling out identity candidates from
-any product that equals neither of its factors. Extreme SHALL use the generic
+column once the identity is known; at Tricky, ruling out identity candidates from
+any product that equals neither of its factors. Hard SHALL use the generic
 set-elimination and forcing techniques and Unreasonable the generic
 guess-and-verify recursion, with no Group-specific technique. A completed grid
 SHALL be accepted only if it is associative.
@@ -255,4 +257,3 @@ SHALL map to exactly one `group` so a hint step never mixes deductions.
 
 - **WHEN** a hint is requested while `findMistakes` is non-empty
 - **THEN** the hint refuses and the engine lights the mistake overlay
-

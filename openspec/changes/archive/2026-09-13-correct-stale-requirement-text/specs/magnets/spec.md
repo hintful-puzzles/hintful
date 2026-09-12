@@ -26,3 +26,24 @@ report `canSolve = true` and `canFormatAsText = true`.
 
 - **WHEN** `validateParams` is given a 4×4 grid at Normal difficulty
 - **THEN** it returns a non-null error string (Normal needs a side ≥ 5)
+
+### Requirement: Magnets ports the graded solver faithfully
+
+The port SHALL implement upstream `solve_state` with its exact deductive power
+at each difficulty, returning the impossible / ambiguous / solved
+(−1 / 0 / 1) verdict identical to the C solver on every board. The Easy tier
+SHALL perform: set-and-hold of initial givens, force-by-flags, the
+neither-can-be-a-magnet neutral deduction, the row/column count-full pass
+(color complete ⇒ exclude the rest; remaining unset all needed ⇒ set them),
+and the odd-length-section deduction. The Normal tier SHALL additionally
+perform: the advanced-full in-row domino-polarization pass, the
+single-neutral-left exclusion, and the two count-dominoes passes
+(all-remaining-dominoes-magnet ⇒ no neutral; one placeable end ⇒ set it). The
+solver SHALL propagate a deduction across a domino to its partner (an
+excluded color on one end excludes the opposite color on the other).
+
+#### Scenario: A generated board is uniquely solvable at its difficulty
+
+- **WHEN** a board generated at difficulty `d` is solved from empty
+- **THEN** the solver returns solved (1) at `d`, and — for a Normal board —
+  fails to fully solve (0) at Easy

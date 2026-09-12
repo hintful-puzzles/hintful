@@ -28,9 +28,9 @@ import { newCursor } from "../../engine/pointer.ts";
 
 // --- difficulty ------------------------------------------------------------
 
-/** Upstream `DIFF_EASY`, shown as **Normal**. */
+/** Upstream `DIFF_EASY`, shown as **Easy**. */
 export const DIFF_EASY = 0;
-/** Upstream `DIFF_HARD`, shown as **Extreme**. */
+/** Upstream `DIFF_HARD`, shown as **Normal**. */
 export const DIFF_HARD = 1;
 const DIFFCOUNT = 2;
 

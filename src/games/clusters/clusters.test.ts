@@ -138,8 +138,8 @@ describe("params", () => {
     expect(validateParams(easy(2, 3), true)).toBeNull();
   });
 
-  it("refuses Tricky below the size where it binds — for generation only", () => {
-    const refusal = "Tricky needs a board of at least 12 squares, at least two wide";
+  it("refuses Normal below the size where it binds — for generation only", () => {
+    const refusal = "Normal needs a board of at least 12 squares, at least two wide";
     const tricky = (w: number, h: number) => ({ w, h, diff: DIFF_TRICKY });
     expect(validateParams(tricky(2, 5), true)).toBe(refusal); // 10 squares
     expect(validateParams(tricky(3, 3), true)).toBe(refusal); // 9 squares
@@ -172,7 +172,7 @@ describe("difficulty tiers", () => {
     }
   });
 
-  it("a Tricky board needs the lookahead: unsolvable at level 0, solved at 1", () => {
+  it("a Normal board needs the lookahead: unsolvable at level 0, solved at 1", () => {
     for (const [w, h] of SIZES) {
       const p = { w, h, diff: DIFF_TRICKY };
       const { desc } = newClustersDesc(p, randomNew(`clusters-tricky-${w}`));
@@ -199,7 +199,7 @@ describe("difficulty tiers", () => {
     // What the flag preserves is the *defect*: one gate at the deeper rung,
     // accepting whatever it completes. So over the same seeds it must (a) ignore
     // the tier entirely — which is what keeps the frozen fixtures byte-matching
-    // — and (b) hand out boards that need no lookahead, which the honest Tricky
+    // — and (b) hand out boards that need no lookahead, which the honest Normal
     // gate never does. Fixed seeds, so neither count can drift.
     const p = { w: 7, h: 7, diff: DIFF_TRICKY };
     const seeds = Array.from({ length: 10 }, (_, i) => `clusters-loose-${i}`);

@@ -6,7 +6,9 @@ arbitrary tiling rather than a square array. It specifies the grid structure,
 the periodic and aperiodic tilings with their sizing, validation, description
 round-trip and patch trimming, the geometric queries that input and labels need,
 and the random loop generator built on it.
+
 ## Requirements
+
 ### Requirement: Shared planar-grid data structure and deterministic square tiling
 
 The engine SHALL provide `src/engine/grid/index.ts` exposing a general
@@ -70,7 +72,7 @@ the generated loop SHALL be reproducible.
 
 ### Requirement: Periodic tilings
 
-`grid.ts` SHALL provide a generator for each of the 14 periodic tilings —
+The grid module (`src/engine/grid/`) SHALL provide a generator for each of the 14 periodic tilings —
 square, honeycomb, triangular, snub-square, Cairo, great-hexagonal, Kagome,
 octagonal, kites, floret, dodecagonal, great-dodecagonal,
 great-great-dodecagonal and compass-dodecagonal — selected by a `GridType`
@@ -113,7 +115,7 @@ ragged boundary "ears") and the desc `"0"` selects the current ear-trimmed one.
 
 ### Requirement: Grid size computation
 
-`grid.ts` SHALL provide `gridComputeSize(type, width, height)` returning the
+The grid module (`src/engine/grid/`) SHALL provide `gridComputeSize(type, width, height)` returning the
 tiling's natural `tileSize` and its `xExtent`/`yExtent`, as a pure integer
 function of its arguments requiring no constructed grid, for **all 18 tilings**.
 Consumers size their drawing surface from it.
@@ -134,7 +136,7 @@ bounding box will generally not equal its reported extent.
 
 ### Requirement: Nearest-edge hit testing
 
-`grid.ts` SHALL provide `gridNearestEdge(grid, x, y)` returning the edge nearest
+The grid module (`src/engine/grid/`) SHALL provide `gridNearestEdge(grid, x, y)` returning the edge nearest
 a point, or null when no edge is close enough. Eligibility SHALL be decided by
 exact integer arithmetic on squared lengths; only the perpendicular distance
 comparison is floating point. The nearest-edge comparison SHALL be strict, so
@@ -152,7 +154,7 @@ that on an exact tie the lowest-index edge wins by iteration order.
 
 ### Requirement: Face incenter for label placement
 
-`grid.ts` SHALL provide `gridFindIncenter(face)` computing the center of the
+The grid module (`src/engine/grid/`) SHALL provide `gridFindIncenter(face)` computing the center of the
 largest circle inscribable in a face — the point at which a clue digit or symbol
 most easily fits. It SHALL be computed lazily on first request and cached on the
 face.
@@ -199,7 +201,7 @@ above survived for as long as it existed.
 
 ### Requirement: Grid parameter validation
 
-`grid.ts` SHALL provide `gridValidateParams(type, width, height)` returning an
+The grid module (`src/engine/grid/`) SHALL provide `gridValidateParams(type, width, height)` returning an
 error message for a rejected size and null otherwise, for **all 18 tilings**. It
 SHALL reject non-positive dimensions and sizes large enough to overflow the
 coordinate arithmetic for the given tiling.
@@ -219,7 +221,7 @@ are a property of the consuming game, not of the geometry.
 
 ### Requirement: Aperiodic tilings
 
-`grid.ts` SHALL provide a generator for each of the four aperiodic tilings —
+The grid module (`src/engine/grid/`) SHALL provide a generator for each of the four aperiodic tilings —
 Penrose P2 (kite/dart), Penrose P3 (thick/thin rhombs), hats and spectres —
 selected by the same `GridType` whose ordering matches upstream's `GRIDGEN_LIST`,
 completing the collection at 18 tilings.
@@ -267,7 +269,7 @@ falling through to a misleading parse error.
 
 ### Requirement: Grid description round-trip
 
-`grid.ts` SHALL provide `gridNewDesc(type, width, height, rng)` producing a grid
+The grid module (`src/engine/grid/`) SHALL provide `gridNewDesc(type, width, height, rng)` producing a grid
 description string, and `gridValidateDesc(type, width, height, desc)` returning
 an error message for a rejected description and null otherwise.
 
@@ -311,7 +313,7 @@ a coordinate count from it.
 
 ### Requirement: Vigorous trimming of aperiodic patches
 
-`grid.ts` SHALL provide `gridTrimVigorously(grid)`, retaining only those faces
+The grid module (`src/engine/grid/`) SHALL provide `gridTrimVigorously(grid)`, retaining only those faces
 adjacent to a landlocked dot (one not touching the infinite exterior) whose
 landlocked dots lie in the single largest connected component, then compacting
 faces and dots in place — preserving relative order and renumbering their indices
@@ -344,4 +346,3 @@ component exists.
 
 - **WHEN** trimming a grid in which no dot is landlocked
 - **THEN** an error is raised rather than an empty grid returned
-

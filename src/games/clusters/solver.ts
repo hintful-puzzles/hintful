@@ -9,7 +9,7 @@
  *   - `solverTry` (difficulty 0, Easy) forces an empty cell's color whenever
  *     the opposite color would make the board INVALID — a single-cell proof by
  *     contradiction;
- *   - `solverRecurse` (difficulty 1, Tricky) does the same one hypothetical
+ *   - `solverRecurse` (difficulty 1, Normal) does the same one hypothetical
  *     level deep, re-running the difficulty-0 fixpoint on a scratch copy.
  * Because the generator is solver-gated, this solver's exact verdict on every
  * intermediate board decides which puzzles exist, which is what the byte-match

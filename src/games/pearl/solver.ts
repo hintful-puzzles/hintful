@@ -2,7 +2,7 @@
  * Pearl solver — port of `pearl_solve` (pearl.c). Pure iterative constraint
  * propagation (no guessing, no recursion): edge↔square elimination, the
  * black-pearl (CORNER) and white-pearl (STRAIGHT) clue deductions, and
- * shortcut-loop detection over a union-find. The Tricky tier adds the
+ * shortcut-loop detection over a union-find. The Normal tier adds the
  * premature-short-loop rules, so both tiers are guess-free.
  *
  * The workspace is `(2w+1)×(2h+1)`: squares sit at odd (x, y) and hold a

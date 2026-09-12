@@ -41,8 +41,8 @@ const SHAPES: MagnetsParams[] = [
   { w: 10, h: 9, diff: DIFF_TRICKY, stripclues: true },
 ];
 
-/** Eight seeds, not three: a mis-tiered `advancedfull` shows only on a Tricky
- * board where it is the first Tricky rung to fire from the Easy stall, and
+/** Eight seeds, not three: a mis-tiered `advancedfull` shows only on a Normal
+ * board where it is the first Normal rung to fire from the Easy stall, and
  * fifteen boards contained none such — the differential caught the plant on
  * one fixture while the ladder stayed green. The corpus is sized so the tier
  * plant is red here too, which the whole cap walk is for. */

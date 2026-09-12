@@ -33,3 +33,30 @@ game SHALL report `canSolve = true` and `canFormatAsText = true` (for `n < 1000`
 
 - **WHEN** `validateParams` is given `n = 0`
 - **THEN** it returns a non-null error string
+
+### Requirement: Dominosa ports the graded solver faithfully
+
+The port SHALL implement upstream `run_solver` with its exact deductive power at
+each difficulty, returning the impossible / unique / ambiguous (0 / 1 / 2)
+verdict identical to the C solver on every board. Easy SHALL perform the
+domino-single-placement and square-single-placement deductions. Normal SHALL
+additionally perform square-single-domino, domino-must-overlap, the two
+local-duplicate deductions, and the parity deduction (a domino whose placement
+would split the unfilled area into two odd-sized regions is ruled out, detected
+by bridge-finding over the placement graph). Tricky SHALL additionally perform set
+analysis without doubles; `Unreasonable` SHALL additionally perform set analysis
+with doubles and the forcing-chain deduction (parity-linked chains of forced
+placements, using a flip DSF). The solver SHALL track the maximum difficulty
+level actually used.
+
+The forcing-chain deduction SHALL remain in the solver, so the generator grades
+on it and every description is unchanged; it SHALL NOT be recorded by the hint's
+deduction pass, because a closure over all placements is a search and no hint
+narrates a search on any tier.
+
+#### Scenario: A generated board is uniquely solvable at its difficulty
+
+- **WHEN** a board generated at difficulty `d` is solved from empty
+- **THEN** the solver returns unique (1) and reports `max_diff_used == d`, and —
+  for a board above Easy — fails to reach a unique solution (returns 2) when
+  capped at the difficulty one level below `d`

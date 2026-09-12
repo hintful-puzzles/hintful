@@ -6,20 +6,22 @@ have the same color, given a few regions already colored. This capability
 specifies its port to the TS engine: the graded solver and the generator gated
 on it, completion and mistake reporting, and its input, preferences and
 rendering.
+
 ## Requirements
+
 ### Requirement: Map game implements the Game interface
 
 The engine SHALL provide a registered `map` game implementing
 `Game<MapParams, MapState, MapMove, MapUi, MapDrawState, MapMistake>`: color
 every region of a map so that no two adjacent regions share a color, given some
 regions pre-colored as immutable clues. Params SHALL be `w`, `h`, `n` (number
-of regions) and `diff` (one of Easy, Normal, Hard, Unreasonable), encoded
+of regions) and `diff` (one of Easy, Normal, Tricky, Unreasonable), encoded
 `{w}x{h}n{n}` with a full-form `d{char}` difficulty suffix (chars `e`/`n`/`h`/`u`).
 `decodeParams` SHALL be lenient: an omitted `xH` defaults height to width, an
 omitted `nN` defaults `n` to `w*h/8`, a `.` in the region count is tolerated
 (truncated), and an unknown difficulty char is ignored. All 6 upstream landscape
 presets (20×15 with 30 regions at each difficulty, and 30×25 with 75 regions at
-Normal and Hard) SHALL be offered. `validateParams` SHALL enforce `w ≥ 2`,
+Normal and Tricky) SHALL be offered. `validateParams` SHALL enforce `w ≥ 2`,
 `h ≥ 2`, `n ≥ 5`, `n ≤ w*h`, and the width×height overflow guard. The game SHALL
 report `canSolve = true` and `canFormatAsText = true`, and SHALL drive a
 completion flash suppressed after Solve.
@@ -75,7 +77,7 @@ points.
 The port SHALL implement `map_solver` with its full graded deductive power over
 the region-adjacency graph: at Easy, place a region that has exactly one possible
 color left; at Normal, additionally exclude a shared color pair from the common
-neighbors of an adjacent same-two-possibilities pair; at Hard, additionally run
+neighbors of an adjacent same-two-possibilities pair; at Tricky, additionally run
 the forcing-chain BFS; at Unreasonable, additionally recurse (guess and verify).
 The solver SHALL return the three-valued verdict (impossible / unique / stuck-or-
 ambiguous), and a grading routine SHALL return the easiest difficulty that yields
@@ -156,4 +158,3 @@ palette index-for-index against the upstream color enum and a `BORDER` of 0
 - **WHEN** the player drops a color onto a region that already holds it (or onto
   the border, or onto an immutable clue region)
 - **THEN** `interpretMove` yields no move (returns null or a UI update only)
-

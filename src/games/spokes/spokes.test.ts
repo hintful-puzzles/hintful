@@ -275,15 +275,15 @@ describe("spokes solver", () => {
     }
   });
 
-  it("grades honestly: a Hard board is not crackable at Tricky", () => {
+  it("grades honestly: an Unreasonable board is not crackable at Normal", () => {
     // The corrected difficulty gate (see `SpokesGenerateOptions`). Upstream's
     // acceptance check reads "…and it does *not* solve one tier easier", but it
     // re-solves the scratch board from the *leftover* position of the previous
     // candidate rather than from empty, so it answers a question about that
     // leftover instead of about the puzzle. Measured on 12 fixed seeds each:
-    // upstream's gate lets 10/12 4×4 and 5/12 6×6 "Hard" boards through that
-    // Tricky also cracks; clearing first gives 0/12 on both, and costs nothing
-    // (6×6 Tricky generation actually gets ~3× faster, because most of the
+    // upstream's gate lets 10/12 4×4 and 5/12 6×6 Unreasonable boards through
+    // that Normal also cracks; clearing first gives 0/12 on both, and costs
+    // nothing (6×6 Normal generation actually gets ~3× faster, because most of the
     // dirty gate's rejections were spurious).
     for (const k of [0, 1, 2, 3]) {
       const p: SpokesParams = { w: 4, h: 4, diff: "hard" };

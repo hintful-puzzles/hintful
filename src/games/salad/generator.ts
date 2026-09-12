@@ -47,7 +47,7 @@ import {
 /**
  * Runaway backstop for both generation loops, raised above the house default.
  *
- * The tier gate (`tooEasy`) makes these rejection-sampling loops, and Extreme
+ * The tier gate (`tooEasy`) makes these rejection-sampling loops, and Normal
  * boards are genuinely rare in the Number Ball mode: measured over 25 runs per
  * preset, `numbers 5x5 n3` costs a **median of 486 candidates and a worst of
  * 4,419** (`letters` modes cost 2–85). The house default of 10,000 is only ~2x
@@ -212,13 +212,14 @@ export interface SaladGenerateOptions {
    *
    * Upstream strips clues while the board still solves at the target tier and
    * publishes whatever that leaves, never asking whether an easier tier would
-   * have done. So its Extreme does not mean Extreme: measured over this game's
-   * own frozen C fixtures, **12 of its 13 Extreme boards are solvable at
-   * Normal**, and over 80 freshly generated boards the rate is 71/80 — at 5×5
+   * have done. So its Extreme (this game's Normal) does not mean Extreme:
+   * measured over this game's own frozen C fixtures, **12 of its 13 Extreme
+   * boards are solvable at its Normal** (this game's Easy), and over 80 freshly
+   * generated boards the rate is 71/80 — at 5×5
    * and 6×6 it is every single board. {@link newSaladDesc} therefore rejects
    * such a candidate and generates another.
    *
-   * That changes every Extreme description, which would cost the byte-match
+   * That changes every Normal description, which would cost the byte-match
    * differential. This flag keeps that oracle: `salad-differential.test.ts`
    * sets it, so the fixtures still match the C byte-for-byte and the only lines
    * the oracle does not cover are the two `tooEasy` calls. Nothing else should

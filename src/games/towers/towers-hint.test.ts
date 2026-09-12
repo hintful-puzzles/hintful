@@ -73,7 +73,7 @@ describe("towers recording solver", () => {
     for (let i = 0; i < st.w * st.w; i++) expect(filled[i]).toBeGreaterThan(0);
   });
 
-  it("records the harder techniques on a hard board", () => {
+  it("records the harder techniques on a Normal board", () => {
     const { p, st } = gen(6, "hard", "rec-hard");
     const grid = Uint8Array.from(st.grid);
     const ops = recordTowersDeductions(
@@ -83,7 +83,8 @@ describe("towers recording solver", () => {
       Math.min(diffToLevel(p.diff), DIFF_EXTREME),
     );
     const kinds = new Set(ops.map((o) => (o.reason as HintReason).kind));
-    // Hard boards engage the set (naked-subset) deduction at some point.
+    // Normal boards (`"hard"`) engage the set (naked-subset) deduction at some
+    // point.
     expect(ops.length).toBeGreaterThan(0);
     expect(kinds.has("set") || kinds.has("arrangement")).toBe(true);
   });

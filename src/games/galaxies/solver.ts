@@ -729,8 +729,8 @@ function solverStateInner(
   if (ret === IMPOSSIBLE) return GalaxiesDiff.Impossible;
 
   const ladder = galaxiesLadder(s, rec);
-  // `GalaxiesDiff`'s members above Normal are verdicts, not harder tiers:
-  // every rung is Normal, and `maxDiff` gates only the recursion below.
+  // `GalaxiesDiff`'s members above `Normal` are verdicts, not harder tiers:
+  // every rung is `Normal`, and `maxDiff` gates only the recursion below.
   const { grade: diff, impossible } = runDeductionFixpoint({
     techniques: ladder,
     firings,

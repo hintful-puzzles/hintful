@@ -33,11 +33,11 @@ describe("magnets params", () => {
     }
   });
 
-  it("encodes 10x9 Tricky strip-clues as 10x9dtS", () => {
+  it("encodes 10x9 Normal strip-clues as 10x9dtS", () => {
     expect(encodeParams(P(10, 9, DIFF_TRICKY, true), true)).toBe("10x9dtS");
   });
 
-  it("rejects a 4x4 Tricky board (needs a side >= 5)", () => {
+  it("rejects a 4x4 Normal board (needs a side >= 5)", () => {
     expect(magnetsGame.validateParams(P(4, 4, DIFF_TRICKY), true)).not.toBeNull();
     expect(magnetsGame.validateParams(P(5, 4, DIFF_TRICKY), true)).toBeNull();
   });
@@ -96,7 +96,7 @@ describe("magnets generator + solver", () => {
     }
   });
 
-  it("a Tricky board is not solvable at Easy", () => {
+  it("a Normal board is not solvable at Easy", () => {
     const p = P(8, 7, DIFF_TRICKY);
     const { desc } = newMagnetsDesc(p, randomNew("tricky-not-easy"));
     const s = newState(p, desc);

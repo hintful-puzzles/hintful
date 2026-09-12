@@ -6,7 +6,9 @@ that no two like poles are orthogonally adjacent and each row and column meets
 its clued pole counts. This capability specifies its port to the TS engine, with
 input that cycles a domino's contents and marks clues done, and mistake-checking
 against the unique solution.
+
 ## Requirements
+
 ### Requirement: Magnets game implements the Game interface
 
 The engine SHALL provide a registered `magnets` game implementing
@@ -16,24 +18,23 @@ magnet (one `+` cell and one `−` cell) or neutral (both cells blank), no two
 orthogonally-adjacent cells share a polarity, and each row and column contains
 exactly its clue count of `+` and of `−` cells. Some dominoes MAY be fixed
 singleton squares that are permanently neutral. Params SHALL be `w`, `h`,
-`diff` (Easy / Tricky) and `stripclues` (boolean), encoded `{w}x{h}` with a
+`diff` (Easy / Normal) and `stripclues` (boolean), encoded `{w}x{h}` with a
 full-form `d{e|t}` difficulty suffix and an `S` strip-clues suffix (square
 shorthand `{n}`). All 8 upstream presets SHALL be offered. `validateParams`
 SHALL enforce `w ≥ 2`, `h ≥ 2`, a per-difficulty minimum size (Easy: `w ≥ 3`
-or `h ≥ 3`; Tricky: `w ≥ 5` or `h ≥ 5`) and the area bound. The game SHALL
-report `canSolve = true`, `canFormatAsText = true`, and
-`needsRightButton = true` (upstream `REQUIRE_RBUTTON`).
+or `h ≥ 3`; Normal: `w ≥ 5` or `h ≥ 5`) and the area bound. The game SHALL
+report `canSolve = true` and `canFormatAsText = true`.
 
 #### Scenario: Params round-trip
 
-- **WHEN** params `{ w: 10, h: 9, diff: TRICKY, stripclues: true }` are
-  encoded in full
+- **WHEN** params `{ w: 10, h: 9, diff: DIFF_TRICKY, stripclues: true }` (the
+  Normal tier) are encoded in full
 - **THEN** the result is `10x9dtS` and decoding it round-trips the params
 
 #### Scenario: Invalid params are rejected
 
-- **WHEN** `validateParams` is given a 4×4 grid at Tricky difficulty
-- **THEN** it returns a non-null error string (Tricky needs a side ≥ 5)
+- **WHEN** `validateParams` is given a 4×4 grid at Normal difficulty
+- **THEN** it returns a non-null error string (Normal needs a side ≥ 5)
 
 ### Requirement: Magnets descriptions carry the clues and domino layout
 
@@ -67,7 +68,7 @@ at each difficulty, returning the impossible / ambiguous / solved
 SHALL perform: set-and-hold of initial givens, force-by-flags, the
 neither-can-be-a-magnet neutral deduction, the row/column count-full pass
 (color complete ⇒ exclude the rest; remaining unset all needed ⇒ set them),
-and the odd-length-section deduction. The Tricky tier SHALL additionally
+and the odd-length-section deduction. The Normal tier SHALL additionally
 perform: the advanced-full in-row domino-polarization pass, the
 single-neutral-left exclusion, and the two count-dominoes passes
 (all-remaining-dominoes-magnet ⇒ no neutral; one placeable end ⇒ set it). The
@@ -77,7 +78,7 @@ excluded color on one end excludes the opposite color on the other).
 #### Scenario: A generated board is uniquely solvable at its difficulty
 
 - **WHEN** a board generated at difficulty `d` is solved from empty
-- **THEN** the solver returns solved (1) at `d`, and — for a Tricky board —
+- **THEN** the solver returns solved (1) at `d`, and — for a Normal board —
   fails to fully solve (0) at Easy
 
 ### Requirement: Magnets input cycles domino contents and toggles clue aids
@@ -137,4 +138,3 @@ part of the render diff key so it repaints and clears correctly.
 - **WHEN** a cell is drawn, then `findMistakes` flags it on a subsequent frame
   without the cell's own value changing
 - **THEN** the mistake overlay is painted on that later frame
-

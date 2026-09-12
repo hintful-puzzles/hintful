@@ -68,7 +68,7 @@ describe("Bridges C-vs-TS differential — solver agreement (gated)", () => {
       const state = newStateFromDesc(p, f.desc);
       expect(solveFromScratch(state.workingCopy(), f.difficulty)).toBe(1);
 
-      // The "too easy" gate: a Medium/Hard board with more than the sensible
+      // The "too easy" gate: a Normal/Tricky board with more than the sensible
       // minimum of islands must not solve one difficulty down.
       if (f.difficulty > 0 && state.islands.length > MIN_SENSIBLE_ISLANDS) {
         expect(solveFromScratch(state.workingCopy(), f.difficulty - 1)).toBe(0);

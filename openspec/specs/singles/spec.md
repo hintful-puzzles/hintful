@@ -6,7 +6,9 @@ in a row or column, no two black squares share an edge, and the white squares
 stay connected. This capability specifies its port to the TS engine, with
 difficulty-graded unique generation, the show-black-numbers preference,
 mistake-checking, and an explained deduction hint with its own color legend.
+
 ## Requirements
+
 ### Requirement: Singles game implements the Game interface
 
 The engine SHALL provide a registered `singles` game implementing
@@ -15,16 +17,17 @@ SinglesMistake>`: the Nikoli puzzle Hitori on a `w × h` grid of numbers, in
 which the player blackens cells so that no number repeats among the remaining
 (white) cells of any row or column, no two black cells are orthogonally
 adjacent, and the white cells form one orthogonally-connected region. Params
-SHALL be `w`, `h`, and `diff` (Easy or Tricky), encoded `{w}x{h}d{c}` when full
+SHALL be `w`, `h`, and `diff` (Easy or Normal), encoded `{w}x{h}d{c}` when full
 (`c` = `e`/`k`) and `{w}x{h}` otherwise, with presets at 5×5, 6×6, 8×8, 10×10,
-and 12×12 in both Easy and Tricky. `validateParams` SHALL require `w ≥ 2`,
+and 12×12 in both Easy and Normal. `validateParams` SHALL require `w ≥ 2`,
 `h ≥ 2`, both `≤ 62`, and (when full) a known difficulty. The game SHALL report
 `wantsStatusbar = false`, `isTimed = false`, `canSolve = true`, and
 `canFormatAsText = true`.
 
 #### Scenario: Params round-trip
 
-- **WHEN** params `{ w: 8, h: 8, diff: "tricky" }` are encoded with `full = true`
+- **WHEN** params `{ w: 8, h: 8, diff: "tricky" }` (the Normal tier) are encoded
+  with `full = true`
 - **THEN** the result is `8x8dk`
 - **AND** decoding it round-trips the params
 - **AND** encoding with `full = false` yields `8x8`
@@ -82,7 +85,7 @@ SHALL set the board completed when `checkComplete` reports no errors.
 The game SHALL provide a deductive solver reproducing the upstream techniques:
 the auto-cascade (a black forces its neighbors white; a circled cell forces
 same-numbered cells in its row/column black), `singlesep`, `doubles`, `corners`,
-`offsetpair` (Tricky and above), `allblackbutone`, and `removesplits` (Tricky
+`offsetpair` (Normal and above), `allblackbutone`, and `removesplits` (Normal
 and above). It SHALL detect impossibility (e.g. a white cell with no white
 escape, or a contradiction in the cascade). `solve` SHALL attempt to solve the
 current state and then the initial state, returning the move that completes the
@@ -116,7 +119,7 @@ the C reference byte-for-byte for the same seed.
 
 - **WHEN** a board is generated at difficulty D
 - **THEN** the solver solves it at D
-- **AND** (for Tricky) the solver fails to solve it at the level below D even
+- **AND** (for Normal) the solver fails to solve it at the level below D even
   with the sneaky deduction
 
 #### Scenario: Desc matches the C reference byte-for-byte
@@ -319,4 +322,3 @@ and the three highlight roles remain disjoint.
   protects a corner
 - **THEN** the numbers shade `COL_HINT_CELL` (digits on top) and the protected
   corner stays `COL_HINT_STRAND`, as before
-

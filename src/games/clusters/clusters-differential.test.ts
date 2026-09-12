@@ -10,9 +10,9 @@
  * (docs/games/testing.md § "Byte-match: fidelity where there is a right answer").
  *
  * **`upstreamLooseGate` is set here and nowhere else.** The shipped generator
- * grades its two tiers honestly — Tricky rejects a board the single-cell rule
+ * grades its two tiers honestly — Normal rejects a board the single-cell rule
  * alone can finish — and because generation is solver-gated, that changes every
- * Tricky description. The flag keeps upstream's one-gate acceptance reachable
+ * Normal description. The flag keeps upstream's one-gate acceptance reachable
  * from this file alone, so these fixtures still byte-match the C; see
  * `ClustersGenerateOptions.upstreamLooseGate` for what it therefore stops
  * covering.
@@ -41,7 +41,7 @@ describeDescDifferential<Fixture, ClustersParams>({
   fixtures: data.fixtures,
   label: (f) => `${f.w}x${f.h} seed=${f.seed}`,
   // The tier is immaterial under the loose gate, which solves at the deeper rung
-  // whatever was asked for, but the params must carry one, and Tricky is what
+  // whatever was asked for, but the params must carry one, and Normal is what
   // the recorded boards are: upstream's only bar is "solvable with one
   // hypothetical".
   params: (f) => ({ w: f.w, h: f.h, diff: DIFF_TRICKY }),

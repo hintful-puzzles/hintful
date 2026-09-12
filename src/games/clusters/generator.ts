@@ -11,7 +11,7 @@
  *
  * The two difficulty tiers change only *which candidates are kept*, never how
  * one is built. The single extra draw they can make — the cell perturbed when a
- * Tricky candidate turns out too easy — is unreachable on the loose path, so
+ * Normal candidate turns out too easy — is unreachable on the loose path, so
  * the oracle above is untouched.
  */
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
@@ -150,7 +150,7 @@ function clustersGenerate(
   const easy = solveGame(grid, w, h, DIFF_EASY);
   if (diff === DIFF_EASY) return easy;
 
-  // Tricky, and the single-cell rule alone finished it — so this board does not
+  // Normal, and the single-cell rule alone finished it — so this board does not
   // need the tier the player asked for. Rejecting it takes more than returning
   // "no": every other rejection leaves a *partly* solved grid whose blank cells
   // the next attempt re-randomizes, but a completed one has no blank cells left,
@@ -179,14 +179,14 @@ function clustersGenerate(
 /**
  * Attempts before the generator gives up — the house default (`MAX_REGENERATE`).
  * A synchronous generator that cannot succeed owns its thread outright; see
- * `engine/retry-limit.ts`. Without the Tricky gate every rejection leaves
+ * `engine/retry-limit.ts`. Without the Normal gate every rejection leaves
  * deduced cells behind, so the loop could not spin for ever; the gate's
  * too-easy rejection removes that accident.
  *
  * The bound is not decorative and is not near any legal configuration. The tiers
  * that `validateParams` allows converge in well under a second of attempts at
- * every offered size (10×10 Tricky, the slowest: 1.4 s median, 10.9 s worst over
- * 50 seeds), while a board too small to admit a Tricky puzzle spends the whole
+ * every offered size (10×10 Normal, the slowest: 1.4 s median, 10.9 s worst over
+ * 50 seeds), while a board too small to admit a Normal puzzle spends the whole
  * budget and reports failure in 0.4 s at 2×2 and 1.7 s at 3×3 — which is how the
  * size floor in `state.ts` was measured.
  */
@@ -199,9 +199,9 @@ export interface ClustersGenerateOptions {
    *
    * Under that gate every board is "solvable with one hypothetical" and none is
    * *required* to need one — measured, 50–64% of them (by board size) fall to
-   * the single-cell rule alone. Gating Tricky on "and not solvable one rung
+   * the single-cell rule alone. Gating Normal on "and not solvable one rung
    * down" is what makes the setting bind, and because the generator is
-   * solver-gated it changes which candidates are kept, hence every Tricky
+   * solver-gated it changes which candidates are kept, hence every Normal
    * description.
    *
    * This flag keeps the byte-match oracle that validates the generator, the

@@ -33,8 +33,6 @@ maximizing how much downstream code each port unblocks.
 - **THEN** an idiomatic TS equivalent is written as a normal module
   dependency
 - **AND** no characterization corpus is recorded for that helper
-- **AND** unported games continue using the C implementation via the
-  WASM build
 
 #### Scenario: Midend precedes game ports
 

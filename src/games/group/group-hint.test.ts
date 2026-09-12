@@ -97,7 +97,7 @@ describe("group hint — plan solves boards", () => {
     expect(solved).toBe(true);
   });
 
-  it("solves an identity-hidden Hard board, teaching an identity-mark elimination", () => {
+  it("solves an identity-hidden Tricky board, teaching an identity-mark elimination", () => {
     // The identity-hidden `DIFF_HARD` (Tricky) tier is the one that exercises
     // solverHard, which the shared first-leaf resume never reaches.
     let sawElim = false;
@@ -256,6 +256,6 @@ describe("group hint — keepTrack", () => {
         s = groupGame.executeMove(s, res.steps[0].move);
       }
     }
-    throw new Error("no populate step reached on any identity-hidden Hard seed");
+    throw new Error("no populate step reached on any identity-hidden Tricky seed");
   });
 });

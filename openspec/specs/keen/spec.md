@@ -5,7 +5,9 @@ Keen (KenKen), the Latin-square puzzle whose cages each carry an arithmetic clue
 their digits must satisfy. This capability specifies its port to the TS engine
 on the shared Latin-square framework, with pencil marks and their preferences,
 mistake-checking, on-screen key labels, and an explained deduction hint.
+
 ## Requirements
+
 ### Requirement: Keen game implements the Game interface
 
 The engine SHALL provide a registered `keen` game implementing
@@ -16,7 +18,9 @@ digit exactly once, subject to **arithmetic cage clues** — the grid is
 partitioned into contiguous blocks, each labeled with a target value and an
 operation (`+`, `−`, `×`, `÷`) that the block's digits must satisfy, where
 subtraction and division cages always have area 2. Params SHALL be `w`, `diff`
-(Easy, Normal, Hard, Extreme, or Unreasonable), and `multiplicationOnly`,
+(Easy, Normal, Tricky, Hard, or Unreasonable — held as upstream's keys
+`"easy"`, `"normal"`, `"hard"`, `"extreme"`, `"unreasonable"`, so the Tricky
+tier is `"hard"`), and `multiplicationOnly`,
 encoded `{w}` without `full` and `{w}d{c}{m?}` with `full` (`c` =
 `e`/`n`/`h`/`x`/`u`; a trailing `m` for multiplication-only), with the upstream
 preset list. `validateParams` SHALL require `3 ≤ w ≤ 9` and a known difficulty.
@@ -25,8 +29,8 @@ The game SHALL report `wantsStatusbar = false`, `isTimed = false`,
 
 #### Scenario: Params round-trip
 
-- **WHEN** params `{ w: 6, diff: "hard", multiplicationOnly: false }` are encoded
-  with `full = true`
+- **WHEN** params `{ w: 6, diff: "hard", multiplicationOnly: false }` (the Tricky
+  tier) are encoded with `full = true`
 - **THEN** the result is `6dh`
 - **AND** decoding it round-trips the params
 - **AND** encoding with `full = false` yields `6`
@@ -103,10 +107,10 @@ enumerate, for each cage, the digit layouts consistent with the current candidat
 cube and the cage's operation/value (subtraction and division cages by their two
 ordered digit pairs; addition and multiplication cages by combination
 enumeration), and prune the candidate cube accordingly — at Easy by amalgamating
-all values, at Normal by per-square value bitmaps, and at Hard by the cross-cage
+all values, at Normal by per-square value bitmaps, and at Tricky by the cross-cage
 "a digit required in this row/column" intersection. The validator SHALL accept a
 completed grid only when every cage's digits satisfy its clue. `solveKeen(w,
-clues, soln, maxdiff)` SHALL map Easy→simple, Hard→set, Extreme→set+forcing, and
+clues, soln, maxdiff)` SHALL map Easy→simple, Tricky→set, Hard→set+forcing, and
 Unreasonable→recursion, and return the difficulty reached or an
 impossible/ambiguous/unfinished sentinel.
 
@@ -324,4 +328,3 @@ the C build.
 
 - **WHEN** the key labels are requested for a `6×6` Keen board
 - **THEN** the result is the buttons `1,2,…,6` followed by a clear key
-

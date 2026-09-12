@@ -5,7 +5,9 @@ Dominosa, the puzzle of tiling a grid of numbers with dominoes so that every
 pairing, doubles included, appears exactly once. This capability specifies its
 port to the TS engine, with an explained deductive hint drawn distinctly and a
 domino reference that highlights where each pair can occur.
+
 ## Requirements
+
 ### Requirement: Dominosa game implements the Game interface
 
 The engine SHALL provide a registered `dominosa` game implementing
@@ -14,7 +16,7 @@ partition an `(n+2) × (n+1)` grid of numbers (each `0…n`) into 2×1 dominoes 
 that the placed dominoes are exactly the `DCOUNT(n) = (n+1)(n+2)/2` distinct
 number-pairs `0-0 … n-n`, one of each, with every domino's two numbers matching
 the underlying clues. Params SHALL be `n` (maximum face number, default 6) and
-`diff` (Trivial / Basic / Hard / `Unreasonable` / Ambiguous), encoded `"{n}"` with
+`diff` (Easy / Normal / Tricky / `Unreasonable` / Ambiguous), encoded `"{n}"` with
 a full-form `"d{t|b|h|e|a}"` difficulty suffix; a legacy bare `"a"` suffix SHALL
 decode to Ambiguous. The fourth tier is named `Unreasonable` rather than
 upstream's `Extreme` because its forcing-chain deduction is a search over a
@@ -22,12 +24,11 @@ closure of all placements, and it is the last tier that is a difficulty —
 `Ambiguous` follows it in the list but relaxes the puzzle's promise rather than
 deepening its ladder. All 12 upstream presets SHALL be offered. `validateParams`
 SHALL enforce `n ≥ 1`, a valid difficulty, and the upstream overflow bound. The
-game SHALL report `canSolve = true`, `canFormatAsText = true` (for `n < 1000`),
-and `needsRightButton = true` (upstream `REQUIRE_RBUTTON`).
+game SHALL report `canSolve = true` and `canFormatAsText = true` (for `n < 1000`).
 
 #### Scenario: Params round-trip
 
-- **WHEN** params `{ n: 6, diff: HARD }` are encoded in full
+- **WHEN** params `{ n: 6, diff: DIFF_HARD }` (the Tricky tier) are encoded in full
 - **THEN** the result is `"6dh"` and decoding it round-trips the params
 
 #### Scenario: The renamed tier keeps its difficulty character
@@ -64,12 +65,12 @@ number `0…n` does not occur exactly `n+2` times.
 
 The port SHALL implement upstream `run_solver` with its exact deductive power at
 each difficulty, returning the impossible / unique / ambiguous (0 / 1 / 2)
-verdict identical to the C solver on every board. Trivial SHALL perform the
-domino-single-placement and square-single-placement deductions. Basic SHALL
+verdict identical to the C solver on every board. Easy SHALL perform the
+domino-single-placement and square-single-placement deductions. Normal SHALL
 additionally perform square-single-domino, domino-must-overlap, the two
 local-duplicate deductions, and the parity deduction (a domino whose placement
 would split the unfilled area into two odd-sized regions is ruled out, detected
-by bridge-finding over the placement graph). Hard SHALL additionally perform set
+by bridge-finding over the placement graph). Tricky SHALL additionally perform set
 analysis without doubles; `Unreasonable` SHALL additionally perform set analysis
 with doubles and the forcing-chain deduction (parity-linked chains of forced
 placements, using a flip DSF). The solver SHALL track the maximum difficulty
@@ -84,7 +85,7 @@ narrates a search on any tier.
 
 - **WHEN** a board generated at difficulty `d` is solved from empty
 - **THEN** the solver returns unique (1) and reports `max_diff_used == d`, and —
-  for a board above Trivial — fails to reach a unique solution (returns 2) when
+  for a board above Easy — fails to reach a unique solution (returns 2) when
   capped at the difficulty one level below `d`
 
 ### Requirement: Dominosa input places dominoes and barrier edges
@@ -264,4 +265,3 @@ into the render cache key so the box appears and clears on selection change.
 - **WHEN** a pair is highlighted and the player then completes the board
 - **THEN** the highlight is cleared, and neither selecting nor clearing a highlight ever
   added a move, an undo entry, or anything to the saved game
-

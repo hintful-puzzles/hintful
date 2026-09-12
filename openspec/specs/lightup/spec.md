@@ -6,7 +6,9 @@ without two bulbs lighting each other, meeting the counts on numbered walls.
 This capability specifies its port to the TS engine, with live errors,
 mistake-checking, an explained deductive hint drawn in the element-type legend,
 and no tier below Unreasonable that requires guessing.
+
 ## Requirements
+
 ### Requirement: Light Up game implements the Game interface
 
 The engine SHALL provide a registered `lightup` game implementing
@@ -16,7 +18,7 @@ is lit (bulbs shine along rows and columns until blocked by a black square),
 no bulb is lit by another bulb, and every numbered black square has exactly
 that many orthogonally-adjacent bulbs. Params SHALL be `w`, `h`, `blackpc`
 (percentage of black squares), `symm` (none / 2-way mirror / 2-way rotational /
-4-way mirror / 4-way rotational) and `difficulty` (easy / tricky / hard),
+4-way mirror / 4-way rotational) and `difficulty` (Easy / Normal / Unreasonable),
 encoded `{w}x{h}b{blackpc}s{symm}d{difficulty}` (short form `{w}x{h}`). All 9
 upstream presets SHALL be offered. Decoding SHALL keep upstream's lenient
 quirks: a bare `WxH` id demotes 4-way-rotational symmetry to 2-way-rotational
@@ -66,15 +68,15 @@ into black/numbered flags and clue values with all open squares unlit.
 ### Requirement: Light Up ports the graded solver faithfully
 
 The port SHALL implement the upstream solver with its exact deductive power at
-each difficulty: at easy, forced-light ("this unlit square has exactly one
+each difficulty: at Easy, forced-light ("this unlit square has exactly one
 remaining way to be lit") and clue deductions (a satisfied clue marks its
 remaining neighbors impossible; a clue whose remaining lights equal its
-remaining spaces fills them); at tricky, additionally the overlapping-set
+remaining spaces fills them); at Normal, additionally the overlapping-set
 discount (every MAKESLIGHT set — from an unlit square or a `C(n, n−m+1)`
 combination of a clue's free neighbors enumerated via the ported `Combi`
 module — is tested against candidate MAKESDARK squares chosen by the upstream
 minimum-rule-out heuristic, marking squares impossible), restarting the cheap
-deduction sweep after the first successful discount; at hard, additionally
+deduction sweep after the first successful discount; at Unreasonable, additionally
 recursion on the most-illuminating candidate square, depth-capped at 5, with
 upstream's unique-solution bookkeeping (recursion-limit hits propagate
 "unknown" under force-unique; solution counts sum across branches). The solver
@@ -260,7 +262,7 @@ leaving the reader to supply it.
 
 #### Scenario: The plan completes deductive boards
 
-- **WHEN** the plan is computed on any generated Easy or Tricky board
+- **WHEN** the plan is computed on any generated Easy or Normal board
 - **THEN** following it step-by-step solves the board with no un-narrated step
 
 ### Requirement: Light Up hint rendering follows the element-type legend
@@ -290,11 +292,9 @@ bit SHALL participate in the per-tile render cache diff key.
 Light Up SHALL comply with the `ts-migration` narratable-deduction generation
 policy: every difficulty tier offered under a name other than `Unreasonable`
 SHALL generate only boards solvable by the narrated deductive techniques with
-no recursion. The current Hard tier (recursion-requiring by construction)
-SHALL be resolved by measurement plus one of the sanctioned remedies — rename
-to `Unreasonable` (labels only; generation and the byte-match differential
-unchanged), or promotion of single-level forcing to a narrated externalized
-technique — chosen by the owner with the depth-distribution numbers in hand.
+no recursion. The recursion-requiring top tier SHALL be offered as `Unreasonable`: it is
+upstream's Hard tier under an honest name, renamed by `add-lightup-hint` as a
+label change that left its generation untouched.
 On boards of an `Unreasonable` tier the hint MAY narrate the deductive prefix
 and then refuse honestly at the guess point.
 
@@ -307,4 +307,3 @@ and then refuse honestly at the guess point.
 
 - **WHEN** a tier's boards require recursion to solve
 - **THEN** that tier is offered only under the name `Unreasonable`
-

@@ -16,7 +16,7 @@ TracksMistake>`: lay a single continuous train track from an entrance on the
 left edge to an exit on the bottom edge of a `w × h` grid, using only straight
 and curved rails that neither cross nor form a loop, so every row and column
 clue counts the number of track-bearing cells in that row/column. Params SHALL
-be `w`, `h`, `diff` (Easy / Tricky / Hard) and `single_ones` (disallow
+be `w`, `h`, `diff` (Easy / Normal / Tricky) and `single_ones` (disallow
 consecutive 1-clues), encoded `{w}x{h}` with a full-form `d{e|t|h}` difficulty
 suffix and an `o` suffix when `single_ones` is false (square shorthand `{n}`).
 All 12 upstream presets SHALL be offered. `validateParams` SHALL enforce a
@@ -26,8 +26,8 @@ Solve.
 
 #### Scenario: Params round-trip
 
-- **WHEN** params `{ w: 10, h: 8, diff: Tricky, single_ones: false }` are
-  encoded in full
+- **WHEN** params `{ w: 10, h: 8, diff: DIFF_TRICKY, single_ones: false }` (the
+  Normal tier) are encoded in full
 - **THEN** the result is `10x8dto` and decoding it round-trips the params
 
 #### Scenario: Invalid params are rejected
@@ -64,22 +64,22 @@ immutable clue-number/station data, with the player grid initially blank.
 The port SHALL implement `tracks_solve` with its exact deductive power and rung
 order at each difficulty. At Easy: edge/square flag propagation
 (`update_flags`), row/column track-count deductions (`count_clues`), and
-immediate loop avoidance over a `Dsf` (`check_loop`). At Tricky, additionally:
-single-track reasoning (`check_single`), loose-end reasoning
-(`check_loose_ends`), and the one-way neighbor deduction
-(`check_neighbours(false)`). At Hard, additionally: the two-way neighbor
-deduction (`check_neighbours(true)`) and the bridge-parity argument
+immediate loop avoidance over a `Dsf` (`check_loop`). At Normal
+(`DIFF_TRICKY`), additionally: single-track reasoning (`check_single`),
+loose-end reasoning (`check_loose_ends`), and the one-way neighbor deduction
+(`check_neighbours(false)`). At Tricky (`DIFF_HARD`), additionally: the two-way
+neighbor deduction (`check_neighbours(true)`) and the bridge-parity argument
 (`check_bridge_parity`) over the shared `findLoops` bridge finder. The solver
 SHALL return impossible / unique / non-converged verdicts identical to the C
 solver on every board, reproducing C's edge-processing order where a later
-deduction reads state a earlier one mutated. The solver SHALL be reused by
+deduction reads state an earlier one mutated. The solver SHALL be reused by
 `solve()` and `findMistakes`.
 
 #### Scenario: Generated boards solve at exactly their difficulty
 
-- **WHEN** a board generated at Hard is solved
-- **THEN** the Hard solver reaches the unique solution
-- **AND** the Tricky solver fails to converge on it
+- **WHEN** a board generated at Tricky is solved
+- **THEN** the Tricky solver reaches the unique solution
+- **AND** the Normal solver fails to converge on it
 
 #### Scenario: Solve recovers from a wrong mid-game state
 
@@ -93,7 +93,7 @@ seed: `lay_path` (a random walk from a random left-edge entrance to a bottom
 exit), clue-number derivation, rejection of boring boards and (under
 `single_ones`) consecutive/exit 1-clues, `add_clues` (lay clues until soluble
 at exactly the target difficulty, then strip redundant clues, re-running the
-solver on each candidate), and the 4×4 Tricky/Hard → Easy fallback. A gated
+solver on each candidate), and the 4×4 Normal/Tricky → Easy fallback. A gated
 differential test SHALL assert byte-equal descs against C-recorded fixtures
 across all three difficulties and non-preset sizes, and that the TS solver
 grades each C board at its recorded difficulty.

@@ -9,7 +9,7 @@
  * upstream's C by a harness that no longer exists (see
  * `engine/testing/differential.ts`).
  *
- * Generation at Tricky/Hard runs the discount-set/recursive solver in a
+ * Generation at Normal/Unreasonable runs the discount-set/recursive solver in a
  * retry loop — legitimately seconds of fixed work per fixture. The work is
  * seed-deterministic, so the verdict never depends on load and the block is not
  * clock-gated (docs/games/testing.md § "Seed-deterministic, never clock-gated").

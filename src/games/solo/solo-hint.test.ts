@@ -60,7 +60,7 @@ const KILLER: SoloParams = {
 // --- tier 1: recording solver ----------------------------------------------
 
 describe("solo recording solver", () => {
-  it("records reasons and its placements complete the board (Basic)", () => {
+  it("records reasons and its placements complete the board (Normal)", () => {
     const { st } = gen(BASIC, "rec-basic");
     const ops = recordSoloDeductions(st, DIFF_SIMPLE);
     expect(ops.length).toBeGreaterThan(0);
@@ -71,7 +71,7 @@ describe("solo recording solver", () => {
     for (let i = 0; i < cr * cr; i++) expect(filled[i]).toBeGreaterThan(0);
   });
 
-  it("records the intersect technique on Intermediate boards", () => {
+  it("records the intersect technique on Tricky boards", () => {
     const kinds = new Set<string>();
     for (const s of ["i0", "i1", "i2", "i3", "i4", "i5"]) {
       const { st } = gen(INTER, s);
@@ -81,7 +81,7 @@ describe("solo recording solver", () => {
     expect([...kinds]).toContain("intersect");
   });
 
-  it("records the set technique on Advanced boards", () => {
+  it("records the set technique on Hard boards", () => {
     const kinds = new Set<string>();
     for (const s of ["s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7"]) {
       const { st } = gen(ADV, s);

@@ -246,25 +246,6 @@ drawing canvas, or `src/store/`.
 - **AND** no `src/screens/`, `src/dialogs/`, `src/puzzle/puzzle.ts`,
   drawing-canvas, or `src/store/` code changes to consume it
 
-### Requirement: A TS-ported game stays in the catalog without a wasm artifact
-
-A game whose engine is ported to native TS SHALL remain present in the
-generated catalog (its metadata and `puzzleIds` entry) so the app
-lists and routes to it, while its C source and per-puzzle wasm/deps
-artifacts SHALL NOT be built. The build SHALL provide an explicit
-marker for "this game is TS-served" rather than inferring it, and the
-catalog generator SHALL union TS-ported games with the wasm-built
-games.
-
-#### Scenario: Flip is cataloged but has no wasm
-
-- **WHEN** the project is built after Flip's C source is deleted
-- **THEN** `catalog.json` and `puzzleIds` still include `flip` with
-  its display metadata
-- **AND** no `flip.wasm` (or per-puzzle Flip dependency target) is
-  produced
-- **AND** opening Flip in the app routes to the TS engine
-
 ### Requirement: The midend repaints on every transition and drives animation
 
 The TS midend SHALL cause the canvas to repaint after every state
@@ -298,7 +279,7 @@ in its `!ds.started` branch and re-fired on a fresh drawstate.
   `setTileSize`, but SHALL NOT recreate the drawstate, invalidate any
   per-tile cache, or schedule any framework-emitted overpaint. The
   frontend may call `size()` on every layout perturbation (any
-  element-size change goes through it via `puzzle-view.ts`'s
+  element-size change goes through it via `src/puzzle/components/view.ts`'s
   `ResizeController`); a side-effecting call here would wipe caches
   at unrelated moments and cause spurious full repaints.
 
@@ -536,80 +517,6 @@ The engine SHALL provide `mkhighlight(bg: Color): { background: Color; highlight
 
 - **WHEN** the host background is white or near-white
 - **THEN** the highlight saturates to pure white instead of collapsing into the adjusted background (the defect the previous per-game inline copies had)
-
-### Requirement: The engine supports an ephemeral mistake-checking hook
-
-The engine SHALL support a UI-only, ephemeral mistake-checking facility,
-shaped like the Hint System. The `Game` interface SHALL define an
-optional `findMistakes(state)` method returning the cells of the current
-state that contradict the puzzle's unique solution as game-specific
-highlight data (an empty result means no detectable mistakes). The
-method SHALL be pure (no state mutation).
-
-A game whose state carries **candidate/pencil annotations** (e.g. Towers) MAY
-report **annotation-level** contradictions as mistakes, consistently with how a
-placed value is reported: a non-empty candidate set that **excludes** the cell's
-unique-solution value (the player has crossed out the correct answer) is a
-contradiction and MAY be returned, whereas a candidate set that merely holds
-extra, non-solution candidates is ordinary mid-solve state and SHALL NOT be
-reported. The solution such a game checks against SHALL be derived from the
-committed placements only, never from the annotations themselves (an annotation
-can be wrong — that is precisely what is being checked). This makes pencil notes
-first-class markings, so the existing Check-&-Save gate (which refuses a save
-while `findMistakes` is non-empty) refuses a board carrying an invalid note
-exactly as it refuses a wrong placed value.
-
-The `Midend` SHALL, on `findMistakes()`, call the game's hook, store the
-result as `activeMistakes` (midend-only, never in game state, never
-persisted), pass it to the game's `redraw`, and return the **count** of
-flagged cells. `activeMistakes` SHALL be displayed until the next state
-transition and SHALL be cleared on the same events that clear an active
-hint (a player move, undo, redo, restart, new game, solve, and reaching
-the solved state). A game that does not implement `findMistakes` SHALL
-report it as unavailable.
-
-The engine surface SHALL expose `canFindMistakes` (true iff the game
-implements the hook) in its static attributes and `findMistakes(): number`
-(display the mistakes as a side effect, return how many). For an
-unported C/WASM game, `canFindMistakes` SHALL be false and
-`findMistakes()` SHALL return 0.
-
-#### Scenario: Checking a board with mistakes
-
-- **WHEN** the user invokes `findMistakes()` on a game that implements
-  the hook and the current state has cells contradicting the solution
-- **THEN** the midend stores those cells as `activeMistakes`, schedules a
-  repaint that draws them highlighted, and returns the count (> 0)
-- **AND** the highlight remains until the next state transition
-
-#### Scenario: Checking a clean board
-
-- **WHEN** the user invokes `findMistakes()` and no cell contradicts the
-  solution
-- **THEN** the count returned is 0 and nothing is highlighted
-
-#### Scenario: A transition clears the mistake display
-
-- **WHEN** `activeMistakes` is displayed and the user makes a move,
-  undoes, redoes, restarts, starts a new game, or solves
-- **THEN** the midend clears `activeMistakes` and the next repaint draws
-  no mistake highlights
-
-#### Scenario: An unported game reports no capability
-
-- **WHEN** the active game runs on the C/WASM engine
-- **THEN** `canFindMistakes` is false and `findMistakes()` returns 0,
-  and the app shell shows no mistake-checking control
-
-#### Scenario: A candidate annotation that excludes the solution is a mistake
-
-- **WHEN** a game with pencil/candidate annotations reports mistakes on a state
-  where an undecided cell's non-empty candidate set excludes that cell's
-  unique-solution value
-- **THEN** `findMistakes` includes that cell
-- **AND** a cell whose candidate set still contains the solution value (with or
-  without extra candidates) is not included
-- **AND** Check-&-Save refuses to quick-save the board while such a cell exists
 
 ### Requirement: The engine provides shared grid-coordinate helpers
 
@@ -1023,91 +930,6 @@ vertex-style Circles. The keywords SHALL match upstream
 - **AND** `setPreferences({ "show-crossed-edges": false })` turns off the
   crossed-edge highlight and repaints, leaving the other two unchanged
 
-### Requirement: The engine surface exposes a "fill all pencil marks" capability
-
-The engine surface SHALL expose `canMarkAll` in its static attributes, true
-iff the active game supports the "fill every empty cell with all candidate
-pencil marks" action (upstream's `M`/`m` key). The `Game` interface SHALL
-define an optional `readonly canMarkAll?: boolean` flag; the `Midend` SHALL
-surface it as `canMarkAll: game.canMarkAll ?? false`. For an unported C/WASM
-game, `canMarkAll` SHALL be false.
-
-The action itself reuses the existing keyboard input path rather than a new
-engine method: a game that sets `canMarkAll` SHALL handle the `M`/`m` key in
-`interpretMove` and return its mark-all move. The app shell SHALL render a
-control in the same toolbar `wa-button-group` as Hint and Check & Save, shown
-only when `canMarkAll` is true, which on activation injects the `M` key via the
-surface's `processKey`.
-
-The mark-all action SHALL be **adaptive** for a game whose cells have uniqueness
-regions (one that supplies a per-game region provider): if any empty cell has **no
-pencil notes at all** the action fills every note-less empty cell with all candidates
-(as before); otherwise (every empty cell already carries notes) the action SHALL
-instead **remove the obvious candidates** — every penciled value equal to a value
-already *placed* in one of that cell's uniqueness regions (row/column, plus sub-block
-and X-diagonal where the game has them; a Keen arithmetic cage is NOT a uniqueness
-region). "Obvious" SHALL be judged only against placed values, never inferred from
-another pencil mark.
-
-The cleanup SHALL be emitted as the existing atomic `pencilStrike` move with its marks
-computed at `interpretMove` time, so replay and undo are exact. When there is nothing to
-fill **and** nothing to strike (an already-cleaned, fully-noted board) the action SHALL
-produce **no move at all** (a true no-op that adds no undo entry), rather than an empty
-`pencilStrike`. The cleanup SHALL be **idempotent** and a pure function of the placed
-(non-pencil) grid: repeated presses converge to and remain at "every empty cell noted with
-all candidates minus the values placed in its regions" — there SHALL be no fill⇄clean
-toggle, and a cleaned board SHALL NOT silently re-fill. A clean SHALL NOT empty a cell of its last note (a cell whose every
-candidate is region-eliminated occurs only on an already-mistaken board; leaving its last
-note keeps idempotency unconditional). A game without a row/column uniqueness model (e.g.
-Undead) SHALL keep the fill-only behavior.
-
-#### Scenario: A pencil-mark game shows the control and fills candidates
-
-- **WHEN** the active game reports `canMarkAll` true and the player activates
-  the toolbar control
-- **THEN** the `M` key is injected via `processKey`, the game fills every empty
-  cell with all candidate pencil marks, and the board repaints
-
-#### Scenario: A second press on a fully-noted board removes obvious candidates
-
-- **WHEN** every empty cell is already fully noted and the player activates the
-  mark-all control on a game with uniqueness regions
-- **THEN** the action emits a `pencilStrike` that removes exactly the penciled
-  values already placed in each cell's row/column (and block/diagonal where the game
-  has them), leaving every still-possible candidate, and replaying the move
-  reproduces the cleaned board
-
-#### Scenario: Repeated presses are idempotent (no re-fill, no toggle)
-
-- **WHEN** the player activates the mark-all control a third time, after a fill and a
-  clean, with no board change in between
-- **THEN** the cleaned board is unchanged — the action produces no move (a true no-op,
-  no undo entry) and does not re-fill any cell — and the resulting notes equal `{1..n}`
-  minus the placed values in each cell's regions
-
-#### Scenario: An arithmetic cage is not a uniqueness region
-
-- **WHEN** the game is Keen and a cell's penciled value also appears in its cage but
-  not in its row or column
-- **THEN** the cleanup does NOT remove that candidate (the value is still legal under
-  the cage's arithmetic constraint)
-
-#### Scenario: A non-uniqueness game keeps fill-only
-
-- **WHEN** the game has no row/column uniqueness model (e.g. Undead)
-- **THEN** the mark-all action only ever fills missing candidates; it performs no
-  obvious-candidate cleanup
-
-#### Scenario: A game without pencil marks shows no control
-
-- **WHEN** the active game does not set `canMarkAll`
-- **THEN** `canMarkAll` is false and the app shell renders no mark-all control
-
-#### Scenario: An unported game reports no capability
-
-- **WHEN** the active game runs on the C/WASM engine
-- **THEN** `canMarkAll` is false and the app shell renders no mark-all control
-
 ### Requirement: executeHint supports a single-step (hide-after) mode
 
 `midend.executeHint(hideAfter?)` SHALL accept an optional `hideAfter` flag
@@ -1118,8 +940,7 @@ through its animation and, on settle, the plan advances and the next step is
 step still stays displayed through its animation, but on settle the plan
 advances and is then **hidden** (the same hidden-but-stored state a manual step
 completion produces), so nothing is previewed; the next `midend.hint()`
-re-displays the advanced step without recomputing. The C/WASM surface accepts
-and ignores the flag (it supports no hints).
+re-displays the advanced step without recomputing.
 
 #### Scenario: Single-step execute hides the plan instead of previewing
 
@@ -2006,54 +1827,6 @@ drawstate recreation, no cache invalidation).
 
 - **WHEN** `size` is called without user-size on the same large slot
 - **THEN** the resolved tile size equals the preferred tile size
-
-### Requirement: The engine surface exposes a per-game reference-aid capability
-
-The engine surface SHALL expose an optional per-game "reference aid": a read-only
-checklist of a puzzle's fixed inventory of pieces with found/outstanding status, plus a
-way to spotlight one item on the board.
-
-The `Game` interface SHALL define two optional hooks:
-
-- `reference(state, ui): ReferenceModel` — returns a plain, serializable model of the
-  inventory. `ReferenceModel` SHALL be `{ items: ReferenceItem[]; selected: string | null;
-  columns?: number }`, and `ReferenceItem` SHALL be `{ key: string; label: string; pips?:
-  readonly number[]; status: "outstanding" | "placed" | "conflict" }`. `key` is a stable id;
-  `pips` is optional face-value data for games whose pieces render as pips; `selected`
-  echoes the currently spotlighted key (or null).
-- `selectReference(ui, key): boolean` — spotlights the item `key` (or clears it when `key`
-  is null) by mutating `Ui`, and returns whether anything changed.
-
-The `Midend` SHALL surface `hasReference = this.game.reference !== undefined` in its static
-attributes, and SHALL provide `getReference(): ReferenceModel | null` (returning
-`game.reference(state, ui)` or null) and `selectReference(key): void`. `selectReference`
-SHALL call `game.selectReference(this.ui, key)` and, on a `true` return, take the same
-repaint path as a `UI_UPDATE`: it SHALL NOT create a move, add an undo entry, alter the move
-log, or be serialized into a save. For an unported C/WASM game `hasReference` SHALL be false,
-`getReference()` SHALL return null, and `selectReference()` SHALL be a no-op.
-
-`hasReference`, `getReference`, and `selectReference` SHALL be part of the shared
-`PuzzleEngineSurface` so the same call site works for both the TS midend and C/WASM.
-
-#### Scenario: A game exposing a reference is discoverable through the surface
-
-- **WHEN** the active game defines `reference` and the app queries static attributes
-- **THEN** `hasReference` is true and `getReference()` returns the game's model, whose
-  `items` reflect current board state and whose `selected` matches the spotlighted key
-
-#### Scenario: Selecting a reference item repaints without a history entry
-
-- **WHEN** the app calls `selectReference(key)` on a game whose `selectReference` reports a
-  change
-- **THEN** the board repaints with that item spotlighted, and no move is added — the move
-  log, undo/redo availability, and any subsequent save are byte-for-byte identical to before
-  the call
-
-#### Scenario: An unported game reports no reference
-
-- **WHEN** the active game is served by C/WASM
-- **THEN** `hasReference` is false, `getReference()` returns null, `selectReference()` does
-  nothing, and no reference control is shown
 
 ### Requirement: The app shell shows a non-blocking, responsive reference panel
 
@@ -5545,3 +5318,206 @@ rather than as a snapshot that no longer notices anything.
 - **WHEN** the suite runs
 - **THEN** a test fails and names the game and the field
 - **AND** the snapshot is not quietly widened to absorb it
+
+### Requirement: The engine supports an ephemeral, opt-in mistake-checking hook
+
+The engine SHALL support a UI-only, ephemeral mistake-checking facility,
+shaped like the Hint System. The `Game` interface SHALL define an
+optional `findMistakes(state)` method returning the cells of the current
+state that contradict the puzzle's unique solution as game-specific
+highlight data (an empty result means no detectable mistakes). The
+method SHALL be pure (no state mutation).
+
+A game whose state carries **candidate/pencil annotations** (e.g. Towers) MAY
+report **annotation-level** contradictions as mistakes, consistently with how a
+placed value is reported: a non-empty candidate set that **excludes** the cell's
+unique-solution value (the player has crossed out the correct answer) is a
+contradiction and MAY be returned, whereas a candidate set that merely holds
+extra, non-solution candidates is ordinary mid-solve state and SHALL NOT be
+reported. The solution such a game checks against SHALL be derived from the
+committed placements only, never from the annotations themselves (an annotation
+can be wrong — that is precisely what is being checked). This makes pencil notes
+first-class markings, so the existing Check-&-Save gate (which refuses a save
+while `findMistakes` is non-empty) refuses a board carrying an invalid note
+exactly as it refuses a wrong placed value.
+
+The `Midend` SHALL, on `findMistakes()`, call the game's hook, store the
+result as `activeMistakes` (midend-only, never in game state, never
+persisted), pass it to the game's `redraw`, and return the **count** of
+flagged cells. `activeMistakes` SHALL be displayed until the next state
+transition and SHALL be cleared on the same events that clear an active
+hint (a player move, undo, redo, restart, new game, solve, and reaching
+the solved state). A game that does not implement `findMistakes` SHALL
+report it as unavailable.
+
+The engine surface SHALL expose `canFindMistakes` (true iff the game
+implements the hook) in its static attributes and `findMistakes(): number`
+(display the mistakes as a side effect, return how many). For a game
+that does not implement the hook, `canFindMistakes` SHALL be false and
+`findMistakes()` SHALL return 0.
+
+#### Scenario: Checking a board with mistakes
+
+- **WHEN** the user invokes `findMistakes()` on a game that implements
+  the hook and the current state has cells contradicting the solution
+- **THEN** the midend stores those cells as `activeMistakes`, schedules a
+  repaint that draws them highlighted, and returns the count (> 0)
+- **AND** the highlight remains until the next state transition
+
+#### Scenario: Checking a clean board
+
+- **WHEN** the user invokes `findMistakes()` and no cell contradicts the
+  solution
+- **THEN** the count returned is 0 and nothing is highlighted
+
+#### Scenario: A transition clears the mistake display
+
+- **WHEN** `activeMistakes` is displayed and the user makes a move,
+  undoes, redoes, restarts, starts a new game, or solves
+- **THEN** the midend clears `activeMistakes` and the next repaint draws
+  no mistake highlights
+
+#### Scenario: A game without the hook reports no capability
+
+- **WHEN** the active game does not implement `findMistakes`
+- **THEN** `canFindMistakes` is false and `findMistakes()` returns 0,
+  and the app shell shows no mistake-checking control
+
+#### Scenario: A candidate annotation that excludes the solution is a mistake
+
+- **WHEN** a game with pencil/candidate annotations reports mistakes on a state
+  where an undecided cell's non-empty candidate set excludes that cell's
+  unique-solution value
+- **THEN** `findMistakes` includes that cell
+- **AND** a cell whose candidate set still contains the solution value (with or
+  without extra candidates) is not included
+- **AND** Check-&-Save refuses to quick-save the board while such a cell exists
+
+### Requirement: The engine surface exposes an opt-in "fill all pencil marks" capability
+
+The engine surface SHALL expose `canMarkAll` in its static attributes, true
+iff the active game supports the "fill every empty cell with all candidate
+pencil marks" action (upstream's `M`/`m` key). The `Game` interface SHALL
+define an optional `readonly canMarkAll?: boolean` flag; the `Midend` SHALL
+surface it as `canMarkAll: game.canMarkAll ?? false`.
+
+The action itself reuses the existing keyboard input path rather than a new
+engine method: a game that sets `canMarkAll` SHALL handle the `M`/`m` key in
+`interpretMove` and return its mark-all move. The app shell SHALL render a
+control in the same toolbar `wa-button-group` as Hint and Check & Save, shown
+only when `canMarkAll` is true, which on activation injects the `M` key via the
+surface's `processKey`.
+
+The mark-all action SHALL be **adaptive** for a game whose cells have uniqueness
+regions (one that supplies a per-game region provider): if any empty cell has **no
+pencil notes at all** the action fills every note-less empty cell with all candidates
+(as before); otherwise (every empty cell already carries notes) the action SHALL
+instead **remove the obvious candidates** — every penciled value equal to a value
+already *placed* in one of that cell's uniqueness regions (row/column, plus sub-block
+and X-diagonal where the game has them; a Keen arithmetic cage is NOT a uniqueness
+region). "Obvious" SHALL be judged only against placed values, never inferred from
+another pencil mark.
+
+The cleanup SHALL be emitted as the existing atomic `pencilStrike` move with its marks
+computed at `interpretMove` time, so replay and undo are exact. When there is nothing to
+fill **and** nothing to strike (an already-cleaned, fully-noted board) the action SHALL
+produce **no move at all** (a true no-op that adds no undo entry), rather than an empty
+`pencilStrike`. The cleanup SHALL be **idempotent** and a pure function of the placed
+(non-pencil) grid: repeated presses converge to and remain at "every empty cell noted with
+all candidates minus the values placed in its regions" — there SHALL be no fill⇄clean
+toggle, and a cleaned board SHALL NOT silently re-fill. A clean SHALL NOT empty a cell of its last note (a cell whose every
+candidate is region-eliminated occurs only on an already-mistaken board; leaving its last
+note keeps idempotency unconditional). A game without a row/column uniqueness model (e.g.
+Undead) SHALL keep the fill-only behavior.
+
+#### Scenario: A pencil-mark game shows the control and fills candidates
+
+- **WHEN** the active game reports `canMarkAll` true and the player activates
+  the toolbar control
+- **THEN** the `M` key is injected via `processKey`, the game fills every empty
+  cell with all candidate pencil marks, and the board repaints
+
+#### Scenario: A second press on a fully-noted board removes obvious candidates
+
+- **WHEN** every empty cell is already fully noted and the player activates the
+  mark-all control on a game with uniqueness regions
+- **THEN** the action emits a `pencilStrike` that removes exactly the penciled
+  values already placed in each cell's row/column (and block/diagonal where the game
+  has them), leaving every still-possible candidate, and replaying the move
+  reproduces the cleaned board
+
+#### Scenario: Repeated presses are idempotent (no re-fill, no toggle)
+
+- **WHEN** the player activates the mark-all control a third time, after a fill and a
+  clean, with no board change in between
+- **THEN** the cleaned board is unchanged — the action produces no move (a true no-op,
+  no undo entry) and does not re-fill any cell — and the resulting notes equal `{1..n}`
+  minus the placed values in each cell's regions
+
+#### Scenario: An arithmetic cage is not a uniqueness region
+
+- **WHEN** the game is Keen and a cell's penciled value also appears in its cage but
+  not in its row or column
+- **THEN** the cleanup does NOT remove that candidate (the value is still legal under
+  the cage's arithmetic constraint)
+
+#### Scenario: A non-uniqueness game keeps fill-only
+
+- **WHEN** the game has no row/column uniqueness model (e.g. Undead)
+- **THEN** the mark-all action only ever fills missing candidates; it performs no
+  obvious-candidate cleanup
+
+#### Scenario: A game without pencil marks shows no control
+
+- **WHEN** the active game does not set `canMarkAll`
+- **THEN** `canMarkAll` is false and the app shell renders no mark-all control
+
+### Requirement: The engine surface exposes an opt-in per-game reference-aid capability
+
+The engine surface SHALL expose an optional per-game "reference aid": a read-only
+checklist of a puzzle's fixed inventory of pieces with found/outstanding status, plus a
+way to spotlight one item on the board.
+
+The `Game` interface SHALL define two optional hooks:
+
+- `reference(state, ui): ReferenceModel` — returns a plain, serializable model of the
+  inventory. `ReferenceModel` SHALL be `{ items: ReferenceItem[]; selected: string | null;
+  columns?: number }`, and `ReferenceItem` SHALL be `{ key: string; label: string; pips?:
+  readonly number[]; status: "outstanding" | "placed" | "conflict" }`. `key` is a stable id;
+  `pips` is optional face-value data for games whose pieces render as pips; `selected`
+  echoes the currently spotlighted key (or null).
+- `selectReference(ui, key): boolean` — spotlights the item `key` (or clears it when `key`
+  is null) by mutating `Ui`, and returns whether anything changed.
+
+The `Midend` SHALL surface `hasReference = this.game.reference !== undefined` in its static
+attributes, and SHALL provide `getReference(): ReferenceModel | null` (returning
+`game.reference(state, ui)` or null) and `selectReference(key): void`. `selectReference`
+SHALL call `game.selectReference(this.ui, key)` and, on a `true` return, take the same
+repaint path as a `UI_UPDATE`: it SHALL NOT create a move, add an undo entry, alter the move
+log, or be serialized into a save. For a game that does not define `reference`,
+`hasReference` SHALL be false,
+`getReference()` SHALL return null, and `selectReference()` SHALL be a no-op.
+
+`hasReference`, `getReference`, and `selectReference` SHALL be part of the shared
+`PuzzleEngineSurface`, so the app reaches them through the same surface as every other
+engine call.
+
+#### Scenario: A game exposing a reference is discoverable through the surface
+
+- **WHEN** the active game defines `reference` and the app queries static attributes
+- **THEN** `hasReference` is true and `getReference()` returns the game's model, whose
+  `items` reflect current board state and whose `selected` matches the spotlighted key
+
+#### Scenario: Selecting a reference item repaints without a history entry
+
+- **WHEN** the app calls `selectReference(key)` on a game whose `selectReference` reports a
+  change
+- **THEN** the board repaints with that item spotlighted, and no move is added — the move
+  log, undo/redo availability, and any subsequent save are byte-for-byte identical to before
+  the call
+
+#### Scenario: A game without a reference aid reports none
+
+- **WHEN** the active game does not define `reference`
+- **THEN** `hasReference` is false, `getReference()` returns null, `selectReference()` does
+  nothing, and no reference control is shown

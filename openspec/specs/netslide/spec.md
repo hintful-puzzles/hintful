@@ -7,7 +7,9 @@ loops. This capability specifies its port to the TS engine: it has no solver, so
 Solve and the hint recover the finished grid from the board itself and work from
 any position without the generator's answer, and the hint explains and draws
 each slide it proposes.
+
 ## Requirements
+
 ### Requirement: Netslide game implements the Game interface
 
 The engine SHALL provide a registered `netslide` game implementing
@@ -138,28 +140,6 @@ complete when every tile is active.
 
 - **WHEN** a slide leaves every tile reachable from the center
 - **THEN** the game reports itself complete and plays a completion flash
-
-### Requirement: Netslide solves by replaying the generator's grid
-
-The game has **no solver**. `solve` SHALL replay the unshuffled grid saved in
-the generator's `aux`, and SHALL report "solution not known" when no `aux` is
-available (a descriptive game id or a loaded save), faithful to upstream.
-
-Netslide SHALL NOT implement `findMistakes`: every reachable board is legal —
-the solution can still be reached from any state by sliding — so there is no
-wrong-but-legal state to flag, and Check & Save correctly degrades to a plain
-quick-save.
-
-#### Scenario: Solve on a freshly generated game
-
-- **WHEN** Solve is invoked on a game created from a random seed
-- **THEN** the board is restored to the generator's unshuffled grid and is
-  reported solved-with-help
-
-#### Scenario: Solve on a descriptive id
-
-- **WHEN** Solve is invoked on a game created from a `params:desc` id
-- **THEN** it reports that the solution is not known
 
 ### Requirement: Netslide renders wires, barriers, arrows and the slide animation
 
@@ -367,3 +347,20 @@ different kinds of thing:
 - **THEN** that cell's outline is drawn at the cell's own position, unshifted by
   the animation
 
+### Requirement: Netslide solves from the generator's grid when it has one
+
+The game has **no deduction solver**. `solve` SHALL replay the unshuffled grid
+saved in the generator's `aux` when the game came with one, and otherwise SHALL
+recover the finished grid from the board, as "Netslide can be solved without the
+generator's answer" requires.
+
+Netslide SHALL NOT implement `findMistakes`: every reachable board is legal —
+the solution can still be reached from any state by sliding — so there is no
+wrong-but-legal state to flag, and Check & Save correctly degrades to a plain
+quick-save.
+
+#### Scenario: Solve on a freshly generated game
+
+- **WHEN** Solve is invoked on a game created from a random seed
+- **THEN** the board is restored to the generator's unshuffled grid and is
+  reported solved-with-help

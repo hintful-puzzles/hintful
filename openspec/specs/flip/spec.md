@@ -5,23 +5,8 @@ Flip, the puzzle of lighting every square by flipping squares, where each flip
 also toggles a fixed pattern of neighbors. This capability specifies its port to
 the TS engine, with generation of solvable, non-trivial boards and a solver that
 finds a shortest set of flips by elimination over GF(2).
+
 ## Requirements
-### Requirement: Flip is served by the native TS engine
-
-The `flip` puzzle SHALL be implemented as a native TS `Game`
-registered in the engine registry, so the worker serves `flip` via
-the TS midend and not via C/WASM. Its C source SHALL be deleted from
-`puzzles/` (per the `ts-migration` per-game C-deletion rule). All
-other catalog games SHALL continue to load via the existing C/WASM
-path in the same session.
-
-#### Scenario: Flip loads on the TS engine, others on C/WASM
-
-- **WHEN** the app opens `flip`
-- **THEN** it is constructed by the TS-midend-backed puzzle
-- **AND** opening any non-ported game in the same session still uses
-  its C/WASM implementation
-- **AND** `puzzles/flip.c` no longer exists
 
 ### Requirement: Flip parameters and presets
 
@@ -120,3 +105,12 @@ This check SHALL NOT be part of the commit/CI gate.
   sampled board is solvable
 - **AND** the result does not gate the build or commit
 
+### Requirement: Flip is registered in the engine registry
+
+The `flip` puzzle SHALL be implemented as a native TS `Game` registered in the
+engine registry, so the worker serves `flip` via the TS midend.
+
+#### Scenario: Flip loads on the TS engine
+
+- **WHEN** the app opens `flip`
+- **THEN** it is constructed by the TS-midend-backed puzzle

@@ -91,7 +91,7 @@ export function newSinglesDesc(p: SinglesParams, rs: RandomState): { desc: strin
   const o = Math.max(w, h);
   const n = w * h;
 
-  /* A board under 4 in either dimension can't be generated at Tricky. */
+  /* A board under 4 in either dimension can't be generated at Normal. */
   const diffLevel = w < 4 || h < 4 ? DIFF_EASY : diffToLevel(p.diff);
 
   const state = makeState(w, h, new Int8Array(n));

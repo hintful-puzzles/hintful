@@ -203,7 +203,7 @@ function validateParams(p: GalaxiesParams): string | null {
     return "Width times height must not be unreasonably large";
   }
   if (p.diff !== GalaxiesDiff.Normal && p.diff !== GalaxiesDiff.Unreasonable) {
-    return "Difficulty must be Normal or Unreasonable";
+    return `Difficulty must be ${GALAXIES_TIERS.join(" or ")}`;
   }
   return null;
 }
@@ -898,7 +898,7 @@ function textFormat(s: GalaxiesState): string {
  * never counts `GalaxiesDiff`. */
 const GALAXIES_TIERS = tierNames(2, { search: true });
 
-const DIFF_NAMES = ["Normal", "Unreasonable", "Impossible", "Ambiguous", "Unfinished"];
+const DIFF_NAMES = [...GALAXIES_TIERS, "Impossible", "Ambiguous", "Unfinished"];
 
 function statusbarText(s: GalaxiesState, _ui: GalaxiesUi): string {
   // Solved once, on first ask, and kept: the verdict depends only on the dots.

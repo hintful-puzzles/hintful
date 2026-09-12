@@ -960,7 +960,7 @@ class SolverUsage {
           }
         }
 
-        // Trivial killer: fill single-square cages.
+        // Killer singles (`DIFF_KSINGLE`): fill single-square cages.
         for (let b = 0; b < kblocks.blocks.length; b++) {
           if (kblocks.blocks[b].length === 1) {
             const v = kclues[b];

@@ -425,7 +425,7 @@ function keenValid(solver: LatinSolver, ctx: KeenCtx): boolean {
  * Solve the `w × w` Keen board (cage partition + clues in `kclues`) into `soln`
  * (0 = blank), up to difficulty `maxdiff`. Returns the difficulty level reached,
  * or a `DIFF_IMPOSSIBLE`/`DIFF_AMBIGUOUS`/`DIFF_UNFINISHED` sentinel. Mirrors the
- * `solver()` driver: Easy→simple, Hard→set₀, Extreme→set₁+forcing,
+ * `solver()` driver: Easy→simple, Tricky→set₀, Hard→set₁+forcing,
  * Unreasonable→recursion through the shared `latinSolver`.
  */
 export function solveKeen(

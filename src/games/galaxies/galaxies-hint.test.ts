@@ -85,7 +85,7 @@ function firstStepMatching(
  *
  * Both tiers, because *where a rung sits in the ladder* decides which boards
  * can reach it: mirroring a wall is last, so it fires only once the five
- * direct rungs are spent, and a Normal board is by definition one where they
+ * direct rungs are spent, and an Easy board is by definition one where they
  * never all are. Nothing is exclusive to a tier by rule — only by how far down
  * the ladder that tier's boards force the hint to go.
  */
@@ -121,7 +121,7 @@ describe("the plan is sound: every step agrees with the unique solution", () => 
   // in the generator's frozen differential at all — it would show up as a
   // player being told to draw an arrow the puzzle contradicts.
   for (const [name, params] of [
-    ["Normal", NORMAL_7],
+    ["Easy", NORMAL_7],
     ["Unreasonable", UNREASONABLE_7],
   ] as const) {
     it(`${name}: no association or wall contradicts the solution`, () => {
@@ -298,16 +298,16 @@ describe("the hint never guesses, and says so when that is the end of the road",
     }
   });
 
-  it("a Normal board is always carried all the way to solved", () => {
+  it("an Easy board is always carried all the way to solved", () => {
     // The tier's promise: pure deduction suffices, so the hint must never
-    // reach the refusal below on a Normal board.
+    // reach the refusal below on an Easy board.
     for (const size of [7, 10]) {
       for (const seed of ["gf-a", "gf-b", "gf-c"]) {
         const params = { w: size, h: size, diff: GalaxiesDiff.Normal };
         let s = board(params, `${seed}-${size}`);
         for (let b = 0; b < 40 && galaxiesGame.status(s) === "ongoing"; b++) {
           const res = galaxiesGame.hint?.(s);
-          expect(res?.ok, `${seed}/${size}: Normal board stalled`).toBe(true);
+          expect(res?.ok, `${seed}/${size}: Easy board stalled`).toBe(true);
           if (!res?.ok) break;
           for (const step of res.steps) s = galaxiesGame.executeMove(s, step.move);
         }
@@ -334,7 +334,7 @@ describe("the hint never guesses, and says so when that is the end of the road",
       }
     }
     // If this ever came out zero the tier would be indistinguishable from
-    // Normal, which is its own defect (`grade-difficulty-tiers-honestly`).
+    // Easy, which is its own defect (`grade-difficulty-tiers-honestly`).
     expect(refusals, "no Unreasonable board needed to guess").toBeGreaterThan(0);
   });
 });

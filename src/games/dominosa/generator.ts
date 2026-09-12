@@ -326,7 +326,7 @@ export function newDominosaDesc(
     } else if (diff < DIFF_HARD) {
       if (!as.tryUnique(rng)) continue;
     } else {
-      // Hard and up want no easy toehold: reject a board the Basic solver
+      // Tricky and up want no easy toehold: reject a board the Normal solver
       // finishes, or on which it pins any domino to a single placement.
       if (!as.tryHard(rng)) continue;
       sc.setupGrid(as.numbers);

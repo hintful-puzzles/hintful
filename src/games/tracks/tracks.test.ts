@@ -97,7 +97,7 @@ describe("tracks solver", () => {
     expect(tracksSolve(strip, DIFF_COUNT).ret).toBe(1);
   });
 
-  it("grades the Hard fixture Hard, and the Tricky solver cannot finish it", () => {
+  it("grades the HARD fixture Tricky, and the Normal solver cannot finish it", () => {
     const strip = () => copyAndStrip(stateToBoard(newState(HARD.p, HARD.desc)), -1);
     expect(tracksSolve(strip(), DIFF_COUNT).maxDiff).toBe(2 /* DIFF_HARD */);
     expect(tracksSolve(strip(), DIFF_TRICKY).ret).toBeLessThan(1);

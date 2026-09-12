@@ -6,7 +6,9 @@ have a single same-colored neighbor and every other tile has at least two. This
 capability specifies its port to the TS engine, with its contradiction-based
 solver and generator, an explained deduction hint, and difficulty tiers laid
 over the solver's two levels of deduction.
+
 ## Requirements
+
 ### Requirement: Clusters game implements the Game interface
 
 The engine SHALL provide `src/games/clusters/` implementing the `Game`
@@ -211,12 +213,12 @@ from a doomed position.
 Clusters SHALL offer a difficulty parameter with two tiers, corresponding to the
 two deduction levels its solver already implements: the single-cell proof by
 contradiction (**Easy**), and the same reasoning applied one hypothetical level
-deep (**Tricky**).
+deep (**Normal**).
 
-A board generated at Tricky SHALL require that second level — it SHALL NOT be
+A board generated at Normal SHALL require that second level — it SHALL NOT be
 soluble by the single-cell reasoning alone. A board generated at Easy SHALL be
 soluble by it. The acceptance gate MAY run the easier rung first and reject a
-Tricky candidate it completes, which reaches the same verdict for one solver run
+Normal candidate it completes, which reaches the same verdict for one solver run
 rather than two.
 
 The difficulty SHALL be encoded in the game ID, and an ID that carries no
@@ -225,7 +227,7 @@ generated before the parameter existed, and the tier whose boards a returning
 player is likeliest to recognize. A tier letter the game does not know SHALL be
 rejected by parameter validation rather than silently played as some other tier.
 
-Clusters SHALL refuse to *generate* at Tricky on a board too small to admit one,
+Clusters SHALL refuse to *generate* at Normal on a board too small to admit one,
 reporting it through parameter validation with `full` set, so that a saved game or
 a game ID carrying its own description still loads at any size.
 
@@ -257,4 +259,3 @@ costs nothing on a board that does not need it.
   board admitting no such puzzle
 - **THEN** parameter validation rejects it, naming the constraint
 - **AND** the same parameters are accepted when a description is supplied instead
-

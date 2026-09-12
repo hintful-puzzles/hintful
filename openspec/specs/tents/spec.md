@@ -6,7 +6,9 @@ orthogonally adjacent tent, no two tents touch even diagonally, and each row and
 column holds its clued count. This capability specifies its port to the TS
 engine: the graded solver, live errors and completion, drag, cursor and
 direct-key input, and mistake-checking.
+
 ## Requirements
+
 ### Requirement: Tents game implements the Game interface
 
 The engine SHALL provide a registered `tents` game implementing
@@ -15,15 +17,14 @@ place tents on a `w × h` grid of fixed trees so that each tent is
 orthogonally adjacent to a tree in a one-to-one tree↔tent matching, no two
 tents are even diagonally adjacent, and each row/column contains exactly its
 edge-clue number of tents. Params SHALL be `w`, `h` and `diff`
-(Easy / Tricky), encoded `{w}x{h}d{e|t}` (short form `{w}x{h}`, square
-shorthand `{n}`). All 6 upstream presets (8×8, 10×10, 15×15 × Easy/Tricky)
+(Easy / Normal), encoded `{w}x{h}d{e|t}` (short form `{w}x{h}`, square
+shorthand `{n}`). All 6 upstream presets (8×8, 10×10, 15×15 × Easy/Normal)
 SHALL be offered. `validateParams` SHALL enforce minimum size 4×4. The game
-SHALL report `canSolve = true`, `canFormatAsText = true`, and
-`needsRightButton = true` (upstream `REQUIRE_RBUTTON`).
+SHALL report `canSolve = true` and `canFormatAsText = true`.
 
 #### Scenario: Params round-trip
 
-- **WHEN** params `{ w: 15, h: 15, diff: TRICKY }` are encoded in full
+- **WHEN** params `{ w: 15, h: 15, diff: DIFF_TRICKY }` (the Normal tier) are encoded in full
 - **THEN** the result is `15x15dt` and decoding it round-trips the params
 
 #### Scenario: Invalid params are rejected
@@ -61,16 +62,16 @@ power at each difficulty, returning the impossible / unique / non-converged
 perform: tent↔tree link deduction (a tent with one unattached adjacent tree,
 and a tree with one candidate square, are linked); non-tent marking (a blank
 with no adjacent unmatched tree, or diagonally adjacent to any tent); the
-Tricky tree diagonal-pair elimination; and the row/column
+Normal-tier (`DIFF_TRICKY`) tree diagonal-pair elimination; and the row/column
 combination-enumeration pass that places a tent or non-tent in any square
 given the same state by every valid placement of the row's remaining tents
-(with the Tricky adjacent-row influence). The solver SHALL be reused by
+(with the Normal-tier adjacent-row influence). The solver SHALL be reused by
 `solve()`, the generator's difficulty gate, and `findMistakes`.
 
 #### Scenario: Generated boards solve at exactly their difficulty
 
-- **WHEN** a board generated at Tricky is solved
-- **THEN** the Tricky solver reaches the unique solution
+- **WHEN** a board generated at Normal is solved
+- **THEN** the Normal solver reaches the unique solution
 - **AND** the Easy solver fails to converge on it
 
 #### Scenario: Solve recovers from a wrong mid-game state
@@ -194,4 +195,3 @@ color appended past it.
 
 - **WHEN** a row's tent count exceeds its edge clue
 - **THEN** that row's number is drawn in the error color
-

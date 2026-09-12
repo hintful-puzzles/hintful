@@ -86,7 +86,9 @@ describe("params codec", () => {
 
   it("rejects the two impossible identity-hidden combinations", () => {
     expect(validateParams(P(3, DIFF_NORMAL, false), true)).toMatch(/3x3/);
-    expect(validateParams(P(6, 0, false), true)).toMatch(/Trivial/);
+    expect(validateParams(P(6, 0, false), true)).toBe(
+      "Easy puzzles must have an identity",
+    );
     expect(validateParams(P(6, DIFF_NORMAL, false), true)).toBeNull();
     expect(validateParams(P(2, DIFF_NORMAL, true), true)).toMatch(/between 3 and 26/);
   });

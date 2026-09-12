@@ -133,7 +133,7 @@ export function validateParams(p: PearlParams, _full: boolean): string | null {
     return "Width times height must not be unreasonably large";
   if (p.difficulty < 0 || p.difficulty >= DIFF_COUNT) return "Unknown difficulty level";
   if (p.difficulty >= DIFF_TRICKY && p.w + p.h < 11)
-    return "Width or height must be at least six for Tricky";
+    return `Width or height must be at least six for ${DIFF_NAMES[DIFF_TRICKY]}`;
   return null;
 }
 

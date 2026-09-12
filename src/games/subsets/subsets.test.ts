@@ -277,7 +277,7 @@ describe("subsets generator (tier 1)", () => {
 const TRICKY = { ...PARAMS, diff: DIFF_TRICKY };
 
 describe("subsets difficulty tiers", () => {
-  it("a Tricky board needs the restored rung: it does not solve at Easy", () => {
+  it("a Normal board needs the restored rung: it does not solve at Easy", () => {
     const boards = seedBudget(6, 24);
     for (let s = 0; s < boards; s++) {
       const { desc } = newSubsetsDesc(TRICKY, randomNew(`tricky-${s}`));
@@ -313,9 +313,9 @@ describe("subsets difficulty tiers", () => {
     expect(newSubsetsDesc(defaultParams(), randomNew("tier1-seed")).desc).toBe(desc);
   });
 
-  it("the hint plan reaches the end of a Tricky board", () => {
+  it("the hint plan reaches the end of a Normal board", () => {
     // A hint that cannot narrate a deduction the solver uses fails the bar: the
-    // recorder has to carry the restored rung too, or a Tricky board's plan
+    // recorder has to carry the restored rung too, or a Normal board's plan
     // stops partway with nothing to say.
     const boards = seedBudget(4, 20);
     for (let s = 0; s < boards; s++) {
@@ -330,7 +330,7 @@ describe("subsets difficulty tiers", () => {
     }
   });
 
-  it("an Easy board's hint plan does not reach for the Tricky rung", () => {
+  it("an Easy board's hint plan does not reach for the Normal rung", () => {
     // The rung is a *fallback*, engaged only once the cheaper vocabulary runs
     // out — which on an Easy board it never does. Asserted, not assumed: the
     // same board is planned by the production recorder (which *can* reach the

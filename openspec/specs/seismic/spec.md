@@ -16,7 +16,7 @@ The engine SHALL provide `src/games/seismic/` implementing the `Game`
 interface for Seismic (Hakyuu / Ripple Effect), registered so the puzzle is
 served by the TypeScript engine.
 
-Parameters SHALL be a width, a height, a difficulty (Easy or Hard), and a game
+Parameters SHALL be a width, a height, a difficulty (Easy or Normal), and a game
 mode (Seismic or Tectonic). Validation SHALL require width and height at least 4
 and a known difficulty, matching upstream. A game ID SHALL encode the width,
 height, mode and difficulty and round-trip through decode, with a bare number
@@ -119,7 +119,7 @@ the region structure and the fixed clues.
 
 Seismic SHALL provide a solver that fills the grid by candidate elimination — a
 naked single and a hidden single within a region at Easy, plus a trial-placement
-deduction at Hard — reporting the difficulty reached or that the puzzle is not
+deduction at Normal — reporting the difficulty reached or that the puzzle is not
 uniquely soluble. The solver SHALL enforce the mode's keep-apart rule and the
 one-of-each-number-per-region rule while eliminating candidates.
 

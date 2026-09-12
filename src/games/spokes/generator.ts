@@ -142,13 +142,13 @@ export interface SpokesGenerateOptions {
    * position instead of about the puzzle: measured on fixed seeds it saw an
    * already-*complete* board (which validates instantly, failing the attempt
    * for no difficulty-related reason) in 31–45% of attempts, and it let through
-   * boards an easier tier cracks — 10 of 12 4×4 "Hard" boards also solved at
-   * Tricky. That is a plain defect, not a difficulty curve upstream chose, so
+   * boards an easier tier cracks — 10 of 12 4×4 Unreasonable boards also solved
+   * at Normal. That is a plain defect, not a difficulty curve upstream chose, so
    * {@link newSpokesDesc} clears the board first and the shipped game grades
    * honestly.
    *
-   * Because the generator is solver-gated, that changes every Tricky and Hard
-   * description — which would cost the byte-match differential that validates
+   * Because the generator is solver-gated, that changes every Normal and
+   * Unreasonable description — which would cost the byte-match differential that validates
    * the generator, the whole tiered solver and the codec together. This flag
    * keeps that oracle: `spokes-differential.test.ts` sets it, so the fixtures
    * still match the C byte-for-byte and the only line the oracle no longer

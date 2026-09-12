@@ -6,7 +6,9 @@ constrain neighbors: greater-than signs in Unequal mode, and in Adjacent mode
 bars on exactly the pairs of consecutive values. This capability specifies its
 port to the TS engine, with pencil marks and their preferences,
 mistake-checking, on-screen key labels, and an explained deduction hint.
+
 ## Requirements
+
 ### Requirement: Unequal game implements the Game interface
 
 The engine SHALL provide a registered `unequal` game implementing
@@ -17,19 +19,20 @@ every number exactly once, subject to clues between orthogonally adjacent cells.
 The game SHALL support two modes: **Unequal** (greater-than signs, `a > b`) and
 **Adjacent** (a bar means the two numbers differ by exactly 1, and the absence of
 a bar between two cells means they do not). Params SHALL be `order`, `mode`
-(Unequal or Adjacent), and `diff` (Trivial, Easy, Tricky, Extreme, or
-`Unreasonable`), encoded `{order}` with an `a` suffix for Adjacent mode and a
-`d{c}` suffix for difficulty when full (`c` = `t`/`e`/`k`/`x`/`r`), with the
-upstream preset list. The top tier is named `Unreasonable` rather than upstream's
-`Recursive` because it branches and backtracks, which is the one thing the
-collection reserves that name for; its difficulty character stays `r`, so an
-existing game ID names the same board. The tier names SHALL have a single
-definition in the game, read by both the preset menu and the custom-params
-dialog, so the two cannot disagree. `validateParams` SHALL require
-`3 ≤ order ≤ 32`, a known difficulty, and `order ≥ 5` for Adjacent puzzles of
-Tricky difficulty or harder. The game SHALL report `wantsStatusbar = false`,
-`isTimed = false`, `canSolve = true`, `canFormatAsText = true`, and
-`canMarkAll = true`.
+(Unequal or Adjacent), and `diff` (Easy, Normal, Tricky, Hard, or
+`Unreasonable`, held as the values `"trivial"`, `"easy"`, `"tricky"`,
+`"extreme"` and `"recursive"`), encoded `{order}` with an `a` suffix for
+Adjacent mode and a `d{c}` suffix for difficulty when full
+(`c` = `t`/`e`/`k`/`x`/`r`), with the upstream preset list. The top tier is
+named `Unreasonable` rather than upstream's `Recursive` because it branches and
+backtracks, which is the one thing the collection reserves that name for; its
+difficulty character stays `r`, so an existing game ID names the same board. The
+tier names SHALL have a single definition in the game, read by both the preset
+menu and the custom-params dialog, so the two cannot disagree. `validateParams`
+SHALL require `3 ≤ order ≤ 32`, a known difficulty, and `order ≥ 5` for Adjacent
+puzzles of Tricky difficulty or harder. The game SHALL report
+`wantsStatusbar = false`, `isTimed = false`, `canSolve = true`,
+`canFormatAsText = true`, and `canMarkAll = true`.
 
 #### Scenario: Params round-trip
 
@@ -304,4 +307,3 @@ diverges from the shared `digitKeys` helper, which the other digit games use.)
 
 - **WHEN** the key labels are requested for an order-11 Unequal board
 - **THEN** the result is the buttons `0,1,…,9,a` (values 1..11) followed by a clear key
-

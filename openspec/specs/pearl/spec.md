@@ -7,36 +7,8 @@ straight through every white pearl with a turn in at least one square beside it.
 This capability specifies its port to the TS engine: the deductive solver and
 the generator gated on it by default, completion and mistake reporting, and its
 input and rendering.
+
 ## Requirements
-### Requirement: Pearl game implements the Game interface
-
-The engine SHALL provide a registered `pearl` game implementing
-`Game<PearlParams, PearlState, PearlMove, PearlUi, PearlDrawState, PearlMistake>`:
-draw a single closed loop through grid cells so that it turns a right angle at
-every black pearl (and goes straight through at least one cell on each side of
-it) and passes straight through every white pearl (turning immediately before or
-after). Params SHALL be `w`, `h`, `difficulty` (Easy or Tricky) and `nosolve`
-(allow an unsoluble board, default false), encoded `{w}x{h}` with a full-form
-`d{char}` difficulty suffix and an `n` suffix when `nosolve` is set.
-`validateParams` SHALL enforce `w ≥ 5`, `h ≥ 5`, that width×height does not
-overflow, and that a Tricky board has `w + h ≥ 11`. The 8 upstream presets
-(6×6, 8×8, 10×10, 12×8 each at Easy and Tricky) SHALL be offered. The game SHALL
-report `canSolve = true` and `canFormatAsText = true`, and SHALL drive a
-completion flash suppressed after Solve. The two upstream appearance styles
-(traditional Masyu and loopy) SHALL be selectable via an `appearance`
-preference (default traditional).
-
-#### Scenario: Params round-trip
-
-- **WHEN** params `{ w: 10, h: 10, difficulty: Tricky, nosolve: false }` are
-  encoded in full
-- **THEN** decoding the result round-trips the params
-
-#### Scenario: Tricky requires a large enough board
-
-- **WHEN** `validateParams` is given a Tricky board with `w + h < 11`, or any
-  board with `w < 5` or `h < 5`
-- **THEN** it returns a non-null error string
 
 ### Requirement: Pearl descriptions use the upstream run-length encoding
 
@@ -63,7 +35,7 @@ initially empty.
 The port SHALL implement `pearl_solve` as pure iterative constraint propagation
 (no guessing or recursion) over the edge/square workspace: edge↔square
 elimination, the black-pearl and white-pearl clue deductions, and shortcut-loop
-detection over a union-find, with the Tricky tier additionally applying the
+detection over a union-find, with the Normal tier additionally applying the
 premature-short-loop rules. It SHALL return the three-valued verdict
 (inconsistent / unique / ambiguous), and a grading routine SHALL return the
 easiest difficulty that yields a unique solution. The generator SHALL build a
@@ -72,7 +44,7 @@ derive a maximal clue set, gate on the solver finding a unique solution at the
 requested difficulty (and failing one tier easier), then greedily minimize the
 clues — reproducing the upstream RNG draw order byte-for-byte (including the
 upstream `corners`-array quirk that consumes a shuffle sized by the straight
-count, and the 5×5-Tricky→Easy downgrade) — so that for a given seed and params
+count, and the 5×5 Normal→Easy downgrade) — so that for a given seed and params
 the produced desc and aux reproduce the C output exactly. `solve` SHALL return
 the generator's aux when present, else re-solve from the clues.
 
@@ -139,3 +111,32 @@ enum.
   mark
 - **THEN** `interpretMove` yields no move (returns null or a UI update only)
 
+### Requirement: Pearl game is registered and implements the Game interface
+
+The engine SHALL provide a registered `pearl` game implementing
+`Game<PearlParams, PearlState, PearlMove, PearlUi, PearlDrawState, PearlMistake>`:
+draw a single closed loop through grid cells so that it turns a right angle at
+every black pearl (and goes straight through at least one cell on each side of
+it) and passes straight through every white pearl (turning immediately before or
+after). Params SHALL be `w`, `h`, `difficulty` (Easy or Normal) and `nosolve`
+(allow an unsoluble board, default false), encoded `{w}x{h}` with a full-form
+`d{char}` difficulty suffix and an `n` suffix when `nosolve` is set.
+`validateParams` SHALL enforce `w ≥ 5`, `h ≥ 5`, that width×height does not
+overflow, and that a Normal board has `w + h ≥ 11`. The 8 upstream presets
+(6×6, 8×8, 10×10, 12×8 each at Easy and Normal) SHALL be offered. The game SHALL
+report `canSolve = true` and `canFormatAsText = true`, and SHALL drive a
+completion flash suppressed after Solve. The two upstream appearance styles
+(traditional Masyu and loopy) SHALL be selectable via an `appearance`
+preference (default traditional).
+
+#### Scenario: Params round-trip
+
+- **WHEN** params `{ w: 10, h: 10, difficulty: DIFF_TRICKY, nosolve: false }` (the
+  Normal tier) are encoded in full
+- **THEN** decoding the result round-trips the params
+
+#### Scenario: The Normal tier requires a large enough board
+
+- **WHEN** `validateParams` is given a Normal board with `w + h < 11`, or any
+  board with `w < 5` or `h < 5`
+- **THEN** it returns a non-null error string

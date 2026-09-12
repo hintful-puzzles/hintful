@@ -60,14 +60,14 @@ describe("pearl params", () => {
     ).toBe("7x7");
   });
 
-  it("rejects too-small boards and small Tricky boards", () => {
+  it("rejects too-small boards and small Normal boards", () => {
     expect(
       validateParams({ w: 4, h: 6, difficulty: DIFF_EASY, nosolve: false }, true),
     ).not.toBeNull();
     expect(
       validateParams({ w: 6, h: 4, difficulty: DIFF_EASY, nosolve: false }, true),
     ).not.toBeNull();
-    // w + h < 11 at Tricky is rejected.
+    // w + h < 11 at Normal is rejected.
     expect(
       validateParams({ w: 5, h: 5, difficulty: DIFF_TRICKY, nosolve: false }, true),
     ).not.toBeNull();
@@ -107,8 +107,8 @@ describe("pearl solver", () => {
     }
   });
 
-  it("a Tricky board is not solvable with only Easy deductions", () => {
-    // Find a Tricky board that genuinely needs the tricky rung.
+  it("a Normal board is not solvable with only Easy deductions", () => {
+    // Find a Normal board that genuinely needs the Normal rung.
     const p = { w: 6, h: 6, difficulty: DIFF_TRICKY, nosolve: false };
     const state = generate(p, "tricky-needs-rung");
     const out = new Uint8Array(p.w * p.h);

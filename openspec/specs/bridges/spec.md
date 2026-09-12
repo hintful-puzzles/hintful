@@ -20,10 +20,10 @@ bridges so that each island carries exactly its number of bridge-ends, at most
 directly in line and never cross an island or another bridge, and all islands
 form a single connected group. Params SHALL be `w`, `h`, `maxb`, `islands`
 (percentage island density), `expansion` (percentage), `allowloops` (boolean)
-and `difficulty` (Easy / Medium / Hard). All 9 upstream presets SHALL be offered
-(7×7, 10×10, 15×15 × Easy/Medium/Hard, each `maxb = 2`, `islands = 30`,
-`expansion = 10`, `allowloops = true`). The game SHALL report `canSolve = true`,
-`canFormatAsText = true` and `needsRightButton = true` (upstream `REQUIRE_RBUTTON`).
+and `difficulty` (Easy / Normal / Tricky). All 9 upstream presets SHALL be offered
+(7×7, 10×10, 15×15 × Easy/Normal/Tricky, each `maxb = 2`, `islands = 30`,
+`expansion = 10`, `allowloops = true`). The game SHALL report `canSolve = true`
+and `canFormatAsText = true`.
 
 #### Scenario: Params round-trip
 
@@ -64,9 +64,9 @@ The port SHALL implement upstream `solve_sub` and its stages with the exact
 deductive power of each difficulty, returning the impossible / ambiguous /
 solved verdict identical to the C solver on every board. Easy SHALL run stage 1
 (force bridges an island must place because its remaining count equals its
-available adjacent space, and forbid bridges into a satisfied island). Medium
+available adjacent space, and forbid bridges into a satisfied island). Normal
 SHALL additionally run stage 2 (per-direction minimum/maximum reasoning using
-each neighbor's own remaining capacity). Hard SHALL additionally run stage 3
+each neighbor's own remaining capacity). Tricky SHALL additionally run stage 3
 (the dsf connected-subgroup deductions — forbid a bridge that would seal off a
 subgroup that cannot then be satisfied, and, when `allowloops` is false, forbid a
 bridge that would complete a premature loop). The solver is purely deductive
@@ -77,7 +77,7 @@ solver SHALL maintain the per-cell possible/maximum-bridge counts
 #### Scenario: A generated board is uniquely solvable at its difficulty
 
 - **WHEN** a board generated at difficulty `d` is solved from the clue-only state
-- **THEN** the solver returns solved at `d`, and a Medium/Hard board is not fully
+- **THEN** the solver returns solved at `d`, and a Normal/Tricky board is not fully
   solved at the tier below it
 
 ### Requirement: Bridges generates byte-identical descriptions to the C build

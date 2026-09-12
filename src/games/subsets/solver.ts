@@ -250,7 +250,7 @@ function bitsFromCube(state: SubsetsState, cube: Uint8Array): number {
  * - **Head half** (`strong` only): the mirror — drop a subset candidate at
  *   `i2` that has no strictly-larger live candidate at `i1`. Upstream wrote
  *   this, commented it out under `// TODO repair this`, and shipped without
- *   it; here it is the Tricky rung.
+ *   it; here it is the Normal rung.
  */
 function applyArrowsAdvanced(
   state: SubsetsState,
@@ -354,8 +354,8 @@ function disjoint(state: SubsetsState, cube: Uint8Array): number {
  *
  * `maxdiff` caps the deduction ladder: {@link DIFF_EASY} is upstream's shipped
  * strength exactly, {@link DIFF_TRICKY} adds the head half of
- * {@link applyArrowsAdvanced}. The rungs nest — Tricky runs every Easy rule —
- * so a board solvable at Easy is solvable at Tricky. Required, not defaulted:
+ * {@link applyArrowsAdvanced}. The rungs nest — Normal runs every Easy rule —
+ * so a board solvable at Easy is solvable at Normal. Required, not defaulted:
  * an implicit cap is how a caller silently measures the wrong tier.
  */
 export function subsetsSolveGame(
@@ -387,7 +387,7 @@ export function subsetsSolveGame(
       run: () => solveSinglePosition(state, counts, cube),
     },
     // **The cap is an argument, not a tier** (the guards-itself convention):
-    // this rung runs at every tier and does *more* at Tricky. Declaring it
+    // this rung runs at every tier and does *more* at Normal. Declaring it
     // `tier: DIFF_TRICKY` would stop it running at Easy, where upstream runs it.
     {
       id: "arrows-advanced",
@@ -489,7 +489,7 @@ export function findMistakes(state: SubsetsState): readonly SubsetsMistake[] {
 /** Solve a copy of `state`, returning the solved copy and its status — the
  * shared entry for `solve()` and tests. Defaults to the top of the ladder,
  * which is right for the Solve button whatever tier the board was generated
- * at: an Easy board solves at Tricky too (the rungs nest). */
+ * at: an Easy board solves at Normal too (the rungs nest). */
 export function solveCopy(
   state: SubsetsState,
   maxdiff: number = DIFF_TRICKY,
@@ -1105,7 +1105,7 @@ function nextHiddenSingle(
  * Stops at `complete`/`invalid`, or `unfinished` when no rule fires.
  *
  * `maxdiff` mirrors {@link subsetsSolveGame}'s cap and defaults to the top of
- * the ladder, which is what production wants: the Tricky rung is a *fallback*,
+ * the ladder, which is what production wants: the Normal rung is a *fallback*,
  * so a board that never exhausts the cheaper vocabulary never reaches it and an
  * Easy plan is unaffected by the default. Passing `DIFF_EASY` is how a test
  * asserts that rather than assuming it.

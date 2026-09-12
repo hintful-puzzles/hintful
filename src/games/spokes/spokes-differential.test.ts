@@ -14,7 +14,7 @@
  * deliberately corrects upstream's final difficulty gate, which re-solves a
  * *dirty* scratch board and therefore over-grades badly (see
  * `SpokesGenerateOptions.upstreamDirtyGate`). That correction changes every
- * Tricky and Hard desc, so the flag restores upstream's exact gate for the
+ * Normal and Unreasonable desc, so the flag restores upstream's exact gate for the
  * differential alone — keeping this oracle over the generator's draw order, the
  * whole tiered solver and the codec, and leaving only the clear before that
  * gate in `spokesGenerate` outside its reach. `spokes.test.ts` covers the

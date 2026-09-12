@@ -26,10 +26,10 @@
  * ({@link saladLettersSolverDir}).
  *
  * Two difficulties, both **guess-free**: `diffRecursive = DIFF_IMPOSSIBLE`, so
- * the cube never recurses at either tier. Normal (`DIFF_EASY`) is the border
+ * the cube never recurses at either tier. Easy (`DIFF_EASY`) is the border
  * deduction plus the generic positional / numeric elimination — which, with the
  * hole a real symbol, now includes "only these `k` squares can be empty" and
- * "this line already has its `k` empties"; Extreme (`DIFF_HARD`) adds the
+ * "this line already has its `k` empties"; Normal (`DIFF_HARD`) adds the
  * generic set elimination and forcing chains.
  */
 
@@ -482,8 +482,8 @@ export interface SaladMistake {
  * — what `Game.solve` turns into a `solve` move. `null` when no solution is
  * deducible.
  *
- * Solved at the top tier: Salad's Extreme rung only *adds* sound generic
- * techniques to Normal's, so a Normal board still solves here (pinned by the
+ * Solved at the top tier: Salad's Normal rung only *adds* sound generic
+ * techniques to Easy's, so an Easy board still solves here (pinned by the
  * "generate low, solve high" check, docs/games/solver-and-generator.md
  * § "Solver-gated generation").
  */

@@ -149,10 +149,10 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 /**
- * The smallest board on which a Tricky puzzle exists: **twelve squares, and at
+ * The smallest board on which a Normal puzzle exists: **twelve squares, and at
  * least two wide**.
  *
- * Tricky demands a board the single-cell rule cannot finish, and a small grid has
+ * Normal demands a board the single-cell rule cannot finish, and a small grid has
  * nowhere to hide a deduction that deep. Measured by running the real gate over
  * every shape from 1×2 to 6×9, ten seeds each, with each seed free to spend the
  * generator's whole 10,000-attempt budget: **every** shape of twelve squares or
@@ -189,7 +189,7 @@ export function validateParams(p: ClustersParams, full: boolean): string | null 
     p.diff > DIFF_EASY &&
     (Math.min(p.w, p.h) < 2 || p.w * p.h < MIN_TRICKY_AREA)
   ) {
-    return "Tricky needs a board of at least 12 squares, at least two wide";
+    return `${DIFF_NAMES[DIFF_TRICKY]} needs a board of at least 12 squares, at least two wide`;
   }
   return null;
 }

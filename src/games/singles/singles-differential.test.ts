@@ -7,7 +7,7 @@
  *     blacks → numbers → difficulty gate) is a faithful port and the RNG
  *     is bit-identical, so the streams must agree exactly.
  *  2. The TS solver solves the C-generated board at the C-recorded
- *     difficulty (and, for Tricky, fails one level below).
+ *     difficulty (and, for Normal, fails one level below).
  *
  * The fixture is **frozen and cannot be regenerated**: the C harness that
  * captured it no longer exists (see `engine/testing/differential.ts`).

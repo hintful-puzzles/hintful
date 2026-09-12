@@ -7,7 +7,9 @@ with 3D and 2D styles, a sticky pencil mode, an optional auto-pencil that
 strikes a placed height from its row and column, clue striking, mistake-checking
 that also catches a pencil note excluding the true height, on-screen key labels,
 and a hint explained through pencil notes.
+
 ## Requirements
+
 ### Requirement: Towers game implements the Game interface
 
 The engine SHALL provide a registered `towers` game implementing
@@ -16,10 +18,11 @@ TowersMistake>`: the puzzle Skyscrapers on a `w × w` grid, in which the player
 places a tower of height `1..w` in every cell so that each row and column
 contains every height exactly once, and so that each outside clue equals the
 number of towers visible from that edge (a taller tower hides every shorter one
-behind it). Params SHALL be `w` and `diff` (Easy, Hard, Extreme, or
-Unreasonable), encoded `{w}d{c}` when full (`c` = `e`/`h`/`x`/`u`) and `{w}`
-otherwise, with presets at 4×4 Easy, 5×5 Easy/Hard, and 6×6
-Easy/Hard/Extreme/Unreasonable. `validateParams` SHALL require `3 ≤ w ≤ 9` and
+behind it). Params SHALL be `w` and `diff` (Easy, Normal, Tricky, or
+Unreasonable, held as the values `"easy"`, `"hard"`, `"extreme"` and
+`"unreasonable"`), encoded `{w}d{c}` when full (`c` = `e`/`h`/`x`/`u`) and `{w}`
+otherwise, with presets at 4×4 Easy, 5×5 Easy/Normal, and 6×6
+Easy/Normal/Tricky/Unreasonable. `validateParams` SHALL require `3 ≤ w ≤ 9` and
 (when full) a known difficulty. The game SHALL report `wantsStatusbar = false`,
 `isTimed = false`, `canSolve = true`, and `canFormatAsText = true`.
 
@@ -358,4 +361,3 @@ the C build.
 
 - **WHEN** the key labels are requested for a `5×5` Towers board
 - **THEN** the result is the buttons `1,2,3,4,5` followed by a clear key
-

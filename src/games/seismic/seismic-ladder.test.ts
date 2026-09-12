@@ -22,7 +22,7 @@ import {
 } from "./state.ts";
 
 /** Both modes at both tiers: the mode changes the region shapes the rungs reason
- * over, and the tier is what gates the Hard rung. */
+ * over, and the tier is what gates the Normal rung. */
 const SHAPES: SeismicParams[] = [
   { w: 4, h: 4, diff: DIFF_EASY, mode: MODE_SEISMIC },
   { w: 4, h: 4, diff: DIFF_NORMAL, mode: MODE_TECTONIC },
