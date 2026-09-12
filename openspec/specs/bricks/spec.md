@@ -7,7 +7,9 @@ three shaded cells run in a row, and each number counts the shaded cells around
 it. This capability specifies its port to the TS engine, with mistake-checking,
 an explained deduction hint, and only the difficulty tiers its solver can
 actually grade.
+
 ## Requirements
+
 ### Requirement: Bricks game implements the Game interface
 
 The engine SHALL provide `src/games/bricks/` implementing the `Game` interface for
@@ -73,33 +75,6 @@ value out of range.
 - **WHEN** a description that decodes to more or fewer playable cells than the board
   has is validated
 - **THEN** it is rejected with a message distinguishing too many from too few
-
-### Requirement: Bricks ports the deductive solver and generator faithfully
-
-Bricks SHALL provide a solver that decides whether a grid is complete, still
-unfinished, or invalid, from three rules: no three consecutive shaded cells in a
-horizontal line, every shaded cell supported by a shaded cell below it, and every
-numbered cell's shaded-neighbor count consistent with its clue. The solver SHALL
-place cells by contradiction — tentatively shading or unshading a cell and forcing
-the opposite when that leads to an invalid grid — with bounded lookahead for the
-harder difficulties. Every difficulty tier SHALL be solvable by pure deduction; the
-solver SHALL NOT rely on guessing.
-
-The generator SHALL use the solver to keep every puzzle uniquely solvable at its
-target difficulty: it SHALL fill the grid under the support and run-length
-constraints, number it, then remove numbers in a randomized order, keeping a
-removal only while the puzzle stays uniquely solvable. Generation from a given seed
-SHALL be reproducible.
-
-#### Scenario: The solver reaches the unique solution
-
-- **WHEN** a generated board is solved
-- **THEN** the solver marks it complete and its cells match the intended solution
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** the same seed is used twice for the same parameters
-- **THEN** both runs produce the identical board description
 
 ### Requirement: Bricks input, mistake-checking and completion
 
@@ -257,9 +232,7 @@ the tier below it. The acceptance gate SHALL probe the tier immediately below th
 one requested; upstream probes at Easy whatever tier was requested, which is
 correct for the second tier only by coincidence.
 
-Because generation is solver-gated at every clue removal, the byte-for-byte
-differential SHALL retain a way to run upstream's original gate, used by that
-differential alone. The rename changes no description: it is a menu label, and the
+The rename changes no description: it is a menu label, and the
 solver's rungs are untouched.
 
 #### Scenario: An Unreasonable board genuinely needs its own tier
@@ -268,3 +241,29 @@ solver's rungs are untouched.
 - **THEN** the solver does not reach a solution
 - **AND** solving the same board at `Unreasonable` does
 
+### Requirement: Bricks solves and generates by deduction
+
+Bricks SHALL provide a solver that decides whether a grid is complete, still
+unfinished, or invalid, from three rules: no three consecutive shaded cells in a
+horizontal line, every shaded cell supported by a shaded cell below it, and every
+numbered cell's shaded-neighbor count consistent with its clue. The solver SHALL
+place cells by contradiction — tentatively shading or unshading a cell and forcing
+the opposite when that leads to an invalid grid — with bounded lookahead for the
+harder difficulties. Every difficulty tier SHALL be solvable by pure deduction; the
+solver SHALL NOT rely on guessing.
+
+The generator SHALL use the solver to keep every puzzle uniquely solvable at its
+target difficulty: it SHALL fill the grid under the support and run-length
+constraints, number it, then remove numbers in a randomized order, keeping a
+removal only while the puzzle stays uniquely solvable. Generation from a given seed
+SHALL be reproducible.
+
+#### Scenario: The solver reaches the unique solution
+
+- **WHEN** a generated board is solved
+- **THEN** the solver marks it complete and its cells match the intended solution
+
+#### Scenario: Generation is reproducible from a seed
+
+- **WHEN** the same seed is used twice for the same parameters
+- **THEN** both runs produce the identical board description

@@ -5,7 +5,9 @@ Pattern (Nonogram), the puzzle of shading a grid so that the runs of black
 squares in each row and column match its clue list. This capability specifies
 its port to the TS engine, with drag-to-fill and cursor input, an error overlay,
 and an explained deductive hint with its own color legend.
+
 ## Requirements
+
 ### Requirement: Pattern game implements the Game interface
 
 The engine SHALL provide a registered `pattern` game implementing
@@ -64,9 +66,7 @@ The port SHALL implement the per-line nonogram solver (the row/column fixpoint
 that narrows each line against its run-length clue until no further cell is
 forced) and a `generate_soluble` generator that produces a random grid and
 accepts it only when it is **uniquely line-solvable** from its derived clues.
-The solver SHALL be reused by `solve()` and `findMistakes`. Because the published
-clue set is decided by the solver's verdict, the TS solver SHALL reach the same
-solved/stuck verdict as the C reference on each intermediate board.
+The solver SHALL be reused by `solve()` and `findMistakes`.
 
 #### Scenario: Generated boards are uniquely line-solvable
 
@@ -79,20 +79,6 @@ solved/stuck verdict as the C reference on each intermediate board.
 
 - **WHEN** `solve()` is invoked on a generated game
 - **THEN** it returns the fully-solved `Full`/`Empty` grid
-
-### Requirement: Pattern generation byte-matches the C reference
-
-The port SHALL reproduce the C reference desc **exactly** for the same seed
-(`newDesc(params, seed).desc` byte-for-byte) — achievable because `random.ts` is
-bit-identical to `random.c` and the generator is faithful. A committed gated
-differential test SHALL assert this across the presets and several seeds against
-a `__fixtures__` snapshot recorded from a `puzzles/auxiliary/pattern-trace.c`
-harness (the harness and `pattern.c` are deleted together at port acceptance).
-
-#### Scenario: Desc byte-match
-
-- **WHEN** `newDesc` is run for a preset and seed recorded in the fixture
-- **THEN** the produced desc equals the fixture desc byte-for-byte
 
 ### Requirement: Pattern accepts drag-fill rectangle and cursor input
 
@@ -194,9 +180,7 @@ deductive bottom rung (*"whichever way this line's runs fit, these cells must be
 black / must stay white"* — the necessity voice of the explained-hint bar, never
 the retired *"only one arrangement fits"* wording); being the per-line solver's
 own fixpoint restricted to one line, that rung always exists for a generated
-board, so the plan completes without any un-narrated step. Generation is
-untouched, so Pattern's byte-match differential against the C reference is
-retained.
+board, so the plan completes without any un-narrated step.
 
 `hint` SHALL refuse with an error string when the board is already solved or when
 `findMistakes` reports mistakes (the refusal lighting the mistake overlay and the
@@ -256,4 +240,3 @@ on the frame they are shown.
   cell as evidence
 - **THEN** the black cell is ringed in the black-reference color and the white
   cell in the white-reference color, each leaving the cell's own color visible
-

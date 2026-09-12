@@ -8,7 +8,7 @@ How a game's deduction engine, difficulty tiers, generator, `solve()` and
 monotone in its cap"**, **"A difficulty tier binds the board it generates"**
 and **"An unbindable tier is refused, not silently downgraded"**, and the
 [`ts-engine`](../../openspec/specs/ts-engine/spec.md) requirement **"A hint
-step always names a technique — no un-narrated fallback"**.
+step always names a technique, with no un-narrated fallback"**.
 
 Related guides: [hints.md](./hints.md) (narration and plan mechanics),
 [testing.md](./testing.md) (the frozen differentials and what a red one
@@ -584,7 +584,7 @@ the point of the fork. The full doctrine lives in
 [`ts-migration`](../../openspec/specs/ts-migration/spec.md) spec; the
 followable form is this section.
 
-Three rules govern every divergence decision:
+Two rules govern every divergence decision:
 
 - **"Wherever it's worth it" is the whole test.** A divergence still needs a
   stated player-visible benefit; tidiness is still not one.
@@ -594,8 +594,6 @@ Three rules govern every divergence decision:
   difficulty" as a property test, stated in the change
   (`replace-seismic-region-generator` and the Mathrax Recursive divergence
   are the copies to follow).
-- **Try to keep both.** You often need not choose — see § "Keep the oracle
-  and ship the fix" below.
 
 And four decision rules, learned on `add-loopy-ts-port`, for reading a quirk
 before paying or refusing it:
@@ -751,32 +749,26 @@ verdict. The lessons that stay live:
   does. Tell: a loop bounded by a canonify result used as an index value
   rather than as an identity to compare.
 
-### Keep the oracle and ship the fix
+### Retained upstream paths are history, not the default
 
-**When a deliberate divergence sits on an otherwise verdict-matched path,
-don't choose between "keep the bug" and "lose the differential": put
-upstream's exact behavior behind an option that only the differential
-sets.** Used twice, so treat it as the default technique:
+**A divergence does not have to keep upstream's behavior reachable for its
+differential.** Matching upstream's C output is not a requirement anywhere
+(owner, 2026-09-13: *"it was just something we cared about during the port, but
+it's not a concern anymore"*), so the ordinary shape of a divergence is to ship
+the fix and retire or re-found the fixture it moves, saying what replaces it.
 
-- Spokes ships the corrected (cleared-scratch) acceptance gate; its
-  `upstreamDirtyGate` option restores upstream's behavior for the fixtures,
-  and a behavioral test covers the four-line divergence itself.
-- Seismic replaced its whole region generator (upstream's succeeded roughly
-  once in 200,000 attempts at 7×7) yet keeps all 28 fixtures byte-matched
-  behind `upstreamRegionGrower`
-  ([`seismic/generator.ts`](../../src/games/seismic/generator.ts)).
-
-Three rules that ride along: **comment the retained code at every definition
-as deliberately-unreachable oracle** (or a later reader deletes the "dead"
-branch and silently deletes the differential with it); **the retained path
-may need its own constants** (Seismic's retry bound splits into shipped vs
-upstream values — one shared bound would either strangle the oracle or make
-a real divergence hang); and **pair the option with a test asserting the flag
-still changes the outcome**, or the oracle decays into testing the shipped
-path. The Spokes episode also set the doctrine boundary: *upstream being
-clearly wrong is a reason to fix it* (owner), and re-measurement showed the
-"cost" of fixing was negative — most of the dirty gate's rejections were
-spurious, so generation got faster.
+Some games were diverged the older way, putting upstream's exact behavior behind
+an option only the differential sets — Spokes' `upstreamDirtyGate`, Seismic's
+`upstreamRegionGrower` ([`seismic/generator.ts`](../../src/games/seismic/generator.ts)),
+Crossing's `upstreamIsolatedCells`; `git grep -n 'upstream[A-Z]\w*'` finds the rest.
+While such an option stays, the rules that kept it honest still hold: **comment
+the retained code as deliberately unreachable from play** (or a later reader
+deletes the "dead" branch and silently changes the differential with it), give
+the retained path its own constants where the shipped path's would strangle it,
+and **pair the option with a test asserting the flag still changes the outcome**.
+Removing one, with its fixtures retired, needs no more justification than the
+code it deletes. The Spokes episode's doctrine boundary stands on its own:
+*upstream being clearly wrong is a reason to fix it* (owner).
 
 ### Recover emergent parameters from the fixtures
 

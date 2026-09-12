@@ -278,8 +278,7 @@ clearing a subset of the step's marks is `onTrack` (the step shrinks in place) o
 — and otherwise drop the plan to recompute (`off`).
 
 The solver's recording mode SHALL be gated so that with recording off the
-generator's solve path is byte-for-byte unchanged (verified by the existing C
-differential), and the hint fixpoint SHALL be guarded by a step budget.
+generator's solve path is unchanged, and the hint fixpoint SHALL be guarded by a step budget.
 
 #### Scenario: A clue elimination is taught as a note strike
 
@@ -354,8 +353,7 @@ hint teaches them as explicit strikes.
 
 Towers SHALL implement `requestKeys(params)` returning one button per digit `1..w`
 (labeled by the digit character) followed by a clear key (button code `8`,
-labeled `"Clear"`), reproducing upstream `game_request_keys` so the keypad matches
-the C build.
+labeled `"Clear"`).
 
 #### Scenario: The keypad covers the grid's heights plus clear
 

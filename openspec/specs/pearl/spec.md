@@ -30,39 +30,10 @@ initially empty.
   fill the grid
 - **THEN** it returns a non-null error string
 
-### Requirement: Pearl ports the deductive solver and solver-gated generator faithfully
-
-The port SHALL implement `pearl_solve` as pure iterative constraint propagation
-(no guessing or recursion) over the edge/square workspace: edge↔square
-elimination, the black-pearl and white-pearl clue deductions, and shortcut-loop
-detection over a union-find, with the Normal tier additionally applying the
-premature-short-loop rules. It SHALL return the three-valued verdict
-(inconsistent / unique / ambiguous), and a grading routine SHALL return the
-easiest difficulty that yields a unique solution. The generator SHALL build a
-random loop via the shared `generateLoop` (biased toward black-pearl corners),
-derive a maximal clue set, gate on the solver finding a unique solution at the
-requested difficulty (and failing one tier easier), then greedily minimize the
-clues — reproducing the upstream RNG draw order byte-for-byte (including the
-upstream `corners`-array quirk that consumes a shuffle sized by the straight
-count, and the 5×5 Normal→Easy downgrade) — so that for a given seed and params
-the produced desc and aux reproduce the C output exactly. `solve` SHALL return
-the generator's aux when present, else re-solve from the clues.
-
-#### Scenario: Generated boards are uniquely solvable at their difficulty
-
-- **WHEN** a board is generated with `nosolve = false` and graded by the TS solver
-- **THEN** the grading is a unique solution at exactly the requested difficulty
-
-#### Scenario: Desc reproduces the C reference byte for byte
-
-- **WHEN** `newDesc` runs for a fixture's seed and params
-- **THEN** the produced desc and aux equal the recorded C values exactly, and the
-  TS solver grades the decoded board at the C-recorded difficulty
-
 ### Requirement: Pearl reports completion and mistakes
 
-The port SHALL compute completion and always-on error marks faithfully to
-`check_completion` — a union-find loop classification flagging squares of degree
+The game SHALL compute completion and always-on error marks by
+`check_completion`'s rules — a union-find loop classification flagging squares of degree
 greater than two, non-reciprocal links, and clue contradictions, and setting the
 completed flag only when the lines form one closed loop satisfying every clue.
 Because boards are uniquely solvable by default, the game SHALL implement
@@ -97,8 +68,7 @@ mark SHALL be rejected. `redraw` SHALL render the grid in the selected appearanc
 style (traditional square outlines, or loopy center-dots plus inter-cell grid),
 the black and white pearls, the no-line crosses, the loop segments (with the drag
 preview and error recoloring), the flagged-mistake segment color, and the
-completion flash, with the palette index-for-index against the upstream color
-enum.
+completion flash.
 
 #### Scenario: A drag draws a loop path
 
@@ -140,3 +110,23 @@ preference (default traditional).
 - **WHEN** `validateParams` is given a Normal board with `w + h < 11`, or any
   board with `w < 5` or `h < 5`
 - **THEN** it returns a non-null error string
+
+### Requirement: Pearl ports the deductive solver and solver-gated generator
+
+The port SHALL implement `pearl_solve` as pure iterative constraint propagation
+(no guessing or recursion) over the edge/square workspace: edge↔square
+elimination, the black-pearl and white-pearl clue deductions, and shortcut-loop
+detection over a union-find, with the Normal tier additionally applying the
+premature-short-loop rules. It SHALL return the three-valued verdict
+(inconsistent / unique / ambiguous), and a grading routine SHALL return the
+easiest difficulty that yields a unique solution. The generator SHALL build a
+random loop via the shared `generateLoop` (biased toward black-pearl corners),
+derive a maximal clue set, gate on the solver finding a unique solution at the
+requested difficulty (and failing one tier easier), then greedily minimize the
+clues, generating a 5×5 Normal request at Easy. `solve` SHALL return
+the generator's aux when present, else re-solve from the clues.
+
+#### Scenario: Generated boards are uniquely solvable at their difficulty
+
+- **WHEN** a board is generated with `nosolve = false` and graded by the TS solver
+- **THEN** the grading is a unique solution at exactly the requested difficulty

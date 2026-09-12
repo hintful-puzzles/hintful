@@ -5,7 +5,9 @@ Sokoban, the puzzle of pushing, never pulling, every barrel onto a target, where
 no barrel can be pushed into a wall or another barrel. This capability specifies
 its port to the TS engine: movement and pushing, completion, reproducible
 generation that is solvable by construction, and rendering.
+
 ## Requirements
+
 ### Requirement: Sokoban game implements the Game interface
 
 The engine SHALL provide `src/games/sokoban/` implementing the `Game`
@@ -95,18 +97,6 @@ no empty target square) — so that levels with spare barrels or pits still comp
   and no free barrel remain
 - **THEN** the game is reported solved and flashes
 
-### Requirement: Sokoban generation is deterministic and faithful
-
-Sokoban generation SHALL port the upstream reverse-move generator faithfully over
-the shared bit-identical RNG, so that a given seed always produces the same board
-and shared game IDs remain reproducible. Generation SHALL NOT be gated by a solver,
-because the level is solvable by construction.
-
-#### Scenario: The same seed reproduces the same board
-
-- **WHEN** the same size and seed are used twice to generate a game
-- **THEN** both runs produce the identical description
-
 ### Requirement: Sokoban rendering
 
 Sokoban SHALL render each cell as its content — walls with a beveled face, targets,
@@ -125,3 +115,14 @@ completion.
 - **WHEN** the board contains a capital-letter barrel
 - **THEN** that barrel is drawn with its letter label
 
+### Requirement: Sokoban generation is deterministic
+
+Sokoban generation SHALL use a reverse-move generator over the shared seeded RNG,
+so that a given seed always produces the same board
+and shared game IDs remain reproducible. Generation SHALL NOT be gated by a solver,
+because the level is solvable by construction.
+
+#### Scenario: The same seed reproduces the same board
+
+- **WHEN** the same size and seed are used twice to generate a game
+- **THEN** both runs produce the identical description

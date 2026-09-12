@@ -5,7 +5,9 @@ Mathrax, the Latin-square puzzle whose clues sit on grid intersections and
 constrain the four digits around each. This capability specifies its port to the
 TS engine, with notes, mistake-checking against the unique solution, honestly
 graded difficulty tiers, and only the difficulties a given size can support.
+
 ## Requirements
+
 ### Requirement: Mathrax game implements the Game interface
 
 The engine SHALL provide a complete implementation of the `Game<…>` engine
@@ -84,41 +86,6 @@ or clue part stops short of covering the grid.
   validated
 - **THEN** it is rejected
 
-### Requirement: Mathrax ports the Latin-square solver and generator faithfully
-
-Mathrax SHALL solve using the shared Latin-square solver framework, contributing its
-own clue deductions: for each cell it SHALL intersect its candidate digits with those
-permitted by each adjacent clue given the opposite cell's candidates, across the Easy,
-Normal, Tricky and `Unreasonable` difficulty levels. The generator SHALL produce a full
-Latin square, derive a candidate clue at every interior intersection, and then remove
-given digits and clues in a randomized order while the puzzle remains **uniquely**
-solvable at the target difficulty. Generation from a given seed SHALL be reproducible.
-
-Uniqueness is required at *every* difficulty, including the guess-and-verify
-`Unreasonable` tier. This is a deliberate divergence from upstream, which tests its
-solver's verdict for bare truthiness and so accepts an *ambiguous* verdict as grounds
-to keep removing — leaving that whole tier with puzzles that have several solutions
-(measured: 30 of 30 sampled boards, and the recorded C descriptions for it are blank
-grids). A board with no unique answer cannot be mistake-checked, so Check & Save would
-silently pass anything played on it.
-
-#### Scenario: The solver solves a generated board
-
-- **WHEN** a generated board is solved
-- **THEN** the returned grid is the board's unique Latin-square solution and satisfies
-  every clue
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** the same seed is used twice for the same parameters
-- **THEN** both runs produce the identical board description
-
-#### Scenario: Even the guess-and-verify tier yields a unique solution
-
-- **WHEN** a board is generated at the `Unreasonable` difficulty
-- **THEN** it has exactly one solution, and it cannot be solved without the
-  guess-and-verify step
-
 ### Requirement: Mathrax input, notes and completion
 
 Mathrax SHALL be played with the Solo-style control scheme: a cell is selected for ink
@@ -185,11 +152,8 @@ tier would also have done. Upstream generates exactly once; the corrected
 generator retries until a candidate binds, and that loop SHALL be bounded.
 
 Because generation is solver-gated at every removal, the correction changes every
-board above the easiest tier; the byte-for-byte differential SHALL retain a way to
-run upstream's original gate, used by that differential alone. This is the second
-divergence in this generator — the first requires removals to keep the board
-*uniquely* solvable — and with the original gate selected the loop SHALL return on
-its first pass, so the random-number draw order is unchanged.
+board above the easiest tier. This is the second divergence in this generator — the
+first requires removals to keep the board *uniquely* solvable.
 
 #### Scenario: A Tricky board genuinely needs the Tricky tier
 
@@ -219,3 +183,37 @@ every tier at size 4 and above is reachable at ordinary cost.
 - **AND** the message names those tiers exactly as the difficulty menu does
 - **AND** the same parameters validate successfully when a description is supplied
 
+### Requirement: Mathrax solves and generates over the shared Latin-square framework
+
+Mathrax SHALL solve using the shared Latin-square solver framework, contributing its
+own clue deductions: for each cell it SHALL intersect its candidate digits with those
+permitted by each adjacent clue given the opposite cell's candidates, across the Easy,
+Normal, Tricky and `Unreasonable` difficulty levels. The generator SHALL produce a full
+Latin square, derive a candidate clue at every interior intersection, and then remove
+given digits and clues in a randomized order while the puzzle remains **uniquely**
+solvable at the target difficulty. Generation from a given seed SHALL be reproducible.
+
+Uniqueness is required at *every* difficulty, including the guess-and-verify
+`Unreasonable` tier. This is a deliberate divergence from upstream, which tests its
+solver's verdict for bare truthiness and so accepts an *ambiguous* verdict as grounds
+to keep removing — leaving that whole tier with puzzles that have several solutions
+(measured: 30 of 30 sampled boards, and the recorded C descriptions for it are blank
+grids). A board with no unique answer cannot be mistake-checked, so Check & Save would
+silently pass anything played on it.
+
+#### Scenario: The solver solves a generated board
+
+- **WHEN** a generated board is solved
+- **THEN** the returned grid is the board's unique Latin-square solution and satisfies
+  every clue
+
+#### Scenario: Generation is reproducible from a seed
+
+- **WHEN** the same seed is used twice for the same parameters
+- **THEN** both runs produce the identical board description
+
+#### Scenario: Even the guess-and-verify tier yields a unique solution
+
+- **WHEN** a board is generated at the `Unreasonable` difficulty
+- **THEN** it has exactly one solution, and it cannot be solved without the
+  guess-and-verify step

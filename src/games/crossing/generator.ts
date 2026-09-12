@@ -182,7 +182,7 @@ export interface CrossingGenOptions {
    * player can even type any digit into it and still win.
    *
    * The shipped game rejects such boards; this option exists **only** so the
-   * byte-match differential can reproduce upstream exactly (docs/games/solver-and-generator.md § "Keep the oracle and ship the fix").
+   * byte-match differential can reproduce upstream exactly (docs/games/solver-and-generator.md § "Retained upstream paths are history, not the default").
    * Measured cost of the fix: 4% of 5×5 boards, 7% of 7×7, 17-18% of 9×9 and
    * 12×12 are rejected, i.e. a few percent more attempts on a generator that
    * makes a 9×9 board in well under a millisecond.

@@ -60,27 +60,6 @@ exceed the row/column size.
 - **WHEN** `validateDesc` is given a desc whose domino ends are inconsistent
 - **THEN** it returns a non-null error string
 
-### Requirement: Magnets ports the graded solver faithfully
-
-The port SHALL implement upstream `solve_state` with its exact deductive power
-at each difficulty, returning the impossible / ambiguous / solved
-(−1 / 0 / 1) verdict identical to the C solver on every board. The Easy tier
-SHALL perform: set-and-hold of initial givens, force-by-flags, the
-neither-can-be-a-magnet neutral deduction, the row/column count-full pass
-(color complete ⇒ exclude the rest; remaining unset all needed ⇒ set them),
-and the odd-length-section deduction. The Normal tier SHALL additionally
-perform: the advanced-full in-row domino-polarization pass, the
-single-neutral-left exclusion, and the two count-dominoes passes
-(all-remaining-dominoes-magnet ⇒ no neutral; one placeable end ⇒ set it). The
-solver SHALL propagate a deduction across a domino to its partner (an
-excluded color on one end excludes the opposite color on the other).
-
-#### Scenario: A generated board is uniquely solvable at its difficulty
-
-- **WHEN** a board generated at difficulty `d` is solved from empty
-- **THEN** the solver returns solved (1) at `d`, and — for a Normal board —
-  fails to fully solve (0) at Easy
-
 ### Requirement: Magnets input cycles domino contents and toggles clue aids
 
 Left-click or `CURSOR_SELECT` on a domino cell SHALL cycle its content
@@ -120,7 +99,27 @@ red per upstream `check_completion`).
   contradicts, without yet violating adjacency or a count
 - **THEN** `findMistakes` includes that cell and Check & Save refuses to save
 
-### Requirement: Magnets renders to upstream parity under the web geometry
+### Requirement: Magnets grades boards with a tiered deductive solver
+
+The solver SHALL return the impossible / ambiguous / solved (−1 / 0 / 1)
+verdict at each difficulty. The Easy tier
+SHALL perform: set-and-hold of initial givens, force-by-flags, the
+neither-can-be-a-magnet neutral deduction, the row/column count-full pass
+(color complete ⇒ exclude the rest; remaining unset all needed ⇒ set them),
+and the odd-length-section deduction. The Normal tier SHALL additionally
+perform: the advanced-full in-row domino-polarization pass, the
+single-neutral-left exclusion, and the two count-dominoes passes
+(all-remaining-dominoes-magnet ⇒ no neutral; one placeable end ⇒ set it). The
+solver SHALL propagate a deduction across a domino to its partner (an
+excluded color on one end excludes the opposite color on the other).
+
+#### Scenario: A generated board is uniquely solvable at its difficulty
+
+- **WHEN** a board generated at difficulty `d` is solved from empty
+- **THEN** the solver returns solved (1) at `d`, and — for a Normal board —
+  fails to fully solve (0) at Easy
+
+### Requirement: Magnets renders under the web geometry
 
 The renderer SHALL draw the rounded-corner dominoes (per upstream
 `draw_tile_col`), the `+`/`−` magnet symbols, the neutral cross, the blue
@@ -128,8 +127,7 @@ not-neutral `?`, singleton black squares, and the `+`/`−` clue counts on all
 four borders (top = column `+`, bottom = column `−`, left = row `+`, right =
 row `−`) with the corner `+`/`−` symbols, using the web build's
 `NARROW_BORDERS` geometry (`BORDER = 0`, an `(w+2) × (h+2)`-tile canvas). The
-palette SHALL mirror the upstream color enum index-for-index, with the fork
-mistake-overlay color appended past it. Every per-cell and per-clue overlay
+mistake-overlay color SHALL be appended past the base palette. Every per-cell and per-clue overlay
 (set / error / cursor / not-neutral / flash / mistake / clue-done) SHALL be
 part of the render diff key so it repaints and clears correctly.
 

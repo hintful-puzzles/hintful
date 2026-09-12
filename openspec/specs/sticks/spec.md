@@ -6,7 +6,9 @@ or vertical line, where a number on a line gives its length, no line covers two
 numbers, and a number on a black cell counts the lines running into it. This
 capability specifies its port to the TS engine, with the solver-gated generator,
 mistake-checking, and an explained hint.
+
 ## Requirements
+
 ### Requirement: Sticks game implements the Game interface
 
 The engine SHALL provide `src/games/sticks/` implementing the `Game`
@@ -194,7 +196,7 @@ Requesting a hint on a board contradicting its own clues SHALL refuse and
 surface the mistakes, rather than deducing from a wrong position.
 
 Recording SHALL be confined to the hint path: the generator's solve calls SHALL
-be unchanged, and the frozen description fixtures SHALL NOT move.
+be unchanged.
 
 #### Scenario: A forced line is explained by the clue it would break
 
@@ -236,5 +238,5 @@ be unchanged, and the frozen description fixtures SHALL NOT move.
 
 - **WHEN** boards are generated for a fixed seed with the hint recorder present
   in the build
-- **THEN** the descriptions are identical to those the frozen fixtures record
-
+- **THEN** the descriptions are identical to those the generator produces for
+  the same seed when no hint has been requested

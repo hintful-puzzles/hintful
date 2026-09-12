@@ -126,7 +126,8 @@ guide by file and heading name, never by a section number — numbers move, and
 the tidy pass deleted dozens of `§4.3`-style pointers that resolved nowhere.
 
 **An assertion about behavior is a claim.** If a test checks it, say which one:
-"byte-matches upstream, the frozen differential asserts it" survives contact
+"every generated board is uniquely solvable at its tier, the generation test
+asserts it" survives contact
 with the future. "Draws the clue in its run's color" is a description that the
 next render change quietly falsifies.
 

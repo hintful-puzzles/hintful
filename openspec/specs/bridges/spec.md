@@ -58,47 +58,6 @@ bridge configuration could satisfy at the grid edge.
 - **WHEN** `validateDesc` is given a desc whose run-lengths overrun the grid
 - **THEN** it returns a non-null error string
 
-### Requirement: Bridges ports the graded multi-stage solver faithfully
-
-The port SHALL implement upstream `solve_sub` and its stages with the exact
-deductive power of each difficulty, returning the impossible / ambiguous /
-solved verdict identical to the C solver on every board. Easy SHALL run stage 1
-(force bridges an island must place because its remaining count equals its
-available adjacent space, and forbid bridges into a satisfied island). Normal
-SHALL additionally run stage 2 (per-direction minimum/maximum reasoning using
-each neighbor's own remaining capacity). Tricky SHALL additionally run stage 3
-(the dsf connected-subgroup deductions — forbid a bridge that would seal off a
-subgroup that cannot then be satisfied, and, when `allowloops` is false, forbid a
-bridge that would complete a premature loop). The solver is purely deductive
-(no guess-and-verify recursion — upstream `solve_sub`'s `depth` is unused). The
-solver SHALL maintain the per-cell possible/maximum-bridge counts
-(`map_update_possibles`) as deductions are applied.
-
-#### Scenario: A generated board is uniquely solvable at its difficulty
-
-- **WHEN** a board generated at difficulty `d` is solved from the clue-only state
-- **THEN** the solver returns solved at `d`, and a Normal/Tricky board is not fully
-  solved at the tier below it
-
-### Requirement: Bridges generates byte-identical descriptions to the C build
-
-The port SHALL reproduce the C description byte-for-byte for the same parameters
-and seed (feasible because `random.ts` is bit-identical to `random.c` and the
-Bridges generator draws only `random_upto` — no `qsort`, no `shuffle`). The
-generator SHALL place a random initial island, grow the map by repeatedly
-selecting an island and
-direction and joining or expanding to a new island (with the exact draw order:
-initial `x` then `y`; per grow step the island index, the direction index, the
-expansion rolls against `expansion%`, the new-island offset, and the join count),
-until the island-density target is met, then derive the clue counts and reject
-boards not soluble at exactly the target difficulty, retrying until one is found.
-
-#### Scenario: Byte-match against recorded C descriptions
-
-- **WHEN** `newDesc` is run for each recorded preset/seed fixture
-- **THEN** the produced desc equals the C-recorded desc exactly, and the TS
-  solver grades each recorded board at its recorded difficulty
-
 ### Requirement: Bridges input drags bridges between islands
 
 Left-drag from an island along its row or column to the next in-line island SHALL
@@ -147,24 +106,6 @@ diff key so they repaint and clear on a later frame.
   without that bridge's own value changing
 - **THEN** the mistake overlay is painted on that later frame
 
-### Requirement: Bridges renders to upstream parity with a show-hints preference
-
-The renderer SHALL draw islands as circles bearing their count, single and double
-bridges (horizontal and vertical), the in-progress drag preview line,
-no-line/mark indicators, the keyboard cursor ring, and the win flash, using the
-upstream tile geometry. The palette SHALL mirror the upstream color enum
-index-for-index (`BACKGROUND, FOREGROUND, HIGHLIGHT, LOWLIGHT, SELECTED, MARK,
-HINT, GRID, WARNING, CURSOR`); the `findMistakes` overlay SHALL reuse the red
-`COL_WARNING` channel (no extra palette entry), so it lives in the render diff
-key and repaints clean when cleared. The game SHALL expose a `show-hints` boolean
-preference (upstream `PREF_SHOW_HINTS`) through the `Game.prefs` hook; when on,
-faint `COL_HINT` lines SHALL indicate forced or forbidden bridges.
-
-#### Scenario: The show-hints preference toggles the hint overlay
-
-- **WHEN** the `show-hints` preference is turned on
-- **THEN** the renderer emits `COL_HINT` hint lines that are absent when it is off
-
 ### Requirement: Bridges auto-marks satisfied islands (fork aid)
 
 The game SHALL offer an `auto-mark-complete` boolean preference, default on,
@@ -197,8 +138,7 @@ deductions from the player's own bridges as an ordered plan, each step narrating
 The plan SHALL be produced by the *same three* `DeductionTechnique` objects
 `solveFromScratch` runs, through one `runDeductionFixpoint` call, with a recorder
 attached to the `Solver`: no rung is reimplemented for the hint, and the
-generator's solve path SHALL remain byte-identical, which
-`bridges-differential.test.ts` proves. The ladder SHALL be capped at the board's
+generator's solve path SHALL remain unchanged by recording. The ladder SHALL be capped at the board's
 own difficulty rather than the top rung, since that is the tier the generator
 certified it soluble at.
 
@@ -309,3 +249,52 @@ and an island's recolored rim reaches the four tiles its arcs intrude into.
 
 - **WHEN** any frame of a hint plan is captured
 - **THEN** no rect in either hint color is tile-sized in both directions
+
+### Requirement: Bridges solves with a graded multi-stage deductive solver
+
+The solver SHALL run upstream's `solve_sub` stages, gated by difficulty, and
+return an impossible / ambiguous / solved verdict. Easy SHALL run stage 1
+(force bridges an island must place because its remaining count equals its
+available adjacent space, and forbid bridges into a satisfied island). Normal
+SHALL additionally run stage 2 (per-direction minimum/maximum reasoning using
+each neighbor's own remaining capacity). Tricky SHALL additionally run stage 3
+(the dsf connected-subgroup deductions — forbid a bridge that would seal off a
+subgroup that cannot then be satisfied, and, when `allowloops` is false, forbid a
+bridge that would complete a premature loop). The solver is purely deductive
+(no guess-and-verify recursion — upstream `solve_sub`'s `depth` is unused). The
+solver SHALL maintain the per-cell possible/maximum-bridge counts
+(`map_update_possibles`) as deductions are applied.
+
+#### Scenario: A generated board is uniquely solvable at its difficulty
+
+- **WHEN** a board generated at difficulty `d` is solved from the clue-only state
+- **THEN** the solver returns solved at `d`, and a Normal/Tricky board is not fully
+  solved at the tier below it
+
+### Requirement: Bridges generates boards soluble at exactly their difficulty
+
+The generator SHALL place a random initial island, grow the map by repeatedly
+selecting an island and direction and joining or expanding to a new island,
+until the island-density target is met, then derive the clue counts and reject
+boards not soluble at exactly the target difficulty, retrying until one is found.
+
+#### Scenario: A generated board is graded at its requested difficulty
+
+- **WHEN** `newDesc` is run for a preset
+- **THEN** the solver grades the board it produces at exactly the requested
+  difficulty
+
+### Requirement: Bridges renders islands and bridges with a show-hints preference
+
+The renderer SHALL draw islands as circles bearing their count, single and double
+bridges (horizontal and vertical), the in-progress drag preview line,
+no-line/mark indicators, the keyboard cursor ring, and the win flash. The `findMistakes` overlay SHALL reuse the red
+`COL_WARNING` channel (no extra palette entry), so it lives in the render diff
+key and repaints clean when cleared. The game SHALL expose a `show-hints` boolean
+preference (upstream `PREF_SHOW_HINTS`) through the `Game.prefs` hook; when on,
+faint `COL_HINT` lines SHALL indicate forced or forbidden bridges.
+
+#### Scenario: The show-hints preference toggles the hint overlay
+
+- **WHEN** the `show-hints` preference is turned on
+- **THEN** the renderer emits `COL_HINT` hint lines that are absent when it is off

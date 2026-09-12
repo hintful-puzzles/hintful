@@ -6,7 +6,9 @@ that each contain exactly one of each letter. This capability specifies its port
 to the TS engine, with a three-valued wall model and half-grid cursor, shading
 of completed regions, and mistake-checking, on a border-marking mechanic it
 shares rather than owns.
+
 ## Requirements
+
 ### Requirement: Separate game implements the Game interface
 
 The engine SHALL provide a registered `separate` game implementing
@@ -181,8 +183,8 @@ SHALL take Separate's palette indices and a callback for the middle of a tile,
 and SHALL NOT branch on which game is drawing.
 
 Adopting the shared module SHALL NOT change any board Separate generates or any
-frame it draws: its differential fixtures and render snapshots SHALL pass
-unmodified. **The same standard binds the rendering extraction, and binds it
+frame it draws: the boards it generates for a given seed and its render snapshots
+SHALL be unchanged. **The same standard binds the rendering extraction, and binds it
 harder**, because a tier-2.5 snapshot records every draw call with its
 coordinates and its resolved color: sharing the look either changes no draw call
 or it is wrong.
@@ -190,7 +192,7 @@ or it is wrong.
 #### Scenario: The shared mechanic is adopted without moving a board
 
 - **WHEN** Separate is changed to consume the shared border-grid module
-- **THEN** every Separate differential fixture passes without modification
+- **THEN** every board Separate generates for a given seed is unchanged
 - **AND** every Separate render snapshot passes without `vitest -u`
 
 #### Scenario: The games' move formats stay independent
@@ -208,4 +210,3 @@ or it is wrong.
 - **THEN** the build fails, naming that game
 - **BECAUSE** two hand-written renderers of one mechanic is the state this
   module exists to end, and nothing else can see a third being written
-

@@ -66,33 +66,6 @@ carrying more.
   validated
 - **THEN** it is rejected with a message distinguishing too little from too much
 
-### Requirement: Ascent ports the four-tier deductive solver faithfully
-
-Ascent SHALL provide a solver that finds the unique completion of a graded puzzle,
-or reports that it cannot. The solver SHALL be a fixpoint of deduction rules gated
-by difficulty — Easy applying only single-position and simple-proximity reasoning,
-Normal adding path reasoning, Tricky adding simple single-number reasoning, and
-Hard adding full single-number and overlap reasoning. The solver SHALL NOT guess
-or backtrack at any difficulty tier.
-
-The generator SHALL use the graded solver to keep every board uniquely soluble at
-its target difficulty: it SHALL build a Hamiltonian path by the backbite
-algorithm, then either remove clue numbers while the solver still solves
-(non-Edges modes, honoring the symmetry and keep-endpoints options) or move
-numbers out to arrow clues via a maximal bipartite matching (Edges mode), retrying
-until soluble. Generation from a given seed SHALL be reproducible.
-
-#### Scenario: A graded board is solved only at its difficulty
-
-- **WHEN** a board generated at a given difficulty is solved
-- **THEN** the graded solver reaches the unique completion at that difficulty, and
-  a strictly weaker ruleset does not
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** the same seed is used twice for the same parameters
-- **THEN** both runs produce the identical description
-
 ### Requirement: Ascent input, movement and completion
 
 Ascent SHALL be playable by three number-entry methods: clicking a placed number
@@ -150,8 +123,7 @@ Seven of the 22 boards above Easy in this game's own frozen reference fixtures f
 to a lower tier, as did 56 of 180 freshly generated boards.
 
 Because generation is solver-gated at every removal, the correction changes every
-description above Easy; the byte-for-byte differential SHALL retain a way to run
-upstream's original gate, used by that differential alone. Upstream's generation
+description above Easy. Upstream's generation
 loop is unbounded, and the gate introduces rejections, so the loop SHALL be bounded.
 
 The gate's probe SHALL run on solver scratch state that carries nothing from any
@@ -216,3 +188,30 @@ has a genuine secondary meaning and correctly does not declare the flag.
 - **WHEN** a partially typed number is pending and the player moves the cursor,
   presses Enter, or clicks the board
 - **THEN** the number is committed, as before
+
+### Requirement: Ascent solves with a four-tier deductive solver
+
+Ascent SHALL provide a solver that finds the unique completion of a graded puzzle,
+or reports that it cannot. The solver SHALL be a fixpoint of deduction rules gated
+by difficulty — Easy applying only single-position and simple-proximity reasoning,
+Normal adding path reasoning, Tricky adding simple single-number reasoning, and
+Hard adding full single-number and overlap reasoning. The solver SHALL NOT guess
+or backtrack at any difficulty tier.
+
+The generator SHALL use the graded solver to keep every board uniquely soluble at
+its target difficulty: it SHALL build a Hamiltonian path by the backbite
+algorithm, then either remove clue numbers while the solver still solves
+(non-Edges modes, honoring the symmetry and keep-endpoints options) or move
+numbers out to arrow clues via a maximal bipartite matching (Edges mode), retrying
+until soluble. Generation from a given seed SHALL be reproducible.
+
+#### Scenario: A graded board is solved only at its difficulty
+
+- **WHEN** a board generated at a given difficulty is solved
+- **THEN** the graded solver reaches the unique completion at that difficulty, and
+  a strictly weaker ruleset does not
+
+#### Scenario: Generation is reproducible from a seed
+
+- **WHEN** the same seed is used twice for the same parameters
+- **THEN** both runs produce the identical description

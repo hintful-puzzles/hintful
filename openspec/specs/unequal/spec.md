@@ -243,8 +243,7 @@ drop a stored step's dead marks (or resolve the step) before each (re-)display s
 kept plan never tells the player to remove a candidate already gone.
 
 The solver's recording mode SHALL be gated so that with recording off the
-generator/solve path is byte-for-byte unchanged (verified by the existing C
-differential), and one recorded deduction *firing* (one inequality link, or one
+generator/solve path is unchanged, and one recorded deduction *firing* (one inequality link, or one
 cell+direction adjacency clue) SHALL map to exactly one `group` so a hint step
 never mixes clues.
 
@@ -288,8 +287,7 @@ never mixes clues.
 
 Unequal SHALL implement `requestKeys(params)` returning one button per grid value
 `1..order` followed by a clear key (button code `8`, labeled `"Clear"`),
-reproducing upstream `game_request_keys` so the keypad matches the C build, in both
-the inequality and adjacent (Adjacent) modes.
+in both the inequality and adjacent (Adjacent) modes.
 
 Faithful to upstream's `c2n`/`game_request_keys`, the value-to-button mapping
 depends on the order: for `order < 10` the buttons are `'1'..'9'` (value `v` ⇒

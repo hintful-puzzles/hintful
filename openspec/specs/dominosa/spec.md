@@ -61,33 +61,6 @@ number `0…n` does not occur exactly `n+2` times.
 - **WHEN** `validateDesc` is given a desc whose number balance is wrong
 - **THEN** it returns a non-null error string
 
-### Requirement: Dominosa ports the graded solver faithfully
-
-The port SHALL implement upstream `run_solver` with its exact deductive power at
-each difficulty, returning the impossible / unique / ambiguous (0 / 1 / 2)
-verdict identical to the C solver on every board. Easy SHALL perform the
-domino-single-placement and square-single-placement deductions. Normal SHALL
-additionally perform square-single-domino, domino-must-overlap, the two
-local-duplicate deductions, and the parity deduction (a domino whose placement
-would split the unfilled area into two odd-sized regions is ruled out, detected
-by bridge-finding over the placement graph). Tricky SHALL additionally perform set
-analysis without doubles; `Unreasonable` SHALL additionally perform set analysis
-with doubles and the forcing-chain deduction (parity-linked chains of forced
-placements, using a flip DSF). The solver SHALL track the maximum difficulty
-level actually used.
-
-The forcing-chain deduction SHALL remain in the solver, so the generator grades
-on it and every description is unchanged; it SHALL NOT be recorded by the hint's
-deduction pass, because a closure over all placements is a search and no hint
-narrates a search on any tier.
-
-#### Scenario: A generated board is uniquely solvable at its difficulty
-
-- **WHEN** a board generated at difficulty `d` is solved from empty
-- **THEN** the solver returns unique (1) and reports `max_diff_used == d`, and —
-  for a board above Easy — fails to reach a unique solution (returns 2) when
-  capped at the difficulty one level below `d`
-
 ### Requirement: Dominosa input places dominoes and barrier edges
 
 A left-click or `CURSOR_SELECT` between two adjacent clue numbers SHALL toggle a
@@ -134,24 +107,6 @@ the always-on red **clash** highlight (a domino value placed more than once).
   without the cell's own value changing
 - **THEN** the mistake overlay is painted on that later frame
 
-### Requirement: Dominosa renders to upstream parity under the web geometry
-
-The renderer SHALL draw the rounded-corner domino ends (circles plus rectangles
-per upstream `draw_tile`), the clue numbers, the barrier edge lines, the two
-value-highlight colors, the red clash fill, the half-grid cursor corners, and
-the completion flash, using the web build's `NARROW_BORDERS` geometry
-(`BORDER = −DOMINO_GUTTER`). The palette SHALL mirror the upstream color enum
-index-for-index, with the fork mistake-overlay color appended past it. Every
-per-square overlay (domino type / clash / highlight / edge / cursor / flash /
-mistake) SHALL be part of the render diff key so it repaints and clears
-correctly.
-
-#### Scenario: A clash renders red
-
-- **WHEN** the same domino value is placed in two locations
-- **THEN** both placements render with the clash color rather than the normal
-  domino color
-
 ### Requirement: Dominosa provides an explained deductive hint
 
 The `dominosa` game SHALL implement `Game.hint(state)`, returning a narrated
@@ -172,8 +127,7 @@ quality bar):
 `hint()` SHALL refuse (`{ ok: false, error }`, lighting the `findMistakes`
 overlay) when the board is already solved, contains a mistake, or is an
 Ambiguous (not uniquely solvable) board with no forced deduction to teach. The
-recorder SHALL be gated so the generator's `runSolver` path — and thus the
-byte-match differential — is unchanged.
+recorder SHALL be gated so the generator's `runSolver` path is unchanged.
 
 #### Scenario: A hint refuses on a solved board
 
@@ -265,3 +219,46 @@ into the render cache key so the box appears and clears on selection change.
 - **WHEN** a pair is highlighted and the player then completes the board
 - **THEN** the highlight is cleared, and neither selecting nor clearing a highlight ever
   added a move, an undo entry, or anything to the saved game
+
+### Requirement: Dominosa solves with a graded deductive solver
+
+The solver SHALL grade by difficulty, as upstream's `run_solver` does, returning
+the impossible / unique / ambiguous (0 / 1 / 2) verdict. Easy SHALL perform the
+domino-single-placement and square-single-placement deductions. Normal SHALL
+additionally perform square-single-domino, domino-must-overlap, the two
+local-duplicate deductions, and the parity deduction (a domino whose placement
+would split the unfilled area into two odd-sized regions is ruled out, detected
+by bridge-finding over the placement graph). Tricky SHALL additionally perform set
+analysis without doubles; `Unreasonable` SHALL additionally perform set analysis
+with doubles and the forcing-chain deduction (parity-linked chains of forced
+placements, using a flip DSF). The solver SHALL track the maximum difficulty
+level actually used.
+
+The forcing-chain deduction SHALL remain in the solver, so the generator grades
+on it and every description is unchanged; it SHALL NOT be recorded by the hint's
+deduction pass, because a closure over all placements is a search and no hint
+narrates a search on any tier.
+
+#### Scenario: A generated board is uniquely solvable at its difficulty
+
+- **WHEN** a board generated at difficulty `d` is solved from empty
+- **THEN** the solver returns unique (1) and reports `max_diff_used == d`, and —
+  for a board above Easy — fails to reach a unique solution (returns 2) when
+  capped at the difficulty one level below `d`
+
+### Requirement: Dominosa renders dominoes, barriers and overlays under the web geometry
+
+The renderer SHALL draw the rounded-corner domino ends (circles plus rectangles
+per upstream `draw_tile`), the clue numbers, the barrier edge lines, the two
+value-highlight colors, the red clash fill, the half-grid cursor corners, and
+the completion flash, using the web build's `NARROW_BORDERS` geometry
+(`BORDER = −DOMINO_GUTTER`). Every
+per-square overlay (domino type / clash / highlight / edge / cursor / flash /
+mistake) SHALL be part of the render diff key so it repaints and clears
+correctly.
+
+#### Scenario: A clash renders red
+
+- **WHEN** the same domino value is placed in two locations
+- **THEN** both placements render with the clash color rather than the normal
+  domino color

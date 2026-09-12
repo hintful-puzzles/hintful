@@ -75,44 +75,6 @@ unknown character, or that omits the target coordinates.
   is validated
 - **THEN** it is rejected with a message distinguishing too much from too little
 
-### Requirement: Slide ports the shortest-path solver faithfully
-
-Slide SHALL provide a solver that finds the minimum number of moves to bring the
-main block to the target, or reports that no solution exists. The solver SHALL be
-a breadth-first search over canonical board layouts, deduplicating already-seen
-layouts by exact board equality and expanding them in first-in-first-out order,
-so that the first path found to the target is a shortest one. The solver SHALL
-respect a move limit by abandoning the search once every remaining candidate
-exceeds it.
-
-The solver SHALL NOT depend on the ordered-collection semantics of upstream's
-`tree234`; its result SHALL depend only on the breadth-first order and on exact
-layout deduplication.
-
-The generator SHALL use the solver to keep every board soluble: it SHALL remove
-singleton blocks until the board becomes soluble, then attempt to merge adjacent
-blocks in a randomized order, keeping a merge only while the board stays soluble.
-Generation from a given seed SHALL be reproducible.
-
-The generator SHALL test solubility **after** its final singleton removal as well
-as before each one. Upstream tests only before, so a board that becomes soluble
-only once its last singleton goes falls through its loop into an abort — which is
-every board at the smallest legal size. The added check draws no randomness and is
-unreachable on any board upstream generates successfully, so it SHALL NOT change
-any description upstream produces.
-
-#### Scenario: The solver returns the shortest solution
-
-- **WHEN** a soluble board is solved
-- **THEN** the reported move count equals the length of a shortest sequence that
-  brings the main block to the target, and the returned moves realize it
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** the same seed is used twice for the same parameters
-- **THEN** both runs produce the identical board description and minimum move
-  count
-
 ### Requirement: Slide input, movement and completion
 
 Slide SHALL be played by grabbing a block, dragging it, and releasing it. On a
@@ -314,3 +276,39 @@ color prominent in one scheme is not thereby prominent in the other.
 - **WHEN** a player uses only the keyboard from a fresh board
 - **THEN** every move the pointer can make is reachable, and the board can be
   driven to completion
+
+### Requirement: Slide solves for a shortest path and keeps every board soluble
+
+Slide SHALL provide a solver that finds the minimum number of moves to bring the
+main block to the target, or reports that no solution exists. The solver SHALL be
+a breadth-first search over canonical board layouts, deduplicating already-seen
+layouts by exact board equality and expanding them in first-in-first-out order,
+so that the first path found to the target is a shortest one. The solver SHALL
+respect a move limit by abandoning the search once every remaining candidate
+exceeds it.
+
+The solver SHALL NOT depend on the ordered-collection semantics of upstream's
+`tree234`; its result SHALL depend only on the breadth-first order and on exact
+layout deduplication.
+
+The generator SHALL use the solver to keep every board soluble: it SHALL remove
+singleton blocks until the board becomes soluble, then attempt to merge adjacent
+blocks in a randomized order, keeping a merge only while the board stays soluble.
+Generation from a given seed SHALL be reproducible.
+
+The generator SHALL test solubility **after** its final singleton removal as well
+as before each one. Upstream tests only before, so a board that becomes soluble
+only once its last singleton goes falls through its loop into an abort — which is
+every board at the smallest legal size. The added check draws no randomness.
+
+#### Scenario: The solver returns the shortest solution
+
+- **WHEN** a soluble board is solved
+- **THEN** the reported move count equals the length of a shortest sequence that
+  brings the main block to the target, and the returned moves realize it
+
+#### Scenario: Generation is reproducible from a seed
+
+- **WHEN** the same seed is used twice for the same parameters
+- **THEN** both runs produce the identical board description and minimum move
+  count

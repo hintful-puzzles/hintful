@@ -212,11 +212,6 @@ live here:
   (35% of generation time → a hash + exact compare, 3.4× faster) was provable
   precisely because the differential pinned the output. When an optimization
   looks risky, check whether a fixture already pins its observable output.
-- **Try to keep both.** Spokes ships a corrected difficulty-acceptance check
-  *and* retains upstream's original one, reachable by the differential alone —
-  fixtures still byte-match the old path while players get better boards.
-  Reach for that shape before retiring a fixture (`spokes` spec, "grades its
-  difficulty tiers honestly").
 - **RNG draws are observable side effects.** A generator loop that *rejects* a
   candidate has already spent its draws; "pick only legal candidates in the
   first place" silently diverges the stream. Tell: a C-style loop whose counter

@@ -216,8 +216,7 @@ resolve the step) before each (re-)display so a kept plan never tells the player
 act on something already resolved.
 
 The solver's recording mode SHALL be gated so that with recording off the
-generator/solve path is **byte-for-byte unchanged** (verified by the existing
-frozen `group-c-reference.json` differential), and one recorded deduction *firing*
+generator/solve path is **byte-for-byte unchanged**, and one recorded deduction *firing*
 SHALL map to exactly one `group` so a hint step never mixes deductions.
 
 #### Scenario: Associativity forces a placement and the hint teaches why

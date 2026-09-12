@@ -115,64 +115,6 @@ the region structure and the fixed clues.
 - **WHEN** a description whose clue exceeds the size of its region is validated
 - **THEN** it is rejected as an over-large clue
 
-### Requirement: Seismic ports the deductive solver and solver-gated generator
-
-Seismic SHALL provide a solver that fills the grid by candidate elimination — a
-naked single and a hidden single within a region at Easy, plus a trial-placement
-deduction at Normal — reporting the difficulty reached or that the puzzle is not
-uniquely soluble. The solver SHALL enforce the mode's keep-apart rule and the
-one-of-each-number-per-region rule while eliminating candidates.
-
-The generator SHALL partition the grid into connected regions **before** placing
-any number, and SHALL then fill each region with the numbers 1 to its size by
-searching over the solver's own candidate propagation, so that a region holds
-exactly the numbers it requires by construction. It SHALL NOT depend on a
-post-hoc test that a randomly-merged region happens to hold a valid number set:
-that is upstream's approach, its author records it as needing replacement, and its
-success rate falls to nothing above roughly fifty cells. The generator SHALL then
-strip clues while the puzzle stays soluble at the target difficulty, and accept a
-puzzle only when it is soluble at that difficulty and not at the difficulty below
-— both stages unchanged. Generation from a given seed SHALL be reproducible,
-reusing the bit-identical random source.
-
-Every generated board SHALL satisfy, by test rather than by luck: every region is
-connected and holds exactly the numbers 1 to its size; the mode's keep-apart rule
-holds across the whole solution; and the description round-trips through the
-codec.
-
-Upstream's fill-then-merge generator SHALL be retained behind an option that only
-the differential test sets, so that the frozen C-reference fixtures continue to
-match byte-for-byte and the solver, the description codec and the clue-stripping
-loop keep that oracle. A test SHALL assert that the option still changes the
-generated description, so the oracle cannot decay into re-testing the shipped
-path.
-
-#### Scenario: The solver grades a puzzle's difficulty
-
-- **WHEN** a uniquely soluble puzzle is solved
-- **THEN** the solver reports the lowest difficulty at which its deductions
-  complete the grid
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** the same seed is used twice for the same parameters
-- **THEN** both runs produce the identical board description
-
-#### Scenario: Every region is valid by construction
-
-- **WHEN** a board is generated at any preset
-- **THEN** each of its regions is connected and holds exactly one of each number
-  from 1 to that region's size, and no two equal numbers violate the mode's
-  keep-apart rule
-
-#### Scenario: The C-reference oracle still applies to the unchanged stages
-
-- **WHEN** the differential test generates each frozen fixture with upstream's
-  region grower selected
-- **THEN** the description matches the recorded C description byte-for-byte, and a
-  further test confirms that deselecting the option produces a different
-  description
-
 ### Requirement: Seismic input, note-taking and completion
 
 Seismic SHALL be played with the Solo control scheme: a left-click or the cursor
@@ -265,3 +207,45 @@ confused them.
 - **WHEN** the generator's region-size distribution is changed to admit a larger
   region
 - **THEN** the keypad admits the corresponding digits
+
+### Requirement: Seismic solves by candidate elimination and generates regions before numbers
+
+Seismic SHALL provide a solver that fills the grid by candidate elimination — a
+naked single and a hidden single within a region at Easy, plus a trial-placement
+deduction at Normal — reporting the difficulty reached or that the puzzle is not
+uniquely soluble. The solver SHALL enforce the mode's keep-apart rule and the
+one-of-each-number-per-region rule while eliminating candidates.
+
+The generator SHALL partition the grid into connected regions **before** placing
+any number, and SHALL then fill each region with the numbers 1 to its size by
+searching over the solver's own candidate propagation, so that a region holds
+exactly the numbers it requires by construction. It SHALL NOT depend on a
+post-hoc test that a randomly-merged region happens to hold a valid number set:
+that is upstream's approach, its author records it as needing replacement, and its
+success rate falls to nothing above roughly fifty cells. The generator SHALL then
+strip clues while the puzzle stays soluble at the target difficulty, and accept a
+puzzle only when it is soluble at that difficulty and not at the difficulty below
+— both stages unchanged. Generation from a given seed SHALL be reproducible.
+
+Every generated board SHALL satisfy, by test rather than by luck: every region is
+connected and holds exactly the numbers 1 to its size; the mode's keep-apart rule
+holds across the whole solution; and the description round-trips through the
+codec.
+
+#### Scenario: The solver grades a puzzle's difficulty
+
+- **WHEN** a uniquely soluble puzzle is solved
+- **THEN** the solver reports the lowest difficulty at which its deductions
+  complete the grid
+
+#### Scenario: Generation is reproducible from a seed
+
+- **WHEN** the same seed is used twice for the same parameters
+- **THEN** both runs produce the identical board description
+
+#### Scenario: Every region is valid by construction
+
+- **WHEN** a board is generated at any preset
+- **THEN** each of its regions is connected and holds exactly one of each number
+  from 1 to that region's size, and no two equal numbers violate the mode's
+  keep-apart rule

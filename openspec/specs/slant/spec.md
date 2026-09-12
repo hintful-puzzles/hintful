@@ -54,54 +54,6 @@ the game, with all squares initially blank.
   clue count not matching `(w+1) × (h+1)`
 - **THEN** it returns a non-null error string
 
-### Requirement: Slant ports the graded solver faithfully
-
-The port SHALL implement the upstream solver with its exact deductive power
-at each difficulty. At Easy: the clue-point counting deduction (a clue whose
-remaining lines equal zero or its remaining undecided neighbors fills all
-of them) and immediate loop avoidance (a square whose one orientation would
-close a loop takes the other). At Normal, additionally: single-pair
-equivalence tracking around clue points (two adjacent undecided
-equivalent squares count jointly as one line; a 2-clue with two undecided
-adjacent neighbors marks them equivalent), slash-value propagation through
-equivalence classes, dead-end avoidance (never connect two non-border
-vertex groups that each have at most one remaining exit), and the v-shape
-bitmap deductions (placed slashes, 1-clues and 3-clues rule out v-shapes;
-2-clues propagate ruled-out v-shapes to their far side; a square pair with
-both v-shapes ruled out becomes equivalent). The solver SHALL return
-impossible / unique / non-converged verdicts identical to the C solver on
-every board, including release-build `fill_square` semantics (its
-conflict and loop early-outs exist only under `SOLVER_DIAGNOSTICS` and are
-NOT active). The solver SHALL be reused by `solve()` and `findMistakes`.
-
-#### Scenario: Generated boards solve at exactly their difficulty
-
-- **WHEN** a board generated at Normal is solved
-- **THEN** the Normal solver reaches the unique solution
-- **AND** the Easy solver fails to converge on it
-
-#### Scenario: Solve recovers from a wrong mid-game state
-
-- **WHEN** `solve()` runs against a state containing wrong diagonals
-- **THEN** the returned move list yields the unique solution
-
-### Requirement: Slant generation is byte-identical to upstream
-
-`newDesc` SHALL reproduce upstream `new_game_desc` byte-for-byte for the
-same seed: filled-grid growth over a shuffled square order (forced by the
-vertex DSF where a loop would form, otherwise one `random_upto(rs, 2)`
-draw), full clue derivation, a single clue-index shuffle, two-pass
-solver-gated clue removal (pass 0 removes obvious starting points — 4s, 0s,
-border 2s, corner 1s, or everything at Easy — pass 1 the rest), and
-regeneration while the board is solvable one difficulty level down. A gated
-differential test SHALL assert byte-equal descs against C-recorded fixtures
-for all 6 presets and non-preset sizes.
-
-#### Scenario: Differential fixtures match
-
-- **WHEN** `newDesc` runs with a fixture's params and seed
-- **THEN** the emitted desc equals the C-recorded desc byte-for-byte
-
 ### Requirement: Slant computes live errors and completion as upstream
 
 `executeMove` SHALL recompute error state exactly as upstream
@@ -183,30 +135,6 @@ stand out.
   border
 - **THEN** it renders in the grounded color instead of its slash color
 
-### Requirement: Slant renders to full parity with the C build
-
-`redraw` SHALL render: chessboard-colored thick diagonals (color parity
-`(x^y)&1`), grid lines, corner dots where neighboring squares' diagonals
-meet the tile, clue circles with parity-colored rings and ink numbers,
-red error coloring for loop-edge slashes (including their corner dots) and
-unmet clue circles, a filled-square background tint, the cursor highlight,
-the grounded fade (per pref), and the upstream 3-phase completion flash.
-The drawstate SHALL diff a `(w+2) × (h+2)` packed `Int32Array` covering the
-border ring, with the findMistakes overlay carried in the diff key (a
-packed bit of the per-frame-rebuilt word). The palette SHALL be
-index-for-index with the C color enum.
-
-#### Scenario: A mistake overlay repaints an unchanged tile
-
-- **WHEN** a tile is painted, `findMistakes` flags it, and `redraw` runs
-  again with no tile change
-- **THEN** the second paint renders the red mistake styling
-
-#### Scenario: Border clue circles draw
-
-- **WHEN** a clue sits on the outer border of the point grid
-- **THEN** the border-ring tile pass draws its circle and number
-
 ### Requirement: Slant ships an explained deductive hint
 
 The game SHALL implement `hint()` returning a plan of narrated steps computed
@@ -214,7 +142,7 @@ by the game's own solver techniques from the player's current position (the
 solver seeded with the placed diagonals), refusing on a solved board and on a
 board with detectable mistakes (coupling to the `findMistakes` overlay and the
 banner). The plan SHALL be computed with the recorder off leaving the
-generator's solve path byte-identical (the byte-match differential unchanged).
+generator's solve path unchanged.
 
 Each step SHALL name its technique and, for the glance-able techniques
 (clue-counting, loop avoidance, dead-end avoidance), meet the Palisade quality
@@ -280,3 +208,67 @@ hint bit SHALL participate in the per-tile render-cache diff key.
 - **WHEN** any glance-able-technique step is displayed
 - **THEN** it carries a non-empty evidence area or a ringed anchor, never a
   bare conclusion
+
+### Requirement: Slant solves with a graded deductive solver
+
+The solver SHALL apply the following deductions at each difficulty. At Easy: the clue-point counting deduction (a clue whose
+remaining lines equal zero or its remaining undecided neighbors fills all
+of them) and immediate loop avoidance (a square whose one orientation would
+close a loop takes the other). At Normal, additionally: single-pair
+equivalence tracking around clue points (two adjacent undecided
+equivalent squares count jointly as one line; a 2-clue with two undecided
+adjacent neighbors marks them equivalent), slash-value propagation through
+equivalence classes, dead-end avoidance (never connect two non-border
+vertex groups that each have at most one remaining exit), and the v-shape
+bitmap deductions (placed slashes, 1-clues and 3-clues rule out v-shapes;
+2-clues propagate ruled-out v-shapes to their far side; a square pair with
+both v-shapes ruled out becomes equivalent). The solver SHALL return
+impossible / unique / non-converged verdicts. The solver SHALL be reused by `solve()` and `findMistakes`.
+
+#### Scenario: Generated boards solve at exactly their difficulty
+
+- **WHEN** a board generated at Normal is solved
+- **THEN** the Normal solver reaches the unique solution
+- **AND** the Easy solver fails to converge on it
+
+#### Scenario: Solve recovers from a wrong mid-game state
+
+- **WHEN** `solve()` runs against a state containing wrong diagonals
+- **THEN** the returned move list yields the unique solution
+
+### Requirement: Slant generates solver-gated boards reproducibly
+
+`newDesc` SHALL generate the same board for the same seed, by filled-grid growth over a shuffled square order (forced by the
+vertex DSF where a loop would form, otherwise one `random_upto(rs, 2)`
+draw), full clue derivation, a single clue-index shuffle, two-pass
+solver-gated clue removal (pass 0 removes obvious starting points — 4s, 0s,
+border 2s, corner 1s, or everything at Easy — pass 1 the rest), and
+regeneration while the board is solvable one difficulty level down.
+
+#### Scenario: Generation is reproducible from a seed
+
+- **WHEN** `newDesc` runs twice with the same params and seed
+- **THEN** both runs emit the identical Slant description
+
+### Requirement: Slant renders diagonals, clues, errors and the completion flash
+
+`redraw` SHALL render: chessboard-colored thick diagonals (color parity
+`(x^y)&1`), grid lines, corner dots where neighboring squares' diagonals
+meet the tile, clue circles with parity-colored rings and ink numbers,
+red error coloring for loop-edge slashes (including their corner dots) and
+unmet clue circles, a filled-square background tint, the cursor highlight,
+the grounded fade (per pref), and the upstream 3-phase completion flash.
+The drawstate SHALL diff a `(w+2) × (h+2)` packed `Int32Array` covering the
+border ring, with the findMistakes overlay carried in the diff key (a
+packed bit of the per-frame-rebuilt word).
+
+#### Scenario: A mistake overlay repaints an unchanged tile
+
+- **WHEN** a tile is painted, `findMistakes` flags it, and `redraw` runs
+  again with no tile change
+- **THEN** the second paint renders the red mistake styling
+
+#### Scenario: Border clue circles draw
+
+- **WHEN** a clue sits on the outer border of the point grid
+- **THEN** the border-ring tile pass draws its circle and number

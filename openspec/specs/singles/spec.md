@@ -103,30 +103,6 @@ solved-with-help.
 - **WHEN** `solve` is called on a board the solver cannot complete
 - **THEN** it returns a non-null error and applies no move
 
-### Requirement: Singles generator produces unique, difficulty-graded boards
-
-`newDesc` SHALL generate a board by constructing a Latin rectangle, adding black
-squares at random with solver assistance (forced whites laid between
-placements), and assigning numbers under the black squares so the solution stays
-unique. It SHALL accept the board only when it is solvable at the requested
-difficulty and *not* solvable one difficulty level below (with the sneaky
-generation-artifact deduction enabled), regenerating otherwise. Difficulty SHALL
-downgrade to Easy when `min(w, h) < 4`. The generation SHALL be RNG-faithful to
-upstream so that, over the bit-identical `random.ts`, the produced desc matches
-the C reference byte-for-byte for the same seed.
-
-#### Scenario: Generated boards are uniquely solvable at their difficulty
-
-- **WHEN** a board is generated at difficulty D
-- **THEN** the solver solves it at D
-- **AND** (for Normal) the solver fails to solve it at the level below D even
-  with the sneaky deduction
-
-#### Scenario: Desc matches the C reference byte-for-byte
-
-- **WHEN** `newDesc` runs for a seed and params recorded from the C build
-- **THEN** the produced desc equals the recorded C desc exactly
-
 ### Requirement: Singles rendering
 
 `redraw` SHALL draw a grid-outlined tile per cell: black (or red on error) fill
@@ -134,8 +110,7 @@ for a blackened cell, otherwise the background (or lowlight during the
 completion flash); a circle ring for a circled (white-marked) cell; the cell's
 number always for a white cell and, when the show-black-numbers preference is
 on, also for a black cell; cursor corners on the cursor cell; and a red grid
-outline when the board is in an impossible state. The palette SHALL be ordered
-index-for-index with the upstream color enum. A genuine completion (not a
+outline when the board is in an impossible state. A genuine completion (not a
 solved-with-help) SHALL trigger the completion flash.
 
 #### Scenario: A blackened cell renders black with no number by default
@@ -322,3 +297,26 @@ and the three highlight roles remain disjoint.
   protects a corner
 - **THEN** the numbers shade `COL_HINT_CELL` (digits on top) and the protected
   corner stays `COL_HINT_STRAND`, as before
+
+### Requirement: Singles generates unique, difficulty-graded boards
+
+`newDesc` SHALL generate a board by constructing a Latin rectangle, adding black
+squares at random with solver assistance (forced whites laid between
+placements), and assigning numbers under the black squares so the solution stays
+unique. It SHALL accept the board only when it is solvable at the requested
+difficulty and *not* solvable one difficulty level below (with the sneaky
+generation-artifact deduction enabled), regenerating otherwise. Difficulty SHALL
+downgrade to Easy when `min(w, h) < 4`. Generation from a given seed SHALL
+be reproducible.
+
+#### Scenario: Generated boards are uniquely solvable at their difficulty
+
+- **WHEN** a board is generated at difficulty D
+- **THEN** the solver solves it at D
+- **AND** (for Normal) the solver fails to solve it at the level below D even
+  with the sneaky deduction
+
+#### Scenario: Generation is reproducible from a seed
+
+- **WHEN** `newDesc` runs twice with the same params and seed
+- **THEN** both runs emit the identical Singles description

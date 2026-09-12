@@ -70,35 +70,6 @@ per-cage clue, with every cell starting blank (Keen has no givens).
   many clues, or a subtraction/division clue on a non-domino cage
 - **THEN** it returns a non-null error string
 
-### Requirement: Keen generates uniquely-solvable boards at the requested difficulty
-
-`newDesc` SHALL generate a full Latin square as the solution, partition it into
-cages (random dominoes plus folded singletons, every cage of area `≤ 6`), assign
-a balanced mix of cage operations and values avoiding low-quality clues, and
-accept the board only when the graded solver solves it at **exactly** the
-requested difficulty (solvable at `diff` but not at `diff − 1`), regenerating
-otherwise; a 3×3 puzzle requested above Normal SHALL be dialed down to Normal.
-Generation SHALL be RNG-faithful to upstream over the bit-identical `random.ts`,
-so the emitted desc matches the C reference byte-for-byte for the same seed. The
-generator SHALL carry a capped-iteration backstop that throws rather than
-hanging.
-
-#### Scenario: Generated board is uniquely solvable at its difficulty
-
-- **WHEN** a board is generated for given params
-- **THEN** the solver solves it uniquely at the requested difficulty
-- **AND** the solver fails to solve it at one difficulty level lower (for
-  difficulties above Easy)
-- **AND** every cage has area between 1 and 6, and every subtraction/division
-  cage has area 2
-
-#### Scenario: Generated desc matches the C reference byte-for-byte
-
-- **WHEN** a board is generated from a fixed seed and params matching a frozen C
-  trace fixture
-- **THEN** the emitted desc equals the recorded C desc exactly
-- **AND** the TS solver grades the board at the C-recorded difficulty
-
 ### Requirement: Keen solves cages with the shared Latin-square framework
 
 The solver SHALL ride on the shared generic `latin_solver` framework, supplying
@@ -161,8 +132,7 @@ cage's minimal cell, the placed digit or an auto-sized grid of pencil marks per
 cell, the cursor and pencil-mode highlights, live rule-violation errors (a cage
 whose filled digits violate its clue, and duplicate digits in a row or column),
 the Check & Save mistake overlay, and a completion flash. A CapsLock-style
-pencil-mode indicator SHALL be shown while persistent pencil mode is on. The
-palette SHALL be index-for-index with the upstream color enum. Rendering SHALL
+pencil-mode indicator SHALL be shown while persistent pencil mode is on. Rendering SHALL
 use a per-tile diff cache, with every overlay that is not part of the tile value
 (the mistake overlay) included in the diff key so it repaints on an
 already-drawn cell.
@@ -275,8 +245,7 @@ drop a stored step's dead marks (or resolve the step) before each (re-)display s
 kept plan never tells the player to remove a candidate already gone.
 
 The solver's recording mode SHALL be gated so that with recording off the
-generator/solve path is byte-for-byte unchanged (verified by the existing C
-differential), and one recorded deduction *firing* (one cage's candidate pruning,
+generator/solve path is byte-for-byte unchanged, and one recorded deduction *firing* (one cage's candidate pruning,
 or one digit-out-of-one-line cross-cage elimination) SHALL map to exactly one
 `group` so a hint step never mixes cages.
 
@@ -321,10 +290,29 @@ or one digit-out-of-one-line cross-cage elimination) SHALL map to exactly one
 
 Keen SHALL implement `requestKeys(params)` returning one button per digit `1..w`
 (labeled by the digit character) followed by a clear key (button code `8`,
-labeled `"Clear"`), reproducing upstream `game_request_keys` so the keypad matches
-the C build.
+labeled `"Clear"`), as upstream's `game_request_keys` does.
 
 #### Scenario: The keypad covers the grid's digits plus clear
 
 - **WHEN** the key labels are requested for a `6×6` Keen board
 - **THEN** the result is the buttons `1,2,…,6` followed by a clear key
+
+### Requirement: Keen generates boards uniquely solvable at exactly the requested difficulty
+
+`newDesc` SHALL generate a full Latin square as the solution, partition it into
+cages (random dominoes plus folded singletons, every cage of area `≤ 6`), assign
+a balanced mix of cage operations and values avoiding low-quality clues, and
+accept the board only when the graded solver solves it at **exactly** the
+requested difficulty (solvable at `diff` but not at `diff − 1`), regenerating
+otherwise; a 3×3 puzzle requested above Normal SHALL be dialed down to Normal. The
+generator SHALL carry a capped-iteration backstop that throws rather than
+hanging.
+
+#### Scenario: Generated board is uniquely solvable at its difficulty
+
+- **WHEN** a board is generated for given params
+- **THEN** the solver solves it uniquely at the requested difficulty
+- **AND** the solver fails to solve it at one difficulty level lower (for
+  difficulties above Easy)
+- **AND** every cage has area between 1 and 6, and every subtraction/division
+  cage has area 2

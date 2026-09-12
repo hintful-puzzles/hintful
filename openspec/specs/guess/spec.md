@@ -5,7 +5,9 @@ Guess, the Mastermind puzzle of deducing a hidden combination of colors from the
 feedback each submitted row earns. This capability specifies its port to the TS
 engine: obfuscated solution descriptions, Knuth-style scoring, and drag, hold,
 keyboard and hint input.
+
 ## Requirements
+
 ### Requirement: Guess game implements the Game interface
 
 The engine SHALL provide a registered `guess` game implementing
@@ -39,8 +41,7 @@ ignored). The two upstream presets — **Standard** (`6,4,10,false,true`) and
 The Guess `newDesc` SHALL draw a random color sequence (each peg uniformly from
 `1..ncolors`, redrawing on a repeat when `allowMultiple` is false), encode it as
 a byte-per-peg bitmap, apply the upstream `obfuscate_bitmap` SHA-1 masking, and
-hex-encode the result. The desc SHALL be byte-identical to the C build for the
-same random seed. `validateDesc` SHALL reject a desc of wrong length or one whose
+hex-encode the result. `validateDesc` SHALL reject a desc of wrong length or one whose
 de-obfuscated bytes fall outside `1..ncolors`. `newState` SHALL recover the
 solution by hex-decoding and de-obfuscating the desc.
 
@@ -118,4 +119,3 @@ next working row.
 - **WHEN** a slot is held and a non-winning guess is submitted
 - **THEN** the next working row is pre-filled with the held peg's color and
   unheld slots are cleared
-

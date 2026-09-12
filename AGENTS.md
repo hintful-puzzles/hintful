@@ -427,11 +427,15 @@ verdict on every intermediate board, so **one byte-match assertion validated
 generator, solver and codec together**. That is a lot of assurance in one line,
 which is why dropping it leaves a hole that must be filled deliberately.
 
-Three things this does **not** license:
+**No requirement asks for C compatibility** (owner, 2026-09-13: *"it was just
+something we cared about during the port, but it's not a concern anymore"*). A
+divergence does not keep upstream's path reachable so that a differential stays
+green; it retires or re-founds the fixture.
+
+Two things this does **not** license:
 
 1. **Churn.** "Wherever it's worth it" is the whole test. A divergence still needs a stated player-visible benefit; tidiness is still not one (playbook §4 rule 3's second half survives its first half).
 2. **Losing the assurance silently.** The byte-match was the strongest verification available, and dropping it leaves a hole that must be filled deliberately — normally "every generated board is uniquely solvable at exactly its stated difficulty" as a property test. Say what replaces the oracle, in the change.
-3. **Assuming you must choose.** **Often you can diverge and keep the oracle as a test.** Spokes is the worked example (`spokes` spec, "grades its difficulty tiers honestly"): it ships a corrected acceptance check *and* retains upstream's original one, reachable by the differential alone, so the byte-match fixtures still pass against the old path while players get the better boards. Reach for that shape before retiring a differential.
 
 Four rules, from `add-loopy-ts-port`; the followable form is [`docs/games/solver-and-generator.md`](docs/games/solver-and-generator.md) § "Divergence and what it costs":
 

@@ -5,7 +5,9 @@ Same Game, the puzzle of clearing the board by removing connected groups of one
 color, scoring more for larger groups. This capability specifies its port to the
 TS engine: guaranteed-soluble and random generation, removal with scoring and
 compaction, and two-click selection, keyboard input and a live score.
+
 ## Requirements
+
 ### Requirement: Same Game implements the Game interface
 
 The engine SHALL provide a registered `samegame` game implementing
@@ -38,31 +40,6 @@ NOT provide `solve`, `hint`, or `findMistakes`.
 - **THEN** it returns a non-null error string
 - **AND** `{ soluble: false, w: 2, h: 2, ncols: 3 }` (area `4 < 2·ncols`) also
   returns a non-null error string
-
-### Requirement: Same Game generates guaranteed-soluble and random boards
-
-`newDesc` SHALL produce the board as a comma-separated list of `w·h` color
-integers in row-major order. When `soluble` is true it SHALL use the
-inverse-move generator (repeatedly inserting a verified connected blob whose
-removal reproduces the prior grid, so the board is clearable); when `soluble` is
-false it SHALL use the legacy random generator (at least two tiles of every
-color, the remainder filled at random). The generated desc SHALL be
-byte-identical to the C build for the same random seed and params.
-`validateDesc` SHALL reject a desc without exactly `w·h` comma-separated
-integers, or any integer outside `0..ncols`. `newState` SHALL parse the desc into
-the tile grid with score 0 and the complete/impossible flags clear.
-
-#### Scenario: A soluble description is byte-identical to C
-
-- **WHEN** `newDesc` runs for a soluble preset with a fixed seed
-- **THEN** the desc equals the C engine's desc for that seed byte-for-byte
-- **AND** `validateDesc` accepts it and `newState` parses `w·h` tiles
-
-#### Scenario: A malformed description is rejected
-
-- **WHEN** `validateDesc` is given a desc with too few numbers, or one
-  containing a color greater than `ncols`
-- **THEN** it returns a non-null error string
 
 ### Requirement: Same Game removes connected groups, scores, and compacts
 
@@ -130,3 +107,25 @@ when impossible.
 - **WHEN** a `remove` move is applied
 - **THEN** `changedState` leaves the Ui with no active selection
 
+### Requirement: Same Game generates soluble and random boards
+
+`newDesc` SHALL produce the board as a comma-separated list of `w·h` color
+integers in row-major order. When `soluble` is true it SHALL use the
+inverse-move generator (repeatedly inserting a verified connected blob whose
+removal reproduces the prior grid, so the board is clearable); when `soluble` is
+false it SHALL use the legacy random generator (at least two tiles of every
+color, the remainder filled at random).
+`validateDesc` SHALL reject a desc without exactly `w·h` comma-separated
+integers, or any integer outside `0..ncols`. `newState` SHALL parse the desc into
+the tile grid with score 0 and the complete/impossible flags clear.
+
+#### Scenario: A soluble description is well-formed
+
+- **WHEN** `newDesc` runs for a soluble preset with a fixed seed
+- **THEN** `validateDesc` accepts it and `newState` parses `w·h` tiles
+
+#### Scenario: A malformed description is rejected
+
+- **WHEN** `validateDesc` is given a desc with too few numbers, or one
+  containing a color greater than `ncols`
+- **THEN** it returns a non-null error string

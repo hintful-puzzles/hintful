@@ -66,40 +66,6 @@ that is syntactically valid but geometrically impossible or unsolvable.
   is validated
 - **THEN** it is rejected with a message distinguishing which
 
-### Requirement: Loopy ports the graded solver faithfully
-
-Loopy SHALL provide a solver with four difficulty tiers — Easy, Normal, Tricky,
-Hard — implemented as deduction rungs run to a fixpoint. The solver SHALL NOT
-backtrack or guess at any tier; Tricky SHALL NOT be a separate rung but SHALL
-unlock additional inferences within the dline rung.
-
-The dline machinery SHALL index a pair of edges adjacent around a common dot
-consistently whether that pair is reached from the dot or from the face, and
-this consistency SHALL be verified for every grid type, because a mismatch
-weakens the solver silently rather than failing.
-
-Two upstream behaviors SHALL be reproduced rather than corrected, because the
-generator is solver-gated and correcting either changes which puzzles are
-generated:
-
-- the identical-lines face deduction SHALL report "no progress" even when it
-  changes the board;
-- the parity deduction SHALL preserve upstream's truncating-remainder arithmetic
-  rather than normalizing it to a non-negative residue.
-
-Both SHALL carry comments recording why they are not defects to be fixed.
-
-#### Scenario: The solver grades a board at the intended difficulty
-
-- **WHEN** a board generated at a given difficulty is solved
-- **THEN** it is solvable at that difficulty and not at the tier below
-
-#### Scenario: The dline index is consistent from both directions
-
-- **WHEN** a dline is addressed via its dot and via its face, for any face and
-  corner of any grid type
-- **THEN** both address the same pair of edges
-
 ### Requirement: Loopy generation recovers from a degenerate grid patch
 
 Loopy SHALL recover from a degenerate grid patch: where building a grid from a
@@ -254,3 +220,26 @@ recomputed when it changes.
 
 - **WHEN** the drawing surface is resized after the board has been drawn
 - **THEN** clue text is drawn at the correct position for the new tile size
+
+### Requirement: Loopy grades boards with a four-tier deductive solver
+
+Loopy SHALL provide a solver with four difficulty tiers — Easy, Normal, Tricky,
+Hard — implemented as deduction rungs run to a fixpoint. The solver SHALL NOT
+backtrack or guess at any tier; Tricky SHALL NOT be a separate rung but SHALL
+unlock additional inferences within the dline rung.
+
+The dline machinery SHALL index a pair of edges adjacent around a common dot
+consistently whether that pair is reached from the dot or from the face, and
+this consistency SHALL be verified for every grid type, because a mismatch
+weakens the solver silently rather than failing.
+
+#### Scenario: The solver grades a board at the intended difficulty
+
+- **WHEN** a board generated at a given difficulty is solved
+- **THEN** it is solvable at that difficulty and not at the tier below
+
+#### Scenario: The dline index is consistent from both directions
+
+- **WHEN** a dline is addressed via its dot and via its face, for any face and
+  corner of any grid type
+- **THEN** both address the same pair of edges

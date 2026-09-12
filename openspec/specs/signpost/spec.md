@@ -5,7 +5,9 @@ Signpost, the puzzle of linking every square into one numbered sequence in which
 each square's arrow points toward the next. This capability specifies its port
 to the TS engine: the linked-chain state model, the deductive solver,
 mistake-checking, and a drag sprite drawn with a blitter.
+
 ## Requirements
+
 ### Requirement: Signpost game implements the Game interface
 
 The engine SHALL provide a registered `signpost` game implementing
@@ -79,43 +81,6 @@ arrays + disjoint-set forest, no explicit free).
 - **WHEN** two differently-colored regions are joined
 - **THEN** the merged region takes the color group of the larger of the two
 
-### Requirement: Signpost ports the deductive solver faithfully
-
-The port SHALL implement the upstream solver: iterate `update_numbers` and
-a single forced-link deduction (`solve_single` — if a cell has exactly one
-legal next cell it may link to, make that link; symmetrically for a sole
-legal predecessor) to a fixpoint, gated by `move_couldfit` (a region may
-only bridge a numeric gap it fits into). The solver SHALL report the board
-solved, stuck, or impossible, and its verdict SHALL match the C solver on
-every intermediate board (the generator is solver-gated).
-
-#### Scenario: Forced links are deduced
-
-- **WHEN** the solver runs on a board where a cell points at exactly one
-  legal continuation
-- **THEN** it links them, and iterating to a fixpoint solves any generated
-  board
-
-#### Scenario: Solve recovers the chain from a dirty state
-
-- **WHEN** `solve()` is invoked on a partially- and wrongly-linked board
-- **THEN** it returns a move reconstructing the correct full `1 … n` chain
-
-### Requirement: Signpost generates byte-identically to the C build
-
-For a given random seed and params, `newDesc` SHALL produce the exact desc
-string the C generator produces — the `new_game_fill` head+tail random walk,
-the `new_game_strip` shuffle-and-solver-gated clue selection, and the
-final `generate_desc` encoding — reproduced by matching C's `random_upto` /
-`shuffle` call order. A committed gated differential test SHALL assert this
-across all 6 presets and representative non-preset sizes.
-
-#### Scenario: Generated descs match the C reference
-
-- **WHEN** the trace harness records `(preset, seed) → desc` fixtures from
-  the pure-C build and the TS `newDesc` is run for the same seeds
-- **THEN** every TS desc equals the recorded C desc byte-for-byte
-
 ### Requirement: Signpost reports mistakes for Check & Save
 
 Because generated boards are uniquely solvable, `signpost` SHALL implement
@@ -138,10 +103,55 @@ wrong ones.
 - **WHEN** `findMistakes` runs on a desc with no unique solution
 - **THEN** it returns an empty list
 
-### Requirement: Signpost renders to full parity with a blitter drag sprite
+### Requirement: Signpost exposes the victory-flash preference
 
-`render.ts` SHALL draw the board with palette indices matching the C enum,
-including the four 16-entry HSV color ramps for region backgrounds and mid
+`signpost` SHALL expose the sole upstream preference through the `Game.prefs`
+hook: `flash-type` (a choice of "unidirectional" vs "meshing gears" victory
+rotation). Setting it SHALL change the win-flash spin direction pattern and
+SHALL persist through the standard preferences mechanism.
+
+#### Scenario: The flash preference is offered and applied
+
+- **WHEN** the player opens Preferences for signpost
+- **THEN** a victory-rotation-effect choice is shown, and selecting "meshing
+  gears" makes alternate cells spin in opposite directions on the next win
+
+### Requirement: Signpost solves by forced-link deduction
+
+The solver SHALL iterate `update_numbers` and
+a single forced-link deduction (`solve_single` — if a cell has exactly one
+legal next cell it may link to, make that link; symmetrically for a sole
+legal predecessor) to a fixpoint, gated by `move_couldfit` (a region may
+only bridge a numeric gap it fits into). The solver SHALL report the board
+solved, stuck, or impossible.
+
+#### Scenario: Forced links are deduced
+
+- **WHEN** the solver runs on a board where a cell points at exactly one
+  legal continuation
+- **THEN** it links them, and iterating to a fixpoint solves any generated
+  board
+
+#### Scenario: Solve recovers the chain from a dirty state
+
+- **WHEN** `solve()` is invoked on a partially- and wrongly-linked board
+- **THEN** it returns a move reconstructing the correct full `1 … n` chain
+
+### Requirement: Signpost generates solver-gated boards reproducibly
+
+For a given random seed and params, `newDesc` SHALL produce the same desc
+on every run — the `new_game_fill` head+tail random walk,
+the `new_game_strip` shuffle-and-solver-gated clue selection, and the
+final `generate_desc` encoding.
+
+#### Scenario: Generation is reproducible from a seed
+
+- **WHEN** `newDesc` runs twice with the same params and seed
+- **THEN** both runs emit the identical Signpost description
+
+### Requirement: Signpost renders region colors, arrows and a blitter drag sprite
+
+`render.ts` SHALL draw the board with the four 16-entry HSV color ramps for region backgrounds and mid
 / dim arrow colors. The drawstate SHALL key a per-cell packed `Int32Array`
 cache (region color group, sequence number, arrow direction, and the
 immutable / error / cursor / drag-origin / flash / findMistakes-overlay
@@ -163,17 +173,3 @@ first-draw branch fills the background.
 
 - **WHEN** the findMistakes overlay is active for a wrong link
 - **THEN** that cell is drawn with the `COL_ERROR` styling on the next paint
-
-### Requirement: Signpost exposes the victory-flash preference
-
-`signpost` SHALL expose the sole upstream preference through the `Game.prefs`
-hook: `flash-type` (a choice of "unidirectional" vs "meshing gears" victory
-rotation). Setting it SHALL change the win-flash spin direction pattern and
-SHALL persist through the standard preferences mechanism.
-
-#### Scenario: The flash preference is offered and applied
-
-- **WHEN** the player opens Preferences for signpost
-- **THEN** a victory-rotation-effect choice is shown, and selecting "meshing
-  gears" makes alternate cells spin in opposite directions on the next win
-

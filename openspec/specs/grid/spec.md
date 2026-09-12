@@ -25,8 +25,7 @@ face per cell with `tileSize = 20`, shared corner dots deduplicated. A shared
 `makeConsistent` step SHALL derive the edges (deduplicated by their dot pair,
 assigning each edge its one or two faces), the per-face edge lists, the per-dot
 edge and face rings (walked clockwise then anticlockwise past the exterior face),
-and the bounding box. All ordering tie-breaks SHALL be by array index, which
-reproduces upstream's sequential-allocation pointer order.
+and the bounding box. All ordering tie-breaks SHALL be by array index.
 
 That module is a **barrel**, and its own doc comment tells callers to import from
 it rather than from the parts (`grid-core.ts`, `grid-desc.ts`, `grid-geometry.ts`,
@@ -49,45 +48,23 @@ of every part it re-exports.
 - **THEN** the two grids have identical faces, edges and dots in the same order
   (no randomness enters square construction)
 
-### Requirement: RNG-faithful random loop generation
-
-The engine SHALL provide `src/engine/loopgen.ts` exposing
-`generateLoop(grid, board, rng, bias?)` which colors every face of `grid`
-inside (white) or outside (black) so that the white/black boundary is a single
-closed loop, writing the coloring into `board`. It SHALL reproduce the upstream
-`generate_loop` RNG draw order exactly — a per-face 31-bit random score, a random
-seed face, a per-iteration random candidate color, a shuffle of the face list,
-and a final random flip pass — with candidate faces ordered by score, then their
-random score field, then face index (reproducing upstream's pointer-order tie
-break). An optional `bias` callback (the upstream contract: invoked with a face
-tentatively set, then restored, then notified on commit; consuming no randomness)
-SHALL let a consumer bias generation toward desirable loops. Given a fixed seed,
-the generated loop SHALL be reproducible.
-
-#### Scenario: Loop generation yields a single closed loop
-
-- **WHEN** `generateLoop` runs on a square grid with a fixed seed and no bias
-- **THEN** the resulting white/black face coloring has a boundary that is one
-  closed loop, and the same seed yields the same coloring every run
-
 ### Requirement: Periodic tilings
 
 The grid module (`src/engine/grid/`) SHALL provide a generator for each of the 14 periodic tilings —
 square, honeycomb, triangular, snub-square, Cairo, great-hexagonal, Kagome,
 octagonal, kites, floret, dodecagonal, great-dodecagonal,
-great-great-dodecagonal and compass-dodecagonal — selected by a `GridType`
-whose ordering SHALL match upstream's `GRIDGEN_LIST`.
+great-great-dodecagonal and compass-dodecagonal — selected by a `GridType`.
 
 Every periodic generator SHALL be a pure function of `(width, height)` (and, for
 triangular, its version desc): it SHALL consume no randomness and SHALL use
 **exact integer arithmetic only**, because shared corner dots are deduplicated
 by exact coordinate equality and a fractional coordinate would silently produce
-duplicate dots rather than a visible error. Where upstream relies on C's
-truncating integer division, the port SHALL use `Math.trunc` rather than `/`.
+duplicate dots rather than a visible error. An integer division SHALL
+truncate (`Math.trunc`) rather than yield a fraction.
 
-Each generator SHALL emit its faces and dots in upstream's emission order, so
-that dot, edge and face **indices** agree with the C, not merely the resulting
-shape.
+Each generator's face and dot emission order SHALL be stable across builds, not
+merely the resulting shape: a Loopy description indexes its clues by face, so
+reordering faces would give a stored game ID a different board.
 
 The triangular tiling SHALL support both of upstream's algorithms, selected by
 its version desc: an absent desc selects the legacy generator (which leaves
@@ -223,8 +200,7 @@ are a property of the consuming game, not of the geometry.
 
 The grid module (`src/engine/grid/`) SHALL provide a generator for each of the four aperiodic tilings —
 Penrose P2 (kite/dart), Penrose P3 (thick/thin rhombs), hats and spectres —
-selected by the same `GridType` whose ordering matches upstream's `GRIDGEN_LIST`,
-completing the collection at 18 tilings.
+selected by the same `GridType`, completing the collection at 18 tilings.
 
 Each aperiodic generator SHALL be a **pure deterministic function of
 `(width, height, desc)`**: all randomness SHALL be confined to grid-description
@@ -236,10 +212,11 @@ then summed, so that exactly one rounding occurs.
 
 Dot coordinates SHALL be normalized so that no coordinate is negative zero,
 because dot deduplication is by exact coordinate equality and a negative zero
-produces a structurally correct grid that nonetheless differs from the reference.
+produces a structurally correct grid that nonetheless differs from the one the
+same description built before.
 
-Faces SHALL be emitted in upstream's order, so that dot, edge and face
-**indices** agree with the C rather than merely the resulting shape.
+Face emission order SHALL be stable across builds, for the reason "Periodic
+tilings" gives: a stored description indexes its clues by face.
 
 Legacy (pre-rewrite) Penrose grid descriptions — those beginning with `'G'` —
 SHALL be rejected with an explicit error naming them, rather than silently
@@ -266,50 +243,6 @@ falling through to a misleading parse error.
   beginning with `'G'`
 - **THEN** it reports an error identifying the description as an unsupported
   legacy format
-
-### Requirement: Grid description round-trip
-
-The grid module (`src/engine/grid/`) SHALL provide `gridNewDesc(type, width, height, rng)` producing a grid
-description string, and `gridValidateDesc(type, width, height, desc)` returning
-an error message for a rejected description and null otherwise.
-
-`gridNewDesc` SHALL be the **only** randomness-consuming function in the module.
-It SHALL return `"0"` for the triangular tiling and null for the other twelve
-periodic tilings; `gridValidateDesc` SHALL reject a description supplied for a
-tiling that does not use one.
-
-For the aperiodic tilings, description generation SHALL reproduce upstream's
-random draw order **exactly**, including draws whose outcome is predetermined:
-where upstream consults a weighted candidate list holding a single entry, the
-port SHALL still consume a random draw, because the draw is an observable effect
-on the stream rather than a computation whose result may be shortcut. Weight
-constants SHALL be transcribed as the integers upstream uses and SHALL NOT be
-recomputed from irrational expressions.
-
-Where a stored description is replayed and its coordinates are exhausted, the
-port SHALL reproduce upstream's fixed-seed fallback generator exactly — created
-lazily at the same point and shared thereafter — because divergence yields a
-different grid for the same description with no detectable error.
-
-Description parsing SHALL validate the length of the description before deriving
-a coordinate count from it.
-
-#### Scenario: A generated description round-trips
-
-- **WHEN** `gridNewDesc` produces a description for an aperiodic tiling
-- **THEN** `gridValidateDesc` accepts it and `gridNew` builds a grid from it
-
-#### Scenario: Description generation reproduces the reference draw order
-
-- **WHEN** `gridNewDesc` is called for an aperiodic tiling with a given seed
-- **THEN** the description string it produces matches the one upstream produces
-  from the same seed
-
-#### Scenario: A malformed description is rejected rather than crashing
-
-- **WHEN** `gridValidateDesc` is given an empty, truncated, or otherwise
-  malformed description, including one too short to carry a coordinate count
-- **THEN** it returns an error message, and no construction is attempted
 
 ### Requirement: Vigorous trimming of aperiodic patches
 
@@ -346,3 +279,63 @@ component exists.
 
 - **WHEN** trimming a grid in which no dot is landlocked
 - **THEN** an error is raised rather than an empty grid returned
+
+### Requirement: Seeded random loop generation
+
+The engine SHALL provide `src/engine/loopgen.ts` exposing
+`generateLoop(grid, board, rng, bias?)` which colors every face of `grid`
+inside (white) or outside (black) so that the white/black boundary is a single
+closed loop, writing the coloring into `board`. Candidate faces SHALL be ordered by score,
+then their random score field, then face index, so that no ordering depends on
+anything but the random stream. An optional `bias` callback (invoked with a face
+tentatively set, then restored, then notified on commit; consuming no randomness)
+SHALL let a consumer bias generation toward desirable loops. Given a fixed seed,
+the generated loop SHALL be reproducible across builds, because a seeded Loopy
+game ID regenerates its board from it.
+
+#### Scenario: Loop generation yields a single closed loop
+
+- **WHEN** `generateLoop` runs on a square grid with a fixed seed and no bias
+- **THEN** the resulting white/black face coloring has a boundary that is one
+  closed loop, and the same seed yields the same coloring every run
+
+### Requirement: Grid descriptions round-trip and keep building the same grid
+
+The grid module (`src/engine/grid/`) SHALL provide `gridNewDesc(type, width, height, rng)` producing a grid
+description string, and `gridValidateDesc(type, width, height, desc)` returning
+an error message for a rejected description and null otherwise.
+
+`gridNewDesc` SHALL be the **only** randomness-consuming function in the module.
+It SHALL return `"0"` for the triangular tiling and null for the other twelve
+periodic tilings; `gridValidateDesc` SHALL reject a description supplied for a
+tiling that does not use one.
+
+For the aperiodic tilings, description generation SHALL be a deterministic
+function of the random stream and stable across builds, so a seeded game ID keeps
+its grid. Weight constants SHALL be integers and SHALL NOT be recomputed from
+irrational expressions.
+
+Where a stored description is replayed and its coordinates are exhausted, the
+fixed-seed fallback generator SHALL behave the same in every build — created
+lazily at the same point and shared thereafter — because divergence yields a
+different grid for the same description with no detectable error.
+
+Description parsing SHALL validate the length of the description before deriving
+a coordinate count from it.
+
+#### Scenario: A generated description round-trips
+
+- **WHEN** `gridNewDesc` produces a description for an aperiodic tiling
+- **THEN** `gridValidateDesc` accepts it and `gridNew` builds a grid from it
+
+#### Scenario: Description generation is stable for a seed
+
+- **WHEN** `gridNewDesc` is called for an aperiodic tiling with a given seed
+- **THEN** the description string it produces matches the one the committed
+  fixture records for that seed
+
+#### Scenario: A malformed description is rejected rather than crashing
+
+- **WHEN** `gridValidateDesc` is given an empty, truncated, or otherwise
+  malformed description, including one too short to carry a coordinate count
+- **THEN** it returns an error message, and no construction is attempted

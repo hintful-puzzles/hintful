@@ -5,7 +5,9 @@ Filling (Fillomino), the puzzle of writing numbers so that every connected group
 of equal numbers has exactly that many cells. This capability specifies its port
 to the TS engine, with uniquely solvable generation, mistake-checking, on-screen
 key labels, and an explained deduction hint with its own color legend.
+
 ## Requirements
+
 ### Requirement: Filling game implements the Game interface
 
 The engine SHALL provide a registered `filling` game implementing
@@ -57,8 +59,7 @@ to a copy of the clues.
 equal their cell values (capped at `min(max(max(w,h),3), 9)`), then reduce the
 clue set — removing whole regions and then individual clues — keeping a removal
 only while the solver still solves the board, so the published clues uniquely
-determine the solution. Generation SHALL be byte-faithful to upstream over the
-shared bit-identical RNG (same shuffle and `randomUpto` draw sequence).
+determine the solution.
 
 #### Scenario: Every generated board is solvable
 
@@ -241,11 +242,10 @@ deduction kinds (`growth` exact/partial, `blocked`, `lonely`, `bitmap`).
 
 Filling SHALL implement `requestKeys()` returning the fixed digit keypad `1..9`
 (labeled by the digit character) followed by a clear key (button code `8`,
-labeled `"Clear"`), reproducing upstream `game_request_keys` (which is fixed to
-digits 1–9 regardless of board size) so the keypad matches the C build.
+labeled `"Clear"`), fixed to digits 1–9 regardless of board size as upstream's
+`game_request_keys` is.
 
 #### Scenario: The keypad is digits 1–9 plus clear
 
 - **WHEN** the key labels are requested for any Filling board
 - **THEN** the result is the buttons `1,2,…,9` followed by a clear key
-

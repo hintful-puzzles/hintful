@@ -339,7 +339,7 @@ describe("crossing generator", () => {
     // The byte-match differential runs with `upstreamIsolatedCells`, so this
     // guards the thing that would otherwise rot silently: that the flag really
     // does change the generated board, and the oracle is therefore still
-    // checking upstream's algorithm rather than the shipped one (docs/games/solver-and-generator.md § "Keep the oracle and ship the fix").
+    // checking upstream's algorithm rather than the shipped one (docs/games/solver-and-generator.md § "Retained upstream paths are history, not the default").
     const seed = "iso-seed-14"; // found by scan: upstream yields an isolated cell here
     const upstream = newCrossingDesc(P5, randomNew(seed), {
       upstreamIsolatedCells: true,

@@ -84,9 +84,8 @@ SHALL be retained and delivered once the press has been acknowledged, rather
 than discarded. A press the puzzle declines SHALL continue to be followed by an
 immediate release, as it is today.
 
-This guarantee is independent of which engine serves the puzzle: it holds for
-the TypeScript engine and for the C/WebAssembly engine alike, because it is a
-property of the input layer above both.
+This guarantee is independent of any particular game, because it is a property
+of the input layer above the engine.
 
 #### Scenario: A click completed before the press is acknowledged still releases
 

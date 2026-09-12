@@ -901,7 +901,7 @@ The shape that works (`tracks-hint.test.ts`):
   only instrument that can read a sentence no board produces; the cross-game
   narration guard walks *fired* steps, so it has never seen them either.
 
-Do not delete an unreachable arm whose deduction is byte-matched to upstream:
+Do not delete an unreachable narration arm for a deduction the solver still runs:
 the deduction stays either way, and without a reason its firing would be hidden
 from the player instead of taught — which the guards in § "Show only what the
 board does not already say" would then catch, since its conclusion is real.

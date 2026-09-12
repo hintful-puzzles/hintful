@@ -156,7 +156,7 @@ dot — is filled in its dot's color; associations do not color
 tiles), white and black dots, set edges, association arrows from each
 associated tile to its dot, and the keyboard cursor through
 `GameDrawing`. A dot move on the board SHALL animate the dot along
-the same path the C build animates (the `movedot_cb` shortest-path).
+its shortest path (upstream's `movedot_cb`).
 Completion SHALL trigger a flash. The game SHALL provide a statusbar
 string reporting move count, completion state, and current-puzzle
 difficulty when known, and a plain-text format of the board. Colors
@@ -228,36 +228,6 @@ NOT be gated by that preference.
 - **AND WHEN** the candidate preference is off
 - **THEN** no rings are drawn, and the drag and its commit preview
   are unaffected
-
-### Requirement: Galaxies has a dev-time differential spot-check
-
-An advisory, non-gating differential check SHALL be available that
-generates Galaxies boards from the C build and the TS port for the
-same seed and parameters and surfaces differences for human review.
-A frozen-snapshot, C-free, **gated** form SHALL also exist: a
-committed snapshot of N C-built reference boards under
-`__fixtures__/galaxies-c-reference.json`, against which the gated
-test asserts that the TS port decodes the board and that its solver
-finds **exactly one** solution at the C-recorded target difficulty
-(no `Ambiguous`, no diagnosis at a different level). Boards produced
-by the TS *generator* MAY differ from C byte-for-byte (the idiomatic
-generator is allowed to diverge); such a difference SHALL be
-reported as review signal, not a failure. The live (C-running)
-advisory check SHALL NOT be part of the commit/CI gate.
-
-#### Scenario: Differential check is advisory; gated check verifies uniqueness
-
-- **WHEN** the live Galaxies differential check runs
-- **THEN** divergent C-vs-TS boards are reported for human review,
-  and every sampled TS-generated board is uniquely solvable at the
-  requested difficulty
-- **AND** the result does not gate the build or commit
-
-- **WHEN** the gated `galaxies-differential.test.ts` runs against
-  the frozen C-reference snapshot
-- **THEN** every reference board is decoded by the TS port and the
-  TS solver reports a unique solution at exactly the snapshot's
-  recorded difficulty
 
 ### Requirement: Galaxies detects and highlights mistakes
 

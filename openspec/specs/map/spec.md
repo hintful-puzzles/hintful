@@ -72,36 +72,6 @@ points.
   other than `n`, or whose edge list defines the wrong number of regions
 - **THEN** it returns a non-null error string
 
-### Requirement: Map ports the graded solver and solver-gated generator faithfully
-
-The port SHALL implement `map_solver` with its full graded deductive power over
-the region-adjacency graph: at Easy, place a region that has exactly one possible
-color left; at Normal, additionally exclude a shared color pair from the common
-neighbors of an adjacent same-two-possibilities pair; at Tricky, additionally run
-the forcing-chain BFS; at Unreasonable, additionally recurse (guess and verify).
-The solver SHALL return the three-valued verdict (impossible / unique / stuck-or-
-ambiguous), and a grading routine SHALL return the easiest difficulty that yields
-a unique solution. The generator (`new_game_desc`) SHALL be byte-faithful to the
-C RNG draw order — voronoi region growth over the cumulative-frequency table, the
-recursive four-coloring, the solver-gated clue reduction that never removes the
-last region of a color, and the difficulty-floor retry loop — so that for a
-given seed and params the produced desc and aux reproduce the C output exactly.
-`solve` SHALL return the generator's aux when present, else re-solve from the
-clues at maximum difficulty.
-
-#### Scenario: Generated boards are uniquely solvable at their difficulty
-
-- **WHEN** a board is generated for a given difficulty and graded by the TS
-  solver
-- **THEN** the grading is a unique solution at exactly the requested difficulty
-  (or the generator's documented fallback for pathologically dense/sparse maps)
-
-#### Scenario: Desc reproduces the C reference byte for byte
-
-- **WHEN** `newDesc` runs for a fixture's seed and params
-- **THEN** the produced desc and aux equal the recorded C values exactly, and the
-  TS solver grades the decoded board at the C-recorded difficulty
-
 ### Requirement: Map reports completion and mistakes
 
 The board SHALL be completed when every region is colored and no two adjacent
@@ -133,7 +103,7 @@ under the pointer (or, on a blank region, its pencil marks) into a floating drag
 blob; a release that drops the held color onto the region under the pointer; a
 right-drag from a color to a blank region that toggles a single pencil-mark bit;
 and a keyboard cursor that picks and drops via the select keys — with the
-diagonally-split-cell quadrant hit-test of `region_from_coords` ported exactly. A
+diagonally-split-cell quadrant hit-test of `region_from_coords`. A
 drop that changes nothing SHALL produce no move. Penciling a colored region
 SHALL be rejected. The three upstream preferences (victory-flash effect,
 number-regions, stipple display style) SHALL be exposed through the `prefs` hook
@@ -142,8 +112,7 @@ the `l`/`L` key SHALL toggle region numbers in play. `redraw` SHALL render regio
 fills, the diagonal second-region triangle of a split cell, pencil-mark stipples,
 grid lines on region boundaries, the red adjacency error diamonds, optional
 region numbers, the flagged-mistake region outline, the floating drag/cursor
-blob (a blitter sprite), and the selected completion-flash style — with the
-palette index-for-index against the upstream color enum and a `BORDER` of 0
+blob (a blitter sprite), and the selected completion-flash style — with a `BORDER` of 0
 (NARROW_BORDERS).
 
 #### Scenario: A drag colors a region
@@ -158,3 +127,26 @@ palette index-for-index against the upstream color enum and a `BORDER` of 0
 - **WHEN** the player drops a color onto a region that already holds it (or onto
   the border, or onto an immutable clue region)
 - **THEN** `interpretMove` yields no move (returns null or a UI update only)
+
+### Requirement: Map ports the graded solver and solver-gated generator
+
+The port SHALL implement `map_solver` with its full graded deductive power over
+the region-adjacency graph: at Easy, place a region that has exactly one possible
+color left; at Normal, additionally exclude a shared color pair from the common
+neighbors of an adjacent same-two-possibilities pair; at Tricky, additionally run
+the forcing-chain BFS; at Unreasonable, additionally recurse (guess and verify).
+The solver SHALL return the three-valued verdict (impossible / unique / stuck-or-
+ambiguous), and a grading routine SHALL return the easiest difficulty that yields
+a unique solution. The generator (`new_game_desc`) SHALL grow voronoi regions over
+the cumulative-frequency table, four-color them recursively, reduce clues under the
+solver's gate without ever removing the last region of a color, and retry below a
+difficulty floor.
+`solve` SHALL return the generator's aux when present, else re-solve from the
+clues at maximum difficulty.
+
+#### Scenario: Generated boards are uniquely solvable at their difficulty
+
+- **WHEN** a board is generated for a given difficulty and graded by the TS
+  solver
+- **THEN** the grading is a unique solution at exactly the requested difficulty
+  (or the generator's documented fallback for pathologically dense/sparse maps)

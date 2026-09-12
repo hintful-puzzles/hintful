@@ -53,9 +53,9 @@ then lexicographically, matching the order the description emits.
 
 Validation SHALL reject a description containing an unknown wall character, a
 description that supplies more cell data than the board holds, a clue number
-longer than the maximum row length, and a duplicate clue number. Validation SHALL
-reproduce upstream's behavior, including its deliberately absent checks (it does
-not reject an over-short description or an invalid digit character).
+longer than the maximum row length, and a duplicate clue number. Those are its only
+checks: it does not reject an over-short description or an invalid digit
+character.
 
 #### Scenario: A generated description round-trips
 
@@ -192,31 +192,6 @@ supplied, so an existing puzzle of any size remains playable.
 - **WHEN** parameters larger than the generable maximum accompany a supplied
   description
 - **THEN** validation succeeds
-
-### Requirement: Crossing generates no cell that a clue cannot reach
-
-Generation SHALL reject a candidate board containing an open cell that belongs
-to no run, since no clue number can reach it: it would stay blank on a finished
-board, and — the completion check inspecting only runs — would accept any digit
-the player put there. Upstream produces such boards and records the fault as a
-generator TODO.
-
-Reproducing upstream's descriptions byte-for-byte SHALL remain possible through
-an explicit generator option, so that the C-reference differential keeps
-validating the generator, solver and codec together.
-
-#### Scenario: Every open cell of a generated board lies in a run
-
-- **WHEN** a board is generated for any preset or legal size
-- **THEN** every cell that is not a wall belongs to at least one horizontal or
-  vertical run
-
-#### Scenario: Upstream's boards remain reproducible on request
-
-- **WHEN** the generator is asked for upstream's isolated-cell behavior on a
-  seed where upstream produces such a board
-- **THEN** it reproduces that board, and the shipped default produces a
-  different one in which every cell is reachable
 
 ### Requirement: Crossing places whole clue numbers from the list
 
@@ -470,3 +445,17 @@ whether or not the draw state has painted before.
   state
 - **THEN** the panel marks that clue as held
 - **AND** putting the clue back removes the mark on the following frame
+
+### Requirement: Crossing never generates a cell no clue can reach
+
+Generation SHALL reject a candidate board containing an open cell that belongs
+to no run, since no clue number can reach it: it would stay blank on a finished
+board, and — the completion check inspecting only runs — would accept any digit
+the player put there. Upstream produces such boards and records the fault as a
+generator TODO.
+
+#### Scenario: Every open cell of a generated board lies in a run
+
+- **WHEN** a board is generated for any preset or legal size
+- **THEN** every cell that is not a wall belongs to at least one horizontal or
+  vertical run

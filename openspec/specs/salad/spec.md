@@ -202,49 +202,7 @@ recorder the hint reads SHALL be inert on the generator's solving path.
 
 - **WHEN** the deduction recorder used by the hint is present in the codebase
 - **THEN** the descriptions Salad generates for a given seed are byte-for-byte
-  unchanged from those recorded from the C reference
-
-### Requirement: Salad reasons about the empty square directly
-
-Salad's solver SHALL express the empty square as a shared-cube symbol carrying a
-per-line multiplicity, rather than translating between holes and candidates at
-the game's edge. The translation layer that stood in for that support SHALL be
-removed.
-
-The empty-square deductions SHALL be the shared cube's own — positional
-elimination with the symbol's multiplicity, the line strike once a line holds
-all its empties, multiplicity-aware set elimination — rather than a hand-written
-sync-and-count layer, and the Number Ball quality gate SHALL ask its question
-("do the holes fall out with no number entered?") of that cube.
-
-The rewrite SHALL be deductively equivalent to upstream's translation layer on
-every board the frozen C reference records, and the byte-match differential
-SHALL be **kept** as the proof: because generation is solver-gated at every clue
-removal, a description that still matches byte for byte means the solver's
-verdict on every intermediate board is unchanged. (The plan was to retire the
-differential and re-found assurance on properties; the finding was that the
-oracle survives, and a surviving oracle is stronger than any property written
-to replace it.)
-
-#### Scenario: The empty square is reasoned about directly
-
-- **WHEN** the solver deduces a placement that turns on where empty squares can
-  and cannot go
-- **THEN** that deduction is expressed over the shared cube's repeatable symbol,
-  with no translation step at the game boundary
-
-#### Scenario: A generated board is uniquely solvable at its stated tier
-
-- **WHEN** a board is generated at any tier
-- **THEN** the solver finds exactly one solution, and finds it at that tier and
-  not at the tier below
-
-#### Scenario: The frozen C descriptions still match byte for byte
-
-- **WHEN** the byte-match differential replays every frozen C fixture against
-  upstream's loose tier gate
-- **THEN** every description is reproduced exactly, and the recorded solver
-  verdicts hold
+  unchanged from those generated without it
 
 ### Requirement: Salad's Normal tier is never soluble at Easy
 
@@ -258,8 +216,7 @@ generated boards, and in the Number Ball mode at 5×5 and 6×6 it was every boar
 sampled.
 
 Because generation is solver-gated at every clue removal, the correction changes
-every Normal-tier description; the byte-for-byte differential SHALL retain a way
-to run upstream's original gate, used by that differential alone.
+every Normal-tier description.
 
 Normal-tier boards are genuinely rare in the Number Ball mode — a median of 486
 candidate boards per success at 5×5, and a worst measured case of 4,419 — so the
@@ -271,3 +228,29 @@ it. Exhaustion is a failure a player sees.
 - **WHEN** a board generated at Normal is solved at Easy
 - **THEN** the solver does not reach a solution
 - **AND** solving the same board at Normal does
+
+### Requirement: Salad's solver reasons about the empty square directly
+
+Salad's solver SHALL express the empty square as a shared-cube symbol carrying a
+per-line multiplicity, rather than translating between holes and candidates at
+the game's edge. The translation layer that stood in for that support SHALL be
+removed.
+
+The empty-square deductions SHALL be the shared cube's own — positional
+elimination with the symbol's multiplicity, the line strike once a line holds
+all its empties, multiplicity-aware set elimination — rather than a hand-written
+sync-and-count layer, and the Number Ball quality gate SHALL ask its question
+("do the holes fall out with no number entered?") of that cube.
+
+#### Scenario: The empty square is reasoned about directly
+
+- **WHEN** the solver deduces a placement that turns on where empty squares can
+  and cannot go
+- **THEN** that deduction is expressed over the shared cube's repeatable symbol,
+  with no translation step at the game boundary
+
+#### Scenario: A generated board is uniquely solvable at its stated tier
+
+- **WHEN** a board is generated at any tier
+- **THEN** the solver finds exactly one solution, and finds it at that tier and
+  not at the tier below

@@ -6,7 +6,9 @@ contain exactly one number, equal to its area. This capability specifies its
 port to the TS engine: its encoding, the solver and the generator gated on it
 unless uniqueness is turned off, completion and mistake reporting, and its input
 and rendering.
+
 ## Requirements
+
 ### Requirement: Rectangles game implements the Game interface
 
 The engine SHALL provide a registered `rect` game implementing
@@ -55,35 +57,9 @@ correctness overlay computed.
   fill the grid
 - **THEN** it returns a non-null error string
 
-### Requirement: Rectangles ports the solver and solver-gated generator faithfully
-
-The port SHALL implement `rect_solver` with its full deductive power:
-per-rectangle candidate-placement enumeration, the overlaps and `rectbyplace`
-bookkeeping, and the deduction loop (sole-remaining-number-position marking,
-placement-intersection marking, rectangle-focused and square-focused placement
-elimination), plus the RNG-driven number-placement winnowing used during
-generation. The generator (`new_game_desc`) SHALL be byte-faithful to the C RNG
-draw order — base-grid random tiling, singleton removal, the two-pass
-expand-and-transpose stretch, the `unique`-gated solver call, and the run-length
-desc encoding — so that for a given seed and params the produced desc and `aux`
-reproduce the C output exactly. `solve` SHALL run the solver from the fixed
-numbers and return the unique solution's edges (or the generator's `aux` when
-present).
-
-#### Scenario: Generated boards are uniquely solvable
-
-- **WHEN** a board is generated with `unique = true` and solved from its numbers
-- **THEN** the solver reaches a single consistent rectangle placement for every
-  number
-
-#### Scenario: Desc reproduces the C reference byte for byte
-
-- **WHEN** `newDesc` runs for a fixture's seed and params
-- **THEN** the produced desc and `aux` equal the recorded C values exactly
-
 ### Requirement: Rectangles reports completion and mistakes
 
-The port SHALL compute per-cell correctness faithfully to `get_correct`: a cell
+The game SHALL compute per-cell correctness as `get_correct` does: a cell
 is correct iff it belongs to a valid rectangle — all boundary edges present,
 none interior, and exactly one contained number equal to the rectangle's area.
 The board is completed when every cell is correct. Because boards are uniquely
@@ -109,13 +85,12 @@ depends on this hook and SHALL refuse to save while any mistake is present.
 `interpretMove` SHALL support: a left-drag drawing a rectangle outline, a
 right-drag erasing interior edges, a click near an edge toggling that single
 edge, and a half-grid keyboard cursor with press-to-drag — with the
-corner/center/edge click allocation of `coord_round` ported exactly. A drag or
+corner/center/edge click allocation of `coord_round`. A drag or
 click that changes no edge SHALL produce no move. `redraw` SHALL render the grid,
 number text, the three edge colors (black solid line, red drag-draw preview,
 blue drag-erase preview), the computed corner pixels, the gray correct-rectangle
 fill, the cursor tile, the flagged-mistake edge color, and the completion
-flash, with the palette index-for-index against the upstream color enum and a
-`BORDER` of 1 (NARROW_BORDERS).
+flash, with a `BORDER` of 1 (NARROW_BORDERS).
 
 #### Scenario: A drag draws a rectangle outline
 
@@ -129,3 +104,21 @@ flash, with the palette index-for-index against the upstream color enum and a
 - **WHEN** the player clicks in a way that would change no edge
 - **THEN** `interpretMove` yields no move (returns null or a UI update only)
 
+### Requirement: Rectangles ports the solver and solver-gated generator
+
+The port SHALL implement `rect_solver` with its full deductive power:
+per-rectangle candidate-placement enumeration, the overlaps and `rectbyplace`
+bookkeeping, and the deduction loop (sole-remaining-number-position marking,
+placement-intersection marking, rectangle-focused and square-focused placement
+elimination), plus the RNG-driven number-placement winnowing used during
+generation. The generator (`new_game_desc`) SHALL tile the base grid at random,
+remove singletons, stretch it with the two-pass expand-and-transpose, call the
+solver when `unique` is set, and encode the run-length desc. `solve` SHALL run the solver from the fixed
+numbers and return the unique solution's edges (or the generator's `aux` when
+present).
+
+#### Scenario: Generated boards are uniquely solvable
+
+- **WHEN** a board is generated with `unique = true` and solved from its numbers
+- **THEN** the solver reaches a single consistent rectangle placement for every
+  number

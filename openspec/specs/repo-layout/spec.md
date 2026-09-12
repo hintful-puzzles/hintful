@@ -555,7 +555,7 @@ mechanisms SHALL keep this from degrading the machine:
      for bounding at all lives in one place.
    - Exhaustion SHALL either throw, or transfer to a recovery path that is
      itself bounded. Throwing is the default, and cannot alter a converging
-     seed, so byte-match with the C reference is preserved by construction.
+     seed, so every board a seed already produced is preserved by construction.
      Recovery is preferred where the algorithm already has such a path, since a
      cap that throws turns a rare-but-legal pathological seed into a *failed
      puzzle*, where recovery makes it merely a slower one.

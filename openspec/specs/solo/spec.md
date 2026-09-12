@@ -6,7 +6,9 @@ row, column and block, in variants that add jigsaw blocks, killer cages or X
 diagonals, alone or combined. This capability specifies its port to the TS
 engine around its own graded solver, with pencil marks and their preferences,
 mistake-checking, on-screen key labels, and an explained deduction hint.
+
 ## Requirements
+
 ### Requirement: Solo game implements the Game interface
 
 The engine SHALL provide a registered `solo` game implementing
@@ -81,35 +83,6 @@ block structure, or cage-sum grid.
   cage-sum grid
 - **THEN** it returns a non-null error string
 
-### Requirement: Solo generates uniquely-solvable boards at the requested difficulty
-
-`newDesc` SHALL generate a full solution grid satisfying all active constraints
-(Latin rows/columns, sub-blocks, X-diagonals when `xtype`, killer cages when
-`killer`; jigsaw blocks produced by the lazily-ported `divvy`), then remove givens
-in symmetry orbits (per the `symm` mode) by re-running the graded solver, keeping a
-board only when it is **uniquely** solvable at **exactly** the requested
-difficulty, regenerating otherwise. Generation SHALL carry a capped-iteration
-backstop that throws rather than hanging. Where the generation path is RNG-faithful
-and order-deterministic to the desc, the emitted desc SHALL match the C reference
-byte-for-byte for the same seed; where it is not (an order-dependent step), the
-differential SHALL instead validate order-independent solver verdicts.
-
-#### Scenario: Generated board is uniquely solvable at its difficulty
-
-- **WHEN** a board is generated for given params
-- **THEN** the graded solver solves it uniquely at the requested difficulty
-- **AND** (for difficulties above the lowest) the solver fails to solve it one
-  difficulty level lower
-
-#### Scenario: Generated board matches the C reference
-
-- **WHEN** a board is generated from a fixed seed and params matching a frozen C
-  trace fixture
-- **THEN** for a byte-match variant the emitted desc equals the recorded C desc
-  exactly
-- **AND** for a verdict-record variant the TS solver reaches the C-recorded
-  difficulty and unique-solvability verdict on the recorded board
-
 ### Requirement: Solo solves with its bespoke graded solver
 
 The solver SHALL be a self-contained port of upstream's `solver_usage` model: a
@@ -121,8 +94,7 @@ elimination, block/row/column intersection, set elimination, extreme forcing
 chains, and bounded recursion) and the killer techniques (single-cell sums,
 min/max elimination, sum-combination enumeration, and cage/line intersection).
 `solveSolo(...)` SHALL return the difficulty reached, or an impossible/ambiguous
-sentinel, faithfully reproducing upstream's grading (including any upstream quirk
-that the solver-gated generator depends on).
+sentinel.
 
 #### Scenario: Solver grades a known board
 
@@ -290,8 +262,7 @@ drop a stored step's dead marks (or resolve the step) before each (re-)display s
 kept plan never tells the player to remove a candidate already gone.
 
 The solver's recording mode SHALL be gated so that with recording off the
-generator/solve path is **byte-for-byte unchanged** (verified by the existing C
-differential — Solo's solver is a faithful bespoke port, not the shared
+generator/solve path is **unchanged** (Solo's solver is its own, not the shared
 `engine/latin.ts`, so the recording mode is added to Solo's own techniques), and
 one recorded deduction *firing* (one region's elimination, one cage's pruning, …)
 SHALL map to exactly one `group` so a hint step never mixes regions.
@@ -353,8 +324,7 @@ SHALL map to exactly one `group` so a hint step never mixes regions.
 Solo SHALL implement `requestKeys(params)` returning the digit keypad for its grid:
 one button per symbol `1..cr` (where `cr = c·r`), labeled by the symbol character
 (`"1".."9"`, then `"a"`, `"b"`, … for `cr > 9`), followed by a clear key (button
-code `8`, the backspace, labeled `"Clear"`). This reproduces upstream
-`game_request_keys` so the keypad is identical to the C build.
+code `8`, the backspace, labeled `"Clear"`).
 
 #### Scenario: A 9-symbol board shows digits 1–9 plus clear
 
@@ -366,3 +336,19 @@ code `8`, the backspace, labeled `"Clear"`). This reproduces upstream
 - **WHEN** the key labels are requested for a `2×2` Solo board
 - **THEN** the result is the buttons `1,2,3,4` followed by a clear key
 
+### Requirement: Solo generates boards uniquely solvable at exactly the requested difficulty
+
+`newDesc` SHALL generate a full solution grid satisfying all active constraints
+(Latin rows/columns, sub-blocks, X-diagonals when `xtype`, killer cages when
+`killer`; jigsaw blocks produced by the lazily-ported `divvy`), then remove givens
+in symmetry orbits (per the `symm` mode) by re-running the graded solver, keeping a
+board only when it is **uniquely** solvable at **exactly** the requested
+difficulty, regenerating otherwise. Generation SHALL carry a capped-iteration
+backstop that throws rather than hanging.
+
+#### Scenario: Generated board is uniquely solvable at its difficulty
+
+- **WHEN** a board is generated for given params
+- **THEN** the graded solver solves it uniquely at the requested difficulty
+- **AND** (for difficulties above the lowest) the solver fails to solve it one
+  difficulty level lower

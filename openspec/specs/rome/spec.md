@@ -6,7 +6,9 @@ repeats an arrow and following the arrows from anywhere leads to a goal. This
 capability specifies its port to the TS engine, with pencil marks and
 mistake-checking that also reports an arrow which breaks no rule but contradicts
 the unique solution.
+
 ## Requirements
+
 ### Requirement: Rome game implements the Game interface
 
 The engine SHALL provide `src/games/rome/` implementing the `Game`
@@ -62,35 +64,6 @@ than four cells, or that places a goal in a region whose size is not exactly one
 - **WHEN** a description placing a goal in a region larger than a single cell is
   validated
 - **THEN** it is rejected
-
-### Requirement: Rome ports the deductive solver and generator faithfully
-
-Rome SHALL provide a solver that fills the grid by pure deduction, or reports
-that the board is invalid or incomplete. Validity SHALL be judged by merging
-each arrow with the square it points at into a disjoint-set forest and flagging
-any arrow that points off the grid, any duplicate arrow within an outlined
-region, and any arrow that forms a loop. The solver SHALL apply the upstream
-deduction rules in the upstream order, gated by difficulty — Easy, then the
-additional Normal rules, then the additional Tricky rule — and SHALL NOT
-backtrack or guess at any difficulty.
-
-The generator SHALL use the solver to keep every board soluble: it SHALL fill
-the grid with arrows in single-cell regions, merge outlined regions randomly
-while keeping arrows within a region distinct, and remove redundant clues,
-accepting a board only when it is soluble at the target difficulty and not
-soluble at the difficulty below. Generation from a given seed SHALL be
-reproducible over the shared bit-identical RNG.
-
-#### Scenario: The solver completes a soluble board without guessing
-
-- **WHEN** a soluble board is solved at its difficulty
-- **THEN** every square is filled by deduction and the result reaches a goal from
-  every square with no loops and no duplicate arrows in any region
-
-#### Scenario: Generation is reproducible from a seed
-
-- **WHEN** the same size, difficulty and seed are used twice
-- **THEN** both runs produce the identical board description
 
 ### Requirement: Rome input, arrow placement, pencil marks and completion
 
@@ -150,3 +123,31 @@ pencil marks carry no fixed meaning.
 - **WHEN** a square carries pencil marks that exclude the solution's direction
 - **THEN** no mistake is reported for that square
 
+### Requirement: Rome solves by deduction and generates soluble boards
+
+Rome SHALL provide a solver that fills the grid by pure deduction, or reports
+that the board is invalid or incomplete. Validity SHALL be judged by merging
+each arrow with the square it points at into a disjoint-set forest and flagging
+any arrow that points off the grid, any duplicate arrow within an outlined
+region, and any arrow that forms a loop. The solver SHALL apply its
+deduction rules gated by difficulty — Easy, then the
+additional Normal rules, then the additional Tricky rule — and SHALL NOT
+backtrack or guess at any difficulty.
+
+The generator SHALL use the solver to keep every board soluble: it SHALL fill
+the grid with arrows in single-cell regions, merge outlined regions randomly
+while keeping arrows within a region distinct, and remove redundant clues,
+accepting a board only when it is soluble at the target difficulty and not
+soluble at the difficulty below. Generation from a given seed SHALL be
+reproducible.
+
+#### Scenario: The solver completes a soluble board without guessing
+
+- **WHEN** a soluble board is solved at its difficulty
+- **THEN** every square is filled by deduction and the result reaches a goal from
+  every square with no loops and no duplicate arrows in any region
+
+#### Scenario: Generation is reproducible from a seed
+
+- **WHEN** the same size, difficulty and seed are used twice
+- **THEN** both runs produce the identical board description

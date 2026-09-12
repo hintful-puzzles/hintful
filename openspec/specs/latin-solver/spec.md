@@ -47,23 +47,6 @@ Latin cube supports a symbol that may repeat in a line").
   permitted
 - **THEN** `latinSolver` returns `DIFF_UNFINISHED` rather than guessing
 
-### Requirement: Shared Latin-square generator
-
-The engine SHALL provide, in `src/engine/latin.ts`, the RNG-faithful
-Latin-square generator promoted from the Singles port: `matching` (randomized
-bipartite matching), `latinGenerate(o, rng)`, and `latinGenerateRect(w, h, rng)`.
-Their random draws SHALL remain bit-identical to upstream `matching.c` /
-`latin.c` so that a faithful game generator reproduces the C description exactly
-for the same seed. Singles SHALL consume the shared implementation.
-
-#### Scenario: Generated square is Latin and RNG-faithful
-
-- **WHEN** `latinGenerate(o, rng)` is called
-- **THEN** the result contains every value `1..o` exactly once in each row and
-  column
-- **AND** the Singles byte-match differential remains green against the shared
-  implementation
-
 ### Requirement: The Latin cube supports a symbol that may repeat in a line
 
 The shared Latin-square solver SHALL support puzzles in which one declared symbol
@@ -74,9 +57,7 @@ written about it.
 
 The support SHALL be opt-in, and SHALL be inert when not requested: a puzzle that
 declares no repeatable symbol SHALL produce exactly the deductions, in exactly the
-order, that it produces today. Because every Latin-family game's generator is
-solver-gated, this is verified by those games' existing byte-match differentials
-remaining green.
+order, that it produces without the support.
 
 #### Scenario: A pseudo-Latin puzzle is expressed directly
 
@@ -88,5 +69,19 @@ remaining green.
 #### Scenario: Existing consumers are unaffected
 
 - **WHEN** a puzzle declaring no repeatable symbol is solved
-- **THEN** the solver's deductions and their order are unchanged, and every
-  Latin-family byte-match differential still passes
+- **THEN** the solver's deductions and their order are unchanged
+
+### Requirement: The engine provides a shared, seeded Latin-square generator
+
+The engine SHALL provide, in `src/engine/latin.ts`, the Latin-square
+generator promoted from the Singles port: `matching` (randomized
+bipartite matching), `latinGenerate(o, rng)`, and `latinGenerateRect(w, h, rng)`.
+Given the same random state they SHALL produce the same square, so a seeded game
+ID keeps its board. Singles SHALL consume the shared implementation.
+
+#### Scenario: Generated square is Latin and deterministic per seed
+
+- **WHEN** `latinGenerate(o, rng)` is called
+- **THEN** the result contains every value `1..o` exactly once in each row and
+  column
+- **AND** calling it again from an identical random state yields the same square

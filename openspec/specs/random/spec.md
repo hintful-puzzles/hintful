@@ -1,18 +1,18 @@
 # random Specification
 
 ## Purpose
-The seeded random-number generator that game generation draws on, reproducing
-upstream's `random.c` bit for bit so that a seeded game ID feeds the generator
-the same random stream in every build, and the committed C-recorded corpus that
-holds it to that.
+The seeded random-number generator that game generation draws on, whose stream
+stays the same in every build of this app so that a seeded game ID keeps feeding
+the generator the same numbers, and the committed corpus that holds it to that
+(recorded, historically, from upstream's `random.c`).
 
 ## Requirements
 
 ### Requirement: Characterization corpus is committed to the repository
 
-The repository SHALL contain a JSON corpus under `src/engine/random/__fixtures__/` capturing input seeds, call scripts, and recorded outputs from the native C implementation. The corpus SHALL cover varied bit counts (including 32), varied `randomUpto` limits (including non-powers-of-two), the SHA-rollover path, `randomCopy` independence, and `randomStateEncode`/`randomStateDecode` round-trips.
+The repository SHALL contain a JSON corpus under `src/engine/random/__fixtures__/` capturing input seeds, call scripts, and recorded outputs (recorded, historically, from upstream's C implementation). The corpus SHALL cover varied bit counts (including 32), varied `randomUpto` limits (including non-powers-of-two), the SHA-rollover path, `randomCopy` independence, and `randomStateEncode`/`randomStateDecode` round-trips.
 
-The corpus is a **frozen oracle** and SHALL NOT be re-baselined: the C build that recorded it is deleted. It is what keeps shared game IDs reproducible across builds, which was always its real job.
+The corpus is **frozen** and SHALL NOT be re-baselined: it pins the random stream every seeded game ID depends on, so a change that moved it would silently change the board behind every seed a player has shared. Where it came from is history; what it holds the module to is stability across this app's builds.
 
 #### Scenario: Corpus covers the named edge cases
 
@@ -23,9 +23,9 @@ The corpus is a **frozen oracle** and SHALL NOT be re-baselined: the C build tha
 - **AND** at least one fixture exercises `randomCopy` and confirms the copy advances independently
 - **AND** at least one fixture exercises `randomStateEncode` followed by `randomStateDecode`
 
-### Requirement: The TypeScript random module reproduces upstream's output byte-for-byte
+### Requirement: The random module's output is stable across builds
 
-The TypeScript implementation in `src/engine/random/index.ts` SHALL produce byte-identical output to upstream's `random.c` for every call in the characterization corpus. Bit-identical reproducibility is a product requirement: existing game IDs and shared seeds must keep working.
+The TypeScript implementation in `src/engine/random/index.ts` SHALL produce, for every call in the characterization corpus, exactly the output the corpus records, so its output is stable across builds. That stability is a product requirement: existing game IDs and shared seeds must keep producing the same boards.
 
 The implementation SHALL expose, at minimum, upstream's public surface under TypeScript names: `randomNew(seed)`, `randomBits(state, bits)`, `randomUpto(state, limit)`, `randomCopy(state)`, `randomStateEncode(state)`, `randomStateDecode(encoded)`. It SHALL NOT expose a counterpart to upstream's `random_free`: a state is garbage-collected like any other value.
 
@@ -36,18 +36,18 @@ The module lives under `src/engine/` because it is an engine library that game g
 #### Scenario: Corpus replay passes byte-for-byte
 
 - **WHEN** the Vitest replay loads each fixture in `src/engine/random/__fixtures__/` and replays the recorded call sequence against `src/engine/random/index.ts`
-- **THEN** every returned value matches the C-recorded value byte-for-byte
-- **AND** every `randomStateEncode` output matches the C-recorded hex string character-for-character
+- **THEN** every returned value matches the recorded value byte-for-byte
+- **AND** every `randomStateEncode` output matches the recorded hex string character-for-character
 
 #### Scenario: randomBits handles the SHA rollover
 
 - **WHEN** the call sequence consumes more than 20 bytes of databuf so that `state.pos >= 20` triggers seedbuf increment and re-hash
-- **THEN** the TS impl produces the same post-rollover bytes as the C impl
+- **THEN** the post-rollover bytes match the corpus
 
 #### Scenario: randomBits returns 32-bit values without precision loss
 
 - **WHEN** `randomBits(state, 32)` is called
-- **THEN** the TS impl returns the same unsigned 32-bit value as the C impl, with no sign extension and no precision loss
+- **THEN** it returns the unsigned 32-bit value the corpus records, with no sign extension and no precision loss
 
 #### Scenario: encode/decode round-trip preserves state
 

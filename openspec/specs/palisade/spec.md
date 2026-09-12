@@ -353,8 +353,8 @@ take Palisade's palette indices and a callback for the middle of a tile, and
 SHALL NOT branch on which game is drawing.
 
 Adopting the shared module SHALL NOT change any board Palisade generates or any
-frame it draws: its differential fixtures and render snapshots SHALL pass
-unmodified. Input handling is downstream of generation and touches none of it, so
+frame it draws: the boards it generates for a given seed and its render snapshots
+SHALL be unchanged. Input handling is downstream of generation and touches none of it, so
 a correct extraction is a provable no-op — a snapshot that requires
 re-baselining is evidence the extraction is wrong, not a new baseline. **The same
 standard binds the rendering extraction, and binds it harder**, because a
@@ -364,7 +364,7 @@ color: sharing the look either changes no draw call or it is wrong.
 #### Scenario: The shared mechanic is adopted without moving a board
 
 - **WHEN** Palisade is changed to consume the shared border-grid module
-- **THEN** every Palisade differential fixture passes without modification
+- **THEN** every board Palisade generates for a given seed is unchanged
 - **AND** every Palisade render snapshot passes without `vitest -u`
 
 #### Scenario: A fix to the shared mechanic reaches both games

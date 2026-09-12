@@ -93,10 +93,6 @@ itself, draw no randomness, and never terminate. The perturbation SHOULD be smal
 rather than a reset: the loop is a hill-climb, and discarding it costs several
 times the generation time it saves nothing of.
 
-Because generation is solver-gated at every candidate, the byte-for-byte
-differential SHALL retain a way to run the original single gate — solve at the
-deeper rung, accept on completion — used by that differential alone.
-
 #### Scenario: The solver completes a uniquely solvable board
 
 - **WHEN** a generated board is solved

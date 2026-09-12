@@ -87,24 +87,6 @@ Colors SHALL be derived from the supplied default background.
   the host background
 - **AND** the board has a correct plain-text representation
 
-### Requirement: Flip has a dev-time differential spot-check
-
-An advisory, non-gating differential check SHALL be available that
-generates Flip game descriptions from the C build and the TS port for
-the same seed and parameters and surfaces differences for human
-review. The deterministic `crosses` matrix SHALL match exactly; the
-`random` matrix MAY differ (a different but valid board), and a
-difference there SHALL be reported as review signal, not a failure.
-This check SHALL NOT be part of the commit/CI gate.
-
-#### Scenario: Differential check is advisory
-
-- **WHEN** the Flip differential check runs
-- **THEN** `crosses` output matches C exactly
-- **AND** any `random` difference is reported for review, and every
-  sampled board is solvable
-- **AND** the result does not gate the build or commit
-
 ### Requirement: Flip is registered in the engine registry
 
 The `flip` puzzle SHALL be implemented as a native TS `Game` registered in the
