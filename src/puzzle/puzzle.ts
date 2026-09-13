@@ -254,14 +254,14 @@ export class Puzzle {
   private _statusbarText = signal<string>("");
   private _generatingGame = signal<boolean>(false);
   private _autoHintActive = signal<boolean>(false);
-  private _autoHintMessage = signal<string>("");
+  private _helpMessage = signal<string>("");
   private _activeHintExplanation = signal<string>("");
   /** "Step 2 of 3" while one deduction plays out over several legs; empty for a
    * single-leg hint and when no hint is displayed. Formatted here rather than
    * in the chrome so the two surfaces that show it (the rail and the phone's
    * hint strip) cannot word it differently. */
   private _hintJourney = signal<string>("");
-  private _autoHintMessageTimeoutId?: ReturnType<typeof setTimeout>;
+  private _helpMessageTimeoutId?: ReturnType<typeof setTimeout>;
   /**
    * Stepper state for the Hint button. A press that *shows* a step arms this;
    * the next press (with nothing else done in between) *applies* that one step
@@ -324,18 +324,18 @@ export class Puzzle {
     this._hintArmedToApply.set(false);
   }
 
-  private setAutoHintMessage(msg: string, temp = false): void {
-    if (this._autoHintMessageTimeoutId !== undefined) {
-      clearTimeout(this._autoHintMessageTimeoutId);
-      this._autoHintMessageTimeoutId = undefined;
+  private setHelpMessage(msg: string, temp = false): void {
+    if (this._helpMessageTimeoutId !== undefined) {
+      clearTimeout(this._helpMessageTimeoutId);
+      this._helpMessageTimeoutId = undefined;
     }
-    this._autoHintMessage.set(msg);
+    this._helpMessage.set(msg);
     if (temp && msg !== "") {
-      this._autoHintMessageTimeoutId = setTimeout(() => {
-        if (this._autoHintMessage.get() === msg) {
-          this._autoHintMessage.set("");
+      this._helpMessageTimeoutId = setTimeout(() => {
+        if (this._helpMessage.get() === msg) {
+          this._helpMessage.set("");
         }
-        this._autoHintMessageTimeoutId = undefined;
+        this._helpMessageTimeoutId = undefined;
       }, 3000);
     }
   }
@@ -344,8 +344,8 @@ export class Puzzle {
     return this._autoHintActive.get();
   }
 
-  public get autoHintMessage(): string {
-    return this._autoHintMessage.get();
+  public get helpMessage(): string {
+    return this._helpMessage.get();
   }
 
   public get hintJourney(): string {
@@ -427,7 +427,7 @@ export class Puzzle {
   // Methods
   public async newGame(): Promise<void> {
     this.stopAutoHint("");
-    this.setAutoHintMessage("");
+    this.setHelpMessage("");
     this._activeHintExplanation.set("");
     this._generatingGame.set(true);
     await this.workerPuzzle.newGame();
@@ -436,14 +436,14 @@ export class Puzzle {
 
   public async newGameFromId(id: string): Promise<string | null> {
     this.stopAutoHint("");
-    this.setAutoHintMessage("");
+    this.setHelpMessage("");
     this._activeHintExplanation.set("");
     return this.workerPuzzle.newGameFromId(id);
   }
 
   public async restartGame(): Promise<void> {
     this.stopAutoHint("");
-    this.setAutoHintMessage("");
+    this.setHelpMessage("");
     this._activeHintExplanation.set("");
     await this.workerPuzzle.restartGame();
   }
@@ -460,7 +460,12 @@ export class Puzzle {
 
   public async solve(): Promise<string | null> {
     this.stopAutoHint("Canceled by manual move");
-    return this.workerPuzzle.solve();
+    // Solve applies a move, so it queues behind any step Auto-Hint has in
+    // flight. A refusal is the only answer the press gets ("Game has not been
+    // started yet"), so it goes where a refused hint goes.
+    const err = await this.enqueueInput(() => this.workerPuzzle.solve());
+    if (err) this.setHelpMessage(err, true);
+    return err;
   }
 
   public async hint(): Promise<string | null> {
@@ -468,7 +473,7 @@ export class Puzzle {
     this._hintInFlight = true;
     const pendingTimer = setTimeout(() => {
       this._hintPending.set(true);
-      this.setAutoHintMessage(HINT_PENDING_MESSAGE);
+      this.setHelpMessage(HINT_PENDING_MESSAGE);
     }, HINT_PENDING_MS);
     try {
       return await this.hintOnce();
@@ -480,8 +485,8 @@ export class Puzzle {
         // A refusal or "Hint applied" has replaced the message by now; a
         // successful show has not, so take it down rather than let it sit
         // under the explanation and reappear when that is hidden.
-        if (this._autoHintMessage.get() === HINT_PENDING_MESSAGE) {
-          this.setAutoHintMessage("");
+        if (this._helpMessage.get() === HINT_PENDING_MESSAGE) {
+          this.setHelpMessage("");
         }
       }
     }
@@ -497,11 +502,11 @@ export class Puzzle {
       this.disarmHintApply();
       const err = await this.executeHint(true);
       if (err) {
-        this.setAutoHintMessage(err, true);
+        this.setHelpMessage(err, true);
       } else if (!this.isSolved) {
         // Confirm the apply; the midend has hidden the (advanced) plan, so this
         // transient message is what the banner shows until the next request.
-        this.setAutoHintMessage("Hint applied", true);
+        this.setHelpMessage("Hint applied", true);
       }
       return err;
     }
@@ -514,7 +519,7 @@ export class Puzzle {
     this.stopAutoHint("Canceled by manual move");
     const err = await this.workerPuzzle.hint();
     if (err) {
-      this.setAutoHintMessage(err, true);
+      this.setHelpMessage(err, true);
       return err;
     }
     // Auto-Hint may have been started while the show was computing; it owns
@@ -552,10 +557,10 @@ export class Puzzle {
     // pausing should show, not resume applying.
     this.disarmHintApply();
     if (this.isSolved) {
-      this.setAutoHintMessage("Already solved!", true);
+      this.setHelpMessage("Already solved!", true);
       return;
     }
-    this.setAutoHintMessage("");
+    this.setHelpMessage("");
     this._autoHintActive.set(true);
     void this.runAutoHintLoop();
   }
@@ -568,7 +573,7 @@ export class Puzzle {
     if (this._autoHintActive.get()) {
       this._autoHintActive.set(false);
       if (reason !== "") {
-        this.setAutoHintMessage(reason ?? "Paused", true);
+        this.setHelpMessage(reason ?? "Paused", true);
       }
     }
   }
@@ -593,7 +598,7 @@ export class Puzzle {
     const solved = this.isSolved;
     this.stopAutoHint("");
     if (solved) {
-      this.setAutoHintMessage("Solved!", true);
+      this.setHelpMessage("Solved!", true);
     }
   }
 

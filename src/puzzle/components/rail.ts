@@ -243,6 +243,11 @@ export class PuzzleRail extends SignalWatcher(LitElement) {
               })
             : nothing
         }
+        ${
+          // A hintless game has no hint row to hang the banner under, and Solve
+          // can still refuse (Mines, before the first click).
+          this.puzzle.canHint ? nothing : this.renderHintExplanation()
+        }
       </section>
     `;
   }
@@ -250,7 +255,7 @@ export class PuzzleRail extends SignalWatcher(LitElement) {
   /** The hint's own words, directly under the button that asked for it, with
    * its position in a multi-step journey. */
   private renderHintExplanation() {
-    const text = this.puzzle?.activeHintExplanation || this.puzzle?.autoHintMessage;
+    const text = this.puzzle?.activeHintExplanation || this.puzzle?.helpMessage;
     if (!text) return nothing;
     const journey = this.puzzle?.hintJourney;
     return html`

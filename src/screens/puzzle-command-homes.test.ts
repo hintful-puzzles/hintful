@@ -79,7 +79,7 @@ function fullyCapablePuzzle(overrides: Record<string, unknown> = {}) {
     wantsStatusbar: true,
     statusbarText: "3 lights placed",
     autoHintActive: false,
-    autoHintMessage: "",
+    helpMessage: "",
     activeHintExplanation: "",
     currentMove: 3,
     totalMoves: 7,
@@ -256,6 +256,23 @@ describe("every puzzle command has exactly one home in the rail", () => {
       expect(found.has(command), `${command} should be present for every game`).toBe(
         true,
       );
+    }
+  });
+
+  it("shows the help banner exactly once, whether or not the game can hint", async () => {
+    // Solve refuses in the banner, and a game can offer Solve with no hint
+    // (Mines): its banner was once rendered only under the hint row, so a
+    // refused Solve there showed nothing at all.
+    for (const canHint of [true, false]) {
+      document.body.replaceChildren();
+      const rail = await mountRail(
+        "rail",
+        fullyCapablePuzzle({ canHint, helpMessage: "Game has not been started yet" }),
+      );
+      const banners = [
+        ...(rail.shadowRoot?.querySelectorAll('[part="hint-explanation"]') ?? []),
+      ].map((el) => el.textContent?.trim());
+      expect(banners, `canHint: ${canHint}`).toEqual(["Game has not been started yet"]);
     }
   });
 

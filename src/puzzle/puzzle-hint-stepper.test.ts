@@ -83,7 +83,7 @@ describe("Hint button stepper", () => {
     // The apply hides the plan rather than previewing the next step.
     expect(workerPuzzle.executeHint).toHaveBeenCalledWith(true);
     // …and confirms with a transient "Hint applied" banner.
-    expect(puzzle.autoHintMessage).toBe("Hint applied");
+    expect(puzzle.helpMessage).toBe("Hint applied");
   });
 
   it("alternates show, apply, show, apply over repeated presses", async () => {
@@ -126,6 +126,48 @@ describe("Hint button stepper", () => {
     await puzzle.hint(); // apply -> error -> disarm
     await puzzle.hint(); // shows again
     expect(calls).toEqual(["show", "apply", "show"]);
+  });
+});
+
+describe("Solve answers in the same banner (show-a-refused-solve)", () => {
+  it("shows a refusal", async () => {
+    const { puzzle } = makePuzzle({
+      solve: vi.fn(async () => "Game has not been started yet"),
+    });
+    expect(await puzzle.solve()).toBe("Game has not been started yet");
+    expect(puzzle.helpMessage).toBe("Game has not been started yet");
+  });
+
+  it("shows nothing when the solve lands", async () => {
+    const { puzzle, workerPuzzle } = makePuzzle({ solve: vi.fn(async () => null) });
+    expect(await puzzle.solve()).toBeNull();
+    expect(workerPuzzle.solve).toHaveBeenCalledOnce();
+    expect(puzzle.helpMessage).toBe("");
+  });
+
+  it("waits behind a step already in flight rather than landing inside it", async () => {
+    let releaseApply = () => {};
+    const base = makePuzzle({
+      executeHint: vi.fn(async () => {
+        base.calls.push("apply");
+        await new Promise<void>((resolve) => {
+          releaseApply = resolve;
+        });
+        return null;
+      }),
+      solve: vi.fn(async () => {
+        base.calls.push("solve");
+        return null;
+      }),
+    });
+    const apply = base.puzzle.executeHint();
+    const solve = base.puzzle.solve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(base.calls).toEqual(["apply"]);
+    releaseApply();
+    await apply;
+    await solve;
+    expect(base.calls).toEqual(["apply", "solve"]);
   });
 });
 
@@ -242,16 +284,16 @@ describe("a slow hint says it is thinking (coalesce-hint-requests)", () => {
     const show = puzzle.hint();
     await vi.advanceTimersByTimeAsync(HINT_PENDING_MS - 1);
     expect(puzzle.hintPending).toBe(false);
-    expect(puzzle.autoHintMessage).toBe("");
+    expect(puzzle.helpMessage).toBe("");
     await vi.advanceTimersByTimeAsync(1);
     expect(puzzle.hintPending).toBe(true);
-    expect(puzzle.autoHintMessage).toBe(HINT_PENDING_MESSAGE);
+    expect(puzzle.helpMessage).toBe(HINT_PENDING_MESSAGE);
     await releaseUnderFakeTimers(release);
     await show;
     // The show succeeded: nothing else replaced the message, so it is taken
     // down rather than left under the explanation; and the press armed.
     expect(puzzle.hintPending).toBe(false);
-    expect(puzzle.autoHintMessage).toBe("");
+    expect(puzzle.helpMessage).toBe("");
     expect(puzzle.hintArmedToApply).toBe(true);
   });
 
@@ -263,7 +305,7 @@ describe("a slow hint says it is thinking (coalesce-hint-requests)", () => {
     await show;
     await vi.advanceTimersByTimeAsync(HINT_PENDING_MS * 2);
     expect(puzzle.hintPending).toBe(false);
-    expect(puzzle.autoHintMessage).toBe("");
+    expect(puzzle.helpMessage).toBe("");
   });
 
   it("a refusal that lands late replaces the label rather than being wiped by it", async () => {
@@ -271,10 +313,10 @@ describe("a slow hint says it is thinking (coalesce-hint-requests)", () => {
     setHintError("Fix the highlighted mistakes first");
     const show = puzzle.hint();
     await vi.advanceTimersByTimeAsync(HINT_PENDING_MS);
-    expect(puzzle.autoHintMessage).toBe(HINT_PENDING_MESSAGE);
+    expect(puzzle.helpMessage).toBe(HINT_PENDING_MESSAGE);
     await releaseUnderFakeTimers(release);
     await show;
     expect(puzzle.hintPending).toBe(false);
-    expect(puzzle.autoHintMessage).toBe("Fix the highlighted mistakes first");
+    expect(puzzle.helpMessage).toBe("Fix the highlighted mistakes first");
   });
 });

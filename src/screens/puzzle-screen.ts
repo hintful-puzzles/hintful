@@ -244,7 +244,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
    */
   private renderPhoneChrome(): TemplateResult {
     const puzzle = this.puzzle;
-    const explanation = puzzle?.activeHintExplanation || puzzle?.autoHintMessage;
+    const explanation = puzzle?.activeHintExplanation || puzzle?.helpMessage;
     const status = puzzle?.wantsStatusbar ? puzzle.statusbarText : null;
     return html`
       ${
