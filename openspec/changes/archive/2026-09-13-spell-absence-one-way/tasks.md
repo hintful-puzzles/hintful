@@ -47,15 +47,20 @@
 
 ## 4. Verify
 
-- [ ] 4.1 No narration, snapshot or frozen fixture moves; no stored value's
-      meaning changes (D5).
+- [x] 4.1 No narration, snapshot or frozen fixture moves; no stored value's
+      meaning changes (D5). The implementing commit touches no `__snapshots__`
+      or fixture file, and the full gate passed (319 files, 9,212 tests).
 - [x] 4.2 By shape: the codemod's 234 lines differ by one token each; the rest
       were read site by site from the guard's and the typechecker's lists.
 - [x] 4.3 `EngineCore` result consumers re-read (D5).
-- [ ] 4.4 Run the app: an invalid game ID in the Enter Game ID dialog, an
-      invalid Custom type, and in Abcd and Crossing a cursor-entered value, a
-      clear, and a key that is neither; the settings dialog's favorites and a
-      preference round-trip.
+- [x] 4.4 Run the app (Chromium, dev server, 2026-09-13). Crossing: a digit
+      entered, Backspace cleared it, `x` changed nothing. Abcd: a letter entered,
+      a keyboard-cursor Backspace cleared it, `z` changed nothing. An invalid
+      `?id=` alerted with the refusal's text. At phone width an invalid Custom
+      width was refused with "Width must be at least 2". The home page rendered
+      the default favorites, read through `UNSET`. Found on the way, and filed as
+      `reach-the-custom-dialog-from-the-rail`: Custom type… throws from the
+      wide layout's rail, and the dialog is titled with the game id.
 
 ## 5. Keep it
 
