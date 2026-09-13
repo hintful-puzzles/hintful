@@ -28,13 +28,13 @@ function speaks(id: string): boolean {
   if (!game) return false;
   const params = firstLeaf(game.presets());
   for (const seed of SEEDS) {
-    let desc: string;
-    let aux: string | undefined;
+    let board: { desc: string; aux?: string };
     try {
-      ({ desc, aux } = game.newDesc(params, randomNew(`${id}-${seed}`)));
+      board = game.newDesc(params, randomNew(`${id}-${seed}`));
     } catch {
       continue;
     }
+    const { desc, aux } = board;
     const res = game.hint?.(game.newState(params, desc), aux);
     if (res?.ok && res.steps.some((s) => s.explanation !== "")) return true;
   }

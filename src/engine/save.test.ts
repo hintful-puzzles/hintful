@@ -211,7 +211,7 @@ describe("Midend save/restore round-trip", () => {
     expect(a.state()).toMatchObject({ currentMove: 2, canRedo: true });
 
     const b = driven();
-    expect(b.m.loadGame(saved)).toBeUndefined();
+    expect(b.m.loadGame(saved)).toBeNull();
     expect(b.m.formatAsText()).toBe("count=2");
     expect(b.state()).toMatchObject({
       currentMove: 2,
@@ -231,7 +231,7 @@ describe("Midend save/restore round-trip", () => {
     a.m.newGame();
     a.m.solve();
     const b = driven();
-    expect(b.m.loadGame(a.m.saveGame())).toBeUndefined();
+    expect(b.m.loadGame(a.m.saveGame())).toBeNull();
     expect(b.state()?.status).toBe("solved-with-help");
   });
 
@@ -296,7 +296,7 @@ describe("Midend save/restore round-trip", () => {
       cheated: false,
     };
     const b = driven();
-    expect(b.m.loadGame(encodeSave(env))).toBeUndefined();
+    expect(b.m.loadGame(encodeSave(env))).toBeNull();
     expect(b.state()).toMatchObject({ currentMove: 2, totalMoves: 2, canRedo: false });
     expect(b.m.formatAsText()).toBe("count=2");
   });
@@ -312,7 +312,7 @@ describe("Midend save/restore round-trip", () => {
     a.m.timer(83);
 
     const b = driven(timed);
-    expect(b.m.loadGame(a.m.saveGame())).toBeUndefined();
+    expect(b.m.loadGame(a.m.saveGame())).toBeNull();
     expect(decodeSave(a.m.saveGame()).timerElapsed).toBe(83);
     expect(b.statusBar()).toMatch(/^\[1:23\]/);
   });

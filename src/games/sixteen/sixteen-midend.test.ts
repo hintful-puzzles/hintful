@@ -69,7 +69,7 @@ describe("Sixteen midend integration — lifecycle", () => {
   it("newGameFromId creates a game from a known id", () => {
     const h = harness();
     const err = h.m.newGameFromId("3x3:1,2,3,4,5,6,7,8,9");
-    expect(err).toBeUndefined();
+    expect(err).toBeNull();
     expect(h.state()?.status).toBe("ongoing");
   });
 });
@@ -130,7 +130,7 @@ describe("Sixteen midend integration — presets", () => {
   it("setParams changes the game size", () => {
     const h = harness();
     const err = h.m.setParams("3x3");
-    expect(err).toBeUndefined();
+    expect(err).toBeNull();
     h.m.newGame();
     // The game should now be 3×3 — check params-change notification.
     const params = h.last("params-change") as
@@ -185,7 +185,7 @@ describe("Sixteen midend integration — hint persistence", () => {
 
     // Request a hint
     const exp = h.m.hint();
-    expect(exp).toBeUndefined(); // Returns undefined on success
+    expect(exp).toBeNull(); // null on success
 
     // activeHint should hold a stored plan
     const mPrivate = h.m as unknown as PrivateHintView;
@@ -221,7 +221,7 @@ describe("Sixteen midend integration — hint persistence", () => {
 
     // Request a hint
     const exp = h.m.hint();
-    expect(exp).toBeUndefined(); // Returns undefined on success
+    expect(exp).toBeNull(); // null on success
 
     // activeHint should hold a stored plan
     const mPrivate = h.m as unknown as PrivateHintView;
@@ -255,7 +255,7 @@ describe("Sixteen midend integration — hint persistence", () => {
         | undefined;
       return n?.activeHintExplanation;
     };
-    expect(h.m.hint()).toBeUndefined();
+    expect(h.m.hint()).toBeNull();
     expect(banner()).toBe(
       "Working on tile 6: move it to column 4, then row 2 (setting up).",
     );
@@ -296,7 +296,7 @@ describe("Sixteen midend integration — executeHint auto-play", () => {
     const maxSteps = 100;
     while (h.state()?.status === "ongoing" && steps < maxSteps) {
       const hintErr = h.m.executeHint();
-      expect(hintErr).toBeUndefined();
+      expect(hintErr).toBeNull();
       steps++;
     }
 
@@ -311,7 +311,7 @@ describe("Sixteen midend integration — executeHint auto-play", () => {
     expect(h.state()?.status).toBe("ongoing");
 
     const err = h.m.executeHint();
-    expect(err).toBeUndefined();
+    expect(err).toBeNull();
 
     const mPrivate = h.m as unknown as PrivateHintView;
     expect(mPrivate.activeHint).not.toBeNull();
@@ -367,11 +367,11 @@ describe("Sixteen midend integration — executeHint auto-play", () => {
     const err = h.m.newGameFromId(
       "5x5:6,2,3,4,5,1,7,8,9,10,11,12,13,14,15,20,17,18,19,16,21,22,23,24,25",
     );
-    expect(err).toBeUndefined();
+    expect(err).toBeNull();
 
     let guard = 0;
     while (h.state()?.status === "ongoing" && guard < 30) {
-      expect(h.m.executeHint()).toBeUndefined();
+      expect(h.m.executeHint()).toBeNull();
       h.m.timer(1.5); // settle the slow-motion animation (1.0s) + flash
       guard++;
     }

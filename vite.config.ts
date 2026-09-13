@@ -397,9 +397,9 @@ export default defineConfig(async ({ command, mode }) => {
    * itself, `pegs.html` is `/pegs`, and `help/index.html` is `/help` with no
    * trailing slash.
    */
-  const canonicalUrlFor = (urlPathname: unknown): string | undefined => {
+  const canonicalUrlFor = (urlPathname: unknown): string | null => {
     if (!canonicalBaseUrl) {
-      return undefined;
+      return null;
     }
     const path = String(urlPathname)
       .replace(/\.html$/, "")
@@ -510,9 +510,9 @@ export default defineConfig(async ({ command, mode }) => {
           },
           {
             virtualPages: Object.entries(puzzles).map(([id, puzzleData]) => {
-              let iconUrl: string | undefined = `src/assets/icons/${id}-64d8.png`;
+              let iconUrl: string | null = `src/assets/icons/${id}-64d8.png`;
               if (!fs.existsSync(iconUrl)) {
-                iconUrl = undefined;
+                iconUrl = null;
               }
               return {
                 urlPathname: `${id}.html`,

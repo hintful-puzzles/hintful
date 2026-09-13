@@ -360,9 +360,9 @@ export function readDesc(
   for (let i = 0; i < s; i++) {
     if (erun === 0) {
       const c = desc[pos++] ?? "";
-      const clue: number | undefined = CLUE_BITS[c];
+      const clue: number | null = CLUE_BITS[c] ?? null;
       if (c >= "a" && c <= "z") erun = c.charCodeAt(0) - CODE_a + 1;
-      else if (clue !== undefined) grid[i] = clue | FM_FIXED;
+      else if (clue !== null) grid[i] = clue | FM_FIXED;
       else error = "Clues contain invalid characters";
     }
     if (erun > 0) erun--; // an empty square

@@ -42,10 +42,10 @@ export const isHelpUrl = (href: string | URL): boolean =>
  * If href is relative to baseUrl, returns its pathname portion after
  * baseUrl.pathname, with leading and trailing slashes removed.
  */
-const relativePathname = (href: string | URL): string | undefined => {
+const relativePathname = (href: string | URL): string | null => {
   const url = href instanceof URL ? href : new URL(href, baseUrl);
   if (url.origin !== baseUrl.origin || !url.pathname.startsWith(baseUrl.pathname)) {
-    return undefined;
+    return null;
   }
   return (
     url.pathname
@@ -57,12 +57,12 @@ const relativePathname = (href: string | URL): string | undefined => {
   );
 };
 
-export function parsePuzzleUrl(href?: string | URL): PuzzleUrlParams | undefined {
+export function parsePuzzleUrl(href?: string | URL): PuzzleUrlParams | null {
   // Extract puzzleId from /:puzzleId
   const url = new URL(href ?? window.location.href, baseUrl);
   const path = relativePathname(url);
-  if (path === undefined || !validPuzzleIds.has(path)) {
-    return undefined;
+  if (path === null || !validPuzzleIds.has(path)) {
+    return null;
   }
 
   return {

@@ -4,14 +4,14 @@
 function getPropertyDescriptor(
   obj: unknown,
   property: PropertyKey,
-): PropertyDescriptor | undefined {
+): PropertyDescriptor | null {
   for (let o = obj; o; o = Object.getPrototypeOf(o)) {
     const descriptor = Object.getOwnPropertyDescriptor(o, property);
     if (descriptor) {
       return descriptor;
     }
   }
-  return undefined;
+  return null;
 }
 
 /**

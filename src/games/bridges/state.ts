@@ -644,7 +644,7 @@ export function validateDesc(params: BridgesParams, desc: string): string | null
     }
     // An island holds 1..16 bridges: `1`–`9`, then `A`–`G`.
     const count = c2nUpper(tok.value);
-    if (count === undefined || count < 1 || count > 16) {
+    if (count === null || count < 1 || count > 16) {
       return "Game description contains unexpected character";
     }
     nislands++;
@@ -675,7 +675,7 @@ export function newStateFromDesc(params: BridgesParams, desc: string): BridgesSt
     }
     const count = c2nUpper(tok.value);
     // Anything else was rejected by validateDesc.
-    if (count !== undefined && count >= 1 && count <= 16)
+    if (count !== null && count >= 1 && count <= 16)
       state.islandAdd(i % w, Math.floor(i / w), count);
     i++;
   }

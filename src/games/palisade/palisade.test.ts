@@ -335,7 +335,7 @@ describe("palisade hint", () => {
   // the same board every run (the idiom used by the render-scenario seed).
   const scanPlan = (
     pred: (steps: HintStep<PalisadeMove>[]) => boolean,
-  ): HintStep<PalisadeMove>[] | undefined => {
+  ): HintStep<PalisadeMove>[] | null => {
     for (const [preset, count] of [
       [P, 250],
       [{ w: 8, h: 6, k: 6 }, 40],
@@ -346,12 +346,12 @@ describe("palisade hint", () => {
         if (r?.ok && pred(r.steps)) return r.steps;
       }
     }
-    return undefined;
+    return null;
   };
 
   it("groups a multi-edge deduction into one continuesPrevious journey", () => {
     const steps = scanPlan((ss) => ss.some((s) => s.continuesPrevious));
-    expect(steps).toBeDefined();
+    expect(steps).not.toBeNull();
     if (!steps) return;
     // A plan never opens on a continuation, and every continuation leg is
     // preceded by the unflagged start of its journey, which surfaces its
@@ -378,7 +378,7 @@ describe("palisade hint", () => {
           (hlOf(s).cells?.length ?? 0) > 1,
       ),
     );
-    expect(steps).toBeDefined();
+    expect(steps).not.toBeNull();
     if (!steps) return;
     const opener = steps.find(
       (s, k) =>

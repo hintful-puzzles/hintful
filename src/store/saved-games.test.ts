@@ -28,9 +28,9 @@ function fakePuzzle(puzzleId: string, initialState: string) {
     async saveGame(): Promise<Uint8Array<ArrayBuffer>> {
       return new Uint8Array(bytes) as Uint8Array<ArrayBuffer>;
     },
-    async loadGame(data: Uint8Array): Promise<string | undefined> {
+    async loadGame(data: Uint8Array): Promise<string | null> {
       bytes = new Uint8Array(data);
-      return undefined;
+      return null;
     },
     get decodedState(): string {
       return new TextDecoder().decode(bytes);
@@ -57,7 +57,7 @@ async function waitFor(predicate: () => boolean, ms = 500): Promise<boolean> {
 function refusingPuzzle(puzzleId: string, error: string) {
   const fake = fakePuzzle(puzzleId, "board");
   return Object.assign(fake, {
-    async loadGame(): Promise<string | undefined> {
+    async loadGame(): Promise<string | null> {
       return error;
     },
   });

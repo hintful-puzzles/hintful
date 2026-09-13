@@ -67,9 +67,9 @@ function holeSymbol(nums: number): number {
 /** How the cube is told about the empty squares. With exactly one empty square
  * per line (`nums = order − 1`) the hole is an ordinary once-per-line symbol
  * and needs no declaration. */
-function repeatsFor(b: SaladBoard): LatinRepeats | undefined {
+function repeatsFor(b: SaladBoard): LatinRepeats | null {
   const times = b.order - b.nums;
-  return times >= 2 ? { times } : undefined;
+  return times >= 2 ? { times } : null;
 }
 
 /** Known empty: the hole symbol is *placed* here. */

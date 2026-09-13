@@ -52,7 +52,7 @@ describe("Twiddle midend lifecycle", () => {
     h = harness();
     // A 3×3 board one anticlockwise turn of block (0,0) from solved:
     // 'A' (dir -1) at (0,0) restores 1..9.
-    expect(h.m.newGameFromId("3x3n2:2,5,3,1,4,6,7,8,9")).toBeUndefined();
+    expect(h.m.newGameFromId("3x3n2:2,5,3,1,4,6,7,8,9")).toBeNull();
   });
 
   it("paints the board on a forced redraw", () => {
@@ -81,7 +81,7 @@ describe("Twiddle midend lifecycle", () => {
   });
 
   it("solve snaps to the solved board and reports auto-solve", () => {
-    expect(h.m.solve()).toBeUndefined();
+    expect(h.m.solve()).toBeNull();
     expect(h.status()?.statusBarText).toContain("Moves since auto-solve");
   });
 });

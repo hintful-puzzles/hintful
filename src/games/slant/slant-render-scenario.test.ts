@@ -19,8 +19,8 @@ function boardId(params: SlantParams, seed: string): string {
   return `${encodeParams(params, true)}:${desc}`;
 }
 
-const hl = (step: HintStep<unknown> | undefined): SlantHint | undefined =>
-  step?.highlights as SlantHint | undefined;
+const hl = (step?: HintStep<unknown>): SlantHint | null =>
+  (step?.highlights as SlantHint | undefined) ?? null;
 
 describe("Slant hint render scenarios", () => {
   it("opener frame: ringed target(s), recolored clue digit, board intact", () => {
@@ -31,7 +31,7 @@ describe("Slant hint render scenarios", () => {
     });
 
     const h = hl(hint);
-    expect(h).toBeDefined();
+    expect(h).not.toBeNull();
     // The opener is a clue firing: it carries a driving clue.
     expect(h?.clue).toBeDefined();
 
@@ -59,7 +59,7 @@ describe("Slant hint render scenarios", () => {
     });
 
     const h = hl(hint);
-    expect(h).toBeDefined();
+    expect(h).not.toBeNull();
     expect(h?.area?.length ?? 0).toBeGreaterThan(0);
     // Exactly one ringed target (loop firings force a single square).
     expectRing(recording.ops, COL_HINT);

@@ -115,7 +115,7 @@ export function decodeClues(clueDesc: string, numFaces: number): Int8Array {
       continue;
     }
     const clue = c2nUpper(tok.value);
-    if (clue !== undefined) clues[i] = clue;
+    if (clue !== null) clues[i] = clue;
     i++;
   }
   return clues;
@@ -174,7 +174,7 @@ export function validateDesc(p: LoopyParams, desc: string): string | null {
   for (const tok of scanRunLength(clueDesc)) {
     if ("blanks" in tok) {
       count += tok.blanks;
-    } else if (c2nUpper(tok.value) !== undefined) {
+    } else if (c2nUpper(tok.value) !== null) {
       count++;
     } else {
       return "Unknown character in description";
@@ -381,11 +381,11 @@ export function checkCompletion(state: LoopyState): boolean {
  * Upstream expresses this as a separate `game_can_format_as_text_now(params)`
  * returning false for every non-square type; this project's `Game` has a static
  * `canFormatAsText`, so the param-dependence is carried by returning
- * `undefined` instead (the midend and the share dialog treat an absent
+ * `null` instead (the midend and the share dialog treat an absent
  * rendering as "no text panel").
  */
-export function textFormat(state: LoopyState): string | undefined {
-  if (state.gridType !== 0) return undefined;
+export function textFormat(state: LoopyState): string | null {
+  if (state.gridType !== 0) return null;
 
   const g = state.grid;
   // Dots are clockwise, so a face's dots 0 and 2 are opposite corners.

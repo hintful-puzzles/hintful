@@ -448,7 +448,7 @@ function narrate(reason: SoloReason, ns: number[]): string {
     case "intersect":
       return say.intersect(reason.confined, reason.target, reason.n);
     case "set":
-      return say.set(reason.region, ns);
+      return say.set(reason.region ?? null, ns);
     case "forcing":
       return say.forcing(reason, ns[0], reason.shares, reason.lastShares);
     case "cageSingle":
@@ -709,7 +709,7 @@ function hint(
   _aux?: string,
   ui?: SoloUi,
 ): HintResult<SoloMove, SoloHint> {
-  return candidateHint(state, ui, findMistakes, buildSteps);
+  return candidateHint(state, ui ?? null, findMistakes, buildSteps);
 }
 
 /** Classify a player move against the displayed hint step (shared

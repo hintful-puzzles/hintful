@@ -161,7 +161,7 @@ export function borderErrorBits(
 export function mistakeEdgeBits(
   w: number,
   h: number,
-  mistakes: readonly { x: number; y: number; dir: number }[] | undefined,
+  mistakes?: readonly { x: number; y: number; dir: number }[],
 ): Int32Array {
   const mask = new Int32Array(w * h);
   for (const m of mistakes ?? []) mask[m.y * w + m.x] |= BORDER_ERROR(BORDER(m.dir));

@@ -155,7 +155,7 @@ export function validateDesc(p: SinglesParams, desc: string): string | null {
   if (desc.length !== n) return "Game description is wrong length";
   for (let i = 0; i < n; i++) {
     const num = c2n(desc[i]);
-    if (num === undefined || num <= 0 || num > o) {
+    if (num === null || num <= 0 || num > o) {
       return "Game description contains unexpected characters";
     }
   }
@@ -169,7 +169,7 @@ export function newState(p: SinglesParams, desc: string): SinglesState {
     // Every Singles cell holds a number, so there is no absent value to write:
     // a character `validateDesc` would have rejected is refused here too.
     const num = c2n(desc[i]);
-    if (num === undefined)
+    if (num === null)
       throw new Error("Game description contains unexpected characters");
     nums[i] = num;
   }

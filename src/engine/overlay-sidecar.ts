@@ -11,8 +11,8 @@
  * highlighted nothing because `ds.wrong` was missing from the diff key).
  *
  * Usage in a game's `redraw`, one instance per overlay:
- *   - pack once per frame — `ds.hint.pack(step?.highlights, index, markBits)`
- *     for the hint's highlight object, `ds.wrong.packCells(mistakes, index)`
+ *   - pack once per frame — `ds.hint.pack(step?.highlights ?? null, index, markBits)`
+ *     for the hint's highlight object, `ds.wrong.packCells(mistakes ?? null, index)`
  *     for the `findMistakes` cell list, or `clear()` + `add()` for a game whose
  *     overlay has its own topology (Galaxies' four wall bits per tile);
  *   - `ds.<overlay>.stale(i)` as one clause of the per-cell cache-miss test;
@@ -104,7 +104,7 @@ export class OverlaySidecar {
    * the game's cell indexing (stride, border ring, …); `markBits` encodes
    * one mark's payload into the packed word. */
   pack<Mark extends Cell>(
-    hl: PackableHighlights<Mark> | undefined,
+    hl: PackableHighlights<Mark> | null,
     index: (x: number, y: number) => number,
     markBits: (mark: Mark) => number,
   ): void {
@@ -123,7 +123,7 @@ export class OverlaySidecar {
    * shape. Every listed cell gets {@link OVERLAY_FLAG}, everything else
    * clears (so the overlay's *removal* repaints too). */
   packCells(
-    cells: readonly Cell[] | undefined,
+    cells: readonly Cell[] | null,
     index: (x: number, y: number) => number,
   ): void {
     this.clear();

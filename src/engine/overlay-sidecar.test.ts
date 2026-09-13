@@ -46,11 +46,11 @@ describe("OverlaySidecar", () => {
     expect(s.stale(idx(1, 1))).toBe(false);
   });
 
-  it("packing undefined clears the overlay (hint dismissed)", () => {
+  it("packing null clears the overlay (hint dismissed)", () => {
     const s = new OverlaySidecar(4);
     s.pack({ targets: [{ x: 0, y: 0 }], marks: [] }, (x, y) => y * 2 + x, marks);
     for (let i = 0; i < 4; i++) s.commit(i);
-    s.pack(undefined, (x, y) => y * 2 + x, marks);
+    s.pack(null, (x, y) => y * 2 + x, marks);
     expect(s.stale(0)).toBe(true); // the erased cell repaints
     expect(s.stale(1)).toBe(false);
   });
@@ -76,7 +76,7 @@ describe("OverlaySidecar", () => {
     // Check & Save's overlay is dropped on the next move: the cell that showed
     // a red highlight must repaint to erase it. (Towers shipped this bug — its
     // mistake array was missing from the diff key, so nothing lit up at all.)
-    s.packCells(undefined, idx);
+    s.packCells(null, idx);
     expect(s.stale(idx(1, 1))).toBe(true);
     expect(s.stale(idx(0, 0))).toBe(false);
   });

@@ -873,8 +873,8 @@ describe("seismic moves", () => {
       },
       () => {},
     );
-    expect(me.newGameFromId(idOf(SMALL))).toBeUndefined();
-    expect(me.solve()).toBeUndefined();
+    expect(me.newGameFromId(idOf(SMALL))).toBeNull();
+    expect(me.solve()).toBeNull();
     expect(status).toBe("solved-with-help");
     // Every cell is filled in, so Solve really finished the job.
     expect(me.formatAsText()).not.toContain(".");
@@ -1019,7 +1019,7 @@ describe("seismic findMistakes", () => {
 
   it("is offered to the app, so Check & Save can hard-block on it", () => {
     const me = new Midend(seismicGame);
-    expect(me.newGameFromId(idOf(SMALL))).toBeUndefined();
+    expect(me.newGameFromId(idOf(SMALL))).toBeNull();
     expect(me.getStaticProperties().canFindMistakes).toBe(true);
   });
 });
@@ -1029,7 +1029,7 @@ describe("seismic findMistakes", () => {
 describe("seismic midend lifecycle", () => {
   it("round-trips a game with progress through save/load", () => {
     const me = new Midend(seismicGame);
-    expect(me.newGameFromId(idOf(SMALL))).toBeUndefined();
+    expect(me.newGameFromId(idOf(SMALL))).toBeNull();
     const cell = firstFreeCell(stateOf(SMALL));
     me.playMoves([
       { type: "set", x: cell.x, y: cell.y, n: 1, pencil: false },
@@ -1038,7 +1038,7 @@ describe("seismic midend lifecycle", () => {
     const text = me.formatAsText();
 
     const restored = new Midend(seismicGame);
-    expect(restored.loadGame(me.saveGame())).toBeUndefined();
+    expect(restored.loadGame(me.saveGame())).toBeNull();
     expect(restored.formatAsText()).toBe(text);
     expect(restored.getParams()).toBe(me.getParams());
   });
@@ -1046,7 +1046,7 @@ describe("seismic midend lifecycle", () => {
   it("accepts every recorded board as a game id", () => {
     for (const f of FIXTURES) {
       const me = new Midend(seismicGame);
-      expect(me.newGameFromId(idOf(f))).toBeUndefined();
+      expect(me.newGameFromId(idOf(f))).toBeNull();
     }
   });
 });

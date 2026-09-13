@@ -152,8 +152,8 @@ export interface DifficultyContract<Params> {
  */
 export function difficultyTiers<Params>(game: {
   paramConfig?: readonly ParamConfigItem<Params>[];
-}): readonly string[] | undefined {
-  return difficultyChoiceItem(game)?.choices;
+}): readonly string[] | null {
+  return difficultyChoiceItem(game)?.choices ?? null;
 }
 
 /**
@@ -167,11 +167,11 @@ export function difficultyTiers<Params>(game: {
  */
 export function difficultyChoiceItem<Params>(game: {
   paramConfig?: readonly ParamConfigItem<Params>[];
-}): Extract<ParamConfigItem<Params>, { type: "choices" }> | undefined {
+}): Extract<ParamConfigItem<Params>, { type: "choices" }> | null {
   const item = game.paramConfig?.find(
     (i) => i.type === "choices" && /^diff/.test(i.kw),
   );
-  return item?.type === "choices" ? item : undefined;
+  return item?.type === "choices" ? item : null;
 }
 
 /**

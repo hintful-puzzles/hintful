@@ -45,7 +45,7 @@ export type KeyLabel = {
 export type PresetMenuEntry = {
   title: string;
   params: string;
-  submenu?: PresetMenuEntry[] | undefined;
+  submenu?: PresetMenuEntry[];
 };
 
 export type DrawTextOptions = {
@@ -65,7 +65,7 @@ export type DrawTextOptions = {
 export type NotifyGameIdChange = {
   type: "game-id-change";
   currentGameId: string;
-  randomSeed?: string | undefined;
+  randomSeed?: string;
   restoreGameId: string;
 };
 
@@ -104,14 +104,21 @@ export interface NotifyStatusBarChange {
    * flagged `continuesPrevious`. It is deliberately not the position in the
    * stored plan — for a plan-based game like Inertia that would read "Step 3
    * of 47", which is a fact about the solver, not about the hint the player is
-   * being shown. Absent when there is no displayed hint; `length` is 1 for a
+   * being shown. `null` when there is no displayed hint; `length` is 1 for a
    * single-leg hint, and the chrome shows nothing then.
    */
-  hintJourney?: { index: number; length: number };
+  hintJourney: { index: number; length: number } | null;
 }
 
 export type PuzzleId = string;
 export type EncodedParams = string;
+
+/** The Custom dialog's preview of the params its values describe, or why they
+ * are refused. A result rather than a string, because the answer on success is
+ * itself a string and the refusal would otherwise have to hide inside it. */
+export type CustomParamsEncoding =
+  | { ok: true; params: EncodedParams }
+  | { ok: false; error: string };
 
 /** One field in a config dialog (custom game params, or preferences). */
 export type ConfigItem =

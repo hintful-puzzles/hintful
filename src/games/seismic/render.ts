@@ -357,7 +357,7 @@ export function redraw(
   const flash = flashTime > 0 ? Math.floor(flashTime / FLASH_FRAME) % 3 : -1;
   const cshow = flashTime > 0 ? false : ui.cursor.visible;
 
-  ds.wrong.packCells(mistakes, (x, y) => y * w + x);
+  ds.wrong.packCells(mistakes ?? null, (x, y) => y * w + x);
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {

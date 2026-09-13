@@ -487,7 +487,7 @@ describe("Sixteen hint", () => {
               expect(onLine).toBe(true);
             }
             expect(hl.targetPos).not.toBe(cur);
-            if (hl.ultimatePos !== undefined) expect(hl.ultimatePos).not.toBe(cur);
+            if (hl.ultimatePos !== null) expect(hl.ultimatePos).not.toBe(cur);
             s = executeMove(s, step.move);
             // The step's move is the full slide its narration describes:
             // applying it lands the tile exactly on the highlighted target.
@@ -997,7 +997,7 @@ describe("Sixteen hint rendering", () => {
       const hl = step.highlights as SixteenHintHighlights;
       // A previewed two-leg journey (first leg, not a continuation) reads
       // "move it to <line>, then <line>" and carries a distinct ultimatePos.
-      if (hl.ultimatePos !== undefined && !step.continuesPrevious) {
+      if (hl.ultimatePos !== null && !step.continuesPrevious) {
         expect(step.explanation).toMatch(
           /^Working on tile \d+: move it to (row|column) \d+, then (row|column) \d+/,
         );
@@ -1024,6 +1024,7 @@ describe("Sixteen hint track and direction fixes", () => {
       highlights: {
         tile: 1,
         targetPos: 2, // col 2, row 0
+        ultimatePos: null,
       },
     };
 
@@ -1057,6 +1058,7 @@ describe("Sixteen hint track and direction fixes", () => {
       highlights: {
         tile: 1,
         targetPos: 0, // col 0, row 0
+        ultimatePos: null,
       },
     };
 
@@ -1078,6 +1080,7 @@ describe("Sixteen hint track and direction fixes", () => {
       highlights: {
         tile: 1,
         targetPos: 2,
+        ultimatePos: null,
       },
     });
 
@@ -1110,7 +1113,7 @@ describe("Sixteen hint track and direction fixes", () => {
     const h4: HintStep<SixteenMove, SixteenHintHighlights> = {
       move: { type: "slide", axis: "row", index: 0, delta: 2 },
       explanation: "",
-      highlights: { tile: 1, targetPos: 2 },
+      highlights: { tile: 1, targetPos: 2, ultimatePos: null },
     };
     const m4: SixteenMove = { type: "slide", axis: "row", index: 0, delta: -1 };
     expect(sixteenGame.hintKeepTrack?.(m4, h4, s4)).toBe("onTrack");
@@ -1160,7 +1163,7 @@ describe("the hint marks while the hinted slide animates", () => {
       if (step.move.type !== "slide") continue;
       const m = step.move;
       const hl = step.highlights as SixteenHintHighlights;
-      if (hl.ultimatePos !== undefined) continue; // want the solid target border
+      if (hl.ultimatePos !== null) continue; // want the solid target border
       const after = executeMove(state, m);
       const w = state.w;
       const from = state.tiles.indexOf(hl.tile);

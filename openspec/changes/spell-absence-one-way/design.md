@@ -1,96 +1,170 @@
 # spell-absence-one-way — design
 
-## D1. What the census measures, and what it cannot
+## D1. What the census measured, re-taken
 
-It counts **declared** return types, parsed by the compiler rather than grepped,
-because the grep this change's predecessor used could not be reproduced and two
-line-based attempts in the scaffolding session returned zeros for reasons that
-had nothing to do with the tree (POSIX ERE has no `\s`; zsh reads `"$s["` as a
-subscript). Give any re-take a known positive — `digitValue` in
-`src/engine/decimal.ts` is a one-line `number | undefined` — and read stderr.
+Taken 2026-09-13 with the TypeScript compiler API and its type checker, from
+scripts kept in the session scratchpad; the durable instrument is now the guard
+(D4). The known positive held — `digitValue` found as `| undefined` — over
+527 files and 6,909 function-like nodes, 2,162 of them unannotated.
 
-Three things it does not see, each a reason not to treat its totals as the
-population a convention governs:
+| declared returns, non-test `src/` | `\| null` | `\| undefined` | both |
+| --- | --- | --- | --- |
+| `src/engine/` | 48 | 33 | 0 |
+| `src/games/` | 330 | 8 | 2 |
+| app | 7 | 54 | 1 |
 
-- **Unannotated functions** (2,219 of 7,187 on 2026-09-13). Their inferred
-  return type may contain either word.
-- **Fields, parameters and locals.** `?:` members and `x: T | null` fields
-  carry the same question and are not returns.
-- **Meaning.** A count says which word, never whether the site means "an error,
-  or nothing", "nothing to say", "lookup missed" or a third state. Task 1.3
-  classifies the engine rows by reading them; the classification is the input
-  to D2, the totals are not.
+The checker closed the blind spot the scaffold named: unannotated functions
+inferred 4 / 0 in the engine, 30 / 1 in the games and 2 / 10 in the app.
 
-## D2. The candidate conventions
+Two wider figures decided D2. **Every union position**, not only returns
+(parameters, members, variables, aliases, type arguments), in non-test `src/`:
+about 750 name `null` and about 160 name `undefined`, 45 of the latter being the
+one `EngineCore` relay chain written out in four layers. And **the respelling's
+hazard population**: 478 `return null` statements in the games (189 in
+`interpretMove`) and 42 in the engine, with 197 strict comparisons against
+`null` and 160 against `undefined` — the comparisons being the part no
+typechecker checks after a word moves.
 
-The test from `AGENTS.md` § "Convention over configuration": *can we say what a
-site would legitimately want to do differently?* Where yes, the convention needs
-an override; where no, it is a convention nobody made.
+Two instruments lied before they were trusted, both in the known way. A
+`--include=*.ts` glob expanded in zsh and every scan returned nothing; a
+`git grep -E` using `\b` reported no `toBeDefined()` on a respelled value until a
+known positive (`crossing-hint.test.ts:585`) was required to appear, whereupon
+it found ten.
 
-| Option | Rule | Cost, as measured 2026-09-13 |
-| --- | --- | --- |
-| **A** | `undefined` is this tree's "nothing". `null` appears only where a platform API returns it or a stored/transported value gives it a distinct meaning. | Flips the `Game` contract: four members' implementations in every game, plus helpers. Compiler-enumerated, so mechanical. |
-| **B** | `null` is "deliberately nothing" (returns, contract results); `undefined` is "not provided" (optional parameters and fields). | Flips `EngineCore`'s relayed results and most app helpers. Keeps the `Game` contract. |
-| **C** | Contracts only: `Game` and `EngineCore` agree with each other and with themselves; helpers are the file's business. | Smallest. Gives a new helper no rule, so the per-porter decision survives. |
+## D2. Decision: `null`, with named states and results where a value is at stake
 
-**Recommendation: A, with the override stated.** Reasons, each checkable:
+The rule, stated in `docs/games/mechanics.md` § "Absence is `null`" and the
+`ts-engine` requirement "Absence has one spelling":
 
-- The language produces `undefined` on its own — `?.`, `Map.get`, `Array.find`,
-  an omitted argument, an unset `?:` member — and default parameters fire only
-  on `undefined`. Under A those compose without a `?? null` conversion; under B
-  every one of them is a conversion somebody must remember.
-- B's distinction ("deliberately nothing" versus "not provided") is real in
-  English and unenforceable in code: nothing checks which one a site meant. It is
-  exactly the kind of decision a porter makes per helper and two porters make
-  differently, which is what this change exists to remove.
-- The override is one a site *already declares for its own reasons*: a value
-  that is stored or that a platform API returned. `settings.ts` needs no ledger
-  entry to keep its `null` — it is a persisted setting, and that is visible.
+1. A value that may be absent is `T | null`; `undefined` is never written into a
+   union. `?` marks a parameter or member that may be left out, and a value the
+   language produced as `undefined` takes `?? null` where it enters a declared
+   type.
+2. Two kinds of nothing get named states.
+3. A failure with nothing to return on success is its reason or `null`; a failure
+   beside a value is a discriminated result.
 
-**Decide in task 2, not here.** A's cost falls mostly on the `Game` contract,
-which `interpretMove`'s `Move | null | UiUpdate` also touches — that return has
-three members already, and changing its `null` interacts with `UI_UPDATE`'s
-handling in the midend. Read that before committing to A; if it pushes back,
-say so and choose again. **And if no part of A or B shows a benefit beyond
-consistency, implement C and record why the rest was declined**, as
-`unify-hint-framework` recorded its no-gos.
+**The scaffold recommended the opposite (A, `undefined`). Measured, it does not
+survive:**
 
-## D3. The three-state functions are fixed whichever option wins
+- **Every path has to say it.** Verified with tsgo on a probe: a declared
+  `number | null` return that falls off its end is TS2366, and `number |
+  undefined` compiles. The tree had a live instance — `extractSGTGameID` fell off
+  its end for any URL that was not upstream's, legal only because its return
+  admitted `undefined`.
+- **It is enforceable by syntax with no ledger.** A's guard would have to exempt
+  every `null` a move, a `Ui` field or a save carries, and no declaration marks
+  which types those are. That is D4's "no honest derivation" case; the `null`
+  rule has none.
+- **A's "composes without conversion" is symmetric.** Assigning `T | undefined`
+  into `T | null` is a type error, but so is the reverse, so either rule makes the
+  compiler demand each conversion. The sweep added about forty `?? null`
+  conversions; A would have respelled some 520 `return null` statements and
+  audited 197 comparisons tsc does not check.
+- **B's objection does not apply.** The scaffold called B unenforceable because it
+  distinguished "deliberately nothing" from "not provided" by meaning. The rule
+  adopted is not a meaning; it is where the word may be written.
 
-`keyLetter` (Abcd) and `keyDigit` (Crossing) return a value, `null` ("clear") or
-`undefined` ("not an entry key"). This is not a spelling question: it is two
-states hiding in one type's two absent inhabitants. Give "clear" a name the
-compiler can see — a `CLEAR` constant or a small discriminated union — so a
-`??` cannot merge it into "not mine".
+**The owner's lean toward explicit types** (2026-09-13: "rather than
+`strToNum(s: string | undefined)` I'd lean towards something like
+`strToNum(s: string | MissingFixtureValue | MissingInput)`", with anything
+consistent acceptable) **is applied where it earns something**:
 
-The two functions share their shape (`digitOf`, `CURSOR_SELECT2`,
-`isEraseKey`, `digit === 0` means clear). **Before extracting a shared helper,
-measure how many other games spell the same entry-key logic inline**, keyed on
-that shape rather than on these two names; per `AGENTS.md` § "Refactor as you
-go", extract if the shape will stay stable, and record the no-go if not.
+- *Two kinds of nothing are named.* Abcd's `keyLetter` and Crossing's `keyDigit`
+  return `"clear"` (Salad's `symbolFor` already spelled it that way), and the
+  settings store reads a key nobody stored as `UNSET`, because several settings
+  store `null` as a value and the decorator must give the default to one and not
+  the other.
+- *A failure beside a value is a result.* `encodeCustomParams` returned the
+  params string or `#ERROR:<reason>` in the same string; it returns
+  `CustomParamsEncoding` now. `Game.solve` and `Game.hint` were already that
+  shape.
 
-## D4. Keeping it
+**And declined for "fine, or why not"** — `validateParams`, `validateDesc` and
+`EngineCore`'s refusals stay reason-or-`null`. Measured: 111 validator
+implementations, 737 test lines naming them, of which 118 `not.toBeNull()` and
+15 `toBeTruthy()` would pass against an always-truthy result object, and every
+`if (err)` in production would compile and invert. A reason cannot be confused
+with a success value when success carries none, so a result there buys
+uniformity and costs a hazard. Revisit when a validator must return something on
+success.
 
-A guard keyed on a name will miss the helper written next week. If one is
-built, key it on shape — a declared return union containing the forbidden word
-— through the compiler API, as `scripts/checks/unused-exports.mjs` already does,
-and **derive its exceptions** from what a site already is (a return that
-forwards a platform call; a member of a persisted-settings type) rather than a
-roster. Prove it fails on a planted signature before trusting it.
+**What each part buys beyond consistency:**
 
-If no honest derivation exists, do not ship a ledger that rots: state the rule
-in `docs/games/mechanics.md` and the `ts-engine` spec, and say plainly that
-nothing enforces it.
+- `EngineCore`: the refusal is spelled as `Game`'s validators spell it, across
+  the midend, the worker adapter, the surface and `Puzzle`. `setPreferences`
+  declared a refusal no path produced and returns `void`.
+- `encodeCustomParams`: a caller that forgot the `#ERROR:` prefix test would have
+  used the refusal as a params string; the compiler now refuses that.
+- `keyLetter` / `keyDigit`: a `??` written against the result can no longer merge
+  a clear into an ignored key.
+- The digit codecs: `digitValue` and its key-side twin `digitOf` spell the one
+  fact one way.
+- The guard (D4): four silent defects were written *by this sweep* and caught
+  before any commit — Loopy's and Mosaic's `validateDesc` accepting any
+  character (`c2nUpper(…) !== undefined`, now always true), an unmapped key
+  reaching the game as a `null` button, and the settings dialog drawing a
+  progress ring with no value. The guard found the first two; reading each
+  consumer found the other two, and the guard has since been run over them.
 
-## D5. What must not move
+`interpretMove`'s `Move | null | UiUpdate` is unchanged: it was already the rule.
 
-- Stored meaning in `store/settings.ts` and the save envelope (proposal, "What
-  this does not do").
-- The consumers' behavior: every `EngineCore` result consumer tests truthiness
-  today (read on 2026-09-13 at each call site of `setParams`, `setCustomParams`,
-  `loadGame`, `newGameFromId`, `setPreferences`, `hint` and `executeHint`
-  outside the engine). Re-read them after the contracts change — a switch to a
-  strict comparison anywhere would make a respelling a behavior change.
-- Values crossing the Comlink worker boundary survive structured clone with
-  either word, so the boundary itself is not a constraint; the consumers above
-  are.
+## D3. The three-state keys, and why nothing was extracted
+
+Named as D2 says. The extraction the scaffold asked to measure (task 1.5),
+keyed on the shape rather than the two names: 22 games read the erase keys, and
+what they share is two tokens, `CURSOR_SELECT2 || isEraseKey`. Whether that pair
+*clears* is the game's own decision — Boats and Bricks cycle on the secondary
+select, Sticks and Unruly read `0` as a value, Salad adds Space, Abcd and Solo
+accept letters. A helper would name a disjunction, not a fact. No-go.
+
+## D4. The guard
+
+`scripts/checks/absence-spelling.mjs`, in the gate's fast prefix after
+`unused-exports.mjs`.
+
+- **Parse half:** a union type with an `undefined` member, outside a cast.
+- **Checker half:** a strict comparison against `null` or `undefined` whose
+  other operand's type holds the other word and not this one.
+- **Exceptions, all by syntax:** a cast (the walk climbs through an inline type's
+  members, so `as { env?: Record<string, string | undefined> }` is still a cast);
+  a comparison against an index read, which is a bounds check while
+  `noUncheckedIndexedAccess` is off; an operand whose type is generic, `any` or
+  `unknown`. No ledger.
+- **It proves itself** against in-memory fixtures on every run and floors the
+  files, unions and comparisons it examined.
+
+It was red before it was green: its first run over the tree named 220 unions and
+one comparison. That comparison was a live check under an understating type (the
+settings merge filters `undefined` values that `Object.entries` types away), and
+the fix typed the merged entries `unknown` rather than exempting the shape.
+
+**Cost.** A program per tsconfig checked `src/` twice, because the build-side
+project imports most of it: 22 s wall. One program over both projects' files
+under the build-side options (a superset environment) measured 7.0 s user and
+8.7 s wall at load average 37 with about 140 MB free and the machine swapping —
+an upper bound.
+
+## D5. What did not move
+
+- **Stored data.** `setParams` and `setLastGameId` clear their key on `null`
+  exactly as they did on `undefined`, and a stored `null` setting still reads back
+  as `null`. `puzzleAutoSaveFilename` in history state now holds `null` where it
+  held `undefined`; its reader accepts only a string, so both read the same.
+- **Consumers.** Every `EngineCore` result consumer outside the engine was re-read
+  after the contract moved (`config.ts`, `context.ts`, `type-menu.ts`,
+  `puzzle-screen.ts`, `saved-games.ts`, `enter-gameid-dialog.ts`, `puzzle.ts`,
+  `share-dialog.ts`, `render-scenario.ts`) and each still tests truthiness or
+  `?? null`.
+- **Tests that would have lied.** 234 `toBeUndefined()` assertions on respelled
+  APIs were moved to `toBeNull()` by a scratchpad codemod and verified by shape
+  (every changed line differed by that token alone); they would have failed
+  loudly anyway. That codemod matched a call and its assertion on one line, so
+  the first gated commit failed on 220 tests where the two sat apart
+  (`const err = …; expect(err).toBeUndefined()`) or the API was unnamed
+  (`chordCommand`, `bareCommand`). The fix read every one of the 194 remaining
+  `toBeUndefined()`/`toBeDefined()` assertions in the tree rather than only the
+  failing ones, because the *silent* kind cannot fail: about thirty
+  `toBeDefined()` sites would have passed on `null` (an absent hint step, a
+  difficulty item, a registry lookup, a text rendering) and now assert
+  `not.toBeNull()` or, for a text rendering, `typeof … === "string"`.

@@ -88,12 +88,12 @@ function chordLabel(chord: Chord): string {
  * game not wanting that letter — and a label that is sometimes a lie is worse
  * than no label.
  */
-export function shortcutLabel(command: string): string | undefined {
+export function shortcutLabel(command: string): string | null {
   const shortcut = SHORTCUTS.find((s) => s.command === command);
-  if (!shortcut) return undefined;
+  if (!shortcut) return null;
   const [first] = shortcut.chords;
   if (first) return chordLabel(first);
-  return shortcut.bare?.toUpperCase();
+  return shortcut.bare?.toUpperCase() ?? null;
 }
 
 /** The Ctrl/Cmd state of an event, the way the rest of the app reads it. */
@@ -103,30 +103,32 @@ type ModifierEvent = Pick<
 >;
 
 /**
- * The command an always-on chord in `event` runs, or `undefined`.
+ * The command an always-on chord in `event` runs, or `null`.
  *
  * Alt/Option disqualifies a match: `⌥⌘Z` is somebody's window-manager binding,
  * not ours, and claiming a superset of what is drawn on the rail is how a
  * shortcut label stops being true.
  */
-export function chordCommand(event: ModifierEvent): string | undefined {
-  if (!(event.ctrlKey || event.metaKey) || event.altKey) return undefined;
+export function chordCommand(event: ModifierEvent): string | null {
+  if (!(event.ctrlKey || event.metaKey) || event.altKey) return null;
   const key = event.key.toLowerCase();
-  return SHORTCUTS.find((s) =>
-    s.chords.some((c) => c.key === key && Boolean(c.shift) === event.shiftKey),
-  )?.command;
+  return (
+    SHORTCUTS.find((s) =>
+      s.chords.some((c) => c.key === key && Boolean(c.shift) === event.shiftKey),
+    )?.command ?? null
+  );
 }
 
 /**
- * The command a bare letter in `event` runs, or `undefined`.
+ * The command a bare letter in `event` runs, or `null`.
  *
  * Caller's responsibility, both of them deliberately not decided here: that the
  * preference is on, and that **the game has already declined this key**.
  */
-export function bareCommand(event: ModifierEvent): string | undefined {
+export function bareCommand(event: ModifierEvent): string | null {
   if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) {
-    return undefined;
+    return null;
   }
   const key = event.key.toLowerCase();
-  return SHORTCUTS.find((s) => s.bare === key)?.command;
+  return SHORTCUTS.find((s) => s.bare === key)?.command ?? null;
 }

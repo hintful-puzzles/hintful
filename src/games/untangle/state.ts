@@ -309,7 +309,7 @@ export function decodeGame(desc: string, n: number): Edge[] {
 /** Parse the generator's `aux` solved layout (`S` then `P<i>:x,y/d`
  * per vertex, `;`-separated) into rational points, or `null` if it is
  * absent or malformed. Shared by `solve` and the aux-based hint. */
-export function parseAux(aux: string | undefined, n: number): RationalPoint[] | null {
+export function parseAux(aux: string | null, n: number): RationalPoint[] | null {
   if (!aux || aux[0] !== "S") return null;
   const parts = aux
     .slice(1)

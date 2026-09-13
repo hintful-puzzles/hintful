@@ -53,7 +53,7 @@ export interface SlantFiring {
   /** Driving clue vertex + value (clue-fill / clue-empty). */
   clue?: { x: number; y: number; c: number };
   /** A same-class already-filled square (equivalence anchor). */
-  anchor?: Point;
+  anchor?: Point | null;
   /** Snapshot of `soln` just after this firing, so its evidence is read from
    * the board it fired on rather than the one the step is shown on. */
   grid: Int8Array;
@@ -77,14 +77,14 @@ function findEquivAnchor(
   h: number,
   x: number,
   y: number,
-): Point | undefined {
+): Point | null {
   const cls = sc.equiv.canonify(y * w + x);
   for (let i = 0; i < w * h; i++) {
     if (soln[i] !== 0 && sc.equiv.canonify(i) === cls) {
       return { x: i % w, y: Math.floor(i / w) };
     }
   }
-  return undefined;
+  return null;
 }
 
 /** Reusable scratch space (upstream `struct solver_scratch`). */
@@ -459,9 +459,7 @@ export function slantSolve(
           // For an equivalence firing, the anchor must be found BEFORE the
           // fill merges this square into the class as another filled member.
           const anchor =
-            record && reason === "equiv"
-              ? findEquivAnchor(sc, soln, w, h, x, y)
-              : undefined;
+            record && reason === "equiv" ? findEquivAnchor(sc, soln, w, h, x, y) : null;
           fillSquare(w, x, y, sv, soln, sc.connected, sc);
           record?.({
             technique: reason,

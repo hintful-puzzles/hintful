@@ -73,7 +73,7 @@ function stateOf(me: SaladMidend): SaladState {
 
 function play(id: string): SaladMidend {
   const me = new Midend(saladGame) as unknown as SaladMidend;
-  expect(me.newGameFromId(id)).toBeUndefined();
+  expect(me.newGameFromId(id)).toBeNull();
   return me;
 }
 
@@ -358,8 +358,8 @@ describe("salad moves", () => {
       () => {},
       () => {},
     );
-    expect(me.newGameFromId(LETTERS_ID)).toBeUndefined();
-    expect(me.solve()).toBeUndefined();
+    expect(me.newGameFromId(LETTERS_ID)).toBeNull();
+    expect(me.solve()).toBeNull();
     const st = (me as unknown as { state: SaladState }).state;
     expect(st.completed).toBe(true);
     expect(st.cheated).toBe(true);
@@ -381,7 +381,7 @@ describe("salad moves", () => {
     ]);
     const saved = me.saveGame();
     const me2 = play(NUMBERS_ID);
-    expect(me2.loadGame(saved)).toBeUndefined();
+    expect(me2.loadGame(saved)).toBeNull();
     expect(me2.formatAsText()).toBe(me.formatAsText());
     expect([...stateOf(me2).pencil]).toEqual([...stateOf(me).pencil]);
   });

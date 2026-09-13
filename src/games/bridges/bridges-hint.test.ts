@@ -328,7 +328,7 @@ describe("following a step", () => {
     if (!step) return;
 
     let state = start;
-    let verdict: string | undefined;
+    let verdict: string | null = null;
     let legs = 0;
     while (legs < 20) {
       const op = step.move.ops.find((o) => o.op === "L");
@@ -348,7 +348,7 @@ describe("following a step", () => {
           },
         ],
       };
-      verdict = bridgesGame.hintKeepTrack?.(move, step, state);
+      verdict = bridgesGame.hintKeepTrack?.(move, step, state) ?? null;
       state = bridgesGame.executeMove(state, move);
       if (verdict === "completed") break;
       expect(verdict, `leg ${legs}`).toBe("onTrack");

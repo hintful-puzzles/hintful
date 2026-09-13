@@ -28,7 +28,6 @@ import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { it } from "vitest";
 import { getTsGame } from "../../src/engine/registry.ts";
-import type { Color } from "../../src/engine/types.ts";
 import { puzzleIds } from "../../src/puzzle/catalog.ts";
 import { colorToOKLCH, isGrayChroma, type OKLCH } from "../../src/utils/color.ts";
 import "../../src/games/index.ts";
@@ -82,7 +81,7 @@ it("reports palette entries a game cannot tell apart", () => {
     const palette = game.colors([0.827, 0.827, 0.827]);
     const names = indexNames(id);
     const label = (i: number): string => names.get(i) ?? `#${i}`;
-    const oklch = palette.map((c: Color | undefined) => (c ? colorToOKLCH(c) : null));
+    const oklch = palette.map((c) => (c ? colorToOKLCH(c) : null));
     const pairs: string[] = [];
     for (let i = 0; i < oklch.length; i++)
       for (let j = i + 1; j < oklch.length; j++) {

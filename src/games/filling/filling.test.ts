@@ -196,19 +196,19 @@ describe("filling findMistakes", () => {
 describe("filling Midend integration", () => {
   it("solves a generated board to completion", () => {
     const me = new Midend(fillingGame);
-    expect(me.newGameFromId("9x7#filling-seed-1")).toBeUndefined();
-    expect(me.solve()).toBeUndefined();
+    expect(me.newGameFromId("9x7#filling-seed-1")).toBeNull();
+    expect(me.solve()).toBeNull();
     const text = me.formatAsText() ?? "";
     expect(text).not.toContain("   |"); // every cell filled
   });
 
   it("round-trips a save with progress", () => {
     const me = new Midend(fillingGame);
-    expect(me.newGameFromId("9x7#filling-seed-2")).toBeUndefined();
+    expect(me.newGameFromId("9x7#filling-seed-2")).toBeNull();
     me.solve();
     const saved = me.saveGame();
     const me2 = new Midend(fillingGame);
-    expect(me2.loadGame(saved)).toBeUndefined();
+    expect(me2.loadGame(saved)).toBeNull();
     expect(me2.formatAsText()).toBe(me.formatAsText());
   });
 });

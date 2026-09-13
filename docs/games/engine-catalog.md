@@ -596,7 +596,7 @@ amounts, and it says which.
 ### `desc-alphabet.ts` — one character per small number
 
 `n2c(n)` writes `0`–`9`, then `a`–`z` for 10–35, then `A`–`Z` for 36–61;
-`c2n(c)` inverts it and returns `undefined` for anything else. A **value** codec, not a
+`c2n(c)` inverts it and returns `null` for anything else. A **value** codec, not a
 run-length one: every character stands for exactly one cell. Singles and Magnets
 had a copy each, and Magnets' section header said *"cloned from singles.c"*.
 
@@ -631,7 +631,7 @@ wrapper is `clueChar`.
 
 ### `decimal.ts` — decimal digits in a game ID
 
-`isDigit(c)`, `digitValue(c)` (`0`–`9` or `undefined`) and `parseLeadingInt(s, pos)`
+`isDigit(c)`, `digitValue(c)` (`0`–`9` or `null`) and `parseLeadingInt(s, pos)`
 (the maximal digit run at `pos` as `{ value, next }`, `atoi` semantics: `0`
 with no advance on a non-digit, which is how a caller tells "no number here"
 from "zero"). Both halves of a game ID spend digits — `10x7n12` and a desc's
@@ -640,7 +640,7 @@ in either; it is the desc-side twin of `pointer.ts`'s `digitOf`.
 
 **What stays with the game**: the bound (Slant's clues stop at `4`, Bricks' at
 `7`) and what an out-of-range value means, written beside the call —
-`const v = digitValue(tok.value); if (v === undefined || v > 4) …`. A single digit is
+`const v = digitValue(tok.value); if (v === null || v > 4) …`. A single digit is
 *written* as `String(n)`; anything wider is one of the alphabets above. Hex
 that is hex (Mines' bitmap, Cube's and Flip's grids) is `Number.parseInt(c, 16)`
 and not this.

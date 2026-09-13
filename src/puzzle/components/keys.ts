@@ -38,13 +38,13 @@ export class PuzzleKeys extends SignalWatcher(LitElement) {
   @state()
   private keyLabels?: KeyLabel[];
 
-  private renderedParams?: string;
+  private renderedParams: string | null = null;
 
   protected override async willUpdate() {
     // The available keys can vary with changes to puzzle params.
     // (This should really be an effect on this.puzzle?.currentParams,
     // but @lit-labs/signals doesn't have effects yet.)
-    const currentParams = this.puzzle?.currentParams;
+    const currentParams = this.puzzle?.currentParams ?? null;
     if (currentParams !== this.renderedParams) {
       this.renderedParams = currentParams;
       await this.loadKeyLabels();

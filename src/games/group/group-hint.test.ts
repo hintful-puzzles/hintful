@@ -77,13 +77,13 @@ describe("group hint — recorded deductions", () => {
   it("an associativity record names its triple and the forced fourth product", () => {
     // Find any board whose plan surfaces an associativity step, and assert the
     // narration states the law with concrete element letters.
-    let text: string | undefined;
+    let text: string | null = null;
     for (const seed of ["a1", "a2", "a3", "a4", "a5", "a6"]) {
       const { texts } = walk(NORMAL, seed);
-      text = texts.find((t) => /in any group/.test(t));
+      text = texts.find((t) => /in any group/.test(t)) ?? null;
       if (text) break;
     }
-    expect(text).toBeDefined();
+    expect(text).not.toBeNull();
     // "…Because (a·b)·c = a·(b·c) in any group, <fourth> must also be <v>."
     expect(text).toMatch(/The grid shows .+·.+ = .+, .+·.+ = .+ and/);
     expect(text).toMatch(/Because \(.+·.+\)·.+ = .+·\(.+·.+\) in any group/);

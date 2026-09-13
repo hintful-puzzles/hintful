@@ -426,8 +426,8 @@ export function redraw(
 
   // Pack both overlays per play cell (border-ring indexing).
   const index = (x: number, y: number) => (y + 1) * W + (x + 1);
-  ds.hint.pack(hint?.highlights, index, (m) => hintMarkBit(m.n));
-  ds.wrong.packCells(mistakes, index);
+  ds.hint.pack(hint?.highlights ?? null, index, (m) => hintMarkBit(m.n));
+  ds.wrong.packCells(mistakes ?? null, index);
 
   // Build the tile values.
   ds.tiles.fill(0);

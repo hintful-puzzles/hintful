@@ -611,12 +611,12 @@ function harness() {
     () => {},
     () => {},
   );
-  const status = (): GameStatus | undefined =>
+  const status = (): GameStatus | null =>
     (
       [...notes].reverse().find((n) => n.type === "game-state-change") as
         | Extract<ChangeNotification, { type: "game-state-change" }>
         | undefined
-    )?.status;
+    )?.status ?? null;
   return { m, status };
 }
 
@@ -625,9 +625,9 @@ describe("midend integration", () => {
     const p: RomeParams = { w: 6, h: 6, diff: DIFF_EASY };
     const { desc } = newRomeDesc(p, randomNew("rome-midend"));
     const { m, status } = harness();
-    expect(m.newGameFromId(`6x6de:${desc}`)).toBeUndefined();
+    expect(m.newGameFromId(`6x6de:${desc}`)).toBeNull();
     expect(status()).toBe("ongoing");
-    expect(m.solve()).toBeUndefined();
+    expect(m.solve()).toBeNull();
     expect(status()).toBe("solved-with-help");
     // A solver fill completes the board but never celebrates.
     const after = stateOf(m);
@@ -639,7 +639,7 @@ describe("midend integration", () => {
     const p: RomeParams = { w: 6, h: 6, diff: DIFF_EASY };
     const { desc } = newRomeDesc(p, randomNew("rome-save"));
     const m = new Midend(romeGame);
-    expect(m.newGameFromId(`6x6de:${desc}`)).toBeUndefined();
+    expect(m.newGameFromId(`6x6de:${desc}`)).toBeNull();
 
     const target = firstEmpty(board(p.w, p.h, desc));
     const moves: RomeMove[] = [
@@ -650,7 +650,7 @@ describe("midend integration", () => {
     m.playMoves(moves);
 
     const m2 = new Midend(romeGame);
-    expect(m2.loadGame(m.saveGame())).toBeUndefined();
+    expect(m2.loadGame(m.saveGame())).toBeNull();
     const restored = stateOf(m2);
     expect(restored.pencil[target]).toBe(FM_UP | FM_LEFT);
     expect(restored.grid[target] & FM_ARROWMASK).toBe(FM_DOWN);

@@ -42,10 +42,10 @@ export class PuzzleView extends SignalWatcher(LitElement) {
   protected puzzle?: Puzzle;
 
   @state()
-  protected renderedPuzzleGameId?: string;
+  protected renderedPuzzleGameId: string | null = null;
 
   @state()
-  protected renderedPuzzleParams?: string;
+  protected renderedPuzzleParams: string | null = null;
 
   @state()
   protected renderedColorScheme?: string;
@@ -69,8 +69,8 @@ export class PuzzleView extends SignalWatcher(LitElement) {
     // Since lit signals doesn't yet support effects on reactive properties, copy the
     // puzzle's reactive currentGameId and currentParams into local reactive state.
     // If they have changed, this will cause "effects" via updated().
-    this.renderedPuzzleGameId = this.puzzle?.currentGameId;
-    this.renderedPuzzleParams = this.puzzle?.currentParams;
+    this.renderedPuzzleGameId = this.puzzle?.currentGameId ?? null;
+    this.renderedPuzzleParams = this.puzzle?.currentParams ?? null;
     this.renderedColorScheme = currentColorScheme.get();
   }
 
@@ -100,7 +100,7 @@ export class PuzzleView extends SignalWatcher(LitElement) {
       }
 
       if (changedProperties.has("renderedPuzzleGameId")) {
-        if (changedProperties.get("renderedPuzzleGameId") === undefined) {
+        if (changedProperties.get("renderedPuzzleGameId") === null) {
           // First game rendered; need resize before redraw.
           needsResize = true;
         }

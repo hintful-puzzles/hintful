@@ -111,7 +111,7 @@ function pointerEvent(type: string, overrides: Record<string, unknown> = {}) {
 function makePointerView(consumed = true, canvasOrigin = { left: 0, top: 0 }) {
   const received: number[] = [];
   const locations: { x: number; y: number }[] = [];
-  let releasePress: (() => void) | undefined;
+  let releasePress: (() => void) | null = null;
   const pressLanded = new Promise<void>((resolve) => {
     releasePress = resolve;
   });

@@ -82,7 +82,7 @@ describe("Puzzle.currentParams", () => {
 
   it("is undefined before any board has been dealt", async () => {
     const { puzzle } = makePuzzle();
-    expect(puzzle.currentParams).toBeUndefined();
+    expect(puzzle.currentParams).toBeNull();
   });
 
   it("follows the board when the difficulty changes", async () => {

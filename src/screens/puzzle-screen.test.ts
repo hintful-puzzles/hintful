@@ -44,7 +44,7 @@ const {
   quickLoad: vi.fn(async () => ({ found: true as boolean, error: undefined })),
   hasQuickSave: vi.fn(() => true),
   makeAutoSaveFilename: vi.fn(() => "autosave-1"),
-  findMostRecentAutoSave: vi.fn(async (_id: string) => undefined as string | undefined),
+  findMostRecentAutoSave: vi.fn(async (_id: string) => null as string | null),
   restoreAutoSavedGame: vi.fn(async () => false),
   autoSavedPuzzles: new Set<string>(),
 }));
@@ -371,7 +371,7 @@ let dealt = 0;
  * cannot tell a test which one was recorded. */
 const shareFormOf = (id: string) => id.replace(/^([^:]*?)(?:d\d+)?:/, "$1:");
 
-function makeLoadPuzzle(opts: { rejectId?: (id: string) => string | undefined } = {}) {
+function makeLoadPuzzle(opts: { rejectId?: (id: string) => string | null } = {}) {
   const puzzle = {
     puzzleId: "abcd",
     params: "5x5n4d1",
@@ -381,7 +381,7 @@ function makeLoadPuzzle(opts: { rejectId?: (id: string) => string | undefined } 
     currentGameId: "",
     restoreGameId: "",
     setPreferences: vi.fn(async () => undefined),
-    setParams: vi.fn(async () => undefined),
+    setParams: vi.fn(async () => null),
     newGame: vi.fn(async () => {
       dealt += 1;
       puzzle.restoreGameId = `5x5n4d1:fresh-${dealt}`;
@@ -392,7 +392,7 @@ function makeLoadPuzzle(opts: { rejectId?: (id: string) => string | undefined } 
       if (error) return error;
       puzzle.restoreGameId = id;
       puzzle.currentGameId = shareFormOf(id);
-      return undefined;
+      return null;
     }),
   };
   return puzzle;
@@ -432,11 +432,11 @@ describe("which board a puzzle page opens with", () => {
   // them pay for a fake-indexeddb round trip.
   beforeEach(async () => {
     await settings.loaded;
-    await settings.setLastGameId("abcd", undefined);
-    await settings.setParams("abcd", undefined);
+    await settings.setLastGameId("abcd", null);
+    await settings.setParams("abcd", null);
     showAlert.mockClear();
     autoSavedPuzzles.clear();
-    findMostRecentAutoSave.mockResolvedValue(undefined);
+    findMostRecentAutoSave.mockResolvedValue(null);
     restoreAutoSavedGame.mockResolvedValue(false);
   });
 
@@ -532,7 +532,7 @@ describe("which board a puzzle page opens with", () => {
     const stale = first.restoreGameId;
 
     const second = makeLoadPuzzle({
-      rejectId: (id) => (id === stale ? "Board size no longer supported" : undefined),
+      rejectId: (id) => (id === stale ? "Board size no longer supported" : null),
     });
     await load(second);
 

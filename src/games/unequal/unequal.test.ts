@@ -259,8 +259,8 @@ describe("unequal findMistakes", () => {
 describe("unequal Solve via Midend", () => {
   it("solves a freshly generated board (aux path)", () => {
     const me = new Midend(unequalGame);
-    expect(me.newGameFromId("5dk#unequal-solve")).toBeUndefined();
-    expect(me.solve()).toBeUndefined();
+    expect(me.newGameFromId("5dk#unequal-solve")).toBeNull();
+    expect(me.solve()).toBeNull();
     const solved = (me as unknown as { state: UnequalState }).state;
     expect(solved.completed).toBe(true);
     expect(unequalGame.status(solved)).toBe("solved");
@@ -268,7 +268,7 @@ describe("unequal Solve via Midend", () => {
 
   it("save round-trips a played board", () => {
     const me = new Midend(unequalGame);
-    expect(me.newGameFromId("5de#unequal-save")).toBeUndefined();
+    expect(me.newGameFromId("5de#unequal-save")).toBeNull();
     const st = (me as unknown as { state: UnequalState }).state;
     const i = [...st.immutable].indexOf(0);
     me.playMoves([
@@ -276,7 +276,7 @@ describe("unequal Solve via Midend", () => {
     ]);
     const saved = me.saveGame();
     const me2 = new Midend(unequalGame);
-    expect(me2.loadGame(saved)).toBeUndefined();
+    expect(me2.loadGame(saved)).toBeNull();
     expect((me2 as unknown as { state: UnequalState }).state.grid[i]).toBe(1);
   });
 });

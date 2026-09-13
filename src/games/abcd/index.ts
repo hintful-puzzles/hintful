@@ -96,15 +96,15 @@ function inGrid(p: AbcdParams, x: number, y: number): boolean {
   return x >= 0 && x < p.w && y >= 0 && y < p.h;
 }
 
-/** The letter index a key selects, or `null` for "clear", or `undefined` for
- * "not a letter/clear key for this `n`". */
-function keyLetter(button: number, n: number): number | null | undefined {
+/** The letter index a key selects, `"clear"` for a key that clears, or `null`
+ * for a key that is neither for this `n`. */
+function keyLetter(button: number, n: number): number | "clear" | null {
   if (button >= 97 && button <= 105 && button - 97 < n) return button - 97; // a-i
   if (button >= 65 && button <= 73 && button - 65 < n) return button - 65; // A-I
   const digit = digitOf(button);
   if (digit !== null && digit >= 1 && digit - 1 < n) return digit - 1; // 1-9
-  if (button === CURSOR_SELECT2 || isEraseKey(button) || digit === 0) return null;
-  return undefined;
+  if (button === CURSOR_SELECT2 || isEraseKey(button) || digit === 0) return "clear";
+  return null;
 }
 
 /** Cell `i`'s pencil marks: a view of its `n` contiguous slots in the cube. */
@@ -176,8 +176,9 @@ function interpretMove(
   }
 
   // Enter or clear a letter.
-  const letter = ui.cursor.visible ? keyLetter(button, n) : undefined;
-  if (letter !== undefined) {
+  const key = ui.cursor.visible ? keyLetter(button, n) : null;
+  if (key !== null) {
+    const letter = key === "clear" ? null : key;
     // In pencil mode a filled square can't be changed.
     if (ui.pencilMode && state.grid[ui.cursor.y * w + ui.cursor.x] !== EMPTY)
       return null;

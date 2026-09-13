@@ -83,8 +83,8 @@ function solvedGrid(f: Fixture): Int8Array {
 describe("solo solve", () => {
   it("solve fills a valid grid for a uniquely-solvable board", () => {
     const me = new Midend(soloGame);
-    expect(me.newGameFromId(idOf(STD))).toBeUndefined();
-    expect(me.solve()).toBeUndefined();
+    expect(me.newGameFromId(idOf(STD))).toBeNull();
+    expect(me.solve()).toBeNull();
     const s = getState(me);
     expect(s.completed).toBe(true);
     expect(checkValid(s.cr, s.blocks, s.killerData, s.xtype, s.grid)).toBe(true);
@@ -99,11 +99,8 @@ describe("solo solve", () => {
     for (const preset of leafPresets(soloGame.presets())) {
       const me = new Midend(soloGame);
       const id = `${soloGame.encodeParams(preset.params, true)}#solve-aux`;
-      expect(
-        me.newGameFromId(id),
-        `${preset.title}: could not deal ${id}`,
-      ).toBeUndefined();
-      expect(me.solve(), `${preset.title}: solve refused`).toBeUndefined();
+      expect(me.newGameFromId(id), `${preset.title}: could not deal ${id}`).toBeNull();
+      expect(me.solve(), `${preset.title}: solve refused`).toBeNull();
       const s = getState(me);
       expect(
         [...s.grid].every((v) => v >= 1 && v <= s.cr),

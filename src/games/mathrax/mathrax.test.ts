@@ -130,12 +130,12 @@ function harness() {
     () => {},
     () => {},
   );
-  const status = (): GameStatus | undefined =>
+  const status = (): GameStatus | null =>
     (
       [...notes].reverse().find((n) => n.type === "game-state-change") as
         | Extract<ChangeNotification, { type: "game-state-change" }>
         | undefined
-    )?.status;
+    )?.status ?? null;
   return { m, status };
 }
 
@@ -671,7 +671,7 @@ describe("mathrax moves", () => {
 
   it("completes the game — and flashes — when the player fills the last cell", () => {
     const { m, status } = harness();
-    expect(m.newGameFromId(FIX_ID)).toBeUndefined();
+    expect(m.newGameFromId(FIX_ID)).toBeNull();
     const st = (m as unknown as { state: MathraxState }).state;
     const o = st.params.o;
     const sol = solutionOf(st);
@@ -708,8 +708,8 @@ describe("mathrax moves", () => {
 
   it("Solve fills the board, reports solved-with-help and does not flash", () => {
     const { m, status } = harness();
-    expect(m.newGameFromId(FIX_ID)).toBeUndefined();
-    expect(m.solve()).toBeUndefined();
+    expect(m.newGameFromId(FIX_ID)).toBeNull();
+    expect(m.solve()).toBeNull();
     expect(status()).toBe("solved-with-help");
 
     const st = (m as unknown as { state: MathraxState }).state;
@@ -720,7 +720,7 @@ describe("mathrax moves", () => {
 
   it("saveGame -> loadGame restores an equivalent game", () => {
     const { m } = harness();
-    expect(m.newGameFromId(FIX_ID)).toBeUndefined();
+    expect(m.newGameFromId(FIX_ID)).toBeNull();
     const st = (m as unknown as { state: MathraxState }).state;
     const o = st.params.o;
     const empty = [...st.flags].findIndex((f) => !(f & F_IMMUTABLE));
@@ -731,7 +731,7 @@ describe("mathrax moves", () => {
     const saved = m.saveGame();
 
     const m2 = new Midend(mathraxGame);
-    expect(m2.loadGame(saved)).toBeUndefined();
+    expect(m2.loadGame(saved)).toBeNull();
     const st2 = (m2 as unknown as { state: MathraxState }).state;
     expect([...st2.grid]).toEqual([
       ...(m as unknown as { state: MathraxState }).state.grid,
@@ -862,7 +862,7 @@ describe("mathrax rendering", () => {
     // tile value, so it must also be compared in the cache-miss test — Check &
     // Save runs a frame *after* the move that drew the cell.
     const m = new Midend(mathraxGame);
-    expect(m.newGameFromId(FIX_ID)).toBeUndefined();
+    expect(m.newGameFromId(FIX_ID)).toBeNull();
     const st = (m as unknown as { state: MathraxState }).state;
     const o = st.params.o;
     const sol = solutionOf(st);

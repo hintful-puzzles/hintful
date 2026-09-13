@@ -798,7 +798,7 @@ export const towersGame: Game<
 
   solve,
   difficulty,
-  hint: (state, _aux, ui) => candidateHint(state, ui, findMistakes, buildSteps),
+  hint: (state, _aux, ui) => candidateHint(state, ui ?? null, findMistakes, buildSteps),
   hintKeepTrack: (m, step: HintStep<TowersMove, TowersHint>, state) =>
     keepCandidateHintTrack(m, step, state.pencil, state.w),
   refreshHintStep: (step: HintStep<TowersMove, TowersHint>, state) =>

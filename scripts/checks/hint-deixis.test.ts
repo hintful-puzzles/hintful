@@ -94,13 +94,13 @@ it("reports every hint step that points bare while a second mark is displayed", 
       const params = contract ? contract.withTier(base, tier) : base;
       if (game.validateParams(params, true)) continue; // tier refused at this size
       for (const seed of SEEDS) {
-        let desc: string;
-        let aux: string | undefined;
+        let board: { desc: string; aux?: string };
         try {
-          ({ desc, aux } = game.newDesc(params, randomNew(`${name}-${tier}-${seed}`)));
+          board = game.newDesc(params, randomNew(`${name}-${tier}-${seed}`));
         } catch {
           continue; // ungenerable at this size; difficulty-contract.test.ts owns that
         }
+        const { desc, aux } = board;
         const res = game.hint?.(game.newState(params, desc), aux);
         if (!res?.ok) continue;
         for (const step of res.steps) {

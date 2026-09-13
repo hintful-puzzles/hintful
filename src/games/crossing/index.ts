@@ -109,13 +109,14 @@ function presets(): PresetMenu<CrossingParams> {
   };
 }
 
-/** The digit a key enters, `null` for "clear", or `undefined` for "not an entry
- * key". Upstream binds `1`–`9`, Backspace, `0` and the secondary select. */
-function keyDigit(button: number): number | null | undefined {
+/** The digit a key enters, `"clear"` for a key that clears, or `null` for a key
+ * that is neither. Upstream binds `1`–`9`, Backspace, `0` and the secondary
+ * select. */
+function keyDigit(button: number): number | "clear" | null {
   const digit = digitOf(button);
   if (digit !== null && digit >= 1) return digit; // '1'-'9'
-  if (button === CURSOR_SELECT2 || isEraseKey(button) || digit === 0) return null;
-  return undefined;
+  if (button === CURSOR_SELECT2 || isEraseKey(button) || digit === 0) return "clear";
+  return null;
 }
 
 /** Would writing a number that fits run `r` change anything? Every filled cell
@@ -239,8 +240,9 @@ function interpretMove(
     return UI_UPDATE;
   }
 
-  const digit = ui.cursor.visible ? keyDigit(button) : undefined;
-  if (digit !== undefined) {
+  const key = ui.cursor.visible ? keyDigit(button) : null;
+  if (key !== null) {
+    const digit = key === "clear" ? null : key;
     ui.heldNumber = null;
     const i = ui.cursor.y * w + ui.cursor.x;
     // Suppress no-op moves locally rather than comparing states (docs/games/README.md § "Before you start").
@@ -456,7 +458,7 @@ function buildSteps(state: CrossingState): HintStep<CrossingMove, CrossingHint>[
 }
 
 function hint(state: CrossingState): HintResult<CrossingMove, CrossingHint> {
-  return candidateHint(state, undefined, findMistakes, buildSteps);
+  return candidateHint(state, null, findMistakes, buildSteps);
 }
 
 /**

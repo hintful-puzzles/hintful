@@ -399,7 +399,7 @@ export const untangleGame: Game<
 
   // --- solve (decode aux, pick the closest of 8 dihedral symmetries) -
   solve: (orig, curr, aux) => {
-    const auxPts = parseAux(aux, orig.n);
+    const auxPts = parseAux(aux ?? null, orig.n);
     if (auxPts === null) {
       return aux
         ? { ok: false, error: "Internal error: aux_info badly formatted" }

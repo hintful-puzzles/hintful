@@ -18,13 +18,13 @@ import "@awesome.me/webawesome/dist/components/input/input.js";
  * If href is a permalink to puzzleId at SGT's website,
  * return the game id or random seed from its hash.
  */
-function extractSGTGameID(href: string | URL, puzzleId: string): string | undefined {
+function extractSGTGameID(href: string | URL, puzzleId: string): string | null {
   // https://www.chiark.greenend.org.uk/~sgtatham/puzzles/js/solo.html#3x3db%23529619113385357
   let url: URL;
   try {
     url = href instanceof URL ? href : new URL(href);
   } catch {
-    return undefined;
+    return null;
   }
 
   if (
@@ -40,6 +40,7 @@ function extractSGTGameID(href: string | URL, puzzleId: string): string | undefi
       return hash;
     }
   }
+  return null;
 }
 
 @customElement("enter-gameid-dialog")

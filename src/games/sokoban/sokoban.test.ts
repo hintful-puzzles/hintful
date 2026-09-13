@@ -343,7 +343,7 @@ describe("Sokoban midend lifecycle", () => {
   it("reports 'solved' once the last barrel reaches its target", () => {
     // Player(1,1), barrel(2,1), target(3,1): one push right wins.
     const h = harness();
-    expect(h.m.newGameFromId("5x5:w6ubtw2s3w2s3w6")).toBeUndefined();
+    expect(h.m.newGameFromId("5x5:w6ubtw2s3w2s3w6")).toBeNull();
     expect(h.status()).toBe("ongoing");
     // A left-click to the player's right issues the push.
     expect(h.m.processInput(3 * 32 + 16, 1 * 32 + 16, LEFT_BUTTON)).toBe(true);
@@ -352,7 +352,7 @@ describe("Sokoban midend lifecycle", () => {
 
   it("save -> load preserves the board (render-equivalent)", () => {
     const me = new Midend(sokobanGame);
-    expect(me.newGameFromId("12x10#sokoban-save")).toBeUndefined();
+    expect(me.newGameFromId("12x10#sokoban-save")).toBeNull();
     // Two legal keyboard moves so the save carries real progress.
     me.processInput(0, 0, CURSOR_RIGHT);
     me.processInput(0, 0, CURSOR_DOWN);
@@ -360,7 +360,7 @@ describe("Sokoban midend lifecycle", () => {
 
     const saved = me.saveGame();
     const me2 = new Midend(sokobanGame);
-    expect(me2.loadGame(saved)).toBeUndefined();
+    expect(me2.loadGame(saved)).toBeNull();
     expect(renderOps(me2)).toEqual(before);
   });
 });

@@ -328,10 +328,10 @@ describe("bridges save round-trip", () => {
     const { desc } = newBridgesDesc(p, randomNew("bridges-save"));
     const id = `${encodeParams(p, true)}:${desc}`;
     const me = new Midend(bridgesGame);
-    expect(me.newGameFromId(id)).toBeUndefined();
+    expect(me.newGameFromId(id)).toBeNull();
     const saved = me.saveGame();
     const me2 = new Midend(bridgesGame);
-    expect(me2.loadGame(saved)).toBeUndefined();
+    expect(me2.loadGame(saved)).toBeNull();
     expect(me2.formatAsText?.()).toBe(me.formatAsText?.());
   });
 });

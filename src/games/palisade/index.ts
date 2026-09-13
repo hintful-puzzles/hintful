@@ -141,9 +141,9 @@ function explain(
     case "numberExhausted":
       return say.numberExhausted(c, fe.kind, multi);
     case "notTooBig":
-      return say.notTooBig(fe.cells?.length, k);
+      return say.notTooBig(fe.cells?.length ?? null, k);
     case "notTooSmall":
-      return say.notTooSmall(fe.cells?.length, k);
+      return say.notTooSmall(fe.cells?.length ?? null, k);
     case "noDanglingEdges":
       return say.noDanglingEdges;
     case "equivalentEdges":

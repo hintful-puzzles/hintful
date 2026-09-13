@@ -371,8 +371,8 @@ describe("lightup solver difficulty coupling", () => {
 describe("lightup solve", () => {
   it("Solve through a real Midend completes the board", () => {
     const me = new Midend(lightupGame);
-    expect(me.newGameFromId(EASY_ID)).toBeUndefined();
-    expect(me.solve()).toBeUndefined();
+    expect(me.newGameFromId(EASY_ID)).toBeNull();
+    expect(me.solve()).toBeNull();
     const st = (me as unknown as { state: LightupState }).state;
     expect(st.completed).toBe(true);
     expect(st.cheated).toBe(true);
@@ -445,11 +445,11 @@ describe("lightup findMistakes", () => {
 describe("lightup save round-trip", () => {
   it("saveGame -> loadGame restores an equivalent game", () => {
     const me = new Midend(lightupGame);
-    expect(me.newGameFromId(EASY_ID)).toBeUndefined();
+    expect(me.newGameFromId(EASY_ID)).toBeNull();
     me.playMoves([light(0, 0), mark(3, 0)]);
     const saved = me.saveGame();
     const me2 = new Midend(lightupGame);
-    expect(me2.loadGame(saved)).toBeUndefined();
+    expect(me2.loadGame(saved)).toBeNull();
     expect(me2.formatAsText()).toBe(me.formatAsText());
   });
 });
@@ -513,7 +513,7 @@ describe("lightup rendering", () => {
     // per-tile diff key, or a findMistakes() after the move's own paint
     // repaints nothing.
     const me = new Midend(lightupGame);
-    expect(me.newGameFromId(EASY_ID)).toBeUndefined();
+    expect(me.newGameFromId(EASY_ID)).toBeNull();
     const st = (me as unknown as { state: LightupState }).state;
     const solution = solveUnique(st);
     if (!solution) throw new Error("fixture board must be uniquely solvable");
@@ -542,7 +542,7 @@ describe("lightup rendering", () => {
         (o) => o.op === "rect" && o.color === COL_BLACK && o.w === 8, // ts/4 at 32
       );
     const me = new Midend(lightupGame);
-    expect(me.newGameFromId(EASY_ID)).toBeUndefined();
+    expect(me.newGameFromId(EASY_ID)).toBeNull();
     me.playMoves([mark(0, 0), light(3, 0)]);
     const palette = lightupGame.colors(DEFAULT_BACKGROUND);
     const on = new RecordingDrawing(palette);

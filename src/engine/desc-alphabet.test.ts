@@ -37,7 +37,7 @@ describe("the desc digit alphabet", () => {
     for (let code = 0; code < 128; code++) {
       const ch = String.fromCharCode(code);
       const n = c2n(ch);
-      if (n === undefined) continue;
+      if (n === null) continue;
       accepted++;
       expect(n2c(n), `n2c(c2n(${JSON.stringify(ch)}))`).toBe(ch);
     }
@@ -80,7 +80,7 @@ describe("the desc digit alphabet", () => {
     expect(magnetsClueChar(0)).toBe("0");
     expect(magnetsClueChar(61)).toBe("Z");
     // The sentinel is not in the shared alphabet, in either direction.
-    expect(c2n(".")).toBeUndefined();
+    expect(c2n(".")).toBeNull();
   });
 });
 
@@ -105,7 +105,7 @@ describe("the run-length value alphabet", () => {
     let accepted = 0;
     for (let code = 0; code < 128; code++) {
       const ch = String.fromCharCode(code);
-      if (c2nUpper(ch) === undefined) continue;
+      if (c2nUpper(ch) === null) continue;
       accepted++;
       expect(ch, ch).not.toMatch(/[a-z]/);
     }

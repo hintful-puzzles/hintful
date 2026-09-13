@@ -34,7 +34,7 @@ class AlertDialog extends LitElement {
   type: Required<AlertOptions>["type"] = "error";
 
   @property({ type: String })
-  icon: string | undefined = undefined;
+  icon?: string;
 
   @property({ type: Boolean, attribute: "light-dismiss" })
   lightDismiss = false;

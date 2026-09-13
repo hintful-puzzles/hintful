@@ -122,13 +122,13 @@ export function renderScenario<Params, State, Move, Ui, DrawState, Mistake>(
 
   const mistakeCount = showMistakes ? midend.findMistakes() : 0;
 
-  let hint: HintStep<Move> | undefined;
+  let hint: HintStep<Move> | null = null;
   if (showHint) {
     const hintErr = midend.hint();
     if (hintErr) throw new Error(`renderScenario: hint failed: ${hintErr}`);
     hint = midend.activeHintStep();
     // Apply the displayed step and advance, until the plan runs out
-    // (`executeHint` clears it, so `activeHintStep()` is undefined). A
+    // (`executeHint` clears it, so `activeHintStep()` is null). A
     // no-animation game (e.g. Palisade) settles synchronously, so the next
     // step is on display immediately.
     for (let steps = 0; hintUntil && hint && !hintUntil(hint); steps++) {
@@ -153,5 +153,5 @@ export function renderScenario<Params, State, Move, Ui, DrawState, Mistake>(
     game.preferredTileSize ?? 32,
   );
 
-  return { recording, hint, mistakeCount, size, palette, midend };
+  return { recording, hint: hint ?? undefined, mistakeCount, size, palette, midend };
 }

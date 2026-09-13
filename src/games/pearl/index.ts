@@ -291,8 +291,8 @@ function solve(
   if (aux) {
     for (let i = 0; i < sz; i++) {
       // A nibble of direction bits: `0`–`9`, then `A`–`F`.
-      const v = i < aux.length ? c2nUpper(aux[i]) : undefined;
-      if (v === undefined || v > 15) return { ok: false, error: "invalid char in aux" };
+      const v = i < aux.length ? c2nUpper(aux[i]) : null;
+      if (v === null || v > 15) return { ok: false, error: "invalid char in aux" };
       solvedLines[i] = v;
     }
   } else if (pearlSolve(w, curr.h, curr.clues, solvedLines, DIFF_COUNT, false) < 1) {

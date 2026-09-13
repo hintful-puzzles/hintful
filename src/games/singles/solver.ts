@@ -78,8 +78,8 @@ export interface HintRecord extends Point {
 
 interface Op extends Point {
   op: number;
-  /** Present only when the solver runs in recording (hint) mode. */
-  reason?: SinglesReason;
+  /** `null` unless the solver runs in recording (hint) mode. */
+  reason: SinglesReason | null;
   group?: number;
 }
 
@@ -122,7 +122,7 @@ export function solverOpAdd(
   x: number,
   y: number,
   op: number,
-  reason?: SinglesReason,
+  reason: SinglesReason | null = null,
   group?: number,
 ): void {
   ss.ops.push({ x, y, op, reason, group });
@@ -133,7 +133,7 @@ function solverOpCircle(
   ss: SolverState,
   x: number,
   y: number,
-  reason?: SinglesReason,
+  reason: SinglesReason | null = null,
   group?: number,
 ): void {
   if (!inGrid(s, x, y)) return;
@@ -151,7 +151,7 @@ function solverOpBlacken(
   x: number,
   y: number,
   num: number,
-  reason?: SinglesReason,
+  reason: SinglesReason | null = null,
   group?: number,
 ): void {
   if (!inGrid(s, x, y)) return;
@@ -229,7 +229,7 @@ function solveSinglesep(s: SinglesState, ss: SolverState): number {
     const i = y * s.w + x;
     const mid = i + dy * s.w + dx;
     if (s.nums[i] !== s.nums[mid + dy * s.w + dx] || s.flags[mid] & F_CIRCLE) return;
-    const reason: SinglesReason | undefined = ss.records
+    const reason: SinglesReason | null = ss.records
       ? {
           kind: "sandwich",
           ends: [
@@ -237,7 +237,7 @@ function solveSinglesep(s: SinglesState, ss: SolverState): number {
             { x: x + 2 * dx, y: y + 2 * dy },
           ],
         }
-      : undefined;
+      : null;
     solverOpAdd(ss, x + dx, y + dy, OP_CIRCLE, reason, newGroup(ss));
   };
   for (let x = 0; x < s.w; x++) {
@@ -259,7 +259,7 @@ function solveDoubles(s: SinglesState, ss: SolverState): number {
     const i = y * s.w + x;
     const j = i + dy * s.w + dx;
     if (s.flags[j] & F_BLACK || s.nums[i] !== s.nums[j]) return;
-    const reason: SinglesReason | undefined = ss.records
+    const reason: SinglesReason | null = ss.records
       ? {
           kind: "pair",
           pair: [
@@ -267,7 +267,7 @@ function solveDoubles(s: SinglesState, ss: SolverState): number {
             { x: x + dx, y: y + dy },
           ],
         }
-      : undefined;
+      : null;
     const g = newGroup(ss);
     const at = dx ? x : y;
     for (let k = 0; k < (dx ? s.w : s.h); k++) {
@@ -310,9 +310,9 @@ function solveCorner(
 
   if (nc === n1 && nc === n2 && nc === ni) {
     // QC: all four equal — both far-diagonal cells black, one firing.
-    const reason: SinglesReason | undefined = rec
+    const reason: SinglesReason | null = rec
       ? { kind: "corner4", block: [corner, side1, side2, inner] }
-      : undefined;
+      : null;
     const g = newGroup(ss);
     solverOpAdd(ss, corner.x, corner.y, OP_BLACK, reason, g);
     solverOpAdd(ss, inner.x, inner.y, OP_BLACK, reason, g);
@@ -323,7 +323,7 @@ function solveCorner(
       corner.x,
       corner.y,
       OP_BLACK,
-      rec ? { kind: "corner3", corner, matched: [corner, side1, side2] } : undefined,
+      rec ? { kind: "corner3", corner, matched: [corner, side1, side2] } : null,
       newGroup(ss),
     );
   } else if (n1 === n2 && n1 === ni) {
@@ -334,7 +334,7 @@ function solveCorner(
       inner.x,
       inner.y,
       OP_BLACK,
-      rec ? { kind: "corner3", corner, matched: [side1, side2, inner] } : undefined,
+      rec ? { kind: "corner3", corner, matched: [side1, side2, inner] } : null,
       newGroup(ss),
     );
   } else if (nc === n1 || n1 === ni) {
@@ -346,7 +346,7 @@ function solveCorner(
       side2.x,
       side2.y,
       OP_CIRCLE,
-      rec ? { kind: "corner2", corner, pair } : undefined,
+      rec ? { kind: "corner2", corner, pair } : null,
       newGroup(ss),
     );
   } else if (nc === n2 || n2 === ni) {
@@ -357,7 +357,7 @@ function solveCorner(
       side1.x,
       side1.y,
       OP_CIRCLE,
-      rec ? { kind: "corner2", corner, pair } : undefined,
+      rec ? { kind: "corner2", corner, pair } : null,
       newGroup(ss),
     );
   }
@@ -397,7 +397,7 @@ function solveOffsetpairPair(
     if (s.nums[by * s.w + bx] !== an) continue;
     // One firing: the two offset pairs (A at (x1,y1)&(x2,y2), B at
     // (ax,ay)&(bx,by)) force both these neighbors of (x2,y2) white.
-    const reason: SinglesReason | undefined = ss.records
+    const reason: SinglesReason | null = ss.records
       ? {
           kind: "offset",
           quad: [
@@ -407,7 +407,7 @@ function solveOffsetpairPair(
             { x: bx, y: by },
           ],
         }
-      : undefined;
+      : null;
     const g = newGroup(ss);
     solverOpAdd(ss, x2 + xd, y2, OP_CIRCLE, reason, g);
     solverOpAdd(ss, x2, y2 + yd, OP_CIRCLE, reason, g);
@@ -470,7 +470,7 @@ export function solveAllblackbutone(s: SinglesState, ss: SolverState): number {
         free % s.w,
         (free / s.w) | 0,
         OP_CIRCLE,
-        ss.records ? { kind: "boxedIn", cell: { x, y } } : undefined,
+        ss.records ? { kind: "boxedIn", cell: { x, y } } : null,
         newGroup(ss),
       );
     }
@@ -532,7 +532,7 @@ function solveRemovesplitsCheck(
   if (!issingle) {
     // Evidence: the non-black orthogonal neighbors this cell bridges —
     // shading it would split them into disconnected white regions.
-    let reason: SinglesReason | undefined;
+    let reason: SinglesReason | null = null;
     if (ss.records) {
       const neighbors: Point[] = [];
       for (let d = 0; d < 4; d++) {

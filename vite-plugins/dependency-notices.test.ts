@@ -134,7 +134,7 @@ describe("who a package says publishes it", () => {
   });
 
   it("is absent when the package names nobody", () => {
-    expect(attribution(dep())).toBeUndefined();
+    expect(attribution(dep())).toBeNull();
   });
 });
 

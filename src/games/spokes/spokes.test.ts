@@ -94,12 +94,12 @@ function harness() {
     () => {},
     () => {},
   );
-  const status = (): GameStatus | undefined =>
+  const status = (): GameStatus | null =>
     (
       [...notes].reverse().find((n) => n.type === "game-state-change") as
         | Extract<ChangeNotification, { type: "game-state-change" }>
         | undefined
-    )?.status;
+    )?.status ?? null;
   return { m, status };
 }
 
@@ -453,8 +453,8 @@ describe("spokes input", () => {
 describe("spokes completion and solve (through a real Midend)", () => {
   it("Solve completes the board as solved-with-help and arms no flash", () => {
     const { m, status } = harness();
-    expect(m.newGameFromId(FIX_ID)).toBeUndefined();
-    expect(m.solve()).toBeUndefined();
+    expect(m.newGameFromId(FIX_ID)).toBeNull();
+    expect(m.solve()).toBeNull();
     expect(status()).toBe("solved-with-help");
     expect(m.currentAnimationMs()).toBe(0);
   });
@@ -475,12 +475,12 @@ describe("spokes completion and solve (through a real Midend)", () => {
 
   it("round-trips a save with progress on it", () => {
     const { m } = harness();
-    expect(m.newGameFromId(FIX_ID)).toBeUndefined();
+    expect(m.newGameFromId(FIX_ID)).toBeNull();
     m.playMoves([{ kind: "set", index: 0, dir: DIR_RIGHT, state: SPOKE_LINE }]);
     const before = m.formatAsText();
 
     const m2 = new Midend(spokesGame);
-    expect(m2.loadGame(m.saveGame())).toBeUndefined();
+    expect(m2.loadGame(m.saveGame())).toBeNull();
     expect(m2.formatAsText()).toBe(before);
   });
 
@@ -586,7 +586,7 @@ describe("spokes rendering", () => {
     // Save runs a frame *after* the move that drew the hub, so a cold-frame
     // test would pass even with the overlay missing from the key.
     const { m } = harness();
-    expect(m.newGameFromId(FIX_ID)).toBeUndefined();
+    expect(m.newGameFromId(FIX_ID)).toBeNull();
     const state = newState(FIX, FIX_DESC);
     const { index, dir } = solutionSpokes(state, SPOKE_MARKED)[0];
     m.playMoves([{ kind: "set", index, dir, state: SPOKE_LINE }]);

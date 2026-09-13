@@ -116,7 +116,7 @@ describe("generation invariants", () => {
         expect(Math.max(...degree)).toBeLessThanOrEqual(4);
 
         // The solved (aux) layout is crossing-free — i.e. planar.
-        const solved = parseAux(aux, n);
+        const solved = parseAux(aux ?? null, n);
         expect(solved).not.toBeNull();
         expect(findCrossings(solved ?? [], edges).completed).toBe(true);
 
@@ -369,7 +369,7 @@ describe("save → moves → load reproduces vertex positions (move-log, no supe
       () => {},
       () => {},
     );
-    expect(me.newGameFromId("10#midend-save")).toBeUndefined();
+    expect(me.newGameFromId("10#midend-save")).toBeNull();
     me.playMoves(playthrough());
     const saved = me.saveGame();
 
@@ -383,7 +383,7 @@ describe("save → moves → load reproduces vertex positions (move-log, no supe
       () => {},
       () => {},
     );
-    expect(me2.loadGame(saved)).toBeUndefined();
+    expect(me2.loadGame(saved)).toBeNull();
     // Re-saving the loaded game yields the same bytes — desc + move log
     // (and thus every reconstructed position) round-tripped exactly.
     expect(Array.from(me2.saveGame())).toEqual(Array.from(saved));

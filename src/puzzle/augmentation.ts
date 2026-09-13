@@ -9,7 +9,7 @@ import type { ConfigValues, PuzzleId } from "../engine/types.ts";
  * game actually declares instead of a word typed out here. Optional so a caller
  * with nothing to offer still renders everything else.
  */
-export type ChoiceNames = Record<string, readonly string[] | undefined>;
+export type ChoiceNames = Partial<Record<string, readonly string[]>>;
 
 /**
  * Per-puzzle presentation metadata: how a custom configuration reads in the

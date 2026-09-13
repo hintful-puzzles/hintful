@@ -123,7 +123,7 @@ describe("penrose transition tables", () => {
     for (const parent of PENROSE_LETTERS) {
       for (const edge of [0, 1, 2]) {
         for (const end of [-1, 0, 1] as const) {
-          let result: ReturnType<typeof transitionIn> | undefined;
+          let result: ReturnType<typeof transitionIn>;
           try {
             result = transitionIn(parent, edge, end);
           } catch {

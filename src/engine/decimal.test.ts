@@ -28,7 +28,7 @@ describe("isDigit / digitValue", () => {
     for (let code = 0; code < 128; code++) {
       const ch = String.fromCharCode(code);
       if (!isDigit(ch)) {
-        expect(digitValue(ch), JSON.stringify(ch)).toBeUndefined();
+        expect(digitValue(ch), JSON.stringify(ch)).toBeNull();
         continue;
       }
       accepted++;
@@ -37,7 +37,7 @@ describe("isDigit / digitValue", () => {
     expect(accepted).toBe(10);
     // An empty string is a character that is not a digit, not an error.
     expect(isDigit("")).toBe(false);
-    expect(digitValue("")).toBeUndefined();
+    expect(digitValue("")).toBeNull();
   });
 
   it("agrees with the desc alphabet and the key map on every digit", () => {

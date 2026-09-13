@@ -165,6 +165,16 @@ node scripts/checks/vacuous-assertions.mjs
 # vitest.
 node scripts/checks/unused-exports.mjs
 
+# --- 1b-vi. Absence has one spelling. ~7s. ---
+#
+# `undefined` written into a union, and a strict comparison testing for an
+# absent word its value cannot hold. The second half is why this is a gate
+# rather than a lint: moving a helper from `undefined` to `null` leaves
+# `=== undefined` behind it, always false, and tsgo accepts it. The dearest step
+# in the prefix, because that half reads types and so builds a program over the
+# whole tree; build-side work for the same reason as the step above.
+node scripts/checks/absence-spelling.mjs
+
 # --- 1c. The specs and every open change parse and validate. ~1s. ---
 #
 # This is the tool's own check, deliberately, and it replaces a hand-written one.

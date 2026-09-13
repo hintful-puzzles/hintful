@@ -21,14 +21,14 @@ const debounce = <T extends (...args: unknown[]) => unknown>(
   func: T,
   delayMs: number,
 ): ((this: ThisParameterType<T>, ...args: Parameters<T>) => void) => {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
   return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
     const later = () => {
-      timeoutId = undefined;
+      timeoutId = null;
       func.apply(this, args);
     };
-    clearTimeout(timeoutId);
+    if (timeoutId !== null) clearTimeout(timeoutId);
     timeoutId = setTimeout(later, delayMs);
   };
 };
@@ -75,7 +75,7 @@ export const throttle = <T extends (...args: unknown[]) => unknown>(
   delayMs: number,
 ): ((this: ThisParameterType<T>, ...args: Parameters<T>) => void) => {
   let lastRun = 0;
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
   return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
     const now = Date.now();
     if (now - lastRun >= delayMs) {
@@ -86,7 +86,7 @@ export const throttle = <T extends (...args: unknown[]) => unknown>(
         () => {
           func.apply(this, args);
           lastRun = Date.now();
-          timeoutId = undefined;
+          timeoutId = null;
         },
         delayMs - (now - lastRun),
       );

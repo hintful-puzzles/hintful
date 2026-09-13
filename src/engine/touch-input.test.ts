@@ -40,7 +40,7 @@ function press(
   id: string,
   button: number,
   point: { x: number; y: number },
-): { consumed: boolean; board: string | undefined } {
+): { consumed: boolean; board: string | null } {
   const m = new Midend(game);
   m.setCallbacks(
     () => {},
@@ -50,7 +50,7 @@ function press(
   m.newGameFromId(id);
   const consumed = m.processInput(point.x, point.y, button);
   // Compare the *effect* of the press, not merely whether it was swallowed.
-  return { consumed, board: game.canFormatAsText ? m.formatAsText() : undefined };
+  return { consumed, board: game.canFormatAsText ? m.formatAsText() : null };
 }
 
 // Read once, at collection time — importing the barrel above has already

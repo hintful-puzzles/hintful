@@ -281,10 +281,10 @@ export class SettingsDialog extends SignalWatcher(LitElement) {
           pwaManager.status === "downloading" ? "downloading" : "downloading update";
         const progress = pwaManager.downloadProgress;
         const spinner =
-          progress === undefined
+          progress === null
             ? html`<wa-spinner></wa-spinner>`
             : html`<wa-progress-ring value=${progress}></wa-progress-ring>`;
-        const progressLabel = progress === undefined ? nothing : ` ${progress}%`;
+        const progressLabel = progress === null ? nothing : ` ${progress}%`;
         return html`${spinner} ${statusLabel}${progressLabel}&hellip;`;
       }
       case "download-ready":

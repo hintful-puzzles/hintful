@@ -75,19 +75,19 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
   @query("puzzle-context")
   private puzzleContext?: HTMLElementTagNameMap["puzzle-context"];
 
-  get puzzle(): Puzzle | undefined {
-    return this.puzzleContext?.puzzle;
+  get puzzle(): Puzzle | null {
+    return this.puzzleContext?.puzzle ?? null;
   }
 
   /** If the current game has been saved or loaded, its filename. */
   savedFilename?: string;
-  savedGameId?: string;
+  savedGameId: string | null = null;
 
-  private _autoSaveFilename?: string;
-  private get autoSaveFilename(): string | undefined {
+  private _autoSaveFilename: string | null = null;
+  private get autoSaveFilename(): string | null {
     return this._autoSaveFilename;
   }
-  private set autoSaveFilename(value: string | undefined) {
+  private set autoSaveFilename(value: string | null) {
     // Persist autoSaveFilename in history state; restored in connectedCallback
     this._autoSaveFilename = value;
     const newState = {
@@ -125,7 +125,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         throw new Error(`Unknown puzzleId ${this.puzzleId}`);
       }
       this.puzzleData = data;
-      this.autoSaveFilename = undefined;
+      this.autoSaveFilename = null;
       this.puzzleLoaded = false;
       this.referenceOpen = false; // a new puzzle type may have no reference
       this.defaultHelpLabel = `${this.puzzleData.name} Help`;
@@ -859,7 +859,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         );
         if (params === settingsParams) {
           // Don't try those again
-          await settings.setParams(puzzle.puzzleId, undefined);
+          await settings.setParams(puzzle.puzzleId, null);
         } else {
           void showAlert({
             label: `Ignoring invalid type in URL`,
@@ -917,7 +917,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
             `Dropping unusable remembered board for ${puzzle.puzzleId}: ` +
               `${lastGameId}: ${error}`,
           );
-          await settings.setLastGameId(puzzle.puzzleId, undefined);
+          await settings.setLastGameId(puzzle.puzzleId, null);
         } else {
           hasGame = true;
         }
@@ -972,7 +972,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
       } else if (this.autoSaveFilename) {
         // Don't retain autosave for solved or unstarted puzzle.
         const autoSaveFilename = this.autoSaveFilename;
-        this.autoSaveFilename = undefined;
+        this.autoSaveFilename = null;
         await savedGames.removeAutoSavedGame(puzzle, autoSaveFilename);
       }
     }

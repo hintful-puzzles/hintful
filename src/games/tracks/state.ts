@@ -340,7 +340,7 @@ export function validateDesc(p: TracksParams, desc: string): string | null {
     const nibble = c2nUpper(ch);
     let f = 0;
     if (ch >= "a" && ch <= "z") i += ch.charCodeAt(0) - 97;
-    else if (nibble !== undefined && nibble <= 15) f = nibble;
+    else if (nibble !== null && nibble <= 15) f = nibble;
     else return "Game description contained unexpected characters";
 
     if (f !== 0 && NBITS[f] !== 2) return "Clue did not provide 2 direction flags";
@@ -378,7 +378,7 @@ export function decodeDesc(p: TracksParams, desc: string): Board {
     const nibble = c2nUpper(ch);
     let f = 0;
     if (ch >= "a" && ch <= "z") i += ch.charCodeAt(0) - 97;
-    else if (nibble !== undefined && nibble <= 15) f = nibble;
+    else if (nibble !== null && nibble <= 15) f = nibble;
 
     if (f !== 0) {
       b.sflags[i] |= S_TRACK | S_CLUE;

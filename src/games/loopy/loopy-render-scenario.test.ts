@@ -226,7 +226,7 @@ describe("Loopy render scenarios: line state and preferences", () => {
     // The preference lives on the ui, which `renderScenario` does not expose,
     // so this one drives the Midend directly — same production path.
     const midend = new Midend(loopyGame);
-    expect(midend.newGameFromId(id)).toBeUndefined();
+    expect(midend.newGameFromId(id)).toBeNull();
     midend.playMoves(moves);
     expect(midend.setPreferences({ "draw-faint-lines": false })).toBeUndefined();
     const recording = new RecordingDrawing(loopyGame.colors(DEFAULT_BACKGROUND));
@@ -340,7 +340,7 @@ describe("Loopy render scenarios: clue-position cache", () => {
     const palette = loopyGame.colors(DEFAULT_BACKGROUND);
 
     const midend = new Midend(loopyGame);
-    expect(midend.newGameFromId(id)).toBeUndefined();
+    expect(midend.newGameFromId(id)).toBeNull();
 
     const big = new RecordingDrawing(palette);
     midend.redraw(big);

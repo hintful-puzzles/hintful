@@ -77,10 +77,10 @@ export class SortedMultiset<T> {
     return this.lowerBound(probe) - 1;
   }
 
-  /** The least element strictly greater than `probe`, or `undefined` if none
+  /** The least element strictly greater than `probe`, or `null` if none
    * (upstream `findrel234(t, probe, REL234_GT)`). */
-  firstGreaterThan(probe: T): T | undefined {
+  firstGreaterThan(probe: T): T | null {
     const i = this.upperBound(probe);
-    return i < this.items.length ? this.items[i] : undefined;
+    return i < this.items.length ? this.items[i] : null;
   }
 }

@@ -576,7 +576,7 @@ function hint(state: SixteenState): HintResult<SixteenMove, SixteenHintHighlight
   for (let k = 0; k < path.length; k++) {
     const prev = steps[k - 1]?.highlights;
     const journey =
-      prev && prev.ultimatePos !== undefined
+      prev && prev.ultimatePos !== null
         ? { tile: prev.tile, ultimatePos: prev.ultimatePos }
         : null;
     steps.push(narrateStep(board, w, h, path[k], path[k + 1] ?? null, journey));
@@ -655,7 +655,7 @@ function narrateStep(
       : { axis: "row", n: landR + 1 };
   let second: Line | null = null;
 
-  let ultimatePos: number | undefined;
+  let ultimatePos: number | null = null;
 
   if (nextMove && nextMove.axis !== move.axis) {
     const onSecondLine =

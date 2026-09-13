@@ -68,7 +68,7 @@ export class PuzzleTypeMenu extends SignalWatcher(LitElement) {
 
   // Params for the current game
   @state()
-  private currentParams?: string;
+  private currentParams: string | null = null;
 
   // Description of currentParams
   @state()
@@ -91,7 +91,7 @@ export class PuzzleTypeMenu extends SignalWatcher(LitElement) {
     if (changedProperties.has("puzzle")) {
       await this.loadPresets();
     }
-    const currentParams = this.puzzle?.currentParams;
+    const currentParams = this.puzzle?.currentParams ?? null;
     if (currentParams !== this.currentParams) {
       this.currentGameTypeLabel =
         this.puzzle && currentParams

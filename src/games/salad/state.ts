@@ -379,7 +379,7 @@ interface Decoded {
 /** The symbol a desc character names: `'1'..'9'` or `'A'..'I'` as `1..9`, else 0. */
 function descSymbol(ch: string): number {
   const digit = digitValue(ch);
-  if (digit !== undefined && digit >= 1) return digit;
+  if (digit !== null && digit >= 1) return digit;
   const c = ch.charCodeAt(0);
   if (c >= 65 && c <= 73) return c - 64;
   return 0;

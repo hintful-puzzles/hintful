@@ -93,14 +93,14 @@ function rgbOf(color: Color): string {
  * outline it numbers rather than a fourth hint color. */
 const ORDINAL_RGB = rgbOf(HINT_EVIDENCE);
 
-/** The leaf preset with this exact title, or undefined. */
-function presetTitled<P>(menu: PresetMenu<P>, title: string): P | undefined {
+/** The leaf preset with this exact title, or null. */
+function presetTitled<P>(menu: PresetMenu<P>, title: string): P | null {
   if (menu.params !== undefined && menu.title === title) return menu.params;
   for (const sub of menu.submenu ?? []) {
     const p = presetTitled(sub, title);
-    if (p !== undefined) return p;
+    if (p !== null) return p;
   }
-  return undefined;
+  return null;
 }
 
 /**
@@ -134,9 +134,9 @@ describe("an ordered hint chain carries its order to the canvas", () => {
     it(`${name}: every numbered chain is 1..n, and every number is drawn`, () => {
       const contract = game.difficulty;
       const wanted = BIGGER_BOARD[name];
-      const override = wanted ? presetTitled(game.presets(), wanted) : undefined;
+      const override = wanted ? presetTitled(game.presets(), wanted) : null;
       if (wanted) {
-        expect(override, `${name}: no preset titled "${wanted}"`).toBeDefined();
+        expect(override, `${name}: no preset titled "${wanted}"`).not.toBeNull();
       }
       const base = override ?? firstLeaf(game.presets());
       // Every tier, not just the first preset: a chain deduction is the
@@ -149,13 +149,13 @@ describe("an ordered hint chain carries its order to the canvas", () => {
       for (const params of tiers) {
         if (game.validateParams(params, true)) continue; // refused at this size
         for (const seed of SEEDS) {
-          let desc: string;
-          let aux: string | undefined;
+          let board: { desc: string; aux?: string };
           try {
-            ({ desc, aux } = game.newDesc(params, randomNew(`${name}-${seed}`)));
+            board = game.newDesc(params, randomNew(`${name}-${seed}`));
           } catch {
             continue; // ungenerable here; difficulty-contract.test.ts owns that
           }
+          const { desc, aux } = board;
           const res = game.hint?.(game.newState(params, desc), aux);
           if (!res?.ok) continue;
 

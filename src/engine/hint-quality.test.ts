@@ -463,16 +463,13 @@ describe("no hint leaves a chain for the player to carry, at any tier", () => {
       for (const { label, params } of cases) {
         if (game.validateParams(params, true)) continue; // refused at this size
         for (const seed of SEEDS) {
-          let desc: string;
-          let aux: string | undefined;
+          let board: { desc: string; aux?: string };
           try {
-            ({ desc, aux } = game.newDesc(
-              params,
-              randomNew(`${name}-${label}-${seed}`),
-            ));
+            board = game.newDesc(params, randomNew(`${name}-${label}-${seed}`));
           } catch {
             continue; // ungenerable at this size; difficulty-contract.test.ts owns that
           }
+          const { desc, aux } = board;
           const res = game.hint?.(game.newState(params, desc), aux);
           if (!res?.ok) continue;
           checked++;
@@ -563,16 +560,13 @@ describe("hint narration stays readable at a glance", () => {
       for (const { label, params, seeds } of lintCases(name, game)) {
         if (game.validateParams(params, true)) continue;
         for (const seed of seeds) {
-          let desc: string;
-          let aux: string | undefined;
+          let board: { desc: string; aux?: string };
           try {
-            ({ desc, aux } = game.newDesc(
-              params,
-              randomNew(`${name}-${label}-${seed}`),
-            ));
+            board = game.newDesc(params, randomNew(`${name}-${label}-${seed}`));
           } catch {
             continue;
           }
+          const { desc, aux } = board;
           let state = game.newState(params, desc);
           for (let round = 0; round < LINT_ROUNDS; round++) {
             if (game.status(state) === "solved") break;

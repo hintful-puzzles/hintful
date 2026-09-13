@@ -69,7 +69,7 @@ export interface DependencyNotice {
 const TEMPLATE_PLACEHOLDER =
   /\[yyyy\]|\[name of copyright owner\]|<year>|<COPYRIGHT HOLDER>|\[fullname\]|\[year\]|\{\{\s*year\s*\}\}/i;
 
-const personName = (p: Person | string | null | undefined): string | null => {
+const personName = (p?: Person | string | null): string | null => {
   if (!p) return null;
   const name = typeof p === "string" ? p : p.name;
   // npm's people fields allow "Name <email> (url)"; the About box wants a name.
@@ -78,10 +78,10 @@ const personName = (p: Person | string | null | undefined): string | null => {
 
 /**
  * Who the package says publishes it: its author, else its contributors, else
- * the owner of the repository it points at. `undefined` when it names nobody —
+ * the owner of the repository it points at. `null` when it names nobody —
  * which is a fact worth showing as absence rather than papering over.
  */
-export function attribution(dep: Dependency): string | undefined {
+export function attribution(dep: Dependency): string | null {
   const author = personName(dep.author);
   if (author) return author;
 
@@ -97,7 +97,7 @@ export function attribution(dep: Dependency): string | undefined {
     ?.replace(/^git\+/, "")
     .replace(/\.git$/, "")
     .replace(/^[a-z+]+:\/\//, "");
-  return cleaned || undefined;
+  return cleaned || null;
 }
 
 /**

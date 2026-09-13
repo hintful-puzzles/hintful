@@ -141,7 +141,7 @@ class SavedGames {
   /**
    * Return the filename of the most recent autosave for puzzleId, if any.
    */
-  async findMostRecentAutoSave(puzzleId: PuzzleId): Promise<string | undefined> {
+  async findMostRecentAutoSave(puzzleId: PuzzleId): Promise<string | null> {
     const record = await db.savedGames
       .where("[saveType+puzzleId+timestamp]")
       .between(
@@ -150,7 +150,7 @@ class SavedGames {
       )
       .last();
 
-    return record?.filename;
+    return record?.filename ?? null;
   }
 
   makeAutoSaveFilename(): string {

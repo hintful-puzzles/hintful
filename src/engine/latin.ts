@@ -181,7 +181,7 @@ export class LatinSolver {
    * record of one firing shares a `group`. */
   group = 0;
 
-  constructor(o: number, repeats?: LatinRepeats) {
+  constructor(o: number, repeats: LatinRepeats | null = null) {
     this.o = o;
     if (repeats) {
       if (!(repeats.times >= 2 && repeats.times <= o)) {
@@ -247,11 +247,11 @@ export class LatinSolver {
    * elsewhere in the row/column, and record the placement. `reason` (hint path
    * only) explains *why* the cell was placed; the row/column eliminations it
    * implies are recorded as `dup` strikes so a hint can teach them too. */
-  place(x: number, y: number, n: number, reason?: unknown): void {
+  place(x: number, y: number, n: number, reason: unknown = null): void {
     const o = this.o;
     const s = this.symbols;
     const rec = this.recorder;
-    if (rec && reason !== undefined) {
+    if (rec && reason !== null) {
       rec({ kind: "place", x, y, n, reason, group: this.group });
     }
     for (let i = 1; i <= s; i++) if (i !== n) this.cube[this.cubepos(x, y, i)] = 0;
@@ -361,7 +361,7 @@ export class LatinSolver {
         const y = rest % o;
         const x = (rest / o) | 0;
         if (!this.grid[y * o + x]) {
-          this.place(x, y, n, this.recorder ? { kind: "single" } : undefined);
+          this.place(x, y, n, this.recorder ? { kind: "single" } : null);
           placed++;
         }
       }
@@ -794,8 +794,8 @@ function popcount(v: number): number {
  * the game's own deductions and validator, and the hint-path hooks. */
 export interface LatinSolverConfig<Ctx> {
   /** Declare the last symbol as repeating `times` per line (a pseudo-Latin
-   * puzzle). Leave unset for a Latin square; see {@link LatinRepeats}. */
-  repeats?: LatinRepeats;
+   * puzzle). Leave unset or `null` for a Latin square; see {@link LatinRepeats}. */
+  repeats?: LatinRepeats | null;
   maxdiff: number;
   diffSimple: number;
   diffSet0: number;

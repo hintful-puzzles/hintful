@@ -206,7 +206,7 @@ export function validateDesc(p: PalisadeParams, desc: string): string | null {
       squares += tok.blanks;
     } else {
       const clue = digitValue(tok.value);
-      if (clue === undefined) return `Invalid character in data: '${tok.value}'`;
+      if (clue === null) return `Invalid character in data: '${tok.value}'`;
       if (clue > 4) return `Invalid (too large) number: '${tok.value}'`;
       squares++;
     }
@@ -227,7 +227,7 @@ export function newState(p: PalisadeParams, desc: string): PalisadeState {
     }
     // Anything that is not a digit was rejected by validateDesc.
     const clue = digitValue(tok.value);
-    if (clue !== undefined) clues[i++] = clue;
+    if (clue !== null) clues[i++] = clue;
   }
   return {
     w,

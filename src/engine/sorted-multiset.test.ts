@@ -33,7 +33,7 @@ describe("SortedMultiset", () => {
       const expectedIdx = lt.length - 1;
       expect(s.lastIndexLessThan(probe)).toBe(expectedIdx);
       const gt = present.find((x) => x > probe);
-      expect(s.firstGreaterThan(probe)).toBe(gt);
+      expect(s.firstGreaterThan(probe)).toBe(gt ?? null);
     }
   });
 

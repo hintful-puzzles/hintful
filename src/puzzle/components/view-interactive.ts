@@ -165,15 +165,14 @@ export class PuzzleViewInteractive extends PuzzleView {
     // Tab: Only Untangle uses it; intercepting would create a tab-order trap
   } as const;
 
-  eventKeyToPuzzleKey(key: KeyboardEvent["key"]): number | undefined {
-    let button = PuzzleViewInteractive.puzzleKeyMap[key];
-    if (button === undefined && key.length === 1) {
+  eventKeyToPuzzleKey(key: KeyboardEvent["key"]): number | null {
+    const button = PuzzleViewInteractive.puzzleKeyMap[key];
+    if (button !== undefined) return button;
+    if (key.length === 1) {
       const code = key.charCodeAt(0);
-      if (code <= 127) {
-        button = code;
-      }
+      if (code <= 127) return code;
     }
-    return button;
+    return null;
   }
 
   /**
@@ -192,7 +191,7 @@ export class PuzzleViewInteractive extends PuzzleView {
       event.key === "Copy" ||
       (event.key === "c" && isCtrl) ||
       // In general, avoid intercepting browser shortcuts (even if puzzle might handle it):
-      (this.eventKeyToPuzzleKey(event.key) !== undefined && !isCtrl)
+      (this.eventKeyToPuzzleKey(event.key) !== null && !isCtrl)
     );
   }
 
@@ -223,7 +222,7 @@ export class PuzzleViewInteractive extends PuzzleView {
     }
 
     const button = this.eventKeyToPuzzleKey(event.key);
-    if (button === undefined) {
+    if (button === null) {
       return;
     }
 

@@ -348,7 +348,7 @@ export function readDesc(
       const digits = Array.from(desc.slice(at, at + len), digitValue);
       // `len` spans exactly the run `parseLeadingInt` stopped at, so a
       // non-digit here is a broken scan rather than a bad desc.
-      if (!digits.every((d) => d !== undefined)) {
+      if (!digits.every((d) => d !== null)) {
         throw new Error("crossing: a digit run held a non-digit");
       }
       numbers.push(digits);

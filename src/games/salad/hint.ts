@@ -713,7 +713,7 @@ export function hint(
 ): HintResult<SaladMove, SaladHint> {
   // No `autoPencil` preference to honor: Salad has no auto-elimination on
   // placement, so the plan always teaches the row/column note cull explicitly.
-  return candidateHint(state, undefined, findMistakes, buildSteps);
+  return candidateHint(state, null, findMistakes, buildSteps);
 }
 
 /** Classify a player move against the displayed step. Salad's two emptiness

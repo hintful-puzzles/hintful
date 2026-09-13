@@ -24,7 +24,8 @@
     "mutation": "rm -rf .stryker-tmp && stryker run scripts/stryker.config.mjs",
     "probe": "node scripts/feedback-probe.mjs",
     "refs": "node scripts/refs.mjs",
-    "dead-exports": "node scripts/checks/unused-exports.mjs"
+    "dead-exports": "node scripts/checks/unused-exports.mjs",
+    "absence": "node scripts/checks/absence-spelling.mjs"
   },
   "dependencies": {
     "@awesome.me/webawesome": "^3.5.0",

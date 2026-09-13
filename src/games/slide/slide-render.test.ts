@@ -127,7 +127,7 @@ const PALETTE: Color[] = slideGame.colors(DEFAULT_BACKGROUND);
 
 function newBoard(): SlideMidend {
   const me: SlideMidend = new Midend(slideGame);
-  expect(me.newGameFromId(ID)).toBeUndefined();
+  expect(me.newGameFromId(ID)).toBeNull();
   return me;
 }
 
@@ -170,15 +170,11 @@ function rectsInTile(ops: readonly DrawOp[], gx: number, gy: number): RectOp[] {
  * recolors to signal "held" or "next in the Solve route". Ignores the
  * full-tile background rect so the piece's own fill is what we read.
  */
-function pieceFillColor(
-  ops: readonly DrawOp[],
-  gx: number,
-  gy: number,
-): number | undefined {
+function pieceFillColor(ops: readonly DrawOp[], gx: number, gy: number): number | null {
   const inner = rectsInTile(ops, gx, gy).filter((o) => o.w < TS || o.h < TS);
-  let best: RectOp | undefined;
+  let best: RectOp | null = null;
   for (const o of inner) if (!best || o.w * o.h > best.w * best.h) best = o;
-  return best?.color;
+  return best?.color ?? null;
 }
 
 // --- the opening frame -------------------------------------------------
@@ -297,7 +293,7 @@ describe("slide drag frame", () => {
     expect(pieceFillColor(ops, 2, 1)).toBe(COL_MAIN_GRABBED);
     expect(pieceFillColor(ops, 3, 2)).toBe(COL_MAIN_GRABBED);
     // ...and the square it came from is now empty floor.
-    expect(pieceFillColor(ops, 1, 1)).toBeUndefined();
+    expect(pieceFillColor(ops, 1, 1)).toBeNull();
   });
 
   it("lights up an ordinary block in its own held color", () => {
@@ -313,7 +309,7 @@ describe("slide drag frame", () => {
     me.processInput(...at(2, 1), LEFT_RELEASE);
     const ops = capture(me);
     expect(pieceFillColor(ops, 2, 1)).toBe(COL_MAIN);
-    expect(pieceFillColor(ops, 1, 1)).toBeUndefined();
+    expect(pieceFillColor(ops, 1, 1)).toBeNull();
   });
 
   it("matches its snapshot", () => {
@@ -377,7 +373,7 @@ describe("slide keyboard frame", () => {
     // The held block is drawn where it would land, in the same held color the
     // pointer drag uses — there is one grab, not two.
     expect(pieceFillColor(ops, 4, 1)).toBe(COL_GRABBED);
-    expect(pieceFillColor(ops, 3, 1)).toBeUndefined();
+    expect(pieceFillColor(ops, 3, 1)).toBeNull();
     // ...with the cursor on it, having traveled with it.
     expect(cursorLines(ops, 4, 1)).toHaveLength(8);
     expect(cursorLines(ops, 3, 1)).toHaveLength(0);
@@ -406,7 +402,7 @@ describe("slide keyboard frame", () => {
 describe("slide exit gate", () => {
   function gateBoard(): SlideMidend {
     const me: SlideMidend = new Midend(slideGame);
-    expect(me.newGameFromId(GATE_ID)).toBeUndefined();
+    expect(me.newGameFromId(GATE_ID)).toBeNull();
     return me;
   }
 
@@ -466,7 +462,7 @@ describe("slide solve-route frame", () => {
   function withRoute(): { me: SlideMidend; from: number; to: number } {
     const me = newBoard();
     capture(me); // warm the draw state
-    expect(me.solve()).toBeUndefined();
+    expect(me.solve()).toBeNull();
     const state = (me as unknown as { state: SlideState }).state;
     const step = state.soln?.[0];
     if (!step) throw new Error("solve installed no route");

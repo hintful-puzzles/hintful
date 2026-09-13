@@ -462,7 +462,7 @@ export function redraw(
 
   // Grid tiles.
   const adjErr = computeAdjacencyErrors(state);
-  ds.wrong.packCells(mistakes, (x, y) => y * w + x);
+  ds.wrong.packCells(mistakes ?? null, (x, y) => y * w + x);
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {

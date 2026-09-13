@@ -445,7 +445,7 @@ export function redraw(
 
   // Hint overlay, packed by grid cell so it follows an element through a reorder.
   ds.hint.pack(
-    hint?.highlights,
+    hint?.highlights ?? null,
     (x, y) => y * w + x,
     (m) => hintMarkBit(m.n),
   );

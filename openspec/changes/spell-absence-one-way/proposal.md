@@ -1,11 +1,12 @@
 # spell-absence-one-way
 
-**Readiness: scaffolded 2026-09-13, not started.** Raised as a deliberate
-non-goal of `type-the-absent-digit` (its `design.md` D3), which chose
-`undefined` for three desc codecs and declined to settle the tree-wide
-question. Every figure below was measured on 2026-09-13 and is a claim to
-re-take before building on it (task 1). The convention itself is **not yet
-chosen**: `design.md` D2 lays out the candidates and recommends one.
+**Readiness: implemented 2026-09-13.** Raised as a deliberate non-goal of
+`type-the-absent-digit` (its `design.md` D3), which chose `undefined` for three
+desc codecs and declined to settle the tree-wide question. The figures below are
+the scaffold's; `design.md` D1 re-took them, and D2 records the convention
+chosen — `null`, named states for two kinds of nothing, a result beside a value
+— and why the scaffold's recommendation of `undefined` did not survive the
+measurement.
 
 ## Why
 

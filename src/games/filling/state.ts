@@ -106,7 +106,7 @@ export function validateDesc(p: FillingParams, desc: string): string | null {
       area += tok.blanks;
     } else {
       const v = digitValue(tok.value);
-      if (v === undefined || v > m) {
+      if (v === null || v > m) {
         return `Invalid character '${tok.value}' in game description`;
       }
       area += 1;
@@ -191,7 +191,7 @@ export function executeMove(state: FillingState, move: FillingMove): FillingStat
     const board = new Uint8Array(sz);
     for (let i = 0; i < sz; i++) {
       const v = digitValue(move.board[i]);
-      if (v === undefined) throw new Error("Bad solve board");
+      if (v === null) throw new Error("Bad solve board");
       board[i] = v;
     }
     return { ...state, board, completed: true, cheated: true };

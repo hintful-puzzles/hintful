@@ -50,7 +50,7 @@ describe("candidateHint (shared hint entry)", () => {
   it("refuses a solved board", () => {
     const r = candidateHint<St, CandidateMove, CandidateHighlights>(
       { completed: true },
-      undefined,
+      null,
       () => [],
       () => oneStep,
     );
@@ -60,7 +60,7 @@ describe("candidateHint (shared hint entry)", () => {
   it("refuses a board with mistakes, pointing at the overlay", () => {
     const r = candidateHint<St, CandidateMove, CandidateHighlights>(
       { completed: false },
-      undefined,
+      null,
       () => [{ wrong: true }],
       () => oneStep,
     );
@@ -71,7 +71,7 @@ describe("candidateHint (shared hint entry)", () => {
   it("refuses when no further move can be deduced", () => {
     const r = candidateHint<St, CandidateMove, CandidateHighlights>(
       { completed: false },
-      undefined,
+      null,
       () => [],
       () => [],
     );
@@ -86,7 +86,7 @@ describe("candidateHint (shared hint entry)", () => {
   it("returns the built plan on the success path", () => {
     const r = candidateHint<St, CandidateMove, CandidateHighlights>(
       { completed: false },
-      undefined,
+      null,
       () => [],
       () => oneStep,
     );
@@ -101,7 +101,7 @@ describe("candidateHint (shared hint entry)", () => {
     };
     candidateHint<St, CandidateMove, CandidateHighlights>(
       { completed: false },
-      undefined,
+      null,
       () => [],
       build,
     );

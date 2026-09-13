@@ -68,7 +68,7 @@ describe("group render scenarios", () => {
     // step, walking the plan to it (the fixed-seed scan + hintUntil idiom).
     const isAssoc = (step: { explanation: string }) =>
       /in any group/.test(step.explanation);
-    let frame: ReturnType<typeof renderScenario> | undefined;
+    let frame: ReturnType<typeof renderScenario> | null = null;
     for (let n = 0; n < 40 && !frame; n++) {
       const r = renderScenario({
         game: groupGame,
@@ -78,7 +78,7 @@ describe("group render scenarios", () => {
       });
       if (r.hint && isAssoc(r.hint)) frame = r;
     }
-    expect(frame, "no associativity frame found in 40 seeds").toBeDefined();
+    expect(frame, "no associativity frame found in 40 seeds").not.toBeNull();
     if (!frame) return;
 
     // The forced cell is **ringed** COL_HINT — four thin rects, no fill — and

@@ -19,7 +19,7 @@ export function liveQuerySignal<T>(
   >,
 ): Signal.State<T> {
   const query = liveQuery(querier);
-  let subscription: Subscription | undefined;
+  let subscription: Subscription | null = null;
 
   const startWatching = () => {
     if (!subscription) {
@@ -31,7 +31,7 @@ export function liveQuerySignal<T>(
 
   const stopWatching = () => {
     subscription?.unsubscribe();
-    subscription = undefined;
+    subscription = null;
   };
 
   const resultSignal = signal<T>(initialValue, {

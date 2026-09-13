@@ -183,7 +183,7 @@ describe("desc supersession", () => {
     const data = h.m.saveGame();
 
     const h2 = harness();
-    expect(h2.m.loadGame(data)).toBeUndefined();
+    expect(h2.m.loadGame(data)).toBeNull();
 
     // The restored position is the saved one, and the ID still names the real board.
     expect(h2.board()).toBe("layout=L4 clicked=4 opened=[4,7]");
@@ -212,7 +212,7 @@ describe("desc supersession", () => {
     expect(save.privDesc).toBeUndefined();
 
     const h2 = harness();
-    expect(h2.m.loadGame(h.m.saveGame())).toBeUndefined();
+    expect(h2.m.loadGame(h.m.saveGame())).toBeNull();
     expect(h2.gameId()).toBe("s9:blank");
     expect(h2.board()).toBe(BLANK);
 

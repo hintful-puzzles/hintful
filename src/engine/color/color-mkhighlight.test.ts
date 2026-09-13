@@ -143,7 +143,7 @@ describe("mkhighlightSpecific", () => {
     expect(darkValue(trio.highlight)).toEqual(plain.highlight);
     expect(darkValue(trio.lowlight)).toEqual(plain.lowlight);
     // A base with no dark value hands on none: the trio stays calculable.
-    expect(darkValue(plain.highlight)).toBeUndefined();
+    expect(darkValue(plain.highlight)).toBeNull();
   });
 
   it("does not shift a base comfortably inside the gamut (dark COL_1)", () => {

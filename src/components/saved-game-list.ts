@@ -90,11 +90,11 @@ export class SavedGameList extends SignalWatcher(LitElement) {
   @state()
   private selectedItemKey?: string;
 
-  private get selectedItem(): SavedGameListItem | undefined {
+  private get selectedItem(): SavedGameListItem | null {
     // TODO: memoize/computed?
     return this.selectedItemKey
-      ? this.items?.find((item) => item.key === this.selectedItemKey)
-      : undefined;
+      ? (this.items?.find((item) => item.key === this.selectedItemKey) ?? null)
+      : null;
   }
 
   override disconnectedCallback(): void {

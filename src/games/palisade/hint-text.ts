@@ -67,15 +67,15 @@ export const say = {
   // states the sizes it is comparing rather than "the target size".
   /** Joining two regions would make `joined` cells (unknown when the rule
    * carried none), against regions of `k`. */
-  notTooBig: (joined: number | undefined, k: number): string =>
-    joined === undefined
+  notTooBig: (joined: number | null, k: number): string =>
+    joined === null
       ? `Joining these two regions would leave more than the ${k} cells a region holds, so this edge must be a wall.`
       : `Joining these two regions would make ${joined} cells, but a region here holds ${k}, so this edge must be a wall.`,
 
   /** A region of `size` cells (unknown when the rule carried none), short of
    * `k`, with one way left to grow. */
-  notTooSmall: (size: number | undefined, k: number): string =>
-    size === undefined
+  notTooSmall: (size: number | null, k: number): string =>
+    size === null
       ? `This region is short of its ${k} cells and has just one way left to grow, so this edge can't be a wall.`
       : `This region has ${size} of its ${k} cells and just one way left to grow, so this edge can't be a wall.`,
 

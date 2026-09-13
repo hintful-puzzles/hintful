@@ -1,67 +1,66 @@
 # spell-absence-one-way — tasks
 
-Not started. Read `design.md` first: D1 says what the measurement can and
-cannot see, D2 holds the undecided convention and its recommendation.
-
 ## 1. Re-take the measurements before building on them
 
-- [ ] 1.1 Re-run the census `proposal.md` describes (compiler API, declared
-      return types, non-test `src/`). Check the instrument first: it must
-      find `digitValue` as `| undefined`, report its file and node counts, and
-      agree in direction with a line-based `git grep` written with
-      `[[:space:]]` (D1). Record the re-taken table here.
-- [ ] 1.2 Read the bodies of `Midend.setPreferences`, `solve`, `hint`,
-      `executeHint` and `formatAsText`, and record which mean "an error, or
-      nothing" and which mean "nothing to say". `proposal.md` verified only
-      `setParams`, `setCustomParams`, `loadGame` and `newGameFromId`.
-- [ ] 1.3 Classify every engine row by meaning — error-or-nothing,
-      nothing-to-say, lookup-miss, three-state — by reading it, not by its
-      name. This classification is D2's input.
-- [ ] 1.4 Grep `openspec/specs/` for `| null` and `| undefined` in signatures,
-      and note which requirement holds each: those are the `MODIFIED` deltas
-      this change will owe.
-- [ ] 1.5 Measure how many games spell the entry-key logic `keyLetter` and
-      `keyDigit` share (D3), keyed on its shape.
+- [x] 1.1 Re-run the census (compiler API, declared return types, non-test
+      `src/`), known positive first. Re-taken table and the wider union-position
+      census are in `design.md` D1.
+- [x] 1.2 Read `Midend.setPreferences`, `solve`, `hint`, `executeHint` and
+      `formatAsText`. `solve`, `hint` and `executeHint` mean "a refusal, or
+      nothing" (each relays a `Game` result's `error`); `formatAsText` means
+      "nothing to say"; `setPreferences` returned `undefined` on its only path
+      and so declared a refusal it cannot produce.
+- [x] 1.3 Classify the engine rows by meaning. Refusal-or-nothing: the
+      `EngineCore` members, `computeHintPlan`, the grid and tiling validators.
+      Nothing-to-say: `textFormat`, `formatAsText`, `supersededDesc`,
+      `refreshHintStep` (fully resolved), `hintJourney`. Lookup miss: the codecs,
+      `darkValue`, `difficultyTiers`, `getTsGame`, `firstGreaterThan`, the hint
+      getters. Three-state: `keyLetter`, `keyDigit`, and the settings store's
+      common-setting read (found by reading, not by the census).
+- [x] 1.4 Live spec requirements spelling a changed signature: `ts-engine`
+      "The engine answers which character is a digit, once" and "The engine
+      provides the two desc value alphabets". The custom-params and
+      reference-aid requirements already say `null` or a string.
+- [x] 1.5 Entry-key shape across games: 22 read the erase keys, sharing two
+      tokens; no-go recorded in `design.md` D3.
 
 ## 2. Decide
 
-- [ ] 2.1 Choose A, B or C (D2) and write the decision and its reason into
-      `design.md` D2, including the benefit beyond consistency for each part
-      kept. Read `interpretMove`'s `Move | null | UiUpdate` handling in the
-      midend before choosing A.
-- [ ] 2.2 Write the spec delta: an `ADDED` `ts-engine` requirement stating the
-      convention and its override, plus a `MODIFIED` block for each
-      requirement 1.4 found. Grep the live spec for each sentence before
-      modifying it. Remove `skip_specs` from `.openspec.yaml`.
+- [x] 2.1 Chosen and recorded in `design.md` D2: `null`, named states for two
+      kinds of nothing, a result beside a value; results declined for
+      validators, with the measurement.
+- [x] 2.2 Spec deltas: `ts-engine` ADDED "Absence has one spelling" and MODIFIED
+      the two codec requirements; `build-pipeline` ADDED "The gate holds absence
+      to one spelling". `skip_specs` removed.
 
 ## 3. Implement
 
-- [ ] 3.1 The contracts: `Game` and `EngineCore`, then `Midend`, the worker
-      adapter and `puzzle.ts`. Let the typechecker enumerate the
-      implementations; read each, do not sweep.
-- [ ] 3.2 `keyLetter` and `keyDigit`: name the "clear" state (D3), extracting a
-      shared helper only if 1.5 supports it.
-- [ ] 3.3 `DynamicContent.addItem`: declare what it returns.
-- [ ] 3.4 Helpers, to the extent task 2 chose.
+- [x] 3.1 The contracts: `Game.textFormat`, `EngineCore` and its relays
+      (`Midend`, `worker-adapter.ts`, `engine-surface.ts`, `puzzle.ts`) and their
+      consumers; `encodeCustomParams` returns `CustomParamsEncoding`;
+      `setPreferences` returns `void`.
+- [x] 3.2 `keyLetter` and `keyDigit` return `"clear"`; nothing extracted (D3).
+- [x] 3.3 `DynamicContent.addItem` declares `… | null`.
+- [x] 3.4 Every union naming `undefined` in the tracked TypeScript, including
+      tests, the build-side plugins and `vite.config.ts`; settings' common-setting
+      read names `UNSET`.
 
 ## 4. Verify
 
 - [ ] 4.1 No narration, snapshot or frozen fixture moves; no stored value's
       meaning changes (D5).
-- [ ] 4.2 Verify by shape: every changed line respells an absent value,
-      converts a platform `null` at a contract boundary, or names a state. Read
-      the exceptions.
-- [ ] 4.3 Re-read every `EngineCore` result consumer outside the engine and
-      confirm each still tests truthiness (D5).
+- [x] 4.2 By shape: the codemod's 234 lines differ by one token each; the rest
+      were read site by site from the guard's and the typechecker's lists.
+- [x] 4.3 `EngineCore` result consumers re-read (D5).
 - [ ] 4.4 Run the app: an invalid game ID in the Enter Game ID dialog, an
-      invalid Custom type, a corrupt save imported, and in Abcd and Crossing a
-      cursor-entered value, a clear, and a key that is neither.
+      invalid Custom type, and in Abcd and Crossing a cursor-entered value, a
+      clear, and a key that is neither; the settings dialog's favorites and a
+      preference round-trip.
 
 ## 5. Keep it
 
-- [ ] 5.1 Write the rule, its reason and its override into
-      `docs/games/mechanics.md`, and link it from the section
-      `type-the-absent-digit` added ("Not a digit" is outside the type).
-- [ ] 5.2 Build the guard D4 describes if its exceptions can be derived; prove
-      it fails on a planted signature. Otherwise say in the docs that nothing
-      enforces the rule.
+- [x] 5.1 `docs/games/mechanics.md` § "Absence is `null`", linked from the digit
+      section; `AGENTS.md` Code conventions and the gate list; the engine
+      catalog's codec entries.
+- [x] 5.2 `scripts/checks/absence-spelling.mjs` in the gate, exceptions derived
+      from syntax, fixtures proving both halves on every run.

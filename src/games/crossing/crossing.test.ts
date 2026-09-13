@@ -131,12 +131,12 @@ function harness() {
     () => {},
     () => {},
   );
-  const status = (): GameStatus | undefined =>
+  const status = (): GameStatus | null =>
     (
       [...notes].reverse().find((n) => n.type === "game-state-change") as
         | Extract<ChangeNotification, { type: "game-state-change" }>
         | undefined
-    )?.status;
+    )?.status ?? null;
   return { m, status };
 }
 
@@ -1051,7 +1051,7 @@ describe("crossing moves and completion", () => {
 
   it("filling the board completes the game and flashes", () => {
     const { m, status } = harness();
-    expect(m.newGameFromId(FIX_ID)).toBeUndefined();
+    expect(m.newGameFromId(FIX_ID)).toBeNull();
     const moves = solutionMoves();
     m.playMoves(moves);
     expect(status()).toBe("solved");
@@ -1070,8 +1070,8 @@ describe("crossing moves and completion", () => {
 
   it("Solve completes the game with help (no flash)", () => {
     const { m, status } = harness();
-    expect(m.newGameFromId(FIX_ID)).toBeUndefined();
-    expect(m.solve()).toBeUndefined();
+    expect(m.newGameFromId(FIX_ID)).toBeNull();
+    expect(m.solve()).toBeNull();
     expect(status()).toBe("solved-with-help");
     // `cheated` is set, so the celebration flash must not fire (docs/games/solver-and-generator.md § "Solve and the generator's aux").
     const start = newState(P5, FIX.desc);

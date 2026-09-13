@@ -63,11 +63,11 @@ export function token(light: Color, dark?: Color): Color {
 }
 
 /**
- * The value this color takes in dark mode, or `undefined` if it has not been
+ * The value this color takes in dark mode, or `null` if it has not been
  * authored one and should be adapted by calculation.
  */
-export function darkValue(c: Color): Color | undefined {
-  return (c as Token).dark;
+export function darkValue(c: Color): Color | null {
+  return (c as Token).dark ?? null;
 }
 
 // --- combining colors -------------------------------------------------

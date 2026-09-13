@@ -18,27 +18,27 @@ function harness() {
     () => {},
     () => {},
   );
-  const status = (): GameStatus | undefined =>
+  const status = (): GameStatus | null =>
     (
       [...notes].reverse().find((n) => n.type === "game-state-change") as
         | Extract<ChangeNotification, { type: "game-state-change" }>
         | undefined
-    )?.status;
-  const hintBanner = (): string | undefined =>
+    )?.status ?? null;
+  const hintBanner = (): string | null =>
     (
       [...notes].reverse().find((n) => n.type === "status-bar-change") as
         | Extract<ChangeNotification, { type: "status-bar-change" }>
         | undefined
-    )?.activeHintExplanation;
+    )?.activeHintExplanation ?? null;
   return { m, status, hintBanner };
 }
 
 describe("midend integration", () => {
   it("starts ongoing and the Solve command finishes with help", () => {
     const { m, status } = harness();
-    expect(m.newGameFromId("9x6#range-mid-solve")).toBeUndefined();
+    expect(m.newGameFromId("9x6#range-mid-solve")).toBeNull();
     expect(status()).toBe("ongoing");
-    expect(m.solve()).toBeUndefined();
+    expect(m.solve()).toBeNull();
     expect(status()).toBe("solved-with-help");
   });
 
@@ -49,7 +49,7 @@ describe("midend integration", () => {
     if (!solution) throw new Error("expected solvable");
 
     const { m, status } = harness();
-    expect(m.newGameFromId(`9x6:${desc}`)).toBeUndefined();
+    expect(m.newGameFromId(`9x6:${desc}`)).toBeNull();
 
     const moves: RangeMove[] = [];
     for (let r = 0; r < params.h; r++) {
@@ -69,9 +69,9 @@ describe("midend integration", () => {
     const params = decodeParams("9x6");
     const { desc } = rangeGame.newDesc(params, randomNew("range-hint-banner"));
     const { m, hintBanner } = harness();
-    expect(m.newGameFromId(`9x6:${desc}`)).toBeUndefined();
+    expect(m.newGameFromId(`9x6:${desc}`)).toBeNull();
 
-    expect(m.hint()).toBeUndefined();
+    expect(m.hint()).toBeNull();
     const banner = hintBanner();
     expect(banner).toBeTruthy();
     expect((banner ?? "").length).toBeGreaterThan(0);
@@ -98,7 +98,7 @@ describe("midend integration", () => {
     if (!solution) throw new Error("expected solvable");
 
     const { m } = harness();
-    expect(m.newGameFromId(`9x6:${desc}`)).toBeUndefined();
+    expect(m.newGameFromId(`9x6:${desc}`)).toBeNull();
 
     // Dot (white) a cell that is black in the solution → a mistake.
     const blackCell = solution.indexOf(BLACK);

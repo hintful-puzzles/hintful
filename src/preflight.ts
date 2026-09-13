@@ -121,17 +121,17 @@ async function runPreflightChecks(runAll = false): Promise<string[]> {
 
   if (runAll || failed.length === 0) {
     // Run async checks concurrently (even when not runAll).
-    // Resolve each to `undefined` for passed, feature name for failed.
+    // Resolve each to `null` for passed, feature name for failed.
     const asyncResults = await Promise.allSettled(
       Object.entries(asyncPreflightChecks).map(
         ([feature, check]) =>
-          new Promise<string | undefined>(
+          new Promise<string | null>(
             (resolve) =>
               check()
                 .then(
                   (result) =>
                     result || result === undefined
-                      ? resolve(undefined) // passed (returned true or nothing)
+                      ? resolve(null) // passed (returned true or nothing)
                       : resolve(feature), // failed (returned false)
                 )
                 .catch(() => resolve(feature)), // failed (rejected)

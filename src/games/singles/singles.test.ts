@@ -138,11 +138,11 @@ describe("singles findMistakes", () => {
 describe("singles save round-trip", () => {
   it("saveGame -> loadGame restores an equivalent game", () => {
     const me = new Midend(singlesGame);
-    expect(me.newGameFromId("5x5de#singles-save")).toBeUndefined();
+    expect(me.newGameFromId("5x5de#singles-save")).toBeNull();
     me.playMoves([{ sets: [{ x: 0, y: 0, value: "black" }] }]);
     const saved = me.saveGame();
     const me2 = new Midend(singlesGame);
-    expect(me2.loadGame(saved)).toBeUndefined();
+    expect(me2.loadGame(saved)).toBeNull();
     expect(me2.formatAsText()).toBe(me.formatAsText());
   });
 });

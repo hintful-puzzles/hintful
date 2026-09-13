@@ -28,7 +28,7 @@ import Dexie from "dexie";
 (Dexie as unknown as { maxKey: unknown }).maxKey = "￿";
 
 type Db = typeof import("../store/db.ts")["db"];
-let dbPromise: Promise<Db> | undefined;
+let dbPromise: Promise<Db> | null = null;
 
 async function getDb(): Promise<Db> {
   if (!dbPromise) dbPromise = import("../store/db.ts").then((m) => m.db);

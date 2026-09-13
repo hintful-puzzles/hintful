@@ -38,7 +38,7 @@ describe("Same Game midend lifecycle", () => {
   it("updates the status bar on a selection-only UI update", () => {
     const h = harness();
     // row0: 1 1 2 / row1: 3 3 3 / row2: 1 2 2, scoring (n-1)².
-    expect(h.m.newGameFromId("3x3c3s1:1,1,2,3,3,3,1,2,2")).toBeUndefined();
+    expect(h.m.newGameFromId("3x3c3s1:1,1,2,3,3,3,1,2,2")).toBeNull();
     expect(h.statusBar()).toBe("Score: 0");
     // Select the color-3 group (cell (0,1)); no history move, but the
     // status bar must reflect the selection.

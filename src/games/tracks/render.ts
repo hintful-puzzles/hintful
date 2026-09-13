@@ -766,7 +766,7 @@ export function redraw(
   // board changes under it, and the preview must go with it.
   const dragBoard = ui.drag.live && ui.painting ? copyAndApplyDrag(board, ui) : null;
 
-  ds.wrong.packCells(mistakes, (x, y) => y * w + x);
+  ds.wrong.packCells(mistakes ?? null, (x, y) => y * w + x);
 
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {

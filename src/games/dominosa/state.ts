@@ -159,7 +159,7 @@ function parseNumbers(
     let j: number;
     const c = desc[p];
     const digit = digitValue(c);
-    if (digit !== undefined) {
+    if (digit !== null) {
       j = digit;
       p++;
     } else if (c === "[") {

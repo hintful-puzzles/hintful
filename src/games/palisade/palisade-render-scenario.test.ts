@@ -18,7 +18,7 @@ import type { PalisadeHint } from "./state.ts";
 // The equivalentEdges frame: a sibling edge AND a referenced *region* (more
 // than one cell). numberExhausted journeys carry siblings too, but reference a
 // single clue cell, so the multi-cell region distinguishes the rule.
-const isEquivalentEdgesFrame = (hl: PalisadeHint | undefined): boolean =>
+const isEquivalentEdgesFrame = (hl?: PalisadeHint): boolean =>
   (hl?.edges?.length ?? 0) > 0 && (hl?.cells?.length ?? 0) > 1;
 
 /**

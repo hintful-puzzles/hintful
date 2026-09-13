@@ -68,7 +68,7 @@ const CLICK_Y = 96;
 describe("Palisade midend lifecycle", () => {
   it("paints the board and shows the region-size status bar", () => {
     const h = harness();
-    expect(h.m.newGameFromId(ID)).toBeUndefined();
+    expect(h.m.newGameFromId(ID)).toBeNull();
     expect(h.statusBar()).toBe("Region size: 5");
     expect(h.status()).toBe("ongoing");
 
@@ -80,7 +80,7 @@ describe("Palisade midend lifecycle", () => {
 
   it("toggles an edge, then undo reverts and redo reapplies it", () => {
     const h = harness();
-    expect(h.m.newGameFromId(ID)).toBeUndefined();
+    expect(h.m.newGameFromId(ID)).toBeNull();
     const before = h.m.saveGame();
 
     expect(h.m.processInput(CLICK_X, CLICK_Y, LEFT_BUTTON)).toBe(true);
@@ -101,23 +101,23 @@ describe("Palisade midend lifecycle", () => {
 
   it("solves via the Solve command", () => {
     const h = harness();
-    expect(h.m.newGameFromId(ID)).toBeUndefined();
-    expect(h.m.solve()).toBeUndefined();
+    expect(h.m.newGameFromId(ID)).toBeNull();
+    expect(h.m.solve()).toBeNull();
     expect(h.status()).toBe("solved-with-help");
   });
 
   it("reports no mistakes on a fresh board (only the rim is drawn)", () => {
     const h = harness();
-    expect(h.m.newGameFromId(ID)).toBeUndefined();
+    expect(h.m.newGameFromId(ID)).toBeNull();
     expect(h.m.findMistakes()).toBe(0);
   });
 
   it("computes a hint plan and auto-solves it via executeHint", () => {
     const h = harness();
-    expect(h.m.newGameFromId(ID)).toBeUndefined();
+    expect(h.m.newGameFromId(ID)).toBeNull();
 
     // A hint is available on a fresh board.
-    expect(h.m.hint()).toBeUndefined();
+    expect(h.m.hint()).toBeNull();
 
     // Auto-playing the deduction plan (Palisade has no move animation, so
     // each step settles synchronously) drives the board to solved.
@@ -135,12 +135,12 @@ describe("Palisade midend lifecycle", () => {
 
   it("round-trips through save/load", () => {
     const h = harness();
-    expect(h.m.newGameFromId(ID)).toBeUndefined();
+    expect(h.m.newGameFromId(ID)).toBeNull();
     h.m.processInput(CLICK_X, CLICK_Y, LEFT_BUTTON);
     const saved = h.m.saveGame();
 
     const h2 = harness();
-    expect(h2.m.loadGame(saved)).toBeUndefined();
+    expect(h2.m.loadGame(saved)).toBeNull();
     expect(bytesEqual(h2.m.saveGame(), saved)).toBe(true);
   });
 });

@@ -166,7 +166,7 @@ type LiternderRoot = LitElement["renderRoot"] & { [litPartProperty]?: ChildPart 
 
 interface RenderState {
   children: ChildNode[];
-  childPart: ChildPart | undefined;
+  childPart?: ChildPart;
 }
 
 /**

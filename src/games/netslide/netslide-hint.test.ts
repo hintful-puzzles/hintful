@@ -86,10 +86,10 @@ type OkHint = Extract<ReturnType<typeof hintOf>, { ok: true }>;
 interface CorpusEntry {
   params: NetslideParams;
   state: NetslideState;
-  aux: string | undefined;
+  aux?: string;
   steps: OkHint["steps"];
 }
-let narrationCorpusCache: CorpusEntry[] | undefined;
+let narrationCorpusCache: CorpusEntry[] | null = null;
 function narrationCorpus(): CorpusEntry[] {
   if (narrationCorpusCache) return narrationCorpusCache;
   const out: CorpusEntry[] = [];
@@ -147,7 +147,7 @@ describe("the hint's idea of where a tile belongs", () => {
     let claims = 0;
     for (const seed of ["belong-a", "belong-b", "belong-c", "belong-d"]) {
       const { state, aux } = board(HARD_5X5, seed);
-      const target = parseAux(aux, state.w * state.h) as Uint8Array;
+      const target = parseAux(aux ?? null, state.w * state.h) as Uint8Array;
       const res = hintOf(state, aux);
       if (!res.ok) continue;
 

@@ -33,8 +33,8 @@ function boardId(params: LightupParams, seed: string): string {
   return `${encodeParams(params, true)}:${desc}`;
 }
 
-const hl = (step: HintStep<unknown> | undefined): LightupHint | undefined =>
-  step?.highlights as LightupHint | undefined;
+const hl = (step?: HintStep<unknown>): LightupHint | null =>
+  (step?.highlights as LightupHint | undefined) ?? null;
 
 describe("Light Up hint render scenarios", () => {
   it("opener frame: grouped ringed targets, recolored clue digit, board intact", () => {
@@ -46,7 +46,7 @@ describe("Light Up hint render scenarios", () => {
     });
 
     const h = hl(hint);
-    expect(h).toBeDefined();
+    expect(h).not.toBeNull();
     expect(h?.targets.length).toBeGreaterThan(1);
     expect(h?.clue).toBeDefined();
 

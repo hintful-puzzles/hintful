@@ -837,8 +837,8 @@ export function redraw(
 
   // The two overlay sidecars. Hint: bit 0 target, bit 1 area, bits 2.. struck mask.
   const index = (x: number, y: number) => x + y * stride;
-  ds.hint.pack(hint?.highlights, index, (m) => m.monster << 2);
-  ds.wrong.packCells(mistakes, index);
+  ds.hint.pack(hint?.highlights ?? null, index, (m) => m.monster << 2);
+  ds.wrong.packCells(mistakes ?? null, index);
 
   // Grid cells.
   for (let x = 1; x < w + 1; x++) {

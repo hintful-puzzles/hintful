@@ -386,7 +386,7 @@ describe("the hint frame paints the overlay", () => {
     expect(id, "no diagonal hint board found").not.toBeNull();
     if (!id) return;
 
-    const isDiagLine = (h: SpokesHint | undefined): boolean =>
+    const isDiagLine = (h?: SpokesHint): boolean =>
       h?.spokes?.some((s) => s.state === SPOKE_LINE && (s.dir === 1 || s.dir === 3)) ??
       false;
 

@@ -224,7 +224,7 @@ function packHint(
   ds: GalaxiesDrawState,
   w: number,
   h: number,
-  hl: GalaxiesHint | undefined,
+  hl?: GalaxiesHint,
 ): void {
   ds.hint.clear();
   if (!hl) return;
@@ -643,7 +643,7 @@ function splitMistakeOverlay(
   ds: GalaxiesDrawState,
   w: number,
   h: number,
-  mistakes: readonly GalaxiesMistake[] | undefined,
+  mistakes?: readonly GalaxiesMistake[],
 ): Set<number> {
   const mistakeTiles = new Set<number>();
   ds.wrongEdges.clear();

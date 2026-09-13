@@ -363,13 +363,13 @@ describe("pattern drag-paint skips placed marks", () => {
 describe("pattern Midend integration", () => {
   it("generates, solves, and round-trips a save", () => {
     const me = new Midend(patternGame);
-    expect(me.newGameFromId("10x10#midend-seed")).toBeUndefined();
+    expect(me.newGameFromId("10x10#midend-seed")).toBeNull();
     expect(me.requestKeys()).toEqual([]); // no on-screen keypad
     const saved = me.saveGame();
     const me2 = new Midend(patternGame);
-    expect(me2.loadGame(saved)).toBeUndefined();
+    expect(me2.loadGame(saved)).toBeNull();
     expect(me2.formatAsText()).toBe(me.formatAsText());
-    expect(me.solve()).toBeUndefined(); // a fresh game can solve
+    expect(me.solve()).toBeNull(); // a fresh game can solve
   });
 });
 

@@ -232,7 +232,7 @@ export function narrateForcingChain(
   region: string,
   /** How the last link lines up with this cell; a row/column game's chain
    * always ends in line with it, Solo's can end in its block or diagonal. */
-  lastTie?: string,
+  lastTie: string | null = null,
 ): string {
   const v = vocab.value;
   const cell = vocab.cell ?? "cell";

@@ -336,7 +336,7 @@ describe("mistake overlay", () => {
     // disappears again on a third once the overlay is cleared.
     const { desc, index, wrong } = legalLookingMistake();
     const me = new Midend(romeGame);
-    expect(me.newGameFromId(`6x6de:${desc}`)).toBeUndefined();
+    expect(me.newGameFromId(`6x6de:${desc}`)).toBeNull();
     const move: RomeMove = {
       kind: "place",
       x: index % 6,

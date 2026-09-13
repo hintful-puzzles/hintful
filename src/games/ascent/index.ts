@@ -327,8 +327,8 @@ function findMistakes(state: AscentState): readonly AscentMistake[] {
 
 // --- text format ---------------------------------------------------
 
-function textFormat(state: AscentState): string | undefined {
-  if (isHexagonal(state.mode)) return undefined; // game_can_format_as_text_now
+function textFormat(state: AscentState): string | null {
+  if (isHexagonal(state.mode)) return null; // game_can_format_as_text_now
   const w = state.w;
   const h = state.h;
   const space = w * h >= 100 ? 3 : 2;

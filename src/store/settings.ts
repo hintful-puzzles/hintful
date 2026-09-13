@@ -40,6 +40,9 @@ const COMMON_SETTINGS_ID = "puzzle-common";
 
 const getCommonSetting = Symbol("getCommonSetting");
 const setCommonSetting = Symbol("setCommonSetting");
+/** A common setting nobody has stored. Named, because a stored `null` is a
+ * value some settings keep on purpose, and the two must not be read as one. */
+const UNSET = Symbol("unset");
 
 type RequiredCommonSettings = Required<CommonSettings>;
 
@@ -81,9 +84,9 @@ function commonSetting<
 
     Object.defineProperty(target, propertyKey, {
       get(this: Settings): D | ActualV {
-        // Convert undefined to default (but not null to default)
+        // An unset key takes the default; a stored `null` is a value and does not.
         const value = this[getCommonSetting](propertyKey);
-        if (value === undefined) {
+        if (value === UNSET) {
           return options.default;
         }
         return options.fromDB ? options.fromDB(value) : (value as ActualV);
@@ -168,8 +171,9 @@ class Settings {
   };
 
   /**
-   * Type safe getter for individual _commonSettings values.
-   * Unset keys return undefined.
+   * Type safe getter for individual _commonSettings values. An unset key is
+   * {@link UNSET} rather than `null`, because several settings store `null` as
+   * a value of their own.
    * @private (uses symbol for sharing with commonSetting decorator)
    */
   [getCommonSetting] = <
@@ -177,8 +181,9 @@ class Settings {
     V extends RequiredCommonSettings[K],
   >(
     key: K,
-  ): V | undefined => {
-    return this._commonSettings.get(key) as V | undefined;
+  ): V | typeof UNSET => {
+    const value = this._commonSettings.get(key);
+    return value === undefined ? UNSET : (value as V);
   };
 
   /**
@@ -233,8 +238,13 @@ class Settings {
   declare colorScheme: "light" | "dark" | "system";
 
   private _favoritePuzzles = computed<ReadonlySet<PuzzleId>>(
-    () => new Set(this[getCommonSetting]("favoritePuzzles") ?? defaultFavoritePuzzles),
+    () => new Set(this.storedFavoritePuzzles()),
   );
+
+  private storedFavoritePuzzles(): readonly PuzzleId[] {
+    const favorites = this[getCommonSetting]("favoritePuzzles");
+    return favorites === UNSET ? defaultFavoritePuzzles : favorites;
+  }
 
   get favoritePuzzles(): ReadonlySet<PuzzleId> {
     return this._favoritePuzzles.get();
@@ -247,8 +257,7 @@ class Settings {
   setFavoritePuzzle(puzzleId: PuzzleId, isFavorite: boolean) {
     const wasFavorite = this.isFavoritePuzzle(puzzleId);
     if (wasFavorite !== isFavorite) {
-      const oldFavorites =
-        this[getCommonSetting]("favoritePuzzles") ?? defaultFavoritePuzzles;
+      const oldFavorites = this.storedFavoritePuzzles();
       const newFavorites = isFavorite
         ? [...oldFavorites, puzzleId].sort()
         : oldFavorites.filter((id) => id !== puzzleId);
@@ -325,7 +334,7 @@ class Settings {
     // with any existing record in case another tab has edited it.
     // Remove any keys that end up with undefined values after merging.
     const current = await this.getCommonSettings();
-    const merged = Object.entries({ ...current, ...record }).filter(
+    const merged = Object.entries<unknown>({ ...current, ...record }).filter(
       ([, value]) => value !== undefined,
     );
     const updated = Object.fromEntries(merged) as CommonSettings;
@@ -336,11 +345,9 @@ class Settings {
     });
   }
 
-  private async getPuzzleSettings(
-    puzzleId: PuzzleId,
-  ): Promise<PuzzleSettings | undefined> {
+  private async getPuzzleSettings(puzzleId: PuzzleId): Promise<PuzzleSettings | null> {
     const record = await db.settings.get(puzzleId);
-    return record?.type === "puzzle" ? record.data : undefined;
+    return record?.type === "puzzle" ? record.data : null;
   }
 
   /**
@@ -356,7 +363,7 @@ class Settings {
     const puzzleRecord = await this.getPuzzleSettings(puzzleId);
     return {
       ...defaults,
-      ...commonPuzzlePreferences,
+      ...(commonPuzzlePreferences === UNSET ? {} : commonPuzzlePreferences),
       ...puzzleRecord?.puzzlePreferences,
     };
   }
@@ -404,15 +411,16 @@ class Settings {
     return { commonPreferences, puzzlePreferences };
   }
 
-  async getParams(puzzleId: PuzzleId): Promise<string | undefined> {
+  async getParams(puzzleId: PuzzleId): Promise<string | null> {
     const puzzleRecord = await this.getPuzzleSettings(puzzleId);
-    return puzzleRecord?.params;
+    return puzzleRecord?.params ?? null;
   }
 
-  async setParams(puzzleId: PuzzleId, params?: string): Promise<void> {
+  /** Passing `null` clears the key rather than storing it. */
+  async setParams(puzzleId: PuzzleId, params: string | null): Promise<void> {
     const { params: _, ...current } = (await this.getPuzzleSettings(puzzleId)) ?? {};
     const updated: PuzzleSettings =
-      params === undefined
+      params === null
         ? current
         : {
             ...current,
@@ -427,19 +435,19 @@ class Settings {
 
   /** The board this puzzle last dealt — see `PuzzleSettings.lastGameId` for why
    * it lives here rather than in the autosave table. */
-  async getLastGameId(puzzleId: PuzzleId): Promise<string | undefined> {
+  async getLastGameId(puzzleId: PuzzleId): Promise<string | null> {
     const puzzleRecord = await this.getPuzzleSettings(puzzleId);
-    return puzzleRecord?.lastGameId;
+    return puzzleRecord?.lastGameId ?? null;
   }
 
-  /** Passing `undefined` clears the key rather than storing it, matching
+  /** Passing `null` clears the key rather than storing it, matching
    * `setParams` — a remembered board this build can no longer deal is forgotten,
    * not recorded as absent. */
-  async setLastGameId(puzzleId: PuzzleId, lastGameId?: string): Promise<void> {
+  async setLastGameId(puzzleId: PuzzleId, lastGameId: string | null): Promise<void> {
     const { lastGameId: _, ...current } =
       (await this.getPuzzleSettings(puzzleId)) ?? {};
     const updated: PuzzleSettings =
-      lastGameId === undefined ? current : { ...current, lastGameId };
+      lastGameId === null ? current : { ...current, lastGameId };
     await db.settings.put({
       id: puzzleId,
       type: "puzzle",

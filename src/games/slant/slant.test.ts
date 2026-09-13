@@ -328,11 +328,11 @@ describe("slant generator (behavioral)", () => {
 describe("slant midend integration", () => {
   it("save -> load round-trips a game in progress", () => {
     const me = new Midend(slantGame);
-    expect(me.newGameFromId(`5x5:${FIXTURE.desc}`)).toBeUndefined();
+    expect(me.newGameFromId(`5x5:${FIXTURE.desc}`)).toBeNull();
     me.playMoves([set(0, 0, -1), set(1, 1, 1)]);
     const saved = me.saveGame();
     const me2 = new Midend(slantGame);
-    expect(me2.loadGame(saved)).toBeUndefined();
+    expect(me2.loadGame(saved)).toBeNull();
     expect(me2.formatAsText()).toBe(me.formatAsText());
   });
 

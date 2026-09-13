@@ -140,7 +140,7 @@ export function validateDesc(params: MapParams, desc: string): string | null {
     }
     // A clue is one of the four map colors.
     const color = digitValue(tok.value);
-    if (color === undefined || color > 3) return "Unexpected character in clue list";
+    if (color === null || color > 3) return "Unexpected character in clue list";
     area++;
   }
   if (area < n) return "Too little data in clue list";

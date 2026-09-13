@@ -267,7 +267,7 @@ export function validateDesc(p: TowersParams, desc: string): string | null {
         squares += ch.charCodeAt(0) - 97 + 1;
       } else if (ch === "_") {
         // separator, no cell
-      } else if (digit !== undefined && digit >= 1) {
+      } else if (digit !== null && digit >= 1) {
         const { value: val, next } = parseLeadingInt(desc, i - 1);
         i = next;
         if (val < 1 || val > w) return "Out-of-range number in grid description";
@@ -311,7 +311,7 @@ export function newState(p: TowersParams, desc: string): TowersState {
         pos += ch.charCodeAt(0) - 97 + 1;
       } else if (ch === "_") {
         // separator
-      } else if (digit !== undefined && digit >= 1) {
+      } else if (digit !== null && digit >= 1) {
         const { value: val, next } = parseLeadingInt(desc, i - 1);
         i = next;
         grid[pos] = val;

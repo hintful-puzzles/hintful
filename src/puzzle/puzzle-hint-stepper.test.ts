@@ -29,12 +29,12 @@ function makePuzzle(overrides: Partial<Record<string, unknown>> = {}): {
   puzzle: Puzzle;
   calls: string[];
   workerPuzzle: RemoteWorkerPuzzle;
-  setHintError: (e: string | undefined) => void;
-  setExecuteError: (e: string | undefined) => void;
+  setHintError: (e: string | null) => void;
+  setExecuteError: (e: string | null) => void;
 } {
   const calls: string[] = [];
-  let hintError: string | undefined;
-  let executeError: string | undefined;
+  let hintError: string | null = null;
+  let executeError: string | null = null;
   const workerPuzzle = {
     hint: vi.fn(async () => {
       calls.push("show");
@@ -139,7 +139,7 @@ function makeSlowPuzzle() {
     new Promise<void>((resolve) => {
       pending.push(resolve);
     });
-  let hintError: string | undefined;
+  let hintError: string | null = null;
   const base = makePuzzle({
     hint: vi.fn(async () => {
       base.calls.push("show");
@@ -149,7 +149,7 @@ function makeSlowPuzzle() {
     executeHint: vi.fn(async () => {
       base.calls.push("apply");
       await gate();
-      return undefined;
+      return null;
     }),
   });
   const release = async () => {
@@ -159,7 +159,7 @@ function makeSlowPuzzle() {
   return {
     ...base,
     release,
-    setHintError: (e: string | undefined) => {
+    setHintError: (e: string | null) => {
       hintError = e;
     },
   };
@@ -177,7 +177,7 @@ describe("Hint presses coalesce while one is in flight (coalesce-hint-requests)"
     expect(puzzle.hintArmedToApply).toBe(false);
     await release();
     await first;
-    expect(await Promise.all(dropped)).toEqual([undefined, undefined]);
+    expect(await Promise.all(dropped)).toEqual([null, null]);
     expect(puzzle.hintArmedToApply).toBe(true);
     // The next press is the apply — the rhythm survived the dropped presses.
     const apply = puzzle.hint();
@@ -198,7 +198,7 @@ describe("Hint presses coalesce while one is in flight (coalesce-hint-requests)"
     expect(calls).toEqual(["show", "apply"]);
     await release();
     await apply;
-    expect(await dropped).toBeUndefined();
+    expect(await dropped).toBeNull();
     const next = puzzle.hint();
     await release();
     await next;

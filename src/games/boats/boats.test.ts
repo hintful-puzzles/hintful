@@ -596,9 +596,9 @@ describe("boats solve", () => {
     const p = presetParams(0);
     const { desc } = newBoatsDesc(p, randomNew("boats-midend-solve"));
     const midend = new Midend(boatsGame);
-    expect(midend.newGameFromId(`${encodeParams(p, true)}:${desc}`)).toBeUndefined();
+    expect(midend.newGameFromId(`${encodeParams(p, true)}:${desc}`)).toBeNull();
 
-    expect(midend.solve()).toBeUndefined();
+    expect(midend.solve()).toBeNull();
     // Solve must actually finish the game and mark it solved-with-help, not
     // merely fill some squares in (docs/games/solver-and-generator.md § "Solve
     // and the generator's aux").
@@ -617,7 +617,7 @@ describe("boats solve", () => {
 
     const saved = midend.saveGame();
     const restored = new Midend(boatsGame);
-    expect(restored.loadGame(saved)).toBeUndefined();
+    expect(restored.loadGame(saved)).toBeNull();
     expect(restored.formatAsText()).toBe(midend.formatAsText());
   });
 
@@ -846,11 +846,11 @@ describe("boats textFormat", () => {
     const p = presetParams(0);
     const state = generated(p, "boats-text-1");
     const text = textFormat(state);
-    expect(text).toBeDefined();
+    expect(typeof text).toBe("string");
     expect(text?.split("\n")).toHaveLength(p.h + 1);
 
     const big = params({ w: 10, h: 12, fleet: 5, fleetData: defaultFleet(5) });
-    expect(textFormat(generated(big, "boats-text-2"))).toBeUndefined();
+    expect(textFormat(generated(big, "boats-text-2"))).toBeNull();
   });
 });
 

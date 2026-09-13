@@ -84,12 +84,12 @@ function harness() {
     () => {},
     () => {},
   );
-  const status = (): GameStatus | undefined =>
+  const status = (): GameStatus | null =>
     (
       [...notes].reverse().find((n) => n.type === "game-state-change") as
         | Extract<ChangeNotification, { type: "game-state-change" }>
         | undefined
-    )?.status;
+    )?.status ?? null;
   return { m, status };
 }
 
@@ -253,11 +253,11 @@ describe("bricks input", () => {
 describe("bricks completion and solve (through a real Midend)", () => {
   it("Solve completes the board as solved-with-help", () => {
     const { m, status } = harness();
-    expect(m.newGameFromId(FIX_ID)).toBeUndefined();
-    expect(m.solve()).toBeUndefined();
+    expect(m.newGameFromId(FIX_ID)).toBeNull();
+    expect(m.solve()).toBeNull();
     expect(status()).toBe("solved-with-help");
     const text = m.formatAsText();
-    expect(text).toBeDefined();
+    expect(typeof text).toBe("string");
     expect(text).not.toContain("."); // no cell left empty
   });
 
@@ -280,7 +280,7 @@ describe("bricks completion and solve (through a real Midend)", () => {
 
   it("saveGame -> loadGame restores an equivalent game", () => {
     const me = new Midend(bricksGame);
-    expect(me.newGameFromId(FIX_ID)).toBeUndefined();
+    expect(me.newGameFromId(FIX_ID)).toBeNull();
     const blank = newState(FIX_PARAMS, FIX.desc).grid.findIndex(
       (c) => (c & COL_MASK) === F_EMPTY,
     );
@@ -290,7 +290,7 @@ describe("bricks completion and solve (through a real Midend)", () => {
     ] as BricksMove[]);
     const saved = me.saveGame();
     const me2 = new Midend(bricksGame);
-    expect(me2.loadGame(saved)).toBeUndefined();
+    expect(me2.loadGame(saved)).toBeNull();
     expect(me2.formatAsText()).toBe(me.formatAsText());
   });
 });

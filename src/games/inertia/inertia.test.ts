@@ -445,7 +445,7 @@ describe("inertia deaths tally", () => {
   it("counts a death once, and undo/redo does not re-count it", () => {
     const { params, desc } = board(["Smbbg", "wwwww"]);
     const { m, status } = harness();
-    expect(m.newGameFromId(`${params.w}x${params.h}:${desc}`)).toBeUndefined();
+    expect(m.newGameFromId(`${params.w}x${params.h}:${desc}`)).toBeNull();
 
     // Drive the death through the real input path, so `justMadeMove` is set
     // exactly as it is in play.
@@ -463,7 +463,7 @@ describe("inertia deaths tally", () => {
   it("counts the gems left in the status bar, and announces completion", () => {
     const { params, desc } = board(["Sggb", "wwww"]);
     const { m, status } = harness();
-    expect(m.newGameFromId(`${params.w}x${params.h}:${desc}`)).toBeUndefined();
+    expect(m.newGameFromId(`${params.w}x${params.h}:${desc}`)).toBeNull();
     expect(status()).toBe("Gems: 2");
 
     m.processInput(0, 0, key("right"));
@@ -665,15 +665,15 @@ describe("inertia generator", () => {
 describe("inertia save round-trip", () => {
   it("restores a solved-with-help game, route and all", () => {
     const { m } = harness();
-    expect(m.newGameFromId(SEED_ID)).toBeUndefined();
-    expect(m.solve()).toBeUndefined();
+    expect(m.newGameFromId(SEED_ID)).toBeNull();
+    expect(m.solve()).toBeNull();
     m.processInput(0, 0, 0x020d); // Enter: follow one step of the route
 
     const before = m.formatAsText();
     const saved = m.saveGame();
 
     const restored = harness();
-    expect(restored.m.loadGame(saved)).toBeUndefined();
+    expect(restored.m.loadGame(saved)).toBeNull();
     expect(restored.m.formatAsText()).toBe(before);
     // The route is rebuilt by replaying the solve move, so the arrow is back.
     expect(restored.status()).toContain("Auto-solver used.");

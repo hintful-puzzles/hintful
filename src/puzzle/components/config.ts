@@ -63,7 +63,7 @@ abstract class PuzzleConfigForm extends SignalWatcher(LitElement) {
   protected _title = signal<string>("");
 
   @state()
-  protected config?: ConfigDescription;
+  protected config: ConfigDescription | null = null;
 
   @state()
   protected values: ConfigValues = {};
@@ -80,9 +80,9 @@ abstract class PuzzleConfigForm extends SignalWatcher(LitElement) {
   protected error?: string;
 
   protected abstract submitEventType: string;
-  protected abstract getConfig(): Promise<ConfigDescription | undefined>;
+  protected abstract getConfig(): Promise<ConfigDescription | null>;
   protected abstract getValues(): Promise<ConfigValues>;
-  protected abstract setValues(values: ConfigValues): Promise<string | undefined>;
+  protected abstract setValues(values: ConfigValues): Promise<string | null>;
 
   protected async loadConfig(): Promise<void> {
     this.config = await this.getConfig();
@@ -408,7 +408,7 @@ export class PuzzleCustomParamsForm extends PuzzleConfigForm {
   protected override submitEventType = "puzzle-custom-params-change";
 
   protected override async getConfig() {
-    return this.puzzle?.getCustomParamsConfig();
+    return (await this.puzzle?.getCustomParamsConfig()) ?? null;
   }
 
   protected override async getValues() {
@@ -416,23 +416,24 @@ export class PuzzleCustomParamsForm extends PuzzleConfigForm {
   }
 
   protected override async setValues(values: ConfigValues) {
-    return this.puzzle?.setCustomParams(values);
+    return (await this.puzzle?.setCustomParams(values)) ?? null;
   }
 
   /**
    * Return encoded params for current form values
    */
-  async getParams(): Promise<string | undefined> {
+  async getParams(): Promise<string | null> {
     if (this.puzzle) {
       const result = await this.puzzle.encodeCustomParams({
         ...this.values,
         ...this.changes,
       });
-      if (!result.startsWith("#ERROR:")) {
-        return result;
+      if (result.ok) {
+        return result.params;
       }
-      console.warn(`PuzzleCustomParamsForm.getParams: ${result}`);
+      console.warn(`PuzzleCustomParamsForm.getParams: ${result.error}`);
     }
+    return null;
   }
 }
 
@@ -444,7 +445,7 @@ export class PuzzlePreferencesForm extends PuzzleConfigForm {
   protected override submitEventType = "puzzle-preferences-change";
 
   protected override async getConfig() {
-    return this.puzzle?.getPreferencesConfig();
+    return (await this.puzzle?.getPreferencesConfig()) ?? null;
   }
 
   protected override async getValues() {
@@ -452,11 +453,9 @@ export class PuzzlePreferencesForm extends PuzzleConfigForm {
   }
 
   protected override async setValues(values: ConfigValues) {
-    const result = await this.puzzle?.setPreferences(values);
-    if (!result) {
-      await this.puzzle?.redraw();
-    }
-    return result;
+    await this.puzzle?.setPreferences(values);
+    await this.puzzle?.redraw();
+    return null;
   }
 }
 
@@ -610,8 +609,8 @@ export class PuzzleCustomParamsDialog extends PuzzleConfigDialog {
     `;
   }
 
-  async getParams(): Promise<string | undefined> {
-    return this.form?.getParams();
+  async getParams(): Promise<string | null> {
+    return (await this.form?.getParams()) ?? null;
   }
 }
 

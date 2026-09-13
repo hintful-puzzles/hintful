@@ -506,7 +506,7 @@ function driven(id: string) {
     (n) => notes.push(n),
     () => {},
   );
-  expect(me.newGameFromId(id)).toBeUndefined();
+  expect(me.newGameFromId(id)).toBeNull();
   const statusBar = () =>
     [...notes]
       .reverse()
@@ -521,7 +521,7 @@ describe("netslide solve and save", () => {
   it("solves a freshly generated game", () => {
     const { me, statusBar } = driven("5x5b1#solve-seed");
     expect(statusBar()).toContain("Active:");
-    expect(me.solve()).toBeUndefined();
+    expect(me.solve()).toBeNull();
     // Upstream reports moves-since-auto-solve rather than a completion once the
     // solver has been used.
     expect(statusBar()).toContain("Moves since auto-solve:");
@@ -534,7 +534,7 @@ describe("netslide solve and save", () => {
     // grid is recovered from the board itself instead (`reconstruct.ts`).
     const { desc } = newDesc(EASY_5x5, randomNew("no-aux"));
     const { me, statusBar } = driven(`5x5b1:${desc}`);
-    expect(me.solve()).toBeUndefined();
+    expect(me.solve()).toBeNull();
     expect(statusBar()).toContain("Active: 25/25");
   });
 
@@ -552,7 +552,7 @@ describe("netslide solve and save", () => {
       () => {},
       () => {},
     );
-    expect(me2.loadGame(saved)).toBeUndefined();
+    expect(me2.loadGame(saved)).toBeNull();
 
     // The restored board must *draw* identically, not merely report the same
     // move count. The playing midend still has the last slide's animation armed,

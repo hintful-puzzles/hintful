@@ -288,7 +288,7 @@ describe("Midend status + solve", () => {
   it("using the solver yields solved-with-help", () => {
     const h = harness();
     h.m.newGame();
-    expect(h.m.solve()).toBeUndefined();
+    expect(h.m.solve()).toBeNull();
     expect(h.state()?.status).toBe("solved-with-help");
   });
 
@@ -331,7 +331,7 @@ describe("Midend params + presets", () => {
 
   it("setParams validates and rejects bad params", () => {
     const m = new Midend(fakeGame);
-    expect(m.setParams("t5")).toBeUndefined();
+    expect(m.setParams("t5")).toBeNull();
     expect(m.getParams()).toBe("t5");
     expect(m.setParams("garbage")).toMatch(/Invalid parameters/);
     expect(m.setParams("t0")).toBe("target must be positive");
@@ -340,7 +340,7 @@ describe("Midend params + presets", () => {
   it("newGameFromId rebuilds from a descriptive id", () => {
     const h = harness();
     h.m.newGame();
-    expect(h.m.newGameFromId("t4:g4-7")).toBeUndefined();
+    expect(h.m.newGameFromId("t4:g4-7")).toBeNull();
     expect(h.m.getParams()).toBe("t4");
     h.m.processInput(0, 0, LEFT_BUTTON);
     expect(h.m.formatAsText()).toBe("count=1");
@@ -372,7 +372,7 @@ describe("Midend params + presets", () => {
     // `currentGameId`, whose params are lossy on purpose: reopening a tiered
     // puzzle by the latter drops it to its default difficulty.
     const h = harness(tieredGame());
-    expect(h.m.setParams("t3d1")).toBeUndefined();
+    expect(h.m.setParams("t3d1")).toBeNull();
     h.m.newGame();
     const id = h.last("game-id-change") as Extract<
       ChangeNotification,
@@ -395,7 +395,7 @@ describe("Midend params + presets", () => {
     // arm is here deliberately — it pins the sharing id's documented lossiness
     // so the two ids cannot quietly converge and make the distinction dead.
     const h = harness(tieredGame());
-    expect(h.m.setParams("t3d1")).toBeUndefined();
+    expect(h.m.setParams("t3d1")).toBeNull();
     h.m.newGame();
     const id = h.last("game-id-change") as Extract<
       ChangeNotification,
@@ -403,11 +403,11 @@ describe("Midend params + presets", () => {
     >;
 
     const restored = harness(tieredGame());
-    expect(restored.m.newGameFromId(id.restoreGameId)).toBeUndefined();
+    expect(restored.m.newGameFromId(id.restoreGameId)).toBeNull();
     expect(restored.m.getParams()).toBe("t3d1");
 
     const shared = harness(tieredGame());
-    expect(shared.m.newGameFromId(id.currentGameId)).toBeUndefined();
+    expect(shared.m.newGameFromId(id.currentGameId)).toBeNull();
     expect(shared.m.getParams()).toBe("t3d0");
   });
 
@@ -438,7 +438,7 @@ describe("Midend params + presets", () => {
 
     // But a descriptive id hands over a finished board: nothing is generated,
     // so the generation-only bound must not apply.
-    expect(h.m.newGameFromId("t9:g9-7")).toBeUndefined();
+    expect(h.m.newGameFromId("t9:g9-7")).toBeNull();
     expect(h.m.getParams()).toBe("t9");
 
     // A bound that is NOT generation-only still refuses on the desc arm.
@@ -503,7 +503,7 @@ describe("Midend.requestKeys forwards Game.requestKeys", () => {
     // defaultParams ⇒ target 3
     expect(m.requestKeys()).toEqual([{ button: 49, label: "3" }]);
     // params drive the hook: switch presets and the keys follow
-    expect(m.setParams("t7")).toBeUndefined();
+    expect(m.setParams("t7")).toBeNull();
     expect(m.requestKeys()).toEqual([{ button: 49, label: "7" }]);
   });
 });
@@ -804,7 +804,7 @@ describe("Midend hint plan lifecycle", () => {
   });
 
   it("hint() stores a plan and displays its first step", () => {
-    expect(h.m.hint()).toBeUndefined();
+    expect(h.m.hint()).toBeNull();
     expect(explanation()).toBe("Increment the counter to 1");
   });
 
@@ -823,11 +823,11 @@ describe("Midend hint plan lifecycle", () => {
     h.m.processInput(0, 0, LEFT_BUTTON);
     expect(explanation()).toBeUndefined();
     // Asking again re-displays from the stored plan instantly.
-    expect(h.m.hint()).toBeUndefined();
+    expect(h.m.hint()).toBeNull();
     expect(explanation()).toBe("Increment the counter to 2");
     h.m.processInput(0, 0, LEFT_BUTTON);
     expect(explanation()).toBeUndefined();
-    expect(h.m.hint()).toBeUndefined();
+    expect(h.m.hint()).toBeNull();
     expect(explanation()).toBe("Increment the counter to 3");
     expect(c.hintCalls()).toBe(1);
   });
@@ -861,7 +861,7 @@ describe("Midend hint plan lifecycle", () => {
     // Completing the journey's last leg hides (step 3 is unflagged).
     h.m.processInput(0, 0, LEFT_BUTTON);
     expect(explanation()).toBeUndefined();
-    expect(h.m.hint()).toBeUndefined();
+    expect(h.m.hint()).toBeNull();
     expect(explanation()).toBe("Increment the counter to 3");
     expect(c.hintCalls()).toBe(1);
   });
@@ -876,7 +876,7 @@ describe("Midend hint plan lifecycle", () => {
     h.m.processInput(0, 0, LEFT_BUTTON);
     h.m.processInput(0, 0, LEFT_BUTTON);
     expect(explanation()).toBeUndefined();
-    expect(h.m.hint()).toBeUndefined();
+    expect(h.m.hint()).toBeNull();
     expect(explanation()).toBe("Increment the counter to 3");
     expect(c.hintCalls()).toBe(1);
   });
@@ -888,7 +888,7 @@ describe("Midend hint plan lifecycle", () => {
     h.m.hint();
     h.m.processInput(0, 0, LEFT_BUTTON); // completes step 1, hides
     h.m.processInput(0, 0, RIGHT_BUTTON); // off-plan ⇒ plan dropped
-    expect(h.m.hint()).toBeUndefined();
+    expect(h.m.hint()).toBeNull();
     expect(c.hintCalls()).toBe(2); // recomputed from the new state
   });
 
@@ -897,8 +897,8 @@ describe("Midend hint plan lifecycle", () => {
     h = harness(c.game);
     h.m.newGame();
     h.m.hint();
-    expect(h.m.hint()).toBeUndefined();
-    expect(h.m.hint()).toBeUndefined();
+    expect(h.m.hint()).toBeNull();
+    expect(h.m.hint()).toBeNull();
     expect(explanation()).toBe("Increment the counter to 1");
     expect(c.hintCalls()).toBe(1);
   });
@@ -916,7 +916,7 @@ describe("Midend hint plan lifecycle", () => {
     h.m.newGame();
     h.m.hint();
     h.m.processInput(0, 0, RIGHT_BUTTON); // drops the plan (count now -1)
-    expect(h.m.hint()).toBeUndefined();
+    expect(h.m.hint()).toBeNull();
     expect(c.hintCalls()).toBe(2);
     expect(explanation()).toBe("Increment the counter to 0");
   });
@@ -1113,14 +1113,14 @@ describe("Midend re-validates a kept plan (a displayed step is never stale)", ()
   it("skips a continuation step a completed move's side effects already resolved", () => {
     const m = new Midend(strikeGame({ sideEffect: true }));
     m.newGame();
-    expect(m.hint()).toBeUndefined(); // plan: strike 0,1,2; displays step 0
+    expect(m.hint()).toBeNull(); // plan: strike 0,1,2; displays step 0
     expect((m.activeHintStep()?.move as StrikeMove & { i: number }).i).toBe(0);
 
     // Strike candidate 0 — its side effect also strikes candidate 1, so the
     // stored step 1 is now resolved. The midend must advance past it to step 2.
     expect(m.processInput(0, 0, 100)).toBe(true);
     const shown = m.activeHintStep();
-    expect(shown, "a kept journey stays displayed across its legs").toBeDefined();
+    expect(shown, "a kept journey stays displayed across its legs").not.toBeNull();
     expect(
       (shown?.move as StrikeMove & { i: number }).i,
       "the stale step (candidate 1, already struck) must be skipped",
@@ -1166,7 +1166,7 @@ describe("Midend re-validates a kept plan (a displayed step is never stale)", ()
     // beside a board with no hint on it is a label for something that is not
     // there.
     const m = new Midend(strikeGame({ sideEffect: false }));
-    const seen: (unknown | undefined)[] = [];
+    const seen: unknown[] = [];
     m.setCallbacks(
       (n) => {
         if (n.type === "status-bar-change") seen.push(n.hintJourney);
@@ -1174,7 +1174,8 @@ describe("Midend re-validates a kept plan (a displayed step is never stale)", ()
       () => {},
     );
     m.newGame();
-    expect(seen.at(-1)).toBeUndefined();
+    expect(seen.length).toBeGreaterThan(0);
+    expect(seen.at(-1)).toBeNull();
   });
 
   it("a scripted replay drops the stored plan, and hint() recomputes fresh", () => {
@@ -1208,9 +1209,9 @@ describe("Midend executeHint plays the stored plan", () => {
     const c = countingHintGame();
     h = harness(c.game);
     h.m.newGame(); // target 3
-    expect(h.m.executeHint()).toBeUndefined();
-    expect(h.m.executeHint()).toBeUndefined();
-    expect(h.m.executeHint()).toBeUndefined();
+    expect(h.m.executeHint()).toBeNull();
+    expect(h.m.executeHint()).toBeNull();
+    expect(h.m.executeHint()).toBeNull();
     expect(c.hintCalls()).toBe(1);
     expect(h.m.formatAsText()).toBe("count=3");
     expect(h.state()?.status).toBe("solved");
@@ -1222,7 +1223,7 @@ describe("Midend executeHint plays the stored plan", () => {
     const c = countingHintGame();
     h = harness(c.game);
     h.m.newGame();
-    expect(h.m.executeHint()).toBeUndefined();
+    expect(h.m.executeHint()).toBeNull();
     expect(c.hintCalls()).toBe(1);
     expect(h.m.formatAsText()).toBe("count=1");
     // fakeGame has no animation ⇒ the step settles synchronously and
@@ -1235,11 +1236,11 @@ describe("Midend executeHint plays the stored plan", () => {
     h = harness(c.game);
     h.m.newGame(); // target 3
     // Apply step 1 in single-step (Hint-button stepper) mode.
-    expect(h.m.executeHint(true)).toBeUndefined();
+    expect(h.m.executeHint(true)).toBeNull();
     expect(c.hintCalls()).toBe(1);
     expect(h.m.formatAsText()).toBe("count=1"); // the move did land
     // The plan is hidden — no preview of the next step (unlike auto-play).
-    expect(h.m.activeHintStep()).toBeUndefined();
+    expect(h.m.activeHintStep()).toBeNull();
     expect(explanation()).toBeUndefined();
     // …but the plan advanced and is still stored: a fresh hint() re-shows the
     // next step without recomputing (show/apply alternation).
@@ -1255,7 +1256,7 @@ describe("Midend executeHint plays the stored plan", () => {
     h.m.newGame();
     h.m.hint();
     h.m.processInput(0, 0, LEFT_BUTTON); // completes step 1 manually
-    expect(h.m.executeHint()).toBeUndefined(); // plays step 2
+    expect(h.m.executeHint()).toBeNull(); // plays step 2
     expect(c.hintCalls()).toBe(1);
     expect(h.m.formatAsText()).toBe("count=2");
     expect(explanation()).toBe("Increment the counter to 3");
@@ -1267,7 +1268,7 @@ describe("Midend executeHint plays the stored plan", () => {
     h.m.newGame();
     h.m.hint();
     h.m.processInput(0, 0, RIGHT_BUTTON); // off-plan: drops the plan
-    expect(h.m.executeHint()).toBeUndefined();
+    expect(h.m.executeHint()).toBeNull();
     expect(c.hintCalls()).toBe(2);
   });
 

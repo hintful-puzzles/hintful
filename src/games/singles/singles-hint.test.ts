@@ -293,15 +293,15 @@ describe("hintKeepTrack", () => {
   });
 
   it("onTracks a multi-cell step filled one cell at a time, then completes", () => {
-    let step: { move: SinglesMove; highlights?: SinglesHint } | undefined;
-    let state: SinglesState | undefined;
+    let step: { move: SinglesMove; highlights?: SinglesHint } | null = null;
+    let state: SinglesState | null = null;
     for (const seed of ["hint-plan", "sh-1", "sh-2", "sh-3", "two-cell"]) {
       const s = fromSeed({ w: 6, h: 6, diff: "tricky" }, seed);
       const res = singlesGame.hint?.(s);
       if (!res?.ok) continue;
       const multi = res.steps.find((st) => st.move.sets.length === 2);
       if (multi) {
-        step = multi as typeof step;
+        step = multi as { move: SinglesMove; highlights?: SinglesHint };
         state = s;
         break;
       }

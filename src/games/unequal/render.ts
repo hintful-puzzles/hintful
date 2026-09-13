@@ -582,8 +582,8 @@ export function redraw(
 
   // Pack both overlays per cell.
   const index = (x: number, y: number) => y * o + x;
-  ds.hint.pack(hint?.highlights, index, (m) => hintMarkBit(m.n));
-  ds.wrong.packCells(mistakes, index);
+  ds.hint.pack(hint?.highlights ?? null, index, (m) => hintMarkBit(m.n));
+  ds.wrong.packCells(mistakes ?? null, index);
 
   const hchanged =
     ds.cursor.x !== ui.cursor.x ||

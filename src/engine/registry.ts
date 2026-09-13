@@ -40,8 +40,8 @@ export function hasTsGame(puzzleId: string): boolean {
 /** Get the registered Game instance for the given puzzle ID. */
 export function getTsGame(
   puzzleId: string,
-): Game<unknown, unknown, unknown, unknown, unknown> | undefined {
-  return games.get(puzzleId);
+): Game<unknown, unknown, unknown, unknown, unknown> | null {
+  return games.get(puzzleId) ?? null;
 }
 
 /** All registered puzzle ids. Must equal the catalog — see
@@ -50,10 +50,10 @@ export function registeredGameIds(): string[] {
   return [...factories.keys()];
 }
 
-/** Construct the engine core for `puzzleId`, or `undefined` if no game is
+/** Construct the engine core for `puzzleId`, or `null` if no game is
  * registered under that id. */
-export function createTsEngine(puzzleId: string): EngineCore | undefined {
-  return factories.get(puzzleId)?.();
+export function createTsEngine(puzzleId: string): EngineCore | null {
+  return factories.get(puzzleId)?.() ?? null;
 }
 
 /** Test-only: drop all registrations. */

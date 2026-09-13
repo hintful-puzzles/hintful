@@ -379,13 +379,13 @@ export function status(s: AbcdState): "solved" | "ongoing" {
  * ASCII rendering for the share-as-text panel (upstream `game_text_format`):
  * the `A…` letters in the top-left gutter, the edge clues on the top and left
  * borders, an outlined `w × h` grid of entered letters (`.` for empty), and a
- * `+`/`*` corner cue for the no-diagonal-touch mode. Returns `undefined` when a
+ * `+`/`*` corner cue for the no-diagonal-touch mode. Returns `null` when a
  * clue could be two digits (`w ≥ 19` or `h ≥ 19`), which is upstream's
  * `game_can_format_as_text_now` (docs/games/mechanics.md § "Capability flags").
  */
-export function textFormat(state: AbcdState): string | undefined {
+export function textFormat(state: AbcdState): string | null {
   const { w, h, n } = state.params;
-  if (w >= 19 || h >= 19) return undefined;
+  if (w >= 19 || h >= 19) return null;
   const { grid, numbers } = state;
 
   const rw = (w + n) * 2 + 1; // row width, incl. the trailing newline column

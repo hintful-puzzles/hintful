@@ -98,7 +98,7 @@ class PWAManager {
   private _allowOfflineUse = computed(() => settings.allowOfflineUse ?? isRunningAsApp);
   private _autoUpdate = computed(() => settings.autoUpdate ?? this.allowOfflineUse);
   private _status = signal<PWAManagerStatus>("uninitialized");
-  private _downloadProgress = signal<number | undefined>(undefined);
+  private _downloadProgress = signal<number | null>(null);
 
   private wb?: Workbox;
 
@@ -176,7 +176,7 @@ class PWAManager {
     return this._status.get();
   }
 
-  get downloadProgress(): number | undefined {
+  get downloadProgress(): number | null {
     return this._downloadProgress.get();
   }
 
@@ -359,7 +359,7 @@ class PWAManager {
         break;
       }
       case "PRECACHE_COMPLETE":
-        this._downloadProgress.set(undefined);
+        this._downloadProgress.set(null);
         break;
     }
   };

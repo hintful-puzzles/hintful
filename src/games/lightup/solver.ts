@@ -278,7 +278,7 @@ function discountSet(
   state: LightupState,
   scratch: Scratch[],
   rec?: LightupRecorder,
-  source?: DiscountSource,
+  source: DiscountSource | null = null,
 ): boolean {
   const n = scratch.length;
   if (n === 0) return false;
@@ -351,7 +351,12 @@ function discountUnlit(
       scratch.push({ x: pt.x, y: pt.y, n: 0 });
     }
   }
-  return discountSet(state, scratch, rec, rec && { kind: "unlit", dark: { x, y } });
+  return discountSet(
+    state,
+    scratch,
+    rec,
+    rec ? { kind: "unlit", dark: { x, y } } : null,
+  );
 }
 
 /**
@@ -381,11 +386,9 @@ function discountClue(
   if (m < 0 || m > n) return false; // become impossible
 
   let didsth = false;
-  const source: DiscountSource | undefined = rec && {
-    kind: "clue",
-    clue: { x, y },
-    n: clue,
-  };
+  const source: DiscountSource | null = rec
+    ? { kind: "clue", clue: { x, y }, n: clue }
+    : null;
   const combi = new Combi(n - m + 1, n);
   while (combi.next()) {
     const scratch: Scratch[] = combi.a.map((j) => ({ ...sempty[j], n: 0 }));

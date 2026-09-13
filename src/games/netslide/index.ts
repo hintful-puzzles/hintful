@@ -287,7 +287,7 @@ export const netslideGame: Game<
   // board instead (`reconstruct.ts`), so Solve — and Hint — work on any board a
   // player can actually be looking at.
   solve: (_orig, curr, aux): SolveResult<NetslideMove> => {
-    const tiles = parseAux(aux, curr.w * curr.h) ?? reconstructSolution(curr);
+    const tiles = parseAux(aux ?? null, curr.w * curr.h) ?? reconstructSolution(curr);
     if (!tiles) return { ok: false, error: "Solution not known for this puzzle" };
     return { ok: true, move: { type: "solve", tiles: Array.from(tiles) } };
   },

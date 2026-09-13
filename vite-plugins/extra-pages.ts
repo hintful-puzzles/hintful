@@ -401,7 +401,7 @@ export const extraPages = (options: ExtraPagesPluginOptions = {}): Plugin => {
 
   async function renderPage(
     urlPathname: string,
-    transforms: Transform[] | undefined,
+    transforms: Transform[] | null,
     pluginContext: MinimalPluginContextWithoutEnvironment,
     initialData: TransformData = {},
     sourceFile?: string, // absolute path
@@ -732,8 +732,8 @@ export const extraPages = (options: ExtraPagesPluginOptions = {}): Plugin => {
     },
 
     async load(id) {
-      const pagesSet: BuildPagesSet | undefined =
-        this.getModuleInfo(id)?.meta?.[PLUGIN_ID]?.pagesSet;
+      const pagesSet: BuildPagesSet | null =
+        this.getModuleInfo(id)?.meta?.[PLUGIN_ID]?.pagesSet ?? null;
       if (pagesSet) {
         const page = pagesSet.pages.get(id);
         if (!page) {
@@ -742,7 +742,7 @@ export const extraPages = (options: ExtraPagesPluginOptions = {}): Plugin => {
         }
         const html = await renderPage(
           cleanUrl(id),
-          pagesSet.transforms,
+          pagesSet.transforms ?? null,
           this,
           page.data,
           page.sourceFile,
@@ -763,7 +763,7 @@ export const extraPages = (options: ExtraPagesPluginOptions = {}): Plugin => {
         for (const [id, page] of pagesSet.pages) {
           const content = await renderPage(
             cleanUrl(id),
-            pagesSet.transforms,
+            pagesSet.transforms ?? null,
             this,
             page.data,
             page.sourceFile,
@@ -794,7 +794,7 @@ const HELP_STYLESHEET = "src/css/help.css";
 
 /** The `.icon-*` rules `help.css` defines, read once per build. Lazily, because
  * `renderMarkdown` is constructed before a build begins. */
-let helpIconRules: Set<string> | undefined;
+let helpIconRules: Set<string> | null = null;
 
 /**
  * The names `help.css` defines a picture for.

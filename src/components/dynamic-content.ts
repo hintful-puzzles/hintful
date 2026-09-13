@@ -67,7 +67,7 @@ export class DynamicContent extends LitElement {
   async addItem<T extends TagName>({
     tagName,
     render,
-  }: DynamicContentItem<T>): Promise<HTMLElementTagNameMap[T] | null | undefined> {
+  }: DynamicContentItem<T>): Promise<HTMLElementTagNameMap[T] | null> {
     let element = this.querySelector(tagName);
     if (element) {
       return element;

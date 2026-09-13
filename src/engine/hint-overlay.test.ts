@@ -38,7 +38,7 @@ describe("a newly displayed hint repaints a warm, otherwise-unchanged frame", ()
         const params = firstLeaf(game.presets());
         const id = `${game.encodeParams(params, true)}#${name}-${seed}`;
         const err = midend.newGameFromId(id);
-        expect(err, `${name}/${seed}: bad id ${id}`).toBeUndefined();
+        expect(err, `${name}/${seed}: bad id ${id}`).toBeNull();
 
         const palette = game.colors(DEFAULT_BACKGROUND);
 
@@ -53,9 +53,9 @@ describe("a newly displayed hint repaints a warm, otherwise-unchanged frame", ()
           // a cached renderer this frame's *only* difference is the
           // overlay — the exact frame the bug class makes blank.
           const hintErr = midend.hint();
-          expect(hintErr, `${name}/${seed}: hint refused on the board`).toBeUndefined();
+          expect(hintErr, `${name}/${seed}: hint refused on the board`).toBeNull();
           const step = midend.activeHintStep();
-          expect(step, `${name}/${seed}: no step on display`).toBeDefined();
+          expect(step, `${name}/${seed}: no step on display`).not.toBeNull();
           if (!step) return;
 
           const withHint = new RecordingDrawing(palette);

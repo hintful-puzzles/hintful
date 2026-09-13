@@ -359,8 +359,8 @@ describe("towers findMistakes", () => {
 describe("towers Solve via Midend", () => {
   it("solves a freshly generated board and reports solved", () => {
     const me = new Midend(towersGame);
-    expect(me.newGameFromId("6dh#towers-solve")).toBeUndefined();
-    expect(me.solve()).toBeUndefined();
+    expect(me.newGameFromId("6dh#towers-solve")).toBeNull();
+    expect(me.solve()).toBeNull();
     const solved = (me as unknown as { state: TowersState }).state;
     expect(solved.completed).toBe(true);
     expect(towersGame.status(solved)).toBe("solved");
@@ -368,7 +368,7 @@ describe("towers Solve via Midend", () => {
 
   it("save round-trips a played board", () => {
     const me = new Midend(towersGame);
-    expect(me.newGameFromId("5de#towers-save")).toBeUndefined();
+    expect(me.newGameFromId("5de#towers-save")).toBeNull();
     const st = (me as unknown as { state: TowersState }).state;
     const i = [...st.immutable].indexOf(0);
     me.playMoves([
@@ -376,7 +376,7 @@ describe("towers Solve via Midend", () => {
     ]);
     const saved = me.saveGame();
     const me2 = new Midend(towersGame);
-    expect(me2.loadGame(saved)).toBeUndefined();
+    expect(me2.loadGame(saved)).toBeNull();
     expect((me2 as unknown as { state: TowersState }).state.grid[i]).toBe(1);
   });
 });
@@ -545,7 +545,7 @@ describe("towers render", () => {
     // tile was already painted (the move happened a frame earlier) repaints
     // nothing and the red highlight never shows.
     const me = new Midend(towersGame);
-    expect(me.newGameFromId(RENDER_ID)).toBeUndefined();
+    expect(me.newGameFromId(RENDER_ID)).toBeNull();
     const st = (me as unknown as { state: TowersState }).state;
     const sol = solutionGrid(st);
     const w = st.w;

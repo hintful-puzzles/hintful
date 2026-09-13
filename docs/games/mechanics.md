@@ -56,6 +56,48 @@ has held across all 57 games is `index.ts` (the `Game` object + glue),
 `state.ts` (types + codecs), `solver.ts`, `generator.ts`, `render.ts` — see
 [README](./README.md) § "File anatomy".
 
+### Absence is `null`
+
+One spelling of "nothing here", in the engine, the games, the app and the build
+([`ts-engine`](../../openspec/specs/ts-engine/spec.md), "Absence has one
+spelling"):
+
+- **A value that may be absent is `T | null`.** `undefined` is never written as
+  a member of a union — not in a return, a parameter, a member or a variable.
+  What the language means by `undefined`, *not supplied*, is written `?` on an
+  optional parameter or member; a value the language produced that way
+  (`step?.highlights`, `Map.get`, `Array.find`) takes `?? null` where it enters
+  a declared type. A cast describes a value rather than declaring one, so
+  `hint?.highlights as MyHint | undefined` is fine.
+- **Two kinds of nothing get names.** Crossing's `keyDigit` returns a digit,
+  `"clear"` or `null`, and the settings store reads a key nobody stored as
+  `UNSET`, because some settings store `null` on purpose. A `??` written against
+  the result cannot merge one kind into the other.
+- **A failure with nothing to return on success is its reason or `null`**
+  (`validateParams`, `setParams`). **A failure beside a value is a result**,
+  `{ ok: true, … } | { ok: false, error }`, so a refusal cannot hide inside the
+  value: `solve`, `hint`, `encodeCustomParams`.
+
+Why `null` rather than the word the language produces by itself:
+
+- **Every path has to say it.** A declared `T | null` return that falls off the
+  end is a compile error (TS2366); a `T | undefined` return accepts the missing
+  `return` in silence.
+- **It is checkable with no exceptions.**
+  [`absence-spelling.mjs`](../../scripts/checks/absence-spelling.mjs) fails any
+  union naming `undefined`. The rule the other way round would have to exempt
+  every `null` a move or a save carries, and nothing marks which types those are.
+- **It was already this tree's word**, about 750 declared positions against 160
+  when `spell-absence-one-way` measured it.
+
+**A respelling is the one edit the compiler will not check.** `x === null`
+compiles against `number | undefined` and is always false. Moving the digit
+codecs and the key map to `null` left Loopy's and Mosaic's `validateDesc`
+accepting any character and an unmapped key reaching the game, with tsgo and the
+suite green; the same guard fails a strict comparison against a word the value's
+type cannot hold. **Assertions move with it**: `toBeDefined()` passes on `null`,
+so assert a present answer with `not.toBeNull()`.
+
 ## Idiomatic state, not a C transliteration
 
 **Use upstream's C (in git history) as a reference for the logic, never as a
@@ -320,7 +362,7 @@ character arithmetic the two families share.
 
 Whatever the grammar, the digits in it are read and written one way, from
 [`engine/decimal.ts`](../../src/engine/decimal.ts): `isDigit(c)`,
-`digitValue(c)` (`0`–`9` or `undefined`) and `parseLeadingInt(s, pos)` for a run of
+`digitValue(c)` (`0`–`9` or `null`) and `parseLeadingInt(s, pos)` for a run of
 them (`{ value, next }`, with `next === pos` meaning "no number here"). A
 single digit is *written* as `String(n)`. A value above nine takes one of the
 two alphabets in [`engine/desc-alphabet.ts`](../../src/engine/desc-alphabet.ts)
@@ -338,14 +380,15 @@ each into a digit array once, and the string is rebuilt only where the desc,
 the number panel or a hint sentence needs one.
 
 What is yours is the **bound** and what an out-of-range value means, written
-beside the call — `const v = digitValue(tok.value); if (v === undefined || v > 4)
+beside the call — `const v = digitValue(tok.value); if (v === null || v > 4)
 return "Invalid …"` — because Slant's clues stop at `4`, Bricks' at `7` and Bridges'
 at `G`, and those are facts about the puzzle.
 
 **"Not a digit" is outside the type, and a write names its own absent value.**
-`digitValue`, `c2n` and `c2nUpper` return `number | undefined`, so the compiler
-refuses a site until it says what a stray character means: test `undefined`
-explicitly beside your bound rather than trusting the bound to catch it. A
+`digitValue`, `c2n` and `c2nUpper` return `number | null`, so the compiler
+refuses a site until it says what a stray character means: test `null`
+explicitly beside your bound rather than trusting the bound to catch it (the
+spelling is § "Absence is `null`"). A
 write into a typed array names *that array's* absent constant — Filling's
 `?? EMPTY`, Slant's `?? -1` — because a borrowed `-1` in a `Uint8Array` is
 `255`. Where the write is safe only because `validateDesc` screened the
@@ -472,7 +515,7 @@ Solve is [solver & generator](./solver-and-generator.md) § "Solve and the gener
 | `wantsStatusbar` | game writes `statusbarText` | timed games get a `[M:SS]` prefix engine-side |
 | `isTimed` | midend runs the clock while `timingState(state, ui)` is true | browser-verify the tick/freeze/resume — see "Timed games" |
 | `canSolve` | `solve` present | test through a real `Midend` when `aux` matters |
-| `canFormatAsText` | `textFormat` present | may still return `undefined` for params with no rendering (Loopy: square grid only) |
+| `canFormatAsText` | `textFormat` present | may still return `null` for params with no rendering (Loopy: square grid only) |
 | `canMarkAll` | game handles the `M`/`m` key; shell shows the button | see "Pencil marks" |
 | `needsRightButton` | game is unplayable without a secondary action | **nothing reads it today** — eighteen games declare it and the trail ends at `Puzzle.needsRightButton`; the touch affordance is offered to every game unconditionally. Kept pending `audit-input-mode-parity` task 4b.1, which wants the per-game control this is half of |
 | `wantsStylusModifier` | game handles `MOD_STYLUS` itself | **keep false** unless touch has its own behavior; the midend strips the bit for everyone else — [input](./input.md) § "Touch is stripped for you" |
@@ -480,7 +523,7 @@ Solve is [solver & generator](./solver-and-generator.md) § "Solve and the gener
 **A param-dependent capability the static flag can't express: widen the
 return, don't add a hook.** Loopy's text format works on the square lattice
 and none of its other seventeen tilings; the resolution was widening
-`textFormat` to return `string | undefined` — the midend and share dialog
+`textFormat` to return `string | null` — the midend and share dialog
 already treat an absent rendering as "no text panel". A
 `canFormatAsTextNow?(params)` hook would have been a wider surface for one
 adopter, which is the `PointerAction` mistake: a hook shipped speculatively,

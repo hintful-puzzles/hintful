@@ -168,7 +168,7 @@ describe("abcd generable-size bound", () => {
     expect(validateParams(p, false)).toBeNull();
 
     const m = new Midend(abcdGame);
-    expect(m.newGameFromId(`10x10n4:${desc}`)).toBeUndefined();
+    expect(m.newGameFromId(`10x10n4:${desc}`)).toBeNull();
     expect(m.getParams()).toBe("10x10n4");
   });
 });
@@ -225,7 +225,7 @@ describe("abcd solver", () => {
 describe("abcd moves through a Midend", () => {
   it("enters and clears a letter, and toggles a pencil mark", () => {
     const me = new Midend(abcdGame);
-    expect(me.newGameFromId(RENDER_ID)).toBeUndefined();
+    expect(me.newGameFromId(RENDER_ID)).toBeNull();
     const w = stateOf(me).params.w;
 
     me.playMoves([{ type: "enter", x: 1, y: 1, letter: 2 }]);
@@ -361,15 +361,15 @@ describe("abcd moves through a Midend", () => {
 
   it("Solve completes the board and reports solved-with-help", () => {
     const me = new Midend(abcdGame);
-    expect(me.newGameFromId(RENDER_ID)).toBeUndefined();
-    expect(me.solve()).toBeUndefined();
+    expect(me.newGameFromId(RENDER_ID)).toBeNull();
+    expect(me.solve()).toBeNull();
     expect(stateOf(me).completed).toBe(true);
     expect(stateOf(me).cheated).toBe(true);
   });
 
   it("filling in the unique solution completes the board", () => {
     const me = new Midend(abcdGame);
-    expect(me.newGameFromId(RENDER_ID)).toBeUndefined();
+    expect(me.newGameFromId(RENDER_ID)).toBeNull();
     const st = stateOf(me);
     const { w, h } = st.params;
     const sol = solveAbcd(st.params, st.numbers).grid;
@@ -482,7 +482,7 @@ describe("abcd textFormat", () => {
     const st = newState(p, newAbcdDesc(p, randomNew("txt-1")).desc);
     const withA = abcdGame.executeMove(st, { type: "enter", x: 0, y: 0, letter: 0 });
     const text = abcdGame.textFormat?.(withA);
-    expect(text).toBeDefined();
+    expect(typeof text).toBe("string");
     // Asserted as the WHOLE rendering: `toContain("A")`, `toContain(".")` and
     // the like are satisfied by any *superstring* of the character, so they
     // stay green when every empty cell renders as "./" instead of ".". One
@@ -513,7 +513,7 @@ describe("abcd textFormat", () => {
       params: p,
       numbers,
     } as never;
-    expect(abcdGame.textFormat?.(st)).toBeUndefined();
+    expect(abcdGame.textFormat?.(st)).toBeNull();
   });
 });
 
@@ -611,7 +611,7 @@ describe("abcd render", () => {
     // be in the diff cache key or a findMistakes() a frame after the move
     // repaints nothing.
     const me = new Midend(abcdGame);
-    expect(me.newGameFromId(RENDER_ID)).toBeUndefined();
+    expect(me.newGameFromId(RENDER_ID)).toBeNull();
     const st = stateOf(me);
     const sol = solveAbcd(st.params, st.numbers).grid;
     const wrong = (sol[0] + 1) % st.params.n;
@@ -631,14 +631,14 @@ describe("abcd render", () => {
 describe("abcd save round-trip", () => {
   it("restores an equivalent game after some progress", () => {
     const me = new Midend(abcdGame);
-    expect(me.newGameFromId(RENDER_ID)).toBeUndefined();
+    expect(me.newGameFromId(RENDER_ID)).toBeNull();
     me.playMoves([
       { type: "enter", x: 0, y: 0, letter: 0 },
       { type: "pencil", x: 1, y: 1, letter: 2 },
     ]);
     const saved = me.saveGame();
     const me2 = new Midend(abcdGame);
-    expect(me2.loadGame(saved)).toBeUndefined();
+    expect(me2.loadGame(saved)).toBeNull();
     expect(Array.from(stateOf(me2).grid)).toEqual(Array.from(stateOf(me).grid));
     expect(Array.from(stateOf(me2).pencil)).toEqual(Array.from(stateOf(me).pencil));
   });

@@ -1,6 +1,6 @@
 import { sleep } from "./timing.ts";
 
-let audioContext: AudioContext | undefined;
+let audioContext: AudioContext | null = null;
 
 async function getAudioContext() {
   let justCreated = false;

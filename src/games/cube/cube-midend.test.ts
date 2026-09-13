@@ -50,7 +50,7 @@ describe("Cube midend lifecycle", () => {
     h = harness();
     // 3x3 cube grid, no blue squares, start in the center (index 4) where
     // every orthogonal roll is legal.
-    expect(h.m.newGameFromId("c3x3:000,4")).toBeUndefined();
+    expect(h.m.newGameFromId("c3x3:000,4")).toBeNull();
   });
 
   it("paints the board on a forced redraw", () => {

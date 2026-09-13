@@ -351,7 +351,7 @@ describe("Flip reshape (regression: black canvas when shapes share a tile size)"
     // exactly 48 — and the same is done for the 5x5 below, which is what makes
     // this a *same-tile* reshape. One shared viewport would give the two boards
     // different tiles, and `setTileSize` would then do the invalidating.
-    expect(me.newGameFromId(`3x3c:${desc3}`)).toBeUndefined();
+    expect(me.newGameFromId(`3x3c:${desc3}`)).toBeNull();
     me.size(flipGame.computeSize(p3, TILE));
     const first = recordingDrawing();
     me.redraw(first.dr);
@@ -365,7 +365,7 @@ describe("Flip reshape (regression: black canvas when shapes share a tile size)"
     // drawstate for the new game; the app's reshape would then call
     // `resizeDrawing` → engine.canvasCleared (we invoke it directly here since
     // this is a midend-level test).
-    expect(me.newGameFromId(`5x5c:${desc5}`)).toBeUndefined();
+    expect(me.newGameFromId(`5x5c:${desc5}`)).toBeNull();
     const reshaped = me.size(flipGame.computeSize(p5, TILE));
     // The claim the test's name makes, asserted rather than assumed: both
     // boards were laid out at the same tile size.
@@ -411,7 +411,7 @@ describe("Flip flash-overlay isolation (regression: wave through every cell)", (
       () => {},
       () => {},
     );
-    expect(me.newGameFromId(`3x3c:${desc}`)).toBeUndefined();
+    expect(me.newGameFromId(`3x3c:${desc}`)).toBeNull();
 
     // Click (0,0), which must not solve this seed's board (so flashLength
     // stays 0); if a changed seed ever makes it solve, pick another seed.
@@ -444,7 +444,7 @@ describe("Flip flash-overlay isolation (regression: wave through every cell)", (
       () => {},
       () => {},
     );
-    expect(me.newGameFromId(`3x3c:${desc}`)).toBeUndefined();
+    expect(me.newGameFromId(`3x3c:${desc}`)).toBeNull();
 
     // Use the solver to find the moves, then play each in turn.
     const initial = flipGame.newState(params, desc);
@@ -503,7 +503,7 @@ describe("Flip animation/redraw lifecycle (regression: clicks not rendered)", ()
         redraws++;
       },
     );
-    expect(me.newGameFromId(`3x3c:${desc}`)).toBeUndefined();
+    expect(me.newGameFromId(`3x3c:${desc}`)).toBeNull();
     expect(timerActive).toBe(false); // settled, no animation yet
     const afterLoad = redraws;
 
@@ -544,11 +544,11 @@ describe("Flip through the midend", () => {
     );
     expect(
       me.newGameFromId(`${flipGame.encodeParams(params, false)}:${desc}`),
-    ).toBeUndefined();
+    ).toBeNull();
 
     // Reveal the solution (a hint move; marks usedSolve), then click
     // the hinted cells via processInput at tile centers.
-    expect(me.solve()).toBeUndefined();
+    expect(me.solve()).toBeNull();
     const tile = flipGame.preferredTileSize ?? 32;
     const border = tile >> 1;
     solved.move.mask.forEach((bit, idx) => {
@@ -574,7 +574,7 @@ describe("Flip through the midend", () => {
       () => {},
       () => {},
     );
-    expect(me2.loadGame(saved)).toBeUndefined();
+    expect(me2.loadGame(saved)).toBeNull();
     expect(me2.formatAsText()).toContain("+");
   });
 });

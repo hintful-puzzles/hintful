@@ -530,9 +530,9 @@ describe("reference-aid affordance", () => {
     // A displayed hint suppresses the aid, so an aid click must clear the hint
     // or it does nothing visible.
     const midend = new Midend(subsetsGame);
-    expect(midend.newGameFromId("4x4n4#aid-dismiss")).toBeUndefined();
-    expect(midend.hint()).toBeUndefined();
-    expect(midend.activeHintStep()).toBeDefined();
+    expect(midend.newGameFromId("4x4n4#aid-dismiss")).toBeNull();
+    expect(midend.hint()).toBeNull();
+    expect(midend.activeHintStep()).not.toBeNull();
     // A tally click is a UI_UPDATE; it must clear the hint.
     const ts = 36;
     const tallyPoint = {
@@ -540,7 +540,7 @@ describe("reference-aid affordance", () => {
       y: Math.floor(0 * 0.75 * ts) + (4 + 2) * 2 * ts,
     };
     midend.processInput(tallyPoint.x, tallyPoint.y, LEFT_BUTTON);
-    expect(midend.activeHintStep()).toBeUndefined();
+    expect(midend.activeHintStep()).toBeNull();
   });
 });
 

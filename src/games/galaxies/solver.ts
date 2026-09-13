@@ -115,7 +115,7 @@ function newRecorder(stopAtFirstFiring: boolean): SolverRecorder {
 
 /** True when this rule should return now — it has a firing and the caller
  * asked for one at a time. */
-function stop(rec: SolverRecorder | undefined): boolean {
+function stop(rec?: SolverRecorder): boolean {
   return rec?.stopAtFirstFiring === true && rec.firing !== null;
 }
 

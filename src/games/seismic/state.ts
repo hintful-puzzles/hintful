@@ -463,7 +463,7 @@ function readDesc(
       erun--;
     }
     const clue = digitValue(c);
-    if (clue !== undefined && clue >= 1) {
+    if (clue !== null && clue >= 1) {
       board.grid[i] = clue;
       board.flags[i] = FM_FIXED;
     }

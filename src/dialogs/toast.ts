@@ -55,7 +55,7 @@ class AppToast extends LitElement {
   type: Required<ToastOptions>["type"] = "info";
 
   @property({ type: String })
-  icon: string | undefined = undefined;
+  icon?: string;
 
   @property({ type: Number })
   duration = 3000;

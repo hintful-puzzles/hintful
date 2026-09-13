@@ -57,16 +57,16 @@ export function n2c(num: number): string {
   return String.fromCharCode(65 + num - 36);
 }
 
-/** The value `c` stands for, or `undefined` if it is not a character of the
+/** The value `c` stands for, or `null` if it is not a character of the
  * alphabet. Not a throw, because this reads descs, which arrive from URLs; and
  * outside the return type, as `digitValue`'s is, so a caller cannot use it
  * without deciding what a stray character means. */
-export function c2n(c: string): number | undefined {
+export function c2n(c: string): number | null {
   const code = c.charCodeAt(0);
   if (code >= 48 && code <= 57) return code - 48;
   if (code >= 97 && code <= 122) return code - 97 + 10;
   if (code >= 65 && code <= 90) return code - 65 + 36;
-  return undefined;
+  return null;
 }
 
 /** How many values the run-length alphabet covers: `0`–`9`, `A`–`Z`. */
@@ -84,12 +84,12 @@ export function n2cUpper(num: number): string {
   return num < 10 ? String(num) : String.fromCharCode(65 + num - 10);
 }
 
-/** The value `c` stands for in a run-length desc, or `undefined` if it is not a
+/** The value `c` stands for in a run-length desc, or `null` if it is not a
  * character of that alphabet — a lowercase letter included, since there it is
  * a blank run and never a value. */
-export function c2nUpper(c: string): number | undefined {
+export function c2nUpper(c: string): number | null {
   const digit = digitValue(c);
-  if (digit !== undefined) return digit;
+  if (digit !== null) return digit;
   const code = c.charCodeAt(0);
-  return code >= 65 && code <= 90 ? code - 65 + 10 : undefined;
+  return code >= 65 && code <= 90 ? code - 65 + 10 : null;
 }

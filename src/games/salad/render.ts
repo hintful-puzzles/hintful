@@ -162,7 +162,7 @@ const GHOST_CROSS = 10;
 const GHOST_CIRCLE = 11;
 
 /** The packed ghost code for what a step writes, or 0 for "nothing". */
-function ghostCode(ghost: "cross" | "circle" | number | undefined): number {
+function ghostCode(ghost?: "cross" | "circle" | number): number {
   if (ghost === undefined) return 0;
   if (ghost === "cross") return GHOST_CROSS << HINT_GHOST_SHIFT;
   if (ghost === "circle") return GHOST_CIRCLE << HINT_GHOST_SHIFT;
@@ -532,14 +532,14 @@ export function redraw(
 
   setDrawFlags(ds, ui, s, cursorShown);
   const flags = ds.gridfs;
-  ds.wrong.packCells(mistakes, (x, y) => y * o + x);
+  ds.wrong.packCells(mistakes ?? null, (x, y) => y * o + x);
 
   // The hint overlay: the shared target/area/marks pack, plus the ghosted entry
   // the step asks for. Both live in `ds.hint`, so both are part of the
   // cache-miss test below (docs/games/rendering.md § "The tile cache and the diff key").
   const hl = hint?.highlights;
   ds.hint.pack(
-    hl,
+    hl ?? null,
     (x, y) => y * o + x,
     (m) => hintMarkBit(m.n),
   );

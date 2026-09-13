@@ -66,7 +66,7 @@ export class PuzzleEndNotification extends SignalWatcher(LitElement) {
       this.puzzle.randomSeed ?? this.puzzle.currentGameId ?? "unknown",
     );
     let message: string;
-    let icon: string | undefined;
+    let icon: string | null = null;
     const actions = [
       html`
         <wa-button autofocus variant="brand" @click=${this.newGame}>

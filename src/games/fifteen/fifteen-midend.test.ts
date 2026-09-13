@@ -51,9 +51,7 @@ describe("Fifteen midend lifecycle", () => {
     // A 4×4 board with the gap at (0,3): tiles 13,14,15 are shifted one
     // cell right of home, so a single rightward slide is legal and the
     // board is not already solved.
-    expect(
-      h.m.newGameFromId("4x4:1,2,3,4,5,6,7,8,9,10,11,12,0,13,14,15"),
-    ).toBeUndefined();
+    expect(h.m.newGameFromId("4x4:1,2,3,4,5,6,7,8,9,10,11,12,0,13,14,15")).toBeNull();
   });
 
   it("paints the board on a forced redraw", () => {
@@ -85,7 +83,7 @@ describe("Fifteen midend lifecycle", () => {
 
   it("surfaces a hint and renders it with the hint color", () => {
     // hint() returns undefined on success.
-    expect(h.m.hint()).toBeUndefined();
+    expect(h.m.hint()).toBeNull();
     const { dr, ops } = recordingDrawing();
     h.m.forceRedraw(dr);
     // The hinted tile is filled with COL_HINT (palette index 4).
@@ -103,7 +101,7 @@ describe("Fifteen midend lifecycle", () => {
     expect(mPrivate.animLength).toBeCloseTo(0.13);
 
     // A hint-executed move stretches to the uniform 1s.
-    expect(h.m.executeHint()).toBeUndefined();
+    expect(h.m.executeHint()).toBeNull();
     expect(mPrivate.animLength).toBeCloseTo(1.0);
     expect(h.m.currentAnimationMs()).toBeCloseTo(1000);
   });

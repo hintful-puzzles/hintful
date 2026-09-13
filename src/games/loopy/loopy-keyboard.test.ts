@@ -433,7 +433,7 @@ function playToCompletionByKeyboard(type: number, w: number, h: number, seed: st
   expect(yes.size).toBeGreaterThan(3);
 
   const midend = new Midend(loopyGame);
-  expect(midend.newGameFromId(`${encodeParams(p, true)}:${desc}`)).toBeUndefined();
+  expect(midend.newGameFromId(`${encodeParams(p, true)}:${desc}`)).toBeNull();
   let s = orig;
   const ui = loopyGame.newUi(s);
   const ds = sizedDrawState(loopyGame, s);
@@ -512,7 +512,7 @@ describe("the cursor is drawn, on an aperiodic tiling", () => {
   function frame(type: number, w: number, h: number, seed: string) {
     const { p, desc, s } = board(type, w, h, seed);
     const midend = new Midend(loopyGame);
-    expect(midend.newGameFromId(`${encodeParams(p, true)}:${desc}`)).toBeUndefined();
+    expect(midend.newGameFromId(`${encodeParams(p, true)}:${desc}`)).toBeNull();
     midend.size(computeSize(p, PREFERRED_TILE_SIZE));
     const capture = () => {
       const rec = new RecordingDrawing(loopyGame.colors(DEFAULT_BACKGROUND));

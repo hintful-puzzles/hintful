@@ -160,9 +160,7 @@ function permitsSearch(game: AnyGame, params: unknown): boolean {
   const tiers = difficultyTiers(game);
   const contract = game.difficulty as DifficultyContract<unknown> | undefined;
   const tier = contract?.tierOf(params);
-  return (
-    tiers !== undefined && typeof tier === "number" && tiers[tier] === "Unreasonable"
-  );
+  return tiers !== null && typeof tier === "number" && tiers[tier] === "Unreasonable";
 }
 
 /**

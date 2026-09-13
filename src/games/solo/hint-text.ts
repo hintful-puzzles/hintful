@@ -45,11 +45,11 @@ function regionName(region: SoloRegion): string {
 
 /** How a chain's last link lines up with this cell, where it is not by row or
  * column (the shared sentence's own default). */
-function lastTie(region: SoloRegion): string | undefined {
+function lastTie(region: SoloRegion): string | null {
   if (region.kind === "block") return "in this cell's block";
   if (region.kind === "diag0" || region.kind === "diag1")
     return "on this cell's diagonal";
-  return undefined;
+  return null;
 }
 
 const g = digitChar;
@@ -90,7 +90,7 @@ export const say = {
 
   /** A set of cells inside `region` accounts for `ns`; with no region, the set
    * is a locked pattern across several lines. */
-  set: (region: SoloRegion | undefined, ns: number[]): string =>
+  set: (region: SoloRegion | null, ns: number[]): string =>
     region
       ? `Other cells in this ${regionName(region)} already account for ${all(ns)}, so ${ns.length === 1 ? "it" : "they"} must be crossed out here.`
       : `A locked pattern of cells across these lines already accounts for ${all(ns)}, so we must cross out ${all(ns)} here.`,

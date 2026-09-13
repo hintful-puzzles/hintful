@@ -741,7 +741,7 @@ function hint(
   _aux?: string,
   _ui?: GroupUi,
 ): HintResult<GroupMove, GroupHint> {
-  return candidateHint(state, undefined, findMistakes, buildSteps);
+  return candidateHint(state, null, findMistakes, buildSteps);
 }
 
 /**

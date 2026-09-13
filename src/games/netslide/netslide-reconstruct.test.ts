@@ -73,7 +73,9 @@ describe("recovering the finished grid", () => {
       const { desc, aux } = netslideGame.newDesc(params, randomNew(seed));
       const state = netslideGame.newState(params, desc);
       const grid = reconstructSolution(state) as Uint8Array;
-      expect(Array.from(grid)).toEqual(Array.from(parseAux(aux, 9) as Uint8Array));
+      expect(Array.from(grid)).toEqual(
+        Array.from(parseAux(aux ?? null, 9) as Uint8Array),
+      );
     }
   });
 

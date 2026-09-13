@@ -83,8 +83,8 @@ describe("the shared color vocabulary", () => {
     // where it is pinned: ink is maximum contrast against the surface and must
     // invert, while a piece's black is the piece's identity — inverting it would
     // tell the player the piece is the other color.
-    expect(darkValue(roles.INK)).toBeUndefined();
-    expect(darkValue(roles.PAPER)).toBeUndefined();
+    expect(darkValue(roles.INK)).toBeNull();
+    expect(darkValue(roles.PAPER)).toBeNull();
     expect(darkValue(colors.BLACK)).toEqual([0, 0, 0]);
     expect(darkValue(colors.WHITE)).toEqual([1, 1, 1]);
   });

@@ -464,9 +464,7 @@ class SolverUsage {
    *  single-digit set). +1 / 0 / -1. */
   private set_(indices: Int32Array, region?: SoloRegion): number {
     const cr = this.cr;
-    const reason: SoloReason | undefined = this.recorder
-      ? { kind: "set", region }
-      : undefined;
+    const reason: SoloReason | null = this.recorder ? { kind: "set", region } : null;
     const grid = this.sGrid;
     const rowidx = this.sRowidx;
     const colidx = this.sColidx;

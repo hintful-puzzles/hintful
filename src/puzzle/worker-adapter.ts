@@ -24,6 +24,7 @@ import type {
   Color,
   ConfigDescription,
   ConfigValues,
+  CustomParamsEncoding,
   FontInfo,
   KeyLabel,
   Point,
@@ -76,7 +77,7 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
   newGame(): void {
     this.engine.newGame();
   }
-  newGameFromId(id: string): string | undefined {
+  newGameFromId(id: string): string | null {
     return this.engine.newGameFromId(id);
   }
   restartGame(): void {
@@ -88,13 +89,13 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
   redo(): void {
     this.engine.redo();
   }
-  solve(): string | undefined {
+  solve(): string | null {
     return this.engine.solve();
   }
-  hint(): string | undefined {
+  hint(): string | null {
     return this.engine.hint();
   }
-  executeHint(hideAfter = false): string | undefined {
+  executeHint(hideAfter = false): string | null {
     return this.engine.executeHint(hideAfter);
   }
   currentAnimationMs(): number {
@@ -127,7 +128,7 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
   getParams(): string {
     return this.engine.getParams();
   }
-  setParams(params: string): string | undefined {
+  setParams(params: string): string | null {
     return this.engine.setParams(params);
   }
   getPresets(): PresetMenuEntry[] {
@@ -140,7 +141,7 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
   getCustomParams(): ConfigValues {
     return this.engine.getCustomParams();
   }
-  setCustomParams(values: ConfigValues): string | undefined {
+  setCustomParams(values: ConfigValues): string | null {
     return this.engine.setCustomParams(values);
   }
   decodeCustomParams(params: string): ConfigValues | string {
@@ -170,7 +171,7 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
       return String(e);
     }
   }
-  encodeCustomParams(values: ConfigValues): string {
+  encodeCustomParams(values: ConfigValues): CustomParamsEncoding {
     return this.engine.encodeCustomParams(values);
   }
   getPreferencesConfig(): ConfigDescription {
@@ -179,8 +180,8 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
   getPreferences(): ConfigValues {
     return this.engine.getPreferences();
   }
-  setPreferences(values: ConfigValues): string | undefined {
-    return this.engine.setPreferences(values);
+  setPreferences(values: ConfigValues): void {
+    this.engine.setPreferences(values);
   }
 
   // --- rendering --------------------------------------------------
@@ -198,13 +199,13 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
   preferredSize(): Size {
     return this.engine.preferredSize();
   }
-  formatAsText(): string | undefined {
+  formatAsText(): string | null {
     return this.engine.formatAsText();
   }
 
   // --- save / load ------------------------------------------------
 
-  loadGame(data: Uint8Array): string | undefined {
+  loadGame(data: Uint8Array): string | null {
     return this.engine.loadGame(data);
   }
   saveGame(): Uint8Array<ArrayBuffer> {

@@ -142,8 +142,8 @@ function refusalsIn(file: string, text: string, out: Found[]): void {
   const sf = ts.createSourceFile(file, text, ts.ScriptTarget.ESNext, true);
   const visit = (n: ts.Node): void => {
     if (ts.isObjectLiteralExpression(n)) {
-      let ok: ts.Expression | undefined;
-      let error: ts.Expression | undefined;
+      let ok: ts.Expression | null = null;
+      let error: ts.Expression | null = null;
       for (const p of n.properties) {
         if (!ts.isPropertyAssignment(p)) continue;
         const name = p.name.getText(sf);
@@ -152,7 +152,7 @@ function refusalsIn(file: string, text: string, out: Found[]): void {
       }
       if (
         ok?.kind === ts.SyntaxKind.FalseKeyword &&
-        error !== undefined &&
+        error !== null &&
         (ts.isStringLiteral(error) || ts.isNoSubstitutionTemplateLiteral(error))
       ) {
         out.push({ message: error.text, file });

@@ -7,6 +7,7 @@ import type {
   Color,
   ConfigDescription,
   ConfigValues,
+  CustomParamsEncoding,
   FontInfo,
   GameStatus,
   KeyLabel,
@@ -168,7 +169,7 @@ export class Puzzle {
     switch (message.type) {
       case "game-id-change": {
         update(this._currentGameId, message.currentGameId);
-        update(this._randomSeed, message.randomSeed);
+        update(this._randomSeed, message.randomSeed ?? null);
         update(this._restoreGameId, message.restoreGameId);
         break;
       }
@@ -237,17 +238,18 @@ export class Puzzle {
    * narrow. Always false for a game without the press. */
   private _hasPencilMarks = signal(false);
   private _params = signal<string>("");
-  private _currentParams = computed<string | undefined>(() =>
-    // The **full** params of the board on screen — difficulty included, which
-    // is what every consumer wants: the type-menu label, the share dialog's
-    // type description, and the keypad/view re-render keys. Only
-    // `restoreGameId` carries them unconditionally: `currentGameId`'s params are
-    // lossy, and a board restored from a descriptive id has no `randomSeed`.
-    this.restoreGameId?.split(":", 1).at(0),
+  private _currentParams = computed<string | null>(
+    () =>
+      // The **full** params of the board on screen — difficulty included, which
+      // is what every consumer wants: the type-menu label, the share dialog's
+      // type description, and the keypad/view re-render keys. Only
+      // `restoreGameId` carries them unconditionally: `currentGameId`'s params
+      // are lossy, and a board restored from a descriptive id has no `randomSeed`.
+      this.restoreGameId?.split(":", 1).at(0) ?? null,
   );
-  private _currentGameId = signal<string | undefined>(undefined);
-  private _randomSeed = signal<string | undefined>(undefined);
-  private _restoreGameId = signal<string | undefined>(undefined);
+  private _currentGameId = signal<string | null>(null);
+  private _randomSeed = signal<string | null>(null);
+  private _restoreGameId = signal<string | null>(null);
   private _canFormatAsText = signal(false);
   private _statusbarText = signal<string>("");
   private _generatingGame = signal<boolean>(false);
@@ -388,11 +390,11 @@ export class Puzzle {
   }
 
   // The encoded game params in effect for the current game.
-  public get currentParams(): string | undefined {
+  public get currentParams(): string | null {
     return this._currentParams.get();
   }
 
-  public get currentGameId(): string | undefined {
+  public get currentGameId(): string | null {
     return this._currentGameId.get();
   }
 
@@ -402,11 +404,11 @@ export class Puzzle {
    * {@link currentGameId} is the one to *show or share*, and its params are
    * deliberately lossy (see `NotifyGameIdChange`).
    */
-  public get restoreGameId(): string | undefined {
+  public get restoreGameId(): string | null {
     return this._restoreGameId.get();
   }
 
-  public get randomSeed(): string | undefined {
+  public get randomSeed(): string | null {
     return this._randomSeed.get();
   }
 
@@ -432,7 +434,7 @@ export class Puzzle {
     this._generatingGame.set(false);
   }
 
-  public async newGameFromId(id: string): Promise<string | undefined> {
+  public async newGameFromId(id: string): Promise<string | null> {
     this.stopAutoHint("");
     this.setAutoHintMessage("");
     this._activeHintExplanation.set("");
@@ -456,13 +458,13 @@ export class Puzzle {
     return this.enqueueInput(() => this.workerPuzzle.redo());
   }
 
-  public async solve(): Promise<string | undefined> {
+  public async solve(): Promise<string | null> {
     this.stopAutoHint("Canceled by manual move");
     return this.workerPuzzle.solve();
   }
 
-  public async hint(): Promise<string | undefined> {
-    if (this._hintInFlight) return undefined;
+  public async hint(): Promise<string | null> {
+    if (this._hintInFlight) return null;
     this._hintInFlight = true;
     const pendingTimer = setTimeout(() => {
       this._hintPending.set(true);
@@ -485,7 +487,7 @@ export class Puzzle {
     }
   }
 
-  private async hintOnce(): Promise<string | undefined> {
+  private async hintOnce(): Promise<string | null> {
     if (this.hintArmedToApply) {
       // Second press with nothing done in between: apply this one step in slow
       // motion and stop — `executeHint(true)` hides the plan on settle rather
@@ -519,10 +521,10 @@ export class Puzzle {
     // the plan now, and arming behind it would make the next manual press
     // apply a step Auto-Hint is already applying.
     if (!this._autoHintActive.get()) this._hintArmedToApply.set(true);
-    return undefined;
+    return null;
   }
 
-  public async executeHint(hideAfter = false): Promise<string | undefined> {
+  public async executeHint(hideAfter = false): Promise<string | null> {
     return this.enqueueInput(() => this.workerPuzzle.executeHint(hideAfter));
   }
 
@@ -632,7 +634,7 @@ export class Puzzle {
     return this.workerPuzzle.getParams();
   }
 
-  public async setParams(params: string): Promise<string | undefined> {
+  public async setParams(params: string): Promise<string | null> {
     return this.workerPuzzle.setParams(params);
   }
 
@@ -673,7 +675,7 @@ export class Puzzle {
     return this.workerPuzzle.getCustomParams();
   }
 
-  public async setCustomParams(values: ConfigValues): Promise<string | undefined> {
+  public async setCustomParams(values: ConfigValues): Promise<string | null> {
     return this.workerPuzzle.setCustomParams(values);
   }
 
@@ -700,7 +702,7 @@ export class Puzzle {
     return names;
   }
 
-  public async encodeCustomParams(values: ConfigValues): Promise<string> {
+  public async encodeCustomParams(values: ConfigValues): Promise<CustomParamsEncoding> {
     return this.workerPuzzle.encodeCustomParams(values);
   }
 
@@ -712,7 +714,7 @@ export class Puzzle {
     return this.workerPuzzle.getPreferences();
   }
 
-  public async setPreferences(values: ConfigValues): Promise<string | undefined> {
+  public async setPreferences(values: ConfigValues): Promise<void> {
     return this.workerPuzzle.setPreferences(values);
   }
 
@@ -754,11 +756,11 @@ export class Puzzle {
     return this.workerPuzzle.preferredSize();
   }
 
-  public async formatAsText(): Promise<string | undefined> {
+  public async formatAsText(): Promise<string | null> {
     return this.workerPuzzle.formatAsText();
   }
 
-  public async loadGame(data: Uint8Array<ArrayBuffer>): Promise<string | undefined> {
+  public async loadGame(data: Uint8Array<ArrayBuffer>): Promise<string | null> {
     // Loading a saved game (e.g. quick-load) replaces the board; a Hint press
     // after it must show against the loaded state, not apply a stale step.
     this.disarmHintApply();

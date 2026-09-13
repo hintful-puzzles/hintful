@@ -65,7 +65,7 @@ const MAX_STATES = 6_000;
  */
 
 /** The generator's unshuffled grid, as wire masks. */
-export function parseAux(aux: string | undefined, n: number): Uint8Array | null {
+export function parseAux(aux: string | null, n: number): Uint8Array | null {
   if (!aux || aux.length !== n) return null;
   const tiles = new Uint8Array(n);
   for (let i = 0; i < n; i++) {
@@ -331,7 +331,7 @@ export function hint(
   // The finished grid to aim at: the generator's, when the game came with one,
   // and otherwise recovered from the board itself (a game arriving as a shared
   // link or a bookmark carries no `aux`, and that is an ordinary way to play).
-  const target = parseAux(aux, n) ?? reconstructSolution(s);
+  const target = parseAux(aux ?? null, n) ?? reconstructSolution(s);
   if (!target) {
     return { ok: false, error: "Solution not known for this puzzle" };
   }

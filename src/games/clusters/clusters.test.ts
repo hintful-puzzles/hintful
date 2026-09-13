@@ -349,12 +349,12 @@ function harness() {
     () => {},
     () => {},
   );
-  const status = (): GameStatus | undefined =>
+  const status = (): GameStatus | null =>
     (
       [...notes].reverse().find((n) => n.type === "game-state-change") as
         | Extract<ChangeNotification, { type: "game-state-change" }>
         | undefined
-    )?.status;
+    )?.status ?? null;
   return { m, status };
 }
 
@@ -383,9 +383,9 @@ describe("midend integration", () => {
 
     // (a) Solve command → solved-with-help.
     const solveH = harness();
-    expect(solveH.m.newGameFromId(`7x7:${desc}`)).toBeUndefined();
+    expect(solveH.m.newGameFromId(`7x7:${desc}`)).toBeNull();
     expect(solveH.status()).toBe("ongoing");
-    expect(solveH.m.solve()).toBeUndefined();
+    expect(solveH.m.solve()).toBeNull();
     expect(solveH.status()).toBe("solved-with-help");
 
     // (b) Play the solution's own fills → plain solved (no cheat).
@@ -400,7 +400,7 @@ describe("midend integration", () => {
       });
     }
     const playH = harness();
-    expect(playH.m.newGameFromId(`7x7:${desc}`)).toBeUndefined();
+    expect(playH.m.newGameFromId(`7x7:${desc}`)).toBeNull();
     playH.m.playMoves(moves);
     expect(playH.status()).toBe("solved");
   });
@@ -408,7 +408,7 @@ describe("midend integration", () => {
   it("findMistakes flags a rule violation and clears when corrected", () => {
     const { desc, target, moves } = violation();
     const { m } = harness();
-    expect(m.newGameFromId(`7x7:${desc}`)).toBeUndefined();
+    expect(m.newGameFromId(`7x7:${desc}`)).toBeNull();
     expect(m.findMistakes()).toBe(0);
     m.playMoves(moves);
     expect(m.findMistakes()).toBeGreaterThan(0);
@@ -440,11 +440,11 @@ describe("midend integration", () => {
   it("save → load round-trips a played game", () => {
     const { desc } = newClustersDesc(decodeParams("7x7"), randomNew("clusters-save"));
     const m = new Midend(clustersGame);
-    expect(m.newGameFromId(`7x7:${desc}`)).toBeUndefined();
+    expect(m.newGameFromId(`7x7:${desc}`)).toBeNull();
     m.playMoves([{ kind: "paint", cells: [{ index: 0, fill: F_COLOR_1 }] }]);
     const saved = m.saveGame();
     const m2 = new Midend(clustersGame);
-    expect(m2.loadGame(saved)).toBeUndefined();
+    expect(m2.loadGame(saved)).toBeNull();
     expect(m2.formatAsText()).toBe(m.formatAsText());
   });
 });

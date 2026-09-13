@@ -75,13 +75,13 @@ class AutoBindDirective<T extends object, K extends keyof T> extends AsyncDirect
     this.eventListenerInstalled = false;
   }
 
-  override render(object: T, field: K, _options: AutoBindOptions<T, K> | undefined) {
+  override render(object: T, field: K, _options?: AutoBindOptions<T, K>) {
     return object[field];
   }
 
   override update(
     part: AttributePart,
-    [object, field, options]: [T, K, AutoBindOptions<T, K> | undefined],
+    [object, field, options]: [T, K, AutoBindOptions<T, K>?],
   ) {
     const { event = "change", convert, property = part.name } = options ?? {};
 

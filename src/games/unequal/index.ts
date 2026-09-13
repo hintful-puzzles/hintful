@@ -662,7 +662,7 @@ function hint(
   _aux?: string,
   ui?: UnequalUi,
 ): HintResult<UnequalMove, UnequalHint> {
-  return candidateHint(state, ui, findMistakes, buildSteps);
+  return candidateHint(state, ui ?? null, findMistakes, buildSteps);
 }
 
 /** Classify a player move against the displayed hint step (shared

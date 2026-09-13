@@ -125,10 +125,7 @@ describe("a saved game reloads in every ported game", () => {
 
       // The replay itself. A move the game cannot execute surfaces here.
       const loaded = midendFor(game);
-      expect(
-        loaded.loadGame(saved),
-        `${id}: loadGame refused its own save`,
-      ).toBeUndefined();
+      expect(loaded.loadGame(saved), `${id}: loadGame refused its own save`).toBeNull();
 
       // The board came back. `formatAsText` is the game's own description of
       // its state, so this compares what the player would see.
@@ -268,7 +265,7 @@ describe("a v1 save still loads", () => {
       const params = game.defaultParams();
       const desc = game.newDesc(params, randomNew(`legacy-${id}`)).desc;
 
-      let playedStatus: string | undefined;
+      let playedStatus: string | null = null;
       const played = midendFor(game);
       played.setCallbacks(
         (n) => {
@@ -296,7 +293,7 @@ describe("a v1 save still loads", () => {
       const legacy = encodeSave({ ...rest, v: 1, usedSolve: cheated } as never);
 
       const restored = midendFor(game);
-      let status: string | undefined;
+      let status: string | null = null;
       restored.setCallbacks(
         (n) => {
           if (n.type === "game-state-change") status = n.status;

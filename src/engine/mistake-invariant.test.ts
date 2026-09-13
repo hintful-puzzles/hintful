@@ -145,7 +145,7 @@ describe("a board with nothing wrong on it reports no mistakes", () => {
         expect(
           midend.newGameFromId(id),
           `${name}/${title}: could not deal ${id}`,
-        ).toBeUndefined();
+        ).toBeNull();
 
         expect(
           midend.findMistakes(),
@@ -156,7 +156,7 @@ describe("a board with nothing wrong on it reports no mistakes", () => {
         expect(
           midend.solve(),
           `${name}/${title}: solve refused on its own generated board`,
-        ).toBeUndefined();
+        ).toBeNull();
 
         expect(
           midend.findMistakes(),

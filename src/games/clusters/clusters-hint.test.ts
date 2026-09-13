@@ -319,13 +319,13 @@ describe("hintKeepTrack", () => {
 describe("hint through the midend", () => {
   it("shows a step, advances on the followed move, and walks to solved", () => {
     const midend = new Midend(clustersGame);
-    expect(midend.newGameFromId(`${ID}#mid-walk`)).toBeUndefined();
-    let refusal: string | undefined;
+    expect(midend.newGameFromId(`${ID}#mid-walk`)).toBeNull();
+    let refusal: string | null = null;
     for (let guard = 0; guard < 100 && !refusal; guard++) {
       refusal = midend.hint();
       if (refusal) break;
       const step = midend.activeHintStep();
-      expect(step).toBeDefined();
+      expect(step).not.toBeNull();
       if (!step) return;
       midend.playMoves([step.move]);
     }

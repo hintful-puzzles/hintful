@@ -513,7 +513,7 @@ describe("text format", () => {
     const { desc } = newDesc(p, randomNew("text"));
     const s = newState(p, desc);
     const text = textFormat(s);
-    expect(text).toBeDefined();
+    expect(typeof text).toBe("string");
     // 2w+2 columns (including the newline) by 2h+1 rows.
     expect(text?.split("\n").length).toBe(2 * 4 + 1 + 1);
 
@@ -522,7 +522,7 @@ describe("text format", () => {
     // as an undefined return.
     const hexParams = { w: 4, h: 4, diff: DIFF_EASY, type: 2 };
     const hex = newDesc(hexParams, randomNew("text-hex"));
-    expect(textFormat(newState(hexParams, hex.desc))).toBeUndefined();
+    expect(textFormat(newState(hexParams, hex.desc))).toBeNull();
   });
 });
 

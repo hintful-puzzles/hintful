@@ -54,7 +54,7 @@ describe("Flood midend lifecycle", () => {
   it("paints the board on a forced redraw", () => {
     const h = harness();
     // 3×3, three colors, generous limit.
-    expect(h.m.newGameFromId("3x3c3m9:011000222,9")).toBeUndefined();
+    expect(h.m.newGameFromId("3x3c3m9:011000222,9")).toBeNull();
     const { dr, ops } = recordingDrawing();
     h.m.forceRedraw(dr);
     // Background + recessed bevels + one rect per tile.
@@ -64,7 +64,7 @@ describe("Flood midend lifecycle", () => {
 
   it("a fill advances the move counter", () => {
     const h = harness();
-    expect(h.m.newGameFromId("3x3c3m9:011000222,9")).toBeUndefined();
+    expect(h.m.newGameFromId("3x3c3m9:011000222,9")).toBeNull();
     expect(h.statusBar()?.statusBarText).toContain("0 / 9 moves");
     // Move the cursor to (1,0) (color 1) and fill.
     expect(h.m.processInput(0, 0, CURSOR_RIGHT)).toBe(true);
@@ -75,7 +75,7 @@ describe("Flood midend lifecycle", () => {
   it("completing within the limit reports solved", () => {
     const h = harness();
     // 2×1 board: corner color 0, other cell color 1 — one fill wins.
-    expect(h.m.newGameFromId("2x1c3m5:01,5")).toBeUndefined();
+    expect(h.m.newGameFromId("2x1c3m5:01,5")).toBeNull();
     expect(h.status()).toBe("ongoing");
     h.m.processInput(0, 0, CURSOR_RIGHT); // cursor to (1,0)
     h.m.processInput(0, 0, CURSOR_SELECT); // fill color 1
@@ -86,7 +86,7 @@ describe("Flood midend lifecycle", () => {
   it("exhausting the limit unsolved reports lost", () => {
     const h = harness();
     // 3×1 board 0,1,2 with limit 1: a single fill cannot complete it.
-    expect(h.m.newGameFromId("3x1c3m1:012,1")).toBeUndefined();
+    expect(h.m.newGameFromId("3x1c3m1:012,1")).toBeNull();
     h.m.processInput(0, 0, CURSOR_RIGHT); // cursor to (1,0), color 1
     h.m.processInput(0, 0, CURSOR_SELECT); // fill color 1 → 1,1,2 (incomplete)
     expect(h.status()).toBe("lost");
@@ -95,7 +95,7 @@ describe("Flood midend lifecycle", () => {
 
   it("undo and redo restore the move count", () => {
     const h = harness();
-    expect(h.m.newGameFromId("3x3c3m9:011000222,9")).toBeUndefined();
+    expect(h.m.newGameFromId("3x3c3m9:011000222,9")).toBeNull();
     h.m.processInput(0, 0, CURSOR_RIGHT);
     h.m.processInput(0, 0, CURSOR_SELECT);
     expect(h.statusBar()?.statusBarText).toContain("1 / 9 moves");
@@ -107,8 +107,8 @@ describe("Flood midend lifecycle", () => {
 
   it("surfaces a hint and renders its SOLNNEXT circle", () => {
     const h = harness();
-    expect(h.m.newGameFromId("3x3c3m9:011000222,9")).toBeUndefined();
-    expect(h.m.hint()).toBeUndefined();
+    expect(h.m.newGameFromId("3x3c3m9:011000222,9")).toBeNull();
+    expect(h.m.hint()).toBeNull();
     const { dr, ops } = recordingDrawing();
     h.m.forceRedraw(dr);
     // The hint highlights the next-fill squares with a separator-color

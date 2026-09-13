@@ -131,12 +131,12 @@ function harness() {
     () => {},
     () => {},
   );
-  const status = (): GameStatus | undefined =>
+  const status = (): GameStatus | null =>
     (
       [...notes].reverse().find((n) => n.type === "game-state-change") as
         | Extract<ChangeNotification, { type: "game-state-change" }>
         | undefined
-    )?.status;
+    )?.status ?? null;
   return { m, status };
 }
 
@@ -493,15 +493,15 @@ describe("subsets executeMove and completion", () => {
 describe("subsets solve (through a real Midend)", () => {
   it("Solve completes the board as solved-with-help, without the flash", () => {
     const { m, status } = harness();
-    expect(m.newGameFromId(FIX_ID)).toBeUndefined();
+    expect(m.newGameFromId(FIX_ID)).toBeNull();
     const before = newState(PARAMS, FIX.desc);
-    expect(m.solve()).toBeUndefined();
+    expect(m.solve()).toBeNull();
     // The board is fully decided and the game completes — a deliberate
     // divergence from upstream, whose 'S' move skips the completion check
     // and leaves the game "ongoing" for ever (collection convention wins;
     // docs/games/solver-and-generator.md § "Solve and the generator's aux").
     const text = m.formatAsText();
-    expect(text).toBeDefined();
+    expect(typeof text).toBe("string");
     expect(text).not.toContain("?");
     expect(status()).toBe("solved-with-help");
     // The solve move marks the state cheated, so the win flash stays off.
@@ -517,13 +517,13 @@ describe("subsets solve (through a real Midend)", () => {
 
   it("saveGame -> loadGame restores an equivalent game", () => {
     const me = new Midend(subsetsGame);
-    expect(me.newGameFromId(FIX_ID)).toBeUndefined();
+    expect(me.newGameFromId(FIX_ID)).toBeNull();
     const start = newState(PARAMS, FIX.desc);
     const i = start.immutable.indexOf(0);
     me.playMoves([{ kind: "set", type: "known", pos: i, bit: 1 }] as SubsetsMove[]);
     const saved = me.saveGame();
     const me2 = new Midend(subsetsGame);
-    expect(me2.loadGame(saved)).toBeUndefined();
+    expect(me2.loadGame(saved)).toBeNull();
     expect(me2.formatAsText()).toBe(me.formatAsText());
   });
 });

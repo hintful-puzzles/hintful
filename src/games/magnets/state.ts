@@ -223,7 +223,7 @@ function readRow(
     if (c === ".") num = -1;
     else {
       const value = c2n(c);
-      if (value === undefined) {
+      if (value === null) {
         return { error: "Game description contained unexpected characters" };
       }
       num = value;

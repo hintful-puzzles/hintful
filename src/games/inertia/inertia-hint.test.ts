@@ -333,7 +333,7 @@ describe("inertia hint is a nudge; only Solve is a commitment", () => {
 
   it("does not brand the game auto-solved, and installs no route", () => {
     const { m, status } = harness(id);
-    expect(m.hint()).toBeUndefined();
+    expect(m.hint()).toBeNull();
 
     const s = m.saveGame();
     expect(status()).not.toContain("Auto-solver used.");
@@ -342,13 +342,13 @@ describe("inertia hint is a nudge; only Solve is a commitment", () => {
     // The hint shows an arrow, but it is the *hint's* arrow: nothing has been
     // written into the state for the game to follow afterwards.
     const step = m.activeHintStep();
-    expect(step).toBeDefined();
+    expect(step).not.toBeNull();
     expect(step?.move).toMatchObject({ type: "move" });
   });
 
   it("...whereas Solve does both", () => {
     const { m, status } = harness(id);
-    expect(m.solve()).toBeUndefined();
+    expect(m.solve()).toBeNull();
     expect(status()).toContain("Auto-solver used.");
   });
 
@@ -424,7 +424,7 @@ describe("inertia hint tracking", () => {
     // Without `hintKeepTrack` the midend drops the plan on *every* player move,
     // including one that faithfully follows the hint (see `hintKeepTrack`).
     const { m, computed } = counting();
-    expect(m.hint()).toBeUndefined();
+    expect(m.hint()).toBeNull();
     expect(computed()).toBe(1);
 
     const plan = hint(stateOf(rows));
@@ -439,7 +439,7 @@ describe("inertia hint tracking", () => {
 
     // A manual completion advances the plan but hides the display — one hint per
     // request. Asking again re-shows the *stored* next step: no recompute.
-    expect(m.hint()).toBeUndefined();
+    expect(m.hint()).toBeNull();
     expect(computed(), "following the hint threw the plan away").toBe(1);
     expect(m.activeHintStep()?.move).toEqual(plan.steps[1].move);
   });
@@ -455,12 +455,12 @@ describe("inertia hint tracking", () => {
 
     // biome-ignore lint/style/noNonNullAssertion: asserted above.
     expect(m.processInput(0, 0, padKey(other!))).toBe(true);
-    expect(m.activeHintStep(), "deviating kept the plan").toBeUndefined();
+    expect(m.activeHintStep(), "deviating kept the plan").toBeNull();
 
     // So the next hint is planned afresh from where the ball now is.
     m.hint();
     expect(computed()).toBe(2);
-    expect(m.activeHintStep()).toBeDefined();
+    expect(m.activeHintStep()).not.toBeNull();
   });
 });
 

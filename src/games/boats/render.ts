@@ -446,7 +446,7 @@ function tileKey(ship: number, flags: number, flash: boolean, hint: number): num
 
 /** The per-cell hint bits for the displayed step. */
 function hintBits(
-  step: HintStep<BoatsMove, BoatsHint> | undefined,
+  step: HintStep<BoatsMove, BoatsHint> | null,
   w: number,
   h: number,
 ): Int32Array | null {
@@ -521,7 +521,7 @@ export function redraw(
   validateGridClues(board, cellFlags);
   checkCollision(board, cellFlags);
 
-  ds.wrong.packCells(mistakes, (x, y) => y * w + x);
+  ds.wrong.packCells(mistakes ?? null, (x, y) => y * w + x);
 
   // --- the border numbers: columns along the bottom, then rows down the right ---
   const half = (ts / 2) | 0;
@@ -565,7 +565,7 @@ export function redraw(
   }
 
   const drag = dragBounds(ui);
-  const hints = flashTime === 0 ? hintBits(hint, w, h) : null;
+  const hints = flashTime === 0 ? hintBits(hint ?? null, w, h) : null;
 
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {

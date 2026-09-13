@@ -70,7 +70,7 @@ function stateOf(me: SlideMidend): SlideState {
 }
 
 /** A midend plus a reader for the status it last notified. */
-function makeMidend(): { m: SlideMidend; status: () => GameStatus | undefined } {
+function makeMidend(): { m: SlideMidend; status: () => GameStatus | null } {
   const notes: ChangeNotification[] = [];
   const m: SlideMidend = new Midend(slideGame);
   m.setCallbacks(
@@ -78,19 +78,19 @@ function makeMidend(): { m: SlideMidend; status: () => GameStatus | undefined } 
     () => {},
     () => {},
   );
-  const status = (): GameStatus | undefined =>
+  const status = (): GameStatus | null =>
     (
       [...notes].reverse().find((n) => n.type === "game-state-change") as
         | Extract<ChangeNotification, { type: "game-state-change" }>
         | undefined
-    )?.status;
+    )?.status ?? null;
   return { m, status };
 }
 
 /** A midend already running `id`. */
 function play(id: string): SlideMidend {
   const { m } = makeMidend();
-  expect(m.newGameFromId(id)).toBeUndefined();
+  expect(m.newGameFromId(id)).toBeNull();
   return m;
 }
 
@@ -351,7 +351,7 @@ describe("slide text format", () => {
 
   it("is available through the Game hook", () => {
     const text = play("5x5u#slide-text").formatAsText();
-    expect(text).toBeDefined();
+    expect(typeof text).toBe("string");
     expect(text).toContain("*");
   });
 });
@@ -834,7 +834,7 @@ describe("slide keyboard control", () => {
 
   it("leaves the select key to an installed Solve route", () => {
     const me = play("5x5u#slide-solve");
-    expect(me.solve()).toBeUndefined();
+    expect(me.solve()).toBeNull();
     const before = stateOf(me).board.slice();
 
     // A route is installed, so the select key steps it rather than grabbing —
@@ -937,11 +937,11 @@ function slideSomeBlock(me: SlideMidend, avoid = -1): boolean {
 describe("slide solve", () => {
   it("installs a route the step key walks to completion", () => {
     const { m, status } = makeMidend();
-    expect(m.newGameFromId("5x5u#slide-solve")).toBeUndefined();
+    expect(m.newGameFromId("5x5u#slide-solve")).toBeNull();
     const minmoves = stateOf(m).minmoves;
     expect(minmoves).toBeGreaterThan(0);
 
-    expect(m.solve()).toBeUndefined();
+    expect(m.solve()).toBeNull();
     // Slide's Solve deliberately does not fill the board in: it arms a route,
     // exactly as Inertia's does. So the board is untouched but marked cheated.
     expect(stateOf(m).soln).toHaveLength(minmoves);
@@ -965,7 +965,7 @@ describe("slide solve", () => {
     const me = play("5x5u#slide-solve-mid");
     expect(slideSomeBlock(me)).toBe(true);
 
-    expect(me.solve()).toBeUndefined();
+    expect(me.solve()).toBeNull();
     const steps = stateOf(me).soln?.length ?? 0;
     expect(steps).toBeGreaterThan(0);
     for (let i = 0; i < steps; i++) me.processInput(0, 0, CURSOR_SELECT2);
@@ -974,7 +974,7 @@ describe("slide solve", () => {
 
   it("drops the route when the player strays from it", () => {
     const me = play("6x5u#slide-stray");
-    expect(me.solve()).toBeUndefined();
+    expect(me.solve()).toBeNull();
     const route = stateOf(me).soln;
     expect(route).not.toBeNull();
 
@@ -1032,7 +1032,7 @@ describe("slide statusbar", () => {
 describe("slide save round-trip", () => {
   it("restores the board, the move count and an armed Solve route", () => {
     const me = play("5x5u#slide-save");
-    expect(me.solve()).toBeUndefined();
+    expect(me.solve()).toBeNull();
     me.processInput(0, 0, CURSOR_SELECT2);
 
     const before = stateOf(me);
@@ -1040,7 +1040,7 @@ describe("slide save round-trip", () => {
     const saved = me.saveGame();
 
     const me2: SlideMidend = new Midend(slideGame);
-    expect(me2.loadGame(saved)).toBeUndefined();
+    expect(me2.loadGame(saved)).toBeNull();
     const after = stateOf(me2);
 
     expect([...after.board]).toEqual([...before.board]);

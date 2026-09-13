@@ -227,8 +227,8 @@ function solverNormal(solver: LatinSolver): number {
 
     if (doneSomething) {
       const witness = rec ? identityWitness(solver, idn) : null;
-      const reasonFor = (): GroupReason | undefined =>
-        witness ? { kind: "identityFill", e: idn, ...witness } : undefined;
+      const reasonFor = (): GroupReason | null =>
+        witness ? { kind: "identityFill", e: idn, ...witness } : null;
       for (let j = 1; j <= w; j++) {
         if (!g[(j - 1) * w + (i - 1)]) {
           if (!solver.cubeGet(i - 1, j - 1, j)) return -1;

@@ -872,9 +872,9 @@ export function redraw(
     }
   }
 
-  ds.wrong.packCells(mistakes, (x, y) => y * w + x);
+  ds.wrong.packCells(mistakes ?? null, (x, y) => y * w + x);
   ds.hint.pack(
-    hint?.highlights,
+    hint?.highlights ?? null,
     (x, y) => y * w + x,
     (m) => hintMarkBit(m.n),
   );

@@ -42,13 +42,13 @@ export class ShareDialog extends SignalWatcher(LitElement) {
   private gameTypeDescription?: string;
 
   @state()
-  private formattedText?: string;
+  private formattedText: string | null = null;
 
   async reset() {
     this.gameTypeDescription = this.puzzle?.currentParams
       ? await this.puzzle.getParamsDescription(this.puzzle.currentParams)
       : undefined;
-    this.formattedText = await this.puzzle?.formatAsText();
+    this.formattedText = (await this.puzzle?.formatAsText()) ?? null;
   }
 
   async showPanel(panelId: string) {
@@ -64,23 +64,21 @@ export class ShareDialog extends SignalWatcher(LitElement) {
 
   protected override render() {
     const puzzleName = this.puzzle?.displayName ?? "Unknown puzzle";
-    const puzzleParams = this.puzzle?.currentParams;
-    const gameId = this.puzzle?.currentGameId;
-    const randomSeed = this.puzzle?.randomSeed;
+    const puzzleParams = this.puzzle?.currentParams ?? null;
+    const gameId = this.puzzle?.currentGameId ?? null;
+    const randomSeed = this.puzzle?.randomSeed ?? null;
     const preferredId = randomSeed ?? gameId;
-    const puzzleId = this.puzzle?.puzzleId;
+    const puzzleId = this.puzzle?.puzzleId ?? null;
     const typeDescription = this.gameTypeDescription
       ? `type “${this.gameTypeDescription}”`
       : "this custom type";
 
     const puzzleTypeLink =
-      puzzleId && puzzleParams
-        ? puzzlePageUrl({ puzzleId, puzzleParams }).href
-        : undefined;
+      puzzleId && puzzleParams ? puzzlePageUrl({ puzzleId, puzzleParams }).href : null;
     const currentGameLink =
       puzzleId && preferredId
         ? puzzlePageUrl({ puzzleId, puzzleGameId: preferredId })
-        : undefined;
+        : null;
 
     return html`
       <wa-dialog 
@@ -153,7 +151,7 @@ export class ShareDialog extends SignalWatcher(LitElement) {
   }: {
     label: string;
     hint?: string;
-    value: string | URL | undefined;
+    value: string | URL | null;
   }) {
     if (!value) {
       return nothing;
@@ -177,10 +175,10 @@ export class ShareDialog extends SignalWatcher(LitElement) {
     gameId,
     randomSeed,
   }: {
-    puzzleId?: string;
-    puzzleParams?: string;
-    gameId?: string;
-    randomSeed?: string;
+    puzzleId: string | null;
+    puzzleParams: string | null;
+    gameId: string | null;
+    randomSeed: string | null;
   }) {
     // Upstream's site carries its own games, so the link is offered for those
     // and no others.
@@ -232,16 +230,7 @@ export class ShareDialog extends SignalWatcher(LitElement) {
     `;
   }
 
-  private renderOffsiteLink({
-    hint,
-    url,
-  }: {
-    hint?: string;
-    url: string | URL | undefined;
-  }) {
-    if (!url) {
-      return nothing;
-    }
+  private renderOffsiteLink({ hint, url }: { hint?: string; url: string | URL }) {
     return html`
       <div>
         <div class="link">

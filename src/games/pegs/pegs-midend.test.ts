@@ -74,14 +74,14 @@ describe("Pegs midend integration — lifecycle", () => {
   it("newGameFromId works with a descriptive ID", () => {
     const h = harness();
     const error = h.m.newGameFromId(CROSS_7x7);
-    expect(error).toBeUndefined();
+    expect(error).toBeNull();
     expect(h.state()?.status).toBe("ongoing");
   });
 
   it("newGameFromId works with a random seed", () => {
     const h = harness();
     const error = h.m.newGameFromId("7x7cross#test-seed");
-    expect(error).toBeUndefined();
+    expect(error).toBeNull();
     expect(h.state()?.status).toBe("ongoing");
   });
 
@@ -101,7 +101,7 @@ describe("Pegs midend integration — lifecycle", () => {
     // pegs, one hole, and a legal jump), so nothing is generated and nothing
     // is refused.
     const h = harness();
-    expect(h.m.newGameFromId("3x1cross:PPH")).toBeUndefined();
+    expect(h.m.newGameFromId("3x1cross:PPH")).toBeNull();
     expect(h.m.getParams()).toBe("3x1cross");
   });
 
@@ -241,7 +241,7 @@ describe("Pegs midend integration — keyboard input", () => {
     // sits on a hole with a peg beside it and a second hole beyond that, which
     // is the one shape the direction checks accept.
     const h = harness();
-    expect(h.m.newGameFromId("5x1cross:PPHPH")).toBeUndefined();
+    expect(h.m.newGameFromId("5x1cross:PPHPH")).toBeNull();
 
     // Reveal the cursor on (0,0), arm it, and jump right into (2,0).
     h.m.processInput(0, 0, CURSOR_SELECT);
@@ -289,7 +289,7 @@ describe("Pegs midend integration — generator termination", () => {
         const id = `${params.w}x${params.h}${["cross", "octagon", "random"][params.type]}#${seed}`;
         // If the generator doesn't terminate, this will hang.
         const error = h.m.newGameFromId(id);
-        expect(error).toBeUndefined();
+        expect(error).toBeNull();
         expect(h.state()?.status).toBe("ongoing");
       }
     }

@@ -60,11 +60,11 @@ describe("the app's keyboard shortcuts", () => {
           shortcut.command,
         );
         // Without the modifier it is a plain letter and belongs to the game.
-        expect(chordCommand(key(chord.key, { shift: chord.shift }))).toBeUndefined();
+        expect(chordCommand(key(chord.key, { shift: chord.shift }))).toBeNull();
         // With Alt as well it is somebody else's binding, not ours.
         expect(
           chordCommand(key(chord.key, { ctrl: true, shift: chord.shift, alt: true })),
-        ).toBeUndefined();
+        ).toBeNull();
       });
     }
 
@@ -74,9 +74,9 @@ describe("the app's keyboard shortcuts", () => {
         expect(bareCommand(key(bare))).toBe(shortcut.command);
         // A modified press is not the bare shortcut — it is either a chord or
         // the game's, and either way not this.
-        expect(bareCommand(key(bare, { ctrl: true }))).toBeUndefined();
-        expect(bareCommand(key(bare, { shift: true }))).toBeUndefined();
-        expect(bareCommand(key(bare, { alt: true }))).toBeUndefined();
+        expect(bareCommand(key(bare, { ctrl: true }))).toBeNull();
+        expect(bareCommand(key(bare, { shift: true }))).toBeNull();
+        expect(bareCommand(key(bare, { alt: true }))).toBeNull();
       });
     }
 
@@ -114,8 +114,8 @@ describe("the app's keyboard shortcuts", () => {
     // A key with no entry runs nothing — the matchers must not fall through to
     // some default, which is how a chord quietly starts eating a browser
     // shortcut the app never meant to take.
-    expect(chordCommand(key("p", { ctrl: true }))).toBeUndefined();
-    expect(bareCommand(key("q"))).toBeUndefined();
+    expect(chordCommand(key("p", { ctrl: true }))).toBeNull();
+    expect(bareCommand(key("q"))).toBeNull();
   });
 });
 
@@ -176,7 +176,7 @@ describe("a bare shortcut letter reaches the app in every game", () => {
   for (const id of registeredGameIds()) {
     it(`${id}: declines the letters the app needs`, () => {
       const game = getTsGame(id) as AnyGame | undefined;
-      expect(game, `${id} is registered but has no game object`).toBeDefined();
+      expect(game, `${id} is registered but has no game object`).not.toBeNull();
       if (!game) return;
       const { m, reset } = probeBoard(game, id);
 

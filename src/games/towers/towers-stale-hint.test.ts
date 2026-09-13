@@ -127,14 +127,14 @@ const REPORTED_ID = "5:2/4/3/2/1/2/1/3/2/3/3/1/3/4/2/1/3/3/2/2";
 function midendFromId(id: string): Me {
   const me: Me = new Midend(towersGame);
   const err = me.newGameFromId(id);
-  expect(err).toBeUndefined();
+  expect(err).toBeNull();
   return me;
 }
 
 function midendFromSeed(diff: TowersParams["diff"], seed: string): Me {
   const me: Me = new Midend(towersGame);
   const { desc } = newTowersDesc({ w: 5, diff }, randomNew(seed));
-  expect(me.newGameFromId(`5${diffChar(diff)}:${desc}`)).toBeUndefined();
+  expect(me.newGameFromId(`5${diffChar(diff)}:${desc}`)).toBeNull();
   return me;
 }
 function diffChar(d: TowersParams["diff"]): string {

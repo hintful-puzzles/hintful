@@ -256,8 +256,8 @@ describe("undead findMistakes", () => {
 describe("undead Solve via Midend", () => {
   it("solves a freshly generated board (aux path)", () => {
     const me = new Midend(undeadGame);
-    expect(me.newGameFromId("4x4dn#undead-solve")).toBeUndefined();
-    expect(me.solve()).toBeUndefined();
+    expect(me.newGameFromId("4x4dn#undead-solve")).toBeNull();
+    expect(me.solve()).toBeNull();
     const solved = (me as unknown as { state: UndeadState }).state;
     expect(undeadGame.status(solved)).toBe("solved");
     // Every cell is a single placed monster.

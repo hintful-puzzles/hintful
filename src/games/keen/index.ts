@@ -291,7 +291,7 @@ function solve(orig: KeenState, _curr: KeenState, aux?: string): SolveResult<Kee
       // `aux` is written by `newDesc` in this process and never read from a
       // save, so a non-digit here is a broken encoder rather than a bad input.
       const digit = digitValue(aux[i + 1]);
-      if (digit === undefined) return { ok: false, error: "invalid char in aux" };
+      if (digit === null) return { ok: false, error: "invalid char in aux" };
       grid[i] = digit;
     }
     return { ok: true, move: { type: "solve", grid } };
@@ -633,7 +633,7 @@ export const keenGame: Game<
 
   solve,
   difficulty,
-  hint: (state, _aux, ui) => candidateHint(state, ui, findMistakes, buildSteps),
+  hint: (state, _aux, ui) => candidateHint(state, ui ?? null, findMistakes, buildSteps),
   // The shared candidate-elimination keep-track and stale-step check;
   // `KeenHint` is structurally `CandidateHighlights`.
   hintKeepTrack: (m, step: HintStep<KeenMove, KeenHint>, state) =>

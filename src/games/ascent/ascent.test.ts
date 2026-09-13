@@ -134,14 +134,14 @@ describe("ascent solve + completion", () => {
   it("Solve completes through a real Midend and save round-trips", () => {
     const me = new Midend(ascentGame);
     const id = `${ascentGame.encodeParams(mk(5, 5, 1, MODE_RECT), true)}#save-seed`;
-    expect(me.newGameFromId(id)).toBeUndefined();
-    expect(me.solve()).toBeUndefined();
+    expect(me.newGameFromId(id)).toBeNull();
+    expect(me.solve()).toBeNull();
     const text = me.formatAsText();
-    expect(text).toBeDefined();
+    expect(typeof text).toBe("string");
     expect(text).not.toContain(".");
     const saved = me.saveGame();
     const me2 = new Midend(ascentGame);
-    expect(me2.loadGame(saved)).toBeUndefined();
+    expect(me2.loadGame(saved)).toBeNull();
     expect(me2.formatAsText()).not.toContain(".");
   });
 });

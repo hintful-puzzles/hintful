@@ -30,6 +30,7 @@ import type {
   Color,
   ConfigDescription,
   ConfigValues,
+  CustomParamsEncoding,
   GameStatus,
   KeyLabel,
   PresetMenuEntry,
@@ -62,13 +63,13 @@ export interface EngineCore {
     notifyRedraw?: NotifyRedraw,
   ): void;
   newGame(): void;
-  newGameFromId(id: string): string | undefined;
+  newGameFromId(id: string): string | null;
   restartGame(): void;
   undo(): void;
   redo(): void;
-  solve(): string | undefined;
-  hint(): string | undefined;
-  executeHint(hideAfter?: boolean): string | undefined;
+  solve(): string | null;
+  hint(): string | null;
+  executeHint(hideAfter?: boolean): string | null;
   /** Duration in milliseconds of the animation currently armed (e.g. by
    * the slow-motion move `executeHint` just played), or 0 when nothing
    * is animating. The auto-hint loop paces each step by this so a move
@@ -89,7 +90,7 @@ export interface EngineCore {
   requestKeys(): KeyLabel[];
   processInput(x: number, y: number, button: number): boolean;
   getParams(): string;
-  setParams(params: string): string | undefined;
+  setParams(params: string): string | null;
   getPresets(): PresetMenuEntry[];
   /** The game's **custom-params** form as the app's config-dialog
    * shapes, built from its declarative `paramConfig`. An empty item set
@@ -101,18 +102,18 @@ export interface EngineCore {
    * validate with the game's own `validateParams`, and — on success —
    * adopt them (so the app generates a new game at those params) or — on
    * failure — return the validation error string without applying. */
-  setCustomParams(values: ConfigValues): string | undefined;
+  setCustomParams(values: ConfigValues): string | null;
   /** Encode the params described by `values` (built the same way as
-   * `setCustomParams`) to a game-ID param string, or `#ERROR:<reason>`
-   * when they fail `validateParams` — the form's preview path. */
-  encodeCustomParams(values: ConfigValues): string;
+   * `setCustomParams`) to a game-ID param string, or say why they fail
+   * `validateParams` — the form's preview path. */
+  encodeCustomParams(values: ConfigValues): CustomParamsEncoding;
   /** The game's preferences as the app's config-dialog shapes. An empty
    * item set for a game that declares no `prefs`. */
   getPreferencesConfig(): ConfigDescription;
   getPreferences(): ConfigValues;
   /** Apply the supplied preference values (only the keys present),
    * retaining them across future new games, and repaint. */
-  setPreferences(values: ConfigValues): string | undefined;
+  setPreferences(values: ConfigValues): void;
   getColorPalette(defaultBackground: Color): Color[];
   /** The authored dark-mode value of each palette index that has one; see
    * the implementation on {@link Midend}. */
@@ -137,9 +138,9 @@ export interface EngineCore {
    * cache the game holds is stale. Discard the drawstate so the game's next
    * `redraw` paints from scratch via its `!ds.started` branch. */
   canvasCleared(): void;
-  formatAsText(): string | undefined;
+  formatAsText(): string | null;
   saveGame(): Uint8Array<ArrayBuffer>;
-  loadGame(data: Uint8Array): string | undefined;
+  loadGame(data: Uint8Array): string | null;
   timer(tplus: number): void;
   redraw(dr: GameDrawing): void;
   /** Drop the drawstate and redraw. The worker adapter calls this when the
@@ -273,7 +274,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.startFrom(desc, aux);
   }
 
-  newGameFromId(id: string): string | undefined {
+  newGameFromId(id: string): string | null {
     // `<params>:<desc>` (descriptive) or `<params>#<seed>` (random).
     const sep = id.search(/[:#]/);
     if (sep < 0) return "Invalid game ID (no ':' or '#')";
@@ -300,14 +301,14 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       this.params = params;
       this.seed = rest;
       this.startFrom(desc, aux);
-      return undefined;
+      return null;
     }
     const dErr = this.game.validateDesc(params, rest);
     if (dErr) return dErr;
     this.params = params;
     this.seed = undefined;
     this.startFrom(rest);
-    return undefined;
+    return null;
   }
 
   private startFrom(desc: string, aux?: string): void {
@@ -440,7 +441,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     const prev = this.state;
     const next = this.game.executeMove(prev, move);
     const step = this.currentHintStep;
-    if (step !== undefined) {
+    if (step !== null) {
       const verdict = this.game.hintKeepTrack?.(move, step, prev) ?? "off";
       if (verdict === "completed") {
         // The game asserts the post-move state matches the plan's
@@ -568,7 +569,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     for (const move of moves) this.applyMove(move);
   }
 
-  solve(): string | undefined {
+  solve(): string | null {
     if (!this.game.canSolve || !this.game.solve) {
       return "This game does not support solving";
     }
@@ -577,7 +578,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.clearHint();
     this.cheated = true;
     this.applyMove(result.move);
-    return undefined;
+    return null;
   }
 
   // --- hints ---------------------------------------------------------
@@ -585,15 +586,15 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   /** The stored plan's current step (`undefined` when no plan is
    * active) — what `hintKeepTrack` classifies moves against and what
    * `executeHint` plays, displayed or not. */
-  private get currentHintStep(): HintStep<Move> | undefined {
-    return this.activeHint?.steps[this.activeHint.index];
+  private get currentHintStep(): HintStep<Move> | null {
+    return this.activeHint?.steps[this.activeHint.index] ?? null;
   }
 
   /** The step on display (`undefined` when no plan is active or the
    * plan is hidden). This is what `redraw` and the status bar
    * narrate. */
-  private get displayedHintStep(): HintStep<Move> | undefined {
-    return this.hintDisplayed ? this.currentHintStep : undefined;
+  private get displayedHintStep(): HintStep<Move> | null {
+    return this.hintDisplayed ? this.currentHintStep : null;
   }
 
   /** Does this `UI_UPDATE` put the hint away? Asked only while a plan is stored
@@ -602,7 +603,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * cursor where the player just put it. */
   private uiUpdateDismisses(): boolean {
     const step = this.currentHintStep;
-    if (step === undefined) return false;
+    if (step === null) return false;
     return this.game.uiUpdateClearsHint?.(step, this.state, this.ui) ?? false;
   }
 
@@ -666,7 +667,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     for (let guard = (this.activeHint?.steps.length ?? 0) + 1; guard > 0; guard--) {
       if (!this.activeHint) return;
       const step = this.currentHintStep;
-      if (step === undefined) {
+      if (step === null) {
         this.clearHint();
         return;
       }
@@ -683,7 +684,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
 
   /** Compute and store a fresh plan at index 0. Returns the error
    * message when no plan is available. */
-  private computeHintPlan(): string | undefined {
+  private computeHintPlan(): string | null {
     if (!this.game.hint) {
       return "This game does not support hints";
     }
@@ -702,7 +703,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.activeHint = { steps: result.steps, index: 0 };
     this.advanceHintOnAnimationEnd = false;
     this.hintDisplayed = true;
-    return undefined;
+    return null;
   }
 
   /** Settle bookkeeping after a move finishes animating (or applies
@@ -732,7 +733,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     if (this.displayedHintStep !== before) this.emitStatusBar();
   }
 
-  hint(): string | undefined {
+  hint(): string | null {
     if (this.activeHint) {
       // A valid plan is stored: re-validate it against the current state
       // (a kept plan's later step may have been resolved by a followed
@@ -746,7 +747,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         this.hintDisplayed = true;
         this.emitStatusBar();
         this.requestRedraw();
-        return undefined;
+        return null;
       }
       // The re-validation drained the whole plan (every remaining step
       // was already resolved) — fall through and recompute a fresh one.
@@ -755,17 +756,17 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     if (err) return err;
     this.clearAnimation();
     this.afterTransition();
-    return undefined;
+    return null;
   }
 
   /** The displayed hint step (see {@link displayedHintStep}), exposed so the
    * render-scenario harness and tests can assert on the structured step rather
    * than only its draw ops, and walk a plan with `executeHint`. */
-  activeHintStep(): HintStep<Move> | undefined {
+  activeHintStep(): HintStep<Move> | null {
     return this.displayedHintStep;
   }
 
-  executeHint(hideAfter = false): string | undefined {
+  executeHint(hideAfter = false): string | null {
     // A previously executed step may still be animating (e.g. the
     // user outpaces the auto-play settle). Its move is already
     // applied to the state, so advance past it now rather than
@@ -776,7 +777,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       if (err) return err;
     }
     const step = this.currentHintStep;
-    if (step === undefined) return "Game returned an empty hint plan"; // unreachable
+    if (step === null) return "Game returned an empty hint plan"; // unreachable
     // The executed step stays displayed through the slow-motion
     // animation (the banner describes the move in flight). On settle the
     // plan advances and, in auto-play (`hideAfter` false), the *next* step
@@ -790,7 +791,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // A game with no move animation settles synchronously inside
     // `afterTransition` (the timer's settle path never runs for it).
     this.applyMove(step.move);
-    return undefined;
+    return null;
   }
 
   currentAnimationMs(): number {
@@ -890,7 +891,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     return this.game.encodeParams(this.params, true);
   }
 
-  setParams(params: string): string | undefined {
+  setParams(params: string): string | null {
     let decoded: Params;
     try {
       decoded = this.game.decodeParams(params);
@@ -901,7 +902,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     if (err) return err;
     this.params = decoded;
     this.emitParamsChange();
-    return undefined;
+    return null;
   }
 
   getPresets(): PresetMenuEntry[] {
@@ -966,24 +967,24 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     return draft;
   }
 
-  setCustomParams(values: ConfigValues): string | undefined {
-    if (!this.game.paramConfig?.length) return undefined;
+  setCustomParams(values: ConfigValues): string | null {
+    if (!this.game.paramConfig?.length) return null;
     const draft = this.paramsFromCustomValues(values);
     const err = this.game.validateParams(draft, true);
     if (err) return err;
     this.params = draft;
     this.emitParamsChange();
-    return undefined;
+    return null;
   }
 
-  encodeCustomParams(values: ConfigValues): string {
+  encodeCustomParams(values: ConfigValues): CustomParamsEncoding {
     if (!this.game.paramConfig?.length) {
-      return this.game.encodeParams(this.params, true);
+      return { ok: true, params: this.game.encodeParams(this.params, true) };
     }
     const draft = this.paramsFromCustomValues(values);
-    const err = this.game.validateParams(draft, true);
-    if (err) return `#ERROR:${err}`;
-    return this.game.encodeParams(draft, true);
+    const error = this.game.validateParams(draft, true);
+    if (error) return { ok: false, error };
+    return { ok: true, params: this.game.encodeParams(draft, true) };
   }
 
   // --- preferences -------------------------------------------------
@@ -1010,7 +1011,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     return values;
   }
 
-  setPreferences(values: ConfigValues): string | undefined {
+  setPreferences(values: ConfigValues): void {
     // Merge into the retained set (the form may submit only the changed
     // keys), then apply onto the live ui and repaint — a preference like
     // "highlight crossed edges" or "vertex style" changes what `redraw`
@@ -1026,7 +1027,6 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       this.canvasCleared();
       this.requestRedraw();
     }
-    return undefined;
   }
 
   /** Write the retained preference values onto the current ui, coercing
@@ -1121,8 +1121,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.drawState = this.freshDrawState(this.history[0]);
   }
 
-  formatAsText(): string | undefined {
-    if (!this.game.canFormatAsText || !this.game.textFormat) return undefined;
+  formatAsText(): string | null {
+    if (!this.game.canFormatAsText || !this.game.textFormat) return null;
     return this.game.textFormat(this.state);
   }
 
@@ -1145,7 +1145,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     return encodeSave(envelope);
   }
 
-  loadGame(data: Uint8Array): string | undefined {
+  loadGame(data: Uint8Array): string | null {
     let env: SaveEnvelope;
     try {
       env = decodeSave(data);
@@ -1204,7 +1204,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // appear settled, not mid-animation.
     this.clearAnimation();
     this.afterTransition();
-    return undefined;
+    return null;
   }
 
   // --- timer -------------------------------------------------------
@@ -1281,7 +1281,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       // keeps the game's `animTime / its-anim-length` progress correct.
       this.animTime / this.animScale,
       this.flashTime,
-      this.displayedHintStep,
+      this.displayedHintStep ?? undefined,
       this.activeMistakes ?? undefined,
     );
     dr.endDraw();
@@ -1400,9 +1400,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * `continuesPrevious`. It is **derived from a flag the game already sets for
    * its own reasons**, so a game that never groups its steps reports length 1.
    */
-  private hintJourney(): { index: number; length: number } | undefined {
+  private hintJourney(): { index: number; length: number } | null {
     const plan = this.activeHint;
-    if (plan === null || this.displayedHintStep === undefined) return undefined;
+    if (plan === null || this.displayedHintStep === null) return null;
     let first = plan.index;
     while (first > 0 && plan.steps[first].continuesPrevious === true) first--;
     let last = plan.index;

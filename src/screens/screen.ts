@@ -209,7 +209,7 @@ export class Screen extends LitElement {
   }
 
   protected defaultHelpHref: string = helpUrl().href;
-  protected defaultHelpLabel: string | undefined = "Help"; // for pages with no <title>
+  protected defaultHelpLabel: string | null = "Help"; // for pages with no <title>
 
   protected async showHelpViewer(href?: string) {
     await import("../components/help-viewer.ts");

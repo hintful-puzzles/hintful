@@ -84,7 +84,7 @@ describe("Pearl render scenarios", () => {
 
   it("the loopy appearance draws center-dot grid instead of a black border", () => {
     const midend = new Midend(pearlGame);
-    expect(midend.newGameFromId(ID)).toBeUndefined();
+    expect(midend.newGameFromId(ID)).toBeNull();
     // Switch to the loopy appearance (choice index 1).
     expect(midend.setPreferences({ appearance: 1 })).toBeUndefined();
     const palette = pearlGame.colors([0.9, 0.9, 0.9]);

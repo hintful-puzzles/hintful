@@ -86,7 +86,7 @@ const GAME_ID = "3x3:464696464";
 describe("Mosaic midend lifecycle", () => {
   it("paints the board on a forced redraw", () => {
     const h = harness();
-    expect(h.m.newGameFromId(GAME_ID)).toBeUndefined();
+    expect(h.m.newGameFromId(GAME_ID)).toBeNull();
     const { dr, ops } = recordingDrawing();
     h.m.forceRedraw(dr);
     expect(ops.filter((o) => o.op === "drawRect").length).toBeGreaterThanOrEqual(9);
@@ -95,7 +95,7 @@ describe("Mosaic midend lifecycle", () => {
 
   it("tracks the clue count and completes via keyboard marking", () => {
     const h = harness();
-    expect(h.m.newGameFromId(GAME_ID)).toBeUndefined();
+    expect(h.m.newGameFromId(GAME_ID)).toBeNull();
     expect(h.statusBar()).toBe("Clues left: 9");
     expect(h.status()).toBe("ongoing");
     for (let y = 0; y < 3; y++) {
@@ -109,7 +109,7 @@ describe("Mosaic midend lifecycle", () => {
 
   it("undo and redo restore the clue count", () => {
     const h = harness();
-    expect(h.m.newGameFromId(GAME_ID)).toBeUndefined();
+    expect(h.m.newGameFromId(GAME_ID)).toBeNull();
     // Marking the top-left 2×2 satisfies the corner clue (4) and no other;
     // the fourth mark is the move undone.
     h.selectAt(0, 0);
@@ -125,15 +125,15 @@ describe("Mosaic midend lifecycle", () => {
 
   it("solves via the Solve command", () => {
     const h = harness();
-    expect(h.m.newGameFromId(GAME_ID)).toBeUndefined();
-    expect(h.m.solve()).toBeUndefined();
+    expect(h.m.newGameFromId(GAME_ID)).toBeNull();
+    expect(h.m.solve()).toBeNull();
     expect(h.statusBar()).toBe("Auto solved");
     expect(h.status()).toBe("solved-with-help");
   });
 
   it("recomputes mistakes as marks change", () => {
     const h = harness();
-    expect(h.m.newGameFromId(GAME_ID)).toBeUndefined();
+    expect(h.m.newGameFromId(GAME_ID)).toBeNull();
     h.selectAt(1, 0, true); // blank a cell that must be black
     expect(h.m.findMistakes()).toBe(1);
     h.selectAt(1, 0, true); // double-toggle again: blank → black, now correct

@@ -355,7 +355,7 @@ export function specToGrid(
       while (run-- > 0) grid[idx++] = 0;
     } else if (ch === "_") {
       i++;
-    } else if (digit !== undefined && digit >= 1) {
+    } else if (digit !== null && digit >= 1) {
       const n = parseLeadingInt(desc, i);
       grid[idx++] = n.value;
       i = n.next;
@@ -383,7 +383,7 @@ function validateGridDesc(
       i++;
     } else if (ch === "_") {
       i++;
-    } else if (digit !== undefined && digit >= 1) {
+    } else if (digit !== null && digit >= 1) {
       const n = parseLeadingInt(desc, i);
       const val = n.value;
       i = n.next;

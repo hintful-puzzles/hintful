@@ -11,7 +11,7 @@ import { settings } from "./settings.ts";
 describe("the last dealt board", () => {
   it("round-trips per puzzle, and is absent before anything is recorded", async () => {
     await settings.loaded;
-    expect(await settings.getLastGameId("flip")).toBeUndefined();
+    expect(await settings.getLastGameId("flip")).toBeNull();
 
     await settings.setLastGameId("flip", "4x4:1,2,3");
     await settings.setLastGameId("pegs", "7x7cross:abc");
@@ -19,13 +19,13 @@ describe("the last dealt board", () => {
     expect(await settings.getLastGameId("pegs")).toBe("7x7cross:abc");
   });
 
-  it("clears the key on `undefined` rather than storing it", async () => {
+  it("clears the key on `null` rather than storing it", async () => {
     // The path a board this build can no longer deal takes: forgotten, not
     // recorded as absent.
     await settings.loaded;
     await settings.setLastGameId("galaxies", "7x7dn:stale");
-    await settings.setLastGameId("galaxies", undefined);
-    expect(await settings.getLastGameId("galaxies")).toBeUndefined();
+    await settings.setLastGameId("galaxies", null);
+    expect(await settings.getLastGameId("galaxies")).toBeNull();
   });
 
   it("leaves the puzzle's other settings alone", async () => {
@@ -36,7 +36,7 @@ describe("the last dealt board", () => {
     await settings.setLastGameId("towers", "5x5dn:board");
     expect(await settings.getParams("towers")).toBe("5x5dn");
 
-    await settings.setLastGameId("towers", undefined);
+    await settings.setLastGameId("towers", null);
     expect(await settings.getParams("towers")).toBe("5x5dn");
   });
 });

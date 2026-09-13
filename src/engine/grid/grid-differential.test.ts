@@ -95,7 +95,7 @@ describe("grid periodic tilings match the C reference", () => {
       // Built lazily and memoized: constructing at describe-body time would
       // make one unimplemented tiling abort collection for the whole file,
       // hiding every other tiling's result.
-      let memo: ReturnType<typeof dump> | undefined;
+      let memo: ReturnType<typeof dump> | null = null;
       const got = (): ReturnType<typeof dump> => {
         memo ??= dump(gridNew(f.type as GridType, f.width, f.height, f.desc));
         return memo;

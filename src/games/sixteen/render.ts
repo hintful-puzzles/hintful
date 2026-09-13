@@ -45,7 +45,7 @@ export interface SixteenHintHighlights {
   targetPos: number;
   /** Where the *next* plan step takes this tile when it continues the
    * same journey perpendicular to this one (two-leg preview). */
-  ultimatePos?: number;
+  ultimatePos: number | null;
 }
 
 // --- coordinate helpers -----------------------------------------------

@@ -113,7 +113,7 @@ describe("Midend custom-params round-trip", () => {
   it("applies valid submitted values and adopts the new params", () => {
     const m = new Midend(makeGame());
     const err = m.setCustomParams({ width: "12", flag: true, mode: 2 });
-    expect(err).toBeUndefined();
+    expect(err).toBeNull();
     expect(m.getParams()).toBe("12fm2");
     expect(m.getCustomParams()).toEqual({ width: "12", flag: true, mode: 2 });
   });
@@ -129,7 +129,7 @@ describe("Midend custom-params round-trip", () => {
   it("applies only submitted keys, leaving the rest at their current value", () => {
     const m = new Midend(makeGame());
     // Only width submitted: flag/mode keep the current params' values.
-    expect(m.setCustomParams({ width: "7" })).toBeUndefined();
+    expect(m.setCustomParams({ width: "7" })).toBeNull();
     expect(m.getParams()).toBe("7m1");
   });
 
@@ -141,12 +141,16 @@ describe("Midend custom-params round-trip", () => {
     expect(m.getCustomParams()).toEqual({ width: "5", flag: false, mode: 1 });
   });
 
-  it("encodeCustomParams returns the encoded id, or #ERROR: on invalid", () => {
+  it("encodeCustomParams returns the encoded id, or the refusal on invalid", () => {
     const m = new Midend(makeGame());
-    expect(m.encodeCustomParams({ width: "9", flag: true, mode: 0 })).toBe("9fm0");
-    expect(m.encodeCustomParams({ width: "0" })).toBe(
-      "#ERROR:Width must be at least one",
-    );
+    expect(m.encodeCustomParams({ width: "9", flag: true, mode: 0 })).toEqual({
+      ok: true,
+      params: "9fm0",
+    });
+    expect(m.encodeCustomParams({ width: "0" })).toEqual({
+      ok: false,
+      error: "Width must be at least one",
+    });
     // A preview never adopts the params.
     expect(m.getParams()).toBe("5m1");
   });
@@ -155,7 +159,7 @@ describe("Midend custom-params round-trip", () => {
     const m = new Midend(makeGame());
     // The app form submits typed values, but a persisted/legacy value may
     // arrive as a string; boolean and choices coerce like applyPrefs.
-    expect(m.setCustomParams({ width: "8", flag: "true", mode: "2" })).toBeUndefined();
+    expect(m.setCustomParams({ width: "8", flag: "true", mode: "2" })).toBeNull();
     expect(m.getParams()).toBe("8fm2");
   });
 });
@@ -167,7 +171,7 @@ describe("A game without paramConfig keeps an empty custom dialog", () => {
     expect(cfg.items).toEqual({});
     expect(m.getCustomParams()).toEqual({});
     const before = m.getParams();
-    expect(m.setCustomParams({ width: "99" })).toBeUndefined();
+    expect(m.setCustomParams({ width: "99" })).toBeNull();
     expect(m.getParams()).toBe(before);
   });
 });
@@ -223,7 +227,7 @@ describe("Every registered game with paramConfig round-trips its presets", () =>
       for (const p of allPresetParams(game)) {
         const encoded = game.encodeParams(p, true);
         const setErr = m.setParams(encoded);
-        expect(setErr, `${id} rejected its own preset ${encoded}`).toBeUndefined();
+        expect(setErr, `${id} rejected its own preset ${encoded}`).toBeNull();
         const values = m.getCustomParams();
         // Feeding the read-back values into setCustomParams must validate
         // and reproduce the same param id — no drift between get and set.
@@ -231,7 +235,7 @@ describe("Every registered game with paramConfig round-trips its presets", () =>
         expect(
           err,
           `${id} rejected its own values ${JSON.stringify(values)}`,
-        ).toBeUndefined();
+        ).toBeNull();
         expect(m.getParams()).toBe(encoded);
       }
     });

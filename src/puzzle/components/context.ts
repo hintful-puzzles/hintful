@@ -25,8 +25,8 @@ export class PuzzleContext extends SignalWatcher(LitElement) {
   @state()
   private _puzzle?: Puzzle;
 
-  get puzzle(): Puzzle | undefined {
-    return this._puzzle;
+  get puzzle(): Puzzle | null {
+    return this._puzzle ?? null;
   }
 
   // For dispatching puzzle-game-state-change

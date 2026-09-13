@@ -87,12 +87,12 @@ function harness() {
     () => {},
     () => {},
   );
-  const status = (): GameStatus | undefined =>
+  const status = (): GameStatus | null =>
     (
       [...notes].reverse().find((n) => n.type === "game-state-change") as
         | Extract<ChangeNotification, { type: "game-state-change" }>
         | undefined
-    )?.status;
+    )?.status ?? null;
   return { m, status };
 }
 
@@ -478,25 +478,25 @@ describe("sticks completion and solve (through a real Midend)", () => {
 
   it("Solve through the midend completes the board (solved-with-help)", () => {
     const { m, status } = harness();
-    expect(m.newGameFromId(FIX_ID)).toBeUndefined();
-    expect(m.solve()).toBeUndefined();
+    expect(m.newGameFromId(FIX_ID)).toBeNull();
+    expect(m.solve()).toBeNull();
     expect(status()).toBe("solved-with-help");
     const text = m.formatAsText();
-    expect(text).toBeDefined();
+    expect(typeof text).toBe("string");
     // Every white cell carries a line ('-' or '|'), none left '.'.
     expect(text).not.toContain(".");
   });
 
   it("saveGame -> loadGame restores an equivalent game", () => {
     const me = new Midend(sticksGame);
-    expect(me.newGameFromId(FIX_ID)).toBeUndefined();
+    expect(me.newGameFromId(FIX_ID)).toBeNull();
     const i = whiteCellSolved(F_VER);
     me.playMoves([
       { kind: "set", changes: [{ index: i, line: "ver" }] },
     ] as SticksMove[]);
     const saved = me.saveGame();
     const me2 = new Midend(sticksGame);
-    expect(me2.loadGame(saved)).toBeUndefined();
+    expect(me2.loadGame(saved)).toBeNull();
     expect(me2.formatAsText()).toBe(me.formatAsText());
   });
 

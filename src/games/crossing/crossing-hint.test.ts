@@ -541,10 +541,10 @@ describe("crossing hint — the frame", () => {
   const hinted = (seed: string): { midend: CrossingMidend; step: Step } => {
     const midend = new Midend(crossingGame);
     const id = `${crossingGame.encodeParams(crossingPresets[0], true)}#${seed}`;
-    expect(midend.newGameFromId(id)).toBeUndefined();
-    expect(midend.hint()).toBeUndefined();
+    expect(midend.newGameFromId(id)).toBeNull();
+    expect(midend.hint()).toBeNull();
     const step = midend.activeHintStep() as Step | undefined;
-    expect(step).toBeDefined();
+    expect(step).not.toBeNull();
     if (!step) throw new Error("no hint step");
     return { midend, step };
   };
@@ -569,7 +569,7 @@ describe("crossing hint — the frame", () => {
     expect(away, "no open square outside the hint").toBeGreaterThanOrEqual(0);
 
     clickCell(midend, params.w, away);
-    expect(midend.activeHintStep()).toBeUndefined();
+    expect(midend.activeHintStep()).toBeNull();
   });
 
   it("a click inside the hint keeps it up, so it can be followed by hand", () => {
@@ -582,7 +582,7 @@ describe("crossing hint — the frame", () => {
     if (!inside) return;
 
     clickCell(midend, params.w, inside.y * params.w + inside.x);
-    expect(midend.activeHintStep()).toBeDefined();
+    expect(midend.activeHintStep()).not.toBeNull();
   });
 
   it("keeps the cursor visible on a square the hint has marked", () => {
@@ -598,10 +598,10 @@ describe("crossing hint — the frame", () => {
     const frameAfterClick = (showHint: boolean, cell: { x: number; y: number }) => {
       const midend = new Midend(crossingGame);
       const id = `${crossingGame.encodeParams(params, true)}#hint-dismiss`;
-      expect(midend.newGameFromId(id)).toBeUndefined();
+      expect(midend.newGameFromId(id)).toBeNull();
       const size = midend.size({ w: 600, h: 900 });
       const ts = size.w / (params.w + 1);
-      if (showHint) expect(midend.hint()).toBeUndefined();
+      if (showHint) expect(midend.hint()).toBeNull();
       midend.redraw(new RecordingDrawing(palette));
       clickCell(midend, params.w, cell.y * params.w + cell.x, ts);
 

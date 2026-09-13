@@ -319,8 +319,8 @@ describe("keen findMistakes", () => {
 describe("keen Solve via Midend", () => {
   it("solves a freshly generated board and reports solved", () => {
     const me = new Midend(keenGame);
-    expect(me.newGameFromId("6dn#keen-solve")).toBeUndefined();
-    expect(me.solve()).toBeUndefined();
+    expect(me.newGameFromId("6dn#keen-solve")).toBeNull();
+    expect(me.solve()).toBeNull();
     const solved = (me as unknown as { state: KeenState }).state;
     expect(solved.completed).toBe(true);
     expect(keenGame.status(solved)).toBe("solved");
@@ -328,11 +328,11 @@ describe("keen Solve via Midend", () => {
 
   it("save round-trips a played board", () => {
     const me = new Midend(keenGame);
-    expect(me.newGameFromId(`4de:${D4}`)).toBeUndefined();
+    expect(me.newGameFromId(`4de:${D4}`)).toBeNull();
     me.playMoves([{ type: "set", x: 0, y: 0, n: 1, pencil: false }]);
     const saved = me.saveGame();
     const me2 = new Midend(keenGame);
-    expect(me2.loadGame(saved)).toBeUndefined();
+    expect(me2.loadGame(saved)).toBeNull();
     expect((me2 as unknown as { state: KeenState }).state.grid[0]).toBe(1);
   });
 });
@@ -386,7 +386,7 @@ describe("keen render", () => {
     // tile value, so it must be in the diff cache key — otherwise findMistakes()
     // on an already-painted cell repaints nothing and the red never shows.
     const me = new Midend(keenGame);
-    expect(me.newGameFromId(RENDER_ID)).toBeUndefined();
+    expect(me.newGameFromId(RENDER_ID)).toBeNull();
     const st = (me as unknown as { state: KeenState }).state;
     const sol = solutionGrid(st);
     const wrong = (sol[0] % 4) + 1;

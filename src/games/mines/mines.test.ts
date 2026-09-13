@@ -47,7 +47,7 @@ function fresh(id: string) {
     () => {},
     () => {},
   );
-  expect(m.newGameFromId(id)).toBeUndefined();
+  expect(m.newGameFromId(id)).toBeNull();
   const gameId = () =>
     [...notes].reverse().find((n) => n.type === "game-id-change")?.currentGameId;
   return { m, notes, gameId };
@@ -55,7 +55,7 @@ function fresh(id: string) {
 
 /** A genuinely covered cell (`?` in the text format) — a flag on an opened
  * cell is illegal, so tests must pick a covered one to flag. */
-function coveredCell(m: { formatAsText(): string | undefined }): {
+function coveredCell(m: { formatAsText(): string | null }): {
   x: number;
   y: number;
 } {
@@ -267,7 +267,7 @@ describe("mines supersede + midend", () => {
       () => {},
       () => {},
     );
-    expect(m2.loadGame(data)).toBeUndefined();
+    expect(m2.loadGame(data)).toBeNull();
     expect(m2.formatAsText()).toBe(before);
     // Undo to state 0: rebuilt from the private desc (layout, no click), so the
     // board is fully covered again — the click was not baked in.

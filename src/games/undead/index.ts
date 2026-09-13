@@ -655,7 +655,7 @@ function hint(
 /** Re-derive the displayed step's highlights for a shrunk `pencilStrike`. */
 function strikeHighlights(
   xyOf: Point[],
-  prev: UndeadHint | undefined,
+  prev: UndeadHint | null,
   marks: { cell: number; monster: number }[],
 ): UndeadHint {
   return {
@@ -696,7 +696,7 @@ function hintKeepTrack(
     step.move = { type: "pencilStrike", marks: remaining };
     step.highlights = strikeHighlights(
       monsterCellXY(state.common),
-      step.highlights,
+      step.highlights ?? null,
       remaining,
     );
     return "onTrack";
@@ -721,7 +721,11 @@ function refreshHintStep(
     return {
       ...step,
       move: { type: "pencilStrike", marks: live },
-      highlights: strikeHighlights(monsterCellXY(state.common), step.highlights, live),
+      highlights: strikeHighlights(
+        monsterCellXY(state.common),
+        step.highlights ?? null,
+        live,
+      ),
     };
   }
   if (m.type === "set") {

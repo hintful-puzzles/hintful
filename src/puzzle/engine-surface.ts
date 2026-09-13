@@ -13,6 +13,7 @@ import type {
   Color,
   ConfigDescription,
   ConfigValues,
+  CustomParamsEncoding,
   FontInfo,
   KeyLabel,
   Point,
@@ -32,16 +33,16 @@ export interface PuzzleEngineSurface {
   getStaticProperties(): PuzzleStaticAttributes;
 
   newGame(): void;
-  newGameFromId(id: string): string | undefined;
+  newGameFromId(id: string): string | null;
   restartGame(): void;
   undo(): void;
   redo(): void;
-  solve(): string | undefined;
-  hint(): string | undefined;
+  solve(): string | null;
+  hint(): string | null;
   /** Apply one step of the stored plan in slow motion. `hideAfter` (the
    * Hint-button stepper) hides the plan once the step settles instead of
    * previewing the next step; auto-play leaves it false. */
-  executeHint(hideAfter?: boolean): string | undefined;
+  executeHint(hideAfter?: boolean): string | null;
   /** Milliseconds of the animation currently armed (e.g. the slow-motion
    * move `executeHint` just played), or 0 when nothing is animating. The
    * auto-hint loop paces each step by this. */
@@ -63,18 +64,18 @@ export interface PuzzleEngineSurface {
   requestKeys(): KeyLabel[];
 
   getParams(): string;
-  setParams(params: string): string | undefined;
+  setParams(params: string): string | null;
   getPresets(): PresetMenuEntry[];
 
   getCustomParamsConfig(): ConfigDescription;
   getCustomParams(): ConfigValues;
-  setCustomParams(values: ConfigValues): string | undefined;
+  setCustomParams(values: ConfigValues): string | null;
   decodeCustomParams(params: string): ConfigValues | string;
-  encodeCustomParams(values: ConfigValues): string;
+  encodeCustomParams(values: ConfigValues): CustomParamsEncoding;
 
   getPreferencesConfig(): ConfigDescription;
   getPreferences(): ConfigValues;
-  setPreferences(values: ConfigValues): string | undefined;
+  setPreferences(values: ConfigValues): void;
   // No binary preferences form (upstream's `midend_serialize_prefs`): the app
   // persists `ConfigValues` per puzzle through get/setPreferences. A preferences
   // import/export feature should choose its own wire format, not inherit the C's.
@@ -89,9 +90,9 @@ export interface PuzzleEngineSurface {
   darkPalette(defaultBackground: Color): Record<number, Color>;
   size(maxSize: Size): Size;
   preferredSize(): Size;
-  formatAsText(): string | undefined;
+  formatAsText(): string | null;
 
-  loadGame(data: Uint8Array<ArrayBuffer>): string | undefined;
+  loadGame(data: Uint8Array<ArrayBuffer>): string | null;
   saveGame(): Uint8Array<ArrayBuffer>;
 
   attachCanvas(canvas: OffscreenCanvas, fontInfo: FontInfo): void;

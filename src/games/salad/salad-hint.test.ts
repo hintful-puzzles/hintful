@@ -495,18 +495,19 @@ describe("salad hint — the strike move", () => {
   it("a marker step is judged followed once the square carries that marker", () => {
     const state = board(NUMBERS, "m2");
     let plan = saladGame.hint?.(state);
-    let step: HintStep<unknown, SaladHint> | undefined;
+    let step: HintStep<unknown, SaladHint> | null = null;
     for (let i = 0; i < 40 && !step; i++) {
       if (!plan?.ok) break;
-      step = plan.steps.find(
-        (s) =>
-          (s.move as { type: string; value?: unknown }).type === "set" &&
-          typeof (s.move as { value?: unknown }).value === "string",
-      ) as HintStep<unknown, SaladHint> | undefined;
+      step =
+        (plan.steps.find(
+          (s) =>
+            (s.move as { type: string; value?: unknown }).type === "set" &&
+            typeof (s.move as { value?: unknown }).value === "string",
+        ) as HintStep<unknown, SaladHint> | undefined) ?? null;
       if (step) break;
       plan = saladGame.hint?.(saladGame.executeMove(state, plan.steps[0].move));
     }
-    expect(step, "no marker step in any early plan").toBeDefined();
+    expect(step, "no marker step in any early plan").not.toBeNull();
     if (!step) return;
     const move = step.move as {
       type: "set";

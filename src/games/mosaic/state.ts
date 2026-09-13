@@ -149,7 +149,7 @@ export function validateDesc(p: MosaicParams, desc: string): string | null {
   let length = 0;
   for (const tok of scanRunLength(desc)) {
     if ("blanks" in tok) length += tok.blanks;
-    else if (digitValue(tok.value) !== undefined) length++;
+    else if (digitValue(tok.value) !== null) length++;
     else return "Invalid character in game description";
   }
   if (length !== p.width * p.height) return "Desc size mismatch";
@@ -166,7 +166,7 @@ export function newState(p: MosaicParams, desc: string): MosaicState {
       loc += tok.blanks; // hidden cells; already -1
     } else {
       const clue = digitValue(tok.value);
-      if (clue !== undefined) {
+      if (clue !== null) {
         clues[loc] = clue;
         notCompletedClues++;
       }

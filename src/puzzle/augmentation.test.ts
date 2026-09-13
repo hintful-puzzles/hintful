@@ -77,7 +77,7 @@ describe("describeParams covers every augmentation template field", () => {
     const describeConfig = aug.describeConfig;
     it(`${id}: no unsubstituted {field} placeholder in any preset header`, () => {
       const game = getTsGame(id);
-      expect(game, `${id} is in the catalog but not registered`).toBeDefined();
+      expect(game, `${id} is in the catalog but not registered`).not.toBeNull();
       if (!game) {
         return;
       }
@@ -114,7 +114,7 @@ describe("the type header names the tier the game declares", () => {
     const describeConfig = aug.describeConfig;
     it(`${id}: every tier renders as its declared name`, () => {
       const game = getTsGame(id);
-      expect(game, `${id} is in the catalog but not registered`).toBeDefined();
+      expect(game, `${id} is in the catalog but not registered`).not.toBeNull();
       if (!game) {
         return;
       }

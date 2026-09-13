@@ -191,7 +191,7 @@ export function validateDesc(p: RectParams, desc: string): string | null {
     const digit = digitValue(c);
     if (c >= "a" && c <= "z") {
       squares += c.charCodeAt(0) - CODE_A + 1;
-    } else if (digit !== undefined && digit >= 1) {
+    } else if (digit !== null && digit >= 1) {
       squares++;
       i = parseLeadingInt(desc, i).next;
     } else if (c !== "_") {
@@ -213,7 +213,7 @@ export function decodeNumbers(desc: string, area: number): Int32Array {
     const digit = digitValue(c);
     if (c >= "a" && c <= "z") {
       idx += c.charCodeAt(0) - CODE_A + 1; // the grid starts zeroed
-    } else if (digit !== undefined && digit >= 1) {
+    } else if (digit !== null && digit >= 1) {
       const n = parseLeadingInt(desc, i - 1);
       grid[idx++] = n.value;
       i = n.next;

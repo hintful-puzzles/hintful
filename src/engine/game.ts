@@ -464,15 +464,15 @@ export interface Game<
    * `reference` is. */
   selectReference?(ui: Ui, key: string | null): boolean;
 
-  /** Render the state as plain text for the share dialog. Returns `undefined`
+  /** Render the state as plain text for the share dialog. Returns `null`
    * when *these particular* params have no text rendering, which the static
    * `canFormatAsText` flag cannot express: Loopy's text format assumes a square
    * lattice, so it is available on the square grid type only (upstream spells
    * this as a separate `game_can_format_as_text_now(params)` entry point). The
    * midend and the app treat an absent rendering as "no text panel", so a game
    * with a param-dependent format sets `canFormatAsText: true` and returns
-   * `undefined` for the params it cannot render. */
-  textFormat?(s: State): string | undefined;
+   * `null` for the params it cannot render. */
+  textFormat?(s: State): string | null;
   statusbarText?(s: State, ui: Ui): string;
 
   /** The game's user preferences (upstream `get_prefs`/`set_prefs`),

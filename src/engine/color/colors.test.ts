@@ -91,7 +91,7 @@ describe("the named colors", () => {
     // A named color with no authored dark value would be adapted by calculation,
     // and calculation is exactly what cannot preserve a set's separation.
     for (const [name, c] of named)
-      expect(darkValue(c), `${name} has no dark value`).toBeDefined();
+      expect(darkValue(c), `${name} has no dark value`).not.toBeNull();
   });
 
   it("names each color once", () => {

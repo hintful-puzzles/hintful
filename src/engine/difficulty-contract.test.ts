@@ -215,7 +215,7 @@ describe.each(tiered)("$id difficulty contract", ({ id, game, contract, tiers })
     // a different param. Two string arrays being equal never ruled that out.
     // Asking the item to move the tier that `tierOf` reads does.
     const item = difficultyChoiceItem(game);
-    expect(item, `${id}: no difficulty choice item`).toBeDefined();
+    expect(item, `${id}: no difficulty choice item`).not.toBeNull();
     if (!item) return;
     expect(item.choices, `${id}: the tier list is that item's choices`).toBe(tiers);
     const base = firstLeaf(game.presets());

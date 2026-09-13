@@ -127,7 +127,7 @@ const STATIC_ATTRIBUTES = staticAttributeFields();
  * named field is a real read — `canHint: this.game.hint !== undefined` is the
  * engine deciding something — so the names have to match.
  */
-function relayTarget(access: ts.PropertyAccessExpression): string | undefined {
+function relayTarget(access: ts.PropertyAccessExpression): string | null {
   let node: ts.Node = access;
   let parent = access.parent;
   if (
@@ -140,7 +140,7 @@ function relayTarget(access: ts.PropertyAccessExpression): string | undefined {
     node = parent;
     parent = parent.parent;
   }
-  if (parent === undefined) return undefined;
+  if (parent === undefined) return null;
   if (
     ts.isPropertyAssignment(parent) &&
     parent.initializer === node &&
@@ -156,7 +156,7 @@ function relayTarget(access: ts.PropertyAccessExpression): string | undefined {
   ) {
     return parent.left.name.text;
   }
-  return undefined;
+  return null;
 }
 
 /**

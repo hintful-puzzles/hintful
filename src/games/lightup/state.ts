@@ -370,7 +370,7 @@ export function validateDesc(p: LightupParams, desc: string): string | null {
     const clue = digitValue(c);
     if (c >= "a" && c <= "z") {
       i += c.charCodeAt(0) - A; // and the loop's i++ adds another one
-    } else if (c !== "B" && (clue === undefined || clue > 4)) {
+    } else if (c !== "B" && (clue === null || clue > 4)) {
       return "Game description contained unexpected character";
     }
   }
@@ -391,7 +391,7 @@ export function newState(p: LightupParams, desc: string): LightupState {
     const clue = digitValue(c);
     if (c >= "a" && c <= "z") {
       run = c.charCodeAt(0) - A; // this square is the run's first
-    } else if (clue !== undefined && clue <= 4) {
+    } else if (clue !== null && clue <= 4) {
       state.flags[i] |= F_NUMBERED | F_BLACK;
       state.lights[i] = clue;
     } else if (c === "B") {

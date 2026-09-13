@@ -62,7 +62,7 @@ export interface NoteEncoding {
 }
 
 /** `enc.bit`, defaulted to the Latin family's `1 << n`. */
-function bitOf(enc: NoteEncoding | undefined): (n: number) => number {
+function bitOf(enc?: NoteEncoding): (n: number) => number {
   return enc?.bit ?? ((n: number): number => 1 << n);
 }
 
@@ -108,7 +108,7 @@ export interface CandidateHighlights {
  */
 export function candidateHint<State extends { completed: boolean }, Move, Hint>(
   state: State,
-  ui: { autoPencil?: boolean } | undefined,
+  ui: { autoPencil?: boolean } | null,
   findMistakes: (state: State) => readonly unknown[],
   buildSteps: (state: State, autoClean: boolean) => HintStep<Move, Hint>[],
 ): HintResult<Move, Hint> {

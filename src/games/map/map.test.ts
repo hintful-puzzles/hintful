@@ -363,12 +363,12 @@ describe("map save round-trip", () => {
     const blank = firstBlank(state);
 
     const me = new Midend(mapGame);
-    expect(me.newGameFromId(id)).toBeUndefined();
+    expect(me.newGameFromId(id)).toBeNull();
     me.playMoves([{ ops: [{ op: "color", region: blank, color: 2 }] }]);
     const saved = me.saveGame();
 
     const me2 = new Midend(mapGame);
-    expect(me2.loadGame(saved)).toBeUndefined();
+    expect(me2.loadGame(saved)).toBeNull();
     // A faithful reconstruction re-serializes to the same bytes.
     expect(Array.from(me2.saveGame())).toEqual(Array.from(saved));
   });

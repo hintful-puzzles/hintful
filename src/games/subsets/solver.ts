@@ -657,7 +657,7 @@ function recCubeSingleCount(
   state: SubsetsState,
   counts: Int32Array,
   cube: Uint8Array,
-  elim: (ElimEvidence | undefined)[],
+  elim: (ElimEvidence | null)[],
 ): number {
   const s = state.w * state.h;
   const n2 = 1 << state.n;
@@ -688,7 +688,7 @@ function recCubeSingleCount(
 function recDisjoint(
   state: SubsetsState,
   cube: Uint8Array,
-  elim: (ElimEvidence | undefined)[],
+  elim: (ElimEvidence | null)[],
 ): number {
   const { w, h } = state;
   const n2 = 1 << state.n;
@@ -741,7 +741,7 @@ function recDisjoint(
 function recApplyArrowsAdvanced(
   state: SubsetsState,
   cube: Uint8Array,
-  elim: (ElimEvidence | undefined)[],
+  elim: (ElimEvidence | null)[],
   strong: boolean,
 ): number {
   const { w, h } = state;
@@ -798,7 +798,7 @@ function shrinkCube(
   state: SubsetsState,
   cube: Uint8Array,
   counts: Int32Array,
-  elim: (ElimEvidence | undefined)[],
+  elim: (ElimEvidence | null)[],
   strong: boolean,
 ): void {
   syncCube(state, cube);
@@ -816,7 +816,7 @@ function shrinkCube(
 function nextCollapseFiring(
   state: SubsetsState,
   cube: Uint8Array,
-  elim: (ElimEvidence | undefined)[],
+  elim: (ElimEvidence | null)[],
 ): SubsetsDeduction | null {
   const s = state.w * state.h;
   const n2 = 1 << state.n;
@@ -1119,7 +1119,7 @@ export function deduceHintPlan(
   const n2 = 1 << work.n;
   const cube = new Uint8Array(s * n2).fill(1);
   const counts = new Int32Array(s);
-  const elim: (ElimEvidence | undefined)[] = new Array(s * n2);
+  const elim: (ElimEvidence | null)[] = new Array(s * n2).fill(null);
   const budget = stepBudget("subsets hint");
 
   // Every rung *applies as it detects* (each `next*Firing` writes the letter or
