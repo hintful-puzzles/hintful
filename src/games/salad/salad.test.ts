@@ -7,7 +7,7 @@
  * `Midend`. Tier 2 — the paint-twice mistake-overlay regression; the tier-2.5
  * render scenarios live in `salad-render.test.ts`.
  *
- * The byte-for-byte C differential is `salad-differential.test.ts`.
+ * The frozen C boards are decoded and graded in `salad-differential.test.ts`.
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";

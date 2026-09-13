@@ -58,8 +58,6 @@ export const FM_ERRORMASK = FM_ERRORDUP | FM_ERRORDIST;
 export const numBit = (n: number): number => 1 << (n - 1);
 /** Every candidate a region of size `k` admits: bits for `1..k`. */
 export const areaBits = (k: number): number => (1 << k) - 1;
-/** The widest candidate set (a region of nine). */
-export const ALL_MARKS = areaBits(9);
 
 // --- params ----------------------------------------------------------------
 

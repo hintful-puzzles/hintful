@@ -439,9 +439,9 @@ describe("salad hint — the opener never destroys the player's own notes", () =
 
 describe("salad hint — the recorder cannot reach the generator", () => {
   it("recording leaves the board it was given untouched", () => {
-    // The 28-fixture byte-match differential is the real proof that the recorder
-    // is inert on the generate/solve path; this pins the narrower property that
-    // the recording run itself is pure on its input.
+    // The recorder is gated off the generate/solve path, and nothing regenerates
+    // a board against a recording; this pins the narrower property that the
+    // recording run itself is pure on its input.
     const state = board(LETTERS, "i1");
     const b = scratchBoard(state);
     const before = [Array.from(b.grid), Array.from(b.holes)];

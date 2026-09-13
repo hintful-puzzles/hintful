@@ -77,8 +77,8 @@ describe("ascent generation + solving", () => {
   }
 });
 
-// The tier gate. Upstream has none, and how often its tiers failed to bind is
-// measured on `AscentGenerateOptions.upstreamLooseGate`.
+// The tier gate. Upstream has none; how often its tiers failed to bind is
+// recorded on `newAscentDesc`.
 describe("ascent difficulty tiers bind", () => {
   const TIERED: [string, AscentParams][] = [
     ["5x5 rect normal", mk(5, 5, 1, MODE_RECT)],

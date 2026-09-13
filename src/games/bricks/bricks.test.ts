@@ -1,6 +1,5 @@
 /**
- * Bricks behavioral tests (tiers 1 and 2.5). The byte-match generator /
- * solver / codec are covered by `bricks-differential.test.ts`; here we pin the
+ * Bricks behavioral tests (tiers 1 and 2.5): the generator and its tier gate, the
  * hex geometry, the input mapping (the one place a shear-coordinate bug hides),
  * completion/solve through a real `Midend`, findMistakes, and the render frames.
  */

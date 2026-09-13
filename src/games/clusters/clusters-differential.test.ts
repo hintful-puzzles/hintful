@@ -1,31 +1,28 @@
 /**
- * Clusters — gated differential against a frozen snapshot of C-generated
- * reference boards (`__fixtures__/clusters-c-reference.json`).
+ * Clusters — the frozen C-generated boards (`__fixtures__/clusters-c-reference.json`),
+ * decoded rather than regenerated.
  *
- * Clusters' generator is solver-gated (it accepts only a board its
- * contradiction solver can uniquely complete) and its codec is an exact
- * inverse, so the strongest meaningful bar is that the TS `newDesc` reproduces
- * the C engine's desc byte-for-byte for the same seed — which validates the
- * generator, the solver AND the run-length codec all at once
- * (docs/games/testing.md § "Byte-match: fidelity where there is a right answer").
+ * Each board was one upstream's generator accepted: every one is "solvable with
+ * one hypothetical". So each must still validate, round-trip through the
+ * run-length codec, and be completed by the TS solver at the lookahead rung — a
+ * net under refactoring the codec and the solver that no longer depends on
+ * reproducing upstream's generator. What the shipped generator guarantees is
+ * asserted in `clusters.test.ts` § "difficulty tiers": an Easy board is finished
+ * by the single-cell rule alone, and a Normal board needs the lookahead.
  *
- * **`upstreamLooseGate` is set here and nowhere else.** The shipped generator
- * grades its two tiers honestly — Normal rejects a board the single-cell rule
- * alone can finish — and because generation is solver-gated, that changes every
- * Normal description. The flag keeps upstream's one-gate acceptance reachable
- * from this file alone, so these fixtures still byte-match the C; see
- * `ClustersGenerateOptions.upstreamLooseGate` for what it therefore stops
- * covering.
- *
- * The fixture is **frozen and cannot be regenerated**: it was captured by
- * `puzzles/auxiliary/clusters-trace.c` against upstream's C, and that harness
- * is gone — see `engine/testing/differential.ts`.
+ * The fixture is **frozen and cannot be regenerated**: the harness that captured
+ * it is gone — see `engine/testing/differential.ts`.
  */
-import { expect } from "vitest";
-import { describeDescDifferential } from "../../engine/testing/differential.ts";
+import { describe, expect, it } from "vitest";
 import cReference from "./__fixtures__/clusters-c-reference.json" with { type: "json" };
-import { newClustersDesc } from "./generator.ts";
-import { type ClustersParams, DIFF_TRICKY, validateDesc } from "./state.ts";
+import { COMPLETE, solveGame } from "./solver.ts";
+import {
+  type ClustersParams,
+  DIFF_TRICKY,
+  encodeDesc,
+  newState,
+  validateDesc,
+} from "./state.ts";
 
 interface Fixture {
   w: number;
@@ -36,18 +33,17 @@ interface Fixture {
 
 const data = cReference as { fixtures: Fixture[] };
 
-describeDescDifferential<Fixture, ClustersParams>({
-  title: "Clusters differential (frozen C reference)",
-  fixtures: data.fixtures,
-  label: (f) => `${f.w}x${f.h} seed=${f.seed}`,
-  // The tier is immaterial under the loose gate, which solves at the deeper rung
-  // whatever was asked for, but the params must carry one, and Normal is what
-  // the recorded boards are: upstream's only bar is "solvable with one
-  // hypothetical".
-  params: (f) => ({ w: f.w, h: f.h, diff: DIFF_TRICKY }),
-  newDesc: (p, rng) => newClustersDesc(p, rng, { upstreamLooseGate: true }),
-  extra: (f, p) => {
-    // The desc the generator emits must also pass validation.
-    expect(validateDesc(p, f.desc)).toBeNull();
-  },
+describe("Clusters frozen C boards", () => {
+  it("covers every recorded board", () => {
+    expect(data.fixtures).toHaveLength(12);
+  });
+
+  for (const f of data.fixtures) {
+    it(`${f.w}x${f.h} seed=${f.seed}: decodes, round-trips and solves`, () => {
+      const p: ClustersParams = { w: f.w, h: f.h, diff: DIFF_TRICKY };
+      expect(validateDesc(p, f.desc)).toBeNull();
+      expect(encodeDesc(newState(p, f.desc).grid, f.w, f.h)).toBe(f.desc);
+      expect(solveGame(newState(p, f.desc).grid, f.w, f.h, DIFF_TRICKY)).toBe(COMPLETE);
+    });
+  }
 });

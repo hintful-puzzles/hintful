@@ -276,7 +276,7 @@ describe("spokes solver", () => {
   });
 
   it("grades honestly: an Unreasonable board is not crackable at Normal", () => {
-    // The corrected difficulty gate (see `SpokesGenerateOptions`). Upstream's
+    // The corrected difficulty gate (see `spokesGenerate`). Upstream's
     // acceptance check reads "…and it does *not* solve one tier easier", but it
     // re-solves the scratch board from the *leftover* position of the previous
     // candidate rather than from empty, so it answers a question about that
@@ -294,18 +294,6 @@ describe("spokes solver", () => {
       clearBoard(b);
       expect(spokesSolve(b, null, DIFF_HARD)).toBe("valid");
     }
-  });
-
-  it("reproduces upstream's dirty gate when asked, for the differential", () => {
-    // The differential is the only caller of this flag; if it ever stopped
-    // changing the outcome, that oracle would be silently testing the shipped
-    // path instead of upstream's.
-    const p: SpokesParams = { w: 4, h: 4, diff: "hard" };
-    const clean = newSpokesDesc(p, randomNew("gate-flag"));
-    const upstream = newSpokesDesc(p, randomNew("gate-flag"), {
-      upstreamDirtyGate: true,
-    });
-    expect(clean.desc).not.toBe(upstream.desc);
   });
 
   it("solves an Easy board without the look-ahead", () => {

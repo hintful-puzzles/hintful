@@ -2,17 +2,14 @@
  * Clusters generator — port of `clusters_generate` / `new_game_desc` in
  * `puzzles/unreleased/clusters.c`.
  *
- * This is the byte-match surface (see clusters-differential.test.ts): under
- * {@link ClustersGenerateOptions.upstreamLooseGate} the only randomness is one
- * `randomUpto(rs, 2)` per cell, and the solver is deterministic, so the emitted
- * desc is a pure function of the seed and reproduces the C byte-for-byte. The
- * scan orders, the flip-and-restart `break`, and the `force`-every-100 cadence
- * are transcribed verbatim — each decides the outcome.
+ * The randomness is one `randomUpto(rs, 2)` per cell, plus one draw per
+ * too-easy Normal candidate, and the solver is deterministic, so the emitted
+ * desc is a pure function of the seed. The scan orders, the flip-and-restart
+ * `break`, and the `force`-every-100 cadence each decide which board a seed
+ * produces.
  *
  * The two difficulty tiers change only *which candidates are kept*, never how
- * one is built. The single extra draw they can make — the cell perturbed when a
- * Normal candidate turns out too easy — is unreachable on the loose path, so
- * the oracle above is untouched.
+ * one is built.
  */
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { retryLimit } from "../../engine/retry-limit.ts";
@@ -72,8 +69,7 @@ function sameNeighbors(
  *  4. Prune adjacent equal dot pairs (two adjacent identical dots are mutually
  *     derivable): in scan order, clear a dot and its left/upper twin.
  *  5. Gate: solve the resulting puzzle at the requested tier — and, above the
- *     easiest tier, reject it if the tier below already solves it (see
- *     {@link ClustersGenerateOptions.upstreamLooseGate}).
+ *     easiest tier, reject it if the tier below already solves it.
  *
  * Steps 1–4 are untouched by the tiers: every board this emits comes from the
  * same candidate stream, and the tier only decides which candidates are kept.
@@ -85,7 +81,6 @@ function clustersGenerate(
   rng: RandomState,
   force: boolean,
   diff: number,
-  loose: boolean,
 ): ClustersStatus {
   const s = w * h;
   const counts = new Int32Array(s);
@@ -97,7 +92,7 @@ function clustersGenerate(
   }
 
   // 2. Flip isolated cells until none remain, restarting the scan after each
-  //    flip (the `break` is load-bearing for byte-match). The final pass, which
+  //    flip (the `break` decides which board a seed produces). The final pass, which
   //    finds nothing to flip, leaves `counts` holding the settled neighbor
   //    counts step 3 reads.
   let reset = true;
@@ -136,9 +131,6 @@ function clustersGenerate(
       grid[i - w] = 0;
     }
   }
-
-  // The pre-tier gate: solve at the deeper rung, accept on completion.
-  if (loose) return solveGame(grid, w, h, 1);
 
   // The tiers are named after the solver's own two rungs and share its scale, so
   // a tier *is* the `maxdiff` to solve at. The easy rung goes first, on the grid
@@ -192,39 +184,19 @@ function clustersGenerate(
  */
 const MAX_ATTEMPTS = 10_000;
 
-export interface ClustersGenerateOptions {
-  /**
-   * Reproduce upstream's single gate verbatim: solve at the deeper rung
-   * whatever the tier, and accept any board it completes.
-   *
-   * Under that gate every board is "solvable with one hypothetical" and none is
-   * *required* to need one — measured, 50–64% of them (by board size) fall to
-   * the single-cell rule alone. Gating Normal on "and not solvable one rung
-   * down" is what makes the setting bind, and because the generator is
-   * solver-gated it changes which candidates are kept, hence every Normal
-   * description.
-   *
-   * This flag keeps the byte-match oracle that validates the generator, the
-   * solver's exact deductive power and the run-length codec in one assertion:
-   * `clusters-differential.test.ts` sets it, and nothing else ever should. The
-   * oracle's blind spot is therefore exactly the `if (loose)` branch above and
-   * the tier arithmetic around it.
-   */
-  readonly upstreamLooseGate?: boolean;
-}
-
-export function newClustersDesc(
-  p: ClustersParams,
-  rng: RandomState,
-  options: ClustersGenerateOptions = {},
-): { desc: string } {
+/**
+ * Generate a board at `p.diff`. Normal is gated on "and not solvable one rung
+ * down": upstream solved at the deeper rung whatever the tier and accepted any
+ * board it completed, and measured, 50–64% of those boards (by size) fell to
+ * the single-cell rule alone, so the setting did not bind.
+ */
+export function newClustersDesc(p: ClustersParams, rng: RandomState): { desc: string } {
   const { w, h } = p;
-  const loose = options.upstreamLooseGate ?? false;
   const grid = new Uint8Array(w * h);
   const attempt = retryLimit("clusters: generation attempts", MAX_ATTEMPTS);
   let attempts = 0;
   let force = false;
-  while (clustersGenerate(grid, w, h, rng, force, p.diff, loose) !== COMPLETE) {
+  while (clustersGenerate(grid, w, h, rng, force, p.diff) !== COMPLETE) {
     attempt();
     attempts++;
     force = attempts % FORCE_EVERY === 0;

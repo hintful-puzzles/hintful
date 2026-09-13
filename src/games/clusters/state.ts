@@ -36,8 +36,8 @@ export const F_COLOR_0 = 0x01; // red
 export const F_COLOR_1 = 0x02; // blue
 export const F_SINGLE = 0x04; // a "dot": touches exactly one same-color cell
 /** Transient rule-violation bit. Upstream `clusters_validate` mutates this
- * into the grid; the solver/generator reproduce that (it is byte-match
- * critical — see solver.ts), but persisted play state stays free of it. */
+ * into the grid; the solver/generator reproduce that (it decides which boards a
+ * seed produces — see solver.ts), but persisted play state stays free of it. */
 export const F_ERROR = 0x08;
 export const COLMASK = F_COLOR_0 | F_COLOR_1;
 
@@ -194,14 +194,14 @@ export function validateParams(p: ClustersParams, full: boolean): string | null 
   return null;
 }
 
-// --- desc codec (byte-match surface, upstream new_game_desc/new_game) -------
+// --- desc codec (upstream new_game_desc/new_game) ---------------------------
 
 const CODE_a = "a".charCodeAt(0);
 const CODE_A = "A".charCodeAt(0);
 
 /**
- * Run-length encode the *given dot clues* of a finished grid, byte-for-byte
- * as upstream `new_game_desc`'s encode loop: walk positions `0..s` (inclusive
+ * Run-length encode the *given dot clues* of a finished grid, in the same
+ * format as upstream `new_game_desc`'s encode loop: walk positions `0..s` (inclusive
  * — the trailing `+1` terminator), tracking a run of non-given cells; at each
  * red dot emit `a+run` (chaining `z`=skip-25 for runs > 24), at each blue dot
  * `A+run` (chaining `Z`), and at the terminator flush the final run as a

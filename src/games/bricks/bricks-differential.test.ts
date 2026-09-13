@@ -1,26 +1,19 @@
 /**
- * Gated C-vs-TS differential for Bricks: for each frozen fixture recorded from
- * `puzzles/unreleased/bricks.c` via `puzzles/auxiliary/bricks-trace.c`, the TS
- * `newBricksDesc` over the bit-identical RNG must reproduce the C desc
- * byte-for-byte.
+ * Frozen upstream boards for Bricks: every description recorded from
+ * `puzzles/unreleased/bricks.c` must still validate, load, round-trip through
+ * the codec, and be completed by the contradiction solver capped at the tier it
+ * was generated for. That keeps descriptions shared before the port readable,
+ * and pins the codec and the solver's deductive reach against boards this
+ * generator did not produce.
  *
- * **`upstreamLooseGate` is set here and nowhere else**: it runs upstream's
- * original difficulty gate (`BricksGenerateOptions.upstreamLooseGate`), so the
- * four Tricky fixtures still match the C byte-for-byte although the shipped
- * generator refuses Tricky. This is the shape `spokes` established.
- *
- * Because generation gates every clue removal on `solveGame`, one byte-match
- * validates the generator (the conditional fill draws, the removal shuffle),
- * the contradiction solver's exact deductive power, and the run-length codec
- * together. The `extra` check also round-trips each C desc through
- * `validateDesc` + `newState` + `encodeDesc` (codec inverse property) and
- * confirms a fresh solve of the decoded board reaches completion.
+ * It no longer asks the generator to reproduce them: the shipped generator gates
+ * on the tier actually below the one requested (upstream always probed Easy) and
+ * refuses Tricky outright. Generation is carried by `bricks.test.ts` — "bricks
+ * generator" (a uniquely solvable board for each preset) and "difficulty tiers
+ * bind" (every generated board needs exactly its tier).
  */
-import { expect } from "vitest";
-import type { RandomState } from "../../engine/random/index.ts";
-import { describeDescDifferential } from "../../engine/testing/differential.ts";
+import { describe, expect, it } from "vitest";
 import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
-import { newBricksDesc } from "./generator.ts";
 import { solveGame } from "./solver.ts";
 import { type BricksParams, encodeDesc, newState, validateDesc } from "./state.ts";
 
@@ -33,39 +26,19 @@ interface Fixture {
 }
 const data = cReference as { fixtures: Fixture[] };
 
-/** The 12x8 Tricky fixture alone costs **100 s** of the suite's 1,178 — 87% of
- * this file. Its difficulty is already carried by the 7x6, 8x5 and 10x8 Tricky
- * fixtures, so it adds board size against the same generator/solver/codec path,
- * not a configuration. It runs under `npm run test:slow`. */
-const isSlow = (f: Fixture) => f.w * f.h >= 96;
+describe("bricks frozen upstream boards (decode, round-trip, solve at their tier)", () => {
+  it("has fixtures to check", () => {
+    expect(data.fixtures.length).toBeGreaterThan(0);
+  });
 
-const common = {
-  label: (f: Fixture) => `${f.w}x${f.h}d${f.diff} seed=${f.seed}`,
-  params: (f: Fixture): BricksParams => ({ w: f.w, h: f.h, diff: f.diff }),
-  newDesc: (p: BricksParams, rng: RandomState) =>
-    newBricksDesc(p, rng, { upstreamLooseGate: true }),
-  extra: (f: Fixture, p: BricksParams) => {
-    // Codec inverse: validate → decode → re-encode is the identity.
-    expect(validateDesc(p, f.desc)).toBeNull();
-    const state = newState(p, f.desc);
-    expect(encodeDesc(state.grid, state.w, state.h)).toBe(f.desc);
-    // The decoded board solves uniquely to completion.
-    const grid = state.grid.slice();
-    expect(solveGame(grid, state.w, state.h, 2 /* TRICKY */, true, true)).toBe(
-      "complete",
-    );
-  },
-};
-
-describeDescDifferential<Fixture, BricksParams>({
-  title: "bricks differential (frozen C reference)",
-  fixtures: data.fixtures.filter((f) => !isSlow(f)),
-  ...common,
-});
-
-describeDescDifferential<Fixture, BricksParams>({
-  title: "bricks differential, 12x8 (frozen C reference; slow by construction)",
-  fixtures: data.fixtures.filter(isSlow),
-  ...common,
-  slow: true,
+  for (const f of data.fixtures) {
+    it(`${f.w}x${f.h}d${f.diff} seed=${f.seed}`, () => {
+      const p: BricksParams = { w: f.w, h: f.h, diff: f.diff };
+      expect(validateDesc(p, f.desc)).toBeNull();
+      const state = newState(p, f.desc);
+      expect(encodeDesc(state.grid, state.w, state.h)).toBe(f.desc);
+      const grid = state.grid.slice();
+      expect(solveGame(grid, state.w, state.h, f.diff, true, true)).toBe("complete");
+    });
+  }
 });

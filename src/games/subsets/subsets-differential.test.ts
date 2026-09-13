@@ -10,7 +10,7 @@
  * together. The `extra` check also round-trips each C desc through
  * `validateDesc` + `newState` + `encodeDesc` (codec inverse property).
  *
- * **The oracle binds in full, with no `upstreamLooseGate` flag.** The Normal
+ * **The oracle binds in full, on the shipped generator.** The Normal
  * rung sits *above* upstream's shipped strength, so `DIFF_EASY` runs
  * upstream's exact rule set with upstream's exact RNG draw order — and tier 0
  * has no tier below to be graded against, so its acceptance rule is upstream's

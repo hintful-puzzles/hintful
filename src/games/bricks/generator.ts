@@ -3,12 +3,10 @@
  * `bricks_fill_grid`, `bricks_build_numbers`, `bricks_remove_numbers`) in
  * `puzzles/unreleased/bricks.c`.
  *
- * This is the byte-match surface (bricks-differential.test.ts). The RNG draw
- * order is upstream's exactly: per outer attempt, `fillGrid`'s conditional
- * draws, then one `shuffle` of the padded cell indices. The solver consumes no
- * RNG, so the desc is a pure function of the seed, and because every removal is
- * gated on the solver, one byte-match validates the generator, the solver's
- * exact deductive power, and the codec together.
+ * The RNG draws, per outer attempt, are `fillGrid`'s conditional draws, then one
+ * `shuffle` of the padded cell indices. The solver consumes no RNG, so the desc
+ * is a pure function of the seed, and because every removal is gated on the
+ * solver, a change to the solver's deductive power changes which boards exist.
  */
 
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
@@ -117,36 +115,16 @@ function removeNumbers(
   }
 }
 
-export interface BricksGenerateOptions {
-  /**
-   * Reproduce upstream's min-difficulty gate verbatim: reject a candidate only
-   * when the *Easy* solver completes it, whatever tier was requested. That is
-   * right for `DIFF_NORMAL` and vacuous for `DIFF_TRICKY`, so
-   * {@link newBricksDesc} gates on the tier actually below the one requested
-   * and refuses Tricky outright (`MAX_GENERABLE_DIFF`).
-   *
-   * Every clue removal is solver-gated, so that changes every Tricky desc. This
-   * flag keeps the oracle: `bricks-differential.test.ts` sets it so the Tricky
-   * fixtures still match the C byte-for-byte. Nothing else should set it.
-   */
-  readonly upstreamLooseGate?: boolean;
-}
-
-export function newBricksDesc(
-  p: BricksParams,
-  rs: RandomState,
-  options: BricksGenerateOptions = {},
-): { desc: string } {
+export function newBricksDesc(p: BricksParams, rs: RandomState): { desc: string } {
   const { w, h } = gridSize(p);
   const spaces = p.w * p.h; // playable-cell count
   const grid = new Uint16Array(w * h);
-  const loose = options.upstreamLooseGate ?? false;
 
   // `validateParams` refuses this combination, so reaching it means a caller
   // bypassed it. Fail immediately rather than let the gate below reject every
   // candidate for ~100,000 attempts — a synchronous generator that cannot
   // succeed owns its thread outright (see `engine/retry-limit.ts`).
-  if (!loose && p.diff > MAX_GENERABLE_DIFF) {
+  if (p.diff > MAX_GENERABLE_DIFF) {
     throw new Error(
       `bricks: no board requires difficulty ${p.diff}; the generable maximum is ${MAX_GENERABLE_DIFF}`,
     );
@@ -170,14 +148,12 @@ export function newBricksDesc(
     removeNumbers(grid, w, h, p.diff, rs);
 
     // The tier gate: a board the tier below already solves is not the
-    // difficulty the player asked for. Upstream always probes at `DIFF_EASY`
-    // here regardless of the tier requested; `p.diff - 1` is the divergence,
-    // and the two agree on every tier Bricks still offers.
-    const below = loose ? DIFF_EASY : p.diff - 1;
+    // difficulty the player asked for. Upstream always probed at `DIFF_EASY`
+    // whatever the tier requested, which was vacuous above Normal.
     if (
       p.diff > DIFF_EASY &&
       spaces > 6 &&
-      solveGame(grid, w, h, below, true, true) === "complete"
+      solveGame(grid, w, h, p.diff - 1, true, true) === "complete"
     ) {
       continue;
     }

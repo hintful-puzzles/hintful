@@ -1,7 +1,6 @@
 /**
- * Mathrax behavioral tests (tiers 1 and 2.5). The generator / solver / codec
- * are pinned byte-for-byte against C by `mathrax-differential.test.ts`; here we
- * cover what a desc differential cannot reach — the clue semantics, the input
+ * Mathrax behavioral tests (tiers 1 and 2.5): the codec over the recorded upstream
+ * boards, the solver and the generator's tier gate, the clue semantics, the input
  * mapping, `executeMove`'s live-error and completion paths, `findMistakes`
  * (including notes), the keypad, and the render frames.
  */
@@ -335,7 +334,7 @@ describe("mathrax clue semantics", () => {
 // --- solver and generator --------------------------------------------------
 
 describe("mathrax solver", () => {
-  it("solves every faithfully-reproduced C board uniquely, at no more than its tier", () => {
+  it("solves every recorded upstream board uniquely, at no more than its tier", () => {
     // The Recursive fixtures are excluded: upstream strips those boards past
     // uniqueness (they are literally blank), which is the defect the generator's
     // divergence fixes — `mathrax-differential.test.ts` pins them by verdict.

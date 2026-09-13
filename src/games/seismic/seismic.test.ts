@@ -457,11 +457,10 @@ describe("seismic generator", () => {
 /**
  * These are what **replaces the byte-match** for the shipped region generator.
  *
- * The shipped generator partitions first and fills second, so it leaves the
- * frozen C descriptions behind (the differential runs upstream's stages behind
- * `upstreamRegionGrower`). Everything the byte-match guaranteed about the
- * *regions* is therefore checked directly here: the structure, the mode's
- * keep-apart rule, unique solubility at the requested band, and determinism.
+ * The generator partitions first and fills second, so it does not reproduce the
+ * frozen C descriptions. What a byte-match once guaranteed about the *regions*
+ * is therefore checked directly here: the structure, the mode's keep-apart rule,
+ * unique solubility at the requested band, and determinism.
  *
  * Every case is a fixed seed, so the work and the verdict are identical on every
  * run, and nothing is clock-gated (docs/games/testing.md § "Seed-deterministic, never clock-gated").
@@ -615,24 +614,6 @@ describe("seismic constructive generator", () => {
       const b = newSeismicDesc(p, randomNew("determinism")).desc;
       expect(b).toBe(a);
     }
-  });
-
-  it("still differs from upstream's grower, so the oracle cannot decay", () => {
-    // The differential runs `upstreamRegionGrower: true`. If the flag ever
-    // stopped changing anything, those 28 byte-match assertions would silently
-    // become a test of the shipped path against itself — and the whole point of
-    // keeping upstream's stages alive would be lost.
-    let differences = 0;
-    for (const p of SWEEP) {
-      const shipped = newSeismicDesc(p, randomNew("oracle-check")).desc;
-      const upstream = newSeismicDesc(p, randomNew("oracle-check"), {
-        upstreamRegionGrower: true,
-      }).desc;
-      if (shipped !== upstream) differences++;
-    }
-    expect(differences, "the two generators produced identical output").toBe(
-      SWEEP.length,
-    );
   });
 });
 

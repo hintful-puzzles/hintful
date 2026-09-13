@@ -12,10 +12,9 @@
  *   - `solverRecurse` (difficulty 1, Normal) does the same one hypothetical
  *     level deep, re-running the difficulty-0 fixpoint on a scratch copy.
  * Because the generator is solver-gated, this solver's exact verdict on every
- * intermediate board decides which puzzles exist, which is what the byte-match
- * differential validates.
+ * intermediate board decides which puzzles exist.
  *
- * ## The `F_ERROR` contamination quirk (byte-match critical)
+ * ## The `F_ERROR` contamination quirk (it decides which boards exist)
  *
  * Upstream `clusters_validate` **mutates an `F_ERROR` bit into the grid** on
  * every filled cell (set on a rule violation, cleared otherwise), and the
@@ -102,7 +101,7 @@ function errorKind(
 }
 
 /** Core classifier. `markGrid` writes the `F_ERROR` bit into `grid` exactly as
- * upstream does (the byte-match quirk above); `errors`, if given, collects the
+ * upstream does (the quirk above); `errors`, if given, collects the
  * offending cell indices (for the pure play-side checks). An empty cell (byte
  * 0) downgrades COMPLETE to UNFINISHED. */
 function classify(

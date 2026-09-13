@@ -7,9 +7,8 @@
  * empties per line — turn that into a full clue set, and then remove clues one
  * at a time in a shuffled order, keeping each removal only while the puzzle
  * still solves by pure deduction at the target difficulty. Because every
- * removal is gated on the solver's verdict, the byte-match differential
- * validates generator, solver and codec at once
- * (docs/games/solver-and-generator.md § "Solver-gated generation").
+ * removal is gated on the solver's verdict, a change to the solver changes which
+ * boards exist (docs/games/solver-and-generator.md § "Solver-gated generation").
  *
  * Two upstream quality rules are reproduced verbatim:
  *
@@ -85,11 +84,14 @@ function solvesAt(base: SaladBoard, diff: number): boolean {
  * player chose is not the tier they got. Returns true when the candidate must
  * be thrown away.
  *
- * `loose` reproduces upstream, which has no such gate at all; see
- * {@link SaladGenerateOptions.upstreamLooseGate}.
+ * Upstream has no such gate: it strips clues while the board still solves at
+ * the target tier and publishes whatever that leaves. Measured over this game's
+ * frozen C fixtures, **12 of its 13 top-tier boards were solvable one tier
+ * down**, and over 80 freshly generated boards the rate was 71/80 — at 5×5 and
+ * 6×6, every single board.
  */
-function tooEasy(base: SaladBoard, diff: number, loose: boolean): boolean {
-  if (loose || diff <= DIFF_EASY) return false;
+function tooEasy(base: SaladBoard, diff: number): boolean {
+  if (diff <= DIFF_EASY) return false;
   return solvesAt(base, diff - 1);
 }
 
@@ -117,7 +119,7 @@ function stripClues(
 }
 
 /** Upstream `salad_new_numbers_desc`. */
-function newNumbersDesc(p: SaladParams, rs: RandomState, loose: boolean): string {
+function newNumbersDesc(p: SaladParams, rs: RandomState): string {
   const o = p.order;
   const o2 = o * o;
   const nums = p.nums;
@@ -159,14 +161,14 @@ function newNumbersDesc(p: SaladParams, rs: RandomState, loose: boolean): string
     // Quality check: reject a board whose holes all fall out with no number
     // entered at all.
     if (solvesAt(base, DIFF_HOLESONLY)) continue;
-    // Tier gate (the divergence): it must *need* the difficulty requested.
-    if (tooEasy(base, diff, loose)) continue;
+    // Tier gate: it must *need* the difficulty requested.
+    if (tooEasy(base, diff)) continue;
     return serialize(gridclues, (v) => symbolChar(GAMEMODE_NUMBERS, v));
   }
 }
 
 /** Upstream `salad_new_letters_desc`. */
-function newLettersDesc(p: SaladParams, rs: RandomState, loose: boolean): string {
+function newLettersDesc(p: SaladParams, rs: RandomState): string {
   const o = p.order;
   const o2 = o * o;
   const nums = p.nums;
@@ -199,45 +201,15 @@ function newLettersDesc(p: SaladParams, rs: RandomState, loose: boolean): string
     }
     stripClues(base, rs, borderclues, diff);
 
-    // Tier gate (the divergence): it must *need* the difficulty requested.
-    if (tooEasy(base, diff, loose)) continue;
+    // Tier gate: it must *need* the difficulty requested.
+    if (tooEasy(base, diff)) continue;
 
     return `${serialize(borderclues, letterChar)},${serialize(gridclues, letterChar)}`;
   }
 }
 
-export interface SaladGenerateOptions {
-  /**
-   * Reproduce upstream's difficulty gate, which does not exist.
-   *
-   * Upstream strips clues while the board still solves at the target tier and
-   * publishes whatever that leaves, never asking whether an easier tier would
-   * have done. So its Extreme (this game's Normal) does not mean Extreme:
-   * measured over this game's own frozen C fixtures, **12 of its 13 Extreme
-   * boards are solvable at its Normal** (this game's Easy), and over 80 freshly
-   * generated boards the rate is 71/80 — at 5×5
-   * and 6×6 it is every single board. {@link newSaladDesc} therefore rejects
-   * such a candidate and generates another.
-   *
-   * That changes every Normal description, which would cost the byte-match
-   * differential. This flag keeps that oracle: `salad-differential.test.ts`
-   * sets it, so the fixtures still match the C byte-for-byte and the only lines
-   * the oracle does not cover are the two `tooEasy` calls. Nothing else should
-   * ever set it.
-   */
-  readonly upstreamLooseGate?: boolean;
-}
-
-export function newSaladDesc(
-  p: SaladParams,
-  rng: RandomState,
-  options: SaladGenerateOptions = {},
-): { desc: string } {
-  const loose = options.upstreamLooseGate ?? false;
+export function newSaladDesc(p: SaladParams, rng: RandomState): { desc: string } {
   return {
-    desc:
-      p.mode === GAMEMODE_NUMBERS
-        ? newNumbersDesc(p, rng, loose)
-        : newLettersDesc(p, rng, loose),
+    desc: p.mode === GAMEMODE_NUMBERS ? newNumbersDesc(p, rng) : newLettersDesc(p, rng),
   };
 }

@@ -253,7 +253,7 @@ export function validateParams(p: BricksParams, full: boolean): string | null {
   return null;
 }
 
-// --- desc codec (byte-match surface, upstream validate_desc / new_game) ------
+// --- desc codec (upstream validate_desc / new_game) -------------------------
 
 /**
  * Validate the run-length desc (upstream `validate_desc`): a digit run is a

@@ -6,8 +6,7 @@
  * The whole path is a pure function of the seed: the only RNG surface is
  * `randomUpto` per backbite step, one `shuffle` before removal, and the
  * `matching(..., rs)` draws for the Edges variant. The reduction is gated
- * by the graded solver, so the emitted desc reproduces byte-for-byte and a
- * single differential validates generator + solver + codec.
+ * by the graded solver, so a change to the solver changes which boards exist.
  */
 
 import { matching } from "../../engine/latin.ts";
@@ -288,34 +287,18 @@ function ascentBlankClues(
   return true;
 }
 
-export interface AscentGenerateOptions {
-  /**
-   * Reproduce upstream's difficulty gate, which does not exist.
-   *
-   * Upstream blanks clues (or moves them to edge arrows) while the graded
-   * solver still finishes the board, and never asks whether an easier tier
-   * would also have done. So the tier often does not bind: **7 of the 22 frozen
-   * C fixtures above Easy fall to a lower tier**, as do 56 of 180 freshly
-   * generated boards, reaching 12 of 20 at 5×5 Tricky. {@link newAscentDesc}
-   * therefore rejects such a candidate and generates another.
-   *
-   * That changes every description above Easy, which would cost the byte-match
-   * differential validating the generator, the solver, the per-mode grid
-   * padding and the codec together. `ascent-differential.test.ts` sets this
-   * flag so the fixtures still match the C; the tier check is the only line the
-   * oracle no longer covers. Nothing else should ever set it.
-   */
-  readonly upstreamLooseGate?: boolean;
-}
-
-/** Generate a fresh puzzle description for `params` (upstream `new_game_desc`). */
+/**
+ * Generate a fresh puzzle description for `params` (upstream `new_game_desc`).
+ *
+ * Unlike upstream, a candidate the tier below already finishes is rejected:
+ * upstream never asked, and measured over its own boards **7 of 22 above Easy
+ * fell to a lower tier**, as did 56 of 180 freshly generated ones.
+ */
 export function newAscentDesc(
   params: AscentParams,
   rng: RandomState,
-  options: AscentGenerateOptions = {},
 ): { desc: string } {
   const { w, h } = ascentGridSize(params);
-  const loose = options.upstreamLooseGate ?? false;
   const sc = new SolverScratch(w, h, params.mode, w * h - 1);
   let grid: Int16Array | null = null;
   let success = false;
@@ -346,7 +329,7 @@ export function newAscentDesc(
     // scratch**: `foundEndpoints` persists across solves (see `solverStart`), so
     // reusing `sc` would ask an already-weakened solver, under-rejecting, and
     // would leave the probe's state behind to change which later boards ship.
-    if (success && !loose && params.diff > DIFF_EASY) {
+    if (success && params.diff > DIFF_EASY) {
       const probe = new SolverScratch(w, h, params.mode, sc.end);
       ascentSolve(grid, params.diff - 1, probe);
       if (checkCompletion(probe.grid, w, h, params.mode)) success = false;

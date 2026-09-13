@@ -335,29 +335,6 @@ describe("crossing generator", () => {
     }
   });
 
-  it("still reproduces upstream's isolated-cell boards on request", () => {
-    // The byte-match differential runs with `upstreamIsolatedCells`, so this
-    // guards the thing that would otherwise rot silently: that the flag really
-    // does change the generated board, and the oracle is therefore still
-    // checking upstream's algorithm rather than the shipped one (docs/games/solver-and-generator.md § "Retained upstream paths are history, not the default").
-    const seed = "iso-seed-14"; // found by scan: upstream yields an isolated cell here
-    const upstream = newCrossingDesc(P5, randomNew(seed), {
-      upstreamIsolatedCells: true,
-    }).desc;
-    const shipped = newCrossingDesc(P5, randomNew(seed)).desc;
-    expect(upstream).not.toBe(shipped);
-
-    const covered = (desc: string): boolean => {
-      const { puzzle } = newState(P5, desc);
-      const seen = new Set<number>();
-      for (const run of puzzle.runs) for (const i of run.cells) seen.add(i);
-      for (let i = 0; i < 25; i++) if (!puzzle.walls[i] && !seen.has(i)) return false;
-      return true;
-    };
-    expect(covered(upstream)).toBe(false);
-    expect(covered(shipped)).toBe(true);
-  });
-
   it("grows symmetric walls 180°-rotationally", () => {
     const params = { w: 6, h: 4, sym: true };
     const { desc } = newCrossingDesc(params, randomNew("sym-shape"));

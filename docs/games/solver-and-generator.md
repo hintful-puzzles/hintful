@@ -749,26 +749,24 @@ verdict. The lessons that stay live:
   does. Tell: a loop bounded by a canonify result used as an index value
   rather than as an identity to compare.
 
-### Retained upstream paths are history, not the default
+### A divergence retires or re-founds its fixture
 
-**A divergence does not have to keep upstream's behavior reachable for its
-differential.** Matching upstream's C output is not a requirement anywhere
-(owner, 2026-09-13: *"it was just something we cared about during the port, but
-it's not a concern anymore"*), so the ordinary shape of a divergence is to ship
-the fix and retire or re-found the fixture it moves, saying what replaces it.
+**Do not keep upstream's behavior reachable so a differential stays green.**
+Matching upstream's C output is not a requirement anywhere (owner, 2026-09-13:
+*"it was just something we cared about during the port, but it's not a concern
+anymore"*). Ship the fix, and retire or re-found the fixture it moves, saying
+what replaces it.
 
-Some games were diverged the older way, putting upstream's exact behavior behind
-an option only the differential sets — Spokes' `upstreamDirtyGate`, Seismic's
-`upstreamRegionGrower` ([`seismic/generator.ts`](../../src/games/seismic/generator.ts)),
-Crossing's `upstreamIsolatedCells`; `git grep -n 'upstream[A-Z]\w*'` finds the rest.
-While such an option stays, the rules that kept it honest still hold: **comment
-the retained code as deliberately unreachable from play** (or a later reader
-deletes the "dead" branch and silently changes the differential with it), give
-the retained path its own constants where the shipped path's would strangle it,
-and **pair the option with a test asserting the flag still changes the outcome**.
-Removing one, with its fixtures retired, needs no more justification than the
-code it deletes. The Spokes episode's doctrine boundary stands on its own:
-*upstream being clearly wrong is a reason to fix it* (owner).
+Re-founding is usually cheaper than it sounds, because a frozen fixture holds
+more than generation. `delete-retained-upstream-paths` removed eight options that
+kept upstream's generator reachable for a byte-match, and turned each
+differential into a check over the same recorded boards: every description still
+validates, loads and round-trips through the codec — so an older shared ID stays
+playable — and the solver still finds each board uniquely solvable. Generation is
+then carried by the game's property test that every generated board is uniquely
+solvable at exactly its tier. The doctrine boundary the first of those options
+came from still stands: *upstream being clearly wrong is a reason to fix it*
+(owner).
 
 ### Recover emergent parameters from the fixtures
 

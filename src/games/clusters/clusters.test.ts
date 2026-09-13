@@ -1,9 +1,8 @@
 /**
- * Behavioral tests for the Clusters port (tier 1 logic + tier 2.5 render).
- * The byte-match generator/solver/codec check lives in
- * clusters-differential.test.ts; these cover the interactive paths a
- * differential never touches — the paint/keyboard input, executeMove's
- * completion, Solve through a real Midend, findMistakes, and a render frame.
+ * Behavioral tests for the Clusters port (tier 1 logic + tier 2.5 render): the
+ * generator's tier property ("difficulty tiers"), the paint/keyboard input,
+ * executeMove's completion, Solve through a real Midend, findMistakes, and a
+ * render frame. clusters-differential.test.ts decodes the frozen C boards.
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/midend.ts";
@@ -193,33 +192,6 @@ describe("difficulty tiers", () => {
       // literal here would just be a second copy of the tier names to rot.
       expect(entry.title).toContain(DIFF_NAMES[p.diff]);
     }
-  });
-
-  it("the loose gate is the unbinding one the tiers replaced", () => {
-    // What the flag preserves is the *defect*: one gate at the deeper rung,
-    // accepting whatever it completes. So over the same seeds it must (a) ignore
-    // the tier entirely — which is what keeps the frozen fixtures byte-matching
-    // — and (b) hand out boards that need no lookahead, which the honest Normal
-    // gate never does. Fixed seeds, so neither count can drift.
-    const p = { w: 7, h: 7, diff: DIFF_TRICKY };
-    const seeds = Array.from({ length: 10 }, (_, i) => `clusters-loose-${i}`);
-    const solvesEasily = (desc: string) =>
-      solveGame(newState(p, desc).grid, p.w, p.h, 0) === COMPLETE;
-
-    const loose = seeds.map(
-      (s) => newClustersDesc(p, randomNew(s), { upstreamLooseGate: true }).desc,
-    );
-    const looseAsEasy = seeds.map(
-      (s) =>
-        newClustersDesc({ ...p, diff: DIFF_EASY }, randomNew(s), {
-          upstreamLooseGate: true,
-        }).desc,
-    );
-    expect(looseAsEasy).toEqual(loose);
-
-    const honest = seeds.map((s) => newClustersDesc(p, randomNew(s)).desc);
-    expect(loose.filter(solvesEasily).length).toBeGreaterThan(0);
-    expect(honest.filter(solvesEasily)).toEqual([]);
   });
 });
 

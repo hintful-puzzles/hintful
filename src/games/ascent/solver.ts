@@ -9,8 +9,7 @@
  * tier to add.
  *
  * The generator removes a clue only if the graded solver still solves the
- * result, which is what lets one byte-match differential validate solver,
- * generator and codec together.
+ * result, so a change to the solver changes which boards exist.
  */
 
 import {
@@ -477,7 +476,7 @@ function solverStart(puzzle: Int16Array, sc: SolverScratch): void {
   /* Upstream never resets `foundEndpoints`, so on a reused scratch it stays set
    * from an earlier board, and `solverUpdatePath`'s endpoint clearing and
    * `solverRemoveEndpoints` stop firing. The generator reuses one scratch, so
-   * this weakening decides which boards ship, and the differential holds it. */
+   * this weakening decides which boards ship. */
   solverRemoveBlocks(sc);
 }
 

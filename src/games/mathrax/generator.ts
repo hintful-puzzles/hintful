@@ -2,8 +2,7 @@
  * Mathrax generator — port of `new_game_desc` from `mathrax.c`.
  *
  * Three steps, and only three RNG draw sites (a `latinGenerate` and two
- * `shuffle`s), which is what makes the description byte-match portable over the
- * bit-identical `random.ts`:
+ * `shuffle`s):
  *
  * 1. generate a full Latin square;
  * 2. derive a *candidate clue* at every interior intersection from the four
@@ -12,9 +11,7 @@
  *    removal while the puzzle still solves at the target difficulty.
  *
  * Step 3 is **solver-gated**, so the published description depends on the
- * solver's verdict on every intermediate board, and one byte-match validates the
- * generator, the solver and the codec together
- * (docs/games/testing.md § "Byte-match: fidelity where there is a right answer").
+ * solver's verdict on every intermediate board.
  *
  * ## Divergence: removals must keep the board *unique*
  *
@@ -25,8 +22,7 @@
  * has one answer.
  *
  * Below the top tier no recursion runs, so the verdict can only be "stuck" or
- * "solved" and the two tests are **identical**: Easy / Normal / Tricky boards
- * stay byte-for-byte upstream's. At the top tier (upstream's Recursive) the
+ * "solved" and the two tests are **identical**. At the top tier (upstream's Recursive) the
  * difference is total: every sampled upstream board (30 of 30) had more than one
  * solution, so Check & Save could flag nothing and Solve could show a grid other
  * than the one the player legitimately finished.
@@ -162,37 +158,18 @@ function stripMathClues(
   }
 }
 
-export interface MathraxGenerateOptions {
-  /**
-   * Reproduce upstream's missing difficulty gate.
-   *
-   * Upstream publishes whatever survives stripping at the target tier and never
-   * asks whether an easier tier would also have done: 3 of this game's 23 frozen
-   * C boards above Easy fall to a lower tier (at order 3, a Tricky board that
-   * Easy solves outright). {@link newMathraxDesc} rejects such a board and
-   * generates another, which changes every description above Easy.
-   *
-   * This flag keeps the byte-match oracle anyway: `mathrax-differential.test.ts`
-   * sets it, so the fixtures still match C byte-for-byte and the tier check is
-   * the only line they no longer cover. Nothing else should set it. With it set
-   * the loop returns on its first pass, so the RNG is drawn in exactly
-   * upstream's order. It composes with the unique-removal divergence (module
-   * header), which already costs the oracle the top tier.
-   */
-  readonly upstreamLooseGate?: boolean;
-}
-
-export function newMathraxDesc(
-  p: MathraxParams,
-  rs: RandomState,
-  options: MathraxGenerateOptions = {},
-): { desc: string } {
+/**
+ * Generate a description at `p`'s tier. Unlike upstream, a board the tier below
+ * already solves uniquely is rejected: upstream never asked, and 3 of its 23
+ * recorded boards above Easy fell to a lower tier (at order 3, a Tricky board
+ * that Easy solves outright).
+ */
+export function newMathraxDesc(p: MathraxParams, rs: RandomState): { desc: string } {
   const o = p.o;
   const co = o - 1;
   // An empty option set means "all" — the same fallback `decodeParams` applies.
   const clueOptions = p.options || OPTIONSMASK;
   const diff = diffToLevel(p.diff);
-  const loose = options.upstreamLooseGate ?? false;
 
   // Upstream generates exactly once; the tier gate below can reject, so the
   // loop needs the house runaway guard (docs/games/testing.md § "Quirks are load-bearing — capped, not cleaned").
@@ -220,7 +197,7 @@ export function newMathraxDesc(
     // The tier gate: a board the tier below already solves uniquely is not the
     // difficulty the player asked for. `mathraxSolve` fills
     // the grid it is given, so the probe runs on a copy.
-    if (!loose && diff > DIFF_EASY) {
+    if (diff > DIFF_EASY) {
       if (mathraxSolve(o, Uint8Array.from(grid), clues, diff - 1) === SOLVE_UNIQUE) {
         continue;
       }

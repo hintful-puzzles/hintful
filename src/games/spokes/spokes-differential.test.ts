@@ -1,34 +1,33 @@
 /**
- * Gated C-vs-TS differential for Spokes: the TS generator must reproduce the C
- * description **byte-for-byte** for the same seed.
+ * Frozen-fixture checks for Spokes, over boards recorded from upstream's
+ * `spokes.c` (frozen, see `engine/testing/differential.ts`).
  *
- * This is the strongest bar available, and here it validates three layers at
- * once. Spokes' generator strips a randomized list of lines and keeps each
- * removal only while the tiered solver still deduces a unique solution, so the
- * published clue digits are decided by the solver's verdict on every
- * intermediate board — the desc cannot match unless the generator's draw
- * order, every deduction rung (including the bounded contradiction look-ahead
- * and its exact recursion tiers) and the flat digit codec all agree with the C.
+ * **Every recorded board loads and solves at its recorded tier.** The generator
+ * keeps a line removal only while the tiered solver still solves the board from
+ * empty at the target tier, so a recorded board that stopped solving there
+ * means a deduction rung or the codec changed.
  *
- * **`upstreamDirtyGate` is set here and nowhere else.** The shipped generator
- * deliberately corrects upstream's final difficulty gate, which re-solves a
- * *dirty* scratch board and therefore over-grades badly (see
- * `SpokesGenerateOptions.upstreamDirtyGate`). That correction changes every
- * Normal and Unreasonable desc, so the flag restores upstream's exact gate for the
- * differential alone — keeping this oracle over the generator's draw order, the
- * whole tiered solver and the codec, and leaving only the clear before that
- * gate in `spokesGenerate` outside its reach. `spokes.test.ts` covers the
- * corrected gate behaviorally, by grading the boards the game actually ships.
- *
- * The fixture was recorded from `puzzles/auxiliary/spokes-trace.c` while
- * `puzzles/unreleased/spokes.c` still existed, and is frozen (see
- * `engine/testing/differential.ts`).
+ * **The Easy boards are reproduced byte-for-byte.** The shipped generator's
+ * final gate re-solves from a cleared board, where upstream's re-solved a dirty
+ * one; that gate decides only the tiers above Easy (an Easy board is accepted
+ * unconditionally), so at Easy the draws, the strip loop and the codec are the
+ * whole of generation, and one desc comparison pins all three.
  */
 
+import { describe, expect, it } from "vitest";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/spokes-c-reference.json" with { type: "json" };
 import { newSpokesDesc } from "./generator.ts";
-import { diffFromLevel, type SpokesParams, validateDesc } from "./state.ts";
+import { spokesSolve } from "./solver.ts";
+import {
+  clearBoard,
+  cloneBoard,
+  DIFF_EASY,
+  diffFromLevel,
+  newState,
+  type SpokesParams,
+  validateDesc,
+} from "./state.ts";
 
 interface Fixture {
   w: number;
@@ -40,15 +39,35 @@ interface Fixture {
 
 const data = cReference as { fixtures: Fixture[] };
 
+const label = (f: Fixture) => `${f.w}x${f.h} ${diffFromLevel(f.diff)} seed=${f.seed}`;
+const params = (f: Fixture): SpokesParams => ({
+  w: f.w,
+  h: f.h,
+  diff: diffFromLevel(f.diff),
+});
+const easy = data.fixtures.filter((f) => f.diff === DIFF_EASY);
+
+describe("spokes frozen boards", () => {
+  it("include Easy boards to reproduce and harder boards to solve", () => {
+    expect(easy.length).toBeGreaterThan(0);
+    expect(data.fixtures.length).toBeGreaterThan(easy.length);
+  });
+
+  for (const f of data.fixtures) {
+    it(`${label(f)} loads and solves at its tier`, () => {
+      const p = params(f);
+      expect(validateDesc(p, f.desc)).toBeNull();
+      const b = cloneBoard(newState(p, f.desc));
+      clearBoard(b);
+      expect(spokesSolve(b, null, f.diff)).toBe("valid");
+    });
+  }
+});
+
 describeDescDifferential<Fixture, SpokesParams>({
-  title: "spokes differential (frozen C reference)",
-  fixtures: data.fixtures,
-  label: (f) => `${f.w}x${f.h} ${diffFromLevel(f.diff)} seed=${f.seed}`,
-  params: (f) => ({ w: f.w, h: f.h, diff: diffFromLevel(f.diff) }),
-  newDesc: (p, rng) => newSpokesDesc(p, rng, { upstreamDirtyGate: true }),
-  extra: (f, p) => {
-    if (validateDesc(p, f.desc) !== null) {
-      throw new Error(`validateDesc rejected the C desc ${f.desc}`);
-    }
-  },
+  title: "spokes generator reproduces its frozen Easy boards",
+  fixtures: easy,
+  label,
+  params,
+  newDesc: (p, rng) => newSpokesDesc(p, rng),
 });

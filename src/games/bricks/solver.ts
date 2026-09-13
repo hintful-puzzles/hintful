@@ -29,8 +29,8 @@
  *   tier named `Unreasonable` — why upstream's `Normal` is called that here,
  *   and why {@link nextForcedMove} has no arm for it.
  *
- * Generation gates uniqueness on this solver, so its exact deductive power is
- * byte-match surface: keep every quirk verbatim. `DIFF_TRICKY` has no boards
+ * Generation gates uniqueness on this solver, so its exact deductive power
+ * decides which boards exist. `DIFF_TRICKY` has no boards
  * (`MAX_GENERABLE_DIFF`) but stays here as "try as hard as you can" for hints
  * and Solve, where the extra depth costs nothing.
  */

@@ -18,9 +18,8 @@
  *
  * The RNG surface is therefore exactly `shuffle(cells)` followed by `w·h`
  * `randomUpto(9)` draws per attempt, so the description is a pure function of
- * the seed and reproduces the C byte-for-byte — and because step 4 gates on the
- * solver, that one byte-match validates the generator, the solver *and* the
- * codec together (docs/games/testing.md § "Byte-match: fidelity where there is a right answer").
+ * the seed. Because step 4 gates on the solver, a change to the solver's verdict
+ * changes which boards a seed produces.
  */
 
 import { Dsf } from "../../engine/dsf.ts";
@@ -172,26 +171,16 @@ function genNumbers(
   return numbers;
 }
 
-export interface CrossingGenOptions {
-  /**
-   * Accept a board containing an **isolated** open cell — one with no open
-   * orthogonal neighbor, so it lies in no run and no clue number can ever
-   * reach it. Upstream produces these (its first generator TODO is "Some
-   * puzzles have isolated squares (1x1 areas)"): the cell stays blank on a
-   * finished board, and because the completion check only inspects runs, a
-   * player can even type any digit into it and still win.
-   *
-   * The shipped game rejects such boards; this option exists **only** so the
-   * byte-match differential can reproduce upstream exactly (docs/games/solver-and-generator.md § "Retained upstream paths are history, not the default").
-   * Measured cost of the fix: 4% of 5×5 boards, 7% of 7×7, 17-18% of 9×9 and
-   * 12×12 are rejected, i.e. a few percent more attempts on a generator that
-   * makes a 9×9 board in well under a millisecond.
-   */
-  upstreamIsolatedCells?: boolean;
-}
-
-/** Does every open cell belong to some run? An open cell that doesn't is
- * unreachable by any clue — see {@link CrossingGenOptions.upstreamIsolatedCells}. */
+/**
+ * Does every open cell belong to some run? An **isolated** open cell — one with
+ * no open orthogonal neighbor — lies in no run, so no clue number can ever reach
+ * it. Upstream produces these (its first generator TODO is "Some puzzles have
+ * isolated squares (1x1 areas)"): the cell stays blank on a finished board, and
+ * because the completion check only inspects runs, a player can type any digit
+ * into it and still win. Measured cost of rejecting them: 4% of 5×5 boards, 7%
+ * of 7×7, 17-18% of 9×9 and 12×12, i.e. a few percent more attempts on a
+ * generator that makes a 9×9 board in well under a millisecond.
+ */
 function everyCellInARun(puzzle: CrossingPuzzle): boolean {
   const { w, h, walls, acrossRun, downRun } = puzzle;
   for (let i = 0; i < w * h; i++) {
@@ -201,11 +190,7 @@ function everyCellInARun(puzzle: CrossingPuzzle): boolean {
 }
 
 /** One generation attempt — `crossing_generate`. `null` means "retry". */
-function generate(
-  p: CrossingParams,
-  rng: RandomState,
-  opts: CrossingGenOptions,
-): CrossingPuzzle | null {
+function generate(p: CrossingParams, rng: RandomState): CrossingPuzzle | null {
   const { w, h } = p;
   const walls = genWalls(w, h, p.sym, rng);
   const grid = genGrid(w, h, rng);
@@ -215,20 +200,16 @@ function generate(
 
   const puzzle = makePuzzle(w, h, walls, numbers);
   // Fork: no cell of a finished board may be left blank and unreachable.
-  if (!opts.upstreamIsolatedCells && !everyCellInARun(puzzle)) return null;
+  if (!everyCellInARun(puzzle)) return null;
   // The gate: the puzzle must be solvable by pure deduction, uniquely.
   return solveCrossing(puzzle).status === "valid" ? puzzle : null;
 }
 
-export function newCrossingDesc(
-  p: CrossingParams,
-  rng: RandomState,
-  opts: CrossingGenOptions = {},
-): { desc: string } {
+export function newCrossingDesc(p: CrossingParams, rng: RandomState): { desc: string } {
   const attempt = retryLimit("crossing: generation");
   for (;;) {
     attempt();
-    const puzzle = generate(p, rng, opts);
+    const puzzle = generate(p, rng);
     if (puzzle) return { desc: encodeDesc(p.w, p.h, puzzle.walls, puzzle.numbers) };
   }
 }

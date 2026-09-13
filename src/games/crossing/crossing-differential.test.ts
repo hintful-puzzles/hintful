@@ -1,20 +1,22 @@
 /**
- * Gated C-vs-TS differential for Crossing.
+ * Frozen-fixture checks for Crossing, over boards recorded from upstream's
+ * `crossing.c` (frozen, see `engine/testing/differential.ts`).
  *
- * For each frozen C-reference fixture, the TS `newCrossingDesc`, replayed over
- * the bit-identical `random.ts` seeded the same way and asked for upstream's
- * isolated-cell behavior, must reproduce the C desc byte-for-byte. Because
- * generation retries until the deductive solver reaches a complete unique
- * answer, this one assertion validates the wall-growth loop (including
- * `checkPool`'s mutating test), the digit fill, the run collection order, the
- * solver's every deduction and the codec together.
+ * **Every recorded board loads and solves.** It passes the validator, decodes to
+ * exactly one number per run (what a solvable Nansuke means), and the deductive
+ * solver finishes it uniquely — including the boards with an isolated open
+ * cell, which the generator no longer makes but a shared game ID can still name.
  *
- * The fixture is **frozen and cannot be regenerated**. It was captured by
- * `puzzles/auxiliary/crossing-trace.c` against upstream's C, under an
- * Emscripten/CMake build this repo does not have — see
- * `engine/testing/differential.ts`.
+ * **The boards with no isolated cell are reproduced byte-for-byte.** Rejecting
+ * an isolated-cell board is the generator's only departure from upstream's, and
+ * it can only turn an accepted attempt into a retry: a recorded board with no
+ * isolated cell was reached by attempts none of which that rule rejects, so the
+ * same seed reaches it again. One desc comparison then pins the wall growth
+ * (including `checkPool`'s mutating test), the digit fill, the run collection
+ * order, every deduction and the codec together.
  */
 
+import { describe, expect, it } from "vitest";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/crossing-c-reference.json" with { type: "json" };
 import { newCrossingDesc } from "./generator.ts";
@@ -37,29 +39,42 @@ interface Fixture {
 
 const data = cReference as { fixtures: Fixture[] };
 
+const label = (f: Fixture) => `${f.w}x${f.h}${f.sym ? "S" : ""} seed=${f.seed}`;
+const params = (f: Fixture): CrossingParams => ({ w: f.w, h: f.h, sym: f.sym });
+
+/** Does the board have an open cell that lies in no run? */
+function hasIsolatedCell(f: Fixture): boolean {
+  const p = params(f);
+  const { walls } = readDesc(p, f.desc);
+  const covered = new Set<number>();
+  for (const run of collectRuns(p.w, p.h, walls))
+    for (const i of run.cells) covered.add(i);
+  for (let i = 0; i < p.w * p.h; i++) if (!walls[i] && !covered.has(i)) return true;
+  return false;
+}
+
+const reproducible = data.fixtures.filter((f) => !hasIsolatedCell(f));
+
+describe("crossing frozen boards", () => {
+  it("include boards to reproduce", () => {
+    expect(reproducible.length).toBeGreaterThan(0);
+  });
+
+  for (const f of data.fixtures) {
+    it(`${label(f)} loads and solves uniquely`, () => {
+      const p = params(f);
+      expect(validateDesc(p, f.desc)).toBeNull();
+      const { walls, numbers } = readDesc(p, f.desc);
+      expect(collectRuns(p.w, p.h, walls)).toHaveLength(numbers.length);
+      expect(solveCrossing(makePuzzle(p.w, p.h, walls, numbers)).status).toBe("valid");
+    });
+  }
+});
+
 describeDescDifferential<Fixture, CrossingParams>({
-  title: "crossing differential (frozen C reference)",
-  fixtures: data.fixtures,
-  label: (f) => `${f.w}x${f.h}${f.sym ? "S" : ""} seed=${f.seed}`,
-  params: (f) => ({ w: f.w, h: f.h, sym: f.sym }),
-  // Upstream accepts boards containing an isolated open cell; the shipped
-  // generator rejects them. Reproducing the C's descriptions therefore needs
-  // upstream's behavior explicitly — the four-line divergence is the only code
-  // this oracle cannot see, and `crossing.test.ts` asserts separately that the
-  // flag still changes the outcome, so this can't silently decay into testing
-  // the shipped path.
-  newDesc: (params, rng) =>
-    newCrossingDesc(params, rng, { upstreamIsolatedCells: true }),
-  extra: (f, p) => {
-    // The C desc must also pass the port's own validator, decode to exactly one
-    // number per run (what a solvable Nansuke means), and re-solve to a unique
-    // complete answer under the TS solver.
-    if (validateDesc(p, f.desc) !== null) throw new Error("C desc failed validateDesc");
-    const { walls, numbers } = readDesc(p, f.desc);
-    const runs = collectRuns(p.w, p.h, walls);
-    if (runs.length !== numbers.length)
-      throw new Error(`run/number count mismatch: ${runs.length} vs ${numbers.length}`);
-    if (solveCrossing(makePuzzle(p.w, p.h, walls, numbers)).status !== "valid")
-      throw new Error("TS solver did not uniquely solve the C board");
-  },
+  title: "crossing generator reproduces its frozen boards with no isolated cell",
+  fixtures: reproducible,
+  label,
+  params,
+  newDesc: (p, rng) => newCrossingDesc(p, rng),
 });
