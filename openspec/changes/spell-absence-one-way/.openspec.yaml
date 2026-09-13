@@ -1,0 +1,10 @@
+# The convention this change settles is not yet chosen (design.md D2 lists the
+# candidates), so the spec delta cannot be written honestly at scaffold time.
+# It is owed at implementation, once the rule is decided: most likely an ADDED
+# requirement in `ts-engine` stating the convention and its override, plus a
+# MODIFIED one wherever a live requirement spells a signature this changes
+# (grep the spec for `| null` and `| undefined` first). Remove `skip_specs`
+# when the delta is written, and re-read it against the code before archiving.
+schema: spec-driven
+created: 2026-09-13
+skip_specs: true
