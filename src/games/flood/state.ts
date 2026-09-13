@@ -131,7 +131,7 @@ export function validateDesc(p: FloodParams, desc: string): string | null {
     // Upstream's `validate_desc` reads `A`-`Z` as 10-35, so a letter is out
     // of range rather than a bad character.
     const c = c2nUpper(ch);
-    if (c < 0) return "Bad character in grid description";
+    if (c === undefined) return "Bad character in grid description";
     if (c >= MAXCOLORS) return "Color out of range in grid description";
   }
   if (desc[wh] !== ",") return "Expected ',' after grid description";
@@ -145,7 +145,10 @@ export function newState(p: FloodParams, desc: string): FloodState {
   const grid = new Uint8Array(wh);
   let colors = 0;
   for (let i = 0; i < wh; i++) {
+    // Every Flood cell holds a color, so there is no absent value to write: a
+    // character `validateDesc` would have rejected is refused here too.
     const c = c2nUpper(desc[i]);
+    if (c === undefined) throw new Error("Bad character in grid description");
     grid[i] = c;
     if (c >= colors) colors = c + 1;
   }

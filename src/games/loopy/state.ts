@@ -115,7 +115,7 @@ export function decodeClues(clueDesc: string, numFaces: number): Int8Array {
       continue;
     }
     const clue = c2nUpper(tok.value);
-    if (clue >= 0) clues[i] = clue;
+    if (clue !== undefined) clues[i] = clue;
     i++;
   }
   return clues;
@@ -174,7 +174,7 @@ export function validateDesc(p: LoopyParams, desc: string): string | null {
   for (const tok of scanRunLength(clueDesc)) {
     if ("blanks" in tok) {
       count += tok.blanks;
-    } else if (c2nUpper(tok.value) >= 0) {
+    } else if (c2nUpper(tok.value) !== undefined) {
       count++;
     } else {
       return "Unknown character in description";

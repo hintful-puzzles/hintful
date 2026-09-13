@@ -149,7 +149,7 @@ export function validateDesc(p: SlantParams, desc: string): string | null {
     }
     // A clue is how many of the four cells around a vertex hold a line.
     const clue = digitValue(tok.value);
-    if (clue < 0 || clue > 4) return "Invalid character in game description";
+    if (clue === undefined || clue > 4) return "Invalid character in game description";
     squares++;
   }
   if (squares < area) return "Not enough data to fill grid";
@@ -163,7 +163,8 @@ export function decodeClues(p: SlantParams, desc: string): Int8Array {
   let pos = 0;
   for (const tok of scanRunLength(desc)) {
     if ("blanks" in tok) pos += tok.blanks;
-    else clues[pos++] = digitValue(tok.value);
+    // `validateDesc` rejects a non-digit; `-1` is this array's own "no clue".
+    else clues[pos++] = digitValue(tok.value) ?? -1;
   }
   return clues;
 }

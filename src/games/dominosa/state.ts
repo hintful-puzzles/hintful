@@ -12,7 +12,7 @@
  * are cloned per move.
  */
 
-import { digitValue, isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -158,8 +158,9 @@ function parseNumbers(
     }
     let j: number;
     const c = desc[p];
-    if (isDigit(c)) {
-      j = digitValue(c);
+    const digit = digitValue(c);
+    if (digit !== undefined) {
+      j = digit;
       p++;
     } else if (c === "[") {
       p++;

@@ -302,7 +302,7 @@ export function loadGame(
     const digit = digitValue(c);
     if (c >= "a" && c <= "z") pos += c.charCodeAt(0) - 97 + 1;
     // `0` is not a clue here: the grid holds `1..order`.
-    else if (digit >= 1) d = digit;
+    else if (digit !== undefined && digit >= 1) d = digit;
     else return { ok: false, error: "Grid description contains invalid characters." };
 
     if (d > 0 && d <= o) {

@@ -394,8 +394,8 @@ export function newState(p: SpokesParams, desc: string): SpokesState {
 
   for (let i = 0; i < w * h; i++) {
     // A hub joins at most eight spokes; anything else (`X`, or nothing) is -1.
-    const n = i < desc.length ? digitValue(desc[i]) : -1;
-    b.numbers[i] = n <= 8 ? n : -1;
+    const n = i < desc.length ? digitValue(desc[i]) : undefined;
+    b.numbers[i] = n !== undefined && n <= 8 ? n : -1;
   }
 
   for (let y = 0; y < h; y++) {

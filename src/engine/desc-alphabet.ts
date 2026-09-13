@@ -16,9 +16,9 @@
  *
  * **A game's sentinel does not live here.** Magnets writes `.` for "no clue"
  * and Singles has no such concept; a shared codec that knows one game's
- * sentinel has taken on that game's meaning. Magnets handles its own `-1`
- * before delegating, exactly as `run-length.ts` leaves each game its own value
- * characters.
+ * sentinel has taken on that game's meaning. Magnets handles its own `.` (a
+ * `-1` in its clue array) before delegating, exactly as `run-length.ts` leaves
+ * each game its own value characters.
  *
  * **A run-length desc has a second alphabet, and it is here too.** Such a desc
  * has spent `a`–`z` on blank runs (`run-length.ts`), so a value above nine has
@@ -57,14 +57,16 @@ export function n2c(num: number): string {
   return String.fromCharCode(65 + num - 36);
 }
 
-/** The value `c` stands for, or `-1` if it is not a character of the alphabet.
- * `-1` rather than a throw because this reads descs, which arrive from URLs. */
-export function c2n(c: string): number {
+/** The value `c` stands for, or `undefined` if it is not a character of the
+ * alphabet. Not a throw, because this reads descs, which arrive from URLs; and
+ * outside the return type, as `digitValue`'s is, so a caller cannot use it
+ * without deciding what a stray character means. */
+export function c2n(c: string): number | undefined {
   const code = c.charCodeAt(0);
   if (code >= 48 && code <= 57) return code - 48;
   if (code >= 97 && code <= 122) return code - 97 + 10;
   if (code >= 65 && code <= 90) return code - 65 + 36;
-  return -1;
+  return undefined;
 }
 
 /** How many values the run-length alphabet covers: `0`–`9`, `A`–`Z`. */
@@ -82,12 +84,12 @@ export function n2cUpper(num: number): string {
   return num < 10 ? String(num) : String.fromCharCode(65 + num - 10);
 }
 
-/** The value `c` stands for in a run-length desc, or `-1` if it is not a
+/** The value `c` stands for in a run-length desc, or `undefined` if it is not a
  * character of that alphabet — a lowercase letter included, since there it is
  * a blank run and never a value. */
-export function c2nUpper(c: string): number {
+export function c2nUpper(c: string): number | undefined {
   const digit = digitValue(c);
-  if (digit >= 0) return digit;
+  if (digit !== undefined) return digit;
   const code = c.charCodeAt(0);
-  return code >= 65 && code <= 90 ? code - 65 + 10 : -1;
+  return code >= 65 && code <= 90 ? code - 65 + 10 : undefined;
 }

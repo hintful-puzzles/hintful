@@ -114,8 +114,8 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
  *
  * A cell holds `1..max(w, h)` and the alphabet's 62 slots run `0..61`, so the
  * largest number expressible is 61 — **one less than upstream's bound**, which
- * is `10+26+26` written out. A 62 would encode as `[`, which `c2n` reads back
- * as `-1` and `validateDesc` rejects. Derived from the alphabet so the two
+ * is `10+26+26` written out. A 62 would encode as `[`, which `c2n` gives no
+ * value and `validateDesc` rejects. Derived from the alphabet so the two
  * cannot drift apart.
  */
 const MAX_DIM = DESC_ALPHABET_SIZE - 1;
@@ -155,7 +155,9 @@ export function validateDesc(p: SinglesParams, desc: string): string | null {
   if (desc.length !== n) return "Game description is wrong length";
   for (let i = 0; i < n; i++) {
     const num = c2n(desc[i]);
-    if (num <= 0 || num > o) return "Game description contains unexpected characters";
+    if (num === undefined || num <= 0 || num > o) {
+      return "Game description contains unexpected characters";
+    }
   }
   return null;
 }
@@ -163,7 +165,14 @@ export function validateDesc(p: SinglesParams, desc: string): string | null {
 export function newState(p: SinglesParams, desc: string): SinglesState {
   const n = p.w * p.h;
   const nums = new Int8Array(n);
-  for (let i = 0; i < n; i++) nums[i] = c2n(desc[i]);
+  for (let i = 0; i < n; i++) {
+    // Every Singles cell holds a number, so there is no absent value to write:
+    // a character `validateDesc` would have rejected is refused here too.
+    const num = c2n(desc[i]);
+    if (num === undefined)
+      throw new Error("Game description contains unexpected characters");
+    nums[i] = num;
+  }
   return makeState(p.w, p.h, nums);
 }
 

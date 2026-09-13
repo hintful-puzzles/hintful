@@ -222,8 +222,11 @@ function readRow(
     let num: number;
     if (c === ".") num = -1;
     else {
-      num = c2n(c);
-      if (num < 0) return { error: "Game description contained unexpected characters" };
+      const value = c2n(c);
+      if (value === undefined) {
+        return { error: "Game description contained unexpected characters" };
+      }
+      num = value;
     }
     array[i * 3 + off] = num;
   }

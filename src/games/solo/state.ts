@@ -348,13 +348,14 @@ export function specToGrid(
   let idx = 0;
   while (i < desc.length && desc[i] !== ",") {
     const ch = desc[i];
+    const digit = digitValue(ch);
     if (ch >= "a" && ch <= "z") {
       let run = ch.charCodeAt(0) - "a".charCodeAt(0) + 1;
       i++;
       while (run-- > 0) grid[idx++] = 0;
     } else if (ch === "_") {
       i++;
-    } else if (digitValue(ch) >= 1) {
+    } else if (digit !== undefined && digit >= 1) {
       const n = parseLeadingInt(desc, i);
       grid[idx++] = n.value;
       i = n.next;
@@ -376,12 +377,13 @@ function validateGridDesc(
   let squares = 0;
   while (i < desc.length && desc[i] !== ",") {
     const ch = desc[i];
+    const digit = digitValue(ch);
     if (ch >= "a" && ch <= "z") {
       squares += ch.charCodeAt(0) - "a".charCodeAt(0) + 1;
       i++;
     } else if (ch === "_") {
       i++;
-    } else if (digitValue(ch) >= 1) {
+    } else if (digit !== undefined && digit >= 1) {
       const n = parseLeadingInt(desc, i);
       const val = n.value;
       i = n.next;

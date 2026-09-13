@@ -337,9 +337,10 @@ export function validateDesc(p: TracksParams, desc: string): string | null {
   while (pos < desc.length) {
     const ch = desc[pos];
     // A clue square is a nibble of direction flags: `0`–`9`, then `A`–`F`.
+    const nibble = c2nUpper(ch);
     let f = 0;
     if (ch >= "a" && ch <= "z") i += ch.charCodeAt(0) - 97;
-    else if (c2nUpper(ch) >= 0 && c2nUpper(ch) <= 15) f = c2nUpper(ch);
+    else if (nibble !== undefined && nibble <= 15) f = nibble;
     else return "Game description contained unexpected characters";
 
     if (f !== 0 && NBITS[f] !== 2) return "Clue did not provide 2 direction flags";
@@ -374,9 +375,10 @@ export function decodeDesc(p: TracksParams, desc: string): Board {
   let pos = 0;
   while (pos < desc.length) {
     const ch = desc[pos];
+    const nibble = c2nUpper(ch);
     let f = 0;
     if (ch >= "a" && ch <= "z") i += ch.charCodeAt(0) - 97;
-    else if (c2nUpper(ch) >= 0 && c2nUpper(ch) <= 15) f = c2nUpper(ch);
+    else if (nibble !== undefined && nibble <= 15) f = nibble;
 
     if (f !== 0) {
       b.sflags[i] |= S_TRACK | S_CLUE;

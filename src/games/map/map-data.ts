@@ -140,7 +140,7 @@ export function validateDesc(params: MapParams, desc: string): string | null {
     }
     // A clue is one of the four map colors.
     const color = digitValue(tok.value);
-    if (color < 0 || color > 3) return "Unexpected character in clue list";
+    if (color === undefined || color > 3) return "Unexpected character in clue list";
     area++;
   }
   if (area < n) return "Too little data in clue list";
@@ -175,7 +175,8 @@ export function newMapData(
       pos += tok.blanks;
       continue;
     }
-    coloring[pos] = digitValue(tok.value);
+    // `validateDesc` rejects a non-digit; `-1` is this array's own "uncolored".
+    coloring[pos] = digitValue(tok.value) ?? -1;
     immutable[pos] = 1;
     pos++;
   }

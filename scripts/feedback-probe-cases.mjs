@@ -607,8 +607,8 @@ export const MODULES = [
       {
         within: "digitValue",
         why: "a character past `9` reads as a digit, so `:` becomes a clue of ten",
-        find: "  return v >= 0 && v <= 9 ? v : -1;",
-        replace: "  return v >= 0 ? v : -1;",
+        find: "  return v >= 0 && v <= 9 ? v : undefined;",
+        replace: "  return v >= 0 ? v : undefined;",
       },
     ],
   },

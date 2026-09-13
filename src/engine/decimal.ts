@@ -40,15 +40,18 @@ export function isDigit(c: string): boolean {
 const ZERO = "0".charCodeAt(0);
 
 /**
- * The value a decimal digit character stands for, or `-1` if `c` is not one.
+ * The value a decimal digit character stands for, or `undefined` if `c` is not
+ * one.
  *
- * `-1` rather than `null` because this reads descs, and the desc codecs
- * already test `c2n`'s `-1` in the same layer; `digitOf` returns `null`
- * following `cursorDelta` in its own layer, and no call site sees both.
+ * The absent case sits outside the return type because a value inside it is
+ * one nobody has to check. A `-1` passed every lower-bound test by the
+ * coincidence of sitting below the domain, failed silently under `!== 0`, and
+ * stored `255` when written into a `Uint8Array`. `digitOf` spells its absent
+ * key `null`, following `cursorDelta` in its own layer; no call site sees both.
  */
-export function digitValue(c: string): number {
+export function digitValue(c: string): number | undefined {
   const v = c.charCodeAt(0) - ZERO;
-  return v >= 0 && v <= 9 ? v : -1;
+  return v >= 0 && v <= 9 ? v : undefined;
 }
 
 /**

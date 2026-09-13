@@ -204,12 +204,11 @@ export function validateDesc(p: PalisadeParams, desc: string): string | null {
   for (const tok of scanRunLength(desc)) {
     if ("blanks" in tok) {
       squares += tok.blanks;
-    } else if (digitValue(tok.value) >= 0) {
-      if (digitValue(tok.value) > 4)
-        return `Invalid (too large) number: '${tok.value}'`;
-      squares++;
     } else {
-      return `Invalid character in data: '${tok.value}'`;
+      const clue = digitValue(tok.value);
+      if (clue === undefined) return `Invalid character in data: '${tok.value}'`;
+      if (clue > 4) return `Invalid (too large) number: '${tok.value}'`;
+      squares++;
     }
   }
   if (squares > wh) return "Data describes too many squares";
@@ -228,7 +227,7 @@ export function newState(p: PalisadeParams, desc: string): PalisadeState {
     }
     // Anything that is not a digit was rejected by validateDesc.
     const clue = digitValue(tok.value);
-    if (clue >= 0) clues[i++] = clue;
+    if (clue !== undefined) clues[i++] = clue;
   }
   return {
     w,

@@ -106,7 +106,7 @@ export function validateDesc(p: FillingParams, desc: string): string | null {
       area += tok.blanks;
     } else {
       const v = digitValue(tok.value);
-      if (v < 0 || v > m) {
+      if (v === undefined || v > m) {
         return `Invalid character '${tok.value}' in game description`;
       }
       area += 1;
@@ -125,7 +125,9 @@ export function newState(p: FillingParams, desc: string): FillingState {
   for (const tok of scanRunLength(desc)) {
     // A blank run just advances, leaving the empties as 0.
     if ("blanks" in tok) i += tok.blanks;
-    else clues[i++] = digitValue(tok.value);
+    // `validateDesc` rejects a non-digit. Should one arrive regardless, it is
+    // this array's own `EMPTY`, never a sentinel that wraps to 255 in a byte.
+    else clues[i++] = digitValue(tok.value) ?? EMPTY;
   }
   return {
     w: p.w,
@@ -189,7 +191,7 @@ export function executeMove(state: FillingState, move: FillingMove): FillingStat
     const board = new Uint8Array(sz);
     for (let i = 0; i < sz; i++) {
       const v = digitValue(move.board[i]);
-      if (v < 0) throw new Error("Bad solve board");
+      if (v === undefined) throw new Error("Bad solve board");
       board[i] = v;
     }
     return { ...state, board, completed: true, cheated: true };

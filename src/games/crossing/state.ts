@@ -344,7 +344,15 @@ export function readDesc(
     end++; // step over the ',' (or, on the last number, the terminator)
     const len = end - (at + 1);
     if (len > MAX_NUMBER_LENGTH) verdict = "number";
-    if (len >= 2) numbers.push(Array.from(desc.slice(at, at + len), digitValue));
+    if (len >= 2) {
+      const digits = Array.from(desc.slice(at, at + len), digitValue);
+      // `len` spans exactly the run `parseLeadingInt` stopped at, so a
+      // non-digit here is a broken scan rather than a bad desc.
+      if (!digits.every((d) => d !== undefined)) {
+        throw new Error("crossing: a digit run held a non-digit");
+      }
+      numbers.push(digits);
+    }
     at = end;
   }
 

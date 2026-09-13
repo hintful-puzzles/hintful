@@ -301,6 +301,7 @@ function specToGrid(desc: string, grid: Uint8Array, area: number): void {
   let p = 0;
   while (p < desc.length && desc[p] !== ",") {
     const ch = desc[p];
+    const digit = digitValue(ch);
     if (ch >= "a" && ch <= "z") {
       let run = desc.charCodeAt(p) - 97 + 1;
       p++;
@@ -308,7 +309,7 @@ function specToGrid(desc: string, grid: Uint8Array, area: number): void {
       while (run-- > 0) grid[i++] = 0;
     } else if (ch === "_") {
       p++;
-    } else if (digitValue(ch) >= 1) {
+    } else if (digit !== undefined && digit >= 1) {
       const num = parseLeadingInt(desc, p);
       p = num.next;
       if (i >= area) throw new Error("Too much data to fit in grid");
@@ -326,12 +327,13 @@ function validateGridDesc(desc: string, range: number, area: number): string | n
   let p = 0;
   while (p < desc.length && desc[p] !== ",") {
     const ch = desc[p];
+    const digit = digitValue(ch);
     if (ch >= "a" && ch <= "z") {
       squares += desc.charCodeAt(p) - 97 + 1;
       p++;
     } else if (ch === "_") {
       p++;
-    } else if (digitValue(ch) >= 1) {
+    } else if (digit !== undefined && digit >= 1) {
       const num = parseLeadingInt(desc, p);
       p = num.next;
       const val = num.value;

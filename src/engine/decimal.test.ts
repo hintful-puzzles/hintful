@@ -28,7 +28,7 @@ describe("isDigit / digitValue", () => {
     for (let code = 0; code < 128; code++) {
       const ch = String.fromCharCode(code);
       if (!isDigit(ch)) {
-        expect(digitValue(ch), JSON.stringify(ch)).toBe(-1);
+        expect(digitValue(ch), JSON.stringify(ch)).toBeUndefined();
         continue;
       }
       accepted++;
@@ -37,7 +37,7 @@ describe("isDigit / digitValue", () => {
     expect(accepted).toBe(10);
     // An empty string is a character that is not a digit, not an error.
     expect(isDigit("")).toBe(false);
-    expect(digitValue("")).toBe(-1);
+    expect(digitValue("")).toBeUndefined();
   });
 
   it("agrees with the desc alphabet and the key map on every digit", () => {
@@ -141,6 +141,8 @@ describe("no game restates the decimal digit fact", () => {
       "if (w > 50) return 'Width must be at most 50';",
       'grid[i] = c === "1" ? ONE : ZERO;',
       "const digit = digitValue(tok.value);",
+      // A typed array's own absent constant, named at the write.
+      "else clues[pos++] = digitValue(tok.value) ?? -1;",
       "if (button >= 97 && button <= 105) return button - 97;",
     ]) {
       expect(restates(snippet), snippet).toBe(false);

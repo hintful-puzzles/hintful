@@ -320,7 +320,7 @@ character arithmetic the two families share.
 
 Whatever the grammar, the digits in it are read and written one way, from
 [`engine/decimal.ts`](../../src/engine/decimal.ts): `isDigit(c)`,
-`digitValue(c)` (`0`–`9` or `-1`) and `parseLeadingInt(s, pos)` for a run of
+`digitValue(c)` (`0`–`9` or `undefined`) and `parseLeadingInt(s, pos)` for a run of
 them (`{ value, next }`, with `next === pos` meaning "no number here"). A
 single digit is *written* as `String(n)`. A value above nine takes one of the
 two alphabets in [`engine/desc-alphabet.ts`](../../src/engine/desc-alphabet.ts)
@@ -338,9 +338,25 @@ each into a digit array once, and the string is rebuilt only where the desc,
 the number panel or a hint sentence needs one.
 
 What is yours is the **bound** and what an out-of-range value means, written
-beside the call — `const v = digitValue(tok.value); if (v < 0 || v > 4) return
-"Invalid …"` — because Slant's clues stop at `4`, Bricks' at `7` and Bridges'
-at `G`, and those are facts about the puzzle. Never write `c >= "0" && c <=
+beside the call — `const v = digitValue(tok.value); if (v === undefined || v > 4)
+return "Invalid …"` — because Slant's clues stop at `4`, Bricks' at `7` and Bridges'
+at `G`, and those are facts about the puzzle.
+
+**"Not a digit" is outside the type, and a write names its own absent value.**
+`digitValue`, `c2n` and `c2nUpper` return `number | undefined`, so the compiler
+refuses a site until it says what a stray character means: test `undefined`
+explicitly beside your bound rather than trusting the bound to catch it. A
+write into a typed array names *that array's* absent constant — Filling's
+`?? EMPTY`, Slant's `?? -1` — because a borrowed `-1` in a `Uint8Array` is
+`255`. Where the write is safe only because `validateDesc` screened the
+character, say so at the write (§ "The two scans have to agree, and nothing
+makes them"); an array with no absent value, where every cell holds a number,
+throws instead. The reason is scale: a `-1` inside the return type passed every
+`>= 0` test by a coincidence of ordering and would have failed silently under
+`!== 0`, and a fact every new author must be told loses to one the compiler
+enforces.
+
+Never write `c >= "0" && c <=
 "9"`, `c.charCodeAt(0) - 48`, `String.fromCharCode(48 + n)` or a private
 `isDigit`: [`decimal.test.ts`](../../src/engine/decimal.test.ts) scans every
 game source for the shapes and fails the build, and `emittable-keys.test.ts`

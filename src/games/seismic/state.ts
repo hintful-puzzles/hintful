@@ -462,8 +462,9 @@ function readDesc(
       c = "";
       erun--;
     }
-    if (digitValue(c) >= 1) {
-      board.grid[i] = digitValue(c);
+    const clue = digitValue(c);
+    if (clue !== undefined && clue >= 1) {
+      board.grid[i] = clue;
       board.flags[i] = FM_FIXED;
     }
   }

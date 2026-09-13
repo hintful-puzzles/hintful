@@ -287,7 +287,13 @@ function solve(orig: KeenState, _curr: KeenState, aux?: string): SolveResult<Kee
   const w = orig.params.w;
   if (aux) {
     const grid: number[] = [];
-    for (let i = 0; i < w * w; i++) grid[i] = digitValue(aux[i + 1]);
+    for (let i = 0; i < w * w; i++) {
+      // `aux` is written by `newDesc` in this process and never read from a
+      // save, so a non-digit here is a broken encoder rather than a bad input.
+      const digit = digitValue(aux[i + 1]);
+      if (digit === undefined) return { ok: false, error: "invalid char in aux" };
+      grid[i] = digit;
+    }
     return { ok: true, move: { type: "solve", grid } };
   }
   const soln = new Uint8Array(w * w);
