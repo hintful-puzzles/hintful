@@ -931,7 +931,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
             ? { type: "choices", name: item.name, choicenames: item.choices }
             : { type: "string", name: item.name };
     }
-    return { title: this.game.id, items };
+    return { items };
   }
 
   /** Current custom-params values read off the live params: a string for
@@ -997,7 +997,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
           ? { type: "boolean", name: p.name }
           : { type: "choices", name: p.name, choicenames: p.choices };
     }
-    return { title: this.game.id, items };
+    return { items };
   }
 
   /** Current preference values read off the live ui: a boolean for a

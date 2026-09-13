@@ -31,6 +31,11 @@ only.** The tiers are codified in the
   a target frame. **New render code SHOULD ship one** (see below).
 - **Tier 3** — components + persistence: opt a file into `happy-dom` for Lit
   components, import `src/test-setup/indexeddb.ts` for Dexie round-trips.
+  Mounting Web Awesome controls needs `src/test-setup/element-internals.ts`,
+  and opening a `wa-dialog` that holds a config form needs
+  `src/test-setup/resize-and-animations.ts` too — Lit resolves its `node`
+  build under vitest, so anything gated on `isServer` behaves as on a server
+  even in `happy-dom`. Each module's header says what fails without it.
 
 **A test that needs a specific board should find it deterministically, not by
 scanning further.** The idiom for reaching a specific deduction or board state

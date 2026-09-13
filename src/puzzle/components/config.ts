@@ -1,8 +1,8 @@
 import type WaDialog from "@awesome.me/webawesome/dist/components/dialog/dialog.js";
 import { consume } from "@lit/context";
 import { ResizeController } from "@lit-labs/observers/resize-controller.js";
-import { SignalWatcher, signal } from "@lit-labs/signals";
-import { css, html, LitElement, nothing, type TemplateResult } from "lit";
+import { SignalWatcher } from "@lit-labs/signals";
+import { css, html, LitElement, nothing } from "lit";
 import { query } from "lit/decorators/query.js";
 import { customElement, property, queryAll, state } from "lit/decorators.js";
 import { when } from "lit/directives/when.js";
@@ -53,15 +53,6 @@ abstract class PuzzleConfigForm extends SignalWatcher(LitElement) {
   @property({ type: Number, attribute: "choices-button-group-limit" })
   choicesButtonGroupLimit = 8;
 
-  /**
-   * The title for the dialog, per the config
-   */
-  override get title(): string {
-    return this._title.get();
-  }
-
-  protected _title = signal<string>("");
-
   @state()
   protected config: ConfigDescription | null = null;
 
@@ -86,7 +77,6 @@ abstract class PuzzleConfigForm extends SignalWatcher(LitElement) {
 
   protected async loadConfig(): Promise<void> {
     this.config = await this.getConfig();
-    this._title.set(this.config?.title ?? "");
     await this.loadValues();
   }
 
@@ -459,7 +449,15 @@ export class PuzzlePreferencesForm extends PuzzleConfigForm {
   }
 }
 
-abstract class PuzzleConfigDialog extends SignalWatcher(LitElement) {
+/**
+ * Dialog for editing custom game params (custom puzzle type)
+ */
+@customElement("puzzle-custom-params-dialog")
+export class PuzzleCustomParamsDialog extends SignalWatcher(LitElement) {
+  @consume({ context: puzzleContext, subscribe: true })
+  @state()
+  private puzzle?: Puzzle;
+
   /**
    * The label for the submit button
    */
@@ -472,21 +470,20 @@ abstract class PuzzleConfigDialog extends SignalWatcher(LitElement) {
   @property({ type: String, attribute: "cancel-label" })
   cancelLabel = "Cancel";
 
-  @property({ type: String, attribute: "dialog-title" })
-  dialogTitle = "Configuration";
-
   @query("wa-dialog", true)
   protected dialog?: WaDialog;
 
-  protected abstract form?: PuzzleConfigForm;
+  @query("puzzle-custom-params-form")
+  protected form?: PuzzleCustomParamsForm;
 
   protected override render() {
+    const title = this.puzzle ? `Custom ${this.puzzle.displayName}` : "Custom type";
     return html`
-      <wa-dialog label=${this.dialogTitle}>
+      <wa-dialog label=${title}>
         <wa-scroller orientation="vertical">
-          ${this.renderConfigForm()}
+          <puzzle-custom-params-form part="form"></puzzle-custom-params-form>
         </wa-scroller>
-        
+
         <div slot="footer" part="footer">
           <wa-button @click=${this.handleCancel}>${this.cancelLabel}</wa-button>
           <wa-button variant="brand" @click=${this.handleSubmit}>${this.submitLabel}</wa-button>
@@ -495,17 +492,9 @@ abstract class PuzzleConfigDialog extends SignalWatcher(LitElement) {
     `;
   }
 
-  protected override updated() {
-    if (!this.hasAttribute("dialog-title")) {
-      // Get the dialog title from the form (see disableWarning below).
-      const title = this.form?.title;
-      if (title && title !== this.dialogTitle) {
-        this.dialogTitle = title;
-      }
-    }
+  async getParams(): Promise<string | null> {
+    return (await this.form?.getParams()) ?? null;
   }
-
-  protected abstract renderConfigForm(): TemplateResult;
 
   protected async handleSubmit() {
     await this.form?.submit();
@@ -591,50 +580,12 @@ abstract class PuzzleConfigDialog extends SignalWatcher(LitElement) {
     `,
   ];
 }
-// change-in-update is necessary because title is retrieved
-// from PuzzleConfigForm after first render.
-PuzzleConfigDialog.disableWarning?.("change-in-update");
-
-/**
- * Dialog for editing custom game params (custom puzzle type)
- */
-@customElement("puzzle-custom-params-dialog")
-export class PuzzleCustomParamsDialog extends PuzzleConfigDialog {
-  @query("puzzle-custom-params-form")
-  protected form?: PuzzleCustomParamsForm;
-
-  protected override renderConfigForm() {
-    return html`
-      <puzzle-custom-params-form part="form"></puzzle-custom-params-form>
-    `;
-  }
-
-  async getParams(): Promise<string | null> {
-    return (await this.form?.getParams()) ?? null;
-  }
-}
-
-/**
- * Dialog for editing puzzle preferences
- */
-@customElement("puzzle-preferences-dialog")
-export class PuzzlePreferencesDialog extends PuzzleConfigDialog {
-  @query("puzzle-preferences-form")
-  protected form?: PuzzlePreferencesForm;
-
-  protected override renderConfigForm() {
-    return html`
-      <puzzle-preferences-form part="form"></puzzle-preferences-form>
-    `;
-  }
-}
 
 declare global {
   interface HTMLElementTagNameMap {
     "puzzle-custom-params-form": PuzzleCustomParamsForm;
     "puzzle-preferences-form": PuzzlePreferencesForm;
     "puzzle-custom-params-dialog": PuzzleCustomParamsDialog;
-    "puzzle-preferences-dialog": PuzzlePreferencesDialog;
   }
 
   interface HTMLElementEventMap {

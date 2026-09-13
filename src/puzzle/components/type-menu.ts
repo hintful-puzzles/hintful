@@ -7,6 +7,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import type { PresetMenuEntry } from "../../engine/types.ts";
 import { cssWATweaks } from "../../utils/css.ts";
+import { closest } from "../../utils/dom.ts";
 import { puzzleContext } from "../contexts.ts";
 import type { Puzzle } from "../puzzle.ts";
 import type { PuzzleCustomParamsDialog } from "./config.ts";
@@ -282,7 +283,9 @@ export class PuzzleTypeMenu extends SignalWatcher(LitElement) {
     }
 
     if (!this.customDialog) {
-      const container = this.closest("puzzle-context");
+      // The rail draws this menu inside its own shadow root, which
+      // `Element.closest` does not leave.
+      const container = closest(this, "puzzle-context");
       if (!container) {
         throw new Error("launchCustomDialog() can't find puzzle-context container");
       }

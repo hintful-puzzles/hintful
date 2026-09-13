@@ -126,9 +126,9 @@ export type ConfigItem =
   | { type: "boolean"; name: string }
   | { type: "choices"; name: string; choicenames: string[] };
 
-/** A whole config dialog: a title and its fields, keyed by field id. */
+/** A whole config form: its fields, keyed by field id. It carries no title
+ * because a game's display name is not the engine's to know. */
 export type ConfigDescription = {
-  title: string;
   items: { [id: string]: ConfigItem };
 };
 

@@ -95,7 +95,6 @@ describe("Midend custom-params round-trip", () => {
   it("builds a ConfigDescription from paramConfig (one item per field, typed)", () => {
     const m = new Midend(makeGame());
     const cfg = m.getCustomParamsConfig();
-    expect(cfg.title).toBe("__cfg__");
     expect(cfg.items["width"]).toEqual({ type: "string", name: "Width" });
     expect(cfg.items["flag"]).toEqual({ type: "boolean", name: "Flag" });
     expect(cfg.items["mode"]).toEqual({
