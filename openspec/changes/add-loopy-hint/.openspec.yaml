@@ -1,0 +1,5 @@
+# A stub: the requirement a Loopy hint adds is written with the hint, once
+# its narration and marks exist to be stated. Remove `skip_specs` then.
+schema: spec-driven
+created: 2026-09-14
+skip_specs: true
