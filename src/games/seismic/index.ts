@@ -56,7 +56,6 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
   type SeismicDrawState,
-  setTileSize,
 } from "./render.ts";
 import { SOLVE_FAILED, STATUS_COMPLETE, solveGame, validateGame } from "./solver.ts";
 import {
@@ -371,7 +370,6 @@ export const seismicGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 

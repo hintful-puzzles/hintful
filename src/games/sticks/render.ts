@@ -105,17 +105,13 @@ export interface SticksDrawState {
   mistakes: OverlaySidecar;
 }
 
-export function newDrawState(state: SticksState): SticksDrawState {
+export function newDrawState(state: SticksState, tileSize: number): SticksDrawState {
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     cache: new Int32Array(state.w * state.h).fill(-1),
     mistakes: new OverlaySidecar(state.w * state.h),
   };
-}
-
-export function setTileSize(ds: SticksDrawState, ts: number): void {
-  ds.tileSize = ts;
 }
 
 // --- cell drawing -----------------------------------------------------------

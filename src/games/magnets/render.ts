@@ -121,10 +121,10 @@ export interface MagnetsDrawState {
   rowwhat: Int32Array;
 }
 
-export function newDrawState(state: MagnetsState): MagnetsDrawState {
+export function newDrawState(state: MagnetsState, tileSize: number): MagnetsDrawState {
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     w: state.w,
     h: state.h,
     what: new Int32Array(state.wh).fill(-1),

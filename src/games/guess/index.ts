@@ -34,7 +34,6 @@ import {
   PREFERRED_TILE_SIZE,
   pegOff,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import {
   cloneState,
@@ -422,7 +421,6 @@ export const guessGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 };

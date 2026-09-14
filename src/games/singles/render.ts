@@ -132,18 +132,14 @@ export interface SinglesDrawState {
   cache: Int32Array;
 }
 
-export function newDrawState(state: SinglesState): SinglesDrawState {
+export function newDrawState(state: SinglesState, tileSize: number): SinglesDrawState {
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     w: state.w,
     h: state.h,
     cache: new Int32Array(state.n).fill(-1),
   };
-}
-
-export function setTileSize(ds: SinglesDrawState, ts: number): void {
-  ds.tileSize = ts;
 }
 
 // --- tile drawing ----------------------------------------------------------

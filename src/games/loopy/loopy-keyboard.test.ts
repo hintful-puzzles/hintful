@@ -40,12 +40,12 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import {
   type DrawOp,
   RecordingDrawing,
 } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
 import {
   farDot,
   type LoopyCursor,
@@ -232,7 +232,7 @@ function board(type = 0, w = 7, h = 7, seed = "loopy-kb") {
   const { desc } = newDesc(p, randomNew(seed));
   const s = newState(p, desc);
   const ui = loopyGame.newUi(s);
-  const ds = sizedDrawState(loopyGame, s);
+  const ds = preferredDrawState(loopyGame, s);
   return { p, desc, s, ui, ds };
 }
 
@@ -436,7 +436,7 @@ function playToCompletionByKeyboard(type: number, w: number, h: number, seed: st
   expect(midend.newGameFromId(`${encodeParams(p, true)}:${desc}`)).toBeNull();
   let s = orig;
   const ui = loopyGame.newUi(s);
-  const ds = sizedDrawState(loopyGame, s);
+  const ds = preferredDrawState(loopyGame, s);
   const key = (button: number) => {
     expect(midend.processInput(0, 0, button)).toBe(true);
     const r = press(s, ui, ds, button);
@@ -541,7 +541,7 @@ describe("the cursor is drawn, on an aperiodic tiling", () => {
     // Where they land: mirror the cursor at the game level to know which dot
     // and edge the midend's cursor walked to, then check the marks sit on them.
     const ui = loopyGame.newUi(s);
-    const ds = sizedDrawState(loopyGame, s);
+    const ds = preferredDrawState(loopyGame, s);
     press(s, ui, ds, CURSOR_RIGHT);
     const d = s.grid.dots[ui.cursor.dot];
     const e = s.grid.edges[ui.cursor.edge];

@@ -310,9 +310,6 @@ export const fillingGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize: (p: FillingParams, ts: number): Size => computeSize(p.w, p.h, ts),
-  setTileSize: (ds, ts) => {
-    ds.tileSize = ts;
-  },
   newDrawState,
   redraw: redrawFilling,
 

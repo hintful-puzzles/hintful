@@ -17,12 +17,12 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { SYMM_ROT2, SYMM_ROT4 } from "../../engine/symmetric-blacks.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
 import cReference from "./__fixtures__/lightup-c-reference.json" with { type: "json" };
 import { puzzleIsGood } from "./generator.ts";
 import { type LightupMistake, lightupGame } from "./index.ts";
@@ -211,7 +211,7 @@ describe("lightup input", () => {
     const m = lightupGame.interpretMove(
       state(),
       ui(),
-      sizedDrawState(lightupGame, state()),
+      preferredDrawState(lightupGame, state()),
       { x: px(0), y: px(0) },
       LEFT_BUTTON,
     );
@@ -219,7 +219,7 @@ describe("lightup input", () => {
     const m2 = lightupGame.interpretMove(
       state(),
       ui(),
-      sizedDrawState(lightupGame, state()),
+      preferredDrawState(lightupGame, state()),
       { x: px(0), y: px(0) },
       RIGHT_BUTTON,
     );
@@ -232,7 +232,7 @@ describe("lightup input", () => {
       lightupGame.interpretMove(
         state(),
         ui(),
-        sizedDrawState(lightupGame, state()),
+        preferredDrawState(lightupGame, state()),
         { x: px(1), y: px(1) },
         LEFT_BUTTON,
       ),
@@ -241,7 +241,7 @@ describe("lightup input", () => {
       lightupGame.interpretMove(
         state(),
         ui(),
-        sizedDrawState(lightupGame, state()),
+        preferredDrawState(lightupGame, state()),
         { x: 5000, y: 5000 },
         LEFT_BUTTON,
       ),
@@ -255,7 +255,7 @@ describe("lightup input", () => {
       lightupGame.interpretMove(
         s,
         ui(),
-        sizedDrawState(lightupGame, s),
+        preferredDrawState(lightupGame, s),
         { x: px(0), y: px(0) },
         LEFT_BUTTON,
       ),
@@ -266,7 +266,7 @@ describe("lightup input", () => {
       lightupGame.interpretMove(
         s2,
         ui(),
-        sizedDrawState(lightupGame, s2),
+        preferredDrawState(lightupGame, s2),
         { x: px(0), y: px(0) },
         RIGHT_BUTTON,
       ),
@@ -281,7 +281,7 @@ describe("lightup input", () => {
       lightupGame.interpretMove(
         state(),
         u,
-        sizedDrawState(lightupGame, state()),
+        preferredDrawState(lightupGame, state()),
         { x: 0, y: 0 },
         CURSOR_RIGHT,
       ),
@@ -292,7 +292,7 @@ describe("lightup input", () => {
       lightupGame.interpretMove(
         state(),
         u,
-        sizedDrawState(lightupGame, state()),
+        preferredDrawState(lightupGame, state()),
         { x: 0, y: 0 },
         CURSOR_DOWN,
       ),
@@ -302,7 +302,7 @@ describe("lightup input", () => {
       lightupGame.interpretMove(
         state(),
         u,
-        sizedDrawState(lightupGame, state()),
+        preferredDrawState(lightupGame, state()),
         { x: 0, y: 0 },
         CURSOR_SELECT,
       ),
@@ -312,7 +312,7 @@ describe("lightup input", () => {
       lightupGame.interpretMove(
         state(),
         u,
-        sizedDrawState(lightupGame, state()),
+        preferredDrawState(lightupGame, state()),
         { x: 0, y: 0 },
         CURSOR_SELECT,
       ),
@@ -322,7 +322,7 @@ describe("lightup input", () => {
       lightupGame.interpretMove(
         state(),
         u,
-        sizedDrawState(lightupGame, state()),
+        preferredDrawState(lightupGame, state()),
         { x: 0, y: 0 },
         "i".charCodeAt(0),
       ),
@@ -337,7 +337,7 @@ describe("lightup input", () => {
       lightupGame.interpretMove(
         state(),
         u,
-        sizedDrawState(lightupGame, state()),
+        preferredDrawState(lightupGame, state()),
         { x: px(1), y: px(1) },
         LEFT_BUTTON,
       ),

@@ -174,13 +174,13 @@ export interface GroupDrawState {
   errtmp: Int32Array;
 }
 
-export function newDrawState(state: GroupState): GroupDrawState {
+export function newDrawState(state: GroupState, tileSize: number): GroupDrawState {
   const w = state.w;
   const a = w * w;
   return {
     w,
     id: state.id,
-    tileSize: 0,
+    tileSize,
     started: false,
     tiles: new Int32Array(a).fill(-1),
     legend: new Int32Array(w).fill(-1),
@@ -192,10 +192,6 @@ export function newDrawState(state: GroupState): GroupDrawState {
     sequence: new Uint8Array(w),
     errtmp: new Int32Array(a),
   };
-}
-
-export function setTileSize(ds: GroupDrawState, ts: number): void {
-  ds.tileSize = ts;
 }
 
 /**

@@ -334,20 +334,10 @@ function computeSize(p: SignpostParams, ts: number): Size {
   return { w: ts * p.w + 2 * BORDER, h: ts * p.h + 2 * BORDER };
 }
 
-function setTileSize(ds: SignpostDrawState, ts: number): void {
-  if (ds.tileSize !== ts) {
-    ds.tileSize = ts;
-    ds.started = false;
-    ds.cache.fill(-1);
-    ds.nums.fill(-1);
-    ds.dirp.fill(-2);
-  }
-}
-
-function newDrawState(s: SignpostState): SignpostDrawState {
+function newDrawState(s: SignpostState, tileSize: number): SignpostDrawState {
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     w: s.w,
     h: s.h,
     n: s.n,
@@ -415,7 +405,6 @@ export const signpostGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw: redrawSignpost,
   flashLength,

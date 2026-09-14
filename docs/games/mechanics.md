@@ -37,9 +37,8 @@ owns the decision.
 
 **When every game implements an optional member, ask what the optionality
 costs — and whose code pays.** It is not automatically a mistake:
-`preferredTileSize`, `setTileSize` and `paramConfig` are declared by all 57 and
-are fine as they are, because their optionality is absorbed by three `?.`/`??`
-in the midend and never appears in a game. `newDrawState` and `redraw` were the
+`preferredTileSize` and `paramConfig` are fine as they are, because their
+optionality is absorbed by the engine and never appears in a game. `newDrawState` and `redraw` were the
 opposite case: their optionality *leaked into the game-facing signature* as
 `ds: DrawState | null`, so 112 game files carried a guard against a null the
 engine could not produce, and 57 of them a `ds?.tilesize ?? PREFERRED_TILE_SIZE`
@@ -424,17 +423,19 @@ be the same one `executeMove` filters with, so the two cannot drift (see
 worked example). Input-device traps — touch, stylus, keypad, drag classes —
 are [input](./input.md)'s whole subject; read it before writing this hook.
 
-**`ds` is non-null and already sized, so read `ds.tileSize` directly.** The
-midend creates the draw state and applies `setTileSize` in one step
-(`Midend.freshDrawState`) and declines input before a board exists. Do **not**
+**`ds` is non-null and built at the tile size on screen, so read `ds.tileSize`
+directly.** The midend builds the draw state with `newDrawState(state,
+tileSize)`, builds a fresh one whenever the tile size changes, and declines
+input before a board exists. Do **not**
 write `ds?.tileSize ?? PREFERRED_TILE_SIZE`: that fallback cannot fire, and if
 it ever did it would map the click at the preferred tile size rather than the
 one on screen — the wrong cell, silently. Fifty-seven games had one, from back
 when `newDrawState` was optional; `audit-vestigial-contract-surface` made both
 it and `redraw` required and removed the lot. A test that calls `interpretMove`
-or `redraw` directly builds the drawstate with
-[`sizedDrawState`](../../src/engine/testing/sized-draw-state.ts) rather than
-passing `null`.
+or `redraw` directly builds the drawstate with `game.newDrawState(state,
+tileSize)`, or with
+[`preferredDrawState`](../../src/engine/testing/preferred-draw-state.ts) at the
+game's preferred size, rather than passing `null`.
 
 ### executeMove is pure
 
@@ -800,7 +801,7 @@ half a tile per row). Three rules keep it cheap and correct:
   before flooring to a column. Share the offset helper between `render.ts` and
   `index.ts` (Bricks exports `offsets(h, ts)`) so pointer mapping and drawing
   cannot drift. Force the tile size even in **both** `computeSize` and
-  `setTileSize` so the half-tile is exact.
+  `newDrawState` so the half-tile is exact.
 - **Verify the shear from an SVG dump before touching a browser** — a wrong
   offset shows instantly as a staircase; see
   [testing](./testing.md) § "Render scenarios".

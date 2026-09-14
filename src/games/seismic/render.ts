@@ -160,21 +160,17 @@ export interface SeismicDrawState {
   pencilModeShown: boolean | null;
 }
 
-export function newDrawState(state: SeismicState): SeismicDrawState {
+export function newDrawState(state: SeismicState, tileSize: number): SeismicDrawState {
   const cells = state.w * state.h;
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     tiles: new Int32Array(cells).fill(-1),
     wrong: new OverlaySidecar(cells),
     hint: new OverlaySidecar(cells),
     marks: new HintMarks(),
     pencilModeShown: null,
   };
-}
-
-export function setTileSize(ds: SeismicDrawState, ts: number): void {
-  ds.tileSize = ts;
 }
 
 // --- tile drawing ----------------------------------------------------------

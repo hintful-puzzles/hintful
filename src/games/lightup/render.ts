@@ -122,18 +122,13 @@ export interface LightupDrawState {
   cache: Int32Array;
 }
 
-export function newDrawState(state: LightupState): LightupDrawState {
+export function newDrawState(state: LightupState, tileSize: number): LightupDrawState {
   return {
     started: false,
-    tileSize: 0,
-    crad: 0,
+    tileSize,
+    crad: Math.floor((3 * (tileSize - 1)) / 8),
     cache: new Int32Array(state.w * state.h).fill(-1),
   };
-}
-
-export function setTileSize(ds: LightupDrawState, ts: number): void {
-  ds.tileSize = ts;
-  ds.crad = Math.floor((3 * (ts - 1)) / 8);
 }
 
 // --- per-tile flags + draw -------------------------------------------------------

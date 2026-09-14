@@ -33,6 +33,7 @@ import type { Game } from "./game.ts";
 import { CURSOR_RIGHT, newCursor } from "./pointer.ts";
 import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
+import { preferredDrawState } from "./testing/preferred-draw-state.ts";
 
 beforeAll(registerAllGames);
 
@@ -115,10 +116,7 @@ describe("one keyboard-cursor vocabulary", () => {
       const params = game.defaultParams();
       const desc = game.newDesc(params, randomNew(`cursor-vocab-${id}`)).desc;
       const state = game.newState(params, desc);
-      const ds = game.newDrawState?.(state) as Record<string, number> | undefined;
-      // Both spellings are in use across the collection's draw states.
-      if (ds && "tileSize" in ds) ds["tileSize"] = game.preferredTileSize ?? 32;
-      if (ds && "tileSize" in ds) ds["tileSize"] = game.preferredTileSize ?? 32;
+      const ds = preferredDrawState(game, state);
 
       const before = { ...c };
       expect(before.visible, `${id} starts with a hidden cursor`).toBe(false);

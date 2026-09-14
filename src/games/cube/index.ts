@@ -34,7 +34,6 @@ import {
   PREFERRED_TILE_SIZE,
   ROLLTIME,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import {
   alignPolyKeys,
@@ -266,8 +265,8 @@ function directionFromClick(
   p: Point,
 ): Direction | null {
   const sq = state.grid[state.current];
-  const cx = Math.trunc(sq.x * ds.gridScale) + ds.ox;
-  const cy = Math.trunc(sq.y * ds.gridScale) + ds.oy;
+  const cx = Math.trunc(sq.x * ds.tileSize) + ds.ox;
+  const cy = Math.trunc(sq.y * ds.tileSize) + ds.oy;
   if (p.x === cx && p.y === cy) return null;
 
   const angle = Math.atan2(p.y - cy, p.x - cx);
@@ -372,7 +371,6 @@ export const cubeGame: Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawSta
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 

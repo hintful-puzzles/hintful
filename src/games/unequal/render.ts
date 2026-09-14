@@ -187,11 +187,11 @@ export interface UnequalDrawState {
   marks: HintMarks;
 }
 
-export function newDrawState(state: UnequalState): UnequalDrawState {
+export function newDrawState(state: UnequalState, tileSize: number): UnequalDrawState {
   const o = state.order;
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     order: o,
     nums: new Int8Array(o * o).fill(-1),
     flags: new Int32Array(o * o).fill(-1),
@@ -205,10 +205,6 @@ export function newDrawState(state: UnequalState): UnequalDrawState {
     pencilModeShown: null,
     marks: new HintMarks(),
   };
-}
-
-export function setTileSize(ds: UnequalDrawState, ts: number): void {
-  ds.tileSize = ts;
 }
 
 /**

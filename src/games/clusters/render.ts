@@ -139,20 +139,19 @@ export interface ClustersDrawState {
   marks: HintMarks;
 }
 
-export function newDrawState(state: ClustersState): ClustersDrawState {
+export function newDrawState(
+  state: ClustersState,
+  tileSize: number,
+): ClustersDrawState {
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     w: state.w,
     h: state.h,
     cache: new Int32Array(state.w * state.h).fill(-1),
     hint: new OverlaySidecar(state.w * state.h),
     marks: new HintMarks(),
   };
-}
-
-export function setTileSize(ds: ClustersDrawState, ts: number): void {
-  ds.tileSize = ts;
 }
 
 /**

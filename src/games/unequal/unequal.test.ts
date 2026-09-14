@@ -6,8 +6,8 @@ import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
 import { newUnequalDesc } from "./generator.ts";
 import { unequalGame } from "./index.ts";
 import { computeSize, coord, PREFERRED_TILE_SIZE } from "./render.ts";
@@ -300,7 +300,7 @@ describe("unequal interpretMove", () => {
     unequalGame.interpretMove?.(
       st,
       ui,
-      sizedDrawState(unequalGame, st),
+      preferredDrawState(unequalGame, st),
       center(x, y),
       LEFT_BUTTON,
     );
@@ -310,7 +310,7 @@ describe("unequal interpretMove", () => {
     const move = unequalGame.interpretMove?.(
       st,
       ui,
-      sizedDrawState(unequalGame, st),
+      preferredDrawState(unequalGame, st),
       { x: 0, y: 0 },
       49,
     ); // '1'
@@ -323,7 +323,7 @@ describe("unequal interpretMove", () => {
     const move = unequalGame.interpretMove?.(
       st,
       ui,
-      sizedDrawState(unequalGame, st),
+      preferredDrawState(unequalGame, st),
       { x: 0, y: 0 },
       109,
     ); // 'm'

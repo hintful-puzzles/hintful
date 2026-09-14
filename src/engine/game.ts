@@ -344,9 +344,9 @@ export interface Game<
    * happened", or `UI_UPDATE` for "UI/cursor changed in place, redraw
    * but add no history entry".
    *
-   * `ds` is the live draw state, **never null and always sized**: the midend
-   * creates it and applies `setTileSize` in the same breath (see
-   * `Midend.freshDrawState`) and refuses input before there is a board. So
+   * `ds` is the live draw state, **never null and built at the tile size on
+   * screen** (see {@link Game.newDrawState}), and the midend refuses input
+   * before there is a board. So
    * read `ds.tileSize` directly: a `ds?.tileSize ?? PREFERRED_TILE_SIZE`
    * fallback is not merely inert, it is a *wrong answer* waiting to happen,
    * mapping the pointer at the preferred tile size rather than the one on
@@ -525,15 +525,17 @@ export interface Game<
   /** Upstream's `preferred_tilesize`; the size baseline. Default 32. */
   readonly preferredTileSize?: number;
   computeSize(p: Params, tileSize: number): Size;
-  /** Upstream's `game_set_size`: tell the draw state the chosen tile
-   * size so coordinate mapping (`interpretMove`) and `redraw` agree.
-   * The midend calls this right after `newDrawState` and again whenever
-   * `size()` picks a new tile size. */
-  setTileSize?(ds: DrawState, tileSize: number): void;
   /** Build the per-game draw state (the tile cache and whatever else `redraw`
-   * needs). Required, so that a game never receives a null `ds`: the midend
-   * has no sensible behavior without one. */
-  newDrawState(s: State): DrawState;
+   * needs) at `tileSize`, deriving any tile-size geometry here. Required, so
+   * that a game never receives a null `ds`: the midend has no sensible
+   * behavior without one.
+   *
+   * A draw state lives at one tile size. The midend builds a fresh one when
+   * `size()` picks a different tile size, so no cached tile or blitter is ever
+   * the wrong size and a game writes no resize invalidation of its own. There
+   * is deliberately no counterpart to upstream's `game_set_size`, which resized
+   * a live draw state. */
+  newDrawState(s: State, tileSize: number): DrawState;
   /** Paint the board. `ds` is never null — see {@link Game.newDrawState}. */
   redraw(
     dr: GameDrawing,

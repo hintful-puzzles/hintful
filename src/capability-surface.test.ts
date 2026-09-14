@@ -36,7 +36,6 @@ import {
   capabilitySets,
   OPTIONAL_GAME_MEMBERS,
 } from "./engine/testing/enrollment.ts";
-import { sizedDrawState } from "./engine/testing/sized-draw-state.ts";
 import { registerAllGames } from "./games/index.ts";
 
 beforeAll(registerAllGames);
@@ -118,31 +117,6 @@ describe("capability surface", () => {
     // flag, so nearly every game carries it; a probe returning empty sets
     // could not clear this.
     expect(has("started").length).toBeGreaterThan(50);
-  });
-
-  it("loses nothing by reading the draw state before it is sized", () => {
-    // What licenses the snapshot to read the *unsized* draw state. It must,
-    // because `setTileSize` assigns into it and so puts back any field it
-    // writes: sizing first was this change's first cut, and deleting
-    // `tileSize` from Flood's `newDrawState` passed, because Flood's
-    // `setTileSize` is `ds.tileSize = ts`. The cost of reading unsized is the
-    // opposite blindness — a field a game assigns *only* under a tile size
-    // would go unrecorded — so that is asserted away here rather than paid
-    // for by sizing.
-    //
-    // Every game is in this check by construction: it compares the two
-    // readings of the same draw state, so a game cannot be missing from it
-    // without being missing from the collection.
-    const surprising = builtGames()
-      .map((g) => {
-        const before = Object.keys(g.drawState).sort();
-        const after = Object.keys(
-          sizedDrawState(g.game, g.state) as Record<string, unknown>,
-        ).sort();
-        return { id: g.id, added: after.filter((k) => !before.includes(k)) };
-      })
-      .filter((r) => r.added.length > 0);
-    expect(surprising).toEqual([]);
   });
 
   it("matches the recorded capability surface", () => {

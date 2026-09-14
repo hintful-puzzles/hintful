@@ -27,7 +27,7 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import type { ChangeNotification, GameStatus } from "../../engine/types.ts";
 import { newSlideDesc } from "./generator.ts";
 import { slideGame } from "./index.ts";
@@ -588,7 +588,7 @@ function pointer(
   cell: { x: number; y: number },
   button: number,
 ) {
-  return slideGame.interpretMove(s, ui, sizedDrawState(slideGame, s), cell, button);
+  return slideGame.interpretMove(s, ui, preferredDrawState(slideGame, s), cell, button);
 }
 
 describe("slide input", () => {
@@ -688,7 +688,13 @@ describe("slide keyboard control", () => {
    * deliberately the origin: anything the cursor branch read off it would show
    * up as a wrong cell rather than as a silently-correct one. */
   function press(s: SlideState, ui: SlideUi, button: number) {
-    return slideGame.interpretMove(s, ui, sizedDrawState(slideGame, s), ORIGIN, button);
+    return slideGame.interpretMove(
+      s,
+      ui,
+      preferredDrawState(slideGame, s),
+      ORIGIN,
+      button,
+    );
   }
 
   /** Walk the cursor to `(x, y)` from wherever it is, one press per cell. */

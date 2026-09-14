@@ -42,7 +42,6 @@ import {
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import {
   c2diff,
@@ -307,7 +306,6 @@ export const netslideGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 

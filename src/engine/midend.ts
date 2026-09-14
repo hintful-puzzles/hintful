@@ -119,15 +119,16 @@ export interface EngineCore {
    * the implementation on {@link Midend}. */
   darkPalette(defaultBackground: Color): Record<number, Color>;
   preferredSize(): Size;
-  /** Pick the largest integer tile size whose board fits `maxSize`, record it
-   * (informing the drawstate via `setTileSize`), and return the board's pixel
-   * size at it.
+  /** Pick the largest integer tile size whose board fits `maxSize`, record it,
+   * and return the board's pixel size at it.
    *
-   * No other side effect on the drawstate, unlike upstream's `midend_size`,
-   * which recreates it on every call: `puzzle-view.ts`'s `ResizeController`
-   * calls this on any layout perturbation (CSS transitions, mobile address-bar
-   * show/hide), and wiping the per-tile cache then would cause spurious full
-   * repaints. `canvasCleared()` is the real signal that the cache is stale.
+   * At an unchanged tile size that is all it does, unlike upstream's
+   * `midend_size`, which recreates the drawstate on every call:
+   * `puzzle-view.ts`'s `ResizeController` calls this on any layout perturbation
+   * (CSS transitions, mobile address-bar show/hide), and wiping the per-tile
+   * cache then would cause spurious full repaints. At a different tile size
+   * every cached tile is the wrong size, so the drawstate is rebuilt at the new
+   * one; `canvasCleared()` is the other signal that the cache is stale.
    *
    * There is no upstream `user_size` flag: the board fills the slot it is
    * given, and the `maxScale` setting caps `maxSize` at N× `preferredSize()`
@@ -397,9 +398,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   }
 
   private freshDrawState(s: State): DrawState {
-    const ds = this.game.newDrawState(s);
-    this.game.setTileSize?.(ds, this.currentTileSize);
-    return ds;
+    return this.game.newDrawState(s, this.currentTileSize);
   }
 
   processInput(x: number, y: number, button: number): boolean {
@@ -1110,9 +1109,13 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       else hi = mid;
     }
     const tile = lo;
-    this.currentTileSize = tile;
-    // `drawState` is null only before the first board exists.
-    if (this.drawState !== null) this.game.setTileSize?.(this.drawState, tile);
+    if (tile !== this.currentTileSize) {
+      this.currentTileSize = tile;
+      // `drawState` is null only before the first board exists.
+      if (this.drawState !== null) {
+        this.drawState = this.freshDrawState(this.history[0]);
+      }
+    }
     return this.game.computeSize(this.params, tile);
   }
 

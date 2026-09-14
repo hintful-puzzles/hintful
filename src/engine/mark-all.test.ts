@@ -26,7 +26,7 @@ import { Midend } from "./midend.ts";
 import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { type AnyGame, firstLeaf } from "./testing/hint-games.ts";
-import { sizedDrawState } from "./testing/sized-draw-state.ts";
+import { preferredDrawState } from "./testing/preferred-draw-state.ts";
 
 // Registers every ported game; `beforeAll` re-runs it in case a sibling file
 // reset the shared registry under `isolate: false`.
@@ -132,7 +132,7 @@ it("every game declaring the press answers it, and no other game does", () => {
     const move = game.interpretMove(
       state,
       game.newUi(state),
-      sizedDrawState(game, state),
+      preferredDrawState(game, state),
       { x: 0, y: 0 },
       77, // 'M', exactly what the toolbar button injects.
     );
@@ -167,7 +167,7 @@ function press(
   const move = row.game.interpretMove(
     state,
     ui,
-    sizedDrawState(row.game, state),
+    preferredDrawState(row.game, state),
     { x: 0, y: 0 },
     77,
   );

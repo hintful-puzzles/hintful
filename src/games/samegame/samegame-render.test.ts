@@ -8,7 +8,7 @@ import { newCursor } from "../../engine/pointer.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { samegameGame } from "./index.ts";
-import { newDrawState, redraw, type SamegameDrawState, setTileSize } from "./render.ts";
+import { newDrawState, redraw, type SamegameDrawState } from "./render.ts";
 import {
   newState,
   type SamegameParams,
@@ -26,8 +26,7 @@ function recordingDrawing(): { dr: RecordingDrawing; ops: RecordingDrawing["ops"
 const TS = 32; // tilegap = 2, tileinner = 30, TILE_SIZE = 32.
 
 function freshDs(state: SamegameState): SamegameDrawState {
-  const ds = newDrawState(state);
-  setTileSize(ds, TS);
+  const ds = newDrawState(state, TS);
   return ds;
 }
 

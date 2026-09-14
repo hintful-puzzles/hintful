@@ -20,7 +20,6 @@ import {
   colors,
   newDrawState,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import {
   BLACK,
@@ -39,8 +38,7 @@ function renderState(
   mistakes?: { r: number; c: number }[],
 ): RecordingDrawing {
   const rec = new RecordingDrawing(palette);
-  const ds = newDrawState(state);
-  setTileSize(ds, 32);
+  const ds = newDrawState(state, 32);
   redraw(rec, ds, null, state, 1, ui, 0, 0, undefined, mistakes);
   return rec;
 }
@@ -68,8 +66,7 @@ describe("hint color legend", () => {
       },
     };
     const rec = new RecordingDrawing(palette);
-    const ds = newDrawState(state);
-    setTileSize(ds, 32);
+    const ds = newDrawState(state, 32);
     redraw(rec, ds, null, state, 1, noCursor, 0, 0, step);
     // The cited black square rings COL_HINT_BLACKREF (an outline — `line` ops,
     // not a body fill).

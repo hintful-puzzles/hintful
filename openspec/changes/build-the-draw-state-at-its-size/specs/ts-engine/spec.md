@@ -1,6 +1,6 @@
-## MODIFIED Requirements
+## ADDED Requirements
 
-### Requirement: The midend repaints on every transition and drives animation
+### Requirement: The midend repaints on every transition and rebuilds the draw state for a new tile size
 
 The TS midend SHALL cause the canvas to repaint after every state
 transition it processes — moves, undo, redo, solve, restart, load,
@@ -87,9 +87,9 @@ the bg + one-time setup via the game's first-paint branch.
 - **AND** the game is not eligible for parity registration until it
   repaints and animates to parity with the C build
 
-#### Scenario: `Midend.size` is purely informational
+#### Scenario: A layout jiggle at the same tile size touches nothing
 
-- **WHEN** the frontend calls `size()` repeatedly at a slot that resolves
+- **WHEN** the frontend calls `size()` repeatedly at slots that resolve
   to the same tile size (e.g. on every ResizeController tick, including
   ones with no actual canvas-size change)
 - **THEN** the midend computes and returns the pixel size but DOES NOT
@@ -135,6 +135,44 @@ the bg + one-time setup via the game's first-paint branch.
 - **AND** there is no framework-level background fill, clear, or
   full-window overpaint
 
+### Requirement: The capability snapshot records the draw state its constructor builds
+
+The derived capability snapshot SHALL record the field names of a game's **draw
+state** as well as of its `Ui`, so that a divergence in either is a reviewable
+line in a text diff rather than something a reader must go looking for.
+
+It SHALL record names only — not sizes, values or types — so that the snapshot
+moves when a game's vocabulary moves and at no other time. A snapshot that moves
+for unrelated reasons trains its readers to re-baseline without reading.
+
+The snapshot SHALL continue to assert nothing about *which* names a game may
+use. An approved vocabulary would be a manifest, which a game can be written
+without and nothing would notice; the snapshot's whole job is to make a change
+visible, not to permit or forbid one.
+
+It SHALL read the draw state **as `newDrawState` returns it** at the game's
+preferred tile size, before any `redraw`. A draw state is built at its size and
+no step of the `Game` contract assigns into it afterwards, so that is the only
+reading there is: no later step can put a field back that the constructor lost
+before its names are taken.
+
+#### Scenario: a shared mechanic is added to several games at once
+
+- **GIVEN** a mechanic that several games remember in their draw state
+- **WHEN** the snapshot is next taken
+- **THEN** the field appears against each of those games in one place
+- **AND** no assertion is made about what it should be called
+
+#### Scenario: a game's draw state loses a field
+
+- **GIVEN** a change that removes a field from one game's draw state
+- **WHEN** the suite runs
+- **THEN** the snapshot moves, and the loss is visible in the diff
+- **AND** this holds for every field the game's `newDrawState` builds,
+  including those it derives from the tile size
+
+## MODIFIED Requirements
+
 ### Requirement: A game is handed a draw state, never the absence of one
 
 `Game.newDrawState` and `Game.redraw` SHALL be required members, and the draw
@@ -153,8 +191,10 @@ optional, fifty-five games opened `redraw` with a guard against a null the
 engine could not produce, and fifty-seven mapped pointer coordinates through a
 `ds?.tilesize ?? PREFERRED_TILE_SIZE` fallback — not inert, but a silent wrong
 answer waiting for a null that would have sent every click to the wrong cell.
-And while sizing was a second step, nine games wrote their own invalidation for
-the moment it re-sized a live draw state (measured 2026-09-12).
+And while sizing was a second step, ten games wrote their own invalidation for a
+live draw state re-sized under them — nine in the sizing hook, and Map in
+`redraw`, reallocating its blitter when the tile size moved (measured
+2026-09-15).
 
 #### Scenario: A game reads the tile size it is actually drawn at
 
@@ -173,44 +213,27 @@ the moment it re-sized a live draw state (measured 2026-09-12).
 - **THEN** the game receives a draw state built at the new size
 - **AND** no game code runs against a draw state built at the old size
 
+## REMOVED Requirements
+
+### Requirement: The midend repaints on every transition and drives animation
+
+**Reason**: Its scenario "`Midend.size` is purely informational" states that
+`size()` never replaces the draw state, and a `size()` that resolves a new tile
+size now does. Keeping the heading over a narrowed body would leave a heading
+describing a case the requirement no longer allows.
+
+**Migration**: Replaced by "The midend repaints on every transition and rebuilds
+the draw state for a new tile size", which carries every other scenario verbatim,
+restates the same-tile-size promise as "A layout jiggle at the same tile size
+touches nothing", and adds "A new tile size arrives as a fresh drawstate".
+
 ### Requirement: The capability snapshot covers both halves of what a game remembers
-The derived capability snapshot SHALL record the field names of a game's **draw
-state** as well as of its `Ui`, so that a divergence in either is a reviewable
-line in a text diff rather than something a reader must go looking for.
 
-It SHALL record names only — not sizes, values or types — so that the snapshot
-moves when a game's vocabulary moves and at no other time. A snapshot that moves
-for unrelated reasons trains its readers to re-baseline without reading.
+**Reason**: It required reading the draw state before `setTileSize`, and its
+scenario "a game assigns a draw-state field only once its tile size is known"
+required a test comparing sized and unsized readings. `Game.setTileSize` no
+longer exists, so there is one reading and the hazard cannot be written.
 
-The snapshot SHALL continue to assert nothing about *which* names a game may
-use. An approved vocabulary would be a manifest, which a game can be written
-without and nothing would notice; the snapshot's whole job is to make a change
-visible, not to permit or forbid one.
-
-It SHALL read the draw state **as `newDrawState` returns it** at the game's
-preferred tile size. Because a draw state is built at its size and nothing
-assigns into it afterwards, that is the only reading there is, and a field
-removed from the constructor cannot be put back before its names are taken.
-
-#### Scenario: a shared mechanic is added to several games at once
-
-- **GIVEN** a mechanic that several games remember in their draw state
-- **WHEN** the snapshot is next taken
-- **THEN** the field appears against each of those games in one place
-- **AND** no assertion is made about what it should be called
-
-#### Scenario: a game's draw state loses a field
-
-- **GIVEN** a change that removes a field from one game's draw state
-- **WHEN** the suite runs
-- **THEN** the snapshot moves, and the loss is visible in the diff
-- **AND** this holds for every field the game's `newDrawState` builds,
-  including those it derives from the tile size
-
-#### Scenario: a game assigns a draw-state field only once its tile size is known
-
-- **GIVEN** a game whose draw state holds a field derived from its tile size
-- **WHEN** the snapshot is next taken
-- **THEN** the field is recorded, because `newDrawState` receives the tile size
-  and builds the field in the same draw state the snapshot reads
-- **AND** no second, sized reading exists for the field to hide behind
+**Migration**: Replaced by "The capability snapshot records the draw state its
+constructor builds", which carries the two surviving scenarios. The comparison
+test ("loses nothing by reading the draw state before it is sized") is deleted.

@@ -24,7 +24,6 @@ import {
   FLASH_SIZE,
   newAscentDrawState,
   redrawAscent,
-  setAscentTileSize,
 } from "./render.ts";
 import { ascentSolve, SolverScratch } from "./solver.ts";
 import {
@@ -402,7 +401,6 @@ export const ascentGame: Game<
 
   colors: ascentColors,
   computeSize: (p, tileSize) => ascentComputeSize(p.w, p.h, p.mode, tileSize),
-  setTileSize: setAscentTileSize,
   newDrawState: newAscentDrawState,
   redraw: redrawAscent,
   flashLength,

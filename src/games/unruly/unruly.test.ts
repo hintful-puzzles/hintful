@@ -200,8 +200,7 @@ describe("moves", () => {
     // `DELETE` (127) is what the keyboard sends for Backspace/Delete/Clear;
     // `BACKSPACE` (8) is what a keypad's Clear key would send. Both must pass
     // `interpretMove`'s gate *and* reach a value in `decideValue`.
-    const ds = unrulyGame.newDrawState(blank());
-    unrulyGame.setTileSize?.(ds, 32);
+    const ds = unrulyGame.newDrawState(blank(), 32);
     for (const erase of [BACKSPACE, DELETE]) {
       const state = executeMove(blank(), { type: "place", x: 0, y: 0, value: ONE });
       const ui = unrulyGame.newUi(state);

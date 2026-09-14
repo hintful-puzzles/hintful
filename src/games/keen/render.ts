@@ -167,11 +167,11 @@ export interface KeenDrawState {
   marks: HintMarks;
 }
 
-export function newDrawState(state: KeenState): KeenDrawState {
+export function newDrawState(state: KeenState, tileSize: number): KeenDrawState {
   const a = state.params.w * state.params.w;
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     w: state.params.w,
     tiles: new Int32Array(a).fill(-1),
     errors: new Int32Array(a),
@@ -180,10 +180,6 @@ export function newDrawState(state: KeenState): KeenDrawState {
     pencilModeShown: null,
     marks: new HintMarks(),
   };
-}
-
-export function setTileSize(ds: KeenDrawState, ts: number): void {
-  ds.tileSize = ts;
 }
 
 // --- tile drawing ----------------------------------------------------------

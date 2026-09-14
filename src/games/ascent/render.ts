@@ -104,22 +104,26 @@ function userDims(
   return { userW: w, userH: h };
 }
 
-export function newAscentDrawState(state: AscentState): AscentDrawState {
+export function newAscentDrawState(
+  state: AscentState,
+  tileSize: number,
+): AscentDrawState {
   const s = state.w * state.h;
   const { userW, userH } = userDims(state.w, state.h, state.mode);
+  const px = ascentComputeSize(userW, userH, state.mode, tileSize);
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     w: state.w,
     h: state.h,
     mode: state.mode,
     userW,
     userH,
-    offsetX: 0,
+    offsetX: computeOffsetX(state.h, state.mode, tileSize),
     offsetY: 0,
-    thickness: 2,
-    pxW: 0,
-    pxH: 0,
+    thickness: Math.max(2, tileSize / 7),
+    pxW: px.w,
+    pxH: px.h,
     colors: new Int32Array(s).fill(-1),
     oldnum: new Int32Array(s).fill(-0x7fff),
     oldpath: new Int32Array(s).fill(-1),
@@ -225,15 +229,6 @@ function computeOffsetX(h: number, mode: number, tileSize: number): number {
     offsetX -= Math.trunc(((h - 1) * tileSize) / 4);
   }
   return offsetX;
-}
-
-export function setAscentTileSize(ds: AscentDrawState, tileSize: number): void {
-  ds.tileSize = tileSize;
-  ds.thickness = Math.max(2, tileSize / 7);
-  ds.offsetX = computeOffsetX(ds.h, ds.mode, tileSize);
-  const size = ascentComputeSize(ds.userW, ds.userH, ds.mode, tileSize);
-  ds.pxW = size.w;
-  ds.pxH = size.h;
 }
 
 // --- colors -------------------------------------------------------

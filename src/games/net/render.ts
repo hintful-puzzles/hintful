@@ -89,20 +89,16 @@ export interface NetDrawState {
   toDraw: Int32Array;
 }
 
-export function newDrawState(s: NetState): NetDrawState {
+export function newDrawState(s: NetState, tileSize: number): NetDrawState {
   const cells = (s.w + 2) * (s.h + 2);
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     w: s.w,
     h: s.h,
     visible: new Int32Array(cells).fill(-1),
     toDraw: new Int32Array(cells),
   };
-}
-
-export function setTileSize(ds: NetDrawState, tileSize: number): void {
-  ds.tileSize = tileSize;
 }
 
 /** The board and its closing grid line, with no margin (upstream's

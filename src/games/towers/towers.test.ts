@@ -18,14 +18,7 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { newTowersDesc } from "./generator.ts";
 import { towersGame } from "./index.ts";
-import {
-  COL_ERROR,
-  COL_PENCIL_BODY,
-  coord,
-  newDrawState,
-  redraw,
-  setTileSize,
-} from "./render.ts";
+import { COL_ERROR, COL_PENCIL_BODY, coord, newDrawState, redraw } from "./render.ts";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, solveTowers } from "./solver.ts";
 import {
   clueIndex,
@@ -402,8 +395,7 @@ describe("towers sticky pencil mode", () => {
     const { st } = gen(5, "easy", "sticky-1");
     const ui = newUi(st);
     ui.threeD = false;
-    const ds = newDrawState(st);
-    setTileSize(ds, ts);
+    const ds = newDrawState(st, ts);
     // Two distinct empty (non-immutable) cells to click.
     const empty: { x: number; y: number }[] = [];
     for (let i = 0; i < st.w * st.w && empty.length < 2; i++) {
@@ -468,8 +460,7 @@ describe("towers render", () => {
       const ui = newUi(st);
       ui.pencilMode = pencilMode;
       ui.cursor.visible = pencilMode;
-      const ds = newDrawState(st);
-      setTileSize(ds, ts);
+      const ds = newDrawState(st, ts);
       const dr = new RecordingDrawing(palette);
       redraw(dr, ds, null, st, 1, ui, 0, 0);
       return dr;
@@ -499,8 +490,7 @@ describe("towers render", () => {
       const st = newState(RENDER.p, RENDER.desc);
       const ui = newUi(st);
       ui.threeD = threeD;
-      const ds = newDrawState(st);
-      setTileSize(ds, ts);
+      const ds = newDrawState(st, ts);
       const dr = new RecordingDrawing(palette);
       redraw(dr, ds, null, st, 1, ui, 0, 0);
       return dr;

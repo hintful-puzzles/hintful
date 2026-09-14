@@ -125,20 +125,16 @@ export interface AbcdDrawState {
   pencilModeShown: boolean | null;
 }
 
-export function newDrawState(state: AbcdState): AbcdDrawState {
+export function newDrawState(state: AbcdState, tileSize: number): AbcdDrawState {
   const { w, h, n } = state.params;
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     tiles: new Int32Array(w * h).fill(-1),
     clueErr: new Int8Array((w + h) * n).fill(-1),
     wrong: new OverlaySidecar(w * h),
     pencilModeShown: null,
   };
-}
-
-export function setTileSize(ds: AbcdDrawState, ts: number): void {
-  ds.tileSize = ts;
 }
 
 // --- error computation (base render, not findMistakes) ---------------------

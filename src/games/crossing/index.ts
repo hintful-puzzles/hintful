@@ -70,7 +70,6 @@ import {
   numberAtPoint,
   PREFERRED_TILE_SIZE,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import { type CrossingMistake, findMistakes, solveCrossing } from "./solver.ts";
 import {
@@ -640,7 +639,6 @@ export const crossingGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 

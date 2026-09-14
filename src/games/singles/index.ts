@@ -48,7 +48,6 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
   type SinglesDrawState,
-  setTileSize,
 } from "./render.ts";
 import {
   CC_MARK_ERRORS,
@@ -490,7 +489,6 @@ export const singlesGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 

@@ -19,9 +19,9 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
 import type { ChangeNotification } from "../../engine/types.ts";
 import { newSaladDesc } from "./generator.ts";
 import { saladGame } from "./index.ts";
@@ -492,7 +492,7 @@ describe("salad input", () => {
       saladGame.interpretMove(
         s,
         ui,
-        sizedDrawState(saladGame, s),
+        preferredDrawState(saladGame, s),
         at(1, 2),
         LEFT_BUTTON,
       ),
@@ -504,7 +504,7 @@ describe("salad input", () => {
       saladGame.interpretMove(
         s,
         ui,
-        sizedDrawState(saladGame, s),
+        preferredDrawState(saladGame, s),
         at(1, 2),
         "B".charCodeAt(0),
       ),
@@ -519,12 +519,18 @@ describe("salad input", () => {
   it("refuses a symbol beyond the puzzle's range", () => {
     const s = newState(LETTERS.p, LETTERS.desc);
     const ui = newUi(s);
-    saladGame.interpretMove(s, ui, sizedDrawState(saladGame, s), at(0, 0), LEFT_BUTTON);
+    saladGame.interpretMove(
+      s,
+      ui,
+      preferredDrawState(saladGame, s),
+      at(0, 0),
+      LEFT_BUTTON,
+    );
     expect(
       saladGame.interpretMove(
         s,
         ui,
-        sizedDrawState(saladGame, s),
+        preferredDrawState(saladGame, s),
         at(0, 0),
         "D".charCodeAt(0),
       ),
@@ -533,7 +539,7 @@ describe("salad input", () => {
       saladGame.interpretMove(
         s,
         ui,
-        sizedDrawState(saladGame, s),
+        preferredDrawState(saladGame, s),
         at(0, 0),
         "4".charCodeAt(0),
       ),
@@ -547,7 +553,7 @@ describe("salad input", () => {
     saladGame.interpretMove(
       s,
       ui,
-      sizedDrawState(saladGame, s),
+      preferredDrawState(saladGame, s),
       at(0, 0),
       RIGHT_BUTTON,
     );
@@ -556,7 +562,7 @@ describe("salad input", () => {
       saladGame.interpretMove(
         s,
         ui,
-        sizedDrawState(saladGame, s),
+        preferredDrawState(saladGame, s),
         at(0, 0),
         "A".charCodeAt(0),
       ),
@@ -567,7 +573,13 @@ describe("salad input", () => {
       value: 1,
     });
     // ...and stays on for the next square, unlike upstream's per-click mode.
-    saladGame.interpretMove(s, ui, sizedDrawState(saladGame, s), at(1, 0), LEFT_BUTTON);
+    saladGame.interpretMove(
+      s,
+      ui,
+      preferredDrawState(saladGame, s),
+      at(1, 0),
+      LEFT_BUTTON,
+    );
     expect(ui.pencilMode).toBe(true);
   });
 
@@ -577,7 +589,7 @@ describe("salad input", () => {
     const first = saladGame.interpretMove(
       s0,
       ui,
-      sizedDrawState(saladGame, s0),
+      preferredDrawState(saladGame, s0),
       at(2, 1),
       MIDDLE_BUTTON,
     );
@@ -586,7 +598,7 @@ describe("salad input", () => {
     const second = saladGame.interpretMove(
       s1,
       ui,
-      sizedDrawState(saladGame, s1),
+      preferredDrawState(saladGame, s1),
       at(2, 1),
       MIDDLE_BUTTON,
     );
@@ -596,7 +608,7 @@ describe("salad input", () => {
       saladGame.interpretMove(
         s2,
         ui,
-        sizedDrawState(saladGame, s2),
+        preferredDrawState(saladGame, s2),
         at(2, 1),
         MIDDLE_BUTTON,
       ),
@@ -614,7 +626,7 @@ describe("salad input", () => {
     saladGame.interpretMove(
       s,
       ui,
-      sizedDrawState(saladGame, s),
+      preferredDrawState(saladGame, s),
       { x: 0, y: 0 },
       CURSOR_RIGHT,
     );
@@ -623,7 +635,7 @@ describe("salad input", () => {
     saladGame.interpretMove(
       s,
       ui,
-      sizedDrawState(saladGame, s),
+      preferredDrawState(saladGame, s),
       { x: 0, y: 0 },
       CURSOR_SELECT,
     );
@@ -642,7 +654,7 @@ describe("salad input", () => {
       saladGame.interpretMove(
         st,
         ui,
-        sizedDrawState(saladGame, st),
+        preferredDrawState(saladGame, st),
         { x: 0, y: 0 },
         109,
       );
@@ -683,13 +695,19 @@ describe("salad input", () => {
     const s = newState(NUMBERS.p, NUMBERS.desc);
     const ui = newUi(s);
     // Cell 4 (x=4, y=0) carries a given digit.
-    saladGame.interpretMove(s, ui, sizedDrawState(saladGame, s), at(4, 0), LEFT_BUTTON);
+    saladGame.interpretMove(
+      s,
+      ui,
+      preferredDrawState(saladGame, s),
+      at(4, 0),
+      LEFT_BUTTON,
+    );
     expect(ui.cursor.visible).toBe(false);
     expect(
       saladGame.interpretMove(
         s,
         ui,
-        sizedDrawState(saladGame, s),
+        preferredDrawState(saladGame, s),
         at(4, 0),
         "1".charCodeAt(0),
       ),

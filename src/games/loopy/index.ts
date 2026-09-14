@@ -77,7 +77,6 @@ import {
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import { solveGame } from "./solver.ts";
 import {
@@ -482,7 +481,6 @@ export const loopyGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
   flashLength: (a, b) => winFlash(a, b, FLASH_TIME),

@@ -46,9 +46,7 @@ function freshUi(): PalisadeUi {
 }
 
 function freshDs(state: PalisadeState): PalisadeDrawState {
-  const ds = newDrawState(state);
-  ds.tileSize = TS;
-  return ds;
+  return newDrawState(state, TS);
 }
 
 function makeState(): PalisadeState {

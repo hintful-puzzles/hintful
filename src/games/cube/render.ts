@@ -26,7 +26,7 @@ export const COL_BORDER = 1;
 export const COL_BLUE = 2;
 
 export interface CubeDrawState {
-  gridScale: number;
+  tileSize: number;
   /** Pixel position of the float origin. */
   ox: number;
   oy: number;
@@ -42,13 +42,15 @@ export function colors(defaultBackground: Color): Color[] {
   return ret;
 }
 
-export function newDrawState(state: CubeState): CubeDrawState {
+export function newDrawState(state: CubeState, tileSize: number): CubeDrawState {
+  const bbox = findBbox(state.grid);
+  const border = SOLIDS[state.solidIndex].border;
   return {
-    gridScale: 0,
-    ox: 0,
-    oy: 0,
-    bbox: findBbox(state.grid),
-    border: SOLIDS[state.solidIndex].border,
+    tileSize,
+    ox: Math.trunc(-(bbox.l - border) * tileSize),
+    oy: Math.trunc(-(bbox.u - border) * tileSize),
+    bbox,
+    border,
   };
 }
 
@@ -61,12 +63,6 @@ export function computeSize(p: CubeParams, tileSize: number): Size {
   };
 }
 
-export function setTileSize(ds: CubeDrawState, tileSize: number): void {
-  ds.gridScale = tileSize;
-  ds.ox = Math.trunc(-(ds.bbox.l - ds.border) * tileSize);
-  ds.oy = Math.trunc(-(ds.bbox.u - ds.border) * tileSize);
-}
-
 export function redraw(
   dr: GameDrawing,
   ds: CubeDrawState,
@@ -77,7 +73,7 @@ export function redraw(
   animTime: number,
   _flashTime: number,
 ): void {
-  const gs = ds.gridScale;
+  const gs = ds.tileSize;
   const bb = ds.bbox;
   const xsize = Math.trunc((bb.r - bb.l + 2 * ds.border) * gs);
   const ysize = Math.trunc((bb.d - bb.u + 2 * ds.border) * gs);

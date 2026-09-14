@@ -179,8 +179,7 @@ describe("Flood solve", () => {
 describe("Flood input mapping", () => {
   const p: FloodParams = { w: 3, h: 3, colors: 3, leniency: 0 };
   const state = newState(p, "011000222,9");
-  const ds = floodGame.newDrawState?.(state) ?? null;
-  if (ds) floodGame.setTileSize?.(ds, 32);
+  const ds = floodGame.newDrawState(state, 32);
 
   it("maps a left-click on a different-color cell to a fill", () => {
     const fresh = floodGame.newUi(state);

@@ -292,7 +292,7 @@ describe("pearl mistake overlay is in the diff key (paint-twice)", () => {
     expect(mistakes.length).toBeGreaterThan(0);
 
     const ui = pearlGame.newUi(wrong);
-    const ds = newDrawState(wrong);
+    const ds = newDrawState(wrong, pearlGame.preferredTileSize ?? 32);
     const palette = pearlGame.colors([0.9, 0.9, 0.9]);
 
     // Frame 1: warm the cache with NO mistakes (draws the laid segment).

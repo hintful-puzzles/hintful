@@ -259,16 +259,12 @@ export interface SlideDrawState {
   grid: Int32Array;
 }
 
-export function newDrawState(state: SlideState): SlideDrawState {
+export function newDrawState(state: SlideState, tileSize: number): SlideDrawState {
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     grid: new Int32Array(state.w * state.h).fill(-1),
   };
-}
-
-export function setTileSize(ds: SlideDrawState, ts: number): void {
-  ds.tileSize = ts;
 }
 
 // --- the fiddly bit: one section of one tile ---------------------------

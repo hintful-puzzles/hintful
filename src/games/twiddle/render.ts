@@ -84,12 +84,12 @@ export interface TwiddleDrawState {
   curY: number;
 }
 
-export function newDrawState(state: TwiddleState): TwiddleDrawState {
+export function newDrawState(state: TwiddleState, tileSize: number): TwiddleDrawState {
   return {
     started: false,
     bgcolor: COL_BACKGROUND,
     cache: new Int32Array(state.w * state.h).fill(-1),
-    tileSize: 0,
+    tileSize,
     curX: -state.n,
     curY: -state.n,
   };

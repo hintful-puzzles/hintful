@@ -63,9 +63,7 @@ function makeState(
 }
 
 function freshDs(s: BlackboxState): BlackboxDrawState {
-  const ds = blackboxGame.newDrawState?.(s) as BlackboxDrawState;
-  blackboxGame.setTileSize?.(ds, TS);
-  return ds;
+  return blackboxGame.newDrawState(s, TS) as BlackboxDrawState;
 }
 
 function freshUi(s: BlackboxState): BlackboxUi {

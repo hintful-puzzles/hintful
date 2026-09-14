@@ -147,10 +147,13 @@ export interface DominosaDrawState {
   marks: HintMarks;
 }
 
-export function newDrawState(state: DominosaState): DominosaDrawState {
+export function newDrawState(
+  state: DominosaState,
+  tileSize: number,
+): DominosaDrawState {
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     w: state.w,
     h: state.h,
     visible: new Int32Array(state.w * state.h).fill(-1),

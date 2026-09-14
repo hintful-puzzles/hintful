@@ -30,9 +30,7 @@ const TS = 32;
 const params = defaultParams();
 
 function freshDs(): GuessDrawState {
-  const ds = guessGame.newDrawState?.(newState(params, "01020304")) as GuessDrawState;
-  guessGame.setTileSize?.(ds, TS);
-  return ds;
+  return guessGame.newDrawState(newState(params, "01020304"), TS) as GuessDrawState;
 }
 
 function freshUi(state = newState(params, "01020304")): GuessUi {

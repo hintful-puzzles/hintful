@@ -78,7 +78,6 @@ import {
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import {
   type HintOp,
@@ -883,7 +882,6 @@ export const groupGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize: (p: GroupParams, ts: number): Size => computeSize(p.w, ts),
-  setTileSize,
   newDrawState,
   redraw,
 

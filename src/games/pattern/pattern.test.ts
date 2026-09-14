@@ -13,8 +13,8 @@ import {
   LEFT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
 import { newPatternDesc } from "./generator.ts";
 import { patternGame } from "./index.ts";
 import { COL_UNKNOWN } from "./render.ts";
@@ -194,7 +194,7 @@ describe("pattern moves and completion", () => {
       patternGame.interpretMove(
         st,
         ui,
-        sizedDrawState(patternGame, st),
+        preferredDrawState(patternGame, st),
         { x: 0, y: 0 },
         CURSOR_SELECT,
       ),
@@ -204,7 +204,7 @@ describe("pattern moves and completion", () => {
     const move = patternGame.interpretMove(
       st,
       ui,
-      sizedDrawState(patternGame, st),
+      preferredDrawState(patternGame, st),
       { x: 0, y: 0 },
       CURSOR_SELECT,
     );
@@ -268,7 +268,7 @@ describe("pattern drag-paint skips placed marks", () => {
       return patternGame.interpretMove(
         st,
         ui,
-        sizedDrawState(patternGame, st),
+        preferredDrawState(patternGame, st),
         { x: 0, y: 0 },
         LEFT_RELEASE,
       );
@@ -287,7 +287,7 @@ describe("pattern drag-paint skips placed marks", () => {
     function rig() {
       const st = base();
       const ui = patternGame.newUi(st);
-      const ds = sizedDrawState(patternGame, st);
+      const ds = preferredDrawState(patternGame, st);
       const ts = (ds as { tileSize: number }).tileSize;
       const b =
         Math.floor((3 * ts) / 4) + Math.floor(ts / 2) + ts * (Math.floor(5 / 5) + 2);

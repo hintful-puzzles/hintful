@@ -13,9 +13,9 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
 import { newDesc } from "./generator.ts";
 import { rectGame } from "./index.ts";
 import { cloneRectState, executeMove, newState, status } from "./moves.ts";
@@ -116,12 +116,18 @@ describe("rect input → moves", () => {
     // Grid point (2.5, 3.0) is the horizontal edge on top of cell (2,3).
     const point = { x: px(2.5), y: px(3.0) };
     expect(
-      rectGame.interpretMove(st, ui, sizedDrawState(rectGame, st), point, LEFT_BUTTON),
+      rectGame.interpretMove(
+        st,
+        ui,
+        preferredDrawState(rectGame, st),
+        point,
+        LEFT_BUTTON,
+      ),
     ).toBeDefined();
     const move = rectGame.interpretMove(
       st,
       ui,
-      sizedDrawState(rectGame, st),
+      preferredDrawState(rectGame, st),
       point,
       LEFT_RELEASE,
     );
@@ -140,21 +146,21 @@ describe("rect input → moves", () => {
     rectGame.interpretMove(
       st,
       ui,
-      sizedDrawState(rectGame, st),
+      preferredDrawState(rectGame, st),
       { x: px(2), y: px(2) },
       LEFT_BUTTON,
     );
     rectGame.interpretMove(
       st,
       ui,
-      sizedDrawState(rectGame, st),
+      preferredDrawState(rectGame, st),
       { x: px(4), y: px(4) },
       LEFT_DRAG,
     );
     const move = rectGame.interpretMove(
       st,
       ui,
-      sizedDrawState(rectGame, st),
+      preferredDrawState(rectGame, st),
       { x: px(4), y: px(4) },
       LEFT_RELEASE,
     );
@@ -180,21 +186,21 @@ describe("rect input → moves", () => {
     rectGame.interpretMove(
       st,
       ui,
-      sizedDrawState(rectGame, st),
+      preferredDrawState(rectGame, st),
       { x: px(2), y: px(2) },
       RIGHT_BUTTON,
     );
     rectGame.interpretMove(
       st,
       ui,
-      sizedDrawState(rectGame, st),
+      preferredDrawState(rectGame, st),
       { x: px(4), y: px(4) },
       LEFT_DRAG,
     );
     const move = rectGame.interpretMove(
       st,
       ui,
-      sizedDrawState(rectGame, st),
+      preferredDrawState(rectGame, st),
       { x: px(4), y: px(4) },
       RIGHT_RELEASE,
     );
@@ -209,11 +215,17 @@ describe("rect input → moves", () => {
     const st = newState(p, "zw");
     const ui = rectGame.newUi(st);
     const center = { x: px(3.5), y: px(3.5) };
-    rectGame.interpretMove(st, ui, sizedDrawState(rectGame, st), center, LEFT_BUTTON);
+    rectGame.interpretMove(
+      st,
+      ui,
+      preferredDrawState(rectGame, st),
+      center,
+      LEFT_BUTTON,
+    );
     const move = rectGame.interpretMove(
       st,
       ui,
-      sizedDrawState(rectGame, st),
+      preferredDrawState(rectGame, st),
       center,
       LEFT_RELEASE,
     );
@@ -233,7 +245,7 @@ describe("rect input → moves", () => {
   it("anchors an asymmetric drag the right way round", () => {
     const st = newState(P(), "zw");
     const ui = rectGame.newUi(st);
-    const ds = sizedDrawState(rectGame, st);
+    const ds = preferredDrawState(rectGame, st);
     // 3 wide by 1 tall — a box that is not its own transpose.
     rectGame.interpretMove(st, ui, ds, { x: px(1), y: px(2) }, LEFT_BUTTON);
     rectGame.interpretMove(st, ui, ds, { x: px(4), y: px(3) }, LEFT_DRAG);
@@ -255,7 +267,7 @@ describe("rect input → moves", () => {
     // where dropping the outward rounding would lose the last column.
     const st = newState(P(), "zw");
     const ui = rectGame.newUi(st);
-    const ds = sizedDrawState(rectGame, st);
+    const ds = preferredDrawState(rectGame, st);
     rectGame.interpretMove(st, ui, ds, { x: px(1), y: px(2) }, LEFT_BUTTON);
     rectGame.interpretMove(st, ui, ds, { x: px(3.5), y: px(3.5) }, LEFT_DRAG);
     const move = rectGame.interpretMove(
@@ -275,7 +287,7 @@ describe("rect input → moves", () => {
     // what keeps a bare click on an edge from committing a 1x1 box.
     const st = newState(P(), "zw");
     const ui = rectGame.newUi(st);
-    const ds = sizedDrawState(rectGame, st);
+    const ds = preferredDrawState(rectGame, st);
     const point = { x: px(2.5), y: px(3.0) };
     rectGame.interpretMove(st, ui, ds, point, LEFT_BUTTON);
     expect(ui.dragged).toBe(false);
@@ -290,7 +302,7 @@ describe("rect input → moves", () => {
   it("a drag that moves off the press point sets dragged, and the release clears it", () => {
     const st = newState(P(), "zw");
     const ui = rectGame.newUi(st);
-    const ds = sizedDrawState(rectGame, st);
+    const ds = preferredDrawState(rectGame, st);
     rectGame.interpretMove(st, ui, ds, { x: px(1), y: px(2) }, LEFT_BUTTON);
     expect(ui.dragged).toBe(false);
     rectGame.interpretMove(st, ui, ds, { x: px(4), y: px(3) }, LEFT_DRAG);
@@ -307,7 +319,7 @@ describe("rect input → moves", () => {
     rectGame.interpretMove(
       st,
       ui,
-      sizedDrawState(rectGame, st),
+      preferredDrawState(rectGame, st),
       { x: 0, y: 0 },
       CURSOR_UP,
     );
@@ -367,8 +379,7 @@ describe("rect render", () => {
     const p = P();
     const { desc } = newDesc(p, randomNew("1"));
     const st = newState(p, desc);
-    const ds = newDrawState(st);
-    ds.tileSize = TILE;
+    const ds = newDrawState(st, TILE);
     const dr = new RecordingDrawing(rectGame.colors(DEFAULT_BACKGROUND));
     redraw(dr, ds, null, st, 1, rectGame.newUi(st), 0, 0);
     expect(dr.ops.some((o) => o.op === "rect")).toBe(true);
@@ -377,8 +388,7 @@ describe("rect render", () => {
 
   it("paints the mistake overlay even on an already-drawn tile", () => {
     const { st } = boardWithWrongWall();
-    const ds = newDrawState(st);
-    ds.tileSize = TILE;
+    const ds = newDrawState(st, TILE);
     const ui = rectGame.newUi(st);
     const palette = rectGame.colors(DEFAULT_BACKGROUND);
     // Warm the drawstate without the overlay, then repaint with it.

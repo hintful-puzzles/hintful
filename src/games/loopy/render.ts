@@ -105,17 +105,13 @@ export interface LoopyDrawState {
   clueSatisfied: Uint8Array;
 }
 
-export function newDrawState(s: LoopyState): LoopyDrawState {
+export function newDrawState(s: LoopyState, tileSize: number): LoopyDrawState {
   const { numFaces } = s.grid;
   return {
-    tileSize: PREFERRED_TILE_SIZE,
+    tileSize,
     clueError: new Uint8Array(numFaces),
     clueSatisfied: new Uint8Array(numFaces),
   };
-}
-
-export function setTileSize(ds: LoopyDrawState, tileSize: number): void {
-  ds.tileSize = tileSize;
 }
 
 export function computeSize(p: LoopyParams, tileSize: number): Size {

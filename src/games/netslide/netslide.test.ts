@@ -20,10 +20,10 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
 import type { ChangeNotification } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import { netslideGame } from "./index.ts";
@@ -297,7 +297,7 @@ describe("netslide input", () => {
       netslideGame.interpretMove(
         s,
         ui,
-        sizedDrawState(netslideGame, s),
+        preferredDrawState(netslideGame, s),
         gutterPoint(cx, cy),
         button,
       );
@@ -314,7 +314,7 @@ describe("netslide input", () => {
       netslideGame.interpretMove(
         s,
         ui,
-        sizedDrawState(netslideGame, s),
+        preferredDrawState(netslideGame, s),
         gutterPoint(-1, 0),
         button,
       );
@@ -328,7 +328,7 @@ describe("netslide input", () => {
       netslideGame.interpretMove(
         s,
         ui,
-        sizedDrawState(netslideGame, s),
+        preferredDrawState(netslideGame, s),
         gutterPoint(cx, cy),
         LEFT_BUTTON,
       );
@@ -344,7 +344,7 @@ describe("netslide input", () => {
       netslideGame.interpretMove(
         s,
         ui,
-        sizedDrawState(netslideGame, s),
+        preferredDrawState(netslideGame, s),
         gutterPoint(1, 1),
         LEFT_BUTTON,
       ),
@@ -360,7 +360,7 @@ describe("netslide input", () => {
       netslideGame.interpretMove(
         s,
         ui,
-        sizedDrawState(netslideGame, s),
+        preferredDrawState(netslideGame, s),
         { x: 0, y: 0 },
         CURSOR_RIGHT,
       );
@@ -378,7 +378,7 @@ describe("netslide input", () => {
     netslideGame.interpretMove(
       s,
       ui,
-      sizedDrawState(netslideGame, s),
+      preferredDrawState(netslideGame, s),
       { x: 0, y: 0 },
       CURSOR_RIGHT,
     );
@@ -386,7 +386,7 @@ describe("netslide input", () => {
       netslideGame.interpretMove(
         s,
         ui,
-        sizedDrawState(netslideGame, s),
+        preferredDrawState(netslideGame, s),
         { x: 0, y: 0 },
         CURSOR_SELECT,
       ),
@@ -398,7 +398,7 @@ describe("netslide input", () => {
     const move = netslideGame.interpretMove(
       s,
       ui,
-      sizedDrawState(netslideGame, s),
+      preferredDrawState(netslideGame, s),
       { x: 0, y: 0 },
       CURSOR_SELECT,
     );
@@ -659,9 +659,7 @@ describe("netslide rendering", () => {
     expect(netslideGame.status(won)).toBe("solved");
 
     const flashingTilesAt = (flashTime: number) => {
-      const ds = netslideGame.newDrawState?.(won);
-      if (!ds) throw new Error("netslide has a draw state");
-      netslideGame.setTileSize?.(ds, PREFERRED_TILE_SIZE);
+      const ds = netslideGame.newDrawState(won, PREFERRED_TILE_SIZE);
       const rec = new RecordingDrawing(netslideGame.colors([1, 1, 1]));
       netslideGame.redraw?.(rec, ds, null, won, 1, newUi(won), 0, flashTime);
       return rec.ops.filter((o) => o.op === "rect" && o.color === COL_FLASHING).length;

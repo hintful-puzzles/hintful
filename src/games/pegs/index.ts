@@ -39,7 +39,6 @@ import {
   type PegsDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import {
   BOARD_TYPE_NAMES,
@@ -287,7 +286,6 @@ export const pegsGame: Game<PegsParams, PegsState, PegsMove, PegsUi, PegsDrawSta
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
   flashLength,

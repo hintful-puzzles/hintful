@@ -52,7 +52,6 @@ import {
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import { solveRoute } from "./solver.ts";
 import {
@@ -340,7 +339,6 @@ export const inertiaGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
   animLength,

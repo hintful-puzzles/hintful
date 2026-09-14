@@ -25,7 +25,6 @@ import {
   COL_HINT_SPOT,
   newDrawState,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import {
   candidateCells,
@@ -475,8 +474,7 @@ describe("reference-aid affordance", () => {
         y: Math.floor(y * 0.75 * ts) + (state.h + 2) * ch * ts,
       };
     };
-    const ds = newDrawState(state);
-    setTileSize(ds, ts);
+    const ds = newDrawState(state, ts);
     const r1 = subsetsGame.interpretMove(state, ui, ds, tallyPoint(5), LEFT_BUTTON);
     expect(r1).toBe(UI_UPDATE);
     expect(ui.highlightSet).toBe(5);
@@ -490,8 +488,7 @@ describe("reference-aid affordance", () => {
     const state = gen("aff-b");
     const ui = subsetsGame.newUi(state);
     ui.highlightSet = 3;
-    const ds = newDrawState(state);
-    setTileSize(ds, 36);
+    const ds = newDrawState(state, 36);
     const r = subsetsGame.interpretMove(state, ui, ds, { x: 0, y: 0 }, CURSOR_DOWN);
     expect(r).toBe(UI_UPDATE);
     expect(ui.highlightSet).toBeNull();
@@ -501,9 +498,8 @@ describe("reference-aid affordance", () => {
   it("clicking a cell's inspect icon focuses it without editing; editing a slot does not", () => {
     const state = gen("aff-c");
     const ui = subsetsGame.newUi(state);
-    const ds = newDrawState(state);
     const ts = 36;
-    setTileSize(ds, ts);
+    const ds = newDrawState(state, ts);
     // The inspect icon sits in the margin above the block's left edge
     // (index.ts iconHit).
     const cell = 5;
@@ -716,8 +712,7 @@ describe("reference-aid rendering (tier 2.5)", () => {
     expect(pick).toBeGreaterThanOrEqual(0);
     const palette = subsetsGame.colors([0.827, 0.827, 0.827]);
     const rec = new RecordingDrawing(palette);
-    const ds = newDrawState(state);
-    setTileSize(ds, 36);
+    const ds = newDrawState(state, 36);
     const ui = { cursor: newCursor(), highlightSet: pick, highlightCell: null };
     redraw(rec, ds, null, state, 0, ui, 0, 0, undefined, undefined);
     expect(rec.ops.some((o) => o.op === "rect" && o.color === COL_HINT_SPOT)).toBe(

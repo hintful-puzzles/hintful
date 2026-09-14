@@ -82,7 +82,6 @@ import {
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
-  setTileSize,
   type TowersDrawState,
   type TowersHint,
   x3d,
@@ -828,7 +827,6 @@ export const towersGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 

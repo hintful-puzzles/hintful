@@ -34,7 +34,6 @@ import {
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import {
   decodeBitmap,
@@ -191,7 +190,6 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
   },
 
   newDrawState,
-  setTileSize,
   colors,
   computeSize,
   redraw,

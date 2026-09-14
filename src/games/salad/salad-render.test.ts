@@ -34,7 +34,6 @@ import {
   FLASH_TIME,
   newDrawState,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import { saladSolution } from "./solver.ts";
 import {
@@ -292,8 +291,7 @@ function paint(
   ui: ReturnType<typeof newUi>,
   flashTime = 0,
 ): RecordingDrawing {
-  const ds = newDrawState(state);
-  setTileSize(ds, saladGame.preferredTileSize ?? 32);
+  const ds = newDrawState(state, saladGame.preferredTileSize ?? 32);
   const rec = new RecordingDrawing(saladGame.colors(DEFAULT_BACKGROUND));
   redraw(rec, ds, null, state, 0, ui, 0, flashTime);
   return rec;

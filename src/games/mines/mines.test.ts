@@ -309,8 +309,7 @@ describe("mines supersede + midend", () => {
       grid,
     };
     const ui = minesGame.newUi(s);
-    const ds = minesGame.newDrawState?.(s) ?? null;
-    minesGame.setTileSize?.(ds as never, 20);
+    const ds = minesGame.newDrawState(s, 20);
     const border = borderFor(20);
     const at = (x: number, y: number) => ({
       x: x * 20 + border + 10,
@@ -345,8 +344,7 @@ describe("mines supersede + midend", () => {
       grid,
     };
     const ui = minesGame.newUi(s);
-    const ds = minesGame.newDrawState?.(s) ?? null;
-    minesGame.setTileSize?.(ds as never, 20);
+    const ds = minesGame.newDrawState(s, 20);
     const border = borderFor(20);
     const at = (x: number, y: number) => ({
       x: x * 20 + border + 10,
@@ -445,8 +443,7 @@ describe("mines chord preview", () => {
       grid,
     };
     const ui = minesGame.newUi(s);
-    const ds = minesGame.newDrawState?.(s) ?? null;
-    minesGame.setTileSize?.(ds as never, 20);
+    const ds = minesGame.newDrawState(s, 20);
     const border = borderFor(20);
     const at = (x: number, y: number) => ({
       x: x * 20 + border + 10,
@@ -540,8 +537,7 @@ describe("mines render", () => {
     const s = minesGame.newState(p, desc); // blank pre-click board, all covered
     const palette = minesGame.colors(BG);
     const ui = minesGame.newUi(s);
-    const ds = minesGame.newDrawState?.(s) ?? null;
-    minesGame.setTileSize?.(ds as never, 20);
+    const ds = minesGame.newDrawState(s, 20);
 
     const paint = (state: MinesState) => {
       const rec = new RecordingDrawing(palette);

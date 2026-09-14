@@ -8,9 +8,9 @@
  * State carries its own target, so `status(state)` is pure, as a real game
  * encodes its goal in its state.
  *
- * Its drawing members record each drawstate's identity and each `setTileSize`
- * and `redraw` call on the drawstate itself, so tests can assert on first-draw
- * and force-redraw behavior without leaking globals.
+ * Its drawing members record each drawstate's identity, tile size and `redraw`
+ * calls on the drawstate itself, so tests can assert on first-draw, resize and
+ * force-redraw behavior without leaking globals.
  */
 
 import type { Game } from "./game.ts";
@@ -33,8 +33,6 @@ export interface FakeDrawState {
   /** The first-paint flag every real game keeps (`ds.started`): `redraw`
    * paints a one-off background rect while it is false, then sets it. */
   started: boolean;
-  /** Incremented every time `setTileSize` is called. */
-  setSizeCalls: number;
   /** Incremented every time `redraw` is called. */
   redrawCalls: number;
   /** The drawstate's identity counter, copied from a module-local
@@ -117,17 +115,12 @@ export const fakeGame: Game<FakeParams, FakeState, FakeMove, null, FakeDrawState
   ],
   computeSize: (p, tile) => ({ w: p.target * tile, h: tile }),
 
-  newDrawState: (_s) => ({
-    tileSize: 10,
+  newDrawState: (_s, tileSize) => ({
+    tileSize,
     started: false,
-    setSizeCalls: 0,
     redrawCalls: 0,
     instance: nextInstance++,
   }),
-  setTileSize: (ds, tileSize) => {
-    ds.tileSize = tileSize;
-    ds.setSizeCalls += 1;
-  },
   redraw: (dr, ds, _prev, s) => {
     ds.redrawCalls += 1;
     if (!ds.started) {

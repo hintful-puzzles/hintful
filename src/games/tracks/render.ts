@@ -197,11 +197,11 @@ export interface TracksDrawState {
   wrong: OverlaySidecar;
 }
 
-export function newDrawState(state: TracksState): TracksDrawState {
+export function newDrawState(state: TracksState, tileSize: number): TracksDrawState {
   const n = state.w * state.h;
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     w: state.w,
     h: state.h,
     flags: new Int32Array(n).fill(-1),

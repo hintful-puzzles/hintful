@@ -50,7 +50,6 @@ import {
   PREFERRED_TILE_SIZE,
   ROTATE_TIME,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import { netSolver, SOLVER_INCONSISTENT } from "./solver.ts";
 import {
@@ -434,7 +433,6 @@ export const netGame: Game<NetParams, NetState, NetMove, NetUi, NetDrawState> = 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 

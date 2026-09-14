@@ -25,9 +25,7 @@ const TS = 32; // sepWidth = 1, cursorInset = 4, both > 0.
 const UI = { cursor: newCursor() };
 
 function freshDs(state: FloodState): FloodDrawState {
-  const ds = floodGame.newDrawState?.(state) as FloodDrawState;
-  floodGame.setTileSize?.(ds, TS);
-  return ds;
+  return floodGame.newDrawState(state, TS) as FloodDrawState;
 }
 
 describe("Flood redraw", () => {

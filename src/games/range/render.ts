@@ -122,18 +122,14 @@ export interface RangeDrawState {
   cache: Int32Array;
 }
 
-export function newDrawState(state: RangeState): RangeDrawState {
+export function newDrawState(state: RangeState, tileSize: number): RangeDrawState {
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     w: state.w,
     h: state.h,
     cache: new Int32Array(state.w * state.h).fill(-1),
   };
-}
-
-export function setTileSize(ds: RangeDrawState, ts: number): void {
-  ds.tileSize = ts;
 }
 
 // --- cell drawing ----------------------------------------------------------

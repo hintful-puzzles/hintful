@@ -19,15 +19,15 @@ import {
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { SYMM_NONE, SYMM_ROT2 } from "../../engine/symmetric-blacks.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
 import { seedBudget } from "../../engine/testing/slow.ts";
 import type { ChangeNotification, GameStatus, Point } from "../../engine/types.ts";
 import cReference from "./__fixtures__/sticks-c-reference.json" with { type: "json" };
 import { newSticksDesc } from "./generator.ts";
 import { sticksGame } from "./index.ts";
-import { COL_ERROR, COL_LINE, newDrawState, redraw, setTileSize } from "./render.ts";
+import { COL_ERROR, COL_LINE, newDrawState, redraw } from "./render.ts";
 import {
   findLiveErrors,
   findMistakes,
@@ -107,7 +107,7 @@ function press(
   return sticksGame.interpretMove(
     state,
     ui,
-    sizedDrawState(sticksGame, state),
+    preferredDrawState(sticksGame, state),
     { x, y },
     button,
   );
@@ -588,8 +588,7 @@ describe("sticks rendering (tier 2.5)", () => {
     const state = newState(FIX_PARAMS, FIX.desc);
     const solution = fixtureSolution();
     for (let i = 0; i < solution.length; i++) state.grid[i] = solution[i];
-    const ds = newDrawState(state);
-    setTileSize(ds, 48);
+    const ds = newDrawState(state, 48);
     const ui = newUi();
     const dr = new RecordingDrawing(sticksGame.colors([1, 1, 1]));
     // Flash-on beat: floor(0.05 / 0.1) = 0 -> even -> lines hidden.

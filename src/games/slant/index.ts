@@ -439,9 +439,6 @@ export const slantGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize: (ds, ts) => {
-    ds.tileSize = ts;
-  },
   newDrawState,
   redraw,
 

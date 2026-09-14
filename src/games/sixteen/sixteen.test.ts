@@ -970,10 +970,7 @@ describe("Sixteen hint rendering", () => {
     if (!result?.ok) return;
 
     const ui = sixteenGame.newUi(s);
-    const ds = sixteenGame.newDrawState?.(s);
-    expect(ds).toBeDefined();
-    if (!ds) return;
-    sixteenGame.setTileSize?.(ds, 32);
+    const ds = sixteenGame.newDrawState(s, 32);
 
     const { dr, ops } = recordingDrawing();
     sixteenGame.redraw?.(dr, ds, null, s, 1, ui, 0, 0, result.steps[0]);
@@ -1013,10 +1010,7 @@ describe("Sixteen hint track and direction fixes", () => {
     // Recommended move was left (delta: -1), but in-grid direction is right (delta: 1).
     const s1 = solvedState(3, 3); // Tile 1 is at index 0 (col 0, row 0).
     const ui1 = sixteenGame.newUi(s1);
-    const ds1 = sixteenGame.newDrawState?.(s1);
-    expect(ds1).toBeDefined();
-    if (!ds1) return;
-    sixteenGame.setTileSize?.(ds1, 32);
+    const ds1 = sixteenGame.newDrawState(s1, 32);
 
     const activeHint1: HintStep<SixteenMove, SixteenHintHighlights> = {
       move: { type: "slide", axis: "row", index: 0, delta: -1 },
@@ -1047,10 +1041,7 @@ describe("Sixteen hint track and direction fixes", () => {
     s2.tiles[2] = 1;
 
     const ui2 = sixteenGame.newUi(s2);
-    const ds2 = sixteenGame.newDrawState?.(s2);
-    expect(ds2).toBeDefined();
-    if (!ds2) return;
-    sixteenGame.setTileSize?.(ds2, 32);
+    const ds2 = sixteenGame.newDrawState(s2, 32);
 
     const activeHint2: HintStep<SixteenMove, SixteenHintHighlights> = {
       move: { type: "slide", axis: "row", index: 0, delta: 1 },
@@ -1183,9 +1174,7 @@ describe("the hint marks while the hinted slide animates", () => {
           : hl.targetPos % w === m.index;
       if (!onLine) continue;
 
-      const ds = sixteenGame.newDrawState?.(state);
-      if (!ds) throw new Error("no draw state");
-      sixteenGame.setTileSize?.(ds, TS);
+      const ds = sixteenGame.newDrawState(state, TS);
       const ui = sixteenGame.newUi(state);
 
       // Paint the still pre-move frame first, so the cache is warm exactly

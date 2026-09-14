@@ -190,11 +190,12 @@ const HINT_RING = 1 << 8;
  * dot). These sit above {@link HINT_RING}, disjoint from the line bits `0..7`. */
 const hintMarkBit = (d: number): number => 1 << (9 + d);
 
-export function newDrawState(state: SpokesState): SpokesDrawState {
+export function newDrawState(state: SpokesState, tileSize: number): SpokesDrawState {
   const n = state.w * state.h;
+  const cursorRadius = (tileSize * 0.2) | 0;
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     w: state.w,
     h: state.h,
     scratch: new SpokesScratch(n),
@@ -207,21 +208,9 @@ export function newDrawState(state: SpokesState): SpokesDrawState {
     cursorSaved: false,
     cursorX: -1,
     cursorY: -1,
-    cursorRadius: -1,
-    cursorSize: -1,
+    cursorRadius,
+    cursorSize: cursorRadius * 2 + 1,
   };
-}
-
-export function setTileSize(ds: SpokesDrawState, ts: number): void {
-  if (ds.tileSize !== ts) {
-    // The blitter is sized from the tile size, so a resize retires it; the
-    // next frame allocates a fresh one (only `redraw` has the `GameDrawing`).
-    ds.cursorBlitter = null;
-    ds.cursorSaved = false;
-  }
-  ds.tileSize = ts;
-  ds.cursorRadius = (ts * 0.2) | 0;
-  ds.cursorSize = ds.cursorRadius * 2 + 1;
 }
 
 // --- helpers ----------------------------------------------------------------

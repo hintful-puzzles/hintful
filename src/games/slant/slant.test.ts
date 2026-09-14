@@ -16,12 +16,12 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
 import type { Point } from "../../engine/types.ts";
 import cReference from "./__fixtures__/slant-c-reference.json" with { type: "json" };
 import { newDesc, slantGenerate } from "./generator.ts";
@@ -76,7 +76,7 @@ function center(x: number, y: number) {
 }
 
 const input = (s: SlantState, u: SlantUi, p: Point, button: number) =>
-  slantGame.interpretMove(s, u, sizedDrawState(slantGame, s), p, button);
+  slantGame.interpretMove(s, u, preferredDrawState(slantGame, s), p, button);
 
 const set = (x: number, y: number, v: -1 | 0 | 1): SlantMove => ({
   type: "set",
@@ -380,7 +380,7 @@ describe("slant rendering", () => {
     s = executeMove(s, set(0, 0, wrong0 as -1 | 1));
 
     const dr = new RecordingDrawing(slantGame.colors(DEFAULT_BACKGROUND));
-    const ds = sizedDrawState(slantGame, s, 32);
+    const ds = slantGame.newDrawState(s, 32);
     const u = ui();
     slantGame.redraw?.(dr, ds, null, s, 1, u, 0, 0, undefined, undefined);
     dr.ops.length = 0;
@@ -396,7 +396,7 @@ describe("slant rendering", () => {
     const palette = slantGame.colors(DEFAULT_BACKGROUND);
     for (const fade of [false, true]) {
       const dr = new RecordingDrawing(palette);
-      const ds = sizedDrawState(slantGame, s, 32);
+      const ds = slantGame.newDrawState(s, 32);
       slantGame.redraw?.(dr, ds, null, s, 1, ui({ fadeGrounded: fade }), 0, 0);
       const groundedLines = dr.ops.filter(
         (o) => o.op === "line" && o.color === COL_GROUNDED,

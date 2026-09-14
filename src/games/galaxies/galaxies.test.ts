@@ -11,7 +11,7 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { PuzzleButton } from "../../engine/types.ts";
 import { newGameDesc } from "./generator.ts";
 import {
@@ -246,9 +246,6 @@ function recordingDrawing() {
 
 // Galaxies always defines these optional Game members; pin them as
 // non-optional locals so the tests don't need `!` assertions.
-const newDrawState = galaxiesGame.newDrawState as NonNullable<
-  typeof galaxiesGame.newDrawState
->;
 const galaxiesRedraw = galaxiesGame.redraw as NonNullable<typeof galaxiesGame.redraw>;
 
 describe("Galaxies rendering", () => {
@@ -258,7 +255,7 @@ describe("Galaxies rendering", () => {
     const { desc } = galaxiesGame.newDesc(p, rng);
     const s = galaxiesGame.newState(p, desc);
     const ui = galaxiesGame.newUi(s);
-    const ds = newDrawState(s);
+    const ds = preferredDrawState(galaxiesGame, s);
     const { dr, ops } = recordingDrawing();
     galaxiesRedraw(dr, ds, null, s, 1, ui, 0, 0);
     // First-draw branch is responsible for the background fill —
@@ -277,7 +274,7 @@ describe("Galaxies rendering", () => {
     const { desc } = galaxiesGame.newDesc(p, rng);
     const s = galaxiesGame.newState(p, desc);
     const ui = galaxiesGame.newUi(s);
-    const ds = newDrawState(s);
+    const ds = preferredDrawState(galaxiesGame, s);
     const { dr } = recordingDrawing();
     galaxiesRedraw(dr, ds, null, s, 1, ui, 0, 0);
     const { dr: dr2, ops: ops2 } = recordingDrawing();
@@ -312,7 +309,7 @@ describe("Galaxies interpretMove", () => {
     const r = galaxiesGame.interpretMove(
       s,
       ui,
-      newDrawState(s),
+      preferredDrawState(galaxiesGame, s),
       { x: 0, y: 0 },
       PuzzleButton.CURSOR_UP,
     );
@@ -463,7 +460,7 @@ describe("Galaxies findMistakes", () => {
     s.flags[idx(s, interior.x, interior.y)] |= F_EDGE_SET;
     const mistakes = galaxiesGame.findMistakes?.(s) ?? [];
     const ui = galaxiesGame.newUi(s);
-    const ds = newDrawState(s);
+    const ds = preferredDrawState(galaxiesGame, s);
     const { dr, ops } = recordingDrawing();
     galaxiesRedraw(dr, ds, null, s, 1, ui, 0, 0, undefined, mistakes);
     // The only COL_MISTAKE consumer reachable from this state is the
@@ -482,7 +479,7 @@ describe("Galaxies findMistakes", () => {
     const s = cloneState(init);
     s.flags[idx(s, interior.x, interior.y)] |= F_EDGE_SET;
     const ui = galaxiesGame.newUi(s);
-    const ds = newDrawState(s);
+    const ds = preferredDrawState(galaxiesGame, s);
 
     // Frame 1: the same board, no overlay — warms the per-tile cache.
     const cold = recordingDrawing();
@@ -541,7 +538,7 @@ describe("Galaxies drag preview (discrete snapped target)", () => {
   function twoDotBoard() {
     const s = galaxiesGame.newState(p43, "gj");
     const ui = galaxiesGame.newUi(s);
-    const ds = newDrawState(s);
+    const ds = preferredDrawState(galaxiesGame, s);
     return { s, ui, ds };
   }
 
@@ -634,7 +631,7 @@ describe("Galaxies drag preview (discrete snapped target)", () => {
     // about it is off-grid, so nothing can commit anywhere.
     const s = galaxiesGame.newState(p, "a");
     const ui = galaxiesGame.newUi(s);
-    const ds = newDrawState(s);
+    const ds = preferredDrawState(galaxiesGame, s);
     const cold = recordingDrawing();
     galaxiesRedraw(cold.dr, ds, null, s, 1, ui, 0, 0);
 
@@ -706,7 +703,7 @@ describe("Galaxies drag preview (discrete snapped target)", () => {
       galaxiesGame.interpretMove(
         s,
         ui,
-        sizedDrawState(galaxiesGame, s),
+        preferredDrawState(galaxiesGame, s),
         { x: 80, y: 80 },
         RIGHT_BUTTON,
       ),
@@ -717,7 +714,7 @@ describe("Galaxies drag preview (discrete snapped target)", () => {
       galaxiesGame.interpretMove(
         s,
         ui,
-        sizedDrawState(galaxiesGame, s),
+        preferredDrawState(galaxiesGame, s),
         { x: 48, y: 80 },
         RIGHT_DRAG,
       ),
@@ -728,7 +725,7 @@ describe("Galaxies drag preview (discrete snapped target)", () => {
       galaxiesGame.interpretMove(
         s,
         ui,
-        sizedDrawState(galaxiesGame, s),
+        preferredDrawState(galaxiesGame, s),
         { x: 51, y: 83 },
         RIGHT_DRAG,
       ),
@@ -737,7 +734,7 @@ describe("Galaxies drag preview (discrete snapped target)", () => {
     const move = galaxiesGame.interpretMove(
       s,
       ui,
-      sizedDrawState(galaxiesGame, s),
+      preferredDrawState(galaxiesGame, s),
       { x: 300, y: 300 },
       RIGHT_RELEASE,
     );
@@ -760,7 +757,7 @@ describe("Galaxies drag preview (discrete snapped target)", () => {
       galaxiesGame.interpretMove(
         s,
         ui,
-        sizedDrawState(galaxiesGame, s),
+        preferredDrawState(galaxiesGame, s),
         { x: 48, y: 48 },
         RIGHT_BUTTON,
       ),
@@ -769,7 +766,7 @@ describe("Galaxies drag preview (discrete snapped target)", () => {
       galaxiesGame.interpretMove(
         s,
         ui,
-        sizedDrawState(galaxiesGame, s),
+        preferredDrawState(galaxiesGame, s),
         { x: 80, y: 48 },
         RIGHT_DRAG,
       ),
@@ -778,7 +775,7 @@ describe("Galaxies drag preview (discrete snapped target)", () => {
       galaxiesGame.interpretMove(
         s,
         ui,
-        sizedDrawState(galaxiesGame, s),
+        preferredDrawState(galaxiesGame, s),
         { x: 80, y: 48 },
         RIGHT_RELEASE,
       ),
@@ -810,7 +807,7 @@ describe("Galaxies association gestures (left button, and cell→dot)", () => {
     galaxiesGame.interpretMove(
       s,
       ui,
-      sizedDrawState(galaxiesGame, s),
+      preferredDrawState(galaxiesGame, s),
       { x, y },
       button,
     );
@@ -946,7 +943,7 @@ describe("Galaxies candidate rings", () => {
   function board() {
     const s = galaxiesGame.newState(p43, "gj");
     const ui = galaxiesGame.newUi(s);
-    const ds = newDrawState(s);
+    const ds = preferredDrawState(galaxiesGame, s);
     const cold = recordingDrawing();
     galaxiesRedraw(cold.dr, ds, null, s, 1, ui, 0, 0);
     return { s, ui, ds };

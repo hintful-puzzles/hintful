@@ -23,7 +23,6 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
   type SokobanDrawState,
-  setTileSize,
 } from "./render.ts";
 import {
   DEEP_PIT,
@@ -198,7 +197,6 @@ export const sokobanGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 

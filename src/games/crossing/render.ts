@@ -295,11 +295,14 @@ export interface CrossingDrawState {
   pencilModeShown: boolean | null;
 }
 
-export function newDrawState(state: CrossingState): CrossingDrawState {
+export function newDrawState(
+  state: CrossingState,
+  tileSize: number,
+): CrossingDrawState {
   const { w, h, numbers } = state.puzzle;
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     tiles: new Int32Array(w * h).fill(-1),
     wrong: new OverlaySidecar(w * h),
     hint: new OverlaySidecar(w * h),
@@ -307,10 +310,6 @@ export function newDrawState(state: CrossingState): CrossingDrawState {
     numberState: new Int8Array(numbers.length).fill(-1),
     pencilModeShown: null,
   };
-}
-
-export function setTileSize(ds: CrossingDrawState, ts: number): void {
-  ds.tileSize = ts;
 }
 
 /**

@@ -13,14 +13,7 @@ import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { seedBudget } from "../../engine/testing/slow.ts";
 import { type NetslideHint, parseAux } from "./hint.ts";
 import { netslideGame } from "./index.ts";
-import {
-  ANIM_TIME,
-  COL_HINT,
-  colors,
-  newDrawState,
-  redraw,
-  setTileSize,
-} from "./render.ts";
+import { ANIM_TIME, COL_HINT, colors, newDrawState, redraw } from "./render.ts";
 import {
   D,
   isComplete,
@@ -555,8 +548,7 @@ describe("netslide hint rendering", () => {
     // the *same* draw state again — the highlight must turn up on the second paint.
     const { aux, state } = board(EASY_3X3, "repaint-1");
     const ui = newUi(state);
-    const ds = newDrawState(state);
-    setTileSize(ds, 32);
+    const ds = newDrawState(state, 32);
     const palette = colors([1, 1, 1]);
 
     const first = new RecordingDrawing(palette);
@@ -677,8 +669,7 @@ describe("the hint marks while the hinted slide animates", () => {
       if (marks.landing === marks.tile) continue;
 
       const after = netslideGame.executeMove(state, step.move);
-      const ds = newDrawState(after);
-      setTileSize(ds, TS);
+      const ds = newDrawState(after, TS);
       const palette = colors([1, 1, 1]);
 
       // Paint the pre-move frame first, so the draw state's cache is warm exactly as

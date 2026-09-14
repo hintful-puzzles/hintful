@@ -10,8 +10,8 @@ import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, LEFT_DRAG } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
 import { newFillingDesc } from "./generator.ts";
 import { fillingGame } from "./index.ts";
 import { COL_CORRECT, COL_ERROR, COL_GRID } from "./render.ts";
@@ -126,7 +126,7 @@ describe("filling moves + selection", () => {
   it("fills every selected cell with one digit", () => {
     const st = newState({ w: 3, h: 1 }, "aaa"); // all empty
     const ui = fillingGame.newUi(st);
-    const ds = fillingGame.newDrawState?.(st) ?? null;
+    const ds = fillingGame.newDrawState(st, fillingGame.preferredTileSize ?? 32);
     // Select cells 1 and 2 with left-click + drag.
     const ts = fillingGame.preferredTileSize ?? 32;
     const cx = (i: number) => Math.floor(ts / 2) + i * ts + Math.floor(ts / 2);
@@ -145,7 +145,7 @@ describe("filling moves + selection", () => {
     const move = fillingGame.interpretMove(
       st,
       ui,
-      sizedDrawState(fillingGame, st),
+      preferredDrawState(fillingGame, st),
       { x: 0, y: 0 },
       0x34 /* '4' */,
     );

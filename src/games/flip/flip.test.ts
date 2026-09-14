@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { type GameDrawing, Midend, UI_UPDATE } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { type ChangeNotification, PuzzleButton } from "../../engine/types.ts";
 import { type FlipParams, type FlipState, flipGame } from "./index.ts";
 
@@ -169,7 +169,7 @@ describe("Flip interpretMove", () => {
     const m = flipGame.interpretMove(
       s,
       ui,
-      sizedDrawState(flipGame, s),
+      preferredDrawState(flipGame, s),
       at(2, 1),
       0x0200,
     );
@@ -184,7 +184,7 @@ describe("Flip interpretMove", () => {
       flipGame.interpretMove(
         s,
         ui,
-        sizedDrawState(flipGame, s),
+        preferredDrawState(flipGame, s),
         { x: 9999, y: 9999 },
         0x0200,
       ),
@@ -198,7 +198,7 @@ describe("Flip interpretMove", () => {
       flipGame.interpretMove(
         s,
         ui,
-        sizedDrawState(flipGame, s),
+        preferredDrawState(flipGame, s),
         { x: 0, y: 0 },
         0x0200 + 12,
       ),
@@ -208,7 +208,7 @@ describe("Flip interpretMove", () => {
     const m = flipGame.interpretMove(
       s,
       ui,
-      sizedDrawState(flipGame, s),
+      preferredDrawState(flipGame, s),
       { x: 0, y: 0 },
       0x0200 + 13,
     );
@@ -231,7 +231,7 @@ describe("Flip interpretMove", () => {
       flipGame.interpretMove(
         s,
         flipGame.newUi(s),
-        sizedDrawState(flipGame, s),
+        preferredDrawState(flipGame, s),
         at(0, 0),
         0x0200,
       ),
@@ -244,7 +244,7 @@ describe("Flip interpretMove", () => {
       flipGame.interpretMove(
         s,
         flipGame.newUi(s),
-        sizedDrawState(flipGame, s),
+        preferredDrawState(flipGame, s),
         at(0, 0),
         0x0201,
       ),
@@ -292,9 +292,7 @@ describe("Flip redraw", () => {
   it("draws the grid once, then the per-tile cache suppresses redundant redraws", () => {
     const s = flipGame.newState(p, desc);
     const ui = flipGame.newUi(s);
-    const ds = flipGame.newDrawState?.(s);
-    if (!ds || !flipGame.redraw) throw new Error("flip has redraw + drawState");
-    flipGame.setTileSize?.(ds, flipGame.preferredTileSize ?? 32);
+    const ds = flipGame.newDrawState(s, flipGame.preferredTileSize ?? 32);
 
     const a = recordingDrawing();
     flipGame.redraw(a.dr, ds, null, s, 1, ui, 0, 0);
@@ -319,9 +317,7 @@ describe("Flip redraw", () => {
       mask: [1, 1, 1, 1, 1, 1, 1, 1, 1],
     });
     const ui = flipGame.newUi(hinted);
-    const ds = flipGame.newDrawState?.(hinted);
-    if (!ds || !flipGame.redraw) throw new Error("flip has redraw + drawState");
-    flipGame.setTileSize?.(ds, flipGame.preferredTileSize ?? 32);
+    const ds = flipGame.newDrawState(hinted, flipGame.preferredTileSize ?? 32);
     const a = recordingDrawing();
     flipGame.redraw(a.dr, ds, null, hinted, 1, ui, 0, 0);
     expect(a.ops.some((o) => o.op === "drawLine" && o.color === COL_HINT)).toBe(true);
@@ -330,7 +326,7 @@ describe("Flip redraw", () => {
 
 describe("Flip reshape (regression: black canvas when shapes share a tile size)", () => {
   // `Drawing.resize` clears the canvas to opaque black, and a reshape that
-  // keeps the tile size gives `setTileSize` nothing to invalidate. So the
+  // keeps the tile size gets no fresh drawstate from `size()`. So the
   // engine treats `canvasCleared` as the one canvas-invalidation signal, and
   // Flip's `!ds.started` branch repaints the background and grid lines on it.
   it("canvasCleared after a same-tile reshape repaints bg + grid lines", () => {
@@ -350,7 +346,7 @@ describe("Flip reshape (regression: black canvas when shapes share a tile size)"
     // The slot is the board's own size at tile 48, so `size()` resolves to
     // exactly 48 — and the same is done for the 5x5 below, which is what makes
     // this a *same-tile* reshape. One shared viewport would give the two boards
-    // different tiles, and `setTileSize` would then do the invalidating.
+    // different tiles, and `size()` would then rebuild the drawstate itself.
     expect(me.newGameFromId(`3x3c:${desc3}`)).toBeNull();
     me.size(flipGame.computeSize(p3, TILE));
     const first = recordingDrawing();
@@ -360,8 +356,8 @@ describe("Flip reshape (regression: black canvas when shapes share a tile size)"
     ).length;
     expect(firstGridLines).toBeGreaterThan(0); // grid drawn once
 
-    // Switch to 5x5 at the *same* tile size, so `setTileSize` has nothing to
-    // change. `newGameFromId` builds a fresh
+    // Switch to 5x5 at the *same* tile size, so `size()` has nothing to
+    // rebuild. `newGameFromId` builds a fresh
     // drawstate for the new game; the app's reshape would then call
     // `resizeDrawing` → engine.canvasCleared (we invoke it directly here since
     // this is a midend-level test).

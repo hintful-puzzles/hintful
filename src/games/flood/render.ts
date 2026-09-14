@@ -82,10 +82,10 @@ export interface FloodDrawState {
   grid: Int32Array;
 }
 
-export function newDrawState(state: FloodState): FloodDrawState {
+export function newDrawState(state: FloodState, tileSize: number): FloodDrawState {
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     grid: new Int32Array(state.w * state.h).fill(-1),
   };
 }

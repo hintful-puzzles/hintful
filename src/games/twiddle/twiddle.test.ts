@@ -14,7 +14,7 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import type { Point } from "../../engine/types.ts";
 import { twiddleGame } from "./index.ts";
 import {
@@ -60,7 +60,7 @@ function interpret(state: TwiddleState, button: number, p: Point = { x: 0, y: 0 
     move: twiddleGame.interpretMove(
       state,
       ui,
-      sizedDrawState(twiddleGame, state),
+      preferredDrawState(twiddleGame, state),
       p,
       button,
     ),
@@ -277,7 +277,7 @@ describe("Twiddle input", () => {
     const m1 = twiddleGame.interpretMove(
       s,
       ui,
-      sizedDrawState(twiddleGame, s),
+      preferredDrawState(twiddleGame, s),
       { x: 0, y: 0 },
       CURSOR_LEFT,
     );
@@ -288,7 +288,7 @@ describe("Twiddle input", () => {
     twiddleGame.interpretMove(
       s,
       ui,
-      sizedDrawState(twiddleGame, s),
+      preferredDrawState(twiddleGame, s),
       { x: 0, y: 0 },
       CURSOR_RIGHT,
     );
@@ -304,7 +304,7 @@ describe("Twiddle input", () => {
       twiddleGame.interpretMove(
         s,
         ui,
-        sizedDrawState(twiddleGame, s),
+        preferredDrawState(twiddleGame, s),
         { x: 0, y: 0 },
         CURSOR_SELECT,
       ),
@@ -313,7 +313,7 @@ describe("Twiddle input", () => {
       twiddleGame.interpretMove(
         s,
         ui,
-        sizedDrawState(twiddleGame, s),
+        preferredDrawState(twiddleGame, s),
         { x: 0, y: 0 },
         CURSOR_SELECT2,
       ),
@@ -326,7 +326,7 @@ describe("Twiddle input", () => {
       twiddleGame.interpretMove(
         s,
         ui,
-        sizedDrawState(twiddleGame, s),
+        preferredDrawState(twiddleGame, s),
         { x: 0, y: 0 },
         CURSOR_SELECT,
       ),

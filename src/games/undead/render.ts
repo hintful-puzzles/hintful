@@ -170,11 +170,11 @@ export interface UndeadDrawState {
   pencilModeShown: boolean | null;
 }
 
-export function newDrawState(state: UndeadState): UndeadDrawState {
+export function newDrawState(state: UndeadState, tileSize: number): UndeadDrawState {
   const common = state.common;
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     w: common.w,
     h: common.h,
     monsters: new Int8Array(common.numTotal).fill(7),
@@ -198,10 +198,6 @@ export function newDrawState(state: UndeadState): UndeadDrawState {
     marks: new HintMarks(),
     pencilModeShown: null,
   };
-}
-
-export function setTileSize(ds: UndeadDrawState, ts: number): void {
-  ds.tileSize = ts;
 }
 
 // --- count-row layout (calculate_count_layout) -----------------------------

@@ -265,7 +265,6 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
   refreshHintStep: { kind: "internal", why: "re-validating a stored step" },
   uiUpdateClearsHint: { kind: "internal", why: "when a UI change invalidates a step" },
   preferredTileSize: { kind: "internal", why: "layout" },
-  setTileSize: { kind: "internal", why: "layout" },
   animLength: { kind: "internal", why: "animation timing" },
   flashLength: { kind: "internal", why: "animation timing" },
   timingState: { kind: "internal", why: "whether the clock runs" },

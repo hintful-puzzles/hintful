@@ -11,21 +11,15 @@
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
 import { newKeenDesc } from "./generator.ts";
 import { keenGame } from "./index.ts";
-import {
-  COL_ERROR,
-  COL_PENCIL_BODY,
-  newDrawState,
-  redraw,
-  setTileSize,
-} from "./render.ts";
+import { COL_ERROR, COL_PENCIL_BODY, newDrawState, redraw } from "./render.ts";
 import { solveKeen } from "./solver.ts";
 import {
   C_DIV,
@@ -369,8 +363,7 @@ describe("keen render", () => {
       const st = newState(P4, D4);
       const ui = newUi(st);
       ui.pencilMode = pencilMode;
-      const ds = newDrawState(st);
-      setTileSize(ds, ts);
+      const ds = newDrawState(st, ts);
       const dr = new RecordingDrawing(palette);
       redraw(dr, ds, null, st, 1, ui, 0, 0);
       return dr;
@@ -407,7 +400,7 @@ describe("adaptive mark-all ('M')", () => {
     keenGame.interpretMove(
       st,
       newUi(st),
-      sizedDrawState(keenGame, st),
+      preferredDrawState(keenGame, st),
       { x: 0, y: 0 },
       77,
     );

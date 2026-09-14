@@ -74,7 +74,6 @@ import {
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import { type BoatsMistake, findMistakes, solveBoats, solveToGrid } from "./solver.ts";
 import {
@@ -613,7 +612,6 @@ export const boatsGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 

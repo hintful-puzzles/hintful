@@ -24,12 +24,12 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
 import type { ChangeNotification, GameStatus, Point } from "../../engine/types.ts";
 import { newSpokesDesc } from "./generator.ts";
 import { spokesGame } from "./index.ts";
@@ -41,7 +41,6 @@ import {
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import { spokesSolve, spokesValidate } from "./solver.ts";
 import {
@@ -112,7 +111,7 @@ function press(
   return spokesGame.interpretMove(
     state,
     ui,
-    sizedDrawState(spokesGame, state),
+    preferredDrawState(spokesGame, state),
     p,
     button,
   );
@@ -615,8 +614,7 @@ describe("spokes rendering", () => {
     ui.dragEnd = 1;
 
     const palette = spokesGame.colors(DEFAULT_BACKGROUND);
-    const ds = newDrawState(state);
-    setTileSize(ds, TS);
+    const ds = newDrawState(state, TS);
     const dr = new RecordingDrawing(palette);
     redraw(dr, ds, null, state, 1, ui, 0, 0);
 
@@ -632,8 +630,7 @@ describe("spokes rendering", () => {
     ui.cursor.x = 1;
 
     const palette = spokesGame.colors(DEFAULT_BACKGROUND);
-    const ds = newDrawState(state);
-    setTileSize(ds, TS);
+    const ds = newDrawState(state, TS);
     const dr = new RecordingDrawing(palette);
     redraw(dr, ds, null, state, 1, ui, 0, 0);
 
@@ -672,8 +669,7 @@ describe("spokes rendering", () => {
     spokesPlace(lit, 0, DIR_RIGHT, SPOKE_LINE);
 
     const palette = spokesGame.colors(DEFAULT_BACKGROUND);
-    const ds = newDrawState(lit);
-    setTileSize(ds, TS);
+    const ds = newDrawState(lit, TS);
     const dr = new RecordingDrawing(palette);
     redraw(dr, ds, null, lit, 1, ui, 0, 0);
 

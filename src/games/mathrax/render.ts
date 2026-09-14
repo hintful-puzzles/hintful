@@ -142,19 +142,15 @@ export interface MathraxDrawState {
   pencilModeShown: boolean | null;
 }
 
-export function newDrawState(state: MathraxState): MathraxDrawState {
+export function newDrawState(state: MathraxState, tileSize: number): MathraxDrawState {
   const o = state.params.o;
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     tiles: new Int32Array(o * o).fill(-1),
     wrong: new OverlaySidecar(o * o),
     pencilModeShown: null,
   };
-}
-
-export function setTileSize(ds: MathraxDrawState, ts: number): void {
-  ds.tileSize = ts;
 }
 
 // --- clue drawing ----------------------------------------------------------

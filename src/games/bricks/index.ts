@@ -63,7 +63,6 @@ import {
   offsets,
   PREFERRED_TILE_SIZE,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import {
   type BricksReason,
@@ -481,7 +480,6 @@ export const bricksGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 

@@ -8,12 +8,12 @@ import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import {
   type DrawOp,
   RecordingDrawing,
 } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
 import type { ChangeNotification } from "../../engine/types.ts";
 import { newInertiaDesc } from "./generator.ts";
 import { inertiaGame } from "./index.ts";
@@ -178,7 +178,7 @@ describe("inertia sliding", () => {
       inertiaGame.interpretMove(
         s,
         ui(),
-        sizedDrawState(inertiaGame, s),
+        preferredDrawState(inertiaGame, s),
         { x: 0, y: 0 },
         key("left"),
       ),
@@ -187,7 +187,7 @@ describe("inertia sliding", () => {
       inertiaGame.interpretMove(
         s,
         ui(),
-        sizedDrawState(inertiaGame, s),
+        preferredDrawState(inertiaGame, s),
         { x: 0, y: 0 },
         key("down"),
       ),
@@ -196,7 +196,7 @@ describe("inertia sliding", () => {
       inertiaGame.interpretMove(
         s,
         ui(),
-        sizedDrawState(inertiaGame, s),
+        preferredDrawState(inertiaGame, s),
         { x: 0, y: 0 },
         key("right"),
       ),
@@ -211,7 +211,7 @@ describe("inertia sliding", () => {
       inertiaGame.interpretMove(
         s1,
         ui(),
-        sizedDrawState(inertiaGame, s1),
+        preferredDrawState(inertiaGame, s1),
         { x: 0, y: 0 },
         key("right"),
       ),
@@ -256,7 +256,7 @@ describe("inertia input", () => {
         inertiaGame.interpretMove(
           s,
           ui(),
-          sizedDrawState(inertiaGame, s),
+          preferredDrawState(inertiaGame, s),
           { x: 0, y: 0 },
           button,
         ),
@@ -282,7 +282,7 @@ describe("inertia input", () => {
         inertiaGame.interpretMove(
           s,
           ui(),
-          sizedDrawState(inertiaGame, s),
+          preferredDrawState(inertiaGame, s),
           { x: 0, y: 0 },
           k.charCodeAt(0),
         ),
@@ -293,7 +293,7 @@ describe("inertia input", () => {
       inertiaGame.interpretMove(
         s,
         ui(),
-        sizedDrawState(inertiaGame, s),
+        preferredDrawState(inertiaGame, s),
         { x: 0, y: 0 },
         "5".charCodeAt(0),
       ),
@@ -304,9 +304,7 @@ describe("inertia input", () => {
     const { params, desc } = board(["bbbbb", "bbbbb", "bbSbg", "bbbbb", "bbbbb"]);
     const s = newState(params, desc);
     const ts = 32;
-    const ds = inertiaGame.newDrawState?.(s);
-    if (!ds) throw new Error("expected a drawstate");
-    inertiaGame.setTileSize?.(ds, ts);
+    const ds = inertiaGame.newDrawState(s, ts);
     // Click on the cell two to the right of the ball => east.
     const at = (cx: number, cy: number) => ({
       x: 1 + cx * ts + ts / 2,
@@ -339,9 +337,7 @@ describe("inertia swipe", () => {
     const { params, desc } = board(["bbbbb", "bbwbb", "bbSbg", "bbbbb", "bbbbb"]);
     const s = newState(params, desc);
     const ts = 32;
-    const ds = inertiaGame.newDrawState?.(s);
-    if (!ds) throw new Error("expected a drawstate");
-    inertiaGame.setTileSize?.(ds, ts);
+    const ds = inertiaGame.newDrawState(s, ts);
     // Pixel center of a cell, and the ball's own center.
     const center = (cx: number, cy: number) => ({
       x: 1 + cx * ts + ts / 2,
@@ -519,7 +515,7 @@ describe("inertia route aid", () => {
         inertiaGame.interpretMove(
           s1,
           ui(),
-          sizedDrawState(inertiaGame, s1),
+          preferredDrawState(inertiaGame, s1),
           { x: 0, y: 0 },
           padKey(d),
         ) !== null,
@@ -569,7 +565,7 @@ describe("inertia route aid", () => {
     const move = inertiaGame.interpretMove(
       s1,
       ui(),
-      sizedDrawState(inertiaGame, s1),
+      preferredDrawState(inertiaGame, s1),
       { x: 0, y: 0 },
       0x020d,
     );
@@ -717,9 +713,7 @@ describe("inertia rendering", () => {
     // pointer events, so there is no swipe for it to drive.
     const { params, desc } = board(["bbbbb", "bbbbb", "bbSbg", "bbbbb", "bbbbb"]);
     const s = newState(params, desc);
-    const ds = inertiaGame.newDrawState?.(s);
-    if (!ds) throw new Error("expected a drawstate");
-    inertiaGame.setTileSize?.(ds, 32);
+    const ds = inertiaGame.newDrawState(s, 32);
 
     const palette = inertiaGame.colors([1, 1, 1]);
     const redraw = inertiaGame.redraw;

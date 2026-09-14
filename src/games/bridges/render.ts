@@ -167,23 +167,15 @@ export interface BridgesDrawState {
   hint: Int32Array;
 }
 
-export function newDrawState(state: BridgesState): BridgesDrawState {
+export function newDrawState(state: BridgesState, tileSize: number): BridgesDrawState {
   const n = state.w * state.h;
   return {
     started: false,
-    tileSize: PREFERRED_TILE_SIZE,
+    tileSize,
     grid: new Int32Array(n).fill(-1),
     newgrid: new Int32Array(n),
     hint: new Int32Array(n).fill(-1),
   };
-}
-
-export function setTileSize(ds: BridgesDrawState, tileSize: number): void {
-  if (ds.tileSize === tileSize) return;
-  ds.tileSize = tileSize;
-  ds.started = false;
-  ds.grid.fill(-1);
-  ds.hint.fill(-1);
 }
 
 export function computeSize(

@@ -152,11 +152,11 @@ export interface SubsetsDrawState {
   oldHintSets: Uint8Array;
 }
 
-export function newDrawState(state: SubsetsState): SubsetsDrawState {
+export function newDrawState(state: SubsetsState, tileSize: number): SubsetsDrawState {
   const s = state.w * state.h;
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     cellCache: new Int32Array(s).fill(-1),
     oldFlags: new Uint8Array(s),
     oldCounts: new Int32Array(s),
@@ -165,10 +165,6 @@ export function newDrawState(state: SubsetsState): SubsetsDrawState {
     hintSets: new Uint8Array(s),
     oldHintSets: new Uint8Array(s),
   };
-}
-
-export function setTileSize(ds: SubsetsDrawState, ts: number): void {
-  ds.tileSize = ts;
 }
 
 // --- redraw -----------------------------------------------------------------

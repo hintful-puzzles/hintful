@@ -99,8 +99,11 @@ export function computeSize(p: SeparateParams, ts: number): Size {
 
 export type SeparateDrawState = BorderGridDrawState;
 
-export function newDrawState(state: SeparateState): SeparateDrawState {
-  return newBorderGridDrawState(state.w, state.h);
+export function newDrawState(
+  state: SeparateState,
+  tileSize: number,
+): SeparateDrawState {
+  return newBorderGridDrawState(state.w, state.h, tileSize);
 }
 
 // --- redraw ----------------------------------------------------------------

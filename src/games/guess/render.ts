@@ -58,7 +58,7 @@ interface Geom {
   ncolors: number;
   npegs: number;
   nguesses: number;
-  pegsz: number;
+  tileSize: number;
   hintsz: number;
   gapsz: number;
   border: number;
@@ -90,29 +90,28 @@ export function computeSize(p: LayoutParams, tileSize: number): Size {
 }
 
 function computeGeometry(p: LayoutParams, tileSize: number): Geom {
-  const pegsz = tileSize;
-  const hintsz = Math.floor(pegsz * PEG_HINT);
-  const gapsz = Math.floor(pegsz * PEG_GAP);
-  const border = Math.floor(pegsz * BORDER);
-  const pegrad = idiv(pegsz - 1, 2);
+  const hintsz = Math.floor(tileSize * PEG_HINT);
+  const gapsz = Math.floor(tileSize * PEG_GAP);
+  const border = Math.floor(tileSize * BORDER);
+  const pegrad = idiv(tileSize - 1, 2);
   const hintrad = idiv(hintsz - 1, 2);
 
-  const colh = (pegsz + gapsz) * p.ncolors - gapsz;
-  const guessh = (pegsz + gapsz) * p.nguesses + gapsz + pegsz;
+  const colh = (tileSize + gapsz) * p.ncolors - gapsz;
+  const guessh = (tileSize + gapsz) * p.nguesses + gapsz + tileSize;
 
   const { w, h } = computeSize(p, tileSize);
   const colx = border;
   const coly = idiv(h - colh, 2);
-  const guessx = border + pegsz * 2;
+  const guessx = border + tileSize * 2;
   const guessy = idiv(h - guessh, 2);
-  const solny = guessy + (pegsz + gapsz) * p.nguesses + gapsz;
+  const solny = guessy + (tileSize + gapsz) * p.nguesses + gapsz;
   const hintw = idiv(p.npegs + 1, 2);
 
   return {
     ncolors: p.ncolors,
     npegs: p.npegs,
     nguesses: p.nguesses,
-    pegsz,
+    tileSize,
     hintsz,
     gapsz,
     border,
@@ -131,7 +130,7 @@ function computeGeometry(p: LayoutParams, tileSize: number): Geom {
 
 // --- geometry accessors (upstream macros) -----------------------------
 
-export const pegOff = (g: Geom): number => g.pegsz + g.gapsz;
+export const pegOff = (g: Geom): number => g.tileSize + g.gapsz;
 const hintOff = (g: Geom): number => g.hintsz + g.gapsz;
 const cgap = (g: Geom): number => Math.max(idiv(g.gapsz, 2), 1);
 
@@ -147,7 +146,7 @@ const GUESS_H = (g: Geom): number => g.nguesses * pegOff(g);
 
 const HINT_OX = (g: Geom): number => GUESS_OX(g) + GUESS_W(g) + g.gapsz;
 const HINT_OY = (g: Geom): number =>
-  GUESS_OY(g) + idiv(g.pegsz - hintOff(g) - g.hintsz, 2);
+  GUESS_OY(g) + idiv(g.tileSize - hintOff(g) - g.hintsz, 2);
 const hintX = (g: Geom): number => HINT_OX(g);
 const hintY = (g: Geom, gi: number): number => HINT_OY(g) + gi * pegOff(g);
 const HINT_W = (g: Geom): number => g.hintw * hintOff(g) - g.gapsz;
@@ -178,10 +177,10 @@ function invalidRow(n: number): PegRow {
   return { pegs: new Array(n).fill(-1), feedback: new Array(n).fill(-1) };
 }
 
-export function newDrawState(s: GuessState): GuessDrawState {
+export function newDrawState(s: GuessState, tileSize: number): GuessDrawState {
   const p = s.params;
   return {
-    ...computeGeometry(p, PREFERRED_TILE_SIZE),
+    ...computeGeometry(p, tileSize),
     started: false,
     solved: 0,
     nextGo: 0,
@@ -193,22 +192,6 @@ export function newDrawState(s: GuessState): GuessDrawState {
     blitOx: 0,
     blitOy: 0,
   };
-}
-
-export function setTileSize(ds: GuessDrawState, tileSize: number): void {
-  if (ds.pegsz === tileSize) return;
-  Object.assign(ds, computeGeometry(ds, tileSize));
-  ds.started = false;
-  // Drop the cached pegrows and the now-wrongly-sized drag blitter so
-  // the next paint rebuilds both (we have no GameDrawing here to free).
-  for (const row of ds.guessesCache) {
-    row.pegs.fill(-1);
-    row.feedback.fill(-1);
-  }
-  ds.solutionCache.pegs.fill(-1);
-  ds.solutionCache.feedback.fill(-1);
-  ds.colorsCache.pegs.fill(-1);
-  ds.blitPeg = null;
 }
 
 // --- colors ----------------------------------------------------------
@@ -249,7 +232,7 @@ function drawPeg(
   labeled: boolean,
   col: number,
 ): void {
-  const ts = ds.pegsz;
+  const ts = ds.tileSize;
   const cg = cgap(ds);
   if (!moving) {
     dr.drawRect(rect(cx - cg, cy - cg, ts + cg * 2, ts + cg * 2), COL_BACKGROUND);
@@ -276,7 +259,7 @@ function drawPeg(
 }
 
 function drawCursor(dr: GameDrawing, ds: GuessDrawState, x: number, y: number): void {
-  const ts = ds.pegsz;
+  const ts = ds.tileSize;
   const cg = cgap(ds);
   dr.drawCircle(pt(x + ds.pegrad, y + ds.pegrad), ds.pegrad + cg, -1, COL_CURSOR);
   dr.drawUpdate(rect(x - cg, y - cg, ts + cg * 2, ts + cg * 2));
@@ -319,8 +302,8 @@ function guessRedraw(
         dr.drawRect(
           rect(
             rowx + pegOff(ds) * i,
-            rowy + ds.pegsz + idiv(ds.gapsz, 2) - 2,
-            ds.pegsz,
+            rowy + ds.tileSize + idiv(ds.gapsz, 2) - 2,
+            ds.tileSize,
             2,
           ),
           COL_HOLD,
@@ -329,8 +312,8 @@ function guessRedraw(
       dr.drawUpdate(
         rect(
           rowx + pegOff(ds) * i,
-          rowy + ds.pegsz + idiv(ds.gapsz, 2) - 2,
-          ds.pegsz,
+          rowy + ds.tileSize + idiv(ds.gapsz, 2) - 2,
+          ds.tileSize,
           2,
         ),
       );
@@ -422,9 +405,9 @@ function currmoveRedraw(
 ): void {
   const ox = guessX(ds, 0);
   const oy = guessY(ds, guess);
-  const off = idiv(ds.pegsz, 4);
-  dr.drawRect(rect(ox - off - 1, oy, 2, ds.pegsz), col);
-  dr.drawUpdate(rect(ox - off - 1, oy, 2, ds.pegsz));
+  const off = idiv(ds.tileSize, 4);
+  dr.drawRect(rect(ox - off - 1, oy, 2, ds.tileSize), col);
+  dr.drawUpdate(rect(ox - off - 1, oy, 2, ds.tileSize));
 }
 
 // --- game_redraw ------------------------------------------------------
@@ -455,7 +438,7 @@ export function redraw(
   // Restore whatever the floating drag sprite last covered.
   if (ds.dragColor !== 0 && ds.blitPeg) {
     dr.blitterLoad(ds.blitPeg, pt(ds.blitOx, ds.blitOy));
-    dr.drawUpdate(rect(ds.blitOx, ds.blitOy, ds.pegsz, ds.pegsz));
+    dr.drawUpdate(rect(ds.blitOx, ds.blitOy, ds.tileSize, ds.tileSize));
   }
 
   // The color bar.
@@ -533,9 +516,10 @@ export function redraw(
 
   // Save the background under the new floating sprite and draw it.
   if (ui.dragColor !== 0) {
-    if (!ds.blitPeg) ds.blitPeg = dr.blitterNew({ w: ds.pegsz + 2, h: ds.pegsz + 2 });
-    const ox = ui.dragX - idiv(ds.pegsz, 2);
-    const oy = ui.dragY - idiv(ds.pegsz, 2);
+    if (!ds.blitPeg)
+      ds.blitPeg = dr.blitterNew({ w: ds.tileSize + 2, h: ds.tileSize + 2 });
+    const ox = ui.dragX - idiv(ds.tileSize, 2);
+    const oy = ui.dragY - idiv(ds.tileSize, 2);
     ds.blitOx = ox - 1;
     ds.blitOy = oy - 1;
     dr.blitterSave(ds.blitPeg, pt(ds.blitOx, ds.blitOy));

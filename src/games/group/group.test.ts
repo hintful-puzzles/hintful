@@ -10,7 +10,7 @@ import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE } from "../../engine/latin.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { newGameDesc } from "./generator.ts";
 import { groupGame } from "./index.ts";
-import { colors, newDrawState, redraw, setTileSize } from "./render.ts";
+import { colors, newDrawState, redraw } from "./render.ts";
 import { solveGroup } from "./solver.ts";
 import {
   cloneState,
@@ -254,8 +254,7 @@ describe("rendering smoke", () => {
     // index into the evidence, not a hint role of its own.
     expect(pal).toHaveLength(10);
 
-    const ds = newDrawState(state);
-    setTileSize(ds, 48);
+    const ds = newDrawState(state, 48);
     const ops: string[] = [];
     // Minimal GameDrawing double: record op names, ignore geometry.
     const dr = {

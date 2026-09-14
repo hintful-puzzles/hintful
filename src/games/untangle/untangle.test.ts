@@ -150,9 +150,7 @@ describe("moves and solve", () => {
     const { desc } = untangleGame.newDesc({ n: 10 }, randomNew("frac-drag"));
     const s0 = untangleGame.newState({ n: 10 }, desc);
     const ui = untangleGame.newUi(s0);
-    const ds = untangleGame.newDrawState?.(s0);
-    if (!ds) throw new Error("expected a drawstate");
-    untangleGame.setTileSize?.(ds, 64);
+    const ds = untangleGame.newDrawState(s0, 64);
 
     // Grab vertex 0 (circle layout: d = 64 = tileSize, so its rational
     // coordinate is already its pixel), then release at an in-window
@@ -182,9 +180,7 @@ describe("moves and solve", () => {
     const { desc } = untangleGame.newDesc({ n: 10 }, randomNew("fuzz-drag"));
     let s = untangleGame.newState({ n: 10 }, desc);
     const ui = untangleGame.newUi(s);
-    const ds = untangleGame.newDrawState?.(s);
-    if (!ds) throw new Error("expected a drawstate");
-    untangleGame.setTileSize?.(ds, 53); // odd size → fractional pixel mappings
+    const ds = untangleGame.newDrawState(s, 53); // odd size → fractional pixel mappings
 
     // Deterministic LCG so the fuzz is reproducible.
     let seed = 0x9e3779b1;
@@ -235,9 +231,7 @@ describe("moves and solve", () => {
     const { desc } = untangleGame.newDesc({ n: 10 }, randomNew("clamp-drag"));
     const s0 = untangleGame.newState({ n: 10 }, desc);
     const ui = untangleGame.newUi(s0);
-    const ds = untangleGame.newDrawState?.(s0);
-    if (!ds) throw new Error("expected a drawstate");
-    untangleGame.setTileSize?.(ds, 64);
+    const ds = untangleGame.newDrawState(s0, 64);
     const size = s0.w * 64; // 5 * 64 = 320
     const margin = 8; // PLAY_BORDER_INSET (2) + CIRCLE_RADIUS (6)
 

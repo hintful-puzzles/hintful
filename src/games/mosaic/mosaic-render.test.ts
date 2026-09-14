@@ -41,9 +41,7 @@ function freshUi(): MosaicUi {
 }
 
 function freshDs(state: MosaicState): MosaicDrawState {
-  const ds = newDrawState(state);
-  ds.tileSize = TS;
-  return ds;
+  return newDrawState(state, TS);
 }
 
 describe("Mosaic redraw", () => {

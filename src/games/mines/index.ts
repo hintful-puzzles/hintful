@@ -81,7 +81,6 @@ import {
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import {
   around,
@@ -603,7 +602,6 @@ export const minesGame: Game<
     return ret;
   },
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 };

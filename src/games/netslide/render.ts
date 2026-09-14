@@ -140,22 +140,18 @@ export interface NetslideDrawState {
   hintArrowY: number;
 }
 
-export function newDrawState(s: NetslideState): NetslideDrawState {
+export function newDrawState(s: NetslideState, tileSize: number): NetslideDrawState {
   return {
     started: false,
     w: s.w,
     h: s.h,
-    tileSize: 0,
+    tileSize,
     visible: new Int32Array(s.w * s.h).fill(-1),
     curX: -1,
     curY: -1,
     hintArrowX: -2,
     hintArrowY: -2,
   };
-}
-
-export function setTileSize(ds: NetslideDrawState, tileSize: number): void {
-  ds.tileSize = tileSize;
 }
 
 /* ----------------------------------------------------------------------

@@ -64,7 +64,6 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
   type SticksDrawState,
-  setTileSize,
 } from "./render.ts";
 import {
   deduceSticksPlan,
@@ -535,7 +534,6 @@ export const sticksGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 

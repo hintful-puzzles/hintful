@@ -81,14 +81,14 @@ export interface SixteenDrawState {
   dragIndex?: number;
 }
 
-export function newDrawState(state: SixteenState): SixteenDrawState {
+export function newDrawState(state: SixteenState, tileSize: number): SixteenDrawState {
   return {
     started: false,
     w: state.w,
     h: state.h,
     bgcolor: COL_BACKGROUND,
     tiles: new Int32Array(state.n).fill(-1),
-    tileSize: 0,
+    tileSize,
     curX: -1,
     curY: -1,
     hintTile: null,

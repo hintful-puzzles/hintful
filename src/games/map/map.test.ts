@@ -15,12 +15,12 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
 import { newMapDesc } from "./generator.ts";
 import { mapGame } from "./index.ts";
 import { TE, validateDesc } from "./map-data.ts";
-import { COL_MISTAKE, newDrawState, redraw, setTileSize } from "./render.ts";
+import { COL_MISTAKE, newDrawState, redraw } from "./render.ts";
 import {
   cloneState,
   DIFF_HARD,
@@ -219,8 +219,7 @@ describe("map interpretMove", () => {
   it("press picks up a region's color, release drops it", () => {
     const { state } = makeGame(p, "input-1");
     const ui = newUi(state);
-    const ds = newDrawState(state);
-    setTileSize(ds, TS);
+    const ds = newDrawState(state, TS);
 
     const found = findClueBlankPair(state);
     expect(found).not.toBeNull();
@@ -243,8 +242,7 @@ describe("map interpretMove", () => {
   it("dropping on an immutable region is a no-op", () => {
     const { state } = makeGame(p, "input-2");
     const ui = newUi(state);
-    const ds = newDrawState(state);
-    setTileSize(ds, TS);
+    const ds = newDrawState(state, TS);
 
     const clue = firstClue(state);
     const clueCell = solidCellOf(state, clue);
@@ -259,8 +257,7 @@ describe("map interpretMove", () => {
   it("right-drag toggles a pencil mark on a blank region", () => {
     const { state } = makeGame(p, "input-3");
     const ui = newUi(state);
-    const ds = newDrawState(state);
-    setTileSize(ds, TS);
+    const ds = newDrawState(state, TS);
 
     const found = findClueBlankPair(state);
     // All three asserted rather than skipped: any one missing would leave the
@@ -294,7 +291,7 @@ describe("map interpretMove", () => {
     const r = mapGame.interpretMove(
       state,
       ui,
-      sizedDrawState(mapGame, state),
+      preferredDrawState(mapGame, state),
       { x: 0, y: 0 },
       108,
     );
@@ -389,8 +386,7 @@ describe("map mistake overlay repaints on an already-drawn board", () => {
     });
 
     const ui = newUi(state);
-    const ds = newDrawState(state);
-    setTileSize(ds, TS);
+    const ds = newDrawState(state, TS);
 
     // Frame 1: no overlay — warm the cache.
     const dr1 = new RecordingDrawing(mapGame.colors([0.9, 0.9, 0.9]));

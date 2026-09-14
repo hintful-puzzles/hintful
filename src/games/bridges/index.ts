@@ -59,7 +59,6 @@ import {
   newDrawState,
   PREFERRED_TILE_SIZE,
   redrawBridges,
-  setTileSize,
   toCoord,
 } from "./render.ts";
 import { runMapCheck, solveFromScratch } from "./solver.ts";
@@ -628,7 +627,6 @@ export const bridgesGame: Game<
 
   colors,
   computeSize,
-  setTileSize,
   newDrawState,
   hint,
   hintKeepTrack: (

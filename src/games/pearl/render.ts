@@ -103,10 +103,10 @@ export interface PearlDrawState {
   lflags: Int32Array;
 }
 
-export function newDrawState(state: PearlState): PearlDrawState {
+export function newDrawState(state: PearlState, tileSize: number): PearlDrawState {
   return {
     started: false,
-    tileSize: PREFERRED_TILE_SIZE,
+    tileSize,
     w: state.w,
     h: state.h,
     lflags: new Int32Array(state.w * state.h),

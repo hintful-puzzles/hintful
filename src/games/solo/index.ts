@@ -75,7 +75,6 @@ import {
   redraw,
   type SoloDrawState,
   type SoloHint,
-  setTileSize,
 } from "./render.ts";
 import {
   type HintOp,
@@ -891,7 +890,6 @@ export const soloGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize: (p: SoloParams, ts: number): Size => computeSize(p.c * p.r, ts),
-  setTileSize,
   newDrawState,
   redraw,
 

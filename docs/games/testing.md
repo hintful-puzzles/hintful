@@ -597,12 +597,11 @@ Two limits to know before trusting it:
   snapshot alone **under-counts**, which is the same wrong-key error as § "How
   a cross-game guard finds its population" rule 1, one level up. Read the
   interface when the count is the point.
-- **Read the draw state *unsized*, and never "the way production builds it".**
-  `setTileSize` assigns, so sizing puts back every field it writes; the first
-  cut sized it and a deliberately deleted `tilesize` came back before
-  `Object.keys` ran. The guard passed. What replaces sizing is an assertion
-  that sizing adds no key for any game, so the hazard sizing was covering
-  fails a test instead.
+- **The draw-state half sees only what `newDrawState` returned**, at the game's
+  preferred tile size and before any `redraw`. A draw state is built at its size
+  and nothing sizes it afterwards, so that is the only reading there is — but a
+  field only a frame assigns, never declared in the constructor's literal, is
+  invisible, exactly like the `Ui` half's gesture fields.
 
 ## Metrics and instruments
 

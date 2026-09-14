@@ -173,11 +173,11 @@ export interface SoloDrawState {
   marks: HintMarks;
 }
 
-export function newDrawState(state: SoloState): SoloDrawState {
+export function newDrawState(state: SoloState, tileSize: number): SoloDrawState {
   const a = state.cr * state.cr;
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     cr: state.cr,
     xtype: state.xtype,
     tiles: new Int32Array(a).fill(-1),
@@ -187,10 +187,6 @@ export function newDrawState(state: SoloState): SoloDrawState {
     pencilModeShown: null,
     marks: new HintMarks(),
   };
-}
-
-export function setTileSize(ds: SoloDrawState, ts: number): void {
-  ds.tileSize = ts;
 }
 
 /**

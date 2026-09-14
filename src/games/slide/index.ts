@@ -58,7 +58,6 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
   type SlideDrawState,
-  setTileSize,
 } from "./render.ts";
 import { solveBoard } from "./solver.ts";
 import {
@@ -370,7 +369,6 @@ export const slideGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 

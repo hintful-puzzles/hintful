@@ -26,6 +26,7 @@ import "../../games/index.ts";
 import type { Game } from "../game.ts";
 import { randomNew } from "../random/index.ts";
 import { getTsGame, registeredGameIds } from "../registry.ts";
+import { preferredDrawState } from "./preferred-draw-state.ts";
 
 // biome-ignore lint/suspicious/noExplicitAny: a deliberately game-agnostic probe.
 export type AnyGame = Game<any, any, any, any, any, any>;
@@ -40,19 +41,10 @@ export interface BuiltGame {
   /** What this game's `newUi` actually returns — the thing to read a
    * capability off, rather than asking the game to announce one. */
   readonly ui: Record<string, unknown>;
-  /** The other half of what a game remembers: what its `newDrawState`
-   * returns, **unsized** — the vocabulary the game's own constructor declares.
-   *
-   * Not passed through `sizedDrawState`, and that is the whole point:
-   * `setTileSize` *assigns* into the draw state, so sizing puts back any field
-   * it writes. Flood's is `ds.tileSize = ts`, so a `tileSize` deleted from
-   * `newDrawState`'s literal reappears and the snapshot cannot see the loss —
-   * and `tileSize` is the field nearly every game's `setTileSize` writes. Sizing
-   * was the first cut here; it passed with the field removed.
-   *
-   * The hazard sizing was meant to cover — a draw state that assigns
-   * conditionally on its tile size, and so under-reports unsized — is
-   * asserted against instead, in `capability-surface.test.ts`. */
+  /** The other half of what a game remembers: what its `newDrawState` returns
+   * at its preferred tile size — the vocabulary the game's own constructor
+   * declares. Read straight off the constructor, before `redraw` has run, so a
+   * field only a frame assigns is not in it. */
   readonly drawState: Record<string, unknown>;
 }
 
@@ -78,7 +70,7 @@ export function builtGames(): BuiltGame[] {
         game,
         state,
         ui: game.newUi(state) as Record<string, unknown>,
-        drawState: game.newDrawState(state) as Record<string, unknown>,
+        drawState: preferredDrawState(game, state) as Record<string, unknown>,
       };
     });
   return built;

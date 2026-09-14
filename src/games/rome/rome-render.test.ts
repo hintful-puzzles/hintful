@@ -30,7 +30,6 @@ import {
   PREFERRED_TILE_SIZE,
   type RomeDrawState,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import { romeSolve, validateGame } from "./solver.ts";
 import {
@@ -75,8 +74,7 @@ function frame(
   ui: RomeUi,
   flashTime = 0,
 ): { dr: RecordingDrawing; ds: RomeDrawState } {
-  const ds = newDrawState(state);
-  setTileSize(ds, TS);
+  const ds = newDrawState(state, TS);
   const dr = new RecordingDrawing(PALETTE);
   redraw(dr, ds, null, state, 1, ui, 0, flashTime);
   return { dr, ds };
@@ -123,8 +121,7 @@ describe("region outlines", () => {
 
   it("floods the grid color once, on the first frame only", () => {
     const state = board(3, 3, `${ALL_WALLS_3},i`);
-    const ds = newDrawState(state);
-    setTileSize(ds, TS);
+    const ds = newDrawState(state, TS);
 
     const first = new RecordingDrawing(PALETTE);
     redraw(first, ds, null, state, 1, newUi(), 0, 0);

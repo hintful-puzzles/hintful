@@ -46,7 +46,6 @@ import {
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import { findMistakes, solveCrossing } from "./solver.ts";
 import {
@@ -761,8 +760,7 @@ describe("crossing number-list placement", () => {
 
   function paintWith(st: CrossingState, ui: CrossingUi): RecordingDrawing {
     const palette = crossingGame.colors([0.827, 0.827, 0.827]);
-    const ds = newDrawState(st);
-    setTileSize(ds, TS);
+    const ds = newDrawState(st, TS);
     const dr = new RecordingDrawing(palette);
     redraw(dr, ds, null, st, 1, ui, 0, 0);
     return dr;
@@ -803,8 +801,7 @@ describe("crossing number-list placement", () => {
     // input to the panel's cache key or the box is never drawn — nor erased.
     const state = newState(P5, FIX.desc);
     const palette = crossingGame.colors([0.827, 0.827, 0.827]);
-    const ds = newDrawState(state);
-    setTileSize(ds, TS);
+    const ds = newDrawState(state, TS);
     const paint = (ui: CrossingUi): RecordingDrawing => {
       const dr = new RecordingDrawing(palette);
       redraw(dr, ds, null, state, 1, ui, 0, 0);
@@ -1252,8 +1249,7 @@ describe("crossing rendering", () => {
     expect(mistakes).toHaveLength(1);
 
     const palette = crossingGame.colors([0.827, 0.827, 0.827]);
-    const ds = newDrawState(dirty);
-    setTileSize(ds, TS);
+    const ds = newDrawState(dirty, TS);
     const ui = newUi();
     const errLines = (dr: RecordingDrawing): number =>
       dr.ops.filter((o) => o.op === "line" && o.color === COL_ERROR).length;
@@ -1279,8 +1275,7 @@ describe("crossing rendering", () => {
     const palette = crossingGame.colors([0.827, 0.827, 0.827]);
     const open = state.puzzle.walls.indexOf(0);
     const paint = (ui: CrossingUi): RecordingDrawing => {
-      const ds = newDrawState(state);
-      setTileSize(ds, TS);
+      const ds = newDrawState(state, TS);
       const dr = new RecordingDrawing(palette);
       redraw(dr, ds, null, state, 1, ui, 0, 0);
       return dr;
@@ -1327,8 +1322,7 @@ describe("crossing rendering", () => {
       digit: 4,
     });
     const palette = crossingGame.colors([0.827, 0.827, 0.827]);
-    const ds = newDrawState(noted);
-    setTileSize(ds, TS);
+    const ds = newDrawState(noted, TS);
     const dr = new RecordingDrawing(palette);
     redraw(dr, ds, null, noted, 1, newUi(), 0, 0);
     expect(dr.ops.some((o) => o.op === "text" && o.text === "4")).toBe(true);
@@ -1341,8 +1335,7 @@ describe("crossing rendering", () => {
     );
     const palette = crossingGame.colors([0.827, 0.827, 0.827]);
     const frameColors = (flashTime: number): number[] => {
-      const ds = newDrawState(solved);
-      setTileSize(ds, TS);
+      const ds = newDrawState(solved, TS);
       const dr = new RecordingDrawing(palette);
       redraw(dr, ds, null, solved, 1, newUi(), 0, flashTime);
       return [
@@ -1359,8 +1352,7 @@ describe("crossing rendering", () => {
     expect(late).toContain(COL_HIGHLIGHT);
 
     const litCells = (flashTime: number): string[] => {
-      const ds = newDrawState(solved);
-      setTileSize(ds, TS);
+      const ds = newDrawState(solved, TS);
       const dr = new RecordingDrawing(palette);
       redraw(dr, ds, null, solved, 1, newUi(), 0, flashTime);
       return dr.ops.flatMap((o) =>
@@ -1379,8 +1371,7 @@ describe("crossing rendering", () => {
     const palette = crossingGame.colors([0.827, 0.827, 0.827]);
     expect(palette).toHaveLength(NCOLORS);
 
-    const ds = newDrawState(withDigits);
-    setTileSize(ds, TS);
+    const ds = newDrawState(withDigits, TS);
     const dr = new RecordingDrawing(palette);
     redraw(dr, ds, null, withDigits, 1, newUi(), 0, 0);
 

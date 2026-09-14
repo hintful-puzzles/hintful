@@ -51,9 +51,7 @@ function freshUi(): UnrulyUi {
 }
 
 function freshDs(state: UnrulyState): UnrulyDrawState {
-  const ds = newDrawState(state);
-  ds.tileSize = TS;
-  return ds;
+  return newDrawState(state, TS);
 }
 
 /** A blank (no-clue) board of P's size. */

@@ -141,10 +141,10 @@ export interface UnrulyDrawState {
   cache: Int32Array;
 }
 
-export function newDrawState(state: UnrulyState): UnrulyDrawState {
+export function newDrawState(state: UnrulyState, tileSize: number): UnrulyDrawState {
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     cache: new Int32Array(state.w2 * state.h2).fill(-1),
   };
 }

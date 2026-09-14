@@ -7,7 +7,7 @@
 import { describe, expect, it } from "vitest";
 import { CURSOR_SELECT } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { guessGame } from "./index.ts";
 import {
   defaultParams,
@@ -137,7 +137,7 @@ describe("hint (compute_hint)", () => {
       const r = guessGame.interpretMove(
         state,
         ui,
-        sizedDrawState(guessGame, state),
+        preferredDrawState(guessGame, state),
         ZERO,
         0x68 /* 'h' */,
       );
@@ -156,7 +156,7 @@ describe("hint (compute_hint)", () => {
     const s1 = guessGame.executeMove(s0, submit([1, 2, 3, 4]));
     expect(s1.nextGo).toBe(1); // scored, not won
     guessGame.changedState?.(ui, s0, s1);
-    guessGame.interpretMove(s1, ui, sizedDrawState(guessGame, s1), ZERO, 0x68);
+    guessGame.interpretMove(s1, ui, preferredDrawState(guessGame, s1), ZERO, 0x68);
     // Consistent: had the hint row been the answer, every prior guess
     // would have scored exactly as it did.
     const hintRow = ui.currPegs.slice();
@@ -174,7 +174,7 @@ describe("interpretMove keyboard", () => {
     const r = guessGame.interpretMove(
       state,
       ui,
-      sizedDrawState(guessGame, state),
+      preferredDrawState(guessGame, state),
       ZERO,
       0x33 /* '3' */,
     );
@@ -193,7 +193,7 @@ describe("interpretMove keyboard", () => {
     const r = guessGame.interpretMove(
       state,
       ui,
-      sizedDrawState(guessGame, state),
+      preferredDrawState(guessGame, state),
       ZERO,
       CURSOR_SELECT,
     );
@@ -207,7 +207,7 @@ describe("interpretMove keyboard", () => {
     const r = guessGame.interpretMove(
       solved,
       ui,
-      sizedDrawState(guessGame, solved),
+      preferredDrawState(guessGame, solved),
       ZERO,
       0x6c /* 'l' */,
     );

@@ -147,7 +147,6 @@ export interface MapDrawState {
   todraw: Int32Array;
   // floating drag/cursor blob
   bl: unknown | null;
-  blTileSize: number;
   dragVisible: boolean;
   /** Where the blitter last saved the background, in pixels — the sprite's
    * top-left, not the pointer (which is `ui.dragX`/`dragY`, a half-tile away). */
@@ -159,23 +158,18 @@ export function computeSize(p: MapParams, tileSize: number): Size {
   return { w: p.w * tileSize + 1, h: p.h * tileSize + 1 };
 }
 
-export function newDrawState(s: MapState): MapDrawState {
+export function newDrawState(s: MapState, tileSize: number): MapDrawState {
   const wh = s.params.w * s.params.h;
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     drawn: new Int32Array(wh).fill(-1),
     todraw: new Int32Array(wh),
     bl: null,
-    blTileSize: 0,
     dragVisible: false,
     dragX: -1,
     dragY: -1,
   };
-}
-
-export function setTileSize(ds: MapDrawState, tileSize: number): void {
-  ds.tileSize = tileSize;
 }
 
 // --- flash -----------------------------------------------------------
@@ -493,12 +487,8 @@ export function redraw(
       cursorY = ui.dragY;
     }
 
-    // Lazily (re)allocate the blitter for the current tile size.
-    if (!ds.bl || ds.blTileSize !== ts) {
-      if (ds.bl) dr.blitterFree(ds.bl);
-      ds.bl = dr.blitterNew({ w: ts + 3, h: ts + 3 });
-      ds.blTileSize = ts;
-    }
+    // Allocated lazily: only `redraw` has the `GameDrawing`.
+    if (!ds.bl) ds.bl = dr.blitterNew({ w: ts + 3, h: ts + 3 });
 
     ds.dragX = cursorX - Math.floor(ts / 2) - 2;
     ds.dragY = cursorY - Math.floor(ts / 2) - 2;

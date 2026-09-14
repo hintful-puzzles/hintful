@@ -40,7 +40,6 @@ import {
   redraw,
   regionFromCoords,
   regionFromUiCursor,
-  setTileSize,
 } from "./render.ts";
 import { mapSolver, SOLVER_IMPOSSIBLE, SOLVER_UNIQUE } from "./solver.ts";
 import {
@@ -423,7 +422,6 @@ export const mapGame: Game<
   colors,
   preferredTileSize: 20,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 

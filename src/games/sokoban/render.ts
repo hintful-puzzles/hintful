@@ -92,16 +92,12 @@ export interface SokobanDrawState {
   grid: Int32Array;
 }
 
-export function newDrawState(state: SokobanState): SokobanDrawState {
+export function newDrawState(state: SokobanState, tileSize: number): SokobanDrawState {
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     grid: new Int32Array(state.w * state.h).fill(CACHE_INVALID),
   };
-}
-
-export function setTileSize(ds: SokobanDrawState, ts: number): void {
-  ds.tileSize = ts;
 }
 
 // --- tile drawing -----------------------------------------------------

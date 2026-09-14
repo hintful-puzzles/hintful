@@ -212,12 +212,12 @@ export interface SaladDrawState {
   pencilModeShown: boolean | null;
 }
 
-export function newDrawState(s: SaladState): SaladDrawState {
+export function newDrawState(s: SaladState, tileSize: number): SaladDrawState {
   const o = s.order;
   const o2 = o * o;
   return {
     started: false,
-    tileSize: PREFERRED_TILE_SIZE,
+    tileSize,
     order: o,
     gridfs: new Int32Array(o2),
     drawn: new Int32Array(o2).fill(-1),
@@ -249,10 +249,6 @@ function markBand(ds: SaladDrawState, x: number, y: number): MarkBand {
     outer: 0,
     inner: Math.max(2, ts >> 4),
   };
-}
-
-export function setTileSize(ds: SaladDrawState, ts: number): void {
-  ds.tileSize = ts;
 }
 
 // --- live rule errors ------------------------------------------------------

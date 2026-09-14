@@ -130,11 +130,11 @@ export interface SlantDrawState {
   todraw: Int32Array;
 }
 
-export function newDrawState(state: SlantState): SlantDrawState {
+export function newDrawState(state: SlantState, tileSize: number): SlantDrawState {
   const n = (state.w + 2) * (state.h + 2);
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     grid: new Int32Array(n).fill(-1),
     todraw: new Int32Array(n).fill(-1),
   };

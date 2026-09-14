@@ -557,12 +557,13 @@ describe("Midend timer", () => {
   });
 });
 
-describe("Midend.size is purely informational (regression: ResizeObserver flicker)", () => {
+describe("Midend.size rebuilds the drawstate only for a new tile size (regression: ResizeObserver flicker)", () => {
   // `puzzle-view.ts`'s `ResizeController` calls `puzzle.size()` on every
   // element-size change, including CSS transitions and mobile address-bar
-  // show/hide. A side-effecting `size()` makes everything flicker, so it must
-  // not touch drawstate identity or make the next `redraw` repaint its
-  // background.
+  // show/hide. A `size()` with side effects at an unchanged tile size makes
+  // everything flicker, so it must not touch drawstate identity or make the
+  // next `redraw` repaint its background. A new tile size is different: every
+  // cached tile is the wrong size, so it is a new drawstate.
   function midend() {
     const m = new Midend(fakeGame);
     m.setCallbacks(
@@ -620,20 +621,18 @@ describe("Midend.size is purely informational (regression: ResizeObserver flicke
     expect(ds1.instance).toBe(instance0);
   });
 
-  it("does NOT recreate the drawstate even when called with a different size", () => {
-    // The size() call is informational; the *actual* canvas
-    // invalidation signal is `canvasCleared()` (fired by the
-    // adapter from `resizeDrawing` only when the canvas backing
-    // store really got reset).
+  it("builds a fresh drawstate at the new tile size when the tile size changes", () => {
     const m = midend();
     m.size({ w: 200, h: 200 });
-    const instance0 = (m as unknown as { drawState: FakeDrawState }).drawState.instance;
+    const ds0 = (m as unknown as { drawState: FakeDrawState }).drawState;
     m.size({ w: 400, h: 400 });
-    const instance1 = (m as unknown as { drawState: FakeDrawState }).drawState.instance;
-    expect(instance1).toBe(instance0);
+    const ds1 = (m as unknown as { drawState: FakeDrawState }).drawState;
+    expect(ds1.instance).not.toBe(ds0.instance);
+    expect(ds0.tileSize).toBe(66);
+    expect(ds1.tileSize).toBe(133); // 3*133 = 399 ≤ 400
   });
 
-  it("a redraw after only size() preserves the per-tile cache (no bg fill emitted)", () => {
+  it("a redraw after a same-tile size() preserves the per-tile cache (no bg fill emitted)", () => {
     const m = midend();
     m.size({ w: 200, h: 200 });
 
@@ -642,14 +641,24 @@ describe("Midend.size is purely informational (regression: ResizeObserver flicke
     m.redraw(a.dr);
     expect(a.ops.some((o) => o.op === "drawRect" && o.color === 0)).toBe(true);
 
-    // Subsequent `size()` calls do NOT cause the next redraw to
-    // re-emit a bg fill — the drawstate is preserved, so the game's
-    // `!ds.started` branch doesn't fire again.
+    // A slot that resolves to the same tile (66) is a layout jiggle: the
+    // drawstate is preserved, so the game's `!ds.started` branch doesn't fire.
     m.size({ w: 200, h: 200 });
-    m.size({ w: 400, h: 400 });
+    m.size({ w: 200, h: 199 });
     const b = recordingDrawing();
     m.redraw(b.dr);
     expect(b.ops.some((o) => o.op === "drawRect" && o.color === 0)).toBe(false);
+  });
+
+  it("a redraw after a new-tile size() paints from scratch", () => {
+    const m = midend();
+    m.size({ w: 200, h: 200 });
+    m.redraw(recordingDrawing().dr);
+
+    m.size({ w: 400, h: 400 });
+    const b = recordingDrawing();
+    m.redraw(b.dr);
+    expect(b.ops.some((o) => o.op === "drawRect" && o.color === 0)).toBe(true);
   });
 });
 

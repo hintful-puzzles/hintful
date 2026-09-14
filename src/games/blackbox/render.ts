@@ -66,11 +66,11 @@ export interface BlackboxDrawState {
   flashLaserno: number;
 }
 
-export function newDrawState(s: BlackboxState): BlackboxDrawState {
+export function newDrawState(s: BlackboxState, tileSize: number): BlackboxDrawState {
   return {
-    tileSize: 0,
-    ballRadius: 0,
-    ringRadius: 0,
+    tileSize,
+    ballRadius: Math.floor((tileSize - 1) / 2),
+    ringRadius: Math.floor((3 * tileSize) / 8),
     w: s.w,
     grid: new Int32Array((s.w + 2) * (s.h + 2)),
     started: false,
@@ -78,12 +78,6 @@ export function newDrawState(s: BlackboxState): BlackboxDrawState {
     isflash: false,
     flashLaserno: LASER_EMPTY,
   };
-}
-
-export function setTileSize(ds: BlackboxDrawState, tileSize: number): void {
-  ds.tileSize = tileSize;
-  ds.ballRadius = Math.floor((tileSize - 1) / 2);
-  ds.ringRadius = Math.floor((3 * tileSize) / 8);
 }
 
 /** The board's pixel origin. Exported so `fromDraw` reads the same number the

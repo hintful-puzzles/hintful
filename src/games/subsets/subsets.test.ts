@@ -19,9 +19,9 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
 import { seedBudget } from "../../engine/testing/slow.ts";
 import type { ChangeNotification, GameStatus } from "../../engine/types.ts";
 import cReference from "./__fixtures__/subsets-c-reference.json" with { type: "json" };
@@ -33,7 +33,6 @@ import {
   COL_INNERBG,
   newDrawState,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import {
   deduceHintPlan,
@@ -105,7 +104,7 @@ function press(
   return subsetsGame.interpretMove(
     state,
     ui,
-    sizedDrawState(subsetsGame, state),
+    preferredDrawState(subsetsGame, state),
     { x, y },
     button,
   );
@@ -653,8 +652,7 @@ describe("subsets rendering (tier 2.5)", () => {
     // Drive redraw directly at a mid-flash time (tier 2, recording double —
     // renderScenario captures settled frames, never a mid-flash one).
     const solution = fixtureSolution();
-    const ds = newDrawState(solution);
-    setTileSize(ds, 36);
+    const ds = newDrawState(solution, 36);
     const ui = newUi();
     const dr = new RecordingDrawing(subsetsGame.colors([1, 1, 1]));
     // Flash-on beat: floor(0.15 / 0.12) = 1 -> odd -> slots blink off.

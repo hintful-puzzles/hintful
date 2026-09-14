@@ -115,10 +115,10 @@ export interface FillingDrawState {
   marks: HintMarks;
 }
 
-export function newDrawState(state: FillingState): FillingDrawState {
+export function newDrawState(state: FillingState, tileSize: number): FillingDrawState {
   return {
     started: false,
-    tileSize: PREFERRED_TILE_SIZE,
+    tileSize,
     w: state.w,
     h: state.h,
     cache: new Int32Array(state.w * state.h).fill(-1),

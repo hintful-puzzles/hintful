@@ -13,12 +13,12 @@ import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, MOD_STYLUS, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import {
   type DrawOp,
   RecordingDrawing,
 } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
 import cReference from "./__fixtures__/seismic-c-reference.json" with { type: "json" };
 import { maxGeneratedRegionSize, maxRegionSize, newSeismicDesc } from "./generator.ts";
 import { seismicGame } from "./index.ts";
@@ -33,7 +33,6 @@ import {
   COL_PENCIL_BODY,
   newDrawState,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import {
   SOLVE_FAILED,
@@ -629,7 +628,7 @@ describe("seismic input", () => {
       seismicGame.interpretMove(
         state,
         ui,
-        sizedDrawState(seismicGame, state),
+        preferredDrawState(seismicGame, state),
         pixel(cell.x, cell.y),
         LEFT_BUTTON,
       ),
@@ -642,7 +641,7 @@ describe("seismic input", () => {
       seismicGame.interpretMove(
         state,
         ui,
-        sizedDrawState(seismicGame, state),
+        preferredDrawState(seismicGame, state),
         { x: 0, y: 0 },
         0x31,
       ),
@@ -665,14 +664,14 @@ describe("seismic input", () => {
     seismicGame.interpretMove(
       state,
       mouse,
-      sizedDrawState(seismicGame, state),
+      preferredDrawState(seismicGame, state),
       pixel(cell.x, cell.y),
       LEFT_BUTTON,
     );
     seismicGame.interpretMove(
       state,
       touch,
-      sizedDrawState(seismicGame, state),
+      preferredDrawState(seismicGame, state),
       pixel(cell.x, cell.y),
       LEFT_BUTTON | MOD_STYLUS,
     );
@@ -694,7 +693,7 @@ describe("seismic input", () => {
       seismicGame.interpretMove(
         state,
         ui,
-        sizedDrawState(seismicGame, state),
+        preferredDrawState(seismicGame, state),
         { x: 0, y: 0 },
         0x30 + size + 1,
       ),
@@ -703,7 +702,7 @@ describe("seismic input", () => {
       seismicGame.interpretMove(
         state,
         ui,
-        sizedDrawState(seismicGame, state),
+        preferredDrawState(seismicGame, state),
         { x: 0, y: 0 },
         0x30 + size,
       ),
@@ -729,7 +728,7 @@ describe("seismic input", () => {
       seismicGame.interpretMove(
         next,
         ui,
-        sizedDrawState(seismicGame, next),
+        preferredDrawState(seismicGame, next),
         { x: 0, y: 0 },
         0x31,
       ),
@@ -746,7 +745,7 @@ describe("seismic input", () => {
     seismicGame.interpretMove(
       state,
       ui,
-      sizedDrawState(seismicGame, state),
+      preferredDrawState(seismicGame, state),
       pixel(given % state.w, (given / state.w) | 0),
       LEFT_BUTTON,
     );
@@ -761,7 +760,7 @@ describe("seismic input", () => {
     seismicGame.interpretMove(
       state,
       ui,
-      sizedDrawState(seismicGame, state),
+      preferredDrawState(seismicGame, state),
       pixel(cell.x, cell.y),
       RIGHT_BUTTON,
     );
@@ -770,7 +769,7 @@ describe("seismic input", () => {
     seismicGame.interpretMove(
       state,
       ui,
-      sizedDrawState(seismicGame, state),
+      preferredDrawState(seismicGame, state),
       pixel(cell.x, cell.y),
       RIGHT_BUTTON,
     );
@@ -784,7 +783,7 @@ describe("seismic input", () => {
       seismicGame.interpretMove(
         state,
         ui,
-        sizedDrawState(seismicGame, state),
+        preferredDrawState(seismicGame, state),
         { x: 0, y: 0 },
         0x4d,
       ),
@@ -796,7 +795,7 @@ describe("seismic input", () => {
       seismicGame.interpretMove(
         filled,
         ui,
-        sizedDrawState(seismicGame, filled),
+        preferredDrawState(seismicGame, filled),
         { x: 0, y: 0 },
         0x6d,
       ),
@@ -1146,7 +1145,7 @@ describe("seismic rendering", () => {
     const move = seismicGame.interpretMove(
       state,
       ui,
-      sizedDrawState(seismicGame, state),
+      preferredDrawState(seismicGame, state),
       { x: 0, y: 0 },
       0x39,
     );
@@ -1169,8 +1168,7 @@ describe("seismic rendering", () => {
     // not reach, so drive `redraw` against a recording double directly.
     const state = stateOf(SMALL);
     const ui = newUi(state);
-    const ds = newDrawState(state);
-    setTileSize(ds, TILE);
+    const ds = newDrawState(state, TILE);
     const palette = seismicGame.colors([1, 1, 1]);
 
     const paint = () => {
@@ -1225,8 +1223,7 @@ describe("seismic rendering", () => {
     const state = stateOf(SMALL);
     const palette = seismicGame.colors([1, 1, 1]);
     const phase = (flashTime: number) => {
-      const ds = newDrawState(state);
-      setTileSize(ds, TILE);
+      const ds = newDrawState(state, TILE);
       const dr = new RecordingDrawing(palette);
       redraw(dr, ds, null, state, 1, newUi(state), 0, flashTime);
       return dr.ops
@@ -1240,8 +1237,7 @@ describe("seismic rendering", () => {
     const frames = [phase(0.05), phase(0.15), phase(0.25)];
     expect(new Set(frames).size).toBe(3);
     // All three background shades appear while the flash plays.
-    const ds = newDrawState(state);
-    setTileSize(ds, TILE);
+    const ds = newDrawState(state, TILE);
     const dr = new RecordingDrawing(palette);
     redraw(dr, ds, null, state, 1, newUi(state), 0, 0.05);
     const colors = new Set(dr.ops.filter((o) => o.op === "rect").map((o) => o.color));

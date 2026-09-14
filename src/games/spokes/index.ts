@@ -62,7 +62,6 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
   type SpokesDrawState,
-  setTileSize,
   toCoord,
 } from "./render.ts";
 import {
@@ -523,7 +522,6 @@ export const spokesGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 

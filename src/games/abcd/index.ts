@@ -50,7 +50,6 @@ import {
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import { type AbcdMark, abcdObviousMarks, solveAbcd } from "./solver.ts";
 import {
@@ -389,7 +388,6 @@ export const abcdGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 

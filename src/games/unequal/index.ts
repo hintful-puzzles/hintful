@@ -83,7 +83,6 @@ import {
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
-  setTileSize,
   type UnequalDrawState,
   type UnequalHint,
 } from "./render.ts";
@@ -817,7 +816,6 @@ export const unequalGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 

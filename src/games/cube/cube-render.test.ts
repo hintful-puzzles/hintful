@@ -19,7 +19,6 @@ function recordingDrawing(): { dr: RecordingDrawing; ops: RecordingDrawing["ops"
 }
 
 const newDrawState = cubeGame.newDrawState as NonNullable<typeof cubeGame.newDrawState>;
-const setTileSize = cubeGame.setTileSize as NonNullable<typeof cubeGame.setTileSize>;
 const redraw = cubeGame.redraw as NonNullable<typeof cubeGame.redraw>;
 
 /** A cube board with square 0 painted blue and the solid starting on a
@@ -30,8 +29,7 @@ function freshCube() {
   // Square 0 blue (top nibble bit 0x8), start on square 5.
   const desc = `8${"0".repeat(Math.floor((area + 3) / 4) - 1)},5`;
   const state = newState(p, desc);
-  const ds = newDrawState(state);
-  setTileSize(ds, cubeGame.preferredTileSize ?? 48);
+  const ds = newDrawState(state, cubeGame.preferredTileSize ?? 48);
   return { p, state, ds };
 }
 

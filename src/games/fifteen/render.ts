@@ -68,12 +68,12 @@ export interface FifteenDrawState {
   hintTile: number | null;
 }
 
-export function newDrawState(state: FifteenState): FifteenDrawState {
+export function newDrawState(state: FifteenState, tileSize: number): FifteenDrawState {
   return {
     started: false,
     bgcolor: COL_BACKGROUND,
     tiles: new Int32Array(state.n).fill(-1),
-    tileSize: 0,
+    tileSize,
     hintTile: null,
   };
 }

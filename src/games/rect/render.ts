@@ -84,10 +84,10 @@ export function computeSize(p: RectParams, tileSize: number): Size {
   return { w: p.w * tileSize + 2 * BORDER + 1, h: p.h * tileSize + 2 * BORDER + 1 };
 }
 
-export function newDrawState(state: RectState): RectDrawState {
+export function newDrawState(state: RectState, tileSize: number): RectDrawState {
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     w: state.w,
     h: state.h,
     visible: new Int32Array(state.w * state.h).fill(-1),

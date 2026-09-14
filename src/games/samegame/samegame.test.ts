@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { executeMove, samegameGame } from "./index.ts";
 import {
   check,
@@ -38,7 +38,7 @@ const click = (
   samegameGame.interpretMove(
     s,
     ui,
-    sizedDrawState(samegameGame, s),
+    preferredDrawState(samegameGame, s),
     at(cx, cy),
     button,
   );

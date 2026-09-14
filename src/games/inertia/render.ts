@@ -129,25 +129,17 @@ export interface InertiaDrawState {
   pbgY: number;
 }
 
-export function newDrawState(s: InertiaState): InertiaDrawState {
+export function newDrawState(s: InertiaState, tileSize: number): InertiaDrawState {
   return {
     started: false,
-    tileSize: PREFERRED_TILE_SIZE,
+    tileSize,
     grid: new Int32Array(s.params.w * s.params.h).fill(UNDRAWN),
-    // The blitter needs the tile size *and* a GameDrawing, so `redraw`
-    // allocates it lazily.
+    // The blitter needs a GameDrawing, so `redraw` allocates it lazily.
     playerBackground: null,
     playerBgSaved: false,
     pbgX: -1,
     pbgY: -1,
   };
-}
-
-export function setTileSize(ds: InertiaDrawState, ts: number): void {
-  ds.tileSize = ts;
-  // The old blitter is the wrong size now; drop it and let `redraw` remake it.
-  ds.playerBackground = null;
-  ds.playerBgSaved = false;
 }
 
 // --- tiles -----------------------------------------------------------

@@ -130,8 +130,11 @@ const F_HINT_CELL = 1 << GAME_FLAG_SHIFT;
 
 export type PalisadeDrawState = BorderGridDrawState;
 
-export function newDrawState(state: PalisadeState): PalisadeDrawState {
-  return newBorderGridDrawState(state.w, state.h);
+export function newDrawState(
+  state: PalisadeState,
+  tileSize: number,
+): PalisadeDrawState {
+  return newBorderGridDrawState(state.w, state.h, tileSize);
 }
 
 // --- redraw ----------------------------------------------------------------

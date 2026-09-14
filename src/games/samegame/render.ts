@@ -73,21 +73,18 @@ export interface SamegameDrawState {
   grid: Int32Array;
 }
 
-export function newDrawState(state: SamegameState): SamegameDrawState {
+export function newDrawState(
+  state: SamegameState,
+  tileSize: number,
+): SamegameDrawState {
   return {
     started: false,
-    tileSize: 0,
-    tileinner: 0,
-    tilegap: 0,
+    tileSize,
+    tileinner: tileSize - gap(tileSize),
+    tilegap: gap(tileSize),
     bgcolor: -1,
     grid: new Int32Array(state.w * state.h).fill(-1),
   };
-}
-
-export function setTileSize(ds: SamegameDrawState, ts: number): void {
-  ds.tileSize = ts;
-  ds.tilegap = gap(ts);
-  ds.tileinner = ts - ds.tilegap;
 }
 
 // --- tile drawing -----------------------------------------------------

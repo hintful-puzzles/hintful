@@ -23,7 +23,6 @@ import {
   COL_PENCIL_BODY,
   newDrawState,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import { solveAbcd } from "./solver.ts";
 import {
@@ -248,8 +247,7 @@ describe("abcd moves through a Midend", () => {
     const p = P(5, 5, 4);
     const ts = abcdGame.preferredTileSize ?? 36;
     const st = newState(p, newAbcdDesc(p, randomNew("noop-1")).desc);
-    const ds = newDrawState(st);
-    setTileSize(ds, ts);
+    const ds = newDrawState(st, ts);
     const at = (s: AbcdState, x: number, y: number): AbcdUi => {
       const ui = newUi(s);
       ui.cursor.visible = true;
@@ -294,8 +292,7 @@ describe("abcd moves through a Midend", () => {
     const ts = abcdGame.preferredTileSize ?? 36;
     const st = newState(p, newAbcdDesc(p, randomNew("m-1")).desc);
     const ui = newUi(st);
-    const ds = newDrawState(st);
-    setTileSize(ds, ts);
+    const ds = newDrawState(st, ts);
     const { w, n } = p;
     const KEY_M = 77;
 
@@ -343,8 +340,7 @@ describe("abcd moves through a Midend", () => {
     const ts = abcdGame.preferredTileSize ?? 36;
     const st = newState(p, newAbcdDesc(p, randomNew("m-2")).desc);
     const ui = newUi(st);
-    const ds = newDrawState(st);
-    setTileSize(ds, ts);
+    const ds = newDrawState(st, ts);
     const { w, n } = p;
 
     let s = abcdGame.executeMove(st, { type: "enter", x: 1, y: 1, letter: 0 });
@@ -396,8 +392,7 @@ describe("abcd input (interpretMove)", () => {
     const p = P(5, 5, 4);
     const st = newState(p, newAbcdDesc(p, randomNew("in-1")).desc);
     const ui = newUi(st);
-    const ds = newDrawState(st);
-    setTileSize(ds, ts);
+    const ds = newDrawState(st, ts);
     expect(ui.pencilSticky).toBe(true); // fork default
 
     // Left-click selects a cell for ink.
@@ -429,8 +424,7 @@ describe("abcd input (interpretMove)", () => {
     const p = P(5, 5, 4);
     const st = newState(p, newAbcdDesc(p, randomNew("in-2")).desc);
     const ui = newUi(st);
-    const ds = newDrawState(st);
-    setTileSize(ds, ts);
+    const ds = newDrawState(st, ts);
     abcdGame.interpretMove(st, ui, ds, center(p, 0, 0), LEFT_BUTTON);
     // 'C' (67) → letter index 2; bare '3' (51) → index 2 as well.
     expect(abcdGame.interpretMove(st, ui, ds, { x: 0, y: 0 }, 67)).toEqual({
@@ -543,8 +537,7 @@ describe("abcd render", () => {
       letter: 0,
     });
     const palette = abcdGame.colors([0.9, 0.9, 0.9]);
-    const ds = newDrawState(withMark);
-    setTileSize(ds, abcdGame.preferredTileSize ?? 36);
+    const ds = newDrawState(withMark, abcdGame.preferredTileSize ?? 36);
     const dr = new RecordingDrawing(palette);
     redraw(dr, ds, null, withMark, 1, ui, 0, 0);
     // The highlighted cursor cell fills its background COL_HIGHLIGHT.
@@ -560,8 +553,7 @@ describe("abcd render", () => {
       const ui = newUi(st);
       ui.pencilMode = pencilMode;
       ui.cursor.visible = pencilMode;
-      const ds = newDrawState(st);
-      setTileSize(ds, abcdGame.preferredTileSize ?? 36);
+      const ds = newDrawState(st, abcdGame.preferredTileSize ?? 36);
       const dr = new RecordingDrawing(palette);
       redraw(dr, ds, null, st, 1, ui, 0, 0);
       return dr;
@@ -578,8 +570,7 @@ describe("abcd render", () => {
     let s = abcdGame.executeMove(st, { type: "enter", x: 0, y: 0, letter: 0 });
     s = abcdGame.executeMove(s, { type: "enter", x: 1, y: 0, letter: 0 });
     const palette = abcdGame.colors([0.9, 0.9, 0.9]);
-    const ds = newDrawState(s);
-    setTileSize(ds, abcdGame.preferredTileSize ?? 36);
+    const ds = newDrawState(s, abcdGame.preferredTileSize ?? 36);
     const dr = new RecordingDrawing(palette);
     redraw(dr, ds, null, s, 1, newUi(s), 0, 0);
     expect(dr.ops.some((o) => o.op === "text" && o.color === COL_ERROR)).toBe(true);
@@ -599,8 +590,7 @@ describe("abcd render", () => {
     expect(flash).toBeGreaterThan(0);
     // A flashing frame paints highlight/lowlight stripe backgrounds.
     const palette = abcdGame.colors([0.9, 0.9, 0.9]);
-    const ds = newDrawState(s);
-    setTileSize(ds, abcdGame.preferredTileSize ?? 36);
+    const ds = newDrawState(s, abcdGame.preferredTileSize ?? 36);
     const dr = new RecordingDrawing(palette);
     redraw(dr, ds, null, s, 1, newUi(s), 0, flash);
     expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_HIGHLIGHT)).toBe(true);

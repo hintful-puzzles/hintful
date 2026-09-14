@@ -49,7 +49,6 @@ import {
   PREFERRED_TILE_SIZE,
   type RangeDrawState,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import {
   DC,
@@ -447,7 +446,6 @@ export const rangeGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 

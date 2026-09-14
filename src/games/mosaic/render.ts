@@ -82,10 +82,10 @@ export interface MosaicDrawState {
   cache: Int32Array;
 }
 
-export function newDrawState(state: MosaicState): MosaicDrawState {
+export function newDrawState(state: MosaicState, tileSize: number): MosaicDrawState {
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     cache: new Int32Array((state.width + 1) * (state.height + 1)).fill(-1),
   };
 }

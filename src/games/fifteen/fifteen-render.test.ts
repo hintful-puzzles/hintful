@@ -22,9 +22,6 @@ function recordingDrawing(): { dr: RecordingDrawing; ops: RecordingDrawing["ops"
 const newDrawState = fifteenGame.newDrawState as NonNullable<
   typeof fifteenGame.newDrawState
 >;
-const setTileSize = fifteenGame.setTileSize as NonNullable<
-  typeof fifteenGame.setTileSize
->;
 const redraw = fifteenGame.redraw as NonNullable<typeof fifteenGame.redraw>;
 
 const TS = 48;
@@ -38,8 +35,7 @@ function solved(w: number, h: number): FifteenState {
 }
 
 function freshDs(state: FifteenState) {
-  const ds = newDrawState(state);
-  setTileSize(ds, TS);
+  const ds = newDrawState(state, TS);
   return ds;
 }
 

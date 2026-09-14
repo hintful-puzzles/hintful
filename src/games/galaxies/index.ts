@@ -75,7 +75,6 @@ import {
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import { clearForSolve, GalaxiesDiff, solverState } from "./solver.ts";
 import {
@@ -1032,7 +1031,6 @@ export const galaxiesGame: Game<
   },
 
   newDrawState,
-  setTileSize,
   interpretMove,
   executeMove,
 

@@ -488,12 +488,9 @@ export const untangleGame: Game<
     const s = coordLimit(p.n) * tileSize;
     return { w: s, h: s };
   },
-  setTileSize: (ds, tileSize) => {
-    ds.tileSize = tileSize;
-  },
-  newDrawState: (s): UntangleDrawState => ({
+  newDrawState: (s, tileSize): UntangleDrawState => ({
     started: false,
-    tileSize: PREFERRED_TILE_SIZE,
+    tileSize,
     bg: -1,
     dragPoint: -1,
     cursorPoint: -1,

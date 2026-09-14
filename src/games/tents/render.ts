@@ -111,10 +111,10 @@ export interface TentsDrawState {
   numbersDrawn: Int32Array;
 }
 
-export function newDrawState(state: TentsState): TentsDrawState {
+export function newDrawState(state: TentsState, tileSize: number): TentsDrawState {
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     drawn: new Int32Array(state.w * state.h).fill(-1),
     numbersDrawn: new Int32Array(state.w + state.h).fill(-1),
   };

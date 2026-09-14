@@ -107,16 +107,12 @@ export interface BricksDrawState {
   cache: Int32Array;
 }
 
-export function newDrawState(state: BricksState): BricksDrawState {
+export function newDrawState(state: BricksState, tileSize: number): BricksDrawState {
   return {
     started: false,
-    tileSize: 0,
+    tileSize: evenTs(tileSize),
     cache: new Int32Array(state.w * state.h).fill(-1),
   };
-}
-
-export function setTileSize(ds: BricksDrawState, ts: number): void {
-  ds.tileSize = evenTs(ts);
 }
 
 // --- error-mark helpers (upstream bricks_draw_err_*) ------------------------

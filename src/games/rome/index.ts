@@ -52,7 +52,6 @@ import {
   PREFERRED_TILE_SIZE,
   type RomeDrawState,
   redraw,
-  setTileSize,
 } from "./render.ts";
 import { romeSolve, validateDesc, validateGame } from "./solver.ts";
 import {
@@ -466,7 +465,6 @@ export const romeGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 

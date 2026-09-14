@@ -18,7 +18,7 @@ import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newBridgesDesc } from "./generator.ts";
 import { bridgesGame } from "./index.ts";
-import { COL_MARK, newDrawState, setTileSize } from "./render.ts";
+import { COL_MARK, newDrawState } from "./render.ts";
 import {
   BRIDGES_PRESETS,
   type BridgesMove,
@@ -91,8 +91,7 @@ describe("bridges input model (drag → move)", () => {
   it("left-drag between adjacent islands emits an L bridge move", () => {
     const s = twoIslands();
     const ui = bridgesGame.newUi(s);
-    const ds = newDrawState(s);
-    setTileSize(ds, ts);
+    const ds = newDrawState(s, ts);
 
     // Press on island (0,0), drag toward (2,0), release.
     expect(
@@ -117,8 +116,7 @@ describe("bridges input model (drag → move)", () => {
   it("right-drag lays a no-line, and a plain click toggles the island mark", () => {
     const s = twoIslands();
     const ui = bridgesGame.newUi(s);
-    const ds = newDrawState(s);
-    setTileSize(ds, ts);
+    const ds = newDrawState(s, ts);
 
     bridgesGame.interpretMove(s, ui, ds, { x: center(0), y: center(0) }, RIGHT_BUTTON);
     bridgesGame.interpretMove(s, ui, ds, { x: center(2), y: center(0) }, RIGHT_DRAG);
@@ -158,8 +156,7 @@ describe("bridges input model (drag → move)", () => {
   it("stores the drag source the right way round on an asymmetric board", () => {
     const s = middleRow();
     const ui = bridgesGame.newUi(s);
-    const ds = newDrawState(s);
-    setTileSize(ds, ts);
+    const ds = newDrawState(s, ts);
 
     expect(
       bridgesGame.interpretMove(s, ui, ds, { x: center(0), y: center(1) }, LEFT_BUTTON),
@@ -180,8 +177,7 @@ describe("bridges input model (drag → move)", () => {
     // the following drag would run from a square holding no island.
     const s = middleRow();
     const ui = bridgesGame.newUi(s);
-    const ds = newDrawState(s);
-    setTileSize(ds, ts);
+    const ds = newDrawState(s, ts);
 
     bridgesGame.interpretMove(s, ui, ds, { x: center(1), y: center(0) }, LEFT_BUTTON);
     // Nothing armed is the assertion: a later drag resolving to no island would
@@ -207,8 +203,7 @@ describe("bridges input model (drag → move)", () => {
     // left sitting on the source would draw one from the island to itself.
     const s = middleRow();
     const ui = bridgesGame.newUi(s);
-    const ds = newDrawState(s);
-    setTileSize(ds, ts);
+    const ds = newDrawState(s, ts);
 
     bridgesGame.interpretMove(s, ui, ds, { x: center(0), y: center(1) }, LEFT_BUTTON);
     expect([ui.drag.sx, ui.drag.sy]).toEqual([0, 1]);
@@ -221,8 +216,7 @@ describe("bridges input model (drag → move)", () => {
     // reason — and, before that, a stray drag event could resume it.
     const s = middleRow();
     const ui = bridgesGame.newUi(s);
-    const ds = newDrawState(s);
-    setTileSize(ds, ts);
+    const ds = newDrawState(s, ts);
 
     bridgesGame.interpretMove(s, ui, ds, { x: center(0), y: center(1) }, LEFT_BUTTON);
     bridgesGame.interpretMove(s, ui, ds, { x: center(2), y: center(1) }, LEFT_DRAG);
@@ -295,8 +289,7 @@ describe("bridges auto-mark aid", () => {
     });
     const palette = bridgesGame.colors([0.9, 0.9, 0.9]);
     const markCircles = (autoMark: boolean) => {
-      const ds = newDrawState(s1);
-      setTileSize(ds, 24);
+      const ds = newDrawState(s1, 24);
       const ui = { ...bridgesGame.newUi(s1), autoMark };
       const rec = new RecordingDrawing(palette);
       bridgesGame.redraw?.(rec, ds, null, s1, 0, ui, 0, 0);

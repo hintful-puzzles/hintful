@@ -119,11 +119,11 @@ export interface PatternDrawState {
   numColors: Int32Array;
 }
 
-export function newDrawState(state: PatternState): PatternDrawState {
+export function newDrawState(state: PatternState, tileSize: number): PatternDrawState {
   const { w, h } = state.common;
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     w,
     h,
     visible: new Int32Array(w * h).fill(-1),

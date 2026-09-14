@@ -136,19 +136,14 @@ export interface RomeDrawState {
   mistakes: OverlaySidecar;
 }
 
-export function newDrawState(state: RomeState): RomeDrawState {
+export function newDrawState(state: RomeState, tileSize: number): RomeDrawState {
   const s = state.w * state.h;
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     cache: new Int32Array(s).fill(-1),
     mistakes: new OverlaySidecar(s),
   };
-}
-
-export function setTileSize(ds: RomeDrawState, ts: number): void {
-  ds.tileSize = ts;
-  ds.started = false;
 }
 
 // --- primitives -------------------------------------------------------------

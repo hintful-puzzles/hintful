@@ -108,8 +108,12 @@ export interface BorderGridDrawState {
   cache: Int32Array;
 }
 
-export function newBorderGridDrawState(w: number, h: number): BorderGridDrawState {
-  return { started: false, tileSize: 0, w, h, cache: new Int32Array(w * h).fill(-1) };
+export function newBorderGridDrawState(
+  w: number,
+  h: number,
+  tileSize: number,
+): BorderGridDrawState {
+  return { started: false, tileSize, w, h, cache: new Int32Array(w * h).fill(-1) };
 }
 
 // --- the flags a frame computes ----------------------------------------------

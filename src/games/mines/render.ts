@@ -82,21 +82,17 @@ export interface MinesDrawState {
   curY: number;
 }
 
-export function newDrawState(s: MinesState): MinesDrawState {
+export function newDrawState(s: MinesState, tileSize: number): MinesDrawState {
   return {
     w: s.w,
     h: s.h,
-    tileSize: 0,
+    tileSize,
     started: false,
     grid: new Int8Array(s.w * s.h).fill(-99),
     bg: -1,
     curX: -1,
     curY: -1,
   };
-}
-
-export function setTileSize(ds: MinesDrawState, tileSize: number): void {
-  ds.tileSize = tileSize;
 }
 
 export function computeSize(

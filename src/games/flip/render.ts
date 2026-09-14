@@ -40,20 +40,12 @@ export function border(tileSize: number): number {
   return tileSize >> 1;
 }
 
-export function newDrawState(s: FlipState): FlipDrawState {
+export function newDrawState(s: FlipState, tileSize: number): FlipDrawState {
   return {
     started: false,
-    tileSize: PREFERRED_TILE_SIZE,
+    tileSize,
     tiles: new Int16Array(s.w * s.h).fill(-1),
   };
-}
-
-export function setTileSize(ds: FlipDrawState, tileSize: number): void {
-  if (ds.tileSize !== tileSize) {
-    ds.tileSize = tileSize;
-    ds.started = false;
-    ds.tiles.fill(-1);
-  }
 }
 
 export function colors(defaultBackground: Color): Color[] {

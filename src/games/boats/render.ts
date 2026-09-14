@@ -252,11 +252,11 @@ export interface BoatsDrawState {
   wrong: OverlaySidecar;
 }
 
-export function newDrawState(state: BoatsState): BoatsDrawState {
+export function newDrawState(state: BoatsState, tileSize: number): BoatsDrawState {
   const { w, h, fleet } = state.params;
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     w,
     h,
     fleet,
@@ -265,10 +265,6 @@ export function newDrawState(state: BoatsState): BoatsDrawState {
     fleetCount: new Int32Array(fleet).fill(-1),
     wrong: new OverlaySidecar(w * h),
   };
-}
-
-export function setTileSize(ds: BoatsDrawState, ts: number): void {
-  ds.tileSize = ts;
 }
 
 // --- primitives ------------------------------------------------------------

@@ -61,7 +61,6 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
   type SubsetsDrawState,
-  setTileSize,
 } from "./render.ts";
 import {
   type CollapseExclusion,
@@ -539,7 +538,6 @@ export const subsetsGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 

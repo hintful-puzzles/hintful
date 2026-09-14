@@ -8,7 +8,7 @@ import {
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { permParity } from "../../engine/shuffle.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { executeMove, fifteenGame } from "./index.ts";
 import {
   decodeParams,
@@ -216,8 +216,7 @@ describe("Fifteen input", () => {
 
   it("maps a left-click sharing one coordinate with the gap to a slide", () => {
     const solved = solvedState(4, 4); // gap at (3,3)
-    const ds = fifteenGame.newDrawState?.(solved) ?? null;
-    fifteenGame.setTileSize?.(ds as never, 48);
+    const ds = fifteenGame.newDrawState(solved, 48);
     // Click the center of cell (0,3): same row as the gap.
     const px = 0 * 48 + 24 + 24; // coord(0)+ts/2 = border + ts/2
     const py = 3 * 48 + 24 + 24;
@@ -233,8 +232,7 @@ describe("Fifteen input", () => {
 
   it("ignores a click diagonal to the gap", () => {
     const solved = solvedState(4, 4);
-    const ds = fifteenGame.newDrawState?.(solved) ?? null;
-    fifteenGame.setTileSize?.(ds as never, 48);
+    const ds = fifteenGame.newDrawState(solved, 48);
     const px = 0 * 48 + 24 + 24; // cell (0, 0): shares neither coord
     const py = 0 * 48 + 24 + 24;
     expect(
@@ -244,8 +242,7 @@ describe("Fifteen input", () => {
 
   it("ignores an out-of-bounds click", () => {
     const solved = solvedState(4, 4);
-    const ds = fifteenGame.newDrawState?.(solved) ?? null;
-    fifteenGame.setTileSize?.(ds as never, 48);
+    const ds = fifteenGame.newDrawState(solved, 48);
     expect(
       fifteenGame.interpretMove(solved, ui, ds, { x: 10000, y: 10000 }, LEFT_BUTTON),
     ).toBeNull();
@@ -260,7 +257,7 @@ describe("Fifteen input", () => {
       fifteenGame.interpretMove(
         solved,
         ui,
-        sizedDrawState(fifteenGame, solved),
+        preferredDrawState(fifteenGame, solved),
         { x: 0, y: 0 },
         CURSOR_UP,
       ),
@@ -270,7 +267,7 @@ describe("Fifteen input", () => {
       fifteenGame.interpretMove(
         solved,
         ui,
-        sizedDrawState(fifteenGame, solved),
+        preferredDrawState(fifteenGame, solved),
         { x: 0, y: 0 },
         CURSOR_LEFT,
       ),
@@ -280,7 +277,7 @@ describe("Fifteen input", () => {
       fifteenGame.interpretMove(
         solved,
         ui,
-        sizedDrawState(fifteenGame, solved),
+        preferredDrawState(fifteenGame, solved),
         { x: 0, y: 0 },
         CURSOR_DOWN,
       ),

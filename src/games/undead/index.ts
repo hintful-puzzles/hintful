@@ -71,7 +71,6 @@ import {
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
-  setTileSize,
   type UndeadDrawState,
   type UndeadHint,
 } from "./render.ts";
@@ -850,7 +849,6 @@ export const undeadGame: Game<
   colors: (defaultBackground: Color): Color[] => colors(defaultBackground),
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize: (p: UndeadParams, ts: number): Size => computeSize(p, ts),
-  setTileSize,
   newDrawState,
   redraw,
 

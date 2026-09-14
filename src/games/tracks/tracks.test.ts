@@ -17,8 +17,8 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
 import { newDesc } from "./generator.ts";
 import { tracksGame } from "./index.ts";
 import { executeMove, uiCanFlipSquare } from "./moves.ts";
@@ -167,21 +167,21 @@ describe("tracks input", () => {
     tracksGame.interpretMove(
       st,
       ui,
-      sizedDrawState(tracksGame, st),
+      preferredDrawState(tracksGame, st),
       { x: CENTER(1), y: CENTER(3) },
       LEFT_BUTTON,
     );
     tracksGame.interpretMove(
       st,
       ui,
-      sizedDrawState(tracksGame, st),
+      preferredDrawState(tracksGame, st),
       { x: CENTER(3), y: CENTER(3) },
       LEFT_DRAG,
     );
     const move = tracksGame.interpretMove(
       st,
       ui,
-      sizedDrawState(tracksGame, st),
+      preferredDrawState(tracksGame, st),
       { x: CENTER(3), y: CENTER(3) },
       LEFT_RELEASE,
     );
@@ -198,7 +198,7 @@ describe("tracks input", () => {
     tracksGame.interpretMove(
       st,
       ui,
-      sizedDrawState(tracksGame, st),
+      preferredDrawState(tracksGame, st),
       { x: CENTER(1), y: CENTER(3) },
       LEFT_BUTTON,
     );
@@ -206,7 +206,7 @@ describe("tracks input", () => {
     tracksGame.interpretMove(
       st,
       ui,
-      sizedDrawState(tracksGame, st),
+      preferredDrawState(tracksGame, st),
       { x: CENTER(3), y: CENTER(3) },
       LEFT_DRAG,
     );
@@ -214,7 +214,7 @@ describe("tracks input", () => {
     tracksGame.interpretMove(
       st,
       ui,
-      sizedDrawState(tracksGame, st),
+      preferredDrawState(tracksGame, st),
       { x: CENTER(3), y: 5 },
       LEFT_DRAG,
     );
@@ -223,7 +223,7 @@ describe("tracks input", () => {
     const move = tracksGame.interpretMove(
       st,
       ui,
-      sizedDrawState(tracksGame, st),
+      preferredDrawState(tracksGame, st),
       { x: CENTER(3), y: 5 },
       LEFT_RELEASE,
     );
@@ -246,21 +246,21 @@ describe("tracks input", () => {
     tracksGame.interpretMove(
       st,
       ui,
-      sizedDrawState(tracksGame, st),
+      preferredDrawState(tracksGame, st),
       { x: CENTER(1), y: CENTER(3) },
       RIGHT_BUTTON,
     );
     tracksGame.interpretMove(
       st,
       ui,
-      sizedDrawState(tracksGame, st),
+      preferredDrawState(tracksGame, st),
       { x: CENTER(3), y: CENTER(3) },
       RIGHT_DRAG,
     );
     const move = tracksGame.interpretMove(
       st,
       ui,
-      sizedDrawState(tracksGame, st),
+      preferredDrawState(tracksGame, st),
       { x: CENTER(3), y: CENTER(3) },
       RIGHT_RELEASE,
     );
@@ -276,8 +276,7 @@ describe("tracks render", () => {
       st,
       (tracksGame.solve?.(st, st) as { ok: true; move: never }).move,
     );
-    const ds = newDrawState(solved);
-    ds.tileSize = tracksGame.preferredTileSize ?? 33;
+    const ds = newDrawState(solved, tracksGame.preferredTileSize ?? 33);
     const dr = new RecordingDrawing(tracksGame.colors(DEFAULT_BACKGROUND));
     redraw(dr, ds, null, solved, 1, tracksGame.newUi(solved), 0, 0);
     expect(dr.ops.some((o) => o.op === "text")).toBe(true);
@@ -299,8 +298,7 @@ describe("tracks render", () => {
     const bad = executeMove(st, {
       ops: [sq(notrackCell % w, Math.floor(notrackCell / w), true, true)],
     });
-    const ds = newDrawState(bad);
-    ds.tileSize = tracksGame.preferredTileSize ?? 33;
+    const ds = newDrawState(bad, tracksGame.preferredTileSize ?? 33);
     const ui = tracksGame.newUi(bad);
     const palette = tracksGame.colors(DEFAULT_BACKGROUND);
 

@@ -501,8 +501,7 @@ describe("crossing hint — the frame", () => {
       cursor: newCursor(cell % params.w, Math.floor(cell / params.w), true),
     };
     const washes = (step?: Step): number => {
-      const ds = crossingGame.newDrawState(state);
-      crossingGame.setTileSize?.(ds, PREFERRED_TILE_SIZE);
+      const ds = crossingGame.newDrawState(state, PREFERRED_TILE_SIZE);
       const dr = new RecordingDrawing(crossingGame.colors(DEFAULT_BACKGROUND));
       crossingGame.redraw(dr, ds, null, state, 1, ui, 0, 0, step);
       return dr.ops.filter(

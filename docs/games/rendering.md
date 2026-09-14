@@ -19,10 +19,11 @@ verification). Exemplar to read end-to-end:
 
 **The engine paints no pixels of its own.** Every visible pixel comes from a
 game's `redraw`; each game fills its own background in its `!ds.started`
-branch. **`Midend.size` is side-effect-free**, and **`canvasCleared()` is the
-only cache-stale signal** — the worker adapter calls it when the canvas
-backing store is genuinely recreated, and nothing else may invalidate a draw
-state. The midend repaints on every transition and drives the
+branch. **`Midend.size` touches nothing at an unchanged tile size**, and **a
+fresh draw state is the only cache-stale signal** — `size()` builds one when
+the tile size changes, the worker adapter calls `canvasCleared()` when the
+canvas backing store is genuinely recreated, and nothing else may invalidate a
+draw state. The midend repaints on every transition and drives the
 animation/flash timer; a game never schedules its own frames.
 
 These four sentences are the survivors of Flip's three-iteration rendering
@@ -396,7 +397,7 @@ pointer transform — is logic and lives with
 [`mechanics.md`](./mechanics.md) § "Bespoke geometry". On the draw side:
 
 - **Force the tile size even** (`ts & ~1`) in *both* `computeSize` and
-  `setTileSize`, so half-tile shears are exact.
+  `newDrawState`, so half-tile shears are exact.
 - **The shear/origin/bevel choices are display** — match the look, keep the
   code clean; they were never in byte-parity scope.
 - **An SVG dump is the fastest shear check**: `toSvg` a `renderScenario`
@@ -529,21 +530,27 @@ condition — and keep a flash-overlay-isolation test (Flip has one).
 ## Sizing
 
 `computeSize(params, tileSize)` is the pure size function;
-`setTileSize(ds, tileSize)` tells the draw state the chosen size so
+`newDrawState(state, tileSize)` builds the draw state at the chosen size,
+deriving any tile-size geometry (radii, gaps, offsets) right there, so
 `interpretMove` coordinate mapping and `redraw` agree; `preferredTileSize` is
-the baseline (default 32). The midend creates the draw state and applies
-`setTileSize` in one step (`Midend.freshDrawState`), and calls `setTileSize`
-again whenever a new tile size is picked; `Midend.size` is informational and
-side-effect-free (see the doctrine above). Because those two are paired, a
-game's `redraw`/`interpretMove` is handed a draw state that is both non-null and
-sized — so no `if (!ds) return;` and no `ds?.tileSize ?? PREFERRED_TILE_SIZE`
-(see [mechanics](./mechanics.md) § "interpretMove and UI_UPDATE").
+the baseline (default 32).
 
-**The draw state's field is `tileSize`**, the word `setTileSize`,
-`preferredTileSize` and `computeSize(p, tileSize)` already use. It is not a
-decision a game makes — the collection once spelled it two ways, and no game had
-a reason to. A board that is not tiled names its own scale for what it is
-(Cube's `gridScale`, Guess's `pegsz`). Nothing enforces the name; a new spelling
+**A draw state lives at one tile size.** `Midend.size` builds a fresh one when
+the tile size it resolves differs from the last, and touches nothing when it is
+the same, so a layout jiggle keeps the cache (see the doctrine above). So a game
+writes **no resize invalidation**: no `if (ds.tileSize !== ts)` guard, no cache
+wipe, no dropping a wrongly-sized blitter — a blitter allocated lazily in
+`redraw` is the right size for as long as its draw state lives, so `if (!ds.bl)`
+is the whole check. And a game's `redraw`/`interpretMove` is handed a draw state
+that is both non-null and at the size on screen — so no `if (!ds) return;` and
+no `ds?.tileSize ?? PREFERRED_TILE_SIZE` (see [mechanics](./mechanics.md) §
+"interpretMove and UI_UPDATE").
+
+**The draw state's field is `tileSize`**, the word `preferredTileSize` and
+`computeSize(p, tileSize)` already use. It is not a decision a game makes — the
+collection once spelled it several ways, and no game had a reason to. A board
+that is not tiled holds its scale as `tileSize` too (Cube's grid scale, Guess's
+peg size), because that is the number `newDrawState` is handed. Nothing enforces the name; a new spelling
 shows up as a line in the capability snapshot ([testing](./testing.md) § "The
 divergence no clone detector can see").
 

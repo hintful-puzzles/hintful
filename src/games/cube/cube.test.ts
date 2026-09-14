@@ -276,7 +276,6 @@ describe("cube Game wiring", () => {
 const newUi = cubeGame.newUi.bind(cubeGame);
 const interpretMove = cubeGame.interpretMove.bind(cubeGame);
 const newDrawState = cubeGame.newDrawState as NonNullable<typeof cubeGame.newDrawState>;
-const setTileSize = cubeGame.setTileSize as NonNullable<typeof cubeGame.setTileSize>;
 
 /** A 4×4 cube board with the solid on the interior square (1,1) (index 5)
  * where all four orthogonal rolls are legal, sized so `ds` has a real
@@ -285,8 +284,7 @@ function interiorCube(): { state: CubeState; ui: CubeUi; ds: CubeDrawState } {
   const p: CubeParams = { solid: SolidType.Cube, d1: 4, d2: 4 };
   const area = gridArea(p.d1, p.d2, SOLIDS[p.solid].order);
   const state = newState(p, `${"0".repeat(Math.floor((area + 3) / 4))},5`);
-  const ds = newDrawState(state);
-  setTileSize(ds, cubeGame.preferredTileSize ?? 48);
+  const ds = newDrawState(state, cubeGame.preferredTileSize ?? 48);
   return { state, ui: newUi(state), ds };
 }
 
@@ -327,8 +325,8 @@ describe("cube input", () => {
     const { state, ui, ds } = interiorCube();
     // Square 5 center in pixels: x*gs+ox, y*gs+oy.
     const sq = state.grid[5];
-    const cx = Math.trunc(sq.x * ds.gridScale) + ds.ox;
-    const cy = Math.trunc(sq.y * ds.gridScale) + ds.oy;
+    const cx = Math.trunc(sq.x * ds.tileSize) + ds.ox;
+    const cy = Math.trunc(sq.y * ds.tileSize) + ds.oy;
     const click = (dx: number, dy: number) =>
       interpretMove(state, ui, ds, { x: cx + dx, y: cy + dy }, LEFT_BUTTON);
     expect(click(40, 0)).toEqual({ dir: "R" });
@@ -340,8 +338,8 @@ describe("cube input", () => {
   it("ignores a dead-center click and unhandled buttons", () => {
     const { state, ui, ds } = interiorCube();
     const sq = state.grid[5];
-    const cx = Math.trunc(sq.x * ds.gridScale) + ds.ox;
-    const cy = Math.trunc(sq.y * ds.gridScale) + ds.oy;
+    const cx = Math.trunc(sq.x * ds.tileSize) + ds.ox;
+    const cy = Math.trunc(sq.y * ds.tileSize) + ds.oy;
     expect(interpretMove(state, ui, ds, { x: cx, y: cy }, LEFT_BUTTON)).toBeNull();
     expect(interpretMove(state, ui, ds, { x: 0, y: 0 }, 0x9999)).toBeNull();
   });

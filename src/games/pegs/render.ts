@@ -93,7 +93,7 @@ export function colors(defaultBackground: Color): Color[] {
   ];
 }
 
-// --- computeSize / setTileSize ---------------------------------------
+// --- computeSize -----------------------------------------------------
 
 export function computeSize(p: PegsParams, ts: number): Size {
   const b = border(ts);
@@ -103,19 +103,11 @@ export function computeSize(p: PegsParams, ts: number): Size {
   };
 }
 
-export function setTileSize(ds: PegsDrawState, ts: number): void {
-  if (ds.tileSize !== ts) {
-    ds.tileSize = ts;
-    ds.started = false;
-    ds.grid.fill(255);
-  }
-}
-
 // --- draw state ------------------------------------------------------
 
-export function newDrawState(s: PegsState): PegsDrawState {
+export function newDrawState(s: PegsState, tileSize: number): PegsDrawState {
   return {
-    tileSize: 0,
+    tileSize,
     dragBackground: null,
     dragging: false,
     dragX: 0,
@@ -320,7 +312,7 @@ export function redraw(
 
   // Draw the dragging sprite.
   if (ui.dragging) {
-    // Allocate the blitter lazily (we don't have GameDrawing in setTileSize).
+    // Allocate the blitter lazily (only `redraw` has the `GameDrawing`).
     if (!ds.dragBackground) {
       ds.dragBackground = dr.blitterNew({ w: ts, h: ts });
     }

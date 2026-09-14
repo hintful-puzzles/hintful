@@ -5,8 +5,8 @@
 import { describe, expect, it } from "vitest";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
 import { newDominosaDesc } from "./generator.ts";
 import { dominosaGame } from "./index.ts";
 import { COL_DOMINOCLASH, COL_REFERENCE } from "./render.ts";
@@ -273,7 +273,7 @@ describe("dominosa reference aid", () => {
     const move = dominosaGame.interpretMove(
       state,
       ui,
-      sizedDrawState(dominosaGame, state),
+      preferredDrawState(dominosaGame, state),
       { x: 26, y: 14 },
       LEFT_BUTTON,
     );

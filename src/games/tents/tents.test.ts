@@ -206,8 +206,7 @@ describe("tents input (drag model)", () => {
     const p = { w: 8, h: 8, diff: DIFF_EASY };
     const { state } = genBoard(p, "input-0");
     const ui = tentsGame.newUi(state);
-    const ds = newDrawState(state);
-    tentsGame.setTileSize?.(ds, 32);
+    const ds = newDrawState(state, 32);
     const blank = [...Array(p.w * p.h).keys()].find((i) => state.grid[i] === BLANK);
     expect(blank).toBeDefined();
     const bx = (blank as number) % p.w;
@@ -239,8 +238,7 @@ describe("tents input (drag model)", () => {
     const p = { w: 8, h: 8, diff: DIFF_EASY };
     const { state } = genBoard(p, seed);
     const ui = tentsGame.newUi(state);
-    const ds = newDrawState(state);
-    tentsGame.setTileSize?.(ds, TS);
+    const ds = newDrawState(state, TS);
     const at = (x: number, y: number) => ({ x: x * TS + 17, y: y * TS + 17 });
     return { p, state, ui, ds, at };
   }
@@ -332,13 +330,12 @@ describe("tents input (drag model)", () => {
     const p = { w: 8, h: 8, diff: DIFF_EASY };
     const { state } = genBoard(p, "preview-cancel");
     const ui = tentsGame.newUi(state);
-    const ds = newDrawState(state);
-    tentsGame.setTileSize?.(ds, TS);
+    const ds = newDrawState(state, TS);
     const at = (x: number, y: number) => ({ x: x * TS + 17, y: y * TS + 17 });
 
     const frame = () => {
       const dr = new RecordingDrawing(tentsGame.colors(DEFAULT_BACKGROUND));
-      tentsGame.redraw(dr, newDrawState(state), null, state, 1, ui, 0, 0);
+      tentsGame.redraw(dr, newDrawState(state, TS), null, state, 1, ui, 0, 0);
       return JSON.stringify(dr.ops);
     };
 
@@ -392,8 +389,7 @@ describe("tents render (tier 2)", () => {
     expect(mistakes.length).toBe(1);
 
     const rec = new RecordingDrawing(tentsGame.colors([0.9, 0.9, 0.9]));
-    const ds = newDrawState(wrong);
-    tentsGame.setTileSize?.(ds, 32);
+    const ds = newDrawState(wrong, 32);
     const ui = tentsGame.newUi(wrong);
 
     // Paint the tent tile without the overlay, then again WITH it (no tile-

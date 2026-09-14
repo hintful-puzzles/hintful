@@ -146,12 +146,12 @@ export interface TowersDrawState {
   marks: HintMarks;
 }
 
-export function newDrawState(state: TowersState): TowersDrawState {
+export function newDrawState(state: TowersState, tileSize: number): TowersDrawState {
   const w = state.w;
   const W = w + 2;
   return {
     started: false,
-    tileSize: 0,
+    tileSize,
     w,
     tiles: new Int32Array(W * W),
     drawn: new Int32Array(W * W * 4).fill(-1),
@@ -160,10 +160,6 @@ export function newDrawState(state: TowersState): TowersDrawState {
     wrong: new OverlaySidecar(W * W),
     marks: new HintMarks(),
   };
-}
-
-export function setTileSize(ds: TowersDrawState, ts: number): void {
-  ds.tileSize = ts;
 }
 
 /**

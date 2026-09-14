@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { CURSOR_RIGHT, MOD_CTRL, MOD_SHFT } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { sizedDrawState } from "../../engine/testing/sized-draw-state.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { newDesc } from "./generator.ts";
 import { netGame } from "./index.ts";
 import { computeLoops } from "./loops.ts";
@@ -218,7 +218,7 @@ describe("moves", () => {
       netGame.interpretMove(
         locked,
         ui,
-        sizedDrawState(netGame, locked),
+        preferredDrawState(netGame, locked),
         { x: 0, y: 0 },
         0x61,
       ),
@@ -231,7 +231,7 @@ describe("moves", () => {
     const move = netGame.interpretMove(
       s,
       ui,
-      sizedDrawState(netGame, s),
+      preferredDrawState(netGame, s),
       { x: 0, y: 0 },
       0x6a /* 'j' */,
     );
@@ -299,7 +299,7 @@ describe("moves", () => {
       netGame.interpretMove(
         state,
         ui,
-        sizedDrawState(netGame, state),
+        preferredDrawState(netGame, state),
         { x: 0, y: 0 },
         CURSOR_RIGHT | MOD_CTRL,
       ),
@@ -311,7 +311,7 @@ describe("moves", () => {
       netGame.interpretMove(
         state,
         ui,
-        sizedDrawState(netGame, state),
+        preferredDrawState(netGame, state),
         { x: 0, y: 0 },
         CURSOR_RIGHT | MOD_SHFT,
       ),
@@ -327,7 +327,7 @@ describe("moves", () => {
       netGame.interpretMove(
         s,
         ui,
-        sizedDrawState(netGame, s),
+        preferredDrawState(netGame, s),
         { x: 0, y: 0 },
         CURSOR_RIGHT | MOD_SHFT,
       ),

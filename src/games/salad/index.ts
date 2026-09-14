@@ -57,7 +57,6 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
   type SaladDrawState,
-  setTileSize,
 } from "./render.ts";
 import {
   findMistakes,
@@ -437,7 +436,6 @@ export const saladGame: Game<
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
-  setTileSize,
   newDrawState,
   redraw,
 

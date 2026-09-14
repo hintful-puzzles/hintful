@@ -27,9 +27,6 @@ function recordingDrawing(): { dr: RecordingDrawing; ops: RecordingDrawing["ops"
 const newDrawState = twiddleGame.newDrawState as NonNullable<
   typeof twiddleGame.newDrawState
 >;
-const setTileSize = twiddleGame.setTileSize as NonNullable<
-  typeof twiddleGame.setTileSize
->;
 const redraw = twiddleGame.redraw as NonNullable<typeof twiddleGame.redraw>;
 
 const TS = 48;
@@ -41,8 +38,7 @@ function params(): TwiddleParams {
 const UI = { cursor: newCursor() };
 
 function fresh(state: TwiddleState) {
-  const ds = newDrawState(state);
-  setTileSize(ds, TS);
+  const ds = newDrawState(state, TS);
   return ds;
 }
 

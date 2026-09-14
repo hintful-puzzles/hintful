@@ -88,12 +88,12 @@ export interface GalaxiesDrawState {
 
 export const PREFERRED_TILE_SIZE = 32;
 
-export function newDrawState(s: GalaxiesState): GalaxiesDrawState {
+export function newDrawState(s: GalaxiesState, tileSize: number): GalaxiesDrawState {
   const n = s.w * s.h;
   return {
     w: s.w,
     h: s.h,
-    tileSize: PREFERRED_TILE_SIZE,
+    tileSize,
     started: false,
     cache: new Int32Array(n).fill(-1),
     dx: new Int16Array(n),
@@ -110,15 +110,6 @@ export function newDrawState(s: GalaxiesState): GalaxiesDrawState {
  * callers ([`docs/games/mechanics.md`](../../../docs/games/mechanics.md)). */
 export function borderFor(tileSize: number): number {
   return tileSize;
-}
-
-export function setTileSize(ds: GalaxiesDrawState, tileSize: number): void {
-  if (ds.tileSize === tileSize) return;
-  ds.tileSize = tileSize;
-  ds.started = false;
-  // Every tile now misses on its key, so it repaints and re-commits its
-  // wrong-wall mask along with it.
-  ds.cache.fill(-1);
 }
 
 // --- flags encoded into the per-tile cache key ---------------------
