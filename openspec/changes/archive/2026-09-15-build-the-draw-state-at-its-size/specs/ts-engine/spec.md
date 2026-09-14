@@ -4,12 +4,11 @@
 
 The TS midend SHALL cause the canvas to repaint after every state
 transition it processes — moves, undo, redo, solve, restart, load,
-and UI-only updates — mirroring the C frontend, which redraws after
-every processed input. A transition that changes what is displayed
+and UI-only updates. A transition that changes what is displayed
 SHALL NOT leave the canvas stale.
 
 For games that animate, the midend SHALL drive the animation/flash
-timer to parity with `midend.c`: it SHALL obtain the animation and
+timer: it SHALL obtain the animation and
 flash durations from the game, run the timer while either an
 animation/flash is in progress or a timed-clock game is running, paint
 each animation frame, and settle to a final clean paint when the
@@ -33,7 +32,7 @@ in its `!ds.started` branch and re-fired on a fresh drawstate.
   drawstate, invalidate any per-tile cache, or schedule any
   framework-emitted overpaint. The frontend may call `size()` on every
   layout perturbation (any element-size change goes through it via
-  `puzzle-view.ts`'s `ResizeController`); a side-effecting call there
+  `src/puzzle/components/view.ts`'s `ResizeController`); a side-effecting call there
   would wipe caches at unrelated moments and cause spurious full
   repaints. **When the resolved tile size changes**, every tile the
   game has cached is at the wrong size, so the midend SHALL replace the
@@ -78,14 +77,6 @@ the bg + one-time setup via the game's first-paint branch.
   repainted on each timer tick through the animation
 - **AND** when the animation and flash complete the midend settles
   with a final paint of the resting state and releases the timer
-
-#### Scenario: A non-rendering port is not at parity
-
-- **WHEN** a TS port processes input correctly but the midend does not
-  repaint (the game appears frozen)
-- **THEN** this is a parity regression, not a cosmetic deferral
-- **AND** the game is not eligible for parity registration until it
-  repaints and animates to parity with the C build
 
 #### Scenario: A layout jiggle at the same tile size touches nothing
 
@@ -171,6 +162,24 @@ before its names are taken.
 - **AND** this holds for every field the game's `newDrawState` builds,
   including those it derives from the tile size
 
+### Requirement: Fit-to-window sizing fills the slot
+
+`Midend.size(maxSize)` SHALL resolve the tile size as upstream `midend_size`
+does in its user-size form: the largest integer tile size whose `computeSize`
+result fits `maxSize` (binary search), growing beyond the game's preferred tile
+size when the slot allows, so that a game occupies the layout slot it is given
+rather than freezing at its preferred size. Capping the board at a multiple of
+its preferred size is the `maxScale` setting's job, and it does so by shrinking
+`maxSize` before the call. What the call does to the draw state is stated by
+"The midend repaints on every transition and rebuilds the draw state for a new
+tile size".
+
+#### Scenario: A large slot expands the board
+
+- **WHEN** `size` is called on a slot much larger than the preferred-size board
+- **THEN** the resolved tile size exceeds the preferred tile size and the
+  returned window size fits the slot
+
 ## MODIFIED Requirements
 
 ### Requirement: A game is handed a draw state, never the absence of one
@@ -215,17 +224,29 @@ live draw state re-sized under them — nine in the sizing hook, and Map in
 
 ## REMOVED Requirements
 
-### Requirement: The midend repaints on every transition and drives animation
+### Requirement: The midend repaints on every transition and drives the animation timer
 
 **Reason**: Its scenario "`Midend.size` is purely informational" states that
 `size()` never replaces the draw state, and a `size()` that resolves a new tile
-size now does. Keeping the heading over a narrowed body would leave a heading
-describing a case the requirement no longer allows.
+size now does; its text also has `size()` inform the game via `setTileSize`,
+which no longer exists. Keeping the heading over a narrowed body would leave a
+heading describing a case the requirement no longer allows.
 
 **Migration**: Replaced by "The midend repaints on every transition and rebuilds
 the draw state for a new tile size", which carries every other scenario verbatim,
 restates the same-tile-size promise as "A layout jiggle at the same tile size
 touches nothing", and adds "A new tile size arrives as a fresh drawstate".
+
+### Requirement: Fit-to-window sizing honors user-size expansion
+
+**Reason**: It names an `isUserSize` parameter that `Midend.size(maxSize)` does
+not take — the board always fills its slot, and `maxScale` caps the slot before
+the call — so its scenario "Without user-size the preferred size is the ceiling"
+describes a call nothing can make. It also calls `size()` "purely
+informational", which a new tile size no longer is.
+
+**Migration**: Replaced by "Fit-to-window sizing fills the slot", which carries
+"A large slot expands the board" without the user-size flag.
 
 ### Requirement: The capability snapshot covers both halves of what a game remembers
 

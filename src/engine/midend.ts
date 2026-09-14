@@ -124,7 +124,7 @@ export interface EngineCore {
    *
    * At an unchanged tile size that is all it does, unlike upstream's
    * `midend_size`, which recreates the drawstate on every call:
-   * `puzzle-view.ts`'s `ResizeController` calls this on any layout perturbation
+   * `components/view.ts`'s `ResizeController` calls this on any layout perturbation
    * (CSS transitions, mobile address-bar show/hide), and wiping the per-tile
    * cache then would cause spurious full repaints. At a different tile size
    * every cached tile is the wrong size, so the drawstate is rebuilt at the new
@@ -1374,7 +1374,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // The notification carries both the status-bar text and the hint banner.
     // A game may want the banner without a status bar (Range), so a
     // hint-capable game always emits, letting its explanation appear and
-    // clear; only a game with neither is skipped. `puzzle-view.ts` gates the
+    // clear; only a game with neither is skipped. `components/view.ts` gates the
     // status-bar DOM on `wantsStatusbar`, so the empty text is inert.
     if (!this.game.wantsStatusbar && !this.game.hint) return;
     let text = this.game.wantsStatusbar

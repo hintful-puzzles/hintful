@@ -7,7 +7,7 @@
  * screenshot was about to cost a correct change. An eye comparing two dark greens
  * adjacent to seven other colors is not a reliable instrument.
  *
- * It reproduces `puzzle-view.ts`'s dark-mode pipeline exactly — including that
+ * It reproduces `components/view.ts`'s dark-mode pipeline exactly — including that
  * games are handed **pure white** as their background in dark mode — and reports
  * two things:
  *
@@ -45,13 +45,13 @@ const LIGHT_BG_L = 0.9;
 /** A dark host. `utils/color.ts` names ~0.18 as the realistic off-black. */
 const DARK_BG_L = 0.2;
 
-/** What `puzzle-view.ts` passes a game in each scheme. In **dark** mode it passes
+/** What `components/view.ts` passes a game in each scheme. In **dark** mode it passes
  * pure white, precisely because games derive colors by scaling the background
  * down; the whole palette is inverted afterwards. */
 const lightInput = oklchToColor([LIGHT_BG_L, 0, 0]);
 const darkInput = oklchToColor([1, 0, 0]);
 
-/** `puzzle-view.ts`'s dark-mode pass — the real one, called rather than copied:
+/** The view's dark-mode pass (`dark-palette.ts`) — the real one, called rather than copied:
  * a second copy kept in step by instruction is a rule with no owner. */
 function darkPalette(id: string, palette: Color[]): OKLCH[] {
   const authored: Record<number, Color> = {};

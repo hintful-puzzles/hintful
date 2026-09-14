@@ -558,7 +558,7 @@ describe("Midend timer", () => {
 });
 
 describe("Midend.size rebuilds the drawstate only for a new tile size (regression: ResizeObserver flicker)", () => {
-  // `puzzle-view.ts`'s `ResizeController` calls `puzzle.size()` on every
+  // `components/view.ts`'s `ResizeController` calls `puzzle.size()` on every
   // element-size change, including CSS transitions and mobile address-bar
   // show/hide. A `size()` with side effects at an unchanged tile size makes
   // everything flicker, so it must not touch drawstate identity or make the

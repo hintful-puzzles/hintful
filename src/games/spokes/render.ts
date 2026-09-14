@@ -89,7 +89,7 @@ export const COL_CURSOR = 7;
  *
  * Upstream fills such a hub with pure white, which is invisible in practice:
  * barely a shade off a near-white light-mode background, and in dark mode
- * `puzzle-view.ts` hands the game *pure white* as its background, so the
+ * `components/view.ts` hands the game *pure white* as its background, so the
  * "highlight" is exactly the background. The shared completed-region shade is a
  * clear step down from the background and reads in both modes, since the
  * dark-mode adaptation inverts gray lightness about the real background.
@@ -106,7 +106,7 @@ export const COL_HINT_CELL = 10;
  * Upstream takes the frontend background as-is (no `game_mkhighlight`) and
  * hard-codes the rest; here the background arrives already shifted off the
  * extremes by `resolvePalette`, the same board every game paints. Deliberately
- * *not* luminance-adjusted for dark mode: `puzzle-view.ts` passes pure white
+ * *not* luminance-adjusted for dark mode: `components/view.ts` passes pure white
  * as the background there and adapts the whole returned palette itself, so a
  * second adaptation here would fight the layer that owns the concern
  * (docs/games/rendering.md § "The palette: three layers, meaning first").
