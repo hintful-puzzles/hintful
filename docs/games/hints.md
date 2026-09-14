@@ -3,10 +3,11 @@
 **How to give a game a full explained hint.** Every game is expected to carry
 a `hint()` — explained hints are a **core deliberate-divergence product
 value** of this fork, not a nicety — but coverage is not yet complete: the
-games still lacking one are exactly the registered games absent from
-[`engine/testing/hint-games.ts`](../../src/engine/testing/hint-games.ts)
-(12 as of 2026-08-11, Galaxies having landed; each is a queued
-`add-<game>-hint` change waiting to be opened). Upstream's `'h'` returns one next move with
+games still lacking one are the registered games that declare no `hint`, which
+[`engine/testing/hint-games.ts`](../../src/engine/testing/hint-games.ts) derives.
+A hintless game is left that way deliberately until its hint is taken as an
+assessment of the framework, and `characterize-the-hint-assessment-corpus`'s
+audit is where the order is chosen. Upstream's `'h'` returns one next move with
 no explanation; that is below the bar. Adding a hint to a game is its **own
 openspec change** (`add-<game>-hint`), acceptance-gated like a port.
 
@@ -1330,6 +1331,7 @@ to a similar game:
 | Spokes | the forced spoke, in `COL_HINT` — **a line** when the move draws a line, **a rim dot** when the move places a mark (§ "Echo the move's shape in the hint color") | the hubs whose clue/lines/connectivity are the argument → `COL_HINT_CELL` ring. A saturated hub forces several spokes as one multi-leg journey, all in the one color |
 | Sticks | the forced square drawn as a `COL_HINT` **bar in the forced orientation**; green `COL_LINE` stays the placed line, so the hint is never mistaken for the move | the run / span / clue-sides the argument counts → one `evidence` list, cue split by the square's own state: a **white** square is washed `COL_HINT_CELL`, a **black clue** is *ringed* the same color (a wash would hide the blackness the argument is about). The list's length equals the number the sentence states |
 | Bridges | the **span** the step decides, drawn as the game's own shape: the bridge bundle it would become with only the *added* bars in `COL_HINT`, or the game's pair of crosses in `COL_HINT` when the step blocks it. The island a sentence *names* has its own rim and clue digit recolored `COL_HINT` (an annulus, so it is already a ring) | the islands and bridges the argument counts → `COL_HINT_CELL` on the same shapes. A premise that counts a **group** marks every member alike, the acted-from island included, because the sentence counts them together |
+| Seismic | the cell(s) a step decides, ringed `COL_HINT` inside the cell's own box (the gap between cells is the black its walls are made of); a struck note keeps its pencil color with a same-color line through it | the area a hidden single or a starved area reasons over → one `COL_HINT_CELL` contour; a placement's follow-on strikes outline the placed number's cell alone |
 | Galaxies | the **deduced** cell, solid **purple** `COL_HINT` (not blue — see below); the 180° partner the same move claims, a `COL_HINT` **outline over the ordinary evidence shading** (same hue, they share a fate; far less weight, only one is what the words are about); the wall it draws, a `COL_HINT` bar drawn *whether or not the wall exists yet*; the dot it points at, a **filled `COL_HINT` halo with the dot repainted on top** — **unless the dot stands on a cell just filled**, where a mark in the fill's own color is invisible and the narration names the dot by position instead | the cells / walls / dots the argument reasons over → `COL_HINT_CELL` teal (a galaxy's reach, a cut-off piece, the partner across a dot, an already-drawn wall). One ring role at a time, so "the ringed dot" is never ambiguous |
 
 **Mark the premise element in the action color only where the sentence names
@@ -1397,7 +1399,7 @@ section is the rule and the reasoning.
 **Read "cell" literally: `hint-mark.ts` is for a mark on a *cell*, and it is
 the right tool exactly that often.** A `MarkBand` is a content box plus an
 outward and an inward reach, so every mark it draws is a band on a cell's
-border box. 24 of the 30 hinting games mark cells and use it. Where a game's
+border box. Most hinting games mark cells and import it. Where a game's
 decided element is something else, the mark comes from § "Echo the move's shape
 in the hint color" instead — the game's own shapes recolored — and that is a
 first-class answer rather than a gap:
@@ -1412,9 +1414,11 @@ first-class answer rather than a gap:
   marked by recoloring its own rim and clue digit, which is already a ring
   because `drawIsland` paints an annulus.
 
-Two games in a row have now needed the second answer for part of their marks and
-one for all of them, so ask **what shape the game already draws for this action**
-before reaching for the band.
+Two games in a row needed the second answer for part of their marks and one for
+all of them, so ask **what shape the game already draws for this action** before
+reaching for the band. **Seismic, the deductive hint after them, used the band
+whole**, because everything it decides is a cell: what separated Bridges was its
+elements, not a vocabulary the collection had outgrown.
 
 **And check the guard is looking at your colors.** `hint-mark.test.ts` finds a
 game's hint colors by reading the `COL_HINT` export out of its own `render.ts`.
@@ -1468,6 +1472,17 @@ it decides who undoes the mark:
   exactly and draw their own per-cell outline, so the band replaces it. Nothing
   needs erasing: the cell whose overlay changed repaints itself and takes its
   mark with it, which is why those games can draw the mark from `drawTile`.
+  Seismic is here for a different reason: the one-pixel gap between its cells is
+  the black backing its region walls are made of, so a band in the gap would read
+  as a wall.
+
+  **"The cell whose overlay changed" includes a cell whose *outline* changed.** A
+  cell can stay evidence from one step to the next while the shape around it does
+  not — Seismic outlines a just-placed number's cell alone, and the very next
+  step can outline that cell's whole area. Its packed word is `HINT_AREA` both
+  times, so it kept the sides it no longer had until `OverlaySidecar` took each
+  evidence cell's outline sides into its diff key (`add-seismic-hint`). Nothing
+  to wire: `pack` computes them.
 - **Both** — Group, Undead and Clusters have a one-pixel gutter plus a couple of
   pixels of the cell's own edge.
 - **Inset** — Galaxies and Palisade put the mark *inside* the cell body, because
@@ -2688,7 +2703,9 @@ shared shape.
 - **The soundness boundary is non-negotiable: seed the working cube from the
   placed grid only — never the player's notes.** A note can be wrong (crossing
   out the correct height is exactly what Check-&-Save flags), so feeding it
-  back as a fact would let the solver "prove" nonsense. The notes are used
+  back as a fact would let the solver "prove" nonsense. The boundary is about a
+  *wrong* note, so it moves where the hint has already refused every wrong one:
+  see § "Deduce from the notes when the mistake check vouches for them". The notes are used
   only to *diff* (which already-true elimination to surface next, what is
   done) and to *render*. Run the recording solver at the board's own
   difficulty, **deductive only** (cap below recursion — a guess isn't a
@@ -3088,6 +3105,47 @@ when wrong, so the working cube may assume it. Pencil notes still never seed
 it. Exemplars: [`salad/hint.ts`](../../src/games/salad/hint.ts),
 [`salad/solver.ts`](../../src/games/salad/solver.ts) (the gated border
 recorder).
+
+### Deduce from the notes when the mistake check vouches for them (Seismic)
+
+Seismic's hint deduces from the **player's own notes**, not from a cube seeded by
+the placed numbers, and it is sound because of one fact about its
+`findMistakes`: it flags any empty cell whose notes have crossed out that cell's
+answer, and the hint refuses on a flagged board. So wherever the hint runs, every
+cell's notes still contain its answer, and a naked single, a hidden single or a
+starved area read off such notes is as sound as one read off the solver's own
+candidates. It is also the deduction the player can check on their screen, with no
+recorded script to diff against. **Check the premise before copying the shape**:
+a game whose mistake check ignores notes has no such guarantee, and the boundary
+above holds there in full.
+
+What else carried over, and what did not:
+
+- **A parallel recorder, held to the rung by a test.** Seismic's three rungs are
+  sweeps that apply everything they find at once; each finder in `hint.ts` is the
+  one-firing form of one of them. `seismic-hint.test.ts` holds the trial finder to
+  what `placeNumber` + `regionsViable` reject at every point it is the next step,
+  which is what makes the re-derivation a projection rather than a second solver.
+- **A trial rung can be a Check in disguise.** `attempt` places a candidate and
+  asks whether every area can still house its numbers. Placing `n` at `c` takes
+  `n` from other cells and other numbers from `c` alone, so the area left short is
+  either `c`'s own (a hidden single, found first) or another area that lost its
+  last `n` — every one of whose remaining homes clashes with `c`. That is one
+  placement and one look, a Check, and every cell clashing with all those homes is
+  ruled out by the same fact, so they are **one firing**. Read what the rung's
+  rejection can possibly *be* before classifying it by the fact that it trials.
+- **A placed value's reach can depend on the value**, which `regionsOf` cannot
+  express: a Seismic 3 rules out 3s three cells along its row and column. The
+  bulk clean is then the game's own marks through the shared `obviousCleanStep`,
+  which keeps the "fill, then clean is one journey" rule in one place.
+- **Not every note-taking board is square.** The shared helpers used to scan
+  `w * w` cells, which on a Seismic board five wide and eight high stops three
+  rows short. They read `grid.length` now.
+- **A shared structure read through a mutating accessor breaks hint purity.**
+  Every Seismic state shares one region `Dsf`, and `canonify` compresses paths as
+  it reads, so the first hint rewrote the partition and `hint-resume.test.ts`'s
+  "hint() leaves the state unchanged" failed. The partition is compressed once
+  when it is built, after which every read is a read.
 
 ### A populate step never resets notes
 

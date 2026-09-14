@@ -14,6 +14,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { anyEmptyLacksNotes, candidateHint } from "../../engine/candidate-hint.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
@@ -45,6 +46,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { maxGeneratedRegionSize, newSeismicDesc } from "./generator.ts";
+import { buildSteps, hintKeepTrack, refreshHintStep } from "./hint.ts";
 import {
   colors,
   computeSize,
@@ -175,13 +177,11 @@ function interpretMove(
   // Fill-only, like upstream's `M`, not the adaptive fill-then-clean the square
   // Latin games use: `adaptiveMarkAllMove` assumes a square board with
   // candidates capped at `w`, while Seismic's candidates are per region.
-  if (button === 0x4d || button === 0x6d) {
-    // The fill is additive, so the gate is "some empty cell has *no* notes" —
-    // not "some cell differs from its region's full set", which would keep
-    // emitting a move that changes nothing (an undo entry per press).
-    for (let i = 0; i < w * h; i++) {
-      if (grid[i] === 0 && pencil[i] === 0) return { type: "pencilAll" };
-    }
+  // The fill is additive, so the gate is "some empty cell has *no* notes" — not
+  // "some cell differs from its region's full set", which would keep emitting a
+  // move that changes nothing (an undo entry per press).
+  if ((button === 0x4d || button === 0x6d) && anyEmptyLacksNotes(grid, pencil)) {
+    return { type: "pencilAll" };
   }
 
   return null;
@@ -216,6 +216,13 @@ function executeMove(state: SeismicState, move: SeismicMove): SeismicState {
         if (next.grid[i] === 0 && next.pencil[i] === 0) {
           next.pencil[i] = areaBits(dsf.size(i));
         }
+      }
+      return next;
+    }
+    case "pencilStrike": {
+      for (const { x, y, n } of move.marks) {
+        const i = y * w + x;
+        if (next.grid[i] === 0) next.pencil[i] &= ~numBit(n);
       }
       return next;
     }
@@ -350,6 +357,9 @@ export const seismicGame: Game<
   solve,
   difficulty,
   findMistakes,
+  hint: (state) => candidateHint(state, null, findMistakes, buildSteps),
+  hintKeepTrack,
+  refreshHintStep,
   // Sized to the regions the generator *makes*, not the nine the format admits:
   // entry is capped at the cell's region size, so a digit no region can hold is
   // a button that does nothing — and on touch the panel is the only way to type.

@@ -126,17 +126,25 @@ export function candidateHint<State extends { completed: boolean }, Move, Hint>(
  * exactly one candidate. On a mistake-free board that lone candidate is the
  * solution, so placing it is sound — and it is the move a human makes next, so the
  * hint surfaces it ahead of any further elimination (docs/games/hints.md § "Solve the way a human does").
- * `grid`: 0 = empty; `pencil`: bit `1 << d` = candidate `d`; `w` = grid order. */
+ * `grid`: 0 = empty, one entry per cell; `pencil`: the note bits `enc` describes;
+ * `w` = the row stride, and the highest value unless `enc.values` says otherwise.
+ *
+ * Every helper in this module that scans the whole board reads its **length** off
+ * `grid` rather than squaring `w`: a Latin board is square, but a note-taking board
+ * need not be, and a square scan of a wide board reads past its last row. */
 export function nakedSingle(
   grid: ArrayLike<number>,
   pencil: ArrayLike<number>,
   w: number,
+  enc?: NoteEncoding,
 ): { x: number; y: number; n: number } | null {
-  for (let i = 0; i < w * w; i++) {
+  const bit = bitOf(enc);
+  const values = enc?.values ?? w;
+  for (let i = 0; i < grid.length; i++) {
     if (grid[i] !== 0 || pencil[i] === 0) continue;
     if ((pencil[i] & (pencil[i] - 1)) !== 0) continue; // more than one bit set
-    for (let v = 1; v <= w; v++) {
-      if (pencil[i] & (1 << v)) return { x: i % w, y: (i / w) | 0, n: v };
+    for (let v = 1; v <= values; v++) {
+      if (pencil[i] & bit(v)) return { x: i % w, y: (i / w) | 0, n: v };
     }
   }
   return null;
@@ -147,9 +155,8 @@ export function nakedSingle(
 export function anyEmptyLacksNotes(
   grid: ArrayLike<number>,
   pencil: ArrayLike<number>,
-  w: number,
 ): boolean {
-  for (let i = 0; i < w * w; i++) {
+  for (let i = 0; i < grid.length; i++) {
     if (grid[i] === 0 && pencil[i] === 0) return true;
   }
   return false;
@@ -288,7 +295,7 @@ export function findRegionDuplicate(
   regionsOf: (x: number, y: number) => readonly ClassifyRegion[],
   enc?: NoteEncoding,
 ): RegionDuplicate | null {
-  for (let i = 0; i < w * w; i++) {
+  for (let i = 0; i < grid.length; i++) {
     const v = grid[i];
     if (v === 0) continue;
     const px = i % w;
@@ -328,7 +335,7 @@ export function obviousCandidateMarks(
   const bit = bitOf(enc);
   const values = enc?.values ?? w;
   const marks: Mark[] = [];
-  for (let i = 0; i < w * w; i++) {
+  for (let i = 0; i < grid.length; i++) {
     if (grid[i] !== 0) continue;
     const notes = pencil[i];
     if (notes === 0) continue;
@@ -385,12 +392,13 @@ export function lazyPopulate<M, H>(
   steps: HintStep<M, H>[],
   explanation: string,
 ): { ensure(): void; done(): boolean } {
-  let populated = !anyEmptyLacksNotes(state.grid, state.pencil, w);
+  let populated = !anyEmptyLacksNotes(state.grid, state.pencil);
   return {
     ensure(): void {
       if (populated) return;
       const all = (1 << (w + 1)) - (1 << 1);
-      for (let i = 0; i < w * w; i++) if (!wGrid[i] && wPen[i] === 0) wPen[i] = all;
+      for (let i = 0; i < wGrid.length; i++)
+        if (!wGrid[i] && wPen[i] === 0) wPen[i] = all;
       steps.push(populateStep({ type: "pencilAll" } as unknown as M, explanation));
       populated = true;
     },
@@ -460,7 +468,7 @@ export function adaptiveMarkAllMove<M>(
   regionsOf: (x: number, y: number) => readonly ClassifyRegion[],
   enc?: NoteEncoding,
 ): M | null {
-  return adaptiveMarkAll<M, Mark>(anyEmptyLacksNotes(grid, pencil, w), () =>
+  return adaptiveMarkAll<M, Mark>(anyEmptyLacksNotes(grid, pencil), () =>
     obviousCandidateMarks(grid, pencil, w, regionsOf, enc),
   );
 }
@@ -537,30 +545,51 @@ export function emitObviousCleanStep<M, H>(
   explanation: string,
   opts?: { enc?: NoteEncoding; adapter?: CandidateMoveAdapter<M> },
 ): boolean {
-  const dialect = adapterOf(opts?.adapter);
   const bit = bitOf(opts?.enc);
   const obvious = obviousCandidateMarks(grid, pencil, w, regionsOf, opts?.enc);
   if (obvious.length === 0) return false;
   for (const m of obvious) pencil[m.y * w + m.x] &= ~bit(m.n);
-  const prev = steps[steps.length - 1];
-  // "Fill, then clear the obvious ones" is one setup journey. Reading the
-  // previous move through the dialect (rather than sniffing a `type` field) is
-  // what lets a game whose populate move is spelled differently — Salad's
-  // `markAll` — still get the continuation.
-  const continuesPrevious =
-    prev !== undefined && dialect.read(prev.move)?.type === "pencilAll";
+  steps.push(
+    obviousCleanStep<M, H>(
+      steps[steps.length - 1] ?? null,
+      obvious,
+      explanation,
+      opts?.adapter,
+    ),
+  );
+  return true;
+}
+
+/**
+ * The obvious-candidate clean as a step, given the step it follows. The half of
+ * {@link emitObviousCleanStep} that does not decide *which* notes are obvious, for
+ * a game whose placed values rule out more than their uniqueness regions — where
+ * `regionsOf` cannot say what a value strikes, because the reach depends on the
+ * value.
+ *
+ * "Fill, then clear the obvious ones" is one setup journey, so the step continues
+ * `prev` exactly when that is the populate fill. Reading `prev` through the dialect
+ * rather than sniffing a `type` field is what lets a game whose populate move is
+ * spelled differently (Salad's `markAll`) still get the continuation.
+ */
+export function obviousCleanStep<M, H>(
+  prev: HintStep<M, H> | null,
+  marks: Mark[],
+  explanation: string,
+  adapter?: CandidateMoveAdapter<M>,
+): HintStep<M, H> {
+  const dialect = adapterOf(adapter);
   const highlights: CandidateHighlights = {
     area: [],
-    targets: obvious.map((m) => ({ x: m.x, y: m.y })),
-    marks: obvious,
+    targets: marks.map((m) => ({ x: m.x, y: m.y })),
+    marks,
   };
-  steps.push({
-    move: dialect.strike(obvious),
+  return {
+    move: dialect.strike(marks),
     explanation,
     highlights: highlights as unknown as H,
-    continuesPrevious,
-  });
-  return true;
+    continuesPrevious: prev !== null && dialect.read(prev.move)?.type === "pencilAll",
+  };
 }
 
 /** Classify a player move against the displayed hint step (the engine's
@@ -671,7 +700,7 @@ export function refreshCandidateHintStep<M, H extends CandidateHighlights>(
   }
   if (m.type === "pencilAll") {
     // The populate step is resolved once every empty cell already has notes.
-    return anyEmptyLacksNotes(grid, pencil, w) ? step : null;
+    return anyEmptyLacksNotes(grid, pencil) ? step : null;
   }
   return step;
 }

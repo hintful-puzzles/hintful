@@ -21,6 +21,15 @@ You can also use the arrow keys to move the selected cell around. Press Enter to
 
 Press the 'M' key to fill every empty cell with all possible pencil marks.
 
+## Hints
+
+**Hint** explains the next step rather than simply making it. It works from your own pencil marks, so it starts by filling them in (the same as pressing 'M') and then crossing out the numbers already ruled out. As long as none of your marks has crossed out a cell's answer, it carries on from wherever you are.
+
+* **A cell ringed in the hint color** is the cell the step is about: the number to enter there, or the pencil marks to cross out, which are shown with a line through them.
+* **An outlined area** is the area the step reasons from. A step that crosses out a number just placed outlines that number's cell instead.
+
+Most steps are the plain rules at work: a cell with only one pencil mark left, or a number with only one cell left to go in within its area. On Normal boards one more idea appears. When every cell an area has left for some number is close enough to a cell outside it to clash, that cell cannot hold the number: whichever cell the area uses, the two would break the keep-apart rule.
+
 ## Seismic parameters
 
 These parameters are available from the ‘Custom…’ option on the ‘Type’ menu. 

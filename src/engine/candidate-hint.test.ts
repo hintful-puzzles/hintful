@@ -16,6 +16,7 @@ import {
   nextPlace,
   nextStrike,
   obviousCandidateMarks,
+  obviousCleanStep,
   populateStep,
   refreshCandidateHintStep,
   regionDuplicateMarks,
@@ -144,20 +145,39 @@ describe("nakedSingle", () => {
     const [grid, pencil] = board([1, 0, 2, 2], [bits(1), bits(2), 0, 0]);
     expect(nakedSingle(grid, pencil, 2)).toEqual({ x: 1, y: 0, n: 2 });
   });
+
+  it("reaches the bottom row of a tall board, in the game's own note encoding", () => {
+    // Candidate 5 at bit 4, on a board whose values run past its width: neither
+    // the default `1 << n` nor a value range capped at `w` would find it.
+    const pencil = Int32Array.from([0, 0, 0, 0, 0, 0, 1 << 4, 0b11]);
+    expect(
+      nakedSingle(TALL.grid, pencil, TALL.w, { bit: (n) => 1 << (n - 1), values: 9 }),
+    ).toEqual({ x: 0, y: 3, n: 5 });
+  });
 });
+
+/** A board two cells wide and four high, whose only note-worthy cell sits in the
+ * bottom row: a scan that squares the stride stops two rows short of it. */
+const TALL = { w: 2, grid: Int8Array.from([1, 2, 2, 1, 1, 2, 0, 0]) };
 
 describe("anyEmptyLacksNotes", () => {
   it("is true iff some empty cell carries no pencil notes", () => {
     const all = bits(1, 2);
     expect(
-      anyEmptyLacksNotes(Int8Array.from([0, 0]), Int32Array.from([all, 0]), 1),
+      anyEmptyLacksNotes(Int8Array.from([0, 0]), Int32Array.from([all, all])),
     ).toBe(false);
-    // order 1 reads only cell 0; cell 0 empty with no notes → true.
-    expect(anyEmptyLacksNotes(Int8Array.from([0]), Int32Array.from([0]), 1)).toBe(true);
+    expect(anyEmptyLacksNotes(Int8Array.from([0, 0]), Int32Array.from([all, 0]))).toBe(
+      true,
+    );
     // a filled cell with no notes does not count.
-    expect(anyEmptyLacksNotes(Int8Array.from([1]), Int32Array.from([0]), 1)).toBe(
+    expect(anyEmptyLacksNotes(Int8Array.from([0, 1]), Int32Array.from([all, 0]))).toBe(
       false,
     );
+  });
+
+  it("reads every row of a board taller than it is wide", () => {
+    const pencil = Int32Array.from([0, 0, 0, 0, 0, 0, bits(1), 0]);
+    expect(anyEmptyLacksNotes(TALL.grid, pencil)).toBe(true);
   });
 });
 
@@ -576,6 +596,14 @@ describe("refreshCandidateHintStep", () => {
       ),
     ).toBeNull();
   });
+
+  it("keeps a populate step while a bottom-row cell of a tall board lacks notes", () => {
+    const populate = step({ type: "pencilAll" });
+    const pencil = Int32Array.from([0, 0, 0, 0, 0, 0, bits(1), 0]);
+    expect(refreshCandidateHintStep(populate, TALL.grid, pencil, TALL.w)).toBe(
+      populate,
+    );
+  });
 });
 
 describe("populateStep", () => {
@@ -702,6 +730,32 @@ describe("emitObviousCleanStep", () => {
       emitObviousCleanStep(steps, grid, pencil, 2, rc(2), "clear the easy ones"),
     ).toBe(false);
     expect(steps).toEqual([]);
+  });
+});
+
+describe("obviousCleanStep", () => {
+  const marks = [{ x: 3, y: 1, n: 4 }];
+
+  it("strikes exactly the marks it is given, and marks their cells", () => {
+    const s = obviousCleanStep<CandidateMove, CandidateHighlights>(
+      null,
+      marks,
+      "clear",
+    );
+    expect(s.move).toEqual({ type: "pencilStrike", marks });
+    expect(s.highlights).toEqual({ area: [], targets: [{ x: 3, y: 1 }], marks });
+    expect(s.explanation).toBe("clear");
+  });
+
+  it("continues a populate fill, and nothing else", () => {
+    const fill = populateStep<CandidateMove, CandidateHighlights>(
+      { type: "pencilAll" },
+      "fill",
+    );
+    const place = step({ type: "set", x: 0, y: 0, n: 1, pencil: false });
+    expect(obviousCleanStep(fill, marks, "clear").continuesPrevious).toBe(true);
+    expect(obviousCleanStep(place, marks, "clear").continuesPrevious).toBe(false);
+    expect(obviousCleanStep(null, marks, "clear").continuesPrevious).toBe(false);
   });
 });
 

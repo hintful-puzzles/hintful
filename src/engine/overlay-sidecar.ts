@@ -20,6 +20,8 @@
  *   - `ds.<overlay>.commit(i)` after the cell is drawn.
  */
 
+import { outlineSides } from "./hint-mark.ts";
+
 /** Bit 0: the cell the deduction acts on (`COL_HINT`). */
 export const HINT_TARGET = 1;
 /** Bit 1: the evidence area (`COL_HINT_CELL` shade). */
@@ -70,16 +72,30 @@ export class OverlaySidecar {
   /** Per-cell chain ordinal for the frame being drawn (0 = none) — see
    * {@link OrderedCell} for why this is a lane of its own. */
   readonly order: Int32Array;
+  /**
+   * Per-cell outline sides of the evidence area, for the frame being drawn (0 =
+   * not evidence), in `hint-mark.ts`'s side bits.
+   *
+   * Part of the diff key because a hint mark drawn *inside* a cell is undone only
+   * by that cell's repaint, and a cell can stay evidence from one step to the next
+   * while the shape around it changes — alone in one step, the middle of a row in
+   * the next. Its packed word is `HINT_AREA` both times, so without this lane it
+   * keeps the sides it no longer has.
+   */
+  private readonly outline: Int32Array;
   /** What the canvas currently shows per cell (-1 = never drawn, so the
    * first frame always misses). */
   private readonly drawn: Int32Array;
   private readonly drawnOrder: Int32Array;
+  private readonly drawnOutline: Int32Array;
 
   constructor(cells: number) {
     this.packed = new Int32Array(cells);
     this.order = new Int32Array(cells);
+    this.outline = new Int32Array(cells);
     this.drawn = new Int32Array(cells).fill(-1);
     this.drawnOrder = new Int32Array(cells).fill(-1);
+    this.drawnOutline = new Int32Array(cells);
   }
 
   /** Start a frame's overlay from nothing. The pack entry points below call
@@ -87,6 +103,7 @@ export class OverlaySidecar {
   clear(): void {
     this.packed.fill(0);
     this.order.fill(0);
+    this.outline.fill(0);
   }
 
   /** OR `bits` into cell `i`'s overlay word for this frame. */
@@ -110,9 +127,13 @@ export class OverlaySidecar {
   ): void {
     this.clear();
     if (!hl) return;
-    for (const a of hl.area ?? []) {
+    const area = hl.area ?? [];
+    const inArea = new Set(area.map((a) => `${a.x},${a.y}`));
+    const isEvidence = (x: number, y: number): boolean => inArea.has(`${x},${y}`);
+    for (const a of area) {
       const i = index(a.x, a.y);
       this.add(i, HINT_AREA);
+      this.outline[i] = outlineSides(a.x, a.y, isEvidence);
       if (a.order !== undefined) this.setOrder(i, a.order);
     }
     for (const t of hl.targets ?? []) this.add(index(t.x, t.y), HINT_TARGET);
@@ -136,15 +157,21 @@ export class OverlaySidecar {
   }
 
   /** True when cell `i`'s drawn overlay differs from this frame's — one
-   * clause of the game's cache-miss test. Covers the ordinal lane too, so a
-   * chain that keeps its cells and only reorders them still repaints. */
+   * clause of the game's cache-miss test. Covers the ordinal and outline lanes
+   * too, so a chain that only reorders its cells, or an area that only changes
+   * shape around a cell, still repaints. */
   stale(i: number): boolean {
-    return this.packed[i] !== this.drawn[i] || this.order[i] !== this.drawnOrder[i];
+    return (
+      this.packed[i] !== this.drawn[i] ||
+      this.order[i] !== this.drawnOrder[i] ||
+      this.outline[i] !== this.drawnOutline[i]
+    );
   }
 
   /** Record that cell `i` now shows this frame's overlay. */
   commit(i: number): void {
     this.drawn[i] = this.packed[i];
     this.drawnOrder[i] = this.order[i];
+    this.drawnOutline[i] = this.outline[i];
   }
 }

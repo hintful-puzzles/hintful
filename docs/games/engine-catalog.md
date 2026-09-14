@@ -441,9 +441,12 @@ the player can already see — a later step may cite it. See
 ### `candidate-hint.ts` — candidate-elimination plan plumbing
 
 The shared mechanics for pencil-notes games (naked-single finder,
-lazy-populate check, next-strike/next-place lookups, generic
-`keepCandidateHintTrack`/`refreshCandidateHintStep`). The per-game `buildSteps`
-walk is deliberately *not* shared — see
+lazy-populate check, next-strike/next-place lookups, the obvious-clean step —
+`emitObviousCleanStep` where the obvious strikes are region duplicates,
+`obviousCleanStep` where the game computes its own — generic
+`keepCandidateHintTrack`/`refreshCandidateHintStep`). A board scan reads
+`grid.length`, so a board need not be square; `w` is only the row stride. The
+per-game `buildSteps` walk is deliberately *not* shared — see
 [`hints.md`](./hints.md) § "Candidate-elimination games".
 
 ### `latin-hint.ts` — truthful Latin single classification
@@ -691,6 +694,8 @@ Discipline for all of these — the cache, the diff key, the doctrine — is
 doesn't live in the packed tile value. **Never hand-write the two-array
 dance.** Entry points by shape: `pack` (a hint step's highlights), `packCells`
 (a `findMistakes` list), `clear()`+`add()` (an overlay with its own topology).
+`pack` also keys an evidence cell on its outline sides, so a cell that stays
+evidence while the area around it changes shape still repaints.
 
 ### `draw.ts` — shared drawing primitives
 

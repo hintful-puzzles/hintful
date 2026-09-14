@@ -85,6 +85,12 @@ drawing. Three pack entry points, by the shape of what you have:
 | A `findMistakes` cell list | `packCells(mistakes, indexFn)` | `towers/render.ts` `ds.wrong` |
 | An overlay with its own topology | `clear()` + `add(i, bits)` | [`galaxies/render.ts`](../../src/games/galaxies/render.ts) `ds.wrongEdges` — one wrong wall is a *shared* edge, so it lights a different bit in each of the two tiles it separates |
 
+`pack` also keys each evidence cell on its **outline sides**, not only on being
+evidence. A hint mark drawn inside a cell is undone only by that cell's repaint,
+and a cell can stay evidence while the shape around it changes; without the
+sides it keeps the outline it no longer has (`hints.md` § "Where the band goes,
+and who rubs it out").
+
 ### A cue with a tile available belongs in the tile key, not in a second cache
 
 **Prefer a bit in the per-tile key over a sidecar scalar on the draw state.** A

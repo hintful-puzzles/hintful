@@ -29,23 +29,33 @@
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import {
   ERROR,
+  HINT_ACTION,
+  HINT_EVIDENCE,
   INK,
   PENCIL_BODY,
   pencilColor,
   playerEntryColor,
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
-import type { GameDrawing } from "../../engine/game.ts";
-import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
+import {
+  HINT_AREA,
+  HINT_TARGET,
+  hintMarkBit,
+  OverlaySidecar,
+} from "../../engine/overlay-sidecar.ts";
 import {
   type PencilIndicatorBox,
   type PencilIndicatorStyle,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import type { SeismicHint } from "./hint.ts";
 import {
   FM_ERRORMASK,
   FM_FIXED,
+  type SeismicMove,
   type SeismicParams,
   type SeismicState,
   type SeismicUi,
@@ -79,6 +89,11 @@ export const COL_ERRORDIST = 8;
 /** Fork addition, appended past the upstream enum (Seismic declares no dark-mode
  * `paletteOverrides`, so appending is safe): the pencil indicator's body. */
 export const COL_PENCIL_BODY = 9;
+/** Fork additions: the explained hint's two marks (docs/games/hints.md § "Shade vs
+ * ring"), the ring on the cell a step acts on and the outline of what it reasons
+ * from. Both are drawn on a cell's edge rather than behind its notes. */
+export const COL_HINT = 10;
+export const COL_HINT_CELL = 11;
 
 export function colors(defaultBackground: Color): Color[] {
   const { background, highlight, lowlight } = mkhighlight(defaultBackground);
@@ -93,6 +108,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_NUM_PENCIL] = pencilColor(background);
   out[COL_ERRORDIST] = ERROR;
   out[COL_PENCIL_BODY] = PENCIL_BODY;
+  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT_CELL] = HINT_EVIDENCE;
   return out;
 }
 
@@ -134,6 +151,11 @@ export interface SeismicDrawState {
   tiles: Int32Array;
   /** The Check-&-Save mistake overlay. */
   wrong: OverlaySidecar;
+  /** The displayed hint: target and evidence bits, and each struck note at
+   * `hintMarkBit(n)`. */
+  hint: OverlaySidecar;
+  /** The hint's rings and outline, painted once per frame after the tiles. */
+  marks: HintMarks;
   /** Whether the pencil-mode indicator was on last frame. */
   pencilModeShown: boolean | null;
 }
@@ -145,6 +167,8 @@ export function newDrawState(state: SeismicState): SeismicDrawState {
     tileSize: 0,
     tiles: new Int32Array(cells).fill(-1),
     wrong: new OverlaySidecar(cells),
+    hint: new OverlaySidecar(cells),
+    marks: new HintMarks(),
     pencilModeShown: null,
   };
 }
@@ -179,14 +203,31 @@ function cellRect(state: SeismicState, x: number, y: number, ts: number) {
   return { cx, cy, cw, ch };
 }
 
+/**
+ * Where a hint mark sits around cell `(x, y)`: inside the box the cell paints,
+ * over its edge (`outer` 0).
+ *
+ * Not in the gap between cells, because that gap is the black backing the region
+ * walls are made of, and a colored band there would read as a wall. Inside, the
+ * cell's own repaint undoes the mark. There is room: the pencil grid's first row
+ * and column of glyphs sit about a tenth of a tile in from the box, against a band
+ * of a sixteenth.
+ */
+function markBand(state: SeismicState, x: number, y: number, ts: number): MarkBand {
+  const { cx, cy, cw, ch } = cellRect(state, x, y, ts);
+  return { box: { x: cx, y: cy, w: cw, h: ch }, outer: 0, inner: Math.max(2, ts >> 4) };
+}
+
 /** The auto-sized pencil-mark grid — upstream's layout arithmetic verbatim,
- * integer division throughout. Bit `n − 1` is candidate `n`. */
+ * integer division throughout. Bit `n − 1` is candidate `n`; bit `n` of `struck`
+ * is a candidate the displayed hint rules out, drawn with a line through it. */
 function drawPencilMarks(
   dr: GameDrawing,
   ts: number,
   cx: number,
   cy: number,
   marks: number,
+  struck: number,
 ): void {
   let nhints = 0;
   for (let n = 0; n < 9; n++) if (marks & (1 << n)) nhints++;
@@ -205,15 +246,22 @@ function drawPencilMarks(
     if (!(marks & (1 << n))) continue;
     const hx = j % hw;
     const hy = (j / hw) | 0;
-    dr.drawText(
-      {
-        x: cx + ((((4 * hx + 3) * ts) / (4 * hw + 2)) | 0),
-        y: cy + ((((4 * hy + 3) * ts) / (4 * hh + 2)) | 0),
-      },
-      glyphFont(fontsz),
-      COL_NUM_PENCIL,
-      String(n + 1),
-    );
+    const at = {
+      x: cx + ((((4 * hx + 3) * ts) / (4 * hw + 2)) | 0),
+      y: cy + ((((4 * hy + 3) * ts) / (4 * hh + 2)) | 0),
+    };
+    dr.drawText(at, glyphFont(fontsz), COL_NUM_PENCIL, String(n + 1));
+    // The struck note keeps its own color, so it still reads as the player's
+    // note; the line through it is what says the hint rules it out.
+    if (struck & (1 << (n + 1))) {
+      const r = Math.max(2, (fontsz / 3) | 0);
+      dr.drawLine(
+        { x: at.x - r, y: at.y },
+        { x: at.x + r, y: at.y },
+        COL_NUM_PENCIL,
+        2,
+      );
+    }
     j++;
   }
 }
@@ -227,6 +275,7 @@ function drawTile(
   color: number,
   pencilCursor: boolean,
   wrong: boolean,
+  struck: number,
 ): void {
   const ts = ds.tileSize;
   const { w, h, dsf, grid, pencil, flags } = state;
@@ -267,7 +316,7 @@ function drawTile(
     corner(tx + ts - 2 * GRIDEXTRA, ty + ts - 2 * GRIDEXTRA);
 
   if (grid[i] === 0) {
-    drawPencilMarks(dr, ts, cx, cy, pencil[i]);
+    drawPencilMarks(dr, ts, cx, cy, pencil[i], struck);
   } else {
     const ink =
       flags[i] & FM_FIXED
@@ -327,7 +376,7 @@ export function redraw(
   ui: SeismicUi,
   _animTime: number,
   flashTime: number,
-  _hint?: unknown,
+  hint?: HintStep<SeismicMove, SeismicHint>,
   mistakes?: readonly { x: number; y: number }[],
 ): void {
   const ts = ds.tileSize;
@@ -357,7 +406,9 @@ export function redraw(
   const flash = flashTime > 0 ? Math.floor(flashTime / FLASH_FRAME) % 3 : -1;
   const cshow = flashTime > 0 ? false : ui.cursor.visible;
 
-  ds.wrong.packCells(mistakes ?? null, (x, y) => y * w + x);
+  const index = (x: number, y: number): number => y * w + x;
+  ds.wrong.packCells(mistakes ?? null, index);
+  ds.hint.pack(hint?.highlights ?? null, index, (m) => hintMarkBit(m.n));
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -384,13 +435,29 @@ export function redraw(
         (color << 16) |
         ((pencilCursor ? 1 : 0) << 18);
 
-      if (ds.tiles[i] !== tile || ds.wrong.stale(i)) {
-        drawTile(dr, ds, state, x, y, color, pencilCursor, ds.wrong.at(i));
+      if (ds.tiles[i] !== tile || ds.wrong.stale(i) || ds.hint.stale(i)) {
+        const struck = ds.hint.packed[i] >> 2;
+        drawTile(dr, ds, state, x, y, color, pencilCursor, ds.wrong.at(i), struck);
         ds.tiles[i] = tile;
         ds.wrong.commit(i);
+        ds.hint.commit(i);
       }
     }
   }
+
+  // The hint's marks, after every tile, so no tile painted this frame covers one.
+  const targets: MarkCell[] = [];
+  const evidence: MarkCell[] = [];
+  for (let i = 0; i < w * h; i++) {
+    const c = { x: i % w, y: (i / w) | 0 };
+    if (ds.hint.packed[i] & HINT_TARGET) targets.push(c);
+    if (ds.hint.packed[i] & HINT_AREA) evidence.push(c);
+  }
+  ds.marks.paint(dr, targets, evidence, {
+    band: (x, y) => markBand(state, x, y, ts),
+    targetColor: COL_HINT,
+    evidenceColor: COL_HINT_CELL,
+  });
 
   const box = PENCIL_BOX(state.params, ts);
   repaintPencilIndicator(dr, ds, ui.pencilMode, box, PENCIL_STYLE);

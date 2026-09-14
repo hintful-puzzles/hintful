@@ -844,13 +844,13 @@ export const MODULES = [
       {
         within: "lazyPopulate.ensure",
         why: "the working fill overwrites notes the player narrowed, so the plan teaches strikes on candidates no longer on their board",
-        find: "      for (let i = 0; i < w * w; i++) if (!wGrid[i] && wPen[i] === 0) wPen[i] = all;",
-        replace: "      for (let i = 0; i < w * w; i++) if (!wGrid[i]) wPen[i] = all;",
+        find: "        if (!wGrid[i] && wPen[i] === 0) wPen[i] = all;",
+        replace: "        if (!wGrid[i]) wPen[i] = all;",
       },
       {
         within: "lazyPopulate",
         why: "an already-noted board still opens with a redundant “pencil everything in” step",
-        find: "  let populated = !anyEmptyLacksNotes(state.grid, state.pencil, w);",
+        find: "  let populated = !anyEmptyLacksNotes(state.grid, state.pencil);",
         replace: "  let populated = false;",
       },
       {
@@ -866,10 +866,10 @@ export const MODULES = [
         replace: "  for (const m of obvious) void m;",
       },
       {
-        within: "emitObviousCleanStep",
+        within: "obviousCleanStep",
         why: "“fill, then clear the obvious ones” splits into two hints instead of one journey",
-        find: '    prev !== undefined && dialect.read(prev.move)?.type === "pencilAll";',
-        replace: "    false;",
+        find: '    continuesPrevious: prev !== null && dialect.read(prev.move)?.type === "pencilAll",',
+        replace: "    continuesPrevious: false,",
       },
       {
         within: "emitObviousCleanStep",
@@ -911,7 +911,7 @@ export const MODULES = [
       {
         within: "refreshCandidateHintStep",
         why: "the populate step stays displayed after every empty cell already has notes",
-        find: "    return anyEmptyLacksNotes(grid, pencil, w) ? step : null;",
+        find: "    return anyEmptyLacksNotes(grid, pencil) ? step : null;",
         replace: "    return step;",
       },
       {

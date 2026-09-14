@@ -272,6 +272,10 @@ export type SeismicMove =
   | { type: "set"; x: number; y: number; n: number; pencil: boolean }
   /** Upstream's `M`: fill every empty cell's marks with its region's candidates. */
   | { type: "pencilAll" }
+  /** Cross out several notes at once: how a hint step rules candidates out, since
+   * one deduction can strike several and a pencil toggle is neither multi-cell nor
+   * idempotent (docs/games/hints.md § "Persist, populate, and the moves"). */
+  | { type: "pencilStrike"; marks: { x: number; y: number; n: number }[] }
   /** Fill in the solver's answer. */
   | { type: "solve"; grid: number[] };
 
@@ -447,6 +451,12 @@ function readDesc(
       if (!walls[hs + y * w + x]) board.dsf.merge(y * w + x, (y + 1) * w + x);
     }
   }
+  // Compress every path now, while the partition is being built. Every state of
+  // a game shares this one `Dsf`, and `canonify` shortens the paths it walks, so
+  // an uncompressed partition is rewritten by whatever reads it first: a hint,
+  // a redraw, a mistake check. Compressed once, every later read is a read, which
+  // is what `hint-resume.test.ts`'s "hint() leaves the state unchanged" holds.
+  for (let i = 0; i < w * h; i++) board.dsf.canonify(i);
 
   // Skip the ',' separator (upstream advances unconditionally, so a truncated
   // description simply reads the clue grid as all-empty).

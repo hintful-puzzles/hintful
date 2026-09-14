@@ -46,6 +46,27 @@ describe("OverlaySidecar", () => {
     expect(s.stale(idx(1, 1))).toBe(false);
   });
 
+  it("an evidence cell whose outline changes shape is stale, though its word is not", () => {
+    // (1,1) is evidence in both frames: alone, then the middle of a row. Its
+    // packed word is HINT_AREA both times while two of its sides go away, and a
+    // mark drawn inside the cell is undone only by the cell repainting.
+    const row = [
+      { x: 0, y: 1 },
+      { x: 1, y: 1 },
+      { x: 2, y: 1 },
+    ];
+    const s = new OverlaySidecar(9);
+    s.pack({ area: [{ x: 1, y: 1 }] }, idx, marks);
+    for (let i = 0; i < 9; i++) s.commit(i);
+    s.pack({ area: row }, idx, marks);
+    expect(s.packed[idx(1, 1)]).toBe(HINT_AREA);
+    expect(s.stale(idx(1, 1))).toBe(true);
+    // The same shape again repaints nothing.
+    for (let i = 0; i < 9; i++) s.commit(i);
+    s.pack({ area: row }, idx, marks);
+    expect(s.stale(idx(1, 1))).toBe(false);
+  });
+
   it("packing null clears the overlay (hint dismissed)", () => {
     const s = new OverlaySidecar(4);
     s.pack({ targets: [{ x: 0, y: 0 }], marks: [] }, (x, y) => y * 2 + x, marks);

@@ -1,5 +1,2 @@
-# A stub: the requirement a Seismic hint adds is written with the hint, once
-# its narration and marks exist to be stated. Remove `skip_specs` then.
 schema: spec-driven
 created: 2026-09-13
-skip_specs: true

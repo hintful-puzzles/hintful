@@ -298,7 +298,11 @@ glanceable steps** — *not* by whether a trial or a search was involved.
 
 - **Check** — Sticks' `sticksTry` (one tentative orientation, one validator
   call, no fixpoint) is the exemplar; so is Galaxies' "only one dot could own
-  this cell", and Bricks' and Clusters' single-cell rungs.
+  this cell", and Bricks' and Clusters' single-cell rungs. So is Seismic's
+  `attempt`, which trials a candidate and asks every area whether it can still
+  house its numbers — but whose every possible rejection is one area left with no
+  home for the placed number, which the player can see without trialing anything
+  (`hints.md` § "Deduce from the notes when the mistake check vouches for them").
 - **Tactic** — `latin.ts`'s `forcing` (measured 3–12 implication links, median
   4–5), Clusters' lookahead (median 2–3 forced cells), Map's forcing-chain BFS.
   Legitimate at a middle tier; see `hints.md` § "The forcing boundary" for what
