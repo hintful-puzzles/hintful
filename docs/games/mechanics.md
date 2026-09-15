@@ -634,6 +634,15 @@ through `Midend.getStaticProperties`.
 | Pencil marks | `canMarkAll` + moves + prefs | below |
 | Reference aid | `reference`/`selectReference` | below |
 
+**A deduction's notation is an affordance, and a hint may use only what the
+game offers.** If solving a tier needs a kind of mark (pencil candidates, an
+association arrow, a no-line cross, Loopy's corners and pairs of edges), the game
+gives the player that mark with every input it supports, and the hint's steps
+place it as a move. A hint that draws facts the player cannot record teaches
+nothing the player can reuse (`AGENTS.md` § "Hint quality bar", rule 6). Decide
+the notation when a game's deductions first need it, not when its hint is found
+to be drawing around the gap.
+
 ### Mistake checking is part of "done"
 
 **A game with a unique solution MUST ship `findMistakes` — Check & Save

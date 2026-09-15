@@ -308,10 +308,11 @@ glanceable steps** — *not* by whether a trial or a search was involved.
   Legitimate at a middle tier; see `hints.md` § "The forcing boundary" for what
   its narration owes the player. Loopy's Tricky and Hard rungs are Tactics of a
   different kind: they never assume anything, but derive corners and pairs of
-  edges the board cannot show, each one a local rule applied to a clue or a dot,
-  and a line can rest on a chain of them (measured on Hard: median 2, p99 about
-  20, at most 28). Every link is glanceable, so the chain is walked by drawing and
-  numbering its facts (`hints.md` § "Facts the board has no notation for").
+  edges the player had no way to mark, each one a local rule applied to a clue or
+  a dot, and a line can rest on a chain of them (measured on Hard: median 2, p99
+  about 20, at most 28). Every link is glanceable, so the chain is walked one fact
+  per step once the player can mark corners and pairs (`add-loopy-notation`;
+  `hints.md` § "Facts the board has no notation for").
 - **Search** — Undead's `forcingPass` and Bricks' `solverRecurse` (both run a
   whole fixpoint / sub-solve from the hypothesis), Dominosa's
   `deduceForcingChain`, Spokes' **unbounded** look-ahead, every true recursion

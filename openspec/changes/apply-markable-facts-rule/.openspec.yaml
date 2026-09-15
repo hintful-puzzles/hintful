@@ -1,0 +1,5 @@
+# A stub: the audit decides which games need a notation change; each such change
+# carries its own spec delta. Remove `skip_specs` if this change grows one.
+schema: spec-driven
+created: 2026-09-15
+skip_specs: true
