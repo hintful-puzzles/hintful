@@ -61,7 +61,9 @@ must clear:
    rests on is on the board or can be put there by the player. If a deduction
    needs a mark the game does not offer, the game gains that mark and the
    hint's steps place it; a hint never draws facts the player has no way to
-   record. See § "Facts the board has no notation for".
+   record. Where a notation would genuinely be too hard to manage, the tier that
+   needs it becomes `Unreasonable` instead. See § "Facts the board has no
+   notation for".
 
 ## Guess-free generation is the precondition
 
@@ -1906,6 +1908,13 @@ rule 6). If a tier's deductions need a kind of mark, the game gives the player t
 mark and the hint's steps make it. A hint never draws a fact the player has no way
 to record, however clearly it draws it, because the point of a hint is that the
 player can do the next one alone.
+
+**The fallback is the tier, not the hint** (owner, 2026-09-15). If the notation a
+deduction needs would genuinely be too hard to manage, the difficulty that needs it
+becomes `Unreasonable`: its boards may need trial and error, and its hint refuses
+with `DEDUCTION_EXHAUSTED` rather than teaching reasoning the player cannot record
+(§ "The forcing boundary", and `solver-and-generator.md` § "Check, Tactic,
+Search"). Try the notation first; say what made it unmanageable when you fall back.
 
 Loopy is where this was learned. From Normal its rungs reason about two things the
 game gave players no way to mark: a **corner**, two edges meeting at a dot around
