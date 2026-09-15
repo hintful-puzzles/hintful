@@ -24,10 +24,11 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { clearKey } from "../../engine/key-labels.ts";
+import { clearKey, pencilModeKey } from "../../engine/key-labels.ts";
 import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
+  toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
 import { parseConfigInt } from "../../engine/params.ts";
 import {
@@ -35,7 +36,6 @@ import {
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
 import {
-  CURSOR_SELECT,
   CURSOR_SELECT2,
   digitOf,
   gridCursorMove,
@@ -178,11 +178,8 @@ function interpretMove(
     return UI_UPDATE;
   }
 
-  if (ui.cursor.visible && button === CURSOR_SELECT) {
-    ui.pencilMode = !ui.pencilMode;
-    ui.cursorFromKeyboard = true;
-    return UI_UPDATE;
-  }
+  const toggled = toggleNoteTakingMode(ui, button);
+  if (toggled) return toggled;
 
   if (ui.cursor.visible && selectable(pos)) {
     const type = ui.pencilMode ? "pencil" : "set";
@@ -425,7 +422,7 @@ export const saladGame: Game<
     }
     keys.push({ button: 88, label: "X" });
     keys.push({ button: 79, label: "O" });
-    keys.push(clearKey);
+    keys.push(clearKey, pencilModeKey);
     return keys;
   },
   textFormat,

@@ -4,6 +4,7 @@ import { query } from "lit/decorators/query.js";
 import { customElement, property, state } from "lit/decorators.js";
 import { showAlert } from "../dialogs/alert-dialog.ts";
 import { showToast } from "../dialogs/toast.ts";
+import { PENCIL_MODE_BUTTON } from "../engine/pointer.ts";
 import { type PuzzleData, puzzleDataMap } from "../puzzle/catalog.ts";
 import type { PuzzleEvent } from "../puzzle/components/context.ts";
 import type { PuzzleKeyUnhandledEvent } from "../puzzle/components/view-interactive.ts";
@@ -452,6 +453,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
       undo: () => this.puzzle?.undo(),
       redo: () => this.puzzle?.redo(),
       "mark-all": this.handleMarkAll,
+      "toggle-pencil-mode": this.handleTogglePencilMode,
       "toggle-auto-hint": this.handleAutoHintToggle,
       "show-timeline": this.showTimeline,
       "switch-puzzle": this.openPuzzleSwitcher,
@@ -773,6 +775,13 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
    * control. */
   private async handleMarkAll() {
     await this.puzzle?.processKey(77);
+  }
+
+  /** The bare P shortcut: send the Marks key's code, which toggles pencil mode in
+   * every game that has one. Reached only once the game has declined `p`, so a
+   * game typing that letter keeps it. */
+  private async handleTogglePencilMode() {
+    await this.puzzle?.processKey(PENCIL_MODE_BUTTON);
   }
 
   /** `Play hints for me` — a mode, so the rail draws it as a switch. */

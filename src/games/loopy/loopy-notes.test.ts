@@ -16,6 +16,7 @@
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import type { Grid, GridFace } from "../../engine/grid/index.ts";
+import { pencilModeKey } from "../../engine/key-labels.ts";
 import { Midend } from "../../engine/midend.ts";
 import {
   CURSOR_DOWN,
@@ -25,6 +26,7 @@ import {
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
+  PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
@@ -55,7 +57,9 @@ import {
 } from "./render.ts";
 import { type LoopyState, newState } from "./state.ts";
 
-const NOTES = "p".charCodeAt(0);
+/** The collection's pencil-mode toggle, which is all Loopy has: its right button
+ * and its held finger already rule an edge out. */
+const NOTES = PENCIL_MODE_BUTTON;
 const ESCAPE = 27;
 const BACKSPACE = 127;
 
@@ -193,15 +197,16 @@ function apply(b: { s: LoopyState }, move: unknown): LoopyMove {
 }
 
 describe("notes mode by pointer", () => {
-  it("is off until P, and P turns it off again", () => {
+  it("is off until the Marks key, which turns it off again", () => {
     const b = board();
     expect(b.ui.pencilMode).toBe(false);
     expect(input(b, NOTES)).toBe(UI_UPDATE);
     expect(b.ui.pencilMode).toBe(true);
-    expect(input(b, "P".charCodeAt(0))).toBe(UI_UPDATE);
+    expect(input(b, NOTES)).toBe(UI_UPDATE);
     expect(b.ui.pencilMode).toBe(false);
-    // The on-screen key is the same code.
-    expect(loopyGame.requestKeys?.(b.p)).toEqual([{ button: NOTES, label: "Notes" }]);
+    // Loopy's keypad is that key and nothing else; that every pencil game offers
+    // it, and that pressing it toggles the mode, is `pencil-mode-key.test.ts`.
+    expect(loopyGame.requestKeys?.(b.p)).toEqual([pencilModeKey]);
   });
 
   it("a tap cycles the corner it lands in; the right button, a held finger, cycles back", () => {

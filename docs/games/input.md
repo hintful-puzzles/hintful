@@ -776,6 +776,15 @@ Normative: the on-screen-keys requirement in
   then `'a','b',…` past nine, plus the clear key — whose `"Clear"` label is
   load-bearing (it is what the `puzzle-keys` icon map turns into the clear
   icon). Size `n` from params: Solo `c*r`, Keen/Towers `w`, Filling fixed `9`.
+- **A game with a pencil mode ends its keypad with `pencilModeKey`.** The Marks
+  key is the collection's one way into note-taking that costs no button: the
+  eleven cell games also toggle the mode with a right-click and with Enter on the
+  highlight, but Loopy's right button and held finger already rule an edge out, so
+  a shared key is what lets a player learn the mode once. It sends
+  `PENCIL_MODE_BUTTON`, which `toggleNoteTakingMode` handles for a note-taking
+  cell game and which the app's bare `P` shortcut sends too. Enrollment is by
+  having `ui.pencilMode` — `pencil-mode-key.test.ts` derives the population from
+  each game's own `newUi` and fails both directions.
 - **Match upstream's keypad exactly — including its quirks.** Unequal is the
   cautionary case: it allows order up to 32 and switches to a **`'0'`-based**
   keypad for order ≥ 10, so it gets a bespoke `unequalKeys(order)`, not

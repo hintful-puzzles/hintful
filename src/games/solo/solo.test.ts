@@ -11,6 +11,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
+import { pencilModeKey } from "../../engine/key-labels.ts";
 import { leafPresets } from "../../engine/testing/hint-games.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import cReference from "./__fixtures__/solo-c-reference.json" with { type: "json" };
@@ -275,17 +276,19 @@ describe("on-screen keys (requestKeys)", () => {
       r: cr === 9 ? 3 : 2,
     });
 
-  it("a 3×3 board offers digits 1..9 plus clear", () => {
+  it("a 3×3 board offers digits 1..9 plus clear and marks", () => {
     expect(buttons(9)).toEqual([
       ..."123456789".split("").map((d) => ({ button: d.charCodeAt(0), label: d })),
       { button: 8, label: "Clear" },
+      pencilModeKey,
     ]);
   });
 
-  it("a 2×2 board offers digits 1..4 plus clear", () => {
+  it("a 2×2 board offers digits 1..4 plus clear and marks", () => {
     expect(buttons(4)).toEqual([
       ..."1234".split("").map((d) => ({ button: d.charCodeAt(0), label: d })),
       { button: 8, label: "Clear" },
+      pencilModeKey,
     ]);
   });
 });

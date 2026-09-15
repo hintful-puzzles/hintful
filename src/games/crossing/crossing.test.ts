@@ -481,7 +481,7 @@ describe("crossing input", () => {
     expect(press(filled, ui, 0x33, 0, 0)).toBeNull();
   });
 
-  it("offers the 1-9 keypad plus a clear key", () => {
+  it("offers the 1-9 keypad, a clear key and the shared Marks key", () => {
     const keys = crossingGame.requestKeys?.(P5) ?? [];
     expect(keys.map((k) => k.label)).toEqual([
       "1",
@@ -494,6 +494,7 @@ describe("crossing input", () => {
       "8",
       "9",
       "Clear",
+      "Marks",
     ]);
   });
 });

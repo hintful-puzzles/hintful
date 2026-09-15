@@ -43,11 +43,15 @@ solver derives beyond lines:
 
 - **`ui.pencilMode`**, the collection's word for a note-taking mode. It is Ui
   state, not saved, and off on a new game.
-- **Toggled by `P`**, and by an on-screen **Notes** key from `requestKeys`, which is
-  how a touch player reaches it. Loopy's right button and a held finger already
-  rule an edge out, so the pencil games' "secondary button toggles the mode" is
-  not available here. `P` is not one of the app's bare shortcuts (`u`, `r`, `n`,
-  `h`).
+- **Toggled by the collection's Marks key**, `pencilModeKey` from `key-labels.ts`,
+  last on the keypad — and by the app's bare `P`, which sends the same
+  `PENCIL_MODE_BUTTON`. Loopy's right button and a held finger already rule an edge
+  out, so the pencil games' "secondary button toggles the mode" is not available
+  here; rather than give Loopy a key of its own, the key is now every pencil game's
+  (owner, 2026-09-15: *"I'm not ok with this game being unique… use the exact same
+  notes UX as all the other games use, and extend/standardize it as needed"*). The
+  eleven cell games keep their right-click and their Enter toggle, both of which
+  now run through `toggleNoteTakingMode`, and gain the key and the letter.
 - **An indicator** whenever the mode is on: the shared pencil glyph
   (`drawPencilGlyph`). Loopy's board has no spare cell and a border only as wide as
   the cursor disc, so the canvas grows a strip below the board, which is Mathrax's

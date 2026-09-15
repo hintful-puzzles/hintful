@@ -34,7 +34,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { narrateLatinReason } from "../../engine/hint-text.ts";
-import { digitKeys } from "../../engine/key-labels.ts";
+import { digitKeys, pencilModeKey } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
 import {
   forcingChainArea,
@@ -46,6 +46,7 @@ import {
   noOpEntryResult,
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
+  toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
 import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import { parseConfigInt } from "../../engine/params.ts";
@@ -55,7 +56,6 @@ import {
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
 import {
-  CURSOR_SELECT,
   CURSOR_SELECT2,
   digitOf,
   isCursorMove,
@@ -177,11 +177,8 @@ function interpretMove(
     return moveCursor(ui.cursor, button, w, w) ? UI_UPDATE : null;
   }
 
-  if (ui.cursor.visible && button === CURSOR_SELECT) {
-    ui.pencilMode = !ui.pencilMode;
-    ui.cursorFromKeyboard = true;
-    return UI_UPDATE;
-  }
+  const toggled = toggleNoteTakingMode(ui, button);
+  if (toggled) return toggled;
 
   const isClear = button === CURSOR_SELECT2 || isEraseKey(button);
   const n = isClear ? 0 : digitOf(button);
@@ -640,7 +637,7 @@ export const keenGame: Game<
   refreshHintStep: (step: HintStep<KeenMove, KeenHint>, state) =>
     refreshCandidateHintStep(step, state.grid, state.pencil, state.params.w),
   findMistakes,
-  requestKeys: (p): KeyLabel[] => digitKeys(p.w),
+  requestKeys: (p): KeyLabel[] => [...digitKeys(p.w), pencilModeKey],
 
   prefs: [
     autoPencilPref<KeenUi>(

@@ -22,3 +22,30 @@ overlay, a fact the player has no way to record.
 - **WHEN** a step of any hinting game is displayed
 - **THEN** every premise its sentence names is a clue, an entry the player placed,
   or a mark the player can make
+
+### Requirement: One way into note-taking across the collection
+
+A game whose `Ui` carries `pencilMode` SHALL offer the collection's shared
+pencil-mode toggle: the Marks key last on its on-screen keypad, sending the one
+button code that the app's bare `P` shortcut also sends. A game SHALL NOT invent a
+toggle of its own, and a game without the mode SHALL NOT offer the key.
+
+Note-taking reached the player differently in each game: the cell games toggle the
+mode with a secondary press, which a game whose secondary press already means
+something cannot copy, leaving that game to invent a key nobody else has. The
+shared key costs a game no button, is the only route a touch player can see, and
+makes the mode something a player learns once. The population SHALL be derived from
+what each game's `newUi` returns rather than from a roster, so a game joins by
+having the mode. Gestures a game already has — a secondary press, a select key on a
+showing cursor — MAY toggle the mode as well.
+
+#### Scenario: A game with a pencil mode is reachable the same way as the rest
+
+- **WHEN** any registered game whose `newUi` returns a `pencilMode` is asked for its
+  keypad, and that key is pressed
+- **THEN** the key is present, last, and the press toggles the mode
+
+#### Scenario: A game without the mode does not offer the key
+
+- **WHEN** a registered game has no `pencilMode`
+- **THEN** its keypad does not offer the toggle, so no key on it does nothing

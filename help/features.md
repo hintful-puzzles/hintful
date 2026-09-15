@@ -221,6 +221,26 @@ pencil marks** button is the only way to reach it on a touchscreen.
 
 It's a move like any other, so ::undo:: undoes it.
 
+## Writing notes on the board {#pencil-mode}
+
+Many puzzles let you note what you are still working out — the numbers that could
+go in a square, or in Loopy the corners and pairs of edges you have worked
+something out about. Those notes go in through a **notes mode**, which is the same
+in every puzzle that has one:
+
+* **The Marks key** on the on-screen keypad turns the mode on and off. It is the
+  only way in that never clashes with the puzzle's own controls, so it is there in
+  every puzzle with notes.
+* **The <kbd>P</kbd> key** does the same from a real keyboard, unless the puzzle
+  itself uses <kbd>P</kbd> to type with.
+* **In the number puzzles** you can also right-click a square (or touch and hold
+  it) and then type, and <kbd>Enter</kbd> switches the mode while the keyboard
+  cursor is showing.
+
+While the mode is on, a small pencil shows on the board, so you can always see
+which kind of mark you are about to make. Notes are ordinary moves: ::undo::
+undoes them, and they are saved with your position.
+
 ## The reference panel {#reference}
 
 Some puzzles are about placing a known set of pieces, where the question you

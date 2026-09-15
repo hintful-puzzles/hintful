@@ -8,6 +8,7 @@
  * literal `"Clear"`, which the `puzzle-keys` icon map renders as the clear icon.
  */
 
+import { PENCIL_MODE_BUTTON } from "./pointer.ts";
 import type { KeyLabel } from "./types.ts";
 
 /** ASCII backspace — upstream's clear-key button code (`'\b'`). */
@@ -15,6 +16,12 @@ export const CLEAR_BUTTON = 8;
 
 /** The clear key, labeled so `puzzle-keys` maps it to the clear icon. */
 export const clearKey: KeyLabel = { button: CLEAR_BUTTON, label: "Clear" };
+
+/** The Marks key, which toggles pencil mode, labeled so `puzzle-keys` maps it to
+ * the marks icon. Every game with a `ui.pencilMode` offers it last on its keypad,
+ * which is a touch player's one visible way into the mode
+ * (`pencil-mode-key.test.ts`). */
+export const pencilModeKey: KeyLabel = { button: PENCIL_MODE_BUTTON, label: "Marks" };
 
 /**
  * The common digit keypad: buttons `'1'..'9'` then `'a','b',…` once the

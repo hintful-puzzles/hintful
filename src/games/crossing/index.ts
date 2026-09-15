@@ -28,11 +28,12 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { digitKeys } from "../../engine/key-labels.ts";
+import { digitKeys, pencilModeKey } from "../../engine/key-labels.ts";
 import {
   highlightIsOn,
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
+  toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import {
@@ -41,7 +42,6 @@ import {
 } from "../../engine/pencil-prefs.ts";
 import {
   CURSOR_DOWN,
-  CURSOR_SELECT,
   CURSOR_SELECT2,
   CURSOR_UP,
   digitOf,
@@ -233,11 +233,8 @@ function interpretMove(
     return UI_UPDATE;
   }
 
-  if (ui.cursor.visible && button === CURSOR_SELECT) {
-    ui.pencilMode = !ui.pencilMode;
-    ui.cursorFromKeyboard = true;
-    return UI_UPDATE;
-  }
+  const toggled = toggleNoteTakingMode(ui, button);
+  if (toggled) return toggled;
 
   const key = ui.cursor.visible ? keyDigit(button) : null;
   if (key !== null) {
@@ -601,7 +598,7 @@ export const crossingGame: Game<
       cs.some((c) => c.x === ui.cursor.x && c.y === ui.cursor.y);
     return !(here(hl.area) || here(hl.targets));
   },
-  requestKeys: (): KeyLabel[] => digitKeys(9),
+  requestKeys: (): KeyLabel[] => [...digitKeys(9), pencilModeKey],
   textFormat,
 
   prefs: [

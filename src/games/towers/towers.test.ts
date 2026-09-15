@@ -9,6 +9,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
+import { pencilModeKey } from "../../engine/key-labels.ts";
 import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -586,11 +587,12 @@ describe("on-screen keys (requestKeys)", () => {
   const keysFor = (w: number) =>
     towersGame.requestKeys?.({ ...towersGame.defaultParams(), w });
 
-  it("offers digits 1..w plus clear", () => {
+  it("offers digits 1..w plus clear and marks", () => {
     expect(keysFor(5)).toEqual([
       ..."12345".split("").map((d) => ({ button: d.charCodeAt(0), label: d })),
       { button: 8, label: "Clear" },
+      pencilModeKey,
     ]);
-    expect(keysFor(4)?.length).toBe(5);
+    expect(keysFor(4)?.length).toBe(6);
   });
 });

@@ -19,10 +19,11 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { clearKey } from "../../engine/key-labels.ts";
+import { clearKey, pencilModeKey } from "../../engine/key-labels.ts";
 import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
+  toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
 import { dimensionParamConfig, parseConfigInt } from "../../engine/params.ts";
 import {
@@ -30,7 +31,6 @@ import {
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
 import {
-  CURSOR_SELECT,
   CURSOR_SELECT2,
   digitOf,
   gridCursorMove,
@@ -168,11 +168,8 @@ function interpretMove(
     return UI_UPDATE;
   }
 
-  if (ui.cursor.visible && button === CURSOR_SELECT) {
-    ui.pencilMode = !ui.pencilMode;
-    ui.cursorFromKeyboard = true;
-    return UI_UPDATE;
-  }
+  const toggled = toggleNoteTakingMode(ui, button);
+  if (toggled) return toggled;
 
   // Enter or clear a letter.
   const key = ui.cursor.visible ? keyLetter(button, n) : null;
@@ -304,7 +301,7 @@ function requestKeys(p: AbcdParams): KeyLabel[] {
   const keys: KeyLabel[] = [];
   for (let i = 0; i < p.n; i++)
     keys.push({ button: 65 + i, label: String.fromCharCode(65 + i) });
-  keys.push(clearKey);
+  keys.push(clearKey, pencilModeKey);
   return keys;
 }
 

@@ -34,7 +34,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { digitKeys } from "../../engine/key-labels.ts";
+import { digitKeys, pencilModeKey } from "../../engine/key-labels.ts";
 import {
   classifyPlacementInRegions,
   forcingChainArea,
@@ -43,6 +43,7 @@ import {
   noOpEntryResult,
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
+  toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
 import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import { parseConfigInt } from "../../engine/params.ts";
@@ -52,7 +53,6 @@ import {
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
 import {
-  CURSOR_SELECT,
   CURSOR_SELECT2,
   digitOf,
   isCursorMove,
@@ -194,11 +194,8 @@ function interpretMove(
     return moveCursor(ui.cursor, button, cr, cr) ? UI_UPDATE : null;
   }
 
-  if (ui.cursor.visible && button === CURSOR_SELECT) {
-    ui.pencilMode = !ui.pencilMode;
-    ui.cursorFromKeyboard = true;
-    return UI_UPDATE;
-  }
+  const toggled = toggleNoteTakingMode(ui, button);
+  if (toggled) return toggled;
 
   // A digit key (1..9 then a..z / A..Z for orders > 9), or a clear.
   let n = -1;
@@ -877,7 +874,7 @@ export const soloGame: Game<
   hintKeepTrack,
   refreshHintStep,
   findMistakes,
-  requestKeys: (p): KeyLabel[] => digitKeys(p.c * p.r),
+  requestKeys: (p): KeyLabel[] => [...digitKeys(p.c * p.r), pencilModeKey],
 
   prefs: [
     autoPencilPref<SoloUi>(

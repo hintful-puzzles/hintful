@@ -644,7 +644,9 @@ the notation when a game's deductions first need it, not when its hint is found
 to be drawing around the gap. Loopy's notes mode is the worked example: its
 corner and pair notes are state and moves beside the lines (`LoopyState.corners`
 and `pairs`), entered through `ui.pencilMode` by tap, drag and keyboard
-(`games/loopy/notes.ts`), and the hint places them before it cites them.
+(`games/loopy/notes.ts`), and the hint places them before it cites them. **Give a
+new notation the collection's mode, not a mode of its own** — `ui.pencilMode` and
+the Marks key below, whatever the marks themselves look like.
 
 ### Mistake checking is part of "done"
 
@@ -718,6 +720,14 @@ were — the last per-game roster in the cross-game guards.
   grid. A game carrying `ui.pencilMode` and `ui.cursorFromKeyboard` without
   calling `pressNoteTakingCell` fails `note-taking-cell.test.ts`; this used to
   be eleven copies, and it is one now.
+- **The Marks key** — `pencilModeKey` last on the keypad, which every game
+  carrying `ui.pencilMode` offers, whether or not its notes are candidate marks.
+  It is the one way into the mode that costs the game no button, so a player
+  learns note-taking once for the collection rather than once per game, and it is
+  what a touch player has instead of a held finger. A note-taking cell game routes
+  it, with Enter on the highlight, through `toggleNoteTakingMode`; the app's bare
+  `P` sends the same code. Guarded, in both directions and by derivation from
+  `newUi`, by `pencil-mode-key.test.ts`.
 - **Sticky pencil mode** — a `pencilSticky` `Ui` boolean (default true) via
   `prefs`: right-click toggles a persistent pencil mode; left-click only moves
   the highlight. The keyboard is already mode-persistent; this unifies the

@@ -15,11 +15,13 @@
  * cycles an edge towards YES, right / Space towards NO, middle / Backspace
  * clears. Loopy genuinely reads `MOD_STYLUS` — see {@link nextLineState}.
  *
- * **Notes mode** (`ui.pencilMode`, toggled by P or the on-screen Notes key) turns
- * the same inputs onto the player's corner and pair notes (`notes.ts`): a tap
- * cycles the corner it lands in and a drag from one edge to another cycles their
- * pair; Enter cycles the corner clockwise from the cursor's edge, and Space pins
- * an edge and then pairs it with the next one Space is pressed on.
+ * **Notes mode** (`ui.pencilMode`, toggled by the collection's Marks key, which
+ * the app's P shortcut also sends) turns the same inputs onto the player's corner
+ * and pair notes (`notes.ts`): a tap cycles the corner it lands in and a drag from
+ * one edge to another cycles their pair; Enter cycles the corner following the
+ * cursor's edge, and Space pins an edge and then pairs it with the next one Space
+ * is pressed on. The other pencil games also toggle the mode with the right
+ * button and Enter, both of which already set lines here.
  *
  * Upstream gives Loopy no keyboard at all (`loopy.c` has no `CURSOR_`
  * reference), so the keyboard here is this fork's design, not a port.
@@ -40,6 +42,7 @@ import {
 } from "../../engine/game.ts";
 import type { Grid, GridDot, GridEdge } from "../../engine/grid/index.ts";
 import { gridNearestEdge } from "../../engine/grid/index.ts";
+import { pencilModeKey } from "../../engine/key-labels.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -53,6 +56,7 @@ import {
   MIDDLE_BUTTON,
   MOD_SHFT,
   MOD_STYLUS,
+  PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
   stripModifiers,
 } from "../../engine/pointer.ts";
@@ -340,11 +344,6 @@ function buttonForKey(button: number): number | null {
   return null;
 }
 
-/** The code notes mode is toggled by: `P`, which the on-screen Notes key sends. */
-const KEY_NOTES = "p".charCodeAt(0);
-const isNotesKey = (button: number): boolean =>
-  button === KEY_NOTES || button === "P".charCodeAt(0);
-
 /** Screen coordinates to grid coordinates, unrounded: a corner is found by angle,
  * which rounding would bend near a dot. */
 function gridPoint(g: Grid, tileSize: number, p: Point): Point {
@@ -441,7 +440,7 @@ function interpretMove(
   const button = stripModifiers(rawButton);
   const cursor = ui.cursor;
 
-  if (isNotesKey(button)) {
+  if (button === PENCIL_MODE_BUTTON) {
     ui.pencilMode = !ui.pencilMode;
     ui.pin = -1;
     ui.noteDrag = null;
@@ -725,8 +724,7 @@ export const loopyGame: Game<
   refreshHintStep,
   textFormat,
   prefs,
-  // Notes mode's toggle, which a touch player has no P key for.
-  requestKeys: (): KeyLabel[] => [{ button: KEY_NOTES, label: "Notes" }],
+  requestKeys: (): KeyLabel[] => [pencilModeKey],
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

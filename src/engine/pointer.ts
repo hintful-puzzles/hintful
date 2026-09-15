@@ -22,6 +22,11 @@ export const CURSOR_LEFT = 0x020b;
 export const CURSOR_RIGHT = 0x020c;
 export const CURSOR_SELECT = 0x020d;
 export const CURSOR_SELECT2 = 0x020e;
+/** Not upstream's: toggle the game's pencil mode. The one code for it in every
+ * game that has one, sent by the on-screen Marks key (`key-labels.ts`
+ * `pencilModeKey`) and by the app's bare P shortcut, so the mode is reached the
+ * same way however a game uses its buttons. */
+export const PENCIL_MODE_BUTTON = 0x0216;
 
 // --- mouse button class predicates (upstream IS_MOUSE_* macros) ----
 

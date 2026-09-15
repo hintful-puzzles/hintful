@@ -38,7 +38,13 @@
  */
 
 import { UI_UPDATE, type UiUpdate } from "./game.ts";
-import { type GridCursor, LEFT_BUTTON, RIGHT_BUTTON } from "./pointer.ts";
+import {
+  CURSOR_SELECT,
+  type GridCursor,
+  LEFT_BUTTON,
+  PENCIL_MODE_BUTTON,
+  RIGHT_BUTTON,
+} from "./pointer.ts";
 
 /**
  * The three `Ui` fields the mechanic owns. A game's `Ui` structurally satisfies
@@ -160,6 +166,26 @@ export function pressNoteTakingCell(
   ui.cursor.y = y;
   ui.cursor.visible = ui.pencilMode ? cell.canMark : cell.canEnter;
   return "moved";
+}
+
+/**
+ * The keys that toggle pencil mode: Enter while the highlight shows, and the
+ * Marks key ({@link PENCIL_MODE_BUTTON}) at any time, since a touch player
+ * pressing it has usually just tapped a cell rather than revealed a keyboard
+ * highlight.
+ *
+ * Only Enter counts as the keyboard taking the highlight over; the Marks key
+ * leaves its provenance alone, so an entry after a tap still puts a mouse
+ * highlight away as {@link releaseHighlightAfterEntry} says.
+ */
+export function toggleNoteTakingMode(
+  ui: NoteTakingUi,
+  button: number,
+): UiUpdate | null {
+  if (button === CURSOR_SELECT && ui.cursor.visible) ui.cursorFromKeyboard = true;
+  else if (button !== PENCIL_MODE_BUTTON) return null;
+  ui.pencilMode = !ui.pencilMode;
+  return UI_UPDATE;
 }
 
 // --- what a symbol entry does to the highlight ------------------------------

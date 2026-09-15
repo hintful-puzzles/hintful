@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
+import { pencilModeKey } from "../../engine/key-labels.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -370,10 +371,11 @@ describe("on-screen keys (requestKeys)", () => {
   const keysFor = (order: number) =>
     unequalGame.requestKeys?.({ ...unequalGame.defaultParams(), order });
 
-  it("offers '1'..order plus clear for order < 10", () => {
+  it("offers '1'..order plus clear and marks for order < 10", () => {
     expect(keysFor(4)).toEqual([
       ..."1234".split("").map((d) => ({ button: d.charCodeAt(0), label: d })),
       { button: 8, label: "Clear" },
+      pencilModeKey,
     ]);
   });
 
@@ -382,11 +384,13 @@ describe("on-screen keys (requestKeys)", () => {
     expect(keysFor(10)).toEqual([
       ..."0123456789".split("").map((d) => ({ button: d.charCodeAt(0), label: d })),
       { button: 8, label: "Clear" },
+      pencilModeKey,
     ]);
     // order 11: '0'..'9' then 'a' (value 11), then clear.
     expect(keysFor(11)).toEqual([
       ..."0123456789a".split("").map((c) => ({ button: c.charCodeAt(0), label: c })),
       { button: 8, label: "Clear" },
+      pencilModeKey,
     ]);
   });
 });

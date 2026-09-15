@@ -9,6 +9,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
+import { pencilModeKey } from "../../engine/key-labels.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newUndeadDesc } from "./generator.ts";
@@ -288,12 +289,13 @@ describe("undead render", () => {
 });
 
 describe("on-screen keys (requestKeys)", () => {
-  it("offers exactly Ghost/Vampire/Zombie plus clear", () => {
+  it("offers exactly Ghost/Vampire/Zombie plus clear and marks", () => {
     expect(undeadGame.requestKeys?.(undeadGame.defaultParams())).toEqual([
       { button: "G".charCodeAt(0), label: "Ghost" },
       { button: "V".charCodeAt(0), label: "Vampire" },
       { button: "Z".charCodeAt(0), label: "Zombie" },
       { button: 8, label: "Clear" },
+      pencilModeKey,
     ]);
   });
 });

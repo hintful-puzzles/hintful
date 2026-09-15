@@ -26,11 +26,12 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { clearKey } from "../../engine/key-labels.ts";
+import { clearKey, pencilModeKey } from "../../engine/key-labels.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
+  toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
 import {
   pencilKeepHighlightPref,
@@ -40,7 +41,6 @@ import {
   CURSOR_DOWN,
   CURSOR_LEFT,
   CURSOR_RIGHT,
-  CURSOR_SELECT,
   CURSOR_SELECT2,
   CURSOR_UP,
   DELETE,
@@ -238,12 +238,8 @@ function interpretMove(
     return UI_UPDATE;
   }
 
-  // Select toggles pencil mode.
-  if (ui.cursor.visible && button === CURSOR_SELECT) {
-    ui.pencilMode = !ui.pencilMode;
-    ui.cursorFromKeyboard = true;
-    return UI_UPDATE;
-  }
+  const toggled = toggleNoteTakingMode(ui, button);
+  if (toggled) return toggled;
 
   // Pencil-entry mode.
   if (ui.cursor.visible && ui.pencilMode) {
@@ -818,6 +814,7 @@ export const undeadGame: Game<
     { button: KEY_V, label: "Vampire" },
     { button: KEY_Z, label: "Zombie" },
     clearKey,
+    pencilModeKey,
   ],
   textFormat,
 

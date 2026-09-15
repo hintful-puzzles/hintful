@@ -32,10 +32,26 @@ Read `AGENTS.md` § "Hint quality bar" (rule 6) and `docs/games/hints.md`
 - [x] 3.2 Loopy spec delta replacing "Loopy explains the next deduction".
 - [x] 3.3 Update `loopy-hint.test.ts`, the guides and `help/games/loopy.md`.
 
-## 4. Report and accept
+## 4. One notes UX, not Loopy's own
 
-- [x] 4.1 Run the app on squares, triangular and an aperiodic tiling, by pointer,
+Owner, 2026-09-15: *"I'm not ok with this game being unique — to the extent
+possible, I want you to use the exact same notes UX as all the other games use,
+and extend/standardize it as needed."*
+
+- [x] 4.1 `pencilModeKey` (the Marks key) and `PENCIL_MODE_BUTTON`; every game
+      carrying `ui.pencilMode` offers it last, Loopy's `P` key and Notes key go.
+- [x] 4.2 `toggleNoteTakingMode` replaces the eleven copies of the Enter toggle.
+- [x] 4.3 The app's bare `P` sends the same code, after the game declines `p`.
+- [x] 4.4 `pencil-mode-key.test.ts`: both directions, population derived from
+      `newUi`, seen to fail under a plant (`findings.md`).
+- [x] 4.5 `ts-engine` delta, the guides and `help/features.md`.
+
+## 5. Report and accept
+
+- [x] 5.1 Run the app on squares, triangular and an aperiodic tiling, by pointer,
       touch emulation and keyboard: pointer tap, drag and an auto-solved Hard plan
       on 7×7 squares; Enter, Space pin and pair on 8×8 triangular; a touch tap and a
       held-then-dragged finger on 10×10 hats.
-- [ ] 4.2 Owner acceptance of the input design.
+- [x] 5.2 Re-run the app on the shared Marks key, in Loopy and in one cell game
+      (`findings.md`).
+- [ ] 5.3 Owner acceptance of the input design.

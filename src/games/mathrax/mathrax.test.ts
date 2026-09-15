@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
+import { pencilModeKey } from "../../engine/key-labels.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
@@ -625,7 +626,7 @@ describe("mathrax input", () => {
     expect(press(st, ui, LEFT_BUTTON, { x: 10, y: outside })).toBeNull();
   });
 
-  it("offers a keypad of exactly the grid's digits plus Clear", () => {
+  it("offers a keypad of exactly the grid's digits, Clear and Marks", () => {
     expect(mathraxGame.requestKeys?.({ ...FIX_PARAMS, o: 5 })).toEqual([
       { button: 49, label: "1" },
       { button: 50, label: "2" },
@@ -633,6 +634,7 @@ describe("mathrax input", () => {
       { button: 52, label: "4" },
       { button: 53, label: "5" },
       { button: 8, label: "Clear" },
+      pencilModeKey,
     ]);
   });
 });

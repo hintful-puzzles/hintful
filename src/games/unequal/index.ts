@@ -35,7 +35,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { narrateLatinReason } from "../../engine/hint-text.ts";
-import { clearKey } from "../../engine/key-labels.ts";
+import { clearKey, pencilModeKey } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
 import {
   forcingChainArea,
@@ -47,6 +47,7 @@ import {
   noOpEntryResult,
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
+  toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
 import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import { parseConfigInt } from "../../engine/params.ts";
@@ -59,7 +60,6 @@ import {
   CURSOR_DOWN,
   CURSOR_LEFT,
   CURSOR_RIGHT,
-  CURSOR_SELECT,
   CURSOR_UP,
   isCursorMove,
   LEFT_BUTTON,
@@ -236,11 +236,8 @@ function interpretMove(
     return moveCursor(ui.cursor, button, o, o) ? UI_UPDATE : null;
   }
 
-  if (ui.cursor.visible && button === CURSOR_SELECT) {
-    ui.pencilMode = !ui.pencilMode;
-    ui.cursorFromKeyboard = true;
-    return UI_UPDATE;
-  }
+  const toggled = toggleNoteTakingMode(ui, button);
+  if (toggled) return toggled;
 
   // 'M' / 'm': fill all pencil marks, then (on a fully-noted board) clean the
   // obvious row/column candidates — the basic-region opening, in one press.
@@ -802,7 +799,7 @@ export const unequalGame: Game<
   hintKeepTrack,
   refreshHintStep,
   findMistakes,
-  requestKeys: (p): KeyLabel[] => unequalKeys(p.order),
+  requestKeys: (p): KeyLabel[] => [...unequalKeys(p.order), pencilModeKey],
   textFormat,
 
   prefs: [

@@ -154,7 +154,9 @@ marks in it*, shared by the eleven games that carry `ui.pencilMode` and
 against two predicates the game supplies — `canEnter` and `canMark` — and
 reports `"moved"` / `"unmoved"` / `null`; `releaseHighlightAfterEntry` and
 `noOpEntryResult` are what a symbol entry does to the highlight, which is where
-the two pencil preferences meet the keyboard. Same test and same line as
+the two pencil preferences meet the keyboard; `toggleNoteTakingMode` is the mode
+switch itself — Enter on the showing highlight, or the keypad's Marks key from
+anywhere — which was eleven identical copies before `add-loopy-notation`. Same test and same line as
 `border-grid.ts`: the game keeps its coordinates, its symbol vocabulary and its
 own `Move`. Its header records what was evaluated and declined.
 
@@ -681,7 +683,9 @@ and the game ID stops naming its board), and the declarative
 ### `key-labels.ts` — on-screen keypad builders
 
 `digitKeys(n)` + `clearKey` for `Game.requestKeys`, resolving labels the way
-the frontend expects (`"Clear"` maps to the clear icon).
+the frontend expects (`"Clear"` maps to the clear icon). `pencilModeKey` is the
+same arrangement for the pencil-mode toggle (`"Marks"` maps to the marks icon),
+and every game with a `ui.pencilMode` offers it last.
 
 ## Rendering and affordance helpers
 

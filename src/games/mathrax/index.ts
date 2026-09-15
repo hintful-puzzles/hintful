@@ -24,11 +24,12 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { digitKeys } from "../../engine/key-labels.ts";
+import { digitKeys, pencilModeKey } from "../../engine/key-labels.ts";
 import { rowColRegions } from "../../engine/latin-hint.ts";
 import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
+  toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
 import { parseConfigInt } from "../../engine/params.ts";
 import {
@@ -36,7 +37,6 @@ import {
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
 import {
-  CURSOR_SELECT,
   CURSOR_SELECT2,
   digitOf,
   gridCursorMove,
@@ -167,11 +167,8 @@ function interpretMove(
     return UI_UPDATE;
   }
 
-  if (ui.cursor.visible && button === CURSOR_SELECT) {
-    ui.pencilMode = !ui.pencilMode;
-    ui.cursorFromKeyboard = true;
-    return UI_UPDATE;
-  }
+  const toggled = toggleNoteTakingMode(ui, button);
+  if (toggled) return toggled;
 
   // Digit entry. Space (`CURSOR_SELECT2`), backspace/delete and `0` clear;
   // upstream binds only `'\b'`, which this frontend never sends.
@@ -418,7 +415,7 @@ export const mathraxGame: Game<
   solve,
   difficulty,
   findMistakes,
-  requestKeys: (p) => digitKeys(p.o),
+  requestKeys: (p) => [...digitKeys(p.o), pencilModeKey],
 
   prefs: [stickyPencilPref<MathraxUi>(), pencilKeepHighlightPref<MathraxUi>()],
 

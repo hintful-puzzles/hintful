@@ -10,9 +10,10 @@ are opposites (exactly one is a line). Notes SHALL be state and absolute-set mov
 beside the lines, so undo covers them and a save replays them, and a save holding
 only line moves SHALL still load.
 
-Notes mode SHALL be `ui.pencilMode`, off on a new game, toggled by `P` and by an
-on-screen Notes key, and shown by the collection's pencil glyph in a strip below the
-board. With the mode off, input SHALL be unchanged.
+Notes mode SHALL be `ui.pencilMode`, off on a new game, toggled by the collection's
+shared pencil-mode toggle rather than by anything of Loopy's own, and shown by the
+collection's pencil glyph in a strip below the board. With the mode off, input SHALL
+be unchanged.
 
 In notes mode a tap SHALL cycle the corner it lands in: the angle, around the nearest
 dot, between the two adjacent edges either side of it, with which of a corner's two

@@ -59,6 +59,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
   { command: "switch-puzzle", chords: [{ key: "k" }] },
   { command: "new-game", chords: [], bare: "n" },
   { command: "hint", chords: [], bare: "h" },
+  { command: "toggle-pencil-mode", chords: [], bare: "p" },
 ];
 
 /** True on a platform whose app-command modifier is ⌘ and whose users read

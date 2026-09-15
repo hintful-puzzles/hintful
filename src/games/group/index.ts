@@ -36,7 +36,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { narrateLatinReason } from "../../engine/hint-text.ts";
-import { clearKey } from "../../engine/key-labels.ts";
+import { clearKey, pencilModeKey } from "../../engine/key-labels.ts";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, latinVerdict } from "../../engine/latin.ts";
 import {
   forcingChainArea,
@@ -48,12 +48,12 @@ import {
 import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
+  toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
 import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import { parseConfigInt } from "../../engine/params.ts";
 import { pencilKeepHighlightPref } from "../../engine/pencil-prefs.ts";
 import {
-  CURSOR_SELECT,
   CURSOR_SELECT2,
   gridCursorMove,
   isCursorMove,
@@ -126,7 +126,7 @@ function requestKeys(p: GroupParams): KeyLabel[] {
     const ch = toChar(i + 1, p.id);
     keys.push({ button: ch.charCodeAt(0), label: ch });
   }
-  keys.push(clearKey);
+  keys.push(clearKey, pencilModeKey);
   return keys;
 }
 
@@ -251,11 +251,8 @@ function interpretMove(
     return UI_UPDATE;
   }
 
-  if (ui.cursor.visible && button === CURSOR_SELECT) {
-    ui.pencilMode = !ui.pencilMode;
-    ui.cursorFromKeyboard = true;
-    return UI_UPDATE;
-  }
+  const toggled = toggleNoteTakingMode(ui, button);
+  if (toggled) return toggled;
 
   // Uppercase 'M' (the Mark-all toolbar button, ASCII 77): fill every empty cell
   // with all candidate marks, then clean the obvious row/column culls — the

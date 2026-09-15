@@ -47,3 +47,24 @@ corner belongs to, and the two comments are corrected.
   fails.
 - Taking a corner's angle the way the edge order turns, ignoring the face:
   `loopy-notes.test.ts` fails on floret and both Penrose tilings.
+- Dropping `pencilModeKey` from one game's keypad (Keen), and offering the key but
+  never acting on it (Solo): `pencil-mode-key.test.ts` fails on that game's case —
+  *"keen must offer exactly one Marks key"*, *"solo must consume the Marks key"* —
+  and its census case fails beside them.
+
+## What the shared toggle costs each game (2026-09-15)
+
+The owner refused a Loopy-only Notes key, so the toggle is now the collection's.
+Measured against the eleven cell games as the change found them:
+
+- **Per game: one keypad entry and one call.** `requestKeys` gains
+  `pencilModeKey`; `interpretMove` gains `toggleNoteTakingMode(ui, button)`, which
+  **replaces** each game's own four-line Enter toggle — eleven identical copies,
+  now one. Loopy loses `KEY_NOTES` and `isNotesKey` outright.
+- **The keyboard costs nothing per game.** The bare `P` is a shortcut-table row,
+  fired only once the game has declined `p`; no registered game claims that letter,
+  so `shortcuts.test.ts`'s ledger stays empty.
+- **In the browser** (Chrome, dev server): Loopy's keypad is that one key, drawn
+  with the inherited `key-marks` icon, and pressing it raises the pencil glyph
+  below the board; `P` on the focused board turns it off again. Towers' keypad is
+  `1`–`5`, Clear, Marks, and Marks raises its in-cell glyph.

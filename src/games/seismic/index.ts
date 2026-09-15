@@ -24,10 +24,11 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { digitKeys } from "../../engine/key-labels.ts";
+import { digitKeys, pencilModeKey } from "../../engine/key-labels.ts";
 import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
+  toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import {
@@ -35,7 +36,6 @@ import {
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
 import {
-  CURSOR_SELECT,
   CURSOR_SELECT2,
   digitOf,
   gridCursorMove,
@@ -146,11 +146,8 @@ function interpretMove(
     return UI_UPDATE;
   }
 
-  if (ui.cursor.visible && button === CURSOR_SELECT) {
-    ui.pencilMode = !ui.pencilMode;
-    ui.cursorFromKeyboard = true;
-    return UI_UPDATE;
-  }
+  const toggled = toggleNoteTakingMode(ui, button);
+  if (toggled) return toggled;
 
   // `0` clears, like the erase keys.
   const isClear = button === CURSOR_SELECT2 || isEraseKey(button);
@@ -362,7 +359,7 @@ export const seismicGame: Game<
   // Sized to the regions the generator *makes*, not the nine the format admits:
   // entry is capped at the cell's region size, so a digit no region can hold is
   // a button that does nothing — and on touch the panel is the only way to type.
-  requestKeys: (p) => digitKeys(maxGeneratedRegionSize(p.mode)),
+  requestKeys: (p) => [...digitKeys(maxGeneratedRegionSize(p.mode)), pencilModeKey],
   textFormat,
 
   prefs: [stickyPencilPref<SeismicUi>(), pencilKeepHighlightPref<SeismicUi>()],

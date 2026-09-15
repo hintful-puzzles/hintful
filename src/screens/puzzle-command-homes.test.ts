@@ -135,6 +135,9 @@ const NOT_A_RAIL_ROW: Record<string, string> = {
   "capture-icons": "dev-only, from the ?screenshot icon-capture bar",
   redraw: "dev-only debugging; no player-facing control",
   "change-type": "the parameter chips are a puzzle-type-menu, not a data-command",
+  "toggle-pencil-mode":
+    "the bare P shortcut's command; the control is the keypad's Marks key, which " +
+    "sends the same code straight to the game",
   // `All puzzles` and `How to play …` are real links, carrying an `href` and
   // nothing else. `Screen.interceptCommandAndHrefClicks` routes the home URL to
   // `navigateToHomePage` and a help URL to the help drawer, and it *throws* in

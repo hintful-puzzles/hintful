@@ -33,7 +33,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { digitKeys } from "../../engine/key-labels.ts";
+import { digitKeys, pencilModeKey } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
 import {
   forcingChainArea,
@@ -45,6 +45,7 @@ import {
   noOpEntryResult,
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
+  toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
 import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import {
@@ -56,7 +57,6 @@ import {
   CURSOR_DOWN,
   CURSOR_LEFT,
   CURSOR_RIGHT,
-  CURSOR_SELECT,
   CURSOR_SELECT2,
   CURSOR_UP,
   digitOf,
@@ -240,11 +240,8 @@ function interpretMove(
     return moveCursor(ui.cursor, button, w, w) ? UI_UPDATE : null;
   }
 
-  if (ui.cursor.visible && button === CURSOR_SELECT) {
-    ui.pencilMode = !ui.pencilMode;
-    ui.cursorFromKeyboard = true;
-    return UI_UPDATE;
-  }
+  const toggled = toggleNoteTakingMode(ui, button);
+  if (toggled) return toggled;
 
   const isClear = button === CURSOR_SELECT2 || isEraseKey(button);
   const n = isClear ? 0 : digitOf(button);
@@ -803,7 +800,7 @@ export const towersGame: Game<
   refreshHintStep: (step: HintStep<TowersMove, TowersHint>, state) =>
     refreshCandidateHintStep(step, state.grid, state.pencil, state.w),
   findMistakes,
-  requestKeys: (p) => digitKeys(p.w),
+  requestKeys: (p) => [...digitKeys(p.w), pencilModeKey],
   textFormat,
 
   prefs: [

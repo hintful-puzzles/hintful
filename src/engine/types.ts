@@ -169,6 +169,8 @@ export enum PuzzleButton {
   UI_UNDO,
   UI_REDO,
   UI_UPPER_BOUND,
+  /* Not upstream's: toggles a game's pencil mode (pointer.ts). */
+  PENCIL_MODE,
 
   MOD_STYLUS = 0x0800,
   MOD_CTRL = 0x1000,
