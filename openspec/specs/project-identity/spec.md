@@ -12,9 +12,9 @@ lineage is the `licensing` capability; this one is the presentational side.
 
 The product SHALL be presented to players as **Hintful Puzzles**, with the
 short label **Hintful** where a full name does not fit (the label under an
-installed icon). The repository remains `puzzles-ts`: the product and the
-codebase are different things with different names, and only the product name
-reaches a player.
+installed icon). The repository is `hintful`, in the `hintful-puzzles`
+organization: the product and the codebase are different things with different
+names, and only the product name reaches a player.
 
 The name and the support links SHALL have one source in the code
 (`src/project-identity.ts`), read by every surface that shows them — the About

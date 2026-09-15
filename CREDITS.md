@@ -1,6 +1,6 @@
 # Credits
 
-Hintful Puzzles (repository `puzzles-ts`) is a TypeScript implementation of
+Hintful Puzzles (repository `hintful`) is a TypeScript implementation of
 Simon Tatham's Portable Puzzle Collection, building on prior work that made
 these puzzles available on the web. This file is a thank-you to the people
 whose work this project stands on. The legal terms of reuse are in [`LICENSE.md`](./LICENSE.md);

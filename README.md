@@ -15,8 +15,8 @@ upstream doesn't have (quick-save, mistake-checking, explained hints, per-game
 play aids). Targets Baseline 2023; works with touch, mouse, and keyboard
 across screen sizes.
 
-**Not deployed yet.** Until `deploy-the-web-app` lands there is no public URL;
-run it locally with `npm install` and `npm run dev`.
+**Play it at <https://hintful.click>.** To run it locally, `npm install` and
+then `npm run dev`.
 
 [puzzles-unreleased]: https://github.com/x-sheep/puzzles-unreleased
 [puzzles-web]: https://github.com/medmunds/puzzles-web
@@ -57,7 +57,7 @@ include:
 Simon Tatham's [*How to Report Bugs Effectively*][sgt-bugs] is worth a
 read.
 
-[issues]: https://github.com/yoniLavi/puzzles-ts/issues
+[issues]: https://github.com/hintful-puzzles/hintful/issues
 [sgt-bugs]: https://www.chiark.greenend.org.uk/~sgtatham/bugs.html
 
 # Technical details

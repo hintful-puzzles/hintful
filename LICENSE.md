@@ -1,6 +1,6 @@
 # License
 
-This project (Hintful Puzzles, repository `puzzles-ts`) layers work from four
+This project (Hintful Puzzles, repository `hintful`) layers work from four
 sources, all under the MIT License. Copyright is held by the respective
 contributors of each layer:
 

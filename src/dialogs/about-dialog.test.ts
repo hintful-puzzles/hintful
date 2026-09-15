@@ -29,7 +29,7 @@ describe("licenseTextToHTML — markdown mode (this project's LICENSE.md)", () =
   const LICENSE_SHAPED = [
     "# License",
     "",
-    "This project (`puzzles-ts`) layers work from four sources:",
+    "This project (`hintful`) layers work from four sources:",
     "",
     "- Copyright © 2004–2024 Simon Tatham. See",
     "  [`licenses/sgt-puzzles-LICENSE`](./licenses/sgt-puzzles-LICENSE) for the",
@@ -69,7 +69,7 @@ describe("licenseTextToHTML — markdown mode (this project's LICENSE.md)", () =
   it("renders code spans, including inside link text", () => {
     const el = renderLicense(LICENSE_SHAPED, undefined, { markdown: true });
     const code = [...el.querySelectorAll("code")].map((c) => c.textContent);
-    expect(code).toContain("puzzles-ts");
+    expect(code).toContain("hintful");
     expect(code).toContain("licenses/sgt-puzzles-LICENSE");
   });
 

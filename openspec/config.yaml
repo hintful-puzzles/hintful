@@ -6,8 +6,9 @@ schema: spec-driven
 # cited two AGENTS.md sections that no longer existed. A second copy of the brief
 # is a second thing to keep true.
 context: |
-  puzzles-ts is a PWA of Simon Tatham's Portable Puzzle Collection, rewritten
-  from C/WASM into native TypeScript. All 57 games and the engine are TypeScript;
+  Hintful Puzzles (repository `hintful`) is a PWA of Simon Tatham's Portable
+  Puzzle Collection, rewritten from C/WASM into native TypeScript. All 57 games
+  and the engine are TypeScript;
   there is no C, no build system, and nothing generated anywhere in the tree.
   `npm install` is the entire setup.
 

@@ -17,7 +17,7 @@ nothing generated, anywhere in the tree.**
 - **Help** is this project's own markdown under `help/` — one directory, one
   format, one page per game in `help/games/`. The MIT notices are `licenses/`,
   and the unbuilt `unfinished/` C files live with the changes that read them.
-- **The product is Hintful Puzzles; the repository is `puzzles-ts`.** The name,
+- **The product is Hintful Puzzles; the repository is `hintful`.** The name,
   the tagline and the support links have one source, `src/project-identity.ts`,
   read by the About dialog, the PWA manifest, the page templates and the home
   screen. The app presents itself as **maintained by** Yoni Lavi (never "by":
@@ -477,8 +477,9 @@ So the question to ask of any inherited invariant is not "is it true?" but **"wh
 - `npm run build` — production app build (tsc + vite). Needs no generated input of any kind: the game catalog is committed source (`src/puzzle/catalog-data.ts`), the icons are a committed snapshot, the help pages are committed markdown.
 - `npm run preview` — preview production build.
 - `npm run check` — biome format + lint with autofix.
-- **The app is live at <https://hintful-puzzles.pages.dev>**, on Cloudflare
-  Pages, and **nobody deploys it by hand**: `.github/workflows/ci.yml` runs the
+- **The app is live at <https://hintful.click>**, on Cloudflare Pages (the
+  `hintful-puzzles` project, also served at `hintful-puzzles.pages.dev`), and
+  **nobody deploys it by hand**: `.github/workflows/ci.yml` runs the
   gate on push to `main` and a second job publishes **the gate's own build
   artifact**. A deploy is therefore always a commit that passed the full gate,
   and the bytes that shipped are the bytes that were checked — the deploy job

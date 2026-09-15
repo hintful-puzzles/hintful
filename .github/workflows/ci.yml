@@ -131,10 +131,10 @@ jobs:
           # inside the repo rather than being whatever the runner resolved
           # today. Bump it deliberately.
           wranglerVersion: "4.129.1"
-          # The project name is the product's, not the repository's: this is
-          # the origin players see (`hintful-puzzles.pages.dev`) until
-          # hintful.click is pointed at it. AGENTS.md: the product is Hintful
-          # Puzzles, the repository is puzzles-ts.
+          # The project name is the product's, not the repository's. Players
+          # reach it at hintful.click; `hintful-puzzles.pages.dev` is its Pages
+          # origin. AGENTS.md: the product is Hintful Puzzles, the repository
+          # is hintful.
           command: pages deploy dist --project-name=hintful-puzzles --branch=main
 
       - name: Say where it went

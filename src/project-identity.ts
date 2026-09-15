@@ -1,7 +1,7 @@
 /**
  * How this project names itself and where it sends players for support.
  *
- * The **product** is Hintful Puzzles; the **repository** is `puzzles-ts`. They
+ * The **product** is Hintful Puzzles; the **repository** is `hintful`. They
  * are different names for different things, and only the product name reaches
  * a player. Every surface that shows it — the About dialog, the PWA manifest
  * (the label under an installed icon), the front page's title and heading —
@@ -29,7 +29,7 @@ export const APP_SHORT_NAME = "Hintful";
 export const APP_TAGLINE = "logic puzzles with hints that explain why";
 
 /** Source code. */
-export const REPO_URL = "https://github.com/yoniLavi/puzzles-ts";
+export const REPO_URL = "https://github.com/hintful-puzzles/hintful";
 
 /**
  * Bug reports and questions. The repository has Issues enabled and Discussions
