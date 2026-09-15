@@ -48,8 +48,8 @@ import {
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
 import {
-  type PencilIndicatorBox,
   type PencilIndicatorStyle,
+  pencilIndicatorBox,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Size } from "../../engine/types.ts";
@@ -508,18 +508,17 @@ function drawPencilMarks(
 
 // --- pencil-mode indicator -------------------------------------------------
 
-/** The shared diagonal pencil glyph, drawn in the empty top-right border corner
- * (outside the grid, never overlapping a cell) — the corner Keen/Unequal use. */
+/** The three palette indices the shared glyph is drawn in; the engine draws it
+ * and decides where. */
 const PENCIL_STYLE: PencilIndicatorStyle = {
   background: COL_BACKGROUND,
   body: COL_PENCIL_BODY,
   ink: COL_GRID,
 };
-/** The top-right border corner, outside every cell and clue. */
-const PENCIL_BOX = (cr: number, ts: number): PencilIndicatorBox => {
-  const b = border(ts);
-  return { x: computeSize(cr, ts).w - b, y: 0, size: b };
-};
+/** The room reserved for it is the border corner, outside every cell and clue:
+ * `border` is the half-tile `pencilIndicatorReach` is sized to. */
+const PENCIL_BOX = (cr: number, ts: number) =>
+  pencilIndicatorBox(computeSize(cr, ts), ts);
 
 // --- redraw ----------------------------------------------------------------
 

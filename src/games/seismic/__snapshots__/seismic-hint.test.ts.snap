@@ -4,10 +4,10 @@ exports[`the frames a hint draws > rings each struck cell, outlines the starved 
 [
   {
     "color": 0,
-    "h": 262,
+    "h": 242,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 242,
+    "w": 262,
     "x": 0,
     "y": 0,
   },
@@ -2294,12 +2294,12 @@ exports[`the frames a hint draws > rings each struck cell, outlines the starved 
   },
   {
     "color": 0,
-    "h": 20,
+    "h": 14,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 20,
-    "x": 222,
-    "y": 242,
+    "w": 14,
+    "x": 245,
+    "y": 3,
   },
 ]
 `;

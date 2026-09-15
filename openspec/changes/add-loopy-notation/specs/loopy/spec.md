@@ -12,8 +12,12 @@ only line moves SHALL still load.
 
 Notes mode SHALL be `ui.pencilMode`, off on a new game, toggled by the collection's
 shared pencil-mode toggle rather than by anything of Loopy's own, and shown by the
-collection's pencil glyph in a strip below the board. With the mode off, input SHALL
-be unchanged.
+collection's pencil glyph in the collection's place for it. With the mode off, input
+SHALL be unchanged.
+
+The gutter around the board SHALL be wide enough for a corner note on a rim dot, so
+that no note is clipped by the edge of the canvas; half of a board's corners are at
+its rim, and the gutter that fitted the keyboard cursor clipped all of them.
 
 In notes mode a tap SHALL cycle the corner it lands in: the angle, around the nearest
 dot, between the two adjacent edges either side of it, with which of a corner's two

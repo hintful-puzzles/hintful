@@ -1337,12 +1337,12 @@ exports[`unequal render > draws adjacency bars in Adjacent mode 1`] = `
   },
   {
     "color": 0,
-    "h": 16,
+    "h": 12,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 16,
-    "x": 240,
-    "y": 0,
+    "w": 12,
+    "x": 242,
+    "y": 2,
   },
 ]
 `;
@@ -2558,12 +2558,12 @@ exports[`unequal render > draws greater-than chevrons in Unequal mode 1`] = `
   },
   {
     "color": 0,
-    "h": 16,
+    "h": 12,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 16,
-    "x": 240,
-    "y": 0,
+    "w": 12,
+    "x": 242,
+    "y": 2,
   },
 ]
 `;

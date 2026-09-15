@@ -22,8 +22,8 @@
  * Two deliberate display divergences: the completion flash sweeps a diagonal
  * highlight/lowlight wave (upstream declares its frame counter `bool`, so its
  * "flash" is a single static color shift — clearly not the intent of
- * `FLASH_TIME = 9 × FLASH_FRAME`), and the sticky pencil mode adds a
- * mode-indicator glyph in the top-left margin.
+ * `FLASH_TIME = 9 × FLASH_FRAME`), and the sticky pencil mode adds the
+ * collection's mode-indicator glyph, in the margin corner the engine picks.
  */
 
 import {
@@ -66,8 +66,8 @@ import {
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
 import {
-  type PencilIndicatorBox,
   type PencilIndicatorStyle,
+  pencilIndicatorBox,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
@@ -808,13 +808,6 @@ const PENCIL_STYLE: PencilIndicatorStyle = {
   body: COL_PENCIL_BODY,
   ink: COL_GRID,
 };
-/** The empty half-tile margin above and left of the grid; half a tile, so it
- * clears the grid outline sitting in that margin. */
-const PENCIL_BOX = (ts: number): PencilIndicatorBox => ({
-  x: 0,
-  y: 0,
-  size: Math.floor(ts / 2),
-});
 
 // --- redraw ----------------------------------------------------------------
 
@@ -1077,5 +1070,13 @@ export function redraw(
     for (let l = 0; l < numbers.length; l++) ds.numberState[l] = panelState(l);
   }
 
-  repaintPencilIndicator(dr, ds, ui.pencilMode, PENCIL_BOX(ts), PENCIL_STYLE);
+  // The collection's place for it: the half-tile margin the grid already leaves,
+  // at the top-right rather than the top-left it used to use here.
+  repaintPencilIndicator(
+    dr,
+    ds,
+    ui.pencilMode,
+    pencilIndicatorBox(computeSize(puzzle, ts), ts),
+    PENCIL_STYLE,
+  );
 }

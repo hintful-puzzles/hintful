@@ -4464,12 +4464,12 @@ exports[`keen hint render > a cage elimination shades the cage and strikes the c
   },
   {
     "color": 0,
-    "h": 24,
+    "h": 18,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 24,
-    "x": 312,
-    "y": 0,
+    "w": 18,
+    "x": 315,
+    "y": 3,
   },
 ]
 `;
@@ -5970,12 +5970,12 @@ exports[`keen hint render > a hidden-single placement shades the whole line and 
   },
   {
     "color": 0,
-    "h": 24,
+    "h": 18,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 24,
-    "x": 216,
-    "y": 0,
+    "w": 18,
+    "x": 219,
+    "y": 3,
   },
 ]
 `;

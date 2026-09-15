@@ -10,6 +10,7 @@
  */
 
 import type { GameDrawing } from "./game.ts";
+import type { Size } from "./types.ts";
 
 /**
  * A game's three palette indices for the indicator. An object rather than three
@@ -23,6 +24,54 @@ export interface PencilIndicatorStyle {
   body: number;
   /** Its outline and graphite. */
   ink: number;
+}
+
+/** The gap between the glyph and each of the two canvas edges it sits against. */
+const inset = (tileSize: number): number => Math.max(1, Math.round(tileSize / 16));
+
+/**
+ * How much room the indicator needs at the canvas's top-right corner: the glyph
+ * plus the gap on either side of it. **This is the figure a game reserves** —
+ * half a tile, which a border of `ts / 2` already gives (Keen, Solo, Unequal),
+ * and which a game with no such margin grows one for (Loopy's `border`).
+ *
+ * It is the reach rather than the glyph because those are different numbers, and
+ * a game reserving the glyph's size would be short by the inset at both edges.
+ */
+export function pencilIndicatorReach(tileSize: number): number {
+  return pencilIndicatorSize(tileSize) + 2 * inset(tileSize);
+}
+
+/**
+ * How big the glyph is drawn, everywhere: the half-tile corner less the gap at
+ * either side of it, and never so small that the pencil stops reading as one on
+ * a tiny board. Where that floor bites, the reach exceeds half a tile and a game
+ * whose margin is exactly half a tile lends it a pixel or two of the cell below.
+ *
+ * Private on purpose: a game that reserved *this* rather than
+ * {@link pencilIndicatorReach} would be short by an inset at each edge.
+ */
+function pencilIndicatorSize(tileSize: number): number {
+  return Math.max(8, Math.round(tileSize / 2) - 2 * inset(tileSize));
+}
+
+/**
+ * **Where the glyph goes, in every game: the canvas's top-right corner**, inset
+ * by a hair so it does not touch the edge.
+ *
+ * The position was each game's own until this, and the collection had drifted
+ * into three answers — top-right in five games, top-left in three, a strip below
+ * the board in three — so the one cue that says "your typing goes into notes
+ * now" moved when the player changed puzzle. It is computed from the canvas
+ * rather than from a cell or a clue ring, so it means the same thing whatever a
+ * game's margins are made of; **a game with nothing at its top-right reserves
+ * the room** (a border wide enough, or a canvas grown to make one), exactly as
+ * it would for any other fixed furniture.
+ */
+export function pencilIndicatorBox(canvas: Size, tileSize: number): PencilIndicatorBox {
+  const size = pencilIndicatorSize(tileSize);
+  const gap = inset(tileSize);
+  return { x: canvas.w - size - gap, y: gap, size };
 }
 
 /**

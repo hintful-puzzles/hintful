@@ -35,7 +35,11 @@ import {
   hintMarkBit,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
-import { drawPencilGlyph } from "../../engine/pencil-indicator.ts";
+import {
+  type PencilIndicatorStyle,
+  pencilIndicatorBox,
+  repaintPencilIndicator,
+} from "../../engine/pencil-indicator.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import {
   checkErrors,
@@ -97,11 +101,6 @@ const DF_HIGHLIGHT_PENCIL = 0x2000;
 const DF_IMMUTABLE = 0x1000;
 const DF_PLAYAREA = 0x0800;
 const DF_DIGIT_MASK = 0x00ff;
-// Fork addition: a CapsLock-style "pencil mode is on" indicator, drawn as a
-// small pencil glyph in the (tower-safe, never-overlapped) top-right corner of
-// the clue ring. A high bit clear of the pencil bitmap (bits 17..25) and the
-// upstream flags below bit 16.
-const DF_PENCIL_MODE = 1 << 30;
 
 // --- geometry --------------------------------------------------------------
 
@@ -144,6 +143,8 @@ export interface TowersDrawState {
   /** The hint target's ring and the evidence area's outline (fork additions),
    * drawn once per frame after the tile loop. See {@link markBand}. */
   marks: HintMarks;
+  /** Whether the pencil-mode indicator was on last frame (fork addition). */
+  pencilModeShown: boolean | null;
 }
 
 export function newDrawState(state: TowersState, tileSize: number): TowersDrawState {
@@ -159,8 +160,22 @@ export function newDrawState(state: TowersState, tileSize: number): TowersDrawSt
     hint: new OverlaySidecar(W * W),
     wrong: new OverlaySidecar(W * W),
     marks: new HintMarks(),
+    pencilModeShown: null,
   };
 }
+
+/** The three palette indices the shared glyph is drawn in; the engine draws it
+ * and decides where. */
+const PENCIL_STYLE: PencilIndicatorStyle = {
+  background: COL_BACKGROUND,
+  body: COL_PENCIL_BODY,
+  ink: COL_GRID,
+};
+
+/** The room reserved for it is the clue ring's top-right corner, which no tower
+ * reaches: `border` is over a whole tile, where the reach needs half of one. */
+const PENCIL_BOX = (w: number, ts: number) =>
+  pencilIndicatorBox(computeSize({ w }, ts), ts);
 
 /**
  * Where a hint mark sits around cell `(x, y)` — **on the cell's own border**,
@@ -245,11 +260,6 @@ function drawTile(
 
   // erase background
   dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, bg);
-
-  // CapsLock-style "pencil mode is on" indicator (shared glyph).
-  if (tile & DF_PENCIL_MODE) {
-    drawPencilGlyph(dr, tx, ty, ts, COL_PENCIL_BODY, COL_GRID);
-  }
 
   // pencil-mode highlight (top-left triangle)
   if (tile & DF_HIGHLIGHT_PENCIL) {
@@ -452,12 +462,6 @@ export function redraw(
     }
   }
 
-  // Pencil-mode indicator in the top-right clue-ring corner (W-pos (w+1, 0)).
-  // Towers protrude up-left, so nothing ever overlaps this corner; it is also
-  // no cell's up-left neighbor, so the diff cache repaints it cleanly on
-  // toggle.
-  if (ui.pencilMode) ds.tiles[w + 1] |= DF_PENCIL_MODE;
-
   // Diff and repaint, drawing each changed cell's tower-overlapping neighbors.
   const paint = (x: number, y: number, tile: number) => {
     const j = index(x, y);
@@ -524,6 +528,8 @@ export function redraw(
     targetColor: COL_HINT,
     evidenceColor: COL_HINT_CELL,
   });
+
+  repaintPencilIndicator(dr, ds, ui.pencilMode, PENCIL_BOX(w, ts), PENCIL_STYLE);
 
   ds.started = true;
 }

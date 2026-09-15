@@ -735,11 +735,12 @@ were — the last per-game roster in the cross-game guards.
   must **not** select or restyle that cell — it can't take a mark, so
   highlighting it only confuses. All of that is the shared arm's, not yours.
 - **A CapsLock-style mode indicator** — a fixed pencil glyph whenever the mode
-  is on. Placement is a rendering problem with three known answers (cache-safe
-  cell bit, explicit end-of-redraw repaint, or grow the canvas below the board
-  when every cell is spoken for — Mathrax); see
-  [engine catalog](./engine-catalog.md) § "pencil-indicator.ts — the
-  pencil-mode glyph".
+  is on, and **the engine says where it goes**: `pencilIndicatorBox` puts it at
+  the canvas's top-right in every game, so the cue does not move when a player
+  changes puzzle. What stays yours is finding the room for it (a margin you
+  already have, a wider border, or a grown canvas) and how you repaint it; see
+  [engine catalog](./engine-catalog.md) § "`pencil-indicator.ts` — the
+  pencil-mode indicator".
 - **Notes are first-class in `findMistakes`.** An empty cell whose non-empty
   notes have crossed out the solution value is a mistake (`kind: "note"`),
   rendered like a wrong placement and blocking Check & Save through the

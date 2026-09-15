@@ -9972,5 +9972,14 @@ exports[`towers hint render > a clue-elimination journey shades the line of sigh
     "x": 147,
     "y": 198,
   },
+  {
+    "color": 0,
+    "h": 18,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 18,
+    "x": 327,
+    "y": 3,
+  },
 ]
 `;

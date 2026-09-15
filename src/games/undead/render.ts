@@ -39,8 +39,9 @@ import {
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
 import {
-  type PencilIndicatorBox,
   type PencilIndicatorStyle,
+  pencilIndicatorBox,
+  pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
@@ -127,7 +128,13 @@ const border = (ts: number): number => f(ts / 4);
 
 export function computeSize(p: { w: number; h: number }, ts: number): Size {
   const b = border(ts);
-  return { w: 2 * b + (p.w + 2) * ts, h: 2 * b + (p.h + 3) * ts };
+  return {
+    // The extra right margin is the room the pencil indicator needs at the
+    // canvas's top-right: the monster-count row spans the board's whole width
+    // (`calculateCountLayout`), so the corner is not otherwise free.
+    w: 2 * b + (p.w + 2) * ts + pencilIndicatorReach(ts),
+    h: 2 * b + (p.h + 3) * ts,
+  };
 }
 
 // --- draw state ------------------------------------------------------------
@@ -714,14 +721,9 @@ const PENCIL_STYLE: PencilIndicatorStyle = {
   ink: COL_GRID,
 };
 
-/** The empty top-right corner cell of the clue ring (grid cell (w+1, 0)), a
- * full tile like Towers' clue-corner indicator: Undead's ts/4 border is too
- * thin for the shared glyph to read at the other pencil-mark games' size. */
-const PENCIL_BOX = (ds: UndeadDrawState): PencilIndicatorBox => {
-  const ts = ds.tileSize;
-  const b = border(ts);
-  return { x: b + (ds.w + 1) * ts, y: b + ts, size: ts };
-};
+/** The margin `computeSize` grows for it, at the canvas's top-right. */
+const PENCIL_BOX = (ds: UndeadDrawState) =>
+  pencilIndicatorBox(computeSize(ds, ds.tileSize), ds.tileSize);
 
 // --- redraw ----------------------------------------------------------------
 
@@ -746,8 +748,9 @@ export function redraw(
   const hflash = Math.trunc((flashTime * 5) / FLASH_TIME) % 2 !== 0;
 
   if (!ds.started) {
-    const fullW = 2 * b + (w + 2) * ts;
-    const fullH = 2 * b + (h + 3) * ts;
+    // The canvas, not the board: `computeSize` grows a right margin for the
+    // pencil indicator, and a fill sized from the board would leave it bare.
+    const { w: fullW, h: fullH } = computeSize({ w, h }, ts);
     dr.drawRect({ x: 0, y: 0, w: fullW, h: fullH }, COL_BACKGROUND);
     dr.drawRect(
       { x: b + ts - 1, y: b + 2 * ts - 1, w: w * ts + 3, h: h * ts + 3 },

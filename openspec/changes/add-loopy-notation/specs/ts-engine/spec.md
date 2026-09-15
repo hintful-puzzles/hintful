@@ -39,6 +39,20 @@ what each game's `newUi` returns rather than from a roster, so a game joins by
 having the mode. Gestures a game already has — a secondary press, a select key on a
 showing cursor — MAY toggle the mode as well.
 
+The mode's on-screen indicator SHALL likewise be the collection's: the shared pencil
+glyph, at the position the engine computes, in every game that has the mode. A game
+SHALL reserve the room for it rather than choose a different place for it. The figure
+it reserves SHALL be the engine's stated reach — the glyph plus the gap that keeps it
+off each edge, which a game reserving the glyph alone would be short of at both — and
+a game whose board leaves that corner occupied SHALL grow a margin for it rather than
+overlap the board or move the glyph.
+
+#### Scenario: The indicator is in the same place in every game
+
+- **WHEN** pencil mode is on in any game that has it
+- **THEN** the glyph is drawn in the position the engine computes, not one the game
+  chose for itself
+
 #### Scenario: A game with a pencil mode is reachable the same way as the rest
 
 - **WHEN** any registered game whose `newUi` returns a `pencilMode` is asked for its

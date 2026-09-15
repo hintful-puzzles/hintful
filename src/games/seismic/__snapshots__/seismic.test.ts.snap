@@ -4,10 +4,10 @@ exports[`seismic rendering > draws the opening frame: black backing, the givens,
 [
   {
     "color": 0,
-    "h": 182,
+    "h": 162,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 162,
+    "w": 182,
     "x": 0,
     "y": 0,
   },
@@ -668,12 +668,12 @@ exports[`seismic rendering > draws the opening frame: black backing, the givens,
   },
   {
     "color": 0,
-    "h": 20,
+    "h": 14,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 20,
-    "x": 142,
-    "y": 162,
+    "w": 14,
+    "x": 165,
+    "y": 3,
   },
 ]
 `;
@@ -682,10 +682,10 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
 [
   {
     "color": 0,
-    "h": 182,
+    "h": 162,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 162,
+    "w": 182,
     "x": 0,
     "y": 0,
   },
@@ -1438,12 +1438,12 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
   },
   {
     "color": 0,
-    "h": 20,
+    "h": 14,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 20,
-    "x": 142,
-    "y": 162,
+    "w": 14,
+    "x": 165,
+    "y": 3,
   },
 ]
 `;
@@ -1452,10 +1452,10 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
 [
   {
     "color": 0,
-    "h": 182,
+    "h": 162,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 162,
+    "w": 182,
     "x": 0,
     "y": 0,
   },
@@ -2128,12 +2128,12 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
   },
   {
     "color": 0,
-    "h": 20,
+    "h": 14,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 20,
-    "x": 142,
-    "y": 162,
+    "w": 14,
+    "x": 165,
+    "y": 3,
   },
 ]
 `;

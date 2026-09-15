@@ -16,6 +16,7 @@ import {
   HINT_EVIDENCE,
   highlightWash,
   INK,
+  PENCIL_BODY,
   pencilColor,
   playerEntryColor,
 } from "../../engine/color/palette.ts";
@@ -32,6 +33,11 @@ import {
   type OrderedCell,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
+import {
+  type PencilIndicatorStyle,
+  pencilIndicatorBox,
+  repaintPencilIndicator,
+} from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import type { GroupMove } from "./state.ts";
 import {
@@ -66,6 +72,10 @@ export const COL_HINT = 8;
  * known products, an identity fill's revealing cell), **and** a forcing chain's
  * ordinal — one index, because the number indexes the evidence. */
 export const COL_HINT_CELL = 9;
+/** The yellow body of the pencil-mode indicator glyph. Appended past the
+ * upstream enum, which is safe because `puzzle/augmentation.ts` gives Group no
+ * dark-mode `paletteOverrides` keyed by index. */
+export const COL_PENCIL_BODY = 10;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -83,6 +93,7 @@ export function colors(defaultBackground: Color): Color[] {
   // color and differ in shape, not weight. `HINT_EVIDENCE` also colors the chain
   // ordinal; its doc comment says why the index and what it indexes are one role.
   out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_PENCIL_BODY] = PENCIL_BODY;
   return out;
 }
 
@@ -172,6 +183,8 @@ export interface GroupDrawState {
   sequence: Uint8Array;
   /** Scratch: grid-indexed error overlay from `checkErrors`. */
   errtmp: Int32Array;
+  /** Whether the pencil-mode indicator was on last frame. */
+  pencilModeShown: boolean | null;
 }
 
 export function newDrawState(state: GroupState, tileSize: number): GroupDrawState {
@@ -191,8 +204,23 @@ export function newDrawState(state: GroupState, tileSize: number): GroupDrawStat
     marks: new HintMarks(),
     sequence: new Uint8Array(w),
     errtmp: new Int32Array(a),
+    pencilModeShown: null,
   };
 }
+
+/** The three palette indices the shared glyph is drawn in; the engine draws it
+ * and decides where. */
+const PENCIL_STYLE: PencilIndicatorStyle = {
+  background: COL_BACKGROUND,
+  body: COL_PENCIL_BODY,
+  ink: COL_GRID,
+};
+
+/** The room reserved for it is the border past the Cayley table's last column,
+ * clear of every cell and of the legend: `border` is the half-tile
+ * `pencilIndicatorReach` is sized to. */
+const PENCIL_BOX = (w: number, ts: number) =>
+  pencilIndicatorBox(computeSize(w, ts), ts);
 
 /**
  * Where a hint mark sits around **display** cell `(x, y)` — straddling the grid
@@ -551,6 +579,10 @@ export function redraw(
     evidenceColor: COL_HINT_CELL,
     gutterColor: COL_GRID,
   });
+
+  // Group takes pencil marks like the rest of the Latin family, so it says so
+  // the same way: the collection's glyph, where the engine puts it.
+  repaintPencilIndicator(dr, ds, ui.pencilMode, PENCIL_BOX(w, ts), PENCIL_STYLE);
 }
 
 export function flashLength(a: GroupState, b: GroupState): number {

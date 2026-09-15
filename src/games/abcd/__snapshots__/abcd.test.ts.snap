@@ -7,7 +7,7 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
     "h": 324,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 325,
+    "w": 343,
     "x": 0,
     "y": 0,
   },
@@ -1787,12 +1787,12 @@ exports[`abcd render > draws the initial frame with border letters and clues 1`]
   },
   {
     "color": 0,
-    "h": 36,
+    "h": 14,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 36,
-    "x": 0,
-    "y": 0,
+    "w": 14,
+    "x": 327,
+    "y": 2,
   },
 ]
 `;

@@ -53,11 +53,23 @@ solver derives beyond lines:
   eleven cell games keep their right-click and their Enter toggle, both of which
   now run through `toggleNoteTakingMode`, and gain the key and the letter.
 - **An indicator** whenever the mode is on: the shared pencil glyph
-  (`drawPencilGlyph`). Loopy's board has no spare cell and a border only as wide as
-  the cursor disc, so the canvas grows a strip below the board, which is Mathrax's
-  answer, without moving the grid. Loopy repaints every frame, so it draws the glyph
-  outright rather than through `repaintPencilIndicator`, whose cache would skip the
-  glyph the background has just painted over.
+  (`drawPencilGlyph`), at `pencilIndicatorBox` — the canvas's top-right, which is
+  the engine's answer for every game rather than Loopy's own (owner, 2026-09-16:
+  *"I want the pencil icon to be managed by the engine and appear in the same
+  place"*). Loopy's gutter is widened to hold it, which the notes needed anyway:
+  a corner note on a rim dot reaches nearly half an edge, and the gutter that
+  fitted the keyboard cursor clipped every one of them. Loopy repaints every frame,
+  so it draws the glyph outright rather than through `repaintPencilIndicator`,
+  whose cache would skip the glyph the background has just painted over.
+- **Every other pencil game moved with it**, since "the same place" is a claim
+  about the collection and not about Loopy: five already had that corner, four
+  grow a right margin of `pencilIndicatorReach` — the glyph plus the gap at each
+  edge, which is the figure a game reserves, because one reserving the glyph
+  alone is short by an inset at both — Towers gives up the tile-cache bit it used
+  while the position was still its own to choose, and Group gains the indicator
+  it never had. What the guard judges is where the pixels land, not which helper
+  was called: a game that computed the same corner by hand would pass, which is
+  right, because the requirement is about the player's eye.
 
 ## D4. Pointer and touch, in notes mode
 

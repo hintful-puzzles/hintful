@@ -7,7 +7,7 @@ exports[`undead render > redraws the initial frame and a partially-filled board 
     "h": 480,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 416,
+    "w": 448,
     "x": 0,
     "y": 0,
   },
@@ -1241,12 +1241,12 @@ exports[`undead render > redraws the initial frame and a partially-filled board 
   },
   {
     "color": 0,
-    "h": 64,
+    "h": 24,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 64,
-    "x": 336,
-    "y": 80,
+    "w": 24,
+    "x": 420,
+    "y": 4,
   },
 ]
 `;

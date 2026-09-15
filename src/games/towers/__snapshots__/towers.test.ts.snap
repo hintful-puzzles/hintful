@@ -7060,5 +7060,14 @@ exports[`towers render > draws the 3D initial frame with clues and tower solids 
   {
     "op": "unclip",
   },
+  {
+    "color": 0,
+    "h": 18,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 18,
+    "x": 375,
+    "y": 3,
+  },
 ]
 `;

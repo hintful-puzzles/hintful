@@ -4,10 +4,10 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
 [
   {
     "color": 0,
-    "h": 222,
+    "h": 202,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 202,
+    "w": 222,
     "x": 0,
     "y": 0,
   },
@@ -3102,12 +3102,12 @@ exports[`mathrax rendering > draws pencil marks for a noted cell 1`] = `
   },
   {
     "color": 0,
-    "h": 20,
+    "h": 14,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 20,
-    "x": 182,
-    "y": 202,
+    "w": 14,
+    "x": 205,
+    "y": 3,
   },
 ]
 `;
@@ -3116,10 +3116,10 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
 [
   {
     "color": 0,
-    "h": 222,
+    "h": 202,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 202,
+    "w": 222,
     "x": 0,
     "y": 0,
   },
@@ -4774,12 +4774,12 @@ exports[`mathrax rendering > draws the opening frame 1`] = `
   },
   {
     "color": 0,
-    "h": 20,
+    "h": 14,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 20,
-    "x": 182,
-    "y": 202,
+    "w": 14,
+    "x": 205,
+    "y": 3,
   },
 ]
 `;

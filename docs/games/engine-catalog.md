@@ -759,33 +759,45 @@ Palisade, which had it right first.
 
 ### `pencil-indicator.ts` — the pencil-mode indicator
 
-The shared "pencil mode is on" indicator drawn identically across the
-collection; each game only picks where it sits and which three palette indices
-it uses (`PencilIndicatorStyle`).
+The shared "pencil mode is on" glyph, drawn identically across the collection —
+**and in the same place.** `pencilIndicatorBox(canvas, tileSize)` returns it:
+the canvas's top-right corner, inset by a hair. `pencilIndicatorReach` is the
+figure a game reserves there — the glyph *plus* both insets, half a tile in all.
+It is the only size the module exports, because a game that reserved the glyph's
+own size would be short by an inset at each edge and the glyph would clip the
+cell below. The position is the engine's, not the game's, because the cue's
+whole job is to say *your typing goes into notes now*, and a cue that moves
+between puzzles has to be re-learned in each; it had drifted into three answers
+across the collection before `add-loopy-notation`. A game picks only its three
+palette indices (`PencilIndicatorStyle`) and how it finds the room.
 
-`repaintPencilIndicator(dr, ds, on, firstFrame, ox, oy, size, style)` is the
-whole of placement answer 2 below — the box, the glyph, the invalidation **and**
-the repaint decision — so a game writes one call rather than a private painter
-plus a hand-rolled cache. The `firstFrame` flag is a parameter because which
-flag a game has (`firstFrame`, `!ds.started`) is its own bookkeeping.
-`drawPencilGlyph` remains exported for answer 1, where the tile cache does the
-deciding. **Placement has three known answers, in preference order:**
+`repaintPencilIndicator(dr, cache, on, box, style)` is the box, the glyph, the
+invalidation **and** the repaint decision, so a game writes one call rather than
+a private painter plus a hand-rolled cache. The cache is a
+`pencilModeShown: boolean | null` on the draw state, and `null` — never painted —
+is why there is no `firstFrame` argument: a fresh draw state has an empty canvas
+under the box and must paint whatever the mode is. `drawPencilGlyph` stays
+exported for a renderer that repaints every frame anyway (Loopy), where a cache
+would skip the repaint that the background has just erased.
 
-1. **A high tile-flag bit on a cache-safe cell** — one the game's own draw
-   never overpaints (no piece/animation overlap) *and* that is no cell's
-   neighbor in the diff cache, so the per-tile cache repaints it on toggle
-   for free (Towers uses the top-right clue-ring corner — its 3D towers only
-   ever protrude up-left).
-2. **An explicit end-of-redraw repaint** when no cache-safe cell exists: call
-   `repaintPencilIndicator` at the end of `redraw` with the game's box, its
-   style and its own first-frame flag. Carry `pencilModeShown: boolean` on the
-   draw state and let the helper own it — the sidecar it implies is a second
-   cache, so see [rendering](./rendering.md) § "A cue with a tile available
-   belongs in the tile key, not in a second cache" before choosing this over 1.
-3. **Grow the canvas rather than overlap the board** when there is no border
-   and no spare cell at all: Mathrax adds a `tileSize/2` strip *below* the
-   board — keep the grid's own geometry untouched when you do, so `fromCoord`
-   and the width stay exactly as before and only the height changes.
+**Finding the room, in preference order:**
+
+1. **A margin the game already has** — a border, a gutter, or a clue-ring corner
+   at the top-right that nothing else paints. Check the *corner*, not the edge: a
+   ring that holds clues along the top usually leaves its corners empty.
+2. **A wider margin** — widen the border until the box fits. Loopy's gutter is
+   the widest of its cursor disc, a corner note on a rim dot, and this box.
+3. **Grow the canvas rather than overlap the board**, when there is no margin at
+   all: widen it by `pencilIndicatorReach` past the board's own width, so the
+   top-right corner exists. The grid's geometry is untouched, so `fromCoord` and
+   the board's own size stay exactly as before — and the *fill* must come from
+   `computeSize`, not from a board-sized expression, or the new margin is never
+   painted.
+
+The box sits in a margin, which is no tile's, so it cannot ride in a per-tile
+cache key however convenient that corner looks: every game repaints it after its
+tile loop, through `repaintPencilIndicator`. Towers packed it into tile `w + 1`
+while the position was Towers' own to choose, and gave that up with the choice.
 
 The glyph's body color is a palette index appended past the game's C-era
 enum — safe only when the game has no dark-mode `paletteOverrides` touching

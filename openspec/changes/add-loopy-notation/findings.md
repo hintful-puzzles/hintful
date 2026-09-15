@@ -51,6 +51,14 @@ corner belongs to, and the two comments are corrected.
   never acting on it (Solo): `pencil-mode-key.test.ts` fails on that game's case —
   *"keen must offer exactly one Marks key"*, *"solo must consume the Marks key"* —
   and its census case fails beside them.
+- Keeping a corner of one's own (Keen returning its old top-left box), and drawing
+  no indicator at all (Group's repaint call removed):
+  `pencil-indicator-placement.test.ts` fails on those two cases alone, the other
+  eleven staying green — *"keen paints polygon at (17, 3) for pencil mode, outside
+  the engine's box {"x":315,"y":3,"size":18}"*, *"group draws nothing when pencil
+  mode goes on"*. The first is the case the guard exists for: Keen still called
+  the engine's helper for its size, so a guard keyed on the import would have
+  passed it.
 
 ## What the shared toggle costs each game (2026-09-15)
 
@@ -65,6 +73,29 @@ Measured against the eleven cell games as the change found them:
   fired only once the game has declined `p`; no registered game claims that letter,
   so `shortcuts.test.ts`'s ledger stays empty.
 - **In the browser** (Chrome, dev server): Loopy's keypad is that one key, drawn
-  with the inherited `key-marks` icon, and pressing it raises the pencil glyph
-  below the board; `P` on the focused board turns it off again. Towers' keypad is
-  `1`–`5`, Clear, Marks, and Marks raises its in-cell glyph.
+  with the inherited `key-marks` icon, and pressing it raises the pencil glyph;
+  `P` on the focused board turns it off again. Towers' keypad is `1`–`5`, Clear,
+  Marks, and Marks raises its glyph too.
+
+## Where the indicator ended up, in the browser (2026-09-16)
+
+Re-checked in Chrome against the dev server once the engine owned the position,
+because the note above described the placement this change replaced — Loopy's
+glyph below the board, Towers' inside a clue-ring tile — which was true when it
+was written and false the moment the position stopped being each game's own.
+
+In Loopy, Towers, Mathrax, Seismic and Undead the glyph is the same size, in the
+same corner of the canvas, at the same inset. The margin the four games grew is
+painted rather than bare — Undead's would not have been, since its first frame
+filled a board-sized rectangle rather than `computeSize`'s — and Mathrax and
+Seismic no longer carry a band below the board. Loopy's widened gutter shows as a
+visible margin between the grid and the canvas edge, which is what stops a corner
+note on a rim dot being clipped.
+
+## The capability surface moved (2026-09-16)
+
+`capability-surface.test.ts` records each game's draw-state vocabulary, and the
+gate caught the two additions this change makes: Towers and Group gained
+`pencilModeShown` — Towers because it gave up the tile-cache bit that carried the
+mode, Group because it had no indicator at all. Re-baselined deliberately, which
+is what that test's own comment asks a change to say out loud.

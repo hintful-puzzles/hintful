@@ -382,7 +382,7 @@ describe("notes on the board", () => {
     expect(new Midend(loopyGame).loadGame(lines.saveGame())).toBeNull();
   });
 
-  it("draw in pencil, red when wrong; the mode's pencil sits below the board and the keyboard previews its corner", () => {
+  it("draw in pencil, red when wrong, inside the canvas; the mode's pencil sits top-right and the keyboard previews its corner", () => {
     const b = board();
     const state = moves(b.s).reduce((s, m) => loopyGame.executeMove(s, m), b.s);
     const palette = loopyGame.colors(DEFAULT_BACKGROUND);
@@ -406,20 +406,37 @@ describe("notes on the board", () => {
     ]);
     expect(wrong.some((o) => o.op === "polygon" && o.fill === COL_MISTAKE)).toBe(true);
 
+    // Half a board's corners are on its rim, and a corner note's band reaches
+    // nearly half an edge, so a gutter sized for the cursor alone clipped every
+    // one of them: the notes on this board must fall inside the canvas.
+    const { w, h } = loopyGame.computeSize(b.p, b.ds.tileSize);
+    const notes = plain.filter((o) => o.op === "polygon" && o.fill === COL_PENCIL);
+    expect(notes.length).toBeGreaterThan(0);
+    for (const note of notes)
+      for (const [x, y] of note.op === "polygon" ? note.points : []) {
+        expect(x).toBeGreaterThanOrEqual(0);
+        expect(x).toBeLessThanOrEqual(w);
+        expect(y).toBeGreaterThanOrEqual(0);
+        expect(y).toBeLessThanOrEqual(h);
+      }
+
     const ui = { ...b.ui, pencilMode: true };
     input({ s: state, ui, ds: b.ds }, CURSOR_RIGHT);
     const on = draw(ui, []);
     const glyph = on.filter((o) => o.op === "polygon" && o.fill === COL_PENCIL_BODY);
     expect(glyph).toHaveLength(1);
-    const lowestDot = Math.max(
-      ...on.flatMap((o) =>
-        o.op === "circle" && o.fill !== COL_CURSOR ? [o.cy + o.r] : [],
-      ),
+    // The collection's place for it: above and right of every dot, inside the
+    // canvas (`engine/pencil-indicator.ts` `pencilIndicatorBox`).
+    const dots = on.flatMap((o) =>
+      o.op === "circle" && o.fill !== COL_CURSOR ? [o] : [],
     );
-    const { h } = loopyGame.computeSize(b.p, b.ds.tileSize);
-    for (const [, y] of glyph[0].op === "polygon" ? glyph[0].points : []) {
-      expect(y).toBeGreaterThan(lowestDot);
-      expect(y).toBeLessThanOrEqual(h);
+    const topDot = Math.min(...dots.map((d) => d.cy - d.r));
+    const rightDot = Math.max(...dots.map((d) => d.cx + d.r));
+    for (const [x, y] of glyph[0].op === "polygon" ? glyph[0].points : []) {
+      expect(y).toBeLessThan(topDot);
+      expect(x).toBeGreaterThan(rightDot);
+      expect(x).toBeLessThanOrEqual(w);
+      expect(y).toBeGreaterThanOrEqual(0);
     }
     // The corner Enter would note, outlined in the cursor's color.
     expect(

@@ -4673,12 +4673,12 @@ exports[`solo hint render > a deductive elimination shades the evidence and stri
   },
   {
     "color": 0,
-    "h": 24,
+    "h": 18,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 24,
-    "x": 456,
-    "y": 0,
+    "w": 18,
+    "x": 459,
+    "y": 3,
   },
 ]
 `;

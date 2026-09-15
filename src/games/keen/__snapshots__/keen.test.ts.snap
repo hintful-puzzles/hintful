@@ -716,12 +716,12 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
   },
   {
     "color": 0,
-    "h": 24,
+    "h": 18,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 24,
-    "x": 216,
-    "y": 0,
+    "w": 18,
+    "x": 219,
+    "y": 3,
   },
 ]
 `;

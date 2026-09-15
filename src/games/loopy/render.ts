@@ -40,7 +40,11 @@ import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import type { Grid, GridDot, GridFace, GridType } from "../../engine/grid/index.ts";
 import { gridComputeSize, gridFindIncenter } from "../../engine/grid/index.ts";
-import { drawPencilGlyph } from "../../engine/pencil-indicator.ts";
+import {
+  drawPencilGlyph,
+  pencilIndicatorBox,
+  pencilIndicatorReach,
+} from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import type { LoopyCursor } from "./cursor.ts";
 import type { LoopyHint } from "./hint.ts";
@@ -107,22 +111,34 @@ const cursorDiscRadius = (tileSize: number): number =>
 
 /**
  * The gutter around the board, in pixels: wide enough for the keyboard
- * cursor's disc on a boundary dot, and for its halo on a boundary edge. The
- * gutter this fork's parent compiled (`NARROW_BORDERS`: the dot radius alone,
- * 1–3 px) clipped both.
+ * cursor's disc on a boundary dot, for its halo on a boundary edge, and for a
+ * **corner note on a boundary dot**, whose band reaches `0.45` of the shortest
+ * edge at that dot and carries an outline just outside that again. Half the
+ * corners of a board are at its rim, so a gutter sized for the cursor alone
+ * clipped every one of them.
+ *
+ * It is also what the notes-mode pencil sits in — {@link pencilIndicatorBox}
+ * puts that at the canvas's top-right, where no tiling draws anything.
  *
  * Rounded **up** to a whole pixel, which the C does not do: a whole-pixel
  * border keeps every coordinate integral (the pixel-center convention
  * `Drawing` expects).
  */
 export function border(tileSize: number): number {
-  return Math.ceil(Math.max(dotRadius(tileSize), cursorDiscRadius(tileSize)));
+  return Math.ceil(
+    Math.max(
+      dotRadius(tileSize),
+      cursorDiscRadius(tileSize),
+      cornerNoteReach(tileSize),
+      pencilIndicatorReach(tileSize),
+    ),
+  );
 }
 
-/** The strip below the board the notes-mode pencil sits in. The board's own border
- * is only as wide as the cursor disc, too narrow for a legible glyph. */
-const indicatorSize = (tileSize: number): number =>
-  Math.max(8, Math.floor(tileSize / 2));
+/** How far a corner note reaches from its dot: {@link drawCornerWedge}'s widest
+ * band (`0.45` of an edge, and an edge at the rim is at most a tile), plus the
+ * outline it draws outside that for "at most one line". */
+const cornerNoteReach = (tileSize: number): number => 0.45 * tileSize + 6;
 
 export interface LoopyDrawState {
   tileSize: number;
@@ -141,16 +157,15 @@ export function newDrawState(s: LoopyState, tileSize: number): LoopyDrawState {
 }
 
 export function computeSize(p: LoopyParams, tileSize: number): Size {
-  const board = boardSize(gridTypeOf(p), p.w, p.h, tileSize);
-  return { w: board.w, h: board.h + indicatorSize(tileSize) };
+  return boardSize(gridTypeOf(p), p.w, p.h, tileSize);
 }
 
 /**
  * The board a `type`/`w`/`h` grid is given, from the tiling's **nominal**
- * extent. {@link redraw} paints its background to this plus the indicator strip,
- * not to the built grid's own extent: an aperiodic patch is trimmed and can come
- * out narrower than nominal, and the difference would otherwise go unpainted (a
- * black strip down the right of a Hats board).
+ * extent. {@link redraw} paints its background to this, not to the built grid's
+ * own extent: an aperiodic patch is trimmed and can come out narrower than
+ * nominal, and the difference would otherwise go unpainted (a black strip down
+ * the right of a Hats board).
  */
 function boardSize(type: GridType, w: number, h: number, tileSize: number): Size {
   const g = gridComputeSize(type, w, h);
@@ -556,11 +571,10 @@ export function redraw(
   }
 
   // The whole canvas, from the nominal extent — not the built grid's, which a
-  // trimmed aperiodic patch undershoots (see `boardSize`) — and the strip below.
+  // trimmed aperiodic patch undershoots (see `boardSize`).
   const board = boardSize(LOOPY_GRIDS[s.gridType].type, s.w, s.h, ts);
-  const strip = indicatorSize(ts);
   const w = board.w;
-  const h = board.h + strip;
+  const h = board.h;
 
   // The game paints its own background; the engine emits no pixels of its own.
   // Every frame is a full repaint, so this both establishes the background on
@@ -669,11 +683,13 @@ export function redraw(
     );
   }
 
-  // The notes-mode pencil, at the strip's right. Drawn outright each frame rather
-  // than through `repaintPencilIndicator`, whose cache skips a repaint when the mode
-  // has not changed: this renderer has just painted over it with the background.
+  // The notes-mode pencil, in the collection's place for it. Drawn outright each
+  // frame rather than through `repaintPencilIndicator`, whose cache skips a repaint
+  // when the mode has not changed: this renderer has just painted over it with the
+  // background.
   if (ui.pencilMode) {
-    drawPencilGlyph(dr, w - strip, board.h, strip, COL_PENCIL_BODY, COL_FOREGROUND);
+    const box = pencilIndicatorBox({ w, h }, ts);
+    drawPencilGlyph(dr, box.x, box.y, box.size, COL_PENCIL_BODY, COL_FOREGROUND);
   }
 
   dr.drawUpdate({ x: 0, y: 0, w, h });

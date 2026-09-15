@@ -46,12 +46,31 @@ and extend/standardize it as needed."*
       `newUi`, seen to fail under a plant (`findings.md`).
 - [x] 4.5 `ts-engine` delta, the guides and `help/features.md`.
 
-## 5. Report and accept
+## 5. One place for the indicator, and room for a rim note
 
-- [x] 5.1 Run the app on squares, triangular and an aperiodic tiling, by pointer,
+Owner, 2026-09-15: *"for the pencil marks here (and in other games using them), I
+want the pencil icon to be managed by the engine and appear in the same place
+(it's in the top right in other games, no?). Also, marks on the outside of the
+board are clipping."*
+
+- [x] 5.1 `pencilIndicatorBox` decides the position (the canvas's top-right), and
+      `pencilIndicatorReach` says what room a game reserves for it.
+- [x] 5.2 Every game with the mode draws it there: five already had the corner,
+      four grow a right margin for it, Towers gives up its tile-cache bit, and
+      Group gains the indicator it never had.
+- [x] 5.3 `pencil-indicator-placement.test.ts`: population derived from `newUi`,
+      judged on where the pixels land rather than on which helper was called, seen
+      to fail under a plant (`findings.md`).
+- [x] 5.4 Loopy's gutter is widened to a corner note's reach, so a note on a rim
+      dot is drawn whole instead of clipped at the canvas edge.
+
+## 6. Report and accept
+
+- [x] 6.1 Run the app on squares, triangular and an aperiodic tiling, by pointer,
       touch emulation and keyboard: pointer tap, drag and an auto-solved Hard plan
       on 7×7 squares; Enter, Space pin and pair on 8×8 triangular; a touch tap and a
       held-then-dragged finger on 10×10 hats.
-- [x] 5.2 Re-run the app on the shared Marks key, in Loopy and in one cell game
+- [x] 6.2 Re-run the app on the shared Marks key, in Loopy and in one cell game
       (`findings.md`).
-- [ ] 5.3 Owner acceptance of the input design.
+- [ ] 6.3 Owner acceptance of the input design, the indicator's new home, and the
+      widened Loopy gutter.

@@ -2833,12 +2833,12 @@ exports[`solo render (initial frame) > X variant: shades the diagonals with COL_
   },
   {
     "color": 0,
-    "h": 24,
+    "h": 18,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 24,
-    "x": 456,
-    "y": 0,
+    "w": 18,
+    "x": 459,
+    "y": 3,
   },
 ]
 `;
@@ -6246,12 +6246,12 @@ exports[`solo render (initial frame) > jigsaw board: renders and draws digits 1`
   },
   {
     "color": 0,
-    "h": 24,
+    "h": 18,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 24,
-    "x": 456,
-    "y": 0,
+    "w": 18,
+    "x": 459,
+    "y": 3,
   },
 ]
 `;
@@ -11709,12 +11709,12 @@ exports[`solo render (initial frame) > killer board: draws cage outlines in COL_
   },
   {
     "color": 0,
-    "h": 24,
+    "h": 18,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 24,
-    "x": 456,
-    "y": 0,
+    "w": 18,
+    "x": 459,
+    "y": 3,
   },
 ]
 `;
@@ -14624,12 +14624,12 @@ exports[`solo render (initial frame) > standard board: draws clue digits on the 
   },
   {
     "color": 0,
-    "h": 24,
+    "h": 18,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 24,
-    "x": 456,
-    "y": 0,
+    "w": 18,
+    "x": 459,
+    "y": 3,
   },
 ]
 `;

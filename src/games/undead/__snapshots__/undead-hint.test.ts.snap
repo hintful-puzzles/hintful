@@ -7,7 +7,7 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "h": 544,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 480,
+    "w": 512,
     "x": 0,
     "y": 0,
   },
@@ -6336,12 +6336,12 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   },
   {
     "color": 0,
-    "h": 64,
+    "h": 24,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 64,
-    "x": 400,
-    "y": 80,
+    "w": 24,
+    "x": 484,
+    "y": 4,
   },
 ]
 `;

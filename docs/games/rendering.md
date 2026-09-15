@@ -98,19 +98,20 @@ and who rubs it out").
 sidecar is a *second cache*, and a second cache is a second key to forget an
 input from — which is the failure below, and it is silent.
 
-The pencil-mode indicator is the collection's worked example of both answers.
-Towers packs it into its tile cache (`DF_PENCIL_MODE` on tile `w + 1`) and
-therefore **cannot** have the bug: the tile's key already covers everything the
-tile shows. Nine other games keep a `ds.pencilModeShown` scalar beside the tile
-cache, and Crossing — the same file, a neighboring surface — is where the bug
-actually happened.
+The pencil-mode indicator was the collection's worked example of both answers,
+and is now an example of the second only: the engine picks its position
+(`pencilIndicatorBox`), that position is a margin, and a margin is no tile's — so
+every game with the mode keeps a `ds.pencilModeShown` beside its tile cache.
+Towers packed it into its tile cache while where to put it was still Towers' own
+choice, and gave the bit up along with the choice. Crossing — the same file, a
+neighboring surface — is where the bug actually happened.
 
 A sidecar is still right when the cue has no tile to live in (a panel below the
 board, a margin outside the grid). Reach for it second, and then name **every**
 input the painter reads in its key.
 
-**The nine sidecars also showed what a second cache costs in tests.** Each one
-was covered only through a render snapshot, and `RecordingDrawing` keeps
+**The sidecars also showed what a second cache costs in tests.** Each of the nine
+there were then was covered only through a render snapshot, and `RecordingDrawing` keeps
 `drawUpdate` out of `ops` deliberately — so deleting the invalidation from all
 nine at once failed *zero* tests. Exemplar of the fix:
 [`engine/pencil-indicator.ts`](../../src/engine/pencil-indicator.ts)

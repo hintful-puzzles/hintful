@@ -1676,6 +1676,15 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "op": "unclip",
   },
+  {
+    "color": 0,
+    "h": 18,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 18,
+    "x": 365,
+    "y": 3,
+  },
 ]
 `;
 
@@ -3301,6 +3310,15 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "x": 214,
     "y": 312,
   },
+  {
+    "color": 0,
+    "h": 18,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 18,
+    "x": 365,
+    "y": 3,
+  },
 ]
 `;
 
@@ -4763,6 +4781,15 @@ exports[`group render scenarios > opener frame draws the legend, the shaded diag
   },
   {
     "op": "unclip",
+  },
+  {
+    "color": 0,
+    "h": 18,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 18,
+    "x": 365,
+    "y": 3,
   },
 ]
 `;

@@ -20,10 +20,11 @@
  * display-only divergence, docs/games/solver-and-generator.md § "Divergence and
  * what it costs").
  *
- * The canvas also gains a half-tile strip below the board for the pencil-mode
+ * The canvas also gains a half-tile margin at its right for the pencil-mode
  * indicator (docs/games/mechanics.md § "Pencil marks: the full note-taking
  * UX"): the web build compiles `NARROW_BORDERS`, so the black board rectangle
- * covers the canvas edge to edge and there is nowhere else to put it.
+ * covers its own area edge to edge, leaving nowhere for the top-right corner
+ * the engine puts the indicator in.
  */
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
@@ -46,8 +47,9 @@ import {
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
 import {
-  type PencilIndicatorBox,
   type PencilIndicatorStyle,
+  pencilIndicatorBox,
+  pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Size } from "../../engine/types.ts";
@@ -115,10 +117,7 @@ export function colors(defaultBackground: Color): Color[] {
 
 // --- geometry --------------------------------------------------------------
 
-/** Height of the fork pencil-mode indicator strip below the board. */
-const indicatorSize = (ts: number): number => (ts / 2) | 0;
-
-/** The board's own size, without the indicator strip — upstream's
+/** The board's own size, without the indicator margin — upstream's
  * `game_compute_size`, `NARROW_BORDERS` arm (which subtracts the outline it
  * drew inside the border). */
 function boardSize(p: SeismicParams, ts: number): Size {
@@ -130,7 +129,9 @@ function boardSize(p: SeismicParams, ts: number): Size {
 
 export function computeSize(p: SeismicParams, ts: number): Size {
   const board = boardSize(p, ts);
-  return { w: board.w, h: board.h + indicatorSize(ts) };
+  // The extra width is the room the pencil indicator needs at the canvas's
+  // top-right: the board rectangle covers its own area edge to edge.
+  return { w: board.w + pencilIndicatorReach(ts), h: board.h };
 }
 
 /** Upstream `FROMCOORD` — C integer division, which **truncates** toward zero,
@@ -354,12 +355,9 @@ const PENCIL_STYLE: PencilIndicatorStyle = {
   ink: COL_BORDER,
 };
 
-/** Under the board's bottom-right corner, clear of every cell and clue. */
-const PENCIL_BOX = (p: SeismicParams, ts: number): PencilIndicatorBox => {
-  const size = indicatorSize(ts);
-  const board = boardSize(p, ts);
-  return { x: board.w - size, y: board.h, size };
-};
+/** The margin `computeSize` grows for it, at the canvas's top-right. */
+const PENCIL_BOX = (p: SeismicParams, ts: number) =>
+  pencilIndicatorBox(computeSize(p, ts), ts);
 
 // --- redraw ----------------------------------------------------------------
 

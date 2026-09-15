@@ -2039,12 +2039,12 @@ exports[`crossing hint — the frame > matches its recorded frame 1`] = `
   },
   {
     "color": 0,
-    "h": 20,
+    "h": 14,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 20,
-    "x": 0,
-    "y": 0,
+    "w": 14,
+    "x": 223,
+    "y": 3,
   },
 ]
 `;

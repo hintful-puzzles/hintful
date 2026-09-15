@@ -14,9 +14,10 @@
  *
  * **One deliberate geometric divergence**: upstream's web build has `BORDER 1`,
  * leaving nowhere to show the pencil-mode indicator every pencil-mark game ships
- * (docs/games/mechanics.md § "Pencil marks: the full note-taking UX"). The canvas therefore gains a half-tile strip *below* the
- * board for it. The grid's own geometry is untouched, so pointer mapping and
- * `computeSize`'s width are exactly upstream's.
+ * (docs/games/mechanics.md § "Pencil marks: the full note-taking UX"). The canvas therefore gains a half-tile margin at its
+ * right, so the indicator has the top-right corner the engine puts it in. The
+ * grid's own geometry is untouched, so pointer mapping and the board's own size
+ * are exactly upstream's.
  */
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
@@ -34,8 +35,9 @@ import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing } from "../../engine/game.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import {
-  type PencilIndicatorBox,
   type PencilIndicatorStyle,
+  pencilIndicatorBox,
+  pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
@@ -112,12 +114,12 @@ const FD_PENCIL = 0x400;
 
 // --- geometry --------------------------------------------------------------
 
-/** Height of the fork pencil-mode indicator strip below the board. */
-const indicatorSize = (ts: number): number => (ts / 2) | 0;
-
 export function computeSize(p: { o: number }, ts: number): Size {
   const side = p.o * ts + 2 * BORDER;
-  return { w: side, h: side + indicatorSize(ts) };
+  // The extra width is the room the pencil indicator needs at the canvas's
+  // top-right, which a one-pixel `BORDER` leaves nowhere for. It sits outside
+  // the grid, so `fromCoord` and the board's own size are upstream's exactly.
+  return { w: side + pencilIndicatorReach(ts), h: side };
 }
 
 /** Upstream `FROMCOORD`: C integer division **truncates**, so a pointer inside
@@ -338,11 +340,9 @@ const PENCIL_STYLE: PencilIndicatorStyle = {
   ink: COL_BORDER,
 };
 
-/** Below the last row, at the board's right edge. */
-const PENCIL_BOX = (o: number, ts: number): PencilIndicatorBox => {
-  const size = indicatorSize(ts);
-  return { x: computeSize({ o }, ts).w - size, y: o * ts + 2 * BORDER, size };
-};
+/** The margin `computeSize` grows for it, at the canvas's top-right. */
+const PENCIL_BOX = (o: number, ts: number) =>
+  pencilIndicatorBox(computeSize({ o }, ts), ts);
 
 // --- redraw ----------------------------------------------------------------
 

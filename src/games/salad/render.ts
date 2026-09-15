@@ -40,8 +40,8 @@ import {
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
 import {
-  type PencilIndicatorBox,
   type PencilIndicatorStyle,
+  pencilIndicatorBox,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Size } from "../../engine/types.ts";
@@ -207,8 +207,8 @@ export interface SaladDrawState {
   /** Scratch symbol/hole counts per line, refilled each frame. */
   rowcount: Int32Array;
   colcount: Int32Array;
-  /** Whether the pencil-mode indicator was drawn last frame (it lives in the
-   * clue margin, outside the per-tile cache). */
+  /** Whether the pencil-mode indicator was drawn last frame (it sits in the clue
+   * margin, outside the per-tile cache). */
   pencilModeShown: boolean | null;
 }
 
@@ -491,10 +491,6 @@ const PENCIL_STYLE: PencilIndicatorStyle = {
   body: COL_PENCIL_BODY,
   ink: COL_BORDER,
 };
-/** The top-left margin tile: a corner, so it never holds a border clue in
- * either mode and nothing else ever paints there. */
-const PENCIL_BOX = (ts: number): PencilIndicatorBox => ({ x: 0, y: 0, size: ts });
-
 // --- redraw ----------------------------------------------------------------
 
 export function redraw(
@@ -732,8 +728,15 @@ export function redraw(
     }
   }
 
-  // Fork addition: the CapsLock-style pencil-mode indicator.
-  repaintPencilIndicator(dr, ds, ui.pencilMode, PENCIL_BOX(ts), PENCIL_STYLE);
+  // Fork addition: the CapsLock-style pencil-mode indicator, in the margin tile
+  // the border clues leave free at the corner — the engine picks which corner.
+  repaintPencilIndicator(
+    dr,
+    ds,
+    ui.pencilMode,
+    pencilIndicatorBox(computeSize(s, ts), ts),
+    PENCIL_STYLE,
+  );
 
   ds.started = true;
 }

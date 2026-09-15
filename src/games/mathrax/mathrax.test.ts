@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { pencilModeKey } from "../../engine/key-labels.ts";
+import { pencilIndicatorReach } from "../../engine/pencil-indicator.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
@@ -622,8 +623,8 @@ describe("mathrax input", () => {
   it("ignores a press outside the grid", () => {
     const st = newState(FIX_PARAMS, FIX.desc);
     const ui = newUi(st);
-    const outside = computeSize(FIX_PARAMS, TS).h - 1; // the indicator strip
-    expect(press(st, ui, LEFT_BUTTON, { x: 10, y: outside })).toBeNull();
+    const outside = computeSize(FIX_PARAMS, TS).w - 1; // the indicator margin
+    expect(press(st, ui, LEFT_BUTTON, { x: outside, y: 10 })).toBeNull();
   });
 
   it("offers a keypad of exactly the grid's digits, Clear and Marks", () => {
@@ -807,10 +808,12 @@ describe("mathrax findMistakes", () => {
 // --- rendering (tier 2.5) --------------------------------------------------
 
 describe("mathrax rendering", () => {
-  it("sizes the board from the tile size, plus the pencil-indicator strip", () => {
+  it("sizes the board from the tile size, plus the pencil-indicator margin", () => {
     const size = computeSize({ o: 5 }, 40);
-    expect(size.w).toBe(5 * 40 + 2);
-    expect(size.h).toBe(size.w + 20);
+    // The board is square and upstream's exact size; the width grows by the
+    // room the engine's indicator needs at the top-right, and nothing else.
+    expect(size.h).toBe(5 * 40 + 2);
+    expect(size.w).toBe(size.h + pencilIndicatorReach(40));
   });
 
   it("draws the opening frame", () => {

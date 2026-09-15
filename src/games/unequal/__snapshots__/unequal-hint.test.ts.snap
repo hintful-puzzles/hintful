@@ -2779,12 +2779,12 @@ exports[`unequal hint render > an Adjacent-mode elimination outlines the pair an
   },
   {
     "color": 0,
-    "h": 16,
+    "h": 12,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 16,
-    "x": 240,
-    "y": 0,
+    "w": 12,
+    "x": 242,
+    "y": 2,
   },
 ]
 `;
@@ -5528,12 +5528,12 @@ exports[`unequal hint render > an Unequal-mode link elimination outlines the pai
   },
   {
     "color": 0,
-    "h": 16,
+    "h": 12,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 16,
-    "x": 240,
-    "y": 0,
+    "w": 12,
+    "x": 242,
+    "y": 2,
   },
 ]
 `;

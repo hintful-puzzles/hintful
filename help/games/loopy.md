@@ -42,8 +42,8 @@ many other types of tiling!
 On harder boards you will often know something about a corner or a pair of
 edges before you know which edges are lines. **Notes** lets you write it down.
 Press the **Marks** key on the keypad, or **P**, to turn notes mode on, the same
-way as in every other puzzle that takes notes; a small pencil shows below the
-board while it is on, and pressing it again turns it off. (Loopy's right-click is
+way as in every other puzzle that takes notes; a small pencil shows at the top
+right of the board while it is on, and pressing it again turns it off. (Loopy's right-click is
 already how you rule an edge out, so it does not switch the mode here.)
 
 - **A corner** is the angle between two neighboring edges at a dot. Tap inside

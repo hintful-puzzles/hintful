@@ -32,8 +32,9 @@ import type { GameDrawing } from "../../engine/game.ts";
 import { fromCoord as geometryFromCoord } from "../../engine/geometry.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import {
-  type PencilIndicatorBox,
   type PencilIndicatorStyle,
+  pencilIndicatorBox,
+  pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
@@ -98,8 +99,11 @@ export function fromCoord(px: number, ts: number, n: number): number {
 }
 
 export function computeSize(p: { w: number; h: number; n: number }, ts: number): Size {
-  // The +1 is upstream's `NARROW_BORDERS` tile-background allowance.
-  return { w: (p.w + p.n) * ts + 1, h: (p.h + p.n) * ts };
+  // The +1 is upstream's `NARROW_BORDERS` tile-background allowance; the margin
+  // past it is the room the pencil indicator needs at the canvas's top-right,
+  // where the clue rows otherwise run to the corner. Both sit outside the grid,
+  // so `outerCoord`, `innerCoord` and `fromCoord` are unaffected.
+  return { w: (p.w + p.n) * ts + 1 + pencilIndicatorReach(ts), h: (p.h + p.n) * ts };
 }
 
 // --- draw state ------------------------------------------------------------
@@ -402,8 +406,9 @@ const PENCIL_STYLE: PencilIndicatorStyle = {
   body: COL_PENCIL_BODY,
   ink: COL_GRID,
 };
-/** The empty top-left gutter corner, clear of every cell and clue. */
-const PENCIL_BOX = (ts: number): PencilIndicatorBox => ({ x: 0, y: 0, size: ts });
+/** The margin `computeSize` grows for it, at the canvas's top-right. */
+const PENCIL_BOX = (p: { w: number; h: number; n: number }, ts: number) =>
+  pencilIndicatorBox(computeSize(p, ts), ts);
 
 // --- redraw ----------------------------------------------------------------
 
@@ -489,5 +494,11 @@ export function redraw(
   }
 
   // Pencil-mode indicator (fork addition): the sticky-pencil "mode on" glyph.
-  repaintPencilIndicator(dr, ds, ui.pencilMode, PENCIL_BOX(ts), PENCIL_STYLE);
+  repaintPencilIndicator(
+    dr,
+    ds,
+    ui.pencilMode,
+    PENCIL_BOX(state.params, ts),
+    PENCIL_STYLE,
+  );
 }
