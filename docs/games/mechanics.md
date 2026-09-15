@@ -641,7 +641,10 @@ gives the player that mark with every input it supports, and the hint's steps
 place it as a move. A hint that draws facts the player cannot record teaches
 nothing the player can reuse (`AGENTS.md` § "Hint quality bar", rule 6). Decide
 the notation when a game's deductions first need it, not when its hint is found
-to be drawing around the gap.
+to be drawing around the gap. Loopy's notes mode is the worked example: its
+corner and pair notes are state and moves beside the lines (`LoopyState.corners`
+and `pairs`), entered through `ui.pencilMode` by tap, drag and keyboard
+(`games/loopy/notes.ts`), and the hint places them before it cites them.
 
 ### Mistake checking is part of "done"
 

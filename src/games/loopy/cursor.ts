@@ -6,7 +6,7 @@
  * input is per-*edge*, across eighteen tilings including aperiodic ones, so an
  * edge has no row and no column to arrow between. What every tiling *does*
  * have is a ring of edges around each dot — `GridDot.edges`, which `grid.ts`
- * supplies in clockwise order — so the cursor lives on a dot, and an arrow key
+ * supplies in rotational order — so the cursor lives on a dot, and an arrow key
  * chooses one of that dot's edges. An edge is reached as (dot, direction),
  * which is also how a player thinks about drawing a loop: you are at a corner
  * and you go *that* way.

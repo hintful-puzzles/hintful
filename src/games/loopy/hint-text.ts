@@ -2,26 +2,22 @@
  * Every sentence Loopy's hint speaks, and every word inside one.
  *
  * The deduction decides which sentence and with what values ([`hint.ts`](./hint.ts)'s
- * `narrate`); this file decides only how it reads. Each sentence runs indication,
+ * `planSteps`); this file decides only how it reads. Each sentence runs indication,
  * reasoning, conclusion, with the conclusion in the necessity voice
  * (docs/games/hints.md § "Writing the narration"). A clue is "this 3" because the
  * hint outlines its face, a dot is "the ringed dot", and an edge the move sets is
  * "this edge", the one drawn with the hint's band. An edge the loop cannot use
  * "can't be a line", as a Palisade edge "can't be a wall".
  *
- * **The words for the two hidden facts.** A *corner* is two edges meeting at a dot
- * around one face, drawn as a wedge in that face's angle: filled when the loop
- * needs a line there, outlined when it can take one at most. A *pair* is two edges
- * known to match (both lines or neither) or to be opposites, drawn as a connector
- * between them marked `=` or `≠`. A step resting on more than a sentence can say
- * numbers every fact behind it in the order it was found, and names the marks it
- * concludes from by number. What links one numbered mark to the next is always the
- * clue or dot beside it and the marks before it, which the help page teaches once
- * rather than every step repeating (docs/games/hints.md § "Rules belong in the
+ * **Notes are named by what they look like.** A step placing a note calls it "this
+ * corner" or "these two edges", drawn in the hint's action color; a note the step
+ * reasons from is "the marked corner" or "the marked pair", the player's own note
+ * redrawn in the evidence color. A corner *needs a line* (at least one), *can take
+ * one line at most*, or *takes exactly one line*; a pair's edges *match* (both lines
+ * or neither) or are *opposites* (exactly one is a line), which the help teaches
+ * once rather than every step repeating (docs/games/hints.md § "Rules belong in the
  * help").
  */
-
-import { joinWith } from "../../engine/hint-text.ts";
 
 /** What a corner is known to carry. */
 export type CornerBound = "atLeastOne" | "atMostOne" | "exactlyOne";
@@ -29,62 +25,38 @@ export type CornerBound = "atLeastOne" | "atMostOne" | "exactlyOne";
 /** How a corner step ends: the corner against the lines already at its dot. */
 export type CornerThen = "otherLine" | "bothLines" | "otherEmpty" | "neither" | "exit";
 
-/** What a sentence says about a corner, and how the reader can check it: from the
- * clue beside it in words, or by the number on its mark. */
-export type CornerSubject =
-  | { kind: "clue"; clue: number; total: number; bound: CornerBound }
-  | { kind: "numbered"; labels: readonly number[]; bound: CornerBound };
-
 const verdict = (line: boolean): string =>
   line ? "must be a line" : "can't be a line";
 
 /** "all 3" for a clue's whole count, and "its line" for a 1's. */
 const allOf = (clue: number): string => (clue === 1 ? "its line" : `all ${clue}`);
 
-const capitalized = (s: string): string => s[0].toUpperCase() + s.slice(1);
-
-/** A numbered corner mark by its labels. A mark shows two numbers when two facts
- * about one corner were found at different points of the chain. */
-const cornerName = (labels: readonly number[]): string =>
-  labels.length === 1
-    ? `corner ${labels[0]}`
-    : `the corner marked ${joinWith(labels.map(String))}`;
-
-const cornerList = (labels: readonly number[]): string =>
-  labels.length === 1
-    ? `corner ${labels[0]}`
-    : `corners ${joinWith(labels.map(String))}`;
-
-const pairsMake = (pairs: number): string =>
-  pairs === 1 ? "the numbered pair makes" : "the numbered pairs make";
-
-function cornerClause(subject: CornerSubject): string {
-  if (subject.kind === "numbered") {
-    const name = capitalized(cornerName(subject.labels));
-    switch (subject.bound) {
-      case "atLeastOne":
-        return `${name} needs a line`;
-      case "atMostOne":
-        return `${name} can take one line at most`;
-      case "exactlyOne":
-        return `${name} takes exactly one line`;
-    }
-  }
-  const { clue, total } = subject;
-  switch (subject.bound) {
+const takes = (bound: CornerBound): string => {
+  switch (bound) {
     case "atLeastOne":
-      return total === 0
-        ? `This ${clue}'s other edges are ruled out, so it needs a line at the marked corner`
-        : `This ${clue}'s other edges give it ${total} at most, so it needs a line at the marked corner`;
+      return "needs a line";
     case "atMostOne":
-      // Any corner of a 1 takes one line at most, whatever its other edges hold.
-      return clue === 1
-        ? "This 1 takes one line, so the marked corner can take one at most"
-        : `This ${clue}'s other edges already give it ${total}, so the marked corner can take one line at most`;
+      return "can take one line at most";
     case "exactlyOne":
-      return `This ${clue}'s other edges give it exactly ${clue - 1}, so the marked corner takes exactly one line`;
+      return "takes exactly one line";
   }
-}
+};
+
+/** What two related edges give a count between them. */
+const gives = (opposite: boolean): string => (opposite ? "exactly 1" : "0 or 2");
+
+const pairVerdict = (opposite: boolean): string =>
+  opposite ? "must be opposites" : "must match";
+
+/** The corner notes a count leans on, each counting one line between its edges. */
+const counting = (corners: number): string => {
+  if (corners === 0) return "";
+  return corners === 1
+    ? ", counting the marked corner as one"
+    : ", counting each marked corner as one";
+};
+
+const dotHas = (lines: number): string => (lines === 1 ? "one line" : "no line");
 
 const CORNER_THEN: Record<CornerThen, string> = {
   otherLine: "; one edge there is ruled out, so the other must be a line.",
@@ -95,6 +67,8 @@ const CORNER_THEN: Record<CornerThen, string> = {
 };
 
 export const say = {
+  // --- steps that set lines ---------------------------------------------------
+
   /** A clue with all its lines; `edges` is how many of its edges the step rules out. */
   clueFull: (clue: number, edges: number): string => {
     if (clue === 0) {
@@ -146,70 +120,112 @@ export const say = {
   closesLoop:
     "This edge closes the marked lines into one loop that meets every clue, so it must be a line.",
 
-  /** A clue's other edges can give it one line fewer than it needs, counting each
-   * marked corner once because its dot already has a line. */
-  boundLine: (clue: number, corners: number): string => {
-    const why =
-      corners === 1
-        ? "the marked corner's dot already has a line"
-        : "each marked corner's dot already has a line";
-    return `This ${clue}'s other edges can give it only ${clue - 1}, as ${why}, so this edge must be a line.`;
-  },
+  /** A clue's other edges can give it one line fewer than it needs. */
+  boundLine: (clue: number, corners: number): string =>
+    `This ${clue}'s other edges can give it only ${clue - 1}${counting(corners)}, so this edge must be a line.`,
 
-  /** A clue already has its count once each marked corner gives it one, because the
-   * line at the corner's dot must go on through it. */
-  boundEmpty: (clue: number, corners: number): string => {
-    const marked =
-      corners === 1
-        ? "the marked corner, where the dot's line must go on"
-        : `the ${corners} marked corners, where each dot's line must go on`;
-    return `This ${clue} already has ${allOf(clue)} counting ${marked}, so this edge can't be a line.`;
-  },
+  /** A clue's other edges already give it every line it needs. */
+  boundEmpty: (clue: number, corners: number): string =>
+    `This ${clue} already has ${allOf(clue)}${counting(corners)}, so this edge can't be a line.`,
 
-  boundLineChain: (clue: number, labels: readonly number[]): string =>
-    `This ${clue}'s other edges can give it only ${clue - 1}, counting one for ${cornerList(labels)}, so this edge must be a line.`,
-
-  boundEmptyChain: (clue: number, labels: readonly number[]): string =>
-    `This ${clue} already has ${allOf(clue)} counting ${cornerList(labels)}, so this edge can't be a line.`,
-
-  corner: (subject: CornerSubject, then: CornerThen): string =>
-    `${cornerClause(subject)}${CORNER_THEN[then]}`,
+  corner: (bound: CornerBound, then: CornerThen): string =>
+    `The marked corner ${takes(bound)}${CORNER_THEN[then]}`,
 
   /** Two edges of a clue that match, with room for one more line (`line` false:
    * neither can be one) or one more empty edge (`line` true: both must be lines). */
-  matchingPair: (clue: number, pairs: number, line: boolean): string => {
+  matchingPair: (clue: number, line: boolean): string => {
     const room = line
       ? `this ${clue} can spare one more edge, so both must be lines.`
       : `this ${clue} has room for one more line, so neither can be one.`;
-    return `${capitalized(pairsMake(pairs))} these two edges match, and ${room}`;
+    return `The marked pair makes these two edges match, and ${room}`;
   },
 
-  /** A clue needing `needed` more from its three open edges, two of which the pairs
-   * relate. */
+  /** A clue needing `needed` more from its three open edges, two of which the pair
+   * relates. */
   parityFace: (
     clue: number,
     needed: number,
-    pairs: number,
     opposite: boolean,
     line: boolean,
   ): string =>
-    `This ${clue} needs ${needed} more; ${pairsMake(pairs)} two of its open edges give ${opposite ? "exactly 1" : "0 or 2"}, so this edge ${verdict(line)}.`,
+    `This ${clue} needs ${needed} more; the marked pair makes two of its open edges give ${gives(opposite)}, so this edge ${verdict(line)}.`,
 
-  /** A dot with three open edges, two of which the pairs relate. That a dot takes 0
+  /** A dot with three open edges, two of which the pair relates. That a dot takes 0
    * or 2 lines is the game's rule, taught by the help rather than repeated here. */
-  parityDot: (
-    dotLines: number,
-    pairs: number,
-    opposite: boolean,
-    line: boolean,
-  ): string =>
-    `The ringed dot has ${dotLines === 1 ? "one line" : "no line"}; ${pairsMake(pairs)} two of its open edges give ${opposite ? "exactly 1" : "0 or 2"}, so this edge ${verdict(line)}.`,
+  parityDot: (dotLines: number, opposite: boolean, line: boolean): string =>
+    `The ringed dot has ${dotHas(dotLines)}; the marked pair makes two of its open edges give ${gives(opposite)}, so this edge ${verdict(line)}.`,
 
-  related: (
-    pairs: number,
+  related: (opposite: boolean, fromLine: boolean, line: boolean): string =>
+    `The marked pair makes this edge ${opposite ? "the opposite of" : "match"} the marked ${fromLine ? "line" : "ruled-out edge"}, so it ${verdict(line)}.`,
+
+  // --- steps that place a corner note -----------------------------------------
+
+  /** A corner read off its dot's own line: the dot has a line elsewhere (at most
+   * one here), and these two edges are its only ways on (at least one). */
+  cornerAtDot: (bound: CornerBound): string =>
+    bound === "atMostOne"
+      ? "The ringed dot already has a line, so this corner can take one line at most."
+      : `The line at the ringed dot can only go on through this corner, so it ${takes(bound)}.`,
+
+  /** A corner read off a clue's count of its other edges. */
+  cornerFromClue: (
+    clue: number,
+    total: number,
+    corners: number,
+    bound: "atLeastOne" | "atMostOne",
+  ): string => {
+    if (bound === "atLeastOne") {
+      return total === 0 && corners === 0
+        ? `This ${clue}'s other edges are ruled out, so this corner needs a line.`
+        : `This ${clue}'s other edges can give it ${total} at most${counting(corners)}, so this corner needs a line.`;
+    }
+    // Any corner of a 1 takes one line at most, whatever its other edges hold.
+    return clue === 1 && corners === 0
+      ? "This 1 takes one line, so this corner can take one at most."
+      : `This ${clue}'s other edges already give it ${total}${counting(corners)}, so this corner can take one line at most.`;
+  },
+
+  cornerAcross:
+    "The marked corner across the ringed dot needs a line, so this corner can take one line at most.",
+
+  cornerOppositeExit:
+    "The marked corner takes exactly one of the ringed dot's two lines, so this corner needs the other.",
+
+  cornerFromPair: (bound: CornerBound): string =>
+    `The marked pair makes this corner's edges opposites, so it ${takes(bound)}.`,
+
+  // --- steps that place a pair note -------------------------------------------
+
+  /** A clue with only these two edges open, needing `needed` more. */
+  pairAtClue: (clue: number, needed: number, opposite: boolean): string =>
+    `Only these two of this ${clue}'s edges are still open, and it needs ${needed} more, so they ${pairVerdict(opposite)}.`,
+
+  pairAtDot: (dotLines: number, opposite: boolean): string =>
+    `Only these two of the ringed dot's edges are still open, and it has ${dotHas(dotLines)}, so they ${pairVerdict(opposite)}.`,
+
+  pairAtCorner:
+    "The marked corner takes exactly one line, so these two edges must be opposites.",
+
+  /** A clue with four open edges, two of which the marked pair relates. */
+  pairAcrossClue: (
+    clue: number,
+    needed: number,
+    pairOpposite: boolean,
     opposite: boolean,
-    fromLine: boolean,
-    line: boolean,
   ): string =>
-    `${capitalized(pairsMake(pairs))} this edge ${opposite ? "the opposite of" : "match"} the marked ${fromLine ? "line" : "ruled-out edge"}, so it ${verdict(line)}.`,
+    `This ${clue} needs ${needed} more from four open edges, and the marked pair gives ${gives(pairOpposite)}, so these two ${pairVerdict(opposite)}.`,
+
+  pairAcrossDot: (dotLines: number, pairOpposite: boolean, opposite: boolean): string =>
+    `The ringed dot has ${dotHas(dotLines)} and four open edges; the marked pair gives ${gives(pairOpposite)}, so these two ${pairVerdict(opposite)}.`,
+
+  /** Two pairs sharing an edge relate their other two edges. `first` and `second`
+   * say whether each pair is opposites. */
+  pairChain: (first: boolean, second: boolean): string => {
+    if (first !== second) {
+      return "One of these edges matches the edge the marked pairs share and the other is its opposite, so they must be opposites.";
+    }
+    return first
+      ? "These two edges are each the opposite of the edge the marked pairs share, so they must match."
+      : "These two edges each match the edge the marked pairs share, so they must match.";
+  },
 };

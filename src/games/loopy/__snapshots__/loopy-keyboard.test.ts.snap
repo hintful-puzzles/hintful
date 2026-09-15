@@ -4,7 +4,7 @@ exports[`the cursor is drawn, on an aperiodic tiling > draws nothing until the f
 [
   {
     "color": 0,
-    "h": 351,
+    "h": 367,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
     "w": 351,

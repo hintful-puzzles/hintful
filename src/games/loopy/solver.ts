@@ -31,6 +31,7 @@
 import { Dsf, FlipDsf } from "../../engine/dsf.ts";
 import type { Grid, GridEdge } from "../../engine/grid/index.ts";
 import {
+  dlineEnds,
   dlineIndexFromDot,
   dlineIndexFromFace,
   isAtLeastOne,
@@ -1448,8 +1449,48 @@ export function hintSolver(state: LoopyState): SolverState {
     if (state.lines[e] !== LINE_UNKNOWN)
       solverSetLine(ss, e, state.lines[e] as LineState);
   }
-  ss.rec = new LoopyRecorder(state.grid.numEdges);
+  const rec = new LoopyRecorder(state.grid.numEdges);
+  ss.rec = rec;
+  seedNotes(ss, rec, state);
   return ss;
+}
+
+/**
+ * The player's notes, as facts whose premise is that they are on the board. The
+ * mistake check vouches for them as it does for lines, so the plan reasons from
+ * them and never places a note the player already has.
+ */
+function seedNotes(ss: SolverState, rec: LoopyRecorder, state: LoopyState): void {
+  const dlines = ss.dlines;
+  if (dlines === null) throw new Error("loopy solver: the hint solver has no dlines");
+  const g = ss.grid;
+  for (let dline = 0; dline < state.corners.length; dline++) {
+    const bits = state.corners[dline];
+    if (bits === 0) continue;
+    const { dot, first, second } = dlineEnds(g, dline);
+    const note = (bound: "atLeastOne" | "atMostOne"): void => {
+      rec.corner(dline, {
+        kind: "corner",
+        dot: dot.index,
+        edges: [first, second],
+        bound,
+        why: { kind: "note" },
+        parents: [],
+      });
+    };
+    if (bits & 1 && setAtLeastOne(dlines, dline)) note("atLeastOne");
+    if (bits & 2 && setAtMostOne(dlines, dline)) note("atMostOne");
+  }
+  for (const { a, b, opposite } of state.pairs) {
+    mergeLines(ss, a, b, opposite);
+    rec.relate({
+      kind: "relation",
+      edges: [a, b],
+      opposite,
+      why: { kind: "note" },
+      parents: [],
+    });
+  }
 }
 
 /** Whether the working board is finished: exactly one loop, every clue met. */

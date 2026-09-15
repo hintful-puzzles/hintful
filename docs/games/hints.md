@@ -1347,7 +1347,7 @@ to a similar game:
 | Bridges | the **span** the step decides, drawn as the game's own shape: the bridge bundle it would become with only the *added* bars in `COL_HINT`, or the game's pair of crosses in `COL_HINT` when the step blocks it. The island a sentence *names* has its own rim and clue digit recolored `COL_HINT` (an annulus, so it is already a ring) | the islands and bridges the argument counts → `COL_HINT_CELL` on the same shapes. A premise that counts a **group** marks every member alike, the acted-from island included, because the sentence counts them together |
 | Seismic | the cell(s) a step decides, ringed `COL_HINT` inside the cell's own box (the gap between cells is the black its walls are made of); a struck note keeps its pencil color with a same-color line through it | the area a hidden single or a starved area reasons over → one `COL_HINT_CELL` contour; a placement's follow-on strikes outline the placed number's cell alone |
 | Galaxies | the **deduced** cell, solid **purple** `COL_HINT` (not blue — see below); the 180° partner the same move claims, a `COL_HINT` **outline over the ordinary evidence shading** (same hue, they share a fate; far less weight, only one is what the words are about); the wall it draws, a `COL_HINT` bar drawn *whether or not the wall exists yet*; the dot it points at, a **filled `COL_HINT` halo with the dot repainted on top** — **unless the dot stands on a cell just filled**, where a mark in the fill's own color is invisible and the narration names the dot by position instead | the cells / walls / dots the argument reasons over → `COL_HINT_CELL` teal (a galaxy's reach, a cut-off piece, the partner across a dot, an already-drawn wall). One ring role at a time, so "the ringed dot" is never ambiguous |
-| Loopy | the edges the step sets, a `COL_HINT` band *under* each (the edge's own state stays on top): solid for a line, broken for an edge that can't be one | the clue it counts → an outline inset inside its face; the dot it names → a ring under the dot; the loop an edge would close → a `COL_HINT_CELL` band under those lines; a **corner** or **pair** the solver derived → today a wedge or a connector drawn by the hint alone and numbered in order, which breaks quality-bar rule 6 and is being replaced by marks the player makes (§ "Facts the board has no notation for") |
+| Loopy | the edges the step sets, a `COL_HINT` band *under* each (the edge's own state stays on top): solid for a line, broken for an edge that can't be one | the clue it counts → an outline inset inside its face; the dot it names → a ring under the dot; the loop an edge would close → a `COL_HINT_CELL` band under those lines; a **corner** or **pair** note the step reasons from → the player's own note, redrawn in `COL_HINT_CELL`; a note the step places → that note's own wedge or connector in `COL_HINT` (§ "Give the facts a notation (Loopy)") |
 
 **Mark the premise element in the action color only where the sentence names
 it (Bridges).** Bridges recolors an island's rim and digit `COL_HINT` when the
@@ -1901,7 +1901,7 @@ cell'". Exemplars: `forcingChainArea`/`narrateForcingChain` in
 games, `LatinVocab` for heights/elements/letters), and Clusters'
 `buildHighlights`.
 
-### Facts the board has no notation for (Loopy)
+### Give the facts a notation (Loopy)
 
 **A hint relies only on marks the player can make** (owner, 2026-09-15; quality-bar
 rule 6). If a tier's deductions need a kind of mark, the game gives the player that
@@ -1917,25 +1917,48 @@ with `DEDUCTION_EXHAUSTED` rather than teaching reasoning the player cannot reco
 Search"). Try the notation first; say what made it unmanageable when you fall back.
 
 Loopy is where this was learned. From Normal its rungs reason about two things the
-game gave players no way to mark: a **corner**, two edges meeting at a dot around
-one face and known to carry at least one line or at most one, and a **pair**, two
-edges known to match or to be opposites. `add-loopy-hint` first drew those facts in
-the hint, as wedges and connectors numbered in the order found; the owner withdrew
-that before it shipped, for exactly this reason, and `add-loopy-notation` gives
-players the marks instead. What transfers from the attempt, in
-[`games/loopy/`](../../src/games/loopy/):
+game once gave players no way to mark: a **corner**, two edges meeting at a dot
+around one face and known to carry at least one line or at most one, and a
+**pair**, two edges known to match or to be opposites. `add-loopy-hint` first drew
+those facts in the hint, as wedges and connectors numbered in the order found; the
+owner withdrew that before it shipped, for exactly this reason, and
+`add-loopy-notation` gave players notes mode instead, with the hint placing each
+fact as a note. What transfers, in [`games/loopy/`](../../src/games/loopy/):
 
 - **A chain the player cannot mark is a missing notation, not a display problem.**
   The drawn chains ran to about 20 facts at p99 on Hard boards. Once each fact is a
   mark the player can make, each is a step of its own with one sentence, which is
   § "Cognitive load: one step per hint" applied to facts that had nowhere to live.
-- **Every hidden fact carries its premise and its parents.** `record.ts` stores each
+- **Place a note where its fact was found, not where it is used.** A fact's
+  sentence counts lines at a clue or a dot, and lines are drawn between a fact being
+  derived and a later step citing it, so a note placed just before its use can
+  narrate a count the board no longer shows. `LoopyRecorder.tickOf` stamps each fact
+  with the plan position it was found at, and `planSteps` places it there, where the
+  lines are the ones it came from.
+- **Place only what some line rests on.** The recorder derives far more than any
+  line uses. The plan takes the union of every line firing's closure and places
+  nothing outside it, so a player is never asked to note something no later step
+  cites.
+- **Seed the player's notes as facts whose premise is "on the board".**
+  `seedNotes` sets the solver's corner bits and flip dsf from the player's notes,
+  each recorded with `why: note`, so a plan resumed from a noted board cites the
+  player's notes and never re-places one. The mistake check vouches for them as it
+  does for lines.
+- **Every fact carries its premise and its parents.** `record.ts` stores each
   corner bit and each relation with why it holds and what it was derived from. A
   relation's chain is a breadth-first search over the recorded merges, because the
   flip dsf answers only *that* two edges are related.
-- **Read what a notation must express off the recorder, not off intuition.** Every
-  relation Loopy's solver records joins two edges sharing a face or a dot, so a pair
-  mark only ever needs to link neighbors.
+- **Read what a notation must express off the chains, not the links.** Every
+  relation the solver records joins two edges sharing a face or a dot, which
+  suggested a pair note need only link neighbors; but a step can rest on a chain of
+  up to 13, whose composed pairs join distant edges. A pair note links any two edges
+  (owner, 2026-09-15), and `chainPair` places a chain one link at a time, so no step
+  cites more than two pairs.
+- **A dot's edge order is not a direction.** It runs clockwise on screen on most
+  tilings and anticlockwise on floret and both Penrose tilings, and a hat has
+  corners wider than a half turn, so `notes.ts` picks which of a corner's two angles
+  is meant by the face the corner belongs to. `loopy-notes.test.ts` checks every
+  face corner of every tiling against points classified by the face polygon alone.
 - **The long tail is structural, so measure a shortener before keeping it.** Hard
   boards give a step resting on more than eight facts once or twice a board, up to
   28. Clusters' remedy, the shortest chain among a tier's firings, was built (set a
@@ -1947,10 +1970,11 @@ players the marks instead. What transfers from the attempt, in
   tier. It tries Easy's rungs to exhaustion, then Normal's, and so on, which is also
   the easiest-first order a hint wants; facts a higher tier derived stay recorded,
   premises and all.
-- **Its soundness is Seismic's shape, on lines.** `findMistakes` compares every drawn
-  line and ruled-out edge with the unique solution, so the plan may take them as
-  facts (§ "Deduce from the notes when the mistake check vouches for them"). A
-  notation the hint reads from has to be vouched for the same way.
+- **Its soundness is Seismic's shape, on lines and notes.** `findMistakes` compares
+  every drawn line, ruled-out edge, corner note and pair note with the unique
+  solution, so the plan may take them as facts (§ "Deduce from the notes when the
+  mistake check vouches for them"). A notation the hint reads from has to be vouched
+  for the same way.
 
 ### Rule-outs as board marks
 

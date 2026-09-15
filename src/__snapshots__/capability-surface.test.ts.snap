@@ -712,6 +712,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "preferredTileSize",
       "prefs",
       "refreshHintStep",
+      "requestKeys",
       "solve",
       "textFormat",
       "wantsStylusModifier",
@@ -720,6 +721,9 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "autofollow",
       "cursor",
       "drawFaintLines",
+      "noteDrag",
+      "pencilMode",
+      "pin",
     ],
   },
   {

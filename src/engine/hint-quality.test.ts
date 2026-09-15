@@ -90,15 +90,6 @@ const MAX_NARRATION_CHARS = 300;
  */
 const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
   {
-    games: ["loopy"],
-    match:
-      /the marked corner(?: can take one(?: line)? at most| takes exactly one line)?; (?:the ringed dot|one edge there)/,
-    why:
-      "Loopy's corner Check, which the board has no notation for: a clue's count " +
-      "decides what the marked corner carries, and the lines at its dot then " +
-      "settle the edges. Two premises, each with the count the reader checks it by.",
-  },
-  {
     games: ["group", "keen", "salad", "solo", "towers", "unequal"],
     match: /has just two \w+s left, so each forces the next/,
     why:

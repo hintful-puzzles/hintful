@@ -4,7 +4,7 @@ exports[`Loopy render scenarios: error highlighting > reddens all three YES edge
 [
   {
     "color": 0,
-    "h": 175,
+    "h": 191,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
     "w": 175,
@@ -1122,7 +1122,7 @@ exports[`Loopy render scenarios: every tiling draws its whole grid > dodecagonal
 [
   {
     "color": 0,
-    "h": 391,
+    "h": 407,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
     "w": 497,
@@ -2924,7 +2924,7 @@ exports[`Loopy render scenarios: every tiling draws its whole grid > great-hexag
 [
   {
     "color": 0,
-    "h": 471,
+    "h": 487,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
     "w": 500,
@@ -5102,7 +5102,7 @@ exports[`Loopy render scenarios: every tiling draws its whole grid > hats 1`] = 
 [
   {
     "color": 0,
-    "h": 303,
+    "h": 319,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
     "w": 351,
@@ -7982,7 +7982,7 @@ exports[`Loopy render scenarios: every tiling draws its whole grid > honeycomb 1
 [
   {
     "color": 0,
-    "h": 218,
+    "h": 234,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
     "w": 185,
@@ -9804,7 +9804,7 @@ exports[`Loopy render scenarios: every tiling draws its whole grid > penrose-kit
 [
   {
     "color": 0,
-    "h": 207,
+    "h": 223,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
     "w": 207,
@@ -10490,7 +10490,7 @@ exports[`Loopy render scenarios: every tiling draws its whole grid > penrose-rho
 [
   {
     "color": 0,
-    "h": 207,
+    "h": 223,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
     "w": 207,
@@ -11146,7 +11146,7 @@ exports[`Loopy render scenarios: every tiling draws its whole grid > spectres 1`
 [
   {
     "color": 0,
-    "h": 351,
+    "h": 367,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
     "w": 351,
@@ -13746,7 +13746,7 @@ exports[`Loopy render scenarios: every tiling draws its whole grid > squares 1`]
 [
   {
     "color": 0,
-    "h": 175,
+    "h": 191,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
     "w": 175,
@@ -14864,7 +14864,7 @@ exports[`Loopy render scenarios: every tiling draws its whole grid > triangular 
 [
   {
     "color": 0,
-    "h": 246,
+    "h": 262,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
     "w": 335,
@@ -16426,7 +16426,7 @@ exports[`Loopy render scenarios: line state and preferences > draws a YES edge b
 [
   {
     "color": 0,
-    "h": 175,
+    "h": 191,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
     "w": 175,

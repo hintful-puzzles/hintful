@@ -56,6 +56,12 @@ export interface LoopyState {
   readonly lines: Uint8Array;
   /** Per-edge error highlight, recomputed by {@link checkCompletion}. */
   readonly lineErrors: Uint8Array;
+  /** The player's corner notes, one entry per dline, indexed and encoded as
+   * `dlines.ts` indexes the solver's bits: 1 at least one line, 2 at most one. */
+  readonly corners: Uint8Array;
+  /** The player's pair notes, sorted by `a` then `b`, so two states noting the
+   * same pairs hold equal arrays. */
+  readonly pairs: readonly LoopyPair[];
   /** The YES edges form exactly one loop and nothing else. Varies the
    * semantics of clue highlighting at display time — see `render.ts`. */
   exactlyOneLoop: boolean;
@@ -63,11 +69,25 @@ export interface LoopyState {
   cheated: boolean;
 }
 
-/** An edge marked the opposite of the board's solution: a line where the loop
- * does not run, or ruled out where it does. */
-export interface LoopyMistake {
-  edge: number;
+/**
+ * A pair note: any two edges `a` and `b` (with `a < b`), known to match (both lines
+ * or neither) or, when `opposite`, to be opposites.
+ */
+export interface LoopyPair {
+  readonly a: number;
+  readonly b: number;
+  readonly opposite: boolean;
 }
+
+/**
+ * A mark that contradicts the board's solution: a line where the loop does not
+ * run, or an edge ruled out where it does; a corner note the solution's lines at
+ * that corner break; a pair note the solution's two edges break.
+ */
+export type LoopyMistake =
+  | { kind: "edge"; edge: number }
+  | { kind: "corner"; dline: number }
+  | { kind: "pair"; a: number; b: number };
 
 /** A fresh state over the same grid, with independent line/clue arrays. */
 export function cloneState(s: LoopyState): LoopyState {
@@ -76,6 +96,7 @@ export function cloneState(s: LoopyState): LoopyState {
     clues: s.clues.slice(),
     lines: s.lines.slice(),
     lineErrors: s.lineErrors.slice(),
+    corners: s.corners.slice(),
   };
 }
 
@@ -205,6 +226,8 @@ export function newState(p: LoopyParams, desc: string): LoopyState {
     clues: decodeClues(clueDesc, grid.numFaces),
     lines: new Uint8Array(grid.numEdges).fill(LINE_UNKNOWN),
     lineErrors: new Uint8Array(grid.numEdges),
+    corners: new Uint8Array(2 * grid.numEdges),
+    pairs: [],
     exactlyOneLoop: false,
     completed: false,
     cheated: false,

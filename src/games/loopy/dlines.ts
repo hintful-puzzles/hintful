@@ -5,7 +5,7 @@
  * A dline is a pair of edges meeting at a common dot and adjacent around it —
  * equivalently a (dot, face) corner. Upstream's insight is that such a pair is
  * uniquely named by an **(edge, which-end)** combination, because a dline
- * always runs clockwise around its common dot: so there are exactly
+ * always runs in its common dot's edge order: so there are exactly
  * `2 × numEdges` of them, indexed `2 * edge.index + (edge.dot1 === dot ? 1 : 0)`.
  * Each slot holds two bits: "at least one of the pair is YES" and "at most one
  * of the pair is YES". (Knowing *both* or *neither* is YES is already recorded
@@ -15,9 +15,11 @@
  * **ordering** conventions exactly:
  *
  * - {@link dlineIndexFromDot}`(d, i)` names the pair
- *   `(d.edges[i], d.edges[(i + 1) % d.order])` — **clockwise around the dot**.
+ *   `(d.edges[i], d.edges[(i + 1) % d.order])` — **in the dot's edge order**, which
+ *   is one rotational sense for the whole grid: clockwise on screen for most
+ *   tilings, anticlockwise for floret and both Penrose tilings (`notes.ts`).
  * - {@link dlineIndexFromFace}`(f, i)` names the pair *starting* at
- *   `f.edges[i]` read **anticlockwise around the face**, and relies on the
+ *   `f.edges[i]` read **in the opposite sense around the face**, and relies on the
  *   interleaving convention that the common dot of that pair is exactly
  *   `f.dots[i]`.
  *
@@ -36,7 +38,7 @@ export function dlineCount(g: Grid): number {
 }
 
 /**
- * Index of the dline whose **first** edge (reading clockwise around `d`) is
+ * Index of the dline whose **first** edge (reading `d.edges` in order) is
  * `d.edges[i]`. Mirrors `dline_index_from_dot`.
  */
 export function dlineIndexFromDot(d: GridDot, i: number): number {
@@ -45,7 +47,7 @@ export function dlineIndexFromDot(d: GridDot, i: number): number {
 }
 
 /**
- * Index of the dline whose **second** edge (reading clockwise around `f`) is
+ * Index of the dline whose **second** edge (reading `f.edges` in order) is
  * `f.edges[i]` — equivalently, the pair starting at `f.edges[i]` read
  * anticlockwise around the face. By the grid's layout conventions the pair's
  * common dot is `f.dots[i]`. Mirrors `dline_index_from_face`.
@@ -56,6 +58,21 @@ export function dlineIndexFromFace(f: GridFace, i: number): number {
   // biome-ignore lint/style/noNonNullAssertion: ditto.
   const d = f.dots[i]!;
   return 2 * e.index + (e.dot1 === d ? 1 : 0);
+}
+
+/**
+ * The dot and the two edges a dline index names: the inverse of
+ * {@link dlineIndexFromDot}. The pair is `(first, second)` clockwise around
+ * `dot`.
+ */
+export function dlineEnds(
+  g: Grid,
+  index: number,
+): { dot: GridDot; first: number; second: number } {
+  const e = g.edges[index >> 1];
+  const dot = index & 1 ? e.dot1 : e.dot2;
+  const j = dot.edges.indexOf(e);
+  return { dot, first: e.index, second: dot.edges[(j + 1) % dot.order].index };
 }
 
 /** Do we know at least one of this dline's two edges is YES? */

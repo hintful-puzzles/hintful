@@ -34,7 +34,9 @@ solver derives beyond lines:
   `{ kind: "pair", a, b, relation: "none" | "match" | "opposite" }`. Re-applying
   one is idempotent, which the hint's keep-track relies on.
 - **Saves:** the move union only grows, and a save replays its log, so every
-  existing save loads unchanged. A test replays a pre-change move log.
+  existing save loads unchanged. `loopy-notes.test.ts` loads a log of lines alone,
+  the only move kinds a save written before notes can hold, and round-trips one
+  with notes.
 - **Undo:** notes are ordinary moves, so undo covers them.
 
 ## D3. The mode
@@ -47,101 +49,106 @@ solver derives beyond lines:
   not available here. `P` is not one of the app's bare shortcuts (`u`, `r`, `n`,
   `h`).
 - **An indicator** whenever the mode is on: the shared pencil glyph
-  (`pencil-indicator.ts`). Loopy's board has no spare cell and a border only as
-  wide as the cursor disc, so the canvas grows a strip below the board, which is
-  Mathrax's answer, without moving the grid.
+  (`drawPencilGlyph`). Loopy's board has no spare cell and a border only as wide as
+  the cursor disc, so the canvas grows a strip below the board, which is Mathrax's
+  answer, without moving the grid. Loopy repaints every frame, so it draws the glyph
+  outright rather than through `repaintPencilIndicator`, whose cache would skip the
+  glyph the background has just painted over.
 
 ## D4. Pointer and touch, in notes mode
 
 With the mode off, input is exactly today's.
 
-- **A tap cycles a corner.** The tap resolves to the nearest dot and to the angular
-  sector around that dot it falls in, which is one dline. No face lookup is needed,
-  so it works on every tiling and at the edge of the board. Left cycles
+- **A tap cycles a corner.** The tap resolves to the nearest dot and to the angle
+  around that dot it falls in, which is one dline. Which of the two angles between
+  a dline's edges is meant is read off the face the dline belongs to (or no face,
+  for the outside), because a dot's edge order runs clockwise on screen on most
+  tilings and anticlockwise on floret and both Penrose tilings, and hats and
+  spectres have corners wider than a half turn (`findings.md`). Left cycles
   none → at least one → at most one → exactly one → none; right, or a held finger,
   cycles the other way; middle clears.
 - **A drag cycles a pair.** Pressing near an edge and releasing near a different
   edge cycles that pair: none → match → opposite → none, the other way for the
-  right button. A release off the board does nothing. A press counts as a drag once it moves beyond half an edge's
-  length from where it went down; below that, the release is a tap. While
+  right button. A release off the board does nothing, which is also what a canceled
+  press comes to. A press counts as a drag once it moves half a tile from where it
+  went down, and stays one if it comes back; below that, the release is a tap. While
   dragging, a connector follows the pointer from the first edge.
 - The drag continues off the button class, so a finger that paused before dragging
   (and so arrived as the right button) still cycles a pair (`input.md` § "A touch
-  hold arrives as the right button").
+  hold arrives as the right button"). The press is claimed at once, since only the
+  release can tell a tap from a drag (`input.md` § "A button with two meanings
+  resolves on the release").
 
 ## D5. Keyboard, in notes mode
 
 The cursor is unchanged: a dot and a chosen edge, walked and aimed as today.
 
-- **Enter cycles the corner clockwise from the chosen edge** at the cursor's dot,
-  and Backspace clears it. Every corner is clockwise from exactly one of its edges
-  at its dot, and aiming reaches every edge at a dot, so every corner is reachable.
-  The corner Enter would act on is previewed while the mode is on.
+- **Enter cycles the corner that follows the chosen edge in the dot's edge order**,
+  and Backspace clears it. Every corner follows exactly one of its edges at its dot,
+  and aiming reaches every edge at a dot, so every corner is reachable. The corner
+  Enter would act on is outlined in the cursor color while the mode is on, which is
+  what makes the order's direction irrelevant to the player.
 - **Space pins the chosen edge, and Space on a second edge cycles the pair** between
-  them, then clears the pin. Walking and aiming reach every edge, so every pair is
-  reachable. Escape clears a pin before it hides the cursor.
-- `loopy-keyboard.test.ts`'s coverage sweep gains corners: every dline of every
-  preset is reachable from the keyboard. Pairs need no sweep of their own, since a
-  pair is two edges and every edge is already proven reachable.
+  them, then clears the pin; Space on the pinned edge lets go of it. Walking and
+  aiming reach every edge, so every pair is reachable. Escape clears a pin before it
+  hides the cursor. The pinned edge has a pencil-colored halo.
+- `loopy-notes.test.ts` asserts every dline of every tiling is the one Enter notes
+  from one of its edges. Pairs need no sweep of their own, since a pair is two edges
+  and every edge is already proven reachable.
 
 ## D6. Rendering
 
-- A player's corner is a wedge in its angle, as the hint drew one, in the pencil
-  color (`pencilColor`): filled for at least one line, outlined for at most one,
-  both for exactly one.
+- A player's corner is a band across its angle, clear of the dot and short of the
+  edges' midpoints, in the pencil color (`pencilColor`): filled for at least one
+  line, outlined for at most one, both for exactly one.
 - A player's pair is a connector between the two edges' midpoints, marked `=` or
   `≠`, in the pencil color.
 - A hint step placing a note draws that note's shape in the hint's action color
   (`docs/games/hints.md` § "Echo the move's shape in the hint color"); the notes it
-  reasons from are the player's own, already on the board.
+  reasons from are the player's own, redrawn in the evidence color.
 
 ## D7. Mistakes
 
 A corner or pair note that contradicts the unique solution is a mistake: *at least
 one* where the solution has neither edge, *at most one* where it has both, a match
 where the solution differs, an opposite where it agrees. So the hint may read the
-player's notes as facts, as it reads lines.
+player's notes as facts, as it reads lines. A mistaken note is drawn in the mistake
+color.
 
 ## D8. The hint
 
 - The solver is seeded from the player's lines **and notes**: a corner note sets its
   dline bits and a pair note merges its relation, each recorded as a fact whose
-  premise is "on the board".
-- A line firing's closure is walked deepest first. Every fact in it the board does
-  not already show becomes **a step placing that note**, narrated by the fact's own
-  premise (one clue count, one dot, one corner across the dot, one parity), with
-  its parents on the board by then. The line step comes last and cites the notes.
-- Facts no line firing rests on are never shown, so a player is never asked to mark
+  premise is "on the board" (`seedNotes`).
+- Every fact in some line firing's closure that the board does not already show
+  becomes **a step placing that note**, narrated by the fact's own premise (one clue
+  count, one dot, one corner across the dot, one pair). It is placed **at the plan
+  position where the fact was found**, not just before the line that uses it: a
+  fact's sentence counts lines, and lines drawn in between would make the count on
+  screen disagree with the sentence. The recorder stamps each fact with that
+  position (`tickOf`). The line step then cites the notes.
+- A corner its dot's own line decides is placed as a note too, rather than cited by
+  the dot in words, so every line step cites a corner the same way. Its two bits
+  come from one premise, so one step places both.
+- Facts no line firing rests on are never placed, so a player is never asked to mark
   something no later step uses.
 - A pair derived by chaining pairs is placed one link at a time: from A–B and B–C
-  on the board, a step marks A–C, citing exactly those two.
+  on the board, a step marks A–C, citing exactly those two and the edge they share.
+  No step cites more than two pairs.
+- Keep-track: a note step completes once the note holds what it places, and tracks a
+  tap on the same note, since a tap cycles through the other states on the way.
 - The drawn, numbered chains and their ledger entry are removed.
 
-## Measured (2026-09-15, today's recorder, one plan per board)
+## Measured
 
-Note steps are the facts in some line firing's closure, each counted once; corners
-a dot's own lines show (a line arriving from outside, or one line with two ways on)
-are counted apart, since a sentence can cite the dot without a note.
-
-| board | line steps | note steps | dot-shown corners | most notes before one line | longest pair chain |
-| --- | --- | --- | --- | --- | --- |
-| 7×7 squares, Normal | 86 | 0 | 1 | 0 | – |
-| 7×7 squares, Tricky | 92 | 21 | 4 | 6 | – |
-| 7×7 squares, Hard | 91 | 39 | 8 | 16 | 7 |
-| 10×10 squares, Hard | 176 | 71 | 18 | 25 | 7 |
-| 12×10 triangular, Hard | 284 | 88 | 11 | 11 | 12 |
-| 10×10 Penrose kite/dart, Hard | 110 | 32 | 3 | 4 | 1 |
-| 10×10 hats, Hard | 352 | 43 | 17 | 13 | 13 |
-
-**Plan length is affordable**: Tricky and Hard plans grow by roughly a quarter to
-two fifths. A long run of notes before one line is the chain made walkable, which
-is the point.
+The first measurement (today's recorder, one plan per board, notes placed just
+before their use) found Tricky and Hard plans grow by roughly a quarter to two
+fifths, with at most 25 notes before one line and pair chains of up to 13. The
+shipped planner's numbers, three seeds per configuration, are in `findings.md`:
+the count of notes is unchanged, and runs before one line reach 35 on the
+triangular grid because notes now arrive where they were found.
 
 **The fallback, if the notation proves unmanageable in play** (owner, 2026-09-15):
 the tier that needs it becomes `Unreasonable`, and its hint refuses rather than
 teaching what the player cannot record. On today's numbers that would be Hard, whose
 pair chains are the notation's heaviest use; Tricky needs corners only.
-
-**Chained pairs** were the one open question the numbers raised: a step can rest
-on up to 13 pairs, usually one or two. Settled by letting a pair link any two
-edges (D1), so a chain of k pairs costs k − 1 more steps, each a single inference.

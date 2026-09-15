@@ -279,10 +279,11 @@ describe("keyboard and pointer are the same move (the Slide rule)", () => {
 
       expect(keyMove).toEqual(clickMove);
       expect(keyMove.kind).toBe("set");
-      expect(keyMove.ops.every((op) => op.state === LINE_YES)).toBe(true);
+      const ops = keyMove.kind === "set" ? keyMove.ops : [];
+      expect(ops.every((op) => op.state === LINE_YES)).toBe(true);
       // With autofollow on the corner dot has one other edge, so the click is
       // extended round the corner — and so, identically, is the keypress.
-      expect(keyMove.ops.length).toBe(autofollow ? 2 : 1);
+      expect(ops.length).toBe(autofollow ? 2 : 1);
 
       const afterKey = loopyGame.executeMove(byKey.s, keyMove);
       const afterClick = loopyGame.executeMove(byClick.s, clickMove as LoopyMove);
@@ -309,7 +310,10 @@ describe("keyboard and pointer are the same move (the Slide rule)", () => {
       const k = press(byKey.s, byKey.ui, byKey.ds, key) as LoopyMove;
       const c = click(byClick.s, byClick.ui, byClick.ds, e, button) as LoopyMove;
       expect(k).toEqual(c);
-      expect(k.ops[0]).toEqual({ edge: e.index, state: expected });
+      expect(k.kind === "set" ? k.ops[0] : null).toEqual({
+        edge: e.index,
+        state: expected,
+      });
       byKey.s = loopyGame.executeMove(byKey.s, k);
       byClick.s = loopyGame.executeMove(byClick.s, c);
     }
@@ -350,7 +354,10 @@ describe("the cursor", () => {
     const here = ui.cursor.dot;
     const e = s.grid.edges[ui.cursor.edge];
     const draw = press(s, ui, ds, CURSOR_SELECT) as LoopyMove;
-    expect(draw.ops[0]).toEqual({ edge: e.index, state: LINE_YES });
+    expect(draw.kind === "set" ? draw.ops[0] : null).toEqual({
+      edge: e.index,
+      state: LINE_YES,
+    });
     const st = loopyGame.executeMove(s, draw);
     expect(ui.cursor.dot).toBe(here); // no auto-advance: already at the far end
 
@@ -358,7 +365,10 @@ describe("the cursor", () => {
     press(st, ui, ds, CURSOR_LEFT);
     expect(ui.cursor.edge).toBe(e.index);
     const undraw = press(st, ui, ds, CURSOR_SELECT) as LoopyMove;
-    expect(undraw.ops[0]).toEqual({ edge: e.index, state: LINE_UNKNOWN });
+    expect(undraw.kind === "set" ? undraw.ops[0] : null).toEqual({
+      edge: e.index,
+      state: LINE_UNKNOWN,
+    });
   });
 
   it("Shift+arrow aims without moving, and a repeat takes the next edge round", () => {

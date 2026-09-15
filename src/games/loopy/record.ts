@@ -1,15 +1,14 @@
 /**
  * What Loopy's solver records on the hint path: each change to a line, the
- * premise that forced it, and the facts the player cannot see that it rests on.
+ * premise that forced it, and the notes it rests on.
  *
- * **Two kinds of fact live nowhere on the board.** From Normal the solver reasons
+ * **Two kinds of fact live beside the lines.** From Normal the solver reasons
  * about *corners* — two edges adjacent around a dot, known to carry at most one or
- * at least one line between them — and from Hard about *relations*, two edges
- * known to be both lines or both empty, or exactly one of each. Loopy has no
- * notation for either, so a hint cannot leave them on the board for a later step
- * to lean on. Every fact therefore carries its own premise and the facts it was
- * derived from, and a step's narration can follow them back to lines the player
- * can see.
+ * at least one line between them — and from Hard about *pairs*, two edges known to
+ * be both lines or both empty, or exactly one of each. The player notes both
+ * (`LoopyState.corners` and `pairs`), and the hint places each fact it relies on as
+ * a note before the step that cites it, so every fact carries its own premise and
+ * the facts it was derived from, and the plan position it was found at.
  *
  * The recorder exists only on the hint path. `solveGame` never builds one, and
  * every recording site in `solver.ts` is behind `ss.rec`, so the generator's
@@ -24,6 +23,8 @@ export type Bound = "atMostOne" | "atLeastOne";
 
 /** Why a corner carries at most one line, or at least one. */
 export type CornerWhy =
+  /** The player noted it. */
+  | { kind: "note" }
   /** Its dot already has a line along some other edge, so a line through both
    * would give the dot three. */
   | { kind: "lineElsewhere" }
@@ -46,6 +47,8 @@ export type CornerWhy =
 
 /** Why two edges are known to match, or to be opposites. */
 export type RelationWhy =
+  /** The player noted it. */
+  | { kind: "note" }
   /** Only these two of a clued face's edges are still open, so the clue's parity
    * decides whether they match. */
   | { kind: "faceParity"; face: number }
@@ -61,22 +64,26 @@ export type RelationWhy =
   /** The same, at a dot with four open edges. */
   | { kind: "dotLink"; dot: number };
 
-export type LoopyFact =
-  | {
-      kind: "corner";
-      dot: number;
-      edges: readonly [number, number];
-      bound: Bound;
-      why: CornerWhy;
-      parents: readonly number[];
-    }
-  | {
-      kind: "relation";
-      edges: readonly [number, number];
-      opposite: boolean;
-      why: RelationWhy;
-      parents: readonly number[];
-    };
+export type CornerFact = {
+  kind: "corner";
+  /** The dline the fact is a bit of, as `dlines.ts` indexes it. */
+  dline: number;
+  dot: number;
+  edges: readonly [number, number];
+  bound: Bound;
+  why: CornerWhy;
+  parents: readonly number[];
+};
+
+export type RelationFact = {
+  kind: "relation";
+  edges: readonly [number, number];
+  opposite: boolean;
+  why: RelationWhy;
+  parents: readonly number[];
+};
+
+export type LoopyFact = CornerFact | RelationFact;
 
 /**
  * What a clue's count of its other edges rests on: the lines already drawn (for a
@@ -130,8 +137,8 @@ export type LoopyReason =
   /** The edge closes a loop through every line with every clue met. */
   | { kind: "closesLoop" };
 
-/** The hidden facts a firing's premise names directly; everything else it rests
- * on is reached through their parents. */
+/** The facts a firing's premise names directly; everything else it rests on is
+ * reached through their parents. */
 export function firingRoots(r: LoopyReason): number[] {
   switch (r.kind) {
     case "clueBound":
@@ -164,6 +171,12 @@ interface RelationEdge {
 
 export class LoopyRecorder {
   readonly facts: LoopyFact[] = [];
+  /** The plan position each fact was found at: how many firings came before it.
+   * The board is unchanged between a fact and the firing it was found ahead of,
+   * so a note placed there is narrated against the lines it was derived from. */
+  readonly tickOf: number[] = [];
+  /** Stamped onto each fact as it is recorded; the planner advances it. */
+  tick = 0;
   /** The fact behind each dline bit — `2 * dline + (atMostOne ? 1 : 0)` — or `-1`
    * where the bit was read straight off a line in the pair, which no consumer
    * ever needs a fact for. */
@@ -180,14 +193,15 @@ export class LoopyRecorder {
     this.relations = Array.from({ length: numEdges }, () => []);
   }
 
-  addFact(fact: LoopyFact): number {
+  private addFact(fact: LoopyFact): number {
     this.facts.push(fact);
+    this.tickOf.push(this.tick);
     return this.facts.length - 1;
   }
 
   /** Record a corner bit's fact, returning its id. */
-  corner(dline: number, fact: LoopyFact & { kind: "corner" }): number {
-    const id = this.addFact(fact);
+  corner(dline: number, fact: Omit<CornerFact, "dline">): number {
+    const id = this.addFact({ ...fact, dline });
     this.bitFact[2 * dline + (fact.bound === "atMostOne" ? 1 : 0)] = id;
     return id;
   }
@@ -196,7 +210,7 @@ export class LoopyRecorder {
     return this.bitFact[2 * dline + (bound === "atMostOne" ? 1 : 0)];
   }
 
-  relate(fact: LoopyFact & { kind: "relation" }): number {
+  relate(fact: RelationFact): number {
     const id = this.addFact(fact);
     const [a, b] = fact.edges;
     this.relations[a].push({ to: b, opposite: fact.opposite, fact: id });

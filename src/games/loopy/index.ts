@@ -15,6 +15,12 @@
  * cycles an edge towards YES, right / Space towards NO, middle / Backspace
  * clears. Loopy genuinely reads `MOD_STYLUS` — see {@link nextLineState}.
  *
+ * **Notes mode** (`ui.pencilMode`, toggled by P or the on-screen Notes key) turns
+ * the same inputs onto the player's corner and pair notes (`notes.ts`): a tap
+ * cycles the corner it lands in and a drag from one edge to another cycles their
+ * pair; Enter cycles the corner clockwise from the cursor's edge, and Space pins
+ * an edge and then pairs it with the next one Space is pressed on.
+ *
  * Upstream gives Loopy no keyboard at all (`loopy.c` has no `CURSOR_`
  * reference), so the keyboard here is this fork's design, not a port.
  *
@@ -41,6 +47,8 @@ import {
   isCursorMove,
   isEraseKey,
   isMouseDown,
+  isMouseDrag,
+  isMouseRelease,
   LEFT_BUTTON,
   MIDDLE_BUTTON,
   MOD_SHFT,
@@ -49,7 +57,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { Point } from "../../engine/types.ts";
+import type { KeyLabel, Point } from "../../engine/types.ts";
 import {
   farDot,
   type LoopyCursor,
@@ -57,8 +65,10 @@ import {
   nextEdgeFor,
   walkEdge,
 } from "./cursor.ts";
+import { dlineEnds } from "./dlines.ts";
 import { newDesc } from "./generator.ts";
 import { hint, hintKeepTrack, refreshHintStep } from "./hint.ts";
+import { cornerAt, cursorCorner, nextCornerNote, nextPairNote } from "./notes.ts";
 import {
   DIFF_MAX,
   decodeParams,
@@ -108,7 +118,13 @@ export interface LoopyOp {
  * ours. */
 export type LoopyMove =
   | { kind: "set"; ops: readonly LoopyOp[] }
-  | { kind: "solve"; ops: readonly LoopyOp[] };
+  | { kind: "solve"; ops: readonly LoopyOp[] }
+  /** Set a corner note's bits outright (1 at least one line, 2 at most one). */
+  | { kind: "corner"; dline: number; bits: number }
+  /** Set a pair note outright, or clear it with `"none"`. */
+  | { kind: "pair"; a: number; b: number; relation: PairRelation };
+
+export type PairRelation = "none" | "match" | "opposite";
 
 /** How much an edge click drags its neighbors along with it. */
 export const AF_OFF = 0;
@@ -122,6 +138,27 @@ export interface LoopyUi {
   autofollow: number;
   /** The keyboard cursor: a dot and one of its incident edges (`cursor.ts`). */
   cursor: LoopyCursor;
+  /** Notes mode: input notes corners and pairs instead of setting lines. */
+  pencilMode: boolean;
+  /** A notes-mode press not yet released, or `null`. */
+  noteDrag: LoopyNoteDrag | null;
+  /** The edge Space pinned for a pair note, or `-1`. */
+  pin: number;
+}
+
+/** A notes-mode press, which the release decides is a tap or a drag. */
+export interface LoopyNoteDrag {
+  /** Where the press went down. */
+  readonly start: Point;
+  /** The edge nearest the press, or `-1`. */
+  readonly from: number;
+  /** The button it arrived as, which sets which way a note cycles. */
+  readonly button: number;
+  /** Where the pointer is now. */
+  at: Point;
+  /** Set once the pointer has gone half a tile from the press, so a drag that
+   * comes back is still a drag. */
+  dragged: boolean;
 }
 
 function newUi(state: LoopyState): LoopyUi {
@@ -132,6 +169,9 @@ function newUi(state: LoopyState): LoopyUi {
     drawFaintLines: true,
     autofollow: AF_OFF,
     cursor: newLoopyCursor(state.grid),
+    pencilMode: false,
+    noteDrag: null,
+    pin: -1,
   };
 }
 
@@ -300,6 +340,94 @@ function buttonForKey(button: number): number | null {
   return null;
 }
 
+/** The code notes mode is toggled by: `P`, which the on-screen Notes key sends. */
+const KEY_NOTES = "p".charCodeAt(0);
+const isNotesKey = (button: number): boolean =>
+  button === KEY_NOTES || button === "P".charCodeAt(0);
+
+/** Screen coordinates to grid coordinates, unrounded: a corner is found by angle,
+ * which rounding would bend near a dot. */
+function gridPoint(g: Grid, tileSize: number, p: Point): Point {
+  const b = border(tileSize);
+  return {
+    x: ((p.x - b) * g.tileSize) / tileSize + g.lowestX,
+    y: ((p.y - b) * g.tileSize) / tileSize + g.lowestY,
+  };
+}
+
+function pairRelation(state: LoopyState, a: number, b: number): PairRelation {
+  const [lo, hi] = a < b ? [a, b] : [b, a];
+  const pair = state.pairs.find((p) => p.a === lo && p.b === hi);
+  if (!pair) return "none";
+  return pair.opposite ? "opposite" : "match";
+}
+
+function cornerMove(
+  state: LoopyState,
+  dline: number,
+  button: number,
+): LoopyMove | null {
+  const bits = nextCornerNote(state.corners[dline], button);
+  if (bits === null || bits === state.corners[dline]) return null;
+  return { kind: "corner", dline, bits };
+}
+
+function pairMove(
+  state: LoopyState,
+  a: number,
+  b: number,
+  button: number,
+): LoopyMove | null {
+  const was = pairRelation(state, a, b);
+  const relation = nextPairNote(was, button);
+  if (relation === null || relation === was) return null;
+  return { kind: "pair", a: Math.min(a, b), b: Math.max(a, b), relation };
+}
+
+/** What a notes-mode press comes to when it is released: a tap cycles the corner
+ * it went down in, and a drag from one edge to another cycles their pair. A
+ * release off the board, as the frontend sends for a canceled press, is neither. */
+function releaseNote(
+  state: LoopyState,
+  ds: LoopyDrawState,
+  drag: LoopyNoteDrag,
+): LoopyMove | null {
+  const g = state.grid;
+  if (!drag.dragged) {
+    const at = gridPoint(g, ds.tileSize, drag.start);
+    const dline = cornerAt(g, at.x, at.y);
+    return dline === null ? null : cornerMove(state, dline, drag.button);
+  }
+  const to = edgeAt(g, ds.tileSize, drag.at);
+  if (drag.from < 0 || to === null || to.index === drag.from) return null;
+  return pairMove(state, drag.from, to.index, drag.button);
+}
+
+/**
+ * Notes mode's keys, at the cursor. Enter cycles the corner clockwise from the
+ * chosen edge, and Backspace clears it; every corner is clockwise from one of its
+ * edges at its dot, and aiming reaches every edge there. Space pins the chosen
+ * edge, and Space on another edge cycles the pair between them.
+ */
+function noteByKey(
+  state: LoopyState,
+  ui: LoopyUi,
+  button: number,
+): LoopyMove | UiUpdate | null {
+  const cursor = ui.cursor;
+  if (button === RIGHT_BUTTON) {
+    if (ui.pin < 0 || ui.pin === cursor.edge) {
+      ui.pin = ui.pin < 0 ? cursor.edge : -1;
+      return UI_UPDATE;
+    }
+    const pinned = ui.pin;
+    ui.pin = -1;
+    return pairMove(state, pinned, cursor.edge, LEFT_BUTTON);
+  }
+  const dline = cursorCorner(state.grid, cursor);
+  return dline === null ? null : cornerMove(state, dline, button);
+}
+
 function interpretMove(
   state: LoopyState,
   ui: LoopyUi,
@@ -313,15 +441,45 @@ function interpretMove(
   const button = stripModifiers(rawButton);
   const cursor = ui.cursor;
 
+  if (isNotesKey(button)) {
+    ui.pencilMode = !ui.pencilMode;
+    ui.pin = -1;
+    ui.noteDrag = null;
+    return UI_UPDATE;
+  }
+
   if (isMouseDown(button)) {
     // A pointer press takes the board over: the cursor goes away, and a click
     // that sets nothing still has to repaint if it hid one.
     const hadCursor = cursor.visible;
     cursor.visible = false;
+    if (ui.pencilMode) {
+      // A tap notes a corner and a drag notes a pair, and only the release can
+      // tell them apart, so the press is claimed and decided then
+      // (docs/games/input.md § "A button with two meanings resolves on the release").
+      const e = edgeAt(g, ds.tileSize, p);
+      ui.pin = -1;
+      ui.noteDrag = { start: p, at: p, from: e?.index ?? -1, button, dragged: false };
+      return UI_UPDATE;
+    }
     const e = edgeAt(g, ds.tileSize, p);
     const move = e === null ? null : setEdge(state, ui, e, button, stylus);
     if (move !== null) return move;
     return hadCursor ? UI_UPDATE : null;
+  }
+
+  if (isMouseDrag(button) || isMouseRelease(button)) {
+    // Whatever button class the drag and release arrive as: a finger held still
+    // before dragging arrives as the right button (docs/games/input.md § "A touch
+    // hold arrives as the right button"), and the press already said which way.
+    const drag = ui.noteDrag;
+    if (drag === null) return null;
+    drag.at = p;
+    if (Math.hypot(p.x - drag.start.x, p.y - drag.start.y) > ds.tileSize / 2)
+      drag.dragged = true;
+    if (isMouseDrag(button)) return UI_UPDATE;
+    ui.noteDrag = null;
+    return releaseNote(state, ds, drag) ?? UI_UPDATE;
   }
 
   if (isCursorMove(button)) {
@@ -351,8 +509,9 @@ function interpretMove(
     const revealed = !cursor.visible;
     cursor.visible = true;
     if (cursor.edge < 0) return revealed ? UI_UPDATE : null; // nothing chosen yet
-    const e = g.edges[cursor.edge];
-    const move = setEdge(state, ui, e, asButton, false);
+    const move = ui.pencilMode
+      ? noteByKey(state, ui, asButton)
+      : setEdge(state, ui, g.edges[cursor.edge], asButton, false);
     if (move === null) return revealed ? UI_UPDATE : null;
     // The cursor stays put: it is already at the far end of the edge it walked,
     // so the same key again undoes the mark just made.
@@ -360,6 +519,10 @@ function interpretMove(
   }
 
   if (isCancelKey(button)) {
+    if (ui.pin >= 0) {
+      ui.pin = -1;
+      return UI_UPDATE;
+    }
     if (!cursor.visible) return null;
     cursor.visible = false;
     return UI_UPDATE;
@@ -379,13 +542,55 @@ function moveCursorAlong(cursor: LoopyCursor, from: GridDot, e: GridEdge): void 
 }
 
 function executeMove(state: LoopyState, move: LoopyMove): LoopyState {
-  // Both kinds carry the same op list, so nothing below would notice an unknown
-  // one: hence the up-front check rather than a `default` on a dispatch that
-  // does not exist.
-  if (move.kind !== "set" && move.kind !== "solve") {
-    return assertNever(move, "loopy: executeMove");
+  switch (move.kind) {
+    case "set":
+    case "solve":
+      return executeLines(state, move);
+    case "corner":
+      return executeCorner(state, move);
+    case "pair":
+      return executePair(state, move);
+    default:
+      return assertNever(move, "loopy: executeMove");
   }
+}
 
+function executeCorner(
+  state: LoopyState,
+  move: LoopyMove & { kind: "corner" },
+): LoopyState {
+  if (move.dline < 0 || move.dline >= state.corners.length) {
+    throw new Error(`loopy: move names dline ${move.dline}, out of range`);
+  }
+  if (move.bits < 0 || move.bits > 3) {
+    throw new Error(`loopy: corner note ${move.bits} is not a note`);
+  }
+  const next = cloneState(state);
+  next.corners[move.dline] = move.bits;
+  return next;
+}
+
+function executePair(
+  state: LoopyState,
+  move: LoopyMove & { kind: "pair" },
+): LoopyState {
+  const a = Math.min(move.a, move.b);
+  const b = Math.max(move.a, move.b);
+  if (a < 0 || b >= state.grid.numEdges || a === b) {
+    throw new Error(`loopy: edges ${a} and ${b} cannot be a pair`);
+  }
+  const pairs = state.pairs.filter((p) => p.a !== a || p.b !== b);
+  if (move.relation !== "none") {
+    pairs.push({ a, b, opposite: move.relation === "opposite" });
+    pairs.sort((p, q) => p.a - q.a || p.b - q.b);
+  }
+  return { ...cloneState(state), pairs };
+}
+
+function executeLines(
+  state: LoopyState,
+  move: LoopyMove & { kind: "set" | "solve" },
+): LoopyState {
   const next = cloneState(state);
   for (const op of move.ops) {
     if (op.edge < 0 || op.edge >= next.grid.numEdges) {
@@ -432,7 +637,21 @@ function findMistakes(state: LoopyState): readonly LoopyMistake[] {
   const out: LoopyMistake[] = [];
   for (let edge = 0; edge < state.lines.length; edge++) {
     const line = state.lines[edge];
-    if (line !== LINE_UNKNOWN && line !== solution[edge]) out.push({ edge });
+    if (line !== LINE_UNKNOWN && line !== solution[edge])
+      out.push({ kind: "edge", edge });
+  }
+  const isLine = (edge: number): boolean => solution[edge] === LINE_YES;
+  for (let dline = 0; dline < state.corners.length; dline++) {
+    const bits = state.corners[dline];
+    if (bits === 0) continue;
+    const { first, second } = dlineEnds(state.grid, dline);
+    const lines = (isLine(first) ? 1 : 0) + (isLine(second) ? 1 : 0);
+    if ((bits & 1 && lines === 0) || (bits & 2 && lines === 2)) {
+      out.push({ kind: "corner", dline });
+    }
+  }
+  for (const { a, b, opposite } of state.pairs) {
+    if ((isLine(a) !== isLine(b)) !== opposite) out.push({ kind: "pair", a, b });
   }
   return out;
 }
@@ -506,6 +725,8 @@ export const loopyGame: Game<
   refreshHintStep,
   textFormat,
   prefs,
+  // Notes mode's toggle, which a touch player has no P key for.
+  requestKeys: (): KeyLabel[] => [{ button: KEY_NOTES, label: "Notes" }],
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

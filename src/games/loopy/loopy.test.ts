@@ -66,6 +66,8 @@ function blankState(w = 4, h = 4, type = 0): LoopyState {
     clues: new Int8Array(grid.numFaces).fill(NO_CLUE),
     lines: new Uint8Array(grid.numEdges).fill(LINE_UNKNOWN),
     lineErrors: new Uint8Array(grid.numEdges),
+    corners: new Uint8Array(2 * grid.numEdges),
+    pairs: [],
     exactlyOneLoop: false,
     completed: false,
     cheated: false,

@@ -23,15 +23,14 @@ and counts at clues and dots, all on the board already.
 - **Players can mark corners.** Any corner of a face at a dot can be marked
   "at least one line here", "at most one line here", or both (exactly one), and
   cleared. Every tiling, with pointer, touch and keyboard.
-- **Players can mark pairs.** Two edges sharing a face or a dot can be marked as
-  matching or as opposites, and cleared. The neighbor restriction is read off the
-  solver, not chosen: every relation `record.ts` records joins two edges sharing a
-  face or a dot, and the one rule that relates distant edges (the edge dsf's
-  propagation) fires on no board in `loopy-hint.test.ts`'s corpus.
+- **Players can mark pairs.** Any two edges can be marked as matching or as
+  opposites, and cleared. Every relation `record.ts` records joins two edges sharing
+  a face or a dot, but a step can rest on a chain of them whose composed pairs join
+  distant edges, and the owner chose to let a pair link any two (`design.md` D1).
 - **The hint makes those marks as moves.** A Tricky or Hard fact becomes a step of
   its own, one sentence resting on marks already on the board, and the drawn,
-  numbered chains are removed. A composed relation (A matches B, B matches C,
-  where A and C share a face) is a step placing the pair A–C.
+  numbered chains are removed. A composed relation (A matches B, B matches C) is a
+  step placing the pair A–C.
 - **Check & save vouches for the notes.** A corner or pair mark that contradicts
   the solution is a mistake, and the hint refuses on it, so the plan may take the
   player's notes as facts, as Seismic does with its pencil marks.
