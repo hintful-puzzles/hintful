@@ -39,8 +39,12 @@
       **rate limit** on the client key. (Owner-configured.)
 - [x] 3.3 Add the DSN as the `VITE_SENTRY_DSN` secret on
       `hintful-puzzles/hintful`, where the repository now lives.
-- [ ] 3.4 Security & Privacy → Advanced Data Scrubbing: `[Remove] [Anything]
-      from [$user.geo.**]`. Sentry derives city and country from the connection
+- [x] 3.4 Security & Privacy → Advanced Data Scrubbing: `[Remove] [Anything]
+      from [$user.geo.**]`. Rule added. Read through the event view (which
+      showed `user.geo` on the browser report sent before the rule), a
+      synthetic event sent afterwards from the same connection carries none.
+      Not trusted: Discover's `user.geo.*` columns, which read empty even for
+      the events that had it. Sentry derives city and country from the connection
       at ingest even with IP storage off (getsentry/sentry#92201); the first
       real payload carried `user.geo`, which the notes do not describe.
 
@@ -53,9 +57,21 @@
 - [x] 4.3 Throw again with a note; press *Send report*: two envelopes (the
       event and the note) are accepted by Sentry with HTTP 200, and the dialog
       shows the event ID.
-- [ ] 4.4 Read that payload against `src/assets/privacy.html`; amend the notes or
-      turn the excess off in this change if it carries more.
+- [x] 4.4 Read that payload against `src/assets/privacy.html`; amend the notes or
+      turn the excess off in this change if it carries more. The first payload
+      carried three things the notes did not describe: a breadcrumb naming the
+      error the player had declined, the timezone and locale, and `user.geo`.
+      The first two are turned off in the SDK, the third by task 3.4, and the
+      notes now mention the button-press breadcrumbs. Re-read in Sentry after
+      the SDK fix (event `0ee89f1c…`, release `9fb611dc`): no culture context,
+      no attachments, and the only breadcrumb a button press; `user.geo` was
+      still present, which task 3.4 addresses.
+- [x] 4.5 Send one more report from the browser on hintful.click and confirm,
+      through the event view, that it carries no `user.geo`. Event
+      `76a6f040…` (release `9fb611dc`) has no user section at all, where the
+      same view of the pre-rule report from the same browser and connection
+      showed `user.geo: IE, Dublin`.
 
 ## 5. Close
 
-- [ ] 5.1 `openspec validate enable-crash-reporting --strict`, then archive.
+- [x] 5.1 `openspec validate enable-crash-reporting --strict`, then archive.
