@@ -1333,6 +1333,7 @@ to a similar game:
 | Bridges | the **span** the step decides, drawn as the game's own shape: the bridge bundle it would become with only the *added* bars in `COL_HINT`, or the game's pair of crosses in `COL_HINT` when the step blocks it. The island a sentence *names* has its own rim and clue digit recolored `COL_HINT` (an annulus, so it is already a ring) | the islands and bridges the argument counts → `COL_HINT_CELL` on the same shapes. A premise that counts a **group** marks every member alike, the acted-from island included, because the sentence counts them together |
 | Seismic | the cell(s) a step decides, ringed `COL_HINT` inside the cell's own box (the gap between cells is the black its walls are made of); a struck note keeps its pencil color with a same-color line through it | the area a hidden single or a starved area reasons over → one `COL_HINT_CELL` contour; a placement's follow-on strikes outline the placed number's cell alone |
 | Galaxies | the **deduced** cell, solid **purple** `COL_HINT` (not blue — see below); the 180° partner the same move claims, a `COL_HINT` **outline over the ordinary evidence shading** (same hue, they share a fate; far less weight, only one is what the words are about); the wall it draws, a `COL_HINT` bar drawn *whether or not the wall exists yet*; the dot it points at, a **filled `COL_HINT` halo with the dot repainted on top** — **unless the dot stands on a cell just filled**, where a mark in the fill's own color is invisible and the narration names the dot by position instead | the cells / walls / dots the argument reasons over → `COL_HINT_CELL` teal (a galaxy's reach, a cut-off piece, the partner across a dot, an already-drawn wall). One ring role at a time, so "the ringed dot" is never ambiguous |
+| Loopy | the edges the step sets, a `COL_HINT` band *under* each (the edge's own state stays on top): solid for a line, broken for an edge that can't be one | the clue it counts → an outline inset inside its face; the dot it names → a ring under the dot; the loop an edge would close → a `COL_HINT_CELL` band under those lines; a hidden **corner** → a wedge in the face's angle, filled for at least one line, outlined for at most one; a hidden **pair** → a connector between its two edges marked `=` or `≠`; past what one sentence carries, every hidden fact numbered in the order it was found (§ "Facts the board has no notation for") |
 
 **Mark the premise element in the action color only where the sentence names
 it (Bridges).** Bridges recolors an island's rim and digit `COL_HINT` when the
@@ -1413,6 +1414,9 @@ first-class answer rather than a gap:
   it would become, with only the *added* bars in the action color; the island is
   marked by recoloring its own rim and clue digit, which is already a ring
   because `drawIsland` paints an annulus.
+- **Loopy** has no cells and no tiles at all. Every mark is drawn from
+  `engine/grid/` geometry: a band under an edge, an outline inset in a face, a
+  ring under a dot, a wedge in a face's angle.
 
 Two games in a row needed the second answer for part of their marks and one for
 all of them, so ask **what shape the game already draws for this action** before
@@ -1882,6 +1886,49 @@ cell'". Exemplars: `forcingChainArea`/`narrateForcingChain` in
 [`engine/latin-hint.ts`](../../src/engine/latin-hint.ts) (one sentence, six
 games, `LatinVocab` for heights/elements/letters), and Clusters'
 `buildHighlights`.
+
+### Facts the board has no notation for (Loopy)
+
+From Normal, Loopy's rungs reason about two things a player cannot write down: a
+**corner**, two edges meeting at a dot around one face and known to carry at least
+one line or at most one, and a **pair**, two edges known to match or to be
+opposites. A candidate game externalizes its chain by striking notes; here there is
+nothing to strike, and a chain still has to be on the board (§ "The forcing
+boundary"). What worked, in [`games/loopy/`](../../src/games/loopy/):
+
+- **Every hidden fact carries its premise and its parents.** `record.ts` stores each
+  corner bit and each relation with why it holds and what it was derived from. A
+  relation's chain is a breadth-first search over the recorded merges, because the
+  flip dsf answers only *that* two edges are related. A step's evidence is the
+  closure of its premise's facts, and that closure bottoms out in lines the player
+  can see.
+- **Draw each fact in the game's own geometry, and number it.** A corner is a wedge in
+  the face's angle, a pair a connector between its edges, and each carries its
+  position in the closure. `drawHintOrdinal` does not apply: it puts a number in a
+  *tile's* corner and Loopy has no tiles, so a lone number goes inside its wedge,
+  away from the clue at the face's center.
+- **Number only past what a sentence carries.** A count leaning on corners whose own
+  dots show why, or one corner read off one clue, is told in words with its corner
+  unnumbered, and everything else is numbered. Measured on generated boards, about
+  71% of Tricky and Hard steps rest on two facts or fewer.
+- **The rule linking the marks belongs in the help.** Each numbered mark follows from
+  the clue or dot beside it and the marks before it. Saying so on every step cost 83
+  characters and pushed chain sentences to 240, so the help teaches it once and a
+  step names only the marks it concludes from (§ "Rules belong in the help").
+- **The long tail is structural, so measure a shortener before keeping it.** Hard
+  boards give a step resting on more than eight facts once or twice a board, up to
+  28. Clusters' remedy, the shortest chain among a tier's firings, was built (set a
+  long firing's lines aside, freeze its edges, ask the tier again) and left every
+  tiling's p99 and count over eight unchanged, because a rung already returns the
+  shallowest line it can set. It was removed.
+- **A board need not carry its tier, and the hint does not need it to.** A shared
+  game ID omits the difficulty, so Loopy's hint cannot cap itself at the board's
+  tier. It tries Easy's rungs to exhaustion, then Normal's, and so on, which is also
+  the easiest-first order a hint wants; facts a higher tier derived stay recorded,
+  premises and all.
+- **Its soundness is Seismic's shape, on lines.** `findMistakes` compares every drawn
+  line and ruled-out edge with the unique solution, so the plan may take them as
+  facts (§ "Deduce from the notes when the mistake check vouches for them").
 
 ### Rule-outs as board marks
 

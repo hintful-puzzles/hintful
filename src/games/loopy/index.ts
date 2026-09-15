@@ -58,6 +58,7 @@ import {
   walkEdge,
 } from "./cursor.ts";
 import { newDesc } from "./generator.ts";
+import { hint, hintKeepTrack, refreshHintStep } from "./hint.ts";
 import {
   DIFF_MAX,
   decodeParams,
@@ -78,7 +79,7 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
-import { solveGame } from "./solver.ts";
+import { solveGame, uniqueSolution } from "./solver.ts";
 import {
   checkCompletion,
   cloneState,
@@ -86,6 +87,7 @@ import {
   LINE_UNKNOWN,
   LINE_YES,
   type LineState,
+  type LoopyMistake,
   type LoopyState,
   newState,
   textFormat,
@@ -413,6 +415,28 @@ function solve(orig: LoopyState, _curr: LoopyState): SolveResult<LoopyMove> {
   return { ok: true, move: { kind: "solve", ops } };
 }
 
+/**
+ * Every edge the player has marked against the board's solution: a line the loop
+ * does not run along, or an edge ruled out that it does.
+ *
+ * `checkCompletion`'s `lineErrors` is a different thing and stays: it flags a
+ * *rule* broken on the board as drawn (a dot with three lines, a loop that is not
+ * the only one), which it can see without knowing the answer. This compares with
+ * the answer, so it also finds a line that breaks no rule and is still wrong, and
+ * that is what lets the hint take the player's marks as facts. A board whose clues
+ * admit no provably unique solution has nothing to compare with and reports none.
+ */
+function findMistakes(state: LoopyState): readonly LoopyMistake[] {
+  const solution = uniqueSolution(state);
+  if (solution === null) return [];
+  const out: LoopyMistake[] = [];
+  for (let edge = 0; edge < state.lines.length; edge++) {
+    const line = state.lines[edge];
+    if (line !== LINE_UNKNOWN && line !== solution[edge]) out.push({ edge });
+  }
+  return out;
+}
+
 /** Loopy's difficulty contract (`engine/difficulty.ts`). Its generator gates
  * every clue removal on `"solved"` specifically: an `"ambiguous"` verdict means
  * the solver only got there by trying a loop closure, which is not a deduction
@@ -435,7 +459,8 @@ export const loopyGame: Game<
   LoopyState,
   LoopyMove,
   LoopyUi,
-  LoopyDrawState
+  LoopyDrawState,
+  LoopyMistake
 > = {
   id: "loopy",
   wantsStatusbar: false,
@@ -475,6 +500,10 @@ export const loopyGame: Game<
   status: (s) => (s.completed ? "solved" : "ongoing"),
   solve,
   difficulty,
+  findMistakes,
+  hint: (state) => hint(state, findMistakes(state).length),
+  hintKeepTrack,
+  refreshHintStep,
   textFormat,
   prefs,
 

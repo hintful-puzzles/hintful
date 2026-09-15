@@ -242,9 +242,9 @@ stated per game rather than assumed, and normative here — the `ts-engine`
 
 | Obligation | Loopy | Lightup |
 | --- | --- | --- |
-| **Narratability survives** — every accepted board is walkable to completion by a hint | **unmet, and honestly so: Loopy ships no `hint()`**, so there is no hint projection and the obligation is vacuous rather than satisfied. A gap against "nothing may ship hintless", tracked separately. | met — `deduceHintPlan` walks the same `dosolve` with a recorder, and Lightup is enrolled in every cross-game hint guard |
+| **Narratability survives** — every accepted board is walkable to completion by a hint | met — the hint runs the solver's own rungs with a recorder, trying the tiers easiest first (`nextFiring`), Loopy is enrolled in every cross-game hint guard, and `loopy-hint.test.ts` walks every tiling at Hard to solved | met — `deduceHintPlan` walks the same `dosolve` with a recorder, and Lightup is enrolled in every cross-game hint guard |
 | **Grading stays honest** — tiers bind to real technique differences | met — `dlineDeductions` unlocks at Normal, `linedsfDeductions` at Hard, and generation is capped at the requested tier | met via `flagsFromDifficulty` |
-| **Budgets apply** — non-termination fails loud | no recording path, so none is needed or installed | met — `solveSub` ticks a `stepBudget` on the recorder path only |
+| **Budgets apply** — non-termination fails loud | met — `nextFiring` ticks the hint plan's `stepBudget` once per rung call, on the recording path only | met — `solveSub` ticks a `stepBudget` on the recorder path only |
 
 ## Guess-free generation
 
@@ -306,7 +306,12 @@ glanceable steps** — *not* by whether a trial or a search was involved.
 - **Tactic** — `latin.ts`'s `forcing` (measured 3–12 implication links, median
   4–5), Clusters' lookahead (median 2–3 forced cells), Map's forcing-chain BFS.
   Legitimate at a middle tier; see `hints.md` § "The forcing boundary" for what
-  its narration owes the player.
+  its narration owes the player. Loopy's Tricky and Hard rungs are Tactics of a
+  different kind: they never assume anything, but derive corners and pairs of
+  edges the board cannot show, each one a local rule applied to a clue or a dot,
+  and a line can rest on a chain of them (measured on Hard: median 2, p99 about
+  20, at most 28). Every link is glanceable, so the chain is walked by drawing and
+  numbering its facts (`hints.md` § "Facts the board has no notation for").
 - **Search** — Undead's `forcingPass` and Bricks' `solverRecurse` (both run a
   whole fixpoint / sub-solve from the hypothesis), Dominosa's
   `deduceForcingChain`, Spokes' **unbounded** look-ahead, every true recursion

@@ -40,6 +40,13 @@ import {
 } from "./dlines.ts";
 import { DIFF_HARD, DIFF_MAX, DIFF_NORMAL, DIFF_TRICKY } from "./params.ts";
 import {
+  type BoundWitness,
+  type LoopyReason,
+  LoopyRecorder,
+  type RecordedOp,
+} from "./record.ts";
+import {
+  checkCompletion,
   cloneState,
   LINE_NO,
   LINE_UNKNOWN,
@@ -63,7 +70,11 @@ export type SolverStatus = "solved" | "mistake" | "ambiguous" | "incomplete";
 export class SolverState {
   readonly state: LoopyState;
   status: SolverStatus = "incomplete";
-  readonly diff: number;
+  /** The difficulty cap. Fixed for a whole solve, except on the hint path, which
+   * raises it one tier at a time until some rung fires ({@link nextFiring}). */
+  diff: number;
+  /** The hint path's recorder; `null` on every other path. */
+  rec: LoopyRecorder | null = null;
 
   /** Dots joined by YES edges. */
   readonly dotDsf: Dsf;
@@ -176,6 +187,7 @@ function solverSetLine(ss: SolverState, i: number, lineNew: LineState): boolean 
   const s = ss.state;
   if (s.lines[i] === lineNew) return false;
   s.lines[i] = lineNew;
+  ss.rec?.ops.push({ edge: i, state: lineNew });
 
   const e = ss.grid.edges[i];
   if (lineNew === LINE_YES) {
@@ -260,6 +272,118 @@ function faceSetall(
 }
 
 // ---------------------------------------------------------------------------
+// Recording (the hint path only)
+// ---------------------------------------------------------------------------
+
+/**
+ * Close a firing on the hint path: name its premise, and tell the rung to stop.
+ *
+ * A rung sweeps every face or dot and applies what it finds, so left alone one
+ * call would put many independent deductions under one premise. The recording
+ * path returns at the first premise that changed a line instead, and the driver
+ * starts again from the cheapest rung (docs/games/hints.md § "A rung is not a
+ * premise, so return per premise").
+ */
+function fired(rec: LoopyRecorder, reason: LoopyReason): number {
+  rec.reason = reason;
+  return 0;
+}
+
+function firedCorner(
+  rec: LoopyRecorder,
+  dot: number,
+  dline: number,
+  bound: "atMostOne" | "atLeastOne",
+): number {
+  return fired(rec, { kind: "corner", dot, fact: rec.cornerFact(dline, bound) });
+}
+
+function recordClueCorner(
+  ss: SolverState,
+  rec: LoopyRecorder,
+  faceIndex: number,
+  corner: number,
+  dline: number,
+  bound: "atMostOne" | "atLeastOne",
+  witness: BoundWitness,
+): void {
+  const f = ss.grid.faces[faceIndex];
+  const N = f.order;
+  // biome-ignore lint/style/noNonNullAssertion: a consistent grid has every face edge and dot.
+  const before = f.edges[corner === 0 ? N - 1 : corner - 1]!.index;
+  rec.corner(dline, {
+    kind: "corner",
+    // biome-ignore lint/style/noNonNullAssertion: ditto.
+    dot: f.dots[corner]!.index,
+    // biome-ignore lint/style/noNonNullAssertion: ditto.
+    edges: [before, f.edges[corner]!.index],
+    bound,
+    why: { kind: "clue", face: faceIndex, witness },
+    parents: [],
+  });
+}
+
+/**
+ * What a bound `dlineDeductions` just stored for the edges of face `faceIndex`
+ * from position `a` up to (not including) `b` rests on.
+ *
+ * The bound was built by splitting the run into single edges and adjacent pairs,
+ * taking the tightest split, so walking the same split back recovers it: each
+ * single edge counts one if it is a line (a lower bound) or still open (an upper
+ * bound), and each pair counts the same way unless its corner bit made it count
+ * one, in which case the corner's fact is what the count leans on. Read straight
+ * after the bound is computed, from the scratch matrices, before anything else
+ * overwrites them.
+ */
+function boundWitness(
+  ss: SolverState,
+  faceIndex: number,
+  a: number,
+  b: number,
+  kind: "max" | "min",
+): BoundWitness {
+  const rec = ss.rec;
+  if (rec === null) throw new Error("loopy solver: bound witness off the hint path");
+  const f = ss.grid.faces[faceIndex];
+  const N = f.order;
+  const S = ss.faceStride;
+  const table = kind === "max" ? ss.maxs : ss.mins;
+  const s = ss.state;
+  const counts = (e: number): boolean =>
+    kind === "max" ? s.lines[e] !== LINE_NO : s.lines[e] === LINE_YES;
+  // biome-ignore lint/style/noNonNullAssertion: a consistent grid has every face edge.
+  const edgeAt = (p: number): number => f.edges[p % N]!.index;
+
+  const edges: number[] = [];
+  const corners: number[] = [];
+  for (let at = a; ; ) {
+    const m = (b - at + N) % N;
+    let size = m;
+    if (m >= 3) {
+      const u = (at + 1) % N;
+      size = table[at * S + u] + table[u * S + b] === table[at * S + b] ? 1 : 2;
+    }
+    if (size === 1) {
+      if (counts(edgeAt(at))) edges.push(edgeAt(at));
+    } else {
+      const pair = [edgeAt(at), edgeAt(at + 1)];
+      const plain = pair.filter(counts);
+      if (table[at * S + ((at + 2) % N)] === plain.length) {
+        edges.push(...plain);
+      } else {
+        const dline = dlineIndexFromFace(f, (at + 1) % N);
+        corners.push(
+          rec.cornerFact(dline, kind === "max" ? "atMostOne" : "atLeastOne"),
+        );
+      }
+    }
+    at = (at + size) % N;
+    if (at === b) break;
+  }
+  return { edges, corners, total: table[a * S + b] };
+}
+
+// ---------------------------------------------------------------------------
 // Rung 0 — trivial deductions (Easy)
 // ---------------------------------------------------------------------------
 
@@ -276,7 +400,7 @@ function faceSetall(
 function findConstrainedUnknownPair(
   ss: SolverState,
   faceIndex: number,
-): { e1: number; e2: number } | null {
+): { e1: number; e2: number; dot: number } | null {
   const s = ss.state;
   const f = ss.grid.faces[faceIndex];
 
@@ -291,7 +415,7 @@ function findConstrainedUnknownPair(
     // The two edges are consecutive around the face, so they share a dot.
     const d = a.dot1 === b.dot1 || a.dot1 === b.dot2 ? a.dot1 : a.dot2;
     for (let k = 0; k < d.order; k++) {
-      if (s.lines[d.edges[k].index] === LINE_YES) return { e1, e2 };
+      if (s.lines[d.edges[k].index] === LINE_YES) return { e1, e2, dot: d.index };
     }
   }
   return null;
@@ -302,6 +426,7 @@ function findConstrainedUnknownPair(
 function trivialDeductions(ss: SolverState): number {
   const g = ss.grid;
   const s = ss.state;
+  const rec = ss.rec;
   let diff = DIFF_MAX;
 
   // ------ Per-face deductions ------
@@ -328,6 +453,7 @@ function trivialDeductions(ss: SolverState): number {
     if (clue === currentYes) {
       if (faceSetall(ss, i, LINE_UNKNOWN, LINE_NO)) diff = Math.min(diff, 0);
       ss.faceSolved[i] = 1;
+      if (rec?.ops.length) return fired(rec, { kind: "clueFull", face: i });
       continue;
     }
     if (f.order - clue < currentNo) {
@@ -337,6 +463,7 @@ function trivialDeductions(ss: SolverState): number {
     if (f.order - clue === currentNo) {
       if (faceSetall(ss, i, LINE_UNKNOWN, LINE_YES)) diff = Math.min(diff, 0);
       ss.faceSolved[i] = 1;
+      if (rec?.ops.length) return fired(rec, { kind: "clueStarved", face: i });
       continue;
     }
 
@@ -353,6 +480,14 @@ function trivialDeductions(ss: SolverState): number {
           solverSetLine(ss, e, LINE_YES);
           diff = Math.min(diff, 0);
         }
+      }
+      if (rec?.ops.length) {
+        return fired(rec, {
+          kind: "clueOneShort",
+          face: i,
+          dot: pair.dot,
+          pair: [pair.e1, pair.e2],
+        });
       }
     }
   }
@@ -374,6 +509,7 @@ function trivialDeductions(ss: SolverState): number {
         dotSetall(ss, i, LINE_UNKNOWN, LINE_NO);
         diff = Math.min(diff, 0);
         ss.dotSolved[i] = 1;
+        if (rec?.ops.length) return fired(rec, { kind: "deadEnd", dot: i });
       }
     } else if (yes === 1) {
       if (unknown === 0) {
@@ -383,13 +519,15 @@ function trivialDeductions(ss: SolverState): number {
         // The line has to continue somewhere, and there is only one way out.
         dotSetall(ss, i, LINE_UNKNOWN, LINE_YES);
         diff = Math.min(diff, 0);
+        if (rec?.ops.length) return fired(rec, { kind: "lineContinues", dot: i });
       }
     } else if (yes === 2) {
+      ss.dotSolved[i] = 1;
       if (unknown > 0) {
         dotSetall(ss, i, LINE_UNKNOWN, LINE_NO);
         diff = Math.min(diff, 0);
+        if (rec?.ops.length) return fired(rec, { kind: "dotFull", dot: i });
       }
-      ss.dotSolved[i] = 1;
     } else {
       ss.status = "mistake";
       return 0;
@@ -425,7 +563,24 @@ function dlineSetOppAtLeastOne(
     const o2 = o + 1 === N ? 0 : o + 1;
     if (ss.state.lines[d.edges[o].index] !== LINE_UNKNOWN) continue;
     if (ss.state.lines[d.edges[o2].index] !== LINE_UNKNOWN) continue;
-    return setAtLeastOne(dlines, dlineIndexFromDot(d, o));
+    const opposite = dlineIndexFromDot(d, o);
+    if (!setAtLeastOne(dlines, opposite)) return false;
+    const rec = ss.rec;
+    if (rec) {
+      const from = dlineIndexFromDot(d, edge);
+      rec.corner(opposite, {
+        kind: "corner",
+        dot: dotIndex,
+        edges: [d.edges[o].index, d.edges[o2].index],
+        bound: "atLeastOne",
+        why: { kind: "exactlyOneAcross" },
+        parents: [
+          rec.cornerFact(from, "atLeastOne"),
+          rec.cornerFact(from, "atMostOne"),
+        ],
+      });
+    }
+    return true;
   }
   return false;
 }
@@ -457,6 +612,7 @@ function dlineSetOppAtLeastOne(
 function dlineDeductions(ss: SolverState): number {
   const g = ss.grid;
   const s = ss.state;
+  const rec = ss.rec;
   const dlines = ss.dlines;
   if (dlines === null) return DIFF_MAX;
   const { maxs, mins, faceStride: S } = ss;
@@ -531,6 +687,10 @@ function dlineDeductions(ss: SolverState): number {
         // Setting this edge YES would take the face past its clue.
         solverSetLine(ss, lineIndex, LINE_NO);
         diff = Math.min(diff, 0);
+        if (rec?.ops.length) {
+          const witness = boundWitness(ss, i, k, j, "min");
+          return fired(rec, { kind: "clueBound", face: i, edge: lineIndex, witness });
+        }
       }
       if (maxs[k * S + j] < clue - 1) {
         ss.status = "mistake";
@@ -540,6 +700,10 @@ function dlineDeductions(ss: SolverState): number {
         // The clue is only reachable if this edge is YES.
         solverSetLine(ss, lineIndex, LINE_YES);
         diff = Math.min(diff, 0);
+        if (rec?.ops.length) {
+          const witness = boundWitness(ss, i, k, j, "max");
+          return fired(rec, { kind: "clueBound", face: i, edge: lineIndex, witness });
+        }
       }
 
       if (ss.diff >= DIFF_TRICKY) {
@@ -549,17 +713,30 @@ function dlineDeductions(ss: SolverState): number {
         // biome-ignore lint/style/noNonNullAssertion: ditto.
         if (s.lines[f.edges[k]!.index] !== LINE_UNKNOWN) continue;
 
-        const dlineIndex = dlineIndexFromFace(f, k);
+        const corner = k;
+        const dlineIndex = dlineIndexFromFace(f, corner);
         k++;
         if (k >= N) k = 0;
 
         if (mins[k * S + j] > clue - 2) {
           // Two more YESs would break the clue.
-          if (setAtMostOne(dlines, dlineIndex)) diff = Math.min(diff, DIFF_NORMAL);
+          if (setAtMostOne(dlines, dlineIndex)) {
+            diff = Math.min(diff, DIFF_NORMAL);
+            if (rec) {
+              const witness = boundWitness(ss, i, k, j, "min");
+              recordClueCorner(ss, rec, i, corner, dlineIndex, "atMostOne", witness);
+            }
+          }
         }
         if (maxs[k * S + j] < clue) {
           // Two more NOs would leave too few YESs.
-          if (setAtLeastOne(dlines, dlineIndex)) diff = Math.min(diff, DIFF_NORMAL);
+          if (setAtLeastOne(dlines, dlineIndex)) {
+            diff = Math.min(diff, DIFF_NORMAL);
+            if (rec) {
+              const witness = boundWitness(ss, i, k, j, "max");
+              recordClueCorner(ss, rec, i, corner, dlineIndex, "atLeastOne", witness);
+            }
+          }
         }
       }
     }
@@ -597,20 +774,24 @@ function dlineDeductions(ss: SolverState): number {
         if (line1 === LINE_YES && line2 === LINE_UNKNOWN) {
           solverSetLine(ss, line2Index, LINE_NO);
           diff = Math.min(diff, 0);
+          if (rec?.ops.length) return firedCorner(rec, i, dlineIndex, "atMostOne");
         }
         if (line2 === LINE_YES && line1 === LINE_UNKNOWN) {
           solverSetLine(ss, line1Index, LINE_NO);
           diff = Math.min(diff, 0);
+          if (rec?.ops.length) return firedCorner(rec, i, dlineIndex, "atMostOne");
         }
       }
       if (isAtLeastOne(dlines, dlineIndex)) {
         if (line1 === LINE_NO && line2 === LINE_UNKNOWN) {
           solverSetLine(ss, line2Index, LINE_YES);
           diff = Math.min(diff, 0);
+          if (rec?.ops.length) return firedCorner(rec, i, dlineIndex, "atLeastOne");
         }
         if (line2 === LINE_NO && line1 === LINE_UNKNOWN) {
           solverSetLine(ss, line1Index, LINE_YES);
           diff = Math.min(diff, 0);
+          if (rec?.ops.length) return firedCorner(rec, i, dlineIndex, "atLeastOne");
         }
       }
 
@@ -626,17 +807,39 @@ function dlineDeductions(ss: SolverState): number {
           solverSetLine(ss, line1Index, LINE_NO);
           solverSetLine(ss, line2Index, LINE_NO);
           diff = Math.min(diff, 0);
+          if (rec?.ops.length) return firedCorner(rec, i, dlineIndex, "atMostOne");
         }
         if (isAtLeastOne(dlines, dlineIndex)) {
           solverSetLine(ss, line1Index, LINE_YES);
           solverSetLine(ss, line2Index, LINE_YES);
           diff = Math.min(diff, 0);
+          if (rec?.ops.length) return firedCorner(rec, i, dlineIndex, "atLeastOne");
         }
       }
       if (yes === 1) {
-        if (setAtMostOne(dlines, dlineIndex)) diff = Math.min(diff, DIFF_NORMAL);
+        if (setAtMostOne(dlines, dlineIndex)) {
+          diff = Math.min(diff, DIFF_NORMAL);
+          rec?.corner(dlineIndex, {
+            kind: "corner",
+            dot: i,
+            edges: [line1Index, line2Index],
+            bound: "atMostOne",
+            why: { kind: "lineElsewhere" },
+            parents: [],
+          });
+        }
         if (unknown === 2) {
-          if (setAtLeastOne(dlines, dlineIndex)) diff = Math.min(diff, DIFF_NORMAL);
+          if (setAtLeastOne(dlines, dlineIndex)) {
+            diff = Math.min(diff, DIFF_NORMAL);
+            rec?.corner(dlineIndex, {
+              kind: "corner",
+              dot: i,
+              edges: [line1Index, line2Index],
+              bound: "atLeastOne",
+              why: { kind: "onlyWayOn" },
+              parents: [],
+            });
+          }
         }
       }
 
@@ -650,8 +853,17 @@ function dlineDeductions(ss: SolverState): number {
             if (o === j || o === j + 1 || o === j - 1) continue;
             if (j === 0 && o === N - 1) continue;
             if (j === N - 1 && o === 0) continue;
-            if (setAtMostOne(dlines, dlineIndexFromDot(d, o))) {
+            const across = dlineIndexFromDot(d, o);
+            if (setAtMostOne(dlines, across)) {
               diff = Math.min(diff, DIFF_NORMAL);
+              rec?.corner(across, {
+                kind: "corner",
+                dot: i,
+                edges: [d.edges[o].index, d.edges[o + 1 === N ? 0 : o + 1].index],
+                bound: "atMostOne",
+                why: { kind: "acrossTheDot" },
+                parents: [rec.cornerFact(dlineIndex, "atLeastOne")],
+              });
             }
           }
           if (yes === 0 && isAtMostOne(dlines, dlineIndex)) {
@@ -665,6 +877,16 @@ function dlineDeductions(ss: SolverState): number {
                   solverSetLine(ss, oppIndex, LINE_YES);
                   diff = Math.min(diff, 0);
                 }
+              }
+              if (rec?.ops.length) {
+                return fired(rec, {
+                  kind: "cornerExit",
+                  dot: i,
+                  facts: [
+                    rec.cornerFact(dlineIndex, "atLeastOne"),
+                    rec.cornerFact(dlineIndex, "atMostOne"),
+                  ],
+                });
               }
             } else if (unknown === 4) {
               // Exactly one of the opposite pair is YES too; "at most one" is
@@ -733,6 +955,12 @@ function faceSetallIdentical(
       if (can1.root === can2.root && can1.inverse === can2.inverse) {
         solverSetLine(ss, line1Index, lineNew);
         solverSetLine(ss, line2Index, lineNew);
+        const rec = ss.rec;
+        if (rec?.ops.length) {
+          const path = rec.path(line1Index, line2Index);
+          rec.reason = { kind: "matchingPair", face: faceIndex, path };
+          return false;
+        }
       }
     }
   }
@@ -782,8 +1010,11 @@ function parityDeductions(
   edgeList: readonly (GridEdge | null)[],
   totalParity: number,
   unknownCount: number,
+  face: number,
+  dot: number,
 ): number {
   const s = ss.state;
+  const rec = ss.rec;
   const linedsf = ss.linedsf;
   if (linedsf === null) return DIFF_MAX;
   let diff = DIFF_MAX;
@@ -791,30 +1022,51 @@ function parityDeductions(
   if (unknownCount === 2) {
     // The two are alike or opposite, depending on the parity.
     const e = findUnknowns(s, edgeList, 2);
-    if (mergeLines(ss, e[0], e[1], totalParity !== 0)) diff = Math.min(diff, DIFF_HARD);
+    if (mergeLines(ss, e[0], e[1], totalParity !== 0)) {
+      diff = Math.min(diff, DIFF_HARD);
+      rec?.relate({
+        kind: "relation",
+        edges: [e[0], e[1]],
+        opposite: totalParity !== 0,
+        why: face >= 0 ? { kind: "faceParity", face } : { kind: "dotParity", dot },
+        parents: [],
+      });
+    }
   } else if (unknownCount === 3) {
     const e = findUnknowns(s, edgeList, 3);
     const can = e.map((x) => linedsf.canonify(x));
     const inv = can.map((c) => (c.inverse ? 1 : 0));
-    if (can[0].root === can[1].root) {
-      const v = totalParity ^ inv[0] ^ inv[1] ? LINE_YES : LINE_NO;
-      if (solverSetLine(ss, e[2], v)) diff = Math.min(diff, 0);
-    }
-    if (can[0].root === can[2].root) {
-      const v = totalParity ^ inv[0] ^ inv[2] ? LINE_YES : LINE_NO;
-      if (solverSetLine(ss, e[1], v)) diff = Math.min(diff, 0);
-    }
-    if (can[1].root === can[2].root) {
-      const v = totalParity ^ inv[1] ^ inv[2] ? LINE_YES : LINE_NO;
-      if (solverSetLine(ss, e[0], v)) diff = Math.min(diff, 0);
-    }
+    const settle = (target: number, x: number, y: number): boolean => {
+      const v = totalParity ^ inv[x] ^ inv[y] ? LINE_YES : LINE_NO;
+      if (!solverSetLine(ss, e[target], v)) return false;
+      diff = Math.min(diff, 0);
+      if (!rec) return false;
+      rec.reason = {
+        kind: "parity",
+        face: face >= 0 ? face : null,
+        dot: dot >= 0 ? dot : null,
+        path: rec.path(e[x], e[y]),
+      };
+      return true;
+    };
+    if (can[0].root === can[1].root && settle(2, 0, 1)) return 0;
+    if (can[0].root === can[2].root && settle(1, 0, 2)) return 0;
+    if (can[1].root === can[2].root && settle(0, 1, 2)) return 0;
   } else if (unknownCount === 4) {
     const e = findUnknowns(s, edgeList, 4);
     const can = e.map((x) => linedsf.canonify(x));
     const inv = can.map((c) => (c.inverse ? 1 : 0));
     const link = (a: number, b: number, x: number, y: number): void => {
-      if (mergeLines(ss, e[a], e[b], (totalParity ^ inv[x] ^ inv[y]) !== 0)) {
+      const opposite = (totalParity ^ inv[x] ^ inv[y]) !== 0;
+      if (mergeLines(ss, e[a], e[b], opposite)) {
         diff = Math.min(diff, DIFF_HARD);
+        rec?.relate({
+          kind: "relation",
+          edges: [e[a], e[b]],
+          opposite,
+          why: face >= 0 ? { kind: "faceLink", face } : { kind: "dotLink", dot },
+          parents: rec.path(e[x], e[y]),
+        });
       }
     };
     // Upstream's chain of `else if`s: only the first matching pair is used.
@@ -842,6 +1094,7 @@ function parityDeductions(
 function linedsfDeductions(ss: SolverState): number {
   const g = ss.grid;
   const s = ss.state;
+  const rec = ss.rec;
   const dlines = ss.dlines;
   const linedsf = ss.linedsf;
   if (dlines === null || linedsf === null) return DIFF_MAX;
@@ -857,10 +1110,12 @@ function linedsfDeductions(ss: SolverState): number {
     let yes = ss.faceYesCount[i];
     if (yes + 1 === clue) {
       if (faceSetallIdentical(ss, i, LINE_NO)) diff = Math.min(diff, 0);
+      if (rec?.ops.length) return 0;
     }
     const no = ss.faceNoCount[i];
     if (no + 1 === N - clue) {
       if (faceSetallIdentical(ss, i, LINE_YES)) diff = Math.min(diff, 0);
+      if (rec?.ops.length) return 0;
     }
 
     // Reload the YES count — the calls above may have changed it.
@@ -869,8 +1124,9 @@ function linedsfDeductions(ss: SolverState): number {
 
     diff = Math.min(
       diff,
-      parityDeductions(ss, g.faces[i].edges, (clue - yes) % 2, unknown),
+      parityDeductions(ss, g.faces[i].edges, (clue - yes) % 2, unknown, i, -1),
     );
+    if (rec?.ops.length) return 0;
   }
 
   // ------ Dot deductions ------
@@ -891,21 +1147,43 @@ function linedsfDeductions(ss: SolverState): number {
       const can2 = linedsf.canonify(line2Index);
       if (can1.root === can2.root && can1.inverse !== can2.inverse) {
         // Opposites: exactly one of the pair is YES.
-        if (setAtMostOne(dlines, dlineIndex)) diff = Math.min(diff, DIFF_NORMAL);
-        if (setAtLeastOne(dlines, dlineIndex)) diff = Math.min(diff, DIFF_NORMAL);
+        const opposites = (bound: "atMostOne" | "atLeastOne"): void => {
+          diff = Math.min(diff, DIFF_NORMAL);
+          rec?.corner(dlineIndex, {
+            kind: "corner",
+            dot: i,
+            edges: [line1Index, line2Index],
+            bound,
+            why: { kind: "opposites" },
+            parents: rec.path(line1Index, line2Index),
+          });
+        };
+        if (setAtMostOne(dlines, dlineIndex)) opposites("atMostOne");
+        if (setAtLeastOne(dlines, dlineIndex)) opposites("atLeastOne");
         continue;
       }
       // And the dsf from the dline flags.
       if (isAtMostOne(dlines, dlineIndex) && isAtLeastOne(dlines, dlineIndex)) {
         if (mergeLines(ss, line1Index, line2Index, true)) {
           diff = Math.min(diff, DIFF_HARD);
+          rec?.relate({
+            kind: "relation",
+            edges: [line1Index, line2Index],
+            opposite: true,
+            why: { kind: "exactlyOneAtCorner", dot: i },
+            parents: [
+              rec.cornerFact(dlineIndex, "atMostOne"),
+              rec.cornerFact(dlineIndex, "atLeastOne"),
+            ],
+          });
         }
       }
     }
 
     const yes = ss.dotYesCount[i];
     const no = ss.dotNoCount[i];
-    diff = Math.min(diff, parityDeductions(ss, d.edges, yes % 2, N - yes - no));
+    diff = Math.min(diff, parityDeductions(ss, d.edges, yes % 2, N - yes - no, -1, i));
+    if (rec?.ops.length) return 0;
   }
 
   // ------ Edge dsf propagation ------
@@ -917,12 +1195,20 @@ function linedsfDeductions(ss: SolverState): number {
     if (state !== LINE_UNKNOWN) {
       if (solverSetLine(ss, i, c.inverse ? opp(state) : (state as LineState))) {
         diff = Math.min(diff, 0);
+        if (rec) {
+          const path = rec.path(c.root, i);
+          return fired(rec, { kind: "related", from: c.root, path });
+        }
       }
     } else {
       state = s.lines[i];
       if (state !== LINE_UNKNOWN) {
         if (solverSetLine(ss, c.root, c.inverse ? opp(state) : (state as LineState))) {
           diff = Math.min(diff, 0);
+          if (rec) {
+            const path = rec.path(i, c.root);
+            return fired(rec, { kind: "related", from: i, path });
+          }
         }
       }
     }
@@ -1021,7 +1307,13 @@ function loopDeductions(ss: SolverState): number {
     progress = solverSetLine(ss, i, val);
     if (val === LINE_YES) {
       ss.status = "ambiguous";
+      if (ss.rec) ss.rec.reason = { kind: "closesLoop" };
       return 0;
+    }
+    if (ss.rec && progress) {
+      const because =
+        ss.looplen[eqclass] === edgecount + 1 ? "unmetClues" : "strayLines";
+      return fired(ss.rec, { kind: "earlyLoop", because });
     }
   }
 
@@ -1105,6 +1397,112 @@ export function gameHasUniqueSoln(state: LoopyState, diff: number): boolean {
   return ss.status === "solved";
 }
 
+/**
+ * The board's one solution, or `null` when its clues admit none the solver can
+ * prove unique (a hand-typed description can). Solved from the clues alone at the
+ * top tier, and kept per grid: every state of one game shares its grid and its
+ * clues, so the answer never changes during play.
+ */
+export function uniqueSolution(state: LoopyState): Uint8Array | null {
+  const known = solutions.get(state.grid);
+  if (known !== undefined) return known;
+  const blank = cloneState(state);
+  blank.lines.fill(LINE_UNKNOWN);
+  const ss = solveGame(blank, DIFF_MAX);
+  const solution = ss.status === "solved" ? ss.state.lines : null;
+  solutions.set(state.grid, solution);
+  return solution;
+}
+
+const solutions = new WeakMap<Grid, Uint8Array | null>();
+
 /** Exposed for `loopy.test.ts` only — see {@link faceSetallIdentical}'s doc for
  * why its return value is asserted rather than trusted. */
 export const _internals = { faceSetallIdentical };
+
+// ---------------------------------------------------------------------------
+// The hint path
+// ---------------------------------------------------------------------------
+
+/** One firing on the hint path: the lines it changed, why, and the lowest tier
+ * whose rungs could make it. */
+export interface LoopyFiring {
+  readonly reason: LoopyReason;
+  readonly ops: readonly RecordedOp[];
+  readonly tier: number;
+}
+
+/**
+ * A solver over the player's board, recording.
+ *
+ * `SolverState` counts a line into its caches only as it is set, so the player's
+ * lines are replayed through `solverSetLine` onto a blank copy rather than cloned
+ * in. Built at the top tier so the dline and relation stores exist; the driver
+ * lowers the cap as it goes.
+ */
+export function hintSolver(state: LoopyState): SolverState {
+  const blank = cloneState(state);
+  blank.lines.fill(LINE_UNKNOWN);
+  const ss = new SolverState(blank, DIFF_HARD);
+  for (let e = 0; e < state.lines.length; e++) {
+    if (state.lines[e] !== LINE_UNKNOWN)
+      solverSetLine(ss, e, state.lines[e] as LineState);
+  }
+  ss.rec = new LoopyRecorder(state.grid.numEdges);
+  return ss;
+}
+
+/** Whether the working board is finished: exactly one loop, every clue met. */
+export function hintBoardSolved(ss: SolverState): boolean {
+  return checkCompletion(ss.state);
+}
+
+/**
+ * The next line the solver can decide, at the lowest tier that decides one.
+ *
+ * **Easiest first, and not the board's own tier.** A shared game ID carries no
+ * difficulty, so the hint cannot know the tier a board was generated at. It does
+ * not need to: every rung is sound, so trying Easy's rungs to exhaustion, then
+ * Normal's, and so on, finds the simplest deduction there is — which is also the
+ * one to teach. Facts a higher tier derived stay recorded when a later firing is
+ * looked for lower down; each carries its own premise, so a step citing one can
+ * still say why it holds.
+ *
+ * **The first line found is the one taken, and a long chain behind it is not a
+ * sign a shorter one was available.** Every rung returns at the first line it can
+ * set, which is the shallowest derivation there is. Setting a long-chained firing
+ * aside and asking the same tier for others, keeping the one resting on the fewest
+ * facts, was built and measured: on generated Hard boards it left every tiling's
+ * p99 chain and count of steps over eight facts unchanged
+ * (`add-loopy-hint`'s `findings.md`).
+ *
+ * `solveGame`'s threshold pair is a speed optimization whose order decides which
+ * boards the generator accepts; the hint decides no boards, so it simply starts
+ * again from the cheapest rung after any progress.
+ */
+export function nextFiring(ss: SolverState, tick: () => void): LoopyFiring | null {
+  const rec = ss.rec;
+  if (rec === null) throw new Error("loopy solver: nextFiring off the hint path");
+  for (let tier = 0; tier <= DIFF_HARD; tier++) {
+    ss.diff = tier;
+    for (let i = 0; i < RUNGS.length; ) {
+      tick();
+      if (ss.status !== "incomplete") return null;
+      const rung = RUNGS[i];
+      if (rung.diff > tier) {
+        i++;
+        continue;
+      }
+      rec.ops = [];
+      rec.reason = null;
+      const progress = rung.fn(ss);
+      if (rec.ops.length > 0) {
+        if (rec.reason === null)
+          throw new Error("loopy solver: a firing with no premise");
+        return { reason: rec.reason, ops: rec.ops, tier };
+      }
+      i = progress === DIFF_MAX ? i + 1 : 0;
+    }
+  }
+  return null;
+}

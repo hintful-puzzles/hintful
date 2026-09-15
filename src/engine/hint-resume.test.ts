@@ -233,15 +233,26 @@ const SEEDS = ["hr-a", "hr-b", "hr-c", "hr-d", "hr-e"];
 
 /** A structural key for a game state — typed arrays rendered as plain arrays so
  * two states compare equal iff every field matches. Used to detect a hint step
- * that does nothing (a no-op when reached = an intrinsically stale step). */
+ * that does nothing (a no-op when reached = an intrinsically stale step).
+ *
+ * An object met a second time is written as a reference to its first position
+ * rather than again. A state may share a cyclic structure — Loopy's grid, whose
+ * dots list their edges and edges their dots — which plain `JSON.stringify`
+ * cannot write at all; every field is still read at its first occurrence, so a
+ * change to shared structure still changes the key. */
 function stateKey(s: unknown): string {
-  return JSON.stringify(s, (_k, v) =>
-    ArrayBuffer.isView(v) && !(v instanceof DataView)
-      ? Array.from(v as unknown as ArrayLike<number>)
-      : v instanceof Set
-        ? [...v]
-        : v,
-  );
+  const seen = new Map<object, number>();
+  return JSON.stringify(s, (_k, v) => {
+    if (ArrayBuffer.isView(v) && !(v instanceof DataView))
+      return Array.from(v as unknown as ArrayLike<number>);
+    if (v instanceof Set) return [...v];
+    if (v !== null && typeof v === "object") {
+      const first = seen.get(v);
+      if (first !== undefined) return `#ref${first}`;
+      seen.set(v, seen.size);
+    }
+    return v;
+  });
 }
 
 describe("a kept hint plan never contains a step that does nothing", () => {

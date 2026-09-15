@@ -184,6 +184,17 @@ that repaints unconditionally (Loopy repaints its whole canvas every frame)
 passes the test while proving nothing about its cache. Warm, redraw once more,
 assert *that* frame is empty, and only then turn the overlay on.
 
+**A game that repaints its whole frame needs none of this plumbing, and that is
+a finding, not a gap.** Loopy has no tile cache and no diff key, so its hint
+(`add-loopy-hint`) added no sidecar and nothing to erase: `redraw` reads the
+displayed step and draws its marks in their place in the z-order, every frame.
+What such a game owes instead is the **z-order**: a mark that goes under the
+content it points at (Loopy's edge bands and dot rings, painted before the edges
+so the edge's own state stays legible) and labels that go last (its chain
+ordinals, drawn after the edges so nothing covers them). The overlay guard passes
+for it because every frame paints; the mark tests are what check where the marks
+land.
+
 **The bug is only expressible where the overlay is handed to the painter
 *beside* the key.** A game that folds its overlay bit into the packed tile value
 — `if (mistakeSet.has(i)) f |= DS_MISTAKE` — cannot omit it from the diff test,

@@ -63,6 +63,12 @@ export interface LoopyState {
   cheated: boolean;
 }
 
+/** An edge marked the opposite of the board's solution: a line where the loop
+ * does not run, or ruled out where it does. */
+export interface LoopyMistake {
+  edge: number;
+}
+
 /** A fresh state over the same grid, with independent line/clue arrays. */
 export function cloneState(s: LoopyState): LoopyState {
   return {

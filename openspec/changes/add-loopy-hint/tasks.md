@@ -1,51 +1,52 @@
 # add-loopy-hint — tasks
 
-A stub. Read [`docs/games/hints.md`](../../../docs/games/hints.md) first; it is
-the procedure, and `AGENTS.md` § "Hint quality bar" is the bar. Flesh these
-tasks out once task 0 is done. `add-seismic-hint`'s `tasks.md` and
-`findings.md` are the shape the last one took.
+Read [`docs/games/hints.md`](../../../docs/games/hints.md) first; it is the
+procedure, and `AGENTS.md` § "Hint quality bar" is the bar. The measurement is
+[`findings.md`](./findings.md).
 
 ## 0. Re-take the claims, and the baseline
 
-- [ ] 0.1 Confirm Loopy is still hintless, and re-read the proposal's dated
-      claims against the code: no `findMistakes`, what `lineErrors` flags, the
-      threshold loop, the whole-frame renderer, the presets.
-- [ ] 0.2 Read `findings.md` for `add-tracks-hint`, `add-bridges-hint` and
-      `add-seismic-hint`, and Lightup's hint as the met bespoke-loop example.
-- [ ] 0.3 Baseline: production lines per Loopy file, taken the way Seismic's
-      were (raw `git diff --numstat`).
+- [x] 0.1 Loopy was hintless, with no `findMistakes`; `lineErrors` flags broken
+      rules only; the threshold loop, the whole-frame renderer and the presets
+      (up to 10×10 Penrose, Hats and Spectres at Hard) are as the proposal said.
+- [x] 0.2 Read `findings.md` for Tracks, Bridges and Seismic, and Lightup's
+      threaded recorder.
+- [x] 0.3 Baseline: `cursor` 169, `dlines` 86, `generator` 184, `grid-build` 82,
+      `index` 489, `params` 237, `render` 319, `solver` 1,110, `state` 419 =
+      **3,095 production lines**.
 
 ## 1. Engine refactoring survey
 
-- [ ] 1.1 For each place the proposal names, and anything else Loopy would
-      write that another game already has: extract, break an assumption, or
-      decline with the reason recorded. Take populations by reference, not by
-      name.
-- [ ] 1.2 Scaffold any refactoring that is its own coherent unit as its own
-      change, and decide whether it lands before the hint.
+- [x] 1.1 Taken and declined with reasons in `findings.md` §4: the shortest-chain
+      search (built, measured, removed), a shared recorder with Lightup, grid
+      geometry marks, clue-count and loop-closure narration, and a whole-frame
+      renderer's plumbing (none needed, written into `rendering.md`). One guard
+      fixed: `hint-resume.test.ts`'s state key could not serialize a cyclic
+      structure.
+- [x] 1.2 None was its own coherent unit.
 
 ## 2. The hint
 
-- [ ] 2.1 Decide the mistake check (`findMistakes` against the solution, or
-      not) and how the hint's premises stay sound. Record the reasoning.
-- [ ] 2.2 Deduction projection, narration, overlay and wiring, per
-      `docs/games/hints.md`. The generator's path must stay unchanged, and the
-      frozen differential is the proof.
-- [ ] 2.3 Settle the Check/Tactic/Search reading of `linedsfDeductions` and the
-      Tricky inferences in `findings.md`, measured against the solver the way
-      Seismic's `attempt` was.
-- [ ] 2.4 Cover every tiling in the hint's corpus test, including the
-      triangular grid, where the dot degree is highest.
-- [ ] 2.5 Spec delta for the hint, and remove `skip_specs`.
+- [x] 2.1 `findMistakes` compares with the unique solution; the hint takes the
+      player's marks as facts on that basis. Check & save now highlights Loopy.
+- [x] 2.2 `record.ts` + gated recording in `solver.ts`, `hint.ts`, `hint-text.ts`,
+      the overlay in `render.ts`. The frozen differential passes unedited.
+- [x] 2.3 Tricky and Hard read as Tactics over facts the board cannot show, walked
+      by drawing and numbering them (`findings.md` §2), per the owner's choice of
+      numbered marks.
+- [x] 2.4 `loopy-hint.test.ts` walks every tiling at Hard and squares at every
+      tier to solved, each step checked against the solution.
+- [x] 2.5 Spec delta for the mistake check and the hint; `skip_specs` removed.
 
 ## 3. Report and accept
 
-- [ ] 3.1 `findings.md`: the same numbers as the last three, the refactoring
-      survey's taken and declined, and the cost on the largest boards with the
-      machine's conditions.
-- [ ] 3.2 Update `docs/games/solver-and-generator.md`'s bespoke-loop table,
-      including the stale "nothing may ship hintless" sentence.
-- [ ] 3.3 Run the app on at least a square, a triangular and an aperiodic board,
-      and read real plans. Add a Hints section to `help/games/loopy.md`.
-- [ ] 3.4 Add anything the guides did not say to `docs/games/hints.md` and
-      `docs/games/rendering.md`.
+- [x] 3.1 `findings.md`: the numbers, the survey, and the cost with the machine's
+      conditions.
+- [x] 3.2 `solver-and-generator.md`'s bespoke-loop table: narratability and
+      budgets met; the stale "nothing may ship hintless" sentence gone.
+- [x] 3.3 Ran the app on squares (Tricky), triangular (Hard) and hats (Hard) and
+      read real steps; `help/games/loopy.md` gains Hints and Checking sections
+      and calls a dot a dot.
+- [x] 3.4 `hints.md` (the legend row, § "Facts the board has no notation for"),
+      `rendering.md` (a whole-frame renderer's hint), `solver-and-generator.md`
+      (the Tactic reading).

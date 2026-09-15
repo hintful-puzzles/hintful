@@ -28,22 +28,27 @@ import {
   clueDoneColor,
   ERROR,
   FLASH,
+  HINT_ACTION,
+  HINT_EVIDENCE,
   INK,
   lineMaybeColor,
   lineNoColor,
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
-import type { GameDrawing } from "../../engine/game.ts";
-import type { Grid, GridType } from "../../engine/grid/index.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import type { Grid, GridDot, GridFace, GridType } from "../../engine/grid/index.ts";
 import { gridComputeSize, gridFindIncenter } from "../../engine/grid/index.ts";
-import type { Color, Size } from "../../engine/types.ts";
+import type { Color, Point, Size } from "../../engine/types.ts";
 import type { LoopyCursor } from "./cursor.ts";
+import type { LoopyHint, LoopyHintCorner, LoopyHintRelation } from "./hint.ts";
+import type { LoopyMove } from "./index.ts";
 import { gridTypeOf, LOOPY_GRIDS, type LoopyParams } from "./params.ts";
 import {
   faceOrder,
   LINE_NO,
   LINE_UNKNOWN,
   LINE_YES,
+  type LoopyMistake,
   type LoopyState,
 } from "./state.ts";
 
@@ -60,6 +65,10 @@ export const COL_SATISFIED = 5;
 export const COL_FAINT = 6;
 /** The keyboard cursor — this fork's addition; upstream has no cursor here. */
 export const COL_CURSOR = 7;
+/** The edges a hint step sets. */
+export const COL_HINT = 8;
+/** What a hint step reasons from: clues, dots, lines, corners and pairs. */
+export const COL_HINT_CELL = 9;
 
 /**
  * The subset of the game UI the renderer reads. The full `LoopyUi` lives in
@@ -164,6 +173,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_SATISFIED] = clueDoneColor(defaultBackground);
   out[COL_FAINT] = lineNoColor(defaultBackground);
   out[COL_CURSOR] = CURSOR;
+  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT_CELL] = HINT_EVIDENCE;
   return out;
 }
 
@@ -196,12 +207,262 @@ const PHASES = [
   COL_MISTAKE,
 ] as const;
 
-/** The color edge `i` draws in: an error highlight overrides its line state. */
-function lineColor(s: LoopyState, i: number, flashing: boolean): number {
+/** The color edge `i` draws in: an error highlight overrides its line state, and
+ * so does a line the mistake check says the loop does not run along. */
+function lineColor(
+  s: LoopyState,
+  i: number,
+  flashing: boolean,
+  mistaken: Uint8Array,
+): number {
   if (s.lineErrors[i]) return COL_MISTAKE;
   if (s.lines[i] === LINE_UNKNOWN) return COL_LINEUNKNOWN;
   if (s.lines[i] === LINE_NO) return COL_FAINT;
+  if (mistaken[i]) return COL_MISTAKE;
   return flashing ? COL_HIGHLIGHT : COL_FOREGROUND;
+}
+
+// --- hint and mistake marks --------------------------------------------------
+//
+// Loopy repaints every frame, so a mark needs no cache key and nothing to erase:
+// it is drawn from the displayed step each time, in its place in the z-order.
+
+const midpoint = (a: Point, b: Point): Point => ({
+  x: (a.x + b.x) / 2,
+  y: (a.y + b.y) / 2,
+});
+
+const along = (a: Point, b: Point, t: number): Point => ({
+  x: Math.round(a.x + (b.x - a.x) * t),
+  y: Math.round(a.y + (b.y - a.y) * t),
+});
+
+function dotAt(g: Grid, ts: number, d: GridDot): Point {
+  const [x, y] = toScreen(g, ts, d.x, d.y);
+  return { x, y };
+}
+
+function edgeEnds(g: Grid, ts: number, i: number): [Point, Point] {
+  const e = g.edges[i];
+  return [dotAt(g, ts, e.dot1), dotAt(g, ts, e.dot2)];
+}
+
+/** Whether screen point `p` lies inside face `f`. */
+function insideFace(g: Grid, ts: number, f: GridFace, p: Point): boolean {
+  const corners = f.dots.flatMap((d) => (d === null ? [] : [dotAt(g, ts, d)]));
+  let inside = false;
+  for (let i = 0, j = corners.length - 1; i < corners.length; j = i++) {
+    const a = corners[i];
+    const b = corners[j];
+    if (
+      a.y > p.y !== b.y > p.y &&
+      p.x < ((b.x - a.x) * (p.y - a.y)) / (b.y - a.y) + a.x
+    )
+      inside = !inside;
+  }
+  return inside;
+}
+
+/** The band under an edge the hint sets: solid for a line, broken for an edge the
+ * loop cannot use, so the two read apart without their color. */
+function drawTargetBand(
+  dr: GameDrawing,
+  a: Point,
+  b: Point,
+  line: boolean,
+  ts: number,
+): void {
+  const thickness = Math.max(3, Math.round(2.5 * lineThickness(ts)));
+  if (line) {
+    dr.drawLine(a, b, COL_HINT, thickness);
+    return;
+  }
+  for (let k = 0; k < 4; k++) {
+    const t = 0.05 + k * 0.25;
+    dr.drawLine(along(a, b, t), along(a, b, t + 0.15), COL_HINT, thickness);
+  }
+}
+
+/** A clue's outline, drawn inside its face so it never sits on the face's edges. */
+function drawFaceOutline(dr: GameDrawing, g: Grid, ts: number, f: GridFace): void {
+  gridFindIncenter(f);
+  const [cx, cy] = toScreen(g, ts, f.ix, f.iy);
+  const shrink = 0.8;
+  const corners = f.dots.flatMap((d) => {
+    if (d === null) return [];
+    const p = dotAt(g, ts, d);
+    return [
+      {
+        x: Math.round(cx + (p.x - cx) * shrink),
+        y: Math.round(cy + (p.y - cy) * shrink),
+      },
+    ];
+  });
+  const thickness = Math.max(2, Math.round(lineThickness(ts) * 0.7));
+  for (let i = 0; i < corners.length; i++) {
+    dr.drawLine(
+      corners[i],
+      corners[(i + 1) % corners.length],
+      COL_HINT_CELL,
+      thickness,
+    );
+  }
+}
+
+/** A ring round a dot the sentence names: an annulus, painted before the edges so
+ * the lines at the dot stay on top of it. */
+const dotRingRadius = (ts: number): number => clamp(5, 2 * dotRadius(ts) + 4, 10);
+
+function drawDotRing(dr: GameDrawing, p: Point, ts: number): void {
+  const outer = dotRingRadius(ts);
+  const width = Math.max(2, Math.round(lineThickness(ts) * 0.8));
+  dr.drawCircle(p, outer, COL_HINT_CELL, COL_HINT_CELL);
+  dr.drawCircle(p, outer - width, COL_BACKGROUND, COL_BACKGROUND);
+}
+
+/** A hint label's size: legible on a small board, and on a large one no bigger
+ * than it needs to be to sit inside a wedge beside a clue. */
+const labelFont = (ts: number): number => clamp(9, Math.floor(ts / 5), 15);
+
+/**
+ * A corner fact's wedge: an arc of the angle between its two edges, inside the
+ * face they bound, filled when the loop needs a line there and outlined when it
+ * has room for one at most (both, for exactly one). Returns where its label goes.
+ *
+ * The side is found by testing a point just off the dot against the face, rather
+ * than by the smaller angle between the edges: a hat or a spectre has reflex
+ * corners, where the face's angle is the larger one.
+ */
+function drawCornerWedge(
+  dr: GameDrawing,
+  g: Grid,
+  ts: number,
+  c: LoopyHintCorner,
+): { at: Point; color: number } {
+  const d = g.dots[c.dot];
+  const p = dotAt(g, ts, d);
+  const [e1, e2] = c.edges.map((i) => g.edges[i]);
+  const far = [e1, e2].map((e) => dotAt(g, ts, e.dot1 === d ? e.dot2 : e.dot1));
+  const angle = far.map((q) => Math.atan2(q.y - p.y, q.x - p.x));
+  const length = Math.min(...far.map((q) => Math.hypot(q.x - p.x, q.y - p.y)));
+
+  const face =
+    [e1.face1, e1.face2].find(
+      (f) => f !== null && (f === e2.face1 || f === e2.face2),
+    ) ?? null;
+  const tau = 2 * Math.PI;
+  const ccw = (((angle[1] - angle[0]) % tau) + tau) % tau;
+  const probe = (sweep: number): Point => {
+    const mid = angle[0] + sweep / 2;
+    return { x: p.x + 4 * Math.cos(mid), y: p.y + 4 * Math.sin(mid) };
+  };
+  const inFace = (q: Point): boolean =>
+    face !== null
+      ? insideFace(g, ts, face, q)
+      : !d.faces.some((f) => f !== null && insideFace(g, ts, f, q));
+  const sweep = inFace(probe(ccw)) ? ccw : ccw - tau;
+
+  // A band of the angle, starting just outside the ring a named dot gets so the two
+  // marks never sit on each other; a hairline here disappears among the edge bands
+  // and the clue outline beside it. A single ordinal goes inside the band, where it
+  // cannot land on the clue at the face's center, so the band is made deep enough
+  // to hold one; a mark carrying two numbers puts them past its arc instead.
+  const font = labelFont(ts);
+  const inside = c.labels.length === 1;
+  const inner = dotRingRadius(ts) + 1;
+  const outer = Math.max(
+    inner + (inside ? 1.4 * font : 8),
+    Math.min(0.4 * length, 0.4 * ts),
+  );
+  const mid = angle[0] + sweep / 2;
+  const arcAt = (radius: number): Point[] => {
+    const points: Point[] = [];
+    for (let k = 0; k <= 6; k++) {
+      const a = angle[0] + sweep * (0.12 + (0.76 * k) / 6);
+      points.push({
+        x: Math.round(p.x + radius * Math.cos(a)),
+        y: Math.round(p.y + radius * Math.sin(a)),
+      });
+    }
+    return points;
+  };
+  const band = [...arcAt(outer), ...arcAt(inner).reverse()];
+  const stroke = Math.max(2, Math.round(lineThickness(ts) * 0.8));
+  if (c.atLeastOne) dr.drawPolygon(band, COL_HINT_CELL, COL_HINT_CELL);
+  if (c.atMostOne) {
+    // Alone, the band's outline. On a corner carrying exactly one line, a second
+    // arc just outside the filled band.
+    const shape = c.atLeastOne ? arcAt(outer + stroke + 2) : [...band, band[0]];
+    for (let k = 0; k + 1 < shape.length; k++)
+      dr.drawLine(shape[k], shape[k + 1], COL_HINT_CELL, stroke);
+  }
+  const reach = inside
+    ? (inner + outer) / 2
+    : outer + (c.atLeastOne && c.atMostOne ? stroke + 2 : 0) + font * 0.7;
+  return {
+    at: {
+      x: Math.round(p.x + reach * Math.cos(mid)),
+      y: Math.round(p.y + reach * Math.sin(mid)),
+    },
+    // On a filled wedge the number is cut out of the fill.
+    color: inside && c.atLeastOne ? COL_BACKGROUND : COL_HINT_CELL,
+  };
+}
+
+/** A pair's connector, between the midpoints of its two edges. Returns where its
+ * label goes. */
+function drawRelation(
+  dr: GameDrawing,
+  g: Grid,
+  ts: number,
+  r: LoopyHintRelation,
+): Point {
+  const [a, b] = r.edges.map((i) => {
+    const [p, q] = edgeEnds(g, ts, i);
+    return midpoint(p, q);
+  });
+  const thickness = Math.max(2, Math.round(lineThickness(ts) * 0.6));
+  dr.drawLine(a, b, COL_HINT_CELL, thickness);
+  for (const end of [a, b])
+    dr.drawCircle(end, thickness + 1, COL_HINT_CELL, COL_HINT_CELL);
+  // Beside the connector and a third of the way along it: at its middle the label
+  // would sit on the clue of a face the pair crosses, and on it, on its own line.
+  const len = Math.max(1, Math.hypot(b.x - a.x, b.y - a.y));
+  const off = labelFont(ts) * 0.7;
+  return {
+    x: Math.round(a.x + (b.x - a.x) * 0.35 - ((b.y - a.y) / len) * off),
+    y: Math.round(a.y + (b.y - a.y) * 0.35 + ((b.x - a.x) / len) * off),
+  };
+}
+
+function drawLabel(
+  dr: GameDrawing,
+  at: Point,
+  ts: number,
+  text: string,
+  color: number,
+): void {
+  dr.drawText(
+    at,
+    {
+      align: "center",
+      baseline: "mathematical",
+      fontType: "variable",
+      size: labelFont(ts),
+    },
+    color,
+    text,
+  );
+}
+
+/** A red cross over an edge the player ruled out that the loop runs along. A red
+ * line would read as a drawn line, which this edge is not. */
+function drawMistakenCross(dr: GameDrawing, a: Point, b: Point, ts: number): void {
+  const m = midpoint(a, b);
+  const r = Math.max(3, Math.round(ts / 6));
+  const t = lineThickness(ts);
+  dr.drawLine({ x: m.x - r, y: m.y - r }, { x: m.x + r, y: m.y + r }, COL_MISTAKE, t);
+  dr.drawLine({ x: m.x - r, y: m.y + r }, { x: m.x + r, y: m.y - r }, COL_MISTAKE, t);
 }
 
 export function redraw(
@@ -213,9 +474,14 @@ export function redraw(
   ui: LoopyRenderUi,
   _animTime: number,
   flashTime: number,
+  hint?: HintStep<LoopyMove, LoopyHint>,
+  mistakes?: readonly LoopyMistake[],
 ): void {
   const g = s.grid;
   const ts = ds.tileSize;
+  const mistaken = new Uint8Array(g.numEdges);
+  for (const m of mistakes ?? []) mistaken[m.edge] = 1;
+  const hl = hint?.highlights;
 
   // Clue coloring. `clueError` and `clueSatisfied` are what the C diffs to
   // decide whether a face needs repainting; here they are simply the key that
@@ -243,7 +509,9 @@ export function redraw(
 
   // Bucket the edges by color once, rather than upstream's scan-per-phase.
   const buckets = new Map<number, number[]>(PHASES.map((c) => [c, []]));
-  for (let i = 0; i < g.numEdges; i++) buckets.get(lineColor(s, i, flashing))?.push(i);
+  for (let i = 0; i < g.numEdges; i++) {
+    buckets.get(lineColor(s, i, flashing, mistaken))?.push(i);
+  }
 
   // The whole canvas, from the nominal extent — not the built grid's, which a
   // trimmed aperiodic patch undershoots (see `canvasSize`).
@@ -271,6 +539,38 @@ export function redraw(
       COL_CURSOR,
       cursorHaloThickness(ts),
     );
+  }
+
+  // The hint's marks go under the edges and the clue digits, which stay legible on
+  // top of them: a band under each edge it sets or cites, a ring under each dot it
+  // names, and its corners and pairs inside the faces. Their labels come last.
+  const labels: { at: Point; text: string; color: number }[] = [];
+  if (hl) {
+    const thin = Math.max(2, Math.round(2 * lineThickness(ts)));
+    for (const i of hl.edges) {
+      const [a, b] = edgeEnds(g, ts, i);
+      dr.drawLine(a, b, COL_HINT_CELL, thin);
+    }
+    const lineTo = new Map(
+      (hint?.move.ops ?? []).map((o) => [o.edge, o.state === LINE_YES]),
+    );
+    for (const i of hl.targets) {
+      const [a, b] = edgeEnds(g, ts, i);
+      drawTargetBand(dr, a, b, lineTo.get(i) ?? false, ts);
+    }
+    for (const f of hl.faces) drawFaceOutline(dr, g, ts, g.faces[f]);
+    for (const d of hl.dots) drawDotRing(dr, dotAt(g, ts, g.dots[d]), ts);
+    for (const r of hl.relations) {
+      labels.push({
+        at: drawRelation(dr, g, ts, r),
+        text: `${r.label}${r.opposite ? "≠" : "="}`,
+        color: COL_HINT_CELL,
+      });
+    }
+    for (const c of hl.corners) {
+      const { at, color } = drawCornerWedge(dr, g, ts, c);
+      if (c.labels.length > 0) labels.push({ at, text: c.labels.join(","), color });
+    }
   }
 
   for (let i = 0; i < g.numFaces; i++) {
@@ -302,6 +602,16 @@ export function redraw(
       dr.drawLine({ x: x1, y: y1 }, { x: x2, y: y2 }, color, thickness);
     }
   }
+
+  // Drawn whether or not faint lines are shown: a wrong mark must never be hidden
+  // by a preference.
+  for (let i = 0; i < g.numEdges; i++) {
+    if (!mistaken[i] || s.lines[i] !== LINE_NO) continue;
+    const [a, b] = edgeEnds(g, ts, i);
+    drawMistakenCross(dr, a, b, ts);
+  }
+
+  for (const { at, text, color } of labels) drawLabel(dr, at, ts, text, color);
 
   if (cursor.visible) {
     const d = g.dots[cursor.dot];
