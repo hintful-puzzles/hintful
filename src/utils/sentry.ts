@@ -14,6 +14,13 @@ const ignoreErrors: (string | RegExp)[] = [
   "Failed to execute 'hidePopover' on 'HTMLElement': Invalid on popover elements that aren't already showing.",
 ];
 
+/**
+ * Default integrations that send what the privacy notes do not describe:
+ * session tracking reports every page load, and the culture context sends the
+ * player's timezone and locale.
+ */
+const OMITTED_INTEGRATIONS = new Set(["BrowserSession", "CultureContext"]);
+
 /** `makeTransport` is a parameter so a test can see what would leave the device. */
 export function initSentry(
   makeTransport = Sentry.makeBrowserOfflineTransport(Sentry.makeFetchTransport),
@@ -36,16 +43,22 @@ export function initSentry(
       // Nothing leaves the device until the player chooses to send a report;
       // the crash dialog asks. See `report-consent.ts`.
       transport: reportConsent.gate(makeTransport),
-      // Neither of these is a crash report, and the privacy notes promise that
-      // nothing is sent when nothing goes wrong: session tracking reports every
-      // page load, and client reports count events the SDK dropped.
+      // Not a crash report, and the privacy notes promise that nothing is sent
+      // when nothing goes wrong: client reports count events the SDK dropped.
       sendClientReports: false,
       integrations: (defaults) => [
-        ...defaults.filter((integration) => integration.name !== "BrowserSession"),
+        ...defaults.filter(
+          (integration) => !OMITTED_INTEGRATIONS.has(integration.name),
+        ),
         ...integrations,
       ],
       ignoreErrors,
       beforeBreadcrumb(breadcrumb, hint) {
+        // The SDK records each captured error as a breadcrumb on the next
+        // report, and the player may have declined to send that error.
+        if (breadcrumb.category === "sentry.event") {
+          return null;
+        }
         try {
           // Skip breadcrumbs for fetch("data:...") URIs (like all of our icon images)
           if (

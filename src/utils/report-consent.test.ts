@@ -17,12 +17,17 @@ type TransportFactory = NonNullable<Parameters<typeof initSentry>[0]>;
 
 /** The item types of each envelope that reached the network. */
 const sent: string[][] = [];
+/** Each event item that reached the network, serialized. */
+const sentEvents: string[] = [];
 
 const recordingTransport: TransportFactory = () => ({
   send: async (envelope) => {
     const types: string[] = [];
-    for (const [header] of envelope[1]) {
+    for (const [header, payload] of envelope[1]) {
       types.push(header.type);
+      if (header.type === "event") {
+        sentEvents.push(JSON.stringify(payload));
+      }
     }
     sent.push(types);
     return { statusCode: 200 };
@@ -38,6 +43,7 @@ beforeAll(() => {
 afterEach(() => {
   reportConsent.discard();
   sent.length = 0;
+  sentEvents.length = 0;
 });
 
 afterAll(async () => {
@@ -77,6 +83,31 @@ describe("a crash report leaves the device only with consent", () => {
     reportConsent.discard();
     await reportConsent.release();
     expect(sent).toEqual([]);
+  });
+
+  it("carries no trace of a declined report inside one the player sends", async () => {
+    // Found on the deployed site: the SDK's own breadcrumb for the declined
+    // error rode along in the next report.
+    Sentry.captureException(new Error("Declined-4f1c"));
+    await Sentry.flush(2000);
+    reportConsent.discard();
+    Sentry.captureException(new Error("Sent-4f1c"));
+    await Sentry.flush(2000);
+    await reportConsent.release();
+    expect(sentEvents).toHaveLength(1);
+    expect(sentEvents[0]).toContain("Sent-4f1c");
+    expect(sentEvents[0]).not.toContain("Declined-4f1c");
+  });
+
+  it("sends the screen it happened on, but not the player's timezone or locale", async () => {
+    Sentry.captureException(new Error("boom"));
+    await Sentry.flush(2000);
+    await reportConsent.release();
+    expect(sentEvents).toHaveLength(1);
+    // Known positive: a context the notes do describe.
+    expect(sentEvents[0]).toContain('"Display"');
+    expect(sentEvents[0]).not.toContain('"culture"');
+    expect(sentEvents[0]).not.toMatch(/timezone|locale/);
   });
 
   it("sends the player's note, which only the Send button creates", async () => {

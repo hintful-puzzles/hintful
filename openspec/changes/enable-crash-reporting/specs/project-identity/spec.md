@@ -11,9 +11,9 @@ are never sent anywhere; that any usage measurement the app may perform counts
 anonymous aggregate actions only, with no personal information and no cookies
 or other client-side identifier; and that crash reporting, where a build has it
 switched on, asks before sending anything, and sends only the error, the app,
-browser and screen it happened on, the puzzle being played (which game, its
-game ID and how far in) and any note the player adds, with personal information
-disabled in the reporting.
+browser and screen it happened on, the last few buttons pressed before it, the
+puzzle being played (which game, its game ID and how far in) and any note the
+player adds, with personal information disabled in the reporting.
 
 The notes SHALL NOT be a development placeholder, and SHALL NOT promise more
 than the code keeps: the crash-report description is bound to `sendDefaultPii:

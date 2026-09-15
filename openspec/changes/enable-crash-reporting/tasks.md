@@ -32,22 +32,27 @@
 
 ## 3. Owner: set up Sentry and CI
 
-- [ ] 3.1 Create the Sentry organization in the **EU** region and a *Browser
-      JavaScript* project.
-- [ ] 3.2 Project settings: **Allowed Domains** `hintful.click` and
+- [x] 3.1 Create the Sentry organization in the **EU** region and a *Browser
+      JavaScript* project. (Ingest host `*.ingest.de.sentry.io`.)
+- [x] 3.2 Project settings: **Allowed Domains** `hintful.click` and
       `hintful-puzzles.pages.dev`; **Prevent Storing of IP Addresses** on; a
-      **rate limit** on the client key.
-- [ ] 3.3 Add the DSN as the `VITE_SENTRY_DSN` repository secret (the gate job
-      already reads it).
+      **rate limit** on the client key. (Owner-configured.)
+- [x] 3.3 Add the DSN as the `VITE_SENTRY_DSN` secret on
+      `hintful-puzzles/hintful`, where the repository now lives.
+- [ ] 3.4 Security & Privacy → Advanced Data Scrubbing: `[Remove] [Anything]
+      from [$user.geo.**]`. Sentry derives city and country from the connection
+      at ingest even with IP storage off (getsentry/sentry#92201); the first
+      real payload carried `user.geo`, which the notes do not describe.
 
 ## 4. Verify on the deployed origin
 
-- [ ] 4.1 `curl -I https://hintful.click/`: `connect-src` names the Sentry
-      origin; no `Accept-CH`.
-- [ ] 4.2 Throw a deliberate error; press *Don't send*; confirm no request to
-      Sentry leaves the page and nothing arrives.
-- [ ] 4.3 Throw again with a note; press *Send report*; confirm the event and
-      the note **arrive in Sentry**.
+- [x] 4.1 `curl -I https://hintful.click/`: `connect-src` names the EU Sentry
+      ingest origin; neither `Accept-CH` nor `Permissions-Policy` is sent.
+- [x] 4.2 Throw a deliberate error on hintful.click; press *Don't send*: the
+      dialog closes and no request to the Sentry host is made.
+- [x] 4.3 Throw again with a note; press *Send report*: two envelopes (the
+      event and the note) are accepted by Sentry with HTTP 200, and the dialog
+      shows the event ID.
 - [ ] 4.4 Read that payload against `src/assets/privacy.html`; amend the notes or
       turn the excess off in this change if it carries more.
 
