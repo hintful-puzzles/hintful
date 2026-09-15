@@ -189,12 +189,22 @@ describe("the privacy notes say what the app does with a player's data", () => {
     );
     expect(text).toMatch(/anonymous actions only/i);
     expect(text).toMatch(/no cookies and no identifier/i);
-    expect(text).toMatch(/does not include your identity, your games/i);
+    expect(text).toMatch(/does not include your identity or anything you have saved/i);
+    expect(text).toMatch(/Nothing is sent unless you choose to send it/i);
   });
 
-  it("keeps the crash-report promise bound to the code that keeps it", () => {
+  it("keeps the crash-report promises bound to the code that keeps them", () => {
     // The notes say personal information is switched off in the reporting.
     // This is the line that makes it so.
     expect(sources["./utils/sentry.ts"]).toMatch(/sendDefaultPii: false/);
+    // "Nothing is sent unless you choose": `report-consent.test.ts` drives the
+    // real `initSentry` and checks that nothing reaches the transport before
+    // consent. This holds `initSentry` to the gate that test exercises.
+    expect(sources["./utils/sentry.ts"]).toMatch(/transport: reportConsent\.gate\(/);
+    // "Nothing you have saved": no save is attached to a report anywhere.
+    const attaching = Object.entries(sources)
+      .filter(([, text]) => /\.addAttachment\(/.test(text))
+      .map(([file]) => file);
+    expect(attaching).toEqual([]);
   });
 });

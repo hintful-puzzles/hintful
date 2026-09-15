@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/browser";
+import { reportConsent } from "./report-consent.ts";
 
 // This is a shorter version of the ignoreErrors list in crash-dialog.
 // (Sentry ignores many errors by default. Also there are some where
@@ -13,7 +14,10 @@ const ignoreErrors: (string | RegExp)[] = [
   "Failed to execute 'hidePopover' on 'HTMLElement': Invalid on popover elements that aren't already showing.",
 ];
 
-export function initSentry() {
+/** `makeTransport` is a parameter so a test can see what would leave the device. */
+export function initSentry(
+  makeTransport = Sentry.makeBrowserOfflineTransport(Sentry.makeFetchTransport),
+) {
   if (import.meta.env.VITE_SENTRY_DSN) {
     const integrations = import.meta.env.VITE_SENTRY_FILTER_APPLICATION_ID
       ? [
@@ -29,8 +33,17 @@ export function initSentry() {
       dsn: import.meta.env.VITE_SENTRY_DSN,
       sendDefaultPii: false,
       release: import.meta.env.VITE_GIT_SHA,
-      transport: Sentry.makeBrowserOfflineTransport(Sentry.makeFetchTransport),
-      integrations,
+      // Nothing leaves the device until the player chooses to send a report;
+      // the crash dialog asks. See `report-consent.ts`.
+      transport: reportConsent.gate(makeTransport),
+      // Neither of these is a crash report, and the privacy notes promise that
+      // nothing is sent when nothing goes wrong: session tracking reports every
+      // page load, and client reports count events the SDK dropped.
+      sendClientReports: false,
+      integrations: (defaults) => [
+        ...defaults.filter((integration) => integration.name !== "BrowserSession"),
+        ...integrations,
+      ],
       ignoreErrors,
       beforeBreadcrumb(breadcrumb, hint) {
         try {

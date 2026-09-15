@@ -51,8 +51,8 @@ include:
 * A screenshot if something looks wrong.
 * For a game-specific bug, the game ID or seed (from *Share*), or an
   exported saved game (*Save…* → *Export…*).
-* If you got the red "Uh-oh" crash dialog, an error report was already
-  filed — add the Sentry "event ID" if you open an issue.
+* If you got the red "Uh-oh" crash dialog and chose *Send report*, add the
+  event ID it showed afterwards.
 
 Simon Tatham's [*How to Report Bugs Effectively*][sgt-bugs] is worth a
 read.

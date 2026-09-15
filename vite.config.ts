@@ -124,13 +124,8 @@ function securityHeaders(options: {
   if (env["VITE_SENTRY_DSN"]) {
     const sentryDsnOrigin = new URL(env["VITE_SENTRY_DSN"]).origin;
     csp["connect-src"] += ` ${sentryDsnOrigin}`;
-
-    // Provide Sentry with high-entropy UA versions
-    const clientHints = ["Platform-Version", "Full-Version-List", "Model"];
-    headers["Accept-CH"] = clientHints.map((hint) => `Sec-CH-UA-${hint}`).join(", ");
-    headers["Permissions-Policy"] = clientHints
-      .map((hint) => `ch-ua-${hint.toLowerCase()}=("${sentryDsnOrigin}")`)
-      .join(", ");
+    // No high-entropy client hints (`Accept-CH`): they are a fingerprinting
+    // surface, and the user-agent string already tells browsers apart.
   }
 
   if (env["VITE_CSP_REPORT_URI"]) {

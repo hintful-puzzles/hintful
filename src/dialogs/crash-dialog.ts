@@ -3,6 +3,7 @@ import { css, html, LitElement, nothing } from "lit";
 import { query } from "lit/decorators/query.js";
 import { customElement, property, state } from "lit/decorators.js";
 import { cssWATweaks } from "../utils/css.ts";
+import { reportConsent } from "../utils/report-consent.ts";
 import { sleep } from "../utils/timing.ts";
 
 // Register components
@@ -107,8 +108,12 @@ class CrashDialog extends LitElement {
   @state()
   private errors: string[] = [];
 
+  /** Nothing leaves the device until the player presses Send report. */
   @state()
-  private sentryLastEventId?: string;
+  private reportState: "unsent" | "sending" | "sent" = "unsent";
+
+  @state()
+  private sentryLastEventId = "";
 
   @state()
   private suppressErrors = false;
@@ -117,8 +122,6 @@ class CrashDialog extends LitElement {
   // textarea might include an email address.
   @state()
   private mightHavePersonalInfo = false;
-
-  private postingUserDescription = false;
 
   @query("wa-dialog")
   private dialog?: HTMLElementTagNameMap["wa-dialog"];
@@ -133,10 +136,8 @@ class CrashDialog extends LitElement {
       this.userDescription.value = "";
     }
     this.mightHavePersonalInfo = false;
-    this.postingUserDescription = false;
-    if (import.meta.env.VITE_SENTRY_DSN) {
-      this.sentryLastEventId = Sentry.lastEventId();
-    }
+    this.reportState = "unsent";
+    this.sentryLastEventId = "";
   }
 
   /**
@@ -152,6 +153,8 @@ class CrashDialog extends LitElement {
       this.reset();
     }
     this.errors = [...this.errors, errorString];
+    // A report already sent did not include this error, so ask again.
+    this.reportState = "unsent";
 
     if (!this.dialog) {
       // reportError before first render
@@ -163,20 +166,24 @@ class CrashDialog extends LitElement {
   }
 
   protected override render() {
+    const canReport = Boolean(import.meta.env.VITE_SENTRY_DSN);
+    const asking = canReport && this.reportState !== "sent";
     const content = [
       html`
-        <div>Uh-oh, an unexpected error occurred. Sorry about that.
-          ${import.meta.env.VITE_SENTRY_DSN ? "The developer has been notified." : nothing}
-        </div>
+        <div>Uh-oh, an unexpected error occurred. Sorry about that.</div>
         <div>If this keeps happening, try reloading the page.</div>
       `,
     ];
 
-    if (import.meta.env.VITE_SENTRY_DSN) {
+    if (asking) {
       const noPersonal = this.mightHavePersonalInfo ? "highlight" : nothing;
       content.push(html`
+        <div>
+          You can send a report of this error to the developer, so it can be fixed.
+          Nothing is sent unless you choose to.
+        </div>
         <wa-textarea
-          label="What were you doing when this occurred? (optional)"
+          label="What were you doing when this happened? (optional)"
           maxlength="1000"
           resize="auto"
           rows="3"
@@ -184,23 +191,24 @@ class CrashDialog extends LitElement {
           @change=${this.handleUserDescriptionChange}
         >
           <div slot="hint">
-            If you know what causes this, it can help fix the problem. 
-            (Please <strong class=${noPersonal}>don’t include email addresses</strong> 
+            Sent with the report, if you send one.
+            (Please <strong class=${noPersonal}>don’t include email addresses</strong>
             or other personal information.)
           </div>
         </wa-textarea>
       `);
     }
 
-    if (this.sentryLastEventId) {
-      content.push(
-        html`
-          <div class="event-id">Event ID (for GitHub bug reports):<br>
+    if (this.reportState === "sent") {
+      content.push(html`<div>Report sent. Thank you!</div>`);
+      if (this.sentryLastEventId) {
+        content.push(html`
+          <div class="event-id">Event ID (quote it if you open a GitHub issue):<br>
             <span id="event-id">${this.sentryLastEventId}</span>
             <wa-copy-button from="event-id"></wa-copy-button>
           </div>
-        `,
-      );
+        `);
+      }
     }
 
     if (this.errors.length > 0) {
@@ -211,7 +219,7 @@ class CrashDialog extends LitElement {
             .slice(-this.maxErrors)
             .map((error) => html`<div>${error}</div>`)}
         </wa-details>
-        <wa-checkbox 
+        <wa-checkbox
             .checked=${this.suppressErrors}
             @change=${this.handleSuppressErrorsChange}
         >${
@@ -222,13 +230,25 @@ class CrashDialog extends LitElement {
       `);
     }
 
+    const closeButtons = asking
+      ? html`
+          <wa-button slot="footer" data-dialog="close">Don’t send</wa-button>
+          <wa-button
+            slot="footer"
+            variant="brand"
+            ?loading=${this.reportState === "sending"}
+            @click=${this.handleSend}
+          >Send report</wa-button>
+        `
+      : html`<wa-button slot="footer" variant="brand" data-dialog="close">Close</wa-button>`;
+
     return html`
       <wa-dialog @wa-hide=${this.handleDismiss}>
         <wa-icon slot="label" name="error"></wa-icon>
         <div slot="label">Something went wrong</div>
         ${content}
         <wa-button slot="footer" @click=${this.handleReload}>Reload page</wa-button>
-        <wa-button slot="footer" variant="brand" data-dialog="close">Close</wa-button>
+        ${closeButtons}
       </wa-dialog>
     `;
   }
@@ -242,40 +262,55 @@ class CrashDialog extends LitElement {
     this.mightHavePersonalInfo = /\w+@\w+/.test(this.userDescription?.value ?? "");
   }
 
-  private async postUserDescription() {
-    if (!this.postingUserDescription) {
-      const description = this.userDescription?.value?.trim();
-      if (description) {
-        this.postingUserDescription = true;
-        try {
-          await Sentry.sendFeedback({
-            associatedEventId: this.sentryLastEventId,
-            message: description,
-          });
-        } catch (error: unknown) {
-          console.error("Error in Sentry.captureFeedback", error);
-          Sentry.captureException(error);
-        } finally {
-          this.postingUserDescription = false;
-        }
+  /** The player's consent: send what was held, then their note if they wrote one. */
+  private async handleSend() {
+    if (!import.meta.env.VITE_SENTRY_DSN || this.reportState !== "unsent") {
+      return;
+    }
+    this.reportState = "sending";
+    const note = this.userDescription?.value?.trim() ?? "";
+    try {
+      await reportConsent.release();
+      this.sentryLastEventId = Sentry.lastEventId() ?? "";
+      if (note) {
+        await Sentry.sendFeedback({
+          associatedEventId: this.sentryLastEventId || undefined,
+          message: note,
+        });
       }
+    } catch (error: unknown) {
+      // Leave the button up to try again; anything captured here is held too.
+      console.error("Sending the crash report failed", error);
+      Sentry.captureException(error);
+      this.reportState = "unsent";
+      return;
+    }
+    // A new error may have arrived meanwhile and asked again.
+    if (this.reportState === "sending") {
+      this.reportState = "sent";
     }
   }
 
-  private async handleDismiss() {
+  private handleDismiss(event: Event) {
+    // wa-hide bubbles from nested components (the details panel, the tooltip
+    // on the copy button); only the dialog's own closing is a decision.
+    if (event.target !== this.dialog) {
+      return;
+    }
     if (this.suppressErrors) {
       for (const error of this.errors) {
         this.suppressedErrors.add(error);
       }
     }
-    await this.postUserDescription();
+    // Closing without sending declines. Anything held now was never agreed to.
+    reportConsent.discard();
   }
 
-  private async handleReload(event: UIEvent) {
+  private handleReload(event: UIEvent) {
     if (event.target instanceof HTMLElement) {
       event.target.setAttribute("loading", "");
     }
-    await this.postUserDescription();
+    reportConsent.discard();
     window.location.reload();
   }
 
@@ -285,7 +320,7 @@ class CrashDialog extends LitElement {
       :host {
         display: contents;
       }
-      
+
       wa-dialog::part(dialog) {
         background-color: var(--wa-color-danger-fill-quiet);
         border-color: var(--wa-color-danger-border-loud);
@@ -309,7 +344,7 @@ class CrashDialog extends LitElement {
       wa-dialog::part(footer) {
         gap: var(--wa-space-m);
       }
-      
+
       wa-details {
         display: contents;
       }
@@ -320,13 +355,13 @@ class CrashDialog extends LitElement {
         display: flex;
         flex-direction: column;
         padding-block: var(--wa-space-xs);
-        border-block-start: 
-            var(--wa-color-danger-border-normal) 
-            var(--wa-border-style) 
+        border-block-start:
+            var(--wa-color-danger-border-normal)
+            var(--wa-border-style)
             var(--wa-border-width-s);
-        border-block-end: 
-            var(--wa-color-danger-border-normal) 
-            var(--wa-border-style) 
+        border-block-end:
+            var(--wa-color-danger-border-normal)
+            var(--wa-border-style)
             var(--wa-border-width-s);
       }
       wa-details::part(header) {
@@ -337,12 +372,12 @@ class CrashDialog extends LitElement {
         padding: 0;
         padding-block-start: var(--wa-space-xs);
         font-size: var(--wa-font-size-s);
-        
+
         flex: 0 1 auto;
         min-height: 3em;
         max-height: 30vh;
         overflow: auto;
-        
+
         display: flex;
         flex-direction: column;
         gap: var(--wa-space-xs);
@@ -351,7 +386,7 @@ class CrashDialog extends LitElement {
         white-space: pre-wrap;
         line-height: var(--wa-line-height-condensed);
       }
-      
+
       .event-id {
         line-height: var(--wa-line-height-condensed);
       }

@@ -495,7 +495,7 @@ So the question to ask of any inherited invariant is not "is it true?" but **"wh
   - **A build's environment changes its output**, and every variable is
     optional with a working empty state: no `VITE_CANONICAL_BASE_URL` means no
     `sitemap.xml` and no canonical links (`robots.txt` ships either way); no
-    `VITE_SENTRY_DSN` means no Sentry origin in the CSP and no client hints.
+    `VITE_SENTRY_DSN` means no Sentry origin in the CSP and no crash reports.
     They are set on the CI job, not in a committed `.env`.
   - **Verify a deploy against the deployed origin, never against `dist/`.**
     Headers, clean URLs and service-worker scope are all host behavior, and

@@ -16,52 +16,59 @@ stale-chunk crash on the About dialog — which reached the owner only because
 they read the error text off their own phone and typed it into a chat. That is
 the reporting channel today.
 
-**This is split out of `deploy-the-web-app` deliberately.** It was the one item
-that change could not close, and it is not a leftover chore: it is a decision
+**This is split out of `deploy-the-web-app` deliberately.** It is a decision
 about what the app sends to a third party, bound to a paragraph of the privacy
-notes that players can read. Left as an unchecked box inside a shipped deploy it
-would have looked like an oversight; it is a question.
+notes that players can read.
+
+**The inherited wiring would have made those notes false the moment the DSN
+was set.** Read against the installed SDK (`@sentry/browser` 10.69) on
+2026-09-15, the build as inherited from puzzles-web would have:
+
+- attached the player's latest autosave to every report as `save.txt`, where the
+  notes promise a report carries nothing they have saved;
+- sent the game ID, seed and move count, and the page URL carrying `?id=`, where
+  the notes promised "no games";
+- sent a session envelope on every page load and navigation
+  (`browserSessionIntegration`, a default), where the notes say a report is sent
+  when an error happens;
+- sent a report the moment an error was captured, without asking;
+- turned on high-entropy client hints (`Accept-CH`) alongside the DSN.
 
 ## What Changes
 
-**The decision, which is the owner's:** turn crash reporting on, or record that
-it stays off and why. Both are legitimate. What is not legitimate is the current
-state — a rule in `AGENTS.md` that describes behavior the build does not have.
+Decided by the owner, 2026-09-15:
 
-If it goes on:
-
-- **Create a Sentry project and set `VITE_SENTRY_DSN`** on the gate job, beside
-  `VITE_CANONICAL_BASE_URL`. Both are read by the build that gets published.
-- **The DSN is not a secret**, whatever it is stored in: a client-side DSN is
-  compiled into a public bundle and readable out of `dist/assets/`. Storing it
-  as a CI secret is tidiness. The controls that do something are **Sentry's
-  allowed-domains list and its rate limits**, configured in Sentry, and this
-  change SHALL set both — an unrestricted public DSN is an invitation to have
-  someone else's errors billed to you.
-- **Two headers appear when it is set**, and neither is obvious from the
-  variable's name: the Sentry origin is added to `connect-src`, and `Accept-CH`
-  plus `Permissions-Policy` turn on high-entropy client hints
-  (`Sec-CH-UA-Platform-Version`, `-Full-Version-List`, `-Model`). Client hints
-  are a fingerprinting surface, so **decide them separately from the DSN** —
-  they are a convenience for reading stack traces, not a requirement.
-- **`sendDefaultPii: false` must stay** (`src/utils/sentry.ts:33`). The privacy
-  notes promise "personal information is switched off in the reporting on
-  purpose", and that line is the flag.
-- **Verify against the deployed origin**, per the `build-pipeline` requirement:
-  the CSP actually names the Sentry origin, a deliberately thrown error actually
-  arrives, and the payload carries no more than the notes describe.
-
-If it stays off, the `AGENTS.md` rule is amended to say so, so the next reader
-does not implement against a promise the project has declined.
+- **Crash reporting goes on, to Sentry.io in its EU data region**, on the free
+  Developer plan. The SDK stays: the service behind a DSN is swappable
+  (GlitchTip and Bugsink accept the same SDK), so the vendor is not locked in by
+  the code.
+- **Nothing is sent without the player's consent.** An unexpected error opens
+  the crash dialog, which offers *Send report* (with an optional note) or
+  *Don't send*. Declining — or closing, or reloading — sends nothing, ever. The
+  gate is at the SDK's transport (`src/utils/report-consent.ts`), the one point
+  every outgoing byte passes, so no integration can route around it, and held
+  reports live only in memory.
+- **No session tracking and no client reports.** Nothing is sent while nothing
+  goes wrong.
+- **No client hints.** The `Accept-CH` / `Permissions-Policy` block is removed
+  from `vite.config.ts`; the user-agent string is enough to tell browsers apart.
+- **The save is no longer attached; the game ID is kept and disclosed.** It is
+  what makes a crash reproducible, it identifies a puzzle rather than a person,
+  and the privacy notes now say a report names the puzzle being played.
+- **`sendDefaultPii: false` stays**, and with it the SDK tells Sentry
+  `infer_ip: "never"`.
+- **The DSN is not a secret**, whatever it is stored in. The controls that do
+  something are Sentry's allowed-domains list and rate limit, configured in
+  Sentry.
 
 ## Impact
 
-- **Affected specs**: `build-pipeline` — the deploy-time environment gains a
-  requirement about what turning reporting on obliges.
-- **Affected code**: the CI workflow's `env` block; possibly
-  `vite.config.ts`'s client-hints block if those are declined separately from
-  the DSN; `AGENTS.md` if the answer is no.
-- **Player-visible**: only through the privacy notes, which must stay true
-  either way. Nothing on screen changes.
-- **Sends data to a third party**, which is why it is the owner's call and not
-  an implementation detail.
+- **Affected specs**: `build-pipeline` (a reporting rule matches the build; what
+  enabling it obliges), `project-identity` (what the privacy notes promise, and
+  consent before any report is sent).
+- **Affected code**: `src/utils/report-consent.ts` (new), `src/utils/sentry.ts`,
+  `src/dialogs/crash-dialog.ts`, `src/puzzle/puzzle.ts`, `vite.config.ts`,
+  `src/assets/privacy.html`, `README.md`, `AGENTS.md`.
+- **Player-visible**: the crash dialog asks before sending, and the privacy
+  notes describe that. Only in builds with `VITE_SENTRY_DSN` set.
+- **Sends data to a third party**, with the player's per-report consent.

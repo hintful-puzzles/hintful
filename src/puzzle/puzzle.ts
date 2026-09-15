@@ -773,18 +773,10 @@ export class Puzzle {
   }
 
   public async saveGame(): Promise<Uint8Array<ArrayBuffer>> {
-    const result = this.workerPuzzle.saveGame();
-    if (import.meta.env.VITE_SENTRY_DSN) {
-      // Capture the most recent (auto-)save as a Sentry attachment.
-      // (There's no way to replace a specific attachment, so just clear all.)
-      Sentry.getCurrentScope().clearAttachments();
-      Sentry.getCurrentScope().addAttachment({
-        filename: "save.txt",
-        data: await result,
-        contentType: "text/plain",
-      });
-    }
-    return result;
+    // Deliberately not attached to crash reports: the privacy notes promise a
+    // report carries nothing the player has saved. `captureSentryContext` sends
+    // the game ID and move count, which is enough to reproduce.
+    return this.workerPuzzle.saveGame();
   }
 
   //
