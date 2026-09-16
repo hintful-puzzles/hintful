@@ -80,6 +80,9 @@ Read `design.md` first, then `docs/games/hints.md` § "Recompute-stable plans" a
 
 ## 6. Report and accept
 
-- [ ] 6.1 Replay the owner's board (10×10 squares Hard) and report the new sequence
-      against the old, step by step.
+- [x] 6.1 Replayed 10×10 Squares Hard at a fixed seed — the owner's own seed is not
+      recoverable from a screenshot — and reported it in `findings.md`. The reported
+      sentence now opens a journey that ends in a line that cites it, 17 and 34 hints
+      later than it used to appear. The replay also surfaced what the fix concentrates:
+      a 55-leg journey at hint 112, filed under "Still open".
 - [ ] 6.2 Owner acceptance of the sequencing, on that board and on one cell game.

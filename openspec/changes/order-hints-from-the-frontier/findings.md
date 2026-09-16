@@ -196,8 +196,59 @@ phrasing change against a sentence nobody has identified.** The note-placement f
 also lands on the first complaint's sentence, which was a *note* — so that reading may
 have changed under it already.
 
+## 6.1 — the owner's board type, replayed
+
+10×10 Squares Hard, seed `frontier-squares-10x10-hard-replay-a`. **Not the owner's
+board**: a seed is not recoverable from a screenshot, so this is the same
+configuration rather than the same puzzle. 175 firings, 329 hint steps, 154 of them
+notes; note lag on this board before the fix was p50 14, p90 99, max 130.
+
+**Twenty-three of the 175 hints cite a note at all.** The other 152 read the board
+directly — a clue and its edges, a dot and its lines — and need no premise placed
+first. So the change touches about one hint in eight, and every note on the board now
+sits inside one of those 23.
+
+**The opening needs nothing motivated.** Hints 1–8 are bare firings: two 0s, a 3 with
+only three edges left, dot continuations. That matches the owner's own answer to the
+sequencing question — at the start everything is the horizon.
+
+**The reported sentence moved.** *"This 1 takes one line, so this corner can take one
+at most"* — the note the owner was shown on its own — now appears at hints 30 and 47
+as the **first leg** of a four- and a three-leg journey, each ending in a line that
+cites it, 17 and 34 hints later than it used to appear. That answers the first
+complaint directly rather than by a rate.
+
+**And the notes are now concentrated.** Leg counts across the 23 note-carrying
+journeys:
+
+| legs | 2 | 3 | 4 | 6 | 7 | 8 | 11 | 13 | 16 | 17 | 55 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| journeys | 5 | 6 | 4 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 |
+
+The median journey is three legs, which is the shape the fix was aiming at. But five
+journeys carry 112 of the 177 legs, and **hint 112 is a 55-leg journey** — 54 notes
+then one line — whose notes carry old lags of 99, 96 and 123 at the front and twelve
+composed `chainPair` legs at the back.
+
+This is the design working as specified rather than a defect in the implementation:
+`firstUse` puts every fact a firing cites onto that firing, and the ancestor pull-back
+concentrates further, so a firing citing 54 previously-uncited facts opens a 55-leg
+journey. **What it means is that 3.3 converted "a note 130 hints before its consumer"
+into "54 notes at once."** Both are defects, and the second is the more visible one.
+
+A journey is *walked* rather than applied in one press — `executeHint` applies a
+single step, and `hintJourney` numbers it — so 55 legs is a long walk, roughly a
+minute under Auto-Hint's 1 s dwell, and not an instant dump. Whether that reads as a
+wall or as a long readable chain is the owner's call, which is why it is filed open
+rather than fixed blind.
+
 ## Still open
 
+- **A journey with no ceiling.** Every fact a firing cites now arrives with it, so a
+  firing citing many previously-uncited facts opens a very long journey — 55 legs at
+  hint 112 of the 6.1 replay. A cap, or spreading a note back across the firings
+  between its discovery and its use, would bound it. Both need the owner's read on
+  whether the long journey is actually a problem in play.
 - **3.4** — a note whose sentence names which edges are still open, placed at the
   latest step where that claim holds. Closes the residual 19% left by 3.3.
 - **4.2** — the guard for what 3.3 and 3.6 changed. They shipped without one, which
