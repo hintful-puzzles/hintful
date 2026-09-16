@@ -56,16 +56,30 @@ this ordering SHALL NOT change which boards the generator builds.
 ### Requirement: A note a hint asks for is placed beside the step that uses it
 
 Where a hint plan asks the player to record a fact as a note, that note SHALL be
-placed immediately before the step whose reasoning rests on it, and SHALL be part of
-that step's journey rather than a step of its own.
+placed as late as it can truthfully be placed — immediately before the step whose
+reasoning rests on it, or, where the note's own explanation would by then be false of
+the board, at the latest step where that explanation still holds. A note SHALL be part
+of its consumer's journey rather than a step of its own.
 
 A note placed where the solver happened to *discover* the fact reads as an unmotivated
-triviality, because nothing on screen connects it to the deduction it serves. Facts
-only accumulate, so deferring a note to its consumer cannot make it underivable, while
-advancing one could.
+triviality, because nothing on screen connects it to the deduction it serves.
+
+Deferring a note cannot make its fact underivable, since facts only accumulate — but
+it can make the note's *explanation* false, where that explanation asserts something
+the board can stop satisfying, such as which of a clue's edges are still open. A plan
+SHALL NOT offer a note whose explanation is false of the board it is shown on, and the
+placement rule is bounded by that.
 
 #### Scenario: a fact found long before it is used
 
-- **WHEN** a plan's step rests on a fact its solver derived many steps earlier
+- **WHEN** a plan's step rests on a fact its solver derived many steps earlier, and the
+  note's explanation asserts only what stays true as the board fills
 - **THEN** the note placing that fact is offered immediately before that step, in the
   same journey, not at the point it was derived
+
+#### Scenario: an explanation the board outgrows
+
+- **WHEN** a note's explanation names which of a clue's or a dot's edges are still
+  open, and further edges are settled before the step that cites the note
+- **THEN** the note is placed at the latest step where its explanation is still true,
+  rather than beside its consumer carrying a stale claim

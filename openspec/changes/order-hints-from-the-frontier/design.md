@@ -169,10 +169,34 @@ the note *near* its consumer: `planSteps` groups by `tickOf`, the plan position 
 the fact was **found**, and its own comment says so — "a step placing each note it
 and the later firings rest on **that was found ahead of it**".
 
-Grouping moves to the earliest firing whose closure contains the fact. Facts only
-accumulate, so a note derivable at discovery is still derivable later: delaying a
-note can never make it unjustified, while advancing one could. The move is in the
-safe direction.
+Grouping moves to the earliest firing whose closure contains the fact, and the
+measurement says that is worth doing: a note waits a median of 15 firings today, p90
+87, worst case 143 (`findings.md`).
+
+**But "delaying a note can never make it unjustified" is true of the fact and false of
+the sentence**, which is the trap this section first walked into. The fact
+accumulates; the *narration* quotes the board. Read out of `hint-text.ts`, Loopy's
+note sentences split cleanly:
+
+- **Monotone premises stay true.** *"The ringed dot already has a line, so this corner
+  can take one line at most"* (`cornerAtDot`), and *"This 1's other edges are ruled
+  out"* (`cornerFromClue`). A line once drawn stays drawn and a ruled-out edge stays
+  ruled out, so these read correctly at any later board.
+- **Anti-monotone premises expire.** *"**Only these two** of this 3's edges are still
+  open, and it needs 2 more"* (`pairAtClue`, and `pairAtDot` likewise). The set of open
+  edges only shrinks, so a sentence naming exactly which two are open can be false by
+  the time its consumer fires — and `placePair` recomputes `needed` and `dotLines`
+  from the `before` it is handed, so the numbers move with it.
+
+`planSteps` rests on the invariant the recorder states — *"the board is unchanged
+between a fact and the firing it was found ahead of"* — so deferring a note is
+precisely what breaks it.
+
+**So the regrouping splits by premise, not by fact kind.** A note whose sentence makes
+only monotone claims moves to its consumer. A note whose sentence names which edges
+are still open is placed at the latest step where that claim still holds, which bounds
+its lag without letting it lie. The owner's own example, a corner note on a `1`, is in
+the monotone half — so the reported defect is fixable in the safe direction.
 
 ## D6. The guard, and what it must not be
 

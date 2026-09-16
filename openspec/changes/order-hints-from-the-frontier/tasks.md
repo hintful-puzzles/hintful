@@ -34,8 +34,15 @@ Read `design.md` first, then `docs/games/hints.md` § "Recompute-stable plans" a
       and without touching the solve path the generator uses (D4).
 - [ ] 3.2 Loopy's frontier and feeds-into predicates over edges and dots on every
       tiling, including the aperiodic ones.
-- [ ] 3.3 `planSteps` groups notes by first use rather than by `tickOf`, and the note
-      joins its consumer's journey (D5).
+- [ ] 3.3 `planSteps` groups a note by first use rather than by `tickOf`, and the note
+      joins its consumer's journey — for notes whose sentence makes only **monotone**
+      claims, which is where the owner's own example sits (D5). Split read out of
+      `hint-text.ts`, not assumed.
+- [ ] 3.4 A note whose sentence names which edges are still open is placed at the
+      **latest** step where that claim still holds, bounding its lag without letting
+      its explanation go stale (D5).
+- [ ] 3.5 Measure how much of today's note lag sits in each half, so the value of the
+      safe fix is known before the harder one is attempted.
 
 ## 4. Guards
 
@@ -43,7 +50,9 @@ Read `design.md` first, then `docs/games/hints.md` § "Recompute-stable plans" a
       firing nothing uses (`findings.md`).
 - [ ] 4.4 The ordering guard (D6), seen to fail under a reversed comparator.
 - [ ] 4.2 A note-adjacency guard: every note step is followed, within its journey, by
-      a firing whose closure contains it.
+      a firing whose closure contains it — **and** its sentence is true of the board it
+      is shown on, which is the half moving a note can break (D5). Today's suite checks
+      that a note *agrees with the solution*, which a stale open-edge count can pass.
 - [ ] 4.3 Generation cost is within the 1.3 baseline.
 
 ## 5. Docs and spec
