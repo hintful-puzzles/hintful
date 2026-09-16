@@ -37,6 +37,7 @@ import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
+  pencilIndicatorCanvas,
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
@@ -66,7 +67,7 @@ const FLASH_FRAME = 0.1;
 
 /** Upstream's `NARROW_BORDERS` arm, which the web build compiled: a one-pixel
  * border, not half a tile (docs/games/rendering.md § "Sizing"). */
-export const BORDER = 1;
+const BORDER = 1;
 
 // --- palette (index-for-index with the upstream COL_* enum) ----------------
 
@@ -114,19 +115,23 @@ const FD_PENCIL = 0x400;
 
 // --- geometry --------------------------------------------------------------
 
+/**
+ * The board's pixel origin: upstream's one-pixel border, plus the margin that
+ * gives the pencil indicator the corner a `BORDER` of 1 leaves nowhere for.
+ * The margin is taken on every side, so the board stays centered in its canvas.
+ */
+export const origin = (ts: number): number => BORDER + pencilIndicatorReach(ts);
+
 export function computeSize(p: { o: number }, ts: number): Size {
   const side = p.o * ts + 2 * BORDER;
-  // The extra width is the room the pencil indicator needs at the canvas's
-  // top-right, which a one-pixel `BORDER` leaves nowhere for. It sits outside
-  // the grid, so `fromCoord` and the board's own size are upstream's exactly.
-  return { w: side + pencilIndicatorReach(ts), h: side };
+  return pencilIndicatorCanvas({ w: side, h: side }, ts);
 }
 
 /** Upstream `FROMCOORD`: C integer division **truncates**, so a pointer inside
  * the one-pixel border maps to row/column 0 rather than −1 (the Sticks idiom,
  * docs/games/input.md § "The accreting-paint drag"). */
 export function fromCoord(v: number, ts: number): number {
-  return Math.trunc((v - BORDER) / ts);
+  return Math.trunc((v - origin(ts)) / ts);
 }
 
 // --- draw state ------------------------------------------------------------
@@ -216,8 +221,8 @@ function drawTile(
   const o = state.params.o;
   const co = o - 1;
   const i = y * o + x;
-  const tx = BORDER + x * ts;
-  const ty = BORDER + y * ts;
+  const tx = origin(ts) + x * ts;
+  const ty = origin(ts) + y * ts;
   const cell = { x: tx, y: ty, w: ts, h: ts };
 
   dr.clip(cell);
@@ -367,7 +372,10 @@ export function redraw(
     // The engine paints no pixels of its own (docs/games/rendering.md § "The rendering doctrine") — the game fills
     // its whole canvas, then the black rectangle the cell outlines sit on.
     dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
-    dr.drawRect({ x: BORDER, y: BORDER - 1, w: o * ts + 1, h: o * ts + 1 }, COL_BORDER);
+    dr.drawRect(
+      { x: origin(ts), y: origin(ts) - 1, w: o * ts + 1, h: o * ts + 1 },
+      COL_BORDER,
+    );
     dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
     ds.started = true;
   }

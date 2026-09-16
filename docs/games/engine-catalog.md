@@ -788,11 +788,14 @@ would skip the repaint that the background has just erased.
 2. **A wider margin** — widen the border until the box fits. Loopy's gutter is
    the widest of its cursor disc, a corner note on a rim dot, and this box.
 3. **Grow the canvas rather than overlap the board**, when there is no margin at
-   all: widen it by `pencilIndicatorReach` past the board's own width, so the
-   top-right corner exists. The grid's geometry is untouched, so `fromCoord` and
-   the board's own size stay exactly as before — and the *fill* must come from
-   `computeSize`, not from a board-sized expression, or the new margin is never
-   painted.
+   all: `pencilIndicatorCanvas` adds the reach on **every** side, so the corner
+   exists and the board stays centered rather than sitting to one side of its
+   canvas. The game adds that same reach to its own origin and subtracts it in
+   `fromCoord`, on both axes — a margin on one axis alone would make a game's
+   pixel→cell mapping differ per axis, and these games each have one
+   axis-agnostic `fromCoord`. The board's own size is untouched, and the *fill*
+   must come from `computeSize`, not from a board-sized expression, or the new
+   margin is never painted.
 
 The box sits in a margin, which is no tile's, so it cannot ride in a per-tile
 cache key however convenient that corner looks: every game repaints it after its

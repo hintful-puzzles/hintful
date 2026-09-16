@@ -43,6 +43,21 @@ export function pencilIndicatorReach(tileSize: number): number {
 }
 
 /**
+ * The canvas for a board whose own corner is occupied: {@link pencilIndicatorReach}
+ * added on **every** side, so the glyph gets its corner and the board keeps equal
+ * margins rather than being pushed off-center by a margin grown on one side only.
+ *
+ * The game adds the same reach to its own origin on both axes, and subtracts it
+ * in `fromCoord`. Both axes, because a margin on the horizontal alone would make
+ * a game's pixel→cell mapping differ per axis, and the games needing this each
+ * have **one** axis-agnostic `fromCoord`.
+ */
+export function pencilIndicatorCanvas(board: Size, tileSize: number): Size {
+  const margin = pencilIndicatorReach(tileSize);
+  return { w: board.w + 2 * margin, h: board.h + 2 * margin };
+}
+
+/**
  * How big the glyph is drawn, everywhere: the half-tile corner less the gap at
  * either side of it, and never so small that the pencil stops reading as one on
  * a tiny board. Where that floor bites, the reach exceeds half a tile and a game

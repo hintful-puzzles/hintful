@@ -45,7 +45,9 @@ SHALL reserve the room for it rather than choose a different place for it. The f
 it reserves SHALL be the engine's stated reach — the glyph plus the gap that keeps it
 off each edge, which a game reserving the glyph alone would be short of at both — and
 a game whose board leaves that corner occupied SHALL grow a margin for it rather than
-overlap the board or move the glyph.
+overlap the board or move the glyph, and SHALL grow that margin on every side, so the
+board stays centered in its canvas rather than being pushed off-center by room taken
+on one side only.
 
 #### Scenario: The indicator is in the same place in every game
 

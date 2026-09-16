@@ -32,6 +32,7 @@ import {
   COL_NUM_PENCIL,
   COL_PENCIL_BODY,
   newDrawState,
+  origin,
   redraw,
 } from "./render.ts";
 import {
@@ -123,10 +124,11 @@ function firstFreeCell(state: SeismicState): { x: number; y: number; i: number }
 }
 
 const TILE = 40;
-const BORDER = 2;
+// The board's origin, from the renderer rather than spelled out again here: it
+// carries the pencil indicator's margin, which a second copy would drift from.
 const pixel = (x: number, y: number) => ({
-  x: BORDER + x * TILE + TILE / 2,
-  y: BORDER + y * TILE + TILE / 2,
+  x: origin(TILE) + x * TILE + TILE / 2,
+  y: origin(TILE) + y * TILE + TILE / 2,
 });
 
 // --- params ----------------------------------------------------------------

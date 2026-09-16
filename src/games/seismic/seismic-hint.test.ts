@@ -26,7 +26,7 @@ import {
 } from "./hint.ts";
 import { say } from "./hint-text.ts";
 import { seismicGame } from "./index.ts";
-import { BORDER, COL_HINT, COL_HINT_CELL, COL_NUM_PENCIL } from "./render.ts";
+import { COL_HINT, COL_HINT_CELL, COL_NUM_PENCIL, origin } from "./render.ts";
 import { placeNumber, regionsViable, STATUS_COMPLETE } from "./solver.ts";
 import {
   DIFF_EASY,
@@ -493,8 +493,8 @@ describe("the frames a hint draws", () => {
         midend.redraw(frame);
         // Every tile clips to its own square, so a clip at the cell's origin is
         // the cell repainting.
-        const x = BORDER + keeps.x * ts;
-        const y = BORDER + keeps.y * ts;
+        const x = origin(ts) + keeps.x * ts;
+        const y = origin(ts) + keeps.y * ts;
         expect(
           frame.ops.some((o) => o.op === "clip" && o.x === x && o.y === y),
           `${label} step ${i}: cell ${keeps.x},${keeps.y} kept its old outline`,

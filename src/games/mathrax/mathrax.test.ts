@@ -29,10 +29,10 @@ import cReference from "./__fixtures__/mathrax-c-reference.json" with { type: "j
 import { mathraxCandidateClue, newMathraxDesc } from "./generator.ts";
 import { mathraxGame } from "./index.ts";
 import {
-  BORDER,
   COL_ERROR,
   clueLabel,
   computeSize,
+  origin,
   PREFERRED_TILE_SIZE,
 } from "./render.ts";
 import { mathraxSolve, SOLVE_STUCK, SOLVE_UNIQUE } from "./solver.ts";
@@ -103,10 +103,11 @@ const FIX_ID = `${encodeParams(FIX_PARAMS, true)}:${FIX.desc}`;
 
 const TS = PREFERRED_TILE_SIZE;
 
-/** Pixel center of cell `(x, y)` at the default tile size. */
+/** Pixel center of cell `(x, y)` at the default tile size. The origin comes from
+ * the renderer, which carries the pencil indicator's margin. */
 const center = (x: number, y: number) => ({
-  x: BORDER + x * TS + TS / 2,
-  y: BORDER + y * TS + TS / 2,
+  x: origin(TS) + x * TS + TS / 2,
+  y: origin(TS) + y * TS + TS / 2,
 });
 
 function press(
@@ -810,10 +811,12 @@ describe("mathrax findMistakes", () => {
 describe("mathrax rendering", () => {
   it("sizes the board from the tile size, plus the pencil-indicator margin", () => {
     const size = computeSize({ o: 5 }, 40);
-    // The board is square and upstream's exact size; the width grows by the
-    // room the engine's indicator needs at the top-right, and nothing else.
-    expect(size.h).toBe(5 * 40 + 2);
-    expect(size.w).toBe(size.h + pencilIndicatorReach(40));
+    // The board is square and upstream's exact size; the canvas adds the room
+    // the engine's indicator needs, on every side — so the board stays centered
+    // and the canvas stays square.
+    const board = 5 * 40 + 2;
+    expect(size.w).toBe(board + 2 * pencilIndicatorReach(40));
+    expect(size.h).toBe(board + 2 * pencilIndicatorReach(40));
   });
 
   it("draws the opening frame", () => {

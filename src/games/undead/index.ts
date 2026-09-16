@@ -64,6 +64,7 @@ import type {
 import { newUndeadDesc } from "./generator.ts";
 import { say } from "./hint-text.ts";
 import {
+  border,
   colors,
   computeSize,
   countBlockAt,
@@ -166,7 +167,9 @@ function interpretMove(
   const { w, h, xinfo } = common;
   const stride = w + 2;
   const ts = ds.tileSize;
-  const b = Math.floor(ts / 4);
+  // The renderer's own margin, not a second copy of it: it carries the pencil
+  // indicator's room, and a copy here would map pixels to the wrong cells.
+  const b = border(ts);
   const button = stripModifiers(rawButton);
   // `1`, `2`, `3` place the three monsters in menu order; `0` clears.
   const digit = digitOf(button);

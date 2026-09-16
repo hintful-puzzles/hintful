@@ -34,6 +34,7 @@ import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
+  pencilIndicatorCanvas,
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
@@ -89,21 +90,23 @@ export function colors(defaultBackground: Color): Color[] {
 
 // --- geometry --------------------------------------------------------------
 
-const outerCoord = (v: number, ts: number): number => v * ts;
-const innerCoord = (v: number, ts: number, n: number): number => (v + n) * ts;
+const outerCoord = (v: number, ts: number): number => v * ts + pencilIndicatorReach(ts);
+const innerCoord = (v: number, ts: number, n: number): number =>
+  (v + n) * ts + pencilIndicatorReach(ts);
 
 /** Pixel → grid cell along one axis (returns an out-of-range index off-grid).
- * The origin is `n` whole tiles: the clue rows and columns sit outside the grid. */
+ * The origin is the margin plus `n` whole tiles: the clue rows and columns sit
+ * outside the grid, and the margin outside them. */
 export function fromCoord(px: number, ts: number, n: number): number {
-  return geometryFromCoord(px, ts, n * ts);
+  return geometryFromCoord(px, ts, n * ts + pencilIndicatorReach(ts));
 }
 
 export function computeSize(p: { w: number; h: number; n: number }, ts: number): Size {
-  // The +1 is upstream's `NARROW_BORDERS` tile-background allowance; the margin
-  // past it is the room the pencil indicator needs at the canvas's top-right,
-  // where the clue rows otherwise run to the corner. Both sit outside the grid,
-  // so `outerCoord`, `innerCoord` and `fromCoord` are unaffected.
-  return { w: (p.w + p.n) * ts + 1 + pencilIndicatorReach(ts), h: (p.h + p.n) * ts };
+  // The +1 is upstream's `NARROW_BORDERS` tile-background allowance. The margin
+  // around it is the room the pencil indicator needs at the canvas's top-right,
+  // where the clue rows otherwise run to the corner — taken on every side, so
+  // the board stays centered rather than sitting left of it.
+  return pencilIndicatorCanvas({ w: (p.w + p.n) * ts + 1, h: (p.h + p.n) * ts }, ts);
 }
 
 // --- draw state ------------------------------------------------------------

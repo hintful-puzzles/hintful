@@ -11,6 +11,7 @@
 
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
+import { pencilIndicatorReach } from "../../engine/pencil-indicator.ts";
 import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -381,11 +382,12 @@ describe("abcd moves through a Midend", () => {
 
 describe("abcd input (interpretMove)", () => {
   const ts = abcdGame.preferredTileSize ?? 36;
-  // Cell (gx, gy) center in pixels: FROMCOORD is floor(px/ts) - n, so cell x
-  // starts at (x + n) * ts.
+  // Cell (gx, gy) center in pixels: the board is inset by the pencil
+  // indicator's margin, and FROMCOORD is floor((px - margin)/ts) - n, so cell x
+  // starts at the margin plus (x + n) * ts.
   const center = (p: AbcdParams, gx: number, gy: number) => ({
-    x: (gx + p.n) * ts + (ts >> 1),
-    y: (gy + p.n) * ts + (ts >> 1),
+    x: pencilIndicatorReach(ts) + (gx + p.n) * ts + (ts >> 1),
+    y: pencilIndicatorReach(ts) + (gy + p.n) * ts + (ts >> 1),
   });
 
   it("right-click toggles a sticky pencil mode; left-click keeps the mode", () => {

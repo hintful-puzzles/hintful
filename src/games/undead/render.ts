@@ -124,17 +124,22 @@ export function colors(defaultBackground: Color): Color[] {
 
 // --- geometry --------------------------------------------------------------
 
-const border = (ts: number): number => f(ts / 4);
+/**
+ * The margin on every side. It carries the room the pencil indicator needs at
+ * the canvas's top-right — the monster-count row spans the board's whole width
+ * (`calculateCountLayout`), so that corner is not otherwise free — and takes it
+ * on all four sides, so the board stays centered in its canvas rather than
+ * sitting left of it.
+ *
+ * Exported because `interpretMove` maps a pixel back through this same origin,
+ * and a second copy of it there would drift from this one.
+ */
+export const border = (ts: number): number => f(ts / 4) + pencilIndicatorReach(ts);
 
 export function computeSize(p: { w: number; h: number }, ts: number): Size {
+  // `border` already carries the indicator's margin, on every side.
   const b = border(ts);
-  return {
-    // The extra right margin is the room the pencil indicator needs at the
-    // canvas's top-right: the monster-count row spans the board's whole width
-    // (`calculateCountLayout`), so the corner is not otherwise free.
-    w: 2 * b + (p.w + 2) * ts + pencilIndicatorReach(ts),
-    h: 2 * b + (p.h + 3) * ts,
-  };
+  return { w: 2 * b + (p.w + 2) * ts, h: 2 * b + (p.h + 3) * ts };
 }
 
 // --- draw state ------------------------------------------------------------

@@ -56,8 +56,9 @@ board are clipping."*
 - [x] 5.1 `pencilIndicatorBox` decides the position (the canvas's top-right), and
       `pencilIndicatorReach` says what room a game reserves for it.
 - [x] 5.2 Every game with the mode draws it there: five already had the corner,
-      four grow a right margin for it, Towers gives up its tile-cache bit, and
-      Group gains the indicator it never had.
+      four grow a margin for it on every side (so the board stays centered in its
+      canvas), Towers gives up its tile-cache bit, and Group gains the indicator
+      it never had.
 - [x] 5.3 `pencil-indicator-placement.test.ts`: population derived from `newUi`,
       judged on where the pixels land rather than on which helper was called, seen
       to fail under a plant (`findings.md`).

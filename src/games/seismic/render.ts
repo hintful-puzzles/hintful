@@ -49,6 +49,7 @@ import {
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
+  pencilIndicatorCanvas,
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
@@ -72,7 +73,7 @@ const GRIDEXTRA = 1;
 /** The `NARROW_BORDERS` arm — the web build defines it, so the grid's outer
  * outline is drawn *inside* the border area rather than a half-tile margin
  * (docs/games/rendering.md § "Sizing": check the define, don't port the desktop default). */
-export const BORDER = GRIDEXTRA * 2;
+const BORDER = GRIDEXTRA * 2;
 
 // --- palette (index-for-index with the upstream COL_* enum) ----------------
 
@@ -127,18 +128,23 @@ function boardSize(p: SeismicParams, ts: number): Size {
   };
 }
 
+/**
+ * The board's pixel origin: upstream's border, plus the margin that gives the
+ * pencil indicator its corner — the black board rectangle covers its own area
+ * edge to edge, so there is nowhere else for it. The margin is taken on every
+ * side, so the board stays centered in its canvas.
+ */
+export const origin = (ts: number): number => BORDER + pencilIndicatorReach(ts);
+
 export function computeSize(p: SeismicParams, ts: number): Size {
-  const board = boardSize(p, ts);
-  // The extra width is the room the pencil indicator needs at the canvas's
-  // top-right: the board rectangle covers its own area edge to edge.
-  return { w: board.w + pencilIndicatorReach(ts), h: board.h };
+  return pencilIndicatorCanvas(boardSize(p, ts), ts);
 }
 
 /** Upstream `FROMCOORD` — C integer division, which **truncates** toward zero,
  * so a pointer inside the two-pixel border maps to row/column 0 rather than −1
  * (docs/games/input.md § "The accreting-paint drag"; Sticks and Mathrax needed the same). */
 export function fromCoord(v: number, ts: number): number {
-  return Math.trunc((v - BORDER) / ts);
+  return Math.trunc((v - origin(ts)) / ts);
 }
 
 // --- draw state ------------------------------------------------------------
@@ -181,8 +187,8 @@ export function newDrawState(state: SeismicState, tileSize: number): SeismicDraw
 function cellRect(state: SeismicState, x: number, y: number, ts: number) {
   const { w, h, dsf } = state;
   const i = y * w + x;
-  let cx = BORDER + x * ts;
-  let cy = BORDER + y * ts;
+  let cx = origin(ts) + x * ts;
+  let cy = origin(ts) + y * ts;
   let cw = ts - 1;
   let ch = ts - 1;
 
@@ -277,8 +283,8 @@ function drawTile(
   const ts = ds.tileSize;
   const { w, h, dsf, grid, pencil, flags } = state;
   const i = y * w + x;
-  const tx = BORDER + x * ts;
-  const ty = BORDER + y * ts;
+  const tx = origin(ts) + x * ts;
+  const ty = origin(ts) + y * ts;
   const { cx, cy, cw, ch } = cellRect(state, x, y, ts);
 
   dr.clip({ x: tx, y: ty, w: ts, h: ts });
@@ -384,8 +390,8 @@ export function redraw(
     dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
     dr.drawRect(
       {
-        x: BORDER - GRIDEXTRA * 2,
-        y: BORDER - GRIDEXTRA * 2,
+        x: origin(ts) - GRIDEXTRA * 2,
+        y: origin(ts) - GRIDEXTRA * 2,
         w: w * ts + GRIDEXTRA * 2,
         h: h * ts + GRIDEXTRA * 2,
       },

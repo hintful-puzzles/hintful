@@ -63,9 +63,11 @@ solver derives beyond lines:
   whose cache would skip the glyph the background has just painted over.
 - **Every other pencil game moved with it**, since "the same place" is a claim
   about the collection and not about Loopy: five already had that corner, four
-  grow a right margin of `pencilIndicatorReach` — the glyph plus the gap at each
-  edge, which is the figure a game reserves, because one reserving the glyph
-  alone is short by an inset at both — Towers gives up the tile-cache bit it used
+  grow a margin of `pencilIndicatorReach` on every side (`pencilIndicatorCanvas`,
+  so the board stays centered rather than being pushed off-center by a margin on
+  one side) — the reach being the glyph plus the gap at each edge, which is the
+  figure a game reserves, because one reserving the glyph alone is short by an
+  inset at both — Towers gives up the tile-cache bit it used
   while the position was still its own to choose, and Group gains the indicator
   it never had. What the guard judges is where the pixels land, not which helper
   was called: a game that computed the same corner by hand would pass, which is
