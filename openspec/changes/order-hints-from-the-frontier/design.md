@@ -178,15 +178,24 @@ the sentence**, which is the trap this section first walked into. The fact
 accumulates; the *narration* quotes the board. Read out of `hint-text.ts`, Loopy's
 note sentences split cleanly:
 
-- **Monotone premises stay true.** *"The ringed dot already has a line, so this corner
-  can take one line at most"* (`cornerAtDot`), and *"This 1's other edges are ruled
-  out"* (`cornerFromClue`). A line once drawn stays drawn and a ruled-out edge stays
-  ruled out, so these read correctly at any later board.
-- **Anti-monotone premises expire.** *"**Only these two** of this 3's edges are still
-  open, and it needs 2 more"* (`pairAtClue`, and `pairAtDot` likewise). The set of open
-  edges only shrinks, so a sentence naming exactly which two are open can be false by
-  the time its consumer fires — and `placePair` recomputes `needed` and `dotLines`
-  from the `before` it is handed, so the numbers move with it.
+- **Monotone premises stay true.** *"The ringed dot already has a line"*, *"this 1's
+  other edges are ruled out"*, *"this 1 takes one line"*. A line once drawn stays
+  drawn, a ruled-out edge stays ruled out, and a clue never changes.
+- **Expiring premises do not.** *"**Only these two** of this 3's edges are still open,
+  and it needs 2 more"* (`pairAtClue`, `pairAtDot`, and the *"four open edges"* of
+  `pairAcrossClue`/`pairAcrossDot`). The open set only shrinks, so a sentence naming
+  exactly which edges are open can be false by the time its consumer fires — and
+  `placePair` recomputes `needed` and `dotLines` from the `before` it is handed, so
+  the numbers move with it.
+
+**The split does not follow the fact kind**, which a partial read made it look like it
+did. `cornerFromClue` has an expiring branch — *"this 3's other edges already give it
+2"* counts drawn lines, which only grows — while `pairAtCorner` and `pairChain` are
+monotone, citing only marks already on the board. One case is a genuine trap for
+review: *"can give it 2 at most"* looks like a live count but states an **upper
+bound**, and the true maximum only falls, so the sentence stays true as it loosens.
+`findings.md` § "Which note sentences survive being deferred" classifies all of them,
+and task 3.3 branches on the sentence, never on `fact.kind`.
 
 `planSteps` rests on the invariant the recorder states — *"the board is unchanged
 between a fact and the firing it was found ahead of"* — so deferring a note is

@@ -80,6 +80,33 @@ plausible and pointed at "no defect here", which is the direction that stops any
 looking. The replacement measures the gap between consecutive steps, which is what
 the player perceives and what was actually reported.
 
+## Which note sentences survive being deferred
+
+Every string `placeCorner` and `placePair` can produce, read out of `hint-text.ts`
+(2026-09-16). A sentence is **monotone** when its premise stays true as the board
+fills, and so may be shown beside a consumer many steps later; **expiring** when the
+board can stop satisfying it. The classification is per *sentence*, and it does not
+follow the fact kind — which was the assumption a partial read suggested.
+
+| sentence | premise it asserts | verdict |
+|---|---|---|
+| `cornerAtDot` (atMostOne) | the dot already has a line | monotone |
+| `cornerAtDot` (atLeastOne) | the line's only continuation is this corner — its others are ruled out | monotone |
+| `cornerFromClue` "…are ruled out" | the clue's other edges are ruled out | monotone |
+| `cornerFromClue` "…can give it N at most" | an **upper** bound on the clue's other edges | monotone — the true max only falls, so the stated bound stays valid |
+| `cornerFromClue` "…already give it N" | a **count of drawn lines**, which only grows | **expiring** |
+| `cornerFromClue` "This 1 takes one line" | the static clue alone | monotone — this is the owner's reported sentence |
+| `cornerAcross`, `cornerOppositeExit`, `cornerFromPair` | other marked corners/pairs | monotone — recorded facts persist |
+| `pairAtClue` | **only these two** edges open, and it needs N more | **expiring** (both clauses) |
+| `pairAtDot` | **only these two** edges open, and the dot has N | **expiring** (both clauses) |
+| `pairAcrossClue`, `pairAcrossDot` | the clue/dot has **four open edges** | **expiring** |
+| `pairAtCorner`, `pairChain` | marked corners and pairs only | monotone |
+
+So corner notes are mostly deferrable and pair notes mostly are not, but **both
+families have exceptions in both directions**, and task 3.3 must branch on the
+sentence rather than on `fact.kind`. The upper-bound case is the one to be careful
+with in review: it looks like a live count and is not one.
+
 ## Still open
 
 - **1.1** — candidates available per plan position. Needs the enumeration hook;
