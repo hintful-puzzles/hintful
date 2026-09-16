@@ -176,10 +176,25 @@ easiest-first tier sweep stands untouched — which also means the generator's
 exploration order was never put at risk.
 
 **And it re-reads the second complaint.** The far-away `3` was not chosen over
-something nearer; at that position there was nothing nearer. What made it read as a
-generic technique is that its sentence names the rule rather than what made the rule
-bite *there*. That is narration, scoped out of this change from the start ("Not the
-phrasing"), and it is the live follow-up.
+something nearer; at that position there was nothing nearer. So sequencing does not
+explain it — and what does is **not yet established**.
+
+An earlier draft of this section said the sentence "names the rule rather than what
+made the rule bite there". Reading the firing narrations afterwards does not support
+that: several name the instance quite specifically, such as *"This 3's other edges can
+give it only 2, counting the marked corner, so this edge must be a line"*
+(`hint-text.ts` `boundLine`). Two readings remain open, and they call for different
+work:
+
+- the sentence states the rule *instantiated* — true of this 3 and of any 3 in the
+  same position — without saying why this clue was worth visiting now; or
+- the deduction genuinely was routine, and a Hard plan is largely routine steps, so
+  the complaint is about what a hint is for rather than about how it reads.
+
+**Which it is should come from the owner's next playtest, not from scaffolding a
+phrasing change against a sentence nobody has identified.** The note-placement fix
+also lands on the first complaint's sentence, which was a *note* — so that reading may
+have changed under it already.
 
 ## Still open
 
