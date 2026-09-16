@@ -36,12 +36,23 @@ that would eventually expand the front, or start a new front."* Jumping between
 fronts is fine — *"I do that often myself"* — and the opening needs no special
 handling, because with nothing determined *"everything is the horizon"*.
 
-So the rule is **contribution, not distance**: every step must expand a front,
-advance a chain that a later step turns into an expansion, or open a new one. What is
-banned is an **orphan** — a step nothing builds on that determines nothing itself.
-Among the steps that qualify, expansions come before chains and the cheapest reasoning
-wins among equals, which is where a chain of easy deductions replaces a single hard
-one.
+That states the intent, but it does not by itself discriminate between firings, and
+section 1 measured why: every line firing settles an edge, so "expands something" is
+true of all of them. A first instrument built on that reading reported 92.5% healthy
+and would have concluded there was no defect (`findings.md`).
+
+What the measurement does see is the symptom reported: **14.4% of steps land four or
+more hops from the previous step**, tail 14–17 hops, which on a 10×10 board is a
+traverse — about one hint in seven. And a note waits a **median of 15 firings**, worst
+case **143**, between where the solver found the fact and the first step that cites
+it.
+
+So the rule is **continuity with an availability caveat**: offer the next step within
+reach of what the plan just determined, leave that neighborhood only when nothing
+there fires rather than because something elsewhere was found first, and take the
+cheapest reasoning among the steps at hand. A step that continues from the last one is
+advancing the same chain; a step that leaves while work remained beside it is the
+jumping-around being complained of.
 
 ## What changes
 
@@ -49,14 +60,14 @@ one.
   candidate-enumeration step: where a game can offer the firings available at the
   current difficulty band, the engine picks among them rather than taking the first.
   Games that do not offer one keep today's order exactly.
-- **A step must contribute, and then be cheap** — it expands a front, advances a chain
-  that later expands one, or opens a new front; among those, expansions first and the
-  cheapest reasoning among equals. The frontier is the boundary between what the board
-  already determines and what it does not, measured from the **board**, never from the
-  player's move history or from what the app last displayed, so the plan stays a pure
-  function of the position. For Loopy this inverts the tier sweep's role: it escalates
-  when nothing cheaper is contributing, rather than when nothing cheaper fires
-  anywhere.
+- **A step continues from the last one, unless nothing there fires** — and among the
+  steps within reach, the cheapest reasoning wins. Reach is measured from the **board**
+  and from the plan's own earlier steps, never from the player's move history or from
+  what the app last displayed, so the plan stays a pure function of the position.
+  Opening a new region stays allowed, and so does alternating between regions; what is
+  not allowed is passing over an available step beside the last one. For Loopy this
+  inverts the tier sweep's role: it escalates when nothing cheaper fires *where the
+  player is working*, rather than when nothing cheaper fires anywhere.
 - **Loopy adopts it** as the exemplar, since the tier sweep it already has supplies
   the band and the scattering is what the owner hit.
 - **A note step sits beside the firing that cites it.** Loopy's `planSteps` groups

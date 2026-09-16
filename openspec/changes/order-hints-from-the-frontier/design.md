@@ -24,23 +24,35 @@ like, the owner settled both (2026-09-16):
 > directly expands the front, or acts to advance a chain of deductions that would
 > eventually expand the front, or start a new front.
 
-**So the criterion is contribution, not distance.** A step is admissible when it is
-one of three things:
+**The criterion is contribution, and the measurement says how to enforce it.** The
+owner's three clauses — a step expands a front, advances a chain that will, or opens
+a new one — state the intent exactly, but they do not discriminate between firings.
+Section 1 measured why: *every* line firing settles an edge, so "expands something"
+is true of all of them, and a firing either touches determined ground or does not, so
+clauses 1 and 3 between them admit everything. An admissibility test built on those
+clauses is vacuous, and the first instrument built on one duly reported 92.5% healthy
+(`findings.md`).
 
-1. it **expands a front** outright;
-2. it **advances a chain** that a later step turns into an expansion;
-3. it **starts a new front**.
+What the measurement *can* see is the symptom actually reported: **14.4% of steps
+land four or more hops from the previous step**, with a tail of 14–17 hops, which on
+a 10×10 board is a traverse. So the operational form of "tell a story" is
+**continuity with an availability caveat**:
 
-What is inadmissible is an **orphan** — a deduction nothing in the plan builds on and
-which expands nothing itself. Distance was only ever a proxy for this, and a poor
-one: a remote firing that opens a new region is welcome, while a nearby firing that
-leads nowhere is the defect. Jumping between fronts is explicitly allowed.
+- offer the next step within reach of what the plan's recent steps determined;
+- leave that neighborhood only when nothing there fires — never because something
+  elsewhere was found first;
+- among the steps at hand, take the cheapest reasoning.
 
-Ordering within the admissible set: expansions first, then chains by how soon they
-pay off, with the cheapest reasoning among equals — which is where "replace a single
-difficult deduction with a chain of easier ones" lives, and where "if we really need
-a difficult deduction, do it sooner rather than later" falls out, since a hard firing
-is offered exactly when nothing easier is contributing.
+That is enforceable, and it carries the intent faithfully: a step continuing from the
+last one *is* advancing the same chain, and a step that leaves while work remained
+beside it is the jumping-around being complained of. Opening a new region stays
+allowed, because that is what a solve does once a region is exhausted, and
+alternating between fronts stays allowed with it.
+
+"Replace a single difficult deduction with a chain of easier ones" lives in the third
+bullet, and "if we really need a difficult deduction, do it sooner rather than later"
+falls out of it: a hard step is reached exactly when nothing easier fires where the
+player is working.
 
 **This inverts what Loopy does today, and that is the substance of the change.**
 `nextFiring` sweeps the cheapest tier to exhaustion and escalates only when nothing
@@ -168,15 +180,21 @@ safe direction.
 budget. It would stay green through a completely incoherent order, so it is not the
 guard for this.
 
-The sequencing guard asserts the *rule* on a real plan, and the rule has two halves
-that fail differently:
+The guard asserts the rule on a real plan, and its two halves differ in what they
+need:
 
-- **No orphans.** Every step either determines something at a front or is depended on
-  by a later step. This is the half the owner reacted to, it needs no comparator, and
-  on a note step it is exact — which makes it the one to write first.
-- **Ordering among the admissible.** For each consecutive pair, no available step both
-  contributed more directly and needed cheaper reasoning.
+- **The note guard.** Every note step is followed, within its journey, by the step
+  whose closure contains it. No comparator, no enumeration, exact against today's
+  data — which is why it is written first, alongside the regrouping it checks.
+- **The continuity guard.** For each consecutive pair, either the step is within
+  reach of the previous one, or no step within reach was available. That second
+  clause is what makes it honest, and it is why this guard cannot be written before
+  the enumeration hook of 2.1 exists.
 
-Both must be seen to fail under a plant — the first by injecting a firing nothing
-uses, the second by reversing the comparator. A guard for the second alone would stay
-green through the exact defect that started this change.
+Both must be seen to fail under a plant: the note guard by delaying a note past its
+consumer, the continuity guard by reversing the comparator.
+
+**A bare distance assertion with no availability clause would be worse than nothing.**
+14.4% of today's steps already jump, an unknown share of those jumps are forced by
+the board, and a guard that fails on a forced jump is a guard that gets switched off
+rather than fixed.

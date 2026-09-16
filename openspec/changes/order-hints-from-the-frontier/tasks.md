@@ -5,17 +5,18 @@ Read `design.md` first, then `docs/games/hints.md` § "Recompute-stable plans" a
 
 ## 1. Measure before designing
 
-- [ ] 1.1 On Loopy Hard, record how many firings are available at each plan position —
-      if it is usually one, ordering buys nothing and this change should stop here
-      (`findings.md`).
-- [ ] 1.2 Measure the distance, in plan steps, between a note step and the firing
-      whose closure contains it, on the boards the owner played.
+- [ ] 1.1 On Loopy Hard, record how many firings are available at each plan position,
+      and how often a step that jumped had a nearer one available — needs the
+      enumeration hook (2.1). **Still the stopping condition for the ordering half:**
+      if the jumps were unavoidable, ordering buys nothing.
+- [x] 1.2 Note-to-consumer distance: median **15** firings, p90 **87**, max **143** on
+      10×10 Hard. Confirmed, and separable from the ordering work (`findings.md`).
 - [ ] 1.3 Record generation cost before any change, as the baseline D4 is judged
       against.
-- [ ] 1.4 Census the defect: build the exact read-set from `LoopyReason` plus the grid
-      (D1), then count how many steps in today's plans are **orphans** — nothing later
-      reads what they wrote, and they expand no front. Count `earlyLoop`/`closesLoop`
-      separately, since those read globally.
+- [x] 1.4 Census the defect with the exact read-set from `LoopyReason` plus the grid:
+      **14.4%** of steps land ≥4 hops from the previous step, tail 14–17 hops. A tail
+      defect, ~1 hint in 7. The first instrument was vacuous and was replaced; both it
+      and the replacement are written up in `findings.md`.
 
 ## 2. The engine's ordering
 
