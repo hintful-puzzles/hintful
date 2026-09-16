@@ -136,8 +136,54 @@ each group is notes-then-firing, so flagging every leg after the first always yi
 the note count. It confirms the flag is live and that no note is left as a journey of
 its own — nothing more. The rate above is the load-bearing number.
 
+## 1.1 — the stopping condition, and it fired
+
+Every plan position on three 10×10 Hard boards and two 7×7 Tricky, 737 positions in
+all. A candidate is a firing `nextFiring` yields from a probe cloned at that
+position, at the same tier as the one the plan took, **whose premise reads nothing
+the earlier candidates wrote** — so a firing that became available only *because* of
+an earlier one is not counted as an alternative to it.
+
+| board | positions | candidates p50/p90/max | exactly one | jumped ≥4 | a nearer one existed |
+|---|---|---|---|---|---|
+| squares-10x10-hard/a | 184 | 1 / 3 / 4 | 58.7% | 24 | 1 (4.2%) |
+| squares-10x10-hard/b | 179 | 1 / 3 / 5 | 54.7% | 28 | 5 (17.9%) |
+| squares-10x10-hard/c | 192 | 1 / 3 / 5 | 69.8% | 32 | 4 (12.5%) |
+| squares-7x7-tricky/a | 94 | 1 / 2 / 3 | 73.4% | 14 | 3 (21.4%) |
+| squares-7x7-tricky/b | 88 | 1 / 3 / 3 | 69.3% | 10 | 2 (20.0%) |
+| **total** | **737** | **1 / 3 / 5** | **63.8%** | **108** | **15 (13.9%)** |
+
+**The condition was "if it is usually one, ordering buys nothing and this change
+should stop here." It is usually one** — the median position offers a single firing
+and 63.8% offer exactly one.
+
+Avoidability says the same from the other side, and answers the complaint more
+directly: of 108 jumps of four hops or more, only **15** had a nearer firing
+available at the same tier. **86.1% of the jumps are forced** — there was nothing
+nearer to offer. Reordering could remove at most 15 jumps across 737 steps, about
+one hint in fifty.
+
+**The bias makes the stop conservative.** The read-sets omit the facts beneath a
+firing, so the independence test under-reads and therefore over-counts candidates.
+1.5 candidates per position and 13.9% avoidable are *upper* bounds on what ordering
+could buy.
+
+### What it means for the change
+
+The ordering half does not proceed. §2, §3.1, §3.2, §4.1, §4.4 and the §1.3 cost
+baseline stop here, the engine gains no candidate-enumeration hook, and Loopy's
+easiest-first tier sweep stands untouched — which also means the generator's
+exploration order was never put at risk.
+
+**And it re-reads the second complaint.** The far-away `3` was not chosen over
+something nearer; at that position there was nothing nearer. What made it read as a
+generic technique is that its sentence names the rule rather than what made the rule
+bite *there*. That is narration, scoped out of this change from the start ("Not the
+phrasing"), and it is the live follow-up.
+
 ## Still open
 
-- **1.1** — candidates available per plan position. Needs the enumeration hook;
-  gates the ordering half.
-- **1.3** — generation cost baseline, once anything touches the solve path.
+- **3.4** — a note whose sentence names which edges are still open, placed at the
+  latest step where that claim holds. Closes the residual 19% left by 3.3.
+- **4.2** — the guard for what 3.3 and 3.6 changed. They shipped without one, which
+  is owed.

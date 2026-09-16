@@ -1,5 +1,18 @@
 # order-hints-from-the-frontier
 
+> **Outcome: half of this proposal was withdrawn by its own measurement.** Section 1
+> was written measurement-first with an explicit stopping condition, and the
+> condition fired. A plan position offers a median of **one** firing (63.8% exactly
+> one), and **86.1% of the jumps that prompted the change were forced** — no nearer
+> deduction existed. So the engine gains no ordering, no candidate-enumeration hook,
+> and Loopy's tier sweep is untouched.
+>
+> What shipped is the other defect, which measured severe and was fixable with
+> certainty: a note used to sit a median of 15 firings — up to 143 — from the
+> deduction that cites it. Notes now arrive with that deduction, as one journey:
+> **24.1% → 80.9%**. Numbers, and the biases that make each one conservative, are in
+> `findings.md`.
+
 ## Why
 
 Playtesting Loopy 10×10 Hard at move 53 (owner, 2026-09-16), two consecutive hints

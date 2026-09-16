@@ -3,12 +3,19 @@
 Read `design.md` first, then `docs/games/hints.md` § "Recompute-stable plans" and
 § "A rung is not a premise, so return per premise".
 
+> **The ordering half stopped on its own stopping condition (1.1).** A plan position
+> offers a median of **one** firing, 63.8% offer exactly one, and **86.1% of the
+> jumps that prompted this change were forced** — no nearer firing existed at that
+> tier. So §2, §3.1, §3.2, §4.1, §4.4 and the §1.3 baseline are **not being done**,
+> and the engine gains no enumeration hook. What shipped is the note placement
+> (3.3, 3.6); what remains live is 3.4 and the guard owed by 4.2. The numbers, and
+> the bias that makes them an upper bound, are in `findings.md`.
+
 ## 1. Measure before designing
 
-- [ ] 1.1 On Loopy Hard, record how many firings are available at each plan position,
-      and how often a step that jumped had a nearer one available — needs the
-      enumeration hook (2.1). **Still the stopping condition for the ordering half:**
-      if the jumps were unavoidable, ordering buys nothing.
+- [x] 1.1 Candidates per plan position, and how often a jump had a nearer option:
+      **p50 1, 63.8% exactly one, 13.9% of jumps avoidable** over 737 positions.
+      The stopping condition fired; the ordering half stops here (`findings.md`).
 - [x] 1.2 Note-to-consumer distance: median **15** firings, p90 **87**, max **143** on
       10×10 Hard. Confirmed, and separable from the ordering work (`findings.md`).
 - [ ] 1.3 Record generation cost before any change, as the baseline D4 is judged

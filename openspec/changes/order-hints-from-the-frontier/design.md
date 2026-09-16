@@ -1,5 +1,15 @@
 # order-hints-from-the-frontier — design
 
+> **D1–D4 and the ordering half of D6 were stopped by measurement and are kept as the
+> record, not as a plan.** The rule they work toward is sound; the board does not
+> offer the choices it needs. A plan position has a median of one available firing,
+> and 86.1% of the jumps are forced (`findings.md` § 1.1). Read them for why the rule
+> was framed that way and what was ruled out on the path — D4's warning about the
+> generator's exploration order still binds anything that revisits this.
+>
+> **D5 is the part that shipped**, and D2's "read it off the board, never off history"
+> still governs it.
+
 ## D1. Every step is on a path to visible progress
 
 The owner's first framing (2026-09-16) was an image — deductions near *"the edge of
