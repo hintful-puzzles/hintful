@@ -12,10 +12,10 @@ Read `design.md` first, then `docs/games/hints.md` § "Recompute-stable plans" a
       whose closure contains it, on the boards the owner played.
 - [ ] 1.3 Record generation cost before any change, as the baseline D4 is judged
       against.
-- [ ] 1.4 Census the defect: how many steps in today's plans are **orphans** (nothing
-      later rests on them and they determine nothing), and validate the adjacency
-      proxy for "advances a chain" against the note-fact closure, where the answer is
-      exact (D1).
+- [ ] 1.4 Census the defect: build the exact read-set from `LoopyReason` plus the grid
+      (D1), then count how many steps in today's plans are **orphans** — nothing later
+      reads what they wrote, and they expand no front. Count `earlyLoop`/`closesLoop`
+      separately, since those read globally.
 
 ## 2. The engine's ordering
 

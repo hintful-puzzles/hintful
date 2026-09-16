@@ -49,16 +49,27 @@ cheaper fires *at the frontier*. So the tier sweep becomes the tiebreak within t
 frontier set rather than the primary key — a behavioral change to hint planning, not
 a sort order laid over the existing one.
 
-**The data for "advances a chain" only partly exists, and that is the sharp
-constraint.** Within one plan build the whole plan is known, so a firing can be tested
-against the steps that follow it — but only where a later step's *premises* are
-machine-readable. Loopy records that for **note facts** (`record.ts` `closure`, which
-is how it already refuses to place a note no firing uses) and for nothing else: the
-recorder captures a firing's writes and a prose `reason`, not the board elements it
-read. So for line-level firings the chain test begins as a **proxy** — the edges a
-firing writes being adjacent to what a later firing writes — and the proxy has to be
-measured against the plans it reorders before it is trusted (task 1.4). The owner's
-own example, an orphaned corner note, falls in the part that is exact.
+**"Advances a chain" is computable exactly for Loopy, which is what makes it the
+exemplar.** Within one plan build the whole plan is known, so a firing can be tested
+against the steps that follow it — and Loopy's premises are machine-readable rather
+than prose. `LoopyReason` (`record.ts`) is a discriminated union, and eleven of its
+thirteen kinds name the board elements the firing read: `face`, `dot`, `edge`, `from`,
+`pair`, `witness.edges`. A face or a dot yields its edges directly (`GridFace.edges`,
+`GridDot.edges`), and `firingRoots` with `closure` gives the note facts underneath. So
+a firing's **read-set over edges** is derivable, its write-set is its `ops`, and "A
+feeds B" is `writes(A) ∩ reads(B) ≠ ∅` — exact, with no proxy to calibrate.
+
+**Two reason kinds are genuinely global.** `earlyLoop` and `closesLoop` read the whole
+line configuration rather than a neighborhood, so they are adjacent to everything.
+They are excluded from the metric rather than given a spurious read-set, and counted
+separately wherever the rule is measured.
+
+**This was read out of `record.ts`, not assumed.** The first draft of this section
+claimed the recorder kept only a firing's writes and a prose reason, which is false,
+and the difference is most of the change's cost: an exact test needs no measurement
+campaign to earn trust. What holds one level up is that `DeductionRecord.reason` is
+`unknown`, so nothing *shared* can read a premise — which is precisely why the engine
+takes the predicate from the game (D3).
 
 **The opening needs no phase of its own.** With nothing determined, every firing
 either starts a front or feeds one, so the admissible set is nearly everything and the

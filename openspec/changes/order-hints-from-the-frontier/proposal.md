@@ -87,11 +87,11 @@ one.
 
 - **Not the phrasing.** Naming the fact that made a technique bite is a separate
   change, downstream of this one.
-- **Not a general premise graph.** No shared read-set exists — `DeductionRecord.reason`
-  is `unknown` so each game can attach its own, and `CandidateHighlights.area` is a
-  paint list, not a fact set. "Advances a chain" is therefore exact only where a game
-  already records premises (Loopy's note-fact `closure`) and a proxy over a firing's
-  *writes* elsewhere, which is what task 1.4 measures before the proxy is trusted.
-  Retrofitting read-sets across the collection is a separate change.
+- **Not a general premise graph.** No *shared* read-set exists —
+  `DeductionRecord.reason` is `unknown` so each game attaches its own, and
+  `CandidateHighlights.area` is a paint list, not a fact set. Loopy's own premises are
+  structured enough to yield an exact read-set (D1), so it adopts the rule in full;
+  a game whose premises are not machine-readable supplies no metric and keeps today's
+  order. Retrofitting read-sets across the collection is a separate change.
 - **Not the generator.** Which boards exist is untouched; the solve path keeps
   first-firing-wins.
