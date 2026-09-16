@@ -61,10 +61,15 @@ Read `design.md` first, then `docs/games/hints.md` § "Recompute-stable plans" a
 - [ ] 4.1 The no-orphans guard (D6) on a real plan, seen to fail under a planted
       firing nothing uses (`findings.md`).
 - [ ] 4.4 The ordering guard (D6), seen to fail under a reversed comparator.
-- [ ] 4.2 A note-adjacency guard: every note step is followed, within its journey, by
-      a firing whose closure contains it — **and** its sentence is true of the board it
-      is shown on, which is the half moving a note can break (D5). Today's suite checks
-      that a note *agrees with the solution*, which a stale open-edge count can pass.
+- [x] 4.2 The note-placement guard, in `loopy-hint.test.ts`: the rate at which a note
+      sits with a firing that cites it, plus the journey shape (one lead leg, every
+      later leg flagged). A rate rather than a rule per note because three separations
+      are legitimate — an expiring sentence, an ancestor pulled back ahead of its
+      dependent, and a `chainPair` composition backing no single recorded fact — and
+      stating the second per note would mean rebuilding the fact closure inside the
+      test. **Seen to fail:** restoring the discovery-position grouping drops the rate
+      to **40.3%** (437/1085) against the 0.5 floor. The margin to the floor is real
+      but not wide, so a corpus change that adds pair-heavy boards should re-check it.
 - [ ] 4.3 Generation cost is within the 1.3 baseline.
 
 ## 5. Docs and spec

@@ -24,6 +24,7 @@ import {
   hintKeepTrack,
   type LoopyHint,
   refreshHintStep,
+  sentenceExpires,
 } from "./hint.ts";
 import { say } from "./hint-text.ts";
 import { type LoopyMove, loopyGame } from "./index.ts";
@@ -202,6 +203,129 @@ describe("Loopy hint: a step reasons only from notes on the board", () => {
         next.pairs.length === state.pairs.length;
       expect(same, `${b.name} step ${i}: "${step.explanation}"`).toBe(false);
     }
+  });
+
+  /**
+   * A note is shown with the firing that cites it, which is what stops it reading as
+   * an unmotivated triviality. The claim is a **rate over the corpus** rather than a
+   * rule per note, because two separations are legitimate:
+   *
+   * - a note whose *sentence* would stop being true as the board fills — "only these
+   *   two of this 3's edges are still open" — stays where the solver found it, the
+   *   last position its premise describes;
+   * - a note pulled back to sit ahead of a note that cites it, so that no note ever
+   *   follows one resting on it;
+   * - a pair `chainPair` composes for the two ends of a relation chain, which backs
+   *   no single recorded fact and is pushed from inside the placement that needs it,
+   *   so it is adjacent by construction and is left out of the rate.
+   *
+   * Stating the second per note would mean rebuilding the fact closure here, and a
+   * guard that re-implements the code it checks does not check it. The rate is the
+   * property that actually moved — grouping by discovery measured 24%, grouping by
+   * use 81% — so it fails if the grouping regresses and survives a shift in the
+   * corpus. A corner move carries no provenance either: its `bits` say what the note
+   * now holds, not which fact put it there, so every fact on that dline matches.
+   *
+   * {@link sentenceExpires} is imported rather than restated, and both of its answers
+   * are asserted to occur, so the classification cannot collapse either way unnoticed.
+   */
+  it("notes sit with the firings that cite them", () => {
+    let total = 0;
+    let cited = 0;
+    let expiring = 0;
+    let composed = 0;
+    for (const b of corpus()) {
+      const { plan, facts } = deduceLoopyPlan(b.state);
+
+      /** Every recorded fact a note move could be placing; the player's own are not
+       * among them, and a corner move names a dline rather than a fact. */
+      const matching = (move: LoopyMove): number[] => {
+        const out: number[] = [];
+        facts.forEach((f, id) => {
+          if (f.why.kind === "note") return;
+          if (move.kind === "corner" && f.kind === "corner" && f.dline === move.dline)
+            out.push(id);
+          if (move.kind === "pair" && f.kind === "relation") {
+            const [x, y] = f.edges;
+            if ((x === move.a && y === move.b) || (x === move.b && y === move.a))
+              out.push(id);
+          }
+        });
+        return out;
+      };
+
+      let k = 0;
+      let pending: Step[] = [];
+      for (const step of stepsOf(b.state)) {
+        if (step.move.kind !== "set" && step.move.kind !== "solve") {
+          pending.push(step);
+          continue;
+        }
+        const closure = new Set(plan[k].closure);
+        for (const note of pending) {
+          const at = `${b.name}: "${note.explanation}"`;
+          const ids = matching(note.move);
+          if (ids.length === 0) {
+            // `chainPair` composes a pair for the two ends of a relation chain and
+            // pushes it from inside the placement that needs it: it backs no single
+            // recorded fact, and it is adjacent by construction. A corner move always
+            // names recorded facts, so an empty match there is a defect.
+            expect(note.move.kind, `${at} places no recorded fact`).toBe("pair");
+            composed++;
+            continue;
+          }
+          total++;
+          if (ids.some((id) => closure.has(id))) cited++;
+          if (ids.some((id) => sentenceExpires(b.state, facts[id]))) expiring++;
+        }
+        pending = [];
+        k++;
+      }
+      expect(pending, `${b.name}: a note trails every firing`).toEqual([]);
+      expect(k, `${b.name}: firings and plan positions disagree`).toBe(plan.length);
+    }
+    expect(total, "no note was seen").toBeGreaterThan(100);
+    expect(
+      expiring,
+      "no note could expire, so one answer went untested",
+    ).toBeGreaterThan(0);
+    expect(
+      total - expiring,
+      "every note could expire, so the other answer went untested",
+    ).toBeGreaterThan(0);
+    expect(
+      cited / total,
+      `only ${cited} of ${total} notes sat with a firing that cites them ` +
+        `(${composed} composed pairs excluded)`,
+    ).toBeGreaterThan(0.5);
+  });
+
+  it("each firing and the notes before it form one journey", () => {
+    let journeys = 0;
+    let withNotes = 0;
+    for (const b of corpus()) {
+      let group: Step[] = [];
+      for (const step of stepsOf(b.state)) {
+        group.push(step);
+        if (step.move.kind !== "set" && step.move.kind !== "solve") continue;
+        journeys++;
+        if (group.length > 1) withNotes++;
+        expect(
+          group[0].continuesPrevious,
+          `${b.name}: "${group[0].explanation}" leads its journey`,
+        ).not.toBe(true);
+        for (const leg of group.slice(1)) {
+          expect(
+            leg.continuesPrevious,
+            `${b.name}: "${leg.explanation}" continues its journey`,
+          ).toBe(true);
+        }
+        group = [];
+      }
+      expect(group, `${b.name}: steps trail the last firing`).toEqual([]);
+    }
+    expect(journeys, "no journey was seen").toBeGreaterThan(100);
+    expect(withNotes, "no journey carried a note leg").toBeGreaterThan(20);
   });
 });
 

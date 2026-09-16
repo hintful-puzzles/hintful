@@ -484,7 +484,7 @@ function narrate(
  * `pairAtCorner` is monotone. `findings.md` § "Which note sentences survive being
  * deferred" classifies all of them.
  */
-function sentenceExpires(state: LoopyState, f: LoopyFact): boolean {
+export function sentenceExpires(state: LoopyState, f: LoopyFact): boolean {
   if (f.kind === "relation") {
     // "Only these two edges are still open", and the "four open edges" of the
     // across-a-clue pairs, both name a set that only shrinks. `pairAtCorner` cites
