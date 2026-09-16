@@ -85,4 +85,10 @@ Read `design.md` first, then `docs/games/hints.md` § "Recompute-stable plans" a
       sentence now opens a journey that ends in a line that cites it, 17 and 34 hints
       later than it used to appear. The replay also surfaced what the fix concentrates:
       a 55-leg journey at hint 112, filed under "Still open".
+- [ ] 6.3 Verify in the running app that a multi-leg journey renders and steps
+      correctly — the note legs, the hint staying displayed across them, and the leg
+      numbering. 3.3 and 3.6 changed what the player sees and have so far only been
+      measured in plan data. Attempted and inconclusive: a browser session reached
+      Loopy, but the hint control sits below the page snapshot's shadow-root depth, so
+      nothing was confirmed either way. Mine, and owed before 6.2 is a fair ask.
 - [ ] 6.2 Owner acceptance of the sequencing, on that board and on one cell game.
