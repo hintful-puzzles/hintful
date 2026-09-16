@@ -475,11 +475,43 @@ function narrate(
 }
 
 /**
+ * Whether a note's own sentence can stop being true as the board fills.
+ *
+ * A fact only accumulates, so deferring a note can never make it underivable — but
+ * the sentence quotes the board, and some premises expire. This branches on the
+ * sentence `placeCorner` or `placePair` would produce, never on the fact's kind,
+ * which does not track it: `cornerFromClue` has an expiring branch and
+ * `pairAtCorner` is monotone. `findings.md` § "Which note sentences survive being
+ * deferred" classifies all of them.
+ */
+function sentenceExpires(state: LoopyState, f: LoopyFact): boolean {
+  if (f.kind === "relation") {
+    // "Only these two edges are still open", and the "four open edges" of the
+    // across-a-clue pairs, both name a set that only shrinks. `pairAtCorner` cites
+    // a corner note, which stays put.
+    return f.why.kind !== "exactlyOneAtCorner" && f.why.kind !== "note";
+  }
+  if (f.why.kind !== "clue" || f.bound !== "atMostOne") return false;
+  // Of `cornerFromClue`'s branches only "already give it N" counts drawn lines, and
+  // that count grows. The "at most" branches state an upper bound, which stays true
+  // as the real maximum falls, and the `1` branch cites the clue alone.
+  return !(state.clues[f.why.face] === 1 && f.why.witness.corners.length === 0);
+}
+
+/**
  * The plan's steps: before each line firing, a step placing each note it and the
- * later firings rest on that was found ahead of it, then the firing itself.
+ * later firings rest on, then the firing itself.
+ *
+ * A note whose sentence survives the board filling up is placed beside the firing
+ * that cites it, rather than where the solver happened to find the fact — which was
+ * a median of 15 firings earlier, and up to 143 (`findings.md`). A note whose
+ * sentence would go stale stays where it was found, that being the last position its
+ * premise still describes, and no note is placed before a note it cites.
  *
  * Facts no line rests on are never placed, so a player is never asked to note
- * something no later step uses.
+ * something no later step uses. Each firing's notes and the firing form one journey:
+ * every leg after the first is flagged `continuesPrevious`, so a note and the
+ * deduction it serves arrive as a single hint.
  */
 function planSteps(
   state: LoopyState,
@@ -488,15 +520,39 @@ function planSteps(
   tickOf: readonly number[],
 ): HintStep<LoopyMove, LoopyHint>[] {
   const pl: Planner = { state, facts, notes: new Notes(state), steps: [] };
-  const used = new Set<number>();
-  for (const p of plan) for (const id of p.closure) used.add(id);
+  const firstUse = new Map<number, number>();
+  plan.forEach((p, i) => {
+    for (const id of p.closure) if (!firstUse.has(id)) firstUse.set(id, i);
+  });
+
+  const slot = new Map<number, number>();
+  for (const [id, use] of firstUse) {
+    slot.set(id, sentenceExpires(state, facts[id]) ? tickOf[id] : use);
+  }
+  // A note may not follow one that cites it. A fact's parents always have smaller
+  // ids, so one descending pass pulls each back to its earliest dependent.
+  for (const id of [...slot.keys()].sort((x, y) => y - x)) {
+    const at = slot.get(id) as number;
+    const f = facts[id];
+    const cites =
+      f.kind === "corner" && f.why.kind === "clue"
+        ? [...f.parents, ...f.why.witness.corners]
+        : f.parents;
+    for (const p of cites) {
+      const was = slot.get(p);
+      if (was !== undefined && was > at) slot.set(p, at);
+    }
+  }
+
   const found = new Map<number, number[]>();
-  for (const id of [...used].sort((x, y) => x - y)) {
+  for (const id of [...slot.keys()].sort((x, y) => x - y)) {
     if (facts[id].why.kind === "note") continue;
-    found.set(tickOf[id], [...(found.get(tickOf[id]) ?? []), id]);
+    const at = slot.get(id) as number;
+    found.set(at, [...(found.get(at) ?? []), id]);
   }
 
   plan.forEach((p, i) => {
+    const start = pl.steps.length;
     const ids = found.get(i) ?? [];
     for (let k = 0; k < ids.length; k++) {
       const f = facts[ids[k]];
@@ -521,6 +577,12 @@ function planSteps(
       marks,
       ops.map((o) => o.edge),
     );
+    // Counted from what actually landed rather than decided ahead of the pushes:
+    // `placeCorner` and `placePair` return early when the note is already there, and
+    // `chainPair` pushes a leg per link from inside one of them.
+    for (let k = start + 1; k < pl.steps.length; k++) {
+      pl.steps[k].continuesPrevious = true;
+    }
   });
   return pl.steps;
 }

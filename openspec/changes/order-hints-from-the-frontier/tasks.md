@@ -34,10 +34,15 @@ Read `design.md` first, then `docs/games/hints.md` § "Recompute-stable plans" a
       and without touching the solve path the generator uses (D4).
 - [ ] 3.2 Loopy's frontier and feeds-into predicates over edges and dots on every
       tiling, including the aperiodic ones.
-- [ ] 3.3 `planSteps` groups a note by first use rather than by `tickOf`, and the note
-      joins its consumer's journey — for notes whose sentence makes only **monotone**
-      claims, which is where the owner's own example sits (D5). Split read out of
-      `hint-text.ts`, not assumed.
+- [x] 3.3 `planSteps` groups a note by first use rather than by `tickOf`, for notes
+      whose sentence makes only **monotone** claims (D5; classified per sentence in
+      `findings.md`, never from `fact.kind`), and never ahead of a note it cites.
+      Notes shown with a firing that cites them: **24.1% → 80.9%**.
+- [x] 3.6 The note joins its consumer's **journey**: every leg after the first carries
+      `continuesPrevious`, counted from what actually landed rather than decided before
+      the pushes — `placeCorner`/`placePair` return early on a note already present,
+      and `chainPair` pushes a leg per link from inside them. Player-visible: a note
+      and the deduction it serves now cost one Hint press instead of two.
 - [ ] 3.4 A note whose sentence names which edges are still open is placed at the
       **latest** step where that claim still holds, bounding its lag without letting
       its explanation go stale (D5).

@@ -107,6 +107,35 @@ families have exceptions in both directions**, and task 3.3 must branch on the
 sentence rather than on `fact.kind`. The upper-bound case is the one to be careful
 with in review: it looks like a live count and is not one.
 
+## 3.3 / 3.6 — the fix, measured
+
+Same corpus and seeds, before and after. The question is the player's: when a note
+appears, does the deduction it arrives with actually use it? The "before" rate is
+computable from plan data alone, since the old grouping keyed on `tickOf` and so put
+a note with its consumer exactly when `tickOf === firstUse`.
+
+| board | notes | before | after |
+|---|---|---|---|
+| squares-10x10-hard/a | 71 | 24.6% | 78.9% |
+| squares-10x10-hard/b | 83 | 28.2% | 80.7% |
+| squares-10x10-hard/c | 122 | 13.7% | 74.6% |
+| squares-7x7-tricky/a | 26 | 48.1% | 100% |
+| squares-7x7-tricky/b | 21 | 33.3% | 100% |
+| squares-7x7-normal/a | 1 | 100% | 100% |
+| **total** | **324** | **24.1%** | **80.9%** |
+
+**The residual is the expiring half, by design.** A note whose sentence names which
+edges are still open stays where the solver found it, because moving it would let it
+lie — so the pair-heavy Hard boards sit at 75–81% while the Tricky boards, whose notes
+are mostly corners, reach 100%. Closing the rest is task 3.4, and it is bounded by
+truth rather than by effort.
+
+**What the leg count does and does not show.** Every board reported legs exactly equal
+to its note count (324/324 across the corpus). That is an *identity*, not evidence:
+each group is notes-then-firing, so flagging every leg after the first always yields
+the note count. It confirms the flag is live and that no note is left as a journey of
+its own — nothing more. The rate above is the load-bearing number.
+
 ## Still open
 
 - **1.1** — candidates available per plan position. Needs the enumeration hook;

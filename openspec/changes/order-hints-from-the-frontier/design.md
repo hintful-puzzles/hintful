@@ -207,6 +207,16 @@ are still open is placed at the latest step where that claim still holds, which 
 its lag without letting it lie. The owner's own example, a corner note on a `1`, is in
 the monotone half — so the reported defect is fixable in the safe direction.
 
+**And "joins its consumer's journey" is not free here.** No Loopy step sets
+`continuesPrevious`; `push` does not even take it, although the engine and a dozen
+other games use it. Today every note Loopy places is a journey of its own, so bundling
+a note with the deduction it serves is a *second* change beside the regrouping, and it
+is player-visible: it changes how many Hint presses one deduction costs and how
+auto-hint paces them. It is also exactly what the complaint asks for — a note and its
+consumer arriving together is what makes the pair read as one story rather than as two
+unrelated hints. One journey may need several note legs, because `chainPair` pushes a
+note per link from inside a note placement.
+
 ## D6. The guard, and what it must not be
 
 `hint-resume.test.ts` asserts that a game's hints reach a solution within a move
