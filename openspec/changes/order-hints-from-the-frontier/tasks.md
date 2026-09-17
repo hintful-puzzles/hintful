@@ -8,8 +8,10 @@ Read `design.md` first, then `docs/games/hints.md` § "Recompute-stable plans" a
 > jumps that prompted this change were forced** — no nearer firing existed at that
 > tier. So §2, §3.1, §3.2, §4.1, §4.4 and the §1.3 baseline are **not being done**,
 > and the engine gains no enumeration hook. What shipped is the note placement
-> (3.3, 3.6); what remains live is 3.4 and the guard owed by 4.2. The numbers, and
-> the bias that makes them an upper bound, are in `findings.md`.
+> (3.3, 3.6), its guard (4.2), and the rendered-frame check on a real board (6.3).
+> **What remains live is 3.4, the delta narrowing 5.3 makes conditional on it, and
+> 6.2.** The numbers, and the bias that makes them an upper bound, are in
+> `findings.md`.
 
 ## 1. Measure before designing
 
@@ -18,8 +20,10 @@ Read `design.md` first, then `docs/games/hints.md` § "Recompute-stable plans" a
       The stopping condition fired; the ordering half stops here (`findings.md`).
 - [x] 1.2 Note-to-consumer distance: median **15** firings, p90 **87**, max **143** on
       10×10 Hard. Confirmed, and separable from the ordering work (`findings.md`).
-- [ ] 1.3 Record generation cost before any change, as the baseline D4 is judged
-      against.
+- [~] 1.3 Withdrawn with §2. The baseline existed to judge a candidate-enumeration
+      hook that is not being built, and nothing that shipped touches the solve path
+      the generator runs — `planSteps` reorders the *presentation* of an already-built
+      plan.
 - [x] 1.4 Census the defect with the exact read-set from `LoopyReason` plus the grid:
       **14.4%** of steps land ≥4 hops from the previous step, tail 14–17 hops. A tail
       defect, ~1 hint in 7. The first instrument was vacuous and was replaced; both it
@@ -27,20 +31,15 @@ Read `design.md` first, then `docs/games/hints.md` § "Recompute-stable plans" a
 
 ## 2. The engine's ordering
 
-- [ ] 2.1 `hint-plan.ts`: an optional candidate-enumeration hook, used only when a
-      plan is built for a hint; absent it, today's order is unchanged.
-- [ ] 2.2 Admissibility first — drop the orphans — then the comparator: expansions
-      before chains, cheapest among equals, ties keeping the ladder's own order so the
-      result stays deterministic.
-- [ ] 2.3 Both predicates ("at a front", "feeds this later step") are supplied by the
-      game and read off the board (D2, D3).
+- [~] 2.1–2.3 Withdrawn by 1.1. The engine gains no candidate-enumeration hook, no
+      comparator and no game-supplied predicates: a plan position offers a median of
+      one firing, so there is nothing to order. D1–D4 are kept as the record of what
+      the rule would have been and what it would have had to respect.
 
 ## 3. Loopy adopts it
 
-- [ ] 3.1 Enumerate the firings available at the current tier without escalating,
-      and without touching the solve path the generator uses (D4).
-- [ ] 3.2 Loopy's frontier and feeds-into predicates over edges and dots on every
-      tiling, including the aperiodic ones.
+- [~] 3.1–3.2 Withdrawn with §2. Loopy's easiest-first tier sweep stands untouched,
+      which is also why the generator's exploration order was never put at risk (D4).
 - [x] 3.3 `planSteps` groups a note by first use rather than by `tickOf`, for notes
       whose sentence makes only **monotone** claims (D5; classified per sentence in
       `findings.md`, never from `fact.kind`), and never ahead of a note it cites.
@@ -48,19 +47,27 @@ Read `design.md` first, then `docs/games/hints.md` § "Recompute-stable plans" a
 - [x] 3.6 The note joins its consumer's **journey**: every leg after the first carries
       `continuesPrevious`, counted from what actually landed rather than decided before
       the pushes — `placeCorner`/`placePair` return early on a note already present,
-      and `chainPair` pushes a leg per link from inside them. Player-visible: a note
-      and the deduction it serves now cost one Hint press instead of two.
+      and `chainPair` pushes a leg per link from inside them. Player-visible, as seen
+      in the running app under 6.3: the note and the deduction it serves arrive as
+      consecutive legs of one numbered journey ("Step 1 of 4") instead of as two
+      unrelated hints. It does **not** reduce the press count, as a draft of this line
+      claimed: the rail's stepper alternates show/apply per leg deliberately
+      (`docs/games/hints.md` § "Highlight, never perform"), so a leg still costs a
+      press to see and a press to apply. What the journey changes is adjacency,
+      numbering, and that manual play and Auto-Hint carry the display through the legs.
 - [ ] 3.4 A note whose sentence names which edges are still open is placed at the
       **latest** step where that claim still holds, bounding its lag without letting
       its explanation go stale (D5).
-- [ ] 3.5 Measure how much of today's note lag sits in each half, so the value of the
-      safe fix is known before the harder one is attempted.
+- [x] 3.5 Answered by the before/after table in `findings.md` § "3.3 / 3.6 — the fix,
+      measured", which splits the lag by the only line that matters: the monotone half
+      is gone (the corner-heavy Tricky boards reach 100%), and the **19.1% residual is
+      the expiring half**, which is exactly what 3.4 is for. Measuring the split
+      separately first would have measured the same quantity twice.
 
 ## 4. Guards
 
-- [ ] 4.1 The no-orphans guard (D6) on a real plan, seen to fail under a planted
-      firing nothing uses (`findings.md`).
-- [ ] 4.4 The ordering guard (D6), seen to fail under a reversed comparator.
+- [~] 4.1, 4.4 Withdrawn with §2 — there is no comparator to guard, and D6 says a
+      bare distance assertion with no availability clause would be worse than nothing.
 - [x] 4.2 The note-placement guard, in `loopy-hint.test.ts`: the rate at which a note
       sits with a firing that cites it, plus the journey shape (one lead leg, every
       later leg flagged). A rate rather than a rule per note because three separations
@@ -70,13 +77,31 @@ Read `design.md` first, then `docs/games/hints.md` § "Recompute-stable plans" a
       test. **Seen to fail:** restoring the discovery-position grouping drops the rate
       to **40.3%** (437/1085) against the 0.5 floor. The margin to the floor is real
       but not wide, so a corpus change that adds pair-heavy boards should re-check it.
-- [ ] 4.3 Generation cost is within the 1.3 baseline.
+- [~] 4.3 Withdrawn with 1.3: no baseline, because nothing that shipped runs during
+      generation.
 
 ## 5. Docs and spec
 
-- [ ] 5.1 `ts-engine` delta: the hint ordering requirement.
-- [ ] 5.2 `docs/games/hints.md`: how a game supplies its metric, and the history rule
-      from D2.
+- [x] 5.1 `ts-engine` delta written, carrying the note-placement requirement only. The
+      ordering requirement was withdrawn with §2 rather than softened, and the delta's
+      own header says so: a requirement the collection cannot satisfy, and that nothing
+      intends to implement, must not reach the live spec.
+- [ ] 5.3 **Blocks archiving.** The delta's second scenario ("an explanation the board
+      outgrows") states 3.4's behavior — a note placed *at the latest step where its
+      explanation still holds* — and 3.4 has not landed. What ships leaves an expiring
+      note at `tickOf`, the position the solver found it at, which is *a* position its
+      sentence describes but not established to be the last one. Archiving as it stands
+      would publish a requirement the code contradicts, which is the hazard `AGENTS.md`
+      § "Work management" names. Resolve by landing 3.4 **or** by narrowing that
+      scenario to what ships and re-filing the rest; do not archive before one of them.
+- [x] 5.2 `docs/games/hints.md` § "Give the facts a notation (Loopy)": the bullet that
+      said *"place a note where its fact was found, not where it is used"* stated the
+      **opposite** of what shipped, and a guide that contradicts a spec is worse than
+      one that is silent. Rewritten around the rule that shipped — slot at first use,
+      leave at `tickOf` only where `sentenceExpires` says the narration would go stale,
+      and branch on the sentence rather than `fact.kind`. The other half of this task,
+      how a game supplies its frontier metric, is withdrawn with §2 along with the D2
+      history rule that governed it.
 
 ## 6. Report and accept
 
@@ -85,10 +110,19 @@ Read `design.md` first, then `docs/games/hints.md` § "Recompute-stable plans" a
       sentence now opens a journey that ends in a line that cites it, 17 and 34 hints
       later than it used to appear. The replay also surfaced what the fix concentrates:
       a 55-leg journey at hint 112, filed under "Still open".
-- [ ] 6.3 Verify in the running app that a multi-leg journey renders and steps
-      correctly — the note legs, the hint staying displayed across them, and the leg
-      numbering. 3.3 and 3.6 changed what the player sees and have so far only been
-      measured in plan data. Attempted and inconclusive: a browser session reached
-      Loopy, but the hint control sits below the page snapshot's shadow-root depth, so
-      nothing was confirmed either way. Mine, and owed before 6.2 is a fair ask.
+- [x] 6.3 Verified in the running app, on `7x7t0dt:c3a2a21a22121a2b22b3a21f3b3332b2c12a`
+      — a Tricky board whose **first** Hint press opens a four-leg journey, found by
+      scanning seeds for the earliest multi-leg note journey. Walking it: the rail
+      reads "STEP 1 OF 4" with the note's sentence, the board draws the corner to
+      place as a `COL_HINT` wedge with its clue outlined, applying it leaves the
+      player's own note in its own color, and the next press reads "STEP 2 OF 4" with
+      the just-placed note redrawn as cited evidence and its dot ringed. Numbering and
+      note legs render correctly.
+      **What the check corrected:** "the hint staying displayed across them" was the
+      wrong expectation for the rail's button. `hideHintAfterStep` hides the plan after
+      an applied step *by design* (`midend.ts`; `docs/games/hints.md` § "Highlight,
+      never perform"), so the stepper alternates show/apply per leg and `Hint applied`
+      shows in between. `continuesPrevious` carries the display through legs on the
+      manual-play and Auto-Hint paths, not the stepper. 3.6's claim was reworded.
+      The 55-leg journey of 6.1 was not reached in the browser; it is 6.2's question.
 - [ ] 6.2 Owner acceptance of the sequencing, on that board and on one cell game.

@@ -505,8 +505,9 @@ export function sentenceExpires(state: LoopyState, f: LoopyFact): boolean {
  * A note whose sentence survives the board filling up is placed beside the firing
  * that cites it, rather than where the solver happened to find the fact — which was
  * a median of 15 firings earlier, and up to 143 (`findings.md`). A note whose
- * sentence would go stale stays where it was found, that being the last position its
- * premise still describes, and no note is placed before a note it cites.
+ * sentence would go stale stays where it was found, a position its premise does
+ * describe; whether a *later* one still would is not asked, so such a note keeps
+ * whatever lag it had. No note is placed before a note it cites.
  *
  * Facts no line rests on are never placed, so a player is never asked to note
  * something no later step uses. Each firing's notes and the firing form one journey:

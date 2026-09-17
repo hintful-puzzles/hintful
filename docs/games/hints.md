@@ -1929,12 +1929,24 @@ fact as a note. What transfers, in [`games/loopy/`](../../src/games/loopy/):
   The drawn chains ran to about 20 facts at p99 on Hard boards. Once each fact is a
   mark the player can make, each is a step of its own with one sentence, which is
   § "Cognitive load: one step per hint" applied to facts that had nowhere to live.
-- **Place a note where its fact was found, not where it is used.** A fact's
-  sentence counts lines at a clue or a dot, and lines are drawn between a fact being
-  derived and a later step citing it, so a note placed just before its use can
-  narrate a count the board no longer shows. `LoopyRecorder.tickOf` stamps each fact
-  with the plan position it was found at, and `planSteps` places it there, where the
-  lines are the ones it came from.
+- **Place a note beside the firing that cites it, and branch on the sentence rather
+  than the fact kind.** A fact only accumulates, so deferring a note can never make
+  it underivable — what can expire is the *sentence*, which quotes the board
+  ("only these two of this 3's edges are still open"). So `planSteps` slots each
+  fact at the first firing whose `closure` contains it, and leaves it at
+  `LoopyRecorder.tickOf` — the plan position the solver found it at — only where
+  `sentenceExpires` says the narration would go stale by then. The classification
+  does **not** follow `fact.kind`: `cornerFromClue` has an expiring branch,
+  `pairAtCorner` is monotone, and an "at most" bound reads like a live count while
+  actually only loosening as the board fills. Grouping by discovery instead put a
+  note a median of 15 firings from the deduction that used it, worst case 143, which
+  is what makes a corner note on a `1` read as an unmotivated triviality;
+  `loopy-hint.test.ts` holds the rate at which a note sits with a firing that cites
+  it, rather than a rule per note, because a legitimately expiring sentence, an
+  ancestor pulled back ahead of its dependent and a composed `chainPair` leg are all
+  separations that are correct. A note never precedes a note it cites, and each
+  firing's notes plus the firing form one journey (§ "A journey completes leg by
+  leg").
 - **Place only what some line rests on.** The recorder derives far more than any
   line uses. The plan takes the union of every line firing's closure and places
   nothing outside it, so a player is never asked to note something no later step

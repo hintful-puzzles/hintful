@@ -250,6 +250,9 @@ rather than fixed blind.
   between its discovery and its use, would bound it. Both need the owner's read on
   whether the long journey is actually a problem in play.
 - **3.4** — a note whose sentence names which edges are still open, placed at the
-  latest step where that claim holds. Closes the residual 19% left by 3.3.
-- **4.2** — the guard for what 3.3 and 3.6 changed. They shipped without one, which
-  is owed.
+  latest step where that claim holds. Closes the residual 19% left by 3.3, and the
+  `ts-engine` delta already states it as a scenario, so the delta cannot be archived
+  until 3.4 lands or that scenario is narrowed (task 5.3).
+
+4.2 stood here as owed and has since shipped (`loopy-hint.test.ts`, "notes sit with
+the firings that cite them"), seen to fail at 40.3% under the discovery grouping.
