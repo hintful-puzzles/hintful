@@ -97,6 +97,18 @@ Seed exemplar:
 [`palisade-render-scenario.test.ts`](../../src/games/palisade/palisade-render-scenario.test.ts)
 — reaches a mid-plan hint frame in-process that no browser harness could.
 
+**When a check genuinely needs the browser, choose the board so the frame is one
+press deep.** The acceptance bar sends real UI work to the running app, and the
+expensive part there is not the browser but the *walk* — clicking thirty hints to
+reach the first interesting one, in a place where nothing is asserted and every
+step costs a round trip. Invert it: scan seeds in a throwaway `vitest` file for a
+board whose **first** press is the frame under test, print its game ID, and open
+`/<game>.html?id=<id>` directly (`routing.ts` reads `type` and `id` off the query
+string). Verifying that a Loopy note journey renders took one seed scan, one URL
+and four clicks; a previous attempt at the same check walked in from a default
+board and confirmed nothing. The scan is the same fixed-seed idiom tier 2.5 uses
+to reach a deduction, aimed at picking the *board* rather than the frame.
+
 ## Render-op vocabulary
 
 **Know which primitive records as which op, or your assertion silently never
