@@ -595,6 +595,15 @@ a run of *zero* at `c = 1`. Phrase counts so they hold across the whole range
 that value can take.** (And re-read the *fresh-board* firing — see
 § "The premise must single out the conclusion".)
 
+**An image has a range too.** Loopy's blocked-pair step first said the loop
+"has to take the long way around this 3": true of a 3 in a square, where the
+loop runs round the other three sides, but the same firing covers a 2 whose
+fourth edge is already out, and there the loop goes round nothing (owner,
+2026-09-19). The guard firing it was stated over the *open* edges, so the
+sentence had to hold for every face that guard admits, not only the one it was
+written for. Read the premise's guard to find the cases, then read the
+sentence against each one.
+
 ### Name elements by what the player can see
 
 A name is a claim, and "claim only what you have checked" applies to it
@@ -904,10 +913,10 @@ the human technique, and then a hint that narrates firings perfectly faithfully
 still teaches badly.
 
 Loopy's owner-reported case (`teach-loopy-the-blocked-corner-pair`): a clue
-needing all but one of its edges, with two dots next to each other around it
-that already carry a line. A player sees one thing — the loop has to take the
-long way around, so the edge between the dots is out and the rest are lines, the
-whole clue settled at once. The solver reached the same conclusions in **three**
+needing all but one of its open edges, with two dots next to each other around
+it that already carry a line. A player sees one thing: joining those dots would
+leave the clue short, so that edge is out and the others are lines, the whole
+clue settled at once. The solver reached the same conclusions in **three**
 firings: one narrow step drawing the two far edges, a dot filling up, then the
 clue starving. "One deduction firing is one journey" rendered those as three
 unrelated hints, and the player was shown the narrowest of them first.

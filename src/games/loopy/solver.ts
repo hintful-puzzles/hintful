@@ -408,8 +408,7 @@ function boundWitness(
  * settles every *other* open edge; two adjacent ones settle the edge between
  * them as well, because if it were a line both dots would be full, ruling out
  * the edges either side of it and leaving the clue one short. So the whole face
- * falls in one firing — the technique a player reads as "the loop has to take
- * the long way around this clue".
+ * falls in one firing, which is how a player sees the technique.
  *
  * Both dots are known to carry their line on an edge *outside* the face,
  * because the face's own two edges at each of them are among the three this
@@ -532,7 +531,7 @@ function trivialDeductions(ss: SolverState): number {
         diff = Math.min(diff, 0);
         if (rec?.ops.length) {
           return fired(rec, {
-            kind: "clueLongWay",
+            kind: "clueBlockedPair",
             face: i,
             dots: [blocked.dot1, blocked.dot2],
             between: blocked.between,

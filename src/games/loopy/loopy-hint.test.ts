@@ -400,7 +400,7 @@ const REASONS: Record<LoopyReason["kind"], true> = {
   clueFull: true,
   clueStarved: true,
   clueOneShort: true,
-  clueLongWay: true,
+  clueBlockedPair: true,
   deadEnd: true,
   lineContinues: true,
   dotFull: true,
@@ -799,7 +799,7 @@ describe("Loopy hint frames", () => {
  * at once, and the point of teaching the engine it is that the player meets it
  * as one step instead of the three firings it used to decompose into.
  */
-describe("Loopy hint: the loop takes the long way around a clue", () => {
+describe("Loopy hint: two blocked dots settle a clue", () => {
   /** A face clued one short of its order, with a line planted outside each of two
    * adjacent dots. Built by hand so that a sweep finding nothing is
    * distinguishable from a sweep looking for the wrong shape. */
@@ -851,8 +851,8 @@ describe("Loopy hint: the loop takes the long way around a clue", () => {
     ] satisfies LoopyParams[]) {
       const { state, between, others } = planted(p, 4);
       const { plan } = deduceLoopyPlan(state);
-      const firing = plan.find((f) => f.reason.kind === "clueLongWay");
-      expect(firing, `no long-way firing on type ${p.type}`).toBeDefined();
+      const firing = plan.find((f) => f.reason.kind === "clueBlockedPair");
+      expect(firing, `no blocked-pair firing on type ${p.type}`).toBeDefined();
       if (firing === undefined) continue;
 
       // One firing, and it is the whole face: the edge between the dots out,
@@ -869,7 +869,7 @@ describe("Loopy hint: the loop takes the long way around a clue", () => {
     // land rather than on the marks the step carries.
     let found = false;
     for (let seed = 0; seed < 20 && !found; seed++) {
-      const id = `${encodeParams({ w: 7, h: 7, diff: DIFF_HARD, type: 0 }, true)}#longway-${seed}`;
+      const id = `${encodeParams({ w: 7, h: 7, diff: DIFF_HARD, type: 0 }, true)}#blocked-pair-${seed}`;
       const want = (s: Step): boolean => /both ringed dots/i.test(s.explanation);
       const result = renderScenario({
         game: loopyGame,
@@ -898,11 +898,11 @@ describe("Loopy hint: the loop takes the long way around a clue", () => {
   });
 
   it("names the clue, and says the same thing with a different digit", () => {
-    // The clue is the only part that varies, and it varies in three places. A
-    // triangle clued 2 reads with 2 throughout, a square clued 3 with 3.
-    expect(say.clueLongWay(3)).toBe(
-      "Both ringed dots already have a line, and joining them directly would rule out the 3's other two edges and leave it one short. So the loop has to take the long way around this 3: the edge between the dots is out, and the other 3 are lines.",
+    // The clue is the only part that varies. A 2 whose fourth edge is already
+    // out reads with 2 throughout, a 3 in a square with 3.
+    expect(say.clueBlockedPair(3)).toBe(
+      "Both ringed dots already have a line, so joining them leaves this 3 short. That edge is out; the other 3 are lines.",
     );
-    expect(say.clueLongWay(2)).toBe(say.clueLongWay(3).replaceAll("3", "2"));
+    expect(say.clueBlockedPair(2)).toBe(say.clueBlockedPair(3).replaceAll("3", "2"));
   });
 });

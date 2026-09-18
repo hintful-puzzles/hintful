@@ -98,20 +98,21 @@ export const say = {
   clueOneShort: (clue: number): string =>
     `This ${clue} can spare one open edge and must spare one at the ringed dot, which already has a line; the rest must be lines.`,
 
-  /** The owner chose this wording, 2026-09-18. Three things it does on purpose:
-   * it names the excluded edge as "the edge between them", because eighteen of
-   * Loopy's tilings have no top; it says "already have a line" rather than
-   * "incoming", because the player sees lines on a board and not a direction of
-   * travel; and it gives both halves of the conclusion, since the whole value of
-   * the step is that the face is settled.
+  /** The owner's shape, 2026-09-19, with the premise that makes it follow: the
+   * dots' existing lines are *why* joining them leaves the clue short, since
+   * each would then be full and rule out the clue's edge on its far side.
    *
-   * The clue is the only thing that varies, and it appears three times: the two
-   * edges ruled out are always exactly two, while the edges left as lines are
-   * every edge but one, which on a face clued one short of its order is the clue
-   * again. A pentagon clued 4 reads the same with 4 throughout. Written as a
-   * digit, like every other count in this file. */
-  clueLongWay: (clue: number): string =>
-    `Both ringed dots already have a line, and joining them directly would rule out the ${clue}'s other two edges and leave it one short. So the loop has to take the long way around this ${clue}: the edge between the dots is out, and the other ${clue} are lines.`,
+   * Names the excluded edge by what it would join, never by direction, because
+   * most of Loopy's tilings have no top; says "already have a line" rather than
+   * "incoming", because the player sees lines and not a direction of travel;
+   * and gives both halves of the conclusion, because settling the whole face is
+   * the step's point. It uses no picture of the loop's path: "the long way
+   * around" fits a 3 in a square, and not a 2 whose fourth edge is already out.
+   *
+   * The clue appears twice and is right both times: the face ends with exactly
+   * the clue's count of lines, whether or not some edge was already ruled out. */
+  clueBlockedPair: (clue: number): string =>
+    `Both ringed dots already have a line, so joining them leaves this ${clue} short. That edge is out; the other ${clue} are lines.`,
 
   deadEnd:
     "The ringed dot has no line and no other open edge, so a line here would dead-end: this edge can't be a line.",

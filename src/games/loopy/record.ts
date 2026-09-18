@@ -110,9 +110,9 @@ export type LoopyReason =
   | { kind: "clueOneShort"; face: number; dot: number; pair: readonly [number, number] }
   /** A clue needs all but one of its open edges, and two dots next to each other
    * around it already have a line, so the edge between them cannot be one and
-   * every other open edge must be: the loop takes the long way around. */
+   * every other open edge must be. */
   | {
-      kind: "clueLongWay";
+      kind: "clueBlockedPair";
       face: number;
       dots: readonly [number, number];
       between: number;

@@ -101,13 +101,13 @@ clue with only as many edges left as it needs, a line with only one way
 to go on, a dot that already has two lines, or an edge that would close
 a loop too early.
 
-One is worth learning by name, because it settles a whole clue at once.
-When a clue needs all but one of its edges — a 3 in a square, a 2 in a
-triangle — and two dots next to each other around it already have a line,
-the loop has to **take the long way around**. Joining those two dots
-directly would use up both of them, ruling out the two edges on the far
-side of them and leaving the clue one line short; so the edge between them
-is out, and every other edge of the clue is a line.
+One is worth learning, because it settles a whole clue at once. Suppose a
+clue needs all but one of its open edges: a 3 in a square, say, or a 2 in
+a square whose fourth edge is already ruled out. If two dots next to each
+other around it both already have a line, **the edge joining them is out**.
+Drawing it would fill both dots, ruling out the clue's edge on the far side
+of each and leaving the clue short. With that edge gone, every other open
+edge of the clue must be a line.
 
 On harder boards the reasoning turns on corners and pairs, and the hint
 writes each one down as a note before it uses it, just as you would:

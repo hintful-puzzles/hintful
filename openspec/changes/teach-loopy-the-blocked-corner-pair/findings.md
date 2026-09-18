@@ -87,45 +87,36 @@ board where it leads.
 The frame composites correctly: both dots ringed, the clue outlined, the edge
 between the dots banded broken, the two edges it draws banded solid.
 
-### The sentence is 239 characters, against a 120 limit
+### The wording, reworked after the owner saw it
 
-`hint-quality.test.ts` caught it, and it is ledgered in `LONG_NARRATIONS` rather
-than shortened. The soft limit is 120 and the hard ceiling 300, so it fits — but it
-is long, and the owner should know the number rather than discover it.
+The sentence first shipped as the one settled before implementation, at 239
+characters and ledgered past the 120 limit:
 
-Nothing shorter keeps what the wording was chosen for. Two premises (both dots have
-a line; joining them leaves the clue one short), the image that teaches the shape
-rather than the arithmetic, and both halves of a conclusion that settles a whole
-face do not fit in 120 characters; the tightest rewrite preserving all three of the
-task's constraints still runs past 200. The override exists for exactly this —
-owner, 2026-09-10: *"a character limit as a linter, and a way to override it for a
-few particularly complex hints"* — and this step replaces three narrow ones, so
-dropping either half of the conclusion would leave the player where they started.
+> *"Both ringed dots already have a line, and joining them directly would rule out
+> the 2's other two edges and leave it one short. So the loop has to take the long
+> way around this 2: the edge between the dots is out, and the other 2 are lines."*
 
-### One wording question for the owner
+Seen on the board above, the owner found it far too long and also confusing: the
+face was **a 2 on a square whose fourth edge was already ruled out**, and there the
+loop does not go round anything. "The long way around" was true of the pristine 3
+it was written for, but the firing's guard is stated over the edges still *open*,
+so it admits faces the image does not fit. That lesson is now in
+`docs/games/hints.md` § "Sanity-read at the degenerate extremes".
 
-The board it fired on was **a 2 on a square with one edge already ruled out**, not
-the pristine 3 the sentence was written for. The guard is `clue = order − 1` stated
-over the edges still *open*, so that case is in scope and is not rare — it was the
-first frame looked at.
+The owner proposed *"Connecting these two dots would leave the 2 short, so it's out
+and the other 2 are lines."* What shipped keeps that shape and adds back the one
+premise it had dropped: the dots' existing lines are *why* joining them leaves the
+clue short.
 
-There the sentence reads: *"…the edge between the dots is out, and the other 2 are
-lines."* The face has **three** edges other than the one between the dots; two of
-them are lines and the third was already ruled out. So the count is the number of
-lines, not the number of "others". The sentence is true — two of the other edges
-are lines, and the already-excluded one is drawn faintly so the player can see
-which — but the phrase does double duty, and it is exact only when the face is
-pristine.
+> *"Both ringed dots already have a line, so joining them leaves this 2 short. That
+> edge is out; the other 2 are lines."*
 
-Not changed here. The wording is the owner's and the tasks say it is not a draft to
-re-open while implementing, so this is raised rather than rewritten. Three ways out,
-if the owner wants one:
-
-1. **Leave it.** True as written, and the marks disambiguate.
-2. **Count the open edges instead** — "the other 2 open edges are lines". Exact in
-   every case; adds a word.
-3. **Drop the count** — "…and the rest are lines". Reads best but is false when one
-   of the rest is already ruled out.
+115 characters, 117 at a two-digit clue (a dodecagon can be clued 11), so it is
+under the limit and off the `LONG_NARRATIONS` ledger. "That edge" replaces
+"it's out", whose "it" had no noun to point at. The count is the clue, and the face
+ends with exactly the clue's number of lines whether or not an edge was already out.
+On the 2 above, "the other 2" refers to the two open edges; the edge already ruled
+out is drawn faintly, so it isn't mistaken for one of them.
 
 ### The known positive (§1.3)
 

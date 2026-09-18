@@ -37,15 +37,15 @@ too" — the rule this change added.
 
 ## 3. The narration
 
-- [x] 3.1 `say.clueLongWay`, the owner's settled wording, with the three constraints
-      it satisfies recorded at the site so a rewrite cannot drop them silently. At
-      239 characters it is ledgered in `hint-quality.test.ts`'s `LONG_NARRATIONS`
-      (limit 120, ceiling 300); nothing shorter keeps both premises, the image and
-      both halves of the conclusion (`findings.md`).
-- [x] 3.2 The clue is the only part that varies, and it varies in three places: the
-      two edges ruled out are always exactly two, while the edges left as lines are
-      every edge but one, which on a face clued one short of its order is the clue
-      again. Guarded by `say.clueLongWay(2) === say.clueLongWay(3).replaceAll(…)`.
+- [x] 3.1 `say.clueBlockedPair`. The wording settled before implementation (239
+      characters, "the long way around") was reworked after the owner saw it on a 2
+      whose fourth edge was already out, where the loop goes round nothing. It now
+      uses the owner's shorter shape with the dots' existing lines restored as the
+      premise: 115 characters, under the limit and off the `LONG_NARRATIONS`
+      ledger (`findings.md` § "The wording, reworked after the owner saw it").
+- [x] 3.2 The clue is the only part that varies, and the face ends with exactly the
+      clue's number of lines whether or not an edge was already out. Guarded by
+      `say.clueBlockedPair(2) === say.clueBlockedPair(3).replaceAll(…)`.
 - [x] 3.3 Both dots ringed, the clue outlined, every edge the step settles banded —
       asserted on where the pixels land, not on the marks the step carries. The
       deictic guard gained the plural case, and its `kinds` census the entry, so a
@@ -73,6 +73,5 @@ too" — the rule this change added.
       firing 46 of 88. The frame composites correctly: both dots ringed, the clue
       outlined, the edge between them banded broken and the two it draws banded
       solid. `findings.md` § "What the app showed".
-- [ ] 6.2 Owner acceptance of the sentence and its marks on a rendered frame —
-      including the one wording question `findings.md` raises, which is the owner's
-      to settle because the sentence is theirs.
+- [ ] 6.2 Owner acceptance of the reworked sentence and its marks on a rendered
+      frame.
