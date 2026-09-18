@@ -7,7 +7,13 @@
  */
 import { c2nUpper, n2cUpper } from "../../engine/desc-alphabet.ts";
 import { Dsf } from "../../engine/dsf.ts";
-import type { Grid, GridType } from "../../engine/grid/index.ts";
+import type {
+  Grid,
+  GridDot,
+  GridEdge,
+  GridFace,
+  GridType,
+} from "../../engine/grid/index.ts";
 import {
   GridTrimmedAwayError,
   gridNew,
@@ -246,6 +252,72 @@ function dotOrder(s: LoopyState, dot: number, lineType: number): number {
     if (s.lines[d.edges[i].index] === lineType) n++;
   }
   return n;
+}
+
+/**
+ * The edges a move's newly drawn lines settle by counting alone: the rest of a dot
+ * that now carries its two lines, and the rest of a face whose clue is now met
+ * exactly.
+ *
+ * Neither is a deduction. A dot takes at most two lines and a clue is an exact
+ * count, so a player spared these marks has been spared bookkeeping rather than
+ * told an answer — which is the argument for `LoopyUi.autoRuleOut` defaulting on
+ * where `autofollow` does not. `setEdge` folds the result into the same move, so
+ * one undo takes the whole thing back.
+ *
+ * Counts read through `ops`, not off `s`, because the ops are what make the count
+ * true. Only a `LINE_YES` op can trigger anything, and one pass is enough: an
+ * excluded edge adds no line, so it completes neither another dot nor another clue.
+ *
+ * `hintKeepTrack` calls it too, on the *hint's* own ops, so a player who follows a
+ * hint with the aid on is still judged to have taken that step rather than a
+ * different one.
+ */
+export function forcedRuleOuts(
+  s: LoopyState,
+  ops: ReadonlyMap<number, LineState>,
+): number[] {
+  const drawn: GridEdge[] = [];
+  for (const [edge, to] of ops) {
+    if (to === LINE_YES) drawn.push(s.grid.edges[edge]);
+  }
+  if (drawn.length === 0) return [];
+
+  const lineOf = (e: GridEdge): LineState =>
+    ops.get(e.index) ?? (s.lines[e.index] as LineState);
+  const out = new Set<number>();
+
+  /** Exclude the rest of `edges`, once `full` accepts how many of them are lines. */
+  const settle = (
+    edges: readonly (GridEdge | null)[],
+    full: (yes: number) => boolean,
+  ): void => {
+    let yes = 0;
+    for (const e of edges) if (e !== null && lineOf(e) === LINE_YES) yes++;
+    if (!full(yes)) return;
+    for (const e of edges) {
+      if (e !== null && lineOf(e) === LINE_UNKNOWN) out.add(e.index);
+    }
+  };
+
+  const dots = new Set<GridDot>();
+  const faces = new Set<GridFace>();
+  for (const e of drawn) {
+    dots.add(e.dot1);
+    dots.add(e.dot2);
+    if (e.face1 !== null) faces.add(e.face1);
+    if (e.face2 !== null) faces.add(e.face2);
+  }
+
+  // Exactly the count, never past it: a dot already carrying three lines, or a face
+  // already over its clue, is a board in error, and hanging marks off an error is
+  // not this aid's job.
+  for (const d of dots) settle(d.edges, (yes) => yes === 2);
+  for (const f of faces) {
+    const clue = s.clues[f.index];
+    if (clue !== NO_CLUE) settle(f.edges, (yes) => yes === clue);
+  }
+  return [...out];
 }
 
 /** How many lines of `lineType` currently surround this face. */

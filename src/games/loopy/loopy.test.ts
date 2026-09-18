@@ -8,6 +8,7 @@
  * purpose, and the retry paths the C reaches by aborting or hanging.
  */
 import { describe, expect, it } from "vitest";
+import type { GridDot } from "../../engine/grid/index.ts";
 import { LEFT_BUTTON, MIDDLE_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { newDesc } from "./generator.ts";
@@ -36,9 +37,11 @@ import { _internals, checkCaches, SolverState, solveGame } from "./solver.ts";
 import {
   decodeClues,
   encodeClues,
+  forcedRuleOuts,
   LINE_NO,
   LINE_UNKNOWN,
   LINE_YES,
+  type LineState,
   type LoopyState,
   NO_CLUE,
   newState,
@@ -291,6 +294,101 @@ describe("input", () => {
       s.lines.fill(LINE_YES);
       const ui = loopyGame.newUi(s);
       expect(ui.autofollow).toBe(AF_OFF);
+    });
+  });
+
+  describe("auto rule-out", () => {
+    /** An interior dot of a 3x3 board, whose order is 4, so it has two spare
+     * edges left once two of them are lines. */
+    function junctionOf(s: LoopyState): GridDot {
+      const d = s.grid.dots.find((x) => x.order === 4);
+      if (!d) throw new Error("a 3x3 square grid has order-4 dots");
+      return d;
+    }
+
+    it("excludes the rest of a dot once it has its second line", () => {
+      const s = blankState(3, 3);
+      const d = junctionOf(s);
+      s.lines[d.edges[0].index] = LINE_YES;
+
+      const ops = new Map<number, LineState>([[d.edges[1].index, LINE_YES]]);
+      const out = forcedRuleOuts(s, ops);
+      expect(out).toContain(d.edges[2].index);
+      expect(out).toContain(d.edges[3].index);
+      // Not the two that are lines, and not an edge the move never reached.
+      expect(out).not.toContain(d.edges[0].index);
+      expect(out).not.toContain(d.edges[1].index);
+    });
+
+    it("excludes the rest of a face once its clue is met", () => {
+      const s = blankState(3, 3);
+      const f = s.grid.faces[0];
+      const edges = f.edges.filter((e) => e !== null);
+      expect(edges.length).toBe(4);
+      s.clues[f.index] = 2;
+      s.lines[edges[0].index] = LINE_YES;
+
+      const out = forcedRuleOuts(s, new Map([[edges[1].index, LINE_YES]]));
+      expect(out).toContain(edges[2].index);
+      expect(out).toContain(edges[3].index);
+    });
+
+    it("counts through the move's own ops, not the board behind them", () => {
+      // Both lines arrive in the one move (an autofollow run), so nothing on the
+      // stale board says the dot is full. Reading `s.lines` alone finds nothing.
+      const s = blankState(3, 3);
+      const d = junctionOf(s);
+      const ops = new Map<number, LineState>([
+        [d.edges[0].index, LINE_YES],
+        [d.edges[1].index, LINE_YES],
+      ]);
+      expect(forcedRuleOuts(s, ops)).toContain(d.edges[2].index);
+    });
+
+    it("never touches an edge the player has already set", () => {
+      const s = blankState(3, 3);
+      const d = junctionOf(s);
+      s.lines[d.edges[0].index] = LINE_YES;
+      s.lines[d.edges[2].index] = LINE_NO;
+
+      const out = forcedRuleOuts(s, new Map([[d.edges[1].index, LINE_YES]]));
+      expect(out).not.toContain(d.edges[2].index);
+      expect(out).toContain(d.edges[3].index);
+    });
+
+    it("stays out of a board already in error", () => {
+      // Three lines at a dot is not a position to hang further marks off — the
+      // count is past the rule rather than at it.
+      const s = blankState(3, 3);
+      const d = junctionOf(s);
+      s.lines[d.edges[0].index] = LINE_YES;
+      s.lines[d.edges[1].index] = LINE_YES;
+      expect(forcedRuleOuts(s, new Map([[d.edges[2].index, LINE_YES]]))).toEqual([]);
+    });
+
+    it("settles nothing when the move draws no line", () => {
+      const s = blankState(3, 3);
+      const d = junctionOf(s);
+      s.lines[d.edges[0].index] = LINE_YES;
+      // An exclusion adds no line, so it can complete neither a dot nor a clue.
+      expect(forcedRuleOuts(s, new Map([[d.edges[1].index, LINE_NO]]))).toEqual([]);
+      expect(forcedRuleOuts(s, new Map([[d.edges[0].index, LINE_UNKNOWN]]))).toEqual(
+        [],
+      );
+    });
+
+    it("is on by default, and the preference turns it off", () => {
+      const s = blankState(3, 3);
+      const ui = loopyGame.newUi(s);
+      // On where `autofollow` is off: this aid asserts a count already true and
+      // forced, so it discards nothing (see the change's proposal).
+      expect(ui.autoRuleOut).toBe(true);
+      const pref = loopyGame.prefs?.find((p) => p.kw === "auto-rule-out");
+      if (pref?.type !== "boolean") {
+        throw new Error("loopy offers no boolean auto-rule-out preference");
+      }
+      pref.set(ui, false);
+      expect(ui.autoRuleOut).toBe(false);
     });
   });
 

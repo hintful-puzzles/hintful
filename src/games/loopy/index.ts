@@ -97,6 +97,7 @@ import { solveGame, uniqueSolution } from "./solver.ts";
 import {
   checkCompletion,
   cloneState,
+  forcedRuleOuts,
   LINE_NO,
   LINE_UNKNOWN,
   LINE_YES,
@@ -140,6 +141,9 @@ export interface LoopyUi {
   drawFaintLines: boolean;
   /** {@link AF_OFF} / {@link AF_FIXED} / {@link AF_ADAPTIVE}. */
   autofollow: number;
+  /** Drawing a line also excludes the edges that settles by counting
+   * ({@link forcedRuleOuts}). */
+  autoRuleOut: boolean;
   /** The keyboard cursor: a dot and one of its incident edges (`cursor.ts`). */
   cursor: LoopyCursor;
   /** Notes mode: input notes corners and pairs instead of setting lines. */
@@ -172,6 +176,10 @@ function newUi(state: LoopyState): LoopyUi {
   return {
     drawFaintLines: true,
     autofollow: AF_OFF,
+    // On, where the other two aids are off: this one asserts a count that is already
+    // true and forced, so it discards nothing and takes no decision away from the
+    // player (owner, 2026-09-18; the reasoning is in the change's proposal).
+    autoRuleOut: true,
     cursor: newLoopyCursor(state.grid),
     pencilMode: false,
     noteDrag: null,
@@ -197,6 +205,15 @@ const prefs: GamePref<LoopyUi>[] = [
     get: (ui) => ui.autofollow,
     set: (ui, v) => {
       ui.autofollow = v;
+    },
+  },
+  {
+    kw: "auto-rule-out",
+    name: "Rule out edges that counting has already settled",
+    type: "boolean",
+    get: (ui) => ui.autoRuleOut,
+    set: (ui, v) => {
+      ui.autoRuleOut = v;
     },
   },
 ];
@@ -316,9 +333,17 @@ function setEdge(
       ? new Set<number>([e.index])
       : autofollowEdges(state, ui, e);
 
+  const ops = new Map<number, LineState>();
+  for (const edge of edges) ops.set(edge, newLine);
+  // After autofollow, so a corridor and the edges its far end settles arrive as one
+  // move — and so one undo takes the whole thing back.
+  if (ui.autoRuleOut) {
+    for (const edge of forcedRuleOuts(state, ops)) ops.set(edge, LINE_NO);
+  }
+
   return {
     kind: "set",
-    ops: [...edges].map((edge) => ({ edge, state: newLine })),
+    ops: [...ops].map(([edge, to]) => ({ edge, state: to })),
   };
 }
 

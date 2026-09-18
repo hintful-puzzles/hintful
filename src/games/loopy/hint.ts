@@ -43,7 +43,14 @@ import {
   nextFiring,
   type SolverState,
 } from "./solver.ts";
-import { LINE_UNKNOWN, LINE_YES, type LoopyPair, type LoopyState } from "./state.ts";
+import {
+  forcedRuleOuts,
+  LINE_NO,
+  LINE_UNKNOWN,
+  LINE_YES,
+  type LoopyPair,
+  type LoopyState,
+} from "./state.ts";
 
 export interface LoopyHint {
   /** The edges the step sets. */
@@ -630,7 +637,19 @@ export function hintKeepTrack(
     case "solve": {
       if (m.kind !== "set") return "off";
       const lines = new Map(want.ops.map((o) => [o.edge, o.state]));
-      for (const op of m.ops) if (lines.get(op.edge) !== op.state) return "off";
+      // A player with `autoRuleOut` on draws the hint's line and the exclusions that
+      // line forces, in one move. Those extra ops are this step taken, not a
+      // different move, so they are tolerated — but **derived from `want`**, so an
+      // exclusion the step does not force is still a divergence and still drops the
+      // plan. Without this, 27.8% of Loopy's own `set` steps verdicted "off" when
+      // followed with the aid on (measured over three 7x7 Tricky plans).
+      let forced: Set<number> | null = null;
+      for (const op of m.ops) {
+        if (lines.get(op.edge) === op.state) continue;
+        if (op.state !== LINE_NO) return "off";
+        forced ??= new Set(forcedRuleOuts(state, lines));
+        if (!forced.has(op.edge)) return "off";
+      }
       const moved = new Map(m.ops.map((o) => [o.edge, o.state]));
       for (const [edge, to] of lines) {
         if ((moved.get(edge) ?? state.lines[edge]) !== to) return "onTrack";

@@ -41,6 +41,7 @@ import type { CornerWhy, LoopyReason, RelationWhy } from "./record.ts";
 import { COL_HINT, COL_HINT_CELL, COL_MISTAKE, PREFERRED_TILE_SIZE } from "./render.ts";
 import { uniqueSolution } from "./solver.ts";
 import {
+  forcedRuleOuts,
   LINE_NO,
   LINE_UNKNOWN,
   LINE_YES,
@@ -152,6 +153,70 @@ describe("Loopy hint: soundness on every tiling", () => {
     for (const grid of LOOPY_GRIDS)
       expect(tilings.has(grid.type), grid.type).toBe(true);
     expect(notes, "the corpus placed no note").toBeGreaterThan(100);
+  });
+
+  /**
+   * The auto rule-out aid extends a player's line move with the exclusions that
+   * line forces, so a player following a hint with the aid on sends a **superset**
+   * of the step's ops. `hintKeepTrack` rejects an op the step did not ask for — for
+   * good reason, since a player who set something else has gone their own way — so
+   * without an allowance for these the plan drops on a step the player *did* take.
+   *
+   * Two claims, and the second is what makes the first safe: every exclusion the aid
+   * derives from the step's own lines is tolerated, and every exclusion it does not
+   * derive still drops the plan. The corpus count guards against a run that exercised
+   * neither.
+   */
+  it("keeps track of a step the player took with auto rule-out on", () => {
+    let exercised = 0;
+    for (const b of corpus()) {
+      let state = b.state;
+      for (const step of stepsOf(b.state)) {
+        const move = step.move;
+        if (move.kind === "set") {
+          const ops = new Map<number, LineState>(
+            move.ops.map((o) => [o.edge, o.state]),
+          );
+          const extra = forcedRuleOuts(state, ops);
+          if (extra.length > 0) {
+            exercised++;
+            const withAid: LoopyMove & { kind: "set" } = {
+              kind: "set",
+              ops: [
+                ...move.ops,
+                ...extra.map((edge) => ({ edge, state: LINE_NO as LineState })),
+              ],
+            };
+            expect(
+              hintKeepTrack(withAid, step, state),
+              `${b.name}: "${step.explanation}" dropped the plan`,
+            ).not.toBe("off");
+
+            // An exclusion the step does not force is still a divergence. Any edge
+            // the aid did not name will do; the board has far more than it settles.
+            const alien = [...state.lines.keys()].find(
+              (e) =>
+                state.lines[e] === LINE_UNKNOWN && !ops.has(e) && !extra.includes(e),
+            );
+            if (alien !== undefined) {
+              expect(
+                hintKeepTrack(
+                  {
+                    kind: "set",
+                    ops: [...withAid.ops, { edge: alien, state: LINE_NO }],
+                  },
+                  step,
+                  state,
+                ),
+                `${b.name}: an unforced exclusion was tolerated`,
+              ).toBe("off");
+            }
+          }
+        }
+        state = loopyGame.executeMove(state, move);
+      }
+    }
+    expect(exercised, "no step in the corpus forced an exclusion").toBeGreaterThan(50);
   });
 
   it("an Easy or Normal square board needs no pair, and an Easy one no note at all", () => {

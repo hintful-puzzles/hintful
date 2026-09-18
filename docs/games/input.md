@@ -762,6 +762,37 @@ chokepoint), so any bypass fails loudly. Exemplar:
 [`untangle/index.ts`](../../src/games/untangle/index.ts)
 (`placeDraggedPoint`).
 
+## An aid extends the move, at the one place the move is built
+
+A convenience aid that does forced work for the player — Loopy's `autofollow`
+extending a click along a corridor, its `autoRuleOut` excluding the edges a new
+line settles by counting — belongs in the **one function that builds the move**
+(`setEdge`), folded into that move's own ops. Two properties fall out and both
+matter:
+
+- **One undo takes the whole thing back**, because there is one move, not a move
+  and a tidy-up. A player who drew a line and got three exclusions gets rid of all
+  four with one press.
+- **Replay is unchanged**, because the ops are absolute sets rather than toggles,
+  so re-applying the recorded move reproduces the same board without re-running the
+  aid.
+
+Two things to get right, learned from `add-loopy-auto-rule-out`:
+
+- **Read the counts through the pending ops, not off the board.** The ops are what
+  make the count true, and a corridor can deliver several lines at once, so a
+  helper that consults `state.lines` alone finds nothing on exactly the move that
+  should trigger it.
+- **A move that does more than the hint asked drops the hint plan, unless you say
+  otherwise.** `hintKeepTrack`'s honest default is that an op the step did not ask
+  for means the player went their own way. With the aid on, 27.8% of Loopy's own
+  line steps verdicted `"off"` when followed — the plan dropping on the step the
+  player had just taken. The allowance has to be **derived from the step's own
+  move** (run the same aid over the *wanted* ops), so an extra mark the step does
+  not force still counts as divergence. Guard:
+  `loopy-hint.test.ts` "keeps track of a step the player took with auto rule-out on",
+  which also plants an unforced exclusion and asserts it still drops the plan.
+
 ## The on-screen keypad
 
 **Any game upstream gave a virtual keypad loses it unless the port implements

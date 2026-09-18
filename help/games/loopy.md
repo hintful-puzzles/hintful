@@ -12,6 +12,14 @@ gray), and again to mark it as undecided again.
 On a touch screen, tapping an edge cycles it through all three states,
 so you never need a second button.
 
+When you draw a line, the app also rules out the edges that plain counting
+has already settled for you: the other edges at a dot that now has its two
+lines, and the other edges of a clue that now has as many lines as it asks
+for. Neither takes any working out — marking them is bookkeeping rather than
+solving — so they arrive with the line you drew, and a single undo takes the
+whole lot back together. If you would rather keep your own board, turn off
+**Rule out edges that counting has already settled** under Loopy preferences.
+
 You can also play entirely from the keyboard. Everywhere else in this
 collection the cursor sits on a square; here you are marking the *edges*
 between squares, so the cursor sits on a **dot**, where edges meet, and the
