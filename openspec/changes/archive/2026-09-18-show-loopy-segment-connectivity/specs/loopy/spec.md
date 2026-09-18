@@ -2,7 +2,7 @@
 
 ## ADDED Requirements
 
-### Requirement: Loopy shows which lines belong to the segment you last touched
+### Requirement: Loopy shows which lines are joined to the one under the pointer
 
 Loopy SHALL highlight the connected run of drawn lines containing the edge under the
 mouse pointer, so that "are these two ends the same run?" can be answered without

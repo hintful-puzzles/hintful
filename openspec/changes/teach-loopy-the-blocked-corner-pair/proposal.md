@@ -35,15 +35,16 @@ granularity is the human one, and here it is not.
 ## What changes
 
 - **The engine learns the pattern as one firing**, so it settles the whole face at once
-  and can be narrated as one thing. Draft phrasing, to be settled in review:
+  and can be narrated as one thing. The wording is settled (owner, 2026-09-18):
 
-  > *"Lines reach both ends of this 3's top edge. If that edge were a line too, both of
-  > those dots would be full and the 3's other two edges ruled out — leaving it one
-  > short. So that edge can't be a line, and the other three must be."*
+  > *"Both ringed dots already have a line, and joining them directly would rule out the
+  > 3's other two edges and leave it one short. So the loop has to take the long way
+  > around this 3: the edge between the dots is out, and the other three are lines."*
 
-  The owner's own draft said "incoming edges" and "the long way around"; the wording
-  above avoids "incoming" because the player sees lines, not direction, and states the
-  contradiction rather than naming the shape.
+  It keeps the owner's own image — *the long way around* — which teaches the shape of
+  the technique rather than only its arithmetic, and is the reason this was chosen over
+  a plainer variant. It drops "incoming", because the player sees lines on a board and
+  not a direction of travel.
 
 - **Generalized past the 3, if the measurement supports it.** The argument is not about
   3 specifically: it is *clue = order − 1* on a face whose two edges at each of two

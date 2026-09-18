@@ -74,7 +74,9 @@ Read `proposal.md`, then `docs/games/rendering.md` on the palette's three layers
 
 - [x] 6.1 Run it. On a board with two disjoint runs, hovering each in turn highlights
       that one and leaves the other plain; moving off the lines clears it.
-- [ ] 6.2 Owner acceptance, including the choice of the cursor green.
+- [x] 6.2 Accepted (owner, 2026-09-18): *"I accepted the new hover and everything
+      else."* That covers the cursor green, which was flagged for their eye — so the
+      reuse stands rather than waiting on a colour of its own.
 
 ## 7. Not here
 

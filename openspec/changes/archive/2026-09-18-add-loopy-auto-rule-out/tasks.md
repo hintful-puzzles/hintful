@@ -87,4 +87,7 @@ instance of.
 - [x] 6.1 Run it. On `7x7t0dt:c3a2…`, one click on the right edge of a `1` drew the
       line, dimmed the clue and excluded its other three edges — all from that one
       click — and one undo restored every one of them together.
-- [ ] 6.2 Owner acceptance, the default included.
+- [x] 6.2 Accepted (owner, 2026-09-18): *"That's fabulous regarding the rule-out
+      mechanism"*, and on this session's work as a whole, *"I accepted the new hover and
+      everything else"* — which is what carries the **default-on** divergence, since
+      that was the one part flagged as needing their call rather than mine.
