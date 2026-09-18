@@ -21,9 +21,17 @@ function makeView(): PuzzleViewInteractive {
   return document.createElement("puzzle-view-interactive") as PuzzleViewInteractive;
 }
 
+/**
+ * A selection as Chrome reports one made inside a shadow root, which is where
+ * the hint explanation is: anchor and focus are retargeted to the host, so
+ * `isCollapsed` is `true` even while text is selected. Modeling the idealized
+ * selection instead (`isCollapsed` exactly when empty) is what let the guard
+ * read `isCollapsed` and pass here while copying an image in the app.
+ */
 function stubSelection(text: string): void {
   vi.spyOn(window, "getSelection").mockReturnValue({
-    isCollapsed: text.length === 0,
+    isCollapsed: true,
+    type: text.length === 0 ? "Caret" : "Range",
     toString: () => text,
   } as unknown as Selection);
 }
@@ -63,6 +71,37 @@ describe("wantsKeyEvent copy handling", () => {
     expect(
       view.wantsKeyEvent(new KeyboardEvent("keydown", { key: "c", ctrlKey: true })),
     ).toBe(true);
+  });
+
+  // The board is usually the one focused, not the page: every rail command hands
+  // focus back to it (`focusBoard`), so a player who pressed Hint and then
+  // selected its text copies through `handleKeyEvent`, never through the
+  // `wantsKeyEvent` redirect above. Both paths have to step aside.
+  it("leaves Ctrl/Cmd+C to the browser when the focused board sees it with text selected", async () => {
+    const copyImage = vi.fn();
+    const view = makeView();
+    (view as unknown as { puzzle: { copyImage: () => void } }).puzzle = { copyImage };
+
+    stubSelection("Both ringed dots already have a line");
+    const withText = new KeyboardEvent("keydown", {
+      key: "c",
+      ctrlKey: true,
+      cancelable: true,
+    });
+    await view.handleKeyEvent(withText);
+    expect(copyImage).not.toHaveBeenCalled();
+    expect(withText.defaultPrevented).toBe(false);
+
+    vi.restoreAllMocks();
+    stubSelection("");
+    const without = new KeyboardEvent("keydown", {
+      key: "c",
+      ctrlKey: true,
+      cancelable: true,
+    });
+    await view.handleKeyEvent(without);
+    expect(copyImage).toHaveBeenCalledTimes(1);
+    expect(without.defaultPrevented).toBe(true);
   });
 
   it("still claims non-copy puzzle keys regardless of selection", () => {

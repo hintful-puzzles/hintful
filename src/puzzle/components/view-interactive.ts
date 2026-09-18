@@ -16,12 +16,17 @@ import { PuzzleView } from "./view.ts";
 /**
  * Whether the user has a non-empty text selection on the page (e.g. across the
  * hint explanation), so a native text copy can win over the puzzle's
- * copy-as-image shortcut. `window.getSelection()` reports selections inside
- * shadow roots too.
+ * copy-as-image shortcut.
+ *
+ * Read from the selected text alone, never from `isCollapsed`. Chrome retargets
+ * a selection inside a shadow root to the host, so its anchor and focus land on
+ * the same node and offset and `isCollapsed` is `true` while `toString()` still
+ * returns the text — and the hint explanation sits two shadow roots deep. A
+ * caret has no text, so the text alone decides.
  */
 function hasTextSelection(): boolean {
   const sel = typeof window !== "undefined" ? window.getSelection?.() : null;
-  return !!sel && !sel.isCollapsed && sel.toString().trim().length > 0;
+  return !!sel && sel.toString().trim().length > 0;
 }
 
 /**
