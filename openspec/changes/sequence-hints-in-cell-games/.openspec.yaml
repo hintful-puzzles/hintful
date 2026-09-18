@@ -1,0 +1,11 @@
+# No spec deltas yet, deliberately.
+#
+# §1 carries a stopping condition, and a delta written before it resolves would be a
+# requirement for code that may never exist — the hazard `order-hints-from-the-frontier`
+# hit from the other end, where a delta outran the code it governed. If §1.5 says
+# proceed, the ordering requirement and the widened note placement (task 4.2) each get
+# their delta then; if it says stop, the change archives with the measurement as its
+# whole product and nothing is published.
+schema: spec-driven
+created: 2026-09-18
+skip_specs: true

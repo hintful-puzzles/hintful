@@ -55,9 +55,13 @@ Read `design.md` first, then `docs/games/hints.md` § "Recompute-stable plans" a
       (`docs/games/hints.md` § "Highlight, never perform"), so a leg still costs a
       press to see and a press to apply. What the journey changes is adjacency,
       numbering, and that manual play and Auto-Hint carry the display through the legs.
-- [ ] 3.4 A note whose sentence names which edges are still open is placed at the
-      **latest** step where that claim still holds, bounding its lag without letting
-      its explanation go stale (D5).
+- [~] 3.4 Carried to `sequence-hints-in-cell-games` rather than done here. Placing an
+      expiring note at the **latest** step where its claim still holds would close the
+      19% residual, but it concentrates notes onto their consumers harder, and the
+      55-leg journey of 6.1 is the open question about exactly that. Landing it before
+      anyone has judged whether a long journey reads as a wall would be building on an
+      unvalidated answer. The spec was narrowed to what ships (5.3) so nothing promises
+      it in the meantime.
 - [x] 3.5 Answered by the before/after table in `findings.md` § "3.3 / 3.6 — the fix,
       measured", which splits the lag by the only line that matters: the monotone half
       is gone (the corner-heavy Tricky boards reach 100%), and the **19.1% residual is
@@ -86,14 +90,12 @@ Read `design.md` first, then `docs/games/hints.md` § "Recompute-stable plans" a
       ordering requirement was withdrawn with §2 rather than softened, and the delta's
       own header says so: a requirement the collection cannot satisfy, and that nothing
       intends to implement, must not reach the live spec.
-- [ ] 5.3 **Blocks archiving.** The delta's second scenario ("an explanation the board
-      outgrows") states 3.4's behavior — a note placed *at the latest step where its
-      explanation still holds* — and 3.4 has not landed. What ships leaves an expiring
-      note at `tickOf`, the position the solver found it at, which is *a* position its
-      sentence describes but not established to be the last one. Archiving as it stands
-      would publish a requirement the code contradicts, which is the hazard `AGENTS.md`
-      § "Work management" names. Resolve by landing 3.4 **or** by narrowing that
-      scenario to what ships and re-filing the rest; do not archive before one of them.
+- [x] 5.3 Resolved by narrowing, the second of the two options it offered. The
+      requirement and its second scenario now state what ships — an expiring note is
+      **not** moved to its consumer and is offered at a position its explanation still
+      describes — instead of 3.4's "at the latest such position", which no code
+      implements. The live spec therefore says something true of the tree, and 3.4
+      moves to `sequence-hints-in-cell-games` to widen it when it lands.
 - [x] 5.2 `docs/games/hints.md` § "Give the facts a notation (Loopy)": the bullet that
       said *"place a note where its fact was found, not where it is used"* stated the
       **opposite** of what shipped, and a guide that contradicts a spec is worse than
@@ -125,4 +127,8 @@ Read `design.md` first, then `docs/games/hints.md` § "Recompute-stable plans" a
       shows in between. `continuesPrevious` carries the display through legs on the
       manual-play and Auto-Hint paths, not the stepper. 3.6's claim was reworded.
       The 55-leg journey of 6.1 was not reached in the browser; it is 6.2's question.
-- [ ] 6.2 Owner acceptance of the sequencing, on that board and on one cell game.
+- [x] 6.2 Accepted (owner, 2026-09-18): *"Fabulous, accepted. I love it for Loopy!"*
+      Accepted **on Loopy**, which is the whole of what shipped; the cell-game half of
+      this task was never reached, because the mechanism it would have been judged on
+      is the ordering that 1.1 withdrew. Whether cell games have the defect at all is
+      the opening measurement of `sequence-hints-in-cell-games`.

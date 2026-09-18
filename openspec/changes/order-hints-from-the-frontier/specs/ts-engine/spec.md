@@ -10,11 +10,12 @@
 
 ### Requirement: A note a hint asks for is placed beside the step that uses it
 
-Where a hint plan asks the player to record a fact as a note, that note SHALL be
-placed as late as it can truthfully be placed — immediately before the step whose
-reasoning rests on it, or, where the note's own explanation would by then be false of
-the board, at the latest step where that explanation still holds. A note SHALL be part
-of its consumer's journey rather than a step of its own.
+Where a hint plan asks the player to record a fact as a note, and the note's own
+explanation asserts only what stays true as the board fills, that note SHALL be placed
+immediately before the step whose reasoning rests on it. Where the explanation asserts
+something the board can stop satisfying, the note SHALL be placed at a position its
+explanation still describes. A note SHALL be part of its consumer's journey rather than
+a step of its own.
 
 A note placed where the solver happened to *discover* the fact reads as an unmotivated
 triviality, because nothing on screen connects it to the deduction it serves.
@@ -36,5 +37,5 @@ placement rule is bounded by that.
 
 - **WHEN** a note's explanation names which of a clue's or a dot's edges are still
   open, and further edges are settled before the step that cites the note
-- **THEN** the note is placed at the latest step where its explanation is still true,
-  rather than beside its consumer carrying a stale claim
+- **THEN** the note is **not** moved to its consumer, and is offered at a position its
+  explanation still describes, rather than beside its consumer carrying a stale claim
