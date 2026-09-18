@@ -73,5 +73,5 @@ board are clipping."*
       held-then-dragged finger on 10×10 hats.
 - [x] 6.2 Re-run the app on the shared Marks key, in Loopy and in one cell game
       (`findings.md`).
-- [ ] 6.3 Owner acceptance of the input design, the indicator's new home, and the
+- [x] 6.3 Owner acceptance of the input design, the indicator's new home, and the
       widened Loopy gutter.
