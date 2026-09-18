@@ -451,6 +451,26 @@ stating the rules its doc comment claims rather than pinning values. Exemplar:
 **The cross-game guards derive their populations mechanically; a game enrolls
 by declaring, not by being remembered.**
 
+**Which means a change confined to one game's directory is not confined to one game's
+tests.** Two guards take their population from the *whole tree*, so any edit anywhere
+can move them, and neither lives under `src/games/`:
+
+- [`capability-surface.test.ts`](../../src/capability-surface.test.ts) snapshots every
+  game's method and `Ui` field lists. A new `Ui` field is an intended re-baseline —
+  `vitest run <path> -u`, then **say so in the change**, because the snapshot's own
+  comment distinguishes a deliberate re-baseline from the sweep silently shrinking a
+  game.
+- [`asset-integrity.test.ts`](../../src/asset-integrity.test.ts) § "no doc comment
+  describes a member that was deleted out from under it" scans every `.ts` file under
+  `src/`. Inserting an exported function immediately above another one strands the
+  **second** function's doc comment on the **first**, leaving two stacked comments and
+  one silently undocumented export — type-correct, test-green, and invisible in review.
+  `add-loopy-auto-rule-out` did exactly this and the guard caught it.
+
+So **run the whole suite before believing a game-local change is game-local**. Running
+the game's own directory plus the cross-game hint guards passed cleanly on that change
+while both of these were red.
+
 - **Hints**: **declaring `hint()` *is* the enrollment.**
   [`hint-games.ts`](../../src/engine/testing/hint-games.ts) filters the registry
   for games that declare one, so a game is covered by all six guards at once —
