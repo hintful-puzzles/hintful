@@ -33,6 +33,7 @@ import type {
   CustomParamsEncoding,
   GameStatus,
   KeyLabel,
+  Point,
   PresetMenuEntry,
   PuzzleStaticAttributes,
   ReferenceModel,
@@ -89,6 +90,10 @@ export interface EngineCore {
    * that wants none. */
   requestKeys(): KeyLabel[];
   processInput(x: number, y: number, button: number): boolean;
+  /** Whether the running game tracks the pointer between presses. */
+  readonly tracksHover: boolean;
+  /** Pointer moved over the board with no button down, or left it (`null`). */
+  processHover(p: Point | null): boolean;
   getParams(): string;
   setParams(params: string): string | null;
   getPresets(): PresetMenuEntry[];
@@ -399,6 +404,32 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
 
   private freshDrawState(s: State): DrawState {
     return this.game.newDrawState(s, this.currentTileSize);
+  }
+
+  /** Whether the running game tracks the pointer between presses
+   * ({@link Game.hover}). Derived from the game object, so the app can
+   * stop sending hovers for a game that has none rather than paying a
+   * worker round trip per pointer move to be told nothing happened. */
+  get tracksHover(): boolean {
+    return this.game.hover !== undefined;
+  }
+
+  /**
+   * The pointer moved over the board with no button down, or left it
+   * (`p === null`). Returns whether anything repainted.
+   *
+   * A hover never makes a move, never touches history and never disturbs a
+   * displayed hint: it is a second way of looking at the position, not a way
+   * of changing it. That is why it does not go through `processInput` — the
+   * repaint here is deliberately the *only* consequence it can have.
+   */
+  processHover(p: Point | null): boolean {
+    if (this.drawState === null || this.game.hover === undefined) return false;
+    const update = this.game.hover(this.state, this.ui, this.drawState, p);
+    if (update === null) return false;
+    this.clearAnimation();
+    this.afterTransition();
+    return true;
   }
 
   processInput(x: number, y: number, button: number): boolean {

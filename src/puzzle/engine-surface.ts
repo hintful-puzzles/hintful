@@ -61,6 +61,14 @@ export interface PuzzleEngineSurface {
 
   processKey(key: number): boolean;
   processMouse(point: Point, button: number): boolean;
+  /** Whether the running game tracks the pointer between presses
+   * (`Game.hover`). Asked once per game so the app can send no hovers at
+   * all for a game that has none. A method rather than a property because
+   * this surface crosses Comlink, where a getter would not survive. */
+  tracksHover(): boolean;
+  /** Pointer moved over the board with no button down, or left it
+   * (`null`). Repaints at most; never a move, never history. */
+  processHover(point: Point | null): boolean;
   requestKeys(): KeyLabel[];
 
   getParams(): string;

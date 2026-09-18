@@ -152,6 +152,11 @@ export interface LoopyUi {
   noteDrag: LoopyNoteDrag | null;
   /** The edge Space pinned for a pair note, or `-1`. */
   pin: number;
+  /** The edge the pointer is over, or `-1`. Its whole run of drawn lines is
+   * highlighted, so a player can see what a move would close without tracing
+   * the board. Mouse-only — touch reports no hover — so nothing may depend on
+   * it, and it is never read by a move. */
+  hoverEdge: number;
 }
 
 /** A notes-mode press, which the release decides is a tap or a drag. */
@@ -184,7 +189,34 @@ function newUi(state: LoopyState): LoopyUi {
     pencilMode: false,
     noteDrag: null,
     pin: -1,
+    hoverEdge: -1,
   };
+}
+
+/**
+ * The pointer moved over the board, or left it (`p === null`).
+ *
+ * Remembers the edge under it so {@link redraw} can light that edge's whole run
+ * of drawn lines — the premise of "don't close this into a loop while other
+ * segments remain", which the board otherwise makes the player trace by eye.
+ *
+ * **Returns `null` when the hovered edge has not changed**, which is what keeps
+ * a pointer sweep from repainting on every frame: most moves within a tile land
+ * on the same nearest edge.
+ */
+function hover(
+  state: LoopyState,
+  ui: LoopyUi,
+  ds: LoopyDrawState,
+  p: Point | null,
+): UiUpdate | null {
+  const e = p === null ? null : edgeAt(state.grid, ds.tileSize, p);
+  // Only a drawn line has a run to show, so anything else reads as "nothing
+  // hovered" rather than as a highlight of one edge.
+  const next = e !== null && state.lines[e.index] === LINE_YES ? e.index : -1;
+  if (next === ui.hoverEdge) return null;
+  ui.hoverEdge = next;
+  return UI_UPDATE;
 }
 
 const prefs: GamePref<LoopyUi>[] = [
@@ -739,6 +771,7 @@ export const loopyGame: Game<
 
   interpretMove,
   executeMove,
+  hover,
   // The midend upgrades this to "solved-with-help" itself when Solve was used.
   status: (s) => (s.completed ? "solved" : "ongoing"),
   solve,

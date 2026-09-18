@@ -4,15 +4,20 @@
 
 ### Requirement: Loopy shows which lines belong to the segment you last touched
 
-Loopy SHALL highlight the connected run of drawn lines containing the edge the player
-last acted on — the edge a pointer set, or the edge the keyboard cursor has chosen —
-so that "are these two ends the same segment?" can be answered without tracing the
-board by eye.
+Loopy SHALL highlight the connected run of drawn lines containing the edge under the
+mouse pointer, so that "are these two ends the same run?" can be answered without
+tracing the board by eye. An edge carrying no line has no run, and hovering it SHALL
+highlight nothing. When the pointer leaves the board the highlight SHALL clear.
 
-The highlight SHALL be derived from the board and the player's last action alone, never
-from a per-segment identity. Segment identity changes whenever two runs join, so a
-scheme that colors segments reshuffles the board as the player draws; keying on the
-player's own last action means the picture changes when, and only when, they act.
+The highlight SHALL be derived from the board and the pointer alone, never from a
+per-segment identity. Segment identity changes whenever two runs join, so a scheme that
+colors segments reshuffles the board as the player draws; keying on the pointer means
+the picture changes when, and only when, the player moves it.
+
+A hover SHALL never make a move, alter history, or change what a later move does. It
+shows the player something the board already contains, so **nothing may depend on
+it** — a touch screen has no hover, and the game must be exactly as playable without
+one.
 
 This is a **second reader of the connectivity the game already computes** for its
 completion check, not a second notion of it.
@@ -21,23 +26,24 @@ The existing highlight of every closed loop but the largest is unaffected: that 
 reports a loop already closed, and this one is what lets the player see the closure
 coming.
 
-#### Scenario: setting a line lights its run
+#### Scenario: hovering a line lights its run and no other
 
-- **WHEN** the player draws a line that joins two runs of lines
-- **THEN** every line of the joined run is highlighted, and lines of other runs are not
+- **WHEN** the board carries two runs of lines that share no dot, and the pointer rests
+  on a line of one of them
+- **THEN** every line of that run is highlighted and no line of the other is
 
-#### Scenario: the keyboard gets the same aid
+#### Scenario: the pointer leaves
 
-- **WHEN** the keyboard cursor chooses an edge that is a drawn line
-- **THEN** that line's whole run is highlighted, exactly as a pointer setting it would
+- **WHEN** the pointer moves off the board while a run is highlighted
+- **THEN** the highlight clears
 
-#### Scenario: joining two runs does not recolor the board
+#### Scenario: an edge with no line on it
 
-- **WHEN** two highlighted-and-unhighlighted runs are joined into one
-- **THEN** the only change is which lines are highlighted; no line changes to a
-  different color scheme, and no run the player did not touch gains a color
+- **WHEN** the pointer rests on an edge that is undecided or ruled out
+- **THEN** no run is highlighted
 
-#### Scenario: an excluded edge is not a segment
+#### Scenario: a hover that changes nothing repaints nothing
 
-- **WHEN** the player's last action excluded an edge rather than drawing a line
-- **THEN** no run is highlighted on account of that edge
+- **WHEN** the pointer moves but stays nearest the same edge
+- **THEN** the board is not repainted, so a pointer sweep costs one repaint per edge
+  crossed rather than one per event

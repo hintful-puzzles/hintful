@@ -17,61 +17,69 @@ builds a dsf over the drawn edges and highlights every closed loop but the large
 closes a spurious loop is told. What is missing is the *prospective* form: seeing the
 segment before committing to the move that closes it.
 
-## What the owner suggested, and why not
-
-*"A naive idea I have is to give each connected segment its own color, but that would
-probably make things too cluttered."* Clutter is one objection and the smaller one.
-
-**The larger objection is instability.** Segment identity changes every time two
-fragments join, so a per-segment palette reshuffles mid-solve: the player draws one edge
-and half the board changes color. That is the same non-convergence trap
-`docs/games/hints.md` § "Recompute-stable plans" records for hint plans, aimed at the
-palette instead — and the fix there, a value that is monotone in the player's own
-progress, is what this design borrows.
-
-*"Perhaps for now just having a hover over an edge highlight the entire connected
-segment?"* This is the right **shape** and the wrong **event**, and the difference is
-not small:
-
-- **There is no hover plumbing in the app at all.** `view-interactive.ts`'s
-  `pointermove` handler acts only while a pointer is tracked
-  (`this.pointerTracking?.pointerId === event.pointerId`), so a hover reaches nothing.
-  Adding one means a new path from the view through the worker into `Ui`.
-- **It would be mouse-only.** Touch has no hover, and a phone is where this board is
-  hardest to read. An aid absent on the device that needs it most is the wrong first
-  step.
-
 ## What changes
 
-**The segment you last touched is highlighted.** After a move that sets a line, the
-connected component containing that edge draws in a distinct tint; the keyboard cursor
-landing on an edge does the same, so keyboard play gets it for free.
+**Hovering an edge highlights the whole run of drawn lines it belongs to.** Owner's
+decision, 2026-09-18: *"yes, let's please do the hover for now, and I'll see down the
+line if I want something else."*
 
-- **No new input plumbing** — it rides the move path that already exists.
-- **Stable by construction**: the highlight is relative to the player's own last action,
-  so nothing reshuffles when two fragments join. It changes when, and only when, the
-  player does something.
-- **The same on touch, mouse and keyboard.**
-- It answers at the moment the question is actually asked — *"I just drew this; what am
-  I about to close?"* — and comparing two distant ends costs one tap.
-- The connectivity is already computed: `state.ts` builds the dsf over drawn edges for
-  the completion check, so this is a second reader of an existing structure.
+This was proposed against, and the objection was answered rather than overruled on one
+point and accepted on the other:
 
-## Open, for the owner
+- **The cost objection was wrong, and it is withdrawn.** The claim was that a hover
+  "needs a new event path from the view through the worker into `Ui`". It does not. The
+  path `pointermove → Puzzle.processMouse → Comlink → worker-adapter → Midend →
+  Game` **already exists in full**; `view-interactive.ts`'s handler simply declines to
+  use it unless a pointer is being tracked (`this.pointerTracking?.pointerId ===
+  event.pointerId`). What this change adds at the view is a branch, not a pipe. The
+  estimate was made by reading the handler's guard and inferring the rest, which is the
+  error — the transport was two files away and unexamined.
+- **The mouse-only objection stands and is accepted.** Touch has no hover, so this aid
+  does not exist on a phone, where the board is hardest to read. That is a known gap
+  the owner has chosen to carry for now, not an oversight.
 
-**Whether a global view is wanted as well.** The focus highlight answers "this one";
-it does not answer "how many segments are there, and which pairs of ends belong
-together" without touching each. The global form with the least clutter is to **pair
-the loose ends**: each segment's two free ends carry a matching small glyph, so the
-question is answerable at a glance with two marks per segment rather than a color per
-edge. It still reshuffles on a merge, just far less visibly. Worth building only if the
-focus highlight leaves the owner still tracing.
+The design questions the hover does not settle are settled the same way they would have
+been for any other trigger:
+
+- **Never a per-segment palette.** Segment identity changes whenever two runs join, so
+  coloring segments reshuffles the board as the player draws — the recompute-stability
+  trap `docs/games/hints.md` records for hint plans, aimed at the palette. Hovering is
+  stable for the same reason the rejected scheme was not: the highlight keys on where
+  the pointer is, not on an identity that moves under it.
+- **One notion of connectivity, two readers.** The run is read off the same dsf
+  `checkCompletion` builds, not a second traversal.
+
+## How the hover reaches the game
+
+**A dedicated `Game.hover` hook, not a new button code through `interpretMove`.** Both
+would work over the existing transport; the hook is the honest one:
+
+- `interpretMove` returns `Move | UiUpdate | null`, so a button-coded hover *could*
+  return a move. A hook typed to return `UiUpdate | null` cannot, by construction.
+- A new button code reaches **every** game's `interpretMove`, whose if/else chains are
+  deliberately terminated so an unrecognized input is rejected rather than ignored
+  (`reject-unrecognized-moves`). Handing all of them an input they have never seen, to
+  serve one game, is a cross-game risk taken for nothing.
+- **Enrollment derives from declaring the hook**, per `AGENTS.md` § "Convention over
+  configuration": a game joins by *having* `hover`, and the app asks the midend once
+  whether the current game does, rather than anything declaring that it might.
+
+That last point is also the throttle's justification: a game with no `hover` costs zero
+messages, and a game with one coalesces to at most one message per animation frame.
 
 ## What this does not do
 
-- **Not a solver or hint change.** The premise it surfaces is one the player can already
-  read off the board by tracing; this makes it cheap to read, and places no mark the
-  player could not have made (`AGENTS.md`, "A hint relies only on marks the player can
-  make" — this is not a hint, but the same bar applies to anything drawn on the board).
-- **Not the existing loop highlight.** That stays exactly as it is; this is the
-  prospective companion to it.
+- **Not a keyboard equivalent**, though an earlier draft of this section said it would
+  be. The cursor already draws its own `COL_CURSOR` halo on the edge it has chosen, so
+  lighting that edge's whole run in the same color puts two greens of different extent
+  on one board with nothing to tell them apart. And the aid's value is comparing two
+  *distant* ends at a glance, which a pointer does by moving and a cursor does by
+  walking the board — the keyboard wants a different affordance, not this one rendered
+  twice. It needs a mark of its own, which is a design question rather than a couple
+  of lines.
+- **Not the global view.** Pairing each segment's two loose ends with a matching glyph
+  would answer "how many segments, and which ends go together" without touching
+  anything. The owner has explicitly deferred it: *"I'll see down the line if I want
+  something else."*
+- **Not the existing loop highlight**, which stays exactly as it is; this is its
+  prospective companion.

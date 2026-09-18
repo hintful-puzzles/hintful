@@ -1476,3 +1476,69 @@ describe("Midend changedState hook (upstream game_changed_state)", () => {
     expect(calls).toHaveLength(0);
   });
 });
+
+describe("Midend pointer hover (Game.hover)", () => {
+  it("reports no tracking, and swallows a hover, for a game without the hook", () => {
+    // The enrollment is the hook itself, so this is what a game that has never
+    // heard of hovering does — and it is what lets the app send nothing at all
+    // rather than pay a worker round trip per pointer move to learn nothing.
+    const h = harness();
+    h.m.newGame();
+    expect(h.m.tracksHover).toBe(false);
+    const before = h.redraws();
+    expect(h.m.processHover({ x: 1, y: 1 })).toBe(false);
+    expect(h.redraws()).toBe(before);
+  });
+
+  it("repaints on a hover the game acts on, and not on one it ignores", () => {
+    // `null` from `hover` means "nothing changed", and the midend must take it
+    // literally: a pointer sweep crosses one tile many times, and a repaint per
+    // event is the cost this return value exists to avoid.
+    let seen: { x: number; y: number } | null = null;
+    let answer: typeof UI_UPDATE | null = UI_UPDATE;
+    const game = {
+      ...fakeGame,
+      hover(
+        _s: unknown,
+        _ui: unknown,
+        _ds: unknown,
+        p: { x: number; y: number } | null,
+      ) {
+        seen = p;
+        return answer;
+      },
+    } as typeof fakeGame;
+
+    const h = harness(game);
+    h.m.newGame();
+    expect(h.m.tracksHover).toBe(true);
+
+    const before = h.redraws();
+    expect(h.m.processHover({ x: 4, y: 7 })).toBe(true);
+    expect(seen).toEqual({ x: 4, y: 7 });
+    expect(h.redraws()).toBeGreaterThan(before);
+
+    answer = null;
+    const settled = h.redraws();
+    expect(h.m.processHover({ x: 5, y: 7 })).toBe(false);
+    expect(h.redraws()).toBe(settled);
+  });
+
+  it("delivers the pointer leaving as a hover of null", () => {
+    // A game that ignored this would leave its highlight on screen after the
+    // pointer is gone, which is the whole failure this argument exists for.
+    let seen: unknown = "never called";
+    const game = {
+      ...fakeGame,
+      hover(_s: unknown, _ui: unknown, _ds: unknown, p: unknown) {
+        seen = p;
+        return UI_UPDATE;
+      },
+    } as typeof fakeGame;
+
+    const h = harness(game);
+    h.m.newGame();
+    expect(h.m.processHover(null)).toBe(true);
+    expect(seen).toBeNull();
+  });
+});

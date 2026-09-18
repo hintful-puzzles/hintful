@@ -119,6 +119,12 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
   processMouse({ x, y }: Point, button: number): boolean {
     return this.engine.processInput(x, y, button);
   }
+  tracksHover(): boolean {
+    return this.engine.tracksHover;
+  }
+  processHover(point: Point | null): boolean {
+    return this.engine.processHover(point);
+  }
   requestKeys(): KeyLabel[] {
     return this.engine.requestKeys();
   }

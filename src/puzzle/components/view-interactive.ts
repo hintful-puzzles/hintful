@@ -102,6 +102,7 @@ export class PuzzleViewInteractive extends PuzzleView {
         @contextmenu=${this.handleContextMenu}
         @pointerdown=${this.handlePointerDown}
         @pointermove=${this.handlePointerMove}
+        @pointerleave=${this.handlePointerLeave}
         @pointerup=${this.handlePointerUp}
         @pointercancel=${this.handlePointerCancel}
         @click=${when(isAppleDevice, () => this.handleClick)}
@@ -298,6 +299,25 @@ export class PuzzleViewInteractive extends PuzzleView {
     readonly release: PuzzleButton;
   };
 
+  /** Whether the running game has a `Game.hover`, asked once per game. False
+   * until answered, so hovers before the answer are simply not sent. */
+  private hoverTracked = false;
+
+  protected override async updated(changed: Map<string, unknown>) {
+    await super.updated(changed);
+    // Re-asked whenever the running game can have changed, because the answer
+    // is a fact about *this* game. `renderedPuzzleParams` is the base class's
+    // own signal that a different board is up.
+    if (changed.has("puzzle") || changed.has("renderedPuzzleParams")) {
+      this.hoverTracked = (await this.puzzle?.tracksHover()) ?? false;
+      if (!this.hoverTracked) this.hoverAt = null;
+    }
+  }
+  /** The latest hovered position this frame, or `null` for none. */
+  private hoverAt: Point | null = null;
+  /** The pending `requestAnimationFrame` handle, or `null`. */
+  private hoverFrame: number | null = null;
+
   /**
    * A press whose `processMouse` round-trip to the engine has been sent but not
    * yet answered, so `pointerTracking` is not installed yet.
@@ -439,7 +459,45 @@ export class PuzzleViewInteractive extends PuzzleView {
         this.getPuzzleLocation(event),
         this.pointerTracking.drag,
       );
+      return;
     }
+    // No button down: a hover. Only a mouse produces these — a finger reports
+    // `pointermove` only while it is down, so touch never reaches here without
+    // tracking — and only for a game that tracks them (`Game.hover`), which is
+    // why `hoverTracked` is asked once rather than paid per move.
+    if (this.pointerTracking === undefined) this.queueHover(event);
+  }
+
+  /**
+   * Coalesce hovers to one per animation frame.
+   *
+   * A pointer sweep fires `pointermove` far faster than a board can usefully
+   * repaint, and each one would otherwise be a worker round trip. Only the
+   * latest position matters, so the frame keeps the last and drops the rest;
+   * `Puzzle.processHover` drops further while one is in flight.
+   */
+  private queueHover(event: PointerEvent) {
+    if (!this.hoverTracked) return;
+    this.hoverAt = this.getPuzzleLocation(event);
+    if (this.hoverFrame !== null) return;
+    this.hoverFrame = requestAnimationFrame(() => {
+      this.hoverFrame = null;
+      const at = this.hoverAt;
+      if (at !== null) void this.puzzle?.processHover(at);
+    });
+  }
+
+  /** The pointer left the board, so nothing is hovered. Sent unconditionally
+   * rather than coalesced: a highlight that outlives the pointer is exactly
+   * the bug this prevents, and dropping this one message is how it happens. */
+  private handlePointerLeave() {
+    if (!this.hoverTracked) return;
+    if (this.hoverFrame !== null) {
+      cancelAnimationFrame(this.hoverFrame);
+      this.hoverFrame = null;
+    }
+    this.hoverAt = null;
+    void this.puzzle?.processHover(null);
   }
 
   private async handlePointerUp(event: PointerEvent) {

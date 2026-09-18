@@ -59,6 +59,7 @@ import {
   type LoopyMistake,
   type LoopyPair,
   type LoopyState,
+  lineRun,
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
@@ -93,6 +94,7 @@ export interface LoopyRenderUi {
   pencilMode: boolean;
   noteDrag: LoopyNoteDrag | null;
   pin: number;
+  hoverEdge: number;
 }
 
 const clamp = (lo: number, v: number, hi: number): number =>
@@ -587,6 +589,18 @@ export function redraw(
   // top of it (the state is what the player is about to change, so it must be
   // readable), and a disc under the cursor's dot, painted before the dots for
   // the same reason. Both take the collection-wide cursor color.
+  // The run of lines under the pointer, haloed the same way and in the same
+  // color as the cursor's own edge, and for the same reason: both mean "where
+  // your attention is", and they belong to different devices — a click hides
+  // the keyboard cursor — so the board never has to explain two greens at once.
+  // Extent tells them apart when it does: one edge against a whole run.
+  if (ui.hoverEdge >= 0) {
+    for (const i of lineRun(s, ui.hoverEdge)) {
+      const [a, b] = edgeEnds(g, ts, i);
+      dr.drawLine(a, b, COL_CURSOR, cursorHaloThickness(ts));
+    }
+  }
+
   const cursor = ui.cursor;
   if (cursor.visible && cursor.edge >= 0) {
     const [a, b] = edgeEnds(g, ts, cursor.edge);

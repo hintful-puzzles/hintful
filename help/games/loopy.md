@@ -4,10 +4,21 @@ Form a single closed loop out of the grid edges, in such a way that
 every numbered square has exactly that many of its edges included in
 the loop.
 
+Two words are used throughout, here and in the hints, and they mean different
+things. An **edge** is one segment of the grid, between two neighboring dots:
+somewhere the loop *could* run, whether or not it does. A **line** is an edge
+you have marked as part of the loop. So an edge is the place and a line is the
+loop running through it — which is why a hint can say *"this edge must be a
+line"*, meaning the loop has no choice but to run along it, or *"this edge can't
+be a line"*, meaning it must run somewhere else.
+
 Click on a grid edge to mark it as part of the loop (black), and
 again to return to marking it as undecided (yellow). Right-click on
 a grid edge to mark it as definitely not part of the loop (faint
 gray), and again to mark it as undecided again.
+
+Resting the mouse pointer on a line highlights every line joined to it, so you
+can see at a glance which pieces of the loop are already one piece.
 
 On a touch screen, tapping an edge cycles it through all three states,
 so you never need a second button.

@@ -262,6 +262,11 @@ export class Puzzle {
    * hint strip) cannot word it differently. */
   private _hintJourney = signal<string>("");
   private _helpMessageTimeoutId?: ReturnType<typeof setTimeout>;
+  /** A `processHover` round trip is outstanding. */
+  private hoverInFlight = false;
+  /** The hover to send once the outstanding one returns, or `null` for none.
+   * Wrapped, because the position may itself be `null` (the pointer left). */
+  private hoverPending: { at: Point | null } | null = null;
   /**
    * Stepper state for the Hint button. A press that *shows* a step arms this;
    * the next press (with nothing else done in between) *applies* that one step
@@ -629,6 +634,45 @@ export class Puzzle {
     );
     if (consumed) this.stopAutoHint("Canceled by manual move");
     return consumed;
+  }
+
+  /** Whether the running game tracks the pointer between presses. The view
+   * asks once per game and sends no hover at all when it is false, so a game
+   * without one costs nothing on a pointer sweep. */
+  public async tracksHover(): Promise<boolean> {
+    return this.workerPuzzle.tracksHover();
+  }
+
+  /**
+   * The pointer moved over the board with no button down, or left it
+   * (`null`).
+   *
+   * **Not queued through `enqueueInput`.** That queue exists to keep real
+   * moves in order; a hover carries no history and the only interesting
+   * hover is the latest one, so queueing them would make a fast sweep
+   * arrive late rather than arrive less. The view coalesces to one per
+   * animation frame, and this drops a hover while one is still in flight,
+   * so a sweep costs at most one round trip at a time.
+   */
+  public async processHover(p: Point | null): Promise<void> {
+    if (this.hoverInFlight) {
+      this.hoverPending = { at: p };
+      return;
+    }
+    this.hoverInFlight = true;
+    try {
+      await this.workerPuzzle.processHover(p);
+      // `{ at: null }` is a queued "the pointer left", which is a real hover to
+      // deliver; `null` is nothing queued. Two kinds of nothing, two states
+      // (`docs/games/mechanics.md` § "Absence is `null`").
+      while (this.hoverPending !== null) {
+        const next = this.hoverPending.at;
+        this.hoverPending = null;
+        await this.workerPuzzle.processHover(next);
+      }
+    } finally {
+      this.hoverInFlight = false;
+    }
   }
 
   public async requestKeys(): Promise<KeyLabel[]> {

@@ -375,10 +375,16 @@ const COMP_EMPTY = 4;
  * necessary to highlight every error, only never to leave the player with
  * neither a victory flash nor a reason.
  */
-export function checkCompletion(state: LoopyState): boolean {
+/**
+ * The connected components of the drawn lines, over dots.
+ *
+ * One notion of "which lines are joined", with two readers: {@link
+ * checkCompletion} classifies the components to decide the board, and the hover
+ * highlight lights the one the pointer is over. A second traversal for the
+ * second reader is how two answers to one question start disagreeing.
+ */
+function drawnLineComponents(state: LoopyState): Dsf {
   const g = state.grid;
-  state.lineErrors.fill(0);
-
   const dsf = new Dsf(g.numDots);
   for (let i = 0; i < g.numEdges; i++) {
     if (state.lines[i] === LINE_YES) {
@@ -386,6 +392,37 @@ export function checkCompletion(state: LoopyState): boolean {
       dsf.merge(e.dot1.index, e.dot2.index);
     }
   }
+  return dsf;
+}
+
+/**
+ * The drawn lines joined to `edge`, including it — or an empty array when that
+ * edge carries no line.
+ *
+ * A run is "the lines reachable from this one", which is the question a player
+ * asks before closing a loop. It is derived from the board every time rather
+ * than cached against a segment identity, because identity changes whenever two
+ * runs join and a cached one would be stale exactly then.
+ */
+export function lineRun(state: LoopyState, edge: number): number[] {
+  if (state.lines[edge] !== LINE_YES) return [];
+  const g = state.grid;
+  const dsf = drawnLineComponents(state);
+  const root = dsf.canonify(g.edges[edge].dot1.index);
+  const run: number[] = [];
+  for (let i = 0; i < g.numEdges; i++) {
+    if (state.lines[i] === LINE_YES && dsf.canonify(g.edges[i].dot1.index) === root) {
+      run.push(i);
+    }
+  }
+  return run;
+}
+
+export function checkCompletion(state: LoopyState): boolean {
+  const g = state.grid;
+  state.lineErrors.fill(0);
+
+  const dsf = drawnLineComponents(state);
 
   const componentState = new Int32Array(g.numDots);
   for (let i = 0; i < g.numDots; i++) {

@@ -254,6 +254,25 @@ screen the natural order is to pick your piece, close the panel to see the board
 properly, and then place it. Press <kbd>Esc</kbd>, or pick the same item again,
 to clear it.
 
+## Seeing what is joined to what {#hover-connected}
+
+In a puzzle where you are building up one continuous path, the question you keep
+asking is *which of these pieces are already joined together* — and once the
+board has a dozen fragments on it, the honest answer is that you trace them with
+your eye.
+
+Where a puzzle can answer that, **resting the mouse pointer on part of what you
+have drawn lights up everything connected to it**. Loopy does this: hover any
+line and the whole run of lines it belongs to is highlighted, so you can see at a
+glance whether the two ends you are about to join are already the same piece —
+which, in Loopy, is the difference between finishing the loop and closing a
+small one by mistake.
+
+Nothing depends on it: it shows you something the board already contains, faster
+than tracing. It is a mouse feature, since a touch screen has no notion of
+hovering — a finger is either pressing or absent — so on a phone or tablet you
+will not see it.
+
 ## Checkpoints {#checkpoints}
 
 A checkpoint marks a position in your move history so you can come back to it:

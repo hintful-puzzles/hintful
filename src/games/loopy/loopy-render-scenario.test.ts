@@ -29,6 +29,7 @@ import { DIFF_EASY, encodeParams, type LoopyParams } from "./params.ts";
 import {
   border,
   COL_BACKGROUND,
+  COL_CURSOR,
   COL_FAINT,
   COL_FOREGROUND,
   COL_LINEUNKNOWN,
@@ -240,6 +241,110 @@ describe("Loopy render scenarios: line state and preferences", () => {
     expect(recording.ops.filter((o) => o.op === "line").length).toBe(
       shown.recording.ops.filter((o) => o.op === "line").length - 1,
     );
+  });
+});
+
+describe("Loopy render scenarios: the hovered run", () => {
+  /**
+   * Hovering a line highlights the run it belongs to and nothing else.
+   *
+   * The claim that matters is the **partition**: a highlight that lit every
+   * drawn line would pass a count-only check and teach the player nothing, so
+   * the assertions name the run's own edges and then name the other run's as
+   * absent. Driven through the `Midend`, because the hover lives on the `Ui`,
+   * which `renderScenario` does not expose — the same production path.
+   */
+  it("lights the run under the pointer, and leaves a separate run alone", () => {
+    const { id, state } = board("hover", 0, 5, 5);
+    const g = state.grid;
+
+    // A run of two: an edge and a neighbor sharing a dot with it. Taken off the
+    // grid rather than written down, so this reads the same on any tiling if it
+    // is ever reused.
+    const first = g.edges[0];
+    const joined = first.dot2.edges.find((e) => e !== first);
+    if (!joined) throw new Error("a square grid's dots have degree > 1");
+    // A second run, far enough away to share no dot with the first.
+    const apart = g.edges.find(
+      (e) =>
+        e !== first &&
+        e !== joined &&
+        ![first, joined].some(
+          (r) =>
+            r.dot1 === e.dot1 ||
+            r.dot1 === e.dot2 ||
+            r.dot2 === e.dot1 ||
+            r.dot2 === e.dot2,
+        ),
+    );
+    if (!apart) throw new Error("a 5x5 grid has a disjoint edge");
+
+    const m = new Midend(loopyGame);
+    expect(m.newGameFromId(id)).toBeNull();
+    expect(m.tracksHover).toBe(true);
+    m.playMoves([setEdges([first.index, joined.index, apart.index], LINE_YES)]);
+
+    const halos = (): number[] => {
+      const rec = new RecordingDrawing(loopyGame.colors(DEFAULT_BACKGROUND));
+      m.redraw(rec);
+      const out: number[] = [];
+      for (const o of rec.ops) {
+        if (o.op !== "line" || o.color !== COL_CURSOR) continue;
+        for (const e of g.edges) {
+          const [x1, y1] = screenPos(state, PREFERRED_TILE_SIZE, e.dot1.x, e.dot1.y);
+          const [x2, y2] = screenPos(state, PREFERRED_TILE_SIZE, e.dot2.x, e.dot2.y);
+          if (o.x1 === x1 && o.y1 === y1 && o.x2 === x2 && o.y2 === y2)
+            out.push(e.index);
+        }
+      }
+      return out.sort((a, b) => a - b);
+    };
+
+    // Nothing hovered, nothing haloed — and the keyboard cursor is hidden until
+    // a key is pressed, so this also pins that the two greens are not confused.
+    expect(halos()).toEqual([]);
+
+    const mid = (e: (typeof g.edges)[number]) => {
+      const [x1, y1] = screenPos(state, PREFERRED_TILE_SIZE, e.dot1.x, e.dot1.y);
+      const [x2, y2] = screenPos(state, PREFERRED_TILE_SIZE, e.dot2.x, e.dot2.y);
+      return { x: Math.round((x1 + x2) / 2), y: Math.round((y1 + y2) / 2) };
+    };
+
+    expect(m.processHover(mid(first))).toBe(true);
+    expect(halos()).toEqual([first.index, joined.index].sort((a, b) => a - b));
+    expect(halos()).not.toContain(apart.index);
+
+    // The other run, hovered in turn: the highlight moves rather than accretes.
+    expect(m.processHover(mid(apart))).toBe(true);
+    expect(halos()).toEqual([apart.index]);
+
+    // The pointer leaves. A highlight outliving the pointer is the bug the
+    // `null` hover exists to prevent.
+    expect(m.processHover(null)).toBe(true);
+    expect(halos()).toEqual([]);
+  });
+
+  it("ignores an edge with no line on it, and a repeated hover", () => {
+    const { id, state } = board("hover-empty", 0, 5, 5);
+    const g = state.grid;
+    const m = new Midend(loopyGame);
+    expect(m.newGameFromId(id)).toBeNull();
+
+    const e = g.edges[0];
+    const [x1, y1] = screenPos(state, PREFERRED_TILE_SIZE, e.dot1.x, e.dot1.y);
+    const [x2, y2] = screenPos(state, PREFERRED_TILE_SIZE, e.dot2.x, e.dot2.y);
+    const at = { x: Math.round((x1 + x2) / 2), y: Math.round((y1 + y2) / 2) };
+
+    // An undrawn edge has no run to show, so hovering it changes nothing — and
+    // "changes nothing" must mean *no repaint*, not a repaint that draws the
+    // same frame, or a pointer sweep repaints on every event.
+    expect(m.processHover(at)).toBe(false);
+
+    m.playMoves([setEdges([e.index], LINE_YES)]);
+    expect(m.processHover(at)).toBe(true);
+    // Still the same edge: the pointer moved within one tile, which is most of
+    // what a sweep does.
+    expect(m.processHover({ x: at.x + 1, y: at.y })).toBe(false);
   });
 });
 

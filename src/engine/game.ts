@@ -368,6 +368,29 @@ export interface Game<
    * itself a string can't be confused with an error message. */
   solve?(orig: State, curr: State, aux?: string): SolveResult<Move>;
 
+  /** Track the pointer over the board when no button is down, for a game
+   * that can say something useful about what sits under it — Loopy lights
+   * the whole run of lines the hovered edge belongs to, so "are these two
+   * ends the same segment?" needs no tracing.
+   *
+   * `p` is `null` when the pointer leaves the board, which a game MUST
+   * treat as "nothing is hovered" rather than ignore, or the highlight
+   * outlives the pointer.
+   *
+   * **Typed to return no move, deliberately.** A hover is not an action:
+   * it may mutate `ui` in place and ask for a repaint with
+   * {@link UI_UPDATE}, or return `null` to change nothing — and returning
+   * `null` when the hovered thing has not changed is what keeps a
+   * pointer sweep from repainting every frame.
+   *
+   * **Declaring it is the enrollment.** The app asks the midend whether
+   * the running game has one and sends nothing at all when it does not,
+   * so a game without a hover costs no messages across the worker; there
+   * is nothing to register and nothing that can be forgotten. A hover is
+   * mouse-only by nature — touch has none — so it may never be the only
+   * way to reach something. */
+  hover?(state: State, ui: Ui, ds: DrawState, p: Point | null): UiUpdate | null;
+
   /** Compute a hint plan for the current state: a non-empty ordered
    * sequence of narrated moves, or an error. Nothing is auto-applied
    * — the midend stores the plan and displays one step at a time;
