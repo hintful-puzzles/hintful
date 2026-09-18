@@ -1,10 +1,4 @@
-# No spec deltas yet, deliberately.
-#
-# §1 is a stopping condition, and the two branches it chooses between write different
-# requirements: a solver rung amends how Loopy deduces, while a hint-side recognizer
-# amends only how it narrates. Writing either now would be a requirement for code that
-# may never exist, which `order-hints-from-the-frontier` had to be corrected for from
-# the other end — a delta that outran the code it governed.
+# §1 chose the rung over the hint-side recognizer (findings.md), so the delta
+# amends how Loopy deduces rather than only how it narrates.
 schema: spec-driven
 created: 2026-09-18
-skip_specs: true

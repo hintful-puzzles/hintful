@@ -400,6 +400,7 @@ const REASONS: Record<LoopyReason["kind"], true> = {
   clueFull: true,
   clueStarved: true,
   clueOneShort: true,
+  clueLongWay: true,
   deadEnd: true,
   lineContinues: true,
   dotFull: true,
@@ -506,7 +507,10 @@ describe("Loopy hint: the words and the marks agree", () => {
       const marks = marksOf(step);
       const at = `${b.name} step ${i}: "${text}"`;
       expect(marks.targets, at).toEqual(opsOf(step.move).map((o) => o.edge));
-      if (/the ringed dot/i.test(text)) {
+      if (/both ringed dots/i.test(text)) {
+        expect(marks.dots, at).toHaveLength(2);
+        kinds.add("both dots");
+      } else if (/the ringed dot/i.test(text)) {
         expect(marks.dots, at).toHaveLength(1);
         kinds.add("dot");
       } else {
@@ -548,6 +552,7 @@ describe("Loopy hint: the words and the marks agree", () => {
       }
     }
     expect([...kinds].sort()).toEqual([
+      "both dots",
       "chain",
       "clue",
       "corner",
@@ -785,5 +790,119 @@ describe("Loopy hint frames", () => {
     // take one at most.
     const filled = ops.filter((o) => o.op === "polygon" && o.fill === COL_HINT);
     expect(filled).toHaveLength(move.bits & 1 ? 1 : 0);
+  });
+});
+
+/**
+ * The blocked-corner pair: a clue needing all but one of its edges, with two
+ * adjacent dots that already carry a line. The technique settles the whole face
+ * at once, and the point of teaching the engine it is that the player meets it
+ * as one step instead of the three firings it used to decompose into.
+ */
+describe("Loopy hint: the loop takes the long way around a clue", () => {
+  /** A face clued one short of its order, with a line planted outside each of two
+   * adjacent dots. Built by hand so that a sweep finding nothing is
+   * distinguishable from a sweep looking for the wrong shape. */
+  function planted(
+    p: LoopyParams,
+    faceIndex: number,
+  ): {
+    state: LoopyState;
+    between: number;
+    others: number[];
+  } {
+    const { desc } = loopyGame.newDesc(p, randomNew("loopy-long-way"));
+    const base = newState(p, desc);
+    const g = base.grid;
+    const face = g.faces[faceIndex];
+
+    const clues = new Int8Array(g.numFaces).fill(-1);
+    clues[faceIndex] = face.order - 1;
+    const lines = new Uint8Array(g.numEdges).fill(LINE_UNKNOWN);
+
+    // Edge k joins dots k and k+1, so edge 0 is the one between dots 0 and 1.
+    const own = new Set(face.edges.map((e) => e?.index ?? -1));
+    let planted = 0;
+    for (const j of [0, 1]) {
+      const d = face.dots[j];
+      if (d === null) continue;
+      for (let k = 0; k < d.order; k++) {
+        const e = d.edges[k];
+        if (own.has(e.index)) continue;
+        lines[e.index] = LINE_YES;
+        planted++;
+        break;
+      }
+    }
+    expect(planted, "could not plant a line outside each dot").toBe(2);
+
+    return {
+      state: { ...base, clues, lines },
+      // biome-ignore lint/style/noNonNullAssertion: a consistent grid has every face edge.
+      between: face.edges[0]!.index,
+      others: face.edges.slice(1).map((e) => e?.index ?? -1),
+    };
+  }
+
+  it("settles the whole face in one firing, on a square and on a triangle", () => {
+    for (const p of [
+      { w: 3, h: 3, diff: DIFF_EASY, type: 0 },
+      { w: 5, h: 5, diff: DIFF_EASY, type: 1 }, // Triangular
+    ] satisfies LoopyParams[]) {
+      const { state, between, others } = planted(p, 4);
+      const { plan } = deduceLoopyPlan(state);
+      const firing = plan.find((f) => f.reason.kind === "clueLongWay");
+      expect(firing, `no long-way firing on type ${p.type}`).toBeDefined();
+      if (firing === undefined) continue;
+
+      // One firing, and it is the whole face: the edge between the dots out,
+      // every other edge a line.
+      const ops = new Map(firing.ops.map((o) => [o.edge, o.state]));
+      expect(ops.get(between), "the edge between the two dots").toBe(LINE_NO);
+      for (const e of others) expect(ops.get(e), `edge ${e}`).toBe(LINE_YES);
+    }
+  });
+
+  it("rings both dots and bands all of the face's edges", () => {
+    // The sentence says "both ringed dots"; with one ring the reader cannot tell
+    // which pair of edges is meant to be blocked. Judged on where the pixels
+    // land rather than on the marks the step carries.
+    let found = false;
+    for (let seed = 0; seed < 20 && !found; seed++) {
+      const id = `${encodeParams({ w: 7, h: 7, diff: DIFF_HARD, type: 0 }, true)}#longway-${seed}`;
+      const want = (s: Step): boolean => /both ringed dots/i.test(s.explanation);
+      const result = renderScenario({
+        game: loopyGame,
+        id,
+        showHint: true,
+        hintUntil: want,
+      });
+      const step = result.hint;
+      if (!step || !want(step)) continue;
+      found = true;
+
+      const rings = result.recording.ops.filter(
+        (o) =>
+          o.op === "circle" && o.fill === COL_HINT_CELL && o.outline === COL_HINT_CELL,
+      );
+      expect(rings, "one ring per dot the sentence names").toHaveLength(2);
+      // The step settles every edge of the face that was still open: exactly one
+      // ruled out — the edge between the two dots — and the rest drawn. The face
+      // may already have carried a line, so the count is not the face's order.
+      const ops = opsOf(step.move);
+      expect(ops.filter((o) => o.state === LINE_NO)).toHaveLength(1);
+      expect(ops.filter((o) => o.state === LINE_YES).length).toBeGreaterThan(1);
+      expect(marksOf(step).targets).toEqual(ops.map((o) => o.edge));
+    }
+    expect(found, "no long-way step in 20 seeds of 7x7 Hard").toBe(true);
+  });
+
+  it("names the clue, and says the same thing with a different digit", () => {
+    // The clue is the only part that varies, and it varies in three places. A
+    // triangle clued 2 reads with 2 throughout, a square clued 3 with 3.
+    expect(say.clueLongWay(3)).toBe(
+      "Both ringed dots already have a line, and joining them directly would rule out the 3's other two edges and leave it one short. So the loop has to take the long way around this 3: the edge between the dots is out, and the other 3 are lines.",
+    );
+    expect(say.clueLongWay(2)).toBe(say.clueLongWay(3).replaceAll("3", "2"));
   });
 });

@@ -395,6 +395,14 @@ function narrate(
         explanation: say.clueOneShort(clue(r.face)),
         marks: { faces: [r.face], dots: [r.dot] },
       };
+    case "clueLongWay":
+      // Both dots, because the sentence says "both ringed dots": with one ring
+      // the reader cannot tell which pair of edges is meant to be blocked. The
+      // edges the step sets are banded by the move itself.
+      return {
+        explanation: say.clueLongWay(clue(r.face)),
+        marks: { faces: [r.face], dots: [...r.dots] },
+      };
     case "deadEnd":
       return { explanation: say.deadEnd, marks: { dots: [r.dot] } };
     case "lineContinues":

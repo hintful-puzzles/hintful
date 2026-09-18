@@ -131,6 +131,17 @@ const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
       "size, and each of those clauses carries weight.",
   },
   {
+    games: ["loopy"],
+    match: /has to take the long way around this \d+/,
+    why:
+      "The owner's wording, 2026-09-18 (`teach-loopy-the-blocked-corner-pair`). " +
+      "It carries two premises — both dots already have a line, and joining them " +
+      "would leave the clue one short — the image that teaches the shape rather " +
+      "than the arithmetic, and both halves of a conclusion that settles a whole " +
+      "face. The step exists to replace three narrow ones, so dropping either " +
+      "half would leave the player where they started.",
+  },
+  {
     games: ["boats"],
     match: /so one of these must be a boat segment; either way/,
     why:

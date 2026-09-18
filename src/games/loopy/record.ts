@@ -108,6 +108,15 @@ export type LoopyReason =
   /** A clue needs all but one of its open edges, and two of them at a dot that
    * already has a line cannot both be lines, so every other open edge is. */
   | { kind: "clueOneShort"; face: number; dot: number; pair: readonly [number, number] }
+  /** A clue needs all but one of its open edges, and two dots next to each other
+   * around it already have a line, so the edge between them cannot be one and
+   * every other open edge must be: the loop takes the long way around. */
+  | {
+      kind: "clueLongWay";
+      face: number;
+      dots: readonly [number, number];
+      between: number;
+    }
   /** A dot with no line and one open edge: a line there would dead-end. */
   | { kind: "deadEnd"; dot: number }
   /** A dot with one line and one open edge: the line must continue along it. */

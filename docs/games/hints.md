@@ -896,6 +896,49 @@ snapshot afterwards. A rung can destroy its own premise: Tracks' `looseEndSpans`
 cites a line's *unfinished* squares and then finishes one of them, so a
 post-firing snapshot shades a different set than the sentence counts.
 
+### A firing is not always a technique, so check the boundary too
+
+The section above splits a rung that fires *too coarsely*. The opposite case
+exists, and Loopy found it: the engine's firing boundary can be **finer** than
+the human technique, and then a hint that narrates firings perfectly faithfully
+still teaches badly.
+
+Loopy's owner-reported case (`teach-loopy-the-blocked-corner-pair`): a clue
+needing all but one of its edges, with two dots next to each other around it
+that already carry a line. A player sees one thing — the loop has to take the
+long way around, so the edge between the dots is out and the rest are lines, the
+whole clue settled at once. The solver reached the same conclusions in **three**
+firings: one narrow step drawing the two far edges, a dot filling up, then the
+clue starving. "One deduction firing is one journey" rendered those as three
+unrelated hints, and the player was shown the narrowest of them first.
+
+So the defect was not a missing deduction — every conclusion was already
+reachable — and not a narration bug either. **It was a granularity mismatch**,
+and the tell is a hint that is *true*, *forced* and still leaves the player
+unable to name what they just learned.
+
+Two things to take from how it was fixed:
+
+- **Teach the engine the pattern; do not group firings in the hint.** The
+  alternative — a hint-side recognizer spotting the three firings and emitting
+  them as one journey — costs nothing in the generator, but it puts the
+  technique in two places, and two descriptions of one technique drift. Prefer
+  the rung, and fall back to the recognizer only if the rung re-grades boards.
+- **A new rung on a solver-gated generator must be measured before it is
+  written.** Adding one changes *when* conclusions are reached, and on a
+  generator that gates every clue removal on the solver's verdict that is enough
+  to move a board's tier — a board labeled Tricky that a player can now solve at
+  Normal is a dishonest difficulty, not a nicety. Grade a corpus both ways and
+  count the boards that change tier. The measurement is cheap, and the frozen
+  differential answers it independently and harder: it asserts, per grid type and
+  tier, that the C's board still needs the difficulty it claims.
+
+The favorable case is a pattern whose conclusions the existing rungs **already
+reach**, differing only in how many steps they take. That cannot strengthen the
+solver at any cap, so it re-grades nothing — but firing *order* is still
+observable (a rung-skipping optimization, an early "ambiguous" exit), so the
+argument bounds the risk and only the measurement closes it.
+
 ### Census the reasons, not only the rungs
 
 `<game>-ladder.test.ts`'s `unreached` ledger says which **rungs** a corpus

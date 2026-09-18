@@ -29,7 +29,7 @@
  * exactly rather than adapted to the shared shape.
  */
 import { Dsf, FlipDsf } from "../../engine/dsf.ts";
-import type { Grid, GridEdge } from "../../engine/grid/index.ts";
+import type { Grid, GridDot, GridEdge } from "../../engine/grid/index.ts";
 import {
   dlineEnds,
   dlineIndexFromDot,
@@ -398,6 +398,58 @@ function boundWitness(
  * reach degree 3), which is one line closer to pinning down the rest of a face
  * whose clue is one short of forcing everything.
  */
+/**
+ * Around `f`, find three consecutive UNKNOWN edges whose two shared dots each
+ * already have a YES edge incident from elsewhere. Returns the middle edge and
+ * the two dots, or `null`.
+ *
+ * The two-dot form of {@link findConstrainedUnknownPair}, valid under exactly
+ * the same guard on the clue. One such dot rules out its own pair and so
+ * settles every *other* open edge; two adjacent ones settle the edge between
+ * them as well, because if it were a line both dots would be full, ruling out
+ * the edges either side of it and leaving the clue one short. So the whole face
+ * falls in one firing — the technique a player reads as "the loop has to take
+ * the long way around this clue".
+ *
+ * Both dots are known to carry their line on an edge *outside* the face,
+ * because the face's own two edges at each of them are among the three this
+ * looks for, and all three are UNKNOWN.
+ */
+function findBlockedCornerPair(
+  ss: SolverState,
+  faceIndex: number,
+): { between: number; dot1: number; dot2: number } | null {
+  const s = ss.state;
+  const f = ss.grid.faces[faceIndex];
+  const N = f.order;
+
+  const hasLine = (d: GridDot): boolean => {
+    for (let k = 0; k < d.order; k++) {
+      if (s.lines[d.edges[k].index] === LINE_YES) return true;
+    }
+    return false;
+  };
+
+  for (let j = 0; j < N; j++) {
+    const before = f.edges[(j + N - 1) % N];
+    const at = f.edges[j];
+    const after = f.edges[(j + 1) % N];
+    if (before === null || at === null || after === null) continue;
+    if (s.lines[before.index] !== LINE_UNKNOWN) continue;
+    if (s.lines[at.index] !== LINE_UNKNOWN) continue;
+    if (s.lines[after.index] !== LINE_UNKNOWN) continue;
+
+    // Edge k joins dots k and k+1, so the middle edge's own two dots are the
+    // ones the edges either side of it also meet.
+    const d1 = f.dots[j];
+    const d2 = f.dots[(j + 1) % N];
+    if (d1 === null || d2 === null) continue;
+    if (!hasLine(d1) || !hasLine(d2)) continue;
+    return { between: at.index, dot1: d1.index, dot2: d2.index };
+  }
+  return null;
+}
+
 function findConstrainedUnknownPair(
   ss: SolverState,
   faceIndex: number,
@@ -469,8 +521,28 @@ function trivialDeductions(ss: SolverState): number {
     }
 
     if (f.order - clue === currentNo + 1 && f.order - currentYes - currentNo > 2) {
-      // One short of forcing the face. If some adjacent pair of unknowns can't
-      // both be YES, every *other* unknown around the face must be.
+      // One short of forcing the face. If two adjacent dots each already have a
+      // line, the edge between them can't be one and every other open edge must
+      // be — the whole face, in one firing.
+      const blocked = findBlockedCornerPair(ss, i);
+      if (blocked !== null) {
+        solverSetLine(ss, blocked.between, LINE_NO);
+        faceSetall(ss, i, LINE_UNKNOWN, LINE_YES);
+        ss.faceSolved[i] = 1;
+        diff = Math.min(diff, 0);
+        if (rec?.ops.length) {
+          return fired(rec, {
+            kind: "clueLongWay",
+            face: i,
+            dots: [blocked.dot1, blocked.dot2],
+            between: blocked.between,
+          });
+        }
+        continue;
+      }
+
+      // Failing that: if some adjacent pair of unknowns can't both be YES,
+      // every *other* unknown around the face must be.
       const pair = findConstrainedUnknownPair(ss, i);
       if (pair === null) continue;
       for (let j = 0; j < f.order; j++) {

@@ -98,6 +98,21 @@ export const say = {
   clueOneShort: (clue: number): string =>
     `This ${clue} can spare one open edge and must spare one at the ringed dot, which already has a line; the rest must be lines.`,
 
+  /** The owner chose this wording, 2026-09-18. Three things it does on purpose:
+   * it names the excluded edge as "the edge between them", because eighteen of
+   * Loopy's tilings have no top; it says "already have a line" rather than
+   * "incoming", because the player sees lines on a board and not a direction of
+   * travel; and it gives both halves of the conclusion, since the whole value of
+   * the step is that the face is settled.
+   *
+   * The clue is the only thing that varies, and it appears three times: the two
+   * edges ruled out are always exactly two, while the edges left as lines are
+   * every edge but one, which on a face clued one short of its order is the clue
+   * again. A pentagon clued 4 reads the same with 4 throughout. Written as a
+   * digit, like every other count in this file. */
+  clueLongWay: (clue: number): string =>
+    `Both ringed dots already have a line, and joining them directly would rule out the ${clue}'s other two edges and leave it one short. So the loop has to take the long way around this ${clue}: the edge between the dots is out, and the other ${clue} are lines.`,
+
   deadEnd:
     "The ringed dot has no line and no other open edge, so a line here would dead-end: this edge can't be a line.",
 
