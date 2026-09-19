@@ -78,10 +78,11 @@ same-slant marks on the board: every equivalence a firing uses (a square taking
 the slant of a placed square, or a clue counting two squares as one line) SHALL
 cite the marks joining the two squares, and every such mark the board does not
 show SHALL be placed by an earlier step of its own, narrated by why the two
-squares slant alike (a clue with one line left for exactly those two squares, or
-both v-shapes of the pair ruled out, naming the 1, 3, 2 or diagonal that rules
-each out). No mark SHALL be placed that no firing uses. No displayed step SHALL
-be a generic, un-narrated fallback.
+squares slant alike (a clue with one line left for exactly those two squares, the
+same clue at both ends of their shared side, or a straight line of 2s capped at
+both ends by the same kind of limit, named as that pattern). No mark SHALL be
+placed that no firing uses. No displayed step SHALL be a generic, un-narrated
+fallback.
 
 #### Scenario: A clue-counting firing is explained and grouped
 

@@ -149,7 +149,7 @@ describe("slant hint", () => {
           expect(hl.marks?.length).toBeGreaterThan(0);
         }
         if (step.move.type === "alike") {
-          seen.add(/^These two can't/.test(e) ? "mark-v" : "mark-clue");
+          seen.add(/^This \d clue/.test(e) ? "mark-clue" : "mark-v");
         }
       }
     }

@@ -153,7 +153,7 @@ function lineReason(
   w: number,
   soln: Int8Array,
   ev: VEvidence,
-): { end: "one" | "three" | "touches" | "misses"; hops: number } {
+): { end: "one" | "three" | "touches" | "misses"; hops: number; capAt: number } {
   let hops = 1;
   let last = two;
   for (;;) {
@@ -174,7 +174,7 @@ function lineReason(
       if ((why.c === 1) !== touch)
         throw new Error("slant hint: a line ends in the wrong clue");
       ev.clues.push(why.pt);
-      return { end: touch ? "one" : "three", hops };
+      return { end: touch ? "one" : "three", hops, capAt: why.pt };
     }
     const W = w + 1;
     const hit = touches(
@@ -185,7 +185,9 @@ function lineReason(
       Math.floor(last / W),
     );
     if (hit !== touch) throw new Error("slant hint: a line ends in the wrong diagonal");
-    return { end: touch ? "touches" : "misses", hops };
+    // The diagonal's pair ends the line; its far end is where a clue would be.
+    const capAt = g.meet === last ? g.far : g.meet;
+    return { end: touch ? "touches" : "misses", hops, capAt };
   }
 }
 
@@ -240,6 +242,122 @@ function vClauses(
   const across = (k: number) => (trace.vWhy[k]?.kind === "two" ? 1 : 0);
   const ordered = [...keys].sort((x, y) => across(x) - across(y));
   return ordered.map((k) => vClause(trace, k, w, soln, ev));
+}
+
+/** One end of a line of 2s: how many 2s lie between the pair and the cap,
+ * and the cap itself (a 1 or 3 clue, or a placed diagonal), by the kind of
+ * limit it sets: `one` makes the pair next to it give the 2 beside it a line,
+ * `three` lets it give at most one. */
+interface LineEnd {
+  at: number;
+  twos: number;
+  kind: "one" | "three";
+  clue: boolean;
+  /** What the cap is, for a line through a 2: its clue, or whether the
+   * placed diagonal meets or misses the 2 beside it. */
+  end?: "one" | "three" | "touches" | "misses";
+  /** The point beyond the end pair, where a clue would cap the line. */
+  capAt: number;
+}
+
+/** The end of the pair's line that ruled-out v-shape `key` reaches. */
+function lineEnd(
+  trace: SlantTrace,
+  key: number,
+  w: number,
+  soln: Int8Array,
+  ev: VEvidence,
+): LineEnd {
+  const why = trace.vWhy[key];
+  if (why === null) throw new Error("slant hint: a v-shape with no reason");
+  const g = vGeometry(key >> 2, key & 3, w);
+  switch (why.kind) {
+    case "clue":
+      ev.clues.push(why.pt);
+      return {
+        at: why.pt,
+        twos: 0,
+        kind: why.c === 1 ? "one" : "three",
+        clue: true,
+        capAt: why.pt,
+      };
+    case "slash":
+      // The placed square misses the meeting corner, so it touches the other
+      // end: a line through that end gets a line from it; one through the
+      // meeting corner gets at most one.
+      ev.squares.push(why.sq);
+      return { at: g.meet, twos: 0, kind: "three", clue: false, capAt: -1 };
+    case "two": {
+      ev.clues.push(why.pt);
+      const touch = why.pt === g.meet;
+      const r = lineReason(trace, why.from, why.pt, touch, w, soln, ev);
+      return {
+        at: why.pt,
+        twos: r.hops,
+        kind: touch ? "one" : "three",
+        clue: r.end === "one" || r.end === "three",
+        end: r.end,
+        capAt: r.capAt,
+      };
+    }
+  }
+}
+
+/**
+ * The sentence for a pair on a straight line of 2s capped at both ends by the
+ * same kind of limit, which makes every pair along the line slant alike; or
+ * null when the pair's two v-shapes are not ruled out from opposite ends of
+ * one such line.
+ */
+function vLine(
+  trace: SlantTrace,
+  keys: number[],
+  w: number,
+  soln: Int8Array,
+  clues: Int8Array,
+  ev: VEvidence,
+): string | null {
+  const scratch: VEvidence = { clues: [], squares: [] };
+  const [a, b] = keys.map((k) => lineEnd(trace, k, w, soln, scratch));
+  // A placed diagonal caps the line at the end it does not miss, and its kind
+  // is the other end's: the pair gives that end exactly what the far side
+  // lets it.
+  for (const [cap, other] of [
+    [a, b],
+    [b, a],
+  ]) {
+    if (!cap.clue && cap.twos === 0) {
+      cap.kind = other.kind;
+      cap.at = -1;
+      const g = vGeometry(keys[0] >> 2, keys[0] & 3, w);
+      cap.capAt = other.at === g.meet ? g.far : g.meet;
+    }
+  }
+  if (a.twos + b.twos === 0) return null;
+  if (a.at === b.at) {
+    // Both v-shapes are carried across the same 2, so the pair across it is
+    // held from both sides: by a diagonal of its own, and from beyond.
+    const own = [a, b].find((e) => e.twos === 1 && !e.clue);
+    const beyond = own === a ? b : a;
+    if (own === undefined || own.end === undefined || beyond.end === undefined)
+      return null;
+    ev.clues.push(...scratch.clues);
+    ev.squares.push(...scratch.squares);
+    return say.vAcross(own.end === "touches", beyond.twos - 1, beyond.end);
+  }
+  if (a.kind !== b.kind) throw new Error("slant hint: a line of 2s capped two ways");
+  // A diagonal capping the line may have the clue that caps it just as well
+  // beyond it; the clue reads more plainly.
+  const digit = a.kind === "one" ? 1 : 3;
+  for (const cap of [a, b]) {
+    if (!cap.clue && cap.capAt >= 0 && clues[cap.capAt] === digit) {
+      cap.clue = true;
+      scratch.clues.push(cap.capAt);
+    }
+  }
+  ev.clues.push(...scratch.clues);
+  ev.squares.push(...scratch.squares);
+  return say.vLine(a.twos + b.twos, a.kind === "one", [a.clue, b.clue]);
 }
 
 // --- the plan ---------------------------------------------------------------
@@ -315,6 +433,7 @@ function markStep(
   m: SlantMerge,
   trace: SlantTrace,
   grid: Int8Array,
+  clues: Int8Array,
   cites: SlantMark[],
   w: number,
   h: number,
@@ -336,12 +455,14 @@ function markStep(
     const bits = Math.max(m.a, m.b) === lo + 1 ? [1, 0] : [3, 2];
     const ev: VEvidence = { clues: [], squares: [] };
     const keys = bits.map((bit) => lo * 4 + bit);
-    explanation = say.markV(vClauses(trace, keys, w, grid, ev));
-    const clues = [...new Set(ev.clues)].map((p) => ({
+    explanation =
+      vLine(trace, keys, w, grid, clues, ev) ??
+      say.markV(vClauses(trace, keys, w, grid, ev));
+    const read = [...new Set(ev.clues)].map((p) => ({
       x: p % W,
       y: Math.floor(p / W),
     }));
-    if (clues.length) hl.clues = clues;
+    if (read.length) hl.clues = read;
     const area = [...new Set(ev.squares)]
       .filter((s) => s !== m.a && s !== m.b)
       .map((s) => pointOf(s, w));
@@ -512,7 +633,17 @@ export function slantHint(
     };
     for (let m = 0; m < merges.length; m++) {
       if (pos[m] !== i || merges[m].why.kind === "note") continue;
-      push(markStep(merges[m], trace, boardBefore(i), marksOf(mergeCites[m]), w, h));
+      push(
+        markStep(
+          merges[m],
+          trace,
+          boardBefore(i),
+          state.clues,
+          marksOf(mergeCites[m]),
+          w,
+          h,
+        ),
+      );
     }
     const cites = firingCites[i];
     for (let leg = 0; leg < firing.moves.length; leg++) {

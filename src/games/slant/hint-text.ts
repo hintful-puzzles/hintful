@@ -113,6 +113,51 @@ export const say = {
     },
   },
 
+  /**
+   * A pair on a straight line of `twos` 2s capped at each end by the same kind
+   * of limit (the help's "Lines of 2s"): a 1, or a placed diagonal meeting the
+   * 2 at that end, for `one`; a 3, or a diagonal missing it, otherwise.
+   * `clues` says which caps are clues.
+   */
+  vLine: (twos: number, one: boolean, clues: [boolean, boolean]): string => {
+    const clue = one ? "1" : "3";
+    const diagonal = one ? "meeting" : "missing";
+    const [a, b] = clues;
+    const it = twos === 1 ? "it" : !a && !b ? "the end 2s" : "the end 2";
+    const caps =
+      a && b
+        ? `two ${clue}s`
+        : !a && !b
+          ? `two diagonals ${diagonal} ${it}`
+          : `a ${clue} and a diagonal ${diagonal} ${it}`;
+    const head = twos === 1 ? "This 2 lies" : "These 2s lie";
+    return `${head} in a line between ${caps}, so these two must slant the same way.`;
+  },
+
+  /**
+   * Both v-shapes carried across one 2, from the pair across it: a diagonal of
+   * that pair already `touches` the 2 (so it gives one line) or misses it (so
+   * at most one), and what lies beyond the pair supplies the other bound,
+   * either `end` directly or after `twos` more 2s.
+   */
+  vAcross: (
+    touches: boolean,
+    twos: number,
+    end: "one" | "three" | "touches" | "misses",
+  ): string => {
+    const cap =
+      end === "one"
+        ? "a 1"
+        : end === "three"
+          ? "a 3"
+          : `a diagonal ${end === "touches" ? "meeting" : "missing"} the end 2`;
+    const beyond = twos === 0 ? `${cap} beyond` : `2s beyond ending in ${cap}`;
+    const bounds = touches
+      ? `gives it one line and, with ${beyond}, no more`
+      : `gives it at most one line and, with ${beyond}, at least one`;
+    return `The pair across this 2 ${bounds}, so these two must slant the same way.`;
+  },
+
   /** Both v-shapes ruled out by the same kind of clue, one at each end. */
   vBoth: (digit: number): string =>
     digit === 1 ? "touch either 1" : "slant away from either 3",

@@ -107,18 +107,25 @@ read the player's marks as facts, as it reads diagonals.
   (clues and placed diagonals) only stays true as the board fills. A clue-pair
   premise ("only these two squares around it are empty") can expire, so it is
   re-checked against the board it would be shown on.
-- A v-shape step names both ruled-out v-shapes and where each end is: *"These two
-  can't both touch the 1 above, or both slant away from the 3 below, so they must
-  slant the same way."* A placed diagonal reads *"touch the corner above, as one
-  already slants away from it"*, and a 1 (or 3) at both ends reads *"touch either
-  1"*. Across a 2 the clause says what limits the pair on the far side: *"touch
-  the 2 below, as the pair across it can't both touch the 1"*. A line of 2s holds
-  one kind of limit all the way along (`lineReason` checks it, and never saw it
-  fail on 27,009 steps), so it is said once: *"as along the 2s beyond it, the last
-  pair can't both touch the 1"*.
-- Those across-a-2 sentences are the only ones over the 120-character limit: 210
-  of 27,009 steps over 60 boards per preset, 275 at the longest. They are one
-  ledgered template in `hint-quality.test.ts`. Every other step is within 120.
+- A v-shape step names the clue pattern, not the two ruled-out v-shapes one by
+  one. Over 2,678 v-shape marks on 2,000 boards, every one is one of three shapes:
+  - **The same clue at both ends** of the shared side (53%): *"These two can't
+    both touch either 1, so they must slant the same way."*
+  - **A straight line of 2s capped at both ends by the same kind of limit**
+    (47%): a 1, or a diagonal meeting the end 2, at each end; or a 3, or a
+    diagonal missing it. Then each pair beside a 2 gives it exactly one line, so
+    every pair along the line slants alike: *"This 2 lies in a line between two
+    1s, so these two must slant the same way."* The help teaches it as "Lines of
+    2s". Where a diagonal caps the line and the matching clue sits just beyond
+    it, the sentence names the clue.
+  - **Both limits through the same 2** (0.4%), because the pair across it is held
+    from both sides: *"The pair across this 2 gives it one line and, with a 3
+    beyond, no more, so these two must slant the same way."*
+- `lineReason` and `vLine` refuse to speak a line that bends or is capped two
+  ways. `slant-notes.test.ts` walks the line on the board and holds each sentence
+  to it: the number of 2s, and what caps each end. Every step is within 120
+  characters, and the longest v-shape sentence is 106. The first cut named each
+  v-shape and ran to 275; a brainstorm over the census found the line pattern.
 - Keep-track: a mark step completes when the player sets that mark.
 - The honest chain tier, and the anchor with no reason given, are removed.
 

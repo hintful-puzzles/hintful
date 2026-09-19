@@ -25,9 +25,14 @@ Two squares side by side slant the same way exactly when just one of them
 touches each end of the side between them. So they do when a clue at that end
 needs exactly one more line and they are the only empty squares around it, and
 when they can neither both touch one end nor both touch the other: a **1** there
-stops them both touching it, a **3** stops them both slanting away from it. A
-**2** passes that on: if the two squares on one side of it must give it a line,
-the two squares across it can give it only one more.
+stops them both touching it, a **3** stops them both slanting away from it.
+
+**Lines of 2s.** When 2s lie in a straight line with a 1 at each end, every pair
+of squares along the line, one on each side of it, slants the same way; so does
+every pair when there is a 3 at each end. A 2's four squares are the pairs on
+either side of it, and the 1s (or the 3s) leave each pair giving it exactly one of
+its two lines. A diagonal can stand in for either end: one meeting the end 2 does
+what a 1 does, and one missing it does what a 3 does.
 
 A mark that turns out to be wrong shows in red when you check the board.
 

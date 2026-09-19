@@ -304,6 +304,83 @@ function walkPlan(s: SlantState): { marks: number; steps: number } {
       });
       expect(holds).toBe(true);
     }
+    const line = text.match(/^(This 2 lies|These 2s lie) in a line between (.*), so /);
+    if (line) checkLine(board, line[1] === "This 2 lies", line[2], Object.values(ends));
+    if (/^The pair across this 2 /.test(text)) {
+      expect(Object.values(ends).some((pt) => board.clues[pt] === 2)).toBe(true);
+    }
+  }
+
+  /**
+   * Walk the line of 2s out from both ends of the pair's shared side, and hold
+   * the sentence to it: how many 2s there are, and what caps each end (a 1 or 3
+   * clue, or a placed diagonal in the end pair meeting or missing the 2 beside
+   * it).
+   */
+  function checkLine(board: SlantState, one2: boolean, caps: string, ends: number[]) {
+    const [e1, e2] = ends;
+    const sx = (e2 % W) - (e1 % W);
+    const sy = Math.floor(e2 / W) - Math.floor(e1 / W);
+    const onGrid = (x: number, y: number) => x >= 0 && y >= 0 && x <= w && y <= board.h;
+    // Per side, every cap the line could end in and how many 2s come before
+    // it: a placed diagonal may cap it at any 2 along the way, a clue only
+    // where the 2s stop.
+    const options: { twos: number; cap: string }[][] = [];
+    for (const [start, other, dir] of [
+      [e1, e2, -1],
+      [e2, e1, 1],
+    ]) {
+      const found: { twos: number; cap: string }[] = [];
+      let [px, py] = [start % W, Math.floor(start / W)];
+      let [qx, qy] = [other % W, Math.floor(other / W)];
+      for (let twos = 0; ; twos++) {
+        // The end pair: the two squares either side of the segment from the
+        // last 2, (qx, qy), to (px, py).
+        const [lx, ly] = [Math.min(px, qx), Math.min(py, qy)];
+        const pair =
+          sx === 0
+            ? [
+                [lx - 1, ly],
+                [lx, ly],
+              ]
+            : [
+                [lx, ly - 1],
+                [lx, ly],
+              ];
+        for (const [x, y] of pair) {
+          if (x < 0 || y < 0 || x >= w || y >= board.h) continue;
+          const v = board.soln[y * w + x];
+          if (v === 0) continue;
+          const meets = v < 0 === (qx - x === qy - y);
+          found.push({ twos, cap: `a diagonal ${meets ? "meeting" : "missing"}` });
+        }
+        const c = onGrid(px, py) ? board.clues[py * W + px] : -1;
+        if (c !== 2) {
+          if (c === 1 || c === 3) found.push({ twos, cap: `a ${c}` });
+          break;
+        }
+        [qx, qy] = [px, py];
+        [px, py] = [px + dir * sx, py + dir * sy];
+      }
+      options.push(found);
+    }
+    const both = caps.match(/^two (?:(\d)s|diagonals (meeting|missing))/);
+    const said = both
+      ? Array(2).fill(both[1] ? `a ${both[1]}` : `a diagonal ${both[2]}`)
+      : [...caps.matchAll(/a \d|a diagonal (?:meeting|missing)/g)].map((m) => m[0]);
+    expect(said).toHaveLength(2);
+    const fits = (x: number, y: number) =>
+      options[0].some((a) =>
+        options[1].some(
+          (b) =>
+            a.cap === said[x] &&
+            b.cap === said[y] &&
+            (one2 ? a.twos + b.twos === 1 : a.twos + b.twos >= 2),
+        ),
+      );
+    expect(fits(0, 1) || fits(1, 0), `${caps} on ${JSON.stringify(options)}`).toBe(
+      true,
+    );
   }
 }
 

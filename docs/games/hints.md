@@ -2047,10 +2047,17 @@ two squares sharing a side slant the same way. What it added, in
 - **A fact inside a premise need not be a mark if every link is on the board.** A
   v-shape merge rests on two ruled-out v-shapes, and the solver carries one across
   a 2, sometimes along a line of 2s. Slant has no mark for half a pair, but each
-  link is a clue or a diagonal the player can see, so the step names them in one
-  sentence ("as the pair across it can't both touch the 1"). The chain was checked
-  to hold one kind all the way along before it was said once (`lineReason`).
-  Those sentences are the ledgered long template in `hint-quality.test.ts`.
+  link is a clue or a diagonal the player can see.
+- **Narrate the pattern the facts make, not the facts one by one.** The first cut
+  named each ruled-out v-shape and its cause, and ran to 275 characters. A census
+  of every v-shape mark found only three shapes, and the commonest through a 2 was
+  a straight line of 2s capped at both ends by the same kind of limit, which makes
+  every pair along it slant alike. Stated as that pattern, *"This 2 lies in a line
+  between two 1s"*, the longest sentence is 106, and the help teaches it by name.
+  The rule sits in the help (§ "Rules belong in the help"), and `vLine` refuses a
+  line that bends or is capped two ways, so the name is never spoken over a shape
+  it does not fit. Take the census before shortening: the pattern was invisible
+  in the clause-by-clause output.
 - **Record why each merge holds where it happens.** `SlantTrace` keeps each merge's
   reason and each v-shape bit's, and the plan finds a firing's cited marks as the
   shortest path through the merges before it, since the union-find answers only
