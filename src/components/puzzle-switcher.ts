@@ -25,9 +25,14 @@
  * by being in the catalog and by nothing else.
  */
 import { css, html, LitElement, nothing } from "lit";
-import { customElement, query, state } from "lit/decorators.js";
+import { customElement, property, query, state } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
-import { puzzleDataMap, puzzleIds } from "../puzzle/catalog.ts";
+import {
+  familyLabel,
+  puzzleDataMap,
+  puzzleIds,
+  puzzlesInFamily,
+} from "../puzzle/catalog.ts";
 import { matchesQuery } from "../puzzle/catalog-search.ts";
 import { puzzlePageUrl } from "../routing.ts";
 import { closeOnBackdropClick } from "../utils/dialog.ts";
@@ -37,8 +42,13 @@ import "@awesome.me/webawesome/dist/components/icon/icon.js";
 @customElement("puzzle-switcher")
 export class PuzzleSwitcher extends LitElement {
   /** The puzzle currently being played, marked in the list so a player can see
-   * where they are. Empty on the home screen. */
-  @state()
+   * where they are. Empty on the home screen.
+   *
+   * A public `@property`, because the puzzle screen sets it as an attribute;
+   * an `@state` field ignores attributes, which is how the "Playing" mark
+   * once never appeared at all (`puzzle-switcher.test.ts` sets it the same
+   * way). */
+  @property()
   current = "";
 
   @state()
@@ -61,7 +71,26 @@ export class PuzzleSwitcher extends LitElement {
    * No game is ever excluded: this is a jump, not a catalog, and refusing to go
    * somewhere the player named would just be baffling. */
   private get hits(): readonly string[] {
+    const related = this.related;
+    if (related.length > 0) {
+      return [...related, ...puzzleIds.filter((id) => !related.includes(id))];
+    }
     return puzzleIds.filter((puzzleId) => matchesQuery(puzzleId, this.search));
+  }
+
+  /**
+   * **More like this**: the other games in the current one's family, which
+   * head the list until the player types. Opening the switcher from a game is
+   * the moment a player asks "what else is like this?", and an empty box
+   * otherwise spends that moment on an alphabetical list.
+   *
+   * Empty on the home screen (nothing is current) and once anything is typed,
+   * where a search answers a question the player has already asked.
+   */
+  private get related(): readonly string[] {
+    const family = puzzleDataMap[this.current]?.family;
+    if (this.search.trim() || !family) return [];
+    return puzzlesInFamily(family).filter((id) => id !== this.current);
   }
 
   /** Show the switcher, cleared and focused. */
@@ -80,6 +109,8 @@ export class PuzzleSwitcher extends LitElement {
 
   protected override render() {
     const hits = this.hits;
+    const related = this.related;
+    const family = puzzleDataMap[this.current]?.family;
     return html`
       <dialog
           @keydown=${this.handleKeyDown}
@@ -102,10 +133,22 @@ export class PuzzleSwitcher extends LitElement {
           ${
             hits.length > 0
               ? html`<ul part="list" role="listbox">
+                  ${
+                    related.length > 0 && family
+                      ? html`<li part="group" role="presentation">
+                          More ${familyLabel(family)}
+                        </li>`
+                      : nothing
+                  }
                   ${repeat(
                     hits,
                     (id) => id,
-                    (id, i) => this.renderMatch(id, i === this.active),
+                    (id, i) =>
+                      html`${
+                        related.length > 0 && i === related.length
+                          ? html`<li part="group" role="presentation">All puzzles</li>`
+                          : nothing
+                      }${this.renderMatch(id, i === this.active)}`,
                   )}
                 </ul>`
               : html`<p part="empty">No puzzle matches “${this.search.trim()}”.</p>`
@@ -300,6 +343,15 @@ export class PuzzleSwitcher extends LitElement {
       font-family: var(--app-font-mono);
       font-size: var(--app-font-size-micro);
       color: var(--app-color-link);
+    }
+
+    [part="group"] {
+      padding: 0.5rem 0.625rem 0.25rem;
+      font-size: var(--app-font-size-micro);
+      font-weight: var(--wa-font-weight-semibold);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--app-color-text-quiet);
     }
 
     [part="empty"] {

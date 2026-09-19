@@ -15,7 +15,7 @@
  */
 import "../test-setup/element-internals.ts";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { puzzleDataMap, puzzleIds } from "../puzzle/catalog.ts";
+import { puzzleDataMap, puzzleIds, puzzlesInFamily } from "../puzzle/catalog.ts";
 import { PuzzleSwitcher } from "./puzzle-switcher.ts";
 
 vi.stubGlobal(
@@ -88,5 +88,41 @@ describe("the quick-switch reaches every game", () => {
     const listed = await search("zzzzzzzz");
     expect(listed).toEqual([]);
     expect(switcher.shadowRoot?.querySelector("[part='empty']")).not.toBeNull();
+  });
+});
+
+describe("from a game, the empty switcher opens on that game's family", () => {
+  beforeEach(async () => {
+    document.body.replaceChildren();
+    switcher = new PuzzleSwitcher();
+    // As the puzzle screen writes it: an attribute, not a property.
+    switcher.setAttribute("current", "solo");
+    document.body.append(switcher);
+    await switcher.updateComplete;
+  });
+
+  it("lists the rest of the family first, then everything, each game once", async () => {
+    const siblings = puzzlesInFamily("latin").filter((id) => id !== "solo");
+    expect(siblings.length).toBeGreaterThan(1);
+
+    const listed = await search("");
+    expect(listed.slice(0, siblings.length)).toEqual(siblings);
+    expect([...listed].sort()).toEqual([...puzzleIds].sort());
+    const groups = switcher.shadowRoot?.querySelectorAll("[part='group']");
+    expect([...(groups ?? [])].map((g) => g.textContent?.trim())).toEqual([
+      "More Latin squares",
+      "All puzzles",
+    ]);
+  });
+
+  it("marks the game being played", async () => {
+    await search("");
+    expect(switcher.shadowRoot?.querySelector("[part='match-current']")).not.toBeNull();
+  });
+
+  it("drops the grouping once the player types", async () => {
+    const listed = await search("loop");
+    expect(listed).not.toContain("keen");
+    expect(switcher.shadowRoot?.querySelector("[part='group']")).toBeNull();
   });
 });

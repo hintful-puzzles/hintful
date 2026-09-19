@@ -1,7 +1,7 @@
 /**
  * The front page: an intro, then the whole catalog as a dense list of
- * `catalog-card` rows, narrowed by a search box and an `All / Favorites /
- * In progress` filter.
+ * `catalog-card` rows, narrowed by a search box, an `All / Favorites /
+ * In progress` filter and a row of family chips.
  *
  * **One content axis.** The intro and the list share one column and one left
  * edge; the intro keeps a reading measure by *capping* its width, never by
@@ -18,7 +18,13 @@ import { repeat } from "lit/directives/repeat.js";
 import type { FavoriteChangeEvent } from "../components/catalog-card.ts";
 import rawHomeScreenCSS from "../css/home-screen.css?inline";
 import { APP_NAME, APP_TAGLINE } from "../project-identity.ts";
-import { puzzleDataMap, puzzleIds } from "../puzzle/catalog.ts";
+import {
+  familyLabel,
+  type PuzzleFamily,
+  puzzleDataMap,
+  puzzleFamilies,
+  puzzleIds,
+} from "../puzzle/catalog.ts";
 import { matchesQuery } from "../puzzle/catalog-search.ts";
 import { puzzlePageUrl } from "../routing.ts";
 import { savedGames } from "../store/saved-games.ts";
@@ -63,6 +69,11 @@ export class HomeScreen extends SignalWatcher(Screen) {
 
   @state()
   private filter: CatalogFilter = "all";
+
+  /** The family chip that is pressed, if any. Independent of `filter`, so
+   * "my favorites among the shading puzzles" is two taps. */
+  @state()
+  private family: PuzzleFamily | null = null;
 
   protected override render() {
     // Deliberately skip <slot name="header"> and <slot="footer">
@@ -187,6 +198,9 @@ export class HomeScreen extends SignalWatcher(Screen) {
         case "all":
           break;
       }
+      if (this.family !== null && puzzleDataMap[puzzleId]?.family !== this.family) {
+        return false;
+      }
       return matchesQuery(puzzleId, this.search);
     });
   }
@@ -219,6 +233,22 @@ export class HomeScreen extends SignalWatcher(Screen) {
               `,
             )}
           </div>
+          <div part="families" role="group" aria-label="Family">
+            ${puzzleFamilies.map(
+              ({ id, label }) => html`
+                <button
+                    part="family"
+                    type="button"
+                    aria-pressed=${String(this.family === id)}
+                    @click=${() => {
+                      // Pressing the pressed chip again lets go of it: there
+                      // is no "all families" chip to go back to.
+                      this.family = this.family === id ? null : id;
+                    }}
+                >${label}</button>
+              `,
+            )}
+          </div>
         </div>
 
         ${
@@ -240,8 +270,14 @@ export class HomeScreen extends SignalWatcher(Screen) {
    * "no results" would leave a player who pressed Favorites by accident with
    * nothing to undo. */
   private get emptyMessage(): string {
+    const within = this.family === null ? "" : ` in ${familyLabel(this.family)}`;
     if (this.search.trim()) {
-      return `No puzzle matches “${this.search.trim()}”.`;
+      return `No puzzle${within} matches “${this.search.trim()}”.`;
+    }
+    if (this.family !== null) {
+      return this.filter === "favorites"
+        ? `No favorites${within} yet.`
+        : `No games in progress${within}.`;
     }
     return this.filter === "favorites"
       ? "No favorites yet — tap a heart to add one."

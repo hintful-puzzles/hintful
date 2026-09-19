@@ -40,7 +40,14 @@ premises.
 | `repeatFull` | the named `line` + `index` | exact |
 
 So the instrument belongs in `engine/`, written once against the shared union, and it
-serves every Latin game rather than one. That is the opposite of Loopy's position and
+serves every Latin game rather than one. **The population is the Latin squares
+family**, `puzzlesInFamily("latin")`, which `catalog-families.test.ts` bounds by the
+users of `engine/latin-hint` and of the shared Latin engine. The family names the
+*corpus* the measurement runs over. If §2 goes ahead, what enrolls a game in the
+ordering is still that it emits the reasons, never the tag (`AGENTS.md` § "Special
+files", on `catalog-data.ts`). The other cell games (Unruly, Singles, Range and the
+rest of Shading) record no shared reasons, so the read-set cannot reach them; that
+is a limit of the instrument, and the corpus does not pretend otherwise. That is the opposite of Loopy's position and
 it is what makes this measurement cheap.
 
 **`set` is the one gap, and it must be handled in the conservative direction.** An

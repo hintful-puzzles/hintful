@@ -1,79 +1,100 @@
 # propose-puzzle-categories
 
-**Status: parked for a decision. Nothing here is implemented, and the questions
-in §"What needs deciding" are the point of the document.** Raised by the owner
-during acceptance of `implement-front-page-and-chrome` (2026-09-07): now that
-the collection has a lot more games, it is time to start thinking about
-categorizing or tagging them. (Paraphrased rather than quoted, so the spelling
-convention applies to it like any other line here.)
+Raised by the owner during acceptance of `implement-front-page-and-chrome`
+(2026-09-07): now that the collection has a lot more games, it is time to start
+thinking about categorizing or tagging them. The change was parked on four
+questions for the owner, which were answered on 2026-09-19 (below), and then
+implemented.
 
 ## Why
 
-The catalog is 57 games and the home screen browses them as one alphabetical
-list. That is a large improvement on the card grid it replaced — search, three
-filters, and up to four columns — but every one of those narrows by something
-the player already knows: a name, a favorite, a game in progress. **There is no
-way to ask "what else is like this one?", which is the question somebody with 57
-options actually has.**
+The home screen lists the catalog alphabetically, and every existing narrowing
+(search, Favorites, In progress) works from something the player already knows.
+**There was no way to ask "what else is like this one?"**, which is the question
+somebody with 57 options actually has.
 
-Two things make this worth doing deliberately rather than as a small addition:
+The obvious ready-made taxonomy, `PuzzleData.description` ("Letter placement
+puzzle", "Loop-drawing puzzle"), is not one: it had **53 distinct values across
+57 games** (measured 2026-09-07). It is a per-game subtitle, so grouping by it
+yields groups of one.
 
-- **It is genuinely new data.** The obvious candidate for a ready-made taxonomy
-  is `PuzzleData.description` — "Letter placement puzzle", "Loop-drawing
-  puzzle" — which *looks* like a category field. It is not: **53 distinct values
-  across 57 games** (measured 2026-09-07). It is a per-game subtitle wearing a
-  category's clothes, and grouping by it would produce 53 groups of one.
-- **The taxonomy is the whole decision.** Whatever axes are chosen will be what
-  a player navigates the collection by for a long time, and they are not
-  recoverable from the code. Everything else — the data field, the filter UI,
-  the search integration — is small once the axes exist.
+**The categories also serve the maintainers** (owner, 2026-09-19: *"while the
+focus of this change is on the user-facing discoverability, I want us to be able
+to use these same categories for our internal maintenance"*). Work that aims at
+a group of games (`sequence-hints-in-cell-games` measuring "the cell games", an
+audit of the shading puzzles) needs a name for that group that is written down
+once and does not drift. Before this change nothing in the tree said which games
+were which, and every campaign typed its own list.
 
-## What needs deciding
+## What was decided (owner, 2026-09-19)
 
-These are the owner's calls, not implementation details, which is why this is
-parked rather than built:
+1. **One family per game**, rather than several tags or several axes. A single
+   family answers "what else is like this one?", renders as one row of chips,
+   and is easy to learn.
+2. **Nine families**, drafted and accepted as follows:
 
-1. **One taxonomy or several axes?** A single "type" per game (each game in
-   exactly one bucket) reads simply and is easy to render as sections. Several
-   independent axes — mechanic, board shape, whether it rewards deduction or
-   dexterity — is more truthful about the collection but needs a facet UI.
-2. **What are the axes?** Sketches, not proposals:
-   - *Mechanic*: latin-square, loop-drawing, region-division, shading,
-     placement, path-finding, sliding, flood/color.
-   - *Board*: square grid, hexagonal, irregular/graph, non-grid.
-   - *What it asks of you*: pure deduction, deduction with search, dexterity,
-     luck. **This axis is partly derivable already** — `difficultyTiers` names
-     the tiers, and a game with no `hint()` is usually one with no technique to
-     teach — so it may cost less than it looks.
-3. **Curated or derived?** A tag list on each catalog entry is a *declaration a
-   mechanism consumes* (like `aliases`), which `AGENTS.md` explicitly permits —
-   but only where the value cannot be derived. Some of axis 3 can be. Worth
-   splitting the derivable part from the editorial part rather than hand-writing
-   all of it.
-4. **How it surfaces.** A fourth filter chip? A facet row under the search box?
-   Sections in place of the flat list? Related-games links on the puzzle screen
-   itself, which is where "what else is like this" is most often asked?
+   | family | games |
+   |---|---|
+   | Latin squares | group keen mathrax salad solo towers unequal |
+   | Numbers & letters | abcd crossing seismic subsets |
+   | Placing objects | boats lightup magnets tents undead |
+   | Shading | bricks clusters mosaic pattern range singles unruly |
+   | Lines & paths | ascent bridges loopy pearl rome signpost slant spokes sticks tracks |
+   | Regions | dominosa filling galaxies map palisade rect separate |
+   | Rearranging | fifteen net netslide sixteen slide twiddle untangle |
+   | Moves & planning | cube flip flood inertia pegs samegame sokoban |
+   | Hidden information | blackbox guess mines |
 
-## What this change would do, once decided
+   Latin squares stays separate from the other number puzzles because "like
+   sudoku" is the family players recognize.
+3. **No derived "what it asks of you" axis for now.** The family already
+   separates the sliding and moving games from the logic ones. A split on
+   "has a hint" would sort the deliberately hintless logic games as a different
+   *kind* of game.
+4. **It surfaces in two places**: as filter chips on the home screen, and as
+   "more like this" on the puzzle screen.
 
-- Add the chosen field(s) to `PuzzleData`, with the same discipline `aliases`
-  got: a mechanism consumes it, a guard keeps it honest (every game classified,
-  no orphan category, no category of one).
-- Fold it into `catalog-search.ts`, so typing "loop" finds the loop games
-  whether or not the word is in their objective.
-- Render it on the home screen per the decision in §4 above.
+## What changes
+
+- `PuzzleData.family`, a required field typed by `puzzleFamilies`, so a new
+  game cannot skip it. Beside it in `catalog.ts`: `familyLabel` and
+  `puzzlesInFamily`, the query every piece of maintenance work uses in place of
+  a typed-out list.
+- **Home screen**: a row of family chips under the search box. The chips work
+  independently of the All / Favorites / In progress filter, and pressing a
+  pressed chip releases it.
+- **Search**: a family's label joins the haystack, so typing "shading" or
+  "latin" finds the family.
+- **Quick-switch, from a puzzle**: with nothing typed, it opens with the rest of
+  the current game's family ("More Latin squares") above everything else. This
+  is the puzzle screen's existing "go to another game" surface, and it is
+  reached from `More… → Switch puzzle…` as well as `Ctrl/Cmd+K`.
+- **A defect fixed on the way**: the switcher's `current` was an `@state`
+  field, which Lit does not bind to attributes. The puzzle screen sets it as an
+  attribute, so the "Playing" mark had never appeared. It is now a
+  `@property`.
+- **The guard** (`catalog-families.test.ts`): every game is in exactly one
+  family, no family has fewer than two games, and labels are distinct. Where
+  code can vouch for a family, the tag is held to the code. For Latin squares,
+  every game that imports the shared Latin hint vocabulary must be tagged Latin
+  squares, and every game tagged Latin squares must use the shared Latin engine.
 
 ## Impact
 
-- Affected specs: `app-shell` (how the catalog is browsed); possibly
-  `repo-layout` (a new catalog field's guard).
-- Affected code: `src/puzzle/catalog-data.ts`, `src/puzzle/catalog-search.ts`,
-  `src/screens/home-screen.ts`, `src/css/home-screen.css`.
-- Risk: low to build, high to get wrong and then change — a taxonomy a player
-  has learned is expensive to renumber.
+- Affected specs: `app-shell`.
+- Affected code: `src/puzzle/catalog-data.ts`, `src/puzzle/catalog.ts`,
+  `src/puzzle/catalog-search.ts`, `src/screens/home-screen.ts`,
+  `src/css/home-screen.css`, `src/components/puzzle-switcher.ts`.
+- Affected docs: `docs/games/README.md` (registering a game names its family),
+  `AGENTS.md` § "Special files", `scripts/new-game-port.sh`.
+- Not a compatibility break: the chip state is not persisted, and no saved or
+  shared data mentions a family.
 
 ## Explicitly not in this change
 
-Anything about *difficulty*. A game's tiers are already named, guarded and
-player-visible; folding them into a browse taxonomy is a separate question and
-would drag the tier-name convention into a UI decision it has no stake in.
+- **Difficulty.** A game's tiers are already named, guarded and visible to
+  players. Folding them into a browse taxonomy would tie the tier-name
+  convention to a UI decision it has no stake in.
+- **Grouping the help index (`help/puzzles.md`) by family.** Possible later,
+  but the help viewer loads every same-origin link inside its own drawer, so
+  help pages are the wrong place for "play this next" links.

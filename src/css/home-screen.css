@@ -168,6 +168,43 @@ footer > * {
 }
 
 /*
+ * The family chips: a line of their own under the search and the filters, and
+ * wrapping rather than scrolling sideways, so every family stays in view on a
+ * phone instead of hiding behind a swipe nobody knows to make.
+ */
+[part="families"] {
+  flex: 1 1 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--wa-space-xs);
+}
+
+[part="family"] {
+  min-height: var(--app-tap-min);
+  padding-inline: 0.75rem;
+  border: 1px solid var(--app-color-control-border);
+  border-radius: var(--wa-border-radius-pill);
+  background-color: var(--app-color-ground);
+  color: var(--app-color-text-secondary);
+  font: inherit;
+  font-size: var(--app-font-size-detail);
+  cursor: pointer;
+
+  &[aria-pressed="true"] {
+    border-color: var(--app-color-link);
+    background-color: var(--app-color-link);
+    color: var(--wa-color-brand-on-loud);
+    font-weight: var(--wa-font-weight-semibold);
+  }
+
+  @media (hover: hover) {
+    &:hover:not([aria-pressed="true"]) {
+      background-color: var(--app-color-rail);
+    }
+  }
+}
+
+/*
  * The list. As many columns as fit, one to four.
  *
  * `auto-fill` with a track floor rather than a breakpoint ladder: the number of

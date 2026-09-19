@@ -19,8 +19,11 @@ its bias analysis and its stopping condition are all reusable here, and only its
       position with two hidden singles in disjoint regions and assert it reports two
       candidates. An instrument that has never been seen to say "two" cannot be trusted
       to mean it when it says "one".
-- [ ] 1.3 Candidates per plan position across a cell-game corpus — Solo, Towers, Keen,
-      Unequal at their harder tiers, where plans are long enough to have a tail. Report
+- [ ] 1.3 Candidates per plan position across a cell-game corpus. Take it as
+      `puzzlesInFamily("latin")` (`src/puzzle/catalog.ts`), not as a typed list: the
+      family is held to the users of `engine/latin-hint` by `catalog-families.test.ts`,
+      which are exactly the games D2's read-set can read. Run each at its harder tiers,
+      where plans are long enough to have a tail. Report
       p50/p90/max, the share offering exactly one, and the share of ≥4-unit jumps that
       had an alternative sharing a unit with the previous step.
 - [ ] 1.4 Say which way the bias runs and quote the numbers as bounds accordingly

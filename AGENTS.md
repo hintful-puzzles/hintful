@@ -583,7 +583,7 @@ Source tree under `src/`:
 
 ## Special files
 
-- `src/puzzle/catalog-data.ts` — the committed game catalog. Adding a game means editing this **and** `src/games/index.ts`; `catalog-registry.test.ts` holds them together.
+- `src/puzzle/catalog-data.ts` — the committed game catalog. Adding a game means editing this **and** `src/games/index.ts`; `catalog-registry.test.ts` holds them together. Each entry's `family` is how players browse the collection, and it is also the name maintenance work uses for a group of games: take a family as a population with `puzzlesInFamily(...)` (`src/puzzle/catalog.ts`). It is a value a mechanism consumes, not a manifest. Where code can vouch for a family, `catalog-families.test.ts` holds the tag to the code, so reading a family is safe. What stays forbidden is making a family the *only* thing that enrolls a game in an engine mechanic that the game could simply have.
 - `src/puzzle/puzzle.ts`, `src/puzzle/worker.ts` — how the engine is exposed to the rest of the app.
 - `templates/index.html.hbs`, `templates/puzzle.html.hbs` — handlebars templates for static page generation (handled by `vite-plugins/extra-pages.ts`).
 - `src/preflight.ts` — Baseline 2023 capability checks.

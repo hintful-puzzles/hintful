@@ -83,7 +83,13 @@ For a new game:
    `catalog-registry.test.ts` holds them to each other: import the game in
    [`src/games/index.ts`](../../src/games/index.ts) and add its catalog entry
    to [`src/puzzle/catalog-data.ts`](../../src/puzzle/catalog-data.ts). A game
-   absent from the registry is simply unplayable.
+   absent from the registry is simply unplayable. The entry names the game's
+   **family** (one of `puzzleFamilies`), which a player browses by. Choose the
+   family whose other members a player of the new game would most want to try
+   next. If none fits, add a family, but only once it has a second member:
+   `catalog-families.test.ts` refuses a family of one. And when work needs "the
+   Latin squares" or any other family as its population, write
+   `puzzlesInFamily("latin")` rather than typing the list out.
 5. **Icons**: two committed PNGs (`src/assets/icons/<gameId>-{64,128}d8.png`),
    captured from the running game via the dev-only `?screenshot` mode — see
    [`puzzle-icons`](../../openspec/specs/puzzle-icons/spec.md).
