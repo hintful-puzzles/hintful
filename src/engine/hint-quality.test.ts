@@ -173,6 +173,17 @@ const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
       'sentences (hints.md § "Conclude with the action the move makes").',
   },
   {
+    games: ["slant"],
+    match:
+      /^These two can't both .*the 2 .*, as (?:one of )?(?:the pair across it|along the 2s)/,
+    why:
+      "A same-slant mark resting on a v-shape the solver carried across a 2 " +
+      "(add-slant-notation). Slant has no mark for one ruled-out v-shape, so the " +
+      "step names what rules it out at the far side of the 2 (a 1, a 3 or a " +
+      "diagonal) in the same sentence as the other v-shape; both premises are " +
+      "clues and diagonals on the board.",
+  },
+  {
     games: ["singles"],
     match:
       /^(?:A touching pair of \d+s sits at the corner|This (?:corner|inner) \d+ matches)/,

@@ -6,7 +6,8 @@
 import { describe, expect, test } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
 import { newDesc } from "./generator.ts";
-import { type SlantHint, slantGame } from "./index.ts";
+import type { SlantHint } from "./hint.ts";
+import { slantGame } from "./index.ts";
 import { solveFromClues } from "./solver.ts";
 import {
   DIFF_EASY,
@@ -86,12 +87,14 @@ describe("slant hint", () => {
         // Conclusion carries a necessity modal, never a bare "is/stays".
         expect(step.explanation).toMatch(/must (be|slant|stay)/);
         const hl = step.highlights as SlantHint;
-        // Visible evidence: an area, a ringed anchor, a driving clue, or the
-        // firing's still-to-do siblings (never a bare conclusion).
+        // Visible evidence: an area, a ringed anchor, a clue it reads, a mark
+        // it cites, or the firing's still-to-do siblings (never a bare
+        // conclusion).
         const hasEvidence =
           (hl.area?.length ?? 0) > 0 ||
           hl.ref !== undefined ||
-          hl.clue !== undefined ||
+          (hl.clues?.length ?? 0) > 0 ||
+          (hl.marks?.length ?? 0) > 0 ||
           (hl.siblings?.length ?? 0) > 0;
         expect(hasEvidence).toBe(true);
       }
@@ -111,9 +114,15 @@ describe("slant hint", () => {
         if (/^(This \d clue|A [04] clue)/.test(e)) {
           sawClue = true;
           const hl = res.steps[i].highlights as SlantHint;
-          expect(hl.clue).toBeDefined();
+          expect(hl.clues?.length).toBe(1);
         }
-        if (res.steps[i].continuesPrevious) {
+        // A firing's first leg continues the marks placed for it, so only a
+        // square after a square is a clue's continuation.
+        if (
+          res.steps[i].continuesPrevious &&
+          res.steps[i].move.type === "set" &&
+          res.steps[i - 1].move.type === "set"
+        ) {
           sawGroupedJourney = true;
           expect(res.steps[i].explanation).toMatch(/^The same clue forces this square/);
         }
@@ -125,7 +134,7 @@ describe("slant hint", () => {
 
   test("loop / dead-end / equivalence firings each get their narration", () => {
     const seen = new Set<string>();
-    for (let seed = 0; seed < 40 && seen.size < 3; seed++) {
+    for (let seed = 0; seed < 40 && seen.size < 5; seed++) {
       const s = freshState(12, 10, DIFF_HARD, `adv-${seed}`);
       const res = slantGame.hint?.(s);
       if (!res?.ok) continue;
@@ -133,16 +142,26 @@ describe("slant hint", () => {
         const e = step.explanation;
         if (/already joined by a chain/.test(e)) seen.add("loop");
         if (/one way out each/.test(e)) seen.add("deadend");
-        if (/locked to the same slant/.test(e)) {
+        if (/slant the same as the ringed one|chain of marks links/.test(e)) {
           seen.add("equiv");
-          expect((step.highlights as SlantHint).ref).toBeDefined();
+          const hl = step.highlights as SlantHint;
+          expect(hl.ref).toBeDefined();
+          expect(hl.marks?.length).toBeGreaterThan(0);
+        }
+        if (step.move.type === "alike") {
+          seen.add(/^These two can't/.test(e) ? "mark-v" : "mark-clue");
         }
       }
     }
-    // Loop and dead-end are common; equivalence appears on most large boards.
-    expect(seen.has("loop")).toBe(true);
-    expect(seen.has("deadend")).toBe(true);
-    expect(seen.has("equiv")).toBe(true);
+    // Loop and dead-end are common; equivalence appears on most large boards,
+    // and so do both kinds of mark.
+    expect([...seen].sort()).toEqual([
+      "deadend",
+      "equiv",
+      "loop",
+      "mark-clue",
+      "mark-v",
+    ]);
   });
 
   test("hintKeepTrack: the hinted move completes, a wrong move drops the plan", () => {

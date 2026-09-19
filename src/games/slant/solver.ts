@@ -18,8 +18,7 @@
  *   over the vertex-connectivity DSF, and the v-shape bitmap deductions.
  */
 import { Dsf } from "../../engine/dsf.ts";
-import type { Point } from "../../engine/types.ts";
-import { DIFF_EASY, DIFF_HARD, type Slash } from "./state.ts";
+import { ALIKE_DOWN, ALIKE_RIGHT, DIFF_EASY, DIFF_HARD, type Slash } from "./state.ts";
 
 /** Solver verdicts (upstream's 0 / 1 / 2 return codes). */
 export const SOLVE_IMPOSSIBLE = 0;
@@ -52,8 +51,9 @@ export interface SlantFiring {
   moves: SlantPlacement[];
   /** Driving clue vertex + value (clue-fill / clue-empty). */
   clue?: { x: number; y: number; c: number };
-  /** A same-class already-filled square (equivalence anchor). */
-  anchor?: Point | null;
+  /** Two squares around the clue that slant alike, counted as one line
+   * (clue-fill / clue-empty above `DIFF_EASY`). */
+  pair?: [number, number];
   /** Snapshot of `soln` just after this firing, so its evidence is read from
    * the board it fired on rather than the one the step is shown on. */
   grid: Int8Array;
@@ -66,25 +66,52 @@ export interface SlantSolveOpts {
   /** Replay these placed diagonals before deducing, so the recorded plan
    * continues from the player's position. */
   seedFrom?: Int8Array;
+  /** Merge the squares the player has marked as slanting alike (after the
+   * diagonals), trusting them as `findMistakes` vouches for them. */
+  seedAlike?: Uint8Array;
+  /** Record why every equivalence merge and every v-shape exclusion holds. */
+  trace?: SlantTrace;
 }
 
-/** Find an already-filled square in the same equivalence class as (x, y) — the
- * "share a fate" anchor an equivalence firing propagates from. */
-function findEquivAnchor(
-  sc: SolverScratch,
-  soln: Int8Array,
-  w: number,
-  h: number,
-  x: number,
-  y: number,
-): Point | null {
-  const cls = sc.equiv.canonify(y * w + x);
-  for (let i = 0; i < w * h; i++) {
-    if (soln[i] !== 0 && sc.equiv.canonify(i) === cls) {
-      return { x: i % w, y: Math.floor(i / w) };
-    }
+/**
+ * Why one v-shape of a pair was ruled out: a diagonal already in the pair, a
+ * 1 or 3 clue at a corner the pair shares, or the same v-shape ruled out on
+ * the far side of a 2 (`from` is that square's bit, as `sq * 4 + bit`).
+ */
+export type VWhy =
+  | { kind: "slash"; sq: number }
+  | { kind: "clue"; pt: number; c: number }
+  | { kind: "two"; pt: number; from: number };
+
+/**
+ * Why two adjacent squares slant alike: a clue with one line left and only
+ * these two open squares around it (`pair` is a same-slant pair the clue
+ * counted as one line), both of the pair's v-shapes ruled out, or the
+ * player's own mark.
+ */
+export type MergeWhy =
+  | { kind: "clue"; pt: number; c: number; pair: [number, number] | null }
+  | { kind: "vshape" }
+  | { kind: "note" };
+
+/** One equivalence merge, between two edge-adjacent squares. */
+export interface SlantMerge {
+  a: number;
+  b: number;
+  why: MergeWhy;
+  /** The number of firings recorded before it. */
+  tick: number;
+}
+
+/** The provenance the hint needs of the solver's hidden state. */
+export class SlantTrace {
+  /** Per `sq * 4 + bit`, why that v-shape bit was cleared. */
+  readonly vWhy: (VWhy | null)[];
+  readonly merges: SlantMerge[] = [];
+  tick = 0;
+  constructor(w: number, h: number) {
+    this.vWhy = new Array<VWhy | null>(w * h * 4).fill(null);
   }
-  return null;
 }
 
 /** Reusable scratch space (upstream `struct solver_scratch`). */
@@ -115,6 +142,7 @@ export class SolverScratch {
     this.slashval = new Int8Array(w * h);
     this.vbitmap = new Uint8Array(w * h);
   }
+  trace: SlantTrace | null = null;
 }
 
 /**
@@ -208,9 +236,17 @@ function vbitmapClear(
   x: number,
   y: number,
   vbits: number,
+  why: (bit: number) => VWhy,
 ): boolean {
   const cleared = vbits & sc.vbitmap[y * w + x];
-  if (cleared) sc.vbitmap[y * w + x] &= ~cleared;
+  if (cleared) {
+    sc.vbitmap[y * w + x] &= ~cleared;
+    if (sc.trace) {
+      for (let bit = 0; bit < 4; bit++) {
+        if (cleared & (1 << bit)) sc.trace.vWhy[(y * w + x) * 4 + bit] = why(bit);
+      }
+    }
+  }
   return cleared !== 0;
 }
 
@@ -230,7 +266,14 @@ export function slantSolve(
 ): SolveVerdict {
   const W = w + 1;
   const H = h + 1;
-  const record = opts?.record;
+  const trace = opts?.trace ?? null;
+  sc.trace = trace;
+  const record = opts?.record
+    ? (f: SlantFiring) => {
+        opts.record?.(f);
+        if (trace) trace.tick++;
+      }
+    : undefined;
 
   soln.fill(0);
   sc.clues = clues;
@@ -258,6 +301,13 @@ export function slantSolve(
       if (v !== 0) {
         fillSquare(w, i % w, Math.floor(i / w), v, soln, sc.connected, sc);
       }
+    }
+  }
+  if (opts?.seedAlike) {
+    for (let i = 0; i < w * h; i++) {
+      const bits = opts.seedAlike[i];
+      if (bits & ALIKE_RIGHT) seedMerge(sc, i, i + 1);
+      if (bits & ALIKE_DOWN) seedMerge(sc, i, i + w);
     }
   }
 
@@ -354,6 +404,7 @@ export function slantSolve(
             technique: nl ? "clue-fill" : "clue-empty",
             moves: placed,
             clue: { x, y, c },
+            ...(meq >= 0 ? { pair: [mj1, mj2] as [number, number] } : {}),
             grid: soln.slice(),
           });
           doneSomething = true;
@@ -380,6 +431,19 @@ export function slantSolve(
             const sv2 = sc.slashval[b];
             if (sv1 !== 0 && sv2 !== 0 && sv1 !== sv2) return SOLVE_IMPOSSIBLE;
             const sv = sv1 !== 0 ? sv1 : sv2;
+            if (trace && a !== b) {
+              trace.merges.push({
+                a: nPos[lastIdx],
+                b: nPos[i],
+                why: {
+                  kind: "clue",
+                  pt: y * W + x,
+                  c,
+                  pair: meq >= 0 ? [mj1, mj2] : null,
+                },
+                tick: trace.tick,
+              });
+            }
             sc.equiv.merge(a, b);
             a = sc.equiv.canonify(a);
             sc.slashval[a] = sv;
@@ -456,15 +520,10 @@ export function slantSolve(
         if (fs && bs) return SOLVE_IMPOSSIBLE;
         if (fs || bs) {
           const sv: Slash = fs ? 1 : -1;
-          // For an equivalence firing, the anchor must be found BEFORE the
-          // fill merges this square into the class as another filled member.
-          const anchor =
-            record && reason === "equiv" ? findEquivAnchor(sc, soln, w, h, x, y) : null;
           fillSquare(w, x, y, sv, soln, sc.connected, sc);
           record?.({
             technique: reason,
             moves: [{ x, y, v: sv }],
-            anchor,
             grid: soln.slice(),
           });
           doneSomething = true;
@@ -483,21 +542,24 @@ export function slantSolve(
         // neighbor.
         const s = soln[y * w + x];
         if (s !== 0) {
+          const bySlash = (): VWhy => ({ kind: "slash", sq: y * w + x });
           if (x > 0) {
             doneSomething =
-              vbitmapClear(w, sc, x - 1, y, s < 0 ? 0x1 : 0x2) || doneSomething;
+              vbitmapClear(w, sc, x - 1, y, s < 0 ? 0x1 : 0x2, bySlash) ||
+              doneSomething;
           }
           if (x + 1 < w) {
             doneSomething =
-              vbitmapClear(w, sc, x, y, s < 0 ? 0x2 : 0x1) || doneSomething;
+              vbitmapClear(w, sc, x, y, s < 0 ? 0x2 : 0x1, bySlash) || doneSomething;
           }
           if (y > 0) {
             doneSomething =
-              vbitmapClear(w, sc, x, y - 1, s < 0 ? 0x4 : 0x8) || doneSomething;
+              vbitmapClear(w, sc, x, y - 1, s < 0 ? 0x4 : 0x8, bySlash) ||
+              doneSomething;
           }
           if (y + 1 < h) {
             doneSomething =
-              vbitmapClear(w, sc, x, y, s < 0 ? 0x8 : 0x4) || doneSomething;
+              vbitmapClear(w, sc, x, y, s < 0 ? 0x8 : 0x4, bySlash) || doneSomething;
           }
         }
 
@@ -508,6 +570,12 @@ export function slantSolve(
           const n1 = y * w + x;
           const n2 = y * w + (x + 1);
           if (sc.equiv.canonify(n1) !== sc.equiv.canonify(n2)) {
+            trace?.merges.push({
+              a: n1,
+              b: n2,
+              why: { kind: "vshape" },
+              tick: trace.tick,
+            });
             sc.equiv.merge(n1, n2);
             doneSomething = true;
           }
@@ -516,6 +584,12 @@ export function slantSolve(
           const n1 = y * w + x;
           const n2 = (y + 1) * w + x;
           if (sc.equiv.canonify(n1) !== sc.equiv.canonify(n2)) {
+            trace?.merges.push({
+              a: n1,
+              b: n2,
+              why: { kind: "vshape" },
+              tick: trace.tick,
+            });
             sc.equiv.merge(n1, n2);
             doneSomething = true;
           }
@@ -525,17 +599,24 @@ export function slantSolve(
         if (y === 0 || x === 0) continue;
         const c = clues[y * W + x];
         if (c < 0) continue;
+        const pt = y * W + x;
+        const byClue = (): VWhy => ({ kind: "clue", pt, c });
+        const across =
+          (sx: number, sy: number) =>
+          (bit: number): VWhy => ({ kind: "two", pt, from: (sy * w + sx) * 4 + bit });
 
         if (c === 1) {
           // A 1 clue can never have any v-shape pointing at it.
-          doneSomething = vbitmapClear(w, sc, x - 1, y - 1, 0x5) || doneSomething;
-          doneSomething = vbitmapClear(w, sc, x - 1, y, 0x2) || doneSomething;
-          doneSomething = vbitmapClear(w, sc, x, y - 1, 0x8) || doneSomething;
+          doneSomething =
+            vbitmapClear(w, sc, x - 1, y - 1, 0x5, byClue) || doneSomething;
+          doneSomething = vbitmapClear(w, sc, x - 1, y, 0x2, byClue) || doneSomething;
+          doneSomething = vbitmapClear(w, sc, x, y - 1, 0x8, byClue) || doneSomething;
         } else if (c === 3) {
           // A 3 clue can never have any v-shape pointing away from it.
-          doneSomething = vbitmapClear(w, sc, x - 1, y - 1, 0xa) || doneSomething;
-          doneSomething = vbitmapClear(w, sc, x - 1, y, 0x1) || doneSomething;
-          doneSomething = vbitmapClear(w, sc, x, y - 1, 0x4) || doneSomething;
+          doneSomething =
+            vbitmapClear(w, sc, x - 1, y - 1, 0xa, byClue) || doneSomething;
+          doneSomething = vbitmapClear(w, sc, x - 1, y, 0x1, byClue) || doneSomething;
+          doneSomething = vbitmapClear(w, sc, x, y - 1, 0x4, byClue) || doneSomething;
         } else if (c === 2) {
           // A v-shape ruled out on one side of a 2 is ruled out on the
           // other side too.
@@ -546,6 +627,7 @@ export function slantSolve(
               x - 1,
               y - 1,
               (sc.vbitmap[y * w + (x - 1)] & 0x3) ^ 0x3,
+              across(x - 1, y),
             ) || doneSomething;
           doneSomething =
             vbitmapClear(
@@ -554,6 +636,7 @@ export function slantSolve(
               x - 1,
               y - 1,
               (sc.vbitmap[(y - 1) * w + x] & 0xc) ^ 0xc,
+              across(x, y - 1),
             ) || doneSomething;
           doneSomething =
             vbitmapClear(
@@ -562,6 +645,7 @@ export function slantSolve(
               x - 1,
               y,
               (sc.vbitmap[(y - 1) * w + (x - 1)] & 0x3) ^ 0x3,
+              across(x - 1, y - 1),
             ) || doneSomething;
           doneSomething =
             vbitmapClear(
@@ -570,6 +654,7 @@ export function slantSolve(
               x,
               y - 1,
               (sc.vbitmap[(y - 1) * w + (x - 1)] & 0xc) ^ 0xc,
+              across(x - 1, y - 1),
             ) || doneSomething;
         }
       }
@@ -580,22 +665,39 @@ export function slantSolve(
   return soln.includes(0) ? SOLVE_NOT_CONVERGED : SOLVE_UNIQUE;
 }
 
-/** Run the full (`DIFF_HARD`) solver from the player's current marks,
- * returning every remaining forced firing in deduction order. */
+/** Merge a player-marked pair's classes, keeping the class's slash value
+ * (the clue-pair merge's reconciliation). */
+function seedMerge(sc: SolverScratch, a: number, b: number): void {
+  const ra = sc.equiv.canonify(a);
+  const rb = sc.equiv.canonify(b);
+  if (ra === rb) return;
+  const sv = sc.slashval[ra] !== 0 ? sc.slashval[ra] : sc.slashval[rb];
+  sc.trace?.merges.push({ a, b, why: { kind: "note" }, tick: sc.trace.tick });
+  sc.equiv.merge(ra, rb);
+  sc.slashval[sc.equiv.canonify(ra)] = sv;
+}
+
+/** Run the full (`DIFF_HARD`) solver from the player's diagonals and marks,
+ * returning every remaining forced firing in deduction order, and why each
+ * equivalence it used holds. */
 export function deduceHintPlan(
   w: number,
   h: number,
   clues: Int8Array,
   soln: Int8Array,
-): SlantFiring[] {
+  alike: Uint8Array,
+): { firings: SlantFiring[]; trace: SlantTrace } {
   const sc = new SolverScratch(w, h);
   const scratch = new Int8Array(w * h);
   const firings: SlantFiring[] = [];
+  const trace = new SlantTrace(w, h);
   slantSolve(w, h, clues, scratch, sc, DIFF_HARD, {
     seedFrom: soln,
+    seedAlike: alike,
     record: (f) => firings.push(f),
+    trace,
   });
-  return firings;
+  return { firings, trace };
 }
 
 /** Solve a board's clues from scratch with the full (`DIFF_HARD`) solver, as

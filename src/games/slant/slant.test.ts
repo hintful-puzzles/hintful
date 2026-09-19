@@ -64,6 +64,8 @@ const P22 = { w: 2, h: 2, diff: DIFF_EASY };
 function ui(over: Partial<SlantUi> = {}): SlantUi {
   return {
     cursor: newCursor(),
+    pencilMode: false,
+    pin: null,
     swapButtons: false,
     fadeGrounded: false,
     ...over,

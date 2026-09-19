@@ -48,6 +48,9 @@ export interface SlantState {
   readonly clues: Int8Array;
   /** Per-square slash (−1/0/+1), cloned per move. */
   readonly soln: Int8Array;
+  /** Per-square same-slant marks: {@link ALIKE_RIGHT} joins a square to its
+   * right neighbor, {@link ALIKE_DOWN} to the one below. */
+  readonly alike: Uint8Array;
   /** Per-square: this diagonal lies on a closed loop (upstream ERR_SQUARE). */
   readonly loopErrors: Uint8Array;
   /** Per-vertex: this clue is over-committed or unsatisfiable (ERR_VERTEX). */
@@ -59,23 +62,42 @@ export interface SlantState {
   readonly cheated: boolean;
 }
 
+/** Which neighbor a same-slant mark joins a square to. */
+export type AlikeDir = "right" | "down";
+
+export const ALIKE_RIGHT = 1;
+export const ALIKE_DOWN = 2;
+
+export const alikeBit = (dir: AlikeDir): number =>
+  dir === "right" ? ALIKE_RIGHT : ALIKE_DOWN;
+
 /** A `set` writes one square (the C `\`/`/`/`C` move letters); a `solve`
  * applies a full solution as a string of `'\'`/`'/'` per square (the C `S…`
- * compound), kept a string so the move is JSON-save-safe. */
+ * compound), kept a string so the move is JSON-save-safe. An `alike` sets or
+ * clears the same-slant mark between (x, y) and its neighbor, absolutely, so
+ * replaying one is harmless. */
 export type SlantMove =
   | { type: "set"; x: number; y: number; v: Slash }
-  | { type: "solve"; grid: string };
+  | { type: "solve"; grid: string }
+  | { type: "alike"; x: number; y: number; dir: AlikeDir; on: boolean };
 
 export interface SlantUi {
   cursor: GridCursor;
+  /** Notes mode: a tap or Enter marks two squares as slanting alike. */
+  pencilMode: boolean;
+  /** The square Enter pinned in notes mode, waiting for its partner. */
+  pin: Point | null;
   /** Pref: swap which click direction cycles `\`-first vs `/`-first. */
   swapButtons: boolean;
   /** Pref: dim diagonals connected to the border (they can never loop). */
   fadeGrounded: boolean;
 }
 
-/** A placed diagonal that contradicts the unique solution. */
-export type SlantMistake = Point;
+/** A placed diagonal that contradicts the unique solution, or, with `dir`, a
+ * same-slant mark joining two squares the solution slants differently. */
+export interface SlantMistake extends Point {
+  dir?: AlikeDir;
+}
 
 // --- params --------------------------------------------------------------
 
@@ -187,6 +209,7 @@ export function newState(p: SlantParams, desc: string): SlantState {
     h,
     clues: decodeClues(p, desc),
     soln: new Int8Array(w * h),
+    alike: new Uint8Array(w * h),
     loopErrors: new Uint8Array(w * h),
     vertexErrors: new Uint8Array((w + 1) * (h + 1)),
     grounded: new Uint8Array(w * h),
@@ -306,6 +329,15 @@ export function computeErrors(w: number, h: number, clues: Int8Array, soln: Int8
 
 export function executeMove(state: SlantState, move: SlantMove): SlantState {
   const { w, h } = state;
+  if (move.type === "alike") {
+    const { x, y, dir } = move;
+    const [nx, ny] = dir === "right" ? [x + 1, y] : [x, y + 1];
+    if (x < 0 || y < 0 || nx >= w || ny >= h) throw new Error("Mark out of bounds");
+    const alike = Uint8Array.from(state.alike);
+    if (move.on) alike[y * w + x] |= alikeBit(dir);
+    else alike[y * w + x] &= ~alikeBit(dir);
+    return { ...state, alike };
+  }
   const soln = Int8Array.from(state.soln);
   let cheated = state.cheated;
 

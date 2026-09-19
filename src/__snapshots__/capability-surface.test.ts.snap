@@ -1378,9 +1378,12 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "grid",
+      "pencilModeShown",
+      "sideKeys",
       "started",
       "tileSize",
       "todraw",
+      "todrawSideKeys",
     ],
     "id": "slant",
     "members": [
@@ -1393,12 +1396,15 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "paramConfig",
       "preferredTileSize",
       "prefs",
+      "requestKeys",
       "solve",
       "textFormat",
     ],
     "ui": [
       "cursor",
       "fadeGrounded",
+      "pencilMode",
+      "pin",
       "swapButtons",
     ],
   },

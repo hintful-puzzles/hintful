@@ -10,7 +10,8 @@ import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { type SlantHint, slantGame } from "./index.ts";
+import type { SlantHint } from "./hint.ts";
+import { slantGame } from "./index.ts";
 import { COL_GRID, COL_HINT, COL_HINT_CELL, COL_HINT_REF } from "./render.ts";
 import { DIFF_EASY, DIFF_HARD, encodeParams, type SlantParams } from "./state.ts";
 
@@ -33,7 +34,7 @@ describe("Slant hint render scenarios", () => {
     const h = hl(hint);
     expect(h).not.toBeNull();
     // The opener is a clue firing: it carries a driving clue.
-    expect(h?.clue).toBeDefined();
+    expect(h?.clues?.length).toBe(1);
 
     // The target and any siblings are **ringed**, four thin rects each and none
     // solid: a blue square in Slant would read as a slash already placed.
@@ -75,7 +76,8 @@ describe("Slant hint render scenarios", () => {
       game: slantGame,
       id: boardId({ w: 12, h: 10, diff: DIFF_HARD }, "srs-hard-eq"),
       showHint: true,
-      hintUntil: (step) => /locked to the same slant/.test(step.explanation ?? ""),
+      hintUntil: (step) =>
+        /slant the same as the ringed one/.test(step.explanation ?? ""),
     });
 
     const h = hl(hint);

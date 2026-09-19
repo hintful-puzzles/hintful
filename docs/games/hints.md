@@ -1391,7 +1391,7 @@ to a similar game:
 | Towers | struck candidate digit(s) `COL_HINT` + cross-through (on a *non*-`COL_HINT` cell so the digit shows); placement target `COL_HINT` fill (no digit to hide) | driving **clue cell(s)** *and* their line of sight → `COL_HINT_CELL` shade (clue + sightline read as one premise region) |
 | Pattern | forced cell(s), blue `COL_HINT` fill (highlight only, no mark) — the reasoned line's clue digits also recolor `COL_HINT` to tie clue↔line | reasoned **row/column** → `COL_HINT_CELL` shade on its *undecided* cells; an overlap run's anchoring **black** mark → teal `COL_HINT_BLACKREF` ring (white anchors → violet `COL_HINT_WHITEREF`). White ("no run reaches here") firings ring *nothing* — that deduction leans on the whole line's packing, so a ring would over-claim; the shaded line + highlighted clue is the evidence. |
 | Light Up | forced square(s), blue `COL_HINT` fill (bulb *and* mark targets identical — the narration says which) | evidence squares carried as one list, cue split by the cell's own state: a **dark** square → `COL_HINT_CELL` shade, a **lit/bulb** square → teal `COL_HINT_LITERF` ring (a fill would hide the "already lit" premise); the unlit square a deduction protects → amber `COL_HINT_DARKREF` ring; the driving clue → its digit recolors `COL_HINT` (the light `COL_HINT_CELL` was tried first and is unreadable as a cue — nearly white on black) |
-| Slant | forced square(s), blue `COL_HINT` fill (no slash preview); a clue firing lights all its forced squares and drops them as its multi-leg journey advances | a **clue** firing → the clue's digit recolors `COL_HINT` + its already-decided neighbor squares `COL_HINT_CELL` shade; a **loop/dead-end** firing → the connectivity chain / trapped-point components `COL_HINT_CELL` shade (plus the trapped points' incident squares); an **equivalence** firing → teal `COL_HINT_REF` ring on the cited already-filled anchor |
+| Slant | forced square(s), blue `COL_HINT` ring (no slash preview); a clue firing rings all its forced squares and drops them as its multi-leg journey advances; a same-slant mark the step places, its bars in `COL_HINT` | a **clue** firing → the clue's digit recolors `COL_HINT` + its already-decided neighbor squares `COL_HINT_CELL` outlined; a **loop/dead-end** firing → the connectivity chain / trapped-point components outlined (plus the trapped points' incident squares); an **equivalence** firing → teal `COL_HINT_REF` ring on the placed square, and the marks it cites in `COL_HINT_CELL`; a **v-shape mark** → the clues it names recolored and the pairs across a 2 outlined |
 | Netslide | the tile being placed, `COL_HINT` fill (its wires still drawn on top); the border arrow to press, `COL_HINT` | its destination outlined `COL_HINT` — **solid** when the finished board really wants that tile's wires there, **dashed** when the plan is only passing through (the non-color cue distinguishing *arrived* from *setting up*) |
 | Crossing | the squares to write into, solid **green** `COL_HINT` (green, not the collection's blue — see below); a struck note keeps its normal `COL_PENCIL` digit + strikethrough on a *non*-target background | the run(s) reasoned over → pale-green `COL_HINT_CELL` shade; **and the still-fitting listed numbers → the same two shades as a patch behind their text in the clue panel** (§ "Off-board evidence") |
 | Spokes | the forced spoke, in `COL_HINT` — **a line** when the move draws a line, **a rim dot** when the move places a mark (§ "Echo the move's shape in the hint color") | the hubs whose clue/lines/connectivity are the argument → `COL_HINT_CELL` ring. A saturated hub forces several spokes as one multi-leg journey, all in the one color |
@@ -1819,62 +1819,33 @@ is the shape for any game whose live-error/`findMistakes` validator already
 marks *which* rule each cell breaks — the same pass is a ready-made reason
 source.
 
-### The honest chain tier
+### Connectivity evidence (Slant)
 
-**Superseded by quality-bar rule 6** (§ "Give the facts a notation (Loopy)"): a
-technique the game has no vocabulary for is a missing notation, and the answer
-is to give the player the vocabulary, not to cite the chain's anchor. Slant's
-equivalence step still speaks this tier, and `apply-markable-facts-rule`'s audit
-recorded it as nonconforming; `add-slant-notation` is the fix. What follows is
-kept for its measurement and its two connectivity mechanics, which still hold.
-
-Sometimes a whole **technique is intrinsically a multi-step chain the game has
-no vocabulary to externalize** (Slant, `add-slant-hint`). Slant's four
-move-producing techniques: three
-are clean and glance-able — clue-counting, loop avoidance, dead-end
-avoidance — and cover ~94–98% of firings (*measure first*: a throwaway
-technique-tag recorder over the shipped presets gave clue ≈83%, loop ≈9%,
-dead-end ≈5%, equivalence ≈4%, and showed dead-end/equivalence fire on most
-boards, so the plan **cannot** drop them — every one must be narrated).
-
-The fourth, **equivalence-to-an-already-filled-square**, is the Palisade
-"share a fate" idea, but its justification is a *chain* — the lock was
-established by a pairing or v-shape argument several fixpoint passes earlier —
-and Slant has **no pencil mark** to accumulate that chain onto the board (the
-externalization route is closed). So compressing it into one glance-able
-sentence is impossible without lying. The honest tier: name the technique and
-cite the anchor — *"This square is locked to the same slant as the ringed one
-— the clues around them leave no other pairing — so since that one is a
-backslash, this must be a backslash too"* — ring the already-filled anchor
-(`COL_HINT_REF` teal) as the visible evidence, and **do not** reconstruct the
-derivation. It is a real minority of firings, so the common hint stays
-first-class; flag the dip for owner acceptance.
-
-Two mechanics worth carrying to the next connectivity game:
+Slant's techniques reason over which grid points its diagonals join. These
+mechanics are worth carrying to the next connectivity game:
 
 - **Recorder + `seedFrom`, both gated, over the real solver.** Extend the
   ported solver with an optional `record`/`seedFrom` (the generator passes
   neither ⇒ byte-identical, differential green); `seedFrom` replays the
-  player's marks through the same `fillSquare` that syncs
+  player's diagonals through the same `fillSquare` that syncs
   connectivity/exits/equivalence, so the recorded plan continues from their
   position — the seed has to walk the union-find, not just copy a grid.
   Exemplar: [`slant/solver.ts`](../../src/games/slant/solver.ts).
 - **Connectivity-chain evidence must add the points' *incident squares*, not
   just the diagonal component.** A dead-end firing traps a point that may
   carry **zero placed diagonals** — the diagonal-only component comes back
-  empty and the visible-evidence invariant fails. Shade the component **∪**
+  empty and the visible-evidence invariant fails. Outline the component **∪**
   the ruled-out corners' incident squares, so the trapped points are always
   located (`componentSquares` + `incidentSquares` in
-  [`slant/index.ts`](../../src/games/slant/index.ts)).
+  [`slant/hint.ts`](../../src/games/slant/hint.ts)).
 - **A clue firing groups as `continuesPrevious` legs**, each leg carrying the
   necessity modal too, so the voice guard passes on *every* step, not just
   openers.
 
 ### Show the what-if walk statically
 
-Slant's honest tier cites its chain's *anchor* and stops; Clusters
-(`add-clusters-hint`) goes one step further for a **contradiction solver whose
-depth-1 chains are frequent** (39–56% of boards — measured first): the whole
+Clusters (`add-clusters-hint`) has a **contradiction solver whose depth-1
+chains are frequent** (39–56% of boards — measured first): the whole
 hypothetical is displayed **statically in one step's highlights**. The target
 stays a plain `COL_HINT` fill ("suppose this cell were blue"), each cell the
 hypothesis would force carries a **small center mark of its forced color**
@@ -1987,6 +1958,11 @@ that fact and nothing on the board records it. Two tells found every breach:
   game has a shallow, board-only derivation (Subsets' `candidateSets`), check each
   firing's premise against it: a firing that does not follow from it rests on
   something unmarked.
+- **Then find every arm that reads that state, not the arm whose sentence gave it
+  away.** The audit flagged Slant's equivalence step by its sentence and called it
+  the only arm. A clue firing that counts two equivalent squares as one line reads
+  the same union-find, fired five times as often, and its sentence was false as
+  well. `add-slant-notation` found it by grepping the solver for reads of `equiv`.
 
 Loopy is where this was learned. From Normal its rungs reason about two things the
 game once gave players no way to mark: a **corner**, two edges meeting at a dot
@@ -2059,6 +2035,30 @@ fact as a note. What transfers, in [`games/loopy/`](../../src/games/loopy/):
   solution, so the plan may take them as facts (§ "Deduce from the notes when the
   mistake check vouches for them"). A notation the hint reads from has to be vouched
   for the same way.
+
+Slant is the second game this was done for (`add-slant-notation`), with one mark:
+two squares sharing a side slant the same way. What it added, in
+[`games/slant/`](../../src/games/slant/):
+
+- **Measure what the solver derives before designing the mark.** Every merge in
+  Slant's union-find joins two squares that share a side, and every one means
+  "the same slant", so the notation needed no opposite and no long-range pair. A
+  chain of marks is read by following it, as a chain of diagonals is.
+- **A fact inside a premise need not be a mark if every link is on the board.** A
+  v-shape merge rests on two ruled-out v-shapes, and the solver carries one across
+  a 2, sometimes along a line of 2s. Slant has no mark for half a pair, but each
+  link is a clue or a diagonal the player can see, so the step names them in one
+  sentence ("as the pair across it can't both touch the 1"). The chain was checked
+  to hold one kind all the way along before it was said once (`lineReason`).
+  Those sentences are the ledgered long template in `hint-quality.test.ts`.
+- **Record why each merge holds where it happens.** `SlantTrace` keeps each merge's
+  reason and each v-shape bit's, and the plan finds a firing's cited marks as the
+  shortest path through the merges before it, since the union-find answers only
+  *that* two squares are joined.
+- **A resumed plan may place a mark the first plan did not.** The solver counts
+  one equivalent pair per clue, so marks known from the start can change which pair
+  it counts. A mark is still placed only once and only where it is true, which is
+  what `slant-notes.test.ts` holds, rather than equality with the first plan.
 
 ### Rule-outs as board marks
 

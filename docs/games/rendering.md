@@ -571,7 +571,9 @@ games with an `#ifdef NARROW_BORDERS` variant (Slant's slim border; Bricks'
 `BORDER = 0`) were ported in the *narrow* variant — parity was with what the
 browser actually showed, not the desktop default. If a border constant looks
 surprisingly small, that is why. Exemplar:
-[`slant/render.ts`](../../src/games/slant/render.ts).
+[`bricks/render.ts`](../../src/games/bricks/render.ts). Slant's slim border has
+since grown by `pencilIndicatorReach`, the room notes mode's pencil needs at the
+canvas's top-right corner.
 
 ## The palette: three layers, meaning first
 

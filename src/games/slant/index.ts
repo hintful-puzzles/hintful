@@ -6,39 +6,38 @@
  * Left-click cycles a square blank → `\` → `/` → blank; right-click the
  * reverse (swappable via the mouse-button-order preference); `\`, `/` and
  * backspace place directly at the keyboard cursor.
+ *
+ * **Notes mode** (`ui.pencilMode`, toggled by the collection's Marks key and
+ * the app's bare `P`) marks two squares that share a side as slanting alike:
+ * a tap toggles the mark on the side nearest it, and Enter pins a square and
+ * then toggles the mark between it and a neighbor.
  */
 
 import type { DifficultyContract } from "../../engine/difficulty.ts";
-import { Dsf } from "../../engine/dsf.ts";
 import { winFlash } from "../../engine/flash.ts";
-import type {
-  Game,
-  HintResult,
-  HintStep,
-  HintTrackVerdict,
-  SolveResult,
-  UiUpdate,
-} from "../../engine/game.ts";
+import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
-import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { pencilModeKey } from "../../engine/key-labels.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
   hideCursor,
+  isCancelKey,
   isCursorMove,
   isEraseKey,
   LEFT_BUTTON,
   moveCursor,
   newCursor,
+  PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
   showCursor,
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { Point } from "../../engine/types.ts";
+import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
-import { say } from "./hint-text.ts";
+import { slantHint, slantHintKeepTrack } from "./hint.ts";
 import {
   border,
   colors,
@@ -50,8 +49,6 @@ import {
   type SlantDrawState,
 } from "./render.ts";
 import {
-  deduceHintPlan,
-  type SlantFiring,
   SOLVE_IMPOSSIBLE,
   SOLVE_UNIQUE,
   SolverScratch,
@@ -59,6 +56,10 @@ import {
   solveFromClues,
 } from "./solver.ts";
 import {
+  ALIKE_DOWN,
+  ALIKE_RIGHT,
+  type AlikeDir,
+  alikeBit,
   decodeParams,
   defaultParams,
   encodeParams,
@@ -81,6 +82,8 @@ import {
 function newUi(_state: SlantState): SlantUi {
   return {
     cursor: newCursor(),
+    pencilMode: false,
+    pin: null,
     swapButtons: false,
     fadeGrounded: false,
   };
@@ -108,12 +111,33 @@ function interpretMove(
   const button = stripModifiers(rawButton);
   const { w, h } = state;
 
+  if (button === PENCIL_MODE_BUTTON) {
+    ui.pencilMode = !ui.pencilMode;
+    ui.pin = null;
+    return UI_UPDATE;
+  }
+
   if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
     const ts = ds.tileSize;
     const x = fromCoord(p.x, ts, border(ts));
     const y = fromCoord(p.y, ts, border(ts));
     if (x < 0 || y < 0 || x >= w || y >= h) return null;
     hideCursor(ui.cursor);
+    if (ui.pencilMode) {
+      // The mark on the square's side nearest the tap: the diagonals cut the
+      // square into four triangles, one per side.
+      const fx = (p.x - border(ts)) / ts - x;
+      const fy = (p.y - border(ts)) / ts - y;
+      const side = [fx, 1 - fx, fy, 1 - fy];
+      const near = side.indexOf(Math.min(...side));
+      const [nx, ny] = [
+        [x - 1, y],
+        [x + 1, y],
+        [x, y - 1],
+        [x, y + 1],
+      ][near];
+      return toggleMark(state, { x, y }, { x: nx, y: ny });
+    }
     return {
       type: "set",
       x,
@@ -125,6 +149,15 @@ function interpretMove(
   if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
     if (showCursor(ui.cursor)) return UI_UPDATE;
     const { x, y } = ui.cursor;
+    if (ui.pencilMode) {
+      const pin = ui.pin;
+      if (pin !== null && Math.abs(pin.x - x) + Math.abs(pin.y - y) === 1) {
+        ui.pin = null;
+        return toggleMark(state, pin, { x, y }) ?? UI_UPDATE;
+      }
+      ui.pin = pin !== null && pin.x === x && pin.y === y ? null : { x, y };
+      return UI_UPDATE;
+    }
     return {
       type: "set",
       x,
@@ -145,7 +178,29 @@ function interpretMove(
     return { type: "set", x, y, v };
   }
 
+  // Erase keys set the square above, so only Escape reaches this.
+  if (isCancelKey(button) && ui.pin !== null) {
+    ui.pin = null;
+    return UI_UPDATE;
+  }
+
   return null;
+}
+
+/** The mark joining two squares that share a side, as `alike` stores it. */
+function markBetween(a: Point, b: Point): { x: number; y: number; dir: AlikeDir } {
+  const lo = a.y < b.y || (a.y === b.y && a.x < b.x) ? a : b;
+  return { x: lo.x, y: lo.y, dir: a.y === b.y ? "right" : "down" };
+}
+
+/** Toggle the mark between `a` and its neighbor `b`, or nothing when `b` is
+ * off the board. */
+function toggleMark(state: SlantState, a: Point, b: Point): SlantMove | null {
+  const { w, h } = state;
+  if (b.x < 0 || b.y < 0 || b.x >= w || b.y >= h) return null;
+  const mark = markBetween(a, b);
+  const on = (state.alike[mark.y * w + mark.x] & alikeBit(mark.dir)) === 0;
+  return { type: "alike", ...mark, on };
 }
 
 function solve(
@@ -171,192 +226,28 @@ function solve(
 }
 
 /** Generated boards are uniquely solvable by the full solver: re-solve the
- * clues and flag every placed diagonal that contradicts the unique solution.
- * Blank squares are never mistakes; a non-uniquely-solvable (hand-typed)
- * board degrades to "no detectable mistakes". */
+ * clues and flag every placed diagonal, and every same-slant mark, that
+ * contradicts the unique solution. Blank squares are never mistakes; a
+ * non-uniquely-solvable (hand-typed) board degrades to "no detectable
+ * mistakes". */
 function findMistakes(state: SlantState): readonly SlantMistake[] {
   const { w, h } = state;
   const result = solveFromClues(w, h, state.clues);
   if ("error" in result) return [];
+  const sol = result.soln;
   const out: SlantMistake[] = [];
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      const s = state.soln[y * w + x];
-      if (s !== 0 && s !== result.soln[y * w + x]) out.push({ x, y });
+      const i = y * w + x;
+      const s = state.soln[i];
+      if (s !== 0 && s !== sol[i]) out.push({ x, y });
+      const marks = state.alike[i];
+      if (marks & ALIKE_RIGHT && sol[i] !== sol[i + 1])
+        out.push({ x, y, dir: "right" });
+      if (marks & ALIKE_DOWN && sol[i] !== sol[i + w]) out.push({ x, y, dir: "down" });
     }
   }
   return out;
-}
-
-// --- hint ------------------------------------------------------------------
-
-/** Highlight data for a Slant hint step. `target` is the square this leg
- * forces and `siblings` the same firing's still-to-do squares, all ringed
- * `COL_HINT` with no slash preview (they share its fate); `area` is the
- * deduction's evidence to outline (a clue's decided neighbors, a loop chain,
- * the trapped dead-end components); `ref` rings a cited already-filled square
- * (an equivalence anchor); `clue` recolors a driving clue's digit. */
-export interface SlantHint {
-  target: Point;
-  siblings?: Point[];
-  area?: Point[];
-  ref?: Point;
-  clue?: Point;
-}
-
-/** The up-to-four squares touching a grid point. */
-function incidentSquares(px: number, py: number, w: number, h: number): Point[] {
-  const out: Point[] = [];
-  if (px > 0 && py > 0) out.push({ x: px - 1, y: py - 1 });
-  if (px > 0 && py < h) out.push({ x: px - 1, y: py });
-  if (px < w && py > 0) out.push({ x: px, y: py - 1 });
-  if (px < w && py < h) out.push({ x: px, y: py });
-  return out;
-}
-
-/** Squares whose diagonal lies in the connectivity component of any of the
- * given grid points, computed from a `soln` snapshot (the loop chain / the
- * trapped dead-end components a firing reasons over). */
-function componentSquares(
-  grid: Int8Array,
-  w: number,
-  h: number,
-  points: number[],
-): Point[] {
-  const W = w + 1;
-  const dsf = new Dsf(W * (h + 1));
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const s = grid[y * w + x];
-      if (s === -1) dsf.merge(y * W + x, (y + 1) * W + (x + 1));
-      else if (s === 1) dsf.merge((y + 1) * W + x, y * W + (x + 1));
-    }
-  }
-  const roots = new Set(points.map((p) => dsf.canonify(p)));
-  const out: Point[] = [];
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const s = grid[y * w + x];
-      if (s === 0) continue;
-      const endpoint = s === -1 ? y * W + x : (y + 1) * W + x;
-      if (roots.has(dsf.canonify(endpoint))) out.push({ x, y });
-    }
-  }
-  return out;
-}
-
-/** Narrate why this leg's move is forced. The words are
- * [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(firing: SlantFiring, leg: number): string {
-  if (leg > 0) return say.continuation(firing.technique === "clue-empty");
-  switch (firing.technique) {
-    case "clue-fill":
-      return say.clueFill(firing.clue?.c ?? 0);
-    case "clue-empty":
-      return say.clueEmpty(firing.clue?.c ?? 0);
-    case "loop":
-      return say.loop;
-    case "deadend":
-      return say.deadend;
-    case "equiv":
-      return say.equiv(firing.moves[0].v);
-  }
-}
-
-/** Build the highlight payload for one leg of a firing. */
-function buildHighlights(
-  firing: SlantFiring,
-  leg: number,
-  w: number,
-  h: number,
-): SlantHint {
-  const m = firing.moves[leg];
-  const hint: SlantHint = { target: { x: m.x, y: m.y } };
-  const siblings = firing.moves.slice(leg + 1).map((s) => ({ x: s.x, y: s.y }));
-  if (siblings.length) hint.siblings = siblings;
-
-  switch (firing.technique) {
-    case "clue-fill":
-    case "clue-empty": {
-      if (firing.clue) {
-        hint.clue = { x: firing.clue.x, y: firing.clue.y };
-        // Evidence: the clue's already-decided neighbors, not the squares
-        // this firing places.
-        const inFiring = new Set(firing.moves.map((s) => s.y * w + s.x));
-        hint.area = incidentSquares(firing.clue.x, firing.clue.y, w, h).filter(
-          (s) => !inFiring.has(s.y * w + s.x) && firing.grid[s.y * w + s.x] !== 0,
-        );
-      }
-      break;
-    }
-    case "loop":
-    case "deadend": {
-      // The ruled-out diagonal is −v; its two corners are the points at
-      // issue. Outline the chain / components they belong to (from the board
-      // with this square removed) plus their incident squares, so a dead-end
-      // point that carries no diagonal yet is still located.
-      const grid = firing.grid.slice();
-      grid[m.y * w + m.x] = 0;
-      // A ruled-out `\` runs from (x, y), a ruled-out `/` from (x+1, y).
-      const dx = m.v === 1 ? 0 : 1;
-      const corners: Point[] = [
-        { x: m.x + dx, y: m.y },
-        { x: m.x + 1 - dx, y: m.y + 1 },
-      ];
-      const byKey = new Map<number, Point>();
-      for (const s of [
-        ...componentSquares(
-          grid,
-          w,
-          h,
-          corners.map((p) => p.y * (w + 1) + p.x),
-        ),
-        ...corners.flatMap((p) => incidentSquares(p.x, p.y, w, h)),
-      ]) {
-        if (s.x === m.x && s.y === m.y) continue; // the target carries its own ring
-        byKey.set(s.y * w + s.x, s);
-      }
-      hint.area = [...byKey.values()];
-      break;
-    }
-    case "equiv": {
-      if (firing.anchor) hint.ref = { x: firing.anchor.x, y: firing.anchor.y };
-      break;
-    }
-  }
-  return hint;
-}
-
-function hint(state: SlantState): HintResult<SlantMove, SlantHint> {
-  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-  if (refusal) return refusal;
-  const plan = deduceHintPlan(state.w, state.h, state.clues, state.soln);
-  if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  const steps: HintStep<SlantMove, SlantHint>[] = [];
-  for (const firing of plan) {
-    for (let leg = 0; leg < firing.moves.length; leg++) {
-      steps.push({
-        move: { type: "set", ...firing.moves[leg] },
-        explanation: narrate(firing, leg),
-        ...(leg > 0 ? { continuesPrevious: true } : {}),
-        highlights: buildHighlights(firing, leg, state.w, state.h),
-      });
-    }
-  }
-  return { ok: true, steps };
-}
-
-/** The player's move completes the step iff it sets the hinted square to the
- * hinted slash; anything else drops the plan to recompute. */
-function hintKeepTrack(
-  m: SlantMove,
-  step: HintStep<SlantMove, SlantHint>,
-  _state: SlantState,
-): HintTrackVerdict {
-  if (m.type !== "set" || step.move.type !== "set") return "off";
-  return m.x === step.move.x && m.y === step.move.y && m.v === step.move.v
-    ? "completed"
-    : "off";
 }
 
 const difficulty: DifficultyContract<SlantParams> = {
@@ -409,8 +300,9 @@ export const slantGame: Game<
   solve,
   difficulty,
   findMistakes,
-  hint,
-  hintKeepTrack,
+  hint: (state) => slantHint(state, findMistakes(state).length),
+  hintKeepTrack: slantHintKeepTrack,
+  requestKeys: (): KeyLabel[] => [pencilModeKey],
 
   textFormat,
 

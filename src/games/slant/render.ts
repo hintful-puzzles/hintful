@@ -6,8 +6,13 @@
  * cursor, flash, grounded fade, the findMistakes outline, the hint marks —
  * lives in the packed word, so the diff key covers it by construction.
  *
- * The border is `CLUE_RADIUS + 1`, not a full tile: upstream's web build
- * defined `NARROW_BORDERS`, and parity is with what the browser showed.
+ * The same-slant marks are keyed per tile in a second array beside the
+ * packed word, since a mark straddles the side two tiles share and each tile
+ * draws its own half.
+ *
+ * The border is a clue circle plus a pixel, as upstream's web build drew it,
+ * grown by `pencilIndicatorReach` so the notes-mode pencil has the top-right
+ * corner to itself.
  */
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
@@ -19,19 +24,30 @@ import {
   HINT_EVIDENCE,
   highlightWash,
   INK,
+  PENCIL_BODY,
+  pencilColor,
 } from "../../engine/color/palette.ts";
 import { slantGrounded } from "../../engine/color/palette-games.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
+import {
+  type PencilIndicatorCache,
+  type PencilIndicatorStyle,
+  pencilIndicatorBox,
+  pencilIndicatorReach,
+  repaintPencilIndicator,
+} from "../../engine/pencil-indicator.ts";
 import type { Color, Size } from "../../engine/types.ts";
-import type { SlantHint } from "./index.ts";
-import type {
-  SlantMistake,
-  SlantMove,
-  SlantParams,
-  SlantState,
-  SlantUi,
+import type { SlantHint, SlantMark } from "./hint.ts";
+import {
+  ALIKE_DOWN,
+  ALIKE_RIGHT,
+  type SlantMistake,
+  type SlantMove,
+  type SlantParams,
+  type SlantState,
+  type SlantUi,
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
@@ -51,6 +67,8 @@ export const COL_GROUNDED = 8;
 export const COL_HINT = 9; // forced square(s), ringed on their own border
 export const COL_HINT_CELL = 10; // evidence area, outlined
 export const COL_HINT_REF = 11; // a cited filled anchor (a doubled ring)
+export const COL_PENCIL = 12; // the player's same-slant marks
+export const COL_PENCIL_BODY = 13; // the notes-mode indicator's pencil
 
 export function colors(defaultBackground: Color): Color[] {
   const { background } = mkhighlight(defaultBackground);
@@ -69,6 +87,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
   out[COL_HINT_REF] = HINT_BLACKREF;
+  out[COL_PENCIL] = pencilColor(defaultBackground);
+  out[COL_PENCIL_BODY] = PENCIL_BODY;
   return out;
 }
 
@@ -106,12 +126,32 @@ const HINT_TR = 0x02000000;
 const HINT_BL = 0x04000000;
 const HINT_BR = 0x08000000;
 
+// The marks key, per tile: a 3-bit code for each side (left, right, top,
+// bottom), and the notes-mode pin.
+const MARK_PLAYER = 1;
+const MARK_MISTAKE = 2;
+const MARK_CITED = 3;
+const MARK_PLACING = 4;
+const SIDE_L = 0;
+const SIDE_R = 3;
+const SIDE_T = 6;
+const SIDE_B = 9;
+const PIN = 1 << 12;
+
+const MARK_COLORS = [-1, COL_PENCIL, COL_ERROR, COL_HINT_CELL, COL_HINT];
+
+const INDICATOR: PencilIndicatorStyle = {
+  background: COL_BACKGROUND,
+  body: COL_PENCIL_BODY,
+  ink: COL_INK,
+};
+
 // --- geometry -------------------------------------------------------------
 const clueRadius = (ts: number) => Math.floor(ts / 3);
 const clueTextSize = (ts: number) => Math.floor(ts / 2);
-/** The board's pixel origin, a clue circle plus a pixel. Shared with
- * `interpretMove` so pointer mapping and drawing agree. */
-export const border = (ts: number) => clueRadius(ts) + 1;
+/** The board's pixel origin: a clue circle plus a pixel, and the pencil's
+ * corner. Shared with `interpretMove` so pointer mapping and drawing agree. */
+export const border = (ts: number) => clueRadius(ts) + 1 + pencilIndicatorReach(ts);
 const coord = (n: number, ts: number) => n * ts + border(ts);
 
 export function computeSize(p: SlantParams, ts: number): Size {
@@ -120,7 +160,7 @@ export function computeSize(p: SlantParams, ts: number): Size {
 
 // --- draw state -----------------------------------------------------------
 
-export interface SlantDrawState {
+export interface SlantDrawState extends PencilIndicatorCache {
   started: boolean;
   tileSize: number;
   /** Last-drawn packed word per tile of the (w+2)×(h+2) ring-extended grid;
@@ -128,6 +168,10 @@ export interface SlantDrawState {
   grid: Int32Array;
   /** Scratch for the frame being built (upstream `todraw`). */
   todraw: Int32Array;
+  /** Last-drawn side key per tile (its same-slant marks and pin), and the
+   * frame's; see `MARK_PLAYER`. */
+  sideKeys: Int32Array;
+  todrawSideKeys: Int32Array;
 }
 
 export function newDrawState(state: SlantState, tileSize: number): SlantDrawState {
@@ -137,6 +181,9 @@ export function newDrawState(state: SlantState, tileSize: number): SlantDrawStat
     tileSize,
     grid: new Int32Array(n).fill(-1),
     todraw: new Int32Array(n).fill(-1),
+    sideKeys: new Int32Array(n).fill(-1),
+    todrawSideKeys: new Int32Array(n),
+    pencilModeShown: null,
   };
 }
 
@@ -177,6 +224,7 @@ function drawTile(
   x: number,
   y: number,
   v: number,
+  marks: number,
 ): void {
   const W = w + 1;
   const chess = (x ^ y) & 1;
@@ -327,6 +375,16 @@ function drawTile(
     dr.drawRect({ x: sx + span - t, y: sy, w: t, h: span }, COL_ERROR);
   }
 
+  if (marks & PIN) {
+    const band = {
+      box: { x: coord(x, ts), y: coord(y, ts), w: ts, h: ts },
+      outer: 0,
+      inner: Math.max(2, ts >> 4),
+    };
+    drawMarkSides(dr, band, MARK_ALL, COL_PENCIL);
+  }
+  drawMarks(dr, ts, x, y, marks);
+
   // And finally the clues at the tile's corners.
   if (x >= 0 && y >= 0) {
     drawClue(dr, ts, x, y, clues[y * W + x], (v & ERR_TL) !== 0, (v & HINT_TL) !== 0);
@@ -369,6 +427,59 @@ function drawTile(
   dr.drawUpdate({ x: coord(x, ts), y: coord(y, ts), w: ts, h: ts });
 }
 
+/**
+ * The same-slant marks on this tile's sides: a pair of short bars across the
+ * middle of the side, joining the two squares. The whole mark is drawn and the
+ * tile's clip keeps this tile's half.
+ */
+function drawMarks(dr: GameDrawing, ts: number, x: number, y: number, marks: number) {
+  const reach = Math.round(ts * 0.18);
+  const gap = Math.max(2, Math.round(ts * 0.08));
+  const t = Math.max(1, Math.round(ts / 16));
+  const midX = coord(x, ts) + Math.floor(ts / 2);
+  const midY = coord(y, ts) + Math.floor(ts / 2);
+  const sides: [number, number, number, boolean][] = [
+    [SIDE_L, coord(x, ts), midY, true],
+    [SIDE_R, coord(x + 1, ts), midY, true],
+    [SIDE_T, midX, coord(y, ts), false],
+    [SIDE_B, midX, coord(y + 1, ts), false],
+  ];
+  for (const [shift, cx, cy, across] of sides) {
+    const code = (marks >> shift) & 7;
+    if (code === 0) continue;
+    const color = MARK_COLORS[code];
+    for (const k of [-1, 1]) {
+      const off = k * gap - Math.floor(t / 2);
+      dr.drawRect(
+        across
+          ? { x: cx - reach, y: cy + off, w: 2 * reach + 1, h: t }
+          : { x: cx + off, y: cy - reach, w: t, h: 2 * reach + 1 },
+        color,
+      );
+    }
+  }
+}
+
+/** Put mark `code` on both tiles beside a mark, keeping the strongest. */
+function keyMark(
+  key: Int32Array,
+  ti: (x: number, y: number) => number,
+  mark: SlantMark,
+  code: number,
+): void {
+  const { x, y, dir } = mark;
+  const [nx, ny] = dir === "right" ? [x + 1, y] : [x, y + 1];
+  const [here, there] = dir === "right" ? [SIDE_R, SIDE_L] : [SIDE_B, SIDE_T];
+  for (const [tx, ty, shift] of [
+    [x, y, here],
+    [nx, ny, there],
+  ]) {
+    const i = ti(tx, ty);
+    if (((key[i] >> shift) & 7) < code)
+      key[i] = (key[i] & ~(7 << shift)) | (code << shift);
+  }
+}
+
 // --- redraw -----------------------------------------------------------------
 
 export function redraw(
@@ -390,6 +501,8 @@ export function redraw(
   const stride = w + 2;
   const ti = (x: number, y: number) => (y + 1) * stride + (x + 1);
   const todraw = ds.todraw;
+  const marks = ds.todrawSideKeys;
+  marks.fill(0);
 
   if (!ds.started) {
     // The engine paints no pixels of its own: fill the whole background.
@@ -462,35 +575,61 @@ export function redraw(
     }
   }
 
+  // Same-slant marks, with the ones findMistakes flags in the mistake color.
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const a = state.alike[y * w + x];
+      if (a & ALIKE_RIGHT) keyMark(marks, ti, { x, y, dir: "right" }, MARK_PLAYER);
+      if (a & ALIKE_DOWN) keyMark(marks, ti, { x, y, dir: "down" }, MARK_PLAYER);
+    }
+  }
+  if (ui.pencilMode && ui.pin !== null) marks[ti(ui.pin.x, ui.pin.y)] |= PIN;
+
   // findMistakes overlay.
-  for (const m of mistakes ?? []) todraw[ti(m.x, m.y)] |= MISTAKE;
+  for (const m of mistakes ?? []) {
+    if (m.dir === undefined) todraw[ti(m.x, m.y)] |= MISTAKE;
+    else keyMark(marks, ti, { x: m.x, y: m.y, dir: m.dir }, MARK_MISTAKE);
+  }
 
   // Hint overlay: target square(s) ringed, evidence outlined, anchor
   // double-ringed, the driving clue's digit recolored in the four tiles that
   // draw it.
   const hl = hint?.highlights;
   if (hl) {
-    todraw[ti(hl.target.x, hl.target.y)] |= HINT_TARGET;
+    if (hl.target) todraw[ti(hl.target.x, hl.target.y)] |= HINT_TARGET;
     if (hl.siblings) for (const s of hl.siblings) todraw[ti(s.x, s.y)] |= HINT_TARGET;
     if (hl.area) for (const a of hl.area) todraw[ti(a.x, a.y)] |= HINT_EVID;
     if (hl.ref) todraw[ti(hl.ref.x, hl.ref.y)] |= HINT_REF;
-    if (hl.clue) {
-      const { x: cx, y: cy } = hl.clue;
+    for (const { x: cx, y: cy } of hl.clues ?? []) {
       todraw[cy * stride + cx] |= HINT_BR;
       todraw[cy * stride + (cx + 1)] |= HINT_BL;
       todraw[(cy + 1) * stride + cx] |= HINT_TR;
       todraw[(cy + 1) * stride + (cx + 1)] |= HINT_TL;
     }
+    for (const m of hl.marks ?? []) keyMark(marks, ti, m, MARK_CITED);
+    if (hl.mark) keyMark(marks, ti, hl.mark, MARK_PLACING);
   }
 
-  // Draw the tiles whose packed word changed.
+  // Draw the tiles whose packed word or marks changed.
   for (let y = -1; y <= h; y++) {
     for (let x = -1; x <= w; x++) {
       const i = ti(x, y);
-      if (todraw[i] !== ds.grid[i]) {
-        drawTile(dr, ts, w, h, clues, x, y, todraw[i]);
+      if (todraw[i] !== ds.grid[i] || marks[i] !== ds.sideKeys[i]) {
+        drawTile(dr, ts, w, h, clues, x, y, todraw[i], marks[i]);
         ds.grid[i] = todraw[i];
+        ds.sideKeys[i] = marks[i];
+        // The top-right ring tile paints over the pencil's corner.
+        if (x === w && y === -1) ds.pencilModeShown = null;
       }
     }
   }
+
+  const canvas = computeSize({ w, h, diff: 0 }, ts);
+  repaintPencilIndicator(
+    dr,
+    ds,
+    ui.pencilMode,
+    pencilIndicatorBox(canvas, ts),
+    INDICATOR,
+  );
 }
