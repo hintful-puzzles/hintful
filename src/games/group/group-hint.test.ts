@@ -133,6 +133,46 @@ describe("group hint — plan solves boards", () => {
   });
 });
 
+describe("group hint — placements on a note-free board", () => {
+  // Group places before it populates, so these placements are classified with
+  // few notes or none. A hidden single's sentence says every other empty cell of
+  // the line rules the value out; with no notes, that must hold of the values
+  // each cell's own row and column leave it.
+  it("claims a hidden single only where the board shows one", () => {
+    let claims = 0;
+    for (const seed of ["nf0", "nf1", "nf2", "nf3", "nf4"]) {
+      const state = board(NORMAL, seed);
+      const w = state.w;
+      const res = groupGame.hint?.(state, undefined);
+      if (!res?.ok) continue;
+      const g = Uint8Array.from(state.grid);
+      const open = (x: number, y: number, n: number): boolean => {
+        if (g[y * w + x] !== 0) return false;
+        for (let k = 0; k < w; k++)
+          if (g[y * w + k] === n || g[k * w + x] === n) return false;
+        return true;
+      };
+      for (const st of res.steps) {
+        const mv = st.move as GroupMove;
+        if (mv.type === "pencilAll") break;
+        if (mv.type !== "set") continue;
+        const { x, y } = mv.cells[0];
+        const line = /^In this (row|column)/.exec(st.explanation)?.[1];
+        if (line) {
+          claims++;
+          for (let k = 0; k < w; k++) {
+            const [cx, cy] = line === "row" ? [k, y] : [x, k];
+            if (cx === x && cy === y) continue;
+            expect(open(cx, cy, mv.n), `${seed}: ${st.explanation}`).toBe(false);
+          }
+        }
+        g[y * w + x] = mv.n;
+      }
+    }
+    expect(claims).toBeGreaterThan(0);
+  });
+});
+
 describe("group hint — refusals", () => {
   it("refuses on a solved board", () => {
     const orig = board(NORMAL, "refuse-solved");

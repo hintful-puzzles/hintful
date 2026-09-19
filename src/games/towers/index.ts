@@ -427,8 +427,6 @@ function narrate(reason: HintReason, n: number, continues = false): string {
       return say.single(n);
     case "hiddenSingle":
       return say.hiddenSingle(reason.line, n);
-    case "forcedSingle":
-      return say.forcedSingle(n);
     case "set":
       return say.set(n);
     case "forcing":

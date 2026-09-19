@@ -335,7 +335,7 @@ function narrate(reason: HintReason, ns: number[]): string {
       return say.cage(reason.op, reason.value, ns);
     case "cageLine":
       return say.cageLine(reason.op, reason.value, ns[0], reason.horizontal);
-    // The generic Latin arms (single / hiddenSingle / forcedSingle / dup / set /
+    // The generic Latin arms (single / hiddenSingle / dup / set /
     // forcing) read identically to Unequal's — narrated once, shared.
     default:
       return narrateLatinReason(reason, ns);

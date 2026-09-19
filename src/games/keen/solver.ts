@@ -67,11 +67,7 @@ export type KeenReason =
    * several candidates, but every *other* cell in the line has ruled `n` out. Not
    * recorded by the solver (its generic `elim` conflates the two); the hint plan
    * re-derives it from the working board at placement time. */
-  | { kind: "hiddenSingle"; n: number; line: "row" | "col"; index: number }
-  /** A placement forced by deeper combined deductions whose eliminations the
-   * working notes don't yet reflect (so it is neither a naked nor a clean hidden
-   * single) — narrated honestly without claiming the cell's notes are resolved. */
-  | { kind: "forcedSingle"; n: number };
+  | { kind: "hiddenSingle"; n: number; line: "row" | "col"; index: number };
 
 /** A reason attached to a recorded Keen deduction. */
 export type HintReason = KeenReason | LatinReason;

@@ -62,9 +62,6 @@ export const say = {
   hiddenSingle: (line: "row" | "col", n: number): string =>
     `In this ${line === "row" ? "row" : "column"}, height ${n} can go in only this cell, since every other cell in the ${line === "row" ? "row" : "column"} rules it out, so it must be ${n}.`,
 
-  forcedSingle: (n: number): string =>
-    `Working through this cell's row and column together, only height ${n} can still go here, so it must be ${n}.`,
-
   set: (n: number): string =>
     `Another group of cells already accounts for a fixed set of heights that includes ${n}, so we must cross out the ${n} here.`,
 

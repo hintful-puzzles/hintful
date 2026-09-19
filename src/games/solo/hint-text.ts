@@ -75,9 +75,6 @@ export const say = {
     return `In this ${r}, ${g(n)} can go in only this cell, since every other cell in the ${r} rules it out, so it must be ${g(n)}.`;
   },
 
-  forcedSingle: (n: number): string =>
-    `Working through this cell's row, column and block together, only ${g(n)} can still go here, so it must be ${g(n)}.`,
-
   dup: (n: number): string =>
     `${indefinite(g(n), true)} ${g(n)} is already placed in this cell, so it can't repeat in its row, column or block: cross out the ${g(n)} from these cells.`,
 

@@ -27,6 +27,15 @@ five had 0 hits, but nothing makes the arm unreachable.
 - Then delete `forcedSingle`, Salad's `forcedCross` / `forcedCircle`, and their
   sentences, if nothing reaches them.
 
+## What was found
+
+The strikes were Group's own. The identity-fill journey placed its cells without
+striking them from their lines' notes, and the placement-first arm ran before the
+obvious-cull clean. The same arm also misnarrated note-free boards: a note-less
+cell read as holding nothing, so every placement there was called a hidden
+single in its row, false in 11 of 78 cases at 6x6 Normal. `tasks.md` has the
+measurements.
+
 ## Acceptance
 
 The steps a player sees change in rare positions. The owner decides only if a

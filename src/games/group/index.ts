@@ -21,6 +21,7 @@ import {
   nakedSingle,
   nextPlace,
   nextStrike,
+  obviousCandidateMarks,
   refreshCandidateHintStep,
   regionDuplicateMarks,
 } from "../../engine/candidate-hint.ts";
@@ -523,10 +524,8 @@ function reasonArea(reason: NarratableReason, w: number): OrderedCell[] {
 }
 
 /** Emit a placement step (a native single-cell `set`) and apply it to the working
- * board, striking the placed value from the rest of its row and column. Group has
- * no auto-pencil, so that cleanup is always an explicit `pencilStrike` journey
- * continuation when notes exist (and a no-op — no step — when they don't, the
- * placement-first common case on a note-free board). */
+ * board, then strike the placed value from the rest of its row and column
+ * ({@link emitDupStrike}). */
 function emitPlacement(
   steps: HintStep<GroupMove, GroupHint>[],
   wGrid: Uint8Array,
@@ -545,7 +544,26 @@ function emitPlacement(
   });
   wGrid[y * w + x] = n;
   wPen[y * w + x] = 0;
+  emitDupStrike(steps, wGrid, wPen, w, id, x, y, n);
+}
 
+/** Strike `n`, just placed at `(x, y)`, from the notes of the rest of its row and
+ * column, as a `pencilStrike` journey continuation. Group has no auto-pencil, so
+ * every placement the plan makes owes the player this cleanup: a later
+ * placement is narrated as a naked or hidden single *in the notes*, and a strike
+ * the plan skipped here would leave it resting on facts the board does not show.
+ * A no-op (no step) when no note carries `n`, the common case on a note-free
+ * board. */
+function emitDupStrike(
+  steps: HintStep<GroupMove, GroupHint>[],
+  wGrid: Uint8Array,
+  wPen: Int32Array,
+  w: number,
+  id: boolean,
+  x: number,
+  y: number,
+  n: number,
+): void {
   const dupMarks = regionDuplicateMarks(
     wGrid,
     wPen,
@@ -555,19 +573,18 @@ function emitPlacement(
     w,
     rowColRegions(x, y, w),
   );
+  if (dupMarks.length === 0) return;
   for (const m of dupMarks) wPen[m.y * w + m.x] &= ~(1 << m.n);
-  if (dupMarks.length > 0) {
-    steps.push({
-      move: { type: "pencilStrike", marks: dupMarks },
-      explanation: narrate({ kind: "dup", n, px: x, py: y }, [], id),
-      highlights: {
-        area: [],
-        targets: dupMarks.map((m) => ({ x: m.x, y: m.y })),
-        marks: dupMarks,
-      },
-      continuesPrevious: true,
-    });
-  }
+  steps.push({
+    move: { type: "pencilStrike", marks: dupMarks },
+    explanation: narrate({ kind: "dup", n, px: x, py: y }, [], id),
+    highlights: {
+      area: [],
+      targets: dupMarks.map((m) => ({ x: m.x, y: m.y })),
+      marks: dupMarks,
+    },
+    continuesPrevious: true,
+  });
 }
 
 /** Emit the identity's whole row and column as **one multi-leg journey**: the
@@ -601,6 +618,7 @@ function emitIdentityFillJourney(
     });
     wGrid[op.y * w + op.x] = op.n;
     wPen[op.y * w + op.x] = 0;
+    emitDupStrike(steps, wGrid, wPen, w, id, op.x, op.y, op.n);
   });
 }
 
@@ -621,9 +639,31 @@ function emitPlacementOp(
   }
   const reason: NarratableReason =
     pl.reason.kind === "single"
-      ? singlePlacementReason(wGrid, wPen, pl.x, pl.y, pl.n, w)
+      ? singlePlacementReason(
+          wGrid,
+          visibleCandidates(wGrid, wPen, w),
+          pl.x,
+          pl.y,
+          pl.n,
+          w,
+        )
       : (pl.reason as NarratableReason);
   emitPlacement(steps, wGrid, wPen, w, id, pl.x, pl.y, pl.n, reason);
+}
+
+/** The candidates the player can read off the board, for classifying a placement:
+ * a cell's notes where it has any, and every value not already placed in its row
+ * or column where it has none. Group places before it populates, so a placement
+ * often lands on a board with few notes or none, and a note-less cell read as
+ * holding nothing would pass every placement off as a hidden single in its row. */
+function visibleCandidates(wGrid: Uint8Array, wPen: Int32Array, w: number): Int32Array {
+  const pen = Int32Array.from(wPen);
+  const all = (1 << (w + 1)) - (1 << 1);
+  for (let i = 0; i < pen.length; i++) if (!wGrid[i] && pen[i] === 0) pen[i] = all;
+  const regionsOf = (x: number, y: number) => rowColRegions(x, y, w);
+  for (const m of obviousCandidateMarks(wGrid, pen, w, regionsOf))
+    pen[m.y * w + m.x] &= ~(1 << m.n);
+  return pen;
 }
 
 /** Build the hint plan by walking a working copy the way a person solves it,
@@ -649,7 +689,6 @@ function buildSteps(state: GroupState): HintStep<GroupMove, GroupHint>[] {
     steps,
     say.populate,
   );
-  let cleaned = false;
   let ops = recordGroupDeductions(wGrid, w, maxdiff);
 
   const budget = stepBudget("group hint plan");
@@ -666,7 +705,25 @@ function buildSteps(state: GroupState): HintStep<GroupMove, GroupHint>[] {
       continue;
     }
 
-    // 2. A placement is the solver's immediate next deduction (nothing precedes
+    // 2. Notes still carrying a value already placed in their row or column —
+    //    the player's own, or just filled in by a populate — are struck before
+    //    anything else. Every placement below is narrated from the notes as a
+    //    naked or hidden single, and the solver's cube never holds those values,
+    //    so a placement it forces could otherwise rest on strikes the board does
+    //    not show. A no-op on a note-free board.
+    if (
+      emitObviousCleanStep(
+        steps,
+        wGrid,
+        wPen,
+        w,
+        (x, y) => rowColRegions(x, y, w),
+        say.cleanObvious,
+      )
+    )
+      continue;
+
+    // 3. A placement is the solver's immediate next deduction (nothing precedes
     //    it in solver order) — teach it directly, no notes needed (placement-
     //    first: Group's associativity / identity fill lead, not a populate).
     //    `ops.length > 0` is load-bearing: `firstUnreflectedPlaceIndex` returns
@@ -678,26 +735,13 @@ function buildSteps(state: GroupState): HintStep<GroupMove, GroupHint>[] {
       continue;
     }
 
-    // 3. An elimination precedes the next placement (Group's identity-mark strike,
+    // 4. An elimination precedes the next placement (Group's identity-mark strike,
     //    or a set/forcing cull) — its notes are what the strike crosses out, so
-    //    populate (and clean the obvious culls) first, then teach the deduction.
+    //    populate first (step 2 then cleans the obvious culls), then teach the
+    //    deduction.
     if (!pop.done()) {
       pop.ensure();
       continue;
-    }
-    if (!cleaned) {
-      cleaned = true;
-      if (
-        emitObviousCleanStep(
-          steps,
-          wGrid,
-          wPen,
-          w,
-          (x, y) => rowColRegions(x, y, w),
-          say.cleanObvious,
-        )
-      )
-        continue;
     }
     const strike = nextStrike(ops, wGrid, wPen, w);
     if (strike) {
@@ -717,7 +761,7 @@ function buildSteps(state: GroupState): HintStep<GroupMove, GroupHint>[] {
       continue;
     }
 
-    // 4. The strikes are exhausted; the placement they enabled (a forced single
+    // 5. The strikes are exhausted; the placement they enabled (a forced single
     //    the notes now reflect) is next.
     const pl = nextPlace(ops, wGrid, w);
     if (pl) {

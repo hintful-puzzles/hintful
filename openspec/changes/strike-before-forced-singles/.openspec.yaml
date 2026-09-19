@@ -1,5 +1,2 @@
 schema: spec-driven
 created: 2026-09-19
-skip_specs: true
-# A scaffold: the cause in Group is unlocated. Decide on a delta once the fix's shape
-# is known.

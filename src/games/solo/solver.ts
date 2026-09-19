@@ -56,7 +56,7 @@ export type SoloRegion =
 /** Why a Solo deduction forced a candidate change — the premise a hint narrates
  * and the cells it shades. Combined into {@link HintOp}'s `reason`.
  *
- * The placement reasons (`single` / `hiddenSingle` / `forcedSingle`) are
+ * The placement reasons (`single` / `hiddenSingle`) are
  * re-derived from the working board at emit time, because the recorded `place`
  * carries a bare `single`: the solver's positional and numeric `elim` conflate
  * naked and hidden singles. The killer placement reasons (`cageSingle` /
@@ -86,8 +86,6 @@ export type SoloReason =
     }
   /** A *hidden* single — digit `n` fits only one cell of `region`. */
   | { kind: "hiddenSingle"; n: number; region: SoloRegion }
-  /** A placement forced by deeper deductions the working notes don't reflect. */
-  | { kind: "forcedSingle"; n: number }
   /** Killer: the remaining cell(s) of a cage must total `clue`; with one left it
    * is forced. */
   | { kind: "cageSingle"; cells: Point[]; clue: number }

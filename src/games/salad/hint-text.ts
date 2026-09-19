@@ -124,10 +124,6 @@ export function say(mode: number) {
 
     crossNaked: `Every ${noun} is ruled out here, so the empty-square mark is the only one left: this square must be empty.`,
 
-    forcedCross: `Working through this square's row and column together, no ${noun} can still go here, so it must be empty.`,
-
-    forcedCircle: `Working through this square's row and column together, it can't be empty: it must hold a ${noun}, though not yet which.`,
-
     /** The squares just settled as holding a symbol, `count` of them, keep no
      * empty-square mark. */
     circleXNote: (count: number): string =>

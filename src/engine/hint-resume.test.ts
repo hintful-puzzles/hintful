@@ -335,10 +335,19 @@ describe("a Latin-family placement never falsely claims a naked single", () => {
             !m.pencil &&
             /ruled out in this cell/.test(step.explanation)
           ) {
+            // Group's `set` carries a cell list; the others carry `x`/`y`.
+            const { x, y } = (m.cells?.[0] ?? m) as { x: number; y: number };
             // biome-ignore lint/suspicious/noExplicitAny: structural state access.
-            const pen = (state as any).pencil[m.y * w + m.x] as number;
-            const ncand = Array.from({ length: w }, (_, k) => k + 1).filter(
-              (n) => pen & (1 << n),
+            const { grid, pencil } = state as any;
+            // A note-less cell shows the values its row and column leave it.
+            const open = (n: number): boolean => {
+              for (let k = 0; k < w; k++)
+                if (grid[y * w + k] === n || grid[k * w + x] === n) return false;
+              return true;
+            };
+            const pen = pencil[y * w + x] as number;
+            const ncand = Array.from({ length: w }, (_, k) => k + 1).filter((n) =>
+              pen === 0 ? open(n) : pen & (1 << n),
             ).length;
             expect(
               ncand,

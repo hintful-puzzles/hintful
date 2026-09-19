@@ -399,7 +399,7 @@ function narrate(reason: HintReason, ns: number[], o: number): string {
       return say.adjacent(reason.bar, reason.v, ns, o);
     case "adjacentSet":
       return say.adjacentSet(reason.bar, ns, o);
-    // The generic Latin arms (single / hiddenSingle / forcedSingle / dup / set /
+    // The generic Latin arms (single / hiddenSingle / dup / set /
     // forcing) read identically to Keen's — narrated once, shared.
     default:
       return narrateLatinReason(reason, ns, unequalVocab(o));

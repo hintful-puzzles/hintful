@@ -95,10 +95,6 @@ export type SaladReason =
   | { kind: "countLettersDone"; line: "row" | "col"; index: number; allPlaced: boolean }
   /** The square's notes have come down to the empty-square mark alone. */
   | { kind: "crossNaked" }
-  /** No cheaper reason explains the marker — the honest weaker arm, the
-   * marker analog of `forcedSingle`. */
-  | { kind: "forcedCross" }
-  | { kind: "forcedCircle" }
   /** Tidy-up leg: squares just settled as holding a symbol keep no
    * "might be empty" mark. */
   | { kind: "circleXNote"; count: number }
@@ -167,10 +163,6 @@ export function narrate(
       return text.countLettersDone(reason.line, reason.allPlaced, nums);
     case "crossNaked":
       return text.crossNaked;
-    case "forcedCross":
-      return text.forcedCross;
-    case "forcedCircle":
-      return text.forcedCircle;
     case "circleXNote":
       return text.circleXNote(reason.count);
     case "repeatFull":
@@ -352,25 +344,26 @@ function nextCheapMarker(w: Working, o: number, nums: number): MarkerFiring | nu
   return null;
 }
 
-/** A marker the cube forces that no cheaper reason explained — the honest weaker
- * arm (`forcedCross` / `forcedCircle`), reached only once every recorded strike
- * and placement is already on the working board. */
-function nextForcedMarker(
+/** Throw if the cube forces a marker the working board still lacks once every
+ * recorded strike and placement is on it. No reason the plan can narrate
+ * explains such a marker, so it rests on a strike the plan skipped: the marker
+ * twin of `classifyPlacementInRegions`'s throw (AGENTS.md § "Hint quality bar",
+ * rule 6). */
+function assertEveryMarkerExplained(
   w: Working,
   fixpointHoles: Uint8Array,
   o: number,
-): MarkerFiring | null {
+): void {
   for (let i = 0; i < o * o; i++) {
     if (w.holes[i] !== 0 || w.grid[i] !== 0) continue;
     const m = fixpointHoles[i];
     if (m !== CROSS && m !== CIRCLE) continue;
-    return {
-      mark: m === CROSS ? "cross" : "circle",
-      cells: [{ x: i % o, y: (i / o) | 0 }],
-      reason: { kind: m === CROSS ? "forcedCross" : "forcedCircle" },
-    };
+    throw new Error(
+      `hint plan: the ${m === CROSS ? "empty-square" : "letter"} marker at ` +
+        `(${i % o}, ${(i / o) | 0}) has no reason the notes show, so the plan ` +
+        "skipped a strike it rests on",
+    );
   }
-  return null;
 }
 
 /** Salad's dialect for the shared plan mechanics. The three canonical shapes map
@@ -664,16 +657,7 @@ function buildSteps(
       continue;
     }
 
-    // 6. A marker the row and column force together, with nothing cheaper to
-    //    say about it.
-    const forced = nextForcedMarker(w, rec.holes, o);
-    if (forced) {
-      pushMarkers(b, forced);
-      rec = recordSaladDeductions(board(), state.diff);
-      lastStrikeGroup = -1;
-      continue;
-    }
-
+    assertEveryMarkerExplained(w, rec.holes, o);
     break; // nothing further is deducible from here
   }
 

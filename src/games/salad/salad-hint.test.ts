@@ -212,20 +212,7 @@ describe("salad hint — journeys and highlights", () => {
 });
 
 describe("salad hint — narration arms", () => {
-  // The two `forced*` arms are the honest weaker residue: a 60-board sweep over
-  // both modes and both difficulties never reached them, because a cheaper,
-  // visible reason always applied first. They stay as the backstop that keeps
-  // the plan from ever being wordless, so their wording is pinned here directly.
   const s = { mode: GAMEMODE_LETTERS, order: 5, nums: 3 };
-
-  it("states what a forced marker rests on without overclaiming", () => {
-    expect(narrate({ kind: "forcedCross" }, [], s)).toBe(
-      "Working through this square's row and column together, no letter can still go here, so it must be empty.",
-    );
-    expect(narrate({ kind: "forcedCircle" }, [], s)).toBe(
-      "Working through this square's row and column together, it can't be empty: it must hold a letter, though not yet which.",
-    );
-  });
 
   it("names a blocking ball when that is what bounds a clue's reach", () => {
     const t = narrate(

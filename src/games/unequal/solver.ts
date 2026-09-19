@@ -50,10 +50,7 @@ export type UnequalReason =
    * itself still showing several candidates. Distinct from the generic Latin
    * `single` (a *naked* single). Re-derived from the working board at placement
    * time (the recording solver conflates the two under `single`). */
-  | { kind: "hiddenSingle"; n: number; line: "row" | "col"; index: number }
-  /** A placement forced by deeper combined deductions the working notes don't yet
-   * reflect (neither a naked nor a clean hidden single) — narrated honestly. */
-  | { kind: "forcedSingle"; n: number };
+  | { kind: "hiddenSingle"; n: number; line: "row" | "col"; index: number };
 
 /** A reason attached to a recorded Unequal deduction. */
 export type HintReason = UnequalReason | LatinReason;

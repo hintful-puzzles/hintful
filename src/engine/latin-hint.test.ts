@@ -75,13 +75,15 @@ describe("classifyPlacement", () => {
     });
   });
 
-  it("forced: neither naked nor a clean hidden line (notes lag)", () => {
+  it("throws when the notes show neither (the plan skipped a strike)", () => {
     const { grid, pencil, w } = board([[], [], [], []]);
     // 3 is live in another empty cell of both the row and the column.
     pencil[1 * w + 1] = (1 << 2) | (1 << 3);
     pencil[1 * w + 0] = 1 << 3; // row competitor
     pencil[0 * w + 1] = 1 << 3; // column competitor
-    expect(classifyPlacement(grid, pencil, 1, 1, 3, w)).toEqual({ kind: "forced" });
+    expect(() => classifyPlacement(grid, pencil, 1, 1, 3, w)).toThrow(
+      /skipped a strike/,
+    );
   });
 });
 
@@ -115,18 +117,19 @@ describe("classifyPlacementInRegions", () => {
     expect(c.kind === "hidden" && c.region.tag).toBe("block");
   });
 
-  it("returns naked / forced regardless of the region list", () => {
+  it("returns naked regardless of the region list, and throws on the residue", () => {
     const { grid, pencil } = board([[], [], [], []]);
     pencil[5] = 1 << 2;
     expect(
       classifyPlacementInRegions(grid, pencil, 5, 2, [{ cells: block(0, 0) }]).kind,
     ).toBe("naked");
-    // 3 still live elsewhere in the only region → forced (not hidden there).
+    // 3 still live elsewhere in the only region: not hidden there, so the notes
+    // cannot explain the placement.
     pencil[5] = (1 << 2) | (1 << 3);
     pencil[0] = 1 << 3;
-    expect(
-      classifyPlacementInRegions(grid, pencil, 5, 3, [{ cells: block(0, 0) }]).kind,
-    ).toBe("forced");
+    expect(() =>
+      classifyPlacementInRegions(grid, pencil, 5, 3, [{ cells: block(0, 0) }]),
+    ).toThrow(/skipped a strike/);
   });
 });
 
@@ -146,15 +149,6 @@ describe("singlePlacementReason", () => {
       n: 3,
       line: "row",
       index: 2,
-    });
-
-    const p3 = new Int32Array(w * w);
-    p3[5] = (1 << 2) | (1 << 3);
-    p3[4] = 1 << 3;
-    p3[1] = 1 << 3;
-    expect(singlePlacementReason(grid, p3, 1, 1, 3, w)).toEqual({
-      kind: "forcedSingle",
-      n: 3,
     });
   });
 });
@@ -185,9 +179,6 @@ describe("narrateLatinReason (shared row/column-game narration)", () => {
       narrateLatinReason({ kind: "hiddenSingle", n: 2, line: "col", index: 1 }, []),
     ).toBe(
       "In this column, 2 can go in only this cell, since every other cell in the column rules it out, so it must be 2.",
-    );
-    expect(narrateLatinReason({ kind: "forcedSingle", n: 4 }, [])).toBe(
-      "Working through this cell's row and column together, only 4 can still go here, so it must be 4.",
     );
     expect(narrateLatinReason({ kind: "dup", n: 1 }, [])).toBe(
       "There's already a 1 in this row and column, so we must cross out the 1 from the other cells they pass through.",

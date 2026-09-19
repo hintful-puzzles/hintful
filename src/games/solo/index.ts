@@ -410,9 +410,8 @@ function regionsOf(
 
 /** Re-derive *why* a generic-`single` placement is forced, from the working board
  * (the recorded `place` carries a bare `single`, conflating naked and hidden
- * singles): a naked single (the cell's notes collapsed to one), a hidden single
- * in a row/column/sub-block/diagonal, or a forced single (the notes lag a deeper
- * deduction). */
+ * singles): a naked single (the cell's notes collapsed to one) or a hidden single
+ * in a row/column/sub-block/diagonal. */
 function soloPlacementReason(
   wGrid: Int8Array,
   wPen: Int32Array,
@@ -424,8 +423,7 @@ function soloPlacementReason(
   const cell = y * state.cr + x;
   const c = classifyPlacementInRegions(wGrid, wPen, cell, n, regionsOf(state, x, y));
   if (c.kind === "naked") return { kind: "single" };
-  if (c.kind === "hidden") return { kind: "hiddenSingle", n, region: c.region.region };
-  return { kind: "forcedSingle", n };
+  return { kind: "hiddenSingle", n, region: c.region.region };
 }
 
 /** Narrate *why* a firing is forced (docs/games/hints.md § "Writing the narration"): indication → reasoning →
@@ -437,8 +435,6 @@ function narrate(reason: SoloReason, ns: number[]): string {
       return say.single(ns[0]);
     case "hiddenSingle":
       return say.hiddenSingle(reason.region, reason.n);
-    case "forcedSingle":
-      return say.forcedSingle(reason.n);
     case "dup":
       return say.dup(reason.n);
     case "intersect":

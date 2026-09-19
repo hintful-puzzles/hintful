@@ -1951,8 +1951,11 @@ hinting game this way, and its `audit.md` has the verdicts. Read what each sente
 *cites*, not the words it uses, and ask whether an **earlier** deduction found
 that fact and nothing on the board records it. Two tells found every breach:
 
-- **An arm whose own comment says the notes lag the solver** (`forcedSingle`: "deeper
-  combined deductions the notes don't yet reflect") breaks the rule by definition.
+- **An arm whose own comment says the notes lag the solver** breaks the rule by
+  definition. The Latin family's `forcedSingle` ("deeper combined deductions the
+  notes don't yet reflect") was one. `strike-before-forced-singles` removed it by
+  placing the strikes it skipped, and made the residue throw instead of speak
+  (§ "Re-derive a placement's why").
 - **A recorder state that persists across the plan and is not the board.** Slant's
   equivalence union-find and Subsets' `cube` are each accumulated facts. Where the
   game has a shallow, board-only derivation (Subsets' `candidateSets`), check each
@@ -2841,7 +2844,7 @@ The `Game.hint` *entry* — completed-board refusal, `findMistakes` refusal,
 `autoPencil ?? false` default, empty-plan refusal, the three refusal
 strings — is `candidateHint(state, ui, findMistakes, buildSteps)`; every
 candidate game's `hint` is a one-line call to it. (b) The *generic Latin
-reason* narration arms (`single` / `hiddenSingle` / `forcedSingle` / `dup` /
+reason* narration arms (`single` / `hiddenSingle` / `dup` /
 `set` / `forcing`) read byte-identically across the **row/column** Latin
 games, so `narrateLatinReason(reason, ns)` in `hint-text.ts` owns them; Keen
 and Unequal narrate their game-specific arms then
@@ -2995,16 +2998,35 @@ evidence, so the player can *see* that no other cell takes the digit.
 **Re-derive the placement reason from the working board at emit time; never
 trust the recorded `single`.** The shared classifier
 [`engine/latin-hint.ts`](../../src/engine/latin-hint.ts)
-`classifyPlacement` returns **naked** (the cell's notes are exactly `{n}`),
+`classifyPlacement` returns **naked** (the cell's notes are exactly `{n}`) or
 **hidden** (no other *empty* cell of the row — or column — still has `n`;
-only empty cells compete), or **forced** (neither — the notes lag behind a
-deeper set/forcing deduction, so narrate honestly without claiming the cell's
-notes are down to one, rather than lie); `singlePlacementReason` maps those to
-the `single` / `hiddenSingle` / `forcedSingle` reasons every Latin game's
-narration and evidence shading share. `classifyPlacementInRegions` is the
-same classifier over arbitrary regions — pass the regions your game reasons
-over. Reclassify **only** when the recorded reason is `single` — Towers'
-clue-driven placements keep their own reasons.
+only empty cells compete); `singlePlacementReason` maps those to the `single` /
+`hiddenSingle` reasons every Latin game's narration and evidence shading share.
+`classifyPlacementInRegions` is the same classifier over arbitrary regions —
+pass the regions your game reasons over. Reclassify **only** when the recorded
+reason is `single` — Towers' clue-driven placements keep their own reasons.
+
+**It throws when the placement is neither.** The notes then still show a
+candidate the solver has ruled out, which means the plan skipped a strike the
+placement rests on, and a hint may not narrate a fact the board does not show
+(AGENTS.md § "Hint quality bar", rule 6). There used to be a third answer,
+`forcedSingle` (*"Working through this cell's row and column together, only …
+can still go here"*), which said exactly that unmarked fact out loud.
+`strike-before-forced-singles` traced its hits to two skipped strikes in
+Group and removed the arm; the throw means every cross-game hint walk now
+fails on a plan that skips one. What to check when it fires:
+
+- **Every placement strikes its value from its lines' notes.** Group's
+  identity fill placed a whole row and column without doing so, and the
+  placements after it read the stale notes.
+- **Obvious culls come before any placement the plan classifies**, including
+  those left by the player, who may place a value without striking it and in a
+  game with no auto-pencil usually will.
+- **A cell with no notes shows the values its lines leave it.** Only a plan
+  that places before it populates classifies on such a board; read a note-less
+  cell as holding nothing and every placement passes as a hidden single in its
+  row, which is false wherever the value is open elsewhere in that row. Group's
+  `visibleCandidates` fills those cells in before classifying.
 
 Shared, not per-game: this shipped for Towers, Unequal and Keen together
 (`fix-latin-hidden-single-narration`) — a probe had mis-narrated 37/96 Towers
@@ -3247,7 +3269,10 @@ decision:
   only counts a strike whose candidate is *present in the notes*, so with no
   notes yet it returns null and you deadlock. That chicken-and-egg was the one
   real bug in the port; the fix is the `firstUnreflectedPlaceIndex` peek,
-  which reads solver order without needing notes.
+  which reads solver order without needing notes. Placing first means
+  classifying on a board with few notes or none, so the obvious-cull clean runs
+  ahead of the placement arm, and a note-less cell is read by what its lines
+  leave it (§ "Re-derive a placement's why").
 - **The identity fill is one firing → one multi-leg journey.** Learning the
   identity forces its whole row and column at once; emit those as
   `continuesPrevious` legs with the revealing cell shaded on every leg, not
@@ -3297,16 +3322,16 @@ will hit:
    delegating — in particular `refreshHintStep` must resolve a marker step by
    reading the **marker array**, because the shared placement arm waits for
    `grid[cell] !== 0`, which for a cross never comes.
-3. **Re-derive a marker's *why* from the visible board, cheapest first — and
-   measure how often the honest weak arm fires.** The plan re-derives marker
-   conclusions in order — a line's *counts* first (visible and countable),
-   then a note collapse, and only then a `forcedCross`/`forcedCircle` arm. A
-   60-board sweep showed the weak arms firing **zero** times — so the plan is
-   entirely concrete techniques in practice, with the weak arms kept as the
-   backstop that stops a step ever being wordless (their wording pinned by a
-   direct `narrate` unit test, since the walk never reaches them). **Do the
-   sweep; "there is a fallback" and "the fallback is what the player sees" are
-   very different situations.**
+3. **Re-derive a marker's *why* from the visible board, cheapest first, and
+   leave no weak arm to fall back on.** The plan re-derives marker conclusions
+   in order: a line's *counts* first (visible and countable), then a note
+   collapse. A marker the solver forces that neither explains rests on a
+   strike the plan skipped, so `assertEveryMarkerExplained` throws rather
+   than narrate it, in the same way the placement classifier does
+   (§ "Re-derive a placement's why"). The weak `forcedCross` / `forcedCircle`
+   arms that once stood there had fired zero times in every sweep, which is
+   what made retiring them safe. **Do the sweep; "there is a fallback" and
+   "the fallback is what the player sees" are very different situations.**
 4. **Only record the deduction whose *premise* you could not otherwise
    recover.** Salad threads the recorder through the border scan **alone** —
    the one deduction whose premise (which clue, how far its symbol reaches,
