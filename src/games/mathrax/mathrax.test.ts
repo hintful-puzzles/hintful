@@ -28,13 +28,7 @@ import type { ChangeNotification, GameStatus } from "../../engine/types.ts";
 import cReference from "./__fixtures__/mathrax-c-reference.json" with { type: "json" };
 import { mathraxCandidateClue, newMathraxDesc } from "./generator.ts";
 import { mathraxGame } from "./index.ts";
-import {
-  COL_ERROR,
-  clueLabel,
-  computeSize,
-  origin,
-  PREFERRED_TILE_SIZE,
-} from "./render.ts";
+import { COL_ERROR, computeSize, origin, PREFERRED_TILE_SIZE } from "./render.ts";
 import { mathraxSolve, SOLVE_STUCK, SOLVE_UNIQUE } from "./solver.ts";
 import {
   bitOf,
@@ -44,6 +38,7 @@ import {
   CLUE_MUL,
   CLUE_ODD,
   CLUE_SUB,
+  clueLabel,
   clueNum,
   clueType,
   DIFF_EASY,
@@ -528,6 +523,8 @@ describe("mathrax input", () => {
       y,
       n: 3,
       pencil: false,
+      // Auto-pencil defaults off, so the entry carries `autoElim: false`.
+      autoElim: false,
     });
 
     const after = mathraxGame.executeMove(st, {

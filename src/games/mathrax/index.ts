@@ -14,25 +14,43 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import { adaptiveMarkAllMove } from "../../engine/candidate-hint.ts";
+import {
+  adaptiveMarkAllMove,
+  candidateHint,
+  keepCandidateHintTrack,
+  refreshCandidateHintStep,
+} from "../../engine/candidate-hint.ts";
+import { runCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
+  type HintResult,
+  type HintStep,
+  type HintTrackVerdict,
   type PresetMenu,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { narrateLatinReason } from "../../engine/hint-text.ts";
 import { digitKeys, pencilModeKey } from "../../engine/key-labels.ts";
-import { rowColRegions } from "../../engine/latin-hint.ts";
+import {
+  forcingChainArea,
+  hiddenSingleLine,
+  type RowColRegion,
+  rowColRegions,
+  singleReasonOf,
+} from "../../engine/latin-hint.ts";
 import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
+import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import { parseConfigInt } from "../../engine/params.ts";
 import {
+  autoPencilPref,
   pencilKeepHighlightPref,
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
@@ -47,26 +65,37 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newMathraxDesc } from "./generator.ts";
+import { say } from "./hint-text.ts";
 import {
   colors,
   computeSize,
   FLASH_TIME,
   fromCoord,
   type MathraxDrawState,
+  type MathraxHint,
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
 import {
+  type HintOp,
+  type HintReason,
   mathraxSolve,
+  recordMathraxDeductions,
   SOLVE_AMBIGUOUS,
   SOLVE_IMPOSSIBLE,
   SOLVE_UNIQUE,
 } from "./solver.ts";
 import {
+  CLUE_EVN,
   cloneState,
+  clueCells,
+  clueIsParity,
+  clueOpposite,
+  clueType,
   DIFF_NAMES,
   DIFF_RECURSIVE,
+  DIFF_TRICKY,
   decodeParams,
   defaultParams,
   diffFromLevel,
@@ -189,7 +218,16 @@ function interpretMove(
     if (state.flags[i] & F_IMMUTABLE) return null;
 
     releaseHighlightAfterEntry(ui);
-    return { type: "set", x: ui.cursor.x, y: ui.cursor.y, n: c, pencil: ui.pencilMode };
+    return ui.pencilMode
+      ? { type: "set", x: ui.cursor.x, y: ui.cursor.y, n: c, pencil: true }
+      : {
+          type: "set",
+          x: ui.cursor.x,
+          y: ui.cursor.y,
+          n: c,
+          pencil: false,
+          autoElim: ui.autoPencil,
+        };
   }
 
   // 'M' / 'm': adaptive mark-all
@@ -220,6 +258,13 @@ function executeMove(state: MathraxState, move: MathraxMove): MathraxState {
         else next.pencil[i] ^= 1 << move.n;
       } else {
         next.grid[i] = move.n;
+        if (move.autoElim && move.n > 0) {
+          const bit = ~(1 << move.n);
+          for (let k = 0; k < o; k++) {
+            if (k !== move.x) next.pencil[move.y * o + k] &= bit;
+            if (k !== move.y) next.pencil[k * o + move.x] &= bit;
+          }
+        }
       }
       // Upstream recomputes the live error flags (and the completion test) after
       // *both* a real entry and a pencil change.
@@ -312,6 +357,136 @@ function findMistakes(state: MathraxState): readonly MathraxMistake[] {
     }
   }
   return out;
+}
+
+// --- hint ------------------------------------------------------------------
+
+/**
+ * Narrate *why* a firing is forced (docs/games/hints.md § "Writing the
+ * narration"): indication → reasoning → necessity-voice conclusion. `ns` is the
+ * struck value list (a placement passes its single digit). The words are
+ * [`hint-text.ts`](./hint-text.ts)'s.
+ *
+ * **Which of the clue's two sentences it speaks is read off the working board,
+ * not off the record.** The solver reaches a clue elimination either from a
+ * partner whose candidates have collapsed to one or from its whole remaining
+ * set, but what the *player* can check is whether a digit is written across the
+ * clue — so the "and the 3 across it" sentence is spoken exactly when one is,
+ * and the "nothing open across it" sentence otherwise. This is the rule
+ * `latin-hint.ts` applies to a recorded `single`, aimed at a clue.
+ */
+function narrate(
+  reason: HintReason,
+  ns: number[],
+  target: Point,
+  grid: ArrayLike<number>,
+  o: number,
+): string {
+  switch (reason.kind) {
+    case "clue": {
+      const { clue, cx, cy } = reason;
+      if (clueIsParity(clue)) return say.parity(clueType(clue) === CLUE_EVN, ns);
+      const across = clueOpposite(cx, cy, target);
+      const v = grid[across.y * o + across.x];
+      return v ? say.paired(clue, v, ns) : say.open(clue, ns);
+    }
+    // The generic Latin arms (single / hiddenSingle / dup / set / forcing) read
+    // identically to Keen's and Unequal's — narrated once, shared.
+    default:
+      return narrateLatinReason(reason, ns);
+  }
+}
+
+/** The deduction's evidence cells to shade `COL_HINT_CELL`. A clue's cells are
+ * what names it: an arithmetic clue constrains one diagonal pair, an `E`/`O`
+ * clue all four cells around it, and either set meets at exactly one
+ * intersection — so the shading points at the clue without the board having any
+ * way to mark the intersection itself. The generic Latin techniques have no
+ * clean local area (the struck notes carry the premise). */
+function reasonArea(reason: HintReason, target: Point): OrderedCell[] {
+  switch (reason.kind) {
+    case "clue":
+      return clueIsParity(reason.clue)
+        ? clueCells(reason.cx, reason.cy)
+        : [target, clueOpposite(reason.cx, reason.cy, target)];
+    // A forcing chain names the cells it ran through, **numbered**, so the
+    // narration can cite them and the player can walk it.
+    case "forcing":
+      return forcingChainArea(reason);
+    default:
+      return [];
+  }
+}
+
+/** Build the hint plan by walking a working copy of the board the way a person
+ * solves it (`runCandidatePlan`). `autoClean` (the auto-pencil preference)
+ * decides whether a placement's trivial row/column eliminations are silent or
+ * taught. */
+function buildSteps(
+  state: MathraxState,
+  autoClean: boolean,
+): HintStep<MathraxMove, MathraxHint>[] {
+  const o = state.params.o;
+  const steps: HintStep<MathraxMove, MathraxHint>[] = [];
+  const wGrid = Uint8Array.from(state.grid);
+  // Deductive only: a guess is not a teachable note strike, so the recording
+  // solve is capped below the recursive tier whatever the board's own tier is.
+  const maxdiff = Math.min(diffToLevel(state.params.diff), DIFF_TRICKY);
+  runCandidatePlan<MathraxMove, MathraxHint, HintOp, HintReason, RowColRegion>({
+    w: o,
+    steps,
+    grid: wGrid,
+    pencil: Int32Array.from(state.pencil),
+    autoClean,
+    label: "mathrax hint plan",
+    record: () => recordMathraxDeductions(o, state.clues, wGrid, maxdiff),
+    regionsOf: (x, y) => rowColRegions(x, y, o),
+    singleReason: singleReasonOf,
+    placeWords: (m, reason) => ({
+      explanation: narrate(reason, [m.n], m, wGrid, o),
+      area:
+        reason.kind === "hiddenSingle"
+          ? hiddenSingleLine(reason.line, reason.index, o)
+          : [],
+    }),
+    strikeWords: (marks, reason) => {
+      const target = { x: marks[0].x, y: marks[0].y };
+      return {
+        explanation: narrate(reason, valuesOf(marks), target, wGrid, o),
+        area: reasonArea(reason, target),
+      };
+    },
+    notes: { populate: say.populate, cleanObvious: say.cleanObvious },
+  });
+  return steps;
+}
+
+function hint(
+  state: MathraxState,
+  _aux?: string,
+  ui?: MathraxUi,
+): HintResult<MathraxMove, MathraxHint> {
+  return candidateHint(state, ui ?? null, findMistakes, buildSteps);
+}
+
+/** Classify a player move against the displayed hint step (shared
+ * candidate-elimination keep-track; `MathraxHint` is structurally
+ * `CandidateHighlights`). */
+function hintKeepTrack(
+  m: MathraxMove,
+  step: HintStep<MathraxMove, MathraxHint>,
+  state: MathraxState,
+): HintTrackVerdict {
+  return keepCandidateHintTrack(m, step, state.pencil, state.params.o);
+}
+
+/** Re-validate a stored hint step against the current board before it is
+ * (re-)displayed (shared "never show a stale step" guarantee). */
+function refreshHintStep(
+  step: HintStep<MathraxMove, MathraxHint>,
+  state: MathraxState,
+): HintStep<MathraxMove, MathraxHint> | null {
+  return refreshCandidateHintStep(step, state.grid, state.pencil, state.params.o);
 }
 
 // --- the game --------------------------------------------------------------
@@ -415,9 +590,18 @@ export const mathraxGame: Game<
   solve,
   difficulty,
   findMistakes,
+  hint,
+  hintKeepTrack,
+  refreshHintStep,
   requestKeys: (p) => [...digitKeys(p.o), pencilModeKey],
 
-  prefs: [stickyPencilPref<MathraxUi>(), pencilKeepHighlightPref<MathraxUi>()],
+  prefs: [
+    autoPencilPref<MathraxUi>(
+      "When you place a number, remove it from pencil marks in its row and column",
+    ),
+    stickyPencilPref<MathraxUi>(),
+    pencilKeepHighlightPref<MathraxUi>(),
+  ],
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

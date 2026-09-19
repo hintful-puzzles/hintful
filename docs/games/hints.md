@@ -3581,6 +3581,48 @@ like Group — its plan teaches every placement's row/column note cull as an
 explicit `continuesPrevious` strike. If Salad ever gains the pref, those legs
 fold away for free (the walk already honors `autoClean`).
 
+### One deduction body, several clues (Mathrax)
+
+Mathrax's solver is **one** user-solver wired at three difficulty rungs. For
+each cell it intersects the candidate set with the options of the (up to four)
+clues at that cell's corners, and commits what survives. That is the shape to
+watch for, and it needs three things the other Latin games did not.
+
+- **A conjunction is not a firing — split it before you narrate it.** The
+  eliminations a cell commits are forced by *several* clues at once, and a step
+  saying "the 7+ clue means…" while crossing out a value the `E` clue ruled out
+  is a lie the player can check. On the recording path the body therefore
+  attributes each elimination to the first incident clue that excludes it and
+  **returns after one clue**, so one `solver.group` is one clue acting on one
+  cell (Unequal's `solverLinks` does the same for one `>` sign). The cell's own
+  commit gate is untouched — the Normal-and-below rungs still wait on the
+  *intersection* across every clue — so this is a finer attribution of exactly
+  the same eliminations, not a different solver. `mathrax-hint.test.ts` asserts
+  both halves: one cell and one clue per group, and the same verdict and the
+  same grid at every cap with and without a recorder. The second is what keeps
+  the solver-gated generator out of it.
+- **Re-derive a sentence's claim about a *neighbor* from the working board too,
+  not just a placement's.** § "Re-derive a placement's why" says never to trust
+  a recorded `single`; the same reasoning reaches any sentence that describes
+  another cell. The solver reaches a clue elimination either from a partner
+  collapsed to one candidate or from its whole remaining set, but *what the
+  player can see* is whether a digit is written across the clue. So the reason
+  records only the clue and its intersection, and `narrate` reads the partner
+  off the working grid: "this cell and the 3 across it add to 7" exactly when a
+  3 is there, and "nothing open across the 7+ clue adds with 1 or 2 to make 7"
+  otherwise. Two recorded arms collapsed into one, and the guard is a walk
+  asserting the board really shows what the sentence names.
+- **Evidence for an off-board clue is the cells that identify it.** Mathrax's
+  clue sits on a grid *intersection*, which the board has no mark for and
+  `CandidateHighlights` has no field for. The shading is therefore the cells
+  the clue constrains — the diagonal pair for an arithmetic clue, the block of
+  four for `E`/`O` — and either set meets at exactly one intersection, so the
+  mark points at one clue without a new highlight role. The diagonal pair
+  deliberately comes out as **two rings** rather than one contour, because the
+  two cells share no edge and joining them would outline board the clue does
+  not constrain (`outlineSides`). Compare § "Off-board evidence", which is for
+  a clue that sits outside the grid rather than between its cells.
+
 ## Probe before trusting a diagnosis
 
 Twice in one hint session a plausible mechanism diagnosis ("the second leg

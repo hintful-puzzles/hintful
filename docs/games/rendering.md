@@ -207,6 +207,25 @@ whose `redraw` takes a `mistakes` parameter route it correctly, so the class has
 no live instance today — but it shipped twice before, and a new game reaching
 for a sidecar is reaching for the one shape that can still get it wrong.
 
+### A mark band with `outer: 0` must lie inside the tile's *clip*, not on its outline
+
+`HintMarks` with `MarkBand.outer` 0 keeps no history on purpose: the band is
+inside the cell's content box, so the cell's own repaint — which the hint
+`OverlaySidecar` already triggers — erases it. That is true only of pixels the
+cell is allowed to paint, and **a tile's drawn outline is not always inside its
+clip**. Mathrax traces its cell outline at `ty − 1` and `tx + ts`, a pixel above
+and a pixel past the `{tx, ty, ts, ts}` rect it clips to, so the line the player
+sees between two cells is the *neighbor's*. A band placed on the traced
+rectangle put its top row in nobody's tile, nothing ever repainted it, and every
+step the hint moved on from left a stray colored line across the board
+(`add-mathrax-hint`, caught by running the app, not by any test — the tier-2.5
+recorder captures one frame, and a leak is about the frame *after*).
+
+So take the band's box from the rect the painter clips to, and check the two
+against each other rather than assuming they agree. The symptom is unmistakable
+once you are looking for it: marks accumulate as the hint walks, and a reload
+clears them.
+
 ## Drag previews and blitters
 
 ### A simulated-release preview lives in `moves.ts`

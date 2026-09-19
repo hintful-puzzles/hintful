@@ -21,6 +21,7 @@
 import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
+import type { Point } from "../../engine/types.ts";
 
 // --- difficulty ------------------------------------------------------------
 
@@ -76,6 +77,64 @@ export function clueNum(clue: number): number {
 }
 export function setClueNum(n: number): number {
   return n << 3;
+}
+
+const MINUS_SIGN = "−";
+const TIMES_SIGN = "×";
+const DIVIDE_SIGN = "÷";
+
+/**
+ * The clue's label as the board draws it (upstream `mathrax_clue_label`); a
+ * subtraction clue of 0 is the equality clue, which reads `=`.
+ *
+ * Here rather than in `render.ts` because the hint's sentences name a clue by
+ * what the player can see (docs/games/hints.md § "Name elements by what the
+ * player can see"), so the renderer and the narration must print it the same
+ * way or the sentence points at nothing.
+ */
+export function clueLabel(clue: number): string {
+  const n = clueNum(clue);
+  switch (clueType(clue)) {
+    case CLUE_ADD:
+      return `${n}+`;
+    case CLUE_SUB:
+      return n ? `${n}${MINUS_SIGN}` : "=";
+    case CLUE_MUL:
+      return `${n}${TIMES_SIGN}`;
+    case CLUE_DIV:
+      return `${n}${DIVIDE_SIGN}`;
+    case CLUE_EVN:
+      return "E";
+    case CLUE_ODD:
+      return "O";
+    default:
+      return "";
+  }
+}
+
+/** Whether `clue` constrains all four cells around its intersection (`E`/`O`)
+ * rather than the diagonal pair through it. The hint's sentence and its evidence
+ * area both split on this, so the question is asked in one place. */
+export function clueIsParity(clue: number): boolean {
+  const t = clueType(clue);
+  return t === CLUE_EVN || t === CLUE_ODD;
+}
+
+/** The four cells around interior intersection `(cx, cy)`, top-left first. */
+export function clueCells(cx: number, cy: number): Point[] {
+  return [
+    { x: cx, y: cy },
+    { x: cx + 1, y: cy },
+    { x: cx, y: cy + 1 },
+    { x: cx + 1, y: cy + 1 },
+  ];
+}
+
+/** The cell diagonally across intersection `(cx, cy)` from `cell`, which is one
+ * of the four {@link clueCells}: an arithmetic clue constrains exactly this
+ * pair, so it is what a hint shades beside the cell it acts on. */
+export function clueOpposite(cx: number, cy: number, cell: Point): Point {
+  return { x: 2 * cx + 1 - cell.x, y: 2 * cy + 1 - cell.y };
 }
 
 // --- clue-type options (which clue kinds the generator may emit) ------------
@@ -501,8 +560,18 @@ export function mathraxValidate(
 // --- moves -----------------------------------------------------------------
 
 export type MathraxMove =
-  /** Enter (or pencil-toggle) digit `n` at `(x, y)`; `n = 0` clears. */
-  | { type: "set"; x: number; y: number; n: number; pencil: boolean }
+  /** Enter (or pencil-toggle) digit `n` at `(x, y)`; `n = 0` clears.
+   * `autoElim` (the auto-pencil preference, baked in at `interpretMove` time so
+   * `executeMove` stays pure) also strikes `n` from the pencil marks of the rest
+   * of the cell's row and column. */
+  | {
+      type: "set";
+      x: number;
+      y: number;
+      n: number;
+      pencil: boolean;
+      autoElim?: boolean;
+    }
   /** Fill every empty cell's pencil marks (the `M` key / mark-all button). */
   | { type: "pencilAll" }
   /** Strike the listed pencil candidates atomically (the adaptive second press
@@ -520,6 +589,11 @@ export interface MathraxUi {
   cursorFromKeyboard: boolean;
   /** The highlight is in pencil-mark mode. */
   pencilMode: boolean;
+  /** Preference (default off, the family's): entering a number strikes it from
+   * the pencil marks of the rest of its row and column. The hint reads it too —
+   * when it is on, a placement's trivial culls are folded into the placement
+   * instead of taught as their own step. */
+  autoPencil: boolean;
   /** Preference (default on, fork addition): right-click toggles a *sticky*
    * pencil mode rather than selecting one cell for one mark. */
   pencilSticky: boolean;
@@ -532,6 +606,7 @@ export function newUi(_state: MathraxState): MathraxUi {
     cursor: newCursor(),
     cursorFromKeyboard: false,
     pencilMode: false,
+    autoPencil: false,
     pencilSticky: true,
     pencilKeepHighlight: true,
   };

@@ -793,6 +793,8 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
+      "hint",
+      "marks",
       "pencilModeShown",
       "started",
       "tileSize",
@@ -807,13 +809,17 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "difficulty",
       "findMistakes",
       "flashLength",
+      "hint",
+      "hintKeepTrack",
       "paramConfig",
       "preferredTileSize",
       "prefs",
+      "refreshHintStep",
       "requestKeys",
       "solve",
     ],
     "ui": [
+      "autoPencil",
       "cursor",
       "cursorFromKeyboard",
       "pencilKeepHighlight",

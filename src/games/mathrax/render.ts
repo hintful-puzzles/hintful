@@ -25,6 +25,8 @@ import {
   ERROR,
   ERROR_WASH,
   FLASH,
+  HINT_ACTION,
+  HINT_EVIDENCE,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -32,8 +34,16 @@ import {
   playerEntryColor,
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
-import type { GameDrawing } from "../../engine/game.ts";
-import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
+import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
+import {
+  HINT_AREA,
+  HINT_TARGET,
+  hintMarkBit,
+  type OrderedCell,
+  OverlaySidecar,
+} from "../../engine/overlay-sidecar.ts";
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
@@ -43,20 +53,14 @@ import {
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import {
-  CLUE_ADD,
-  CLUE_DIV,
-  CLUE_EVN,
-  CLUE_MUL,
-  CLUE_ODD,
-  CLUE_SUB,
-  clueNum,
-  clueType,
+  clueLabel,
   F_IMMUTABLE,
   FE_BOTLEFT,
   FE_BOTRIGHT,
   FE_COUNT,
   FE_TOPLEFT,
   FE_TOPRIGHT,
+  type MathraxMove,
   type MathraxState,
   type MathraxUi,
 } from "./state.ts";
@@ -87,6 +91,12 @@ export const COL_PENCIL_BODY = 8;
  * stays the pencil-corner and cell-outline color. */
 export const COL_FLASH = 9;
 export const COL_CURSOR = 10;
+/** The hint's two marks (docs/games/hints.md § "The element-type color
+ * legend"): a ring around the cell the deduction acts on, and an outline around
+ * the cells it reasons from. Both replace a cell's own border rather than its
+ * background, so neither has to be read through the digits it surrounds. */
+export const COL_HINT = 11;
+export const COL_HINT_CELL = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const { background, highlight, lowlight } = mkhighlight(defaultBackground);
@@ -104,7 +114,26 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERROR] = ERROR;
   out[COL_ERRORBG] = ERROR_WASH;
   out[COL_PENCIL_BODY] = PENCIL_BODY;
+  // Both hint marks sit on a cell's own border, which is read against the board
+  // rather than through it, so both take the palette's strong hint colors.
+  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT_CELL] = HINT_EVIDENCE;
   return out;
+}
+
+/** Highlight payload a Mathrax hint step carries (built in `index.ts`). The
+ * element-type legend (docs/games/hints.md § "The element-type color legend"):
+ * the clue's cells shaded `COL_HINT_CELL`, the acted-on cell ringed `COL_HINT`,
+ * the ruled-out candidates struck through among the pencil marks. */
+export interface MathraxHint {
+  /** The cells the deduction reasons from — a clue's diagonal pair, all four
+   * cells around an `E`/`O` clue, or a hidden single's line. A forcing chain's
+   * cells additionally carry their place in it, drawn as an ordinal. */
+  area: OrderedCell[];
+  /** The cell(s) the deduction acts on, ringed `COL_HINT`. */
+  targets: Point[];
+  /** The candidate number(s) ruled out, shown struck among the pencil marks. */
+  marks: { x: number; y: number; n: number }[];
 }
 
 // --- draw-only flags (upstream FD_*) ---------------------------------------
@@ -145,6 +174,12 @@ export interface MathraxDrawState {
   tiles: Int32Array;
   /** `o²` Check-&-Save mistake overlay. */
   wrong: OverlaySidecar;
+  /** `o²` hint overlay: bit 0 = target cell, bit 1 = evidence, bits 2.. = the
+   * struck-candidate mask (`hintMarkBit(n)`). Owns the chain ordinal and the
+   * evidence outline lanes too (docs/games/rendering.md § "Overlay sidecars"). */
+  hint: OverlaySidecar;
+  /** The hint target's ring and the evidence region's outline. */
+  marks: HintMarks;
   /** Whether the pencil-mode indicator was on last frame. */
   pencilModeShown: boolean | null;
 }
@@ -156,37 +191,44 @@ export function newDrawState(state: MathraxState, tileSize: number): MathraxDraw
     tileSize,
     tiles: new Int32Array(o * o).fill(-1),
     wrong: new OverlaySidecar(o * o),
+    hint: new OverlaySidecar(o * o),
+    marks: new HintMarks(),
     pencilModeShown: null,
   };
 }
 
-// --- clue drawing ----------------------------------------------------------
-
-const MINUS_SIGN = "−";
-const TIMES_SIGN = "×";
-const DIVIDE_SIGN = "÷";
-
-/** The clue's label (upstream `mathrax_clue_label`); a subtraction clue of 0 is
- * the equality clue, which reads `=`. */
-export function clueLabel(clue: number): string {
-  const n = clueNum(clue);
-  switch (clueType(clue)) {
-    case CLUE_ADD:
-      return `${n}+`;
-    case CLUE_SUB:
-      return n ? `${n}${MINUS_SIGN}` : "=";
-    case CLUE_MUL:
-      return `${n}${TIMES_SIGN}`;
-    case CLUE_DIV:
-      return `${n}${DIVIDE_SIGN}`;
-    case CLUE_EVN:
-      return "E";
-    case CLUE_ODD:
-      return "O";
-    default:
-      return "";
-  }
+/**
+ * Where a hint mark sits around cell `(x, y)` — **on the cell's own border**,
+ * the outline `drawTile` already paints there, rather than in a gutter.
+ *
+ * Mathrax has no gutter: consecutive tiles sit at a `tileSize` pitch and each
+ * fills its whole square, so the grid the player sees *is* that one-pixel box
+ * outline. The band therefore lies wholly inside the box (`outer` 0), which is
+ * also what undoes it — a cell whose overlay changes repaints itself and takes
+ * its mark with it, so there is nothing for {@link HintMarks} to erase.
+ *
+ * **The box is the tile's clip rect, not the rectangle its outline traces.**
+ * `drawTile` draws that outline a pixel above the clip and a pixel past its
+ * right edge, where it is clipped away — what the player sees between two cells
+ * is the *neighbor's* line. A band placed on the traced rectangle would put its
+ * top row outside the cell that owns it, and nothing would ever repaint it: the
+ * mark stayed on the board as a stray line after the step moved on.
+ *
+ * A clue circle straddles the corner and overlaps the band by a chord of a few
+ * pixels. The circle is drawn first and the band over it, so a marked cell
+ * reads as a highlighted grid line passing behind the clue, which is what the
+ * unmarked frame already shows in `COL_BORDER`.
+ */
+function markBand(ds: MathraxDrawState, x: number, y: number): MarkBand {
+  const ts = ds.tileSize;
+  return {
+    box: { x: origin(ts) + x * ts, y: origin(ts) + y * ts, w: ts, h: ts },
+    outer: 0,
+    inner: 2,
+  };
 }
+
+// --- clue drawing ----------------------------------------------------------
 
 function drawClue(
   dr: GameDrawing,
@@ -216,11 +258,16 @@ function drawTile(
   y: number,
   fs: number,
   wrong: boolean,
+  hint: number,
 ): void {
   const ts = ds.tileSize;
   const o = state.params.o;
   const co = o - 1;
   const i = y * o + x;
+  // Of the hint overlay, a tile draws only `struck`, the candidates this firing
+  // rules out. The target's ring and the evidence outline are painted after the
+  // tile loop, unclipped, so a neighbor's repaint cannot bury them.
+  const struck = hint >> 2;
   const tx = origin(ts) + x * ts;
   const ty = origin(ts) + y * ts;
   const cell = { x: tx, y: ty, w: ts, h: ts };
@@ -265,7 +312,7 @@ function drawTile(
       String(state.grid[i]),
     );
   } else if (state.pencil[i]) {
-    drawPencilMarks(dr, ts, tx, ty, state.pencil[i], o);
+    drawPencilMarks(dr, ts, tx, ty, state.pencil[i], o, struck);
   }
 
   // The (up to) four clues at this cell's corners, each colored by *this*
@@ -293,6 +340,24 @@ function drawTile(
     }
   }
 
+  // A forcing chain's place in the order it fires, so the narration can cite the
+  // cells by number. The collection draws it in the bottom-right corner, which
+  // here can hold a quarter of a clue circle of radius `ts / 3`; where one does,
+  // the inset grows past it rather than moving the mark to another corner, so
+  // the ordinal still means the same thing it means in every other game.
+  const order = ds.hint.order[i];
+  if (order > 0) {
+    const clued = y < co && x < co && state.clues[y * co + x] !== 0;
+    drawHintOrdinal(
+      dr,
+      { x: tx, y: ty },
+      ts,
+      order,
+      COL_HINT_CELL,
+      clued ? Math.ceil(ts / 3) : undefined,
+    );
+  }
+
   dr.unclip();
 }
 
@@ -306,6 +371,7 @@ function drawPencilMarks(
   ty: number,
   marks: number,
   o: number,
+  struck: number,
 ): void {
   let nhints = 0;
   for (let n = 1; n <= o; n++) if (marks & (1 << n)) nhints++;
@@ -324,15 +390,16 @@ function drawPencilMarks(
     if (!(marks & (1 << n))) continue;
     const hx = j % hw;
     const hy = (j / hw) | 0;
-    dr.drawText(
-      {
-        x: tx + ((((4 * hx + 3) * ts) / (4 * hw + 2)) | 0),
-        y: ty + ((((4 * hy + 3) * ts) / (4 * hh + 2)) | 0),
-      },
-      glyphFont(fontsz),
-      COL_PENCIL,
-      String(n),
-    );
+    const cx = tx + ((((4 * hx + 3) * ts) / (4 * hw + 2)) | 0);
+    const cy = ty + ((((4 * hy + 3) * ts) / (4 * hh + 2)) | 0);
+    // A struck candidate keeps its pencil color, so it still reads as the
+    // player's note; the same-color strikethrough is what says the hint rules it
+    // out (docs/games/hints.md § "The element-type color legend").
+    dr.drawText({ x: cx, y: cy }, glyphFont(fontsz), COL_PENCIL, String(n));
+    if (struck & (1 << n)) {
+      const r = Math.max(2, (fontsz / 3) | 0);
+      dr.drawLine({ x: cx - r, y: cy }, { x: cx + r, y: cy }, COL_PENCIL, 2);
+    }
     j++;
   }
 }
@@ -360,7 +427,7 @@ export function redraw(
   ui: MathraxUi,
   _animTime: number,
   flashTime: number,
-  _hint?: unknown,
+  hint?: HintStep<MathraxMove, MathraxHint>,
   mistakes?: readonly Point[],
 ): void {
   const ts = ds.tileSize;
@@ -381,7 +448,9 @@ export function redraw(
   }
 
   const flash = flashTime > 0 ? Math.floor(flashTime / FLASH_FRAME) % 3 : -1;
-  ds.wrong.packCells(mistakes ?? null, (x, y) => y * o + x);
+  const index = (x: number, y: number): number => y * o + x;
+  ds.wrong.packCells(mistakes ?? null, index);
+  ds.hint.pack(hint?.highlights ?? null, index, (m) => hintMarkBit(m.n));
 
   for (let y = 0; y < o; y++) {
     for (let x = 0; x < o; x++) {
@@ -398,13 +467,30 @@ export function redraw(
         fs |= ui.pencilMode ? FD_PENCIL : FD_CURSOR;
 
       const tile = state.grid[i] | (state.pencil[i] << 4) | (fs << 14);
-      if (ds.tiles[i] !== tile || ds.wrong.stale(i)) {
-        drawTile(dr, ds, state, x, y, fs, ds.wrong.at(i));
+      if (ds.tiles[i] !== tile || ds.wrong.stale(i) || ds.hint.stale(i)) {
+        drawTile(dr, ds, state, x, y, fs, ds.wrong.at(i), ds.hint.packed[i]);
         ds.tiles[i] = tile;
         ds.wrong.commit(i);
+        ds.hint.commit(i);
       }
     }
   }
+
+  // The hint marks, after the tile loop and outside every clip: a mark lies on
+  // the shared grid line between two cells, so a neighbor repainting for its own
+  // reasons would otherwise clip a side off.
+  const targets: MarkCell[] = [];
+  const evidence: MarkCell[] = [];
+  for (let i = 0; i < o * o; i++) {
+    const c = { x: i % o, y: (i / o) | 0 };
+    if (ds.hint.packed[i] & HINT_TARGET) targets.push(c);
+    if (ds.hint.packed[i] & HINT_AREA) evidence.push(c);
+  }
+  ds.marks.paint(dr, targets, evidence, {
+    band: (x, y) => markBand(ds, x, y),
+    targetColor: COL_HINT,
+    evidenceColor: COL_HINT_CELL,
+  });
 
   repaintPencilIndicator(dr, ds, ui.pencilMode, PENCIL_BOX(o, ts), PENCIL_STYLE);
 }

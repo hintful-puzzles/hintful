@@ -90,7 +90,7 @@ const MAX_NARRATION_CHARS = 300;
  */
 const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
   {
-    games: ["group", "keen", "salad", "solo", "towers", "unequal"],
+    games: ["group", "keen", "mathrax", "salad", "solo", "towers", "unequal"],
     match: /has just two \w+s left, so each forces the next/,
     why:
       "The Latin chain Tactic (`latin-hint.ts`). ts-engine requires a narrated " +
