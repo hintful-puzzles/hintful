@@ -65,7 +65,9 @@ const SOLO_VOCAB: LatinVocab = { noun: "number", value: digitChar };
 export const say = {
   populate: populateText("number"),
 
-  cleanObvious: cleanObviousText("number", "placed", "row, column or block"),
+  /** `regions` names every kind of region a digit may not repeat in. */
+  cleanObvious: (regions: string[]): string =>
+    cleanObviousText("number", "placed", joinOr(regions)),
 
   single: (n: number): string =>
     `Every other number has been ruled out in this cell, so it can only be ${g(n)}.`,
@@ -75,8 +77,9 @@ export const say = {
     return `In this ${r}, ${g(n)} can go in only this cell, since every other cell in the ${r} rules it out, so it must be ${g(n)}.`;
   },
 
-  dup: (n: number): string =>
-    `${indefinite(g(n), true)} ${g(n)} is already placed in this cell, so it can't repeat in its row, column or block: cross out the ${g(n)} from these cells.`,
+  /** `regions` names the kinds of region the placed cell lies in. */
+  dup: (n: number, regions: string[]): string =>
+    `${indefinite(g(n), true)} ${g(n)} is placed here, so it can't repeat in its ${joinOr(regions)}: cross out the ${g(n)} from these cells.`,
 
   /** Every cell of `confined` that can take `n` also lies in `target`. */
   intersect: (confined: SoloRegion, target: SoloRegion, n: number): string => {

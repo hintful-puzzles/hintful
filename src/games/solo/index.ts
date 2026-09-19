@@ -234,22 +234,22 @@ function interpretMove(
   }
 
   // 'M' / 'm': fill all pencil marks, then (on a fully-noted board) clean the
-  // obvious candidates already placed in each cell's row, column, block or (X)
-  // diagonal — the basic-region opening, in one press.
+  // obvious candidates already placed in each cell's row, column, block, (X)
+  // diagonal or (killer) cage — the basic-region opening, in one press.
   if (button === 77 || button === 109)
     return adaptiveMarkAllMove<SoloMove>(state.grid, state.pencil, cr, (x, y) =>
-      regionsOf(state, x, y),
+      noRepeatRegionsOf(state, x, y),
     );
 
   return null;
 }
 
 /** Strike digit `n` from the pencil marks of every cell sharing a row, column,
- * block (or diagonal when xtype) with `(x, y)` — auto-pencil cleanup on a real
- * placement. */
+ * block, diagonal (xtype) or cage (killer) with `(x, y)` — auto-pencil cleanup
+ * on a real placement. */
 function autoEliminate(state: SoloState, x: number, y: number, n: number): void {
   const cell = y * state.cr + x;
-  for (const { cells } of regionsOf(state, x, y))
+  for (const { cells } of noRepeatRegionsOf(state, x, y))
     for (const c of cells) if (c !== cell) state.pencil[c] &= ~(1 << n);
 }
 
@@ -385,12 +385,11 @@ function regionCells(region: SoloRegion, state: SoloState): Point[] {
   return cellsOf(region, state).map((c) => ({ x: c % cr, y: (c / cr) | 0 }));
 }
 
-/** The uniqueness regions of cell `(x, y)`, in narration-preference order (row,
- * column, sub-block, then the X diagonals it lies on), each with its
- * `SoloRegion` tag for naming. The single source of truth for "this cell's
- * uniqueness regions", shared by auto-pencil, the placement classifier
- * ({@link soloPlacementReason}), the basic-region strike and the placement
- * dup-cull, so they can never disagree. */
+/** The regions of cell `(x, y)` that hold every digit exactly once, in
+ * narration-preference order (row, column, sub-block, then the X diagonals it
+ * lies on), each with its `SoloRegion` tag for naming. What the placement
+ * classifier ({@link soloPlacementReason}) reads: a digit with one home left in
+ * such a region must go there. The culls read {@link noRepeatRegionsOf}. */
 function regionsOf(
   state: SoloState,
   x: number,
@@ -406,6 +405,38 @@ function regionsOf(
   if (state.xtype && onDiag0(cell, cr)) regions.push({ kind: "diag0" });
   if (state.xtype && onDiag1(cell, cr)) regions.push({ kind: "diag1" });
   return regions.map((region) => ({ cells: cellsOf(region, state), region }));
+}
+
+/** Every region a digit placed at `(x, y)` may not repeat in: the
+ * {@link regionsOf} regions, plus the cell's killer cage. A cage forbids repeats
+ * without having to hold every digit, so it is no place to find a hidden single
+ * and stays out of `regionsOf`. Shared by auto-pencil, Mark-all, the obvious
+ * cleanup and the placement dup-cull, so none of them leaves a cage-mate's note
+ * standing that the solver has struck. */
+function noRepeatRegionsOf(
+  state: SoloState,
+  x: number,
+  y: number,
+): { cells: number[] }[] {
+  const regions: { cells: number[] }[] = regionsOf(state, x, y);
+  const killer = state.killerData;
+  if (killer) {
+    const cage = killer.kblocks.whichblock[y * state.cr + x];
+    regions.push({ cells: killer.kblocks.blocks[cage] });
+  }
+  return regions;
+}
+
+/** The names of the regions {@link noRepeatRegionsOf} returns for `(x, y)`, or
+ * for any cell when `at` is omitted — what a sentence about a repeat cites. */
+function noRepeatRegionNames(state: SoloState, at?: Point): string[] {
+  const names = ["row", "column", "block"];
+  const cell = at ? at.y * state.cr + at.x : null;
+  const onDiagonal =
+    cell === null || onDiag0(cell, state.cr) || onDiag1(cell, state.cr);
+  if (state.xtype && onDiagonal) names.push("diagonal");
+  if (state.killerData) names.push("cage");
+  return names;
 }
 
 /** Re-derive *why* a generic-`single` placement is forced, from the working board
@@ -429,14 +460,17 @@ function soloPlacementReason(
 /** Narrate *why* a firing is forced (docs/games/hints.md § "Writing the narration"): indication → reasoning →
  * necessity-voice conclusion. `ns` is the struck value list (a placement passes
  * its single digit). */
-function narrate(reason: SoloReason, ns: number[]): string {
+function narrate(reason: SoloReason, ns: number[], state: SoloState): string {
   switch (reason.kind) {
     case "single":
       return say.single(ns[0]);
     case "hiddenSingle":
       return say.hiddenSingle(reason.region, reason.n);
     case "dup":
-      return say.dup(reason.n);
+      return say.dup(
+        reason.n,
+        noRepeatRegionNames(state, { x: reason.px, y: reason.py }),
+      );
     case "intersect":
       return say.intersect(reason.confined, reason.target, reason.n);
     case "set":
@@ -505,7 +539,7 @@ function emitStrikeJourney(
     const marks = groupOps.map((op) => ({ x: op.x, y: op.y, n: op.n }));
     steps.push({
       move: { type: "pencilStrike", marks },
-      explanation: narrate(reason, [reason.n]),
+      explanation: narrate(reason, [reason.n], state),
       highlights: {
         area: reasonArea(reason, state),
         targets: marks.map((m) => ({ x: m.x, y: m.y })),
@@ -531,7 +565,7 @@ function emitStrikeJourney(
     const values = marks.map((m) => m.n).sort((a, b) => a - b);
     steps.push({
       move: { type: "pencilStrike", marks },
-      explanation: narrate(reason, values),
+      explanation: narrate(reason, values, state),
       highlights: { area: reasonArea(reason, state), targets: [{ x, y }], marks },
       continuesPrevious: !first,
     });
@@ -558,7 +592,7 @@ function emitPlacement(
   const cr = state.cr;
   steps.push({
     move: { type: "set", x, y, n, pencil: false, autoElim: autoClean },
-    explanation: narrate(reason, [n]),
+    explanation: narrate(reason, [n], state),
     highlights: { area: placementArea(reason, state), targets: [{ x, y }], marks: [] },
   });
   wGrid[y * cr + x] = n;
@@ -572,14 +606,14 @@ function emitPlacement(
     y,
     n,
     cr,
-    regionsOf(state, x, y),
+    noRepeatRegionsOf(state, x, y),
   );
   for (const m of dupMarks) wPen[m.y * cr + m.x] &= ~(1 << n);
 
   if (!autoClean && dupMarks.length > 0) {
     steps.push({
       move: { type: "pencilStrike", marks: dupMarks },
-      explanation: narrate({ kind: "dup", n, px: x, py: y }, []),
+      explanation: narrate({ kind: "dup", n, px: x, py: y }, [], state),
       highlights: {
         area: [{ x, y }],
         targets: dupMarks.map((m) => ({ x: m.x, y: m.y })),
@@ -661,8 +695,8 @@ function buildSteps(
           wGrid,
           wPen,
           cr,
-          (x, y) => regionsOf(state, x, y),
-          say.cleanObvious,
+          (x, y) => noRepeatRegionsOf(state, x, y),
+          say.cleanObvious(noRepeatRegionNames(state)),
         )
       ) {
         continue;

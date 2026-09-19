@@ -37,8 +37,8 @@ describe("a number after an article gets the article it is pronounced with", () 
   });
 
   it("Solo's duplicate", () => {
-    expect(solo.dup(8)).toMatch(/^An 8 is already placed/);
-    expect(solo.dup(3)).toMatch(/^A 3 is already placed/);
+    expect(solo.dup(8, ["row"])).toMatch(/^An 8 is placed/);
+    expect(solo.dup(3, ["row"])).toMatch(/^A 3 is placed/);
   });
 
   it("Crossing's shared digit and single note strike", () => {

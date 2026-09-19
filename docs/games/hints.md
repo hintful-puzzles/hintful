@@ -2869,6 +2869,18 @@ regions. **A Keen cage is *not* a uniqueness region** — it is an arithmetic
 constraint a digit may legally repeat under; `regionsOf` returns row+col only,
 and the cage logic stays its own deduction.
 
+**"Holds every value" and "forbids repeats" are two relations, and they come
+apart.** The classifier needs the first: a value with one home left in a region
+must go there only if the region has to hold that value. The culls (dup strike,
+obvious clean, Mark-all, the player's auto-pencil) need the second. A **Solo
+Killer cage** forbids repeats but needn't hold every digit, so Solo keeps
+`regionsOf` for the classifier and feeds the culls `noRepeatRegionsOf`, which
+adds the cage. While the culls read `regionsOf`, the solver struck a placed
+digit from its cage-mates and the notes never did, so a later single rested on
+a strike the player never saw, and the hint threw on about one fresh Killer
+board in six. When a game gains a region with only one of the two properties,
+give each relation its own function rather than widening the shared one.
+
 **What stays in the game — and why no shared driver.** The `buildSteps` *walk*
 is per-game on purpose: the games diverge in step order, strike-split policy
 (by-height / by-target-cell / by-cell / intersect-single — dictated by what

@@ -186,7 +186,7 @@ describe("solo hint", () => {
           // Skip the basic-region dup opening (one placed value across its groups)
           // and the bulk obvious-candidate cleanup at populate (a setup step, not a
           // deductive strike — multi-cell and multi-digit by design).
-          if (/already placed in this cell/.test(step.explanation)) continue;
+          if (/is placed here, so it can't repeat/.test(step.explanation)) continue;
           if (/clear the easy ones|fill all pencil marks/.test(step.explanation)) {
             continue;
           }
@@ -205,7 +205,7 @@ describe("solo hint", () => {
 
   it("auto-pencil off teaches more cleanup steps than on", () => {
     const { st } = gen(ADV, "autopencil");
-    const dupRe = /already placed in this cell/;
+    const dupRe = /is placed here, so it can't repeat/;
     const uiOn = soloGame.newUi(st);
     uiOn.autoPencil = true;
     const on = soloGame.hint?.(st, undefined, uiOn);
@@ -323,6 +323,83 @@ describe("solo hint", () => {
       pencil: false,
     });
     expect(soloGame.hint?.(bad)?.ok).toBe(false);
+  });
+});
+
+describe("solo killer cages forbid repeats", () => {
+  /** A board whose hint threw while the culls ignored cages: the solver struck a
+   * placed digit from its cage-mates without recording it, so a later single
+   * rested on a strike the notes never showed. */
+  const DESC =
+    "zzzc,__aab___aa___a__a___a_a___aaa_aa_a_a_a_aa__baa_baa_ca____aaa__aa___" +
+    "__________a__a__a___a____aaa_ab,7_16_11a12a9d11_10_16a10a19_10d10_11c7_12_" +
+    "17c8a14c9a8a11b5_7a16a18a13b7a3b24_14_15a13b8d9a15d";
+
+  /** The other empty cells of `cell`'s cage that still note `n`. */
+  function cageMatesNoting(state: SoloState, cell: number, n: number): number[] {
+    const kblocks = state.killerData?.kblocks;
+    if (!kblocks) throw new Error("not a killer board");
+    return kblocks.blocks[kblocks.whichblock[cell]].filter(
+      (c) => c !== cell && state.grid[c] === 0 && (state.pencil[c] & (1 << n)) !== 0,
+    );
+  }
+
+  it("walks to solved on recomputed hints", () => {
+    let state = newState(KILLER, DESC);
+    for (let i = 0; i < 2000 && soloStatus(state) === "ongoing"; i++) {
+      const res = soloGame.hint?.(state);
+      if (!res?.ok) throw new Error(`hint refused after ${i} moves`);
+      state = soloGame.executeMove(state, res.steps[0].move);
+    }
+    expect(soloStatus(state)).toBe("solved");
+  });
+
+  it("a hinted placement leaves no cage-mate noting its digit", () => {
+    let state = newState(KILLER, DESC);
+    const res = soloGame.hint?.(state);
+    if (!res?.ok) throw new Error("hint refused");
+    const placed: { cell: number; n: number }[] = [];
+    let checked = 0;
+    const settle = () => {
+      for (const p of placed) {
+        expect(cageMatesNoting(state, p.cell, p.n)).toEqual([]);
+        checked++;
+      }
+      placed.length = 0;
+    };
+    for (const step of res.steps) {
+      if (!step.continuesPrevious) settle();
+      const m = step.move as SoloMove;
+      if (m.type === "set" && !m.pencil && m.n > 0)
+        placed.push({ cell: m.y * state.cr + m.x, n: m.n });
+      state = soloGame.executeMove(state, step.move);
+    }
+    settle();
+    expect(checked).toBeGreaterThan(20);
+  });
+
+  it("auto-pencil strikes a placed digit from its cage-mates' notes", () => {
+    const st = newState(KILLER, DESC);
+    const res = soloGame.hint?.(st);
+    if (!res?.ok) throw new Error("hint refused");
+    const noted = soloGame.executeMove(st, res.steps[0].move);
+    const cr = noted.cr;
+    // An empty cell, and a digit one of its cage-mates also notes.
+    let found: { x: number; y: number; n: number } | null = null;
+    for (let cell = 0; cell < cr * cr && !found; cell++) {
+      if (noted.grid[cell] !== 0) continue;
+      for (let n = 1; n <= cr && !found; n++)
+        if (noted.pencil[cell] & (1 << n) && cageMatesNoting(noted, cell, n).length > 0)
+          found = { x: cell % cr, y: (cell / cr) | 0, n };
+    }
+    if (!found) throw new Error("no cage-mate shares a note");
+    const after = soloGame.executeMove(noted, {
+      type: "set",
+      ...found,
+      pencil: false,
+      autoElim: true,
+    });
+    expect(cageMatesNoting(after, found.y * cr + found.x, found.n)).toEqual([]);
   });
 });
 
