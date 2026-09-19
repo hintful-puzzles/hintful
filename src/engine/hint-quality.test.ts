@@ -90,7 +90,13 @@ const MAX_NARRATION_CHARS = 300;
  */
 const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
   {
-    games: ["group", "keen", "mathrax", "salad", "solo", "towers", "unequal"],
+    // Not Mathrax, though its solver records `forcing`: measured over all nine
+    // presets × 3 seeds × both auto-pencil settings, 100,249 plan steps spoke
+    // this sentence **zero** times, because the frontier takes its clue strikes
+    // and singles first and the board finishes before a chain is ever the best
+    // candidate. A game listed here that never reaches the sentence is a dead
+    // exemption, and the ledger cannot see one (see `derive-the-narration-ledger-population`).
+    games: ["group", "keen", "salad", "solo", "towers", "unequal"],
     match: /has just two \w+s left, so each forces the next/,
     why:
       "The Latin chain Tactic (`latin-hint.ts`). ts-engine requires a narrated " +
