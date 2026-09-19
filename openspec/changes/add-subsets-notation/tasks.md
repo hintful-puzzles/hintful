@@ -2,8 +2,13 @@
 
 ## 1. Measure
 
-- [ ] 1.1 Per collapse and `singlePosition`, count the cube eliminations it rests on
-      that the board does not show, and how deep each one's chain runs.
+- [ ] 1.0 List every rule that reads `cube`, not only the two the audit named
+      (proposal § "Carried from `add-slant-notation`").
+- [ ] 1.1 Per collapse and `singlePosition` (and any other arm 1.0 finds), count
+      the cube eliminations it rests on that the board does not show, and how deep
+      each one's chain runs.
+- [ ] 1.2 Census the eliminations' reasons by shape, to write the sentences
+      against patterns within the 120-character limit.
 
 ## 2. The notation
 

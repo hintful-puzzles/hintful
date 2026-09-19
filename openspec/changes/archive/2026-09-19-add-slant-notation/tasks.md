@@ -27,4 +27,4 @@
 ## 4. Done
 
 - [x] 4.1 Run the app.
-- [ ] 4.2 Owner acceptance: a new input and a new mark on the board.
+- [x] 4.2 Owner acceptance: a new input and a new mark on the board (2026-09-19).
