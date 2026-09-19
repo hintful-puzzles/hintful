@@ -1,0 +1,5 @@
+# Spec deltas come with the implementation. It will modify "A cell's regions are
+# one definition per relation".
+schema: spec-driven
+created: 2026-09-19
+skip_specs: true

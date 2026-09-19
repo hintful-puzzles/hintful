@@ -1,0 +1,4 @@
+# The Mathrax spec gains its hint requirement with the implementation.
+schema: spec-driven
+created: 2026-09-19
+skip_specs: true
