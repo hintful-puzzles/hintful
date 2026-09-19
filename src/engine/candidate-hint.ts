@@ -7,21 +7,24 @@
  * {@link DeductionRecord} shape, which every game produces from its own
  * techniques and this module consumes uniformly.
  *
- * This module owns the reusable *mechanics*: the pure plan helpers
- * (naked-single finder, lazy populate, the unreflected-placement index, the
- * next-strike and next-place lookups) and the generic `keepCandidateHintTrack` /
- * `refreshCandidateHintStep`. The game owns the *walk and the meaning*: its
- * `buildSteps` (step order, strike-split policy and journey continuation differ
- * per game, so a shared driver was evaluated and deliberately not built), the
- * recording solver, the narration and the reason union. See
- * `docs/games/hints.md` § "Candidate-elimination games".
+ * This module owns the reusable *mechanics*: the walk itself
+ * (`runCandidatePlan`, which takes each next firing through a `HintFrontier`),
+ * the pure plan helpers (the naked singles, lazy populate, the
+ * unreflected-placement index, the available strikes, the next-place lookup)
+ * and the generic `keepCandidateHintTrack` / `refreshCandidateHintStep`. The
+ * game owns the *meaning*: which rungs it has and what each can fire now, its
+ * strike-split policy and journey continuation, the recording solver, the
+ * narration and the reason union. See `docs/games/hints.md` §
+ * "Candidate-elimination games".
  */
 
 import type { DeductionRecord } from "./deduction-record.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "./game.ts";
+import { type FrontierCandidate, HintFrontier } from "./hint-frontier.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import type { ClassifyRegion } from "./latin-hint.ts";
 import type { OrderedCell } from "./overlay-sidecar.ts";
+import { stepBudget } from "./step-budget.ts";
 import type { Point } from "./types.ts";
 
 /** A board cell. */
@@ -138,16 +141,31 @@ export function nakedSingle(
   w: number,
   enc?: NoteEncoding,
 ): { x: number; y: number; n: number } | null {
+  return nakedSingles(grid, pencil, w, enc)[0] ?? null;
+}
+
+/** Every naked single on the board, in the scan order {@link nakedSingle} takes
+ * the first of — the choices a frontier picks among. */
+export function nakedSingles(
+  grid: ArrayLike<number>,
+  pencil: ArrayLike<number>,
+  w: number,
+  enc?: NoteEncoding,
+): Mark[] {
   const bit = bitOf(enc);
   const values = enc?.values ?? w;
+  const out: Mark[] = [];
   for (let i = 0; i < grid.length; i++) {
     if (grid[i] !== 0 || pencil[i] === 0) continue;
     if ((pencil[i] & (pencil[i] - 1)) !== 0) continue; // more than one bit set
     for (let v = 1; v <= values; v++) {
-      if (pencil[i] & bit(v)) return { x: i % w, y: (i / w) | 0, n: v };
+      if (pencil[i] & bit(v)) {
+        out.push({ x: i % w, y: (i / w) | 0, n: v });
+        break;
+      }
     }
   }
-  return null;
+  return out;
 }
 
 /** True iff some empty cell carries no pencil notes — i.e. the board needs a
@@ -184,16 +202,30 @@ export function firstUnreflectedPlaceIndex(
   return ops.length;
 }
 
-/** The next deduction-strike *firing* whose marks are still live, considering only
- * eliminations valid against the current grid. One returned firing is one `group`
- * (one cage/line/region firing); the caller splits it into a per-cell (or whole)
- * journey. `dup` strikes are excluded — those are placement bookkeeping handled by
- * the placement emitter, not a technique to teach. */
-export function nextStrike<R extends DeductionRecord>(
+/**
+ * Every deduction-strike *firing* a plan could take now, in solver order — the
+ * choices `HintFrontier` picks among. Only eliminations valid against the
+ * current grid count: those before the solver's first placement the board has
+ * not made (see {@link firstUnreflectedPlaceIndex}).
+ *
+ * The first firing with a live teachable mark is always available: every
+ * firing before it is already reflected on the notes. A later one is available
+ * when its premise, the cells `reads` names for it, holds no mark an earlier
+ * firing has yet to strike; otherwise it may rest on that strike, and narrating
+ * it now would cite a board the player does not have. A later firing whose
+ * `reads` is empty cannot be vouched for and is not offered.
+ *
+ * Each firing is returned as its still-live records, one `group` (one
+ * cage/line/region firing) that the caller splits into a per-cell (or whole)
+ * journey. `dup` strikes are excluded — those are placement bookkeeping handled
+ * by the placement emitter, not a technique to teach.
+ */
+export function availableStrikes<R extends DeductionRecord>(
   ops: readonly R[],
   grid: ArrayLike<number>,
   pencil: ArrayLike<number>,
   w: number,
+  reads: (live: readonly R[]) => readonly Point[],
   opts?: {
     /** The note encoding, when the game's is not `1 << n`. */
     enc?: NoteEncoding;
@@ -201,24 +233,146 @@ export function nextStrike<R extends DeductionRecord>(
      * {@link firstUnreflectedPlaceIndex}. Defaults to `grid`. */
     placed?: ArrayLike<number>;
   },
-): R[] | null {
+): R[][] {
   const bit = bitOf(opts?.enc);
   const lim = firstUnreflectedPlaceIndex(ops, opts?.placed ?? grid, w);
   const liveAt = (op: R): boolean =>
     op.kind === "elim" &&
     grid[op.y * w + op.x] === 0 &&
-    (pencil[op.y * w + op.x] & bit(op.n)) !== 0 &&
-    (op.reason as { kind?: string }).kind !== "dup";
+    (pencil[op.y * w + op.x] & bit(op.n)) !== 0;
+  const rows = grid.length / w;
+  // A clue in the margin is premise too, but no firing ever marks one.
+  const onBoard = (ps: readonly Point[]): number[] =>
+    ps
+      .filter((p) => p.x >= 0 && p.y >= 0 && p.x < w && p.y < rows)
+      .map((p) => p.y * w + p.x);
+  /** Cells an earlier firing still has a live mark in, `dup` bookkeeping
+   * included: it is a strike the board does not show yet either. */
+  const pending = new Set<number>();
+  const out: R[][] = [];
+  let first = true;
   let i = 0;
   while (i < lim) {
     const g = ops[i].group;
     const group: R[] = [];
     while (i < lim && ops[i].group === g) group.push(ops[i++]);
     const live = group.filter(liveAt);
-    if (live.length === 0) continue;
-    return live;
+    const teachable = live.filter(
+      (op) => (op.reason as { kind?: string }).kind !== "dup",
+    );
+    if (teachable.length > 0) {
+      const premise = first ? [] : onBoard(reads(teachable));
+      if (first || (premise.length > 0 && !premise.some((c) => pending.has(c))))
+        out.push(teachable);
+      first = false;
+    }
+    for (const op of live) pending.add(op.y * w + op.x);
   }
-  return null;
+  return out;
+}
+
+/**
+ * One rung of a candidate plan's ladder: the firings of one kind it could take
+ * now. `nothingEarlier` says every earlier rung came up empty this time, which is
+ * where a rung that may only fire as the plan's last resort (a clue-forced
+ * placement, `availablePlacements`' `nothingElse`) is allowed to.
+ */
+export type CandidateRung = (nothingEarlier: boolean) => readonly FrontierCandidate[];
+
+/** A candidate-elimination game's plan, as {@link runCandidatePlan} walks it. */
+export interface CandidatePlan {
+  /** The board's width, and its height where that differs. */
+  w: number;
+  h?: number;
+  /** The steps the rungs push to; the frontier reads what each wrote. */
+  steps: readonly { highlights?: { targets?: readonly Point[] } }[];
+  /** Whether the working board is finished. */
+  finished(): boolean;
+  /** Names the plan if its step budget trips. */
+  label: string;
+  /** Iteration cap, a backstop for a rung that fires without progress. */
+  cap: number;
+  /** The rungs that need no notes, offered until {@link setUp} is done. */
+  opening: readonly CandidateRung[];
+  /** Populate, the obvious clean: taken when no opening rung fires. */
+  setUp: PlanSetUp;
+  /** Every rung, cheapest first, once the plan is set up. */
+  rungs: readonly CandidateRung[];
+  /** Called when nothing fires, before the plan ends: the place for a check
+   * that the solver forces nothing the plan could not explain. */
+  stuck?(): void;
+}
+
+/** The setup a candidate plan does before its every rung competes. */
+export interface PlanSetUp {
+  /** Whether the setup is finished. */
+  done(): boolean;
+  /** Take the next setup step, and say whether it pushed a step; one that
+   * pushed nothing (a clean with nothing to clean) still counts as taken. */
+  step(): boolean;
+}
+
+/**
+ * The {@link PlanSetUp} most games take: pencil the notes in once (`pop`,
+ * usually {@link lazyPopulate}), then clean the obvious candidates once
+ * (`clean`, usually {@link emitObviousCleanStep}, reporting whether it pushed
+ * a step).
+ */
+export function populateThenClean(
+  pop: { done(): boolean; ensure(): void },
+  clean: () => boolean,
+): PlanSetUp {
+  let cleaned = false;
+  return {
+    done: () => pop.done() && cleaned,
+    step: () => {
+      if (!pop.done()) {
+        pop.ensure();
+        return true;
+      }
+      cleaned = true;
+      return clean();
+    },
+  };
+}
+
+/**
+ * The walk every candidate-elimination hint plan takes: from the working board,
+ * take the note-free firings while the notes are being set up, then every rung,
+ * until the board is finished or nothing fires. Which firing is taken is the
+ * `HintFrontier`'s choice, so a plan continues from its latest steps where it
+ * can and otherwise follows the rung order.
+ *
+ * The game keeps what is its own: which rungs exist, what each can fire now,
+ * and how a firing is narrated and applied. Everything about *walking* them is
+ * here, so a new game gets the ordering, the phase handling and the backstops
+ * by supplying its rungs.
+ */
+export function runCandidatePlan(plan: CandidatePlan): void {
+  const frontier = new HintFrontier(plan.w, plan.h ?? plan.w);
+  const budget = stepBudget(plan.label);
+  const listed = (rungs: readonly CandidateRung[]): FrontierCandidate[][] => {
+    const lists: FrontierCandidate[][] = [];
+    let nothingEarlier = true;
+    for (const rung of rungs) {
+      const list = [...rung(nothingEarlier)];
+      if (list.length > 0) nothingEarlier = false;
+      lists.push(list);
+    }
+    return lists;
+  };
+  for (let guard = 0; guard < plan.cap; guard++) {
+    budget.tick();
+    if (plan.finished()) return;
+    if (!plan.setUp.done()) {
+      if (frontier.take(listed(plan.opening), plan.steps)) continue;
+      if (plan.setUp.step()) continue;
+    }
+    if (!frontier.take(listed(plan.rungs), plan.steps)) {
+      plan.stuck?.();
+      return;
+    }
+  }
 }
 
 /** The next forced placement the recording solver makes whose cell is still empty

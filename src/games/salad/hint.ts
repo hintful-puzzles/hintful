@@ -34,6 +34,7 @@
  */
 
 import {
+  availableStrikes,
   type CandidateHighlights,
   type CandidateMoveAdapter,
   type Cell,
@@ -42,26 +43,27 @@ import {
   keepCandidateHintTrack,
   type Mark,
   type NoteEncoding,
-  nextPlace,
-  nextStrike,
   populateStep,
+  populateThenClean,
   refreshCandidateHintStep,
   regionDuplicateMarks,
+  runCandidatePlan,
 } from "../../engine/candidate-hint.ts";
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
+import type { FrontierCandidate } from "../../engine/hint-frontier.ts";
 import { narrateLatinReason } from "../../engine/hint-text.ts";
 import type { LatinRepeatReason } from "../../engine/latin.ts";
 import {
+  availablePlacements,
   type ForcingLink,
   forcingChainArea,
   hiddenSingleLine,
   rowColRegions,
   type SingleReason,
-  singlePlacementReason,
+  singleReasonOf,
 } from "../../engine/latin-hint.ts";
 import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import { saladVocab, say } from "./hint-text.ts";
 import { type BorderReason, findMistakes, recordSaladDeductions } from "./solver.ts";
 import {
@@ -257,19 +259,20 @@ function placedProbe(w: Working): Uint8Array {
   return out;
 }
 
-/** A square whose notes have come down to a single *symbol* — the move a person
- * makes next. The X-mark-only case is a *cross*, not a placement (see the file
- * header), and is handled by the marker pass. */
-function nakedSymbol(w: Working, o: number, nums: number): Mark | null {
+/** The squares whose notes have come down to a single *symbol* — the move a
+ * person makes next. The X-mark-only case is a *cross*, not a placement (see the
+ * file header), and is handled by the marker pass. */
+function nakedSymbols(w: Working, o: number, nums: number): Mark[] {
+  const out: Mark[] = [];
   for (let i = 0; i < o * o; i++) {
     if (w.grid[i] !== 0 || w.holes[i] === CROSS) continue;
     const m = w.pencil[i];
     if (m === 0 || (m & (m - 1)) !== 0) continue;
     for (let n = 1; n <= nums; n++) {
-      if (m === 1 << (n - 1)) return { x: i % o, y: (i / o) | 0, n };
+      if (m === 1 << (n - 1)) out.push({ x: i % o, y: (i / o) | 0, n });
     }
   }
-  return null;
+  return out;
 }
 
 /** One marker deduction: the squares it settles, the marker it settles them to,
@@ -280,11 +283,12 @@ interface MarkerFiring {
   reason: SaladReason;
 }
 
-/** The cheapest marker deduction available on the board *as the player sees it*
- * — a line's counts first (visible and countable), then a note collapse.
- * Returns `null` when neither applies; the caller then falls through to the
- * recorded strikes/placements and finally to the cube's own verdict. */
-function nextCheapMarker(w: Working, o: number, nums: number): MarkerFiring | null {
+/** The cheap marker deductions available on the board *as the player sees it*
+ * — a line's counts first (visible and countable), then a note collapse. When
+ * there are none, the caller falls through to the recorded strikes/placements
+ * and finally to the cube's own verdict. */
+function cheapMarkers(w: Working, o: number, nums: number): MarkerFiring[] {
+  const out: MarkerFiring[] = [];
   const lines: { line: "row" | "col"; index: number; cells: number[] }[] = [];
   for (let y = 0; y < o; y++) {
     const cells: number[] = [];
@@ -313,14 +317,13 @@ function nextCheapMarker(w: Working, o: number, nums: number): MarkerFiring | nu
     }
     if (blank.length === 0) continue;
     if (crosses === o - nums) {
-      return {
+      out.push({
         mark: "circle",
         cells: blank.map(at),
         reason: { kind: "countHolesDone", line: l.line, index: l.index },
-      };
-    }
-    if (circles === nums) {
-      return {
+      });
+    } else if (circles === nums) {
+      out.push({
         mark: "cross",
         cells: blank.map(at),
         reason: {
@@ -329,7 +332,7 @@ function nextCheapMarker(w: Working, o: number, nums: number): MarkerFiring | nu
           index: l.index,
           allPlaced: placed === nums,
         },
-      };
+      });
     }
   }
 
@@ -338,10 +341,10 @@ function nextCheapMarker(w: Working, o: number, nums: number): MarkerFiring | nu
   for (let i = 0; i < o * o; i++) {
     if (w.grid[i] !== 0 || w.holes[i] !== 0) continue;
     if (w.pencil[i] === xbit) {
-      return { mark: "cross", cells: [at(i)], reason: { kind: "crossNaked" } };
+      out.push({ mark: "cross", cells: [at(i)], reason: { kind: "crossNaked" } });
     }
   }
-  return null;
+  return out;
 }
 
 /** Throw if the cube forces a marker the working board still lacks once every
@@ -537,7 +540,6 @@ function buildSteps(
   // The same predicate the Mark-all button's fill half uses, so the opener fires
   // exactly when a press of that button would fill something.
   let populated = !needsPencilFill({ order: o, ...w });
-  let cleaned = false;
 
   const allMarks = (1 << (nums + 1)) - 1;
   const symbolMarks = (1 << nums) - 1;
@@ -561,106 +563,124 @@ function buildSteps(
   };
 
   let rec = recordSaladDeductions(board(), state.diff);
-  const budget = stepBudget("salad hint plan");
-  const cap = o * o * (nums + 4) + 8;
   let lastStrikeGroup = -1;
 
-  for (let guard = 0; guard < cap; guard++) {
-    budget.tick();
-    if (latinholesCheck(board())) break;
-
-    // 1. A square whose notes have come down to one symbol.
-    const ns = nakedSymbol(w, o, nums);
-    if (ns) {
-      pushPlacement(b, ns.x, ns.y, ns.n, { kind: "single" }, autoClean);
+  const placing = (m: Mark, reason: SaladReason): FrontierCandidate => ({
+    reads: [m, ...reasonEvidence(reason, o).area],
+    take: () => {
+      pushPlacement(b, m.x, m.y, m.n, reason, autoClean);
       rec = recordSaladDeductions(board(), state.diff);
       lastStrikeGroup = -1;
-      continue;
-    }
+    },
+  });
 
-    // 2. The cheapest emptiness deduction: a line's counts, or a collapse onto
-    //    the empty-square mark. Both need no notes beyond what is on screen, so
-    //    a Number Ball board opens on them rather than on "pencil everything in".
-    const cheap = nextCheapMarker(w, o, nums);
-    if (cheap) {
-      pushMarkers(b, cheap);
-      rec = recordSaladDeductions(board(), state.diff);
-      lastStrikeGroup = -1;
-      continue;
-    }
+  // 1. A square whose notes have come down to one symbol.
+  const singles = () =>
+    nakedSymbols(w, o, nums).map((ns) => placing(ns, { kind: "single" }));
 
-    // 3. Notes are needed from here on, so fill them in — as the player's own
-    //    Mark-all move, once.
-    if (!populated) {
-      populate();
-      lastStrikeGroup = -1;
-      continue;
-    }
+  // 2. The cheapest emptiness deductions: a line's counts, or a collapse onto
+  //    the empty-square mark. Both need no notes beyond what is on screen, so
+  //    a Number Ball board opens on them rather than on "pencil everything in".
+  const markers = () =>
+    cheapMarkers(w, o, nums).map(
+      (f): FrontierCandidate => ({
+        reads: [...f.cells, ...reasonEvidence(f.reason, o).area],
+        take: () => {
+          pushMarkers(b, f);
+          rec = recordSaladDeductions(board(), state.diff);
+          lastStrikeGroup = -1;
+        },
+      }),
+    );
 
-    // 3a. …then bulk-clear the candidates a placed symbol already rules out, in
-    //     one step, so the walk teaches real deductions rather than N trivial
-    //     row/column culls (docs/games/hints.md § "Persist, populate, and the moves").
-    if (!cleaned) {
-      cleaned = true;
-      if (
-        emitObviousCleanStep<SaladMove, SaladHint>(
-          steps,
-          w.grid,
-          w.pencil,
-          o,
-          regionsOf,
-          text.cleanObvious,
-          { enc, adapter: saladCandidateMoves },
-        )
-      ) {
-        // The shared helper builds the common highlight fields; Salad's carry a
-        // clue list too.
-        const step = steps[steps.length - 1];
-        step.highlights = { ...(step.highlights as SaladHint), clues: [] };
-        lastStrikeGroup = -1;
-        continue;
-      }
-    }
+  // 3. Notes are needed from here on, so fill them in — as the player's own
+  //    Mark-all move, once — then bulk-clear the candidates a placed symbol
+  //    already rules out, in one step, so the walk teaches real deductions
+  //    rather than N trivial row/column culls (docs/games/hints.md § "Persist,
+  //    populate, and the moves").
+  const setUp = populateThenClean({ done: () => populated, ensure: populate }, () => {
+    if (
+      !emitObviousCleanStep<SaladMove, SaladHint>(
+        steps,
+        w.grid,
+        w.pencil,
+        o,
+        regionsOf,
+        text.cleanObvious,
+        { enc, adapter: saladCandidateMoves },
+      )
+    )
+      return false;
+    // The shared helper builds the common highlight fields; Salad's carry a
+    // clue list too.
+    const step = steps[steps.length - 1];
+    step.highlights = { ...(step.highlights as SaladHint), clues: [] };
+    return true;
+  });
 
-    // 4. The next teachable elimination. Strikes *of* the hole symbol are
-    //    dropped — the same fact reaches the player as a marker step (file
-    //    header, point 1), and teaching it twice would be noise — but hole
-    //    *placements* are kept, because they still bound the window of strikes
-    //    whose premise the board already supports.
+  // 4. The teachable eliminations. Strikes *of* the hole symbol are dropped —
+  //    the same fact reaches the player as a marker step (file header, point 1),
+  //    and teaching it twice would be noise — but hole *placements* are kept,
+  //    because they still bound the window of strikes whose premise the board
+  //    already supports.
+  const strikes = () => {
     const probe = placedProbe(w);
     const ops = rec.ops as SaladOp[];
     const strikeOps = ops.filter((op) => op.kind === "place" || op.n <= nums);
-    const strike = nextStrike(strikeOps, w.grid, w.pencil, o, { enc, placed: probe });
-    if (strike) {
-      const group = strike[0].group;
-      let continues = group === lastStrikeGroup;
-      for (const leg of splitStrike(strike, o)) {
-        pushStrike(b, leg.marks, leg.reason, continues);
-        continues = true;
-      }
-      lastStrikeGroup = group;
-      continue;
-    }
+    return availableStrikes(
+      strikeOps,
+      w.grid,
+      w.pencil,
+      o,
+      (live) => [...reasonEvidence(live[0].reason, o).area, ...live],
+      { enc, placed: probe },
+    ).map(
+      (strike): FrontierCandidate => ({
+        reads: [...reasonEvidence(strike[0].reason, o).area, ...strike],
+        take: () => {
+          const group = strike[0].group;
+          let continues = group === lastStrikeGroup;
+          for (const leg of splitStrike(strike, o)) {
+            pushStrike(b, leg.marks, leg.reason, continues);
+            continues = true;
+          }
+          lastStrikeGroup = group;
+        },
+      }),
+    );
+  };
 
-    // 5. A forced placement — re-derive a generic `single`'s *why* from the
-    //    working board; Salad records no placement reasons of its own.
-    const placeOps = ops.filter((op) => op.kind === "place" && op.n <= nums);
-    const place = nextPlace(placeOps, probe, o);
-    if (place) {
-      const reason: SaladReason =
-        place.reason.kind === "single"
-          ? singlePlacementReason(w.grid, w.pencil, place.x, place.y, place.n, o, enc)
-          : place.reason;
-      pushPlacement(b, place.x, place.y, place.n, reason, autoClean);
-      rec = recordSaladDeductions(board(), state.diff);
-      lastStrikeGroup = -1;
-      continue;
-    }
+  // 5. The forced placements — re-derive a generic `single`'s *why* from the
+  //    working board; Salad records no placement reasons of its own.
+  const places = (nothingEarlier: boolean) => {
+    const placeOps = (rec.ops as SaladOp[]).filter(
+      (op) => op.kind === "place" && op.n <= nums,
+    );
+    return availablePlacements(
+      placeOps,
+      w.grid,
+      w.pencil,
+      o,
+      regionsOf,
+      nothingEarlier,
+      { enc, placed: placedProbe(w) },
+    ).map(({ op, why }) =>
+      placing(op, why.kind === "recorded" ? op.reason : singleReasonOf(op.n, why)),
+    );
+  };
 
-    assertEveryMarkerExplained(w, rec.holes, o);
-    break; // nothing further is deducible from here
-  }
-
+  runCandidatePlan({
+    w: o,
+    steps,
+    finished: () => latinholesCheck(board()),
+    label: "salad hint plan",
+    cap: o * o * (nums + 4) + 8,
+    opening: [singles, markers],
+    setUp,
+    rungs: [singles, markers, strikes, places],
+    // Nothing further is deducible from here.
+    stuck: () => assertEveryMarkerExplained(w, rec.holes, o),
+  });
   return steps;
 }
 

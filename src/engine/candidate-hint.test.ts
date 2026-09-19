@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   adaptiveMarkAllMove,
   anyEmptyLacksNotes,
+  availableStrikes,
   type CandidateHighlights,
   type CandidateMove,
   type CandidateMoveAdapter,
@@ -14,18 +15,20 @@ import {
   type Mark,
   nakedSingle,
   nextPlace,
-  nextStrike,
   obviousCandidateMarks,
   obviousCleanStep,
   populateStep,
   refreshCandidateHintStep,
   regionDuplicateMarks,
+  runCandidatePlan,
 } from "./candidate-hint.ts";
 import type { HintStep } from "./game.ts";
+import type { FrontierCandidate } from "./hint-frontier.ts";
 import { ALREADY_SOLVED, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { cleanObviousText, joinNums, populateText } from "./hint-text.ts";
 import type { DeductionRecord } from "./latin.ts";
 import { rowColRegions } from "./latin-hint.ts";
+import type { Point } from "./types.ts";
 
 /** Build a working board from a `grid` (0 = empty) and a matching `pencil`
  * candidate-bitmask array. */
@@ -340,7 +343,88 @@ describe("firstUnreflectedPlaceIndex", () => {
   });
 });
 
-describe("nextStrike", () => {
+describe("runCandidatePlan", () => {
+  /** A plan over a 4×1 board whose firings each fill one cell, logging what
+   * the walk did in order. */
+  function walk(opts: { setUpSteps: number; stuckAt?: number }) {
+    const grid = [0, 0, 0, 0];
+    const steps: { highlights: { targets: Point[] } }[] = [];
+    const log: string[] = [];
+    const fill = (name: string, x: number): FrontierCandidate => ({
+      reads: [{ x, y: 0 }],
+      take: () => {
+        grid[x] = 1;
+        steps.push({ highlights: { targets: [{ x, y: 0 }] } });
+        log.push(name);
+      },
+    });
+    let setUps = 0;
+    runCandidatePlan({
+      w: 4,
+      h: 1,
+      steps,
+      finished: () => !grid.includes(0),
+      label: "test plan",
+      cap: 20,
+      // The note-free rung offers cell 0 only.
+      opening: [() => (grid[0] ? [] : [fill("opening", 0)])],
+      setUp: {
+        done: () => setUps >= opts.setUpSteps,
+        step: () => {
+          setUps++;
+          log.push("setUp");
+          return true;
+        },
+      },
+      rungs: [
+        () => [],
+        (nothingEarlier) =>
+          grid
+            .map((v, x) => (v || x >= (opts.stuckAt ?? 4) ? null : x))
+            .filter((x) => x !== null)
+            .map((x) => fill(nothingEarlier ? `last resort ${x}` : `cell ${x}`, x)),
+      ],
+      stuck: () => log.push("stuck"),
+    });
+    return log;
+  }
+
+  it("takes the note-free rungs, then sets up, then every rung", () => {
+    expect(walk({ setUpSteps: 2 })).toEqual([
+      "opening",
+      "setUp",
+      "setUp",
+      "last resort 1",
+      "last resort 2",
+      "last resort 3",
+    ]);
+  });
+
+  it("goes straight to every rung when there is nothing to set up", () => {
+    expect(walk({ setUpSteps: 0 })[0]).toBe("last resort 0");
+  });
+
+  it("calls stuck when nothing fires on an unfinished board", () => {
+    expect(walk({ setUpSteps: 0, stuckAt: 2 })).toEqual([
+      "last resort 0",
+      "last resort 1",
+      "stuck",
+    ]);
+  });
+});
+
+describe("availableStrikes", () => {
+  /** What each firing reads: its own cells, the premise a strike's evidence
+   * would name in a game. */
+  const ownCells = (live: readonly DeductionRecord[]) => live;
+  /** The firing a plan with no frontier takes: the first available one. */
+  const nextStrike = (
+    ops: DeductionRecord[],
+    grid: ArrayLike<number>,
+    pencil: ArrayLike<number>,
+    w: number,
+  ) => availableStrikes(ops, grid, pencil, w, ownCells)[0] ?? null;
+
   it("returns one firing's still-live elims and excludes dup-reason bookkeeping", () => {
     const [grid, pencil] = board(
       [0, 0, 0, 0],
@@ -390,6 +474,41 @@ describe("nextStrike", () => {
     // to cross out, whatever notes were left behind there.
     const [grid, pencil] = board([0, 3, 0, 0], [bits(1, 2), bits(1, 2), 0, 0]);
     expect(nextStrike([op("elim", 1, 0, 1, 0, "set")], grid, pencil, 2)).toBeNull();
+  });
+
+  it("offers a later firing whose premise no earlier firing has yet to strike", () => {
+    const [grid, pencil] = board([0, 0, 0, 0], [bits(1, 2), bits(1, 2), bits(1, 2), 0]);
+    const ops = [
+      op("elim", 0, 0, 1, 0, "set"), // first: always available
+      op("elim", 1, 0, 1, 1, "set"), // reads only (1,0): independent
+    ];
+    expect(
+      availableStrikes(ops, grid, pencil, 2, ownCells).map((f) => f[0].group),
+    ).toEqual([0, 1]);
+  });
+
+  it("withholds a later firing that reads a cell an earlier one has yet to strike", () => {
+    const [grid, pencil] = board([0, 0, 0, 0], [bits(1, 2), bits(1, 2), 0, 0]);
+    const ops = [op("elim", 0, 0, 1, 0, "set"), op("elim", 1, 0, 2, 1, "set")];
+    const readsBoth = () => [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+    ];
+    expect(
+      availableStrikes(ops, grid, pencil, 2, readsBoth).map((f) => f[0].group),
+    ).toEqual([0]);
+  });
+
+  it("withholds a later firing that names no premise, and ignores one off the board", () => {
+    const [grid, pencil] = board([0, 0, 0, 0], [bits(1, 2), bits(1, 2), 0, 0]);
+    const ops = [op("elim", 0, 0, 1, 0, "set"), op("elim", 1, 0, 2, 1, "set")];
+    expect(availableStrikes(ops, grid, pencil, 2, () => []).length).toBe(1);
+    // A clue at x = 2 would alias (0,1) if indexed blindly; (0,0) is pending.
+    const clueAndSelf = (live: readonly DeductionRecord[]) => [
+      { x: 2, y: -1 },
+      ...live,
+    ];
+    expect(availableStrikes(ops, grid, pencil, 2, clueAndSelf).length).toBe(2);
   });
 });
 

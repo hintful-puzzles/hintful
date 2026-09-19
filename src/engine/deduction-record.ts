@@ -3,8 +3,9 @@
  *
  * This is the seam between a game's *recording deduction pass* and the shared
  * hint-plan mechanics in [`candidate-hint.ts`](./candidate-hint.ts): every game
- * produces these from its own techniques, and the shared readers (`nextStrike`,
- * `nextPlace`, `firstUnreflectedPlaceIndex`) consume them uniformly.
+ * produces these from its own techniques, and the shared readers
+ * (`availableStrikes`, `nextPlace`, `firstUnreflectedPlaceIndex`) consume them
+ * uniformly.
  *
  * Nothing here is Latin — the reason is `unknown` precisely so each game
  * attaches its own — so it lives apart from `latin.ts`, and a non-Latin

@@ -34,27 +34,46 @@ its bias analysis and its stopping condition are all reusable here, and only its
 
 ## 2. The engine's ordering — only if 1.5 says proceed
 
-- [ ] 2.1 The candidate-enumeration hook on `deduceHintPlan`, used only when a plan is
-      built for a hint; absent it, today's order is unchanged.
-- [ ] 2.2 The comparator, with admissibility first. `order-hints-from-the-frontier`
-      D1–D6 hold the design; re-read D4 before touching anything a generator runs.
-- [ ] 2.3 The guard, seen to fail under a reversed comparator — and never a bare
-      distance assertion without an availability clause (D6 there).
+- [x] 2.1 The enumeration lives in the candidate plan, not on `deduceHintPlan`: none of
+      these games plans through `deduceHintPlan`, and each plan's choice points are its
+      rungs. `nakedSingles`, `availableStrikes` and `availablePlacements` list what each
+      rung could fire now, and only firings whose premise the board already shows. The
+      hint path only: the recording solvers and the generators are untouched (D4 there).
+- [x] 2.2 `HintFrontier` (`engine/hint-frontier.ts`): continuity with the plan's last
+      three steps first, most recent first, then the rung order, so a fresh plan opens
+      as before. The walk around it is `runCandidatePlan`: the loop six games had each
+      written moved into the engine, owner-directed mid-change ("refactor away from
+      just consistent idioms towards having the functionality in the framework"), and
+      the recorded decision not to build a shared driver is reversed in
+      `docs/games/hints.md`. Jumps fell from 48.4% to 35.9% of steps, and the avoidable
+      share of them from 23.0% to 5.8%.
+- [x] 2.3 `hint-frontier.test.ts`: every game that walks with `runCandidatePlan`
+      (derived from its source) is measured from outside by
+      `engine/testing/plan-continuity.ts`, bounding avoidable jumps below 10% (measured
+      3.9–8.3%, against 14.8–32.1% for the old order). All six games and both rule tests
+      failed under a reversed comparator. The availability clause is the instrument's
+      candidate definition, not a distance.
 
-## 3. Bound the journey
+## 3. Bound the journey — moved
 
-- [ ] 3.1 Decide whether a 55-leg journey is a defect, by walking one in the running
-      app rather than by reading a leg count. It is walked at one step per press, so
-      the question is whether it reads as a long chain or as a wall.
-- [ ] 3.2 If it needs bounding: cap a journey, or spread a note back across the firings
-      between its discovery and its use. Either way say what the player sees instead.
+- [~] 3.1–3.2 Moved to `bound-loopy-note-journeys`. They are Loopy's, they share
+      nothing with the cell-game ordering, and 3.1 is a judgment the earlier campaign
+      left to the owner (does a 55-leg walked journey read as a chain or as a wall), so
+      they should not hold this change open.
 
-## 4. Widen the note placement (carried 3.4)
+## 4. Widen the note placement (carried 3.4) — moved
 
-- [ ] 4.1 An expiring note placed at the **latest** position its explanation still
-      describes. Gated on 3.1 — it concentrates notes onto their consumers harder.
-- [ ] 4.2 Widen the `ts-engine` note-placement requirement to match, and re-measure the
-      rate the guard in `loopy-hint.test.ts` holds.
+- [~] 4.1–4.2 Moved to `bound-loopy-note-journeys` with §3, which gates them.
+
+## 6. Found on the way
+
+- [x] 6.1 Solo's hint threw on one fresh Killer board in six: the notes culls ignored
+      the cage, which forbids repeats. Fixed in its own commit, with the lesson in
+      `docs/games/hints.md` § "Candidate-elimination games".
+- [x] 6.2 Two live requirements contradicted the code: "A shared cell-region helper"
+      (by that fix) and "Latin-family hints distinguish naked, hidden and forced
+      singles" (by `strike-before-forced-singles`, which retired the third kind and left
+      the requirement describing it). Both are replaced in this change's delta.
 
 ## 5. Not here
 

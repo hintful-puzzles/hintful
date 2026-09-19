@@ -12,15 +12,17 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAllMove,
+  availableStrikes,
   candidateHint,
   emitObviousCleanStep,
   keepCandidateHintTrack,
   lazyPopulate,
-  nakedSingle,
-  nextPlace,
-  nextStrike,
+  type Mark,
+  nakedSingles,
+  populateThenClean,
   refreshCandidateHintStep,
   regionDuplicateMarks,
+  runCandidatePlan,
 } from "../../engine/candidate-hint.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
@@ -34,11 +36,9 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import type { FrontierCandidate } from "../../engine/hint-frontier.ts";
 import { digitKeys, pencilModeKey } from "../../engine/key-labels.ts";
-import {
-  classifyPlacementInRegions,
-  forcingChainArea,
-} from "../../engine/latin-hint.ts";
+import { availablePlacements, forcingChainArea } from "../../engine/latin-hint.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
@@ -61,7 +61,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import type { ConfigValues, KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newSoloDesc } from "./generator.ts";
 import { say } from "./hint-text.ts";
@@ -388,7 +387,7 @@ function regionCells(region: SoloRegion, state: SoloState): Point[] {
 /** The regions of cell `(x, y)` that hold every digit exactly once, in
  * narration-preference order (row, column, sub-block, then the X diagonals it
  * lies on), each with its `SoloRegion` tag for naming. What the placement
- * classifier ({@link soloPlacementReason}) reads: a digit with one home left in
+ * classifier (`availablePlacements`) reads: a digit with one home left in
  * such a region must go there. The culls read {@link noRepeatRegionsOf}. */
 function regionsOf(
   state: SoloState,
@@ -439,22 +438,17 @@ function noRepeatRegionNames(state: SoloState, at?: Point): string[] {
   return names;
 }
 
-/** Re-derive *why* a generic-`single` placement is forced, from the working board
- * (the recorded `place` carries a bare `single`, conflating naked and hidden
- * singles): a naked single (the cell's notes collapsed to one) or a hidden single
- * in a row/column/sub-block/diagonal. */
-function soloPlacementReason(
-  wGrid: Int8Array,
-  wPen: Int32Array,
-  x: number,
-  y: number,
+/** The reason a single of `n` narrates as, once `availablePlacements` has
+ * re-derived *why* it is forced from the working board (the recorded `place`
+ * carries a bare `single`, conflating naked and hidden singles): a naked single
+ * (the cell's notes collapsed to one) or a hidden single in a
+ * row/column/sub-block/diagonal. */
+function soloSingleReason(
   n: number,
-  state: SoloState,
+  why: { kind: "naked" } | { kind: "hidden"; region: { region: SoloRegion } },
 ): SoloReason {
-  const cell = y * state.cr + x;
-  const c = classifyPlacementInRegions(wGrid, wPen, cell, n, regionsOf(state, x, y));
-  if (c.kind === "naked") return { kind: "single" };
-  return { kind: "hiddenSingle", n, region: c.region.region };
+  if (why.kind === "naked") return { kind: "single" };
+  return { kind: "hiddenSingle", n, region: why.region.region };
 }
 
 /** Narrate *why* a firing is forced (docs/games/hints.md § "Writing the narration"): indication → reasoning →
@@ -648,85 +642,73 @@ function buildSteps(
     steps,
     say.populate,
   );
-  // The obvious-candidate cleanup is emitted once, right after notes first exist
-  // (just populated, or already present on a pre-noted board) — see step 3.
-  let cleaned = false;
 
   let ops = recOps();
-  const budget = stepBudget("solo hint plan");
-  const cap = cr * cr * cr * 4 + 4;
-  for (let guard = 0; guard < cap; guard++) {
-    budget.tick();
-    if (!wGrid.includes(0)) break;
-
-    // 1. A naked single — the next move a human makes.
-    const ns = nakedSingle(wGrid, wPen, cr);
-    if (ns) {
-      emitPlacement(
-        steps,
-        wGrid,
-        wPen,
-        state,
-        ns.x,
-        ns.y,
-        ns.n,
-        { kind: "single" },
-        autoClean,
-      );
+  const placing = (m: Mark, reason: SoloReason): FrontierCandidate => ({
+    reads: [m, ...placementArea(reason, state)],
+    take: () => {
+      emitPlacement(steps, wGrid, wPen, state, m.x, m.y, m.n, reason, autoClean);
       ops = recOps();
-      continue;
-    }
+    },
+  });
 
-    // 2. Pencil in the notes (once) before any elimination needs them.
-    if (!pop.done()) {
-      pop.ensure();
-      continue;
-    }
+  // 1. A naked single — the next move a human makes.
+  const singles = () =>
+    nakedSingles(wGrid, wPen, cr).map((ns) => placing(ns, { kind: "single" }));
 
-    // 3. Once notes exist (just populated, or already present), bulk-clear the
-    // obvious candidates in one step — the adaptive Mark-all second press — then
-    // the walk goes straight to the real techniques (later placements keep notes
-    // clean via `emitPlacement`).
-    if (!cleaned) {
-      cleaned = true;
-      if (
-        emitObviousCleanStep(
-          steps,
-          wGrid,
-          wPen,
-          cr,
-          (x, y) => noRepeatRegionsOf(state, x, y),
-          say.cleanObvious(noRepeatRegionNames(state)),
-        )
-      ) {
-        continue;
-      }
-    }
+  // 2. Pencil in the notes (once) before any elimination needs them, then (once)
+  // bulk-clear the obvious candidates in one step — the adaptive Mark-all second
+  // press — so the walk goes straight to the real techniques (later placements
+  // keep notes clean via `emitPlacement`).
+  const setUp = populateThenClean(pop, () =>
+    emitObviousCleanStep(
+      steps,
+      wGrid,
+      wPen,
+      cr,
+      (x, y) => noRepeatRegionsOf(state, x, y),
+      say.cleanObvious(noRepeatRegionNames(state)),
+    ),
+  );
 
-    // 4. The next deductive elimination (the technique worth teaching).
-    const cs = nextStrike(ops, wGrid, wPen, cr);
-    if (cs) {
-      emitStrikeJourney(steps, wPen, state, cs);
-      continue;
-    }
+  // 3. The deductive eliminations (the techniques worth teaching).
+  const strikes = () =>
+    availableStrikes(ops, wGrid, wPen, cr, (live) => [
+      ...reasonArea(live[0].reason, state),
+      ...live,
+    ]).map(
+      (cs): FrontierCandidate => ({
+        reads: [...reasonArea(cs[0].reason, state), ...cs],
+        take: () => emitStrikeJourney(steps, wPen, state, cs),
+      }),
+    );
 
-    // 5. A forced placement (a cube collapse the notes lag) — re-derive *why*
-    // (naked vs hidden single) from the working board for the generic singles;
-    // a killer placement keeps its recorded cage reason.
-    const pl = nextPlace(ops, wGrid, cr);
-    if (pl) {
-      const reason =
-        pl.reason.kind === "single"
-          ? soloPlacementReason(wGrid, wPen, pl.x, pl.y, pl.n, state)
-          : pl.reason;
-      emitPlacement(steps, wGrid, wPen, state, pl.x, pl.y, pl.n, reason, autoClean);
-      ops = recOps();
-      continue;
-    }
+  // 4. The forced placements (a cube collapse the notes lag) — re-derive *why*
+  // (naked vs hidden single) from the working board for the generic singles;
+  // a killer placement keeps its recorded cage reason.
+  const places = (nothingEarlier: boolean) =>
+    availablePlacements(
+      ops,
+      wGrid,
+      wPen,
+      cr,
+      (x, y) => regionsOf(state, x, y),
+      nothingEarlier,
+    ).map(({ op, why }) =>
+      placing(op, why.kind === "recorded" ? op.reason : soloSingleReason(op.n, why)),
+    );
 
-    break; // stuck (e.g. an Unreasonable board now needing a guess)
-  }
-
+  // Stops when nothing fires (e.g. an Unreasonable board now needing a guess).
+  runCandidatePlan({
+    w: cr,
+    steps,
+    finished: () => !wGrid.includes(0),
+    label: "solo hint plan",
+    cap: cr * cr * cr * 4 + 4,
+    opening: [singles],
+    setUp,
+    rungs: [singles, strikes, places],
+  });
   return steps;
 }
 

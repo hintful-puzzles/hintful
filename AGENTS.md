@@ -120,6 +120,19 @@ guard rather than skipping it. **Derive the exception from a declaration the gam
 already makes** — an exemption roster rots exactly as quietly as the membership
 roster it replaced.
 
+**A consistent idiom is not the finish line; the framework owning it is**
+(owner, 2026-09-19: *"whenever possible, please refactor away from just
+consistent idioms towards having the functionality in the framework"*). When
+several games write the same loop, the same sequence of helper calls or the
+same bookkeeping, even identically and even well, that is a convention the
+games are each re-implementing, and it belongs in the engine with the games
+supplying only what is theirs. The candidate hint plans are the case: six games
+each wrote the loop around their rungs until `runCandidatePlan` took it, and an
+earlier decision not to build that driver (a "callback shell over a six-line
+loop") was reversed once the loop carried the frontier, the setup phases and
+the rung ordering. Re-read any recorded "deliberately not shared" in that light
+rather than inheriting it.
+
 **A game joins a shared mechanic by *having* it, never by declaring that it
 has it.** Carrying the `Ui` fields, calling the arm, declaring the method — that
 *is* the enrollment, and a cross-game guard finds its population by reading what

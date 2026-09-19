@@ -12,18 +12,20 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAllMove,
+  availableStrikes,
   type CandidateMoveAdapter,
   candidateHint,
   emitObviousCleanStep,
   firstUnreflectedPlaceIndex,
   keepCandidateHintTrack,
   lazyPopulate,
-  nakedSingle,
-  nextPlace,
-  nextStrike,
+  type Mark,
+  nakedSingles,
   obviousCandidateMarks,
+  populateThenClean,
   refreshCandidateHintStep,
   regionDuplicateMarks,
+  runCandidatePlan,
 } from "../../engine/candidate-hint.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import {
@@ -36,15 +38,18 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import type { FrontierCandidate } from "../../engine/hint-frontier.ts";
 import { narrateLatinReason } from "../../engine/hint-text.ts";
 import { clearKey, pencilModeKey } from "../../engine/key-labels.ts";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, latinVerdict } from "../../engine/latin.ts";
 import {
+  availablePlacements,
   forcingChainArea,
   hiddenSingleLine,
   rowColRegions,
   type SingleReason,
   singlePlacementReason,
+  singleReasonOf,
 } from "../../engine/latin-hint.ts";
 import {
   pressNoteTakingCell,
@@ -65,7 +70,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import type { ConfigValues, KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newGameDesc } from "./generator.ts";
 import { groupVocab, say } from "./hint-text.ts";
@@ -691,88 +695,126 @@ function buildSteps(state: GroupState): HintStep<GroupMove, GroupHint>[] {
   );
   let ops = recordGroupDeductions(wGrid, w, maxdiff);
 
-  const budget = stepBudget("group hint plan");
-  const cap = w * w * w * 4 + 4;
-  for (let guard = 0; guard < cap; guard++) {
-    budget.tick();
-    if (!wGrid.includes(0)) break;
-
-    // 1. A naked single — the next move a human makes.
-    const ns = nakedSingle(wGrid, wPen, w);
-    if (ns) {
-      emitPlacement(steps, wGrid, wPen, w, id, ns.x, ns.y, ns.n, { kind: "single" });
+  const placing = (m: Mark, reason: NarratableReason): FrontierCandidate => ({
+    reads: [m, ...reasonArea(reason, w)],
+    take: () => {
+      emitPlacement(steps, wGrid, wPen, w, id, m.x, m.y, m.n, reason);
       ops = recordGroupDeductions(wGrid, w, maxdiff);
-      continue;
-    }
+    },
+  });
+  const placingOp = (op: HintOp): FrontierCandidate => ({
+    reads: [op, ...reasonArea(op.reason as NarratableReason, w)],
+    take: () => {
+      emitPlacementOp(steps, wGrid, wPen, w, id, ops, op);
+      ops = recordGroupDeductions(wGrid, w, maxdiff);
+    },
+  });
+  const regions = (x: number, y: number) => rowColRegions(x, y, w);
 
-    // 2. Notes still carrying a value already placed in their row or column —
-    //    the player's own, or just filled in by a populate — are struck before
-    //    anything else. Every placement below is narrated from the notes as a
-    //    naked or hidden single, and the solver's cube never holds those values,
-    //    so a placement it forces could otherwise rest on strikes the board does
-    //    not show. A no-op on a note-free board.
-    if (
-      emitObviousCleanStep(
-        steps,
-        wGrid,
-        wPen,
-        w,
-        (x, y) => rowColRegions(x, y, w),
-        say.cleanObvious,
+  // 1. A naked single — the next move a human makes.
+  const singles = () =>
+    nakedSingles(wGrid, wPen, w).map((ns) => placing(ns, { kind: "single" }));
+
+  // 2. A placement is the solver's immediate next deduction (nothing precedes
+  //    it in solver order) — teach it directly, no notes needed (placement-
+  //    first: Group's associativity / identity fill lead, not a populate).
+  //    `ops.length > 0` is load-bearing: `firstUnreflectedPlaceIndex` returns
+  //    `ops.length` for "no placement", which is 0 when `ops` is empty, and
+  //    that is ordinary on an Unreasonable board, whose rungs the cap withholds.
+  //    Any associativity placement is available once the three products it
+  //    reads are all on the board, since those are its whole premise. Before
+  //    the notes are in, so is any recorded single the player can read off
+  //    the board; once they are, singles wait behind the strikes as in rung 5.
+  const leads = () => {
+    const out: FrontierCandidate[] = [];
+    const lead = ops.length > 0 && firstUnreflectedPlaceIndex(ops, wGrid, w) === 0;
+    if (lead) out.push(placingOp(ops[0]));
+    for (const op of ops)
+      if (
+        (op !== ops[0] || !lead) &&
+        op.kind === "place" &&
+        op.reason.kind === "associativity" &&
+        wGrid[op.y * w + op.x] === 0 &&
+        reasonArea(op.reason, w).every((p) => wGrid[p.y * w + p.x] !== 0)
       )
-    )
-      continue;
+        out.push(placingOp(op));
+    if (!pop.done())
+      for (const { op, why } of availablePlacements(
+        ops,
+        wGrid,
+        visibleCandidates(wGrid, wPen, w),
+        w,
+        regions,
+        false,
+      ))
+        if (why.kind !== "recorded" && (op !== ops[0] || !lead))
+          out.push(placing(op, singleReasonOf(op.n, why)));
+    return out;
+  };
 
-    // 3. A placement is the solver's immediate next deduction (nothing precedes
-    //    it in solver order) — teach it directly, no notes needed (placement-
-    //    first: Group's associativity / identity fill lead, not a populate).
-    //    `ops.length > 0` is load-bearing: `firstUnreflectedPlaceIndex` returns
-    //    `ops.length` for "no placement", which is 0 when `ops` is empty, and
-    //    that is ordinary on an Unreasonable board, whose rungs the cap withholds.
-    if (ops.length > 0 && firstUnreflectedPlaceIndex(ops, wGrid, w) === 0) {
-      emitPlacementOp(steps, wGrid, wPen, w, id, ops, ops[0]);
-      ops = recordGroupDeductions(wGrid, w, maxdiff);
-      continue;
-    }
+  // 3. An elimination precedes the next placement (Group's identity-mark strike,
+  //    or a set/forcing cull) — its notes are what the strike crosses out, so
+  //    populate first, then strike the notes still carrying a value already
+  //    placed in their row or column — the player's own, or just filled in by
+  //    the populate. Every placement below is narrated from the notes as a naked
+  //    or hidden single, and the solver's cube never holds those values, so a
+  //    placement it forces could otherwise rest on strikes the board does not
+  //    show.
+  const setUp = populateThenClean(pop, () =>
+    emitObviousCleanStep(steps, wGrid, wPen, w, regions, say.cleanObvious),
+  );
 
-    // 4. An elimination precedes the next placement (Group's identity-mark strike,
-    //    or a set/forcing cull) — its notes are what the strike crosses out, so
-    //    populate first (step 2 then cleans the obvious culls), then teach the
-    //    deduction.
-    if (!pop.done()) {
-      pop.ensure();
-      continue;
-    }
-    const strike = nextStrike(ops, wGrid, wPen, w);
-    if (strike) {
+  // 4. The eliminations, then the teaching.
+  const strikes = () =>
+    availableStrikes(ops, wGrid, wPen, w, (live) => [
+      ...reasonArea(live[0].reason, w),
+      ...live,
+    ]).map((strike): FrontierCandidate => {
       const reason = strike[0].reason;
       const marks = strike.map((op) => ({ x: op.x, y: op.y, n: op.n }));
-      const values = marks.map((m) => m.n).sort((a, b) => a - b);
-      steps.push({
-        move: { type: "pencilStrike", marks },
-        explanation: narrate(reason, values, id),
-        highlights: {
-          area: reasonArea(reason, w),
-          targets: marks.map((m) => ({ x: m.x, y: m.y })),
-          marks,
+      return {
+        reads: [...reasonArea(reason, w), ...marks],
+        take: () => {
+          const values = marks.map((m) => m.n).sort((a, b) => a - b);
+          steps.push({
+            move: { type: "pencilStrike", marks },
+            explanation: narrate(reason, values, id),
+            highlights: {
+              area: reasonArea(reason, w),
+              targets: marks.map((m) => ({ x: m.x, y: m.y })),
+              marks,
+            },
+          });
+          for (const m of marks) wPen[m.y * w + m.x] &= ~(1 << m.n);
         },
-      });
-      for (const m of marks) wPen[m.y * w + m.x] &= ~(1 << m.n);
-      continue;
-    }
+      };
+    });
 
-    // 5. The strikes are exhausted; the placement they enabled (a forced single
-    //    the notes now reflect) is next.
-    const pl = nextPlace(ops, wGrid, w);
-    if (pl) {
-      emitPlacementOp(steps, wGrid, wPen, w, id, ops, pl);
-      ops = recordGroupDeductions(wGrid, w, maxdiff);
-      continue;
-    }
+  // 5. The placements the strikes enabled (a forced single the notes now
+  //    reflect), classified against what the player can read off the board.
+  const places = (nothingEarlier: boolean) =>
+    availablePlacements(
+      ops,
+      wGrid,
+      visibleCandidates(wGrid, wPen, w),
+      w,
+      regions,
+      nothingEarlier,
+    ).map(({ op, why }) =>
+      why.kind === "recorded" ? placingOp(op) : placing(op, singleReasonOf(op.n, why)),
+    );
 
-    break; // stuck (an Unreasonable board now needing a guess)
-  }
-
+  // Stops when nothing fires (an Unreasonable board now needing a guess).
+  runCandidatePlan({
+    w,
+    steps,
+    finished: () => !wGrid.includes(0),
+    label: "group hint plan",
+    cap: w * w * w * 4 + 4,
+    opening: [singles, leads],
+    setUp,
+    rungs: [singles, leads, strikes, places],
+  });
   return steps;
 }
 

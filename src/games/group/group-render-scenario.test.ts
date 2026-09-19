@@ -65,9 +65,16 @@ describe("group render scenarios", () => {
 
   it("an associativity hint frame rings the target and shades the known products", () => {
     // Scan Normal (identity-shown) seeds for a plan that reaches an associativity
-    // step, walking the plan to it (the fixed-seed scan + hintUntil idiom).
-    const isAssoc = (step: { explanation: string }) =>
-      /in any group/.test(step.explanation);
+    // step, walking the plan to it (the fixed-seed scan + hintUntil idiom). The
+    // step must have two premises side by side, which is what the contour
+    // assertion below is about.
+    const isAssoc = (step: { explanation: string; highlights?: unknown }) => {
+      if (!/in any group/.test(step.explanation)) return false;
+      const area = (step.highlights as { area: { x: number; y: number }[] }).area;
+      return area.some((a) =>
+        area.some((b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1),
+      );
+    };
     let frame: ReturnType<typeof renderScenario> | null = null;
     for (let n = 0; n < 40 && !frame; n++) {
       const r = renderScenario({

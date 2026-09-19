@@ -14,7 +14,8 @@
  * re-derivation, shared so every Latin game tells the truth the same way.
  */
 
-import type { NoteEncoding } from "./candidate-hint.ts";
+import { type NoteEncoding, nextPlace } from "./candidate-hint.ts";
+import type { DeductionRecord } from "./deduction-record.ts";
 import type { ForcingLink } from "./latin.ts";
 import type { OrderedCell } from "./overlay-sidecar.ts";
 import type { Point } from "./types.ts";
@@ -64,6 +65,26 @@ export function classifyPlacementInRegions<R extends ClassifyRegion>(
   regions: readonly R[],
   enc?: NoteEncoding,
 ): { kind: "naked" } | { kind: "hidden"; region: R } {
+  const c = placementInRegions(grid, pencil, cell, n, regions, enc);
+  if (c) return c;
+  throw new Error(
+    `hint plan: placing ${n} at cell ${cell} is neither a naked nor a hidden single ` +
+      "in the notes, so the plan skipped a strike it rests on",
+  );
+}
+
+/** {@link classifyPlacementInRegions} for a placement that may not be a single
+ * yet: `null` where it would throw. What a plan asks of a placement it is
+ * choosing *between*, where "not a single on these notes" means "not available
+ * now" rather than "the plan skipped a strike". */
+function placementInRegions<R extends ClassifyRegion>(
+  grid: ArrayLike<number>,
+  pencil: ArrayLike<number>,
+  cell: number,
+  n: number,
+  regions: readonly R[],
+  enc?: NoteEncoding,
+): { kind: "naked" } | { kind: "hidden"; region: R } | null {
   const bit = (enc?.bit ?? ((v: number): number => 1 << v))(n);
   if (pencil[cell] === bit) return { kind: "naked" };
   for (const region of regions) {
@@ -78,10 +99,64 @@ export function classifyPlacementInRegions<R extends ClassifyRegion>(
     }
     if (hidden) return { kind: "hidden", region };
   }
-  throw new Error(
-    `hint plan: placing ${n} at cell ${cell} is neither a naked nor a hidden single ` +
-      "in the notes, so the plan skipped a strike it rests on",
-  );
+  return null;
+}
+
+/** Why a placement a plan could take now is forced: a single the notes show, or
+ * (`recorded`) the solver's own reason, which the game keeps. */
+export type PlacementWhy<R> =
+  | { kind: "naked" }
+  | { kind: "hidden"; region: R }
+  | { kind: "recorded" };
+
+/**
+ * The recorded placements a plan could take now, in solver order — the choices
+ * `HintFrontier` picks among.
+ *
+ * A placement the solver records as a plain `single` is available whenever the
+ * notes show it as a naked or hidden single in one of `regionsOf` its cell; the
+ * solver's having placed it is what makes trusting the notes sound. A placement
+ * with a reason of its own (a clue or cage that forces it) rests on the solver's
+ * cube rather than on the notes, so it is offered only as the plan's last
+ * resort: the first unreflected placement, when `nothingElse` says every other
+ * rung of the plan came up empty.
+ *
+ * In that position a plain single the notes do not show is the plan having
+ * skipped a strike, and it is classified with the throwing
+ * {@link classifyPlacementInRegions}, so the cross-game hint walks stay the
+ * guard for it. Anywhere earlier it is merely not available yet: another
+ * rung's firing may be the very premise it waits on.
+ */
+export function availablePlacements<
+  Op extends DeductionRecord,
+  R extends ClassifyRegion,
+>(
+  ops: readonly Op[],
+  grid: ArrayLike<number>,
+  pencil: ArrayLike<number>,
+  w: number,
+  regionsOf: (x: number, y: number) => readonly R[],
+  nothingElse: boolean,
+  opts?: { enc?: NoteEncoding; placed?: ArrayLike<number> },
+): { op: Op; why: PlacementWhy<R> }[] {
+  const placed = opts?.placed ?? grid;
+  const first = nextPlace(ops, placed, w);
+  const out: { op: Op; why: PlacementWhy<R> }[] = [];
+  for (const op of ops) {
+    if (op.kind !== "place" || placed[op.y * w + op.x] !== 0) continue;
+    const cell = op.y * w + op.x;
+    const regions = regionsOf(op.x, op.y);
+    const lead = op === first && nothingElse;
+    if ((op.reason as { kind?: string }).kind !== "single") {
+      if (lead) out.push({ op, why: { kind: "recorded" } });
+      continue;
+    }
+    const why = lead
+      ? classifyPlacementInRegions(grid, pencil, cell, op.n, regions, opts?.enc)
+      : placementInRegions(grid, pencil, cell, op.n, regions, opts?.enc);
+    if (why) out.push({ op, why });
+  }
+  return out;
 }
 
 /** A row/column region tagged for narration: the cells of the line plus whether it
@@ -166,6 +241,16 @@ export function singlePlacementReason(
     case "hidden":
       return { kind: "hiddenSingle", n, line: c.line, index: c.index };
   }
+}
+
+/** The {@link SingleReason} a row/column single of `n` narrates as. */
+export function singleReasonOf(
+  n: number,
+  why: { kind: "naked" } | { kind: "hidden"; region: RowColRegion },
+): SingleReason {
+  return why.kind === "naked"
+    ? { kind: "single" }
+    : { kind: "hiddenSingle", n, line: why.region.line, index: why.region.index };
 }
 
 /** The cells of a hidden single's line — the whole row (`line: "row"`, `index` =

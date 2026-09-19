@@ -139,6 +139,32 @@ Two things the numbers say about *how* §2 should work:
   40.4% of the steps that continue none of them, so the frontier is the recent
   steps, most recent first, and not only the last one.
 
+## §2 — the frontier, measured the same way
+
+Same corpus, seeds and instrument, *mid* precision, after every game took its
+next firing through `HintFrontier`:
+
+| game | steps not continuing the last | …avoidable, before | …avoidable, after |
+|---|---|---|---|
+| Group | 49.4% | 22.5% | 8.8% |
+| Keen | 41.3% | 14.6% | 1.1% |
+| Salad | 21.7% | 32.5% | 5.7% |
+| Solo | 33.6% | 24.4% | 6.7% |
+| Towers | 25.6% | 26.2% | 2.7% |
+| Unequal | 37.6% | 25.2% | 8.4% |
+| **total** | **35.9%** (was 48.4%) | **23.0%** | **5.8%** |
+
+Avoidable jumps fell from about one hint in nine to one in fifty. The residual is
+firings the frontier is deliberately not offered: strikes recorded past the
+solver's next unmade placement (their premise may include that placement's
+culls), and singles the solver has not yet recorded (a single is trusted only
+when the solver placed it). Offering either would mean narrating a premise the
+code has not checked.
+
+The guard (`hint-frontier.test.ts`) measures a different corpus, every leaf
+preset with two seeds, where the old order measured 14.8–32.1% per game and the
+frontier 3.9–8.3%. It bounds each game below 10%.
+
 ## Found on the way
 
 **Solo's hint threw on one fresh 3x3 Killer board in six** ("placing 8 at cell 16

@@ -12,15 +12,17 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAllMove,
+  availableStrikes,
   candidateHint,
   emitObviousCleanStep,
   keepCandidateHintTrack,
   lazyPopulate,
-  nakedSingle,
-  nextPlace,
-  nextStrike,
+  type Mark,
+  nakedSingles,
+  populateThenClean,
   refreshCandidateHintStep,
   regionDuplicateMarks,
+  runCandidatePlan,
 } from "../../engine/candidate-hint.ts";
 import { digitValue } from "../../engine/decimal.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
@@ -33,14 +35,16 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import type { FrontierCandidate } from "../../engine/hint-frontier.ts";
 import { narrateLatinReason } from "../../engine/hint-text.ts";
 import { digitKeys, pencilModeKey } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
 import {
+  availablePlacements,
   forcingChainArea,
   hiddenSingleLine,
   rowColRegions,
-  singlePlacementReason,
+  singleReasonOf,
 } from "../../engine/latin-hint.ts";
 import {
   noOpEntryResult,
@@ -64,7 +68,6 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
 import type { ConfigValues, KeyLabel, Point } from "../../engine/types.ts";
 import { newKeenDesc } from "./generator.ts";
 import { say } from "./hint-text.ts";
@@ -469,79 +472,72 @@ function buildSteps(
     steps,
     say.populate,
   );
-  let cleaned = false; // see step 3
 
   let ops = recordKeenDeductions(w, state.clues, Uint8Array.from(wGrid), maxdiff);
-  const budget = stepBudget("keen hint plan");
-  const cap = w * w * w * 4 + 4;
-  for (let guard = 0; guard < cap; guard++) {
-    budget.tick();
-    if (!wGrid.includes(0)) break;
-
-    // 1. A naked single — the next move a human makes.
-    const ns = nakedSingle(wGrid, wPen, w);
-    if (ns) {
-      emitPlacement(
-        steps,
-        wGrid,
-        wPen,
-        w,
-        ns.x,
-        ns.y,
-        ns.n,
-        { kind: "single" },
-        autoClean,
-      );
+  const placing = (m: Mark, reason: HintReason): FrontierCandidate => ({
+    reads: [m, ...placementArea(reason, w)],
+    take: () => {
+      emitPlacement(steps, wGrid, wPen, w, m.x, m.y, m.n, reason, autoClean);
       ops = recordKeenDeductions(w, state.clues, Uint8Array.from(wGrid), maxdiff);
-      continue;
-    }
+    },
+  });
 
-    // 2. Pencil in the notes (once) before any elimination needs them.
-    if (!pop.done()) {
-      pop.ensure();
-      continue;
-    }
+  // 1. A naked single — the next move a human makes.
+  const singles = () =>
+    nakedSingles(wGrid, wPen, w).map((ns) => placing(ns, { kind: "single" }));
 
-    // 3. Once, as soon as notes exist (just populated, or already present),
-    // bulk-clear the obvious candidates in one step — the adaptive Mark-all
-    // second press. Later placements keep notes clean via `emitPlacement`.
-    if (!cleaned) {
-      cleaned = true;
-      if (
-        emitObviousCleanStep(
-          steps,
-          wGrid,
-          wPen,
-          w,
-          (x, y) => rowColRegions(x, y, w),
-          say.cleanObvious,
-        )
-      ) {
-        continue;
-      }
-    }
+  // 2. Pencil in the notes (once) before any elimination needs them, then (once)
+  // bulk-clear the obvious candidates in one step — the adaptive Mark-all second
+  // press. Later placements keep notes clean via `emitPlacement`.
+  const setUp = populateThenClean(pop, () =>
+    emitObviousCleanStep(
+      steps,
+      wGrid,
+      wPen,
+      w,
+      (x, y) => rowColRegions(x, y, w),
+      say.cleanObvious,
+    ),
+  );
 
-    // 4. The next cage elimination (the deduction worth teaching).
-    const cs = nextStrike(ops, wGrid, wPen, w);
-    if (cs) {
-      emitStrikeJourney(steps, wPen, w, cs);
-      continue;
-    }
+  // 3. The cage eliminations (the deductions worth teaching).
+  const strikes = () =>
+    availableStrikes(ops, wGrid, wPen, w, (live) => [
+      ...reasonArea(live[0].reason),
+      ...live,
+    ]).map(
+      (cs): FrontierCandidate => ({
+        reads: [...reasonArea(cs[0].reason), ...cs],
+        take: () => emitStrikeJourney(steps, wPen, w, cs),
+      }),
+    );
 
-    // 5. A forced placement (a cube collapse the notes lag) — re-derive *why*
-    // (naked vs hidden single) from the working board; the recorded `single`
-    // reason conflates the two and would mis-narrate a hidden single.
-    const pl = nextPlace(ops, wGrid, w);
-    if (pl) {
-      const reason = singlePlacementReason(wGrid, wPen, pl.x, pl.y, pl.n, w);
-      emitPlacement(steps, wGrid, wPen, w, pl.x, pl.y, pl.n, reason, autoClean);
-      ops = recordKeenDeductions(w, state.clues, Uint8Array.from(wGrid), maxdiff);
-      continue;
-    }
+  // 4. The forced placements (a cube collapse the notes lag) — re-derive *why*
+  // (naked vs hidden single) from the working board; the recorded `single`
+  // reason conflates the two and would mis-narrate a hidden single.
+  const places = (nothingEarlier: boolean) =>
+    availablePlacements(
+      ops,
+      wGrid,
+      wPen,
+      w,
+      (x, y) => rowColRegions(x, y, w),
+      nothingEarlier,
+    ).map(({ op, why }) =>
+      placing(op, why.kind === "recorded" ? op.reason : singleReasonOf(op.n, why)),
+    );
 
-    break; // stuck (e.g. an Unreasonable board now needing a guess)
-  }
-
+  // Stops when nothing fires (e.g. an Unreasonable board now needing a guess).
+  runCandidatePlan({
+    w,
+    steps,
+    finished: () => !wGrid.includes(0),
+    label: "keen hint plan",
+    cap: w * w * w * 4 + 4,
+    opening: [singles],
+    setUp,
+    rungs: [singles, strikes, places],
+  });
   return steps;
 }
 

@@ -442,20 +442,34 @@ the player can already see — a later step may cite it. See
 
 ### `candidate-hint.ts` — candidate-elimination plan plumbing
 
-The shared mechanics for pencil-notes games (naked-single finder,
-lazy-populate check, next-strike/next-place lookups, the obvious-clean step —
+The shared mechanics for pencil-notes games (the plan walk `runCandidatePlan`
+with its `populateThenClean` setup, the naked singles and the available
+strikes a plan could take now, lazy-populate check, next-place lookup, the
+obvious-clean step —
 `emitObviousCleanStep` where the obvious strikes are region duplicates,
 `obviousCleanStep` where the game computes its own — generic
 `keepCandidateHintTrack`/`refreshCandidateHintStep`). A board scan reads
-`grid.length`, so a board need not be square; `w` is only the row stride. The
-per-game `buildSteps` walk is deliberately *not* shared — see
-[`hints.md`](./hints.md) § "Candidate-elimination games".
+`grid.length`, so a board need not be square; `w` is only the row stride. A
+game's `buildSteps` supplies its rungs and hands them to `runCandidatePlan` —
+see [`hints.md`](./hints.md) § "Candidate-elimination games".
+
+### `hint-frontier.ts` — which available firing a plan takes next
+
+`HintFrontier` takes, among the firings a candidate plan could make at once,
+the one continuing from what the plan's latest steps wrote, with the game's
+rung order as the tiebreak; `runCandidatePlan` hands it each rung's list of
+candidates the game can vouch for (`nakedSingles`, `availableStrikes`,
+`availablePlacements`). The game still owns which firings exist and what each
+reads. See
+[`hints.md`](./hints.md) § "Continue from the last step".
 
 ### `latin-hint.ts` — truthful Latin single classification
 
-Re-derives whether a recorded `single` is **naked**, **hidden**, or **forced**
-from the working board, so no Latin game narrates "every other number has been
-ruled out in this cell" at a cell visibly holding several candidates. The
+Re-derives whether a recorded `single` is **naked** or **hidden** from the
+working board, so no Latin game narrates "every other number has been ruled
+out in this cell" at a cell visibly holding several candidates, and throws on a
+placement that is neither, which is a strike the plan skipped.
+`availablePlacements` lists the recorded placements a plan could take now. The
 sentences it classifies for are `hint-text.ts`'s.
 
 ### `hint-text.ts` — the sentences several games share
