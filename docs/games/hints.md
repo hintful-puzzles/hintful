@@ -1984,19 +1984,26 @@ fact as a note. What transfers, in [`games/loopy/`](../../src/games/loopy/):
   than the fact kind.** A fact only accumulates, so deferring a note can never make
   it underivable — what can expire is the *sentence*, which quotes the board
   ("only these two of this 3's edges are still open"). So `planSteps` slots each
-  fact at the first firing whose `closure` contains it, and leaves it at
-  `LoopyRecorder.tickOf` — the plan position the solver found it at — only where
-  `sentenceExpires` says the narration would go stale by then. The classification
-  does **not** follow `fact.kind`: `cornerFromClue` has an expiring branch,
-  `pairAtCorner` is monotone, and an "at most" bound reads like a live count while
-  actually only loosening as the board fills. Grouping by discovery instead put a
-  note a median of 15 firings from the deduction that used it, worst case 143, which
-  is what makes a corner note on a `1` read as an unmotivated triviality;
-  `loopy-hint.test.ts` holds the rate at which a note sits with a firing that cites
-  it, rather than a rule per note, because a legitimately expiring sentence, an
-  ancestor pulled back ahead of its dependent and a composed `chainPair` leg are all
-  separations that are correct. A note never precedes a note it cites, and each
-  firing's notes plus the firing form one journey (§ "A journey completes leg by
+  fact at the first firing whose `closure` contains it, or — where
+  `sentenceExpires` says the narration can go stale — at the latest position
+  `sentenceHolds` still finds it true, walking forward from
+  `LoopyRecorder.tickOf`. The classification does **not** follow `fact.kind`:
+  `cornerFromClue` has an expiring branch, `pairAtCorner` is monotone, and an "at
+  most" bound reads like a live count while actually only loosening as the board
+  fills. Grouping by discovery instead put a note a median of 15 firings from the
+  deduction that used it, worst case 143, which is what makes a corner note on a
+  `1` read as an unmotivated triviality. A note never precedes a note it cites.
+- **A journey is one deduction, not one firing's worth of notes.** The notes
+  placed at one position are split by `deductions` into the separate derivations
+  they make — facts joined by what they cite — and each derivation is its own
+  journey, ordered a branch at a time so each leg follows from the one before. A
+  line resting on a single derivation arrives as its last leg; a line combining
+  several stands alone after them. Putting every note a line rests on into one
+  journey read as a tour of the board: on a 10×10 Hard replay, 23 of 154 notes
+  rode in a journey whose line did not cite them, and 28 legs jumped four or more
+  edges from the leg before; splitting took both to zero and the longest journey
+  from 55 legs to 16. `loopy-hint.test.ts` asserts each journey is one connected
+  derivation holding only what its line rests on (§ "A journey completes leg by
   leg").
 - **Place only what some line rests on.** The recorder derives far more than any
   line uses. The plan takes the union of every line firing's closure and places

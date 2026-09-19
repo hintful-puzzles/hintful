@@ -3,38 +3,54 @@
 ## Why
 
 `order-hints-from-the-frontier` moved each of Loopy's notes to the firing that
-cites it, and that made the notes arrive with their consumer: 24.1% of notes did
+cites it, which made the notes arrive with their consumer: 24.1% of notes did
 before, 80.9% after. It also concentrated them. `firstUse` puts every fact a
-firing cites onto that firing, so a firing citing many previously-uncited facts
-opens one long journey: **hint 112 of the 10×10 Hard replay is 55 legs**, 54 notes
-and then one line (`order-hints-from-the-frontier/findings.md` § 6.1). Nothing
-bounds it.
+firing cites onto that firing, so hint 112 of the 10×10 Hard replay became one
+55-leg journey (`order-hints-from-the-frontier/findings.md` § 6.1), and it was
+filed open for the owner to judge.
 
-A journey is walked, one leg per press, not dumped, so 55 legs is roughly a minute
-under Auto-Hint rather than a wall of moves at once. Whether it *reads* as a long
-chain or as a wall is the owner's call, and the earlier change filed it open for
-that reason.
+Walking the replay in the app, the owner stopped earlier, at a 15-leg journey
+around move 29, because it **jumped around the board**: its legs visited four
+different clues before the line they led up to. Measured on that board (seed
+`frontier-squares-10x10-hard-replay-a`, 2026-09-19):
 
-The residual 19% of notes still placed where the solver found them waits on the
-same answer. Those are the notes whose sentence names which edges are still open,
-and placing each at the latest position its sentence still describes would
-concentrate notes onto their consumers even harder.
+- **23 of 154 notes rode in a journey whose line does not cite them.** They were
+  notes whose sentence can go stale ("already give it 2", "only these two edges
+  are still open"), left at the position the solver found them, which is wherever
+  its whole-board sweep happened to be before the next line. They also pulled back
+  the monotone notes they cite. In the owner's journey, 8 of its 12 notes were of
+  that kind.
+- **Every journey with a jump of four or more edges carried such notes**, and no
+  journey without them jumped at all.
+- Even the cited notes came out in discovery order, which interleaves independent
+  branches of one derivation.
 
-Carried from `sequence-hints-in-cell-games` §3–§4, where it had been scheduled
-beside the cell-game ordering it shares nothing with.
+Owner, on seeing it: the journey "looks like a combination of at least 2 smaller
+ones, and I think it would be better to present it as such to the player."
 
 ## What changes
 
-Gated on the owner's read of a long journey in the running app:
+- **A journey is one deduction.** The notes placed at one plan position split into
+  the separate derivations they make (facts joined by what they cite), and each is
+  its own journey, ordered a branch at a time. A line resting on one derivation
+  arrives as its last leg; a line combining several stands alone after them. A
+  note its line does not rest on is never inside that line's journey.
+- **A note whose sentence can go stale is placed at the latest position the
+  sentence still describes**, walking forward from where it was found towards its
+  consumer, instead of staying where it was found (the old task 3.4).
+- The `ts-engine` requirement "A note a hint asks for is placed beside the step
+  that uses it" drops "a note is part of its consumer's journey rather than a step
+  of its own", which this replaces.
 
-- **If a long journey reads fine**, nothing is bounded, and the residual notes
-  move to the latest position their explanation still describes.
-- **If it reads as a wall**, either cap a journey or spread a note back across
-  the firings between its discovery and its use, saying what the player sees
-  instead. The widened placement then follows under whichever bound is chosen.
+Measured after, on the replay board and three more 10×10 Hard boards: notes in a
+journey whose line does not cite them 23 → 0; in-journey jumps of four or more edges
+28 → 0 on the replay and 36 → 2 across the others; longest journey 55 → 16 legs.
 
 ## What this does not do
 
+- **Not a cap on journey length.** Splitting took the 55-leg journey to 16. Whether
+  a 16-leg derivation still wants bounding is the owner's read in the app, not a
+  number.
 - **Not the extraction of Loopy's note placement into the engine.** One member,
   no shared fact graph (`sequence-hints-in-cell-games` D5). The trigger is a
   second game recording derived facts as notes.

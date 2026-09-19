@@ -259,6 +259,58 @@ describe("Loopy hint: a step reasons only from notes on the board", () => {
     expect(pairs, "the corpus cited no pair note").toBeGreaterThan(20);
   });
 
+  /**
+   * A note that can go stale is placed as late as its sentence allows. This reads
+   * the pair sentences' premise straight off the board each note is shown on —
+   * "only these two of its edges are still open", "it has four open edges" — rather
+   * than through `sentenceHolds`, which is what placed them. On this corpus every
+   * such note still holds when its line comes, so the placement's stop is not
+   * reached here; what this holds is that moving notes later never outran it.
+   */
+  it("a pair note that can go stale is true of the board it is shown on", () => {
+    let checked = 0;
+    let moved = 0;
+    for (const b of corpus()) {
+      const { facts, tickOf } = deduceLoopyPlan(b.state);
+      const g = b.state.grid;
+      let state = b.state;
+      let firings = 0;
+      for (const step of stepsOf(b.state)) {
+        const move = step.move;
+        if (move.kind === "pair") {
+          const lines = state.lines;
+          const open = (edges: readonly ({ index: number } | null)[]) =>
+            edges.filter((e) => e !== null && lines[e.index] === LINE_UNKNOWN).length;
+          facts.forEach((f, id) => {
+            if (f.kind !== "relation" || f.why.kind === "note") return;
+            if (new Set([...f.edges, move.a, move.b]).size !== 2) return;
+            if (firings > tickOf[id]) moved++;
+            const w = f.why;
+            let holds = true;
+            if (w.kind === "faceParity") holds = open(g.faces[w.face].edges) === 2;
+            else if (w.kind === "dotParity") holds = open(g.dots[w.dot].edges) === 2;
+            else if (w.kind === "faceLink") holds = open(g.faces[w.face].edges) === 4;
+            else if (w.kind === "dotLink") holds = open(g.dots[w.dot].edges) === 4;
+            else return;
+            checked++;
+            if (w.kind === "faceParity" || w.kind === "dotParity") {
+              holds &&= f.edges.every((e) => lines[e] === LINE_UNKNOWN);
+            }
+            expect(
+              holds,
+              `${b.name}: "${step.explanation}" is shown after it stopped being true`,
+            ).toBe(true);
+          });
+        } else if (move.kind === "set") {
+          firings++;
+        }
+        state = loopyGame.executeMove(state, move);
+      }
+    }
+    expect(checked, "no pair note that can go stale was shown").toBeGreaterThan(20);
+    expect(moved, "no note moved past where it was found").toBeGreaterThan(0);
+  });
+
   it("every step changes the board: no note is placed twice", () => {
     for (const { b, step, state, i } of walk()) {
       const next = loopyGame.executeMove(state, step.move);
@@ -275,9 +327,9 @@ describe("Loopy hint: a step reasons only from notes on the board", () => {
    * an unmotivated triviality. The claim is a **rate over the corpus** rather than a
    * rule per note, because two separations are legitimate:
    *
-   * - a note whose *sentence* would stop being true as the board fills — "only these
-   *   two of this 3's edges are still open" — stays where the solver found it, the
-   *   last position its premise describes;
+   * - a note whose *sentence* stops being true as the board fills — "only these two
+   *   of this 3's edges are still open" — sits at the last position it describes,
+   *   which falls short of its consumer when a firing between settles one of them;
    * - a note pulled back to sit ahead of a note that cites it, so that no note ever
    *   follows one resting on it;
    * - a pair `chainPair` composes for the two ends of a relation chain, which backs
@@ -365,32 +417,103 @@ describe("Loopy hint: a step reasons only from notes on the board", () => {
     ).toBeGreaterThan(0.5);
   });
 
-  it("each firing and the notes before it form one journey", () => {
-    let journeys = 0;
+  it("a journey is one deduction: one connected derivation, and only what its line rests on", () => {
+    let lineJourneys = 0;
     let withNotes = 0;
+    let noteOnly = 0;
+    let lineAlone = 0;
     for (const b of corpus()) {
-      let group: Step[] = [];
-      for (const step of stepsOf(b.state)) {
-        group.push(step);
-        if (step.move.kind !== "set" && step.move.kind !== "solve") continue;
-        journeys++;
-        if (group.length > 1) withNotes++;
+      const { plan, facts } = deduceLoopyPlan(b.state);
+      const cites = (id: number): readonly number[] => {
+        const f = facts[id];
+        return f.kind === "corner" && f.why.kind === "clue"
+          ? [...f.parents, ...f.why.witness.corners]
+          : f.parents;
+      };
+      /** The recorded facts a note move places, and no fact an earlier move did;
+       * empty for a composed pair. */
+      const done = new Set<number>();
+      const placing = (move: LoopyMove): number[] => {
+        const ids = facts.flatMap((f, id) => {
+          if (f.why.kind === "note" || done.has(id)) return [];
+          if (move.kind === "corner") {
+            const bit = f.kind === "corner" && f.bound === "atMostOne" ? 2 : 1;
+            return f.kind === "corner" && f.dline === move.dline && move.bits & bit
+              ? [id]
+              : [];
+          }
+          if (move.kind !== "pair" || f.kind !== "relation") return [];
+          const [x, y] = f.edges;
+          return (x === move.a && y === move.b) || (x === move.b && y === move.a)
+            ? [id]
+            : [];
+        });
+        for (const id of ids) done.add(id);
+        return ids;
+      };
+
+      const steps = stepsOf(b.state);
+      let k = 0;
+      let firing = 0;
+      while (k < steps.length) {
+        const legs = [steps[k++]];
+        while (k < steps.length && steps[k].continuesPrevious) legs.push(steps[k++]);
+        const at = `${b.name}: the journey led by "${legs[0].explanation}"`;
+        const last = legs[legs.length - 1];
+        const line = last.move.kind === "set" || last.move.kind === "solve";
         expect(
-          group[0].continuesPrevious,
-          `${b.name}: "${group[0].explanation}" leads its journey`,
-        ).not.toBe(true);
-        for (const leg of group.slice(1)) {
-          expect(
-            leg.continuesPrevious,
-            `${b.name}: "${leg.explanation}" continues its journey`,
-          ).toBe(true);
+          legs
+            .slice(0, -1)
+            .some((l) => l.move.kind === "set" || l.move.kind === "solve"),
+          `${at} draws a line before its last leg`,
+        ).toBe(false);
+        const notes = legs
+          .filter((l) => l !== last || !line)
+          .map((l) => placing(l.move));
+
+        if (line) {
+          lineJourneys++;
+          if (legs.length > 1) withNotes++;
+          else lineAlone++;
+          const closure = new Set(plan[firing].closure);
+          for (const ids of notes) {
+            if (ids.length === 0) continue;
+            expect(
+              ids.some((id) => closure.has(id)),
+              `${at} places a note its line does not rest on`,
+            ).toBe(true);
+          }
+          firing++;
+        } else {
+          noteOnly++;
         }
-        group = [];
+
+        // One derivation: the facts the notes place are joined only by what they
+        // cite, never through the line — a line resting on two derivations comes
+        // after them on its own.
+        const placed = new Set(notes.flat());
+        if (placed.size === 0) continue;
+        const root = new Map([...placed].map((id) => [id, id]));
+        const find = (id: number): number => {
+          let r = id;
+          while (root.get(r) !== r) r = root.get(r) as number;
+          return r;
+        };
+        const join = (x: number, y: number) => root.set(find(x), find(y));
+        for (const id of placed)
+          for (const c of cites(id)) if (placed.has(c)) join(id, c);
+        for (const ids of notes) for (const id of ids) join(id, ids[0]);
+        const groups = new Set([...placed].map(find));
+        expect(groups.size, `${at} makes ${groups.size} separate deductions`).toBe(1);
       }
-      expect(group, `${b.name}: steps trail the last firing`).toEqual([]);
+      expect(firing, `${b.name}: firings and plan positions disagree`).toBe(
+        plan.length,
+      );
     }
-    expect(journeys, "no journey was seen").toBeGreaterThan(100);
-    expect(withNotes, "no journey carried a note leg").toBeGreaterThan(20);
+    expect(lineJourneys, "no journey was seen").toBeGreaterThan(100);
+    expect(withNotes, "no line arrived with its notes").toBeGreaterThan(20);
+    expect(noteOnly, "no deduction stood apart from a line").toBeGreaterThan(0);
+    expect(lineAlone, "no line stood alone").toBeGreaterThan(0);
   });
 });
 

@@ -14,10 +14,10 @@
  * **Every fact a step rests on is a note on the board first** (docs/games/hints.md
  * § "The marks have to be the player's own"). From Normal the solver reasons about
  * corners and pairs of edges, which the player notes in notes mode. Each such fact
- * a line depends on becomes a step placing that note, at the point in the plan
- * where it was found, so its sentence is read against the lines it was derived
- * from; the line's own step then cites the notes. A pair derived through a chain of
- * pairs is placed one link at a time, so no step cites more than two.
+ * a line depends on becomes a step placing that note, as close before the line as
+ * its sentence stays true ({@link planSteps}); the line's own step then cites the
+ * notes. A pair derived through a chain of pairs is placed one link at a time, so no
+ * step cites more than two.
  */
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
@@ -513,21 +513,132 @@ export function sentenceExpires(state: LoopyState, f: LoopyFact): boolean {
   return !(state.clues[f.why.face] === 1 && f.why.witness.corners.length === 0);
 }
 
+const openAround = (edges: readonly ({ index: number } | null)[], lines: Uint8Array) =>
+  edges.filter((e) => e !== null && lines[e.index] === LINE_UNKNOWN).length;
+
 /**
- * The plan's steps: before each line firing, a step placing each note it and the
- * later firings rest on, then the firing itself.
+ * Whether the sentence placing `f` is still true of `lines`, a board later than the
+ * one it was found on. Every expiring premise fails once and stays failed, because
+ * an edge once settled stays settled.
+ */
+function sentenceHolds(
+  state: LoopyState,
+  facts: readonly LoopyFact[],
+  f: LoopyFact,
+  lines: Uint8Array,
+): boolean {
+  if (!sentenceExpires(state, f)) return true;
+  const g = state.grid;
+  if (f.kind === "relation") {
+    switch (f.why.kind) {
+      case "faceParity":
+      case "dotParity":
+        // "Only these two are still open": the others were settled when it was said.
+        return f.edges.every((e) => lines[e] === LINE_UNKNOWN);
+      case "faceLink":
+        return openAround(g.faces[f.why.face].edges, lines) === 4;
+      case "dotLink":
+        return openAround(g.dots[f.why.dot].edges, lines) === 4;
+      default:
+        return true;
+    }
+  }
+  if (f.why.kind !== "clue") return true;
+  // "Already give it N": no line has joined the ones the count was taken over.
+  const counted = new Set<number>(f.edges);
+  for (const id of f.why.witness.corners)
+    for (const e of facts[id].edges) counted.add(e);
+  const drawn = g.faces[f.why.face].edges.filter(
+    (e) => e !== null && !counted.has(e.index) && lines[e.index] === LINE_YES,
+  ).length;
+  return drawn === f.why.witness.edges.length;
+}
+
+/** The facts a fact's placement cites: its parents, and the corners a clue's count
+ * rests on. */
+const citesOf = (f: LoopyFact): readonly number[] =>
+  f.kind === "corner" && f.why.kind === "clue"
+    ? [...f.parents, ...f.why.witness.corners]
+    : f.parents;
+
+/**
+ * The facts placed at one plan position, split into the separate deductions they
+ * make: two facts share a group when one cites the other or they place one note
+ * together. Each group comes out deepest first, a branch at a time, so one leg
+ * follows from the leg before it wherever the derivation allows.
+ */
+function deductions(facts: readonly LoopyFact[], ids: readonly number[]): number[][] {
+  const here = new Set(ids);
+  const root = new Map<number, number>(ids.map((id) => [id, id]));
+  const find = (id: number): number => {
+    let r = id;
+    while (root.get(r) !== r) r = root.get(r) as number;
+    root.set(id, r);
+    return r;
+  };
+  const join = (a: number, b: number): void => {
+    root.set(find(a), find(b));
+  };
+  const partner = new Map<number, number>();
+  for (const id of ids) {
+    const f = facts[id];
+    for (const c of citesOf(f)) if (here.has(c)) join(id, c);
+    if (f.kind !== "corner" || partner.has(id)) continue;
+    const g = ids.find((o) => {
+      const h = facts[o];
+      return o !== id && !partner.has(o) && h.kind === "corner" && together(f, h);
+    });
+    if (g !== undefined) {
+      partner.set(id, g);
+      partner.set(g, id);
+      join(id, g);
+    }
+  }
+
+  const groups = new Map<number, number[]>();
+  for (const id of ids) groups.set(find(id), [...(groups.get(find(id)) ?? []), id]);
+  const cited = new Set(ids.flatMap((id) => citesOf(facts[id])));
+  return [...groups.values()].map((group) => {
+    const out: number[] = [];
+    const seen = new Set<number>();
+    const visit = (id: number): void => {
+      if (seen.has(id)) return;
+      seen.add(id);
+      const mate = partner.get(id);
+      if (mate !== undefined) seen.add(mate);
+      for (const c of citesOf(facts[id])) if (here.has(c)) visit(c);
+      if (mate !== undefined)
+        for (const c of citesOf(facts[mate])) if (here.has(c)) visit(c);
+      // A shared note is narrated from its first fact, the one found first.
+      if (mate === undefined) out.push(id);
+      else out.push(Math.min(id, mate), Math.max(id, mate));
+    };
+    for (const id of group) if (!cited.has(id)) visit(id);
+    for (const id of group) visit(id);
+    return out;
+  });
+}
+
+/**
+ * The plan's steps: the notes each line firing rests on, then the firing itself.
  *
- * A note whose sentence survives the board filling up is placed beside the firing
- * that cites it, rather than where the solver happened to find the fact — which was
- * a median of 15 firings earlier, and up to 143 (`findings.md`). A note whose
- * sentence would go stale stays where it was found, a position its premise does
- * describe; whether a *later* one still would is not asked, so such a note keeps
- * whatever lag it had. No note is placed before a note it cites.
+ * A note whose sentence survives the board filling up is placed just before the
+ * firing that cites it, rather than where the solver happened to find the fact —
+ * which was a median of 15 firings earlier, and up to 143 (`findings.md`). A note
+ * whose sentence can go stale is placed at the latest position it still describes,
+ * which is beside its consumer whenever the board allows. No note is placed before a
+ * note it cites.
+ *
+ * **A journey is one deduction.** The notes placed at one position split into the
+ * separate derivations they make ({@link deductions}), and each is its own journey:
+ * one that dumped them all in front of the line read as a tour of the board, since
+ * independent derivations sit wherever their clues are. A firing resting on a single
+ * derivation arrives as that derivation's last leg; one combining several is a
+ * journey of its own after them, and a note no firing at that position cites is
+ * never inside a firing's journey.
  *
  * Facts no line rests on are never placed, so a player is never asked to note
- * something no later step uses. Each firing's notes and the firing form one journey:
- * every leg after the first is flagged `continuesPrevious`, so a note and the
- * deduction it serves arrive as a single hint.
+ * something no later step uses.
  */
 function planSteps(
   state: LoopyState,
@@ -543,18 +654,16 @@ function planSteps(
 
   const slot = new Map<number, number>();
   for (const [id, use] of firstUse) {
-    slot.set(id, sentenceExpires(state, facts[id]) ? tickOf[id] : use);
+    let at = Math.min(tickOf[id], use);
+    while (at < use && sentenceHolds(state, facts, facts[id], plan[at + 1].before))
+      at++;
+    slot.set(id, at);
   }
   // A note may not follow one that cites it. A fact's parents always have smaller
   // ids, so one descending pass pulls each back to its earliest dependent.
   for (const id of [...slot.keys()].sort((x, y) => y - x)) {
     const at = slot.get(id) as number;
-    const f = facts[id];
-    const cites =
-      f.kind === "corner" && f.why.kind === "clue"
-        ? [...f.parents, ...f.why.witness.corners]
-        : f.parents;
-    for (const p of cites) {
+    for (const p of citesOf(facts[id])) {
       const was = slot.get(p);
       if (was !== undefined && was > at) slot.set(p, at);
     }
@@ -567,23 +676,47 @@ function planSteps(
     found.set(at, [...(found.get(at) ?? []), id]);
   }
 
+  /** Flag every leg after `start` as continuing the journey `start` leads. */
+  const journey = (start: number): void => {
+    for (let k = start + 1; k < pl.steps.length; k++)
+      pl.steps[k].continuesPrevious = true;
+  };
+
   plan.forEach((p, i) => {
-    const start = pl.steps.length;
-    const ids = found.get(i) ?? [];
-    for (let k = 0; k < ids.length; k++) {
-      const f = facts[ids[k]];
-      if (f.kind === "relation") {
-        placePair(pl, f, p.before);
-        continue;
+    const closure = new Set(p.closure);
+    const groups = deductions(facts, found.get(i) ?? []);
+    const uses = (group: readonly number[]): boolean =>
+      group.some((id) => closure.has(id));
+    // The groups this firing does not rest on first, so its own come straight before it.
+    const ordered = [...groups.filter((g) => !uses(g)), ...groups.filter(uses)];
+    let lastStart = -1;
+    let usedGroups = 0;
+    for (const group of ordered) {
+      const start = pl.steps.length;
+      for (let k = 0; k < group.length; k++) {
+        const f = facts[group[k]];
+        if (f.kind === "relation") {
+          placePair(pl, f, p.before);
+          continue;
+        }
+        const g = k + 1 < group.length ? facts[group[k + 1]] : null;
+        if (g?.kind === "corner" && together(f, g)) {
+          placeCorner(pl, [f, g]);
+          k++;
+        } else {
+          placeCorner(pl, [f]);
+        }
       }
-      const g = k + 1 < ids.length ? facts[ids[k + 1]] : null;
-      if (g?.kind === "corner" && together(f, g)) {
-        placeCorner(pl, [f, g]);
-        k++;
-      } else {
-        placeCorner(pl, [f]);
+      // Counted from what actually landed: `placeCorner` and `placePair` return
+      // early when the note is already there, and `chainPair` pushes a leg per link.
+      if (pl.steps.length === start) continue;
+      journey(start);
+      if (uses(group)) {
+        usedGroups++;
+        lastStart = start;
       }
     }
+    const lineStart = usedGroups === 1 ? lastStart : pl.steps.length;
     const { explanation, marks } = narrate(pl, p);
     const ops: LoopyOp[] = p.ops.map(({ edge, state: to }) => ({ edge, state: to }));
     push(
@@ -593,12 +726,7 @@ function planSteps(
       marks,
       ops.map((o) => o.edge),
     );
-    // Counted from what actually landed rather than decided ahead of the pushes:
-    // `placeCorner` and `placePair` return early when the note is already there, and
-    // `chainPair` pushes a leg per link from inside one of them.
-    for (let k = start + 1; k < pl.steps.length; k++) {
-      pl.steps[k].continuesPrevious = true;
-    }
+    journey(lineStart);
   });
   return pl.steps;
 }
