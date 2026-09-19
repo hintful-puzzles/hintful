@@ -1821,9 +1821,16 @@ source.
 
 ### The honest chain tier
 
+**Superseded by quality-bar rule 6** (§ "Give the facts a notation (Loopy)"): a
+technique the game has no vocabulary for is a missing notation, and the answer
+is to give the player the vocabulary, not to cite the chain's anchor. Slant's
+equivalence step still speaks this tier, and `apply-markable-facts-rule`'s audit
+recorded it as nonconforming; `add-slant-notation` is the fix. What follows is
+kept for its measurement and its two connectivity mechanics, which still hold.
+
 Sometimes a whole **technique is intrinsically a multi-step chain the game has
-no vocabulary to externalize**, and the honest treatment is the only compliant
-one (Slant, `add-slant-hint`). Slant's four move-producing techniques: three
+no vocabulary to externalize** (Slant, `add-slant-hint`). Slant's four
+move-producing techniques: three
 are clean and glance-able — clue-counting, loop avoidance, dead-end
 avoidance — and cover ~94–98% of firings (*measure first*: a throwaway
 technique-tag recorder over the shipped presets gave clue ≈83%, loop ≈9%,
@@ -1967,6 +1974,19 @@ becomes `Unreasonable`: its boards may need trial and error, and its hint refuse
 with `DEDUCTION_EXHAUSTED` rather than teaching reasoning the player cannot record
 (§ "The forcing boundary", and `solver-and-generator.md` § "Check, Tactic,
 Search"). Try the notation first; say what made it unmanageable when you fall back.
+
+**How to check a game against it.** `apply-markable-facts-rule` audited every
+hinting game this way, and its `audit.md` has the verdicts. Read what each sentence
+*cites*, not the words it uses, and ask whether an **earlier** deduction found
+that fact and nothing on the board records it. Two tells found every breach:
+
+- **An arm whose own comment says the notes lag the solver** (`forcedSingle`: "deeper
+  combined deductions the notes don't yet reflect") breaks the rule by definition.
+- **A recorder state that persists across the plan and is not the board.** Slant's
+  equivalence union-find and Subsets' `cube` are each accumulated facts. Where the
+  game has a shallow, board-only derivation (Subsets' `candidateSets`), check each
+  firing's premise against it: a firing that does not follow from it rests on
+  something unmarked.
 
 Loopy is where this was learned. From Normal its rungs reason about two things the
 game once gave players no way to mark: a **corner**, two edges meeting at a dot
@@ -3052,6 +3072,12 @@ to, so they are **not steps** — they set up a collapse whose firing is the
 narratable letter conclusion. The trap is narrating a collapse by its
 **evidence** (the eliminated candidates): measured, that set is large (avg
 4.4, max 14), so enumerating it is both unreadable and dishonestly precise.
+
+**Those unplaced eliminations break quality-bar rule 6**, and this section
+predates it. `apply-markable-facts-rule` measured a quarter to a third of
+collapses resting on set-values the board does not rule out, even with the
+no-horseshoe rule added. Its audit has the numbers, and `add-subsets-notation`
+is the fix: give the player the rule-out, not a better narration of it.
 
 The resolution three rounds of owner review converged on — **one slot per
 step, and make the counting *visible***:

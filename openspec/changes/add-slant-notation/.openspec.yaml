@@ -1,0 +1,5 @@
+schema: spec-driven
+created: 2026-09-19
+skip_specs: true
+# A scaffold: the notation's input design is this change's first decision, and its
+# delta (Slant's input and hint requirements) is written once that is settled.
