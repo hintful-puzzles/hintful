@@ -5655,20 +5655,22 @@ order because of it.
 
 ### Requirement: A cell's regions are one definition per relation
 
-A candidate-elimination game SHALL define "the regions of a cell" once for each of two
-relations, and every consumer of a relation SHALL read that one definition:
+A candidate-elimination game SHALL declare "the regions of a cell" once, as the regions a placed value may not repeat in, each flagged with whether it also holds every value once (`CellRegion.holdsEvery`), and every consumer SHALL derive its relation from that one declaration:
 
-1. the regions that must hold every value once, read by the placement classifier
-   (`classifyPlacementInRegions`), since a value with one home left in such a region
-   must go there;
-2. the regions a placed value may not repeat in, read by every notes cull: the
-   placement's duplicate strike (`regionDuplicateMarks`), the obvious-candidate clean,
-   Mark-all's clean and the player's auto-pencil.
+1. the regions that must hold every value once are read by the placement
+   classifier (`classifyPlacementInRegions`), which itself skips a region flagged
+   `holdsEvery: false`, since a value with one home left in a region must go there
+   only if the region has to hold it;
+2. every declared region is read by every notes cull: the placement's duplicate
+   strike (`regionDuplicateMarks`), the obvious-candidate clean, Mark-all's clean
+   and the player's auto-pencil.
 
-Where the two relations coincide, as they do for every game but Solo Killer, the game
-SHALL use one provider for both (`regionsOf`, or the shared `rowColRegions`). A region
-with only the second property SHALL join the culls' definition and stay out of the
-classifier's. A region with neither, such as a Keen cage, SHALL be in neither.
+Holding every value implies forbidding repeats, so these are the only two kinds of
+declared region. A region with only the second property, such as a Solo Killer
+cage, SHALL be declared with `holdsEvery: false`. A region with neither, such as a
+Keen cage, SHALL NOT be declared, since no consumer reads it. A game whose regions
+carry a tag for naming a hidden single SHALL tag only the regions that hold every
+value, so that the type refuses a partial region declared as whole.
 
 #### Scenario: The consumers of a relation agree on a cell's regions
 
@@ -5688,6 +5690,12 @@ classifier's. A region with neither, such as a Keen cage, SHALL be in neither.
 - **WHEN** the game is Solo with Killer cages and a value is placed in a cage
 - **THEN** the culls strike that value from the rest of the cage, and the classifier
   never calls a placement a hidden single in its cage
+
+#### Scenario: The classifier skips a region that need not hold every value
+
+- **WHEN** a placement's value is noted by no other cell of a region declared
+  `holdsEvery: false`, and by another cell of each of its whole regions
+- **THEN** the classifier does not call it a hidden single in that region
 
 ### Requirement: Latin-family hints distinguish naked and hidden singles
 
