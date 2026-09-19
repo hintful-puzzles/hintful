@@ -972,74 +972,6 @@ element it references remains visible rather than appearing already-resolved.
 - **AND WHEN** the player instead makes a conflicting move
 - **THEN** the plan is dropped and the next hint recomputes from the new state
 
-### Requirement: A shared candidate-elimination hint-plan abstraction
-
-The engine SHALL provide a shared module (`src/engine/candidate-hint.ts`) that
-implements the reusable parts of the candidate-elimination hint *plan* — shared by every
-pencil-notes game whose hint sets and strikes candidate notes and places a value when a
-cell's notes collapse to one (Towers, Unequal, Keen, Solo, and any future such game).
-The shared module SHALL own the parts that are identical across those games, while the
-game retains the parts that carry game-specific *meaning* — which rungs its plan has and
-in what order, what each can fire now, its strike-split policy and its
-journey-continuation tracking.
-
-The shared module SHALL provide:
-
-1. **The plan walk** (`runCandidatePlan`): the note-free opening rungs until the plan's
-   setup (populate, then the obvious clean) is done, then every rung, each next firing
-   taken through the engine's `HintFrontier`, the last-resort signal a rung needs
-   (every earlier rung came up empty), and the step budget and iteration cap. A game
-   supplies its rungs and setup (`populateThenClean` where it populates and cleans)
-   rather than writing the loop.
-2. **Pure plan helpers** over a working `(grid, pencil)` and a recorded
-   `DeductionRecord[]` deduction script: every naked single on the board, detecting
-   whether any empty cell lacks notes (needs populate), the first recorded placement not
-   yet reflected on the working grid, every still-live strike *firing* a plan could take
-   now (each one `group`, excluding placement-bookkeeping `dup` elims, the first always
-   among them), and the next forced placement (returned whole so the game reads its own
-   reason union). A `joinNums` value-list narration helper.
-3. **Generic `keepCandidateHintTrack` and `refreshCandidateHintStep`** over the shared
-   pencil-move shape (`set` / `pencilAll` / `pencilStrike`) and the shared
-   `CandidateHighlights`, implementing the cross-game verdicts (a populate match, a
-   placement match, a strike whose marks shrink in place or complete) and the
-   no-stale-step guarantee (drop dead marks, resolve a filled placement, resolve a
-   fully-noted populate).
-
-Narration, the per-game reason union, the rungs and their game-specific strike-split and
-continuation tracking SHALL remain in the game — the shared module owns the walk and the
-reusable mechanics, the game owns meaning.
-
-The placement-classifier in `src/engine/latin-hint.ts` (which re-derives whether a
-recorded generic `single` placement is a naked single or a hidden single — see the
-"Latin-family hints distinguish naked and hidden singles" requirement) SHALL generalize
-to an arbitrary **region list**, so a game reasoning over sub-blocks and diagonals (Solo)
-classifies a hidden single in any of its regions, while the row/column games pass only
-`[row, column]` and are unchanged.
-
-Routing a game's hint through the shared module SHALL be behavior-preserving: the
-game's existing hint requirement and its observable narration, journeys, keep-track
-verdicts, resume guarantee and rendered frames are unchanged. The bespoke and shared
-solvers and the generator/solve paths are untouched — the shared abstraction is
-hint-plan plumbing only, consuming the already-shared `DeductionRecord`/`HintOp` shape.
-
-#### Scenario: A migrated game's hint is unchanged
-
-- **WHEN** a candidate-elimination game (Towers, Unequal, Keen or Solo) is routed
-  through the shared hint-plan module
-- **THEN** its hint plan — the populate/strike/place steps, their narration, the
-  one-firing-one-journey grouping, the `hintKeepTrack` verdicts and the rendered
-  highlight frame — is identical to before the migration
-- **AND** the game's per-game hint suite, the shared `hint-resume.test.ts`, and the
-  render snapshots pass with no change
-
-#### Scenario: A hidden single is classified in a non-row/column region
-
-- **WHEN** a game reasoning over sub-blocks or diagonals (Solo) forces a placement that
-  is a hidden single within a sub-block or diagonal
-- **THEN** the shared classifier identifies the region and the narration names it
-  (e.g. "in this block / diagonal, N can go in only this cell"), the same way the
-  row/column games name a row or column
-
 ### Requirement: Games may expose on-screen key labels
 
 The engine SHALL support an optional `Game.requestKeys(params)` hook returning an
@@ -5669,17 +5601,19 @@ When several firings are available at one position of a candidate-elimination hi
 plan, the plan SHALL take one whose premise reads a cell that the plan's latest step
 wrote, and failing that one reading what the step before it wrote, up to three steps
 back. Among the firings that qualify at the same depth, and when none qualifies, the
-game's own rung order SHALL decide, so a plan with no earlier step opens exactly as the
+plan's own rung order SHALL decide, so a plan with no earlier step opens exactly as the
 rung order says.
 
 The engine SHALL own the choice (`HintFrontier` in `src/engine/hint-frontier.ts`, which
-`runCandidatePlan` drives) and the game SHALL own which firings are available and what
-each reads. A game SHALL offer
-the frontier only firings whose premise the working board already shows: a strike
-recorded before the solver's next unmade placement whose premise cells hold no mark an
-earlier firing has yet to strike, a placement the notes show as a naked or hidden
-single, and a placement forced by a clue only where the plan has nothing else to take.
-The frontier SHALL read what a step wrote from the targets of the steps it pushed.
+`runCandidatePlan` drives) and SHALL read each firing's premise off the steps the firing
+would push: the `area ∪ targets` of every one of them, built before the choice and
+pushed unchanged if it is taken. No firing SHALL carry a second statement of its
+premise. The game SHALL own which firings are available. A firing SHALL be offered to
+the frontier only when the working board already shows its premise: a strike recorded
+before the solver's next unmade placement whose premise cells hold no mark an earlier
+firing has yet to strike, a placement the notes show as a naked or hidden single, and a
+placement forced by a clue only where the plan has nothing else to take. The frontier
+SHALL read what a step wrote from the targets of the steps it pushed.
 
 The frontier SHALL key only on the plan's own earlier steps, never on the midend's
 displayed step or the player's moves, so the same board always yields the same plan.
@@ -5711,6 +5645,13 @@ order because of it.
   already-available firing that did
 - **THEN** fewer than one such step in ten passed over one, and the check fails when
   the frontier's preference is reversed
+
+#### Scenario: a firing continues from the evidence it shades
+
+- **WHEN** two firings are available after a step that wrote one cell, the rung order
+  prefers the first, and only the second shades that cell as evidence, acting on a
+  cell elsewhere
+- **THEN** the plan takes the second
 
 ### Requirement: A cell's regions are one definition per relation
 
@@ -5788,3 +5729,82 @@ reasons.
   out in this cell"
 - **THEN** the cell's working notes are genuinely a single candidate (a true naked
   single) — a hidden single uses its own narration instead
+
+### Requirement: A shared candidate-elimination hint plan
+
+The engine SHALL provide the whole candidate-elimination hint *plan* walk
+(`runCandidatePlan` in `src/engine/candidate-plan.ts`) for every pencil-notes game whose
+hint sets and strikes candidate notes and places a value when a cell's notes collapse to
+one, and such a game's `buildSteps` SHALL hand its plan to it rather than walk, build or
+apply steps itself.
+
+The walk SHALL own:
+
+1. **The ladder**: the naked singles, then the game's own rungs, then the recorded
+   strikes a plan could take now, then the recorded placements, in the note-free opening
+   until setup is done and in the whole walk after it; the last-resort signal a rung
+   needs (every earlier rung came up empty); the step budget and the iteration cap.
+2. **The setup**: a lazy populate and then the obvious-candidate clean, unless the game
+   supplies its own.
+3. **The steps**: a rung returns firings as lists of legs — a placement, a strike, or a
+   step of the game's own with its effect on the working board — and the walk builds
+   each step from the game's words and evidence, adding the move, the `targets` (the
+   move's cells, each once) and the `marks` itself.
+4. **The placement cull**: after a placement the walk strikes its value from the rest of
+   the cell's no-repeat regions, as a leg continuing the placement's journey, or
+   silently when the player's auto-pencil preference makes the placement's move do it.
+5. **Journey continuation**: a firing is emitted whole, its later legs flagged
+   `continuesPrevious`, so no game tracks which firing a step belongs to.
+
+The game SHALL keep what carries its meaning: its recording solver, its regions, the
+words and evidence of its steps, the axis its strikes split into legs on (dictated by
+what the narration names singular), its own rungs, and the deviations the walk names as
+optional hooks, each stating the game-shaped fact that needs it.
+
+The engine SHALL also provide the pure plan helpers over a working `(grid, pencil)` and a
+recorded `DeductionRecord[]` script (every naked single, whether any empty cell lacks
+notes, the first recorded placement not yet on the working grid, every still-live strike
+firing a plan could take now excluding placement-bookkeeping `dup` elims, the next forced
+placement, `joinNums`), and generic `keepCandidateHintTrack` and
+`refreshCandidateHintStep` over the shared pencil-move shape (`set` / `pencilAll` /
+`pencilStrike`, read through a game's move dialect) and `CandidateHighlights`.
+
+The placement classifier in `src/engine/latin-hint.ts` SHALL classify over an arbitrary
+region list, so a game reasoning over sub-blocks and diagonals (Solo) classifies a hidden
+single in any of its regions, while the row/column games pass only `[row, column]`.
+
+The walk is hint-plan plumbing only: the solvers and the generator/solve paths SHALL NOT
+change because of it.
+
+#### Scenario: A hidden single is classified in a non-row/column region
+
+- **WHEN** a game reasoning over sub-blocks or diagonals (Solo) forces a placement that
+  is a hidden single within a sub-block or diagonal
+- **THEN** the shared classifier identifies the region and the narration names it
+  (e.g. "in this block / diagonal, N can go in only this cell"), the same way the
+  row/column games name a row or column
+
+#### Scenario: A placement's cull continues its journey
+
+- **WHEN** a plan places a value with auto-pencil off and other cells of its row or
+  column still note that value
+- **THEN** the next step strikes it from exactly those cells, flagged
+  `continuesPrevious`, and the working notes no longer hold it there
+- **AND** with auto-pencil on no such step is emitted, the notes are struck all the
+  same, and the placement's move carries the cull
+
+#### Scenario: A firing is one journey
+
+- **WHEN** one recorded firing strikes candidates the game's narration must show as
+  several legs (several heights in Towers, both ends of a link in Unequal, several
+  cells of a cage in Keen)
+- **THEN** the legs are consecutive steps, the first unflagged and the rest flagged
+  `continuesPrevious`, with no other firing's step between them
+
+#### Scenario: A game's steps are built by the walk
+
+- **WHEN** any game that walks its plan with `runCandidatePlan` emits a placement or a
+  strike
+- **THEN** the step's move is the game's own placement or strike move, its `targets`
+  are the cells that move acts on, each once, and its `marks` are the candidates it
+  strikes

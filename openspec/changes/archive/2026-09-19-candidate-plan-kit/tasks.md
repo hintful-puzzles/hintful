@@ -27,4 +27,9 @@ list was noticed, not measured: confirm each idiom against the code first.
 - [x] 3.1 Spec deltas ("A shared candidate-elimination hint-plan abstraction"
       replaced, "A candidate hint plan continues…" modified); `docs/games/hints.md`
       and the engine catalog updated.
-- [ ] 3.2 Run the app on two games before archiving.
+- [x] 3.2 Run the app on two games before archiving. — Towers 5×5 Easy walked
+      by hints through clue lines, populate, clean, strike journeys and singles
+      (a clue firing's two heights now one two-step journey); Salad 4×4 Letters
+      solved end to end by hints twice (52 and 53 moves), border near/far arms
+      as one journey, hidden single with its row band and ghost. No console
+      errors.
