@@ -42,6 +42,7 @@
 
 ## 4. Acceptance
 
-- [ ] 4.1 The owner walks the replay again in the running app: journeys stay on one
+- [x] 4.1 The owner walks the replay again in the running app: journeys stay on one
       piece of the board, and a line combining two derivations reads well standing
-      alone after them.
+      alone after them. Accepted 2026-09-19 ("So much better"); a 16-leg journey
+      was not asked to be capped.
