@@ -31,7 +31,11 @@ import {
 import type { DeductionRecord } from "./deduction-record.ts";
 import type { HintStep } from "./game.ts";
 import { type FrontierCandidate, HintFrontier } from "./hint-frontier.ts";
-import { availablePlacements, type ClassifyRegion } from "./latin-hint.ts";
+import {
+  availablePlacements,
+  type CellRegion,
+  type WholeRegion,
+} from "./latin-hint.ts";
 import { stepBudget } from "./step-budget.ts";
 import type { Point } from "./types.ts";
 
@@ -119,7 +123,7 @@ export interface CandidatePlan<
   H extends CandidateHighlights,
   R extends DeductionRecord,
   Reason,
-  Reg extends ClassifyRegion,
+  Reg extends CellRegion,
 > {
   /** The board's row stride; its height is read off `grid`. */
   w: number;
@@ -144,16 +148,14 @@ export interface CandidatePlan<
   /** Run the recording solver on the working board. Called at the start and
    * after every firing that decides a cell. */
   record: () => readonly R[];
-  /** The regions a single is classified in, in narration preference order. */
+  /** A cell's regions, in narration preference order. A placed value is culled
+   * from all of them, and a single is classified in the ones that hold every
+   * value. */
   regionsOf: (x: number, y: number) => readonly Reg[];
-  /** The regions a placed value is culled from, and the obvious clean reads.
-   * Default {@link regionsOf}; they differ where a region forbids repeats
-   * without having to hold every value (a Killer cage). */
-  cullRegionsOf?: (x: number, y: number) => readonly ClassifyRegion[];
   /** The reason a single the notes show narrates as. */
   singleReason: (
     n: number,
-    why: { kind: "naked" } | { kind: "hidden"; region: Reg },
+    why: { kind: "naked" } | { kind: "hidden"; region: WholeRegion<Reg> },
   ) => Reason;
   /** A placement's words; `continues` is true on a journey's later legs. */
   placeWords: (m: Mark, reason: Reason, continues: boolean) => StepWords<H>;
@@ -245,7 +247,7 @@ export function runCandidatePlan<
   H extends CandidateHighlights,
   R extends DeductionRecord,
   Reason,
-  Reg extends ClassifyRegion,
+  Reg extends CellRegion,
 >(plan: CandidatePlan<M, H, R, Reason, Reg>): void {
   new CandidateWalk(plan).run();
 }
@@ -255,13 +257,12 @@ class CandidateWalk<
   H extends CandidateHighlights,
   R extends DeductionRecord,
   Reason,
-  Reg extends ClassifyRegion,
+  Reg extends CellRegion,
 > {
   private ops: readonly R[];
   private readonly bit: (n: number) => number;
   private readonly place: (x: number, y: number, n: number, autoElim: boolean) => M;
   private readonly strike: (marks: Mark[]) => M;
-  private readonly cull: (x: number, y: number) => readonly ClassifyRegion[];
   private readonly setUp: PlanSetUp;
   private readonly populated: () => boolean;
   /** Each firing's steps, built once whether the frontier or the take asks. */
@@ -274,7 +275,6 @@ class CandidateWalk<
     const dialect = plan.moves;
     this.place = (dialect?.place ?? latinMoves.place) as typeof this.place;
     this.strike = (dialect?.strike ?? latinMoves.strike) as typeof this.strike;
-    this.cull = plan.cullRegionsOf ?? plan.regionsOf;
     if (plan.setUp) {
       const setUp = plan.setUp;
       this.setUp = setUp;
@@ -291,10 +291,18 @@ class CandidateWalk<
         notes.populate,
       );
       this.setUp = populateThenClean(pop, () =>
-        emitObviousCleanStep(steps, grid, pencil, w, this.cull, notes.cleanObvious, {
-          enc,
-          adapter: dialect,
-        }),
+        emitObviousCleanStep(
+          steps,
+          grid,
+          pencil,
+          w,
+          plan.regionsOf,
+          notes.cleanObvious,
+          {
+            enc,
+            adapter: dialect,
+          },
+        ),
       );
       this.populated = pop.done;
     }
@@ -519,7 +527,7 @@ class CandidateWalk<
       y,
       n,
       w,
-      this.cull(x, y),
+      plan.regionsOf(x, y),
       plan.enc,
     );
     this.clear(dup);

@@ -36,20 +36,32 @@ export type SinglePlacement =
   | { kind: "naked" }
   | { kind: "hidden"; line: "row" | "col"; index: number };
 
-/** A region the {@link classifyPlacementInRegions} classifier reasons over: its
- * member cell indices (`y * w + x`). A game tags each region with whatever it
- * needs to name it (a `line`/`index` for a row/column, a `kind` for a sub-block
- * or diagonal) and reads that tag back off the returned `region`. */
-export interface ClassifyRegion {
+/** A region a value may not repeat in: its member cell indices (`y * w + x`),
+ * and whether it also holds every value once. A game declares each of a cell's
+ * regions once, in narration preference order, and every consumer derives its
+ * own list from that: the notes culls read all of them, and the placement
+ * classifier only the ones that hold every value, since a value with one home
+ * left in a region is forced there only if the region must hold it (a Killer
+ * cage need not). A region with neither property (a Keen cage) is not declared,
+ * because nothing reads it. A game tags each region with whatever it needs to
+ * name it (a `line`/`index` for a row/column, a `kind` for a sub-block or
+ * diagonal) and reads that tag back off the classifier's `region`. */
+export interface CellRegion {
   cells: ArrayLike<number>;
+  holdsEvery: boolean;
 }
+
+/** The declared regions of `R` the classifier reasons over. For a union that
+ * tags only its whole regions for naming, this is the tagged arm. */
+export type WholeRegion<R extends CellRegion> = R & { holdsEvery: true };
 
 /** Whether the forced placement of digit `n` at `cell` is a *naked* single (the
  * cell's notes are exactly `{n}`) or a *hidden* single in one of `regions` (no
  * other empty cell of that region still notes `n`). The generic core of
  * docs/games/hints.md § "Re-derive a placement's why" for any
  * candidate-elimination game: the Latin row/column games pass `[row, column]`;
- * Solo passes `[row, column, block, diag0, diag1]`. Regions are tested in order,
+ * Solo passes `[row, column, block, diag0, diag1]` and its Killer cage, which is
+ * skipped because it need not hold every digit. Regions are tested in order,
  * so the first match wins (callers list them in narration preference order).
  *
  * **Throws when it is neither**: the notes then still show candidates the solver
@@ -57,14 +69,14 @@ export interface ClassifyRegion {
  * plan that classifies a placement passes here, which is what makes the
  * cross-game hint walks (`hint-resume.test.ts`, `hint-quality.test.ts`) the
  * guard for it. */
-export function classifyPlacementInRegions<R extends ClassifyRegion>(
+export function classifyPlacementInRegions<R extends CellRegion>(
   grid: ArrayLike<number>,
   pencil: ArrayLike<number>,
   cell: number,
   n: number,
   regions: readonly R[],
   enc?: NoteEncoding,
-): { kind: "naked" } | { kind: "hidden"; region: R } {
+): { kind: "naked" } | { kind: "hidden"; region: WholeRegion<R> } {
   const c = placementInRegions(grid, pencil, cell, n, regions, enc);
   if (c) return c;
   throw new Error(
@@ -77,17 +89,18 @@ export function classifyPlacementInRegions<R extends ClassifyRegion>(
  * yet: `null` where it would throw. What a plan asks of a placement it is
  * choosing *between*, where "not a single on these notes" means "not available
  * now" rather than "the plan skipped a strike". */
-function placementInRegions<R extends ClassifyRegion>(
+function placementInRegions<R extends CellRegion>(
   grid: ArrayLike<number>,
   pencil: ArrayLike<number>,
   cell: number,
   n: number,
   regions: readonly R[],
   enc?: NoteEncoding,
-): { kind: "naked" } | { kind: "hidden"; region: R } | null {
+): { kind: "naked" } | { kind: "hidden"; region: WholeRegion<R> } | null {
   const bit = (enc?.bit ?? ((v: number): number => 1 << v))(n);
   if (pencil[cell] === bit) return { kind: "naked" };
   for (const region of regions) {
+    if (!isWhole(region)) continue;
     let hidden = true;
     for (let i = 0; i < region.cells.length; i++) {
       const j = region.cells[i];
@@ -102,6 +115,10 @@ function placementInRegions<R extends ClassifyRegion>(
   return null;
 }
 
+function isWhole<R extends CellRegion>(region: R): region is WholeRegion<R> {
+  return region.holdsEvery;
+}
+
 /** Why a placement a plan could take now is forced: a single the notes show, or
  * (`recorded`) the solver's own reason, which the game keeps. */
 export type PlacementWhy<R> =
@@ -114,8 +131,9 @@ export type PlacementWhy<R> =
  * `HintFrontier` picks among.
  *
  * A placement the solver records as a plain `single` is available whenever the
- * notes show it as a naked or hidden single in one of `regionsOf` its cell; the
- * solver's having placed it is what makes trusting the notes sound. A placement
+ * notes show it as a naked or hidden single in one of its cell's `regionsOf` that
+ * holds every value; the solver's having placed it is what makes trusting the
+ * notes sound. A placement
  * with a reason of its own (a clue or cage that forces it) rests on the solver's
  * cube rather than on the notes, so it is offered only as the plan's last
  * resort: the first unreflected placement, when `nothingElse` says every other
@@ -127,10 +145,7 @@ export type PlacementWhy<R> =
  * guard for it. Anywhere earlier it is merely not available yet: another
  * rung's firing may be the very premise it waits on.
  */
-export function availablePlacements<
-  Op extends DeductionRecord,
-  R extends ClassifyRegion,
->(
+export function availablePlacements<Op extends DeductionRecord, R extends CellRegion>(
   ops: readonly Op[],
   grid: ArrayLike<number>,
   pencil: ArrayLike<number>,
@@ -138,10 +153,10 @@ export function availablePlacements<
   regionsOf: (x: number, y: number) => readonly R[],
   nothingElse: boolean,
   opts?: { enc?: NoteEncoding; placed?: ArrayLike<number> },
-): { op: Op; why: PlacementWhy<R> }[] {
+): { op: Op; why: PlacementWhy<WholeRegion<R>> }[] {
   const placed = opts?.placed ?? grid;
   const first = nextPlace(ops, placed, w);
-  const out: { op: Op; why: PlacementWhy<R> }[] = [];
+  const out: { op: Op; why: PlacementWhy<WholeRegion<R>> }[] = [];
   for (const op of ops) {
     if (op.kind !== "place" || placed[op.y * w + op.x] !== 0) continue;
     const cell = op.y * w + op.x;
@@ -163,16 +178,15 @@ export function availablePlacements<
  * is a `row` (`index` = its y) or `col` (`index` = its x). */
 export interface RowColRegion {
   cells: number[];
+  holdsEvery: true;
   line: "row" | "col";
   index: number;
 }
 
-/** The two uniqueness regions of cell `(x, y)` in a plain Latin square: its row
- * and its column, in narration-preference order (row first). The `regionsOf`
- * provider for Towers / Unequal / Keen — those games' *only* uniqueness regions (a
- * Keen cage is an arithmetic constraint, not a uniqueness region). The single
- * source of truth shared by the placement classifier, the basic-region strike and
- * the placement dup-cull, so they can never disagree about a cell's regions. */
+/** The two regions of cell `(x, y)` in a plain Latin square: its row and its
+ * column, in narration-preference order (row first), each holding every value.
+ * A Keen cage is an arithmetic constraint a value may repeat in, so it is not a
+ * region at all. */
 export function rowColRegions(x: number, y: number, w: number): RowColRegion[] {
   const row: number[] = [];
   const col: number[] = [];
@@ -181,8 +195,8 @@ export function rowColRegions(x: number, y: number, w: number): RowColRegion[] {
     col.push(k * w + x);
   }
   return [
-    { cells: row, line: "row", index: y },
-    { cells: col, line: "col", index: x },
+    { cells: row, holdsEvery: true, line: "row", index: y },
+    { cells: col, holdsEvery: true, line: "col", index: x },
   ];
 }
 

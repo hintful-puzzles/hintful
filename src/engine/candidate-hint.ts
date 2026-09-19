@@ -17,7 +17,7 @@
 import type { DeductionRecord } from "./deduction-record.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "./game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
-import type { ClassifyRegion } from "./latin-hint.ts";
+import type { CellRegion } from "./latin-hint.ts";
 import type { OrderedCell } from "./overlay-sidecar.ts";
 import type { Point } from "./types.ts";
 
@@ -305,7 +305,7 @@ export function regionDuplicateMarks(
   y: number,
   n: number,
   w: number,
-  regions: readonly ClassifyRegion[],
+  regions: readonly CellRegion[],
   enc?: NoteEncoding,
 ): Mark[] {
   const home = y * w + x;
@@ -336,7 +336,7 @@ export function findRegionDuplicate(
   grid: ArrayLike<number>,
   pencil: ArrayLike<number>,
   w: number,
-  regionsOf: (x: number, y: number) => readonly ClassifyRegion[],
+  regionsOf: (x: number, y: number) => readonly CellRegion[],
   enc?: NoteEncoding,
 ): RegionDuplicate | null {
   for (let i = 0; i < grid.length; i++) {
@@ -373,7 +373,7 @@ export function obviousCandidateMarks(
   grid: ArrayLike<number>,
   pencil: ArrayLike<number>,
   w: number,
-  regionsOf: (x: number, y: number) => readonly ClassifyRegion[],
+  regionsOf: (x: number, y: number) => readonly CellRegion[],
   enc?: NoteEncoding,
 ): Mark[] {
   const bit = bitOf(enc);
@@ -509,7 +509,7 @@ export function adaptiveMarkAllMove<M>(
   grid: ArrayLike<number>,
   pencil: ArrayLike<number>,
   w: number,
-  regionsOf: (x: number, y: number) => readonly ClassifyRegion[],
+  regionsOf: (x: number, y: number) => readonly CellRegion[],
   enc?: NoteEncoding,
 ): M | null {
   return adaptiveMarkAll<M, Mark>(anyEmptyLacksNotes(grid, pencil), () =>
@@ -589,7 +589,7 @@ export function emitObviousCleanStep<M, H>(
   grid: ArrayLike<number>,
   pencil: Int32Array,
   w: number,
-  regionsOf: (x: number, y: number) => readonly ClassifyRegion[],
+  regionsOf: (x: number, y: number) => readonly CellRegion[],
   explanation: string,
   opts?: { enc?: NoteEncoding; adapter?: CandidateMoveAdapter<M> },
 ): boolean {

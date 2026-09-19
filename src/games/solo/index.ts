@@ -229,7 +229,7 @@ function interpretMove(
   // diagonal or (killer) cage — the basic-region opening, in one press.
   if (button === 77 || button === 109)
     return adaptiveMarkAllMove<SoloMove>(state.grid, state.pencil, cr, (x, y) =>
-      noRepeatRegionsOf(state, x, y),
+      regionsOf(state, x, y),
     );
 
   return null;
@@ -240,7 +240,7 @@ function interpretMove(
  * on a real placement. */
 function autoEliminate(state: SoloState, x: number, y: number, n: number): void {
   const cell = y * state.cr + x;
-  for (const { cells } of noRepeatRegionsOf(state, x, y))
+  for (const { cells } of regionsOf(state, x, y))
     for (const c of cells) if (c !== cell) state.pencil[c] &= ~(1 << n);
 }
 
@@ -376,48 +376,41 @@ function regionCells(region: SoloRegion, state: SoloState): Point[] {
   return cellsOf(region, state).map((c) => ({ x: c % cr, y: (c / cr) | 0 }));
 }
 
-/** A region a single is classified in, tagged for naming. */
-type SoloClassifyRegion = { cells: number[]; region: SoloRegion };
+/** A region a digit may not repeat in. The ones holding every digit are tagged
+ * for naming a hidden single; a killer cage is not one, so it has no tag. */
+type SoloCellRegion =
+  | { cells: number[]; holdsEvery: true; region: SoloRegion }
+  | { cells: number[]; holdsEvery: false };
 
-/** The regions of cell `(x, y)` that hold every digit exactly once, in
- * narration-preference order (row, column, sub-block, then the X diagonals it
- * lies on), each with its `SoloRegion` tag for naming. What the placement
- * classifier (`availablePlacements`) reads: a digit with one home left in
- * such a region must go there. The culls read {@link noRepeatRegionsOf}. */
-function regionsOf(state: SoloState, x: number, y: number): SoloClassifyRegion[] {
+/** The regions of cell `(x, y)`, in narration-preference order: row, column,
+ * sub-block, the X diagonals it lies on, then its killer cage. A cage forbids
+ * repeats without having to hold every digit. Auto-pencil, Mark-all and the
+ * hint all read this one list, so none of them leaves a cage-mate's note
+ * standing that the solver has struck. */
+function regionsOf(state: SoloState, x: number, y: number): SoloCellRegion[] {
   const cr = state.cr;
   const cell = y * cr + x;
-  const regions: SoloRegion[] = [
+  const whole: SoloRegion[] = [
     { kind: "row", index: y },
     { kind: "col", index: x },
     { kind: "block", index: state.blocks.whichblock[cell] },
   ];
-  if (state.xtype && onDiag0(cell, cr)) regions.push({ kind: "diag0" });
-  if (state.xtype && onDiag1(cell, cr)) regions.push({ kind: "diag1" });
-  return regions.map((region) => ({ cells: cellsOf(region, state), region }));
-}
-
-/** Every region a digit placed at `(x, y)` may not repeat in: the
- * {@link regionsOf} regions, plus the cell's killer cage. A cage forbids repeats
- * without having to hold every digit, so it is no place to find a hidden single
- * and stays out of `regionsOf`. Shared by auto-pencil, Mark-all, the obvious
- * cleanup and the placement dup-cull, so none of them leaves a cage-mate's note
- * standing that the solver has struck. */
-function noRepeatRegionsOf(
-  state: SoloState,
-  x: number,
-  y: number,
-): { cells: number[] }[] {
-  const regions: { cells: number[] }[] = regionsOf(state, x, y);
+  if (state.xtype && onDiag0(cell, cr)) whole.push({ kind: "diag0" });
+  if (state.xtype && onDiag1(cell, cr)) whole.push({ kind: "diag1" });
+  const regions: SoloCellRegion[] = whole.map((region) => ({
+    cells: cellsOf(region, state),
+    holdsEvery: true,
+    region,
+  }));
   const killer = state.killerData;
   if (killer) {
-    const cage = killer.kblocks.whichblock[y * state.cr + x];
-    regions.push({ cells: killer.kblocks.blocks[cage] });
+    const cage = killer.kblocks.whichblock[cell];
+    regions.push({ cells: killer.kblocks.blocks[cage], holdsEvery: false });
   }
   return regions;
 }
 
-/** The names of the regions {@link noRepeatRegionsOf} returns for `(x, y)`, or
+/** The names of the regions {@link regionsOf} returns for `(x, y)`, or
  * for any cell when `at` is omitted — what a sentence about a repeat cites. */
 function noRepeatRegionNames(state: SoloState, at?: Point): string[] {
   const names = ["row", "column", "block"];
@@ -507,9 +500,7 @@ function placementArea(reason: SoloReason, state: SoloState): Point[] {
 }
 
 /** Build the hint plan by walking a working copy of the board the way a person
- * solves it (`runCandidatePlan`). A single is classified in the regions that
- * hold every digit; a placement culls the ones that forbid repeats, a Killer
- * cage among them. */
+ * solves it (`runCandidatePlan`). */
 function buildSteps(
   state: SoloState,
   autoClean: boolean,
@@ -519,7 +510,7 @@ function buildSteps(
   const wGrid = Int8Array.from(state.grid);
   const maxdiff = Math.min(state.params.diff, DIFF_EXTREME);
   const maxkdiff = state.params.kdiff;
-  runCandidatePlan<SoloMove, SoloHint, HintOp, SoloReason, SoloClassifyRegion>({
+  runCandidatePlan<SoloMove, SoloHint, HintOp, SoloReason, SoloCellRegion>({
     w: cr,
     steps,
     grid: wGrid,
@@ -528,7 +519,6 @@ function buildSteps(
     label: "solo hint plan",
     record: () => recordSoloDeductions({ ...state, grid: wGrid }, maxdiff, maxkdiff),
     regionsOf: (x, y) => regionsOf(state, x, y),
-    cullRegionsOf: (x, y) => noRepeatRegionsOf(state, x, y),
     singleReason: soloSingleReason,
     placeWords: (m, reason) => ({
       explanation: narrate(reason, [m.n], state),

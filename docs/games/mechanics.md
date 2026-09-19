@@ -694,8 +694,8 @@ were — the last per-game roster in the cross-game guards.
   regions) as one atomic move. It returns `null` when there is nothing to do,
   so a redundant press adds no undo entry. The cleanup is idempotent, defined
   off the *placed* grid only, and never empties a cell's last note. Use the
-  regions the hint's own culls use (a Keen cage is **not** a uniqueness region;
-  a Solo Killer cage forbids repeats, so Solo passes `noRepeatRegionsOf`);
+  same `regionsOf` the hint's plan declares (a Keen cage is **not** a region;
+  a Solo Killer cage forbids repeats, so it is one, flagged `holdsEvery: false`);
   games without a row/column model keep plain fill-only. **The mark-all trap:**
   a guard on this path must *narrow* a cell's notes or the bug hides — the
   mark-all-resets-notes defect shipped in ten games at once; mutation-check

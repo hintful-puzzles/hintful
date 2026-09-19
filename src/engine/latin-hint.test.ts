@@ -108,27 +108,52 @@ describe("classifyPlacementInRegions", () => {
     pencil[2] = 1 << 3; // (2,0) row competitor — blocks row-hidden
     pencil[9] = 1 << 3; // (1,2) column competitor — blocks col-hidden
     const regions = [
-      { cells: [0, 1, 2, 3], tag: "row" },
-      { cells: [1, 5, 9, 13], tag: "col" },
-      { cells: block(0, 0), tag: "block" },
+      { cells: [0, 1, 2, 3], holdsEvery: true, tag: "row" },
+      { cells: [1, 5, 9, 13], holdsEvery: true, tag: "col" },
+      { cells: block(0, 0), holdsEvery: true, tag: "block" },
     ];
     const c = classifyPlacementInRegions(grid, pencil, 1, 3, regions);
     expect(c.kind).toBe("hidden");
     expect(c.kind === "hidden" && c.region.tag).toBe("block");
   });
 
+  it("never calls a placement hidden in a region that need not hold every value", () => {
+    // The same board, with the block declared as a Killer-style cage: no other
+    // cell of it notes 3, but a cage need not hold a 3, so that proves nothing.
+    const { grid, pencil } = board([[], [], [], []]);
+    pencil[1] = (1 << 2) | (1 << 3);
+    pencil[2] = 1 << 3;
+    pencil[9] = 1 << 3;
+    const cage = { cells: block(0, 0), holdsEvery: false };
+    const row = { cells: [0, 1, 2, 3], holdsEvery: true };
+    expect(() => classifyPlacementInRegions(grid, pencil, 1, 3, [row, cage])).toThrow(
+      /skipped a strike/,
+    );
+    // Declared as holding every digit, the same cells would make it hidden.
+    expect(
+      classifyPlacementInRegions(grid, pencil, 1, 3, [
+        row,
+        { ...cage, holdsEvery: true },
+      ]).kind,
+    ).toBe("hidden");
+  });
+
   it("returns naked regardless of the region list, and throws on the residue", () => {
     const { grid, pencil } = board([[], [], [], []]);
     pencil[5] = 1 << 2;
     expect(
-      classifyPlacementInRegions(grid, pencil, 5, 2, [{ cells: block(0, 0) }]).kind,
+      classifyPlacementInRegions(grid, pencil, 5, 2, [
+        { cells: block(0, 0), holdsEvery: true },
+      ]).kind,
     ).toBe("naked");
     // 3 still live elsewhere in the only region: not hidden there, so the notes
     // cannot explain the placement.
     pencil[5] = (1 << 2) | (1 << 3);
     pencil[0] = 1 << 3;
     expect(() =>
-      classifyPlacementInRegions(grid, pencil, 5, 3, [{ cells: block(0, 0) }]),
+      classifyPlacementInRegions(grid, pencil, 5, 3, [
+        { cells: block(0, 0), holdsEvery: true },
+      ]),
     ).toThrow(/skipped a strike/);
   });
 });

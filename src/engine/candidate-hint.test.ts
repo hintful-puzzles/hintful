@@ -207,7 +207,10 @@ describe("regionDuplicateMarks", () => {
     // marked once, not twice.
     const grid = [3, 0, 0, 0];
     const pencil = [0, bits(3), 0, 0];
-    const regions = [{ cells: [0, 1] }, { cells: [1, 0] }];
+    const regions = [
+      { cells: [0, 1], holdsEvery: true },
+      { cells: [1, 0], holdsEvery: true },
+    ];
     const marks = regionDuplicateMarks(grid, pencil, 0, 0, 3, 2, regions);
     expect(marks).toEqual([{ x: 1, y: 0, n: 3 }]);
   });

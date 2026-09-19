@@ -2865,23 +2865,26 @@ bulk obvious-clean opening, and the placement dup-cull. A plan now names it
 once, as its `regionsOf`, and the walk feeds all three from it, so they can
 never disagree. Row/column games pass the shared `rowColRegions(x, y, w)` from
 [`latin-hint.ts`](../../src/engine/latin-hint.ts); Solo writes its own
-(`[row, col, block, diag0, diag1]`). The culls de-dup a cell reachable via two
-regions. **A Keen cage is *not* a uniqueness region** — it is an arithmetic
-constraint a digit may legally repeat under; `regionsOf` returns row+col only,
-and the cage logic stays its own deduction.
+(`[row, col, block, diag0, diag1]`, then the Killer cage). The culls de-dup a
+cell reachable via two regions. **A Keen cage is *not* a region** — it is an
+arithmetic constraint a digit may legally repeat under; `regionsOf` returns
+row+col only, and the cage logic stays its own deduction.
 
-**"Holds every value" and "forbids repeats" are two relations, and they come
-apart.** The classifier needs the first: a value with one home left in a region
-must go there only if the region has to hold that value. The culls (dup strike,
-obvious clean, Mark-all, the player's auto-pencil) need the second. A **Solo
-Killer cage** forbids repeats but needn't hold every digit, so Solo keeps
-`regionsOf` for the classifier and passes the plan
-`cullRegionsOf: noRepeatRegionsOf`, which adds the cage. While the culls read
-`regionsOf`, the solver struck a placed
-digit from its cage-mates and the notes never did, so a later single rested on
-a strike the player never saw, and the hint threw on about one fresh Killer
-board in six. When a game gains a region with only one of the two properties,
-give each relation its own function rather than widening the shared one.
+**"Holds every value" and "forbids repeats" are two relations, and a region
+declares which it has.** The classifier needs the first: a value with one home
+left in a region must go there only if the region has to hold that value. The
+culls (dup strike, obvious clean, Mark-all, the player's auto-pencil) need the
+second. Holding every value implies forbidding repeats, so `regionsOf` returns
+every region a value may not repeat in, each a `CellRegion` flagged
+`holdsEvery`, and the classifier itself skips the ones that are `false`. A
+**Solo Killer cage** is the case: declared `holdsEvery: false`, and untagged,
+since only the whole regions need a name for a hidden single — so the type
+refuses a cage declared the other way. A region with neither property (the Keen
+cage) is not declared at all, because nothing would read it. Before the flag,
+Solo's culls read the classifier's list, the solver struck a placed digit from
+its cage-mates and the notes never did, so a later single rested on a strike
+the player never saw, and the hint threw on about one fresh Killer board in
+six.
 
 **The walk and its steps are shared; the meaning is the game's.**
 `runCandidatePlan` owns the loop — the note-free opening, populate and the
@@ -2901,7 +2904,7 @@ last rung when every earlier one came up empty, the budget and cap (§
   `targets` and the `marks` itself, so none of those can disagree with the
   move.
 - **The walk plays each leg on the working board**, and after a placement
-  strikes its value from `cullRegionsOf` (default `regionsOf`): a leg
+  strikes its value from every one of its `regionsOf`: a leg
   continuing the journey, or silent under auto-pencil, whose move carries the
   same cull to the real board. Every such game used to write this as its own
   `emitPlacement`, differing only in the words and the regions.
