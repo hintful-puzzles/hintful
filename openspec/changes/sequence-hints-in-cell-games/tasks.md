@@ -11,27 +11,26 @@ its bias analysis and its stopping condition are all reusable here, and only its
 
 ## 1. Measure, with the condition stated first
 
-- [ ] 1.1 Write the read-set derivation in `engine/`, once, against the shared Latin
-      reason union (D2). `set` reads everything, the conservative direction; count how
-      many firings take that branch, because a corpus that is mostly `set` measures
-      nothing.
-- [ ] 1.2 Prove the instrument on a known positive before trusting a number: hand it a
-      position with two hidden singles in disjoint regions and assert it reports two
-      candidates. An instrument that has never been seen to say "two" cannot be trusted
-      to mean it when it says "one".
-- [ ] 1.3 Candidates per plan position across a cell-game corpus. Take it as
-      `puzzlesInFamily("latin")` (`src/puzzle/catalog.ts`), not as a typed list: the
-      family is held to the users of `engine/latin-hint` by `catalog-families.test.ts`,
-      which are exactly the games D2's read-set can read. Run each at its harder tiers,
-      where plans are long enough to have a tail. Report
-      p50/p90/max, the share offering exactly one, and the share of ≥4-unit jumps that
-      had an alternative sharing a unit with the previous step.
-- [ ] 1.4 Say which way the bias runs and quote the numbers as bounds accordingly
-      (under-read premises inflate candidates, so the figures are upper bounds and a
-      **stop** is conservative while a **proceed** is earned).
-- [ ] 1.5 **Decide, and write the decision down either way.** A stop here is a result,
-      not a failure, and is reported as one — the earlier campaign's stop is the most
-      valuable thing it produced.
+- [x] 1.1 The read-set derivation. **Not against the Latin reason union**: most
+      strikes in Towers, Keen and Unequal carry game-local reasons the union lacks, so
+      D2's read-set would have measured the minority. It reads the step's
+      `CandidateHighlights` (`area ∪ targets`) instead, which every game here emits,
+      at three precisions that bracket the truth (`findings.md` § "The instrument").
+- [x] 1.2 Known positive and negative pass at every precision, and every available
+      placement was checked against the position's own notes: of 3,863, the 248 that
+      are not singles are all clue-forced placements (cage sums, associativity).
+- [x] 1.3 Six games, 42 boards, 3,445 positions: candidates **p50 3, p90 12**, one
+      candidate at **20.7%** of positions. Jumps are measured as D3's continuity
+      rather than a unit distance (in a Latin square every cell is two units from
+      every other): 48.4% of steps continue nothing the previous step wrote, and
+      **23.0%** of those had a continuing candidate.
+- [x] 1.4 The bias runs the other way from Loopy's: the tight read-set and the
+      plan-tail definition both under-count, so the figures are lower bounds and the
+      proceed is earned.
+- [x] 1.5 **Proceed.** Even the strictest reading has fewer than half the positions
+      offering one firing. Most of the avoidable jumps cross techniques and a third of
+      them reach back past the last step, so §2 orders frontier first, most recent
+      first, and keeps the tier order as the tiebreak (`findings.md` § 1.5).
 
 ## 2. The engine's ordering — only if 1.5 says proceed
 
