@@ -31,4 +31,4 @@
 - [x] 4.1 Run the app (Chrome, 2026-09-19): a tally press struck two sets out of a
       focused cell; the hint walked to a rule-out step and its collapse; the
       keyboard reached the tally and ruled a set out.
-- [ ] 4.2 Owner acceptance: a new input, and a changed reference aid.
+- [x] 4.2 Owner acceptance: a new input, and a changed reference aid (2026-09-19).
