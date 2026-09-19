@@ -10,6 +10,7 @@
 import {
   bitList,
   type CollapseExclusion,
+  type RuleOutMark,
   type SubsetsDeduction,
   type SubsetsDeductionSet,
 } from "./solver.ts";
@@ -95,13 +96,24 @@ export const say = {
     const attn =
       r.kind === "hiddenSingle"
         ? "The highlighted set can go nowhere but this cell."
-        : r.kind === "collapse"
-          ? plural
-            ? "Only the highlighted sets can still go in this cell."
-            : "Only the highlighted set can still go in this cell."
-          : // singlePosition (deep cube fallback)
-            "The highlighted set's other cells are all taken or blocked, so it must go here.";
+        : plural
+          ? "Only the highlighted sets can still go in this cell."
+          : "Only the highlighted set can still go in this cell.";
     return `${attn} ${capitalize(hasClause)}, so ${act}.`;
+  },
+
+  /**
+   * A rule-out step. The horseshoe needs a strictly smaller set at its subset
+   * end and a strictly bigger one at its superset end (the help teaches why),
+   * so a set with no such partner among the highlighted sets, which are what
+   * the highlighted cell can still hold, cannot go here.
+   */
+  ruleOut: (mark: RuleOutMark, n: number): string => {
+    const label = setLabel(mark.value, n);
+    const partner = mark.why.head
+      ? `a bigger set holding ${label}`
+      : `a smaller set inside ${label}`;
+    return `No highlighted set is ${partner}, so the horseshoe to the highlighted cell rules ${label} out here.`;
   },
 
   /** The "why not X" clause a collapse appends: name a competitor set and the

@@ -2067,6 +2067,41 @@ two squares sharing a side slant the same way. What it added, in
   it counts. A mark is still placed only once and only where it is true, which is
   what `slant-notes.test.ts` holds, rather than equality with the first plan.
 
+Subsets is the third (`add-subsets-notation`), with one mark: a set ruled out of
+a cell. What it added, in [`games/subsets/`](../../src/games/subsets/):
+
+- **Start from the board's own reading, and record only what it cannot derive.**
+  Before designing anything, list every rule that reads the hidden state and ask
+  of each what the board already says about its conclusion. Four of Subsets' five
+  cube rules turned out to be the reference aid's shallow reading in disguise, so
+  the recorder now syncs its cube to that reading (`syncToBoard`) and keeps a
+  reason only for the fifth. One predicate (`canHold`) then answers "can this go
+  here?" for the aid, for the hint's premises and for "is this fact already on
+  the board?", so the three cannot disagree.
+- **Grow the reading before adding a mark.** A fact the board shows with no chain
+  behind it belongs in the reading, not in the notation. The empty and full sets'
+  rule (they need every horseshoe around the cell to point one way) was read by
+  nothing, so it was costing hint steps; it is now part of `whyCantPlace`, and the
+  help teaches it. Measure what is left after that, not before.
+- **Where the game already lists a location's values, make the list editable.**
+  Subsets' aid already showed a cell's possible sets in the tally, so a press on a
+  set there rules it out of the cell in focus. No mode was needed, because the
+  focus is already framed on the board and decides what a press means. Look for
+  that home before reaching for a notes mode and a new glyph.
+- **A monotone premise needs no expiry check.** Every rule-out's premise is "none
+  of the sets the neighbor can still hold fits", and the board's reading only
+  grows as it fills, so a premise true when found stays true. The plan computes a
+  firing's rule-outs on the board the firing is shown on, recursing into the
+  neighbor's, and places them just before it. Slant and Loopy classify each
+  sentence as monotone or expiring; check whether yours can expire at all first.
+- **Read every step against the plan's board at that step.** Subsets' `hint()`
+  built every firing's highlights and "why not" clause from the board the hint
+  was asked on, so a spotlight or an exclusion several firings in could describe
+  a board that no longer existed. Nothing caught it, because the first step, which
+  every test looked at, was always right. Walk a working copy while building the
+  steps, and test by walking whole plans (`subsets-notes.test.ts`), not by
+  checking step one.
+
 ### Rule-outs as board marks
 
 Most deductive hints only ever *place*; a game whose own move set includes a
@@ -3073,18 +3108,18 @@ specific:
 
 Subsets is another parallel-recorder game, but its cube is **doubly hidden**:
 the player sees per-*letter* tri-state marks, never the `cube[cell][value]` of
-candidate *set-values* the solver reasons over. Three of its six rules
-eliminate set-values the player can't see and have no letter move to attach
-to, so they are **not steps** — they set up a collapse whose firing is the
-narratable letter conclusion. The trap is narrating a collapse by its
-**evidence** (the eliminated candidates): measured, that set is large (avg
-4.4, max 14), so enumerating it is both unreadable and dishonestly precise.
+candidate *set-values* the solver reasons over. The trap is narrating a
+collapse by its **evidence** (the eliminated candidates): measured, that set is
+large (avg 4.4, max 14), so enumerating it is both unreadable and dishonestly
+precise.
 
-**Those unplaced eliminations break quality-bar rule 6**, and this section
-predates it. `apply-markable-facts-rule` measured a quarter to a third of
-collapses resting on set-values the board does not rule out, even with the
-no-horseshoe rule added. Its audit has the numbers, and `add-subsets-notation`
-is the fix: give the player the rule-out, not a better narration of it.
+Most of what the cube eliminates the board already says, through the shallow
+reading the reference aid makes (`canHold`), so the recorder syncs its cube to
+that reading and those eliminations are never steps. The one rule that derives
+more, the advanced-arrow rule, gives the player a **rule-out** to make: a set
+struck out of a cell in the aid's tally. The hint places each rule-out a firing
+needs as a step before it (`add-subsets-notation`, and § "Give the facts a
+notation (Loopy)" for what transferred).
 
 The resolution three rounds of owner review converged on — **one slot per
 step, and make the counting *visible***:
@@ -3136,11 +3171,11 @@ full** ("the highlighted set"), never a bare "them"/"it", and signal the
 sub-goal it continues ("Still filling this cell — …").
 
 Three Subsets-specific mechanics: the recorder's `cube` **and** its
-elimination-provenance array must both persist across fixpoint iterations
-(refilling the provenance mis-attributes a collapse's evidence); a firing
-decides a cell's letters as one journey with per-slot legs; and the tally-set
-tint plus the `HINT_SPOT` bit live in the game's overlay arrays and must each
-join their cache-miss test. Exemplars:
+rule-out reasons (`why`) must both persist across fixpoint iterations
+(refilling the reasons loses why an earlier rule-out holds); a firing
+decides a cell's letters as one journey with per-slot legs; and each tally
+entry's look (its box, its strike, the keyboard cursor) plus the `HINT_SPOT`
+bit live in the game's overlay arrays and must each join their cache-miss test. Exemplars:
 [`subsets/solver.ts`](../../src/games/subsets/solver.ts),
 [`subsets/index.ts`](../../src/games/subsets/index.ts),
 [`subsets/render.ts`](../../src/games/subsets/render.ts).

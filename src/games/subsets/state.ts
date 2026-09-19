@@ -12,6 +12,10 @@
  * - `mask`   — letters not yet ruled out.
  * A cell is *decided* when `known == mask`; a letter slot is Known (in both),
  * Unknown (in `mask` only) or Cleared (in neither).
+ *
+ * `ruledOut` is the player's own notation, beside the letters: per cell, bit
+ * `v` says set-value `v` cannot go there. It is how a player records a fact
+ * about whole sets that no letter mark can say (`add-subsets-notation`).
  */
 
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
@@ -93,6 +97,9 @@ export interface SubsetsState {
   known: Uint16Array;
   /** Letters not yet ruled out, per cell. */
   mask: Uint16Array;
+  /** Set-values the player has ruled out, per cell: bit `v` is set-value `v`.
+   * Sixteen bits hold every set at the one legal size (`2^4`). */
+  ruledOut: Uint16Array;
   completed: boolean;
   /** Set by the solve move, with `completed` (see `executeMove`'s solve arm);
    * upstream declares this field but never sets it. */
@@ -102,10 +109,13 @@ export interface SubsetsState {
 /**
  * A move is a single letter-slot tri-state edit (upstream's `"%c%d,%d"`
  * string with `K`/`C`/`U`), or the solver's full-board fill (upstream `'S'`).
- * `bit` is the letter index (bit position), `0..n-1`.
+ * `bit` is the letter index (bit position), `0..n-1`. A `rule` move rules
+ * set-value `value` out of cell `pos` or takes the rule-out back, absolutely,
+ * so replaying one is harmless.
  */
 export type SubsetsMove =
   | { kind: "set"; type: "known" | "cleared" | "unknown"; pos: number; bit: number }
+  | { kind: "rule"; pos: number; value: number; on: boolean }
   | { kind: "solve"; known: ReadonlyArray<number>; mask: ReadonlyArray<number> };
 
 export interface SubsetsUi {
@@ -120,14 +130,19 @@ export interface SubsetsUi {
    * light up in the tally (`null` = none). Mutually exclusive with
    * {@link highlightSet}. Ephemeral, never persisted. */
   highlightCell: number | null;
+  /** The tally entry the keyboard cursor is on, when it has left the grid for
+   * the tally band below it (`null` = the cursor is on the grid). */
+  tallyCursor: number | null;
 }
 
 /** A Check & Save mistake: a set-value placed in more than one decided cell,
- * or an edge whose horseshoe / missing-horseshoe relation two decided cells
- * violate (`dir` indexes {@link ADJTHAN} on the cell `pos` it was flagged on). */
+ * an edge whose horseshoe / missing-horseshoe relation two decided cells
+ * violate (`dir` indexes {@link ADJTHAN} on the cell `pos` it was flagged on),
+ * or a set-value ruled out of the cell the solution puts it in. */
 export type SubsetsMistake =
   | { kind: "cell"; pos: number }
-  | { kind: "edge"; pos: number; dir: number };
+  | { kind: "edge"; pos: number; dir: number }
+  | { kind: "ruled"; pos: number; value: number };
 
 // --- params -----------------------------------------------------------------
 
@@ -201,6 +216,7 @@ export function blankState(p: SubsetsParams): SubsetsState {
     immutable: new Uint16Array(s),
     known: new Uint16Array(s),
     mask: new Uint16Array(s).fill(ALL_BITS(p.n)),
+    ruledOut: new Uint16Array(s),
     completed: false,
     cheated: false,
   };
@@ -213,6 +229,7 @@ export function cloneState(s: SubsetsState): SubsetsState {
     immutable: s.immutable.slice(),
     known: s.known.slice(),
     mask: s.mask.slice(),
+    ruledOut: s.ruledOut.slice(),
   };
 }
 

@@ -464,16 +464,29 @@ export function subsetsSolveGameLegacy(
  * The Check & Save mistake set: exactly what upstream's own error display
  * highlights — every set-value fully placed in more than one cell (each
  * offending cell flagged), and every edge whose horseshoe or
- * missing-horseshoe relation two decided cells violate. A rule-based check,
- * not a re-solve-and-diff, matching the C's live `COL_ERROR` verdicts.
+ * missing-horseshoe relation two decided cells violate — a rule-based check
+ * matching the C's live `COL_ERROR` verdicts — and every rule-out of the set
+ * the solution puts in that cell, which only the solution can judge. The hint
+ * reads the rule-outs as facts, so this is what makes that sound.
  */
 export function findMistakes(state: SubsetsState): readonly SubsetsMistake[] {
   const { w, h } = state;
+  const mistakes: SubsetsMistake[] = [];
+  if (state.ruledOut.some((r) => r !== 0)) {
+    const { solved, result } = solveCopy(state);
+    if (result === "complete") {
+      for (let i = 0; i < w * h; i++) {
+        const value = solved.known[i];
+        if (state.ruledOut[i] & (1 << value))
+          mistakes.push({ kind: "ruled", pos: i, value });
+      }
+    }
+  }
+
   const flags = new Uint8Array(w * h);
   const counts = new Int32Array(w * h);
-  if (subsetsValidate(state, flags, counts) !== "invalid") return [];
+  if (subsetsValidate(state, flags, counts) !== "invalid") return mistakes;
 
-  const mistakes: SubsetsMistake[] = [];
   for (let i = 0; i < w * h; i++) {
     if (state.known[i] === state.mask[i] && counts[state.known[i]] > 1)
       mistakes.push({ kind: "cell", pos: i });
@@ -511,19 +524,19 @@ export function solveCopy(
 // this, the generator's desc is unaffected *by construction*; there is no
 // recorder flag on the hot path.
 //
-// The projection problem: three of the six rules — `cubeSingleCount`,
-// `disjoint`, `applyArrowsAdvanced` — eliminate candidate *values* the player
-// never sees. They are not steps of their own (there is no letter move to
-// attach them to); instead they set up a `bitsFromCube` collapse, whose firing
-// carries the elimination *evidence* that drove it. Only three rules produce a
-// player-visible letter change: `applyArrows` (a horseshoe propagating letters),
-// `bitsFromCube` (a candidate collapse), and `solveSinglePosition` (a set with
-// one place left).
+// The projection problem: the solver reasons over candidate *set-values*, and
+// the player marks letters. Most of what the cube rules out the board already
+// says, through the shallow reading the reference aid makes (`canHold`: a
+// cell's marks, its horseshoes, and the sets placed elsewhere), so the
+// recorder's cube is synced to that reading and needs no record of it. The
+// advanced-arrow rule is the exception: it rules a set out of a cell because no
+// set that can still go in the neighbor fits it, which no letter can say. Those
+// are the rule-out marks (`ruledOut`), and the recorder keeps each one's reason
+// (`RuleOutWhy`) so a firing that rests on it places it first.
 //
 // Confluence makes the one-firing-at-a-time order safe: every rule only *adds*
 // information monotonically, so the fixpoint is order-independent — the
-// recorder reaches exactly the board `subsetsSolveGame` would from the same
-// position, never deducing more than the uniqueness gate vetted.
+// recorder never deduces more than the uniqueness gate vetted.
 
 /** One letter slot a firing decides. */
 export interface SubsetsDeductionSet {
@@ -547,30 +560,37 @@ export type SubsetsReason =
    * spotlight of `value`'s candidate cells is that single cell. */
   | { kind: "hiddenSingle"; value: number }
   /** A candidate collapse (`bitsFromCube`): the sets that can still go in the
-   * cell all agree on the decided letters. `survivors` is that surviving
-   * set-value list (the self-contained premise — every one contains each
-   * now-Known letter, none contains a now-Cleared letter; measured ≤3 in 94%
-   * of collapses). `neighbors` are the few local arrow/adjacency cells whose
-   * relation removed candidates (shaded as evidence); `placedDriven` is true
-   * when exactly-once placements elsewhere also removed candidates (narrated
-   * generically, shown ambiently in the tally — up to 14 cells, never
-   * enumerated). */
-  | {
-      kind: "collapse";
-      survivors: number[];
-      neighbors: number[];
-      placedDriven: boolean;
-    }
-  /** A set placed nowhere with exactly one candidate cell left goes there —
-   * the whole cell is decided at once. */
-  | { kind: "singlePosition"; value: number };
+   * cell all agree on the decided letters. `survivors` is that set-value list,
+   * read off the board once the firing's rule-outs are marked, so it is what
+   * the reference aid shows for the cell. */
+  | { kind: "collapse"; survivors: number[] };
+
+/** Why a set-value is ruled out of a cell when the board does not say so: the
+ * horseshoe between the cell and `via` leaves it no partner. With `head`, the
+ * cell is the horseshoe's subset end and no set that can still go in `via` is
+ * a bigger set holding it; otherwise the cell is the superset end and none is
+ * a smaller set inside it. */
+export interface RuleOutWhy {
+  via: number;
+  head: boolean;
+}
+
+/** A rule-out mark the plan places: set-value `value` out of cell `pos`. */
+export interface RuleOutMark {
+  pos: number;
+  value: number;
+  why: RuleOutWhy;
+}
 
 /** One recorded firing: the cell acted on, the letters it decides together
- * (one journey), and the deduction that forces them. */
+ * (one journey), the deduction that forces them, and the rule-outs it rests
+ * on that the board did not show, in the order they must be placed (each
+ * after every rule-out its own reason cites). */
 export interface SubsetsDeduction {
   pos: number;
   sets: SubsetsDeductionSet[];
   reason: SubsetsReason;
+  marks: RuleOutMark[];
 }
 
 /** The remaining plan from the player's position. `status` is the board's
@@ -607,13 +627,6 @@ function lettersToPlace(
   return sets;
 }
 
-/** Why a cube candidate was eliminated, for a collapse's evidence.
- * `undefined` in the sink means "not eliminated, or eliminated by the cell's
- * own marks (syncCube)" — the latter carries no external evidence cell. */
-type ElimEvidence =
-  | { kind: "placed"; cell: number }
-  | { kind: "neighbor"; cell: number };
-
 /** The first arrow with a player-visible letter change, applied and recorded
  * (mirrors `applyArrows`, one side of one arrow at a time). */
 function nextArrowFiring(state: SubsetsState): SubsetsDeduction | null {
@@ -633,6 +646,7 @@ function nextArrowFiring(state: SubsetsState): SubsetsDeduction | null {
             pos: i1,
             sets: bitList(gainedKnown, n).map((bit) => ({ bit, type: "known" })),
             reason: { kind: "arrowKnown", from: i1, to: i2 },
+            marks: [],
           };
         }
         // A letter ruled out of the superset i1 is ruled out of the subset i2.
@@ -643,6 +657,7 @@ function nextArrowFiring(state: SubsetsState): SubsetsDeduction | null {
             pos: i2,
             sets: bitList(lostMask, n).map((bit) => ({ bit, type: "cleared" })),
             reason: { kind: "arrowMask", from: i1, to: i2 },
+            marks: [],
           };
         }
       }
@@ -651,97 +666,31 @@ function nextArrowFiring(state: SubsetsState): SubsetsDeduction | null {
   return null;
 }
 
-/** `cubeSingleCount`, recording each elimination's evidence cell. Separate copy
- * of the private rule (does not touch the solve path). */
-function recCubeSingleCount(
-  state: SubsetsState,
-  counts: Int32Array,
-  cube: Uint8Array,
-  elim: (ElimEvidence | null)[],
-): number {
+/** Drop from the cube every set-value the board already rules out of its cell
+ * (`canHold`). This one rule stands in for the solve path's `syncCube`,
+ * `cubeSingleCount` and `disjoint`, all of which the shallow reading covers,
+ * and for the player's own rule-out marks; none of it needs a record, because
+ * a firing resting on it cites only the board. */
+function syncToBoard(state: SubsetsState, cube: Uint8Array): void {
   const s = state.w * state.h;
   const n2 = 1 << state.n;
-  let ret = 0;
-  for (let ni = 0; ni < n2; ni++) {
-    if (counts[ni] !== 1) continue;
-    // The single decided cell holding value `ni` — the evidence for every
-    // elimination this value causes.
-    let placedAt = -1;
-    for (let k = 0; k < s; k++) {
-      if (state.known[k] === state.mask[k] && state.known[k] === ni) {
-        placedAt = k;
-        break;
-      }
-    }
-    for (let j = 0; j < s; j++) {
-      if (state.mask[j] === state.known[j]) continue;
-      if (!cube[j * n2 + ni]) continue;
-      cube[j * n2 + ni] = 0;
-      elim[j * n2 + ni] ??= { kind: "placed", cell: placedAt };
-      ret++;
+  for (let i = 0; i < s; i++) {
+    for (let v = 0; v < n2; v++) {
+      if (cube[i * n2 + v] && !canHold(state, i, v)) cube[i * n2 + v] = 0;
     }
   }
-  return ret;
-}
-
-/** `disjoint`, recording the incomparable/decided neighbor as evidence. */
-function recDisjoint(
-  state: SubsetsState,
-  cube: Uint8Array,
-  elim: (ElimEvidence | null)[],
-): number {
-  const { w, h } = state;
-  const n2 = 1 << state.n;
-  let ret = 0;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      for (let d = 0; d < 4; d++) {
-        const i1 = y * w + x;
-        if (state.clues[i1] & ADJTHAN[d].f) continue;
-        const x2 = x + ADJTHAN[d].dx;
-        const y2 = y + ADJTHAN[d].dy;
-        if (x2 < 0 || x2 >= w || y2 < 0 || y2 >= h) continue;
-        const i2 = y2 * w + x2;
-        if (state.clues[i2] & ADJTHAN[d].fo) continue;
-
-        if (state.known[i1] !== state.mask[i1]) {
-          if (cube[i1 * n2] || cube[i1 * n2 + (n2 - 1)]) {
-            if (cube[i1 * n2]) elim[i1 * n2] ??= { kind: "neighbor", cell: i2 };
-            if (cube[i1 * n2 + (n2 - 1)])
-              elim[i1 * n2 + (n2 - 1)] ??= { kind: "neighbor", cell: i2 };
-            cube[i1 * n2] = 0;
-            cube[i1 * n2 + (n2 - 1)] = 0;
-            ret++;
-          }
-        } else if (state.known[i2] !== state.mask[i2]) {
-          for (let opt = 0; opt < n2; opt++) {
-            if (!cube[i2 * n2 + opt]) continue;
-            if (
-              (state.known[i1] & opt) !== opt &&
-              (state.known[i1] & opt) !== state.known[i1]
-            )
-              continue;
-            cube[i2 * n2 + opt] = 0;
-            elim[i2 * n2 + opt] ??= { kind: "neighbor", cell: i1 };
-            ret++;
-          }
-        }
-      }
-    }
-  }
-  return ret;
 }
 
 /**
- * `applyArrowsAdvanced`, recording the arrow neighbor as evidence. `strong`
- * adds the head half exactly as the solve path does — and, exactly as there,
- * the recorder reaches for it only once the cheaper vocabulary is exhausted
- * (see {@link deduceHintPlan}).
+ * `applyArrowsAdvanced`, recording why each set-value it rules out is gone.
+ * `strong` adds the head half exactly as the solve path does — and, exactly as
+ * there, the recorder reaches for it only once the cheaper vocabulary is
+ * exhausted (see {@link deduceHintPlan}).
  */
 function recApplyArrowsAdvanced(
   state: SubsetsState,
   cube: Uint8Array,
-  elim: (ElimEvidence | null)[],
+  why: (RuleOutWhy | null)[],
   strong: boolean,
 ): number {
   const { w, h } = state;
@@ -763,7 +712,7 @@ function recApplyArrowsAdvanced(
           }
           if (!found) {
             cube[i1 * n2 + sup] = 0;
-            elim[i1 * n2 + sup] ??= { kind: "neighbor", cell: i2 };
+            why[i1 * n2 + sup] = { via: i2, head: false };
             ret++;
           }
         }
@@ -779,7 +728,7 @@ function recApplyArrowsAdvanced(
           }
           if (!found) {
             cube[i2 * n2 + sub] = 0;
-            elim[i2 * n2 + sub] ??= { kind: "neighbor", cell: i1 };
+            why[i2 * n2 + sub] = { via: i1, head: true };
             ret++;
           }
         }
@@ -789,34 +738,65 @@ function recApplyArrowsAdvanced(
   return ret;
 }
 
-/** Shrink the cube to a fixpoint from the current marks, recording evidence.
- * `syncCube` (own-marks elimination) needs no evidence — a collapse detects
- * own-marks culprits directly. `counts` is fixed (no letter changes here), so
- * `recCubeSingleCount` runs once; `recDisjoint`/`recApplyArrowsAdvanced`
- * interact through the cube, so they iterate. */
+/** Shrink the cube to a fixpoint from the board. The board's reading is
+ * fixed here (no letter changes), so the sync runs once, and the advanced
+ * rule iterates on its own output. */
 function shrinkCube(
   state: SubsetsState,
   cube: Uint8Array,
-  counts: Int32Array,
-  elim: (ElimEvidence | null)[],
+  why: (RuleOutWhy | null)[],
   strong: boolean,
 ): void {
-  syncCube(state, cube);
-  recCubeSingleCount(state, counts, cube, elim);
-  for (;;) {
-    let changed = 0;
-    changed += recDisjoint(state, cube, elim);
-    changed += recApplyArrowsAdvanced(state, cube, elim, strong);
-    if (!changed) break;
+  syncToBoard(state, cube);
+  while (recApplyArrowsAdvanced(state, cube, why, strong)) {}
+}
+
+/** The set-values a rule-out's premise needs gone from `why.via`: every bigger
+ * set holding `value` for a subset end, every smaller set inside it for a
+ * superset end. */
+function premiseValues(value: number, why: RuleOutWhy, n2: number): number[] {
+  const out: number[] = [];
+  for (let v = 0; v < n2; v++) {
+    if (v === value) continue;
+    if (why.head ? (v & value) === value : (value & v) === v) out.push(v);
   }
+  return out;
+}
+
+/**
+ * Mark on `state` every rule-out that `targets` rest on and the board does not
+ * show, each after the rule-outs its own premise needs, and return them in that
+ * order. A target the board already rules out needs nothing, and since the
+ * board's reading only grows as it fills, one ruled out when the recorder
+ * found it stays ruled out.
+ */
+function markRuleOuts(
+  state: SubsetsState,
+  why: (RuleOutWhy | null)[],
+  targets: { pos: number; value: number }[],
+): RuleOutMark[] {
+  const n2 = 1 << state.n;
+  const out: RuleOutMark[] = [];
+  const ensure = (pos: number, value: number): void => {
+    if (!canHold(state, pos, value)) return;
+    const w = why[pos * n2 + value];
+    // Anything else the cube dropped, it dropped because the board says so.
+    if (w === null) throw new Error("subsets hint: a rule-out with no reason");
+    for (const v of premiseValues(value, w, n2)) ensure(w.via, v);
+    state.ruledOut[pos] |= 1 << value;
+    out.push({ pos, value, why: w });
+  };
+  for (const t of targets) ensure(t.pos, t.value);
+  return out;
 }
 
 /** The first cell whose surviving cube-candidates collapse into a new letter
- * conclusion (`bitsFromCube`), applied and recorded with its evidence. */
+ * conclusion (`bitsFromCube`), applied and recorded with the rule-outs it
+ * rests on. */
 function nextCollapseFiring(
   state: SubsetsState,
   cube: Uint8Array,
-  elim: (ElimEvidence | null)[],
+  why: (RuleOutWhy | null)[],
 ): SubsetsDeduction | null {
   const s = state.w * state.h;
   const n2 = 1 << state.n;
@@ -846,45 +826,39 @@ function nextCollapseFiring(
       ...bitList(lostMask, n).map((bit) => ({ bit, type: "cleared" as const })),
     ];
 
-    // Attribute the eliminations that are *culprits* for a decided letter — a
-    // Known letter L is forced because every set lacking L was ruled out; a
-    // Cleared letter L because every set holding L was. Shade only the few
-    // local arrow/adjacency neighbors; note whether exactly-once placements
-    // contributed (narrated generically — the tally shows them). The
-    // surviving-set list is the self-contained premise for the conclusion.
-    const neighbors = new Set<number>();
-    let placedDriven = false;
-    for (let nj = 0; nj < n2; nj++) {
-      if (cube[i * n2 + nj]) continue; // still a candidate — not a culprit
-      const culprit = (gainedKnown & ~nj) !== 0 || (lostMask & nj) !== 0;
-      if (!culprit) continue;
-      const ev = elim[i * n2 + nj];
-      if (ev?.kind === "neighbor") neighbors.add(ev.cell);
-      else if (ev?.kind === "placed") placedDriven = true;
+    // The *culprits* are the ruled-out sets the conclusion needs gone: a Known
+    // letter L is forced because every set lacking L is out, a Cleared letter
+    // L because every set holding L is. The rest of the cube's eliminations
+    // this firing does not rest on, so they are never placed.
+    const culprits: { pos: number; value: number }[] = [];
+    for (let v = 0; v < n2; v++) {
+      if (cube[i * n2 + v]) continue;
+      if ((gainedKnown & ~v) !== 0 || (lostMask & v) !== 0)
+        culprits.push({ pos: i, value: v });
     }
+    const marks = markRuleOuts(state, why, culprits);
+    const reason: SubsetsReason = {
+      kind: "collapse",
+      survivors: candidateSets(state, i),
+    };
 
     state.known[i] |= newknown;
     state.mask[i] &= newmask;
-    return {
-      pos: i,
-      sets,
-      reason: {
-        kind: "collapse",
-        survivors,
-        neighbors: [...neighbors],
-        placedDriven,
-      },
-    };
+    return { pos: i, sets, reason, marks };
   }
   return null;
 }
 
-/** A set placed nowhere with exactly one candidate cell left is placed there
- * (`solveSinglePosition`) — the whole cell decided at once. */
+/**
+ * A set placed nowhere with exactly one cube cell left is placed there
+ * (`solveSinglePosition`). Once the rule-outs from its other cells are marked,
+ * the board shows it has one cell left, so it is spoken as a hidden single.
+ */
 function nextSinglePosition(
   state: SubsetsState,
   counts: Int32Array,
   cube: Uint8Array,
+  why: (RuleOutWhy | null)[],
 ): SubsetsDeduction | null {
   const s = state.w * state.h;
   const n2 = 1 << state.n;
@@ -897,10 +871,13 @@ function nextSinglePosition(
     }
     if (found < 0) continue;
 
+    const others: { pos: number; value: number }[] = [];
+    for (let i = 0; i < s; i++) if (i !== found) others.push({ pos: i, value: nj });
+    const marks = markRuleOuts(state, why, others);
     const sets = lettersToPlace(state, found, nj);
     state.known[found] = nj;
     state.mask[found] = nj;
-    return { pos: found, sets, reason: { kind: "singlePosition", value: nj } };
+    return { pos: found, sets, reason: { kind: "hiddenSingle", value: nj }, marks };
   }
   return null;
 }
@@ -912,6 +889,13 @@ export type PlacementBlock =
   /** The cell's own marks forbid it (it lacks a marked letter, or holds a
    * cleared one). */
   | { kind: "marks" }
+  /** The player (or a hint step) ruled this set out of the cell. */
+  | { kind: "ruledOut" }
+  /** The empty set lies inside every set and the full set holds every set, so
+   * either one needs every edge of its cell to say so: the empty set a
+   * horseshoe pointing into the cell from each neighbor, the full set one
+   * pointing out to each. `neighbor` is one whose edge does not. */
+  | { kind: "extreme"; neighbor: number }
   /** A horseshoe to decided `neighbor` requires `value` to contain / be
    * contained in the neighbor's set, and it isn't: `mustContain` says which
    * direction, `letters` are the offending letters. */
@@ -921,7 +905,8 @@ export type PlacementBlock =
   | { kind: "adjacent"; neighbor: number };
 
 /** The visible rule (if any) that stops `value` sitting in undecided cell `i`,
- * judged shallowly from the board (marks + decided-neighbor horseshoes). */
+ * judged shallowly from the board: the cell's letters and rule-outs, the
+ * horseshoes around it, and its decided neighbors. */
 export function whyCantPlace(
   state: SubsetsState,
   i: number,
@@ -932,11 +917,17 @@ export function whyCantPlace(
   const y = Math.floor(i / w);
   if ((state.known[i] & value) !== state.known[i] || (value & state.mask[i]) !== value)
     return { kind: "marks" };
+  if (state.ruledOut[i] & (1 << value)) return { kind: "ruledOut" };
+  const full = ALL_BITS(state.n);
   for (let d = 0; d < 4; d++) {
     const x2 = x + ADJTHAN[d].dx;
     const y2 = y + ADJTHAN[d].dy;
     if (x2 < 0 || x2 >= w || y2 < 0 || y2 >= state.h) continue;
     const j = y2 * w + x2;
+    if (value === 0 && !(state.clues[j] & ADJTHAN[d].fo))
+      return { kind: "extreme", neighbor: j };
+    if (value === full && !(state.clues[i] & ADJTHAN[d].f))
+      return { kind: "extreme", neighbor: j };
     if (state.known[j] !== state.mask[j]) continue; // only decided neighbors constrain
     const kj = state.known[j];
     if (state.clues[i] & ADJTHAN[d].f) {
@@ -989,18 +980,21 @@ export function candidateCells(state: SubsetsState, value: number): number[] {
  * already placed elsewhere. A decided cell returns just its own set. */
 export function candidateSets(state: SubsetsState, i: number): number[] {
   const n2 = 1 << state.n;
-  if (state.known[i] === state.mask[i]) return [state.known[i]];
-  const placedElsewhere = new Set<number>();
+  const out: number[] = [];
+  for (let value = 0; value < n2; value++)
+    if (canHold(state, i, value)) out.push(value);
+  return out;
+}
+
+/** Whether set-value `value` can still go in cell `i` as the board reads —
+ * membership in {@link candidateSets}, the reference aid's cell view. */
+export function canHold(state: SubsetsState, i: number, value: number): boolean {
+  if (state.known[i] === state.mask[i]) return state.known[i] === value;
   const s = state.w * state.h;
   for (let k = 0; k < s; k++)
-    if (k !== i && state.known[k] === state.mask[k])
-      placedElsewhere.add(state.known[k]);
-  const out: number[] = [];
-  for (let value = 0; value < n2; value++) {
-    if (placedElsewhere.has(value)) continue;
-    if (whyCantPlace(state, i, value) === null) out.push(value);
-  }
-  return out;
+    if (k !== i && state.known[k] === state.mask[k] && state.known[k] === value)
+      return false;
+  return whyCantPlace(state, i, value) === null;
 }
 
 /** A representative excluded competitor of a collapse. `block` is why it can't
@@ -1008,7 +1002,9 @@ export function candidateSets(state: SubsetsState, i: number): number[] {
  * board, at `cell`). */
 export type CollapseExclusion = {
   value: number;
-  block: PlacementBlock | { kind: "placed"; cell: number };
+  block:
+    | Extract<PlacementBlock, { kind: "arrow" | "adjacent" }>
+    | { kind: "placed"; cell: number };
 };
 
 /** For a collapse at `cell` (only `survivors` fit), a representative *excluded*
@@ -1049,8 +1045,12 @@ export function pickExclusion(
     if (home >= 0) {
       block = { kind: "placed", cell: home };
     } else {
+      // A competitor the cell's own marks or rule-outs exclude says nothing
+      // the player cannot already see in the cell, and the empty and full
+      // sets' rule is the help's to teach, not a clause's.
       const b = whyCantPlace(state, cell, value);
-      if (!b || b.kind === "marks") continue;
+      if (!b || b.kind === "marks" || b.kind === "ruledOut" || b.kind === "extreme")
+        continue;
       block = b;
     }
     const rank = rankOf(block);
@@ -1090,7 +1090,7 @@ function nextHiddenSingle(
     if (sets.length === 0) continue;
     state.known[pos] = value;
     state.mask[pos] = value;
-    return { pos, sets, reason: { kind: "hiddenSingle", value } };
+    return { pos, sets, reason: { kind: "hiddenSingle", value }, marks: [] };
   }
   return null;
 }
@@ -1102,7 +1102,9 @@ function nextHiddenSingle(
  * **hidden single**
  * (a set with one spot left — the crisp, spotlight-shaped counting) → the
  * cube collapse (a cell with one set left) → a last-place cube placement.
- * Stops at `complete`/`invalid`, or `unfinished` when no rule fires.
+ * Stops at `complete`/`invalid`, or `unfinished` when no rule fires. The two
+ * cube rungs carry the rule-outs they rest on (`SubsetsDeduction.marks`), and
+ * the player's own rule-outs are facts from the start, as the letters are.
  *
  * `maxdiff` mirrors {@link subsetsSolveGame}'s cap and defaults to the top of
  * the ladder, which is what production wants: the Normal rung is a *fallback*,
@@ -1119,7 +1121,7 @@ export function deduceHintPlan(
   const n2 = 1 << work.n;
   const cube = new Uint8Array(s * n2).fill(1);
   const counts = new Int32Array(s);
-  const elim: (ElimEvidence | null)[] = new Array(s * n2).fill(null);
+  const why: (RuleOutWhy | null)[] = new Array(s * n2).fill(null);
   const budget = stepBudget("subsets hint");
 
   // Every rung *applies as it detects* (each `next*Firing` writes the letter or
@@ -1137,12 +1139,13 @@ export function deduceHintPlan(
 
     // Rungs 3+: engage the cube. Shrink it to a fixpoint (the value-only
     // rules), then look for a letter collapse, then a last-place placement.
-    // `cube` and `elim` both persist across iterations (the cube shrinks
-    // monotonically, so an elimination's reason is stable) — refilling `elim`
-    // would lose the provenance of candidates removed in an earlier iteration.
-    shrinkCube(state, cube, counts, elim, false);
+    // `cube` and `why` both persist across iterations (the cube shrinks
+    // monotonically, so an elimination's reason is stable) — refilling `why`
+    // would lose the reason for a rule-out found in an earlier iteration.
+    shrinkCube(state, cube, why, false);
     const easy =
-      nextCollapseFiring(state, cube, elim) ?? nextSinglePosition(state, counts, cube);
+      nextCollapseFiring(state, cube, why) ??
+      nextSinglePosition(state, counts, cube, why);
     if (easy) return easy;
 
     // Rung 4 (`DIFF_TRICKY`): only once every cheaper rung is exhausted, add
@@ -1153,9 +1156,10 @@ export function deduceHintPlan(
     // calls above returned null without mutating, so re-running them here
     // repeats no work and drops no firing.
     if (maxdiff < DIFF_TRICKY) return null;
-    shrinkCube(state, cube, counts, elim, true);
+    shrinkCube(state, cube, why, true);
     return (
-      nextCollapseFiring(state, cube, elim) ?? nextSinglePosition(state, counts, cube)
+      nextCollapseFiring(state, cube, why) ??
+      nextSinglePosition(state, counts, cube, why)
     );
   };
 

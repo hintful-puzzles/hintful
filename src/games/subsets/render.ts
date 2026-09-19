@@ -8,7 +8,8 @@
  * arrows sit in the gaps between cell blocks (red when their relation is
  * violated), a violated missing-arrow edge shows a red cross, and the band
  * below the grid tallies every set-value with a color for its placement
- * count (red = duplicated, lowlight = placed once, black = unplaced). All
+ * count (red = duplicated, lowlight = placed once, black = unplaced), and a
+ * set ruled out of the cell in focus struck through in the player's ink. All
  * error verdicts are live (recomputed from the committed state each frame,
  * as upstream). On a fresh win the slots blink to the inner background on
  * alternate 0.12 s flash frames; there is no move animation.
@@ -17,7 +18,8 @@
  * through the per-cell diff (the cursor slot is part of the cache key)
  * instead of upstream's save/restore blitter — same pixels, no blitter.
  *
- * `findMistakes` duplicates get an inset red frame via an `OverlaySidecar`
+ * `findMistakes` duplicates and wrong rule-outs get an inset red frame via an
+ * `OverlaySidecar`
  * (docs/games/rendering.md § "The tile cache and the diff key"); violated
  * edges are already red live, exactly as the C shows them.
  */
@@ -145,12 +147,25 @@ export interface SubsetsDrawState {
    * cell, plus the target slot index packed in bits 4+ (`(slot + 1) << 4`,
    * 0 = no target slot). */
   hint: OverlaySidecar;
-  /** Set-values the hint highlights in the tally band (1 = highlighted),
-   * indexed by set-value; compared against {@link SubsetsDrawState.oldHintSets}
-   * in the tally cache-miss test. */
-  hintSets: Uint8Array;
-  oldHintSets: Uint8Array;
+  /** How each tally entry looks, indexed by set-value: its box
+   * (`TALLY_BOX_*`), its rule-out strike (`TALLY_STRUCK*`) and the keyboard
+   * cursor (`TALLY_CURSOR`); compared against
+   * {@link SubsetsDrawState.oldTallyLook} in the tally cache-miss test. */
+  tallyLook: Uint8Array;
+  oldTallyLook: Uint8Array;
 }
+
+/** Tally look: boxed as a highlighted set (the premise, `COL_HINT_CELL`). */
+const TALLY_BOX_SET = 1;
+/** Tally look: boxed as the set a hint step rules out (the action, `COL_HINT`). */
+const TALLY_BOX_RULE = 2;
+const TALLY_BOX = 3;
+/** Tally look: ruled out of the cell the tally is showing. */
+const TALLY_STRUCK = 4;
+/** Tally look: ruled out, but the solution puts it there (a mistake). */
+const TALLY_STRUCK_WRONG = 8;
+/** Tally look: the keyboard cursor is on this entry. */
+const TALLY_CURSOR = 16;
 
 export function newDrawState(state: SubsetsState, tileSize: number): SubsetsDrawState {
   const s = state.w * state.h;
@@ -162,8 +177,8 @@ export function newDrawState(state: SubsetsState, tileSize: number): SubsetsDraw
     oldCounts: new Int32Array(s),
     mistakes: new OverlaySidecar(s),
     hint: new OverlaySidecar(s),
-    hintSets: new Uint8Array(s),
-    oldHintSets: new Uint8Array(s),
+    tallyLook: new Uint8Array(s),
+    oldTallyLook: new Uint8Array(s),
   };
 }
 
@@ -192,7 +207,8 @@ export function redraw(
   const radius = Math.floor(diameter / 2);
 
   const flash = flashTime > 0 && (Math.floor(flashTime / FLASH_FRAME) & 1) === 1;
-  const cshow = ui.cursor.visible && flashTime <= 0;
+  // The grid cursor hides while the keyboard is in the tally band below.
+  const cshow = ui.cursor.visible && ui.tallyCursor === null && flashTime <= 0;
   const firstDraw = !ds.started;
 
   // Live error verdicts and the tally, recomputed pure from the committed
@@ -201,27 +217,32 @@ export function redraw(
   const counts = new Int32Array(w * h);
   subsetsValidate(state, flags, counts);
 
-  // Check & Save overlay: duplicated placements get an inset red frame.
+  // Check & Save overlay: duplicated placements, and cells holding a wrong
+  // rule-out, get an inset red frame.
   ds.mistakes.clear();
+  const wrongRuled = new Set<number>();
   for (const m of mistakes ?? []) {
-    if (m.kind === "cell") ds.mistakes.add(m.pos, 1);
+    if (m.kind === "cell" || m.kind === "ruled") ds.mistakes.add(m.pos, 1);
+    if (m.kind === "ruled") wrongRuled.add(m.pos * (w * h) + m.value);
   }
 
   // Hint + reference-aid overlay: the current step's target slot (bold frame),
   // highlighted neighbor cells (light frame), spotlit placement cells, and
   // highlighted tally sets — repacked each frame so a dropped hint repaints too.
   ds.hint.clear();
-  ds.hintSets.fill(0);
+  ds.tallyLook.fill(0);
   const hl = hint?.highlights;
+  // The cell whose rule-outs the tally shows: the one a hint step is about,
+  // else the one in focus.
+  let tallyCell: number | null = null;
   if (hl && hint) {
     const slot = hint.move.kind === "set" ? hint.move.bit : -1;
-    ds.hint.add(
-      hl.target.y * w + hl.target.x,
-      HINT_TARGET | ((slot + 1) << HINT_SLOT_SHIFT),
-    );
+    tallyCell = hl.target.y * w + hl.target.x;
+    ds.hint.add(tallyCell, HINT_TARGET | ((slot + 1) << HINT_SLOT_SHIFT));
     for (const e of hl.cells) ds.hint.add(e.y * w + e.x, HINT_AREA);
     for (const c of hl.spotlight) ds.hint.add(c.y * w + c.x, HINT_SPOT);
-    for (const v of hl.sets) if (v >= 0 && v < w * h) ds.hintSets[v] = 1;
+    for (const v of hl.sets) if (v >= 0 && v < w * h) ds.tallyLook[v] = TALLY_BOX_SET;
+    if (hl.rule !== null) ds.tallyLook[hl.rule] = TALLY_BOX_RULE;
   } else if (
     ui.highlightSet !== null &&
     ui.highlightSet >= 0 &&
@@ -230,7 +251,7 @@ export function redraw(
     // Reference aid, set→cells: a clicked tally set lights up every cell it can
     // still go in (green). If the set is already placed, its home cell is lit a
     // distinct color instead — where it *is*, not where it could go.
-    ds.hintSets[ui.highlightSet] = 1;
+    ds.tallyLook[ui.highlightSet] = TALLY_BOX_SET;
     for (const i of candidateCells(state, ui.highlightSet)) {
       const placed = state.known[i] === state.mask[i];
       ds.hint.add(i, placed ? HINT_PLACED : HINT_SPOT);
@@ -241,10 +262,21 @@ export function redraw(
     ui.highlightCell < w * h
   ) {
     // Reference aid, cell→sets: a focused cell lights up, and every set it
-    // could still hold is tinted in the tally.
-    ds.hint.add(ui.highlightCell, HINT_SPOT);
-    for (const v of candidateSets(state, ui.highlightCell)) ds.hintSets[v] = 1;
+    // could still hold is boxed in the tally.
+    tallyCell = ui.highlightCell;
+    ds.hint.add(tallyCell, HINT_SPOT);
+    for (const v of candidateSets(state, tallyCell)) ds.tallyLook[v] = TALLY_BOX_SET;
   }
+  if (tallyCell !== null) {
+    for (let v = 0; v < w * h; v++) {
+      if (!(state.ruledOut[tallyCell] & (1 << v))) continue;
+      ds.tallyLook[v] |= wrongRuled.has(tallyCell * (w * h) + v)
+        ? TALLY_STRUCK_WRONG
+        : TALLY_STRUCK;
+    }
+  }
+  if (ui.tallyCursor !== null && ui.cursor.visible && flashTime <= 0)
+    ds.tallyLook[ui.tallyCursor] |= TALLY_CURSOR;
 
   if (firstDraw) {
     const all = { x: 0, y: 0, ...computeSize({ w, h }, ts) };
@@ -385,9 +417,20 @@ export function redraw(
       if (hintBits & HINT_TARGET) {
         // The slot the current step decides: a bold frame around that one slot
         // square (the interior is left clear — the hint shows *where*, the
-        // player marks it).
+        // player marks it). A rule-out step decides no slot, so its whole cell
+        // is framed instead.
         const targetSlot = (hintBits >> HINT_SLOT_SHIFT) - 1;
-        if (targetSlot >= 0 && targetSlot < cw * ch) {
+        if (targetSlot < 0) {
+          drawThickRectOutline(
+            dr,
+            bx,
+            by,
+            bw,
+            bw,
+            Math.max(2, Math.floor(ts / 8)),
+            COL_HINT,
+          );
+        } else if (targetSlot < cw * ch) {
           const tx = Math.floor((x * (cw + 1) + (targetSlot % cw) + 0.5) * ts);
           const ty = Math.floor(
             (y * (ch + 1) + Math.floor(targetSlot / cw) + 0.5) * ts,
@@ -502,12 +545,8 @@ export function redraw(
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const cn = x * h + y;
-      const hinted = ds.hintSets[cn];
-      if (
-        !firstDraw &&
-        counts[cn] === ds.oldCounts[cn] &&
-        hinted === ds.oldHintSets[cn]
-      )
+      const look = ds.tallyLook[cn];
+      if (!firstDraw && counts[cn] === ds.oldCounts[cn] && look === ds.oldTallyLook[cn])
         continue;
 
       const tx = x * (cw + 1) * ts + Math.floor(cw * ts * 0.75);
@@ -532,12 +571,25 @@ export function redraw(
       // The label's own color is information here — error red, used-up gray,
       // fixed — so a fill behind it competes with exactly what it has to be read
       // against.
-      if (hinted)
+      const box = look & TALLY_BOX;
+      if (box)
         drawMarkSides(
           dr,
           { box: entry, outer: 0, inner: Math.max(1, Math.floor(ts / 10)) },
           MARK_ALL,
-          COL_HINT_CELL,
+          box === TALLY_BOX_RULE ? COL_HINT : COL_HINT_CELL,
+        );
+      // The keyboard cursor: a thin frame just inside the entry, outside the
+      // hint's box, so both read at once.
+      if (look & TALLY_CURSOR)
+        drawThickRectOutline(
+          dr,
+          entry.x,
+          entry.y,
+          entry.w,
+          entry.h,
+          Math.max(1, Math.floor(ts / 18)),
+          COL_CURSOR,
         );
       dr.drawText(
         { x: tx, y: ty },
@@ -550,10 +602,20 @@ export function redraw(
         color,
         label,
       );
+      // A rule-out strikes the label through, in the player's own ink.
+      if (look & (TALLY_STRUCK | TALLY_STRUCK_WRONG)) {
+        const half = Math.floor(ts * 0.6);
+        dr.drawLine(
+          { x: tx - half, y: ty },
+          { x: tx + half, y: ty },
+          look & TALLY_STRUCK_WRONG ? COL_ERROR : COL_GUESS,
+          Math.max(2, Math.floor(ts / 12)),
+        );
+      }
       dr.drawUpdate(entry);
 
       ds.oldCounts[cn] = counts[cn];
-      ds.oldHintSets[cn] = hinted;
+      ds.oldTallyLook[cn] = look;
     }
   }
 

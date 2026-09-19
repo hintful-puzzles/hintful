@@ -52,9 +52,17 @@ function gen(seed: string): SubsetsState {
   return newState(P, desc);
 }
 
-/** Apply one firing (every letter it decides) to a copy of `state`. */
-function applyFiring(state: SubsetsState, d: SubsetsDeduction): SubsetsState {
+/** A copy of `state` with the rule-outs firing `d` rests on marked. */
+function withMarks(state: SubsetsState, d: SubsetsDeduction): SubsetsState {
   const next = cloneState(state);
+  for (const m of d.marks) next.ruledOut[m.pos] |= 1 << m.value;
+  return next;
+}
+
+/** Apply one firing (its rule-outs, then every letter it decides) to a copy of
+ * `state`. */
+function applyFiring(state: SubsetsState, d: SubsetsDeduction): SubsetsState {
+  const next = withMarks(state, d);
   for (const set of d.sets) {
     const b = 1 << set.bit;
     if (set.type === "known") {
@@ -185,7 +193,7 @@ describe("deduceHintPlan", () => {
     const r = hit.d.reason;
     if (r.kind !== "hiddenSingle") return;
     // The set can go in exactly one cell — the target — per the shallow aid.
-    const cells = candidateCells(hit.state, r.value);
+    const cells = candidateCells(withMarks(hit.state, hit.d), r.value);
     expect(cells).toEqual([hit.d.pos]);
     // After the firing the cell holds exactly `value`.
     const after = applyFiring(hit.state, hit.d);
@@ -193,16 +201,18 @@ describe("deduceHintPlan", () => {
     expect(after.mask[hit.d.pos]).toBe(r.value);
   });
 
-  it("a singlePosition firing places a set with exactly one candidate cell", () => {
-    // A rare deep fallback, but the scan's seeds do reach it.
-    const hit = findFiring((d) => d.reason.kind === "singlePosition");
+  it("the cube's last-place firing is a hidden single once its rule-outs are marked", () => {
+    // The cube finds a set with one cell left that the board does not show; the
+    // rule-outs it places are what make the aid show it.
+    const hit = findFiring(
+      (d) => d.reason.kind === "hiddenSingle" && d.marks.length > 0,
+    );
     expect(hit).not.toBeNull();
     if (!hit) return;
     const r = hit.d.reason;
-    if (r.kind !== "singlePosition") return;
-    const after = applyFiring(hit.state, hit.d);
-    expect(after.known[hit.d.pos]).toBe(r.value);
-    expect(after.mask[hit.d.pos]).toBe(r.value);
+    if (r.kind !== "hiddenSingle") return;
+    expect(candidateCells(hit.state, r.value).length).toBeGreaterThan(1);
+    expect(candidateCells(withMarks(hit.state, hit.d), r.value)).toEqual([hit.d.pos]);
   });
 });
 
@@ -295,9 +305,12 @@ describe("hint", () => {
       expect(step.explanation.length).toBeGreaterThan(20);
       const hl = step.highlights as SubsetsHintHighlights | undefined;
       expect(hl?.target).toBeDefined();
-      // Every leg is one slot with its own action; the lead leg also names the
-      // highlighted thing it reasons from (attention → deduction → action).
-      expect(step.explanation).toMatch(/(mark .*present|clear)/i);
+      // Every leg is one slot or one rule-out with its own action; the lead leg
+      // also names the highlighted thing it reasons from (attention → deduction
+      // → action).
+      expect(step.explanation).toMatch(
+        step.move.kind === "rule" ? /rules .* out here/ : /(mark .*present|clear)/i,
+      );
       if (!step.continuesPrevious) {
         expect(step.explanation).toMatch(/highlighted (cell|set)/i);
       }
@@ -549,15 +562,21 @@ describe("subgoal continuation narration", () => {
         if (subsetsGame.status(state) === "solved") break;
         const res = subsetsGame.hint?.(state);
         if (!res?.ok) break;
-        for (const st of res.steps) {
-          if (!st.continuesPrevious) continue;
+        res.steps.forEach((st, k) => {
+          if (!st.continuesPrevious) return;
           checked++;
           // The referent is explicit — "the highlighted cell/set(s)" — never a
           // sentence-leading bare "It"/"They"/"None of them".
-          expect(st.explanation).toMatch(/the highlighted (cell|sets?)/);
-          expect(st.explanation).toMatch(/Still filling this cell/);
+          expect(st.explanation).toMatch(
+            /the highlighted (cell|sets?)|highlighted set/,
+          );
           expect(st.explanation).not.toMatch(/^(It|They|None of them)\b/);
-        }
+          // A letter after a letter of the same cell continues that cell's
+          // sub-goal; a firing's lead after its rule-outs states its own.
+          const prev = res.steps[k - 1].move;
+          if (st.move.kind === "set" && prev.kind === "set" && prev.pos === st.move.pos)
+            expect(st.explanation).toMatch(/Still filling this cell/);
+        });
         state = applyFiring(state, deduceHintPlan(state).deductions[0]);
       }
     }
@@ -577,14 +596,16 @@ describe("collapse exclusion (#2 — why not X)", () => {
         if (!d) break;
         if (
           d.reason.kind === "collapse" &&
-          pickExclusion(state, d.pos, d.reason.survivors)
+          pickExclusion(withMarks(state, d), d.pos, d.reason.survivors)
         ) {
           const res = subsetsGame.hint?.(state);
           if (res?.ok) {
-            expect(res.steps[0].explanation).toMatch(
+            // The firing's lead letter comes after the rule-outs it rests on.
+            const lead = res.steps[d.marks.length];
+            expect(lead.explanation).toMatch(
               /For instance, .* (can't go here|already placed)/,
             );
-            const hl = res.steps[0].highlights as SubsetsHintHighlights;
+            const hl = lead.highlights as SubsetsHintHighlights;
             // The blocker cell is highlighted so the clause has a referent.
             expect(hl.cells.length).toBeGreaterThan(0);
             found = true;
@@ -713,7 +734,12 @@ describe("reference-aid rendering (tier 2.5)", () => {
     const palette = subsetsGame.colors([0.827, 0.827, 0.827]);
     const rec = new RecordingDrawing(palette);
     const ds = newDrawState(state, 36);
-    const ui = { cursor: newCursor(), highlightSet: pick, highlightCell: null };
+    const ui = {
+      cursor: newCursor(),
+      highlightSet: pick,
+      highlightCell: null,
+      tallyCursor: null,
+    };
     redraw(rec, ds, null, state, 0, ui, 0, 0, undefined, undefined);
     expect(rec.ops.some((o) => o.op === "rect" && o.color === COL_HINT_SPOT)).toBe(
       true,

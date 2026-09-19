@@ -10,7 +10,9 @@
  * Input targets one letter slot of a cell: left-click / Enter cycles it
  * unknown → present → absent, right-click / Space cycles the other way, and
  * middle-click / Backspace resets it to unknown; a keyboard cursor walks the
- * slots, skipping the gaps between cell blocks.
+ * slots, skipping the gaps between cell blocks. The tally band below the grid
+ * is the reference aid, and with a cell in focus it is also where a set is
+ * ruled out of that cell; the keyboard cursor walks down into it.
  *
  * Upstream locks the board to one configuration (4×4, four letters — the only
  * size where the sixteen possible sets exactly fill the sixteen cells), so the
@@ -65,9 +67,11 @@ import {
 import {
   type CollapseExclusion,
   candidateCells,
+  candidateSets,
   deduceHintPlan,
   findMistakes,
   pickExclusion,
+  type RuleOutMark,
   type SubsetsDeduction,
   solveCopy,
   subsetsSolveGame,
@@ -96,7 +100,12 @@ import {
 } from "./state.ts";
 
 function newUi(_state: SubsetsState): SubsetsUi {
-  return { cursor: newCursor(), highlightSet: null, highlightCell: null };
+  return {
+    cursor: newCursor(),
+    highlightSet: null,
+    highlightCell: null,
+    tallyCursor: null,
+  };
 }
 
 /** The cell whose inspect icon a pointer is over, or null. The icon is a badge
@@ -150,6 +159,60 @@ function tallyHit(p: Point, w: number, h: number, ts: number): number | null {
 
 type SlotType = "known" | "unknown" | "cleared";
 
+/**
+ * A press on tally entry `value`. With an undecided cell in focus the tally is
+ * that cell's list of sets, so the press rules `value` out of it or takes the
+ * rule-out back; otherwise (no cell in focus, or a decided one with nothing
+ * left to rule out) it spotlights where `value` can go, as it always has.
+ */
+function pressTally(
+  state: SubsetsState,
+  ui: SubsetsUi,
+  value: number,
+): SubsetsMove | UiUpdate {
+  const cell = ui.highlightCell;
+  if (cell !== null && state.known[cell] !== state.mask[cell]) {
+    return {
+      kind: "rule",
+      pos: cell,
+      value,
+      on: !(state.ruledOut[cell] & (1 << value)),
+    };
+  }
+  ui.highlightSet = ui.highlightSet === value ? null : value;
+  ui.highlightCell = null;
+  return UI_UPDATE;
+}
+
+/** The cell under the keyboard cursor. */
+const cursorCell = (ui: SubsetsUi, w: number): number =>
+  Math.floor(ui.cursor.y / (CELL_HEIGHT + 1)) * w +
+  Math.floor(ui.cursor.x / (CELL_WIDTH + 1));
+
+/** Arrow keys while the cursor is in the tally band: move between entries,
+ * and leave for the grid's bottom row from the band's top row. */
+function moveInTally(
+  ui: SubsetsUi,
+  dx: number,
+  dy: number,
+  w: number,
+  h: number,
+): UiUpdate {
+  const at = ui.tallyCursor ?? 0;
+  const col = Math.floor(at / h);
+  const row = at % h;
+  if (dy < 0 && row === 0) {
+    ui.tallyCursor = null;
+    ui.highlightCell = cursorCell(ui, w);
+    ui.highlightSet = null;
+    return UI_UPDATE;
+  }
+  const c = Math.max(0, Math.min(w - 1, col + dx));
+  const r = Math.max(0, Math.min(h - 1, row + dy));
+  ui.tallyCursor = c * h + r;
+  return UI_UPDATE;
+}
+
 function interpretMove(
   state: SubsetsState,
   ui: SubsetsUi,
@@ -174,18 +237,34 @@ function interpretMove(
       return UI_UPDATE;
     }
     const cn = tallyHit(p, w, h, ts);
-    if (cn !== null) {
-      ui.highlightSet = ui.highlightSet === cn ? null : cn;
-      ui.highlightCell = null;
-      return UI_UPDATE;
+    if (cn !== null) return pressTally(state, ui, cn);
+  }
+
+  // --- the keyboard in the tally band: arrows move, select presses --------
+  const delta = cursorDelta(button);
+  const gw = w * (cw + 1) - 1;
+  const gh = h * (ch + 1) - 1;
+  if (ui.tallyCursor !== null) {
+    if (delta) return moveInTally(ui, delta.dx, delta.dy, w, h);
+    if (button === CURSOR_SELECT || button === CURSOR_SELECT2)
+      return pressTally(state, ui, ui.tallyCursor);
+    if (isEraseKey(button)) {
+      // Erase takes a rule-out back, and only that.
+      const cell = ui.highlightCell;
+      const value = ui.tallyCursor;
+      if (cell === null || !(state.ruledOut[cell] & (1 << value))) return null;
+      return { kind: "rule", pos: cell, value, on: false };
     }
   }
 
   // --- cursor movement over the virtual slot grid, skipping the gaps -------
-  const delta = cursorDelta(button);
   if (delta) {
-    const gw = w * (cw + 1) - 1;
-    const gh = h * (ch + 1) - 1;
+    // Down from the grid's bottom row enters the tally band below it, keeping
+    // the cell in focus, so its sets can be ruled out from the keyboard.
+    if (delta.dy > 0 && ui.cursor.visible && ui.cursor.y === gh - 1) {
+      ui.tallyCursor = Math.floor(ui.cursor.x / (cw + 1)) * h;
+      return UI_UPDATE;
+    }
     // Upstream repeats move_cursor while the cursor rests on a gap row or
     // column between cell blocks; gaps never touch the clamped edges, so
     // this always terminates.
@@ -195,8 +274,7 @@ function interpretMove(
       ui.cursor.visible = true;
     } while (ui.cursor.x % (cw + 1) === cw || ui.cursor.y % (ch + 1) === ch);
     // Reverse aid: the cursor cell's still-possible sets light up in the tally.
-    ui.highlightCell =
-      Math.floor(ui.cursor.y / (ch + 1)) * w + Math.floor(ui.cursor.x / (cw + 1));
+    ui.highlightCell = cursorCell(ui, w);
     ui.highlightSet = null;
     return UI_UPDATE;
   }
@@ -258,7 +336,10 @@ function interpretMove(
   }
 
   if (oldtype === newtype) return null;
-  if (isMouseDown(button)) ui.cursor.visible = false;
+  if (isMouseDown(button)) {
+    ui.cursor.visible = false;
+    ui.tallyCursor = null;
+  }
 
   return { kind: "set", type: newtype, pos, bit: num };
 }
@@ -278,6 +359,15 @@ function executeMove(state: SubsetsState, move: SubsetsMove): SubsetsState {
     // Not byte-match surface: the desc differential never runs executeMove.
     if (subsetsValidate(next) === "complete") next.completed = true;
     next.cheated = next.completed;
+    return next;
+  }
+  if (move.kind === "rule") {
+    const { pos, value } = move;
+    if (pos < 0 || pos >= state.w * state.h || value < 0 || value >= 1 << state.n)
+      throw new Error("subsets: rule-out out of range");
+    const next = cloneState(state);
+    if (move.on) next.ruledOut[pos] |= 1 << value;
+    else next.ruledOut[pos] &= ~(1 << value);
     return next;
   }
   // Before the range checks: a missing `pos` makes `pos < 0` and `pos >= n`
@@ -340,12 +430,36 @@ function solve(orig: SubsetsState): SolveResult<SubsetsMove> {
  *   in the tally band (a collapse's surviving candidates, or the placed set);
  * - `spotlight` — the cells a *hidden single*'s set can still go in (its one
  *   home), lit `COL_HINT_SPOT` — the same set→placement spotlight the
- *   player-facing reference aid draws. */
+ *   player-facing reference aid draws;
+ * - `rule` — the set-value a rule-out step rules out of `target`, boxed
+ *   `COL_HINT` in the tally (the action), while `sets` box what the neighbor
+ *   across the horseshoe can still hold (the premise). */
 export interface SubsetsHintHighlights {
   target: Point;
   cells: Point[];
   sets: number[];
   spotlight: Point[];
+  rule: number | null;
+}
+
+const pointOf = (i: number, w: number): Point => ({ x: i % w, y: Math.floor(i / w) });
+
+/** A rule-out step, read against `board`, the plan's board just before it. */
+function ruleOutStep(
+  board: SubsetsState,
+  mark: RuleOutMark,
+): HintStep<SubsetsMove, SubsetsHintHighlights> {
+  return {
+    move: { kind: "rule", pos: mark.pos, value: mark.value, on: true },
+    explanation: say.ruleOut(mark, board.n),
+    highlights: {
+      target: pointOf(mark.pos, board.w),
+      cells: [pointOf(mark.why.via, board.w)],
+      sets: candidateSets(board, mark.why.via),
+      spotlight: [],
+      rule: mark.value,
+    },
+  };
 }
 
 function buildHighlights(
@@ -354,18 +468,14 @@ function buildHighlights(
   exclusion: CollapseExclusion | null,
 ): SubsetsHintHighlights {
   const w = state.w;
-  const pt = (i: number): Point => ({ x: i % w, y: Math.floor(i / w) });
+  const pt = (i: number): Point => pointOf(i, w);
   const r = d.reason;
   // Arrows point at a neighbor *cell*; a placement points at the *set* in the
   // tally; a hidden single also *spotlights* where the set can go (its one
   // home). A collapse highlights the excluded competitor's blocker cell, so
   // "the highlighted cell" in the "why not …" clause has a referent.
   const blockerCell = (ex: CollapseExclusion): number =>
-    ex.block.kind === "placed"
-      ? ex.block.cell
-      : ex.block.kind === "arrow" || ex.block.kind === "adjacent"
-        ? ex.block.neighbor
-        : d.pos; // "marks" never occurs here (pickExclusion filters it)
+    ex.block.kind === "placed" ? ex.block.cell : ex.block.neighbor;
   const cells: number[] =
     r.kind === "arrowKnown"
       ? [r.to]
@@ -375,38 +485,51 @@ function buildHighlights(
           ? [blockerCell(exclusion)]
           : [];
   const sets =
-    r.kind === "hiddenSingle" || r.kind === "singlePosition"
-      ? [r.value]
-      : r.kind === "collapse"
-        ? r.survivors
-        : [];
+    r.kind === "hiddenSingle" ? [r.value] : r.kind === "collapse" ? r.survivors : [];
   const spotlight =
     r.kind === "hiddenSingle" ? candidateCells(state, r.value).map(pt) : [];
-  return { target: pt(d.pos), cells: cells.map(pt), sets, spotlight };
+  return { target: pt(d.pos), cells: cells.map(pt), sets, spotlight, rule: null };
 }
 
-/** A firing (one deduction deciding a cell's letters) becomes one sub-goal
- * journey: leg 0 leads with the why, the rest follow as `continuesPrevious`
- * legs — each with its own per-slot string. A collapse's lead also gets a "why
- * not X" clause. All of a journey's marks render in the same `COL_HINT`. */
+/**
+ * A firing (one deduction deciding a cell's letters) becomes one sub-goal
+ * journey: first the rule-outs it rests on that the board does not show, one
+ * step each, then its letters, leg 0 leading with the why and the rest as
+ * per-slot legs. A collapse's lead also gets a "why not X" clause. Every step
+ * is read against `board`, the plan's board as that step is shown, which this
+ * advances past the firing.
+ */
 function stepsForFiring(
-  state: SubsetsState,
+  board: SubsetsState,
   d: SubsetsDeduction,
 ): HintStep<SubsetsMove, SubsetsHintHighlights>[] {
+  const steps: HintStep<SubsetsMove, SubsetsHintHighlights>[] = [];
+  for (const mark of d.marks) {
+    steps.push(ruleOutStep(board, mark));
+    board.ruledOut[mark.pos] |= 1 << mark.value;
+  }
   const exclusion =
     d.reason.kind === "collapse"
-      ? pickExclusion(state, d.pos, d.reason.survivors)
+      ? pickExclusion(board, d.pos, d.reason.survivors)
       : null;
-  const highlights = buildHighlights(state, d, exclusion);
-  const steps = d.sets.map((set, k) => ({
-    move: { kind: "set" as const, type: set.type, pos: d.pos, bit: set.bit },
-    explanation: say.leg(d, k),
-    highlights,
-    ...(k > 0 ? { continuesPrevious: true } : {}),
-  }));
-  if (exclusion && steps.length > 0)
-    steps[0].explanation += say.exclusion(exclusion, state.n);
-  return steps;
+  const highlights = buildHighlights(board, d, exclusion);
+  d.sets.forEach((set, k) => {
+    let explanation = say.leg(d, k);
+    if (k === 0 && exclusion) explanation += say.exclusion(exclusion, board.n);
+    steps.push({
+      move: { kind: "set", type: set.type, pos: d.pos, bit: set.bit },
+      explanation,
+      highlights,
+    });
+  });
+  for (const set of d.sets) {
+    const b = 1 << set.bit;
+    board.known[d.pos] =
+      set.type === "known" ? board.known[d.pos] | b : board.known[d.pos] & ~b;
+    board.mask[d.pos] =
+      set.type === "known" ? board.mask[d.pos] | b : board.mask[d.pos] & ~b;
+  }
+  return steps.map((step, k) => (k > 0 ? { ...step, continuesPrevious: true } : step));
 }
 
 function hint(state: SubsetsState): HintResult<SubsetsMove, SubsetsHintHighlights> {
@@ -433,22 +556,29 @@ function hint(state: SubsetsState): HintResult<SubsetsMove, SubsetsHintHighlight
     return { ok: false, error: DEDUCTION_EXHAUSTED };
   }
 
-  const steps = plan.deductions.flatMap((d) => stepsForFiring(state, d));
+  const board = cloneState(state);
+  const steps = plan.deductions.flatMap((d) => stepsForFiring(board, d));
   return { ok: true, steps };
 }
 
 /** A move completes the step iff it is exactly the hinted letter toggle
- * (position, letter and target tri-state all match); anything else drops the
- * plan to recompute. */
+ * (position, letter and target tri-state all match) or the hinted rule-out;
+ * anything else drops the plan to recompute. */
 function hintKeepTrack(
   m: SubsetsMove,
   step: HintStep<SubsetsMove>,
   _state: SubsetsState,
 ): HintTrackVerdict {
-  if (m.kind !== "set" || step.move.kind !== "set") return "off";
-  return m.pos === step.move.pos && m.bit === step.move.bit && m.type === step.move.type
-    ? "completed"
-    : "off";
+  const s = step.move;
+  if (m.kind === "set" && s.kind === "set")
+    return m.pos === s.pos && m.bit === s.bit && m.type === s.type
+      ? "completed"
+      : "off";
+  if (m.kind === "rule" && s.kind === "rule")
+    return m.pos === s.pos && m.value === s.value && m.on === s.on
+      ? "completed"
+      : "off";
+  return "off";
 }
 
 function flashLength(
