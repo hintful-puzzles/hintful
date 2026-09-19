@@ -63,7 +63,7 @@ export type SoloRegion =
  * `cageIntersect`) are recorded directly because the working board can't
  * re-derive them. */
 export type SoloReason =
-  /** A forced single placement — re-derived to naked/hidden/forced at emit. */
+  /** A forced single placement — re-derived to naked or hidden at emit. */
   | { kind: "single" }
   /** A digit placed at `(px, py)`, struck from the rest of a shared group. */
   | { kind: "dup"; n: number; px: number; py: number }
