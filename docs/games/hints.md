@@ -1393,7 +1393,7 @@ to a similar game:
 | Light Up | forced square(s), blue `COL_HINT` fill (bulb *and* mark targets identical — the narration says which) | evidence squares carried as one list, cue split by the cell's own state: a **dark** square → `COL_HINT_CELL` shade, a **lit/bulb** square → teal `COL_HINT_LITERF` ring (a fill would hide the "already lit" premise); the unlit square a deduction protects → amber `COL_HINT_DARKREF` ring; the driving clue → its digit recolors `COL_HINT` (the light `COL_HINT_CELL` was tried first and is unreadable as a cue — nearly white on black) |
 | Slant | forced square(s), blue `COL_HINT` ring (no slash preview); a clue firing rings all its forced squares and drops them as its multi-leg journey advances; a same-slant mark the step places, its bars in `COL_HINT` | a **clue** firing → the clue's digit recolors `COL_HINT` + its already-decided neighbor squares `COL_HINT_CELL` outlined; a **loop/dead-end** firing → the connectivity chain / trapped-point components outlined (plus the trapped points' incident squares); an **equivalence** firing → teal `COL_HINT_REF` ring on the placed square, and the marks it cites in `COL_HINT_CELL`; a **v-shape mark** → the clues it names recolored and the pairs across a 2 outlined |
 | Netslide | the tile being placed, `COL_HINT` fill (its wires still drawn on top); the border arrow to press, `COL_HINT` | its destination outlined `COL_HINT` — **solid** when the finished board really wants that tile's wires there, **dashed** when the plan is only passing through (the non-color cue distinguishing *arrived* from *setting up*) |
-| Crossing | the squares to write into, solid **green** `COL_HINT` (green, not the collection's blue — see below); a struck note keeps its normal `COL_PENCIL` digit + strikethrough on a *non*-target background | the run(s) reasoned over → pale-green `COL_HINT_CELL` shade; **and the still-fitting listed numbers → the same two shades as a patch behind their text in the clue panel** (§ "Off-board evidence") |
+| Crossing | the squares to write into (digits or notes), ringed **green** `COL_HINT` on the square's own border (green, not the collection's blue — see below); the notes to write are named only in the sentence; a struck note keeps its normal `COL_PENCIL` digit + strikethrough on a *non*-target background | the run(s) reasoned over → pale-green `COL_HINT_CELL` shade; **and the still-fitting listed numbers → the same two shades as a patch behind their text in the clue panel** (§ "Off-board evidence") |
 | Spokes | the forced spoke, in `COL_HINT` — **a line** when the move draws a line, **a rim dot** when the move places a mark (§ "Echo the move's shape in the hint color") | the hubs whose clue/lines/connectivity are the argument → `COL_HINT_CELL` ring. A saturated hub forces several spokes as one multi-leg journey, all in the one color |
 | Sticks | the forced square drawn as a `COL_HINT` **bar in the forced orientation**; green `COL_LINE` stays the placed line, so the hint is never mistaken for the move | the run / span / clue-sides the argument counts → one `evidence` list, cue split by the square's own state: a **white** square is washed `COL_HINT_CELL`, a **black clue** is *ringed* the same color (a wash would hide the blackness the argument is about). The list's length equals the number the sentence states |
 | Bridges | the **span** the step decides, drawn as the game's own shape: the bridge bundle it would become with only the *added* bars in `COL_HINT`, or the game's pair of crosses in `COL_HINT` when the step blocks it. The island a sentence *names* has its own rim and clue digit recolored `COL_HINT` (an annulus, so it is already a ring) | the islands and bridges the argument counts → `COL_HINT_CELL` on the same shapes. A premise that counts a **group** marks every member alike, the acted-from island included, because the sentence counts them together |
@@ -2104,6 +2104,44 @@ a cell. What it added, in [`games/subsets/`](../../src/games/subsets/):
   every test looked at, was always right. Walk a working copy while building the
   steps, and test by walking whole plans (`subsets-notes.test.ts`), not by
   checking step one.
+
+### Place the notes a fixpoint rests on (Crossing)
+
+When the notation already exists and only the plan skips it, the fix is in the
+plan: read the board's own marks as premises, and **trace a stronger engine's
+conclusion back to the marks it needs**. Crossing's hint used to fall back to the
+solver's narrowing fixpoint and say *"Once the crossing numbers rule the others
+out, …"*. That was true, and the player could not check it, because the rule-outs
+it rested on were digits struck from squares in the fixpoint's head and nowhere on
+the board.
+
+- **Read the notes as the board.** "Still fits" is the run's length, not written
+  in elsewhere, and agreeing with every square's entered digit **or notes**. That
+  is sound only because `findMistakes` flags a note that excludes the answer (the
+  Seismic premise, § "Deduce from the notes when the mistake check vouches for
+  them"). On a board the check cannot judge, the notes are the player's own
+  premises and the hint reasons from them as given.
+- **Record provenance per rule-out.** The fixpoint notes, for each (square,
+  digit), which narrowing removed it and how many narrowings came before that
+  run's numbers were judged. A number died at the square where one of its digits
+  went first. The narrowing that removed it rests on every number of its run
+  carrying that digit there having died earlier, and so on down. The board's own
+  rule-outs rest on nothing.
+- **Emit the oldest narrowing in the support, then recompute.** The oldest rests
+  only on the board, so its sentence is checkable as it stands. Every note step
+  narrows some square, so the recomputed walk ends at the placement read off the
+  notes. No recorded script is replayed; `support` in
+  [`crossing/hint-solver.ts`](../../src/games/crossing/hint-solver.ts) is the
+  exemplar.
+- **Writing notes into an empty square needs its own move.** Crossing's
+  `pencilAdd` only ever adds, for the reason `pencilStrike` only ever removes:
+  a toggle is not idempotent. Its keep-track and refresh are game-side, because
+  the shared candidate helpers know only strikes.
+- **Measure the notes, not the steps.** The audit counted 4 affected steps on 3
+  of 40 boards. Placing the support instead writes up to ten notes in a row on
+  the largest symmetric presets, some eight digits long: 13 of 160 boards needed
+  any. Preferring the square left with the fewest digits instead of the earliest
+  was tried, and wrote about as many.
 
 ### Rule-outs as board marks
 

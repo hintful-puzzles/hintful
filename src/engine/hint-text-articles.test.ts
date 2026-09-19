@@ -42,14 +42,10 @@ describe("a number after an article gets the article it is pronounced with", () 
   });
 
   it("Crossing's shared digit and single note strike", () => {
-    const shared = (digit: number, deep: boolean) =>
-      crossing.sharedDigit(
-        { technique: "sharedDigit", digit, deep } as SharedDigit,
-        true,
-      );
-    expect(shared(8, false)).toContain("has an 8 in this square");
-    expect(shared(8, true)).toContain("has an 8 here");
-    expect(shared(3, false)).toContain("has a 3 in this square");
+    const shared = (digit: number) =>
+      crossing.sharedDigit({ technique: "sharedDigit", digit } as SharedDigit, true);
+    expect(shared(8)).toContain("has an 8 in this square");
+    expect(shared(3)).toContain("has a 3 in this square");
     const strike = (digits: number[]) =>
       crossing.noteStrike({ technique: "noteStrike", digits } as NoteStrike, false);
     expect(strike([8])).toContain("puts an 8 in this square");

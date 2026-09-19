@@ -15,6 +15,7 @@ import {
   type CandidateMoveAdapter,
   candidateHint,
   keepCandidateHintTrack,
+  type Mark,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
 import { winFlash } from "../../engine/flash.ts";
@@ -301,13 +302,15 @@ function executeMove(state: CrossingState, move: CrossingMove): CrossingState {
     return next;
   }
 
-  if (move.kind === "pencilStrike") {
-    // Only ever removes, so replaying it is idempotent (unlike a `pencil`
-    // toggle) and a partly-followed strike stays safe to re-apply.
+  if (move.kind === "pencilStrike" || move.kind === "pencilAdd") {
+    // Only ever removes, or only ever adds, so replaying it is idempotent
+    // (unlike a `pencil` toggle) and a partly-followed step stays safe to
+    // re-apply.
     for (const { x, y, n } of move.marks) {
       const j = y * w + x;
       if (walls[j]) throw new Error("crossing: cannot edit a wall");
-      next.pencil[j] &= ~(1 << (n - 1));
+      if (move.kind === "pencilAdd") next.pencil[j] |= 1 << (n - 1);
+      else next.pencil[j] &= ~(1 << (n - 1));
     }
     return next;
   }
@@ -375,7 +378,9 @@ const crossingCandidateMoves: CandidateMoveAdapter<CrossingMove> = {
     if (m.kind === "pencil" && m.digit !== null)
       return { type: "set", x: m.x, y: m.y, n: m.digit, pencil: true };
     if (m.kind === "pencilStrike") return { type: "pencilStrike", marks: [...m.marks] };
-    return null; // `place`, `solve`, and the two "clear this" moves are off-plan
+    // `place`, `pencilAdd`, `solve`, and the two "clear this" moves are
+    // Crossing's own, read by `hintKeepTrack` and `refreshHintStep` first.
+    return null;
   },
   strike: (marks) => ({ kind: "pencilStrike", marks }),
   bit: (n) => 1 << (n - 1),
@@ -386,6 +391,9 @@ const cellAt = (puzzle: CrossingPuzzle, i: number): Point => ({
   y: Math.floor(i / puzzle.w),
 });
 
+const sameMark = (a: Mark, b: Mark): boolean =>
+  a.x === b.x && a.y === b.y && a.n === b.n;
+
 /** The move a firing asks for, in the game's own vocabulary — a whole number
  * into a run, one digit, or a rule-out. */
 function hintMove(puzzle: CrossingPuzzle, f: CrossingFiring): CrossingMove {
@@ -395,6 +403,11 @@ function hintMove(puzzle: CrossingPuzzle, f: CrossingFiring): CrossingMove {
     case "sharedDigit":
     case "crossRuns":
       return { ...cellAt(puzzle, f.cell), kind: "set", digit: f.digit };
+    case "noteDigits":
+      return {
+        kind: "pencilAdd",
+        marks: f.digits.map((n) => ({ ...cellAt(puzzle, f.cell), n })),
+      };
     case "noteStrike":
       return {
         kind: "pencilStrike",
@@ -431,6 +444,10 @@ function hintHighlights(puzzle: CrossingPuzzle, f: CrossingFiring): CrossingHint
         targets: [at(f.cell)],
         ...common,
       };
+    case "noteDigits":
+      // Nothing to strike: the digits to write are named in the sentence, and
+      // the ring says where.
+      return { area: runCells(f.run), targets: [at(f.cell)], ...common };
     case "noteStrike":
       return {
         area: runCells(f.run),
@@ -443,14 +460,34 @@ function hintHighlights(puzzle: CrossingPuzzle, f: CrossingFiring): CrossingHint
 
 /** One firing is one step — a whole run filled by one deduction is one hint,
  * not one per square (quality-bar rule 2), which is exactly what the `place`
- * move buys. */
+ * move buys. Notes one run's fitting numbers leave in several of its squares
+ * are one deduction too, but with different digits per square, so they are one
+ * journey with a sentence per leg. */
 function buildSteps(state: CrossingState): HintStep<CrossingMove, CrossingHint>[] {
   const { puzzle } = state;
-  return deduceCrossingPlan(state).firings.map((f) => ({
+  const firings = deduceCrossingPlan(state).firings;
+  return firings.map((f, j) => ({
     move: hintMove(puzzle, f),
     explanation: narrateCrossing(puzzle, f),
     highlights: hintHighlights(puzzle, f),
+    ...(j > 0 && sameNoteDeduction(firings[j - 1], f) && { continuesPrevious: true }),
   }));
+}
+
+type NoteFiring = Extract<CrossingFiring, { technique: "noteDigits" | "noteStrike" }>;
+
+const isNote = (f: CrossingFiring): f is NoteFiring =>
+  f.technique === "noteDigits" || f.technique === "noteStrike";
+
+/** Two note firings read off the same run's same fitting numbers. */
+function sameNoteDeduction(a: CrossingFiring, b: CrossingFiring): boolean {
+  return (
+    isNote(a) &&
+    isNote(b) &&
+    a.run === b.run &&
+    a.fitting.length === b.fitting.length &&
+    a.fitting.every((l, k) => l === b.fitting[k])
+  );
 }
 
 function hint(state: CrossingState): HintResult<CrossingMove, CrossingHint> {
@@ -484,6 +521,26 @@ function hintKeepTrack(
     const empty = run.cells.filter((i) => state.grid[i] === 0).length;
     return empty <= 1 ? "completed" : "onTrack";
   }
+  if (sm.kind === "pencilAdd") {
+    // Written by hand, the notes arrive one toggle at a time, and each one the
+    // step names that is not there yet is following it.
+    if (m.kind === "pencilAdd") {
+      return m.marks.length === sm.marks.length &&
+        sm.marks.every((k) => m.marks.some((j) => sameMark(j, k)))
+        ? "completed"
+        : "off";
+    }
+    if (m.kind !== "pencil" || m.digit === null) return "off";
+    const n = m.digit;
+    const hit = sm.marks.findIndex((k) => sameMark(k, { x: m.x, y: m.y, n }));
+    if (hit < 0 || state.pencil[m.y * state.puzzle.w + m.x] & (1 << (n - 1))) {
+      return "off";
+    }
+    const remaining = sm.marks.filter((_, j) => j !== hit);
+    if (remaining.length === 0) return "completed";
+    step.move = { kind: "pencilAdd", marks: remaining };
+    return "onTrack";
+  }
   return keepCandidateHintTrack(
     m,
     step,
@@ -512,6 +569,17 @@ function refreshHintStep(
         targets: empty.map((i) => cellAt(state.puzzle, i)),
       },
     };
+  }
+  if (m.kind === "pencilAdd") {
+    const { w } = state.puzzle;
+    const live = m.marks.filter(
+      ({ x, y, n }) =>
+        state.grid[y * w + x] === 0 && !(state.pencil[y * w + x] & (1 << (n - 1))),
+    );
+    if (live.length === 0) return null;
+    return live.length === m.marks.length
+      ? step
+      : { ...step, move: { kind: "pencilAdd", marks: live } };
   }
   return refreshCandidateHintStep(
     step,

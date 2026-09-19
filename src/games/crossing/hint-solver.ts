@@ -22,34 +22,35 @@
  * 3. **`crossRuns`** — the signature deduction of a number crossword: the
  *    across number allows one set of digits in this square, the down number
  *    another, and they agree on exactly one.
- * 4. **`noteStrike`** — a pencil note no still-fitting number supports.
+ * 4. **`noteDigits`** / **`noteStrike`** — the digits a run's still-fitting
+ *    numbers leave in one of its squares, written as notes into a square that
+ *    has none, or struck from the notes of one that has.
  *
- * **The order is derivation-depth first, then goal-first within a depth.**
- * "Still fits" has two readings. The *shallow* one — right length, not written
- * in elsewhere, agrees with the digits already in the run — is the scan the
- * player does by eye down the clue list, and is literally what the number
- * panel's fit-highlight already colors. The *deep* one is the fixpoint of the
- * narrowing below, where a number can die three implications away because some
- * crossing run ruled a digit out of one of its squares. Both are sound (each
- * over-estimates which numbers fit, so a set either narrows to one is narrowed
- * to the truth), but only the shallow one is checkable at a glance — so 1→3 run
- * over the shallow tables first, and a firing that needed the deep ones says so
- * in its own words rather than asserting something the player would check and
- * find false.
+ * **"Still fits" is read off the board.** A number fits a run when it is the
+ * run's length, is not written in elsewhere, and agrees with every square of
+ * the run: its entered digit, or else its notes. That is a check the player can
+ * make by eye, and reading the notes as facts is sound because `findMistakes`
+ * flags a note that has ruled a square's answer out, and the hint refuses on a
+ * flagged board.
  *
- * Within a depth the order is goal-first: fill a whole run, else pin a square,
- * else rule a note out. That makes `noteStrike` a **tail technique by
- * construction** — it can only surface once every placement rung is exhausted,
- * which on a solver-gated board means never before the board is solved. It is
- * kept because it is the only honest advice on a position where deduction *is*
+ * Rungs 1–3 read that way can stall where the solver does not: a number can
+ * die three implications away, because some crossing run ruled a digit out of
+ * one of its squares. The solver's narrowing fixpoint ({@link fixpoint}) finds
+ * such a placement, and the hint then does **not** assert it (a hint relies
+ * only on marks the player can make — `AGENTS.md` § "Hint quality bar" rule 6).
+ * It traces the placement back to the narrowings it rests on ({@link support})
+ * and places the earliest of them as notes, whose own premise is already on the
+ * board. Each note step narrows some square's notes, so the walk ends at the
+ * placement read off the notes.
+ *
+ * The order is goal-first: fill a whole run, else pin a square, else write the
+ * notes a placement needs. Rung 4 also closes a board where deduction is
  * exhausted (a hand-authored, non-uniquely-solvable id reaches it, and that is
- * how `crossing-hint.test.ts` tests it). Measured over 48 generated boards:
- * `onlyNumber` 86.6%, `sharedDigit` 7.3%, `crossRuns` 5.8%, deep tier 0.4%,
- * `noteStrike` 0 — with **no board stalling**.
+ * how `crossing-hint.test.ts` tests it) by ruling out a note no still-fitting
+ * number supports.
  *
- * Rungs 1–3 over the deep tables are exactly as strong as {@link solveCrossing}
- * — the narrowing fixpoint below is its `solverMarks` loop, and rungs 2+3 are
- * its `solverConfirm` — so a plan always reaches the solution.
+ * The fixpoint is {@link solveCrossing}'s `solverMarks` loop and rungs 2+3 are
+ * its `solverConfirm`, so a plan always reaches the solution.
  */
 
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
@@ -88,24 +89,38 @@ function soleDigit(mask: number): number {
 
 // --- the candidate lattice --------------------------------------------------
 
-/** What the deduction knows about a board: which numbers are used up, which
- * still fit each run, and what each open square can therefore hold. */
-interface Analysis {
-  /** Per listed number, the run it is already written into, or −1. */
-  placed: Int32Array;
-  /** Per run, the indices of the listed numbers that can still go in it. */
-  fitting: number[][];
-  /** Per run, per position, the digits those numbers put there. */
-  acc: Int32Array[];
-  /** Per cell, the digits it can hold — the intersection over its runs. */
-  cand: Int32Array;
-  /** The same as {@link fitting}, but judged **only** against the digits
-   * already entered in the run — the scan a player does by eye down the clue
-   * list, which is exactly what the number panel already colors. A firing
-   * whose premise holds under this weaker reading is directly checkable; one
-   * that needs the full lattice says so in its narration. */
-  shallowFitting: number[][];
-  shallowAcc: Int32Array[];
+/** The board the deduction walks: the player's entries plus their notes. */
+export interface CrossingHintBoard {
+  puzzle: CrossingPuzzle;
+  grid: Uint8Array;
+  marks: Int32Array;
+}
+
+/** What each square shows it can hold: its entered digit, else its notes, else
+ * anything. */
+function boardCandidates(board: CrossingHintBoard): Int32Array {
+  const { puzzle, grid, marks } = board;
+  const { w, h, walls } = puzzle;
+  const cand = new Int32Array(w * h);
+  for (let i = 0; i < w * h; i++) {
+    cand[i] = walls[i]
+      ? 0
+      : grid[i]
+        ? digitBit(grid[i])
+        : marks[i] & ALL_DIGITS || ALL_DIGITS;
+  }
+  return cand;
+}
+
+/** Number `l` is run `r`'s length and not already written into another run. */
+function mayTake(
+  puzzle: CrossingPuzzle,
+  placed: Int32Array,
+  r: number,
+  l: number,
+): boolean {
+  if (placed[l] >= 0 && placed[l] !== r) return false;
+  return puzzle.numbers[l].length === puzzle.runs[r].cells.length;
 }
 
 function fitsUnder(
@@ -122,103 +137,172 @@ function fitsUnder(
   return true;
 }
 
-/**
- * One narrowing pass, `solverMarks`' shape: for every run, collect the numbers
- * that still fit it, union their digits per position, and intersect each open
- * square's candidates with that union. Narrows **in place as it goes**, so the
- * vertical runs already see what the horizontal ones ruled out — that ordering
- * is where much of the solver's strength lives.
- */
-function narrowPass(
-  puzzle: CrossingPuzzle,
-  grid: Uint8Array,
-  cand: Int32Array,
-  placed: Int32Array,
-): { fitting: number[][]; acc: Int32Array[]; changed: boolean } {
-  const { numbers, runs } = puzzle;
-  const fitting: number[][] = [];
-  const acc: Int32Array[] = [];
-  let changed = false;
-
-  for (let r = 0; r < runs.length; r++) {
-    const cells = runs[r].cells;
-    const fits: number[] = [];
-    const a = new Int32Array(cells.length);
-
-    for (let l = 0; l < numbers.length; l++) {
-      if (placed[l] >= 0 && placed[l] !== r) continue; // used up elsewhere
-      if (numbers[l].length !== cells.length) continue;
-      if (!fitsUnder(puzzle, cand, r, l)) continue;
-      fits.push(l);
-      for (let k = 0; k < cells.length; k++) {
-        a[k] |= digitBit(numbers[l][k]);
-      }
-    }
-
-    fitting.push(fits);
-    acc.push(a);
-
-    for (let k = 0; k < cells.length; k++) {
-      const i = cells[k];
-      if (grid[i]) continue;
-      const next = cand[i] & a[k];
-      if (next !== cand[i]) {
-        cand[i] = next;
-        changed = true;
-      }
-    }
-  }
-
-  return { fitting, acc, changed };
+/** Per run, the listed numbers that still fit it under `cand`, and per position
+ * the digits they put there. */
+interface Tables {
+  fitting: number[][];
+  acc: Int32Array[];
 }
 
-/** Run the narrowing to a fixpoint from the player's board. */
-function analyze(puzzle: CrossingPuzzle, grid: Uint8Array): Analysis {
-  const { w, h, walls, runs } = puzzle;
-  const cand = new Int32Array(w * h);
-  for (let i = 0; i < w * h; i++) {
-    // Seeding a *filled* square with just its own digit is what makes "still
-    // fits" respect the player's entries — `solveCrossing` never needs it
-    // because it only ever runs from an empty grid.
-    cand[i] = walls[i] ? 0 : grid[i] ? digitBit(grid[i]) : ALL_DIGITS;
-  }
-  const placed = placedRuns(puzzle, grid);
+/** What the board shows: which numbers are used up, and which still fit each
+ * run judged against its entered digits and notes. */
+interface Analysis extends Tables {
+  placed: Int32Array;
+}
 
-  // The directly-checkable reading, taken before any narrowing.
-  const shallowFitting: number[][] = [];
-  const shallowAcc: Int32Array[] = [];
+function analyze(board: CrossingHintBoard): Analysis {
+  const { puzzle, grid } = board;
+  const { numbers, runs } = puzzle;
+  const cand = boardCandidates(board);
+  const placed = placedRuns(puzzle, grid);
+  const fitting: number[][] = [];
+  const acc: Int32Array[] = [];
   for (let r = 0; r < runs.length; r++) {
     const cells = runs[r].cells;
     const fits: number[] = [];
     const a = new Int32Array(cells.length);
-    for (let l = 0; l < puzzle.numbers.length; l++) {
-      if (!numberAvailableTo(puzzle, grid, placed, r, l)) continue;
+    for (let l = 0; l < numbers.length; l++) {
+      if (!mayTake(puzzle, placed, r, l) || !fitsUnder(puzzle, cand, r, l)) continue;
       fits.push(l);
-      for (let k = 0; k < cells.length; k++) {
-        a[k] |= digitBit(puzzle.numbers[l][k]);
-      }
+      for (let k = 0; k < cells.length; k++) a[k] |= digitBit(numbers[l][k]);
     }
-    shallowFitting.push(fits);
-    shallowAcc.push(a);
+    fitting.push(fits);
+    acc.push(a);
   }
+  return { placed, fitting, acc };
+}
+
+/** One square narrowed by one run's still-fitting numbers. */
+interface Narrowing {
+  cell: number;
+  run: number;
+  /** How many narrowings were recorded before the run's numbers were judged —
+   * the only ones this one can rest on. */
+  before: number;
+}
+
+/** `removedBy` value for a digit the fixpoint never rules out. */
+const SURVIVES = 0x7fffffff;
+
+interface Fixpoint extends Tables {
+  /** Per square and digit (`cell * 9 + digit − 1`), the index of the narrowing
+   * that ruled it out: −1 where the board already does, {@link SURVIVES} where
+   * nothing does. */
+  removedBy: Int32Array;
+  narrowings: Narrowing[];
+}
+
+/**
+ * `solverMarks`' narrowing, run to a fixpoint from the board, recording which
+ * narrowing ruled out each digit. Every pass narrows **in place as it goes**, so
+ * the vertical runs already see what the horizontal ones ruled out — that
+ * ordering is where much of the solver's strength lives.
+ */
+function fixpoint(board: CrossingHintBoard, placed: Int32Array): Fixpoint {
+  const { puzzle, grid } = board;
+  const { w, h, numbers, runs } = puzzle;
+  const cand = boardCandidates(board);
+  const removedBy = new Int32Array(w * h * 9).fill(SURVIVES);
+  for (let i = 0; i < w * h; i++) {
+    for (let d = 1; d <= 9; d++) {
+      if (!(cand[i] & digitBit(d))) removedBy[i * 9 + d - 1] = -1;
+    }
+  }
+  const narrowings: Narrowing[] = [];
 
   // The fixpoint is budgeted here only; the generator's copy of it in
   // `solver.ts` runs unbudgeted.
   const budget = stepBudget("crossing hint narrowing");
-  let pass = narrowPass(puzzle, grid, cand, placed);
-  while (pass.changed) {
+  for (;;) {
+    const fitting: number[][] = [];
+    const acc: Int32Array[] = [];
+    let changed = false;
+    for (let r = 0; r < runs.length; r++) {
+      const cells = runs[r].cells;
+      const before = narrowings.length;
+      const fits: number[] = [];
+      const a = new Int32Array(cells.length);
+      for (let l = 0; l < numbers.length; l++) {
+        if (!mayTake(puzzle, placed, r, l) || !fitsUnder(puzzle, cand, r, l)) continue;
+        fits.push(l);
+        for (let k = 0; k < cells.length; k++) a[k] |= digitBit(numbers[l][k]);
+      }
+      fitting.push(fits);
+      acc.push(a);
+
+      for (let k = 0; k < cells.length; k++) {
+        const i = cells[k];
+        if (grid[i]) continue;
+        const removed = cand[i] & ~a[k];
+        if (!removed) continue;
+        for (const d of digitsOf(removed)) removedBy[i * 9 + d - 1] = narrowings.length;
+        narrowings.push({ cell: i, run: r, before });
+        cand[i] &= a[k];
+        changed = true;
+      }
+    }
+    // A pass that changed nothing leaves `fitting`/`acc` agreeing with `cand`.
+    if (!changed) return { fitting, acc, removedBy, narrowings };
     budget.tick();
-    pass = narrowPass(puzzle, grid, cand, placed);
   }
-  // The final pass changed nothing, so its `fitting`/`acc` agree with `cand`.
-  return {
-    placed,
-    fitting: pass.fitting,
-    acc: pass.acc,
-    cand,
-    shallowFitting,
-    shallowAcc,
+}
+
+/**
+ * The narrowings that killing every number in `kills` rests on, oldest first.
+ *
+ * A number died at the square of its run where one of its digits was ruled out
+ * first. That narrowing rests on every number of its run carrying that digit
+ * there having died before the run was judged, and so on down; a digit the
+ * board already rules out rests on nothing. So the oldest narrowing in the
+ * result rests only on the board, and is directly checkable.
+ */
+function support(
+  puzzle: CrossingPuzzle,
+  placed: Int32Array,
+  fp: Fixpoint,
+  kills: readonly { run: number; number: number }[],
+): number[] {
+  const { runs, numbers } = puzzle;
+  const need = new Set<number>();
+  const visited = new Set<number>();
+
+  const kill = (r: number, l: number, bound: number): void => {
+    const cells = runs[r].cells;
+    const num = numbers[l];
+    // The square where it died first; the board's own rule-outs come before
+    // every narrowing and rest on nothing. (Preferring the square left with the
+    // fewest digits was measured, and wrote about as many notes.)
+    let key = -1;
+    let at = SURVIVES;
+    for (let k = 0; k < cells.length; k++) {
+      const kk = cells[k] * 9 + num[k] - 1;
+      if (fp.removedBy[kk] < at) {
+        at = fp.removedBy[kk];
+        key = kk;
+      }
+    }
+    if (at >= bound)
+      throw new Error("crossing hint: a dead number has no square it died at");
+    if (at >= 0) rule(key);
   };
+
+  const rule = (key: number): void => {
+    if (visited.has(key)) return;
+    visited.add(key);
+    const e = fp.removedBy[key];
+    need.add(e);
+    const { cell, run, before } = fp.narrowings[e];
+    const pos = posInRun(puzzle, run, cell);
+    const digit = (key % 9) + 1;
+    for (let l = 0; l < numbers.length; l++) {
+      if (mayTake(puzzle, placed, run, l) && numbers[l][pos] === digit) {
+        kill(run, l, before);
+      }
+    }
+  };
+
+  for (const { run, number } of kills) kill(run, number, SURVIVES);
+  return [...need].sort((a, b) => a - b);
 }
 
 // --- firings ----------------------------------------------------------------
@@ -240,16 +324,13 @@ export type CrossingFiring =
       /** The premise: the numbers that still fit (here, just `number`). */
       fitting: number[];
       /** **What actually rules the others out** — the premise the narration
-       * must state, since all three read very differently on the board (a
-       * premise that doesn't single out this conclusion is a bug):
-       * `"length"` — no other listed number is even this long (the whole story
-       * on a fresh board); `"used"` — the other numbers of this length are
-       * already written in elsewhere; `"digits"` — the digits already in this
-       * run contradict them. Meaningful only when `deep` is false — a deep
-       * firing's premise is the crossing numbers, and says so. */
-      because: "length" | "used" | "digits";
-      /** The premise needs the crossing numbers, not just the entered digits. */
-      deep: boolean;
+       * must state, since they read very differently on the board (a premise
+       * that doesn't single out this conclusion is a bug): `"length"` — no
+       * other listed number is even this long (the whole story on a fresh
+       * board); `"used"` — the other numbers of this length are already
+       * written in elsewhere; `"digits"` — the digits already in this run
+       * contradict them; `"notes"` — the notes in the run's squares do. */
+      because: "length" | "used" | "digits" | "notes";
     }
   | {
       technique: "sharedDigit";
@@ -259,7 +340,6 @@ export type CrossingFiring =
       pos: number;
       digit: number;
       fitting: number[];
-      deep: boolean;
     }
   | {
       technique: "crossRuns";
@@ -271,23 +351,19 @@ export type CrossingFiring =
       acrossDigits: number[];
       downDigits: number[];
       fitting: number[];
-      deep: boolean;
     }
-  | {
-      technique: "noteStrike";
-      cell: number;
-      /** The run whose fitting numbers refute the notes. */
-      run: number;
-      digits: number[];
-      fitting: number[];
-    };
+  | ({ technique: "noteDigits" } & NoteFiring)
+  | ({ technique: "noteStrike" } & NoteFiring);
 
-/** The board the deduction walks: the player's entries plus their notes (the
- * notes are never read as *facts*, only as the thing a strike acts on). */
-export interface CrossingHintBoard {
-  puzzle: CrossingPuzzle;
-  grid: Uint8Array;
-  marks: Int32Array;
+/** `noteDigits` writes notes into a square that has none; `noteStrike` rules
+ * notes out of one that has. */
+interface NoteFiring {
+  cell: number;
+  /** The run whose fitting numbers decide the notes. */
+  run: number;
+  /** The digits written, or the digits struck. */
+  digits: number[];
+  fitting: number[];
 }
 
 /** Position of cell `i` along run `r`. */
@@ -297,36 +373,40 @@ function posInRun(puzzle: CrossingPuzzle, r: number, i: number): number {
 
 /**
  * The next forced deduction, in **goal-first** order: fill a whole run, else
- * pin one square, else pin one square from its two crossing numbers, else rule
- * a refuted note out. Leading with the whole-run placement is both the
- * strongest teaching and the most satisfying move; a plan that dribbled out
- * note strikes before the run they belong to would read as busywork.
- *
- * The shallow tables go first, so a plainer argument is never passed over for
- * one that needs the crossing numbers (see the module note).
+ * pin one square, else pin one square from its two crossing numbers, else write
+ * the notes the next placement rests on, else rule a refuted note out. Leading
+ * with the whole-run placement is both the strongest teaching and the most
+ * satisfying move.
  */
 function nextCrossingFiring(board: CrossingHintBoard): CrossingFiring | null {
-  const a = analyze(board.puzzle, board.grid);
-  return (
-    placementFiring(board, a.shallowFitting, a.shallowAcc, false) ??
-    placementFiring(board, a.fitting, a.acc, true) ??
-    noteStrikeFiring(board, a)
-  );
+  const a = analyze(board);
+  const shown = placementFiring(board, a, a);
+  if (shown) return shown;
+
+  const fp = fixpoint(board, a.placed);
+  const hidden = placementFiring(board, fp, a);
+  if (!hidden) return noteStrikeFiring(board, a);
+  const [first] = support(board.puzzle, a.placed, fp, kills(board, a, fp, hidden));
+  if (first === undefined) {
+    throw new Error("crossing hint: a placement the board shows was passed over");
+  }
+  const { cell, run } = fp.narrowings[first];
+  return noteFiring(board, a, cell, run);
 }
 
 /**
- * The three placement techniques, in goal-first order. Reads whichever pair of
- * (fitting, acc) tables it is given, so the same code serves the
- * directly-checkable and the non-local readings.
+ * The three placement techniques, in goal-first order, read off whichever
+ * tables `t` it is given. `shown` is always the board's own reading: it decides
+ * how a whole-run placement is narrated.
  */
 function placementFiring(
   board: CrossingHintBoard,
-  fitting: number[][],
-  acc: Int32Array[],
-  deep: boolean,
+  t: Tables,
+  shown: Analysis,
 ): CrossingFiring | null {
   const { puzzle, grid } = board;
   const { w, h, walls, runs, numbers } = puzzle;
+  const { fitting, acc } = t;
 
   // 1 — a run only one listed number can still go in.
   for (let r = 0; r < runs.length; r++) {
@@ -335,6 +415,10 @@ function placementFiring(
     const fill = cells.filter((i) => grid[i] === 0);
     if (fill.length === 0) continue; // already written in
     const sameLength = numbers.filter((n) => n.length === cells.length).length;
+    // Judged on the entered digits alone, does anything else still fit?
+    const unnoted = numbers.filter((_, l) =>
+      numberAvailableTo(puzzle, grid, shown.placed, r, l),
+    ).length;
     return {
       technique: "onlyNumber",
       run: r,
@@ -342,12 +426,13 @@ function placementFiring(
       fill,
       fitting: fitting[r],
       because:
-        fill.length < cells.length
-          ? "digits" // something is written in the run, and it does the work
-          : sameLength > 1
-            ? "used" // nothing written here, so the others must be used up
-            : "length", // it is the only number of this length, full stop
-      deep,
+        unnoted > 1
+          ? "notes" // the notes in the run are what rule the others out
+          : fill.length < cells.length
+            ? "digits" // something is written in the run, and it does the work
+            : sameLength > 1
+              ? "used" // nothing written here, so the others must be used up
+              : "length", // it is the only number of this length, full stop
     };
   }
 
@@ -366,7 +451,6 @@ function placementFiring(
         pos: k,
         digit,
         fitting: fitting[r],
-        deep,
       };
     }
   }
@@ -390,11 +474,76 @@ function placementFiring(
       acrossDigits: digitsOf(acrossDigits),
       downDigits: digitsOf(downDigits),
       fitting: [...fitting[across], ...fitting[down]],
-      deep,
     };
   }
 
   return null;
+}
+
+/** The numbers that still fit on the board but must be dead for `f` — found on
+ * the fixpoint's tables — to fire on the board's own. */
+function kills(
+  board: CrossingHintBoard,
+  shown: Analysis,
+  fp: Fixpoint,
+  f: CrossingFiring,
+): { run: number; number: number }[] {
+  const { puzzle } = board;
+  /** The numbers still fitting run `r` whose digit at `pos` is not `digit`. */
+  const against = (r: number, pos: number, digit: number) =>
+    shown.fitting[r]
+      .filter((l) => puzzle.numbers[l][pos] !== digit)
+      .map((l) => ({ run: r, number: l }));
+  switch (f.technique) {
+    case "onlyNumber":
+      return shown.fitting[f.run]
+        .filter((l) => l !== f.number)
+        .map((l) => ({ run: f.run, number: l }));
+    case "sharedDigit":
+      return against(f.run, f.pos, f.digit);
+    case "crossRuns": {
+      // Every other digit both runs allow on the board must go from one side:
+      // whichever the fixpoint ruled it out of.
+      const pa = posInRun(puzzle, f.acrossRun, f.cell);
+      const pd = posInRun(puzzle, f.downRun, f.cell);
+      const both = shown.acc[f.acrossRun][pa] & shown.acc[f.downRun][pd];
+      const out: { run: number; number: number }[] = [];
+      for (const d of digitsOf(both)) {
+        if (d === f.digit) continue;
+        const [r, pos] =
+          fp.acc[f.acrossRun][pa] & digitBit(d) ? [f.downRun, pd] : [f.acrossRun, pa];
+        out.push(
+          ...shown.fitting[r]
+            .filter((l) => puzzle.numbers[l][pos] === d)
+            .map((l) => ({ run: r, number: l })),
+        );
+      }
+      return out;
+    }
+    case "noteDigits":
+    case "noteStrike":
+      throw new Error("crossing hint: a note step is not a placement");
+  }
+}
+
+/** The notes run `run`'s still-fitting numbers leave in square `cell`: written
+ * in when it has none, the rest struck when it has some. */
+function noteFiring(
+  board: CrossingHintBoard,
+  a: Analysis,
+  cell: number,
+  run: number,
+): CrossingFiring {
+  const leave = a.acc[run][posInRun(board.puzzle, run, cell)];
+  const notes = board.marks[cell] & ALL_DIGITS;
+  const digits = digitsOf(notes ? notes & ~leave : leave);
+  if (notes ? digits.length === 0 : digits.length < 2) {
+    throw new Error("crossing hint: a note step that narrows nothing");
+  }
+  const note = { cell, run, digits, fitting: a.fitting[run] };
+  return notes
+    ? { technique: "noteStrike", ...note }
+    : { technique: "noteDigits", ...note };
 }
 
 /** A pencil note no still-fitting number supports. */
@@ -451,6 +600,9 @@ export function applyCrossingFiring(
     case "crossRuns":
       grid[firing.cell] = firing.digit;
       break;
+    case "noteDigits":
+      for (const d of firing.digits) marks[firing.cell] |= digitBit(d);
+      break;
     case "noteStrike":
       for (const d of firing.digits) marks[firing.cell] &= ~digitBit(d);
       break;
@@ -502,7 +654,6 @@ export function narrateCrossing(
       const run = puzzle.runs[firing.run];
       return say.onlyNumber(
         firing,
-        run.horizontal,
         run.cells.length,
         puzzle.numbers[firing.number].join(""),
       );
@@ -511,6 +662,8 @@ export function narrateCrossing(
       return say.sharedDigit(firing, puzzle.runs[firing.run].horizontal);
     case "crossRuns":
       return say.crossRuns(firing);
+    case "noteDigits":
+      return say.noteDigits(firing, puzzle.runs[firing.run].horizontal);
     case "noteStrike":
       return say.noteStrike(firing, puzzle.runs[firing.run].horizontal);
   }

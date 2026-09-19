@@ -6,13 +6,6 @@
  * the puzzle); this file decides only how it reads. One firing, one sentence:
  * the indication (the pattern to learn to spot), then the premise, then the
  * forced action in the necessity voice.
- *
- * The two `deep` variants exist because the premise is *half off the board*.
- * "Only one number still fits" is directly checkable when it holds against the
- * digits already entered — the clue list is literally coloring that scan
- * already. When it holds only after the crossing numbers have ruled the others
- * out, saying so plainly beats asserting something the player would check and
- * find false.
  */
 
 import { indefinite, joinOr } from "../../engine/hint-text.ts";
@@ -28,15 +21,7 @@ const way = (horizontal: boolean): string => (horizontal ? "across" : "down");
 
 export const say = {
   /** The run (`horizontal`, `len` squares) can only be `num`. */
-  onlyNumber: (
-    f: Firing<"onlyNumber">,
-    horizontal: boolean,
-    len: number,
-    num: string,
-  ): string => {
-    if (f.deep) {
-      return `Once the crossing numbers rule the others out, only one number is left for this ${way(horizontal)} run, so it must be ${num}.`;
-    }
+  onlyNumber: (f: Firing<"onlyNumber">, len: number, num: string): string => {
     // The fresh-board opener says nothing about entered digits: on an empty
     // run there are none, so that premise does no work and reads as plainly
     // false — the length is the whole argument there.
@@ -46,13 +31,15 @@ export const say = {
     if (f.because === "used") {
       return `Every other ${len}-digit number is already on the board, so this run must be ${num}.`;
     }
+    if (f.because === "notes") {
+      const what = f.fill.length < len ? "digits and notes" : "notes";
+      return `Only one ${len}-digit number left fits the ${what} in this run, so it must be ${num}.`;
+    }
     return `Only one ${len}-digit number left matches the digits already in this run, so it must be ${num}.`;
   },
 
   sharedDigit: (f: Firing<"sharedDigit">, horizontal: boolean): string =>
-    f.deep
-      ? `Once the crossing numbers rule the rest out, every number left for this ${way(horizontal)} run has ${indefinite(String(f.digit))} ${f.digit} here, so it must be ${f.digit}.`
-      : `Every number that still fits this ${way(horizontal)} run has ${indefinite(String(f.digit))} ${f.digit} in this square, so it must be ${f.digit}.`,
+    `Every number that still fits this ${way(horizontal)} run has ${indefinite(String(f.digit))} ${f.digit} in this square, so it must be ${f.digit}.`,
 
   crossRuns: (f: Firing<"crossRuns">): string => {
     // Lead with whichever run is the *tighter* constraint and let the other
@@ -69,6 +56,10 @@ export const say = {
     const small = leadAcross ? across : down;
     return `${near}, this square can only be ${joinOr(small)}, and the ${far} number rules out all but ${f.digit}, so it must be ${f.digit}.`;
   },
+
+  /** Always two digits or more: a run leaving one would pin the square. */
+  noteDigits: (f: Firing<"noteDigits">, horizontal: boolean): string =>
+    `Every number that still fits this ${way(horizontal)} run puts ${joinOr(f.digits)} in this square, so note them.`,
 
   noteStrike: (f: Firing<"noteStrike">, horizontal: boolean): string => {
     const ds = joinOr(f.digits);

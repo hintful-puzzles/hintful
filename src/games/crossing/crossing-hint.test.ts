@@ -111,6 +111,10 @@ describe("crossing hint — soundness", () => {
         } else if (f.technique === "sharedDigit" || f.technique === "crossRuns") {
           expect(f.digit).toBe(answer.grid[f.cell]);
           checked++;
+        } else if (f.technique === "noteDigits") {
+          // Written notes must keep the answer's digit.
+          expect(f.digits).toContain(answer.grid[f.cell]);
+          checked++;
         } else {
           // A rule-out must never strike the answer's own digit.
           expect(f.digits).not.toContain(answer.grid[f.cell]);
@@ -156,11 +160,8 @@ describe("crossing hint — techniques and narration", () => {
   }
 
   it("reaches all three placement techniques on generated boards", () => {
-    expect([...found.keys()].sort()).toEqual([
-      "crossRuns",
-      "onlyNumber",
-      "sharedDigit",
-    ]);
+    const placements = [...found.keys()].filter((k) => !k.startsWith("note"));
+    expect(placements.sort()).toEqual(["crossRuns", "onlyNumber", "sharedDigit"]);
   });
 
   it("a whole-run placement is one step covering the whole run", () => {
@@ -176,8 +177,9 @@ describe("crossing hint — techniques and narration", () => {
   });
 
   it("states the premise that actually rules the other numbers out", () => {
-    // A whole-run placement can be forced three different ways, and saying the
-    // wrong one is a bug even though the move is right. In particular the
+    // A whole-run placement can be forced several different ways, and saying
+    // the wrong one is a bug even though the move is right ("notes" is
+    // exercised on the hand-made board below). In particular the
     // fresh-board opener must not claim to match "the digits already in this
     // run" — on an empty run there are none, so the premise is both vacuous
     // and visibly false.
@@ -185,7 +187,7 @@ describe("crossing hint — techniques and narration", () => {
     for (let s = 0; s < 12 && seen.size < 3; s++) {
       const state = board(crossingPresets[0], `hint-because-${s}`);
       walk(state, (f, before) => {
-        if (f.technique !== "onlyNumber" || seen.has(f.because) || f.deep) return;
+        if (f.technique !== "onlyNumber" || seen.has(f.because)) return;
         seen.add(f.because);
         const text = narrateCrossing(before.puzzle, f);
         if (f.because === "digits") {
@@ -249,13 +251,29 @@ describe("crossing hint — ruling a candidate out", () => {
     return state;
   };
 
-  it("strikes a note no still-fitting number supports, and only that note", () => {
-    // Position 0 of either number is 1 or 5; a penciled 9 is refuted, the 1 is
-    // not. Deduction is otherwise exhausted here, which is what lets the tail
-    // rung surface at all.
+  it("reads the player's notes as the premise of a placement", () => {
+    // Notes of 1 and 9 leave position 0 no room for 5678, so the run is 1234:
+    // on the player's own word, which is the only word this board has.
     const state = noted([
       [0, 0, 9],
       [0, 0, 1],
+    ]);
+    const res = crossingGame.hint?.(state);
+    if (!res?.ok) throw new Error("hint refused");
+    expect(res.steps[0].move).toEqual({ kind: "place", run: 0, number: 0 });
+    expect(res.steps[0].explanation).toBe(
+      "Only one 4-digit number left fits the notes in this run, so it must be 1234.",
+    );
+  });
+
+  it("strikes a note no still-fitting number supports, and only that note", () => {
+    // Position 0 of either number is 1 or 5; a penciled 9 is refuted, the 1
+    // and 5 are not, and keep both numbers alive. Deduction is otherwise
+    // exhausted here, which is what lets the tail rung surface at all.
+    const state = noted([
+      [0, 0, 9],
+      [0, 0, 1],
+      [0, 0, 5],
     ]);
     const res = crossingGame.hint?.(state);
     expect(res?.ok).toBe(true);
@@ -284,6 +302,191 @@ describe("crossing hint — ruling a candidate out", () => {
     const twice = crossingGame.executeMove(once, move);
     expect([...twice.pencil]).toEqual([...once.pencil]);
     expect(once.pencil[0]).toBe(1); // the 1 survives, the 9 is gone
+  });
+});
+
+// Two generated boards whose plans once needed the solver's narrowing fixpoint:
+// the first at its opening move, the second for a chain of notes that writes
+// two squares of one run.
+const NEEDS_NOTES = {
+  params: { w: 5, h: 5, sym: false },
+  desc: "3a1a1a4a1a1a6a1,11,22,33,73,84,112,361,576,764,811,838",
+} as const;
+const NOTE_JOURNEY = {
+  params: { w: 13, h: 13, sym: true },
+  desc:
+    "1a1a4b8b4a2a1a4b1a2a1b1a2a3a3a2a1b1a2a3a3a2a3a3a3a2a3a3a2a1b1a2a3a3a2a1b1a2a1b4a1a2a4b8b4a1a1," +
+    "14,16,27,39,78,85,89,98,164,195,293,315,351,357,368,489,536,552,611,781,821,831,873,925," +
+    "953,1319,1376,1433,1991,2644,3155,4779,4968,5528,6418,6448,6898,7832,7893,8864,9743,12733," +
+    "34325,73179,93446,319913,347579,528899,742755",
+} as const;
+
+/** The numbers that fit run `r` as the board shows it — its length, not used
+ * elsewhere, and agreeing with every entered digit and every square's notes —
+ * computed from the state's own rules rather than the hint's tables. */
+function fitsOnBoard(state: CrossingState, r: number): number[] {
+  const { puzzle, grid, pencil } = state;
+  const placed = placedRuns(puzzle, grid);
+  const cells = puzzle.runs[r].cells;
+  return puzzle.numbers
+    .map((_, l) => l)
+    .filter(
+      (l) =>
+        numberAvailableTo(puzzle, grid, placed, r, l) &&
+        cells.every(
+          (c, k) =>
+            grid[c] !== 0 ||
+            pencil[c] === 0 ||
+            (pencil[c] & (1 << (puzzle.numbers[l][k] - 1))) !== 0,
+        ),
+    );
+}
+
+/** The digits run `r`'s board-fitting numbers put in square `cell`. */
+function digitsOnBoard(state: CrossingState, r: number, cell: number): number[] {
+  const k = state.puzzle.runs[r].cells.indexOf(cell);
+  const ds = new Set(fitsOnBoard(state, r).map((l) => state.puzzle.numbers[l][k]));
+  return [...ds].sort((a, b) => a - b);
+}
+
+describe("crossing hint — every premise is on the board", () => {
+  // A hint relies only on marks the player can make (AGENTS.md § "Hint quality
+  // bar" rule 6): each step's claim is re-checked against the entered digits
+  // and notes of the board it fires on, never against the hint's own tables.
+  const premiseHolds = (f: CrossingFiring, s: CrossingState): void => {
+    switch (f.technique) {
+      case "onlyNumber":
+        expect(fitsOnBoard(s, f.run)).toEqual([f.number]);
+        break;
+      case "sharedDigit":
+        expect(digitsOnBoard(s, f.run, f.cell)).toEqual([f.digit]);
+        break;
+      case "crossRuns": {
+        const down = digitsOnBoard(s, f.downRun, f.cell);
+        const both = digitsOnBoard(s, f.acrossRun, f.cell).filter((d) =>
+          down.includes(d),
+        );
+        expect(both).toEqual([f.digit]);
+        break;
+      }
+      case "noteDigits":
+        expect(s.pencil[f.cell]).toBe(0);
+        expect(digitsOnBoard(s, f.run, f.cell)).toEqual(f.digits);
+        break;
+      case "noteStrike":
+        for (const d of f.digits)
+          expect(digitsOnBoard(s, f.run, f.cell)).not.toContain(d);
+        break;
+    }
+  };
+
+  it("holds on every step of every preset and of the boards that need notes", () => {
+    const boards = [
+      ...crossingPresets.map((p) =>
+        board(p, `hint-sound-${p.w}x${p.h}${p.sym ? "s" : ""}`),
+      ),
+      newState(NEEDS_NOTES.params, NEEDS_NOTES.desc),
+      newState(NOTE_JOURNEY.params, NOTE_JOURNEY.desc),
+    ];
+    let notes = 0;
+    for (const state of boards) {
+      walk(state, (f, before) => {
+        premiseHolds(f, before);
+        if (f.technique === "noteDigits") notes++;
+      });
+    }
+    // The pinned boards write three notes between them; with none, the guard
+    // above would never have met the note steps it exists for.
+    expect(notes).toBeGreaterThanOrEqual(3);
+  });
+
+  it("writes the notes a placement rests on before making it", () => {
+    const state = newState(NEEDS_NOTES.params, NEEDS_NOTES.desc);
+    const res = crossingGame.hint?.(state);
+    if (!res?.ok) throw new Error("hint refused");
+    const [first, second, third] = res.steps as Step[];
+    expect(first.move).toEqual({
+      kind: "pencilAdd",
+      marks: [1, 3, 5, 7, 8].map((n) => ({ x: 0, y: 4, n })),
+    });
+    expect(first.explanation).toBe(
+      "Every number that still fits this across run puts 1, 3, 5, 7 or 8 in this square, so note them.",
+    );
+    expect(first.highlights?.targets).toEqual([{ x: 0, y: 4 }]);
+    expect(second.move.kind).toBe("pencilAdd");
+    // Two runs, two deductions: not one journey.
+    expect(second.continuesPrevious).toBeUndefined();
+    expect(third.move.kind).toBe("set");
+    expect(third.explanation).toMatch(/^Across, this square can only be 3 or 4/);
+  });
+
+  it("writes one run's notes in several squares as one journey", () => {
+    const state = newState(NOTE_JOURNEY.params, NOTE_JOURNEY.desc);
+    const res = crossingGame.hint?.(state);
+    if (!res?.ok) throw new Error("hint refused");
+    const steps = res.steps as Step[];
+    const j = steps.findIndex((s) => s.continuesPrevious);
+    expect(j).toBeGreaterThan(0);
+    const [a, b] = [steps[j - 1].move, steps[j].move];
+    if (a.kind !== "pencilAdd" || b.kind !== "pencilAdd")
+      throw new Error("expected notes");
+    // Column 4, rows 0 and 2: one down run, two squares.
+    expect([a.marks[0].x, a.marks[0].y, b.marks[0].x, b.marks[0].y]).toEqual([
+      4, 0, 4, 2,
+    ]);
+    expect(state.puzzle.downRun[0 * 13 + 4]).toBe(state.puzzle.downRun[2 * 13 + 4]);
+    // A leg continues only the note step before it, on the same run.
+    for (const [k, s] of steps.entries()) {
+      if (!s.continuesPrevious) continue;
+      const [p, q] = [steps[k - 1].highlights?.area, s.highlights?.area];
+      expect(q).toEqual(p);
+    }
+  });
+
+  it("follows a note step toggled in by hand, one digit at a time", () => {
+    const state = newState(NEEDS_NOTES.params, NEEDS_NOTES.desc);
+    const res = crossingGame.hint?.(state);
+    if (!res?.ok) throw new Error("hint refused");
+    const step = res.steps[0] as Step;
+    if (step.move.kind !== "pencilAdd") throw new Error("expected a note step");
+    const toggle = (digit: number): CrossingMove => ({
+      kind: "pencil",
+      x: 0,
+      y: 4,
+      digit,
+    });
+
+    expect(crossingGame.hintKeepTrack?.(toggle(2), step, state)).toBe("off");
+    let cur = state;
+    const verdicts: string[] = [];
+    for (const n of [1, 3, 5, 7, 8]) {
+      verdicts.push(crossingGame.hintKeepTrack?.(toggle(n), step, cur) ?? "?");
+      cur = crossingGame.executeMove(cur, toggle(n));
+    }
+    expect(verdicts).toEqual(["onTrack", "onTrack", "onTrack", "onTrack", "completed"]);
+  });
+
+  it("resolves a note step once its notes are there, and shrinks it before that", () => {
+    const state = newState(NEEDS_NOTES.params, NEEDS_NOTES.desc);
+    const res = crossingGame.hint?.(state);
+    if (!res?.ok) throw new Error("hint refused");
+    const step = res.steps[0] as Step;
+    const partial = crossingGame.executeMove(state, {
+      kind: "pencil",
+      x: 0,
+      y: 4,
+      digit: 3,
+    });
+    expect(crossingGame.refreshHintStep?.(step, partial)?.move).toEqual({
+      kind: "pencilAdd",
+      marks: [1, 5, 7, 8].map((n) => ({ x: 0, y: 4, n })),
+    });
+    const done = crossingGame.executeMove(state, step.move);
+    expect(crossingGame.refreshHintStep?.(step, done)).toBeNull();
+    // Only ever adds, so replaying it changes nothing.
+    expect([...crossingGame.executeMove(done, step.move).pencil]).toEqual([
+      ...done.pencil,
+    ]);
   });
 });
 
@@ -428,7 +631,7 @@ describe("crossing hint — following the plan", () => {
 
   it("shrinks a rule-out step as its candidates go, and resolves when they are gone", () => {
     let state = newState(AMBIGUOUS, AMBIGUOUS_DESC);
-    for (const digit of [9, 7, 1]) {
+    for (const digit of [9, 7, 1, 5]) {
       state = crossingGame.executeMove(state, { kind: "pencil", x: 0, y: 0, digit });
     }
     const step = firstStep(state);
@@ -463,6 +666,21 @@ describe("crossing hint — the frame", () => {
     const rects = res.recording.ops.filter((o) => o.op === "rect");
     expect(rects.some((o) => o.color === COL_HINT)).toBe(true);
     expect(rects.some((o) => o.color === COL_HINT_CELL)).toBe(true);
+  });
+
+  it("rings the one square a note step writes into, and strikes nothing", () => {
+    const res = renderScenario({
+      game: crossingGame,
+      id: `5x5:${NEEDS_NOTES.desc}`,
+      showHint: true,
+    });
+    const step = res.hint as Step | undefined;
+    expect(step?.move.kind).toBe("pencilAdd");
+    expect(step?.highlights?.marks).toEqual([]);
+    expectRing(
+      res.recording.ops.filter((o) => o.op === "rect"),
+      COL_HINT,
+    );
   });
 
   it("names at least one listed number as evidence, and paints it in the panel", () => {

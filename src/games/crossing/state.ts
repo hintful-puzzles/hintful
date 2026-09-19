@@ -657,6 +657,11 @@ export type CrossingMove =
    * that only ever removes (docs/games/hints.md § "Persist, populate, and the moves"). Players produce it only by
    * following a hint; typing produces `pencil` toggles. */
   | { kind: "pencilStrike"; marks: readonly { x: number; y: number; n: number }[] }
+  /** Add a list of notes atomically — the hint's move for writing the digits a
+   * run leaves into a square with none. It only ever adds, for the reason
+   * `pencilStrike` only ever removes, and players likewise produce it only by
+   * following a hint. */
+  | { kind: "pencilAdd"; marks: readonly { x: number; y: number; n: number }[] }
   /** Write listed number `number` into run `run` — the whole clue at once,
    * as one undo step (the fork's number-list placement aid). */
   | { kind: "place"; run: number; number: number }

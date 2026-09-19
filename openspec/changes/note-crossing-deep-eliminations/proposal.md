@@ -24,5 +24,6 @@ No new notation: the notes exist.
 
 ## Acceptance
 
-A hint's steps change, so the owner sees it. It is small, and the sentence gets
-shorter.
+A hint's steps change, so the owner sees it. It is rarer than expected but not
+small where it happens: on the largest symmetric presets a placement can need up
+to ten note steps, some of six to eight digits (`tasks.md` § "Measured cost").
