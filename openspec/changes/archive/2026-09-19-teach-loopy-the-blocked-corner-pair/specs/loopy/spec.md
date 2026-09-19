@@ -22,8 +22,10 @@ a board labeled at a tier a player no longer needs is a dishonest difficulty.
 
 `hint(state)` SHALL narrate this firing as one step that rings both dots, outlines
 the clue, and bands every edge it settles — solid for the lines, broken for the
-edge it rules out — and SHALL name the excluded edge by its position between the
-two dots rather than by any direction, since most of Loopy's tilings have no top.
+edge it rules out — and SHALL name the excluded edge as the one joining the two
+dots rather than by any direction, since most of Loopy's tilings have no top. The
+sentence SHALL NOT describe the loop's path around the clue, because the same
+firing covers faces where the loop goes round nothing.
 
 #### Scenario: Two blocked dots settle the whole clue at once
 

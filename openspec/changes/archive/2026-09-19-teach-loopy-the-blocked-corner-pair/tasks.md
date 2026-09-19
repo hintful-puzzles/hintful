@@ -73,5 +73,5 @@ too" — the rule this change added.
       firing 46 of 88. The frame composites correctly: both dots ringed, the clue
       outlined, the edge between them banded broken and the two it draws banded
       solid. `findings.md` § "What the app showed".
-- [ ] 6.2 Owner acceptance of the reworked sentence and its marks on a rendered
-      frame.
+- [x] 6.2 Owner acceptance of the reworked sentence and its marks on a rendered
+      frame (owner, 2026-09-19).
