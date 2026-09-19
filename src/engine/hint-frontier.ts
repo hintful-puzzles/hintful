@@ -33,9 +33,10 @@
 import type { Point } from "./types.ts";
 
 /** A firing the plan could take now: the cells its premise reads, and how to
- * take it (emit its steps and apply them to the working board). */
+ * take it (emit its steps and apply them to the working board). `reads` is
+ * asked only while a frontier is looking for a continuation. */
 export interface FrontierCandidate {
-  reads: readonly Point[];
+  reads(): readonly Point[];
   take(): void;
 }
 
@@ -97,7 +98,7 @@ export class HintFrontier {
       for (const rung of rungs)
         for (const c of rung)
           if (
-            c.reads.some((p) => {
+            c.reads().some((p) => {
               const i = this.cell(p);
               return i !== null && wrote.has(i);
             })

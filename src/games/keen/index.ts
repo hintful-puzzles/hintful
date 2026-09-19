@@ -12,18 +12,11 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAllMove,
-  availableStrikes,
   candidateHint,
-  emitObviousCleanStep,
   keepCandidateHintTrack,
-  lazyPopulate,
-  type Mark,
-  nakedSingles,
-  populateThenClean,
   refreshCandidateHintStep,
-  regionDuplicateMarks,
-  runCandidatePlan,
 } from "../../engine/candidate-hint.ts";
+import { runCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
 import { digitValue } from "../../engine/decimal.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
@@ -35,14 +28,13 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import type { FrontierCandidate } from "../../engine/hint-frontier.ts";
 import { narrateLatinReason } from "../../engine/hint-text.ts";
 import { digitKeys, pencilModeKey } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
 import {
-  availablePlacements,
   forcingChainArea,
   hiddenSingleLine,
+  type RowColRegion,
   rowColRegions,
   singleReasonOf,
 } from "../../engine/latin-hint.ts";
@@ -366,94 +358,10 @@ function placementArea(reason: HintReason, w: number): Point[] {
     : [];
 }
 
-/** Emit one firing's strikes as a single journey: split the firing's live ops by
- * cell (one cell = one leg), so each leg narrates "this cell" and highlights a
- * single target, with the legs flagged `continuesPrevious` (quality-bar rule 2 —
- * one firing = one journey). Applies each leg's strikes to the working notes. */
-function emitStrikeJourney(
-  steps: HintStep<KeenMove, KeenHint>[],
-  wPen: Int32Array,
-  w: number,
-  groupOps: HintOp[],
-): void {
-  const byCell = new Map<number, HintOp[]>();
-  for (const op of groupOps) {
-    const key = op.y * w + op.x;
-    const arr = byCell.get(key);
-    if (arr) arr.push(op);
-    else byCell.set(key, [op]);
-  }
-  let first = true;
-  for (const [key, cellOps] of byCell) {
-    const x = key % w;
-    const y = (key / w) | 0;
-    const marks = cellOps.map((op) => ({ x, y, n: op.n }));
-    const values = marks.map((m) => m.n).sort((a, b) => a - b);
-    const reason = cellOps[0].reason;
-    steps.push({
-      move: { type: "pencilStrike", marks },
-      explanation: narrate(reason, values),
-      highlights: { area: reasonArea(reason), targets: [{ x, y }], marks },
-      continuesPrevious: !first,
-    });
-    for (const m of marks) wPen[m.y * w + m.x] &= ~(1 << m.n);
-    first = false;
-  }
-}
-
-/** Emit a placement step and apply it to the working board, striking the placed
- * value from the rest of its row and column. With auto-pencil on (`autoClean`)
- * that cleanup is silent (the move's own `autoElim` does it on the real board);
- * with it off it becomes an explicit `pencilStrike` journey continuation. */
-function emitPlacement(
-  steps: HintStep<KeenMove, KeenHint>[],
-  wGrid: Int8Array,
-  wPen: Int32Array,
-  w: number,
-  x: number,
-  y: number,
-  n: number,
-  reason: HintReason,
-  autoClean: boolean,
-): void {
-  steps.push({
-    move: { type: "set", x, y, n, pencil: false, autoElim: autoClean },
-    explanation: narrate(reason, [n]),
-    highlights: { area: placementArea(reason, w), targets: [{ x, y }], marks: [] },
-  });
-  wGrid[y * w + x] = n;
-  wPen[y * w + x] = 0;
-
-  const dupMarks = regionDuplicateMarks(
-    wGrid,
-    wPen,
-    x,
-    y,
-    n,
-    w,
-    rowColRegions(x, y, w),
-  );
-  for (const m of dupMarks) wPen[m.y * w + m.x] &= ~(1 << n);
-
-  if (!autoClean && dupMarks.length > 0) {
-    steps.push({
-      move: { type: "pencilStrike", marks: dupMarks },
-      explanation: narrate({ kind: "dup", n, px: x, py: y }, []),
-      highlights: {
-        area: [],
-        targets: dupMarks.map((m) => ({ x: m.x, y: m.y })),
-        marks: dupMarks,
-      },
-      continuesPrevious: true,
-    });
-  }
-}
-
-/** Build the hint plan by walking a working copy the way a person solves it: a
- * naked single first; else (after a lazy populate) the basic-Latin row/column cull
- * a placed value forces; else the next cage elimination; else a forced placement.
- * `autoClean` (the auto-pencil preference) decides whether a placement's trivial
- * row/column eliminations are silent or taught. */
+/** Build the hint plan by walking a working copy of the board the way a person
+ * solves it (`runCandidatePlan`). `autoClean` (the auto-pencil preference)
+ * decides whether a placement's trivial row/column eliminations are silent or
+ * taught. */
 function buildSteps(
   state: KeenState,
   autoClean: boolean,
@@ -461,82 +369,29 @@ function buildSteps(
   const w = state.params.w;
   const steps: HintStep<KeenMove, KeenHint>[] = [];
   const wGrid = Int8Array.from(state.grid);
-  const wPen = Int32Array.from(state.pencil);
   const maxdiff = Math.min(diffToLevel(state.params.diff), DIFF_EXTREME);
-
-  const pop = lazyPopulate<KeenMove, KeenHint>(
-    state,
-    wGrid,
-    wPen,
+  runCandidatePlan<KeenMove, KeenHint, HintOp, HintReason, RowColRegion>({
     w,
     steps,
-    say.populate,
-  );
-
-  let ops = recordKeenDeductions(w, state.clues, Uint8Array.from(wGrid), maxdiff);
-  const placing = (m: Mark, reason: HintReason): FrontierCandidate => ({
-    reads: [m, ...placementArea(reason, w)],
-    take: () => {
-      emitPlacement(steps, wGrid, wPen, w, m.x, m.y, m.n, reason, autoClean);
-      ops = recordKeenDeductions(w, state.clues, Uint8Array.from(wGrid), maxdiff);
-    },
-  });
-
-  // 1. A naked single — the next move a human makes.
-  const singles = () =>
-    nakedSingles(wGrid, wPen, w).map((ns) => placing(ns, { kind: "single" }));
-
-  // 2. Pencil in the notes (once) before any elimination needs them, then (once)
-  // bulk-clear the obvious candidates in one step — the adaptive Mark-all second
-  // press. Later placements keep notes clean via `emitPlacement`.
-  const setUp = populateThenClean(pop, () =>
-    emitObviousCleanStep(
-      steps,
-      wGrid,
-      wPen,
-      w,
-      (x, y) => rowColRegions(x, y, w),
-      say.cleanObvious,
-    ),
-  );
-
-  // 3. The cage eliminations (the deductions worth teaching).
-  const strikes = () =>
-    availableStrikes(ops, wGrid, wPen, w, (live) => [
-      ...reasonArea(live[0].reason),
-      ...live,
-    ]).map(
-      (cs): FrontierCandidate => ({
-        reads: [...reasonArea(cs[0].reason), ...cs],
-        take: () => emitStrikeJourney(steps, wPen, w, cs),
-      }),
-    );
-
-  // 4. The forced placements (a cube collapse the notes lag) — re-derive *why*
-  // (naked vs hidden single) from the working board; the recorded `single`
-  // reason conflates the two and would mis-narrate a hidden single.
-  const places = (nothingEarlier: boolean) =>
-    availablePlacements(
-      ops,
-      wGrid,
-      wPen,
-      w,
-      (x, y) => rowColRegions(x, y, w),
-      nothingEarlier,
-    ).map(({ op, why }) =>
-      placing(op, why.kind === "recorded" ? op.reason : singleReasonOf(op.n, why)),
-    );
-
-  // Stops when nothing fires (e.g. an Unreasonable board now needing a guess).
-  runCandidatePlan({
-    w,
-    steps,
-    finished: () => !wGrid.includes(0),
+    grid: wGrid,
+    pencil: Int32Array.from(state.pencil),
+    autoClean,
     label: "keen hint plan",
-    cap: w * w * w * 4 + 4,
-    opening: [singles],
-    setUp,
-    rungs: [singles, strikes, places],
+    record: () => recordKeenDeductions(w, state.clues, Uint8Array.from(wGrid), maxdiff),
+    regionsOf: (x, y) => rowColRegions(x, y, w),
+    singleReason: singleReasonOf,
+    placeWords: (m, reason) => ({
+      explanation: narrate(reason, [m.n]),
+      area: placementArea(reason, w),
+    }),
+    strikeWords: (marks, reason) => ({
+      explanation: narrate(reason, valuesOf(marks)),
+      area: reasonArea(reason),
+    }),
+    // A cage's narration is about "this cell", with the whole cage shaded on
+    // every leg, so a firing is one leg per cell.
+    strikeAxis: (op) => op.y * w + op.x,
+    notes: { populate: say.populate, cleanObvious: say.cleanObvious },
   });
   return steps;
 }

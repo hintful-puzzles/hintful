@@ -12,18 +12,12 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAllMove,
-  availableStrikes,
   candidateHint,
-  emitObviousCleanStep,
   keepCandidateHintTrack,
-  lazyPopulate,
   type Mark,
-  nakedSingles,
-  populateThenClean,
   refreshCandidateHintStep,
-  regionDuplicateMarks,
-  runCandidatePlan,
 } from "../../engine/candidate-hint.ts";
+import { runCandidatePlan } from "../../engine/candidate-plan.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
@@ -34,13 +28,12 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import type { FrontierCandidate } from "../../engine/hint-frontier.ts";
 import { digitKeys, pencilModeKey } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
 import {
-  availablePlacements,
   forcingChainArea,
   hiddenSingleLine,
+  type RowColRegion,
   rowColRegions,
   singleReasonOf,
 } from "../../engine/latin-hint.ts";
@@ -466,91 +459,6 @@ function reasonArea(reason: HintReason, w: number): OrderedCell[] {
   }
 }
 
-/** The clue-deduction strikes a plan could take now (`availableStrikes`: live
- * in the working notes, and resting on nothing an earlier firing has yet to
- * strike). `dup` strikes are excluded — those are placement bookkeeping,
- * handled at placement time, not a deduction to teach.
- *
- * Each returned strike groups only the marks of its firing that share the
- * **same struck height** — because the narration names that height ("a tower of
- * height 5 can't go here"). A firing that rules out *several* heights (a clue's
- * lower-bound rule can strike both 4 and 5 along its line) would otherwise be
- * shown as one step crossing out 4 *and* 5 while the text mentions only one,
- * which reads as a bug. The remaining heights of the same firing come back on
- * the next call and are emitted as continuation legs of one journey (the caller
- * links them by `group`). */
-function clueStrikes(
-  ops: HintOp[],
-  wGrid: Uint8Array,
-  wPen: Int32Array,
-  w: number,
-): { marks: Mark[]; reason: HintReason; group: number }[] {
-  const reads = (live: readonly HintOp[]): Point[] => [
-    ...reasonArea(live[0].reason, w),
-    ...live.map((op) => ({ x: op.x, y: op.y })),
-  ];
-  return availableStrikes(ops, wGrid, wPen, w, reads).map((live) => {
-    const height = live[0].n;
-    const same = live.filter((op) => op.n === height);
-    return {
-      marks: same.map((op) => ({ x: op.x, y: op.y, n: op.n })),
-      reason: same[0].reason,
-      group: same[0].group,
-    };
-  });
-}
-
-/** Emit a placement step and apply it to the working board, striking the placed
- * height from the rest of its row and column. With auto-pencil on (`autoClean`)
- * that cleanup is silent (the placement's own `autoElim` does it on the real
- * board); with it off the cleanup becomes an explicit `pencilStrike` journey
- * continuation, so the player is taught the eliminations they must make by hand. */
-function emitPlacement(
-  steps: HintStep<TowersMove, TowersHint>[],
-  wGrid: Uint8Array,
-  wPen: Int32Array,
-  w: number,
-  x: number,
-  y: number,
-  n: number,
-  reason: HintReason,
-  autoClean: boolean,
-  continues = false,
-): void {
-  steps.push({
-    move: { type: "set", x, y, n, pencil: false, autoElim: autoClean },
-    explanation: narrate(reason, n, continues),
-    highlights: { area: reasonArea(reason, w), targets: [{ x, y }], marks: [] },
-    continuesPrevious: continues,
-  });
-  wGrid[y * w + x] = n;
-  wPen[y * w + x] = 0;
-
-  const dupMarks = regionDuplicateMarks(
-    wGrid,
-    wPen,
-    x,
-    y,
-    n,
-    w,
-    rowColRegions(x, y, w),
-  );
-  for (const m of dupMarks) wPen[m.y * w + m.x] &= ~(1 << n);
-
-  if (!autoClean && dupMarks.length > 0) {
-    steps.push({
-      move: { type: "pencilStrike", marks: dupMarks },
-      explanation: narrate({ kind: "dup", n, px: x, py: y }, 0),
-      highlights: {
-        area: [],
-        targets: dupMarks.map((m) => ({ x: m.x, y: m.y })),
-        marks: dupMarks,
-      },
-      continuesPrevious: true,
-    });
-  }
-}
-
 /** An extreme clue that forces (part of) a line outright — the cleanest
  * deduction on the board, so the planner surfaces it before anything else:
  *   - clue == w: the line sees every tower, so it must climb `1..w` from the
@@ -591,13 +499,11 @@ function extremeClueLines(
 }
 
 /** Build the hint plan by walking a working copy of the board the way a person
- * solves it: of the firings available, the one continuing from the plan's
- * latest steps (`HintFrontier`), and failing that a naked single first, else a
- * forced extreme-clue line, else a clue elimination, else a forced placement
- * (populating notes lazily, after the note-free forced placements and before the
- * first elimination needs them).
- * `autoClean` (the auto-pencil preference) decides whether a placement's trivial
- * row/column note eliminations are silent or taught. */
+ * solves it (`runCandidatePlan`). Towers' own rung is the extreme-clue lines,
+ * which need no notes, so an empty board opens on them rather than on
+ * "pencil everything in". `autoClean` (the auto-pencil preference) decides
+ * whether a placement's trivial row/column note eliminations are silent or
+ * taught. */
 function buildSteps(
   state: TowersState,
   autoClean: boolean,
@@ -605,130 +511,37 @@ function buildSteps(
   const w = state.w;
   const steps: HintStep<TowersMove, TowersHint>[] = [];
   const wGrid = Uint8Array.from(state.grid);
-  const wPen = Int32Array.from(state.pencil);
   const maxdiff = Math.min(diffToLevel(state.diff), DIFF_EXTREME);
-
-  // Populate notes lazily: the forced placements below (extreme-clue lines,
-  // facing pairs) need no notes, so an empty board opens straight on them rather
-  // than on a "pencil everything in" step. We only fill notes the moment an
-  // elimination actually needs something to cross out.
-  const pop = lazyPopulate<TowersMove, TowersHint>(
-    state,
-    wGrid,
-    wPen,
+  runCandidatePlan<TowersMove, TowersHint, HintOp, HintReason, RowColRegion>({
     w,
     steps,
-    say.populate,
-  );
-
-  let ops = recordTowersDeductions(w, state.clues, wGrid, maxdiff);
-  // The firing whose strike the previous step emitted, so a same-firing strike
-  // of a *different* height continues the journey rather than reading as a new,
-  // unrelated hint. `-1` = no strike pending (a placement resets it, since a new
-  // `ops` recording restarts group numbering).
-  let lastStrikeGroup = -1;
-  const place = (m: Mark, reason: HintReason, continues = false) =>
-    emitPlacement(steps, wGrid, wPen, w, m.x, m.y, m.n, reason, autoClean, continues);
-  const placing = (m: Mark, reason: HintReason, reads: Point[]): FrontierCandidate => ({
-    reads,
-    take: () => {
-      place(m, reason);
-      ops = recordTowersDeductions(w, state.clues, wGrid, maxdiff);
-      lastStrikeGroup = -1;
-    },
-  });
-
-  // 1. A naked single — the next move a human makes. (On an unpopulated board
-  //    there are no notes, so none fire here and we fall through to the
-  //    note-free extreme-clue lines.)
-  const singles = () =>
-    nakedSingles(wGrid, wPen, w).map((ns) => placing(ns, { kind: "single" }, [ns]));
-
-  // 2. An extreme clue forcing (part of) a line outright — the cleanest move
-  //    that needs no notes, so an empty board opens on it. clue == w fills the
-  //    whole line 1..w in order as one journey; clue == 1 places the tallest
-  //    tower next to the clue.
-  const lines = () =>
-    extremeClueLines(state.clues, wGrid, w).map(
-      (forced): FrontierCandidate => ({
-        reads: reasonArea(forced.reason, w),
-        take: () => {
-          for (const [j, c] of forced.cells.entries()) place(c, forced.reason, j > 0);
-          ops = recordTowersDeductions(w, state.clues, wGrid, maxdiff);
-          lastStrikeGroup = -1;
-        },
-      }),
-    );
-
-  // 3. The extreme-clue lines are done — pencil in the notes now (once), so
-  //    the eliminations below have something to cross out and are taught
-  //    rather than skipped in favor of bare placements. Then, once notes exist
-  //    (just populated, or already present), bulk-clear the obvious candidates
-  //    in one step — the adaptive Mark-all second press — so the walk teaches
-  //    the real deductions, not the trivial row/column culls one placement at a
-  //    time.
-  const setUp = populateThenClean(pop, () =>
-    emitObviousCleanStep(
-      steps,
-      wGrid,
-      wPen,
-      w,
-      (x, y) => rowColRegions(x, y, w),
-      say.cleanObvious,
-    ),
-  );
-
-  // 4. The clue eliminations (the deductions worth teaching). One firing
-  //    that rules out several heights is emitted as one journey: the first
-  //    height unflagged, each further height a `continuesPrevious` leg.
-  const strikes = () =>
-    clueStrikes(ops, wGrid, wPen, w).map(
-      (strike): FrontierCandidate => ({
-        reads: reasonArea(strike.reason, w),
-        take: () => {
-          steps.push({
-            move: { type: "pencilStrike", marks: strike.marks },
-            explanation: narrate(strike.reason, strike.marks[0].n),
-            highlights: {
-              area: reasonArea(strike.reason, w),
-              targets: strike.marks.map((m) => ({ x: m.x, y: m.y })),
-              marks: strike.marks,
-            },
-            continuesPrevious: strike.group === lastStrikeGroup,
-          });
-          for (const m of strike.marks) wPen[m.y * w + m.x] &= ~(1 << m.n);
-          lastStrikeGroup = strike.group;
-        },
-      }),
-    );
-
-  // 5. The forced placements (facing clue, or a cube collapse the notes lag).
-  // A generic `single`'s *why* (naked vs hidden single) is re-derived from the
-  // working board, since the recorded reason conflates the two and would
-  // mis-narrate a hidden single. A clue-driven placement keeps its reason.
-  const places = (nothingEarlier: boolean) =>
-    availablePlacements(
-      ops,
-      wGrid,
-      wPen,
-      w,
-      (x, y) => rowColRegions(x, y, w),
-      nothingEarlier,
-    ).map(({ op, why }) => {
-      const reason = why.kind === "recorded" ? op.reason : singleReasonOf(op.n, why);
-      return placing(op, reason, [op, ...reasonArea(reason, w)]);
-    });
-
-  // Stops when nothing fires (e.g. an Unreasonable board now needing a guess).
-  runCandidatePlan({
-    w,
-    steps,
-    finished: () => !wGrid.includes(0),
+    grid: wGrid,
+    pencil: Int32Array.from(state.pencil),
+    autoClean,
     label: "towers hint plan",
-    cap: w * w * w * 4 + 4,
-    opening: [singles, lines],
-    setUp,
-    rungs: [singles, lines, strikes, places],
+    record: () => recordTowersDeductions(w, state.clues, wGrid, maxdiff),
+    regionsOf: (x, y) => rowColRegions(x, y, w),
+    singleReason: singleReasonOf,
+    placeWords: (m, reason, continues) => ({
+      explanation: narrate(reason, m.n, continues),
+      area: reasonArea(reason, w),
+    }),
+    strikeWords: (marks, reason) => ({
+      explanation: narrate(reason, marks[0].n),
+      area: reasonArea(reason, w),
+    }),
+    // The narration names one height ("a tower of height 5 can't go here"), so
+    // a clue firing that rules out 4 and 5 along its line is one leg per height.
+    strikeAxis: (op) => op.n,
+    notes: { populate: say.populate, cleanObvious: say.cleanObvious },
+    // clue == w fills the whole line 1..w in order as one journey; clue == 1
+    // places the tallest tower next to the clue.
+    rungs: [
+      () =>
+        extremeClueLines(state.clues, wGrid, w).map((f) =>
+          f.cells.map((place) => ({ place, reason: f.reason })),
+        ),
+    ],
   });
   return steps;
 }

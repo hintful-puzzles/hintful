@@ -43,6 +43,12 @@ Every step is behavior-preserving. The render snapshots, the hint walks and
 `hint-frontier.test.ts` are the net, and a moved snapshot is a finding to
 explain, not a baseline to refresh.
 
+*Outcome:* not every step was. Keen and Solo are byte-identical; Towers,
+Unequal, Group and Salad take their firings in a different order, because
+their frontier now reads what the player is shown and no firing is split
+across turns. The continuity instrument scores all four better, so the change
+kept them — `design.md` D5 and § 3.
+
 ## What this does not do
 
 - **Not the narration.** Sentences stay in each game's `hint-text.ts`.

@@ -2844,27 +2844,28 @@ Exemplar: [`towers/`](../../src/games/towers/) +
 
 ### The shared candidate-hint machinery
 
-**The reusable mechanics live in
-[`engine/candidate-hint.ts`](../../src/engine/candidate-hint.ts)** — import
-them rather than copying: the pure plan helpers (`nakedSingles`,
-`anyEmptyLacksNotes`, `firstUnreflectedPlaceIndex`, `availableStrikes` —
-whole-firing, dup-excluded — `nextPlace`, `joinNums`) and the generic
+**A game's `buildSteps` is one call to `runCandidatePlan`**
+([`engine/candidate-plan.ts`](../../src/engine/candidate-plan.ts)), and the
+pieces it composes live in
+[`engine/candidate-hint.ts`](../../src/engine/candidate-hint.ts): the pure
+plan helpers (`nakedSingles`, `anyEmptyLacksNotes`,
+`firstUnreflectedPlaceIndex`, `availableStrikes` — whole-firing,
+dup-excluded — `nextPlace`, `joinNums`) and the generic
 `keepCandidateHintTrack` / `refreshCandidateHintStep` over the shared
 `CandidateMove` / `CandidateHighlights`. A game wires
 `hintKeepTrack`/`refreshHintStep` as one-line wrappers passing
-`state.pencil`/`state.grid` + the grid order.
+`state.pencil`/`state.grid` + the grid order. Exemplar:
+[`keen/index.ts`](../../src/games/keen/index.ts)'s `buildSteps`, which is
+nothing but that call.
 
 **A cell's *uniqueness regions* are one definition per game — `regionsOf`.**
 Three sites used to recompute "which cells share a uniqueness constraint with
 `(x, y)`, and which still note value `n`?" — the placement classifier, the
-bulk obvious-clean opening, and the placement dup-cull. Write a single
-per-game `regionsOf(state, x, y)` returning the cell's tagged uniqueness
-regions and feed all three from it, so they can never disagree. Row/column
-games import the shared `rowColRegions(x, y, w)` from
+bulk obvious-clean opening, and the placement dup-cull. A plan now names it
+once, as its `regionsOf`, and the walk feeds all three from it, so they can
+never disagree. Row/column games pass the shared `rowColRegions(x, y, w)` from
 [`latin-hint.ts`](../../src/engine/latin-hint.ts); Solo writes its own
-(`[row, col, block, diag0, diag1]`). The bulk opening is
-`emitObviousCleanStep(steps, grid, pencil, w, regionsOf, text)`; the placement
-cull is `regionDuplicateMarks(...)` — all de-dup a cell reachable via two
+(`[row, col, block, diag0, diag1]`). The culls de-dup a cell reachable via two
 regions. **A Keen cage is *not* a uniqueness region** — it is an arithmetic
 constraint a digit may legally repeat under; `regionsOf` returns row+col only,
 and the cage logic stays its own deduction.
@@ -2874,24 +2875,53 @@ apart.** The classifier needs the first: a value with one home left in a region
 must go there only if the region has to hold that value. The culls (dup strike,
 obvious clean, Mark-all, the player's auto-pencil) need the second. A **Solo
 Killer cage** forbids repeats but needn't hold every digit, so Solo keeps
-`regionsOf` for the classifier and feeds the culls `noRepeatRegionsOf`, which
-adds the cage. While the culls read `regionsOf`, the solver struck a placed
+`regionsOf` for the classifier and passes the plan
+`cullRegionsOf: noRepeatRegionsOf`, which adds the cage. While the culls read
+`regionsOf`, the solver struck a placed
 digit from its cage-mates and the notes never did, so a later single rested on
 a strike the player never saw, and the hint threw on about one fresh Killer
 board in six. When a game gains a region with only one of the two properties,
 give each relation its own function rather than widening the shared one.
 
-**The walk is shared; the rungs are the game's.** `runCandidatePlan` owns the
-loop: the note-free opening, populate and the obvious clean, taking each next
-firing through the `HintFrontier`, telling the last rung when every earlier
-one came up empty, and the budget and cap (§ "Continue from the last step").
-A game hands it its rungs, and keeps what genuinely differs: which rungs exist
-and in what order, the strike-split policy (by-height / by-target-cell /
-by-cell / intersect-single — dictated by what the narration names singular)
-and journey-continuation tracking. A driver was once declined as a callback
-shell over a six-line loop; the frontier made the loop the part every game
-got the same way, so it moved into the engine. The reason union is per-game;
-narration is *mostly* per-game — except:
+**The walk and its steps are shared; the meaning is the game's.**
+`runCandidatePlan` owns the loop — the note-free opening, populate and the
+obvious clean, taking each next firing through the `HintFrontier`, telling the
+last rung when every earlier one came up empty, the budget and cap (§
+"Continue from the last step") — and it owns the steps too:
+
+- **The ladder is standard.** Naked singles, then the game's own `rungs`, then
+  the recorded strikes, then the recorded placements, in the note-free opening
+  and after it alike. Towers' clue lines, Group's leads and Salad's markers are
+  the own rungs so far; each sits in the same slot, which is why the slot is
+  fixed rather than configured.
+- **A firing is data.** A rung returns firings as lists of **legs** — a
+  placement, a strike, or (Salad's markers) a step of the game's own with an
+  `apply`. The walk builds the step for each leg from the game's `placeWords`
+  / `strikeWords` (the sentence and the evidence) and adds the move, the
+  `targets` and the `marks` itself, so none of those can disagree with the
+  move.
+- **The walk plays each leg on the working board**, and after a placement
+  strikes its value from `cullRegionsOf` (default `regionsOf`): a leg
+  continuing the journey, or silent under auto-pencil, whose move carries the
+  same cull to the real board. Every such game used to write this as its own
+  `emitPlacement`, differing only in the words and the regions.
+- **A firing's later legs continue its journey.** A firing is emitted whole,
+  so no game tracks which firing it is in the middle of. Towers and Unequal
+  used to emit one height or one cell per turn and re-link the rest by
+  `group`, which let the frontier take something else in between and split one
+  deduction into two hints.
+
+What a game genuinely decides: which rungs of its own it has, the strike-split
+axis (`strikeAxis` — by height, by cell, one leg for a digit confined to a
+region; dictated by what the narration names singular), its recording solver,
+its regions, its words, and the deviations the plan's optional hooks name
+(`singles`, `placeable`, `placed`, `shownNotes`, `placement`, `onPlace`), each
+of which states the one game-shaped fact that needs it. A driver was once
+declined as a callback shell over a six-line loop; the frontier made the loop
+the part every game got the same way, so it moved into the engine, and the
+steps followed once every game's emitters were read side by side and differed
+only in their words. The reason union is per-game; narration is *mostly*
+per-game — except:
 
 **The `hint()` entry and the generic-Latin narration arms are shared.** (a)
 The `Game.hint` *entry* — completed-board refusal, `findMistakes` refusal,
@@ -2969,21 +2999,28 @@ shared shape.
 A candidate board usually offers several firings at once (a median of three
 on the Latin family's harder presets; `sequence-hints-in-cell-games`
 `findings.md`), and a plan that takes whichever its scan reaches first walks
-the player across the board for no reason they can see. So a game's
-`buildSteps` defines its **rungs**, each a function listing what that rung
-could fire now, and hands them to `runCandidatePlan`
-([`engine/candidate-hint.ts`](../../src/engine/candidate-hint.ts)), which walks
-the plan and takes each next firing through a `HintFrontier`
+the player across the board for no reason they can see. So
+`runCandidatePlan`
+([`engine/candidate-plan.ts`](../../src/engine/candidate-plan.ts)) takes each
+next firing through a `HintFrontier`
 ([`engine/hint-frontier.ts`](../../src/engine/hint-frontier.ts)). The frontier
 takes the candidate reading a cell the plan's latest step wrote, then the step
-before, three deep, and otherwise the rung order's own first choice, so a fresh
-plan opens exactly as the rung order says. Each candidate is
-`{ reads, take }`: `reads` is the evidence its step will shade plus its target
-cells, and `take` emits the step and updates the working board.
+before, three deep, and otherwise the ladder's own first choice, so a fresh
+plan opens exactly as the ladder says.
+
+**A firing reads exactly what its steps show: their `area ∪ targets`.** The
+walk builds a firing's steps before choosing among them and reads the premise
+off those, the same steps it will push. The candidates used to carry a
+hand-built `reads` beside the steps they would push, and the two disagreed in
+three games without anything noticing: Towers' strikes read their clue's line
+but not the cells they struck, Unequal's link read one end, and Group's
+identity fill read one cell of the row and column it placed. Reading the steps
+cut the jumps `plan-continuity.ts` counts as avoidable in all four games whose
+plans moved (`candidate-plan-kit`).
 
 **Offer only what you can vouch for, because the frontier takes whatever it
-is handed.** That is the whole of the game's side, and the shared listers
-carry it:
+is handed.** For the standard rungs the walk does it with the shared listers;
+a game's own rung carries the same duty:
 
 - `nakedSingles` — every cell whose notes are down to one.
 - `availableStrikes` — every live firing before the solver's next unmade
@@ -2998,9 +3035,11 @@ carry it:
   earlier rung may be the very premise it waits on (eight of Salad's own tests
   threw until that was so).
 
-The driver keeps the phases: the plan's `opening` rungs (the note-free ones)
-compete until its `setUp` is done, and setup — `populateThenClean` for every
-game here — is bookkeeping outside the frontier. A `setUp` says whether it is
+The driver keeps the phases: the naked singles and the game's own rungs (the
+note-free ones) compete until its setup is done, and setup — lazy populate then
+the obvious clean, built from the plan's `notes` words, or a `setUp` of the
+game's own (Salad's populate knows about empty squares) — is bookkeeping
+outside the frontier. A `setUp` says whether it is
 *done*, not only whether it did something: a driver that learned "done" by
 asking once more stayed an extra round in the opening, where a second
 empty-square marker beat the hidden single continuing the last step. Exemplars:
@@ -3052,11 +3091,12 @@ firing that continued.
   bulk cleanup step via the shared `emitObviousCleanStep(...)`: it strikes
   every penciled value already placed in a region as one `pencilStrike`,
   flagged `continuesPrevious` when it follows the populate fill and standalone
-  otherwise. Gate it to fire **once** and run it *as a step in the walk* — not
-  inside `ensurePopulated` — so it also cleans a **pre-noted board**: a clean
-  tucked inside `ensurePopulated` never runs when notes already exist,
-  silently regressing that case. Exemplar: the one-shot call in
-  [`unequal/index.ts`](../../src/games/unequal/index.ts). *Gotcha:* the clean
+  otherwise. It fires **once** and runs *as a step in the walk* — not inside
+  the populate — so it also cleans a **pre-noted board**: a clean tucked inside
+  the populate never runs when notes already exist, silently regressing that
+  case. `runCandidatePlan`'s default setup does exactly this
+  (`populateThenClean`); a game writing its own `setUp` must keep the order.
+  *Gotcha:* the clean
   step is a multi-cell **and** multi-digit setup step, not a deductive
   strike — exempt it (by its narration) from any per-firing test asserting "a
   strike's marks share one cell or one digit" or "every step uses the
@@ -3162,8 +3202,9 @@ owner-driven and worth copying:
   commits the facing-clue placement *first*, so a naive "strikes before the
   first recorded placement" window is empty. Fix: the strike window extends to
   the first *unreflected* placement (one whose cell isn't yet on the working
-  grid). Exemplar: `buildSteps` / `firstUnreflectedPlaceIndex` in
-  [`towers/index.ts`](../../src/games/towers/index.ts).
+  grid). `runCandidatePlan` does all of this; the window is
+  `firstUnreflectedPlaceIndex` in
+  [`candidate-hint.ts`](../../src/engine/candidate-hint.ts).
 - **Surface a *whole-line forcing* as one ordered placement journey, before
   populate; pencil in notes lazily.** A clue at an extreme value can force a
   whole line (or a single cell) outright, needing *no* notes. Emitting that as
@@ -3172,11 +3213,14 @@ owner-driven and worth copying:
   (first leg unflagged, the rest `continuesPrevious`, continuation legs
   narrated tersely). Because these placements need no notes, make **populate
   lazy**: do the note-free forced placements first and only emit the fill-all
-  step when an *elimination* first needs something to cross out. Detect off
-  `state.clues`, not the recording solver, so the generate/solve path stays
-  byte-identical. Exemplar: `extremeClueLines` + the lazy `ensurePopulated`
-  in [`towers/index.ts`](../../src/games/towers/index.ts); guard:
-  `towers-hint.test.ts` "populates before the first elimination".
+  step when an *elimination* first needs something to cross out. Detect it
+  off `state.clues` in the plan, not in the solver: the solver reaches the
+  same fact as a cascade of eliminations, and a note-free journey is a way of
+  *showing* it that the solver has no reason to know about. Exemplar:
+  `extremeClueLines`, Towers' own rung in
+  [`towers/index.ts`](../../src/games/towers/index.ts); the walk's default
+  setup is the lazy populate. Guard: `towers-hint.test.ts` "populates before
+  the first elimination".
 - **The split axis is dictated by what the narration names singular.** A clue
   firing that rules out *different* heights in different cells must not be one
   `pencilStrike` step: the narration names a single height ("a tower of height
@@ -3187,10 +3231,10 @@ owner-driven and worth copying:
   candidate pruning) splits **by cell**, one leg each, the shaded area — the
   whole cage — constant across the journey; a value *list* within a leg is
   fine because the cage narration never names a single value ("No way to make
-  this cage multiply to 120 leaves room for 1, 2 and 3 in this cell").
-  Exemplars: `clueStrikes` in
-  [`towers/index.ts`](../../src/games/towers/index.ts),
-  `emitStrikeJourney` in [`keen/index.ts`](../../src/games/keen/index.ts);
+  this cage multiply to 120 leaves room for 1, 2 and 3 in this cell"). A plan
+  states its axis as `strikeAxis` and the walk splits and flags the legs:
+  `(op) => op.n` in [`towers/index.ts`](../../src/games/towers/index.ts), the
+  cell in [`keen/index.ts`](../../src/games/keen/index.ts);
   guards: `towers-hint.test.ts` "a strike step never mixes heights",
   `keen-hint.test.ts` "a cage-strike step's marks all lie in one cell".
 

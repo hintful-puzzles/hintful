@@ -12,18 +12,11 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAllMove,
-  availableStrikes,
   candidateHint,
-  emitObviousCleanStep,
   keepCandidateHintTrack,
-  lazyPopulate,
-  type Mark,
-  nakedSingles,
-  populateThenClean,
   refreshCandidateHintStep,
-  regionDuplicateMarks,
-  runCandidatePlan,
 } from "../../engine/candidate-hint.ts";
+import { runCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
@@ -36,9 +29,8 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import type { FrontierCandidate } from "../../engine/hint-frontier.ts";
 import { digitKeys, pencilModeKey } from "../../engine/key-labels.ts";
-import { availablePlacements, forcingChainArea } from "../../engine/latin-hint.ts";
+import { forcingChainArea } from "../../engine/latin-hint.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
@@ -384,16 +376,15 @@ function regionCells(region: SoloRegion, state: SoloState): Point[] {
   return cellsOf(region, state).map((c) => ({ x: c % cr, y: (c / cr) | 0 }));
 }
 
+/** A region a single is classified in, tagged for naming. */
+type SoloClassifyRegion = { cells: number[]; region: SoloRegion };
+
 /** The regions of cell `(x, y)` that hold every digit exactly once, in
  * narration-preference order (row, column, sub-block, then the X diagonals it
  * lies on), each with its `SoloRegion` tag for naming. What the placement
  * classifier (`availablePlacements`) reads: a digit with one home left in
  * such a region must go there. The culls read {@link noRepeatRegionsOf}. */
-function regionsOf(
-  state: SoloState,
-  x: number,
-  y: number,
-): { cells: number[]; region: SoloRegion }[] {
+function regionsOf(state: SoloState, x: number, y: number): SoloClassifyRegion[] {
   const cr = state.cr;
   const cell = y * cr + x;
   const regions: SoloRegion[] = [
@@ -498,6 +489,9 @@ function reasonArea(reason: SoloReason, state: SoloState): OrderedCell[] {
     // narration can cite them and the player can walk it.
     case "forcing":
       return forcingChainArea(reason);
+    // A placement's cull shades the value that forces it.
+    case "dup":
+      return [{ x: reason.px, y: reason.py }];
     default:
       return [];
   }
@@ -512,115 +506,10 @@ function placementArea(reason: SoloReason, state: SoloState): Point[] {
   return [];
 }
 
-/** Emit one firing's strikes as a journey. A digit-confined firing (`intersect`)
- * is one multi-cell step (it crosses a single digit from several cells); every
- * other firing (cage pruning, a region subset) is split by cell — one leg each
- * narrating "this cell" — so a multi-digit strike never shows a single value
- * crossed in the wrong place (docs/games/hints.md § "Solve the way a human does"). */
-function emitStrikeJourney(
-  steps: HintStep<SoloMove, SoloHint>[],
-  wPen: Int32Array,
-  state: SoloState,
-  groupOps: HintOp[],
-): void {
-  const cr = state.cr;
-  const reason = groupOps[0].reason;
-  const apply = (marks: { x: number; y: number; n: number }[]): void => {
-    for (const m of marks) wPen[m.y * cr + m.x] &= ~(1 << m.n);
-  };
-
-  if (reason.kind === "intersect") {
-    const marks = groupOps.map((op) => ({ x: op.x, y: op.y, n: op.n }));
-    steps.push({
-      move: { type: "pencilStrike", marks },
-      explanation: narrate(reason, [reason.n], state),
-      highlights: {
-        area: reasonArea(reason, state),
-        targets: marks.map((m) => ({ x: m.x, y: m.y })),
-        marks,
-      },
-    });
-    apply(marks);
-    return;
-  }
-
-  const byCell = new Map<number, HintOp[]>();
-  for (const op of groupOps) {
-    const key = op.y * cr + op.x;
-    const arr = byCell.get(key);
-    if (arr) arr.push(op);
-    else byCell.set(key, [op]);
-  }
-  let first = true;
-  for (const [key, cellOps] of byCell) {
-    const x = key % cr;
-    const y = (key / cr) | 0;
-    const marks = cellOps.map((op) => ({ x, y, n: op.n }));
-    const values = marks.map((m) => m.n).sort((a, b) => a - b);
-    steps.push({
-      move: { type: "pencilStrike", marks },
-      explanation: narrate(reason, values, state),
-      highlights: { area: reasonArea(reason, state), targets: [{ x, y }], marks },
-      continuesPrevious: !first,
-    });
-    apply(marks);
-    first = false;
-  }
-}
-
-/** Emit a placement step and apply it, striking the placed value from the rest of
- * its row, column, sub-block and (X) diagonal. With auto-pencil on (`autoClean`)
- * that cleanup is silent (the move's own `autoElim` does it); with it off it
- * becomes an explicit `pencilStrike` journey continuation. */
-function emitPlacement(
-  steps: HintStep<SoloMove, SoloHint>[],
-  wGrid: Int8Array,
-  wPen: Int32Array,
-  state: SoloState,
-  x: number,
-  y: number,
-  n: number,
-  reason: SoloReason,
-  autoClean: boolean,
-): void {
-  const cr = state.cr;
-  steps.push({
-    move: { type: "set", x, y, n, pencil: false, autoElim: autoClean },
-    explanation: narrate(reason, [n], state),
-    highlights: { area: placementArea(reason, state), targets: [{ x, y }], marks: [] },
-  });
-  wGrid[y * cr + x] = n;
-  wPen[y * cr + x] = 0;
-
-  // The row/column/block/diagonal copies the placement rules out.
-  const dupMarks = regionDuplicateMarks(
-    wGrid,
-    wPen,
-    x,
-    y,
-    n,
-    cr,
-    noRepeatRegionsOf(state, x, y),
-  );
-  for (const m of dupMarks) wPen[m.y * cr + m.x] &= ~(1 << n);
-
-  if (!autoClean && dupMarks.length > 0) {
-    steps.push({
-      move: { type: "pencilStrike", marks: dupMarks },
-      explanation: narrate({ kind: "dup", n, px: x, py: y }, [], state),
-      highlights: {
-        area: [{ x, y }],
-        targets: dupMarks.map((m) => ({ x: m.x, y: m.y })),
-        marks: dupMarks,
-      },
-      continuesPrevious: true,
-    });
-  }
-}
-
-/** Build the hint plan by walking a working copy the way a person solves it: a
- * naked single first; else (after a lazy populate) the basic-region cull a placed
- * value forces; else the next deductive elimination; else a forced placement. */
+/** Build the hint plan by walking a working copy of the board the way a person
+ * solves it (`runCandidatePlan`). A single is classified in the regions that
+ * hold every digit; a placement culls the ones that forbid repeats, a Killer
+ * cage among them. */
 function buildSteps(
   state: SoloState,
   autoClean: boolean,
@@ -628,86 +517,39 @@ function buildSteps(
   const cr = state.cr;
   const steps: HintStep<SoloMove, SoloHint>[] = [];
   const wGrid = Int8Array.from(state.grid);
-  const wPen = Int32Array.from(state.pencil);
   const maxdiff = Math.min(state.params.diff, DIFF_EXTREME);
   const maxkdiff = state.params.kdiff;
-  const recOps = (): HintOp[] =>
-    recordSoloDeductions({ ...state, grid: wGrid }, maxdiff, maxkdiff);
-
-  const pop = lazyPopulate<SoloMove, SoloHint>(
-    state,
-    wGrid,
-    wPen,
-    cr,
-    steps,
-    say.populate,
-  );
-
-  let ops = recOps();
-  const placing = (m: Mark, reason: SoloReason): FrontierCandidate => ({
-    reads: [m, ...placementArea(reason, state)],
-    take: () => {
-      emitPlacement(steps, wGrid, wPen, state, m.x, m.y, m.n, reason, autoClean);
-      ops = recOps();
-    },
-  });
-
-  // 1. A naked single — the next move a human makes.
-  const singles = () =>
-    nakedSingles(wGrid, wPen, cr).map((ns) => placing(ns, { kind: "single" }));
-
-  // 2. Pencil in the notes (once) before any elimination needs them, then (once)
-  // bulk-clear the obvious candidates in one step — the adaptive Mark-all second
-  // press — so the walk goes straight to the real techniques (later placements
-  // keep notes clean via `emitPlacement`).
-  const setUp = populateThenClean(pop, () =>
-    emitObviousCleanStep(
-      steps,
-      wGrid,
-      wPen,
-      cr,
-      (x, y) => noRepeatRegionsOf(state, x, y),
-      say.cleanObvious(noRepeatRegionNames(state)),
-    ),
-  );
-
-  // 3. The deductive eliminations (the techniques worth teaching).
-  const strikes = () =>
-    availableStrikes(ops, wGrid, wPen, cr, (live) => [
-      ...reasonArea(live[0].reason, state),
-      ...live,
-    ]).map(
-      (cs): FrontierCandidate => ({
-        reads: [...reasonArea(cs[0].reason, state), ...cs],
-        take: () => emitStrikeJourney(steps, wPen, state, cs),
-      }),
-    );
-
-  // 4. The forced placements (a cube collapse the notes lag) — re-derive *why*
-  // (naked vs hidden single) from the working board for the generic singles;
-  // a killer placement keeps its recorded cage reason.
-  const places = (nothingEarlier: boolean) =>
-    availablePlacements(
-      ops,
-      wGrid,
-      wPen,
-      cr,
-      (x, y) => regionsOf(state, x, y),
-      nothingEarlier,
-    ).map(({ op, why }) =>
-      placing(op, why.kind === "recorded" ? op.reason : soloSingleReason(op.n, why)),
-    );
-
-  // Stops when nothing fires (e.g. an Unreasonable board now needing a guess).
-  runCandidatePlan({
+  runCandidatePlan<SoloMove, SoloHint, HintOp, SoloReason, SoloClassifyRegion>({
     w: cr,
     steps,
-    finished: () => !wGrid.includes(0),
+    grid: wGrid,
+    pencil: Int32Array.from(state.pencil),
+    autoClean,
     label: "solo hint plan",
-    cap: cr * cr * cr * 4 + 4,
-    opening: [singles],
-    setUp,
-    rungs: [singles, strikes, places],
+    record: () => recordSoloDeductions({ ...state, grid: wGrid }, maxdiff, maxkdiff),
+    regionsOf: (x, y) => regionsOf(state, x, y),
+    cullRegionsOf: (x, y) => noRepeatRegionsOf(state, x, y),
+    singleReason: soloSingleReason,
+    placeWords: (m, reason) => ({
+      explanation: narrate(reason, [m.n], state),
+      area: placementArea(reason, state),
+    }),
+    strikeWords: (marks, reason) => ({
+      explanation: narrate(
+        reason,
+        reason.kind === "intersect" ? [reason.n] : valuesOf(marks),
+        state,
+      ),
+      area: reasonArea(reason, state),
+    }),
+    // A digit confined to one region crosses that digit from several cells in
+    // one sentence; every other firing's narration is about "this cell", so a
+    // multi-digit strike never shows a value crossed in the wrong place.
+    strikeAxis: (op) => (op.reason.kind === "intersect" ? null : op.y * cr + op.x),
+    notes: {
+      populate: say.populate,
+      cleanObvious: say.cleanObvious(noRepeatRegionNames(state)),
+    },
   });
   return steps;
 }

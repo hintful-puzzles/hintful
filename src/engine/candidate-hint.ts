@@ -7,24 +7,18 @@
  * {@link DeductionRecord} shape, which every game produces from its own
  * techniques and this module consumes uniformly.
  *
- * This module owns the reusable *mechanics*: the walk itself
- * (`runCandidatePlan`, which takes each next firing through a `HintFrontier`),
- * the pure plan helpers (the naked singles, lazy populate, the
- * unreflected-placement index, the available strikes, the next-place lookup)
- * and the generic `keepCandidateHintTrack` / `refreshCandidateHintStep`. The
- * game owns the *meaning*: which rungs it has and what each can fire now, its
- * strike-split policy and journey continuation, the recording solver, the
- * narration and the reason union. See `docs/games/hints.md` §
- * "Candidate-elimination games".
+ * This module owns the pure plan helpers (the naked singles, lazy populate,
+ * the unreflected-placement index, the available strikes, the next-place
+ * lookup) and the generic `keepCandidateHintTrack` / `refreshCandidateHintStep`.
+ * The walk that composes them into a plan is `candidate-plan.ts`. See
+ * `docs/games/hints.md` § "Candidate-elimination games".
  */
 
 import type { DeductionRecord } from "./deduction-record.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "./game.ts";
-import { type FrontierCandidate, HintFrontier } from "./hint-frontier.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import type { ClassifyRegion } from "./latin-hint.ts";
 import type { OrderedCell } from "./overlay-sidecar.ts";
-import { stepBudget } from "./step-budget.ts";
 import type { Point } from "./types.ts";
 
 /** A board cell. */
@@ -269,110 +263,6 @@ export function availableStrikes<R extends DeductionRecord>(
     for (const op of live) pending.add(op.y * w + op.x);
   }
   return out;
-}
-
-/**
- * One rung of a candidate plan's ladder: the firings of one kind it could take
- * now. `nothingEarlier` says every earlier rung came up empty this time, which is
- * where a rung that may only fire as the plan's last resort (a clue-forced
- * placement, `availablePlacements`' `nothingElse`) is allowed to.
- */
-export type CandidateRung = (nothingEarlier: boolean) => readonly FrontierCandidate[];
-
-/** A candidate-elimination game's plan, as {@link runCandidatePlan} walks it. */
-export interface CandidatePlan {
-  /** The board's width, and its height where that differs. */
-  w: number;
-  h?: number;
-  /** The steps the rungs push to; the frontier reads what each wrote. */
-  steps: readonly { highlights?: { targets?: readonly Point[] } }[];
-  /** Whether the working board is finished. */
-  finished(): boolean;
-  /** Names the plan if its step budget trips. */
-  label: string;
-  /** Iteration cap, a backstop for a rung that fires without progress. */
-  cap: number;
-  /** The rungs that need no notes, offered until {@link setUp} is done. */
-  opening: readonly CandidateRung[];
-  /** Populate, the obvious clean: taken when no opening rung fires. */
-  setUp: PlanSetUp;
-  /** Every rung, cheapest first, once the plan is set up. */
-  rungs: readonly CandidateRung[];
-  /** Called when nothing fires, before the plan ends: the place for a check
-   * that the solver forces nothing the plan could not explain. */
-  stuck?(): void;
-}
-
-/** The setup a candidate plan does before its every rung competes. */
-export interface PlanSetUp {
-  /** Whether the setup is finished. */
-  done(): boolean;
-  /** Take the next setup step, and say whether it pushed a step; one that
-   * pushed nothing (a clean with nothing to clean) still counts as taken. */
-  step(): boolean;
-}
-
-/**
- * The {@link PlanSetUp} most games take: pencil the notes in once (`pop`,
- * usually {@link lazyPopulate}), then clean the obvious candidates once
- * (`clean`, usually {@link emitObviousCleanStep}, reporting whether it pushed
- * a step).
- */
-export function populateThenClean(
-  pop: { done(): boolean; ensure(): void },
-  clean: () => boolean,
-): PlanSetUp {
-  let cleaned = false;
-  return {
-    done: () => pop.done() && cleaned,
-    step: () => {
-      if (!pop.done()) {
-        pop.ensure();
-        return true;
-      }
-      cleaned = true;
-      return clean();
-    },
-  };
-}
-
-/**
- * The walk every candidate-elimination hint plan takes: from the working board,
- * take the note-free firings while the notes are being set up, then every rung,
- * until the board is finished or nothing fires. Which firing is taken is the
- * `HintFrontier`'s choice, so a plan continues from its latest steps where it
- * can and otherwise follows the rung order.
- *
- * The game keeps what is its own: which rungs exist, what each can fire now,
- * and how a firing is narrated and applied. Everything about *walking* them is
- * here, so a new game gets the ordering, the phase handling and the backstops
- * by supplying its rungs.
- */
-export function runCandidatePlan(plan: CandidatePlan): void {
-  const frontier = new HintFrontier(plan.w, plan.h ?? plan.w);
-  const budget = stepBudget(plan.label);
-  const listed = (rungs: readonly CandidateRung[]): FrontierCandidate[][] => {
-    const lists: FrontierCandidate[][] = [];
-    let nothingEarlier = true;
-    for (const rung of rungs) {
-      const list = [...rung(nothingEarlier)];
-      if (list.length > 0) nothingEarlier = false;
-      lists.push(list);
-    }
-    return lists;
-  };
-  for (let guard = 0; guard < plan.cap; guard++) {
-    budget.tick();
-    if (plan.finished()) return;
-    if (!plan.setUp.done()) {
-      if (frontier.take(listed(plan.opening), plan.steps)) continue;
-      if (plan.setUp.step()) continue;
-    }
-    if (!frontier.take(listed(plan.rungs), plan.steps)) {
-      plan.stuck?.();
-      return;
-    }
-  }
 }
 
 /** The next forced placement the recording solver makes whose cell is still empty
@@ -653,6 +543,10 @@ export interface CandidateMoveAdapter<M> {
   read(m: M): CandidateMove | null;
   /** Build a strike over `marks` in the game's own move shape. */
   strike(marks: Mark[]): M;
+  /** Build a placement of `n` at `(x, y)` in the game's own move shape, for a
+   * hint plan to emit; `autoElim` is the auto-pencil preference, for a dialect
+   * that bakes it into the move. Defaults to the Latin family's `set`. */
+  place?(x: number, y: number, n: number, autoElim: boolean): M;
   /** The pencil-mask bit for candidate `n` — {@link NoteEncoding.bit}, carried
    * here too so a game wires the dialect in one object. Defaults to `1 << n`,
    * the `0`-means-empty encoding the Latin games share. */

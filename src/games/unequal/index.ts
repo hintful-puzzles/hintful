@@ -12,18 +12,11 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAllMove,
-  availableStrikes,
   candidateHint,
-  emitObviousCleanStep,
   keepCandidateHintTrack,
-  lazyPopulate,
-  type Mark,
-  nakedSingles,
-  populateThenClean,
   refreshCandidateHintStep,
-  regionDuplicateMarks,
-  runCandidatePlan,
 } from "../../engine/candidate-hint.ts";
+import { runCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
@@ -36,14 +29,13 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import type { FrontierCandidate } from "../../engine/hint-frontier.ts";
 import { narrateLatinReason } from "../../engine/hint-text.ts";
 import { clearKey, pencilModeKey } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
 import {
-  availablePlacements,
   forcingChainArea,
   hiddenSingleLine,
+  type RowColRegion,
   rowColRegions,
   singleReasonOf,
 } from "../../engine/latin-hint.ts";
@@ -429,96 +421,10 @@ function reasonArea(reason: HintReason, target: Point): OrderedCell[] {
   }
 }
 
-/** The clue-deduction strikes a plan could take now (`availableStrikes`: live,
- * and resting on nothing an earlier firing has yet to strike). `dup` strikes are
- * excluded (those are placement bookkeeping). Each returned strike groups the
- * marks of its firing sharing the **same target cell** — so its narration (which
- * names that cell's relationship) matches the marks. A link's two ends (greater
- * in one cell, lesser in the other) come back across two calls and are linked as
- * one journey by the caller's `group` tracking. */
-function clueStrikes(
-  ops: HintOp[],
-  wGrid: Int8Array,
-  wPen: Int32Array,
-  o: number,
-): {
-  marks: { x: number; y: number; n: number }[];
-  reason: HintReason;
-  group: number;
-}[] {
-  const reads = (live: readonly HintOp[]): Point[] =>
-    live.flatMap((op) => [op, ...reasonArea(op.reason, op)]);
-  return availableStrikes(ops, wGrid, wPen, o, reads).map((live) => {
-    const first = live[0];
-    const same = live.filter((op) => op.x === first.x && op.y === first.y);
-    return {
-      marks: same.map((op) => ({ x: op.x, y: op.y, n: op.n })),
-      reason: first.reason,
-      group: first.group,
-    };
-  });
-}
-
-/** Emit a placement step and apply it to the working board, striking the placed
- * value from the rest of its row and column. With auto-pencil on (`autoClean`)
- * that cleanup is silent (the move's own `autoElim` does it on the real board);
- * with it off it becomes an explicit `pencilStrike` journey continuation. */
-function emitPlacement(
-  steps: HintStep<UnequalMove, UnequalHint>[],
-  wGrid: Int8Array,
-  wPen: Int32Array,
-  o: number,
-  x: number,
-  y: number,
-  n: number,
-  reason: HintReason,
-  autoClean: boolean,
-): void {
-  steps.push({
-    move: { type: "set", x, y, n, pencil: false, autoElim: autoClean },
-    explanation: narrate(reason, [n], o),
-    highlights: {
-      area:
-        reason.kind === "hiddenSingle"
-          ? hiddenSingleLine(reason.line, reason.index, o)
-          : [],
-      targets: [{ x, y }],
-      marks: [],
-    },
-  });
-  wGrid[y * o + x] = n;
-  wPen[y * o + x] = 0;
-
-  const dupMarks = regionDuplicateMarks(
-    wGrid,
-    wPen,
-    x,
-    y,
-    n,
-    o,
-    rowColRegions(x, y, o),
-  );
-  for (const m of dupMarks) wPen[m.y * o + m.x] &= ~(1 << n);
-
-  if (!autoClean && dupMarks.length > 0) {
-    steps.push({
-      move: { type: "pencilStrike", marks: dupMarks },
-      explanation: narrate({ kind: "dup", n, px: x, py: y }, [], o),
-      highlights: {
-        area: [],
-        targets: dupMarks.map((m) => ({ x: m.x, y: m.y })),
-        marks: dupMarks,
-      },
-      continuesPrevious: true,
-    });
-  }
-}
-
-/** Build the hint plan by walking a working copy the way a person solves it: a
- * naked single first; else (after a lazy populate) the basic-Latin row/column
- * cull a given/placed value forces; else the next clue elimination; else a forced
- * placement. `autoClean` (the auto-pencil preference) decides whether a
- * placement's trivial row/column eliminations are silent or taught. */
+/** Build the hint plan by walking a working copy of the board the way a person
+ * solves it (`runCandidatePlan`). `autoClean` (the auto-pencil preference)
+ * decides whether a placement's trivial row/column eliminations are silent or
+ * taught. */
 function buildSteps(
   state: UnequalState,
   autoClean: boolean,
@@ -526,109 +432,39 @@ function buildSteps(
   const o = state.order;
   const steps: HintStep<UnequalMove, UnequalHint>[] = [];
   const wGrid = Int8Array.from(state.grid);
-  const wPen = Int32Array.from(state.pencil);
   const maxdiff = Math.min(diffToLevel(state.diff), DIFF_EXTREME);
-  const record = () =>
-    recordUnequalDeductions(
-      o,
-      state.mode,
-      state.clueFlags,
-      Uint8Array.from(wGrid),
-      maxdiff,
-    );
-
-  const pop = lazyPopulate<UnequalMove, UnequalHint>(
-    state,
-    wGrid,
-    wPen,
-    o,
-    steps,
-    say.populate,
-  );
-
-  let ops = record();
-  // The firing whose strike the previous step emitted, so a same-firing strike of
-  // a *different* cell (a link's other end) continues the journey.
-  let lastStrikeGroup = Number.NaN;
-  const placing = (m: Mark, reason: HintReason): FrontierCandidate => ({
-    reads:
-      reason.kind === "hiddenSingle"
-        ? [m, ...hiddenSingleLine(reason.line, reason.index, o)]
-        : [m],
-    take: () => {
-      emitPlacement(steps, wGrid, wPen, o, m.x, m.y, m.n, reason, autoClean);
-      ops = record();
-      lastStrikeGroup = Number.NaN;
-    },
-  });
-  // 1. A naked single — the next move a human makes.
-  const singles = () =>
-    nakedSingles(wGrid, wPen, o).map((ns) => placing(ns, { kind: "single" }));
-
-  // 2. Pencil in the notes (once) before any elimination needs them, then (once)
-  // bulk-clear the obvious candidates in one step — the adaptive Mark-all second
-  // press — so the walk goes straight to the real deductions (later placements
-  // keep notes clean via `emitPlacement`).
-  const setUp = populateThenClean(pop, () =>
-    emitObviousCleanStep(
-      steps,
-      wGrid,
-      wPen,
-      o,
-      (x, y) => rowColRegions(x, y, o),
-      say.cleanObvious,
-    ),
-  );
-
-  // 3. The clue eliminations (the deductions worth teaching).
-  const strikes = () =>
-    clueStrikes(ops, wGrid, wPen, o).map((cs): FrontierCandidate => {
-      const area = reasonArea(cs.reason, { x: cs.marks[0].x, y: cs.marks[0].y });
-      return {
-        reads: [...area, ...cs.marks],
-        take: () => {
-          const values = cs.marks.map((m) => m.n).sort((a, b) => a - b);
-          steps.push({
-            move: { type: "pencilStrike", marks: cs.marks },
-            explanation: narrate(cs.reason, values, o),
-            highlights: {
-              area,
-              targets: cs.marks.map((m) => ({ x: m.x, y: m.y })),
-              marks: cs.marks,
-            },
-            continuesPrevious: cs.group === lastStrikeGroup,
-          });
-          for (const m of cs.marks) wPen[m.y * o + m.x] &= ~(1 << m.n);
-          lastStrikeGroup = cs.group;
-        },
-      };
-    });
-
-  // 4. The forced placements (a cube collapse the notes lag) — re-derive *why*
-  // (naked vs hidden single) from the working board; the recorded `single`
-  // reason conflates the two and would mis-narrate a hidden single.
-  const places = (nothingEarlier: boolean) =>
-    availablePlacements(
-      ops,
-      wGrid,
-      wPen,
-      o,
-      (x, y) => rowColRegions(x, y, o),
-      nothingEarlier,
-    ).map(({ op, why }) =>
-      placing(op, why.kind === "recorded" ? op.reason : singleReasonOf(op.n, why)),
-    );
-
-  // Stops when nothing fires (e.g. a Recursive board now needing a guess).
-  runCandidatePlan({
+  runCandidatePlan<UnequalMove, UnequalHint, HintOp, HintReason, RowColRegion>({
     w: o,
     steps,
-    finished: () => !wGrid.includes(0),
+    grid: wGrid,
+    pencil: Int32Array.from(state.pencil),
+    autoClean,
     label: "unequal hint plan",
-    cap: o * o * o * 4 + 4,
-    opening: [singles],
-    setUp,
-    rungs: [singles, strikes, places],
+    record: () =>
+      recordUnequalDeductions(
+        o,
+        state.mode,
+        state.clueFlags,
+        Uint8Array.from(wGrid),
+        maxdiff,
+      ),
+    regionsOf: (x, y) => rowColRegions(x, y, o),
+    singleReason: singleReasonOf,
+    placeWords: (m, reason) => ({
+      explanation: narrate(reason, [m.n], o),
+      area:
+        reason.kind === "hiddenSingle"
+          ? hiddenSingleLine(reason.line, reason.index, o)
+          : [],
+    }),
+    strikeWords: (marks, reason) => ({
+      explanation: narrate(reason, valuesOf(marks), o),
+      area: reasonArea(reason, { x: marks[0].x, y: marks[0].y }),
+    }),
+    // The narration names a cell's relationship to its neighbor, so a firing is
+    // one leg per cell: a link's two ends, greater and lesser, are two legs.
+    strikeAxis: (op) => op.y * o + op.x,
+    notes: { populate: say.populate, cleanObvious: say.cleanObvious },
   });
   return steps;
 }

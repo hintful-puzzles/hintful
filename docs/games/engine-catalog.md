@@ -442,25 +442,32 @@ the player can already see — a later step may cite it. See
 
 ### `candidate-hint.ts` — candidate-elimination plan plumbing
 
-The shared mechanics for pencil-notes games (the plan walk `runCandidatePlan`
-with its `populateThenClean` setup, the naked singles and the available
+The pure helpers for pencil-notes games: the naked singles and the available
 strikes a plan could take now, lazy-populate check, next-place lookup, the
-obvious-clean step —
-`emitObviousCleanStep` where the obvious strikes are region duplicates,
-`obviousCleanStep` where the game computes its own — generic
-`keepCandidateHintTrack`/`refreshCandidateHintStep`). A board scan reads
-`grid.length`, so a board need not be square; `w` is only the row stride. A
-game's `buildSteps` supplies its rungs and hands them to `runCandidatePlan` —
-see [`hints.md`](./hints.md) § "Candidate-elimination games".
+obvious-clean step — `emitObviousCleanStep` where the obvious strikes are
+region duplicates, `obviousCleanStep` where the game computes its own — the
+move dialect (`CandidateMoveAdapter`) and the generic
+`keepCandidateHintTrack`/`refreshCandidateHintStep`. A board scan reads
+`grid.length`, so a board need not be square; `w` is only the row stride.
+
+### `candidate-plan.ts` — the candidate-elimination plan walk
+
+`runCandidatePlan` is a pencil-notes game's whole `buildSteps` walk: the naked
+singles, the recorded strikes and placements as rungs around any rungs of the
+game's own, populate and the obvious clean, a placement's row/column cull
+(taught as a leg, or silent under auto-pencil), the journey flags, and each
+next firing taken through a `HintFrontier`. A rung returns firings as **legs**
+(a placement, a strike, or a step of the game's own), the walk builds every
+step, and the frontier reads a firing's premise off those steps. The game
+supplies its recording solver, regions, words and strike-split axis — see
+[`hints.md`](./hints.md) § "Candidate-elimination games".
 
 ### `hint-frontier.ts` — which available firing a plan takes next
 
 `HintFrontier` takes, among the firings a candidate plan could make at once,
-the one continuing from what the plan's latest steps wrote, with the game's
-rung order as the tiebreak; `runCandidatePlan` hands it each rung's list of
-candidates the game can vouch for (`nakedSingles`, `availableStrikes`,
-`availablePlacements`). The game still owns which firings exist and what each
-reads. See
+the one continuing from what the plan's latest steps wrote, with the ladder
+order as the tiebreak; `runCandidatePlan` hands it each rung's candidates,
+each reading the `area ∪ targets` of the steps it would push. See
 [`hints.md`](./hints.md) § "Continue from the last step".
 
 ### `latin-hint.ts` — truthful Latin single classification

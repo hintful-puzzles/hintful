@@ -12,21 +12,20 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAllMove,
-  availableStrikes,
   type CandidateMoveAdapter,
   candidateHint,
-  emitObviousCleanStep,
   firstUnreflectedPlaceIndex,
   keepCandidateHintTrack,
-  lazyPopulate,
   type Mark,
-  nakedSingles,
   obviousCandidateMarks,
-  populateThenClean,
   refreshCandidateHintStep,
-  regionDuplicateMarks,
-  runCandidatePlan,
 } from "../../engine/candidate-hint.ts";
+import {
+  type Firing,
+  type RungContext,
+  runCandidatePlan,
+  valuesOf,
+} from "../../engine/candidate-plan.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import {
   type Game,
@@ -38,7 +37,6 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import type { FrontierCandidate } from "../../engine/hint-frontier.ts";
 import { narrateLatinReason } from "../../engine/hint-text.ts";
 import { clearKey, pencilModeKey } from "../../engine/key-labels.ts";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, latinVerdict } from "../../engine/latin.ts";
@@ -46,6 +44,7 @@ import {
   availablePlacements,
   forcingChainArea,
   hiddenSingleLine,
+  type RowColRegion,
   rowColRegions,
   type SingleReason,
   singlePlacementReason,
@@ -470,8 +469,8 @@ type NarratableReason = HintReason | SingleReason;
  * narration"). `ns` is the value list the step acts on (a placement passes its
  * single value; a strike its struck values). The generic Latin arms go to
  * `narrateLatinReason` under {@link groupVocab}; only Group's own three
- * techniques are chosen here. `identityFill`'s continuation legs are narrated in
- * {@link emitIdentityFillJourney}. The words are [`hint-text.ts`](./hint-text.ts)'s. */
+ * techniques are chosen here. `identityFill`'s continuation legs are narrated
+ * by `buildSteps`' `placeWords`. The words are [`hint-text.ts`](./hint-text.ts)'s. */
 function narrate(reason: NarratableReason, ns: number[], id: boolean): string {
   const ch = (n: number): string => toChar(n, id);
   switch (reason.kind) {
@@ -527,134 +526,6 @@ function reasonArea(reason: NarratableReason, w: number): OrderedCell[] {
   }
 }
 
-/** Emit a placement step (a native single-cell `set`) and apply it to the working
- * board, then strike the placed value from the rest of its row and column
- * ({@link emitDupStrike}). */
-function emitPlacement(
-  steps: HintStep<GroupMove, GroupHint>[],
-  wGrid: Uint8Array,
-  wPen: Int32Array,
-  w: number,
-  id: boolean,
-  x: number,
-  y: number,
-  n: number,
-  reason: NarratableReason,
-): void {
-  steps.push({
-    move: { type: "set", cells: [{ x, y }], n },
-    explanation: narrate(reason, [n], id),
-    highlights: { area: reasonArea(reason, w), targets: [{ x, y }], marks: [] },
-  });
-  wGrid[y * w + x] = n;
-  wPen[y * w + x] = 0;
-  emitDupStrike(steps, wGrid, wPen, w, id, x, y, n);
-}
-
-/** Strike `n`, just placed at `(x, y)`, from the notes of the rest of its row and
- * column, as a `pencilStrike` journey continuation. Group has no auto-pencil, so
- * every placement the plan makes owes the player this cleanup: a later
- * placement is narrated as a naked or hidden single *in the notes*, and a strike
- * the plan skipped here would leave it resting on facts the board does not show.
- * A no-op (no step) when no note carries `n`, the common case on a note-free
- * board. */
-function emitDupStrike(
-  steps: HintStep<GroupMove, GroupHint>[],
-  wGrid: Uint8Array,
-  wPen: Int32Array,
-  w: number,
-  id: boolean,
-  x: number,
-  y: number,
-  n: number,
-): void {
-  const dupMarks = regionDuplicateMarks(
-    wGrid,
-    wPen,
-    x,
-    y,
-    n,
-    w,
-    rowColRegions(x, y, w),
-  );
-  if (dupMarks.length === 0) return;
-  for (const m of dupMarks) wPen[m.y * w + m.x] &= ~(1 << m.n);
-  steps.push({
-    move: { type: "pencilStrike", marks: dupMarks },
-    explanation: narrate({ kind: "dup", n, px: x, py: y }, [], id),
-    highlights: {
-      area: [],
-      targets: dupMarks.map((m) => ({ x: m.x, y: m.y })),
-      marks: dupMarks,
-    },
-    continuesPrevious: true,
-  });
-}
-
-/** Emit the identity's whole row and column as **one multi-leg journey**: the
- * deduction that "learns" the identity forces every empty cell of its row and
- * column at once, so those placements read and auto-play as a single hint
- * (continuation legs flagged `continuesPrevious`), not `2w−1` disjoint ones. The
- * revealing cell is shaded on every leg as the shared premise. */
-function emitIdentityFillJourney(
-  steps: HintStep<GroupMove, GroupHint>[],
-  wGrid: Uint8Array,
-  wPen: Int32Array,
-  w: number,
-  id: boolean,
-  ops: HintOp[],
-  group: number,
-): void {
-  const fills = ops.filter(
-    (op) => op.kind === "place" && op.group === group && wGrid[op.y * w + op.x] === 0,
-  );
-  fills.forEach((op, i) => {
-    const reason = op.reason;
-    const area =
-      reason.kind === "identityFill" ? [{ x: reason.viaX, y: reason.viaY }] : [];
-    const explanation =
-      i === 0 ? narrate(reason, [op.n], id) : say.identityFillNext(toChar(op.n, id));
-    steps.push({
-      move: { type: "set", cells: [{ x: op.x, y: op.y }], n: op.n },
-      explanation,
-      highlights: { area, targets: [{ x: op.x, y: op.y }], marks: [] },
-      continuesPrevious: i > 0,
-    });
-    wGrid[op.y * w + op.x] = op.n;
-    wPen[op.y * w + op.x] = 0;
-    emitDupStrike(steps, wGrid, wPen, w, id, op.x, op.y, op.n);
-  });
-}
-
-/** Emit one recorded placement (Group's own or a generic single), re-deriving a
- * generic `single` reason into naked/hidden/forced from the working board. */
-function emitPlacementOp(
-  steps: HintStep<GroupMove, GroupHint>[],
-  wGrid: Uint8Array,
-  wPen: Int32Array,
-  w: number,
-  id: boolean,
-  ops: HintOp[],
-  pl: HintOp,
-): void {
-  if (pl.reason.kind === "identityFill") {
-    emitIdentityFillJourney(steps, wGrid, wPen, w, id, ops, pl.group);
-    return;
-  }
-  const reason: NarratableReason =
-    pl.reason.kind === "single"
-      ? singlePlacementReason(
-          wGrid,
-          visibleCandidates(wGrid, wPen, w),
-          pl.x,
-          pl.y,
-          pl.n,
-          w,
-        )
-      : (pl.reason as NarratableReason);
-  emitPlacement(steps, wGrid, wPen, w, id, pl.x, pl.y, pl.n, reason);
-}
-
 /** The candidates the player can read off the board, for classifying a placement:
  * a cell's notes where it has any, and every value not already placed in its row
  * or column where it has none. Group places before it populates, so a placement
@@ -670,13 +541,15 @@ function visibleCandidates(wGrid: Uint8Array, wPen: Int32Array, w: number): Int3
   return pen;
 }
 
-/** Build the hint plan by walking a working copy the way a person solves it,
- * placement-first: a naked single first; else, when a placement is
- * the solver's *immediate* next deduction, teach it (Group's associativity or an
- * identity-row/column fill, or a generic single); else — when an elimination
- * precedes the next placement — a lazy populate + obvious-cull cleanup, then the
- * elimination (Group's identity-mark strike, or a generic set/forcing cull), then
- * the placement it enables. Capped below recursion (a guess is not teachable). */
+/** Build the hint plan by walking a working copy of the board the way a person
+ * solves it (`runCandidatePlan`), placement-first: Group's own rung teaches a
+ * placement the solver makes before any elimination (associativity, an identity
+ * row and column, or a single the board already shows) with no notes at all,
+ * so notes are penciled in only when an elimination needs them. Group has no
+ * auto-pencil, so every placement teaches its row/column cull: a later single
+ * is narrated from the notes, and a cull skipped here would leave it resting on
+ * strikes the board does not show. Capped below recursion (a guess is not
+ * teachable). */
 function buildSteps(state: GroupState): HintStep<GroupMove, GroupHint>[] {
   const w = state.w;
   const id = state.id;
@@ -684,51 +557,54 @@ function buildSteps(state: GroupState): HintStep<GroupMove, GroupHint>[] {
   const wGrid = Uint8Array.from(state.grid);
   const wPen = Int32Array.from(state.pencil);
   const maxdiff = Math.min(state.diff, DIFF_EXTREME);
-
-  const pop = lazyPopulate<GroupMove, GroupHint>(
-    state,
-    wGrid,
-    wPen,
-    w,
-    steps,
-    say.populate,
-  );
-  let ops = recordGroupDeductions(wGrid, w, maxdiff);
-
-  const placing = (m: Mark, reason: NarratableReason): FrontierCandidate => ({
-    reads: [m, ...reasonArea(reason, w)],
-    take: () => {
-      emitPlacement(steps, wGrid, wPen, w, id, m.x, m.y, m.n, reason);
-      ops = recordGroupDeductions(wGrid, w, maxdiff);
-    },
-  });
-  const placingOp = (op: HintOp): FrontierCandidate => ({
-    reads: [op, ...reasonArea(op.reason as NarratableReason, w)],
-    take: () => {
-      emitPlacementOp(steps, wGrid, wPen, w, id, ops, op);
-      ops = recordGroupDeductions(wGrid, w, maxdiff);
-    },
-  });
   const regions = (x: number, y: number) => rowColRegions(x, y, w);
+  type Legs = Firing<GroupMove, GroupHint, NarratableReason>;
 
-  // 1. A naked single — the next move a human makes.
-  const singles = () =>
-    nakedSingles(wGrid, wPen, w).map((ns) => placing(ns, { kind: "single" }));
+  /** A placement's firing. Learning the identity forces every empty cell of its
+   * row and column at once, so those placements are one journey, not `2w − 1`
+   * hints, with the revealing cell shaded on every leg. */
+  const placing = (m: Mark, reason: NarratableReason, ops: readonly HintOp[]): Legs => {
+    if (reason.kind !== "identityFill") return [{ place: m, reason }];
+    const group = ops.find(
+      (op) => op.kind === "place" && op.x === m.x && op.y === m.y,
+    )?.group;
+    return ops
+      .filter(
+        (op) =>
+          op.kind === "place" && op.group === group && wGrid[op.y * w + op.x] === 0,
+      )
+      .map((op) => ({ place: op, reason: op.reason }));
+  };
+  /** A recorded placement, a generic `single` re-derived as naked or hidden
+   * from what the player can read off the board. */
+  const placingOp = (op: HintOp, ops: readonly HintOp[]): Legs =>
+    placing(
+      op,
+      op.reason.kind === "single"
+        ? singlePlacementReason(
+            wGrid,
+            visibleCandidates(wGrid, wPen, w),
+            op.x,
+            op.y,
+            op.n,
+            w,
+          )
+        : op.reason,
+      ops,
+    );
 
-  // 2. A placement is the solver's immediate next deduction (nothing precedes
-  //    it in solver order) — teach it directly, no notes needed (placement-
-  //    first: Group's associativity / identity fill lead, not a populate).
-  //    `ops.length > 0` is load-bearing: `firstUnreflectedPlaceIndex` returns
-  //    `ops.length` for "no placement", which is 0 when `ops` is empty, and
-  //    that is ordinary on an Unreasonable board, whose rungs the cap withholds.
-  //    Any associativity placement is available once the three products it
-  //    reads are all on the board, since those are its whole premise. Before
-  //    the notes are in, so is any recorded single the player can read off
-  //    the board; once they are, singles wait behind the strikes as in rung 5.
-  const leads = () => {
-    const out: FrontierCandidate[] = [];
+  // A placement that is the solver's immediate next deduction (nothing precedes
+  // it in solver order). `ops.length > 0` is load-bearing:
+  // `firstUnreflectedPlaceIndex` returns `ops.length` for "no placement", which
+  // is 0 when `ops` is empty, and that is ordinary on an Unreasonable board,
+  // whose rungs the cap withholds. Any associativity placement is available once
+  // the three products it reads are all on the board, since those are its whole
+  // premise. Before the notes are in, so is any recorded single the player can
+  // read off the board; once they are, singles wait behind the strikes.
+  const leads = ({ ops, populated }: RungContext<HintOp>): Legs[] => {
+    const out: Legs[] = [];
     const lead = ops.length > 0 && firstUnreflectedPlaceIndex(ops, wGrid, w) === 0;
-    if (lead) out.push(placingOp(ops[0]));
+    if (lead) out.push(placingOp(ops[0], ops));
     for (const op of ops)
       if (
         (op !== ops[0] || !lead) &&
@@ -737,8 +613,8 @@ function buildSteps(state: GroupState): HintStep<GroupMove, GroupHint>[] {
         wGrid[op.y * w + op.x] === 0 &&
         reasonArea(op.reason, w).every((p) => wGrid[p.y * w + p.x] !== 0)
       )
-        out.push(placingOp(op));
-    if (!pop.done())
+        out.push(placingOp(op, ops));
+    if (!populated)
       for (const { op, why } of availablePlacements(
         ops,
         wGrid,
@@ -748,72 +624,36 @@ function buildSteps(state: GroupState): HintStep<GroupMove, GroupHint>[] {
         false,
       ))
         if (why.kind !== "recorded" && (op !== ops[0] || !lead))
-          out.push(placing(op, singleReasonOf(op.n, why)));
+          out.push(placing(op, singleReasonOf(op.n, why), ops));
     return out;
   };
 
-  // 3. An elimination precedes the next placement (Group's identity-mark strike,
-  //    or a set/forcing cull) — its notes are what the strike crosses out, so
-  //    populate first, then strike the notes still carrying a value already
-  //    placed in their row or column — the player's own, or just filled in by
-  //    the populate. Every placement below is narrated from the notes as a naked
-  //    or hidden single, and the solver's cube never holds those values, so a
-  //    placement it forces could otherwise rest on strikes the board does not
-  //    show.
-  const setUp = populateThenClean(pop, () =>
-    emitObviousCleanStep(steps, wGrid, wPen, w, regions, say.cleanObvious),
-  );
-
-  // 4. The eliminations, then the teaching.
-  const strikes = () =>
-    availableStrikes(ops, wGrid, wPen, w, (live) => [
-      ...reasonArea(live[0].reason, w),
-      ...live,
-    ]).map((strike): FrontierCandidate => {
-      const reason = strike[0].reason;
-      const marks = strike.map((op) => ({ x: op.x, y: op.y, n: op.n }));
-      return {
-        reads: [...reasonArea(reason, w), ...marks],
-        take: () => {
-          const values = marks.map((m) => m.n).sort((a, b) => a - b);
-          steps.push({
-            move: { type: "pencilStrike", marks },
-            explanation: narrate(reason, values, id),
-            highlights: {
-              area: reasonArea(reason, w),
-              targets: marks.map((m) => ({ x: m.x, y: m.y })),
-              marks,
-            },
-          });
-          for (const m of marks) wPen[m.y * w + m.x] &= ~(1 << m.n);
-        },
-      };
-    });
-
-  // 5. The placements the strikes enabled (a forced single the notes now
-  //    reflect), classified against what the player can read off the board.
-  const places = (nothingEarlier: boolean) =>
-    availablePlacements(
-      ops,
-      wGrid,
-      visibleCandidates(wGrid, wPen, w),
-      w,
-      regions,
-      nothingEarlier,
-    ).map(({ op, why }) =>
-      why.kind === "recorded" ? placingOp(op) : placing(op, singleReasonOf(op.n, why)),
-    );
-
-  // Stops when nothing fires (an Unreasonable board now needing a guess).
-  runCandidatePlan({
+  runCandidatePlan<GroupMove, GroupHint, HintOp, NarratableReason, RowColRegion>({
     w,
     steps,
-    finished: () => !wGrid.includes(0),
+    grid: wGrid,
+    pencil: wPen,
+    moves: groupCandidateMoves,
+    autoClean: false,
     label: "group hint plan",
-    cap: w * w * w * 4 + 4,
-    opening: [singles, leads],
-    setUp,
-    rungs: [singles, leads, strikes, places],
+    record: () => recordGroupDeductions(wGrid, w, maxdiff),
+    regionsOf: regions,
+    singleReason: singleReasonOf,
+    placeWords: (m, reason, continues) => ({
+      explanation:
+        continues && reason.kind === "identityFill"
+          ? say.identityFillNext(toChar(m.n, id))
+          : narrate(reason, [m.n], id),
+      area: reasonArea(reason, w),
+    }),
+    strikeWords: (marks, reason) => ({
+      explanation: narrate(reason, valuesOf(marks), id),
+      area: reasonArea(reason, w),
+    }),
+    notes: { populate: say.populate, cleanObvious: say.cleanObvious },
+    rungs: [leads],
+    shownNotes: () => visibleCandidates(wGrid, wPen, w),
+    placement: placing,
   });
   return steps;
 }
@@ -843,6 +683,7 @@ const groupCandidateMoves: CandidateMoveAdapter<GroupMove> = {
     return null;
   },
   strike: (marks) => ({ type: "pencilStrike", marks }),
+  place: (x, y, n) => ({ type: "set", cells: [{ x, y }], n }),
 };
 
 /** Classify a player move against the displayed hint step (the engine's

@@ -22,7 +22,7 @@ function cand(
   log: string[],
 ): FrontierCandidate {
   return {
-    reads,
+    reads: () => reads,
     take: () => {
       steps.push({ highlights: { targets: writes } });
       log.push(name);

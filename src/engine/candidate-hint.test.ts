@@ -20,15 +20,12 @@ import {
   populateStep,
   refreshCandidateHintStep,
   regionDuplicateMarks,
-  runCandidatePlan,
 } from "./candidate-hint.ts";
 import type { HintStep } from "./game.ts";
-import type { FrontierCandidate } from "./hint-frontier.ts";
 import { ALREADY_SOLVED, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { cleanObviousText, joinNums, populateText } from "./hint-text.ts";
 import type { DeductionRecord } from "./latin.ts";
 import { rowColRegions } from "./latin-hint.ts";
-import type { Point } from "./types.ts";
 
 /** Build a working board from a `grid` (0 = empty) and a matching `pencil`
  * candidate-bitmask array. */
@@ -340,76 +337,6 @@ describe("firstUnreflectedPlaceIndex", () => {
     const [grid] = board([1, 2, 0, 0], [0, 0, 0, 0]);
     const ops = [op("place", 0, 0, 1, 0), op("place", 1, 0, 2, 1)];
     expect(firstUnreflectedPlaceIndex(ops, grid, 2)).toBe(2);
-  });
-});
-
-describe("runCandidatePlan", () => {
-  /** A plan over a 4×1 board whose firings each fill one cell, logging what
-   * the walk did in order. */
-  function walk(opts: { setUpSteps: number; stuckAt?: number }) {
-    const grid = [0, 0, 0, 0];
-    const steps: { highlights: { targets: Point[] } }[] = [];
-    const log: string[] = [];
-    const fill = (name: string, x: number): FrontierCandidate => ({
-      reads: [{ x, y: 0 }],
-      take: () => {
-        grid[x] = 1;
-        steps.push({ highlights: { targets: [{ x, y: 0 }] } });
-        log.push(name);
-      },
-    });
-    let setUps = 0;
-    runCandidatePlan({
-      w: 4,
-      h: 1,
-      steps,
-      finished: () => !grid.includes(0),
-      label: "test plan",
-      cap: 20,
-      // The note-free rung offers cell 0 only.
-      opening: [() => (grid[0] ? [] : [fill("opening", 0)])],
-      setUp: {
-        done: () => setUps >= opts.setUpSteps,
-        step: () => {
-          setUps++;
-          log.push("setUp");
-          return true;
-        },
-      },
-      rungs: [
-        () => [],
-        (nothingEarlier) =>
-          grid
-            .map((v, x) => (v || x >= (opts.stuckAt ?? 4) ? null : x))
-            .filter((x) => x !== null)
-            .map((x) => fill(nothingEarlier ? `last resort ${x}` : `cell ${x}`, x)),
-      ],
-      stuck: () => log.push("stuck"),
-    });
-    return log;
-  }
-
-  it("takes the note-free rungs, then sets up, then every rung", () => {
-    expect(walk({ setUpSteps: 2 })).toEqual([
-      "opening",
-      "setUp",
-      "setUp",
-      "last resort 1",
-      "last resort 2",
-      "last resort 3",
-    ]);
-  });
-
-  it("goes straight to every rung when there is nothing to set up", () => {
-    expect(walk({ setUpSteps: 0 })[0]).toBe("last resort 0");
-  });
-
-  it("calls stuck when nothing fires on an unfinished board", () => {
-    expect(walk({ setUpSteps: 0, stuckAt: 2 })).toEqual([
-      "last resort 0",
-      "last resort 1",
-      "stuck",
-    ]);
   });
 });
 

@@ -1,6 +1,2 @@
-# Spec deltas come with the implementation: the shape of the kit is decided in
-# task 1, and "A shared candidate-elimination hint-plan abstraction" is the
-# requirement it will modify.
 schema: spec-driven
 created: 2026-09-19
-skip_specs: true

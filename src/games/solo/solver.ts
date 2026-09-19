@@ -333,8 +333,8 @@ class SolverUsage {
   /** `solver_place`: commit digit `n` at (x, y) and propagate the eliminations.
    * On the recording path the placement op is recorded with `reason` (default a
    * generic `single`, re-derived at emit time); the propagated row/col/block/
-   * diagonal dup strikes are NOT recorded, because the hint plan recomputes
-   * them from the working notes (`emitPlacement`), as Keen's does. */
+   * diagonal dup strikes are NOT recorded, because the hint plan culls them
+   * from the working notes itself when it places (`runCandidatePlan`). */
   place(x: number, y: number, n: number, reason?: SoloReason): void {
     const cr = this.cr;
     const sqindex = y * cr + x;
