@@ -20,6 +20,7 @@
  * step cites more than two.
  */
 
+import { Dsf } from "../../engine/dsf.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
@@ -569,16 +570,8 @@ const citesOf = (f: LoopyFact): readonly number[] =>
  */
 function deductions(facts: readonly LoopyFact[], ids: readonly number[]): number[][] {
   const here = new Set(ids);
-  const root = new Map<number, number>(ids.map((id) => [id, id]));
-  const find = (id: number): number => {
-    let r = id;
-    while (root.get(r) !== r) r = root.get(r) as number;
-    root.set(id, r);
-    return r;
-  };
-  const join = (a: number, b: number): void => {
-    root.set(find(a), find(b));
-  };
+  const dsf = new Dsf(facts.length);
+  const join = (a: number, b: number): void => dsf.merge(a, b);
   const partner = new Map<number, number>();
   for (const id of ids) {
     const f = facts[id];
@@ -596,7 +589,10 @@ function deductions(facts: readonly LoopyFact[], ids: readonly number[]): number
   }
 
   const groups = new Map<number, number[]>();
-  for (const id of ids) groups.set(find(id), [...(groups.get(find(id)) ?? []), id]);
+  for (const id of ids) {
+    const r = dsf.canonify(id);
+    groups.set(r, [...(groups.get(r) ?? []), id]);
+  }
   const cited = new Set(ids.flatMap((id) => citesOf(facts[id])));
   return [...groups.values()].map((group) => {
     const out: number[] = [];

@@ -10,6 +10,7 @@
  * check the hint's soundness rests on.
  */
 import { describe, expect, it } from "vitest";
+import { Dsf } from "../../engine/dsf.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { FIX_MISTAKES_FIRST } from "../../engine/hint-refusal.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -493,17 +494,11 @@ describe("Loopy hint: a step reasons only from notes on the board", () => {
         // after them on its own.
         const placed = new Set(notes.flat());
         if (placed.size === 0) continue;
-        const root = new Map([...placed].map((id) => [id, id]));
-        const find = (id: number): number => {
-          let r = id;
-          while (root.get(r) !== r) r = root.get(r) as number;
-          return r;
-        };
-        const join = (x: number, y: number) => root.set(find(x), find(y));
+        const dsf = new Dsf(facts.length);
         for (const id of placed)
-          for (const c of cites(id)) if (placed.has(c)) join(id, c);
-        for (const ids of notes) for (const id of ids) join(id, ids[0]);
-        const groups = new Set([...placed].map(find));
+          for (const c of cites(id)) if (placed.has(c)) dsf.merge(id, c);
+        for (const ids of notes) for (const id of ids) dsf.merge(id, ids[0]);
+        const groups = new Set([...placed].map((id) => dsf.canonify(id)));
         expect(groups.size, `${at} makes ${groups.size} separate deductions`).toBe(1);
       }
       expect(firing, `${b.name}: firings and plan positions disagree`).toBe(
