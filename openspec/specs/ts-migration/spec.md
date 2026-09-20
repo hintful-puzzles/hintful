@@ -351,6 +351,13 @@ Adopting such a helper SHALL be a no-op: these tables are consumed by the
 Custom-params and preferences dialogs, never by a solver, generator or
 description codec, so no differential or render snapshot may move.
 
+A per-game label SHALL state only what holds for every board that game can deal.
+Where the fact it states varies within the game — Solo's auto-pencil clears a
+diagonal only under X and a cage only under Killer — the label SHALL name the
+relation rather than enumerate, since a declarative table has no params in scope
+and an enumeration would be a second statement of a structure the code already
+derives.
+
 #### Scenario: A new port declares its params config
 
 - **WHEN** a newly ported game with width and height params declares
@@ -377,11 +384,20 @@ description codec, so no differential or render snapshot may move.
 #### Scenario: A helper is parameterized by a player-visible string
 
 - **WHEN** a shared declarative helper's label differs between games because it
-  states a game-specific fact (the auto-pencil preference names the regions that
-  game's placement clears)
+  states a game-specific fact (the auto-pencil preference names what that game's
+  placement clears)
 - **THEN** the label is a **required** argument, never a default
 - **BECAUSE** a default that only some callers want is a sentence a game can
   inherit while it is silently wrong about that game
+
+#### Scenario: A label enumerates a structure that varies within the game
+
+- **WHEN** a declarative label would list the parts of a structure the game
+  derives elsewhere, and which parts exist depends on the params
+- **THEN** the label names the relation instead, so that it holds on every board
+  the game can deal
+- **BECAUSE** the enumeration is a copy of the derivation that no single board
+  makes true, and nothing in the suite reads a preference's words
 
 #### Scenario: A get/set round-trip is offered as the guard
 
