@@ -1,6 +1,2 @@
-# No delta yet: the derivation's shape and its cost bound are the decisions the
-# change exists to make, and which requirement governs the cross-game walk's
-# population depends on where the bound lands.
 schema: spec-driven
 created: 2026-09-20
-skip_specs: true

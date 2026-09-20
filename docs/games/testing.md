@@ -598,6 +598,50 @@ is the `ts-engine` spec, "A shared mechanic is joined by having it".
    **Tell:** the covered set is a single `includes("…")` while the population
    above it took twenty lines to derive.
 
+### Slicing a preset sweep for the gate
+
+Rules 1–7 find *which games*. A sweep over **boards** has a second population —
+which of each game's presets — and it goes wrong the same way, one axis at a
+time, because every wrong answer looks like coverage.
+
+**Never invent a key. Call `axisSlice`**
+([`testing/hint-games.ts`](../../src/engine/testing/hint-games.ts)): the full
+list is `leafPresets`, and the per-commit slice is one preset per *value* of
+every axis the game varies, derived from the game's own `paramConfig`. Difficulty
+is not special there; it is a `"choices"` item like any other.
+
+Three keys have been tried here and the first two were each right about one axis
+and blind to the rest:
+
+| key | what it walked | what it missed |
+| --- | --- | --- |
+| `firstLeaf` | the smallest, easiest board | every Hard, every `Unreasonable`, every mode — 13 refusals across 7 games |
+| one per tier | a board at each difficulty | every preset of an **untiered** game after the first — Sixteen's cycling 5×5 |
+| tier + first/last | that, plus the size ends | every **mode**: Solo's Killer/X/jigsaw, Unequal's Adjacent, Seismic's Tectonic, 17 of Loopy's 18 tilings, 10 of Salad's 11 presets |
+
+**Why `paramConfig` is the right source**, and not the params object's keys: it
+is a value a mechanism *consumes* (the Custom dialog is built from it), so it is
+a declaration of the healthy kind rather than a manifest; `custom-params.test.ts`
+already fails a registered game whose list is empty, so it is complete; and it is
+*typed*, which is the whole of the rule. A `"string"` item is a free scalar whose
+values lie on a line — cover both ends. A `"boolean"` or `"choices"` item is a
+selection from a closed set with nothing between its members — cover every one.
+
+**It is cheap where it matters and expensive where you would guess.** Measured
+2026-09-20 across the collection, the slice went 88 → 141 walks and
+`hint-resume.test.ts` 25.1 s → 67.0 s (on a box 18.6 GB into swap, so upper
+bounds; the ratio is the figure that survives). But the *mode* coverage that
+motivated the widening is nearly free — Seismic's Tectonic board 3 ms, Group's
+identity-hidden 11 ms, Unequal's Adjacent 34 ms — because presets are taken in
+menu order, so each value is claimed by the **smallest** board offering it. The
+two big line items were Loopy's eighteen tilings and one largest board per game.
+
+**Say what still covers the presets between.** The slow tier walks them all
+(`npm run test:slow -- src/engine/hint-resume.test.ts`), and
+`hint-quality.test.ts`'s `lintCases` reads every preset of every game per commit
+at one seed — but for *narration*, not convergence, so it is a different
+question and not a substitute.
+
 ### The divergence no clone detector can see
 
 **One concept spelled several ways is not duplication, so jscpd is blind to it,

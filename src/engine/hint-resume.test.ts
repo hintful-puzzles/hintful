@@ -26,6 +26,7 @@ import { DEDUCTION_EXHAUSTED, SEARCH_OUT_OF_REACH } from "./hint-refusal.ts";
 import { randomNew } from "./random/index.ts";
 import {
   type AnyGame,
+  axisSlice,
   firstLeaf,
   HINT_GAMES,
   leafPresets,
@@ -175,19 +176,55 @@ function permitsSearch(game: AnyGame, params: unknown): boolean {
  * or any mode variant. Widened, it found thirteen refusals across seven games
  * that the narrow form could not reach, saying three different things.
  *
- * **Tier is the right axis only for a game that has one.** Keyed on tier alone,
- * every preset of an *untiered* game collapses to a single key, so the slice
- * took the first and nothing else — reinstating, for those games, exactly the
- * first-preset blindness the widening existed to remove. It cost a real defect:
- * Sixteen is untiered with five presets, its 3×3 walks in seven moves, and the
- * hint cycled for ever on its 5×5 (`fix-sixteen-hint-recompute-stability`) where
- * only the slow tier could see it.
+ * **Tier was never *the* axis; it was one of them, and keying on it lost the
+ * rest.** Keyed on tier alone the slice de-duplicated away every preset sharing
+ * a tier with a plainer board earlier in the menu, which is how a game's whole
+ * second mode went unwalked while the file read as covering it. Measured
+ * 2026-09-20 over the live registry: Solo walked no X board, no jigsaw board and
+ * no Killer board (four cage rungs and four cage sentences these guards exist to
+ * check); Unequal no Adjacent board; Seismic no Tectonic board; Group no
+ * identity-hidden board; Keen no multiplication-only board; Loopy nothing but
+ * Squares. Salad was blind outright — every preset it offers carries the same
+ * tier, so eleven collapsed to one.
  *
- * So an untiered game is sliced by **size** instead, taking the first preset and
- * the last. Presets are conventionally ordered smallest-first, which is the same
- * convention `firstLeaf` already relies on, and taking both ends is the cheap
- * honest approximation of "cover the axis this game varies". It costs one extra
- * walk per untiered game.
+ * That is the *same* collapse the untiered games had already paid for once, one
+ * axis over: Sixteen is untiered with five presets, its 3×3 walks in seven moves,
+ * and its hint cycled for ever on its 5×5 (`fix-sixteen-hint-recompute-stability`)
+ * where only the slow tier could see it. The fix then was a second key — size,
+ * for untiered games only. `axisSlice` generalizes both: one preset per value of
+ * every axis the game's own `paramConfig` says it varies, with difficulty
+ * falling out as a `"choices"` axis like any other rather than as a special
+ * case.
+ *
+ * **What it costs, measured 2026-09-20 back to back on one box** (16 GB, load
+ * 3.6–5.1, **125 MB free and 18.6 of 19.4 GB of swap in use** — deep in paging,
+ * so read the seconds as upper bounds and the ratio as the figure that
+ * survives): this file went **25.1 s → 67.0 s** as the slice went 88 → 141
+ * walks, against 280 for every preset. Attributed per added board, the split is
+ * the one to remember: **covering the modes is nearly free and covering the
+ * sizes is not.** Unequal's Adjacent board costs 34 ms, Seismic's Tectonic 3 ms,
+ * Group's identity-hidden 11 ms, Keen's multiplication-only 95 ms, Salad's
+ * Numbers 9 ms — because the slice takes each value on the *smallest* preset
+ * offering it. The two large line items are Loopy's eighteen tilings (18.9 s)
+ * and one largest board per game (~22.5 s, of which Mathrax 9×9 is 7.7 s and
+ * Keen 9×9 4.9 s).
+ *
+ * **What the slice still does not walk, and what covers it.** Every preset in
+ * between — a mode at a size other than its smallest, a tier at a size other
+ * than the menu's first — is walked by the slow tier, passed this file's path,
+ * which is the run to make when a refactor moves a hint
+ * planner. Narration across *every* preset of every game is per-commit
+ * regardless, in `hint-quality.test.ts`'s `lintCases`, which adds each preset at
+ * one seed; what that sweep asks is whether the sentences are readable, not
+ * whether the plan converges, so the two do not substitute for each other.
+ *
+ * **Proved rather than assumed** (2026-09-20): capping Solo's hint recorder at
+ * `DIFF_KSINGLE` instead of the board's own `kdiff` — the hint grown weaker than
+ * the solver that graded the board, a Killer-only defect — leaves the tier-keyed
+ * slice **green at 111 passed** and turns this one red on
+ * `solo-3x3 Killer-hr-a`. (Solo's own `solo-hint.test.ts` catches that plant
+ * too; what no per-game file asserts for most of the collection is this walk's
+ * property, which is convergence from arbitrary reached positions.)
  *
  * **The exception, and it is the whole reason this file is affordable: a game
  * that plans by *searching* walks its smallest preset only.** Measured
@@ -215,18 +252,7 @@ function walkedPresets(
   // A searching hint's cost is superlinear in board size; its large boards are
   // covered deterministically by the game's own file (see SEARCH_REACH).
   if (SEARCH_PLANNING_GAMES.includes(id)) return all.slice(0, 1);
-  const contract = game.difficulty as DifficultyContract<unknown> | undefined;
-  if (!contract) {
-    // First and last, de-duplicated for a game that offers only one preset.
-    return all.length <= 1 ? all : [all[0], all[all.length - 1]];
-  }
-  const seen = new Set<unknown>();
-  return all.filter((e) => {
-    const key = contract.tierOf(e.params);
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  return axisSlice(game, all);
 }
 
 const SEEDS = ["hr-a", "hr-b", "hr-c", "hr-d", "hr-e"];
@@ -424,11 +450,13 @@ let walkedCases = 0;
 
 describe("the resume walk", () => {
   it("covered enough boards to mean something", () => {
-    // The floor separates "working" from "enumerating nothing" and sits well
-    // below the gate slice's true count (74 walks over 30 games as of
-    // 2026-09-09, down from 76 when the two searching games stopped walking
-    // their largest preset here — see `walkedPresets`),
-    // so it is not a ratchet a legitimate change has to bump.
-    expect(walkedCases).toBeGreaterThan(40);
+    // **The floor has to sit above the ways the slice can silently collapse,**
+    // not merely above zero — that is what makes it a vacuity guard rather than
+    // a decoration. Three counts, measured 2026-09-20: one board per game is
+    // 35, the tier keying this replaced was 88, and the axis slice is 141.
+    // A floor at 100 therefore separates "sliced by axis" from both collapses,
+    // with 41 walks of slack under the true count, so it is not a ratchet a
+    // legitimate change has to bump.
+    expect(walkedCases).toBeGreaterThan(100);
   });
 });

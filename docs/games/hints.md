@@ -2770,15 +2770,20 @@ fresh board to solved one *freshly-recomputed* hint at a time (apply only
 `steps[0]`, recompute, repeat), asserting a hint never gives up before solved.
 
 **It walks every preset**, not just the first — the gate slice keeps one preset
-per axis the game varies (one per declared tier where there is one; first and
-last preset where there is not), and the slow tier takes them all. It walked
+per *value* of every axis the game varies, derived by `axisSlice` from the
+game's own `paramConfig`, and the slow tier takes them all. It walked
 `firstLeaf` alone until `refuse-honestly-at-every-tier`, i.e. by convention the
 smallest and easiest board each game offers, so the collection's strongest hint
 guarantee had never seen a Hard board, an `Unreasonable` board, or any mode
 variant. Widened, it found thirteen refusals across seven games at once — and
 then, keyed on tier alone, it silently kept the old blindness for the twelve
 untiered games, which is how Sixteen's cycling 5×5 survived a round of widening
-(`fix-sixteen-hint-recompute-stability`).
+(`fix-sixteen-hint-recompute-stability`). Keying on tier *and* size still hid
+every **mode**: Solo's Killer, X and jigsaw boards, Unequal's Adjacent, Seismic's
+Tectonic and seventeen of Loopy's eighteen tilings all shared a tier with a
+plainer board earlier in the menu and were de-duplicated away
+(`slice-presets-by-the-axes-a-game-varies`). See
+[`testing.md`](testing.md) § "Slicing a preset sweep for the gate".
 
 **The one refusal it accepts** is running out of deduction on a board whose tier
 name promises search (`Unreasonable`), and only with

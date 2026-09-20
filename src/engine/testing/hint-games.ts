@@ -127,11 +127,135 @@ export function firstLeaf<P>(menu: PresetMenu<P>): P {
 /**
  * Every leaf preset a game offers, with the title its menu shows.
  *
- * **A cross-game sweep keyed on tier is blind to the games that have none**, so
- * a sweep walks one preset per tier where a game has tiers, and its presets
- * where it does not, because that is the axis such a game varies.
+ * **The full population**, which the slow tier walks. A sweep that cannot
+ * afford all of it slices with {@link axisSlice} rather than inventing a key of
+ * its own; keys invented here have twice turned out to name one axis of several
+ * and to drop the rest in silence.
  */
 export function leafPresets<P>(menu: PresetMenu<P>): { title: string; params: P }[] {
   if (menu.params !== undefined) return [{ title: menu.title, params: menu.params }];
   return (menu.submenu ?? []).flatMap(leafPresets);
+}
+
+/** What a `paramConfig` item reads off a params record: the three types the
+ * Custom dialog knows how to render, and all primitives, so a `Set` of them
+ * compares by value and no serialization is needed to key an axis. */
+type AxisValue = string | boolean | number;
+
+/**
+ * One axis a game's presets move along, with the values a per-commit slice owes
+ * a board.
+ */
+export interface PresetAxis {
+  /** The `paramConfig` keyword this axis is declared under — the name the
+   * Custom dialog labels it with, and the one a diagnostic can name it by. */
+  readonly kw: string;
+  /** This axis's value on one preset's params. */
+  read(params: unknown): AxisValue;
+  /** The values a slice must include a preset for. */
+  readonly wanted: ReadonlySet<AxisValue>;
+}
+
+/**
+ * The axes a game's presets **actually vary** — derived from `paramConfig`, the
+ * field list the game already publishes so the Custom dialog can render it.
+ *
+ * **Why `paramConfig` rather than the params object's own keys.** It is a value
+ * a mechanism *consumes* (`Midend.getCustomParams` builds the dialog from it),
+ * not a statement written for a guard's benefit, which is the distinction
+ * AGENTS.md § "Convention over configuration" draws between a healthy
+ * declaration and a manifest. It is also complete: `custom-params.test.ts`
+ * fails a registered game whose `paramConfig` is missing or empty, so no game
+ * can join the collection with its axes unstated. And it is *typed* — the game
+ * says which fields are free scalars and which are selections — which is the
+ * whole of the rule below. Raw params keys carry neither: Boats' `fleetData` is
+ * a derived array, Solo's `kdiff` moves only with `killer`.
+ *
+ * **A scalar axis contributes its extremes; a discrete axis contributes every
+ * value.** A `"string"` item is a free-form dimension (a width, an order, a
+ * region size): its values lie on a line, more of them is a bigger board, and
+ * both ends is the cheap honest cover — the same "smallest and largest"
+ * approximation `firstLeaf` and the untiered slice already rest on. A
+ * `"boolean"` or `"choices"` item is a **selection from a closed set**, and its
+ * values are not on a line at all: Solo's Killer is not more Solo than Solo, it
+ * is four extra cage rungs and four extra cage sentences. Nothing interpolates
+ * between the members of a closed set, so every one of them needs a board.
+ *
+ * A field every preset holds the same value at is not an axis — the game offers
+ * no way to reach a second value from the presets menu, so a slice cannot walk
+ * one. Salad's `difficulty` is the standing case.
+ */
+export function presetAxes(
+  game: AnyGame,
+  presets: readonly { params: unknown }[],
+): PresetAxis[] {
+  const axes: PresetAxis[] = [];
+  for (const item of game.paramConfig ?? []) {
+    const read = (params: unknown): AxisValue => item.get(params);
+    const values = [...new Set(presets.map((e) => read(e.params)))];
+    if (values.length < 2) continue;
+    axes.push({ kw: item.kw, read, wanted: new Set(wantedValues(item.type, values)) });
+  }
+  return axes;
+}
+
+/** Which of an axis's observed values a slice owes a board — both ends of a
+ * numeric scalar, all of anything else. A `"string"` item whose values are not
+ * numbers is a selection wearing a text field, so it is covered in full rather
+ * than ordered by a comparison that would not mean anything. */
+function wantedValues(
+  type: "string" | "boolean" | "choices",
+  values: readonly AxisValue[],
+): readonly AxisValue[] {
+  if (type !== "string") return values;
+  const nums = values.map((v) => Number(v));
+  if (!nums.every((n) => Number.isFinite(n))) return values;
+  const lo = Math.min(...nums);
+  const hi = Math.max(...nums);
+  return values.filter((_, i) => nums[i] === lo || nums[i] === hi);
+}
+
+/**
+ * One preset per value of every axis the game varies — the per-commit slice of
+ * a sweep whose full form walks every preset.
+ *
+ * Presets are taken in menu order and kept when one supplies a value no earlier
+ * one did, so the board chosen for a mode is the **smallest** the menu offers it
+ * on, and the first preset is always in. That ordering is the whole cost
+ * discipline: a mode costs about what the game's easiest board costs, and only
+ * a scalar axis's far end buys a large board.
+ *
+ * **What this replaces, and why keying on tier alone was not enough.** The slice
+ * keyed a tiered game on its tier and took the first preset of each. Difficulty
+ * is one axis of several, so every preset that shared a tier with a plainer
+ * board earlier in the menu was de-duplicated away: Solo walked no X board, no
+ * jigsaw board and no Killer board, Unequal walked no Adjacent board, Seismic no
+ * Tectonic board, Group no identity-hidden board, Keen no multiplication-only
+ * board. Salad fared worst: every preset it offers carries the *same* tier, so
+ * eleven collapsed to one board and one of its two game modes was never walked
+ * at all. That is the same collapse the untiered games had already paid for
+ * once (`fix-sixteen-hint-recompute-stability`); tier was never *the* axis, it
+ * was one of them.
+ *
+ * Difficulty needs no special case here: it is a `"choices"` item like any
+ * other, so "one preset per tier" falls out of the same rule that reaches the
+ * modes.
+ */
+export function axisSlice(
+  game: AnyGame,
+  presets: readonly { title: string; params: unknown }[],
+): { title: string; params: unknown }[] {
+  const axes = presetAxes(game, presets);
+  if (axes.length === 0) return presets.slice(0, 1);
+  const covered = axes.map(() => new Set<AxisValue>());
+  return presets.filter((e) => {
+    let novel = false;
+    for (const [i, axis] of axes.entries()) {
+      const v = axis.read(e.params);
+      if (!axis.wanted.has(v) || covered[i].has(v)) continue;
+      covered[i].add(v);
+      novel = true;
+    }
+    return novel;
+  });
 }
