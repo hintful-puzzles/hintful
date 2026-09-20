@@ -117,11 +117,32 @@ describe("HintFrontier", () => {
 /**
  * The games whose hint plans choose through a `HintFrontier` — derived from
  * each game's own comment-stripped source (it walks its plan with
- * `runCandidatePlan`, which owns the frontier), never declared.
+ * `runCandidatePlan` or a preset over it, either of which owns the frontier),
+ * never declared.
+ *
+ * The key is the **shape both entry points share**, not either one's full
+ * name: `runLatinCandidatePlan` does not contain `runCandidatePlan`, and when
+ * the row/column preset arrived this derivation silently dropped six of its
+ * seven games (`AGENTS.md` § "A scan that keys on a name"). The comment
+ * stripper transpiles, which erases the type arguments, so a call written
+ * `runCandidatePlan<M, H, …>({` reaches the scan as `runCandidatePlan({`.
  */
 const FRONTIER_GAMES: readonly string[] = (() => {
   const ids = HINT_GAMES.map(([id]) => id);
-  const without = new Set(membersNotMentioning(ids, "runCandidatePlan("));
+  const without = new Set(membersNotMentioning(ids, "CandidatePlan("));
+  return ids.filter((id) => !without.has(id));
+})();
+
+/** The same population read a second, independent way: a game that imports the
+ * walk's module. Not the same question — importing is not calling — but nothing
+ * in the collection imports `candidate-plan.ts` for anything but walking a plan
+ * (its other exports are the pieces of one), so the two lists must agree, and a
+ * key that stops matching a call site leaves the import behind. If a future game
+ * genuinely imports without walking, this fails and says so, which is the
+ * honest outcome; it is not a remembered count. */
+const PLAN_IMPORTERS: readonly string[] = (() => {
+  const ids = HINT_GAMES.map(([id]) => id);
+  const without = new Set(membersNotMentioning(ids, "engine/candidate-plan.ts"));
   return ids.filter((id) => !without.has(id));
 })();
 
@@ -146,6 +167,7 @@ describe("hint plans continue from their previous step where they can", () => {
   it("finds the games that have a frontier", () => {
     expect(FRONTIER_GAMES).toContain("solo");
     expect(FRONTIER_GAMES.length).toBeGreaterThan(1);
+    expect(FRONTIER_GAMES).toEqual(PLAN_IMPORTERS);
   });
 
   for (const id of FRONTIER_GAMES) {

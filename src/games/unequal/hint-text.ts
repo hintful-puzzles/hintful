@@ -1,8 +1,9 @@
 /**
  * Every sentence Unequal's hint speaks that is Unequal's own: the inequality
- * signs and Adjacent mode's bars, and the two setup steps in Unequal's words.
- * The generic Latin arms are the engine's (`engine/hint-text.ts`), spoken in
- * {@link unequalVocab}.
+ * signs and Adjacent mode's bars. The generic Latin arms are the engine's
+ * (`engine/hint-text.ts`), spoken in {@link unequalVocab}, and so are the two
+ * setup steps, built by the row/column preset from the two words Unequal gives
+ * it (`index.ts`'s `notes`).
  *
  * The deduction decides which sentence and with what values (`index.ts`'s
  * `narrate`); this file decides only how it reads. Every arm reads correctly
@@ -14,13 +15,7 @@
  * order, which runs 0-based digits and then letters once the order passes 9.
  */
 
-import {
-  cleanObviousText,
-  joinOr,
-  joinWith,
-  type LatinVocab,
-  populateText,
-} from "../../engine/hint-text.ts";
+import { joinOr, joinWith, type LatinVocab } from "../../engine/hint-text.ts";
 import { displayChar } from "./state.ts";
 
 /** Unequal's value vocabulary for the shared generic-Latin arms. */
@@ -33,10 +28,6 @@ const all = (ns: number[], order: number): string =>
   joinWith(ns.map((n) => displayChar(n, order)));
 
 export const say = {
-  populate: populateText("number"),
-
-  cleanObvious: cleanObviousText("number", "standing", "row or column"),
-
   /** This cell is the larger side of a sign whose other cell is at least
    * `bound`. */
   greater: (bound: number, ns: number[], order: number): string =>

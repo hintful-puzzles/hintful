@@ -16,7 +16,7 @@ import {
   keepCandidateHintTrack,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
-import { runCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
+import { runLatinCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
@@ -32,13 +32,7 @@ import {
 import { narrateLatinReason } from "../../engine/hint-text.ts";
 import { clearKey, pencilModeKey } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
-import {
-  forcingChainArea,
-  hiddenSingleLine,
-  type RowColRegion,
-  rowColRegions,
-  singleReasonOf,
-} from "../../engine/latin-hint.ts";
+import { forcingChainArea, rowColRegions } from "../../engine/latin-hint.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
@@ -422,7 +416,7 @@ function reasonArea(reason: HintReason, target: Point): OrderedCell[] {
 }
 
 /** Build the hint plan by walking a working copy of the board the way a person
- * solves it (`runCandidatePlan`). `autoClean` (the auto-pencil preference)
+ * solves it (`runLatinCandidatePlan`). `autoClean` (the auto-pencil preference)
  * decides whether a placement's trivial row/column eliminations are silent or
  * taught. */
 function buildSteps(
@@ -433,7 +427,7 @@ function buildSteps(
   const steps: HintStep<UnequalMove, UnequalHint>[] = [];
   const wGrid = Int8Array.from(state.grid);
   const maxdiff = Math.min(diffToLevel(state.diff), DIFF_EXTREME);
-  runCandidatePlan<UnequalMove, UnequalHint, HintOp, HintReason, RowColRegion>({
+  runLatinCandidatePlan<UnequalMove, UnequalHint, HintOp, HintReason>({
     w: o,
     steps,
     grid: wGrid,
@@ -448,14 +442,11 @@ function buildSteps(
         Uint8Array.from(wGrid),
         maxdiff,
       ),
-    regionsOf: (x, y) => rowColRegions(x, y, o),
-    singleReason: singleReasonOf,
     placeWords: (m, reason) => ({
       explanation: narrate(reason, [m.n], o),
-      area:
-        reason.kind === "hiddenSingle"
-          ? hiddenSingleLine(reason.line, reason.index, o)
-          : [],
+      // A naked single's own collapsed candidates are the premise, so it needs
+      // no area; a hidden single's line is the preset's.
+      area: [],
     }),
     strikeWords: (marks, reason) => ({
       explanation: narrate(reason, valuesOf(marks), o),
@@ -464,7 +455,7 @@ function buildSteps(
     // The narration names a cell's relationship to its neighbor, so a firing is
     // one leg per cell: a link's two ends, greater and lesser, are two legs.
     strikeAxis: (op) => op.y * o + op.x,
-    notes: { populate: say.populate, cleanObvious: say.cleanObvious },
+    notes: { noun: "number", placedVerb: "standing" },
   });
   return steps;
 }

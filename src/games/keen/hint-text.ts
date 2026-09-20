@@ -1,18 +1,14 @@
 /**
- * Every sentence Keen's hint speaks that is Keen's own: the cage arithmetic,
- * and the two setup steps in Keen's words. The generic Latin arms are the
- * engine's (`engine/hint-text.ts`), which Keen speaks unchanged.
+ * Every sentence Keen's hint speaks that is Keen's own: the cage arithmetic.
+ * The generic Latin arms are the engine's (`engine/hint-text.ts`), which Keen
+ * speaks unchanged, and so are the two setup steps, built by the row/column
+ * preset from the two words Keen gives it (`index.ts`'s `notes`).
  *
  * The deduction decides which sentence and with what values (`index.ts`'s
  * `narrate`); this file decides only how it reads.
  */
 
-import {
-  cleanObviousText,
-  indefinite,
-  joinOr,
-  populateText,
-} from "../../engine/hint-text.ts";
+import { indefinite, joinOr } from "../../engine/hint-text.ts";
 import { C_ADD, C_DIV, C_MUL, C_SUB } from "./state.ts";
 
 /** The cage's arithmetic goal as a verb phrase, read off its packed clue — the
@@ -35,10 +31,6 @@ function cageGoal(op: number, value: number): string {
 }
 
 export const say = {
-  populate: populateText("number"),
-
-  cleanObvious: cleanObviousText("number", "standing", "row or column"),
-
   /** No way to fill the cage (operator `op`, target `value`) leaves room for
    * `ns` in this cell. */
   cage: (op: number, value: number, ns: number[]): string =>

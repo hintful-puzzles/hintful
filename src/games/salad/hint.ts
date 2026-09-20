@@ -48,7 +48,7 @@ import {
   type Firing,
   type Leg,
   populateThenClean,
-  runCandidatePlan,
+  runLatinCandidatePlan,
 } from "../../engine/candidate-plan.ts";
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
@@ -58,9 +58,7 @@ import {
   type ForcingLink,
   forcingChainArea,
   hiddenSingleLine,
-  type RowColRegion,
   type SingleReason,
-  singleReasonOf,
 } from "../../engine/latin-hint.ts";
 import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import { saladVocab, say } from "./hint-text.ts";
@@ -206,9 +204,11 @@ function reasonEvidence(
       }
       return { area, clues: [reason.clue] };
     }
+    // Not hidden singles — a finished count reasons over its whole line the
+    // same way, so it shades the same cells. (A hidden single's own line is
+    // the row/column preset's.)
     case "countHolesDone":
     case "countLettersDone":
-    case "hiddenSingle":
       return { area: hiddenSingleLine(reason.line, reason.index, o), clues: [] };
     // A forcing chain names the squares it ran through, **numbered**, so the
     // narration can cite them and the player can walk it.
@@ -524,7 +524,7 @@ function buildSteps(
     return true;
   });
 
-  runCandidatePlan<SaladMove, SaladHint, SaladOp, SaladReason, RowColRegion>({
+  runLatinCandidatePlan<SaladMove, SaladHint, SaladOp, SaladReason>({
     w: o,
     steps,
     grid: w.grid,
@@ -544,8 +544,6 @@ function buildSteps(
       holes = rec.holes;
       return (rec.ops as SaladOp[]).filter((op) => op.kind === "place" || op.n <= nums);
     },
-    regionsOf,
-    singleReason: singleReasonOf,
     placeWords: (m, reason) => ({
       explanation: narrate(reason, [m.n], state),
       ...reasonEvidence(reason, o),

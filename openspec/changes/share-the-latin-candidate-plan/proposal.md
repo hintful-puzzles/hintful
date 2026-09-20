@@ -31,6 +31,12 @@ because the population moves.
    (`joinOr(noRepeatRegionNames(state))`). Three games typed what the plan
    already knows.
 
+**Re-measured 2026-09-20, before the work.** Two of the three findings did not
+survive it — finding 2's defect cannot happen, and finding 3's precedent does
+not exist — and finding 1's count was low. `design.md` § 6 holds what moved and
+why; the sections below are the proposal as written, kept so the correction has
+something to be a correction *of*. What shipped is § 6.
+
 ## What changes
 
 - **A row/column Latin preset** over `runCandidatePlan` supplying `regionsOf`,

@@ -5,10 +5,11 @@ import {
   type DupReason,
   type Firing,
   runCandidatePlan,
+  runLatinCandidatePlan,
 } from "./candidate-plan.ts";
 import type { DeductionRecord } from "./deduction-record.ts";
 import type { HintStep } from "./game.ts";
-import { type RowColRegion, rowColRegions } from "./latin-hint.ts";
+import { type RowColRegion, rowColRegions, type SingleReason } from "./latin-hint.ts";
 import type { Point } from "./types.ts";
 
 type Reason = { kind: string; near?: Point } | DupReason;
@@ -249,3 +250,122 @@ describe("runCandidatePlan", () => {
     ]);
   });
 });
+
+describe("runLatinCandidatePlan", () => {
+  /** A reason union of the shape the preset requires: it can hold every arm of
+   * a {@link SingleReason}. */
+  type LatinReason = SingleReason | DupReason;
+  type LatinStep = HintStep<Move, CandidateHighlights>;
+
+  /** Walk a 3×3 plan through the preset. The game supplies its solver and its
+   * words; it passes no regions, no single-reason function and no evidence for
+   * a hidden single, because a row/column square cannot answer those
+   * differently. */
+  function latinWalk(over: {
+    grid: Uint8Array;
+    pencil: Int32Array;
+    record: () => readonly DeductionRecord[];
+  }): LatinStep[] {
+    const steps: LatinStep[] = [];
+    runLatinCandidatePlan<Move, CandidateHighlights, DeductionRecord, LatinReason>({
+      w: 3,
+      steps,
+      autoClean: false,
+      label: "latin test plan",
+      ...over,
+      placeWords: (m, r) => ({ explanation: `${r.kind} ${m.x},${m.y}`, area: [] }),
+      strikeWords: (marks, r) => ({
+        explanation: `${r.kind} strike ${marks.length}`,
+        area: [],
+      }),
+      notes: { noun: "number", placedVerb: "standing" },
+    });
+    return steps;
+  }
+
+  it("classifies and shades a hidden single with nothing from the game", () => {
+    // 1 is noted only at (0,0) in row 0, so placing it there is a hidden single
+    // in that row — and (0,0) still shows a second candidate, so it is not a
+    // naked one. Nothing below names a row.
+    const pencil = new Int32Array(9).fill(bits(2, 3));
+    pencil[0] = bits(1, 2);
+    const steps = latinWalk({
+      grid: new Uint8Array(9),
+      pencil,
+      record: () => [
+        { kind: "place", x: 0, y: 0, n: 1, reason: { kind: "single" }, group: 0 },
+      ],
+    });
+    expect(steps[0].explanation).toBe("hiddenSingle 0,0");
+    expect(steps[0].highlights?.area).toEqual([
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: 2, y: 0 },
+    ]);
+  });
+
+  it("names the regions in the setup sentences the game never writes", () => {
+    const steps = latinWalk({
+      grid: Uint8Array.from([1, 0, 0, 0, 0, 0, 0, 0, 0]),
+      pencil: new Int32Array(9),
+      record: () => [],
+    });
+    const [populate, clean] = steps.map((s) => s.explanation);
+    expect(populate).toContain("number");
+    // The two words are the game's; the phrase naming its regions is the
+    // preset's, and is the whole reason `notes` does not carry one.
+    expect(clean).toContain("number");
+    expect(clean).toContain("standing");
+    expect(clean).toContain("row or column");
+  });
+
+  it("still walks a plan the checker lets through", () => {
+    // The companion to {@link blockRegionGame}: the preset is usable, so its
+    // refusal of that game is a refusal and not a broken signature.
+    const steps = latinWalk({
+      grid: new Uint8Array(9),
+      pencil: new Int32Array(9).fill(bits(1)),
+      record: () => [],
+    });
+    expect(steps[0].explanation).toBe("single 0,0");
+  });
+
+  it("refuses the block-region game at compile time, not at run time", () => {
+    // The refusal lives in {@link blockRegionGame}'s `@ts-expect-error`. What
+    // is asserted here is the other half: nothing stops such a plan *running*,
+    // so the type is the only thing standing between that game and a hidden
+    // single shaded along the wrong region.
+    expect(blockRegionGame).not.toThrow();
+  });
+});
+
+/**
+ * A game whose hidden singles name a *region* rather than a line — Solo's
+ * shape. `SingleReason` is not assignable to that union, so the preset's
+ * `NarratesSingles` constraint collapses its parameter to `never` and such a
+ * game must call `runCandidatePlan` instead.
+ *
+ * This cannot be observed by running anything: the refusal is a type error, and
+ * a preset that quietly accepted the game would pass every runtime test while
+ * shading a row for a hidden single in a block. `@ts-expect-error` inverts it
+ * into an assertion — the gate's typecheck fails this file if the line ever
+ * stops erroring (`assert-never.test.ts` uses the same idiom).
+ */
+function blockRegionGame(): void {
+  type BlockReason =
+    | { kind: "single" }
+    | { kind: "hiddenSingle"; n: number; region: string };
+  // @ts-expect-error the reason union cannot hold a row/column hidden single.
+  runLatinCandidatePlan<Move, CandidateHighlights, DeductionRecord, BlockReason>({
+    w: 3,
+    steps: [],
+    grid: new Uint8Array(9),
+    pencil: new Int32Array(9),
+    autoClean: false,
+    label: "refused",
+    record: () => [],
+    placeWords: () => ({ explanation: "", area: [] }),
+    strikeWords: () => ({ explanation: "", area: [] }),
+    setUp: { done: () => true, step: () => false },
+  });
+}

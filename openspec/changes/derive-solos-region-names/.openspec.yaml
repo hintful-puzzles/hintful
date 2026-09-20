@@ -1,0 +1,7 @@
+# The delta belongs with the implementation: which requirement moves depends on
+# whether the name ends up on the region or on a second lookup, and that is the
+# decision the change exists to make. Written against the code as it stands
+# then, not against this scaffold.
+schema: spec-driven
+created: 2026-09-20
+skip_specs: true

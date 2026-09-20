@@ -267,6 +267,21 @@ export function singleReasonOf(
     : { kind: "hiddenSingle", n, line: why.region.line, index: why.region.index };
 }
 
+/** A hidden single as {@link singleReasonOf} states it. */
+export type HiddenSingleReason = Extract<SingleReason, { kind: "hiddenSingle" }>;
+
+/** Read a hidden single back off a game's own reason union, or `null` for any
+ * other reason — what a *shared* consumer needs to act on the reason
+ * {@link singleReasonOf} made without knowing the game's wider union. Sound for
+ * the row/column family because a reason union that can hold a
+ * {@link SingleReason} at all holds this arm with these fields; a game whose
+ * `hiddenSingle` says something else (Solo names a block or a diagonal, not a
+ * line) cannot take that reason in the first place. */
+export function hiddenSingleOf(reason: unknown): HiddenSingleReason | null {
+  const r = reason as { kind?: string };
+  return r.kind === "hiddenSingle" ? (r as HiddenSingleReason) : null;
+}
+
 /** The cells of a hidden single's line — the whole row (`line: "row"`, `index` =
  * its y) or column (`line: "col"`, `index` = its x) — to shade as evidence. */
 export function hiddenSingleLine(

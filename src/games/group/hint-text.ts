@@ -1,18 +1,16 @@
 /**
  * Every sentence Group's hint speaks that is Group's own: associativity and
- * the identity, and the two setup steps in Group's words. The generic Latin
- * arms are the engine's (`engine/hint-text.ts`), spoken in element vocabulary.
+ * the identity. The generic Latin arms are the engine's
+ * (`engine/hint-text.ts`), spoken in element vocabulary, and so are the two
+ * setup steps, built by the row/column preset from the two words Group gives it
+ * (`index.ts`'s `notes`).
  *
  * The deduction decides which sentence and with what values (`index.ts`'s
  * `narrate`); this file decides only how it reads. Values arrive already
  * printed as the element letters the board shows.
  */
 
-import {
-  cleanObviousText,
-  type LatinVocab,
-  populateText,
-} from "../../engine/hint-text.ts";
+import type { LatinVocab } from "../../engine/hint-text.ts";
 import { toChar } from "./state.ts";
 
 /** Group's value vocabulary for the shared generic-Latin narration arms: its
@@ -22,10 +20,6 @@ export function groupVocab(id: boolean): LatinVocab {
 }
 
 export const say = {
-  populate: populateText("element"),
-
-  cleanObvious: cleanObviousText("element", "placed", "row or column"),
-
   /** `A·B = ab`, `B·C = bc`, and one bracketing of `A·B·C` is filled in as `v`
    * (the left one when `knownLeft`), so the other must equal it too. */
   associativity: (p: {

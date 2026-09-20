@@ -2,7 +2,8 @@
  * Every sentence Mathrax's hint speaks that is Mathrax's own: the clue at an
  * interior intersection, read three ways. The generic Latin arms (naked and
  * hidden singles, the placement cull, set elimination, forcing chains) are the
- * engine's, `engine/hint-text.ts`.
+ * engine's, `engine/hint-text.ts`, and so are the two setup steps, built by the
+ * row/column preset from the two words Mathrax gives it (`index.ts`'s `notes`).
  *
  * The deduction decides which sentence and with what values (`index.ts`'s
  * `narrate`); this file decides only how it reads.
@@ -21,12 +22,7 @@
  * extremes").
  */
 
-import {
-  cleanObviousText,
-  joinNums,
-  joinOr,
-  populateText,
-} from "../../engine/hint-text.ts";
+import { joinNums, joinOr } from "../../engine/hint-text.ts";
 import {
   CLUE_ADD,
   CLUE_DIV,
@@ -79,10 +75,6 @@ function pairClause(clue: number, list: string): string {
 }
 
 export const say = {
-  populate: populateText("number"),
-
-  cleanObvious: cleanObviousText("number", "standing", "row or column"),
-
   /** An `E`/`O` clue rules the wrong parity out of all four cells around it. */
   parity: (even: boolean, ns: number[]): string =>
     `The ${even ? "E" : "O"} clue means all four numbers around it are ${even ? "even" : "odd"}, so we must cross out ${joinNums(ns)}.`,

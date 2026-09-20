@@ -462,6 +462,14 @@ step, and the frontier reads a firing's premise off those steps. The game
 supplies its recording solver, regions, words and strike-split axis — see
 [`hints.md`](./hints.md) § "Candidate-elimination games".
 
+`runLatinCandidatePlan` is the same walk with the plain row/column square's
+answers filled in — its regions, the reason a single narrates as, and a hidden
+single's evidence line, none of which a Latin game can answer differently —
+so such a game supplies its solver, its rungs and its words alone. A game whose
+singles narrate otherwise (Solo's name a block or a diagonal) fails to
+type-check against it and calls `runCandidatePlan`. See
+[`hints.md`](./hints.md) § "The row/column preset".
+
 ### `hint-frontier.ts` — which available firing a plan takes next
 
 `HintFrontier` takes, among the firings a candidate plan could make at once,

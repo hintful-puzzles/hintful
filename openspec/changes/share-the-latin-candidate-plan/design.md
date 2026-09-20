@@ -105,3 +105,105 @@ it out of momentum:
 - If D3 turns out to need a per-game hook to say *which* cell a firing acts on,
   the "helper keeps all the logic" property is gone and it should be declined
   and recorded, the way Undead was.
+
+## 6. What the re-measurement did to §§ 1–4 (2026-09-20, the implementing session)
+
+§ 3 said to expect the counts to have moved. Three did, and two findings did not
+survive contact with the code. Recorded here rather than by quietly editing the
+sections above, because the *shape* of each error is the reusable part.
+
+### The counts
+
+Taken by reference (`npm run refs`) over the seven games that walk a candidate
+plan — group, keen, mathrax, salad, solo, towers, unequal:
+
+| Field | Proposal | Measured | Why it moved |
+|---|---|---|---|
+| plain row/column `regionsOf` | four | **six** (all but Solo) | Group spells it `const regions = …`, Salad `saladRegions(o)`. A copy is never called by the name of the thing it copies |
+| `singleReason: singleReasonOf` | six | **six** ✓ | — |
+| hidden-single placement area | three copies | **six** | verbatim in Mathrax and Unequal; inside `placementArea` (Keen), `reasonArea` (Towers, Group) and `reasonEvidence` (Salad) |
+
+§ 3's own prediction held too: `rowColRegions` has 29 references, because the
+Mark-all arm calls it in four games and Group's own rung calls it and
+`singleReasonOf` directly. Those are not plan fields and they stay.
+
+**Salad is on the preset, against the proposal's expectation.** "Solo and Salad,
+whose regions or values differ, stay on the general entry" was half wrong:
+Salad's regions do not differ at all. What differs is its note encoding and its
+setup, and both were already ordinary plan fields (`enc`, `setUp`). The habit
+this catches: reading "differs" off a game's reputation rather than off the
+field in question.
+
+### D3 — declined on its premise
+
+The finding: `strikeWords` digs `{ x: marks[0].x, y: marks[0].y }` back out of
+the marks, and "a game whose axis lets a firing span cells names the wrong one
+silently."
+
+The premise is false. `cellsOf` (the walk's own helper, which builds the step's
+`targets`) returns each cell once **in the order they first appear**, so
+`cellsOf(marks)[0]` and `{ x: marks[0].x, y: marks[0].y }` are the same value
+for every firing, always. Nothing can diverge, so "the evidence a game shades
+cannot name a different cell from the one the move acts on" was already true and
+threading the parameter would have renamed a fact rather than fixed one. And a
+firing that genuinely spans cells has **no** single acted-on cell, so there is no
+correct value for the walk to pass — which is why task 2.3 ("prove the new shape
+fails") could not be satisfied, and that impossibility is what settled it.
+
+Measured while checking: three `marks[0]` digs exist (Mathrax, Unequal — cells;
+Towers — `marks[0].n`, a value). All three are sound today, each because the
+game's own `strikeAxis` keeps a firing to one cell or one value. Solo, the game
+D3 said to check first, does not dig a cell at all.
+
+**The reusable part**: AGENTS.md's "prove a new guard fails before trusting it"
+applies to a *refactor's* falsification task as much as to a guard. A task that
+cannot be written is a finding about the design, not an obstacle to route around.
+
+### D4 — re-founded, not built as written
+
+The finding rested on "Solo … derives the phrase from the regions it declares
+(`joinOr(noRepeatRegionNames(state))`)". It does not. `noRepeatRegionNames` is a
+hand-written list (`["row", "column", "block"]`, then `"diagonal"` if `xtype`,
+then `"cage"` if Killer) sitting twelve lines from the `regionsOf` it parallels,
+and nothing holds the two together. So the precedent D4 wanted to generalize
+does not exist — and the thing it pointed at is itself an instance of the defect,
+in the one game the preset cannot serve.
+
+A literal derivation there is not cheap: the cage carries no name (it is
+`holdsEvery: false` and untagged *by design*, so that the type refuses a partial
+region declared as whole), two diagonals must collapse to one word, and the
+`at`-less call is a union over the board. That is its own set of decisions, so it
+is filed as `derive-solos-region-names` rather than folded in here.
+
+What this change does instead is **remove the phrase structurally** for the
+family that can be served: the preset builds both setup sentences from the
+game's `{ noun, placedVerb }`, so a game on it has no way to state the region
+phrase and therefore no way to state a wrong one. That is stronger than deriving
+a string — the tie is in the type, not in a helper both sides must remember to
+call. Five games stopped typing `"row or column"`; Salad keeps its literal
+because its custom `setUp` builds its own clean step, and Solo's phrase is
+genuinely per-board.
+
+### D5 — held, with nothing to explain
+
+Every converted game's suite and every hint/render snapshot passed unchanged, no
+`-u`. D5 asked for a sentence per game saying whether the plan is byte-identical;
+the honest sentence is one for all six.
+
+### The fall-out D1 did not predict
+
+Renaming the entry point broke a **derived enrollment**: `FRONTIER_GAMES` in
+`hint-frontier.test.ts` finds the plan-walking games by scanning their
+comment-stripped sources for `runCandidatePlan(`, and `runLatinCandidatePlan`
+does not contain that string. Six of seven games left the population silently;
+only the vacuity floor (`length > 1`) caught it, and it would have survived a
+partial rename. Two things worth carrying:
+
+- **The comment stripper transpiles**, which erases type arguments — which is
+  why a call written `runCandidatePlan<M, H, …>({` matched a key ending in `(`
+  at all. A scan's key is written against the *stripped* text, not the source.
+- The repair is AGENTS.md's: key on the shape both entries share
+  (`CandidatePlan(`), and add a **second, independent derivation** of the same
+  population (who imports the module) asserted equal to the first, so a key that
+  stops matching a call site fails rather than passing over a smaller set. Both
+  halves were proved to fail before being trusted.

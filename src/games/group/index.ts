@@ -23,7 +23,7 @@ import {
 import {
   type Firing,
   type RungContext,
-  runCandidatePlan,
+  runLatinCandidatePlan,
   valuesOf,
 } from "../../engine/candidate-plan.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
@@ -43,8 +43,6 @@ import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, latinVerdict } from "../../engine/lati
 import {
   availablePlacements,
   forcingChainArea,
-  hiddenSingleLine,
-  type RowColRegion,
   rowColRegions,
   type SingleReason,
   singlePlacementReason,
@@ -505,9 +503,10 @@ function narrate(reason: NarratableReason, ns: number[], id: boolean): string {
 
 /** The premise cells a step shades `COL_HINT_CELL` as evidence: associativity's
  * three known products; an identity fill's / identity elimination's revealing
- * cell; a hidden single's whole line. The generic culls have no clean local area
- * (the struck notes carry the premise). */
-function reasonArea(reason: NarratableReason, w: number): OrderedCell[] {
+ * cell. The generic culls have no clean local area (the struck notes carry the
+ * premise), and a hidden single's line is the row/column preset's, which shades
+ * it over whatever this returns. */
+function reasonArea(reason: NarratableReason): OrderedCell[] {
   switch (reason.kind) {
     case "associativity":
       return [reason.abCell, reason.bcCell, reason.thirdCell];
@@ -515,8 +514,6 @@ function reasonArea(reason: NarratableReason, w: number): OrderedCell[] {
       return [{ x: reason.viaX, y: reason.viaY }];
     case "identityElim":
       return [{ x: reason.wx, y: reason.wy }];
-    case "hiddenSingle":
-      return hiddenSingleLine(reason.line, reason.index, w);
     // A forcing chain names the cells it ran through, **numbered**, so the
     // narration can cite them and the player can walk it.
     case "forcing":
@@ -542,7 +539,7 @@ function visibleCandidates(wGrid: Uint8Array, wPen: Int32Array, w: number): Int3
 }
 
 /** Build the hint plan by walking a working copy of the board the way a person
- * solves it (`runCandidatePlan`), placement-first: Group's own rung teaches a
+ * solves it (`runLatinCandidatePlan`), placement-first: Group's own rung teaches a
  * placement the solver makes before any elimination (associativity, an identity
  * row and column, or a single the board already shows) with no notes at all,
  * so notes are penciled in only when an elimination needs them. Group has no
@@ -611,7 +608,7 @@ function buildSteps(state: GroupState): HintStep<GroupMove, GroupHint>[] {
         op.kind === "place" &&
         op.reason.kind === "associativity" &&
         wGrid[op.y * w + op.x] === 0 &&
-        reasonArea(op.reason, w).every((p) => wGrid[p.y * w + p.x] !== 0)
+        reasonArea(op.reason).every((p) => wGrid[p.y * w + p.x] !== 0)
       )
         out.push(placingOp(op, ops));
     if (!populated)
@@ -628,7 +625,7 @@ function buildSteps(state: GroupState): HintStep<GroupMove, GroupHint>[] {
     return out;
   };
 
-  runCandidatePlan<GroupMove, GroupHint, HintOp, NarratableReason, RowColRegion>({
+  runLatinCandidatePlan<GroupMove, GroupHint, HintOp, NarratableReason>({
     w,
     steps,
     grid: wGrid,
@@ -637,20 +634,18 @@ function buildSteps(state: GroupState): HintStep<GroupMove, GroupHint>[] {
     autoClean: false,
     label: "group hint plan",
     record: () => recordGroupDeductions(wGrid, w, maxdiff),
-    regionsOf: regions,
-    singleReason: singleReasonOf,
     placeWords: (m, reason, continues) => ({
       explanation:
         continues && reason.kind === "identityFill"
           ? say.identityFillNext(toChar(m.n, id))
           : narrate(reason, [m.n], id),
-      area: reasonArea(reason, w),
+      area: reasonArea(reason),
     }),
     strikeWords: (marks, reason) => ({
       explanation: narrate(reason, valuesOf(marks), id),
-      area: reasonArea(reason, w),
+      area: reasonArea(reason),
     }),
-    notes: { populate: say.populate, cleanObvious: say.cleanObvious },
+    notes: { noun: "element", placedVerb: "placed" },
     rungs: [leads],
     shownNotes: () => visibleCandidates(wGrid, wPen, w),
     placement: placing,

@@ -1,60 +1,73 @@
 # share-the-latin-candidate-plan — tasks
 
 `design.md` holds the per-field verdicts, the sequencing and the two conditions
-under which this change should be killed rather than finished. Read § 5 first.
+under which this change should be killed rather than finished. Read § 5 first,
+then § 6, which records what the re-measurement did to the proposal's premises.
 
 ## 1. Re-measure before designing against the counts
 
-- [ ] 1.1 Take each population **by reference, not by grep** — `npm run refs --
-      src/engine/latin-hint.ts rowColRegions`, then `singleReasonOf`, then
-      `hiddenSingleLine`. Read the call sites and classify them; expect more
-      references than the proposal's grep counts, because the mark-all arm calls
-      `rowColRegions` too and that is not a plan field (`design.md` § 3).
-- [ ] 1.2 Check the kill conditions in `design.md` § 5 against what 1.1 found,
-      and stop here if either holds, recording the no-go with its reason.
+- [x] 1.1 Take each population **by reference, not by grep**. Done 2026-09-20;
+      the numbers and what moved are `design.md` § 6. Seven games walk a
+      candidate plan; **six** take plain row/column regions (the proposal said
+      four — Group spells it `regions`, Salad `saladRegions`), six take
+      `singleReasonOf`, six shade a hidden single by its line. Solo is the only
+      game outside all three.
+- [x] 1.2 Kill conditions checked. Neither holds: the preset serves six games,
+      not two (§ 5 bullet 1 clear). Bullet 2 does not arise, because **D3 is
+      declined on its premise rather than on a per-game hook** — see § 6.
 
-## 2. The walk passes the firing's cell (design D3)
+## 2. The walk passes the firing's cell (design D3) — DECLINED
 
-- [ ] 2.1 Add the acted-on cell to `StepWords`/`strikeWords` in
-      `candidate-plan.ts`, taking it from the `cellsOf(marks)` the walk already
-      computes for `targets`.
-- [ ] 2.2 Delete every `marks[0]` dig in the candidate games. **Check Solo
-      first**: its `intersect` firings span several cells, so it may already be
-      shading by its first mark where it means the region — if so, that is a bug
-      this change fixes, and its moved snapshot is evidence, not drift.
-- [ ] 2.3 Prove the new shape fails: give a game a `strikeAxis` that lets a
-      firing span cells and watch the evidence follow the move rather than the
-      first mark. Restore.
-- [ ] 2.4 Verify by shape: every changed line either deletes a `marks[0]` dig or
-      threads the new parameter. Read the exceptions.
+- [x] 2.1–2.4 Declined, with the measurement, in `design.md` § 6 D3. `cellsOf`
+      preserves first-appearance order, so `cellsOf(marks)[0]` **is**
+      `{ x: marks[0].x, y: marks[0].y }` for every firing that has ever run:
+      the defect the finding names cannot happen, and a firing that spans cells
+      has no single acted-on cell for the walk to pass. Task 2.3's falsification
+      is therefore unsatisfiable, which is the signal that stopped it.
 
-## 3. Derive the obvious-clean region phrase (design D4)
+## 3. Derive the obvious-clean region phrase (design D4) — re-founded
 
-- [ ] 3.1 Move `noRepeatRegionNames`' derivation beside `rowColRegions` and have
-      the plan call it where the regions can name themselves; keep the placed
-      verb and the noun as parameters, which are genuine per-game words.
-- [ ] 3.2 Confirm the three games that typed "row or column" now produce the
-      identical string — this one really should be byte-identical.
+- [x] 3.1 The proposal's premise ("Solo derives the phrase from the regions it
+      declares") is false: `noRepeatRegionNames` is a hand-written list beside
+      `regionsOf`, not a derivation from it (`design.md` § 6 D4). The phrase is
+      instead removed **structurally**: the preset builds both setup sentences
+      from the game's `{ noun, placedVerb }`, so a game on it cannot state the
+      region phrase and cannot state a wrong one. The two words stay parameters.
+- [x] 3.2 Byte-identical: the five games that typed "row or column" produce the
+      same two sentences, asserted by their unchanged hint snapshots.
+- [x] 3.3 Solo's parallel list filed as its own change (`derive-solos-region-names`).
 
 ## 4. The row/column preset (design D1, D2)
 
-- [ ] 4.1 `runLatinCandidatePlan` supplying `regionsOf`, `singleReason` and the
-      hidden-single placement area, over `runCandidatePlan` rather than beside
-      it. No `latin: true` flag — a function a game calls, not a statement about
-      the game for a mechanism to read (D2).
-- [ ] 4.2 Convert the row/column games; leave Solo and Salad on the general
-      entry, and leave the explicit form first-class for anyone who wants it.
-- [ ] 4.3 Prove the preset fails: have it supply the wrong region set and watch
-      the hidden-single narration go wrong.
+- [x] 4.1 `runLatinCandidatePlan` over `runCandidatePlan`, supplying `regionsOf`,
+      `singleReason`, the hidden-single placement area and the setup sentences.
+      No `latin: true` flag. A game that cannot take it is refused **by the
+      checker** (`NarratesSingles<Reason>`), not by a convention.
+- [x] 4.2 Converted: Keen, Unequal, Mathrax, Towers, Group, Salad. **Salad is
+      on it too** — the proposal expected it to stay behind, but its regions do
+      not differ (only its note encoding and its setup, both already plan
+      fields). Solo stays on the general entry.
+- [x] 4.3 Proved the preset fails: keying the frontier guard's population on the
+      wrong string dropped six of seven games and the guard went red; and the
+      converted games' hint snapshots are the net for the regions themselves.
 
 ## 5. Close out
 
-- [ ] 5.1 Per game, say whether its plan is byte-identical and explain every
-      snapshot that moved (`design.md` D5 — "the refactor drifted" and "a real
-      bug is fixed" are different sentences; write which).
-- [ ] 5.2 `npm run test:slow -- <each game touched>`, targeted, not the bare
-      command.
-- [ ] 5.3 Update `docs/games/hints.md` § "The shared candidate-hint machinery" —
-      it currently lists `regionsOf` and `singleReason` among what a game
-      "genuinely decides", which this change makes false for the row/column
-      family. Repoint, don't leave a stale sentence beside a true one.
+- [x] 5.1 Every converted game is byte-identical: all six games' suites and
+      every hint/render snapshot passed **unchanged**, with no `-u`. Nothing
+      moved, so there is no snapshot to explain — which is what D5 asked for.
+- [x] 5.2 `npm run test:slow` for each game touched.
+- [x] 5.3 `docs/games/hints.md` repointed: the "genuinely decides" sentence no
+      longer lists regions unconditionally, the `regionsOf` paragraph says the
+      preset supplies them, and a new § "The row/column preset" holds the
+      per-field table. `docs/games/engine-catalog.md` gained the preset.
+
+## 6. Fall-out
+
+- [x] 6.1 `hint-frontier.test.ts`'s `FRONTIER_GAMES` keyed on `runCandidatePlan(`
+      and lost six of its seven games to the rename. Re-keyed on the shape both
+      entries share and cross-checked against a second derivation; both halves
+      proved to fail. Spec scenario added.
+- [x] 6.2 The two `ts-engine` requirements that named the general entry point in
+      prose are repointed to "the shared candidate-plan walk", so the spec does
+      not key on a name either.

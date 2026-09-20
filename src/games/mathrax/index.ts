@@ -20,7 +20,7 @@ import {
   keepCandidateHintTrack,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
-import { runCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
+import { runLatinCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
@@ -35,13 +35,7 @@ import {
 } from "../../engine/game.ts";
 import { narrateLatinReason } from "../../engine/hint-text.ts";
 import { digitKeys, pencilModeKey } from "../../engine/key-labels.ts";
-import {
-  forcingChainArea,
-  hiddenSingleLine,
-  type RowColRegion,
-  rowColRegions,
-  singleReasonOf,
-} from "../../engine/latin-hint.ts";
+import { forcingChainArea, rowColRegions } from "../../engine/latin-hint.ts";
 import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
@@ -419,7 +413,7 @@ function reasonArea(reason: HintReason, target: Point): OrderedCell[] {
 }
 
 /** Build the hint plan by walking a working copy of the board the way a person
- * solves it (`runCandidatePlan`). `autoClean` (the auto-pencil preference)
+ * solves it (`runLatinCandidatePlan`). `autoClean` (the auto-pencil preference)
  * decides whether a placement's trivial row/column eliminations are silent or
  * taught. */
 function buildSteps(
@@ -432,7 +426,7 @@ function buildSteps(
   // Deductive only: a guess is not a teachable note strike, so the recording
   // solve is capped below the recursive tier whatever the board's own tier is.
   const maxdiff = Math.min(diffToLevel(state.params.diff), DIFF_TRICKY);
-  runCandidatePlan<MathraxMove, MathraxHint, HintOp, HintReason, RowColRegion>({
+  runLatinCandidatePlan<MathraxMove, MathraxHint, HintOp, HintReason>({
     w: o,
     steps,
     grid: wGrid,
@@ -440,14 +434,11 @@ function buildSteps(
     autoClean,
     label: "mathrax hint plan",
     record: () => recordMathraxDeductions(o, state.clues, wGrid, maxdiff),
-    regionsOf: (x, y) => rowColRegions(x, y, o),
-    singleReason: singleReasonOf,
     placeWords: (m, reason) => ({
       explanation: narrate(reason, [m.n], m, wGrid, o),
-      area:
-        reason.kind === "hiddenSingle"
-          ? hiddenSingleLine(reason.line, reason.index, o)
-          : [],
+      // A naked single's own collapsed candidates are the premise, so it needs
+      // no area; a hidden single's line is the preset's.
+      area: [],
     }),
     strikeWords: (marks, reason) => {
       const target = { x: marks[0].x, y: marks[0].y };
@@ -456,7 +447,7 @@ function buildSteps(
         area: reasonArea(reason, target),
       };
     },
-    notes: { populate: say.populate, cleanObvious: say.cleanObvious },
+    notes: { noun: "number", placedVerb: "standing" },
   });
   return steps;
 }

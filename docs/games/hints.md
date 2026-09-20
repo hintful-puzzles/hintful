@@ -2887,7 +2887,9 @@ Exemplar: [`towers/`](../../src/games/towers/) +
 
 ### The shared candidate-hint machinery
 
-**A game's `buildSteps` is one call to `runCandidatePlan`**
+**A game's `buildSteps` is one call to `runCandidatePlan`** — or, for a plain
+row/column Latin square, to `runLatinCandidatePlan` over it (§ "The row/column
+preset")
 ([`engine/candidate-plan.ts`](../../src/engine/candidate-plan.ts)), and the
 pieces it composes live in
 [`engine/candidate-hint.ts`](../../src/engine/candidate-hint.ts): the pure
@@ -2906,7 +2908,8 @@ Three sites used to recompute "which cells share a uniqueness constraint with
 `(x, y)`, and which still note value `n`?" — the placement classifier, the
 bulk obvious-clean opening, and the placement dup-cull. A plan now names it
 once, as its `regionsOf`, and the walk feeds all three from it, so they can
-never disagree. Row/column games pass the shared `rowColRegions(x, y, w)` from
+never disagree. A row/column game does not pass one at all — the preset
+supplies `rowColRegions(x, y, w)` from
 [`latin-hint.ts`](../../src/engine/latin-hint.ts); Solo writes its own
 (`[row, col, block, diag0, diag1]`, then the Killer cage). The culls de-dup a
 cell reachable via two regions. **A Keen cage is *not* a region** — it is an
@@ -2960,7 +2963,8 @@ last rung when every earlier one came up empty, the budget and cap (§
 What a game genuinely decides: which rungs of its own it has, the strike-split
 axis (`strikeAxis` — by height, by cell, one leg for a digit confined to a
 region; dictated by what the narration names singular), its recording solver,
-its regions, its words, and the deviations the plan's optional hooks name
+its words, its regions **where they are a decision at all** (§ "The row/column
+preset" — for a plain Latin square they are not), and the deviations the plan's optional hooks name
 (`singles`, `placeable`, `placed`, `shownNotes`, `placement`, `onPlace`), each
 of which states the one game-shaped fact that needs it. A driver was once
 declined as a callback shell over a six-line loop; the frontier made the loop
@@ -2968,6 +2972,49 @@ the part every game got the same way, so it moved into the engine, and the
 steps followed once every game's emitters were read side by side and differed
 only in their words. The reason union is per-game; narration is *mostly*
 per-game — except:
+
+### The row/column preset
+
+**A plain Latin square answers no question about its regions, so it is not
+asked one.** `runLatinCandidatePlan` (same module) is `runCandidatePlan` with
+the row/column family's answers filled in, and a game on it supplies its
+recording solver, its rungs and its own words and nothing else. Exemplar:
+[`mathrax/index.ts`](../../src/games/mathrax/index.ts)'s `buildSteps`.
+
+What it fills in, and why each one is not a parameter — the test being
+`AGENTS.md` § "Convention over configuration"'s *can we say what a game would
+legitimately want to do differently?*, asked **per field** rather than per
+helper:
+
+| Field | Why the preset owns it |
+|---|---|
+| `regionsOf` | `rowColRegions(x, y, w)`. The one genuine choice, and making it is what the preset *is* |
+| `singleReason` | `singleReasonOf`. Once `Reg` is a `RowColRegion` it is the **only inhabitant** of that signature |
+| a hidden single's placement evidence | its own line, `hiddenSingleLine`. The game's `placeWords` still says *why*; the preset shades *where*, over whatever area the game returned, and the game's other placement arms are untouched |
+| the two setup sentences | built from the game's `notes: { noun, placedVerb }`. The words are per-game ("height"/"standing", "element"/"placed"); the region phrase is not |
+
+The strongest form of the test is the middle two rows: not "six games happen to
+agree" but "the question has one answer once `regionsOf` is known". Before the
+preset, six games answered each of them, and four spellings of `regionsOf` were
+in the tree because a copy is never called by the name of the thing it copies
+(Group's `regions`, Salad's `saladRegions`).
+
+**A game that genuinely differs is turned back by the checker, not by a
+convention.** The preset's parameter type carries `NarratesSingles<Reason>`, a
+conditional that collapses to `never` unless the game's reason union can hold
+the `SingleReason` the preset synthesizes. Solo's `hiddenSingle` names a block
+or a diagonal rather than a line, so the preset is simply unavailable to it and
+it calls `runCandidatePlan` — which every game may do, and which is what keeps
+the override first-class. A game taking the explicit form says why in its
+change.
+
+**Its population is derived, never declared.** A game joins by *calling* it;
+`hint-frontier.test.ts` finds the plan-walking games by reading their own
+source. That scan keyed on `runCandidatePlan(` and silently dropped six of its
+seven games the moment the preset arrived — `runLatinCandidatePlan` does not
+contain that string. It now keys on `CandidatePlan(`, the shape both entries
+share, and cross-checks against a second derivation (who imports the module).
+`AGENTS.md` § "A scan that keys on a name", in the engine rather than in a game.
 
 **The `hint()` entry and the generic-Latin narration arms are shared.** (a)
 The `Game.hint` *entry* — completed-board refusal, `findMistakes` refusal,

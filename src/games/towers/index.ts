@@ -17,7 +17,7 @@ import {
   type Mark,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
-import { runCandidatePlan } from "../../engine/candidate-plan.ts";
+import { runLatinCandidatePlan } from "../../engine/candidate-plan.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
@@ -30,13 +30,7 @@ import {
 } from "../../engine/game.ts";
 import { digitKeys, pencilModeKey } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
-import {
-  forcingChainArea,
-  hiddenSingleLine,
-  type RowColRegion,
-  rowColRegions,
-  singleReasonOf,
-} from "../../engine/latin-hint.ts";
+import { forcingChainArea, rowColRegions } from "../../engine/latin-hint.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
@@ -432,7 +426,9 @@ function narrate(reason: HintReason, n: number, continues = false): string {
 /** The deduction's evidence area to shade: a Towers clue technique shows the
  * driving clue cell(s) *and* the whole line of sight they reason along, so the
  * player can see exactly which clue the hint is about; the generic Latin
- * techniques have no clean local area (the struck notes carry the premise). */
+ * techniques have no clean local area (the struck notes carry the premise).
+ * A hidden single is not among them — its line is the row/column preset's,
+ * which shades it over whatever this returns. */
 function reasonArea(reason: HintReason, w: number): OrderedCell[] {
   switch (reason.kind) {
     case "facing":
@@ -448,8 +444,6 @@ function reasonArea(reason: HintReason, w: number): OrderedCell[] {
     case "lowerBound":
     case "arrangement":
       return [cluePos(reason.clue, w), ...lineCells(reason.clue, w)];
-    case "hiddenSingle":
-      return hiddenSingleLine(reason.line, reason.index, w);
     // A forcing chain names the cells it ran through, **numbered**, so the
     // narration can cite them and the player can walk it.
     case "forcing":
@@ -499,7 +493,7 @@ function extremeClueLines(
 }
 
 /** Build the hint plan by walking a working copy of the board the way a person
- * solves it (`runCandidatePlan`). Towers' own rung is the extreme-clue lines,
+ * solves it (`runLatinCandidatePlan`). Towers' own rung is the extreme-clue lines,
  * which need no notes, so an empty board opens on them rather than on
  * "pencil everything in". `autoClean` (the auto-pencil preference) decides
  * whether a placement's trivial row/column note eliminations are silent or
@@ -512,7 +506,7 @@ function buildSteps(
   const steps: HintStep<TowersMove, TowersHint>[] = [];
   const wGrid = Uint8Array.from(state.grid);
   const maxdiff = Math.min(diffToLevel(state.diff), DIFF_EXTREME);
-  runCandidatePlan<TowersMove, TowersHint, HintOp, HintReason, RowColRegion>({
+  runLatinCandidatePlan<TowersMove, TowersHint, HintOp, HintReason>({
     w,
     steps,
     grid: wGrid,
@@ -520,8 +514,6 @@ function buildSteps(
     autoClean,
     label: "towers hint plan",
     record: () => recordTowersDeductions(w, state.clues, wGrid, maxdiff),
-    regionsOf: (x, y) => rowColRegions(x, y, w),
-    singleReason: singleReasonOf,
     placeWords: (m, reason, continues) => ({
       explanation: narrate(reason, m.n, continues),
       area: reasonArea(reason, w),
@@ -533,7 +525,7 @@ function buildSteps(
     // The narration names one height ("a tower of height 5 can't go here"), so
     // a clue firing that rules out 4 and 5 along its line is one leg per height.
     strikeAxis: (op) => op.n,
-    notes: { populate: say.populate, cleanObvious: say.cleanObvious },
+    notes: { noun: "height", placedVerb: "standing" },
     // clue == w fills the whole line 1..w in order as one journey; clue == 1
     // places the tallest tower next to the clue.
     rungs: [

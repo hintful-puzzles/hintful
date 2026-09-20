@@ -1,6 +1,2 @@
-# The ts-engine spec's candidate-plan requirement gains the preset with the
-# implementation; the deltas are written against the code as it stands then,
-# not against this scaffold.
 schema: spec-driven
 created: 2026-09-19
-skip_specs: true

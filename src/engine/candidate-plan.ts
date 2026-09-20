@@ -31,9 +31,16 @@ import {
 import type { DeductionRecord } from "./deduction-record.ts";
 import type { HintStep } from "./game.ts";
 import { type FrontierCandidate, HintFrontier } from "./hint-frontier.ts";
+import { cleanObviousText, populateText } from "./hint-text.ts";
 import {
   availablePlacements,
   type CellRegion,
+  hiddenSingleLine,
+  hiddenSingleOf,
+  type RowColRegion,
+  rowColRegions,
+  type SingleReason,
+  singleReasonOf,
   type WholeRegion,
 } from "./latin-hint.ts";
 import { stepBudget } from "./step-budget.ts";
@@ -250,6 +257,97 @@ export function runCandidatePlan<
   Reg extends CellRegion,
 >(plan: CandidatePlan<M, H, R, Reason, Reg>): void {
   new CandidateWalk(plan).run();
+}
+
+/** Whether a reason union can hold the {@link SingleReason} the row/column
+ * preset synthesizes. `unknown` when it can (and so intersects away), `never`
+ * when it cannot, which makes the plan unassignable — a game whose singles
+ * narrate differently (Solo names a block or a diagonal) is turned back to
+ * {@link runCandidatePlan} by the checker rather than by a convention. The
+ * tuples stop the union distributing, so `Reason` is tested whole. */
+type NarratesSingles<Reason> = [SingleReason] extends [Reason] ? unknown : never;
+
+/** A {@link CandidatePlan} with the row/column family's answers taken out: see
+ * {@link runLatinCandidatePlan} for why each one is not a parameter. */
+export type LatinCandidatePlan<
+  M,
+  H extends CandidateHighlights,
+  R extends DeductionRecord,
+  Reason,
+> = Omit<
+  CandidatePlan<M, H, R, Reason, RowColRegion>,
+  "regionsOf" | "singleReason" | "notes"
+> & {
+  /** The two words the shared setup sentences are built from: the game's
+   * singular noun for a cell's value ("number", "height", "element") and its
+   * verb for one already on the board ("standing", "placed"). The region phrase
+   * is not among them — a game whose regions are a row and a column has no
+   * other answer. Omit only with `setUp`. */
+  notes?: { noun: string; placedVerb: string };
+};
+
+/**
+ * The plain row/column Latin square's {@link runCandidatePlan}: a preset over
+ * it, not a second entry point, so a game supplies its recording solver, its
+ * rungs and its own words and nothing else.
+ *
+ * **What it fills in is what a row and a column *force*** — the test being
+ * AGENTS.md § "Convention over configuration"'s, *can we say what a game would
+ * legitimately want to do differently?*, asked per field:
+ *
+ * - `regionsOf` is {@link rowColRegions}. That is the one genuine choice, and
+ *   taking it is what this preset *is*;
+ * - `singleReason` is {@link singleReasonOf}. Once `Reg` is a
+ *   {@link RowColRegion} it is the only inhabitant of that signature, so the
+ *   question has one answer rather than six games agreeing;
+ * - a hidden single's evidence is its own line ({@link hiddenSingleLine}), for
+ *   the same reason. The game's `placeWords` still says *why*; the preset
+ *   shades *where*, and the game's other placement arms are untouched;
+ * - the setup sentences, from the game's `notes` vocabulary.
+ *
+ * A game whose regions, singles or setup genuinely differ stays on
+ * {@link runCandidatePlan}, which every game may call and which the checker
+ * sends it back to anyway ({@link NarratesSingles}).
+ */
+export function runLatinCandidatePlan<
+  M,
+  H extends CandidateHighlights,
+  R extends DeductionRecord,
+  Reason,
+>(plan: LatinCandidatePlan<M, H, R, Reason> & NarratesSingles<Reason>): void {
+  const { w, notes, placeWords, ...rest } = plan;
+  const full: CandidatePlan<M, H, R, Reason, RowColRegion> = {
+    ...rest,
+    w,
+    regionsOf: (x, y) => rowColRegions(x, y, w),
+    // Sound because `NarratesSingles` has already rejected a plan whose reason
+    // union cannot hold what `singleReasonOf` returns; the checker cannot
+    // narrow `Reason` from that constraint, which is all the cast says.
+    singleReason: singleReasonOf as CandidatePlan<
+      M,
+      H,
+      R,
+      Reason,
+      RowColRegion
+    >["singleReason"],
+    placeWords: (m, reason, continues) => {
+      const words = placeWords(m, reason, continues);
+      const hidden = hiddenSingleOf(reason);
+      if (!hidden) return words;
+      // Asserted like the walk's other highlight constructions: `H` extends
+      // `CandidateHighlights`, so it has an `area` of this type.
+      return {
+        ...words,
+        area: hiddenSingleLine(hidden.line, hidden.index, w),
+      } as StepWords<H>;
+    },
+  };
+  if (notes)
+    full.notes = {
+      populate: populateText(notes.noun),
+      cleanObvious: cleanObviousText(notes.noun, notes.placedVerb, "row or column"),
+    };
+  runCandidatePlan(full);
 }
 
 class CandidateWalk<

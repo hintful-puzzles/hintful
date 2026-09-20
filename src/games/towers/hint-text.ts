@@ -4,19 +4,15 @@
  * Towers keeps its own version of the generic Latin arms rather than the
  * engine's (`engine/hint-text.ts`), because its values need qualifying in some
  * arms and not others ("height 5 can go in only this cell … so it must be
- * 5"), which one vocabulary cannot say. It shares the forcing chain and the two
- * setup steps.
+ * 5"), which one vocabulary cannot say. It shares the forcing chain, and the
+ * two setup steps are built by the row/column preset from the two words Towers
+ * gives it (`index.ts`'s `notes`).
  *
  * The deduction decides which sentence and with what values (`index.ts`'s
  * `narrate`); this file decides only how it reads.
  */
 
-import {
-  cleanObviousText,
-  type LatinVocab,
-  narrateForcingChain,
-  populateText,
-} from "../../engine/hint-text.ts";
+import { type LatinVocab, narrateForcingChain } from "../../engine/hint-text.ts";
 import type { ForcingLink } from "../../engine/latin-hint.ts";
 
 /** Towers speaks of heights, not numbers — the one word the shared chain
@@ -24,10 +20,6 @@ import type { ForcingLink } from "../../engine/latin-hint.ts";
 const TOWERS_VOCAB: LatinVocab = { noun: "height", value: (h) => String(h) };
 
 export const say = {
-  populate: populateText("height"),
-
-  cleanObvious: cleanObviousText("height", "standing", "row or column"),
-
   /** Clue `clue` sees every tower in its line, so height `n` sits here. A
    * journey's later leg (`continues`) does not restate the premise its first
    * leg gave. */
