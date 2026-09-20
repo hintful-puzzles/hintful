@@ -465,18 +465,43 @@ long, cut to the single premise the highlight doesn't already show.
 § "hint narration stays readable at a glance", owner-chosen 2026-09-10 from a
 measured census — median 84, p75 110, p90 147). It walks every tier and every
 preset of every hinting game into the middle game (a preset can pick a mode,
-Adjacent or Killer or Number Ball, that no tier reaches), because long sentences are the ones spoken
+Adjacent or Killer or Number Ball, that no tier reaches), plus each game's last
+preset at its hardest teachable tier (the Custom-dialog corner neither of those
+reaches), because long sentences are the ones spoken
 once more of the board is decided; the easiest preset's opening plan, where the
 old 300 ceiling was checked, is exactly where they are not.
 
 **A sentence that genuinely needs more room goes in the ledger**
-(`LONG_NARRATIONS`), one entry per template with its reason, held to 300
-instead. The ledger is asserted both ways — an unlisted long step fails, and so
-does an entry that matches nothing long — so shortening a sentence means
-deleting its entry. What earned a place when the limit was introduced is worth
-knowing before you add one: chain Tactics whose form the spec mandates (name
-both ends, cite links, state the case split), owner-endorsed exemplar wording,
-two-premise deductions, and an owner-requested second sentence.
+(`LONG_NARRATIONS`), one entry per template with its reason and a `games`
+roster, held to 300 instead. The ledger is asserted both ways — an unlisted
+long step fails, and so does a *listing* that matches nothing long — so
+shortening a sentence means deleting its entry. What earned a place when the
+limit was introduced is worth knowing before you add one: chain Tactics whose
+form the spec mandates (name both ends, cite links, state the case split),
+owner-endorsed exemplar wording, two-premise deductions, and an owner-requested
+second sentence.
+
+**The unit of both halves is the `(entry, game)` listing**, which matters for
+the sentences the engine writes on several games' behalf. A roster read off the
+solver — "this game records `forcing`, so it speaks the chain sentence" — is an
+inference, and a false one: Mathrax records `forcing` about ten times in sixteen
+boards and spoke the sentence in **none** of 100,249 plan steps, because the
+plan's frontier finishes the board on cheaper rungs before a chain is ever the
+best candidate. So **add your game to a shared entry only once you have seen it
+speak the sentence.**
+
+**When the guard calls a listing dead, suspect the walk first.** Its reverse
+half is a negative over a sample, and the sample is the gate's own walk. Group
+is the case: it speaks the chain sentence **only** at 12×12 Hard, which is not a
+shipped preset — a player reaches it through the Custom dialog — so every tier
+of its smallest board and every preset at its own tier heard nothing, twelve
+seeds deep, and the listing read as dead while being perfectly live. That is
+why `lintCases` walks each game's last preset at its hardest teachable tier: it
+is the one corner of `presets × tiers` the other two rules both miss. So before
+deleting a listing, widen the walk for that game — every leaf preset, every
+tier, both auto-pencil settings where the game has them — and make the wider
+walk the deletion's evidence, recorded beside the entry so the next reader can
+re-run it rather than re-derive it.
 
 **How the pass that introduced it shortened ~100 sentences without losing a
 premise**, in order of how often each applied:

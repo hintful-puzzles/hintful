@@ -22,9 +22,10 @@
  *    a limit every step is
  *    held to, with a ledger for the few sentences that genuinely need more
  *    room, and a hard ceiling even they cannot pass. Checked across every
- *    tier and every preset, and into the middle of the game, in its own
- *    block, because the first preset's opening plan is where the long
- *    sentences never are.
+ *    tier and every preset — and across the last preset at the hardest
+ *    teachable tier, the Custom-dialog corner neither of those reaches — and
+ *    into the middle of the game, in its own block, because the first
+ *    preset's opening plan is where the long sentences never are.
  *  - **No step asks the player to carry a chain it never lays out**
  *    (`audit-guessing-tier-names`): a bounded chain is a legitimate
  *    *Tactic* and may be narrated — but with the chain **shown on the
@@ -81,12 +82,33 @@ const MAX_NARRATION_CHARS = 300;
  * sentence *template*, each saying why it needs the room.
  *
  * **Asserted in both directions**, the `NARRATES_MOVES` shape: a step over the
- * limit that no entry matches fails, and an entry that matches nothing over the
- * limit fails too — so shortening a sentence means deleting its entry rather
- * than leaving an exemption behind that silently stops guarding anything.
+ * limit that no entry matches fails, and an exemption that matches nothing over
+ * the limit fails too, so shortening a sentence means deleting its entry rather
+ * than leaving behind an exemption that silently stops guarding anything.
  *
- * `games` names every game the template reaches, because some are written once
- * in the engine and spoken by several games.
+ * **The unit of both halves is the *listing*, not the entry.** `games` is the
+ * roster of games that reach the template — some sentences are written once in
+ * the engine and spoken by several — and it is what scopes the exemption, so a
+ * Palisade entry cannot excuse a Towers sentence. Being a scope, it is checked
+ * the same way in both directions: the forward half asks whether *this game* is
+ * on the entry, and the reverse half asks whether *this game* ever spoke it. An
+ * `(entry, game)` pair that never fires is deleted exactly as a dead entry is.
+ *
+ * So a shared-engine sentence's roster is **the games that actually reach it in
+ * the walk, not the games that could** — those are different sets, and the
+ * difference is invisible from the code: Mathrax's solver records `forcing` and
+ * its narration would say this, yet 100,249 plan steps never chose one, because
+ * the frontier finishes the board on cheaper rungs first. Reading a roster off
+ * the solver is therefore an inference, and the reverse half is what turns it
+ * into a measurement.
+ *
+ * **The reverse half is a negative over a sample**, which is the one thing to
+ * be careful with here: a game that speaks the sentence only on a preset or
+ * tier {@link lintCases} does not walk looks identical to one that never speaks
+ * it. Before deleting a listing, widen the walk for that game and let the wider
+ * walk be the evidence; the floors in "ledgers only listings that still need
+ * the room" are what stop a walk that examined nothing from reading as a
+ * collection of dead listings.
  */
 const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
   {
@@ -94,8 +116,16 @@ const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
     // presets × 3 seeds × both auto-pencil settings, 100,249 plan steps spoke
     // this sentence **zero** times, because the frontier takes its clue strikes
     // and singles first and the board finishes before a chain is ever the best
-    // candidate. A game listed here that never reaches the sentence is a dead
-    // exemption, and the ledger cannot see one (see `derive-the-narration-ledger-population`).
+    // candidate.
+    //
+    // Group is the near-miss in the other direction, and is listed on the
+    // measurement rather than on the inference: it reaches this sentence at
+    // **12x12 Hard only** (44 times in 2,007 steps over 12 seeds), and at no
+    // other point of its 7 presets × 5 tiers — 6x6 and 8x8 are zero at every
+    // tier, and 12x12 is zero at every tier but Hard. 12x12 Hard is not a
+    // shipped preset; it is reachable through the Custom dialog, and it is why
+    // `lintCases` walks the last preset at the hardest teachable tier. Delete
+    // that rule and this listing reads as dead.
     games: ["group", "keen", "salad", "solo", "towers", "unequal"],
     match: /has just two \w+s left, so each forces the next/,
     why:
@@ -522,12 +552,59 @@ describe("no hint leaves a chain for the player to carry, at any tier", () => {
  * Walking every preset on every seed measured 103 s as a census against 49 s
  * for the tiers alone (load 12, swap 22 GB used: upper bounds both); one seed
  * per extra preset is the middle of that.
+ *
+ * Cost of {@link lintCases}' third rule, 2026-09-20, load 5–6 (upper bounds,
+ * same box, same session, so the ratios are the usable part): 36 s for the
+ * block without it, 43 s with it at one seed, 83 s at three. It is not spread
+ * evenly — four games hold ~40 s of the 47, and all four for the same reason,
+ * that generating a *large* board at a *hard* tier is the expensive corner:
+ * Group ~18 s, Salad ~12 s, Solo ~6 s, Spokes ~3 s. Three seeds rather than
+ * one because the rule's whole job is to let the close-out case decide a
+ * negative, and a negative from a sample of one is not evidence — Group speaks
+ * its chain sentence on three of six 12x12 Hard seeds, so one seed is a coin
+ * flip on whether a live listing reads as dead. Slicing those four games is
+ * the lever if this ever matters.
  */
 const LINT_ROUNDS = 30;
 
-/** The boards the length walk plays: every tier of the first preset on every
- * seed, then every other preset once. Deduplicated by params, since a tier of
- * the first preset is often a preset too. */
+/**
+ * The boards the length walk plays: every tier of the first preset on every
+ * seed, then every other preset once, then **the last preset at the hardest
+ * teachable tier**. Deduplicated by params, since a tier of the first preset is
+ * often a preset too.
+ *
+ * That third rule is one board per tiered game, and it is the one corner of
+ * `presets × tiers` the other two both miss: they walk every tier of the
+ * *smallest* board and every board at *its own* tier, so a combination a player
+ * reaches only through the Custom dialog — a big grid turned up to a hard tier —
+ * is walked by neither. Group is the case that found it
+ * (`derive-the-narration-ledger-population`): its shipped presets stop at 8x8
+ * Tricky and 12x12 Normal, and it speaks the shared Latin chain sentence
+ * **only** at 12x12 Hard, 44 times in 2,007 steps. Every tier of its 6x6 and
+ * every preset at its own tier: zero, across 12 seeds each. So the roster was
+ * right and the walk was short, which is the failure mode that matters most
+ * here — a listing the walk cannot reach reads as a dead exemption, and the
+ * close-out case would have had it deleted.
+ *
+ * **"Hardest teachable" excludes a declared search tier**, which is where the
+ * cost lives and where there is nothing to hear: a hint refuses on a board that
+ * needs a guess (AGENTS.md § "Hint quality bar" rule 6), so the plan stops
+ * early — Group's 6x6 yields 27 steps at Unreasonable against 253 at Hard — and
+ * generation there is by far the most expensive thing in the cross product
+ * (12x12 Unreasonable ran past 25 minutes for 12 boards and was abandoned;
+ * 12x12 Hard was 116 s). The tier is derived from its *name*, the way
+ * `hint-resume.test.ts` and `difficulty-contract.test.ts` already do it:
+ * `tierNames(n, { search: true })` puts "Unreasonable" last, so the game has
+ * already said so for its own reasons.
+ *
+ * **"Last preset" stands in for "largest"** — preset menus are ordered
+ * smallest-first by convention (see {@link untieredCases} on Netslide). If a
+ * game ever orders them otherwise this walks a different board rather than a
+ * wrong one, and the close-out case is what would notice. It is the last of
+ * {@link untieredCases} rather than of `leafPresets`, so a search-planning
+ * game's sliced list is sliced here too — for those two the board is the last
+ * of the three the gate keeps, and the whole list in the slow tier.
+ */
 function lintCases(
   id: string,
   game: AnyGame,
@@ -547,6 +624,17 @@ function lintCases(
     for (const [tier, tierName] of tiers.entries()) {
       add(`tier ${tier} ("${tierName}")`, contract.withTier(base, tier), SEEDS);
     }
+    // Through `untieredCases`, so a search-planning game's sliced preset list
+    // is sliced here too rather than quietly handing this rule the one board
+    // its cost was sliced to avoid.
+    const last = untieredCases(id, game).at(-1);
+    const top = tiers.length - (tiers.at(-1) === "Unreasonable" ? 2 : 1);
+    if (last && top >= 0)
+      add(
+        "last preset at the hardest teachable tier",
+        contract.withTier(last.params, top),
+        SEEDS,
+      );
   }
   // A tiered game already plays three seeds of each tier, so its other presets
   // play once; an untiered game's presets are all it has, so they keep all three.
@@ -555,9 +643,21 @@ function lintCases(
   return out;
 }
 
-/** Ledger entries that matched a step over the limit, by index. Filled by the
- * per-game cases, read by the last one. */
-const ledgerUsed = new Set<number>();
+/**
+ * The **listings** that matched a step over the limit, as `"<entry index>:<game
+ * id>"`. Filled by the per-game cases, read by the last one.
+ *
+ * Keyed by the pair, not by the entry: a listing is what the ledger asks a
+ * reader to believe, so a listing is the unit the check has to hold. Keyed by
+ * entry alone it passed as soon as *any* listed game reached the sentence,
+ * which on the ten single-game entries is the same thing and on the shared
+ * Latin chain entry is not — that is how Mathrax sat on it while speaking it
+ * zero times in 100,249 plan steps (`derive-the-narration-ledger-population`).
+ */
+const ledgerUsed = new Set<string>();
+/** Steps walked per game, so the close-out case can tell "this game's walk
+ * found nothing" from "this game's walk *was* nothing". */
+const lintedPerGame = new Map<string, number>();
 let linted = 0;
 
 describe("hint narration stays readable at a glance", () => {
@@ -581,6 +681,7 @@ describe("hint narration stays readable at a glance", () => {
             for (const step of res.steps) {
               const text = step.explanation;
               linted++;
+              lintedPerGame.set(name, (lintedPerGame.get(name) ?? 0) + 1);
               expect(
                 text.length,
                 `${name} ${label}/${seed}: "${text}" is over the hard ceiling of ${MAX_NARRATION_CHARS}`,
@@ -593,7 +694,7 @@ describe("hint narration stays readable at a glance", () => {
                 entry,
                 `${name} ${label}/${seed}: "${text}" is ${text.length} characters, over ${NARRATION_LIMIT}. Shorten it, or add it to LONG_NARRATIONS with the reason it needs the room.`,
               ).toBeGreaterThanOrEqual(0);
-              ledgerUsed.add(entry);
+              ledgerUsed.add(`${entry}:${name}`);
             }
             // Walk on through the whole plan, not just its first step: the
             // aim is the sentences deeper in the game, cheaply.
@@ -604,21 +705,45 @@ describe("hint narration stays readable at a glance", () => {
     });
   }
 
-  it("ledgers only sentences that still need the room", () => {
+  it("ledgers only listings that still need the room", () => {
     // Registered last, so it runs after every per-game case has filled
-    // `ledgerUsed`. Vacuity first: an unpopulated walk would find every entry
+    // `ledgerUsed`. Vacuity first: an unpopulated walk would find every listing
     // "unused" for the wrong reason.
     expect(linted, "the length walk looked at almost nothing").toBeGreaterThan(2000);
     const hinting = new Set(HINT_GAMES.map(([id]) => id));
-    LONG_NARRATIONS.forEach((e, i) => {
-      for (const g of e.games)
-        expect(hinting.has(g), `${g} ships no hint()`).toBe(true);
-      expect(e.why.length, `${e.match} states no reason`).toBeGreaterThan(60);
+    // And per game, because the check below is a negative *per listing*: a game
+    // whose every case refused to generate would read as dead on every entry it
+    // is listed on, and the collection-wide floor above cannot say so — it is
+    // met many times over by the games that did walk. Measured 2026-09-20, the
+    // listed games walk 320 (Subsets) to 3,007 (Solo) steps each, so 200 is
+    // clear of the smallest and nowhere near "examined nothing".
+    for (const g of new Set(LONG_NARRATIONS.flatMap((e) => e.games))) {
+      const n = lintedPerGame.get(g) ?? 0;
       expect(
-        ledgerUsed.has(i),
-        `${e.match} matched nothing over ${NARRATION_LIMIT}: the sentence got shorter, so delete the entry`,
-      ).toBe(true);
+        n,
+        `${g} is listed in LONG_NARRATIONS but its length walk looked at ${n} steps`,
+      ).toBeGreaterThan(200);
+    }
+    // Collected rather than asserted one at a time, so one run reports every
+    // dead listing: a check that stops at the first turns a census into a
+    // queue of reruns, and this one's whole job is to be read as a census.
+    const dead: string[] = [];
+    LONG_NARRATIONS.forEach((e, i) => {
+      expect(e.why.length, `${e.match} states no reason`).toBeGreaterThan(60);
+      for (const g of e.games) {
+        expect(hinting.has(g), `${g} ships no hint()`).toBe(true);
+        if (!ledgerUsed.has(`${i}:${g}`)) dead.push(`${g} on ${e.match}`);
+      }
     });
+    expect(
+      dead,
+      `listed in LONG_NARRATIONS but never spoke the sentence over ${NARRATION_LIMIT} ` +
+        "characters. Either the sentence got shorter, or that game never reaches the " +
+        "arm. Widen the walk for the game first (every leaf preset, both auto-pencil " +
+        "settings); if it still says nothing, delete the listing and record the walk " +
+        "that found nothing beside the entry, so the next reader can re-run it rather " +
+        "than re-derive it.",
+    ).toEqual([]);
   });
 });
 
