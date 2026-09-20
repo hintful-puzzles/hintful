@@ -731,6 +731,19 @@ starts**; this harness warms all three, and the distinction vanishes. Warm every
 arm, rotate their order, and report the minimum beside the median — on a loaded
 box the minima are the least contended samples, and here the two agreed.
 
+**To compare two configurations of a sweep, time the *items* once inside one
+run — not the sweep twice.** Two whole-file runs are taken minutes apart under
+whatever load the box has then, and this one swings several-fold. A single run
+that records the wall time of each (game, preset, seed) case pays for the widest
+configuration once and then answers every narrower one by summing the cases it
+would have kept, so every figure and every ratio comes from the same conditions.
+It also attributes the cost, which is the part that changes decisions:
+`slice-presets-by-the-axes-a-game-varies` widened a walk from 88 boards to 141,
+and the one run showed the *modes* that motivated it costing 3–95 ms each while
+two line items carried almost all of the increase. Summing wall clock across
+separate runs is the instrument `AGENTS.md` § "Test discipline" records as 5×
+off.
+
 Two calibration notes that recur: a raw madge cycle count is **not** a runtime
 cycle count here (`verbatimModuleSyntax` erases `import type`, which is the
 standard cycle *fix*, so madge reports the fix as the problem —
