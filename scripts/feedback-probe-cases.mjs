@@ -850,8 +850,8 @@ export const MODULES = [
       {
         within: "lazyPopulate.ensure",
         why: "the working fill overwrites notes the player narrowed, so the plan teaches strikes on candidates no longer on their board",
-        find: "        if (!wGrid[i] && wPen[i] === 0) wPen[i] = all;",
-        replace: "        if (!wGrid[i]) wPen[i] = all;",
+        find: "        if (!wGrid[i] && wPen[i] === 0) wPen[i] = all(i);",
+        replace: "        if (!wGrid[i]) wPen[i] = all(i);",
       },
       {
         within: "lazyPopulate",
@@ -862,8 +862,8 @@ export const MODULES = [
       {
         within: "lazyPopulate.ensure",
         why: "the populate fill omits the top candidate, so no elimination of it is ever taught",
-        find: "      const all = (1 << (w + 1)) - (1 << 1);",
-        replace: "      const all = (1 << w) - (1 << 1);",
+        find: "      const scalar = (1 << ((opts?.enc?.values ?? w) + 1)) - (1 << 1);",
+        replace: "      const scalar = (1 << (opts?.enc?.values ?? w)) - (1 << 1);",
       },
       {
         within: "emitObviousCleanStep",

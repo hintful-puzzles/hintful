@@ -56,6 +56,21 @@ export interface NoteEncoding {
    * Salad's is `nums + 1` (its symbols plus the "might be empty" mark) on an
    * `order`-strided grid, so the two genuinely differ. */
   values?: number;
+  /**
+   * Every note a blank square at cell index `i` could carry — what a fill-all
+   * puts there. Default: values `1..values`, which is the whole board's answer
+   * for a Latin game and is why this went unstated until a game needed a
+   * different one.
+   *
+   * **It is per cell, not per board.** Rome's arrows are bounded by the grid
+   * edge (a top-row square can never point up) and Seismic's by its region's
+   * size, so for those two the full set genuinely varies square to square. A
+   * populate that fills more than this teaches strikes on notes the player's
+   * own Mark-all never made, which is the failure it exists to prevent — so a
+   * game's `pencilAll` move and this must agree, and the game's own move is the
+   * authority.
+   */
+  all?(i: number): number;
 }
 
 /** `enc.bit`, defaulted to the Latin family's `1 << n`. */
@@ -435,15 +450,21 @@ export function lazyPopulate<M, H>(
   w: number,
   steps: HintStep<M, H>[],
   explanation: string,
+  opts?: { enc?: NoteEncoding; adapter?: CandidateMoveAdapter<M> },
 ): { ensure(): void; done(): boolean } {
   let populated = !anyEmptyLacksNotes(state.grid, state.pencil);
   return {
     ensure(): void {
       if (populated) return;
-      const all = (1 << (w + 1)) - (1 << 1);
+      // What the game's own fill-all move puts in a blank square, asked per
+      // cell — see {@link NoteEncoding.all}. The scalar fallback is every value
+      // of the note alphabet, and `values` defaults to `w`, so this is the same
+      // expression a Latin plan has always evaluated.
+      const scalar = (1 << ((opts?.enc?.values ?? w) + 1)) - (1 << 1);
+      const all = opts?.enc?.all ?? ((): number => scalar);
       for (let i = 0; i < wGrid.length; i++)
-        if (!wGrid[i] && wPen[i] === 0) wPen[i] = all;
-      steps.push(populateStep({ type: "pencilAll" } as unknown as M, explanation));
+        if (!wGrid[i] && wPen[i] === 0) wPen[i] = all(i);
+      steps.push(populateStep(populateMove(opts?.adapter), explanation));
       populated = true;
     },
     done: (): boolean => populated,
@@ -494,11 +515,20 @@ export function lazyPopulate<M, H>(
 export function adaptiveMarkAll<M, Mk>(
   needsFill: boolean,
   computeMarks: () => readonly Mk[],
+  adapter?: CandidateMoveAdapter<M>,
 ): M | null {
-  if (needsFill) return { type: "pencilAll" } as unknown as M;
+  if (needsFill) return populateMove(adapter);
   const marks = computeMarks();
   if (marks.length === 0) return null;
-  return { type: "pencilStrike", marks } as unknown as M;
+  return adapter
+    ? adapter.strike(marks as unknown as Mark[])
+    : ({ type: "pencilStrike", marks } as unknown as M);
+}
+
+/** The fill-all move in a game's own dialect. The default is the canonical
+ * `{ type: "pencilAll" }` the Latin family's `Move` unions carry verbatim. */
+function populateMove<M>(adapter?: CandidateMoveAdapter<M>): M {
+  return adapter?.populate?.() ?? ({ type: "pencilAll" } as unknown as M);
 }
 
 /** The square-Latin adaptive mark-all: `pencilAll` when any empty cell has zero
@@ -543,6 +573,11 @@ export interface CandidateMoveAdapter<M> {
   read(m: M): CandidateMove | null;
   /** Build a strike over `marks` in the game's own move shape. */
   strike(marks: Mark[]): M;
+  /** Build the fill-all in the game's own move shape. Defaults to
+   * `{ type: "pencilAll" }`. Its counterpart `read` has always been asked
+   * through the dialect; this is the writing half, which three helpers spelled
+   * for themselves until Rome's `kind`-keyed moves needed it. */
+  populate?(): M;
   /** Build a placement of `n` at `(x, y)` in the game's own move shape, for a
    * hint plan to emit; `autoElim` is the auto-pencil preference, for a dialect
    * that bakes it into the move. Defaults to the Latin family's `set`. */

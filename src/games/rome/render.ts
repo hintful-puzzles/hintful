@@ -30,15 +30,25 @@ import { BLUE, BLUE_BOLD } from "../../engine/color/colors.ts";
 import {
   ERROR,
   ERROR_WASH,
+  HINT_ACTION,
+  HINT_EVIDENCE,
   INK,
   pencilColor,
   playerEntryColor,
 } from "../../engine/color/palette.ts";
 import { romeGoalBackground } from "../../engine/color/palette-games.ts";
 import { drawRectOutline } from "../../engine/draw.ts";
-import type { GameDrawing } from "../../engine/game.ts";
-import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
+import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
+import {
+  HINT_AREA,
+  HINT_TARGET,
+  hintMarkBit,
+  OverlaySidecar,
+} from "../../engine/overlay-sidecar.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import type { RomeHint } from "./hint.ts";
 import type { RomeMistake } from "./index.ts";
 import {
   EMPTY,
@@ -62,6 +72,7 @@ import {
   KEYMODE_PLACE,
   MOUSEMODE_PENCIL,
   MOUSEMODE_PLACE,
+  type RomeMove,
   type RomeParams,
   type RomeState,
   type RomeUi,
@@ -93,6 +104,10 @@ export const COL_ARROW_ENTRY = 8;
 export const COL_ERRORBG = 9;
 export const COL_GOALBG = 10;
 export const COL_GOAL = 11;
+/** The square a hint's deduction acts on, ringed (fork addition). */
+export const COL_HINT = 12;
+/** The area a hint reasons from, outlined (fork addition). */
+export const COL_HINT_CELL = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const { background, highlight, lowlight } = mkhighlight(defaultBackground);
@@ -109,6 +124,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERRORBG] = ERROR_WASH;
   out[COL_GOALBG] = romeGoalBackground(background);
   out[COL_GOAL] = BLUE_BOLD;
+  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT_CELL] = HINT_EVIDENCE;
   return out;
 }
 
@@ -134,6 +151,11 @@ export interface RomeDrawState {
   /** Packed `(effective cell, effective marks, flash phase)` per square. */
   cache: Int32Array;
   mistakes: OverlaySidecar;
+  /** Hint overlay (fork addition): bit 0 = the square acted on, bit 1 =
+   * evidence, bits 2.. = the arrow marks this firing rules out. */
+  hint: OverlaySidecar;
+  /** The hint's ring and outline, painted after the square loop. */
+  marks: HintMarks;
 }
 
 export function newDrawState(state: RomeState, tileSize: number): RomeDrawState {
@@ -143,6 +165,36 @@ export function newDrawState(state: RomeState, tileSize: number): RomeDrawState 
     tileSize,
     cache: new Int32Array(s).fill(-1),
     mistakes: new OverlaySidecar(s),
+    hint: new OverlaySidecar(s),
+    marks: new HintMarks(),
+  };
+}
+
+/**
+ * Where a square's hint band sits: **inside** its content box, over pixels the
+ * square's own painter fills.
+ *
+ * Rome's grid lines are negative space — the first frame floods `COL_BORDER`
+ * and every square paints its background inset into it — so the gutter between
+ * two squares is the *region outline*, and a mark drawn there would erase a
+ * region boundary that nothing repaints. Insetting by `2 * GRIDEXTRA` clears
+ * the widest inset any square takes (`GRIDEXTRA` on a boundary side, plus
+ * `GRIDEXTRA * 2` off the far edge), so the band is always strictly within the
+ * background rect and the square's own repaint undoes it. That is why no
+ * `gutterColor` is passed.
+ */
+function markBand(ds: RomeDrawState, x: number, y: number): MarkBand {
+  const ts = ds.tileSize;
+  const inset = GRIDEXTRA * 2;
+  return {
+    box: {
+      x: BORDER + x * ts + inset,
+      y: BORDER + y * ts + inset,
+      w: ts - 1 - 2 * inset,
+      h: ts - 1 - 2 * inset,
+    },
+    outer: 0,
+    inner: Math.max(2, Math.floor(ts / 14)),
   };
 }
 
@@ -224,7 +276,7 @@ export function redraw(
   ui: RomeUi,
   _animTime: number,
   flashTime: number,
-  _hint?: unknown,
+  hint?: HintStep<RomeMove, RomeHint>,
   mistakes?: readonly RomeMistake[],
 ): void {
   const ts = ds.tileSize;
@@ -263,6 +315,11 @@ export function redraw(
   if (mistakes) {
     for (const m of mistakes) ds.mistakes.add(m.index, HB_MISTAKE);
   }
+  ds.hint.pack(
+    hint?.highlights ?? null,
+    (hx, hy) => hy * w + hx,
+    (m) => hintMarkBit(m.n),
+  );
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -292,9 +349,11 @@ export function redraw(
         (((p >> 2) & 0xf) << 15) |
         ((p & FD_ENTRY ? 1 : 0) << 19) |
         ((flash + 1) << 20);
-      if (ds.cache[i1] === key && !ds.mistakes.stale(i1)) continue;
+      if (ds.cache[i1] === key && !ds.mistakes.stale(i1) && !ds.hint.stale(i1))
+        continue;
       ds.cache[i1] = key;
       ds.mistakes.commit(i1);
+      ds.hint.commit(i1);
 
       let cx = BORDER + x * ts;
       let cy = BORDER + y * ts;
@@ -358,46 +417,22 @@ export function redraw(
       // Pencil marks show only on a square with no arrow or goal of its own.
       if ((c & FD_KBMASK) === c) {
         const q = ts * 0.12;
-        if (p & FM_UP) {
-          drawArrow(
-            dr,
-            midX,
-            BORDER + y * ts + Math.floor(ts / 4),
-            q,
-            FM_UP,
-            COL_ARROW_PENCIL,
-          );
-        }
-        if (p & FM_DOWN) {
-          drawArrow(
-            dr,
-            midX,
-            BORDER + y * ts + Math.floor((3 * ts) / 4),
-            q,
-            FM_DOWN,
-            COL_ARROW_PENCIL,
-          );
-        }
-        if (p & FM_LEFT) {
-          drawArrow(
-            dr,
-            BORDER + x * ts + Math.floor(ts / 4),
-            midY,
-            q,
-            FM_LEFT,
-            COL_ARROW_PENCIL,
-          );
-        }
-        if (p & FM_RIGHT) {
-          drawArrow(
-            dr,
-            BORDER + x * ts + Math.floor((3 * ts) / 4),
-            midY,
-            q,
-            FM_RIGHT,
-            COL_ARROW_PENCIL,
-          );
-        }
+        // A mark this hint rules out keeps its own color and takes a
+        // strikethrough in the same color — the collection's "ruled out" cue
+        // (docs/games/hints.md § "The element-type color legend"). The hint
+        // says what to cross off; it never crosses it off for the player.
+        const struck = ds.hint.packed[i1];
+        const markAt = (bit: number, mx: number, my: number, n: number): void => {
+          if (!(p & bit)) return;
+          drawArrow(dr, mx, my, q, bit, COL_ARROW_PENCIL);
+          if (struck & hintMarkBit(n)) {
+            line(dr, 1, mx - q, my + q, mx + q, my - q, COL_ARROW_PENCIL);
+          }
+        };
+        markAt(FM_UP, midX, BORDER + y * ts + Math.floor(ts / 4), 1);
+        markAt(FM_DOWN, midX, BORDER + y * ts + Math.floor((3 * ts) / 4), 2);
+        markAt(FM_LEFT, BORDER + x * ts + Math.floor(ts / 4), midY, 3);
+        markAt(FM_RIGHT, BORDER + x * ts + Math.floor((3 * ts) / 4), midY, 4);
         if (p & FD_ENTRY) {
           dr.drawRect({ x: midX - 2, y: midY - 2, w: 4, h: 4 }, COL_ARROW_PENCIL);
         }
@@ -426,6 +461,30 @@ export function redraw(
           COL_ARROW_ERROR,
         );
       }
+
+      // A loop firing shades the arrow chain that leads back here, and the
+      // ordinal is what makes it a chain the player can walk rather than a heap
+      // of squares (docs/games/hints.md § "Number the chain").
+      const order = ds.hint.order[i1];
+      if (order > 0) {
+        drawHintOrdinal(dr, { x: cx, y: cy }, ts, order, COL_HINT_CELL);
+      }
     }
   }
+
+  // The ring and the evidence outline, after the square loop: a band sits over
+  // the square's own background, so it has to be painted once the background is
+  // down, and once per frame rather than once per square.
+  const targets: MarkCell[] = [];
+  const evidence: MarkCell[] = [];
+  for (let i = 0; i < w * h; i++) {
+    const cell = { x: i % w, y: (i / w) | 0 };
+    if (ds.hint.packed[i] & HINT_TARGET) targets.push(cell);
+    if (ds.hint.packed[i] & HINT_AREA) evidence.push(cell);
+  }
+  ds.marks.paint(dr, targets, evidence, {
+    band: (bx, by) => markBand(ds, bx, by),
+    targetColor: COL_HINT,
+    evidenceColor: COL_HINT_CELL,
+  });
 }

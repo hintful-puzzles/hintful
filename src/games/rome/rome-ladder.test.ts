@@ -34,13 +34,45 @@ const SHAPES: RomeParams[] = [
 // only after the corpus has genuinely been given a chance to reach it.
 const SEEDS = ["lad-a", "lad-b", "lad-c", "lad-d", "lad-e"];
 
-const cases = SHAPES.flatMap((params) =>
-  SEEDS.map((seed) => {
-    const label = `${params.w}x${params.h} diff=${params.diff} ${seed}`;
-    const { desc } = newRomeDesc(params, randomNew(`rome-ladder-${label}`));
-    return { label, board: () => readDesc(params, desc).board };
-  }),
-);
+/**
+ * Two boards that fire `naked-pairs`, which thirty randomly seeded ones did
+ * not, so the census has an entry for every rung rather than a shortfall.
+ *
+ * **They are pinned as descs, not as seeds**, because a seed reaches a rung
+ * only through the generator, and a generator change would silently take the
+ * corpus back to thirty boards with the census still reporting health. Found
+ * 2026-09-20 by solving 120 published descs (6x6 and 8x8, Normal and Tricky)
+ * and keeping the two that fired: the rate is around one board in sixty, which
+ * is why five seeds a shape missed it.
+ */
+const PAIR_BOARDS: { label: string; params: RomeParams; desc: string }[] = [
+  {
+    label: "6x6 diff=2 naked-pairs",
+    params: { w: 6, h: 6, diff: DIFF_TRICKY },
+    desc: "1a1aa2a4b1a1ab2a1a4c3aaa1a2aa,aLDRDgRaXUDcLcRUaURg",
+  },
+  {
+    label: "8x8 diff=2 naked-pairs",
+    params: { w: 8, h: 8, diff: DIFF_TRICKY },
+    desc:
+      "2bac3a1a4b2b7a1a2aaa1ba6a3da3a4ba2a1ac5b3a," +
+      "DDbDLaLcLReXDULbULULeURbUcRbUXdUDRDiL",
+  },
+];
+
+const cases = [
+  ...SHAPES.flatMap((params) =>
+    SEEDS.map((seed) => {
+      const label = `${params.w}x${params.h} diff=${params.diff} ${seed}`;
+      const { desc } = newRomeDesc(params, randomNew(`rome-ladder-${label}`));
+      return { label, board: () => readDesc(params, desc).board };
+    }),
+  ),
+  ...PAIR_BOARDS.map(({ label, params, desc }) => ({
+    label,
+    board: () => readDesc(params, desc).board,
+  })),
+];
 
 describeLadderEquivalence({
   game: "rome",
@@ -53,26 +85,10 @@ describeLadderEquivalence({
     "expand",
     "opposites",
   ],
-  unreached: {
-    "naked-pairs":
-      "Never fires — and not only on finished boards. Instrumented inside the " +
-      "rung itself and run through *generation*: **2,896 calls across 36 board " +
-      "generations, zero firings**, so it is dead on the clue-stripping path too, " +
-      "which is the path that decides which puzzles exist. " +
-      "**Why that is not a port defect, argued rather than assumed**: `rome.c` " +
-      "is puzzles-unreleased and is not in the sibling clone, so the C could not " +
-      "be read — but Rome's differential is a *byte-match* against recorded C " +
-      "descs and it passes. A rung wrongly dead here while live in C would change " +
-      "this solver's verdict on intermediate clue sets and the generated descs " +
-      "would diverge. They do not. So either the rule is equally dead in C, or " +
-      "its firings never alter an outcome on this corpus. " +
-      "**One live consequence**: the rung's own comment claims its faithfully " +
-      "reproduced scan-order quirk (`k < c`, the union-by-size root rather than " +
-      "the minimum) 'changes which puzzles exist'. On this evidence it changes " +
-      "nothing, because the rung never reaches the loop that quirk is in. Retire " +
-      "this entry by building a board that fires it — or, if none exists, that " +
-      "comment is the thing to correct.",
-  },
+  // Empty, which is the goal. `naked-pairs` stood here until `add-rome-hint`
+  // (2026-09-20) found the two boards in `PAIR_BOARDS` above; the entry's own
+  // instruction was to retire it by building a board that fires it.
+  unreached: {},
   caps: [DIFF_EASY, DIFF_NORMAL, DIFF_TRICKY],
   cases,
   viaRunner: romeSolve,

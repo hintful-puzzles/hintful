@@ -46,11 +46,14 @@ import {
   type FiringTally,
   runDeductionFixpoint,
 } from "../../engine/deduction-fixpoint.ts";
+import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import {
   DIFF_EASY,
   DIFF_NORMAL,
   DIFF_TRICKY,
+  DIR_BITS,
+  dirValue,
   EMPTY,
   FD_TOGOAL,
   FE_BOUNDS,
@@ -64,6 +67,7 @@ import {
   FM_LEFT,
   FM_RIGHT,
   FM_UP,
+  legalDirs,
   type RomeBoard,
   type RomeParams,
   readDesc,
@@ -240,6 +244,107 @@ export function validateDesc(p: RomeParams, desc: string): string | null {
   return result;
 }
 
+// --- the recording projection -----------------------------------------------
+
+/**
+ * Why one recorded Rome deduction fired — the premise its sentence states and
+ * its evidence shades. Each arm carries what the *finder* knew, because only
+ * the finder knows which of several causes killed a candidate
+ * (docs/games/hints.md § "The premise must single out the conclusion").
+ *
+ * `dup` is the shared {@link import("../../engine/candidate-plan.ts").DupReason}
+ * spelling on purpose: `solverDoubles` is exactly the cull a candidate plan does
+ * for itself around every placement, so recording it under that name is what
+ * makes the shared machinery skip it as bookkeeping rather than teach it twice.
+ */
+export type RomeReason =
+  /** The square's notes have collapsed to one arrow. */
+  | { kind: "single" }
+  /** That arrow is already placed at `(px, py)`, in this square's region. */
+  | { kind: "dup"; n: number; px: number; py: number }
+  /** Pointing that way joins a chain of arrows that leads back here. `path` is
+   * that chain, from the square pointed at through to the square itself. */
+  | { kind: "loop"; path: readonly number[] }
+  /** In a four-square region, this is the only square left that can take the
+   * arrows in `only`, so it can be nothing else. `region` is the four squares. */
+  | { kind: "onlyHome"; only: readonly number[]; region: readonly number[] }
+  /** The only arrow left anywhere that can point into `group`, the squares
+   * already leading to the goal at `goal`. */
+  | { kind: "reach"; goal: number; group: readonly number[] }
+  /** `(px, py)` can only point along this axis, and both its neighbors on it
+   * share its region, so a neighbor pointing back would close a two-square
+   * loop. */
+  | { kind: "opposite"; px: number; py: number }
+  /** Two squares of this region hold the same two candidates between them, so
+   * those two arrows are spent. `pair` is the two squares and `values` the two
+   * arrows they share.
+   *
+   * `values` is carried rather than read back off the struck marks, because
+   * those are only the *live* ones: where the region's other squares had
+   * already lost one of the two, a sentence built from them would say a pair is
+   * one arrow (docs/games/hints.md § "The premise must single out the
+   * conclusion" — compute the reason where the elimination is computed). */
+  | {
+      kind: "pair";
+      pair: readonly number[];
+      values: readonly number[];
+      region: readonly number[];
+    };
+
+/** One recorded Rome deduction. */
+export interface RomeHintOp extends DeductionRecord {
+  reason: RomeReason;
+}
+
+/**
+ * The hint path's recorder. Every rung below takes one and is **oblivious to
+ * it otherwise**: nothing here changes what a rung strikes, only what it says
+ * about it, so the recording and the committing paths cannot diverge. That is
+ * worth stating because Rome's generator is solver-gated at every step, and a
+ * rung that behaved differently under a recorder would change every published
+ * desc; `rome.test.ts` asserts the two paths agree rather than trusting it.
+ *
+ * A *firing* is one premise acting once. {@link open} starts one, and every op
+ * of it carries that group, so the plan reads one deduction as one journey.
+ */
+class RomeRecording {
+  private g = 0;
+  readonly ops: RomeHintOp[] = [];
+
+  constructor(private readonly w: number) {}
+
+  /** Open a firing and return its group id. */
+  open(): number {
+    return ++this.g;
+  }
+
+  add(
+    kind: "place" | "elim",
+    cell: number,
+    bit: number,
+    reason: RomeReason,
+    group: number,
+  ): void {
+    this.ops.push({
+      kind,
+      x: cell % this.w,
+      y: (cell / this.w) | 0,
+      n: dirValue(bit),
+      reason,
+      group,
+    });
+  }
+}
+
+/** The bits of `mask`, as candidate values. */
+function valuesIn(mask: number): number[] {
+  const out: number[] = [];
+  for (const bit of DIR_BITS) {
+    if (mask & bit) out.push(dirValue(bit));
+  }
+  return out;
+}
+
 // --- deduction rules --------------------------------------------------------
 
 /** Ascending member lists per region canonical root. The region partition is
@@ -259,13 +364,15 @@ function regionMembers(board: RomeBoard): Map<number, number[]> {
 }
 
 /** EASY: a square with a single remaining candidate takes it. */
-function solverSingle(board: RomeBoard): number {
+function solverSingle(board: RomeBoard, rec: RomeRecording | null): number {
   const { grid, pencil } = board;
   let ret = 0;
   for (let i = 0; i < grid.length; i++) {
     if (grid[i] !== EMPTY) continue;
     const m = pencil[i];
     if (m === FM_UP || m === FM_DOWN || m === FM_LEFT || m === FM_RIGHT) {
+      // Each single stands on its own notes, so each is its own firing.
+      rec?.add("place", i, m, { kind: "single" }, rec.open());
       grid[i] = m;
       ret++;
     }
@@ -273,14 +380,49 @@ function solverSingle(board: RomeBoard): number {
   return ret;
 }
 
+/** The square of `i`'s region that already holds `bit`, for a `dup` reason's
+ * `(px, py)`. The rung fires off `sets`, which remembers only *that* the arrow
+ * is there; a sentence has to point at it. */
+function holderOf(board: RomeBoard, i: number, bit: number): number {
+  const { grid, regions } = board;
+  const c = regions.canonify(i);
+  for (let j = 0; j < grid.length; j++) {
+    if (j !== i && regions.canonify(j) === c && grid[j] & bit) return j;
+  }
+  throw new Error("rome: a duplicate arrow with no holder in its region");
+}
+
 /** EASY: an arrow already placed in a region is ruled out everywhere in it. */
-function solverDoubles(board: RomeBoard, sets: Int32Array): number {
-  const { pencil, regions } = board;
+function solverDoubles(
+  board: RomeBoard,
+  sets: Int32Array,
+  rec: RomeRecording | null,
+): number {
+  const { w, grid, pencil, regions } = board;
   let ret = 0;
   for (let i = 0; i < pencil.length; i++) {
     const prev = pencil[i];
     pencil[i] &= ~sets[regions.canonify(i)];
-    if (prev !== pencil[i]) ret++;
+    if (prev === pencil[i]) continue;
+    ret++;
+    // Recorded under the shared `dup` name, so the plan treats it as the cull
+    // it does around its own placements rather than as a technique to teach.
+    // A struck note on an already-filled square is the solver tidying its own
+    // working set, not a deduction, and is not recorded.
+    if (rec && grid[i] === EMPTY) {
+      const group = rec.open();
+      for (const n of valuesIn(prev & ~pencil[i])) {
+        const bit = DIR_BITS[n - 1];
+        const holder = holderOf(board, i, bit);
+        rec.add(
+          "elim",
+          i,
+          bit,
+          { kind: "dup", n, px: holder % w, py: (holder / w) | 0 },
+          group,
+        );
+      }
+    }
   }
   return ret;
 }
@@ -292,31 +434,68 @@ function solverDoubles(board: RomeBoard, sets: Int32Array): number {
  * border-illegal candidates, so the off-grid neighbor is never reached — but
  * upstream relies on that silently and reads out of bounds if it ever stops
  * holding. */
-function solverLoops(board: RomeBoard, dsf: Dsf): number {
-  const { w, h, pencil } = board;
+function solverLoops(board: RomeBoard, dsf: Dsf, rec: RomeRecording | null): number {
+  const { w, h, grid, pencil } = board;
   let ret = 0;
+  const strike = (i: number, bit: number, target: number): void => {
+    pencil[i] &= ~bit;
+    ret++;
+    // The self-strike on a square that already holds this arrow is the solver
+    // tidying its working set: the arrow is placed, so it closes no loop.
+    if (rec && grid[i] === EMPTY) {
+      rec.add(
+        "elim",
+        i,
+        bit,
+        { kind: "loop", path: arrowPath(board, target, i) },
+        rec.open(),
+      );
+    }
+  };
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
-      if (pencil[i] & FM_UP && y > 0 && dsf.equivalent(i, i - w)) {
-        pencil[i] &= ~FM_UP;
-        ret++;
-      }
-      if (pencil[i] & FM_DOWN && y < h - 1 && dsf.equivalent(i, i + w)) {
-        pencil[i] &= ~FM_DOWN;
-        ret++;
-      }
-      if (pencil[i] & FM_LEFT && x > 0 && dsf.equivalent(i, i - 1)) {
-        pencil[i] &= ~FM_LEFT;
-        ret++;
-      }
-      if (pencil[i] & FM_RIGHT && x < w - 1 && dsf.equivalent(i, i + 1)) {
-        pencil[i] &= ~FM_RIGHT;
-        ret++;
-      }
+      if (pencil[i] & FM_UP && y > 0 && dsf.equivalent(i, i - w))
+        strike(i, FM_UP, i - w);
+      if (pencil[i] & FM_DOWN && y < h - 1 && dsf.equivalent(i, i + w))
+        strike(i, FM_DOWN, i + w);
+      if (pencil[i] & FM_LEFT && x > 0 && dsf.equivalent(i, i - 1))
+        strike(i, FM_LEFT, i - 1);
+      if (pencil[i] & FM_RIGHT && x < w - 1 && dsf.equivalent(i, i + 1))
+        strike(i, FM_RIGHT, i + 1);
     }
   }
   return ret;
+}
+
+/**
+ * The chain of arrows from `from` to `to`, inclusive of both — the walk a loop
+ * sentence claims exists, computed rather than assumed (AGENTS.md § "Hint
+ * quality bar", rule 5).
+ *
+ * It always exists where {@link solverLoops} calls it, and the argument is the
+ * one {@link markLoops} makes: `from` and `to` share an arrow component, every
+ * square has at most one outgoing arrow, and `to` is empty and so has none — so
+ * the component is a tree whose every edge points towards its one arrow-less
+ * square, which is `to`. Following arrows from `from` therefore arrives there.
+ * The throw is the check on that argument, not decoration: it is what would
+ * fire if a caller ever passed a pair the premise does not hold for.
+ */
+function arrowPath(board: RomeBoard, from: number, to: number): number[] {
+  const { w, grid } = board;
+  const path: number[] = [];
+  let at = from;
+  for (let steps = 0; steps <= grid.length; steps++) {
+    path.push(at);
+    if (at === to) return path;
+    const c = grid[at];
+    if (c & FM_UP) at -= w;
+    else if (c & FM_DOWN) at += w;
+    else if (c & FM_LEFT) at -= 1;
+    else if (c & FM_RIGHT) at += 1;
+    else break;
+  }
+  throw new Error("rome: no arrow chain between two squares of one component");
 }
 
 /** NORMAL: in a four-square region — which must hold all four arrows — a
@@ -325,8 +504,10 @@ function find4Position(
   board: RomeBoard,
   singles: Int32Array,
   doubles: Int32Array,
+  members: Map<number, number[]>,
+  rec: RomeRecording | null,
 ): number {
-  const { pencil, regions } = board;
+  const { grid, pencil, regions } = board;
   const s = pencil.length;
   singles.fill(0);
   doubles.fill(0);
@@ -344,15 +525,33 @@ function find4Position(
     const unique = singles[c] ^ doubles[c];
     const prev = pencil[i];
     if (pencil[i] & unique) pencil[i] &= unique;
-    if (prev !== pencil[i]) ret++;
+    if (prev === pencil[i]) continue;
+    ret++;
+    // One square kept down to the arrows only it can take: one premise, so one
+    // firing however many notes it clears.
+    if (rec && grid[i] === EMPTY) {
+      const group = rec.open();
+      const reason: RomeReason = {
+        kind: "onlyHome",
+        only: valuesIn(prev & unique),
+        region: members.get(c) as number[],
+      };
+      for (const n of valuesIn(prev & ~pencil[i])) {
+        rec.add("elim", i, DIR_BITS[n - 1], reason, group);
+      }
+    }
   }
   return ret;
 }
 
 /** NORMAL: two squares of a region sharing the same pair of candidates use
  * both of them up, so the pair is ruled out of the region's other squares. */
-function nakedPairs(board: RomeBoard, members: Map<number, number[]>): number {
-  const { pencil, regions } = board;
+function nakedPairs(
+  board: RomeBoard,
+  members: Map<number, number[]>,
+  rec: RomeRecording | null,
+): number {
+  const { grid, pencil, regions } = board;
   const s = pencil.length;
   let ret = 0;
 
@@ -374,12 +573,29 @@ function nakedPairs(board: RomeBoard, members: Map<number, number[]>): number {
       if (j <= i || pencil[j] !== pencil[i]) continue;
       // Upstream scans `k` from the region's canonical root — the union-by-size
       // root, NOT its minimum — so a member below that root is genuinely
-      // skipped. Reproduced verbatim: it changes which puzzles exist.
+      // skipped. Reproduced verbatim because the generator is solver-gated at
+      // every step, so any deduction this rung does or does not make is a
+      // deduction the published descs were chosen against. `rome-ladder.test.ts`
+      // pins two boards that reach this loop; before them the whole rung was
+      // uncertified and its `unreached` entry doubted the sentence above.
+      const reason: RomeReason = {
+        kind: "pair",
+        pair: [i, j],
+        values: valuesIn(m),
+        region: list,
+      };
+      const group = rec?.open() ?? 0;
       for (const k of list) {
         if (k < c || k === i || k === j) continue;
         const prev = pencil[k];
         pencil[k] &= ~pencil[i];
-        if (pencil[k] !== prev) ret++;
+        if (pencil[k] === prev) continue;
+        ret++;
+        if (rec && grid[k] === EMPTY) {
+          for (const n of valuesIn(prev & ~pencil[k])) {
+            rec.add("elim", k, DIR_BITS[n - 1], reason, group);
+          }
+        }
       }
     }
   }
@@ -395,10 +611,11 @@ function nakedPairs(board: RomeBoard, members: Map<number, number[]>): number {
  * {@link solverLoops}, which runs to exhaustion first — so every candidate
  * this sees genuinely grows the component.)
  */
-function solverExpand(board: RomeBoard, dsf: Dsf): number {
+function solverExpand(board: RomeBoard, dsf: Dsf, rec: RomeRecording | null): number {
   const { w, h, grid, pencil } = board;
   let dir = EMPTY;
   let idx = -1;
+  let goal = -1;
 
   for (let i = 0; i < grid.length; i++) {
     if (!(grid[i] & FM_GOAL)) continue;
@@ -413,31 +630,57 @@ function solverExpand(board: RomeBoard, dsf: Dsf): number {
           if (dir !== EMPTY) return 0; // more than one option: nothing forced
           dir = FM_RIGHT;
           idx = i1;
+          goal = i;
         }
         if (x > 0 && dsf.canonify(i1 - 1) === c && pencil[i1] & FM_LEFT) {
           if (dir !== EMPTY) return 0;
           dir = FM_LEFT;
           idx = i1;
+          goal = i;
         }
         if (y < h - 1 && dsf.canonify(i1 + w) === c && pencil[i1] & FM_DOWN) {
           if (dir !== EMPTY) return 0;
           dir = FM_DOWN;
           idx = i1;
+          goal = i;
         }
         if (y > 0 && dsf.canonify(i1 - w) === c && pencil[i1] & FM_UP) {
           if (dir !== EMPTY) return 0;
           dir = FM_UP;
           idx = i1;
+          goal = i;
         }
       }
     }
   }
 
   if (dir !== EMPTY) {
+    const prev = pencil[idx];
     pencil[idx] = dir;
+    // One premise (only this arrow can still point into that goal's group), so
+    // one firing however many of the square's other notes it clears.
+    if (rec && grid[idx] === EMPTY) {
+      const group = rec.open();
+      const reason: RomeReason = {
+        kind: "reach",
+        goal,
+        group: componentOf(dsf, grid.length, goal),
+      };
+      for (const n of valuesIn(prev & ~dir)) {
+        rec.add("elim", idx, DIR_BITS[n - 1], reason, group);
+      }
+    }
     return 1;
   }
   return 0;
+}
+
+/** The squares whose arrows already lead to `goal` — the group a `reach`
+ * sentence names and its evidence shades. */
+function componentOf(dsf: Dsf, cells: number, goal: number): number[] {
+  const out: number[] = [];
+  for (let i = 0; i < cells; i++) if (dsf.equivalent(i, goal)) out.push(i);
+  return out;
 }
 
 /** TRICKY: a square whose only candidates are up/down cannot be pointed at by
@@ -448,40 +691,33 @@ function solverExpand(board: RomeBoard, dsf: Dsf): number {
  * The neighbors are always in range: a square on the top row has had `FM_UP`
  * cleared, so its candidate set can never equal exactly `FM_UP|FM_DOWN`, and
  * symmetrically on the other three edges. */
-function solverOpposites(board: RomeBoard): number {
-  const { w, h, pencil, regions } = board;
+function solverOpposites(board: RomeBoard, rec: RomeRecording | null): number {
+  const { w, h, grid, pencil, regions } = board;
   let ret = 0;
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i1 = y * w + x;
+      const twoWay =
+        pencil[i1] === (FM_UP | FM_DOWN) || pencil[i1] === (FM_LEFT | FM_RIGHT);
+      if (!twoWay) continue;
+      // Both neighbors on the axis are ruled out by the same premise about this
+      // square, so the two strikes are one firing.
+      const reason: RomeReason = { kind: "opposite", px: x, py: y };
+      const group = rec?.open() ?? 0;
+      const strike = (j: number, bit: number): void => {
+        if (!(pencil[j] & bit) || regions.canonify(j) !== regions.canonify(i1)) return;
+        pencil[j] &= ~bit;
+        ret++;
+        if (rec && grid[j] === EMPTY) rec.add("elim", j, bit, reason, group);
+      };
 
       if (pencil[i1] === (FM_UP | FM_DOWN)) {
-        const c = regions.canonify(i1);
-        const above = (y - 1) * w + x;
-        if (pencil[above] & FM_DOWN && regions.canonify(above) === c) {
-          pencil[above] &= ~FM_DOWN;
-          ret++;
-        }
-        const below = (y + 1) * w + x;
-        if (pencil[below] & FM_UP && regions.canonify(below) === c) {
-          pencil[below] &= ~FM_UP;
-          ret++;
-        }
-      }
-
-      if (pencil[i1] === (FM_LEFT | FM_RIGHT)) {
-        const c = regions.canonify(i1);
-        const left = i1 - 1;
-        if (pencil[left] & FM_RIGHT && regions.canonify(left) === c) {
-          pencil[left] &= ~FM_RIGHT;
-          ret++;
-        }
-        const right = i1 + 1;
-        if (pencil[right] & FM_LEFT && regions.canonify(right) === c) {
-          pencil[right] &= ~FM_LEFT;
-          ret++;
-        }
+        strike((y - 1) * w + x, FM_DOWN);
+        strike((y + 1) * w + x, FM_UP);
+      } else {
+        strike(i1 - 1, FM_RIGHT);
+        strike(i1 + 1, FM_LEFT);
       }
     }
   }
@@ -495,15 +731,8 @@ function solverOpposites(board: RomeBoard): number {
 function initCandidates(board: RomeBoard): void {
   const { w, h, grid, pencil } = board;
   for (let i = 0; i < w * h; i++) {
-    pencil[i] = grid[i] === EMPTY ? FM_ARROWMASK : grid[i] & FM_ARROWMASK;
-  }
-  for (let x = 0; x < w; x++) {
-    pencil[x] &= ~FM_UP;
-    pencil[(h - 1) * w + x] &= ~FM_DOWN;
-  }
-  for (let y = 0; y < h; y++) {
-    pencil[y * w] &= ~FM_LEFT;
-    pencil[y * w + (w - 1)] &= ~FM_RIGHT;
+    pencil[i] =
+      grid[i] === EMPTY ? legalDirs(i % w, (i / w) | 0, w, h) : grid[i] & FM_ARROWMASK;
   }
 }
 
@@ -520,6 +749,7 @@ export function romeSolve(
   board: RomeBoard,
   maxdiff: number,
   firings?: FiringTally,
+  rec: RomeRecording | null = null,
 ): number {
   const s = board.w * board.h;
   const scratch = newValidateScratch(s);
@@ -534,17 +764,21 @@ export function romeSolve(
   let iteration = 0;
 
   const ladder: DeductionTechnique[] = [
-    { id: "single", tier: DIFF_EASY, run: () => solverSingle(board) },
-    { id: "doubles", tier: DIFF_EASY, run: () => solverDoubles(board, sets) },
-    { id: "loops", tier: DIFF_EASY, run: () => solverLoops(board, dsf) },
+    { id: "single", tier: DIFF_EASY, run: () => solverSingle(board, rec) },
+    { id: "doubles", tier: DIFF_EASY, run: () => solverDoubles(board, sets, rec) },
+    { id: "loops", tier: DIFF_EASY, run: () => solverLoops(board, dsf, rec) },
     {
       id: "find-4-position",
       tier: DIFF_NORMAL,
-      run: () => find4Position(board, singles, doubles),
+      run: () => find4Position(board, singles, doubles, members, rec),
     },
-    { id: "naked-pairs", tier: DIFF_NORMAL, run: () => nakedPairs(board, members) },
-    { id: "expand", tier: DIFF_NORMAL, run: () => solverExpand(board, dsf) },
-    { id: "opposites", tier: DIFF_TRICKY, run: () => solverOpposites(board) },
+    {
+      id: "naked-pairs",
+      tier: DIFF_NORMAL,
+      run: () => nakedPairs(board, members, rec),
+    },
+    { id: "expand", tier: DIFF_NORMAL, run: () => solverExpand(board, dsf, rec) },
+    { id: "opposites", tier: DIFF_TRICKY, run: () => solverOpposites(board, rec) },
   ];
 
   runDeductionFixpoint({
@@ -568,6 +802,20 @@ export function romeSolve(
   });
 
   return status;
+}
+
+/**
+ * Every deduction the solver makes from `board`, in solver order, each tagged
+ * with the premise that forced it — the raw script a hint narrates.
+ *
+ * `board` is solved in place, so callers pass a scratch board (the hint plan
+ * rebuilds one from its working grid on every recompute). The generator never
+ * reaches here.
+ */
+export function recordRomeDeductions(board: RomeBoard, maxdiff: number): RomeHintOp[] {
+  const rec = new RomeRecording(board.w);
+  romeSolve(board, maxdiff, undefined, rec);
+  return rec.ops;
 }
 
 /**
@@ -595,19 +843,19 @@ export function romeSolveLegacy(board: RomeBoard, maxdiff: number): number {
     status = validateGame(board, false, scratch);
     if (status !== STATUS_INCOMPLETE) break;
 
-    if (solverSingle(board)) continue;
-    if (solverDoubles(board, sets)) continue;
-    if (solverLoops(board, dsf)) continue;
+    if (solverSingle(board, null)) continue;
+    if (solverDoubles(board, sets, null)) continue;
+    if (solverLoops(board, dsf, null)) continue;
 
     if (maxdiff < DIFF_NORMAL) break;
 
-    if (find4Position(board, singles, doubles)) continue;
-    if (nakedPairs(board, members)) continue;
-    if (solverExpand(board, dsf)) continue;
+    if (find4Position(board, singles, doubles, members, null)) continue;
+    if (nakedPairs(board, members, null)) continue;
+    if (solverExpand(board, dsf, null)) continue;
 
     if (maxdiff < DIFF_TRICKY) break;
 
-    if (solverOpposites(board)) continue;
+    if (solverOpposites(board, null)) continue;
 
     break;
   }

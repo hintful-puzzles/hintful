@@ -1124,6 +1124,8 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "cache",
+      "hint",
+      "marks",
       "mistakes",
       "started",
       "tileSize",
@@ -1131,13 +1133,17 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "rome",
     "members": [
       "animLength",
+      "canMarkAll",
       "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
+      "hint",
+      "hintKeepTrack",
       "paramConfig",
       "preferredTileSize",
       "prefs",
+      "refreshHintStep",
       "solve",
     ],
     "ui": [

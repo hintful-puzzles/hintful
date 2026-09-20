@@ -228,6 +228,23 @@ work — and several here silently did nothing until this step was applied.
 can exclude everything — and every downstream assertion then passes over nothing
 and reports health. Count the inputs and assert the count.
 
+**And a census that finds *zero* owes a power argument, not only a count.** The
+vacuity guard above asks "did I look at anything?"; this asks "did I look at
+*enough*?", and a census passes the first while failing the second in perfect
+silence. Rome's `naked-pairs` rung was recorded as dead on strong-looking
+evidence — instrumented inside the rung and run through generation, **2,896
+calls across 36 boards, zero firings** — and the measurement was honest and
+reproducible. It fires on about one board in sixty, which 36 boards will miss
+better than a third of the time. The conclusion ("dead, so do not narrate it")
+was doing work the sample could not support, and it had stood as a recorded
+shortfall in a ladder census. So when a sweep reports none, say how many it
+would have taken to see one, and **widen until a positive appears or the
+absence is argued from the code** rather than from the silence. The
+corresponding fix is cheap: once a firing board is found, pin it — and pin it
+as the *input the rung consumes* (Rome pins descs), never as a seed, because a
+seed reaches a rung only through a generator that is free to stop producing it
+while the census still reports health.
+
 **Verify a bulk edit by shape, not by a green suite.** Assert that every changed
 line in the whole diff is the one intended kind of change, then read the
 exceptions. This is what catches an import-rewriter that also rewrote prose in a

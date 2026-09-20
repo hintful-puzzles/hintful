@@ -27,10 +27,12 @@
  * carrying them.
  */
 
+import type { Mark, NoteEncoding } from "../../engine/candidate-hint.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import type { CellRegion } from "../../engine/latin-hint.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -70,6 +72,139 @@ export const FD_KBMASK = FD_CURSOR | FD_PLACE | FD_PENCIL;
 
 /** One of the four arrow bits. */
 export type RomeDir = typeof FM_UP | typeof FM_DOWN | typeof FM_LEFT | typeof FM_RIGHT;
+
+/**
+ * The four arrows as the dense candidate values `1..4`, in upstream's bit
+ * order.
+ *
+ * Rome's notes *are* bits already, so no bit-packing is needed — but the shared
+ * candidate machinery enumerates a cell's candidates as `for (v = 1; v <=
+ * values; v++)`, which needs a dense ordinal, and a `Mark` carries `n` rather
+ * than a mask. So a direction crosses the framework boundary as its index here
+ * and comes back through {@link dirBit}.
+ */
+export const DIR_BITS: readonly RomeDir[] = [FM_UP, FM_DOWN, FM_LEFT, FM_RIGHT];
+
+/** How many arrow candidates a square may hold — the framework's `values`. */
+export const DIR_COUNT = DIR_BITS.length;
+
+/**
+ * The placed-value a square that is decided but holds no arrow carries on a
+ * candidate plan's working grid: a goal. `dirBit` maps it to no candidate bit,
+ * which is the truth — a goal rules no arrow out of its neighbors. Goals sit in
+ * one-square regions (`validateDesc` rejects any other placement), so nothing
+ * ever asks it to.
+ */
+const GOAL_VALUE = DIR_COUNT + 1;
+
+/** The arrow bit for candidate value `n`, or `0` for a value that is not an
+ * arrow ({@link GOAL_VALUE}). */
+export function dirBit(n: number): number {
+  return DIR_BITS[n - 1] ?? 0;
+}
+
+/** The candidate value of one arrow bit; `0` for anything else. */
+export function dirValue(bit: number): number {
+  return DIR_BITS.indexOf(bit as RomeDir) + 1;
+}
+
+/**
+ * Rome's note encoding for the shared candidate machinery: the arrow bits
+ * themselves, four of them, and a per-square full set.
+ *
+ * **Rome's notes are already bits, so nothing is packed or unpacked here** —
+ * `bit` is a lookup, not an encoding. What the shared machinery genuinely needs
+ * is the *dense ordinal* its `for (v = 1; v <= values; v++)` scans and its
+ * `Mark.n` carries; `NoteEncoding` is the one place a game says how the two
+ * relate, and for a game whose values are bits that is near-identity.
+ */
+export function romeNotes(w: number, h: number): NoteEncoding {
+  return {
+    bit: dirBit,
+    values: DIR_COUNT,
+    all: (i) => legalDirs(i % w, (i / w) | 0, w, h),
+  };
+}
+
+/**
+ * The board as the shared candidate machinery reads a grid: one dense value per
+ * square, `0` for undecided.
+ *
+ * Rome's own cells are packed bit-fields — an arrow OR'd with `FM_FIXED` and
+ * whatever `FE_*` / `FD_*` bits the last validity check wrote — so they cannot
+ * be read as values directly, and `0` is the only value the two spellings share.
+ *
+ * *An undecided square really is exactly `0`*, which is what makes that shared
+ * `0` enough. Every `FE_*` bit requires an arrow to be wrong about, and
+ * `FD_TOGOAL` cannot land on a blank square: a goal holds no arrow and neither
+ * does a blank one, an arrow component is a forest, and a tree of `n` squares
+ * spends `n - 1` arrows, so at most one of its squares can be without one.
+ */
+export function placedValues(board: RomeBoard): Uint8Array {
+  const { grid } = board;
+  const out = new Uint8Array(grid.length);
+  for (let i = 0; i < grid.length; i++) {
+    if (grid[i] === EMPTY) continue;
+    out[i] = dirValue(grid[i] & FM_ARROWMASK) || GOAL_VALUE;
+  }
+  return out;
+}
+
+/**
+ * A square's one uniqueness region, as the shared candidate machinery reads it:
+ * the outlined area it belongs to.
+ *
+ * `holdsEvery` is `size === 4`, and that is not a coincidence to be argued —
+ * it is `find4Position`'s own guard (`if (regions.size(i) !== 4) continue`),
+ * arrived at independently. A region of four squares must hold all four arrows,
+ * so an arrow with one home left in it is forced there; a smaller region only
+ * forbids repeats, which is exactly the distinction `CellRegion.holdsEvery`
+ * exists to draw.
+ *
+ * Cached per board, because a plan asks for a square's region on every note
+ * cull and the partition never moves while a board is being solved.
+ */
+export function romeRegions(board: RomeBoard): (x: number, y: number) => CellRegion[] {
+  const { w, regions } = board;
+  const byRoot = new Map<number, number[]>();
+  for (let i = 0; i < board.grid.length; i++) {
+    const c = regions.canonify(i);
+    const list = byRoot.get(c);
+    if (list) list.push(i);
+    else byRoot.set(c, [i]);
+  }
+  const cache = new Map<number, CellRegion[]>();
+  return (x, y) => {
+    const c = regions.canonify(y * w + x);
+    let region = cache.get(c);
+    if (!region) {
+      const cells = byRoot.get(c) as number[];
+      region = [{ cells, holdsEvery: cells.length === 4 }];
+      cache.set(c, region);
+    }
+    return region;
+  };
+}
+
+/**
+ * The arrows square `(x, y)` could legally hold: all four, less any that would
+ * point off the grid.
+ *
+ * **Rome's full candidate set is per-square, not a board-wide mask** — the one
+ * place its notes differ in shape from a Latin game's, where every cell's
+ * "everything" is the same `1..n`. The solver seeds its candidates with this,
+ * the Mark-all press fills with it, and the hint's populate step fills with it;
+ * all three have to agree, or the hint teaches a strike on a note the player's
+ * board never had.
+ */
+export function legalDirs(x: number, y: number, w: number, h: number): number {
+  let mask = FM_ARROWMASK;
+  if (y === 0) mask &= ~FM_UP;
+  if (y === h - 1) mask &= ~FM_DOWN;
+  if (x === 0) mask &= ~FM_LEFT;
+  if (x === w - 1) mask &= ~FM_RIGHT;
+  return mask;
+}
 
 // --- difficulty -------------------------------------------------------------
 
@@ -125,10 +260,17 @@ export interface RomeState extends RomeBoard {
  * A move is a *place* (set or clear an arrow), a *pencil* (toggle one mark, or
  * clear the square's marks), or a *solve* (the full-grid solution): upstream's
  * `"R x,y,c"` / `"P x,y,c"` / `"S<letters>"`.
+ *
+ * `pencilAll` and `pencilStrike` are this fork's, for the Mark-all press and
+ * the hint: a `pencil` toggle is one square and is not idempotent, so neither a
+ * bulk fill nor a firing that rules out several marks at once can be built from
+ * it (docs/games/hints.md § "Persist, populate, and the moves").
  */
 export type RomeMove =
   | { kind: "place"; x: number; y: number; dir: RomeDir | null }
   | { kind: "pencil"; x: number; y: number; dir: RomeDir | null }
+  | { kind: "pencilAll" }
+  | { kind: "pencilStrike"; marks: readonly Mark[] }
   | { kind: "solve"; arrows: ReadonlyArray<RomeDir | null> };
 
 // --- ui ---------------------------------------------------------------------

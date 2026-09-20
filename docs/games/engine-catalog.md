@@ -450,6 +450,16 @@ move dialect (`CandidateMoveAdapter`) and the generic
 `keepCandidateHintTrack`/`refreshCandidateHintStep`. A board scan reads
 `grid.length`, so a board need not be square; `w` is only the row stride.
 
+Two members exist for a game whose notes are not the Latin family's, and both
+default to what a Latin game would have done. `NoteEncoding.all(i)` is the full
+note set of a *blank* cell — per cell, because Rome's is bounded by the grid
+edge and Seismic's by its region's size — and it must agree with the game's own
+fill-all move, or the plan teaches strikes on notes the player never had.
+`CandidateMoveAdapter.populate()` builds that fill-all in the game's own move
+shape, which a `kind`-keyed game needs because `read` had always been asked
+through the dialect while three helpers wrote `{ type: "pencilAll" }` for
+themselves.
+
 ### `candidate-plan.ts` — the candidate-elimination plan walk
 
 `runCandidatePlan` is a pencil-notes game's whole `buildSteps` walk: the naked

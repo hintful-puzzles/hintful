@@ -387,6 +387,7 @@ class CandidateWalk<
         w,
         steps,
         notes.populate,
+        { enc, adapter: dialect },
       );
       this.setUp = populateThenClean(pop, () =>
         emitObviousCleanStep(

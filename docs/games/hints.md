@@ -3673,6 +3673,82 @@ What else carried over, and what did not:
   "hint() leaves the state unchanged" failed. The partition is compressed once
   when it is built, after which every read is a read.
 
+### Candidates that are not values (Rome)
+
+Rome's candidates are the four **arrow directions**, its notes are direction
+*bits*, and its uniqueness regions come from a `Dsf` rather than from `y*w+x`
+arithmetic. It was taken on to find where the candidate machinery is secretly
+numeric. Most of it is not, and the parts that were are now fixed rather than
+worked around:
+
+- **A dsf region is a `CellRegion`, and `holdsEvery` is the whole translation.**
+  `romeRegions` is a member list per canonical root plus `holdsEvery:
+  cells.length === 4`, which is *`find4Position`'s own guard*, written years
+  earlier and arrived at independently: a four-square area must hold all four
+  arrows, so an arrow with one home left is forced there, and a smaller area
+  only forbids repeats. When a game's own solver already tests the predicate an
+  engine flag names, the adapter is a translation, not a design.
+- **A region's name belongs to the game, and that question is settled.**
+  `derive-solos-region-names` left `CellRegion.name` open for want of a second
+  game supplying its own `regionsOf`; Rome is it, and Rome does not want one.
+  Its sentences say "this area" because it has exactly one kind of region and
+  there is nothing to tell apart, so an engine `name` would carry the constant
+  `"area"` on every region Rome ever builds. Solo needs a name because it has
+  five kinds and its sentences must say *which*. **A region's name is a fact
+  about a game's narration, not about the region** — so it lives with whichever
+  game has several to distinguish, as `SoloCellRegion.name` does.
+- **`NoteEncoding` fits a game whose values *are* bits** — `bit` becomes a
+  lookup and `values` is 4. What the shared machinery still needs from such a
+  game is the **dense ordinal** its `for (v = 1; v <= values; v++)` scans and its
+  `Mark.n` carries, and saying how the two relate is what `NoteEncoding` is for.
+  Do **not** try to use the bits as values: `nakedSingles` would test
+  `pencil & 12` on its way past.
+- **What was missing is the *full* note set, and it is per cell.**
+  `lazyPopulate` filled `(1 << (w+1)) - 2` regardless of `enc`, because every
+  game on the plan until Rome had one board-wide answer. Rome's is bounded by
+  the grid edge (a top-row square can never point up) and Seismic's by its
+  region's size, so `NoteEncoding.all(i)` now says it. **The game's own
+  `pencilAll` move is the authority** — a populate that fills more than it
+  teaches strikes on notes the player's Mark-all never made, and the hint's
+  first job is to be reproducible by hand.
+- **Three helpers spelled the populate move for themselves.** `lazyPopulate`,
+  `adaptiveMarkAll` and the plan's default setup all wrote
+  `{ type: "pencilAll" }` literally, while `obviousCleanStep` had always *read*
+  the same move through the dialect. `CandidateMoveAdapter.populate` is the
+  writing half, and a `kind`-keyed game is what needed it.
+- **Graph reachability is a premise, not a rung shape.** Rome's `loops`,
+  `expand` and `find-4-position` are "dsf reasoning" but all three write to
+  `pencil`, so all three are ordinary candidate eliminations whose *reason*
+  happens to be a fact about a walk. `plan.rungs` is unused in Rome. Before
+  reaching for the own-rungs slot, ask what the rung **writes**: the slot is for
+  a move the canonical shapes have no room for (Salad's markers), not for a
+  deduction that is merely unusual.
+- **A walk a sentence claims is a walk the code takes.** "Following the arrows
+  from the square above leads back here" is a claim, so `arrowPath` performs it
+  and throws if it does not arrive, with the termination argument beside it (an
+  arrow component is a forest, so a tree of `n` squares spends `n − 1` arrows
+  and at most one of them can be arrow-less). The same argument is what lets a
+  packed bit-field grid be projected onto the shared "`0` means undecided"
+  convention: an undecided Rome square is *exactly* `0`, because every `FE_*`
+  bit needs an arrow to be wrong about and `FD_TOGOAL` cannot reach a blank.
+- **A direction wants a word and a relation; it does not want a glyph.**
+  Measured against the arms rather than guessed: all of them want "up", four
+  additionally want the relation ("the square above", "point straight back"),
+  and none is improved by "↑", which is smaller in prose than on the board.
+  `LatinVocab` is **not** widened — and could not have helped anyway, because
+  Rome's generic-looking arms name an *area* where `narrateLatinReason` names a
+  row and a column, which is the same reason Solo and Towers write their own.
+
+**The precondition was a decision about what a mark means.** Rome's marks went
+unchecked by `findMistakes` on the strength of upstream's "can be used for any
+purpose", which leaves a note-taking game with no note semantics — and a
+candidate hint cannot read a note it cannot trust (`nakedSingles` would place
+from it). Adding Mark-all and a hint settles the question the same way the rest
+of the collection does: **a mark claims the arrow is still possible**, so a
+square whose marks rule out its answer is a `kind: "note"` mistake. If you are
+porting a note-taking game whose notes have no stated meaning, decide this
+*before* the hint, not during it.
+
 ### A populate step never resets notes
 
 **A populate step must never *reset* the player's notes — and the shared

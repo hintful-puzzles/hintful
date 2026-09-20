@@ -14,6 +14,13 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import {
+  adaptiveMarkAll,
+  anyEmptyLacksNotes,
+  candidateHint,
+  type Mark,
+  obviousCandidateMarks,
+} from "../../engine/candidate-hint.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
@@ -44,6 +51,12 @@ import { registerGame } from "../../engine/registry.ts";
 import type { ConfigValues, Point } from "../../engine/types.ts";
 import { newRomeDesc } from "./generator.ts";
 import {
+  buildSteps,
+  hintKeepTrack,
+  refreshHintStep,
+  romeCandidateMoves,
+} from "./hint.ts";
+import {
   BORDER,
   colors,
   computeSize,
@@ -60,6 +73,7 @@ import {
   DIFFCOUNT,
   decodeParams,
   defaultParams,
+  dirBit,
   EMPTY,
   encodeParams,
   FE_BOUNDS,
@@ -74,10 +88,12 @@ import {
   KEYMODE_MOVE,
   KEYMODE_PENCIL,
   KEYMODE_PLACE,
+  legalDirs,
   MOUSEMODE_OFF,
   MOUSEMODE_PENCIL,
   MOUSEMODE_PLACE,
   paramConfig,
+  placedValues,
   presets,
   type RomeDir,
   type RomeMove,
@@ -85,6 +101,8 @@ import {
   type RomeState,
   type RomeUi,
   readDesc,
+  romeNotes,
+  romeRegions,
   STATUS_COMPLETE,
   STATUS_INVALID,
   status,
@@ -94,11 +112,12 @@ import {
 /**
  * A square Check & Save flags. `bounds` / `double` / `loop` are the rule
  * violations the board already shows live; `wrong` is an arrow that breaks no
- * rule *yet* but contradicts the puzzle's unique solution.
+ * rule *yet* but contradicts the puzzle's unique solution; `note` is an empty
+ * square whose marks have crossed out the arrow the solution wants there.
  */
 export interface RomeMistake {
   index: number;
-  kind: "bounds" | "double" | "loop" | "wrong";
+  kind: "bounds" | "double" | "loop" | "wrong" | "note";
 }
 
 // --- setup ------------------------------------------------------------------
@@ -160,6 +179,27 @@ function interpretMove(
   const here = grid[y * w + x];
 
   if (ui.mmode === MOUSEMODE_OFF) {
+    // 'M' / 'm': fill every blank square's marks, then — on an already-filled
+    // board — strike the arrows each square's own outlined region already
+    // holds. That second press is `solverDoubles` by hand, which is why the
+    // hint's opening clean and this press agree without either citing the
+    // other: both read `romeRegions`.
+    if (button === 77 || button === 109) {
+      const values = placedValues(state);
+      return adaptiveMarkAll<RomeMove, Mark>(
+        anyEmptyLacksNotes(values, state.pencil),
+        () =>
+          obviousCandidateMarks(
+            values,
+            state.pencil,
+            w,
+            romeRegions(state),
+            romeNotes(w, h),
+          ),
+        romeCandidateMoves,
+      );
+    }
+
     if (isCursorMove(button) && ui.kmode === KEYMODE_MOVE) {
       moveCursor(ui.cursor, button, w, h);
       return UI_UPDATE;
@@ -293,6 +333,26 @@ function executeMove(state: RomeState, move: RomeMove): RomeState {
     next.cheated = next.completed;
     return next;
   }
+  // ## THE ADDITIVE RULE, stated once
+  //
+  // `engine/candidate-hint.ts` § "THE ADDITIVE RULE, stated once". A square the
+  // player has already narrowed keeps its marks; only a note-less empty square
+  // is filled. What "every candidate" means is Rome's own, and it is per
+  // square rather than a board-wide mask: see `legalDirs`.
+  if (move.kind === "pencilAll") {
+    for (let i = 0; i < grid.length; i++) {
+      if (grid[i] === EMPTY && pencil[i] === EMPTY) {
+        pencil[i] = legalDirs(i % w, (i / w) | 0, w, h);
+      }
+    }
+    return next;
+  }
+
+  if (move.kind === "pencilStrike") {
+    for (const m of move.marks) pencil[m.y * w + m.x] &= ~dirBit(m.n);
+    return next;
+  }
+
   // Before the bounds check below, not inside it: a move with no coordinates
   // makes every one of those comparisons false rather than true.
   if (move.kind !== "place" && move.kind !== "pencil") {
@@ -346,9 +406,15 @@ function solve(orig: RomeState): SolveResult<RomeMove> {
  * re-solves from the fixed clues and flags every placed arrow the solution
  * disagrees with.
  *
- * Pencil marks are deliberately **not** checked: Rome's own documentation says
- * they "can be used for any purpose" — a player may be marking the arrows they
- * have *ruled out* — so no note can be called wrong.
+ * **A mark is a claim that the arrow is still possible**, so a square whose
+ * marks have crossed out the answer is wrong in the same way a wrong arrow is,
+ * and is flagged the same way (docs/games/mechanics.md § "Pencil marks: the
+ * full note-taking UX"; every other note-taking game in the collection does
+ * this). Rome's marks went unchecked until `add-rome-hint`, on the strength of
+ * upstream's "can be used for any purpose" — but a Mark-all press that fills
+ * every legal arrow, and a hint that teaches the player to cross them off, both
+ * only make sense under the possibility reading, and the solver has always read
+ * the same array that way.
  */
 function findMistakes(state: RomeState): readonly RomeMistake[] {
   const out: RomeMistake[] = [];
@@ -366,10 +432,17 @@ function findMistakes(state: RomeState): readonly RomeMistake[] {
     for (let i = 0; i < grid.length; i++) {
       // A clue is never wrong, and a rule violation is already reported.
       if (grid[i] & (FM_FIXED | FE_BOUNDS | FE_DOUBLE | FE_LOOP)) continue;
+      const answer = solution[i] & FM_ARROWMASK;
       const arrow = grid[i] & FM_ARROWMASK;
-      // An empty square is incomplete, never wrong.
-      if (arrow !== 0 && arrow !== (solution[i] & FM_ARROWMASK)) {
-        out.push({ index: i, kind: "wrong" });
+      if (arrow !== 0) {
+        if (arrow !== answer) out.push({ index: i, kind: "wrong" });
+        continue;
+      }
+      // An empty square is incomplete, never wrong — but its marks can be. A
+      // square with no marks is saying nothing, which is why the emptiness test
+      // is on the marks rather than on the square.
+      if (state.pencil[i] !== EMPTY && !(state.pencil[i] & answer)) {
+        out.push({ index: i, kind: "note" });
       }
     }
   }
@@ -413,6 +486,7 @@ export const romeGame: Game<
   isTimed: false,
   canSolve: true,
   canFormatAsText: false,
+  canMarkAll: true,
 
   defaultParams,
   presets,
@@ -439,6 +513,14 @@ export const romeGame: Game<
   solve,
   difficulty,
   findMistakes,
+
+  // `null` rather than the Ui: Rome has no auto-pencil preference, so a
+  // placement's area cull is always taught as an explicit strike rather than
+  // folded into the placement, which is what `candidateHint` defaults to
+  // anyway.
+  hint: (state) => candidateHint(state, null, findMistakes, buildSteps),
+  hintKeepTrack,
+  refreshHintStep,
 
   // Upstream's two highlight preferences, with its own keywords and defaults.
   prefs: [

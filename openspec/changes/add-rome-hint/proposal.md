@@ -81,6 +81,61 @@ Where to look, in the order the work will meet them:
   than Rome — a second dsf-region game (`separate`, class A2) is already in the
   corpus.
 
+## What the four hypotheses returned
+
+Implemented 2026-09-20. Answers in the order they were posed; the followable
+form is `docs/games/hints.md` § "Candidates that are not values (Rome)", and
+`tasks.md` carries the measurements.
+
+1. **`NoteEncoding` generalizes off numbers — and was incomplete in a way
+   nobody had needed.** `bit` became a lookup and `values` is 4; no contortion.
+   But the shared machinery enumerates candidates as `for (v = 1; v <= values;
+   v++)`, so a direction must cross the boundary as a *dense ordinal* rather
+   than as its bit — which is exactly what `NoteEncoding` exists to say, so the
+   abstraction is not numeric, it is *positional*, and that is the honest
+   description of what it always was. The genuine gap was elsewhere:
+   `lazyPopulate` filled a board-wide `(1 << (w+1)) - 2` regardless of `enc`,
+   because every game on the plan had one answer for every cell. Rome's full
+   note set is **per square** (a top-row square can never point up) and
+   Seismic's is per region. `NoteEncoding.all(i)` now states it.
+2. **`CellRegion` does not want a name, and the question is closed.** Rome is
+   the second game to supply its own `regionsOf`, which is what
+   `derive-solos-region-names` was waiting for — and Rome's sentences say "this
+   area", because Rome has one kind of region and there is nothing to tell
+   apart. A `name` field would carry the constant `"area"` on every region Rome
+   ever builds. Solo needs a name because it has five kinds; **a region's name
+   is a fact about a game's narration, not about the region**, so it stays with
+   the game that has several.
+3. **A mixed ladder runs in one plan, and the own-rungs slot was never
+   touched.** `loops`, `expand` and `find-4-position` all write to `pencil`, so
+   all three are ordinary candidate eliminations whose *reason* is a fact about
+   a graph. `plan.rungs` is `undefined` in Rome. The generalization: **ask what
+   a rung writes**, not how exotic its reasoning is — the slot is for a firing
+   whose *move* the canonical shapes cannot express (Salad's markers).
+4. **A direction wants a word and a relation; it does not want a glyph.** All
+   eleven arms want "up"; four additionally want the relation ("the square
+   above", "point straight back"); none is improved by "↑". `LatinVocab` is not
+   widened, and could not have helped anyway — Rome's generic-looking arms name
+   an *area* where `narrateLatinReason` names a row and a column.
+
+Two things the change turned up that it was not looking for:
+
+- **`naked-pairs` is not dead.** Its `unreached` entry recorded a reproducible
+  census ("2,896 calls across 36 board generations, zero firings"), and the
+  census is honest — but thirty boards is a small sample for an event that
+  happens on about one board in sixty, which is what solving 120 published
+  descs measured. Two firing boards are now pinned in `rome-ladder.test.ts` **as
+  descs rather than seeds**, `unreached` is empty, and the rung's `k < c`
+  scan-order quirk is reachable again. *A census that finds zero owes a power
+  argument, not only a count.*
+- **A note-taking game had no note semantics.** Rome's `findMistakes` ignored
+  marks on the strength of upstream's "can be used for any purpose". A
+  candidate hint cannot deduce from a note it cannot trust, and a Mark-all that
+  fills every legal arrow is incoherent under a "ruled out" reading — so a Rome
+  mark now claims its arrow is still possible, and a square whose marks exclude
+  its answer is a mistake. **This is the one player-visible decision in the
+  change**; `tasks.md` § 6 states it and `help/games/rome.md` says so.
+
 ## What this does not do
 
 - **Not a new engine contract chosen in advance.** The standing note on the
