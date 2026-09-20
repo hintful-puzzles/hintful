@@ -30,6 +30,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { clearKey } from "../../engine/key-labels.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -50,7 +51,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { ConfigValues, Point } from "../../engine/types.ts";
+import type { ConfigValues, KeyLabel, Point } from "../../engine/types.ts";
 import { newRomeDesc } from "./generator.ts";
 import {
   buildSteps,
@@ -155,6 +156,27 @@ const DIGIT_DIRS: Readonly<Record<number, RomeDir>> = {
   52: FM_LEFT, // '4'
   54: FM_RIGHT, // '6'
 };
+
+/**
+ * The on-screen keypad: one key per arrow, then Clear.
+ *
+ * **A note-taking game's elements belong on buttons**, the way every digit game
+ * puts its digits there — select a square and toggle what it may hold. Rome's
+ * only other way to mark was a drag, which is a different motion for the same
+ * job and the one thing a player has to learn twice.
+ *
+ * The keys send the character codes Rome's typed entry already answers
+ * ({@link DIGIT_DIRS}), so the panel needed no new input path — it needed the
+ * *cursor* to be reachable by tap, which is what the notes-mode tap gives it.
+ * The engine appends the Marks key after these.
+ */
+const ARROW_KEYS: KeyLabel[] = [
+  { button: 56, label: "↑" },
+  { button: 50, label: "↓" },
+  { button: 52, label: "←" },
+  { button: 54, label: "→" },
+  clearKey,
+];
 
 /** Upstream `FROMCOORD`: C integer division **truncates toward zero**, so a
  * pixel inside the two-pixel border maps to row/column 0 rather than to -1 —
@@ -270,7 +292,12 @@ function interpretMove(
       }
       if (isEraseKey(button)) {
         ui.kmode = KEYMODE_MOVE;
-        return { kind: "place", x, y, dir: null };
+        // In notes mode Clear empties the square's *marks*: the key clears
+        // whatever the mode is entering, or it is a control that does the one
+        // thing the player did not ask for.
+        return pencil
+          ? { kind: "pencil", x, y, dir: null }
+          : { kind: "place", x, y, dir: null };
       }
     }
 
@@ -316,10 +343,22 @@ function interpretMove(
     if (isMouseRelease(button)) {
       const pencil = ui.mmode === MOUSEMODE_PENCIL;
       ui.mmode = MOUSEMODE_OFF;
-      if (c === EMPTY && pencil) return UI_UPDATE;
-      // Masked to the arrow bits: upstream compares the whole cell, so an
-      // arrow carrying an error bit would emit a move that changes nothing.
-      if (!pencil && c === (here & FM_ARROWMASK)) return UI_UPDATE;
+      // A release that commits nothing **selects** the square instead — a tap
+      // in notes mode, or one that lands back on the arrow already there.
+      //
+      // That is what makes the keypad reachable: its keys enter at the cursor,
+      // and a touch player has no other way to put the cursor anywhere. Both
+      // arms were bare no-ops before the panel existed, so nothing that used to
+      // make a move stops making one; dragging still enters directly, and this
+      // is the second way in rather than a replacement.
+      //
+      // The second arm masks to the arrow bits because upstream compares the
+      // whole cell, so an arrow carrying an error bit would emit a move that
+      // changes nothing.
+      if ((c === EMPTY && pencil) || (!pencil && c === (here & FM_ARROWMASK))) {
+        showCursor(ui.cursor);
+        return UI_UPDATE;
+      }
 
       return {
         kind: pencil ? "pencil" : "place",
@@ -528,6 +567,7 @@ export const romeGame: Game<
   solve,
   difficulty,
   findMistakes,
+  requestKeys: () => ARROW_KEYS,
 
   // `null` rather than the Ui: Rome has no auto-pencil preference, so a
   // placement's area cull is always taught as an explicit strike rather than

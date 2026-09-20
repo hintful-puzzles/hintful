@@ -831,6 +831,32 @@ Normative: the on-screen-keys requirement in
   What a game still owes is that the key *acts*: the engine can put it on the
   panel, only the game can make it toggle. `pencil-mode-key.test.ts` asserts
   both, with an exemption ledger that is empty and still asserts something.
+- **Put a game's markable elements on the panel, wherever they are an
+  enumerable per-cell set.** Every digit game already does — select a cell, tap
+  a value, and in notes mode the same key toggles it as a mark. **Rome did not**
+  until `give-rome-its-element-keypad`: its notes could only be *dragged*, which
+  is a different motion for the same job and the one thing a player had to learn
+  twice. Its panel is four arrow keys plus Clear, sending the character codes
+  its typed entry already answered, so the keys cost no new input path.
+
+  **What they cost instead was a way to reach the cursor.** A panel key enters
+  at the keyboard cursor, and a touch player has no arrow keys to move one with,
+  so every key was dead until a *tap* could select a square. Rome's taps used to
+  be bare no-ops in exactly the two cases that matter (a tap in notes mode, and
+  a release back on the arrow already there), so selecting there was additive —
+  nothing that made a move stopped making one. **Check this before adding a
+  keypad to a drag game**: `input-parity.test.ts` presses keys with a cursor
+  already placed, so it will not tell you the panel is unreachable.
+
+  Three games are deliberately without element keys, because their notes are
+  **relational or positional rather than a value you choose**: Loopy's mark is
+  *which corner* of a face or *which pair of edges*, Slant's is *which two
+  adjacent squares*, and both are indicated by pointing at them — there is no
+  element for a button to name. Map's mark is "possibly this color", which *is*
+  enumerable, but it is set by dragging *from* a colored region, so the bit
+  comes from the drag's origin; giving Map element keys means giving it
+  key-based entry it has never had for colors either, which is a change to how
+  the game is played rather than to how its notes are reached.
 - **A sticky mode must be visible, which can cost geometry.** Acquiring
   `ui.pencilMode` also acquires the pencil-mode indicator's corner
   (`pencil-indicator-placement.test.ts`), and a game whose borders cannot hold

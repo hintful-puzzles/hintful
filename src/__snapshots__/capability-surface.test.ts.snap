@@ -1146,6 +1146,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "preferredTileSize",
       "prefs",
       "refreshHintStep",
+      "requestKeys",
       "solve",
     ],
     "ui": [

@@ -9,6 +9,7 @@
  * Render frames are in `rome-render.test.ts`.
  */
 import { describe, expect, it } from "vitest";
+import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
 import { Midend } from "../../engine/midend.ts";
 import {
   CURSOR_DOWN,
@@ -20,6 +21,7 @@ import {
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
+  PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
@@ -28,7 +30,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import type { ChangeNotification, GameStatus, Point } from "../../engine/types.ts";
 import { newRomeDesc } from "./generator.ts";
 import { romeGame } from "./index.ts";
-import { BORDER, PREFERRED_TILE_SIZE } from "./render.ts";
+import { origin, PREFERRED_TILE_SIZE } from "./render.ts";
 import { romeSolve, validateDesc, validateGame } from "./solver.ts";
 import {
   DIFF_EASY,
@@ -67,10 +69,18 @@ import {
 const TS = PREFERRED_TILE_SIZE;
 const ds = { tileSize: TS } as never;
 
+/** The center of cell `(x, y)`.
+ *
+ * `origin`, not `BORDER`: the board starts past the pencil-mode indicator's
+ * margin. At the preferred tile size the two happen to cancel — `BORDER + TS/2`
+ * is 22 and so is `origin(TS)` — so this read the right cell either way, from
+ * its top-left *corner* rather than its center. An accidental agreement is not
+ * a reason to keep the wrong expression: a drag's direction is read from where
+ * the pointer lands. */
 function cellPoint(x: number, y: number): Point {
   return {
-    x: BORDER + TS * x + Math.floor(TS / 2),
-    y: BORDER + TS * y + Math.floor(TS / 2),
+    x: origin(TS) + TS * x + Math.floor(TS / 2),
+    y: origin(TS) + TS * y + Math.floor(TS / 2),
   };
 }
 
@@ -331,6 +341,64 @@ function drag(
   const res = romeGame.interpretMove(state, ui, ds, cellPoint(...to), up);
   return typeof res === "object" && res !== null ? (res as RomeMove) : null;
 }
+
+describe("the on-screen keypad", () => {
+  const EMPTY_3 = `${ALL_WALLS_3},i`;
+
+  /**
+   * The panel is the only way a touch player enters an arrow *or* a mark
+   * without dragging, and its keys act at the cursor — so a tap that commits
+   * nothing has to leave the cursor on the square it touched, or every key on
+   * the panel is dead until somebody presses an arrow key they do not have.
+   *
+   * This is the assertion the panel rests on. Without it the keys are not
+   * merely awkward, they are unreachable, and `input-parity.test.ts` would not
+   * notice: it presses keys with a cursor already placed.
+   */
+  it("a tap that commits nothing selects the square, in both modes", () => {
+    const st = board(3, 3, EMPTY_3);
+    for (const marks of [false, true]) {
+      const ui = newUi();
+      if (marks)
+        romeGame.interpretMove(st, ui, ds, cellPoint(0, 0), PENCIL_MODE_BUTTON);
+      expect(ui.cursor.visible).toBe(false);
+      // Press and release on one square: no direction, so no move.
+      expect(drag(st, ui, [1, 1], [1, 1], LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE)).toBe(
+        null,
+      );
+      expect(ui.cursor, `marks=${marks}`).toMatchObject({ x: 1, y: 1, visible: true });
+    }
+  });
+
+  it("enters an arrow, or a mark in notes mode, from the same key", () => {
+    const st = board(3, 3, EMPTY_3);
+    const ui = newUi();
+    drag(st, ui, [1, 1], [1, 1], LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE); // select
+    const press = (b: number) => romeGame.interpretMove(st, ui, ds, cellPoint(1, 1), b);
+
+    // '8' is up. The same key enters an arrow, or a mark once Marks is armed —
+    // one key per element, which is the collection's shape for a note game.
+    expect(press(56)).toEqual({ kind: "place", x: 1, y: 1, dir: FM_UP });
+    press(PENCIL_MODE_BUTTON);
+    expect(press(56)).toEqual({ kind: "pencil", x: 1, y: 1, dir: FM_UP });
+    // …and Clear clears whatever the mode is entering, rather than always the
+    // arrow: a control that does the one thing the player did not ask for.
+    expect(press(CLEAR_BUTTON)).toEqual({ kind: "pencil", x: 1, y: 1, dir: null });
+    press(PENCIL_MODE_BUTTON);
+    expect(press(CLEAR_BUTTON)).toEqual({ kind: "place", x: 1, y: 1, dir: null });
+  });
+
+  it("offers one key per arrow, so every mark a square can hold is on the panel", () => {
+    // The engine appends Marks after these (`pencil-mode-key.test.ts`).
+    expect(romeGame.requestKeys?.(romeGame.defaultParams())).toEqual([
+      { button: 56, label: "↑" },
+      { button: 50, label: "↓" },
+      { button: 52, label: "←" },
+      { button: 54, label: "→" },
+      { button: CLEAR_BUTTON, label: "Clear" },
+    ]);
+  });
+});
 
 describe("input", () => {
   const EMPTY_3 = `${ALL_WALLS_3},i`;
