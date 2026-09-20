@@ -12,7 +12,7 @@
 
 import { describe, expect, it } from "vitest";
 import { randomNew } from "./random/index.ts";
-import { firstLeaf, HINT_GAMES } from "./testing/hint-games.ts";
+import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 
 /** Game ids with a text module, read off the paths alone (nothing is loaded). */
 const WITH_TEXT = new Set(
@@ -21,22 +21,33 @@ const WITH_TEXT = new Set(
 
 const SEEDS = ["ht-a", "ht-b", "ht-c"];
 
-/** Does this game's hint put words on screen? One speaking step on any of a
- * few boards of its easiest preset settles it. */
+/**
+ * Does this game's hint put words on screen? One speaking step on any board of
+ * the gate slice settles it.
+ *
+ * **The widening is almost free here, and it is not symmetric.** This returns
+ * on the first speaking step, so a game that speaks costs what it always cost —
+ * one board — and only a *silent* game walks the whole slice, which is the case
+ * the answer has to be right about. Reading the easiest preset alone
+ * (`slice-the-first-leaf-hint-guards-by-axis`) could call a game silent on the
+ * strength of a board with no deduction to narrate, and then demand that its
+ * `hint-text.ts` be deleted.
+ */
 function speaks(id: string): boolean {
   const game = HINT_GAMES.find(([g]) => g === id)?.[1];
   if (!game) return false;
-  const params = firstLeaf(game.presets());
-  for (const seed of SEEDS) {
-    let board: { desc: string; aux?: string };
-    try {
-      board = game.newDesc(params, randomNew(`${id}-${seed}`));
-    } catch {
-      continue;
+  for (const { title, params } of gatePresets(id, game)) {
+    for (const seed of SEEDS) {
+      let board: { desc: string; aux?: string };
+      try {
+        board = game.newDesc(params, randomNew(`${id}-${title}-${seed}`));
+      } catch {
+        continue;
+      }
+      const { desc, aux } = board;
+      const res = game.hint?.(game.newState(params, desc), aux);
+      if (res?.ok && res.steps.some((s) => s.explanation !== "")) return true;
     }
-    const { desc, aux } = board;
-    const res = game.hint?.(game.newState(params, desc), aux);
-    if (res?.ok && res.steps.some((s) => s.explanation !== "")) return true;
   }
   return false;
 }

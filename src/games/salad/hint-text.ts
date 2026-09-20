@@ -99,9 +99,14 @@ export function say(mode: number) {
         p.reach === 0
           ? `must be in the square nearest the clue`
           : `must be within the first ${count(p.reach + 1, "square")} from the clue`;
+      // "later in the row", not "further along": the phrase this used to say is
+      // the collection's word for a deduction the reader has to carry on by
+      // themselves ("a contradiction further along", engine/hint-text.ts), and
+      // `hint-quality.test.ts` forbids it for that reason. Here it meant a
+      // *place* on the line, which the axis name says without the ambiguity.
       const tighten =
         p.tightenedBy > 0
-          ? ` and ${p.tightenedBy === 1 ? "one of them is" : `${p.tightenedBy} of them are`} already marked further along`
+          ? ` and ${p.tightenedBy === 1 ? "one of them is" : `${p.tightenedBy} of them are`} already marked later in the ${p.axis}`
           : ``;
       return `${clueName(p.side)} sees ${clue} first, so every square before its ${clue} must be empty. This ${p.axis} has room for only ${count(p.holes, "empty square")}${tighten}, so the ${clue} ${bound}. We must cross out the ${clue} beyond that.`;
     },

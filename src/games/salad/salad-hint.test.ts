@@ -253,7 +253,7 @@ describe("salad hint — narration arms", () => {
         { mode: GAMEMODE_LETTERS, order: 4, nums: 3 },
       ),
     ).toMatch(
-      /one of them is already marked further along, so the A must be in the square nearest the clue/,
+      /one of them is already marked later in the row, so the A must be in the square nearest the clue/,
     );
   });
 

@@ -1,0 +1,7 @@
+# No delta: this is a *read* of an advisory report, and what it produces is
+# either per-game narration fixes (each of which carries its own reasoning) or a
+# recorded "nothing further to change", exactly as the 230-row read before it
+# did. A requirement would be premature until the read says what it found.
+schema: spec-driven
+created: 2026-09-20
+skip_specs: true

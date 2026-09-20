@@ -600,7 +600,20 @@ function buildSteps(state: GroupState): HintStep<GroupMove, GroupHint>[] {
   // read off the board; once they are, singles wait behind the strikes.
   const leads = ({ ops, populated }: RungContext<HintOp>): Legs[] => {
     const out: Legs[] = [];
-    const lead = ops.length > 0 && firstUnreflectedPlaceIndex(ops, wGrid, w) === 0;
+    // A *single* lead waits behind the strikes once the notes are in — the last
+    // sentence above, which this branch used to contradict. `visibleCandidates`
+    // culls the obvious marks for itself, so a single resting on a strike the
+    // board still shows read as naked and narrated "every other element has
+    // been ruled out in this cell" over a cell showing two notes. Reachable in
+    // play: place an element without culling your own notes (auto-pencil off,
+    // which is Group's default), then ask for a hint. Found by
+    // `hint-resume.test.ts` once its Latin block walked 8x8 Tricky rather than
+    // the first preset; that walk follows one leg of each journey, which is
+    // exactly the player who takes the placement and leaves its cull.
+    const lead =
+      ops.length > 0 &&
+      firstUnreflectedPlaceIndex(ops, wGrid, w) === 0 &&
+      !(populated && ops[0].reason.kind === "single");
     if (lead) out.push(placingOp(ops[0], ops));
     for (const op of ops)
       if (

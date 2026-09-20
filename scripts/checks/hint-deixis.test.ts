@@ -10,21 +10,30 @@
  * marks and says nothing about either — invisible to that grep, and the reason
  * for this file.
  *
- * It reads the *frame* instead: every hinting game, **every tier** (a rung is
- * tier-gated, and `audit-guessing-tier-names` §3.2 found a planted violation
- * staying green because a sweep looked only at `firstLeaf(presets())`), each
- * step's declared marks counted by role, and each explanation tested for a bare
- * deictic.
+ * It reads the *frame* instead: every hinting game, **every board the gate
+ * slice offers** (a rung is tier-gated, and `audit-guessing-tier-names` §3.2
+ * found a planted violation staying green because a sweep looked only at
+ * `firstLeaf(presets())`), each step's declared marks counted by role, and each
+ * explanation tested for a bare deictic.
  *
  * It earned its keep once already: Light Up's *"This square is still dark, and
  * every square that could light it … is crossed out or already lit"* shades that
  * corridor on the board and never said so, and no grep for a second-mark word
  * could have found a sentence that contains none.
  *
- * **It is a report, not a gate, and its own numbers are why.** On the tree it
- * ships with — after the four games' sentences were fixed — it still flags **230
- * sentence shapes across 20 games**, and reading all of them found **nothing
- * further to change**. The false positives are not noise to be tuned away; they
+ * **It is a report, not a gate, and its own numbers are why.** After the four
+ * games' sentences were fixed it flagged **230 sentence shapes across 20
+ * games**, and reading all of them found **nothing further to change**.
+ *
+ * It now flags **505 shapes across 27 games**, over 25,670 steps, because
+ * `slice-the-first-leaf-hint-guards-by-axis` pointed it at the presets menu
+ * instead of at tiers written onto the first preset: seven games appear that
+ * never had a board here, and Loopy alone contributes 29 from twenty tilings.
+ * **Those rows have been sampled, not read** — the sample fell squarely in the
+ * fourth class below, a *dot* or a *corner* marked against "this edge" — and
+ * reading the report in full is `read-the-widened-deixis-report`.
+ *
+ * The false positives are not noise to be tuned away; they
  * are four legitimate ways to tie a deictic that no lexical rule recognizes:
  *
  * - **by value** — Singles' *"This 3 shares a line with the ringed white 3"*;
@@ -55,10 +64,9 @@
  */
 import { writeFileSync } from "node:fs";
 import { expect, it } from "vitest";
-import { difficultyTiers } from "../../src/engine/difficulty.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
 import {
-  firstLeaf,
+  gatePresets,
   HINT_GAMES,
   markRoles,
 } from "../../src/engine/testing/hint-games.ts";
@@ -86,17 +94,20 @@ it("reports every hint step that points bare while a second mark is displayed", 
   let withSecondMark = 0;
 
   for (const [name, game] of HINT_GAMES) {
-    const contract = game.difficulty;
-    const base = firstLeaf(game.presets());
-    const tiers = contract ? (difficultyTiers(game)?.length ?? 1) : 1;
     const shapes = new Set<string>();
-    for (let tier = 0; tier < tiers; tier++) {
-      const params = contract ? contract.withTier(base, tier) : base;
-      if (game.validateParams(params, true)) continue; // tier refused at this size
+    // Every board the gate slice offers, rather than every tier written onto
+    // the first preset. This sweep's whole subject is *sentences beside marks*,
+    // and the `withTier` form it used to build produced no board with a cage, a
+    // jigsaw block, an X diagonal, an Adjacent clue, a Tectonic region or any
+    // Loopy tiling but Squares — so the modes' narration, which is where a
+    // deictic is most likely to point at one of two marks of the same kind, was
+    // outside the report it is a report about.
+    for (const { title, params } of gatePresets(name, game)) {
+      if (game.validateParams(params, true)) continue; // refused at this size
       for (const seed of SEEDS) {
         let board: { desc: string; aux?: string };
         try {
-          board = game.newDesc(params, randomNew(`${name}-${tier}-${seed}`));
+          board = game.newDesc(params, randomNew(`${name}-${title}-${seed}`));
         } catch {
           continue; // ungenerable at this size; difficulty-contract.test.ts owns that
         }

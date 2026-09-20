@@ -26,5 +26,15 @@ export default defineConfig({
       "scripts/checks/hint-deixis.test.ts",
     ],
     environment: "node",
+    // The same absurd ceiling `vitest.config.ts` argues for at length, and for
+    // the same reason: a timeout here is a backstop against a runaway test, not
+    // a performance assertion, and this box is deliberately busy. Without it
+    // these inherit vitest's 5 s default — which the deixis sweep blew through
+    // the day it started reading the presets menu, *after* running to
+    // completion and writing its report, because a synchronous test cannot be
+    // interrupted. A check that did all its work and is then marked failed is
+    // the worst of both.
+    testTimeout: 3_600_000,
+    hookTimeout: 3_600_000,
   },
 });

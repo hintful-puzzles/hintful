@@ -1,7 +1,7 @@
-# No delta yet: the shape is settled (`axisSlice`, already in
-# `testing/hint-games.ts`) and the open question is per-guard cost, so which
-# requirement moves — and whether any guard legitimately stays narrow — depends
-# on what the measurements in task 2 say.
+# The delta is `ADDED`, not `MODIFIED`: "The hint walk SHALL cover every preset
+# a game offers" already required a cross-game sweep to derive its population
+# from the game, and it stays exactly as it is. What this change adds is where
+# the answer comes from — one shared function rather than twelve sweeps each
+# deciding — which is a new concern rather than an altered rule.
 schema: spec-driven
 created: 2026-09-20
-skip_specs: true

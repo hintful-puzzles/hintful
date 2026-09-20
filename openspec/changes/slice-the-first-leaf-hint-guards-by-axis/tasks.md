@@ -2,58 +2,92 @@
 
 ## 1. Confirm the blindness per guard, on the board rather than in the source
 
-- [ ] 1.1 The call sites are listed in `proposal.md` and were read, not grepped.
-      Before widening anything, take the same printout
-      `slice-presets-by-the-axes-a-game-varies` took for the resume walk: for
-      each of the eight, what params it actually runs on, per game. Its census
-      ran off the live registry through a scratch `*.test.ts` that throws the
-      report (the failure message prints in full; vitest silences `console`).
-- [ ] 1.2 **Name what each guard would newly see, per game, and say whether it
-      could differ.** "More boards" is not a reason; "Killer adds four cage
-      sentences and this guard is about sentences" is. A guard whose subject
-      genuinely cannot vary with the mode stays narrow **and says which property
-      that is** — and that claim is about sentences and marks the guard has
-      never rendered, so it is checked, not asserted.
-- [ ] 1.3 Carry the vacuity guard: count the cases each guard runs before and
-      after, so a widening that silently changed nothing cannot read as a win.
+- [x] 1.1 Census taken off the live registry through a scratch `*.test.ts` that
+      throws its report. **It is eleven sites, not eight**: reading the call
+      sites found three more inside `hint-resume.test.ts` itself — the no-op
+      step block, the `hint()`-purity block and the Latin naked-single block —
+      all still on `firstLeaf` after that file's *main* walk had been widened.
+      The proposal's "five seeds per case" was `hint-resume`'s `SEEDS`, not
+      these; they run three, three and two.
+- [x] 1.2 Named per guard, at the site, in the comment that now says why the
+      guard reads the slice. Two claims were checked rather than asserted:
+      `hint-text-convention`'s `speaks()` returns on the first speaking board,
+      so widening it is free for every game but a silent one; and
+      `difficulty-contract.test.ts`'s three `firstLeaf` sites **stay narrow**,
+      because they generate no board at all — they ask what `withTier` does to a
+      params record, which any valid record exercises.
+- [x] 1.3 Vacuity counts carried: `mark-all`'s `M` probe counts the boards it
+      walked and floors it, and `hint-resume`'s per-game walk already floored
+      its preset count. Census: 35 games → **146** sliced boards (141 with the
+      searching games' size axis dropped), 10 Mark-all games → 49, 57 registered
+      games → 227.
 
 ## 2. Measure before widening
 
-- [ ] 2.1 Time each of the eight before and after on an **idle** box, recording
-      free memory and swap beside the load average. A contended timing measures
-      the contention. Ratios taken under comparable conditions survive where
-      absolute seconds do not.
-- [ ] 2.2 **These are not a like-for-like substitution for the resume walk's
-      figures.** Three of them run five seeds per case
-      (`hint-quality.test.ts`'s chain sweep, `hint-ordinal.test.ts`,
-      `hint-deixis.test.ts`), so 141 cases is 705 boards, not 141. Decide the
-      seed budget and the slice together, and price `seedBudget(gate, full)`
-      against a narrower slice rather than assuming both can stay.
-- [ ] 2.3 Take the treatments in `docs/games/testing.md` § "Right-sizing the
-      gate" **in order** — short-circuit a deterministic search, then turn a
-      seed count down, then defer — before reaching for a deferral, and check
-      the `build-pipeline` four conditions bind anything deferred to push.
+- [x] 2.1 Every guard timed before and after on the same box, load and free
+      memory recorded beside each figure. The table is in
+      `docs/games/testing.md` § "Slicing a preset sweep for the gate".
+- [x] 2.2 Seed budgets decided *with* the slice rather than after it, because
+      the slice is a hundred and forty configurations and a second seed of one
+      board repeats one the first already walked. `hint-overlay` 3 → 1,
+      `hint-mark` 6 → 2, `hint-quality`'s form block 3 → 1, `hint-resume`'s two
+      single-plan blocks 5 → 1 (`BREADTH_SEEDS`, priced at the site: 39.1 s and
+      19.4 s at two seeds against a 122 s file).
+- [x] 2.3 No deferral was needed, so the `build-pipeline` conditions do not come
+      into it. The treatments used were the second one — turn a seed count down,
+      saying what the reduced count still executes — and nothing was moved to
+      the slow tier. `mark-all`'s 19.8 s `interpretMove` probe is paid rather
+      than sliced further, with the reason at the site.
 
 ## 3. Widen, and prove each one
 
-- [ ] 3.1 Point each guard at `axisSlice(game, leafPresets(game.presets()))`.
-      No new key, no per-guard variant of the rule.
-- [ ] 3.2 Per guard, **break something mode-specific and watch that guard go
-      red** where it is currently green — the same proof
-      `slice-presets-by-the-axes-a-game-varies` ran on the resume walk with
-      Solo's Killer tier cap. A widening nobody has seen catch anything has not
-      been shown to work, and eight of them is eight proofs, not one.
-- [ ] 3.3 Re-examine `hint-ordinal.test.ts`'s `BIGGER_BOARD` roster once the
-      slice is in. If Solo reaches a forcing chain without it, the entry goes;
-      if not, it is telling the truth and stays with its reason.
+- [x] 3.1 All eleven read `gatePresets(id, game)`, a new shared entry point in
+      `testing/hint-games.ts` — the slow tier's full list, the gate's
+      `axisSlice`, and the searching games' cost discipline in one place. The
+      searching-game rule changed with it: `all.slice(0, 1)` and `all.slice(0, 3)`
+      became `axisSlice(..., { scalarEnds: false })`, every mode on the smallest
+      board offering it, derived from the same axes as everyone else's slice
+      rather than being a count of presets that happened to reach Netslide's
+      three barrier modes.
+- [x] 3.2 Proved by what they caught, which is stronger than a plant — five
+      findings, each on a board the narrow form could not reach:
+      - **Group narrated a naked single over a cell showing two notes**
+        (`8x8 Tricky`). Its `leads` rung offered a `single` placement ahead of
+        the strikes once the notes were in, contradicting its own comment, and
+        `visibleCandidates` culled the obvious marks for itself so the
+        classification never threw. Reachable in play: place an element without
+        culling your notes, then ask for a hint. Fixed in `games/group/index.ts`.
+      - **Loopy's corner rung and Palisade's clue-0 rung** failed the necessity
+        rule with *"can take one line at most"* and *"none of its remaining
+        edges can be walls"* — two constructions five-plus games write and the
+        rule had never heard. Vocabulary extended, with the scoping that keeps
+        Subsets' bare *"none of them has A"* failing.
+      - **Loopy's blocked-pair sentence** is owner-endorsed (2026-09-19) and
+        carries its necessity in its own words, so it is a declared idiom.
+      - **Salad said "further along"**, the collection's phrase for a deduction
+        the reader must carry on alone, where it meant a place on the line. Now
+        "later in the row".
+      - **Keen emits an ordered chain on none of its ten presets**, at eight
+        seeds each — it was in `ORDERING_GAMES` on the strength of a
+        Custom-dialog board. `hint-ordinal` therefore walks the slice *and* the
+        first preset's tiers, with the measurement at the site.
+- [x] 3.3 `BIGGER_BOARD` is deleted. Solo's slice carries `3x3 Extreme` on its
+      own, because Extreme is a value of Solo's difficulty axis and that is the
+      smallest preset offering it, and Solo is still in `ORDERING_GAMES`.
 
 ## 4. Close out
 
-- [ ] 4.1 Spec delta wherever the verdict lands — `ts-engine`'s "The hint walk
-      SHALL cover every preset a game offers" already says *any* cross-game
-      sweep over presets asks the same question, so this may be a widening of
-      that rule's reach rather than a new requirement.
-- [ ] 4.2 Update `docs/games/testing.md` § "Slicing a preset sweep for the gate"
-      with the per-guard outcome, and § "How a cross-game guard finds its
-      population" rule 6 if the `with*` tell needs sharpening now that eight
-      guards have been found by it at once.
+- [x] 4.1 `ts-engine` delta: `ADDED` "A cross-game sweep SHALL take its boards
+      from the shared slice, not build them". The existing preset-walk
+      requirement already said a sweep derives its population from the game and
+      is unchanged; what is new is that the answer comes from one function.
+- [x] 4.2 `docs/games/testing.md` updated in both sections — § "Slicing a preset
+      sweep for the gate" now points at `gatePresets`, carries the per-guard
+      cost table and the "pay in seeds, not presets" rule, and warns that a
+      lexical narration rule will meet vocabulary it has never heard; rule 6's
+      tell records that eleven sweeps wore it at once, and states the narrow
+      exception for a synthesized record.
+- [x] 4.3 Follow-up scaffolded: `read-the-widened-deixis-report`. The advisory
+      deixis sweep went 230 shapes / 20 games → 505 / 27 once it read the
+      presets menu; the new rows were sampled, not read, and the sweep's header
+      says so rather than carrying the old conclusion.

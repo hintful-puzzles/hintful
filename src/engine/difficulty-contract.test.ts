@@ -66,7 +66,18 @@ for (const { id, game } of registered) {
 }
 
 /** First leaf preset's params — a small, valid board (`hint-games.ts` uses the
- * same convention). */
+ * same convention).
+ *
+ * **This one stays narrow on purpose**, where
+ * `slice-the-first-leaf-hint-guards-by-axis` widened eleven of its siblings to
+ * `gatePresets`. The three cases below that read it — the form/contract
+ * coupling, the codec round-trip and the no-mutation rule — generate no board
+ * at all: they ask whether `withTier` writes a field `tierOf` and the codec can
+ * read back, which is arithmetic on a params record, and any valid record
+ * exercises it. Everything here that *is* about boards already reads
+ * `allLeaves`. The distinction is rule 6's, from the other side: a synthesized
+ * params record is the wrong input when the question is what a board carries,
+ * and the right one when the question is what the contract does to a record. */
 function firstLeaf<P>(menu: PresetMenu<P>): P {
   if (menu.params !== undefined) return menu.params;
   for (const sub of menu.submenu ?? []) {

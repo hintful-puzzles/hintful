@@ -19,6 +19,7 @@ import "../../games/index.ts";
 import type { ParamConfigItem, PresetMenu } from "../game.ts";
 import { getTsGame, registeredGameIds } from "../registry.ts";
 import { type AnyGame, membersNotMentioning } from "./enrollment.ts";
+import { SLOW_TESTS_ENABLED } from "./slow.ts";
 
 export type { AnyGame };
 
@@ -194,31 +195,59 @@ export interface PresetAxis<Params> {
 export function presetAxes<Params>(
   game: { paramConfig?: readonly ParamConfigItem<Params>[] },
   presets: readonly { params: Params }[],
+  opts: SliceOptions = {},
 ): PresetAxis<Params>[] {
   const axes: PresetAxis<Params>[] = [];
   for (const item of game.paramConfig ?? []) {
     const read = (params: Params): AxisValue => item.get(params);
     const values = [...new Set(presets.map((e) => read(e.params)))];
     if (values.length < 2) continue;
-    axes.push({ kw: item.kw, read, wanted: new Set(wantedValues(item.type, values)) });
+    axes.push({
+      kw: item.kw,
+      read,
+      wanted: new Set(wantedValues(item.type, values, opts.scalarEnds !== false)),
+    });
   }
   return axes;
 }
 
+/**
+ * How much of a scalar axis a slice takes.
+ */
+export interface SliceOptions {
+  /**
+   * Whether a scalar axis contributes its **far** end as well as its near one.
+   * Default `true`, which is the honest cover: a width, an order or a region
+   * size runs along a line, and both ends of it is what a sweep owes.
+   *
+   * `false` takes the near end alone — **every mode, each on the smallest
+   * board offering it, and no large board at all.** It is for a sweep whose
+   * cost is superlinear in board size and whose subject is not: a hint that
+   * plans by *searching* pays for size twice over (one full search per move,
+   * and more moves to make), so the gate takes its modes and leaves its sizes
+   * to the slow tier. Which games those are is derived, not listed — see
+   * {@link SEARCH_PLANNING_GAMES} — and {@link gatePresets} is the one place
+   * that decides it.
+   */
+  readonly scalarEnds?: boolean;
+}
+
 /** Which of an axis's observed values a slice owes a board — both ends of a
- * numeric scalar, all of anything else. A `"string"` item whose values are not
- * numbers is a selection wearing a text field, so it is covered in full rather
- * than ordered by a comparison that would not mean anything. */
+ * numeric scalar (or its near end alone, see {@link SliceOptions}), all of
+ * anything else. A `"string"` item whose values are not numbers is a selection
+ * wearing a text field, so it is covered in full rather than ordered by a
+ * comparison that would not mean anything. */
 function wantedValues(
   type: "string" | "boolean" | "choices",
   values: readonly AxisValue[],
+  scalarEnds: boolean,
 ): readonly AxisValue[] {
   if (type !== "string") return values;
   const nums = values.map((v) => Number(v));
   if (!nums.every((n) => Number.isFinite(n))) return values;
   const lo = Math.min(...nums);
   const hi = Math.max(...nums);
-  return values.filter((_, i) => nums[i] === lo || nums[i] === hi);
+  return values.filter((_, i) => nums[i] === lo || (scalarEnds && nums[i] === hi));
 }
 
 /**
@@ -250,8 +279,9 @@ function wantedValues(
 export function axisSlice<Params, Entry extends { params: Params }>(
   game: { paramConfig?: readonly ParamConfigItem<Params>[] },
   presets: readonly Entry[],
+  opts: SliceOptions = {},
 ): Entry[] {
-  const axes = presetAxes(game, presets);
+  const axes = presetAxes(game, presets, opts);
   if (axes.length === 0) return presets.slice(0, 1);
   const covered = axes.map(() => new Set<AxisValue>());
   return presets.filter((e) => {
@@ -264,4 +294,50 @@ export function axisSlice<Params, Entry extends { params: Params }>(
     }
     return novel;
   });
+}
+
+/**
+ * **The boards a per-commit cross-game sweep walks** — every preset in the slow
+ * tier, the {@link axisSlice} in the gate.
+ *
+ * This is the one place the gate's preset population is decided, because twelve
+ * sweeps had decided it twelve times and eleven of them had decided it wrong.
+ * Eleven walked `firstLeaf` — by convention the smallest and easiest board a
+ * game offers — or synthesized params from it with a `withTier` that writes
+ * only the tier field, so no board any of them had ever run on carried a cage,
+ * a jigsaw block, an X diagonal, an Adjacent clue, a Tectonic region, a
+ * multiplication-only Keen or any Loopy tiling but Squares. Three of those
+ * eleven are about *narration*, while Killer alone adds four cage sentences.
+ * `docs/games/testing.md` § "How a cross-game guard finds its population" rule
+ * 6 names the tell: a guard that builds its inputs with a `with*` rather than
+ * reading them off something the game offers.
+ *
+ * **Difficulty needs no special case**: it is a `"choices"` item like any
+ * other, so a slice *replaces* a `tiers.map(withTier(base))` loop rather than
+ * multiplying with it — one preset per tier falls out of the same rule that
+ * reaches the modes, and it is a board the player can actually pick rather than
+ * a tier label written onto the smallest grid in the menu.
+ *
+ * **A searching hint takes its modes and not its sizes.** Its cost is
+ * superlinear in board size — one full search per move, and more moves to make
+ * — and `retire-tests-that-do-not-earn-their-runtime` measured the two members
+ * of {@link SEARCH_PLANNING_GAMES} at 43% of all test time. So they get
+ * `scalarEnds: false`: every mode on the smallest board offering it, and no
+ * large board at all. That is derived from the same axes as everyone else's
+ * slice rather than being a count of presets to keep — one of the two counts
+ * this replaced was three, chosen because three happened to reach Netslide's
+ * three barrier modes, which stops being true the day Netslide gains a fourth.
+ *
+ * **What the slice does not walk, and what does.** Every preset in between — a
+ * mode at a size other than its smallest, a tier at a size other than the
+ * menu's first — is the slow tier's, through this same function:
+ * `npm run test:slow -- src/engine/hint-resume.test.ts`.
+ */
+export function gatePresets(
+  id: string,
+  game: AnyGame,
+): { title: string; params: unknown }[] {
+  const all = leafPresets(game.presets());
+  if (SLOW_TESTS_ENABLED) return all;
+  return axisSlice(game, all, { scalarEnds: !SEARCH_PLANNING_GAMES.includes(id) });
 }

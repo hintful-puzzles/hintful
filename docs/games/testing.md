@@ -576,7 +576,21 @@ is the `ts-engine` spec, "A shared mechanic is joined by having it".
    **Tell:** your guard builds its inputs with a `with*`/setter rather than
    reading them off something the game offers. The population is what the game
    presents — its presets, its registered object, its `Ui` — not what the guard
-   can construct out of the parts.
+   can construct out of the parts. **It is the most common tell in the tree**:
+   eleven sweeps were found wearing it at once
+   (`slice-the-first-leaf-hint-guards-by-axis`), so when you write one, grep the
+   file you are copying from before you copy its population.
+
+   **The exception is real and narrow, and it has to be said at the site.** A
+   synthesized params record is the wrong input when the question is what a
+   *board* carries, and the right one when the question is what the *contract
+   does to a record* — `difficulty-contract.test.ts`'s codec round-trip
+   generates no board at all. It is also right when the behavior needs a
+   combination no preset carries: a menu never pairs a small grid with a hard
+   tier, because menus climb size and difficulty together, and Keen's ordered
+   chain fires on none of its ten presets and readily on 4x4 at Hard — a board
+   the Custom dialog offers and `validateParams` accepts. Say which behavior
+   needs it, and keep the slice beside it rather than instead of it.
 7. **A coverage guard has a *second* key, and it needs the same discipline as
    the first.** Rules 1–6 are about finding *who*; a guard that reports a
    shortfall also has to decide who is already covered, and that side is the one
@@ -604,11 +618,26 @@ Rules 1–7 find *which games*. A sweep over **boards** has a second population 
 which of each game's presets — and it goes wrong the same way, one axis at a
 time, because every wrong answer looks like coverage.
 
-**Never invent a key. Call `axisSlice`**
-([`testing/hint-games.ts`](../../src/engine/testing/hint-games.ts)): the full
-list is `leafPresets`, and the per-commit slice is one preset per *value* of
-every axis the game varies, derived from the game's own `paramConfig`. Difficulty
-is not special there; it is a `"choices"` item like any other.
+**Never invent a key, and do not build a population at all. Call
+`gatePresets(id, game)`**
+([`testing/hint-games.ts`](../../src/engine/testing/hint-games.ts)): it hands
+back every preset in the slow tier and the per-commit slice otherwise — one
+preset per *value* of every axis the game varies, derived from the game's own
+`paramConfig` — and it decides the search-planning games' cost discipline for
+you. Difficulty is not special there; it is a `"choices"` item like any other,
+so the slice **replaces** a `tiers.map(withTier(base))` loop rather than
+multiplying with it, and the board it walks a tier on is one the player can pick
+from the menu.
+
+`axisSlice` and `leafPresets` are underneath it and are the right call only when
+a sweep is about the slicing rule itself.
+
+**Calling it is the whole of the enrollment, and that is the lesson.** Twelve
+sweeps decided this population for themselves and eleven decided it wrong; three
+of the eleven sat inside the very file whose main walk had already been widened
+(`slice-the-first-leaf-hint-guards-by-axis`). A sweep that was fixed once is not
+a sweep that stays fixed, so the rule names the function rather than the
+finding.
 
 Three keys have been tried here and the first two were each right about one axis
 and blind to the rest:
@@ -641,6 +670,35 @@ two big line items were Loopy's eighteen tilings and one largest board per game.
 `hint-quality.test.ts`'s `lintCases` reads every preset of every game per commit
 at one seed — but for *narration*, not convergence, so it is a different
 question and not a substitute.
+
+**Pay for it in seeds, not in presets.** Every guard widened to the slice was
+sampling several seeds of *one* configuration, and the slice is a hundred and
+forty configurations: for a property that is a code path — a renderer branch
+that fills instead of ringing, a diff key missing the hint bits, a rung that
+emits a stale step — the second seed of a board buys a repeat of a
+configuration the first already walked. Measured per guard, 2026-09-20 (load
+2.9–5.7, the box ~18.4 GB into swap, so upper bounds and the ratios are what
+survive):
+
+| guard | before | after | what it traded |
+| --- | --- | --- | --- |
+| `hint-text-convention.test.ts` | 0.26 s | 0.35 s | nothing — it returns on the first speaking board |
+| `hint-overlay` | 0.74 s | 9.7 s | 3 seeds → 1 |
+| `hint-mark` | 1.1 s | 20.9 s | 6 seeds → 2 |
+| `hint-ordinal` | 6.6 s | 25.9 s | nothing; it walks the slice **and** the first preset's tiers |
+| `mark-all` | 0.42 s | 26.2 s | nothing; 19.8 s of it is one `interpretMove` probe over 227 boards |
+| `hint-quality` | 99.8 s | 121.7 s | 3 seeds → 1 on the form block; `lintCases` already read every preset |
+| `hint-resume` | 67 s | 93 s | 5 seeds → 1 on its two single-plan blocks |
+
+**And expect a lexical rule to meet vocabulary it has never heard.** A rule that
+recognizes narration by its words was tuned against the sentences a one-board
+walk happened to hear, so widening it fails on phrasings the collection has used
+all along: *"can take one line at most"* (Loopy, Bridges, Clusters, Slant,
+Unequal) and *"none of its remaining edges can be walls"* (Palisade, Bridges,
+Seismic, Spokes) both failed the necessity rule the first time it heard them.
+Extend the vocabulary with the reason, or declare the idiom where the wording is
+owner-endorsed — never flatten the sentence to fit the regex, which is the
+failure mode `hint-quality.test.ts`'s own header forbids.
 
 ### The divergence no clone detector can see
 

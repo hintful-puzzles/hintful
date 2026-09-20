@@ -26,13 +26,10 @@ import { DEDUCTION_EXHAUSTED, SEARCH_OUT_OF_REACH } from "./hint-refusal.ts";
 import { randomNew } from "./random/index.ts";
 import {
   type AnyGame,
-  axisSlice,
-  firstLeaf,
+  gatePresets,
   HINT_GAMES,
-  leafPresets,
   SEARCH_PLANNING_GAMES,
 } from "./testing/hint-games.ts";
-import { SLOW_TESTS_ENABLED } from "./testing/slow.ts";
 
 /** Walk a fresh board to solved, recomputing the hint after every move.
  * Returns the move count, or throws with a diagnostic if a hint gives up or
@@ -121,7 +118,7 @@ const BOUNDED_SEARCH_HINTS = SEARCH_PLANNING_GAMES;
  *
  * **The second sentence is load-bearing since
  * `retire-tests-that-do-not-earn-their-runtime`.** These games' walk is sliced
- * to the smallest preset in the gate (see `walkedPresets`), so each entry has to
+ * to its modes' smallest boards in the gate (see `gatePresets`), so each entry has to
  * name the test that still walks a full-size board on every commit. A future
  * third member joins the derivation by *having* the mechanic and fails the
  * equality below until someone writes that sentence — which is the point of
@@ -165,42 +162,12 @@ function permitsSearch(game: AnyGame, params: unknown): boolean {
 }
 
 /**
- * The presets the resume walk covers.
- *
- * **Every preset in the slow tier; in the gate slice, one per axis the game
- * actually varies.**
- *
- * This walked `firstLeaf` alone until `refuse-honestly-at-every-tier` — by
- * convention the smallest and easiest board a game offers — so the collection's
- * strongest hint guarantee had never seen a Hard board, an `Unreasonable` board
- * or any mode variant. Widened, it found thirteen refusals across seven games
- * that the narrow form could not reach, saying three different things.
- *
- * **Tier was never *the* axis; it was one of them, and keying on it lost the
- * rest.** Keyed on tier alone the slice de-duplicated away every preset sharing
- * a tier with a plainer board earlier in the menu, which is how a game's whole
- * second mode went unwalked while the file read as covering it. Measured
- * 2026-09-20 over the live registry: Solo walked no X board, no jigsaw board and
- * no Killer board (four cage rungs and four cage sentences these guards exist to
- * check); Unequal no Adjacent board; Seismic no Tectonic board; Group no
- * identity-hidden board; Keen no multiplication-only board; Loopy nothing but
- * Squares. Salad was blind outright — every preset it offers carries the same
- * tier, so eleven collapsed to one.
- *
- * That is the *same* collapse the untiered games had already paid for once, one
- * axis over: Sixteen is untiered with five presets, its 3×3 walks in seven moves,
- * and its hint cycled for ever on its 5×5 (`fix-sixteen-hint-recompute-stability`)
- * where only the slow tier could see it. The fix then was a second key — size,
- * for untiered games only. `axisSlice` generalizes both: one preset per value of
- * every axis the game's own `paramConfig` says it varies, with difficulty
- * falling out as a `"choices"` axis like any other rather than as a special
- * case.
- *
- * **What it costs, measured 2026-09-20 back to back on one box** (16 GB, load
+ * **What this file's walk costs at the gate's slice, measured 2026-09-20 back
+ * to back on one box** (16 GB, load
  * 3.6–5.1, **125 MB free and 18.6 of 19.4 GB of swap in use** — deep in paging,
  * so read the seconds as upper bounds and the ratio as the figure that
- * survives): this file went **25.1 s → 67.0 s** as the slice went 88 → 141
- * walks, against 280 for every preset. Attributed per added board, the split is
+ * survives): **25.1 s → 67.0 s** as the walk went 88 → 141 boards, against 280
+ * for every preset. Attributed per added board, the split is
  * the one to remember: **covering the modes is nearly free and covering the
  * sizes is not.** Unequal's Adjacent board costs 34 ms, Seismic's Tectonic 3 ms,
  * Group's identity-hidden 11 ms, Keen's multiplication-only 95 ms, Salad's
@@ -209,14 +176,23 @@ function permitsSearch(game: AnyGame, params: unknown): boolean {
  * and one largest board per game (~22.5 s, of which Mathrax 9×9 is 7.7 s and
  * Keen 9×9 4.9 s).
  *
- * **What the slice still does not walk, and what covers it.** Every preset in
- * between — a mode at a size other than its smallest, a tier at a size other
- * than the menu's first — is walked by the slow tier, passed this file's path,
- * which is the run to make when a refactor moves a hint
- * planner. Narration across *every* preset of every game is per-commit
- * regardless, in `hint-quality.test.ts`'s `lintCases`, which adds each preset at
- * one seed; what that sweep asks is whether the sentences are readable, not
- * whether the plan converges, so the two do not substitute for each other.
+ * The three sibling sweeps below reached the slice later
+ * (`slice-the-first-leaf-hint-guards-by-axis`), which took the **file** from
+ * 67 s to 93 s: the walk holds ~60 s of that, the no-op and purity blocks ~20 s
+ * and ~10 s, and the Latin naked-single block 5 s. {@link BREADTH_SEEDS} is
+ * what the first two traded to afford it.
+ *
+ * The walk read `firstLeaf` alone until `refuse-honestly-at-every-tier`, so the
+ * collection's strongest hint guarantee had never seen a Hard board, an
+ * `Unreasonable` board or any mode variant; widened, it found thirteen refusals
+ * across seven games that the narrow form could not reach, saying three
+ * different things. What decides the population now is `gatePresets`, shared
+ * with every other cross-game sweep.
+ *
+ * Narration across *every* preset of every game is per-commit regardless, in
+ * `hint-quality.test.ts`'s `lintCases`, which adds each preset at one seed; what
+ * that sweep asks is whether the sentences are readable, not whether the plan
+ * converges, so the two do not substitute for each other.
  *
  * **Proved rather than assumed** (2026-09-20): capping Solo's hint recorder at
  * `DIFF_KSINGLE` instead of the board's own `kdiff` — the hint grown weaker than
@@ -227,13 +203,15 @@ function permitsSearch(game: AnyGame, params: unknown): boolean {
  * property, which is convergence from arbitrary reached positions.)
  *
  * **The exception, and it is the whole reason this file is affordable: a game
- * that plans by *searching* walks its smallest preset only.** Measured
- * 2026-09-09 (`retire-tests-that-do-not-earn-their-runtime`), Sixteen's single
- * 5×5 walk was the most expensive test in the collection and Netslide's 5×5 the
- * third; between them the two members of `SEARCH_PLANNING_GAMES` were 43% of
- * all test time. A search pays for board size twice over — one full search per
- * move, and more moves to make — so for these two the last preset is not "one
- * extra walk", it is most of the suite.
+ * that plans by *searching* walks no large board at all** — every mode on the
+ * smallest preset offering it, which `gatePresets` derives from the same axes
+ * as everyone else's slice. Measured 2026-09-09
+ * (`retire-tests-that-do-not-earn-their-runtime`), Sixteen's single 5×5 walk
+ * was the most expensive test in the collection and Netslide's 5×5 the third;
+ * between them the two members of `SEARCH_PLANNING_GAMES` were 43% of all test
+ * time. A search pays for board size twice over — one full search per move, and
+ * more moves to make — so for these two the last preset is not "one extra
+ * walk", it is most of the suite.
  *
  * **This is a deferral, not a retirement, and what still covers the large board
  * is recorded per member in `SEARCH_REACH` above** — Sixteen's five hand-picked
@@ -243,19 +221,30 @@ function permitsSearch(game: AnyGame, params: unknown): boolean {
  * up on, and removing the tangle term was verified to turn them red. The slow
  * tier walks every preset for these games as for all others.
  */
-function walkedPresets(
-  id: string,
-  game: AnyGame,
-): { title: string; params: unknown }[] {
-  const all = leafPresets(game.presets());
-  if (SLOW_TESTS_ENABLED) return all;
-  // A searching hint's cost is superlinear in board size; its large boards are
-  // covered deterministically by the game's own file (see SEARCH_REACH).
-  if (SEARCH_PLANNING_GAMES.includes(id)) return all.slice(0, 1);
-  return axisSlice(game, all);
-}
-
 const SEEDS = ["hr-a", "hr-b", "hr-c", "hr-d", "hr-e"];
+
+/**
+ * The seeds the *single-plan* sweeps below take per board — the two that
+ * compute one hint and judge it, rather than walking a board to solved.
+ *
+ * **Breadth of board bought with depth of seed — the same number of boards,
+ * chosen differently.** Those two sweeps read `firstLeaf` at five seeds until
+ * `slice-the-first-leaf-hint-guards-by-axis`: 175 boards, every one of them the
+ * smallest and easiest configuration its game offers. One seed of the slice is
+ * 143 boards covering every tier and every mode in the collection. What was
+ * traded away is sampling, and it is the cheap half here, because the property
+ * is a code path rather than a coincidence: a rung that emits a stale step, or
+ * a `hint()` that mutates, does it on every board that reaches the rung.
+ *
+ * Priced rather than assumed (2026-09-20, load 3.5, the box 19.0 GB into swap,
+ * so upper bounds): at two seeds the two blocks measured 39.1 s and 19.4 s
+ * against a whole-file budget of 122 s, and the second seed was buying a repeat
+ * of a configuration the first had already walked.
+ *
+ * `SEEDS` itself is unchanged, because the walk it belongs to is the one whose
+ * depth genuinely finds things.
+ */
+const BREADTH_SEEDS = SEEDS.slice(0, 1);
 
 /** A structural key for a game state — typed arrays rendered as plain arrays so
  * two states compare equal iff every field matches. Used to detect a hint step
@@ -289,22 +278,29 @@ describe("a kept hint plan never contains a step that does nothing", () => {
   // steps, replayed in order (the exact-follow path), include one that is
   // already a no-op when reached. A clean plan means the game has no latent
   // staleness of this shape.
+  //
+  // **Breadth of board over depth of seed** (see BREADTH_SEEDS): a rung that
+  // emits a stale step does it on the first board that reaches the rung, and
+  // the rungs are what a mode adds — Solo's four cage rungs fire on no board
+  // `firstLeaf` can produce.
   for (const [name, game] of HINT_GAMES) {
     it(`${name}: every plan step changes the board when reached`, () => {
-      for (const seed of SEEDS) {
-        const params = firstLeaf(game.presets());
-        const { desc, aux } = game.newDesc(params, randomNew(`noop-${name}-${seed}`));
-        let state = game.newState(params, desc);
-        const res = game.hint?.(state, aux);
-        if (!res?.ok) continue; // refusal (e.g. already solved) — nothing to check
-        res.steps.forEach((step, i) => {
-          const after = game.executeMove(state, step.move);
-          expect(
-            stateKey(after) !== stateKey(state),
-            `${name}/${seed}: plan step ${i} is a no-op when reached (stale step)`,
-          ).toBe(true);
-          state = after;
-        });
+      for (const { title, params } of gatePresets(name, game)) {
+        for (const seed of BREADTH_SEEDS) {
+          const at = `${name}/${title}/${seed}`;
+          const { desc, aux } = game.newDesc(params, randomNew(`noop-${at}`));
+          let state = game.newState(params, desc);
+          const res = game.hint?.(state, aux);
+          if (!res?.ok) continue; // refusal (e.g. already solved) — nothing to check
+          res.steps.forEach((step, i) => {
+            const after = game.executeMove(state, step.move);
+            expect(
+              stateKey(after) !== stateKey(state),
+              `${at}: plan step ${i} is a no-op when reached (stale step)`,
+            ).toBe(true);
+            state = after;
+          });
+        }
       }
     });
   }
@@ -318,15 +314,15 @@ describe("requesting a hint never mutates the board", () => {
   // guarantee is worth asserting directly: `hint()` is pure on the state.)
   for (const [name, game] of HINT_GAMES) {
     it(`${name}: hint() leaves the state unchanged`, () => {
-      for (const seed of SEEDS) {
-        const params = firstLeaf(game.presets());
-        const { desc, aux } = game.newDesc(params, randomNew(`pure-${name}-${seed}`));
-        const state = game.newState(params, desc);
-        const before = stateKey(state);
-        game.hint?.(state, aux);
-        expect(stateKey(state), `${name}/${seed}: hint() mutated the state`).toBe(
-          before,
-        );
+      for (const { title, params } of gatePresets(name, game)) {
+        for (const seed of BREADTH_SEEDS) {
+          const at = `${name}/${title}/${seed}`;
+          const { desc, aux } = game.newDesc(params, randomNew(`pure-${at}`));
+          const state = game.newState(params, desc);
+          const before = stateKey(state);
+          game.hint?.(state, aux);
+          expect(stateKey(state), `${at}: hint() mutated the state`).toBe(before);
+        }
       }
     });
   }
@@ -339,14 +335,20 @@ describe("a Latin-family placement never falsely claims a naked single", () => {
   // that still visibly shows several candidates (owner-reported on Keen). Walk each
   // Latin game and assert the naked-single phrasing only ever appears on a cell
   // whose notes really are down to one candidate.
+  //
+  // **One board per sliced preset, not five of the easiest.** This walks a
+  // board to solved, so a seed is expensive here; what the five seeds could
+  // never reach is the modes, which is exactly where the shared solver's
+  // reasons differ — Unequal's Adjacent clues, Keen's multiplication-only
+  // cages, Group's hidden identity.
   const LATIN: [string, AnyGame][] = HINT_GAMES.filter(([name]) =>
     ["towers", "unequal", "keen", "group"].includes(name),
   );
   for (const [name, game] of LATIN) {
     it(`${name}: "ruled out in this cell" only on a genuine naked single`, () => {
-      for (const seed of SEEDS) {
-        const params = firstLeaf(game.presets());
-        const { desc, aux } = game.newDesc(params, randomNew(`naked-${name}-${seed}`));
+      for (const { title, params } of gatePresets(name, game)) {
+        const at = `${name}/${title}`;
+        const { desc, aux } = game.newDesc(params, randomNew(`naked-${at}`));
         let state = game.newState(params, desc);
         // biome-ignore lint/suspicious/noExplicitAny: structural state access.
         const w = (params as any).w ?? (params as any).order;
@@ -377,7 +379,7 @@ describe("a Latin-family placement never falsely claims a naked single", () => {
             ).length;
             expect(
               ncand,
-              `${name}/${seed}: naked-single narration on a cell with ${ncand} candidates`,
+              `${at}: naked-single narration on a cell with ${ncand} candidates`,
             ).toBe(1);
           }
           state = game.executeMove(state, step.move);
@@ -401,7 +403,7 @@ describe("a hint can solve from any mid-game position", () => {
     // saturation. That is why nothing here is clock-gated — the assertion is on
     // the *result*. See docs/games/testing.md § "Seed-deterministic, never clock-gated".
     it(`${name}: following hints one move at a time always reaches solved`, () => {
-      const presets = walkedPresets(name, game);
+      const presets = gatePresets(name, game);
       // Per-game vacuity: a presets menu that flattened to nothing would leave
       // this loop asserting nothing while reporting health.
       expect(presets.length, `${name}: no preset to walk`).toBeGreaterThan(0);

@@ -53,6 +53,7 @@ import {
   type AnyGame,
   declaresNoMarks,
   firstLeaf,
+  gatePresets,
   HINT_GAMES,
   leafPresets,
   SEARCH_PLANNING_GAMES,
@@ -226,9 +227,26 @@ const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
  * as *"can only go in this cell"*, written in ordinary English rather than a
  * game's private idiom — there is no game that would want it read as anything
  * weaker, which is the test for whether a word belongs to the shared vocabulary
- * or to {@link IDIOMS}. */
+ * or to {@link IDIOMS}.
+ *
+ * **Two entries are here because the sweep below finally heard them**
+ * (`slice-the-first-leaf-hint-guards-by-axis`). A lexical rule's vocabulary can
+ * only be as wide as the sentences it is run over, and this one was run over
+ * each game's easiest opening plan, so two constructions the collection has
+ * used all along were missing:
+ *
+ *  - *"…can take one line at most"* — a proved bound, which is what `at most`
+ *    always is here. Loopy writes it six ways, and Bridges, Clusters, Slant and
+ *    Unequal write it too; Loopy's corner rung is the one whose necessity is
+ *    carried by nothing else, and it fires at Hard.
+ *  - *"none of its remaining edges can be walls"* — a negated possibility, the
+ *    same claim as `cannot` with the negation moved to the subject. Scoped to a
+ *    `can` within the same clause on purpose: bare *"none of them has A"*
+ *    (Subsets) is a state of being, which is exactly what this rule exists to
+ *    reject. Palisade's clue-0 rung is the one that carries it alone.
+ */
 const NECESSITY =
-  /\bmust\b|\bcan(?:no|')t\b|\bcannot\b|\bcan only\b|\bcan never\b|\bhas to\b|\bhave to\b|\bneeds?\b|\brul(?:e|es|ed|ing)\b.{0,40}\bout\b|\bno other\b|\bnowhere\b|\bonly\b|\bnever\b|\bforce[sd]?\b|\bimpossible\b|\bneither\b/i;
+  /\bmust\b|\bcan(?:no|')t\b|\bcannot\b|\bcan only\b|\bcan never\b|\bhas to\b|\bhave to\b|\bneeds?\b|\brul(?:e|es|ed|ing)\b.{0,40}\bout\b|\bno other\b|\bnowhere\b|\bonly\b|\bnever\b|\bforce[sd]?\b|\bimpossible\b|\bneither\b|\bat most\b|\bnone of\b[^.]{0,40}\bcan\b/i;
 
 /** The candidate-elimination games' mechanical openers — procedure the
  * player is walked through, not a deduction, so no necessity modal. */
@@ -337,6 +355,18 @@ const IDIOMS: Record<string, (step: NarratedStep) => boolean> = {
   // (owner-endorsed, `audit-declared-versus-derived-capabilities`).
   subsets: (s) =>
     s.continuesPrevious === true && /^Still filling this cell:/.test(s.explanation),
+
+  // Loopy's blocked-pair rung: "Both ringed dots already have a line, so
+  // joining them leaves this 2 short. That edge is out; the other 2 are
+  // lines." The necessity is in "leaves this 2 short" — the clue could not be
+  // met — and the conclusion is then stated in Loopy's own board word, where an
+  // edge that is *out* is one ruled out (the same word its other sentences use:
+  // "aren't ruled out", "already out"). Endorsed because the sentence is: the
+  // owner settled this exact shape on 2026-09-19, and `loopy/hint-text.ts`
+  // records what each clause is doing and why it says it that way. Reached only
+  // at Hard, which is why the walk met it for the first time when it started
+  // reading the presets menu rather than the first preset.
+  loopy: (s) => /leaves this \d+ short\. That edge is out/.test(s.explanation),
 };
 
 /**
@@ -381,50 +411,71 @@ describe("the necessity rule reaches every hinting game it should", () => {
   });
 });
 
+/**
+ * Boards per game for the form rules below — the gate slice, one seed each.
+ *
+ * **This block is about sentences, and it had never heard most of them.** It
+ * read `firstLeaf` at three seeds until
+ * `slice-the-first-leaf-hint-guards-by-axis`: three boards of `2x2 Trivial` for
+ * Solo, whose Killer mode alone adds four cage sentences, and one board of
+ * Squares for Loopy's twenty-one tilings. A form rule — is the step visible, is
+ * the conclusion in the necessity voice, is there an em-dash — is a property of
+ * the *sentence*, so the question is how many distinct sentences the walk
+ * hears, and a second seed of one preset hears the same ones again.
+ *
+ * `lintCases` below already walks every preset, but only for *length*; the
+ * necessity voice, the visibility rule and the speculative-chain rule are this
+ * block's, and they stopped at the first preset.
+ */
+const FORM_SEEDS = SEEDS.slice(0, 1);
+
 describe("hint narration form, cross-game", () => {
   for (const [name, game] of HINT_GAMES) {
     it(`${name}: every step is visible, terse${DEDUCTIVE.has(name) ? ", and necessity-voiced" : ""}`, () => {
-      for (const seed of SEEDS) {
-        const params = firstLeaf(game.presets());
-        const { desc, aux } = game.newDesc(params, randomNew(`${name}-${seed}`));
-        const state = game.newState(params, desc);
-        const res = game.hint?.(state, aux);
-        if (!res?.ok) continue;
-        res.steps.forEach((step, i) => {
-          const at = `${name}/${seed} step ${i}: "${step.explanation}"`;
+      for (const { title, params } of gatePresets(name, game))
+        for (const seed of FORM_SEEDS) {
+          const { desc, aux } = game.newDesc(
+            params,
+            randomNew(`${name}-${title}-${seed}`),
+          );
+          const state = game.newState(params, desc);
+          const res = game.hint?.(state, aux);
+          if (!res?.ok) continue;
+          res.steps.forEach((step, i) => {
+            const at = `${name}/${title}/${seed} step ${i}: "${step.explanation}"`;
 
-          // A step the player cannot see is not a hint.
-          expect(
-            step.explanation.length > 0 || !declaresNoMarks(step.highlights),
-            `${at} — shows nothing: no words, no board marks`,
-          ).toBe(true);
-
-          // Length is checked in "hint narration stays readable at a glance"
-          // below, across every tier and into the middle game.
-
-          // A deduction concludes in the necessity voice.
-          if (DEDUCTIVE.has(name) && !MECHANICAL.test(step.explanation)) {
+            // A step the player cannot see is not a hint.
             expect(
-              NECESSITY.test(step.explanation) || (IDIOMS[name]?.(step) ?? false),
-              `${at} — no necessity modal (and no declared idiom)`,
+              step.explanation.length > 0 || !declaresNoMarks(step.highlights),
+              `${at} — shows nothing: no words, no board marks`,
             ).toBe(true);
-          }
 
-          expect(
-            SPECULATIVE.test(step.explanation),
-            `${at} — asks the player to carry a chain it never lays out`,
-          ).toBe(false);
+            // Length is checked in "hint narration stays readable at a glance"
+            // below, across every tier and into the middle game.
 
-          // The runtime half of the em-dash rule. Strictly weaker than the
-          // source scan below for anything written as a literal, and strictly
-          // stronger for a narration *assembled* from pieces at run time —
-          // two nets with different holes, and this one costs nothing.
-          expect(
-            EM_DASH.test(step.explanation),
-            `${at} — narration uses an em-dash; rewrite with a comma, a semicolon or a sentence break`,
-          ).toBe(false);
-        });
-      }
+            // A deduction concludes in the necessity voice.
+            if (DEDUCTIVE.has(name) && !MECHANICAL.test(step.explanation)) {
+              expect(
+                NECESSITY.test(step.explanation) || (IDIOMS[name]?.(step) ?? false),
+                `${at} — no necessity modal (and no declared idiom)`,
+              ).toBe(true);
+            }
+
+            expect(
+              SPECULATIVE.test(step.explanation),
+              `${at} — asks the player to carry a chain it never lays out`,
+            ).toBe(false);
+
+            // The runtime half of the em-dash rule. Strictly weaker than the
+            // source scan below for anything written as a literal, and strictly
+            // stronger for a narration *assembled* from pieces at run time —
+            // two nets with different holes, and this one costs nothing.
+            expect(
+              EM_DASH.test(step.explanation),
+              `${at} — narration uses an em-dash; rewrite with a comma, a semicolon or a sentence break`,
+            ).toBe(false);
+          });
+        }
     });
   }
 });
@@ -482,19 +533,23 @@ function untieredCases(
 
 describe("no hint leaves a chain for the player to carry, at any tier", () => {
   for (const [name, game] of HINT_GAMES) {
-    const contract = game.difficulty;
-    const tiers = difficultyTiers(game);
     it(`${name}: every tier`, () => {
-      const base = firstLeaf(game.presets());
-      // One params per tier where the game has tiers; one per preset where it
-      // does not, which is the axis such a game actually varies.
-      const cases: { label: string; params: unknown }[] =
-        contract && tiers
-          ? tiers.map((tierName, tier) => ({
-              label: `tier ${tier} ("${tierName}")`,
-              params: contract.withTier(base, tier),
-            }))
-          : untieredCases(name, game);
+      // **One board per value of every axis the game varies**, which subsumes
+      // the per-tier loop this used to build with `withTier` on the first
+      // preset: difficulty is a `"choices"` axis like any other, so the slice
+      // already carries a board at each tier — and carries it at the size the
+      // menu offers that tier at, which is a board the player can pick rather
+      // than a tier label written onto the smallest grid in the game.
+      //
+      // The `withTier` form is the tell `docs/games/testing.md` § "How a
+      // cross-game guard finds its population" rule 6 names: it writes the tier
+      // field and nothing else, so it never produced a Killer board, an
+      // Adjacent board or a Tectonic one, and a trial rung that fires only in a
+      // mode was outside this sweep as surely as it was outside the block above.
+      const cases = gatePresets(name, game).map((e) => ({
+        label: `preset "${e.title}"`,
+        params: e.params,
+      }));
       let checked = 0;
       for (const { label, params } of cases) {
         if (game.validateParams(params, true)) continue; // refused at this size

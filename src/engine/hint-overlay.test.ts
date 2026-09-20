@@ -19,11 +19,23 @@
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "./midend.ts";
-import { declaresNoMarks, firstLeaf, HINT_GAMES } from "./testing/hint-games.ts";
+import { declaresNoMarks, gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 
-const SEEDS = ["ov-a", "ov-b", "ov-c"];
+/**
+ * Seeds per board — one, because the boards are now the gate slice rather than
+ * three of each game's easiest preset
+ * (`slice-the-first-leaf-hint-guards-by-axis`).
+ *
+ * **The defect this guards is a missing comparison in a cache-miss branch**, so
+ * it is a property of the *renderer branch* a board enters, not of the board:
+ * it fires on every board that reaches the branch, or on none. What a second
+ * seed of one preset could never do is enter a second branch, and Solo's Killer
+ * cages, Seismic's Tectonic regions and twenty of Loopy's twenty-one tilings
+ * are each a branch this walked no board of.
+ */
+const SEED = "ov-a";
 
 /** How many opening steps we will play through looking for one that carries
  * board marks (a candidate game's populate/cleanup opener may precede the
@@ -33,12 +45,12 @@ const MAX_UNMARKED_OPENERS = 4;
 describe("a newly displayed hint repaints a warm, otherwise-unchanged frame", () => {
   for (const [name, game] of HINT_GAMES) {
     it(`${name}: the hint overlay survives the render cache`, () => {
-      for (const seed of SEEDS) {
+      for (const { title, params } of gatePresets(name, game)) {
+        const seed = `${name}/${title}`;
         const midend = new Midend(game);
-        const params = firstLeaf(game.presets());
-        const id = `${game.encodeParams(params, true)}#${name}-${seed}`;
+        const id = `${game.encodeParams(params, true)}#${SEED}-${seed}`;
         const err = midend.newGameFromId(id);
-        expect(err, `${name}/${seed}: bad id ${id}`).toBeNull();
+        expect(err, `${seed}: bad id ${id}`).toBeNull();
 
         const palette = game.colors(DEFAULT_BACKGROUND);
 
@@ -53,9 +65,9 @@ describe("a newly displayed hint repaints a warm, otherwise-unchanged frame", ()
           // a cached renderer this frame's *only* difference is the
           // overlay — the exact frame the bug class makes blank.
           const hintErr = midend.hint();
-          expect(hintErr, `${name}/${seed}: hint refused on the board`).toBeNull();
+          expect(hintErr, `${seed}: hint refused on the board`).toBeNull();
           const step = midend.activeHintStep();
-          expect(step, `${name}/${seed}: no step on display`).not.toBeNull();
+          expect(step, `${seed}: no step on display`).not.toBeNull();
           if (!step) return;
 
           const withHint = new RecordingDrawing(palette);
@@ -70,7 +82,7 @@ describe("a newly displayed hint repaints a warm, otherwise-unchanged frame", ()
           // narration is the whole display). Anything else is the bug.
           expect(
             declaresNoMarks(step.highlights),
-            `${name}/${seed}: displaying a hint with board marks painted ` +
+            `${seed}: displaying a hint with board marks painted ` +
               "nothing on a warm frame — its overlay is not reaching the " +
               "render cache (docs/games/rendering.md § 'The tile cache and the diff key')",
           ).toBe(true);
@@ -79,7 +91,7 @@ describe("a newly displayed hint repaints a warm, otherwise-unchanged frame", ()
           // which drops the displayed hint) and judge the next display.
           expect(
             opener,
-            `${name}/${seed}: no step within ${MAX_UNMARKED_OPENERS} painted or declared marks`,
+            `${seed}: no step within ${MAX_UNMARKED_OPENERS} painted or declared marks`,
           ).toBeLessThan(MAX_UNMARKED_OPENERS);
           midend.playMoves([step.move]);
         }

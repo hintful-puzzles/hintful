@@ -35,9 +35,13 @@
 import { describe, expect, it } from "vitest";
 import { HINT_EVIDENCE } from "./color/palette.ts";
 import { difficultyTiers } from "./difficulty.ts";
-import type { PresetMenu } from "./game.ts";
 import { randomNew } from "./random/index.ts";
-import { firstLeaf, HINT_GAMES } from "./testing/hint-games.ts";
+import {
+  type AnyGame,
+  firstLeaf,
+  gatePresets,
+  HINT_GAMES,
+} from "./testing/hint-games.ts";
 import { DEFAULT_BACKGROUND, renderScenario } from "./testing/render-scenario.ts";
 import type { Color } from "./types.ts";
 
@@ -55,7 +59,8 @@ const SEEDS = ["ord-a", "ord-b", "ord-c"];
  * settles before a two-candidate chain can form. Larger boards were not swept
  * because generating them is minutes per seed. Written down rather than left
  * implicit, so a later reader does not add Group back and spend the afternoon
- * wondering why it fails. Solo is here only through {@link BIGGER_BOARD} below.
+ * wondering why it fails. Solo reaches it on `3x3 Extreme`, a preset of its
+ * own, which {@link chainBoards} picks up from the menu.
  */
 const ORDERING_GAMES = new Set([
   "clusters",
@@ -65,19 +70,6 @@ const ORDERING_GAMES = new Set([
   "towers",
   "unequal",
 ]);
-
-/**
- * Games whose *first preset* is too small to reach a chain, with the preset to
- * use instead.
- *
- * The tier sweep varies difficulty and keeps the first preset's **size**, which
- * is right for the narration guards it is modeled on — but a forcing chain
- * needs a board big enough for two-candidate cells to line up, and Solo's first
- * preset is a 4x4 (`2x2 Trivial`). At 3x3 Extreme it fires on 8 of 8 seeds.
- * Named by preset title rather than hand-written params so the entry cannot
- * drift out of step with what the game actually offers.
- */
-const BIGGER_BOARD: Record<string, string> = { solo: "3x3 Extreme" };
 
 /** A palette color as the `rgb(r, g, b)` label `RecordingDrawing` records. */
 function rgbOf(color: Color): string {
@@ -92,16 +84,6 @@ function rgbOf(color: Color): string {
  * number is an *index into* the evidence, so it is the same role as the evidence
  * outline it numbers rather than a fourth hint color. */
 const ORDINAL_RGB = rgbOf(HINT_EVIDENCE);
-
-/** The leaf preset with this exact title, or null. */
-function presetTitled<P>(menu: PresetMenu<P>, title: string): P | null {
-  if (menu.params !== undefined && menu.title === title) return menu.params;
-  for (const sub of menu.submenu ?? []) {
-    const p = presetTitled(sub, title);
-    if (p !== null) return p;
-  }
-  return null;
-}
 
 /**
  * The ordinals a step declares, or null when it declares none.
@@ -127,31 +109,69 @@ function declaredOrder(highlights: unknown): number[] | null {
   return orders.length > 0 ? orders : null;
 }
 
+/**
+ * The boards this sweep looks for a chain on: **the gate slice, plus every
+ * tier of the smallest preset.**
+ *
+ * The slice alone is not enough here, and the measurement is the argument.
+ * A two-candidate chain needs a board *tight* enough that cells run out of
+ * candidates in a line, which is a **small grid at a hard tier** — and a
+ * presets menu never offers that pairing, because menus climb size and
+ * difficulty together. Keen is the case: across **all ten** of its presets at
+ * eight seeds each, a chain fires **zero** times, and it fires readily on the
+ * 4x4 its first preset gives once the tier is turned up. So dropping the tier
+ * sweep would have taken Keen's renderer out of this guard entirely, which is
+ * the one line per game the file exists to hold.
+ *
+ * **A synthesized tier is not a fiction here**, and that is what separates this
+ * from `docs/games/testing.md` § "How a cross-game guard finds its population"
+ * rule 6. Rule 6's case asked whether a *board* carries the difficulty its
+ * params claim, which a 4x4 cannot; this asks whether a renderer draws what its
+ * hint declares, and 4x4 Hard is a configuration the Custom dialog offers and
+ * `validateParams` accepts, so a player can sit in front of one. It is the same
+ * corner `hint-quality.test.ts`'s `lintCases` walks for the same reason.
+ *
+ * What the slice adds on top is the *modes*: Salad's Number Ball, Solo's
+ * Killer, X and jigsaw, Unequal's Adjacent — each a rung of its own, and none
+ * of them reachable by writing a tier onto the first preset.
+ *
+ * **It also retires a roster.** `BIGGER_BOARD = { solo: "3x3 Extreme" }` stood
+ * here because the tier sweep keeps the first preset's *size*, and Solo's
+ * `2x2 Trivial` 4x4 has no room for a chain. The entry was honest and
+ * well-argued, and it was still a hand-maintained list a second game could join
+ * only by being remembered. The slice picks `3x3 Extreme` on its own, because
+ * Extreme is a value of Solo's difficulty axis and that is the smallest preset
+ * offering it — the board the roster named by hand is the board the derivation
+ * names, and Solo is still in {@link ORDERING_GAMES} with the roster deleted.
+ */
+function chainBoards(id: string, game: AnyGame): { title: string; params: unknown }[] {
+  const out = gatePresets(id, game);
+  const contract = game.difficulty;
+  const tiers = difficultyTiers(game);
+  if (!contract || !tiers) return out;
+  const base = firstLeaf(game.presets());
+  const seen = new Set(out.map((e) => JSON.stringify(e.params)));
+  for (const [tier, tierName] of tiers.entries()) {
+    const params = contract.withTier(base, tier);
+    const key = JSON.stringify(params);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ title: `first preset at ${tierName}`, params });
+  }
+  return out;
+}
+
 describe("an ordered hint chain carries its order to the canvas", () => {
   const sawOrdinals = new Set<string>();
 
   for (const [name, game] of HINT_GAMES) {
     it(`${name}: every numbered chain is 1..n, and every number is drawn`, () => {
-      const contract = game.difficulty;
-      const wanted = BIGGER_BOARD[name];
-      const override = wanted ? presetTitled(game.presets(), wanted) : null;
-      if (wanted) {
-        expect(override, `${name}: no preset titled "${wanted}"`).not.toBeNull();
-      }
-      const base = override ?? firstLeaf(game.presets());
-      // Every tier, not just the first preset: a chain deduction is the
-      // *hardest* rung a game has, so the easiest preset is the one place it can
-      // never fire.
-      const names = difficultyTiers(game);
-      const tiers =
-        contract && names ? names.map((_t, i) => contract.withTier(base, i)) : [base];
-
-      for (const params of tiers) {
+      for (const { title, params } of chainBoards(name, game)) {
         if (game.validateParams(params, true)) continue; // refused at this size
         for (const seed of SEEDS) {
           let board: { desc: string; aux?: string };
           try {
-            board = game.newDesc(params, randomNew(`${name}-${seed}`));
+            board = game.newDesc(params, randomNew(`${name}-${title}-${seed}`));
           } catch {
             continue; // ungenerable here; difficulty-contract.test.ts owns that
           }
@@ -173,7 +193,7 @@ describe("an ordered hint chain carries its order to the canvas", () => {
             // Midend so this is the production render path, not a double.
             const scenario = renderScenario({
               game,
-              id: `${game.encodeParams(params, true)}#${name}-${seed}`,
+              id: `${game.encodeParams(params, true)}#${name}-${title}-${seed}`,
               defaultBackground: DEFAULT_BACKGROUND,
               showHint: true,
               hintUntil: (s) => s.explanation === step.explanation,
