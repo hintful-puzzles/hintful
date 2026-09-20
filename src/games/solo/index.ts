@@ -29,7 +29,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { digitKeys, pencilModeKey } from "../../engine/key-labels.ts";
+import { digitKeys } from "../../engine/key-labels.ts";
 import { forcingChainArea } from "../../engine/latin-hint.ts";
 import {
   noOpEntryResult,
@@ -750,7 +750,7 @@ export const soloGame: Game<
   hintKeepTrack,
   refreshHintStep,
   findMistakes,
-  requestKeys: (p): KeyLabel[] => [...digitKeys(p.c * p.r), pencilModeKey],
+  requestKeys: (p): KeyLabel[] => digitKeys(p.c * p.r),
 
   prefs: [
     // Named by the relation, not by a list: Solo's regions depend on the mode

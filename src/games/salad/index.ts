@@ -24,7 +24,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { clearKey, pencilModeKey } from "../../engine/key-labels.ts";
+import { clearKey } from "../../engine/key-labels.ts";
 import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
@@ -422,7 +422,7 @@ export const saladGame: Game<
     }
     keys.push({ button: 88, label: "X" });
     keys.push({ button: 79, label: "O" });
-    keys.push(clearKey, pencilModeKey);
+    keys.push(clearKey);
     return keys;
   },
   textFormat,

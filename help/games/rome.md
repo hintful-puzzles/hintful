@@ -13,7 +13,7 @@ More information: http://www.janko.at/Raetsel/Nikoli/Roma.htm
 
 Click and hold a square, then drag in one of the four directions to place an arrow.
 
-Right-click and drag to place a pencil mark. A mark records an arrow you think a square could still hold, so Mark all fills every square with the arrows the grid's edges leave open, and pressing it again crosses off the ones each square's own area has already used. Check & Save treats a square whose marks have ruled out its answer as a mistake, in the same way it treats a wrong arrow.
+Right-click and drag to place a pencil mark, or press the Marks button below the grid to make ordinary drags leave marks until you press it again. A mark records an arrow you think a square could still hold, so Mark all fills every square with the arrows the grid's edges leave open, and pressing it again crosses off the ones each square's own area has already used. Check & Save treats a square whose marks have ruled out its answer as a mistake, in the same way it treats a wrong arrow.
 
 Squares whose arrows already lead to a goal are shaded, so you can see how much of the grid is settled. A second preference shades squares caught in a loop instead, which can never reach a goal; it is off by default. Both are in the game's preferences.
 

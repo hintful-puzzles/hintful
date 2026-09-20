@@ -18,10 +18,34 @@ export const CLEAR_BUTTON = 8;
 export const clearKey: KeyLabel = { button: CLEAR_BUTTON, label: "Clear" };
 
 /** The Marks key, which toggles pencil mode, labeled so `puzzle-keys` maps it to
- * the marks icon. Every game with a `ui.pencilMode` offers it last on its keypad,
- * which is a touch player's one visible way into the mode
- * (`pencil-mode-key.test.ts`). */
+ * the marks icon. **The engine appends it to every note-taking game's keypad**
+ * (`Midend.requestKeys`), which is a touch player's one visible way into the
+ * mode; a game does not list it itself. */
 export const pencilModeKey: KeyLabel = { button: PENCIL_MODE_BUTTON, label: "Marks" };
+
+/**
+ * Does a game take notes? The one definition, read off what a game **is** — a
+ * `pencil` array on its board, or the collection's `pencilMode` flag on its
+ * `Ui` — so the engine that offers the Marks key and the guard that checks it
+ * cannot disagree about who is in the population.
+ *
+ * Two arms because neither alone is the shape. `pencil` is the spelling every
+ * note-taking *board* uses; Loopy and Slant take notes with no such array
+ * (their marks are edge and line states) and are known by the flag. Every game
+ * either arm catches wants the key, so the union is exact rather than a
+ * convenient over-reach.
+ *
+ * **Deliberately not a game-declared boolean.** A declaration can be forgotten
+ * by a new game and left behind by a changed one with nothing noticing, which
+ * is exactly what happened while this was keyed on the *name* `pencilMode`:
+ * Rome and Map carried notes with no key for their whole lives (AGENTS.md
+ * § "A game joins a shared mechanic by *having* it").
+ */
+export function takesNotes(state: unknown, ui: unknown): boolean {
+  const pencil = (state as { pencil?: ArrayLike<number> } | undefined)?.pencil;
+  if (pencil && typeof pencil.length === "number") return true;
+  return typeof (ui as { pencilMode?: unknown } | undefined)?.pencilMode === "boolean";
+}
 
 /**
  * The common digit keypad: buttons `'1'..'9'` then `'a','b',…` once the

@@ -19,7 +19,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { clearKey, pencilModeKey } from "../../engine/key-labels.ts";
+import { clearKey } from "../../engine/key-labels.ts";
 import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
@@ -301,7 +301,7 @@ function requestKeys(p: AbcdParams): KeyLabel[] {
   const keys: KeyLabel[] = [];
   for (let i = 0; i < p.n; i++)
     keys.push({ button: 65 + i, label: String.fromCharCode(65 + i) });
-  keys.push(clearKey, pencilModeKey);
+  keys.push(clearKey);
   return keys;
 }
 

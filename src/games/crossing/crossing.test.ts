@@ -481,7 +481,9 @@ describe("crossing input", () => {
     expect(press(filled, ui, 0x33, 0, 0)).toBeNull();
   });
 
-  it("offers the 1-9 keypad, a clear key and the shared Marks key", () => {
+  // The Marks key is the engine's, appended to every note-taking game's keypad
+  // (`Midend.requestKeys`); a game lists only what is its own.
+  it("offers the 1-9 keypad and a clear key", () => {
     const keys = crossingGame.requestKeys?.(P5) ?? [];
     expect(keys.map((k) => k.label)).toEqual([
       "1",
@@ -494,7 +496,6 @@ describe("crossing input", () => {
       "8",
       "9",
       "Clear",
-      "Marks",
     ]);
   });
 });

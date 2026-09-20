@@ -29,7 +29,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { narrateLatinReason } from "../../engine/hint-text.ts";
-import { digitKeys, pencilModeKey } from "../../engine/key-labels.ts";
+import { digitKeys } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
 import { forcingChainArea, rowColRegions } from "../../engine/latin-hint.ts";
 import {
@@ -472,7 +472,7 @@ export const keenGame: Game<
   refreshHintStep: (step: HintStep<KeenMove, KeenHint>, state) =>
     refreshCandidateHintStep(step, state.grid, state.pencil, state.params.w),
   findMistakes,
-  requestKeys: (p): KeyLabel[] => [...digitKeys(p.w), pencilModeKey],
+  requestKeys: (p): KeyLabel[] => digitKeys(p.w),
 
   prefs: [
     autoPencilPref<KeenUi>(

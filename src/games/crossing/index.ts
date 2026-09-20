@@ -29,7 +29,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { digitKeys, pencilModeKey } from "../../engine/key-labels.ts";
+import { digitKeys } from "../../engine/key-labels.ts";
 import {
   highlightIsOn,
   pressNoteTakingCell,
@@ -666,7 +666,7 @@ export const crossingGame: Game<
       cs.some((c) => c.x === ui.cursor.x && c.y === ui.cursor.y);
     return !(here(hl.area) || here(hl.targets));
   },
-  requestKeys: (): KeyLabel[] => [...digitKeys(9), pencilModeKey],
+  requestKeys: (): KeyLabel[] => digitKeys(9),
   textFormat,
 
   prefs: [

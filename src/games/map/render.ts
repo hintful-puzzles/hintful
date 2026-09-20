@@ -11,6 +11,13 @@ import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import {
+  type PencilIndicatorStyle,
+  pencilIndicatorBox,
+  pencilIndicatorCanvas,
+  pencilIndicatorReach,
+  repaintPencilIndicator,
+} from "../../engine/pencil-indicator.ts";
+import {
   CURSOR_DOWN,
   CURSOR_LEFT,
   CURSOR_RIGHT,
@@ -70,12 +77,25 @@ const ERR_MASK = 0xff800000;
 
 // --- geometry --------------------------------------------------------
 
+/**
+ * Where the board starts, in canvas pixels: the room the pencil-mode indicator
+ * needs at the top-right.
+ *
+ * Map's board had no margin at all, so the canvas is grown for the glyph on
+ * every side (`pencilIndicatorCanvas`) rather than one, keeping the board
+ * centered. Every drawing site reaches pixels through {@link coord} and every
+ * pointer through {@link fromCoord}, so those two are the whole change.
+ */
+export function origin(ts: number): number {
+  return pencilIndicatorReach(ts);
+}
+
 function coord(x: number, ts: number): number {
-  return x * ts;
+  return origin(ts) + x * ts;
 }
 
 function fromCoord(px: number, ts: number): number {
-  return fromCoordE(px, ts, 0);
+  return fromCoordE(px, ts, origin(ts));
 }
 
 function epsilonX(button: number): number {
@@ -152,10 +172,15 @@ export interface MapDrawState {
    * top-left, not the pointer (which is `ui.dragX`/`dragY`, a half-tile away). */
   dragX: number;
   dragY: number;
+  /** What the pencil-mode indicator shows; `null` = never painted. */
+  pencilModeShown: boolean | null;
 }
 
 export function computeSize(p: MapParams, tileSize: number): Size {
-  return { w: p.w * tileSize + 1, h: p.h * tileSize + 1 };
+  return pencilIndicatorCanvas(
+    { w: p.w * tileSize + 1, h: p.h * tileSize + 1 },
+    tileSize,
+  );
 }
 
 export function newDrawState(s: MapState, tileSize: number): MapDrawState {
@@ -169,8 +194,18 @@ export function newDrawState(s: MapState, tileSize: number): MapDrawState {
     dragVisible: false,
     dragX: -1,
     dragY: -1,
+    pencilModeShown: null,
   };
 }
+
+/** The pencil-mode indicator's colors. The body is the grid ink rather than a
+ * region color: Map's four colors are the puzzle's answer vocabulary, and a
+ * glyph in one of them would read as a fifth region. */
+const PENCIL_STYLE: PencilIndicatorStyle = {
+  background: COL_BACKGROUND,
+  body: COL_GRID,
+  ink: COL_BACKGROUND,
+};
 
 // --- flash -----------------------------------------------------------
 
@@ -373,11 +408,16 @@ export function redraw(
   }
 
   if (!ds.started) {
+    // The whole canvas first, because the board no longer fills it: the margin
+    // grown for the pencil-mode indicator is outside the grid flood below, and
+    // an unpainted margin shows whatever the canvas happened to hold.
+    const canvas = computeSize(s.params, ts);
+    dr.drawRect({ x: 0, y: 0, ...canvas }, COL_BACKGROUND);
     dr.drawRect(
       { x: coord(0, ts), y: coord(0, ts), w: w * ts + 1, h: h * ts + 1 },
       COL_GRID,
     );
-    dr.drawUpdate({ x: coord(0, ts), y: coord(0, ts), w: w * ts + 1, h: h * ts + 1 });
+    dr.drawUpdate({ x: 0, y: 0, ...canvas });
     ds.started = true;
   }
 
@@ -513,4 +553,14 @@ export function redraw(
     dr.drawUpdate({ x: ds.dragX, y: ds.dragY, w: ts + 3, h: ts + 3 });
     ds.dragVisible = true;
   }
+
+  // The pencil-mode indicator (fork addition), in the engine's corner: the
+  // Marks key makes a drop pencil rather than color, and this is what says so.
+  repaintPencilIndicator(
+    dr,
+    ds,
+    ui.pencilMode,
+    pencilIndicatorBox(computeSize(s.params, ts), ts),
+    PENCIL_STYLE,
+  );
 }

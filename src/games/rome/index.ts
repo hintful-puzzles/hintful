@@ -3,9 +3,10 @@
  *
  * Fill every square with an arrow so that every outlined region holds only
  * distinct arrows and following the arrows from anywhere reaches a circled
- * goal. Grab a square and drag a direction to place an arrow (right-drag for a
- * pencil mark), or move the keyboard cursor and press Enter (Space for pencil)
- * followed by a direction — or type `8`/`2`/`4`/`6` directly.
+ * goal. Grab a square and drag a direction to place an arrow (right-drag, or
+ * the Marks key, for a pencil mark), or move the keyboard cursor and press
+ * Enter (Space for pencil) followed by a direction — or type `8`/`2`/`4`/`6`
+ * directly.
  *
  * Rule violations are shown live, as upstream does: an arrow duplicated within
  * a region turns red, an arrow pointing off the grid reddens its square, and
@@ -43,6 +44,7 @@ import {
   LEFT_BUTTON,
   moveCursor,
   newCursor,
+  PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
   showCursor,
   stripModifiers,
@@ -57,11 +59,11 @@ import {
   romeCandidateMoves,
 } from "./hint.ts";
 import {
-  BORDER,
   colors,
   computeSize,
   FLASH_TIME,
   newDrawState,
+  origin,
   PREFERRED_TILE_SIZE,
   type RomeDrawState,
   redraw,
@@ -134,6 +136,7 @@ function newUi(_state: RomeState): RomeUi {
     kmode: KEYMODE_MOVE,
     mmode: MOUSEMODE_OFF,
     mdir: EMPTY,
+    pencilMode: false,
     // Upstream defaults: highlight the squares that reach a goal (a genuinely
     // useful built-in aid), leave loop highlighting off.
     sloops: false,
@@ -157,7 +160,7 @@ const DIGIT_DIRS: Readonly<Record<number, RomeDir>> = {
  * pixel inside the two-pixel border maps to row/column 0 rather than to -1 —
  * hence `Math.trunc`, not the shared `fromCoord`'s floor. */
 function fromCoordTrunc(pixel: number, ts: number): number {
-  return Math.trunc((pixel - BORDER) / ts);
+  return Math.trunc((pixel - origin(ts)) / ts);
 }
 
 function interpretMove(
@@ -198,6 +201,14 @@ function interpretMove(
           ),
         romeCandidateMoves,
       );
+    }
+
+    // The Marks key (and the app's bare P). The engine puts it on every
+    // note-taking game's keypad, so this is the one control a touch player has
+    // for marks: Rome's other two ways in are a right-drag and a keyboard arm.
+    if (button === PENCIL_MODE_BUTTON) {
+      ui.pencilMode = !ui.pencilMode;
+      return UI_UPDATE;
     }
 
     if (isCursorMove(button) && ui.kmode === KEYMODE_MOVE) {
@@ -251,7 +262,7 @@ function interpretMove(
 
     // Type a direction directly, in whichever mode the cursor is in.
     if (ui.cursor.visible && !(here & FM_FIXED)) {
-      const pencil = ui.kmode === KEYMODE_PENCIL;
+      const pencil = ui.kmode === KEYMODE_PENCIL || ui.pencilMode;
       const dir = DIGIT_DIRS[button];
       if (dir !== undefined) {
         ui.kmode = KEYMODE_MOVE;
@@ -274,7 +285,11 @@ function interpretMove(
       ui.cursor.y = gy;
       hideCursor(ui.cursor);
       ui.kmode = KEYMODE_MOVE;
-      ui.mmode = button === LEFT_BUTTON ? MOUSEMODE_PLACE : MOUSEMODE_PENCIL;
+      // Marks mode makes the ordinary drag a pencil drag, which is what gives a
+      // touch player the gesture at all: the right button is a mouse, and a
+      // long press is already how an arrow drag starts here.
+      ui.mmode =
+        button === LEFT_BUTTON && !ui.pencilMode ? MOUSEMODE_PLACE : MOUSEMODE_PENCIL;
       ui.mdir = EMPTY;
       return UI_UPDATE;
     }
@@ -285,8 +300,8 @@ function interpretMove(
   if (isMouseDrag(button) || isMouseRelease(button)) {
     // The direction is read from the *square* the pointer is over, not from a
     // pixel offset: back on the grabbed square means "clear".
-    const cx = p.x >= BORDER ? fromCoordTrunc(p.x, ts) : -1;
-    const cy = p.y >= BORDER ? fromCoordTrunc(p.y, ts) : -1;
+    const cx = p.x >= origin(ts) ? fromCoordTrunc(p.x, ts) : -1;
+    const cy = p.y >= origin(ts) ? fromCoordTrunc(p.y, ts) : -1;
 
     let c: number;
     if (cx === x && cy === y) c = EMPTY;

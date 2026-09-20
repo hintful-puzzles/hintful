@@ -26,7 +26,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { clearKey, pencilModeKey } from "../../engine/key-labels.ts";
+import { clearKey } from "../../engine/key-labels.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
@@ -817,7 +817,6 @@ export const undeadGame: Game<
     { button: KEY_V, label: "Vampire" },
     { button: KEY_Z, label: "Zombie" },
     clearKey,
-    pencilModeKey,
   ],
   textFormat,
 

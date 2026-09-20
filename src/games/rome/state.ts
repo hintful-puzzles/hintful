@@ -295,6 +295,20 @@ export interface RomeUi {
   mmode: number;
   /** The direction the in-flight drag currently points at (`EMPTY` = none). */
   mdir: number;
+  /**
+   * The collection's sticky Marks mode: while on, a drag lays a pencil mark and
+   * a typed direction pencils it, rather than placing an arrow.
+   *
+   * **Rome's other two ways into a mark are a right-drag and a keyboard arm,
+   * and a touch player has neither.** A right button is a mouse, and the app's
+   * long-press fallback is unusable here because a held finger on a square is
+   * already how an arrow drag begins. `kmode`'s one-shot `KEYMODE_PENCIL`
+   * arming is upstream's and stays for the keyboard-cursor flow; this is the
+   * mode the Marks key toggles, spelled as every other note-taking game spells
+   * it so the engine offers the key by seeing it (`key-labels.ts`
+   * `takesNotes`).
+   */
+  pencilMode: boolean;
   /** Preference: tint squares that are part of a loop (upstream default off). */
   sloops: boolean;
   /** Preference: tint squares whose arrows reach a goal (default on). */

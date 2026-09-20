@@ -944,9 +944,10 @@ describe("seismic keypad", () => {
   it("offers exactly the digits a generated board can accept, in both modes", () => {
     expect(PRESETS[4].mode).toBe(MODE_SEISMIC);
     expect(PRESETS[5].mode).toBe(MODE_TECTONIC);
-    // "Marks" is the collection's pencil-mode toggle, on every keypad whose
-    // game has the mode (`pencil-mode-key.test.ts`).
-    const five = ["1", "2", "3", "4", "5", "Clear", "Marks"];
+    // No "Marks": the collection's pencil-mode toggle is the engine's, appended
+    // to every note-taking game's keypad (`pencil-mode-key.test.ts`), so a game
+    // lists only what is its own.
+    const five = ["1", "2", "3", "4", "5", "Clear"];
     expect((seismicGame.requestKeys?.(PRESETS[4]) ?? []).map((k) => k.label)).toEqual(
       five,
     );

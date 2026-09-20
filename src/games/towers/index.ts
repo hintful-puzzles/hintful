@@ -28,7 +28,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { digitKeys, pencilModeKey } from "../../engine/key-labels.ts";
+import { digitKeys } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
 import { forcingChainArea, rowColRegions } from "../../engine/latin-hint.ts";
 import {
@@ -597,7 +597,7 @@ export const towersGame: Game<
   refreshHintStep: (step: HintStep<TowersMove, TowersHint>, state) =>
     refreshCandidateHintStep(step, state.grid, state.pencil, state.w),
   findMistakes,
-  requestKeys: (p) => [...digitKeys(p.w), pencilModeKey],
+  requestKeys: (p) => digitKeys(p.w),
   textFormat,
 
   prefs: [

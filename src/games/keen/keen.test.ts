@@ -10,7 +10,6 @@
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
-import { pencilModeKey } from "../../engine/key-labels.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -455,16 +454,16 @@ describe("on-screen keys (requestKeys)", () => {
   const keysFor = (w: number) =>
     keenGame.requestKeys?.({ ...keenGame.defaultParams(), w });
 
-  it("offers digits 1..w plus clear and marks at two widths", () => {
+  // The Marks key is the engine's, appended to every note-taking game's keypad
+  // (`Midend.requestKeys`); a game lists only what is its own.
+  it("offers digits 1..w plus clear at two widths", () => {
     expect(keysFor(4)).toEqual([
       ..."1234".split("").map((d) => ({ button: d.charCodeAt(0), label: d })),
       { button: 8, label: "Clear" },
-      pencilModeKey,
     ]);
     expect(keysFor(6)).toEqual([
       ..."123456".split("").map((d) => ({ button: d.charCodeAt(0), label: d })),
       { button: 8, label: "Clear" },
-      pencilModeKey,
     ]);
   });
 });

@@ -18,7 +18,6 @@ import { winFlash } from "../../engine/flash.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
-import { pencilModeKey } from "../../engine/key-labels.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -35,7 +34,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { KeyLabel, Point } from "../../engine/types.ts";
+import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import { slantHint, slantHintKeepTrack } from "./hint.ts";
 import {
@@ -302,7 +301,6 @@ export const slantGame: Game<
   findMistakes,
   hint: (state) => slantHint(state, findMistakes(state).length),
   hintKeepTrack: slantHintKeepTrack,
-  requestKeys: (): KeyLabel[] => [pencilModeKey],
 
   textFormat,
 

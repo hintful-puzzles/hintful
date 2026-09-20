@@ -7,7 +7,6 @@
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
-import { pencilModeKey } from "../../engine/key-labels.ts";
 import { pencilIndicatorReach } from "../../engine/pencil-indicator.ts";
 import {
   CURSOR_DOWN,
@@ -625,7 +624,9 @@ describe("mathrax input", () => {
     expect(press(st, ui, LEFT_BUTTON, { x: outside, y: 10 })).toBeNull();
   });
 
-  it("offers a keypad of exactly the grid's digits, Clear and Marks", () => {
+  // The Marks key is the engine's, appended to every note-taking game's keypad
+  // (`Midend.requestKeys`); a game lists only what is its own.
+  it("offers a keypad of exactly the grid's digits and Clear", () => {
     expect(mathraxGame.requestKeys?.({ ...FIX_PARAMS, o: 5 })).toEqual([
       { button: 49, label: "1" },
       { button: 50, label: "2" },
@@ -633,7 +634,6 @@ describe("mathrax input", () => {
       { button: 52, label: "4" },
       { button: 53, label: "5" },
       { button: 8, label: "Clear" },
-      pencilModeKey,
     ]);
   });
 });

@@ -22,6 +22,7 @@ import {
   LEFT_DRAG,
   LEFT_RELEASE,
   moveCursor,
+  PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
@@ -143,6 +144,16 @@ function interpretMove(
     return UI_UPDATE;
   }
 
+  // The Marks key (and the app's bare P), which the engine offers because Map
+  // keeps notes. Map's mark is laid by dragging *from* a colored region onto a
+  // blank one, and which bit it sets comes from the drag's origin — so the mode
+  // does not choose the mark, it chooses whether the drop pencils or colors,
+  // which is the `altButton` the right-drag already supplies.
+  if (button === PENCIL_MODE_BUTTON) {
+    ui.pencilMode = !ui.pencilMode;
+    return UI_UPDATE;
+  }
+
   if (isCursorMove(button)) {
     moveCursor(ui.cursor, button, w, h);
     ui.curMoved = true;
@@ -162,7 +173,7 @@ function interpretMove(
     }
     if (!ui.curMoved) ui.dragColor = -1; // double-select removes the color
     const r = regionFromUiCursor(state.map, ui);
-    return drop(state, ui, r, button === CURSOR_SELECT2);
+    return drop(state, ui, r, button === CURSOR_SELECT2 || ui.pencilMode);
   }
 
   if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
@@ -181,7 +192,7 @@ function interpretMove(
 
   if ((button === LEFT_RELEASE || button === RIGHT_RELEASE) && ui.dragColor > -2) {
     const r = regionFromCoords(state.map, ts, point.x, point.y);
-    return drop(state, ui, r, button === RIGHT_RELEASE);
+    return drop(state, ui, r, button === RIGHT_RELEASE || ui.pencilMode);
   }
 
   return null;

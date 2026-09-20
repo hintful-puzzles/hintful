@@ -38,7 +38,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { narrateLatinReason } from "../../engine/hint-text.ts";
-import { clearKey, pencilModeKey } from "../../engine/key-labels.ts";
+import { clearKey } from "../../engine/key-labels.ts";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, latinVerdict } from "../../engine/latin.ts";
 import {
   availablePlacements,
@@ -128,7 +128,7 @@ function requestKeys(p: GroupParams): KeyLabel[] {
     const ch = toChar(i + 1, p.id);
     keys.push({ button: ch.charCodeAt(0), label: ch });
   }
-  keys.push(clearKey, pencilModeKey);
+  keys.push(clearKey);
   return keys;
 }
 

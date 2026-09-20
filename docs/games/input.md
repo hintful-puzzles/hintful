@@ -807,15 +807,39 @@ Normative: the on-screen-keys requirement in
   then `'a','b',…` past nine, plus the clear key — whose `"Clear"` label is
   load-bearing (it is what the `puzzle-keys` icon map turns into the clear
   icon). Size `n` from params: Solo `c*r`, Keen/Towers `w`, Filling fixed `9`.
-- **A game with a pencil mode ends its keypad with `pencilModeKey`.** The Marks
-  key is the collection's one way into note-taking that costs no button: the
-  eleven cell games also toggle the mode with a right-click and with Enter on the
-  highlight, but Loopy's right button and held finger already rule an edge out, so
-  a shared key is what lets a player learn the mode once. It sends
-  `PENCIL_MODE_BUTTON`, which `toggleNoteTakingMode` handles for a note-taking
-  cell game and which the app's bare `P` shortcut sends too. Enrollment is by
-  having `ui.pencilMode` — `pencil-mode-key.test.ts` derives the population from
-  each game's own `newUi` and fails both directions.
+- **A game does not list the Marks key: the engine appends it.**
+  `Midend.requestKeys` adds `pencilModeKey` to any game `takesNotes` recognizes,
+  so a game supplies only what is its own. The Marks key is the collection's one
+  way into note-taking that costs no button: the cell games also toggle the mode
+  with a right-click and with Enter on the highlight, but Loopy's right button
+  and held finger already rule an edge out, so a shared key is what lets a
+  player learn the mode once. It sends `PENCIL_MODE_BUTTON`, which
+  `toggleNoteTakingMode` handles for a note-taking cell game and which the app's
+  bare `P` shortcut sends too.
+
+  **It was a per-game obligation until `derive-the-marks-key-from-having-notes`,
+  and two games never met it.** The guard read `typeof ui.pencilMode ===
+  "boolean"` — a *name*, so it saw only the games that had spelled the mode that
+  way — and read the keypad off `game.requestKeys` rather than off the `Midend`
+  the app renders. **Rome and Map carried notes with no Marks key for their
+  whole lives**, with that file green over both, until an owner noticed the
+  missing button. Two habits from it: **derive a population from the shape**
+  (`takesNotes` reads a `pencil` array *or* the mode flag, and accepts the
+  superset), and **check the artifact the player gets**, which for a keypad is
+  the midend's, not the game's.
+
+  What a game still owes is that the key *acts*: the engine can put it on the
+  panel, only the game can make it toggle. `pencil-mode-key.test.ts` asserts
+  both, with an exemption ledger that is empty and still asserts something.
+- **A sticky mode must be visible, which can cost geometry.** Acquiring
+  `ui.pencilMode` also acquires the pencil-mode indicator's corner
+  (`pencil-indicator-placement.test.ts`), and a game whose borders cannot hold
+  the glyph grows its canvas for it with `pencilIndicatorCanvas` — on **every**
+  side, so the board stays centered — then routes every drawing site through an
+  `origin(ts)` and shifts `fromCoord` by the same margin. Rome (a two-pixel
+  border) and Map (none) both did. Budget for this when giving a drag game a
+  notes mode: it is a handful of lines where the geometry already funnels
+  through one helper, and a sweep of the renderer where it does not.
 - **Match upstream's keypad exactly — including its quirks.** Unequal is the
   cautionary case: it allows order up to 32 and switches to a **`'0'`-based**
   keypad for order ≥ 10, so it gets a bespoke `unequalKeys(order)`, not

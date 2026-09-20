@@ -12,4 +12,6 @@ you are given at the start of the game.)
 
 Right-drag from a colored region to a blank one to add dots marking
 the latter region as *possibly* the same color as the
-former, or to remove those dots again.
+former, or to remove those dots again. Pressing the Marks button
+below the grid makes ordinary drags leave those dots instead of
+coloring, until you press it again.

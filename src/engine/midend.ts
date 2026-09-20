@@ -22,7 +22,8 @@ import {
   type PresetMenu,
   UI_UPDATE,
 } from "./game.ts";
-import { cancelDrags, MOD_STYLUS } from "./pointer.ts";
+import { pencilModeKey, takesNotes } from "./key-labels.ts";
+import { cancelDrags, MOD_STYLUS, PENCIL_MODE_BUTTON } from "./pointer.ts";
 import { randomNew } from "./random/index.ts";
 import { decodeSave, encodeSave, type SaveEnvelope } from "./save.ts";
 import type {
@@ -913,8 +914,52 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
 
   // --- params / presets -------------------------------------------
 
+  /**
+   * The on-screen keypad, with the Marks key appended for a game that takes
+   * notes.
+   *
+   * **The engine adds it rather than each game remembering to.** A note-taking
+   * game whose keypad lacks this key has no visible way into its own notes: the
+   * alternatives are a right-click, which a touch player does not have, and a
+   * long press, which in a drag-driven game is already the start of a drag. It
+   * was a per-game obligation until `derive-the-marks-key-from-having-notes`,
+   * held by a guard that read `ui.pencilMode` — a *name*, so it saw only the
+   * games that had spelled the mode that way, and Rome and Map carried notes
+   * for their whole lives with no key and nothing noticing (AGENTS.md § "A scan
+   * that keys on a name finds only the games that were named that way").
+   *
+   * Appending here is what makes the discrepancy unreachable: the keypad the
+   * app renders is this one, so a game **cannot** ship notes without the key,
+   * however it spells its own mode and whether or not it has a `requestKeys` at
+   * all.
+   *
+   * A game that already offers the key keeps its own placement; nothing is
+   * duplicated.
+   */
   requestKeys(): KeyLabel[] {
-    return this.game.requestKeys?.(this.params) ?? [];
+    const keys = this.game.requestKeys?.(this.params) ?? [];
+    if (!this.takesNotes()) return keys;
+    if (keys.some((k) => k.button === PENCIL_MODE_BUTTON)) return keys;
+    return [...keys, pencilModeKey];
+  }
+
+  /**
+   * Does this game take notes? Read off what the game **is**, never declared:
+   * a `pencil` array on its state, or the collection's `pencilMode` flag on its
+   * `Ui`.
+   *
+   * Both arms are needed and neither is redundant. The `pencil` array is the
+   * spelling every note-taking *board* uses and is what `hasPencilMarks` reads;
+   * but Loopy and Slant take notes without one (their marks are edge and line
+   * states), and they are known by the mode flag instead. A union is the right
+   * answer here rather than a narrowing — every game either arm catches does
+   * want the key, so the superset is exact (AGENTS.md § "A scan that keys on a
+   * name", on keying the shape and accepting the superset).
+   */
+  private takesNotes(): boolean {
+    // Before a game is loaded there is no board to read, and the keypad is
+    // requested then (the app asks as it builds the panel). No board, no notes.
+    return takesNotes(this.state, this.ui);
   }
 
   getParams(): string {

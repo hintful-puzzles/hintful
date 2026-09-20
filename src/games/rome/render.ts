@@ -18,6 +18,11 @@
  * desktop `tileSize / 2` — and `computeSize` subtracts `GRIDEXTRA * 2` back off
  * because the outer grid outline is drawn inside the border area.
  *
+ * Two pixels is not enough to hold the pencil-mode indicator, so the canvas is
+ * grown for it on every side and the board starts at {@link origin} rather than
+ * at `BORDER`. Every drawing site reads `origin`; `BORDER` remains only the
+ * inner part of it.
+ *
  * ## Colors
  *
  * The `COL_*` indices are upstream's; the colors are the shared palette's
@@ -47,6 +52,13 @@ import {
   hintMarkBit,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
+import {
+  type PencilIndicatorStyle,
+  pencilIndicatorBox,
+  pencilIndicatorCanvas,
+  pencilIndicatorReach,
+  repaintPencilIndicator,
+} from "../../engine/pencil-indicator.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import type { RomeHint } from "./hint.ts";
 import type { RomeMistake } from "./index.ts";
@@ -83,6 +95,20 @@ export const PREFERRED_TILE_SIZE = 40;
 const GRIDEXTRA = 1;
 /** `NARROW_BORDERS` arm: the top/left grid outline is drawn in the border. */
 export const BORDER = GRIDEXTRA * 2;
+
+/**
+ * Where the board starts, in canvas pixels: {@link BORDER} plus the room the
+ * pencil-mode indicator needs.
+ *
+ * Rome's own border is two pixels, so it had nothing to lend the indicator's
+ * top-right corner, and `pencilIndicatorCanvas` grows the canvas on **every**
+ * side rather than one so the board keeps equal margins instead of being pushed
+ * off-center. Every drawing site and `fromCoord` reads this rather than
+ * `BORDER`; the two differ only by that margin.
+ */
+export function origin(ts: number): number {
+  return pencilIndicatorReach(ts) + BORDER;
+}
 
 const FLASH_FRAME = 0.1;
 export const FLASH_TIME = 0.7;
@@ -132,11 +158,15 @@ export function colors(defaultBackground: Color): Color[] {
 // --- geometry ---------------------------------------------------------------
 
 export function computeSize(p: RomeParams, ts: number): Size {
-  // Compensate for the outer grid outline drawn in the border area.
-  return {
-    w: p.w * ts + 2 * BORDER - GRIDEXTRA * 2,
-    h: p.h * ts + 2 * BORDER - GRIDEXTRA * 2,
-  };
+  // Compensate for the outer grid outline drawn in the border area, then grow
+  // the canvas for the pencil-mode indicator's corner ({@link origin}).
+  return pencilIndicatorCanvas(
+    {
+      w: p.w * ts + 2 * BORDER - GRIDEXTRA * 2,
+      h: p.h * ts + 2 * BORDER - GRIDEXTRA * 2,
+    },
+    ts,
+  );
 }
 
 // --- draw state -------------------------------------------------------------
@@ -156,6 +186,8 @@ export interface RomeDrawState {
   hint: OverlaySidecar;
   /** The hint's ring and outline, painted after the square loop. */
   marks: HintMarks;
+  /** What the pencil-mode indicator shows; `null` = never painted. */
+  pencilModeShown: boolean | null;
 }
 
 export function newDrawState(state: RomeState, tileSize: number): RomeDrawState {
@@ -167,8 +199,17 @@ export function newDrawState(state: RomeState, tileSize: number): RomeDrawState 
     mistakes: new OverlaySidecar(s),
     hint: new OverlaySidecar(s),
     marks: new HintMarks(),
+    pencilModeShown: null,
   };
 }
+
+/** The pencil-mode indicator's colors: the pencil body in Rome's own mark
+ * color, so the glyph reads as "this is what your drag will draw". */
+const PENCIL_STYLE: PencilIndicatorStyle = {
+  background: COL_BACKGROUND,
+  body: COL_ARROW_PENCIL,
+  ink: COL_BORDER,
+};
 
 /**
  * Where a square's hint band sits: **inside** its content box, over pixels the
@@ -188,8 +229,8 @@ function markBand(ds: RomeDrawState, x: number, y: number): MarkBand {
   const inset = GRIDEXTRA * 2;
   return {
     box: {
-      x: BORDER + x * ts + inset,
-      y: BORDER + y * ts + inset,
+      x: origin(ts) + x * ts + inset,
+      y: origin(ts) + y * ts + inset,
       w: ts - 1 - 2 * inset,
       h: ts - 1 - 2 * inset,
     },
@@ -280,6 +321,7 @@ export function redraw(
   mistakes?: readonly RomeMistake[],
 ): void {
   const ts = ds.tileSize;
+  const ox = origin(ts);
   const { w, h, grid, pencil, regions } = state;
 
   // The win animation hides the *displayed* cursor while leaving `ui.cursor`
@@ -293,16 +335,16 @@ export function redraw(
   }
 
   if (!ds.started) {
-    const fullW = w * ts + 2 * BORDER;
-    const fullH = h * ts + 2 * BORDER;
+    // The whole canvas, indicator margin included, so nothing is left unpainted.
+    const { w: fullW, h: fullH } = computeSize({ w, h, diff: 0 }, ts);
     dr.drawRect({ x: 0, y: 0, w: fullW, h: fullH }, COL_BACKGROUND);
     dr.drawUpdate({ x: 0, y: 0, w: fullW, h: fullH });
     // The grid: every square's own rect is inset into this, so what survives
     // is the outline.
     dr.drawRect(
       {
-        x: BORDER - GRIDEXTRA * 2,
-        y: BORDER - GRIDEXTRA * 2,
+        x: ox - GRIDEXTRA * 2,
+        y: ox - GRIDEXTRA * 2,
         w: w * ts + GRIDEXTRA * 2,
         h: h * ts + GRIDEXTRA * 2,
       },
@@ -355,8 +397,8 @@ export function redraw(
       ds.mistakes.commit(i1);
       ds.hint.commit(i1);
 
-      let cx = BORDER + x * ts;
-      let cy = BORDER + y * ts;
+      let cx = ox + x * ts;
+      let cy = ox + y * ts;
       let cw = ts - 1;
       let ch = ts - 1;
       dr.drawUpdate({ x: cx, y: cy, w: cw, h: ch });
@@ -397,8 +439,8 @@ export function redraw(
 
       dr.drawRect({ x: cx, y: cy, w: cw, h: ch }, color);
 
-      const midX = BORDER + x * ts + Math.floor(ts / 2);
-      const midY = BORDER + y * ts + Math.floor(ts / 2);
+      const midX = ox + x * ts + Math.floor(ts / 2);
+      const midY = ox + y * ts + Math.floor(ts / 2);
 
       if (cursorShown && ui.kmode === KEYMODE_PENCIL && onHighlight) {
         dr.drawText(
@@ -429,10 +471,10 @@ export function redraw(
             line(dr, 1, mx - q, my + q, mx + q, my - q, COL_ARROW_PENCIL);
           }
         };
-        markAt(FM_UP, midX, BORDER + y * ts + Math.floor(ts / 4), 1);
-        markAt(FM_DOWN, midX, BORDER + y * ts + Math.floor((3 * ts) / 4), 2);
-        markAt(FM_LEFT, BORDER + x * ts + Math.floor(ts / 4), midY, 3);
-        markAt(FM_RIGHT, BORDER + x * ts + Math.floor((3 * ts) / 4), midY, 4);
+        markAt(FM_UP, midX, ox + y * ts + Math.floor(ts / 4), 1);
+        markAt(FM_DOWN, midX, ox + y * ts + Math.floor((3 * ts) / 4), 2);
+        markAt(FM_LEFT, ox + x * ts + Math.floor(ts / 4), midY, 3);
+        markAt(FM_RIGHT, ox + x * ts + Math.floor((3 * ts) / 4), midY, 4);
         if (p & FD_ENTRY) {
           dr.drawRect({ x: midX - 2, y: midY - 2, w: 4, h: 4 }, COL_ARROW_PENCIL);
         }
@@ -454,8 +496,8 @@ export function redraw(
         const inset = Math.max(2, Math.floor(ts / 10));
         drawRectOutline(
           dr,
-          BORDER + x * ts + inset,
-          BORDER + y * ts + inset,
+          ox + x * ts + inset,
+          ox + y * ts + inset,
           ts - 1 - 2 * inset,
           ts - 1 - 2 * inset,
           COL_ARROW_ERROR,
@@ -487,4 +529,15 @@ export function redraw(
     targetColor: COL_HINT,
     evidenceColor: COL_HINT_CELL,
   });
+
+  // The pencil-mode indicator (fork addition), in the engine's corner. A sticky
+  // mode with no visible state is a trap: the Marks key arms a drag to draw a
+  // mark rather than an arrow, and this is what says so.
+  repaintPencilIndicator(
+    dr,
+    ds,
+    ui.pencilMode,
+    pencilIndicatorBox(computeSize({ w, h, diff: 0 }, ts), ts),
+    PENCIL_STYLE,
+  );
 }

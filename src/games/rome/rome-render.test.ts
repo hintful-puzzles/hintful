@@ -6,6 +6,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/midend.ts";
+import { pencilIndicatorReach } from "../../engine/pencil-indicator.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -27,6 +28,7 @@ import {
   COL_LOWLIGHT,
   computeSize,
   newDrawState,
+  origin,
   PREFERRED_TILE_SIZE,
   type RomeDrawState,
   redraw,
@@ -90,7 +92,13 @@ describe("geometry", () => {
     // because that outline is drawn inside the border area — not the desktop
     // `tileSize / 2` (docs/games/rendering.md § "The tile cache and the diff key").
     expect(BORDER).toBe(2);
-    expect(computeSize({ w: 6, h: 6, diff: 0 }, 40)).toEqual({ w: 242, h: 242 });
+    // The board is 6*40 + 2*2 - 2 = 242 across, and the canvas is that plus the
+    // pencil-mode indicator's reach on **both** sides: two pixels of border
+    // cannot hold the glyph, so `computeSize` grows for it and the board starts
+    // at `origin` rather than at `BORDER`.
+    expect(pencilIndicatorReach(40)).toBe(20);
+    expect(origin(40)).toBe(22);
+    expect(computeSize({ w: 6, h: 6, diff: 0 }, 40)).toEqual({ w: 282, h: 282 });
   });
 });
 
@@ -101,8 +109,10 @@ describe("region outlines", () => {
    * its sides border another region. */
   function topLeftTile(desc: string): { w: number; h: number } {
     const { dr } = frame(board(3, 3, desc), newUi());
+    // `origin`, not `BORDER`: the board starts past the pencil-mode
+    // indicator's margin, and the `+ 1` is the square's own region inset.
     const rect = dr.ops.find(
-      (o) => o.op === "rect" && o.x === BORDER + 1 && o.y === BORDER + 1,
+      (o) => o.op === "rect" && o.x === origin(TS) + 1 && o.y === origin(TS) + 1,
     );
     if (!rect || rect.op !== "rect") throw new Error("no top-left tile rect");
     return { w: rect.w, h: rect.h };

@@ -11,7 +11,6 @@
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
-import { pencilModeKey } from "../../engine/key-labels.ts";
 import {
   CURSOR_RIGHT,
   CURSOR_SELECT,
@@ -727,7 +726,6 @@ describe("salad presentation hooks", () => {
       { button: 88, label: "X" },
       { button: 79, label: "O" },
       { button: 8, label: "Clear" },
-      pencilModeKey,
     ]);
     expect(saladGame.requestKeys?.(NUMBERS.p)?.slice(0, 3)).toEqual([
       { button: 49, label: "1" },

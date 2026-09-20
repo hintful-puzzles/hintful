@@ -24,7 +24,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { digitKeys, pencilModeKey } from "../../engine/key-labels.ts";
+import { digitKeys } from "../../engine/key-labels.ts";
 import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
@@ -359,7 +359,7 @@ export const seismicGame: Game<
   // Sized to the regions the generator *makes*, not the nine the format admits:
   // entry is capped at the cell's region size, so a digit no region can hold is
   // a button that does nothing — and on touch the panel is the only way to type.
-  requestKeys: (p) => [...digitKeys(maxGeneratedRegionSize(p.mode)), pencilModeKey],
+  requestKeys: (p) => digitKeys(maxGeneratedRegionSize(p.mode)),
   textFormat,
 
   prefs: [stickyPencilPref<SeismicUi>(), pencilKeepHighlightPref<SeismicUi>()],

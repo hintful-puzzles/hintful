@@ -34,7 +34,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { narrateLatinReason } from "../../engine/hint-text.ts";
-import { digitKeys, pencilModeKey } from "../../engine/key-labels.ts";
+import { digitKeys } from "../../engine/key-labels.ts";
 import { forcingChainArea, rowColRegions } from "../../engine/latin-hint.ts";
 import {
   pressNoteTakingCell,
@@ -584,7 +584,7 @@ export const mathraxGame: Game<
   hint,
   hintKeepTrack,
   refreshHintStep,
-  requestKeys: (p) => [...digitKeys(p.o), pencilModeKey],
+  requestKeys: (p) => digitKeys(p.o),
 
   prefs: [
     autoPencilPref<MathraxUi>(

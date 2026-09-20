@@ -42,7 +42,6 @@ import {
 } from "../../engine/game.ts";
 import type { Grid, GridDot, GridEdge } from "../../engine/grid/index.ts";
 import { gridNearestEdge } from "../../engine/grid/index.ts";
-import { pencilModeKey } from "../../engine/key-labels.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -61,7 +60,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { KeyLabel, Point } from "../../engine/types.ts";
+import type { Point } from "../../engine/types.ts";
 import {
   farDot,
   type LoopyCursor,
@@ -782,7 +781,6 @@ export const loopyGame: Game<
   refreshHintStep,
   textFormat,
   prefs,
-  requestKeys: (): KeyLabel[] => [pencilModeKey],
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

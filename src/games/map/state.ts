@@ -160,6 +160,17 @@ export interface MapUi {
   curLastmove: number;
   curMoved: boolean;
 
+  /**
+   * The collection's sticky Marks mode: while on, a drop pencils rather than
+   * colors, which is exactly what a right-drag already does.
+   *
+   * Map's mark is not chosen by the mode — which pencil bit a drop sets comes
+   * from the color the drag started on — so this arms the *kind* of drop, not
+   * its content. That is why it fits: `drop` already takes the boolean, and the
+   * mode just supplies it from somewhere a touch player can reach.
+   */
+  pencilMode: boolean;
+
   // preferences
   /** 0 = cyclic, 1 = each-to-white, 2 = all-to-white. */
   flashType: number;
@@ -176,6 +187,7 @@ export function newUi(_state: MapState): MapUi {
     cursor: newCursor(),
     curLastmove: 0,
     curMoved: false,
+    pencilMode: false,
     flashType: FLASH_CYCLIC,
     showNumbers: false,
     largeStipples: false,

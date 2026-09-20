@@ -16,7 +16,6 @@
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import type { Grid, GridFace } from "../../engine/grid/index.ts";
-import { pencilModeKey } from "../../engine/key-labels.ts";
 import { Midend } from "../../engine/midend.ts";
 import {
   CURSOR_DOWN,
@@ -204,9 +203,10 @@ describe("notes mode by pointer", () => {
     expect(b.ui.pencilMode).toBe(true);
     expect(input(b, NOTES)).toBe(UI_UPDATE);
     expect(b.ui.pencilMode).toBe(false);
-    // Loopy's keypad is that key and nothing else; that every pencil game offers
-    // it, and that pressing it toggles the mode, is `pencil-mode-key.test.ts`.
-    expect(loopyGame.requestKeys?.(b.p)).toEqual([pencilModeKey]);
+    // Loopy lists no keys of its own: the Marks key is the engine's, appended
+    // to every note-taking game's keypad (`Midend.requestKeys`), so Loopy's
+    // panel is that key and nothing else without Loopy saying so.
+    expect(loopyGame.requestKeys).toBeUndefined();
   });
 
   it("a tap cycles the corner it lands in; the right button, a held finger, cycles back", () => {

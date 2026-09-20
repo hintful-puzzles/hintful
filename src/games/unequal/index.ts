@@ -30,7 +30,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { narrateLatinReason } from "../../engine/hint-text.ts";
-import { clearKey, pencilModeKey } from "../../engine/key-labels.ts";
+import { clearKey } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
 import { forcingChainArea, rowColRegions } from "../../engine/latin-hint.ts";
 import {
@@ -606,7 +606,7 @@ export const unequalGame: Game<
   hintKeepTrack,
   refreshHintStep,
   findMistakes,
-  requestKeys: (p): KeyLabel[] => [...unequalKeys(p.order), pencilModeKey],
+  requestKeys: (p): KeyLabel[] => unequalKeys(p.order),
   textFormat,
 
   prefs: [
