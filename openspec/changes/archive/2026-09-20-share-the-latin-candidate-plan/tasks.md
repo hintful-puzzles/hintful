@@ -56,11 +56,25 @@ then § 6, which records what the re-measurement did to the proposal's premises.
 - [x] 5.1 Every converted game is byte-identical: all six games' suites and
       every hint/render snapshot passed **unchanged**, with no `-u`. Nothing
       moved, so there is no snapshot to explain — which is what D5 asked for.
-- [x] 5.2 `npm run test:slow` for each game touched.
+- [x] 5.2 `npm run test:slow -- <the six games> <the two engine files>`: 23 files,
+      510 tests, all passing. **It vouched for nothing extra**, and saying so is
+      the point: none of the six references `engine/testing/slow`, so the slow
+      tier runs them identically to the gate (510 = the six games' 486 plus the
+      two engine files' 24). The assurance here is the gate and the unmoved
+      snapshots, not this.
 - [x] 5.3 `docs/games/hints.md` repointed: the "genuinely decides" sentence no
       longer lists regions unconditionally, the `regionsOf` paragraph says the
       preset supplies them, and a new § "The row/column preset" holds the
       per-field table. `docs/games/engine-catalog.md` gained the preset.
+
+- [x] 5.4 Ran the app (Chromium, dev server), because the sentences and the
+      shading are player-visible even when byte-identical. Mathrax: the populate
+      opener, the obvious clean reading "…already standing in each cell's row or
+      column" (Mathrax's two words, the preset's phrase), its own `6+` clue arm,
+      naked singles and dup culls. Unequal: a hidden single narrated "In this
+      column, 1 can go in only this cell…" with **the whole column shaded as
+      evidence** and the target cell outlined, as one two-step journey — the
+      evidence line being exactly what the preset now supplies.
 
 ## 6. Fall-out
 

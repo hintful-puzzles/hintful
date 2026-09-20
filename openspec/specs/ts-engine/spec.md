@@ -5675,7 +5675,8 @@ plan's own rung order SHALL decide, so a plan with no earlier step opens exactly
 rung order says.
 
 The engine SHALL own the choice (`HintFrontier` in `src/engine/hint-frontier.ts`, which
-`runCandidatePlan` drives) and SHALL read each firing's premise off the steps the firing
+the shared candidate-plan walk drives) and SHALL read each firing's premise off the
+steps the firing
 would push: the `area ∪ targets` of every one of them, built before the choice and
 pushed unchanged if it is taken. No firing SHALL carry a second statement of its
 premise. The game SHALL own which firings are available. A firing SHALL be offered to
@@ -5689,6 +5690,11 @@ The frontier SHALL key only on the plan's own earlier steps, never on the midend
 displayed step or the player's moves, so the same board always yields the same plan.
 The choice SHALL stay on the hint path: no generator or solver explores in a different
 order because of it.
+
+The population the guard measures SHALL be derived from the games' own sources, and
+SHALL be keyed on the shape every entry into the walk shares rather than on one entry
+point's name, so a preset over the walk does not silently remove its games from the
+measurement.
 
 #### Scenario: a firing beside the last step is taken over an easier one elsewhere
 
@@ -5710,11 +5716,20 @@ order because of it.
 
 #### Scenario: the plans are measured from outside
 
-- **WHEN** the plans of every game that walks its plan with `runCandidatePlan` are walked over its
+- **WHEN** the plans of every game that walks its plan with the shared candidate-plan
+  walk, by any entry into it, are walked over its
   presets and each step that reads nothing its predecessor wrote is checked for a later,
   already-available firing that did
 - **THEN** fewer than one such step in ten passed over one, and the check fails when
   the frontier's preference is reversed
+
+#### Scenario: the measured population survives a new entry point
+
+- **WHEN** a preset over the walk is added and the games taking it stop naming the
+  general entry point
+- **THEN** those games remain in the measured population, and a key that stops matching
+  a call site fails against a second, independent derivation of the same population
+  rather than passing over a smaller one
 
 #### Scenario: a firing continues from the evidence it shades
 
@@ -5813,8 +5828,8 @@ reasons.
 The engine SHALL provide the whole candidate-elimination hint *plan* walk
 (`runCandidatePlan` in `src/engine/candidate-plan.ts`) for every pencil-notes game whose
 hint sets and strikes candidate notes and places a value when a cell's notes collapse to
-one, and such a game's `buildSteps` SHALL hand its plan to it rather than walk, build or
-apply steps itself.
+one, and such a game's `buildSteps` SHALL hand its plan to it — directly, or through a
+preset over it — rather than walk, build or apply steps itself.
 
 The walk SHALL own:
 
@@ -5834,10 +5849,11 @@ The walk SHALL own:
 5. **Journey continuation**: a firing is emitted whole, its later legs flagged
    `continuesPrevious`, so no game tracks which firing a step belongs to.
 
-The game SHALL keep what carries its meaning: its recording solver, its regions, the
+The game SHALL keep what carries its meaning: its recording solver, the
 words and evidence of its steps, the axis its strikes split into legs on (dictated by
-what the narration names singular), its own rungs, and the deviations the walk names as
-optional hooks, each stating the game-shaped fact that needs it.
+what the narration names singular), its own rungs, the deviations the walk names as
+optional hooks, each stating the game-shaped fact that needs it, and its regions where
+those are a decision the game makes rather than one its family has already answered.
 
 The engine SHALL also provide the pure plan helpers over a working `(grid, pencil)` and a
 recorded `DeductionRecord[]` script (every naked single, whether any empty cell lacks
@@ -5849,7 +5865,8 @@ placement, `joinNums`), and generic `keepCandidateHintTrack` and
 
 The placement classifier in `src/engine/latin-hint.ts` SHALL classify over an arbitrary
 region list, so a game reasoning over sub-blocks and diagonals (Solo) classifies a hidden
-single in any of its regions, while the row/column games pass only `[row, column]`.
+single in any of its regions, while a plain row/column square reasons over `[row,
+column]` alone.
 
 The walk is hint-plan plumbing only: the solvers and the generator/solve paths SHALL NOT
 change because of it.
@@ -5881,8 +5898,58 @@ change because of it.
 
 #### Scenario: A game's steps are built by the walk
 
-- **WHEN** any game that walks its plan with `runCandidatePlan` emits a placement or a
+- **WHEN** any game that walks its plan with the shared candidate-plan walk, by any
+  entry into it, emits a placement or a
   strike
 - **THEN** the step's move is the game's own placement or strike move, its `targets`
   are the cells that move acts on, each once, and its `marks` are the candidates it
   strikes
+
+### Requirement: A row/column Latin square answers no question its regions already settle
+
+The engine SHALL provide a preset over the candidate-elimination plan walk
+(`runLatinCandidatePlan` in `src/engine/candidate-plan.ts`) supplying every plan field
+whose answer is **forced** once a game's cells' no-repeat regions are exactly a row and
+a column, so that a plain Latin game supplies its recording solver, its own rungs and
+its own words and nothing else. The fields SHALL be:
+
+1. **the regions** — the row and the column of the cell, in narration-preference order;
+2. **the reason a single narrates as** — naked, or hidden in the region the classifier
+   found, which given a row/column region is the only function of that signature;
+3. **a hidden single's placement evidence** — the cells of its own line, shaded over
+   whatever area the game's own words returned, so the game says why and the preset
+   shades where;
+4. **the two setup sentences** — built from the game's value noun and its verb for a
+   value already on the board, which are per-game words, while the phrase naming the
+   regions is not.
+
+A game whose singles narrate over any other region SHALL be unable to take the preset:
+the preset's parameter type SHALL fail to type-check for a reason union that cannot hold
+the single reason the preset synthesizes, rather than relying on a convention or a
+roster to keep such a game away. Every game SHALL remain free to call the general entry
+point, and a game that does SHALL say why in its change.
+
+The preset SHALL be behavior-preserving for the games converted to it: the plans, the
+narration and the shaded evidence SHALL be identical to what those games produced when
+they answered the same questions themselves.
+
+#### Scenario: A plain Latin game declares no regions
+
+- **WHEN** a candidate-elimination game whose cells' no-repeat regions are exactly a row
+  and a column walks its hint plan
+- **THEN** it passes no region function, no single-reason function and no hidden-single
+  evidence area, and its hidden singles are still classified in, narrated by and shaded
+  along the correct line
+
+#### Scenario: A game reasoning over other regions cannot take the preset
+
+- **WHEN** a game whose hidden singles name a sub-block, a diagonal or a cage is written
+  against the preset
+- **THEN** it fails to type-check, and the game walks its plan through the general entry
+  point instead
+
+#### Scenario: The setup sentences name the regions without being told them
+
+- **WHEN** a game on the preset supplies only its value noun and its placement verb
+- **THEN** the populate and obvious-clean steps read in that game's words and name its
+  cells' row and column, and no game on the preset states that phrase itself
