@@ -2932,6 +2932,25 @@ its cage-mates and the notes never did, so a later single rested on a strike
 the player never saw, and the hint threw on about one fresh Killer board in
 six.
 
+**A region also carries the word a sentence calls it by.** Where narration
+cites *which kinds* of region a value may not repeat in — Solo's dup cull
+("it can't repeat in its row, column, block, diagonal or cage") and its
+opening clean — read those words off the regions, as a `name` on every arm of
+the game's own `CellRegion`, never from a second list. Solo held two
+statements of the same set twelve lines apart with nothing holding them
+together, and what drifts is a sentence a player is asked to trust. The word
+cannot ride the hidden-single tag: the Killer cage is untagged on purpose and
+still has to be named. Dedup on the **name**, not the region — a cell on both
+X diagonals says "diagonal" once — and where the sentence speaks for the whole
+board at once, take the union over the board, so a cell lying on neither
+diagonal is still told its notes were cleaned against them. Exemplar:
+[`solo/index.ts`](../../src/games/solo/index.ts)'s `regionsOf` +
+`noRepeatRegionNames`, guarded by `solo-hint.test.ts`'s "solo no-repeat region
+names". The name stays the game's rather than joining `CellRegion`, because
+**Solo is the only game that supplies a `regionsOf` at all** — every other
+candidate-elimination game takes the row/column preset, whose region phrase is
+a constant.
+
 **The walk and its steps are shared; the meaning is the game's.**
 `runCandidatePlan` owns the loop — the note-free opening, populate and the
 obvious clean, taking each next firing through the `HintFrontier`, telling the

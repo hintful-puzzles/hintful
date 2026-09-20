@@ -10,11 +10,16 @@
  * in a game's `prefs` array (Crossing lists sticky-pencil fourth, after three
  * of its own).
  *
- * `auto-pencil`'s label is deliberately **not** shared: it names the
- * regions the placement clears ("its row, column and block" in Solo, "its row
- * and column" in Keen and Unequal, and Towers places a *tower* rather than a
- * number), so the sentence is a per-game fact and is passed in. Sharing only
- * the keyword and plumbing is the honest amount to share.
+ * `auto-pencil`'s label is deliberately **not** shared: it names what the
+ * placement clears ("its row and column" in Keen and Unequal, and Towers
+ * places a *tower* rather than a number), so the sentence is a per-game fact
+ * and is passed in. Sharing only the keyword and plumbing is the honest amount
+ * to share.
+ *
+ * A game whose regions depend on its mode names the **relation** instead of
+ * listing them — Solo's row/column/block gain a diagonal under X and a cage
+ * under Killer, so any list is a second statement of its `regionsOf` that no
+ * one board makes true.
  */
 
 import type { GamePref } from "./game.ts";

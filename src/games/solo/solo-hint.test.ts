@@ -16,7 +16,7 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { newSoloDesc } from "./generator.ts";
-import { soloGame } from "./index.ts";
+import { noRepeatRegionNames, regionsOf, soloGame } from "./index.ts";
 import { COL_HINT_CELL, COL_PENCIL } from "./render.ts";
 import { type HintReason, recordSoloDeductions } from "./solver.ts";
 import {
@@ -400,6 +400,81 @@ describe("solo killer cages forbid repeats", () => {
       autoElim: true,
     });
     expect(cageMatesNoting(after, found.y * cr + found.x, found.n)).toEqual([]);
+  });
+});
+
+// --- tier 1: the words a repeat sentence cites ------------------------------
+
+describe("solo no-repeat region names", () => {
+  /** Every optional region at once: X diagonals *and* killer cages. A board
+   * with neither exercises three region kinds of six and passes everything
+   * below, so the naming guard is worth nothing without one. `cr` is odd on
+   * purpose — the center cell lies on both diagonals, which is the only cell
+   * anywhere that asks the naming to collapse two regions into one word. */
+  const XKILLER: SoloParams = { ...KILLER, xtype: true };
+
+  /** The word each region kind is named by. Written out here rather than read
+   * off the production mapping, so the guard has an oracle of its own: a
+   * renamed region word fails this whether or not the derivation still agrees
+   * with itself. */
+  const WORD: Record<string, string> = {
+    row: "row",
+    col: "column",
+    block: "block",
+    diag0: "diagonal",
+    diag1: "diagonal",
+    cage: "cage",
+  };
+
+  const kindOf = (r: ReturnType<typeof regionsOf>[number]): string =>
+    r.holdsEvery ? r.region.kind : "cage";
+
+  it("names exactly each cell's regions, the two diagonals as one word", () => {
+    const { st } = gen(XKILLER, "region-names");
+    const cr = st.cr;
+    const seen = new Set<string>();
+    let onBothDiagonals = 0;
+    let cells = 0;
+    for (let y = 0; y < cr; y++)
+      for (let x = 0; x < cr; x++) {
+        const kinds = regionsOf(st, x, y).map(kindOf);
+        for (const k of kinds) seen.add(k);
+        if (kinds.includes("diag0") && kinds.includes("diag1")) onBothDiagonals++;
+        expect(noRepeatRegionNames(st, { x, y })).toEqual([
+          ...new Set(kinds.map((k) => WORD[k])),
+        ]);
+        cells++;
+      }
+    expect(cells).toBe(cr * cr);
+    expect(onBothDiagonals).toBe(1);
+    expect([...seen].sort()).toEqual(["block", "cage", "col", "diag0", "diag1", "row"]);
+  });
+
+  it("the at-less call is the union over the board", () => {
+    const { st } = gen(XKILLER, "region-names");
+    const cr = st.cr;
+    const union = new Set<string>();
+    for (let y = 0; y < cr; y++)
+      for (let x = 0; x < cr; x++)
+        for (const r of regionsOf(st, x, y)) union.add(WORD[kindOf(r)]);
+    expect(noRepeatRegionNames(st)).toEqual([...union]);
+    // `say.cleanObvious` speaks for the whole board at once, so a cell off the
+    // diagonals must still be told its notes were cleaned against them.
+    expect(noRepeatRegionNames(st)).toContain("diagonal");
+  });
+
+  it("omits the regions a board has not got", () => {
+    expect(noRepeatRegionNames(gen(BASIC, "region-plain").st)).toEqual([
+      "row",
+      "column",
+      "block",
+    ]);
+    expect(noRepeatRegionNames(gen(XADV, "region-x").st)).toEqual([
+      "row",
+      "column",
+      "block",
+      "diagonal",
+    ]);
   });
 });
 

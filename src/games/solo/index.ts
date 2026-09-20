@@ -55,7 +55,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { ConfigValues, KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newSoloDesc } from "./generator.ts";
-import { say } from "./hint-text.ts";
+import { regionName, say } from "./hint-text.ts";
 import {
   colors,
   computeSize,
@@ -225,8 +225,8 @@ function interpretMove(
   }
 
   // 'M' / 'm': fill all pencil marks, then (on a fully-noted board) clean the
-  // obvious candidates already placed in each cell's row, column, block, (X)
-  // diagonal or (killer) cage — the basic-region opening, in one press.
+  // obvious candidates already placed in one of the cell's `regionsOf` regions
+  // — the basic-region opening, in one press.
   if (button === 77 || button === 109)
     return adaptiveMarkAllMove<SoloMove>(state.grid, state.pencil, cr, (x, y) =>
       regionsOf(state, x, y),
@@ -235,9 +235,9 @@ function interpretMove(
   return null;
 }
 
-/** Strike digit `n` from the pencil marks of every cell sharing a row, column,
- * block, diagonal (xtype) or cage (killer) with `(x, y)` — auto-pencil cleanup
- * on a real placement. */
+/** Strike digit `n` from the pencil marks of every cell sharing one of
+ * {@link regionsOf}'s regions with `(x, y)` — auto-pencil cleanup on a real
+ * placement. */
 function autoEliminate(state: SoloState, x: number, y: number, n: number): void {
   const cell = y * state.cr + x;
   for (const { cells } of regionsOf(state, x, y))
@@ -377,17 +377,22 @@ function regionCells(region: SoloRegion, state: SoloState): Point[] {
 }
 
 /** A region a digit may not repeat in. The ones holding every digit are tagged
- * for naming a hidden single; a killer cage is not one, so it has no tag. */
+ * for naming a hidden single; a killer cage is not one, so it has no tag — and
+ * `SoloRegion` must not grow an arm for it, because the narration and evidence
+ * switches over `SoloRegion` are exhaustive and may never see a cage. The
+ * **reader's** word for the region therefore rides here instead, on every arm:
+ * a region added to {@link regionsOf} cannot compile without saying what a
+ * sentence citing it calls it. */
 type SoloCellRegion =
-  | { cells: number[]; holdsEvery: true; region: SoloRegion }
-  | { cells: number[]; holdsEvery: false };
+  | { cells: number[]; holdsEvery: true; region: SoloRegion; name: string }
+  | { cells: number[]; holdsEvery: false; name: string };
 
 /** The regions of cell `(x, y)`, in narration-preference order: row, column,
  * sub-block, the X diagonals it lies on, then its killer cage. A cage forbids
  * repeats without having to hold every digit. Auto-pencil, Mark-all and the
  * hint all read this one list, so none of them leaves a cage-mate's note
  * standing that the solver has struck. */
-function regionsOf(state: SoloState, x: number, y: number): SoloCellRegion[] {
+export function regionsOf(state: SoloState, x: number, y: number): SoloCellRegion[] {
   const cr = state.cr;
   const cell = y * cr + x;
   const whole: SoloRegion[] = [
@@ -401,25 +406,39 @@ function regionsOf(state: SoloState, x: number, y: number): SoloCellRegion[] {
     cells: cellsOf(region, state),
     holdsEvery: true,
     region,
+    name: regionName(region),
   }));
   const killer = state.killerData;
   if (killer) {
     const cage = killer.kblocks.whichblock[cell];
-    regions.push({ cells: killer.kblocks.blocks[cage], holdsEvery: false });
+    regions.push({
+      cells: killer.kblocks.blocks[cage],
+      holdsEvery: false,
+      name: "cage",
+    });
   }
   return regions;
 }
 
-/** The names of the regions {@link regionsOf} returns for `(x, y)`, or
- * for any cell when `at` is omitted — what a sentence about a repeat cites. */
-function noRepeatRegionNames(state: SoloState, at?: Point): string[] {
-  const names = ["row", "column", "block"];
-  const cell = at ? at.y * state.cr + at.x : null;
-  const onDiagonal =
-    cell === null || onDiag0(cell, state.cr) || onDiag1(cell, state.cr);
-  if (state.xtype && onDiagonal) names.push("diagonal");
-  if (state.killerData) names.push("cage");
-  return names;
+/** The names of the regions {@link regionsOf} returns for `(x, y)`, or of every
+ * region on the board when `at` is omitted — what a sentence about a repeat
+ * cites. Read off the regions themselves, so a region added to `regionsOf` is
+ * named by the sentences the moment it exists.
+ *
+ * Names rather than regions are what dedup here: a cell on both X diagonals
+ * declares two regions and the sentence says "diagonal" once. And the
+ * `at`-less call is the union over the board rather than one cell's answer,
+ * because `say.cleanObvious` speaks for every cell at once — a cell off the
+ * diagonals must still be told its notes were cleaned against them. */
+export function noRepeatRegionNames(state: SoloState, at?: Point): string[] {
+  const cr = state.cr;
+  const names = new Set<string>();
+  const add = (x: number, y: number): void => {
+    for (const region of regionsOf(state, x, y)) names.add(region.name);
+  };
+  if (at) add(at.x, at.y);
+  else for (let y = 0; y < cr; y++) for (let x = 0; x < cr; x++) add(x, y);
+  return [...names];
 }
 
 /** The reason a single of `n` narrates as, once `availablePlacements` has
@@ -721,8 +740,11 @@ export const soloGame: Game<
   requestKeys: (p): KeyLabel[] => [...digitKeys(p.c * p.r), pencilModeKey],
 
   prefs: [
+    // Named by the relation, not by a list: Solo's regions depend on the mode
+    // (X adds the diagonals, Killer the cage), and a list here would be a
+    // second statement of `regionsOf` that no board makes true at once.
     autoPencilPref<SoloUi>(
-      "When you place a number, remove it from pencil marks in its row, column and block",
+      "When you place a number, remove it from the pencil marks it rules out",
     ),
     stickyPencilPref<SoloUi>(),
     pencilKeepHighlightPref<SoloUi>(),

@@ -28,8 +28,10 @@ import type { ForcingLink } from "../../engine/latin-hint.ts";
 import { digitChar } from "./render.ts";
 import type { SoloRegion } from "./solver.ts";
 
-/** The reader-facing name of a region. */
-function regionName(region: SoloRegion): string {
+/** The reader-facing name of a region — the one statement of what a sentence
+ * calls each region, read both by the sentences below and by `regionsOf`, which
+ * tags every region it builds with it. */
+export function regionName(region: SoloRegion): string {
   switch (region.kind) {
     case "row":
       return "row";
