@@ -1,0 +1,7 @@
+# No delta yet: the shape is settled (`axisSlice`, already in
+# `testing/hint-games.ts`) and the open question is per-guard cost, so which
+# requirement moves — and whether any guard legitimately stays narrow — depends
+# on what the measurements in task 2 say.
+schema: spec-driven
+created: 2026-09-20
+skip_specs: true

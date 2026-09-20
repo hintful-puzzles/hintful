@@ -113,6 +113,10 @@ property deterministically in seconds. Seeds remain the wrong dial to turn.
   hint plans by searching, where board size is sliced away under the
   `build-pipeline` cost requirement and a named per-game test covers the largest
   board instead
+- **AND** "largest" is the extreme of each scalar axis, not the last entry in
+  the menu: Flood's last preset is 12×12 at four colors, whose color count is
+  interior and whose leniency an earlier board already claimed, while its
+  largest board (16×16) went unwalked under the rule that took the last one
 
 #### Scenario: A sweep meets a game with no tiers
 

@@ -16,7 +16,7 @@
  * Dev/test-only; never imported by production code.
  */
 import "../../games/index.ts";
-import type { PresetMenu } from "../game.ts";
+import type { ParamConfigItem, PresetMenu } from "../game.ts";
 import { getTsGame, registeredGameIds } from "../registry.ts";
 import { type AnyGame, membersNotMentioning } from "./enrollment.ts";
 
@@ -146,12 +146,12 @@ type AxisValue = string | boolean | number;
  * One axis a game's presets move along, with the values a per-commit slice owes
  * a board.
  */
-export interface PresetAxis {
+export interface PresetAxis<Params> {
   /** The `paramConfig` keyword this axis is declared under — the name the
    * Custom dialog labels it with, and the one a diagnostic can name it by. */
   readonly kw: string;
   /** This axis's value on one preset's params. */
-  read(params: unknown): AxisValue;
+  read(params: Params): AxisValue;
   /** The values a slice must include a preset for. */
   readonly wanted: ReadonlySet<AxisValue>;
 }
@@ -184,14 +184,20 @@ export interface PresetAxis {
  * A field every preset holds the same value at is not an axis — the game offers
  * no way to reach a second value from the presets menu, so a slice cannot walk
  * one. Salad's `difficulty` is the standing case.
+ *
+ * **Takes only what it reads**, the way `difficulty.ts`'s `difficultyTiers`
+ * does, so the
+ * rule can be exercised against a hand-written menu rather than only against
+ * whatever the collection happens to offer today: `hint-games.test.ts` is where
+ * the scalar/discrete split and the menu-order tie-break are actually pinned.
  */
-export function presetAxes(
-  game: AnyGame,
-  presets: readonly { params: unknown }[],
-): PresetAxis[] {
-  const axes: PresetAxis[] = [];
+export function presetAxes<Params>(
+  game: { paramConfig?: readonly ParamConfigItem<Params>[] },
+  presets: readonly { params: Params }[],
+): PresetAxis<Params>[] {
+  const axes: PresetAxis<Params>[] = [];
   for (const item of game.paramConfig ?? []) {
-    const read = (params: unknown): AxisValue => item.get(params);
+    const read = (params: Params): AxisValue => item.get(params);
     const values = [...new Set(presets.map((e) => read(e.params)))];
     if (values.length < 2) continue;
     axes.push({ kw: item.kw, read, wanted: new Set(wantedValues(item.type, values)) });
@@ -241,10 +247,10 @@ function wantedValues(
  * other, so "one preset per tier" falls out of the same rule that reaches the
  * modes.
  */
-export function axisSlice(
-  game: AnyGame,
-  presets: readonly { title: string; params: unknown }[],
-): { title: string; params: unknown }[] {
+export function axisSlice<Params, Entry extends { params: Params }>(
+  game: { paramConfig?: readonly ParamConfigItem<Params>[] },
+  presets: readonly Entry[],
+): Entry[] {
   const axes = presetAxes(game, presets);
   if (axes.length === 0) return presets.slice(0, 1);
   const covered = axes.map(() => new Set<AxisValue>());

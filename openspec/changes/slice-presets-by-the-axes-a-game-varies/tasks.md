@@ -79,6 +79,12 @@
         the first number above both collapse counts (one board per game is 35,
         the tier keying was 88, the axis slice is 141) rather than merely above
         zero.
+      - `hint-games.test.ts` pins the **rule** against a hand-written menu,
+        because the collection cannot exercise it: every game's scalar params
+        are numeric, so the branch treating a non-numeric `"string"` item as a
+        selection is unreachable over real games and would stay green however it
+        behaved. Inverting the scalar/discrete split turns three of its ten
+        cases red.
       - `hint-enrollment.test.ts` gains three cases on the *instrument*: every
         game has a `paramConfig` to derive from and nearly every game yields an
         axis (red when `presetAxes` returns nothing); every value of every
@@ -97,7 +103,9 @@
       floor gets a rule, and a new scenario covers the mode case. All four
       existing scenarios reproduced; "An untiered game's largest board is walked
       per commit" re-worded from "its last preset" to "the largest board it
-      offers" (they differ for Flood, whose last preset is neither extreme) and
+      offers" — they differ for Flood, whose last preset is 12×12 at four colors
+      (an interior color count, and a leniency an earlier board already claimed)
+      while its largest board is the 16×16 the old rule never walked — and
       corrected to name the searching-hint exception it had silently contradicted
       since 2026-09-09. Heading checked against the live spec with `rg -F -x`;
       `openspec validate --strict` passes.
