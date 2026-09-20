@@ -42,6 +42,11 @@ not been fixed is that the ledger could not see it.
 - **The doc comments say which half is which**, because "a rename cannot leave
   a dead exemption behind" was claimed for a field the guard did not check per
   game.
+- **A `ts-engine` delta**, which the scaffold made conditional on the work
+  changing what the ledger *means*. It does: the live requirement states the
+  reverse direction per **entry**, and it is now per listing; and the walk that
+  direction is decided against gained the Custom-dialog corner, which is
+  load-bearing for it rather than incidental.
 
 ## What the stricter check found
 

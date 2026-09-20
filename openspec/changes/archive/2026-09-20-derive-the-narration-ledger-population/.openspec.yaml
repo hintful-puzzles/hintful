@@ -1,0 +1,9 @@
+# The work did turn out to change what the ledger means, so the delta the
+# scaffold made conditional is written. Two facts in the live requirement moved:
+# the reverse direction's unit is the `(entry, game)` listing rather than the
+# entry, and the walk it is decided against gained the `presets × tiers` corner
+# a player reaches only through the Custom dialog. The second is load-bearing
+# for the first — without it the requirement would demand the deletion of a
+# listing that is live.
+schema: spec-driven
+created: 2026-09-20

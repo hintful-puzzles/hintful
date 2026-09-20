@@ -1,7 +1,0 @@
-# A guard's own strictness, with no requirement behind it: the ts-engine spec
-# already requires the narration limit and its ledger, and this only holds the
-# ledger's roster to what the walk speaks. Write a delta only if the work turns
-# out to change what the ledger *means*.
-schema: spec-driven
-created: 2026-09-20
-skip_specs: true
