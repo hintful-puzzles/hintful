@@ -165,10 +165,39 @@ imports, so a graph-based selection may omit exactly the guards that exist to
 catch a change to one game. Such a scheme SHALL first demonstrate that its
 selection reaches those guards.
 
-No correctness check may be removed, weakened, or moved off the per-commit path
-to buy speed (scoping the hook to staged files is not a weakening — the
-whole-tree backstop in CI and `npm run gate` still guarantees nothing unformatted
-survives on `main`), and `vite build` SHALL remain in the gate (it is the only
+**An individual assertion MAY defer to the push-time backstop, under all four
+of the conditions below.** This is the third scoping by role and the narrowest;
+it exists because a guard's cost can land on every commit while its subject is
+*decay* rather than the code being committed. All four SHALL hold:
+
+1. **It checks decay, not the commit's own code.** The half of a guard that
+   catches what the author just wrote SHALL stay on the per-commit path. Only a
+   check of whether something has *stopped* being true may defer.
+2. **A push-time backstop actually runs it.** CI SHALL run it on every push to
+   `main`, which means it is selected by the role toggle the hook sets and by
+   nothing else. Deferring into a tier that runs only on request is the slow
+   tier's business and is governed by its own requirement.
+3. **It is reported as skipped, never silently passed.** A deferred assertion
+   SHALL be skipped at the runner level, so a run that did not check it says so.
+   An assertion left to pass over a sample it could not take is the failure this
+   repository punishes hardest.
+4. **The backstop is asserted by a test.** A test SHALL fail if the role toggle
+   is ever set in CI, or if the hook stops setting it — because the failure
+   otherwise is silent in the worst direction: set it in both places and the
+   deferred assertions run **nowhere**, while both runs report green.
+
+Where an assertion's verdict depends on expensive work elsewhere in its file,
+that work and the assertion SHALL defer **together**: running the assertion
+against a walk narrowed beneath it makes it report a finding it has not
+measured.
+
+No correctness check may be removed or weakened to buy speed, and none may be
+moved off the per-commit path except by a scoping-by-role that keeps the
+push-time backstop intact — scoping the hook to staged files is not a
+weakening, because the whole-tree backstop in CI and `npm run gate` still
+guarantees nothing unformatted survives on `main`, and the same argument, under
+the four conditions above, is what permits an individual assertion to defer.
+`vite build` SHALL remain in the gate (it is the only
 step that exercises the production build, where two prod-only regressions have
 shipped undetected). Any vitest pool/isolation tuning adopted to reduce per-file
 module-load overhead SHALL preserve the `repo-layout` requirement that "the test
@@ -190,7 +219,9 @@ bought by not gating tests on the clock rather than by hoarding cores.
 The gate's orchestration SHALL live in a single script (`scripts/gate.sh`)
 invoked by both `.husky/pre-commit` and `npm run gate`, so the hook and the
 manual command cannot drift; the per-commit-vs-backstop biome scope is selected
-by an environment toggle the hook sets, not by a second copy of the gate.
+by an environment toggle the hook sets, not by a second copy of the gate. That
+same toggle SHALL be the only signal an individual deferred assertion reads, so
+there is one name for one idea rather than a second switch to keep in step.
 
 #### Scenario: The independent heavy steps run concurrently
 
@@ -263,6 +294,32 @@ by an environment toggle the hook sets, not by a second copy of the gate.
   and one of them carries a British spelling outside an allowance
 - **THEN** the spelling guard fails in the fast prefix and blocks the commit,
   before the documentation-only shortcut is reached
+
+#### Scenario: A decay check defers to push while its partner stays per-commit
+
+- **WHEN** a guard has one half that catches a defect the commit just introduced
+  and another whose verdict needs expensive work and reports decay
+- **THEN** the per-commit hook runs the first half and skips the second, and the
+  second runs in CI on every push and in a manual `npm run gate`
+- **AND** the skipped half is reported as skipped by the test runner
+
+#### Scenario: A deferred assertion and the work it reads defer together
+
+- **WHEN** an assertion's verdict is decided against a walk that the per-commit
+  hook narrows
+- **THEN** the assertion is skipped on that run rather than evaluated against
+  the narrowed walk
+- **BECAUSE** an assertion run against a sample that cannot contain its subject
+  reports a finding it never measured
+
+#### Scenario: The role toggle leaks into CI
+
+- **WHEN** the CI workflow is edited to set the per-commit role toggle, or the
+  hook stops setting it
+- **THEN** a test fails naming it
+- **BECAUSE** every deferral rests on CI being the backstop, and a toggle set in
+  both places means the deferred assertions run nowhere while both runs report
+  green
 
 ### Requirement: Refactoring metrics are measured on demand and ratcheted in the gate
 
