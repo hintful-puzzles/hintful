@@ -72,8 +72,10 @@ export type SoloReason =
    * of the two is a sub-block, the other a row/column/diagonal. */
   | { kind: "intersect"; n: number; confined: SoloRegion; target: SoloRegion }
   /** A naked/hidden subset locks a set of digits to a set of cells in a region
-   * (absent for the cross-line single-digit "X-wing" set). */
-  | { kind: "set"; region?: SoloRegion }
+   * (absent for the cross-line single-digit "X-wing" set), whose `cells` the
+   * firing rests on. The region arm shades its region instead; without a region
+   * the cells are the only thing there is to shade. */
+  | { kind: "set"; region?: SoloRegion; cells: Point[] }
   /** A forcing-chain contradiction, with the chain it followed and the region
    * that ties the conclusion back to the chain's origin — the other half of the
    * case split. Solo's chain hops through blocks and diagonals as well as lines,
@@ -90,8 +92,10 @@ export type SoloReason =
    * is forced. */
   | { kind: "cageSingle"; cells: Point[]; clue: number }
   /** Killer: a deduced extra-cage (a region minus the cages it fully contains)
-   * with one undetermined cell, forced to the residual sum. */
-  | { kind: "cageIntersect"; cells: Point[]; clue: number }
+   * with one undetermined cell, forced to the residual sum. `region` is the row,
+   * column or block the residual was taken from — the evidence the sentence
+   * points at, and without it the step shades only the cell it is about. */
+  | { kind: "cageIntersect"; cells: Point[]; clue: number; region: SoloRegion }
   /** Killer: even the extreme the other cage cells can reach leaves no room for
    * `n` here. */
   | { kind: "cageMinMax"; cells: Point[]; clue: number }
@@ -462,7 +466,6 @@ class SolverUsage {
    *  single-digit set). +1 / 0 / -1. */
   private set_(indices: Int32Array, region?: SoloRegion): number {
     const cr = this.cr;
-    const reason: SoloReason | null = this.recorder ? { kind: "set", region } : null;
     const grid = this.sGrid;
     const rowidx = this.sRowidx;
     const colidx = this.sColidx;
@@ -512,6 +515,18 @@ class SolverUsage {
         }
         if (rows > n - count) return -1;
         if (rows >= n - count) {
+          // The firing's own cells — every position the chosen columns still
+          // admit. Recorded per firing rather than once for `set_`, because it
+          // is what the region-less arm has instead of a region to shade: with
+          // no region and no cells, "a locked pattern of cells across these
+          // lines" marks nothing at all.
+          const reason: SoloReason | null = this.recorder
+            ? {
+                kind: "set",
+                region,
+                cells: this.setCells(indices, n, rowidx, colidx, set),
+              }
+            : null;
           let progress = false;
           for (let i = 0; i < n; i++) {
             let ok = true;
@@ -861,6 +876,43 @@ class SolverUsage {
     return { len: off, filteredSum };
   }
 
+  /**
+   * The cells a {@link set_} firing rests on: every position the chosen columns
+   * of the compacted `n × n` matrix still admit, each cell once.
+   *
+   * What a "column" is depends on the caller. Over a region it is a *digit*, so
+   * these are the subset's cells; over the region-less single-digit matrix it is
+   * a board column, so these are the cells the digit is locked into — the ones
+   * the narration points at, and the reason this is recorded at all.
+   */
+  private setCells(
+    indices: Int32Array,
+    n: number,
+    rowidx: Uint8Array,
+    colidx: Uint8Array,
+    set: Uint8Array,
+  ): Point[] {
+    const cr = this.cr;
+    const seen = new Set<number>();
+    const out: Point[] = [];
+    for (let i = 0; i < n; i++)
+      for (let j = 0; j < n; j++) {
+        if (!set[j] || !this.sGrid[i * cr + j]) continue;
+        const cell = (indices[rowidx[i] * cr + colidx[j]] / cr) | 0;
+        if (seen.has(cell)) continue;
+        seen.add(cell);
+        out.push({ x: cell % cr, y: (cell / cr) | 0 });
+      }
+    return out;
+  }
+
+  /** {@link regionCells}' `(i, n)` as the region a sentence can name. */
+  private static extraRegion(i: number, n: number): SoloRegion {
+    if (i === 0) return { kind: "row", index: n };
+    if (i === 1) return { kind: "col", index: n };
+    return { kind: "block", index: n };
+  }
+
   /** The cells of region `(i, n)`: i=0 row n, i=1 column n, i=2 (digit) block n. */
   private regionCells(i: number, n: number): number[] {
     const cr = this.cr;
@@ -1025,6 +1077,7 @@ class SolverUsage {
                 kind: "cageIntersect",
                 cells: [{ x, y }],
                 clue: sum,
+                region: SolverUsage.extraRegion(i, n),
               });
               changed = true;
             }

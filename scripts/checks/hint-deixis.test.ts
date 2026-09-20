@@ -25,26 +25,28 @@
  * games' sentences were fixed it flagged **230 sentence shapes across 20
  * games**, and reading all of them found **nothing further to change**.
  *
- * It now flags **505 shapes across 27 games**, over 25,670 steps, because
+ * It widened to **505 shapes across 27 games**, over 25,670 steps, when
  * `slice-the-first-leaf-hint-guards-by-axis` pointed it at the presets menu
- * instead of at tiers written onto the first preset: seven games appear that
- * never had a board here, and Loopy alone contributes 29 from twenty tilings.
+ * instead of at tiers written onto the first preset: seven games appeared that
+ * never had a board here, and Loopy alone contributed 29 from twenty tilings.
  * Reading all 505 (`read-the-widened-deixis-report`) again found **nothing
- * further to change**: every row ties by one of the four classes below — 122 by
+ * further to change**: every row tied by one of the four classes below — 122 by
  * a continuation leg, 82 by naming the second mark the way the board draws it,
  * 184 by a line, region or run, and the rest by value, by state (Boats' filled
- * segment against an empty square) or by kind.
+ * segment against an empty square) or by kind. The report itself states the
+ * figure of the day; these are what that reading covered.
  *
  * Two things that read found are worth carrying. **A row can mark one place,
  * not two**: `markRoles` counts declared role *fields*, and a step whose
  * evidence is the acted-on square itself declares two of them — which is why
  * Sticks can name a clue of the same value as its target (46 of 49 such steps)
- * with nothing ambiguous on the board. Twelve rows are of that shape. And the
- * sweep's blind spot is the inverse of its subject: a sentence that points at
- * cells the frame never marks. Keying on a *plural* deictic over the same
- * corpus found six shapes, four of them Loopy's, where the pair connector the
- * move draws is the mark; the two real ones are Solo's, and are
- * `mark-the-cells-solo-points-at`.
+ * with nothing ambiguous on the board. And the sweep's blind spot is the
+ * inverse of its subject: a sentence that points at cells the frame never
+ * marks. Keying on a *plural* deictic over the same corpus found six shapes,
+ * four of them Loopy's, where the pair connector the move draws is the mark;
+ * the two real ones were Solo's, and `mark-the-cells-solo-points-at` marked
+ * what they name — which is why one of Solo's rows is gone from the report and
+ * another became three, one per region kind.
  *
  * The false positives are not noise to be tuned away; they
  * are four legitimate ways to tie a deictic that no lexical rule recognizes:

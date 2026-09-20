@@ -2,36 +2,46 @@
 
 ## 1. The deduced extra-cage
 
-- [ ] 1.1 Carry the region on the reason: `cageIntersect` gains
-      `region: SoloRegion`, built from the `(i, n)` the KINTERSECT loop already
-      walks (0 → row, 1 → column, 2 → block).
-- [ ] 1.2 Shade it: `reasonArea` and `placementArea` return the region's cells
-      for `cageIntersect`, with the open cell still the target.
-- [ ] 1.3 Rewrite `say.cageIntersect` against that frame: name the region by
-      kind, state the region's total, and say the cages and filled cells inside
-      it account for all but the residual. Hold it to the 120-character limit.
+- [x] 1.1 `cageIntersect` carries `region: SoloRegion`, built by
+      `SolverUsage.extraRegion` from the `(i, n)` the KINTERSECT loop walks.
+- [x] 1.2 `reasonArea` and `placementArea` return the region's cells, with the
+      open cell still the target.
+- [x] 1.3 `say.cageIntersect` names the region, states its total and says the
+      cages and digits inside it account for all but the residual. 112
+      characters at 9×9, 113 at 16×16 — inside the shared 120 limit. The
+      residual *is* the digit (`clue === n` in all 172 firings measured across
+      48 boards), which is why the old sentence said the number twice.
 
 ## 2. The locked pattern
 
-- [ ] 2.1 Record the firing's own cells on the region-less `set` reason — the
-      candidate positions at (rows confined to the chosen columns) × (those
-      columns), taken where the firing is decided rather than per elimination.
-- [ ] 2.2 `reasonArea` shades them where there is no region.
-- [ ] 2.3 Re-read `say.set`'s region-less arm against the frame: "these lines"
-      only if the lines are what is marked, otherwise name the pattern.
+- [x] 2.1 `set_` records the firing's cells (`setCells`) — every position the
+      chosen columns still admit — per firing rather than once per call.
+- [x] 2.2 `reasonArea` shades them where there is no region.
+- [x] 2.3 The region-less arm of `say.set` speaks of those cells instead of the
+      lines it used to point at and never marked. What it claims is what the
+      firing checks, measured over the same boards: in 10 of 10 strikes the
+      struck cell lay in a pattern row and outside the pattern's columns.
 
 ## 3. Pin it where the judgment lives
 
-- [ ] 3.1 In `solo-hint.test.ts`, reach each firing and assert the step marks
-      every cell its sentence points at (and, for the extra-cage, that the
-      region's cells sum to the grid total so the arithmetic the sentence
-      teaches is the arithmetic the board shows).
-- [ ] 3.2 Prove each new assertion fails: restore the old reason payload, watch
-      it go red, restore.
-- [ ] 3.3 Re-run the deixis sweep and the plural-deictic probe; neither Solo
-      shape may remain.
+- [x] 3.1 `solo-hint.test.ts` reaches each firing and asserts the marks are
+      what the words point at: the extra-cage shades exactly the region the
+      sentence names (whose solution values sum to the total it quotes), and
+      the locked pattern shades as many rows as columns with every strike
+      inside its rows and outside its columns.
+- [x] 3.2 Both proved to fail: restoring the one-cell evidence fails the
+      extra-cage test on `area` length 1 of 9, and restoring `[]` fails the
+      locked-pattern test with "'the highlighted cells' with nothing
+      highlighted".
+- [x] 3.3 The deixis report is regenerated. The locked-pattern row is **gone**
+      (the new sentence has no bare deictic at all) and the extra-cage row
+      became three, one per region kind, each now tied by region context.
 
 ## 4. Accept it in the app
 
-- [ ] 4.1 Play a killer board and an Extreme board in the browser, ask for a
-      hint at each firing, and read the sentence against the frame.
+- [x] 4.1 Played both in Chrome at `npm run dev`: a `3x3 Killer Easy` board
+      shows the whole column shaded behind "This column must total 45; the
+      cages and digits inside it account for all but 5…", and a `3x3 Extreme`
+      board shows the four cells of an 8-wing outlined behind "The highlighted
+      cells are the only places 8 fits in their columns…", with the struck 8 in
+      a fifth cell in one of their rows.

@@ -91,11 +91,16 @@ export const say = {
   },
 
   /** A set of cells inside `region` accounts for `ns`; with no region, the set
-   * is a locked pattern across several lines. */
+   * is a locked pattern across several lines.
+   *
+   * The region-less arm speaks of the cells the step shades, because there is no
+   * region to name and the lines it used to point at were never marked. What it
+   * claims is what the firing checks: in the columns those cells sit in, the
+   * digit fits nowhere else, so each of their rows is spoken for. */
   set: (region: SoloRegion | null, ns: number[]): string =>
     region
       ? `Other cells in this ${regionName(region)} already account for ${all(ns)}, so ${ns.length === 1 ? "it" : "they"} must be crossed out here.`
-      : `A locked pattern of cells across these lines already accounts for ${all(ns)}, so we must cross out ${all(ns)} here.`,
+      : `The highlighted cells are the only places ${all(ns)} fits in their columns, so no other ${all(ns)} fits in their rows: cross out ${all(ns)}.`,
 
   // The shared chain sentence, with Solo's own region vocabulary — its chain
   // hops through blocks and diagonals as well as lines, so both the region that
@@ -118,8 +123,13 @@ export const say = {
   cageSingle: (n: number): string =>
     `The rest of this killer cage is filled in, and the one cell left must bring the cage to its total, so it can only be ${g(n)}.`,
 
-  cageIntersect: (clue: number, n: number): string =>
-    `Once the cages inside their region are counted, these cells must total ${clue}, and only this cell is open: it must be ${g(n)}.`,
+  /** A row, column or block whose cages and filled digits leave one open cell.
+   * The residual *is* the digit on this rung, so the sentence says it once, as
+   * the thing left over. `total` is what the region must come to; every cell of
+   * it belongs to some cage, so "the cages and digits inside it" never names an
+   * empty set. */
+  cageIntersect: (region: SoloRegion, total: number, n: number): string =>
+    `This ${regionName(region)} must total ${total}; the cages and digits inside it account for all but ${g(n)}, so its one open cell must be ${g(n)}.`,
 
   cageMinMax: (clue: number, ns: number[]): string =>
     `This killer cage must total ${clue}; its other cells leave no room for ${any(ns)}, so ${ns.length === 1 ? "it" : "they"} must be crossed out.`,

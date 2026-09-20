@@ -1280,6 +1280,20 @@ square is genuinely part of the area being reasoned over. A run whose *length*
 is the argument contains it; a clue's already-counted neighbors do not. Same
 list, opposite answers, and the same per-game non-empty assertion catches it.
 
+**A plural deictic is a promise about the frame.** "These cells", "their
+region", "across these lines" — each says a set is on the board, and a
+sentence that says one while the step marks a single place cannot be followed
+at all; the player has no way to find what it is talking about. This is the
+deixis defect (§ "Two marks on the board, one 'this cell'") turned inside out,
+and `scripts/checks/hint-deixis.test.ts` cannot see it, because that sweep
+looks only at steps with *two* marks. The key that does find it is a plural
+deictic plus a count of the distinct *places* a step marks (role fields are
+not places — two roles naming one cell are one mark). Run over every hinting
+game it returned six shapes, four of them Loopy's, where the move's own pair
+connector is the mark; both real ones were Solo's, and the fix was to record
+the premise (`mark-the-cells-solo-points-at`): the region an extra-cage
+counted down, and the cells a locked pattern is locked into.
+
 **The strongest form of "the words and the picture agree" is a count you can
 assert.** Where a sentence states a number — a run's length, the room left,
 the sides a clue has — make the evidence list have exactly that many entries

@@ -17,10 +17,11 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { newSoloDesc } from "./generator.ts";
 import { noRepeatRegionNames, regionsOf, soloGame } from "./index.ts";
-import { COL_HINT_CELL, COL_PENCIL } from "./render.ts";
+import { COL_HINT_CELL, COL_PENCIL, digitChar } from "./render.ts";
 import { type HintReason, recordSoloDeductions } from "./solver.ts";
 import {
   DIFF_BLOCK,
+  DIFF_EXTREME,
   DIFF_INTERSECT,
   DIFF_KINTERSECT,
   DIFF_SET,
@@ -47,6 +48,7 @@ const BASIC: SoloParams = { ...defaultParams(), diff: DIFF_SIMPLE };
 const INTER: SoloParams = { ...defaultParams(), diff: DIFF_INTERSECT };
 const ADV: SoloParams = { ...defaultParams(), diff: DIFF_SET };
 const XADV: SoloParams = { ...defaultParams(), diff: DIFF_SET, xtype: true };
+const EXTREME: SoloParams = { ...defaultParams(), diff: DIFF_EXTREME };
 const KILLER: SoloParams = {
   c: 3,
   r: 3,
@@ -294,6 +296,99 @@ describe("solo hint", () => {
       }
     }
     expect(found).toBe(true);
+  });
+
+  // Both rungs used to name cells the frame never marked — "these cells must
+  // total 5" over one shaded cell, "across these lines" over none
+  // (`mark-the-cells-solo-points-at`). A sentence is only as good as what the
+  // player can see it against, so each test asserts the marks *are* what the
+  // words point at, not merely that the words appear.
+  it("shows the region a deduced extra-cage counted", () => {
+    let checked = 0;
+    for (let s = 0; s < 8 && checked === 0; s++) {
+      const { st, aux } = gen(KILLER, `killer-${s}`);
+      const res = soloGame.hint?.(st, aux);
+      if (!res?.ok) continue;
+      const solved = soloGame.solve?.(st, st);
+      if (!solved?.ok) throw new Error("solve failed");
+      const sol = (solved.move as { type: "solve"; grid: number[] }).grid;
+      const cr = st.cr;
+      for (const step of res.steps as AnyStep[]) {
+        const said = /^This (row|column|block) must total (\d+);/.exec(
+          step.explanation,
+        );
+        if (said === null) continue;
+        checked++;
+        expect(
+          Number(said[2]),
+          "the total named is the region's, not the residual",
+        ).toBe((cr * (cr + 1)) / 2);
+        const [target] = step.highlights.targets as { x: number; y: number }[];
+        const area = step.highlights.area as { x: number; y: number }[];
+        // The cells shaded are the cells of the region the sentence names.
+        const want =
+          said[1] === "row"
+            ? area.every((c) => c.y === target.y)
+            : said[1] === "column"
+              ? area.every((c) => c.x === target.x)
+              : area.every(
+                  (c) =>
+                    ((c.x / st.params.c) | 0) === ((target.x / st.params.c) | 0) &&
+                    ((c.y / st.params.r) | 0) === ((target.y / st.params.r) | 0),
+                );
+        expect(want, `shaded cells outside the ${said[1]} the sentence names`).toBe(
+          true,
+        );
+        expect(area).toHaveLength(cr);
+        expect(area).toContainEqual({ x: target.x, y: target.y });
+        // The arithmetic the sentence teaches is the arithmetic the board does.
+        expect(area.reduce((t, c) => t + sol[c.y * cr + c.x], 0)).toBe(
+          (cr * (cr + 1)) / 2,
+        );
+        break;
+      }
+    }
+    expect(checked, "no extra-cage firing reached").toBeGreaterThan(0);
+  });
+
+  it("shows the cells a locked pattern is locked into", () => {
+    let checked = 0;
+    for (let s = 0; s < 16 && checked === 0; s++) {
+      const { st, aux } = gen(EXTREME, `extreme-${s}`);
+      const res = soloGame.hint?.(st, aux);
+      if (!res?.ok) continue;
+      for (const step of res.steps as AnyStep[]) {
+        const said = /^The highlighted cells are the only places (\S+) fits/.exec(
+          step.explanation,
+        );
+        if (said === null) continue;
+        checked++;
+        const area = step.highlights.area as { x: number; y: number }[];
+        const marks = step.highlights.marks as { x: number; y: number; n: number }[];
+        expect(
+          area.length,
+          "'the highlighted cells' with nothing highlighted",
+        ).toBeGreaterThan(3);
+        const rows = new Set(area.map((c) => c.y));
+        const cols = new Set(area.map((c) => c.x));
+        expect(rows.size, "a locked pattern spans as many rows as columns").toBe(
+          cols.size,
+        );
+        for (const m of marks) {
+          // What the sentence claims: the strike is in a pattern row, and it is
+          // outside the columns the pattern uses up.
+          expect(rows.has(m.y), "struck a cell outside the pattern's rows").toBe(true);
+          expect(cols.has(m.x), "struck a cell inside the pattern's own columns").toBe(
+            false,
+          );
+          expect(digitChar(m.n), "struck a digit the sentence does not name").toBe(
+            said[1],
+          );
+        }
+        break;
+      }
+    }
+    expect(checked, "no locked-pattern firing reached").toBeGreaterThan(0);
   });
 
   it("refuses on a solved board and on a board with mistakes", () => {

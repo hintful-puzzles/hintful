@@ -485,7 +485,7 @@ function narrate(reason: SoloReason, ns: number[], state: SoloState): string {
     case "cageSingle":
       return say.cageSingle(ns[0]);
     case "cageIntersect":
-      return say.cageIntersect(reason.clue, ns[0]);
+      return say.cageIntersect(reason.region, (state.cr * (state.cr + 1)) / 2, ns[0]);
     case "cageMinMax":
       return say.cageMinMax(reason.clue, ns);
     case "cageSums":
@@ -498,10 +498,13 @@ function reasonArea(reason: SoloReason, state: SoloState): OrderedCell[] {
   switch (reason.kind) {
     case "intersect":
       return regionCells(reason.confined, state);
+    // With no region to shade, the firing's own cells are what the sentence
+    // points at — see `say.set`.
     case "set":
-      return reason.region ? regionCells(reason.region, state) : [];
-    case "cageSingle":
+      return reason.region ? regionCells(reason.region, state) : reason.cells;
     case "cageIntersect":
+      return regionCells(reason.region, state);
+    case "cageSingle":
     case "cageMinMax":
     case "cageSums":
       return reason.cells;
@@ -518,11 +521,13 @@ function reasonArea(reason: SoloReason, state: SoloState): OrderedCell[] {
 }
 
 /** A placement's evidence cells: a hidden single shades the whole region it
- * reasons over; a killer placement shades its cage; a naked single needs none. */
+ * reasons over, as does a deduced extra-cage (the region whose total the
+ * sentence counts down); a killer placement shades its cage; a naked single
+ * needs none. */
 function placementArea(reason: SoloReason, state: SoloState): Point[] {
-  if (reason.kind === "hiddenSingle") return regionCells(reason.region, state);
-  if (reason.kind === "cageSingle" || reason.kind === "cageIntersect")
-    return reason.cells;
+  if (reason.kind === "hiddenSingle" || reason.kind === "cageIntersect")
+    return regionCells(reason.region, state);
+  if (reason.kind === "cageSingle") return reason.cells;
   return [];
 }
 
