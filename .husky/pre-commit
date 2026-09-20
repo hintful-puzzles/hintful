@@ -12,7 +12,11 @@
 #                        unformat a file it touches).
 #   GATE_PRECOMMIT=1     a commit touching only documentation (docs/, openspec/,
 #                        AGENTS.md and friends — never help/, which is a build
-#                        input) skips vitest and vite build.
+#                        input) skips vitest and vite build. It is also the one
+#                        signal an individual *deferred assertion* reads
+#                        (`PRECOMMIT_HOOK_RUN` in engine/testing/slow.ts), so
+#                        there is one name for one idea rather than a second
+#                        switch to keep in step.
 #
 # CI and a manual `npm run gate` leave both unset and run everything, so nothing
 # reaches `main` without the full gate having seen it. See scripts/gate.sh.

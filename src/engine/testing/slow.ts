@@ -55,6 +55,36 @@ const env = (globalThis as { process?: { env?: Record<string, string | undefined
   .process?.env;
 export const SLOW_TESTS_ENABLED = Boolean(env?.["PUZZLES_SLOW_TESTS"]);
 
+/**
+ * True when this run is the **automatic per-commit hook** — the one role that
+ * is allowed to narrow what it checks, because CI runs the whole gate on every
+ * push to `main` (`.github/workflows/ci.yml` calls `npm run gate` with neither
+ * toggle set). It is `.husky/pre-commit`'s own `GATE_PRECOMMIT`, read here
+ * rather than invented, so the hook has one name for one idea.
+ *
+ * **The opposite polarity to {@link SLOW_TESTS_ENABLED}, and used far more
+ * sparingly.** Slow is opt-in and defaults to *less*; this defaults to
+ * **more** — every run that is not the hook (CI, `npm run gate`, a bare
+ * `vitest`, an editor) gets the wide check. That direction is the whole safety
+ * argument: forgetting to set it costs time, never coverage, and the shortcut
+ * is unreachable from anywhere except the one caller that has the backstop.
+ *
+ * **What may hide behind it**, and it is a much narrower license than `slow`:
+ * work whose omission for one commit is covered by the same run on push, and
+ * which is expensive enough that a developer would otherwise start reaching for
+ * `--no-verify`. It may **not** hide a check of the code the commit is
+ * changing. `hint-quality.test.ts` is the case and states its own reasoning:
+ * the narration ledger's *rot* half needs the expensive corner of the walk to
+ * decide anything, and rot is by nature a thing push can catch, while the half
+ * that catches a sentence you just wrote too long stays on every commit.
+ *
+ * Pair it with `it.skipIf(...)` rather than an early return, so a deferred
+ * check is **reported as skipped** instead of passing silently — the hazard
+ * `slow.ts` names above ("a skipped test nobody runs is worse than a deleted
+ * one") applies here with the same force.
+ */
+export const PRECOMMIT_HOOK_RUN = env?.["GATE_PRECOMMIT"] === "1";
+
 /** `describe`, skipped unless the slow tier was asked for. */
 export const describeSlow = describe.skipIf(!SLOW_TESTS_ENABLED);
 

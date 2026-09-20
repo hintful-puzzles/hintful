@@ -471,6 +471,13 @@ reaches), because long sentences are the ones spoken
 once more of the board is decided; the easiest preset's opening plan, where the
 old 300 ceiling was checked, is exactly where they are not.
 
+That last corner is 47 s of the block's 83, and the per-commit test selector
+reaches this guard from any staged path under `src/games/`, so it is **scoped
+by role**: off in the automatic pre-commit hook, on in CI and in
+`npm run gate`. What it defers is the ledger's *rot* half below, which cannot
+be decided without it. **The limit itself never defers** — a sentence you just
+wrote too long fails your commit, at every tier and every preset.
+
 **A sentence that genuinely needs more room goes in the ledger**
 (`LONG_NARRATIONS`), one entry per template with its reason and a `games`
 roster, held to 300 instead. The ledger is asserted both ways — an unlisted
@@ -502,6 +509,10 @@ deleting a listing, widen the walk for that game — every leaf preset, every
 tier, both auto-pencil settings where the game has them — and make the wider
 walk the deletion's evidence, recorded beside the entry so the next reader can
 re-run it rather than re-derive it.
+
+**If you are reading a red from that half, you are not in the pre-commit hook**
+— it is skipped there and reported as skipped, so the run that flagged it was
+CI or `npm run gate`, and the corner walk did happen.
 
 **How the pass that introduced it shortened ~100 sentences without losing a
 premise**, in order of how often each applied:

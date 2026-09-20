@@ -1,0 +1,7 @@
+# Two deltas, because the work crosses two capabilities' rules. `build-pipeline`
+# forbids moving a correctness check off the per-commit path to buy speed and
+# carves the exception for biome alone; this generalizes that carve-out into a
+# stated, bounded permission with a test behind it. `ts-engine` published the
+# corner walk as unconditional a day ago and now has to say where it runs.
+schema: spec-driven
+created: 2026-09-20

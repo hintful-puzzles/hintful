@@ -57,7 +57,7 @@ import {
   leafPresets,
   SEARCH_PLANNING_GAMES,
 } from "./testing/hint-games.ts";
-import { SLOW_TESTS_ENABLED } from "./testing/slow.ts";
+import { PRECOMMIT_HOOK_RUN, SLOW_TESTS_ENABLED } from "./testing/slow.ts";
 
 const SEEDS = ["hq-a", "hq-b", "hq-c"];
 
@@ -568,6 +568,42 @@ describe("no hint leaves a chain for the player to carry, at any tier", () => {
 const LINT_ROUNDS = 30;
 
 /**
+ * Whether this run walks {@link lintCases}' third rule — and with it, whether
+ * the ledger's *rot* half can decide anything.
+ *
+ * **Off in the automatic per-commit hook, on everywhere else.** That is the
+ * gate's existing third-scoping-by-role shape (`AGENTS.md` § "Git", `slow.ts`'s
+ * {@link PRECOMMIT_HOOK_RUN}): CI runs `npm run gate` with the toggle unset on
+ * every push to `main`, so this narrows what a *commit* costs and never what
+ * protects the branch.
+ *
+ * **Why this rule and not the rest of the block.** Measured: the rule is 47 s
+ * of the block's 83, and the block is selected on essentially every commit —
+ * the per-commit selector maps any staged path under `src/games/` to every
+ * guard that reads game source as text, and this is one, so a one-line edit to
+ * one game was paying the whole 47 s. What it protects is not the code the
+ * commit is changing: the forward half, which catches a sentence you just
+ * wrote too long, runs on every commit at every tier and every preset and is
+ * untouched. What defers to push is the *rot* half — a ledger listing that has
+ * stopped being spoken — and rot is exactly the thing a push-time check
+ * catches in time.
+ *
+ * **The two move together and must.** The rot half's verdict is decided
+ * against this walk, so with the rule off it would report Group's live listing
+ * as dead (see the ledger's first entry). It is therefore `skipIf`-ed on the
+ * same flag rather than left to pass over a walk that could not see its
+ * subject — a check that reports health over a sample it never took is the
+ * defect this whole file exists to avoid.
+ *
+ * **What was rejected:** running the rule only for the games whose source the
+ * commit staged. It sounds targeted and is unsound — the shared Latin chain
+ * sentence lives in `engine/hint-text.ts`, so the commit most likely to kill a
+ * listing touches no `src/games/<id>/` path at all, and the version that fixes
+ * that ("...or any engine file") runs everything nearly always.
+ */
+const CORNER_WALKED = !PRECOMMIT_HOOK_RUN;
+
+/**
  * The boards the length walk plays: every tier of the first preset on every
  * seed, then every other preset once, then **the last preset at the hardest
  * teachable tier**. Deduplicated by params, since a tier of the first preset is
@@ -627,7 +663,7 @@ function lintCases(
     // Through `untieredCases`, so a search-planning game's sliced preset list
     // is sliced here too rather than quietly handing this rule the one board
     // its cost was sliced to avoid.
-    const last = untieredCases(id, game).at(-1);
+    const last = CORNER_WALKED ? untieredCases(id, game).at(-1) : undefined;
     const top = tiers.length - (tiers.at(-1) === "Unreasonable" ? 2 : 1);
     if (last && top >= 0)
       add(
@@ -705,12 +741,24 @@ describe("hint narration stays readable at a glance", () => {
     });
   }
 
-  it("ledgers only listings that still need the room", () => {
+  it("states a reason for every ledger entry, and lists only hinting games", () => {
+    // The structural half: cheap, needs no walk, and so runs on every commit
+    // whatever `CORNER_WALKED` says.
+    const hinting = new Set(HINT_GAMES.map(([id]) => id));
+    for (const e of LONG_NARRATIONS) {
+      expect(e.why.length, `${e.match} states no reason`).toBeGreaterThan(60);
+      for (const g of e.games)
+        expect(hinting.has(g), `${g} ships no hint()`).toBe(true);
+    }
+  });
+
+  // Skipped rather than weakened in the per-commit hook, so a deferred check is
+  // **reported** instead of passing over a walk that could not see its subject.
+  it.skipIf(!CORNER_WALKED)("ledgers only listings that still need the room", () => {
     // Registered last, so it runs after every per-game case has filled
     // `ledgerUsed`. Vacuity first: an unpopulated walk would find every listing
     // "unused" for the wrong reason.
     expect(linted, "the length walk looked at almost nothing").toBeGreaterThan(2000);
-    const hinting = new Set(HINT_GAMES.map(([id]) => id));
     // And per game, because the check below is a negative *per listing*: a game
     // whose every case refused to generate would read as dead on every entry it
     // is listed on, and the collection-wide floor above cannot say so — it is
@@ -729,11 +777,8 @@ describe("hint narration stays readable at a glance", () => {
     // queue of reruns, and this one's whole job is to be read as a census.
     const dead: string[] = [];
     LONG_NARRATIONS.forEach((e, i) => {
-      expect(e.why.length, `${e.match} states no reason`).toBeGreaterThan(60);
-      for (const g of e.games) {
-        expect(hinting.has(g), `${g} ships no hint()`).toBe(true);
+      for (const g of e.games)
         if (!ledgerUsed.has(`${i}:${g}`)) dead.push(`${g} on ${e.match}`);
-      }
     });
     expect(
       dead,

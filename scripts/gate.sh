@@ -193,6 +193,16 @@ node scripts/checks/absence-spelling.mjs
 node scripts/checks/openspec-version.mjs
 npx --no-install openspec validate --all --strict
 
+# --- 1c-ii. A note on what else GATE_PRECOMMIT reaches. ---
+#
+# The toggle is set once, by `.husky/pre-commit`, and vitest inherits it — so a
+# test can read it (`PRECOMMIT_HOOK_RUN` in src/engine/testing/slow.ts) and
+# defer an expensive *decay* check to push, while the half of the same guard
+# that catches what the commit just wrote keeps running here. The conditions
+# are in the build-pipeline spec, and they are narrow; `hint-quality.test.ts`
+# is the one caller and states its own reasoning. The backstop is asserted by
+# `src/gate-scope.test.ts`, which fails if CI ever sets this or the hook stops.
+#
 # `nice` (weak on macOS but free insurance) is applied to BOTH heavy branches,
 # so the gate yields to whatever else the developer is running rather than
 # competing with it. The build is niced hardest, since vitest is the branch that
