@@ -29,9 +29,22 @@
  * `slice-the-first-leaf-hint-guards-by-axis` pointed it at the presets menu
  * instead of at tiers written onto the first preset: seven games appear that
  * never had a board here, and Loopy alone contributes 29 from twenty tilings.
- * **Those rows have been sampled, not read** — the sample fell squarely in the
- * fourth class below, a *dot* or a *corner* marked against "this edge" — and
- * reading the report in full is `read-the-widened-deixis-report`.
+ * Reading all 505 (`read-the-widened-deixis-report`) again found **nothing
+ * further to change**: every row ties by one of the four classes below — 122 by
+ * a continuation leg, 82 by naming the second mark the way the board draws it,
+ * 184 by a line, region or run, and the rest by value, by state (Boats' filled
+ * segment against an empty square) or by kind.
+ *
+ * Two things that read found are worth carrying. **A row can mark one place,
+ * not two**: `markRoles` counts declared role *fields*, and a step whose
+ * evidence is the acted-on square itself declares two of them — which is why
+ * Sticks can name a clue of the same value as its target (46 of 49 such steps)
+ * with nothing ambiguous on the board. Twelve rows are of that shape. And the
+ * sweep's blind spot is the inverse of its subject: a sentence that points at
+ * cells the frame never marks. Keying on a *plural* deictic over the same
+ * corpus found six shapes, four of them Loopy's, where the pair connector the
+ * move draws is the mark; the two real ones are Solo's, and are
+ * `mark-the-cells-solo-points-at`.
  *
  * The false positives are not noise to be tuned away; they
  * are four legitimate ways to tie a deictic that no lexical rule recognizes:
@@ -81,15 +94,34 @@ const DEICTIC =
 /** The tie forms this project has actually used, as a *relation* rather than a
  * role name. Deliberately excludes `ringed`/`shaded`/`highlighted`: those name
  * the **other** mark, and a sentence containing one is exactly what the
- * co-occurrence grep already flagged. */
+ * co-occurrence grep already flagged.
+ *
+ * Every alternative here excuses at least one row, which is the property to
+ * preserve when one is added: an alternative pinned to a sentence that later
+ * changed goes on matching nothing while reading as coverage. Three did.
+ * `except this one` and `could light it are marked` were Light Up's, and the
+ * 120-character pass (`hold every hint step to 120 characters`) rewrote both
+ * sentences out from under them — which is why Light Up's *"The ringed square
+ * is still dark and only this square can still light it"* is a row today. It
+ * ties by naming the other mark, so it stays a row rather than a phrase.
+ *
+ * The liveness is asserted below rather than left to this paragraph, over the
+ * alternatives read back off the source so there is one copy of them. */
 const RELATIONAL =
-  /\bbeside\b|\bnext to\b|\bneighbor|\babove\b|\bbelow\b|\bbeneath\b|\bbetween\b|\bpast\b|\bbeyond\b|\baround it\b|\bfrom it\b|\bexcept this one\b|\breaches\b|\bsits\b|\btouch|\bas far as this\b|\bcould light it are marked\b/i;
+  /\bbeside\b|\bnext to\b|\bneighbor|\babove\b|\bbelow\b|\bbetween\b|\bpast\b|\bbeyond\b|\baround it\b|\bfrom it\b|\breaches\b|\bsits\b|\btouch|\bas far as this\b/i;
+
+/** Each alternative of {@link RELATIONAL}, on its own, so the sweep can say
+ * which one excused a step. None contains a top-level `|`. */
+const RELATIONAL_ALTS = RELATIONAL.source
+  .split("|")
+  .map((alt) => [alt, new RegExp(alt, "i")] as const);
 
 const SEEDS = ["deixis-a", "deixis-b"];
 
 it("reports every hint step that points bare while a second mark is displayed", () => {
   const rows: string[] = [];
   const perGame = new Map<string, number>();
+  const excused = new Map<string, number>();
   let examined = 0;
   let withSecondMark = 0;
 
@@ -119,7 +151,12 @@ it("reports every hint step that points bare while a second mark is displayed", 
           if (markRoles(step.highlights) < 2) continue;
           withSecondMark++;
           if (!DEICTIC.test(step.explanation)) continue;
-          if (RELATIONAL.test(step.explanation)) continue;
+          if (RELATIONAL.test(step.explanation)) {
+            for (const [alt, re] of RELATIONAL_ALTS)
+              if (re.test(step.explanation))
+                excused.set(alt, (excused.get(alt) ?? 0) + 1);
+            continue;
+          }
           // Collapse to a sentence *shape* — the formulaic games (Keen, Salad,
           // Subsets) otherwise report the same sentence once per value.
           const shape = step.explanation.replace(/\d+/g, "#");
@@ -136,6 +173,16 @@ it("reports every hint step that points bare while a second mark is displayed", 
   // generator threw would report a clean bill of health.
   expect(examined, "no hint step was examined at all").toBeGreaterThan(500);
   expect(withSecondMark, "no step displayed a second mark").toBeGreaterThan(200);
+
+  // A tie phrase excuses rows from the report, so one that matches nothing is
+  // a hole in the report's own coverage that reads as filter. Three had gone
+  // dead under a rewording before anyone looked (see {@link RELATIONAL}).
+  expect(
+    RELATIONAL_ALTS.filter(([alt]) => (excused.get(alt) ?? 0) === 0).map(
+      ([alt]) => alt,
+    ),
+    "a RELATIONAL alternative excuses no row: the sentence it was written for has changed",
+  ).toEqual([]);
 
   const lines = [
     "# Hint deixis sweep",
