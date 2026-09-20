@@ -134,6 +134,14 @@ function presets(): PresetMenu<SoloParams> {
   const submenu = [
     P(2, 2, SYMM_ROT2, DIFF_BLOCK, K, false, false),
     P(2, 3, SYMM_ROT2, DIFF_SIMPLE, K, false, false),
+    // Upstream offers the 6×6 board at one tier. Size and difficulty are
+    // independent axes and a player who prefers the small grid should be able
+    // to pick both; these two generate and grade honestly at this size, which
+    // was measured rather than assumed. A 6×6 has fewer places to hide a `set`
+    // deduction than a 9×9, so Hard costs the generator roughly fifty times
+    // what 3x3 Hard does — a retry count, not a defect.
+    P(2, 3, SYMM_ROT2, DIFF_INTERSECT, K, false, false),
+    P(2, 3, SYMM_ROT2, DIFF_SET, K, false, false),
     P(3, 3, SYMM_ROT2, DIFF_BLOCK, K, false, false),
     P(3, 3, SYMM_ROT2, DIFF_SIMPLE, K, false, false),
     P(3, 3, SYMM_ROT2, DIFF_SIMPLE, K, true, false),

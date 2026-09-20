@@ -617,6 +617,8 @@ exports[`encoded params are byte-stable > solo 1`] = `
 "default  full=3x3
 preset:Solo/2x2 Easy  full=2x2
 preset:Solo/2x3 Normal  full=2x3db  brief=2x3
+preset:Solo/2x3 Tricky  full=2x3di  brief=2x3
+preset:Solo/2x3 Hard  full=2x3da  brief=2x3
 preset:Solo/3x3 Easy  full=3x3
 preset:Solo/3x3 Normal  full=3x3db  brief=3x3
 preset:Solo/3x3 Normal X  full=3x3xdb  brief=3x3x

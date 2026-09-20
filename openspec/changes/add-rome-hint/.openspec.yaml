@@ -1,0 +1,7 @@
+# No delta yet: which capability moves depends on whether `CellRegion` gains a
+# name, whether `NoteEncoding` grows, and whether the dsf→region adapter lands
+# in the engine — those are the decisions the change exists to make. Written
+# against the code as it stands then, not against this scaffold.
+schema: spec-driven
+created: 2026-09-20
+skip_specs: true

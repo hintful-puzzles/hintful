@@ -1,0 +1,6 @@
+# No delta yet: whether a runner seam is needed, and whether the notation
+# extends to all three negative marks, are the decisions the change exists to
+# make. The notation half is player-visible and is the owner's call.
+schema: spec-driven
+created: 2026-09-20
+skip_specs: true
