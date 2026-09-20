@@ -300,17 +300,22 @@ export function axisSlice<Params, Entry extends { params: Params }>(
  * **The boards a per-commit cross-game sweep walks** — every preset in the slow
  * tier, the {@link axisSlice} in the gate.
  *
- * This is the one place the gate's preset population is decided, because twelve
- * sweeps had decided it twelve times and eleven of them had decided it wrong.
- * Eleven walked `firstLeaf` — by convention the smallest and easiest board a
- * game offers — or synthesized params from it with a `withTier` that writes
- * only the tier field, so no board any of them had ever run on carried a cage,
- * a jigsaw block, an X diagonal, an Adjacent clue, a Tectonic region, a
- * multiplication-only Keen or any Loopy tiling but Squares. Three of those
- * eleven are about *narration*, while Killer alone adds four cage sentences.
- * `docs/games/testing.md` § "How a cross-game guard finds its population" rule
- * 6 names the tell: a guard that builds its inputs with a `with*` rather than
- * reading them off something the game offers.
+ * This is the one place the gate's preset population is decided, because every
+ * cross-game sweep but one used to decide it for itself and all of those
+ * decided it wrong. They walked `firstLeaf` — by convention the smallest and
+ * easiest board a game offers — or synthesized params from it with a `withTier`
+ * that writes only the tier field, so no board any of them had ever run on
+ * carried a cage, a jigsaw block, an X diagonal, an Adjacent clue, a Tectonic
+ * region, a multiplication-only Keen or any Loopy tiling but Squares. Three of
+ * them have *narration* as their subject, while Killer alone adds four cage
+ * sentences. `docs/games/testing.md` § "How a cross-game guard finds its
+ * population" rule 6 names the tell: a guard that builds its inputs with a
+ * `with*` rather than reading them off something the game offers.
+ *
+ * **Which sweeps still build their own is asserted rather than counted** —
+ * `hint-enrollment.test.ts` scans the suite for the two calls and holds the
+ * result to a ledger with a reason per entry, because three of the sweeps found
+ * that way were inside the file whose main walk had already been fixed once.
  *
  * **Difficulty needs no special case**: it is a `"choices"` item like any
  * other, so a slice *replaces* a `tiers.map(withTier(base))` loop rather than

@@ -632,12 +632,16 @@ from the menu.
 `axisSlice` and `leafPresets` are underneath it and are the right call only when
 a sweep is about the slicing rule itself.
 
-**Calling it is the whole of the enrollment, and that is the lesson.** Twelve
-sweeps decided this population for themselves and eleven decided it wrong; three
-of the eleven sat inside the very file whose main walk had already been widened
-(`slice-the-first-leaf-hint-guards-by-axis`). A sweep that was fixed once is not
-a sweep that stays fixed, so the rule names the function rather than the
-finding.
+**Calling it is the whole of the enrollment, and that is the lesson.** Every
+cross-game sweep but one used to decide this population for itself and all of
+them decided it wrong; three sat inside the very file whose main walk had
+already been widened (`slice-the-first-leaf-hint-guards-by-axis`). A sweep that
+was fixed once is not a sweep that stays fixed, so the rule names the function
+rather than the finding — and
+[`hint-enrollment.test.ts`](../../src/engine/hint-enrollment.test.ts) scans the
+suite for `firstLeaf(`/`.withTier(` and holds what it finds to a ledger, one
+entry per file with the behavior that needs a record the presets menu does not
+offer. Do not count these in prose; the scan is the count.
 
 Three keys have been tried here and the first two were each right about one axis
 and blind to the rest:

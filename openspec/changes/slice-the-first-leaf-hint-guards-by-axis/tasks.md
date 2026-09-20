@@ -3,12 +3,16 @@
 ## 1. Confirm the blindness per guard, on the board rather than in the source
 
 - [x] 1.1 Census taken off the live registry through a scratch `*.test.ts` that
-      throws its report. **It is eleven sites, not eight**: reading the call
+      throws its report. **The proposal's list was short**: reading the call
       sites found three more inside `hint-resume.test.ts` itself — the no-op
       step block, the `hint()`-purity block and the Latin naked-single block —
       all still on `firstLeaf` after that file's *main* walk had been widened.
-      The proposal's "five seeds per case" was `hint-resume`'s `SEEDS`, not
-      these; they run three, three and two.
+      Two of the proposal's own figures did not survive checking: its prose says
+      "eight others" where its own list enumerates ten sites, and "five seeds per
+      case" was `hint-resume`'s `SEEDS` rather than these three, which run three,
+      three and two. **No count of them is written down anywhere now** — a
+      suite scan in `hint-enrollment.test.ts` names the files that still build
+      their own boards, and the ledger beside it says why each may.
 - [x] 1.2 Named per guard, at the site, in the comment that now says why the
       guard reads the slice. Two claims were checked rather than asserted:
       `hint-text-convention`'s `speaks()` returns on the first speaking board,
@@ -41,7 +45,13 @@
 
 ## 3. Widen, and prove each one
 
-- [x] 3.1 All eleven read `gatePresets(id, game)`, a new shared entry point in
+- [x] 3.0 The rule is held by a check rather than by a guide sentence:
+      `hint-enrollment.test.ts` scans every test file's comment-stripped source
+      for `firstLeaf(` / `.withTier(` and asserts the result equals a ledger of
+      the four files that legitimately still build a params record, each with
+      the behavior that needs one. Proved both ways — a planted call in
+      `hint-overlay.test.ts` turns it red, and so does removing an entry.
+- [x] 3.1 All of them read `gatePresets(id, game)`, a new shared entry point in
       `testing/hint-games.ts` — the slow tier's full list, the gate's
       `axisSlice`, and the searching games' cost discipline in one place. The
       searching-game rule changed with it: `all.slice(0, 1)` and `all.slice(0, 3)`

@@ -27,6 +27,7 @@
  * thing standing between an empty derivation and a clean commit.
  */
 import { describe, expect, it } from "vitest";
+import { SCANNED_TEST_FILES, testCodeLinesMatching } from "./testing/enrollment.ts";
 import {
   axisSlice,
   HINT_GAMES,
@@ -169,5 +170,83 @@ describe("the per-commit preset slice is derived, and did not collapse", () => {
       carries("seismic", (p) => p["mode"] === 1),
       "no Seismic Tectonic board",
     ).toBe(true);
+  });
+});
+
+/**
+ * The guard on the **third** instrument, and the one the other two could not
+ * supply: *does a sweep call the slice at all?*
+ *
+ * The two above assert that the derivation and the slice are healthy. Neither
+ * can see a guard that never asks them — and that was the state of every
+ * cross-game sweep but one until
+ * `slice-the-first-leaf-hint-guards-by-axis`: each built its own boards from
+ * `firstLeaf(game.presets())`, or synthesized them with a `withTier` that
+ * writes the tier field and nothing else, so no board any of them ran on
+ * carried a cage, a jigsaw block, an X diagonal, an Adjacent clue, a Tectonic
+ * region or any Loopy tiling but Squares.
+ *
+ * **Three of them sat inside the file whose main walk had already been fixed**,
+ * which is the whole reason this check exists rather than a sentence in a
+ * guide: a sweep fixed once is not a sweep that stays fixed, and the next one
+ * is written by copying a neighbor.
+ *
+ * Keyed on the **shape** — the two calls themselves, anywhere in any test file,
+ * comments stripped — and the superset is then classified by the ledger rather
+ * than narrowed away (`AGENTS.md` § "A scan that keys on a name"). The ledger is
+ * the rule 3 shape from `docs/games/testing.md` § "How a cross-game guard finds
+ * its population": the scan says *who*, each entry says *why*, and the equality
+ * below means neither can rot.
+ */
+const BUILDS_ITS_OWN_BOARDS: Record<string, string> = {
+  "src/engine/hint-quality.test.ts":
+    "`lintCases` deliberately walks one corner the presets menu does not offer " +
+    "— the last preset at the hardest teachable tier — because Group speaks the " +
+    "shared Latin chain sentence at 12x12 Hard and at no point of its seven " +
+    "presets. A Custom-dialog combination is a board a player can sit in front " +
+    "of, and the ledger's rot half would read a live listing as dead without it.",
+  "src/engine/hint-ordinal.test.ts":
+    "`chainBoards` walks the slice AND every tier of the smallest preset, " +
+    "because a two-candidate chain needs a small grid at a hard tier and a menu " +
+    "never pairs those. Measured: Keen emits an ordered chain on none of its " +
+    "ten presets at eight seeds each, and readily on 4x4 at Hard.",
+  "src/engine/difficulty-contract.test.ts":
+    "Its three cases generate no board at all — they ask whether `withTier` " +
+    "writes a field `tierOf` and the codec read back, which is arithmetic on a " +
+    "params record that any valid record exercises. Everything here that is " +
+    "about boards already reads every leaf preset.",
+  "src/engine/difficulty.test.ts":
+    "Exercises `withTier` against a hand-written contract rather than a game, " +
+    "the way `hint-games.test.ts` exercises the slicing rule against a " +
+    "hand-written menu: there is no presets menu in it to read.",
+};
+
+describe("a cross-game sweep takes its boards from the slice", () => {
+  const OWN_BOARDS = /\bfirstLeaf\(|\.withTier\(/;
+
+  it("scanned the suite, and only the ledgered files build their own", () => {
+    // Vacuity, first and for the usual reason: a glob that matched nothing
+    // yields a clean bill of health over no files at all.
+    expect(
+      SCANNED_TEST_FILES,
+      "the test-source glob found almost nothing",
+    ).toBeGreaterThan(250);
+    const found = [
+      ...new Set(testCodeLinesMatching(OWN_BOARDS).map((m) => m.id)),
+    ].sort();
+    expect(
+      found,
+      "a test builds its own board population instead of calling `gatePresets` " +
+        '(docs/games/testing.md § "Slicing a preset sweep for the gate"). If it ' +
+        "genuinely needs a params record the presets menu does not offer, say " +
+        "which behavior needs it and add it to BUILDS_ITS_OWN_BOARDS.",
+    ).toEqual(Object.keys(BUILDS_ITS_OWN_BOARDS).sort());
+  });
+
+  it("every ledger entry states a reason", () => {
+    // The other direction: an entry left behind by a file that stopped doing it
+    // is a dead exemption, and a one-word entry is not a reason.
+    for (const [path, why] of Object.entries(BUILDS_ITS_OWN_BOARDS))
+      expect(why.length, `${path}'s entry states no reason`).toBeGreaterThan(80);
   });
 });

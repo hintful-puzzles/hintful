@@ -10,18 +10,24 @@ of a game's parts.
 
 The rule already said that any cross-game sweep over presets asks the same
 question and derives the answer from the game. What it did not say is where the
-answer comes from, and so **twelve sweeps answered it twelve times and eleven
-answered it wrong**. Eleven read `firstLeaf(game.presets())` — by convention the
-smallest and easiest board a game offers — or synthesized params from it with a
-`withTier` that writes the tier field and nothing else. Measured 2026-09-20 over
-the live registry: no board any of the eleven had ever run on carried a cage, a
-jigsaw block, an X diagonal, an Adjacent clue, a Tectonic region, a
-multiplication-only Keen or any Loopy tiling but Squares. Three of the eleven
-have *narration* as their subject, while Killer alone adds four cage sentences.
+answer comes from, and so **every such sweep but one answered it for itself, and
+all of those answered it wrong**. They read `firstLeaf(game.presets())` — by
+convention the smallest and easiest board a game offers — or synthesized params
+from it with a `withTier` that writes the tier field and nothing else. Measured
+2026-09-20 over the live registry: no board any of them had ever run on carried
+a cage, a jigsaw block, an X diagonal, an Adjacent clue, a Tectonic region, a
+multiplication-only Keen or any Loopy tiling but Squares. Three have *narration*
+as their subject, while Killer alone adds four cage sentences.
 
-Three of the eleven sat inside the very file whose main walk had already been
-widened, which is why the rule has to name the shared function rather than the
-finding: a sweep that was fixed once is not a sweep that stays fixed.
+Three of them sat inside the very file whose main walk had already been widened,
+which is why the rule has to name the shared function rather than the finding: a
+sweep that was fixed once is not a sweep that stays fixed.
+
+**Which sweeps still build their own boards SHALL be derived and ledgered, not
+counted in prose.** A scan of the suite's own comment-stripped sources for the
+two calls names the files, and each is held to an entry saying which behavior
+needs a params record the presets menu does not offer. A guide sentence could
+not have stopped the next sweep, which is written by copying a neighbor.
 
 **A shared decision keeps its cost discipline in one place too.** A hint that
 plans by *searching* pays for board size twice over — one full search per move,
@@ -41,6 +47,14 @@ findings.
 - **WHEN** a new cross-game test needs a board per game
 - **THEN** it calls the shared slice, and gains every game's every mode from
   that commit with no key of its own to maintain
+
+#### Scenario: A sweep is written that builds its own boards anyway
+
+- **WHEN** a test file calls `firstLeaf` or `withTier` and is not in the ledger
+- **THEN** the suite scan fails, naming the file and the guide section, and the
+  author either calls the slice or writes down which behavior needs the record
+- **AND** an entry left behind by a file that stopped doing it fails the same
+  check from the other side
 
 #### Scenario: A guard's own population is synthesized from a base preset
 
