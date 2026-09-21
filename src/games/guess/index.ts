@@ -5,7 +5,8 @@
  * colors within `nguesses` rows; each submitted row is scored with Knuth's
  * black/white feedback. Win on all-correct-place, lose (and reveal) when the
  * rows run out. The working row lives in `GuessUi`, rebuilt by
- * `changedState` after every transition.
+ * `changedState` whenever the row being played changes; the answer row's
+ * rule-out marks live in the state, and the hint (`hint.ts`) places them.
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
@@ -22,11 +23,15 @@ import {
   isMouseRelease,
   moveCursor,
   newCursor,
+  PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
+  RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
+import { guessHint, guessHintKeepTrack, guessRefreshHintStep } from "./hint.ts";
 import {
+  answerDotAt,
   COL_1,
   colors,
   computeSize,
@@ -66,14 +71,21 @@ function newUi(state: GuessState): GuessUi {
     cursor: newCursor(),
     markable: false,
     showLabels: false,
-    hint: null,
+    pencilMode: false,
   };
 }
 
-/** Upstream `game_changed_state`: rebuild the working row from the state's
- * holds after every transition, and drop the cached hint on an undo. */
+/**
+ * Upstream `game_changed_state`: rebuild the working row from the state's holds
+ * whenever the row being played changes — a submit, an undo or redo of one, a
+ * reveal.
+ *
+ * **Only then**, because a mark is a move too and the row is not in it: rebuilt
+ * after every transition, ruling a color out of the answer row would throw
+ * away the half-composed guess the player was marking against.
+ */
 function changedState(ui: GuessUi, prev: GuessState | null, next: GuessState): void {
-  if (prev && next.nextGo < prev.nextGo) ui.hint = null;
+  if (prev && prev.nextGo === next.nextGo && prev.solved === next.solved) return;
 
   const { npegs } = next.params;
   const lastRow = next.nextGo > 0 ? next.guesses[next.nextGo - 1] : null;
@@ -121,15 +133,21 @@ function restCursor(ui: GuessUi, npegs: number, fallback = 0): void {
 }
 
 /**
- * Enter `color` where the player is pointing: the slot they selected, else the
- * first empty one. Declines when the row is full and nothing is selected, as
+ * Enter `color` where the player is pointing: slot `at` when they tapped that
+ * slot's dot in the answer row, else the slot they selected, else the first
+ * empty one. Declines when the row is full and nothing is selected, as
  * a Wordle row does — there is nowhere for the color to go, and overwriting
  * a slot the player did not name would be a guess about which.
  */
-function enterColor(params: GuessParams, ui: GuessUi, color: number): UiUpdate | null {
+function enterColor(
+  params: GuessParams,
+  ui: GuessUi,
+  color: number,
+  at = -1,
+): UiUpdate | null {
   const { npegs } = params;
-  const slot =
-    ui.cursor.visible && ui.cursor.x < npegs ? ui.cursor.x : firstEmpty(ui, npegs);
+  const chosen = at >= 0 ? at : markSlot(ui, npegs);
+  const slot = chosen >= 0 ? chosen : firstEmpty(ui, npegs);
   if (slot < 0) return null;
   setPeg(params, ui, slot, color);
   // The ring is the "where does the next one land" marker, so it is shown
@@ -153,64 +171,26 @@ function buildGuessMove(ui: GuessUi): GuessMove {
   return { type: "guess", pegs: ui.currPegs.slice(), holds: ui.holds.slice() };
 }
 
-// --- hint (upstream compute_hint) -------------------------------------
+// --- answer-row marks -------------------------------------------------
 
-/** Fill the working row with the lexicographically-first combination
- * consistent with every prior scored guess (a `game_ui` mutation, not a
- * state transition). A candidate once ruled out stays ruled out, so the
- * search resumes from `ui.hint` on the next call; `changedState` clears it
- * on an undo. */
-function computeHint(state: GuessState, ui: GuessUi): void {
-  const { npegs, ncolors, allowMultiple } = state.params;
-  const past = state.guesses.slice(0, state.nextGo);
+/** Rule `color` out of answer slot `pos`, or back in if it is already out. */
+function toggleMark(state: GuessState, pos: number, color: number): GuessMove {
+  const out = (state.ruledOut[pos] & (1 << color)) !== 0;
+  return { type: "mark", marks: [{ pos, color }], ruledOut: !out };
+}
 
-  // Bound the colors worth trying. Past feedback cannot tell unguessed
-  // colors apart, so `maxcolor` admits one of them (`npegs` without
-  // duplicates); `mincolor` skips any color proven absent, a past guess
-  // made entirely of it that scored nothing.
-  let maxcolor = 0;
-  for (const g of past) maxcolor = Math.max(maxcolor, ...g.pegs);
-  maxcolor = Math.min(maxcolor + (allowMultiple ? 1 : npegs), ncolors);
-  let mincolor = 1;
-  const provenAbsent = (c: number): boolean =>
-    past.some((g) => !g.feedback[0] && g.pegs.every((v) => v === c));
-  while (provenAbsent(mincolor)) mincolor++;
-
-  if (!ui.hint) ui.hint = new Array(npegs).fill(1);
-  const hint = ui.hint;
-  const consistent = (): boolean => {
-    for (let i = 0; i < past.length; i++) {
-      const { feedback } = markPegs(hint, past[i].pegs, maxcolor);
-      for (let j = 0; j < npegs; j++) {
-        if (feedback[j] !== past[i].feedback[j]) return false;
-      }
-    }
-    return true;
-  };
-
-  while (hint[0] <= ncolors) {
-    if (isMarkable(state.params, hint) && consistent()) {
-      for (let i = 0; i < npegs; i++) ui.currPegs[i] = hint[i];
-      ui.markable = true;
-      ui.cursor.x = npegs;
-      ui.cursor.visible = true;
-      return;
-    }
-    // Next candidate, odometer-style; peg 0 never wraps, which ends the search.
-    let i = npegs - 1;
-    hint[i]++;
-    while (i > 0 && hint[i] > maxcolor) {
-      hint[i] = mincolor;
-      i--;
-      hint[i]++;
-    }
+/** Put every color of answer slot `pos` back, or decline if none is out. */
+function clearMarks(state: GuessState, pos: number): GuessMove | null {
+  const marks = [];
+  for (let c = 1; c <= state.params.ncolors; c++) {
+    if (state.ruledOut[pos] & (1 << c)) marks.push({ pos, color: c });
   }
+  return marks.length > 0 ? { type: "mark", marks, ruledOut: false } : null;
+}
 
-  // Nothing is compatible, which only a corrupted solution allows: nudge
-  // the cursor to signal futility, as upstream does.
-  if (!ui.cursor.visible) ui.cursor.visible = true;
-  else if (npegs === 1) ui.cursor.visible = false;
-  else ui.cursor.x = (ui.cursor.x + 1) % npegs;
+/** The slot a mark from the keyboard goes in: the cursor's, when it is on one. */
+function markSlot(ui: GuessUi, npegs: number): number {
+  return ui.cursor.visible && ui.cursor.x < npegs ? ui.cursor.x : -1;
 }
 
 // --- input ------------------------------------------------------------
@@ -271,17 +251,18 @@ function interpretMove(
   const off = pegOff(ds);
   const { x, y } = p;
 
-  // Hit-test the two regions the pointer can act in: the row being composed,
-  // and the feedback pegs beside it.
+  // Hit-test the row being composed and the feedback pegs beside it — that
+  // row's height only. Upstream's region ran `nguesses` rows down from it,
+  // which once the answer row became a target swallowed it from the third
+  // guess on: a tap on a dot selected the peg above it instead.
   let overGuess = -1; // current-row peg index
   let overHint = false;
 
   const guessOx = ds.guessx;
   const guessOy = ds.guessy + from.nextGo * off;
   const guessW = npegs * off;
-  const guessH = params.nguesses * off;
 
-  if (x >= guessOx && y >= guessOy && y < guessOy + guessH) {
+  if (x >= guessOx && y >= guessOy && y < guessOy + off) {
     if (x < guessOx + guessW) overGuess = Math.floor((x - guessOx) / off);
     else overHint = true;
   }
@@ -309,6 +290,24 @@ function interpretMove(
       ui.cursor.visible = true;
       return UI_UPDATE;
     }
+    const dot = answerDotAt(ds, x, y);
+    if (dot) {
+      // The press already acted on a held finger or a right-click (below), so
+      // its release has nothing left to do here.
+      if (button === RIGHT_RELEASE) return null;
+      // A tap on an answer-row dot **enters that color in that column**, which
+      // is the pointer's way to place a peg without the keypad; in notes mode
+      // it rules the color out instead, as the color keys do.
+      if (dot.color === 0) {
+        ui.cursor.x = dot.pos;
+        ui.cursor.visible = true;
+        return UI_UPDATE;
+      }
+      if (!ui.pencilMode) return enterColor(params, ui, dot.color, dot.pos);
+      ui.cursor.x = dot.pos;
+      ui.cursor.visible = true;
+      return toggleMark(from, dot.pos, dot.color);
+    }
     if (overHint && ui.markable) return buildGuessMove(ui);
     return null;
   }
@@ -317,37 +316,52 @@ function interpretMove(
       ui.holds[overGuess] = !ui.holds[overGuess];
       return UI_UPDATE;
     }
+    // A right-click or a held finger on a dot rules it out in either mode —
+    // the way to mark with no keypad and no mode to switch into.
+    const dot = answerDotAt(ds, x, y);
+    if (dot && dot.color > 0) return toggleMark(from, dot.pos, dot.color);
     return null;
   }
 
   // --- keyboard ---
-  if (isCursorMove(button)) {
-    // One axis: the peg the next color will fill. The second axis picked a
-    // color out of the board's palette column, and went with it — a color is
-    // named by its own key now, on the panel and on the keyboard both, so
-    // walking a list to reach one was a slower way to say the same thing.
-    const maxcur = npegs + (ui.markable ? 1 : 0);
-    return moveCursor(ui.cursor, button, maxcur, 1) ? UI_UPDATE : null;
-  }
-  if (button === 0x68 || button === 0x48 || button === 0x3f /* 'h' | 'H' | '?' */) {
-    computeHint(from, ui);
+  if (button === PENCIL_MODE_BUTTON) {
+    ui.pencilMode = !ui.pencilMode;
+    // Notes go in a slot, and the submit position is not one.
+    if (ui.pencilMode && ui.cursor.x >= npegs) ui.cursor.x = npegs - 1;
     return UI_UPDATE;
+  }
+  if (isCursorMove(button)) {
+    // One axis: the slot the next color fills, or — in notes mode — the answer
+    // slot the next mark goes in, which is why the submit position drops out
+    // there.
+    const maxcur = npegs + (ui.markable && !ui.pencilMode ? 1 : 0);
+    return moveCursor(ui.cursor, button, maxcur, 1) ? UI_UPDATE : null;
   }
   if (button === SUBMIT_BUTTON) return ui.markable ? buildGuessMove(ui) : null;
   if (button === CURSOR_SELECT) {
-    // Submit, and nothing else. It used to place the color the second cursor
-    // axis was resting on; with that axis gone there is no color for it to
-    // mean, and a digit says which one in one press. Declined off the submit
-    // position rather than made to do something, so it does not claim a key it
-    // did not act on.
-    if (ui.cursor.x !== npegs || !ui.markable) return null;
-    ui.cursor.visible = true;
-    return buildGuessMove(ui);
+    // On the submit position Enter submits; on a slot it toggles notes mode,
+    // which is what Enter on the highlight does in every note-taking game.
+    // Declined with the cursor hidden, so it claims no key it did not act on.
+    if (!ui.cursor.visible) return null;
+    if (ui.cursor.x < npegs) {
+      ui.pencilMode = !ui.pencilMode;
+      return UI_UPDATE;
+    }
+    return ui.markable ? buildGuessMove(ui) : null;
   }
   // A digit picks a color; `0` is the tenth, which only a ten-color game has.
   const digit = digitOf(button);
   const color = digit === 0 ? 10 : digit;
-  if (color !== null && color <= ncolors) return enterColor(params, ui, color);
+  if (color !== null && color <= ncolors) {
+    if (!ui.pencilMode) return enterColor(params, ui, color);
+    const slot = markSlot(ui, npegs);
+    return slot >= 0 ? toggleMark(from, slot, color) : null;
+  }
+  if (ui.pencilMode && isEraseKey(button)) {
+    // Clear, in notes mode, puts the cursor's answer slot back to every color.
+    const slot = markSlot(ui, npegs);
+    return slot >= 0 ? clearMarks(from, slot) : null;
+  }
   if (button === 0x44 || button === 0x64 || isEraseKey(button) /* 'D' | 'd' */) {
     // Rub out the selected slot, or — with nothing selected, or a selection
     // sitting on a slot that is already empty — the last color the player
@@ -381,6 +395,18 @@ function interpretMove(
 
 function executeMove(s: GuessState, m: GuessMove): GuessState {
   if (m.type === "solve") return { ...cloneState(s), solved: -1 };
+  if (m.type === "mark") {
+    const { npegs, ncolors } = s.params;
+    const ret = cloneState(s);
+    for (const { pos, color } of m.marks) {
+      if (pos < 0 || pos >= npegs || color < 1 || color > ncolors) {
+        throw new Error(`Illegal answer-row mark ${color} at ${pos}`);
+      }
+      if (m.ruledOut) ret.ruledOut[pos] |= 1 << color;
+      else ret.ruledOut[pos] &= ~(1 << color);
+    }
+    return ret;
+  }
   if (m.type !== "guess") return assertNever(m, "guess: executeMove");
   if (s.solved) throw new Error("No guesses allowed once the game is over");
 
@@ -464,7 +490,7 @@ function statusbarText(s: GuessState, ui: GuessUi): string {
   }
   if (s.solved < 0) {
     return s.nextGo >= nguesses
-      ? "Out of guesses — the answer is revealed."
+      ? "Out of guesses: the answer is revealed."
       : "The answer is revealed.";
   }
   const where = `Guess ${s.nextGo + 1} of ${nguesses}`;
@@ -568,6 +594,9 @@ export const guessGame: Game<
     // A give-up, as upstream's "S": reveal the answer, scored as a loss.
     return { ok: true, move: { type: "solve" } };
   },
+  hint: (state, _aux, ui) => guessHint(state, ui),
+  hintKeepTrack: guessHintKeepTrack,
+  refreshHintStep: guessRefreshHintStep,
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

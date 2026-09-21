@@ -2,8 +2,9 @@
  * Guess — state, params, desc codec, and the scoring/markability logic.
  *
  * The *live editing* state (working row, holds, cursor) lives in `GuessUi`, as
- * upstream keeps it in `game_ui`; `GuessState` holds only the submitted guesses
- * (with feedback), the hidden solution, and the play cursor.
+ * upstream keeps it in `game_ui`; `GuessState` holds the submitted guesses
+ * (with feedback), the hidden solution, the play cursor, and the player's
+ * rule-out marks in the answer row.
  */
 
 import { parseLeadingInt } from "../../engine/decimal.ts";
@@ -52,12 +53,37 @@ export interface GuessState {
   readonly nextGo: number;
   /** `+1` win, `-1` lose/revealed, `0` still playing. */
   readonly solved: number;
+  /**
+   * The answer row's marks, one bitmask per slot: bit `c` set means the player
+   * has ruled color `c` out of that slot of the answer.
+   *
+   * **Rule-outs, not candidates**, so it is not called `pencil`: a slot with no
+   * marks is one where every color is still possible, and nothing is written
+   * there until a row proves otherwise. Mastermind's one-row readings are all of
+   * the form "not this color, here" (`openspec/changes/add-guess-hint`'s
+   * proposal has the table), which is the fact a player needs somewhere to keep.
+   *
+   * State rather than `Ui`, so a mark is a move: it undoes, it replays from the
+   * log, and a hint can place one.
+   */
+  readonly ruledOut: Int32Array;
 }
 
-/** Submit the working row (`pegs`/`holds` snapshot), or reveal the
- * answer. Both are JSON-safe → the default move codec suffices. */
+/** One answer-row mark: color `color` in slot `pos`. */
+export interface SlotMark {
+  pos: number;
+  color: number;
+}
+
+/** Submit the working row (`pegs`/`holds` snapshot), reveal the answer, or set
+ * answer-row marks. All JSON-safe → the default move codec suffices.
+ *
+ * A mark move *sets* each mark to `ruledOut` rather than toggling it, so a
+ * hint's step is idempotent and a player's toggle is decided in
+ * `interpretMove`, where the current mark is known. */
 export type GuessMove =
   | { type: "guess"; pegs: number[]; holds: boolean[] }
+  | { type: "mark"; marks: SlotMark[]; ruledOut: boolean }
   | { type: "solve" };
 
 export interface GuessUi {
@@ -74,9 +100,9 @@ export interface GuessUi {
   cursor: GridCursor;
   markable: boolean;
   showLabels: boolean;
-  /** Cached lexicographically-first row, narrowed incrementally by
-   * `computeHint` (rebuilt from scratch after an undo). */
-  hint: number[] | null;
+  /** Notes mode: a color key rules that color out of the cursor's slot of the
+   * answer row instead of placing it in the working row. */
+  pencilMode: boolean;
 }
 
 // --- pegrow helpers ---------------------------------------------------
@@ -97,6 +123,7 @@ export function cloneState(s: GuessState): GuessState {
     solution: s.solution.slice(),
     nextGo: s.nextGo,
     solved: s.solved,
+    ruledOut: s.ruledOut.slice(),
   };
 }
 
@@ -260,6 +287,7 @@ export function newState(p: GuessParams, desc: string): GuessState {
     solution: Array.from(bmp),
     nextGo: 0,
     solved: 0,
+    ruledOut: new Int32Array(p.npegs),
   };
 }
 

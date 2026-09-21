@@ -1,8 +1,10 @@
 # add-guess-hint
 
-**Status: scaffolded, not started.** Opened 2026-09-21 out of
-`give-guess-element-keys`, with the code read that day. The first task is a
-decision about **notation**, not code.
+**Status: implemented 2026-09-21**; the answers are `design.md`'s. Opened the
+same day out of `give-guess-element-keys`, with the code read that day. One
+thing below was overtaken before work began: the board's palette column, which
+§ "Its bearing on the input model" says survives as tap-to-place, was deleted
+by `compose-guess-rows-without-dragging` itself.
 
 ## Why
 

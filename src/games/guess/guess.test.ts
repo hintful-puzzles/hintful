@@ -1,8 +1,8 @@
 /**
  * Tier-1 tests for the Guess Game glue: move execution + purity,
- * win/lose/reveal transitions, the `changedState` hold-carry, the
- * hint-fills-the-working-row behavior (played end-to-end), key
- * input mapping, and the element keypad with its tap selection.
+ * win/lose/reveal transitions, the `changedState` hold-carry, key
+ * input mapping, and the element keypad with its tap selection. The
+ * answer-row notation and the hint are `guess-hint.test.ts`'s.
  */
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
@@ -27,7 +27,6 @@ import {
   type GuessParams,
   type GuessState,
   type GuessUi,
-  markPegs,
   newDesc,
   newState,
   status,
@@ -144,53 +143,41 @@ describe("changedState (hold-carry)", () => {
     expect(ui.holds.every((h) => !h)).toBe(true);
   });
 
-  it("drops the cached hint on an undo (next_go decreases)", () => {
+  it("keeps the half-composed row across a mark, and an undo of one", () => {
+    // A mark is a move, and the row is not in it: rebuilding after every
+    // transition would throw the row away while the player marks against it.
     const { state, ui } = freshGame();
-    ui.hint = [1, 1, 1, 1];
+    ui.currPegs.splice(0, 2, 3, 5);
+    const marked = guessGame.executeMove(state, {
+      type: "mark",
+      marks: [{ pos: 0, color: 2 }],
+      ruledOut: true,
+    });
+    guessGame.changedState?.(ui, state, marked);
+    expect(ui.currPegs).toEqual([3, 5, 0, 0]);
+    guessGame.changedState?.(ui, marked, state); // the undo
+    expect(ui.currPegs).toEqual([3, 5, 0, 0]);
+  });
+
+  it("still rebuilds the row when an undo takes a guess back", () => {
+    const { state, ui } = freshGame();
     const wrong = state.solution.slice();
     wrong[0] = (wrong[0] % state.params.ncolors) + 1;
-    const next = guessGame.executeMove(state, submit(wrong)); // nextGo 0 -> 1
-    guessGame.changedState?.(ui, next, state); // simulate undo: new < old
-    expect(ui.hint).toBeNull();
+    const next = guessGame.executeMove(state, submit(wrong));
+    ui.currPegs.splice(0, 1, 4);
+    guessGame.changedState?.(ui, next, state); // undo: nextGo 1 -> 0
+    expect(ui.currPegs).toEqual([0, 0, 0, 0]);
   });
 });
 
-describe("hint (compute_hint)", () => {
-  it("solving by always taking the hint wins within the guess limit", () => {
-    const params = defaultParams();
-    let { state, ui } = freshGame("hint-solve", params);
-    let guesses = 0;
-    while (state.solved === 0 && guesses < params.nguesses) {
-      // Press the hint key: fills ui.currPegs with a consistent row.
-      const r = guessGame.interpretMove(
-        state,
-        ui,
-        preferredDrawState(guessGame, state),
-        ZERO,
-        0x68 /* 'h' */,
-      );
-      expect(r).toBeTruthy();
-      const move = submit(ui.currPegs.slice());
-      state = guessGame.executeMove(state, move);
-      guessGame.changedState?.(ui, state, state);
-      guesses++;
-    }
-    expect(state.solved).toBe(1);
-  });
-
-  it("the hint row is consistent with every prior guess's feedback", () => {
-    const params = defaultParams();
-    const { state: s0, ui } = freshGame("hint-consistency", params);
-    const s1 = guessGame.executeMove(s0, submit([1, 2, 3, 4]));
-    expect(s1.nextGo).toBe(1); // scored, not won
-    guessGame.changedState?.(ui, s0, s1);
-    guessGame.interpretMove(s1, ui, preferredDrawState(guessGame, s1), ZERO, 0x68);
-    // Consistent: had the hint row been the answer, every prior guess
-    // would have scored exactly as it did.
-    const hintRow = ui.currPegs.slice();
-    for (const prior of s1.guesses.slice(0, s1.nextGo)) {
-      const { feedback } = markPegs(prior.pegs, hintRow, params.ncolors);
-      expect(feedback).toEqual(prior.feedback);
+describe("the hint key belongs to the app", () => {
+  it("declines h, H and ? so the app's Hint command gets them", () => {
+    // Guess used to consume them for upstream's row-filler, which the app's
+    // hint replaces; claimed here, the bare `h` would reach the wrong one.
+    const { state, ui } = freshGame();
+    const ds = preferredDrawState(guessGame, state);
+    for (const key of [0x68, 0x48, 0x3f]) {
+      expect(guessGame.interpretMove(state, ui, ds, ZERO, key)).toBeNull();
     }
   });
 });

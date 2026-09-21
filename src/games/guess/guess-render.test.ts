@@ -94,10 +94,17 @@ describe("Guess redraw", () => {
     const dsA = freshDs();
     const { dr: drA, ops: opsA } = recordingDrawing();
     redraw(drA, dsA, null, s0, 1, freshUi(s0), 0, 0);
-    /** A peg is a circle in one of the ten peg colors, wherever it is drawn. */
+    /** A peg is a peg-sized circle in one of the ten peg colors, wherever it is
+     * drawn. The size is the point: the answer row paints a dot of every color
+     * there too, and a dot must never read as a revealed peg. */
     const pegsBelow = (ops: RecordingDrawing["ops"], y: number) =>
-      opsOfKind(ops, "circle").some((o) => o.fill >= 6 && o.fill <= 15 && o.cy >= y);
+      opsOfKind(ops, "circle").some(
+        (o) => o.fill >= 6 && o.fill <= 15 && o.cy >= y && o.r >= dsA.pegrad,
+      );
     expect(pegsBelow(opsA, dsA.solny)).toBe(false);
+    const dots = opsOfKind(opsA, "circle").filter((o) => o.cy >= dsA.solny);
+    expect(dots.length).toBe(params.ncolors * params.npegs);
+    for (const d of dots) expect(d.r * 2).toBeLessThanOrEqual(dsA.pegrad);
 
     // Solved: the solution pegs are revealed in the solution row.
     const won = guessGame.executeMove(s0, {

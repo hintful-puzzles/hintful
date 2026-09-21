@@ -550,6 +550,13 @@ a preview that then simulates its move against the new board throws where
 upstream asserted. See [rendering](./rendering.md) § "Drag previews and blitters" for the
 render half.
 
+**A `Ui` rebuilt from state must ask whether this transition touched what it
+rebuilds.** Guess rebuilt its working row from the holds after every
+transition, which was harmless while the only moves were guesses; the day marks
+became moves, each one would have wiped the row the player was marking against.
+It now rebuilds only when the row being played changes. Adding a move type to a
+game with a rebuilding `changedState` is the moment to check.
+
 ### Ui that must survive a save
 
 **A `Ui` field set in `interpretMove` that lives outside the undo history

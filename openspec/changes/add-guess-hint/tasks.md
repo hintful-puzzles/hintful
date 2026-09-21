@@ -1,82 +1,61 @@
 # add-guess-hint — tasks
 
-**Nothing here is started.** The first task is a decision about notation, and
-the change should not begin until the input-model question it depends on has
-been settled (proposal, § "Its bearing on the input model").
+Implemented 2026-09-21, together with the two input limitations
+`compose-guess-rows-without-dragging` shipped with (owner, same day). The
+decisions are `design.md`'s.
 
 ## 1. Decide, before building anything
 
-- [ ] 1.1 **Does Guess get a notation, and which one?** Per-slot ruled-out
-      colors (pencil marks — the collection's usual shape), a per-color "proven
-      absent" mark (the Wordle shape), or both. Quality-bar rule 6 forces the
-      question: without one, a hint narrating an elimination draws a fact the
-      player cannot keep.
-      **The proposal's rule table is the evidence, and it points at per-slot.**
-      The one high-frequency sound reading is positional (rule B, `black = 0` ⇒
-      `npegs` eliminations at once, ~a third of the pair space), and a per-color
-      strike cannot hold *"not this color, here"*. Re-run the brute force before
-      relying on the ranking if `markPegs` has moved.
-      **Still open, and deliberately so** — the owner was asked on 2026-09-21,
-      alongside the input-model questions, and kept it here rather than folding
-      it into `compose-guess-rows-without-dragging`. Two things changed under
-      it: `encodeUi`/`decodeUi` now exist, which any notation needed as a
-      prerequisite and which are no longer this change's to build; and the
-      board's palette column survives as tap-to-place, so **whichever notation
-      ships, deleting that column is a step of this change** (the two surfaces
-      are one keypress today only because neither holds state the other lacks —
-      `openspec/specs/guess/spec.md` and `docs/games/input.md` § "The on-screen
-      keypad" both record why).
-- [ ] 1.2 **The usual escape is closed.** Guess has no `difficulty` contract, so
-      "demote the tier that needs the notation to `Unreasonable` and refuse
-      there" is not available. Either the notation happens or the hint says very
-      little; decide which, and say so rather than discovering it late.
-- [ ] 1.3 **What the hint says when nothing is forced**, which will be most
-      turns. Refuse? Or lead with the one thing the game can prove, Inertia-
-      style, and then narrate a probe by the consequence it actually has? A
-      probe is not forced, so rule 5 governs every sentence about it.
-- [ ] 1.4 **`computeHint` and the `'h'` key.** Two things called "hint" in one
-      game the day `Game.hint()` is declared, and the app's bare `h` reaches the
-      wrong one because Guess consumes the key. Keep the row-filler under
-      another key, fold it into a last resort, or retire it.
-- [ ] 1.5 **Read the corpus audit before assuming this is the right next hint.**
-      It puts Guess in class ∅ and calls the class the wrong pick for assessing
-      the framework. That verdict is not overturned by this change; if the
-      reason for doing Guess is no longer the UX question, re-read the audit's
-      table and pick from it instead.
+- [x] 1.1 **Does Guess get a notation, and which one?** Per-slot rule-outs,
+      kept in an answer row below the guess rows (design D1). The proposal's
+      table pointed there and the brute force still agreed: the high-frequency
+      reading is positional.
+- [x] 1.2 **The usual escape is closed.** It was never needed: the probe always
+      exists because the hidden answer fits, so the hint refuses only on a
+      finished game (design D4, "No refusal on a sound board").
+- [x] 1.3 **What the hint says when nothing is forced**: a probe whose sentence
+      claims only what was counted — it fits every score, how many answers fit,
+      the most it can leave (design D4).
+- [x] 1.4 **`computeHint` and the `'h'` key.** Retired; the probe step does its
+      job (design D5). `shortcuts.test.ts` no longer ledgers Guess.
+- [x] 1.5 **The corpus audit.** Read; its verdict stands (design D6).
 
-## 2. If it goes ahead
+## 2. Build
 
-- [ ] 2.1 Whatever §1 settled, notation first. A `pencilMode` on the `Ui`
-      enrolls Guess in the Marks key with no line of its own (`takesNotes`), and
-      the color keys toggle marks in notes mode exactly as Map's do.
-- [ ] 2.2 The pencil-mode indicator's geometry, if notes are the answer — Guess
-      has a half-tile border, so check `pencil-indicator-placement.test.ts`
-      before assuming it fits.
-- [ ] 2.3 The deduction itself. There is **no solver to project from**: unlike
-      every recent hint, this is built rather than derived, and the doctrine
-      (one engine, two projections) has to be established here rather than
-      followed.
-- [ ] 2.4 Drawing the marks. The peg is a circle and the slot is a tile; a
-      ruled-out set of up to ten colors has to fit inside one without being
-      mistaken for a placed peg — the same trap `colors()` already notes for
-      `COL_FLASH` and `COL_HOLD` ("they sit *behind* a peg and must not be
-      mistaken for one").
+- [x] 2.1 Notation: `GuessState.ruledOut`, a set-not-toggle mark move,
+      `ui.pencilMode` (Marks key and indicator derived), color keys and Clear
+      in notes mode, and `changedState` rebuilding the row only when the row
+      being played changes.
+- [x] 2.2 The pencil-mode indicator fits Guess's half-tile border as it stands;
+      `pencil-indicator-placement.test.ts` passes unchanged.
+- [x] 2.3 The deduction: seven readings in `hint.ts`, plus the counted
+      probe. An eighth ("a one-color row") was written and deleted when the
+      census showed it is `blacksForced` in disguise.
+- [x] 2.4 Drawing the marks: a dot per color per answer slot, hollow once
+      ruled out, a fraction of a peg's size.
+- [x] 2.5 The two limitations: a tap on an answer-row dot enters that color in
+      its column (pointer-only entry with the keypad off), and Enter on a slot
+      toggles notes mode (design D2, D3).
 
 ## 3. Verify
 
-- [ ] 3.1 Every sentence the hint utters is checked in code — particularly any
-      claim that a color is absent, which Mastermind's count-based feedback
-      supports only in narrow cases (upstream's `provenAbsent` is one).
-- [ ] 3.2 The cross-game hint guards arrive for free the moment `hint()` is
-      declared, and several will have something to say about a game whose
-      "plan" is a probe. Expect `hint-resume.test.ts` (recompute stability) to
-      be the hard one: a probe recomputed after the player guesses something
-      else must not swing.
-- [ ] 3.3 Run the app. A hint whose reasoning the player cannot record is the
-      failure this change exists to avoid, and no test tier can see it.
+- [x] 3.1 Every mark rule brute-forced against the whole answer space
+      (`guess-hint.test.ts`, six parameter sets); every probe count recounted.
+- [x] 3.2 Cross-game hint guards green: `hint-resume`, `hint-quality` (after
+      an em-dash in the status line was rewritten), `hint-overlay`,
+      `hint-mark` (count 33 → 34), `hint-refusal`, the input and note-taking
+      guards.
+- [x] 3.3 Ran the app in Chrome: the answer row, the hint's outline and rings,
+      a mark step applied and surviving a reload, notes mode by Enter, a digit
+      and a right-click, dot taps entering colors, and Auto-solve winning in
+      five rows. The browser found one defect no test had: the current row's
+      hit region ran `nguesses` rows down and swallowed the answer row from the
+      third guess on. Fixed, with a regression test.
 
 ## 4. Record
 
-- [ ] 4.1 `docs/games/hints.md`: Guess as the case where the two halves of a
-      hint have different standards of proof, if that survives the design.
-- [ ] 4.2 Spec deltas: `guess`, plus `ts-engine` if anything is extracted.
+- [x] 4.1 `docs/games/hints.md` § "Two standards of proof in one plan (Guess)";
+      `docs/games/input.md` on the notation restoring pointer entry;
+      `docs/games/mechanics.md` § "changedState" on rebuilding across a new move
+      type. Help: `help/games/guess.md` rewritten, `help/features.md` §Hints.
+- [x] 4.2 Spec delta: `guess` only; nothing was extracted to the engine.

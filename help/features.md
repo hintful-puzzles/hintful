@@ -132,7 +132,10 @@ so it's worth knowing which one you're looking at.
 
 The hint says which of these has happened. It never guesses on your behalf and
 then presents the guess as a deduction: a guess that happens to come off is not
-a technique, and teaching you one would be the point.
+a technique, and teaching you one would be the point. *Guess*, where guessing is
+the game, is the one place a hint suggests one — after pointing out everything
+the rows prove, and saying what it counted about the guess rather than claiming
+it is forced.
 
 Not every puzzle has a *Next hint* button. A puzzle has one where it's solved by
 reasoning *and* the game can put that reasoning into words. Where the challenge

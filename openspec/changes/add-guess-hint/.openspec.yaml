@@ -1,8 +1,6 @@
-# No delta: which requirement moves depends on §1.1 — whether Guess gains a
-# notation, and whether it is per-slot marks or a per-color panel mark. A hint
-# requirement written before that is a claim about a game whose vocabulary is
-# still undecided. Written 2026-09-21 out of `give-guess-element-keys`;
-# nothing is implemented.
+# §1.1 settled on per-slot rule-outs kept in an answer row (design D1), so the
+# deltas below say what that notation is, what the hint built on it does, and
+# how the two limitations `compose-guess-rows-without-dragging` shipped with
+# were closed by it.
 schema: spec-driven
 created: 2026-09-21
-skip_specs: true

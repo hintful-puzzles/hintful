@@ -937,12 +937,18 @@ Normative: the on-screen-keys requirement in
   ruled out. Deleting the column ahead of any notation removes that question
   rather than answering it later.
 
-  **What the board loses with it, said plainly:** a player who turns the keypad
-  off (`showPuzzleKeyboard`) has no pointer-only way to enter a value. Solo,
-  Keen and Filling are already there — a sweep of every pointer gesture over a
-  real board commits zero moves in all three — so it is the collection's
-  existing answer for a game whose elements are values rather than positions.
-  Check where your game sits before assuming either way.
+  **And the notation, when it came, was the way back** (`add-guess-hint`). With
+  the column gone a player who turned the keypad off (`showPuzzleKeyboard`) had
+  no pointer-only way to enter a peg, which is where Solo, Keen and Filling
+  still are — a sweep of every pointer gesture over a real board commits zero
+  moves in all three. Guess's rule-out marks live in an *answer row*, one slot
+  per peg with a dot for every color, and a tap on a dot enters that color in
+  its own column. That is a palette which *is* the notation, so the fault line
+  above cannot open: there is no second surface to disagree with. **So when a
+  game loses a pointer path to a value, look at where its notes are drawn**
+  before accepting the loss: a per-cell list of values the player can see is
+  already a set of targets, and Subsets' tally made the same discovery from the
+  other side (`hints.md` § "Give the facts a notation (Loopy)").
 
   **A panel key cannot be offered conditionally.** `requestKeys` takes `params`
   alone, because the panel reloads only on a param change, so there is no

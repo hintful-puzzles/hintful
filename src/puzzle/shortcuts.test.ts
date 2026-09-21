@@ -130,9 +130,6 @@ describe("the app's keyboard shortcuts", () => {
  * would agree with.
  */
 const BINDS_A_SHORTCUT_LETTER: Record<string, string> = {
-  guess:
-    "binds 'h' (with 'H' and '?') to its own hint, which is the same command " +
-    "the bare letter would have run — a player pressing h gets a hint either way.",
   pearl:
     "binds 'h' (with 'H') to its own hint, which is the same command the bare " +
     "letter would have run — a player pressing h gets a hint either way.",

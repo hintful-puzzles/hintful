@@ -2752,6 +2752,37 @@ millisecond on most boards. Two lessons generalize:
   Do not reason your way to a parity rule and trust it: enumerate a small
   board's entire reachable set and assert the predicate agrees.
 
+### Two standards of proof in one plan (Guess)
+
+Guess is neither Palisade nor Inertia: its answer is hidden, some facts about it
+are forced and the next move almost never is. Its hint
+([`guess/hint.ts`](../../src/games/guess/hint.ts), `add-guess-hint`) keeps the two
+halves apart rather than blending them into one voice.
+
+- **The forced half is marks, placed as moves.** Each one-row reading ("no black
+  pegs, so no color is where it stood") becomes a rule-out in the game's answer
+  row, which the same change gave the player (§ "Give the facts a notation"). A
+  sentence there is necessity, and a brute force over the whole answer space
+  holds every rule to it.
+- **The unforced half is a probe, and its sentence counts instead of arguing.**
+  It says only what was computed: that the guess fits every score so far, how
+  many answers still fit, and the most the guess can leave. No "because", no
+  "best", nothing a player could not recount. The necessity guard's `at most`
+  and `only` are what those claims are made of anyway.
+- **Measure the strategy before narrating it.** Upstream's row-filler (the first
+  answer that fits) came within one row of losing on both presets over every
+  answer; choosing the fewest-left among the answers that fit left four rows
+  spare. A hint-followed game that loses is a hint that lied by omission, and
+  only an exhaustive walk sees the worst case.
+- **A plan with no tier can never refuse**, so check that it never has to. The
+  probe always exists because the hidden answer fits; the census over the rules
+  (`Record<kind, true>`, as in § "Census the reasons, not only the rungs") found
+  one rule that never fired, because it was another rule in disguise.
+- **A hidden-information game cannot vouch for a player's marks**, so the hint
+  re-derives its own and skips what the board already shows, Dominosa's shape
+  rather than Seismic's (§ "Deduce from the notes when the mistake check vouches
+  for them"). A mistake check against the answer would leak it.
+
 ## The cross-game guards
 
 ### A hint must resume from any position

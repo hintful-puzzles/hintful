@@ -24,10 +24,53 @@ peg is kept when you clear the rest, so the colors you place go into
 the gaps around it. Press **L** to number the colors, which can help
 when two of them are hard to tell apart.
 
-The keyboard can also be used. Left and right move the cursor along
-the row, and a color's digit places it — the digit shown on that
-color's button. Backspace rubs one out and Space holds a peg. Once
-the row is full the cursor rests one step past its last peg, where
-Enter submits the guess. Pressing **H** fills the row with a
-combination that fits every piece of feedback you have been given so
-far.
+## The answer row
+
+Below the rows is the answer row: one slot for each peg of the hidden
+combination, each showing a small dot for every color. It is where
+you keep track of what you have worked out. A filled dot is a color
+that could still be in that slot; a hollow one is a color you have
+ruled out of it.
+
+To rule a color out of a slot, right-click its dot or hold a finger
+on it; do the same again to put it back. Or press **Marks** and then
+the color buttons, which rule colors out of the slot the ring is on,
+with **Clear** putting every color back in that slot. Press **Marks**
+again to go back to entering pegs.
+
+Tapping a dot while not in Marks mode puts that color into the same
+column of the row you are filling, so you can play without the color
+buttons at all.
+
+Some things a single row tells you for certain, and the hint will
+point them out:
+
+- A row that scored **no black pegs** has none of its colors where
+  it guessed them.
+- A row that scored **nothing at all** has none of its colors
+  anywhere in the answer.
+- A row where **every peg scored** holds every color the answer uses.
+
+Once some slots are narrowed down, a row can say more. If only two
+of a row's pegs can still be in their right places and it scored two
+black pegs, those two must be right.
+
+## The hint
+
+**Next hint** first points out anything the rows prove that your
+answer row does not show yet: the row it reads from is outlined, and
+the dots it rules out are ringed. When nothing more follows, it
+suggests a guess, ringing one dot in each slot. The guess always fits
+every score so far, so it could be the answer, and the hint tells you
+how many answers are still possible and the most that could be left
+after it. That part is a suggestion rather than a deduction, and the
+hint says so by counting rather than arguing.
+
+## The keyboard
+
+Left and right move the cursor along the row, and a color's digit
+places it — the digit shown on that color's button. Backspace rubs
+one out and Space holds a peg. Once the row is full the cursor rests
+one step past its last peg, where Enter submits the guess. Enter on a
+peg switches Marks mode on and off, and in Marks mode the digits rule
+colors out of the slot the cursor is on.
