@@ -109,6 +109,31 @@ and four clicks; a previous attempt at the same check walked in from a default
 board and confirmed nothing. The scan is the same fixed-seed idiom tier 2.5 uses
 to reach a deduction, aimed at picking the *board* rather than the frame.
 
+### A snapshot cannot see a hole
+
+**A render snapshot records the ops a frame *drew*, so it is structurally blind
+to a region the frame left unpainted.** Nothing is missing from the record —
+there was never an op there to miss — and the diff is clean whether the gap is
+deliberate or a defect.
+
+Measured the hard way (`derive-the-marks-key-from-having-notes`, 2026-09-21):
+growing Map's canvas for the pencil-mode indicator left the new margin outside
+the first frame's flood, which rendered as a thick black band around the board.
+**All 334 test files passed, including the Map snapshot re-baselined with the
+band in it.** It was caught by opening the page.
+
+So when a change moves a canvas's *geometry* — a new margin, a shifted origin, a
+grown `computeSize` — a green suite and a reviewed snapshot diff are not
+evidence that the frame is right. Two habits:
+
+- **Look at it.** This is the acceptance bar's "a green suite is not a rendered
+  frame" in its sharpest form, because here the suite cannot in principle tell
+  you.
+- **Assert the flood covers the canvas**, not the board, wherever a game paints
+  a ground layer. That *is* expressible as an op assertion — a `rect` at `(0,0)`
+  the size of `computeSize` — and it is the one part of the class a test can
+  hold.
+
 ## Render-op vocabulary
 
 **Know which primitive records as which op, or your assertion silently never
