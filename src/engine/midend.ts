@@ -14,7 +14,13 @@
 
 import { resolvePalette } from "./color/color-mkhighlight.ts";
 import { darkValue } from "./color/color-token.ts";
-import { cappedSolveFor, difficultyTiers, lowestSolvingCap } from "./difficulty.ts";
+import {
+  cappedSolveFor,
+  difficultyTiers,
+  lowestSolvingCap,
+  permitsSearch,
+  tierNameOf,
+} from "./difficulty.ts";
 import {
   type ActiveHint,
   type Game,
@@ -23,6 +29,7 @@ import {
   type PresetMenu,
   UI_UPDATE,
 } from "./game.ts";
+import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { pencilModeKey, takesNotes } from "./key-labels.ts";
 import { cancelDrags, MOD_STYLUS, PENCIL_MODE_BUTTON } from "./pointer.ts";
 import { randomNew } from "./random/index.ts";
@@ -756,6 +763,23 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       return "This game does not support hints";
     }
     const result = this.game.hint(this.state, this.aux, this.ui);
+    if (!result.ok && result.error === DEDUCTION_EXHAUSTED) {
+      // The refusal tells the player the tier allows positions that need trial
+      // and error, which only an `Unreasonable` tier does. Anywhere else the
+      // board was promised to solve by deduction, so the sentence would be
+      // false and the board is a defect worth a report: thrown rather than
+      // shown, with what it takes to reopen the board.
+      if (!permitsSearch(this.game, this.params)) {
+        const tier = tierNameOf(this.game, this.params);
+        const promise =
+          tier === null
+            ? "the game has no tier that allows trial and error"
+            : `the board's tier, ${tier}, does not allow trial and error`;
+        throw new Error(
+          `${this.game.id}: the hint ran out of deduction at move ${this.pos}, but ${promise} (${this.game.encodeParams(this.params, true)}:${this.desc})`,
+        );
+      }
+    }
     if (!result.ok) {
       // Keep the refusal's promise. A hint is typically refused because the
       // board has mistakes ("fix the highlighted mistakes first") — but the

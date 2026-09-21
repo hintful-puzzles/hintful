@@ -4,6 +4,7 @@ import { token } from "./color/color-token.ts";
 import { type FakeDrawState, fakeGame } from "./fake-game.ts";
 import type { Game, GameDrawing } from "./game.ts";
 import { UI_UPDATE } from "./game.ts";
+import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { Midend } from "./midend.ts";
 import { LEFT_BUTTON, RIGHT_BUTTON } from "./pointer.ts";
 import type { ChangeNotification, Color } from "./types.ts";
@@ -783,6 +784,70 @@ describe("Midend newGame requests a redraw (deterministic boards may produce the
 
 /** fakeGame with a counting `hint` so tests can assert how many times
  * a plan was (re)computed. */
+describe("Midend: deduction runs out only on an Unreasonable tier", () => {
+  /** {@link tieredGame} with `Easy · Unreasonable` tiers and a hint that has
+   * run out of deduction on every board. */
+  function exhaustedGame(): typeof fakeGame {
+    type TieredParams = { target: number; diff: number };
+    const tiered = tieredGame() as unknown as Game<
+      TieredParams,
+      unknown,
+      unknown,
+      unknown,
+      unknown
+    >;
+    const g: typeof tiered = {
+      ...tiered,
+      paramConfig: [
+        {
+          kw: "diff",
+          name: "Difficulty",
+          type: "choices",
+          choices: ["Easy", "Unreasonable"],
+          get: (p) => p.diff,
+          set: (p, v) => {
+            p.diff = v;
+          },
+        },
+      ],
+      difficulty: {
+        tierOf: (p) => p.diff,
+        withTier: (p, diff) => ({ ...p, diff }),
+        solveAtCap: () => "unsolved",
+      },
+      hint: () => ({ ok: false, error: DEDUCTION_EXHAUSTED }),
+    };
+    return g as unknown as typeof fakeGame;
+  }
+
+  it("an Unreasonable board gets the refusal", () => {
+    const h = harness(exhaustedGame());
+    expect(h.m.newGameFromId("t3d1:g3-7")).toBeNull();
+    expect(h.m.hint()).toBe(DEDUCTION_EXHAUSTED);
+    expect(h.m.executeHint()).toBe(DEDUCTION_EXHAUSTED);
+  });
+
+  it("a board on any other tier is a defect, thrown with the id to reopen it", () => {
+    const h = harness(exhaustedGame());
+    expect(h.m.newGameFromId("t3d0:g3-7")).toBeNull();
+    expect(() => h.m.hint()).toThrow(
+      "__fake__: the hint ran out of deduction at move 0, but the board's tier, Easy, does not allow trial and error (t3d0:g3-7)",
+    );
+    expect(() => h.m.executeHint()).toThrow(/tier, Easy,/);
+  });
+
+  it("a game with no tiers has none that allows trial and error", () => {
+    const h = harness({
+      ...fakeGame,
+      hint: () => ({ ok: false, error: DEDUCTION_EXHAUSTED }),
+    });
+    h.m.newGame();
+    expect(() => h.m.hint()).toThrow(
+      /the game has no tier that allows trial and error/,
+    );
+  });
+});
+
 function countingHintGame(): { game: typeof fakeGame; hintCalls: () => number } {
   let calls = 0;
   const game: typeof fakeGame = {

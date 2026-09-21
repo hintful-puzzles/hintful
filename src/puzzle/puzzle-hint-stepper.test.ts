@@ -264,6 +264,27 @@ describe("Hint presses coalesce while one is in flight (coalesce-hint-requests)"
   });
 });
 
+describe("Auto-Hint", () => {
+  it("a step that throws stops the loop and lets the error through", async () => {
+    const broken = new Error("the hint broke a promise");
+    const { puzzle } = makePuzzle({
+      executeHint: vi.fn(async () => {
+        throw broken;
+      }),
+    });
+    // `startAutoHint` runs the loop unawaited, which is what hands the error to
+    // the app's unhandled-rejection reporter; driving it directly lets the test
+    // see the same rejection.
+    const internals = puzzle as unknown as {
+      _autoHintActive: { set: (v: boolean) => void };
+      runAutoHintLoop: () => Promise<void>;
+    };
+    internals._autoHintActive.set(true);
+    await expect(internals.runAutoHintLoop()).rejects.toBe(broken);
+    expect(puzzle.autoHintActive).toBe(false);
+  });
+});
+
 describe("a slow hint says it is thinking (coalesce-hint-requests)", () => {
   beforeEach(() => {
     vi.useFakeTimers();

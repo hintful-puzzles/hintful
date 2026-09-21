@@ -420,6 +420,11 @@ Boats shipped without, silently breaking Check & Save on every Easy board.
 Details: [`mechanics.md`](./mechanics.md) (declaring) and
 [`solver-and-generator.md`](./solver-and-generator.md) (grading).
 
+`tierNameOf` reads the name of the tier some params request, and
+`permitsSearch` asks whether that name is `Unreasonable`. The midend's runtime
+check and `hint-resume.test.ts`'s walk both use it to decide whether a board may
+run out of deduction, so reach for it rather than comparing names yourself.
+
 ### `deduction-record.ts` — the recorded-firing shape
 
 `DeductionRecord`/`DeductionRecorder`: the seam between a game's recording

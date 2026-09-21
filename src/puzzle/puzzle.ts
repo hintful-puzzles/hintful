@@ -604,7 +604,16 @@ export class Puzzle {
 
   private async runAutoHintLoop(): Promise<void> {
     while (this._autoHintActive.get() && !this.isSolved) {
-      const err = await this.executeHint();
+      let err: string | null;
+      try {
+        err = await this.executeHint();
+      } catch (error) {
+        // A hint that throws has broken a promise the engine keeps, and the
+        // error goes on to the crash dialog and Sentry; left running, the loop
+        // would sit "active" with nothing driving it.
+        this.stopAutoHint("");
+        throw error;
+      }
       if (err) {
         this.stopAutoHint(err);
         return;

@@ -133,12 +133,15 @@ function midendFromId(id: string): Me {
 
 function midendFromSeed(diff: TowersParams["diff"], seed: string): Me {
   const me: Me = new Midend(towersGame);
-  const { desc } = newTowersDesc({ w: 5, diff }, randomNew(seed));
-  expect(me.newGameFromId(`5${diffChar(diff)}:${desc}`)).toBeNull();
+  const params: TowersParams = { w: 5, diff };
+  const { desc } = newTowersDesc(params, randomNew(seed));
+  // The game's own encoder, because a hand-spelled id once dropped the tier:
+  // `5h` decoded to Easy, and the "hard" walks ran Easy's rules to a refusal.
+  expect(
+    me.newGameFromId(`${towersGame.encodeParams(params, true)}:${desc}`),
+  ).toBeNull();
+  expect(me.getParams()).toBe(towersGame.encodeParams(params, true));
   return me;
-}
-function diffChar(d: TowersParams["diff"]): string {
-  return d === "easy" ? "e" : d === "hard" ? "h" : d === "extreme" ? "x" : "u";
 }
 
 const SCENARIOS: { name: string; toggle: (s: number) => boolean }[] = [
@@ -162,7 +165,7 @@ describe("towers: a displayed hint step is never stale", () => {
     it(`random ${diff} boards survive a mid-solve auto-pencil flip`, () => {
       for (let s = 0; s < 8; s++) {
         const me = midendFromSeed(diff, `stale-${diff}-${s}`);
-        walkFollowingHints(me, (n) => n % 2 === 0);
+        expect(walkFollowingHints(me, (n) => n % 2 === 0)).toBe(true);
       }
     });
   }

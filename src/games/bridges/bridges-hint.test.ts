@@ -556,6 +556,25 @@ describe("a board shared without its difficulty", () => {
     }
     expect(state.completed).toBe(true);
   });
+
+  it("pinned to a tier it needs more than, is a defect the midend throws over", () => {
+    // The same board under an id that pins it Easy, which grading leaves alone.
+    // Easy's rules run out partway, and the refusal would tell the player that
+    // Easy allows trial and error, which it does not.
+    const me = new Midend(bridgesGame);
+    const easy = "10x10i30e10m2d0:a2a4e31c2a4a1l1b1e5b4b4a1m1f43j2a4e43d4a2b";
+    expect(me.newGameFromId(easy)).toBeNull();
+    expect(decodeParams(me.getParams()).difficulty).toBe(0);
+    let moves = 0;
+    const walk = () => {
+      for (; moves < 200; moves++) {
+        if (me.executeHint() !== null) return;
+        me.timer(10);
+      }
+    };
+    expect(walk).toThrow(/^bridges: .* tier, Easy, does not allow .*d0:a2a4e31/);
+    expect(moves).toBeGreaterThan(0);
+  });
 });
 
 describe("refusing", () => {

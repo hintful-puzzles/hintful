@@ -21,7 +21,7 @@
  * arbitrary partial positions; a correct hint must never give up before solved.
  */
 import { describe, expect, it } from "vitest";
-import { type DifficultyContract, difficultyTiers } from "./difficulty.ts";
+import { permitsSearch } from "./difficulty.ts";
 import { DEDUCTION_EXHAUSTED, SEARCH_OUT_OF_REACH } from "./hint-refusal.ts";
 import { randomNew } from "./random/index.ts";
 import {
@@ -146,20 +146,6 @@ const SEARCH_REACH: Record<string, string> = {
     "ways: zeroing TANGLE_COST leaves the gate green and turns the slow tier " +
     "red.",
 };
-
-/** Does this preset's tier promise that its boards may need search?
- *
- * Derived from what the game already declares — the tier list its params form
- * offers, and the contract that reads a tier off params. A game with no
- * difficulty contract has no tier to blame, so **nothing** it offers permits
- * search: such a game must never run out of deduction on a sound board, and the
- * walk holds it to that rather than skipping it. */
-function permitsSearch(game: AnyGame, params: unknown): boolean {
-  const tiers = difficultyTiers(game);
-  const contract = game.difficulty as DifficultyContract<unknown> | undefined;
-  const tier = contract?.tierOf(params);
-  return tiers !== null && typeof tier === "number" && tiers[tier] === "Unreasonable";
-}
 
 /**
  * **What this file's walk costs at the gate's slice, measured 2026-09-20 back

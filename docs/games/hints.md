@@ -1142,6 +1142,18 @@ at all. So `DEDUCTION_EXHAUSTED` says what the position is *and* what to do
 about it, and `hint-resume.test.ts` fails any refusal outside a
 search-permitting tier.
 
+**The midend holds the same rule at runtime**, because the walk sees only boards
+the generators dealt, and those are tiered correctly by construction. A board
+can still arrive at the wrong tier: from an id that pins one, or from a save.
+When `hint()` returns `DEDUCTION_EXHAUSTED` and `difficulty.ts`'s
+`permitsSearch` says the board's tier does not allow search, `Midend` throws
+with the game, the tier and the full id. The player gets the crash dialog
+instead of a false sentence, and the report says how to reopen the board. So a
+game must never use this refusal for anything but deduction running out on a
+sound board. A board that is inconsistent without any single entry being wrong
+is `CONTRADICTION_UNLOCALIZED`; the runtime check would read anything else as a
+broken tier.
+
 The reason this is a rule: `help/features.md` §Hints teaches "there is a mistake
 on the board" and "deduction has run out" as a pair, because they call for
 opposite responses. That is unteachable if the wording changes between games.

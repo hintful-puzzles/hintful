@@ -1,5 +1,0 @@
-# No delta yet: the ts-engine requirement is written with the implementation
-# (tasks.md 2.4). Scaffolded 2026-09-21; nothing is implemented.
-schema: spec-driven
-created: 2026-09-21
-skip_specs: true

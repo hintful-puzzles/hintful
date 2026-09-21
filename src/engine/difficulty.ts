@@ -157,6 +157,40 @@ export function difficultyTiers<Params>(game: {
 }
 
 /**
+ * The name of the tier these params request, or `null` for a game with no
+ * difficulty choice.
+ */
+export function tierNameOf<Params>(
+  game: {
+    paramConfig?: readonly ParamConfigItem<Params>[];
+    difficulty?: DifficultyContract<Params>;
+  },
+  params: Params,
+): string | null {
+  const tiers = difficultyTiers(game);
+  if (tiers === null || !game.difficulty) return null;
+  return tiers[game.difficulty.tierOf(params)] ?? null;
+}
+
+/**
+ * Does this board's tier allow positions that need trial and error?
+ *
+ * Only a tier named {@link SEARCH_TIER} does: the name *is* the promise, which
+ * is why the check reads the name rather than a position on the ladder. A game
+ * with no tiers has none to blame, so nothing it deals permits search, and a
+ * hint that runs out of deduction on one of its boards is a defect.
+ */
+export function permitsSearch<Params>(
+  game: {
+    paramConfig?: readonly ParamConfigItem<Params>[];
+    difficulty?: DifficultyContract<Params>;
+  },
+  params: Params,
+): boolean {
+  return tierNameOf(game, params) === SEARCH_TIER;
+}
+
+/**
  * The custom-params item {@link difficultyTiers} reads, whole — its `get` /
  * `set` included.
  *
@@ -185,6 +219,9 @@ export function difficultyChoiceItem<Params>(game: {
  * rung rather than a position.
  */
 const TIER_SCALE = ["Easy", "Normal", "Tricky", "Hard", "Extreme"] as const;
+
+/** The one tier name that promises a board may need Search. */
+const SEARCH_TIER = "Unreasonable";
 
 /**
  * The conventional names for a game with `count` tiers: the first `count` of
@@ -230,7 +267,7 @@ export function tierNames(count: number, opts?: { search?: boolean }): string[] 
     );
   }
   const named = TIER_SCALE.slice(0, opts?.search ? count - 1 : count);
-  return opts?.search ? [...named, "Unreasonable"] : [...named];
+  return opts?.search ? [...named, SEARCH_TIER] : [...named];
 }
 
 /** Bind a contract to one board, for the closure-shaped helpers below. */
