@@ -144,6 +144,12 @@ export function validateParams(p: BridgesParams, full: boolean): string | null {
       return "%age of island squares must be between 1% and 30%";
     if (p.expansion < 0 || p.expansion > 100)
       return "Expansion factor must be between 0 and 100";
+    // With one bridge per line no "at most" limit can exist, and sealing a
+    // group off is Normal's, so Tricky has almost nothing left that a Normal
+    // board could not need: measured, generation gave up on most seeds. A
+    // generation-only bound, so a board already dealt this way still opens.
+    if (p.maxb === 1 && p.difficulty >= 2)
+      return "Tricky needs lines that can carry at least two bridges";
   }
   return null;
 }

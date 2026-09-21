@@ -36,7 +36,12 @@ const cases = SHAPES.flatMap((params) =>
 
 describeLadderEquivalence<BridgesState>({
   game: "bridges",
-  rungs: ["stage1-arithmetic", "stage2-counting", "stage3-connectivity"],
+  rungs: [
+    "stage1-arithmetic",
+    "stage2-counting",
+    "stage2-sealing",
+    "stage3-connectivity",
+  ],
   unreached: {},
   // The stages' own tiers, plus one above the top, where `difficulty` caps nothing.
   caps: [0, 1, 2, 3],

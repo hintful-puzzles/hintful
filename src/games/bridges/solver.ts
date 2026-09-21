@@ -1,13 +1,14 @@
 /**
- * Bridges solver — faithful port of the multi-stage deductive solver in
- * `puzzles/bridges.c` (`solve_sub` and friends). Byte-match fidelity of the
- * generator's difficulty grading depends on this reproducing C's verdict
- * exactly, so the deductions are transcribed rule-for-rule.
+ * Bridges solver — a port of the multi-stage deductive solver in
+ * `puzzles/bridges.c` (`solve_sub` and friends), transcribed rule-for-rule with
+ * one deliberate divergence: sealing off is graded Normal rather than Tricky.
  *
  * Structure:
  *  - Stage 1 (Easy): whole-island arithmetic — fill when forced, mark full.
  *  - Stage 2 (Normal): per-connection reasoning — a direction that must carry a
- *    bridge, and loop-avoidance when `allowloops` is off.
+ *    bridge, and loop-avoidance when `allowloops` is off — plus sealing off, the
+ *    first bridge that would finish a group cut off from the rest (upstream's
+ *    stage 3, taken down to Normal; see `solveIslandSeal`).
  *  - Stage 3 (Tricky): group reasoning over a dsf — speculatively cap/force a
  *    direction to avoid an isolated finished subgraph or an impossibility.
  *
@@ -531,6 +532,60 @@ class Solver {
     return { ok: true, didsth: added || removed };
   }
 
+  // --- Sealing off (Normal; the first bridge of stage 3's block) ---
+
+  /**
+   * A direction still empty where one bridge would finish this island and its
+   * neighbor into a group cut off from the rest: block it. The case a player
+   * meets first is two 1s side by side.
+   *
+   * Stage 3 draws the same cross, and upstream graded it Tricky with the rest of
+   * that stage. It is taken down to Normal on its own (owner, 2026-09-21: "this
+   * seems conceptually easy"), beside the loop rule, the other one about the
+   * shape of the network. What stays Tricky is what needs more than one bridge
+   * or more than one island's room: an "at most" limit, a starved neighbor, and
+   * filling every other direction at once.
+   */
+  solveIslandSeal(is: Island): { ok: boolean; didsth: boolean } {
+    const st = this.st;
+    const rec = this.rec;
+    const missing = is.count - st.islandCountbridges(is);
+    if (missing <= 0) return { ok: true, didsth: false };
+    let didsth = false;
+    for (let i = 0; i < is.points.length; i++) {
+      const pt = is.points[i];
+      if (st.gridCount(pt.x, pt.y, pt.dx ? G_LINEH : G_LINEV) !== 0) continue;
+      if (st.islandAdjspace(is, true, missing, i) === 0) continue;
+
+      const saved = this.dsf.clone();
+      this.solveJoin(is, i, 1, false);
+      st.mapUpdatePossibles();
+      const sealed = this.solveIslandSubgroup(is, i)
+        ? this.groupIslands(this.dsf.canonify(st.idx(is.x, is.y)))
+        : null;
+      this.solveJoin(is, i, 0, false);
+      this.dsf = saved;
+      st.mapUpdatePossibles();
+      if (!sealed) continue;
+
+      if (rec) {
+        rec.reason = {
+          kind: "wouldSealGroup",
+          island: this.islandIndex(is),
+          group: sealed.length,
+          limit: 0,
+          ev: { islands: sealed, spans: this.groupSpans(sealed) },
+        };
+      }
+      this.solveJoin(is, i, -1, false); // NOLINE
+      this.recordNoline(is, i);
+      st.mapUpdatePossibles();
+      didsth = true;
+      if (rec) break;
+    }
+    return { ok: true, didsth };
+  }
+
   // --- Stage-3 (C solve_island_subgroup / _impossible / _stage3) ---
 
   /** True if the (full) island's group is a finished subgraph that isn't the whole set. */
@@ -751,6 +806,11 @@ class Solver {
           ),
       },
       {
+        id: "stage2-sealing",
+        tier: 1,
+        run: () => sweep((is) => this.solveIslandSeal(is)),
+      },
+      {
         id: "stage3-connectivity",
         tier: 2,
         run: () => sweep((is) => this.solveIslandStage3(is)),
@@ -788,6 +848,13 @@ class Solver {
       for (const is of st.islands) {
         if (st.gridAt(is.x, is.y) & G_MARK) continue; // CONTINUE_IF_FULL
         const r = this.solveIslandStage2(is);
+        if (!r.ok) return 0;
+        if (r.didsth) didsth = true;
+      }
+      if (didsth) continue;
+
+      for (const is of st.islands) {
+        const r = this.solveIslandSeal(is);
         if (!r.ok) return 0;
         if (r.didsth) didsth = true;
       }

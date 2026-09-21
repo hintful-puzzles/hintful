@@ -94,8 +94,9 @@ const SHAPES: { label: string; params: BridgesParams; shipped: boolean }[] = [
     shipped: false,
   },
   {
-    label: "15x15 maxb 1",
-    params: { ...BRIDGES_PRESETS[8], maxb: 1 },
+    // Normal, because Tricky refuses one bridge per line (`validateParams`).
+    label: "15x15 Normal maxb 1",
+    params: { ...BRIDGES_PRESETS[7], maxb: 1 },
     shipped: false,
   },
 ];
@@ -535,13 +536,14 @@ describe("following a step", () => {
 describe("a board shared without its difficulty", () => {
   it("is hinted at the tier it needs, all the way to solved", () => {
     // Reported by the owner: shared by the id that omits the difficulty, this
-    // Tricky board loaded as Easy, and the hint, capped at Easy's rules, ran out
-    // at move 10. The midend grades such a board on load.
+    // board loaded as Easy, and the hint, capped at Easy's rules, ran out at
+    // move 10. The midend grades such a board on load. It graded Tricky until
+    // sealing off moved to Normal; the move it was missing is that rule.
     const shared = "10x10m2:a2a4e31c2a4a1l1b1e5b4b4a1m1f43j2a4e43d4a2b";
     const me = new Midend(bridgesGame);
     expect(me.newGameFromId(shared)).toBeNull();
     const params = decodeParams(me.getParams());
-    expect(params.difficulty).toBe(2);
+    expect(params.difficulty).toBe(1);
 
     let state = newStateFromDesc(params, shared.slice(shared.indexOf(":") + 1));
     const ui = bridgesGame.newUi(state);
