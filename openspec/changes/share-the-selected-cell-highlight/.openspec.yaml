@@ -1,0 +1,7 @@
+# No delta yet: which requirement moves depends on §2.1 — whether the shared
+# renderer takes a cell or a shape the game supplies, which decides whether Map
+# is inside the mechanic or beside it. Written 2026-09-21; nothing is
+# implemented.
+schema: spec-driven
+created: 2026-09-21
+skip_specs: true

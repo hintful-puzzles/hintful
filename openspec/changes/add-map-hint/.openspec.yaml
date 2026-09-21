@@ -1,0 +1,6 @@
+# No delta yet: which requirement moves depends on §1.3 and §2 — whether the
+# rungs go on the shared runner, and whether the shared hint marks reach a
+# region. Written 2026-09-21; nothing is implemented.
+schema: spec-driven
+created: 2026-09-21
+skip_specs: true
