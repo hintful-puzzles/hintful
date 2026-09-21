@@ -432,15 +432,40 @@ function markerFiring(f: MarkerFiring, w: Working, state: SaladState): SaladFiri
       if (f.mark === "cross") w.pencil[i] = 0;
     },
   }));
-  const tidy: SaladMark[] =
-    f.mark === "circle"
-      ? f.cells
-          .filter((c) => w.pencil[c.y * o + c.x] & (1 << nums))
-          .map((c) => ({ x: c.x, y: c.y, n: nums + 1 }))
-      : [];
+  const tidy = f.mark === "circle" ? emptyNotesOn(w, f.cells, o, nums) : [];
   if (tidy.length > 0)
     legs.push({ strike: tidy, reason: { kind: "circleXNote", count: tidy.length } });
   return legs;
+}
+
+/** The "might be empty" notes still on `cells`. */
+function emptyNotesOn(
+  w: Working,
+  cells: readonly Cell[],
+  o: number,
+  nums: number,
+): SaladMark[] {
+  return cells
+    .filter((c) => w.pencil[c.y * o + c.x] & (1 << nums))
+    .map((c) => ({ x: c.x, y: c.y, n: nums + 1 }));
+}
+
+/**
+ * The tidy-up as a firing of its own, for a circle already on the board: one
+ * the player put there, or one an earlier hint placed before the player went
+ * their own way. The circle's own firing strikes the note in the same journey,
+ * but only while it is placing the circle, so without this a leftover note
+ * would hide the placement behind it for good.
+ */
+function circledEmptyNotes(w: Working, o: number, nums: number): SaladFiring[] {
+  const circled: Cell[] = [];
+  for (let i = 0; i < o * o; i++) {
+    if (w.grid[i] === 0 && w.holes[i] === CIRCLE)
+      circled.push({ x: i % o, y: (i / o) | 0 });
+  }
+  const tidy = emptyNotesOn(w, circled, o, nums);
+  if (tidy.length === 0) return [];
+  return [[{ strike: tidy, reason: { kind: "circleXNote", count: tidy.length } }]];
 }
 
 /**
@@ -567,7 +592,10 @@ function buildSteps(
     // The cheapest emptiness deductions: a line's counts, or a collapse onto
     // the empty-square mark. Both need no notes beyond what is on screen, so a
     // Number Ball board opens on them rather than on "pencil everything in".
-    rungs: [() => cheapMarkers(w, o, nums).map((f) => markerFiring(f, w, state))],
+    rungs: [
+      () => cheapMarkers(w, o, nums).map((f) => markerFiring(f, w, state)),
+      () => circledEmptyNotes(w, o, nums),
+    ],
     // A lone "might be empty" note is a marker, not a symbol to place.
     singles: () => nakedSymbols(w, o, nums),
     // The cube's hole symbols are settled by markers, never placed.

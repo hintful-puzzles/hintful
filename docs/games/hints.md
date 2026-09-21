@@ -3107,6 +3107,13 @@ last rung when every earlier one came up empty, the budget and cap (§
   used to emit one height or one cell per turn and re-link the rest by
   `group`, which let the frontier take something else in between and split one
   deduction into two hints.
+- **A strike that rides as a later leg must also be on offer by itself.** The
+  board can reach the state the leg tidies without the leg: the player makes
+  the first move themselves, or takes the first leg and then goes their own
+  way, and the plan recomputes. Salad's circle firing strikes its squares'
+  empty-square notes as a second leg; a circle already on the board kept its
+  note for good, and the placement behind it threw. `circledEmptyNotes` is
+  that strike as a rung of its own (`salad-hint.test.ts` pins both routes).
 
 What a game genuinely decides: which rungs of its own it has, the strike-split
 axis (`strikeAxis` — by height, by cell, one leg for a digit confined to a
@@ -3820,7 +3827,10 @@ worked around:
   region's size, so `NoteEncoding.all(i)` now says it. **The game's own
   `pencilAll` move is the authority** — a populate that fills more than it
   teaches strikes on notes the player's Mark-all never made, and the hint's
-  first job is to be reproducible by hand.
+  first job is to be reproducible by hand. The converse needs the input: a
+  note *outside* `all(i)` has no strike anywhere, so the game refuses it at
+  entry ([mechanics](./mechanics.md) § "Pencil marks: the full note-taking
+  UX").
 - **Three helpers spelled the populate move for themselves.** `lazyPopulate`,
   `adaptiveMarkAll` and the plan's default setup all wrote
   `{ type: "pencilAll" }` literally, while `obviousCleanStep` had always *read*

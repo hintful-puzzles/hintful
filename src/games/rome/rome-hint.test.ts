@@ -17,6 +17,7 @@
  * that it is true of the board rather than merely present.
  */
 import { describe, expect, it } from "vitest";
+import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import {
@@ -37,6 +38,8 @@ import {
   EMPTY,
   encodeParams,
   FM_ARROWMASK,
+  FM_LEFT,
+  legalDirs,
   type RomeMove,
   type RomeParams,
   type RomeState,
@@ -214,6 +217,48 @@ describe("rome hint plan", () => {
     for (const cell of reason.pair) expect(reason.region).toContain(cell);
   });
 
+  /**
+   * The board a random-play sweep crashed the hint on. Every move but the last
+   * is a hint step, and the last is the player noting "left" on square (0, 2),
+   * which points off the grid. No rung strikes a note the solver never
+   * considers, so the placement behind it (right, on that same square) was
+   * neither a naked nor a hidden single and the plan threw. Pinned as the moves
+   * the plan consumes rather than as a seed: a seed reaches the plan only
+   * through a generator free to stop producing this board.
+   */
+  it("survives a note pointing off the grid in a replayed move log", () => {
+    const me = new Midend(romeGame);
+    expect(me.newGameFromId("4x4de:aa5a2aca1a,bRaDaXcLbRaL")).toBeNull();
+    me.playMoves([
+      { kind: "pencilAll" },
+      {
+        kind: "pencilStrike",
+        marks: [
+          { x: 0, y: 2, n: 2 },
+          { x: 0, y: 3, n: 4 },
+          { x: 2, y: 3, n: 3 },
+        ],
+      },
+      { kind: "place", x: 0, y: 3, dir: 4 },
+      { kind: "pencilStrike", marks: [{ x: 3, y: 0, n: 3 }] },
+      { kind: "place", x: 3, y: 0, dir: 8 },
+      {
+        kind: "pencilStrike",
+        marks: [
+          { x: 3, y: 1, n: 2 },
+          { x: 3, y: 2, n: 2 },
+        ],
+      },
+      { kind: "pencilStrike", marks: [{ x: 3, y: 1, n: 1 }] },
+      { kind: "place", x: 3, y: 1, dir: 16 },
+      { kind: "pencilStrike", marks: [{ x: 3, y: 2, n: 3 }] },
+      { kind: "pencil", x: 0, y: 2, dir: FM_LEFT },
+    ]);
+    const st = (me as unknown as { state: RomeState }).state;
+    expect(romeGame.hint?.(st)?.ok).toBe(true);
+    expect(st.pencil[2 * st.w] & FM_LEFT).toBe(0);
+  });
+
   it("refuses on a solved board and on a board with a wrong mark", () => {
     const { st } = gen(NORMAL, "refuse-0");
     const solution = boardFromClues(st);
@@ -232,11 +277,15 @@ describe("rome hint plan", () => {
       (c, i) => st.grid[i] === EMPTY && (c & FM_ARROWMASK) !== 0,
     );
     const answer = solution.grid[target] & FM_ARROWMASK;
-    const wrong = answer === dirBit(1) ? dirBit(2) : dirBit(1);
+    const tx = target % st.w;
+    const ty = (target / st.w) | 0;
+    // A wrong arrow the square could hold: one off the grid is not a mark.
+    const others = legalDirs(tx, ty, st.w, st.h) & ~answer;
+    const wrong = others & -others;
     const noted = romeGame.executeMove(st, {
       kind: "pencil",
-      x: target % st.w,
-      y: (target / st.w) | 0,
+      x: tx,
+      y: ty,
       dir: wrong as 4 | 8 | 16 | 32,
     });
     expect(romeGame.findMistakes?.(noted).some((m) => m.kind === "note")).toBe(true);

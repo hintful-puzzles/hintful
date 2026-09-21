@@ -720,6 +720,15 @@ were — the last per-game roster in the cross-game guards.
   a guard on this path must *narrow* a cell's notes or the bug hides — the
   mark-all-resets-notes defect shipped in ten games at once; mutation-check
   the guard (see [testing](./testing.md)).
+- **Refuse a note Mark-all would never make.** Where a cell's full note set
+  varies by cell, as Rome's arrows are bounded by the grid edge and Seismic's
+  numbers by the area's size, input refuses a note outside it. No solver
+  considers that candidate, so no hint has a strike for it, and a hint meeting
+  one could not explain the placement it hides. Rome's crashed exactly that
+  way (`rome-hint-survives-a-restored-note`). Refuse it on every way into notes
+  (typed key, keypad, drag; the drag's preview too), and mask it in
+  `executeMove` as well, because a saved move log from before the refusal
+  replays through `executeMove`.
 - **Declare the pencil preferences from
   [`engine/pencil-prefs.ts`](../../src/engine/pencil-prefs.ts), never by
   hand.** `stickyPencilPref()` and `pencilKeepHighlightPref()` carry wording

@@ -9,6 +9,7 @@
  * Render frames are in `rome-render.test.ts`.
  */
 import { describe, expect, it } from "vitest";
+import { UI_UPDATE } from "../../engine/game.ts";
 import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
 import { Midend } from "../../engine/midend.ts";
 import {
@@ -486,12 +487,60 @@ describe("input", () => {
     const ui = newUi();
     romeGame.interpretMove(st, ui, ds, cellPoint(0, 0), CURSOR_RIGHT);
     romeGame.interpretMove(st, ui, ds, cellPoint(0, 0), CURSOR_SELECT2);
-    expect(romeGame.interpretMove(st, ui, ds, cellPoint(0, 0), CURSOR_UP)).toEqual({
+    expect(romeGame.interpretMove(st, ui, ds, cellPoint(0, 0), CURSOR_DOWN)).toEqual({
       kind: "pencil",
+      x: 1,
+      y: 0,
+      dir: FM_DOWN,
+    });
+  });
+
+  /**
+   * An arrow off the grid is never a candidate: Mark-all leaves it out and the
+   * solver never considers it, so a hint meeting that note had no strike to
+   * teach and crashed on the placement behind it. Every way into notes refuses
+   * it — the armed cursor, a typed key and a drag — while the same arrow can
+   * still be *placed*, where the board flags it.
+   */
+  it("refuses a mark pointing off the grid, however it is entered", () => {
+    const st = board(3, 3, EMPTY_3);
+    // Square (1, 0) is on the top edge, so up points off the grid.
+    const ui = newUi();
+    romeGame.interpretMove(st, ui, ds, cellPoint(0, 0), CURSOR_RIGHT);
+    romeGame.interpretMove(st, ui, ds, cellPoint(0, 0), CURSOR_SELECT2);
+    expect(romeGame.interpretMove(st, ui, ds, cellPoint(0, 0), CURSOR_UP)).toBe(
+      UI_UPDATE,
+    );
+    expect(ui.kmode).toBe(KEYMODE_MOVE);
+
+    romeGame.interpretMove(st, ui, ds, cellPoint(0, 0), PENCIL_MODE_BUTTON);
+    expect(romeGame.interpretMove(st, ui, ds, cellPoint(0, 0), 56)).toBe(UI_UPDATE);
+    // The same key still notes an arrow the square can take.
+    expect(romeGame.interpretMove(st, ui, ds, cellPoint(0, 0), 50)).toEqual({
+      kind: "pencil",
+      x: 1,
+      y: 0,
+      dir: FM_DOWN,
+    });
+    romeGame.interpretMove(st, ui, ds, cellPoint(0, 0), PENCIL_MODE_BUTTON);
+    // ...and placing it is still a move, which the board then flags.
+    expect(romeGame.interpretMove(st, ui, ds, cellPoint(0, 0), 56)).toEqual({
+      kind: "place",
       x: 1,
       y: 0,
       dir: FM_UP,
     });
+
+    // A right-drag off the top edge: no preview, and a release that selects.
+    const dragUi = newUi();
+    const above = { x: cellPoint(1, 0).x, y: 1 };
+    romeGame.interpretMove(st, dragUi, ds, cellPoint(1, 0), RIGHT_BUTTON);
+    romeGame.interpretMove(st, dragUi, ds, above, RIGHT_DRAG);
+    expect(dragUi.mdir).toBe(EMPTY);
+    expect(romeGame.interpretMove(st, dragUi, ds, above, RIGHT_RELEASE)).toBe(
+      UI_UPDATE,
+    );
+    expect(dragUi.cursor).toMatchObject({ x: 1, y: 0, visible: true });
   });
 
   it("accepts the bare numpad digits and backspace", () => {
@@ -534,15 +583,28 @@ describe("input", () => {
 describe("moves", () => {
   it("toggles a pencil mark on and off without touching the grid", () => {
     let st = board(3, 3, `${ALL_WALLS_3},i`);
+    st = romeGame.executeMove(st, { kind: "pencil", x: 1, y: 1, dir: FM_UP });
+    expect(st.pencil[4]).toBe(FM_UP);
+    st = romeGame.executeMove(st, { kind: "pencil", x: 1, y: 1, dir: FM_LEFT });
+    expect(st.pencil[4]).toBe(FM_UP | FM_LEFT);
+    st = romeGame.executeMove(st, { kind: "pencil", x: 1, y: 1, dir: FM_UP });
+    expect(st.pencil[4]).toBe(FM_LEFT);
+    st = romeGame.executeMove(st, { kind: "pencil", x: 1, y: 1, dir: null });
+    expect(st.pencil[4]).toBe(EMPTY);
+    expect(st.grid[4]).toBe(EMPTY);
+  });
+
+  /**
+   * A move log saved before input refused an off-grid mark still carries one.
+   * Replaying it must not rebuild the note. The note meant nothing, so dropping
+   * it costs the player nothing, and a hint meeting it crashed.
+   */
+  it("replays a mark pointing off the grid as no mark at all", () => {
+    let st = board(3, 3, `${ALL_WALLS_3},i`);
+    st = romeGame.executeMove(st, { kind: "pencil", x: 0, y: 0, dir: FM_RIGHT });
     st = romeGame.executeMove(st, { kind: "pencil", x: 0, y: 0, dir: FM_UP });
-    expect(st.pencil[0]).toBe(FM_UP);
     st = romeGame.executeMove(st, { kind: "pencil", x: 0, y: 0, dir: FM_LEFT });
-    expect(st.pencil[0]).toBe(FM_UP | FM_LEFT);
-    st = romeGame.executeMove(st, { kind: "pencil", x: 0, y: 0, dir: FM_UP });
-    expect(st.pencil[0]).toBe(FM_LEFT);
-    st = romeGame.executeMove(st, { kind: "pencil", x: 0, y: 0, dir: null });
-    expect(st.pencil[0]).toBe(EMPTY);
-    expect(st.grid[0]).toBe(EMPTY);
+    expect(st.pencil[0]).toBe(FM_RIGHT);
   });
 
   it("leaves the source state untouched", () => {
@@ -709,7 +771,7 @@ describe("midend integration", () => {
     const m = new Midend(romeGame);
     expect(m.newGameFromId(`6x6de:${desc}`)).toBeNull();
 
-    const target = firstEmpty(board(p.w, p.h, desc));
+    const target = firstEmpty(board(p.w, p.h, desc), { interior: true });
     const moves: RomeMove[] = [
       { kind: "pencil", x: target % p.w, y: Math.floor(target / p.w), dir: FM_UP },
       { kind: "pencil", x: target % p.w, y: Math.floor(target / p.w), dir: FM_LEFT },
@@ -729,8 +791,14 @@ describe("midend integration", () => {
   });
 });
 
-function firstEmpty(st: RomeState): number {
-  const i = st.grid.indexOf(EMPTY);
-  if (i < 0) throw new Error("no empty square");
-  return i;
+/** The first empty square, or with `interior` the first one off the grid's
+ * edge, where every arrow can be noted. */
+function firstEmpty(st: RomeState, opts?: { interior?: boolean }): number {
+  for (let i = 0; i < st.grid.length; i++) {
+    const x = i % st.w;
+    const y = (i / st.w) | 0;
+    const edge = x === 0 || y === 0 || x === st.w - 1 || y === st.h - 1;
+    if (st.grid[i] === EMPTY && !(opts?.interior && edge)) return i;
+  }
+  throw new Error("no empty square");
 }

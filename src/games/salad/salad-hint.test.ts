@@ -27,6 +27,7 @@ import {
   GAMEMODE_LETTERS,
   GAMEMODE_NUMBERS,
   newState,
+  type SaladMove,
   type SaladParams,
   type SaladState,
   scratchBoard,
@@ -336,7 +337,56 @@ describe("salad hint — refusals and resumption", () => {
     const next = saladGame.executeMove(after, again.steps[0].move);
     expect(key(next)).not.toBe(key(after));
   });
+
+  /**
+   * A circle's own firing strikes the square's empty-square note in the same
+   * journey, but a circle can reach the board without that leg: the player
+   * puts it there, or takes a circle step and then goes their own way. The note
+   * then hid the placement behind it, and the plan threw rather than strike it.
+   * Both boards are pinned as descs, the input the plan consumes, from a
+   * random-play sweep that found them.
+   */
+  it("strikes the empty-square note of its own circle, once recomputed", () => {
+    // Walking the plan one first step at a time takes each circle without the
+    // leg that tidies it.
+    const own = descWalk("8n5Bde:c13c13aXXdX52f3b42f5aX4bXc3aOOb24a21bOXaX");
+    expect(own.solved).toBe(true);
+    expect(own.texts.some((t) => /empty-square mark/.test(t))).toBe(true);
+  });
+
+  it("strikes the empty-square note of the player's circle", () => {
+    // The circle is right, so the hint has no mistake to refuse on.
+    const played = descWalk("8n5Lde:aDaEBcBaEAaEdEADDcCDaABBA,uCeBlXeDbXaXl", [
+      { type: "pencilAll" },
+      { type: "pencil", x: 2, y: 6, value: "circle" },
+    ]);
+    expect(played.first).toMatch(/This square is now known to hold/);
+    expect(played.solved).toBe(true);
+  });
 });
+
+/** Walk the plan's first steps to the end from the board `id` names, after
+ * `setup` moves the player makes; `first` is the first narration seen. */
+function descWalk(
+  id: string,
+  setup: SaladMove[] = [],
+): { texts: string[]; first: string | null; solved: boolean } {
+  const [params, desc] = id.split(":", 2);
+  let state = newState(saladGame.decodeParams(params), desc);
+  for (const m of setup) state = saladGame.executeMove(state, m);
+  const texts: string[] = [];
+  for (let i = 0; i < 400 && saladGame.status(state) === "ongoing"; i++) {
+    const res = saladGame.hint?.(state);
+    if (!res?.ok) break;
+    texts.push(res.steps[0].explanation);
+    state = saladGame.executeMove(state, res.steps[0].move);
+  }
+  return {
+    texts,
+    first: texts[0] ?? null,
+    solved: saladGame.status(state) === "solved",
+  };
+}
 
 describe("salad hint — the opener never destroys the player's own notes", () => {
   it("fills only the squares that carry no mark yet", () => {

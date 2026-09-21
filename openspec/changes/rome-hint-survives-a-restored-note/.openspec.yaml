@@ -1,5 +1,0 @@
-# No delta yet: which requirement moves depends on §1.2 (Rome or the shared
-# candidate plan). Written 2026-09-21; nothing is implemented.
-schema: spec-driven
-created: 2026-09-21
-skip_specs: true

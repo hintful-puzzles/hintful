@@ -158,6 +158,17 @@ const DIGIT_DIRS: Readonly<Record<number, RomeDir>> = {
 };
 
 /**
+ * Whether the player may note an arrow pointing `dir` at `(x, y)`: never one
+ * pointing off the grid. Mark-all never offers that note and the solver never
+ * considers that arrow, so the hint has no strike for it and could not explain
+ * the placement it hides (`rome-hint.test.ts` pins the board). Upstream accepts it.
+ * Placing such an arrow stays allowed, because the board flags it as an error.
+ */
+function markable(state: RomeState, x: number, y: number, dir: number): boolean {
+  return (legalDirs(x, y, state.w, state.h) & dir) !== 0;
+}
+
+/**
  * The on-screen keypad: one key per arrow, then Clear.
  *
  * **A note-taking game's elements belong on buttons**, the way every digit game
@@ -279,6 +290,7 @@ function interpretMove(
               : FM_RIGHT;
       // Placing the arrow that is already there is a no-op, not a history entry.
       if (here & dir) return UI_UPDATE;
+      if (pencil && !markable(state, x, y, dir)) return UI_UPDATE;
       return { kind: pencil ? "pencil" : "place", x, y, dir };
     }
 
@@ -288,6 +300,7 @@ function interpretMove(
       const dir = DIGIT_DIRS[button];
       if (dir !== undefined) {
         ui.kmode = KEYMODE_MOVE;
+        if (pencil && !markable(state, x, y, dir)) return UI_UPDATE;
         return { kind: pencil ? "pencil" : "place", x, y, dir };
       }
       if (isEraseKey(button)) {
@@ -334,6 +347,10 @@ function interpretMove(
     if (cx === x && cy === y) c = EMPTY;
     else if (Math.abs(cx - x) < Math.abs(cy - y)) c = cy < y ? FM_UP : FM_DOWN;
     else c = cx < x ? FM_LEFT : FM_RIGHT;
+    // A pencil drag off the grid's edge reads as no drag at all, so its preview
+    // never shows a mark the release would refuse.
+    if (ui.mmode === MOUSEMODE_PENCIL && c !== EMPTY && !markable(state, x, y, c))
+      c = EMPTY;
 
     if (c !== ui.mdir && isMouseDrag(button)) {
       ui.mdir = c;
@@ -420,8 +437,12 @@ function executeMove(state: RomeState, move: RomeMove): RomeState {
   const i = y * w + x;
   if (grid[i] & FM_FIXED) throw new Error("rome: cannot change a fixed clue");
 
+  // The mask is for a move log recorded before input refused such a mark: it
+  // replays as a no-op rather than as a note no hint can strike.
   if (move.kind === "place") grid[i] = move.dir ?? EMPTY;
-  else pencil[i] = move.dir === null ? EMPTY : pencil[i] ^ move.dir;
+  else
+    pencil[i] =
+      move.dir === null ? EMPTY : (pencil[i] ^ move.dir) & legalDirs(x, y, w, h);
 
   if (validateGame(next, true) === STATUS_COMPLETE) next.completed = true;
   return next;
