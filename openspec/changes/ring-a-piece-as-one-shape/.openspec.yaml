@@ -1,0 +1,6 @@
+# No delta yet: the mark rule lives in docs/games/hints.md § "Shade vs ring",
+# and whether a spec requirement names it is for the change to find out.
+# Written 2026-09-21; nothing is implemented.
+schema: spec-driven
+created: 2026-09-21
+skip_specs: true
