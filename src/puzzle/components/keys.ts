@@ -4,6 +4,7 @@ import { css, html, LitElement, nothing } from "lit";
 import { customElement, eventOptions, property, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import type { KeyLabel } from "../../engine/types.ts";
+import { cssColorToOKLCH } from "../../utils/color.ts";
 import { cssWATweaks } from "../../utils/css.ts";
 import { puzzleContext } from "../contexts.ts";
 import type { Puzzle } from "../puzzle.ts";
@@ -14,6 +15,40 @@ import "@awesome.me/webawesome/dist/components/icon/icon.js";
 
 interface LabelIcons {
   [label: string]: string;
+}
+
+/**
+ * Stop a key press moving focus off the board.
+ *
+ * The board listens for `keydown` on **itself** (`view-interactive.ts`), so
+ * whatever holds focus decides whether a physical key reaches the game. A
+ * `mousedown` focuses the button it lands on, which left every keypad game in
+ * the collection deaf to the keyboard from the first on-screen key a player
+ * clicked until they clicked the board again — panel and keyboard are the same
+ * input, and using one should not switch the other off.
+ *
+ * `mousedown` rather than `pointerdown`: iOS Safari generates a click from a
+ * prevented `pointerdown` anyway, and a touch press is already answered on
+ * `touchstart` by {@link PuzzleKeys.handleButtonPress}. Preventing the default
+ * here suppresses the focus, not the click.
+ */
+function keepFocusOnTheBoard(event: MouseEvent): void {
+  event.preventDefault();
+}
+
+/**
+ * The Web Awesome tokens that paint a key in `fill`, with a readable label on
+ * top of it.
+ *
+ * The ink is chosen from the fill's own lightness rather than fixed: a palette
+ * is authored per color scheme, and a fill light enough to take black text in
+ * one scheme is not in the other. The same value borders the key, because a
+ * default `wa-button` draws a transparent border and a pale fill against a
+ * pale panel would otherwise have no edge at all.
+ */
+function swatchProperties(fill: string): string {
+  const ink = cssColorToOKLCH(fill)[0] > 0.6 ? "black" : "white";
+  return `--wa-color-fill-loud: ${fill}; --wa-color-on-loud: ${ink}; --swatch-edge: ${ink};`;
 }
 
 /**
@@ -77,6 +112,7 @@ export class PuzzleKeys extends SignalWatcher(LitElement) {
       <div
           part="base"
           @click=${this.handleButtonPress}
+          @mousedown=${keepFocusOnTheBoard}
           @touchstart=${this.handleButtonPress}
         >${groups}</div>
     `;
@@ -85,20 +121,38 @@ export class PuzzleKeys extends SignalWatcher(LitElement) {
   private renderVirtualKey = (key: KeyLabel) => {
     const label = key.label;
     const icon = this.labelIcons[label];
-    const classes = classMap({ single: icon || label.length === 1 });
+    const fill = this.swatchFill(key);
+    const classes = classMap({
+      single: icon || label.length === 1,
+      swatch: fill !== null,
+    });
     const content = icon
       ? html`<wa-icon name=${icon} label=${label}></wa-icon>`
       : label;
     // Exclude virtual keys from keyboard navigation
     // (they're not helpful for a keyboard user).
     return html`
-      <wa-button 
-          class=${classes} 
-          data-button=${key.button} 
+      <wa-button
+          class=${classes}
+          style=${fill === null ? nothing : swatchProperties(fill)}
+          data-button=${key.button}
           tabindex="-1"
         >${content}</wa-button>
     `;
   };
+
+  /**
+   * The CSS color a key with a `swatch` is painted in, or `null` for an
+   * ordinary key.
+   *
+   * Read off `puzzle.palette` — the very array the canvas is painted from —
+   * so a key cannot drift from the board when the color scheme flips. Before
+   * the first palette arrives the key renders plain rather than guessing.
+   */
+  private swatchFill(key: KeyLabel): string | null {
+    if (key.swatch === undefined) return null;
+    return this.puzzle?.palette[key.swatch] ?? null;
+  }
 
   @eventOptions({ passive: false })
   private async handleButtonPress(event: PointerEvent | TouchEvent) {
@@ -146,6 +200,12 @@ export class PuzzleKeys extends SignalWatcher(LitElement) {
         /* Make all single-char buttons the same width, for uniform layout.
          * (This cheats the horizontal padding just a bit.) */
         width: var(--wa-form-control-height);
+      }
+
+      .swatch::part(base) {
+        /* A default wa-button's border is transparent; a key painted in a pale
+         * board color needs an edge to read as a key. */
+        border-color: var(--swatch-edge);
       }
       
       wa-button {

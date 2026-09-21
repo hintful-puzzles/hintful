@@ -848,15 +848,45 @@ Normative: the on-screen-keys requirement in
   keypad to a drag game**: `input-parity.test.ts` presses keys with a cursor
   already placed, so it will not tell you the panel is unreachable.
 
-  Three games are deliberately without element keys, because their notes are
+  **Map followed, in `give-map-element-keys`, and it is the case to copy when a
+  game's element is not a character.** Its mark is "possibly this color", and
+  its color was reachable only by dragging *from* a region already wearing it —
+  so the keys had to enter colors too, which is a change to how the game is
+  *played* and not only to how its notes are reached. Three things made it
+  cheap rather than a second input path:
+
+  - **The key is the pick-up.** Map's `drop(state, ui, r, altButton)` already
+    took a held color and a flag; a key sets `ui.dragColor` and calls it. Notes
+    mode, the refusal on a clue, and "no move where nothing changes" all come
+    for free, because they were already in the one function the drag used.
+  - **A tap selects, because a tap was already a no-op** — press and release on
+    one region picks that region's own color up and puts it straight back. The
+    rule below generalizes: *check this before adding a keypad to a drag game*.
+  - **A key that enters a color says so, with `KeyLabel.swatch`** — a palette
+    index the panel paints the key in, resolved against the game's own palette
+    by the frontend (`Puzzle.palette`, set from the array the canvas is painted
+    from, so the key follows the board into dark mode). The label stays the
+    character the key sends, so the swatch teaches the binding rather than
+    replacing it. A bare `"1"` would have asked the player to learn which color
+    one *is*, which is the thing the panel exists to spare them.
+
+  Two games remain deliberately without element keys, because their notes are
   **relational or positional rather than a value you choose**: Loopy's mark is
   *which corner* of a face or *which pair of edges*, Slant's is *which two
   adjacent squares*, and both are indicated by pointing at them — there is no
-  element for a button to name. Map's mark is "possibly this color", which *is*
-  enumerable, but it is set by dragging *from* a colored region, so the bit
-  comes from the drag's origin; giving Map element keys means giving it
-  key-based entry it has never had for colors either, which is a change to how
-  the game is played rather than to how its notes are reached.
+  element for a button to name.
+
+- **The panel must not take focus.** The board listens for `keydown` on
+  *itself* (`view-interactive.ts`), and `puzzle-screen`'s window-level redirect
+  steps in only when `document.activeElement` is the body — so a `mousedown`
+  landing on a key focused that button and left the **physical keyboard dead in
+  every keypad game** until the player clicked the board again. The panel
+  prevents the `mousedown` default (`keepFocusOnTheBoard` in
+  [`components/keys.ts`](../../src/puzzle/components/keys.ts)); the rail already
+  had its own answer to the same hole, `puzzle-screen.ts`'s `focusBoard`. **No
+  behavioral tier can see this**: every one of them calls `processInput`
+  directly, so the panel and the keyboard both "work" in a suite that is green
+  over a game nobody can type into. It was found by driving the real app.
 - **A sticky mode must be visible, which can cost geometry.** Acquiring
   `ui.pencilMode` also acquires the pencil-mode indicator's corner
   (`pencil-indicator-placement.test.ts`), and a game whose borders cannot hold

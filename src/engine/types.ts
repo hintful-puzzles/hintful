@@ -38,6 +38,20 @@ export type Rect = {
 export type KeyLabel = {
   label: string;
   button: number;
+  /**
+   * A palette index this key *enters*, painting the key in that color.
+   *
+   * For a game whose element is a color there is no character that names it:
+   * a bare `"1"` asks the player to learn which color one means, which is the
+   * one thing the panel exists to spare them. The index is resolved against
+   * the game's own palette by the frontend, so the key and the board agree
+   * under every color scheme (`puzzle/components/view.ts` computes that
+   * palette; `Puzzle.palette` publishes it).
+   *
+   * The label still carries the character the key sends, so the swatch teaches
+   * the keyboard binding rather than replacing it.
+   */
+  swatch?: number;
 };
 
 /** One entry in the game-type preset menu; `submenu` makes it a nested group

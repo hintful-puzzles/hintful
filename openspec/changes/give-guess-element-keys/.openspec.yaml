@@ -1,0 +1,7 @@
+# No delta: this change is an open question awaiting a decision about *how*
+# Guess should be entered, and which requirement moves depends on that answer —
+# a keypad, a tappable board palette, or both. Written 2026-09-21 out of
+# `give-map-element-keys`; nothing is implemented.
+schema: spec-driven
+created: 2026-09-21
+skip_specs: true

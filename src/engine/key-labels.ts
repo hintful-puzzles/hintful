@@ -62,3 +62,22 @@ export function digitKeys(n: number): KeyLabel[] {
   keys.push(clearKey);
   return keys;
 }
+
+/**
+ * {@link digitKeys} where each key **enters a color**: key `i` carries palette
+ * index `firstColor + i`, and the panel paints the key in it.
+ *
+ * For a game whose element is a color there is no character that names it, so
+ * the digit stays as the label — the key the keyboard presses — and the color
+ * arrives as the key's face. Map is the case: its four region colors.
+ *
+ * Built by decorating `digitKeys` rather than beside it, because the button
+ * codes are the decimal-digit fact and `decimal.test.ts` allows exactly one
+ * statement of it in the tree. The clear key `digitKeys` appends is the entry
+ * past `n`, and is left plain.
+ */
+export function colorKeys(n: number, firstColor: number): KeyLabel[] {
+  return digitKeys(n).map((key, i) =>
+    i < n ? { ...key, swatch: firstColor + i } : key,
+  );
+}

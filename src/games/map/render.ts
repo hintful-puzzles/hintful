@@ -122,9 +122,46 @@ export function regionFromLogicalCoords(
   const wh = w * h;
   if (tx < 0 || tx >= w || ty < 0 || ty >= h) return -1;
 
-  const q = 2 * (xEps > yEps ? 1 : 0) + (-xEps > yEps ? 1 : 0);
+  const q = quadrantIndex(xEps, yEps);
   const quadrant = q === 0 ? BE : q === 1 ? LE : q === 2 ? RE : TE;
   return map.map[quadrant * wh + ty * w + tx];
+}
+
+/** Which of a cell's four triangles an offset from its center falls in, as
+ * upstream's `region_from_coords` numbers them (0 bottom, 1 left, 2 right,
+ * 3 top). */
+function quadrantIndex(xEps: number, yEps: number): number {
+  return 2 * (xEps > yEps ? 1 : 0) + (-xEps > yEps ? 1 : 0);
+}
+
+/**
+ * The cursor-direction button whose own offset picks the same triangle — the
+ * inverse of {@link quadrantIndex} over the four `epsilonX`/`epsilonY` pairs.
+ *
+ * The keyboard cursor is a cell *plus the direction it last moved*, which is
+ * how upstream names one of the four regions a diagonally-split cell can hold.
+ * A pointer knows its triangle directly, so this is what lets a tap put the
+ * cursor exactly where the finger was rather than on some quadrant of the
+ * right cell.
+ *
+ * Derived from the same expression rather than tabulated against it, so the
+ * two cannot disagree about which triangle is which.
+ */
+function directionForQuadrant(xEps: number, yEps: number): number {
+  const q = quadrantIndex(xEps, yEps);
+  for (const button of [CURSOR_DOWN, CURSOR_LEFT, CURSOR_RIGHT, CURSOR_UP])
+    if (quadrantIndex(epsilonX(button), epsilonY(button)) === q) return button;
+  // Unreachable: the four directions cover the four quadrants, which
+  // `map.test.ts` pins.
+  return CURSOR_DOWN;
+}
+
+/** Is cell `(x, y)` split along a diagonal between two regions? The test
+ * `drawSquare` uses to decide whether to paint a second triangle at all. */
+function dividedCell(map: MapData, x: number, y: number): boolean {
+  const wh = map.w * map.h;
+  const c = y * map.w + x;
+  return map.map[TE * wh + c] !== map.map[BE * wh + c];
 }
 
 /** Upstream `region_from_coords` (pixel → region). */
@@ -141,6 +178,26 @@ export function regionFromCoords(
     map,
     tx,
     ty,
+    x - coord(tx, ts) - half,
+    y - coord(ty, ts) - half,
+  );
+}
+
+/**
+ * Put the keyboard cursor on the region under a pointer at `(x, y)`, leaving
+ * it hidden.
+ *
+ * The pointer already knows its cell and its triangle; this is the same pair
+ * written in the cursor's own vocabulary, so `regionFromUiCursor` afterwards
+ * names the region the finger was on.
+ */
+export function placeCursorAtCoords(ui: MapUi, ts: number, x: number, y: number): void {
+  const tx = fromCoord(x, ts);
+  const ty = fromCoord(y, ts);
+  const half = Math.floor(ts / 2);
+  ui.cursor.x = tx;
+  ui.cursor.y = ty;
+  ui.curLastmove = directionForQuadrant(
     x - coord(tx, ts) - half,
     y - coord(ty, ts) - half,
   );
@@ -520,8 +577,18 @@ export function redraw(
     let cursorX: number;
     let cursorY: number;
     if (ui.cursor.visible) {
-      cursorX = coord(ui.cursor.x, ts) + Math.floor(ts / 2) + epsilonX(ui.curLastmove);
-      cursorY = coord(ui.cursor.y, ts) + Math.floor(ts / 2) + epsilonY(ui.curLastmove);
+      // On a divided cell the ring sits at the **centroid** of the triangle it
+      // names, which for a quadrant of a square is exactly a third of a tile
+      // from the center; on a whole cell it keeps upstream's one-pixel nudge.
+      // The cursor names a triangle, not a cell, and every key press now acts
+      // on it, so a ring parked on the diagonal would not say which half it
+      // means. On a whole cell all four quadrants are the same region, and the
+      // same offset would only announce which way the player last moved.
+      const reach = dividedCell(map, ui.cursor.x, ui.cursor.y) ? Math.floor(ts / 3) : 1;
+      cursorX =
+        coord(ui.cursor.x, ts) + Math.floor(ts / 2) + epsilonX(ui.curLastmove) * reach;
+      cursorY =
+        coord(ui.cursor.y, ts) + Math.floor(ts / 2) + epsilonY(ui.curLastmove) * reach;
     } else {
       cursorX = ui.dragX;
       cursorY = ui.dragY;

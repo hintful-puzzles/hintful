@@ -237,6 +237,16 @@ export class Puzzle {
    * control say `Fill` on a bare board and `Update` once there is something to
    * narrow. Always false for a game without the press. */
   private _hasPencilMarks = signal(false);
+  /**
+   * The board's resolved palette, as CSS colors — what the canvas is actually
+   * painted with, after dark-mode authoring and the background's hue tint
+   * (`components/view.ts` computes it and hands it to the drawing).
+   *
+   * A signal because the key panel reads it too: a `KeyLabel.swatch` names a
+   * palette index, and a key painted from anywhere but *this* array would
+   * disagree with the board the moment the color scheme flips.
+   */
+  private _palette = signal<readonly string[]>([]);
   private _params = signal<string>("");
   private _currentParams = computed<string | null>(
     () =>
@@ -927,7 +937,13 @@ export class Puzzle {
   }
 
   public async setDrawingPalette(colors: string[]): Promise<void> {
+    this._palette.set(colors);
     await this.workerPuzzle.setDrawingPalette(colors);
+  }
+
+  /** @see _palette */
+  public get palette(): readonly string[] {
+    return this._palette.get();
   }
 
   public async getImage(options?: ImageEncodeOptions): Promise<Blob> {

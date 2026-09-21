@@ -346,6 +346,20 @@ before applying the default. Exemplar:
 [`spokes/render.ts`](../../src/games/spokes/render.ts) (the corner protocol
 is in its module header).
 
+**Draw the cursor inside the thing it selects, not merely in the right cell.**
+Map's cursor is a cell *plus a direction*, which is how upstream names one of
+the two regions a diagonally-split cell holds — and upstream nudges the ring one
+pixel, which on a divided cell parks it on the diagonal saying nothing about
+which half is meant. Fine while the cursor only picked a color up; not fine once
+`give-map-element-keys` made every key press act on it. The ring goes to the
+**centroid of the triangle it names**, which for a quadrant of a square is
+exactly a third of a tile from the center, and keeps the one-pixel nudge on a
+whole cell, where all four quadrants are one region and an offset would only
+announce which way the player last moved. The general rule: **when a selection
+starts being acted on, re-ask whether it is legible** — and assert the offset
+(a tier-2 op check on the ring's center) rather than trusting the screenshot
+that prompted it.
+
 ## A press preview must not look like a commit
 
 **If a transient press/preview overlay is visually indistinguishable from a

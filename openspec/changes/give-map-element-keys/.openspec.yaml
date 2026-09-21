@@ -1,6 +1,2 @@
-# No delta: this change is an open question awaiting an owner decision, and
-# which requirement moves depends on that answer — whether Map gains key entry
-# for colors as well as marks. Written 2026-09-21; nothing is implemented.
 schema: spec-driven
 created: 2026-09-21
-skip_specs: true

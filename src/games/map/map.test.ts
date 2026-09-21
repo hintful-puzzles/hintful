@@ -8,6 +8,7 @@
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
+import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
 import {
   LEFT_BUTTON,
   LEFT_RELEASE,
@@ -15,12 +16,27 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import {
+  type AnyGame,
+  fingerprint,
+  probeBoard,
+  probePoints,
+} from "../../engine/testing/input-probe.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { newMapDesc } from "./generator.ts";
 import { mapGame } from "./index.ts";
-import { TE, validateDesc } from "./map-data.ts";
-import { COL_MISTAKE, newDrawState, redraw } from "./render.ts";
+import { BE, TE, validateDesc } from "./map-data.ts";
+import {
+  COL_0,
+  COL_MISTAKE,
+  newDrawState,
+  origin,
+  placeCursorAtCoords,
+  redraw,
+  regionFromCoords,
+  regionFromUiCursor,
+} from "./render.ts";
 import {
   cloneState,
   DIFF_HARD,
@@ -31,6 +47,7 @@ import {
   type MapOp,
   type MapParams,
   type MapState,
+  type MapUi,
   newUi,
 } from "./state.ts";
 
@@ -70,8 +87,12 @@ function solidCellOf(state: MapState, region: number): { x: number; y: number } 
   return null;
 }
 
+/** The pixel center of a cell. Through `origin`, because the board is inset by
+ * the room the pencil-mode indicator needs and a hand-written `x * TS` aims at
+ * the cell's corner instead. */
 function centerOf(cell: { x: number; y: number }): { x: number; y: number } {
-  return { x: cell.x * TS + Math.floor(TS / 2), y: cell.y * TS + Math.floor(TS / 2) };
+  const half = Math.floor(TS / 2);
+  return { x: origin(TS) + cell.x * TS + half, y: origin(TS) + cell.y * TS + half };
 }
 
 function firstBlank(state: MapState): number {
@@ -403,5 +424,252 @@ describe("map mistake overlay repaints on an already-drawn board", () => {
     dr2.endDraw();
 
     expect(dr2.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(true);
+  });
+});
+
+// --- the keypad, and entry at the cursor -----------------------------
+
+describe("map keypad", () => {
+  it("offers one key per color, painted in it, plus Clear", () => {
+    // Pinned, so a fifth key or a renumbered swatch fails here rather than
+    // showing the player a button in a color the board does not use. The Marks
+    // key is absent on purpose: the engine appends it, and
+    // `pencil-mode-key.test.ts` is what holds that.
+    expect(mapGame.requestKeys?.(defaultParams())).toEqual([
+      { button: 0x31, label: "1", swatch: COL_0 },
+      { button: 0x32, label: "2", swatch: COL_0 + 1 },
+      { button: 0x33, label: "3", swatch: COL_0 + 2 },
+      { button: 0x34, label: "4", swatch: COL_0 + 3 },
+      { button: CLEAR_BUTTON, label: "Clear" },
+    ]);
+  });
+
+  it("names a swatch this game's own palette holds", () => {
+    // The frontend resolves the index against this palette, so one past its end
+    // paints the key in nothing at all.
+    const palette = mapGame.colors([0.9, 0.9, 0.9]);
+    const swatches = (mapGame.requestKeys?.(defaultParams()) ?? []).flatMap((k) =>
+      k.swatch === undefined ? [] : [k.swatch],
+    );
+    expect(swatches).toHaveLength(4);
+    for (const i of swatches) expect(palette[i]).toBeDefined();
+  });
+});
+
+describe("map key entry", () => {
+  const p: MapParams = { w: 12, h: 10, n: 12, diff: DIFF_NORMAL };
+
+  /** A ui whose cursor is on `region`, as a tap there would leave it. */
+  function cursorOn(state: MapState, region: number): MapUi {
+    const ui = newUi(state);
+    const cell = solidCellOf(state, region);
+    expect(cell, `region ${region} has no solid cell to tap`).toBeDefined();
+    if (!cell) throw new Error("unreachable");
+    const { x, y } = centerOf(cell);
+    placeCursorAtCoords(ui, TS, x, y);
+    ui.cursor.visible = true;
+    return ui;
+  }
+
+  function press(state: MapState, ui: MapUi, button: number) {
+    const ds = newDrawState(state, TS);
+    return mapGame.interpretMove(state, ui, ds, { x: 0, y: 0 }, button);
+  }
+
+  it("a color key colors the region at the cursor", () => {
+    const { state } = makeGame(p, "key-color");
+    const blank = firstBlank(state);
+    const move = press(state, cursorOn(state, blank), 0x33);
+    expect(move).not.toBe(UI_UPDATE);
+    expect(move).not.toBeNull();
+    expect(mapGame.executeMove(state, move as { ops: MapOp[] }).coloring[blank]).toBe(
+      2,
+    );
+  });
+
+  it("a color key marks the region in notes mode, and toggles", () => {
+    const { state } = makeGame(p, "key-mark");
+    const blank = firstBlank(state);
+    const ui = cursorOn(state, blank);
+    ui.pencilMode = true;
+
+    const on = press(state, ui, 0x32);
+    expect(on).not.toBe(UI_UPDATE);
+    const marked = mapGame.executeMove(state, on as { ops: MapOp[] });
+    expect(marked.coloring[blank]).toBe(-1);
+    expect(marked.pencil[blank]).toBe(1 << 1);
+
+    const off = press(marked, ui, 0x32);
+    expect(off).not.toBe(UI_UPDATE);
+    expect(mapGame.executeMove(marked, off as { ops: MapOp[] }).pencil[blank]).toBe(0);
+  });
+
+  it("Clear empties the region", () => {
+    const { state } = makeGame(p, "key-clear");
+    const blank = firstBlank(state);
+    const colored = mapGame.executeMove(state, {
+      ops: [{ op: "color", region: blank, color: 1 }],
+    });
+    const move = press(colored, cursorOn(state, blank), CLEAR_BUTTON);
+    expect(move).not.toBe(UI_UPDATE);
+    expect(mapGame.executeMove(colored, move as { ops: MapOp[] }).coloring[blank]).toBe(
+      -1,
+    );
+  });
+
+  it("a color key refuses a clue", () => {
+    const { state } = makeGame(p, "key-clue");
+    const clue = firstClue(state);
+    const other = (state.coloring[clue] + 1) % 4;
+    expect(press(state, cursorOn(state, clue), 0x31 + other)).toBe(UI_UPDATE);
+  });
+
+  it("a color key with no cursor shown is declined", () => {
+    // Declined rather than entered blind, as the digit games do: `null` is also
+    // what lets the app's bare-letter shortcuts through (`puzzle/shortcuts.ts`).
+    const { state } = makeGame(p, "key-nocursor");
+    const ui = newUi(state);
+    expect(ui.cursor.visible).toBe(false);
+    expect(press(state, ui, 0x31)).toBeNull();
+    expect(press(state, ui, CLEAR_BUTTON)).toBeNull();
+  });
+});
+
+describe("map tap selection", () => {
+  const p: MapParams = { w: 12, h: 10, n: 12, diff: DIFF_NORMAL };
+
+  it("selects the region the finger was on, quadrant and all", () => {
+    // The cursor is a cell *plus a direction*, which is how upstream names one
+    // of the regions a diagonally-split cell holds. What has to hold is that
+    // the translation from a pixel is lossless: the region the tap hit is the
+    // region the cursor then names.
+    const { state } = makeGame(p, "tap-select");
+    const ui = newUi(state);
+    const { w, h } = p;
+    const half = Math.floor(TS / 2);
+
+    let sampled = 0;
+    let offCenter = 0;
+    for (let cy = 0; cy < h; cy++)
+      for (let cx = 0; cx < w; cx++) {
+        const mid = { x: origin(TS) + cx * TS + half, y: origin(TS) + cy * TS + half };
+        // The center, and a point well inside each quadrant, so a split cell is
+        // sampled on both sides of its diagonal.
+        for (const [dx, dy] of [
+          [0, 0],
+          [0, -6],
+          [0, 6],
+          [-6, 0],
+          [6, 0],
+        ]) {
+          const x = mid.x + dx;
+          const y = mid.y + dy;
+          const hit = regionFromCoords(state.map, TS, x, y);
+          if (hit < 0) continue;
+          sampled++;
+          placeCursorAtCoords(ui, TS, x, y);
+          expect(
+            regionFromUiCursor(state.map, ui),
+            `a tap at (${x}, ${y}) selected the wrong region`,
+          ).toBe(hit);
+          if (hit !== regionFromCoords(state.map, TS, mid.x, mid.y)) offCenter++;
+        }
+      }
+
+    // Vacuity guards. The first says the sweep saw the board at all; the second
+    // says it reached the case the quadrant exists for — a point naming a
+    // different region from its own cell's center, which only a split cell has.
+    expect(sampled).toBeGreaterThan(w * h * 4);
+    expect(offCenter).toBeGreaterThan(0);
+  });
+
+  it("a tap commits nothing and leaves the cursor on that region", () => {
+    const { state } = makeGame(p, "tap-noop");
+    const ui = newUi(state);
+    const ds = newDrawState(state, TS);
+    const blank = firstBlank(state);
+    const cell = solidCellOf(state, blank);
+    expect(cell, "the blank region has no solid cell").toBeDefined();
+    if (!cell) return;
+
+    expect(mapGame.interpretMove(state, ui, ds, centerOf(cell), LEFT_BUTTON)).toBe(
+      UI_UPDATE,
+    );
+    expect(mapGame.interpretMove(state, ui, ds, centerOf(cell), LEFT_RELEASE)).toBe(
+      UI_UPDATE,
+    );
+    expect(ui.cursor.visible).toBe(true);
+    expect(regionFromUiCursor(state.map, ui)).toBe(blank);
+  });
+
+  it("a key reaches a region after a tap alone, with no drag anywhere", () => {
+    // The question `input-parity.test.ts` cannot ask: it walks the cursor with
+    // arrow keys first, so it would pass over a panel that no gesture a touch
+    // player has can reach.
+    const { m, size, reset } = probeBoard(mapGame as unknown as AnyGame, "map-tap-key");
+    let reached = 0;
+    for (const pt of probePoints(size)) {
+      reset();
+      const before = fingerprint(m);
+      m.processInput(pt.x, pt.y, LEFT_BUTTON);
+      // No LEFT_DRAG between them, deliberately: a tap is the whole gesture.
+      m.processInput(pt.x, pt.y, LEFT_RELEASE);
+      m.processInput(0, 0, 0x31);
+      if (fingerprint(m) !== before) reached++;
+    }
+    expect(reached).toBeGreaterThan(0);
+  });
+
+  it("draws the cursor inside the triangle it names, on a divided cell", () => {
+    // Tier 2. A selection every key press acts on has to be legible, and on a
+    // divided cell upstream's one-pixel nudge parks the ring on the diagonal,
+    // saying nothing about which half is meant. The ring goes to the triangle's
+    // centroid instead — a third of a tile, for a quadrant of a square.
+    const { state } = makeGame(p, "cursor-offset");
+    const { w, h } = p;
+    const wh = w * h;
+    const M = state.map.map;
+    const half = Math.floor(TS / 2);
+
+    /** Where `redraw` puts the small cursor ring, relative to the cell center. */
+    function ringOffset(cell: { x: number; y: number }): { dx: number; dy: number } {
+      const ui = newUi(state);
+      placeCursorAtCoords(
+        ui,
+        TS,
+        origin(TS) + cell.x * TS + half,
+        origin(TS) + cell.y * TS + half + 6,
+      );
+      ui.cursor.visible = true;
+      const dr = new RecordingDrawing(mapGame.colors([0.9, 0.9, 0.9]));
+      dr.startDraw();
+      redraw(dr, newDrawState(state, TS), null, state, 0, ui, 0, 0, undefined, []);
+      dr.endDraw();
+      const ring = dr.ops.find((o) => o.op === "circle" && o.r === Math.floor(TS / 4));
+      expect(ring, "the cursor ring was not drawn").toBeDefined();
+      const c = ring as { cx: number; cy: number };
+      return {
+        dx: c.cx - (origin(TS) + cell.x * TS + half),
+        dy: c.cy - (origin(TS) + cell.y * TS + half),
+      };
+    }
+
+    let divided: { x: number; y: number } | null = null;
+    let whole: { x: number; y: number } | null = null;
+    for (let y = 0; y < h && !(divided && whole); y++)
+      for (let x = 0; x < w && !(divided && whole); x++) {
+        const c = y * w + x;
+        const cell = { x, y };
+        if (M[TE * wh + c] !== M[BE * wh + c]) divided ??= cell;
+        else whole ??= cell;
+      }
+    // Asserted, not skipped: without both the comparison below is vacuous.
+    expect(divided, "no divided cell on this board").not.toBeNull();
+    expect(whole, "no whole cell on this board").not.toBeNull();
+    if (!divided || !whole) return;
+
+    // The tap was below each cell's center, so the ring goes down.
+    expect(ringOffset(divided)).toEqual({ dx: 0, dy: Math.floor(TS / 3) });
+    expect(ringOffset(whole)).toEqual({ dx: 0, dy: 1 });
   });
 });

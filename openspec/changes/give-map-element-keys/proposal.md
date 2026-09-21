@@ -1,50 +1,78 @@
 # give-map-element-keys
 
-**Status: an open question, scaffolded so it survives the session. Not started,
-and it needs an owner decision before it should be.**
+## Why
 
-## Why this is here
+**Map was the last game whose elements were enumerable and off the panel.**
+`give-rome-its-element-keypad` established the rule — a game's markable
+elements belong on the on-screen panel wherever its notes are an enumerable
+per-cell set — and left Map as an open question, because Map's mark is set by
+dragging *from* a region already wearing the color. Giving Map element keys
+therefore meant giving it key entry for colors too, which is a change to how
+the game is *played* and not only to how its notes are reached.
 
-`give-rome-its-element-keypad` established the rule that a game's markable
-elements belong on the on-screen panel wherever its notes are an **enumerable
-per-cell set** — select a cell, tap a value, and in notes mode the same key
-toggles it as a mark. Every note game in the collection now follows it except
-three, and two of those are outside it permanently: Loopy marks *which corner*
-of a face or *which pair of edges*, Slant marks *which two adjacent squares*
-slant alike, and both are indicated by pointing, so there is no element for a
-button to name.
+The owner settled it (2026-09-21): *"my goal is to make the UX as consistent and
+unsurprising as we can make it, across games."* So Map joins the rule, colors
+and all. Dragging still works and is unchanged; the panel is a second way in.
 
-**Map is the one that could go either way**, and the owner asked (2026-09-21) to
-leave it and perhaps re-examine later.
+## What the scaffold got wrong, and why that made this cheap
 
-## What makes it a decision rather than a task
+The open question said selection *"has to be carved out of behavior that already
+does something"*, because Map's taps begin a drag. **They don't commit
+anything.** A tap is a press and a release on one region: the press picks that
+region's own color up, and the release drops it back, which `drop` answers with
+"nothing changed" before it reaches any move. Map's tap was as bare a no-op as
+Rome's, so selecting on it is additive — exactly the check
+`docs/games/input.md` tells you to make before adding a keypad to a drag game.
 
-Map's marks *are* enumerable — "possibly this color", four of them — so the rule
-appears to apply. But a Map mark is laid by **dragging from a colored region
-onto a blank one**, and which pencil bit it sets comes from *the color the drag
-started on*. The mode arms the kind of drop, not its content.
+The other half is that **`drop` already was the whole vocabulary**: it takes a
+held color and a notes flag, turns a held color into a pencil toggle when the
+flag is on, refuses a clue, refuses penciling a colored region, and yields no
+move where nothing changes. A key is a pick-up, so key entry is *set what the
+key holds, then drop it at the cursor* — no second input path.
 
-So element keys for Map cannot be built the way Rome's were. Rome already
-answered typed directions and only needed a reachable cursor; Map has **no
-key-based entry at all** — not for notes and not for colors. Giving it four
-color keys means giving it "select a region, press a color", which is a change
-to **how the game is played**, not to how its notes are reached. It would
-arguably be an improvement on touch, where Map is drag-only for everything —
-which is exactly why it deserves its own decision rather than arriving as a
-side effect of a notes-consistency change.
+## What changes
 
-## What a proposal here would have to settle
+- **Four color keys and Clear**, with the engine appending Marks as it does for
+  every note-taking game. `1`–`4` color the region at the cursor; in notes mode
+  the same keys toggle that color as a mark; Clear empties the region.
+- **A tap selects the region under it**, quadrant and all — the cursor is a cell
+  *plus a direction*, and a tap knows its triangle directly, so the two are
+  translated rather than approximated. Without this every panel key is dead on
+  touch, which is the trap `input-parity.test.ts` structurally cannot see: it
+  walks the cursor with arrow keys first.
+- **`KeyLabel.swatch`**, a palette index the panel paints the key in. Map's
+  element is a color and no character names it; a bare `"1"` would make the
+  player learn which color one *is*. The index resolves against the game's own
+  palette, published as `Puzzle.palette` from the array the canvas is painted
+  from — so the keys follow the board into dark mode rather than being authored
+  twice. The label stays the character the key sends.
 
-- Whether colors get keys too, or only the pencil marks (only the marks would
-  leave the game's primary action drag-only, which is the inconsistency this
-  rule exists to remove).
-- What a tap on a region means once it can select. Map's taps currently begin a
-  drag; unlike Rome's, they are not no-ops, so selection is not free here.
-- Whether erasing a color gets a key, given it is currently "drag in from
-  outside the grid".
+## The bug this found, which was not Map's
 
-## What is already true, and needs no work
+Driving the real app turned up a **collection-wide** defect. The board listens
+for `keydown` on itself, and `puzzle-screen`'s window-level redirect only fires
+when `document.activeElement` is the body — so a `mousedown` on an on-screen key
+focused that button and left the physical keyboard dead in **every** keypad game
+until the player clicked the board again. The rail already had an answer to the
+same hole (`focusBoard`); the panel, which is not a `data-command` control and
+sits outside the chrome, never got one. The panel now prevents the `mousedown`
+default, so focus never moves at all.
 
-Map has the Marks key and the pencil-mode indicator, and its notes mode makes an
-ordinary drag lay dots (`derive-the-marks-key-from-having-notes`). A player can
-reach every Map mark today; what they cannot do is reach one without a drag.
+**No behavioral tier could have caught it.** Tiers 1–2.5 call `processInput`
+directly, so the panel and the keyboard both work in a suite that is green over
+a game nobody can type into. Checked in Chrome against Map *and* Solo.
+
+## What replaces the assurance
+
+Nothing here is gated by a fixture: Map's generator, solver and codec are
+untouched. What is new is input, and it is held by
+
+- the pinned `KeyLabel[]` (a fifth key or a renumbered swatch fails);
+- a sweep asserting the tap→cursor translation is lossless over the whole board,
+  with a vacuity guard that it reached a split cell at all;
+- a Midend-level test that a key reaches a region after **a tap alone, with no
+  drag anywhere** — the question `input-parity.test.ts` cannot ask;
+- `input-parity.test.ts`'s existing "no on-screen key is inert", which Map
+  enrolled in by acquiring `requestKeys` and now passes for all five keys.
+
+Each was watched to fail with the behavior deliberately broken.

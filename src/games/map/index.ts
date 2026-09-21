@@ -6,18 +6,25 @@
  * region, its pencil marks) into a floating drag blob; release drops it onto
  * the region under the pointer. A right-drag from a color onto a blank region
  * toggles one pencil bit; a keyboard cursor picks/drops via select. A drop that
- * changes nothing produces no move.
+ * changes nothing produces no move — and selects the region under it instead,
+ * which is what puts a cursor under a finger.
+ *
+ * A color key (or the panel's swatch) colors the region at the cursor, or in
+ * notes mode toggles that color as a mark; Clear empties it.
  */
 
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { colorKeys } from "../../engine/key-labels.ts";
 import { dimensionParamConfig, parseConfigInt } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
+  digitOf,
   isCursorMove,
+  isEraseKey,
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
@@ -29,15 +36,17 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
+import type { GameStatus, KeyLabel, Point } from "../../engine/types.ts";
 import { newMapDesc } from "./generator.ts";
 import { newMapData, validateDesc } from "./map-data.ts";
 import {
+  COL_0,
   colors,
   computeSize,
   flashLengthFromUi,
   type MapDrawState,
   newDrawState,
+  placeCursorAtCoords,
   redraw,
   regionFromCoords,
   regionFromUiCursor,
@@ -127,6 +136,28 @@ function drop(
   return ops.length ? { ops } : UI_UPDATE;
 }
 
+/**
+ * The four region colors, plus Clear. The engine appends the Marks key.
+ *
+ * Map's element is a *color*, so each key carries the palette index it enters
+ * and the panel paints it in that color; the label is still the character the
+ * key sends, so pressing `2` and tapping the second key are visibly the same
+ * input.
+ */
+function requestKeys(): KeyLabel[] {
+  return colorKeys(FOUR, COL_0);
+}
+
+/**
+ * What a color key or Clear puts in the player's hand: a color index, `-1` for
+ * blank, or `null` for a button that is neither.
+ */
+function heldByKey(button: number): number | null {
+  const digit = digitOf(button);
+  if (digit !== null && digit >= 1 && digit <= FOUR) return digit - 1;
+  return isEraseKey(button) ? -1 : null;
+}
+
 function interpretMove(
   state: MapState,
   ui: MapUi,
@@ -176,6 +207,25 @@ function interpretMove(
     return drop(state, ui, r, button === CURSOR_SELECT2 || ui.pencilMode);
   }
 
+  // A color key or Clear, entered at the cursor — the collection's "select a
+  // cell, tap a value", where in notes mode the same key marks it instead
+  // (`docs/games/input.md` § "Put a game's markable elements on the panel").
+  //
+  // The key *is* the pick-up: Map holds a color rather than typing one, so
+  // loading what the key names into the drag and dropping it where the cursor
+  // is gets the whole vocabulary for free — a mark in notes mode, a refusal on
+  // a clue, no move where nothing changes.
+  //
+  // Only with the cursor shown, as the digit games do: entering at a cursor
+  // nobody can see would put a color somewhere the player is not looking. An
+  // arrow key reveals it, and so does a tap.
+  const held = heldByKey(button);
+  if (held !== null && ui.cursor.visible && ui.dragColor === -2) {
+    ui.dragColor = held;
+    ui.dragPencil = 0;
+    return drop(state, ui, regionFromUiCursor(state.map, ui), ui.pencilMode);
+  }
+
   if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
     pickUp(state, ui, regionFromCoords(state.map, ts, point.x, point.y));
     ui.dragX = point.x;
@@ -192,7 +242,18 @@ function interpretMove(
 
   if ((button === LEFT_RELEASE || button === RIGHT_RELEASE) && ui.dragColor > -2) {
     const r = regionFromCoords(state.map, ts, point.x, point.y);
-    return drop(state, ui, r, button === RIGHT_RELEASE || ui.pencilMode);
+    const dropped = drop(state, ui, r, button === RIGHT_RELEASE || ui.pencilMode);
+
+    // A gesture that commits nothing selects the region instead. That is what
+    // makes the color keys reachable on touch, where there are no arrow keys
+    // to walk a cursor with, and it costs nothing: a tap is a press and a
+    // release on one region, so it picks that region's own color up and puts
+    // it straight back — already a no-op before this existed.
+    if (dropped === UI_UPDATE && r >= 0) {
+      placeCursorAtCoords(ui, ts, point.x, point.y);
+      ui.cursor.visible = true;
+    }
+    return dropped;
   }
 
   return null;
@@ -397,6 +458,7 @@ export const mapGame: Game<
   solve,
   difficulty,
   findMistakes,
+  requestKeys,
 
   prefs: [
     {

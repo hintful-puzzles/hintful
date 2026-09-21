@@ -50,6 +50,10 @@ export const cssColorToOKLCH = (cssColor: string): OKLCH =>
 
 export const oklchToCSSColor = (lch: OKLCH): string =>
   // display() returns the best CSS <color> string this browser can handle.
+  // It is a **boxed** `String` carrying the color on a property, not a
+  // primitive — it behaves as its text everywhere this app uses it, but an
+  // assertion comparing one by identity fails while printing two strings that
+  // look the same. Pass it through `String(...)` before a `toBe`.
   display({ space: OKLCHspace, coords: lch });
 
 export const isGrayChroma = (c: number) => c < 0.01;
