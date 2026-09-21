@@ -31,7 +31,7 @@ import {
 } from "./hint.ts";
 import type { Reason } from "./hint-text.ts";
 import { guessGame } from "./index.ts";
-import { answerDotAt, COL_HINT, COL_HINT_CELL } from "./render.ts";
+import { answerCellAt, COL_HINT, COL_HINT_CELL } from "./render.ts";
 import {
   decodeParams,
   defaultParams,
@@ -312,7 +312,7 @@ describe("the plan", () => {
     const refreshed = guessRefreshHintStep(step, after);
     const left = refreshed?.move as Extract<GuessMove, { type: "mark" }>;
     expect(left.marks).toHaveLength(3);
-    expect((refreshed?.highlights as GuessHighlights).dots).toHaveLength(3);
+    expect((refreshed?.highlights as GuessHighlights).marked).toHaveLength(3);
     expect(guessRefreshHintStep(step, state)).toBe(step);
     const rest: GuessMove = { ...left };
     expect(guessHintKeepTrack(rest, step, after)).toBe("completed");
@@ -341,28 +341,28 @@ describe("the answer row takes marks and colors", () => {
     return { state, ui, ds };
   }
 
-  /** A point on answer slot `pos`'s dot for `color`, found by asking the hit
+  /** A point in answer slot `pos`'s cell for `color`, found by asking the hit
    * test rather than by restating the layout. */
-  function dotPoint(ds: ReturnType<typeof fresh>["ds"], pos: number, color: number) {
+  function cellPoint(ds: ReturnType<typeof fresh>["ds"], pos: number, color: number) {
     for (let y = 0; y < ds.h; y++) {
       for (let x = 0; x < ds.w; x++) {
-        const d = answerDotAt(ds, x, y);
+        const d = answerCellAt(ds, x, y);
         if (d && d.pos === pos && d.color === color) return { x, y };
       }
     }
-    throw new Error(`no dot for ${color} in slot ${pos}`);
+    throw new Error(`no cell for ${color} in slot ${pos}`);
   }
 
-  it("a tap on a dot enters that color in that column, with no keypad", () => {
+  it("a tap on a color enters it in that column, with no keypad", () => {
     const { state, ui, ds } = fresh();
-    const at = dotPoint(ds, 2, 5);
+    const at = cellPoint(ds, 2, 5);
     expect(guessGame.interpretMove(state, ui, ds, at, LEFT_RELEASE)).toBe(UI_UPDATE);
     expect(ui.currPegs).toEqual([0, 0, 5, 0]);
   });
 
   it("still does so once the rows above have been played", () => {
     // The current row's hit region used to run `nguesses` rows down from it,
-    // so from the third guess on it covered the answer row and a tap on a dot
+    // so from the third guess on it covered the answer row and a tap on a color
     // selected the peg above instead. Found in the browser, not by a test.
     const { ui, ds } = fresh();
     let state = fresh().state;
@@ -375,14 +375,14 @@ describe("the answer row takes marks and colors", () => {
       guessGame.changedState?.(ui, state, next);
       state = next;
     }
-    const at = dotPoint(ds, 1, 5);
+    const at = cellPoint(ds, 1, 5);
     expect(guessGame.interpretMove(state, ui, ds, at, LEFT_RELEASE)).toBe(UI_UPDATE);
     expect(ui.currPegs).toEqual([0, 5, 0, 0]);
   });
 
-  it("a right-click or held finger on a dot rules it out, and its release does nothing", () => {
+  it("a right-click or held finger on a color rules it out, and its release does nothing", () => {
     const { state, ui, ds } = fresh();
-    const at = dotPoint(ds, 1, 3);
+    const at = cellPoint(ds, 1, 3);
     const move = guessGame.interpretMove(state, ui, ds, at, RIGHT_BUTTON);
     expect(move).toEqual({
       type: "mark",
@@ -418,7 +418,7 @@ describe("the answer row takes marks and colors", () => {
       marked,
       ui,
       ds,
-      dotPoint(ds, 0, 6),
+      cellPoint(ds, 0, 6),
       LEFT_RELEASE,
     );
     expect(tap).toEqual({
@@ -462,9 +462,9 @@ describe("the answer row takes marks and colors", () => {
 });
 
 describe("the hint frame", () => {
-  it("outlines the row it reads and rings the dots it marks", () => {
+  it("outlines the row it reads and frames the colors it marks", () => {
     // A row of two colors the answer lacks scores nothing, which is the
-    // plainest firing there is: every dot of both colors, ruled out everywhere.
+    // plainest firing there is: both colors, ruled out everywhere.
     const p = defaultParams();
     const { desc } = newDesc(p, randomNew("hint-frame"));
     const answer = newState(p, desc).solution;
@@ -482,11 +482,15 @@ describe("the hint frame", () => {
     expect(step?.explanation).toMatch(/scored nothing/);
     const hl = step?.highlights as GuessHighlights;
     expect(hl.rows).toEqual([0]);
-    expect(hl.dots).toHaveLength(2 * p.npegs);
+    expect(hl.marked).toHaveLength(2 * p.npegs);
     const ops = res.recording.ops;
-    const rings = ops.filter((o) => o.op === "circle" && o.outline === COL_HINT);
-    // Two concentric circles per ringed dot.
-    expect(rings.length).toBe(hl.dots.length * 2);
+    const frames = ops.filter((o) => o.op === "rect" && o.color === COL_HINT);
+    // A four-sided frame beside each marked block, every side of it thin: a
+    // mark in the gap, never a fill over the color it is about.
+    expect(frames.length).toBe(hl.marked.length * 4);
+    for (const f of frames) {
+      if (f.op === "rect") expect(Math.min(f.w, f.h)).toBeLessThanOrEqual(2);
+    }
     const outlineRects = ops.filter(
       (o) => o.op === "rect" && o.color === COL_HINT_CELL,
     );

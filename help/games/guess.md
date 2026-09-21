@@ -27,20 +27,22 @@ when two of them are hard to tell apart.
 ## The answer row
 
 Below the rows is the answer row: one slot for each peg of the hidden
-combination, each showing a small dot for every color. It is where
-you keep track of what you have worked out. A filled dot is a color
-that could still be in that slot; a hollow one is a color you have
-ruled out of it.
+combination, each holding a small square of every color that could
+still be in that slot. It is where you keep track of what you have
+worked out: when you rule a color out of a slot, its square goes, and
+the colors that are left are the ones you still have to decide
+between. Each color always sits in the same place in a slot, so you
+can tell at a glance which one has gone.
 
-To rule a color out of a slot, right-click its dot or hold a finger
-on it; do the same again to put it back. Or press **Marks** and then
-the color buttons, which rule colors out of the slot the ring is on,
-with **Clear** putting every color back in that slot. Press **Marks**
-again to go back to entering pegs.
+To rule a color out of a slot, right-click its square or hold a
+finger on it; do the same again in the empty place to put it back.
+Or press **Marks** and then the color buttons, which rule colors out
+of the slot the frame is on, with **Clear** putting every color back
+in that slot. Press **Marks** again to go back to entering pegs.
 
-Tapping a dot while not in Marks mode puts that color into the same
-column of the row you are filling, so you can play without the color
-buttons at all.
+Tapping a square while not in Marks mode puts that color into the
+same column of the row you are filling, so you can play without the
+color buttons at all.
 
 Some things a single row tells you for certain, and the hint will
 point them out:
@@ -59,8 +61,8 @@ black pegs, those two must be right.
 
 **Next hint** first points out anything the rows prove that your
 answer row does not show yet: the row it reads from is outlined, and
-the dots it rules out are ringed. When nothing more follows, it
-suggests a guess, ringing one dot in each slot. The guess always fits
+the colors it rules out are ringed. When nothing more follows, it
+suggests a guess, ringing one color in each slot. The guess always fits
 every score so far, so it could be the answer, and the hint tells you
 how many answers are still possible and the most that could be left
 after it. That part is a suggestion rather than a deduction, and the

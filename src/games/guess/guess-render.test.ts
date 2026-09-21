@@ -11,6 +11,7 @@ import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-draw
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { guessGame } from "./index.ts";
 import {
+  COL_1,
   COL_BACKGROUND,
   COL_CORRECTPLACE,
   COL_HOLD,
@@ -86,6 +87,26 @@ describe("Guess redraw", () => {
     );
   });
 
+  it("draws a ruled-out color as nothing at all", () => {
+    const { desc } = newDesc(params, randomNew("render-ruled-out"));
+    const s0 = newState(params, desc);
+    const marked = guessGame.executeMove(s0, {
+      type: "mark",
+      marks: [{ pos: 2, color: 4 }],
+      ruledOut: true,
+    });
+    const count = (s: typeof s0) => {
+      const ds = freshDs();
+      const { dr, ops } = recordingDrawing();
+      redraw(dr, ds, null, s, 1, freshUi(s), 0, 0);
+      return opsOfKind(ops, "rect").filter(
+        (o) => o.color === COL_1 + 3 && o.y >= ds.solny,
+      ).length;
+    };
+    expect(count(s0)).toBe(params.npegs);
+    expect(count(marked)).toBe(params.npegs - 1);
+  });
+
   it("reveals the solution row only once the game is over", () => {
     const { desc } = newDesc(params, randomNew("render-reveal"));
     const s0 = newState(params, desc);
@@ -94,17 +115,17 @@ describe("Guess redraw", () => {
     const dsA = freshDs();
     const { dr: drA, ops: opsA } = recordingDrawing();
     redraw(drA, dsA, null, s0, 1, freshUi(s0), 0, 0);
-    /** A peg is a peg-sized circle in one of the ten peg colors, wherever it is
-     * drawn. The size is the point: the answer row paints a dot of every color
-     * there too, and a dot must never read as a revealed peg. */
+    /** A peg is a circle in one of the ten peg colors, wherever it is drawn. The
+     * answer row paints every color there too, as square blocks, and a block
+     * must never read as a revealed peg. */
     const pegsBelow = (ops: RecordingDrawing["ops"], y: number) =>
-      opsOfKind(ops, "circle").some(
-        (o) => o.fill >= 6 && o.fill <= 15 && o.cy >= y && o.r >= dsA.pegrad,
-      );
+      opsOfKind(ops, "circle").some((o) => o.fill >= 6 && o.fill <= 15 && o.cy >= y);
     expect(pegsBelow(opsA, dsA.solny)).toBe(false);
-    const dots = opsOfKind(opsA, "circle").filter((o) => o.cy >= dsA.solny);
-    expect(dots.length).toBe(params.ncolors * params.npegs);
-    for (const d of dots) expect(d.r * 2).toBeLessThanOrEqual(dsA.pegrad);
+    const blocks = opsOfKind(opsA, "rect").filter(
+      (o) => o.color >= 6 && o.color <= 15 && o.y >= dsA.solny,
+    );
+    expect(blocks.length).toBe(params.ncolors * params.npegs);
+    for (const b of blocks) expect(Math.max(b.w, b.h) * 2).toBeLessThan(dsA.tileSize);
 
     // Solved: the solution pegs are revealed in the solution row.
     const won = guessGame.executeMove(s0, {

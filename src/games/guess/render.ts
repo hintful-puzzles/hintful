@@ -7,15 +7,19 @@
  * it rather than by carrying it.
  *
  * Below the rows, where upstream drew a blank box over the hidden answer, is
- * the **answer row**: one slot per peg, each showing a dot for every color —
- * filled while the color could still be there, hollow once the player has
- * ruled it out. It is the game's notation and, on a tap, a palette whose dots
- * sit in the column they enter.
+ * the **answer row**: one slot per peg, a dark well holding a block of every
+ * color that could still be there, and nothing where the player has ruled one
+ * out. It is the game's notation and, on a tap, a palette whose colors sit in
+ * the column they enter.
  */
 
 import { BLACK, PINK_WASH, TEAL_WASH, TEN, WHITE } from "../../engine/color/colors.ts";
 import { HINT_ACTION, HINT_EVIDENCE, INK } from "../../engine/color/palette.ts";
-import { guessBoard, guessEmptySlot } from "../../engine/color/palette-games.ts";
+import {
+  guessAnswerWell,
+  guessBoard,
+  guessEmptySlot,
+} from "../../engine/color/palette-games.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import {
@@ -47,11 +51,13 @@ export const COL_EMPTY = 5; // must be COL_1 - 1
 export const COL_1 = 6; // COL_1..COL_10 = 6..15
 export const COL_CORRECTPLACE = 16;
 export const COL_CORRECTCOLOR = 17;
-/** The hint's target: a ring round each answer-row dot a step acts on. */
+/** The hint's target: a frame beside each answer-row color a step acts on. */
 export const COL_HINT = 18;
 /** The hint's evidence: an outline round a row or an answer slot it reads. */
 export const COL_HINT_CELL = 19;
-export const NCOLORS = 20;
+/** The answer row's well, darker than every peg color in both schemes. */
+const COL_WELL = 20;
+export const NCOLORS = 21;
 
 // --- peg overlay flags (upstream PEG_*) -------------------------------
 
@@ -66,6 +72,13 @@ export const PREFERRED_TILE_SIZE = 32; // PEG_PREFER_SZ
 const PEG_GAP = 0.1;
 const PEG_HINT = 0.35;
 const BORDER = 0.5;
+/**
+ * The answer row's height, in tiles. Taller than a peg row because it holds a
+ * block per color: at one tile, six colors left 14×21 px cells on a phone and
+ * 2 px dots on a small one, and a row half a tile taller costs the pegs about
+ * 5% because the board's height is what limits it.
+ */
+const ANSWER_ROWS = 1.5;
 
 /** Integer division truncating toward zero, matching C's `/` on ints. */
 const idiv = (a: number, b: number): number => Math.trunc(a / b);
@@ -91,6 +104,8 @@ interface Geom {
   guessx: number;
   guessy: number;
   solny: number;
+  /** The answer row's height in pixels. */
+  answerh: number;
   hintw: number;
   w: number;
   h: number;
@@ -104,7 +119,7 @@ export function computeSize(p: LayoutParams, tileSize: number): Size {
   // board's width back at standard params.
   const hmul =
     BORDER * 2 + p.npegs + PEG_GAP * p.npegs + PEG_HINT * hintw + PEG_GAP * (hintw - 1);
-  const vmul = BORDER * 2 + (p.nguesses + 1) + PEG_GAP * (p.nguesses + 1);
+  const vmul = BORDER * 2 + p.nguesses + ANSWER_ROWS + PEG_GAP * (p.nguesses + 1);
   return { w: Math.ceil(tileSize * hmul), h: Math.ceil(tileSize * vmul) };
 }
 
@@ -115,7 +130,8 @@ function computeGeometry(p: LayoutParams, tileSize: number): Geom {
   const pegrad = idiv(tileSize - 1, 2);
   const hintrad = idiv(hintsz - 1, 2);
 
-  const guessh = (tileSize + gapsz) * p.nguesses + gapsz + tileSize;
+  const answerh = Math.round(tileSize * ANSWER_ROWS);
+  const guessh = (tileSize + gapsz) * p.nguesses + gapsz + answerh;
 
   const { w, h } = computeSize(p, tileSize);
   const guessx = border;
@@ -135,6 +151,7 @@ function computeGeometry(p: LayoutParams, tileSize: number): Geom {
     guessx,
     guessy,
     solny,
+    answerh,
     hintw,
     w,
     h,
@@ -164,13 +181,18 @@ const HINT_W = (g: Geom): number => g.hintw * hintOff(g) - g.gapsz;
 const SOLN_OX = (g: Geom): number => GUESS_OX(g);
 const SOLN_OY = (g: Geom): number => GUESS_OY(g) + GUESS_H(g) + g.gapsz + 2;
 const SOLN_W = (g: Geom): number => GUESS_W(g);
-const SOLN_H = (g: Geom): number => pegOff(g);
+/** The whole answer row with the margin its slots draw in, which is what the
+ * reveal clears and the un-reveal repaints. */
+const answerArea = (g: Geom): Rect => {
+  const cg = cgap(g);
+  return rect(SOLN_OX(g) - cg, SOLN_OY(g) - cg, SOLN_W(g) + cg, g.answerh + cg * 2);
+};
 
 // --- draw state -------------------------------------------------------
 
 export interface GuessDrawState extends Geom {
-  /** How many dots an answer slot holds — the one thing the layout does not
-   * depend on and the answer row does. */
+  /** How many cells an answer slot holds — the one thing the board's size does
+   * not depend on and the answer row's layout does. */
   ncolors: number;
   started: boolean;
   solved: number;
@@ -208,50 +230,71 @@ export function newDrawState(s: GuessState, tileSize: number): GuessDrawState {
 
 // --- the answer row -----------------------------------------------------
 
-/** How an answer slot's dots are laid out: the squarest grid holding one per
- * color, filled a row at a time in color order. */
-function dotGrid(ds: GuessDrawState): {
+/**
+ * How an answer slot's cells are laid out: one per color, filled a row at a
+ * time in keypad order, so a color is always in the same place. The grid is
+ * the one giving the largest cell (its smaller side), and among equals the one
+ * wasting fewest cells — six colors are 2×3 in a slot 1.5 tiles tall.
+ */
+function cellGrid(ds: GuessDrawState): {
   cols: number;
   rows: number;
   cw: number;
   ch: number;
 } {
-  const cols = Math.ceil(Math.sqrt(ds.ncolors));
-  const rows = Math.ceil(ds.ncolors / cols);
-  return { cols, rows, cw: ds.tileSize / cols, ch: ds.tileSize / rows };
+  let best = { cols: 1, rows: ds.ncolors, size: 0, waste: 0 };
+  for (let cols = 1; cols <= ds.ncolors; cols++) {
+    const rows = Math.ceil(ds.ncolors / cols);
+    const size = Math.min(ds.tileSize / cols, ds.answerh / rows);
+    const waste = cols * rows - ds.ncolors;
+    if (size > best.size || (size === best.size && waste < best.waste)) {
+      best = { cols, rows, size, waste };
+    }
+  }
+  const { cols, rows } = best;
+  return { cols, rows, cw: ds.tileSize / cols, ch: ds.answerh / rows };
 }
 
-function dotCenter(ds: GuessDrawState, pos: number, color: number): Point {
-  const { cols, cw, ch } = dotGrid(ds);
+/** Color `color`'s cell in answer slot `pos`, in whole pixels. */
+function cellRect(ds: GuessDrawState, pos: number, color: number): Rect {
+  const { cols, cw, ch } = cellGrid(ds);
   const i = color - 1;
-  return {
-    x: Math.round(guessX(ds, pos) + (i % cols) * cw + cw / 2),
-    y: Math.round(SOLN_OY(ds) + Math.floor(i / cols) * ch + ch / 2),
-  };
+  const x0 = Math.round(guessX(ds, pos) + (i % cols) * cw);
+  const y0 = Math.round(SOLN_OY(ds) + Math.floor(i / cols) * ch);
+  const x1 = Math.round(guessX(ds, pos) + ((i % cols) + 1) * cw);
+  const y1 = Math.round(SOLN_OY(ds) + (Math.floor(i / cols) + 1) * ch);
+  return rect(x0, y0, x1 - x0, y1 - y0);
 }
 
-/** A dot's radius, leaving room in its cell for the hint's ring round it. */
-function dotRadius(ds: GuessDrawState): number {
-  const { cw, ch } = dotGrid(ds);
-  return Math.max(1, Math.floor(Math.min(cw, ch) / 2) - 3);
+/** How far a color's block sits inside its cell: the dark gap between blocks,
+ * and the room the hint's frame is drawn in, beside the block rather than on
+ * it. */
+function blockInset(ds: GuessDrawState): number {
+  const { cw, ch } = cellGrid(ds);
+  return Math.max(2, Math.round(0.12 * Math.min(cw, ch)));
 }
 
 /**
- * The answer-row dot under a pointer: its slot and color, or color `0` for a
- * point inside a slot but on no dot. `null` outside every slot.
+ * The answer-row color under a pointer: its slot and color, or color `0` for a
+ * point inside a slot but in no color's cell. `null` outside every slot.
  *
- * The whole grid cell answers for its dot, not only the drawn circle, because
- * a dot is a small target and the cell is all it has.
+ * The whole cell answers for its color, gap included, and whether or not the
+ * color is still shown there: a ruled-out color is drawn as nothing, and its
+ * cell is still where a tap enters it or a long press brings it back.
  */
-export function answerDotAt(ds: GuessDrawState, x: number, y: number): SlotMark | null {
+export function answerCellAt(
+  ds: GuessDrawState,
+  x: number,
+  y: number,
+): SlotMark | null {
   const ly = y - SOLN_OY(ds);
-  if (ly < 0 || ly >= ds.tileSize) return null;
+  if (ly < 0 || ly >= ds.answerh) return null;
   const off = pegOff(ds);
   const pos = Math.floor((x - GUESS_OX(ds)) / off);
   if (pos < 0 || pos >= ds.npegs) return null;
   const lx = x - guessX(ds, pos);
   if (lx >= ds.tileSize) return null;
-  const { cols, cw, ch } = dotGrid(ds);
+  const { cols, cw, ch } = cellGrid(ds);
   const index = Math.floor(ly / ch) * cols + Math.floor(lx / cw);
   return { pos, color: index < ds.ncolors ? index + 1 : 0 };
 }
@@ -259,23 +302,26 @@ export function answerDotAt(ds: GuessDrawState, x: number, y: number): SlotMark 
 const ANSWER_RING_SHIFT = 11;
 const ANSWER_CURSOR = 1 << 22;
 const ANSWER_PREMISE = 1 << 23;
+const ANSWER_LABELED = 1 << 24;
 
 /**
  * Everything an answer slot's pixels depend on, as one integer: the colors
- * ruled out (bits `1..10`), the dots a hint rings (the same bits, shifted),
- * the notes cursor and the hint's outline.
+ * ruled out (bits `1..10`), the colors a hint marks (the same bits, shifted),
+ * the notes cursor, the hint's outline and the label toggle.
  */
 function answerKey(
   ruledOut: number,
   ringed: number,
   cursor: boolean,
   premise: boolean,
+  labeled: boolean,
 ): number {
   return (
     ruledOut |
     (ringed << ANSWER_RING_SHIFT) |
     (cursor ? ANSWER_CURSOR : 0) |
-    (premise ? ANSWER_PREMISE : 0)
+    (premise ? ANSWER_PREMISE : 0) |
+    (labeled ? ANSWER_LABELED : 0)
   );
 }
 
@@ -298,24 +344,46 @@ function drawAnswerSlot(
   const cg = cgap(ds);
   const x = guessX(ds, pos);
   const y = SOLN_OY(ds);
-  const area = rect(x - cg, y - cg, ts + cg * 2, ts + cg * 2);
+  const area = rect(x - cg, y - cg, ts + cg * 2, ds.answerh + cg * 2);
   dr.drawRect(area, COL_BACKGROUND);
-  dr.drawRect(rect(x, y, ts, ts), COL_EMPTY);
-  const r = dotRadius(ds);
+  dr.drawRect(rect(x, y, ts, ds.answerh), COL_WELL);
+  const inset = blockInset(ds);
   for (let c = 1; c <= ds.ncolors; c++) {
-    const at = dotCenter(ds, pos, c);
-    // Hollow in its own color once ruled out, so the grid keeps its shape and
-    // every dot stays where the player learned it.
-    if (key & (1 << c)) dr.drawCircle(at, r, COL_EMPTY, COL_EMPTY + c);
-    else dr.drawCircle(at, r, COL_EMPTY + c, COL_FRAME);
+    const cell = cellRect(ds, pos, c);
+    const block = rect(
+      cell.x + inset,
+      cell.y + inset,
+      cell.w - inset * 2,
+      cell.h - inset * 2,
+    );
+    // A color still possible is a solid block; a ruled-out one is nothing at
+    // all, as a struck pencil mark is in every other game. No outline either
+    // way: a block is there or it is not.
+    if (!(key & (1 << c))) {
+      dr.drawRect(block, COL_EMPTY + c);
+      if (key & ANSWER_LABELED) {
+        dr.drawText(
+          pt(block.x + block.w / 2, block.y + block.h / 2),
+          glyphFont(Math.min(block.w, block.h) / 2),
+          COL_FRAME,
+          String(c % 10),
+        );
+      }
+    }
     if (key & (1 << (c + ANSWER_RING_SHIFT))) {
-      // A pixel clear of the dot's own outline, so the ring reads as a ring.
-      dr.drawCircle(at, r + 2, -1, COL_HINT);
-      dr.drawCircle(at, r + 3, -1, COL_HINT);
+      // In the gap beside the block, a pixel clear of it, never over it.
+      outline(
+        dr,
+        rect(block.x - 3, block.y - 3, block.w + 6, block.h + 6),
+        2,
+        COL_HINT,
+      );
     }
   }
+  // Both marks sit in the margin round the well, where the ink cursor reads on
+  // the board in either scheme; the well itself is too dark for it in light mode.
   if (key & ANSWER_PREMISE) outline(dr, area, cg, COL_HINT_CELL);
-  if (key & ANSWER_CURSOR) outline(dr, rect(x, y, ts, ts), 1, COL_CURSOR);
+  if (key & ANSWER_CURSOR) outline(dr, area, cg, COL_CURSOR);
   dr.drawUpdate(area);
 }
 
@@ -328,10 +396,10 @@ function answerRowRedraw(
 ): void {
   for (let pos = 0; pos < ds.npegs; pos++) {
     let ringed = 0;
-    for (const d of hl?.dots ?? []) if (d.pos === pos) ringed |= 1 << d.color;
+    for (const d of hl?.marked ?? []) if (d.pos === pos) ringed |= 1 << d.color;
     const cursor = ui.pencilMode && ui.cursor.visible && ui.cursor.x === pos;
     const premise = hl?.slots.includes(pos) ?? false;
-    const key = answerKey(s.ruledOut[pos], ringed, cursor, premise);
+    const key = answerKey(s.ruledOut[pos], ringed, cursor, premise, ui.showLabels);
     if (ds.answerCache[pos] === key) continue;
     ds.answerCache[pos] = key;
     drawAnswerSlot(dr, ds, pos, key);
@@ -367,6 +435,7 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_CORRECTCOLOR] = WHITE;
   ret[COL_BACKGROUND] = guessBoard(defaultBackground);
   ret[COL_EMPTY] = guessEmptySlot(defaultBackground);
+  ret[COL_WELL] = guessAnswerWell(defaultBackground);
   ret[COL_HINT] = HINT_ACTION;
   ret[COL_HINT_CELL] = HINT_EVIDENCE;
 
@@ -443,7 +512,8 @@ function guessRedraw(
   if (guess === -1) {
     dest = ds.solutionCache;
     rowx = SOLN_OX(ds);
-    rowy = SOLN_OY(ds);
+    // Centered in the answer row, which is taller than a peg.
+    rowy = SOLN_OY(ds) + idiv(ds.answerh - ds.tileSize, 2);
   } else {
     dest = ds.guessesCache[guess];
     rowx = guessX(ds, 0);
@@ -663,8 +733,8 @@ export function redraw(
 
   // The solution box (or its reveal).
   if ((s.solved === 0) !== (ds.solved === 0) || !ds.started) {
-    dr.drawRect(rect(SOLN_OX(ds), SOLN_OY(ds), SOLN_W(ds), SOLN_H(ds)), COL_BACKGROUND);
-    dr.drawUpdate(rect(SOLN_OX(ds), SOLN_OY(ds), SOLN_W(ds), SOLN_H(ds)));
+    dr.drawRect(answerArea(ds), COL_BACKGROUND);
+    dr.drawUpdate(answerArea(ds));
     ds.answerCache.fill(-1);
   }
   if (!s.solved) answerRowRedraw(dr, ds, s, ui, hl);

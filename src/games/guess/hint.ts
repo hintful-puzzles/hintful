@@ -32,9 +32,9 @@ export interface GuessHighlights {
   rows: number[];
   /** Answer-row slots whose marks the step cites, outlined. */
   slots: number[];
-  /** Answer-row dots to act on, ringed: the marks to set, or the colors a probe
-   * enters (one per slot). */
-  dots: SlotMark[];
+  /** Answer-row colors to act on, marked: the rule-outs to set, or the colors
+   * a probe enters (one per slot). */
+  marked: SlotMark[];
 }
 
 /** A scored row as the rules read it. */
@@ -524,7 +524,7 @@ export function guessHint(
     steps.push({
       move: { type: "mark", marks: place, ruledOut: true },
       explanation: say(f.reason),
-      highlights: { rows: f.rows, slots: f.slots, dots: place },
+      highlights: { rows: f.rows, slots: f.slots, marked: place },
     });
   }
 
@@ -546,7 +546,7 @@ export function guessHint(
     highlights: {
       rows: [],
       slots: [],
-      dots: probe.guess.map((color, pos) => ({ pos, color })),
+      marked: probe.guess.map((color, pos) => ({ pos, color })),
     },
   });
   return { ok: true, steps };
@@ -597,6 +597,6 @@ export function guessRefreshHintStep(
   return {
     ...step,
     move: { ...move, marks: live },
-    highlights: { ...hl, dots: live },
+    highlights: { ...hl, marked: live },
   };
 }

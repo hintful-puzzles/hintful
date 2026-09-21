@@ -31,7 +31,7 @@ import { registerGame } from "../../engine/registry.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
 import { guessHint, guessHintKeepTrack, guessRefreshHintStep } from "./hint.ts";
 import {
-  answerDotAt,
+  answerCellAt,
   COL_1,
   colors,
   computeSize,
@@ -134,7 +134,7 @@ function restCursor(ui: GuessUi, npegs: number, fallback = 0): void {
 
 /**
  * Enter `color` where the player is pointing: slot `at` when they tapped that
- * slot's dot in the answer row, else the slot they selected, else the first
+ * color in that slot of the answer row, else the slot they selected, else the first
  * empty one. Declines when the row is full and nothing is selected, as
  * a Wordle row does — there is nowhere for the color to go, and overwriting
  * a slot the player did not name would be a guess about which.
@@ -254,7 +254,7 @@ function interpretMove(
   // Hit-test the row being composed and the feedback pegs beside it — that
   // row's height only. Upstream's region ran `nguesses` rows down from it,
   // which once the answer row became a target swallowed it from the third
-  // guess on: a tap on a dot selected the peg above it instead.
+  // guess on: a tap on one of its colors selected the peg above it instead.
   let overGuess = -1; // current-row peg index
   let overHint = false;
 
@@ -290,23 +290,23 @@ function interpretMove(
       ui.cursor.visible = true;
       return UI_UPDATE;
     }
-    const dot = answerDotAt(ds, x, y);
-    if (dot) {
+    const cell = answerCellAt(ds, x, y);
+    if (cell) {
       // The press already acted on a held finger or a right-click (below), so
       // its release has nothing left to do here.
       if (button === RIGHT_RELEASE) return null;
-      // A tap on an answer-row dot **enters that color in that column**, which
-      // is the pointer's way to place a peg without the keypad; in notes mode
-      // it rules the color out instead, as the color keys do.
-      if (dot.color === 0) {
-        ui.cursor.x = dot.pos;
+      // A tap on an answer-row color **enters that color in that column**,
+      // which is the pointer's way to place a peg without the keypad; in notes
+      // mode it rules the color out instead, as the color keys do.
+      if (cell.color === 0) {
+        ui.cursor.x = cell.pos;
         ui.cursor.visible = true;
         return UI_UPDATE;
       }
-      if (!ui.pencilMode) return enterColor(params, ui, dot.color, dot.pos);
-      ui.cursor.x = dot.pos;
+      if (!ui.pencilMode) return enterColor(params, ui, cell.color, cell.pos);
+      ui.cursor.x = cell.pos;
       ui.cursor.visible = true;
-      return toggleMark(from, dot.pos, dot.color);
+      return toggleMark(from, cell.pos, cell.color);
     }
     if (overHint && ui.markable) return buildGuessMove(ui);
     return null;
@@ -316,10 +316,10 @@ function interpretMove(
       ui.holds[overGuess] = !ui.holds[overGuess];
       return UI_UPDATE;
     }
-    // A right-click or a held finger on a dot rules it out in either mode —
+    // A right-click or a held finger on a color rules it out in either mode —
     // the way to mark with no keypad and no mode to switch into.
-    const dot = answerDotAt(ds, x, y);
-    if (dot && dot.color > 0) return toggleMark(from, dot.pos, dot.color);
+    const cell = answerCellAt(ds, x, y);
+    if (cell && cell.color > 0) return toggleMark(from, cell.pos, cell.color);
     return null;
   }
 

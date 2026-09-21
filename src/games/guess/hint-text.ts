@@ -4,7 +4,7 @@
  * The board carries the references, so the sentences use three words for them
  * and nothing else: the **outlined row** is the scored guess a step reads, an
  * **outlined answer slot** is one whose marks it leans on, and the **ringed
- * colors** are the dots in the answer row the step acts on. Colors have no
+ * colors** are the blocks in the answer row the step acts on. Colors have no
  * names in this game, and positions no numbers, so neither is spoken.
  *
  * A deduction ends on the marks it makes; a probe ends on what was counted.

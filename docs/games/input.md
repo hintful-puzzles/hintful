@@ -942,13 +942,24 @@ Normative: the on-screen-keys requirement in
   no pointer-only way to enter a peg, which is where Solo, Keen and Filling
   still are — a sweep of every pointer gesture over a real board commits zero
   moves in all three. Guess's rule-out marks live in an *answer row*, one slot
-  per peg with a dot for every color, and a tap on a dot enters that color in
-  its own column. That is a palette which *is* the notation, so the fault line
-  above cannot open: there is no second surface to disagree with. **So when a
-  game loses a pointer path to a value, look at where its notes are drawn**
-  before accepting the loss: a per-cell list of values the player can see is
-  already a set of targets, and Subsets' tally made the same discovery from the
-  other side (`hints.md` § "Give the facts a notation (Loopy)").
+  per peg with a block for every color still possible, and a tap on a block
+  enters that color in its own column. That is a palette which *is* the
+  notation, so the fault line above cannot open: there is no second surface to
+  disagree with. **So when a game loses a pointer path to a value, look at where
+  its notes are drawn** before accepting the loss: a per-cell list of values the
+  player can see is already a set of targets, and Subsets' tally made the same
+  discovery from the other side (`hints.md` § "Give the facts a notation
+  (Loopy)").
+
+  **Size the notes as targets, not as notes** (`enlarge-guess-answer-row`). The
+  first answer row drew a dot per color inside one tile, which on a 360-px phone
+  came to 2 px dots, and in dark mode a possible dot and a ruled-out one both
+  read as rings. The fix was the owner's "you see it or you don't": solid
+  blocks in fixed places on a dark well, nothing where a color is ruled out,
+  and a row half a tile taller, which cost the pegs about 5% because the
+  board's height is what limits it. Keeping a trace of a ruled-out color so it
+  could still be tapped was argued and rejected: it carries no deductive value,
+  and an empty cell still answers the tap because the colors never move.
 
   **A panel key cannot be offered conditionally.** `requestKeys` takes `params`
   alone, because the panel reloads only on a param change, so there is no

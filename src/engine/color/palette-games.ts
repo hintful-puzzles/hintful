@@ -114,6 +114,18 @@ export const guessBoard = (defaultBackground: Color): Color => {
 export const guessEmptySlot = (defaultBackground: Color): Color =>
   fraction(guessBoard(defaultBackground), 2, 3);
 
+/**
+ * **The answer row's well** — the dark tray the color blocks sit in, darker
+ * than every one of the ten in both schemes, so that no block (the gray and the
+ * brown least of all) can sink into it and read as ruled out.
+ *
+ * A board-relative gray in light mode, and an authored one in dark: calculated
+ * from the light value it would come out *lighter* than the darkest pegs, which
+ * is the one thing it exists not to be.
+ */
+export const guessAnswerWell = (defaultBackground: Color): Color =>
+  token(scale(guessBoard(defaultBackground), 0.3), [0.09, 0.09, 0.09]);
+
 // --- mines --------------------------------------------------------------
 
 /** **Not cleared yet** — the uncleared square's face, a twentieth darker than the
