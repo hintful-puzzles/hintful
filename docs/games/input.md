@@ -937,29 +937,31 @@ Normative: the on-screen-keys requirement in
   ruled out. Deleting the column ahead of any notation removes that question
   rather than answering it later.
 
-  **And the notation, when it came, was the way back** (`add-guess-hint`). With
-  the column gone a player who turned the keypad off (`showPuzzleKeyboard`) had
-  no pointer-only way to enter a peg, which is where Solo, Keen and Filling
-  still are — a sweep of every pointer gesture over a real board commits zero
-  moves in all three. Guess's rule-out marks live in an *answer row*, one slot
-  per peg with a block for every color still possible, and a tap on a block
-  enters that color in its own column. That is a palette which *is* the
-  notation, so the fault line above cannot open: there is no second surface to
-  disagree with. **So when a game loses a pointer path to a value, look at where
-  its notes are drawn** before accepting the loss: a per-cell list of values the
-  player can see is already a set of targets, and Subsets' tally made the same
-  discovery from the other side (`hints.md` § "Give the facts a notation
-  (Loopy)").
+  **A player's notes are a display, not a set of targets** — learned the hard
+  way on Guess. Its rule-out marks live in an *answer row* below the guesses,
+  one slot per peg with a block for every color still possible
+  (`add-guess-hint`). The first design made each color a tap target — a tap
+  entered the color in its column, a held finger ruled it out — on the argument
+  that a palette which *is* the notation could not disagree with it, and that it
+  restored pointer-only entry for a player with the keypad off. It could not be
+  aimed at: first as dots (2 px on a 360-px phone, `enlarge-guess-answer-row`),
+  then as blocks a fifth of a peg across, where the owner's taps on a slot kept
+  landing on one of its colors instead (`select-guess-answer-slots`). **A tap
+  now selects a slot as a whole, and the panel keys do the rest**: selecting an
+  answer slot turns notes mode on and selecting a peg turns it off, so the row
+  the frame is on says what a color key will do. Keypad off, Guess is where
+  Solo, Keen and Filling are — a sweep of every pointer gesture over a real
+  board commits zero moves in all three — which is the collection's answer for
+  a game whose elements are values. **Size a target to a finger, not to what
+  fits in a cell**, and when a cell holds several values, make the cell the
+  target and let a key name the value.
 
-  **Size the notes as targets, not as notes** (`enlarge-guess-answer-row`). The
-  first answer row drew a dot per color inside one tile, which on a 360-px phone
-  came to 2 px dots, and in dark mode a possible dot and a ruled-out one both
-  read as rings. The fix was the owner's "you see it or you don't": solid
-  blocks in fixed places on a dark well, nothing where a color is ruled out,
-  and a row half a tile taller, which cost the pegs about 5% because the
-  board's height is what limits it. Keeping a trace of a ruled-out color so it
-  could still be tapped was argued and rejected: it carries no deductive value,
-  and an empty cell still answers the tap because the colors never move.
+  **And draw the notes to be read at a glance** (`enlarge-guess-answer-row`).
+  A possible dot and a ruled-out hollow one both read as rings in dark mode.
+  The fix was the owner's "you see it or you don't": solid blocks in fixed
+  places on a dark well, nothing where a color is ruled out, and a row half a
+  tile taller, which cost the pegs about 5% because the board's height is what
+  limits it.
 
   **A panel key cannot be offered conditionally.** `requestKeys` takes `params`
   alone, because the panel reloads only on a param change, so there is no

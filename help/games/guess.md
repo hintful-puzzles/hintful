@@ -34,15 +34,13 @@ the colors that are left are the ones you still have to decide
 between. Each color always sits in the same place in a slot, so you
 can tell at a glance which one has gone.
 
-To rule a color out of a slot, right-click its square or hold a
-finger on it; do the same again in the empty place to put it back.
-Or press **Marks** and then the color buttons, which rule colors out
-of the slot the frame is on, with **Clear** putting every color back
-in that slot. Press **Marks** again to go back to entering pegs.
-
-Tapping a square while not in Marks mode puts that color into the
-same column of the row you are filling, so you can play without the
-color buttons at all.
+To rule colors out of a slot, tap the slot. The frame moves there,
+and the color buttons now rule their color out of that slot, or put
+it back if it is already out; **Clear** puts every color back.
+Tapping a peg in the row you are filling takes you back to entering
+pegs. **Marks** switches between the two as well, keeping the frame
+in the same column, so whichever row the frame is on is always what
+the color buttons will change.
 
 Some things a single row tells you for certain, and the hint will
 point them out:

@@ -17,7 +17,6 @@ import {
   LEFT_RELEASE,
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
-  RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -31,7 +30,7 @@ import {
 } from "./hint.ts";
 import type { Reason } from "./hint-text.ts";
 import { guessGame } from "./index.ts";
-import { answerCellAt, COL_HINT, COL_HINT_CELL } from "./render.ts";
+import { answerSlotAt, COL_HINT, COL_HINT_CELL } from "./render.ts";
 import {
   decodeParams,
   defaultParams,
@@ -341,28 +340,55 @@ describe("the answer row takes marks and colors", () => {
     return { state, ui, ds };
   }
 
-  /** A point in answer slot `pos`'s cell for `color`, found by asking the hit
-   * test rather than by restating the layout. */
-  function cellPoint(ds: ReturnType<typeof fresh>["ds"], pos: number, color: number) {
+  /** Every point the hit test puts in answer slot `pos`, found by asking it
+   * rather than by restating the layout. */
+  function slotPoints(ds: ReturnType<typeof fresh>["ds"], pos: number) {
+    const points: { x: number; y: number }[] = [];
     for (let y = 0; y < ds.h; y++) {
       for (let x = 0; x < ds.w; x++) {
-        const d = answerCellAt(ds, x, y);
-        if (d && d.pos === pos && d.color === color) return { x, y };
+        if (answerSlotAt(ds, x, y) === pos) points.push({ x, y });
       }
     }
-    throw new Error(`no cell for ${color} in slot ${pos}`);
+    if (points.length === 0) throw new Error(`no point in slot ${pos}`);
+    return points;
   }
 
-  it("a tap on a color enters it in that column, with no keypad", () => {
+  it("a tap anywhere on an answer slot selects it for marking, and marks nothing", () => {
+    // The slot is the target, never one color's block: on a phone a block is a
+    // fifth of a peg across, and taps aimed at one landed on its neighbor.
     const { state, ui, ds } = fresh();
-    const at = cellPoint(ds, 2, 5);
-    expect(guessGame.interpretMove(state, ui, ds, at, LEFT_RELEASE)).toBe(UI_UPDATE);
-    expect(ui.currPegs).toEqual([0, 0, 5, 0]);
+    const points = slotPoints(ds, 2);
+    // At least the whole slot, not only its blocks.
+    expect(points.length).toBeGreaterThanOrEqual(ds.tileSize * ds.answerh);
+    for (const at of [points[0], points[points.length - 1]]) {
+      ui.pencilMode = false;
+      expect(guessGame.interpretMove(state, ui, ds, at, LEFT_RELEASE)).toBe(UI_UPDATE);
+      expect(ui.pencilMode).toBe(true);
+      expect(ui.cursor).toMatchObject({ x: 2, visible: true });
+    }
+    expect(ui.currPegs).toEqual([0, 0, 0, 0]);
+    // The color key then rules its color out of that slot.
+    const key = guessGame.requestKeys?.(state.params)?.[4].button ?? -1;
+    expect(guessGame.interpretMove(state, ui, ds, ZERO, key)).toEqual({
+      type: "mark",
+      marks: [{ pos: 2, color: 5 }],
+      ruledOut: true,
+    });
   });
 
-  it("still does so once the rows above have been played", () => {
+  it("a tap on the working row goes back to entering pegs", () => {
+    const { state, ui, ds } = fresh();
+    guessGame.interpretMove(state, ui, ds, slotPoints(ds, 1)[0], LEFT_RELEASE);
+    expect(ui.pencilMode).toBe(true);
+    const peg = { x: ds.guessx + 3 * (ds.tileSize + ds.gapsz) + 2, y: ds.guessy + 2 };
+    expect(guessGame.interpretMove(state, ui, ds, peg, LEFT_RELEASE)).toBe(UI_UPDATE);
+    expect(ui.pencilMode).toBe(false);
+    expect(ui.cursor.x).toBe(3);
+  });
+
+  it("still selects the answer slot once the rows above have been played", () => {
     // The current row's hit region used to run `nguesses` rows down from it,
-    // so from the third guess on it covered the answer row and a tap on a color
+    // so from the third guess on it covered the answer row and a tap there
     // selected the peg above instead. Found in the browser, not by a test.
     const { ui, ds } = fresh();
     let state = fresh().state;
@@ -375,31 +401,18 @@ describe("the answer row takes marks and colors", () => {
       guessGame.changedState?.(ui, state, next);
       state = next;
     }
-    const at = cellPoint(ds, 1, 5);
-    expect(guessGame.interpretMove(state, ui, ds, at, LEFT_RELEASE)).toBe(UI_UPDATE);
-    expect(ui.currPegs).toEqual([0, 5, 0, 0]);
+    guessGame.interpretMove(state, ui, ds, slotPoints(ds, 1)[0], LEFT_RELEASE);
+    expect(ui.pencilMode).toBe(true);
+    expect(ui.cursor.x).toBe(1);
   });
 
-  it("a right-click or held finger on a color rules it out, and its release does nothing", () => {
+  it("a right-click or held finger on an answer slot marks nothing", () => {
     const { state, ui, ds } = fresh();
-    const at = cellPoint(ds, 1, 3);
-    const move = guessGame.interpretMove(state, ui, ds, at, RIGHT_BUTTON);
-    expect(move).toEqual({
-      type: "mark",
-      marks: [{ pos: 1, color: 3 }],
-      ruledOut: true,
-    });
-    expect(guessGame.interpretMove(state, ui, ds, at, RIGHT_RELEASE)).toBeNull();
-    expect(ui.currPegs).toEqual([0, 0, 0, 0]);
-    const marked = guessGame.executeMove(state, move as GuessMove);
-    expect(guessGame.interpretMove(marked, ui, ds, at, RIGHT_BUTTON)).toEqual({
-      type: "mark",
-      marks: [{ pos: 1, color: 3 }],
-      ruledOut: false,
-    });
+    const at = slotPoints(ds, 1)[0];
+    expect(guessGame.interpretMove(state, ui, ds, at, RIGHT_BUTTON)).toBeNull();
   });
 
-  it("in notes mode a color key and a tap both mark, and Clear empties the slot", () => {
+  it("in notes mode a color key marks, and Clear empties the slot", () => {
     const { state, ui, ds } = fresh();
     expect(guessGame.interpretMove(state, ui, ds, ZERO, PENCIL_MODE_BUTTON)).toBe(
       UI_UPDATE,
@@ -414,20 +427,12 @@ describe("the answer row takes marks and colors", () => {
       ruledOut: true,
     });
     const marked = guessGame.executeMove(state, move as GuessMove);
-    const tap = guessGame.interpretMove(
-      marked,
-      ui,
-      ds,
-      cellPoint(ds, 0, 6),
-      LEFT_RELEASE,
-    );
-    expect(tap).toEqual({
+    // Again, and the mark comes back out.
+    expect(guessGame.interpretMove(marked, ui, ds, ZERO, key)).toEqual({
       type: "mark",
-      marks: [{ pos: 0, color: 6 }],
-      ruledOut: true,
+      marks: [{ pos: 2, color: 4 }],
+      ruledOut: false,
     });
-    expect(ui.cursor.x).toBe(0);
-    ui.cursor.x = 2;
     expect(guessGame.interpretMove(marked, ui, ds, ZERO, CLEAR_BUTTON)).toEqual({
       type: "mark",
       marks: [{ pos: 2, color: 4 }],

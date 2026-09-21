@@ -37,7 +37,6 @@ import {
   type GuessState,
   type GuessUi,
   type PegRow,
-  type SlotMark,
 } from "./state.ts";
 
 // --- color indices (upstream enum) -----------------------------------
@@ -275,28 +274,16 @@ function blockInset(ds: GuessDrawState): number {
 }
 
 /**
- * The answer-row color under a pointer: its slot and color, or color `0` for a
- * point inside a slot but in no color's cell. `null` outside every slot.
- *
- * The whole cell answers for its color, gap included, and whether or not the
- * color is still shown there: a ruled-out color is drawn as nothing, and its
- * cell is still where a tap enters it or a long press brings it back.
+ * The answer slot under a pointer, or `-1`. The whole column answers, gap and
+ * margin included: a slot is the target, never one color's block inside it,
+ * because a block is a fifth of a peg across and a finger cannot aim at one.
  */
-export function answerCellAt(
-  ds: GuessDrawState,
-  x: number,
-  y: number,
-): SlotMark | null {
+export function answerSlotAt(ds: GuessDrawState, x: number, y: number): number {
+  const cg = cgap(ds);
   const ly = y - SOLN_OY(ds);
-  if (ly < 0 || ly >= ds.answerh) return null;
-  const off = pegOff(ds);
-  const pos = Math.floor((x - GUESS_OX(ds)) / off);
-  if (pos < 0 || pos >= ds.npegs) return null;
-  const lx = x - guessX(ds, pos);
-  if (lx >= ds.tileSize) return null;
-  const { cols, cw, ch } = cellGrid(ds);
-  const index = Math.floor(ly / ch) * cols + Math.floor(lx / cw);
-  return { pos, color: index < ds.ncolors ? index + 1 : 0 };
+  if (ly < -cg || ly >= ds.answerh + cg) return -1;
+  const pos = Math.floor((x - GUESS_OX(ds)) / pegOff(ds));
+  return pos >= 0 && pos < ds.npegs ? pos : -1;
 }
 
 const ANSWER_FRAME_SHIFT = 11;

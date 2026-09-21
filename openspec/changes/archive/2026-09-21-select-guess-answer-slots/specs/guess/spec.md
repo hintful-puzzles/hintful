@@ -1,92 +1,6 @@
-# guess Specification
+# guess — delta
 
-## Purpose
-Guess, the Mastermind puzzle of deducing a hidden combination of colors from the
-feedback each submitted row earns. This capability specifies its port to the TS
-engine: obfuscated solution descriptions, Knuth-style scoring, the row
-composition — keys, taps and holds — that a player builds a guess with, the
-answer row the player keeps rule-out marks in, and the hint that fills it.
-
-## Requirements
-
-### Requirement: Guess game implements the Game interface
-
-The engine SHALL provide a registered `guess` game implementing
-`Game<GuessParams, GuessState, GuessMove, GuessUi, GuessDrawState>`: a Mastermind
-clone in which the player deduces a hidden combination of `npegs` color pegs
-drawn from `ncolors` colors within `nguesses` guess rows. Params SHALL be
-`ncolors`, `npegs`, `nguesses`, `allowBlank`, and `allowMultiple`, encoded
-`c{ncolors}p{npegs}g{nguesses}{b|B}{m|M}` with lenient decode (unknown letters
-ignored). The two upstream presets — **Standard** (`6,4,10,false,true`) and
-**Super** (`8,5,12,false,true`) — SHALL be offered. `validateParams` SHALL reject
-`ncolors < 2` or `npegs < 2`, `ncolors > 10`, `nguesses < 1`, and
-`allowMultiple = false` with `ncolors < npegs`. The game SHALL report
-`wantsStatusbar = true`, `isTimed = false`, `canSolve = true`, and
-`canFormatAsText = false`, and SHALL NOT provide `findMistakes`.
-
-#### Scenario: Params round-trip and lenient decode
-
-- **WHEN** params `{ ncolors: 8, npegs: 5, nguesses: 12, allowBlank: false, allowMultiple: true }`
-  are encoded
-- **THEN** the result is `c8p5g12Bm`
-- **AND** decoding `c8p5g12Bm` round-trips those params
-
-#### Scenario: Invalid params are rejected
-
-- **WHEN** `validateParams` is called with `allowMultiple: false` and
-  `ncolors: 3, npegs: 4`
-- **THEN** it returns a non-null error string
-
-### Requirement: Guess descriptions are obfuscated solution bitmaps
-
-The Guess `newDesc` SHALL draw a random color sequence (each peg uniformly from
-`1..ncolors`, redrawing on a repeat when `allowMultiple` is false), encode it as
-a byte-per-peg bitmap, apply the upstream `obfuscate_bitmap` SHA-1 masking, and
-hex-encode the result. `validateDesc` SHALL reject a desc of wrong length or one whose
-de-obfuscated bytes fall outside `1..ncolors`. `newState` SHALL recover the
-solution by hex-decoding and de-obfuscating the desc.
-
-#### Scenario: A description round-trips through obfuscation
-
-- **WHEN** a solution sequence is obfuscated and hex-encoded to a desc, then that
-  desc is hex-decoded and de-obfuscated by `newState`
-- **THEN** the recovered solution equals the original sequence
-
-#### Scenario: A corrupted description is rejected
-
-- **WHEN** `validateDesc` is given a desc of the wrong length, or one that
-  de-obfuscates to a color outside `1..ncolors`
-- **THEN** it returns a non-null error string
-
-### Requirement: Guess scores submitted rows with Knuth feedback
-
-A `GuessMove` SHALL be a guess submission carrying the working row's pegs and
-holds (`{ type: "guess", pegs, holds }`) or a solve (`{ type: "solve" }`).
-`executeMove` SHALL be pure. A guess submission SHALL validate each peg against
-`[allowBlank ? 0 : 1, ncolors]`, then mark the row with Knuth's feedback —
-`nc_place` exact-position matches (black) and `nc_colour = Σ_color min(#guess,
-#solution) − nc_place` color-only matches (white) — and store that feedback on
-the row. The game SHALL set `solved = +1` (win) when every peg is in the correct
-place, else advance to the next row, setting `solved = -1` (lose, revealing the
-solution) when the rows are exhausted. A solve SHALL set `solved = -1`.
-
-#### Scenario: A correct guess wins
-
-- **WHEN** the submitted row equals the solution
-- **THEN** the row's feedback is all correct-place, and `status()` returns
-  `"solved"`
-
-#### Scenario: Feedback counts black then white pegs
-
-- **WHEN** a row with two pegs in the correct place and one further peg of a
-  color present elsewhere in the solution is submitted
-- **THEN** the feedback contains exactly two correct-place markers followed by
-  one correct-color marker, and the source state is unmutated
-
-#### Scenario: Exhausting the rows loses and reveals
-
-- **WHEN** the final available row is submitted without matching the solution
-- **THEN** `status()` returns `"lost"` and the solution becomes visible
+## MODIFIED Requirements
 
 ### Requirement: Guess offers one key per color, and a tap selects a peg
 
@@ -214,81 +128,6 @@ on touch, and by `CURSOR_SELECT2` at the cursor.
 - **THEN** notes mode is switched on by the first press and off by the second,
   and no move is made
 
-### Requirement: Guess rubs out a color without ever lengthening the row
-
-The erase key SHALL clear the selected slot when it holds a color, and otherwise
-SHALL **backspace**: rub out the rightmost filled slot the player is not
-holding. A held slot was carried over from the previous row rather than typed,
-so backspacing SHALL walk past it, and SHALL be declined when every filled slot
-is held.
-
-The key SHALL never write past the last peg. The erase arm was the one that did
-not bound the cursor against the peg count while `CURSOR_SELECT` and
-`CURSOR_SELECT2` both did; unguarded it writes one past the row, which lengthens
-it while the markable test — reading only the first `npegs` — still says yes,
-and the guess that follows is rejected by `executeMove` with an illegal peg. The
-bound SHALL come from the slot being chosen by a scan of the row or by a cursor
-checked against `npegs`, rather than from declining the key.
-
-#### Scenario: Clearing on the submit position backspaces
-
-- **WHEN** the working row is full, so the cursor sits on the submit position,
-  and the clear key is pressed
-- **THEN** the last color the player typed is rubbed out, the row keeps its
-  length, and the guess submitted next executes
-
-#### Scenario: Backspace leaves a held peg alone
-
-- **WHEN** the only filled slots left are held ones and the clear key is pressed
-  with nothing selected
-- **THEN** no move and no UI update is produced and the held colors are kept
-
-### Requirement: Guess says why a row will not go
-
-Guess SHALL report `wantsStatusbar` and SHALL provide `statusbarText`. The line
-SHALL name the guess in progress and the number available, and — when the
-working row cannot be submitted because a color repeats under
-`allowMultiple: false` — SHALL say so.
-
-The submit arms answer an unsubmittable row with `null`, and a key that appears
-to do nothing is indistinguishable to a player from one that is broken. This is
-the refusal made legible, and it is the reason the Submit key can be offered
-unconditionally.
-
-#### Scenario: A repeat under no-duplicates is explained
-
-- **WHEN** the working row is filled with a repeated color in a game with
-  `allowMultiple: false`
-- **THEN** the submit key produces no move and the status line says that
-  repeated colors are not allowed
-
-#### Scenario: The explanation goes when the repeat does
-
-- **WHEN** the repeated color is replaced by one the row does not already hold
-- **THEN** the status line no longer mentions repeated colors and the submit key
-  produces a guess move
-
-### Requirement: Guess remembers a half-composed row across a save
-
-Guess SHALL provide `encodeUi` and `decodeUi`, carrying the working row and the
-live holds. Neither is in the move log — a row is only recorded once it is
-submitted, and a hold only as part of the guess that carries it — so replaying
-the log cannot recover them, and without the hook a player who closed the app
-mid-row lost it. `decodeUi` SHALL treat a peg the params have no color for as an
-empty slot, and SHALL leave the cursor where the next color will go.
-
-#### Scenario: A half-composed row survives a save
-
-- **WHEN** a working row is partly filled with a hold set, encoded through
-  `encodeUi`, and decoded into a freshly built `Ui`
-- **THEN** the restored row and holds equal the originals and the restored
-  cursor rests on the first empty slot
-
-#### Scenario: A peg no color exists for is dropped
-
-- **WHEN** `decodeUi` is given a peg outside `1..ncolors`
-- **THEN** that slot is left empty and the rest of the row still decodes
-
 ### Requirement: Guess composes a row from colors, holds and keyboard input
 
 `interpretMove` SHALL support: placing a color from a panel key or from the
@@ -356,56 +195,19 @@ feedback pegs still submits, where testing `LEFT_RELEASE` would drop it.
 - **WHEN** `'h'`, `'H'` or `'?'` is pressed on a board in play
 - **THEN** `interpretMove` returns `null`
 
-### Requirement: Guess's hint places what the rows prove, then suggests a guess
+## REMOVED Requirements
 
-Guess SHALL provide `hint`, `hintKeepTrack` and `refreshHintStep`. The hint
-SHALL read nothing but the scored rows — never the hidden answer — so that two
-boards whose rows scored alike get the same plan.
+### Requirement: Guess keeps rule-out marks as color blocks in an answer row
 
-Its steps SHALL be of two kinds, in this order.
+**Reason**: it let the pointer act on one color's block — a tap entered it, a
+held finger ruled it out — and on a phone a block is too small to aim at
+(owner, 2026-09-21). Two of its scenarios describe exactly those gestures.
 
-**Marks.** Each step SHALL place, as one mark move, the rule-outs that one
-one-row reading proves and the answer row does not yet show, narrated with the
-reading, with the row it reads outlined, any answer slots it leans on outlined,
-and the colors it rules out framed. The readings SHALL be sound: no answer that
-fits every scored row has a color the hint rules out of a slot, which SHALL be
-checked by brute force over the whole answer space. The hint SHALL derive its
-own rule-outs from the rows rather than read the player's, and SHALL NOT place a
-mark the board already has.
+**Migration**: "Guess marks an answer slot selected as a whole" below carries
+the drawing, the state and the keyboard rules unchanged, with the pointer
+selecting a slot instead.
 
-**A probe.** Every plan SHALL end with a guess that fits every score so far,
-with one color per slot framed. Its sentence SHALL claim only what was counted —
-how many answers still fit, and the most the guess can leave whatever it
-scores — and those counts SHALL be checked against a recount. The probe SHALL be
-a function of the scored rows alone, so a plan recomputed after anything but a
-guess names the same guess.
-
-On the presets a player who follows the hint SHALL win within the row limit,
-checked over every Standard answer. The hint SHALL refuse only once the game is
-over.
-
-#### Scenario: A row with no blacks is read as marks
-
-- **WHEN** repeats are off and the only scored row is `1, 2, 3, 4` with two
-  whites and no blacks
-- **THEN** the first step rules 1, 2, 3 and 4 out of the first, second, third
-  and fourth answer slots respectively, in one mark move
-
-#### Scenario: A mark the player made is not taught again
-
-- **WHEN** the player has already ruled 2 out of the second slot on that board
-- **THEN** the first step rules out the other three and not that one
-
-#### Scenario: The plan ends in a guess that could win
-
-- **WHEN** a hint is asked on any board in play
-- **THEN** its last step is a guess move whose pegs fit every scored row
-
-#### Scenario: Following the hint wins
-
-- **WHEN** every Standard answer is played by applying the first step of a
-  freshly computed hint until the game ends
-- **THEN** every game is won within ten rows
+## ADDED Requirements
 
 ### Requirement: Guess marks an answer slot selected as a whole
 
