@@ -870,6 +870,41 @@ Normative: the on-screen-keys requirement in
     replacing it. A bare `"1"` would have asked the player to learn which color
     one *is*, which is the thing the panel exists to spare them.
 
+  **Guess followed, in `give-guess-element-keys`, and it corrects two things
+  the two cases above would have led you to assume.**
+
+  - **A panel is not automatically dead without tap-to-select.** Rome's and
+    Map's keys act only at the cursor, so a touch player could not reach them
+    until a tap could place one. Guess's digit arm *reveals* the cursor, places
+    at it and advances — so from a cold board, pressing colors fills the row
+    left to right and the panel works before any selection gesture exists.
+    Selection was still worth adding (it is how a row is **edited** rather than
+    only filled), but it was an improvement, not a precondition. **Check which
+    kind of game you have** before costing the work: read the key arm's guard,
+    not the other games' changes.
+  - **A game with a real secondary meaning cannot buy its way out of the
+    long-press trap.** `ignoresSecondaryButton` is available only to a game
+    whose right button means nothing, and Guess's toggles a peg's hold — so
+    "press a color, pause to aim, then drag" is genuinely dropped on touch and
+    there is no flag that fixes it. For such a game the keypad is not a second
+    way in, it is *the* reliable one.
+
+  Two more things from it worth copying. The predicate for "this release wrote
+  nothing, so select instead" is the **local** one — the peg already holds what
+  the release would put there — never a compare of state before and after
+  (AGENTS.md § "Traps that catch new game work"). And a tap that was *worse*
+  than a no-op is the best case you can find: Guess's tap on a filled slot put
+  the same color back **and hid the cursor**, so selecting there was a fix
+  rather than a divergence to argue for.
+
+  **Where the board already draws the elements, leave it alone.** Guess paints
+  a palette column down the board's left side, and the obvious-looking move is
+  to make it tap-to-arm instead of adding a keypad. Don't: a tap on a slot would
+  then mean "select" or "place" depending on state the player cannot see, and
+  the game would keep a bespoke input model in the name of saving pixels. The
+  column stays the drag source and the legend; the panel is where the elements
+  go, as in every other game.
+
   Two games remain deliberately without element keys, because their notes are
   **relational or positional rather than a value you choose**: Loopy's mark is
   *which corner* of a face or *which pair of edges*, Slant's is *which two
@@ -899,8 +934,21 @@ Normative: the on-screen-keys requirement in
 - **Match upstream's keypad exactly — including its quirks.** Unequal is the
   cautionary case: it allows order up to 32 and switches to a **`'0'`-based**
   keypad for order ≥ 10, so it gets a bespoke `unequalKeys(order)`, not
-  `digitKeys`. Games with explicit labels (Undead's Ghost/Vampire/Zombie)
-  carry those strings verbatim.
+  `digitKeys`. Guess's quirk is one key wide — its colors stop at ten and the
+  tenth is `'0'`, which is what `digitOf` answers and what
+  `colorKeysZeroIsTen` builds — and it lives in the engine rather than the
+  game, because the digit codes are the decimal fact `decimal.test.ts` allows
+  exactly one statement of. Games with explicit labels (Undead's
+  Ghost/Vampire/Zombie) carry those strings verbatim.
+
+  **A quirk that only shows up past the default params is the dangerous kind.**
+  `input-parity.test.ts` sweeps a game's keypad at its **default** params, so a
+  wrong tenth key in a game whose presets stop at six or eight is inert only for
+  the player who opened the Custom dialog, and nothing catches it. Pin the
+  `KeyLabel[]` at the widest params the game admits, and at the width *below*
+  the rollover too: the keypad carries its clear key after the values, so
+  "rewrite the tenth entry" and "rewrite the tenth value" are different
+  statements and the first one eats Clear at nine.
 - **The hook takes `params` only.** The keypad does not vary with play and the
   panel reloads only on param change — don't thread state or ui through it.
 - **Test it tier-1.** Pin the returned `KeyLabel[]` for representative params

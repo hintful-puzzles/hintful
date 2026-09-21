@@ -10,6 +10,7 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
+import { colorKeysZeroIsTen } from "../../engine/key-labels.ts";
 import { parseConfigInt } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -25,8 +26,9 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { Point } from "../../engine/types.ts";
+import type { KeyLabel, Point } from "../../engine/types.ts";
 import {
+  COL_1,
   colors,
   computeSize,
   type GuessDrawState,
@@ -159,6 +161,21 @@ function computeHint(state: GuessState, ui: GuessUi): void {
 
 // --- input ------------------------------------------------------------
 
+/**
+ * One key per color, plus Clear. The colors are Guess's elements and this is
+ * where the collection puts a game's elements; on touch it is also the only
+ * entry that does not depend on a drag surviving the long-press promotion
+ * (`docs/games/input.md` § "Put a game's markable elements on the panel").
+ *
+ * Painted from Guess's own palette rather than labeled with a bare digit: no
+ * character names a color. The label stays the digit the keyboard sends, and
+ * the tenth color is `'0'` — the key `digitOf` answers as zero and this game
+ * reads as ten.
+ */
+function requestKeys(p: GuessParams): KeyLabel[] {
+  return colorKeysZeroIsTen(p.ncolors, COL_1);
+}
+
 function interpretMove(
   from: GuessState,
   ui: GuessUi,
@@ -236,12 +253,28 @@ function interpretMove(
     ui.dragY = y;
     return UI_UPDATE;
   }
-  if (button === LEFT_RELEASE && ui.dragColor) {
-    if (overGuess > -1) {
+  if (button === LEFT_RELEASE && overGuess > -1) {
+    // A release over a current-row peg that would write nothing new there
+    // **selects** it instead, so a touch player can edit a row rather than only
+    // fill it left to right. The predicate is the local one — this peg already
+    // holds whatever the release would put in it — never a compare of the row
+    // before and after. It covers a tap on an empty slot (no drag at all) and a
+    // tap on a filled one (picked up and put straight back), which used to
+    // *hide* the cursor and so took the panel away from the player.
+    if (ui.dragColor === 0 || ui.dragOpeg === overGuess) {
+      ui.cursor.x = overGuess;
+      ui.cursor.visible = true;
+    } else {
       setPeg(params, ui, overGuess, ui.dragColor);
-    } else if (ui.dragOpeg > -1) {
-      setPeg(params, ui, ui.dragOpeg, 0);
+      ui.cursor.visible = false;
     }
+    ui.dragColor = 0;
+    ui.dragOpeg = -1;
+    return UI_UPDATE;
+  }
+  if (button === LEFT_RELEASE && ui.dragColor) {
+    // Dropped away from the row: a peg dragged out of it is cleared.
+    if (ui.dragOpeg > -1) setPeg(params, ui, ui.dragOpeg, 0);
     ui.dragColor = 0;
     ui.dragOpeg = -1;
     ui.cursor.visible = false;
@@ -286,6 +319,14 @@ function interpretMove(
     return UI_UPDATE;
   }
   if (button === 0x44 || button === 0x64 || isEraseKey(button) /* 'D' | 'd' */) {
+    // Declined on the submit position, as `CURSOR_SELECT2` is: the cursor is
+    // past the last peg there, not on one. Unguarded — as upstream leaves it —
+    // this writes `currPegs[npegs]`, which lengthens the row while `isMarkable`
+    // (reading only the first `npegs`) still says yes, and the guess that
+    // follows is rejected by `executeMove`. Reachable with a keyboard the
+    // moment a row is full, because the digit arm advances onto the submit
+    // position; the Clear key on the panel sends the same button.
+    if (ui.cursor.x === npegs) return null;
     if (!ui.cursor.visible || ui.currPegs[ui.cursor.x] !== 0) {
       ui.cursor.visible = true;
       setPeg(params, ui, ui.cursor.x, 0);
@@ -412,6 +453,7 @@ export const guessGame: Game<
   interpretMove,
   executeMove,
   status,
+  requestKeys,
 
   solve() {
     // A give-up, as upstream's "S": reveal the answer, scored as a loss.

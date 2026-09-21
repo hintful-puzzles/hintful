@@ -81,3 +81,27 @@ export function colorKeys(n: number, firstColor: number): KeyLabel[] {
     i < n ? { ...key, swatch: firstColor + i } : key,
   );
 }
+
+/**
+ * {@link colorKeys} for a game that numbers ten colors `1..10` and spells the
+ * tenth on the **`'0'` key** — the inverse of what `digitOf` answers for `'0'`,
+ * which `pointer.ts` already names Guess's meaning of zero.
+ *
+ * Below ten colors this is `colorKeys` exactly. `digitKeys`'s `'a'` rollover is
+ * the collection's other convention (Solo, Keen, Towers) and is what a game
+ * that can go past ten values wants; a game capped at ten and reading `'0'`
+ * would ship an `'a'` key it refuses, which is the defect Seismic's keypad had.
+ */
+export function colorKeysZeroIsTen(n: number, firstColor: number): KeyLabel[] {
+  const keys = colorKeys(n, firstColor);
+  // Keyed on there *being* a tenth color, not on `keys[TENTH]` existing: at
+  // nine colors that entry is the clear key `digitKeys` appends.
+  if (n <= TENTH) return keys;
+  keys[TENTH] = { ...keys[TENTH], button: ZERO_BUTTON, label: "0" };
+  return keys;
+}
+
+/** The `'0'` key, stated here because a game may not spell a digit's code
+ * (`decimal.test.ts`). */
+const ZERO_BUTTON = "0".charCodeAt(0);
+const TENTH = 9;

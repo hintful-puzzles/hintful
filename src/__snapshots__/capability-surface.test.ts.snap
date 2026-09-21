@@ -578,6 +578,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "describeParams",
       "paramConfig",
       "preferredTileSize",
+      "requestKeys",
       "solve",
     ],
     "ui": [

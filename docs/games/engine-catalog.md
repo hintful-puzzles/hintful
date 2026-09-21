@@ -722,9 +722,21 @@ and the game ID stops naming its board), and the declarative
 ### `key-labels.ts` — on-screen keypad builders
 
 `digitKeys(n)` + `clearKey` for `Game.requestKeys`, resolving labels the way
-the frontend expects (`"Clear"` maps to the clear icon). `pencilModeKey` is the
-same arrangement for the pencil-mode toggle (`"Marks"` maps to the marks icon),
-and every game with a `ui.pencilMode` offers it last.
+the frontend expects (`"Clear"` maps to the clear icon).
+
+`colorKeys(n, firstColor)` is `digitKeys` for a game whose element is a **color**
+— each key carries a palette index the panel paints it in (`KeyLabel.swatch`),
+because no character names a color. `colorKeysZeroIsTen(n, firstColor)` is the
+same keypad for a game that stops at ten values and reads the tenth off the
+`'0'` key rather than `'a'` (Guess). Reach for one of these rather than spelling
+digit codes in a game: `decimal.test.ts` allows exactly one statement of them in
+the tree, and it is here.
+
+`pencilModeKey` is the marks toggle (`"Marks"` maps to the marks icon), and **a
+game never lists it** — `Midend.requestKeys` appends it to any game `takesNotes`
+recognizes, which reads a `pencil` array on the state or the mode flag on the
+`Ui`. `takesNotes` is exported here and is the one definition of that
+population.
 
 ## Rendering and affordance helpers
 

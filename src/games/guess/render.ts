@@ -27,7 +27,7 @@ export const COL_CURSOR = 2;
 export const COL_FLASH = 3;
 export const COL_HOLD = 4;
 export const COL_EMPTY = 5; // must be COL_1 - 1
-const COL_1 = 6; // COL_1..COL_10 = 6..15
+export const COL_1 = 6; // COL_1..COL_10 = 6..15
 export const COL_CORRECTPLACE = 16;
 export const COL_CORRECTCOLOR = 17;
 export const NCOLORS = 18;
