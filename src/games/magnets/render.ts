@@ -20,12 +20,16 @@ import {
   clueDoneColor,
   ERROR,
   FLASH,
+  HINT_ACTION,
+  HINT_EVIDENCE,
   highlightWash,
   INK,
 } from "../../engine/color/palette.ts";
 import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
-import type { GameDrawing } from "../../engine/game.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { drawMarkSides, type MarkBand, outlineSides } from "../../engine/hint-mark.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import type { MagnetsHighlights } from "./hint.ts";
 import {
   COLUMN,
   clueIndex,
@@ -62,6 +66,13 @@ export const COL_POSITIVE = 9;
 export const COL_NOT = 10;
 // Fork mistake overlay, appended past the upstream enum.
 export const COL_MISTAKE = 11;
+/** The hint's action ring. The collection's blue, although the `?` mark is
+ * blue too: the ring is a band on a square's border and the `?` a glyph in its
+ * middle, so the two never read as one shape, and a ring on a domino about to
+ * be marked `?` agrees with the mark rather than contradicting it. */
+export const COL_HINT = 12;
+/** The hint's evidence outline. */
+export const COL_HINT_CELL = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const { background, lowlight } = mkhighlight(defaultBackground);
@@ -82,6 +93,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_POSITIVE] = RED;
   out[COL_NOT] = BLUE;
   out[COL_MISTAKE] = ERROR;
+  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT_CELL] = HINT_EVIDENCE;
   return out;
 }
 
@@ -95,6 +108,11 @@ const DS_NOTNEG = 0x100;
 const DS_NOTNEU = 0x200;
 const DS_FLASH = 0x400;
 const DS_MISTAKE = 0x800; // fork overlay
+// The hint's marks, as the sides of this square each role draws: part of the
+// diff key, so a square whose outline changes repaints and takes the old one
+// with it (docs/games/hints.md § "Where the band goes, and who rubs it out").
+const DS_HINT_TARGET_SHIFT = 12;
+const DS_HINT_AREA_SHIFT = 16;
 
 // --- geometry ---------------------------------------------------------------
 /** The board's pixel origin: the clue row and column take one whole tile.
@@ -336,6 +354,7 @@ function getCountColor(
   which: number,
   index: number,
   target: number,
+  hinted: ReadonlySet<number>,
 ): number {
   const { w, h } = state;
   const count = countRowcol(state, index, rowcol, which);
@@ -349,8 +368,26 @@ function getCountColor(
     rowcol === COLUMN
       ? clueIndex(w, h, index, which === POSITIVE ? -1 : h)
       : clueIndex(w, h, which === POSITIVE ? -1 : w, index);
+  // The clue a hint counts with takes the action color, tying the line the
+  // sentence calls "this row" to its count (docs/games/hints.md § "Off-board
+  // evidence").
+  if (hinted.has(idx)) return COL_HINT;
   if (state.countsDone[idx]) return COL_DONE;
   return COL_TEXT;
+}
+
+/**
+ * Where a hint mark sits around square `(x, y)`: inside its own box, over the
+ * gutter that rounds each domino off from the next, so the band sits beside
+ * the domino rather than on it. A square whose marks change repaints itself and
+ * takes the old ones with it.
+ */
+function markBand(ts: number, x: number, y: number): MarkBand {
+  return {
+    box: { x: coord(x, ts), y: coord(y, ts), w: ts, h: ts },
+    outer: 0,
+    inner: Math.max(2, ts >> 4),
+  };
 }
 
 // --- redraw ---------------------------------------------------------------
@@ -362,6 +399,7 @@ export function redraw(
   ui: MagnetsUi,
   flashTime: number,
   mistakes?: readonly MagnetsMistake[],
+  hint?: HintStep<unknown, MagnetsHighlights>,
 ): void {
   const ts = ds.tileSize;
   const { w, h, grid, flags, common } = state;
@@ -384,10 +422,37 @@ export function redraw(
   const cx = ui.cursor.visible ? ui.cursor.x : -1;
   const cy = ui.cursor.visible ? ui.cursor.y : -1;
 
+  // A domino the hint decides is one ring around both its squares, and the
+  // line it reasons over one contour: each square draws only the sides that
+  // face out of its set.
+  const hintTargets = new Set(hint?.highlights?.targets);
+  const area = new Set(hint?.highlights?.area);
+  const hintedClues = new Set(hint?.highlights?.clues);
+  const inSet =
+    (set: ReadonlySet<number>) =>
+    (x: number, y: number): boolean =>
+      x >= 0 && x < w && y >= 0 && y < h && set.has(y * w + x);
+  const inTargets = inSet(hintTargets);
+  const inArea = inSet(area);
+  const marked: number[] = [];
+
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const idx = y * w + x;
       let c = grid[idx];
+      // A target joins only its own partner, so two decided dominoes side by
+      // side stay two shapes.
+      const targetSides = hintTargets.has(idx)
+        ? outlineSides(
+            x,
+            y,
+            (nx, ny) => inTargets(nx, ny) && dominoes[idx] === ny * w + nx,
+          )
+        : 0;
+      const areaSides = area.has(idx) ? outlineSides(x, y, inArea) : 0;
+      if (targetSides || areaSides) marked.push(idx);
+      c |= targetSides << DS_HINT_TARGET_SHIFT;
+      c |= areaSides << DS_HINT_AREA_SHIFT;
       if (flags[idx] & GS_ERROR) c |= DS_ERROR;
       if (flags[idx] & GS_SET) c |= DS_SET;
       if (x === cx && y === cy) c |= DS_CURSOR;
@@ -403,6 +468,18 @@ export function redraw(
     }
   }
 
+  // After every tile, and every frame: a domino's body reaches a pixel into
+  // its partner's box, so a partner repainting for its own reasons can clip a
+  // band it did not draw. The evidence first, so a side both roles want is the
+  // target's.
+  for (const role of [DS_HINT_AREA_SHIFT, DS_HINT_TARGET_SHIFT]) {
+    for (const idx of marked) {
+      const sides = (ds.what[idx] >> role) & 0xf;
+      const color = role === DS_HINT_TARGET_SHIFT ? COL_HINT : COL_HINT_CELL;
+      drawMarkSides(dr, markBand(ts, idx % w, Math.floor(idx / w)), sides, color);
+    }
+  }
+
   // Clue counts around the four borders.
   for (const which of [POSITIVE, NEGATIVE]) {
     for (const [rowcol, n, targets, drawn] of [
@@ -411,7 +488,14 @@ export function redraw(
     ] as const) {
       for (let i = 0; i < n; i++) {
         const index = i * 3 + which;
-        const color = getCountColor(state, rowcol, which, i, targets[index]);
+        const color = getCountColor(
+          state,
+          rowcol,
+          which,
+          i,
+          targets[index],
+          hintedClues,
+        );
         if (drawn[index] !== color) {
           drawNum(dr, ds, rowcol, which, i, color, targets[index]);
           drawn[index] = color;

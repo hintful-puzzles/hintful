@@ -1,0 +1,6 @@
+# The census settled both open questions (design D1, D2): one ladder, so no
+# runner seam and no ts-engine delta; and no new notation, because the board
+# already says every "cannot be + / −". The delta records the hint and the one
+# player-visible change it needed, a `?` on a neutral domino becoming a mistake.
+schema: spec-driven
+created: 2026-09-20

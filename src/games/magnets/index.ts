@@ -11,9 +11,16 @@
 
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
-import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
+import type {
+  Game,
+  HintResult,
+  HintStep,
+  SolveResult,
+  UiUpdate,
+} from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
+import { commonHintRefusal } from "../../engine/hint-refusal.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -27,6 +34,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newMagnetsDesc } from "./generator.ts";
+import { type MagnetsHighlights, magnetsHint, magnetsKeepTrack } from "./hint.ts";
 import {
   colors,
   computeSize,
@@ -175,8 +183,11 @@ function solve(
 }
 
 /** Re-solve from the clues and flag every player-set cell whose value
- * contradicts the unique solution (blanks and not-neutral marks are never
- * mistakes; a non-uniquely-solvable board yields none). */
+ * contradicts the unique solution, and every `?` on a domino that is neutral
+ * in it. The `?` counts because the hint reads it as a fact (`hint.ts`
+ * `seedSolver`), so the check has to vouch for it (docs/games/hints.md §
+ * "Deduce from the notes when the mistake check vouches for them"). Blanks are
+ * never mistakes, and a non-uniquely-solvable board yields none. */
 function findMistakes(state: MagnetsState): readonly MagnetsMistake[] {
   const { w, wh, grid, flags, common } = state;
   const solver = new MagnetsSolver(w, state.h, common);
@@ -184,11 +195,21 @@ function findMistakes(state: MagnetsState): readonly MagnetsMistake[] {
   const out: MagnetsMistake[] = [];
   for (let i = 0; i < wh; i++) {
     if (common.dominoes[i] === i) continue;
-    if (flags[i] & GS_SET && grid[i] !== solver.grid[i]) {
-      out.push({ x: i % w, y: Math.floor(i / w) });
-    }
+    const wrong =
+      flags[i] & GS_SET
+        ? grid[i] !== solver.grid[i]
+        : (flags[i] & GS_NOTNEUTRAL) !== 0 && solver.grid[i] === NEUTRAL;
+    if (wrong) out.push({ x: i % w, y: Math.floor(i / w) });
   }
   return out;
+}
+
+/** The explained hint: the two refusals every deductive hint owes, then the
+ * recording projection ([`hint.ts`](./hint.ts)). */
+function hint(state: MagnetsState): HintResult<MagnetsMove, MagnetsHighlights> {
+  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
+  if (refusal) return refusal;
+  return magnetsHint(state);
 }
 
 const difficulty: DifficultyContract<MagnetsParams> = {
@@ -240,6 +261,8 @@ export const magnetsGame: Game<
 
   solve,
   findMistakes,
+  hint,
+  hintKeepTrack: magnetsKeepTrack,
   difficulty,
 
   textFormat,
@@ -248,8 +271,16 @@ export const magnetsGame: Game<
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
   newDrawState,
-  redraw: (dr, ds, _prev, s, _dir, ui, _animTime, flashTime, _hint, mistakes) =>
-    redraw(dr, ds, s, ui, flashTime, mistakes),
+  redraw: (dr, ds, _prev, s, _dir, ui, _animTime, flashTime, hintStep, mistakes) =>
+    redraw(
+      dr,
+      ds,
+      s,
+      ui,
+      flashTime,
+      mistakes,
+      hintStep as HintStep<MagnetsMove, MagnetsHighlights> | undefined,
+    ),
 
   flashLength: (from, to) => winFlash(from, to, FLASH_TIME),
 };

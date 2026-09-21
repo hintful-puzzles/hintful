@@ -746,6 +746,8 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "difficulty",
       "findMistakes",
       "flashLength",
+      "hint",
+      "hintKeepTrack",
       "paramConfig",
       "preferredTileSize",
       "solve",

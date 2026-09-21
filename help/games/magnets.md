@@ -10,8 +10,12 @@ orthogonally adjacent to each other, and similarly two − poles.
 
 Left-click a domino to toggle it between being empty and being a
 magnet (the + is placed in the end you click). Right-click to toggle
-between empty, neutral, and a ?? mark indicating that you're sure
+between empty, neutral, and a ? mark indicating that you're sure
 it's a magnet but don't yet know which way round it goes.
+
+A domino marked ? that lies along a row or column brings exactly one +
+and one − to that line, whichever way round it turns out, so it
+counts toward both of the line's numbers.
 
 Left-click a clue to mark it as done (gray it out). To unmark a clue
 as done, left-click it again.

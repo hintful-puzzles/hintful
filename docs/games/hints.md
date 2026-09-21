@@ -1449,6 +1449,7 @@ to a similar game:
 | Bridges | the **span** the step decides, drawn as the game's own shape: the bridge bundle it would become with only the *added* bars in `COL_HINT`, or the game's pair of crosses in `COL_HINT` when the step blocks it. The island a sentence *names* has its own rim and clue digit recolored `COL_HINT` (an annulus, so it is already a ring) | the islands and bridges the argument counts → `COL_HINT_CELL` on the same shapes. A premise that counts a **group** marks every member alike, the acted-from island included, because the sentence counts them together |
 | Seismic | the cell(s) a step decides, ringed `COL_HINT` inside the cell's own box (the gap between cells is the black its walls are made of); a struck note keeps its pencil color with a same-color line through it | the area a hidden single or a starved area reasons over → one `COL_HINT_CELL` contour; a placement's follow-on strikes outline the placed number's cell alone |
 | Galaxies | the **deduced** cell, solid **purple** `COL_HINT` (not blue — see below); the 180° partner the same move claims, a `COL_HINT` **outline over the ordinary evidence shading** (same hue, they share a fate; far less weight, only one is what the words are about); the wall it draws, a `COL_HINT` bar drawn *whether or not the wall exists yet*; the dot it points at, a **filled `COL_HINT` halo with the dot repainted on top** — **unless the dot stands on a cell just filled**, where a mark in the fill's own color is invisible and the narration names the dot by position instead | the cells / walls / dots the argument reasons over → `COL_HINT_CELL` teal (a galaxy's reach, a cut-off piece, the partner across a dot, an already-drawn wall). One ring role at a time, so "the ringed dot" is never ambiguous |
+| Magnets | the square a placement decides, ringed `COL_HINT`; a domino decided whole (neutral, or marked `?`) as **one contour around both ends**, never a ring per end | the line a premise counts → one `COL_HINT_CELL` contour, and its clue digits recolor `COL_HINT` (Magnets draws no line numbers, so the digit is how "this row" is found); a pole the square touches → that square outlined; the domino's other end, when the sentence reasons about it, outlined too |
 | Loopy | the edges the step sets, a `COL_HINT` band *under* each (the edge's own state stays on top): solid for a line, broken for an edge that can't be one | the clue it counts → an outline inset inside its face; the dot it names → a ring under the dot; the loop an edge would close → a `COL_HINT_CELL` band under those lines; a **corner** or **pair** note the step reasons from → the player's own note, redrawn in `COL_HINT_CELL`; a note the step places → that note's own wedge or connector in `COL_HINT` (§ "Give the facts a notation (Loopy)") |
 
 **Mark the premise element in the action color only where the sentence names
@@ -2161,6 +2162,37 @@ a cell. What it added, in [`games/subsets/`](../../src/games/subsets/):
   every test looked at, was always right. Walk a working copy while building the
   steps, and test by walking whole plans (`subsets-notes.test.ts`), not by
   checking step one.
+
+Magnets is the fourth (`add-magnets-hint`), and the first where the answer was
+**no new mark at all**. Its solver keeps three "cannot be" bits per square and
+the player can write one, the `?`. What settled it, in
+[`games/magnets/`](../../src/games/magnets/):
+
+- **List the writers of the hidden bit before designing its mark.** Every
+  "cannot be +/−" comes from one primitive, reached from three places, and each
+  is a rule over things already drawn: a placed pole beside the square, a line
+  whose count is met, and the same fact about the domino's other end. So
+  `reading.ts` states that reading, and `magnets-reading.test.ts` holds every bit
+  the solver ever sets to it, firing by firing: 46,502 bits, none unreadable.
+  Only then does "the board already says it" license hiding the firings that set
+  those bits (§ "Show only what the board does not already say").
+- **Count the notes the reading leans on, and have the plan place them.** A met
+  count may need the `?` magnets along a line, one + and one − each. That makes
+  the `?` a premise, so the hint places every `?` its deductions rest on as a
+  move, seeds the player's own as facts, and `findMistakes` now vouches for a `?`
+  (a wrong one used to be silently accepted). The help teaches the counting
+  rule, which is what lets a sentence say "overfill its column" without a
+  counting clause.
+- **Read what a firing did off the board, and mask the scratch.** `advancedfull`
+  rewrites its `GS_MARK` scratch bit whether or not it fires, so a before/after
+  diff that included it reported a "firing" at the end of every plan. Decide
+  *whether* a rung fired from its return value, and *what* it did from the
+  masked diff.
+- **A cycle input needs an "on the way" verdict.** A leg asking for a − is two
+  presses from empty, through a +, and a `?` goes through neutral.
+  `magnetsKeepTrack` calls that press `"onTrack"`, which holds the leg; without
+  it the first press drops the plan, and the recomputed hint then refuses over
+  a neutral domino that is a mistake.
 
 ### Place the notes a fixpoint rests on (Crossing)
 
