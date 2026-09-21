@@ -14,6 +14,7 @@
 
 import { resolvePalette } from "./color/color-mkhighlight.ts";
 import { darkValue } from "./color/color-token.ts";
+import { cappedSolveFor, difficultyTiers, lowestSolvingCap } from "./difficulty.ts";
 import {
   type ActiveHint,
   type Game,
@@ -312,10 +313,45 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     }
     const dErr = this.game.validateDesc(params, rest);
     if (dErr) return dErr;
-    this.params = params;
+    this.params = this.withBoardTier(paramsStr, params, rest);
     this.seed = undefined;
     this.startFrom(rest);
     return null;
+  }
+
+  /**
+   * The params a `:desc` id should load with, difficulty included.
+   *
+   * The id offered for sharing omits the difficulty (`emitIdChange`), so its
+   * params decode to the game's default tier, and a Tricky board shared that
+   * way opened labeled Easy, with a hint capped at Easy's rules that ran out
+   * partway. The board itself says which tier it is: the lowest cap at which
+   * the game's own solver solves it. That is also the tier a board our
+   * generators dealt was accepted at, since a tier's boards must not solve a
+   * tier lower.
+   *
+   * Graded only when the params string cannot tell tiers apart: when it is the
+   * sharing encoding of more than one tier. A string that pins its tier keeps
+   * it, which is the id a player's own board is restored from. The test is on
+   * the string rather than "is it the full form", because a game may leave its
+   * default tier out of the full form too (Solo's `2x3` is both the full id of
+   * an Easy board and the shared id of a board at any tier); grading resolves
+   * that, and gives the dealt tier back for any board a generator dealt. When no
+   * cap solves the board (a tier that promises no unique solution), the decoded
+   * params stand.
+   */
+  private withBoardTier(paramsStr: string, params: Params, desc: string): Params {
+    const contract = this.game.difficulty;
+    if (!contract) return params;
+    const tiers = difficultyTiers(this.game)?.length ?? 0;
+    const sharedAs = (tier: number) =>
+      this.game.encodeParams(contract.withTier(params, tier), false);
+    const ambiguous = Array.from({ length: tiers }, (_, t) => t).filter(
+      (t) => sharedAs(t) === paramsStr,
+    );
+    if (ambiguous.length < 2) return params;
+    const tier = lowestSolvingCap(cappedSolveFor(contract, params, desc), tiers);
+    return tier === null ? params : contract.withTier(params, tier);
   }
 
   private startFrom(desc: string, aux?: string): void {
@@ -1389,10 +1425,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       // Shares the board: the desc fully specifies it, so the params omit the
       // difficulty (upstream `midend_get_game_id` → `encode_params(..., FALSE)`).
       currentGameId: `${this.game.encodeParams(this.params, false)}:${this.desc}`,
-      // Re-deals this board here, so the params are FULL. Loading an id sets the
-      // params from its prefix, which is right for a shared link (the recipient
-      // keeps their own difficulty) and wrong for reopening your own board,
-      // which would drop to the default difficulty. Emitted here rather than
+      // Re-deals this board here, so the params are FULL: reopening your own
+      // board restores the tier you chose as stated, where a shared id's is
+      // re-derived by grading (`withBoardTier`). Emitted here rather than
       // assembled by the caller from `params` and a desc, two signals that
       // could drift into a broken board.
       restoreGameId: `${this.game.encodeParams(this.params, true)}:${this.desc}`,

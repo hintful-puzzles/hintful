@@ -31,6 +31,7 @@ import {
   tierNames,
 } from "./difficulty.ts";
 import type { Game, PresetMenu } from "./game.ts";
+import { Midend } from "./midend.ts";
 import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { SLOW_TESTS_ENABLED, seedBudget } from "./testing/slow.ts";
@@ -425,6 +426,7 @@ describe.each(tiered)("$id difficulty contract", ({ id, game, contract, tiers })
         );
     const seeds = seedBudget(1, 3);
     let checked = 0;
+    let sharedReloaded = false;
 
     for (const { title, params } of walked) {
       const tier = contract.tierOf(params);
@@ -452,6 +454,27 @@ describe.each(tiered)("$id difficulty contract", ({ id, game, contract, tiers })
           lowest,
           `${id}: "${title}" claims tier ${tier} ("${tiers[tier]}") but its board needs cap ${lowest}`,
         ).toBe(tier);
+
+        // What the equality above buys a player: a board shared by the id that
+        // omits its difficulty loads at the tier it was dealt at, because the
+        // midend grades it. Only a board whose short id decodes to some *other*
+        // tier can tell grading from the default, and once per game is enough,
+        // since the grading is the same call the assertion above just made.
+        const shortParams = game.encodeParams(params, false);
+        if (
+          !sharedReloaded &&
+          contract.tierOf(game.decodeParams(shortParams)) !== tier
+        ) {
+          sharedReloaded = true;
+          sharedReloads++;
+          const me = new Midend(game);
+          const shared = `${shortParams}:${desc}`;
+          expect(me.newGameFromId(shared), `${id}: ${shared}`).toBeNull();
+          expect(
+            contract.tierOf(game.decodeParams(me.getParams())),
+            `${id}: "${title}" shared as ${shared} reloaded at the wrong tier`,
+          ).toBe(tier);
+        }
       }
     }
 
@@ -471,7 +494,18 @@ describe.each(tiered)("$id difficulty contract", ({ id, game, contract, tiers })
  * above and asserted below, which runs last because it is registered last. */
 let boardsThatBound = 0;
 
+/** How many games reloaded a shared board whose short id decodes to a tier
+ * other than its own, the only case that tells grading from the default. */
+let sharedReloads = 0;
+
 describe("the tier-binding sweep", () => {
+  it("reloaded shared boards in enough games to mean something", () => {
+    // Most tiered games omit the difficulty from the id they share, so most
+    // should reach the reload above; a floor well under that count fails only
+    // when the reload stopped happening at all.
+    expect(sharedReloads).toBeGreaterThan(10);
+  });
+
   it("graded enough boards to mean something", () => {
     // The floor separates "working" from "enumerating nothing" and is set well
     // below the gate slice's true count (~90 boards over 29 games when written),

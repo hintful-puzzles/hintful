@@ -232,16 +232,12 @@ const READS = propertyReads();
 
 /**
  * Members whose only consumer is a test, with the argument for why that is the
- * consumer. Not a loophole: a cross-game guard is a real reader, and for
- * `difficulty` it is the *stated* reason the member exists.
+ * consumer. Not a loophole: a cross-game guard is a real reader, and a member
+ * can exist for one. Empty, and still asserting: `difficulty` sat here until
+ * the midend began grading a board shared without its tier
+ * (`grade-a-board-shared-without-its-tier`), and this ledger is what noticed.
  */
-const TEST_ONLY_CONSUMER: Record<string, string> = {
-  difficulty:
-    "Declared so a property *about* difficulty tiers can be asserted for every " +
-    "tiered game at once rather than one game at a time — so its consumers are " +
-    "`difficulty-contract.test.ts` and `hint-quality.test.ts` by design, and " +
-    "production never asks a game for its tiers. See `difficulty.ts`.",
-};
+const TEST_ONLY_CONSUMER: Record<string, string> = {};
 
 /**
  * Members with no consumer at all, each with the change that owns the decision.

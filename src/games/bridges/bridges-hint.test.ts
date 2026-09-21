@@ -16,6 +16,7 @@ import {
   CONTRADICTION_UNLOCALIZED,
   FIX_MISTAKES_FIRST,
 } from "../../engine/hint-refusal.ts";
+import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { newBridgesDesc } from "./generator.ts";
@@ -528,6 +529,30 @@ describe("following a step", () => {
       // And a bridge where the step asks for a limit is not a limit.
       expect(track({ ops: [{ op: "L", ...span, n: 1 }] }, atMostOne)).toBe("off");
     });
+  });
+});
+
+describe("a board shared without its difficulty", () => {
+  it("is hinted at the tier it needs, all the way to solved", () => {
+    // Reported by the owner: shared by the id that omits the difficulty, this
+    // Tricky board loaded as Easy, and the hint, capped at Easy's rules, ran out
+    // at move 10. The midend grades such a board on load.
+    const shared = "10x10m2:a2a4e31c2a4a1l1b1e5b4b4a1m1f43j2a4e43d4a2b";
+    const me = new Midend(bridgesGame);
+    expect(me.newGameFromId(shared)).toBeNull();
+    const params = decodeParams(me.getParams());
+    expect(params.difficulty).toBe(2);
+
+    let state = newStateFromDesc(params, shared.slice(shared.indexOf(":") + 1));
+    const ui = bridgesGame.newUi(state);
+    let moves = 0;
+    while (!state.completed && moves < 200) {
+      const r = bridgesGame.hint?.(state, undefined, ui);
+      if (!r?.ok) throw new Error(`move ${moves}: ${r?.error}`);
+      state = bridgesGame.executeMove(state, r.steps[0].move);
+      moves++;
+    }
+    expect(state.completed).toBe(true);
   });
 });
 
