@@ -7,11 +7,15 @@ been settled (proposal, § "Its bearing on the input model").
 ## 1. Decide, before building anything
 
 - [ ] 1.1 **Does Guess get a notation, and which one?** Per-slot ruled-out
-      colors (pencil marks — the collection's usual shape, and the only one
-      strong enough for positional reasoning), a per-color "proven absent" mark
-      on the panel (the Wordle shape, free but weaker), or both. Quality-bar
-      rule 6 forces the question: without one, a hint narrating an elimination
-      draws a fact the player cannot keep.
+      colors (pencil marks — the collection's usual shape), a per-color "proven
+      absent" mark (the Wordle shape), or both. Quality-bar rule 6 forces the
+      question: without one, a hint narrating an elimination draws a fact the
+      player cannot keep.
+      **The proposal's rule table is the evidence, and it points at per-slot.**
+      The one high-frequency sound reading is positional (rule B, `black = 0` ⇒
+      `npegs` eliminations at once, ~a third of the pair space), and a per-color
+      strike cannot hold *"not this color, here"*. Re-run the brute force before
+      relying on the ranking if `markPegs` has moved.
 - [ ] 1.2 **The usual escape is closed.** Guess has no `difficulty` contract, so
       "demote the tier that needs the notation to `Unreasonable` and refuse
       there" is not available. Either the notation happens or the hint says very

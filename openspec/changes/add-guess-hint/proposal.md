@@ -80,22 +80,63 @@ notation (Loopy)").
 So the change is a notation change first and a hint second, and the notation is
 the thing to design.
 
+## What a single row honestly proves — derived, then checked exhaustively
+
+Let `black(G)` be the correctly-placed count, `white(G)` the
+right-color-wrong-place count, and `total(G) = black + white = Σ_c min(#G_c,
+#S_c)`. Four one-step readings are sound, and **all four were brute-forced
+against the real `markPegs` over every (solution, guess) pair at 4 colors × 4
+pegs — 65,536 pairs, zero counterexamples** (2026-09-21). None is vacuous; the
+fire counts are below.
+
+| | Reading | Why | Fires |
+| --- | --- | --- | --- |
+| **A1** | `total = 0` ⇒ every color in `G` is absent | each term of `Σ_c min(#G_c,#S_c)` is 0, and `#G_c > 0` | 1,812 |
+| **A2** | `total = npegs` ⇒ every color **not** in `G` is absent, and `#S_c ≤ #G_c` | `Σ_c #S_c = npegs` too, so the termwise `≤` is equality | 2,716 |
+| **A3** | a monochrome row of `c` ⇒ `#S_c = total`, exactly | `min(npegs, #S_c) = #S_c` | 1,024 |
+| **B** | `black = 0` ⇒ `S_i ≠ G_i` for **every** `i` | the definition of `black` | **20,736** |
+
+**Rule B is the workhorse and it is the one with no Wordle analog.** It is
+*positional*: one row scoring no blacks yields `npegs` eliminations at once, and
+it fired on about a third of the pair space — an order of magnitude more often
+than the three color-level rules together. (That rate is over the **uniform**
+pair space, not over positions real play reaches; a player guesses
+informatively, so treat it as evidence of which rule matters, not as an in-play
+frequency.)
+
+**Everything else attributes nothing.** A four-peg row scoring one black and one
+white constrains four pegs *jointly* and pins nothing to any one of them. A
+white count alone never attributes to a color or a position, and a black count
+strictly between `0` and `npegs` never attributes to a position.
+
+**This is the argument for per-slot marks over a per-color panel mark.** The
+facts worth recording are overwhelmingly of the form *"not this color, here"*,
+which a per-color strike cannot hold.
+
 ## Wordle is a live reference here, and its keyboard is the cheap half
 
 The owner (2026-09-21) invited borrowing from NYT Wordle, which is this game
 with letters. Wordle's on-screen keyboard **accumulates feedback color per
 letter**, so the player's ruled-out notation is free and needs no marks placed.
 
-**The mapping is not clean, and the difference is exactly where a false claim
-would enter.** Wordle scores per letter *in place*, so "this letter is absent"
-is directly given. Mastermind's black/white feedback is **count-based over the
-row**: a row scoring one black and one white says *something* about four pegs
-jointly and pins nothing to a peg. Guess can honestly prove a color absent only
-in narrow cases (upstream's `computeHint` already derives one — a past guess
-made entirely of one color scoring nothing, its `provenAbsent`). Anything richer
-has to be derived and checked, not assumed from the analogy. Whatever the panel
-shows must be a fact the game has proven, or it is the quality bar's rule 5
-broken on the most visible surface in the app.
+**The mapping is not clean, and the table above says exactly where it breaks.**
+Wordle's feedback is **addressed** — each tile carries its own verdict, so its
+keyboard coloring is a pure transcription of something the player was already
+shown. Guess's black and white pegs are **unordered and unattached**: the row
+says "two are in the right place" and never which two.
+
+So **there is no analog of green and none of yellow.** A per-color "correct
+position" claim and a per-color "present but misplaced" claim are both
+unobtainable from Mastermind scoring. The only part of the mapping that
+survives is the *gray*, and even the gray fires only on rules A1–A3 — the three
+that fired least. Upstream's `computeHint` already derives the narrowest of
+them (`provenAbsent`, the A1 special case of a monochrome row scoring nothing).
+
+Whatever the panel shows must be a fact the game has proven, or it is the
+quality bar's rule 5 broken on the most visible surface in the app. **The safe
+form of the idea is a strike the *player* places**, which is a notation, not a
+derivation — and it is then subject to the same question as any other notation:
+can it hold the facts the hint actually needs? Per the table, mostly it cannot.
 
 ## What a proposal here would have to settle
 
