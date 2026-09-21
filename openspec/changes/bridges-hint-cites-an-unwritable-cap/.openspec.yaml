@@ -1,0 +1,5 @@
+# No delta yet: which requirement moves depends on the owner's choice in
+# proposal.md § "The decision". Written 2026-09-21; nothing is implemented.
+schema: spec-driven
+created: 2026-09-21
+skip_specs: true

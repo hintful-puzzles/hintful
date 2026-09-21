@@ -1,6 +1,0 @@
-# No delta yet: whether the runner's contract changes depends on §2.1 (an
-# option on runDeductionFixpoint or a function beside it). Written 2026-09-21;
-# nothing is implemented.
-schema: spec-driven
-created: 2026-09-21
-skip_specs: true

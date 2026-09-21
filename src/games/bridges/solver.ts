@@ -20,6 +20,7 @@ import {
   type DeductionTechnique,
   type FiringTally,
   runDeductionFixpoint,
+  singleFirings,
 } from "../../engine/deduction-fixpoint.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { findLoops } from "../../engine/findloop.ts";
@@ -833,15 +834,14 @@ export interface BridgesRecordingPass {
 
 /**
  * The recording projection: the *same three* `DeductionTechnique` objects
- * `solveFromScratch` runs, through one `runDeductionFixpoint` call, with a
- * recorder attached — no rung is reimplemented for the hint.
+ * `solveFromScratch` runs, through `singleFirings`, with a recorder attached —
+ * no rung is reimplemented for the hint. `beforeTechnique` clears the standing
+ * reason, which is what makes "a rule that declares no reason narrates
+ * nothing" a checked property rather than a hope.
  *
- * Two hooks the runner already had do the whole single-firing job, exactly as
- * they do in Tracks: `settled` is documented as broader than "solved", so
- * *stop, this pass has a firing to narrate* is a legitimate reason to stop; and
- * `beforeTechnique` clears the standing reason, which is what makes "a rule
- * that declares no reason narrates nothing" a checked property rather than a
- * hope.
+ * Every firing is returned, a per-direction maximum included: it changes the
+ * working board, records no op and declares no reason, so the plan loop's
+ * `showable` hides it and counts it in `hidden`.
  *
  * `st` must be a working copy the caller is happy to have overwritten, and —
  * unlike {@link solveFromScratch} — it is **not** cleared: the deduction
@@ -867,30 +867,23 @@ export function bridgesRecordingPass(
   }
   const rec: BridgesRecorder = { reason: null, ops: [] };
   solver.rec = rec;
-  const ladder = solver.ladder();
-  let impossible = false;
+  const firings = singleFirings({
+    techniques: solver.ladder(),
+    maxTier: cap,
+    budget,
+    beforeTechnique: () => {
+      rec.reason = null;
+    },
+  });
 
   return {
     next(): BridgesFiring | null {
       rec.ops = [];
-      rec.reason = null;
-      const result = runDeductionFixpoint({
-        techniques: ladder,
-        maxTier: cap,
-        budget,
-        beforeTechnique: () => {
-          rec.reason = null;
-        },
-        // A max-cap changes the board and offers the player nothing, so the
-        // ladder keeps going until it has a move to show.
-        settled: () => rec.ops.length > 0,
-      });
-      if (result.impossible) impossible = true;
-      if (impossible || rec.ops.length === 0) return null;
+      if (!firings.next()) return null;
       return { reason: rec.reason, ops: rec.ops };
     },
     solved: () => solver.mapCheck(),
-    impossible: () => impossible,
+    impossible: firings.impossible,
   };
 }
 

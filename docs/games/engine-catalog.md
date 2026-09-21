@@ -386,6 +386,15 @@ called *inside* a game's solver — a returned tally would have to be threaded b
 out through each game's own return shape. It replaced seven hand-written
 ladder-wrapping closures.
 
+**`singleFirings({ techniques, maxTier, budget, beforeTechnique, settled })`
+is the recording path's driver**: the same pass down the ladder, stopped after
+each firing, returning the technique that fired (`null` when none does) with a
+sticky `impossible()`. Every firing comes back, visible or not; hiding is
+`deduceHintPlan`'s `showable`, never the driver's. The budget is required and
+its attribution tally outlives a call. Callers: a reference query for
+`singleFirings`. The followable form is [`hints.md`](./hints.md) § "Recording
+the deduction".
+
 An adoption is proved by a **ladder-equivalence** test, not by the game's
 byte-match differential — see
 [`solver-and-generator.md`](./solver-and-generator.md) § "Proving an adoption",

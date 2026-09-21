@@ -25,6 +25,7 @@ import {
   type DeductionTechnique,
   type FiringTally,
   runDeductionFixpoint,
+  singleFirings,
 } from "../../engine/deduction-fixpoint.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { findLoops } from "../../engine/findloop.ts";
@@ -989,20 +990,12 @@ export function tracksSolve(
 }
 
 /**
- * The **recording projection**: the same eight rungs, the same runner, one
- * firing at a time with its premise attached.
+ * The **recording projection**: the same eight rungs through `singleFirings`,
+ * one firing at a time with its premise attached. `beforeTechnique` clears the
+ * standing reason, so a rung that declares none comes back with `null` rather
+ * than the previous rung's premise.
  *
- * `runDeductionFixpoint` is not bypassed here and gains nothing new. Two hooks
- * it already has do the whole job:
- *
- *  - **`settled`**: documented as broader than "solved" (Undead stops on a
- *    contradiction, Spokes on a spent action budget). `rec.ops.length > 0` is
- *    another such reason: *stop, this pass has a firing to narrate*. Checked at
- *    the top of an iteration, so the ladder always finishes the rung it is in.
- *  - **`beforeTechnique`** clears the standing reason, so a rung that declares
- *    none comes back with `null` rather than the previous rung's premise.
- *
- * **Every change is a firing, including the ones nobody should be shown.**
+ * **Every firing is returned, including the ones nobody should be shown.**
  * Deciding what is worth a step is the plan loop's job (`deduceHintPlan`'s
  * `showable`), not the recorder's.
  *
@@ -1022,21 +1015,21 @@ export function tracksRecordingPass(
   const ladder = tracksLadder(b, bridgeDsf);
   const rec: TracksRecorder = { reason: null, ops: [] };
   b.rec = rec;
+  // A rung never returns `< 0`; it raises the board's own flag instead, which
+  // `settled` reads before the ladder runs and the closure reads after.
+  const firings = singleFirings({
+    techniques: ladder,
+    maxTier: cap,
+    budget,
+    beforeTechnique: () => {
+      rec.reason = null;
+    },
+    settled: () => b.impossible,
+  });
 
   return (): TracksFiring | null => {
     rec.ops = [];
-    rec.reason = null;
-    runDeductionFixpoint({
-      techniques: ladder,
-      maxTier: cap,
-      baseGrade: DIFF_EASY,
-      budget,
-      beforeTechnique: () => {
-        rec.reason = null;
-      },
-      settled: () => b.impossible || rec.ops.length > 0,
-    });
-    if (b.impossible || rec.ops.length === 0) return null;
+    if (!firings.next() || b.impossible) return null;
     return { reason: rec.reason as TracksReason | null, ops: rec.ops };
   };
 }

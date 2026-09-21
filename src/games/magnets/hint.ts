@@ -1,8 +1,8 @@
 /**
  * Magnets' explained hint: the recording projection of [`solver.ts`](./solver.ts).
  *
- * The deduction is entirely the solver's: the same graded ladder on the same
- * `runDeductionFixpoint`, run one firing at a time with a recorder standing
+ * The deduction is entirely the solver's: the same graded ladder, run one
+ * firing at a time through `singleFirings` with a recorder standing
  * (docs/games/hints.md § "Recording the deduction", the *threaded* shape). This
  * file turns each firing into a journey of moves the player can make, and the
  * sentence and picture that explain it.
@@ -19,7 +19,7 @@
  * it re-derives it from the board, in the board's own terms.
  */
 
-import { runDeductionFixpoint } from "../../engine/deduction-fixpoint.ts";
+import { singleFirings } from "../../engine/deduction-fixpoint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
@@ -138,36 +138,17 @@ export function recordingPass(
 ): { next: () => MagnetsFiring | null; impossible: () => boolean } {
   const rec = { reason: null as MagnetsReason | null };
   solver.rec = rec;
-  let impossible = false;
-  // Flips once a technique changes the board, so the runner stops after
-  // exactly one firing (docs/games/hints.md § "Recording the deduction").
-  let fired = false;
-  const ladder = solver.ladder().map((t) => ({
-    ...t,
-    run: () => {
-      const ret = t.run();
-      if (ret > 0) fired = true;
-      return ret;
+  const ladder = singleFirings({
+    techniques: solver.ladder(),
+    budget,
+    beforeTechnique: () => {
+      rec.reason = null;
     },
-  }));
+  });
 
   const next = (): MagnetsFiring | null => {
     const before = snapshot(solver);
-    rec.reason = null;
-    fired = false;
-    const result = runDeductionFixpoint({
-      techniques: ladder,
-      budget,
-      beforeTechnique: () => {
-        rec.reason = null;
-      },
-      settled: () => fired,
-    });
-    if (result.impossible) {
-      impossible = true;
-      return null;
-    }
-    if (!fired) return null;
+    if (!ladder.next()) return null;
     const placed = new Map<number, number>();
     const marked = new Set<number>();
     for (let i = 0; i < solver.wh; i++) {
@@ -197,7 +178,7 @@ export function recordingPass(
     };
   };
 
-  return { next, impossible: () => impossible };
+  return { next, impossible: ladder.impossible };
 }
 
 // --- narration ------------------------------------------------------------

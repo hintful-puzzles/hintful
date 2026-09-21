@@ -195,6 +195,30 @@ function attributingBudget(
 }
 
 /**
+ * One pass down the ladder, easiest first, stopping at the first technique that
+ * fires: that technique, `null` when none does, or `"contradiction"` when one
+ * proves the board inconsistent. Both the fixpoint and {@link singleFirings}
+ * are this pass repeated; they differ only in when they stop repeating it.
+ */
+function firstFiring(
+  opts: DeductionFixpointOptions,
+  firings: FiringTally | null,
+): DeductionTechnique | null | "contradiction" {
+  const { techniques, maxTier, beforeTechnique } = opts;
+  for (const technique of techniques) {
+    if (maxTier !== undefined && technique.tier > maxTier) continue;
+    beforeTechnique?.(technique);
+    const ret = technique.run();
+    if (ret < 0) return "contradiction";
+    if (ret > 0) {
+      firings?.set(technique.id, (firings.get(technique.id) ?? 0) + 1);
+      return technique;
+    }
+  }
+  return null;
+}
+
+/**
  * Run the ordered techniques to a fixpoint (see the module doc). Returns the
  * reached grade and whether a technique proved the board inconsistent; callers
  * handle `impossible` first (the reported `grade` is meaningless then).
@@ -202,7 +226,7 @@ function attributingBudget(
 export function runDeductionFixpoint(
   opts: DeductionFixpointOptions,
 ): DeductionFixpointResult {
-  const { techniques, maxTier, baseGrade = 0, beforeTechnique, settled } = opts;
+  const { baseGrade = 0, settled } = opts;
   let grade = baseGrade;
   // A tally exists only where a caller asked for one or a budget needs one, so
   // the generator path allocates nothing and runs the loop it always ran.
@@ -213,21 +237,71 @@ export function runDeductionFixpoint(
   for (;;) {
     budget?.tick();
     if (settled?.()) break;
-    let fired = false;
-    for (const technique of techniques) {
-      if (maxTier !== undefined && technique.tier > maxTier) continue;
-      beforeTechnique?.(technique);
-      const ret = technique.run();
-      if (ret < 0) return { grade, impossible: true };
-      if (ret > 0) {
-        firings?.set(technique.id, (firings.get(technique.id) ?? 0) + 1);
-        if (technique.tier > grade) grade = technique.tier;
-        fired = true;
-        break;
-      }
-    }
-    if (!fired) break;
+    const fired = firstFiring(opts, firings);
+    if (fired === "contradiction") return { grade, impossible: true };
+    if (fired === null) break;
+    if (fired.tier > grade) grade = fired.tier;
   }
 
   return { grade, impossible: false };
+}
+
+/**
+ * The recording path's options: the fixpoint's, less the grade floor a single
+ * firing has no use for, and with the step budget required rather than
+ * optional, because a hint is exactly the path that must fail loud on a
+ * technique reporting progress without changing the board.
+ */
+export type SingleFiringOptions = Omit<
+  DeductionFixpointOptions,
+  "baseGrade" | "budget"
+> & {
+  budget: StepBudget;
+};
+
+/** The ladder, one firing per call. */
+export interface SingleFirings {
+  /**
+   * Run the ladder from the top until one technique fires, and return it;
+   * `null` when none fires, when `settled` says there is nothing left to do,
+   * or once a technique has proved the board inconsistent. What the firing
+   * changed is the caller's to read: its recorder, or the board itself.
+   */
+  next(): DeductionTechnique | null;
+  /** A technique proved the board inconsistent. Sticky: `next` returns `null`
+   * from then on. */
+  impossible(): boolean;
+}
+
+/**
+ * The **recording projection's** driver: the same ladder as
+ * {@link runDeductionFixpoint}, stopping after every firing so that one firing
+ * is one hint step (docs/games/hints.md § "Recording the deduction").
+ *
+ * **Every firing is returned, including one that changed nothing the player
+ * can see.** Whether a firing is worth a step is the plan loop's question
+ * (`deduceHintPlan`'s `showable`), not the driver's: a firing hidden there
+ * still advances the board and is counted in `hidden`, which is how a test
+ * proves the hiding ran at all. A driver that skipped such firings itself
+ * would hide them where nothing counts them.
+ *
+ * The tally behind the budget's attribution lives as long as the driver, not
+ * one call, so a technique that runs away across many calls is still named.
+ */
+export function singleFirings(opts: SingleFiringOptions): SingleFirings {
+  const firings = opts.firings ?? new Map<string, number>();
+  const budget = attributingBudget(opts.budget, firings);
+  let impossible = false;
+  return {
+    next(): DeductionTechnique | null {
+      if (impossible) return null;
+      budget.tick();
+      if (opts.settled?.()) return null;
+      const fired = firstFiring(opts, firings);
+      if (fired !== "contradiction") return fired;
+      impossible = true;
+      return null;
+    },
+    impossible: () => impossible,
+  };
 }

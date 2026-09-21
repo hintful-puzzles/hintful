@@ -1,6 +1,7 @@
 # share-the-single-firing-driver
 
-**Status: scaffolded, not started.** Owner-requested, 2026-09-21, from
+**Status: implemented and archived 2026-09-21** (design.md records the
+decisions). Owner-requested, 2026-09-21, from
 `add-magnets-hint`.
 
 ## Why

@@ -186,13 +186,14 @@ function highlightsOf(
  * rung: that is the tier the generator certified it soluble at, and it is what
  * stops an Easy board being handed a connectivity argument it never needed.
  *
- * **`showable` is the reason test alone, with no board-legality half.** Tracks
- * needs both because three of its rules restate what the board already draws;
- * Bridges has exactly one reason-less rule, the bookkeeping mark, and the fork's
- * own auto-mark aid draws it. Every other firing changes something the player
- * could not already have: a bridge count the solver only ever raises, and a
- * no-line it only ever draws where `possibles` is still nonzero, which a cross
- * the player has drawn already zeroes.
+ * **`showable` is the reason test alone, with no board-legality half.** Two
+ * firings declare no reason: the bookkeeping mark, which the fork's own
+ * auto-mark aid draws, and a per-direction maximum, which the player has no
+ * way to write down (the open change `bridges-hint-cites-an-unwritable-cap`
+ * records where a later sentence leans on one). Every other firing changes
+ * something the player could not already have: a bridge count the solver only
+ * ever raises, and a no-line it only ever draws where `possibles` is still
+ * nonzero, which a cross the player has drawn already zeroes.
  */
 export function bridgesHint(
   state: BridgesState,

@@ -869,27 +869,36 @@ ladder**: the rungs are named, and the game's `<game>-ladder.test.ts` says which
 of them the generator ever reaches, so a rung in the `unreached` ledger needs no
 narration at all.
 
-**But it does supply the single-firing driver, out of hooks it already has
-(Tracks).** An adopted game does not need a hand-rolled "run the ladder until
-one rung fires" loop beside the runner's:
+**But it does supply the single-firing driver: `singleFirings`.** An adopted
+game does not write a "run the ladder until one rung fires" loop; it builds
+`singleFirings({ techniques, maxTier, budget, beforeTechnique })` once over
+its working board and calls `next()` per step. `next()` returns the technique
+that fired, or `null` when none does (or `settled` says there is nothing left);
+`impossible()` is sticky once a rung proves a contradiction. It is the same
+one-pass-down-the-ladder the fixpoint repeats, so tier cap, restart rule and
+budget attribution cannot drift between the two projections.
 
-- **`settled: () => board.impossible || rec.ops.length > 0`.** That hook is
-  documented as broader than "solved" — *stop, this pass has a firing to
-  narrate* is the same kind of reason as Undead's contradiction and Spokes'
-  spent budget. It is checked at the top of an iteration, so the ladder always
-  finishes the rung it is in.
 - **`beforeTechnique`** clears the standing reason, so a rung that declares
   none comes back with a `null` reason instead of borrowing the previous
-  rung's. Record **every** change as a firing, reason or not, and let the plan
-  loop decide what is worth showing (§ "Show only what the board does not
-  already say") — the recorder should never have to know.
+  rung's.
+- **Every firing comes back, including one that changed nothing the player
+  can see.** Record every change, reason or not, and let the plan loop decide
+  what is worth showing (§ "Show only what the board does not already say").
+  Do not make the driver skip such firings by bending `settled` into "stop
+  once the recorder holds a move" — that hides them where `deduceHintPlan`'s
+  `hidden` count cannot see them, which is how Bridges' per-direction maximum
+  went uncounted until the driver was shared.
+- **What the firing changed is yours to read**: from the recorder (Tracks,
+  Bridges), or by comparing the board before and after (Magnets). The driver
+  takes no snapshot, because only one adopter reads the board that way.
 
-Wrap the two in a `next()` closure and hand it to `deduceHintPlan`. Exemplar:
-`tracksRecordingPass` in [`tracks/solver.ts`](../../src/games/tracks/solver.ts).
-What this does **not** save you is the record itself — measured against a
-control, an adopted game's recording projection is not cheaper than an
-unadopted one's (`add-tracks-hint`'s `findings.md`), because the loop was never
-the expensive part.
+Wrap the call in a `next()` closure that turns the recorder into a firing, and
+hand it to `deduceHintPlan`. Exemplar: `tracksRecordingPass` in
+[`tracks/solver.ts`](../../src/games/tracks/solver.ts). What this does **not**
+save you is the record itself — measured against a control, an adopted game's
+recording projection is not cheaper than an unadopted one's
+(`add-tracks-hint`'s `findings.md`), because the loop was never the expensive
+part.
 
 ### A rung is not a premise, so return per premise
 

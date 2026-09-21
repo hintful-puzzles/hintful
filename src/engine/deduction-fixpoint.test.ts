@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { type DeductionTechnique, runDeductionFixpoint } from "./deduction-fixpoint.ts";
+import {
+  type DeductionTechnique,
+  type FiringTally,
+  runDeductionFixpoint,
+  singleFirings,
+} from "./deduction-fixpoint.ts";
 import { StepBudgetExceeded, stepBudget } from "./step-budget.ts";
 
 /** A technique whose tier is its position — the baseline the tier-specific
@@ -344,5 +349,121 @@ describe("runDeductionFixpoint", () => {
         runDeductionFixpoint({ techniques, budget: stepBudget("x") }),
       ).toThrow(boom);
     });
+  });
+});
+
+describe("singleFirings", () => {
+  /** A rung that fires `times` times, then has nothing left to do. */
+  const firesTimes = (index: number, times: number, log: string[]) =>
+    rung(index, () => {
+      log.push(`r${index}`);
+      return times-- > 0 ? 1 : 0;
+    });
+
+  it("returns one firing per call, restarting from the top each time", () => {
+    const log: string[] = [];
+    const ladder = singleFirings({
+      techniques: [firesTimes(0, 1, log), firesTimes(1, 2, log)],
+      budget: stepBudget("single"),
+    });
+    const ids: (string | null)[] = [];
+    for (let i = 0; i < 4; i++) ids.push(ladder.next()?.id ?? null);
+    expect(ids).toEqual(["rung-0", "rung-1", "rung-1", null]);
+    // Each call starts at rung 0, and a call stops at the rung that fired.
+    expect(log).toEqual(["r0", "r0", "r1", "r0", "r1", "r0", "r1"]);
+    expect(ladder.impossible()).toBe(false);
+  });
+
+  it("returns a firing even when the caller will hide it", () => {
+    // The driver has no notion of a firing worth showing: a rung that fires
+    // records nothing here, and it is still handed back rather than skipped.
+    const ladder = singleFirings({
+      techniques: [firesTimes(0, 1, []), firesTimes(1, 1, [])],
+      budget: stepBudget("hidden"),
+    });
+    expect(ladder.next()?.id).toBe("rung-0");
+    expect(ladder.next()?.id).toBe("rung-1");
+  });
+
+  it("an exhausted ladder answers null, and keeps answering it", () => {
+    const log: string[] = [];
+    const ladder = singleFirings({
+      techniques: [firesTimes(0, 0, log)],
+      budget: stepBudget("exhausted"),
+    });
+    expect(ladder.next()).toBeNull();
+    expect(ladder.next()).toBeNull();
+    expect(ladder.impossible()).toBe(false);
+    expect(log).toEqual(["r0", "r0"]);
+  });
+
+  it("a contradiction is sticky: null, impossible, and no rung runs again", () => {
+    const log: string[] = [];
+    const ladder = singleFirings({
+      techniques: [
+        firesTimes(0, 1, log),
+        rung(1, () => {
+          log.push("r1");
+          return -1;
+        }),
+      ],
+      budget: stepBudget("contradiction"),
+    });
+    expect(ladder.next()?.id).toBe("rung-0");
+    expect(ladder.impossible()).toBe(false);
+    expect(ladder.next()).toBeNull();
+    expect(ladder.impossible()).toBe(true);
+    const ran = log.length;
+    expect(ladder.next()).toBeNull();
+    expect(log.length).toBe(ran);
+  });
+
+  it("honors the tier cap, beforeTechnique and settled as the fixpoint does", () => {
+    const seen: string[] = [];
+    let done = false;
+    const ladder = singleFirings({
+      techniques: [
+        { id: "hard", tier: 2, run: () => 1 },
+        { id: "easy", tier: 0, run: () => 1 },
+      ],
+      maxTier: 1,
+      budget: stepBudget("hooks"),
+      beforeTechnique: (t) => seen.push(t.id),
+      settled: () => done,
+    });
+    expect(ladder.next()?.id).toBe("easy");
+    expect(seen).toEqual(["easy"]);
+    done = true;
+    expect(ladder.next()).toBeNull();
+    expect(seen).toEqual(["easy"]);
+  });
+
+  it("tallies into the caller's census across calls", () => {
+    const firings: FiringTally = new Map();
+    const ladder = singleFirings({
+      techniques: [firesTimes(0, 2, []), firesTimes(1, 1, [])],
+      budget: stepBudget("tally"),
+      firings,
+    });
+    while (ladder.next()) {}
+    expect([...firings]).toEqual([
+      ["rung-0", 2],
+      ["rung-1", 1],
+    ]);
+  });
+
+  it("names a technique that runs away across many calls", () => {
+    const ladder = singleFirings({
+      techniques: [{ id: "liar", tier: 0, run: () => 1 }],
+      budget: stepBudget("runaway", 30),
+    });
+    let message = "";
+    try {
+      for (;;) ladder.next();
+    } catch (e) {
+      message = (e as StepBudgetExceeded).message;
+    }
+    // One firing per call, so only a tally that outlives the call can blame it.
+    expect(message).toMatch(/Techniques by firings: liar ×30\./);
   });
 });
