@@ -1,0 +1,8 @@
+# No delta: which requirement moves depends on §1.1 — whether Guess gains a
+# notation, and whether it is per-slot marks or a per-color panel mark. A hint
+# requirement written before that is a claim about a game whose vocabulary is
+# still undecided. Written 2026-09-21 out of `give-guess-element-keys`;
+# nothing is implemented.
+schema: spec-driven
+created: 2026-09-21
+skip_specs: true
