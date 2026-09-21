@@ -116,6 +116,14 @@ const D_L_ISLAND_SHIFT_U = 8;
 const D_L_ISLAND_SHIFT_D = 12;
 const D_L_LINE_SHIFT_H = 16;
 const D_L_LINE_SHIFT_V = 22;
+/**
+ * The "at most" limit written on a span, set only on the span's middle square
+ * (0 = none). Two bits suffice because a limit is below `maxb`, which is at
+ * most 4. The top of the word: read it with `>>>`.
+ */
+const DLIM_MASK = 0x03;
+const D_L_LIMIT_SHIFT_H = 28;
+const D_L_LIMIT_SHIFT_V = 30;
 
 // --- Hint draw flags -------------------------------------------------------
 //
@@ -155,6 +163,9 @@ const H_L_ISLAND_SHIFT_U = 4;
 const H_L_ISLAND_SHIFT_D = 6;
 const H_L_LINE_SHIFT_H = 8;
 const H_L_LINE_SHIFT_V = 13;
+/** The limit the step writes, on the span's middle square as the board's is. */
+const H_L_LIMIT_SHIFT_H = 18;
+const H_L_LIMIT_SHIFT_V = 20;
 
 export interface BridgesDrawState {
   started: boolean;
@@ -217,6 +228,15 @@ const offset = (thing: number, ts: number): number => div(ts, 2) - div(thing, 2)
 const islandRadius = (ts: number): number => div(ts * 12, 20);
 const islandNumsize = (clue: number, ts: number): number =>
   clue < 10 ? div(ts * 7, 10) : div(ts * 5, 10);
+
+/** The square a span's limit is written on: its middle one, so the mark sits
+ * between the two islands rather than against either. */
+function middleOf(span: BridgesSpan): { x: number; y: number } {
+  const dx = Math.sign(span.x2 - span.x1);
+  const dy = Math.sign(span.y2 - span.y1);
+  const k = div(Math.abs(span.x2 - span.x1) + Math.abs(span.y2 - span.y1), 2);
+  return { x: span.x1 + k * dx, y: span.y1 + k * dy };
+}
 
 /** WITHIN(x,min,max) — inclusive, order-independent (bridges.c line 200). */
 function within(x: number, a: number, b: number): boolean {
@@ -282,6 +302,40 @@ function drawCross(
   const off = ts8(2, ts);
   dr.drawLine({ x: ox, y: oy }, { x: ox + off, y: oy + off }, col, 1);
   dr.drawLine({ x: ox + off, y: oy }, { x: ox, y: oy + off }, col, 1);
+}
+
+/**
+ * The "at most" mark: the limit as `≤n` on a patch of background, centered on
+ * the span like a sign on a road. The patch is what keeps it legible over a
+ * bridge already drawn through the square, which a span with a limit of one
+ * or more may carry.
+ */
+function drawLimit(
+  dr: GameDrawing,
+  ts: number,
+  cx: number,
+  cy: number,
+  limit: number,
+  col: number,
+): void {
+  const w = div(ts * 3, 4);
+  const h = div(ts, 2);
+  dr.drawRect({ x: cx - div(w, 2), y: cy - div(h, 2), w, h }, COL_BACKGROUND);
+  dr.drawText({ x: cx, y: cy }, glyphFont(div(ts * 2, 5)), col, `≤${limit}`);
+}
+
+/** The color a span's own marks take: the same choice the bars make. */
+function lineColor(ldata: number): number {
+  switch (ldata & DL_COLMASK) {
+    case DL_COL_SELECTED:
+      return COL_SELECTED;
+    case DL_COL_FLASH:
+      return COL_HIGHLIGHT;
+    case DL_COL_WARNING:
+      return COL_WARNING;
+    default:
+      return COL_FOREGROUND;
+  }
 }
 
 /**
@@ -628,6 +682,23 @@ function drawLineTile(
     (data >> D_L_ISLAND_SHIFT_D) & DI_MASK,
     ihint(H_L_ISLAND_SHIFT_D),
   );
+  // Last, so neither an island's rim nor a bridge bar covers it. A square in
+  // the middle of both a limited row and a limited column is rare, and there
+  // the two marks move apart so each stays readable.
+  const hlimHint = (hint >>> H_L_LIMIT_SHIFT_H) & DLIM_MASK;
+  const vlimHint = (hint >>> H_L_LIMIT_SHIFT_V) & DLIM_MASK;
+  const hlim = hlimHint || (data >>> D_L_LIMIT_SHIFT_H) & DLIM_MASK;
+  const vlim = vlimHint || (data >>> D_L_LIMIT_SHIFT_V) & DLIM_MASK;
+  const apart = hlim && vlim ? div(ts, 4) : 0;
+  const half = div(ts, 2);
+  if (hlim) {
+    const col = hlimHint ? COL_HINT : lineColor(hdata);
+    drawLimit(dr, ts, ox + half, oy + half - apart, hlim, col);
+  }
+  if (vlim) {
+    const col = vlimHint ? COL_HINT : lineColor(vdata);
+    drawLimit(dr, ts, ox + half - apart, oy + half + apart, vlim, col);
+  }
   dr.unclip();
   dr.drawUpdate({ x: ox, y: oy, w: ts, h: ts });
 }
@@ -741,6 +812,11 @@ function hintWords(s: BridgesState, hl?: BridgesHighlights): Int32Array {
   // Targets after citations: a span the step decides is never merely cited.
   for (const t of hl.targets) {
     span(t, t.blocked ? HL_CROSS : t.bridges & HL_COUNTMASK);
+    if (t.limit !== null) {
+      const m = middleOf(t);
+      const shift = t.x1 !== t.x2 ? H_L_LIMIT_SHIFT_H : H_L_LIMIT_SHIFT_V;
+      out[s.idx(m.x, m.y)] |= (t.limit & DLIM_MASK) << shift;
+    }
   }
 
   // Second pass: what each cell shows of its neighbors. An island's rim spills
@@ -932,6 +1008,25 @@ export function redrawBridges(
         if (y + 1 < h && s.gridAt(x, y + 1) & G_ISLAND)
           newgrid[s.idx(x, y + 1)] |= vdata << D_I_LINE_SHIFT_U;
       }
+    }
+  }
+
+  // Each limit on its span's middle square. Spans are walked from their left
+  // or top island so each is visited once; a limit under a cross is the cross.
+  for (const is of s.islands) {
+    for (const pt of is.points) {
+      if (pt.dx === -1 || pt.dy === -1 || !pt.off) continue;
+      const limit = s.maximum(pt.dx, pt.x, pt.y);
+      if (limit >= s.maxb) continue;
+      if (s.gridAt(pt.x, pt.y) & (pt.dx ? G_NOLINEH : G_NOLINEV)) continue;
+      const m = middleOf({
+        x1: is.x,
+        y1: is.y,
+        x2: is.x + pt.off * pt.dx,
+        y2: is.y + pt.off * pt.dy,
+      });
+      newgrid[s.idx(m.x, m.y)] |=
+        (limit & DLIM_MASK) << (pt.dx ? D_L_LIMIT_SHIFT_H : D_L_LIMIT_SHIFT_V);
     }
   }
 

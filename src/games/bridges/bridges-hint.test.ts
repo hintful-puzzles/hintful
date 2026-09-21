@@ -33,8 +33,11 @@ import {
   type BridgesMove,
   type BridgesParams,
   type BridgesState,
+  decodeParams,
   G_LINEH,
   G_LINEV,
+  G_NOLINEH,
+  G_NOLINEV,
   type Island,
   newStateFromDesc,
 } from "./state.ts";
@@ -172,6 +175,107 @@ describe("the corpus reaches every premise, and the ledger says which it cannot"
     // preset that stopped allowing them would make the entry wrong, and this is
     // what notices.
     expect(BRIDGES_PRESETS.every((p) => p.allowloops)).toBe(true);
+  });
+});
+
+/**
+ * Boards whose plans once leaned on a limit the player could not see: the
+ * working board held "at most one" on a span while the player's showed room
+ * for two, and a later step counted the one. Pinned as descs, the input the
+ * rung consumes, so a generator change cannot quietly stop producing them.
+ */
+const LIMITED = [
+  "7x7i30e10m2d2:2e2a2a5a2a3a2g5b43i2c2a3c3",
+  "7x7i30e10m2d2:3d2b2d4g4e5a2a3j2b3b2",
+  "7x7i30e10m2d2:2e3a1a4a2a3a3g2b32d1h2a4b2a",
+];
+
+/** Where two boards disagree about a bridge, a cross or a limit, if anywhere. */
+function unseen(player: BridgesState, work: BridgesState): string | null {
+  for (let y = 0; y < work.h; y++) {
+    for (let x = 0; x < work.w; x++) {
+      for (const [dx, line, cross] of [
+        [1, G_LINEH, G_NOLINEH],
+        [0, G_LINEV, G_NOLINEV],
+      ]) {
+        const at = `(${x},${y}) ${dx ? "across" : "down"}`;
+        if (player.gridCount(x, y, line) !== work.gridCount(x, y, line))
+          return `bridges at ${at}`;
+        if ((player.gridAt(x, y) & cross) !== (work.gridAt(x, y) & cross))
+          return `cross at ${at}`;
+        if (player.maximum(dx, x, y) !== work.maximum(dx, x, y))
+          return `limit at ${at}: player ${player.maximum(dx, x, y)}, hint ${work.maximum(dx, x, y)}`;
+      }
+    }
+  }
+  return null;
+}
+
+describe("every step stands on the board the player can see", () => {
+  /**
+   * Plays only the steps the plan shows onto a player's board, through the
+   * real `executeMove`, and before each one compares it with the board the
+   * deduction is reasoning from. Any bridge, cross or limit the deduction holds
+   * and the player does not is a fact the step's sentence may be leaning on
+   * that the player has no way to see (AGENTS.md, hint rule 6).
+   */
+  function walk(params: BridgesParams, desc: string) {
+    const start = newStateFromDesc(params, desc);
+    const work = start.workingCopy();
+    const pass = bridgesRecordingPass(work, params.difficulty, stepBudget("bh"));
+    let player = start;
+    let before = work.workingCopy();
+    const out = { shown: 0, limits: 0, hiddenMoves: 0, first: null as string | null };
+    deduceHintPlan<BridgesState, BridgesFiring, string>({
+      board: work,
+      status: () => (pass.impossible() ? "broken" : pass.solved() ? "done" : "open"),
+      incomplete: "open",
+      next: () => {
+        before = work.workingCopy();
+        return pass.next();
+      },
+      showable: (_board, f) => {
+        if (!f.reason) {
+          if (f.ops.some((op) => op.op !== "M")) out.hiddenMoves++;
+          return false;
+        }
+        out.shown++;
+        if (f.ops.some((op) => op.op === "C")) out.limits++;
+        const gap = unseen(player, before);
+        if (gap && !out.first)
+          out.first = `step ${out.shown} (${f.reason.kind}): ${gap}`;
+        player = bridgesGame.executeMove(player, { ops: f.ops });
+        return true;
+      },
+    });
+    return out;
+  }
+
+  it("the pinned boards write the limits their later steps count", () => {
+    for (const pd of LIMITED) {
+      const [p, desc] = pd.split(":");
+      const r = walk(decodeParams(p), desc);
+      expect(r.first, pd).toBeNull();
+      expect(r.limits, `${pd} wrote no limit`).toBeGreaterThan(0);
+    }
+  });
+
+  it("and so does every board of the corpus", () => {
+    let shown = 0;
+    let limits = 0;
+    for (const { params } of SHAPES) {
+      for (const seed of SEEDS) {
+        const { desc } = newBridgesDesc(params, randomNew(seed));
+        const r = walk(params, desc);
+        expect(r.first, `${bridgesGame.encodeParams(params, true)}:${desc}`).toBeNull();
+        expect(r.hiddenMoves, "a firing moved the board without a sentence").toBe(0);
+        shown += r.shown;
+        limits += r.limits;
+      }
+    }
+    // The vacuity guards: the comparison ran, and it ran across limits.
+    expect(shown).toBeGreaterThan(1000);
+    expect(limits).toBeGreaterThan(5);
   });
 });
 
@@ -391,6 +495,40 @@ describe("following a step", () => {
     }
     expect(checked).toBe(elsewhere.length);
   });
+
+  describe("a step that limits a span", () => {
+    const [p, desc] = LIMITED[0].split(":");
+    const board = newStateFromDesc(decodeParams(p), desc);
+    const span = { x1: 0, y1: 0, x2: 6, y2: 0 };
+    const stepTo = (op: BridgesMove["ops"][number]) => ({
+      move: { ops: [op] },
+      explanation: "",
+      highlights: { targets: [], focus: null, islands: [], spans: [] },
+    });
+    const track = (m: BridgesMove, want: BridgesMove["ops"][number], on = board) =>
+      bridgesGame.hintKeepTrack?.(m, stepTo(want), on);
+
+    it("is followed by the limit the drag leaves, not by the ops that leave it", () => {
+      const atMostOne = { op: "C" as const, ...span, n: 1 };
+      const cross = { op: "N" as const, ...span };
+      // The one drag that writes it, from either end.
+      expect(track({ ops: [atMostOne] }, atMostOne)).toBe("completed");
+      expect(
+        track({ ops: [{ op: "C", x1: 6, y1: 0, x2: 0, y2: 0, n: 1 }] }, atMostOne),
+      ).toBe("completed");
+      // A cross is two drags from a free span, and the first is on the way.
+      expect(track({ ops: [atMostOne] }, cross)).toBe("onTrack");
+      const limited = bridgesGame.executeMove(board, { ops: [atMostOne] });
+      expect(track({ ops: [{ ...atMostOne, n: 2 }, cross] }, cross, limited)).toBe(
+        "completed",
+      );
+      // Past the step's limit, or back up from it, is the player's own way.
+      expect(track({ ops: [cross] }, atMostOne)).toBe("off");
+      expect(track({ ops: [{ ...atMostOne, n: 2 }] }, cross, limited)).toBe("off");
+      // And a bridge where the step asks for a limit is not a limit.
+      expect(track({ ops: [{ op: "L", ...span, n: 1 }] }, atMostOne)).toBe("off");
+    });
+  });
 });
 
 describe("refusing", () => {
@@ -466,16 +604,23 @@ describe("the sentences at their extremes", () => {
     expect(say.needsThisWay(3, 0)).toContain("no bridges at all");
     expect(say.needsThisWay(3, 1)).toContain("at most 1 bridge from");
     expect(say.needsThisWay(3, 2)).toContain("at most 2 bridges from");
-    expect(say.wouldSealGroup(2)).toContain("these 2 islands");
-    expect(say.wouldStarve(5, true)).toContain("this 5 itself");
-    expect(say.wouldStarve(5, false)).toContain("the outlined island");
+    expect(say.wouldSealGroup(2, 0)).toContain("these 2 islands");
+    expect(say.wouldSealGroup(2, 0)).toMatch(/^A bridge here .* must be blocked\.$/);
+    expect(say.wouldSealGroup(2, 1)).toMatch(
+      /^Two bridges here .* at most one can run/,
+    );
+    expect(say.wouldSealGroup(2, 3)).toMatch(/^Four bridges here .* at most three can/);
+    expect(say.wouldStarve(5, true, 0)).toContain("this 5 itself");
+    expect(say.wouldStarve(5, false, 0)).toContain("the outlined island");
+    expect(say.wouldStarve(5, false, 1)).toMatch(/^Two bridges .* at most one can run/);
     for (const s of [
       say.exactSpace(16, 8),
       say.everyNeighbor(16, 4),
       say.wouldCloseLoop,
       say.needsThisWay(16, 12),
-      say.wouldSealGroup(64),
-      say.wouldStarve(16, false),
+      say.wouldSealGroup(64, 3),
+      say.wouldStarve(16, false, 3),
+      say.wouldStarve(16, true, 3),
       say.mustReachOut(16),
     ]) {
       expect(s.length, s).toBeLessThanOrEqual(120);
@@ -490,6 +635,7 @@ describe("the sentences at their extremes", () => {
       narrate(state, {
         kind: "wouldStarve",
         island: 0,
+        limit: 0,
         ev: { islands: [0], spans: [] },
       }),
     ).toContain("itself");
@@ -497,6 +643,7 @@ describe("the sentences at their extremes", () => {
       narrate(state, {
         kind: "wouldStarve",
         island: 0,
+        limit: 0,
         ev: { islands: [1], spans: [] },
       }),
     ).toContain("the outlined island");

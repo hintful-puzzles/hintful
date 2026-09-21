@@ -83,8 +83,8 @@ export type BridgesReason = { ev: BridgesEvidence; island: number } & (
   | { kind: "everyNeighbor"; neighbors: number }
   | { kind: "wouldCloseLoop" }
   | { kind: "needsThisWay"; elsewhere: number }
-  | { kind: "wouldSealGroup"; group: number }
-  | { kind: "wouldStarve" }
+  | { kind: "wouldSealGroup"; group: number; limit: number }
+  | { kind: "wouldStarve"; limit: number }
   | { kind: "mustReachOut"; group: number }
 );
 
@@ -241,6 +241,20 @@ class Solver {
     if (!rec) return;
     rec.ops.push({
       op: "L",
+      x1: is.x,
+      y1: is.y,
+      x2: this.st.islandOrthX(is, direction),
+      y2: this.st.islandOrthY(is, direction),
+      n,
+    });
+  }
+
+  /** Record the "at most `n`" limit the firing writes in `direction`. */
+  private recordLimit(is: Island, direction: number, n: number): void {
+    const rec = this.rec;
+    if (!rec) return;
+    rec.ops.push({
+      op: "C",
       x1: is.x,
       y1: is.y,
       x2: this.st.islandOrthX(is, direction),
@@ -586,7 +600,7 @@ class Solver {
         const subgroup = this.solveIslandSubgroup(is, i);
         if (subgroup || this.solveIslandImpossible()) {
           maxb = n - 1;
-          if (rec && maxb === 0) {
+          if (rec) {
             if (subgroup) {
               sealed = this.groupIslands(this.dsf.canonify(st.idx(is.x, is.y)));
             } else {
@@ -600,28 +614,32 @@ class Solver {
       this.dsf = saved; // C: dsf_copy(dsf, tmpdsf)
 
       if (maxb !== -1) {
+        // One argument whatever the limit: `maxb + 1` bridges this way would
+        // seal a group off or starve an island, so at most `maxb` may run here.
+        // At none the limit is the no-line cross; above it, the "at most" mark
+        // the player can write with the same gesture.
+        if (rec) {
+          rec.reason = sealed
+            ? {
+                kind: "wouldSealGroup",
+                island: this.islandIndex(is),
+                group: sealed.length,
+                limit: maxb,
+                ev: { islands: sealed, spans: this.groupSpans(sealed) },
+              }
+            : {
+                kind: "wouldStarve",
+                island: this.islandIndex(is),
+                limit: maxb,
+                ev: { islands: starved >= 0 ? [starved] : [], spans: [] },
+              };
+        }
         if (maxb === 0) {
-          if (rec) {
-            rec.reason = sealed
-              ? {
-                  kind: "wouldSealGroup",
-                  island: this.islandIndex(is),
-                  group: sealed.length,
-                  ev: { islands: sealed, spans: this.groupSpans(sealed) },
-                }
-              : {
-                  kind: "wouldStarve",
-                  island: this.islandIndex(is),
-                  ev: { islands: starved >= 0 ? [starved] : [], spans: [] },
-                };
-          }
           this.solveJoin(is, i, -1, false); // NOLINE
           this.recordNoline(is, i);
         } else {
-          // A per-direction maximum. Upstream gives the player no way to write
-          // one down, so it is real progress with no move to offer: it changes
-          // the working board, declares no reason, and emits no op.
           this.solveJoin(is, i, maxb, true);
+          this.recordLimit(is, i, maxb);
         }
         didsth = true;
       }
@@ -839,9 +857,8 @@ export interface BridgesRecordingPass {
  * reason, which is what makes "a rule that declares no reason narrates
  * nothing" a checked property rather than a hope.
  *
- * Every firing is returned, a per-direction maximum included: it changes the
- * working board, records no op and declares no reason, so the plan loop's
- * `showable` hides it and counts it in `hidden`.
+ * Every firing is returned. The one that declares no reason, the bookkeeping
+ * mark, is hidden by the plan loop's `showable` and counted in `hidden`.
  *
  * `st` must be a working copy the caller is happy to have overwritten, and —
  * unlike {@link solveFromScratch} — it is **not** cleared: the deduction

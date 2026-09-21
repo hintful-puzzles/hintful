@@ -2026,6 +2026,26 @@ that fact and nothing on the board records it. Two tells found every breach:
   the only arm. A clue firing that counts two equivalent squares as one line reads
   the same union-find, fired five times as often, and its sentence was false as
   well. `add-slant-notation` found it by grepping the solver for reads of `equiv`.
+- **A state field the solver writes and no player move does.** Bridges' stage 3
+  wrote a per-span maximum ("at most one bridge here") into `maxh`/`maxv`, which
+  every later rung reads through `possibles`, while the firing that wrote it
+  showed nothing. The audit missed it because no sentence *named* the maximum:
+  the steps that leaned on it were ordinary counting sentences ("room for exactly
+  one"), false only on the player's board. On 603 Tricky boards, 477 showed such a
+  step. `bridges-hint-cites-an-unwritable-cap` measured it by rebuilding each
+  step's board as the player sees it and re-running the premise there.
+
+**The guard that holds the rule, for any game whose hint runs on a working copy:
+replay only the shown steps onto a player's board through the real
+`executeMove`, and before each shown step compare that board with the one the
+deduction reasons from.** Any bridge, line, mark or limit the deduction holds and
+the player does not is a fact a sentence may lean on unseen, whichever sentence
+it is, so the guard needs no per-premise knowledge. `bridges-hint.test.ts`
+§ "every step stands on the board the player can see" is the exemplar.
+Where the solver already stores the fact in the state, the notation can be that
+field: Bridges' limit is the same `maxh`/`maxv` the solver wrote, set by a
+player's right-drag (which lowers the limit one step, down to the cross), so the
+hint's firing becomes a step that writes it and nothing else had to change.
 
 Loopy is where this was learned. From Normal its rungs reason about two things the
 game once gave players no way to mark: a **corner**, two edges meeting at a dot

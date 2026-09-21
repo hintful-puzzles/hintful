@@ -61,7 +61,7 @@ import {
   redrawBridges,
   toCoord,
 } from "./render.ts";
-import { runMapCheck, solveFromScratch } from "./solver.ts";
+import { type BridgesSpan, runMapCheck, solveFromScratch } from "./solver.ts";
 import {
   BRIDGES_PRESETS,
   type BridgesMistake,
@@ -187,7 +187,8 @@ function updateDragDst(
   if (!pt || pt.off === 0) return UI_UPDATE;
   if (s.grid[nc] & mtype) return UI_UPDATE; // don't change marked lines
   if (ui.dragIsNoline) {
-    if (s.grid[nc] & gtype) return UI_UPDATE; // no no-line where a line already is
+    const span = { x1: is.x, y1: is.y, x2: is.x + pt.off * dx, y2: is.y + pt.off * dy };
+    if (!lowerLimit(s, span)) return UI_UPDATE; // a full bundle with no limit to lower
   } else {
     if (s.possibles(dx, nextX, nextY) === 0) return UI_UPDATE; // not possible
     if (s.grid[nc] & ntype) return UI_UPDATE; // no bridge over a no-line
@@ -197,15 +198,42 @@ function updateDragDst(
   return UI_UPDATE;
 }
 
-function finishDrag(ui: BridgesUi): BridgesMove | UiUpdate | null {
+/**
+ * The secondary drag lowers the most bridges a span may carry by one:
+ * no limit, then each limit down to one, then none at all (the no-line
+ * cross), then no limit again. Every stop on the way is weaker than the next,
+ * so a player heading for "at most one" or for the cross never passes through a
+ * mark that claims more than they mean. A limit never drops below the bridges
+ * already drawn, so over a bundle the cycle skips the cross and wraps to no
+ * limit instead. `null` when there is nothing to lower: a full bundle with no
+ * limit on it.
+ */
+function lowerLimit(s: BridgesState, span: BridgesSpan): BridgesOp[] | null {
+  const dx = Math.sign(span.x2 - span.x1);
+  const cx = span.x1 + dx;
+  const cy = span.y1 + Math.sign(span.y2 - span.y1);
+  const cross = { op: "N" as const, ...span };
+  const limit = (n: number): BridgesOp => ({ op: "C", ...span, n });
+  if (s.gridAt(cx, cy) & (dx ? G_NOLINEH : G_NOLINEV)) return [cross];
+  const drawn = s.gridCount(cx, cy, dx ? G_LINEH : G_LINEV);
+  const now = s.maximum(dx, cx, cy);
+  const next = now - 1;
+  if (next >= Math.max(drawn, 1)) return [limit(next)];
+  const lifted = now < s.maxb ? [limit(s.maxb)] : [];
+  if (drawn === 0) return [...lifted, cross];
+  return lifted.length ? lifted : null;
+}
+
+function finishDrag(s: BridgesState, ui: BridgesUi): BridgesMove | UiUpdate | null {
   const { sx, sy, ex, ey } = ui.drag;
   if (sx === -1 || sy === -1) return null;
   if (ex === -1 || ey === -1) return uiCancelDrag(ui);
-  const op: BridgesOp = ui.dragIsNoline
-    ? { op: "N", x1: sx, y1: sy, x2: ex, y2: ey }
-    : { op: "L", x1: sx, y1: sy, x2: ex, y2: ey, n: ui.nlines };
+  const span = { x1: sx, y1: sy, x2: ex, y2: ey };
+  const ops: BridgesOp[] | null = ui.dragIsNoline
+    ? lowerLimit(s, span)
+    : [{ op: "L", ...span, n: ui.nlines }];
   uiCancelDrag(ui);
-  return { ops: [op] };
+  return ops ? { ops } : UI_UPDATE;
 }
 
 function interpretMove(
@@ -256,7 +284,7 @@ function interpretMove(
     // path below would otherwise still toggle the mark on the island this
     // gesture pressed — a move committed from a board that no longer exists.
     if (!ui.drag.live) return uiCancelDrag(ui);
-    if (ui.dragged) return finishDrag(ui);
+    if (ui.dragged) return finishDrag(s, ui);
     if (!s.inGrid(ui.drag.sx, ui.drag.sy) || gx !== ui.drag.sx || gy !== ui.drag.sy) {
       return uiCancelDrag(ui);
     }
@@ -284,7 +312,7 @@ function interpretMove(
         toCoord(moved.x, ts, b) + half,
         toCoord(moved.y, ts, b) + half,
       );
-      return finishDrag(ui);
+      return finishDrag(s, ui);
     }
     // Not dragging: cone-search for the next island in the pressed direction.
     const dx = btn === CURSOR_RIGHT ? 1 : btn === CURSOR_LEFT ? -1 : 0;
@@ -395,7 +423,7 @@ function executeMove(s: BridgesState, m: BridgesMove): BridgesState {
   for (const op of m.ops) {
     if (op.op === "S") {
       ret.solved = true;
-    } else if (op.op === "L" || op.op === "N") {
+    } else if (op.op === "L" || op.op === "N" || op.op === "C") {
       if (!ret.inGrid(op.x1, op.y1) || !ret.inGrid(op.x2, op.y2))
         throw new Error(`bridges executeMove: ${op.op} endpoint off-grid`);
       if ((op.x1 !== op.x2 ? 1 : 0) + (op.y1 !== op.y2 ? 1 : 0) !== 1)
@@ -406,7 +434,19 @@ function executeMove(s: BridgesState, m: BridgesMove): BridgesState {
         throw new Error(`bridges executeMove: ${op.op} endpoint not an island`);
       if (op.op === "L" && (op.n < 0 || op.n > ret.maxb))
         throw new Error("bridges executeMove: L count out of range");
-      ret.islandJoin(is1, is2, op.op === "L" ? op.n : -1, false);
+      if (op.op === "C") {
+        // A limit below the bridges already drawn would be a board that
+        // contradicts its own marks, which no gesture and no hint produces.
+        const dx = Math.sign(op.x2 - op.x1);
+        const cx = op.x1 + dx;
+        const cy = op.y1 + Math.sign(op.y2 - op.y1);
+        const drawn = ret.gridCount(cx, cy, dx ? G_LINEH : G_LINEV);
+        if (op.n < 1 || op.n > ret.maxb || op.n < drawn)
+          throw new Error("bridges executeMove: C limit out of range");
+        ret.islandJoin(is1, is2, op.n, true);
+      } else {
+        ret.islandJoin(is1, is2, op.op === "L" ? op.n : -1, false);
+      }
     } else if (op.op === "M") {
       if (!ret.inGrid(op.x, op.y)) throw new Error("bridges executeMove: M off-grid");
       const is1 = ret.islandAt(op.x, op.y);
@@ -442,6 +482,9 @@ function stateDiff(src: BridgesState, dest: BridgesState): BridgesOp[] {
       if ((src.gridAt(x, y) & nline) !== (dest.gridAt(x, y) & nline)) {
         ops.push({ op: "N", ...ends });
       }
+      // The solution is its bridges, so a limit the player wrote is lifted
+      // rather than matched to one the solver derived on the way.
+      if (src.maximum(dx, x, y) < src.maxb) ops.push({ op: "C", ...ends, n: src.maxb });
     }
     if ((src.gridAt(isS.x, isS.y) & G_MARK) !== (dest.gridAt(isD.x, isD.y) & G_MARK)) {
       ops.push({ op: "M", x: isS.x, y: isS.y });
@@ -458,8 +501,15 @@ function solve(orig: BridgesState, curr: BridgesState): SolveResult<BridgesMove>
   return { ok: true, move: { ops: stateDiff(curr, solved) } };
 }
 
-// --- findMistakes: flag player bridges the unique solution can't support ---
+// --- findMistakes: flag player marks the unique solution can't support ---
 
+/**
+ * A span is wrong when it carries more bridges than the solution, or when the
+ * player has limited it below the solution's count: an "at most" mark under
+ * the bridges it needs, or a cross over a span that needs any. The cross is
+ * the bottom of the same scale, so the two are one rule, and both are a span
+ * the board can light up.
+ */
 function findMistakes(state: BridgesState): readonly BridgesMistake[] {
   const solved = state.workingCopy();
   if (solveFromScratch(solved, 10) === 0) return [];
@@ -469,7 +519,11 @@ function findMistakes(state: BridgesState): readonly BridgesMistake[] {
       if (pt.dx === -1 || pt.dy === -1) continue; // span once (right/down)
       if (pt.off === 0) continue;
       const gline = pt.dx ? G_LINEH : G_LINEV;
-      if (state.gridCount(pt.x, pt.y, gline) > solved.gridCount(pt.x, pt.y, gline)) {
+      const nline = pt.dx ? G_NOLINEH : G_NOLINEV;
+      const needed = solved.gridCount(pt.x, pt.y, gline);
+      const limit =
+        state.gridAt(pt.x, pt.y) & nline ? 0 : state.maximum(pt.dx, pt.x, pt.y);
+      if (state.gridCount(pt.x, pt.y, gline) > needed || limit < needed) {
         out.push({
           x1: is.x,
           y1: is.y,

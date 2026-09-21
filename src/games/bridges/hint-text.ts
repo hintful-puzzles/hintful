@@ -19,6 +19,21 @@
 
 const plural = (n: number, one: string, many: string): string => (n === 1 ? one : many);
 
+/** Bridge counts as words: a limit is at most `MAX_BRIDGES - 1`, and the count
+ * one past it at most `MAX_BRIDGES`. */
+const WORDS = ["none", "one", "two", "three", "four"];
+
+/** The trial a limiting argument makes: one bridge past what it allows. */
+const tooMany = (limit: number): string =>
+  limit === 0
+    ? "A bridge"
+    : `${WORDS[limit + 1].replace(/^./, (c) => c.toUpperCase())} bridges`;
+
+/** Its conclusion. At none it is the no-line the player crosses out, and
+ * above it the "at most" mark they write with the same gesture. */
+const limited = (limit: number): string =>
+  limit === 0 ? "this way must be blocked" : `at most ${WORDS[limit]} can run this way`;
+
 export const say = {
   /** An island `missing` bridges short of its clue with room for exactly that
    * many. `clue` names it; the picture draws every bridge the move adds, and
@@ -55,18 +70,19 @@ export const say = {
       ? `This ${clue}'s other neighbors can take no bridges at all, so every bridge it needs must run this way.`
       : `This ${clue} can take at most ${elsewhere} ${plural(elsewhere, "bridge", "bridges")} from its other neighbors, so one must run this way.`,
 
-  /** A bridge here would complete a group of `group` islands, all satisfied and
-   * cut off from the rest. The picture outlines exactly `group` islands. */
-  wouldSealGroup: (group: number): string =>
-    `A bridge here would shut these ${group} islands into a finished group of their own, so this way must be blocked.`,
+  /** One bridge more than `limit` here would complete a group of `group`
+   * islands, all satisfied and cut off from the rest. The picture outlines
+   * exactly `group` islands. */
+  wouldSealGroup: (group: number, limit: number): string =>
+    `${tooMany(limit)} here would shut these ${group} islands into a finished group of their own, so ${limited(limit)}.`,
 
-  /** A bridge here leaves some island unable to reach its clue: `self` when
-   * that island is the one the bridge would start from, where "the outlined
-   * island" would point at the recolored one instead. */
-  wouldStarve: (clue: number, self: boolean): string =>
+  /** One bridge more than `limit` here leaves some island unable to reach its
+   * clue: `self` when that island is the one the bridge would start from,
+   * where "the outlined island" would point at the recolored one instead. */
+  wouldStarve: (clue: number, self: boolean, limit: number): string =>
     self
-      ? `A bridge here would leave this ${clue} itself unable to reach its count, so this way must be blocked.`
-      : "A bridge here would leave the outlined island unable to reach its own count, so this way must be blocked.",
+      ? `${tooMany(limit)} here would leave this ${clue} itself unable to reach its count, so ${limited(limit)}.`
+      : `${tooMany(limit)} here would leave the outlined island unable to reach its own count, so ${limited(limit)}.`,
 
   /** Filling every other direction to its limit would seal off a finished
    * group, so this direction cannot be the empty one. */

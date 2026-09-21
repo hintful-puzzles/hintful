@@ -95,6 +95,44 @@ describe("Bridges render scenarios", () => {
     expect(rims.length).toBeGreaterThanOrEqual(cited?.length ?? 0);
   });
 
+  // A board whose plan limits a span: its top row runs 2 … 2 across six empty
+  // squares, and a double bridge there would seal the two 2s off.
+  const LIMITED = "7x7i30e10m2d2:2e2a2a5a2a3a2g5b43i2c2a3c3";
+  const TOP_ROW = { x1: 0, y1: 0, x2: 6, y2: 0 };
+  const limitLabels = (ops: ReturnType<typeof renderScenario>["recording"]["ops"]) =>
+    ops.flatMap((o) => (o.op === "text" && o.text.startsWith("≤") ? [o] : []));
+
+  it("a limit the player writes is drawn once, mid-span, in board ink", () => {
+    const { recording } = renderScenario({
+      game: bridgesGame,
+      id: LIMITED,
+      moves: [{ ops: [{ op: "C", ...TOP_ROW, n: 1 }] }],
+    });
+    const labels = limitLabels(recording.ops);
+    expect(labels.map((o) => [o.text, o.color])).toEqual([["≤1", COL_FOREGROUND]]);
+    // On the middle square of the six between the two islands: x = 3.
+    const ts = PREFERRED_TILE_SIZE;
+    expect(Math.trunc(labels[0].x / ts)).toBe(3);
+    expect(recording.ops).toMatchSnapshot();
+  });
+
+  it("a step that limits a span writes the limit in the action color", () => {
+    const { recording, hint } = renderScenario({
+      game: bridgesGame,
+      id: LIMITED,
+      showHint: true,
+      hintUntil: (s) =>
+        ((s as { highlights?: BridgesHighlights }).highlights?.targets ?? []).some(
+          (t) => t.limit !== null,
+        ),
+    });
+    expect(hint?.explanation).toMatch(/at most one can run this way/);
+    expect(limitLabels(recording.ops).map((o) => [o.text, o.color])).toEqual([
+      ["≤1", COL_HINT],
+    ]);
+    expect(recording.ops).toMatchSnapshot();
+  });
+
   it("a bridge the step adds to an existing one leaves the first in board ink", () => {
     // The half of "highlight, never perform" a bundle has to get right: raising
     // a span from one bridge to two draws two bars, and only the new one is the

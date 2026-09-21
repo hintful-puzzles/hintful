@@ -58,6 +58,8 @@ export interface BridgesTarget extends BridgesSpan {
   bridges: number;
   /** The move draws the no-line cross instead. */
   blocked: boolean;
+  /** The "at most" limit the move writes here, or `null` when it writes none. */
+  limit: number | null;
 }
 
 /**
@@ -99,13 +101,13 @@ export function narrate(state: BridgesState, reason: BridgesReason): string {
     case "needsThisWay":
       return say.needsThisWay(clue, reason.elsewhere);
     case "wouldSealGroup":
-      return say.wouldSealGroup(reason.group);
+      return say.wouldSealGroup(reason.group, reason.limit);
     case "wouldStarve":
       // "The outlined island" is a lie when the starved island *is* the one the
       // bridge starts from, because nothing else is then left to outline. The
       // sentence and the picture ask `namesFocus` the same question, so they
       // cannot disagree about which arm this is.
-      return say.wouldStarve(clue, namesFocus(reason));
+      return say.wouldStarve(clue, namesFocus(reason), reason.limit);
     case "mustReachOut":
       return say.mustReachOut(clue);
   }
@@ -152,7 +154,7 @@ function highlightsOf(
   const at = (i: number) => ({ x: state.islands[i].x, y: state.islands[i].y });
   return {
     targets: firing.ops.flatMap((op) =>
-      op.op === "L" || op.op === "N"
+      op.op === "L" || op.op === "N" || op.op === "C"
         ? [
             {
               x1: op.x1,
@@ -161,6 +163,7 @@ function highlightsOf(
               y2: op.y2,
               bridges: op.op === "L" ? op.n : 0,
               blocked: op.op === "N",
+              limit: op.op === "C" ? op.n : null,
             },
           ]
         : [],
@@ -186,14 +189,19 @@ function highlightsOf(
  * rung: that is the tier the generator certified it soluble at, and it is what
  * stops an Easy board being handed a connectivity argument it never needed.
  *
- * **`showable` is the reason test alone, with no board-legality half.** Two
- * firings declare no reason: the bookkeeping mark, which the fork's own
- * auto-mark aid draws, and a per-direction maximum, which the player has no
- * way to write down (the open change `bridges-hint-cites-an-unwritable-cap`
- * records where a later sentence leans on one). Every other firing changes
- * something the player could not already have: a bridge count the solver only
- * ever raises, and a no-line it only ever draws where `possibles` is still
- * nonzero, which a cross the player has drawn already zeroes.
+ * **`showable` is the reason test alone, with no board-legality half.** One
+ * firing declares no reason: the bookkeeping mark, which the fork's own
+ * auto-mark aid draws. Every other firing changes something the player could
+ * not already have: a bridge count the solver only ever raises, a no-line it
+ * only ever draws where `possibles` is still nonzero, which a cross the player
+ * has drawn already zeroes, and an "at most" limit it only ever writes below
+ * the one standing, which the player's own limit already lowers.
+ *
+ * **Every fact a step leans on is one the player can see**, because the
+ * per-direction limit is a mark the player writes too, and the hint writes it
+ * as a step of its own. `bridges-hint.test.ts` holds the plan to that: the
+ * board the deduction reasons from never carries a limit, a bridge or a cross
+ * the player's board does not.
  */
 export function bridgesHint(
   state: BridgesState,
@@ -216,10 +224,10 @@ export function bridgesHint(
   });
 
   // The board is sound as far as `findMistakes` can tell — it re-solves from
-  // the clues and compares bridges — and the deduction still contradicts
+  // the clues and compares every span — and the deduction still contradicts
   // itself, so what is wrong is an annotation it cannot see: an island marked
-  // complete before it is, or a no-line across a bridge the solution needs.
-  // Neither is a cell to highlight, which is exactly what this refusal is for.
+  // complete before it is. That is not a span to highlight, which is exactly
+  // what this refusal is for.
   if (pass.impossible()) return { ok: false, error: CONTRADICTION_UNLOCALIZED };
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
 
@@ -259,13 +267,28 @@ function spanBridges(state: BridgesState, span: BridgesSpan): number {
   return state.gridCount(span.x1 + dx, span.y1 + dy, dx ? G_LINEH : G_LINEV);
 }
 
-/** Is this span already crossed out? */
-function spanBlocked(state: BridgesState, span: BridgesSpan): boolean {
+/**
+ * The most bridges this span may carry once `m` is played: none under a cross,
+ * otherwise its limit. A limit is lowered one drag at a time and a drag can be
+ * two ops (lift the limit, then cross), so a move is judged by the limit it
+ * leaves rather than by the ops that leave it.
+ */
+function limitAfter(state: BridgesState, span: BridgesSpan, m: BridgesMove): number {
   const dx = Math.sign(span.x2 - span.x1);
   const dy = Math.sign(span.y2 - span.y1);
-  const c = state.idx(span.x1 + dx, span.y1 + dy);
-  return (state.grid[c] & (dx ? G_NOLINEH : G_NOLINEV)) !== 0;
+  const x = span.x1 + dx;
+  const y = span.y1 + dy;
+  let crossed = (state.gridAt(x, y) & (dx ? G_NOLINEH : G_NOLINEV)) !== 0;
+  let limit = state.maximum(dx, x, y);
+  for (const op of m.ops) {
+    if (op.op === "N" && sameSpan(op, span)) crossed = !crossed;
+    if (op.op === "C" && sameSpan(op, span)) limit = op.n;
+  }
+  return crossed ? 0 : limit;
 }
+
+/** The limit a step asks for: none for a cross. */
+const wantedLimit = (want: BridgesOp): number => (want.op === "C" ? want.n : 0);
 
 /**
  * Classify a player move against the displayed step.
@@ -286,16 +309,25 @@ export function bridgesKeepTrack(
   if (m.ops.length === 0) return "off";
 
   for (const op of m.ops) {
-    if (op.op !== "L" && op.op !== "N") return "off";
-    const want = wanted.find(
-      (w) => (w.op === "L" || w.op === "N") && w.op === op.op && sameSpan(w, op),
-    );
-    if (!want) return "off";
-    // A drag that wraps a full span back to zero, or one past what the step
-    // asks for, is the player going their own way.
-    if (op.op === "L" && want.op === "L") {
+    if (op.op === "L") {
+      const want = wanted.find((w) => w.op === "L" && sameSpan(w, op));
+      if (!want || want.op !== "L") return "off";
+      // A drag that wraps a full span back to zero, or one past what the step
+      // asks for, is the player going their own way.
       const now = spanBridges(state, op);
       if (op.n <= now || op.n > want.n) return "off";
+    } else if (op.op === "N" || op.op === "C") {
+      const want = wanted.find(
+        (w) => (w.op === "N" || w.op === "C") && sameSpan(w, op),
+      );
+      if (!want) return "off";
+      // Lowering toward the step's limit is on the way to it; lowering past
+      // it, or lifting a limit back up, is not.
+      const before = limitAfter(state, op, { ops: [] });
+      const after = limitAfter(state, op, m);
+      if (after >= before || after < wantedLimit(want)) return "off";
+    } else {
+      return "off";
     }
   }
 
@@ -306,11 +338,8 @@ export function bridgesKeepTrack(
         spanBridges(state, want) === want.n
       );
     }
-    if (want.op === "N") {
-      return (
-        m.ops.some((op) => op.op === "N" && sameSpan(op, want)) ||
-        spanBlocked(state, want)
-      );
+    if (want.op === "N" || want.op === "C") {
+      return limitAfter(state, want, m) === wantedLimit(want);
     }
     return true;
   };
@@ -323,7 +352,7 @@ export function bridgesKeepTrack(
     step.highlights = {
       ...step.highlights,
       targets: step.highlights.targets.filter((t) =>
-        left.some((w) => (w.op === "L" || w.op === "N") && sameSpan(w, t)),
+        left.some((w) => w.op !== "S" && w.op !== "M" && sameSpan(w, t)),
       ),
     };
   }

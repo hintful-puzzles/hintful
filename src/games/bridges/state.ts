@@ -155,6 +155,9 @@ export type BridgesOp =
   | { op: "S" } // mark this a solver-produced solution (suppresses win flash)
   | { op: "L"; x1: number; y1: number; x2: number; y2: number; n: number } // set n bridges
   | { op: "N"; x1: number; y1: number; x2: number; y2: number } // toggle no-line
+  // Set the most bridges the span may carry; `n` at the board's `maxb` clears
+  // the limit. A limit of none is the no-line, so `n` is never 0 here.
+  | { op: "C"; x1: number; y1: number; x2: number; y2: number; n: number }
   | { op: "M"; x: number; y: number }; // toggle island mark
 
 /** A move is a sequence of ops (a drag is one L/N; solve/hint is many). */
@@ -593,9 +596,18 @@ export class BridgesState {
     for (const is of this.islands) is.count = this.islandCountbridges(is);
   }
 
-  /** Clear everything but the islands (C map_clear — deliberately leaves lines/max). */
+  /**
+   * Clear everything but the islands, limits included. A limit can be the
+   * player's own mark, and a from-scratch solve that kept one would solve the
+   * player's reading of the board instead of the clues: `findMistakes` would
+   * then find nothing wrong with a board whose wrong limit made it unsolvable.
+   * `lines` needs no reset, because nothing reads it once the line flags are
+   * gone.
+   */
   mapClear(): void {
     for (let i = 0; i < this.grid.length; i++) this.grid[i] &= G_ISLAND;
+    this.maxh.fill(this.maxb);
+    this.maxv.fill(this.maxb);
   }
 }
 

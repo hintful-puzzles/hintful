@@ -23,6 +23,7 @@ import {
   BRIDGES_PRESETS,
   type BridgesMove,
   type BridgesOp,
+  type BridgesState,
   decodeParams,
   encodeGame,
   encodeParams,
@@ -113,23 +114,72 @@ describe("bridges input model (drag → move)", () => {
     expect(s2.gridCount(1, 0, G_LINEH)).toBe(1);
   });
 
-  it("right-drag lays a no-line, and a plain click toggles the island mark", () => {
-    const s = twoIslands();
+  /** A right-drag from island (0,0) to island (2,0), as the pointer sends it. */
+  const rightDrag = (s: BridgesState): ReturnType<typeof bridgesGame.interpretMove> => {
     const ui = bridgesGame.newUi(s);
     const ds = newDrawState(s, ts);
-
     bridgesGame.interpretMove(s, ui, ds, { x: center(0), y: center(0) }, RIGHT_BUTTON);
     bridgesGame.interpretMove(s, ui, ds, { x: center(2), y: center(0) }, RIGHT_DRAG);
-    const nmove = bridgesGame.interpretMove(
+    return bridgesGame.interpretMove(
       s,
       ui,
       ds,
       { x: center(2), y: center(0) },
       RIGHT_RELEASE,
-    ) as BridgesMove;
-    expect(nmove.ops).toEqual([{ op: "N", x1: 0, y1: 0, x2: 2, y2: 0 }]);
-    const s2 = bridgesGame.executeMove(s, nmove);
+    );
+  };
+  const span = { x1: 0, y1: 0, x2: 2, y2: 0 };
+
+  it("right-drag lowers the span's limit one step: at most one, then none, then free", () => {
+    const s = twoIslands();
+    const m1 = rightDrag(s) as BridgesMove;
+    expect(m1.ops).toEqual([{ op: "C", ...span, n: 1 }]);
+    const s1 = bridgesGame.executeMove(s, m1);
+    expect(s1.maximum(1, 1, 0)).toBe(1);
+
+    // The limit is lifted as the cross goes down, so a cross never stands on
+    // top of a limit that would outlive it.
+    const m2 = rightDrag(s1) as BridgesMove;
+    expect(m2.ops).toEqual([
+      { op: "C", ...span, n: 2 },
+      { op: "N", ...span },
+    ]);
+    const s2 = bridgesGame.executeMove(s1, m2);
     expect(s2.gridAt(1, 0) & G_NOLINEH).toBeTruthy();
+    expect(s2.maximum(1, 1, 0)).toBe(2);
+
+    const m3 = rightDrag(s2) as BridgesMove;
+    expect(m3.ops).toEqual([{ op: "N", ...span }]);
+    const s3 = bridgesGame.executeMove(s2, m3);
+    expect(s3.gridAt(1, 0) & G_NOLINEH).toBeFalsy();
+    expect(s3.maximum(1, 1, 0)).toBe(2);
+  });
+
+  it("over a bridge the limit stops at the bridges drawn and never reaches the cross", () => {
+    const one = bridgesGame.executeMove(twoIslands(), {
+      ops: [{ op: "L", ...span, n: 1 }],
+    });
+    const m1 = rightDrag(one) as BridgesMove;
+    expect(m1.ops).toEqual([{ op: "C", ...span, n: 1 }]);
+    const capped = bridgesGame.executeMove(one, m1);
+    expect((rightDrag(capped) as BridgesMove).ops).toEqual([
+      { op: "C", ...span, n: 2 },
+    ]);
+    // A full bundle with no limit has nothing to lower: the drag finds no far
+    // end, and the release commits nothing.
+    const two = bridgesGame.executeMove(twoIslands(), {
+      ops: [{ op: "L", ...span, n: 2 }],
+    });
+    expect(rightDrag(two)).toBe(UI_UPDATE);
+    // And a limit under the bridges already drawn is refused outright.
+    expect(() =>
+      bridgesGame.executeMove(two, { ops: [{ op: "C", ...span, n: 1 }] }),
+    ).toThrow(/C limit/);
+  });
+
+  it("a plain click toggles the island mark", () => {
+    const s = twoIslands();
+    const ds = newDrawState(s, ts);
 
     // A left click on an island with no drag toggles its mark.
     const ui2 = bridgesGame.newUi(s);
@@ -275,6 +325,48 @@ describe("bridges solve + findMistakes", () => {
     const over = bridgesGame.executeMove(state, { ops });
     const mistakes = bridgesGame.findMistakes?.(over) ?? [];
     expect(mistakes.length).toBeGreaterThan(0);
+  });
+
+  it("a limit below the solution's bridges is flagged, the cross included", () => {
+    const { state } = genState(2, "bridges-mistake-limit");
+    const res = bridgesGame.solve?.(state, state);
+    if (!res?.ok) throw new Error("the generated board did not solve");
+    const solved = bridgesGame.executeMove(state, res.move);
+    // Every right/down span, by what the solution puts on it.
+    const spans = state.islands.flatMap((is) =>
+      is.points
+        .filter((pt) => pt.off > 0 && (pt.dx === 1 || pt.dy === 1))
+        .map((pt) => ({
+          span: {
+            x1: is.x,
+            y1: is.y,
+            x2: is.x + pt.off * pt.dx,
+            y2: is.y + pt.off * pt.dy,
+          },
+          needs: solved.gridCount(pt.x, pt.y, pt.dx ? G_LINEH : G_LINEV),
+        })),
+    );
+    const double = spans.find((s) => s.needs === 2);
+    const single = spans.find((s) => s.needs === 1);
+    if (!double || !single) throw new Error("no single and double span to limit");
+
+    const flagged = (ops: BridgesOp[]) =>
+      bridgesGame.findMistakes?.(bridgesGame.executeMove(state, { ops })) ?? [];
+    expect(flagged([{ op: "C", ...double.span, n: 1 }])).toEqual([double.span]);
+    expect(flagged([{ op: "N", ...single.span }])).toEqual([single.span]);
+    // A limit the solution keeps to is no mistake, however tight.
+    expect(flagged([{ op: "C", ...single.span, n: 1 }])).toEqual([]);
+
+    // And Solve lifts a limit the player wrote, even one it agrees with.
+    const limited = bridgesGame.executeMove(state, {
+      ops: [{ op: "C", ...single.span, n: 1 }],
+    });
+    const again = bridgesGame.solve?.(state, limited);
+    if (!again?.ok) throw new Error("a correct limit stopped the solve");
+    const after = bridgesGame.executeMove(limited, again.move);
+    expect(bridgesGame.status(after)).toBe("solved");
+    expect(after.maxh.every((m) => m === after.maxb)).toBe(true);
+    expect(after.maxv.every((m) => m === after.maxb)).toBe(true);
   });
 });
 
