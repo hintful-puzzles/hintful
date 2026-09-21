@@ -299,7 +299,7 @@ export function answerCellAt(
   return { pos, color: index < ds.ncolors ? index + 1 : 0 };
 }
 
-const ANSWER_RING_SHIFT = 11;
+const ANSWER_FRAME_SHIFT = 11;
 const ANSWER_CURSOR = 1 << 22;
 const ANSWER_PREMISE = 1 << 23;
 const ANSWER_LABELED = 1 << 24;
@@ -311,14 +311,14 @@ const ANSWER_LABELED = 1 << 24;
  */
 function answerKey(
   ruledOut: number,
-  ringed: number,
+  framed: number,
   cursor: boolean,
   premise: boolean,
   labeled: boolean,
 ): number {
   return (
     ruledOut |
-    (ringed << ANSWER_RING_SHIFT) |
+    (framed << ANSWER_FRAME_SHIFT) |
     (cursor ? ANSWER_CURSOR : 0) |
     (premise ? ANSWER_PREMISE : 0) |
     (labeled ? ANSWER_LABELED : 0)
@@ -370,7 +370,7 @@ function drawAnswerSlot(
         );
       }
     }
-    if (key & (1 << (c + ANSWER_RING_SHIFT))) {
+    if (key & (1 << (c + ANSWER_FRAME_SHIFT))) {
       // In the gap beside the block, a pixel clear of it, never over it.
       outline(
         dr,
@@ -395,11 +395,11 @@ function answerRowRedraw(
   hl: GuessHighlights | null,
 ): void {
   for (let pos = 0; pos < ds.npegs; pos++) {
-    let ringed = 0;
-    for (const d of hl?.marked ?? []) if (d.pos === pos) ringed |= 1 << d.color;
+    let framed = 0;
+    for (const d of hl?.marked ?? []) if (d.pos === pos) framed |= 1 << d.color;
     const cursor = ui.pencilMode && ui.cursor.visible && ui.cursor.x === pos;
     const premise = hl?.slots.includes(pos) ?? false;
-    const key = answerKey(s.ruledOut[pos], ringed, cursor, premise, ui.showLabels);
+    const key = answerKey(s.ruledOut[pos], framed, cursor, premise, ui.showLabels);
     if (ds.answerCache[pos] === key) continue;
     ds.answerCache[pos] = key;
     drawAnswerSlot(dr, ds, pos, key);

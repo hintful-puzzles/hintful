@@ -3,8 +3,11 @@
  *
  * The board carries the references, so the sentences use three words for them
  * and nothing else: the **outlined row** is the scored guess a step reads, an
- * **outlined answer slot** is one whose marks it leans on, and the **ringed
- * colors** are the blocks in the answer row the step acts on. Colors have no
+ * **outlined answer slot** is one whose marks it leans on, and the **framed
+ * colors** are the blocks in the answer row the step acts on — framed rather
+ * than ringed, because the mark follows the block's square shape (`render.ts`,
+ * `drawAnswerSlot`), and a sentence naming a shape the board does not draw
+ * sends the player looking for it. Colors have no
  * names in this game, and positions no numbers, so neither is spoken.
  *
  * A deduction ends on the marks it makes; a probe ends on what was counted.
@@ -46,12 +49,12 @@ export function say(r: Reason): string {
     case "totalAccounted":
       return `The outlined slots account for all ${pegs(r.total)} the outlined row scored, so its colors can't be anywhere else.`;
     case "onlyAnswer":
-      return "Only one answer fits every score so far: the ringed colors.";
+      return "Only one answer fits every score so far: the framed colors.";
     case "opening":
-      return `Nothing is scored yet. Guess the ringed colors: whatever they score, at most ${r.worst} of the ${r.fitting} answers will be left.`;
+      return `Nothing is scored yet. Guess the framed colors: whatever they score, at most ${r.worst} of the ${r.fitting} answers will be left.`;
     case "probe":
-      return `${r.fitting} answers fit every score so far, and the ringed colors are one. Guess them, and at most ${r.worst} will be left.`;
+      return `${r.fitting} answers fit every score so far, and the framed colors are one. Guess them, and at most ${r.worst} will be left.`;
     case "probeFits":
-      return "Guess the ringed colors: only a guess that fits every score so far can win, and this one does.";
+      return "Guess the framed colors: only a guess that fits every score so far can win, and this one does.";
   }
 }

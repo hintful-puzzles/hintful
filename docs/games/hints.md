@@ -2778,6 +2778,12 @@ halves apart rather than blending them into one voice.
   probe always exists because the hidden answer fits; the census over the rules
   (`Record<kind, true>`, as in § "Census the reasons, not only the rungs") found
   one rule that never fired, because it was another rule in disguise.
+- **Changing a mark's shape falsifies the sentence naming it.** The probe said
+  "the ringed colors" while the answer row drew dots; when the dots became
+  square blocks (`enlarge-guess-answer-row`) the mark became a frame and every
+  probe sentence pointed at a shape the board no longer drew, with the suite
+  green. It was the owner who noticed. When a renderer change moves a hint mark, grep the
+  game's `hint-text.ts` for the old word in the same change.
 - **A hidden-information game cannot vouch for a player's marks**, so the hint
   re-derives its own and skips what the board already shows, Dominosa's shape
   rather than Seismic's (§ "Deduce from the notes when the mistake check vouches

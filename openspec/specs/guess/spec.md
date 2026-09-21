@@ -368,14 +368,14 @@ Its steps SHALL be of two kinds, in this order.
 **Marks.** Each step SHALL place, as one mark move, the rule-outs that one
 one-row reading proves and the answer row does not yet show, narrated with the
 reading, with the row it reads outlined, any answer slots it leans on outlined,
-and the colors it rules out ringed. The readings SHALL be sound: no answer that
+and the colors it rules out framed. The readings SHALL be sound: no answer that
 fits every scored row has a color the hint rules out of a slot, which SHALL be
 checked by brute force over the whole answer space. The hint SHALL derive its
 own rule-outs from the rows rather than read the player's, and SHALL NOT place a
 mark the board already has.
 
 **A probe.** Every plan SHALL end with a guess that fits every score so far,
-with one color per slot ringed. Its sentence SHALL claim only what was counted —
+with one color per slot framed. Its sentence SHALL claim only what was counted —
 how many answers still fit, and the most the guess can leave whatever it
 scores — and those counts SHALL be checked against a recount. The probe SHALL be
 a function of the scored rows alone, so a plan recomputed after anything but a

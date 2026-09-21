@@ -61,8 +61,8 @@ black pegs, those two must be right.
 
 **Next hint** first points out anything the rows prove that your
 answer row does not show yet: the row it reads from is outlined, and
-the colors it rules out are ringed. When nothing more follows, it
-suggests a guess, ringing one color in each slot. The guess always fits
+the colors it rules out are framed in blue. When nothing more
+follows, it suggests a guess, framing one color in each slot. The guess always fits
 every score so far, so it could be the answer, and the hint tells you
 how many answers are still possible and the most that could be left
 after it. That part is a suggestion rather than a deduction, and the
