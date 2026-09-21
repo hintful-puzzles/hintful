@@ -36,6 +36,12 @@ export class PuzzleContext extends SignalWatcher(LitElement) {
   protected checkpoints?: ReadonlySet<number>;
   @state()
   protected statusbarText?: string; // for timed puzzles
+  /** The saveable `Ui`, for a game that has one. A row composed in Guess is a
+   * `Ui` edit and not a move, so none of the three above moves and the autosave
+   * would never be refreshed — the encoding was right and nothing asked for it.
+   * Empty for every game with no `encodeUi`, so it costs them no dispatches. */
+  @state()
+  protected uiState?: string;
 
   override async connectedCallback() {
     super.connectedCallback();
@@ -76,6 +82,7 @@ export class PuzzleContext extends SignalWatcher(LitElement) {
         // this will dispatch puzzle-game-state-change when time is updated.
         this.statusbarText = this.puzzle.statusbarText;
       }
+      this.uiState = this.puzzle.uiState;
     }
     this.currentMove = this.puzzle?.currentMove;
   }
@@ -89,7 +96,8 @@ export class PuzzleContext extends SignalWatcher(LitElement) {
       (changedProps.has("gameId") ||
         changedProps.has("currentMove") ||
         changedProps.has("checkpoints") ||
-        changedProps.has("statusbarText"))
+        changedProps.has("statusbarText") ||
+        changedProps.has("uiState"))
     ) {
       this.dispatchPuzzleEvent("puzzle-game-state-change");
     }

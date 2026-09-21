@@ -1,7 +1,10 @@
 /**
- * Guess — palette, geometry, and rendering (the blitter drag sprite
- * included). A port of upstream's drawing routines, keeping its per-row
- * caches and PEG_* overlay flags.
+ * Guess — palette, geometry, and rendering. A port of upstream's drawing
+ * routines, keeping its per-row caches and PEG_* overlay flags.
+ *
+ * Nothing floats over the board, so nothing here saves a background: upstream's
+ * blitter carried the peg under a drag, and a color is now entered by pressing
+ * it rather than by carrying it.
  */
 
 import { BLACK, PINK_WASH, TEAL_WASH, TEN, WHITE } from "../../engine/color/colors.ts";
@@ -51,11 +54,14 @@ const idiv = (a: number, b: number): number => Math.trunc(a / b);
 
 // --- geometry ---------------------------------------------------------
 
-/** The params the layout depends on, which a draw state carries too. */
-type LayoutParams = Pick<GuessParams, "ncolors" | "npegs" | "nguesses">;
+/** The params the layout depends on, which a draw state carries too.
+ *
+ * **Not `ncolors`.** The board drew a column of every color down its left side,
+ * which is what used to make the palette a term in both dimensions; the colors
+ * are on the key panel now, so the board is the guess rows and nothing else. */
+type LayoutParams = Pick<GuessParams, "npegs" | "nguesses">;
 
 interface Geom {
-  ncolors: number;
   npegs: number;
   nguesses: number;
   tileSize: number;
@@ -64,8 +70,6 @@ interface Geom {
   border: number;
   pegrad: number;
   hintrad: number;
-  colx: number;
-  coly: number;
   guessx: number;
   guessy: number;
   solny: number;
@@ -76,16 +80,13 @@ interface Geom {
 
 export function computeSize(p: LayoutParams, tileSize: number): Size {
   const hintw = idiv(p.npegs + 1, 2);
+  // Upstream's width carried a literal `2` for the palette column and the gap
+  // between it and the rows, and its height took the greater of the column and
+  // the rows. Both are gone with the column, which is about a quarter of the
+  // board's width back at standard params.
   const hmul =
-    BORDER * 2 +
-    2 +
-    p.npegs +
-    PEG_GAP * p.npegs +
-    PEG_HINT * hintw +
-    PEG_GAP * (hintw - 1);
-  const vmulC = BORDER * 2 + p.ncolors + PEG_GAP * (p.ncolors - 1);
-  const vmulG = BORDER * 2 + (p.nguesses + 1) + PEG_GAP * (p.nguesses + 1);
-  const vmul = Math.max(vmulC, vmulG);
+    BORDER * 2 + p.npegs + PEG_GAP * p.npegs + PEG_HINT * hintw + PEG_GAP * (hintw - 1);
+  const vmul = BORDER * 2 + (p.nguesses + 1) + PEG_GAP * (p.nguesses + 1);
   return { w: Math.ceil(tileSize * hmul), h: Math.ceil(tileSize * vmul) };
 }
 
@@ -96,19 +97,15 @@ function computeGeometry(p: LayoutParams, tileSize: number): Geom {
   const pegrad = idiv(tileSize - 1, 2);
   const hintrad = idiv(hintsz - 1, 2);
 
-  const colh = (tileSize + gapsz) * p.ncolors - gapsz;
   const guessh = (tileSize + gapsz) * p.nguesses + gapsz + tileSize;
 
   const { w, h } = computeSize(p, tileSize);
-  const colx = border;
-  const coly = idiv(h - colh, 2);
-  const guessx = border + tileSize * 2;
+  const guessx = border;
   const guessy = idiv(h - guessh, 2);
   const solny = guessy + (tileSize + gapsz) * p.nguesses + gapsz;
   const hintw = idiv(p.npegs + 1, 2);
 
   return {
-    ncolors: p.ncolors,
     npegs: p.npegs,
     nguesses: p.nguesses,
     tileSize,
@@ -117,8 +114,6 @@ function computeGeometry(p: LayoutParams, tileSize: number): Geom {
     border,
     pegrad,
     hintrad,
-    colx,
-    coly,
     guessx,
     guessy,
     solny,
@@ -133,9 +128,6 @@ function computeGeometry(p: LayoutParams, tileSize: number): Geom {
 export const pegOff = (g: Geom): number => g.tileSize + g.gapsz;
 const hintOff = (g: Geom): number => g.hintsz + g.gapsz;
 const cgap = (g: Geom): number => Math.max(idiv(g.gapsz, 2), 1);
-
-const colX = (g: Geom): number => g.colx;
-const colY = (g: Geom, c: number): number => g.coly + c * pegOff(g);
 
 const GUESS_OX = (g: Geom): number => g.guessx;
 const GUESS_OY = (g: Geom): number => g.guessy;
@@ -165,12 +157,6 @@ export interface GuessDrawState extends Geom {
   /** Per-row caches of last-drawn pegs (with PEG_* flags) + feedback. */
   guessesCache: PegRow[];
   solutionCache: PegRow;
-  colorsCache: PegRow;
-  /** Blitter drag sprite. */
-  blitPeg: unknown | null;
-  dragColor: number;
-  blitOx: number;
-  blitOy: number;
 }
 
 function invalidRow(n: number): PegRow {
@@ -186,11 +172,6 @@ export function newDrawState(s: GuessState, tileSize: number): GuessDrawState {
     nextGo: 0,
     guessesCache: Array.from({ length: p.nguesses }, () => invalidRow(p.npegs)),
     solutionCache: invalidRow(p.npegs),
-    colorsCache: invalidRow(p.ncolors),
-    blitPeg: null,
-    dragColor: 0,
-    blitOx: 0,
-    blitOy: 0,
   };
 }
 
@@ -228,15 +209,12 @@ function drawPeg(
   ds: GuessDrawState,
   cx: number,
   cy: number,
-  moving: boolean,
   labeled: boolean,
   col: number,
 ): void {
   const ts = ds.tileSize;
   const cg = cgap(ds);
-  if (!moving) {
-    dr.drawRect(rect(cx - cg, cy - cg, ts + cg * 2, ts + cg * 2), COL_BACKGROUND);
-  }
+  dr.drawRect(rect(cx - cg, cy - cg, ts + cg * 2, ts + cg * 2), COL_BACKGROUND);
   if (ds.pegrad > 0) {
     dr.drawCircle(
       pt(cx + ds.pegrad, cy + ds.pegrad),
@@ -296,7 +274,7 @@ function guessRedraw(
     if (holds?.[i]) scol |= PEG_HOLD;
     if (labeled) scol |= PEG_LABELED;
     if (dest.pegs[i] !== scol || force) {
-      drawPeg(dr, ds, rowx + pegOff(ds) * i, rowy, false, labeled, scol & ~PEG_FLAGS);
+      drawPeg(dr, ds, rowx + pegOff(ds) * i, rowy, labeled, scol & ~PEG_FLAGS);
       if (scol & PEG_CURSOR) drawCursor(dr, ds, rowx + pegOff(ds) * i, rowy);
       if (scol & PEG_HOLD) {
         dr.drawRect(
@@ -422,7 +400,6 @@ export function redraw(
   _animTime: number,
   _flashTime: number,
 ): void {
-  const ncolors = s.params.ncolors;
   const newMove = s.nextGo !== ds.nextGo || !ds.started;
 
   if (!ds.started) {
@@ -433,24 +410,6 @@ export function redraw(
       COL_FRAME,
     );
     dr.drawUpdate(rect(0, 0, ds.w, ds.h));
-  }
-
-  // Restore whatever the floating drag sprite last covered.
-  if (ds.dragColor !== 0 && ds.blitPeg) {
-    dr.blitterLoad(ds.blitPeg, pt(ds.blitOx, ds.blitOy));
-    dr.drawUpdate(rect(ds.blitOx, ds.blitOy, ds.tileSize, ds.tileSize));
-  }
-
-  // The color bar.
-  for (let i = 0; i < ncolors; i++) {
-    let val = i + 1;
-    if (ui.cursor.visible && ui.cursor.y === i) val |= PEG_CURSOR;
-    if (ui.showLabels) val |= PEG_HOLD;
-    if (ds.colorsCache.pegs[i] !== val) {
-      drawPeg(dr, ds, colX(ds), colY(ds, i), false, ui.showLabels, i + 1);
-      if (val & PEG_CURSOR) drawCursor(dr, ds, colX(ds), colY(ds, i));
-      ds.colorsCache.pegs[i] = val;
-    }
   }
 
   // Past guesses + their hints (reverse order so the circular cursor on
@@ -513,18 +472,5 @@ export function redraw(
   }
   ds.solved = s.solved;
   ds.nextGo = s.nextGo;
-
-  // Save the background under the new floating sprite and draw it.
-  if (ui.dragColor !== 0) {
-    if (!ds.blitPeg)
-      ds.blitPeg = dr.blitterNew({ w: ds.tileSize + 2, h: ds.tileSize + 2 });
-    const ox = ui.dragX - idiv(ds.tileSize, 2);
-    const oy = ui.dragY - idiv(ds.tileSize, 2);
-    ds.blitOx = ox - 1;
-    ds.blitOy = oy - 1;
-    dr.blitterSave(ds.blitPeg, pt(ds.blitOx, ds.blitOy));
-    drawPeg(dr, ds, ox, oy, true, ui.showLabels, ui.dragColor);
-  }
-  ds.dragColor = ui.dragColor;
   ds.started = true;
 }

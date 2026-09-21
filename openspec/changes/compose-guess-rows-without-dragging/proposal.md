@@ -1,9 +1,16 @@
 # compose-guess-rows-without-dragging
 
-**Status: scaffolded, not started, and the headline decision is the owner's.**
-Opened 2026-09-21, the day after `give-guess-element-keys` put a keypad under
-Guess. `ux-report.md` beside this file is the full analysis it rests on, with a
-claim-status appendix separating what was verified from what was reasoned.
+**Status: implemented 2026-09-21.** Opened the same day, out of
+`give-guess-element-keys`. `ux-report.md` beside this file is the full analysis
+it rests on, with a claim-status appendix separating what was verified from what
+was reasoned; the analysis's conclusions all survived, and the two things that
+changed on contact with the code are recorded under "What the build changed"
+below.
+
+**The owner answered the three §1 questions on 2026-09-21**, taking the
+analysis's recommendation on each: retire drag entry, no auto-submit, and no
+strike-out notation in this change. Everything below was written before those
+answers and is left as it was argued.
 
 ## Why
 
@@ -169,3 +176,59 @@ Every Wordle behavior cited is from the analyst's memory of the product, not
 from a source. Two carry real argumentative weight and should be confirmed on a
 device before a spec leans on either: **that Enter is explicit**, and **that an
 invalid word shakes the row, explains, and does not consume the guess.**
+
+**Neither was confirmed, so no spec sentence leans on either.** The
+no-auto-submit requirement is argued from *this* game's undo, which is verified
+in code; Wordle appears in this proposal as a design reference and nowhere in
+the spec. The refuse-and-explain requirement is argued from the silent `null`,
+which is likewise verified here. Both would be worth confirming if either is
+ever cited as evidence rather than as inspiration.
+
+---
+
+## What the build changed
+
+Two of the report's recommendations were overtaken by the code, and one defect
+appeared that no amount of reading would have found.
+
+- **§5.4's faint next-empty marker was not built**, because the cursor ring
+  already is one. A color key reveals the cursor and leaves it on the slot the
+  next color will fill, so "where will this land" is answered by an affordance
+  that was already there; a second marker would have been two mechanisms saying
+  one thing. Confirmed by eye in Chrome.
+- **§2.4's "is *empty* a `Ui` fact or a board fact?"** resolved to the board
+  fact. The scaffold feared that a deliberate mid-row blank under `allowBlank`
+  would become unreachable, but selection survives, so tapping slot 3 and
+  pressing a color leaves slot 2 blank — from a finger or from the arrow keys.
+  A `Ui`-side "the player meant this one to be blank" flag would have been a
+  second, invisible model of the row for a case one tap already covers.
+- **The `encodeUi` this change owed was correct and reached nothing.** The app
+  takes an autosave when `puzzle-context` sees one of the values it watches
+  change, and a `Ui` edit is not a move: a half-composed row came back empty
+  from a real page reload while the whole suite was green. The midend now
+  reports the encoding on `game-state-change` and the app watches that. This is
+  the acceptance bar doing its job — nothing short of opening the app would
+  have said so — and it is written up in `tasks.md` §6.4 and in the `ts-engine`
+  delta.
+
+## Verified in the browser
+
+Chrome, `npm run dev`, 2026-09-21. Played the default board and a
+`allowMultiple: false` board through the panel and the pointer:
+
+- Colors land in the first empty slot and the ring walks ahead of them; the row
+  fills and the submit box lights.
+- **The defect this change was opened on is gone**: with holds on pegs 0 and 2,
+  the first color pressed after the submit landed in peg 1 and both held pegs
+  kept their colors.
+- A tap on the board's palette column places that color, as its key does.
+- Clear backspaces on a full row and visibly walks *past* a held peg.
+- On a no-duplicates board, Submit is refused and the status line reads *"Guess
+  1 of 10: this game allows no repeated colors."*; one key fixes the row and it
+  goes.
+- A half-composed row with a hold survives a page reload.
+
+**Not on a real device.** Every touch argument in this change is still reasoning
+from the frontend's promotion logic, and the long-press behaviors it adds — a
+held finger placing a color, a held finger submitting — are exactly what wants
+a hand. `test-touch-on-a-real-device` is open.

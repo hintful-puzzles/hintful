@@ -555,9 +555,22 @@ render half.
 **A `Ui` field set in `interpretMove` that lives outside the undo history
 cannot be rebuilt by replay** — replay runs `executeMove`, never
 `interpretMove`. Mines' death counter is the case: dying then undoing removes
-the death from the log. Serialize exactly those fields with
-`encodeUi`/`decodeUi`; the midend restores them after the replay. A game whose
-`Ui` is fully derivable omits both hooks — that is every game but Mines today.
+the death from the log; Guess's half-composed row and its live holds are
+another, since a row reaches the log only when it is submitted. Serialize
+exactly those fields with `encodeUi`/`decodeUi`; the midend restores them after
+the replay. A game whose `Ui` is fully derivable omits both hooks.
+
+**Writing the hooks is only half of it — check that something still takes a
+save.** The app autosaves when `puzzle-context` sees one of the values it
+watches change, and a `Ui` edit is not a move: it moves no move index, no game
+id and no checkpoint. So Guess shipped a perfectly correct `encodeUi` whose
+output nothing ever asked for, and the composed row came back empty from a real
+reload while every test passed. The fix carries the encoding itself in the
+`game-state-change` notification (`NotifyGameStateChange.uiState`), so the value
+the app compares **is** the part of the save that would differ — and a game with
+no `encodeUi` sends nothing and costs nothing. `midend-ui-state.test.ts` holds
+the derivation; the reload is the half only a browser can tell you about, which
+is why AGENTS.md § "Acceptance bar" says to run the app.
 
 ### Preferences
 

@@ -180,3 +180,22 @@ should auto-submit — touches this directly:
   keypress — which is the property the panel's focus rule rests on.
 
 Settle the input model first, or settle it knowing this is coming.
+
+**Settled, 2026-09-21 (`compose-guess-rows-without-dragging`).** Drag entry is
+retired, a color lands in the first empty slot or in the one the player
+selected, Submit is an explicit panel key and there is **no auto-submit** — so
+the tension in the second bullet does not arise, and the moment a hint would be
+read is still there. The notation question was deliberately **left here**: this
+change still owns it, and the board's palette column was converted from a drag
+source to tap-to-place rather than deleted, precisely because nothing yet has
+state the other surface lacks.
+
+That makes the third bullet the live constraint rather than a hypothetical.
+The column and the panel are now *two spellings of one keypress* with no state
+of their own, and that equivalence is what lets both exist without a tap on a
+slot meaning two things. **A notation on either surface breaks it**, and the
+input spec now says so: if per-slot marks or a panel strike-out ship, the
+palette column goes, and deleting it is this change's step, not a leftover. It
+reclaims the literal `2` in `computeSize`'s horizontal multiplier — about a
+quarter of the board's width at standard params, by arithmetic rather than by
+measurement.

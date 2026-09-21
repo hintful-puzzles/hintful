@@ -1421,6 +1421,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       canUndo: this.pos > 0,
       canRedo: this.pos < this.history.length - 1,
       hasPencilMarks: this.hasPencilMarks(),
+      ...(this.game.encodeUi ? { uiState: this.game.encodeUi(this.ui) } : {}),
     });
   }
 

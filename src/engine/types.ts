@@ -97,6 +97,20 @@ export type NotifyGameStateChange = {
    * pencil marks on a bare board, *Update* them once there are marks to narrow.
    */
   hasPencilMarks: boolean;
+  /**
+   * This game's saveable `Ui`, as `Game.encodeUi` renders it — left out
+   * entirely for a game that has no such hook, which is most of them.
+   *
+   * The app autosaves when something it observes changes, and before this it
+   * observed only the move index, the game id and the checkpoints. A `Ui` edit
+   * moves none of those, so for Guess a half-composed row was encoded perfectly
+   * and never written: the bytes were right and nothing asked for them. Sending
+   * the encoding rather than a "the Ui changed" flag means the value the app
+   * compares **is** the part of the save that would differ, so it cannot
+   * re-save for a change the file would not record, and a game with no
+   * persisted `Ui` costs nothing at all.
+   */
+  uiState?: string;
 };
 
 export type NotifyParamsChange = {

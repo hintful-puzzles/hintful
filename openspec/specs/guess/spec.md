@@ -3,8 +3,8 @@
 ## Purpose
 Guess, the Mastermind puzzle of deducing a hidden combination of colors from the
 feedback each submitted row earns. This capability specifies its port to the TS
-engine: obfuscated solution descriptions, Knuth-style scoring, and drag, hold,
-keyboard and hint input.
+engine: obfuscated solution descriptions, Knuth-style scoring, and the row
+composition — keys, taps, holds and a hint — that a player builds a guess with.
 
 ## Requirements
 

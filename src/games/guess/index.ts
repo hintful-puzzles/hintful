@@ -9,6 +9,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { parseLeadingInt } from "../../engine/decimal.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { colorKeysZeroIsTen } from "../../engine/key-labels.ts";
 import { parseConfigInt } from "../../engine/params.ts";
@@ -18,9 +19,7 @@ import {
   digitOf,
   isCursorMove,
   isEraseKey,
-  LEFT_BUTTON,
-  LEFT_DRAG,
-  LEFT_RELEASE,
+  isMouseRelease,
   moveCursor,
   newCursor,
   RIGHT_BUTTON,
@@ -66,10 +65,6 @@ function newUi(state: GuessState): GuessUi {
     holds: new Array(p.npegs).fill(false),
     cursor: newCursor(),
     markable: false,
-    dragColor: 0,
-    dragX: 0,
-    dragY: 0,
-    dragOpeg: -1,
     showLabels: false,
     hint: null,
   };
@@ -87,12 +82,71 @@ function changedState(ui: GuessUi, prev: GuessState | null, next: GuessState): v
     ui.currPegs[i] = ui.holds[i] && lastRow ? lastRow.pegs[i] : 0;
   }
   ui.markable = isMarkable(next.params, ui.currPegs);
-  if (!ui.markable && ui.cursor.x === npegs) ui.cursor.x = 0;
+  restCursor(ui, npegs);
 }
 
 function setPeg(params: GuessParams, ui: GuessUi, peg: number, col: number): void {
   ui.currPegs[peg] = col;
   ui.markable = isMarkable(params, ui.currPegs);
+}
+
+// --- where a color lands -----------------------------------------------
+
+/** The first slot of the working row with no color in it, or `-1`. */
+function firstEmpty(ui: GuessUi, npegs: number): number {
+  for (let i = 0; i < npegs; i++) {
+    if (ui.currPegs[i] === 0) return i;
+  }
+  return -1;
+}
+
+/**
+ * Park the cursor where the next color will go: the first empty slot, else the
+ * submit position.
+ *
+ * **This is the fix for a defect a keyboard used to hide.** The cursor used to
+ * be reset to peg 0 after every transition, and a color key used to advance it
+ * by one index — so a player holding pegs 0 and 2 got a row pre-filled out of
+ * order and the very first color they pressed overwrote a peg they had asked to
+ * keep. Filling the first *open* slot handles a row pre-filled in any pattern,
+ * which advancing by index structurally cannot.
+ *
+ * `fallback` is where to rest when the row is full but cannot be submitted (a
+ * repeated color under `allowMultiple: false`): the submit position would draw
+ * the submit box around a row that will not go.
+ */
+function restCursor(ui: GuessUi, npegs: number, fallback = 0): void {
+  const open = firstEmpty(ui, npegs);
+  ui.cursor.x = open >= 0 ? open : ui.markable ? npegs : fallback;
+}
+
+/**
+ * Enter `color` where the player is pointing: the slot they selected, else the
+ * first empty one. Declines when the row is full and nothing is selected, as
+ * a Wordle row does — there is nowhere for the color to go, and overwriting
+ * a slot the player did not name would be a guess about which.
+ */
+function enterColor(params: GuessParams, ui: GuessUi, color: number): UiUpdate | null {
+  const { npegs } = params;
+  const slot =
+    ui.cursor.visible && ui.cursor.x < npegs ? ui.cursor.x : firstEmpty(ui, npegs);
+  if (slot < 0) return null;
+  setPeg(params, ui, slot, color);
+  // The ring is the "where does the next one land" marker, so it is shown
+  // whether or not the player has ever moved a cursor.
+  ui.cursor.visible = true;
+  restCursor(ui, npegs, slot);
+  return UI_UPDATE;
+}
+
+/** The last color the player *typed*: the rightmost filled slot they are not
+ * holding. A held slot was carried over from the previous row rather than
+ * entered, so Backspace walks past it rather than undoing a hold. */
+function lastTyped(ui: GuessUi, npegs: number): number {
+  for (let i = npegs - 1; i >= 0; i--) {
+    if (ui.currPegs[i] !== 0 && !ui.holds[i]) return i;
+  }
+  return -1;
 }
 
 function buildGuessMove(ui: GuessUi): GuessMove {
@@ -162,18 +216,39 @@ function computeHint(state: GuessState, ui: GuessUi): void {
 // --- input ------------------------------------------------------------
 
 /**
- * One key per color, plus Clear. The colors are Guess's elements and this is
- * where the collection puts a game's elements; on touch it is also the only
- * entry that does not depend on a drag surviving the long-press promotion
+ * ASCII carriage return — the Submit key's own code. This frontend maps a
+ * physical Enter to `CURSOR_SELECT` (`view-interactive.ts`'s `puzzleKeyMap`),
+ * so 13 arrives from the panel and from nowhere else, and the two spellings of
+ * "send this row" stay distinguishable: Enter submits from the cursor's submit
+ * position, this key submits from wherever the player is.
+ */
+const SUBMIT_BUTTON = 13;
+
+/**
+ * One key per color, then Clear, then Submit. The colors are Guess's elements
+ * and this is where the collection puts a game's elements
  * (`docs/games/input.md` § "Put a game's markable elements on the panel").
  *
  * Painted from Guess's own palette rather than labeled with a bare digit: no
  * character names a color. The label stays the digit the keyboard sends, and
  * the tenth color is `'0'` — the key `digitOf` answers as zero and this game
  * reads as ten.
+ *
+ * **Submit is a key rather than an automatic consequence of filling the last
+ * slot.** Undo cannot take a submitted row back — `changedState` rebuilds the
+ * working row from the holds alone, so undoing the first guess of a board
+ * returns an empty row rather than the one that was sent — which makes an
+ * accidental submission a retype rather than a mistake to correct.
+ *
+ * It cannot be offered conditionally: `requestKeys` takes params only, because
+ * the panel reloads only on a param change. Pressing it on a row that cannot
+ * go is declined, and the status line says why.
  */
 function requestKeys(p: GuessParams): KeyLabel[] {
-  return colorKeysZeroIsTen(p.ncolors, COL_1);
+  return [
+    ...colorKeysZeroIsTen(p.ncolors, COL_1),
+    { button: SUBMIT_BUTTON, label: "Submit" },
+  ];
 }
 
 function interpretMove(
@@ -196,11 +271,9 @@ function interpretMove(
   const off = pegOff(ds);
   const { x, y } = p;
 
-  // Hit-test the four regions (upstream interpret_move).
-  let overCol = 0; // one-indexed color, 0 = none
+  // Hit-test the two regions the pointer can act in: the row being composed,
+  // and the feedback pegs beside it.
   let overGuess = -1; // current-row peg index
-  let overPastGuessY = -1;
-  let overPastGuessX = -1;
   let overHint = false;
 
   const guessOx = ds.guessx;
@@ -208,77 +281,36 @@ function interpretMove(
   const guessW = npegs * off;
   const guessH = params.nguesses * off;
 
-  if (
-    x >= ds.colx &&
-    x < ds.colx + off &&
-    y >= ds.coly &&
-    y < ds.coly + ncolors * off
-  ) {
-    overCol = Math.floor((y - ds.coly) / off) + 1;
-  } else if (x >= guessOx && y >= guessOy && y < guessOy + guessH) {
+  if (x >= guessOx && y >= guessOy && y < guessOy + guessH) {
     if (x < guessOx + guessW) overGuess = Math.floor((x - guessOx) / off);
     else overHint = true;
-  } else if (x >= guessOx && x < guessOx + guessW && y >= ds.guessy && y < guessOy) {
-    overPastGuessY = Math.floor((y - ds.guessy) / off);
-    overPastGuessX = Math.floor((x - guessOx) / off);
   }
 
-  // --- mouse ---
-  if (button === LEFT_BUTTON) {
-    if (overCol > 0) {
-      ui.dragColor = overCol;
-      ui.dragOpeg = -1;
-    } else if (overGuess > -1) {
-      const col = ui.currPegs[overGuess];
-      if (col) {
-        ui.dragColor = col;
-        ui.dragOpeg = overGuess;
-      }
-    } else if (overPastGuessY > -1) {
-      const col = from.guesses[overPastGuessY].pegs[overPastGuessX];
-      if (col) {
-        ui.dragColor = col;
-        ui.dragOpeg = -1;
-      }
-    }
-    if (ui.dragColor) {
-      ui.dragX = x;
-      ui.dragY = y;
-      return UI_UPDATE;
-    }
-    return null;
-  }
-  if (button === LEFT_DRAG && ui.dragColor) {
-    ui.dragX = x;
-    ui.dragY = y;
-    return UI_UPDATE;
-  }
-  if (button === LEFT_RELEASE && overGuess > -1) {
-    // A release over a current-row peg that would write nothing new there
-    // **selects** it instead, so a touch player can edit a row rather than only
-    // fill it left to right. The predicate is the local one — this peg already
-    // holds whatever the release would put in it — never a compare of the row
-    // before and after. It covers a tap on an empty slot (no drag at all) and a
-    // tap on a filled one (picked up and put straight back), which used to
-    // *hide* the cursor and so took the panel away from the player.
-    if (ui.dragColor === 0 || ui.dragOpeg === overGuess) {
+  // --- pointer ---
+  //
+  // Every pointer action happens on the **release**, and the press is declined.
+  // There is no drag to defer to, so claiming the press would buy only drag
+  // frames nothing reads — and an unconsumed press is answered with a release
+  // at the press point (`view-interactive.ts`), which makes a press that slides
+  // off before it lifts still act where it started.
+  //
+  // Keyed on the button *class* rather than `LEFT_RELEASE`, so a press promoted
+  // to the right button by the 350 ms touch hold still finishes as itself: a
+  // held finger over the feedback pegs still submits. The hold toggle below is
+  // the one meaning that stays the secondary button's alone, which is why Guess
+  // cannot declare `ignoresSecondaryButton`.
+  if (isMouseRelease(button)) {
+    // A tap on a current-row slot **selects** it, so a row can be edited rather
+    // than only filled left to right — and so a player with no arrow keys can
+    // put a deliberate blank anywhere in the row, which filling the first empty
+    // slot cannot express on its own.
+    if (overGuess > -1) {
       ui.cursor.x = overGuess;
       ui.cursor.visible = true;
-    } else {
-      setPeg(params, ui, overGuess, ui.dragColor);
-      ui.cursor.visible = false;
+      return UI_UPDATE;
     }
-    ui.dragColor = 0;
-    ui.dragOpeg = -1;
-    return UI_UPDATE;
-  }
-  if (button === LEFT_RELEASE && ui.dragColor) {
-    // Dropped away from the row: a peg dragged out of it is cleared.
-    if (ui.dragOpeg > -1) setPeg(params, ui, ui.dragOpeg, 0);
-    ui.dragColor = 0;
-    ui.dragOpeg = -1;
-    ui.cursor.visible = false;
-    return UI_UPDATE;
+    if (overHint && ui.markable) return buildGuessMove(ui);
+    return null;
   }
   if (button === RIGHT_BUTTON) {
     if (overGuess > -1) {
@@ -287,52 +319,54 @@ function interpretMove(
     }
     return null;
   }
-  if (button === LEFT_RELEASE && overHint && ui.markable) {
-    // Not on the end of a drag (handled above), so an accidental drop
-    // never submits.
-    return buildGuessMove(ui);
-  }
 
   // --- keyboard ---
   if (isCursorMove(button)) {
-    // The peg axis is the cursor's x, the color axis its y.
+    // One axis: the peg the next color will fill. The second axis picked a
+    // color out of the board's palette column, and went with it — a color is
+    // named by its own key now, on the panel and on the keyboard both, so
+    // walking a list to reach one was a slower way to say the same thing.
     const maxcur = npegs + (ui.markable ? 1 : 0);
-    return moveCursor(ui.cursor, button, maxcur, ncolors) ? UI_UPDATE : null;
+    return moveCursor(ui.cursor, button, maxcur, 1) ? UI_UPDATE : null;
   }
   if (button === 0x68 || button === 0x48 || button === 0x3f /* 'h' | 'H' | '?' */) {
     computeHint(from, ui);
     return UI_UPDATE;
   }
+  if (button === SUBMIT_BUTTON) return ui.markable ? buildGuessMove(ui) : null;
   if (button === CURSOR_SELECT) {
+    // Submit, and nothing else. It used to place the color the second cursor
+    // axis was resting on; with that axis gone there is no color for it to
+    // mean, and a digit says which one in one press. Declined off the submit
+    // position rather than made to do something, so it does not claim a key it
+    // did not act on.
+    if (ui.cursor.x !== npegs || !ui.markable) return null;
     ui.cursor.visible = true;
-    if (ui.cursor.x === npegs) return buildGuessMove(ui);
-    setPeg(params, ui, ui.cursor.x, ui.cursor.y + 1);
-    return UI_UPDATE;
+    return buildGuessMove(ui);
   }
   // A digit picks a color; `0` is the tenth, which only a ten-color game has.
   const digit = digitOf(button);
   const color = digit === 0 ? 10 : digit;
-  if (color !== null && color <= ncolors && ui.cursor.x < npegs) {
-    ui.cursor.visible = true;
-    setPeg(params, ui, ui.cursor.x, color);
-    if (ui.cursor.x + 1 < npegs + (ui.markable ? 1 : 0)) ui.cursor.x++;
-    return UI_UPDATE;
-  }
+  if (color !== null && color <= ncolors) return enterColor(params, ui, color);
   if (button === 0x44 || button === 0x64 || isEraseKey(button) /* 'D' | 'd' */) {
-    // Declined on the submit position, as `CURSOR_SELECT2` is: the cursor is
-    // past the last peg there, not on one. Unguarded — as upstream leaves it —
-    // this writes `currPegs[npegs]`, which lengthens the row while `isMarkable`
-    // (reading only the first `npegs`) still says yes, and the guess that
-    // follows is rejected by `executeMove`. Reachable with a keyboard the
-    // moment a row is full, because the digit arm advances onto the submit
-    // position; the Clear key on the panel sends the same button.
-    if (ui.cursor.x === npegs) return null;
-    if (!ui.cursor.visible || ui.currPegs[ui.cursor.x] !== 0) {
-      ui.cursor.visible = true;
-      setPeg(params, ui, ui.cursor.x, 0);
-      return UI_UPDATE;
-    }
-    return null;
+    // Rub out the selected slot, or — with nothing selected, or a selection
+    // sitting on a slot that is already empty — the last color the player
+    // typed. Backspacing is what makes the key work on a *full* row, where the
+    // cursor rests on the submit position and this used to decline: that is
+    // the moment a typo is most likely and most worth correcting.
+    //
+    // Both branches take a slot from a bounded scan or a cursor checked against
+    // `npegs`, so this can no longer write `currPegs[npegs]`. Unguarded — as
+    // upstream leaves it — that lengthens the row while `isMarkable` (reading
+    // only the first `npegs`) still says yes, and `executeMove` then rejects
+    // the guess with an illegal peg.
+    const at = ui.cursor.visible && ui.cursor.x < npegs ? ui.cursor.x : -1;
+    const slot = at >= 0 && ui.currPegs[at] !== 0 ? at : lastTyped(ui, npegs);
+    if (slot < 0) return null;
+    setPeg(params, ui, slot, 0);
+    ui.cursor.x = slot;
+    ui.cursor.visible = true;
+    return UI_UPDATE;
   }
   if (button === CURSOR_SELECT2) {
     if (ui.cursor.x === npegs) return null;
@@ -369,6 +403,78 @@ function executeMove(s: GuessState, m: GuessMove): GuessState {
   return { ...ret, holds, nextGo, solved: nextGo >= nguesses ? -1 : 0 };
 }
 
+// --- the Ui that outlives a save --------------------------------------
+
+/**
+ * The half-composed row and the live holds, in upstream's `encode_ui` format:
+ * one peg color per slot, comma-separated, each suffixed `_` when held
+ * (`3_,0,5,2`).
+ *
+ * Neither survives the move log, because neither is in it — a row is only
+ * recorded once it is submitted, and a hold is only recorded as part of the
+ * guess that carries it. Upstream persists both deliberately; here it matters
+ * more, because composing a row is now the whole of playing this game rather
+ * than one of two ways in.
+ */
+function encodeUi(ui: GuessUi): string {
+  return ui.currPegs.map((peg, i) => `${peg}${ui.holds[i] ? "_" : ""}`).join(",");
+}
+
+function decodeUi(ui: GuessUi, encoded: string): void {
+  const fields = encoded.split(",");
+  const { npegs, ncolors } = ui.params;
+  for (let i = 0; i < npegs; i++) {
+    const field = fields[i] ?? "";
+    const { value } = parseLeadingInt(field, 0);
+    // A save is not a trusted input: a color this game does not have becomes an
+    // empty slot, as upstream's decode_ui does.
+    ui.currPegs[i] = value >= 1 && value <= ncolors ? value : 0;
+    ui.holds[i] = field.endsWith("_");
+  }
+  ui.markable = isMarkable(ui.params, ui.currPegs);
+  restCursor(ui, npegs);
+}
+
+// --- status line ------------------------------------------------------
+
+/** Whether a color appears twice in the working row. */
+function hasRepeat(pegs: readonly number[]): boolean {
+  const seen = new Set<number>();
+  for (const peg of pegs) {
+    if (peg === 0) continue;
+    if (seen.has(peg)) return true;
+    seen.add(peg);
+  }
+  return false;
+}
+
+/**
+ * The status line. It exists for one sentence — **why a row the player has
+ * finished cannot be sent** — which the submit arms otherwise answer with a
+ * silent `null`, and a key that appears to do nothing is indistinguishable from
+ * one that is broken.
+ *
+ * The rest is the count a Mastermind player is always keeping anyway.
+ */
+function statusbarText(s: GuessState, ui: GuessUi): string {
+  const { nguesses } = s.params;
+  if (s.solved > 0) {
+    const used = s.nextGo + 1;
+    return `Solved in ${used} ${used === 1 ? "guess" : "guesses"}.`;
+  }
+  if (s.solved < 0) {
+    return s.nextGo >= nguesses
+      ? "Out of guesses — the answer is revealed."
+      : "The answer is revealed.";
+  }
+  const where = `Guess ${s.nextGo + 1} of ${nguesses}`;
+  if (ui.markable) return `${where}: ready to submit.`;
+  if (!s.params.allowMultiple && hasRepeat(ui.currPegs)) {
+    return `${where}: this game allows no repeated colors.`;
+  }
+  return where;
+}
+
 // --- Game object ------------------------------------------------------
 
 export const guessGame: Game<
@@ -379,7 +485,7 @@ export const guessGame: Game<
   GuessDrawState
 > = {
   id: "guess",
-  wantsStatusbar: false,
+  wantsStatusbar: true,
   isTimed: false,
   canSolve: true,
   canFormatAsText: false,
@@ -449,11 +555,14 @@ export const guessGame: Game<
   newState,
   newUi,
   changedState,
+  encodeUi,
+  decodeUi,
 
   interpretMove,
   executeMove,
   status,
   requestKeys,
+  statusbarText,
 
   solve() {
     // A give-up, as upstream's "S": reveal the answer, scored as a loss.

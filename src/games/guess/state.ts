@@ -1,9 +1,9 @@
 /**
  * Guess — state, params, desc codec, and the scoring/markability logic.
  *
- * The *live editing* state (working row, holds, drag, cursor) lives in
- * `GuessUi`, as upstream keeps it in `game_ui`; `GuessState` holds only the
- * submitted guesses (with feedback), the hidden solution, and the play cursor.
+ * The *live editing* state (working row, holds, cursor) lives in `GuessUi`, as
+ * upstream keeps it in `game_ui`; `GuessState` holds only the submitted guesses
+ * (with feedback), the hidden solution, and the play cursor.
  */
 
 import { parseLeadingInt } from "../../engine/decimal.ts";
@@ -66,19 +66,13 @@ export interface GuessUi {
   currPegs: number[];
   /** Live holds, length `npegs`. */
   holds: boolean[];
-  /** The picker cursor: `x` is the peg position, `0..npegs` (`npegs` = the
-   * submit button); `y` is the color, `0..ncolors-1`. */
+  /** Where the next color will land: `x` is the peg position, `0..npegs`
+   * (`npegs` = the submit position). One-dimensional — `y` stays `0` — because
+   * a color is named by its own key rather than picked out of a list; the
+   * shared `GridCursor` shape is kept so the collection's cursor vocabulary
+   * holds, and `moveCursor` is given a height of one. */
   cursor: GridCursor;
   markable: boolean;
-  /** `0` = not dragging, else a color `1..ncolors`. Spelled out because `Col`
-   * reads as *column* in a collection of grid puzzles, and Ascent holds a
-   * `dragColumn` that is one. Map spells the same concept `dragColor` too. */
-  dragColor: number;
-  /** Drag position — *center* of the floating peg, in pixels. */
-  dragX: number;
-  dragY: number;
-  /** Source peg index when dragging from a current-row peg, else `-1`. */
-  dragOpeg: number;
   showLabels: boolean;
   /** Cached lexicographically-first row, narrowed incrementally by
    * `computeHint` (rebuilt from scratch after an undo). */

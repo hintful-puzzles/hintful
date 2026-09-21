@@ -1,8 +1,8 @@
-# No delta: the headline question — retire drag entry, and should a full row
-# submit itself — is player-visible and the owner's to answer (§1), and which
-# requirements move depends on the answer. The defects in §2 are real today and
-# may be taken first; each would carry its own delta. Written 2026-09-21 out of
-# `give-guess-element-keys`; nothing is implemented.
+# The three headline decisions of §1 were the owner's and were taken on
+# 2026-09-21: retire drag entry, no auto-submit, and no strike-out notation in
+# this change (which leaves the board's palette column standing, converted from
+# a drag source to tap-to-place). The deltas below follow from those answers
+# plus the two defects §2 found, which were real today and did not depend on
+# them.
 schema: spec-driven
 created: 2026-09-21
-skip_specs: true

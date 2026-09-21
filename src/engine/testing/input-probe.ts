@@ -74,13 +74,18 @@ export function fingerprint(m: AnyMidend): string {
  * **What the player can perceive** — the painted frame plus the save.
  *
  * A save alone is not the player's view of the game, and treating it as one
- * under-reports: Guess keeps its peg *holds* in `GuessUi` and never serializes
- * them, so a right-click that toggles a hold is invisible to
- * {@link fingerprint} while being plainly visible on screen. Signpost's
- * backward grab is the same shape. Scoring those two "no secondary meaning"
- * would demand `ignoresSecondaryButton` from two games that have one, turning
- * off the promotion they handle — the exact defect the flag exists to prevent,
- * arrived at from the other direction.
+ * under-reports: Signpost's backward grab is held in its `Ui` and never
+ * serialized, so the drag highlight a secondary press puts on screen is
+ * invisible to {@link fingerprint}. Nine games' pencil-mode press is the same
+ * shape. Scoring those "no secondary meaning" would demand
+ * `ignoresSecondaryButton` from games that have one, turning off the promotion
+ * they handle — the exact defect the flag exists to prevent, arrived at from
+ * the other direction.
+ *
+ * Guess was the founding example and is no longer one: its peg holds reached
+ * the save the day it grew an `encodeUi`. A `Ui` field is frame-only until the
+ * game decides to persist it, which is exactly why the population here is an
+ * observation rather than a list.
  *
  * So the observation is the union: a change the *save* records, or a change the
  * *frame* shows. That is the honest reading of "did anything happen", and it

@@ -231,9 +231,19 @@ describe("a gesture from a finger does what the same gesture from a mouse does",
     it(`${id}: press, drag and release are equivalent on touch`, () => {
       const { tileSize, size, m, reset } = board(game, id);
 
-      /** The frontend's own state machine: press; only if the press was
+      /**
+       * The frontend's own state machine: press; only if the press was
        * consumed does the drag follow; an unconsumed press gets its release
-       * immediately, which is what `handlePointerDown`'s `else` branch does. */
+       * immediately, which is what `handlePointerDown`'s `else` branch does.
+       *
+       * `acted` is *any* of the three being consumed, not the press alone.
+       * Declining the press is a legitimate whole input model — Guess acts on
+       * the release precisely so that a gesture lands where it started — and
+       * reading the press's answer as "was there anything to compare" made
+       * every such game invisible here while the sweep reported health. It was
+       * also the wrong question: what this guards is whether the *gesture*
+       * does the same thing from a finger.
+       */
       const gesture = (
         p: { x: number; y: number },
         q: { x: number; y: number },
@@ -242,12 +252,13 @@ describe("a gesture from a finger does what the same gesture from a mouse does",
       ) => {
         reset();
         if (!m.processInput(p.x, p.y, down | mod)) {
-          m.processInput(p.x, p.y, up | mod);
-          return { consumed: false, fp: fingerprint(m) };
+          const acted = m.processInput(p.x, p.y, up | mod);
+          return { acted, fp: fingerprint(m) };
         }
         m.processInput(q.x, q.y, drag | mod);
         m.processInput(q.x, q.y, up | mod);
-        return { consumed: true, fp: fingerprint(m) };
+        // The press was consumed, so the gesture acted whatever the rest did.
+        return { acted: true, fp: fingerprint(m) };
       };
 
       let live = 0;
@@ -259,7 +270,7 @@ describe("a gesture from a finger does what the same gesture from a mouse does",
         ]) {
           if (q.x >= size.w || q.y >= size.h) continue;
           const mouse = gesture(p, q, LEFT);
-          if (!mouse.consumed) continue;
+          if (!mouse.acted) continue;
           live++;
           // A game that asked for the stylus bit is NOT skipped — excluding
           // the two games with bespoke touch handling would make them the two
@@ -268,7 +279,7 @@ describe("a gesture from a finger does what the same gesture from a mouse does",
           // mouse's, and what must hold is that the gesture still does
           // something rather than falling through a raw-button comparison.
           const touch = gesture(p, q, LEFT, MOD_STYLUS);
-          if (game.wantsStylusModifier) expect(touch.consumed).toBe(true);
+          if (game.wantsStylusModifier) expect(touch.acted).toBe(true);
           else expect(touch).toEqual(mouse);
         }
       }
@@ -417,29 +428,39 @@ describe("every on-screen key a game offers reaches that game", () => {
 
       const pts = probePoints(size);
       const dead: string[] = [];
+      /**
+       * How loaded the board is before the key is tried: not at all, with one
+       * press of the panel's first key, and with a *run* of them.
+       *
+       * The first two cover a "Clear" on an empty cell, which is a legitimate
+       * no-op — scoring that as dead convicted Abcd and Crossing wrongly. The
+       * run covers a key whose precondition is more than one prior press:
+       * Guess's Submit needs a *whole row* composed before there is anything to
+       * send, and with a single prime it read as a key its own game refuses.
+       * The count is a bound on "a row's worth", generous because a prime that
+       * is too long only ever costs time.
+       */
+      const primes = [0, 1, 12];
       for (const k of panel) {
         let reached = false;
         // Walk the keyboard cursor, and separately select a cell with the
-        // pointer, since a panel key acts on whichever the game tracks. Each
-        // is asked twice: bare, and after the panel's first key has written
-        // something — a "Clear" on an empty cell is a legitimate no-op, and
-        // scoring that as dead convicted Abcd and Crossing wrongly.
+        // pointer, since a panel key acts on whichever the game tracks.
         for (let j = 0; j < 8 && !reached; j++)
           for (let i = 0; i < 8 && !reached; i++)
-            for (const prime of [undefined, panel[0].button]) {
+            for (const prime of primes) {
               reset();
               for (let n = 0; n <= i; n++) m.processInput(0, 0, CURSOR_RIGHT);
               for (let n = 0; n < j; n++) m.processInput(0, 0, CURSOR_DOWN);
-              if (prime !== undefined) m.processInput(0, 0, prime);
+              for (let n = 0; n < prime; n++) m.processInput(0, 0, panel[0].button);
               if (m.processInput(0, 0, k.button)) reached = true;
             }
         for (const p of pts) {
           if (reached) break;
-          for (const prime of [undefined, panel[0].button]) {
+          for (const prime of primes) {
             reset();
             m.processInput(p.x, p.y, LEFT_BUTTON);
             m.processInput(p.x, p.y, LEFT_RELEASE);
-            if (prime !== undefined) m.processInput(0, 0, prime);
+            for (let n = 0; n < prime; n++) m.processInput(0, 0, panel[0].button);
             if (m.processInput(0, 0, k.button)) reached = true;
           }
         }

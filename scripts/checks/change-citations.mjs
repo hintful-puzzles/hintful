@@ -122,6 +122,8 @@ const NOT_A_LIVE_CHANGE = {
   "typescript-language-server":
     "the npm tool the agent's default LSP plugin runs (AGENTS.md § Git)",
   "puzzle-key-unhandled": "a DOM event `view-interactive.ts` raises",
+  "game-state-change":
+    "a midend notification type (`NotifyGameStateChange`); named in mechanics.md",
   // The seven `src/` brought with it, all named-as-things rather than used as
   // examples, so the backtick is right and the ledger is the answer.
   "8-3-3": "a Palisade params string, in a comment about the clue bound",

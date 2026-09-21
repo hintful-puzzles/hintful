@@ -253,12 +253,13 @@ Three resolutions, by whether the game uses the secondary button:
   branch of their own.
 
   The probe watches the **painted frame as well as the save**, because a
-  secondary meaning may live in UI state a game never serializes — Guess's peg
-  holds — and a save-only probe would demand the flag from a game that has a
-  meaning, turning off the very promotion it handles. Of the 50 games credited
-  today, 38 change the save and 12 change only the frame (nine draw pencil
-  marks, plus Guess's holds, Samegame's selection and Signpost's drag
-  highlight).
+  secondary meaning may live in UI state a game never serializes — Signpost's
+  backward grab, the nine games' pencil marks — and a save-only probe would
+  demand the flag from a game that has a meaning, turning off the very
+  promotion it handles. Guess's peg holds were the founding example and stopped
+  being one when `compose-guess-rows-without-dragging` gave that game an
+  `encodeUi`: a `Ui` field is frame-only until its game decides to persist it,
+  which is why the two observations are a union rather than a roster.
 
   **It primes the board three ways before pressing** — one press, two presses,
   and a drag — because a secondary meaning is usually "undo what the primary
@@ -692,6 +693,23 @@ session: the press toggled a wall, every drag frame was silently dropped, and
 the served module was verifiably the new one, so all the obvious suspects —
 stale worker, service worker, HTTP cache — checked out fine.
 
+**The exception is a game with no drag at all, and there it inverts:** decline
+the press deliberately, act only on the release, and the frontend's own
+`else` branch hands you the release at the press point. Guess does this — a
+tap on a palette swatch enters that color, a tap on a slot selects it, and
+nothing carries between them — and the behavior it buys is that a press which
+slides off before it lifts still acts where it started, which on a finger is
+the forgiving reading. The rule above is about a press that is *deferring* to a
+gesture it wants; a press with no gesture behind it should not claim anything
+(§ "A button you did not act on must not be claimed").
+
+**Both halves of the frontend's state machine must then be modeled by whatever
+sweeps you.** `input-parity.test.ts` implemented the `else` branch faithfully
+and still asked "was the *press* consumed" to decide whether there was anything
+to compare — so a release-only game was skipped entirely and the sweep reported
+health. It now asks whether the gesture *acted*, which is the question the guard
+was named for.
+
 ## A button you did not act on must not be claimed
 
 **The exact mirror of the section above, and the more expensive of the two.**
@@ -875,13 +893,14 @@ Normative: the on-screen-keys requirement in
 
   - **A panel is not automatically dead without tap-to-select.** Rome's and
     Map's keys act only at the cursor, so a touch player could not reach them
-    until a tap could place one. Guess's digit arm *reveals* the cursor, places
-    at it and advances — so from a cold board, pressing colors fills the row
-    left to right and the panel works before any selection gesture exists.
-    Selection was still worth adding (it is how a row is **edited** rather than
-    only filled), but it was an improvement, not a precondition. **Check which
-    kind of game you have** before costing the work: read the key arm's guard,
-    not the other games' changes.
+    until a tap could place one. Guess's color arm acts with no cursor shown —
+    it fills the first empty slot of the row and *reveals* the cursor on the
+    next one — so from a cold board, pressing colors composes a row and the
+    panel works before any selection gesture exists. Selection was still worth
+    adding (it is how a row is **edited** rather than only filled, and the only
+    way to leave a deliberate gap mid-row), but it was an improvement, not a
+    precondition. **Check which kind of game you have** before costing the
+    work: read the key arm's guard, not the other games' changes.
   - **A game with a real secondary meaning cannot buy its way out of the
     long-press trap.** `ignoresSecondaryButton` is available only to a game
     whose right button means nothing, and Guess's toggles a peg's hold — so
@@ -897,13 +916,51 @@ Normative: the on-screen-keys requirement in
   the same color back **and hid the cursor**, so selecting there was a fix
   rather than a divergence to argue for.
 
-  **Where the board already draws the elements, leave it alone.** Guess paints
-  a palette column down the board's left side, and the obvious-looking move is
-  to make it tap-to-arm instead of adding a keypad. Don't: a tap on a slot would
-  then mean "select" or "place" depending on state the player cannot see, and
-  the game would keep a bespoke input model in the name of saving pixels. The
-  column stays the drag source and the legend; the panel is where the elements
-  go, as in every other game.
+  **Where the board already draws the elements, the panel replaces that
+  drawing — it does not join it.** Guess painted a palette column down the
+  board's left side to be dragged from, and the obvious-looking move while the
+  drag still existed was to make the column tap-to-**arm** instead of adding a
+  keypad. That is the wrong shape for the usual reason: a tap on a slot would
+  then mean "select" or "place" depending on state the player cannot see.
+
+  Tap-to-**place** is a different thing and is genuinely safe while it lasts —
+  neither surface holds state of its own, so they are one keypress spelled
+  twice. But it did not last: `compose-guess-rows-without-dragging` kept the
+  column for exactly one revision before deleting it, because two color
+  surfaces cost a quarter of the board's width and bought no capability either
+  one lacked. **The thing to weigh is not whether the duplicate is safe, but
+  what it is for.** Here it was for the drag, and the drag was gone.
+
+  A second surface also has a fault line: the moment either grows state the
+  other has not got — a strike-out notation on the panel, say — they stop being
+  one keypress, and the board becomes a palette that cannot show what has been
+  ruled out. Deleting the column ahead of any notation removes that question
+  rather than answering it later.
+
+  **What the board loses with it, said plainly:** a player who turns the keypad
+  off (`showPuzzleKeyboard`) has no pointer-only way to enter a value. Solo,
+  Keen and Filling are already there — a sweep of every pointer gesture over a
+  real board commits zero moves in all three — so it is the collection's
+  existing answer for a game whose elements are values rather than positions.
+  Check where your game sits before assuming either way.
+
+  **A panel key cannot be offered conditionally.** `requestKeys` takes `params`
+  alone, because the panel reloads only on a param change, so there is no
+  expressing "show Submit once the row is full" — and `KeyLabel` has no
+  disabled state either. A key whose precondition is a board state therefore
+  ships unconditionally, is **declined** when the precondition fails, and needs
+  somewhere to say why: Guess's Submit key is the case, and it is the reason
+  that game turned `wantsStatusbar` on in the same change. A refusal that is
+  merely silent is indistinguishable from a broken key.
+
+  Such a key also strains the **inert-panel-key probe**, which primes the board
+  by pressing the panel's first key and then tries the key under test. One press
+  is not a full Guess row, so Submit read as inert on arrival; the probe now
+  primes with a run as well, which cost nothing measurable because it
+  short-circuits as soon as a key is reached. If you add a key with a
+  multi-press precondition, check that the probe can still reach it rather than
+  reaching for `INERT_PANEL_KEYS` — that list is a finding under management, not
+  an exemption.
 
   Two games remain deliberately without element keys, because their notes are
   **relational or positional rather than a value you choose**: Loopy's mark is

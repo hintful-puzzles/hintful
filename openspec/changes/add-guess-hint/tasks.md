@@ -16,6 +16,16 @@ been settled (proposal, § "Its bearing on the input model").
       `npegs` eliminations at once, ~a third of the pair space), and a per-color
       strike cannot hold *"not this color, here"*. Re-run the brute force before
       relying on the ranking if `markPegs` has moved.
+      **Still open, and deliberately so** — the owner was asked on 2026-09-21,
+      alongside the input-model questions, and kept it here rather than folding
+      it into `compose-guess-rows-without-dragging`. Two things changed under
+      it: `encodeUi`/`decodeUi` now exist, which any notation needed as a
+      prerequisite and which are no longer this change's to build; and the
+      board's palette column survives as tap-to-place, so **whichever notation
+      ships, deleting that column is a step of this change** (the two surfaces
+      are one keypress today only because neither holds state the other lacks —
+      `openspec/specs/guess/spec.md` and `docs/games/input.md` § "The on-screen
+      keypad" both record why).
 - [ ] 1.2 **The usual escape is closed.** Guess has no `difficulty` contract, so
       "demote the tier that needs the notation to `Unreasonable` and refuse
       there" is not available. Either the notation happens or the hint says very
