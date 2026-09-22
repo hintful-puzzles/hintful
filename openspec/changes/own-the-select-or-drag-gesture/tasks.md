@@ -4,10 +4,12 @@
 
 ## 1. Pin the difference before removing it
 
-- [ ] 1.1 Write the cross-game guard first, over the derived population, and
-      watch it fail on Rome and Map: a repeat tap on the selected cell or
-      region puts the highlight away; a sticky right tap on a cell that can
-      take no mark leaves the highlight where it was. Drive both through the
+- [ ] 1.1 Decide the repeat-tap answer (proposal § "What the owner requires"):
+      either is acceptable if all members agree. Then write the cross-game
+      guard first, over the derived population, and watch it fail on whichever
+      games answer differently: a repeat tap on the selected cell or region
+      does the one agreed thing; a sticky right tap on a cell that can take no
+      mark leaves the highlight where it was. Drive both through the
       game's own `interpretMove`, press and release, so a drag game cannot
       pass by answering a direct call it never receives.
 - [ ] 1.2 Read Rome's and Map's press, drag and release paths side by side and
@@ -23,7 +25,8 @@
       special case in the engine.
 - [ ] 2.3 Rome and Map move to it; their tap comments and any per-game
       highlight bookkeeping go.
-- [ ] 2.4 The click-select games are unchanged: their tests and
+- [ ] 2.4 Apart from the repeat-tap answer, if §1.1 chose to change it for
+      them, the click-select games are unchanged: their tests and
       `note-taking-cell-render.test.ts` snapshots pass without re-baselining.
 
 ## 3. Prove it

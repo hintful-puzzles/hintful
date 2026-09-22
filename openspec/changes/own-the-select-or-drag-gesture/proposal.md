@@ -35,6 +35,25 @@ highlight does in between. That is the shape `AGENTS.md` § "Convention over
 configuration" calls a convention two games are each re-implementing, and it
 will be a third game's, since select-or-drag is a common input model.
 
+## What the owner requires: consistency, not a particular answer
+
+Owner, 2026-09-22: *"I'm ok with a repeat tap re-selecting too, if it's
+easier, just as long as it's consistent across all games."* So the requirement
+is that **every member answers the same way**, and either answer is acceptable:
+
+- **Repeat tap puts the highlight away everywhere** (today's click-select
+  behavior, with Rome and Map brought to it), or
+- **Repeat tap re-selects everywhere** (today's drag-game behavior, with the
+  click-select games brought to it). That is a player-visible change for
+  those games, and removes the "tap again to deselect" gesture they have now,
+  so weigh what replaces it (Escape, tapping outside the board) before taking
+  it.
+
+Choose by what makes the engine simplest *and* the rule easiest to state. The
+same freedom does not extend to the sticky toggle: a mode switch must not move
+or hide the selection in any game, since that is the confusion the sticky mode
+exists to remove.
+
 ## Recommended fix
 
 **The engine owns the select-or-drag gesture, and the game supplies only what
@@ -71,8 +90,9 @@ Deliberately left open, for whoever picks this up:
 
 - **Not a change to the pictures.** Map's band and the cell games' wash are
   settled (`share-the-selected-cell-highlight`); this is about behavior only.
-- **Not a change to the click-select games.** Their press is already the
-  selection, and every one of them must behave exactly as now. That is the
+- **Not a change to the click-select games**, beyond the repeat-tap answer if
+  the change chooses re-select. Their press is already the selection, and in
+  everything else every one of them must behave exactly as now. That is the
   proof obligation.
 - **Not Crossing's walls.** A wall keeps corner brackets because it cannot be
   selected by the pointer and has no background to wash. That was offered to
