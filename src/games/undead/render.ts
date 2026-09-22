@@ -33,6 +33,7 @@ import {
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
+import { cellHighlight, drawCellBackground } from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
   HINT_TARGET,
@@ -462,34 +463,6 @@ function markBand(ds: UndeadDrawState, x: number, y: number): MarkBand {
   };
 }
 
-function drawCellBackground(
-  dr: GameDrawing,
-  ds: UndeadDrawState,
-  ui: UndeadUi,
-  x: number,
-  y: number,
-): void {
-  const ts = ds.tileSize;
-  const { dx, dy } = cellCenter(ds, x, y);
-  const hon = ui.cursor.visible && x === ui.cursor.x && y === ui.cursor.y;
-  dr.drawRect(
-    cellRect(ds, x, y),
-    hon && !ui.pencilMode ? COL_HIGHLIGHT : COL_BACKGROUND,
-  );
-  if (hon && ui.pencilMode) {
-    dr.drawPolygon(
-      [
-        { x: dx - f(ts / 2) + 1, y: dy - f(ts / 2) + 1 },
-        { x: dx - f(ts / 2) + 1 + f(ts / 2), y: dy - f(ts / 2) + 1 },
-        { x: dx - f(ts / 2) + 1, y: dy - f(ts / 2) + 1 + f(ts / 2) },
-      ],
-      COL_HIGHLIGHT,
-      COL_HIGHLIGHT,
-    );
-  }
-  dr.drawUpdate(cellRect(ds, x, y));
-}
-
 function drawMirror(
   dr: GameDrawing,
   ds: UndeadDrawState,
@@ -878,7 +851,15 @@ export function redraw(
         // Both hint marks are drawn after this loop, on the cell's border, so
         // the cell paints its ordinary background and a marked cell keeps
         // showing the candidates the hint is reasoning about.
-        drawCellBackground(dr, ds, ui, x, y);
+        const cell = cellRect(ds, x, y);
+        drawCellBackground(
+          dr,
+          cell,
+          cellHighlight(ui, x, y),
+          COL_HIGHLIGHT,
+          COL_BACKGROUND,
+        );
+        dr.drawUpdate(cell);
         if (xi < 0) {
           drawMirror(dr, ds, x, y, hflash, c);
         } else if (isSingleton(state.guess[xi])) {

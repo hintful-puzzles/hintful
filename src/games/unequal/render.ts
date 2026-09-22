@@ -30,6 +30,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
+import { cellHighlight, drawCellBackground } from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
   HINT_TARGET,
@@ -424,7 +425,6 @@ function drawCell(
   const o = state.order;
   const ox = coord(x, ts);
   const oy = coord(y, ts);
-  const hon = ui.cursor.visible && x === ui.cursor.x && y === ui.cursor.y;
 
   // Hint overlay (docs/games/hints.md § "The element-type color legend"): both
   // cell-level marks are read in `redraw`, which rings the target and outlines
@@ -432,23 +432,13 @@ function drawCell(
   // the digits it is talking about. What is left here is `struck`, the set of
   // candidates this firing rules out, drawn crossed through among the marks.
   const struck = hint >> 2; // bit (2 + n) ⇒ candidate n struck
-  let bg = hflash ? COL_FLASH : COL_BACKGROUND;
-  if (hon && !ui.pencilMode) bg = COL_CURSOR;
-
-  dr.drawRect({ x: ox, y: oy, w: ts, h: ts }, bg);
-
-  // Pencil-mode cursor: a top-left triangle.
-  if (hon && ui.pencilMode) {
-    dr.drawPolygon(
-      [
-        { x: ox, y: oy },
-        { x: ox + Math.floor(ts / 2), y: oy },
-        { x: ox, y: oy + Math.floor(ts / 2) },
-      ],
-      COL_CURSOR,
-      COL_CURSOR,
-    );
-  }
+  drawCellBackground(
+    dr,
+    { x: ox, y: oy, w: ts, h: ts },
+    cellHighlight(ui, x, y),
+    COL_CURSOR,
+    hflash ? COL_FLASH : COL_BACKGROUND,
+  );
 
   rectOutline(dr, ox, oy, ts, ts, COL_GRID);
   dr.drawUpdate({ x: ox, y: oy, w: ts, h: ts });

@@ -32,6 +32,7 @@ import {
   ERROR,
   HINT_ACTION,
   HINT_EVIDENCE,
+  highlightWash,
   INK,
   PENCIL_BODY,
   pencilColor,
@@ -40,6 +41,12 @@ import {
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
+import {
+  type CellHighlight,
+  cellHighlight,
+  drawCellBackground,
+  HIGHLIGHT_NONE,
+} from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
   HINT_TARGET,
@@ -97,6 +104,10 @@ export const COL_PENCIL_BODY = 9;
  * from. Both are drawn on a cell's edge rather than behind its notes. */
 export const COL_HINT = 10;
 export const COL_HINT_CELL = 11;
+/** Fork addition: the highlight's wash, in both its full-cell and its corner
+ * form. Upstream filled the cell with `COL_HIGHLIGHT` and drew the corner in
+ * `COL_LOWLIGHT`; both stay the completion wave's colors. */
+export const COL_CURSOR = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const { background, highlight, lowlight } = mkhighlight(defaultBackground);
@@ -113,6 +124,9 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_PENCIL_BODY] = PENCIL_BODY;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
+  // A fill under the digit and its notes: the note-taking cell's "you are
+  // here" wash, which every game in that mechanic shares, not the green mark.
+  out[COL_CURSOR] = highlightWash(background);
   return out;
 }
 
@@ -276,7 +290,7 @@ function drawTile(
   x: number,
   y: number,
   color: number,
-  pencilCursor: boolean,
+  highlight: CellHighlight,
   wrong: boolean,
   struck: number,
 ): void {
@@ -290,20 +304,7 @@ function drawTile(
   dr.clip({ x: tx, y: ty, w: ts, h: ts });
   dr.drawUpdate({ x: tx, y: ty, w: ts, h: ts });
 
-  dr.drawRect({ x: cx, y: cy, w: cw, h: ch }, color);
-
-  // The pencil-entry cursor: a triangle in the cell's top-left corner.
-  if (pencilCursor) {
-    dr.drawPolygon(
-      [
-        { x: cx, y: cy },
-        { x: cx + ((ts / 2) | 0), y: cy },
-        { x: cx, y: cy + ((ts / 2) | 0) },
-      ],
-      COL_LOWLIGHT,
-      COL_LOWLIGHT,
-    );
-  }
+  drawCellBackground(dr, { x: cx, y: cy, w: cw, h: ch }, highlight, COL_CURSOR, color);
 
   // A cell whose *diagonal* neighbor is in another region owes that corner a
   // black pixel — drawn after the fill, which can otherwise cover it.
@@ -404,7 +405,6 @@ export function redraw(
   // The completion flash runs a three-phase diagonal wave; the cursor is hidden
   // while it plays.
   const flash = flashTime > 0 ? Math.floor(flashTime / FLASH_FRAME) % 3 : -1;
-  const cshow = flashTime > 0 ? false : ui.cursor.visible;
 
   const index = (x: number, y: number): number => y * w + x;
   ds.wrong.packCells(mistakes ?? null, index);
@@ -413,31 +413,24 @@ export function redraw(
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
-      const highlighted = cshow && ui.cursor.x === x && ui.cursor.y === y;
-      const pencilCursor = highlighted && ui.pencilMode;
-
-      let color: number;
-      if (flash === -1) {
-        color = highlighted && !ui.pencilMode ? COL_HIGHLIGHT : COL_BACKGROUND;
-      } else {
-        color =
-          (x + y) % 3 === flash
-            ? COL_BACKGROUND
-            : (x + y + 1) % 3 === flash
-              ? COL_LOWLIGHT
-              : COL_HIGHLIGHT;
-      }
+      const highlight = flash === -1 ? cellHighlight(ui, x, y) : HIGHLIGHT_NONE;
+      const color =
+        flash === -1 || (x + y) % 3 === flash
+          ? COL_BACKGROUND
+          : (x + y + 1) % 3 === flash
+            ? COL_LOWLIGHT
+            : COL_HIGHLIGHT;
 
       const tile =
         state.grid[i] |
         (state.pencil[i] << 4) |
         (state.flags[i] << 13) |
         (color << 16) |
-        ((pencilCursor ? 1 : 0) << 18);
+        (highlight << 18);
 
       if (ds.tiles[i] !== tile || ds.wrong.stale(i) || ds.hint.stale(i)) {
         const struck = ds.hint.packed[i] >> 2;
-        drawTile(dr, ds, state, x, y, color, pencilCursor, ds.wrong.at(i), struck);
+        drawTile(dr, ds, state, x, y, color, highlight, ds.wrong.at(i), struck);
         ds.tiles[i] = tile;
         ds.wrong.commit(i);
         ds.hint.commit(i);

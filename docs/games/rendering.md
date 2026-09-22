@@ -405,6 +405,39 @@ Three things that generalize:
   exactly that — 225 and 237 ops here, unchanged. If a snapshot needs `-u`,
   pixels moved and the extraction is wrong.
 
+### The note-taking cell's picture
+
+The selected cell looks the same in every note-taking game: the whole cell
+washed when typing enters a value, a triangle in its top-left corner when typing
+enters a note, and the same whether the mouse or the keyboard put it there. The
+game calls `drawCellBackground` from
+[`engine/note-taking-cell.ts`](../../src/engine/note-taking-cell.ts) where it
+used to paint its cell's background rect, and hands it that same rect.
+
+- **It draws inside the tile repaint, so it rides the tile key.** Pack
+  `cellHighlight(ui, x, y)` — two bits — into the key, or the old cell never
+  repaints when the highlight leaves (§ "A cursor is usually a cache key, not a
+  blitter"). A game that hides the highlight for its own reasons, a completion
+  flash, passes `HIGHLIGHT_NONE` rather than skipping the call.
+- **The triangle is background.** It is drawn with the rect, before any content,
+  so a clue in the same corner (Keen's cage label, a pencil mark in the top-left
+  slot) sits on top of it, and so do Group's dividers, which the triangle used
+  to cover.
+- **The legs are half of the rect the game paints**, not half a tile, so Solo's
+  and Keen's cells, which reach into the gutter they share with their block,
+  keep a triangle in proportion.
+- **The color is `highlightWash(background)`, at an index the game names.** It
+  is the palette's "you are here" wash under content (§ "The palette: three
+  layers, meaning first"). Before `share-the-selected-cell-highlight` five
+  games had drifted into four other answers — mkhighlight's near-white, its
+  lowlight, and pairs of the two — each a reasonable local choice, and not one
+  of them about the puzzle.
+
+What legitimately differs stays in the game: a Crossing *wall* can only be
+reached by the arrow keys and has no background to wash, so the keyboard
+cursor there is still the corner brackets, and a Crossing digit is a raised tile
+whose face takes the wash and whose bevel also presses in.
+
 ### Sharing a *primitive* is a different, smaller move
 
 `border-grid-render.ts` shares a mechanic's whole look. `engine/draw.ts` shares

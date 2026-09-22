@@ -21,13 +21,13 @@ import { saladGame } from "./index.ts";
 import {
   COL_BACKGROUND,
   COL_BORDERCLUE,
+  COL_CURSOR,
   COL_G_HOLE,
   COL_HIGHLIGHT,
   COL_HINT,
   COL_HINT_CELL,
   COL_I_BALLBG,
   COL_I_HOLE,
-  COL_LOWLIGHT,
   COL_MISTAKE,
   COL_PENCIL,
   COL_PENCIL_BODY,
@@ -305,7 +305,7 @@ describe("salad Ui-driven frames", () => {
     const ink = paint(s, ui);
     expect(
       ink.ops.some(
-        (o) => o.op === "rect" && o.color === COL_LOWLIGHT && o.w === 40 && o.h === 40,
+        (o) => o.op === "rect" && o.color === COL_CURSOR && o.w === 40 && o.h === 40,
       ),
     ).toBe(true);
     // No pencil-mode glyph while entering ink.
@@ -317,7 +317,7 @@ describe("salad Ui-driven frames", () => {
     // The pencil highlight is a half-tile corner triangle, not a full fill.
     expect(
       pencil.ops.some(
-        (o) => o.op === "polygon" && o.fill === COL_LOWLIGHT && o.points.length === 3,
+        (o) => o.op === "polygon" && o.fill === COL_CURSOR && o.points.length === 3,
       ),
     ).toBe(true);
     // ...and the CapsLock-style indicator appears in the clue margin.

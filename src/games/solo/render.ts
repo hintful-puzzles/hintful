@@ -41,6 +41,13 @@ import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import {
+  type CellHighlight,
+  cellHighlight,
+  drawCellBackground,
+  HIGHLIGHT_ENTRY,
+  HIGHLIGHT_NONE,
+} from "../../engine/note-taking-cell.ts";
+import {
   HINT_AREA,
   HINT_TARGET,
   hintMarkBit,
@@ -121,12 +128,10 @@ export interface SoloHint {
 }
 
 // --- highlight byte (the `hl` argument of draw_number) ----------------------
-// Low nibble: 0 = none, 1 = solid highlight (cursor non-pencil / flash),
-// 2 = pencil highlight (top-left triangle). Bit 16 = duplicate-digit error,
+// Low nibble: the cell's `CellHighlight`, where the completion flash washes
+// every cell as an entry highlight would. Bit 16 = duplicate-digit error,
 // bit 32 = killer-cage sum wrong.
 
-const HL_SOLID = 1;
-const HL_PENCIL = 2;
 const HL_ERROR = 16;
 const HL_KSUM = 32;
 
@@ -277,26 +282,15 @@ function drawNumber(
   // Background. No hint role appears here: the target's ring and the evidence
   // region's outline are both drawn in the gutter (see `redraw`), so a hint
   // never paints over the digits it is talking about.
-  const bg =
-    (hl & 15) === HL_SOLID
-      ? COL_HIGHLIGHT
-      : ds.xtype && (onDiag0(cell, cr) || onDiag1(cell, cr))
-        ? COL_XDIAGONALS
-        : COL_BACKGROUND;
-  dr.drawRect({ x: cx, y: cy, w: cw, h: ch }, bg);
-
-  // Pencil-mode highlight (top-left triangle).
-  if ((hl & 15) === HL_PENCIL) {
-    dr.drawPolygon(
-      [
-        { x: cx, y: cy },
-        { x: cx + ((cw / 2) | 0), y: cy },
-        { x: cx, y: cy + ((ch / 2) | 0) },
-      ],
-      COL_HIGHLIGHT,
-      COL_HIGHLIGHT,
-    );
-  }
+  drawCellBackground(
+    dr,
+    { x: cx, y: cy, w: cw, h: ch },
+    (hl & 15) as CellHighlight,
+    COL_HIGHLIGHT,
+    ds.xtype && (onDiag0(cell, cr) || onDiag1(cell, cr))
+      ? COL_XDIAGONALS
+      : COL_BACKGROUND,
+  );
 
   // Corner juts: a GRIDEXTRA square where the diagonal neighbor is a different
   // block (so the grid corner shows through the merged region).
@@ -602,10 +596,8 @@ export function redraw(
     for (let x = 0; x < cr; x++) {
       const cell = y * cr + x;
       const d = state.grid[cell];
-      let hl = 0;
-      if (flash) hl = HL_SOLID;
-      if (x === ui.cursor.x && y === ui.cursor.y && ui.cursor.visible)
-        hl = ui.pencilMode ? HL_PENCIL : HL_SOLID;
+      let hl: number =
+        cellHighlight(ui, x, y) || (flash ? HIGHLIGHT_ENTRY : HIGHLIGHT_NONE);
 
       if (d) {
         if (

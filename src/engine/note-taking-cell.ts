@@ -10,8 +10,9 @@
  * WHAT LIVES HERE is only what would have to change in every copy at once to
  * keep them correct, by [`border-grid.ts`](./border-grid.ts)'s test: what a
  * left and a right press do to the highlight, how the fork's sticky pencil mode
- * behaves, and the rule that a pointer press hands the cursor's provenance back
- * to the mouse.
+ * behaves, the rule that a pointer press hands the cursor's provenance back to
+ * the mouse — and the highlight's *picture*, which each game drew for itself
+ * until five of them had drifted into four different colors for it.
  *
  * WHAT DOES NOT live here is everything about the *puzzle*. Each game keeps its
  * own coordinate mapping, its own symbol vocabulary (digits, letters past nine,
@@ -37,7 +38,7 @@
  * their own data, which is where the line is.
  */
 
-import { UI_UPDATE, type UiUpdate } from "./game.ts";
+import { type GameDrawing, UI_UPDATE, type UiUpdate } from "./game.ts";
 import {
   CURSOR_SELECT,
   type GridCursor,
@@ -45,6 +46,7 @@ import {
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
 } from "./pointer.ts";
+import type { Rect } from "./types.ts";
 
 /**
  * The three `Ui` fields the mechanic owns. A game's `Ui` structurally satisfies
@@ -224,4 +226,77 @@ export function releaseHighlightAfterEntry(ui: NoteTakingUi): void {
   if (ui.cursorFromKeyboard) return;
   if (ui.pencilMode && (ui.pencilKeepHighlight ?? true)) return;
   ui.cursor.visible = false;
+}
+
+// --- the picture ------------------------------------------------------------
+//
+// One picture in every game, because the player learns it once: the whole cell
+// washed when typing enters a value, and a triangle in its top-left corner when
+// typing enters a note. Where a keyboard or a mouse put the highlight makes no
+// difference to it.
+//
+// The wash is `highlightWash` of the board's background, which each game places
+// at its own palette index and passes in; `note-taking-cell-render.test.ts`
+// holds every member to that color.
+
+/** The highlight is not on this cell. */
+export const HIGHLIGHT_NONE = 0;
+/** The highlight is on this cell, and typing enters a value. */
+export const HIGHLIGHT_ENTRY = 1;
+/** The highlight is on this cell, and typing enters a note. */
+export const HIGHLIGHT_NOTES = 2;
+/** Two bits, so a game packs it into its tile key: the tile must repaint when
+ * the highlight arrives, changes mode or leaves, and the key is what says so. */
+export type CellHighlight =
+  | typeof HIGHLIGHT_NONE
+  | typeof HIGHLIGHT_ENTRY
+  | typeof HIGHLIGHT_NOTES;
+
+/** What the highlight shows on cell `(x, y)` right now. A game that hides it
+ * for its own reasons — a completion flash — passes `HIGHLIGHT_NONE` instead. */
+export function cellHighlight(ui: NoteTakingUi, x: number, y: number): CellHighlight {
+  if (!highlightIsOn(ui, x, y)) return HIGHLIGHT_NONE;
+  return ui.pencilMode ? HIGHLIGHT_NOTES : HIGHLIGHT_ENTRY;
+}
+
+/** The color a cell's background is filled with: the wash under an entry
+ * highlight, the game's own background otherwise. Exported for the game that
+ * paints more of the cell than its rect (Towers' 3D faces). */
+export function highlightFill(
+  highlight: CellHighlight,
+  wash: number,
+  background: number,
+): number {
+  return highlight === HIGHLIGHT_ENTRY ? wash : background;
+}
+
+/**
+ * Paint a cell's background with its highlight: `rect` in the wash or in
+ * `background`, then, for a note highlight, the corner triangle over it.
+ *
+ * The triangle's legs are half of `rect`, from `rect`'s own corner, so a game
+ * whose cell reaches into the gutter it shares with a neighbor (Solo's blocks,
+ * Keen's cages) gets a triangle in proportion to what it painted. It is part of
+ * the *background*: a clue or a mark drawn afterwards sits on top of it, which
+ * is how Keen's cage label in that same corner stays readable.
+ */
+export function drawCellBackground(
+  dr: GameDrawing,
+  rect: Rect,
+  highlight: CellHighlight,
+  wash: number,
+  background: number,
+): void {
+  dr.drawRect(rect, highlightFill(highlight, wash, background));
+  if (highlight !== HIGHLIGHT_NOTES) return;
+  const { x, y } = rect;
+  dr.drawPolygon(
+    [
+      { x, y },
+      { x: x + Math.floor(rect.w / 2), y },
+      { x, y: y + Math.floor(rect.h / 2) },
+    ],
+    wash,
+    wash,
+  );
 }

@@ -79,16 +79,17 @@ describe("the raised tile bevel is drawn in one place", () => {
 
   it("knows the lone LOWLIGHT triangles, which are a different thing", () => {
     // The classification the key deliberately does not narrow away: a single
-    // triangle filled COL_LOWLIGHT is a pencil-mode corner marker, not half a
-    // bevel. Listing them is what keeps the scan honest — if this set changes,
-    // somebody either added a marker or started hand-rolling a bevel, and the
-    // two need different answers.
+    // triangle filled COL_LOWLIGHT was a pencil-mode corner marker, not half a
+    // bevel. Mathrax, Salad and Seismic drew one until the marker moved into
+    // `note-taking-cell.ts`'s `drawCellBackground`, in the wash. If this set
+    // grows, somebody either hand-drew a marker again or started hand-rolling
+    // a bevel, and the two need different answers.
     const lone = sources
       .filter(([, t]) =>
         polygonFills(t).some((f) => /COL_LOWLIGHT, COL_LOWLIGHT/.test(f)),
       )
       .map(([p]) => p.replace("../games/", "").split("/")[0])
       .sort();
-    expect(lone).toEqual(["mathrax", "salad", "seismic"]);
+    expect(lone).toEqual([]);
   });
 });

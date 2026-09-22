@@ -38,6 +38,11 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import {
+  type CellHighlight,
+  cellHighlight,
+  drawCellBackground,
+} from "../../engine/note-taking-cell.ts";
+import {
   HINT_AREA,
   HINT_TARGET,
   hintMarkBit,
@@ -87,8 +92,8 @@ export const COL_ERRORBG = 7;
  * `paletteOverrides`, so appending is safe): the pencil-mode indicator's body. */
 export const COL_PENCIL_BODY = 8;
 /** Fork additions, likewise appended: the solved flash's cell fill and the
- * keyboard cursor's cell fill. Upstream drew both with `COL_LOWLIGHT`, which
- * stays the pencil-corner and cell-outline color. */
+ * highlight's wash, in both its full-cell and its corner form. Upstream drew
+ * all of them with `COL_LOWLIGHT`, which stays the cell-outline color. */
 export const COL_FLASH = 9;
 export const COL_CURSOR = 10;
 /** The hint's two marks (docs/games/hints.md § "The element-type color
@@ -139,8 +144,8 @@ export interface MathraxHint {
 // --- draw-only flags (upstream FD_*) ---------------------------------------
 
 const FD_FLASH = 0x100;
-const FD_CURSOR = 0x200;
-const FD_PENCIL = 0x400;
+/** Bits 9–10: the cell's `CellHighlight`. */
+const FD_HIGHLIGHT_SHIFT = 9;
 
 // --- geometry --------------------------------------------------------------
 
@@ -274,23 +279,13 @@ function drawTile(
 
   dr.clip(cell);
   dr.drawUpdate(cell);
-  dr.drawRect(
+  drawCellBackground(
+    dr,
     cell,
-    fs & FD_FLASH ? COL_FLASH : fs & FD_CURSOR ? COL_CURSOR : COL_BACKGROUND,
+    ((fs >> FD_HIGHLIGHT_SHIFT) & 3) as CellHighlight,
+    COL_CURSOR,
+    fs & FD_FLASH ? COL_FLASH : COL_BACKGROUND,
   );
-
-  // Pencil-mode highlight: a triangle in the cell's top-left corner.
-  if (fs & FD_PENCIL) {
-    dr.drawPolygon(
-      [
-        { x: tx, y: ty },
-        { x: tx + ((ts / 2) | 0), y: ty },
-        { x: tx, y: ty + ((ts / 2) | 0) },
-      ],
-      COL_LOWLIGHT,
-      COL_LOWLIGHT,
-    );
-  }
 
   // The cell's own outline.
   dr.drawPolygon(
@@ -458,13 +453,7 @@ export function redraw(
       let fs = state.flags[i];
 
       if (flashTime > 0 && (x + y) % 3 === flash) fs |= FD_FLASH;
-      if (
-        flashTime === 0 &&
-        ui.cursor.visible &&
-        ui.cursor.x === x &&
-        ui.cursor.y === y
-      )
-        fs |= ui.pencilMode ? FD_PENCIL : FD_CURSOR;
+      if (flashTime === 0) fs |= cellHighlight(ui, x, y) << FD_HIGHLIGHT_SHIFT;
 
       const tile = state.grid[i] | (state.pencil[i] << 4) | (fs << 14);
       if (ds.tiles[i] !== tile || ds.wrong.stale(i) || ds.hint.stale(i)) {

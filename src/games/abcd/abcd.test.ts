@@ -19,6 +19,7 @@ import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newAbcdDesc } from "./generator.ts";
 import { abcdGame } from "./index.ts";
 import {
+  COL_CURSOR,
   COL_ERROR,
   COL_HIGHLIGHT,
   COL_PENCIL_BODY,
@@ -542,8 +543,8 @@ describe("abcd render", () => {
     const ds = newDrawState(withMark, abcdGame.preferredTileSize ?? 36);
     const dr = new RecordingDrawing(palette);
     redraw(dr, ds, null, withMark, 1, ui, 0, 0);
-    // The highlighted cursor cell fills its background COL_HIGHLIGHT.
-    expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_HIGHLIGHT)).toBe(true);
+    // The highlighted cursor cell fills its background with the wash.
+    expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_CURSOR)).toBe(true);
     // The pencil mark 'A' is drawn as text.
     expect(dr.ops.some((o) => o.op === "text" && o.text === "A")).toBe(true);
   });

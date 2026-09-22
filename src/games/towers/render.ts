@@ -30,6 +30,13 @@ import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import {
+  type CellHighlight,
+  cellHighlight,
+  drawCellBackground,
+  HIGHLIGHT_ENTRY,
+  highlightFill,
+} from "../../engine/note-taking-cell.ts";
+import {
   HINT_AREA,
   HINT_TARGET,
   hintMarkBit,
@@ -96,8 +103,8 @@ export function colors(defaultBackground: Color): Color[] {
 const DF_PENCIL_SHIFT = 16;
 const DF_CLUE_DONE = 0x10000;
 const DF_ERROR = 0x8000;
-const DF_HIGHLIGHT = 0x4000;
-const DF_HIGHLIGHT_PENCIL = 0x2000;
+/** Bits 13–14: the cell's `CellHighlight`. */
+const DF_HIGHLIGHT_SHIFT = 13;
 const DF_IMMUTABLE = 0x1000;
 const DF_PLAYAREA = 0x0800;
 const DF_DIGIT_MASK = 0x00ff;
@@ -226,7 +233,9 @@ function drawTile(
   // `redraw` draws the hint's target ring and evidence outline once per frame;
   // a tile draws only `struck`, the candidate heights this firing rules out.
   const struck = hint >> 2;
-  const bg = tile & DF_HIGHLIGHT ? COL_HIGHLIGHT : COL_BACKGROUND;
+  const highlight = ((tile >> DF_HIGHLIGHT_SHIFT) & 3) as CellHighlight;
+  // The faces take the top's fill, so a raised tower reads as one selected cell.
+  const bg = highlightFill(highlight, COL_HIGHLIGHT, COL_BACKGROUND);
 
   // 3D tower: left + bottom faces, then offset to the top face.
   if (threeD && tile & DF_PLAYAREA && digit) {
@@ -258,21 +267,13 @@ function drawTile(
     ty -= yoff;
   }
 
-  // erase background
-  dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, bg);
-
-  // pencil-mode highlight (top-left triangle)
-  if (tile & DF_HIGHLIGHT_PENCIL) {
-    dr.drawPolygon(
-      [
-        { x: tx, y: ty },
-        { x: tx + Math.floor(ts / 2), y: ty },
-        { x: tx, y: ty + Math.floor(ts / 2) },
-      ],
-      COL_HIGHLIGHT,
-      COL_HIGHLIGHT,
-    );
-  }
+  drawCellBackground(
+    dr,
+    { x: tx, y: ty, w: ts, h: ts },
+    highlight,
+    COL_HIGHLIGHT,
+    COL_BACKGROUND,
+  );
 
   // box outline (play area only)
   if (tile & DF_PLAYAREA) {
@@ -453,10 +454,8 @@ export function redraw(
       let tile = DF_PLAYAREA;
       if (state.grid[y * w + x]) tile |= state.grid[y * w + x];
       else tile |= state.pencil[y * w + x] << DF_PENCIL_SHIFT;
-      if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y)
-        tile |= ui.pencilMode ? DF_HIGHLIGHT_PENCIL : DF_HIGHLIGHT;
+      tile |= (flash ? HIGHLIGHT_ENTRY : cellHighlight(ui, x, y)) << DF_HIGHLIGHT_SHIFT;
       if (state.immutable[y * w + x]) tile |= DF_IMMUTABLE;
-      if (flash) tile |= DF_HIGHLIGHT;
       if (ds.errtmp[(y + 1) * W + (x + 1)]) tile |= DF_ERROR;
       ds.tiles[(y + 1) * W + (x + 1)] = tile;
     }

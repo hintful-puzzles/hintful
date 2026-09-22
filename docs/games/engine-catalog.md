@@ -148,9 +148,9 @@ the module already owns. The decline was made when only the input had moved.
 
 ### `note-taking-cell.ts` — the shared highlight-and-type mechanic
 
-The pointer half of *highlight a cell, type a value into it, pencil candidate
-marks in it*, shared by the eleven games that carry `ui.pencilMode` and
-`ui.cursorFromKeyboard`. `pressNoteTakingCell` resolves a left or right press
+*Highlight a cell, type a value into it, pencil candidate marks in it* — the
+pointer half and the picture — shared by every game that carries `ui.pencilMode`
+and `ui.cursorFromKeyboard`. `pressNoteTakingCell` resolves a left or right press
 against two predicates the game supplies — `canEnter` and `canMark` — and
 reports `"moved"` / `"unmoved"` / `null`; `releaseHighlightAfterEntry` and
 `noOpEntryResult` are what a symbol entry does to the highlight, which is where
@@ -159,6 +159,17 @@ switch itself — Enter on the showing highlight, or the keypad's Marks key from
 anywhere — which was eleven identical copies before `add-loopy-notation`. Same test and same line as
 `border-grid.ts`: the game keeps its coordinates, its symbol vocabulary and its
 own `Move`. Its header records what was evaluated and declined.
+
+**The picture** is `drawCellBackground(dr, rect, highlight, wash, background)`:
+the cell's rect in the wash for an entry highlight, in `background` otherwise,
+and for a notes highlight a right triangle over it in the top-left corner, legs
+half the rect. `cellHighlight(ui, x, y)` reads the two-bit `CellHighlight` a
+game packs into its tile key, and `highlightFill` is the fill alone, for Towers'
+3D faces. The wash is `highlightWash` of the board's background at whatever
+palette index the game keeps it; `note-taking-cell-render.test.ts` holds every
+member to that color, to the triangle, and to repainting the cell when the
+highlight leaves. See [rendering](./rendering.md) § "The note-taking cell's
+picture".
 
 **Both pencil preferences are on by default across the family, and every member
 offers both**, so a player who moves between two of these games meets the same

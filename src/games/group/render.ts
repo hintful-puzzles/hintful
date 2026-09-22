@@ -27,6 +27,13 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import {
+  type CellHighlight,
+  cellHighlight,
+  drawCellBackground,
+  HIGHLIGHT_ENTRY,
+  HIGHLIGHT_NONE,
+} from "../../engine/note-taking-cell.ts";
+import {
   HINT_AREA,
   HINT_TARGET,
   hintMarkBit,
@@ -116,8 +123,8 @@ const DF_DIVIDER_TOP = 0x1000;
 const DF_DIVIDER_BOT = 0x2000;
 const DF_DIVIDER_LEFT = 0x4000;
 const DF_DIVIDER_RIGHT = 0x8000;
-const DF_HIGHLIGHT = 0x0400;
-const DF_HIGHLIGHT_PENCIL = 0x0200;
+/** Bits 9–10: the cell's `CellHighlight`. */
+const DF_HIGHLIGHT_SHIFT = 9;
 const DF_IMMUTABLE = 0x0100;
 const DF_LEGEND = 0x0080;
 const DF_DIGIT_MASK = 0x001f;
@@ -290,9 +297,13 @@ function drawTile(
   dr.clip({ x: cx, y: cy, w: cw, h: ch });
 
   // Background: highlight > diagonal shade > plain. No hint role appears here.
-  const bg =
-    tile & DF_HIGHLIGHT ? COL_HIGHLIGHT : x === y ? COL_DIAGONAL : COL_BACKGROUND;
-  dr.drawRect({ x: cx, y: cy, w: cw, h: ch }, bg);
+  drawCellBackground(
+    dr,
+    { x: cx, y: cy, w: cw, h: ch },
+    ((tile >> DF_HIGHLIGHT_SHIFT) & 3) as CellHighlight,
+    COL_HIGHLIGHT,
+    x === y ? COL_DIAGONAL : COL_BACKGROUND,
+  );
 
   // Dividers.
   if (tile & DF_DIVIDER_TOP) dr.drawRect({ x: cx, y: cy, w: cw, h: 1 }, COL_GRID);
@@ -301,19 +312,6 @@ function drawTile(
   if (tile & DF_DIVIDER_LEFT) dr.drawRect({ x: cx, y: cy, w: 1, h: ch }, COL_GRID);
   if (tile & DF_DIVIDER_RIGHT)
     dr.drawRect({ x: cx + cw - 1, y: cy, w: 1, h: ch }, COL_GRID);
-
-  // Pencil-mode highlight (a triangle in the top-left corner).
-  if (tile & DF_HIGHLIGHT_PENCIL) {
-    dr.drawPolygon(
-      [
-        { x: cx, y: cy },
-        { x: cx + (cw >> 1), y: cy },
-        { x: cx, y: cy + (ch >> 1) },
-      ],
-      COL_HIGHLIGHT,
-      COL_HIGHLIGHT,
-    );
-  }
 
   if (tile & DF_DIGIT_MASK) {
     const digit = tile & DF_DIGIT_MASK;
@@ -501,24 +499,23 @@ export function redraw(
 
       if (state.immutable[sy * w + sx]) tile |= DF_IMMUTABLE;
 
+      let highlight: CellHighlight = cellHighlight(ui, sx, sy);
       if (
+        flashOn ||
         (ui.drag === 5 && ui.dragnum === sy) ||
         (ui.drag === 6 && ui.dragnum === sx)
       ) {
-        tile |= DF_HIGHLIGHT;
-      } else if (ui.cursor.visible) {
-        let highlight = false;
-        if (ui.odn > 1) {
-          const i = Math.abs(x - ui.ohx);
-          if (i < ui.odn && x === ui.ohx + i * ui.odx && y === ui.ohy + i * ui.ody)
-            highlight = true;
-        } else {
-          highlight = ui.cursor.x === sx && ui.cursor.y === sy;
-        }
-        if (highlight) tile |= ui.pencilMode ? DF_HIGHLIGHT_PENCIL : DF_HIGHLIGHT;
+        highlight = HIGHLIGHT_ENTRY;
+      } else if (ui.odn > 1) {
+        // A multifill run: every cell in it shows what the cursor's cell shows.
+        const i = Math.abs(x - ui.ohx);
+        const inRun =
+          i < ui.odn && x === ui.ohx + i * ui.odx && y === ui.ohy + i * ui.ody;
+        highlight = inRun
+          ? cellHighlight(ui, ui.cursor.x, ui.cursor.y)
+          : HIGHLIGHT_NONE;
       }
-
-      if (flashOn) tile |= DF_HIGHLIGHT; // completion flash
+      tile |= highlight << DF_HIGHLIGHT_SHIFT;
 
       if (y <= 0 || state.dividers[ds.sequence[y - 1]] === sy) tile |= DF_DIVIDER_TOP;
       if (y + 1 >= w || state.dividers[sy] === ds.sequence[y + 1])

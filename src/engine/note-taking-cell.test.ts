@@ -35,6 +35,13 @@ import { registerAllGames } from "../games/index.ts";
 import { UI_UPDATE } from "./game.ts";
 import {
   type CellEntry,
+  type CellHighlight,
+  cellHighlight,
+  drawCellBackground,
+  HIGHLIGHT_ENTRY,
+  HIGHLIGHT_NONE,
+  HIGHLIGHT_NOTES,
+  highlightFill,
   type NoteTakingUi,
   noOpEntryResult,
   pressNoteTakingCell,
@@ -47,6 +54,8 @@ import {
   membersNotMentioning,
   SCANNED_SOURCE_FILES,
 } from "./testing/enrollment.ts";
+import { RecordingDrawing } from "./testing/recording-drawing.ts";
+import type { Rect } from "./types.ts";
 
 beforeAll(registerAllGames);
 
@@ -252,6 +261,64 @@ describe("what a symbol entry does to the highlight", () => {
     });
     releaseHighlightAfterEntry(u);
     expect(u.pencilMode).toBe(true);
+  });
+});
+
+describe("the picture", () => {
+  const WASH = 1;
+  const BG = 0;
+  const paint = (rect: Rect, highlight: CellHighlight) => {
+    const rec = new RecordingDrawing([
+      [1, 1, 1],
+      [0.5, 0.5, 0.5],
+    ]);
+    drawCellBackground(rec, rect, highlight, WASH, BG);
+    return rec.ops;
+  };
+
+  it("reads the highlight off the cursor and the mode", () => {
+    const u = ui({ cursor: newCursor(2, 3, true) });
+    expect(cellHighlight(u, 2, 3)).toBe(HIGHLIGHT_ENTRY);
+    expect(cellHighlight(u, 3, 2)).toBe(HIGHLIGHT_NONE);
+    u.pencilMode = true;
+    expect(cellHighlight(u, 2, 3)).toBe(HIGHLIGHT_NOTES);
+    u.cursor.visible = false;
+    expect(cellHighlight(u, 2, 3)).toBe(HIGHLIGHT_NONE);
+  });
+
+  it("washes the whole rect for entry, and paints the background otherwise", () => {
+    const rect = { x: 10, y: 20, w: 30, h: 30 };
+    expect(paint(rect, HIGHLIGHT_ENTRY)).toEqual([
+      expect.objectContaining({ op: "rect", ...rect, color: WASH }),
+    ]);
+    expect(paint(rect, HIGHLIGHT_NONE)).toEqual([
+      expect.objectContaining({ op: "rect", ...rect, color: BG }),
+    ]);
+  });
+
+  it("puts the notes triangle over the background, legs half the rect", () => {
+    // Half of *this* rect, not of a tile: Solo's cell reaches into the gutter
+    // it shares with its block, and its triangle grows with it.
+    const ops = paint({ x: 10, y: 20, w: 31, h: 40 }, HIGHLIGHT_NOTES);
+    expect(ops).toEqual([
+      expect.objectContaining({ op: "rect", color: BG }),
+      expect.objectContaining({
+        op: "polygon",
+        points: [
+          [10, 20],
+          [25, 20],
+          [10, 40],
+        ],
+        fill: WASH,
+        outline: WASH,
+      }),
+    ]);
+  });
+
+  it("fills only for entry, for the game that paints more than the rect", () => {
+    expect(highlightFill(HIGHLIGHT_ENTRY, WASH, BG)).toBe(WASH);
+    expect(highlightFill(HIGHLIGHT_NOTES, WASH, BG)).toBe(BG);
+    expect(highlightFill(HIGHLIGHT_NONE, WASH, BG)).toBe(BG);
   });
 });
 

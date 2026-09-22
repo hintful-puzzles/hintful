@@ -1303,15 +1303,27 @@ describe("crossing rendering", () => {
       paint(selected).ops.filter((o) => o.op === "rect" && o.color === COL_HIGHLIGHT),
     ).toHaveLength(0);
 
-    // The keyboard cursor draws corner brackets rather than a filled highlight.
-    const keyed = { ...selected, cursorFromKeyboard: true };
-    const keyedOps = paint(keyed).ops;
+    // The keyboard cursor on an open square is the same highlight as the mouse's.
+    const keyedOps = paint({ ...selected, cursorFromKeyboard: true }).ops;
     expect(
-      keyedOps.filter((o) => o.op === "rect" && o.color === COL_HIGHLIGHT),
+      keyedOps.filter((o) => o.op === "rect" && o.color === COL_SELECTED),
+    ).toHaveLength(1);
+    const brackets = (ops: typeof keyedOps) =>
+      ops.filter((o) => o.op === "line" && o.color === COL_HIGHLIGHT);
+    expect(brackets(keyedOps)).toHaveLength(0);
+
+    // On a wall, which only the arrow keys reach, it is the corner brackets: a
+    // wall is a raised block with no background for a wash.
+    const wall = state.puzzle.walls.indexOf(1);
+    const onWall = paint({
+      ...newUi(),
+      cursor: newCursor(wall % 5, Math.floor(wall / 5), true),
+      cursorFromKeyboard: true,
+    }).ops;
+    expect(brackets(onWall)).toHaveLength(8);
+    expect(
+      onWall.filter((o) => o.op === "rect" && o.color === COL_SELECTED),
     ).toHaveLength(0);
-    expect(
-      keyedOps.filter((o) => o.op === "line" && o.color === COL_HIGHLIGHT).length,
-    ).toBe(8);
   });
 
   it("draws pencil marks in an empty cell", () => {

@@ -60,6 +60,14 @@ import {
   type MarkCell,
 } from "../../engine/hint-mark.ts";
 import {
+  type CellHighlight,
+  cellHighlight,
+  drawCellBackground,
+  HIGHLIGHT_ENTRY,
+  highlightFill,
+  highlightIsOn,
+} from "../../engine/note-taking-cell.ts";
+import {
   HINT_AREA,
   HINT_TARGET,
   hintMarkBit,
@@ -138,7 +146,8 @@ export const COL_HINT_CELL = 18;
  */
 export const COL_RUNTEXT = 19;
 /**
- * **Type here** — the empty square the keyboard is pointing at.
+ * **Type here** — the selected square's wash, on an empty square and on a
+ * digit tile's face alike, and its notes triangle.
  *
  * Its own color rather than `COL_HIGHLIGHT`: the highlight is `mkhighlight`'s
  * near-white, which the app's dark-mode pass inverts to **pure black**, so the
@@ -245,9 +254,8 @@ const FE_MID = FE_TOP | FE_BOT;
 // Cache-key bit layout for a cell's packed tile value.
 const K_DIGIT = 0; // bits 0-3: the entered digit (0 = empty)
 const K_ERR = 4; // bits 4-7: the FE_* flags
-const DF_SELECT = 1 << 8; // mouse ink selection (a highlighted background)
-const DF_PENCIL = 1 << 9; // pencil selection (the corner triangle)
-const DF_KEYCUR = 1 << 10; // keyboard cursor (corner brackets)
+const K_HIGHLIGHT = 8; // bits 8-9: the square's `CellHighlight`
+const DF_KEYCUR = 1 << 10; // the keyboard cursor on a wall (corner brackets)
 const K_FLASH = 11; // bits 11-12: flash phase + 1 (0 = not flashing)
 const DF_ACROSS = 1 << 13; // marked as part of a horizontal run in play
 const DF_DOWN = 1 << 14; // marked as part of a vertical run in play
@@ -412,29 +420,6 @@ function drawErrRectangle(
   dr.unclip();
 }
 
-/** Upstream's pencil-selection cue: a small triangle in the tile's top-left.
- * Drawn dark on a hinted square, where the pale `COL_LOWLIGHT` gray reads
- * poorly against the hint green (the same reason the corner cue switches). */
-function drawPencilCorner(
-  dr: GameDrawing,
-  ts: number,
-  tx: number,
-  ty: number,
-  onHint = false,
-): void {
-  const half = Math.floor(ts / 2);
-  const color = onHint ? COL_GRID : COL_LOWLIGHT;
-  dr.drawPolygon(
-    [
-      { x: tx, y: ty },
-      { x: tx + half, y: ty },
-      { x: tx, y: ty + half },
-    ],
-    color,
-    color,
-  );
-}
-
 /** The pencil-mark grid inside an empty cell (upstream's inline block).
  * `struck` is the hint's rule-out set, in the same bit-`n−1` encoding: those
  * candidates keep their normal pencil color (they are still real notes) and
@@ -521,7 +506,8 @@ function drawCell(
   const tx = tileOrigin(x, ts);
   const ty = tileOrigin(y, ts);
   const digit = state.grid[i];
-  const selected = (flags & DF_SELECT) !== 0;
+  const highlight = ((flags >> K_HIGHLIGHT) & 3) as CellHighlight;
+  const selected = highlight === HIGHLIGHT_ENTRY;
   // Both cell-level hint marks are drawn in `redraw`, which rings the target and
   // outlines the evidence on the square's own border, so a hint never takes the
   // background from the run wash or from the penciled candidates it is ruling
@@ -533,7 +519,13 @@ function drawCell(
   const wash = runWash >= 0 ? runWash : COL_INNERBG;
 
   if (!digit) {
-    dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, selected ? COL_SELECTED : wash);
+    drawCellBackground(
+      dr,
+      { x: tx, y: ty, w: ts, h: ts },
+      highlight,
+      COL_SELECTED,
+      wash,
+    );
   }
 
   if (walls[i]) {
@@ -545,10 +537,12 @@ function drawCell(
     // that its author asked to have removed.
     //
     // The completion flash sweeps a diagonal wave of highlight/lowlight across
-    // the board (the shape ABCD uses) in place of upstream's color cycle.
+    // the board (the shape ABCD uses) in place of upstream's color cycle. A
+    // selected tile takes the highlight's wash on its face, as an empty square
+    // does, and is pressed in as well.
     const mid =
       flash < 0
-        ? wash
+        ? highlightFill(highlight, COL_SELECTED, wash)
         : (x + y) % 3 === flash
           ? COL_HIGHLIGHT
           : (x + y + 2) % 3 === flash
@@ -581,8 +575,6 @@ function drawCell(
     drawErrRectangle(dr, ts, tx, ty, tx + 1, top, ts - 1, bottom - top);
   }
 
-  if (flags & DF_PENCIL) drawPencilCorner(dr, ts, tx, ty);
-
   const ghost = (flags >> K_GHOST) & 0xf;
   if (!walls[i] && !digit && ghost) {
     // The held clue number previewed where it would land.
@@ -596,9 +588,8 @@ function drawCell(
     drawMarks(dr, ts, tx, ty, (flags >> K_MARKS) & 0x1ff, struck);
   }
 
-  // The cursor cue. The *mouse* selection is a highlighted background
-  // (`DF_SELECT`, painted above) and only the keyboard cursor draws corners.
-  // The background is the selection's to keep even under a hint, which matters
+  // The cursor cue on a wall. Everywhere else the highlight is the background
+  // painted above, and it is the selection's to keep even under a hint, which matters
   // because the hint deliberately *stays* while the player works inside it
   // (`uiUpdateClearsHint` in `index.ts`): they have to see where they are about
   // to type.
@@ -933,11 +924,14 @@ export function redraw(
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
-      const here = cursorShown && ui.cursor.x === x && ui.cursor.y === y;
       let flags = 0;
-      if (here && ui.pencilMode) flags |= DF_PENCIL;
-      else if (here && ui.cursorFromKeyboard) flags |= DF_KEYCUR;
-      else if (here) flags |= DF_SELECT;
+      if (cursorShown && walls[i]) {
+        // Only arrow keys can put the cursor on a wall, and a wall is a raised
+        // block with no background to wash — so there it is the corner brackets.
+        if (highlightIsOn(ui, x, y)) flags |= DF_KEYCUR;
+      } else if (cursorShown) {
+        flags |= cellHighlight(ui, x, y) << K_HIGHLIGHT;
+      }
       if (!walls[i] && !state.grid[i]) flags |= (state.pencil[i] & 0x1ff) << K_MARKS;
       if (ghost[i]) flags |= ghost[i] << K_GHOST;
       if (acrossWash[i]) flags |= DF_ACROSS;

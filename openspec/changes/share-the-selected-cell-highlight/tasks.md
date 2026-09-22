@@ -1,77 +1,89 @@
 # share-the-selected-cell-highlight — tasks
 
-**Nothing here is started.**
-
 ## 1. Take the population by shape, before designing
 
-- [ ] 1.1 Find every game that draws a selection highlight, keyed on the
-      **shape** and not on a name: a `COL_HIGHLIGHT` fill of a cell rect, and a
-      three-point polygon in `COL_HIGHLIGHT`. Fifteen `render.ts` files
-      reference both `COL_HIGHLIGHT` and `pencilMode` (2026-09-21) — classify
-      what that catches rather than narrowing the scan, which is the error
-      `AGENTS.md` § "A scan that keys on a name" names.
-- [ ] 1.2 Read the geometry of each. Solo, Keen and Undead are byte-identical
-      in intent (full rect; triangle with half-tile legs from the top-left
-      corner); the question is which of the rest **differ**, and whether each
-      difference is about the puzzle or is an accident. A game that legitimately
-      differs is a genuine decision and keeps its own drawing.
-- [ ] 1.3 Record any game whose highlight is *not* a cell — Map is one, and
-      there may be others.
+- [x] 1.1 Find every game that draws a selection highlight. The name key the
+      proposal counted (`COL_HIGHLIGHT` and `pencilMode` in one `render.ts`)
+      finds thirteen files, not fifteen (fifteen counted two test files): the
+      eleven games on `pressNoteTakingCell`, plus Rome and Loopy. The shape
+      key, a `pencilMode` in the `Ui`, finds sixteen games, adding **Map**,
+      **Slant** and **Guess**. Classified: Rome and Map carry a cell cursor
+      and notes but press through their own drag gestures; Loopy's and
+      Slant's notes are edge marks and their selection is not a cell; Guess's
+      `pencilMode` cursor walks peg slots.
+- [x] 1.2 Read the geometry and color of each of the eleven. Six drew the
+      wash (`highlightWash` of the background) for both halves: Solo, Keen,
+      Group, Towers, Undead, Unequal. Five did not, and none for a reason
+      about its puzzle:
+      - **Mathrax**: wash cell, `COL_LOWLIGHT` triangle.
+      - **Seismic**: mkhighlight's near-white cell, lowlight triangle.
+      - **Abcd**: mkhighlight's near-white for both.
+      - **Salad**: lowlight for both, while its own balls already used the
+        wash behind the same cursor; it also dropped the fill on a hinted
+        square, a leftover from before hints moved to the border
+        (`886ba3ed`).
+      - **Crossing**: wash on an empty square, an inverted bevel on a digit,
+        a lowlight triangle, and corner brackets for any *keyboard* cursor.
+        The brackets came from upstream's `crossing.c`; they are kept only on
+        a wall, the one square the keyboard can reach and the mouse cannot,
+        and which has no background to wash.
+      Geometry agreed everywhere but in origin: Solo, Keen and Group take the
+      legs from their painted rect (which reaches into the block gutter),
+      the rest from the tile.
+- [x] 1.3 Cells that are not cells: **Map** (a region of half-cell
+      triangles). Loopy's and Slant's selections are edges and vertices and
+      carry no cell highlight to share; Guess's is a peg slot.
 
 ## 2. Decide the contract
 
-- [ ] 2.1 Does the shared renderer take a **cell**, or a **shape the game
-      supplies**? A cell covers eleven games today and excludes Map for ever;
-      a shape covers Map and costs every caller an argument it does not need.
-      A third option is a cell-shaped default with a region-shaped override —
-      which is only worth it if the override is used by more than Map.
-- [ ] 2.2 What does the triangle mean where a cell is not square, or where the
-      top-left corner is occupied? The pencil-mode *indicator* already had to
-      answer the neighboring question (`pencilIndicatorCanvas` grows the canvas
-      on every side); do not re-answer it differently here.
-- [ ] 2.3 Where does the renderer sit relative to the tile cache? Every one of
-      these games folds the highlight into its packed cell key so the old cell
-      repaints when the highlight leaves. A shared renderer that draws outside
-      that key would leave a highlight behind — `docs/games/rendering.md`
-      § "A cursor is usually a cache key, not a blitter" is the rule, and its
-      **exception** (Spokes' partial clear) is the trap.
+- [x] 2.1 **A cell.** `drawCellBackground(dr, rect, highlight, wash,
+      background)` takes the rect the game paints, which is what kept Solo,
+      Keen and Group byte-identical. A shape parameter would cost every caller
+      an argument for one game, and what Map needs is not the triangle drawn
+      on a different outline (§3.2).
+- [x] 2.2 The triangle's legs are half the **painted rect**, from its corner:
+      a non-square rect gets a right triangle in proportion. It is background,
+      drawn before content, so an occupied corner (Keen's cage label, the
+      top-left pencil slot, Group's dividers) sits on top of it.
+- [x] 2.3 It is drawn inside the tile repaint, so the game packs
+      `cellHighlight` (two bits) into its tile key. The guard proves each
+      member does by repainting on one draw state: a key without it repaints
+      nothing and fails the "put away" frame. No member clears less than its
+      cell, so the Spokes exception does not arise.
 
 ## 3. Extend the pair to the games that have neither
 
-- [ ] 3.1 **Map.** Behavior first: does it adopt `pressNoteTakingCell`, or keep
-      its own press handling? Its right button is a *real gesture* — a
-      right-drag from a color onto a blank region toggles a pencil bit — so
-      the mechanic's "right press toggles notes" collides, and the collision
-      must be **derived from what the game does with the button**, never from a
-      list. `ignoresSecondaryButton` is the existing precedent for deriving
-      exactly this, and `engine/testing/input-probe.ts` already asks the
-      question behaviorally.
-- [ ] 3.2 **Map's picture.** Whatever §2.1 decided, the outcome is that the
-      selected *region* is unmistakable — which the present ring is not on a
-      blank region, where its fill is the board background. If a region outline
-      is drawn, note that `add-map-hint` needs the same thing for its marks:
-      solve it once.
-- [ ] 3.3 Any other game §1.3 found.
+- [ ] 3.1 **Rome and Map: behavior.** Both tie the right button to a *drag*
+      (a pencil drag; a right-drag laying a mark), and in both a right *tap*
+      is today a no-op that selects. The tap is free, so the mechanic's
+      "right selects for notes" can take the tap without an exemption and
+      without touching the drag.
+- [ ] 3.2 **Map's picture**, a region rather than a cell.
+- [ ] 3.3 **Rome's picture**: the pair, where it has a lowlight fill and a
+      `?` today.
 
 ## 4. Prove it changed nothing where nothing should change
 
-- [ ] 4.1 Tier-2.5 render snapshots for the eleven games that already behave
-      correctly, **taken before the refactor** and expected to be byte-identical
-      after. A shared renderer that shifts a highlight by a pixel is a
-      regression in eleven games at once, and the snapshot is the only thing
-      that would notice.
-- [ ] 4.2 Verify the bulk edit **by shape, not by a green suite**: assert every
-      changed line in the diff is the one intended kind of change, then read the
-      exceptions.
-- [ ] 4.3 Watch the new guard fail: break the triangle's geometry deliberately
-      and see a game go red.
-- [ ] 4.4 Run the app — every game §1 found, both modes, both color schemes.
+- [x] 4.1 `note-taking-cell-render.test.ts` recorded every member's entry,
+      keyboard, notes and put-away repaints **before** the refactor. After it:
+      Solo, Keen, Group, Towers and Unequal byte-identical; Undead's triangle
+      one pixel shorter in each leg (its painted rect is `ts − 1`); Mathrax,
+      Seismic, Abcd, Salad and Crossing moved to the wash.
+- [x] 4.2 By shape: every changed line in the five moved snapshots is a color
+      becoming `rgb(164, 164, 164)` (the wash on the test background) or a
+      triangle vertex re-anchored on the painted rect; Salad's also loses its
+      second rect. Crossing's sample moved from `(1, 1)`, a wall, to the
+      first open square.
+- [x] 4.3 Watched it fail: a triangle with legs a third of the rect fails
+      every member's snapshot and the unit test; a triangle drawn in the
+      background fails every member's notes assertion by name; a game that
+      drops the highlight from its tile key (Keen, planted) fails that game's
+      four cases alone.
+- [ ] 4.4 Run the app — every member, both modes, both color schemes.
 
 ## 5. Record
 
-- [ ] 5.1 `docs/games/rendering.md`: the highlight pair, and where it sits
-      relative to the tile cache.
-- [ ] 5.2 `docs/games/engine-catalog.md`: the entry currently titled "the
-      pointer half" stops being only the pointer half.
-- [ ] 5.3 The spec delta, including the derived rule for a game whose secondary
-      button is already spoken for.
+- [x] 5.1 `docs/games/rendering.md` § "The note-taking cell's picture".
+- [x] 5.2 `docs/games/engine-catalog.md`: the entry covers the picture.
+- [ ] 5.3 The spec delta — written for the picture; the right-tap rule for a
+      game whose right button is a drag lands with §3.1.

@@ -29,6 +29,12 @@ import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import {
+  type CellHighlight,
+  cellHighlight,
+  drawCellBackground,
+  HIGHLIGHT_ENTRY,
+} from "../../engine/note-taking-cell.ts";
+import {
   HINT_AREA,
   HINT_TARGET,
   hintMarkBit,
@@ -122,8 +128,8 @@ const OP_SYMBOL: Record<number, string> = {
 const DF_PENCIL_SHIFT = 16;
 const DF_ERR_LATIN = 0x8000;
 const DF_ERR_CLUE = 0x4000;
-const DF_HIGHLIGHT = 0x2000;
-const DF_HIGHLIGHT_PENCIL = 0x1000;
+/** Bits 12–13: the cell's `CellHighlight`. */
+const DF_HIGHLIGHT_SHIFT = 12;
 const DF_DIGIT_MASK = 0x000f;
 
 // --- geometry --------------------------------------------------------------
@@ -228,21 +234,13 @@ function drawTile(
 
   dr.clip({ x: cx, y: cy, w: cw, h: ch });
 
-  const bg = tile & DF_HIGHLIGHT ? COL_HIGHLIGHT : COL_BACKGROUND;
-  dr.drawRect({ x: cx, y: cy, w: cw, h: ch }, bg);
-
-  // Pencil-mode highlight (top-left triangle).
-  if (tile & DF_HIGHLIGHT_PENCIL) {
-    dr.drawPolygon(
-      [
-        { x: cx, y: cy },
-        { x: cx + ((cw / 2) | 0), y: cy },
-        { x: cx, y: cy + ((ch / 2) | 0) },
-      ],
-      COL_HIGHLIGHT,
-      COL_HIGHLIGHT,
-    );
-  }
+  drawCellBackground(
+    dr,
+    { x: cx, y: cy, w: cw, h: ch },
+    ((tile >> DF_HIGHLIGHT_SHIFT) & 3) as CellHighlight,
+    COL_HIGHLIGHT,
+    COL_BACKGROUND,
+  );
 
   // Corner juts: a GRIDEXTRA square where the diagonal neighbor is a different
   // cage (so the grid corner shows).
@@ -467,9 +465,7 @@ export function redraw(
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
       let tile = state.grid[i] || state.pencil[i] << DF_PENCIL_SHIFT;
-      if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y)
-        tile |= ui.pencilMode ? DF_HIGHLIGHT_PENCIL : DF_HIGHLIGHT;
-      if (flash) tile |= DF_HIGHLIGHT;
+      tile |= (flash ? HIGHLIGHT_ENTRY : cellHighlight(ui, x, y)) << DF_HIGHLIGHT_SHIFT;
       if (ds.errors[i] & ERR_LATIN) tile |= DF_ERR_LATIN;
       if (ds.errors[i] & ERR_CLUE) tile |= DF_ERR_CLUE;
 

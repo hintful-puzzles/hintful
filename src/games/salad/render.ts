@@ -34,6 +34,12 @@ import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import {
+  type CellHighlight,
+  cellHighlight,
+  drawCellBackground,
+  highlightFill,
+} from "../../engine/note-taking-cell.ts";
+import {
   HINT_AREA,
   HINT_TARGET,
   hintMarkBit,
@@ -140,9 +146,10 @@ export function colors(defaultBackground: Color): Color[] {
 
 // --- tile flags (upstream FD_*) --------------------------------------------
 
-const FD_CURSOR = 0x01;
-const FD_PENCIL = 0x02;
+const FD_HIGHLIGHT_MASK = 0x03; // bits 0-1: the square's `CellHighlight`
 const FD_ERROR = 0x04;
+const highlightOf = (flags: number): CellHighlight =>
+  (flags & FD_HIGHLIGHT_MASK) as CellHighlight;
 const FD_CIRCLE = 0x08;
 const FD_CROSS = 0x10;
 /** Fork addition, on a *border clue*: this clue is the premise of the hint on
@@ -285,8 +292,7 @@ function setDrawFlags(
     for (let y = 0; y < o; y++) {
       const i = y * o + x;
       let f = 0;
-      if (cursorShown && ui.cursor.x === x && ui.cursor.y === y)
-        f |= ui.pencilMode ? FD_PENCIL : FD_CURSOR;
+      if (cursorShown) f |= cellHighlight(ui, x, y);
 
       const d = s.grid[i];
       if (
@@ -349,7 +355,7 @@ function drawBall(
             : COL_G_BALLBG;
   } else {
     // Letters mode draws the ball "transparent" over whatever is behind it.
-    bg = flags & FD_CURSOR ? COL_CURSOR : COL_BACKGROUND;
+    bg = highlightFill(highlightOf(flags), COL_CURSOR, COL_BACKGROUND);
   }
   const color = s.gridclues[i] ? COL_I_BALL : COL_G_BALL;
 
@@ -565,38 +571,20 @@ export function redraw(
       // whole cell; numbers mode waves the ball backgrounds instead). Neither
       // hint mark appears here: the acted-on square is ringed and the evidence
       // area outlined, both on the square's own border in the pass below, so a
-      // hinted square keeps showing its ghost entry and its struck notes.
-      const hinted = flash === -1 && (overlay & (HINT_TARGET | HINT_AREA)) !== 0;
-      if (s.mode === GAMEMODE_LETTERS && flash >= 0) {
-        const color =
-          (x + y) % 3 === flash
-            ? COL_BACKGROUND
-            : (x + y + 1) % 3 === flash
-              ? COL_LOWLIGHT
-              : COL_HIGHLIGHT;
-        dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, color);
-      } else {
-        dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, COL_BACKGROUND);
-      }
-
-      if (hinted && flags[i] & FD_CURSOR && !(flags[i] & FD_PENCIL)) {
-        // The cursor's own fill would swamp the square a hint is pointing at —
-        // and the hint deliberately stays while the player types into it, so the
-        // two cues have to coexist. The ring says which square the deduction is
-        // about; the cursor keeps its corner triangle below.
-      } else if (flash === -1 && flags[i] & FD_PENCIL) {
-        dr.drawPolygon(
-          [
-            { x: tx, y: ty },
-            { x: tx + Math.floor(ts / 2), y: ty },
-            { x: tx, y: ty + Math.floor(ts / 2) },
-          ],
-          COL_LOWLIGHT,
-          COL_LOWLIGHT,
-        );
-      } else if (flash === -1 && flags[i] & FD_CURSOR) {
-        dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, COL_LOWLIGHT);
-      }
+      // hinted square keeps its highlight, its ghost entry and its struck notes —
+      // the hint deliberately stays while the player types into it.
+      const lettersFlash = s.mode === GAMEMODE_LETTERS && flash >= 0;
+      drawCellBackground(
+        dr,
+        { x: tx, y: ty, w: ts, h: ts },
+        highlightOf(flags[i]),
+        COL_CURSOR,
+        !lettersFlash || (x + y) % 3 === flash
+          ? COL_BACKGROUND
+          : (x + y + 1) % 3 === flash
+            ? COL_LOWLIGHT
+            : COL_HIGHLIGHT,
+      );
 
       dr.drawPolygon(
         [

@@ -81,6 +81,12 @@ export type DrawOp =
 
 const round = (n: number): number => Math.round(n);
 
+/** A color as the recorder labels it, for a test that expects a color it
+ * derived rather than one it read off a game's palette. */
+export function rgbLabel(c: Color): string {
+  return `rgb(${round(c[0] * 255)}, ${round(c[1] * 255)}, ${round(c[2] * 255)})`;
+}
+
 const roundRect = (r: Rect): Rect => ({
   x: round(r.x),
   y: round(r.y),
@@ -100,7 +106,7 @@ export class RecordingDrawing implements GameDrawing {
   private rgb(index: number): string {
     const c = this.palette[index];
     if (!c) return `color#${index}`;
-    return `rgb(${round(c[0] * 255)}, ${round(c[1] * 255)}, ${round(c[2] * 255)})`;
+    return rgbLabel(c);
   }
 
   /**

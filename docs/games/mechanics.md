@@ -750,6 +750,10 @@ were — the last per-game roster in the cross-game guards.
   grid. A game carrying `ui.pencilMode` and `ui.cursorFromKeyboard` without
   calling `pressNoteTakingCell` fails `note-taking-cell.test.ts`; this used to
   be eleven copies, and it is one now.
+- **Do not draw the highlight by hand either** — paint the cell's background
+  through `drawCellBackground` and pack `cellHighlight` into the tile key
+  ([rendering](./rendering.md) § "The note-taking cell's picture"). A member
+  that does not fails `note-taking-cell-render.test.ts`.
 - **The Marks key** — `pencilModeKey` last on the keypad, which every game
   carrying `ui.pencilMode` offers, whether or not its notes are candidate marks.
   It is the one way into the mode that costs the game no button, so a player

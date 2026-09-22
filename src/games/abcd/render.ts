@@ -21,6 +21,7 @@ import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import {
   ERROR,
   GRID_MID,
+  highlightWash,
   INK,
   PENCIL_BODY,
   pencilColor,
@@ -30,6 +31,12 @@ import { abcdBorderLetter } from "../../engine/color/palette-games.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing } from "../../engine/game.ts";
 import { fromCoord as geometryFromCoord } from "../../engine/geometry.ts";
+import {
+  type CellHighlight,
+  cellHighlight,
+  drawCellBackground,
+  HIGHLIGHT_NONE,
+} from "../../engine/note-taking-cell.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import {
   type PencilIndicatorStyle,
@@ -69,6 +76,10 @@ export const COL_LOWLIGHT = 9;
 // paletteOverrides, so a plain append is safe): the yellow body of the shared
 // pencil-mode indicator glyph.
 export const COL_PENCIL_BODY = 10;
+/** The highlight's wash, in both its full-cell and its corner form. Upstream
+ * used `COL_HIGHLIGHT`, mkhighlight's near-white, which the dark-mode pass
+ * inverts to near-black; that one stays the completion flash's light stripe. */
+export const COL_CURSOR = 11;
 
 export function colors(defaultBackground: Color): Color[] {
   const outer = defaultBackground;
@@ -85,6 +96,9 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_HIGHLIGHT] = highlight;
   out[COL_LOWLIGHT] = lowlight;
   out[COL_PENCIL_BODY] = PENCIL_BODY;
+  // A fill under the letter and its notes: the note-taking cell's "you are
+  // here" wash, which every game in that mechanic shares, not the green mark.
+  out[COL_CURSOR] = highlightWash(inner);
   return out;
 }
 
@@ -113,8 +127,7 @@ export function computeSize(p: { w: number; h: number; n: number }, ts: number):
 
 // Cache-key bit layout for a cell's packed tile value.
 const K_LETTER = 0; // bits 0-3: letter + 1 (0 = empty)
-const DF_CURSOR = 1 << 4;
-const DF_PENCIL = 1 << 5; // cursor is in pencil mode over this cell
+const K_HIGHLIGHT = 4; // bits 4-5: the cell's `CellHighlight`
 const DF_ERR = 1 << 6; // this letter breaks an adjacency rule
 const K_FLASH = 7; // bits 7-8: flash phase + 1 (0 = not flashing)
 const K_PENCIL = 9; // bits 9+: the n-bit pencil-mark mask
@@ -292,29 +305,18 @@ function drawTile(
   const flashing = flash >= 0;
   const letter = state.grid[y * w + x];
 
-  // Background: a diagonal stripe while flashing, else a cursor highlight.
-  const bgcol =
+  // Background: a diagonal stripe while flashing, else the cell's highlight.
+  drawCellBackground(
+    dr,
+    { x: tx + 1, y: ty, w: ts - 1, h: ts - 1 },
+    flashing ? HIGHLIGHT_NONE : (((fs >> K_HIGHLIGHT) & 3) as CellHighlight),
+    COL_CURSOR,
     flashing && (x + y) % 3 === flash
       ? COL_HIGHLIGHT
       : flashing && (x + y + 2) % 3 === flash
         ? COL_LOWLIGHT
-        : !flashing && fs & DF_CURSOR
-          ? COL_HIGHLIGHT
-          : COL_INNERBG;
-  dr.drawRect({ x: tx + 1, y: ty, w: ts - 1, h: ts - 1 }, bgcol);
-
-  // Pencil-cursor marker (top-left triangle).
-  if (!flashing && fs & DF_PENCIL) {
-    dr.drawPolygon(
-      [
-        { x: tx, y: ty },
-        { x: tx + ((ts / 2) | 0), y: ty },
-        { x: tx, y: ty + ((ts / 2) | 0) },
-      ],
-      COL_HIGHLIGHT,
-      COL_HIGHLIGHT,
-    );
-  }
+        : COL_INNERBG,
+  );
 
   if (letter !== EMPTY) {
     dr.drawText(
@@ -472,8 +474,7 @@ export function redraw(
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
       let fs = 0;
-      if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y)
-        fs |= ui.pencilMode ? DF_PENCIL : DF_CURSOR;
+      fs |= cellHighlight(ui, x, y) << K_HIGHLIGHT;
       if (adjErr[i]) fs |= DF_ERR;
 
       const letter = state.grid[i];
