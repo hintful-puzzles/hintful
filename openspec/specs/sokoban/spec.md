@@ -14,7 +14,8 @@ The engine SHALL provide `src/games/sokoban/` implementing the `Game`
 interface for Sokoban, registered so the puzzle is served by the TypeScript engine.
 
 Sokoban SHALL support rectangular boards parameterized by width and height (both at
-least 4), with the upstream presets 12×10, 16×12 and 20×16. Because Sokoban is a
+least 4), with presets 10×12, 12×16 and 16×20 (upstream's sizes, turned to draw taller
+than wide). Because Sokoban is a
 non-deductive movement puzzle with no solver and no wrong-but-legal cell state, it
 SHALL NOT implement `solve`, `hint` or `findMistakes`; Check & Save SHALL therefore
 degrade to a plain quick-save, which is correct for a non-uniquely-solvable game.

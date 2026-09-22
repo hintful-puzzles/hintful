@@ -15,7 +15,8 @@ The engine SHALL provide a registered `filling` game implementing
 the Nikoli puzzle Fillomino on a `w × h` grid in which every cell is filled with
 a number `n` such that each maximal orthogonally-connected region of equal
 numbers contains exactly `n` cells. Params SHALL be `w` and `h`, encoded
-`{w}x{h}`, with presets 9×7, 13×9 (default), and 17×13. `validateParams` SHALL
+`{w}x{h}`, with presets 7×9, 9×13 (default), and 13×17: upstream's sizes turned to
+draw taller than wide. `validateParams` SHALL
 require `w ≥ 1`, `h ≥ 1`, and `w·h` not unreasonably large. The game SHALL
 report `wantsStatusbar = false`, `isTimed = false`, `canSolve = true`, and
 `canFormatAsText = true`.

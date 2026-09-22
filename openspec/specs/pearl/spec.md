@@ -92,8 +92,9 @@ after). Params SHALL be `w`, `h`, `difficulty` (Easy or Normal) and `nosolve`
 (allow an unsoluble board, default false), encoded `{w}x{h}` with a full-form
 `d{char}` difficulty suffix and an `n` suffix when `nosolve` is set.
 `validateParams` SHALL enforce `w ≥ 5`, `h ≥ 5`, that width×height does not
-overflow, and that a Normal board has `w + h ≥ 11`. The 8 upstream presets
-(6×6, 8×8, 10×10, 12×8 each at Easy and Normal) SHALL be offered. The game SHALL
+overflow, and that a Normal board has `w + h ≥ 11`. Eight presets
+(6×6, 8×8, 10×10, 8×12 each at Easy and Normal; upstream's 12×8 turned to draw
+taller than wide) SHALL be offered. The game SHALL
 report `canSolve = true` and `canFormatAsText = true`, and SHALL drive a
 completion flash suppressed after Solve. The two upstream appearance styles
 (traditional Masyu and loopy) SHALL be selectable via an `appearance`

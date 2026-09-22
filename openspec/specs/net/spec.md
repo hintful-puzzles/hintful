@@ -5,7 +5,9 @@ Net, the puzzle of rotating tiles until every wire joins one connected network
 with no loops. This capability specifies its port to the TS engine, with boards
 uniquely solvable without guessing unless the player opts out, tile rotation and
 locking, a jumble that replays deterministically, and a movable source.
+
 ## Requirements
+
 ### Requirement: Net game implements the Game interface
 
 The engine SHALL provide a registered `net` game implementing `Game<NetParams, NetState,
@@ -15,8 +17,8 @@ square. The player SHALL rotate tiles until every tile is connected to the sourc
 
 Params SHALL be `w`, `h`, `wrapping`, `barrierProbability` and `unique`, encoded
 `{w}x{h}[w][b{prob}][a]` (`w` = wrapping, the `b` suffix only in the full encoding, `a` = not
-unique). The upstream presets SHALL be offered (excluding the two `SMALL_SCREEN`-only 13×11
-presets, which the web build does not define). `validateParams` SHALL reject a `unique`
+unique). Upstream's presets SHALL be offered, its two 13×11 boards (plain and
+wrapping) turned to 11×13 so that no preset draws wider than tall. `validateParams` SHALL reject a `unique`
 `wrapping` board with a side of length 2.
 
 The game SHALL report `canSolve = true`, `canFormatAsText = false` and `wantsStatusbar = true`.
@@ -91,4 +93,3 @@ degrade to a plain quick-save.
 
 - **WHEN** the player invokes the save control while playing Net
 - **THEN** the board is saved without being checked
-

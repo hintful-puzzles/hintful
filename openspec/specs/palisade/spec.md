@@ -17,7 +17,8 @@ a region-division puzzle (Nikoli's "Five Cells") in which numeric clues count
 the walls around each cell, and the player draws walls so the grid divides into
 connected regions of exactly `k` cells with every clue equal to its cell's wall
 count. Params SHALL be `w`, `h`, and `k` (region size), encoded `{w}x{h}n{k}`.
-The 4 upstream presets — 5×5n5, 8×6n6, 10×8n8, 15×12n10 — SHALL be offered, and
+Four presets — 5×5n5, 6×8n6, 8×10n8, 12×15n10, upstream's sizes turned to
+draw taller than wide — SHALL be offered, and
 the type summary SHALL render via the `width`/`height`/`region-size` config
 keys. `validateParams` SHALL require `k ≥ 1`, `w ≥ 1`, `h ≥ 1`, `k` dividing
 `w·h`, `k < w·h`, and (for full validation) reject `k = 2` unless `w` or `h` is

@@ -18,7 +18,8 @@ single ball starting on a stop-square. A move slides the ball in one of eight
 directions until it lands on a stop-square or the next square in its path is a
 wall; it collects every gem it passes over and dies on any mine it touches. The
 game is won when every gem has been collected. Params SHALL be `w` and `h`, and
-the three upstream presets (10×8, 15×12, 20×16) SHALL be offered. The game SHALL
+three presets (8×10, 12×15, 16×20), upstream's sizes turned to draw taller
+than wide, SHALL be offered. The game SHALL
 report `canSolve = true`, `canFormatAsText = true` and `wantsStatusbar = true`.
 
 The game SHALL NOT implement `findMistakes`: every reachable position is legal — a

@@ -17,8 +17,9 @@ every square of a `w × h` grid with a `/` or `\` diagonal so that every
 numbered vertex clue (0–4, on the `(w+1) × (h+1)` point grid) is met by
 exactly that many incident diagonals and the diagonals form no closed loop.
 Params SHALL be `w`, `h` and `diff` (Easy / Normal), encoded `{w}x{h}d{e|h}`
-(short form `{w}x{h}`, square shorthand `{n}`). All 6 upstream presets
-(5×5, 8×8, 12×10 × Easy/Normal) SHALL be offered. `validateParams` SHALL
+(short form `{w}x{h}`, square shorthand `{n}`). Six presets
+(5×5, 8×8, 10×12 × Easy/Normal; upstream's 12×10 turned to draw taller than
+wide) SHALL be offered. `validateParams` SHALL
 enforce minimum size 2×2. The game SHALL report `canSolve = true` and
 `canFormatAsText = true` and SHALL drive a solve-completion flash suppressed
 after Solve.

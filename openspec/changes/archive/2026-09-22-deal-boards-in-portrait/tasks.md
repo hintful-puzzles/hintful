@@ -81,4 +81,5 @@
       which said its 13×11 presets were excluded while the code offered them.*
 - [x] 4.2 `docs/games/mechanics.md` § params/presets: new games default to
       portrait, and how a game opts out of orientation-free dealing.
-- [ ] 4.3 Owner acceptance: this is player-visible and was asked for by name.
+- [x] 4.3 Owner acceptance: this is player-visible and was asked for by name.
+      *Owner, 2026-09-22, after playing it live on a phone.*

@@ -20,7 +20,8 @@ exactly its clue count of `+` and of `−` cells. Some dominoes MAY be fixed
 singleton squares that are permanently neutral. Params SHALL be `w`, `h`,
 `diff` (Easy / Normal) and `stripclues` (boolean), encoded `{w}x{h}` with a
 full-form `d{e|t}` difficulty suffix and an `S` strip-clues suffix (square
-shorthand `{n}`). All 8 upstream presets SHALL be offered. `validateParams`
+shorthand `{n}`). Upstream's 8 presets SHALL be offered, each
+turned to draw taller than wide (5×6, 7×8, 9×10). `validateParams`
 SHALL enforce `w ≥ 2`, `h ≥ 2`, a per-difficulty minimum size (Easy: `w ≥ 3`
 or `h ≥ 3`; Normal: `w ≥ 5` or `h ≥ 5`) and the area bound. The game SHALL
 report `canSolve = true` and `canFormatAsText = true`.

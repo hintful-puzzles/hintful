@@ -17,8 +17,9 @@ Nikoli puzzle Kurodoko / Kuromasu, in which the player paints some white
 squares black so that no two black squares are orthogonally adjacent, all
 white squares stay connected, and every numbered clue equals the number of
 white squares visible from it in a straight line (itself counted once,
-`h + v - 1`). Params SHALL be `w` and `h`, encoded `{w}x{h}`. The 4 upstream
-presets — 9×6, 12×8, 13×9, 16×11 — SHALL be offered. `validateParams` SHALL
+`h + v - 1`). Params SHALL be `w` and `h`, encoded `{w}x{h}`. Four presets —
+6×9, 8×12, 9×13, 11×16, upstream's sizes turned to draw taller than wide —
+SHALL be offered. `validateParams` SHALL
 reject non-positive dimensions, a `w + h` that overflows the cell encoding,
 and (when `full`) the degenerate 1×1, 1×2, 2×1, and 2×2 grids that admit no
 good puzzle. The game SHALL report `wantsStatusbar = false`,

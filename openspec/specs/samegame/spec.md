@@ -17,8 +17,11 @@ SamegameDrawState>`: a block-clearing puzzle on a `w×h` grid of colored tiles
 orthogonally-connected groups of one color. Params SHALL be `w`, `h`, `ncols`,
 `scoresub` (1 or 2), and `soluble`, encoded `{w}x{h}c{ncols}s{scoresub}[r]`
 (the trailing `r` present only when `full` and not `soluble`) with lenient
-decode. The five upstream presets — `5×5`, `10×5`, `15×10` (all 3 colors),
-`15×10` and `20×15` (4 colors), all `scoresub = 2`, soluble — SHALL be offered.
+decode. Five presets — `5×5`, `5×10`, `10×15` (all 3 colors), `10×15` and
+`15×20` (4 colors), all `scoresub = 2`, soluble — SHALL be offered: upstream's
+sizes, turned to draw taller than wide. Tiles fall down and emptied columns
+close leftward, so a board of Same Game SHALL NOT declare `transposeParams`: a
+tall board is a different game from a wide one, not the same one turned.
 `validateParams` SHALL require `w ≥ 1`, `h ≥ 1`, `ncols ≤ 9`, `scoresub ∈ {1,2}`,
 and — when soluble — `ncols ≥ 3` and `w·h > 1`, or — when not soluble —
 `ncols ≥ 2` and `w·h ≥ 2·ncols`. The game SHALL report `wantsStatusbar = true`,

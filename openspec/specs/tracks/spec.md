@@ -19,7 +19,8 @@ clue counts the number of track-bearing cells in that row/column. Params SHALL
 be `w`, `h`, `diff` (Easy / Normal / Tricky) and `single_ones` (disallow
 consecutive 1-clues), encoded `{w}x{h}` with a full-form `d{e|t|h}` difficulty
 suffix and an `o` suffix when `single_ones` is false (square shorthand `{n}`).
-All 12 upstream presets SHALL be offered. `validateParams` SHALL enforce a
+Upstream's 12 presets SHALL be offered, its landscape sizes turned to
+draw taller than wide (8×10, 10×15). `validateParams` SHALL enforce a
 minimum size of 4×4. The game SHALL report `canSolve = true` and
 `canFormatAsText = true`, and SHALL drive a completion flash suppressed after
 Solve.

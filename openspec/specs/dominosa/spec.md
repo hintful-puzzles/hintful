@@ -12,17 +12,20 @@ domino reference that highlights where each pair can occur.
 
 The engine SHALL provide a registered `dominosa` game implementing
 `Game<DominosaParams, DominosaState, DominosaMove, DominosaUi, DominosaDrawState, DominosaMistake>`:
-partition an `(n+2) × (n+1)` grid of numbers (each `0…n`) into 2×1 dominoes so
+partition an `(n+1) × (n+2)` grid (or, when `tall` is false, upstream's
+`(n+2) × (n+1)`) of numbers (each `0…n`) into 2×1 dominoes so
 that the placed dominoes are exactly the `DCOUNT(n) = (n+1)(n+2)/2` distinct
 number-pairs `0-0 … n-n`, one of each, with every domino's two numbers matching
-the underlying clues. Params SHALL be `n` (maximum face number, default 6) and
-`diff` (Easy / Normal / Tricky / `Unreasonable` / Ambiguous), encoded `"{n}"` with
-a full-form `"d{t|b|h|e|a}"` difficulty suffix; a legacy bare `"a"` suffix SHALL
+the underlying clues. Params SHALL be `n` (maximum face number, default 6),
+`diff` (Easy / Normal / Tricky / `Unreasonable` / Ambiguous) and `tall`, encoded
+`"{n}"`, then `"t"` when `tall`, with a full-form `"d{t|b|h|e|a}"` difficulty
+suffix; an encoding without the `"t"` SHALL decode as the wide board, so every id
+written before `tall` existed names the board its desc was laid out for; a legacy bare `"a"` suffix SHALL
 decode to Ambiguous. The fourth tier is named `Unreasonable` rather than
 upstream's `Extreme` because its forcing-chain deduction is a search over a
 closure of all placements, and it is the last tier that is a difficulty —
 `Ambiguous` follows it in the list but relaxes the puzzle's promise rather than
-deepening its ladder. All 12 upstream presets SHALL be offered. `validateParams`
+deepening its ladder. All 12 upstream presets SHALL be offered, dealt tall. `validateParams`
 SHALL enforce `n ≥ 1`, a valid difficulty, and the upstream overflow bound. The
 game SHALL report `canSolve = true` and `canFormatAsText = true` (for `n < 1000`).
 
@@ -41,6 +44,17 @@ game SHALL report `canSolve = true` and `canFormatAsText = true` (for `n < 1000`
 
 - **WHEN** `validateParams` is given `n = 0`
 - **THEN** it returns a non-null error string
+
+#### Scenario: An id from before tall boards loads as the wide board
+
+- **WHEN** a params string without a `t`, such as `"6db"`, is decoded
+- **THEN** `tall` is false and the board is `n+2` wide and `n+1` tall
+- **AND** encoding the result in full gives back `"6db"`
+
+#### Scenario: The default board is dealt tall
+
+- **WHEN** the default params are encoded in full
+- **THEN** the result is `"6tdb"` and the board is 7 wide and 8 tall
 
 ### Requirement: Dominosa descriptions carry the clue grid
 

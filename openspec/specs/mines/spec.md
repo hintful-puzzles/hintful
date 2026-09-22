@@ -6,7 +6,9 @@ guided by the neighbor counts the uncovered squares reveal. This capability
 specifies its port to the TS engine around the guarantees that keep it fair: the
 first click is never a mine, every preset board is solvable without guessing, a
 death can be undone, and chording never reveals more than it must.
+
 ## Requirements
+
 ### Requirement: Mines game implements the Game interface
 
 The engine SHALL provide a registered `mines` game implementing `Game<MinesParams,
@@ -15,8 +17,9 @@ which the player uncovers squares, deduces from the revealed neighbor-counts whe
 mines are, and flags them.
 
 Params SHALL be `w`, `h`, `n` and `unique`, encoded `{w}x{h}n{n}[a]` (`a` = not unique),
-with a custom `n%` form meaning "percentage of area". All 6 upstream presets (9×9/10,
-9×9/35, 16×16/40, 16×16/99, 30×16/99, 30×16/170) SHALL be offered. `validateParams` SHALL
+with a custom `n%` form meaning "percentage of area". Six presets (9×9/10,
+9×9/35, 16×16/40, 16×16/99, 16×30/99, 16×30/170), upstream's with the expert
+board turned to draw taller than wide, SHALL be offered. `validateParams` SHALL
 require `n ≥ 1` and `n ≤ w·h − 9`, and additionally `w > 2 && h > 2` when `unique`.
 
 The game SHALL report `canSolve = true`, `canFormatAsText = true`, `wantsStatusbar = true`
@@ -123,4 +126,3 @@ restore.
 
 - **WHEN** a new Mines game is displayed and the player has not yet clicked
 - **THEN** the clock is not running; it starts when the first click uncovers the board
-
