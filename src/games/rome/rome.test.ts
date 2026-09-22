@@ -380,6 +380,10 @@ describe("the on-screen keypad", () => {
     // '8' is up. The same key enters an arrow, or a mark once Marks is armed —
     // one key per element, which is the collection's shape for a note game.
     expect(press(56)).toEqual({ kind: "place", x: 1, y: 1, dir: FM_UP });
+    // A tapped highlight goes away after an arrow, as the note-taking games'
+    // does, and stays through the marks that follow.
+    expect(ui.cursor.visible).toBe(false);
+    drag(st, ui, [1, 1], [1, 1], LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE);
     press(PENCIL_MODE_BUTTON);
     expect(press(56)).toEqual({ kind: "pencil", x: 1, y: 1, dir: FM_UP });
     // …and Clear clears whatever the mode is entering, rather than always the
@@ -431,6 +435,26 @@ describe("input", () => {
     expect(
       drag(st, ui, [1, 1], [1, 1], RIGHT_BUTTON, RIGHT_DRAG, RIGHT_RELEASE),
     ).toBeNull();
+  });
+
+  it("a right tap is the note-taking cell's, beside the right drag", () => {
+    const st = board(3, 3, EMPTY_3);
+    // Sticky, the family default: a right tap latches notes mode and selects.
+    const ui = newUi();
+    drag(st, ui, [1, 1], [1, 1], RIGHT_BUTTON, RIGHT_DRAG, RIGHT_RELEASE);
+    expect(ui.pencilMode).toBe(true);
+    expect(ui.cursor).toMatchObject({ x: 1, y: 1, visible: true });
+    // …and a left tap leaves the latch alone.
+    drag(st, ui, [0, 0], [0, 0], LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE);
+    expect(ui.pencilMode).toBe(true);
+    // Without it, a right tap selects one square for notes and a left one for
+    // arrows, upstream's per-cell pencil select.
+    const plain = { ...newUi(), pencilSticky: false };
+    drag(st, plain, [1, 1], [1, 1], RIGHT_BUTTON, RIGHT_DRAG, RIGHT_RELEASE);
+    expect(plain.pencilMode).toBe(true);
+    drag(st, plain, [1, 1], [1, 1], LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE);
+    expect(plain.pencilMode).toBe(false);
+    expect(plain.cursor.visible).toBe(true);
   });
 
   it("releasing back on the grabbed square clears a placed arrow", () => {

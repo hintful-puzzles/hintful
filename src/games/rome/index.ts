@@ -32,6 +32,15 @@ import {
 } from "../../engine/game.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import {
+  noOpEntryResult,
+  pressNoteTakingCell,
+  releaseHighlightAfterEntry,
+} from "../../engine/note-taking-cell.ts";
+import {
+  pencilKeepHighlightPref,
+  stickyPencilPref,
+} from "../../engine/pencil-prefs.ts";
+import {
   CURSOR_DOWN,
   CURSOR_LEFT,
   CURSOR_SELECT,
@@ -47,6 +56,7 @@ import {
   newCursor,
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
+  RIGHT_RELEASE,
   showCursor,
   stripModifiers,
 } from "../../engine/pointer.ts";
@@ -138,6 +148,9 @@ function newUi(_state: RomeState): RomeUi {
     mmode: MOUSEMODE_OFF,
     mdir: EMPTY,
     pencilMode: false,
+    cursorFromKeyboard: false,
+    pencilSticky: true,
+    pencilKeepHighlight: true,
     // Upstream defaults: highlight the squares that reach a goal (a genuinely
     // useful built-in aid), leave loop highlighting off.
     sloops: false,
@@ -196,6 +209,31 @@ function fromCoordTrunc(pixel: number, ts: number): number {
   return Math.trunc((pixel - origin(ts)) / ts);
 }
 
+/**
+ * A direction typed at the shown cursor, or Clear (`null`), in whichever mode
+ * the cursor is in. What the entry does to the highlight is the note-taking
+ * cell's rule.
+ */
+function typedEntry(
+  state: RomeState,
+  ui: RomeUi,
+  dir: RomeDir | null,
+): RomeMove | UiUpdate | null {
+  const { x, y } = ui.cursor;
+  const here = state.grid[y * state.w + x];
+  const pencil = ui.kmode === KEYMODE_PENCIL || ui.pencilMode;
+  ui.kmode = KEYMODE_MOVE;
+  if (dir !== null) {
+    if (pencil && !markable(state, x, y, dir)) return UI_UPDATE;
+    if (!pencil && (here & FM_ARROWMASK) === dir) return noOpEntryResult(ui);
+  }
+  releaseHighlightAfterEntry(ui);
+  // In notes mode Clear empties the square's *marks*: the key clears whatever
+  // the mode is entering, or it is a control that does the one thing the
+  // player did not ask for.
+  return { kind: pencil ? "pencil" : "place", x, y, dir };
+}
+
 function interpretMove(
   state: RomeState,
   ui: RomeUi,
@@ -246,12 +284,14 @@ function interpretMove(
 
     if (isCursorMove(button) && ui.kmode === KEYMODE_MOVE) {
       moveCursor(ui.cursor, button, w, h);
+      ui.cursorFromKeyboard = true;
       return UI_UPDATE;
     }
 
     // Enter arms (or disarms) arrow placement.
     if (button === CURSOR_SELECT && !(here & FM_FIXED)) {
       showCursor(ui.cursor);
+      ui.cursorFromKeyboard = true;
       ui.kmode = ui.kmode !== KEYMODE_PLACE ? KEYMODE_PLACE : KEYMODE_MOVE;
       return UI_UPDATE;
     }
@@ -259,6 +299,7 @@ function interpretMove(
     // Space arms pencil mode on an empty square...
     if (button === CURSOR_SELECT2 && here === EMPTY && ui.kmode !== KEYMODE_PLACE) {
       showCursor(ui.cursor);
+      ui.cursorFromKeyboard = true;
       ui.kmode = ui.kmode !== KEYMODE_PENCIL ? KEYMODE_PENCIL : KEYMODE_MOVE;
       return UI_UPDATE;
     }
@@ -295,24 +336,10 @@ function interpretMove(
     }
 
     // Type a direction directly, in whichever mode the cursor is in.
-    if (ui.cursor.visible && !(here & FM_FIXED)) {
-      const pencil = ui.kmode === KEYMODE_PENCIL || ui.pencilMode;
-      const dir = DIGIT_DIRS[button];
-      if (dir !== undefined) {
-        ui.kmode = KEYMODE_MOVE;
-        if (pencil && !markable(state, x, y, dir)) return UI_UPDATE;
-        return { kind: pencil ? "pencil" : "place", x, y, dir };
-      }
-      if (isEraseKey(button)) {
-        ui.kmode = KEYMODE_MOVE;
-        // In notes mode Clear empties the square's *marks*: the key clears
-        // whatever the mode is entering, or it is a control that does the one
-        // thing the player did not ask for.
-        return pencil
-          ? { kind: "pencil", x, y, dir: null }
-          : { kind: "place", x, y, dir: null };
-      }
-    }
+    const dir = DIGIT_DIRS[button];
+    const typed = dir !== undefined || isEraseKey(button);
+    if (typed && ui.cursor.visible && !(here & FM_FIXED))
+      return typedEntry(state, ui, dir ?? null);
 
     // Grab a square: left starts an arrow drag, right a pencil drag.
     if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
@@ -372,8 +399,19 @@ function interpretMove(
       // The second arm masks to the arrow bits because upstream compares the
       // whole cell, so an arrow carrying an error bit would emit a move that
       // changes nothing.
+      //
+      // What the tap does to the highlight is the note-taking cell's rule, with
+      // the button the gesture used: a right tap selects for notes (or latches
+      // them, sticky). The press already took the highlight down to start its
+      // drag, so a repeat tap re-selects rather than putting it away.
       if ((c === EMPTY && pencil) || (!pencil && c === (here & FM_ARROWMASK))) {
-        showCursor(ui.cursor);
+        pressNoteTakingCell(
+          ui,
+          button === RIGHT_RELEASE ? RIGHT_BUTTON : LEFT_BUTTON,
+          x,
+          y,
+          { canEnter: !(here & FM_FIXED), canMark: here === EMPTY },
+        );
         return UI_UPDATE;
       }
 
@@ -598,7 +636,8 @@ export const romeGame: Game<
   hintKeepTrack,
   refreshHintStep,
 
-  // Upstream's two highlight preferences, with its own keywords and defaults.
+  // Upstream's two highlight preferences, with its own keywords and defaults,
+  // then the note-taking cell's two.
   prefs: [
     {
       kw: "goal",
@@ -618,6 +657,8 @@ export const romeGame: Game<
         ui.sloops = v;
       },
     },
+    stickyPencilPref(),
+    pencilKeepHighlightPref(),
   ],
 
   colors,

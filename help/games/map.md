@@ -20,7 +20,13 @@ Right-drag from a colored region to a blank one to add dots marking
 the latter region as *possibly* the same color as the
 former, or to remove those dots again. Pressing the Marks button
 below the grid makes ordinary drags — and the color buttons — leave
-those dots instead of coloring, until you press it again.
+those dots instead of coloring, until you press it again. A
+right-click without a drag does the same as the Marks button and
+selects the region, as it does in the other note-taking puzzles.
+
+The selected region is outlined in green inside its border; while
+the buttons leave dots, a small green triangle also sits in its
+top-left corner.
 
 The keyboard can also be used. Move the cursor with the arrow keys,
 then press a color's digit to fill the region the cursor is on, or

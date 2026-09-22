@@ -168,8 +168,10 @@ game packs into its tile key, and `highlightFill` is the fill alone, for Towers'
 3D faces. The wash is `highlightWash` of the board's background at whatever
 palette index the game keeps it; `note-taking-cell-render.test.ts` holds every
 member to that color, to the triangle, and to repainting the cell when the
-highlight leaves. See [rendering](./rendering.md) § "The note-taking cell's
-picture".
+highlight leaves, excusing only a member whose selection is not a cell (Map,
+which draws the pair as a band around a region). A game whose press starts a
+drag (Rome, Map) joins through its tap. See [rendering](./rendering.md) § "The
+note-taking cell's picture".
 
 **Both pencil preferences are on by default across the family, and every member
 offers both**, so a player who moves between two of these games meets the same

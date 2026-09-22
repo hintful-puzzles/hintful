@@ -13,11 +13,11 @@ More information: http://www.janko.at/Raetsel/Nikoli/Roma.htm
 
 Click and hold a square, then drag in one of the four directions to place an arrow. Or tap a square to select it and press one of the four arrow buttons below the grid, which is the same thing without the drag; the Clear button empties the selected square.
 
-Right-click and drag to place a pencil mark, or press the Marks button below the grid to make ordinary drags — and the arrow buttons — leave marks until you press it again. A pencil appears in the top right corner while it is on. A mark records an arrow you think a square could still hold, so Mark all fills every square with the arrows the grid's edges leave open, and pressing it again crosses off the ones each square's own area has already used. Check & Save treats a square whose marks have ruled out its answer as a mistake, in the same way it treats a wrong arrow.
+Right-click and drag to place a pencil mark, or press the Marks button below the grid to make ordinary drags — and the arrow buttons — leave marks until you press it again. A right-click without a drag does the same as the Marks button and selects the square, as it does in the other note-taking puzzles. The selected square is shaded while the buttons enter arrows, and shows a small triangle in its corner while they enter marks. A pencil appears in the top right corner while it is on. A mark records an arrow you think a square could still hold, so Mark all fills every square with the arrows the grid's edges leave open, and pressing it again crosses off the ones each square's own area has already used. Check & Save treats a square whose marks have ruled out its answer as a mistake, in the same way it treats a wrong arrow.
 
 Squares whose arrows already lead to a goal are shaded, so you can see how much of the grid is settled. A second preference shades squares caught in a loop instead, which can never reach a goal; it is off by default. Both are in the game's preferences.
 
-The keyboard can also be used. Move the cursor with the arrow keys, and press Enter followed with an arrow key to place an arrow. Use Space to add pencil marks. Alternatively, use the arrows on the numpad to enter arrows directly.
+The keyboard can also be used. Move the cursor with the arrow keys, and press Enter followed with an arrow key to place an arrow. Use Space to add pencil marks. A question mark shows in the square while it waits for the arrow key. Alternatively, use the arrows on the numpad to enter arrows directly.
 
 ## Rome parameters
 

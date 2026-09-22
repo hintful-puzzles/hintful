@@ -170,8 +170,14 @@ export interface MapUi {
    * mode just supplies it from somewhere a touch player can reach.
    */
   pencilMode: boolean;
+  /** The keyboard revealed or moved the highlight, so an entry keeps it. */
+  cursorFromKeyboard: boolean;
 
   // preferences
+  /** A right tap latches notes mode rather than selecting for it. */
+  pencilSticky: boolean;
+  /** Keep a tapped region's highlight through a pencil mark. */
+  pencilKeepHighlight: boolean;
   /** 0 = cyclic, 1 = each-to-white, 2 = all-to-white. */
   flashType: number;
   showNumbers: boolean;
@@ -188,6 +194,9 @@ export function newUi(_state: MapState): MapUi {
     curLastmove: 0,
     curMoved: false,
     pencilMode: false,
+    cursorFromKeyboard: false,
+    pencilSticky: true,
+    pencilKeepHighlight: true,
     flashType: FLASH_CYCLIC,
     showNumbers: false,
     largeStipples: false,

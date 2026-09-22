@@ -37,6 +37,7 @@ import {
   ERROR_WASH,
   HINT_ACTION,
   HINT_EVIDENCE,
+  highlightWash,
   INK,
   pencilColor,
   playerEntryColor,
@@ -46,6 +47,13 @@ import { drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
+import {
+  type CellHighlight,
+  cellHighlight,
+  drawCellBackground,
+  HIGHLIGHT_NONE,
+  HIGHLIGHT_NOTES,
+} from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
   HINT_TARGET,
@@ -64,11 +72,7 @@ import type { RomeHint } from "./hint.ts";
 import type { RomeMistake } from "./index.ts";
 import {
   EMPTY,
-  FD_CURSOR,
   FD_ENTRY,
-  FD_KBMASK,
-  FD_PENCIL,
-  FD_PLACE,
   FD_TOGOAL,
   FE_BOUNDS,
   FE_DOUBLE,
@@ -80,8 +84,8 @@ import {
   FM_LEFT,
   FM_RIGHT,
   FM_UP,
+  KEYMODE_MOVE,
   KEYMODE_PENCIL,
-  KEYMODE_PLACE,
   MOUSEMODE_PENCIL,
   MOUSEMODE_PLACE,
   type RomeMove,
@@ -134,6 +138,8 @@ export const COL_GOAL = 11;
 export const COL_HINT = 12;
 /** The area a hint reasons from, outlined (fork addition). */
 export const COL_HINT_CELL = 13;
+/** The selected square's wash, and its notes triangle. */
+export const COL_CURSOR = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const { background, highlight, lowlight } = mkhighlight(defaultBackground);
@@ -152,6 +158,9 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_GOAL] = BLUE_BOLD;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
+  // A fill under the arrow and its marks: the note-taking cell's "you are
+  // here" wash, which every game in that mechanic shares, not the green mark.
+  out[COL_CURSOR] = highlightWash(background);
   return out;
 }
 
@@ -324,9 +333,8 @@ export function redraw(
   const ox = origin(ts);
   const { w, h, grid, pencil, regions } = state;
 
-  // The win animation hides the *displayed* cursor while leaving `ui.cursor`
-  // alone, because the cursor still feeds the cell value and so the cache key.
-  // Upstream keeps the two apart the same way, through a local copy.
+  // The win animation hides the displayed highlight while leaving `ui.cursor`
+  // alone, as upstream does through a local copy.
   let flash = -1;
   let cursorShown = ui.cursor.visible;
   if (flashTime > 0) {
@@ -377,20 +385,22 @@ export function redraw(
         if (ui.mdir !== EMPTY) p ^= ui.mdir;
         else p |= FD_ENTRY;
       }
-      if (ui.cursor.visible && onHighlight) {
-        c |=
-          ui.kmode === KEYMODE_PLACE
-            ? FD_PLACE
-            : ui.kmode === KEYMODE_PENCIL
-              ? FD_PENCIL
-              : FD_CURSOR;
-      }
+      // The one-shot keyboard arm for a mark is notes too, as far as the
+      // picture goes; either arm also shows a `?` for the direction it awaits.
+      let highlight: CellHighlight = cursorShown
+        ? cellHighlight(ui, x, y)
+        : HIGHLIGHT_NONE;
+      if (highlight !== HIGHLIGHT_NONE && ui.kmode === KEYMODE_PENCIL)
+        highlight = HIGHLIGHT_NOTES;
+      const armed = highlight !== HIGHLIGHT_NONE && ui.kmode !== KEYMODE_MOVE;
 
       const key =
         (c & 0x7fff) |
         (((p >> 2) & 0xf) << 15) |
         ((p & FD_ENTRY ? 1 : 0) << 19) |
-        ((flash + 1) << 20);
+        ((flash + 1) << 20) |
+        (highlight << 22) |
+        ((armed ? 1 : 0) << 24);
       if (ds.cache[i1] === key && !ds.mistakes.stale(i1) && !ds.hint.stale(i1))
         continue;
       ds.cache[i1] = key;
@@ -413,9 +423,6 @@ export function redraw(
               : grid[i1] & FE_BOUNDS
                 ? COL_ERRORBG
                 : COL_BACKGROUND;
-        if (cursorShown && onHighlight) {
-          color = ui.kmode === KEYMODE_PLACE ? COL_HIGHLIGHT : COL_LOWLIGHT;
-        }
       } else {
         color =
           (x + y) % 3 === flash
@@ -437,12 +444,20 @@ export function redraw(
       }
       if (y === h - 1 || !regions.equivalent(i1, i1 + w)) ch -= GRIDEXTRA * 2;
 
-      dr.drawRect({ x: cx, y: cy, w: cw, h: ch }, color);
+      drawCellBackground(
+        dr,
+        { x: cx, y: cy, w: cw, h: ch },
+        highlight,
+        COL_CURSOR,
+        color,
+      );
 
       const midX = ox + x * ts + Math.floor(ts / 2);
       const midY = ox + y * ts + Math.floor(ts / 2);
 
-      if (cursorShown && ui.kmode === KEYMODE_PENCIL && onHighlight) {
+      // An armed keyboard cursor awaits a direction: a `?` in the ink of the
+      // arrow or the mark that direction will make.
+      if (armed) {
         dr.drawText(
           { x: midX, y: midY },
           {
@@ -451,13 +466,13 @@ export function redraw(
             fontType: "fixed",
             size: Math.trunc(ts / 1.8),
           },
-          COL_HIGHLIGHT,
+          highlight === HIGHLIGHT_NOTES ? COL_ARROW_PENCIL : COL_ARROW_GUESS,
           "?",
         );
       }
 
       // Pencil marks show only on a square with no arrow or goal of its own.
-      if ((c & FD_KBMASK) === c) {
+      if (c === EMPTY) {
         const q = ts * 0.12;
         // A mark this hint rules out keeps its own color and takes a
         // strikethrough in the same color — the collection's "ruled out" cue

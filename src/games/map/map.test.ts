@@ -29,6 +29,7 @@ import { mapGame } from "./index.ts";
 import { BE, TE, validateDesc } from "./map-data.ts";
 import {
   COL_0,
+  COL_CURSOR,
   COL_MISTAKE,
   newDrawState,
   origin,
@@ -303,6 +304,37 @@ describe("map interpretMove", () => {
     const s2 = mapGame.executeMove(state, rel as { ops: MapOp[] });
     expect(s2.coloring[found.blank]).toBe(-1);
     expect(s2.pencil[found.blank]).toBe(1 << (state.coloring[found.clue] as number));
+  });
+
+  it("a right tap is the note-taking cell's, beside the right drag", () => {
+    const { state } = makeGame(p, "input-right-tap");
+    const ds = newDrawState(state, TS);
+    const blank = firstBlank(state);
+    const cell = solidCellOf(state, blank);
+    expect(cell, "the blank region has no solid cell").toBeDefined();
+    if (!cell) return;
+    const tap = (ui: MapUi, down: number, up: number) => {
+      mapGame.interpretMove(state, ui, ds, centerOf(cell), down);
+      return mapGame.interpretMove(state, ui, ds, centerOf(cell), up);
+    };
+
+    // Sticky, the family default: a right tap latches notes mode and selects.
+    const ui = newUi(state);
+    expect(tap(ui, RIGHT_BUTTON, RIGHT_RELEASE)).toBe(UI_UPDATE);
+    expect(ui.pencilMode).toBe(true);
+    expect(ui.cursor.visible).toBe(true);
+    expect(regionFromUiCursor(state.map, ui)).toBe(blank);
+    // …and a left tap leaves the latch alone.
+    tap(ui, LEFT_BUTTON, LEFT_RELEASE);
+    expect(ui.pencilMode).toBe(true);
+
+    // Without it, a right tap selects for notes and a left one for colors.
+    const plain = { ...newUi(state), pencilSticky: false };
+    tap(plain, RIGHT_BUTTON, RIGHT_RELEASE);
+    expect(plain.pencilMode).toBe(true);
+    tap(plain, LEFT_BUTTON, LEFT_RELEASE);
+    expect(plain.pencilMode).toBe(false);
+    expect(plain.cursor.visible).toBe(true);
   });
 
   it("the 'l' key toggles region numbers", () => {
@@ -620,18 +652,18 @@ describe("map tap selection", () => {
     expect(reached).toBeGreaterThan(0);
   });
 
-  it("draws the cursor inside the triangle it names, on a divided cell", () => {
-    // Tier 2. A selection every key press acts on has to be legible, and on a
-    // divided cell upstream's one-pixel nudge parks the ring on the diagonal,
-    // saying nothing about which half is meant. The ring goes to the triangle's
-    // centroid instead — a third of a tile, for a quadrant of a square.
+  it("carries a keyboard-held color inside the triangle the drop will land in", () => {
+    // Tier 2. On a divided cell upstream's one-pixel nudge parks the blob on
+    // the diagonal, saying nothing about which half the drop means. It goes to
+    // the triangle's centroid instead — a third of a tile, for a quadrant of a
+    // square.
     const { state } = makeGame(p, "cursor-offset");
     const { w, h } = p;
     const wh = w * h;
     const M = state.map.map;
     const half = Math.floor(TS / 2);
 
-    /** Where `redraw` puts the small cursor ring, relative to the cell center. */
+    /** Where `redraw` puts the carried blob, relative to the cell center. */
     function ringOffset(cell: { x: number; y: number }): { dx: number; dy: number } {
       const ui = newUi(state);
       placeCursorAtCoords(
@@ -641,12 +673,13 @@ describe("map tap selection", () => {
         origin(TS) + cell.y * TS + half + 6,
       );
       ui.cursor.visible = true;
+      ui.dragColor = 0;
       const dr = new RecordingDrawing(mapGame.colors([0.9, 0.9, 0.9]));
       dr.startDraw();
       redraw(dr, newDrawState(state, TS), null, state, 0, ui, 0, 0, undefined, []);
       dr.endDraw();
-      const ring = dr.ops.find((o) => o.op === "circle" && o.r === Math.floor(TS / 4));
-      expect(ring, "the cursor ring was not drawn").toBeDefined();
+      const ring = dr.ops.find((o) => o.op === "circle" && o.r === Math.floor(TS / 2));
+      expect(ring, "the carried blob was not drawn").toBeDefined();
       const c = ring as { cx: number; cy: number };
       return {
         dx: c.cx - (origin(TS) + cell.x * TS + half),
@@ -668,8 +701,128 @@ describe("map tap selection", () => {
     expect(whole, "no whole cell on this board").not.toBeNull();
     if (!divided || !whole) return;
 
-    // The tap was below each cell's center, so the ring goes down.
+    // The tap was below each cell's center, so the blob goes down.
     expect(ringOffset(divided)).toEqual({ dx: 0, dy: Math.floor(TS / 3) });
     expect(ringOffset(whole)).toEqual({ dx: 0, dy: 1 });
+  });
+});
+
+describe("the selected region's picture", () => {
+  // Tier 2. The note-taking cell's picture for a selection that is a region: a
+  // band just inside its boundary, and for notes the corner triangle in its
+  // first cell. The region's own fill never changes — it is the answer here.
+  const p: MapParams = { w: 12, h: 10, n: 12, diff: DIFF_NORMAL };
+  const { state } = makeGame(p, "selection-band");
+  const { w, h } = p;
+  const wh = w * h;
+  const M = state.map.map;
+  const palette = mapGame.colors([0.9, 0.9, 0.9]);
+
+  // A region that owns half of a divided cell, so the diagonal is in play.
+  let divided = -1;
+  for (let c = 0; c < wh && divided < 0; c++)
+    if (M[TE * wh + c] !== M[BE * wh + c]) divided = c;
+  const selected = M[BE * wh + divided];
+  const at = {
+    x: origin(TS) + (divided % w) * TS + Math.floor(TS / 2),
+    y: origin(TS) + Math.floor(divided / w) * TS + Math.floor(TS / 2) + 6,
+  };
+
+  function frame(over: Partial<MapUi>): ReturnType<typeof bandOps> {
+    const ui = { ...newUi(state), ...over };
+    placeCursorAtCoords(ui, TS, at.x, at.y);
+    const dr = new RecordingDrawing(palette);
+    redraw(dr, newDrawState(state, TS), null, state, 0, ui, 0, 0, undefined, []);
+    return bandOps(dr);
+  }
+  function bandOps(dr: RecordingDrawing) {
+    return dr.ops.filter(
+      (o): o is Extract<typeof o, { op: "polygon" }> =>
+        o.op === "polygon" && o.fill === COL_CURSOR,
+    );
+  }
+  const centroid = (pts: ReadonlyArray<readonly [number, number]>) => ({
+    x: pts.reduce((s, q) => s + q[0], 0) / pts.length,
+    y: pts.reduce((s, q) => s + q[1], 0) / pts.length,
+  });
+  const cellOf = (pt: { x: number; y: number }) =>
+    Math.floor((pt.y - origin(TS)) / TS) * w + Math.floor((pt.x - origin(TS)) / TS);
+
+  it("picked a divided cell and named its bottom region (vacuity)", () => {
+    expect(divided).toBeGreaterThanOrEqual(0);
+    expect(regionFromCoords(state.map, TS, at.x, at.y)).toBe(selected);
+  });
+
+  it("bands every cell on the region's boundary, and nothing outside it", () => {
+    const band = frame({ cursor: { x: 0, y: 0, visible: true } });
+    expect(band.length).toBeGreaterThan(0);
+    for (const o of band) {
+      const c = centroid(o.points);
+      expect(regionFromCoords(state.map, TS, c.x, c.y), "band outside the region").toBe(
+        selected,
+      );
+    }
+    // A cell holding part of the region is on its boundary when it is split,
+    // on the board's edge, or beside a cell of another region.
+    const banded = new Set(band.map((o) => cellOf(centroid(o.points))));
+    let boundary = 0;
+    for (let c = 0; c < wh; c++) {
+      const x = c % w;
+      const y = Math.floor(c / w);
+      const inIt = M[TE * wh + c] === selected || M[BE * wh + c] === selected;
+      if (!inIt) continue;
+      const whole = M[TE * wh + c] === M[BE * wh + c];
+      const beside = [
+        [x, y - 1],
+        [x + 1, y],
+        [x, y + 1],
+        [x - 1, y],
+      ].some(
+        ([nx, ny]) =>
+          nx < 0 ||
+          ny < 0 ||
+          nx >= w ||
+          ny >= h ||
+          M[TE * wh + ny * w + nx] !== selected ||
+          M[BE * wh + ny * w + nx] !== selected,
+      );
+      if (!whole || beside) {
+        boundary++;
+        expect(banded.has(c), `boundary cell ${c} has no band`).toBe(true);
+      }
+    }
+    expect(boundary).toBeGreaterThan(0);
+
+    // A band, not a wash: it covers a small part of the region, whose fill is
+    // what the player reads. Quadrants are a quarter of a tile each.
+    const area = (pts: ReadonlyArray<readonly [number, number]>) =>
+      Math.abs(
+        pts.reduce(
+          (s, [x0, y0], i) =>
+            s + x0 * pts[(i + 1) % pts.length][1] - pts[(i + 1) % pts.length][0] * y0,
+          0,
+        ) / 2,
+      );
+    let quadrants = 0;
+    for (let e = 0; e < 4; e++)
+      for (let c = 0; c < wh; c++) if (M[e * wh + c] === selected) quadrants++;
+    const covered = band.reduce((s, o) => s + area(o.points), 0);
+    expect(covered).toBeLessThan((quadrants * TS * TS) / 4 / 2);
+  });
+
+  it("adds the corner triangle for notes, in the region's first cell only", () => {
+    const entry = frame({ cursor: { x: 0, y: 0, visible: true } });
+    const notes = frame({ cursor: { x: 0, y: 0, visible: true }, pencilMode: true });
+    const seen = new Set(entry.map((o) => JSON.stringify(o.points)));
+    const added = notes.filter((o) => !seen.has(JSON.stringify(o.points)));
+    expect(added.length).toBeGreaterThan(0);
+    let first = -1;
+    for (let c = 0; c < wh && first < 0; c++)
+      if (M[TE * wh + c] === selected || M[BE * wh + c] === selected) first = c;
+    for (const o of added) expect(cellOf(centroid(o.points))).toBe(first);
+  });
+
+  it("draws no band once the highlight is put away", () => {
+    expect(frame({ cursor: { x: 0, y: 0, visible: false } })).toEqual([]);
   });
 });

@@ -21,6 +21,7 @@ import {
   COL_ARROW_GUESS,
   COL_ARROW_PENCIL,
   COL_BORDER,
+  COL_CURSOR,
   COL_ERRORBG,
   COL_GOAL,
   COL_GOALBG,
@@ -259,14 +260,39 @@ describe("cursor and drag", () => {
       cursor: newCursor(1, 1, true),
       kmode: KEYMODE_PENCIL,
     }).dr;
-    expect(place.ops.some((o) => o.op === "rect" && o.color === COL_HIGHLIGHT)).toBe(
-      true,
+    // The note-taking cell's pair: the wash for an arrow, the corner triangle
+    // for a mark…
+    expect(place.ops.some((o) => o.op === "rect" && o.color === COL_CURSOR)).toBe(true);
+    expect(
+      pencil.ops.some(
+        (o) => o.op === "polygon" && o.fill === COL_CURSOR && o.points.length === 3,
+      ),
+    ).toBe(true);
+    expect(pencil.ops.some((o) => o.op === "rect" && o.color === COL_CURSOR)).toBe(
+      false,
     );
-    expect(pencil.ops.some((o) => o.op === "rect" && o.color === COL_LOWLIGHT)).toBe(
-      true,
-    );
-    // Pencil mode additionally shows a '?' prompt in the cursor square.
-    expect(pencil.ops.some((o) => o.op === "text" && o.text === "?")).toBe(true);
+    // …and either arm prompts for its direction with a '?' in the ink it will
+    // draw in, which is what tells an armed cursor from a resting one.
+    const prompt = (dr: typeof place) =>
+      dr.ops.find((o) => o.op === "text" && o.text === "?");
+    expect(prompt(place)).toMatchObject({ color: COL_ARROW_GUESS });
+    expect(prompt(pencil)).toMatchObject({ color: COL_ARROW_PENCIL });
+    const resting = frame(state, { ...newUi(), cursor: newCursor(1, 1, true) }).dr;
+    expect(prompt(resting)).toBeUndefined();
+  });
+
+  it("shows the Marks key's notes mode on the selected square", () => {
+    const state = board(3, 3, `${ALL_WALLS_3},i`);
+    const notes = frame(state, {
+      ...newUi(),
+      cursor: newCursor(1, 1, true),
+      pencilMode: true,
+    }).dr;
+    expect(
+      notes.ops.some(
+        (o) => o.op === "polygon" && o.fill === COL_CURSOR && o.points.length === 3,
+      ),
+    ).toBe(true);
   });
 
   it("previews the direction an in-flight drag currently points at", () => {

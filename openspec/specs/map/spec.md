@@ -111,8 +111,9 @@ with the upstream keyword slugs, stored on the `Ui` with `newUi` defaults, and
 the `l`/`L` key SHALL toggle region numbers in play. `redraw` SHALL render region
 fills, the diagonal second-region triangle of a split cell, pencil-mark stipples,
 grid lines on region boundaries, the red adjacency error diamonds, optional
-region numbers, the flagged-mistake region outline, the floating drag/cursor
-blob (a blitter sprite), and the selected completion-flash style — with a `BORDER` of 0
+region numbers, the flagged-mistake region outline, the selected region's band,
+the floating drag blob (a blitter sprite) while a color or its marks are
+carried, and the selected completion-flash style — with a `BORDER` of 0
 (NARROW_BORDERS).
 
 #### Scenario: A drag colors a region
@@ -168,7 +169,9 @@ than merely awkward. Selection is additive: a tap is a press and a release on
 one region, so it picks that region's own color up and puts it straight back,
 which is already no move at all. A drag that ends where it cannot commit — on a
 clue, or back where it started — selects by the same rule rather than by a
-second one.
+second one. What that selection does to the highlight and to notes mode SHALL
+be the note-taking cell's rule, with the button the gesture used: a region may
+take a color when it is not a clue, and a mark when it is blank.
 
 Selection SHALL name the region the pointer was on, not merely its cell. The
 cursor is a cell **plus the direction it last moved**, which is how a
@@ -176,12 +179,15 @@ diagonally-split cell names one of the regions it holds, and the translation
 from a pixel SHALL derive that direction from the same quadrant test the
 pixel→region hit-test uses rather than restating it.
 
-The cursor SHALL be **drawn inside the triangle it names** on a divided cell —
-at that triangle's centroid, a third of a tile from the cell's center — keeping
-upstream's one-pixel nudge on a whole cell, where all four quadrants are one
-region and the offset would only announce which way the player last moved. A
-selection every key press acts on has to say which half of a divided cell it
-means, and a ring parked on the diagonal does not.
+The selection SHALL be drawn as the note-taking cell's picture in a region's
+shape: a band just inside the whole of the selected region's boundary, in the
+palette's cursor color, in both modes, and in notes mode the corner triangle in
+the region's first cell in reading order as well. The region's own fill SHALL
+NOT change, because in this game the fill is the answer. A color carried by the
+keyboard SHALL be drawn **inside the triangle the cursor names** on a divided
+cell — at that triangle's centroid, a third of a tile from the cell's center —
+keeping upstream's one-pixel nudge on a whole cell, so the carried color says
+which half of a divided cell its drop will land in.
 
 Dragging a color from one region to another SHALL continue to work unchanged,
 and so SHALL the keyboard's pick-and-drop by select. The panel is a second way
@@ -208,4 +214,11 @@ in, not a replacement.
 
 - **WHEN** a diagonally-split cell is tapped on one side of its diagonal
 - **THEN** the cursor names the region that side belongs to, not the other one
-- **AND** the cursor ring is drawn on that side of the diagonal rather than on it
+- **AND** the band is drawn inside that region and nowhere outside it
+
+#### Scenario: The selected region is outlined, not recolored
+
+- **WHEN** a region is selected
+- **THEN** every cell on that region's boundary carries the band, the band
+  covers well under half of the region, and in notes mode the corner triangle
+  appears in the region's first cell

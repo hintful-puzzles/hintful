@@ -348,17 +348,16 @@ is in its module header).
 
 **Draw the cursor inside the thing it selects, not merely in the right cell.**
 Map's cursor is a cell *plus a direction*, which is how upstream names one of
-the two regions a diagonally-split cell holds — and upstream nudges the ring one
-pixel, which on a divided cell parks it on the diagonal saying nothing about
-which half is meant. Fine while the cursor only picked a color up; not fine once
-`give-map-element-keys` made every key press act on it. The ring goes to the
-**centroid of the triangle it names**, which for a quadrant of a square is
-exactly a third of a tile from the center, and keeps the one-pixel nudge on a
-whole cell, where all four quadrants are one region and an offset would only
-announce which way the player last moved. The general rule: **when a selection
-starts being acted on, re-ask whether it is legible** — and assert the offset
-(a tier-2 op check on the ring's center) rather than trusting the screenshot
-that prompted it.
+the two regions a diagonally-split cell holds — and upstream nudged its ring one
+pixel, which on a divided cell parked it on the diagonal saying nothing about
+which half was meant. Fine while the cursor only picked a color up; not fine once
+`give-map-element-keys` made every key press act on it. The first fix moved the
+ring to the triangle's centroid; the real one (`share-the-selected-cell-highlight`)
+stopped drawing a *point* for a selection that is a *region*, and outlines the
+region instead (§ "The note-taking cell's picture"). The centroid survives for
+the color the keyboard carries, which does name a point. The general rule:
+**when a selection starts being acted on, re-ask whether it is legible** — and
+ask what the selection *is* before asking where to put its mark.
 
 ## A press preview must not look like a commit
 
@@ -436,7 +435,22 @@ used to paint its cell's background rect, and hands it that same rect.
 What legitimately differs stays in the game: a Crossing *wall* can only be
 reached by the arrow keys and has no background to wash, so the keyboard
 cursor there is still the corner brackets, and a Crossing digit is a raised tile
-whose face takes the wash and whose bevel also presses in.
+whose face takes the wash and whose bevel also presses in. Rome's keyboard can
+be *armed* to await a direction, which the picture alone cannot say, so an
+armed square adds a `?` in the ink of what it will draw.
+
+**A region takes the picture in its own shape.** Map's selection is a region of
+half-cell triangles, and its fill is the answer, so a wash over a red region
+would read as a different red. It draws a band in `CURSOR` just inside the
+region's whole boundary in both modes — the region "filled" without its fill
+changing — and in notes mode the corner triangle in the region's first cell.
+The band is each cell's convex pieces clipped to a strip along their boundary
+sides, plus a corner square where the boundary only passes through a corner (an
+L-shaped region's inner corner, where two strips would meet at a point); see
+`drawSelection` in [`map/render.ts`](../../src/games/map/render.ts). The cell
+guard excuses Map through a one-entry ledger it holds exactly right, and Map's
+own tests say what the band must be: inside the region, on every boundary cell,
+and well under half its area — the last is what tells a band from a wash.
 
 ### Sharing a *primitive* is a different, smaller move
 

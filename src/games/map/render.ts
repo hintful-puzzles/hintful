@@ -6,7 +6,7 @@
  */
 
 import { FOUR_FILLS } from "../../engine/color/colors.ts";
-import { ERROR, ERROR_TEXT, INK } from "../../engine/color/palette.ts";
+import { CURSOR, ERROR, ERROR_TEXT, INK } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
@@ -46,6 +46,8 @@ export const COL_ERROR = 6;
 export const COL_ERRTEXT = 7;
 /** Appended past the upstream enum — a wrong-region outline. */
 export const COL_MISTAKE = 8;
+/** The selected region's band and its notes triangle. */
+export const COL_CURSOR = 9;
 
 const FOUR = 4;
 const FIVE = 5;
@@ -61,6 +63,7 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_ERROR] = ERROR;
   ret[COL_ERRTEXT] = ERROR_TEXT;
   ret[COL_MISTAKE] = ERROR;
+  ret[COL_CURSOR] = CURSOR;
   return ret;
 }
 
@@ -68,6 +71,10 @@ export function colors(defaultBackground: Color): Color[] {
 // Low bits 0..4 hold the base value `tv*FIVE + bv` (0..24); the rest are flags.
 
 const MISTAKE = 0x20; // bit 5 — the cell belongs to a wrong-colored region
+const SEL_TOP = 0x40; // bit 6 — the top piece is in the selected region
+const SEL_BOTTOM = 0x80; // bit 7 — the bottom piece is
+const SEL_NOTES = 0x100; // bit 8 — this cell carries the notes triangle
+const SEL_MASK = SEL_TOP | SEL_BOTTOM | SEL_NOTES;
 const SHOW_NUMBERS = 0x00004000;
 const PENCIL_T_BASE = 0x00080000;
 const PENCIL_B_BASE = 0x00008000;
@@ -94,7 +101,7 @@ function coord(x: number, ts: number): number {
   return origin(ts) + x * ts;
 }
 
-function fromCoord(px: number, ts: number): number {
+export function fromCoord(px: number, ts: number): number {
   return fromCoordE(px, ts, origin(ts));
 }
 
@@ -299,6 +306,212 @@ function drawError(dr: GameDrawing, ts: number, x: number, y: number): void {
   );
 }
 
+// --- the selected region ---------------------------------------------
+//
+// The note-taking cell's picture, for a selection that is a region rather than
+// a cell: a band just inside the region's boundary in both modes, which is the
+// whole region "washed" without changing its fill — a region's fill is the
+// answer in this game, so a wash over a red region would read as another red —
+// and, for notes, the note-taking corner triangle in the region's first cell.
+//
+// Each cell holds one or two convex pieces (a square, or two right triangles
+// either side of its diagonal). The band in a piece is that piece clipped to a
+// strip along each of its edges that is a region boundary, plus a square at
+// each corner the boundary passes through without running along the piece —
+// an inner corner of an L-shaped region, where the two strips would otherwise
+// meet at a single point.
+
+interface Pt {
+  x: number;
+  y: number;
+}
+
+/** A cell's piece: its outline, clockwise, and which sides of the outline are
+ * region boundaries. */
+interface Piece {
+  poly: Pt[];
+  boundary: boolean[];
+}
+
+/** Keep the part of convex `poly` where `f` is at most zero. */
+function clipHalfPlane(poly: Pt[], f: (p: Pt) => number): Pt[] {
+  const out: Pt[] = [];
+  for (let i = 0; i < poly.length; i++) {
+    const p = poly[i];
+    const q = poly[(i + 1) % poly.length];
+    const fp = f(p);
+    const fq = f(q);
+    if (fp <= 0) out.push(p);
+    if ((fp < 0 && fq > 0) || (fp > 0 && fq < 0)) {
+      const s = fp / (fp - fq);
+      out.push({ x: p.x + (q.x - p.x) * s, y: p.y + (q.y - p.y) * s });
+    }
+  }
+  return out;
+}
+
+/** Signed distance inward from side `i` of clockwise `poly` (screen axes). */
+function inwardDistance(poly: Pt[], i: number): (p: Pt) => number {
+  const a = poly[i];
+  const b = poly[(i + 1) % poly.length];
+  const len = Math.hypot(b.x - a.x, b.y - a.y);
+  const nx = -(b.y - a.y) / len;
+  const ny = (b.x - a.x) / len;
+  return (p) => (p.x - a.x) * nx + (p.y - a.y) * ny;
+}
+
+/** `subject` clipped to convex, clockwise `clip`. */
+function clipConvex(subject: Pt[], clip: Pt[]): Pt[] {
+  let out = subject;
+  for (let i = 0; i < clip.length && out.length > 0; i++) {
+    const d = inwardDistance(clip, i);
+    out = clipHalfPlane(out, (p) => -d(p));
+  }
+  return out;
+}
+
+/** The band's width: wide enough to read on any fill, narrow enough to leave
+ * the stipples inside a small region clear. */
+function selectionBand(ts: number): number {
+  return Math.max(2, Math.floor(ts / 8));
+}
+
+/** Is there a region boundary *through* grid point `(px, py)` — along any of
+ * the four grid lines meeting there, or a diagonal ending there? */
+function boundaryAtPoint(map: MapData, px: number, py: number): boolean {
+  const { w, h } = map;
+  if (px <= 0 || py <= 0 || px >= w || py >= h) return true;
+  const wh = w * h;
+  const M = map.map;
+  const q = (x: number, y: number, e: number) => M[e * wh + y * w + x];
+  // The four cells around the point: A above-left, B above-right, C below-left,
+  // D below-right. A split cell's diagonal ends at this point when it runs
+  // through the corner the point is to that cell.
+  const splitThrough = (x: number, y: number, lePairsWith: number) =>
+    q(x, y, TE) !== q(x, y, BE) && q(x, y, LE) === q(x, y, lePairsWith);
+  return (
+    q(px - 1, py - 1, RE) !== q(px, py - 1, LE) ||
+    q(px - 1, py, RE) !== q(px, py, LE) ||
+    q(px - 1, py - 1, BE) !== q(px - 1, py, TE) ||
+    q(px, py - 1, BE) !== q(px, py, TE) ||
+    splitThrough(px - 1, py - 1, BE) ||
+    splitThrough(px, py - 1, TE) ||
+    splitThrough(px - 1, py, TE) ||
+    splitThrough(px, py, BE)
+  );
+}
+
+/** Cell `(x, y)`'s top and bottom pieces (one square when it is whole, which
+ * both names return). */
+function cellPieces(map: MapData, x: number, y: number, ts: number): [Piece, Piece] {
+  const { w, h } = map;
+  const wh = w * h;
+  const M = map.map;
+  const q = (cx: number, cy: number, e: number) => M[e * wh + cy * w + cx];
+  const top = y === 0 || q(x, y - 1, BE) !== q(x, y, TE);
+  const bottom = y === h - 1 || q(x, y + 1, TE) !== q(x, y, BE);
+  const left = x === 0 || q(x - 1, y, RE) !== q(x, y, LE);
+  const right = x === w - 1 || q(x + 1, y, LE) !== q(x, y, RE);
+  const x0 = coord(x, ts);
+  const y0 = coord(y, ts);
+  const TL = { x: x0, y: y0 };
+  const TR = { x: x0 + ts, y: y0 };
+  const BR = { x: x0 + ts, y: y0 + ts };
+  const BL = { x: x0, y: y0 + ts };
+  if (q(x, y, TE) === q(x, y, BE)) {
+    const whole = { poly: [TL, TR, BR, BL], boundary: [top, right, bottom, left] };
+    return [whole, whole];
+  }
+  // The diagonal runs TR–BL when the left quadrant goes with the top one, and
+  // TL–BR when it goes with the bottom one (`drawSquare`'s second triangle).
+  if (q(x, y, LE) === q(x, y, TE))
+    return [
+      { poly: [TL, TR, BL], boundary: [top, true, left] },
+      { poly: [TR, BR, BL], boundary: [right, bottom, true] },
+    ];
+  return [
+    { poly: [TL, TR, BR], boundary: [top, right, true] },
+    { poly: [TL, BR, BL], boundary: [true, bottom, left] },
+  ];
+}
+
+/** Paint the selection over cell `(x, y)`'s fills: the band in each selected
+ * piece, and the notes triangle where this is the region's first cell. */
+function drawSelection(
+  dr: GameDrawing,
+  ts: number,
+  map: MapData,
+  x: number,
+  y: number,
+  v: number,
+): void {
+  const [topPiece, bottomPiece] = cellPieces(map, x, y, ts);
+  const pieces: Piece[] = [];
+  if (v & SEL_TOP) pieces.push(topPiece);
+  if (v & SEL_BOTTOM && bottomPiece !== topPiece) pieces.push(bottomPiece);
+  const t = selectionBand(ts);
+  const fill = (poly: Pt[]) => {
+    if (poly.length >= 3) dr.drawPolygon(poly, COL_CURSOR, COL_CURSOR);
+  };
+  const x0 = coord(x, ts);
+  const y0 = coord(y, ts);
+  const corners = [
+    { px: x, py: y, kx: x0, ky: y0 },
+    { px: x + 1, py: y, kx: x0 + ts, ky: y0 },
+    { px: x + 1, py: y + 1, kx: x0 + ts, ky: y0 + ts },
+    { px: x, py: y + 1, kx: x0, ky: y0 + ts },
+  ];
+  for (const piece of pieces) {
+    const { poly, boundary } = piece;
+    for (let i = 0; i < poly.length; i++) {
+      if (!boundary[i]) continue;
+      const d = inwardDistance(poly, i);
+      fill(clipHalfPlane(poly, (p) => d(p) - t));
+    }
+    for (const k of corners) {
+      // A side of the piece already running along the boundary from this
+      // corner has covered it.
+      const own = poly.some(
+        (p, i) =>
+          boundary[i] &&
+          ((p.x === k.kx && p.y === k.ky) ||
+            (poly[(i + 1) % poly.length].x === k.kx &&
+              poly[(i + 1) % poly.length].y === k.ky)),
+      );
+      if (own || !boundaryAtPoint(map, k.px, k.py)) continue;
+      const sx = k.kx === x0 ? 1 : -1;
+      const sy = k.ky === y0 ? 1 : -1;
+      const square = clipHalfPlane(
+        clipHalfPlane(poly, (p) => sx * (p.x - k.kx) - t),
+        (p) => sy * (p.y - k.ky) - t,
+      );
+      fill(square);
+    }
+  }
+  if (v & SEL_NOTES) {
+    const half = Math.floor(ts / 2);
+    const corner = [
+      { x: x0, y: y0 },
+      { x: x0 + half, y: y0 },
+      { x: x0, y: y0 + half },
+    ];
+    for (const piece of pieces) fill(clipConvex(corner, piece.poly));
+  }
+  // The band reaches the diagonal, which is the second triangle's outline:
+  // stroke it again, along the same line `drawSquare` outlines.
+  if (pieces.length > 0 && topPiece !== bottomPiece) {
+    const wh = map.w * map.h;
+    const c = y * map.w + x;
+    const tlToBr = map.map[LE * wh + c] === map.map[BE * wh + c];
+    dr.drawLine(
+      { x: x0 - 1, y: tlToBr ? y0 - 1 : y0 + ts + 1 },
+      { x: x0 + ts + 1, y: tlToBr ? y0 + ts + 1 : y0 - 1 },
+      COL_GRID,
+      1,
+    );
+  }
+}
+
 function drawSquare(
   dr: GameDrawing,
   ts: number,
@@ -316,7 +529,7 @@ function drawSquare(
   const pencil = vIn & PENCIL_MASK;
   const showNumbers = vIn & SHOW_NUMBERS;
   const mistake = vIn & MISTAKE;
-  const v = vIn & ~(ERR_MASK | PENCIL_MASK | SHOW_NUMBERS | MISTAKE);
+  const v = vIn & ~(ERR_MASK | PENCIL_MASK | SHOW_NUMBERS | MISTAKE | SEL_MASK);
   const tv = Math.floor(v / FIVE);
   const bv = v % FIVE;
 
@@ -346,6 +559,8 @@ function drawSquare(
       COL_GRID,
     );
   }
+
+  drawSelection(dr, ts, map, x, y, vIn);
 
   // Pencil-mark stipples (a square formation; FOUR == 4).
   const te = M[TE * wh + y * w + x];
@@ -490,6 +705,16 @@ export function redraw(
   const mistakeSet = new Set<number>();
   if (mistakes) for (const m of mistakes) mistakeSet.add(m.region);
 
+  // The selected region, hidden while the completion flash plays, and in notes
+  // mode the cell that carries the corner triangle: the region's first in
+  // reading order.
+  const selected = ui.cursor.visible && flash < 0 ? regionFromUiCursor(map, ui) : -1;
+  let notesCell = -1;
+  if (selected >= 0 && ui.pencilMode) {
+    for (let i = 0; i < wh && notesCell < 0; i++)
+      if (M[TE * wh + i] === selected || M[BE * wh + i] === selected) notesCell = i;
+  }
+
   // Build the `todraw` array.
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
@@ -525,6 +750,9 @@ export function redraw(
       }
 
       if (ui.showNumbers) v |= SHOW_NUMBERS;
+      if (tRegion === selected) v |= SEL_TOP;
+      if (bRegion === selected) v |= SEL_BOTTOM;
+      if (y * w + x === notesCell) v |= SEL_NOTES;
       if (mistakeSet.has(tRegion) || mistakeSet.has(bRegion)) v |= MISTAKE;
 
       ds.todraw[y * w + x] = v;
@@ -561,29 +789,20 @@ export function redraw(
       }
     }
 
-  // Floating drag/cursor blob.
-  if (ui.dragColor > -2 || ui.cursor.visible) {
-    let bg: number;
-    let iscur = false;
-    if (ui.dragColor >= 0) bg = COL_0 + ui.dragColor;
-    else if (ui.dragColor === -1) bg = COL_BACKGROUND;
-    else {
-      const r = regionFromUiCursor(map, ui);
-      const c = r < 0 ? -1 : s.coloring[r];
-      bg = c < 0 ? COL_BACKGROUND : COL_0 + c;
-      iscur = true;
-    }
+  // The floating drag blob: the color (or the marks) in the player's hand.
+  // The selection itself is the band `drawSelection` paints; the blob is only
+  // what is being carried.
+  if (ui.dragColor > -2) {
+    const bg = ui.dragColor >= 0 ? COL_0 + ui.dragColor : COL_BACKGROUND;
 
     let cursorX: number;
     let cursorY: number;
     if (ui.cursor.visible) {
-      // On a divided cell the ring sits at the **centroid** of the triangle it
-      // names, which for a quadrant of a square is exactly a third of a tile
-      // from the center; on a whole cell it keeps upstream's one-pixel nudge.
-      // The cursor names a triangle, not a cell, and every key press now acts
-      // on it, so a ring parked on the diagonal would not say which half it
-      // means. On a whole cell all four quadrants are the same region, and the
-      // same offset would only announce which way the player last moved.
+      // Carried by the keyboard, the blob sits at the **centroid** of the
+      // triangle the cursor names, which for a quadrant of a square is exactly
+      // a third of a tile from the center, so it says which half of a divided
+      // cell the drop will land in; on a whole cell it keeps upstream's
+      // one-pixel nudge, since all four quadrants are the same region there.
       const reach = dividedCell(map, ui.cursor.x, ui.cursor.y) ? Math.floor(ts / 3) : 1;
       cursorX =
         coord(ui.cursor.x, ts) + Math.floor(ts / 2) + epsilonX(ui.curLastmove) * reach;
@@ -600,12 +819,7 @@ export function redraw(
     ds.dragX = cursorX - Math.floor(ts / 2) - 2;
     ds.dragY = cursorY - Math.floor(ts / 2) - 2;
     dr.blitterSave(ds.bl, { x: ds.dragX, y: ds.dragY });
-    dr.drawCircle(
-      { x: cursorX, y: cursorY },
-      iscur ? Math.floor(ts / 4) : Math.floor(ts / 2),
-      bg,
-      COL_GRID,
-    );
+    dr.drawCircle({ x: cursorX, y: cursorY }, Math.floor(ts / 2), bg, COL_GRID);
     for (let i = 0; i < FOUR; i++)
       if (ui.dragPencil & (1 << i))
         dr.drawCircle(

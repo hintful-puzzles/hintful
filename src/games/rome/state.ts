@@ -58,9 +58,6 @@ export const FE_LOOP = 0x0100;
 /** Loop entry point — bounds the loop walk so it cannot spin. */
 export const FE_LOOPSTART = 0x0200;
 
-export const FD_CURSOR = 0x0400;
-export const FD_PLACE = 0x0800;
-export const FD_PENCIL = 0x1000;
 /** Its arrow chain reaches a goal. */
 export const FD_TOGOAL = 0x2000;
 /** Mouse button held down on this square. */
@@ -68,7 +65,6 @@ export const FD_ENTRY = 0x4000;
 
 export const FM_ARROWMASK = FM_UP | FM_DOWN | FM_LEFT | FM_RIGHT;
 export const FE_MASK = FE_LOOP | FE_LOOPSTART | FE_BOUNDS | FE_DOUBLE;
-export const FD_KBMASK = FD_CURSOR | FD_PLACE | FD_PENCIL;
 
 /** One of the four arrow bits. */
 export type RomeDir = typeof FM_UP | typeof FM_DOWN | typeof FM_LEFT | typeof FM_RIGHT;
@@ -309,6 +305,12 @@ export interface RomeUi {
    * `takesNotes`).
    */
   pencilMode: boolean;
+  /** The keyboard revealed or moved the highlight, so an entry keeps it. */
+  cursorFromKeyboard: boolean;
+  /** Preference: a right tap latches notes mode rather than selecting for it. */
+  pencilSticky: boolean;
+  /** Preference: keep a tapped square's highlight through a pencil mark. */
+  pencilKeepHighlight: boolean;
   /** Preference: tint squares that are part of a loop (upstream default off). */
   sloops: boolean;
   /** Preference: tint squares whose arrows reach a goal (default on). */

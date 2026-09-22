@@ -338,16 +338,21 @@ describe("the enrolled population is derived, not listed", () => {
     expect(SCANNED_SOURCE_FILES).toBeGreaterThan(100);
   });
 
-  it("is the eleven note-taking games, by the shape of their Ui", () => {
-    // The membership *is* asserted, unlike the population: a twelfth game
-    // acquiring the fields should be a decision somebody makes, and a member
-    // losing them should fail here rather than silently leave the guards below.
+  it("is the note-taking games, by the shape of their Ui", () => {
+    // The membership *is* asserted, unlike the population: a game acquiring
+    // the fields should be a decision somebody makes, and a member losing them
+    // should fail here rather than silently leave the guards below. Map and
+    // Rome joined in `share-the-selected-cell-highlight`, through their tap:
+    // each press is the start of a drag, and only a release that commits
+    // nothing selects.
     expect(noteTaking.ids).toEqual([
       "abcd",
       "crossing",
       "group",
       "keen",
+      "map",
       "mathrax",
+      "rome",
       "salad",
       "seismic",
       "solo",

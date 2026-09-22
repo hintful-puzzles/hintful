@@ -53,14 +53,29 @@
 
 ## 3. Extend the pair to the games that have neither
 
-- [ ] 3.1 **Rome and Map: behavior.** Both tie the right button to a *drag*
+- [x] 3.1 **Rome and Map: behavior.** Both tie the right button to a *drag*
       (a pencil drag; a right-drag laying a mark), and in both a right *tap*
-      is today a no-op that selects. The tap is free, so the mechanic's
-      "right selects for notes" can take the tap without an exemption and
-      without touching the drag.
-- [ ] 3.2 **Map's picture**, a region rather than a cell.
-- [ ] 3.3 **Rome's picture**: the pair, where it has a lowlight fill and a
-      `?` today.
+      was a no-op that selected. The tap was free, so the mechanic took it:
+      the release that commits nothing calls `pressNoteTakingCell` with the
+      button the gesture used, and the drags keep their buttons. No exemption
+      and no roster. Both games gained the mechanic's `Ui` fields and both
+      pencil preferences, so they are members by derivation and every guard
+      over the mechanic now holds them. Known shape, recorded in both games:
+      the press takes the highlight down to begin a possible drag, so a
+      repeat tap re-selects rather than putting it away.
+- [x] 3.2 **Map's picture** — owner's choice, 2026-09-22, between an outline, a
+      wash and keeping the ring: *outline*. A `CURSOR` band just inside the
+      region's whole boundary in both modes, and in notes mode the corner
+      triangle in the region's first cell. The fill never changes, because in
+      Map the fill is the answer. Upstream's ring survives only as the carried
+      blob, still at the centroid of the triangle a keyboard drop will land in.
+      Excused from the cell guard by a one-entry `NOT_A_CELL` ledger the guard
+      holds exactly right; `map.test.ts` says what a band is (inside the
+      region, on every boundary cell, under half its area) and each of those
+      was seen to fail against a planted defect.
+- [x] 3.3 **Rome's picture**: the pair. Its keyboard *arm* (Enter or Space,
+      then a direction) had been told apart only by the fill; it now adds a
+      `?` in the ink of the arrow or mark to come.
 
 ## 4. Prove it changed nothing where nothing should change
 
@@ -79,11 +94,17 @@
       background fails every member's notes assertion by name; a game that
       drops the highlight from its tile key (Keen, planted) fails that game's
       four cases alone.
-- [ ] 4.4 Run the app — every member, both modes, both color schemes.
+- [x] 4.4 Ran the app in Chrome (2026-09-22): Map's band and notes triangle,
+      Rome resting, armed and in notes mode, Crossing's wall brackets, Abcd's
+      and Seismic's new wash, and Map and Solo in dark mode. At Map's default
+      tile size its notes triangle is small, since the band takes three of its
+      twelve pixels; it reads, and is the thing to look at in acceptance.
 
 ## 5. Record
 
 - [x] 5.1 `docs/games/rendering.md` § "The note-taking cell's picture".
 - [x] 5.2 `docs/games/engine-catalog.md`: the entry covers the picture.
-- [ ] 5.3 The spec delta — written for the picture; the right-tap rule for a
-      game whose right button is a drag lands with §3.1.
+- [x] 5.3 The spec deltas: `ts-engine` gains the picture and the rule for a
+      game whose press starts a drag; `map` and `rome` modify their tap
+      requirements (and Map's rendering list, which named a cursor blob).
+      Help pages for both say what a right-click without a drag now does.

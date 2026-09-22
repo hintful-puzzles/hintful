@@ -750,6 +750,11 @@ were — the last per-game roster in the cross-game guards.
   grid. A game carrying `ui.pencilMode` and `ui.cursorFromKeyboard` without
   calling `pressNoteTakingCell` fails `note-taking-cell.test.ts`; this used to
   be eleven copies, and it is one now.
+- **If your press starts a drag, join through the tap.** Rome and Map spend the
+  press (and the right button) on drags, so their *release that commits
+  nothing* is what calls `pressNoteTakingCell`, with the button the gesture
+  used. The drag keeps its buttons, the tap gets the mechanic's, and no game
+  needs an exemption for a right button that is "already spoken for".
 - **Do not draw the highlight by hand either** — paint the cell's background
   through `drawCellBackground` and pack `cellHighlight` into the tile key
   ([rendering](./rendering.md) § "The note-taking cell's picture"). A member

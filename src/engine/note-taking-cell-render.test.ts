@@ -127,22 +127,42 @@ const noteTaking = enrolledIn(
     typeof g.ui["cursorFromKeyboard"] === "boolean",
 );
 
+/**
+ * Members whose selection is not a cell, and so cannot take the cell's
+ * picture. Nothing a game declares says so, so this is the ledger AGENTS.md
+ * allows for intent that cannot be observed — one entry per member, held
+ * exactly right below. Each draws the pair's meaning in its own shape and
+ * tests it beside its renderer.
+ */
+const NOT_A_CELL: Record<string, string> = {
+  map: "the selection is a region of half-cell triangles; map.test.ts § the selected region's picture",
+};
+const cellMembers = noteTaking.ids.filter((id) => !(id in NOT_A_CELL));
+
 it("looked at the note-taking games (vacuity guard)", () => {
   expect(noteTaking.population).toBeGreaterThanOrEqual(50);
-  expect(noteTaking.ids.length).toBeGreaterThanOrEqual(11);
+  expect(cellMembers.length).toBeGreaterThanOrEqual(11);
 });
 
-it("every member paints its cell background through drawCellBackground", () => {
+it("excuses exactly the members whose selection is not a cell", () => {
+  // Every ledger entry is a member, and none of them paints a cell background
+  // after all — an entry that outlived its reason fails here.
+  const ledgered = Object.keys(NOT_A_CELL);
+  expect(ledgered.filter((id) => !noteTaking.ids.includes(id))).toEqual([]);
+  expect(membersNotMentioning(ledgered, "drawCellBackground(")).toEqual(ledgered);
+});
+
+it("every cell member paints its cell background through drawCellBackground", () => {
   // A source scan for the reason `note-taking-cell.test.ts` gives for its own:
   // what is being asserted is that no hand-drawn copy exists beside the shared
   // one, which no frame can show.
   expect(
-    membersNotMentioning(noteTaking.ids, "drawCellBackground("),
+    membersNotMentioning(cellMembers, "drawCellBackground("),
     "carry the note-taking Ui but draw the highlight by hand",
   ).toEqual([]);
 });
 
-describe.each(noteTaking.ids)("%s", (id) => {
+describe.each(cellMembers)("%s", (id) => {
   const g = builtGames().find((b) => b.id === id) as BuiltGame;
   const found = framesOf(g);
 

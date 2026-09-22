@@ -1,7 +1,7 @@
 # share-the-selected-cell-highlight
 
-**Status: in progress** — the picture is shared across the eleven; Rome and
-Map are next (`tasks.md`). Owner-requested, 2026-09-21: the selected
+**Status: done** — see `tasks.md` for what was found and decided.
+Owner-requested, 2026-09-21: the selected
 cell should look and behave the same everywhere — full cell in ordinary mode, a
 top-left triangle in notes mode, right-click to toggle — and that should be
 engine functionality rather than something each game re-draws.

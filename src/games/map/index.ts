@@ -18,7 +18,16 @@ import type { DifficultyContract } from "../../engine/difficulty.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { colorKeys } from "../../engine/key-labels.ts";
+import {
+  noOpEntryResult,
+  pressNoteTakingCell,
+  releaseHighlightAfterEntry,
+} from "../../engine/note-taking-cell.ts";
 import { dimensionParamConfig, parseConfigInt } from "../../engine/params.ts";
+import {
+  pencilKeepHighlightPref,
+  stickyPencilPref,
+} from "../../engine/pencil-prefs.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -44,6 +53,7 @@ import {
   colors,
   computeSize,
   flashLengthFromUi,
+  fromCoord,
   type MapDrawState,
   newDrawState,
   placeCursorAtCoords,
@@ -189,10 +199,12 @@ function interpretMove(
     moveCursor(ui.cursor, button, w, h);
     ui.curMoved = true;
     ui.curLastmove = button;
+    ui.cursorFromKeyboard = true;
     return UI_UPDATE;
   }
 
   if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
+    ui.cursorFromKeyboard = true;
     if (!ui.cursor.visible) {
       ui.cursor.visible = true;
       return UI_UPDATE;
@@ -223,7 +235,10 @@ function interpretMove(
   if (held !== null && ui.cursor.visible && ui.dragColor === -2) {
     ui.dragColor = held;
     ui.dragPencil = 0;
-    return drop(state, ui, regionFromUiCursor(state.map, ui), ui.pencilMode);
+    const entered = drop(state, ui, regionFromUiCursor(state.map, ui), ui.pencilMode);
+    if (entered === UI_UPDATE) return noOpEntryResult(ui);
+    releaseHighlightAfterEntry(ui);
+    return entered;
   }
 
   if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
@@ -249,9 +264,21 @@ function interpretMove(
     // to walk a cursor with, and it costs nothing: a tap is a press and a
     // release on one region, so it picks that region's own color up and puts
     // it straight back — already a no-op before this existed.
+    //
+    // What it does to the highlight is the note-taking cell's rule, with the
+    // button the gesture used: a right tap selects for notes (or latches
+    // them, sticky). The press already took the highlight down to start its
+    // drag, so a repeat tap re-selects rather than putting it away.
     if (dropped === UI_UPDATE && r >= 0) {
-      placeCursorAtCoords(ui, ts, point.x, point.y);
-      ui.cursor.visible = true;
+      const pressed = pressNoteTakingCell(
+        ui,
+        button === RIGHT_RELEASE ? RIGHT_BUTTON : LEFT_BUTTON,
+        fromCoord(point.x, ts),
+        fromCoord(point.y, ts),
+        { canEnter: !state.map.immutable[r], canMark: state.coloring[r] < 0 },
+      );
+      // The mechanic names a cell; the finger named a triangle of it.
+      if (pressed === "moved") placeCursorAtCoords(ui, ts, point.x, point.y);
     }
     return dropped;
   }
@@ -490,6 +517,8 @@ export const mapGame: Game<
         ui.largeStipples = v === 1;
       },
     },
+    stickyPencilPref(),
+    pencilKeepHighlightPref(),
   ],
 
   colors,

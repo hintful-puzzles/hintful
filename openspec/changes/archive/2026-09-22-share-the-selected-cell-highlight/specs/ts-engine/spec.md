@@ -41,8 +41,38 @@ press arm's guard gives.
 - **WHEN** the highlight is put away
 - **THEN** the cell repaints, with neither the wash nor the triangle
 
+#### Scenario: A member whose selection is not a cell
+
+- **WHEN** a member's selection is a region rather than a cell (Map)
+- **THEN** it draws the pair's meaning in the region's shape, is excused from
+  the cell picture by a one-entry-per-member ledger the guard holds exactly
+  right, and tests its own picture beside its renderer
+
 #### Scenario: A game that kept its own copy
 
 - **WHEN** a game carries the mechanic's `Ui` fields and never calls the
   engine's cell-background painter
 - **THEN** the build fails and names the game
+
+### Requirement: A game whose press starts a drag joins the note-taking cell through its tap
+
+A game whose pointer press is the start of a drag — Rome's arrow and pencil
+drags, Map's color and mark drags — SHALL join the note-taking cell through its
+**tap**: a release that commits nothing SHALL resolve through the engine's press
+arm, with the button the gesture used, while the drags themselves keep the
+buttons they already had. So the right button needs no exemption where a game
+already spends it on a drag: the drag and the tap are different gestures, and
+only the tap is the mechanic's. No roster of games whose right button is
+"spoken for" SHALL exist.
+
+Such a game carries the mechanic's `Ui` fields and both pencil preferences, and
+is held by every guard over the mechanic like any other member. Because its
+press has already taken the highlight down to begin a possible drag, a repeat
+tap SHALL re-select rather than put the highlight away.
+
+#### Scenario: The right tap and the right drag in one game
+
+- **WHEN** in Rome or Map the right button is pressed and released on one
+  square or region, and separately pressed and dragged to another
+- **THEN** the tap selects for notes (or, sticky, latches notes mode), and the
+  drag still lays the mark it laid before
