@@ -27,7 +27,7 @@ import {
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import { type StepBudget, stepBudget } from "../../engine/step-budget.ts";
-import { type Axis, type Cause, say } from "./hint-text.ts";
+import { type Axis, type Cause, type RuleOut, say } from "./hint-text.ts";
 import {
   lineCells,
   lineTarget,
@@ -257,6 +257,9 @@ interface Told {
   text: string;
   area: number[];
   clues: number[];
+  /** Later legs' squares that the board as this leg finds it does not force
+   * yet, so this step leaves them unringed. */
+  notYet?: number[];
 }
 
 /** A square forced by the two poles (or the pole and the neutral) its board
@@ -333,11 +336,7 @@ function tell(f: MagnetsFiring, targets: number[]): Told {
           clues: bothClues(b, r.line),
         };
       }
-      return {
-        text: say.lineExact(axis, r.which, needed(b, r.line, r.which)),
-        area,
-        clues: [clueOf(b, r.line, r.which)],
-      };
+      throw new Error("magnets hint: a count premise is told leg by leg");
     case "oneNeutralLeft":
       return {
         text: say.oneNeutralLeft(axis, f.marked.length),
@@ -353,14 +352,145 @@ function tell(f: MagnetsFiring, targets: number[]): Told {
     case "oddGap":
       return { text: say.oddGap(axis, r.which), area, clues: bothClues(b, r.line) };
     case "onlyEndLeft":
-      return {
-        text: say.onlyEndLeft(axis, r.which, needed(b, r.line, r.which)),
-        area,
-        clues: [clueOf(b, r.line, r.which)],
-      };
+      throw new Error("magnets hint: a count premise is told leg by leg");
     case "magnetsFill":
       throw new Error("magnets hint: a hidden premise reached narration");
   }
+}
+
+/** A premise that counts the squares of a line still able to take its pole:
+ * the only two whose sentence rests on squares being ruled out. */
+type CountReason = Extract<MagnetsReason, { kind: "lineExact" | "onlyEndLeft" }>;
+
+function countPremise(r: MagnetsReason): r is CountReason {
+  return r.kind === "onlyEndLeft" || (r.kind === "lineExact" && r.which !== NEUTRAL);
+}
+
+/** A board reason as the thing the pole at the square would do. */
+function ruleOutOf(r: NotReason): RuleOut {
+  if (r.kind === "touch") return { kind: "touch" };
+  if (r.kind === "full") return { kind: "full", axis: axisOf(r.line) };
+  if (r.inner.kind === "touch") return { kind: "partnerTouch" };
+  if (r.inner.kind === "full")
+    return { kind: "partnerFull", axis: axisOf(r.inner.line) };
+  throw new Error("magnets hint: a partner's reason is its own square's");
+}
+
+/** The board a leg reads: `b` with every earlier leg's domino placed. */
+function withLegs(b: ReadableBoard, legs: readonly Leg[]): ReadableBoard {
+  const grid = Array.from(b.grid);
+  const flags = Array.from(b.flags);
+  for (const { move } of legs) {
+    if (move.type !== "set") throw new Error("magnets hint: a count leg places a pole");
+    const j = b.common.dominoes[move.idx];
+    grid[move.idx] = move.which;
+    grid[j] = opposite(move.which);
+    flags[move.idx] |= GS_SET;
+    flags[j] |= GS_SET;
+  }
+  return { ...b, grid, flags };
+}
+
+/**
+ * Each leg of a count premise, told with why the line's other squares cannot
+ * take its pole. The reasons are read off the board the firing found, where
+ * the count was taken; a domino lying along the line gives its far end's
+ * reason off the board as its own leg finds it, because the solver places a
+ * firing's dominoes in one sweep and an earlier leg's pole can be what rules
+ * that end out.
+ */
+function tellCount(
+  f: MagnetsFiring,
+  r: CountReason,
+  legs: readonly Leg[],
+): (k: number) => Told {
+  const b = f.before;
+  const pole = r.which;
+  const cells = lineCells(b, r.line);
+  const onLine = new Set(cells);
+  const legSquares = new Set(
+    legs.map((l) => (l.move.type === "set" ? l.move.idx : -1)),
+  );
+  const elsewhere: RuleOut[] = [];
+  const area: number[] = [];
+  const clues = [clueOf(b, r.line, pole)];
+  for (const i of cells) {
+    if (b.flags[i] & GS_SET || legSquares.has(i)) continue;
+    // In `onlyEndLeft`, a square still able to take the pole, or the far end
+    // of a domino that still can, belongs to a domino the sentence counts.
+    const why = whyNot(b, i, pole);
+    if (!why) {
+      if (r.kind === "onlyEndLeft") continue;
+      throw new Error(
+        `magnets hint: square ${i} can take the pole its line counts out`,
+      );
+    }
+    const j = b.common.dominoes[i];
+    if (
+      r.kind === "onlyEndLeft" &&
+      onLine.has(j) &&
+      !(b.flags[j] & GS_SET) &&
+      !whyNot(b, j, pole)
+    ) {
+      continue;
+    }
+    const ev = evidenceOf(b, why, pole);
+    elsewhere.push(ruleOutOf(why));
+    area.push(i, ...ev.area);
+    clues.push(...ev.clues);
+  }
+  const axis = axisOf(r.line);
+  const idxOf = (leg: Leg): number => {
+    if (leg.move.type !== "set")
+      throw new Error("magnets hint: a count leg places a pole");
+    return leg.move.idx;
+  };
+  /** The far end of the domino at `idx`, as `board` has it: off the line, still
+   * able to take the pole, or ruled out of it and why. */
+  type FarEnd =
+    | { kind: "crosses" }
+    | { kind: "open" }
+    | { kind: "ruled"; why: NotReason };
+  const farEnd = (board: ReadableBoard, idx: number): FarEnd => {
+    const j = b.common.dominoes[idx];
+    if (!onLine.has(j)) return { kind: "crosses" };
+    const why = whyNot(board, j, pole);
+    return why ? { kind: "ruled", why } : { kind: "open" };
+  };
+  return (k: number): Told => {
+    // Each leg that lands gives the line one pole and takes one square (or
+    // domino) out of those that can, so the count is the board's as it stands.
+    const board = withLegs(b, legs.slice(0, k));
+    const n = needed(board, r.line, pole);
+    if (r.kind === "lineExact") {
+      return { text: say.lineExact(axis, pole, n, elsewhere), area, clues };
+    }
+    const notYet = legs
+      .slice(k + 1)
+      .filter((l) => farEnd(board, idxOf(l)).kind === "open")
+      .map(idxOf);
+    const idx = idxOf(legs[k]);
+    const end = farEnd(board, idx);
+    if (end.kind === "open") {
+      throw new Error(`magnets hint: square ${idx} has lost its reason to be the end`);
+    }
+    if (end.kind === "crosses") {
+      return {
+        text: say.onlyEndLeft(axis, pole, n, elsewhere, null),
+        area,
+        clues,
+        notYet,
+      };
+    }
+    const j = b.common.dominoes[idx];
+    const ev = evidenceOf(board, end.why, pole);
+    return {
+      text: say.onlyEndLeft(axis, pole, n, elsewhere, ruleOutOf(end.why)),
+      area: [...area, j, ...ev.area],
+      clues: [...clues, ...ev.clues],
+      notYet,
+    };
+  };
 }
 
 // --- the plan -------------------------------------------------------------
@@ -390,12 +520,17 @@ function legsOf(f: MagnetsFiring): Leg[] {
       squares: both(d),
     }));
   }
+  // A count premise is about the one square that takes the line's pole.
+  const squaresOf = (idx: number, which: number): number[] => {
+    if (countPremise(r)) return [idx];
+    return which === NEUTRAL && r.kind === "force" ? both(idx) : onLine(idx);
+  };
   return f.placed.map(({ idx, which }) => ({
     move:
       which === NEUTRAL
         ? { type: "flag", idx, mode: "neutral" }
         : { type: "set", idx, which },
-    squares: which === NEUTRAL && r.kind === "force" ? both(idx) : onLine(idx),
+    squares: squaresOf(idx, which),
   }));
 }
 
@@ -403,24 +538,34 @@ function legsOf(f: MagnetsFiring): Leg[] {
  * speaking the firing's one sentence, the rings shrinking as legs are done. */
 function stepsOf(f: MagnetsFiring): HintStep<MagnetsMove, MagnetsHighlights>[] {
   const legs = legsOf(f);
-  const told = tell(
-    f,
-    legs.flatMap((l) => l.squares),
-  );
-  const clues = [...new Set(told.clues)];
+  const r = f.reason;
+  let toldLeg: (k: number) => Told;
+  if (countPremise(r)) toldLeg = tellCount(f, r, legs);
+  else {
+    const told = tell(
+      f,
+      legs.flatMap((l) => l.squares),
+    );
+    toldLeg = () => told;
+  }
   return legs.map((leg, k) => {
+    const told = toldLeg(k);
     // A leg already done is part of what the sentence counts, so it rejoins
     // the evidence rather than vanishing from the picture.
-    const targets = legs.slice(k).flatMap((l) => l.squares);
+    const notYet = new Set(told.notYet);
+    const targets = legs
+      .slice(k)
+      .flatMap((l) => l.squares)
+      .filter((i) => !notYet.has(i));
     const onTargets = new Set(targets);
-    const area = [...new Set(told.area), ...legs.slice(0, k).flatMap((l) => l.squares)];
+    const area = [...told.area, ...legs.slice(0, k).flatMap((l) => l.squares)];
     return {
       move: leg.move,
       explanation: told.text,
       highlights: {
         targets,
         area: [...new Set(area)].filter((i) => !onTargets.has(i)),
-        clues,
+        clues: [...new Set(told.clues)],
       },
       ...(k > 0 ? { continuesPrevious: true } : {}),
     };

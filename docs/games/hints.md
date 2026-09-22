@@ -1291,6 +1291,21 @@ deduction's evidence area is non-empty — is still worth a per-game test: the
 rule treats every non-black cell as white, so shade non-black neighbors, not
 only marked-white ones).
 
+**"The rest of the line" is not evidence for a count (Magnets).** A premise
+of the form "this line needs N more and only N can still supply one" rests on
+every *other* square being ruled out, and that is the fact to show. Magnets
+outlined the line's leftover squares instead, which says nothing about why
+they are out, and the owner's first playtest of it found the outline had joined
+the halves of two horizontal dominoes into one vertical shape that was not on
+the board. The step now names what a pole there would do and marks what rules
+each square out (`tellCount` in
+[`magnets/hint.ts`](../../src/games/magnets/hint.ts)). Two things came with
+it. **A leg can be forced by the leg before it** when a solver places a
+firing's moves in one sweep, so read each leg against the board with the
+earlier legs applied, and ring a later leg only once that board forces it.
+And when a line of reasons varies by row and column, merge the axes ("overfill
+its row or column") before reaching for the long-narration ledger.
+
 **Filtering the target out of the evidence is a *per-technique* call, not a
 house rule (Sticks).** Most games drop the acted-on cell from the evidence
 list so the one solid target color is never diluted — and copying that

@@ -193,6 +193,15 @@ const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
       "the ones where the budget or the gap has to be counted out.",
   },
   {
+    games: ["magnets"],
+    match: / anywhere else would |at this domino's other end would/,
+    why:
+      "Magnets' count premises carry two: the line's count, and why each other " +
+      "square of it cannot take the pole. The owner's 2026-09-22 playtest found " +
+      "the second missing, and a step that rests on a fact has to say it " +
+      "(magnets spec, the hidden facts a later step names in board terms).",
+  },
+  {
     games: ["clusters"],
     match: /^Suppose this cell were (?:red|blue):/,
     why:

@@ -22,6 +22,15 @@ export type Cause =
    * marked magnets lying along it. `line` tells two ends' lines apart. */
   | { kind: "full"; axis: Axis; line: number; marked: boolean };
 
+/** Why a square of a counted line cannot take the line's pole, as what that
+ * pole there would do: touch its own kind or overfill the square's line, or
+ * force the opposite pole on the other end into one of those. */
+export type RuleOut =
+  | { kind: "touch" }
+  | { kind: "full"; axis: Axis }
+  | { kind: "partnerTouch" }
+  | { kind: "partnerFull"; axis: Axis };
+
 /** The pole as the board draws it. */
 const glyph = (pole: number): string => (pole === POSITIVE ? "+" : "−");
 
@@ -59,6 +68,57 @@ const wouldBreak = (pole: number, c: Cause): string =>
   c.kind === "touch" ? `touch a ${glyph(pole)}` : `overfill its ${c.axis}`;
 
 const plural = (n: number, one: string, many: string): string => (n === 1 ? one : many);
+
+/** "row", "column", or "row or column" when a reason holds along both. */
+const axesWord = (axes: ReadonlySet<Axis>): string =>
+  axes.size === 2 ? "row or column" : [...axes][0];
+
+/** What `pole` at a ruled-out square would do, the `axes` its line reasons
+ * run along: "touch a +", "put one − too many in a column". "Too many" and
+ * "overfill" hold whether or not the count is met only by counting marked
+ * magnets, so neither needs a counting clause. */
+function wouldDo(pole: number, kind: RuleOut["kind"], axes: ReadonlySet<Axis>): string {
+  const o = glyph(other(pole));
+  switch (kind) {
+    case "touch":
+      return `touch a ${glyph(pole)}`;
+    case "full":
+      return `overfill its ${axesWord(axes)}`;
+    case "partnerTouch":
+      return `put a ${o} beside a ${o}`;
+    case "partnerFull":
+      return `put one ${o} too many in a ${axesWord(axes)}`;
+  }
+}
+
+/** Every distinct thing a pole would do across the ruled-out squares, one
+ * clause per kind in a fixed order so one board always reads the same:
+ * "touch a + or overfill its row". */
+function wouldDoAny(pole: number, rs: readonly RuleOut[]): string {
+  const said: string[] = [];
+  for (const kind of KINDS) {
+    const ofKind = rs.filter((r) => r.kind === kind);
+    if (ofKind.length === 0) continue;
+    const axes = new Set(ofKind.flatMap((r) => ("axis" in r ? [r.axis] : [])));
+    said.push(wouldDo(pole, kind, axes));
+  }
+  return said.length === 1
+    ? said[0]
+    : `${said.slice(0, -1).join(", ")} or ${said[said.length - 1]}`;
+}
+const KINDS: readonly RuleOut["kind"][] = [
+  "touch",
+  "full",
+  "partnerTouch",
+  "partnerFull",
+];
+
+/** "; a + anywhere else would …", or nothing when no empty square is ruled
+ * out and the board's placed squares already say it all. */
+const anywhereElse = (pole: number, rs: readonly RuleOut[]): string =>
+  rs.length === 0
+    ? ""
+    : `; a ${glyph(pole)} anywhere else would ${wouldDoAny(pole, rs)}`;
 
 type Full = Cause & { kind: "full" };
 
@@ -135,11 +195,17 @@ export const say = {
       : `This ${axis} needs ${more(n, pole)} and has only ${n} undecided dominoes, so each must be a magnet.`,
 
   /** The line needs `n` more `pole`s and has exactly `n` squares that can
-   * still take one. */
-  lineExact: (axis: Axis, pole: number, n: number): string =>
+   * still take one; `elsewhere` is why each of its other empty squares
+   * cannot. */
+  lineExact: (
+    axis: Axis,
+    pole: number,
+    n: number,
+    elsewhere: readonly RuleOut[],
+  ): string =>
     n === 1
-      ? `This ${axis} needs ${more(n, pole)} and only this square can still take one, so it must be ${glyph(pole)}.`
-      : `This ${axis} needs ${more(n, pole)} and only these ${n} squares can still take one, so they must be ${glyphs(pole)}.`,
+      ? `This ${axis} needs ${more(n, pole)} and only this square can still take one${anywhereElse(pole, elsewhere)}, so it must be ${glyph(pole)}.`
+      : `This ${axis} needs ${more(n, pole)} and only these ${n} squares can still take one${anywhereElse(pole, elsewhere)}, so they must be ${glyphs(pole)}.`,
 
   /** The line's clues are met, so every empty square in it is neutral: the
    * `neutralExact` premise with no marked magnet in the line to set aside. */
@@ -159,9 +225,24 @@ export const say = {
     `This ${axis}'s empty squares take alternating poles, one more ${glyph(pole)} than ${glyph(other(pole))}: this odd-length gap must start with ${glyph(pole)}.`,
 
   /** The line needs a `pole` from each domino that can still give one, and
-   * this domino can give it only at this end. */
-  onlyEndLeft: (axis: Axis, pole: number, n: number): string =>
-    n === 1
-      ? `This ${axis} needs ${more(n, pole)} and only this domino can still give it, at this end alone, so it must be ${glyph(pole)}.`
-      : `This ${axis} needs ${more(n, pole)} and just ${n} dominoes can still give one; this one only here, so it must be ${glyph(pole)}.`,
+   * `elsewhere` is why no other square of it can. `otherEnd` is why a domino
+   * lying along the line cannot take it at its far end, and `null` for one
+   * crossing the line, which has only this square in it. */
+  onlyEndLeft: (
+    axis: Axis,
+    pole: number,
+    n: number,
+    elsewhere: readonly RuleOut[],
+    otherEnd: RuleOut | null,
+  ): string => {
+    const head =
+      n === 1
+        ? `This ${axis} needs ${more(n, pole)} and only this domino can still give it`
+        : `This ${axis} needs ${more(n, pole)} and just ${n} dominoes can still give one`;
+    const tail =
+      otherEnd === null
+        ? `, so this square must be ${glyph(pole)}.`
+        : `. A ${glyph(pole)} at this domino's other end would ${wouldDoAny(pole, [otherEnd])}, so this end must be ${glyph(pole)}.`;
+    return `${head}${anywhereElse(pole, elsewhere)}${tail}`;
+  },
 };
