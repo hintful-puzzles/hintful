@@ -1,0 +1,6 @@
+# No delta yet: the requirement that moves is the build-pipeline spec's gate
+# ordering, and its shape depends on §1 — which files qualify, measured.
+# Written 2026-09-22; nothing is implemented.
+schema: spec-driven
+created: 2026-09-22
+skip_specs: true
