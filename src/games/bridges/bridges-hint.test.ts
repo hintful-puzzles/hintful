@@ -18,6 +18,7 @@ import {
 } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { decodeSave, encodeSave } from "../../engine/save.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { newBridgesDesc } from "./generator.ts";
 import { type BridgesHighlights, narrate } from "./hint.ts";
@@ -557,23 +558,37 @@ describe("a board shared without its difficulty", () => {
     expect(state.completed).toBe(true);
   });
 
-  it("pinned to a tier it needs more than, is a defect the midend throws over", () => {
-    // The same board under an id that pins it Easy, which grading leaves alone.
-    // Easy's rules run out partway, and the refusal would tell the player that
-    // Easy allows trial and error, which it does not.
-    const me = new Midend(bridgesGame);
-    const easy = "10x10i30e10m2d0:a2a4e31c2a4a1l1b1e5b4b4a1m1f43j2a4e43d4a2b";
-    expect(me.newGameFromId(easy)).toBeNull();
-    expect(decodeParams(me.getParams()).difficulty).toBe(0);
-    let moves = 0;
-    const walk = () => {
-      for (; moves < 200; moves++) {
-        if (me.executeHint() !== null) return;
+  it("pinned Easy by a build that mislabeled it, reopens at Normal and hints to solved", () => {
+    // Reported by the owner the next day: loaded as Easy before grading
+    // existed, the board was remembered and autosaved with Easy pinned, and
+    // every refresh reopened it from one of those as Easy, where the hint runs
+    // out at move 10. Both records are corrected on load.
+    const desc = "a2a4e31c2a4a1l1b1e5b4b4a1m1f43j2a4e43d4a2b";
+    const easy = `10x10i30e10m2d0:${desc}`;
+    const byId = new Midend(bridgesGame);
+    expect(byId.newGameFromId(easy)).toBeNull();
+    const bySave = new Midend(bridgesGame);
+    const stale = encodeSave({
+      ...decodeSave(byId.saveGame()),
+      params: "10x10i30e10m2d0",
+    });
+    expect(bySave.loadGame(stale)).toBeNull();
+
+    for (const me of [byId, bySave]) {
+      expect(decodeParams(me.getParams()).difficulty).toBe(1);
+      let status = "";
+      me.setCallbacks(
+        (n) => {
+          if (n.type === "game-state-change") status = n.status;
+        },
+        () => {},
+      );
+      for (let moves = 0; !status.startsWith("solved") && moves < 200; moves++) {
+        expect(me.executeHint()).toBeNull();
         me.timer(10);
       }
-    };
-    expect(walk).toThrow(/^bridges: .* tier, Easy, does not allow .*d0:a2a4e31/);
-    expect(moves).toBeGreaterThan(0);
+      expect(status).toMatch(/^solved/);
+    }
   });
 });
 

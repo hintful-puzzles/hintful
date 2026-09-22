@@ -7,6 +7,7 @@ import { UI_UPDATE } from "./game.ts";
 import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { Midend } from "./midend.ts";
 import { LEFT_BUTTON, RIGHT_BUTTON } from "./pointer.ts";
+import { decodeSave, encodeSave } from "./save.ts";
 import type { ChangeNotification, Color } from "./types.ts";
 
 /** Recording fake `GameDrawing` for engine-level redraw assertions. */
@@ -495,7 +496,7 @@ describe("Midend.requestKeys forwards Game.requestKeys", () => {
     expect(m.requestKeys()).toEqual([]);
   });
 
-  it("forwards the hook, called with the current params", () => {
+  it("forwards the hook, called with the params of the board on screen", () => {
     const withKeys: typeof fakeGame = {
       ...fakeGame,
       requestKeys: (p) => [{ button: 49, label: String(p.target) }],
@@ -503,8 +504,11 @@ describe("Midend.requestKeys forwards Game.requestKeys", () => {
     const m = new Midend(withKeys);
     // defaultParams ⇒ target 3
     expect(m.requestKeys()).toEqual([{ button: 49, label: "3" }]);
-    // params drive the hook: switch presets and the keys follow
+    // The keys are the board's: a chosen preset changes them with the board
+    // it deals, not before.
     expect(m.setParams("t7")).toBeNull();
+    expect(m.requestKeys()).toEqual([{ button: 49, label: "3" }]);
+    m.newGame();
     expect(m.requestKeys()).toEqual([{ button: 49, label: "7" }]);
   });
 });
@@ -845,6 +849,97 @@ describe("Midend: deduction runs out only on an Unreasonable tier", () => {
     expect(() => h.m.hint()).toThrow(
       /the game has no tier that allows trial and error/,
     );
+  });
+});
+
+describe("Midend: a board carries the tier it needs", () => {
+  /** {@link tieredGame} with `Easy · Normal · Hard` tiers, whose desc `g3-<n>`
+   * names the lowest tier that solves it. */
+  function gradedGame(): typeof fakeGame {
+    type TieredParams = { target: number; diff: number };
+    const tiered = tieredGame() as unknown as Game<
+      TieredParams,
+      unknown,
+      unknown,
+      unknown,
+      unknown
+    >;
+    const g: typeof tiered = {
+      ...tiered,
+      paramConfig: [
+        {
+          kw: "diff",
+          name: "Difficulty",
+          type: "choices",
+          choices: ["Easy", "Normal", "Hard"],
+          get: (p) => p.diff,
+          set: (p, v) => {
+            p.diff = v;
+          },
+        },
+      ],
+      difficulty: {
+        tierOf: (p) => p.diff,
+        withTier: (p, diff) => ({ ...p, diff }),
+        solveAtCap: (_p, desc, cap) =>
+          cap >= Number(desc.split("-")[1]) ? "solved" : "unsolved",
+      },
+    };
+    return g as unknown as typeof fakeGame;
+  }
+  const restoreId = (h: ReturnType<typeof harness>) =>
+    (
+      h.last("game-id-change") as Extract<
+        ChangeNotification,
+        { type: "game-id-change" }
+      >
+    ).restoreGameId;
+
+  it("an id pinning a tier below the board's is raised to the tier it needs", () => {
+    // What a build that mislabeled a board left in the remembered id.
+    const h = harness(gradedGame());
+    expect(h.m.newGameFromId("t3d0:g3-1")).toBeNull();
+    expect(h.m.getParams()).toBe("t3d1");
+    expect(restoreId(h)).toBe("t3d1:g3-1");
+  });
+
+  it("an id pinning a tier the board solves at keeps it, even above the one it needs", () => {
+    const h = harness(gradedGame());
+    expect(h.m.newGameFromId("t3d2:g3-1")).toBeNull();
+    expect(h.m.getParams()).toBe("t3d2");
+  });
+
+  it("a save pinning a tier below the board's is raised on load", () => {
+    const h = harness(gradedGame());
+    const stale = encodeSave({
+      v: 2,
+      puzzleId: fakeGame.id,
+      params: "t3d0",
+      desc: "g3-2",
+      moves: [],
+      pos: 0,
+      timerElapsed: 0,
+      cheated: false,
+    });
+    expect(h.m.loadGame(stale)).toBeNull();
+    expect(h.m.getParams()).toBe("t3d2");
+    expect(decodeSave(h.m.saveGame()).params).toBe("t3d2");
+  });
+
+  it("choosing a type changes the next board, never the one on screen", () => {
+    // The type menu sets the params and then deals; anything that reads the
+    // board in between — an autosave, a restart, an id — must still see the
+    // board's own tier, or it records the board at one it was never dealt at.
+    const h = harness(gradedGame());
+    expect(h.m.newGameFromId("t3d1:g3-1")).toBeNull();
+    expect(h.m.setParams("t3d0")).toBeNull();
+    expect(h.m.getParams()).toBe("t3d0");
+    expect(decodeSave(h.m.saveGame()).params).toBe("t3d1");
+    h.m.restartGame();
+    expect(restoreId(h)).toBe("t3d1:g3-1");
+    // And the next board is dealt at what was chosen.
+    h.m.newGame();
+    expect(restoreId(h)).toMatch(/^t3d0:/);
   });
 });
 

@@ -119,12 +119,12 @@ they have merely opened.
 included, and SHALL NOT be the id offered for sharing. Those are different jobs:
 a shared `params:desc` id deliberately omits difficulty (upstream
 `midend_get_game_id`), because the desc already fixes the board, and loading it
-grades the board to the tier it needs (ts-engine, Requirement: A board loaded
-without its difficulty is graded to the tier it needs). Re-dealing a remembered
-board must restore the tier the player chose without asking the solver, since a
-full id states it. Recording the sharing id here reset a tiered puzzle to its
-default difficulty on every reopen, and the settings write that followed made the
-reset permanent.
+grades the board to the tier it needs (ts-engine, Requirement: A loaded board
+carries the tier it needs). Re-dealing a remembered board restores the tier the
+player chose, since a full id states it; the midend only checks that the board
+solves there, and raises a tier a mislabeling build recorded too low. Recording
+the sharing id here reset a tiered puzzle to its default difficulty on every
+reopen, and the settings write that followed made the reset permanent.
 
 A recorded game ID that this build can no longer deal SHALL be discarded and
 replaced by a new game, without interrupting the player — they did not ask for

@@ -314,8 +314,8 @@ export const MODULES = [
       {
         within: "Midend.preferredSize",
         why: "preferredSize ignores the game's preferred tile size",
-        find: "    return this.game.computeSize(this.params, this.preferredTileSize);",
-        replace: "    return this.game.computeSize(this.params, 1);",
+        find: "    return this.game.computeSize(this.boardParams, this.preferredTileSize);",
+        replace: "    return this.game.computeSize(this.boardParams, 1);",
       },
       {
         within: "Midend.getColorPalette",

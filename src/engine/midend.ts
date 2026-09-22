@@ -95,7 +95,7 @@ export interface EngineCore {
   /** Spotlight (or clear) a reference item by mutating Ui, repainting like
    * a `UI_UPDATE`; no move/history/save. No-op without a reference aid. */
   selectReference(key: string | null): void;
-  /** The on-screen keypad for the current params, or `[]` for a game
+  /** The on-screen keypad for the board on screen, or `[]` for a game
    * that wants none. */
   requestKeys(): KeyLabel[];
   processInput(x: number, y: number, button: number): boolean;
@@ -175,7 +175,16 @@ function freshSeed(): string {
 }
 
 export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
+  /** The params the next New game deals at: what `setParams` and the custom
+   * dialog change, and what `getParams` reports. Upstream `me->params`. */
   private params: Params;
+  /** The params of the board on screen, fixed when that board starts. Kept
+   * apart from `params` because choosing a type is a request for the *next*
+   * board: when it wrote the one field, a save, a restart or an id emitted
+   * before the new board arrived paired the old desc with the new difficulty,
+   * and the board reopened at a tier it was never dealt at. Upstream
+   * `me->curparams`. */
+  private boardParams: Params;
   private desc = "";
   /** The save-only description a desc-superseding game supplies alongside its
    * public one (upstream `privdesc`; Mines: the mine layout with no first
@@ -254,6 +263,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
 
   constructor(private readonly game: Game<Params, State, Move, Ui, DrawState>) {
     this.params = game.defaultParams();
+    this.boardParams = this.params;
     this.currentTileSize = this.preferredTileSize;
   }
 
@@ -286,7 +296,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.seed = freshSeed();
     const rng = randomNew(this.seed);
     const { desc, aux } = this.game.newDesc(this.params, rng);
-    this.startFrom(desc, aux);
+    this.startFrom(this.params, desc, aux);
   }
 
   newGameFromId(id: string): string | null {
@@ -315,58 +325,78 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       const { desc, aux } = this.game.newDesc(params, rng);
       this.params = params;
       this.seed = rest;
-      this.startFrom(desc, aux);
+      this.startFrom(params, desc, aux);
       return null;
     }
     const dErr = this.game.validateDesc(params, rest);
     if (dErr) return dErr;
     this.params = this.withBoardTier(paramsStr, params, rest);
     this.seed = undefined;
-    this.startFrom(rest);
+    this.startFrom(this.params, rest);
     return null;
   }
 
   /**
-   * The params a `:desc` id should load with, difficulty included.
+   * The params a board loaded from a `:desc` id or a save should carry,
+   * difficulty included. The board is the authority on its own tier: the
+   * lowest cap at which the game's own solver solves it, which is also the
+   * tier a board our generators dealt was accepted at, since a tier's boards
+   * must not solve a tier lower.
    *
-   * The id offered for sharing omits the difficulty (`emitIdChange`), so its
-   * params decode to the game's default tier, and a Tricky board shared that
-   * way opened labeled Easy, with a hint capped at Easy's rules that ran out
-   * partway. The board itself says which tier it is: the lowest cap at which
-   * the game's own solver solves it. That is also the tier a board our
-   * generators dealt was accepted at, since a tier's boards must not solve a
-   * tier lower.
+   * When the params string cannot tell tiers apart — it is the sharing
+   * encoding of more than one tier — the board is graded outright. The id
+   * offered for sharing omits the difficulty (`emitIdChange`), so it decodes
+   * to the default tier, and a Tricky board shared that way opened labeled
+   * Easy, with a hint capped at Easy's rules that ran out partway. The test is
+   * on the string rather than "is it the full form", because a game may leave
+   * its default tier out of the full form too (Solo's `2x3` is both the full id
+   * of an Easy board and the shared id of a board at any tier).
    *
-   * Graded only when the params string cannot tell tiers apart: when it is the
-   * sharing encoding of more than one tier. A string that pins its tier keeps
-   * it, which is the id a player's own board is restored from. The test is on
-   * the string rather than "is it the full form", because a game may leave its
-   * default tier out of the full form too (Solo's `2x3` is both the full id of
-   * an Easy board and the shared id of a board at any tier); grading resolves
-   * that, and gives the dealt tier back for any board a generator dealt. When no
-   * cap solves the board (a tier that promises no unique solution), the decoded
-   * params stand.
+   * A string that pins its tier keeps it **if the board solves there**, which
+   * costs one solve and holds for every board a generator dealt. Otherwise the
+   * pin is wrong and the board is raised to the lowest tier above it that
+   * solves it: a record written by a build that mislabeled the board (the
+   * remembered board and the autosave both pin the tier) otherwise reopened it
+   * at the wrong tier on every visit, and its hint refused partway. A pin is
+   * never lowered — a hand-written id may name a harder tier than its board
+   * needs, and every rule that tier allows still applies to the board.
+   *
+   * A tier that allows search, or that promises no unique solution, is taken
+   * as stated: its solver owes no verdict. When no cap solves the board, the
+   * decoded params stand.
    */
   private withBoardTier(paramsStr: string, params: Params, desc: string): Params {
     const contract = this.game.difficulty;
     if (!contract) return params;
     const tiers = difficultyTiers(this.game)?.length ?? 0;
+    const solve = cappedSolveFor(contract, params, desc);
     const sharedAs = (tier: number) =>
       this.game.encodeParams(contract.withTier(params, tier), false);
     const ambiguous = Array.from({ length: tiers }, (_, t) => t).filter(
       (t) => sharedAs(t) === paramsStr,
     );
-    if (ambiguous.length < 2) return params;
-    const tier = lowestSolvingCap(cappedSolveFor(contract, params, desc), tiers);
+    let floor = 0;
+    if (ambiguous.length < 2) {
+      const stated = contract.tierOf(params);
+      if (permitsSearch(this.game, params)) return params;
+      if (contract.nonUniqueTiers?.includes(stated)) return params;
+      if (solve(stated) === "solved") return params;
+      floor = stated + 1;
+    }
+    const tier = lowestSolvingCap(
+      (cap) => (cap < floor ? "unsolved" : solve(cap)),
+      tiers,
+    );
     return tier === null ? params : contract.withTier(params, tier);
   }
 
-  private startFrom(desc: string, aux?: string): void {
+  private startFrom(params: Params, desc: string, aux?: string): void {
+    this.boardParams = params;
     this.desc = desc;
     this.privDesc = undefined;
     this.descSuperseded = false;
     this.aux = aux;
-    const initial = this.game.newState(this.params, desc);
+    const initial = this.game.newState(params, desc);
     this.history = [initial];
     this.moveLog = [];
     this.pos = 0;
@@ -400,7 +430,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // every other game's `history[0]` *is* `newState(params, desc)`.
     this.history = [
       this.descSuperseded
-        ? this.game.newState(this.params, this.desc)
+        ? this.game.newState(this.boardParams, this.desc)
         : this.history[0],
     ];
     this.moveLog = [];
@@ -769,14 +799,14 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       // board was promised to solve by deduction, so the sentence would be
       // false and the board is a defect worth a report: thrown rather than
       // shown, with what it takes to reopen the board.
-      if (!permitsSearch(this.game, this.params)) {
-        const tier = tierNameOf(this.game, this.params);
+      if (!permitsSearch(this.game, this.boardParams)) {
+        const tier = tierNameOf(this.game, this.boardParams);
         const promise =
           tier === null
             ? "the game has no tier that allows trial and error"
             : `the board's tier, ${tier}, does not allow trial and error`;
         throw new Error(
-          `${this.game.id}: the hint ran out of deduction at move ${this.pos}, but ${promise} (${this.game.encodeParams(this.params, true)}:${this.desc})`,
+          `${this.game.id}: the hint ran out of deduction at move ${this.pos}, but ${promise} (${this.game.encodeParams(this.boardParams, true)}:${this.desc})`,
         );
       }
     }
@@ -997,7 +1027,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * duplicated.
    */
   requestKeys(): KeyLabel[] {
-    const keys = this.game.requestKeys?.(this.params) ?? [];
+    const keys = this.game.requestKeys?.(this.boardParams) ?? [];
     if (!this.takesNotes()) return keys;
     if (keys.some((k) => k.button === PENCIL_MODE_BUTTON)) return keys;
     return [...keys, pencilModeKey];
@@ -1222,16 +1252,16 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   }
 
   preferredSize(): Size {
-    return this.game.computeSize(this.params, this.preferredTileSize);
+    return this.game.computeSize(this.boardParams, this.preferredTileSize);
   }
 
   size(maxSize: Size): Size {
-    const base = this.game.computeSize(this.params, this.preferredTileSize);
+    const base = this.game.computeSize(this.boardParams, this.preferredTileSize);
     if (base.w <= 0 || base.h <= 0) return base;
     // Upstream midend_size's binary search, in its `user_size` form: the tile
     // may exceed the game's preferred size to fill the slot.
     const fits = (ts: number): boolean => {
-      const s = this.game.computeSize(this.params, ts);
+      const s = this.game.computeSize(this.boardParams, ts);
       return s.w <= maxSize.w && s.h <= maxSize.h;
     };
     let hi = 1;
@@ -1252,7 +1282,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         this.drawState = this.freshDrawState(this.history[0]);
       }
     }
-    return this.game.computeSize(this.params, tile);
+    return this.game.computeSize(this.boardParams, tile);
   }
 
   canvasCleared(): void {
@@ -1272,7 +1302,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     const envelope: SaveEnvelope = {
       v: 2,
       puzzleId: this.game.id,
-      params: this.game.encodeParams(this.params, true),
+      params: this.game.encodeParams(this.boardParams, true),
       desc: this.desc,
       ...(this.privDesc === undefined ? {} : { privDesc: this.privDesc }),
       moves: this.moveLog.map(serMove),
@@ -1300,14 +1330,16 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     } catch (e) {
       return `Invalid saved parameters: ${(e as Error).message}`;
     }
-    this.params = params;
+    // A save pins the tier its board was labeled at, which a build that
+    // mislabeled the board got wrong; `withBoardTier` checks it.
+    this.params = this.withBoardTier(env.params, params, env.desc);
     this.seed = undefined;
     // State 0 is rebuilt from the private desc when the save carries one — the
     // public desc bakes in the first click the move log is about to replay
     // (upstream midend.c:2663). The public desc is then restored over it, since
     // it, not the layout-only one, is what the game *is* (and what the id names);
     // the replay's own `applySupersede` will agree with it.
-    this.startFrom(env.privDesc ?? env.desc);
+    this.startFrom(this.params, env.privDesc ?? env.desc);
     if (env.privDesc !== undefined) {
       this.desc = env.desc;
       this.privDesc = env.privDesc;
@@ -1328,7 +1360,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       // drawable board with the right params and desc — and report. Anything
       // that leaves a half-replayed history strands the player on a board
       // that throws on every repaint, which is the bug this replaced.
-      this.startFrom(env.privDesc ?? env.desc);
+      this.startFrom(this.params, env.privDesc ?? env.desc);
       return `Could not restore this saved game: ${(e as Error).message}`;
     }
     this.pos = Math.min(env.pos, this.history.length - 1);
@@ -1448,18 +1480,18 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       type: "game-id-change",
       // Shares the board: the desc fully specifies it, so the params omit the
       // difficulty (upstream `midend_get_game_id` → `encode_params(..., FALSE)`).
-      currentGameId: `${this.game.encodeParams(this.params, false)}:${this.desc}`,
+      currentGameId: `${this.game.encodeParams(this.boardParams, false)}:${this.desc}`,
       // Re-deals this board here, so the params are FULL: reopening your own
       // board restores the tier you chose as stated, where a shared id's is
       // re-derived by grading (`withBoardTier`). Emitted here rather than
       // assembled by the caller from `params` and a desc, two signals that
       // could drift into a broken board.
-      restoreGameId: `${this.game.encodeParams(this.params, true)}:${this.desc}`,
+      restoreGameId: `${this.game.encodeParams(this.boardParams, true)}:${this.desc}`,
       // Shares the seed: regenerating needs the FULL params, difficulty
       // included (upstream `midend_get_random_seed` → `encode_params(...,
       // TRUE)`). The app's `currentParams`, and so the type-menu label, read it.
       randomSeed: this.seed
-        ? `${this.game.encodeParams(this.params, true)}#${this.seed}`
+        ? `${this.game.encodeParams(this.boardParams, true)}#${this.seed}`
         : undefined,
     });
   }
