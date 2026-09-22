@@ -25,7 +25,11 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import { dimensionParamConfig, parseConfigInt } from "../../engine/params.ts";
+import {
+  dimensionParamConfig,
+  parseConfigInt,
+  transposeDimensions,
+} from "../../engine/params.ts";
 import {
   pencilKeepHighlightPref,
   stickyPencilPref,
@@ -333,6 +337,7 @@ export const abcdGame: Game<
     "remove-clues": p.removenums ? 1 : 0,
     "allow-diagonal-touching": p.diag ? 0 : 1,
   }),
+  transposeParams: transposeDimensions(),
   paramConfig: [
     ...dimensionParamConfig<AbcdParams>(),
     {

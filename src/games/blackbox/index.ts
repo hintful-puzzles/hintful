@@ -10,7 +10,11 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
-import { dimensionParamConfig, parseConfigInt } from "../../engine/params.ts";
+import {
+  dimensionParamConfig,
+  parseConfigInt,
+  transposeDimensions,
+} from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -339,6 +343,7 @@ export const blackboxGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
+  transposeParams: transposeDimensions(),
   paramConfig: [
     ...dimensionParamConfig<BlackboxParams>(),
     {

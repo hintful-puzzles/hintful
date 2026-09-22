@@ -25,11 +25,12 @@ import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.
 import type { Color, Size } from "../../engine/types.ts";
 import type { DominosaHint } from "./index.ts";
 import {
+  boardSize,
   DCOUNT,
   DINDEX,
   type DominosaMistake,
   type DominosaMove,
-  type DominosaParams,
+  type DominosaShape,
   type DominosaState,
   type DominosaUi,
   EDGE_B,
@@ -127,9 +128,8 @@ const dominoRadius = (ts: number) => Math.floor(ts / 8);
 const coffset = (ts: number) => gutter(ts) + dominoRadius(ts);
 const cursorRadius = (ts: number) => Math.floor(ts / 4);
 
-export function computeSize(p: DominosaParams, ts: number): Size {
-  const w = p.n + 2;
-  const h = p.n + 1;
+export function computeSize(p: DominosaShape, ts: number): Size {
+  const { w, h } = boardSize(p);
   return { w: w * ts + 2 * border(ts), h: h * ts + 2 * border(ts) };
 }
 
@@ -344,7 +344,7 @@ export function redraw(
   }
 
   if (!ds.started) {
-    const size = computeSize({ n, diff: 0 }, ts);
+    const size = computeSize(state.params, ts);
     dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
     dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
     ds.started = true;

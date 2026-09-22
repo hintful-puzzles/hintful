@@ -32,7 +32,8 @@ export interface PuzzleEngineSurface {
   ): void;
   getStaticProperties(): PuzzleStaticAttributes;
 
-  newGame(): void;
+  /** `fitTo` is the board area; see `EngineCore.newGame`. */
+  newGame(fitTo?: Size): void;
   newGameFromId(id: string): string | null;
   restartGame(): void;
   undo(): void;
@@ -73,6 +74,7 @@ export interface PuzzleEngineSurface {
 
   getParams(): string;
   setParams(params: string): string | null;
+  turnParams(params: string): string | null;
   getPresets(): PresetMenuEntry[];
 
   getCustomParamsConfig(): ConfigDescription;

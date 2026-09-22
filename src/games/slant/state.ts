@@ -106,8 +106,8 @@ const PRESETS: SlantParams[] = [
   { w: 5, h: 5, diff: DIFF_HARD },
   { w: 8, h: 8, diff: DIFF_EASY },
   { w: 8, h: 8, diff: DIFF_HARD },
-  { w: 12, h: 10, diff: DIFF_EASY },
-  { w: 12, h: 10, diff: DIFF_HARD },
+  { w: 10, h: 12, diff: DIFF_EASY },
+  { w: 10, h: 12, diff: DIFF_HARD },
 ];
 
 export function defaultParams(): SlantParams {

@@ -22,7 +22,11 @@ import type {
 } from "../../engine/game.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { dimensionParamConfig, parseConfigInt } from "../../engine/params.ts";
+import {
+  dimensionParamConfig,
+  parseConfigInt,
+  transposeDimensions,
+} from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -463,6 +467,7 @@ export const lightupGame: Game<
     symmetry: p.symm,
     difficulty: p.difficulty,
   }),
+  transposeParams: transposeDimensions(),
   paramConfig: [
     ...dimensionParamConfig<LightupParams>(),
     {

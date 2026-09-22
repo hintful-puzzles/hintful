@@ -277,6 +277,14 @@ export interface Game<
   decodeParams(s: string): Params;
   /** `null` when valid, else a human-readable reason. */
   validateParams(p: Params, full: boolean): string | null;
+  /** The same board turned on its side: `p` with width and height exchanged,
+   * or `null` when these params cannot be turned. Having it is what lets a
+   * new game be dealt whichever way round fits the screen better (the midend's
+   * `newGame`), so a game leaves it out when a tall board is a different game
+   * from a wide one — gravity, a goal on a fixed side, a tiling with a
+   * direction. `orientation.test.ts` holds every implementation to its
+   * `computeSize` exchanging width and height. */
+  transposeParams?(p: Params): Params | null;
 
   /** Map this game's params to the type-summary `ConfigValues` the app's
    * `describeConfig` formatter (`src/puzzle/augmentation.ts`) renders for a

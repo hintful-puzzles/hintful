@@ -31,11 +31,11 @@ interface DominosaFixture extends DescFixture {
 
 const fixtures = reference.fixtures as DominosaFixture[];
 
-describeDescDifferential<DominosaFixture, { n: number; diff: number }>({
+describeDescDifferential<DominosaFixture, { n: number; diff: number; tall: boolean }>({
   title: "dominosa generator matches the C reference byte-for-byte",
   fixtures,
   label: (f) => `${f.name} (n=${f.n}, diff=${f.diff}, seed=${f.seed})`,
-  params: (f) => ({ n: f.n, diff: f.diff }),
+  params: (f) => ({ n: f.n, diff: f.diff, tall: false }),
   newDesc: (p, rng) => newDominosaDesc(p, rng),
   extra: (f, p) => {
     // The C board decodes validly and (for graded difficulties) solves uniquely
@@ -43,9 +43,9 @@ describeDescDifferential<DominosaFixture, { n: number; diff: number }>({
     expect(validateDesc(p, f.desc)).toBeNull();
     if (p.diff !== DIFF_AMBIGUOUS) {
       const state = newState(p, f.desc);
-      const full = solveNumbers(p.n, state.numbers, DIFFCOUNT);
+      const full = solveNumbers(p, state.numbers, DIFFCOUNT);
       expect(full.result).toBe(1);
-      const graded = solveNumbers(p.n, state.numbers, p.diff);
+      const graded = solveNumbers(p, state.numbers, p.diff);
       expect(graded.result).toBe(1);
       expect(graded.maxDiffUsed).toBe(p.diff);
     }

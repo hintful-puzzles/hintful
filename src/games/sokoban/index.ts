@@ -11,6 +11,7 @@
 
 import { rejectMove } from "../../engine/assert-never.ts";
 import type { Game } from "../../engine/game.ts";
+import { transposeDimensions } from "../../engine/params.ts";
 import { cursorDelta, LEFT_BUTTON, stripModifiers } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
@@ -183,6 +184,7 @@ export const sokobanGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
+  transposeParams: transposeDimensions(),
   paramConfig,
 
   newDesc: newSokobanDesc,

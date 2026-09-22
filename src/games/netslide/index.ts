@@ -18,6 +18,7 @@ import {
   dimensionParamConfig,
   formatG,
   parseConfigInt,
+  transposeDimensions,
 } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -236,6 +237,7 @@ export const netslideGame: Game<
     "number-of-shuffling-moves": p.movetarget,
   }),
 
+  transposeParams: transposeDimensions(),
   paramConfig: [
     ...dimensionParamConfig<NetslideParams>(),
     {

@@ -90,8 +90,8 @@ const PEARL_PRESETS: readonly PearlParams[] = [
   { w: 8, h: 8, difficulty: DIFF_TRICKY, nosolve: false },
   { w: 10, h: 10, difficulty: DIFF_EASY, nosolve: false },
   { w: 10, h: 10, difficulty: DIFF_TRICKY, nosolve: false },
-  { w: 12, h: 8, difficulty: DIFF_EASY, nosolve: false },
-  { w: 12, h: 8, difficulty: DIFF_TRICKY, nosolve: false },
+  { w: 8, h: 12, difficulty: DIFF_EASY, nosolve: false },
+  { w: 8, h: 12, difficulty: DIFF_TRICKY, nosolve: false },
 ];
 
 export function defaultParams(): PearlParams {

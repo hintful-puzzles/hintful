@@ -125,14 +125,14 @@ export function clueChar(num: number): string {
 // --- params --------------------------------------------------------------
 
 const PRESETS: MagnetsParams[] = [
-  { w: 6, h: 5, diff: DIFF_EASY, stripclues: false },
-  { w: 6, h: 5, diff: DIFF_TRICKY, stripclues: false },
-  { w: 6, h: 5, diff: DIFF_TRICKY, stripclues: true },
-  { w: 8, h: 7, diff: DIFF_EASY, stripclues: false },
-  { w: 8, h: 7, diff: DIFF_TRICKY, stripclues: false },
-  { w: 8, h: 7, diff: DIFF_TRICKY, stripclues: true },
-  { w: 10, h: 9, diff: DIFF_TRICKY, stripclues: false },
-  { w: 10, h: 9, diff: DIFF_TRICKY, stripclues: true },
+  { w: 5, h: 6, diff: DIFF_EASY, stripclues: false },
+  { w: 5, h: 6, diff: DIFF_TRICKY, stripclues: false },
+  { w: 5, h: 6, diff: DIFF_TRICKY, stripclues: true },
+  { w: 7, h: 8, diff: DIFF_EASY, stripclues: false },
+  { w: 7, h: 8, diff: DIFF_TRICKY, stripclues: false },
+  { w: 7, h: 8, diff: DIFF_TRICKY, stripclues: true },
+  { w: 9, h: 10, diff: DIFF_TRICKY, stripclues: false },
+  { w: 9, h: 10, diff: DIFF_TRICKY, stripclues: true },
 ];
 
 export function defaultParams(): MagnetsParams {

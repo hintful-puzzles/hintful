@@ -30,7 +30,7 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
+import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
 import {
   pencilKeepHighlightPref,
   stickyPencilPref,
@@ -311,6 +311,7 @@ export const seismicGame: Game<
   decodeParams,
   validateParams,
 
+  transposeParams: transposeDimensions(),
   paramConfig: [
     ...dimensionParamConfig<SeismicParams>(),
     {

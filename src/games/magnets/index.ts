@@ -21,6 +21,7 @@ import type {
 import { UI_UPDATE } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { commonHintRefusal } from "../../engine/hint-refusal.ts";
+import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -241,6 +242,7 @@ export const magnetsGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
+  transposeParams: transposeDimensions(),
   paramConfig,
   describeParams: (p) => ({
     width: String(p.w),

@@ -175,10 +175,10 @@ export function applyBounds(w: number, h: number, grid: Uint16Array): void {
 export const MAX_GENERABLE_DIFF = DIFF_NORMAL;
 
 const PRESETS: BricksParams[] = [
-  { w: 7, h: 6, diff: DIFF_EASY },
-  { w: 7, h: 6, diff: DIFF_NORMAL },
-  { w: 10, h: 8, diff: DIFF_EASY },
-  { w: 10, h: 8, diff: DIFF_NORMAL },
+  { w: 6, h: 7, diff: DIFF_EASY },
+  { w: 6, h: 7, diff: DIFF_NORMAL },
+  { w: 8, h: 10, diff: DIFF_EASY },
+  { w: 8, h: 10, diff: DIFF_NORMAL },
 ];
 
 /**

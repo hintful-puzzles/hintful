@@ -7,7 +7,7 @@
  */
 
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
+import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -213,6 +213,7 @@ export const mosaicGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
+  transposeParams: transposeDimensions<MosaicParams>({ w: "width", h: "height" }),
   paramConfig: [
     ...dimensionParamConfig<MosaicParams>({ w: "width", h: "height" }),
     {

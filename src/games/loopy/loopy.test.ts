@@ -8,6 +8,7 @@
  * purpose, and the retry paths the C reaches by aborting or hanging.
  */
 import { describe, expect, it } from "vitest";
+import type { PresetMenu } from "../../engine/game.ts";
 import type { GridDot } from "../../engine/grid/index.ts";
 import { LEFT_BUTTON, MIDDLE_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -31,6 +32,7 @@ import {
   defaultParams,
   encodeParams,
   LOOPY_GRIDS,
+  type LoopyParams,
   validateParams,
 } from "./params.ts";
 import { _internals, checkCaches, SolverState, solveGame } from "./solver.ts";
@@ -640,11 +642,20 @@ describe("presets", () => {
     walk(root);
   });
 
-  it("formats preset titles height-first, as upstream does", () => {
-    // The 12x10 triangular preset displays as "10x12": upstream's title format
-    // is sprintf("%dx%d ...", params->h, params->w).
-    const titles = loopyGame.presets().submenu?.map((m) => m.title) ?? [];
-    expect(titles).toContain("10x12 Triangular - Hard");
+  it("formats preset titles width-first, as the Custom dialog reads", () => {
+    // Upstream printed height first; every other game here, and the dialog's
+    // Width and Height fields, read width first.
+    const leaves: { title: string; params: { w: number; h: number } }[] = [];
+    const walk = (m: PresetMenu<LoopyParams>): void => {
+      if (m.params) leaves.push({ title: m.title, params: m.params });
+      for (const c of m.submenu ?? []) walk(c);
+    };
+    walk(loopyGame.presets());
+    expect(leaves.length).toBeGreaterThanOrEqual(20);
+    const nonSquare = leaves.filter(({ params: p }) => p.w !== p.h);
+    expect(nonSquare.length).toBeGreaterThan(0);
+    for (const { title, params: p } of leaves)
+      expect(title.startsWith(`${p.w}x${p.h} `)).toBe(true);
   });
 });
 

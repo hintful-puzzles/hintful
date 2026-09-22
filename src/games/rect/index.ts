@@ -12,7 +12,12 @@
 import { winFlash } from "../../engine/flash.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
-import { atof, dimensionParamConfig, formatG } from "../../engine/params.ts";
+import {
+  atof,
+  dimensionParamConfig,
+  formatG,
+  transposeDimensions,
+} from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -362,6 +367,7 @@ export const rectGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
+  transposeParams: transposeDimensions(),
   paramConfig: [
     ...dimensionParamConfig<RectParams>(),
     {

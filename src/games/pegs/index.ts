@@ -19,7 +19,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/index.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
+import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -254,6 +254,7 @@ export const pegsGame: Game<PegsParams, PegsState, PegsMove, PegsUi, PegsDrawSta
   encodeParams,
   decodeParams,
   validateParams,
+  transposeParams: transposeDimensions(),
   paramConfig: [
     {
       kw: "board-type",

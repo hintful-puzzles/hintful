@@ -11,7 +11,11 @@ import type {
   PresetMenu,
   SolveResult,
 } from "../../engine/game.ts";
-import { dimensionParamConfig, parseDimensions } from "../../engine/params.ts";
+import {
+  dimensionParamConfig,
+  parseDimensions,
+  transposeDimensions,
+} from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { ConfigValues } from "../../engine/types.ts";
 import { newAscentDesc } from "./generator.ts";
@@ -75,26 +79,29 @@ function mk(
 }
 
 const MAIN_PRESETS: AscentParams[] = [
-  mk(7, 6, 0, MODE_RECT, false, false),
-  mk(7, 6, 1, MODE_RECT, false, false),
-  mk(7, 6, 2, MODE_RECT, false, false),
-  mk(7, 6, 3, MODE_RECT, false, false),
-  mk(10, 8, 0, MODE_RECT, false, false),
-  mk(10, 8, 1, MODE_RECT, false, false),
-  mk(10, 8, 2, MODE_RECT, false, false),
-  mk(10, 8, 3, MODE_RECT, false, false),
+  mk(6, 7, 0, MODE_RECT, false, false),
+  mk(6, 7, 1, MODE_RECT, false, false),
+  mk(6, 7, 2, MODE_RECT, false, false),
+  mk(6, 7, 3, MODE_RECT, false, false),
+  mk(8, 10, 0, MODE_RECT, false, false),
+  mk(8, 10, 1, MODE_RECT, false, false),
+  mk(8, 10, 2, MODE_RECT, false, false),
+  mk(8, 10, 3, MODE_RECT, false, false),
   mk(5, 5, 1, MODE_EDGES, true, false),
   mk(5, 5, 2, MODE_EDGES, true, false),
   mk(5, 5, 3, MODE_EDGES, true, false),
 ];
 
+// Not the square presets transposed: a honeycomb cannot be turned on its side,
+// so these are the nearest sizes to upstream's 7x6 and 10x8 that draw taller
+// than wide.
 const HONEYCOMB_PRESETS: AscentParams[] = [
-  mk(7, 6, 1, MODE_HONEYCOMB, false, false),
-  mk(7, 6, 2, MODE_HONEYCOMB, false, false),
-  mk(7, 6, 3, MODE_HONEYCOMB, false, false),
-  mk(10, 8, 1, MODE_HONEYCOMB, false, false),
-  mk(10, 8, 2, MODE_HONEYCOMB, false, false),
-  mk(10, 8, 3, MODE_HONEYCOMB, false, false),
+  mk(6, 8, 1, MODE_HONEYCOMB, false, false),
+  mk(6, 8, 2, MODE_HONEYCOMB, false, false),
+  mk(6, 8, 3, MODE_HONEYCOMB, false, false),
+  mk(8, 10, 1, MODE_HONEYCOMB, false, false),
+  mk(8, 10, 2, MODE_HONEYCOMB, false, false),
+  mk(8, 10, 3, MODE_HONEYCOMB, false, false),
 ];
 
 const HEXAGON_PRESETS: AscentParams[] = [
@@ -212,6 +219,8 @@ function describeParams(p: AscentParams): ConfigValues {
     "symmetrical-clues": p.symmetrical ? 1 : 0,
   };
 }
+
+const transposeSquareGrid = transposeDimensions<AscentParams>();
 
 const paramConfig: ParamConfigItem<AscentParams>[] = [
   ...dimensionParamConfig<AscentParams>(),
@@ -379,6 +388,8 @@ export const ascentGame: Game<
   decodeParams,
   validateParams,
   describeParams,
+  // A hexagonal grid turned on its side is a different tiling.
+  transposeParams: (p) => (isHexagonal(p.mode) ? null : transposeSquareGrid(p)),
   paramConfig,
   prefs,
 

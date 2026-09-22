@@ -33,6 +33,7 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
+import { transposeDimensions } from "../../engine/params.ts";
 import {
   pencilKeepHighlightPref,
   stickyPencilPref,
@@ -787,6 +788,7 @@ export const undeadGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
+  transposeParams: transposeDimensions(),
   paramConfig,
   // Keys match the `undead` config template in augmentation.ts.
   describeParams: (p): ConfigValues => ({

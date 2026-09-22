@@ -67,10 +67,21 @@ export interface DominosaParams {
   /** Maximum face number on a domino. */
   n: number;
   diff: number;
+  /** The board is `n+1` wide and `n+2` tall, rather than upstream's `n+2` wide
+   * and `n+1` tall. Encoded as a `t`, so an id from before it existed still
+   * decodes to the wide board its desc was written for. */
+  tall: boolean;
+}
+
+/** The fields that fix the board's dimensions. */
+export type DominosaShape = Pick<DominosaParams, "n" | "tall">;
+
+export function boardSize({ n, tall }: DominosaShape): { w: number; h: number } {
+  return tall ? { w: n + 1, h: n + 2 } : { w: n + 2, h: n + 1 };
 }
 
 export function defaultParams(): DominosaParams {
-  return { n: 6, diff: DIFF_BASIC };
+  return { n: 6, diff: DIFF_BASIC, tall: true };
 }
 
 const PRESETS: ReadonlyArray<readonly [number, number]> = [
@@ -93,13 +104,13 @@ export function presets(): PresetMenu<DominosaParams> {
     title: "Dominosa",
     submenu: PRESETS.map(([n, diff]) => ({
       title: `Order ${n}, ${DIFF_NAMES[diff]}`,
-      params: { n, diff },
+      params: { n, diff, tall: true },
     })),
   };
 }
 
 export function encodeParams(p: DominosaParams, full: boolean): string {
-  let s = `${p.n}`;
+  let s = `${p.n}${p.tall ? "t" : ""}`;
   if (full) s += `d${DIFF_CHARS[p.diff]}`;
   return s;
 }
@@ -109,9 +120,12 @@ export function decodeParams(str: string): DominosaParams {
   const n = next > 0 ? value : 6;
   let i = next;
   let diff = DIFF_BASIC;
+  let tall = false;
   while (i < str.length) {
     const c = str[i++];
-    if (c === "a") {
+    if (c === "t") {
+      tall = true;
+    } else if (c === "a") {
       // Legacy encoding from before the difficulty system.
       diff = DIFF_AMBIGUOUS;
     } else if (c === "d") {
@@ -123,7 +137,7 @@ export function decodeParams(str: string): DominosaParams {
       }
     }
   }
-  return { n, diff };
+  return { n, diff, tall };
 }
 
 export function validateParams(p: DominosaParams, _full: boolean): string | null {
@@ -183,7 +197,8 @@ function parseNumbers(
 
 export function validateDesc(p: DominosaParams, desc: string): string | null {
   const n = p.n;
-  const wh = (n + 2) * (n + 1);
+  const { w, h } = boardSize(p);
+  const wh = w * h;
   const { numbers, error } = parseNumbers(n, wh, desc);
   if (!numbers) return error;
   // Number-balance check: every number 0..n must occur exactly n+2 times.
@@ -217,8 +232,7 @@ export interface DominosaState {
 
 export function newState(p: DominosaParams, desc: string): DominosaState {
   const n = p.n;
-  const w = n + 2;
-  const h = n + 1;
+  const { w, h } = boardSize(p);
   const wh = w * h;
   const { numbers, error } = parseNumbers(n, wh, desc);
   if (!numbers) throw new Error(`dominosa: bad desc: ${error}`);

@@ -72,7 +72,10 @@ export interface EngineCore {
     notifyTimer: NotifyTimerState,
     notifyRedraw?: NotifyRedraw,
   ): void;
-  newGame(): void;
+  /** Deal a new board at the chosen params, turned on its side when the game
+   * can turn them and the turned board draws at a larger tile in `fitTo`, the
+   * board area. Without `fitTo` the chosen orientation is dealt as it stands. */
+  newGame(fitTo?: Size): void;
   newGameFromId(id: string): string | null;
   restartGame(): void;
   undo(): void;
@@ -105,6 +108,10 @@ export interface EngineCore {
   processHover(p: Point | null): boolean;
   getParams(): string;
   setParams(params: string): string | null;
+  /** `params` turned on its side, or `null` when the game cannot turn them.
+   * The type menu reads it to name a turned board after the preset it was
+   * dealt from. */
+  turnParams(params: string): string | null;
   getPresets(): PresetMenuEntry[];
   /** The game's **custom-params** form as the app's config-dialog
    * shapes, built from its declarative `paramConfig`. An empty item set
@@ -292,11 +299,36 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.notifyRedraw = notifyRedraw;
   }
 
-  newGame(): void {
+  newGame(fitTo?: Size): void {
     this.seed = freshSeed();
     const rng = randomNew(this.seed);
-    const { desc, aux } = this.game.newDesc(this.params, rng);
-    this.startFrom(this.params, desc, aux);
+    const params = fitTo ? this.paramsToFit(fitTo) : this.params;
+    const { desc, aux } = this.game.newDesc(params, rng);
+    this.startFrom(params, desc, aux);
+  }
+
+  /** The chosen params, or the same board turned on its side when that draws
+   * at a larger tile in `area`. Decided at deal time only: `this.params` keeps
+   * the orientation the player chose, so the next deal on a screen held the
+   * other way round turns back. A tie keeps the chosen orientation, which is
+   * what leaves a square board alone. */
+  private paramsToFit(area: Size): Params {
+    const turned = this.game.transposeParams?.(this.params) ?? null;
+    if (turned === null) return this.params;
+    return this.largestTile(turned, area) > this.largestTile(this.params, area)
+      ? turned
+      : this.params;
+  }
+
+  turnParams(params: string): string | null {
+    let decoded: Params;
+    try {
+      decoded = this.game.decodeParams(params);
+    } catch {
+      return null;
+    }
+    const turned = this.game.transposeParams?.(decoded) ?? null;
+    return turned === null ? null : this.game.encodeParams(turned, true);
   }
 
   newGameFromId(id: string): string | null {
@@ -1104,10 +1136,25 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * for a choices item. */
   getCustomParams(): ConfigValues {
     const values: ConfigValues = {};
+    const shown = this.chosenParamsAsDealt();
     for (const item of this.game.paramConfig ?? []) {
-      values[item.kw] = item.get(this.params);
+      values[item.kw] = item.get(shown);
     }
     return values;
+  }
+
+  /** The chosen params, turned the way the board on screen was dealt, so the
+   * dialog shows the size the player is looking at. Derived by comparing
+   * encodings rather than remembered, so no path that deals or loads a board
+   * can leave it stale. */
+  private chosenParamsAsDealt(): Params {
+    const turned = this.game.transposeParams?.(this.params) ?? null;
+    if (turned === null) return this.params;
+    const board = this.game.encodeParams(this.boardParams, true);
+    const dealtTurned =
+      this.game.encodeParams(turned, true) === board &&
+      this.game.encodeParams(this.params, true) !== board;
+    return dealtTurned ? turned : this.params;
   }
 
   /** Map submitted form `values` onto a *copy* of the current params
@@ -1255,13 +1302,12 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     return this.game.computeSize(this.boardParams, this.preferredTileSize);
   }
 
-  size(maxSize: Size): Size {
-    const base = this.game.computeSize(this.boardParams, this.preferredTileSize);
-    if (base.w <= 0 || base.h <= 0) return base;
-    // Upstream midend_size's binary search, in its `user_size` form: the tile
-    // may exceed the game's preferred size to fill the slot.
+  /** The largest integer tile size at which a board with `params` fits
+   * `maxSize`: upstream midend_size's binary search, in its `user_size` form,
+   * where the tile may exceed the game's preferred size to fill the slot. */
+  private largestTile(params: Params, maxSize: Size): number {
     const fits = (ts: number): boolean => {
-      const s = this.game.computeSize(this.boardParams, ts);
+      const s = this.game.computeSize(params, ts);
       return s.w <= maxSize.w && s.h <= maxSize.h;
     };
     let hi = 1;
@@ -1274,7 +1320,13 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       if (fits(mid)) lo = mid;
       else hi = mid;
     }
-    const tile = lo;
+    return lo;
+  }
+
+  size(maxSize: Size): Size {
+    const base = this.game.computeSize(this.boardParams, this.preferredTileSize);
+    if (base.w <= 0 || base.h <= 0) return base;
+    const tile = this.largestTile(this.boardParams, maxSize);
     if (tile !== this.currentTileSize) {
       this.currentTileSize = tile;
       // `drawState` is null only before the first board exists.

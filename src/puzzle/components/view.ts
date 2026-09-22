@@ -79,6 +79,10 @@ export class PuzzleView extends SignalWatcher(LitElement) {
       // Changing Puzzle: any existing canvas belongs to another (probably deleted) worker.
       this.destroyCanvas();
     }
+    if (changedProperties.has("puzzle") && this.puzzlePart) {
+      // A new Puzzle deals its first board before any resize reaches it.
+      this.puzzle?.setBoardArea(this.getAvailableCanvasSize());
+    }
 
     if (!this.canvas && this.puzzle && this.puzzle.currentGameId) {
       await this.createCanvas();
@@ -221,6 +225,9 @@ export class PuzzleView extends SignalWatcher(LitElement) {
     }
 
     const availableSize = this.getAvailableCanvasSize();
+    // Before the maxScale cap below: which way round to deal a board depends on
+    // the shape of the whole space, not on a cap sized from the current board.
+    this.puzzle?.setBoardArea({ ...availableSize });
 
     // Puzzle.size() is only valid while there's a game; report the full
     // availableSize before that. (updated() resizes again for the first game.)

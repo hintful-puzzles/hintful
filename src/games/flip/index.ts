@@ -14,7 +14,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/index.ts";
-import { parseDimensions } from "../../engine/params.ts";
+import { parseDimensions, transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -108,6 +108,7 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
     return null;
   },
 
+  transposeParams: transposeDimensions(),
   paramConfig: [
     ...dimensionParamConfig<FlipParams>(),
     {

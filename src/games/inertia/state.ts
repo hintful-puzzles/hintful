@@ -47,13 +47,13 @@ export interface InertiaParams {
 }
 
 export const PRESETS: readonly InertiaParams[] = [
-  { w: 10, h: 8 },
-  { w: 15, h: 12 },
-  { w: 20, h: 16 },
+  { w: 8, h: 10 },
+  { w: 12, h: 15 },
+  { w: 16, h: 20 },
 ];
 
 export function defaultParams(): InertiaParams {
-  return { w: 10, h: 8 };
+  return { w: 8, h: 10 };
 }
 
 export function encodeParams(p: InertiaParams): string {

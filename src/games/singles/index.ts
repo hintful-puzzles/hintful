@@ -24,6 +24,7 @@ import {
 } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -450,6 +451,7 @@ export const singlesGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
+  transposeParams: transposeDimensions(),
   paramConfig,
   // Keys match the `singles` template in `puzzle/augmentation.ts`: width and
   // height come from the worker adapter's w/h base, `difficulty` is the

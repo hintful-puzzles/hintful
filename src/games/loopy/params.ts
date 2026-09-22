@@ -32,34 +32,66 @@ import { dimensionParamConfig } from "../../engine/params.ts";
  * guards.
  */
 export const LOOPY_GRIDS = [
-  { title: "Squares", type: "square", amin: 3, omin: 3 },
-  { title: "Triangular", type: "triangular", amin: 3, omin: 3 },
-  { title: "Honeycomb", type: "honeycomb", amin: 3, omin: 3 },
-  { title: "Snub-Square", type: "snubsquare", amin: 3, omin: 3 },
-  { title: "Cairo", type: "cairo", amin: 3, omin: 4 },
-  { title: "Great-Hexagonal", type: "greathexagonal", amin: 3, omin: 3 },
-  { title: "Octagonal", type: "octagonal", amin: 3, omin: 3 },
-  { title: "Kites", type: "kites", amin: 3, omin: 3 },
-  { title: "Floret", type: "floret", amin: 1, omin: 2 },
-  { title: "Dodecagonal", type: "dodecagonal", amin: 2, omin: 2 },
-  { title: "Great-Dodecagonal", type: "greatdodecagonal", amin: 2, omin: 2 },
-  { title: "Penrose (kite/dart)", type: "penrose_p2_kite", amin: 3, omin: 3 },
-  { title: "Penrose (rhombs)", type: "penrose_p3_thick", amin: 3, omin: 3 },
+  { title: "Squares", type: "square", amin: 3, omin: 3, turns: true },
+  { title: "Triangular", type: "triangular", amin: 3, omin: 3, turns: false },
+  { title: "Honeycomb", type: "honeycomb", amin: 3, omin: 3, turns: false },
+  { title: "Snub-Square", type: "snubsquare", amin: 3, omin: 3, turns: true },
+  { title: "Cairo", type: "cairo", amin: 3, omin: 4, turns: true },
+  { title: "Great-Hexagonal", type: "greathexagonal", amin: 3, omin: 3, turns: false },
+  { title: "Octagonal", type: "octagonal", amin: 3, omin: 3, turns: true },
+  { title: "Kites", type: "kites", amin: 3, omin: 3, turns: false },
+  { title: "Floret", type: "floret", amin: 1, omin: 2, turns: false },
+  { title: "Dodecagonal", type: "dodecagonal", amin: 2, omin: 2, turns: false },
+  {
+    title: "Great-Dodecagonal",
+    type: "greatdodecagonal",
+    amin: 2,
+    omin: 2,
+    turns: false,
+  },
+  {
+    title: "Penrose (kite/dart)",
+    type: "penrose_p2_kite",
+    amin: 3,
+    omin: 3,
+    turns: true,
+  },
+  {
+    title: "Penrose (rhombs)",
+    type: "penrose_p3_thick",
+    amin: 3,
+    omin: 3,
+    turns: true,
+  },
   {
     title: "Great-Great-Dodecagonal",
     type: "greatgreatdodecagonal",
     amin: 2,
     omin: 2,
+    turns: false,
   },
-  { title: "Kagome", type: "kagome", amin: 3, omin: 3 },
-  { title: "Compass-Dodecagonal", type: "compassdodecagonal", amin: 2, omin: 2 },
-  { title: "Hats", type: "hats", amin: 6, omin: 6 },
-  { title: "Spectres", type: "spectres", amin: 6, omin: 6 },
+  { title: "Kagome", type: "kagome", amin: 3, omin: 3, turns: false },
+  {
+    title: "Compass-Dodecagonal",
+    type: "compassdodecagonal",
+    amin: 2,
+    omin: 2,
+    turns: true,
+  },
+  { title: "Hats", type: "hats", amin: 6, omin: 6, turns: false },
+  { title: "Spectres", type: "spectres", amin: 6, omin: 6, turns: true },
 ] as const satisfies readonly {
   title: string;
   type: GridType;
   amin: number;
   omin: number;
+  /** Whether a patch `h` wide and `w` tall is this same tiling turned on its
+   * side, so the board may be dealt either way round. True of the tilings with
+   * a square's symmetry and of the aperiodic ones whose patch fills its box
+   * alike both ways; `orientation.test.ts` holds each to its drawn size
+   * exchanging exactly. A triangle or hexagon lattice turned is another
+   * tiling, and Hats' patch is not the same shape turned. */
+  turns: boolean;
 }[];
 
 /** Difficulty levels, in encode order. `char` is the params encoding (`d<c>`);
@@ -188,33 +220,39 @@ const PRESETS_TOP: LoopyParams[] = [
   preset(10, 10, DIFF_NORMAL, 0),
   preset(7, 7, DIFF_HARD, 0),
   preset(10, 10, DIFF_HARD, 0),
-  preset(12, 10, DIFF_HARD, 1), // Triangular
+  preset(9, 14, DIFF_HARD, 1), // Triangular
   preset(7, 7, DIFF_HARD, 3), // Snub-Square
   preset(9, 9, DIFF_HARD, 4), // Cairo
-  preset(5, 5, DIFF_HARD, 7), // Kites
+  preset(4, 6, DIFF_HARD, 7), // Kites
   preset(10, 10, DIFF_HARD, 11), // Penrose (kite/dart)
   preset(10, 10, DIFF_HARD, 12), // Penrose (rhombs)
 ];
 
+// A tiling that cannot turn has sizes of its own that draw taller than wide,
+// chosen to keep the drawn area of upstream's landscape preset.
 const PRESETS_MORE: LoopyParams[] = [
   preset(10, 10, DIFF_HARD, 2), // Honeycomb
-  preset(5, 4, DIFF_HARD, 5), // Great-Hexagonal
-  preset(5, 4, DIFF_HARD, 14), // Kagome
+  preset(4, 5, DIFF_HARD, 5), // Great-Hexagonal
+  preset(3, 6, DIFF_HARD, 14), // Kagome
   preset(7, 7, DIFF_HARD, 6), // Octagonal
   preset(5, 5, DIFF_HARD, 8), // Floret
-  preset(5, 4, DIFF_HARD, 9), // Dodecagonal
-  preset(5, 4, DIFF_HARD, 10), // Great-Dodecagonal
-  preset(5, 3, DIFF_HARD, 13), // Great-Great-Dodecagonal
-  preset(5, 4, DIFF_HARD, 15), // Compass-Dodecagonal
-  preset(10, 10, DIFF_HARD, 16), // Hats
+  preset(3, 6, DIFF_HARD, 9), // Dodecagonal
+  preset(3, 6, DIFF_HARD, 10), // Great-Dodecagonal
+  preset(3, 5, DIFF_HARD, 13), // Great-Great-Dodecagonal
+  preset(4, 5, DIFF_HARD, 15), // Compass-Dodecagonal
+  preset(9, 11, DIFF_HARD, 16), // Hats
   preset(10, 10, DIFF_HARD, 17), // Spectres
 ];
 
-/** Preset title, with the dimensions printed **height first** as upstream's
- * `sprintf(buf, "%dx%d %s - %s", params->h, params->w, ...)` does, so the 12×10
- * triangular preset displays as "10x12". */
+/** Width first, as every other game's titles and the Custom dialog read. */
 function presetTitle(p: LoopyParams): string {
-  return `${p.h}x${p.w} ${LOOPY_GRIDS[p.type].title} - ${LOOPY_DIFFS[p.diff].title}`;
+  return `${p.w}x${p.h} ${LOOPY_GRIDS[p.type].title} - ${LOOPY_DIFFS[p.diff].title}`;
+}
+
+/** `Game.transposeParams`: a tiling that turns (`LOOPY_GRIDS`' `turns`) is dealt
+ * either way round; any other keeps the shape it was chosen at. */
+export function transposeParams(p: LoopyParams): LoopyParams | null {
+  return LOOPY_GRIDS[p.type].turns ? { ...p, w: p.h, h: p.w } : null;
 }
 
 /**

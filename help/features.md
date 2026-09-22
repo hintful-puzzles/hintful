@@ -206,6 +206,21 @@ The [hint](#hints) knows about all this. On an Unreasonable board it will tell
 you when deduction has run out rather than making a choice for you and calling
 it a deduction.
 
+## Boards that fit your screen {#board-shape}
+
+Boards that aren't square come taller than they are wide, to suit a phone held
+upright. When you start a new game on a screen that's wider than it is tall, such
+as a desktop or a tablet on its side, a board that plays the same either way
+round is dealt turned, so it fills the space with bigger squares. The
+::puzzle-type:: type menu still names the type you chose, and *Custom type…*
+shows the board's size as it was dealt.
+
+Turning your device never changes a game you're in the middle of: the next new
+game fits the new shape. A few boards are always dealt the way you chose them,
+because turned they would be a different puzzle: Same Game and Bricks, where
+things fall downward; Slide, whose exit is always on the right; and the grid
+types in Loopy and Ascent that become a different grid on their side.
+
 ## Filling in all the pencil marks {#mark-all}
 
 In puzzles where you write small pencil marks into a square to keep track of

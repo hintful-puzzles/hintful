@@ -74,8 +74,8 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
     return this.engine.getStaticProperties();
   }
 
-  newGame(): void {
-    this.engine.newGame();
+  newGame(fitTo?: Size): void {
+    this.engine.newGame(fitTo);
   }
   newGameFromId(id: string): string | null {
     return this.engine.newGameFromId(id);
@@ -136,6 +136,9 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
   }
   setParams(params: string): string | null {
     return this.engine.setParams(params);
+  }
+  turnParams(params: string): string | null {
+    return this.engine.turnParams(params);
   }
   getPresets(): PresetMenuEntry[] {
     return this.engine.getPresets();

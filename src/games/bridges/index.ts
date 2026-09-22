@@ -21,7 +21,7 @@ import {
 } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import { commonHintRefusal } from "../../engine/hint-refusal.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
+import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -595,6 +595,7 @@ export const bridgesGame: Game<
   }),
 
   // Custom "Type…" dialog — index-for-index with bridges.c game_configure.
+  transposeParams: transposeDimensions(),
   paramConfig: [
     ...dimensionParamConfig<BridgesParams>(),
     {

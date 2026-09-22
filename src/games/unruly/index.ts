@@ -19,7 +19,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
+import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -339,6 +339,7 @@ export const unrulyGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
+  transposeParams: transposeDimensions<UnrulyParams>({ w: "w2", h: "h2" }),
   paramConfig: [
     // Upstream's `w2`/`h2` are the *full* grid extent, not halves, so the
     // fields are mapped rather than the game renamed.

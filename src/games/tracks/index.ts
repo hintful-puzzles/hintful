@@ -22,6 +22,7 @@ import type {
 } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { commonHintRefusal } from "../../engine/hint-refusal.ts";
+import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -357,6 +358,7 @@ export const tracksGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
+  transposeParams: transposeDimensions(),
   paramConfig,
   describeParams: (p) => ({
     width: String(p.w),

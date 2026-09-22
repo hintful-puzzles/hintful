@@ -210,6 +210,11 @@ type Coverage =
 const CAPABILITY_COVERAGE: Record<string, Coverage> = {
   // --- this fork's own, and the reason this file grew these blocks ---
   hint: { kind: "features", anchor: "hints", why: "the explained-hint stepper" },
+  transposeParams: {
+    kind: "features",
+    anchor: "board-shape",
+    why: "a new board is dealt turned to fit a wide screen",
+  },
   hover: {
     kind: "features",
     anchor: "hover-connected",

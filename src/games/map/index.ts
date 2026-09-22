@@ -23,7 +23,11 @@ import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
 } from "../../engine/note-taking-cell.ts";
-import { dimensionParamConfig, parseConfigInt } from "../../engine/params.ts";
+import {
+  dimensionParamConfig,
+  parseConfigInt,
+  transposeDimensions,
+} from "../../engine/params.ts";
 import {
   pencilKeepHighlightPref,
   stickyPencilPref,
@@ -444,6 +448,7 @@ export const mapGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
+  transposeParams: transposeDimensions(),
   paramConfig: [
     ...dimensionParamConfig<MapParams>(),
     {

@@ -80,6 +80,7 @@ import {
   type LoopyParams,
   paramConfig,
   presets,
+  transposeParams,
   validateParams,
 } from "./params.ts";
 import {
@@ -752,6 +753,7 @@ export const loopyGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
+  transposeParams,
   paramConfig,
 
   // The names Loopy's type-summary formatter (`augmentation.ts`) reads, with

@@ -32,6 +32,7 @@ import {
   FIX_MISTAKES_FIRST,
 } from "../../engine/hint-refusal.ts";
 import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
+import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -398,6 +399,7 @@ export const clustersGame: Game<
     height: String(p.h),
     difficulty: p.diff,
   }),
+  transposeParams: transposeDimensions(),
   paramConfig,
 
   newDesc: (p, rng) => newClustersDesc(p, rng),

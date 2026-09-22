@@ -117,7 +117,7 @@ export function presets() {
   });
   return {
     title: "Type",
-    submenu: [p(5, 5, 3), p(10, 5, 3), p(15, 10, 3), p(15, 10, 4), p(20, 15, 4)],
+    submenu: [p(5, 5, 3), p(5, 10, 3), p(10, 15, 3), p(10, 15, 4), p(15, 20, 4)],
   };
 }
 

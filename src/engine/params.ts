@@ -92,6 +92,20 @@ export interface DimensionFields<P> {
 const DEFAULT_DIMENSION_FIELDS = { w: "w", h: "h" };
 
 /**
+ * `Game.transposeParams` for a game whose board is its width × height grid and
+ * whose rules have no direction: the same params with the two exchanged. Takes
+ * the field pair exactly as `dimensionParamConfig` does, so the two are
+ * declared alike: `transposeParams: transposeDimensions()`.
+ */
+export function transposeDimensions<P extends { w: number; h: number }>(): (p: P) => P;
+export function transposeDimensions<P>(fields: DimensionFields<P>): (p: P) => P;
+export function transposeDimensions<P>(
+  fields: DimensionFields<P> = DEFAULT_DIMENSION_FIELDS as DimensionFields<P>,
+): (p: P) => P {
+  return (p) => ({ ...p, [fields.w]: p[fields.h], [fields.h]: p[fields.w] });
+}
+
+/**
  * The two `width`/`height` `ParamConfigItem`s that virtually every grid
  * game's "Custom type…" dialog needs — the params analog of the shared
  * dimension *parser* above. A plain w/h game declares its whole custom

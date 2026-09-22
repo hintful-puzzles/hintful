@@ -37,9 +37,21 @@ describe("dominosa params", () => {
       [6, DIFF_EXTREME],
     ];
     for (const [n, diff] of cases) {
-      const s = encodeParams({ n, diff }, true);
-      expect(decodeParams(s)).toEqual({ n, diff });
+      const s = encodeParams({ n, diff, tall: false }, true);
+      expect(decodeParams(s)).toEqual({ n, diff, tall: false });
     }
+  });
+
+  it("decodes an id from before tall boards as the wide board it was dealt on", () => {
+    // Every encoding the params snapshot recorded before `tall` existed: shared
+    // ids carry these, and their descs are laid out n+2 wide.
+    const recorded = ["6db", "3dt", "4dt", "5dt", "6dt", "4db", "5db", "7db"];
+    for (const s of [...recorded, "8db", "9db", "6dh", "6de", "6da"]) {
+      const p = decodeParams(s);
+      expect(`${s}:${p.tall}`).toBe(`${s}:false`);
+      expect(encodeParams(p, true)).toBe(s);
+    }
+    expect(decodeParams("6tdb")).toEqual({ n: 6, diff: DIFF_BASIC, tall: true });
   });
 
   it("decodes the legacy 'a' suffix as Ambiguous", () => {
@@ -48,26 +60,30 @@ describe("dominosa params", () => {
 
   it("rejects n < 1", () => {
     expect(
-      dominosaGame.validateParams({ n: 0, diff: DIFF_BASIC }, true),
+      dominosaGame.validateParams({ n: 0, diff: DIFF_BASIC, tall: false }, true),
     ).not.toBeNull();
-    expect(dominosaGame.validateParams({ n: 6, diff: DIFF_BASIC }, true)).toBeNull();
+    expect(
+      dominosaGame.validateParams({ n: 6, diff: DIFF_BASIC, tall: false }, true),
+    ).toBeNull();
   });
 });
 
 describe("dominosa desc codec", () => {
   it("round-trips a generated desc and validates it", () => {
     const { desc } = newDominosaDesc(
-      { n: 5, diff: DIFF_TRIVIAL },
+      { n: 5, diff: DIFF_TRIVIAL, tall: false },
       randomNew("desc-rt"),
     );
-    expect(validateDesc({ n: 5, diff: DIFF_TRIVIAL }, desc)).toBeNull();
-    const state = newState({ n: 5, diff: DIFF_TRIVIAL }, desc);
+    expect(validateDesc({ n: 5, diff: DIFF_TRIVIAL, tall: false }, desc)).toBeNull();
+    const state = newState({ n: 5, diff: DIFF_TRIVIAL, tall: false }, desc);
     expect(encodeNumbers(state.numbers)).toBe(desc);
   });
 
   it("rejects a wrong number balance", () => {
     // A 3×2 grid (n=1): needs each of {0,1} exactly 3 times. Give all 0s.
-    expect(validateDesc({ n: 1, diff: DIFF_TRIVIAL }, "000000")).not.toBeNull();
+    expect(
+      validateDesc({ n: 1, diff: DIFF_TRIVIAL, tall: false }, "000000"),
+    ).not.toBeNull();
   });
 });
 
@@ -80,27 +96,31 @@ describe("dominosa solver / generator", () => {
     [6, DIFF_HARD, DIFF_BASIC],
     [6, DIFF_EXTREME, DIFF_HARD],
   ];
-  for (const [n, diff, prevDiff] of gradeCases) {
-    it(`generates an order-${n} board uniquely solvable at difficulty ${diff}`, () => {
-      const { desc } = newDominosaDesc({ n, diff }, randomNew(`grade-${n}-${diff}`));
-      const state = newState({ n, diff }, desc);
-      const full = solveNumbers(n, state.numbers, DIFFCOUNT);
-      expect(full.result).toBe(1);
-      expect(full.pairs.length).toBe(DCOUNT(n));
+  for (const [n, diff, prevDiff] of gradeCases)
+    for (const tall of [false, true]) {
+      const shape = tall ? "tall" : "wide";
+      it(`generates a ${shape} order-${n} board uniquely solvable at difficulty ${diff}`, () => {
+        const p = { n, diff, tall };
+        const { desc } = newDominosaDesc(p, randomNew(`grade-${n}-${diff}`));
+        const state = newState(p, desc);
+        expect(state.h > state.w).toBe(tall);
+        const full = solveNumbers(state.params, state.numbers, DIFFCOUNT);
+        expect(full.result).toBe(1);
+        expect(full.pairs.length).toBe(DCOUNT(n));
 
-      const graded = solveNumbers(n, state.numbers, diff);
-      expect(graded.result).toBe(1);
-      expect(graded.maxDiffUsed).toBe(diff);
+        const graded = solveNumbers(state.params, state.numbers, diff);
+        expect(graded.result).toBe(1);
+        expect(graded.maxDiffUsed).toBe(diff);
 
-      if (diff > DIFF_TRIVIAL) {
-        const easier = solveNumbers(n, state.numbers, prevDiff);
-        expect(easier.result).not.toBe(1); // stuck one level below
-      }
-    });
-  }
+        if (diff > DIFF_TRIVIAL) {
+          const easier = solveNumbers(state.params, state.numbers, prevDiff);
+          expect(easier.result).not.toBe(1); // stuck one level below
+        }
+      });
+    }
 
   it("generates an Ambiguous board (no difficulty guarantee, valid desc)", () => {
-    const p = { n: 6, diff: 4 };
+    const p = { n: 6, diff: 4, tall: false };
     const { desc, aux } = newDominosaDesc(p, randomNew("ambig"));
     expect(validateDesc(p, desc)).toBeNull();
     expect(aux.length).toBe((p.n + 2) * (p.n + 1));
@@ -143,16 +163,16 @@ function layoutSolution(
 
 describe("dominosa moves + completion", () => {
   it("placing every solution domino completes the board", () => {
-    const p = { n: 4, diff: DIFF_TRIVIAL };
+    const p = { n: 4, diff: DIFF_TRIVIAL, tall: false };
     const { desc } = newDominosaDesc(p, randomNew("complete"));
     const state = newState(p, desc);
-    const { pairs } = solveNumbers(p.n, state.numbers, DIFFCOUNT);
+    const { pairs } = solveNumbers(p, state.numbers, DIFFCOUNT);
     const solved = layoutSolution(state, pairs);
     expect(dominosaGame.status(solved)).toBe("solved");
   });
 
   it("toggles a domino on and off and toggles a barrier edge", () => {
-    const p = { n: 3, diff: DIFF_TRIVIAL };
+    const p = { n: 3, diff: DIFF_TRIVIAL, tall: false };
     const { desc } = newDominosaDesc(p, randomNew("toggle"));
     const s0 = newState(p, desc);
     const w = s0.w;
@@ -174,10 +194,10 @@ describe("dominosa moves + completion", () => {
 
 describe("dominosa findMistakes + solve", () => {
   it("flags a placed domino the unique solution doesn't contain", () => {
-    const p = { n: 4, diff: DIFF_TRIVIAL };
+    const p = { n: 4, diff: DIFF_TRIVIAL, tall: false };
     const { desc } = newDominosaDesc(p, randomNew("mistake"));
     const state = newState(p, desc);
-    const { pairs } = solveNumbers(p.n, state.numbers, DIFFCOUNT);
+    const { pairs } = solveNumbers(p, state.numbers, DIFFCOUNT);
     const solutionSet = new Set(pairs.map(([a, b]) => a * 1000 + b));
 
     // Find an adjacent pair that is NOT in the solution and place it.
@@ -199,7 +219,7 @@ describe("dominosa findMistakes + solve", () => {
   });
 
   it("solve via aux and via re-solve both reach a completed board", () => {
-    const p = { n: 4, diff: DIFF_TRIVIAL };
+    const p = { n: 4, diff: DIFF_TRIVIAL, tall: false };
     const { desc, aux } = newDominosaDesc(p, randomNew("solve"));
     const state = newState(p, desc);
 
@@ -223,7 +243,7 @@ describe("dominosa reference aid", () => {
   const dominoKey = (a: number, b: number) => (a <= b ? `${a}-${b}` : `${b}-${a}`);
 
   it("lists every domino, and status tracks placed / outstanding / conflict", () => {
-    const p = { n: 5, diff: DIFF_TRIVIAL };
+    const p = { n: 5, diff: DIFF_TRIVIAL, tall: false };
     const { desc } = newDominosaDesc(p, randomNew("ref-status"));
     const state = newState(p, desc);
     const ui = dominosaGame.newUi(state);
@@ -235,7 +255,7 @@ describe("dominosa reference aid", () => {
     expect(empty?.selected).toBeNull();
 
     // Place one solution domino → its pair reads "placed", the rest outstanding.
-    const { pairs } = solveNumbers(p.n, state.numbers, 5);
+    const { pairs } = solveNumbers(p, state.numbers, 5);
     const [cA, cB] = pairs[0];
     const key = dominoKey(state.numbers[cA], state.numbers[cB]);
     const placed = dominosaGame.executeMove(state, { type: "domino", d1: cA, d2: cB });
@@ -261,7 +281,7 @@ describe("dominosa reference aid", () => {
   });
 
   it("a board tap dismisses the reference spotlight (and still does its action)", () => {
-    const p = { n: 4, diff: DIFF_TRIVIAL };
+    const p = { n: 4, diff: DIFF_TRIVIAL, tall: false };
     const { desc } = newDominosaDesc(p, randomNew("ref-dismiss"));
     const state = newState(p, desc);
     const ui = dominosaGame.newUi(state);
@@ -282,7 +302,7 @@ describe("dominosa reference aid", () => {
   });
 
   it("selectReference sets/clears the Ui spotlight and reference() echoes it", () => {
-    const p = { n: 5, diff: DIFF_TRIVIAL };
+    const p = { n: 5, diff: DIFF_TRIVIAL, tall: false };
     const { desc } = newDominosaDesc(p, randomNew("ref-select"));
     const state = newState(p, desc);
     const ui = dominosaGame.newUi(state);
@@ -299,10 +319,10 @@ describe("dominosa reference aid", () => {
   });
 
   it("boxes a selected pair's candidate cells in COL_REFERENCE (and nowhere without one)", () => {
-    const p = { n: 4, diff: DIFF_TRIVIAL };
+    const p = { n: 4, diff: DIFF_TRIVIAL, tall: false };
     const { desc } = newDominosaDesc(p, randomNew("ref-render"));
     const state = newState(p, desc);
-    const { pairs } = solveNumbers(p.n, state.numbers, 5);
+    const { pairs } = solveNumbers(p, state.numbers, 5);
     const [cA, cB] = pairs[0]; // a real adjacency ⇒ at least one candidate
     const key = dominoKey(state.numbers[cA], state.numbers[cB]);
     const id = `${encodeParams(p, true)}:${desc}`;
@@ -325,7 +345,7 @@ describe("dominosa reference aid", () => {
 
 describe("dominosa render", () => {
   it("renders a stable opener frame (numbers, background) for a fixed board", () => {
-    const p = { n: 4, diff: DIFF_TRIVIAL };
+    const p = { n: 4, diff: DIFF_TRIVIAL, tall: false };
     const { desc } = newDominosaDesc(p, randomNew("opener"));
     const { recording, size } = renderScenario({
       game: dominosaGame,
@@ -340,7 +360,7 @@ describe("dominosa render", () => {
 
   it("renders a clash in COL_DOMINOCLASH when a value is placed twice", () => {
     // Place the same domino in two disjoint spots on a fixed board.
-    const p = { n: 4, diff: DIFF_TRIVIAL };
+    const p = { n: 4, diff: DIFF_TRIVIAL, tall: false };
     const { desc } = newDominosaDesc(p, randomNew("clash"));
     const two = twoDisjointPairs(newState(p, desc));
     expect(two).not.toBeNull();

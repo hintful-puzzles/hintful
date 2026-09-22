@@ -27,7 +27,11 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/index.ts";
-import { dimensionParamConfig, parseDimensions } from "../../engine/params.ts";
+import {
+  dimensionParamConfig,
+  parseDimensions,
+  transposeDimensions,
+} from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import {
   CURSOR_SELECT,
@@ -981,6 +985,7 @@ export const galaxiesGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
+  transposeParams: transposeDimensions(),
   paramConfig: [
     ...dimensionParamConfig<GalaxiesParams>(),
     {

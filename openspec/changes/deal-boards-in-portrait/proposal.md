@@ -1,6 +1,7 @@
 # deal-boards-in-portrait
 
-**Status: scaffolded, not started.** Owner-requested, 2026-09-21.
+**Status: implemented 2026-09-22, awaiting owner acceptance.** Owner-requested,
+2026-09-21. The owner took both recommendations below on 2026-09-22.
 
 ## Why
 

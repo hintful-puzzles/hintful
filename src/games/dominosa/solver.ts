@@ -18,12 +18,14 @@
 import { FlipDsf } from "../../engine/dsf.ts";
 import { findLoops } from "../../engine/findloop.ts";
 import {
+  boardSize,
   DCOUNT,
   DIFF_BASIC,
   DIFF_EXTREME,
   DIFF_HARD,
   DIFF_TRIVIAL,
   DINDEX,
+  type DominosaShape,
 } from "./state.ts";
 
 /** A technique that *places* a domino. */
@@ -147,9 +149,9 @@ export class DominosaSolver {
     if (this.recording) this.recEvidence = cells;
   }
 
-  constructor(n: number) {
-    const w = n + 2;
-    const h = n + 1;
+  constructor(shape: DominosaShape) {
+    const n = shape.n;
+    const { w, h } = boardSize(shape);
     const wh = w * h;
     const dc = DCOUNT(n);
     const pc = (w - 1) * h + w * (h - 1);
@@ -863,11 +865,11 @@ export class DominosaSolver {
 /** Convenience: solve a numbers grid from scratch. Returns the verdict, the
  * max difficulty used, and (when unique) the solution domino pairs. */
 export function solveNumbers(
-  n: number,
+  shape: DominosaShape,
   numbers: Int32Array | number[],
   maxDiff: number,
 ): { result: number; maxDiffUsed: number; pairs: Array<[number, number]> } {
-  const sc = new DominosaSolver(n);
+  const sc = new DominosaSolver(shape);
   sc.setupGrid(numbers);
   const result = sc.runSolver(maxDiff);
   return {

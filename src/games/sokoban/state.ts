@@ -77,7 +77,7 @@ export interface SokobanParams {
 }
 
 export function defaultParams(): SokobanParams {
-  return { w: 12, h: 10 };
+  return { w: 10, h: 12 };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
@@ -96,7 +96,7 @@ export function validateParams(p: SokobanParams, _full: boolean): string | null 
 
 export function presets(): PresetMenu<SokobanParams> {
   const p = (w: number, h: number) => ({ title: `${w}x${h}`, params: { w, h } });
-  return { title: "Type", submenu: [p(12, 10), p(16, 12), p(20, 16)] };
+  return { title: "Type", submenu: [p(10, 12), p(12, 16), p(16, 20)] };
 }
 
 // --- state ------------------------------------------------------------

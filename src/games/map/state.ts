@@ -42,17 +42,17 @@ export interface MapParams {
 }
 
 export function defaultParams(): MapParams {
-  return { w: 20, h: 15, n: 30, diff: DIFF_NORMAL };
+  return { w: 15, h: 20, n: 30, diff: DIFF_NORMAL };
 }
 
 /** Upstream `map_presets` (non-portrait; the web build is landscape). */
 const PRESETS: readonly MapParams[] = [
-  { w: 20, h: 15, n: 30, diff: DIFF_EASY },
-  { w: 20, h: 15, n: 30, diff: DIFF_NORMAL },
-  { w: 20, h: 15, n: 30, diff: DIFF_HARD },
-  { w: 20, h: 15, n: 30, diff: DIFF_RECURSE },
-  { w: 30, h: 25, n: 75, diff: DIFF_NORMAL },
-  { w: 30, h: 25, n: 75, diff: DIFF_HARD },
+  { w: 15, h: 20, n: 30, diff: DIFF_EASY },
+  { w: 15, h: 20, n: 30, diff: DIFF_NORMAL },
+  { w: 15, h: 20, n: 30, diff: DIFF_HARD },
+  { w: 15, h: 20, n: 30, diff: DIFF_RECURSE },
+  { w: 25, h: 30, n: 75, diff: DIFF_NORMAL },
+  { w: 25, h: 30, n: 75, diff: DIFF_HARD },
 ];
 
 export function presets(): PresetMenu<MapParams> {

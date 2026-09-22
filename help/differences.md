@@ -22,6 +22,11 @@ work, but they are likely to change in a future update, and might be removed.
   you save several positions within a game’s undo history and return to any of
   them.
 
+* **[Boards fit your screen](features#board-shape).** Where the original's
+  sizes are wider than tall, this app's are taller than wide, for a phone held
+  upright. On a wider screen, a new board that plays the same either way round
+  is dealt turned to fit.
+
 * **Links instead of command-line options.** The original’s desktop builds take
   options on the command line; here the same things go in the address. Add
   *?type=params* to a puzzle’s address to choose a variation, or *?id=id-or-seed*

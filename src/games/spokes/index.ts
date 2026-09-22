@@ -36,7 +36,7 @@ import {
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
+import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -471,6 +471,7 @@ export const spokesGame: Game<
   decodeParams,
   validateParams,
 
+  transposeParams: transposeDimensions(),
   paramConfig: [
     ...dimensionParamConfig<SpokesParams>(),
     {

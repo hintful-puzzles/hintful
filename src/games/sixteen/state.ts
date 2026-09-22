@@ -100,9 +100,9 @@ export function validateParams(p: SixteenParams, _full: boolean): string | null 
 
 const SIXTEEN_PRESETS: SixteenParams[] = [
   { w: 3, h: 3, movetarget: 0 },
-  { w: 4, h: 3, movetarget: 0 },
+  { w: 3, h: 4, movetarget: 0 },
   { w: 4, h: 4, movetarget: 0 },
-  { w: 5, h: 4, movetarget: 0 },
+  { w: 4, h: 5, movetarget: 0 },
   { w: 5, h: 5, movetarget: 0 },
 ];
 

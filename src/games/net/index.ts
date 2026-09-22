@@ -11,7 +11,12 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import type { Game, GamePref, SolveResult } from "../../engine/game.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
-import { atof, dimensionParamConfig, formatG } from "../../engine/params.ts";
+import {
+  atof,
+  dimensionParamConfig,
+  formatG,
+  transposeDimensions,
+} from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -79,12 +84,12 @@ const PRESETS: NetParams[] = [
   { w: 7, h: 7, wrapping: false, unique: true, barrierProbability: 0 },
   { w: 9, h: 9, wrapping: false, unique: true, barrierProbability: 0 },
   { w: 11, h: 11, wrapping: false, unique: true, barrierProbability: 0 },
-  { w: 13, h: 11, wrapping: false, unique: true, barrierProbability: 0 },
+  { w: 11, h: 13, wrapping: false, unique: true, barrierProbability: 0 },
   { w: 5, h: 5, wrapping: true, unique: true, barrierProbability: 0 },
   { w: 7, h: 7, wrapping: true, unique: true, barrierProbability: 0 },
   { w: 9, h: 9, wrapping: true, unique: true, barrierProbability: 0 },
   { w: 11, h: 11, wrapping: true, unique: true, barrierProbability: 0 },
-  { w: 13, h: 11, wrapping: true, unique: true, barrierProbability: 0 },
+  { w: 11, h: 13, wrapping: true, unique: true, barrierProbability: 0 },
 ];
 
 const presetTitle = (p: NetParams): string =>
@@ -381,6 +386,7 @@ export const netGame: Game<NetParams, NetState, NetMove, NetUi, NetDrawState> = 
     "ensure-unique-solution": p.unique ? 1 : 0,
   }),
 
+  transposeParams: transposeDimensions(),
   paramConfig: [
     ...dimensionParamConfig<NetParams>(),
     {

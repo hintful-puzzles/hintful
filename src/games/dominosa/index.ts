@@ -296,7 +296,7 @@ function solve(
     return { ok: true, move: { type: "solve", dominoes } };
   }
 
-  const { result, pairs } = solveNumbers(params.n, numbers, DIFFCOUNT);
+  const { result, pairs } = solveNumbers(params, numbers, DIFFCOUNT);
   if (result !== 1)
     return { ok: false, error: "Unable to find a unique solution for this puzzle" };
   return { ok: true, move: { type: "solve", dominoes: pairs } };
@@ -308,7 +308,7 @@ function solve(
 function findMistakes(state: DominosaState): readonly DominosaMistake[] {
   const { numbers, grid, params } = state;
   const wh = numbers.length;
-  const { result, pairs } = solveNumbers(params.n, numbers, DIFFCOUNT);
+  const { result, pairs } = solveNumbers(params, numbers, DIFFCOUNT);
   if (result !== 1) return [];
 
   const solutionPartner = new Int32Array(wh);
@@ -351,10 +351,10 @@ function hint(state: DominosaState): HintResult<DominosaMove, DominosaHint> {
   const wh = numbers.length;
 
   // A hint teaches a *forced* deduction; an Ambiguous board has none.
-  if (solveNumbers(n, numbers, DIFFCOUNT).result !== 1)
+  if (solveNumbers(params, numbers, DIFFCOUNT).result !== 1)
     return { ok: false, error: PUZZLE_NOT_REASONABLE };
 
-  const solver = new DominosaSolver(n);
+  const solver = new DominosaSolver(params);
   solver.setupGrid(numbers);
   solver.seedFromDominoes(grid);
 
@@ -600,7 +600,7 @@ const difficulty: DifficultyContract<DominosaParams> = {
   withTier: (p, tier) => ({ ...p, diff: tier }),
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
-    const { result } = solveNumbers(p.n, s.numbers, cap);
+    const { result } = solveNumbers(p, s.numbers, cap);
     return result === 1 ? "solved" : result === 0 ? "impossible" : "unsolved";
   },
 };
@@ -624,6 +624,7 @@ export const dominosaGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
+  transposeParams: (p) => ({ ...p, tall: !p.tall }),
   paramConfig: [
     {
       kw: "maximum-number-on-dominoes",

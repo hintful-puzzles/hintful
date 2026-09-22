@@ -215,8 +215,8 @@ export const minesGame: Game<
         { title: "9x9, 35 mines", params: mk(9, 9, 35) },
         { title: "16x16, 40 mines", params: mk(16, 16, 40) },
         { title: "16x16, 99 mines", params: mk(16, 16, 99) },
-        { title: "30x16, 99 mines", params: mk(30, 16, 99) },
-        { title: "30x16, 170 mines", params: mk(30, 16, 170) },
+        { title: "16x30, 99 mines", params: mk(16, 30, 99) },
+        { title: "16x30, 170 mines", params: mk(16, 30, 170) },
       ],
     };
   },
@@ -232,6 +232,13 @@ export const minesGame: Game<
       "ensure-solubility": p.unique ? 1 : 0,
     };
   },
+  transposeParams: (p) => ({
+    ...p,
+    w: p.h,
+    h: p.w,
+    firstClickX: p.firstClickY,
+    firstClickY: p.firstClickX,
+  }),
   paramConfig: [
     ...dimensionParamConfig<MinesParams>(),
     {

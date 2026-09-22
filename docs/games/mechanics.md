@@ -212,6 +212,41 @@ difficulty in the header even though the board generated correctly. If a new
 game's header ignores a suffix, check that first (it cost a dev-verify cycle
 before the fix landed in `Midend.emitIdChange`).
 
+### Portrait boards, and turning them to fit
+
+**Every default and preset draws no wider than tall**, because a phone held
+upright is the main way this app is played. "Draws" means the game's own
+`computeSize`, never its params: a clue margin, a panel along one side or a
+tiling's cell shape all decide the aspect, and a count of `w > h` gets them
+wrong. So choose a new game's sizes by what `computeSize` returns, and for a
+tiling that cannot turn (below), pick sizes of its own that draw tall rather
+than transposing a landscape one. A board whose shape is the puzzle's own (a
+Cube solid, Ascent's hexagon) goes in the `WIDE_BY_NATURE` ledger of
+[`orientation.test.ts`](../../src/engine/orientation.test.ts) with its reason.
+
+**`transposeParams` lets a new board be dealt either way round.** The midend's
+`newGame` takes the board area the view measured and deals the chosen params
+turned whenever that gives a larger tile; the chosen params themselves stay as
+chosen, the type menu names a turned board after its preset, and nothing
+already on screen is ever turned. A plain grid declares it the way it declares
+its Custom fields:
+`transposeParams: transposeDimensions()`, or with the field pair
+(`transposeDimensions<UnrulyParams>({ w: "w2", h: "h2" })`). Swap anything
+else that is laid out on the grid too (Mines' forced first click), return
+`null` for a mode that must not turn (Ascent's hexagonal modes, Loopy's
+`LOOPY_GRIDS[].turns`), and give a game whose size is not two fields a flag
+of its own (Dominosa's `tall`, which decodes absent as the old wide board so
+existing ids keep loading).
+
+**Leave it out only when a tall board is a different game**: gravity (Same
+Game, Bricks), a goal on a fixed side (Slide). The guard derives who must
+decide: every game whose Custom dialog has a width and a height either has
+`transposeParams` or has an entry in `NOT_TURNED` saying why not. The same
+file holds each implementation to turning back exactly and to drawing the
+turned board with width and height exchanged, on non-square boards it builds
+through the game's own width item; a game that draws something along one side
+only records it in `UNEVEN_FRAME`.
+
 ### The type-menu summary
 
 **A game whose params aren't plain `w`/`h` must make `describeParams` emit the

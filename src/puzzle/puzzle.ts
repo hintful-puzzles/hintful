@@ -454,8 +454,17 @@ export class Puzzle {
     this.setHelpMessage("");
     this._activeHintExplanation.set("");
     this._generatingGame.set(true);
-    await this.workerPuzzle.newGame();
+    await this.workerPuzzle.newGame(this.boardArea ?? undefined);
     this._generatingGame.set(false);
+  }
+
+  /** The space the board is drawn in, as `<puzzle-view>` last measured it.
+   * Only a new deal reads it, to choose which way round to deal the board; a
+   * board already on screen is never turned. */
+  private boardArea: Size | null = null;
+
+  public setBoardArea(area: Size): void {
+    this.boardArea = area;
   }
 
   public async newGameFromId(id: string): Promise<string | null> {
@@ -717,7 +726,12 @@ export class Puzzle {
 
   public async getParamsDescription(params: string): Promise<string> {
     const presets = await this.getPresets(true);
-    const preset = presets.find((preset) => preset.params === params);
+    // A board dealt turned on its side keeps its preset's title, which names
+    // the kind of board chosen; the Custom dialog shows the size as dealt.
+    const turned = await this.workerPuzzle.turnParams(params);
+    const preset =
+      presets.find((preset) => preset.params === params) ??
+      presets.find((preset) => preset.params === turned);
     if (preset) {
       return preset.title;
     }

@@ -18,6 +18,7 @@ import {
 } from "../../engine/border-grid.ts";
 import { winFlash } from "../../engine/flash.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
+import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor, stripModifiers } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { ConfigValues, Point } from "../../engine/types.ts";
@@ -132,6 +133,7 @@ export const separateGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
+  transposeParams: transposeDimensions(),
   paramConfig,
   describeParams: (p): ConfigValues => ({
     width: String(p.w),

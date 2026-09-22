@@ -27,7 +27,11 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { dimensionParamConfig, parseConfigInt } from "../../engine/params.ts";
+import {
+  dimensionParamConfig,
+  parseConfigInt,
+  transposeDimensions,
+} from "../../engine/params.ts";
 import {
   CURSOR_LEFT,
   CURSOR_RIGHT,
@@ -493,6 +497,7 @@ export const sticksGame: Game<
     "percentage-of-black-squares": String(p.blackpc),
     symmetry: p.symm,
   }),
+  transposeParams: transposeDimensions(),
   paramConfig: [
     ...dimensionParamConfig<SticksParams>(),
     {

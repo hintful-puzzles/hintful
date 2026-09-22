@@ -344,10 +344,10 @@ describe("bricks generator", () => {
     it("offers only the difficulties it can generate", () => {
       const titles = (bricksGame.presets().submenu ?? []).map((e) => e.title);
       expect(titles).toEqual([
-        "7x6 Easy",
-        "7x6 Unreasonable",
-        "10x8 Easy",
-        "10x8 Unreasonable",
+        "6x7 Easy",
+        "6x7 Unreasonable",
+        "8x10 Easy",
+        "8x10 Unreasonable",
       ]);
     });
 

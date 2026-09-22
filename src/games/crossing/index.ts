@@ -36,7 +36,7 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
+import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
 import {
   pencilKeepHighlightPref,
   stickyPencilPref,
@@ -614,6 +614,7 @@ export const crossingGame: Game<
     height: String(p.h),
     "symmetric-walls": p.sym ? 1 : 0,
   }),
+  transposeParams: transposeDimensions(),
   paramConfig: [
     ...dimensionParamConfig<CrossingParams>(),
     {

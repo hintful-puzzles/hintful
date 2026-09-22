@@ -19,14 +19,14 @@ import {
 } from "./state.ts";
 
 function freshState(n: number, diff: number, seed: string): DominosaState {
-  const { desc } = newDominosaDesc({ n, diff }, randomNew(seed));
-  return newState({ n, diff }, desc);
+  const { desc } = newDominosaDesc({ n, diff, tall: false }, randomNew(seed));
+  return newState({ n, diff, tall: false }, desc);
 }
 
 describe("dominosa hint — refusal", () => {
   it("refuses on a solved board", () => {
     const state = freshState(4, DIFF_TRIVIAL, "hint-solved");
-    const { pairs } = solveNumbers(4, state.numbers, DIFFCOUNT);
+    const { pairs } = solveNumbers(state.params, state.numbers, DIFFCOUNT);
     let s = state;
     for (const [a, b] of pairs)
       s = dominosaGame.executeMove(s, { type: "domino", d1: a, d2: b });
@@ -41,7 +41,7 @@ describe("dominosa hint — refusal", () => {
     // because a seed that happened to be unique would pass this test without
     // ever calling `hint`.
     expect(
-      solveNumbers(6, state.numbers, DIFFCOUNT).result,
+      solveNumbers(state.params, state.numbers, DIFFCOUNT).result,
       "the Ambiguous seed generated a unique board",
     ).not.toBe(1);
     const res = dominosaGame.hint?.(state);
@@ -50,7 +50,7 @@ describe("dominosa hint — refusal", () => {
 
   it("refuses when the board has a mistake", () => {
     const state = freshState(4, DIFF_TRIVIAL, "hint-mistake");
-    const { pairs } = solveNumbers(4, state.numbers, DIFFCOUNT);
+    const { pairs } = solveNumbers(state.params, state.numbers, DIFFCOUNT);
     const solutionSet = new Set(pairs.map(([a, b]) => a * 1000 + b));
     const w = state.w;
     const h = state.h;
@@ -102,7 +102,7 @@ describe("dominosa hint — narration + plan", () => {
 
 describe("dominosa hint — render", () => {
   it("draws the forced domino's cells in COL_HINT", () => {
-    const p = { n: 4, diff: DIFF_TRIVIAL };
+    const p = { n: 4, diff: DIFF_TRIVIAL, tall: false };
     const { desc } = newDominosaDesc(p, randomNew("hint-render"));
     const { recording, hint } = renderScenario({
       game: dominosaGame,

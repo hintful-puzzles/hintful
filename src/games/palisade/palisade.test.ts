@@ -31,9 +31,9 @@ import {
 
 const PRESETS: PalisadeParams[] = [
   { w: 5, h: 5, k: 5 },
-  { w: 8, h: 6, k: 6 },
-  { w: 10, h: 8, k: 8 },
-  { w: 15, h: 12, k: 10 },
+  { w: 6, h: 8, k: 6 },
+  { w: 8, h: 10, k: 8 },
+  { w: 12, h: 15, k: 10 },
 ];
 
 describe("palisade params", () => {

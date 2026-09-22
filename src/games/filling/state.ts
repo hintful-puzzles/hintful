@@ -58,9 +58,9 @@ export interface FillingUi {
 // --- params --------------------------------------------------------------
 
 const PRESETS: FillingParams[] = [
-  { w: 9, h: 7 },
-  { w: 13, h: 9 },
-  { w: 17, h: 13 },
+  { w: 7, h: 9 },
+  { w: 9, h: 13 },
+  { w: 13, h: 17 },
 ];
 
 export function defaultParams(): FillingParams {

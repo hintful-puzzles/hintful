@@ -17,6 +17,7 @@ import { retryLimit } from "../../engine/retry-limit.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { DominosaSolver } from "./solver.ts";
 import {
+  boardSize,
   DCOUNT,
   DIFF_AMBIGUOUS,
   DIFF_BASIC,
@@ -24,6 +25,7 @@ import {
   DIFF_TRIVIAL,
   DINDEX,
   type DominosaParams,
+  type DominosaShape,
   encodeNumbers,
 } from "./state.ts";
 
@@ -53,10 +55,10 @@ class AllocScratch {
   /** Domino locations (square pairs), indexed arbitrarily. */
   locs: Array<[number, number]> = [];
 
-  constructor(n: number) {
+  constructor(shape: DominosaShape) {
+    const n = shape.n;
     this.n = n;
-    this.w = n + 2;
-    this.h = n + 1;
+    ({ w: this.w, h: this.h } = boardSize(shape));
     this.wh = this.w * this.h;
     this.dc = DCOUNT(n);
     this.layout = new Int32Array(this.wh);
@@ -312,8 +314,8 @@ export function newDominosaDesc(
     if (n === 2 && diff > DIFF_BASIC) diff = DIFF_BASIC;
   }
 
-  const sc = new DominosaSolver(n);
-  const as = new AllocScratch(n);
+  const sc = new DominosaSolver(p);
+  const as = new AllocScratch(p);
 
   const attempt = retryLimit("dominosa: generation", 200_000);
   for (;;) {

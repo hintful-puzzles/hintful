@@ -78,10 +78,10 @@ export function gridValueToCell(v: number): RangeCellValue {
 // --- params ----------------------------------------------------------------
 
 const PRESETS: RangeParams[] = [
-  { w: 9, h: 6 },
-  { w: 12, h: 8 },
-  { w: 13, h: 9 },
-  { w: 16, h: 11 },
+  { w: 6, h: 9 },
+  { w: 8, h: 12 },
+  { w: 9, h: 13 },
+  { w: 11, h: 16 },
 ];
 
 export function defaultParams(): RangeParams {

@@ -72,13 +72,13 @@ export interface SlideParams {
 }
 
 export function defaultParams(): SlideParams {
-  return { w: 7, h: 6, maxmoves: 40 };
+  return { w: 6, h: 7, maxmoves: 40 };
 }
 
 const PRESETS: readonly SlideParams[] = [
-  { w: 7, h: 6, maxmoves: 25 },
-  { w: 7, h: 6, maxmoves: -1 },
-  { w: 8, h: 6, maxmoves: -1 },
+  { w: 6, h: 7, maxmoves: 25 },
+  { w: 6, h: 7, maxmoves: -1 },
+  { w: 6, h: 8, maxmoves: -1 },
 ];
 
 /** Upstream `game_fetch_preset`'s label. */

@@ -36,6 +36,7 @@ import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
 } from "../../engine/note-taking-cell.ts";
+import { transposeDimensions } from "../../engine/params.ts";
 import {
   pencilKeepHighlightPref,
   stickyPencilPref,
@@ -612,6 +613,7 @@ export const romeGame: Game<
     height: String(p.h),
     difficulty: p.diff,
   }),
+  transposeParams: transposeDimensions(),
   paramConfig,
 
   newDesc: newRomeDesc,
