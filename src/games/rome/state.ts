@@ -280,8 +280,8 @@ export const MOUSEMODE_PLACE = 1;
 export const MOUSEMODE_PENCIL = 2;
 
 export interface RomeUi {
-  /** Highlighted square — the keyboard cursor, and the grabbed square during
-   * a mouse drag. */
+  /** Highlighted square: the selection, which a pointer gesture changes only
+   * when it resolves (`note-taking-cell.ts` § "the select-or-drag gesture"). */
   cursor: GridCursor;
   /** `KEYMODE_*`: what the keyboard cursor is armed for — plain movement,
    * placing an arrow, or penciling one. Whether the cursor is *shown* is
@@ -289,6 +289,11 @@ export interface RomeUi {
   kmode: number;
   /** `MOUSEMODE_*`: the in-flight drag's mode, `OFF` when idle. */
   mmode: number;
+  /** The square the in-flight drag was grabbed from, meaningless while
+   * `mmode` is `OFF`. Its own field rather than the cursor, because a press
+   * that may become a drag must leave the selection alone. */
+  mx: number;
+  my: number;
   /** The direction the in-flight drag currently points at (`EMPTY` = none). */
   mdir: number;
   /**

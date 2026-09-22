@@ -160,6 +160,18 @@ anywhere — which was eleven identical copies before `add-loopy-notation`. Same
 `border-grid.ts`: the game keeps its coordinates, its symbol vocabulary and its
 own `Move`. Its header records what was evaluated and declined.
 
+**If the press might be a drag, the gesture is the engine's too** — the module's
+§ "the select-or-drag gesture". The press changes nothing about the selection;
+the release resolves it, through `tapNoteTakingCell` when it committed nothing
+(the same rules as a click, with the release button mapped back) or
+`dragEnteredNoteTakingCell` when it committed a move (an entry the pointer made,
+so the highlight follows it and goes away). `TapTarget.onSelection` is the one
+override: left out, the cell is the selection and the arm answers for itself;
+Map supplies its region. The press must not move or hide the highlight, because
+the release needs what it was on — `select-or-drag.test.ts` drives every
+member's own `interpretMove`, press and release, and holds them to one answer
+for the repeat tap and one for the sticky toggle.
+
 **The picture** is `drawCellBackground(dr, rect, highlight, wash, background)`:
 the cell's rect in the wash for an entry highlight, in `background` otherwise,
 and for a notes highlight a right triangle over it in the top-left corner, legs

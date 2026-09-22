@@ -785,11 +785,26 @@ were — the last per-game roster in the cross-game guards.
   grid. A game carrying `ui.pencilMode` and `ui.cursorFromKeyboard` without
   calling `pressNoteTakingCell` fails `note-taking-cell.test.ts`; this used to
   be eleven copies, and it is one now.
-- **If your press starts a drag, join through the tap.** Rome and Map spend the
-  press (and the right button) on drags, so their *release that commits
-  nothing* is what calls `pressNoteTakingCell`, with the button the gesture
-  used. The drag keeps its buttons, the tap gets the mechanic's, and no game
-  needs an exemption for a right button that is "already spoken for".
+- **If your press starts a drag, the gesture is the engine's.** Rome and Map
+  spend the press (and the right button) on drags, so the selection cannot
+  happen at the press — it is not yet known to be one. **Your press changes
+  nothing about the highlight**; the release resolves the gesture through
+  `tapNoteTakingCell` (it committed nothing, so it was a tap, and a tap is a
+  press — hand it the release button and it maps it back) or
+  `dragEnteredNoteTakingCell` (it committed a move, so the highlight follows
+  the pointer to what it acted on and goes away). The drag keeps its buttons,
+  the tap gets the mechanic's, and no game needs an exemption for a right
+  button that is "already spoken for".
+
+  Two things to get right, both of which cost Rome and Map a player-visible
+  quirk apiece before `own-the-select-or-drag-gesture`. **Do not hide or move
+  the highlight at the press** — the release needs to know what it was on, for
+  the repeat tap and for the sticky mode switch that must leave it exactly
+  where it was; keep your grabbed cell in the drag's own fields, not in the
+  cursor. And **if your selection is not a cell**, answer
+  `TapTarget.onSelection` yourself: Map selects a region, and the cell under
+  the finger would make two taps on one region read as two selections. When it
+  is a cell, leave it out and the arm answers for itself.
 - **Do not draw the highlight by hand either** — paint the cell's background
   through `drawCellBackground` and pack `cellHighlight` into the tile key
   ([rendering](./rendering.md) § "The note-taking cell's picture"). A member

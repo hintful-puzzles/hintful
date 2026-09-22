@@ -1190,6 +1190,8 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "kmode",
       "mdir",
       "mmode",
+      "mx",
+      "my",
       "pencilKeepHighlight",
       "pencilMode",
       "pencilSticky",

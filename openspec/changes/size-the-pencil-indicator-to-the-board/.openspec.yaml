@@ -1,0 +1,7 @@
+# No delta yet: the requirement that moves is ts-engine's statement of where
+# the pencil-mode indicator goes and how big it is, and its new wording depends
+# on §1 — whether the glyph is sized from the canvas or the tile keeps a floor.
+# Written 2026-09-22; nothing is implemented.
+schema: spec-driven
+created: 2026-09-22
+skip_specs: true

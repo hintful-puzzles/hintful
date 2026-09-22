@@ -19,9 +19,10 @@ import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { colorKeys } from "../../engine/key-labels.ts";
 import {
+  dragEnteredNoteTakingCell,
   noOpEntryResult,
-  pressNoteTakingCell,
   releaseHighlightAfterEntry,
+  tapNoteTakingCell,
 } from "../../engine/note-taking-cell.ts";
 import {
   dimensionParamConfig,
@@ -246,10 +247,12 @@ function interpretMove(
   }
 
   if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
+    // The selection is left alone: this press may turn out to be a drag, and
+    // until the gesture resolves what is selected is still what was selected
+    // (`note-taking-cell.ts` § "the select-or-drag gesture").
     pickUp(state, ui, regionFromCoords(state.map, ts, point.x, point.y));
     ui.dragX = point.x;
     ui.dragY = point.y;
-    ui.cursor.visible = false;
     return UI_UPDATE;
   }
 
@@ -269,20 +272,31 @@ function interpretMove(
     // release on one region, so it picks that region's own color up and puts
     // it straight back — already a no-op before this existed.
     //
-    // What it does to the highlight is the note-taking cell's rule, with the
-    // button the gesture used: a right tap selects for notes (or latches
-    // them, sticky). The press already took the highlight down to start its
-    // drag, so a repeat tap re-selects rather than putting it away.
+    // Map's selection is a *region*, so it answers `onSelection` itself: the
+    // cell under the finger would make two taps on one region read as two
+    // different selections.
     if (dropped === UI_UPDATE && r >= 0) {
-      const pressed = pressNoteTakingCell(
+      const pressed = tapNoteTakingCell(
         ui,
-        button === RIGHT_RELEASE ? RIGHT_BUTTON : LEFT_BUTTON,
-        fromCoord(point.x, ts),
-        fromCoord(point.y, ts),
+        button,
+        {
+          x: fromCoord(point.x, ts),
+          y: fromCoord(point.y, ts),
+          onSelection: ui.cursor.visible && regionFromUiCursor(state.map, ui) === r,
+        },
         { canEnter: !state.map.immutable[r], canMark: state.coloring[r] < 0 },
       );
-      // The mechanic names a cell; the finger named a triangle of it.
+      // The mechanic names a cell; the finger named a triangle of it. Only when
+      // the tap moved the selection — a mode switch that deliberately left the
+      // highlight alone must not have its quadrant rewritten either.
       if (pressed === "moved") placeCursorAtCoords(ui, ts, point.x, point.y);
+      return UI_UPDATE;
+    }
+    if (dropped !== UI_UPDATE) {
+      // The drop entered a color or a mark with the pointer, so the highlight
+      // follows it and goes away, exactly as a typed entry's does.
+      placeCursorAtCoords(ui, ts, point.x, point.y);
+      dragEnteredNoteTakingCell(ui, ui.cursor.x, ui.cursor.y);
     }
     return dropped;
   }

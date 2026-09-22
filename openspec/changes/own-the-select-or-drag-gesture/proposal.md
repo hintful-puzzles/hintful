@@ -1,6 +1,14 @@
 # own-the-select-or-drag-gesture
 
-**Status: scaffolded, not started.** Owner-requested, 2026-09-22: *"I don't
+**Status: implemented.** The answers to everything left open below are in
+`design.md`, and `tasks.md` says what was done. In short: the repeat tap **puts
+the highlight away** everywhere; the press-time record turned out to be
+unnecessary, because a press that may become a drag now commits to nothing at
+all; and the gesture's two ends are `tapNoteTakingCell` and
+`dragEnteredNoteTakingCell`, with the selection's identity arriving as an
+override only a game whose selection is not a cell supplies.
+
+Owner-requested, 2026-09-22: *"I don't
 want per-game quirks. Any reason not to have the cell/region selection
 functionality entirely in the engine, so that it is fully consistent?"* There
 is none; this change does it.

@@ -1,7 +1,2 @@
-# No delta yet: the requirement that moves is ts-engine's "A game whose press
-# starts a drag joins the note-taking cell through its tap", whose last sentence
-# specifies the quirk this change removes; its new wording depends on the
-# design. Written 2026-09-22; nothing is implemented.
 schema: spec-driven
 created: 2026-09-22
-skip_specs: true

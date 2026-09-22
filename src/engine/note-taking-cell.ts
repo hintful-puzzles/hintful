@@ -43,8 +43,10 @@ import {
   CURSOR_SELECT,
   type GridCursor,
   LEFT_BUTTON,
+  LEFT_RELEASE,
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
+  RIGHT_RELEASE,
 } from "./pointer.ts";
 import type { Rect } from "./types.ts";
 
@@ -137,11 +139,30 @@ export function pressNoteTakingCell(
   y: number,
   cell: CellEntry,
 ): NoteTakingPress | null {
+  return applyPress(ui, button, x, y, cell, highlightIsOn(ui, x, y));
+}
+
+/**
+ * The rules themselves, with *"is the highlight already on the thing being
+ * pressed?"* handed in rather than asked.
+ *
+ * The one argument is the whole reason this is a separate function: a click and
+ * a tap answer that question from different places — the cursor for a click,
+ * the game's own selection for a tap — and everything after it must be the same
+ * code rather than the same intent. See {@link tapNoteTakingCell}.
+ */
+function applyPress(
+  ui: NoteTakingUi,
+  button: number,
+  x: number,
+  y: number,
+  cell: CellEntry,
+  onHighlight: boolean,
+): NoteTakingPress | null {
   const primary = button === LEFT_BUTTON;
   if (!primary && button !== RIGHT_BUTTON) return null;
 
   const sticky = ui.pencilSticky ?? false;
-  const onHighlight = highlightIsOn(ui, x, y);
   ui.cursorFromKeyboard = false;
 
   if (!primary && sticky) {
@@ -168,6 +189,114 @@ export function pressNoteTakingCell(
   ui.cursor.y = y;
   ui.cursor.visible = ui.pencilMode ? cell.canMark : cell.canEnter;
   return "moved";
+}
+
+// --- the select-or-drag gesture ---------------------------------------------
+//
+// Rome and Map spend the pointer press on a drag, so their press cannot be the
+// selection: it is not yet known to be one. **A press that may become a drag
+// therefore commits to nothing at all** — it leaves the highlight showing
+// exactly where it was, and the selection changes when the gesture resolves,
+// through one of the two arms below.
+//
+// That is a rule and not an implementation detail, and the reason is the sticky
+// toggle rather than anything about the highlight. With sticky pencil mode on,
+// the right button's press arm *switches the mode*, and in both games the right
+// button also starts a mark drag. A press that ran the arm would flip the mode
+// on the way into every right-drag. So the rules run at the release; and once
+// they do, the release needs two facts about the selection *before the press* —
+// whether the tap landed on what was already selected, and where to leave a
+// highlight the mode switch must not move — which a press that had hidden or
+// moved the highlight has already destroyed.
+//
+// The two differences a player could see, before `own-the-select-or-drag-gesture`
+// took the gesture off the games, were both that press: a repeat tap re-selected
+// for ever, and a sticky right tap on something that could take no mark hid the
+// highlight instead of leaving it alone. `select-or-drag.test.ts` holds every
+// member to one answer, driving each game's own `interpretMove`.
+
+/** What a tap selects. */
+export interface TapTarget {
+  /** Where the highlight goes, in the game's own cell coordinates. */
+  x: number;
+  y: number;
+  /**
+   * Is the highlight already on the thing being tapped?
+   *
+   * **Left out, the cell is the selection** and the arm answers for itself with
+   * {@link highlightIsOn}, which is what a game whose selection is a cell
+   * wants and the only thing it should have to say.
+   *
+   * Supplied, the game's selection is something else and only the game can
+   * compare two of them: Map selects a *region*, and answers
+   * `ui.cursor.visible && regionFromUiCursor(map, ui) === r`. Handing the arm
+   * the cell under the finger instead would make two taps on different cells of
+   * one region read as two different selections.
+   */
+  onSelection?: boolean;
+}
+
+/**
+ * A release that committed nothing, so the gesture was a **tap** — and a tap is
+ * a press. It resolves through exactly the rules {@link pressNoteTakingCell}
+ * runs for a click-select game, with the button the gesture used.
+ *
+ * ```ts
+ * if (nothingCommitted)
+ *   return tapNoteTakingCell(ui, button, { x, y }, entryAt(x, y)) !== null
+ *     ? UI_UPDATE : null;
+ * ```
+ *
+ * The button arrives as the *release* — `LEFT_RELEASE` or `RIGHT_RELEASE` —
+ * because that is what the game is holding; mapping it back to the press it
+ * belongs to is this arm's job, and was a line both games had copied.
+ */
+export function tapNoteTakingCell(
+  ui: NoteTakingUi,
+  releaseButton: number,
+  tap: TapTarget,
+  cell: CellEntry,
+): NoteTakingPress | null {
+  const button =
+    releaseButton === RIGHT_RELEASE
+      ? RIGHT_BUTTON
+      : releaseButton === LEFT_RELEASE
+        ? LEFT_BUTTON
+        : releaseButton;
+  return applyPress(
+    ui,
+    button,
+    tap.x,
+    tap.y,
+    cell,
+    tap.onSelection ?? highlightIsOn(ui, tap.x, tap.y),
+  );
+}
+
+/**
+ * A release that committed a move, so the gesture was a **drag**: an entry made
+ * with the pointer, on the cell `(x, y)` the player acted on.
+ *
+ * The highlight goes there and then away, which is the two rules a click-select
+ * game already states for its own entries — {@link pressNoteTakingCell}'s "a
+ * press moves the highlight to the cell the player pointed at, so the next
+ * arrow key resumes from it", and {@link releaseHighlightAfterEntry}'s "an
+ * entry the pointer made puts the highlight away" — said for a gesture instead
+ * of for a keystroke.
+ *
+ * A game whose cursor carries more than a cell (Map's names a region by a cell
+ * plus a quadrant) places its own first; the two facts this states are the same
+ * either way.
+ */
+export function dragEnteredNoteTakingCell(
+  ui: NoteTakingUi,
+  x: number,
+  y: number,
+): void {
+  ui.cursor.x = x;
+  ui.cursor.y = y;
+  ui.cursor.visible = false;
+  ui.cursorFromKeyboard = false;
 }
 
 /**

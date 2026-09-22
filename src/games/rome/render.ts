@@ -374,14 +374,15 @@ export function redraw(
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i1 = y * w + x;
-      const onHighlight = ui.cursor.x === x && ui.cursor.y === y;
+      const grabbed = ui.mx === x && ui.my === y;
       let c = grid[i1];
       let p = pencil[i1];
 
-      // The in-flight mouse drag previews its direction in place.
-      if (ui.mmode === MOUSEMODE_PLACE && onHighlight) {
+      // The in-flight mouse drag previews its direction in place, on the square
+      // it was grabbed from — which is the drag's own and not the selection.
+      if (ui.mmode === MOUSEMODE_PLACE && grabbed) {
         c = ui.mdir | FD_ENTRY;
-      } else if (ui.mmode === MOUSEMODE_PENCIL && onHighlight) {
+      } else if (ui.mmode === MOUSEMODE_PENCIL && grabbed) {
         if (ui.mdir !== EMPTY) p ^= ui.mdir;
         else p |= FD_ENTRY;
       }

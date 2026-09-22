@@ -387,13 +387,23 @@ describe("the enrolled population is derived, not listed", () => {
   // arm beside them, which is precisely how eleven copies came to exist. What
   // is being asserted is that no such code exists, so it has to be a source
   // scan — the same reasoning as `emittable-keys.test.ts`'s.
-  it("every enrolled game routes its pointer press through the shared arm", () => {
-    const missing = membersNotMentioning(noteTaking.ids, "pressNoteTakingCell(");
+  //
+  // **Two spellings, because there are two gestures**, not because a name was
+  // once different: a game whose press is the selection calls
+  // `pressNoteTakingCell`, and a game whose press might become a drag resolves
+  // at the release through `tapNoteTakingCell`. Keying on the first alone would
+  // have convicted Rome and Map the day they moved to the second, which is
+  // `AGENTS.md` § "A scan that keys on a name" aimed at this file.
+  it("every enrolled game routes its pointer press through a shared arm", () => {
+    const arms = ["pressNoteTakingCell(", "tapNoteTakingCell("];
+    const missing = arms
+      .map((arm) => membersNotMentioning(noteTaking.ids, arm))
+      .reduce((a, b) => a.filter((id) => b.includes(id)));
     expect(
       missing,
-      "carry the note-taking Ui but never call pressNoteTakingCell — either " +
-        "route the press through it, or drop the fields if the game is not " +
-        "really doing this mechanic.",
+      "carry the note-taking Ui but call neither pressNoteTakingCell nor " +
+        "tapNoteTakingCell — either route the press through one of them, or " +
+        "drop the fields if the game is not really doing this mechanic.",
     ).toEqual([]);
   });
 });

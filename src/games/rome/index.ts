@@ -32,9 +32,10 @@ import {
 } from "../../engine/game.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import {
+  dragEnteredNoteTakingCell,
   noOpEntryResult,
-  pressNoteTakingCell,
   releaseHighlightAfterEntry,
+  tapNoteTakingCell,
 } from "../../engine/note-taking-cell.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -47,7 +48,6 @@ import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
   CURSOR_UP,
-  hideCursor,
   isCursorMove,
   isEraseKey,
   isMouseDrag,
@@ -57,7 +57,6 @@ import {
   newCursor,
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
-  RIGHT_RELEASE,
   showCursor,
   stripModifiers,
 } from "../../engine/pointer.ts";
@@ -147,6 +146,8 @@ function newUi(_state: RomeState): RomeUi {
     cursor: newCursor(),
     kmode: KEYMODE_MOVE,
     mmode: MOUSEMODE_OFF,
+    mx: 0,
+    my: 0,
     mdir: EMPTY,
     pencilMode: false,
     cursorFromKeyboard: false,
@@ -349,9 +350,12 @@ function interpretMove(
       if (gx < 0 || gx >= w || gy < 0 || gy >= h) return null;
       if (grid[gy * w + gx] & FM_FIXED) return null;
 
-      ui.cursor.x = gx;
-      ui.cursor.y = gy;
-      hideCursor(ui.cursor);
+      // The selection is left alone: this press may turn out to be a drag, and
+      // until the gesture resolves what is selected is still what was selected
+      // (`note-taking-cell.ts` § "the select-or-drag gesture"). The grabbed
+      // square is the drag's, not the cursor's.
+      ui.mx = gx;
+      ui.my = gy;
       ui.kmode = KEYMODE_MOVE;
       // Marks mode makes the ordinary drag a pencil drag, which is what gives a
       // touch player the gesture at all: the right button is a mouse, and a
@@ -366,18 +370,24 @@ function interpretMove(
   }
 
   if (isMouseDrag(button) || isMouseRelease(button)) {
+    // Everything this gesture is about is the *grabbed* square, which is the
+    // drag's own and not the selection.
+    const gx = ui.mx;
+    const gy = ui.my;
+    const at = grid[gy * w + gx];
+
     // The direction is read from the *square* the pointer is over, not from a
     // pixel offset: back on the grabbed square means "clear".
     const cx = p.x >= origin(ts) ? fromCoordTrunc(p.x, ts) : -1;
     const cy = p.y >= origin(ts) ? fromCoordTrunc(p.y, ts) : -1;
 
     let c: number;
-    if (cx === x && cy === y) c = EMPTY;
-    else if (Math.abs(cx - x) < Math.abs(cy - y)) c = cy < y ? FM_UP : FM_DOWN;
-    else c = cx < x ? FM_LEFT : FM_RIGHT;
+    if (cx === gx && cy === gy) c = EMPTY;
+    else if (Math.abs(cx - gx) < Math.abs(cy - gy)) c = cy < gy ? FM_UP : FM_DOWN;
+    else c = cx < gx ? FM_LEFT : FM_RIGHT;
     // A pencil drag off the grid's edge reads as no drag at all, so its preview
     // never shows a mark the release would refuse.
-    if (ui.mmode === MOUSEMODE_PENCIL && c !== EMPTY && !markable(state, x, y, c))
+    if (ui.mmode === MOUSEMODE_PENCIL && c !== EMPTY && !markable(state, gx, gy, c))
       c = EMPTY;
 
     if (c !== ui.mdir && isMouseDrag(button)) {
@@ -401,25 +411,26 @@ function interpretMove(
       // whole cell, so an arrow carrying an error bit would emit a move that
       // changes nothing.
       //
-      // What the tap does to the highlight is the note-taking cell's rule, with
-      // the button the gesture used: a right tap selects for notes (or latches
-      // them, sticky). The press already took the highlight down to start its
-      // drag, so a repeat tap re-selects rather than putting it away.
-      if ((c === EMPTY && pencil) || (!pencil && c === (here & FM_ARROWMASK))) {
-        pressNoteTakingCell(
+      // Rome's selection is the square itself, so the tap says nothing about
+      // what it is on and the mechanic answers that for itself.
+      if ((c === EMPTY && pencil) || (!pencil && c === (at & FM_ARROWMASK))) {
+        tapNoteTakingCell(
           ui,
-          button === RIGHT_RELEASE ? RIGHT_BUTTON : LEFT_BUTTON,
-          x,
-          y,
-          { canEnter: !(here & FM_FIXED), canMark: here === EMPTY },
+          button,
+          { x: gx, y: gy },
+          { canEnter: !(at & FM_FIXED), canMark: at === EMPTY },
         );
         return UI_UPDATE;
       }
 
+      // The drag entered an arrow or a mark with the pointer, so the highlight
+      // follows it to the grabbed square and goes away, exactly as a typed
+      // entry's does.
+      dragEnteredNoteTakingCell(ui, gx, gy);
       return {
         kind: pencil ? "pencil" : "place",
-        x,
-        y,
+        x: gx,
+        y: gy,
         dir: c === EMPTY ? null : (c as RomeDir),
       };
     }
