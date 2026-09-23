@@ -23,15 +23,6 @@ const isSerializedSettings = (obj: unknown): obj is SerializedSettings =>
   "data" in obj &&
   Array.isArray(obj.data);
 
-const defaultFavoritePuzzles: PuzzleId[] = [
-  "keen",
-  "mines",
-  "net",
-  "samegame",
-  "solo",
-  "untangle",
-] as const;
-
 const COMMON_SETTINGS_ID = "puzzle-common";
 
 //
@@ -243,7 +234,8 @@ class Settings {
 
   private storedFavoritePuzzles(): readonly PuzzleId[] {
     const favorites = this[getCommonSetting]("favoritePuzzles");
-    return favorites === UNSET ? defaultFavoritePuzzles : favorites;
+    // No starter set: which puzzles are favorites is the player's choice alone.
+    return favorites === UNSET ? [] : favorites;
   }
 
   get favoritePuzzles(): ReadonlySet<PuzzleId> {

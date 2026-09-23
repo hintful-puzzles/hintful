@@ -40,3 +40,18 @@ describe("the last dealt board", () => {
     expect(await settings.getParams("towers")).toBe("5x5dn");
   });
 });
+
+describe("favorites", () => {
+  it("start empty, and hold exactly what the player marks", async () => {
+    // Owner, 2026-09-24: a fresh install had six favorites the player never
+    // chose. Which puzzles are favorites is up to the player.
+    await settings.loaded;
+    expect([...settings.favoritePuzzles]).toEqual([]);
+
+    settings.setFavoritePuzzle("pegs", true);
+    expect([...settings.favoritePuzzles]).toEqual(["pegs"]);
+
+    settings.setFavoritePuzzle("pegs", false);
+    expect([...settings.favoritePuzzles]).toEqual([]);
+  });
+});
