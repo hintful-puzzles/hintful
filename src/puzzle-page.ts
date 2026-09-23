@@ -4,6 +4,9 @@ import { navigateToHomePage, type PuzzleUrlParams, parsePuzzleUrl } from "./rout
 
 // Register components
 import "./screens/puzzle-screen.ts";
+import { trackAppHeight } from "./utils/app-height.ts";
+
+trackAppHeight();
 
 function initialize({
   puzzleId,

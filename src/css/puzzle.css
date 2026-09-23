@@ -8,9 +8,10 @@ body,
    * has a document taller than the screen: Android Chrome scrolls it despite
    * overflow: hidden, pushing the top bar off-screen and leaving a blank band
    * under the bottom bar. min-height overrides common.css's 100vh for the same
-   * reason. */
+   * reason. An installed app gets 100dvh wrong the other way, so the measured
+   * --app-height (utils/app-height.ts) wins wherever it has been set. */
   width: 100dvw;
-  height: 100dvh;
+  height: var(--app-height, 100dvh);
   min-height: 0;
   overflow: hidden;
 }

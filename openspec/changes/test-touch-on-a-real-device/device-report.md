@@ -68,6 +68,7 @@ rather than done here.
 
 | Item | Verdict | Evidence |
 |---|---|---|
+| 4.1a Installed app: the bottom bar | **fail → fixed, device to confirm** | On the owner's phone the installed app showed no bottom command bar, while the same page in a tab did. Pixel-reading the screenshot showed the bar *was* rendered, with only its top 12 device px showing above the system navigation bar: in standalone mode `100dvh` came out about 64 CSS px taller than the window, and `overflow: hidden` clipped the bar off. The puzzle page is now sized by `window.innerHeight` (`src/utils/app-height.ts`, as `--app-height`, with `100dvh` as the fallback), updated on every resize. That is right in a tab and in an app. Chromium check: at 860 and 700 px, the bar's bottom sits on the window's bottom and nothing scrolls. It still needs confirming in the installed app after the deploy. |
 | 4.1 Install: name, icon | pass (manifest) · device (home screen) | The deployed manifest says `name: "Hintful Puzzles"`, `short_name: "Hintful"`, `display: standalone`, scope `/`, with 64/192/512 icons and a maskable 512. How the icon looks on a launcher is a device question. |
 | 4.2 Offline | pass (Chromium) | On `hintful.click` with offline use enabled, 286 of 286 precache entries were stored (7.2 MB). With the network off: a cold reload of Pegs kept the move in progress; `/`, `/untangle`, `/help/` and `/help/solo` loaded; `/solo`, never visited, generated and drew a new board; the self-hosted Plex faces loaded; no console errors. |
 | 4.3 Update flow | **finding** | See below. |

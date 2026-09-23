@@ -1069,7 +1069,8 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         width: 100vw;
         height: 100vh;
         width: 100dvw;
-        height: 100dvh;
+        /* The window's measured height; see utils/app-height.ts. */
+        height: var(--app-height, 100dvh);
       }
       
       main {
