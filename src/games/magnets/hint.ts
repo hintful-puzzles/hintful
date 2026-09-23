@@ -287,9 +287,9 @@ interface Told {
   line?: MagnetsLine;
   /** Clue digits the premise cites as a reason: a met line's count. */
   reasonClues?: number[];
-  /** Later legs' squares that the board as this leg finds it does not force
-   * yet, so this step leaves them unringed. */
-  notYet?: number[];
+  /** The squares the sentence concludes, when that is not every remaining
+   * leg's: a count premise's step speaks of some of its legs and not others. */
+  targets?: number[];
 }
 
 /** A square forced by the two poles (or the pole and the neutral) its board
@@ -542,34 +542,56 @@ function tellCount(
         reasonClues,
       };
     }
-    const notYet = legs
-      .slice(k + 1)
-      .filter((l) => farEnd(board, idxOf(l)).kind === "open")
-      .map(idxOf);
+    // The dominoes the sentence counts, read off this leg's board: exactly
+    // the `n` it names, or the words and the board disagree.
+    const counted = new Set(
+      cells
+        .filter((i) => !(board.flags[i] & GS_SET) && !whyNot(board, i, pole))
+        .map((i) => dominoOf(board, i)),
+    );
+    if (counted.size !== n) {
+      throw new Error(
+        `magnets hint: ${counted.size} dominoes can give the ${n} needed`,
+      );
+    }
+    const along = [...counted].filter((d) => onLine.has(b.common.dominoes[d])).length;
     const idx = idxOf(legs[k]);
     const end = farEnd(board, idx);
     if (end.kind === "open") {
       throw new Error(`magnets hint: square ${idx} has lost its reason to be the end`);
     }
     if (end.kind === "crosses") {
+      // One sentence for every crossing domino still to go: each has only this
+      // square in the line. `legsOf` puts them first, so none waits on a leg
+      // lying along it.
+      const targets = legs
+        .slice(k)
+        .map(idxOf)
+        .filter((i) => farEnd(board, i).kind === "crosses");
       return {
-        text: say.onlyEndLeft(axis, pole, n, elsewhere, null),
+        text: say.onlyEndLeft(axis, pole, n, along, elsewhere, {
+          kind: "crosses",
+          squares: targets.length,
+        }),
         area,
         clues,
         line,
         reasonClues,
-        notYet,
+        targets,
       };
     }
     const j = b.common.dominoes[idx];
     const ev = evidenceOf(board, end.why, pole);
     return {
-      text: say.onlyEndLeft(axis, pole, n, elsewhere, ruleOutOf(end.why, r.line)),
+      text: say.onlyEndLeft(axis, pole, n, along, elsewhere, {
+        kind: "along",
+        why: ruleOutOf(end.why, r.line),
+      }),
       area: [...area, j, ...ev.area],
       clues,
       line,
       reasonClues: [...reasonClues, ...ev.reasonClues],
-      notYet,
+      targets: [idx],
     };
   };
 }
@@ -606,7 +628,14 @@ function legsOf(f: MagnetsFiring): Leg[] {
     if (countPremise(r)) return [idx];
     return which === NEUTRAL && r.kind === "force" ? both(idx) : onLine(idx);
   };
-  return f.placed.map(({ idx, which }) => ({
+  // A count premise's crossing dominoes share one sentence, so they go first;
+  // a domino lying along the line has its own, which may rest on theirs.
+  const crosses = ({ idx }: { idx: number }) => onLine(idx).length === 1;
+  const placed =
+    r.kind === "onlyEndLeft"
+      ? [...f.placed.filter(crosses), ...f.placed.filter((p) => !crosses(p))]
+      : f.placed;
+  return placed.map(({ idx, which }) => ({
     move:
       which === NEUTRAL
         ? { type: "flag", idx, mode: "neutral" }
@@ -633,11 +662,7 @@ function stepsOf(f: MagnetsFiring): HintStep<MagnetsMove, MagnetsHighlights>[] {
     const told = toldLeg(k);
     // A leg already done is part of what the sentence counts, so it rejoins
     // the evidence rather than vanishing from the picture.
-    const notYet = new Set(told.notYet);
-    const targets = legs
-      .slice(k)
-      .flatMap((l) => l.squares)
-      .filter((i) => !notYet.has(i));
+    const targets = told.targets ?? legs.slice(k).flatMap((l) => l.squares);
     const onTargets = new Set(targets);
     const area = [...told.area, ...legs.slice(0, k).flatMap((l) => l.squares)];
     return {

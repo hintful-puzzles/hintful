@@ -35,6 +35,13 @@ export type RuleOut =
    * which one the hatch is. */
   | { kind: "partnerFull"; axis: Axis; place: LinePlace };
 
+/** What an `onlyEndLeft` step concludes: `squares` squares of dominoes
+ * crossing the line, or one end of a domino lying along it, with why its far
+ * end cannot take the pole. */
+export type OnlyEnd =
+  | { kind: "crosses"; squares: number }
+  | { kind: "along"; why: RuleOut };
+
 /** Where a line lies from the counted one. */
 export type LinePlace = "same" | "beside" | "across";
 
@@ -254,24 +261,36 @@ export const say = {
     `This ${axis}'s empty squares take alternating poles, one more ${glyph(pole)} than ${glyph(other(pole))}: this odd-length gap must start with ${glyph(pole)}.`,
 
   /** The line needs a `pole` from each domino that can still give one, and
-   * `elsewhere` is why no other square of it can. `otherEnd` is why a domino
-   * lying along the line cannot take it at its far end, and `null` for one
-   * crossing the line, which has only this square in it. */
+   * `elsewhere` is why no other square of it can. `along` is how many of
+   * those dominoes lie along the line: two squares in it, but one `pole`,
+   * which is what makes the count one of dominoes rather than squares. `end`
+   * is what the step concludes: the squares of the dominoes crossing the line
+   * (each its domino's only square in it), or one end of a domino lying along
+   * it and why its far end cannot take the pole. */
   onlyEndLeft: (
     axis: Axis,
     pole: number,
     n: number,
+    along: number,
     elsewhere: readonly RuleOut[],
-    otherEnd: RuleOut | null,
+    end: OnlyEnd,
   ): string => {
+    // Counting dominoes rather than squares needs saying when one lies along
+    // the line: its two open squares give the line one pole, not two. "Still"
+    // gives way to it, since the clause after says what the board rules out,
+    // and the longest sentences sit near the ledger's ceiling.
     const head =
       n === 1
         ? `This ${axis} needs ${more(n, pole)} and only this domino can still give it`
-        : `This ${axis} needs ${more(n, pole)} and just ${n} dominoes can still give one`;
+        : along > 0
+          ? `This ${axis} needs ${more(n, pole)}, one per magnet, and just ${n} dominoes can give one`
+          : `This ${axis} needs ${more(n, pole)} and just ${n} dominoes can still give one`;
     const tail =
-      otherEnd === null
-        ? `, so this square must be ${glyph(pole)}.`
-        : `. At its other end a ${glyph(pole)} would ${wouldDoAny(pole, [otherEnd])}, so this end must be ${glyph(pole)}.`;
+      end.kind === "crosses"
+        ? end.squares === 1
+          ? `, so this square must be ${glyph(pole)}.`
+          : `, so these ${end.squares} squares must be ${glyphs(pole)}.`
+        : `. A ${glyph(pole)} at its far end would ${wouldDoAny(pole, [end.why])}, so it must go here.`;
     return `${head}${anywhereElse(pole, elsewhere)}${tail}`;
   },
 };

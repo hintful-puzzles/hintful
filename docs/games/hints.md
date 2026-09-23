@@ -1302,7 +1302,19 @@ each square out (`tellCount` in
 [`magnets/hint.ts`](../../src/games/magnets/hint.ts)), and hatches the line
 itself (§ "Hatch the line the sentence names"). Two things came with it. **A leg can be forced by the leg before it** when a solver places a
 firing's moves in one sweep, so read each leg against the board with the
-earlier legs applied, and ring a later leg only once that board forces it.
+earlier legs applied. **And ring what the leg's sentence concludes, not
+every square the journey still has to decide.** Magnets rang all of a count's
+remaining legs while each leg said "so this square must be +", so the owner
+saw two rings under a singular (2026-09-23). The legs its sentence can
+conclude together (dominoes crossing the line, forced by the count alone) now
+go first and are named with their number, "these 2 squares", and a domino
+lying along the line gets its own leg and its own ring. **A count of dominoes
+must say why it is not a count of squares**: a domino lying along the line has
+two open squares and gives it one pole, and without "one per magnet" the same
+owner read four open squares for three +s as a board with several answers.
+`magnets-hint.test.ts` holds every "this square" to one ring and every "these N
+squares" to N, over boards pinned as descs, because the plural fired on 12 of
+320 generated boards and the seeded corpus saw none.
 And when a line of reasons varies by row and column, merge the axes ("overfill
 its row or column") before reaching for the long-narration ledger.
 
@@ -1329,6 +1341,17 @@ game it returned six shapes, four of them Loopy's, where the move's own pair
 connector is the mark; both real ones were Solo's, and the fix was to record
 the premise (`mark-the-cells-solo-points-at`): the region an extra-cage
 counted down, and the cells a locked pattern is locked into.
+
+**So is a singular one.** "This square" beside two action rings of the same
+kind leaves the player to guess which. Swept across every hinting game
+(2026-09-23), with the target-like highlight fields counted as places: the one
+real case was Magnets' count premise (its paragraph above, under § "Show the
+evidence as an area"). Every other hit tied itself by kind: Boats draws its
+extra targets as water marks beside the boat mark the sentence names, a Magnets
+domino sentence rings both halves of "this domino", and Galaxies' "this cell"
+names its partner cell in the same sentence. Highlight fields differ per game,
+so the check lives beside the vocabulary that can judge it, per game, like the
+deixis gates.
 
 **The strongest form of "the words and the picture agree" is a count you can
 assert.** Where a sentence states a number — a run's length, the room left,

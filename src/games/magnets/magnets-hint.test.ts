@@ -15,7 +15,7 @@ import {
   recordingPass,
   seedSolver,
 } from "./hint.ts";
-import { type Axis, type Cause, type RuleOut, say } from "./hint-text.ts";
+import { type Axis, type Cause, type OnlyEnd, type RuleOut, say } from "./hint-text.ts";
 import { magnetsGame } from "./index.ts";
 import type { MagnetsReason } from "./solver.ts";
 import {
@@ -253,10 +253,14 @@ describe("a count premise shows why the rest of its line is ruled out", () => {
 
   it("names the reason, and marks it rather than the rest of the line", () => {
     const [first] = steps();
+    // Two squares are ringed, so the sentence says two (owner, 2026-09-23: it
+    // said "this square"). And rows 4 and 5 are one domino, so the column's
+    // four open squares give it three +s at most, not four: the sentence says
+    // why it counts dominoes, or the count reads as false.
     expect(first.explanation).toBe(
-      "This column needs 3 more +s and just 3 dominoes can still give one; " +
+      "This column needs 3 more +s, one per magnet, and just 3 dominoes can give one; " +
         "a + anywhere else would put one − too many in the column beside it, " +
-        "so this square must be +.",
+        "so these 2 squares must be +s.",
     );
     const h = first.highlights;
     // "This column" is the hatched one, and it is the only line hatched.
@@ -279,7 +283,7 @@ describe("a count premise shows why the rest of its line is ruled out", () => {
     expect(second.highlights?.targets).toEqual([at(2, 3)]);
     expect(third.highlights?.targets).toEqual([at(2, 5)]);
     expect(third.explanation).toContain(
-      "At its other end a + would touch a +, so this end must be +.",
+      "A + at its far end would touch a +, so it must go here.",
     );
     expect(third.highlights?.area).toEqual(
       expect.arrayContaining([at(2, 4), at(2, 3)]),
@@ -320,7 +324,7 @@ describe("a count premise shows why the rest of its line is ruled out", () => {
   it("counts from the board each leg finds, not the one the journey began on", () => {
     const [, second, third] = steps();
     expect(second.explanation).toMatch(
-      /^This column needs 2 more \+s and just 2 dominoes/,
+      /^This column needs 2 more \+s, one per magnet, and just 2 dominoes/,
     );
     expect(third.explanation).toMatch(
       /^This column needs one more \+ and only this domino can still give it;/,
@@ -368,12 +372,25 @@ describe("magnets hint sentences", () => {
               text: say.lineExact(axis, pole, n, elsewhere),
               reasoned: elsewhere.length > 0,
             });
-            for (const end of [null, ...ruleOuts]) {
-              out.push({
-                text: say.onlyEndLeft(axis, pole, n, elsewhere, end),
-                reasoned: elsewhere.length > 0 || end !== null,
-              });
-            }
+            // A far end lying along the line is ruled out through the ringed
+            // square, which is on the counted line: a met line it cites is
+            // that line or one across it, never the one beside it.
+            const ends: OnlyEnd[] = [
+              { kind: "crosses", squares: 1 },
+              { kind: "crosses", squares: 2 },
+              ...ruleOuts
+                .filter(
+                  (why) => !(why.kind === "partnerFull" && why.place === "beside"),
+                )
+                .map((why) => ({ kind: "along" as const, why })),
+            ];
+            for (const end of ends)
+              for (const along of [0, 1]) {
+                out.push({
+                  text: say.onlyEndLeft(axis, pole, n, along, elsewhere, end),
+                  reasoned: elsewhere.length > 0 || end.kind === "along",
+                });
+              }
           }
       }
     return out;
@@ -430,7 +447,7 @@ describe("magnets hint sentences", () => {
       expect(text.length, text).toBeLessThanOrEqual(300);
       expect(text, text).not.toContain("—");
       // The ledger's pattern for these, so a rewording cannot slip off it.
-      expect(text, text).toMatch(/ anywhere else would |At its other end a [+−] would/);
+      expect(text, text).toMatch(/ anywhere else would | at its far end would /);
     }
   });
 
@@ -467,6 +484,82 @@ describe("magnets hint sentences", () => {
     expect(say.lineExact("row", POSITIVE, 1, [])).toContain("this square");
     expect(say.oneNeutralLeft("column", 1)).toContain("this domino");
     expect(say.neutralExact("row", 1)).toContain("this one");
+  });
+
+  it("rings as many squares as the sentence names, in every plan", () => {
+    // A journey rings every square its legs still decide, while a leg's
+    // sentence names only what it concludes; the two drifted apart once, and
+    // "so this square must be +" stood beside two rings (owner, 2026-09-23).
+    // A domino's own sentence rings both its squares, and says "this domino".
+    const said = { one: 0, many: 0, crossing: 0, along: 0 };
+    // A domino count concluding two crossing squares at once fired on 12 of
+    // 320 generated boards (2026-09-23), so the seeded corpus can miss it:
+    // these are boards it fires on, pinned as descs, as is one whose count
+    // ends on dominoes lying along the line.
+    const pinned: [MagnetsParams, string][] = [
+      [
+        { w: 7, h: 8, diff: 1, stripclues: false },
+        "2324334,34233213,4142334,42423132,LRTLRLRTTBLRTTBBLRTBBTTLRBTTBBLRTBBLRTTBTTLRBBTBBLRLRBLR",
+      ],
+      [
+        { w: 7, h: 8, diff: 1, stripclues: true },
+        "..33...,.3.....2,3414.42,.431....,LRTLRLRLRBLRTTTLRLRBBBTTLRLRTBBLRLRBLRTTTTLRTBBBBLRBLRLR",
+      ],
+      [
+        { w: 9, h: 10, diff: 1, stripclues: true },
+        "4.4445.44,.43453...3,53.4.3...,25....43..,TLRTLRTLRBLRBLRBLRLRLRTLRTTTLRTBLRBBBTTBTTTTTTBBTBBBBBBLRBTLRLRLRLRBTTLRTTTTTBBLRBBBBBLRLR",
+      ],
+      [
+        { w: 5, h: 6, diff: 1, stripclues: true },
+        "2....,1222..,21...,....03,LRLRTTLRTBBLRBTLRLRBLRLRTLRLRB",
+      ],
+    ];
+    const boards = [
+      ...CORPUS,
+      ...pinned.map(([p, desc]) => ({ label: desc, state: newState(p, desc) })),
+    ];
+    for (const { label, state: start } of boards) {
+      let state = start;
+      for (let asks = 0; !state.completed && asks < 200; asks++) {
+        const res = hint(state);
+        if (!res.ok) break;
+        for (const step of res.steps as HintStep<MagnetsMove, MagnetsHighlights>[]) {
+          const rings = step.highlights?.targets.length;
+          const many = /\bthese (\d+) squares\b/.exec(step.explanation);
+          if (many) {
+            said.many++;
+            expect(rings, `${label}: ${step.explanation}`).toBe(Number(many[1]));
+          } else if (/\bthis (square|end)\b|\bmust go here\b/.test(step.explanation)) {
+            said.one++;
+            expect(rings, `${label}: ${step.explanation}`).toBe(1);
+          }
+          // A domino count's squares are each their domino's only square in
+          // the hatched line, which is why the count alone decides them.
+          if (
+            /dominoes can .*, so these? (\d+ )?squares? must be/.test(step.explanation)
+          ) {
+            said.crossing++;
+            const line = step.highlights?.line;
+            if (!line) throw new Error(`${label}: a count names no line`);
+            const inLine = (i: number) =>
+              (line.roworcol === COLUMN ? i % state.w : Math.floor(i / state.w)) ===
+              line.num;
+            for (const t of step.highlights?.targets ?? []) {
+              expect(inLine(state.common.dominoes[t]), `${label}: ${t}`).toBe(false);
+            }
+          }
+          if (/, one per magnet, .* at its far end would/.test(step.explanation)) {
+            said.along++;
+          }
+          state = executeMove(state, step.move);
+        }
+      }
+    }
+    // Every arm spoken, so no part of the check passed over nothing.
+    expect(said.one).toBeGreaterThan(20);
+    expect(said.many).toBeGreaterThan(5);
+    expect(said.crossing).toBeGreaterThanOrEqual(3);
+    expect(said.along).toBeGreaterThan(0);
   });
 
   it("marks a line's clue digits, the line and the squares it decides", () => {
