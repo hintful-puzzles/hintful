@@ -318,11 +318,12 @@ describe("netslide hint narration", () => {
     }
   });
 
-  it("teaches the frozen line, named by its number, when that is what the move turns on", () => {
+  it("teaches the frozen line, striped, when that is what the move turns on", () => {
     // The one thing Netslide can prove *about a move*: a tile sitting in the
     // source's row can only be shifted by its column (and the other way about).
-    // The line is named by its number — "the center row" is false on an
-    // even-sized board, where the source sits at ⌊w/2⌋ and the player can see it.
+    // The line is "this row", striped, never a number (the board draws none) and
+    // never "the center row", false on an even-sized board, where the source
+    // sits at ⌊w/2⌋ and the player can see it.
     let seen = false;
     for (let i = 0; i < 40 && !seen; i++) {
       const { state, aux } = board(HARD_5X5, `frozen-${i}`);
@@ -338,8 +339,11 @@ describe("netslide hint narration", () => {
           step.move.type === "slide" &&
           step.move.axis === "col"
         ) {
-          expect(step.explanation).toContain(`Row ${state.cy + 1} never slides`);
+          expect(step.explanation).toContain("This row never slides");
           expect(step.explanation).toContain("only a column move can shift");
+          expect(marks.line).toEqual(
+            Array.from({ length: state.w }, (_, x) => state.cy * state.w + x),
+          );
           seen = true;
         }
         if (
@@ -347,8 +351,11 @@ describe("netslide hint narration", () => {
           step.move.type === "slide" &&
           step.move.axis === "row"
         ) {
-          expect(step.explanation).toContain(`Column ${state.cx + 1} never slides`);
+          expect(step.explanation).toContain("This column never slides");
           expect(step.explanation).toContain("only a row move can shift");
+          expect(marks.line).toEqual(
+            Array.from({ length: state.h }, (_, y) => y * state.w + state.cx),
+          );
           seen = true;
         }
       }

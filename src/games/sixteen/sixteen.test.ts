@@ -363,10 +363,12 @@ describe("Sixteen hint", () => {
     const result = sixteenGame.hint?.(s);
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
-    // Format: "Working on tile T: move it to row R" / "… to column C".
+    // Format: "Working on tile T: move it to the outlined square" (the nearer of
+    // two when the next slide is previewed); never a row or column number.
     expect(result.steps[0].explanation).toMatch(
-      /^Working on tile \d+: move it to (row|column) \d+/,
+      /^Working on tile \d+: move it to the (nearer )?outlined square/,
     );
+    expect(result.steps[0].explanation).not.toMatch(/\b(row|column) \d/);
   });
 
   it("the hinted move actually improves the state (net tiles-closer > 0)", () => {
@@ -762,14 +764,14 @@ describe("Sixteen hint", () => {
     // Tile 7's journey ends at index 1 (its home is index 6), so the
     // first leg carries the "(setting up)" why for the whole journey.
     expect(step1.explanation).toBe(
-      "Working on tile 7: move it to row 1, then column 2 (setting up).",
+      "Working on tile 7: move it to the nearer outlined square, then the other (setting up).",
     );
     expect(hl1.ultimatePos).toBe(1);
 
     // (b) journey continuity: the second leg narrates tile 7's journey
     // and is flagged so the midend keeps it displayed when leg 1
     // completes (the journey was presented as one hint).
-    expect(step2.explanation).toBe("Working on tile 7: then to column 2.");
+    expect(step2.explanation).toBe("Working on tile 7: then to the outlined square.");
     expect(hl2.tile).toBe(7);
     expect(hl2.targetPos).toBe(1);
     expect(step2.continuesPrevious).toBe(true);
@@ -905,8 +907,8 @@ describe("Sixteen hint", () => {
   it("uses the immediate destination in hint explanation when tile is already in its target row/column", () => {
     // Tile 1 sits in its home column but the wrong row, and the plan opens by
     // sliding its row, which takes it out of that column. Every step must name
-    // the line its own move lands the tile on, never the line the tile belongs
-    // on.
+    // the square its own move lands the tile on, never the one the tile belongs
+    // on: the outlined target is exactly where the move puts the tile.
     const s: SixteenState = {
       ...solvedState(3, 3),
       tiles: new Int32Array([4, 3, 9, 1, 6, 5, 8, 2, 7]),
@@ -915,17 +917,23 @@ describe("Sixteen hint", () => {
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
 
+    let at = s;
+    let checked = 0;
     for (const step of result.steps) {
-      if (step.move.type !== "slide") continue;
       const hl = step.highlights as SixteenHintHighlights;
-      const line =
-        step.move.axis === "row"
-          ? `column ${(hl.targetPos % 3) + 1}`
-          : `row ${Math.floor(hl.targetPos / 3) + 1}`;
-      expect(step.explanation).toMatch(
-        new RegExp(`^Working on tile ${hl.tile}: (move it|then) to ${line}\\b`),
-      );
+      const next = sixteenGame.executeMove(at, step.move);
+      if (step.move.type === "slide") {
+        expect(next.tiles.indexOf(hl.tile)).toBe(hl.targetPos);
+        expect(step.explanation).toMatch(
+          new RegExp(
+            `^Working on tile ${hl.tile}: (move it|then) to the (nearer )?outlined square`,
+          ),
+        );
+        checked++;
+      }
+      at = next;
     }
+    expect(checked).toBeGreaterThan(0);
   });
 
   it("always prefers candidates in ascending numeric order regardless of whether they are out-of-place on the moved axis", () => {
@@ -994,10 +1002,11 @@ describe("Sixteen hint rendering", () => {
     for (const step of result.steps) {
       const hl = step.highlights as SixteenHintHighlights;
       // A previewed two-leg journey (first leg, not a continuation) reads
-      // "move it to <line>, then <line>" and carries a distinct ultimatePos.
+      // "move it to the nearer outlined square, then the other" and carries a
+      // distinct ultimatePos.
       if (hl.ultimatePos !== null && !step.continuesPrevious) {
         expect(step.explanation).toMatch(
-          /^Working on tile \d+: move it to (row|column) \d+, then (row|column) \d+/,
+          /^Working on tile \d+: move it to the nearer outlined square, then the other/,
         );
         expect(hl.ultimatePos).not.toBe(hl.targetPos);
       }

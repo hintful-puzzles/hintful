@@ -394,6 +394,9 @@ const IDIOMS: Record<string, (step: NarratedStep) => boolean> = {
  */
 const EM_DASH = /—/;
 
+/** "row 3", "Columns 2" — a line by a number. */
+const NUMBERED_LINE = /\b(rows?|columns?)\s+\d/i;
+
 describe("the necessity rule reaches every hinting game it should", () => {
   it("drew from a populated registry, and exempts a minority of it", () => {
     // Vacuity: an empty `HINT_GAMES` would exempt nothing and check nothing,
@@ -482,6 +485,14 @@ describe("hint narration form, cross-game", () => {
             expect(
               EM_DASH.test(step.explanation),
               `${at} — narration uses an em-dash; rewrite with a comma, a semicolon or a sentence break`,
+            ).toBe(false);
+            // No board in the collection draws row or column numbers, so a
+            // line named by one sends the player counting; the line a sentence
+            // is about is striped instead (hints.md § "Hatch the line the
+            // sentence names").
+            expect(
+              NUMBERED_LINE.test(step.explanation),
+              `${at} — narration names a row or column by a number the board does not draw`,
             ).toBe(false);
           });
         }

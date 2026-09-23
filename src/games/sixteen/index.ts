@@ -34,7 +34,7 @@ import {
   toroidalDist,
 } from "../../engine/slide-planner.ts";
 import type { Point } from "../../engine/types.ts";
-import { type Line, say } from "./hint-text.ts";
+import { say } from "./hint-text.ts";
 import {
   ANIM_TIME,
   colors,
@@ -648,14 +648,8 @@ function narrateStep(
   const landC = move.axis === "row" ? (curC + move.delta + w) % w : curC;
   const targetPos = landR * w + landC;
 
-  // Goal:tactic narration: the tile being worked toward home, the line this
-  // move sends it to, and the line the next move continues it along, if any.
-  const first: Line =
-    move.axis === "row"
-      ? { axis: "column", n: landC + 1 }
-      : { axis: "row", n: landR + 1 };
-  let second: Line | null = null;
-
+  // Goal:tactic narration: the tile being worked toward home, the square this
+  // move lands it on, and the square the next move takes it on to, if any.
   let ultimatePos: number | null = null;
 
   if (nextMove && nextMove.axis !== move.axis) {
@@ -665,13 +659,7 @@ function narrateStep(
       const ultR = nextMove.axis === "col" ? (landR + nextMove.delta + h) % h : landR;
       const ultC = nextMove.axis === "row" ? (landC + nextMove.delta + w) % w : landC;
       const ult = ultR * w + ultC;
-      if (ult !== targetPos && ult !== currentIdx) {
-        ultimatePos = ult;
-        second =
-          move.axis === "row"
-            ? { axis: "row", n: ultR + 1 }
-            : { axis: "column", n: ultC + 1 };
-      }
+      if (ult !== targetPos && ult !== currentIdx) ultimatePos = ult;
     }
   }
 
@@ -684,8 +672,7 @@ function narrateStep(
   const explanation = say.step({
     tile: bestTile,
     continues: continuesPrevious,
-    first,
-    second,
+    previews: ultimatePos !== null,
     home: (ultimatePos ?? targetPos) === bestTile - 1,
   });
 

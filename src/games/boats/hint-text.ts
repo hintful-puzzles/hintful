@@ -17,9 +17,11 @@ type T<K extends BoatsTechnique["kind"]> = Extract<BoatsTechnique, { kind: K }>;
 
 const plural = (n: number): string => (n === 1 ? "" : "s");
 
-/** A line as the player reads it: 1-based, counting from the top / the left. */
+/** A line as the player reads it: "This row", striped on the board. Never a
+ * number, which the board does not draw (docs/games/hints.md § "Hatch the line
+ * the sentence names"). */
 function lineName(line: BoatsLine): string {
-  return `${line.horizontal ? "Row" : "Column"} ${line.index + 1}`;
+  return `This ${line.horizontal ? "row" : "column"}`;
 }
 
 /**
@@ -41,7 +43,9 @@ function breachClause(breach: BoatsBreach): string {
     case "collision":
       return "two boats would end up touching corner to corner";
     case "count":
-      return `${lineName(breach.line).toLowerCase()} could no longer reach its ${breach.line.clue}`;
+      // "The striped row", not "this row": the sentence is about a square, and
+      // the line the trial broke need not be that square's own.
+      return `the striped ${breach.line.horizontal ? "row" : "column"} could no longer reach its ${breach.line.clue}`;
     case "fleet":
       return "it would complete a boat the fleet has no room for";
     case "fleetTotal":

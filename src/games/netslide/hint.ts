@@ -30,7 +30,7 @@ import {
   slidePieces,
   toroidalDist,
 } from "../../engine/slide-planner.ts";
-import { type Line, say } from "./hint-text.ts";
+import { type Landing, say } from "./hint-text.ts";
 import { reconstructSolution } from "./reconstruct.ts";
 import { isComplete, type NetslideMove, type NetslideState } from "./state.ts";
 
@@ -619,10 +619,10 @@ function narrateStep(
     line: [],
   };
 
-  const to: Line =
-    m.axis === "row"
-      ? { axis: "column", n: (focus.landing % w) + 1 }
-      : { axis: "row", n: Math.floor(focus.landing / w) + 1 };
+  // Named by the mark `drawHintTargets` puts on the landing square: solid only
+  // when it is the destination and the tile belongs there.
+  const to: Landing =
+    focus.landing === focus.destination && focus.belongs ? "solid" : "dashed";
 
   // "Where it belongs" is a claim, so it is only made when the finished board
   // really does want this tile's wires in the cell the slide is delivering it to.
@@ -644,14 +644,13 @@ function narrateStep(
 
   // The single degree of freedom. A tile in the source's row sits on a line that
   // never slides, so the only line that can move it is its column — and the other
-  // way about. The row is named by its number: true at every board size, and the
-  // player can count it.
+  // way about. The row is "this row", striped: the board draws no numbers.
   let explanation: string;
   if (row === cy && m.axis === "col") {
-    explanation = say.rowFixed(cy + 1, mask, to, arrivesHome);
+    explanation = say.rowFixed(mask, to, arrivesHome);
     highlights.line = Array.from({ length: w }, (_, x) => cy * w + x);
   } else if (col === cx && m.axis === "row") {
-    explanation = say.colFixed(cx + 1, mask, to, arrivesHome);
+    explanation = say.colFixed(mask, to, arrivesHome);
     highlights.line = Array.from({ length: s.h }, (_, y) => y * w + cx);
   } else if (focus.belongs && isBesideSource(focus.destination, w, cx, cy)) {
     explanation = say.besideSource(mask, to, arrivesHome);

@@ -2,42 +2,35 @@
  * Every sentence Sixteen's hint speaks.
  *
  * Goal:tactic narration, shared in shape with Fifteen: the prefix names the
- * tile being worked toward home (the engine's `workingOn`), the tactic states
- * the line this move sends it to, and a trailing clause says *why* — ", its
- * final spot" when the journey ends in the tile's solved cell, else the shared
- * staging marker. Which tile, which lines and whether it arrives are
- * `index.ts`'s `narrateStep` to decide; this file decides only how it reads.
+ * tile being worked toward home (the engine's `workingOn`), the tactic says
+ * where this move sends it, and a trailing clause says *why* — ", its final
+ * spot" when the journey ends in the tile's solved cell, else the shared staging
+ * marker. Where it goes is the square outlined on the board, never a row or
+ * column number the board does not draw; a two-leg preview outlines both
+ * landings, and this move's is the nearer. Which tile, which squares and
+ * whether it arrives are `index.ts`'s `narrateStep` to decide; this file decides
+ * only how it reads.
  */
 
 import { HINT_SETTING_UP, workingOn } from "../../engine/hint-text.ts";
 
-/** A row or column as the player counts it, 1-based. */
-export interface Line {
-  axis: "row" | "column";
-  n: number;
-}
-
-const lineName = (l: Line): string => `${l.axis} ${l.n}`;
-
 export const say = {
   /**
-   * One slide of `tile`'s journey to `first`, previewing `second` when the
-   * next slide continues the same journey perpendicular to this one. A
-   * continuation leg (`continues`) repeats neither the verb nor the why — leg
-   * 0 of its journey already carried both and is still on screen. `home` is
-   * whether the journey ends in the tile's solved cell.
+   * One slide of `tile`'s journey, previewing the next when it continues the
+   * same journey perpendicular to this one (`previews`). A continuation leg
+   * (`continues`) repeats neither the verb nor the why — leg 0 of its journey
+   * already carried both and is still on screen. `home` is whether the journey
+   * ends in the tile's solved cell.
    */
   step: (p: {
     tile: number;
     continues: boolean;
-    first: Line;
-    second: Line | null;
+    previews: boolean;
     home: boolean;
   }): string => {
-    let tactic = p.continues
-      ? `then to ${lineName(p.first)}`
-      : `move it to ${lineName(p.first)}`;
-    if (p.second) tactic += `, then ${lineName(p.second)}`;
+    const to = p.previews ? "the nearer outlined square" : "the outlined square";
+    let tactic = p.continues ? `then to ${to}` : `move it to ${to}`;
+    if (p.previews) tactic += ", then the other";
     const suffix = p.continues
       ? ""
       : p.home

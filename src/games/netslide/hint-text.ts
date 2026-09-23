@@ -18,9 +18,11 @@
  * Saying it every step made the commonest sentence 1.8× the length of the rest and
  * taught nothing the second time.
  *
- * Lines are named by **number** ("row 3 never slides"), never as "the center":
- * `cx` is `⌊w/2⌋`, so on an even-sized board the source is visibly off-center and
- * the player can see the claim is false.
+ * A line is "this row", striped on the board, never a number the board does not
+ * draw, and never "the center": `cx` is `⌊w/2⌋`, so on an even-sized board the
+ * source is visibly off-center and the player can see the claim is false. Where
+ * a slide takes a tile is named by the mark on that square: dashed for a square
+ * on the way, outlined for one it belongs in.
  *
  * The move itself is *not* forced by logic — Netslide is a movement game — so
  * the conclusion is an imperative, never a modal of necessity.
@@ -29,13 +31,12 @@
 import { HINT_SETTING_UP } from "../../engine/hint-text.ts";
 import { D, L, R, U, wireCount } from "./state.ts";
 
-/** A row or column as the player counts it, 1-based. */
-export interface Line {
-  axis: "row" | "column";
-  n: number;
-}
+/** Where a slide lands the tile, by the mark on that square: `solid` when it
+ * lands where it belongs, `dashed` on the way there. */
+export type Landing = "solid" | "dashed";
 
-const place = (l: Line): string => `${l.axis} ${l.n}`;
+const place = (to: Landing): string =>
+  to === "solid" ? "the outlined square" : "the dashed square";
 
 /** A tile's name is its shape, which is the one thing about it the player can
  * see. There is no "tile 8" in Netslide, so the shape names the *kind* and the
@@ -55,27 +56,27 @@ const tail = (home: boolean): string =>
 export const say = {
   /** A later leg of the journey: it neither re-introduces the tile nor
    * re-explains the why, since leg one carried both and is still on screen. */
-  next: (to: Line, home: boolean): string =>
+  next: (to: Landing, home: boolean): string =>
     `Now on to ${place(to)}${home ? ", where it belongs" : ""}.`,
 
-  /** The tile (wired as `mask`) sits in the source's row, numbered `row`. */
-  rowFixed: (row: number, mask: number, to: Line, home: boolean): string =>
-    `Row ${row} never slides, so only a column move can shift this ${tileName(mask)}: take it to ${place(to)}${tail(home)}.`,
+  /** The tile (wired as `mask`) sits in the source's row, striped. */
+  rowFixed: (mask: number, to: Landing, home: boolean): string =>
+    `This row never slides, so only a column move can shift this ${tileName(mask)}: take it to ${place(to)}${tail(home)}.`,
 
-  /** The tile sits in the source's column, numbered `col`. */
-  colFixed: (col: number, mask: number, to: Line, home: boolean): string =>
-    `Column ${col} never slides, so only a row move can shift this ${tileName(mask)}: take it to ${place(to)}${tail(home)}.`,
+  /** The tile sits in the source's column, striped. */
+  colFixed: (mask: number, to: Landing, home: boolean): string =>
+    `This column never slides, so only a row move can shift this ${tileName(mask)}: take it to ${place(to)}${tail(home)}.`,
 
   // Stated, not argued: *why* the source is fixed is a rule, and rules live in
   // the help text. "Belongs beside the source" is itself the arrival marker, so
   // the arriving leg closes on it rather than on `tail`'s ", where it belongs"
   // (which would say "belongs" twice); a leg still on its way keeps the shared
   // "(setting up)" marker.
-  besideSource: (mask: number, to: Line, home: boolean): string =>
+  besideSource: (mask: number, to: Landing, home: boolean): string =>
     home
       ? `Take this ${tileName(mask)} to ${place(to)}; it belongs beside the source.`
       : `This ${tileName(mask)} belongs beside the source: take it to ${place(to)} ${HINT_SETTING_UP}.`,
 
-  working: (mask: number, to: Line, home: boolean): string =>
+  working: (mask: number, to: Landing, home: boolean): string =>
     `Working on the highlighted ${tileName(mask)}: take it to ${place(to)}${tail(home)}.`,
 };
