@@ -35,4 +35,7 @@
 
 - [x] 3.1 `docs/games/hints.md`: the rule is about the line or region a
       sentence names.
-- [ ] 3.2 Spec delta; Chrome on a sample in light and dark; archive.
+- [x] 3.2 Spec delta; Chrome on a sample in light and dark (Crossing's
+      `crossRuns`, both runs striped); owner accepted 2026-09-23, keeping
+      Range's scattered seen-cells and connect neighbors outlined as
+      particular squares; archive.
