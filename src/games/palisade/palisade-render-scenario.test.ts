@@ -9,17 +9,18 @@
 //     diff" scenario).
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
+import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { palisadeGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
 import { newDesc } from "./solver.ts";
 import type { PalisadeHint } from "./state.ts";
 
-// The equivalentEdges frame: a sibling edge AND a referenced *region* (more
-// than one cell). numberExhausted journeys carry siblings too, but reference a
-// single clue cell, so the multi-cell region distinguishes the rule.
+// The equivalentEdges frame: a sibling edge AND a hatched *region* (more than
+// one cell). numberExhausted journeys carry siblings too, but outline a single
+// clue cell, so the multi-cell region distinguishes the rule.
 const isEquivalentEdgesFrame = (hl?: PalisadeHint): boolean =>
-  (hl?.edges?.length ?? 0) > 0 && (hl?.cells?.length ?? 0) > 1;
+  (hl?.edges?.length ?? 0) > 0 && (hl?.hatch?.length ?? 0) > 1;
 
 /**
  * Deterministically find a board whose hint plan reaches an
@@ -72,18 +73,20 @@ describe("Palisade render scenarios", () => {
       ops.filter((o) => o.op === "rect" && o.color === color).length;
 
     // Both forced edges paint COL_HINT (they share a fate, so they share a
-    // color) — at least two blue rects — over a COL_HINT_CELL-outlined region.
+    // color) — at least two blue rects — over "the same region", hatched, one
+    // hatch per cell of it, and outlined nowhere.
     expect(rectsOf(COL_HINT)).toBeGreaterThanOrEqual(2);
-    expect(rectsOf(COL_HINT_CELL)).toBeGreaterThan(0);
+    const hl = result.hint?.highlights as PalisadeHint | undefined;
+    const hatches = opsOfKind(ops, "hatch");
+    expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(hl?.hatch?.length);
+    expect(rectsOf(COL_HINT_CELL)).toBe(0);
 
-    // Outlining the region does not erase the clues: digits are still drawn.
+    // Hatching the region does not erase the clues: digits are still drawn.
     expect(ops.some((o) => o.op === "text")).toBe(true);
 
     // The displayed step really is the equivalentEdges one (a sibling
-    // edge, and a multi-cell referenced region).
-    const hl = result.hint?.highlights as PalisadeHint | undefined;
+    // edge, and a multi-cell hatched region).
     expect(isEquivalentEdgesFrame(hl)).toBe(true);
-    expect(hl?.cells?.length ?? 0).toBeGreaterThan(1);
   });
 
   it("matches the opener-frame snapshot", () => {

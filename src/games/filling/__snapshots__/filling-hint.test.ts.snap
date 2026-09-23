@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`filling hint render scenario > rings the target(s) and outlines the evidence region 1`] = `
+exports[`filling hint render scenario > rings the target(s) and hatches the region the sentence names 1`] = `
 [
   {
     "color": 0,
@@ -293,6 +293,16 @@ exports[`filling hint render scenario > rings the target(s) and outlines the evi
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
+    "w": 32,
+    "x": 144,
+    "y": 16,
+  },
+  {
+    "color": 7,
+    "h": 32,
+    "op": "hatch",
+    "period": 11,
+    "rgb": "rgb(21, 113, 233)",
     "w": 32,
     "x": 144,
     "y": 16,
@@ -3487,42 +3497,6 @@ exports[`filling hint render scenario > rings the target(s) and outlines the evi
   },
   {
     "op": "unclip",
-  },
-  {
-    "color": 8,
-    "h": 2,
-    "op": "rect",
-    "rgb": "rgb(14, 88, 91)",
-    "w": 32,
-    "x": 144,
-    "y": 16,
-  },
-  {
-    "color": 8,
-    "h": 32,
-    "op": "rect",
-    "rgb": "rgb(14, 88, 91)",
-    "w": 2,
-    "x": 144,
-    "y": 16,
-  },
-  {
-    "color": 8,
-    "h": 2,
-    "op": "rect",
-    "rgb": "rgb(14, 88, 91)",
-    "w": 32,
-    "x": 144,
-    "y": 46,
-  },
-  {
-    "color": 8,
-    "h": 32,
-    "op": "rect",
-    "rgb": "rgb(14, 88, 91)",
-    "w": 2,
-    "x": 174,
-    "y": 16,
   },
   {
     "color": 7,

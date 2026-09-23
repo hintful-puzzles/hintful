@@ -7,17 +7,18 @@
  * region culls) and places with quality-bar narration; refusal on solved / on
  * mistakes; `hintKeepTrack` verdicts. Tier 2.5 — a render-scenario snapshot of a
  * deductive elimination journey frame (struck candidate `COL_PENCIL`
- * strikethrough, evidence `COL_HINT_CELL`, grid/clues still drawn).
+ * strikethrough, the named region hatched, grid/clues still drawn).
  */
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
+import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { newSoloDesc } from "./generator.ts";
 import { noRepeatRegionNames, regionsOf, soloGame } from "./index.ts";
-import { COL_HINT_CELL, COL_PENCIL, digitChar } from "./render.ts";
+import { COL_HINT, COL_PENCIL, digitChar } from "./render.ts";
 import { type HintReason, recordSoloDeductions } from "./solver.ts";
 import {
   DIFF_BLOCK,
@@ -330,8 +331,8 @@ describe("solo hint", () => {
           "the total named is the region's, not the residual",
         ).toBe((cr * (cr + 1)) / 2);
         const [target] = step.highlights.targets as { x: number; y: number }[];
-        const area = step.highlights.area as { x: number; y: number }[];
-        // The cells shaded are the cells of the region the sentence names.
+        const area = step.highlights.hatch as { x: number; y: number }[];
+        // The cells hatched are the cells of the region the sentence names.
         const want =
           said[1] === "row"
             ? area.every((c) => c.y === target.y)
@@ -342,7 +343,7 @@ describe("solo hint", () => {
                     ((c.x / st.params.c) | 0) === ((target.x / st.params.c) | 0) &&
                     ((c.y / st.params.r) | 0) === ((target.y / st.params.r) | 0),
                 );
-        expect(want, `shaded cells outside the ${said[1]} the sentence names`).toBe(
+        expect(want, `hatched cells outside the ${said[1]} the sentence names`).toBe(
           true,
         );
         expect(area).toHaveLength(cr);
@@ -654,7 +655,7 @@ function strikeFrame(p: SoloParams, pred: (s: string) => boolean): string {
 }
 
 describe("solo hint render", () => {
-  it("a deductive elimination shades the evidence and strikes the candidate", () => {
+  it("a deductive elimination hatches its region and strikes the candidate", () => {
     const pred = (e: string) =>
       /crossed out of the rest of it|already accounts? for/.test(e);
     const id = strikeFrame(ADV, pred);
@@ -667,10 +668,13 @@ describe("solo hint render", () => {
       hintUntil: (s) => pred(s.explanation),
     });
     expect(pred(hint?.explanation ?? "")).toBe(true);
-    // The evidence region is shaded COL_HINT_CELL.
-    expect(
-      recording.ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL),
-    ).toBe(true);
+    // The region the sentence names ("in this block", "in this row") is
+    // hatched, one hatch per cell of it.
+    const region = (hint?.highlights as { hatch?: unknown[] }).hatch ?? [];
+    expect(region.length).toBeGreaterThan(0);
+    const hatches = opsOfKind(recording.ops, "hatch");
+    expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(region.length);
+    for (const h of hatches) expect(h.color).toBe(COL_HINT);
     // The struck candidate keeps its COL_PENCIL digit, crossed through in COL_PENCIL.
     expect(recording.ops.some((o) => o.op === "line" && o.color === COL_PENCIL)).toBe(
       true,

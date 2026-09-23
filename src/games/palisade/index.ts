@@ -188,7 +188,12 @@ function buildStep(
       y,
       dir,
       kind,
-      cells: fe.cells?.map((i) => ({ x: i % w, y: Math.floor(i / w) })),
+      // The one region a sentence is about is its hatch (docs/games/hints.md
+      // § "Hatch the line the sentence names"); a clue, a corner or the two
+      // regions a join would merge stay outlined.
+      ...(fe.rule === "notTooSmall" || fe.rule === "equivalentEdges"
+        ? { hatch: fe.cells?.map((i) => ({ x: i % w, y: Math.floor(i / w) })) }
+        : { cells: fe.cells?.map((i) => ({ x: i % w, y: Math.floor(i / w) })) }),
       edges: siblings.length
         ? siblings.map((s) => ({ x: s.x, y: s.y, dir: s.dir }))
         : undefined,

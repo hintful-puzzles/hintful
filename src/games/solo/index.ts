@@ -501,12 +501,10 @@ interface SoloMarks {
   hatch?: Point[];
 }
 
-/** A region the sentence names: hatched when it is a line, outlined otherwise.
- * A block is not a line, so it keeps its outline. */
+/** A region the sentence names as its subject ("in this row", "this block"),
+ * hatched whatever its shape. */
 function namedRegion(region: SoloRegion, state: SoloState): SoloMarks {
-  return region.kind === "block"
-    ? { area: regionCells(region, state) }
-    : { area: [], hatch: regionCells(region, state) };
+  return { area: [], hatch: regionCells(region, state) };
 }
 
 /** The deduction's marks for a strike. */
@@ -514,18 +512,19 @@ function reasonMarks(reason: SoloReason, state: SoloState): SoloMarks {
   switch (reason.kind) {
     case "intersect":
       return namedRegion(reason.confined, state);
-    // The set's own cells are what the sentence points at, inside the line it
-    // names when it names one — see `say.set`.
+    // The set's own cells are what the sentence points at, inside the region
+    // it names when it names one — see `say.set`.
     case "set":
-      return reason.region && reason.region.kind !== "block"
+      return reason.region
         ? { area: reason.cells, hatch: regionCells(reason.region, state) }
-        : { area: reason.region ? regionCells(reason.region, state) : reason.cells };
+        : { area: reason.cells };
     case "cageIntersect":
-      return { area: regionCells(reason.region, state) };
+      return namedRegion(reason.region, state);
+    // "This killer cage": the cage is the hatch.
     case "cageSingle":
     case "cageMinMax":
     case "cageSums":
-      return { area: reason.cells };
+      return { area: [], hatch: reason.cells };
     // A forcing chain names the cells it ran through, **numbered**, so the
     // narration can cite them and the player can walk it.
     case "forcing":
@@ -538,14 +537,13 @@ function reasonMarks(reason: SoloReason, state: SoloState): SoloMarks {
   }
 }
 
-/** A placement's marks: a hidden single marks the whole region it reasons over,
- * as does a deduced extra-cage (the region whose total the sentence counts
- * down); a killer placement outlines its cage; a naked single needs none. */
+/** A placement's marks: a hidden single hatches the region it reasons over, as
+ * does a deduced extra-cage (the region whose total the sentence counts down)
+ * and a killer placement its cage; a naked single needs none. */
 function placementMarks(reason: SoloReason, state: SoloState): SoloMarks {
-  if (reason.kind === "hiddenSingle") return namedRegion(reason.region, state);
-  if (reason.kind === "cageIntersect")
-    return { area: regionCells(reason.region, state) };
-  if (reason.kind === "cageSingle") return { area: reason.cells };
+  if (reason.kind === "hiddenSingle" || reason.kind === "cageIntersect")
+    return namedRegion(reason.region, state);
+  if (reason.kind === "cageSingle") return { area: [], hatch: reason.cells };
   return { area: [] };
 }
 

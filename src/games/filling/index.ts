@@ -201,14 +201,20 @@ function findMistakes(state: FillingState): readonly Point[] {
  * deduction forces (a single firing usually pins a group), ringed with no
  * digit drawn: the narration names the value ("the region of N", "a 1").
  * `value` is the forced number, read by `hintKeepTrack` and never drawn.
- * `area` is the deduction's evidence — the region it reasons about, or the
- * neighbors that pin a lonely or eliminated cell — outlined so the player
- * sees the reasoning, not just the conclusion. */
+ * `hatch` is the region the sentence is about ("the striped region of N"), and
+ * `area` the neighbors that pin a lonely or eliminated cell, outlined, so the
+ * player sees the reasoning, not just the conclusion (docs/games/hints.md
+ * § "Hatch the line the sentence names"). */
 export interface FillingHint {
   cells: number[];
   value: number;
   area: number[];
+  hatch: number[];
 }
+
+/** A growth or blocked step is about one region, which is its hatch. */
+const namesRegion = (reason: FillingHintReason): boolean =>
+  reason.kind === "growth" || reason.kind === "blocked";
 
 /** Narrate *why* the squares are forced, per the technique that fired. `count`
  * is how many squares the step forces (singular vs plural wording). The words
@@ -235,7 +241,9 @@ function hint(state: FillingState): HintResult<FillingMove, FillingHint> {
   const steps: HintStep<FillingMove, FillingHint>[] = plan.map((m) => ({
     move: { type: "set", cells: m.cells, value: m.value },
     explanation: narrate(m.reason, m.cells.length),
-    highlights: { cells: m.cells, value: m.value, area: m.area },
+    highlights: namesRegion(m.reason)
+      ? { cells: m.cells, value: m.value, area: [], hatch: m.area }
+      : { cells: m.cells, value: m.value, area: m.area, hatch: [] },
   }));
   return { ok: true, steps };
 }

@@ -367,15 +367,15 @@ describe("palisade hint", () => {
   });
 
   it("equivalentEdges opens a journey stating the shared-fate coupling", () => {
-    // equivalentEdges references a region (cells > 1, vs numberExhausted's
-    // single clue cell) and pairs two edges into one journey; its opener
-    // leg must spell out the shared-fate coupling.
+    // equivalentEdges is about "the same region" (hatched, where
+    // numberExhausted outlines a single clue cell) and pairs two edges into
+    // one journey; its opener leg must spell out the shared-fate coupling.
     const steps = scanPlan((ss) =>
       ss.some(
         (s, k) =>
           !s.continuesPrevious &&
           ss[k + 1]?.continuesPrevious === true &&
-          (hlOf(s).cells?.length ?? 0) > 1,
+          (hlOf(s).hatch?.length ?? 0) > 1,
       ),
     );
     expect(steps).not.toBeNull();
@@ -384,13 +384,14 @@ describe("palisade hint", () => {
       (s, k) =>
         !s.continuesPrevious &&
         steps[k + 1]?.continuesPrevious === true &&
-        (hlOf(s).cells?.length ?? 0) > 1,
+        (hlOf(s).hatch?.length ?? 0) > 1,
     );
     expect(opener).toBeDefined();
     if (!opener) return;
     expect(opener.explanation).toMatch(/share a fate/);
     expect(hlOf(opener).edges?.length ?? 0).toBeGreaterThan(0);
-    expect(hlOf(opener).cells?.length ?? 0).toBeGreaterThan(1);
+    expect(hlOf(opener).hatch?.length ?? 0).toBeGreaterThan(1);
+    expect(hlOf(opener).cells).toBeUndefined();
   });
 
   it("does not re-hint an edge the player already marked no-wall", () => {

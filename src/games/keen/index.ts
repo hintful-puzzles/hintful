@@ -331,15 +331,17 @@ function narrate(reason: HintReason, ns: number[]): string {
   }
 }
 
-/** The deduction's evidence cells to shade `COL_HINT_CELL`: a cage deduction
- * names the whole cage (the player sees the block the arithmetic reasons over);
- * a forcing chain names the cells it ran through, **numbered**, so the sentence
+/** The deduction's marks: a cage deduction is about "this cage", so the cage is
+ * the hatch (docs/games/hints.md § "Hatch the line the sentence names"); a
+ * forcing chain outlines the cells it ran through, **numbered**, so the sentence
  * can cite them and the player can walk it; the remaining generic Latin
  * techniques have no clean local area. */
-function reasonArea(reason: HintReason): OrderedCell[] {
-  if (reason.kind === "cage" || reason.kind === "cageLine") return reason.cells;
-  if (reason.kind === "forcing") return forcingChainArea(reason);
-  return [];
+function reasonMarks(reason: HintReason): { area: OrderedCell[]; hatch?: Point[] } {
+  if (reason.kind === "cage" || reason.kind === "cageLine") {
+    return { area: [], hatch: reason.cells };
+  }
+  if (reason.kind === "forcing") return { area: forcingChainArea(reason) };
+  return { area: [] };
 }
 
 /** Build the hint plan by walking a working copy of the board the way a person
@@ -370,9 +372,9 @@ function buildSteps(
     }),
     strikeWords: (marks, reason) => ({
       explanation: narrate(reason, valuesOf(marks)),
-      area: reasonArea(reason),
+      ...reasonMarks(reason),
     }),
-    // A cage's narration is about "this cell", with the whole cage shaded on
+    // A cage's narration is about "this cell", with the whole cage hatched on
     // every leg, so a firing is one leg per cell.
     strikeAxis: (op) => op.y * w + op.x,
     notes: { noun: "number", placedVerb: "standing" },

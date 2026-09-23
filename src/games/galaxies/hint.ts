@@ -69,8 +69,11 @@ export interface GalaxiesHint {
   targetWalls: Point[];
   /** The dot the association points at, ringed in the action color. */
   targetDot: Point | null;
-  /** Cells the deduction reasons over. */
+  /** Particular cells the deduction reasons from, outlined. */
   area: Point[];
+  /** The galaxy or piece of one the sentence is about ("the striped galaxy"),
+   * hatched (docs/games/hints.md § "Hatch the line the sentence names"). */
+  hatch: Point[];
   /** Walls the deduction reasons over. */
   walls: Point[];
   /** Dots the argument cites (never the one it acts on — one ring role per
@@ -95,6 +98,7 @@ const EMPTY: Omit<GalaxiesHint, "targets"> = {
   targetWalls: [],
   targetDot: null,
   area: [],
+  hatch: [],
   walls: [],
   refDots: [],
 };
@@ -324,9 +328,13 @@ function highlightsOf(firing: GalaxiesFiring): GalaxiesHint {
         refDots: [firing.dot],
       };
     case "enclosed":
-      // The ways out are the whole premise, so the shaded count is exactly
-      // the number the sentence claims.
-      return { ...claim(firing), area: evidenceFor(firing.openings, firing.tile) };
+      // The ways out are the premise, outlined; the galaxy they lead into is
+      // what the sentence names, hatched.
+      return {
+        ...claim(firing),
+        area: evidenceFor(firing.openings, firing.tile),
+        hatch: evidenceFor(firing.galaxy, firing.tile),
+      };
     case "soleOwner":
       // No shaded area: the argument is about the dots, and the one that
       // survives is ringed. The ruled-out dots stay unmarked, since symmetry
@@ -334,9 +342,9 @@ function highlightsOf(firing: GalaxiesFiring): GalaxiesHint {
       // crossed-out dots teach nothing.
       return claim(firing);
     case "onlyReach":
-      return { ...claim(firing), area: evidenceFor(firing.region, firing.tile) };
+      return { ...claim(firing), hatch: evidenceFor(firing.region, firing.tile) };
     case "exclave":
-      return { ...claim(firing), area: evidenceFor(firing.component, firing.tile) };
+      return { ...claim(firing), hatch: evidenceFor(firing.component, firing.tile) };
   }
 }
 

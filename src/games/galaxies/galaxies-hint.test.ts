@@ -198,7 +198,7 @@ describe("each deduction is narrated in its own vocabulary", () => {
     ],
     [
       "the limit of a galaxy's reach",
-      "No other galaxy can reach this cell, so it must belong to the ringed white dot, whose reach the outline shows.",
+      "No other galaxy can reach this cell, so it must belong to the ringed white dot, whose reach the stripes show.",
     ],
     [
       "a wall mirrored about the dot",
@@ -213,11 +213,11 @@ describe("each deduction is narrated in its own vocabulary", () => {
     // the scan never reaches — see the branch test below.)
     [
       "a cell whose every way out leads into one galaxy",
-      "Every way out of this cell leads into the outlined galaxy, so this cell must belong to the ringed white dot.",
+      "Every way out of this cell leads into the striped galaxy, so this cell must belong to the ringed white dot.",
     ],
     [
       "a detached piece of a galaxy",
-      "The outlined cells are cut off from their ringed dot, and this is their only way back, so it must be that dot's too.",
+      "The striped cells are cut off from their ringed dot, and this is their only way back, so it must be that dot's too.",
     ],
   ];
 
@@ -248,9 +248,10 @@ describe("each deduction is narrated in its own vocabulary", () => {
         opp: null,
         dot,
         openings: [{ x: 5, y: 3 }],
+        galaxy: [{ x: 5, y: 3 }],
       }).replace("black dot", "white dot"),
     ).toBe(
-      "The only way out of this cell leads into the outlined galaxy, so this cell must belong to the ringed white dot.",
+      "The only way out of this cell leads into the striped galaxy, so this cell must belong to the ringed white dot.",
     );
   });
 });
@@ -418,31 +419,43 @@ describe("the picture carries the argument", () => {
     }
   });
 
-  it("an outlined-evidence deduction actually outlines something", () => {
-    // The per-game form of the visible-evidence rule: the four rungs whose
-    // sentences say "the outlined cells" must have some.
-    const shading = /outlined|outline shows/;
-    let checked = 0;
+  it("a deduction naming a mark actually draws it", () => {
+    // The per-game form of the visible-evidence rule: a sentence saying "the
+    // outlined cells" must outline some, and one saying "striped" must hatch
+    // some.
+    const said = [
+      { word: /outlined/, mark: (s: Step) => s.highlights?.area.length ?? 0 },
+      {
+        word: /striped|stripes show/,
+        mark: (s: Step) => s.highlights?.hatch.length ?? 0,
+      },
+    ];
+    const checked = [0, 0];
     for (const seed of SCAN_SEEDS.slice(0, 4)) {
       let s = board(UNREASONABLE_7, seed);
       for (let i = 0; i < 400 && galaxiesGame.status(s) === "ongoing"; i++) {
         const res = galaxiesGame.hint?.(s);
         if (!res?.ok) break; // deduction ran out — legitimate on this tier
         const step = res.steps[0] as Step;
-        if (shading.test(step.explanation)) {
+        said.forEach(({ word, mark }, k) => {
+          if (!word.test(step.explanation)) return;
           expect(
-            step.highlights?.area.length ?? 0,
-            `"${step.explanation}" says outlined and outlines nothing`,
+            mark(step),
+            `"${step.explanation}" names a mark it does not draw`,
           ).toBeGreaterThan(0);
-          checked++;
-        }
+          checked[k]++;
+        });
         s = galaxiesGame.executeMove(s, step.move);
       }
     }
-    // The scan keys on the word, so a rewording would silently empty it.
+    // The scan keys on the words, so a rewording would silently empty it.
     expect(
-      checked,
-      "no step said 'outlined' — the regex has gone stale",
+      checked[0],
+      "no step said 'outlined'; the regex has gone stale",
+    ).toBeGreaterThan(0);
+    expect(
+      checked[1],
+      "no step said 'striped'; the regex has gone stale",
     ).toBeGreaterThan(0);
   });
 

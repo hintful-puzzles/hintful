@@ -85,15 +85,18 @@ export interface PalisadeMistake {
 }
 
 /** A displayed hint step's highlight: the edge the player should set
- * (`(x,y)` + `dir`, `kind` = wall to draw / no-wall to mark), the cells the
- * explanation references (a clue pair or the region, outlined), and the
- * firing's other still-to-do edges, highlighted alongside. */
+ * (`(x,y)` + `dir`, `kind` = wall to draw / no-wall to mark), the particular
+ * cells the explanation references (a clue, a clue pair, a corner, two regions
+ * to be joined), outlined, the one region it is about ("this region", "the
+ * same region"), hatched, and the firing's other still-to-do edges,
+ * highlighted alongside. */
 export interface PalisadeHint {
   x: number;
   y: number;
   dir: number;
   kind: "wall" | "nowall";
   cells?: ReadonlyArray<Point>;
+  hatch?: ReadonlyArray<Point>;
   edges?: ReadonlyArray<{ x: number; y: number; dir: number }>;
 }
 

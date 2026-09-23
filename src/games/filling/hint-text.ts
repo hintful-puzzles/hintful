@@ -3,7 +3,7 @@
  *
  * The deduction decides which sentence and with what values (`index.ts`'s
  * `narrate`); this file decides only how it reads. Kept terse and
- * number-light, referencing the shaded evidence so the words and the picture
+ * number-light, referencing the striped region so the words and the picture
  * agree: the value is read off "the region of N" (or "a 1"), so the target
  * cells need no digit drawn in them.
  */
@@ -14,16 +14,16 @@ export const say = {
   growth: (n: number, exact: boolean, many: boolean): string => {
     if (exact) {
       return many
-        ? `The outlined region of ${n} fits exactly into these squares.`
-        : `The outlined region of ${n} fits exactly into this last square.`;
+        ? `The striped region of ${n} fits exactly into these squares.`
+        : `The striped region of ${n} fits exactly into this last square.`;
     }
     return many
-      ? `The outlined region of ${n} can't fully grow without these squares.`
-      : `The outlined region of ${n} can't fully grow without this square.`;
+      ? `The striped region of ${n} can't fully grow without these squares.`
+      : `The striped region of ${n} can't fully grow without this square.`;
   },
 
   blocked: (n: number): string =>
-    `The outlined region of ${n} has only this one empty square to grow into.`,
+    `The striped region of ${n} has only this one empty square to grow into.`,
 
   lonely:
     "No neighboring region can grow to include this square, so it can only be a 1.",

@@ -387,7 +387,7 @@ function hiddenSingleFrame(p: KeenParams): string {
 }
 
 describe("keen hint render", () => {
-  it("a cage elimination shades the cage and strikes the candidate", () => {
+  it("a cage elimination hatches the cage and strikes the candidate", () => {
     const id = cageStrikeFrame(NORMAL, (e) => /No way to make this cage/.test(e));
     const { recording, hint } = renderScenario({
       game: keenGame,
@@ -398,10 +398,13 @@ describe("keen hint render", () => {
       hintUntil: (s) => /No way to make this cage/.test(s.explanation),
     });
     expect(hint?.explanation).toMatch(/this cage/);
-    // The cage's cells are shaded COL_HINT_CELL evidence.
-    expect(
-      recording.ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL),
-    ).toBe(true);
+    // "This cage" is hatched, one hatch per cell of it, and nothing in it is
+    // outlined: the cage is the region, not a particular cell.
+    const cage = (hint?.highlights as { hatch?: unknown[] }).hatch ?? [];
+    expect(cage.length).toBeGreaterThan(0);
+    const hatches = opsOfKind(recording.ops, "hatch");
+    expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(cage.length);
+    expect(markSides(recording.ops, COL_HINT_CELL)).toEqual([]);
     // The struck candidate keeps its COL_PENCIL digit, crossed through in COL_PENCIL.
     expect(recording.ops.some((o) => o.op === "line" && o.color === COL_PENCIL)).toBe(
       true,

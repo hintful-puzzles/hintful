@@ -49,7 +49,7 @@ export const say = {
       openings === 1
         ? "The only way out of this cell leads"
         : "Every way out of this cell leads";
-    return `${lead} into the outlined galaxy, so this cell must belong to the ringed ${dot(black)}.`;
+    return `${lead} into the striped galaxy, so this cell must belong to the ringed ${dot(black)}.`;
   },
 
   // The claim *is* this rung's own condition, so it is checkable by the player
@@ -58,11 +58,11 @@ export const say = {
     `Only the ringed ${dot(black)} can own this cell: for any other dot, its partner cell is off the board or on a dot.`,
 
   // "shows how far", not "is everywhere": the acted-on cell carries the action
-  // mark rather than the evidence one, so the outlined set is the reach minus
-  // one square and an absolute claim would be a shade off true.
+  // mark rather than the hatch, so the striped set is the reach minus one
+  // square and an absolute claim would be a shade off true.
   onlyReach: (black: boolean): string =>
-    `No other galaxy can reach this cell, so it must belong to the ringed ${dot(black)}, whose reach the outline shows.`,
+    `No other galaxy can reach this cell, so it must belong to the ringed ${dot(black)}, whose reach the stripes show.`,
 
   exclave:
-    "The outlined cells are cut off from their ringed dot, and this is their only way back, so it must be that dot's too.",
+    "The striped cells are cut off from their ringed dot, and this is their only way back, so it must be that dot's too.",
 };

@@ -5,7 +5,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
-import { expectRing } from "../../engine/testing/mark-shape.ts";
+import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
+import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { type FillingHint, fillingGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
@@ -173,7 +174,7 @@ describe("hintKeepTrack", () => {
 });
 
 describe("filling hint render scenario", () => {
-  it("rings the target(s) and outlines the evidence region", () => {
+  it("rings the target(s) and hatches the region the sentence names", () => {
     let result: ReturnType<typeof renderScenario> | null = null;
     for (let s = 0; s < 20; s++) {
       const r = renderScenario({
@@ -182,25 +183,24 @@ describe("filling hint render scenario", () => {
         showHint: true,
       });
       const hl = r.hint?.highlights as FillingHint | undefined;
-      if (hl && hl.area.length > 0) {
+      if (hl && hl.hatch.length > 0) {
         result = r;
         break;
       }
     }
-    if (!result) throw new Error("no seed produced an area-carrying first hint");
+    if (!result) throw new Error("no seed produced a region-naming first hint");
 
     const { recording } = result;
     const hl = result.hint?.highlights as FillingHint;
     expectRing(recording.ops, COL_HINT, hl.cells.length);
-    // The evidence is **outlined**, not shaded: its cells carry the digits the
-    // deduction counts, and a wash dark enough to keep a derived foreground
-    // legible on it is itself invisible against a dark board.
-    //
-    // Filling's premise is a *single* clue cell — the region whose size the
-    // deduction is counting off — so its outline is one ring, which is what the
-    // neighbor rule gives for a one-cell region.
-    expect(hl.area.length).toBe(1);
-    expectRing(recording.ops, COL_HINT_CELL, hl.area.length);
+    // "The striped region of N": every cell of it hatched, the digits drawn
+    // over the stripes, and no outline, since the region is not a particular
+    // cell the reason rests on.
+    expect(result.hint?.explanation).toMatch(/^The striped region of \d+/);
+    expect(hl.area).toEqual([]);
+    const hatches = opsOfKind(recording.ops, "hatch");
+    expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(hl.hatch.length);
+    expect(markSides(recording.ops, COL_HINT_CELL)).toEqual([]);
     expect(recording.ops.some((o) => o.op === "text")).toBe(true); // clues
     expect(recording.ops).toMatchSnapshot();
   });

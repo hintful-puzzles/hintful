@@ -53,6 +53,7 @@ import {
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import {
@@ -121,10 +122,12 @@ export function computeSize(p: PalisadeParams, ts: number): Size {
 
 // --- Palisade's own packed flag ---------------------------------------------
 
-/** A hint-referenced cell (a clue pair, or a region). The one bit Palisade adds
- * to the shared layout, taken from the first index the module reserves for a
- * game so the two cannot collide silently. */
+/** A hint-referenced cell (a clue, a clue pair, a corner). Palisade's own bits
+ * start at the first index the module reserves for a game, so the two cannot
+ * collide silently. */
 const F_HINT_CELL = 1 << GAME_FLAG_SHIFT;
+/** A cell of the region the hint's sentence is about, hatched. */
+const F_HINT_REGION = 1 << (GAME_FLAG_SHIFT + 1);
 
 // --- draw state ------------------------------------------------------------
 
@@ -173,6 +176,8 @@ export function redraw(
     if (hl.edges) for (const e of hl.edges) markEdge(e.x, e.y, e.dir);
     if (hl.cells)
       for (const cell of hl.cells) hintCellMask[cell.y * w + cell.x] |= F_HINT_CELL;
+    if (hl.hatch)
+      for (const cell of hl.hatch) hintCellMask[cell.y * w + cell.x] |= F_HINT_REGION;
   }
 
   if (!ds.started) {
@@ -221,6 +226,7 @@ export function redraw(
       if (ds.cache[i] !== flags) {
         ds.cache[i] = flags;
         drawBorderTile(dr, ts, r, c, flags, PALETTE, (body, o) => {
+          if (flags & F_HINT_REGION) dr.drawHatch(body, COL_HINT, hatchPeriod(ts));
           // The referenced cells are outlined, not washed: a wash would cover
           // the clue digit the deduction counts with, and the `F_CORRECT`
           // background that shows a region is finished. The outline is inset in

@@ -22,6 +22,7 @@ import {
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import type { FillingHint } from "./index.ts";
@@ -91,6 +92,7 @@ const CURSOR_SQ = 0x10000;
 const FF_MISTAKE = 0x20000; // fork's Check & Save overlay (no upstream analog)
 const HINT_TARGET = 0x40000; // a cell the displayed hint points at
 const HINT_AREA = 0x80000; // one of the hint's evidence cells
+const HINT_LINE = 0x100000; // in the region the sentence names (hatched)
 
 // --- geometry (upstream BORDER = TILE_SIZE/2, BORDER_WIDTH = max(TS/32,1)) -
 const border = (ts: number) => Math.floor(ts / 2);
@@ -178,6 +180,8 @@ function drawSquare(
           ? COL_CORRECT
           : COL_BACKGROUND;
   dr.drawRect({ x: px, y: py, w: ts, h: ts }, bg);
+  if (flags & HINT_LINE)
+    dr.drawHatch({ x: px, y: py, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
 
   // Thin grid lines on the top and left edges (interior lines come from each
   // cell's own top/left).
@@ -290,6 +294,7 @@ export function redrawFilling(
       : null;
   const hintTargets = new Set(hint?.highlights?.cells);
   const hintArea = new Set(hint?.highlights?.area);
+  const hintRegion = new Set(hint?.highlights?.hatch);
 
   // Border between two differing cells when both are filled, or either's
   // region is complete/overfull. Bit 1 = border to the right, bit 2 = below.
@@ -386,6 +391,7 @@ export function redrawFilling(
       // and part of the evidence, and it then carries both marks.
       if (hintTargets.has(i)) flags |= HINT_TARGET;
       if (hintArea.has(i)) flags |= HINT_AREA;
+      if (hintRegion.has(i)) flags |= HINT_LINE;
 
       const word = v | (flags << VALUE_BITS);
       if (ds.cache[i] !== word) {

@@ -79,7 +79,15 @@ export type GalaxiesFiring =
       dot: Point;
     }
   /** Every way out of a cell leads into the same galaxy. */
-  | { kind: "enclosed"; tile: Point; opp: Point | null; dot: Point; openings: Point[] }
+  | {
+      kind: "enclosed";
+      tile: Point;
+      opp: Point | null;
+      dot: Point;
+      openings: Point[];
+      /** Every tile already in that dot's galaxy, which the sentence names. */
+      galaxy: Point[];
+    }
   /** Only one dot's galaxy can still stretch to a cell. */
   | { kind: "onlyReach"; tile: Point; opp: Point | null; dot: Point; region: Point[] }
   /** A detached piece of a galaxy has one square left to grow through. */
@@ -307,12 +315,21 @@ function solverSpacesOneposs(s: GalaxiesState, rec?: SolverRecorder): number {
       if (walled === 4) return IMPOSSIBLE;
       if (dx === -1) continue;
       if (rec) {
+        const galaxy: Point[] = [];
+        for (let ty = 1; ty < s.sy - 1; ty += 2) {
+          for (let tx = 1; tx < s.sx - 1; tx += 2) {
+            const ti = idx(s, tx, ty);
+            if (s.flags[ti] & F_TILE_ASSOC && s.dotx[ti] === dx && s.doty[ti] === dy)
+              galaxy.push({ x: tx, y: ty });
+          }
+        }
         rec.firing = {
           kind: "enclosed",
           tile: { x, y },
           opp: spaceOppositeDot(s, x, y, dx, dy),
           dot: { x: dx, y: dy },
           openings,
+          galaxy,
         };
       }
       const r = solverAddAssoc(s, x, y, dx, dy);

@@ -11,7 +11,7 @@
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
 import { isThin, markSides } from "../../engine/testing/mark-shape.ts";
-import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
+import { type DrawOp, opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import type { GalaxiesHint } from "./hint.ts";
 import { type GalaxiesMove, galaxiesGame } from "./index.ts";
@@ -150,8 +150,14 @@ describe("a displayed hint reaches the canvas", () => {
     // partner and no ring — so on its own it pinned none of the marks the two
     // acceptance rounds reworked. This frame carries all of them.
     const { recording } = hintFrame(
-      (h) => h.focus !== null && h.targets.length > 1 && h.area.length > 0,
+      (h) =>
+        h.focus !== null &&
+        h.targets.length > 1 &&
+        h.area.length > 0 &&
+        h.hatch.length > 0,
     );
+    // The galaxy the sentence names is striped, over each cell's own fill.
+    expect(opsOfKind(recording.ops, "hatch").length).toBeGreaterThan(0);
     expect(recording.ops).toMatchSnapshot();
   });
 });

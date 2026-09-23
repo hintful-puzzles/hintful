@@ -3,6 +3,7 @@
  * transient UI, the hint and the wrong walls in three overlay sidecars.
  */
 
+import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import {
   drawRectOutline,
@@ -171,6 +172,8 @@ const HINT_AREA_CELL = 1 << 1;
  * one being deduced. Outlined in `COL_HINT` rather than filled: same fate,
  * same hue, but the deduced cell is the one the words are about. */
 const HINT_PARTNER_CELL = 1 << 28;
+/** Bit 29: a cell of the galaxy the sentence names, hatched over its fill. */
+const HINT_REGION_CELL = 1 << 29;
 /** Bits 2-5: the wall to draw, on this tile's L/R/U/D side (`COL_HINT`). One
  * wall lights a bit in each of the two tiles it separates, exactly as
  * `wrongEdges` does. */
@@ -246,6 +249,7 @@ function packHint(
     }
   };
   for (const a of hl.area) cell(a.x, a.y, HINT_AREA_CELL);
+  for (const a of hl.hatch) cell(a.x, a.y, HINT_REGION_CELL);
   // With a focus, only that cell fills; the rest of the move's cells are its
   // partners and are outlined. Without one, the cells are equivalent and all
   // fill (quality-bar rule 3 — equivalent moves share a color).
@@ -340,6 +344,12 @@ function drawSquare(
         ? COL_BLACKBG
         : COL_BACKGROUND;
   dr.drawRect({ x: lx, y: ly, w: tileSize, h: tileSize }, bg);
+  if (hint & HINT_REGION_CELL)
+    dr.drawHatch(
+      { x: lx, y: ly, w: tileSize, h: tileSize },
+      COL_HINT,
+      hatchPeriod(tileSize),
+    );
 
   // Grid lines (top-left only — neighbors will draw their own)
   const gridCol = flags & DRAW_BLACK ? COL_BLACKDOT : COL_GRID;
