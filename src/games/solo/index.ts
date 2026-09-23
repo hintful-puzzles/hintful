@@ -493,42 +493,60 @@ function narrate(reason: SoloReason, ns: number[], state: SoloState): string {
   }
 }
 
-/** The deduction's evidence cells to shade `COL_HINT_CELL`. */
-function reasonArea(reason: SoloReason, state: SoloState): OrderedCell[] {
+/** What a step marks: the cells it outlines `COL_HINT_CELL`, and the line it
+ * hatches when its sentence names a row, column or diagonal as "this row"
+ * (docs/games/hints.md § "Hatch the line the sentence names"). */
+interface SoloMarks {
+  area: OrderedCell[];
+  hatch?: Point[];
+}
+
+/** A region the sentence names: hatched when it is a line, outlined otherwise.
+ * A block is not a line, so it keeps its outline. */
+function namedRegion(region: SoloRegion, state: SoloState): SoloMarks {
+  return region.kind === "block"
+    ? { area: regionCells(region, state) }
+    : { area: [], hatch: regionCells(region, state) };
+}
+
+/** The deduction's marks for a strike. */
+function reasonMarks(reason: SoloReason, state: SoloState): SoloMarks {
   switch (reason.kind) {
     case "intersect":
-      return regionCells(reason.confined, state);
-    // With no region to shade, the firing's own cells are what the sentence
-    // points at — see `say.set`.
+      return namedRegion(reason.confined, state);
+    // The set's own cells are what the sentence points at, inside the line it
+    // names when it names one — see `say.set`.
     case "set":
-      return reason.region ? regionCells(reason.region, state) : reason.cells;
+      return reason.region && reason.region.kind !== "block"
+        ? { area: reason.cells, hatch: regionCells(reason.region, state) }
+        : { area: reason.region ? regionCells(reason.region, state) : reason.cells };
     case "cageIntersect":
-      return regionCells(reason.region, state);
+      return { area: regionCells(reason.region, state) };
     case "cageSingle":
     case "cageMinMax":
     case "cageSums":
-      return reason.cells;
+      return { area: reason.cells };
     // A forcing chain names the cells it ran through, **numbered**, so the
     // narration can cite them and the player can walk it.
     case "forcing":
-      return forcingChainArea(reason);
+      return { area: forcingChainArea(reason) };
     // A placement's cull shades the value that forces it.
     case "dup":
-      return [{ x: reason.px, y: reason.py }];
+      return { area: [{ x: reason.px, y: reason.py }] };
     default:
-      return [];
+      return { area: [] };
   }
 }
 
-/** A placement's evidence cells: a hidden single shades the whole region it
- * reasons over, as does a deduced extra-cage (the region whose total the
- * sentence counts down); a killer placement shades its cage; a naked single
- * needs none. */
-function placementArea(reason: SoloReason, state: SoloState): Point[] {
-  if (reason.kind === "hiddenSingle" || reason.kind === "cageIntersect")
-    return regionCells(reason.region, state);
-  if (reason.kind === "cageSingle") return reason.cells;
-  return [];
+/** A placement's marks: a hidden single marks the whole region it reasons over,
+ * as does a deduced extra-cage (the region whose total the sentence counts
+ * down); a killer placement outlines its cage; a naked single needs none. */
+function placementMarks(reason: SoloReason, state: SoloState): SoloMarks {
+  if (reason.kind === "hiddenSingle") return namedRegion(reason.region, state);
+  if (reason.kind === "cageIntersect")
+    return { area: regionCells(reason.region, state) };
+  if (reason.kind === "cageSingle") return { area: reason.cells };
+  return { area: [] };
 }
 
 /** Build the hint plan by walking a working copy of the board the way a person
@@ -554,7 +572,7 @@ function buildSteps(
     singleReason: soloSingleReason,
     placeWords: (m, reason) => ({
       explanation: narrate(reason, [m.n], state),
-      area: placementArea(reason, state),
+      ...placementMarks(reason, state),
     }),
     strikeWords: (marks, reason) => ({
       explanation: narrate(
@@ -562,7 +580,7 @@ function buildSteps(
         reason.kind === "intersect" ? [reason.n] : valuesOf(marks),
         state,
       ),
-      area: reasonArea(reason, state),
+      ...reasonMarks(reason, state),
     }),
     // A digit confined to one region crosses that digit from several cells in
     // one sentence; every other firing's narration is about "this cell", so a

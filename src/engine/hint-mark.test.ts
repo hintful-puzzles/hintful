@@ -29,7 +29,7 @@ const RENDERERS = import.meta.glob<Record<string, unknown>>("../games/*/render.t
  * The games whose **evidence** is a wash rather than an outline, with the claim
  * each is making: *nothing is drawn on these cells*.
  *
- * Asserted as an exact set rather than used to skip, so a fourth game quietly
+ * Asserted as an exact set rather than used to skip, so a third game quietly
  * washing its evidence fails here until somebody writes down why it may. The
  * target has no such list: it is ringed in every game, no exceptions (owner,
  * 2026-08-22).
@@ -37,8 +37,6 @@ const RENDERERS = import.meta.glob<Record<string, unknown>>("../games/*/render.t
 const EVIDENCE_WASH_GAMES = new Set([
   // The journey's still-*empty* siblings.
   "unruly",
-  // The reasoned line's still-undecided squares.
-  "pattern",
   // Dark squares, where the premise is that the square is *not lit* — which a
   // teal shade preserves, because it is not yellow.
   "lightup",

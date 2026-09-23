@@ -423,34 +423,50 @@ function narrate(reason: HintReason, n: number, continues = false): string {
   }
 }
 
-/** The deduction's evidence area to shade: a Towers clue technique shows the
- * driving clue cell(s) *and* the whole line of sight they reason along, so the
- * player can see exactly which clue the hint is about; the generic Latin
- * techniques have no clean local area (the struck notes carry the premise).
- * A hidden single is not among them — its line is the row/column preset's,
- * which shades it over whatever this returns. */
-function reasonArea(reason: HintReason, w: number): OrderedCell[] {
+/** The deduction's marks: a Towers clue technique outlines the driving clue
+ * cell(s) and hatches the line of sight they reason along, through both clue
+ * slots, so the player sees which clue and which line the sentence means; the
+ * generic Latin techniques have no clean local area (the struck notes carry the
+ * premise). A hidden single is not among them: the row/column preset hatches
+ * its line over whatever this returns. */
+function reasonMarks(
+  reason: HintReason,
+  w: number,
+): { area: OrderedCell[]; hatch?: { x: number; y: number }[] } {
   switch (reason.kind) {
     case "facing":
       // A facing pair names two clues at opposite ends of the same line.
-      return [
-        cluePos(reason.clue, w),
-        cluePos(reason.clue2, w),
-        ...lineCells(reason.clue, w),
-      ];
+      return {
+        area: [cluePos(reason.clue, w), cluePos(reason.clue2, w)],
+        hatch: sightLine(reason.clue, w),
+      };
     case "fullLine":
     case "tallestNearest":
     case "lineFull":
     case "lowerBound":
     case "arrangement":
-      return [cluePos(reason.clue, w), ...lineCells(reason.clue, w)];
+      return { area: [cluePos(reason.clue, w)], hatch: sightLine(reason.clue, w) };
     // A forcing chain names the cells it ran through, **numbered**, so the
     // narration can cite them and the player can walk it.
     case "forcing":
-      return forcingChainArea(reason);
+      return { area: forcingChainArea(reason) };
     default:
-      return [];
+      return { area: [] };
   }
+}
+
+/** A clue's line of sight with the clue slots at both its ends. */
+function sightLine(clue: number, w: number): { x: number; y: number }[] {
+  const cells = lineCells(clue, w);
+  const [first, second] = cells;
+  const dx = second.x - first.x;
+  const dy = second.y - first.y;
+  const last = cells[cells.length - 1];
+  return [
+    { x: first.x - dx, y: first.y - dy },
+    ...cells,
+    { x: last.x + dx, y: last.y + dy },
+  ];
 }
 
 /** An extreme clue that forces (part of) a line outright — the cleanest
@@ -516,11 +532,11 @@ function buildSteps(
     record: () => recordTowersDeductions(w, state.clues, wGrid, maxdiff),
     placeWords: (m, reason, continues) => ({
       explanation: narrate(reason, m.n, continues),
-      area: reasonArea(reason, w),
+      ...reasonMarks(reason, w),
     }),
     strikeWords: (marks, reason) => ({
       explanation: narrate(reason, marks[0].n),
-      area: reasonArea(reason, w),
+      ...reasonMarks(reason, w),
     }),
     // The narration names one height ("a tower of height 5 can't go here"), so
     // a clue firing that rules out 4 and 5 along its line is one leg per height.

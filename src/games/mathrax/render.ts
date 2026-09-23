@@ -286,6 +286,7 @@ function drawTile(
     COL_CURSOR,
     fs & FD_FLASH ? COL_FLASH : COL_BACKGROUND,
   );
+  ds.hint.drawHatch(dr, i, cell, COL_HINT, ts);
 
   // The cell's own outline.
   dr.drawPolygon(

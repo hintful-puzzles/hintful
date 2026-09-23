@@ -291,6 +291,7 @@ function drawNumber(
       ? COL_XDIAGONALS
       : COL_BACKGROUND,
   );
+  ds.hint.drawHatch(dr, cell, { x: cx, y: cy, w: cw, h: ch }, COL_HINT, ts);
 
   // Corner juts: a GRIDEXTRA square where the diagonal neighbor is a different
   // block (so the grid corner shows through the merged region).

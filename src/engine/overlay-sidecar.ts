@@ -20,7 +20,10 @@
  *   - `ds.<overlay>.commit(i)` after the cell is drawn.
  */
 
+import type { GameDrawing } from "./game.ts";
+import { hatchPeriod } from "./hatch.ts";
 import { outlineSides } from "./hint-mark.ts";
+import type { Rect } from "./types.ts";
 
 /** Bit 0: the cell the deduction acts on (`COL_HINT`). */
 export const HINT_TARGET = 1;
@@ -64,6 +67,10 @@ export interface PackableHighlights<Mark extends Cell> {
   readonly area?: readonly OrderedCell[];
   readonly targets?: readonly Cell[];
   readonly marks?: readonly Mark[];
+  /** The cells of the one row or column the step's sentence names, hatched
+   * (`engine/hatch.ts`; docs/games/hints.md § "Hatch the line the sentence
+   * names"). */
+  readonly hatch?: readonly Cell[];
 }
 
 export class OverlaySidecar {
@@ -83,19 +90,28 @@ export class OverlaySidecar {
    * keeps the sides it no longer has.
    */
   private readonly outline: Int32Array;
+  /**
+   * Per cell, 1 when it lies on the line the step's sentence names and is
+   * hatched. A lane of its own for the reason the ordinal has one: the packed
+   * word has no bit left to borrow.
+   */
+  readonly hatched: Uint8Array;
   /** What the canvas currently shows per cell (-1 = never drawn, so the
    * first frame always misses). */
   private readonly drawn: Int32Array;
   private readonly drawnOrder: Int32Array;
   private readonly drawnOutline: Int32Array;
+  private readonly drawnHatched: Uint8Array;
 
   constructor(cells: number) {
     this.packed = new Int32Array(cells);
     this.order = new Int32Array(cells);
     this.outline = new Int32Array(cells);
+    this.hatched = new Uint8Array(cells);
     this.drawn = new Int32Array(cells).fill(-1);
     this.drawnOrder = new Int32Array(cells).fill(-1);
     this.drawnOutline = new Int32Array(cells);
+    this.drawnHatched = new Uint8Array(cells);
   }
 
   /** Start a frame's overlay from nothing. The pack entry points below call
@@ -104,6 +120,7 @@ export class OverlaySidecar {
     this.packed.fill(0);
     this.order.fill(0);
     this.outline.fill(0);
+    this.hatched.fill(0);
   }
 
   /** OR `bits` into cell `i`'s overlay word for this frame. */
@@ -138,6 +155,7 @@ export class OverlaySidecar {
     }
     for (const t of hl.targets ?? []) this.add(index(t.x, t.y), HINT_TARGET);
     for (const m of hl.marks ?? []) this.add(index(m.x, m.y), markBits(m));
+    for (const c of hl.hatch ?? []) this.hatched[index(c.x, c.y)] = 1;
   }
 
   /** Repack this frame's overlay from a plain cell list — the `findMistakes`
@@ -149,6 +167,18 @@ export class OverlaySidecar {
   ): void {
     this.clear();
     for (const c of cells ?? []) this.add(index(c.x, c.y), OVERLAY_FLAG);
+  }
+
+  /** Hatch cell `i`'s `rect` when it lies on the named line. Call it after the
+   * cell's background and before its content, so the content stays whole. */
+  drawHatch(
+    dr: GameDrawing,
+    i: number,
+    rect: Rect,
+    color: number,
+    tileSize: number,
+  ): void {
+    if (this.hatched[i]) dr.drawHatch(rect, color, hatchPeriod(tileSize));
   }
 
   /** True when cell `i` carries any overlay this frame. */
@@ -164,7 +194,8 @@ export class OverlaySidecar {
     return (
       this.packed[i] !== this.drawn[i] ||
       this.order[i] !== this.drawnOrder[i] ||
-      this.outline[i] !== this.drawnOutline[i]
+      this.outline[i] !== this.drawnOutline[i] ||
+      this.hatched[i] !== this.drawnHatched[i]
     );
   }
 
@@ -173,5 +204,6 @@ export class OverlaySidecar {
     this.drawn[i] = this.packed[i];
     this.drawnOrder[i] = this.order[i];
     this.drawnOutline[i] = this.outline[i];
+    this.drawnHatched[i] = this.hatched[i];
   }
 }

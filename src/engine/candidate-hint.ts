@@ -105,6 +105,9 @@ export interface CandidateHighlights {
   area: OrderedCell[];
   targets: Cell[];
   marks: Mark[];
+  /** The cells of the one row or column the sentence names, hatched rather
+   * than outlined; left out when it names none. */
+  hatch?: Cell[];
 }
 
 /** The shared `hint()` entry every candidate-elimination game uses: refuse on a

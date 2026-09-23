@@ -171,15 +171,23 @@ export function narrate(
   }
 }
 
-/** The evidence to shade (`area`) and the border clues to light (`clues`) for a
- * reason (docs/games/hints.md § "Show the evidence as an area"). A border
- * deduction shades exactly the run of squares its argument is about, read off
+/** The evidence to outline (`area`), the line to hatch (`hatch`, the row or
+ * column the sentence names) and the border clues to light (`clues`) for a
+ * reason (docs/games/hints.md § "Hatch the line the sentence names"). A border
+ * deduction outlines exactly the run of squares its argument is about, read off
  * the shared {@link borderScanFor} rather than re-derived. */
 function reasonEvidence(
   reason: SaladReason,
   o: number,
-): { area: OrderedCell[]; clues: number[] } {
+): { area: OrderedCell[]; hatch?: Cell[]; clues: number[] } {
   const cellAt = (i: number): Cell => ({ x: i % o, y: (i / o) | 0 });
+  /** The whole line a border clue looks along. */
+  const clueLine = (clue: number): Cell[] => {
+    const s = borderScanFor(clue, o);
+    const cells: Cell[] = [];
+    for (let i = s.start, k = 0; k < o; k++, i += s.step) cells.push(cellAt(i));
+    return cells;
+  };
   switch (reason.kind) {
     case "borderNear": {
       const s = borderScanFor(reason.clue, o);
@@ -188,7 +196,7 @@ function reasonEvidence(
       const area: Cell[] = [];
       let i = s.start;
       for (let k = 0; k <= reason.skipped; k++, i += s.step) area.push(cellAt(i));
-      return { area, clues: [reason.clue] };
+      return { area, hatch: clueLine(reason.clue), clues: [reason.clue] };
     }
     case "borderFar": {
       const s = borderScanFor(reason.clue, o);
@@ -202,14 +210,18 @@ function reasonEvidence(
         )
           break;
       }
-      return { area, clues: [reason.clue] };
+      return { area, hatch: clueLine(reason.clue), clues: [reason.clue] };
     }
-    // Not hidden singles — a finished count reasons over its whole line the
-    // same way, so it shades the same cells. (A hidden single's own line is
-    // the row/column preset's.)
+    // Not hidden singles — a finished count names its whole line the same way,
+    // so it hatches the same cells. (A hidden single's own line is the
+    // row/column preset's.)
     case "countHolesDone":
     case "countLettersDone":
-      return { area: hiddenSingleLine(reason.line, reason.index, o), clues: [] };
+      return {
+        area: [],
+        hatch: hiddenSingleLine(reason.line, reason.index, o),
+        clues: [],
+      };
     // A forcing chain names the squares it ran through, **numbered**, so the
     // narration can cite them and the player can walk it.
     case "forcing":

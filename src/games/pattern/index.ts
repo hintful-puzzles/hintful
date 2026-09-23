@@ -259,8 +259,8 @@ function interpretMove(
 /** Highlight data for a Pattern hint step. `cells` are the forced target
  * squares (all one color — `value`), drawn as a `COL_HINT` highlight only,
  * never pre-filled (the narration says black vs white). `line` is the row /
- * column the deduction reasons over — its clue and line of sight shade
- * `COL_HINT_CELL`. `blackRefs` / `whiteRefs` are the already-placed marks the
+ * column the sentence names: its squares and clue strip are hatched, and its
+ * clue takes the action color. `blackRefs` / `whiteRefs` are the already-placed marks the
  * deduction leans on, ringed teal / violet so their own color stays visible
  * (the cross-game element-type legend). */
 export interface PatternHint {

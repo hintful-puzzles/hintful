@@ -283,7 +283,7 @@ describe("runLatinCandidatePlan", () => {
     return steps;
   }
 
-  it("classifies and shades a hidden single with nothing from the game", () => {
+  it("classifies and hatches a hidden single with nothing from the game", () => {
     // 1 is noted only at (0,0) in row 0, so placing it there is a hidden single
     // in that row — and (0,0) still shows a second candidate, so it is not a
     // naked one. Nothing below names a row.
@@ -297,11 +297,14 @@ describe("runLatinCandidatePlan", () => {
       ],
     });
     expect(steps[0].explanation).toBe("hiddenSingle 0,0");
-    expect(steps[0].highlights?.area).toEqual([
+    // "In this row" is the hatch; nothing is outlined, since no particular
+    // cell is the reason.
+    expect(steps[0].highlights?.hatch).toEqual([
       { x: 0, y: 0 },
       { x: 1, y: 0 },
       { x: 2, y: 0 },
     ]);
+    expect(steps[0].highlights?.area).toEqual([]);
   });
 
   it("names the regions in the setup sentences the game never writes", () => {

@@ -6,11 +6,12 @@
  * with quality-bar narration (indication → necessity voice); refusal on
  * solved / on mistakes; `hintKeepTrack` verdicts. Tier 2.5 — a render-scenario
  * snapshot of a clue-elimination journey frame (struck candidates `COL_HINT`,
- * the clue's line of sight `COL_HINT_CELL`, clues still drawn).
+ * the clue's line of sight hatched, clues still drawn).
  */
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
 import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
+import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
   renderScenario,
@@ -158,16 +159,14 @@ describe("towers hint", () => {
   it("clue-strike marks never bleed outside the narrated clue's line (regression)", () => {
     // One recorded firing must cover a single clue, or a hint step narrates one
     // clue's line of sight while a struck mark sits on a *different* clue's
-    // line. A clue-strike step outlines its clue's line as the evidence
-    // `area`; every struck mark must lie within it.
+    // line. A clue-strike step hatches its clue's line; every struck mark must
+    // lie within it.
     //
-    // **`area` has two meanings, and the guard has to tell them apart.** For a
-    // clue technique it is a *containing region* — the line the strike happens
-    // inside. For a forcing chain it is an ordered *chain*, and the cell being
+    // A forcing chain is the other shape: an ordered `area`, and the cell being
     // struck is deliberately **not** on it: the chain drives some other cell to
     // the value, and the conclusion loses it by lining up with that cell.
     // Selecting on the ordinal tests the distinction directly: a numbered area
-    // *is* the chain (an empty area is no proxy for it).
+    // *is* the chain.
     const diffs: Difficulty[] = ["easy", "hard", "extreme"];
     let checked = 0;
     let chainsChecked = 0;
@@ -180,8 +179,9 @@ describe("towers hint", () => {
           if (step.move.type !== "pencilStrike") continue;
           const area: { x: number; y: number; order?: number }[] =
             step.highlights?.area ?? [];
-          if (area.length === 0) continue; // dup continuation: no clue line
+          const line: { x: number; y: number }[] = step.highlights?.hatch ?? [];
           const isChain = area.some((a) => a.order !== undefined);
+          if (!isChain && line.length === 0) continue; // dup continuation: no clue line
           for (const m of step.move.marks as { x: number; y: number }[]) {
             if (isChain) {
               // The other half of the invariant, asserted rather than skipped:
@@ -190,7 +190,7 @@ describe("towers hint", () => {
               expect(area.some((a) => a.x === m.x && a.y === m.y)).toBe(false);
               chainsChecked++;
             } else {
-              expect(area.some((a) => a.x === m.x && a.y === m.y)).toBe(true);
+              expect(line.some((a) => a.x === m.x && a.y === m.y)).toBe(true);
               checked++;
             }
           }
@@ -480,7 +480,7 @@ function facingPlacementFrame() {
 }
 
 describe("towers hint render", () => {
-  it("a clue-elimination journey shades the line of sight and struck candidates", () => {
+  it("a clue-elimination journey hatches the line of sight and strikes candidates", () => {
     const id = lowerBoundFrame();
     const { recording, hint } = renderScenario({
       game: towersGame,
@@ -493,9 +493,24 @@ describe("towers hint render", () => {
     expect(hint).toBeDefined();
     expect(hint?.explanation).toMatch(/sees exactly/);
 
-    // The clue line of sight is **outlined** COL_HINT_CELL, not shaded.
+    // The line of sight is hatched through both clue slots, in one strip; the
+    // clue it is read from is the one cell outlined, COL_HINT_CELL.
+    // Distinct cells, since a changed tile repaints the neighbors its tower
+    // overlaps and so paints a hatched neighbor again.
+    const hatches = opsOfKind(recording.ops, "hatch");
+    expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(5 + 2);
+    for (const h of hatches) expect(h.color).toBe(COL_HINT);
+    // One strip, read off the step's cells: a raised tower's hatch sits on its
+    // top face, offset from the cell below it, so the drawn rects do not share
+    // a coordinate.
+    const line =
+      (hint?.highlights as { hatch?: { x: number; y: number }[] }).hatch ?? [];
+    expect(line).toHaveLength(5 + 2);
+    const xs = new Set(line.map((c) => c.x));
+    const ys = new Set(line.map((c) => c.y));
+    expect(Math.min(xs.size, ys.size)).toBe(1);
     const evidence = markSides(recording.ops, COL_HINT_CELL);
-    expect(evidence.length).toBeGreaterThan(0);
+    expect(evidence).toHaveLength(4);
     for (const s of evidence) expect(isThin(s)).toBe(true);
     // The struck candidate keeps its normal pencil color (legible) and is
     // crossed through with a same-color (COL_PENCIL) line — the strikethrough,

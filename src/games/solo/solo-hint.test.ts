@@ -240,8 +240,14 @@ describe("solo hint", () => {
           const m = step.move as { type: string; x: number; y: number; n: number };
           expect(step.explanation).not.toMatch(/Every other number has been ruled out/);
           expect(step.explanation).toMatch(/In this (row|column|block|diagonal)/);
-          const area = (step.highlights?.area ?? []) as { x: number; y: number }[];
-          expect(area.some((a) => a.x === m.x && a.y === m.y)).toBe(true);
+          // The region it names contains the target: hatched when it is a line,
+          // outlined when it is a block.
+          const isBlock = /In this block/.test(step.explanation);
+          const region = (isBlock ? step.highlights?.area : step.highlights?.hatch) as {
+            x: number;
+            y: number;
+          }[];
+          expect(region.some((a) => a.x === m.x && a.y === m.y)).toBe(true);
           checked++;
           break;
         }

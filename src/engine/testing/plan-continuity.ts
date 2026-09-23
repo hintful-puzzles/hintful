@@ -12,7 +12,8 @@
  *   legs);
  * - **what it wrote** is diffed off the state across its steps, never read off
  *   the move, so it cannot disagree with the board;
- * - **what it read** is its steps' `area ∪ targets`, the premise the hint shows,
+ * - **what it read** is its steps' `area ∪ hatch ∪ targets`, the premise the
+ *   hint shows,
  *   narrowed for a placement to the placed value along its evidence (a hidden 7
  *   in a row reads only the row's 7s);
  * - **a candidate** at a position is a later firing of the same plan that reads
@@ -66,10 +67,12 @@ function firingsOf(
   const firings: Firing[] = [];
   let state = state0;
   for (const s of steps) {
-    const hl = (s.highlights ?? {}) as { area?: Pt[]; targets?: Pt[] };
+    const hl = (s.highlights ?? {}) as { area?: Pt[]; hatch?: Pt[]; targets?: Pt[] };
+    // The line a step hatches is read as much as the cells it outlines.
+    const read = [...(hl.area ?? []), ...(hl.hatch ?? [])];
     let f = firings[firings.length - 1];
     if (!s.continuesPrevious || !f) {
-      const area = (hl.area ?? []).filter((p) => cell(p) !== null);
+      const area = read.filter((p) => cell(p) !== null);
       const targets = new Set((hl.targets ?? []).map(cell).filter((c) => c !== null));
       f = {
         wCells: new Set(),
@@ -85,7 +88,7 @@ function firingsOf(
       firings.push(f);
     }
     const first = f.wCells.size === 0;
-    for (const p of [...(hl.area ?? [])]) {
+    for (const p of read) {
       const c = cell(p);
       if (c !== null) f.area.add(c);
     }

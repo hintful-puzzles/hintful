@@ -24,6 +24,7 @@ import { groupDiagonal } from "../../engine/color/palette-games.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import { winFlash } from "../../engine/flash.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import {
@@ -266,6 +267,7 @@ function drawTile(
   mistake: boolean,
   hint: number,
   hintOrder: number,
+  hatched: boolean,
 ): void {
   const w = ds.w;
   const ts = ds.tileSize;
@@ -296,7 +298,7 @@ function drawTile(
 
   dr.clip({ x: cx, y: cy, w: cw, h: ch });
 
-  // Background: highlight > diagonal shade > plain. No hint role appears here.
+  // Background: highlight > diagonal shade > plain, then the hint's line hatch.
   drawCellBackground(
     dr,
     { x: cx, y: cy, w: cw, h: ch },
@@ -304,6 +306,7 @@ function drawTile(
     COL_HIGHLIGHT,
     x === y ? COL_DIAGONAL : COL_BACKGROUND,
   );
+  if (hatched) dr.drawHatch({ x: cx, y: cy, w: cw, h: ch }, COL_HINT, hatchPeriod(ts));
 
   // Dividers.
   if (tile & DF_DIVIDER_TOP) dr.drawRect({ x: cx, y: cy, w: cw, h: 1 }, COL_GRID);
@@ -478,8 +481,8 @@ export function redraw(
     const tile = (sx + 1) | DF_LEGEND;
     if (ds.legend[x] !== tile) {
       ds.legend[x] = tile;
-      drawTile(dr, ds, -1, x, tile, 0, 0, false, 0, 0);
-      drawTile(dr, ds, x, -1, tile, 0, 0, false, 0, 0);
+      drawTile(dr, ds, -1, x, tile, 0, 0, false, 0, 0, false);
+      drawTile(dr, ds, x, -1, tile, 0, 0, false, 0, 0, false);
     }
   }
 
@@ -552,6 +555,7 @@ export function redraw(
           mistake,
           hintWord,
           ds.hint.order[gi],
+          ds.hint.hatched[gi] === 1,
         );
         ds.hint.commit(gi);
       }

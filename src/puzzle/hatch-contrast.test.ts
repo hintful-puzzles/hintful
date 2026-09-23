@@ -97,6 +97,59 @@ describe("the hint's line hatch", () => {
   });
 });
 
+describe("a step that names a line draws it, and only then", () => {
+  /** The cells a step says to hatch: the shared `hatch` list, or Magnets' own
+   * `line`. Read off the highlights, so a game is in by having it. */
+  const named = (hl: unknown): number => {
+    if (!hl || typeof hl !== "object") return 0;
+    const h = hl as { hatch?: unknown[]; line?: unknown };
+    if (Array.isArray(h.hatch)) return h.hatch.length;
+    // Present, not truthy: Pattern's first column is line 0.
+    return h.line === undefined || h.line === null ? 0 : 1;
+  };
+
+  it("draws a hatch exactly where a step names a line, over every hinting game", () => {
+    let naming = 0;
+    let silent = 0;
+    const gamesNaming = new Set<string>();
+    for (const [id, game] of HINT_GAMES) {
+      const palette = game.colors(DEFAULT_BACKGROUND);
+      const [first] = gatePresets(id, game);
+      if (!first) continue;
+      const midend = new Midend(game);
+      if (midend.newGameFromId(`${game.encodeParams(first.params, true)}#names-a-line`))
+        continue;
+      midend.size({ w: 700, h: 700 });
+      for (let ask = 0; ask < 6 && !midend.hint(); ask++) {
+        for (let n = 0; n < 12 && midend.activeHintStep(); n++) {
+          // A full repaint: a frame redraws only stale cells, so two steps
+          // hatching the same line in a row would draw no hatch in the second.
+          const frame = new RecordingDrawing(palette);
+          midend.forceRedraw(frame);
+          const drawn = opsOfKind(frame.ops, "hatch").length;
+          const cells = named(midend.activeHintStep()?.highlights);
+          if (cells > 0) {
+            expect(
+              drawn,
+              `${id}: a step names a line and draws no hatch`,
+            ).toBeGreaterThan(0);
+            naming++;
+            gamesNaming.add(id);
+          } else {
+            expect(drawn, `${id}: a step names no line and draws a hatch`).toBe(0);
+            silent++;
+          }
+          midend.executeHint();
+        }
+      }
+    }
+    // Both halves looked at something, and the games converted so far are in.
+    expect(naming).toBeGreaterThan(0);
+    expect(silent).toBeGreaterThan(0);
+    expect([...gamesNaming]).toContain("magnets");
+  });
+});
+
 // Here rather than beside Magnets' render tests because the palettes the app
 // paints are built in this layer, which no game may import.
 describe("Magnets under the hatch", () => {

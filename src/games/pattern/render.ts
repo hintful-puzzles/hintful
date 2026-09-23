@@ -13,7 +13,6 @@ import {
   GRID_DARK,
   HINT_ACTION,
   HINT_BLACKREF,
-  HINT_EVIDENCE_WASH,
   HINT_WHITEREF,
   INK,
   UNDECIDED,
@@ -21,6 +20,7 @@ import {
 import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import type { PatternHint } from "./index.ts";
@@ -50,13 +50,12 @@ export const COL_CURSOR = 6;
 export const COL_ERROR = 7;
 export const COL_CURSOR_GUIDE = 8;
 // Hint colors, appended past the C enum (0–8). The forced cell is ringed
-// COL_HINT, the reasoned line's undecided cells shade COL_HINT_CELL, and cited
-// black / white marks ring COL_HINT_BLACKREF / COL_HINT_WHITEREF (the
-// cross-game element-type legend).
+// COL_HINT, the reasoned line is hatched in it, and cited black / white marks
+// ring COL_HINT_BLACKREF / COL_HINT_WHITEREF (the cross-game element-type
+// legend).
 export const COL_HINT = 9;
-export const COL_HINT_CELL = 10;
-export const COL_HINT_BLACKREF = 11;
-export const COL_HINT_WHITEREF = 12;
+export const COL_HINT_BLACKREF = 10;
+export const COL_HINT_WHITEREF = 11;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -74,7 +73,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CURSOR] = CURSOR;
   out[COL_ERROR] = ERROR;
   out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_CELL] = HINT_EVIDENCE_WASH;
   out[COL_HINT_BLACKREF] = HINT_BLACKREF;
   out[COL_HINT_WHITEREF] = HINT_WHITEREF;
   return out;
@@ -136,7 +134,7 @@ const K_CURSOR = 1 << 2;
 const K_MISTAKE = 1 << 3;
 // Hint-overlay bits (no upstream analog), also folded into the cache key.
 const K_HINT_TARGET = 1 << 4; // a forced cell (COL_HINT highlight)
-const K_HINT_SHADE = 1 << 5; // an undecided cell of the reasoned line
+const K_HINT_LINE = 1 << 5; // a cell of the reasoned line (hatched)
 const K_HINT_BLACKREF = 1 << 6; // a cited black mark (teal ring)
 const K_HINT_WHITEREF = 1 << 7; // a cited white mark (violet ring)
 
@@ -170,13 +168,15 @@ function gridSquare(
 
   // A hint target is ringed below, never filled: where the move is exactly
   // "make this square black or white", a fill would state the answer the
-  // narration is proposing. An undecided cell of the reasoned line shades,
-  // since nothing is drawn on it for the wash to cover. A cited mark keeps its
-  // own color (the premise) and gets a ring below.
-  const baseFill =
+  // narration is proposing. Every cell of the reasoned line is hatched, filled
+  // or not, so the line reads as one strip. A cited mark keeps its own color
+  // (the premise) and gets a ring below.
+  const fill =
     val === GRID_FULL ? COL_FULL : val === GRID_EMPTY ? COL_EMPTY : COL_UNKNOWN;
-  const fill = hintBits & K_HINT_SHADE ? COL_HINT_CELL : baseFill;
   dr.drawRect({ x: dx, y: dy, w: dw, h: dh }, fill);
+  if (hintBits & K_HINT_LINE) {
+    dr.drawHatch({ x: dx, y: dy, w: dw, h: dh }, COL_HINT, hatchPeriod(ts));
+  }
 
   if (hintBits & K_HINT_TARGET) {
     drawMarkSides(
@@ -232,6 +232,7 @@ function drawNumbers(
   state: PatternState,
   i: number,
   color: number,
+  hatched: boolean,
 ): void {
   const ts = ds.tileSize;
   const { w, h, clues, fontLarge } = state.common;
@@ -256,6 +257,7 @@ function drawNumbers(
 
   dr.clip({ x: rx, y: ry, w: rw, h: rh });
   dr.drawRect({ x: rx, y: ry, w: rw, h: rh }, COL_BACKGROUND);
+  if (hatched) dr.drawHatch({ x: rx, y: ry, w: rw, h: rh }, COL_HINT, hatchPeriod(ts));
 
   const fontsize = Math.floor((ts + 0.5) / (fontLarge ? 1.2 : 1.8));
   const half = Math.floor(ts / 2);
@@ -392,9 +394,7 @@ export function redraw(
         if (hintTargets?.has(i)) hintBits = K_HINT_TARGET;
         else if (hintBlackRefs?.has(i)) hintBits = K_HINT_BLACKREF;
         else if (hintWhiteRefs?.has(i)) hintBits = K_HINT_WHITEREF;
-        else if (grid[i] === GRID_UNKNOWN && inReasonedLine(x, y)) {
-          hintBits = K_HINT_SHADE;
-        }
+        if (inReasonedLine(x, y)) hintBits |= K_HINT_LINE;
       }
       const key = val | (cur ? K_CURSOR : 0) | (mistake ? K_MISTAKE : 0) | hintBits;
       if (ds.visible[i] !== key) {
@@ -411,11 +411,13 @@ export function redraw(
     if (color === COL_TEXT && ((cx >= 0 && i === cx) || (cy >= 0 && i === cy + w))) {
       color = COL_CURSOR_GUIDE;
     }
-    // The reasoned line's clue is highlighted so it ties to the shaded line.
+    // The reasoned line's clue takes the action color and its strip the hatch,
+    // so the stripe runs from the count to the end of the line. The color alone
+    // keys the repaint, since the two change together.
     if (i === hintLine) color = COL_HINT;
     if (ds.numColors[i] !== color) {
       ds.numColors[i] = color;
-      drawNumbers(dr, ds, state, i, color);
+      drawNumbers(dr, ds, state, i, color, i === hintLine);
     }
   }
 }

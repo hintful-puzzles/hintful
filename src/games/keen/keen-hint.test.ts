@@ -10,7 +10,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
-import { expectContour, expectRing } from "../../engine/testing/mark-shape.ts";
+import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
+import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
   renderScenario,
@@ -205,11 +206,11 @@ describe("keen hint", () => {
     expect(off.steps.length).toBeGreaterThan(on.steps.length);
   });
 
-  it("narrates a hidden single by its line and shades the whole line", () => {
+  it("narrates a hidden single by its line and hatches the whole line", () => {
     // A hidden single (a cell still showing several candidates, but the placed
     // digit fits nowhere else in its row/column) must NOT be narrated as a naked
     // single ("every other number ruled out in this cell"); it names the line and
-    // shades it. Walk boards by hints to reach one.
+    // hatches it. Walk boards by hints to reach one.
     let checked = 0;
     for (const seed of ["hs0", "hs1", "hs2", "hs3", "hs4", "hs5"]) {
       const { st } = gen(NORMAL, seed);
@@ -226,8 +227,8 @@ describe("keen hint", () => {
           // The narration is a placement, never the naked-single phrasing.
           expect(step.explanation).not.toMatch(/Every other number has been ruled out/);
           expect(step.explanation).toMatch(/In this (row|column)/);
-          // The shaded area is exactly one full line (w cells) through the target.
-          const area = (step.highlights?.area ?? []) as { x: number; y: number }[];
+          // The hatch is exactly one full line (w cells) through the target.
+          const area = (step.highlights?.hatch ?? []) as { x: number; y: number }[];
           expect(area.length).toBe(w);
           const isRow = /In this row/.test(step.explanation);
           for (const a of area) {
@@ -415,7 +416,7 @@ describe("keen hint render", () => {
     expect(recording.ops).toMatchSnapshot();
   });
 
-  it("a hidden-single placement shades the whole line and rings the target", () => {
+  it("a hidden-single placement hatches the whole line and rings the target", () => {
     const small: KeenParams = { w: 4, diff: "easy", multiplicationOnly: false };
     const id = hiddenSingleFrame(small);
     const { recording, hint } = renderScenario({
@@ -426,9 +427,14 @@ describe("keen hint render", () => {
       hintUntil: (s) => /can go in only this cell/.test(s.explanation),
     });
     expect(hint?.explanation).toMatch(/In this (row|column)/);
-    // The line is one COL_HINT_CELL contour, so a line that lost its target
-    // cell, or that drew a ring per cell, fails here.
-    expectContour(recording.ops, COL_HINT_CELL, small.w);
+    // One hatch per cell of the line, all in one strip, and no outline: the
+    // line is the hatch, and nothing in it is a particular reason.
+    const hatches = opsOfKind(recording.ops, "hatch");
+    expect(hatches).toHaveLength(small.w);
+    for (const h of hatches) expect(h.color).toBe(COL_HINT);
+    const isRow = /In this row/.test(hint?.explanation ?? "");
+    expect(new Set(hatches.map((h) => (isRow ? h.y : h.x))).size).toBe(1);
+    expect(markSides(recording.ops, COL_HINT_CELL)).toEqual([]);
     expectRing(recording.ops, COL_HINT);
     expect(recording.ops).toMatchSnapshot();
   });

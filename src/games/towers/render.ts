@@ -27,6 +27,7 @@ import {
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import {
@@ -226,6 +227,7 @@ function drawTile(
   wrong: boolean,
   hint: number,
   hintOrder: number,
+  hatched: boolean,
 ): void {
   let tx = coord(x, ts);
   let ty = coord(y, ts);
@@ -274,6 +276,8 @@ function drawTile(
     COL_HIGHLIGHT,
     COL_BACKGROUND,
   );
+  // On a raised tower's top face, so the line reads at the height the tower is.
+  if (hatched) dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
 
   // box outline (play area only)
   if (tile & DF_PLAYAREA) {
@@ -475,6 +479,7 @@ export function redraw(
       ds.wrong.at(j),
       ds.hint.packed[j],
       ds.hint.order[j],
+      ds.hint.hatched[j] === 1,
     );
   };
   for (let y = 0; y < W; y++) {

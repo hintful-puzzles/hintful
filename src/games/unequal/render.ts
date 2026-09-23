@@ -28,6 +28,7 @@ import {
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
 import { cellHighlight, drawCellBackground } from "../../engine/note-taking-cell.ts";
@@ -421,6 +422,7 @@ function drawCell(
   hflash: boolean,
   hint: number,
   hintOrder: number,
+  hatched: boolean,
 ): void {
   const o = state.order;
   const ox = coord(x, ts);
@@ -439,6 +441,7 @@ function drawCell(
     COL_CURSOR,
     hflash ? COL_FLASH : COL_BACKGROUND,
   );
+  if (hatched) dr.drawHatch({ x: ox, y: oy, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
 
   rectOutline(dr, ox, oy, ts, ts, COL_GRID);
   dr.drawUpdate({ x: ox, y: oy, w: ts, h: ts });
@@ -620,6 +623,7 @@ export function redraw(
           hflash,
           ds.hint.packed[i],
           ds.hint.order[i],
+          ds.hint.hatched[i] === 1,
         );
         ds.nums[i] = num;
         ds.flags[i] = flags;

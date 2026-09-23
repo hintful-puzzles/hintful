@@ -1664,12 +1664,14 @@ a line of sight) comes out as a single contour, concave corners and all, and a
 scattered set (a forcing chain's cells) as one ring per cell — honest, because
 they really are separate cells.
 
-**Wash** only where the game can say *nothing is drawn on these*, and three games
-can: **Unruly** (the journey's still-empty siblings), **Pattern** (the reasoned
-line's undecided squares) and **Light Up** (dark squares, where the premise is
-that the square is **not lit** — which a teal shade preserves, being not yellow).
-`hint-mark.test.ts` asserts that set exactly, so a fourth game washing its
-evidence fails until somebody writes down why it may.
+**Wash** only where the game can say *nothing is drawn on these*, and two games
+can: **Unruly** (the journey's still-empty siblings) and **Light Up** (dark
+squares, where the premise is that the square is **not lit** — which a teal
+shade preserves, being not yellow). `hint-mark.test.ts` asserts that set
+exactly, so a third game washing its evidence fails until somebody writes down
+why it may. Pattern washed its reasoned line's undecided squares until the line
+became a hatch (§ "Hatch the line the sentence names"): a line is not evidence,
+and the hatch shows it whole, filled squares included.
 
 **Filling used to be the counterexample and is not.** Its premise is a *number*,
 and a digit reads perfectly well on a pale fill — 3.41:1 in light, 4.04:1 in

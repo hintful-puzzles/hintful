@@ -28,15 +28,35 @@
 
 ## 3. Every other game whose hints name a row or column
 
-- [ ] 3.1 Census the population by what the narration says (a sentence naming
-      "this row", "this column", "this line" or "its row/column"), keyed on the
-      shape, read the result, and record it here.
+- [x] 3.1 Census, 2026-09-23: every hinting game's plans walked on every leaf
+      preset, two seeds each, collecting the sentences that name a row, column
+      or line (keyed on the words, then read and classified by hand, because
+      "line" is also a drawn segment in Loopy, Spokes, Sticks and Slant).
+      - **Name one line as the thing reasoned about**: the row/column Latin
+        games through the shared preset (Keen, Mathrax, Unequal, Group, Towers,
+        Salad) and Solo's own rows, columns and diagonals; Towers' and Salad's
+        clue lines; Pattern; Boats ("Row 3 still needs"); Tracks; Unruly's
+        line counts; Singles ("shares a line with"); Guess ("the outlined
+        row"); Netslide's "Column 2 never slides".
+      - **Name two lines** ("in this row and column", "its row, column or
+        block", Seismic's "in its row or column", Singles' pair in one row and
+        the next): no hatch, by the rule.
+      - **A destination, not a reason**: Sixteen and Netslide's "take it to
+        row 3". Left for a separate decision.
 - [ ] 3.2 Per game: hatch the named line (and its clue slot where the game has
       one) in place of any line outline; keep outlines for particular cells; a
-      second line named by where it lies.
-- [ ] 3.3 Per game, a render-scenario assertion that the hatch covers exactly the
-      named line; the contrast guard picks each game up by its `drawHatch` call.
-- [ ] 3.4 Run each converted game in Chrome, light and dark.
+      second line named by where it lies. *Done: the shared sidecar lane and
+      `CandidateHighlights.hatch`, the Latin preset, Keen, Towers (clue lines
+      through both clue slots), Unequal, Group, Mathrax, Salad (count lines, and
+      a border clue's row with its run outlined), Solo (rows, columns and
+      diagonals; a block keeps its outline), Pattern (its wash retired, clue
+      strip hatched). Left: Boats, Tracks, Unruly, Singles, Guess, Netslide.*
+- [ ] 3.3 A guard that every step naming a line draws a hatch and no other step
+      does, over every hinting game on a full repaint
+      (`puzzle/hatch-contrast.test.ts`). *Written; it found Pattern unconverted
+      and, once, its own falsy-zero bug.*
+- [ ] 3.4 Run each converted game in Chrome, light and dark. *Keen, Towers and
+      Pattern checked in dark.*
 
 ## 4. Close out
 

@@ -585,6 +585,7 @@ export function redraw(
             ? COL_LOWLIGHT
             : COL_HIGHLIGHT,
       );
+      ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, COL_HINT, ts);
 
       dr.drawPolygon(
         [

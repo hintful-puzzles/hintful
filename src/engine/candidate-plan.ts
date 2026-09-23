@@ -300,9 +300,9 @@ export type LatinCandidatePlan<
  * - `singleReason` is {@link singleReasonOf}. Once `Reg` is a
  *   {@link RowColRegion} it is the only inhabitant of that signature, so the
  *   question has one answer rather than six games agreeing;
- * - a hidden single's evidence is its own line ({@link hiddenSingleLine}), for
- *   the same reason. The game's `placeWords` still says *why*; the preset
- *   shades *where*, and the game's other placement arms are untouched;
+ * - a hidden single's line ({@link hiddenSingleLine}) is hatched, for the same
+ *   reason. The game's `placeWords` still says *why*; the preset marks
+ *   *where*, and the game's other placement arms are untouched;
  * - the setup sentences, from the game's `notes` vocabulary.
  *
  * A game whose regions, singles or setup genuinely differ stays on
@@ -334,11 +334,13 @@ export function runLatinCandidatePlan<
       const words = placeWords(m, reason, continues);
       const hidden = hiddenSingleOf(reason);
       if (!hidden) return words;
-      // Asserted like the walk's other highlight constructions: `H` extends
-      // `CandidateHighlights`, so it has an `area` of this type.
+      // The line the sentence names ("in this row") is hatched, not outlined:
+      // an outline marks particular cells. Asserted like the walk's other
+      // highlight constructions: `H` extends `CandidateHighlights`.
       return {
         ...words,
-        area: hiddenSingleLine(hidden.line, hidden.index, w),
+        area: [],
+        hatch: hiddenSingleLine(hidden.line, hidden.index, w),
       } as StepWords<H>;
     },
   };
@@ -530,11 +532,12 @@ class CandidateWalk<
     return { reads: () => (reads ??= this.premise(f)), take: () => this.take(f) };
   }
 
-  /** What a firing rests on: the evidence and the cells of every step it shows. */
+  /** What a firing rests on: every step's outlined evidence, the line it names
+   * (hatched, but reasoned over all the same) and the cells it acts on. */
   private premise(f: Firing<M, H, Reason>): Point[] {
     return this.stepsOf(f).flatMap((s) => {
       const h = s.highlights;
-      return h ? [...h.area, ...h.targets] : [];
+      return h ? [...h.area, ...(h.hatch ?? []), ...h.targets] : [];
     });
   }
 
