@@ -150,11 +150,25 @@ const KINDS: readonly RuleOut["kind"][] = [
 ];
 
 /** "; a + anywhere else would …", or nothing when no empty square is ruled
- * out and the board's placed squares already say it all. */
-const anywhereElse = (pole: number, rs: readonly RuleOut[]): string =>
+ * out and the board's placed squares already say it all. `tiles` is how many
+ * tiles the ruled-out squares make when the step outlines each of them whole,
+ * and 0 when it does not: an outline the sentence never names reads as the
+ * thing the sentence is about. */
+const anywhereElse = (pole: number, rs: readonly RuleOut[], tiles: number): string =>
   rs.length === 0
     ? ""
-    : `; a ${glyph(pole)} anywhere else would ${wouldDoAny(pole, rs)}`;
+    : `; a ${glyph(pole)} ${where(tiles)} would ${wouldDoAny(pole, rs)}`;
+
+/** Where the ruled-out squares are: "in either outlined tile", or "anywhere
+ * else" when the outlines do not make them tiles. */
+const where = (tiles: number): string =>
+  tiles === 0
+    ? "anywhere else"
+    : tiles === 1
+      ? "in the outlined tile"
+      : tiles === 2
+        ? "in either outlined tile"
+        : "in any outlined tile";
 
 type Full = Cause & { kind: "full" };
 
@@ -232,16 +246,17 @@ export const say = {
 
   /** The line needs `n` more `pole`s and has exactly `n` squares that can
    * still take one; `elsewhere` is why each of its other empty squares
-   * cannot. */
+   * cannot, and `tiles` how many outlined tiles those squares make. */
   lineExact: (
     axis: Axis,
     pole: number,
     n: number,
     elsewhere: readonly RuleOut[],
+    tiles: number,
   ): string =>
     n === 1
-      ? `This ${axis} needs ${more(n, pole)} and only this square can still take one${anywhereElse(pole, elsewhere)}, so it must be ${glyph(pole)}.`
-      : `This ${axis} needs ${more(n, pole)} and only these ${n} squares can still take one${anywhereElse(pole, elsewhere)}, so they must be ${glyphs(pole)}.`,
+      ? `This ${axis} needs ${more(n, pole)} and only this square can still take one${anywhereElse(pole, elsewhere, tiles)}, so it must be ${glyph(pole)}.`
+      : `This ${axis} needs ${more(n, pole)} and only these ${n} squares can still take one${anywhereElse(pole, elsewhere, tiles)}, so they must be ${glyphs(pole)}.`,
 
   /** The line's clues are met, so every empty square in it is neutral: the
    * `neutralExact` premise with no marked magnet in the line to set aside. */
@@ -261,7 +276,8 @@ export const say = {
     `This ${axis}'s empty squares take alternating poles, one more ${glyph(pole)} than ${glyph(other(pole))}: this odd-length gap must start with ${glyph(pole)}.`,
 
   /** The line needs a `pole` from each tile that can still give one, and
-   * `elsewhere` is why no other square of it can. `along` is how many of
+   * `elsewhere` is why no other square of it can, and `tiles` how many
+   * outlined tiles those squares make. `along` is how many of
    * those tiles lie along the line: two squares in it, but one `pole`,
    * which is what makes the count one of tiles rather than squares. `end`
    * is what the step concludes: the squares of the tiles crossing the line
@@ -273,6 +289,7 @@ export const say = {
     n: number,
     along: number,
     elsewhere: readonly RuleOut[],
+    tiles: number,
     end: OnlyEnd,
   ): string => {
     // Counting tiles rather than squares needs saying when one lies along
@@ -291,6 +308,6 @@ export const say = {
           ? `, so this square must be ${glyph(pole)}.`
           : `, so these ${end.squares} squares must be ${glyphs(pole)}.`
         : `. A ${glyph(pole)} at its far end would ${wouldDoAny(pole, [end.why])}, so it must go here.`;
-    return `${head}${anywhereElse(pole, elsewhere)}${tail}`;
+    return `${head}${anywhereElse(pole, elsewhere, tiles)}${tail}`;
   },
 };

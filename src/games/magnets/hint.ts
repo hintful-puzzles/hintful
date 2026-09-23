@@ -484,6 +484,8 @@ function tellCount(
   const area: number[] = [];
   const clues = [clueOf(b, r.line, pole)];
   const reasonClues: number[] = [];
+  const ruledTiles = new Set<number>();
+  let wholeTiles = true;
   for (const i of cells) {
     if (b.flags[i] & GS_SET || legSquares.has(i)) continue;
     // In `onlyEndLeft`, a square still able to take the pole, or the far end
@@ -508,7 +510,14 @@ function tellCount(
     elsewhere.push(ruleOutOf(why, r.line));
     area.push(i, ...ev.area);
     reasonClues.push(...ev.reasonClues);
+    // Read through its partner, a square's evidence begins with that partner,
+    // so both halves are outlined: the tile is what the board shows. Unless
+    // the partner is a square the journey rings, which the ring takes instead.
+    if (why.kind === "partner" && !legSquares.has(why.at)) {
+      ruledTiles.add(dominoOf(b, i));
+    } else wholeTiles = false;
   }
+  const tiles = wholeTiles ? ruledTiles.size : 0;
   const { line } = r;
   const axis = axisOf(r.line);
   const idxOf = (leg: Leg): number => {
@@ -535,7 +544,7 @@ function tellCount(
     const n = needed(board, r.line, pole);
     if (r.kind === "lineExact") {
       return {
-        text: say.lineExact(axis, pole, n, elsewhere),
+        text: say.lineExact(axis, pole, n, elsewhere, tiles),
         area,
         clues,
         line,
@@ -569,7 +578,7 @@ function tellCount(
         .map(idxOf)
         .filter((i) => farEnd(board, i).kind === "crosses");
       return {
-        text: say.onlyEndLeft(axis, pole, n, along, elsewhere, {
+        text: say.onlyEndLeft(axis, pole, n, along, elsewhere, tiles, {
           kind: "crosses",
           squares: targets.length,
         }),
@@ -583,7 +592,7 @@ function tellCount(
     const j = b.common.dominoes[idx];
     const ev = evidenceOf(board, end.why, pole);
     return {
-      text: say.onlyEndLeft(axis, pole, n, along, elsewhere, {
+      text: say.onlyEndLeft(axis, pole, n, along, elsewhere, tiles, {
         kind: "along",
         why: ruleOutOf(end.why, r.line),
       }),

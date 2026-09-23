@@ -1312,6 +1312,9 @@ lying along the line gets its own leg and its own ring. **A count of dominoes
 must say why it is not a count of squares**: a domino lying along the line has
 two open squares and gives it one pole, and without "one per magnet" the same
 owner read four open squares for three +s as a board with several answers.
+The outlines the ruled-out squares make are named too, "a + in either outlined
+tile would …", but only when every one of them is a whole outlined tile; a lone
+outlined square keeps "anywhere else", since calling it a tile would be false.
 `magnets-hint.test.ts` holds every "this square" to one ring and every "these N
 squares" to N, over boards pinned as descs, because the plural fired on 12 of
 320 generated boards and the seeded corpus saw none.

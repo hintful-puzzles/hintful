@@ -23,6 +23,7 @@ import {
   DIFF_TRICKY,
   executeMove,
   GS_NOTNEUTRAL,
+  GS_SET,
   type MagnetsMove,
   type MagnetsParams,
   type MagnetsState,
@@ -259,7 +260,7 @@ describe("a count premise shows why the rest of its line is ruled out", () => {
     // why it counts dominoes, or the count reads as false.
     expect(first.explanation).toBe(
       "This column needs 3 more +s, one per magnet, and just 3 tiles can give one; " +
-        "a + anywhere else would put one − too many in the column beside it, " +
+        "a + in either outlined tile would put one − too many in the column beside it, " +
         "so these 2 squares must be +s.",
     );
     const h = first.highlights;
@@ -364,34 +365,48 @@ describe("magnets hint sentences", () => {
     for (const pole of poles)
       for (const axis of axes) {
         const ruleOuts = ruleOutsFor(axis);
-        // No reason, one, and every reason at once: the longest list.
-        const elsewheres = [[], ...ruleOuts.map((r) => [r]), ruleOuts];
+        const throughPartner = (r: RuleOut) =>
+          r.kind === "partnerTouch" || r.kind === "partnerFull";
+        // No reason, one, every reason at once (the longest list), and every
+        // reason read through a partner, the longest the outlined tiles name.
+        const elsewheres = [
+          [],
+          ...ruleOuts.map((r) => [r]),
+          ruleOuts,
+          ruleOuts.filter(throughPartner),
+        ];
+        // The ruled-out squares are named as outlined tiles only when every
+        // one of them is read through its partner, which outlines both
+        // halves (`tellCount`).
         for (const n of [1, 2, 9])
-          for (const elsewhere of elsewheres) {
-            out.push({
-              text: say.lineExact(axis, pole, n, elsewhere),
-              reasoned: elsewhere.length > 0,
-            });
-            // A far end lying along the line is ruled out through the ringed
-            // square, which is on the counted line: a met line it cites is
-            // that line or one across it, never the one beside it.
-            const ends: OnlyEnd[] = [
-              { kind: "crosses", squares: 1 },
-              { kind: "crosses", squares: 2 },
-              ...ruleOuts
-                .filter(
-                  (why) => !(why.kind === "partnerFull" && why.place === "beside"),
-                )
-                .map((why) => ({ kind: "along" as const, why })),
-            ];
-            for (const end of ends)
-              for (const along of [0, 1]) {
-                out.push({
-                  text: say.onlyEndLeft(axis, pole, n, along, elsewhere, end),
-                  reasoned: elsewhere.length > 0 || end.kind === "along",
-                });
-              }
-          }
+          for (const elsewhere of elsewheres)
+            for (const tiles of elsewhere.length > 0 && elsewhere.every(throughPartner)
+              ? [0, 1, 2, 3]
+              : [0]) {
+              out.push({
+                text: say.lineExact(axis, pole, n, elsewhere, tiles),
+                reasoned: elsewhere.length > 0,
+              });
+              // A far end lying along the line is ruled out through the ringed
+              // square, which is on the counted line: a met line it cites is
+              // that line or one across it, never the one beside it.
+              const ends: OnlyEnd[] = [
+                { kind: "crosses", squares: 1 },
+                { kind: "crosses", squares: 2 },
+                ...ruleOuts
+                  .filter(
+                    (why) => !(why.kind === "partnerFull" && why.place === "beside"),
+                  )
+                  .map((why) => ({ kind: "along" as const, why })),
+              ];
+              for (const end of ends)
+                for (const along of [0, 1]) {
+                  out.push({
+                    text: say.onlyEndLeft(axis, pole, n, along, elsewhere, tiles, end),
+                    reasoned: elsewhere.length > 0 || end.kind === "along",
+                  });
+                }
+            }
       }
     return out;
   }
@@ -447,7 +462,9 @@ describe("magnets hint sentences", () => {
       expect(text.length, text).toBeLessThanOrEqual(300);
       expect(text, text).not.toContain("—");
       // The ledger's pattern for these, so a rewording cannot slip off it.
-      expect(text, text).toMatch(/ anywhere else would | at its far end would /);
+      expect(text, text).toMatch(
+        / anywhere else would | outlined tile would | at its far end would /,
+      );
     }
   });
 
@@ -475,12 +492,27 @@ describe("magnets hint sentences", () => {
   });
 
   it("lists each reason once, in a fixed order", () => {
-    const s = say.lineExact("row", POSITIVE, 2, [
-      { kind: "partnerTouch" },
-      { kind: "touch" },
-      { kind: "touch" },
-    ]);
+    const s = say.lineExact(
+      "row",
+      POSITIVE,
+      2,
+      [{ kind: "partnerTouch" }, { kind: "touch" }, { kind: "touch" }],
+      0,
+    );
     expect(s).toContain("a + anywhere else would touch a + or put a − beside a −,");
+  });
+
+  it("names the ruled-out squares by their outlined tiles when it outlines them", () => {
+    const partner: RuleOut[] = [{ kind: "partnerTouch" }];
+    expect(say.lineExact("row", POSITIVE, 2, partner, 1)).toContain(
+      "a + in the outlined tile would put a − beside a −",
+    );
+    expect(say.lineExact("row", POSITIVE, 2, partner, 2)).toContain(
+      "a + in either outlined tile would",
+    );
+    expect(say.lineExact("row", POSITIVE, 2, partner, 3)).toContain(
+      "a + in any outlined tile would",
+    );
   });
 
   it("never cites a marked magnet on a board with none", () => {
@@ -498,8 +530,8 @@ describe("magnets hint sentences", () => {
   });
 
   it("speaks the singular at one", () => {
-    expect(say.lineExact("row", POSITIVE, 1, [])).toContain("one more +");
-    expect(say.lineExact("row", POSITIVE, 1, [])).toContain("this square");
+    expect(say.lineExact("row", POSITIVE, 1, [], 0)).toContain("one more +");
+    expect(say.lineExact("row", POSITIVE, 1, [], 0)).toContain("this square");
     expect(say.oneNeutralLeft("column", 1)).toContain("this tile");
     expect(say.neutralExact("row", 1)).toContain("this one");
   });
@@ -509,7 +541,7 @@ describe("magnets hint sentences", () => {
     // sentence names only what it concludes; the two drifted apart once, and
     // "so this square must be +" stood beside two rings (owner, 2026-09-23).
     // A domino's own sentence rings both its squares, and says "this tile".
-    const said = { one: 0, many: 0, crossing: 0, along: 0 };
+    const said = { one: 0, many: 0, crossing: 0, along: 0, tiles: 0 };
     // A domino count concluding two crossing squares at once fired on 12 of
     // 320 generated boards (2026-09-23), so the seeded corpus can miss it:
     // these are boards it fires on, pinned as descs, as is one whose count
@@ -569,6 +601,41 @@ describe("magnets hint sentences", () => {
           if (/, one per magnet, .* at its far end would/.test(step.explanation)) {
             said.along++;
           }
+          // "Either outlined tile" is two empty tiles outlined whole on the
+          // board. A placed magnet outlined as evidence is drawn with its
+          // poles, so no + can be read as going in it.
+          const named = /in (the|either|any) outlined tile/.exec(step.explanation);
+          if (named) {
+            said.tiles++;
+            const area = new Set(step.highlights?.area);
+            const whole = new Set(
+              [...area]
+                .filter(
+                  (i) =>
+                    area.has(state.common.dominoes[i]) && !(state.flags[i] & GS_SET),
+                )
+                .map((i) => Math.min(i, state.common.dominoes[i])),
+            ).size;
+            const msg = `${label}: ${step.explanation}`;
+            if (named[1] === "the") expect(whole, msg).toBe(1);
+            else if (named[1] === "either") expect(whole, msg).toBe(2);
+            else expect(whole, msg).toBeGreaterThanOrEqual(3);
+            // And every square the clause rules out is in one of them: no empty
+            // square of the hatched line is outlined alone.
+            const line = step.highlights?.line;
+            if (!line) throw new Error(`${label}: a count names no line`);
+            const onLine = (i: number) =>
+              (line.roworcol === COLUMN ? i % state.w : Math.floor(i / state.w)) ===
+              line.num;
+            const alone = [...area].filter(
+              (i) =>
+                onLine(i) &&
+                !(state.flags[i] & GS_SET) &&
+                !area.has(state.common.dominoes[i]) &&
+                !step.highlights?.targets.includes(state.common.dominoes[i]),
+            );
+            expect(alone, msg).toEqual([]);
+          }
           state = executeMove(state, step.move);
         }
       }
@@ -578,6 +645,7 @@ describe("magnets hint sentences", () => {
     expect(said.many).toBeGreaterThan(5);
     expect(said.crossing).toBeGreaterThanOrEqual(3);
     expect(said.along).toBeGreaterThan(0);
+    expect(said.tiles).toBeGreaterThan(0);
   });
 
   it("marks a line's clue digits, the line and the squares it decides", () => {
