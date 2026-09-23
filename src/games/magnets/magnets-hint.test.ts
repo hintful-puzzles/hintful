@@ -258,7 +258,7 @@ describe("a count premise shows why the rest of its line is ruled out", () => {
     // four open squares give it three +s at most, not four: the sentence says
     // why it counts dominoes, or the count reads as false.
     expect(first.explanation).toBe(
-      "This column needs 3 more +s, one per magnet, and just 3 dominoes can give one; " +
+      "This column needs 3 more +s, one per magnet, and just 3 tiles can give one; " +
         "a + anywhere else would put one − too many in the column beside it, " +
         "so these 2 squares must be +s.",
     );
@@ -324,10 +324,10 @@ describe("a count premise shows why the rest of its line is ruled out", () => {
   it("counts from the board each leg finds, not the one the journey began on", () => {
     const [, second, third] = steps();
     expect(second.explanation).toMatch(
-      /^This column needs 2 more \+s, one per magnet, and just 2 dominoes/,
+      /^This column needs 2 more \+s, one per magnet, and just 2 tiles/,
     );
     expect(third.explanation).toMatch(
-      /^This column needs one more \+ and only this domino can still give it;/,
+      /^This column needs one more \+ and only this tile can still give it;/,
     );
   });
 });
@@ -451,6 +451,24 @@ describe("magnets hint sentences", () => {
     }
   });
 
+  it("calls the piece a tile, in every sentence and on the help page", () => {
+    // Owner, 2026-09-23: "domino" was upstream's word for the shape, and it
+    // read as confusing beside the magnet and neutral a player fills it with.
+    const all = [...everySentence(), ...everyCountSentence().map((s) => s.text)];
+    expect(all.filter((s) => /\btiles?\b/.test(s)).length).toBeGreaterThan(20);
+    for (const s of all) expect(s, s).not.toMatch(/domino/i);
+    const help = Object.values(
+      import.meta.glob<string>("../../../help/games/magnets.md", {
+        query: "?raw",
+        import: "default",
+        eager: true,
+      }),
+    );
+    expect(help).toHaveLength(1);
+    expect(help[0]).toContain("neutral tile");
+    expect(help[0]).not.toMatch(/domino/i);
+  });
+
   it("concludes every sentence with a necessity", () => {
     const all = [...everySentence(), ...everyCountSentence().map((s) => s.text)];
     for (const s of all) expect(s, s).toMatch(/must (be|go)|must start/);
@@ -482,7 +500,7 @@ describe("magnets hint sentences", () => {
   it("speaks the singular at one", () => {
     expect(say.lineExact("row", POSITIVE, 1, [])).toContain("one more +");
     expect(say.lineExact("row", POSITIVE, 1, [])).toContain("this square");
-    expect(say.oneNeutralLeft("column", 1)).toContain("this domino");
+    expect(say.oneNeutralLeft("column", 1)).toContain("this tile");
     expect(say.neutralExact("row", 1)).toContain("this one");
   });
 
@@ -490,7 +508,7 @@ describe("magnets hint sentences", () => {
     // A journey rings every square its legs still decide, while a leg's
     // sentence names only what it concludes; the two drifted apart once, and
     // "so this square must be +" stood beside two rings (owner, 2026-09-23).
-    // A domino's own sentence rings both its squares, and says "this domino".
+    // A domino's own sentence rings both its squares, and says "this tile".
     const said = { one: 0, many: 0, crossing: 0, along: 0 };
     // A domino count concluding two crossing squares at once fired on 12 of
     // 320 generated boards (2026-09-23), so the seeded corpus can miss it:
@@ -536,7 +554,7 @@ describe("magnets hint sentences", () => {
           // A domino count's squares are each their domino's only square in
           // the hatched line, which is why the count alone decides them.
           if (
-            /dominoes can .*, so these? (\d+ )?squares? must be/.test(step.explanation)
+            /tiles can .*, so these? (\d+ )?squares? must be/.test(step.explanation)
           ) {
             said.crossing++;
             const line = step.highlights?.line;

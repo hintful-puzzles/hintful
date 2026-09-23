@@ -1,19 +1,19 @@
 # Magnets
 
-Fill each domino shape with either a magnet (consisting of a + and
-− pole) or a neutral domino (green).
+Each tile covers two squares. Fill each one with either a magnet
+(consisting of a + and − pole) or a neutral tile (green).
 
 The number of + poles that in each row and column must match the
 numbers along the top and left; the number of − poles must
 match the numbers along the bottom and right. Two + poles may not be
 orthogonally adjacent to each other, and similarly two − poles.
 
-Left-click a domino to toggle it between being empty and being a
+Left-click a tile to toggle it between being empty and being a
 magnet (the + is placed in the end you click). Right-click to toggle
 between empty, neutral, and a ? mark indicating that you're sure
 it's a magnet but don't yet know which way round it goes.
 
-A domino marked ? that lies along a row or column brings exactly one +
+A tile marked ? that lies along a row or column brings exactly one +
 and one − to that line, whichever way round it turns out, so it
 counts toward both of the line's numbers.
 

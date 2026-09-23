@@ -1315,6 +1315,14 @@ owner read four open squares for three +s as a board with several answers.
 `magnets-hint.test.ts` holds every "this square" to one ring and every "these N
 squares" to N, over boards pinned as descs, because the plural fired on 12 of
 320 generated boards and the seeded corpus saw none.
+
+**Name a piece the way the player thinks of it, not by the word the code
+inherited.** Magnets' hint said "domino", upstream's word for the two-square
+shape, and the owner found it confusing beside the magnet or neutral the player
+fills it with (2026-09-23). The hint and help page now say "tile", while the
+code keeps `dominoes` because no player reads it. When a sentence reaches for
+the name of a piece, check it against the help page's own words for what the
+player does to the piece.
 And when a line of reasons varies by row and column, merge the axes ("overfill
 its row or column") before reaching for the long-narration ledger.
 
@@ -1348,7 +1356,7 @@ kind leaves the player to guess which. Swept across every hinting game
 real case was Magnets' count premise (its paragraph above, under § "Show the
 evidence as an area"). Every other hit tied itself by kind: Boats draws its
 extra targets as water marks beside the boat mark the sentence names, a Magnets
-domino sentence rings both halves of "this domino", and Galaxies' "this cell"
+tile sentence rings both halves of "this tile", and Galaxies' "this cell"
 names its partner cell in the same sentence. Highlight fields differ per game,
 so the check lives beside the vocabulary that can judge it, per game, like the
 deixis gates.

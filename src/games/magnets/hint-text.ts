@@ -35,8 +35,8 @@ export type RuleOut =
    * which one the hatch is. */
   | { kind: "partnerFull"; axis: Axis; place: LinePlace };
 
-/** What an `onlyEndLeft` step concludes: `squares` squares of dominoes
- * crossing the line, or one end of a domino lying along it, with why its far
+/** What an `onlyEndLeft` step concludes: `squares` squares of tiles
+ * crossing the line, or one end of a tile lying along it, with why its far
  * end cannot take the pole. */
 export type OnlyEnd =
   | { kind: "crosses"; squares: number }
@@ -171,19 +171,19 @@ export const say = {
 
   /** Both ends touch the same pole. */
   bothEndsTouch: (pole: number): string =>
-    `Both ends of this domino touch a ${glyph(pole)}, so it can't be a magnet: it must be neutral.`,
+    `Both ends of this tile touch a ${glyph(pole)}, so it can't be a magnet: it must be neutral.`,
 
-  /** The domino lies along a line whose `pole` count is met: a magnet there
+  /** The tile lies along a line whose `pole` count is met: a magnet there
    * would add one more. */
   alongFull: (pole: number, c: Full): string =>
-    `This domino lies along a ${c.axis} with all its ${glyphs(pole)}${counting(c)}, so it can't be a magnet: it must be neutral.`,
+    `This tile lies along a ${c.axis} with all its ${glyphs(pole)}${counting(c)}, so it can't be a magnet: it must be neutral.`,
 
   /** Each end is in its own line of one axis, both with their `pole` count
    * met. */
   bothInFull: (pole: number, a: Full, b: Full): string =>
     a.marked || b.marked
-      ? `Both ends of this domino are in ${a.axis}s with all their ${glyphs(pole)}, counting marked magnets, so it must be neutral.`
-      : `Both ends of this domino are in ${a.axis}s with all their ${glyphs(pole)}, so it can't be a magnet: it must be neutral.`,
+      ? `Both ends of this tile are in ${a.axis}s with all their ${glyphs(pole)}, counting marked magnets, so it must be neutral.`
+      : `Both ends of this tile are in ${a.axis}s with all their ${glyphs(pole)}, so it can't be a magnet: it must be neutral.`,
 
   /** Neither end can take `pole`, for a different reason at each. */
   neitherEnd: (pole: number, one: Cause, two: Cause): string => {
@@ -193,7 +193,7 @@ export const say = {
       a.kind === "full" && b.kind === "full"
         ? `overfill its ${a.axis} at one end and its ${b.axis} at the other`
         : `${wouldBreak(pole, a)} at one end and ${wouldBreak(pole, b)} at the other`;
-    return `This domino can't hold a ${glyph(pole)}: it would ${what}, so it must be neutral.`;
+    return `This tile can't hold a ${glyph(pole)}: it would ${what}, so it must be neutral.`;
   },
 
   /** One end can take neither pole. */
@@ -212,23 +212,23 @@ export const say = {
       const full = (plus.kind === "full" ? plus : minus) as Full;
       why = `it touches a ${glyph(touched)}, and a ${glyph(filled)} there would overfill its ${full.axis}`;
     }
-    return `One end of this domino can't be + or −: ${why}. It must be neutral.`;
+    return `One end of this tile can't be + or −: ${why}. It must be neutral.`;
   },
 
   /** Every empty square of the line needs a pole. */
   polesEverywhere: (axis: Axis): string =>
-    `This ${axis}'s clues need a + or − in every one of its empty squares, so each domino there must be a magnet.`,
+    `This ${axis}'s clues need a + or − in every one of its empty squares, so each tile there must be a magnet.`,
 
-  /** The line has room for one more neutral square: none of its dominoes
+  /** The line has room for one more neutral square: none of its tiles
    * lying along it can be neutral. */
-  oneNeutralLeft: (axis: Axis, dominoes: number): string =>
-    `This ${axis} has room for just one more neutral square, so ${plural(dominoes, "this domino", "these dominoes")} lying along it must be ${plural(dominoes, "a magnet", "magnets")}.`,
+  oneNeutralLeft: (axis: Axis, tiles: number): string =>
+    `This ${axis} has room for just one more neutral square, so ${plural(tiles, "this tile", "these tiles")} lying along it must be ${plural(tiles, "a magnet", "magnets")}.`,
 
-  /** The line needs as many more `pole`s as it has undecided dominoes. */
+  /** The line needs as many more `pole`s as it has undecided tiles. */
   everyDominoNeeded: (axis: Axis, pole: number, n: number): string =>
     n === 1
-      ? `This ${axis} needs ${more(n, pole)} and has only this undecided domino, so it must be a magnet.`
-      : `This ${axis} needs ${more(n, pole)} and has only ${n} undecided dominoes, so each must be a magnet.`,
+      ? `This ${axis} needs ${more(n, pole)} and has only this undecided tile, so it must be a magnet.`
+      : `This ${axis} needs ${more(n, pole)} and has only ${n} undecided tiles, so each must be a magnet.`,
 
   /** The line needs `n` more `pole`s and has exactly `n` squares that can
    * still take one; `elsewhere` is why each of its other empty squares
@@ -260,12 +260,12 @@ export const say = {
   oddGap: (axis: Axis, pole: number): string =>
     `This ${axis}'s empty squares take alternating poles, one more ${glyph(pole)} than ${glyph(other(pole))}: this odd-length gap must start with ${glyph(pole)}.`,
 
-  /** The line needs a `pole` from each domino that can still give one, and
+  /** The line needs a `pole` from each tile that can still give one, and
    * `elsewhere` is why no other square of it can. `along` is how many of
-   * those dominoes lie along the line: two squares in it, but one `pole`,
-   * which is what makes the count one of dominoes rather than squares. `end`
-   * is what the step concludes: the squares of the dominoes crossing the line
-   * (each its domino's only square in it), or one end of a domino lying along
+   * those tiles lie along the line: two squares in it, but one `pole`,
+   * which is what makes the count one of tiles rather than squares. `end`
+   * is what the step concludes: the squares of the tiles crossing the line
+   * (each its tile's only square in it), or one end of a tile lying along
    * it and why its far end cannot take the pole. */
   onlyEndLeft: (
     axis: Axis,
@@ -275,16 +275,16 @@ export const say = {
     elsewhere: readonly RuleOut[],
     end: OnlyEnd,
   ): string => {
-    // Counting dominoes rather than squares needs saying when one lies along
+    // Counting tiles rather than squares needs saying when one lies along
     // the line: its two open squares give the line one pole, not two. "Still"
     // gives way to it, since the clause after says what the board rules out,
     // and the longest sentences sit near the ledger's ceiling.
     const head =
       n === 1
-        ? `This ${axis} needs ${more(n, pole)} and only this domino can still give it`
+        ? `This ${axis} needs ${more(n, pole)} and only this tile can still give it`
         : along > 0
-          ? `This ${axis} needs ${more(n, pole)}, one per magnet, and just ${n} dominoes can give one`
-          : `This ${axis} needs ${more(n, pole)} and just ${n} dominoes can still give one`;
+          ? `This ${axis} needs ${more(n, pole)}, one per magnet, and just ${n} tiles can give one`
+          : `This ${axis} needs ${more(n, pole)} and just ${n} tiles can still give one`;
     const tail =
       end.kind === "crosses"
         ? end.squares === 1
