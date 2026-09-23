@@ -22,6 +22,7 @@ import {
 } from "../../engine/color/palette-games.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
@@ -52,7 +53,7 @@ export const COL_CORRECTPLACE = 16;
 export const COL_CORRECTCOLOR = 17;
 /** The hint's target: a frame beside each answer-row color a step acts on. */
 export const COL_HINT = 18;
-/** The hint's evidence: an outline round a row or an answer slot it reads. */
+/** The hint's evidence: an outline round an answer slot it reads. */
 export const COL_HINT_CELL = 19;
 /** The answer row's well, darker than every peg color in both schemes. */
 const COL_WELL = 20;
@@ -201,7 +202,7 @@ export interface GuessDrawState extends Geom {
   solutionCache: PegRow;
   /** Per answer slot, the last-drawn {@link answerKey}; `-1` = never drawn. */
   answerCache: number[];
-  /** The rows the last frame outlined for a hint, as a key. */
+  /** The rows the last frame hatched for a hint, as a key. */
   hintRowsShown: string;
   /** What the pencil-mode indicator shows; `null` = never painted. */
   pencilModeShown: boolean | null;
@@ -449,10 +450,13 @@ function drawPeg(
   cy: number,
   labeled: boolean,
   col: number,
+  hatched = false,
 ): void {
   const ts = ds.tileSize;
   const cg = cgap(ds);
-  dr.drawRect(rect(cx - cg, cy - cg, ts + cg * 2, ts + cg * 2), COL_BACKGROUND);
+  const box = rect(cx - cg, cy - cg, ts + cg * 2, ts + cg * 2);
+  dr.drawRect(box, COL_BACKGROUND);
+  if (hatched) dr.drawHatch(box, COL_HINT, hatchPeriod(ts));
   if (ds.pegrad > 0) {
     dr.drawCircle(
       pt(cx + ds.pegrad, cy + ds.pegrad),
@@ -492,6 +496,7 @@ function guessRedraw(
   curCol: number,
   force: boolean,
   labeled: boolean,
+  hatched = false,
 ): void {
   let dest: PegRow;
   let rowx: number;
@@ -505,6 +510,11 @@ function guessRedraw(
     dest = ds.guessesCache[guess];
     rowx = guessX(ds, 0);
     rowy = guessY(ds, guess);
+    // The whole strip, so the stripe runs through the gaps no peg repaints.
+    if (hatched && force) {
+      dr.drawRect(rowBox(ds, guess), COL_BACKGROUND);
+      dr.drawHatch(rowBox(ds, guess), COL_HINT, hatchPeriod(ds.tileSize));
+    }
   }
 
   for (let i = 0; i < dest.pegs.length; i++) {
@@ -513,7 +523,7 @@ function guessRedraw(
     if (holds?.[i]) scol |= PEG_HOLD;
     if (labeled) scol |= PEG_LABELED;
     if (dest.pegs[i] !== scol || force) {
-      drawPeg(dr, ds, rowx + pegOff(ds) * i, rowy, labeled, scol & ~PEG_FLAGS);
+      drawPeg(dr, ds, rowx + pegOff(ds) * i, rowy, labeled, scol & ~PEG_FLAGS, hatched);
       if (scol & PEG_CURSOR) drawCursor(dr, ds, rowx + pegOff(ds) * i, rowy);
       if (scol & PEG_HOLD) {
         dr.drawRect(
@@ -547,6 +557,7 @@ function hintRedraw(
   force: boolean,
   cursor: boolean,
   markable: boolean,
+  hatched = false,
 ): void {
   const dest = ds.guessesCache[guess];
   const npegs = dest.feedback.length;
@@ -572,6 +583,7 @@ function hintRedraw(
   const hh = hinth + gap * 2;
 
   dr.drawRect(rect(hx, hy, hw, hh), COL_BACKGROUND);
+  if (hatched) dr.drawHatch(rect(hx, hy, hw, hh), COL_HINT, hatchPeriod(ds.tileSize));
 
   for (let i = 0; i < npegs; i++) {
     const scol = src ? src.feedback[i] : 0;
@@ -643,20 +655,21 @@ export function redraw(
   const newMove = s.nextGo !== ds.nextGo || !ds.started;
   const hl = (hint?.highlights as GuessHighlights | undefined) ?? null;
 
-  // A row the hint outlines is outlined after the rows are drawn, over their
-  // edges. When the set changes, the old outlines are painted out and every row
-  // redrawn, since an outline crosses the gap between a row's pegs and its
-  // feedback, which neither of them repaints.
-  const hintRows = (hl?.rows ?? []).filter((gi) => gi < s.params.nguesses);
+  // A row the sentence reads is hatched, gaps included. When the set changes,
+  // the old rows are painted out whole and every row redrawn, since the stripe
+  // crosses the gaps between a row's pegs and its feedback, which neither of
+  // them repaints.
+  const hintRows = (hl?.line ?? []).filter((gi) => gi < s.params.nguesses);
   const hintRowsKey = hintRows.join(",");
   const forceRows = hintRowsKey !== ds.hintRowsShown;
   if (forceRows && ds.started) {
     for (const gi of ds.hintRowsShown ? ds.hintRowsShown.split(",").map(Number) : []) {
-      outline(dr, rowBox(ds, gi), cgap(ds), COL_BACKGROUND);
+      dr.drawRect(rowBox(ds, gi), COL_BACKGROUND);
       dr.drawUpdate(rowBox(ds, gi));
     }
   }
   ds.hintRowsShown = hintRowsKey;
+  const hatchedRow = new Set(hintRows);
 
   if (!ds.started) {
     // The engine paints no pixels of its own: fill the background here.
@@ -672,7 +685,8 @@ export function redraw(
   // the active row isn't overdrawn by the row above).
   for (let i = s.params.nguesses - 1; i >= 0; i--) {
     if (i < s.nextGo || s.solved) {
-      guessRedraw(dr, ds, i, s.guesses[i], null, -1, forceRows, ui.showLabels);
+      const hatched = hatchedRow.has(i);
+      guessRedraw(dr, ds, i, s.guesses[i], null, -1, forceRows, ui.showLabels, hatched);
       hintRedraw(
         dr,
         ds,
@@ -681,6 +695,7 @@ export function redraw(
         forceRows || i === s.nextGo - 1,
         false,
         false,
+        hatched,
       );
     } else if (i > s.nextGo) {
       guessRedraw(dr, ds, i, null, null, -1, forceRows, ui.showLabels);
@@ -711,7 +726,6 @@ export function redraw(
       ui.markable,
     );
   }
-  for (const gi of hintRows) outline(dr, rowBox(ds, gi), cgap(ds), COL_HINT_CELL);
   for (const gi of hintRows) dr.drawUpdate(rowBox(ds, gi));
 
   // The "current move" / "able to mark" marker beside the active row.

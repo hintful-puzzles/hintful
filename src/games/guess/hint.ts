@@ -28,8 +28,9 @@ import {
 
 /** What a step points at. */
 export interface GuessHighlights {
-  /** Scored rows the step reasons from, outlined. */
-  rows: number[];
+  /** The scored row the sentence reads ("the striped row"), hatched; empty when
+   * it reads none (docs/games/hints.md § "Hatch the line the sentence names"). */
+  line: number[];
   /** Answer-row slots whose marks the step cites, outlined. */
   slots: number[];
   /** Answer-row colors to act on, marked: the rule-outs to set, or the colors
@@ -524,7 +525,7 @@ export function guessHint(
     steps.push({
       move: { type: "mark", marks: place, ruledOut: true },
       explanation: say(f.reason),
-      highlights: { rows: f.rows, slots: f.slots, marked: place },
+      highlights: { line: f.rows, slots: f.slots, marked: place },
     });
   }
 
@@ -544,7 +545,7 @@ export function guessHint(
     },
     explanation: say(probeReason(probe)),
     highlights: {
-      rows: [],
+      line: [],
       slots: [],
       marked: probe.guess.map((color, pos) => ({ pos, color })),
     },

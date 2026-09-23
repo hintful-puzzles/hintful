@@ -146,17 +146,24 @@ describe("hint", () => {
     expect(isComplete(cur)).toBe(true);
   });
 
-  it("gives every step visible evidence (a shaded area or a ringed premise)", () => {
+  it("gives every step visible evidence (a hatched line or a ringed premise)", () => {
     for (const seed of ["unruly-hint-plan", "unruly-ev-2", "unruly-ev-3"]) {
       const st = fromSeed(P, seed);
       const res = unrulyGame.hint?.(st);
       if (!res?.ok) throw new Error("expected a plan");
       for (const step of res.steps) {
         const hl = step.highlights as UnrulyHint;
-        expect(hl.area.length > 0 || hl.ring.length > 0).toBe(true);
-        // The shaded area never includes the target cell itself.
-        const ti = hl.target.y * st.w2 + hl.target.x;
-        expect(hl.area.includes(ti)).toBe(false);
+        expect(hl.line.length > 0 || hl.ring.length > 0).toBe(true);
+        // A hatched line is one whole row or column, through the target.
+        if (hl.line.length > 0) {
+          const ti = hl.target.y * st.w2 + hl.target.x;
+          expect(hl.line.includes(ti)).toBe(true);
+          const rows = new Set(hl.line.map((i) => Math.floor(i / st.w2)));
+          const cols = new Set(hl.line.map((i) => i % st.w2));
+          expect(rows.size === 1 ? st.w2 : cols.size === 1 ? st.h2 : -1).toBe(
+            hl.line.length,
+          );
+        }
       }
     }
   });

@@ -47,6 +47,7 @@ import {
 import { drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import type { Color, Size } from "../../engine/types.ts";
@@ -434,6 +435,10 @@ function drawFleet(
 const HINT_SHIP = 1 << 9; // a square the step asks for a boat segment on
 const HINT_WATER = 1 << 10; // …or for water
 const HINT_EVID = 1 << 11; // a square the deduction reasons over
+const HINT_LINE = 1 << 12; // a square of the line the sentence names (hatched)
+/** Added to a border number's cached status when its slot is hatched: above
+ * every status value, so the two never collide in `ds.border`. */
+const BORDER_HATCHED = 0x100;
 
 /** Pack a cell's drawn appearance into the per-tile cache word. */
 function tileKey(ship: number, flags: number, flash: boolean, hint: number): number {
@@ -451,6 +456,8 @@ function hintBits(
   const bits = new Int32Array(w * h);
   for (const c of hl.evidence)
     if (c.x >= 0 && c.y >= 0 && c.x < w && c.y < h) bits[c.y * w + c.x] |= HINT_EVID;
+  for (const c of hl.line)
+    if (c.x >= 0 && c.y >= 0 && c.x < w && c.y < h) bits[c.y * w + c.x] |= HINT_LINE;
   // Targets win over evidence on the same cell — the action outranks its reason.
   for (const t of hl.targets)
     if (t.x >= 0 && t.y >= 0 && t.x < w && t.y < h)
@@ -520,16 +527,29 @@ export function redraw(
   ds.wrong.packCells(mistakes ?? null, (x, y) => y * w + x);
 
   // --- the border numbers: columns along the bottom, then rows down the right ---
+  // The hint's hatched line runs on through its number (column slots first,
+  // then rows, as `borderClues` counts them), so the slot's hatch is part of
+  // its key beside the validation status.
+  const line = flashTime === 0 ? (hint?.highlights?.line ?? []) : [];
+  const hatchedSlot =
+    line.length === 0
+      ? -1
+      : line.every((c) => c.x === line[0].x)
+        ? line[0].x
+        : w + line[0].y;
   const half = (ts / 2) | 0;
   for (let i = 0; i < w + h; i++) {
     if (state.borderClues[i] === NO_CLUE) continue;
-    if (!full && borderStatus[i] === ds.border[i]) continue;
+    const hatched = i === hatchedSlot;
+    const key = borderStatus[i] + (hatched ? BORDER_HATCHED : 0);
+    if (!full && key === ds.border[i]) continue;
 
     const column = i < w;
     const tx = BORDER + (column ? i * ts + half : (w + 1) * ts);
     const ty = BORDER + (column ? (h + 1) * ts : (i - w) * ts + half);
     const cell = { x: tx - half, y: ty - half, w: ts, h: ts };
     dr.drawRect(cell, COL_BACKGROUND);
+    if (hatched) dr.drawHatch(cell, COL_HINT, hatchPeriod(ts));
     dr.drawUpdate(cell);
     dr.drawText(
       { x: tx, y: ty },
@@ -542,7 +562,7 @@ export function redraw(
       borderStatus[i] === STATUS_INVALID ? COL_COUNT_ERROR : COL_COUNT,
       String(state.borderClues[i]),
     );
-    ds.border[i] = borderStatus[i];
+    ds.border[i] = key;
   }
 
   // A collision diamond straddles the corner of four cells, so a change to one
@@ -606,6 +626,8 @@ export function redraw(
         { x: tx, y: ty, w: ts, h: ts },
         ship !== EMPTY ? COL_WATER : COL_BACKGROUND,
       );
+      if (hintBit & HINT_LINE)
+        dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
       drawRectOutline(dr, tx, ty, ts + 1, ts + 1, COL_GRID);
 
       if (!flash && isShip(ship)) {

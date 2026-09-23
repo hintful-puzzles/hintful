@@ -52,6 +52,10 @@ export interface NetslideHint {
   /** The border arrow to press, as a ring cell just outside the grid. */
   arrowX: number;
   arrowY: number;
+  /** Flat cells of the row or column the sentence names as never sliding,
+   * hatched; empty when it names none (docs/games/hints.md § "Hatch the line
+   * the sentence names"). */
+  line: number[];
 }
 
 /** The forward-search budget. Netslide slides only ±1, so its plans are several
@@ -612,6 +616,7 @@ function narrateStep(
     destination: focus.destination,
     belongs: focus.belongs,
     ...arrowFor(s, move),
+    line: [],
   };
 
   const to: Line =
@@ -644,8 +649,10 @@ function narrateStep(
   let explanation: string;
   if (row === cy && m.axis === "col") {
     explanation = say.rowFixed(cy + 1, mask, to, arrivesHome);
+    highlights.line = Array.from({ length: w }, (_, x) => cy * w + x);
   } else if (col === cx && m.axis === "row") {
     explanation = say.colFixed(cx + 1, mask, to, arrivesHome);
+    highlights.line = Array.from({ length: s.h }, (_, y) => y * w + cx);
   } else if (focus.belongs && isBesideSource(focus.destination, w, cx, cy)) {
     explanation = say.besideSource(mask, to, arrivesHome);
   } else {

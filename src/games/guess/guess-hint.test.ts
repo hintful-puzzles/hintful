@@ -20,6 +20,7 @@ import {
 } from "../../engine/pointer.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
+import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import {
   type GuessHighlights,
@@ -467,7 +468,7 @@ describe("the answer row takes marks and colors", () => {
 });
 
 describe("the hint frame", () => {
-  it("outlines the row it reads and frames the colors it marks", () => {
+  it("hatches the row it reads and frames the colors it marks", () => {
     // A row of two colors the answer lacks scores nothing, which is the
     // plainest firing there is: both colors, ruled out everywhere.
     const p = defaultParams();
@@ -486,7 +487,7 @@ describe("the hint frame", () => {
     expect(step?.move.type).toBe("mark");
     expect(step?.explanation).toMatch(/scored nothing/);
     const hl = step?.highlights as GuessHighlights;
-    expect(hl.rows).toEqual([0]);
+    expect(hl.line).toEqual([0]);
     expect(hl.marked).toHaveLength(2 * p.npegs);
     const ops = res.recording.ops;
     const frames = ops.filter((o) => o.op === "rect" && o.color === COL_HINT);
@@ -496,10 +497,17 @@ describe("the hint frame", () => {
     for (const f of frames) {
       if (f.op === "rect") expect(Math.min(f.w, f.h)).toBeLessThanOrEqual(2);
     }
-    const outlineRects = ops.filter(
-      (o) => o.op === "rect" && o.color === COL_HINT_CELL,
-    );
-    expect(outlineRects.length).toBe(4);
+    // The row is hatched, not outlined: its whole strip, then each peg and the
+    // score box again over their own backgrounds, all on one strip of the board.
+    expect(ops.filter((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toEqual([]);
+    const hatches = opsOfKind(ops, "hatch");
+    expect(hatches).toHaveLength(1 + p.npegs + 1);
+    for (const h of hatches) expect(h.color).toBe(COL_HINT);
+    const [strip] = hatches;
+    for (const h of hatches) {
+      expect(h.y).toBeGreaterThanOrEqual(strip.y);
+      expect(h.y + h.h).toBeLessThanOrEqual(strip.y + strip.h + 2 * p.npegs);
+    }
     expect(ops).toMatchSnapshot();
   });
 });

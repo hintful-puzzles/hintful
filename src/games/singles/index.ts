@@ -267,6 +267,38 @@ export interface SinglesHint {
   targets: { x: number; y: number; value: "black" | "circle" }[];
   evidence: Point[];
   strand: Point[];
+  /** The row or column the sentence names ("in the line", "shares a line
+   * with"), hatched; empty when it names none (docs/games/hints.md § "Hatch
+   * the line the sentence names"). */
+  line: Point[];
+}
+
+/** The line two distinct cells share: a row when they share `y`, else a
+ * column. */
+function sharedLine(a: Point, b: Point, w: number, h: number): Point[] {
+  if (a.y === b.y) return Array.from({ length: w }, (_, x) => ({ x, y: a.y }));
+  return Array.from({ length: h }, (_, y) => ({ x: a.x, y }));
+}
+
+/** The one line a reason's sentence names, from the cells it names together. */
+function namedLine(
+  reason: SinglesReason,
+  targets: readonly Point[],
+  w: number,
+  h: number,
+): Point[] {
+  if (reason.kind === "pair") return sharedLine(reason.pair[0], reason.pair[1], w, h);
+  if (reason.kind === "sameLine") {
+    // The circled cell rules its number out along its row and its column, so a
+    // step's targets can lie in both: then the sentence names two lines, and a
+    // hatch means one.
+    const { circled } = reason;
+    if (targets.every((t) => t.y === circled.y))
+      return sharedLine(circled, targets[0], w, h);
+    if (targets.every((t) => t.x === circled.x))
+      return sharedLine(circled, targets[0], w, h);
+  }
+  return [];
 }
 
 const opValue = (op: number): "black" | "circle" =>
@@ -387,7 +419,12 @@ function hint(state: SinglesState): HintResult<SinglesMove, SinglesHint> {
       return {
         move: { sets: targets.map((t) => ({ ...t })) },
         explanation: narrate(reason, targets, state),
-        highlights: { targets, evidence, strand },
+        highlights: {
+          targets,
+          evidence,
+          strand,
+          line: namedLine(reason, targets, state.w, state.h),
+        },
       };
     },
   );

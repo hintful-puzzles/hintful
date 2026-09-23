@@ -8,7 +8,7 @@ import type { HintStep } from "../../engine/game.ts";
 import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { seedBudget } from "../../engine/testing/slow.ts";
 import { type NetslideHint, parseAux } from "./hint.ts";
@@ -604,6 +604,13 @@ describe("netslide hint rendering", () => {
       (op) => op.op === "polygon" && op.fill === COL_HINT,
     );
     expect(arrows).toHaveLength(1);
+
+    // This step says a line never slides, so that line is hatched: one hatch
+    // per cell of it, and nothing more.
+    expect(result.hint?.explanation).toMatch(/never slides/);
+    const line = (result.hint?.highlights as NetslideHint).line;
+    expect(line).toHaveLength(3);
+    expect(opsOfKind(result.recording.ops, "hatch")).toHaveLength(line.length);
 
     expect(result.recording.ops).toMatchSnapshot();
   });

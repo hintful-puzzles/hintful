@@ -302,12 +302,14 @@ function status(s: BoatsState): GameStatus {
  * decide — drawn in `COL_HINT` in the shape of the action each one is (a boat
  * mark for a segment, a water mark for water), because a single color standing
  * for two different actions reads as one action (docs/games/hints.md § "Echo
- * the move's shape in the hint color"). `evidence` is the area the deduction
- * reasons over, shaded `COL_HINT_CELL`.
+ * the move's shape in the hint color"). `evidence` is the particular squares
+ * the deduction reasons from, outlined `COL_HINT_CELL`; `line` the row or column
+ * the sentence names, hatched with its clue.
  */
 export interface BoatsHint {
   targets: BoatsSquare[];
   evidence: Point[];
+  line: Point[];
 }
 
 /** Which sentence a firing speaks, and with what values: the counts of boat
@@ -400,7 +402,7 @@ function stepsFor(f: BoatsFiring, w: number): HintStep<BoatsMove, BoatsHint>[] {
   // is the rule doing its work, not a further deduction — so it is highlighted
   // and moved with the firing, and never narrated separately.
   const targets = [...f.squares, ...f.consequences];
-  const highlights: BoatsHint = { targets, evidence: f.evidence };
+  const highlights: BoatsHint = { targets, evidence: f.evidence, line: f.line };
   const explanation = narrate(f);
 
   return legMoves(f, w, targets).map((move, i) => ({

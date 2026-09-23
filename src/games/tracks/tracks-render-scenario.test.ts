@@ -7,6 +7,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { CURSOR_RIGHT, CURSOR_SELECT2 } from "../../engine/pointer.ts";
+import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import type { TracksHighlights } from "./hint.ts";
 import { tracksGame } from "./index.ts";
@@ -19,6 +20,33 @@ const ID = `${tracksGame.encodeParams(P, true)}:${DESC}`;
 
 const layTrack = (x: number, y: number): TracksMove => ({
   ops: [{ kind: "square", x, y, track: true, set: true }],
+});
+
+describe("Tracks hint: the line a sentence names", () => {
+  it("hatches the line and its clue, and keeps the counted squares outlined", () => {
+    // Walk the plan on a few boards to a step that names a line.
+    let checked = 0;
+    for (let s = 0; s < 8 && checked === 0; s++) {
+      const id = `${tracksGame.encodeParams(P, true)}#line-${s}`;
+      const { recording, hint } = renderScenario({
+        game: tracksGame,
+        id,
+        showHint: true,
+        hintUntil: (step) => /^This (row|column)/.test(step.explanation),
+      });
+      if (!hint || !/^This (row|column)/.test(hint.explanation)) continue;
+      const hl = hint.highlights as TracksHighlights;
+      expect(hl.line).not.toBeNull();
+      const isColumn = /^This column/.test(hint.explanation);
+      expect(hl.line !== null && hl.line < P.w).toBe(isColumn);
+      const hatches = opsOfKind(recording.ops, "hatch");
+      // Every square of the line, and the clue slot at its end.
+      expect(hatches).toHaveLength((isColumn ? P.h : P.w) + 1);
+      for (const op of hatches) expect(op.color).toBe(COL_HINT);
+      checked++;
+    }
+    expect(checked).toBe(1);
+  });
 });
 
 describe("Tracks render scenarios", () => {

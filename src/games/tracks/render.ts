@@ -26,6 +26,7 @@ import {
 import { tracksGrid } from "../../engine/color/palette-games.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL, outlineSides } from "../../engine/hint-mark.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
@@ -145,6 +146,7 @@ const H_AREA_SHIFT = 2; // 4 bits: which sides of the evidence outline to paint
 const H_TRACK_SHIFT = 6; // 4 bits: sides the step forces to carry track
 const H_BLOCK_SHIFT = 10; // 4 bits: sides the step forces blocked
 const H_CITED_SHIFT = 14; // 4 bits: sides the deduction reasons from
+const H_LINE = 1 << 18; // the square is on the line the sentence names: hatch it
 
 // --- geometry (NARROW_BORDERS → border 0) ---------------------------------
 
@@ -244,6 +246,11 @@ function hintFlags(
   for (const c of hl.area) {
     const sides = outlineSides(c.x, c.y, (ax, ay) => inArea.has(ay * w + ax));
     mark(c.x, c.y, sides << H_AREA_SHIFT);
+  }
+  if (hl.line !== null) {
+    const { line } = hl;
+    if (line < w) for (let y = 0; y < h; y++) mark(line, y, H_LINE);
+    else for (let x = 0; x < w; x++) mark(x, line - w, H_LINE);
   }
   return out;
 }
@@ -535,15 +542,14 @@ function drawSquare(
     flags & DS_TRACK ? COL_TRACK_BACKGROUND : COL_BACKGROUND,
   ).col;
   dr.drawRect({ x: ox, y: oy, w: m.tile, h: m.tile }, COL_GRID);
-  dr.drawRect(
-    {
-      x: ox + m.gridLineTl,
-      y: oy + m.gridLineTl,
-      w: m.tile - m.gridLineAll,
-      h: m.tile - m.gridLineAll,
-    },
-    bg,
-  );
+  const inner = {
+    x: ox + m.gridLineTl,
+    y: oy + m.gridLineTl,
+    w: m.tile - m.gridLineAll,
+    h: m.tile - m.gridLineAll,
+  };
+  dr.drawRect(inner, bg);
+  if (hint & H_LINE) dr.drawHatch(inner, COL_HINT, hatchPeriod(m.tile));
 
   // Cursor outline (center, or nudged onto an edge).
   if (flags & DS_CURSOR) {
@@ -636,6 +642,7 @@ function drawClue(
   i: number,
   col: number,
   bg: number,
+  hatched: boolean,
 ): void {
   const tsz = Math.floor(m.tile / 2);
   let cx: number;
@@ -647,17 +654,14 @@ function drawClue(
     cx = centeredCoord(w, m);
     cy = centeredCoord(i - w, m);
   }
-  if (bg >= 0) {
-    dr.drawRect(
-      {
-        x: cx - tsz + m.gridLineTl,
-        y: cy - tsz + m.gridLineTl,
-        w: m.tile - m.gridLineAll,
-        h: m.tile - m.gridLineAll,
-      },
-      bg,
-    );
-  }
+  const slot = {
+    x: cx - tsz + m.gridLineTl,
+    y: cy - tsz + m.gridLineTl,
+    w: m.tile - m.gridLineAll,
+    h: m.tile - m.gridLineAll,
+  };
+  if (bg >= 0) dr.drawRect(slot, bg);
+  if (hatched) dr.drawHatch(slot, COL_HINT, hatchPeriod(m.tile));
   dr.drawText({ x: cx, y: cy }, glyphFont(tsz), col, String(clue));
 }
 
@@ -745,8 +749,11 @@ export function redraw(
   // rest of the mark (docs/games/hints.md § "Off-board evidence"), which means
   // the hint has to be part of *this* surface's cache key too, not only the
   // per-tile one.
+  // The hatched line runs on through its clue, so that is in the key as well.
+  const hatchedLine = step?.highlights?.line ?? null;
   for (let i = 0; i < w + h; i++) {
-    const key = state.numErrors[i] | (hintedClues.has(i) ? 2 : 0);
+    const key =
+      state.numErrors[i] | (hintedClues.has(i) ? 2 : 0) | (i === hatchedLine ? 4 : 0);
     if (force || key !== ds.numErrors[i]) {
       ds.numErrors[i] = key;
       drawClue(
@@ -757,6 +764,7 @@ export function redraw(
         i,
         key & 1 ? COL_ERROR : key & 2 ? COL_HINT : COL_CLUE,
         key & 1 ? COL_ERROR_BACKGROUND : COL_BACKGROUND,
+        (key & 4) !== 0,
       );
     }
   }

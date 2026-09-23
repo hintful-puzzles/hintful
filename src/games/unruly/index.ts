@@ -173,16 +173,17 @@ function flashLength(
 // --- hint -----------------------------------------------------------------
 
 /** Highlight data for an Unruly hint step. `target` is the cell the
- * deduction forces, ringed in `COL_HINT`. `area` cells are the deduction's
- * other forced cells — the journey's siblings — shaded `COL_HINT_CELL` *where
- * still empty*, so the player sees the whole "this line fills" deduction at a
- * glance. `ring` cells are the premise cells whose color is the evidence (the
- * same-color pair, the completed quota, the near-complete reserved window); a
- * shade would hide the color that *is* the reason, so they are ringed in
- * `COL_HINT_REF` instead. */
+ * deduction forces, ringed in `COL_HINT`. `line` is the row or column the
+ * sentence names, hatched whatever its cells hold. `ring` cells are the premise
+ * cells whose color is the evidence (the same-color pair, the completed quota,
+ * the near-complete reserved window, the reference row), ringed in
+ * `COL_HINT_REF` so the color that *is* the reason stays visible. */
 export interface UnrulyHint {
   target: Point & { value: Cell };
-  area: number[];
+  /** The cells of the row or column the sentence calls "this row", hatched
+   * (docs/games/hints.md § "Hatch the line the sentence names"). */
+  line: number[];
+  /** The cited premise cells, ringed. */
   ring: number[];
 }
 
@@ -214,52 +215,42 @@ function narrate(reason: HintReason): string {
   }
 }
 
-/** Build the highlight payload for a forced move from its reason: the
- * evidence to shade (siblings) and to ring (premise cells). */
+/** Build the highlight payload for a forced move from its reason: the line the
+ * sentence names (hatched) and the premise cells (ringed). */
 function buildHighlights(
   reason: HintReason,
   target: UnrulyHint["target"],
   state: UnrulyState,
 ): UnrulyHint {
   const { w2, h2, grid } = state;
-  const ti = target.y * w2 + target.x;
-  const notTarget = (i: number) => i !== ti;
 
   switch (reason.kind) {
     case "threes":
-      return { target, area: [], ring: [...reason.refs] };
+      return { target, line: [], ring: [...reason.refs] };
     case "complete": {
       const cells = lineCells(reason.line, reason.horizontal, w2, h2);
+      // The already-placed `full` cells are the quota the sentence counts.
       return {
         target,
-        // Other empty cells of the line are the journey's siblings; the
-        // already-placed `full` cells are the quota evidence — ring them.
-        area: cells.filter((i) => notTarget(i) && grid[i] === EMPTY),
+        line: cells,
         ring: cells.filter((i) => grid[i] === reason.full),
       };
     }
-    case "unique": {
-      const rowA = lineCells(reason.rowA, reason.horizontal, w2, h2);
-      const rowB = lineCells(reason.rowB, reason.horizontal, w2, h2);
+    case "unique":
+      // "This row" is the one being completed; the reference row it would copy
+      // is "the ringed row", named by its mark.
       return {
         target,
-        area: rowB.filter((i) => notTarget(i) && grid[i] === EMPTY),
-        ring: rowA, // the full reference row that would be duplicated
+        line: lineCells(reason.rowB, reason.horizontal, w2, h2),
+        ring: lineCells(reason.rowA, reason.horizontal, w2, h2),
       };
-    }
-    case "nearcomplete": {
-      const cells = lineCells(reason.line, reason.horizontal, w2, h2);
-      const ring =
-        reason.anchor >= 0 ? [...reason.window, reason.anchor] : [...reason.window];
-      const windowSet = new Set(reason.window);
+    case "nearcomplete":
       return {
         target,
-        area: cells.filter(
-          (i) => notTarget(i) && grid[i] === EMPTY && !windowSet.has(i),
-        ),
-        ring,
+        line: lineCells(reason.line, reason.horizontal, w2, h2),
+        ring:
+          reason.anchor >= 0 ? [...reason.window, reason.anchor] : [...reason.window],
       };
-    }
   }
 }
 

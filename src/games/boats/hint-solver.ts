@@ -194,8 +194,12 @@ export interface BoatsFiring {
    * recompute re-derives it from the placed segment either way.
    */
   consequences: BoatsSquare[];
-  /** The cells the deduction reasons over, for the `COL_HINT_CELL` area. */
+  /** The particular cells the deduction reasons from, outlined `COL_HINT_CELL`. */
   evidence: Point[];
+  /** The row or column the sentence names ("Row 3 still needs…"), hatched with
+   * its clue; empty when it names none (docs/games/hints.md § "Hatch the line
+   * the sentence names"). */
+  line: Point[];
   /**
    * The grid **as this firing fired** — every earlier firing applied, this one
    * not yet. The step's move is built against it (a `fill` move is a rectangle
@@ -267,6 +271,7 @@ function firing(
   technique: BoatsTechnique,
   forced: BoatsSquare[],
   evidence: Point[],
+  line: Point[] = [],
 ): BoatsFiring | null {
   const { b } = ctx;
   const fresh = forced.filter(
@@ -298,6 +303,7 @@ function firing(
     squares: fresh,
     consequences,
     evidence: evidence.filter((c) => !primary.has(c.y * b.w + c.x)),
+    line,
     grid: Int8Array.from(b.grid),
   };
 }
@@ -415,6 +421,7 @@ function findLineCount(ctx: Ctx, wantShips: boolean): BoatsFiring | null {
         ctx,
         { kind: wantShips ? "lineForced" : "lineSatisfied", line },
         forced,
+        [],
         lineCells(b, horizontal, i),
       );
       if (f) return f;
@@ -555,7 +562,8 @@ function findCenterCount(ctx: Ctx): BoatsFiring | null {
             room: b.borderClues[y + b.w] - shipCounts[y + b.w],
           },
           [{ x: x + 1, y, ship: false }],
-          [{ x, y }, ...lineCells(b, true, y)],
+          [{ x, y }],
+          lineCells(b, true, y),
         );
         if (f) return f;
       }
@@ -569,7 +577,8 @@ function findCenterCount(ctx: Ctx): BoatsFiring | null {
             room: b.borderClues[x] - shipCounts[x],
           },
           [{ x, y: y + 1, ship: false }],
-          [{ x, y }, ...lineCells(b, false, x)],
+          [{ x, y }],
+          lineCells(b, false, x),
         );
         if (f) return f;
       }
@@ -838,6 +847,7 @@ function findSharedDiagonal(ctx: Ctx): BoatsFiring | null {
             { ...cellAt(k, i + 1), ship: false },
           ],
           evidence,
+          lineCells(b, horizontal, i),
         );
         if (f) return f;
       }
@@ -1020,12 +1030,23 @@ function findRefuted(ctx: Ctx): BoatsFiring | null {
           if (validateFullState(trial) !== STATUS_INVALID) continue;
 
           const found = classifyBreach(ctx, trial);
-          const f = firing(
-            ctx,
-            { kind: "refuted", trialShip, breach: found.breach },
-            [{ x, y, ship: !trialShip }],
-            found.cells,
-          );
+          // A line that could no longer reach its number is the one line the
+          // sentence names, so it is the hatch rather than an outline.
+          const f =
+            found.breach.kind === "count"
+              ? firing(
+                  ctx,
+                  { kind: "refuted", trialShip, breach: found.breach },
+                  [{ x, y, ship: !trialShip }],
+                  [],
+                  found.cells,
+                )
+              : firing(
+                  ctx,
+                  { kind: "refuted", trialShip, breach: found.breach },
+                  [{ x, y, ship: !trialShip }],
+                  found.cells,
+                );
           if (f) return f;
         }
       }

@@ -50,13 +50,22 @@
       through both clue slots), Unequal, Group, Mathrax, Salad (count lines, and
       a border clue's row with its run outlined), Solo (rows, columns and
       diagonals; a block keeps its outline), Pattern (its wash retired, clue
-      strip hatched). Left: Boats, Tracks, Unruly, Singles, Guess, Netslide.*
+      strip hatched); then Boats (line counts, a center segment's line, the
+      shared-diagonal line and a refutation's unmet line, number slot
+      included), Tracks (every clue-line technique, clue slot included; the
+      counted squares stay outlined), Unruly (its wash retired; "the ringed
+      row" named by its mark), Singles (a touching pair's line, and "shares a
+      line with" when every target shares the one line), Guess ("the outlined
+      row" becomes "the striped row", pegs, gaps and score box hatched) and
+      Netslide's "never slides". The evidence wash is down to Light Up.*
 - [ ] 3.3 A guard that every step naming a line draws a hatch and no other step
       does, over every hinting game on a full repaint
       (`puzzle/hatch-contrast.test.ts`). *Written; it found Pattern unconverted
       and, once, its own falsy-zero bug.*
-- [ ] 3.4 Run each converted game in Chrome, light and dark. *Keen, Towers and
-      Pattern checked in dark.*
+- [ ] 3.4 Run each converted game in Chrome, light and dark. *Keen, Towers,
+      Pattern, Unruly and Guess checked in dark. Each game without a line step
+      in an existing frame gained a test reaching one (Boats, Tracks, Singles,
+      Netslide), each seen to fail with its hatch removed.*
 
 ## 4. Close out
 

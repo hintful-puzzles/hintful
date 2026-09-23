@@ -19,7 +19,6 @@ import {
   COL_EMPTY,
   COL_ERROR,
   COL_HINT,
-  COL_HINT_CELL,
   COL_HINT_REF,
   newDrawState,
   PLACE_ANIM_TIME,
@@ -209,16 +208,17 @@ describe("Unruly redraw", () => {
     ).toBe(false);
   });
 
-  it("renders a displayed hint: target ring, sibling shade, premise ring", () => {
-    // A black clue at (0,0) (a ring premise), an empty target at (2,0) forced
-    // black, and an empty sibling at (4,0).
+  it("renders a displayed hint: target ring, hatched line, premise ring", () => {
+    // A black clue at (0,0) (a ring premise) and an empty target at (2,0)
+    // forced black, both on row 0, which the sentence names.
     const state = withClue(ONE);
     const ds = freshDs(state);
     const target = { x: 2, y: 0, value: ONE as Cell };
+    const row0 = Array.from({ length: state.w2 }, (_, x) => x);
     const hint: HintStep<UnrulyMove, UnrulyHint> = {
       move: { type: "place", x: 2, y: 0, value: ONE },
       explanation: "test",
-      highlights: { target, area: [4], ring: [0] },
+      highlights: { target, line: row0, ring: [0] },
     };
     const { dr, ops } = recordingDrawing();
     redraw(dr, ds, null, state, 1, freshUi(), 0, 0, hint);
@@ -231,9 +231,11 @@ describe("Unruly redraw", () => {
       ).length,
     ).toBe(4);
     expect(bodies(ops).some((o) => o.color === COL_HINT)).toBe(false);
-    // Sibling area cell: a full COL_HINT_CELL body. This one *stays* a fill —
-    // the siblings are still-empty cells, so the wash covers nothing.
-    expect(bodies(ops).some((o) => o.color === COL_HINT_CELL)).toBe(true);
+    // The row is hatched, every cell of it whatever it holds, over its own fill.
+    const hatches = opsOfKind(ops, "hatch");
+    expect(hatches).toHaveLength(state.w2);
+    for (const h of hatches) expect(h.color).toBe(COL_HINT);
+    expect(new Set(hatches.map((h) => h.y)).size).toBe(1);
     // Premise ring: COL_HINT_REF outline strips around the cited clue — a
     // distinct color from the COL_HINT move, so premise and move don't read
     // as the same element type (the element-type color legend).

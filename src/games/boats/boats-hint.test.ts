@@ -16,8 +16,15 @@
 import { describe, expect, it } from "vitest";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import {
+  type DrawOp,
+  opsOfKind,
+  RecordingDrawing,
+} from "../../engine/testing/recording-drawing.ts";
+import {
+  DEFAULT_BACKGROUND,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
 import { newBoatsDesc } from "./generator.ts";
 import { applyBoatsFiring, type BoatsFiring, deduceBoatsPlan } from "./hint-solver.ts";
 import { type BoatsHint, boatsGame } from "./index.ts";
@@ -31,6 +38,7 @@ import {
   encodeParams,
   fillOf,
   isShip,
+  NO_CLUE,
   newState,
   presetParams,
   STATUS_COMPLETE,
@@ -577,6 +585,47 @@ describe("boats hint — rendering", () => {
       return;
     }
     throw new Error("no tier's opening hint carried evidence");
+  });
+
+  it.each([
+    "lineForced",
+    "lineSatisfied",
+    "centerCount",
+  ] as const)("%s hatches the line it names, with its number, and outlines no line", (kind) => {
+    const { firing, state } = findFiring(kind);
+    const w = state.params.w;
+    const h = state.params.h;
+    // The line is one whole row or column.
+    const { line } = firing;
+    const isColumn = line.every((c) => c.x === line[0].x);
+    expect(line).toHaveLength(isColumn ? h : w);
+    // Any outline is a particular square, never the line again.
+    expect(firing.evidence.length).toBeLessThan(2);
+
+    // Drawn from the step itself, as the player would see it.
+    const res = boatsGame.hint?.(state);
+    if (!res?.ok) throw new Error("the board the firing came from gave no hint");
+    const step = res.steps[0];
+    expect((step.highlights as BoatsHint).line).toEqual(line);
+    const ts = 32;
+    const recording = new RecordingDrawing(boatsGame.colors(DEFAULT_BACKGROUND));
+    boatsGame.redraw(
+      recording,
+      boatsGame.newDrawState(state, ts),
+      null,
+      state,
+      0,
+      boatsGame.newUi(state),
+      0,
+      0,
+      step,
+    );
+    const hatches = opsOfKind(recording.ops, "hatch");
+    // Every square of the line, and its number's slot when it has one.
+    const slot = isColumn ? line[0].x : w + line[0].y;
+    const numbered = state.borderClues[slot] !== NO_CLUE;
+    expect(hatches).toHaveLength(line.length + (numbered ? 1 : 0));
+    for (const op of hatches) expect(op.color).toBe(COL_HINT);
   });
 
   it("paints no hint color at all when no hint is displayed", () => {

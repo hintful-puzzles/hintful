@@ -24,6 +24,7 @@ import {
 } from "../../engine/color/palette.ts";
 import { drawRectCorners, drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import type { SinglesHint } from "./index.ts";
@@ -123,6 +124,7 @@ const DS_MISTAKE = 0x80;
 const DS_HINT_TARGET = 0x100;
 const DS_HINT_EVID = 0x200;
 const DS_HINT_STRAND = 0x400;
+const DS_HINT_LINE = 0x800; // on the line the sentence names: hatched
 
 export interface SinglesDrawState {
   started: boolean;
@@ -183,6 +185,7 @@ function tileRedraw(
   const cr = crad(ts);
 
   dr.drawRect({ x, y, w: ts, h: ts }, bg);
+  if (f & DS_HINT_LINE) dr.drawHatch({ x, y, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
   drawRectOutline(dr, x, y, ts, ts, f & DS_IMPOSSIBLE ? COL_ERROR : COL_GRID);
 
   if (f & DS_CIRCLE) {
@@ -256,10 +259,12 @@ export function redraw(
   const hintTarget = new Set<number>();
   const hintEvid = new Set<number>();
   const hintStrand = new Set<number>();
+  const hintLine = new Set<number>();
   if (hl) {
     for (const t of hl.targets) hintTarget.add(t.y * w + t.x);
     for (const e of hl.evidence) hintEvid.add(e.y * w + e.x);
     for (const s of hl.strand) hintStrand.add(s.y * w + s.x);
+    for (const c of hl.line) hintLine.add(c.y * w + c.x);
   }
   const mistakeSet = new Set(mistakes?.map((m) => m.y * w + m.x));
 
@@ -298,6 +303,7 @@ export function redraw(
       if (hintTarget.has(i)) f |= DS_HINT_TARGET;
       if (hintEvid.has(i)) f |= DS_HINT_EVID;
       if (hintStrand.has(i)) f |= DS_HINT_STRAND;
+      if (hintLine.has(i)) f |= DS_HINT_LINE;
 
       if (!ds.started || ds.cache[i] !== f) {
         tileRedraw(dr, ts, coord(x, ts), coord(y, ts), state.nums[i], f);

@@ -19,15 +19,15 @@ import {
   ERROR,
   GRID_DARK,
   HINT_ACTION,
-  HINT_EVIDENCE_WASH,
   UNDECIDED,
 } from "../../engine/color/palette.ts";
 import { UNRULY_BLACK, UNRULY_WHITE } from "../../engine/color/palette-games.ts";
 import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import type { Color, Size } from "../../engine/types.ts";
-import { EMPTY, ONE, ZERO } from "./constants.ts";
+import { ONE, ZERO } from "./constants.ts";
 import type { UnrulyHint } from "./index.ts";
 import {
   FE_COL_MATCH,
@@ -66,15 +66,11 @@ export const COL_1_HIGHLIGHT = 7;
 export const COL_1_LOWLIGHT = 8;
 export const COL_CURSOR = 9;
 export const COL_ERROR = 10;
-// Hint colors, appended past upstream's enum. The action cell rings
-// COL_HINT; the deduction's empty siblings shade COL_HINT_CELL; the cited
-// premise cells ring COL_HINT_REF, distinct from the move.
+// Hint colors, appended past upstream's enum. The action cell rings COL_HINT,
+// the line the sentence names is hatched in it, and the cited premise cells
+// ring COL_HINT_REF, distinct from the move.
 export const COL_HINT = 11;
-/** The evidence **wash**: these cells are the journey's still-*empty*
- * siblings, so nothing is drawn on the shade and it can be the more visible
- * of the two teals. A game whose evidence carries content outlines instead. */
-export const COL_HINT_CELL = 12;
-export const COL_HINT_REF = 13;
+export const COL_HINT_REF = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -94,7 +90,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CURSOR] = CURSOR;
   out[COL_ERROR] = ERROR;
   out[COL_HINT] = HINT_ACTION;
-  out[COL_HINT_CELL] = HINT_EVIDENCE_WASH;
   // Cited premise / pivotal cells. A single ring color (not the cross-game
   // teal/violet black/white-ref pair): Unruly's ring set is mixed — filled
   // black cells, a balanced reference row holding both colors, and empty
@@ -117,7 +112,7 @@ const FF_IMMUTABLE = 0x1000;
 const FF_MISTAKE = 0x2000;
 // Hint-overlay bits (no upstream analog), also folded into the cache key.
 const FF_HINT_TARGET = 0x4000; // the forced cell (COL_HINT ring)
-const FF_HINT_AREA = 0x10000; // a journey-sibling empty cell (light shade)
+const FF_HINT_LINE = 0x10000; // a cell of the line the sentence names (hatched)
 const FF_HINT_RING = 0x20000; // a cited premise / pivotal cell (COL_HINT_REF outline)
 
 // --- geometry -----------------------------------------------------------
@@ -205,13 +200,10 @@ function drawTile(
       const off = Math.floor((ts - 1 - sz) / 2);
       dr.drawRect({ x: px + off, y: py + off, w: sz, h: sz }, val);
     }
-  } else if (tile & FF_HINT_AREA) {
-    // A journey-sibling **empty** cell: a shade, which is what the evidence wash
-    // is for — nothing is drawn on these, so nothing is hidden.
-    dr.drawRect(inner, COL_HINT_CELL);
   } else {
     dr.drawRect(inner, val);
   }
+  if (tile & FF_HINT_LINE) dr.drawHatch(inner, COL_HINT, hatchPeriod(ts));
 
   // Immutable-clue bevel: inset top/left lowlight, bottom/right highlight.
   if ((val === COL_0 || val === COL_1) && tile & FF_IMMUTABLE) {
@@ -349,10 +341,10 @@ export function redraw(
       ? new Set(mistakes.map((m) => m.y * w2 + m.x))
       : null;
 
-  // Displayed hint step: the forced target, its sibling area, premise rings.
+  // Displayed hint step: the forced target, the named line, premise rings.
   const hl = hint?.highlights;
   const hintTarget = hl ? hl.target.y * w2 + hl.target.x : -1;
-  const hintAreaSet = hl ? new Set(hl.area) : null;
+  const hintLineSet = hl ? new Set(hl.line) : null;
   const hintRingSet = hl ? new Set(hl.ring) : null;
 
   // A placement animates only when the engine is driving timed redraws
@@ -408,14 +400,13 @@ export function redraw(
       if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y)
         tile |= FF_CURSOR;
       if (mistakeSet?.has(i)) tile |= FF_MISTAKE;
-      // Hint overlay (target > ring > sibling-area; area only on empty cells).
+      // Hint overlay: the target outranks a ring; the hatch runs under either.
       if (i === hintTarget) {
         tile |= FF_HINT_TARGET;
       } else if (hintRingSet?.has(i)) {
         tile |= FF_HINT_RING;
-      } else if (hintAreaSet?.has(i) && grid[i] === EMPTY) {
-        tile |= FF_HINT_AREA;
       }
+      if (hintLineSet?.has(i)) tile |= FF_HINT_LINE;
 
       // An animating cell can't be captured by the packed key, so it is
       // redrawn every frame (cache forced stale, Flip's idiom) and grows the

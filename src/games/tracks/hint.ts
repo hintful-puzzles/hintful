@@ -87,6 +87,26 @@ export interface TracksHighlights {
   areaEdges: TracksHintEdge[];
   /** Clue indices the deduction counts with (`0..w-1` columns, then rows). */
   clues: number[];
+  /** The line the sentence names, by the same index, hatched with its clue;
+   * `null` when it names none (docs/games/hints.md § "Hatch the line the
+   * sentence names"). */
+  line: number | null;
+}
+
+/** The one line a reason's sentence names, by clue index. */
+function namedLine(reason: TracksReason): number | null {
+  switch (reason.kind) {
+    case "clueFull":
+    case "clueExact":
+    case "looseEndsFill":
+    case "looseEndSpans":
+    case "sharedFate":
+      return reason.line;
+    case "wouldFinishEarly":
+      return reason.unmet;
+    default:
+      return null;
+  }
 }
 
 // --- narration ------------------------------------------------------------
@@ -175,6 +195,7 @@ function highlightsOf(
       dir: e % 16,
     })),
     clues: ev.clues,
+    line: namedLine(reason),
   };
 }
 

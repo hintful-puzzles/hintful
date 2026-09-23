@@ -12,6 +12,7 @@
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
 import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
+import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { type SinglesHint, singlesGame } from "./index.ts";
 import {
@@ -327,6 +328,38 @@ describe("hintKeepTrack", () => {
         state,
       ),
     ).toBe("completed");
+  });
+});
+
+describe("singles hint: the line a sentence names", () => {
+  it.each([
+    ["a touching pair", /touch, so one of them stays white/],
+    ["a number sharing a line with a ringed white one", /shares? a line with/],
+  ])("%s hatches the one row or column it names", (_, sentence) => {
+    let checked = 0;
+    for (let s = 0; s < 12 && checked === 0; s++) {
+      const { recording, hint } = renderScenario({
+        game: singlesGame,
+        id: `6x6dk#line-${s}`,
+        showHint: true,
+        hintUntil: (step) =>
+          sentence.test(step.explanation) &&
+          (step.highlights as SinglesHint).line.length > 0,
+      });
+      const hl = hint?.highlights as SinglesHint | undefined;
+      if (!hint || !sentence.test(hint.explanation) || !hl?.line.length) continue;
+      // One whole row or column, through every target.
+      const row = hl.line.every((c) => c.y === hl.line[0].y);
+      expect(hl.line).toHaveLength(6);
+      for (const t of hl.targets) {
+        expect(hl.line.some((c) => c.x === t.x && c.y === t.y)).toBe(true);
+      }
+      const hatches = opsOfKind(recording.ops, "hatch");
+      expect(hatches).toHaveLength(6);
+      expect(new Set(hatches.map((h) => (row ? h.y : h.x))).size).toBe(1);
+      checked++;
+    }
+    expect(checked).toBe(1);
   });
 });
 

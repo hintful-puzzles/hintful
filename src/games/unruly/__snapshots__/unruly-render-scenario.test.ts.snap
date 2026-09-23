@@ -286,7 +286,7 @@ exports[`Unruly render scenarios > hint frame: drives a real Midend to a display
     "y": 54,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(232, 139, 33)",
@@ -295,7 +295,7 @@ exports[`Unruly render scenarios > hint frame: drives a real Midend to a display
     "y": 48,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(232, 139, 33)",
@@ -304,7 +304,7 @@ exports[`Unruly render scenarios > hint frame: drives a real Midend to a display
     "y": 77,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(232, 139, 33)",
@@ -313,7 +313,7 @@ exports[`Unruly render scenarios > hint frame: drives a real Midend to a display
     "y": 48,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(232, 139, 33)",
@@ -386,7 +386,7 @@ exports[`Unruly render scenarios > hint frame: drives a real Midend to a display
     "y": 54,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(232, 139, 33)",
@@ -395,7 +395,7 @@ exports[`Unruly render scenarios > hint frame: drives a real Midend to a display
     "y": 48,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(232, 139, 33)",
@@ -404,7 +404,7 @@ exports[`Unruly render scenarios > hint frame: drives a real Midend to a display
     "y": 77,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(232, 139, 33)",
@@ -413,7 +413,7 @@ exports[`Unruly render scenarios > hint frame: drives a real Midend to a display
     "y": 48,
   },
   {
-    "color": 13,
+    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(232, 139, 33)",

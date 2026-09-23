@@ -17,6 +17,7 @@ import {
 } from "../../engine/color/palette.ts";
 import { netslideLowlight } from "../../engine/color/palette-games.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import type { NetslideHint } from "./hint.ts";
@@ -112,6 +113,8 @@ const HINT_TILE = 0x40;
 const HINT_LANDING = 0x80;
 /** Where it finally belongs — a solid outline. */
 const HINT_HOME = 0x100;
+/** On the line the sentence names as never sliding — hatched. */
+const HINT_LINE = 0x200;
 
 /** Takes anything carrying the grid dimensions, so `redraw` can size the
  * background from the state without conjuring a params object. */
@@ -214,15 +217,14 @@ function drawTile(
   // *which piece* this is keep their own color rather than sitting on blue.
   const background = tile & FLASHING ? COL_FLASHING : COL_BACKGROUND;
   dr.drawRect({ x: bx, y: by, w: ts + TILE_BORDER, h: ts + TILE_BORDER }, COL_BORDER);
-  dr.drawRect(
-    {
-      x: bx + TILE_BORDER,
-      y: by + TILE_BORDER,
-      w: ts - TILE_BORDER,
-      h: ts - TILE_BORDER,
-    },
-    background,
-  );
+  const face = {
+    x: bx + TILE_BORDER,
+    y: by + TILE_BORDER,
+    w: ts - TILE_BORDER,
+    h: ts - TILE_BORDER,
+  };
+  dr.drawRect(face, background);
+  if (tile & HINT_LINE) dr.drawHatch(face, COL_HINT, hatchPeriod(ts));
 
   const cx = TILE_BORDER + (ts - TILE_BORDER) / 2 - 0.5;
   const cy = cx;
@@ -589,6 +591,7 @@ export function redraw(
   }
 
   const marks = hint?.highlights;
+  const hintLine = new Set(marks?.line ?? []);
   const hintArrowX = marks?.arrowX ?? -2;
   const hintArrowY = marks?.arrowY ?? -2;
 
@@ -682,6 +685,7 @@ export function redraw(
         // tile under a stale outline repaints once the hint moves on.
         if (i === marks.destination) c |= marks.belongs ? HINT_HOME : HINT_LANDING;
         else if (i === marks.landing) c |= HINT_LANDING;
+        if (hintLine.has(i)) c |= HINT_LINE;
       }
 
       // The completion flash ripples outward: a tile at Chebyshev distance

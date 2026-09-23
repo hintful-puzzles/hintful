@@ -53,13 +53,16 @@ function hatchColor(id: string): number | null {
       )
         continue;
       midend.size({ w: 700, h: 700 });
-      if (midend.hint()) continue;
-      for (let step = 0; step < 24 && midend.activeHintStep(); step++) {
-        const frame = new RecordingDrawing(palette);
-        midend.redraw(frame);
-        const [hatch] = opsOfKind(frame.ops, "hatch");
-        if (hatch) return hatch.color;
-        midend.executeHint();
+      // Asked again when a plan runs out: Guess's first plan is one opening
+      // guess, and only the next reads a scored row.
+      for (let ask = 0; ask < 6 && !midend.hint(); ask++) {
+        for (let step = 0; step < 24 && midend.activeHintStep(); step++) {
+          const frame = new RecordingDrawing(palette);
+          midend.redraw(frame);
+          const [hatch] = opsOfKind(frame.ops, "hatch");
+          if (hatch) return hatch.color;
+          midend.executeHint();
+        }
       }
     }
   }
@@ -98,13 +101,16 @@ describe("the hint's line hatch", () => {
 });
 
 describe("a step that names a line draws it, and only then", () => {
-  /** The cells a step says to hatch: the shared `hatch` list, or Magnets' own
+  /** How much a step says to hatch: the shared `hatch` list, or a game's own
    * `line`. Read off the highlights, so a game is in by having it. */
   const named = (hl: unknown): number => {
     if (!hl || typeof hl !== "object") return 0;
     const h = hl as { hatch?: unknown[]; line?: unknown };
     if (Array.isArray(h.hatch)) return h.hatch.length;
-    // Present, not truthy: Pattern's first column is line 0.
+    // A cell list names a line when it has cells (Boats' is empty for a step
+    // naming none); a line by number, when it is present at all, not truthy
+    // (Pattern's first column is line 0).
+    if (Array.isArray(h.line)) return h.line.length;
     return h.line === undefined || h.line === null ? 0 : 1;
   };
 
