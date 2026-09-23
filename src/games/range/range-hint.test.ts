@@ -81,12 +81,16 @@ describe("hint", () => {
       if (!res?.ok) throw new Error("expected a plan");
       for (const step of res.steps) {
         const hl = step.highlights as RangeHint;
-        const hasEvidence = hl.area.length > 0 || (hl.blackRefs?.length ?? 0) > 0;
+        const hasEvidence =
+          hl.area.length > 0 ||
+          (hl.hatch?.length ?? 0) > 0 ||
+          (hl.blackRefs?.length ?? 0) > 0;
         expect(hasEvidence).toBe(true);
-        // The area never includes the target cell itself.
-        expect(hl.area.some((a) => a.r === hl.target.r && a.c === hl.target.c)).toBe(
-          false,
-        );
+        // Neither the area nor the run includes the target cell itself.
+        for (const cells of [hl.area, hl.hatch ?? []])
+          expect(cells.some((a) => a.r === hl.target.r && a.c === hl.target.c)).toBe(
+            false,
+          );
       }
     }
   });
@@ -98,7 +102,7 @@ describe("hint", () => {
     // on the board" forbids as scheme-relative and invisible to a color-blind
     // reader.
     const TIE =
-      /right next to the ringed black square|just past (?:it|them|the outlined cells)|along the outlined run as far as this cell|the outlined cells around it/;
+      /right next to the ringed black square|just past (?:it|them|the outlined cells)|along the striped run as far as this cell|the outlined cells around it/;
     const kinds = new Set<string>();
     let checked = 0;
     for (const seed of ["range-hint-plan", "range-evidence-2", "range-evidence-3"]) {

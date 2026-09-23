@@ -77,7 +77,7 @@ export const say = {
 
   /** The one candidate anywhere that can still grow a goal's group. */
   reach: (): string =>
-    `Every square must reach a goal, and only this mark can still point into the shaded group, so the rest must go.`,
+    `Every square must reach a goal, and only this mark can still point into the striped group, so the rest must go.`,
 
   /** A neighbor that could only point along one axis, which a mark pointing
    * into it would turn into a two-square loop. `n` is the struck direction, so

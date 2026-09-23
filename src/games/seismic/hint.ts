@@ -73,7 +73,8 @@ export type SeismicFiring =
       y: number;
       n: number;
       why: PlaceWhy;
-      /** The area a hidden single reasons over; empty otherwise. */
+      /** The area the sentence names — a hidden single's, or a singleton's one
+       * cell — hatched; empty for a naked single, which names none. */
       area: Point[];
       /** The live notes the placed number rules out. */
       cull: Mark[];
@@ -175,7 +176,7 @@ function placing(
 function singleton(b: SeismicBoard): SeismicFiring | null {
   for (let i = 0; i < b.grid.length; i++)
     if (b.grid[i] === 0 && b.dsf.size(i) === 1)
-      return placing(b, i, 1, "singleton", []);
+      return placing(b, i, 1, "singleton", [i]);
   return null;
 }
 
@@ -367,7 +368,7 @@ export function buildSteps(state: SeismicState): HintStep<SeismicMove, SeismicHi
         steps.push({
           move: { type: "set", ...cell, n: f.n, pencil: false },
           explanation: narratePlace(f),
-          highlights: { area: f.area, targets: [cell], marks: [] },
+          highlights: { area: [], hatch: f.area, targets: [cell], marks: [] },
         });
         if (f.cull.length > 0) {
           steps.push({
@@ -388,7 +389,7 @@ export function buildSteps(state: SeismicState): HintStep<SeismicMove, SeismicHi
         steps.push({
           move: { type: "pencilStrike", marks },
           explanation: say.starve(f.n, f.targets.length, tectonic),
-          highlights: { area: f.area, targets: f.targets, marks },
+          highlights: { area: [], hatch: f.area, targets: f.targets, marks },
         });
         break;
       }

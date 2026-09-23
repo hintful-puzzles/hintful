@@ -2780,7 +2780,7 @@ exports[`render scenario snapshot > draws a generated board with grid outline, c
 ]
 `;
 
-exports[`render scenario snapshot > rings the hint target and outlines the premise on the first hint step 1`] = `
+exports[`render scenario snapshot > rings the hint target and marks the premise on the first hint step 1`] = `
 [
   {
     "color": 0,
@@ -3037,39 +3037,13 @@ exports[`render scenario snapshot > rings the hint target and outlines the premi
     "y": 17,
   },
   {
-    "color": 5,
-    "h": 2,
-    "op": "rect",
-    "rgb": "rgb(14, 88, 91)",
+    "color": 4,
+    "h": 31,
+    "op": "hatch",
+    "period": 11,
+    "rgb": "rgb(21, 113, 233)",
     "w": 31,
     "x": 145,
-    "y": 17,
-  },
-  {
-    "color": 5,
-    "h": 31,
-    "op": "rect",
-    "rgb": "rgb(14, 88, 91)",
-    "w": 2,
-    "x": 145,
-    "y": 17,
-  },
-  {
-    "color": 5,
-    "h": 2,
-    "op": "rect",
-    "rgb": "rgb(14, 88, 91)",
-    "w": 31,
-    "x": 145,
-    "y": 46,
-  },
-  {
-    "color": 5,
-    "h": 31,
-    "op": "rect",
-    "rgb": "rgb(14, 88, 91)",
-    "w": 2,
-    "x": 174,
     "y": 17,
   },
   {

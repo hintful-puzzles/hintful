@@ -1722,15 +1722,29 @@ Exemplars: `markBand` plus the post-tile block of `redraw` in
 diagonal bands over its squares and on through its clue slots, in the action
 color ([`engine/hatch.ts`](../../src/engine/hatch.ts)). At most one line per
 step. That is "this row" or "this column", or, in a step about a single piece,
-the one line it names as "its column". Every mark then has one meaning:
+the one line it names as "its column".
+
+**A region the sentence is about is hatched the same way**: Keen's cage, Solo's
+block, Filling's and Palisade's region, a galaxy, a Rome or Seismic area, a
+Crossing or Range run, Tracks' closed block. The sentence says "this cage" or
+"the striped area", never "the outlined …". Crossing's `crossRuns` names both
+runs through a square and hatches both, crossing at the ring. What stays
+outlined is a *piece* ("the outlined island", "this segment") and particular
+squares: a Seismic cull's placed number, Range's already-seen arms beside the
+striped run. Every mark then has one meaning:
 
 | mark | means |
 |---|---|
 | ring, action color | what the step decides |
-| hatch | the line the sentence names |
+| hatch | the line or region the sentence names |
 | outline, evidence color | the particular squares or pieces the reason rests on |
 | clue digit, action color | the count the sentence reads |
 | clue digit, evidence color | a line cited only as a reason |
+
+**No line is named by a number the board does not draw.** "Row 3" sends the
+player counting; say "this row" over the hatch, or name a destination by the
+mark already on it ("the outlined square"). `hint-quality.test.ts`'s narration
+walk rejects `row 3` / `column 4` in any sentence.
 
 **Why the line is not an outline.** An outline of the line and an outline of the
 squares a reason rests on are the same mark, and the eye cannot tell them apart.
@@ -1776,7 +1790,12 @@ canvas, not the rect, so tiles hatched one at a time join into one strip. Put
 the flag in the tile's diff key. A clue slot on the line paints even when its
 clue was stripped, because a hatch can arrive on it and leave again. Exemplar:
 `drawTileCol` and `drawNum` in
-[`magnets/render.ts`](../../src/games/magnets/render.ts).
+[`magnets/render.ts`](../../src/games/magnets/render.ts). A game on
+`OverlaySidecar` puts the cells in its highlights' `hatch` list and calls
+`ds.hint.drawHatch(dr, i, rect, COL_HINT, ts)` after the background — the lane is
+already in the sidecar's diff key ([`rome/render.ts`](../../src/games/rome/render.ts)).
+The cross-game guard, "a step that names a line or region draws it", reads the
+`hatch` list and a game's own `line` both, so a game is in by having either.
 
 ### Group one firing into one step
 

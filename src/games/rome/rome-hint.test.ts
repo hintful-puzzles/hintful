@@ -20,6 +20,7 @@ import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
+import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
   renderScenario,
@@ -308,7 +309,7 @@ function frameFor(p: RomeParams, pred: (e: string) => boolean): string {
 }
 
 describe("rome hint render", () => {
-  it("rings the square, outlines its area, and crosses the marks it rules out", () => {
+  it("rings the square, hatches its area, and crosses the marks it rules out", () => {
     const pred = (e: string): boolean => /^This area now has/.test(e);
     const { recording, hint } = renderScenario({
       game: romeGame,
@@ -323,6 +324,12 @@ describe("rome hint render", () => {
     expect(
       recording.ops.some((o) => o.op === "line" && o.color === COL_ARROW_PENCIL),
     ).toBe(true);
+    // "This area" is hatched, one hatch per square of it; the arrow already
+    // placed there is the one square outlined.
+    const area = (hint?.highlights as { hatch?: unknown[] }).hatch ?? [];
+    expect(area.length).toBeGreaterThan(1);
+    const hatches = opsOfKind(recording.ops, "hatch");
+    expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(area.length);
     expectRing(recording.ops, COL_HINT_CELL, 1);
     expect(recording.ops).toMatchSnapshot();
   });

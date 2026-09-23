@@ -268,8 +268,12 @@ const K_GHOST = 24; // bits 24-27: previewed digit of a held clue number (0 = no
  * "which listed numbers still fit this run", so a grid-only highlight would
  * point at something the player cannot see. */
 export interface CrossingHint {
-  /** The run(s) the deduction reasons over. */
+  /** Particular squares a reason rests on, outlined; every technique's reason
+   * is a whole run, so this stays empty. */
   area: Point[];
+  /** The run(s) the sentence names, hatched (docs/games/hints.md § "Hatch the
+   * line the sentence names"). */
+  hatch: Point[];
   /** The square(s) the move writes into. */
   targets: Point[];
   /** The candidate(s) a rule-out strikes — marked on the candidate glyph, not
@@ -508,10 +512,10 @@ function drawCell(
   const digit = state.grid[i];
   const highlight = ((flags >> K_HIGHLIGHT) & 3) as CellHighlight;
   const selected = highlight === HIGHLIGHT_ENTRY;
-  // Both cell-level hint marks are drawn in `redraw`, which rings the target and
-  // outlines the evidence on the square's own border, so a hint never takes the
+  // The ring is drawn in `redraw` on the square's own border, and the run the
+  // sentence names is hatched translucently here, so a hint never takes the
   // background from the run wash or from the penciled candidates it is ruling
-  // out. What is left here is `struck`: `hintMarkBit(n)` is bit `2 + n` and the
+  // out. What is left here besides is `struck`: `hintMarkBit(n)` is bit `2 + n` and the
   // pencil grid indexes digit `n` at bit `n − 1`, so shifting by 3 re-bases one
   // onto the other.
   const struck = hintBits >> 3;
@@ -526,6 +530,7 @@ function drawCell(
       COL_SELECTED,
       wash,
     );
+    ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, COL_HINT, ts);
   }
 
   if (walls[i]) {
@@ -551,6 +556,7 @@ function drawCell(
     const low = selected ? COL_HIGHLIGHT : COL_LOWLIGHT;
     const high = selected ? COL_LOWLIGHT : COL_HIGHLIGHT;
     drawBevelTile(dr, ts, tx, ty, low, mid, high);
+    ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, COL_HINT, ts);
     dr.drawText(
       { x: (x + 1) * ts, y: (y + 1) * ts },
       textOpts(Math.floor(ts / 2), "center", "mathematical"),

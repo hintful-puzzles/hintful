@@ -67,7 +67,7 @@ export interface PackableHighlights<Mark extends Cell> {
   readonly area?: readonly OrderedCell[];
   readonly targets?: readonly Cell[];
   readonly marks?: readonly Mark[];
-  /** The cells of the one row or column the step's sentence names, hatched
+  /** The cells of the line or region the step's sentence names, hatched
    * (`engine/hatch.ts`; docs/games/hints.md § "Hatch the line the sentence
    * names"). */
   readonly hatch?: readonly Cell[];
@@ -169,7 +169,7 @@ export class OverlaySidecar {
     for (const c of cells ?? []) this.add(index(c.x, c.y), OVERLAY_FLAG);
   }
 
-  /** Hatch cell `i`'s `rect` when it lies on the named line. Call it after the
+  /** Hatch cell `i`'s `rect` when it lies on the named line or region. Call it after the
    * cell's background and before its content, so the content stays whole. */
   drawHatch(
     dr: GameDrawing,

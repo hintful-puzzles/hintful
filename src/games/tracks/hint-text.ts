@@ -106,6 +106,6 @@ export const say = {
       crossings === 0
         ? "none marked yet"
         : `${crossings} ${plural(crossings, "crossing", "crossings")} marked`;
-    return `Every time the track enters the outlined block it must leave; with ${marked}, this last side must ${carries ? "carry track" : "be blocked"}.`;
+    return `Every time the track enters the striped block it must leave; with ${marked}, this last side must ${carries ? "carry track" : "be blocked"}.`;
   },
 };

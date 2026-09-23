@@ -100,21 +100,22 @@ describe("the hint's line hatch", () => {
   });
 });
 
-describe("a step that names a line draws it, and only then", () => {
+describe("a step that names a line or region draws it, and only then", () => {
   /** How much a step says to hatch: the shared `hatch` list, or a game's own
    * `line`. Read off the highlights, so a game is in by having it. */
   const named = (hl: unknown): number => {
     if (!hl || typeof hl !== "object") return 0;
     const h = hl as { hatch?: unknown[]; line?: unknown };
-    if (Array.isArray(h.hatch)) return h.hatch.length;
-    // A cell list names a line when it has cells (Boats' is empty for a step
-    // naming none); a line by number, when it is present at all, not truthy
-    // (Pattern's first column is line 0).
-    if (Array.isArray(h.line)) return h.line.length;
-    return h.line === undefined || h.line === null ? 0 : 1;
+    // Both are read: Tracks names a line by number and a block by its cells.
+    // A cell list names something when it has cells (Boats' is empty for a
+    // step naming none); a line by number, when it is present at all, not
+    // truthy (Pattern's first column is line 0).
+    const cells = Array.isArray(h.hatch) ? h.hatch.length : 0;
+    if (Array.isArray(h.line)) return cells + h.line.length;
+    return cells + (h.line === undefined || h.line === null ? 0 : 1);
   };
 
-  it("draws a hatch exactly where a step names a line, over every hinting game", () => {
+  it("draws a hatch exactly where a step names a line or region, over every hinting game", () => {
     let naming = 0;
     let silent = 0;
     const gamesNaming = new Set<string>();
@@ -137,22 +138,25 @@ describe("a step that names a line draws it, and only then", () => {
           if (cells > 0) {
             expect(
               drawn,
-              `${id}: a step names a line and draws no hatch`,
+              `${id}: a step names a line or region and draws no hatch`,
             ).toBeGreaterThan(0);
             naming++;
             gamesNaming.add(id);
           } else {
-            expect(drawn, `${id}: a step names no line and draws a hatch`).toBe(0);
+            expect(drawn, `${id}: a step names nothing and draws a hatch`).toBe(0);
             silent++;
           }
           midend.executeHint();
         }
       }
     }
-    // Both halves looked at something, and the games converted so far are in.
+    // Both halves looked at something, and games naming lines and regions are
+    // both in. (Seismic and Galaxies name a region only past this walk's reach;
+    // their own hint tests pin their hatch.)
     expect(naming).toBeGreaterThan(0);
     expect(silent).toBeGreaterThan(0);
-    expect([...gamesNaming]).toContain("magnets");
+    for (const id of ["magnets", "keen", "rome", "filling", "palisade", "crossing"])
+      expect([...gamesNaming], id).toContain(id);
   });
 });
 

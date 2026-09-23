@@ -25,6 +25,7 @@ import {
 } from "../../engine/color/palette.ts";
 import { drawRectCorners, drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import type { RangeHint } from "./index.ts";
@@ -105,6 +106,7 @@ const F_CURSOR = 1 << 17;
 const F_FLASH = 1 << 18;
 const F_MISTAKE = 1 << 19;
 const F_HINT_CLUE = 1 << 21; // the clue driving the deduction — digit in COL_HINT
+const F_HINT_HATCH = 1 << 24; // on the run the sentence names — hatched
 
 /** A cell's role in the displayed hint, with its cache flag. The `target` is
  * the forced cell, black or white alike (the narration says which mark),
@@ -145,9 +147,11 @@ function drawCell(
   flash: boolean,
   hintKind: HintKind,
   /** This clue drives the displayed deduction, so its digit draws `COL_HINT`
-   * (see `RangeHint.clue`). The clue is *inside* the outlined area, so it
-   * keeps that outline and changes only its digit. */
+   * (see `RangeHint.clue`). The clue is *inside* the outlined area or striped
+   * run it drives, so it keeps that mark and changes only its digit. */
   clueRef = false,
+  /** On the run the sentence names (`RangeHint.hatch`). */
+  hatched = false,
 ): void {
   const b = border(ts);
   const x = b + ts * c;
@@ -177,6 +181,12 @@ function drawCell(
 
   drawRectOutline(dr, x, y, ts + 1, ts + 1, COL_GRID);
   dr.drawRect({ x: x + 1, y: y + 1, w: ts - 1, h: ts - 1 }, fill);
+  if (hatched)
+    dr.drawHatch(
+      { x: x + 1, y: y + 1, w: ts - 1, h: ts - 1 },
+      COL_HINT,
+      hatchPeriod(ts),
+    );
   if (error) drawRectOutline(dr, x + 1, y + 1, ts - 1, ts - 1, COL_ERROR);
   if (cursor) drawRectCorners(dr, tx, ty, Math.floor((ts * 3) / 10), COL_CURSOR);
 
@@ -260,6 +270,7 @@ export function redraw(
     ? new Set(hl.blackRefs.map((m) => idx(m.r, m.c, w)))
     : null;
   const hintClue = hl?.clue ? idx(hl.clue.r, hl.clue.c, w) : -1;
+  const hintHatch = new Set((hl?.hatch ?? []).map((m) => idx(m.r, m.c, w)));
 
   for (let r = 0; r < h; r++) {
     for (let c = 0; c < w; c++) {
@@ -277,6 +288,7 @@ export function redraw(
               ? "area"
               : "none";
       const clueRef = i === hintClue;
+      const hatched = hintHatch.has(i);
 
       let packed = (value + 2) | HINT_FLAG[hintKind];
       if (error) packed |= F_ERROR;
@@ -284,6 +296,7 @@ export function redraw(
       if (flash) packed |= F_FLASH;
       if (mistake) packed |= F_MISTAKE;
       if (clueRef) packed |= F_HINT_CLUE;
+      if (hatched) packed |= F_HINT_HATCH;
 
       if (ds.cache[i] !== packed) {
         drawCell(
@@ -297,6 +310,7 @@ export function redraw(
           flash,
           hintKind,
           clueRef,
+          hatched,
         );
         ds.cache[i] = packed;
       }

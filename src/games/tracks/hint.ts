@@ -91,6 +91,9 @@ export interface TracksHighlights {
    * `null` when it names none (docs/games/hints.md § "Hatch the line the
    * sentence names"). */
   line: number | null;
+  /** The closed block a parity sentence names, hatched like a line; empty when
+   * it names none. */
+  hatch: { x: number; y: number }[];
 }
 
 /** The one line a reason's sentence names, by clue index. */
@@ -181,6 +184,10 @@ function highlightsOf(
 ): TracksHighlights {
   const { w } = b;
   const { ev } = reason;
+  const cells = ev.cells.map((i) => ({ x: i % w, y: Math.floor(i / w) }));
+  // A parity firing's cells are the block its sentence is about, so they are
+  // hatched; every other rung's are the particular squares it reasons from.
+  const block = reason.kind === "crossingParity";
   return {
     targets: firing.ops
       .filter((o) => o.kind === "square")
@@ -188,7 +195,8 @@ function highlightsOf(
     targetEdges: firing.ops
       .filter((o) => o.kind === "edge")
       .map((o) => ({ x: o.x, y: o.y, dir: o.dir ?? 0, track: o.track })),
-    area: ev.cells.map((i) => ({ x: i % w, y: Math.floor(i / w) })),
+    area: block ? [] : cells,
+    hatch: block ? cells : [],
     areaEdges: ev.edges.map((e) => ({
       x: Math.floor(e / 16) % w,
       y: Math.floor(Math.floor(e / 16) / w),

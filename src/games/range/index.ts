@@ -233,14 +233,17 @@ function findMistakes(state: RangeState): readonly RangeMistake[] {
 
 /** Highlight data for a Range hint step. `target` is the cell the
  * deduction forces (and the mark it forces). `area` is the deduction's
- * evidence to outline — the clue's line of sight, the line it must reach
- * along, or the non-black cells a cut would isolate — so a beginner can
+ * evidence to outline — the clue's line of sight (for `reach`, its other
+ * arms), or the non-black cells a cut would isolate — so a beginner can
  * *see* the reasoning, not just the conclusion (the Palisade
  * region-highlight convention). `blackRefs` are black premise cells (an
  * adjacent black) that stay black and are ringed instead. */
 export interface RangeHint {
   target: { r: number; c: number; value: RangeCellValue };
   area: Cell[];
+  /** The run a `reach` sentence names, hatched (docs/games/hints.md § "Hatch
+   * the line the sentence names"). */
+  hatch?: Cell[];
   blackRefs?: Cell[];
   /** The clue driving a line-of-sight deduction, its digit recolored
    * `COL_HINT`. A clue sits *inside* its own shaded line of sight, and a
@@ -358,19 +361,18 @@ function buildHighlights(
         clue: reason.clue,
       };
     case "reach": {
-      // Show the clue's whole current line of sight *and* the path it is
-      // extending toward this target, so the shaded run the narration
-      // names is actually visible even when the target is adjacent.
+      // The run the narration names is the path from the clue to this target,
+      // striped even where it is not yet white; what the clue already sees
+      // along its other arms is outlined, as the reason the run must go on.
       const { r, c } = reason.clue;
-      const area = new Map<number, Cell>();
-      for (const cell of [
-        ...lineOfSight(grid, w, h, r, c),
-        ...reachLine(r, c, target.r, target.c),
-      ]) {
-        area.set(idx(cell.r, cell.c, w), cell);
-      }
-      area.delete(idx(target.r, target.c, w));
-      return { target, area: [...area.values()], clue: reason.clue };
+      const run = reachLine(r, c, target.r, target.c);
+      const onRun = new Set(run.map((cell) => idx(cell.r, cell.c, w)));
+      const area = lineOfSight(grid, w, h, r, c).filter(
+        (cell) =>
+          !onRun.has(idx(cell.r, cell.c, w)) &&
+          (cell.r !== target.r || cell.c !== target.c),
+      );
+      return { target, area, hatch: run, clue: reason.clue };
     }
     case "connect":
       return { target, area: nonBlackNeighbors(grid, w, h, target.r, target.c) };

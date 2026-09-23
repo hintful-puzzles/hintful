@@ -17,15 +17,22 @@
 
 ## 2. Regions as subject
 
-- [ ] 2.1 Keen cages; Solo blocks.
-- [ ] 2.2 Filling, Palisade, Galaxies: the region a sentence is about.
-- [ ] 2.3 Rome, Seismic: areas and groups.
-- [ ] 2.4 Crossing, Range: runs.
-- [ ] 2.5 Tracks: the closed block.
-- [ ] 2.6 The cross-game guard counts regions as well as lines.
+- [x] 2.1 Keen cages; Solo blocks.
+- [x] 2.2 Filling, Palisade, Galaxies: the region a sentence is about.
+- [x] 2.3 Rome, Seismic: areas and groups. Seismic's outline-shape repaint
+      test is retired: an area is no longer outlined, so no cell is outlined
+      twice in different shapes, and the hatch lane is in the sidecar's key.
+- [x] 2.4 Crossing, Range: runs. Crossing's `crossRuns` hatches both runs it
+      names; Range's `reach` hatches the run to the target and keeps the
+      clue's other seen arms outlined as particular cells.
+- [x] 2.5 Tracks: the closed block.
+- [x] 2.6 The cross-game guard counts regions as well as lines (it reads the
+      `hatch` list and a game's own `line` together), and requires region
+      games among those it saw. Seen to fail on Tracks' block before the
+      reading summed both.
 
 ## 3. Close out
 
-- [ ] 3.1 `docs/games/hints.md`: the rule is about the line or region a
+- [x] 3.1 `docs/games/hints.md`: the rule is about the line or region a
       sentence names.
 - [ ] 3.2 Spec delta; Chrome on a sample in light and dark; archive.

@@ -425,32 +425,34 @@ function hintMove(puzzle: CrossingPuzzle, f: CrossingFiring): CrossingMove {
 function hintHighlights(puzzle: CrossingPuzzle, f: CrossingFiring): CrossingHint {
   const at = (i: number): Point => cellAt(puzzle, i);
   const runCells = (r: number): Point[] => puzzle.runs[r].cells.map(at);
-  const common = { marks: [], numbers: f.fitting, numberTarget: null };
+  const common = { area: [], marks: [], numbers: f.fitting, numberTarget: null };
   switch (f.technique) {
     case "onlyNumber":
       return {
-        area: runCells(f.run),
+        hatch: runCells(f.run),
         // Only the squares the move actually writes into; the ones already
-        // filled are the premise, and stay part of the shaded area.
+        // filled are the premise, and stay part of the hatched run.
         targets: f.fill.map(at),
         ...common,
         numberTarget: f.number,
       };
     case "sharedDigit":
-      return { area: runCells(f.run), targets: [at(f.cell)], ...common };
+      return { hatch: runCells(f.run), targets: [at(f.cell)], ...common };
     case "crossRuns":
+      // Both runs are named ("Across, … the down number"), and they cross at
+      // the ringed square.
       return {
-        area: [...runCells(f.acrossRun), ...runCells(f.downRun)],
+        hatch: [...runCells(f.acrossRun), ...runCells(f.downRun)],
         targets: [at(f.cell)],
         ...common,
       };
     case "noteDigits":
       // Nothing to strike: the digits to write are named in the sentence, and
       // the ring says where.
-      return { area: runCells(f.run), targets: [at(f.cell)], ...common };
+      return { hatch: runCells(f.run), targets: [at(f.cell)], ...common };
     case "noteStrike":
       return {
-        area: runCells(f.run),
+        hatch: runCells(f.run),
         targets: [at(f.cell)],
         ...common,
         marks: f.digits.map((n) => ({ ...at(f.cell), n })),
@@ -657,7 +659,7 @@ export const crossingGame: Game<
    * leaving the background to the selection (`render.ts`).
    *
    * Everything a firing is about — the run(s) it reasons over and the squares it
-   * acts on — is already in `area`/`targets`, so this is exactly "am I inside
+   * acts on — is already in `hatch`/`targets`, so this is exactly "am I inside
    * the highlight?".
    */
   uiUpdateClearsHint(step, _state, ui) {
@@ -665,7 +667,7 @@ export const crossingGame: Game<
     if (!hl || !ui.cursor.visible) return true; // nothing shown, or nothing selected
     const here = (cs: readonly Point[]): boolean =>
       cs.some((c) => c.x === ui.cursor.x && c.y === ui.cursor.y);
-    return !(here(hl.area) || here(hl.targets));
+    return !(here(hl.hatch) || here(hl.targets));
   },
   requestKeys: (): KeyLabel[] => digitKeys(9),
   textFormat,

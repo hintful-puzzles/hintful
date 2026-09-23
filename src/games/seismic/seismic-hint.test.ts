@@ -8,10 +8,12 @@
  */
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
-import { Midend } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
-import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  opsOfKind,
+  type RecordingDrawing,
+} from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import {
   areasOf,
@@ -26,7 +28,7 @@ import {
 } from "./hint.ts";
 import { say } from "./hint-text.ts";
 import { seismicGame } from "./index.ts";
-import { COL_HINT, COL_HINT_CELL, COL_NUM_PENCIL, origin } from "./render.ts";
+import { COL_HINT, COL_HINT_CELL, COL_NUM_PENCIL } from "./render.ts";
 import { placeNumber, regionsViable, STATUS_COMPLETE } from "./solver.ts";
 import {
   DIFF_EASY,
@@ -211,7 +213,8 @@ describe("each step's picture matches its words", () => {
             count("naked");
           } else {
             expect(step.explanation, where).toBe(say.hidden(m.n));
-            const area = hl.area.map((c) => cellIndex(state, c));
+            expect(hl.area, where).toEqual([]);
+            const area = (hl.hatch ?? []).map((c) => cellIndex(state, c));
             expect(area, where).toContain(i);
             expect(area.length, where).toBe(state.dsf.size(i));
             const rivals = area.filter(
@@ -251,7 +254,8 @@ describe("each step's picture matches its words", () => {
               say.starve(n, hl.targets.length, tectonic),
             );
             expect(new Set(m.marks.map((k) => k.n)), where).toEqual(new Set([n]));
-            const area = hl.area.map((c) => cellIndex(state, c));
+            expect(hl.area, where).toEqual([]);
+            const area = (hl.hatch ?? []).map((c) => cellIndex(state, c));
             expect(area.length, `${where}: a whole area`).toBe(state.dsf.size(area[0]));
             for (const k of m.marks)
               expect(area, `${where}: a struck cell sits outside`).not.toContain(
@@ -373,10 +377,10 @@ describe("the sentences at their extremes", () => {
     expect(say.cull(9, false)).toContain("within 9 cells of it");
     expect(say.cull(3, true)).not.toContain("within");
     expect(say.starve(1, 1, false)).toBe(
-      "The outlined area can put its 1 only in line with this cell and within 1 cell of it, so this cell can't be 1.",
+      "The striped area can put its 1 only in line with this cell and within 1 cell of it, so this cell can't be 1.",
     );
     expect(say.starve(4, 3, true)).toBe(
-      "The outlined area can put its 4 only in a cell touching each of these, so none of them can be 4.",
+      "The striped area can put its 4 only in a cell touching each of these, so none of them can be 4.",
     );
   });
 
@@ -396,10 +400,10 @@ describe("the sentences at their extremes", () => {
 // --- frames -----------------------------------------------------------------
 
 const isStarve = (step: HintStep<SeismicMove>): boolean =>
-  step.explanation.startsWith("The outlined area can put its");
+  step.explanation.startsWith("The striped area can put its");
 
 describe("the frames a hint draws", () => {
-  it("rings each struck cell, outlines the starved area, and strikes each note through", () => {
+  it("rings each struck cell, hatches the starved area, and strikes each note through", () => {
     const params: SeismicParams = { w: 6, h: 6, diff: DIFF_NORMAL, mode: MODE_SEISMIC };
     let found: { hint?: HintStep<SeismicMove>; recording: RecordingDrawing } | null =
       null;
@@ -417,91 +421,15 @@ describe("the frames a hint draws", () => {
     const ops = found.recording.ops;
 
     expectRing(ops, COL_HINT, hl.targets.length);
-    // One contour around the area: a side wherever the cell across is outside it.
-    const inArea = new Set(hl.area.map((c) => `${c.x},${c.y}`));
-    let sides = 0;
-    for (const c of hl.area)
-      for (const [dx, dy] of [
-        [0, -1],
-        [-1, 0],
-        [0, 1],
-        [1, 0],
-      ])
-        if (!inArea.has(`${c.x + dx},${c.y + dy}`)) sides++;
-    expect(
-      ops.filter((o) => o.op === "rect" && o.color === COL_HINT_CELL),
-    ).toHaveLength(sides);
+    // The area the sentence names is hatched, cell by cell, and outlined nowhere.
+    const area = hl.hatch ?? [];
+    expect(area.length).toBeGreaterThan(1);
+    const hatched = opsOfKind(ops, "hatch");
+    expect(new Set(hatched.map((h) => `${h.x},${h.y}`)).size).toBe(area.length);
+    expect(ops.filter((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toEqual([]);
     expect(
       ops.filter((o) => o.op === "line" && o.color === COL_NUM_PENCIL),
     ).toHaveLength(hl.marks.length);
     expect(ops).toMatchSnapshot();
-  });
-
-  it("repaints a cell that stays outlined when the outline around it changes", () => {
-    // A mark inside a cell is undone only by that cell's repaint. When a cell is
-    // outlined in two consecutive steps, as a different part of a different
-    // shape, and the move between them leaves the cell itself alone, nothing but
-    // the outline says it must repaint: its old sides would stay on screen.
-    let checked = 0;
-    for (const { label, params, desc, state } of boards()) {
-      if (checked > 0) break;
-      const steps = planOf(label, state);
-      for (let i = 0; i + 1 < steps.length && checked === 0; i++) {
-        const [a, b] = [highlightsOf(steps[i]), highlightsOf(steps[i + 1])];
-        const mv = steps[i].move;
-        const touched = new Set(
-          mv.type === "pencilStrike"
-            ? mv.marks.map((k) => `${k.x},${k.y}`)
-            : mv.type === "set"
-              ? [`${mv.x},${mv.y}`]
-              : [],
-        );
-        const shape = (hl: SeismicHint, c: { x: number; y: number }) => {
-          const has = new Set(hl.area.map((d) => `${d.x},${d.y}`));
-          return [
-            [0, -1],
-            [-1, 0],
-            [0, 1],
-            [1, 0],
-          ].map(([dx, dy]) => has.has(`${c.x + dx},${c.y + dy}`));
-        };
-        const keeps = a.area.find(
-          (c) =>
-            b.area.some((d) => d.x === c.x && d.y === c.y) &&
-            !touched.has(`${c.x},${c.y}`) &&
-            shape(a, c).join() !== shape(b, c).join(),
-        );
-        if (!keeps) continue;
-
-        const midend = new Midend(seismicGame);
-        expect(
-          midend.newGameFromId(`${seismicGame.encodeParams(params, true)}:${desc}`),
-        ).toBeNull();
-        midend.size({ w: 700, h: 700 });
-        expect(midend.hint()).toBeNull();
-        for (let k = 0; k < i; k++) midend.executeHint();
-        expect(midend.activeHintStep()?.explanation).toBe(steps[i].explanation);
-        const warm = new RecordingDrawing(seismicGame.colors([0.8, 0.8, 0.8]));
-        midend.redraw(warm);
-        const clip = warm.ops.find((o) => o.op === "clip");
-        if (!clip || clip.op !== "clip") throw new Error("no tile was drawn");
-        const ts = clip.w;
-
-        midend.executeHint();
-        expect(midend.activeHintStep()?.explanation).toBe(steps[i + 1].explanation);
-        const frame = new RecordingDrawing(seismicGame.colors([0.8, 0.8, 0.8]));
-        midend.redraw(frame);
-        // Every tile clips to its own square, so a clip at the cell's origin is
-        // the cell repainting.
-        const x = origin(ts) + keeps.x * ts;
-        const y = origin(ts) + keeps.y * ts;
-        expect(
-          frame.ops.some((o) => o.op === "clip" && o.x === x && o.y === y),
-          `${label} step ${i}: cell ${keeps.x},${keeps.y} kept its old outline`,
-        ).toBe(true);
-        checked++;
-      }
-    }
-    expect(checked, "no board had a cell outlined twice in different shapes").toBe(1);
   });
 });

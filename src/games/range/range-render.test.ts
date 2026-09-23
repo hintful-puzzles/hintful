@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
-import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { type RangeHint, rangeGame } from "./index.ts";
 import {
@@ -134,7 +134,7 @@ describe("render scenario snapshot", () => {
     expect(result.recording.ops).toMatchSnapshot();
   });
 
-  it("rings the hint target and outlines the premise on the first hint step", () => {
+  it("rings the hint target and marks the premise on the first hint step", () => {
     const result = renderScenario({
       game: rangeGame,
       id: "9x6#range-render",
@@ -142,21 +142,24 @@ describe("render scenario snapshot", () => {
     });
     expect(result.hint).toBeDefined();
     const ops = result.recording.ops;
-    // The hint target cell is **ringed** COL_HINT; the premise cells are
-    // outlined COL_HINT_CELL. Neither is a fill: a Range premise area runs along
-    // a clue's arms and takes in the clue cell, so it carries the very digit the
-    // deduction counts with.
+    // The hint target cell is **ringed** COL_HINT; premise cells are outlined
+    // COL_HINT_CELL, and a run the sentence names is hatched translucently.
+    // None is an opaque fill: a Range premise runs along a clue's arms and takes
+    // in the clue cell, so it carries the very digit the deduction counts with.
     expectRing(ops, COL_HINT);
+    const hl = result.hint?.highlights as RangeHint | undefined;
     const premise = markSides(ops, COL_HINT_CELL);
-    expect(premise.length).toBeGreaterThan(0);
     for (const s of premise) expect(isThin(s)).toBe(true);
+    const run = hl?.hatch ?? [];
+    const hatched = opsOfKind(ops, "hatch");
+    expect(new Set(hatched.map((o) => `${o.x},${o.y}`)).size).toBe(run.length);
+    expect(premise.length + run.length).toBeGreaterThan(0);
     // Clues are still drawn.
     expect(ops.some((o) => o.op === "text")).toBe(true);
     // …and the clue *driving* the deduction draws its digit in COL_HINT, which
     // is what lets the narration say "the highlighted 5". A clue sits inside
     // its own shaded line of sight and that run can hold a second clue of the
     // same value (seen live on 9x6 `range-a`), so the value alone is not a name.
-    const hl = result.hint?.highlights as RangeHint | undefined;
     expect(hl?.clue).toBeDefined();
     expect(ops.some((o) => o.op === "text" && o.color === COL_HINT)).toBe(true);
     expect(result.recording.ops).toMatchSnapshot();

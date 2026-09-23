@@ -114,26 +114,38 @@ type RomeHintReason =
 const cellsOf = (w: number, cells: readonly number[]): Point[] =>
   cells.map((i) => ({ x: i % w, y: (i / w) | 0 }));
 
-/** The evidence a reason shades. */
-function evidence(reason: RomeHintReason | DupReason, w: number): OrderedCell[] {
+/** What a reason marks: the particular squares it rests on, outlined, and the
+ * area or group its sentence is about ("its area", "the striped group"),
+ * hatched (docs/games/hints.md § "Hatch the line the sentence names").
+ * `areaOf` is the outlined area a square belongs to. */
+function marks(
+  reason: RomeHintReason | DupReason,
+  w: number,
+  areaOf: (x: number, y: number) => readonly number[],
+): { area: OrderedCell[]; hatch?: Point[] } {
   switch (reason.kind) {
     case "single":
-      return [];
+      return { area: [] };
     case "hiddenSingle":
     case "onlyHome":
-      return cellsOf(w, reason.region);
+      return { area: [], hatch: cellsOf(w, reason.region) };
     case "dup":
-      return [{ x: reason.px, y: reason.py }];
+      return {
+        area: [{ x: reason.px, y: reason.py }],
+        hatch: cellsOf(w, areaOf(reason.px, reason.py)),
+      };
     // The walk back to this square *is* the premise, and its order is the fact
     // the marks would otherwise lose (docs/games/hints.md § "Number the chain").
     case "loop":
-      return reason.path.map((i, k) => ({ x: i % w, y: (i / w) | 0, order: k + 1 }));
+      return {
+        area: reason.path.map((i, k) => ({ x: i % w, y: (i / w) | 0, order: k + 1 })),
+      };
     case "reach":
-      return cellsOf(w, reason.group);
+      return { area: [], hatch: cellsOf(w, reason.group) };
     case "opposite":
-      return [{ x: reason.px, y: reason.py }];
+      return { area: [{ x: reason.px, y: reason.py }] };
     case "pair":
-      return cellsOf(w, reason.pair);
+      return { area: cellsOf(w, reason.pair), hatch: cellsOf(w, reason.region) };
   }
 }
 
@@ -194,6 +206,8 @@ export function buildSteps(
   const grid = placedValues(state);
   const pencil = Int32Array.from(state.pencil);
   const regionsOf = romeRegions(state);
+  const areaOf = (x: number, y: number): readonly number[] =>
+    Array.from(regionsOf(x, y)[0].cells);
   const enc = romeNotes(w, h);
 
   runCandidatePlan<RomeMove, RomeHint, RomeHintOp, RomeHintReason, CellRegion>({
@@ -218,11 +232,11 @@ export function buildSteps(
         : { kind: "hiddenSingle", n, region: Array.from(why.region.cells) },
     placeWords: (m, reason) => ({
       explanation: narrate(reason, [m.n]),
-      area: evidence(reason, w),
+      ...marks(reason, w, areaOf),
     }),
-    strikeWords: (marks, reason) => ({
-      explanation: narrate(reason, valuesOf(marks)),
-      area: evidence(reason, w),
+    strikeWords: (struck, reason) => ({
+      explanation: narrate(reason, valuesOf(struck)),
+      ...marks(reason, w, areaOf),
     }),
     // Every deduction here is about one square, so a firing's strikes stay
     // together; only the `pair` rung reaches several, and its sentence speaks

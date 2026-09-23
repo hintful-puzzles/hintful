@@ -305,6 +305,7 @@ function drawTile(
   dr.drawUpdate({ x: tx, y: ty, w: ts, h: ts });
 
   drawCellBackground(dr, { x: cx, y: cy, w: cw, h: ch }, highlight, COL_CURSOR, color);
+  ds.hint.drawHatch(dr, i, { x: cx, y: cy, w: cw, h: ch }, COL_HINT, ts);
 
   // A cell whose *diagonal* neighbor is in another region owes that corner a
   // black pixel — drawn after the fill, which can otherwise cover it.

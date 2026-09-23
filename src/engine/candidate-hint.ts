@@ -105,7 +105,7 @@ export interface CandidateHighlights {
   area: OrderedCell[];
   targets: Cell[];
   marks: Mark[];
-  /** The cells of the one row or column the sentence names, hatched rather
+  /** The cells of the line or region the sentence names, hatched rather
    * than outlined; left out when it names none. */
   hatch?: Cell[];
 }

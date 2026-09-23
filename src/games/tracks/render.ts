@@ -146,7 +146,7 @@ const H_AREA_SHIFT = 2; // 4 bits: which sides of the evidence outline to paint
 const H_TRACK_SHIFT = 6; // 4 bits: sides the step forces to carry track
 const H_BLOCK_SHIFT = 10; // 4 bits: sides the step forces blocked
 const H_CITED_SHIFT = 14; // 4 bits: sides the deduction reasons from
-const H_LINE = 1 << 18; // the square is on the line the sentence names: hatch it
+const H_LINE = 1 << 18; // on the line or block the sentence names: hatch it
 
 // --- geometry (NARROW_BORDERS → border 0) ---------------------------------
 
@@ -252,6 +252,7 @@ function hintFlags(
     if (line < w) for (let y = 0; y < h; y++) mark(line, y, H_LINE);
     else for (let x = 0; x < w; x++) mark(x, line - w, H_LINE);
   }
+  for (const c of hl.hatch) mark(c.x, c.y, H_LINE);
   return out;
 }
 

@@ -452,6 +452,7 @@ export function redraw(
         COL_CURSOR,
         color,
       );
+      ds.hint.drawHatch(dr, i1, { x: cx, y: cy, w: cw, h: ch }, COL_HINT, ts);
 
       const midX = ox + x * ts + Math.floor(ts / 2);
       const midY = ox + y * ts + Math.floor(ts / 2);

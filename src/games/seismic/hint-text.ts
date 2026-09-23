@@ -28,7 +28,7 @@ export const say = {
   naked: (n: number): string => narrateLatinReason({ kind: "single" }, [n]),
 
   hidden: (n: number): string =>
-    `No other cell in the outlined area can still be ${n}, so this cell must be ${n}.`,
+    `No other cell in the striped area can still be ${n}, so this cell must be ${n}.`,
 
   /** A placement's own strikes, as the leg after it. */
   cull: (n: number, tectonic: boolean): string =>
@@ -39,7 +39,7 @@ export const say = {
   /**
    * An area whose every remaining home for `n` clashes with the struck cells.
    * Worded as where the area *can* put its `n`, because that is what the notes in
-   * the outlined area show; the clash is the reach the player measures from there.
+   * the striped area show; the clash is the reach the player measures from there.
    */
   starve: (n: number, targets: number, tectonic: boolean): string => {
     const one = targets === 1;
@@ -48,6 +48,6 @@ export const say = {
       ? `in a cell touching ${whom}`
       : `in line with ${whom} and within ${cells(n)} of it`;
     const verdict = one ? `this cell can't be ${n}` : `none of them can be ${n}`;
-    return `The outlined area can put its ${n} only ${where}, so ${verdict}.`;
+    return `The striped area can put its ${n} only ${where}, so ${verdict}.`;
   },
 };

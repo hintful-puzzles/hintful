@@ -4142,7 +4142,7 @@ exports[`rome hint render > numbers the arrow chain a loop deduction walks 1`] =
 ]
 `;
 
-exports[`rome hint render > rings the square, outlines its area, and crosses the marks it rules out 1`] = `
+exports[`rome hint render > rings the square, hatches its area, and crosses the marks it rules out 1`] = `
 [
   {
     "color": 0,
@@ -4206,6 +4206,16 @@ exports[`rome hint render > rings the square, outlines its area, and crosses the
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
+    "w": 36,
+    "x": 63,
+    "y": 23,
+  },
+  {
+    "color": 12,
+    "h": 38,
+    "op": "hatch",
+    "period": 13,
+    "rgb": "rgb(21, 113, 233)",
     "w": 36,
     "x": 63,
     "y": 23,
@@ -4590,6 +4600,16 @@ exports[`rome hint render > rings the square, outlines its area, and crosses the
     "h": 37,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
+    "w": 36,
+    "x": 63,
+    "y": 62,
+  },
+  {
+    "color": 12,
+    "h": 37,
+    "op": "hatch",
+    "period": 13,
+    "rgb": "rgb(21, 113, 233)",
     "w": 36,
     "x": 63,
     "y": 62,

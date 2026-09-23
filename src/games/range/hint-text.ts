@@ -14,7 +14,7 @@
  *   from the clue — that is, the **first cell past the shaded run** in one of
  *   the clue's four directions (past the clue itself where the run is empty,
  *   and the clue is shaded too).
- * - `reach` walks outward from the clue and `buildHighlights` shades the whole
+ * - `reach` walks outward from the clue and `buildHighlights` stripes the whole
  *   path behind the target, so the target is the run's **far end**.
  * - `connect` shades exactly the target's own non-black neighbors, so they are
  *   the cells **around it**.
@@ -47,7 +47,7 @@ export const say = {
     `White here, just past the outlined cells, would let the highlighted ${n} see more than ${n}, so this cell must be black.`,
 
   reach: (n: number): string =>
-    `To see ${n} cells, the highlighted ${n} must look along the outlined run as far as this cell, so this cell must be white.`,
+    `To see ${n} cells, the highlighted ${n} must look along the striped run as far as this cell, so this cell must be white.`,
 
   // Both `ruleConnectedness` call sites record WHITE, so there is no
   // black-target sentence to write: a cut vertex of the white region is

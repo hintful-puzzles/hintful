@@ -304,7 +304,7 @@ describe("the picture holds exactly the number the sentence states", () => {
       const { steps } = walk(params, `parity-${seed}`);
       for (const { step } of steps) {
         const m = step.explanation.match(
-          /^Every time the track enters the outlined block/,
+          /^Every time the track enters the striped block/,
         );
         if (!m) continue;
         checked++;
@@ -312,7 +312,9 @@ describe("the picture holds exactly the number the sentence states", () => {
           ? 0
           : Number(step.explanation.match(/with (\d+) crossings? marked/)?.[1]);
         expect(step.highlights?.areaEdges.length, step.explanation).toBe(said);
-        expect(step.highlights?.area.length).toBeGreaterThan(0);
+        // The block is hatched, not outlined: the sentence is about it.
+        expect(step.highlights?.hatch.length).toBeGreaterThan(0);
+        expect(step.highlights?.area).toEqual([]);
       }
     }
     expect(checked, "no parity step in the corpus").toBeGreaterThan(0);
@@ -430,7 +432,7 @@ describe("every narratable premise the corpus reaches is reached", () => {
       "this loose end must run straight on", // looseEndSpans
       "Track here would carry on", // sharedFate, fill arm
       "No track here means none", // sharedFate, empty arm
-      "enters the outlined block it must leave", // crossingParity
+      "enters the striped block it must leave", // crossingParity
     ]) {
       expect(all, `no step ever said "${marker}"`).toContain(marker);
     }

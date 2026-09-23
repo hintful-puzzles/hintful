@@ -20,7 +20,7 @@ import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
-import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
   renderScenario,
@@ -438,7 +438,7 @@ describe("crossing hint — every premise is on the board", () => {
     // A leg continues only the note step before it, on the same run.
     for (const [k, s] of steps.entries()) {
       if (!s.continuesPrevious) continue;
-      const [p, q] = [steps[k - 1].highlights?.area, s.highlights?.area];
+      const [p, q] = [steps[k - 1].highlights?.hatch, s.highlights?.hatch];
       expect(q).toEqual(p);
     }
   });
@@ -660,12 +660,16 @@ describe("crossing hint — the frame", () => {
       showHint: true,
     });
 
-  it("marks the squares to fill and shades the run it reasoned over", () => {
+  it("marks the squares to fill and hatches the run it reasoned over", () => {
     const res = scenario("hint-frame");
-    expect(res.hint).toBeDefined();
+    const run = (res.hint as Step | undefined)?.highlights?.hatch ?? [];
+    expect(run.length).toBeGreaterThan(1);
     const rects = res.recording.ops.filter((o) => o.op === "rect");
     expect(rects.some((o) => o.color === COL_HINT)).toBe(true);
-    expect(rects.some((o) => o.color === COL_HINT_CELL)).toBe(true);
+    const hatched = opsOfKind(res.recording.ops, "hatch");
+    // Distinct squares: a `crossRuns` step names two runs that share one.
+    const squares = new Set(run.map((c) => `${c.x},${c.y}`));
+    expect(new Set(hatched.map((h) => `${h.x},${h.y}`)).size).toBe(squares.size);
   });
 
   it("rings the one square a note step writes into, and strikes nothing", () => {
@@ -776,7 +780,7 @@ describe("crossing hint — the frame", () => {
     const params = crossingPresets[0];
     const puzzle = board(params, "hint-dismiss").puzzle;
     const inHint = new Set(
-      [...(step.highlights?.area ?? []), ...(step.highlights?.targets ?? [])].map(
+      [...(step.highlights?.hatch ?? []), ...(step.highlights?.targets ?? [])].map(
         (c) => c.y * params.w + c.x,
       ),
     );
@@ -794,7 +798,7 @@ describe("crossing hint — the frame", () => {
     // explanation of what to type there.
     const { midend, step } = hinted("hint-dismiss");
     const params = crossingPresets[0];
-    const inside = step.highlights?.area[0];
+    const inside = step.highlights?.hatch[0];
     expect(inside).toBeDefined();
     if (!inside) return;
 
