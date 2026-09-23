@@ -43,7 +43,7 @@
         the next): no hatch, by the rule.
       - **A destination, not a reason**: Sixteen and Netslide's "take it to
         row 3". Left for a separate decision.
-- [ ] 3.2 Per game: hatch the named line (and its clue slot where the game has
+- [x] 3.2 Per game: hatch the named line (and its clue slot where the game has
       one) in place of any line outline; keep outlines for particular cells; a
       second line named by where it lies. *Done: the shared sidecar lane and
       `CandidateHighlights.hatch`, the Latin preset, Keen, Towers (clue lines
@@ -58,15 +58,19 @@
       line with" when every target shares the one line), Guess ("the outlined
       row" becomes "the striped row", pegs, gaps and score box hatched) and
       Netslide's "never slides". The evidence wash is down to Light Up.*
-- [ ] 3.3 A guard that every step naming a line draws a hatch and no other step
+- [x] 3.3 A guard that every step naming a line draws a hatch and no other step
       does, over every hinting game on a full repaint
       (`puzzle/hatch-contrast.test.ts`). *Written; it found Pattern unconverted
       and, once, its own falsy-zero bug.*
-- [ ] 3.4 Run each converted game in Chrome, light and dark. *Keen, Towers,
+- [x] 3.4 Run each converted game in Chrome, light and dark. *Keen, Towers,
       Pattern, Unruly and Guess checked in dark. Each game without a line step
       in an existing frame gained a test reaching one (Boats, Tracks, Singles,
       Netslide), each seen to fail with its hatch removed.*
 
 ## 4. Close out
 
-- [ ] 4.1 Spec deltas per converted game; archive.
+- [x] 4.1 Spec deltas; archive. *The line rule is one cross-game requirement in
+      `ts-engine` rather than one per game, since it is one rule. Owner accepted
+      the rollout 2026-09-23 and asked for two follow-ups: stripes for a named
+      region (a block, a cage), and no line named by a number the board does
+      not show. Both are `stripe-named-regions-not-numbers`.*
