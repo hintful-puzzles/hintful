@@ -1,4 +1,5 @@
 import type { GameDrawing } from "../engine/game.ts";
+import { HATCH_OPACITY, hatchBands } from "../engine/hatch.ts";
 import type { DrawTextOptions, FontInfo, Point, Rect, Size } from "../engine/types.ts";
 
 const defaultFontInfo: FontInfo = {
@@ -177,6 +178,24 @@ export class Drawing implements GameDrawing<Blitter> {
     });
     if (fillcolor >= 0) this.context.fill();
     this.context.stroke();
+  }
+
+  drawHatch({ x, y, w, h }: Rect, color: number, period: number): void {
+    if (w < 1 || h < 1 || period < 2) return;
+    this.context.save();
+    this.context.beginPath();
+    this.context.rect(x, y, w, h);
+    this.context.clip();
+    this.context.globalAlpha = HATCH_OPACITY;
+    this.setUpContext({ fillColor: color });
+    this.context.beginPath();
+    for (const band of hatchBands({ x, y, w, h }, period)) {
+      this.context.moveTo(band[0].x, band[0].y);
+      for (const p of band.slice(1)) this.context.lineTo(p.x, p.y);
+      this.context.closePath();
+    }
+    this.context.fill();
+    this.context.restore();
   }
 
   // Invalidation region management (startDraw/drawUpdate/endDraw):

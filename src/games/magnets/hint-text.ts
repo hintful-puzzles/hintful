@@ -29,7 +29,14 @@ export type RuleOut =
   | { kind: "touch" }
   | { kind: "full"; axis: Axis }
   | { kind: "partnerTouch" }
-  | { kind: "partnerFull"; axis: Axis };
+  /** The other end's met line, by where it lies from the line the sentence
+   * counts: that line itself, the one beside it, or one across it. Two
+   * parallel lines are never both "a column", since the player has to tell
+   * which one the hatch is. */
+  | { kind: "partnerFull"; axis: Axis; place: LinePlace };
+
+/** Where a line lies from the counted one. */
+export type LinePlace = "same" | "beside" | "across";
 
 /** The pole as the board draws it. */
 const glyph = (pole: number): string => (pole === POSITIVE ? "+" : "−");
@@ -73,23 +80,49 @@ const plural = (n: number, one: string, many: string): string => (n === 1 ? one 
 const axesWord = (axes: ReadonlySet<Axis>): string =>
   axes.size === 2 ? "row or column" : [...axes][0];
 
-/** What `pole` at a ruled-out square would do, the `axes` its line reasons
- * run along: "touch a +", "put one − too many in a column". "Too many" and
- * "overfill" hold whether or not the count is met only by counting marked
- * magnets, so neither needs a counting clause. */
-function wouldDo(pole: number, kind: RuleOut["kind"], axes: ReadonlySet<Axis>): string {
+/** A met line named from the counted one: "this column", "the column beside
+ * it", "a row". */
+const placed = (axis: Axis, place: LinePlace): string =>
+  place === "same"
+    ? `this ${axis}`
+    : place === "beside"
+      ? `the ${axis} beside it`
+      : `a ${axis}`;
+
+const orList = (said: readonly string[]): string =>
+  said.length === 1
+    ? said[0]
+    : `${said.slice(0, -1).join(", ")} or ${said[said.length - 1]}`;
+
+/** What `pole` at a ruled-out square would do, over every reason of one kind:
+ * "touch a +", "put one − too many in the column beside it or a row". "Too
+ * many" and "overfill" hold whether or not the count is met only by counting
+ * marked magnets, so neither needs a counting clause. */
+function wouldDo(pole: number, rs: readonly RuleOut[]): string {
   const o = glyph(other(pole));
-  switch (kind) {
+  const [first] = rs;
+  switch (first.kind) {
     case "touch":
       return `touch a ${glyph(pole)}`;
     case "full":
-      return `overfill its ${axesWord(axes)}`;
+      return `overfill its ${axesWord(new Set(rs.flatMap((r) => ("axis" in r ? [r.axis] : []))))}`;
     case "partnerTouch":
       return `put a ${o} beside a ${o}`;
-    case "partnerFull":
-      return `put one ${o} too many in a ${axesWord(axes)}`;
+    case "partnerFull": {
+      const has = (place: LinePlace) =>
+        rs.some((r) => r.kind === "partnerFull" && r.place === place);
+      const lines = PLACES.flatMap((place) => {
+        const at = rs.find((r) => r.kind === "partnerFull" && r.place === place);
+        if (!at || at.kind !== "partnerFull") return [];
+        // After "this column", its neighbor is "the one beside it".
+        if (place === "beside" && has("same")) return ["the one beside it"];
+        return [placed(at.axis, place)];
+      });
+      return `put one ${o} too many in ${orList(lines)}`;
+    }
   }
 }
+const PLACES: readonly LinePlace[] = ["same", "beside", "across"];
 
 /** Every distinct thing a pole would do across the ruled-out squares, one
  * clause per kind in a fixed order so one board always reads the same:
@@ -98,13 +131,9 @@ function wouldDoAny(pole: number, rs: readonly RuleOut[]): string {
   const said: string[] = [];
   for (const kind of KINDS) {
     const ofKind = rs.filter((r) => r.kind === kind);
-    if (ofKind.length === 0) continue;
-    const axes = new Set(ofKind.flatMap((r) => ("axis" in r ? [r.axis] : [])));
-    said.push(wouldDo(pole, kind, axes));
+    if (ofKind.length > 0) said.push(wouldDo(pole, ofKind));
   }
-  return said.length === 1
-    ? said[0]
-    : `${said.slice(0, -1).join(", ")} or ${said[said.length - 1]}`;
+  return orList(said);
 }
 const KINDS: readonly RuleOut["kind"][] = [
   "touch",
@@ -242,7 +271,7 @@ export const say = {
     const tail =
       otherEnd === null
         ? `, so this square must be ${glyph(pole)}.`
-        : `. A ${glyph(pole)} at this domino's other end would ${wouldDoAny(pole, [otherEnd])}, so this end must be ${glyph(pole)}.`;
+        : `. At its other end a ${glyph(pole)} would ${wouldDoAny(pole, [otherEnd])}, so this end must be ${glyph(pole)}.`;
     return `${head}${anywhereElse(pole, elsewhere)}${tail}`;
   },
 };

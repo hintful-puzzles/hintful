@@ -573,6 +573,19 @@ both schemes found no feasible arrangement. `MarkBand` is how a game says where
 its border lives (outside the content box for the `COL_GRID`-backed games,
 inside it for the ones drawing their own per-cell outline).
 
+### `hatch.ts` — the line a step calls "this row"
+
+The third board mark: translucent diagonal bands over the squares, and the clue
+slots, of the one row or column a step's sentence names. `GameDrawing.drawHatch`
+draws them and every drawing takes its geometry from `hatchBands`, laid on the
+canvas rather than the rect, so tiles hatched one at a time join into one strip.
+Draw it **after a square's background and before its content**, and use
+`hatchPeriod(tileSize)` for the pitch. It is not a fill: the bands leave half the
+surface untouched and the content is drawn over them, and
+`puzzle/hatch-contrast.test.ts` holds the opacity to both schemes. Why it exists
+and when to reach for it: [`hints.md`](hints.md) § "Hatch the line the sentence
+names".
+
 ### `hint-ordinal.ts` — where a cell falls in a forced chain
 
 The small corner number that turns a Tactic's shaded set back into something

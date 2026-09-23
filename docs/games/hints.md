@@ -1297,10 +1297,10 @@ every *other* square being ruled out, and that is the fact to show. Magnets
 outlined the line's leftover squares instead, which says nothing about why
 they are out, and the owner's first playtest of it found the outline had joined
 the halves of two horizontal dominoes into one vertical shape that was not on
-the board. The step now names what a pole there would do and marks what rules
+the board. The step now names what a pole there would do, marks what rules
 each square out (`tellCount` in
-[`magnets/hint.ts`](../../src/games/magnets/hint.ts)). Two things came with
-it. **A leg can be forced by the leg before it** when a solver places a
+[`magnets/hint.ts`](../../src/games/magnets/hint.ts)), and hatches the line
+itself (§ "Hatch the line the sentence names"). Two things came with it. **A leg can be forced by the leg before it** when a solver places a
 firing's moves in one sweep, so read each leg against the board with the
 earlier legs applied, and ring a later leg only once that board forces it.
 And when a line of reasons varies by row and column, merge the axes ("overfill
@@ -1713,6 +1713,68 @@ Exemplars: `markBand` plus the post-tile block of `redraw` in
 [`keen/render.ts`](../../src/games/keen/render.ts) for a gutter game;
 [`filling/render.ts`](../../src/games/filling/render.ts) for a tiling one;
 [`galaxies/render.ts`](../../src/games/galaxies/render.ts) for the inset case.
+
+### Hatch the line the sentence names
+
+**A step whose sentence names a row or column hatches that line**: translucent
+diagonal bands over its squares and on through its clue slots, in the action
+color ([`engine/hatch.ts`](../../src/engine/hatch.ts)). At most one line per
+step. That is "this row" or "this column", or, in a step about a single piece,
+the one line it names as "its column". Every mark then has one meaning:
+
+| mark | means |
+|---|---|
+| ring, action color | what the step decides |
+| hatch | the line the sentence names |
+| outline, evidence color | the particular squares or pieces the reason rests on |
+| clue digit, action color | the count the sentence reads |
+| clue digit, evidence color | a line cited only as a reason |
+
+**Why the line is not an outline.** An outline of the line and an outline of the
+squares a reason rests on are the same mark, and the eye cannot tell them apart.
+In the owner's Magnets playtests (2026-09-22 and 23), a step saying "this column"
+outlined *the other* column, the met one it rested on, as a tall contour. It read
+as "this column" and made the sentence look wrong. Separately, an outline of a
+line's leftover squares joined halves of two dominoes into one shape that was
+not on the board. With the line hatched, an outline only ever marks particular
+things, so it joins a square to its **own piece** (a domino's partner) and never
+across two.
+
+**A second line is named by where it lies, never as "this".** When a reason
+cites a met line beside the hatched one, the sentence says "the column beside
+it", and its clue takes the evidence color. Two parallel lines both called "a
+column" left the player to guess which one the hatch meant. A step about a single
+piece that names two lines ("its row" at one end, "its column" at the other)
+hatches neither and colors both clues as reasons, because a hatch means one line.
+
+**Why a hatch clears the bar a fill failed.** § "Why a fill cannot work,
+whatever color it is" still stands for a *flat* tint: at the lightness content
+needs, it is invisible on the dark board. The hatch is not on that axis. Half
+the surface keeps its own color, the content is drawn over the bands, and the
+edge every few pixels is what makes it show. Measured on Magnets at an opacity
+of 0.3, on the palettes the app paints:
+
+- **Stripe visibility:** 1.40 on the light board and 1.36 on the dark one, 1.16
+  over the green neutral domino.
+- **The weakest symbol**, a gray `?` on an empty domino: 1.97 → 1.56 in light,
+  1.80 → 1.55 in dark.
+
+Two guards bracket the opacity. `puzzle/hatch-contrast.test.ts` sets a floor
+(stripes visible on every hatching game's board in both schemes, about 0.27 and
+up). "Magnets under the hatch", in the same file, sets a ceiling (no symbol
+loses more than a quarter of its contrast unless it stays at 4.5:1, about 0.35
+and down). A game's legibility check lives there rather than beside its render
+tests because the app's palettes are built in `src/puzzle/`, which no game may
+import. The hatch is the one hint mark drawn *under* content, and
+`hint-mark.test.ts` does not see it, because it draws no rect.
+
+**Mechanics.** Call `dr.drawHatch(tileRect, COL_HINT, hatchPeriod(ts))` after
+the square's background and before its content. The bands are laid on the
+canvas, not the rect, so tiles hatched one at a time join into one strip. Put
+the flag in the tile's diff key. A clue slot on the line paints even when its
+clue was stripped, because a hatch can arrive on it and leave again. Exemplar:
+`drawTileCol` and `drawNum` in
+[`magnets/render.ts`](../../src/games/magnets/render.ts).
 
 ### Group one firing into one step
 

@@ -16,6 +16,7 @@
  *   writeFileSync("frame.svg", toSvg(recording.ops, size));
  */
 
+import { HATCH_OPACITY, hatchBands } from "../hatch.ts";
 import type { Size } from "../types.ts";
 import type { DrawOp } from "./recording-drawing.ts";
 
@@ -43,6 +44,14 @@ function opToSvg(op: DrawOp): string {
       return `<circle cx="${op.cx}" cy="${op.cy}" r="${op.r}" fill="${paint(op.fill, op.fillRgb)}" stroke="${paint(op.outline, op.outlineRgb)}"/>`;
     case "text":
       return `<text x="${op.x}" y="${op.y}" fill="${op.rgb}" font-size="${op.size}" text-anchor="${anchor(op.align)}" font-family="${op.fontType === "fixed" ? "monospace" : "sans-serif"}">${escapeText(op.text)}</text>`;
+    case "hatch": {
+      // The one op clipped here, since its bands overhang the rect by design.
+      const id = `hatch-${op.x}-${op.y}-${op.w}-${op.h}`;
+      const bands = hatchBands(op, op.period)
+        .map((b) => `<polygon points="${b.map((p) => `${p.x},${p.y}`).join(" ")}"/>`)
+        .join("");
+      return `<clipPath id="${id}"><rect x="${op.x}" y="${op.y}" width="${op.w}" height="${op.h}"/></clipPath><g clip-path="url(#${id})" fill="${op.rgb}" fill-opacity="${HATCH_OPACITY}">${bands}</g>`;
+    }
     // clip/unclip are layout-only; ignored in the convenience view.
     case "clip":
     case "unclip":

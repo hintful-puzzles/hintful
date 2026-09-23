@@ -19,6 +19,7 @@ import { type Axis, type Cause, type RuleOut, say } from "./hint-text.ts";
 import { magnetsGame } from "./index.ts";
 import type { MagnetsReason } from "./solver.ts";
 import {
+  COLUMN,
   DIFF_TRICKY,
   executeMove,
   GS_NOTNEUTRAL,
@@ -241,7 +242,6 @@ describe("a count premise shows why the rest of its line is ruled out", () => {
   // old step outlined their right halves as one shape, a vertical domino that
   // is not on the board, and said nothing about column 1.
   const at = (x: number, y: number) => y * 5 + x;
-  const column = (x: number) => [0, 1, 2, 3, 4, 5].map((y) => at(x, y));
   function steps(): HintStep<MagnetsMove, MagnetsHighlights>[] {
     const p: MagnetsParams = { w: 5, h: 6, diff: 1, stripclues: true };
     let s = newState(p, "..31.,...2..,.0...,.2..3.,LRLRTTLRTBBLRBTLRLRBTTTTTBBBBB");
@@ -255,14 +255,20 @@ describe("a count premise shows why the rest of its line is ruled out", () => {
     const [first] = steps();
     expect(first.explanation).toBe(
       "This column needs 3 more +s and just 3 dominoes can still give one; " +
-        "a + anywhere else would put one − too many in a column, so this square must be +.",
+        "a + anywhere else would put one − too many in the column beside it, " +
+        "so this square must be +.",
     );
-    const area = new Set(first.highlights?.area);
-    // The two ruled-out squares of column 2, and nothing else of it.
-    expect(column(2).filter((i) => area.has(i))).toEqual([at(2, 1), at(2, 2)]);
-    // Column 1 is what rules them out, with its clue.
-    for (const i of column(1)) expect(area.has(i), `square ${i}`).toBe(true);
-    expect(first.highlights?.clues).toHaveLength(2);
+    const h = first.highlights;
+    // "This column" is the hatched one, and it is the only line hatched.
+    expect(h?.line).toEqual({ roworcol: COLUMN, num: 2 });
+    // The outline is the two ruled-out dominoes, both halves each, and
+    // nothing else: no square of column 1 beyond them.
+    expect([...(h?.area ?? [])].sort((a, b) => a - b)).toEqual(
+      [at(1, 1), at(2, 1), at(1, 2), at(2, 2)].sort((a, b) => a - b),
+    );
+    // Column 2's + clue is the count read; column 1's − clue the reason.
+    expect(h?.clues).toHaveLength(1);
+    expect(h?.reasonClues).toHaveLength(1);
   });
 
   it("rings only the square that takes the pole, once the board forces it", () => {
@@ -273,11 +279,42 @@ describe("a count premise shows why the rest of its line is ruled out", () => {
     expect(second.highlights?.targets).toEqual([at(2, 3)]);
     expect(third.highlights?.targets).toEqual([at(2, 5)]);
     expect(third.explanation).toContain(
-      "A + at this domino's other end would touch a +, so this end must be +.",
+      "At its other end a + would touch a +, so this end must be +.",
     );
     expect(third.highlights?.area).toEqual(
       expect.arrayContaining([at(2, 4), at(2, 3)]),
     );
+  });
+
+  it("names each pole's own reason when both are read through the partner", () => {
+    // The owner's second playtest board (2026-09-23), eight moves on. The top
+    // left domino's right end touches the + at (2,0) and sits in column 1,
+    // whose − clue is 0. The sentence had the two poles swapped: both facts
+    // are read by asking about the left end, which reverses each pole.
+    const p: MagnetsParams = { w: 5, h: 6, diff: 1, stripclues: true };
+    let s = newState(p, "..31.,...2..,.0...,.2..3.,LRLRTTLRTBBLRBTLRLRBTTTTTBBBBB");
+    for (const move of [
+      { type: "set", idx: at(2, 0), which: POSITIVE },
+      { type: "flag", idx: at(3, 1), mode: "neutral" },
+      { type: "set", idx: at(2, 3), which: POSITIVE },
+      { type: "flag", idx: at(1, 4), mode: "neutral" },
+      { type: "set", idx: at(2, 5), which: POSITIVE },
+    ] as MagnetsMove[]) {
+      s = executeMove(s, move);
+    }
+    const res = hint(s);
+    if (!res.ok) throw new Error(res.error);
+    const step = (res.steps as HintStep<MagnetsMove, MagnetsHighlights>[]).find(
+      (st) => st.move.type === "flag" && st.move.idx === at(0, 0),
+    );
+    if (!step) throw new Error("the plan never neutralizes the top left domino");
+    expect(step.explanation).toContain(
+      "it touches a +, and a − there would overfill its column",
+    );
+    // "Its column" is the only line named, so it is hatched, with its count.
+    expect(step.highlights?.line).toEqual({ roworcol: COLUMN, num: 1 });
+    expect(step.highlights?.clues).toHaveLength(1);
+    expect(step.highlights?.reasonClues).toEqual([]);
   });
 
   it("counts from the board each leg finds, not the one the journey began on", () => {
@@ -300,16 +337,20 @@ describe("magnets hint sentences", () => {
     { kind: "full" as const, axis, line: 1, marked: true },
   ]);
 
-  const ruleOuts: RuleOut[] = [
-    { kind: "touch" },
-    ...axes.flatMap((axis) => [
-      { kind: "full" as const, axis },
-      { kind: "partnerFull" as const, axis },
-    ]),
-    { kind: "partnerTouch" },
-  ];
-  /** No reason, one, and every reason at once: the longest list. */
-  const elsewheres: RuleOut[][] = [[], ...ruleOuts.map((r) => [r]), ruleOuts];
+  /** Every reason a square of a line counted along `axis` can have: its own
+   * met line always crosses the counted one, and its partner's met line is the
+   * counted line, the one beside it, or one across it. */
+  const ruleOutsFor = (axis: Axis): RuleOut[] => {
+    const across: Axis = axis === "row" ? "column" : "row";
+    return [
+      { kind: "touch" },
+      { kind: "full", axis: across },
+      { kind: "partnerTouch" },
+      { kind: "partnerFull", axis, place: "same" },
+      { kind: "partnerFull", axis, place: "beside" },
+      { kind: "partnerFull", axis: across, place: "across" },
+    ];
+  };
 
   /** The count premises that say why the rest of their line is ruled out:
    * two premises, so held to the ledger's bound (`hint-quality.test.ts`
@@ -317,7 +358,10 @@ describe("magnets hint sentences", () => {
   function everyCountSentence(): { text: string; reasoned: boolean }[] {
     const out: { text: string; reasoned: boolean }[] = [];
     for (const pole of poles)
-      for (const axis of axes)
+      for (const axis of axes) {
+        const ruleOuts = ruleOutsFor(axis);
+        // No reason, one, and every reason at once: the longest list.
+        const elsewheres = [[], ...ruleOuts.map((r) => [r]), ruleOuts];
         for (const n of [1, 2, 9])
           for (const elsewhere of elsewheres) {
             out.push({
@@ -331,6 +375,7 @@ describe("magnets hint sentences", () => {
               });
             }
           }
+      }
     return out;
   }
 
@@ -385,9 +430,7 @@ describe("magnets hint sentences", () => {
       expect(text.length, text).toBeLessThanOrEqual(300);
       expect(text, text).not.toContain("—");
       // The ledger's pattern for these, so a rewording cannot slip off it.
-      expect(text, text).toMatch(
-        / anywhere else would |at this domino's other end would/,
-      );
+      expect(text, text).toMatch(/ anywhere else would |At its other end a [+−] would/);
     }
   });
 
@@ -443,8 +486,16 @@ describe("magnets hint sentences", () => {
           steps++;
           const h = step.highlights;
           expect(h?.targets.length).toBeGreaterThan(0);
-          // Every step shows its evidence: a line, a touching pole or a domino.
-          expect((h?.area.length ?? 0) + (h?.clues.length ?? 0)).toBeGreaterThan(0);
+          // Every step shows its evidence: a hatched line, a clue, a touching
+          // pole or a domino.
+          const shown =
+            (h?.area.length ?? 0) +
+            (h?.clues.length ?? 0) +
+            (h?.reasonClues.length ?? 0) +
+            (h?.line ? 1 : 0);
+          expect(shown).toBeGreaterThan(0);
+          // A clue is the count read or a reason cited, never both.
+          for (const c of h?.reasonClues ?? []) expect(h?.clues).not.toContain(c);
           // No square is both what is decided and what it is decided from.
           const targets = new Set(h?.targets);
           expect(h?.area.filter((i) => targets.has(i))).toEqual([]);

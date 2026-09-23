@@ -76,6 +76,16 @@ export type DrawOp =
       color: number;
       rgb: string;
     }
+  | {
+      op: "hatch";
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      period: number;
+      color: number;
+      rgb: string;
+    }
   | { op: "clip"; x: number; y: number; w: number; h: number }
   | { op: "unclip" };
 
@@ -191,6 +201,16 @@ export class RecordingDrawing implements GameDrawing {
       baseline: options.baseline,
       fontType: options.fontType,
       size: round(options.size),
+      color,
+      rgb: this.rgb(color),
+    });
+  }
+
+  drawHatch(rect: Rect, color: number, period: number): void {
+    this.ops.push({
+      op: "hatch",
+      ...roundRect(rect),
+      period: round(period),
       color,
       rgb: this.rgb(color),
     });

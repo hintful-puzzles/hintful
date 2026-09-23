@@ -240,6 +240,7 @@ function recordingDrawing() {
     blitterFree: () => ops.push({ op: "blitterFree" }),
     blitterSave: () => ops.push({ op: "blitterSave" }),
     blitterLoad: () => ops.push({ op: "blitterLoad" }),
+    drawHatch: (_r: unknown, c: number) => ops.push({ op: "drawHatch", color: c }),
   };
   return { dr, ops };
 }

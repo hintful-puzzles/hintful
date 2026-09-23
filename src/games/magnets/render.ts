@@ -27,6 +27,7 @@ import {
 } from "../../engine/color/palette.ts";
 import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, type MarkBand, outlineSides } from "../../engine/hint-mark.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import type { MagnetsHighlights } from "./hint.ts";
@@ -113,6 +114,8 @@ const DS_MISTAKE = 0x800; // fork overlay
 // with it (docs/games/hints.md § "Where the band goes, and who rubs it out").
 const DS_HINT_TARGET_SHIFT = 12;
 const DS_HINT_AREA_SHIFT = 16;
+/** The square is on the line the hint's sentence calls "this row/column". */
+const DS_HINT_LINE = 1 << 20;
 
 // --- geometry ---------------------------------------------------------------
 /** The board's pixel origin: the clue row and column take one whole tile.
@@ -198,9 +201,11 @@ const TYPE_R = 1;
 const TYPE_T = 2;
 const TYPE_B = 3;
 
-/** Fill the domino covering `(x, y)` with `bg` (rounded outer corners), then
- * draw its symbol in `fg` (skip when `fg < 0`). NOT responsible for the tile
- * background or draw_update. Upstream draw_tile_col. */
+/** Fill the domino covering `(x, y)` with `bg` (rounded outer corners), hatch
+ * the square when it is on the hint's line, then draw its symbol in `fg` (skip
+ * when `fg < 0`): the hatch goes between the two so the symbol stays whole.
+ * NOT responsible for the tile background or draw_update. Upstream
+ * draw_tile_col. */
 function drawTileCol(
   dr: GameDrawing,
   ds: MagnetsDrawState,
@@ -211,6 +216,7 @@ function drawTileCol(
   bg: number,
   fg: number,
   perc: number,
+  hatch: boolean,
 ): void {
   const ts = ds.tileSize;
   const cx = coord(x, ts);
@@ -222,7 +228,13 @@ function drawTileCol(
 
   const i = y * ds.w + x;
   const other = dominoes[i];
-  if (other === i) return;
+  const hatchSquare = () => {
+    if (hatch) dr.drawHatch({ x: cx, y: cy, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
+  };
+  if (other === i) {
+    hatchSquare();
+    return;
+  }
   let type = TYPE_B;
   if (other === i + 1) type = TYPE_L;
   else if (other === i - 1) type = TYPE_R;
@@ -248,6 +260,7 @@ function drawTileCol(
     dr.drawRect({ x: x1, y: y1, w: x2 - x1 + 1, h: y2 - y1 + 1 }, bg);
   }
 
+  hatchSquare();
   if (fg !== -1) drawSym(dr, ts, x, y, which, fg);
 }
 
@@ -291,10 +304,10 @@ function drawTile(
   }
 
   if (flags & DS_FLASH) {
-    drawTileCol(dr, ds, dominoes, x, y, which, COL_HIGHLIGHT, -1, perc);
+    drawTileCol(dr, ds, dominoes, x, y, which, COL_HIGHLIGHT, -1, perc, false);
     perc = Math.floor((3 * perc) / 4);
   }
-  drawTileCol(dr, ds, dominoes, x, y, which, bg, fg, perc);
+  drawTileCol(dr, ds, dominoes, x, y, which, bg, fg, perc, !!(flags & DS_HINT_LINE));
 
   // Fork findMistakes overlay: an inset red outline (distinct from symbol red).
   if (flags & DS_MISTAKE) {
@@ -311,6 +324,13 @@ function drawTile(
 
 // --- clue numbers ---------------------------------------------------------
 
+/** Added to a clue slot's drawn color when the slot is hatched: above every
+ * palette index, so the two never collide in `colwhat`/`rowwhat`. */
+const CLUE_HATCHED = 0x100;
+
+/** A clue slot: its background, the hint's hatch when its line is hatched, and
+ * the count unless it was stripped. A stripped slot still paints, since a hatch
+ * can come and go on it. */
 function drawNum(
   dr: GameDrawing,
   ds: MagnetsDrawState,
@@ -319,8 +339,8 @@ function drawNum(
   idx: number,
   col: number,
   num: number,
+  hatched: boolean,
 ): void {
-  if (num < 0) return;
   const ts = ds.tileSize;
   const text = String(num);
   const tsz =
@@ -339,12 +359,15 @@ function drawNum(
   }
 
   dr.drawRect({ x: cx, y: cy, w: ts, h: ts }, COL_BACKGROUND);
-  dr.drawText(
-    { x: cx + Math.floor(ts / 2), y: cy + Math.floor(ts / 2) },
-    glyphFont(tsz),
-    col,
-    text,
-  );
+  if (hatched) dr.drawHatch({ x: cx, y: cy, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
+  if (num >= 0) {
+    dr.drawText(
+      { x: cx + Math.floor(ts / 2), y: cy + Math.floor(ts / 2) },
+      glyphFont(tsz),
+      col,
+      text,
+    );
+  }
   dr.drawUpdate({ x: cx, y: cy, w: ts, h: ts });
 }
 
@@ -355,6 +378,7 @@ function getCountColor(
   index: number,
   target: number,
   hinted: ReadonlySet<number>,
+  reasons: ReadonlySet<number>,
 ): number {
   const { w, h } = state;
   const count = countRowcol(state, index, rowcol, which);
@@ -372,6 +396,9 @@ function getCountColor(
   // sentence calls "this row" to its count (docs/games/hints.md § "Off-board
   // evidence").
   if (hinted.has(idx)) return COL_HINT;
+  // A met line cited as a reason is evidence, and named in words by where it
+  // is ("the column beside it"), never "this".
+  if (reasons.has(idx)) return COL_HINT_CELL;
   if (state.countsDone[idx]) return COL_DONE;
   return COL_TEXT;
 }
@@ -422,12 +449,16 @@ export function redraw(
   const cx = ui.cursor.visible ? ui.cursor.x : -1;
   const cy = ui.cursor.visible ? ui.cursor.y : -1;
 
-  // A domino the hint decides is one ring around both its squares, and the
-  // line it reasons over one contour: each square draws only the sides that
-  // face out of its set.
+  // A domino the hint decides, or reasons from, is one ring around its squares
+  // in that role: each square draws only the sides not shared with its partner.
+  // The line the sentence counts is the hatch, so no outline has to trace it.
   const hintTargets = new Set(hint?.highlights?.targets);
   const area = new Set(hint?.highlights?.area);
   const hintedClues = new Set(hint?.highlights?.clues);
+  const reasonClues = new Set(hint?.highlights?.reasonClues);
+  const line = hint?.highlights?.line ?? null;
+  const onLine = (roworcol: number, num: number): boolean =>
+    line !== null && line.roworcol === roworcol && line.num === num;
   const inSet =
     (set: ReadonlySet<number>) =>
     (x: number, y: number): boolean =>
@@ -440,19 +471,19 @@ export function redraw(
     for (let x = 0; x < w; x++) {
       const idx = y * w + x;
       let c = grid[idx];
-      // A target joins only its own partner, so two decided dominoes side by
-      // side stay two shapes.
+      // Each role joins a square only to its own partner, so two dominoes side
+      // by side stay two shapes rather than one that is not on the board.
+      const partnerIn =
+        (inRole: (x: number, y: number) => boolean) => (nx: number, ny: number) =>
+          inRole(nx, ny) && dominoes[idx] === ny * w + nx;
       const targetSides = hintTargets.has(idx)
-        ? outlineSides(
-            x,
-            y,
-            (nx, ny) => inTargets(nx, ny) && dominoes[idx] === ny * w + nx,
-          )
+        ? outlineSides(x, y, partnerIn(inTargets))
         : 0;
-      const areaSides = area.has(idx) ? outlineSides(x, y, inArea) : 0;
+      const areaSides = area.has(idx) ? outlineSides(x, y, partnerIn(inArea)) : 0;
       if (targetSides || areaSides) marked.push(idx);
       c |= targetSides << DS_HINT_TARGET_SHIFT;
       c |= areaSides << DS_HINT_AREA_SHIFT;
+      if (onLine(ROW, y) || onLine(COLUMN, x)) c |= DS_HINT_LINE;
       if (flags[idx] & GS_ERROR) c |= DS_ERROR;
       if (flags[idx] & GS_SET) c |= DS_SET;
       if (x === cx && y === cy) c |= DS_CURSOR;
@@ -495,10 +526,15 @@ export function redraw(
           i,
           targets[index],
           hintedClues,
+          reasonClues,
         );
-        if (drawn[index] !== color) {
-          drawNum(dr, ds, rowcol, which, i, color, targets[index]);
-          drawn[index] = color;
+        // The hatch runs on through the line's clue slots, so the strip ends at
+        // the count it is read against. Part of the key, as a color is.
+        const hatched = onLine(rowcol, i);
+        const key = color + (hatched ? CLUE_HATCHED : 0);
+        if (drawn[index] !== key) {
+          drawNum(dr, ds, rowcol, which, i, color, targets[index], hatched);
+          drawn[index] = key;
         }
       }
     }

@@ -25,5 +25,9 @@
 ## 3. Close out
 
 - [x] 3.1 Spec delta; `docs/games/hints.md` § "Show the evidence as an area".
-- [ ] 3.2 Run the app on the owner's board; owner acceptance. *Run in Chrome at
-      412×900: steps 1 and 3 draw as the tests say.*
+- [x] 3.2 Run the app on the owner's board; owner acceptance. *Run in Chrome at
+      412×900: steps 1 and 3 draw as the tests say. The owner's second look
+      (2026-09-22) found "this column" read against an outline of the other
+      column, which `hatch-the-line-a-hint-counts` answered with the line hatch,
+      the reason clue and "the column beside it"; the owner accepted that form
+      on 2026-09-23 ("I love it").*

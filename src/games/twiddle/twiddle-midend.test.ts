@@ -27,6 +27,7 @@ function recordingDrawing() {
     blitterFree: () => {},
     blitterSave: () => {},
     blitterLoad: () => {},
+    drawHatch: () => {},
   };
   return { dr, ops };
 }

@@ -15,6 +15,7 @@ import {
   isThin,
   markSides,
 } from "../../engine/testing/mark-shape.ts";
+import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import type { MagnetsHighlights } from "./hint.ts";
 import { magnetsGame } from "./index.ts";
@@ -31,6 +32,7 @@ import {
   type MagnetsMove,
   type MagnetsParams,
   newState,
+  ROW,
 } from "./state.ts";
 
 function board(p: MagnetsParams, seed: string) {
@@ -96,7 +98,10 @@ describe("magnets render scenarios", () => {
 
   it("a placement rings the one square it decides and marks its evidence beside it", () => {
     const { recording } = hintFrame(
-      (s) => s.move.type === "set" && s.highlights?.targets.length === 1,
+      (s) =>
+        s.move.type === "set" &&
+        s.highlights?.targets.length === 1 &&
+        s.highlights.area.length > 0,
     );
     // Four thin sides, none solid: the square keeps its own content.
     expectRing(recording.ops, COL_HINT, 1);
@@ -119,6 +124,20 @@ describe("magnets render scenarios", () => {
     const hinted = recording.ops.filter((o) => o.op === "text" && o.color === COL_HINT);
     expect(hinted.length).toBe(step.highlights?.clues.length);
     expect(recording.ops).toMatchSnapshot();
+  });
+
+  it("hatches the line a step counts, clue slots included, and nothing else", () => {
+    const { recording, step } = hintFrame((s) => s.highlights?.line != null);
+    const line = step.highlights?.line;
+    if (!line) throw new Error("the picked step names no line");
+    const hatches = opsOfKind(recording.ops, "hatch");
+    // One per square of the line, and one for each clue slot at its ends.
+    const length = line.roworcol === ROW ? P.w : P.h;
+    expect(hatches).toHaveLength(length + 2);
+    for (const h of hatches) expect(h.color).toBe(COL_HINT);
+    // All in one strip: every hatch shares the line's x (a column) or y (a row).
+    const along = new Set(hatches.map((h) => (line.roworcol === ROW ? h.y : h.x)));
+    expect(along.size).toBe(1);
   });
 
   it("findMistakes overlay repaints even when the cell was already drawn", () => {

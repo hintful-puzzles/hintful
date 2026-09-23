@@ -194,7 +194,7 @@ const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
   },
   {
     games: ["magnets"],
-    match: / anywhere else would |at this domino's other end would/,
+    match: / anywhere else would |At its other end a [+−] would/,
     why:
       "Magnets' count premises carry two: the line's count, and why each other " +
       "square of it cannot take the pole. The owner's 2026-09-22 playtest found " +

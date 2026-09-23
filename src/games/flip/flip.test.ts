@@ -24,6 +24,7 @@ function recordingDrawing() {
     blitterFree: () => rec("blitterFree"),
     blitterSave: () => rec("blitterSave"),
     blitterLoad: () => rec("blitterLoad"),
+    drawHatch: (_r, c) => rec("drawHatch", c),
   };
   return { dr, ops };
 }
