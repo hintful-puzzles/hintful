@@ -3,6 +3,15 @@
 exports[`mines render > paints the opened board: numbers, covered bevels, recessed border 1`] = `
 [
   {
+    "color": 0,
+    "h": 186,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 186,
+    "x": 0,
+    "y": 0,
+  },
+  {
     "fill": 16,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "polygon",

@@ -1,6 +1,9 @@
 # Tasks — test-touch-on-a-real-device
 
-**Blocked on `deploy-the-web-app`.** There is nothing to do without a URL.
+Unblocked: `deploy-the-web-app` is archived and the app is at
+<https://hintful.click>. The laptop half was run 2026-09-24. Every item below
+still unticked is owed a verdict from the phone. `device-report.md` says which
+is which.
 
 Findings go in `device-report.md` alongside this file, with a verdict per item,
 and it travels into the archive with the change — the same shape as the input
@@ -36,7 +39,7 @@ The audit's rule 4.4, carried onto hardware.
 - [ ] 2.3 **Tracks** — uses the secondary button without declaring it needs one.
       It is the game that made "invert `needsRightButton`" the wrong answer, so
       it is worth confirming the reasoning held.
-- [ ] 2.4 Mouse and keyboard on a desktop browser against the *deployed* build,
+- [x] 2.4 Mouse and keyboard on a desktop browser against the *deployed* build,
       once, so a deploy-only regression cannot hide behind "we tested on a
       phone".
 
@@ -64,14 +67,16 @@ finding here, not a premise.
       name (it should install as "Hintful Puzzles", short label "Hintful", from
       `src/project-identity.ts`, unless `deploy-the-web-app` sets
       `VITE_APP_NAME`) and the icon.
-- [ ] 4.2 **Offline.** Turn the network off and open the app cold. Then start a
+- [x] 4.2 **Offline.** Turn the network off and open the app cold. Then start a
       new game offline, and reload mid-game.
-- [ ] 4.3 **Update flow.** `registerType: "prompt"` — deploy a second build and
-      confirm the prompt appears and applies. This is the one most likely to be
-      subtly broken and the one nobody notices until an update needs to ship.
+- [ ] 4.3 **Update flow.** There is no prompt: an installed app auto-updates
+      by default and reloads itself a few seconds after an update is found
+      (measured against a local preview, `device-report.md` § 4.3). Still
+      owed: an owner decision on whether a silent reload is acceptable, and
+      the experience on the phone across a real push.
 - [ ] 4.4 **Backgrounding.** Switch apps mid-game and come back; check a timed
       game (Mines) and a quick-save survives.
-- [ ] 4.5 **Preflight.** `src/preflight.ts` gates older browsers to
+- [x] 4.5 **Preflight.** `src/preflight.ts` gates older browsers to
       `unsupported.html`. Confirm a supported phone is not caught by it — a
       false positive here is a blank app on a real device.
 - [ ] 4.6 **Then** decide what is missing. Candidates, none to be built before

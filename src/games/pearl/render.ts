@@ -291,6 +291,12 @@ export function redraw(
   let force = false;
 
   if (!ds.started) {
+    // The engine paints no pixels of its own, and the canvas starts opaque
+    // black; the grid below leaves the border's outer pixel bare.
+    dr.drawRect(
+      { x: 0, y: 0, w: w * m.tile + 2 * m.border, h: h * m.tile + 2 * m.border },
+      COL_BACKGROUND,
+    );
     if (guiStyle === GUI_MASYU) {
       // The black rectangle behind the whole grid.
       dr.drawRect(

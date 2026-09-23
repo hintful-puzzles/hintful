@@ -200,6 +200,10 @@ export function redraw(
   }
 
   if (!ds.started) {
+    // The engine paints no pixels of its own, and the canvas starts opaque
+    // black; the relief below covers only the playable cells.
+    dr.drawRect({ x: 0, y: 0, w: ts * w + 2 * b, h: ts * h + 2 * b }, COL_BACKGROUND);
+
     // First draw: the relief round the playable cells, in upstream's four
     // passes. Each pass covers every cell before the next begins, because a
     // cell's relief overlaps its neighbors'.

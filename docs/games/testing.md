@@ -134,6 +134,13 @@ evidence that the frame is right. Two habits:
   the size of `computeSize` — and it is the one part of the class a test can
   hold.
 
+For the first frame, `src/engine/first-frame-coverage.test.ts` already does
+this for every registered game at its default params. It rasterizes the filled
+ops and fails on any bare pixel. That is how Pegs, Sixteen, Mines and Pearl were
+found shipping black borders (`test-touch-on-a-real-device`). It does not see a
+margin that only a non-default param or a later frame opens up, so the two
+habits above still apply there.
+
 ## Render-op vocabulary
 
 **Know which primitive records as which op, or your assertion silently never

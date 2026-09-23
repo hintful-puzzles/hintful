@@ -1,0 +1,6 @@
+# No delta yet: the requirement that moves is ts-engine's "the engine emits no
+# pixels of its own", and its replacement's wording depends on the answer to
+# "Costs to weigh" in proposal.md. Written 2026-09-24; nothing is implemented.
+schema: spec-driven
+created: 2026-09-24
+skip_specs: true
