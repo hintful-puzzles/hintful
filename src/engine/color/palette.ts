@@ -82,6 +82,21 @@ export const GRID_DARK: Color = GRAY_BOLD;
  * gray and not a color. */
 export const UNDECIDED: Color = GRAY;
 
+/**
+ * **Ruled out** — the small cross or dot a player puts down to say "nothing
+ * goes here".
+ *
+ * Full contrast, because the mark is thin and a player scans the whole board
+ * for it: in the gray of Tracks' rails, or the fixed black of a wall or a
+ * pearl, it sank into a dark-mode board. It is {@link INK} and not `BLACK`
+ * because it is contrast against the board, so it inverts with the scheme.
+ *
+ * A *whole-edge* "no line" (Loopy, Palisade, Separate, Dominosa) is not this
+ * mark: it is drawn along the edge the loop or wall would take, and is meant to
+ * recede behind the lines the player did draw (`lineNoColor`).
+ */
+export const RULED_OUT: Color = INK;
+
 // --- what the player is doing right now --------------------------------
 
 /**

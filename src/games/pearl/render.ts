@@ -21,6 +21,7 @@ import {
   FLASH,
   GRID_DARK,
   highlightWash,
+  RULED_OUT,
 } from "../../engine/color/palette.ts";
 import type { GameDrawing } from "../../engine/game.ts";
 import type { Color, Size } from "../../engine/types.ts";
@@ -61,6 +62,9 @@ export const COL_MISTAKE = 10; // appended past the C enum (findMistakes overlay
  * tint of the board. Appended; Pearl's dark-mode `paletteOverrides` touch only
  * index 0. */
 export const COL_CURSOR_BACKGROUND = 11;
+/** The player's edge crosses. Their own slot rather than upstream's pearl
+ * `COL_BLACK`, which stays black in both schemes and sank into a dark board. */
+export const COL_RULED_OUT = 12;
 
 export function colors(defaultBackground: Color): Color[] {
   const { background, highlight, lowlight } = mkhighlight(defaultBackground);
@@ -79,6 +83,7 @@ export function colors(defaultBackground: Color): Color[] {
   // A whole-cell fill under the pearls and lines: the "you are here" wash
   // Solo's family uses, not the green mark, which as a cell fill would shout.
   out[COL_CURSOR_BACKGROUND] = highlightWash(background);
+  out[COL_RULED_OUT] = RULED_OUT;
   return out;
 }
 
@@ -242,8 +247,8 @@ function drawSquare(
       const mx = cx + xoff;
       const my = cy + yoff;
       const msz = t16;
-      drawLine(dr, mx - msz, my - msz, mx + msz, my + msz, COL_BLACK);
-      drawLine(dr, mx - msz, my + msz, mx + msz, my - msz, COL_BLACK);
+      drawLine(dr, mx - msz, my - msz, mx + msz, my + msz, COL_RULED_OUT);
+      drawLine(dr, mx - msz, my + msz, mx + msz, my - msz, COL_RULED_OUT);
     } else if (guiStyle === GUI_LOOPY) {
       drawLine(dr, cx, cy, cx + xoff, cy + yoff, COL_GRID);
     }

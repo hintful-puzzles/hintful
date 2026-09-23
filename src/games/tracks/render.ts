@@ -22,6 +22,7 @@ import {
   HINT_EVIDENCE,
   INK,
   PAPER,
+  RULED_OUT,
 } from "../../engine/color/palette.ts";
 import { tracksGrid } from "../../engine/color/palette-games.ts";
 import { glyphFont } from "../../engine/draw.ts";
@@ -95,6 +96,10 @@ export const COL_HINT = 13;
 /** The hint's evidence color: teal, the collection's, distinct in hue from the
  * action so the words map to the picture. */
 export const COL_HINT_CELL = 14;
+/** The player's no-track crosses, on squares and edges. Their own slot rather
+ * than the rails' `COL_TRACK`, which upstream shared: a gray rail is the
+ * picture, a gray cross was a mark too faint to find. */
+export const COL_NOTRACK = 15;
 
 export function colors(defaultBackground: Color): Color[] {
   const { background, highlight } = mkhighlight(defaultBackground);
@@ -119,6 +124,7 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_FLASH] = FLASH;
   out[COL_HINT] = HINT_ACTION;
   out[COL_HINT_CELL] = HINT_EVIDENCE;
+  out[COL_NOTRACK] = RULED_OUT;
   return out;
 }
 
@@ -151,7 +157,9 @@ const H_LINE = 1 << 18; // on the line or block the sentence names: hatch it
 // --- geometry (NARROW_BORDERS → border 0) ---------------------------------
 
 export interface Metrics {
-  sz6: number;
+  /** Half a tile, exactly: an edge cross is drawn from both of the squares it
+   * straddles, and the two halves meet only if `2 * half === tile`. */
+  half: number;
   tile: number;
   border: number;
   gridLineAll: number;
@@ -160,12 +168,16 @@ export interface Metrics {
 }
 
 export function metrics(tileSize: number): Metrics {
-  const sz6 = Math.floor(tileSize / 6);
-  const tile = sz6 * 6;
+  // Even, not upstream's multiple of six: the rails are laid out in fractional
+  // thirds and sixths of the tile, so the only exact division left is the half.
+  // Rounding to sixes cost up to five pixels a tile, which on a phone is the
+  // difference between the board filling the width and not.
+  const half = Math.floor(tileSize / 2);
+  const tile = half * 2;
   const gridLineAll = Math.max(Math.floor(tile / 16), 1);
   const gridLineBr = Math.floor(gridLineAll / 2);
   return {
-    sz6,
+    half,
     tile,
     border: 0,
     gridLineAll,
@@ -286,7 +298,7 @@ function circleSleepers(
 ): void {
   const qr6 = Math.PI / 12;
   const qr3 = Math.PI / 6;
-  const r1 = m.sz6; // THIRDSZ / 2
+  const r1 = m.tile / 6; // THIRDSZ / 2
   for (let i = 0; i < 12; i++) {
     const th = qr6 + i * qr3;
     thickLine(
@@ -477,7 +489,7 @@ function drawHintMarks(
   if (!hint) return;
   const ox = coord(x, m);
   const oy = coord(y, m);
-  const t2 = m.sz6 * 3; // HALFSZ
+  const t2 = m.half; // HALFSZ
   const band = m.gridLineAll;
   const lineThick = Math.max(Math.floor(m.tile / 16), 1);
   const box = { x: ox, y: oy, w: m.tile, h: m.tile };
@@ -507,7 +519,7 @@ function drawHintMarks(
     if (!(blocked & d)) continue;
     const cx = ox + t2 + (d === R ? t2 : d === L ? -t2 : 0);
     const cy = oy + t2 + (d === D ? t2 : d === U ? -t2 : 0);
-    drawCross(dr, cx, cy, Math.floor((m.sz6 * 3) / 4), lineThick, COL_HINT);
+    drawCross(dr, cx, cy, Math.floor(m.half / 4), lineThick, COL_HINT);
   }
   if (hint & H_EMPTY) {
     drawCross(dr, ox + t2, oy + t2, Math.floor(t2 / 2), lineThick, COL_HINT);
@@ -526,8 +538,8 @@ function drawSquare(
   wrong: boolean,
   hint: number,
 ): void {
-  const t2 = m.sz6 * 3; // HALFSZ
-  const t16 = Math.floor((m.sz6 * 3) / 4); // HALFSZ/4
+  const t2 = m.half; // HALFSZ
+  const t16 = Math.floor(m.half / 4); // HALFSZ/4
   const ox = coord(x, m);
   const oy = coord(y, m);
   let cx = ox + t2;
@@ -591,12 +603,12 @@ function drawSquare(
   const sq = bestBits(
     flags & DS_NOTRACK ? 1 : 0,
     flagsDrag & DS_NOTRACK ? 1 : 0,
-    COL_TRACK,
+    COL_NOTRACK,
   );
   if (sq.bits) drawCross(dr, cx, cy, Math.floor(t2 / 2), lineThick, sq.col);
 
   // No-track edge marks (a cross on the edge midpoint).
-  const edge = bestBits(flags >> DS_NSHIFT, flagsDrag >> DS_NSHIFT, COL_TRACK);
+  const edge = bestBits(flags >> DS_NSHIFT, flagsDrag >> DS_NSHIFT, COL_NOTRACK);
   for (let d = 1; d < 16; d *= 2) {
     cx = ox + t2;
     cy = oy + t2;

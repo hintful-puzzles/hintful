@@ -26,7 +26,7 @@ import {
 import cReference from "./__fixtures__/lightup-c-reference.json" with { type: "json" };
 import { puzzleIsGood } from "./generator.ts";
 import { type LightupMistake, lightupGame } from "./index.ts";
-import { COL_BLACK, COL_ERROR, COL_LIGHT, COL_LIT } from "./render.ts";
+import { COL_BLACK, COL_ERROR, COL_LIGHT, COL_LIT, COL_RULED_OUT } from "./render.ts";
 import { solveUnique } from "./solver.ts";
 import {
   decodeParams,
@@ -539,7 +539,7 @@ describe("lightup rendering", () => {
     // Mark (0,0), then light (3,0): the mark's square becomes lit.
     const blobRect = (rec: RecordingDrawing) =>
       rec.ops.some(
-        (o) => o.op === "rect" && o.color === COL_BLACK && o.w === 8, // ts/4 at 32
+        (o) => o.op === "rect" && o.color === COL_RULED_OUT && o.w === 8, // ts/4 at 32
       );
     const me = new Midend(lightupGame);
     expect(me.newGameFromId(EASY_ID)).toBeNull();

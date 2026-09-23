@@ -21,6 +21,7 @@ import {
   HINT_BLACKREF,
   HINT_EVIDENCE_WASH,
   HINT_WHITEREF,
+  RULED_OUT,
 } from "../../engine/color/palette.ts";
 import { drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -58,6 +59,9 @@ export const COL_HINT = 7; // forced cell(s), blue fill (highlight only)
 export const COL_HINT_CELL = 8; // evidence: the shade on a *dark* square
 export const COL_HINT_LITERF = 9; // cited lit/bulb premise (green ring)
 export const COL_HINT_DARKREF = 10; // the unlit square a deduction is about (violet ring)
+/** The player's "no light here" dot. Its own slot rather than upstream's wall
+ * `COL_BLACK`, which stays black in both schemes and sank into a dark board. */
+export const COL_RULED_OUT = 11;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -79,6 +83,7 @@ export function colors(defaultBackground: Color): Color[] {
   // The unlit square is the *empty* reference cell, so it takes the white-ref
   // premise color (Pattern's and Singles' empty reference is the same violet).
   out[COL_HINT_DARKREF] = HINT_WHITEREF;
+  out[COL_RULED_OUT] = RULED_OUT;
   return out;
 }
 
@@ -249,7 +254,7 @@ function tileRedraw(
           w: rlen,
           h: rlen,
         },
-        COL_BLACK,
+        COL_RULED_OUT,
       );
     }
   }

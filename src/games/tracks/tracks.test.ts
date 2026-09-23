@@ -22,7 +22,14 @@ import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { newDesc } from "./generator.ts";
 import { tracksGame } from "./index.ts";
 import { executeMove, uiCanFlipSquare } from "./moves.ts";
-import { COL_ERROR, newDrawState, redraw } from "./render.ts";
+import {
+  COL_ERROR,
+  centeredCoord,
+  metrics,
+  newDrawState,
+  PREFERRED_TILE_SIZE,
+  redraw,
+} from "./render.ts";
 import { copyAndStrip, tracksSolve } from "./solver.ts";
 import {
   DIFF_COUNT,
@@ -157,8 +164,8 @@ describe("tracks findMistakes + solve", () => {
   });
 });
 
-// Geometry for PREFERRED_TILE_SIZE=33 → sz6=5, tile=30, border=0.
-const CENTER = (n: number) => (n + 1) * 30 + 15;
+// The square centers at the tile size `preferredDrawState` draws at.
+const CENTER = (n: number) => centeredCoord(n, metrics(PREFERRED_TILE_SIZE));
 
 describe("tracks input", () => {
   it("a left-drag lays a straight run of track", () => {

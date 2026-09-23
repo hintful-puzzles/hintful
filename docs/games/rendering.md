@@ -666,8 +666,8 @@ decision:
   meanings**, and your default: `ERROR`, `ERROR_TEXT`, `ERROR_WASH`,
   `HINT_ACTION`, `HINT_EVIDENCE`, `HINT_EVIDENCE_WASH`,
   `HINT_BLACKREF`/`HINT_WHITEREF`, `CURSOR`, `HELD`, `DRAG_ADD`/`DRAG_REMOVE`,
-  `FLASH`, `UNDECIDED`, `GRID_MID`, `GRID_DARK`, `PENCIL_BODY`, `INK`, `PAPER`,
-  plus the background-derived functions (`pencilColor`, `playerEntryColor`,
+  `FLASH`, `UNDECIDED`, `RULED_OUT`, `GRID_MID`, `GRID_DARK`, `PENCIL_BODY`,
+  `INK`, `PAPER`, plus the background-derived functions (`pencilColor`, `playerEntryColor`,
   `highlightWash`, `lineMaybeColor`, `lineNoColor`, `clueDoneColor`,
   `wallColor`, `correctRegionColor`). Each is a *reference* to a named
   color, so restyling red restyles every meaning built on red.
