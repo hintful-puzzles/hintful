@@ -1181,6 +1181,17 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         --border-radius: var(--app-radius-container);
       }
 
+      /* On a phone, width is what sizes most boards, and the board's own border
+       * already holds its clues and labels: a margin outside the card plus
+       * padding inside it spent 48px of a 412px screen on nothing. The card
+       * keeps a thin edge so its rounded corners still read. */
+      :host([chrome="bar"]) .board-area {
+        padding-inline: var(--wa-space-xs);
+      }
+      :host([chrome="bar"]) puzzle-view-interactive {
+        --spacing: var(--wa-space-xs);
+      }
+
       .top-bar {
         flex: 0 0 auto;
         box-sizing: border-box;
