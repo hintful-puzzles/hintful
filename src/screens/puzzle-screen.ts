@@ -234,7 +234,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
 
   /**
    * The phone's own chrome: the hint's words above the bar, then a persistent
-   * bar of exactly five.
+   * bar of five, or six in a game with `canMarkAll`.
    *
    * **The explanation sits above the bar** so a thumb resting on the controls
    * cannot cover the sentence that explains the move — the whole point of an
@@ -288,6 +288,19 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
                       : "Hint"
                 }</span>
               </button>`
+            : nothing
+        }
+        ${
+          // A sixth slot, by owner request (2026-09-24): in a game that has it,
+          // this is the command that turns placed digits into candidates to
+          // reason from. The caption is the rail row's wording cut to fit six.
+          puzzle?.canMarkAll
+            ? this.renderPhoneAction(
+                "mark-all",
+                "mark-all",
+                puzzle.hasPencilMarks ? "Update marks" : "Fill marks",
+                puzzle.status === "solved",
+              )
             : nothing
         }
         ${this.renderPhoneAction(
@@ -1124,7 +1137,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
        * Two layouts, chosen by --app-chrome (common.css).
        *
        * rail: a 284px command column beside the board.
-       * bar:  a four-item top bar, the board, and a five-slot bottom bar.
+       * bar:  a four-item top bar, the board, and a five- or six-slot bottom bar.
        *
        * The board area is the flex child that grows in both, so the canvas
        * fills what the chrome leaves rather than sitting small inside a panel
@@ -1284,16 +1297,23 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         border-block-start: 1px solid var(--app-color-hairline);
       }
 
+      /* A caption wraps only when the bar is squeezed: six slots, a narrow
+       * phone and the armed hint's longer label together overran 360px when
+       * every caption held one line. The 54px row holds an icon over two.
+       *
+       * The tap-target floor sits on the caption, not the button, so the
+       * button keeps flexbox's own floor of its longest word: a min-width on
+       * the button replaced that floor, and the hint's label overflowed onto
+       * its neighbors. */
       .phone-action {
-        flex: 0 0 auto;
+        flex: 0 4 auto;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         gap: 2px;
-        min-width: var(--app-tap-min);
         min-height: var(--app-row-tool-phone);
-        padding-inline: 0.5rem;
+        padding-inline: 0.25rem;
         border: 1px solid transparent;
         border-radius: var(--app-radius-control);
         background: none;
@@ -1312,12 +1332,20 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         }
 
         span {
-          white-space: nowrap;
+          /* The 44px target, less the button's padding and border. */
+          min-width: calc(var(--app-tap-min) - 0.5rem - 2px);
+          line-height: 1.15;
+          text-align: center;
+          text-wrap: balance;
         }
       }
 
       /* The hint takes the free space, because its label grows when the hint is
-       * armed and the bar reads better with it wide either way.
+       * armed and the bar reads better with it wide either way. It yields width
+       * at a quarter of its neighbors' rate, so the small captions go to two
+       * lines before the hint does. The ratio is carried by the others' 4 rather
+       * than a hint factor below 1: a lone item whose factor is under 1 absorbs
+       * only that fraction of the overflow, and the bar overran 320px.
        *
        * It is NOT filled, deliberately: an accent control reads as advice, and
        * whether to take a hint is the player's choice. The hint is offered

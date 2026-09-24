@@ -234,8 +234,9 @@ And pressing it a second time doesn't start over: in most of these puzzles it
 crosses out the candidates that the board has since ruled out, so repeated
 presses narrow rather than reset.
 
-On a keyboard this is also the <kbd>M</kbd> key. The ::mark-all:: **Fill all
-pencil marks** button is the only way to reach it on a touchscreen.
+On a keyboard this is also the <kbd>M</kbd> key. On a phone it has a place of
+its own in the bottom bar, as ::mark-all:: **Fill marks** (or **Update marks**
+once there are some to narrow).
 
 It's a move like any other, so ::undo:: undoes it.
 

@@ -19,7 +19,7 @@
  *
  * ON THE PHONE BAR, and why "exactly one home" is not the right rule there.
  * The rule exists to stop *two surfaces a player must learn*. The phone's
- * bottom bar is not a second surface: it is five rows promoted out of the sheet
+ * bottom bar is not a second surface: it is a few rows promoted out of the sheet
  * that `More…` opens, which is the quick-access position the owner asked for
  * Check & save to hold (2026-09-07). What must be true is that the promotion is
  * only ever a promotion — so this asserts the bar's commands are a **subset** of
@@ -29,6 +29,7 @@
  */
 import "../test-setup/element-internals.ts";
 import "../test-setup/indexeddb.ts";
+import { render, type TemplateResult } from "lit";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // The real `saved-games` store, deliberately, against `fake-indexeddb`.
@@ -103,6 +104,27 @@ async function mountRail(
   document.body.append(rail);
   await rail.updateComplete;
   return rail;
+}
+
+/**
+ * The commands in the phone's bottom bar for `puzzle`, read from the real
+ * `renderPhoneChrome` template. Only the `<nav>` is read: the sheet beside it
+ * is a `puzzle-rail` with no puzzle in its context here, and `mountRail`
+ * already renders that properly.
+ */
+async function phoneBarCommands(puzzle: Record<string, unknown>): Promise<string[]> {
+  const screen = new PuzzleScreen();
+  Object.defineProperty(screen, "puzzle", { get: () => puzzle });
+  Object.defineProperty(screen, "puzzleId", { value: puzzle["puzzleId"] });
+  const template = (
+    screen as unknown as { renderPhoneChrome(): TemplateResult }
+  ).renderPhoneChrome();
+  const host = document.createElement("div");
+  document.body.append(host);
+  render(template, host);
+  const bar = host.querySelector("nav.phone-bar");
+  if (!bar) throw new Error("renderPhoneChrome drew no phone bar");
+  return commandsIn(bar);
 }
 
 /** Every `data-command` under `root`, descending through shadow roots — the
@@ -292,5 +314,34 @@ describe("every puzzle command has exactly one home in the rail", () => {
     // The sheet omits the heading block (the back link and the game's name live
     // in the phone's top bar instead), so it is the rail minus exactly that.
     expect(sheetCommands).toEqual(railCommands.filter((c) => c !== "home"));
+  });
+
+  it("promotes into the phone bar only commands the sheet also offers", async () => {
+    for (const canMarkAll of [true, false]) {
+      document.body.replaceChildren();
+      const puzzle = fullyCapablePuzzle({ canMarkAll });
+      const bar = await phoneBarCommands(puzzle);
+      const sheet = new Set(
+        commandsIn((await mountRail("sheet", puzzle)).shadowRoot as ParentNode),
+      );
+      // Vacuity floor: Undo, Redo, Hint and Check & save at least.
+      expect(bar.length, `canMarkAll: ${canMarkAll}`).toBeGreaterThanOrEqual(4);
+      expect(
+        bar.filter((c) => !sheet.has(c)),
+        "a command in the phone bar must also be behind More…, or the sheet " +
+          "no longer reaches everything",
+      ).toEqual([]);
+    }
+  });
+
+  it("pins mark-all to the phone bar exactly when the game has it", async () => {
+    // Owner request (2026-09-24): in a game with mark-all it is used often
+    // enough to earn a bar slot rather than a trip through More….
+    expect(await phoneBarCommands(fullyCapablePuzzle({ canMarkAll: true }))).toContain(
+      "mark-all",
+    );
+    expect(
+      await phoneBarCommands(fullyCapablePuzzle({ canMarkAll: false })),
+    ).not.toContain("mark-all");
   });
 });
