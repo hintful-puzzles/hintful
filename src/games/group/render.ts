@@ -44,6 +44,7 @@ import {
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
+  pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
@@ -136,7 +137,10 @@ export const FLASH_TIME = 0.4;
 
 export const PREFERRED_TILE_SIZE = 48;
 
-const border = (ts: number): number => ts >> 1;
+/** Half a tile, or the pencil indicator's reach where that is wider: the glyph
+ * has a floor, and a small tile's half would put it on the legend's last
+ * letter. */
+const border = (ts: number): number => Math.max(ts >> 1, pencilIndicatorReach(ts));
 const legend = (ts: number): number => ts;
 const gridextra = (ts: number): number => Math.max(ts >> 5, 1);
 
@@ -225,8 +229,8 @@ const PENCIL_STYLE: PencilIndicatorStyle = {
 };
 
 /** The room reserved for it is the border past the Cayley table's last column,
- * clear of every cell and of the legend: `border` is the half-tile
- * `pencilIndicatorReach` is sized to. */
+ * clear of every cell and of the legend: `border` is never narrower than
+ * `pencilIndicatorReach`. */
 const PENCIL_BOX = (w: number, ts: number) =>
   pencilIndicatorBox(computeSize(w, ts), ts);
 

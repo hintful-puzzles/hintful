@@ -865,14 +865,25 @@ Palisade, which had it right first.
 The shared "pencil mode is on" glyph, drawn identically across the collection —
 **and in the same place.** `pencilIndicatorBox(canvas, tileSize)` returns it:
 the canvas's top-right corner, inset by a hair. `pencilIndicatorReach` is the
-figure a game reserves there — the glyph *plus* both insets, half a tile in all.
-It is the only size the module exports, because a game that reserved the glyph's
-own size would be short by an inset at each edge and the glyph would clip the
-cell below. The position is the engine's, not the game's, because the cue's
+figure a game reserves there — the glyph *plus* both insets. That is about half a
+tile on a coarse board, **but not on a fine one**: the glyph is clamped between
+20 and 48 CSS pixels, because what makes it legible is its size against the
+canvas, and a board of many cells has small tiles on a full-sized canvas (Map's
+glyph was 9px on 417px). So a margin of exactly `ts / 2` does not hold it at a
+small tile; reserve `Math.max(yourMargin, pencilIndicatorReach(ts))`. It is the
+only size the module exports, because a game that reserved the glyph's own size
+would be short by an inset at each edge and the glyph would clip the cell below.
+`pencil-indicator-placement.test.ts` holds both halves: nothing of the board
+reaches the box at any tile size, and the glyph is at least 3.5% of the canvas's
+short side at phone and laptop sizes, for every preset. The position is the engine's, not the game's, because the cue's
 whole job is to say *your typing goes into notes now*, and a cue that moves
 between puzzles has to be re-learned in each; it had drifted into three answers
 across the collection before `add-loopy-notation`. A game picks only its three
-palette indices (`PencilIndicatorStyle`) and how it finds the room.
+palette indices (`PencilIndicatorStyle`) and how it finds the room. **The `ink`
+must contrast with the `background`**: it draws the outline and the graphite
+point, and Map's, set to the background, left a black dash that did not read as a
+pencil at any size. A game that must keep its answer colors out of the body
+(Map) draws an outlined pencil: `body` the background, `ink` the grid.
 
 `repaintPencilIndicator(dr, cache, on, box, style)` is the box, the glyph, the
 invalidation **and** the repaint decision, so a game writes one call rather than
@@ -889,7 +900,10 @@ would skip the repaint that the background has just erased.
    at the top-right that nothing else paints. Check the *corner*, not the edge: a
    ring that holds clues along the top usually leaves its corners empty.
 2. **A wider margin** — widen the border until the box fits. Loopy's gutter is
-   the widest of its cursor disc, a corner note on a rim dot, and this box.
+   the widest of its cursor disc, a corner note on a rim dot, and this box; Keen's
+   half-tile border is the wider of half a tile and this box. A game whose origin
+   is not one `border` term (Salad's clue ring sits at the canvas edge) pads
+   outside what it has by whatever the reach exceeds it by.
 3. **Grow the canvas rather than overlap the board**, when there is no margin at
    all: `pencilIndicatorCanvas` adds the reach on **every** side, so the corner
    exists and the board stays centered rather than sitting to one side of its

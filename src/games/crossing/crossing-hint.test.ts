@@ -42,6 +42,7 @@ import {
   type CrossingDrawState,
   type CrossingHint,
   PREFERRED_TILE_SIZE,
+  tileOrigin,
 } from "./render.ts";
 import { solveCrossing } from "./solver.ts";
 import {
@@ -750,10 +751,9 @@ describe("crossing hint — the frame", () => {
     i: number,
     ts: number = PREFERRED_TILE_SIZE,
   ): void => {
-    const half = Math.floor(ts / 2);
     midend.processInput(
-      (i % w) * ts + half + 2,
-      Math.floor(i / w) * ts + half + 2,
+      tileOrigin(i % w, ts) + 2,
+      tileOrigin(Math.floor(i / w), ts) + 2,
       LEFT_BUTTON,
     );
   };

@@ -97,9 +97,12 @@ describe("geometry", () => {
     // pencil-mode indicator's reach on **both** sides: two pixels of border
     // cannot hold the glyph, so `computeSize` grows for it and the board starts
     // at `origin` rather than at `BORDER`.
-    expect(pencilIndicatorReach(40)).toBe(20);
-    expect(origin(40)).toBe(22);
-    expect(computeSize({ w: 6, h: 6, diff: 0 }, 40)).toEqual({ w: 282, h: 282 });
+    const reach = pencilIndicatorReach(40);
+    expect(origin(40)).toBe(BORDER + reach);
+    expect(computeSize({ w: 6, h: 6, diff: 0 }, 40)).toEqual({
+      w: 242 + 2 * reach,
+      h: 242 + 2 * reach,
+    });
   });
 });
 

@@ -10328,11 +10328,11 @@ exports[`towers hint render > a clue-elimination journey hatches the line of sig
   },
   {
     "color": 0,
-    "h": 18,
+    "h": 20,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 18,
-    "x": 327,
+    "w": 20,
+    "x": 325,
     "y": 3,
   },
 ]

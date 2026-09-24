@@ -26,6 +26,7 @@ import { hatchPeriod } from "../../engine/hatch.ts";
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
+  pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
@@ -111,22 +112,30 @@ interface Geom {
   h: number;
 }
 
+/** `BORDER` of a tile, or the pencil indicator's reach where that is wider: the
+ * glyph has a floor, and a small tile's border would put it on the hint pegs. */
+const borderPx = (tileSize: number): number =>
+  Math.max(Math.floor(tileSize * BORDER), pencilIndicatorReach(tileSize));
+
 export function computeSize(p: LayoutParams, tileSize: number): Size {
   const hintw = idiv(p.npegs + 1, 2);
   // Upstream's width carried a literal `2` for the palette column and the gap
   // between it and the rows, and its height took the greater of the column and
   // the rows. Both are gone with the column, which is about a quarter of the
   // board's width back at standard params.
-  const hmul =
-    BORDER * 2 + p.npegs + PEG_GAP * p.npegs + PEG_HINT * hintw + PEG_GAP * (hintw - 1);
-  const vmul = BORDER * 2 + p.nguesses + ANSWER_ROWS + PEG_GAP * (p.nguesses + 1);
-  return { w: Math.ceil(tileSize * hmul), h: Math.ceil(tileSize * vmul) };
+  const hmul = p.npegs + PEG_GAP * p.npegs + PEG_HINT * hintw + PEG_GAP * (hintw - 1);
+  const vmul = p.nguesses + ANSWER_ROWS + PEG_GAP * (p.nguesses + 1);
+  const border = borderPx(tileSize);
+  return {
+    w: Math.ceil(tileSize * hmul) + 2 * border,
+    h: Math.ceil(tileSize * vmul) + 2 * border,
+  };
 }
 
 function computeGeometry(p: LayoutParams, tileSize: number): Geom {
   const hintsz = Math.floor(tileSize * PEG_HINT);
   const gapsz = Math.floor(tileSize * PEG_GAP);
-  const border = Math.floor(tileSize * BORDER);
+  const border = borderPx(tileSize);
   const pegrad = idiv(tileSize - 1, 2);
   const hintrad = idiv(hintsz - 1, 2);
 

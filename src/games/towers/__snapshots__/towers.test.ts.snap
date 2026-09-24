@@ -7062,11 +7062,11 @@ exports[`towers render > draws the 3D initial frame with clues and tower solids 
   },
   {
     "color": 0,
-    "h": 18,
+    "h": 20,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 18,
-    "x": 375,
+    "w": 20,
+    "x": 373,
     "y": 3,
   },
 ]

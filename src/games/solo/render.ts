@@ -57,6 +57,7 @@ import {
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
+  pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Size } from "../../engine/types.ts";
@@ -137,7 +138,10 @@ const HL_KSUM = 32;
 
 // --- geometry --------------------------------------------------------------
 
-export const border = (ts: number): number => (ts / 2) | 0;
+/** Half a tile, or the pencil indicator's reach where that is wider: the glyph
+ * has a floor, and a small tile's half would put it on the top-right cell. */
+export const border = (ts: number): number =>
+  Math.max((ts / 2) | 0, pencilIndicatorReach(ts));
 export const gridExtra = (ts: number): number => Math.max((ts / 32) | 0, 1);
 
 /** Pixel to cell, faithful to `interpret_move`'s `(x+TILE-BORDER)/TILE-1`. */
@@ -511,7 +515,7 @@ const PENCIL_STYLE: PencilIndicatorStyle = {
   ink: COL_GRID,
 };
 /** The room reserved for it is the border corner, outside every cell and clue:
- * `border` is the half-tile `pencilIndicatorReach` is sized to. */
+ * `border` is never narrower than `pencilIndicatorReach`. */
 const PENCIL_BOX = (cr: number, ts: number) =>
   pencilIndicatorBox(computeSize(cr, ts), ts);
 

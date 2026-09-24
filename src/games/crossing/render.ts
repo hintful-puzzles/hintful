@@ -2,8 +2,8 @@
  * Crossing rendering — idiomatic port of `game_redraw` and its helpers from
  * `unreleased/crossing.c`.
  *
- * The board sits inside a **half-tile margin** on every side (so the pointer
- * conversion subtracts `tileSize/2`, unlike the zero-border `NARROW_BORDERS`
+ * The board sits inside a **margin of about half a tile** on every side (so the
+ * pointer conversion subtracts `border`, unlike the zero-border `NARROW_BORDERS`
  * geometry most ports use), with a three-tile **number-list panel** below it.
  * Every cell is a beveled tile: walls are drawn indented in gray, an entered
  * digit outdented on a neutral tile, and an empty cell shows the inner
@@ -76,6 +76,7 @@ import {
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
+  pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
@@ -225,8 +226,14 @@ export function colors(defaultBackground: Color): Color[] {
 
 /** Half a tile of margin surrounds the grid, and three tiles below it hold the
  * number list. */
+/** Half a tile, or the pencil indicator's reach where that is wider: the glyph
+ * has a floor, and a small tile's half would put it on the top-right cell. */
+const border = (ts: number): number =>
+  Math.max(Math.floor(ts / 2), pencilIndicatorReach(ts));
+
+/** The grid, the three-tile numbers panel below it, and the border round both. */
 export function computeSize(p: { w: number; h: number }, ts: number): Size {
-  return { w: (p.w + 1) * ts, h: (p.h + 1 + 3) * ts };
+  return { w: p.w * ts + 2 * border(ts), h: (p.h + 3) * ts + 2 * border(ts) };
 }
 
 /** Pixel → cell index along one axis. Upstream's `FROMCOORD` is C's
@@ -234,11 +241,15 @@ export function computeSize(p: { w: number; h: number }, ts: number): Size {
  * column 0 rather than off-grid — reproduced with `Math.trunc` (as Sticks does)
  * rather than the shared floor-based `fromCoord`. */
 export function fromCoord(pixel: number, ts: number): number {
-  return Math.trunc((pixel - Math.floor(ts / 2)) / ts);
+  return Math.trunc((pixel - border(ts)) / ts);
 }
 
 /** Top-left pixel of cell `v` along one axis. */
-const tileOrigin = (v: number, ts: number): number => v * ts + Math.floor(ts / 2);
+export const tileOrigin = (v: number, ts: number): number => v * ts + border(ts);
+
+/** The pixel a cell's digit is centered on, along one axis. */
+const tileCenter = (v: number, ts: number): number =>
+  tileOrigin(v, ts) + Math.ceil(ts / 2);
 
 // --- draw state ------------------------------------------------------------
 
@@ -558,7 +569,7 @@ function drawCell(
     drawBevelTile(dr, ts, tx, ty, low, mid, high);
     ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, COL_HINT, ts);
     dr.drawText(
-      { x: (x + 1) * ts, y: (y + 1) * ts },
+      { x: tileCenter(x, ts), y: tileCenter(y, ts) },
       textOpts(Math.floor(ts / 2), "center", "mathematical"),
       mid === runWash ? COL_RUNTEXT : COL_GRID,
       String(digit),
@@ -585,7 +596,7 @@ function drawCell(
   if (!walls[i] && !digit && ghost) {
     // The held clue number previewed where it would land.
     dr.drawText(
-      { x: (x + 1) * ts, y: (y + 1) * ts },
+      { x: tileCenter(x, ts), y: tileCenter(y, ts) },
       textOpts(Math.floor(ts / 2), "center", "mathematical"),
       COL_GHOST,
       String(ghost),
@@ -651,7 +662,7 @@ export function layoutNumbers(
   const panelH = 2.8 * ts;
   const panelW = w * ts;
   const digitWidth = 0.6; // one digit's width, as a fraction of the font size
-  const yoff = (h + 1.2) * ts;
+  const yoff = tileOrigin(h, ts) + 0.7 * ts;
   let rows = 4;
   let space = 0.8;
   let fontsz = 0;
@@ -680,7 +691,7 @@ export function layoutNumbers(
 
   const rowHeight = panelH / rows;
   const slots: NumberSlot[] = [];
-  let x = 0.5 * ts - space * fontsz;
+  let x = tileOrigin(0, ts) - space * fontsz;
   let y = yoff;
   let len = 0;
   for (let i = 0; i < count; i++) {
@@ -1070,8 +1081,7 @@ export function redraw(
     for (let l = 0; l < numbers.length; l++) ds.numberState[l] = panelState(l);
   }
 
-  // The collection's place for it: the half-tile margin the grid already leaves,
-  // at the top-right rather than the top-left it used to use here.
+  // The collection's place for it: the margin `border` leaves round the grid.
   repaintPencilIndicator(
     dr,
     ds,

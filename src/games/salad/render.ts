@@ -48,6 +48,7 @@ import {
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
+  pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Size } from "../../engine/types.ts";
@@ -178,15 +179,24 @@ function ghostCode(ghost?: "cross" | "circle" | number): number {
 
 // --- geometry --------------------------------------------------------------
 
+/** Room outside the clue ring, which is none until the tile is smaller than the
+ * pencil indicator's reach: the ring's empty corner tile holds the glyph, and
+ * the glyph has a floor a small enough tile falls under. */
+const pad = (ts: number): number => Math.max(0, pencilIndicatorReach(ts) - ts);
+
+/** Where cell `v` starts along either axis, past the one-tile clue ring;
+ * `v = -1` and `v = order` are the ring's own tiles. */
+const cellOrigin = (v: number, ts: number): number => (v + 1) * ts + pad(ts);
+
 export function computeSize(p: { order: number }, ts: number): Size {
-  const s = (p.order + 2) * ts;
+  const s = (p.order + 2) * ts + 2 * pad(ts);
   return { w: s, h: s };
 }
 
 /** Upstream `FROMCOORD`: the one-tile clue margin means cell 0 starts at
  * `TILE_SIZE`, and a click in the margin lands outside the play area. */
 export function fromCoord(v: number, ts: number): number {
-  return fromCoordE(v, ts, ts);
+  return fromCoordE(v, ts, cellOrigin(0, ts));
 }
 
 // --- draw state ------------------------------------------------------------
@@ -252,7 +262,7 @@ export function newDrawState(s: SaladState, tileSize: number): SaladDrawState {
 function markBand(ds: SaladDrawState, x: number, y: number): MarkBand {
   const ts = ds.tileSize;
   return {
-    box: { x: (x + 1) * ts, y: (y + 1) * ts, w: ts, h: ts },
+    box: { x: cellOrigin(x, ts), y: cellOrigin(y, ts), w: ts, h: ts },
     outer: 0,
     inner: Math.max(2, ts >> 4),
   };
@@ -340,8 +350,8 @@ function drawBall(
   const i = x + y * s.order;
   if (s.mode === GAMEMODE_LETTERS && s.grid[i] !== 0) return;
 
-  const tx = (x + 1) * ts + Math.floor(ts / 2);
-  const ty = (y + 1) * ts + Math.floor(ts / 2);
+  const tx = cellOrigin(x, ts) + Math.floor(ts / 2);
+  const ty = cellOrigin(y, ts) + Math.floor(ts / 2);
 
   let bg: number;
   if (s.mode !== GAMEMODE_LETTERS) {
@@ -378,7 +388,7 @@ function drawCross(
     : flags & FD_ERROR
       ? COL_E_HOLE
       : COL_G_HOLE;
-  drawX(dr, (x + 1) * ts, (y + 1) * ts, ts, color, thick);
+  drawX(dr, cellOrigin(x, ts), cellOrigin(y, ts), ts, color, thick);
 }
 
 /** The two strokes of a cross over the tile at `(tx, ty)`. */
@@ -561,8 +571,8 @@ export function redraw(
       if (ds.drawn[i] === key && !ds.wrong.stale(i) && !ds.hint.stale(i)) continue;
       ds.drawn[i] = key;
 
-      const tx = (x + 1) * ts;
-      const ty = (y + 1) * ts;
+      const tx = cellOrigin(x, ts);
+      const ty = cellOrigin(y, ts);
       const overlay = ds.hint.packed[i];
       const struck = (overlay & ~HINT_GHOST_MASK) >> 2;
       const ghost = (overlay & HINT_GHOST_MASK) >> HINT_GHOST_SHIFT;
@@ -684,10 +694,10 @@ export function redraw(
   // (docs/games/rendering.md § "A clue-ring erase must not wipe the grid").
   for (let i = 0; i < o; i++) {
     const spots = [
-      { j: i, tx: (i + 1) * ts, ty: 0, inset: 0 },
-      { j: i + o, tx: 0, ty: (i + 1) * ts, inset: 0 },
-      { j: i + o * 2, tx: (i + 1) * ts, ty: (o + 1) * ts, inset: 0 },
-      { j: i + o * 3, tx: (o + 1) * ts, ty: (i + 1) * ts, inset: 1 },
+      { j: i, tx: cellOrigin(i, ts), ty: cellOrigin(-1, ts), inset: 0 },
+      { j: i + o, tx: cellOrigin(-1, ts), ty: cellOrigin(i, ts), inset: 0 },
+      { j: i + o * 2, tx: cellOrigin(i, ts), ty: cellOrigin(o, ts), inset: 0 },
+      { j: i + o * 3, tx: cellOrigin(o, ts), ty: cellOrigin(i, ts), inset: 1 },
     ];
     for (const spot of spots) {
       if (!s.borderclues[spot.j]) continue;

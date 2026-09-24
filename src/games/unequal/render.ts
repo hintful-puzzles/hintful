@@ -42,6 +42,7 @@ import {
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
+  pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
@@ -139,7 +140,10 @@ export interface UnequalHint {
 
 export const gap = (ts: number): number => Math.floor(ts / 2);
 export const square = (ts: number): number => ts + gap(ts);
-export const border = (ts: number): number => Math.floor(ts / 2);
+/** Half a tile, or the pencil indicator's reach where that is wider: the glyph
+ * has a floor, and a small tile's half would put it on the top-right cell. */
+export const border = (ts: number): number =>
+  Math.max(Math.floor(ts / 2), pencilIndicatorReach(ts));
 export const coord = (v: number, ts: number): number => v * square(ts) + border(ts);
 
 export function fromCoord(v: number, ts: number): number {
@@ -534,7 +538,7 @@ const PENCIL_STYLE: PencilIndicatorStyle = {
   ink: COL_GRID,
 };
 /** The room reserved for it is the border corner, outside every cell and gap
- * clue: `border` is the half-tile `pencilIndicatorReach` is sized to. */
+ * clue: `border` is never narrower than `pencilIndicatorReach`. */
 const PENCIL_BOX = (order: number, ts: number) => {
   const side = drawSize(order, ts);
   return pencilIndicatorBox({ w: side, h: side }, ts);

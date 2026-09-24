@@ -22,11 +22,13 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { registerAllGames } from "../games/index.ts";
 import type { GameDrawing } from "./game.ts";
-import { pencilIndicatorBox } from "./pencil-indicator.ts";
+import { type PencilIndicatorBox, pencilIndicatorBox } from "./pencil-indicator.ts";
 import { type AnyGame, builtGames, enrolledIn } from "./testing/enrollment.ts";
+import { paramsCorpus } from "./testing/params-corpus.ts";
 import type { DrawOp } from "./testing/recording-drawing.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
+import type { Size } from "./types.ts";
 
 beforeAll(registerAllGames);
 
@@ -37,15 +39,18 @@ const noteTaking = enrolledIn((g) => typeof g.ui["pencilMode"] === "boolean");
 function cornersOf(op: DrawOp): { x: number; y: number }[] {
   switch (op.op) {
     case "rect":
+    case "hatch":
       return [
         { x: op.x, y: op.y },
         { x: op.x + op.w, y: op.y + op.h },
       ];
-    case "line":
+    case "line": {
+      const t = Math.ceil(op.thickness / 2);
       return [
-        { x: op.x1, y: op.y1 },
-        { x: op.x2, y: op.y2 },
+        { x: Math.min(op.x1, op.x2) - t, y: Math.min(op.y1, op.y2) - t },
+        { x: Math.max(op.x1, op.x2) + t, y: Math.max(op.y1, op.y2) + t },
       ];
+    }
     case "polygon":
       return op.points.map(([x, y]) => ({ x, y }));
     case "circle":
@@ -68,14 +73,18 @@ function cornersOf(op: DrawOp): { x: number; y: number }[] {
  * differently in pencil mode, which is a second, legitimate cue and not this
  * one. With no cursor showing, the only thing the mode changes is the indicator.
  */
-function frameWith(game: AnyGame, state: unknown, on: boolean): DrawOp[] {
+function frameWith(
+  game: AnyGame,
+  state: unknown,
+  on: boolean,
+  ts = game.preferredTileSize ?? 32,
+): DrawOp[] {
   const ui = game.newUi(state) as {
     pencilMode: boolean;
     cursor?: { visible: boolean };
   };
   ui.pencilMode = on;
   if (ui.cursor) ui.cursor.visible = false;
-  const ts = game.preferredTileSize ?? 32;
   const dr = new RecordingDrawing(game.colors(DEFAULT_BACKGROUND));
   game.redraw(
     dr as unknown as GameDrawing,
@@ -145,4 +154,139 @@ describe("the pencil-mode indicator is where the engine puts it", () => {
       }
     });
   }
+});
+
+/**
+ * Tile sizes either side of where the glyph's floor starts to bite (a tile of
+ * about 48 for the half-tile rule), because below it the glyph is wider than
+ * half a tile and a margin sized as half a tile no longer holds it. Not a
+ * realistic range: the reservation has to hold at any tile, since a large
+ * custom board on a phone reaches tiles this small.
+ */
+const SWEEP_TILES = [12, 16, 20, 24, 32, 48, 64, 96];
+
+/** Whether an op's bounding box reaches into the box's interior. */
+function overlaps(op: DrawOp, box: PencilIndicatorBox): boolean {
+  const cs = cornersOf(op);
+  if (cs.length === 0) return false;
+  const xs = cs.map((c) => c.x);
+  const ys = cs.map((c) => c.y);
+  return (
+    Math.min(...xs) < box.x + box.size &&
+    Math.max(...xs) > box.x &&
+    Math.min(...ys) < box.y + box.size &&
+    Math.max(...ys) > box.y
+  );
+}
+
+describe("every note-taking game keeps the glyph's box clear", () => {
+  /**
+   * With the mode off, the only thing a game may paint in the box is the plain
+   * background the indicator erases to, and only underneath it. Anything else
+   * means the glyph sits on a cell, a clue or a line: under the indicator it is
+   * erased when the mode changes, and over it the glyph is drawn on.
+   */
+  let framesChecked = 0;
+  for (const { id, game, state } of builtGames()) {
+    if (!noteTaking.ids.includes(id)) continue;
+
+    it(`${id}: nothing of the board reaches the box, at any tile size`, () => {
+      for (const ts of SWEEP_TILES) {
+        const canvas = game.computeSize(game.defaultParams(), ts);
+        const box = pencilIndicatorBox(canvas, ts);
+        const ops = frameWith(game, state, false, ts);
+        // The indicator's own erase. A game that repaints the whole canvas each
+        // frame (Loopy) has none, and its background is the canvas-wide clear.
+        const own = ops.findIndex(
+          (o) =>
+            o.op === "rect" &&
+            o.x === box.x &&
+            o.y === box.y &&
+            o.w === box.size &&
+            o.h === box.size,
+        );
+        const background =
+          ops[own] ??
+          ops.find(
+            (o) =>
+              o.op === "rect" &&
+              o.x <= 0 &&
+              o.y <= 0 &&
+              o.w >= canvas.w &&
+              o.h >= canvas.h,
+          );
+        expect(
+          background?.op,
+          `${id} at tile ${ts} paints neither the indicator's box nor a canvas-wide background`,
+        ).toBe("rect");
+        const bg = (background as { rgb: string }).rgb;
+        framesChecked++;
+        ops.forEach((op, i) => {
+          if (i === own || !overlaps(op, box)) return;
+          const under = own < 0 || i < own;
+          if (op.op === "rect" && op.rgb === bg && under) return;
+          expect.fail(
+            `${id} at tile ${ts} paints ${JSON.stringify(op)} ${under ? "under" : "over"} the indicator's box ${JSON.stringify(box)}`,
+          );
+        });
+      }
+    });
+  }
+
+  it("looked at a frame per game and tile size", () => {
+    expect(framesChecked).toBe(noteTaking.ids.length * SWEEP_TILES.length);
+  });
+});
+
+/**
+ * The slots a player's screen gives the canvas: a phone and the laptop window
+ * the defect was found in. The midend picks the largest tile whose canvas
+ * fits, as {@link fittedTile} does here.
+ */
+const SLOTS = [
+  { name: "phone", w: 380, h: 480 },
+  { name: "laptop", w: 682, h: 556 },
+];
+
+/**
+ * The glyph's share of the canvas's short side it may not fall below. The
+ * collection's coarse boards sit between 3.5% and 6.5% at these slots; Map
+ * sat at 2.2%, a 9px glyph on a 417px canvas, and read as a speck.
+ */
+const MIN_SHARE = 0.035;
+
+function fittedTile(game: AnyGame, params: unknown, slot: Size): number {
+  let ts = 1;
+  for (;;) {
+    const next = game.computeSize(params, ts + 1);
+    if (next.w > slot.w || next.h > slot.h) return ts;
+    ts++;
+  }
+}
+
+describe("the glyph reads against the canvas it sits on", () => {
+  let cases = 0;
+  for (const { id, game } of builtGames()) {
+    if (!noteTaking.ids.includes(id)) continue;
+
+    it(`${id}: at least ${(MIN_SHARE * 100).toFixed(1)}% of the short side, every preset and slot`, () => {
+      for (const { label, params } of paramsCorpus(game)) {
+        for (const slot of SLOTS) {
+          const ts = fittedTile(game, params, slot);
+          const canvas = game.computeSize(params, ts);
+          const { size } = pencilIndicatorBox(canvas, ts);
+          const share = size / Math.min(canvas.w, canvas.h);
+          cases++;
+          expect(
+            share,
+            `${id} ${label} on a ${slot.name}: a ${size}px glyph on a ${canvas.w}×${canvas.h} canvas`,
+          ).toBeGreaterThanOrEqual(MIN_SHARE);
+        }
+      }
+    });
+  }
+
+  it("measured every member at every slot", () => {
+    expect(cases).toBeGreaterThanOrEqual(noteTaking.ids.length * SLOTS.length);
+  });
 });

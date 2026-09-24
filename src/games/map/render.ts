@@ -262,13 +262,15 @@ export function newDrawState(s: MapState, tileSize: number): MapDrawState {
   };
 }
 
-/** The pencil-mode indicator's colors. The body is the grid ink rather than a
- * region color: Map's four colors are the puzzle's answer vocabulary, and a
- * glyph in one of them would read as a fifth region. */
+/** The pencil-mode indicator's colors: an outlined pencil in the grid ink, with
+ * no region color in its body — Map's four colors are the puzzle's answer
+ * vocabulary, and a glyph in one of them would read as a fifth region. The
+ * outline and point must be the ink: in the background color they vanish, and
+ * what is left is a short dash that does not read as a pencil. */
 const PENCIL_STYLE: PencilIndicatorStyle = {
   background: COL_BACKGROUND,
-  body: COL_GRID,
-  ink: COL_BACKGROUND,
+  body: COL_BACKGROUND,
+  ink: COL_GRID,
 };
 
 // --- flash -----------------------------------------------------------

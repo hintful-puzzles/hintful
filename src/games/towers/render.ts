@@ -46,6 +46,7 @@ import {
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
+  pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Size } from "../../engine/types.ts";
@@ -112,7 +113,10 @@ const DF_DIGIT_MASK = 0x00ff;
 
 // --- geometry --------------------------------------------------------------
 
-export const border = (ts: number): number => Math.floor((ts * 9) / 8);
+/** Wide enough for the clue ring, or the pencil indicator's reach where that
+ * is wider: the glyph has a floor, which a small enough tile falls under. */
+export const border = (ts: number): number =>
+  Math.max(Math.floor((ts * 9) / 8), pencilIndicatorReach(ts));
 export const coord = (v: number, ts: number): number => v * ts + border(ts);
 export const x3d = (height: number, w: number, ts: number): number =>
   Math.floor((height * ts) / (8 * w));
@@ -181,7 +185,7 @@ const PENCIL_STYLE: PencilIndicatorStyle = {
 };
 
 /** The room reserved for it is the clue ring's top-right corner, which no tower
- * reaches: `border` is over a whole tile, where the reach needs half of one. */
+ * reaches: `border` is never narrower than `pencilIndicatorReach`. */
 const PENCIL_BOX = (w: number, ts: number) =>
   pencilIndicatorBox(computeSize({ w }, ts), ts);
 

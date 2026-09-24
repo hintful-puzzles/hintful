@@ -26,7 +26,7 @@ import type { Point } from "../../engine/types.ts";
 import cReference from "./__fixtures__/slant-c-reference.json" with { type: "json" };
 import { newDesc, slantGenerate } from "./generator.ts";
 import { slantGame } from "./index.ts";
-import { COL_ERROR, COL_GROUNDED } from "./render.ts";
+import { border, COL_ERROR, COL_GROUNDED } from "./render.ts";
 import { SOLVE_UNIQUE, SolverScratch, slantSolve } from "./solver.ts";
 import {
   computeErrors,
@@ -72,9 +72,9 @@ function ui(over: Partial<SlantUi> = {}): SlantUi {
   };
 }
 
-/** Center of square (x, y) at the default 32px tile (border = 11). */
+/** Center of square (x, y) at the default 32px tile. */
 function center(x: number, y: number) {
-  return { x: 11 + x * 32 + 16, y: 11 + y * 32 + 16 };
+  return { x: border(32) + x * 32 + 16, y: border(32) + y * 32 + 16 };
 }
 
 const input = (s: SlantState, u: SlantUi, p: Point, button: number) =>

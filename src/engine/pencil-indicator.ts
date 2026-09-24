@@ -26,14 +26,20 @@ export interface PencilIndicatorStyle {
   ink: number;
 }
 
+/** The glyph's bounds in CSS pixels; see {@link pencilIndicatorSize}. */
+const GLYPH_MIN = 20;
+const GLYPH_MAX = 48;
+
 /** The gap between the glyph and each of the two canvas edges it sits against. */
 const inset = (tileSize: number): number => Math.max(1, Math.round(tileSize / 16));
 
 /**
  * How much room the indicator needs at the canvas's top-right corner: the glyph
  * plus the gap on either side of it. **This is the figure a game reserves** —
- * half a tile, which a border of `ts / 2` already gives (Keen, Solo, Unequal),
- * and which a game with no such margin grows one for (Loopy's `border`).
+ * either by taking a margin of its own that is never narrower
+ * (`Math.max(ts / 2, pencilIndicatorReach(ts))`), or by growing one
+ * ({@link pencilIndicatorCanvas}). It is about half a tile on a coarse board and
+ * more on a fine one, so a margin of exactly half a tile does not hold it.
  *
  * It is the reach rather than the glyph because those are different numbers, and
  * a game reserving the glyph's size would be short by the inset at both edges.
@@ -59,15 +65,22 @@ export function pencilIndicatorCanvas(board: Size, tileSize: number): Size {
 
 /**
  * How big the glyph is drawn, everywhere: the half-tile corner less the gap at
- * either side of it, and never so small that the pencil stops reading as one on
- * a tiny board. Where that floor bites, the reach exceeds half a tile and a game
- * whose margin is exactly half a tile lends it a pixel or two of the cell below.
+ * either side of it, clamped between two sizes in CSS pixels.
+ *
+ * **The floor is about the canvas, not the tile.** The midend fits the canvas
+ * to the player's screen, so a board of many cells gets small tiles on a canvas
+ * as large as anyone's, and half of one of those tiles is a speck: Map's glyph
+ * was 9px on a 417px canvas. Twenty pixels keeps the glyph at least 3.5% of the
+ * canvas's short side at phone and laptop sizes, which is the bound
+ * `pencil-indicator-placement.test.ts` asserts. The ceiling stops a coarse board
+ * on a large screen from growing a status cue past the size of a toolbar icon.
  *
  * Private on purpose: a game that reserved *this* rather than
  * {@link pencilIndicatorReach} would be short by an inset at each edge.
  */
 function pencilIndicatorSize(tileSize: number): number {
-  return Math.max(8, Math.round(tileSize / 2) - 2 * inset(tileSize));
+  const halfTile = Math.round(tileSize / 2) - 2 * inset(tileSize);
+  return Math.min(GLYPH_MAX, Math.max(GLYPH_MIN, halfTile));
 }
 
 /**

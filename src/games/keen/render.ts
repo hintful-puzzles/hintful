@@ -44,6 +44,7 @@ import {
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
+  pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
@@ -134,7 +135,10 @@ const DF_DIGIT_MASK = 0x000f;
 
 // --- geometry --------------------------------------------------------------
 
-export const border = (ts: number): number => (ts / 2) | 0;
+/** Half a tile, or the pencil indicator's reach where that is wider: the glyph
+ * has a floor, and a small tile's half would put it on the top-right cell. */
+export const border = (ts: number): number =>
+  Math.max((ts / 2) | 0, pencilIndicatorReach(ts));
 export const gridExtra = (ts: number): number => Math.max((ts / 32) | 0, 1);
 export const coord = (v: number, ts: number): number => v * ts + border(ts);
 
@@ -411,7 +415,7 @@ const PENCIL_STYLE: PencilIndicatorStyle = {
   ink: COL_GRID,
 };
 /** The room reserved for it is the border corner, outside every cell and clue:
- * `border` is the half-tile `pencilIndicatorReach` is sized to. */
+ * `border` is never narrower than `pencilIndicatorReach`. */
 const PENCIL_BOX = (w: number, ts: number) =>
   pencilIndicatorBox(computeSize({ w }, ts), ts);
 
