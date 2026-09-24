@@ -1,0 +1,5 @@
+# No delta yet: the requirements that move depend on the design questions in
+# proposal.md. Written 2026-09-24; nothing is implemented.
+schema: spec-driven
+created: 2026-09-24
+skip_specs: true
