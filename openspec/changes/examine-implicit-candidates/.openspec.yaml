@@ -1,7 +1,0 @@
-# No delta yet: whether anything normative moves depends on what §2 measures.
-# If candidate reading becomes an engine option on the candidate walk, the
-# ts-engine candidate-plan requirements move; if it is also a player preference,
-# a game's prefs do. Written 2026-09-25; nothing is implemented.
-schema: spec-driven
-created: 2026-09-25
-skip_specs: true

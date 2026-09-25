@@ -22,6 +22,7 @@ import {
   joinWith,
   type LatinVocab,
   narrateForcingChain,
+  noteText,
   populateText,
 } from "../../engine/hint-text.ts";
 import type { ForcingLink } from "../../engine/latin-hint.ts";
@@ -71,8 +72,21 @@ export const say = {
   cleanObvious: (regions: string[]): string =>
     cleanObviousText("number", "placed", joinOr(regions)),
 
+  /** A note step under the implicit reading; `regions` names the kinds of
+   * region the cell lies in. */
+  note: (ns: number[], every: boolean, regions: string[]): string =>
+    noteText(ns.map(g), every, {
+      noun: "number",
+      placedVerb: "placed",
+      regions: joinOr(regions),
+    }),
+
   single: (n: number): string =>
     `Every other number has been ruled out in this cell, so it can only be ${g(n)}.`,
+
+  /** A single in a note-less cell; `regions` as for {@link say.note}. */
+  regionsFull: (n: number, regions: string[]): string =>
+    `This cell's ${joinWith(regions)} already hold every other number, so it can only be ${g(n)}.`,
 
   hiddenSingle: (region: SoloRegion, n: number): string => {
     const r = regionName(region);

@@ -12,6 +12,7 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAllMove,
+  type CandidatePlanPrefs,
   candidateHint,
   keepCandidateHintTrack,
   type Mark,
@@ -30,7 +31,7 @@ import {
 } from "../../engine/game.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
-import { forcingChainArea, rowColRegions } from "../../engine/latin-hint.ts";
+import { genericLatinArea, rowColRegions } from "../../engine/latin-hint.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
@@ -40,6 +41,7 @@ import {
 import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import {
   autoPencilPref,
+  candidateReadingPref,
   pencilKeepHighlightPref,
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
@@ -315,6 +317,10 @@ function executeMove(state: TowersState, move: TowersMove): TowersState {
       for (const { x, y, n } of move.marks) next.pencil[y * w + x] &= ~(1 << n);
       return next;
     }
+    case "pencilAdd": {
+      for (const { x, y, n } of move.marks) next.pencil[y * w + x] |= 1 << n;
+      return next;
+    }
     case "solve": {
       for (let i = 0; i < w * w; i++) {
         next.grid[i] = move.grid[i];
@@ -414,6 +420,8 @@ function narrate(reason: HintReason, n: number, continues = false): string {
       return say.dup(reason.n);
     case "single":
       return say.single(n);
+    case "regionsFull":
+      return say.regionsFull(n);
     case "hiddenSingle":
       return say.hiddenSingle(reason.line, n);
     case "set":
@@ -426,13 +434,17 @@ function narrate(reason: HintReason, n: number, continues = false): string {
 /** The deduction's marks: a Towers clue technique outlines the driving clue
  * cell(s) and hatches the line of sight they reason along, through both clue
  * slots, so the player sees which clue and which line the sentence means; the
- * generic Latin techniques have no clean local area (the struck notes carry the
- * premise). A hidden single is not among them: the row/column preset hatches
- * its line over whatever this returns. */
+ * generic Latin techniques outline what `genericLatinArea` gives them. A hidden
+ * single is not among them: the row/column preset hatches its line over
+ * whatever this returns. */
 function reasonMarks(
   reason: HintReason,
   w: number,
-): { area: OrderedCell[]; hatch?: { x: number; y: number }[] } {
+): {
+  area: OrderedCell[];
+  hatch?: { x: number; y: number }[];
+  reads?: { x: number; y: number }[];
+} {
   switch (reason.kind) {
     case "facing":
       // A facing pair names two clues at opposite ends of the same line.
@@ -444,14 +456,17 @@ function reasonMarks(
     case "tallestNearest":
     case "lineFull":
     case "lowerBound":
-    case "arrangement":
       return { area: [cluePos(reason.clue, w)], hatch: sightLine(reason.clue, w) };
-    // A forcing chain names the cells it ran through, **numbered**, so the
-    // narration can cite them and the player can walk it.
-    case "forcing":
-      return { area: forcingChainArea(reason) };
+    // Which arrangements the clue allows depends on what every cell of its line
+    // can still be, so the line is read as well as named.
+    case "arrangement":
+      return {
+        area: [cluePos(reason.clue, w)],
+        hatch: sightLine(reason.clue, w),
+        reads: lineCells(reason.clue, w),
+      };
     default:
-      return { area: [] };
+      return { area: genericLatinArea(reason) };
   }
 }
 
@@ -511,12 +526,11 @@ function extremeClueLines(
 /** Build the hint plan by walking a working copy of the board the way a person
  * solves it (`runLatinCandidatePlan`). Towers' own rung is the extreme-clue lines,
  * which need no notes, so an empty board opens on them rather than on
- * "pencil everything in". `autoClean` (the auto-pencil preference) decides
- * whether a placement's trivial row/column note eliminations are silent or
- * taught. */
+ * "pencil everything in". The player's two pencil preferences decide whether a
+ * placement's cull is taught and how a note-less cell reads. */
 function buildSteps(
   state: TowersState,
-  autoClean: boolean,
+  { autoClean, reading }: CandidatePlanPrefs,
 ): HintStep<TowersMove, TowersHint>[] {
   const w = state.w;
   const steps: HintStep<TowersMove, TowersHint>[] = [];
@@ -528,6 +542,7 @@ function buildSteps(
     grid: wGrid,
     pencil: Int32Array.from(state.pencil),
     autoClean,
+    reading,
     label: "towers hint plan",
     record: () => recordTowersDeductions(w, state.clues, wGrid, maxdiff),
     placeWords: (m, reason, continues) => ({
@@ -607,7 +622,8 @@ export const towersGame: Game<
 
   solve,
   difficulty,
-  hint: (state, _aux, ui) => candidateHint(state, ui ?? null, findMistakes, buildSteps),
+  hint: (state, _aux, ui) =>
+    candidateHint(state, ui ?? newUi(state), findMistakes, buildSteps),
   hintKeepTrack: (m, step: HintStep<TowersMove, TowersHint>, state) =>
     keepCandidateHintTrack(m, step, state.pencil, state.w),
   refreshHintStep: (step: HintStep<TowersMove, TowersHint>, state) =>
@@ -622,6 +638,7 @@ export const towersGame: Game<
     ),
     stickyPencilPref<TowersUi>(),
     pencilKeepHighlightPref<TowersUi>(),
+    candidateReadingPref<TowersUi>(),
     {
       kw: "appearance",
       name: "Puzzle appearance",

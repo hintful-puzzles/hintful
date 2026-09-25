@@ -13,11 +13,11 @@ import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAllMove,
   type CandidateMoveAdapter,
+  type CandidatePlanPrefs,
   candidateHint,
   firstUnreflectedPlaceIndex,
   keepCandidateHintTrack,
   type Mark,
-  obviousCandidateMarks,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
 import {
@@ -42,10 +42,9 @@ import { clearKey } from "../../engine/key-labels.ts";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, latinVerdict } from "../../engine/latin.ts";
 import {
   availablePlacements,
-  forcingChainArea,
+  genericLatinArea,
   rowColRegions,
   type SingleReason,
-  singlePlacementReason,
   singleReasonOf,
 } from "../../engine/latin-hint.ts";
 import {
@@ -55,7 +54,10 @@ import {
 } from "../../engine/note-taking-cell.ts";
 import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import { parseConfigInt } from "../../engine/params.ts";
-import { pencilKeepHighlightPref } from "../../engine/pencil-prefs.ts";
+import {
+  candidateReadingPref,
+  pencilKeepHighlightPref,
+} from "../../engine/pencil-prefs.ts";
 import {
   CURSOR_SELECT2,
   gridCursorMove,
@@ -364,6 +366,11 @@ function executeMove(from: GroupState, move: GroupMove): GroupState {
       for (const { x, y, n } of move.marks) ret.pencil[y * w + x] &= ~(1 << n);
       return ret;
     }
+    case "pencilAdd": {
+      const ret = cloneState(from);
+      for (const { x, y, n } of move.marks) ret.pencil[y * w + x] |= 1 << n;
+      return ret;
+    }
     default:
       return assertNever(move, "group: executeMove");
   }
@@ -514,28 +521,9 @@ function reasonArea(reason: NarratableReason): OrderedCell[] {
       return [{ x: reason.viaX, y: reason.viaY }];
     case "identityElim":
       return [{ x: reason.wx, y: reason.wy }];
-    // A forcing chain names the cells it ran through, **numbered**, so the
-    // narration can cite them and the player can walk it.
-    case "forcing":
-      return forcingChainArea(reason);
     default:
-      return [];
+      return genericLatinArea(reason);
   }
-}
-
-/** The candidates the player can read off the board, for classifying a placement:
- * a cell's notes where it has any, and every value not already placed in its row
- * or column where it has none. Group places before it populates, so a placement
- * often lands on a board with few notes or none, and a note-less cell read as
- * holding nothing would pass every placement off as a hidden single in its row. */
-function visibleCandidates(wGrid: Uint8Array, wPen: Int32Array, w: number): Int32Array {
-  const pen = Int32Array.from(wPen);
-  const all = (1 << (w + 1)) - (1 << 1);
-  for (let i = 0; i < pen.length; i++) if (!wGrid[i] && pen[i] === 0) pen[i] = all;
-  const regionsOf = (x: number, y: number) => rowColRegions(x, y, w);
-  for (const m of obviousCandidateMarks(wGrid, pen, w, regionsOf))
-    pen[m.y * w + m.x] &= ~(1 << m.n);
-  return pen;
 }
 
 /** Build the hint plan by walking a working copy of the board the way a person
@@ -547,7 +535,10 @@ function visibleCandidates(wGrid: Uint8Array, wPen: Int32Array, w: number): Int3
  * is narrated from the notes, and a cull skipped here would leave it resting on
  * strikes the board does not show. Capped below recursion (a guess is not
  * teachable). */
-function buildSteps(state: GroupState): HintStep<GroupMove, GroupHint>[] {
+function buildSteps(
+  state: GroupState,
+  { reading }: CandidatePlanPrefs,
+): HintStep<GroupMove, GroupHint>[] {
   const w = state.w;
   const id = state.id;
   const steps: HintStep<GroupMove, GroupHint>[] = [];
@@ -572,49 +563,30 @@ function buildSteps(state: GroupState): HintStep<GroupMove, GroupHint>[] {
       )
       .map((op) => ({ place: op, reason: op.reason }));
   };
-  /** A recorded placement, a generic `single` re-derived as naked or hidden
-   * from what the player can read off the board. */
-  const placingOp = (op: HintOp, ops: readonly HintOp[]): Legs =>
-    placing(
-      op,
-      op.reason.kind === "single"
-        ? singlePlacementReason(
-            wGrid,
-            visibleCandidates(wGrid, wPen, w),
-            op.x,
-            op.y,
-            op.n,
-            w,
-          )
-        : op.reason,
-      ops,
-    );
-
-  // A placement that is the solver's immediate next deduction (nothing precedes
-  // it in solver order). `ops.length > 0` is load-bearing:
+  // A placement of Group's own that is the solver's immediate next deduction
+  // (nothing precedes it in solver order). `ops.length > 0` is load-bearing:
   // `firstUnreflectedPlaceIndex` returns `ops.length` for "no placement", which
   // is 0 when `ops` is empty, and that is ordinary on an Unreasonable board,
   // whose rungs the cap withholds. Any associativity placement is available once
   // the three products it reads are all on the board, since those are its whole
-  // premise. Before the notes are in, so is any recorded single the player can
-  // read off the board; once they are, singles wait behind the strikes.
-  const leads = ({ ops, populated }: RungContext<HintOp>): Legs[] => {
+  // premise. Before the notes are set up, so is any recorded single the player
+  // can read off the board; once they are, singles wait behind the strikes.
+  const leads = ({ ops, populated, shown }: RungContext<HintOp>): Legs[] => {
     const out: Legs[] = [];
-    // A *single* lead waits behind the strikes once the notes are in — the last
-    // sentence above, which this branch used to contradict. `visibleCandidates`
-    // culls the obvious marks for itself, so a single resting on a strike the
-    // board still shows read as naked and narrated "every other element has
-    // been ruled out in this cell" over a cell showing two notes. Reachable in
-    // play: place an element without culling your own notes (auto-pencil off,
-    // which is Group's default), then ask for a hint. Found by
-    // `hint-resume.test.ts` once its Latin block walked 8x8 Tricky rather than
-    // the first preset; that walk follows one leg of each journey, which is
-    // exactly the player who takes the placement and leaves its cull.
+    // A *single* never leads: whether the board shows it is the question
+    // `availablePlacements` answers below, and a lead would have to assert it.
+    // A single resting on a strike the board still shows (a stale note the
+    // player left: place an element without culling your own notes, which is
+    // Group's default, then ask for a hint) is not readable yet, and asserting
+    // it threw. Found by `hint-resume.test.ts` once its Latin block walked 8x8
+    // Tricky rather than the first preset; that walk follows one leg of each
+    // journey, which is exactly the player who takes the placement and leaves
+    // its cull.
     const lead =
       ops.length > 0 &&
       firstUnreflectedPlaceIndex(ops, wGrid, w) === 0 &&
-      !(populated && ops[0].reason.kind === "single");
-    if (lead) out.push(placingOp(ops[0], ops));
+      ops[0].reason.kind !== "single";
+    if (lead) out.push(placing(ops[0], ops[0].reason, ops));
     for (const op of ops)
       if (
         (op !== ops[0] || !lead) &&
@@ -623,17 +595,18 @@ function buildSteps(state: GroupState): HintStep<GroupMove, GroupHint>[] {
         wGrid[op.y * w + op.x] === 0 &&
         reasonArea(op.reason).every((p) => wGrid[p.y * w + p.x] !== 0)
       )
-        out.push(placingOp(op, ops));
+        out.push(placing(op, op.reason, ops));
     if (!populated)
       for (const { op, why } of availablePlacements(
         ops,
         wGrid,
-        visibleCandidates(wGrid, wPen, w),
+        shown,
         w,
         regions,
         false,
+        { written: wPen },
       ))
-        if (why.kind !== "recorded" && (op !== ops[0] || !lead))
+        if (why.kind !== "recorded")
           out.push(placing(op, singleReasonOf(op.n, why), ops));
     return out;
   };
@@ -645,6 +618,7 @@ function buildSteps(state: GroupState): HintStep<GroupMove, GroupHint>[] {
     pencil: wPen,
     moves: groupCandidateMoves,
     autoClean: false,
+    reading,
     label: "group hint plan",
     record: () => recordGroupDeductions(wGrid, w, maxdiff),
     placeWords: (m, reason, continues) => ({
@@ -658,9 +632,8 @@ function buildSteps(state: GroupState): HintStep<GroupMove, GroupHint>[] {
       explanation: narrate(reason, valuesOf(marks), id),
       area: reasonArea(reason),
     }),
-    notes: { noun: "element", placedVerb: "placed" },
+    notes: { noun: "element", placedVerb: "placed", value: (n) => toChar(n, id) },
     rungs: [leads],
-    shownNotes: () => visibleCandidates(wGrid, wPen, w),
     placement: placing,
   });
   return steps;
@@ -669,9 +642,9 @@ function buildSteps(state: GroupState): HintStep<GroupMove, GroupHint>[] {
 function hint(
   state: GroupState,
   _aux?: string,
-  _ui?: GroupUi,
+  ui?: GroupUi,
 ): HintResult<GroupMove, GroupHint> {
-  return candidateHint(state, null, findMistakes, buildSteps);
+  return candidateHint(state, ui ?? newUi(state), findMistakes, buildSteps);
 }
 
 /**
@@ -688,9 +661,11 @@ const groupCandidateMoves: CandidateMoveAdapter<GroupMove> = {
     }
     if (m.type === "pencilAll") return { type: "pencilAll" };
     if (m.type === "pencilStrike") return { type: "pencilStrike", marks: [...m.marks] };
+    if (m.type === "pencilAdd") return { type: "pencilAdd", marks: [...m.marks] };
     return null;
   },
   strike: (marks) => ({ type: "pencilStrike", marks }),
+  add: (marks) => ({ type: "pencilAdd", marks }),
   place: (x, y, n) => ({ type: "set", cells: [{ x, y }], n }),
 };
 
@@ -809,7 +784,7 @@ export const groupGame: Game<
   requestKeys,
   textFormat,
 
-  prefs: [pencilKeepHighlightPref<GroupUi>()],
+  prefs: [pencilKeepHighlightPref<GroupUi>(), candidateReadingPref<GroupUi>()],
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

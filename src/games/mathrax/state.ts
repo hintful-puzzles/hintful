@@ -18,6 +18,7 @@
  * save replays moves), so the divergence is free.
  */
 
+import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
@@ -577,6 +578,9 @@ export type MathraxMove =
   /** Strike the listed pencil candidates atomically (the adaptive second press
    * of mark-all, and a future hint's elimination step); idempotent. */
   | { type: "pencilStrike"; marks: { x: number; y: number; n: number }[] }
+  /** Write the listed pencil candidates, `pencilStrike`'s mirror: a hint's note
+   * step. */
+  | { type: "pencilAdd"; marks: { x: number; y: number; n: number }[] }
   /** Auto-solve: write the solution into every non-given cell. */
   | { type: "solve"; grid: number[] };
 
@@ -599,6 +603,8 @@ export interface MathraxUi {
   pencilSticky: boolean;
   /** Preference (default on): keep the mouse highlight after a pencil change. */
   pencilKeepHighlight: boolean;
+  /** Preference: how a hint pencils (`CandidateReading`). */
+  candidateReading: CandidateReading;
 }
 
 export function newUi(_state: MathraxState): MathraxUi {
@@ -609,5 +615,9 @@ export function newUi(_state: MathraxState): MathraxUi {
     autoPencil: false,
     pencilSticky: true,
     pencilKeepHighlight: true,
+    // Not the convention: a clue reads the cell across it, and the rest is
+    // singles, so a plan writes notes into under half the cells and is
+    // shorter than penciling in every candidate first below Tricky.
+    candidateReading: "implicit",
   };
 }

@@ -27,7 +27,11 @@
  * carrying them.
  */
 
-import type { Mark, NoteEncoding } from "../../engine/candidate-hint.ts";
+import type {
+  CandidateReading,
+  Mark,
+  NoteEncoding,
+} from "../../engine/candidate-hint.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
@@ -257,16 +261,18 @@ export interface RomeState extends RomeBoard {
  * clear the square's marks), or a *solve* (the full-grid solution): upstream's
  * `"R x,y,c"` / `"P x,y,c"` / `"S<letters>"`.
  *
- * `pencilAll` and `pencilStrike` are this fork's, for the Mark-all press and
- * the hint: a `pencil` toggle is one square and is not idempotent, so neither a
- * bulk fill nor a firing that rules out several marks at once can be built from
- * it (docs/games/hints.md § "Persist, populate, and the moves").
+ * `pencilAll`, `pencilStrike` and `pencilAdd` are this fork's, for the Mark-all
+ * press and the hint: a `pencil` toggle is one square and is not idempotent, so
+ * neither a bulk fill nor a firing that rules out or writes several marks at
+ * once can be built from it (docs/games/hints.md § "Persist, populate, and the
+ * moves").
  */
 export type RomeMove =
   | { kind: "place"; x: number; y: number; dir: RomeDir | null }
   | { kind: "pencil"; x: number; y: number; dir: RomeDir | null }
   | { kind: "pencilAll" }
   | { kind: "pencilStrike"; marks: readonly Mark[] }
+  | { kind: "pencilAdd"; marks: readonly Mark[] }
   | { kind: "solve"; arrows: ReadonlyArray<RomeDir | null> };
 
 // --- ui ---------------------------------------------------------------------
@@ -320,6 +326,8 @@ export interface RomeUi {
   sloops: boolean;
   /** Preference: tint squares whose arrows reach a goal (default on). */
   sgoals: boolean;
+  /** Preference: how a hint pencils (`CandidateReading`). */
+  candidateReading: CandidateReading;
 }
 
 // --- params -----------------------------------------------------------------

@@ -12,6 +12,7 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAllMove,
+  type CandidatePlanPrefs,
   candidateHint,
   keepCandidateHintTrack,
   refreshCandidateHintStep,
@@ -31,7 +32,7 @@ import {
 import { narrateLatinReason } from "../../engine/hint-text.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
-import { forcingChainArea, rowColRegions } from "../../engine/latin-hint.ts";
+import { genericLatinArea, rowColRegions } from "../../engine/latin-hint.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
@@ -42,6 +43,7 @@ import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import { parseConfigInt } from "../../engine/params.ts";
 import {
   autoPencilPref,
+  candidateReadingPref,
   pencilKeepHighlightPref,
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
@@ -242,6 +244,10 @@ function executeMove(state: KeenState, move: KeenMove): KeenState {
       for (const { x, y, n } of move.marks) next.pencil[y * w + x] &= ~(1 << n);
       return next;
     }
+    case "pencilAdd": {
+      for (const { x, y, n } of move.marks) next.pencil[y * w + x] |= 1 << n;
+      return next;
+    }
     case "solve": {
       for (let i = 0; i < w * w; i++) {
         next.grid[i] = move.grid[i];
@@ -334,23 +340,26 @@ function narrate(reason: HintReason, ns: number[]): string {
 /** The deduction's marks: a cage deduction is about "this cage", so the cage is
  * the hatch (docs/games/hints.md § "Hatch the line the sentence names"); a
  * forcing chain outlines the cells it ran through, **numbered**, so the sentence
- * can cite them and the player can walk it; the remaining generic Latin
- * techniques have no clean local area. */
-function reasonMarks(reason: HintReason): { area: OrderedCell[]; hatch?: Point[] } {
+ * can cite them and the player can walk it, and a set the cells that account
+ * for what it strikes. */
+function reasonMarks(reason: HintReason): {
+  area: OrderedCell[];
+  hatch?: Point[];
+  reads?: Point[];
+} {
+  // What the cage can still hold is what its cells can, so they are all read.
   if (reason.kind === "cage" || reason.kind === "cageLine") {
-    return { area: [], hatch: reason.cells };
+    return { area: [], hatch: reason.cells, reads: reason.cells };
   }
-  if (reason.kind === "forcing") return { area: forcingChainArea(reason) };
-  return { area: [] };
+  return { area: genericLatinArea(reason) };
 }
 
 /** Build the hint plan by walking a working copy of the board the way a person
- * solves it (`runLatinCandidatePlan`). `autoClean` (the auto-pencil preference)
- * decides whether a placement's trivial row/column eliminations are silent or
- * taught. */
+ * solves it (`runLatinCandidatePlan`), under the player's two pencil
+ * preferences. */
 function buildSteps(
   state: KeenState,
-  autoClean: boolean,
+  { autoClean, reading }: CandidatePlanPrefs,
 ): HintStep<KeenMove, KeenHint>[] {
   const w = state.params.w;
   const steps: HintStep<KeenMove, KeenHint>[] = [];
@@ -362,6 +371,7 @@ function buildSteps(
     grid: wGrid,
     pencil: Int32Array.from(state.pencil),
     autoClean,
+    reading,
     label: "keen hint plan",
     record: () => recordKeenDeductions(w, state.clues, Uint8Array.from(wGrid), maxdiff),
     placeWords: (m, reason) => ({
@@ -466,7 +476,8 @@ export const keenGame: Game<
 
   solve,
   difficulty,
-  hint: (state, _aux, ui) => candidateHint(state, ui ?? null, findMistakes, buildSteps),
+  hint: (state, _aux, ui) =>
+    candidateHint(state, ui ?? newUi(state), findMistakes, buildSteps),
   // The shared candidate-elimination keep-track and stale-step check;
   // `KeenHint` is structurally `CandidateHighlights`.
   hintKeepTrack: (m, step: HintStep<KeenMove, KeenHint>, state) =>
@@ -482,6 +493,7 @@ export const keenGame: Game<
     ),
     stickyPencilPref<KeenUi>(),
     pencilKeepHighlightPref<KeenUi>(),
+    candidateReadingPref<KeenUi>(),
   ],
 
   colors,

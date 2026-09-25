@@ -83,8 +83,9 @@ export type LatinReason =
   /** Height `n` was just placed at `(px, py)`, which rules it out of the rest
    * of that row and column. */
   | { kind: "dup"; n: number; px: number; py: number }
-  /** A naked-subset ("set") elimination. */
-  | { kind: "set" }
+  /** A naked-subset ("set") elimination. `cells` are the subset: the cells
+   * whose candidates account for the struck values between them. */
+  | { kind: "set"; cells: readonly { x: number; y: number }[] }
   /** A forcing-chain elimination, with the chain it actually followed. */
   | { kind: "forcing"; chain: ForcingLink[]; shares: "row" | "col" };
 
@@ -438,6 +439,32 @@ export class LatinSolver {
 
         if (rows >= n - count) {
           let progress = false;
+          // The cells the rectangle's rows confine to the other columns: the
+          // premise a hint outlines ("these cells account for …"). A row is a
+          // cell of a line in the two line slices, and a line of the grid in the
+          // value slice, whose premise is then the cells of the rectangle.
+          let premise: { x: number; y: number }[] | null = null;
+          const premiseCells = (): { x: number; y: number }[] => {
+            const seen = new Set<number>();
+            const out: { x: number; y: number }[] = [];
+            for (let i = 0; i < n; i++) {
+              let inside = true;
+              for (let j = 0; j < n; j++)
+                if (set[j] && grid[i * o + j]) {
+                  inside = false;
+                  break;
+                }
+              if (!inside) continue;
+              for (let j = 0; j < n; j++) {
+                if (set[j] || !grid[i * o + j]) continue;
+                const rest = ((start + rowidx[i] * step1 + colidx[j] * step2) / o) | 0;
+                if (seen.has(rest)) continue;
+                seen.add(rest);
+                out.push({ x: (rest / o) | 0, y: rest % o });
+              }
+            }
+            return out;
+          };
           for (let i = 0; i < n; i++) {
             let ok = true;
             for (let j = 0; j < n; j++) {
@@ -453,12 +480,13 @@ export class LatinSolver {
                   if (this.recorder) {
                     const en = 1 + (fpos % o);
                     const rest = (fpos / o) | 0;
+                    premise ??= premiseCells();
                     this.recorder({
                       kind: "elim",
                       x: (rest / o) | 0,
                       y: rest % o,
                       n: en,
-                      reason: { kind: "set" },
+                      reason: { kind: "set", cells: premise },
                       group: this.group,
                     });
                   }
@@ -719,17 +747,18 @@ export class LatinSolver {
   ): number {
     const cube = this.cube;
     const rec = this.recorder;
-    const strike = (pos: number): void => {
+    const s = this.symbols;
+    const cellOf = (pos: number): { x: number; y: number } => {
+      const rest = (pos / s) | 0;
+      return { x: (rest / this.o) | 0, y: rest % this.o };
+    };
+    const strike = (pos: number, cells: readonly { x: number; y: number }[]): void => {
       if (rec) {
-        const s = this.symbols;
-        const n = 1 + (pos % s);
-        const rest = (pos / s) | 0;
         rec({
           kind: "elim",
-          x: (rest / this.o) | 0,
-          y: rest % this.o,
-          n,
-          reason: { kind: "set" },
+          ...cellOf(pos),
+          n: 1 + (pos % s),
+          reason: { kind: "set", cells },
           group: this.group,
         });
       }
@@ -766,12 +795,23 @@ export class LatinSolver {
         }
         if (supplied < demanded) return -1;
         if (supplied !== demanded) continue;
+        const pos = (a: number, b: number): number =>
+          side === "rows" ? at(a, b) : at(b, a);
+        // The subset's own live pairings, as cells: the premise a hint outlines.
+        const premise: { x: number; y: number }[] = [];
+        if (rec)
+          for (let a = 0; a < nSub; a++)
+            for (let b = 0; b < nOther; b++)
+              if (mask & (1 << a) && live(a, b)) {
+                const c = cellOf(pos(a, b));
+                if (!premise.some((p) => p.x === c.x && p.y === c.y)) premise.push(c);
+              }
         let progress = false;
         for (let a = 0; a < nSub; a++) {
           if (mask & (1 << a)) continue;
           for (let b = 0; b < nOther; b++) {
             if (neighborhood & (1 << b) && live(a, b)) {
-              strike(side === "rows" ? at(a, b) : at(b, a));
+              strike(pos(a, b), premise);
               progress = true;
             }
           }

@@ -21,6 +21,7 @@ import {
   type GroupParams,
   type GroupState,
   newState,
+  newUi,
 } from "./state.ts";
 
 const NORMAL: GroupParams = { w: 6, diff: 1, id: true };
@@ -273,11 +274,15 @@ describe("group hint — keepTrack", () => {
   });
 
   it("a Mark-all completes a populate step", () => {
-    // Force a populate step by taking an identity-hidden Tricky plan that needs it.
+    // Force a populate step by taking an identity-hidden Tricky plan that needs
+    // it, under the reading that has one.
     for (const seed of ["h1", "h2", "h3", "h4", "h5"]) {
       let s = board(HARD_HIDDEN, seed);
       for (let i = 0; i < 500 && groupGame.status(s) === "ongoing"; i++) {
-        const res = groupGame.hint?.(s, undefined);
+        const res = groupGame.hint?.(s, undefined, {
+          ...newUi(s),
+          candidateReading: "populate",
+        });
         if (!res?.ok) break;
         const pop = res.steps.find((st) => (st.move as GroupMove).type === "pencilAll");
         if (pop) {

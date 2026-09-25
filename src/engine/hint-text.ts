@@ -102,6 +102,27 @@ export function cleanObviousText(
   return `Now clear the easy ones: cross out any ${noun} already ${placedVerb} in each ${cell}'s ${regions}.`;
 }
 
+/**
+ * Narration for a note step under the implicit reading: a blank cell with no
+ * notes gets the candidates its regions leave it, written down because the
+ * deduction that follows strikes them or rests on them. `values` are already
+ * rendered; the words are those of {@link cleanObviousText}, which states the
+ * same rule for a board that has every note. `every` says the regions rule
+ * nothing out yet, where "only" would list every value as if it were a finding.
+ */
+export function noteText(
+  values: readonly string[],
+  every: boolean,
+  vocab: { noun: string; placedVerb: string; regions: string; cell?: string },
+): string {
+  const { noun, placedVerb, regions } = vocab;
+  const cell = vocab.cell ?? "cell";
+  if (every)
+    return `Nothing in this ${cell}'s ${regions} rules out a ${noun} yet, so pencil in every one.`;
+  const one = values.length === 1;
+  return `Only ${joinWith([...values])} ${one ? "isn't" : "aren't"} already ${placedVerb} in this ${cell}'s ${regions}, so pencil ${one ? "it" : "them"} in.`;
+}
+
 // --- the generic Latin arms --------------------------------------------------
 
 /**
@@ -159,6 +180,8 @@ export function narrateLatinReason(
   switch (reason.kind) {
     case "single":
       return `Every other ${noun} has been ruled out in this ${cell}, so it can only be ${v(ns[0])}.`;
+    case "regionsFull":
+      return `This ${cell}'s row and column already hold every other ${noun}, so it can only be ${v(ns[0])}.`;
     case "hiddenSingle":
       return `In this ${reason.line === "row" ? "row" : "column"}, ${v(reason.n)} can go in only this ${cell}, since every other ${cell} in the ${reason.line === "row" ? "row" : "column"} rules it out, so it must be ${v(reason.n)}.`;
     case "dup": {
@@ -168,7 +191,7 @@ export function narrateLatinReason(
     case "set":
       // One strike per cell can repeat a value, and the order is the solver's:
       // name each value once, smallest first.
-      return `Other ${cells} already account for ${list(distinct(ns))} between them, so we must cross out ${list(distinct(ns))} here.`;
+      return `The outlined ${cells} already account for ${list(distinct(ns))} between them, so we must cross out ${list(distinct(ns))} here.`;
     case "forcing":
       return narrateForcingChain(
         reason,

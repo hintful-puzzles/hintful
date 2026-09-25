@@ -17,6 +17,7 @@
  * that it is true of the board rather than merely present.
  */
 import { describe, expect, it } from "vitest";
+import type { CandidatePlanPrefs } from "../../engine/candidate-hint.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
@@ -49,6 +50,9 @@ import {
 
 const NORMAL: RomeParams = { w: 6, h: 6, diff: DIFF_NORMAL };
 const TRICKY: RomeParams = { w: 8, h: 8, diff: DIFF_TRICKY };
+
+/** The plan these cases read: every mark penciled in first. */
+const POPULATE: CandidatePlanPrefs = { autoClean: false, reading: "populate" };
 
 function gen(p: RomeParams, seed: string): { desc: string; st: RomeState } {
   const { desc } = newRomeDesc(p, randomNew(seed));
@@ -154,7 +158,7 @@ describe("rome recording projection", () => {
 describe("rome hint plan", () => {
   it("opens by penciling in, then clearing the area duplicates", () => {
     const { st } = gen(NORMAL, "open-0");
-    const steps = buildSteps(st, false);
+    const steps = buildSteps(st, POPULATE);
     expect(steps[0].explanation).toMatch(/^Start by penciling/);
     expect((steps[0].move as RomeMove).kind).toBe("pencilAll");
     expect(steps[1].explanation).toMatch(/^Now clear the easy ones/);
@@ -180,7 +184,7 @@ describe("rome hint plan", () => {
       if (x === 0) expect(populated.pencil[i] & dirBit(3)).toBe(0);
       if (x === st.w - 1) expect(populated.pencil[i] & dirBit(4)).toBe(0);
     }
-    for (const step of buildSteps(st, false)) {
+    for (const step of buildSteps(st, POPULATE)) {
       const m = step.move as RomeMove;
       expect(["place", "pencil", "pencilAll", "pencilStrike"]).toContain(m.kind);
       if (m.kind !== "pencilStrike") continue;
@@ -302,7 +306,7 @@ function frameFor(p: RomeParams, pred: (e: string) => boolean): string {
   for (let s = 0; s < 40; s++) {
     const seed = `frame-${p.w}-${s}`;
     const { st } = gen(p, seed);
-    if (buildSteps(st, false).some((step) => pred(step.explanation)))
+    if (buildSteps(st, POPULATE).some((step) => pred(step.explanation)))
       return `${encodeParams(p, true)}#${seed}`;
   }
   throw new Error(`no matching frame for ${encodeParams(p, true)}`);

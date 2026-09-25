@@ -12,6 +12,7 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAllMove,
+  type CandidatePlanPrefs,
   candidateHint,
   keepCandidateHintTrack,
   refreshCandidateHintStep,
@@ -32,7 +33,7 @@ import {
 import { narrateLatinReason } from "../../engine/hint-text.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
-import { forcingChainArea, rowColRegions } from "../../engine/latin-hint.ts";
+import { genericLatinArea, rowColRegions } from "../../engine/latin-hint.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
@@ -43,6 +44,7 @@ import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import { parseConfigInt } from "../../engine/params.ts";
 import {
   autoPencilPref,
+  candidateReadingPref,
   pencilKeepHighlightPref,
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
@@ -303,6 +305,10 @@ function executeMove(state: UnequalState, move: UnequalMove): UnequalState {
       for (const { x, y, n } of move.marks) next.pencil[y * o + x] &= ~(1 << n);
       return next;
     }
+    case "pencilAdd": {
+      for (const { x, y, n } of move.marks) next.pencil[y * o + x] |= 1 << n;
+      return next;
+    }
     case "solve": {
       for (let i = 0; i < o * o; i++) {
         next.grid[i] = move.grid[i];
@@ -406,22 +412,17 @@ function reasonArea(reason: HintReason, target: Point): OrderedCell[] {
     case "adjacent":
     case "adjacentSet":
       return [target, { x: reason.ox, y: reason.oy }];
-    // A forcing chain names the cells it ran through, **numbered**, so the
-    // narration can cite them and the player can walk it.
-    case "forcing":
-      return forcingChainArea(reason);
     default:
-      return [];
+      return genericLatinArea(reason);
   }
 }
 
 /** Build the hint plan by walking a working copy of the board the way a person
- * solves it (`runLatinCandidatePlan`). `autoClean` (the auto-pencil preference)
- * decides whether a placement's trivial row/column eliminations are silent or
- * taught. */
+ * solves it (`runLatinCandidatePlan`), under the player's two pencil
+ * preferences. */
 function buildSteps(
   state: UnequalState,
-  autoClean: boolean,
+  { autoClean, reading }: CandidatePlanPrefs,
 ): HintStep<UnequalMove, UnequalHint>[] {
   const o = state.order;
   const steps: HintStep<UnequalMove, UnequalHint>[] = [];
@@ -433,6 +434,7 @@ function buildSteps(
     grid: wGrid,
     pencil: Int32Array.from(state.pencil),
     autoClean,
+    reading,
     label: "unequal hint plan",
     record: () =>
       recordUnequalDeductions(
@@ -455,7 +457,7 @@ function buildSteps(
     // The narration names a cell's relationship to its neighbor, so a firing is
     // one leg per cell: a link's two ends, greater and lesser, are two legs.
     strikeAxis: (op) => op.y * o + op.x,
-    notes: { noun: "number", placedVerb: "standing" },
+    notes: { noun: "number", placedVerb: "standing", value: unequalVocab(o).value },
   });
   return steps;
 }
@@ -465,7 +467,7 @@ function hint(
   _aux?: string,
   ui?: UnequalUi,
 ): HintResult<UnequalMove, UnequalHint> {
-  return candidateHint(state, ui ?? null, findMistakes, buildSteps);
+  return candidateHint(state, ui ?? newUi(state), findMistakes, buildSteps);
 }
 
 /** Classify a player move against the displayed hint step (shared
@@ -615,6 +617,7 @@ export const unequalGame: Game<
     ),
     stickyPencilPref<UnequalUi>(),
     pencilKeepHighlightPref<UnequalUi>(),
+    candidateReadingPref<UnequalUi>(),
   ],
 
   colors,

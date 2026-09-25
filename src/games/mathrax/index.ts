@@ -16,6 +16,7 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAllMove,
+  type CandidatePlanPrefs,
   candidateHint,
   keepCandidateHintTrack,
   refreshCandidateHintStep,
@@ -35,7 +36,7 @@ import {
 } from "../../engine/game.ts";
 import { narrateLatinReason } from "../../engine/hint-text.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
-import { forcingChainArea, rowColRegions } from "../../engine/latin-hint.ts";
+import { genericLatinArea, rowColRegions } from "../../engine/latin-hint.ts";
 import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
@@ -45,6 +46,7 @@ import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import { parseConfigInt } from "../../engine/params.ts";
 import {
   autoPencilPref,
+  candidateReadingPref,
   pencilKeepHighlightPref,
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
@@ -280,6 +282,10 @@ function executeMove(state: MathraxState, move: MathraxMove): MathraxState {
       for (const { x, y, n } of move.marks) next.pencil[y * o + x] &= ~(1 << n);
       return next;
     }
+    case "pencilAdd": {
+      for (const { x, y, n } of move.marks) next.pencil[y * o + x] |= 1 << n;
+      return next;
+    }
     case "solve": {
       for (let i = 0; i < o * o; i++) {
         if (!(next.flags[i] & F_IMMUTABLE)) {
@@ -403,22 +409,17 @@ function reasonArea(reason: HintReason, target: Point): OrderedCell[] {
       return clueIsParity(reason.clue)
         ? clueCells(reason.cx, reason.cy)
         : [target, clueOpposite(reason.cx, reason.cy, target)];
-    // A forcing chain names the cells it ran through, **numbered**, so the
-    // narration can cite them and the player can walk it.
-    case "forcing":
-      return forcingChainArea(reason);
     default:
-      return [];
+      return genericLatinArea(reason);
   }
 }
 
 /** Build the hint plan by walking a working copy of the board the way a person
- * solves it (`runLatinCandidatePlan`). `autoClean` (the auto-pencil preference)
- * decides whether a placement's trivial row/column eliminations are silent or
- * taught. */
+ * solves it (`runLatinCandidatePlan`), under the player's two pencil
+ * preferences. */
 function buildSteps(
   state: MathraxState,
-  autoClean: boolean,
+  { autoClean, reading }: CandidatePlanPrefs,
 ): HintStep<MathraxMove, MathraxHint>[] {
   const o = state.params.o;
   const steps: HintStep<MathraxMove, MathraxHint>[] = [];
@@ -432,6 +433,7 @@ function buildSteps(
     grid: wGrid,
     pencil: Int32Array.from(state.pencil),
     autoClean,
+    reading,
     label: "mathrax hint plan",
     record: () => recordMathraxDeductions(o, state.clues, wGrid, maxdiff),
     placeWords: (m, reason) => ({
@@ -457,7 +459,7 @@ function hint(
   _aux?: string,
   ui?: MathraxUi,
 ): HintResult<MathraxMove, MathraxHint> {
-  return candidateHint(state, ui ?? null, findMistakes, buildSteps);
+  return candidateHint(state, ui ?? newUi(state), findMistakes, buildSteps);
 }
 
 /** Classify a player move against the displayed hint step (shared
@@ -592,6 +594,7 @@ export const mathraxGame: Game<
     ),
     stickyPencilPref<MathraxUi>(),
     pencilKeepHighlightPref<MathraxUi>(),
+    candidateReadingPref<MathraxUi>(),
   ],
 
   colors,

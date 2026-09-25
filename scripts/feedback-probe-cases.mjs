@@ -792,8 +792,8 @@ export const MODULES = [
       {
         within: "candidateHint",
         why: "with no ui the plan folds the trivial eliminations away instead of teaching them",
-        find: "  const autoClean = ui?.autoPencil ?? false;",
-        replace: "  const autoClean = ui?.autoPencil ?? true;",
+        find: "    autoClean: ui?.autoPencil ?? false,",
+        replace: "    autoClean: ui?.autoPencil ?? true,",
       },
       {
         within: "nakedSingles",
@@ -883,8 +883,8 @@ export const MODULES = [
       {
         within: "lazyPopulate.ensure",
         why: "the working fill overwrites notes the player narrowed, so the plan teaches strikes on candidates no longer on their board",
-        find: "        if (!wGrid[i] && wPen[i] === 0) wPen[i] = all(i);",
-        replace: "        if (!wGrid[i]) wPen[i] = all(i);",
+        find: "        if (!wGrid[i] && wPen[i] === 0) wPen[i] = fillAllNotes(i, w, opts?.enc);",
+        replace: "        if (!wGrid[i]) wPen[i] = fillAllNotes(i, w, opts?.enc);",
       },
       {
         within: "lazyPopulate",
@@ -893,10 +893,10 @@ export const MODULES = [
         replace: "  let populated = false;",
       },
       {
-        within: "lazyPopulate.ensure",
+        within: "fillAllNotes",
         why: "the populate fill omits the top candidate, so no elimination of it is ever taught",
-        find: "      const scalar = (1 << ((opts?.enc?.values ?? w) + 1)) - (1 << 1);",
-        replace: "      const scalar = (1 << (opts?.enc?.values ?? w)) - (1 << 1);",
+        find: "  return enc?.all?.(i) ?? (1 << ((enc?.values ?? w) + 1)) - (1 << 1);",
+        replace: "  return enc?.all?.(i) ?? (1 << (enc?.values ?? w)) - (1 << 1);",
       },
       {
         within: "emitObviousCleanStep",
@@ -926,7 +926,7 @@ export const MODULES = [
       {
         within: "keepCandidateHintTrack",
         why: "a toggle that would re-add an absent candidate counts as following the strike",
-        find: '    if (!(pencil[pm.y * w + pm.x] & bit(pm.n))) return "off";',
+        find: '    if (present !== (sm.type === "pencilStrike")) return "off";',
         replace: "    if (false) return null as never;",
       },
       {
@@ -944,8 +944,8 @@ export const MODULES = [
       {
         within: "refreshCandidateHintStep",
         why: "a stored mark on a cell that has since been filled is still displayed",
-        find: "      ({ x, y, n }) => grid[y * w + x] === 0 && (pencil[y * w + x] & bit(n)) !== 0,",
-        replace: "      ({ x, y, n }) => (pencil[y * w + x] & bit(n)) !== 0,",
+        find: "        grid[y * w + x] === 0 && ((pencil[y * w + x] & bit(n)) !== 0) === want,",
+        replace: "        ((pencil[y * w + x] & bit(n)) !== 0) === want,",
       },
       {
         within: "refreshCandidateHintStep",

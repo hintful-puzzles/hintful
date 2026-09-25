@@ -11,6 +11,7 @@
  * of four.
  */
 import { describe, expect, it } from "vitest";
+import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
 import {
@@ -131,8 +132,9 @@ describe("mathrax recording solver", () => {
 
 // --- tier 1: hint plan ------------------------------------------------------
 
-function firstHint(st: MathraxState) {
-  const res = mathraxGame.hint?.(st);
+function firstHint(st: MathraxState, reading?: CandidateReading) {
+  const ui = { ...newUi(st), ...(reading ? { candidateReading: reading } : {}) };
+  const res = mathraxGame.hint?.(st, undefined, ui);
   if (!res?.ok) throw new Error(`hint refused: ${res && !res.ok ? res.error : "—"}`);
   return res;
 }
@@ -140,7 +142,9 @@ function firstHint(st: MathraxState) {
 describe("mathrax hint", () => {
   it("populates before the first elimination, then places", () => {
     const { st } = gen(NORMAL, "hint-empty");
-    const moves = firstHint(st).steps.map((s) => (s.move as MathraxMove).type);
+    const moves = firstHint(st, "populate").steps.map(
+      (s) => (s.move as MathraxMove).type,
+    );
     expect(moves.indexOf("pencilAll")).toBe(0);
     expect(moves.indexOf("pencilStrike")).toBeGreaterThan(0);
     expect(moves.includes("set")).toBe(true);
@@ -327,7 +331,7 @@ describe("mathrax hint", () => {
 describe("mathrax hintKeepTrack", () => {
   it("matches a populate step, rejects anything else", () => {
     const { st } = gen(NORMAL, "kt-pop");
-    const res = firstHint(st);
+    const res = firstHint(st, "populate");
     const step = res.steps.find((s) => (s.move as MathraxMove).type === "pencilAll");
     if (!step) throw new Error("no populate step");
     expect(mathraxGame.hintKeepTrack?.({ type: "pencilAll" }, step, st)).toBe(

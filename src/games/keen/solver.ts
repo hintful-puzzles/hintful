@@ -27,6 +27,7 @@ import {
   type LatinSolver,
   latinSolver,
 } from "../../engine/latin.ts";
+import type { SingleReason } from "../../engine/latin-hint.ts";
 import type { Point } from "../../engine/types.ts";
 import {
   C_ADD,
@@ -60,14 +61,9 @@ export { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE };
 export type KeenReason =
   | { kind: "cage"; op: number; value: number; cells: Point[] }
   | { kind: "cageLine"; op: number; value: number; cells: Point[]; horizontal: boolean }
-  /** A *hidden* single — digit `n` can go in only one cell of a row (`line:
-   * "row"`, `index` = that row's y) or column (`line: "col"`, `index` = that
-   * column's x). Distinct from the generic Latin `single` (a *naked* single,
-   * where a cell's own candidates have collapsed to one): the cell still shows
-   * several candidates, but every *other* cell in the line has ruled `n` out. Not
-   * recorded by the solver (its generic `elim` conflates the two); the hint plan
-   * re-derives it from the working board at placement time. */
-  | { kind: "hiddenSingle"; n: number; line: "row" | "col"; index: number };
+  /** The singles the hint plan re-derives from the working board at placement
+   * time (the solver's generic `elim` records them all as `single`). */
+  | SingleReason;
 
 /** A reason attached to a recorded Keen deduction. */
 export type HintReason = KeenReason | LatinReason;

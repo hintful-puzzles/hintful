@@ -20,7 +20,12 @@
  * rather than about rows.
  */
 
-import { cleanObviousText, joinOr, populateText } from "../../engine/hint-text.ts";
+import {
+  cleanObviousText,
+  joinOr,
+  joinWith,
+  populateText,
+} from "../../engine/hint-text.ts";
 
 /** What Rome calls a board position, in every sentence here. Its help page says
  * "square", and mixing that with "cell" inside one game reads as sloppy. */
@@ -49,9 +54,24 @@ export const say = {
    * one word where a Latin game's is "row or column". */
   cleanObvious: cleanObviousText("arrow", "placed", "area", SQUARE),
 
+  /** A note step under the implicit reading. A square at the edge can never
+   * point off the board, so what its area leaves it is said of the ways it can
+   * point, never of all four. */
+  note: (ns: number[], every: boolean): string => {
+    if (every)
+      return "Nothing in this square's area rules out a way it can point yet, so pencil in every one.";
+    const one = ns.length === 1;
+    return `Of the ways this square can point, only ${joinWith(ns.map(arrow))} ${one ? "isn't" : "aren't"} already used in its area, so pencil ${one ? "it" : "them"} in.`;
+  },
+
   /** A naked single: the square's own notes have come down to one. */
   single: (n: number): string =>
     `Every other arrow has been ruled out in this square, so it must point ${arrow(n)}.`,
+
+  /** A single in a square with no marks: its area already uses every other way
+   * it can point. */
+  regionsFull: (n: number): string =>
+    `Every other way this square can point is already used in its area, so it must point ${arrow(n)}.`,
 
   /** A hidden single: a four-square area holds all four arrows, and one of them
    * has a single home left. Synthesized by the plan rather than recorded — the

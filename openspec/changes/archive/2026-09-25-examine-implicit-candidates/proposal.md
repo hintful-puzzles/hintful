@@ -1,6 +1,8 @@
 # examine-implicit-candidates
 
-**Status: scaffolded, not started.** Owner-requested, 2026-09-25.
+**Status: implemented** (2026-09-25). Owner-requested, 2026-09-25; the owner
+chose a player preference owned by the engine, and `design.md` records what the
+measurement decided from there.
 
 ## Why
 

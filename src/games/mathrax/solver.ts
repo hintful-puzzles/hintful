@@ -35,6 +35,7 @@ import {
   type LatinSolver,
   latinSolver,
 } from "../../engine/latin.ts";
+import type { SingleReason } from "../../engine/latin-hint.ts";
 import {
   bitOf,
   DIFF_EASY,
@@ -67,12 +68,9 @@ export const SOLVE_AMBIGUOUS = 2;
 export type MathraxReason =
   /** The clue packed in `clue`, sitting at interior intersection `(cx, cy)`. */
   | { kind: "clue"; clue: number; cx: number; cy: number }
-  /** A *hidden* single — number `n` fits only one cell of a row (`line: "row"`,
-   * `index` = its y) or column (`line: "col"`, `index` = its x), the cell itself
-   * still showing several candidates. Re-derived from the working board at
-   * placement time (the recording solver conflates it with the naked single
-   * under the generic `single`). */
-  | { kind: "hiddenSingle"; n: number; line: "row" | "col"; index: number };
+  /** The singles the hint plan re-derives from the working board at placement
+   * time (the recording solver records them all as `single`). */
+  | SingleReason;
 
 /** A reason attached to a recorded Mathrax deduction. */
 export type HintReason = MathraxReason | LatinReason;

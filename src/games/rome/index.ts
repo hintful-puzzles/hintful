@@ -19,6 +19,7 @@ import {
   adaptiveMarkAll,
   anyEmptyLacksNotes,
   candidateHint,
+  DEFAULT_CANDIDATE_READING,
   type Mark,
   obviousCandidateMarks,
 } from "../../engine/candidate-hint.ts";
@@ -39,6 +40,7 @@ import {
 } from "../../engine/note-taking-cell.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
+  candidateReadingPref,
   pencilKeepHighlightPref,
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
@@ -157,6 +159,7 @@ function newUi(_state: RomeState): RomeUi {
     // useful built-in aid), leave loop highlighting off.
     sloops: false,
     sgoals: true,
+    candidateReading: DEFAULT_CANDIDATE_READING,
   };
 }
 
@@ -474,6 +477,11 @@ function executeMove(state: RomeState, move: RomeMove): RomeState {
     return next;
   }
 
+  if (move.kind === "pencilAdd") {
+    for (const m of move.marks) pencil[m.y * w + m.x] |= dirBit(m.n);
+    return next;
+  }
+
   // Before the bounds check below, not inside it: a move with no coordinates
   // makes every one of those comparisons false rather than true.
   if (move.kind !== "place" && move.kind !== "pencil") {
@@ -641,11 +649,10 @@ export const romeGame: Game<
   findMistakes,
   requestKeys: () => ARROW_KEYS,
 
-  // `null` rather than the Ui: Rome has no auto-pencil preference, so a
-  // placement's area cull is always taught as an explicit strike rather than
-  // folded into the placement, which is what `candidateHint` defaults to
-  // anyway.
-  hint: (state) => candidateHint(state, null, findMistakes, buildSteps),
+  // Rome has no auto-pencil preference, so a placement's area cull is always
+  // taught as an explicit strike rather than folded into the placement.
+  hint: (state, _aux, ui) =>
+    candidateHint(state, ui ?? newUi(state), findMistakes, buildSteps),
   hintKeepTrack,
   refreshHintStep,
 
@@ -672,6 +679,7 @@ export const romeGame: Game<
     },
     stickyPencilPref(),
     pencilKeepHighlightPref(),
+    candidateReadingPref(),
   ],
 
   colors,

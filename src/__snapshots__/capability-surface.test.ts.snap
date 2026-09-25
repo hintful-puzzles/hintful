@@ -536,6 +536,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "textFormat",
     ],
     "ui": [
+      "candidateReading",
       "cursor",
       "cursorFromKeyboard",
       "drag",
@@ -669,6 +670,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "ui": [
       "autoPencil",
+      "candidateReading",
       "cursor",
       "cursorFromKeyboard",
       "pencilKeepHighlight",
@@ -846,6 +848,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "ui": [
       "autoPencil",
+      "candidateReading",
       "cursor",
       "cursorFromKeyboard",
       "pencilKeepHighlight",
@@ -1183,6 +1186,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "transposeParams",
     ],
     "ui": [
+      "candidateReading",
       "cursor",
       "cursorFromKeyboard",
       "kmode",
@@ -1541,6 +1545,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "ui": [
       "autoPencil",
+      "candidateReading",
       "cursor",
       "cursorFromKeyboard",
       "pencilKeepHighlight",
@@ -1714,6 +1719,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "ui": [
       "autoPencil",
+      "candidateReading",
       "cursor",
       "cursorFromKeyboard",
       "pencilKeepHighlight",
@@ -1877,6 +1883,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "ui": [
       "autoPencil",
+      "candidateReading",
       "cursor",
       "cursorFromKeyboard",
       "pencilKeepHighlight",

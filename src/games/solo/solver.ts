@@ -65,6 +65,9 @@ export type SoloRegion =
 export type SoloReason =
   /** A forced single placement — re-derived to naked or hidden at emit. */
   | { kind: "single" }
+  /** A single in a cell with no notes, whose regions already hold every other
+   * digit: re-derived at emit under the implicit candidate reading. */
+  | { kind: "regionsFull" }
   /** A digit placed at `(px, py)`, struck from the rest of a shared group. */
   | { kind: "dup"; n: number; px: number; py: number }
   /** Every cell of `confined` that can still take `n` also lies in `target`, so

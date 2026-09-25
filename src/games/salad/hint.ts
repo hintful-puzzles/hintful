@@ -36,6 +36,7 @@
 import {
   type CandidateHighlights,
   type CandidateMoveAdapter,
+  type CandidatePlanPrefs,
   type Cell,
   candidateHint,
   emitObviousCleanStep,
@@ -56,7 +57,7 @@ import { narrateLatinReason } from "../../engine/hint-text.ts";
 import type { LatinRepeatReason } from "../../engine/latin.ts";
 import {
   type ForcingLink,
-  forcingChainArea,
+  genericLatinArea,
   hiddenSingleLine,
   type SingleReason,
 } from "../../engine/latin-hint.ts";
@@ -99,7 +100,7 @@ export type SaladReason =
   | { kind: "circleXNote"; count: number }
   | SingleReason
   | { kind: "dup"; n: number; px: number; py: number }
-  | { kind: "set" }
+  | { kind: "set"; cells: readonly Cell[] }
   /** The shared solver's forcing chain, with the chain it followed — the same
    * shape `latin.ts` records, so the numbered squares and the case-split
    * narration come for free. */
@@ -222,12 +223,8 @@ function reasonEvidence(
         hatch: hiddenSingleLine(reason.line, reason.index, o),
         clues: [],
       };
-    // A forcing chain names the squares it ran through, **numbered**, so the
-    // narration can cite them and the player can walk it.
-    case "forcing":
-      return { area: forcingChainArea(reason), clues: [] };
     default:
-      return { area: [], clues: [] };
+      return { area: genericLatinArea(reason), clues: [] };
   }
 }
 
@@ -489,7 +486,7 @@ function circledEmptyNotes(w: Working, o: number, nums: number): SaladFiring[] {
  */
 function buildSteps(
   state: SaladState,
-  autoClean: boolean,
+  { autoClean }: CandidatePlanPrefs,
 ): HintStep<SaladMove, SaladHint>[] {
   const o = state.order;
   const nums = state.nums;
@@ -540,7 +537,10 @@ function buildSteps(
   // the player's own Mark-all move, once — then bulk-clear the candidates a
   // placed symbol already rules out, in one step, so the walk teaches real
   // deductions rather than N trivial row/column culls (docs/games/hints.md §
-  // "Persist, populate, and the moves").
+  // "Persist, populate, and the moves"). A setup of Salad's own, so the plan
+  // always walks the populate reading: a square's "might be empty" note is a
+  // candidate no row or column rules out, so the implicit reading would have
+  // to say when to write it, and nothing has asked it to yet.
   const setUp = populateThenClean({ done: () => populated, ensure: populate }, () => {
     if (
       !emitObviousCleanStep<SaladMove, SaladHint>(

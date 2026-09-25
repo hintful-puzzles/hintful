@@ -78,10 +78,13 @@ function bitOf(enc?: NoteEncoding): (n: number) => number {
   return enc?.bit ?? ((n: number): number => 1 << n);
 }
 
-/** The three move variants a candidate-elimination hint plan ever emits. Every
- * such game's `Move` union is a superset of these (it also carries `solve` and
+/** The move variants a candidate-elimination hint plan ever emits. Every such
+ * game's `Move` union is a superset of these (it also carries `solve` and
  * incidental fields); the generic plan functions act only on this subset and
- * treat anything else as off-plan. */
+ * treat anything else as off-plan. `pencilAdd` is `pencilStrike`'s mirror: it
+ * writes the listed notes, and is how a plan under the implicit reading
+ * (`candidate-plan.ts`'s `CandidateReading`) puts a cell's candidates on the
+ * board before a deduction reads or strikes them. */
 export type CandidateMove =
   | {
       type: "set";
@@ -92,7 +95,8 @@ export type CandidateMove =
       autoElim?: boolean;
     }
   | { type: "pencilAll" }
-  | { type: "pencilStrike"; marks: Mark[] };
+  | { type: "pencilStrike"; marks: Mark[] }
+  | { type: "pencilAdd"; marks: Mark[] };
 
 /** The highlight shape every candidate-elimination game's hint renders: the
  * deduction's evidence (`area`), the cell(s) it acts on (`targets`), and the
@@ -110,6 +114,40 @@ export interface CandidateHighlights {
   hatch?: Cell[];
 }
 
+/**
+ * How a hint plan reads a blank cell with no notes (the player's choice, the
+ * `hint-notes` preference in `pencil-prefs.ts`):
+ *
+ * - `implicit`: as every value its regions do not already hold, the way a player
+ *   who pencils nothing yet reads the board. The plan writes a cell's notes only
+ *   when a deduction strikes them or rests on them.
+ * - `populate`: as not filled in yet. The plan pencils every candidate into
+ *   every blank cell first (the Mark-all press) and clears the obvious ones,
+ *   and every deduction after that reads the notes alone.
+ */
+export type CandidateReading = "implicit" | "populate";
+
+/**
+ * The reading a game's hint starts on until the player chooses: the convention
+ * a game's `newUi` takes unless it says why not.
+ *
+ * `populate`, because in a game whose deductions come from clues or cages
+ * (Keen, Towers, Unequal, Rome) nearly every cell ends up needing notes: an
+ * implicit plan there writes notes into 50–90% of the cells one at a time and
+ * is 10–25% longer than penciling everything in once. A game whose deductions
+ * mostly read singles off the board overrides it (Solo, Mathrax, Group).
+ * Measured over every preset by `examine-implicit-candidates`.
+ */
+export const DEFAULT_CANDIDATE_READING: CandidateReading = "populate";
+
+/** The two player preferences a candidate plan honors, as `buildSteps` takes
+ * them. `autoClean` is the auto-pencil preference: a placement's cull is silent
+ * rather than taught. */
+export interface CandidatePlanPrefs {
+  autoClean: boolean;
+  reading: CandidateReading;
+}
+
 /** The shared `hint()` entry every candidate-elimination game uses: refuse on a
  * solved board, refuse (pointing at the mistake overlay) on a wrong board, build
  * the plan, refuse when it is empty, else return it. The only per-game inputs are
@@ -120,17 +158,20 @@ export interface CandidateHighlights {
  * `autoPencil` defaults **off**: with no `ui` (tests/harness) the hint teaches the
  * trivial row/column/region eliminations as explicit strikes rather than folding
  * them into placements (matches the games' default-auto-pencil-off preference).
+ * The reading defaults to {@link DEFAULT_CANDIDATE_READING}.
  */
 export function candidateHint<State extends { completed: boolean }, Move, Hint>(
   state: State,
-  ui: { autoPencil?: boolean } | null,
+  ui: { autoPencil?: boolean; candidateReading?: CandidateReading } | null,
   findMistakes: (state: State) => readonly unknown[],
-  buildSteps: (state: State, autoClean: boolean) => HintStep<Move, Hint>[],
+  buildSteps: (state: State, prefs: CandidatePlanPrefs) => HintStep<Move, Hint>[],
 ): HintResult<Move, Hint> {
   const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
   if (refusal) return refusal;
-  const autoClean = ui?.autoPencil ?? false;
-  const steps = buildSteps(state, autoClean);
+  const steps = buildSteps(state, {
+    autoClean: ui?.autoPencil ?? false,
+    reading: ui?.candidateReading ?? DEFAULT_CANDIDATE_READING,
+  });
   if (steps.length === 0) {
     return { ok: false, error: DEDUCTION_EXHAUSTED };
   }
@@ -423,6 +464,48 @@ export function obviousCandidateMarks(
   return marks;
 }
 
+/** What a fill-all puts in blank cell `i`: {@link NoteEncoding.all}, or every
+ * value of the note alphabet, whose size defaults to `w`. */
+export function fillAllNotes(i: number, w: number, enc?: NoteEncoding): number {
+  return enc?.all?.(i) ?? (1 << ((enc?.values ?? w) + 1)) - (1 << 1);
+}
+
+/**
+ * The candidates the player can read off the board: a blank cell's notes where
+ * it has any, and where it has none, every note a fill-all would put there
+ * ({@link NoteEncoding.all}) less each value already placed in one of its
+ * `regionsOf`. A filled cell reads as `0`.
+ *
+ * A written note is read as written, stale or not: a note the board still shows
+ * is one a sentence may not treat as gone, so a plan clears stale notes with a
+ * step before it reads them.
+ */
+export function impliedNotes(
+  grid: ArrayLike<number>,
+  pencil: ArrayLike<number>,
+  w: number,
+  regionsOf: (x: number, y: number) => readonly CellRegion[],
+  enc?: NoteEncoding,
+): Int32Array {
+  const bit = bitOf(enc);
+  const out = new Int32Array(grid.length);
+  for (let i = 0; i < grid.length; i++) {
+    if (grid[i] !== 0) continue;
+    if (pencil[i] !== 0) {
+      out[i] = pencil[i];
+      continue;
+    }
+    let notes = fillAllNotes(i, w, enc);
+    for (const region of regionsOf(i % w, (i / w) | 0))
+      for (let k = 0; k < region.cells.length; k++) {
+        const v = grid[region.cells[k]];
+        if (v !== 0) notes &= ~bit(v);
+      }
+    out[i] = notes;
+  }
+  return out;
+}
+
 /** The populate/mark-all opener step. It deliberately declares **no board
  * marks** — the banner narration is the whole display, and the cross-game
  * guards (`hint-overlay.test.ts`, `hint-quality.test.ts`) recognize exactly
@@ -460,13 +543,9 @@ export function lazyPopulate<M, H>(
     ensure(): void {
       if (populated) return;
       // What the game's own fill-all move puts in a blank square, asked per
-      // cell — see {@link NoteEncoding.all}. The scalar fallback is every value
-      // of the note alphabet, and `values` defaults to `w`, so this is the same
-      // expression a Latin plan has always evaluated.
-      const scalar = (1 << ((opts?.enc?.values ?? w) + 1)) - (1 << 1);
-      const all = opts?.enc?.all ?? ((): number => scalar);
+      // cell — see {@link NoteEncoding.all}.
       for (let i = 0; i < wGrid.length; i++)
-        if (!wGrid[i] && wPen[i] === 0) wPen[i] = all(i);
+        if (!wGrid[i] && wPen[i] === 0) wPen[i] = fillAllNotes(i, w, opts?.enc);
       steps.push(populateStep(populateMove(opts?.adapter), explanation));
       populated = true;
     },
@@ -576,6 +655,9 @@ export interface CandidateMoveAdapter<M> {
   read(m: M): CandidateMove | null;
   /** Build a strike over `marks` in the game's own move shape. */
   strike(marks: Mark[]): M;
+  /** Build the note-writing mirror of `strike`. Defaults to
+   * `{ type: "pencilAdd", marks }`. */
+  add?(marks: Mark[]): M;
   /** Build the fill-all in the game's own move shape. Defaults to
    * `{ type: "pencilAll" }`. Its counterpart `read` has always been asked
    * through the dialect; this is the writing half, which three helpers spelled
@@ -597,7 +679,10 @@ export interface CandidateMoveAdapter<M> {
 const typeKeyedCandidateMoves: CandidateMoveAdapter<{ type: string }> = {
   read: (m) => {
     const cm = m as unknown as CandidateMove;
-    return cm.type === "set" || cm.type === "pencilAll" || cm.type === "pencilStrike"
+    return cm.type === "set" ||
+      cm.type === "pencilAll" ||
+      cm.type === "pencilStrike" ||
+      cm.type === "pencilAdd"
       ? cm
       : null;
   },
@@ -606,6 +691,11 @@ const typeKeyedCandidateMoves: CandidateMoveAdapter<{ type: string }> = {
 
 function adapterOf<M>(adapter?: CandidateMoveAdapter<M>): CandidateMoveAdapter<M> {
   return adapter ?? (typeKeyedCandidateMoves as unknown as CandidateMoveAdapter<M>);
+}
+
+/** The note-writing move in a game's own dialect. */
+export function addMove<M>(marks: Mark[], adapter?: CandidateMoveAdapter<M>): M {
+  return adapter?.add?.(marks) ?? ({ type: "pencilAdd", marks } as unknown as M);
 }
 
 /** Emit the one-shot "clear the obvious candidates" step into a candidate-
@@ -713,19 +803,26 @@ export function keepCandidateHintTrack<M, H extends CandidateHighlights>(
       ? "completed"
       : "off";
   }
-  if (sm.type === "pencilStrike") {
-    // The player strikes a candidate with a pencil toggle (`set { pencil }`).
+  if (sm.type === "pencilStrike" || sm.type === "pencilAdd") {
+    // The player strikes or writes a candidate with a pencil toggle
+    // (`set { pencil }`), one at a time.
     if (pm.type !== "set" || !pm.pencil) return "off";
     const hit = sm.marks.findIndex((k) => k.x === pm.x && k.y === pm.y && k.n === pm.n);
     if (hit < 0) return "off"; // touched a non-target candidate
-    // A pencil toggle clears the candidate iff it is present now; if it is already
-    // absent the toggle would *re-add* it — off-plan. (The candidate being present
-    // is exactly what makes the strike the right move to follow.)
-    if (!(pencil[pm.y * w + pm.x] & bit(pm.n))) return "off";
+    // A pencil toggle clears the candidate iff it is present now and writes it
+    // iff it is absent, so the toggle follows a strike only on a present
+    // candidate and a note step only on an absent one.
+    const present = (pencil[pm.y * w + pm.x] & bit(pm.n)) !== 0;
+    if (present !== (sm.type === "pencilStrike")) return "off";
     const remaining = sm.marks.filter((_, j) => j !== hit);
     if (remaining.length === 0) return "completed";
-    step.move = dialect.strike(remaining);
-    if (step.highlights) {
+    step.move =
+      sm.type === "pencilStrike"
+        ? dialect.strike(remaining)
+        : addMove(remaining, dialect);
+    // A note step's highlights name its cell and no marks: `marks` are the
+    // candidates drawn struck, which a note being written is not.
+    if (step.highlights && sm.type === "pencilStrike") {
       step.highlights = {
         ...step.highlights,
         targets: remaining.map((k) => ({ x: k.x, y: k.y })),
@@ -757,25 +854,30 @@ export function refreshCandidateHintStep<M, H extends CandidateHighlights>(
   const bit = bitOf(dialect);
   const m = dialect.read(step.move);
   if (m === null) return step;
-  if (m.type === "pencilStrike") {
+  if (m.type === "pencilStrike" || m.type === "pencilAdd") {
+    // A strike's live marks are the notes still there to cross out; a note
+    // step's are the ones still to write.
+    const want = m.type === "pencilStrike";
     const live = m.marks.filter(
-      ({ x, y, n }) => grid[y * w + x] === 0 && (pencil[y * w + x] & bit(n)) !== 0,
+      ({ x, y, n }) =>
+        grid[y * w + x] === 0 && ((pencil[y * w + x] & bit(n)) !== 0) === want,
     );
     if (live.length === 0) return null;
     if (live.length === m.marks.length) return step;
     return {
       ...step,
-      move: dialect.strike(live),
+      move: want ? dialect.strike(live) : addMove(live, dialect),
       // A game's own highlight type carries extra fields (Crossing's clue-list
       // premise); spreading keeps them, and only the two the shrink touches
       // are replaced.
-      highlights: step.highlights
-        ? ({
-            ...step.highlights,
-            targets: live.map((k) => ({ x: k.x, y: k.y })),
-            marks: live,
-          } as H)
-        : undefined,
+      highlights:
+        step.highlights && want
+          ? ({
+              ...step.highlights,
+              targets: live.map((k) => ({ x: k.x, y: k.y })),
+              marks: live,
+            } as H)
+          : step.highlights,
     };
   }
   if (m.type === "set" && !m.pencil) {

@@ -121,10 +121,7 @@ function isWhole<R extends CellRegion>(region: R): region is WholeRegion<R> {
 
 /** Why a placement a plan could take now is forced: a single the notes show, or
  * (`recorded`) the solver's own reason, which the game keeps. */
-export type PlacementWhy<R> =
-  | { kind: "naked" }
-  | { kind: "hidden"; region: R }
-  | { kind: "recorded" };
+export type PlacementWhy<R> = SingleWhy<R> | { kind: "recorded" };
 
 /**
  * The recorded placements a plan could take now, in solver order — the choices
@@ -144,6 +141,11 @@ export type PlacementWhy<R> =
  * {@link classifyPlacementInRegions}, so the cross-game hint walks stay the
  * guard for it. Anywhere earlier it is merely not available yet: another
  * rung's firing may be the very premise it waits on.
+ *
+ * `pencil` is the candidates as the player reads them (`impliedNotes`), and
+ * `written` the notes actually on the board: a single in a cell with none
+ * written is `regionsFull` rather than `naked`, since there are no notes to
+ * have collapsed. Default: `pencil`, where the two are the same.
  */
 export function availablePlacements<Op extends DeductionRecord, R extends CellRegion>(
   ops: readonly Op[],
@@ -152,8 +154,13 @@ export function availablePlacements<Op extends DeductionRecord, R extends CellRe
   w: number,
   regionsOf: (x: number, y: number) => readonly R[],
   nothingElse: boolean,
-  opts?: { enc?: NoteEncoding; placed?: ArrayLike<number> },
+  opts?: {
+    enc?: NoteEncoding;
+    placed?: ArrayLike<number>;
+    written?: ArrayLike<number>;
+  },
 ): { op: Op; why: PlacementWhy<WholeRegion<R>> }[] {
+  const written = opts?.written ?? pencil;
   const placed = opts?.placed ?? grid;
   const first = nextPlace(ops, placed, w);
   const out: { op: Op; why: PlacementWhy<WholeRegion<R>> }[] = [];
@@ -169,7 +176,12 @@ export function availablePlacements<Op extends DeductionRecord, R extends CellRe
     const why = lead
       ? classifyPlacementInRegions(grid, pencil, cell, op.n, regions, opts?.enc)
       : placementInRegions(grid, pencil, cell, op.n, regions, opts?.enc);
-    if (why) out.push({ op, why });
+    if (why)
+      out.push({
+        op,
+        why:
+          why.kind === "naked" && written[cell] === 0 ? { kind: "regionsFull" } : why,
+      });
   }
   return out;
 }
@@ -233,7 +245,19 @@ export function classifyPlacement(
  * generic `LatinReason`, plus the game-local `hiddenSingle`). */
 export type SingleReason =
   | { kind: "single" }
+  | { kind: "regionsFull" }
   | { kind: "hiddenSingle"; n: number; line: "row" | "col"; index: number };
+
+/** Why a single the plan can see is forced, before a game names it:
+ * - `naked`: the cell's own notes are down to one;
+ * - `regionsFull`: the cell has no notes, and its regions already hold every
+ *   other value, which is how a cell reads under the implicit candidate
+ *   reading (`candidate-plan.ts`'s `reading`);
+ * - `hidden`: the value has one home left in `region`. */
+export type SingleWhy<R> =
+  | { kind: "naked" }
+  | { kind: "regionsFull" }
+  | { kind: "hidden"; region: R };
 
 /** Re-derive *why* a generic-`single` placement is forced, from the working board:
  * a naked single (the cell's candidates collapsed to one) or a hidden single (the
@@ -258,13 +282,20 @@ export function singlePlacementReason(
 }
 
 /** The {@link SingleReason} a row/column single of `n` narrates as. */
-export function singleReasonOf(
-  n: number,
-  why: { kind: "naked" } | { kind: "hidden"; region: RowColRegion },
-): SingleReason {
-  return why.kind === "naked"
-    ? { kind: "single" }
-    : { kind: "hiddenSingle", n, line: why.region.line, index: why.region.index };
+export function singleReasonOf(n: number, why: SingleWhy<RowColRegion>): SingleReason {
+  switch (why.kind) {
+    case "naked":
+      return { kind: "single" };
+    case "regionsFull":
+      return { kind: "regionsFull" };
+    case "hidden":
+      return {
+        kind: "hiddenSingle",
+        n,
+        line: why.region.line,
+        index: why.region.index,
+      };
+  }
 }
 
 /** A hidden single as {@link singleReasonOf} states it. */
@@ -302,7 +333,7 @@ export function hiddenSingleLine(
 export type GenericLatinReason =
   | SingleReason
   | { kind: "dup"; n: number }
-  | { kind: "set" }
+  | { kind: "set"; cells: readonly Point[] }
   | { kind: "forcing"; chain: readonly ForcingLink[]; shares: "row" | "col" };
 
 /**
@@ -318,4 +349,21 @@ export function forcingChainArea(reason: {
   chain: readonly ForcingLink[];
 }): OrderedCell[] {
   return reason.chain.map((c, i) => ({ x: c.x, y: c.y, order: i + 1 }));
+}
+
+/**
+ * What a generic Latin elimination outlines: a forcing chain's cells, numbered
+ * ({@link forcingChainArea}), and the cells a set rests on, which account for
+ * the struck values between them. Empty for any other reason, so a game's own
+ * area function falls through to it for every arm it does not own.
+ *
+ * Outlining the set's cells is what lets its sentence say "these cells" and
+ * be checked, and under the implicit reading it is what puts their notes on the
+ * board before the strike reads them (`candidate-plan.ts`'s note legs).
+ */
+export function genericLatinArea(reason: { kind: string }): OrderedCell[] {
+  const r = reason as GenericLatinReason;
+  if (r.kind === "forcing") return forcingChainArea(r);
+  if (r.kind === "set") return [...r.cells];
+  return [];
 }

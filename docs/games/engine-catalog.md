@@ -499,6 +499,14 @@ shape, which a `kind`-keyed game needs because `read` had always been asked
 through the dialect while three helpers wrote `{ type: "pencilAll" }` for
 themselves.
 
+`CandidateReading` names the two readings of a blank, note-less cell, with the
+convention `DEFAULT_CANDIDATE_READING`; `impliedNotes` is the implicit one as a
+board (notes where written, otherwise what the regions leave), and
+`fillAllNotes` what a fill-all puts in a cell. `pencilAdd` is the shared move
+dialect's note-writing mirror of `pencilStrike`, built through
+`CandidateMoveAdapter.add`. See [`hints.md`](./hints.md) § "Two readings of an
+unmarked cell".
+
 ### `candidate-plan.ts` — the candidate-elimination plan walk
 
 `runCandidatePlan` is a pencil-notes game's whole `buildSteps` walk: the naked
@@ -509,7 +517,9 @@ next firing taken through a `HintFrontier`. A rung returns firings as **legs**
 (a placement, a strike, or a step of the game's own), the walk builds every
 step, and the frontier reads a firing's premise off those steps. The game
 supplies its recording solver, regions, words and strike-split axis — see
-[`hints.md`](./hints.md) § "Candidate-elimination games".
+[`hints.md`](./hints.md) § "Candidate-elimination games". Its `reading` is the
+player's: under the implicit one there is no populate, and a firing first
+writes the notes of every note-less cell its premise reads.
 
 `runLatinCandidatePlan` is the same walk with the plain row/column square's
 answers filled in — its regions, the reason a single narrates as, and a hidden
@@ -536,7 +546,10 @@ Re-derives whether a recorded `single` is **naked** or **hidden** from the
 working board, so no Latin game narrates "every other number has been ruled
 out in this cell" at a cell visibly holding several candidates, and throws on a
 placement that is neither, which is a strike the plan skipped.
-`availablePlacements` lists the recorded placements a plan could take now. The
+`availablePlacements` lists the recorded placements a plan could take now, and
+a single in a cell with no notes written is `regionsFull`. `genericLatinArea`
+is what a generic Latin elimination outlines (a forcing chain, numbered; a
+set's cells), for a game's own area function to fall through to. The
 sentences it classifies for are `hint-text.ts`'s.
 
 ### `hint-text.ts` — the sentences several games share
@@ -931,8 +944,9 @@ that index (check `augmentation.ts`).
 
 ### `pencil-prefs.ts` — shared pencil `GamePref` declarations
 
-Sticky-pencil and keep-highlight preference factories with per-field `Ui`
-constraints (a game without the field fails to compile). `auto-pencil` is
+Sticky-pencil, keep-highlight and hint-notes (`candidateReadingPref`, how a
+hint pencils) preference factories with per-field `Ui` constraints (a game
+without the field fails to compile). `auto-pencil` is
 deliberately *not* unconditioned — its label names per-game regions, so the
 sentence is passed in.
 

@@ -22,6 +22,7 @@
  * one board makes true.
  */
 
+import { type CandidateReading, DEFAULT_CANDIDATE_READING } from "./candidate-hint.ts";
 import type { GamePref } from "./game.ts";
 
 /**
@@ -39,6 +40,29 @@ export function autoPencilPref<Ui extends { autoPencil: boolean }>(
     get: (ui) => ui.autoPencil,
     set: (ui, v) => {
       ui.autoPencil = v;
+    },
+  };
+}
+
+/** The readings in the order the preference lists them. */
+const READINGS: readonly CandidateReading[] = ["implicit", "populate"];
+
+/**
+ * How a hint pencils: only the notes a deduction needs, or every candidate
+ * first (`candidate-hint.ts`'s {@link CandidateReading}). The one label every
+ * candidate game shows, since the choice is about the hint and not the game.
+ */
+export function candidateReadingPref<
+  Ui extends { candidateReading: CandidateReading },
+>(): GamePref<Ui> {
+  return {
+    kw: "hint-notes",
+    name: "Hints pencil in",
+    type: "choices",
+    choices: ["Only as needed", "Every candidate first"],
+    get: (ui) => READINGS.indexOf(ui.candidateReading),
+    set: (ui, v) => {
+      ui.candidateReading = READINGS[v] ?? DEFAULT_CANDIDATE_READING;
     },
   };
 }

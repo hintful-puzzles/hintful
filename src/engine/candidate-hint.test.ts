@@ -6,10 +6,13 @@ import {
   type CandidateHighlights,
   type CandidateMove,
   type CandidateMoveAdapter,
+  type CandidatePlanPrefs,
   candidateHint,
+  DEFAULT_CANDIDATE_READING,
   emitObviousCleanStep,
   findRegionDuplicate,
   firstUnreflectedPlaceIndex,
+  impliedNotes,
   keepCandidateHintTrack,
   lazyPopulate,
   type Mark,
@@ -94,10 +97,10 @@ describe("candidateHint (shared hint entry)", () => {
     expect(r).toEqual({ ok: true, steps: oneStep });
   });
 
-  it("defaults autoPencil off when no ui is given, and threads ui through", () => {
-    const seen: boolean[] = [];
-    const build = (_s: St, autoClean: boolean) => {
-      seen.push(autoClean);
+  it("defaults the prefs when no ui is given, and threads ui through", () => {
+    const seen: CandidatePlanPrefs[] = [];
+    const build = (_s: St, prefs: CandidatePlanPrefs) => {
+      seen.push(prefs);
       return oneStep;
     };
     candidateHint<St, CandidateMove, CandidateHighlights>(
@@ -108,11 +111,14 @@ describe("candidateHint (shared hint entry)", () => {
     );
     candidateHint<St, CandidateMove, CandidateHighlights>(
       { completed: false },
-      { autoPencil: true },
+      { autoPencil: true, candidateReading: "populate" },
       () => [],
       build,
     );
-    expect(seen).toEqual([false, true]);
+    expect(seen).toEqual([
+      { autoClean: false, reading: DEFAULT_CANDIDATE_READING },
+      { autoClean: true, reading: "populate" },
+    ]);
   });
 });
 
@@ -287,6 +293,31 @@ describe("obviousCandidateMarks", () => {
     const grid = [1, 0, 0, 2];
     const pencil = [0, bits(2), bits(1), 0]; // each empty cell already obvious-free
     expect(obviousCandidateMarks(grid, pencil, 2, rc(2))).toEqual([]);
+  });
+});
+
+describe("impliedNotes", () => {
+  const rowCol = (x: number, y: number) => rowColRegions(x, y, 3);
+
+  it("reads a note-less cell as what its regions leave, and a noted one as written", () => {
+    // Row 0 holds a 2; (0,1) carries a stale 2 the reading must not drop.
+    const grid = Uint8Array.from([0, 2, 0, 0, 0, 0, 0, 0, 3]);
+    const pencil = Int32Array.from([0, 0, 0, bits(1, 2), 0, 0, 0, 0, 0]);
+    const shown = impliedNotes(grid, pencil, 3, rowCol);
+    expect(shown[0]).toBe(bits(1, 3));
+    expect(shown[1]).toBe(0);
+    expect(shown[3]).toBe(bits(1, 2));
+    // Column 2 holds the 3; (1,2) has the 3 in its row and the 2 in its column.
+    expect(shown[5]).toBe(bits(1, 2));
+    expect(shown[7]).toBe(bits(1));
+    expect(shown[4]).toBe(bits(1, 3));
+  });
+
+  it("starts from the game's own fill-all, per cell", () => {
+    const enc = { all: (i: number) => (i === 0 ? bits(1) : bits(1, 2, 3)) };
+    const shown = impliedNotes(new Uint8Array(9), new Int32Array(9), 3, rowCol, enc);
+    expect(shown[0]).toBe(bits(1));
+    expect(shown[1]).toBe(bits(1, 2, 3));
   });
 });
 
@@ -543,6 +574,55 @@ describe("keepCandidateHintTrack", () => {
     expect(s.move).toEqual({ type: "pencilStrike", marks: [{ x: 0, y: 0, n: 1 }] });
   });
 
+  it("follows a note step toggle by toggle, and only by writing its notes", () => {
+    const blank = new Int32Array(4);
+    const marks = [
+      { x: 0, y: 0, n: 1 },
+      { x: 0, y: 0, n: 2 },
+    ];
+    const s = step(
+      { type: "pencilAdd", marks: [...marks] },
+      { area: [], targets: [{ x: 0, y: 0 }], marks: [] },
+    );
+    // Writing a note the step does not name drops it.
+    expect(
+      keepCandidateHintTrack(
+        { type: "set", x: 0, y: 0, n: 3, pencil: true },
+        step({ type: "pencilAdd", marks: [...marks] }),
+        blank,
+        2,
+      ),
+    ).toBe("off");
+    // A toggle on a note already there would clear it: off-plan.
+    expect(
+      keepCandidateHintTrack(
+        { type: "set", x: 0, y: 0, n: 1, pencil: true },
+        step({ type: "pencilAdd", marks: [...marks] }),
+        Int32Array.from([bits(1), 0, 0, 0]),
+        2,
+      ),
+    ).toBe("off");
+    expect(
+      keepCandidateHintTrack(
+        { type: "set", x: 0, y: 0, n: 1, pencil: true },
+        s,
+        blank,
+        2,
+      ),
+    ).toBe("onTrack");
+    expect(s.move).toEqual({ type: "pencilAdd", marks: [{ x: 0, y: 0, n: 2 }] });
+    // A note is not a struck candidate, so the step draws none.
+    expect(s.highlights?.marks).toEqual([]);
+    expect(
+      keepCandidateHintTrack(
+        { type: "set", x: 0, y: 0, n: 2, pencil: true },
+        s,
+        Int32Array.from([bits(1), 0, 0, 0]),
+        2,
+      ),
+    ).toBe("completed");
+  });
+
   it("treats a toggle that would re-add an absent candidate as off-plan", () => {
     const s = step({ type: "pencilStrike", marks: [{ x: 0, y: 0, n: 3 }] });
     // pencil[0] has no candidate 3, so toggling it adds rather than clears.
@@ -558,6 +638,35 @@ describe("keepCandidateHintTrack", () => {
 });
 
 describe("refreshCandidateHintStep", () => {
+  it("keeps a note step to the notes still to write, and drops it once written", () => {
+    const grid = Int8Array.from([0, 0, 0, 0]);
+    const s = step(
+      {
+        type: "pencilAdd",
+        marks: [
+          { x: 0, y: 0, n: 1 },
+          { x: 0, y: 0, n: 2 },
+        ],
+      },
+      { area: [], targets: [{ x: 0, y: 0 }], marks: [] },
+    );
+    const half = refreshCandidateHintStep(
+      s,
+      grid,
+      Int32Array.from([bits(1), 0, 0, 0]),
+      2,
+    );
+    expect(half?.move).toEqual({ type: "pencilAdd", marks: [{ x: 0, y: 0, n: 2 }] });
+    expect(half?.highlights?.marks).toEqual([]);
+    expect(
+      refreshCandidateHintStep(s, grid, Int32Array.from([bits(1, 2), 0, 0, 0]), 2),
+    ).toBeNull();
+    // A cell filled since leaves nothing to write.
+    expect(
+      refreshCandidateHintStep(s, Int8Array.from([1, 0, 0, 0]), new Int32Array(4), 2),
+    ).toBeNull();
+  });
+
   it("drops dead strike marks and resolves the step when none survive", () => {
     const grid = Int8Array.from([0, 0, 0, 0]);
     const pencil = Int32Array.from([bits(2), bits(1, 2), 0, 0]);

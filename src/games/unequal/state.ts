@@ -12,6 +12,10 @@
  * they have used (the `spent` flags, mutable).
  */
 
+import {
+  type CandidateReading,
+  DEFAULT_CANDIDATE_READING,
+} from "../../engine/candidate-hint.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import { digitOf, type GridCursor, newCursor } from "../../engine/pointer.ts";
@@ -245,6 +249,9 @@ export type UnequalMove =
   /** Strike (clear) the listed pencil candidates atomically — a hint's
    * single-firing elimination. Idempotent and resume-safe. */
   | { type: "pencilStrike"; marks: { x: number; y: number; n: number }[] }
+  /** Write the listed pencil candidates, `pencilStrike`'s mirror: a hint's note
+   * step. */
+  | { type: "pencilAdd"; marks: { x: number; y: number; n: number }[] }
   /** Auto-solve to the given full grid. */
   | { type: "solve"; grid: number[] };
 
@@ -261,6 +268,8 @@ export interface UnequalUi {
   /** Preference (default off): placing a number strikes it from the pencil marks
    * of every other cell in its row and column. */
   autoPencil: boolean;
+  /** Preference: how a hint pencils (`CandidateReading`). */
+  candidateReading: CandidateReading;
 }
 
 export function newUi(_state: UnequalState): UnequalUi {
@@ -273,6 +282,7 @@ export function newUi(_state: UnequalState): UnequalUi {
     // Off by default, so notes clear only via Mark-all or a hint unless the
     // player opts in.
     autoPencil: false,
+    candidateReading: DEFAULT_CANDIDATE_READING,
   };
 }
 

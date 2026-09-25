@@ -38,6 +38,7 @@
 import {
   type CandidateHighlights,
   type CandidateMoveAdapter,
+  type CandidatePlanPrefs,
   keepCandidateHintTrack,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
@@ -84,10 +85,12 @@ export const romeCandidateMoves: CandidateMoveAdapter<RomeMove> = {
       return { type: "set", x: m.x, y: m.y, n: dirValue(m.dir), pencil: true };
     if (m.kind === "pencilAll") return { type: "pencilAll" };
     if (m.kind === "pencilStrike") return { type: "pencilStrike", marks: [...m.marks] };
+    if (m.kind === "pencilAdd") return { type: "pencilAdd", marks: [...m.marks] };
     // `solve`, and the two "clear this square" moves, are Rome's own.
     return null;
   },
   strike: (marks) => ({ kind: "pencilStrike", marks }),
+  add: (marks) => ({ kind: "pencilAdd", marks }),
   populate: () => ({ kind: "pencilAll" }),
   place: (x, y, n) => ({ kind: "place", x, y, dir: dirBit(n) as RomeDir }),
   bit: dirBit,
@@ -109,6 +112,7 @@ export type RomeHint = CandidateHighlights;
  */
 type RomeHintReason =
   | RomeReason
+  | { kind: "regionsFull" }
   | { kind: "hiddenSingle"; n: number; region: readonly number[] };
 
 const cellsOf = (w: number, cells: readonly number[]): Point[] =>
@@ -125,6 +129,7 @@ function marks(
 ): { area: OrderedCell[]; hatch?: Point[] } {
   switch (reason.kind) {
     case "single":
+    case "regionsFull":
       return { area: [] };
     case "hiddenSingle":
     case "onlyHome":
@@ -154,6 +159,8 @@ function narrate(reason: RomeHintReason | DupReason, ns: number[]): string {
   switch (reason.kind) {
     case "single":
       return say.single(ns[0]);
+    case "regionsFull":
+      return say.regionsFull(ns[0]);
     case "hiddenSingle":
       return say.hiddenSingle(reason.n);
     case "dup":
@@ -199,7 +206,7 @@ function boardOf(state: RomeState, grid: Uint8Array): RomeBoard {
 
 export function buildSteps(
   state: RomeState,
-  autoClean: boolean,
+  { autoClean, reading }: CandidatePlanPrefs,
 ): HintStep<RomeMove, RomeHint>[] {
   const { w, h } = state;
   const steps: HintStep<RomeMove, RomeHint>[] = [];
@@ -218,6 +225,7 @@ export function buildSteps(
     enc,
     moves: romeCandidateMoves,
     autoClean,
+    reading,
     label: "rome hint plan",
     // Every rung, not the puzzle's own tier — which a `RomeState` does not
     // carry anyway. Upstream's gating is by ladder position, so a rung above a
@@ -226,10 +234,16 @@ export function buildSteps(
     // `solutionGrid` reads the ladder the same way.
     record: () => recordRomeDeductions(boardOf(state, grid), DIFFCOUNT),
     regionsOf,
-    singleReason: (n, why) =>
-      why.kind === "naked"
-        ? { kind: "single" }
-        : { kind: "hiddenSingle", n, region: Array.from(why.region.cells) },
+    singleReason: (n, why) => {
+      switch (why.kind) {
+        case "naked":
+          return { kind: "single" };
+        case "regionsFull":
+          return { kind: "regionsFull" };
+        case "hidden":
+          return { kind: "hiddenSingle", n, region: Array.from(why.region.cells) };
+      }
+    },
     placeWords: (m, reason) => ({
       explanation: narrate(reason, [m.n]),
       ...marks(reason, w, areaOf),
@@ -242,7 +256,11 @@ export function buildSteps(
     // together; only the `pair` rung reaches several, and its sentence speaks
     // for the whole area at once.
     strikeAxis: (op) => (op.reason.kind === "pair" ? null : op.y * w + op.x),
-    notes: { populate: say.populate, cleanObvious: say.cleanObvious },
+    notes: {
+      populate: say.populate,
+      cleanObvious: say.cleanObvious,
+      note: (_cell, values, every) => say.note(values, every),
+    },
   });
   return steps;
 }

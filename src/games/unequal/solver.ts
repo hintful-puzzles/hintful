@@ -17,6 +17,7 @@ import {
   type LatinSolver,
   latinSolver,
 } from "../../engine/latin.ts";
+import type { SingleReason } from "../../engine/latin-hint.ts";
 import {
   ADJTHAN,
   DIFF_EXTREME,
@@ -45,12 +46,9 @@ export type UnequalReason =
   | { kind: "lesser"; ox: number; oy: number; bound: number }
   | { kind: "adjacent"; ox: number; oy: number; v: number; bar: boolean }
   | { kind: "adjacentSet"; ox: number; oy: number; bar: boolean }
-  /** A *hidden* single — number `n` can go in only one cell of a row (`line:
-   * "row"`, `index` = its y) or column (`line: "col"`, `index` = its x), the cell
-   * itself still showing several candidates. Distinct from the generic Latin
-   * `single` (a *naked* single). Re-derived from the working board at placement
-   * time (the recording solver conflates the two under `single`). */
-  | { kind: "hiddenSingle"; n: number; line: "row" | "col"; index: number };
+  /** The singles the hint plan re-derives from the working board at placement
+   * time (the recording solver records them all as `single`). */
+  | SingleReason;
 
 /** A reason attached to a recorded Unequal deduction. */
 export type HintReason = UnequalReason | LatinReason;

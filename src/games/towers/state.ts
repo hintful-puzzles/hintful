@@ -1,3 +1,7 @@
+import {
+  type CandidateReading,
+  DEFAULT_CANDIDATE_READING,
+} from "../../engine/candidate-hint.ts";
 import { digitValue, isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
@@ -201,6 +205,9 @@ export type TowersMove =
    * single-firing elimination. Clearing an absent candidate is a no-op, so this
    * is idempotent and resume-safe (unlike a `set` pencil toggle). */
   | { type: "pencilStrike"; marks: { x: number; y: number; n: number }[] }
+  /** Write the listed pencil candidates, `pencilStrike`'s mirror: a hint's note
+   * step. */
+  | { type: "pencilAdd"; marks: { x: number; y: number; n: number }[] }
   /** Auto-solve to the given full grid. */
   | { type: "solve"; grid: number[] };
 
@@ -223,6 +230,8 @@ export interface TowersUi {
    * marks of every other cell in its row and column. When on, hints also skip
    * teaching those trivial eliminations and lean on the placement instead. */
   autoPencil: boolean;
+  /** Preference: how a hint pencils (`CandidateReading`). */
+  candidateReading: CandidateReading;
 }
 
 export function newUi(_state: TowersState): TowersUi {
@@ -234,6 +243,7 @@ export function newUi(_state: TowersState): TowersUi {
     pencilKeepHighlight: true,
     pencilSticky: true,
     autoPencil: false,
+    candidateReading: DEFAULT_CANDIDATE_READING,
   };
 }
 

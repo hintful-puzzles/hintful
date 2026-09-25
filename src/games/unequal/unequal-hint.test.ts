@@ -208,8 +208,10 @@ describe("unequal hint", () => {
           const marks = step.move.marks as { x: number; y: number; n: number }[];
           // A clue strike (greater/lesser/adjacent/adjacentSet) shades two evidence
           // cells and acts on exactly one of them; every mark is in that one cell.
+          // Basic-Latin/dup steps shade ≤1 cell; a set outlines the cells that
+          // account for what it strikes, which lie outside them.
           const area: { x: number; y: number }[] = step.highlights?.area ?? [];
-          if (area.length !== 2) continue; // basic-Latin/dup steps shade ≤1
+          if (area.length !== 2 || /account for/.test(step.explanation)) continue;
           const cells = new Set(marks.map((m) => `${m.x},${m.y}`));
           expect(cells.size).toBe(1);
           for (const m of marks) {

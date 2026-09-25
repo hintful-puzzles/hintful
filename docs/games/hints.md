@@ -3262,9 +3262,11 @@ What a game genuinely decides: which rungs of its own it has, the strike-split
 axis (`strikeAxis` — by height, by cell, one leg for a digit confined to a
 region; dictated by what the narration names singular), its recording solver,
 its words, its regions **where they are a decision at all** (§ "The row/column
-preset" — for a plain Latin square they are not), and the deviations the plan's optional hooks name
-(`singles`, `placeable`, `placed`, `shownNotes`, `placement`, `onPlace`), each
-of which states the one game-shaped fact that needs it. A driver was once
+preset" — for a plain Latin square they are not), the cells a step's
+candidates rest on beyond those it outlines (`reads` on its words: a cage
+deduction hatches the cage and reads every cell of it), and the deviations the
+plan's optional hooks name (`singles`, `placeable`, `placed`, `placement`,
+`onPlace`), each of which states the one game-shaped fact that needs it. A driver was once
 declined as a callback shell over a six-line loop; the frontier made the loop
 the part every game got the same way, so it moved into the engine, and the
 steps followed once every game's emitters were read side by side and differed
@@ -3513,6 +3515,73 @@ firing that continued.
   Check-&-Save inherits the rejection through its existing `findMistakes`
   gate.
 
+### Two readings of an unmarked cell
+
+**How a blank cell with no notes reads is the player's choice, and the walk owns
+both answers** (`CandidateReading` in
+[`candidate-hint.ts`](../../src/engine/candidate-hint.ts), the `hint-notes`
+preference `candidateReadingPref` in
+[`pencil-prefs.ts`](../../src/engine/pencil-prefs.ts)):
+
+- **`populate`**: not filled in yet. The plan pencils every candidate in first
+  (the Mark-all move), clears the obvious ones, and reads the notes alone from
+  then on. Everything above this section describes it.
+- **`implicit`**: every value its regions do not already hold, the way a player
+  who pencils nothing yet reads a sudoku. There is no populate step. A firing
+  first writes the notes of each blank, note-less cell it strikes, outlines as
+  evidence or `reads` (one `pencilAdd` leg each, continuing its journey, in the
+  engine's words: "Only 3 and 7 aren't already placed in this cell's row,
+  column or block, so pencil them in."), and a single needs no notes at all: a
+  note-less cell whose regions hold every other value is the `regionsFull`
+  single, narrated as exactly that.
+
+**Premise duty is the implicit reading's price, and the walk pays it for every
+game.** Map's playtests found that a premise read off neighbors is fine for one
+region and too much for several (§ "A graph, not a grid (Map)"). So the note
+legs cover every cell a step's candidates rest on: the outlined area, the struck
+cells, and `reads` for a region the sentence names but whose cells it reads (a
+Keen or Killer cage, a Towers `arrangement` line). **A hatched line is not
+read**: a hidden single says no other cell of the line can take the value, and
+each of those shows it by its own row and column. A generic Latin `set` records
+its subset (`LatinReason`'s `cells`) and outlines it, which is what lets the
+note legs find it; before, the sentence said "other cells" and marked none.
+
+**A game joins by having the preference**: a `candidateReading` field in its
+`Ui`, `candidateReadingPref` in its `prefs`, the reading passed through
+`buildSteps` to the walk, `ui ?? newUi(state)` in its `hint` so a caller with no
+`Ui` gets the game's own default, and a `pencilAdd` arm in its move union and
+`executeMove`. `candidate-reading.test.ts` finds the population by the `Ui`
+field and walks every member's other reading, the one every other hint guard
+misses.
+
+**The default is a per-game convention with an override, and it was measured,
+not argued.** Over every preset at six seeds (`examine-implicit-candidates`,
+2026-09-25), the implicit plan against the populate plan:
+
+| Game | Steps, implicit ÷ populate | Blank cells the implicit plan notes |
+|---|---|---|
+| Solo | 0.72 | 12% |
+| Mathrax | 0.91 | 51% |
+| Group | 1.02 | 12% |
+| Towers | 1.11 | 58% |
+| Unequal | 1.14 | 71% |
+| Rome | 1.18 | 80% |
+| Keen | 1.22 | 82% |
+
+Where the clues or cages drive the deductions, nearly every cell ends up needing
+notes, and writing them one cell at a time costs more than one populate. So the
+convention, `DEFAULT_CANDIDATE_READING`, is `populate`, and a game whose plan is
+no longer under the implicit reading overrides it in `newUi` and says why (Solo,
+Mathrax, Group). A new game measures the same two numbers before choosing.
+
+**Salad walks the populate reading only**: its setup is its own (the "might be
+empty" note is a candidate no row or column rules out, so an implicit Salad
+would have to decide when to write it), and the walk refuses the implicit
+reading with a setup of the game's own. Of the note games that plan without the
+walk, Undead and Seismic populate first, and Crossing already writes a square's
+notes only when a narrowing needs them (§ "Place the notes a fixpoint rests on
+(Crossing)"), with a `pencilAdd` of its own that predates the shared one.
+
 ### Re-derive a placement's why
 
 The shared `latin.ts` records every forced placement under one reason,
@@ -3554,11 +3623,13 @@ fails on a plan that skips one. What to check when it fires:
 - **Obvious culls come before any placement the plan classifies**, including
   those left by the player, who may place a value without striking it and in a
   game with no auto-pencil usually will.
-- **A cell with no notes shows the values its lines leave it.** Only a plan
-  that places before it populates classifies on such a board; read a note-less
+- **A cell with no notes shows the values its lines leave it.** A plan
+  classifies on such a board under the implicit reading, and under the
+  populate reading before its populate (Group places first); read a note-less
   cell as holding nothing and every placement passes as a hidden single in its
-  row, which is false wherever the value is open elsewhere in that row. Group's
-  `visibleCandidates` fills those cells in before classifying.
+  row, which is false wherever the value is open elsewhere in that row. The
+  walk classifies against `impliedNotes`, and hands the same view to a game's
+  own rungs as `RungContext.shown`.
 
 Shared, not per-game: this shipped for Towers, Unequal and Keen together
 (`fix-latin-hidden-single-narration`) — a probe had mis-narrated 37/96 Towers
@@ -4090,23 +4161,18 @@ no `(x, y)`, its only relation is adjacency, and its candidates are four colors.
 It was taken on to find out which of the shared hint machinery is secretly a
 square-grid convention. The answers, per piece:
 
-- **The candidate walk does not fit, and should not be made to.**
-  `runCandidatePlan`'s notes are the *whole* candidate set, filled in by
-  populate and cleaned against the board. A Map region's colors are partly the
-  board itself: its dots when it has any, all four when it has none, less every
-  color a neighbor shows. Penciling four colors into thirty regions to strike
-  three from each would teach a procedure nobody plays, and it would make the
-  Easy tier, which needs no dots at all, need dozens. So Map reads its
-  candidates the way a player does and places dots only where a deduction
-  removes a color no neighbor shows (`map/hint.ts`). What the walk owns that Map
-  lacks (populate, the obvious clean, the dup culls) are all consequences of the
-  populate-first note model, so they did not transfer either. **That is a choice
-  about how to read candidates, not a fact about Map**: a Latin game could read
-  an unmarked cell as the values its lines leave it (Group already does, in
-  `visibleCandidates`), and Map could have used Mark-all. Whether the reading
-  should be an engine option, a per-game default or a player preference is open
-  in `examine-implicit-candidates`; until it settles, do not cite Map as a game
-  that *needs* its reading.
+- **Map reads its candidates implicitly, and so can the grid games now.** A Map
+  region's colors are its dots when it has any, all four when it has none, less
+  every color a neighbor shows, and the hint places dots only where a deduction
+  removes a color no neighbor shows (`map/hint.ts`). That is the candidate
+  walk's **implicit reading** (§ "Two readings of an unmarked cell"), which every
+  grid candidate game now offers as a player preference; it was a choice about
+  how to read candidates, never a fact about Map. What still keeps Map off
+  `runCandidatePlan` is geometry: the walk indexes cells by `(x, y)` on a grid
+  of stride `w`, and Map's elements are regions of a graph. Map offers the
+  implicit reading only. Penciling four colors into thirty regions to strike
+  three from each would make the Easy tier, which needs no dots at all, need
+  dozens, and Map has no Mark-all move for a populate step to follow.
 - **The frontier transfers once it stops naming cells.** Its rule (continue from
   what the last steps wrote) never needed a geometry, only a way to tell two
   mentions of one element apart, so `HintFrontier` now takes a key: `gridKey(w,

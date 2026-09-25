@@ -12,6 +12,10 @@
  * starts blank.
  */
 
+import {
+  type CandidateReading,
+  DEFAULT_CANDIDATE_READING,
+} from "../../engine/candidate-hint.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
@@ -447,6 +451,9 @@ export type KeenMove =
   /** Strike (clear) the listed pencil candidates atomically — a hint's
    * single-firing elimination; idempotent (clearing an absent bit is a no-op). */
   | { type: "pencilStrike"; marks: { x: number; y: number; n: number }[] }
+  /** Write the listed pencil candidates, `pencilStrike`'s mirror: a hint's note
+   * step. */
+  | { type: "pencilAdd"; marks: { x: number; y: number; n: number }[] }
   /** Auto-solve to the given full grid. */
   | { type: "solve"; grid: number[] };
 
@@ -465,6 +472,8 @@ export interface KeenUi {
    * placing a digit strikes it from the pencil marks of every other cell in its
    * row and column. */
   autoPencil: boolean;
+  /** Preference: how a hint pencils (`CandidateReading`). */
+  candidateReading: CandidateReading;
 }
 
 export function newUi(_state: KeenState): KeenUi {
@@ -475,5 +484,6 @@ export function newUi(_state: KeenState): KeenUi {
     pencilKeepHighlight: true,
     pencilSticky: true,
     autoPencil: false,
+    candidateReading: DEFAULT_CANDIDATE_READING,
   };
 }

@@ -106,6 +106,27 @@ and an empty one, say — and mark them differently from each other. The
 explanation always names what it's pointing at, so you never have to go by
 color alone.
 
+### How a hint uses pencil marks {#hint-notes}
+
+In puzzles with pencil marks, you choose how a hint writes them, under
+**Hints pencil in** in the puzzle's preferences:
+
+* **Only as needed.** A square with no marks counts as holding
+  everything its row, column or region hasn't ruled out yet, which is how many
+  players solve before they write anything down. A hint writes a square's marks
+  only when its next deduction crosses one out or reasons from it, and tells
+  you why those are the ones to write. Much of a sudoku then needs no marks at
+  all.
+
+* **Every candidate first.** The hint starts by filling in every square's marks,
+  as the ::mark-all:: button does, clears the ones the board already rules out,
+  and reasons from the marks from then on.
+
+Each puzzle starts on whichever suits it better. Solo, Mathrax and Group start
+on the first; puzzles where nearly every square ends up needing marks, such as
+Keen and Towers, start on the second. The hints teach the same deductions either
+way.
+
 ### When there's no hint to give {#hint-refusals}
 
 Three quite different things stop a hint, and they call for different responses,

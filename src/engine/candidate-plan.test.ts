@@ -222,6 +222,147 @@ describe("runCandidatePlan", () => {
     ]);
   });
 
+  describe("under the implicit reading", () => {
+    const elim = (x: number, y: number, n: number, near?: Point): DeductionRecord => ({
+      kind: "elim",
+      x,
+      y,
+      n,
+      reason: { kind: "pair", near },
+      group: 0,
+    });
+    const notes = {
+      populate: "populate",
+      cleanObvious: "clean",
+      note: (c: Point, values: number[], every: boolean) =>
+        `note ${c.x},${c.y} ${values.join("")}${every ? " every" : ""}`,
+    };
+    /** Walk a 3×3 board whose solver's one firing is `ops`. */
+    function implicitWalk(grid: Uint8Array, ops: DeductionRecord[]): Step[] {
+      const steps: Step[] = [];
+      let recorded = false;
+      walk({
+        w: 3,
+        steps,
+        grid,
+        pencil: new Int32Array(9),
+        reading: "implicit",
+        setUp: undefined,
+        notes,
+        record: () => {
+          if (recorded) return [];
+          recorded = true;
+          return ops;
+        },
+      });
+      return steps;
+    }
+
+    it("writes a struck cell's candidates first, as a leg of the same journey", () => {
+      // (0,0)'s row holds a 2, so it reads as 1 or 3 with no notes written.
+      const steps = implicitWalk(Uint8Array.from([0, 2, 0, 0, 0, 0, 0, 0, 0]), [
+        elim(0, 0, 3),
+      ]);
+      // The strike is the firing's own first leg, so it speaks in full; it
+      // still continues the journey the note leg opened.
+      expect(steps.slice(0, 3).map((s) => s.explanation)).toEqual([
+        "note 0,0 13",
+        "pair strike 1",
+        "naked 0,0",
+      ]);
+      expect(steps[0].move).toEqual({
+        type: "pencilAdd",
+        marks: [
+          { x: 0, y: 0, n: 1 },
+          { x: 0, y: 0, n: 3 },
+        ],
+      });
+      // A note step names its cell and draws no struck marks.
+      expect(steps[0].highlights?.targets).toEqual([{ x: 0, y: 0 }]);
+      expect(steps[0].highlights?.marks).toEqual([]);
+      expect(steps[1].continuesPrevious).toBe(true);
+    });
+
+    it("notes a blank cell the firing outlines, but not a filled one", () => {
+      const blank = implicitWalk(new Uint8Array(9), [elim(0, 0, 3, { x: 1, y: 1 })]);
+      expect(blank.slice(0, 3).map((s) => s.explanation)).toEqual([
+        "note 1,1 123 every",
+        "note 0,0 123 every",
+        "pair strike 1",
+      ]);
+      expect(blank.slice(1, 3).every((s) => s.continuesPrevious)).toBe(true);
+      const filled = new Uint8Array(9);
+      filled[4] = 2;
+      expect(implicitWalk(filled, [elim(0, 0, 3, { x: 1, y: 1 })])[0].explanation).toBe(
+        "note 0,0 123 every",
+      );
+    });
+
+    it("notes the cells a step reads beyond its outline, as a cage deduction does", () => {
+      const steps: Step[] = [];
+      let recorded = false;
+      walk({
+        w: 3,
+        steps,
+        grid: new Uint8Array(9),
+        pencil: new Int32Array(9),
+        reading: "implicit",
+        setUp: undefined,
+        notes,
+        record: () => {
+          if (recorded) return [];
+          recorded = true;
+          return [elim(0, 0, 3)];
+        },
+        strikeWords: (marks, r) => ({
+          explanation: `${r.kind} strike ${marks.length}`,
+          area: [],
+          hatch: [{ x: 1, y: 0 }],
+          reads: [{ x: 1, y: 0 }],
+        }),
+      });
+      expect(steps.slice(0, 3).map((s) => s.explanation)).toEqual([
+        "note 1,0 123 every",
+        "note 0,0 123 every",
+        "pair strike 1",
+      ]);
+      // Read, not drawn: nothing the game did not mark is marked.
+      expect(steps[2].highlights?.area).toEqual([]);
+      expect(steps[2].highlights).not.toHaveProperty("reads");
+    });
+
+    it("places a cell its regions have narrowed to one with no notes at all", () => {
+      const steps = implicitWalk(Uint8Array.from([0, 2, 3, 0, 0, 0, 0, 0, 0]), []);
+      expect(steps[0].explanation).toBe("regionsFull 0,0");
+      expect(steps.some((s) => s.move.type === "pencilAll")).toBe(false);
+    });
+
+    it("leaves the populate reading as it was: a note-less cell is no single", () => {
+      const steps: Step[] = [];
+      walk({
+        w: 3,
+        steps,
+        grid: Uint8Array.from([0, 2, 3, 0, 0, 0, 0, 0, 0]),
+        pencil: new Int32Array(9),
+        setUp: undefined,
+        notes,
+      });
+      expect(steps[0].explanation).toBe("populate");
+    });
+
+    it("refuses a setup of the game's own, which it could not leave out", () => {
+      expect(() =>
+        walk({
+          w: 3,
+          steps: [],
+          grid: new Uint8Array(9),
+          pencil: new Int32Array(9),
+          reading: "implicit",
+        }),
+      ).toThrow(/implicit reading/);
+    });
+  });
+
   it("continues from the evidence a firing shades, not only the cells it acts on", () => {
     // After the first placement, at (0,0), two firings compete. The rung order
     // prefers "far"; "near" acts on a cell as distant, but shades (0,0).

@@ -19,6 +19,7 @@
  * match `solo.c` exactly, so do not copy Keen's, whose convention differs.
  */
 
+import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
@@ -736,6 +737,9 @@ export type SoloMove =
   | { type: "pencilAll" }
   /** Strike (clear) the listed pencil candidates atomically (hint elimination). */
   | { type: "pencilStrike"; marks: { x: number; y: number; n: number }[] }
+  /** Write the listed pencil candidates, `pencilStrike`'s mirror: a hint's note
+   * step. */
+  | { type: "pencilAdd"; marks: { x: number; y: number; n: number }[] }
   /** Auto-solve to the given full grid. */
   | { type: "solve"; grid: number[] };
 
@@ -751,6 +755,8 @@ export interface SoloUi {
   pencilSticky: boolean;
   /** Pref (default off): a placement strikes that digit from its row/col/block. */
   autoPencil: boolean;
+  /** Pref: how a hint pencils (`CandidateReading`). */
+  candidateReading: CandidateReading;
 }
 
 export function newUi(_state: SoloState): SoloUi {
@@ -763,6 +769,10 @@ export function newUi(_state: SoloState): SoloUi {
     // Off by owner decision: notes clear only via the mark-all button or a hint
     // unless the player opts in through the "auto-pencil" pref.
     autoPencil: false,
+    // Not the convention: most of a sudoku falls to singles read off the
+    // board, so a plan from a blank Easy or Normal board writes no note at
+    // all, where penciling in first writes and then clears some 300.
+    candidateReading: "implicit",
   };
 }
 

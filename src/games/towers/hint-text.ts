@@ -51,11 +51,14 @@ export const say = {
   single: (n: number): string =>
     `Every other height has been ruled out in this cell, so it can only be ${n}.`,
 
+  regionsFull: (n: number): string =>
+    `This cell's row and column already hold every other height, so it can only be ${n}.`,
+
   hiddenSingle: (line: "row" | "col", n: number): string =>
     `In this ${line === "row" ? "row" : "column"}, height ${n} can go in only this cell, since every other cell in the ${line === "row" ? "row" : "column"} rules it out, so it must be ${n}.`,
 
   set: (n: number): string =>
-    `Another group of cells already accounts for a fixed set of heights that includes ${n}, so we must cross out the ${n} here.`,
+    `The outlined cells already account for a fixed set of heights that includes ${n}, so we must cross out the ${n} here.`,
 
   // The shared chain sentence, in Towers' own vocabulary: the value needs no
   // qualifying here, because "two heights left" contextualizes the bare

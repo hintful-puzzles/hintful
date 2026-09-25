@@ -20,6 +20,7 @@
  * solution `aux` string, never in the desc.
  */
 
+import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -177,7 +178,10 @@ export type GroupMove =
   | { type: "pencilAll" }
   /** Strike the listed pencil marks — the atomic form the hint's elimination
    * steps and the "clear obvious candidates" cleanup emit. */
-  | { type: "pencilStrike"; marks: readonly { x: number; y: number; n: number }[] };
+  | { type: "pencilStrike"; marks: readonly { x: number; y: number; n: number }[] }
+  /** Write the listed pencil marks, `pencilStrike`'s mirror: a hint's note
+   * step. */
+  | { type: "pencilAdd"; marks: readonly { x: number; y: number; n: number }[] };
 
 /** A cell whose filled value contradicts the unique solution (Check & Save). */
 export type GroupMistake = Point;
@@ -243,6 +247,8 @@ export interface GroupUi {
   edgepos: number;
   /** Preference (default off): keep the mouse highlight after a pencil change. */
   pencilKeepHighlight: boolean;
+  /** Preference: how a hint pencils (`CandidateReading`). */
+  candidateReading: CandidateReading;
 }
 
 export function newUi(_state: GroupState): GroupUi {
@@ -260,6 +266,10 @@ export function newUi(_state: GroupState): GroupUi {
     dragpos: 0,
     edgepos: 0,
     pencilKeepHighlight: true,
+    // Not the convention: Group's deductions are placements (associativity,
+    // the identity), so a Normal board needs no notes at all and a Tricky one
+    // needs them in a few cells.
+    candidateReading: "implicit",
   };
 }
 

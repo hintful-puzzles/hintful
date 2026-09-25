@@ -30,12 +30,19 @@ import {
   defaultParams,
   encodeParams,
   newState,
+  newUi,
   type SoloMove,
   type SoloParams,
   type SoloState,
   SYMM_NONE,
   status as soloStatus,
 } from "./state.ts";
+
+/** A player who has chosen to have every candidate penciled in first. */
+const populating = (st: SoloState) => ({
+  ...newUi(st),
+  candidateReading: "populate" as const,
+});
 
 function gen(p: SoloParams, seed: string) {
   const { desc, aux } = newSoloDesc(p, randomNew(seed));
@@ -110,7 +117,7 @@ describe("solo recording solver", () => {
 describe("solo hint", () => {
   it("populates before the first elimination", () => {
     const { st } = gen(ADV, "hint-empty");
-    const res = soloGame.hint?.(st);
+    const res = soloGame.hint?.(st, undefined, populating(st));
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     const moves = res.steps.map((s) => (s.move as SoloMove).type);
@@ -127,6 +134,24 @@ describe("solo hint", () => {
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     expect((res.steps[0].move as SoloMove).type).not.toBe("pencilAll");
+  });
+
+  it("solves an easy board from singles alone on its default reading", () => {
+    // The reason Solo overrides the populate convention: a board this easy never
+    // needs a note written, where penciling in first writes some 450.
+    const easy: SoloParams = { ...defaultParams(), diff: DIFF_BLOCK };
+    for (const p of [easy, BASIC]) {
+      for (const seed of ["singles-1", "singles-2", "singles-3"]) {
+        const { st } = gen(p, seed);
+        const res = soloGame.hint?.(st);
+        if (!res?.ok) throw new Error(`refused on ${seed}`);
+        const kinds = res.steps.map((s) => (s.move as SoloMove).type);
+        expect(new Set(kinds)).toEqual(new Set(["set"]));
+        let state = st;
+        for (const s of res.steps) state = soloGame.executeMove(state, s.move);
+        expect(soloStatus(state)).toBe("solved");
+      }
+    }
   });
 
   it("surfaces a naked single as the next move ahead of any elimination", () => {
@@ -482,7 +507,7 @@ describe("solo killer cages forbid repeats", () => {
 
   it("auto-pencil strikes a placed digit from its cage-mates' notes", () => {
     const st = newState(KILLER, DESC);
-    const res = soloGame.hint?.(st);
+    const res = soloGame.hint?.(st, undefined, populating(st));
     if (!res?.ok) throw new Error("hint refused");
     const noted = soloGame.executeMove(st, res.steps[0].move);
     const cr = noted.cr;
@@ -585,7 +610,7 @@ describe("solo no-repeat region names", () => {
 describe("solo hintKeepTrack", () => {
   it("matches a populate step, rejects anything else", () => {
     const { st } = gen(ADV, "kt-pop");
-    const res = soloGame.hint?.(st);
+    const res = soloGame.hint?.(st, undefined, populating(st));
     if (!res?.ok) throw new Error("refused");
     const step = res.steps.find((s) => (s.move as SoloMove).type === "pencilAll");
     if (!step) throw new Error("no populate step");

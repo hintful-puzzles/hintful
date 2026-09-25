@@ -12,6 +12,7 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAllMove,
+  type CandidatePlanPrefs,
   candidateHint,
   keepCandidateHintTrack,
   refreshCandidateHintStep,
@@ -30,7 +31,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
-import { forcingChainArea } from "../../engine/latin-hint.ts";
+import { forcingChainArea, type SingleWhy } from "../../engine/latin-hint.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
@@ -41,6 +42,7 @@ import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import { parseConfigInt } from "../../engine/params.ts";
 import {
   autoPencilPref,
+  candidateReadingPref,
   pencilKeepHighlightPref,
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
@@ -283,6 +285,10 @@ function executeMove(state: SoloState, move: SoloMove): SoloState {
       for (const { x, y, n } of move.marks) next.pencil[y * cr + x] &= ~(1 << n);
       return next;
     }
+    case "pencilAdd": {
+      for (const { x, y, n } of move.marks) next.pencil[y * cr + x] |= 1 << n;
+      return next;
+    }
     case "solve": {
       for (let i = 0; i < cr * cr; i++) {
         next.grid[i] = move.grid[i];
@@ -452,23 +458,36 @@ export function noRepeatRegionNames(state: SoloState, at?: Point): string[] {
 /** The reason a single of `n` narrates as, once `availablePlacements` has
  * re-derived *why* it is forced from the working board (the recorded `place`
  * carries a bare `single`, conflating naked and hidden singles): a naked single
- * (the cell's notes collapsed to one) or a hidden single in a
- * row/column/sub-block/diagonal. */
+ * (the cell's notes collapsed to one), a note-less cell whose regions hold every
+ * other digit, or a hidden single in a row/column/sub-block/diagonal. */
 function soloSingleReason(
   n: number,
-  why: { kind: "naked" } | { kind: "hidden"; region: { region: SoloRegion } },
+  why: SingleWhy<{ region: SoloRegion }>,
 ): SoloReason {
-  if (why.kind === "naked") return { kind: "single" };
-  return { kind: "hiddenSingle", n, region: why.region.region };
+  switch (why.kind) {
+    case "naked":
+      return { kind: "single" };
+    case "regionsFull":
+      return { kind: "regionsFull" };
+    case "hidden":
+      return { kind: "hiddenSingle", n, region: why.region.region };
+  }
 }
 
 /** Narrate *why* a firing is forced (docs/games/hints.md § "Writing the narration"): indication → reasoning →
  * necessity-voice conclusion. `ns` is the struck value list (a placement passes
- * its single digit). */
-function narrate(reason: SoloReason, ns: number[], state: SoloState): string {
+ * its single digit); `at` is the cell the step acts on (a strike's first). */
+function narrate(
+  reason: SoloReason,
+  ns: number[],
+  state: SoloState,
+  at: Point,
+): string {
   switch (reason.kind) {
     case "single":
       return say.single(ns[0]);
+    case "regionsFull":
+      return say.regionsFull(ns[0], noRepeatRegionNames(state, at));
     case "hiddenSingle":
       return say.hiddenSingle(reason.region, reason.n);
     case "dup":
@@ -499,6 +518,8 @@ function narrate(reason: SoloReason, ns: number[], state: SoloState): string {
 interface SoloMarks {
   area: OrderedCell[];
   hatch?: Point[];
+  /** The cells whose candidates the step rests on beyond `area`. */
+  reads?: Point[];
 }
 
 /** A region the sentence names as its subject ("in this row", "this block"),
@@ -520,10 +541,12 @@ function reasonMarks(reason: SoloReason, state: SoloState): SoloMarks {
         : { area: reason.cells };
     case "cageIntersect":
       return namedRegion(reason.region, state);
-    // "This killer cage": the cage is the hatch.
-    case "cageSingle":
+    // "This killer cage": the cage is the hatch. What its sum leaves a cell
+    // depends on what its other cells can still be, so those are read too.
     case "cageMinMax":
     case "cageSums":
+      return { area: [], hatch: reason.cells, reads: reason.cells };
+    case "cageSingle":
       return { area: [], hatch: reason.cells };
     // A forcing chain names the cells it ran through, **numbered**, so the
     // narration can cite them and the player can walk it.
@@ -551,7 +574,7 @@ function placementMarks(reason: SoloReason, state: SoloState): SoloMarks {
  * solves it (`runCandidatePlan`). */
 function buildSteps(
   state: SoloState,
-  autoClean: boolean,
+  { autoClean, reading }: CandidatePlanPrefs,
 ): HintStep<SoloMove, SoloHint>[] {
   const cr = state.cr;
   const steps: HintStep<SoloMove, SoloHint>[] = [];
@@ -564,12 +587,13 @@ function buildSteps(
     grid: wGrid,
     pencil: Int32Array.from(state.pencil),
     autoClean,
+    reading,
     label: "solo hint plan",
     record: () => recordSoloDeductions({ ...state, grid: wGrid }, maxdiff, maxkdiff),
     regionsOf: (x, y) => regionsOf(state, x, y),
     singleReason: soloSingleReason,
     placeWords: (m, reason) => ({
-      explanation: narrate(reason, [m.n], state),
+      explanation: narrate(reason, [m.n], state, m),
       ...placementMarks(reason, state),
     }),
     strikeWords: (marks, reason) => ({
@@ -577,6 +601,7 @@ function buildSteps(
         reason,
         reason.kind === "intersect" ? [reason.n] : valuesOf(marks),
         state,
+        marks[0],
       ),
       ...reasonMarks(reason, state),
     }),
@@ -587,6 +612,8 @@ function buildSteps(
     notes: {
       populate: say.populate,
       cleanObvious: say.cleanObvious(noRepeatRegionNames(state)),
+      note: (cell, values, every) =>
+        say.note(values, every, noRepeatRegionNames(state, cell)),
     },
   });
   return steps;
@@ -597,7 +624,7 @@ function hint(
   _aux?: string,
   ui?: SoloUi,
 ): HintResult<SoloMove, SoloHint> {
-  return candidateHint(state, ui ?? null, findMistakes, buildSteps);
+  return candidateHint(state, ui ?? newUi(state), findMistakes, buildSteps);
 }
 
 /** Classify a player move against the displayed hint step (shared
@@ -777,6 +804,7 @@ export const soloGame: Game<
     ),
     stickyPencilPref<SoloUi>(),
     pencilKeepHighlightPref<SoloUi>(),
+    candidateReadingPref<SoloUi>(),
   ],
 
   colors,
