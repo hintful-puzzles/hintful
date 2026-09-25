@@ -76,10 +76,9 @@ export const say = {
   lastDot: (color: number): string =>
     `The only dot in this region is ${colorName(color)}, so it must be ${colorName(color)}.`,
 
-  /** A region whose other dots are all colors an outlined neighbor already
-   * has. */
+  /** A region whose other dots are all colors a neighbor already has. */
   deadDots: (color: number): string =>
-    `Its other dots match the outlined neighbors, so this region must be ${colorName(color)}.`,
+    `Its other dots match its neighbors' colors, so this region must be ${colorName(color)}.`,
 
   /**
    * Two touching regions down to the same two colors, which they must then use

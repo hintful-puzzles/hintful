@@ -192,13 +192,16 @@ function singles(w: Work, b: MapBoard): Firing[] {
     const base = dots || ALL;
     // The neighbors whose colors took something from what the region started
     // with: all of its colored neighbors when it has no dots, and only the
-    // ones matching a dot when it has.
-    const evidence: MapEvidence[] = [];
+    // ones matching a dot when it has. The premise, and what the frontier
+    // continues from, but not outlined: their fills are the evidence, and
+    // outlines around a small region's neighbors swamp the region itself
+    // (owner playtest, 2026-09-25).
+    const cited: number[] = [];
     let others = 0;
     for (const k of neighbors(graph, n, ngraph, r)) {
       const c = w.coloring[k];
       if (c >= 0 && base & (1 << c)) {
-        evidence.push({ region: k });
+        cited.push(k);
         others |= 1 << c;
       }
     }
@@ -209,8 +212,8 @@ function singles(w: Work, b: MapBoard): Firing[] {
           ? say.lastDot(color)
           : say.deadDots(color);
     out.push({
-      reads: [r, ...evidence.map((e) => e.region)],
-      legs: (w) => [step(w, r, { color }, explanation, evidence)],
+      reads: [r, ...cited],
+      legs: (w) => [step(w, r, { color }, explanation, [])],
     });
   });
   return out;

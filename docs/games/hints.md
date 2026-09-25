@@ -1520,7 +1520,7 @@ to a similar game:
 | Seismic | the cell(s) a step decides, ringed `COL_HINT` inside the cell's own box (the gap between cells is the black its walls are made of); a struck note keeps its pencil color with a same-color line through it | the area a hidden single or a starved area reasons over → one `COL_HINT_CELL` contour; a placement's follow-on strikes outline the placed number's cell alone |
 | Galaxies | the **deduced** cell, solid **purple** `COL_HINT` (not blue — see below); the 180° partner the same move claims, a `COL_HINT` **outline over the ordinary evidence shading** (same hue, they share a fate; far less weight, only one is what the words are about); the wall it draws, a `COL_HINT` bar drawn *whether or not the wall exists yet*; the dot it points at, a **filled `COL_HINT` halo with the dot repainted on top** — **unless the dot stands on a cell just filled**, where a mark in the fill's own color is invisible and the narration names the dot by position instead | the cells / walls / dots the argument reasons over → `COL_HINT_CELL` teal (a galaxy's reach, a cut-off piece, the partner across a dot, an already-drawn wall). One ring role at a time, so "the ringed dot" is never ambiguous |
 | Magnets | the square a placement decides, ringed `COL_HINT`; a domino decided whole (neutral, or marked `?`) as **one contour around both ends**, never a ring per end | the line a premise counts → one `COL_HINT_CELL` contour, and its clue digits recolor `COL_HINT` (Magnets draws no line numbers, so the digit is how "this row" is found); a pole the square touches → that square outlined; the domino's other end, when the sentence reasons about it, outlined too |
-| Map | the region the step decides, a `COL_HINT` band inside its whole boundary, twice the selection band's width; the selection band, when on the same region, just inside it | the regions a premise rests on (the neighbors whose colors decide a single, the pair, the chain) → a `COL_HINT_CELL` band of the selection's width; a chain's regions numbered at their label points in the same color, with region numbers hidden while it shows |
+| Map | the region the step decides, a solid `COL_HINT` band inside its whole boundary, twice the selection band's width, and the only hint mark on any border; the selection band, when on the same region, just inside it | a single (one color left) outlines **nothing**: the neighbors' fills are its premise. A pair's or chain's regions → a thin **dashed** `COL_HINT_CELL` line set in from their border by a band's width; a chain's regions numbered at their label points in the same color, with region numbers hidden while it shows |
 | Loopy | the edges the step sets, a `COL_HINT` band *under* each (the edge's own state stays on top): solid for a line, broken for an edge that can't be one | the clue it counts → an outline inset inside its face; the dot it names → a ring under the dot; the loop an edge would close → a `COL_HINT_CELL` band under those lines; a **corner** or **pair** note the step reasons from → the player's own note, redrawn in `COL_HINT_CELL`; a note the step places → that note's own wedge or connector in `COL_HINT` (§ "Give the facts a notation (Loopy)") |
 
 **Mark the premise element in the action color only where the sentence names
@@ -4113,11 +4113,22 @@ square-grid convention. The answers, per piece:
 - **The shared marks do not reach a region, and nothing was bent to make them.**
   `hint-mark.ts` bands a cell's border box. Map already drew its selection as a
   band inside the region's whole boundary, clipped piece by piece through
-  divided cells, so the hint's ring and outline are that band in `COL_HINT` and
-  `COL_HINT_CELL` (§ "Echo the move's shape in the hint color"). The target's
-  band is twice the width of the evidence's, so the two differ by weight as well
-  as hue, and the selection band nests just inside a hint band rather than
-  vanishing under it.
+  divided cells, so the hint's ring is that band in `COL_HINT` (§ "Echo the
+  move's shape in the hint color"), and the selection band nests just inside it
+  rather than vanishing under it.
+- **Marks on a shared border run together, so only one role may sit on it.**
+  The first cut outlined evidence with the same kind of band as the target,
+  one hue and a weight apart, and on the owner's first playtest a small target
+  surrounded by outlined neighbors could not be picked out: every border it
+  shared with them carried a blue band on one side and a teal one on the other,
+  which read as a single thick line. Two fixes, both general. **Mark only what
+  the board does not already show**: a single's premise is its neighbors'
+  colors, which their fills state, so it outlines nothing, and that is nine
+  steps in ten. **Where evidence must be marked, make it differ in form**: a
+  pair's or chain's regions take a thin dashed line set in from their border by
+  a band's width, so the target's solid band is the only mark on a boundary.
+  Hue and weight alone did not separate them; a solid band on the edge against a
+  dashed line inside does, and survives a player who cannot compare hues.
 - **The forcing-chain sentence stays Map's own.** `narrateForcingChain` is
   written for a line ("this cell's row already has it", "cross out"). Map's two
   ends *touch* the target and its conclusion is one of three moves, so two of the

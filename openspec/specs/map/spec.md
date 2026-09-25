@@ -258,11 +258,15 @@ region when one color is left, remove the struck dots when the region has dots,
 and otherwise dot the colors left, and its sentence SHALL say which. One firing
 that narrows several regions SHALL be one journey, a leg per region.
 
-A step SHALL ring the region it acts on with a band inside the region's
-boundary, heavier than the band outlining each region its premise rests on, in
-the hint colors, and SHALL number a chain's regions at their label points,
-hiding the region numbers while it does. The selection band SHALL stay visible
-just inside a hint band on the same region.
+A step SHALL ring the region it acts on with a solid band inside the region's
+boundary, in the hint's action color, and that band SHALL be the only hint mark
+on any region boundary. A region with one color left SHALL outline nothing else,
+because its neighbors' fills are its premise. The regions a pair or a chain
+rests on SHALL be outlined by a thin dashed line in the hint's evidence color,
+set in from their boundary, so that where they meet the target the two marks
+stay apart. A chain's regions SHALL be numbered at their label points, with the
+region numbers hidden while it shows. The selection band SHALL stay visible just
+inside a hint band on the same region.
 
 The generator SHALL NOT call the hint, and splitting the rungs into functions
 SHALL change no solver verdict.
@@ -271,8 +275,8 @@ SHALL change no solver verdict.
 
 - **WHEN** a blank region with no dots touches regions of three different colors
   and a hint is requested
-- **THEN** the step colors it the fourth, rings it, outlines those neighbors,
-  and names the three colors and the fourth
+- **THEN** the step colors it the fourth, rings it, outlines nothing else, and
+  names the three colors and the fourth
 
 #### Scenario: A chain's conclusion is dotted onto an unmarked region
 

@@ -173,12 +173,10 @@ describe("map hint claims hold on the board they are spoken over", () => {
         const [arm] = armOf(step.explanation);
         expect(arm, step.explanation).toBeDefined();
         expect(s.coloring[t], "the target is blank").toBe(-1);
-        if (arm === "touches" || arm === "deadDots") {
-          // Its evidence is colored neighbors, and they leave one color.
-          for (const e of ev) {
-            expect(adjacent(s, t, e)).toBe(true);
-            expect(s.coloring[e]).toBeGreaterThanOrEqual(0);
-          }
+        if (arm === "touches" || arm === "deadDots" || arm === "lastDot") {
+          // Its neighbors' colors leave one, and it outlines none of them: their
+          // fills are the evidence.
+          expect(ev).toEqual([]);
           expect(bits(left(s, t))).toBe(1);
         } else if (arm?.startsWith("pair")) {
           // "The outlined pair touch and can only be X or Y" and "this region
@@ -285,7 +283,15 @@ describe("map hint continuity", () => {
         );
         if (!waiting) return;
         const wrote = last.flatMap((h) => h.targets);
-        const reads = [...hl.targets, ...hl.evidence.map((e) => e.region)];
+        // A single outlines nothing but reads its colored neighbors all the
+        // same, so those count as what it reads.
+        const reads = [
+          ...hl.targets,
+          ...hl.evidence.map((e) => e.region),
+          ...[...neighbors(graph, n, ngraph, hl.targets[0])].filter(
+            (k) => s.coloring[k] >= 0,
+          ),
+        ];
         expect(
           reads.some((r) => wrote.includes(r)),
           step.explanation,
@@ -356,6 +362,20 @@ describe("map hint rendering", () => {
       recording.ops.filter((o) => o.op === "polygon" && o.fill === c).length;
     expect(polys(COL_HINT)).toBeGreaterThan(0);
     expect(polys(COL_HINT_CELL)).toBeGreaterThan(0);
+    // The evidence is a dashed line, never a strip along a whole tile side: a
+    // solid one beside the target's band read as one thick line (owner
+    // playtest, 2026-09-25).
+    const ts = mapGame.preferredTileSize ?? 32;
+    for (const o of recording.ops)
+      if (o.op === "polygon" && o.fill === COL_HINT_CELL) {
+        const xs = o.points.map(([x]) => x);
+        const ys = o.points.map(([, y]) => y);
+        const long = Math.max(
+          Math.max(...xs) - Math.min(...xs),
+          Math.max(...ys) - Math.min(...ys),
+        );
+        expect(long).toBeLessThan(ts / 2);
+      }
     expect(recording.ops).toMatchSnapshot();
   });
 });

@@ -471,34 +471,73 @@ function cellPieces(map: MapData, x: number, y: number, ts: number): [Piece, Pie
 }
 
 /** A band's reach inward from the region boundary, `from` to `to` pixels, in
- * `color`. */
+ * `color`, and dashed with this period when `dash` is set. */
 interface Band {
   from: number;
   to: number;
   color: number;
+  dash?: number;
 }
 
 /**
  * The bands piece `(x, y)`'s selection and hint put along its region's
  * boundary, outermost first.
  *
- * A hint step's target takes a band twice the selection's width and its
- * evidence one of the same width, so the region the step acts on differs from
- * the ones it reasons over by weight as well as by hue. A selected region the
- * hint also marks keeps its selection band, just inside the hint's, because
- * that is where a player about to act on the hint is looking.
+ * The hint step's target is the only mark on the boundary itself: a solid band
+ * twice the selection's width. The regions its premise rests on take a thin
+ * dashed line set in from theirs, so where they border the target the two never
+ * run together into one thick line. A small target ringed by outlined
+ * neighbors was lost among them when both sat on the border (owner playtest,
+ * 2026-09-25). A selected region the hint also marks keeps its selection band
+ * just inside the hint's target band, because that is where a player about to
+ * act on the hint is looking, and outside the evidence line.
  */
-function bandsOf(selected: boolean, hint: number, t: number): Band[] {
+function bandsOf(selected: boolean, hint: number, t: number, ts: number): Band[] {
   const out: Band[] = [];
   let reach = 0;
   if (hint === HINT_TARGET) {
     out.push({ from: 0, to: 2 * t, color: COL_HINT });
     reach = 2 * t;
-  } else if (hint === HINT_EVIDENCE_ROLE) {
-    out.push({ from: 0, to: t, color: COL_HINT_CELL });
-    reach = t;
   }
-  if (selected) out.push({ from: reach, to: reach + t, color: COL_CURSOR });
+  if (selected) {
+    out.push({ from: reach, to: reach + t, color: COL_CURSOR });
+    reach += t;
+  }
+  if (hint === HINT_EVIDENCE_ROLE) {
+    const from = reach + t;
+    out.push({
+      from,
+      to: from + Math.max(1, Math.round((2 * t) / 3)),
+      color: COL_HINT_CELL,
+      dash: Math.max(4, Math.round(ts / 3)),
+    });
+  }
+  return out;
+}
+
+/** `strip` cut into dashes along direction `(tx, ty)`, on for the first half of
+ * each `period`. Measured from the canvas origin rather than from the strip, so
+ * the dashes of one border line up from cell to cell. */
+function dashes(strip: Pt[], tx: number, ty: number, period: number): Pt[][] {
+  if (strip.length < 3) return [];
+  const u = (p: Pt) => p.x * tx + p.y * ty;
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (const p of strip) {
+    lo = Math.min(lo, u(p));
+    hi = Math.max(hi, u(p));
+  }
+  const out: Pt[][] = [];
+  for (let k = Math.floor(lo / period); k * period < hi; k++) {
+    const a = k * period;
+    const b = a + period / 2;
+    out.push(
+      clipHalfPlane(
+        clipHalfPlane(strip, (p) => a - u(p)),
+        (p) => u(p) - b,
+      ),
+    );
+  }
   return out;
 }
 
@@ -517,13 +556,14 @@ function drawBands(
   const [topPiece, bottomPiece] = cellPieces(map, x, y, ts);
   const t = selectionBand(ts);
   const marked: [Piece, Band[]][] = [];
-  const top = bandsOf((v & SEL_TOP) !== 0, hv & HINT_ROLE_MASK, t);
+  const top = bandsOf((v & SEL_TOP) !== 0, hv & HINT_ROLE_MASK, t, ts);
   if (top.length > 0) marked.push([topPiece, top]);
   if (bottomPiece !== topPiece) {
     const bottom = bandsOf(
       (v & SEL_BOTTOM) !== 0,
       (hv >> HINT_BOTTOM_SHIFT) & HINT_ROLE_MASK,
       t,
+      ts,
     );
     if (bottom.length > 0) marked.push([bottomPiece, bottom]);
   }
@@ -540,7 +580,7 @@ function drawBands(
   // outer one must be the one left showing there.
   for (const [piece, bands] of marked)
     for (const band of [...bands].reverse()) {
-      const { from, to, color } = band;
+      const { from, to, color, dash } = band;
       const fill = (poly: Pt[]) => {
         if (poly.length >= 3) dr.drawPolygon(poly, color, color);
       };
@@ -548,13 +588,30 @@ function drawBands(
       for (let i = 0; i < poly.length; i++) {
         if (!boundary[i]) continue;
         const d = inwardDistance(poly, i);
-        fill(
-          clipHalfPlane(
-            clipHalfPlane(poly, (p) => d(p) - to),
-            (p) => from - d(p),
-          ),
+        let strip = clipHalfPlane(
+          clipHalfPlane(poly, (p) => d(p) - to),
+          (p) => from - d(p),
         );
+        // A band set in from the boundary keeps clear of the piece's other
+        // boundary sides too, or at a corner it reaches back across the gap.
+        if (from > 0)
+          for (let j = 0; j < poly.length; j++)
+            if (j !== i && boundary[j]) {
+              const dj = inwardDistance(poly, j);
+              strip = clipHalfPlane(strip, (p) => from - dj(p));
+            }
+        if (dash === undefined) {
+          fill(strip);
+          continue;
+        }
+        const a = poly[i];
+        const b = poly[(i + 1) % poly.length];
+        const len = Math.hypot(b.x - a.x, b.y - a.y);
+        for (const seg of dashes(strip, (b.x - a.x) / len, (b.y - a.y) / len, dash))
+          fill(seg);
       }
+      // A dashed line needs no corner joins: its gaps already break it.
+      if (dash !== undefined) continue;
       for (const k of corners) {
         // A side of the piece already running along the boundary from this
         // corner has covered it.
