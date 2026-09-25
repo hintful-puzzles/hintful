@@ -230,11 +230,13 @@ const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
   },
   {
     games: ["map"],
-    match: /^Region 1 is \w+ or \w+\. If \w+, each numbered region/,
+    match:
+      /^(?:If region 1 isn't \w+, it's \w+, so |Every numbered region has a \w+ dot\.)/,
     why:
       "Map's chain Tactic, held to what ts-engine asks of every narrated chain: " +
       "name both ends, cite the links by their numbers on the board, and state " +
-      "the case split, which is three clauses as in the Latin chain.",
+      "the case split. The walk names each link's color, which is what made it " +
+      "readable at a glance (owner playtest, 2026-09-25), and costs a clause per link.",
   },
   {
     games: ["singles"],

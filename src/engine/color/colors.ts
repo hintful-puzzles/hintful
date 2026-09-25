@@ -406,6 +406,8 @@ export const FOUR_FILLS: readonly Color[] = [
  * {@link FOUR_FILLS}, as a player would say them. Map's hint names the color a
  * region must take, and as with {@link TEN_NAMES} the word and the color come
  * from one place, so recoloring the set cannot leave a sentence naming the old
- * hue.
+ * hue. The fourth is "violet" rather than its palette entry's "purple": as a
+ * wash it is pale lavender in light mode and dusky violet in dark, and a player
+ * would call neither purple (owner playtest, 2026-09-25).
  */
-export const FOUR_NAMES: readonly string[] = ["red", "yellow", "teal", "purple"];
+export const FOUR_NAMES: readonly string[] = ["red", "yellow", "teal", "violet"];

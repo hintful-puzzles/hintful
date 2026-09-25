@@ -265,7 +265,7 @@ function chains(b: MapBoard): Firing[] {
           w,
           ks,
           1 << color,
-          (c) => say.chain(color, other, chain.length, c),
+          chainSentence(w, chain, color, other),
           numbered,
         ),
       ];
@@ -275,6 +275,31 @@ function chains(b: MapBoard): Firing[] {
       return legs;
     },
   }));
+}
+
+/**
+ * The chain step's sentence, read off the board as it stands once every
+ * numbered region shows its two dots: the pattern when every region has a dot
+ * of `color`, and otherwise the walk, each region taking the dot the one before
+ * it leaves. Read once, before any of the firing's narrowing legs, since a leg
+ * placing a color beside the chain would change what its regions show.
+ */
+function chainSentence(
+  w: Work,
+  chain: readonly number[],
+  color: number,
+  other: number,
+): (c: Conclusion) => string {
+  if (chain.every((r) => colorsLeft(w, r) & (1 << color)))
+    return (c) => say.chainAlternates(color, chain.length, c);
+  const forced = [other];
+  for (let i = 1; i < chain.length; i++)
+    forced.push(colorsOf(colorsLeft(w, chain[i]) & ~(1 << forced[i - 1]))[0]);
+  // The sentence says the walk ends on `color`; it is what `forcingChain` found,
+  // so a walk that does not is a board the dots misdescribe.
+  if (forced[forced.length - 1] !== color)
+    throw new Error(`map hint: chain walk ends on ${forced.at(-1)}, not ${color}`);
+  return (c) => say.chain(color, forced, c);
 }
 
 /**

@@ -264,6 +264,16 @@ the dots a neighbor's color rules out), so that when the chain step is spoken
 every numbered region shows its two colors and the chain can be followed on the
 board rather than worked out.
 
+The chain step SHALL name what the dots show rather than a rule the player must
+run. When every numbered region has a dot of the struck color, it SHALL say so
+and that the color falls on every other region from region 2 when region 1 does
+not take it. Otherwise it SHALL walk the chain by color, naming region 1's other
+color and the color each later region then takes, for a chain of up to five
+regions, and past that SHALL name the rule and where the chain ends. Either way
+it SHALL conclude that region 1 or the last region takes the struck color, and
+that this region touches both. The plan SHALL fail rather than speak a walk that
+does not end on the struck color.
+
 A step SHALL ring the region it acts on with a solid band inside the region's
 boundary, in the hint's action color, and that band SHALL be the only hint mark
 on any region boundary. A region with one color left SHALL outline nothing else,
@@ -293,6 +303,13 @@ SHALL change no solver verdict.
   numbers the chain's regions 1 to N on the board, and says region 1's two
   colors, the color region N is driven to, and that this region touches both
   ends
+
+#### Scenario: A chain whose regions all carry the struck color is told as a pattern
+
+- **WHEN** every numbered region of a chain has a dot of the struck color when
+  the chain step is spoken
+- **THEN** the sentence says so, and that the color falls on every other region
+  if region 1 does not take it, instead of naming each region's color
 
 #### Scenario: The hint's dots are the next step's premise
 

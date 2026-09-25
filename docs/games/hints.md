@@ -4156,6 +4156,29 @@ square-grid convention. The answers, per piece:
   when the chain step is spoken. **For any chain Tactic, ask whether each link's
   premise is on the board when the chain is spoken**; if it is a sum the player
   must compute, the journey owes a leg that writes it down.
+- **And the chain step names what the dots show, never a rule to run.** With
+  the dots down, "each region loses the color the one before it takes" was
+  still too much (the owner's next playtest): it is a procedure, and following
+  it is the work the hint was meant to do. Two phrasings replaced it, chosen
+  by the chain's shape. When every numbered region has a dot of the struck
+  color (30 of 228 chain steps measured), the player sees a **pattern**, and the
+  sentence names it: red falls on every other region. Otherwise it **walks the
+  chain by color**: "If region 1 isn't red, it's teal, so region 2 is violet and
+  region 3 is red." Past five regions the listed walk stops being a glance (and
+  ran to 270 characters at eight), so it names the rule and where the chain
+  ends. **A walk a sentence names is checked the way Rome's arrow walk is**: the
+  plan throws if it does not end on the struck color, and the test holds every
+  named color to a dot of its region *and* to differing from the one before. The
+  first half alone passed an off-by-one walk, because each chain region's two
+  dots are the previous region's color and its own, so either one is "a dot of
+  it".
+
+**A color's name is checked against how it looks, in both schemes.** Map's
+fourth color was "purple" after its palette entry, and the owner found it read
+as neither: pale lavender in light mode, dusky violet in dark. The name is
+`FOUR_NAMES`'s, beside the fills, and is now "violet". A wash's hue name drifts
+with its lightness, so check a name against the swatch in both schemes before a
+sentence says it.
 
 Two rules of Map's own that another tiered game may want:
 

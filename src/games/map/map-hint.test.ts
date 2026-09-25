@@ -25,9 +25,12 @@ const ARMS = {
   pairPlace: /^The outlined pair .* and must be \w+\.$/,
   pairStrike: /^The outlined pair .* must go\.$/,
   pairMark: /^The outlined pair .*: dot [\w ,]+\.$/,
-  chainPlace: /^Region 1 is .* and must be \w+\.$/,
-  chainStrike: /^Region 1 is .* must go\.$/,
-  chainMark: /^Region 1 is .*: dot [\w ,]+\.$/,
+  chainPlace: /^(?:If region 1 isn't|Every numbered region has) .* and must be \w+\.$/,
+  chainStrike: /^(?:If region 1 isn't|Every numbered region has) .* must go\.$/,
+  chainMark: /^(?:If region 1 isn't|Every numbered region has) .*: dot [\w ,]+\.$/,
+  chainWalk: /^If region 1 isn't \w+, it's \w+, so region 2 is /,
+  chainLongWalk: /^If region 1 isn't \w+, it's \w+, so each numbered region takes /,
+  chainAlternates: /^Every numbered region has a \w+ dot\./,
   chainDot: /^Region \d+ touches /,
   chainTrim: /^Region \d+'s other dots/,
 } satisfies Record<string, RegExp>;
@@ -60,6 +63,14 @@ const PINNED: Partial<Record<Arm, string>> = {
     "15x20n30dh:baccbaaagabacadcaadaaacbaaadfacceaaafaibcahbabhcaabbdbfbaagabbcbcbaabaeadaabadeababacbebaaacbaafcbcafabaacebbadbdabaaacaaaeccbgbaebckbbcabhacgaabaaaabcaabcadaacacbaaabcebcabbaabbbadabadacaabbbacfaabacfcbaabaabaibaadbhahaaaffcadbjbba,a230a3i13a2f1a3a2",
   chainMark: CHAIN_BOARD,
   chainDot: CHAIN_BOARD,
+  chainWalk: CHAIN_BOARD,
+  // An eight-region chain every region of which has a yellow dot; the walk
+  // shape measured 75 chain steps to this one's 19 over 60 Tricky boards.
+  chainAlternates:
+    "15x20n30dh:dbcaoaabdbaaaakbadddbadacadaabcacbabgadcaadbcaabbdccabaafacabcbadceeaadbbadgnababdcbbaabaacbcfaccaaacaecqaeadbdbdakdbaacdabbbdaaaaabdabbcabacaaabbccabaaccabcbabbccbcbebeaeabbebbafbicbbbcdbdaaagababacbcbdaecaajcbag,2a0b02g023g02a121",
+  // A six-region chain: 13 steps over 120 Tricky boards of both sizes.
+  chainLongWalk:
+    "15x20n30dh:bamancbabebacaabhcfaeaaahadaaebdachafbcaaaacebaaaakcaabgiachbaibbabhaaaagaccbddabbcbacbbbeaabcfabbbbcadaaaebebhbaahcaadaabaccdacacfbdacaeaeahcceacdafadbbagbaafbdbdadbcaebbbdaaabccaaaaabbaafcbabbbaaapae,3a0c2a02b3b33b2d0b113",
 };
 
 /**
@@ -229,6 +240,36 @@ describe("map hint claims hold on the board they are spoken over", () => {
           expect(adjacent(s, t, ev[0])).toBe(true);
           expect(adjacent(s, t, ev[ev.length - 1])).toBe(true);
           expect(ev).not.toContain(t);
+          // What the sentence says about the dots is what they show: every
+          // color the walk names is one of that region's dots, and "every
+          // numbered region has a red dot" is true of every one.
+          const COLORS = ["red", "yellow", "teal", "violet"];
+          // The walk as named: region 1's color from "it's X", then each
+          // "region k is Y". Every one is a dot of its region, and each differs
+          // from the one before, which is the whole of "takes the dot the one
+          // before it leaves": two dots each, one shared.
+          const first = /^If region 1 isn't \w+, it's (\w+)/.exec(step.explanation);
+          if (first) {
+            const named = [COLORS.indexOf(first[1])];
+            for (const m of step.explanation.matchAll(
+              /region (\d+) is (\w+)(?=[,. ]| and)/g,
+            ))
+              if (Number(m[1]) === named.length + 1) named.push(COLORS.indexOf(m[2]));
+            named.forEach((c, i) => {
+              expect(s.pencil[ev[i]] & (1 << c), step.explanation).toBeGreaterThan(0);
+              if (i > 0) expect(c, step.explanation).not.toBe(named[i - 1]);
+            });
+            // A listed walk reaches the last region, on the struck color.
+            if (named.length > 1) {
+              const struck = /^If region 1 isn't (\w+)/.exec(step.explanation)?.[1];
+              expect(named).toHaveLength(ev.length);
+              expect(COLORS[named[named.length - 1]]).toBe(struck);
+            }
+          }
+          const all = /^Every numbered region has a (\w+) dot/.exec(step.explanation);
+          if (all)
+            for (const e of ev)
+              expect(s.pencil[e] & (1 << COLORS.indexOf(all[1]))).toBeGreaterThan(0);
         }
         checked++;
       });

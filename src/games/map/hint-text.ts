@@ -42,6 +42,9 @@ export function colorsOf(mask: number): number[] {
 
 const names = (mask: number): string[] => colorsOf(mask).map(colorName);
 
+/** The longest chain whose walk is listed region by region. */
+const WALK_MAX = 5;
+
 /** What a narrowing step does to its region, and so how its sentence ends:
  * - `place` — one color is left, and the step colors the region with it;
  * - `strike` — the region carries dots, and the step removes `struck`;
@@ -93,10 +96,12 @@ export const say = {
     `The outlined pair touch and can only be ${joinOr(names(pair))}, so they use both. This region touches both, so ${conclude(c, "it can't be either")}.`,
 
   /**
-   * A forcing chain, as the case split it is: region 1 is `color` or `other`;
-   * if `other`, each numbered region forces the next until region `last` is
-   * driven to `color`. This region touches region 1 and region `last`, so one of
-   * its neighbors is `color` either way.
+   * A forcing chain, as the case split it is, walked with its actual colors:
+   * `forced` is what each numbered region is if region 1 isn't `color`, the
+   * last being `color`. A rule ("each loses the color the one before it
+   * takes") asked the player to run the walk themselves; the colors make it a
+   * read (owner playtest, 2026-09-25). This region touches region 1 and the
+   * last, so one of its neighbors is `color` either way.
    *
    * Map's own sentence rather than `narrateForcingChain`, which is written for
    * a line: its "this cell's row already has it" and "cross out" become
@@ -104,8 +109,29 @@ export const say = {
    * differ (docs/games/hints.md § "Candidate-elimination games": extract when
    * only the vocabulary differs, decline when an arm's shape does).
    */
-  chain: (color: number, other: number, last: number, c: Conclusion): string =>
-    `Region 1 is ${colorName(color)} or ${colorName(other)}. If ${colorName(other)}, each numbered region loses the color the one before it takes, until region ${last} is ${colorName(color)}. This region touches regions 1 and ${last}, so ${conclude(c, `it can't be ${colorName(color)}`)}.`,
+  chain: (color: number, forced: readonly number[], c: Conclusion): string => {
+    const last = forced.length;
+    const red = colorName(color);
+    // Past a handful of links a listed walk is no longer a glance (and an
+    // eight-region one ran to 270 characters), so a long chain states the rule
+    // its dots follow and names only where it ends.
+    const walk =
+      last <= WALK_MAX
+        ? joinWith(forced.slice(1).map((f, i) => `region ${i + 2} is ${colorName(f)}`))
+        : `each numbered region takes the dot the one before it leaves, down to region ${last} being ${red}`;
+    return `If region 1 isn't ${red}, it's ${colorName(forced[0])}, so ${walk}. Either way region 1 or region ${last} is ${red}, and this region touches both, so ${conclude(c, `it can't be ${red}`)}.`;
+  },
+
+  /**
+   * A forcing chain whose every region has a dot of the struck color, told as
+   * the pattern a player sees in it rather than walked: the color can only
+   * alternate down the chain (owner playtest, 2026-09-25). The chain always ends
+   * on an even region in this shape, so "every other region" lands on `last`.
+   */
+  chainAlternates: (color: number, last: number, c: Conclusion): string => {
+    const red = colorName(color);
+    return `Every numbered region has a ${red} dot. If region 1 isn't ${red}, region 2 must be, and so on every other region to region ${last}. Either way region 1 or region ${last} is ${red}, and this region touches both, so ${conclude(c, `it can't be ${red}`)}.`;
+  },
 
   /**
    * A chain's region, dotted with its two colors before the chain is followed:
