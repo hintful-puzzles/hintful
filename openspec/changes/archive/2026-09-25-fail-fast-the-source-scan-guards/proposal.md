@@ -1,8 +1,9 @@
 # fail-fast-the-source-scan-guards
 
-**Status: scaffolded, not started.** Owner-requested, 2026-09-22, after a
-gated commit in `share-the-selected-cell-highlight` failed twice for reasons
-that took seconds to find and minutes to report.
+Owner-requested, 2026-09-22, after a gated commit in
+`share-the-selected-cell-highlight` failed twice for reasons that took seconds
+to find and minutes to report. Implemented 2026-09-25; `tasks.md` holds the
+measurements and what they changed about the plan below.
 
 ## Why
 
@@ -57,41 +58,13 @@ source mentions both `import.meta.glob` and `games/` numbered **22**
 A board could reach any of these through an import the grep cannot see, so
 §1.1 classifies by *running* them, not by reading them.
 
-## Further thoughts on the suite's cost (unmeasured; for whoever picks this up)
+## Further thoughts on the suite's cost
 
-The owner flagged a broader test-optimization session for another day. These are
-leads, not findings. Each needs the idle-machine, memory-aware measurement
-`AGENTS.md` § "Test discipline" asks for before it becomes a proposal.
-
-- **The hook's test selection widens to everything on any game edit.**
-  `select-tests-in-the-precommit-hook` made the hook run only the tests a
-  commit could affect, but any `src/games/` edit selects every glob-reading
-  cross-game guard, and those guards iterate *every* game. Many are
-  `describe.each` over the population, and each case depends on one game's
-  source plus the engine. When a commit touches no engine file, only the cases
-  for the games it touched could change verdict. Narrowing per case (by an
-  environment variable the guards read, as `PRECOMMIT_HOOK_RUN` already is) is
-  a large, sound saving *if* the soundness condition is stated and tested: no
-  engine file changed, and the guard's per-game case reads only that game.
-  The hook-scoping license in the `build-pipeline` spec is the template.
-- **`builtGames()` is memoized per worker, not per run.** With
-  `isolate: false`, every worker that touches an enrollment guard generates
-  every game's board once. With the worker pool near its cap, that may be the
-  same few seconds of generation paid several times. Worth one measurement: how
-  many times per gate run the registry is built.
-- **Several guards need only `newUi` and the game object, not a playable
-  board.** A cheaper enrollment path (a fixed small preset per game, or the
-  `Ui` built without generating) could cut the board-building half of the
-  guards substantially. Check which fields they actually read first.
-- **Cost is concentrated, and known to be.** `retire-tests-that-do-not-earn-
-  their-runtime` measured half the suite's time in three games whose hints plan
-  by searching, amplified by cross-game guards that recompute a full hint after
-  every move. The hint-resume walk is the obvious candidate for a cheaper
-  per-commit configuration with the full walk left to CI, under the same
-  four-condition license the narration ledger's rot half uses.
-- **Say what the instrument measured.** A timing taken with the machine at load
-  15 and in swap is an upper bound. Record free memory and swap beside every
-  figure, and compare ratios rather than seconds across runs.
+This section held unmeasured leads on what a commit pays overall (per-case
+selection, per-worker `builtGames()`, a cheaper enrollment path, the hint-resume
+walk). They moved, verbatim, to `measure-the-suites-per-commit-cost` so they
+outlive this change's archive, together with this change's measurement of the
+board-building guards.
 
 ## What this is not
 

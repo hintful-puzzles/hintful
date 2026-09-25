@@ -402,6 +402,19 @@ it catches.** Three treatments, in order of how little they lose:
    refactoring round; a tier nobody runs is worse than a deleted test, because
    the file still reads as coverage.
 
+**A guard that only reads source runs first, if you let it.** The gate runs
+the *source scans* as a pass ahead of the rest of the suite, so their failures
+arrive in seconds rather than after the whole run. Nobody enrolls a file:
+[`scripts/checks/source-scans.ts`](../../scripts/checks/source-scans.ts) takes
+any test that reads source through a `?raw` `import.meta.glob` and whose import
+closure reaches nothing under `src/games/`. So when you write a guard that scans
+game source, keep its imports off the registry and the game modules. Reading a
+game's text needs neither, and one import of `games/index.ts` (or of a helper
+such as `testing/hint-games.ts` that imports it) moves the file into the main
+pass without a word. `node scripts/checks/source-scans.ts` prints the current
+set. The spec is `build-pipeline`, "The gate runs the source-scan tests as a
+pass ahead of the rest of the suite".
+
 **Run the slow tier targeted, not whole.** `npm run test:slow` re-runs all
 ~8,500 gate tests *as well*, with the widened seed budgets on top; the deferred
 tier itself is six tests in three files. Pass a path and the script forwards it

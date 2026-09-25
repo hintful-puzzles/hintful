@@ -1,5 +1,31 @@
 import { availableParallelism } from "node:os";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
+import { sourceScanTests } from "./scripts/checks/source-scans.ts";
+
+const INCLUDE = ["src/**/*.test.ts", "vite-plugins/**/*.test.ts"];
+
+/**
+ * The gate runs the suite as two passes: the source scans first, because they
+ * cost milliseconds and used to fail only after ten minutes of everything else,
+ * then the rest. One list feeds the scan pass's `include` and the main pass's
+ * `exclude`, so the two partition the suite by construction; `node
+ * scripts/checks/source-scans.ts --verify` asks vitest to confirm it. Unset,
+ * as everywhere but `scripts/gate.sh`, this is one run of everything.
+ */
+function passFiles(): { include: string[]; exclude: string[] } {
+  const pass = process.env["GATE_TEST_PASS"];
+  if (pass === undefined || pass === "") {
+    return { include: INCLUDE, exclude: configDefaults.exclude };
+  }
+  const scans = sourceScanTests();
+  if (pass === "scan") return { include: scans, exclude: configDefaults.exclude };
+  if (pass === "main") {
+    return { include: INCLUDE, exclude: [...configDefaults.exclude, ...scans] };
+  }
+  throw new Error(
+    `GATE_TEST_PASS must be "scan" or "main", not ${JSON.stringify(pass)}`,
+  );
+}
 
 /** How many checkouts the developer typically has open at once (owner,
  * 2026-09-09). A dated environmental fact, not a tuning constant: if that stops
@@ -87,7 +113,7 @@ export default defineConfig({
     // and both had bugs their first run caught. They are typechecked by
     // `tsconfig.node.json`, so they may use Node types the browser-shaped
     // `src/` project does not have.
-    include: ["src/**/*.test.ts", "vite-plugins/**/*.test.ts"],
+    ...passFiles(),
     environment: "node",
     maxWorkers: maxWorkers(),
     // ONE generous ceiling for the whole suite; no test sets its own.

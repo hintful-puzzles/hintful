@@ -15,7 +15,9 @@
 #      GATE_BIOME_STAGED=1) or whole-tree (CI / manual `npm run gate`) — see the
 #      branch below. Guards that read `docs/` or `AGENTS.md` MUST live in this
 #      prefix rather than in vitest; see the documentation-only shortcut below
-#      for why, and `src/gate-scope.test.ts` for what enforces it.
+#      for why, and `src/gate-scope.test.ts` for what enforces it. The prefix
+#      ends with the vitest files that only read source (step 1f), run as a
+#      pass of their own so that a failure there arrives in seconds.
 #   2. Heavy checks — `vitest run` and `vite build`. They share no inputs or
 #      outputs, so on a machine with spare cores they run concurrently and the
 #      gate wall-clock is ~max(vitest, build) instead of their sum (~40s off the
@@ -278,6 +280,39 @@ if [ "${GATE_PRECOMMIT:-}" = "1" ]; then
   fi
 fi
 
+# --- 1f. The source scans, ahead of everything that builds a board. ~6s. ---
+#
+# The cross-game guards that read source as text cost milliseconds, but as
+# ordinary vitest files they reported only after the whole run: on 2026-09-22 a
+# commit failed twice, each time about eight minutes in, on two such scans. So
+# `vitest.config.ts` splits the suite into two passes by `GATE_TEST_PASS`, and
+# the scans run here, before `vite build` is even started.
+#
+# Membership is derived, never listed: `scripts/checks/source-scans.ts` takes a
+# file that reads source through a `?raw` glob and whose imports reach no game,
+# so it cannot build a board. One list is the scan pass's include and the main
+# pass's exclude, and `--verify` asks vitest itself to confirm that every test
+# file is in exactly one pass. A file that fell out of both would otherwise pass
+# by never running, which is the failure this gate exists to refuse.
+#
+# The hook's selection applies to both passes unchanged, since a filter that
+# names a file outside a pass's include matches nothing there.
+node scripts/checks/source-scans.ts --verify
+run_tests() {
+  if [ "$selected" = "ALL" ] || [ -z "$selected" ]; then
+    GATE_TEST_PASS=$1 $NICE_TESTS npx vitest run --passWithNoTests
+  else
+    # shellcheck disable=SC2086 # the list is newline-separated paths, no globs.
+    GATE_TEST_PASS=$1 $NICE_TESTS npx vitest run --passWithNoTests \
+      $(printf '%s ' $selected)
+  fi
+}
+if ! run_tests scan; then
+  echo ""
+  echo "pre-commit gate failed in the source scans (the main vitest pass and vite build did not start)"
+  exit 1
+fi
+
 # --- 2. Heavy checks, concurrently. ---
 vitest_rc=0
 build_rc=0
@@ -289,13 +324,7 @@ trap 'rm -f "$build_log"' EXIT
 $NICE npx vite build >"$build_log" 2>&1 &
 build_pid=$!
 
-if [ "$selected" = "ALL" ] || [ -z "$selected" ]; then
-  $NICE_TESTS npm run test:run || vitest_rc=$?
-else
-  # shellcheck disable=SC2086 # the list is newline-separated paths, no globs.
-  $NICE_TESTS npx vitest run --passWithNoTests $(printf '%s ' $selected) ||
-    vitest_rc=$?
-fi
+run_tests main || vitest_rc=$?
 wait "$build_pid" || build_rc=$?
 if [ "$build_rc" -ne 0 ]; then
   echo ""
