@@ -61,13 +61,24 @@ function firingsOf(
   }[],
 ): Firing[] {
   const n = (state0["grid"] as ArrayLike<number>).length;
-  const w = Math.round(Math.sqrt(n));
+  // A board that is not square says its width; a Latin square need not.
+  const w = typeof state0["w"] === "number" ? state0["w"] : Math.round(Math.sqrt(n));
+  const h = n / w;
   const cell = (p: Pt): number | null =>
-    p.x >= 0 && p.y >= 0 && p.x < w && p.y < w ? p.y * w + p.x : null;
+    p.x >= 0 && p.y >= 0 && p.x < w && p.y < h ? p.y * w + p.x : null;
+  // A note's bit is the game's encoding, not its value (Seismic keeps `n` at
+  // bit `n − 1`), so a placement's value is matched to the notes it reads
+  // through the values a strike's `marks` name at the bits it clears.
+  const valueOfBit = new Map<number, number>();
   const firings: Firing[] = [];
   let state = state0;
   for (const s of steps) {
-    const hl = (s.highlights ?? {}) as { area?: Pt[]; hatch?: Pt[]; targets?: Pt[] };
+    const hl = (s.highlights ?? {}) as {
+      area?: Pt[];
+      hatch?: Pt[];
+      targets?: Pt[];
+      marks?: (Pt & { n: number })[];
+    };
     // The line a step hatches is read as much as the cells it outlines.
     const read = [...(hl.area ?? []), ...(hl.hatch ?? [])];
     let f = firings[firings.length - 1];
@@ -106,11 +117,15 @@ function firingsOf(
         f.wCells.add(i);
         if (key === "pencil") {
           const diff = a[i] ^ b[i];
-          for (let d = 0; d < 31; d++)
-            if (diff & (1 << d)) {
-              f.wPairs.add(`${i}:${d}`);
-              f.digits.add(d);
-            }
+          const bits: number[] = [];
+          for (let d = 0; d < 31; d++) if (diff & (1 << d)) bits.push(d);
+          const named = (hl.marks ?? []).filter((m) => cell(m) === i);
+          if (bits.length === 1 && named.length === 1)
+            valueOfBit.set(bits[0], named[0].n);
+          for (const d of bits) {
+            f.wPairs.add(`${i}:#${d}`);
+            f.digits.add(-1 - d);
+          }
         } else {
           f.wPairs.add(`${i}:*`);
           if (key === "grid" && b[i] > 0) {
@@ -121,6 +136,15 @@ function firingsOf(
       }
     }
     state = next;
+  }
+  // A bit no strike named keeps its index, which is its value in the `1 << n`
+  // encoding.
+  const bitValue = (d: number): number => valueOfBit.get(d) ?? d;
+  for (const f of firings) {
+    f.wPairs = new Set(
+      [...f.wPairs].map((p) => p.replace(/#(\d+)$/, (_, d) => String(bitValue(+d)))),
+    );
+    f.digits = new Set([...f.digits].map((d) => (d < 0 ? bitValue(-1 - d) : d)));
   }
   return firings;
 }

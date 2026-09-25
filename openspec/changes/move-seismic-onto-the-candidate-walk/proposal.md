@@ -1,7 +1,8 @@
 # move-seismic-onto-the-candidate-walk
 
-**Status: scaffolded, not started.** Owner-requested, 2026-09-25. Measure before
-building: the outcome may be "not worth it", recorded.
+**Status: done — go.** Owner-requested, 2026-09-25. Measure before building: the
+outcome may be "not worth it", recorded. It was worth it; design.md has the
+decisions and the measurements.
 
 ## Why
 

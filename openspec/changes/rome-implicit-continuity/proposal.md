@@ -23,7 +23,11 @@ it, because it walks each game's default reading only.
   first (docs/games/hints.md § "Read one plan out loud").
 - Whether the jump is real or the instrument's: Rome's `loop` evidence is a
   numbered path of placed squares, and `plan-continuity.ts` reads `area ∪ hatch ∪
-  targets`, not the walk's `reads`.
+  targets`, not the walk's `reads`. One instrument cause is ruled out
+  (2026-09-25, `move-seismic-onto-the-candidate-walk` design D4): the instrument
+  compared a placed value with pencil bit indices, which Rome's direction bits
+  are not, and correcting it moved Rome's implicit figure only from 13.7% to
+  13.5%.
 - Whether the continuity guard should walk every reading a game offers, not only
   its default, since `candidate-reading.test.ts` already walks the other one for
   liveness.

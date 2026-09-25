@@ -852,14 +852,14 @@ export const MODULES = [
       {
         within: "regionDuplicateMarks",
         why: "the placed cell itself is offered as a candidate to cross out",
-        find: "      if (j === home || seen.has(j)) continue;",
-        replace: "      if (seen.has(j)) continue;",
+        find: "    if (j === home || seen.has(j)) continue;",
+        replace: "    if (seen.has(j)) continue;",
       },
       {
         within: "regionDuplicateMarks",
         why: "a cell reachable through two of the cell's regions is struck twice",
-        find: "      const j = region.cells[i];\n      if (j === home || seen.has(j)) continue;",
-        replace: "      const j = region.cells[i];\n      if (j === home) continue;",
+        find: "    const j = reached[i];\n    if (j === home || seen.has(j)) continue;",
+        replace: "    const j = reached[i];\n    if (j === home) continue;",
       },
       {
         within: "obviousCandidateMarks",
@@ -901,20 +901,20 @@ export const MODULES = [
       {
         within: "emitObviousCleanStep",
         why: "the cleanup's marks are not applied to the working notes, so the plan re-teaches strikes it already made",
-        find: "  for (const m of obvious) pencil[m.y * w + m.x] &= ~bit(m.n);",
-        replace: "  for (const m of obvious) void m;",
+        find: "  for (const m of marks) pencil[m.y * w + m.x] &= ~bit(m.n);",
+        replace: "  for (const m of marks) void m;",
       },
       {
-        within: "obviousCleanStep",
+        within: "emitObviousCleanStep",
         why: "“fill, then clear the obvious ones” splits into two hints instead of one journey",
-        find: '    continuesPrevious: prev !== null && dialect.read(prev.move)?.type === "pencilAll",',
-        replace: "    continuesPrevious: false,",
+        find: '      prev !== undefined && dialect.read(prev.move)?.type === "pencilAll",',
+        replace: "      false,",
       },
       {
         within: "emitObviousCleanStep",
         why: "the builder is told a cleanup step was emitted when there was nothing obvious to clear",
-        find: "  if (obvious.length === 0) return false;",
-        replace: "  if (obvious.length === 0) return true;",
+        find: "  if (marks.length === 0) return false;",
+        replace: "  if (marks.length === 0) return true;",
       },
       {
         within: "populateStep",

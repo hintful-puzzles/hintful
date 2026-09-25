@@ -483,8 +483,8 @@ the player can already see — a later step may cite it. See
 
 The pure helpers for pencil-notes games: the naked singles and the available
 strikes a plan could take now, lazy-populate check, next-place lookup, the
-obvious-clean step — `emitObviousCleanStep` where the obvious strikes are
-region duplicates, `obviousCleanStep` where the game computes its own — the
+obvious-clean step (`emitObviousCleanStep`), what a placed value rules out
+(`Reach`, and `regionReach` where that is a cell's regions whatever the value) — the
 move dialect (`CandidateMoveAdapter`) and the generic
 `keepCandidateHintTrack`/`refreshCandidateHintStep`. A board scan reads
 `grid.length`, so a board need not be square; `w` is only the row stride.

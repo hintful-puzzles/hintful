@@ -23,10 +23,10 @@ Press the 'M' key to fill every empty cell with all possible pencil marks.
 
 ## Hints
 
-**Hint** explains the next step rather than simply making it. It works from your own pencil marks, so it starts by filling them in (the same as pressing 'M') and then crossing out the numbers already ruled out. As long as none of your marks has crossed out a cell's answer, it carries on from wherever you are.
+**Hint** explains the next step rather than simply making it. It works from your own pencil marks, and a cell with none counts as holding every number its area and the numbers near it haven't ruled out yet, so an Easy board needs no marks at all. When a step reasons from a cell's possibilities, the hint writes that cell's marks first. If you would rather it start by filling in every cell's marks (the same as pressing 'M'), set **Hints pencil in** to **Every candidate first** in the preferences. As long as none of your marks has crossed out a cell's answer, it carries on from wherever you are.
 
-* **A cell ringed in the hint color** is the cell the step is about: the number to enter there, or the pencil marks to cross out, which are shown with a line through them.
-* **An outlined area** is the area the step reasons from. A step that crosses out a number just placed outlines that number's cell instead.
+* **A cell ringed in the hint color** is the cell the step is about: the number to enter there, the marks to write, or the pencil marks to cross out, which are shown with a line through them.
+* **A striped area** is the area the step reasons from. A step that crosses out a number just placed outlines that number's cell instead.
 
 Most steps are the plain rules at work: a cell with only one pencil mark left, or a number with only one cell left to go in within its area. On Normal boards one more idea appears. When every cell an area has left for some number is close enough to a cell outside it to clash, that cell cannot hold the number: whichever cell the area uses, the two would break the keep-apart rule.
 

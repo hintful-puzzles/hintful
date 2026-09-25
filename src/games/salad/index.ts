@@ -14,7 +14,11 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import { adaptiveMarkAll, obviousCandidateMarks } from "../../engine/candidate-hint.ts";
+import {
+  adaptiveMarkAll,
+  obviousCandidateMarks,
+  regionReach,
+} from "../../engine/candidate-hint.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
@@ -219,7 +223,7 @@ function interpretMove(
         state.grid,
         state.pencil,
         o,
-        saladRegions(o),
+        regionReach(o, saladRegions(o)),
         saladNotes(nums),
       ),
     );

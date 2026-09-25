@@ -139,7 +139,7 @@ export type CandidateReading = "implicit" | "populate";
  * (Keen, Towers, Unequal, Rome) nearly every cell ends up needing notes: an
  * implicit plan there writes notes into 50–90% of the cells one at a time and
  * is 10–25% longer than penciling everything in once. A game whose deductions
- * mostly read singles off the board overrides it (Solo, Mathrax, Group).
+ * mostly read singles off the board overrides it (Solo and Seismic, for two).
  * Measured over every preset by `examine-implicit-candidates`.
  */
 export const DEFAULT_CANDIDATE_READING: CandidateReading = "populate";
@@ -343,6 +343,50 @@ export function nextPlace<R extends DeductionRecord>(
   return null;
 }
 
+/**
+ * The cells a value `n` placed at cell `i` rules `n` out of: what a placement
+ * culls, what a note-less cell's implied candidates lose, and what the obvious
+ * clean strikes. It may list `i` itself, and a cell more than once.
+ *
+ * It is a function of the value because a game's reach can be: a Seismic 3 rules
+ * out 3s three cells along its row and column, which no fixed region can say.
+ * Where it is not, it is {@link regionReach}. It is read in both directions: two
+ * equal values that may not stand together is a symmetric rule, so the cells an
+ * `n` at `i` reaches are also the cells whose `n` would rule one out at `i`.
+ */
+export type Reach = (i: number, n: number) => ArrayLike<number>;
+
+/** The {@link Reach} of a game whose values may not repeat in a cell's regions
+ * (`regionsOf`), whatever the value. */
+export function regionReach(
+  w: number,
+  regionsOf: (x: number, y: number) => readonly CellRegion[],
+): Reach {
+  return (i) => {
+    const cells: number[] = [];
+    for (const region of regionsOf(i % w, (i / w) | 0))
+      for (let k = 0; k < region.cells.length; k++) cells.push(region.cells[k]);
+    return cells;
+  };
+}
+
+/** Each cell's note bits a placed value rules out, by `reach`. */
+function ruledOut(
+  grid: ArrayLike<number>,
+  reach: Reach,
+  bit: (n: number) => number,
+): Int32Array {
+  const ruled = new Int32Array(grid.length);
+  for (let p = 0; p < grid.length; p++) {
+    const v = grid[p];
+    if (v === 0) continue;
+    const b = bit(v);
+    const cells = reach(p, v);
+    for (let k = 0; k < cells.length; k++) ruled[cells[k]] |= b;
+  }
+  return ruled;
+}
+
 /** One firing of the basic-region cleanup: a placed (or given) value `n` at
  * `(px, py)` and every stray pencil copy of it still live across that cell's
  * uniqueness regions. */
@@ -353,14 +397,13 @@ export interface RegionDuplicate {
   marks: Mark[];
 }
 
-/** The pencil marks the value `n` at `(x, y)` rules out by region uniqueness: every
- * still-empty cell of any of `regions` that still notes `n`, de-duplicated (a cell
- * may lie in two of the cell's regions — e.g. a row and a diagonal in Solo X). The
- * single source of truth for "what a placement strikes," shared by the placement
- * dup-cull and {@link findRegionDuplicate}. `regions` are the cell's uniqueness
- * regions (from the game's `regionsOf`); `w` converts a region's `y*w+x` cell
- * index back to coordinates for the {@link Mark}. The home cell `(x, y)` is never
- * marked. */
+/** The pencil marks the value `n` at `(x, y)` rules out: every still-empty cell
+ * of `reached` that still notes `n`, de-duplicated (a region-built reach lists a
+ * cell once per region it shares, e.g. a row and a diagonal in Solo X). The single
+ * source of truth for "what a placement strikes," shared by the placement
+ * dup-cull and {@link findRegionDuplicate}. `reached` is the cell's
+ * {@link Reach} for `n`; `w` converts a cell index back to coordinates for the
+ * {@link Mark}. The home cell `(x, y)` is never marked. */
 export function regionDuplicateMarks(
   grid: ArrayLike<number>,
   pencil: ArrayLike<number>,
@@ -368,21 +411,19 @@ export function regionDuplicateMarks(
   y: number,
   n: number,
   w: number,
-  regions: readonly CellRegion[],
+  reached: ArrayLike<number>,
   enc?: NoteEncoding,
 ): Mark[] {
   const home = y * w + x;
   const bit = bitOf(enc)(n);
   const seen = new Set<number>();
   const marks: Mark[] = [];
-  for (const region of regions) {
-    for (let i = 0; i < region.cells.length; i++) {
-      const j = region.cells[i];
-      if (j === home || seen.has(j)) continue;
-      if (grid[j] === 0 && (pencil[j] & bit) !== 0) {
-        seen.add(j);
-        marks.push({ x: j % w, y: (j / w) | 0, n });
-      }
+  for (let i = 0; i < reached.length; i++) {
+    const j = reached[i];
+    if (j === home || seen.has(j)) continue;
+    if (grid[j] === 0 && (pencil[j] & bit) !== 0) {
+      seen.add(j);
+      marks.push({ x: j % w, y: (j / w) | 0, n });
     }
   }
   return marks;
@@ -402,31 +443,23 @@ export function findRegionDuplicate(
   regionsOf: (x: number, y: number) => readonly CellRegion[],
   enc?: NoteEncoding,
 ): RegionDuplicate | null {
+  const reach = regionReach(w, regionsOf);
   for (let i = 0; i < grid.length; i++) {
     const v = grid[i];
     if (v === 0) continue;
     const px = i % w;
     const py = (i / w) | 0;
-    const marks = regionDuplicateMarks(
-      grid,
-      pencil,
-      px,
-      py,
-      v,
-      w,
-      regionsOf(px, py),
-      enc,
-    );
+    const marks = regionDuplicateMarks(grid, pencil, px, py, v, w, reach(i, v), enc);
     if (marks.length > 0) return { px, py, n: v, marks };
   }
   return null;
 }
 
 /** The whole-board "obvious candidate" strikes for the adaptive mark-all cleanup:
- * for every empty cell, each penciled value that already sits as a *placed* value
- * in one of that cell's uniqueness regions (per `regionsOf`). "Obvious" is always
- * judged against a placed value, never another pencil mark, so the result is a pure
- * function of the placed grid and pressing repeatedly converges.
+ * for every empty cell, each penciled value that a value already *placed* rules
+ * out, by `reach`. "Obvious" is always judged against a placed value, never
+ * another pencil mark, so the result is a pure function of the placed grid and
+ * pressing repeatedly converges.
  *
  * Mistaken-board guard: never strike a cell's *last* surviving note. If every note
  * of a cell is region-eliminated — only possible on an already-wrong board — one
@@ -436,26 +469,18 @@ export function obviousCandidateMarks(
   grid: ArrayLike<number>,
   pencil: ArrayLike<number>,
   w: number,
-  regionsOf: (x: number, y: number) => readonly CellRegion[],
+  reach: Reach,
   enc?: NoteEncoding,
 ): Mark[] {
   const bit = bitOf(enc);
   const values = enc?.values ?? w;
+  const ruled = ruledOut(grid, reach, bit);
   const marks: Mark[] = [];
   for (let i = 0; i < grid.length; i++) {
     if (grid[i] !== 0) continue;
     const notes = pencil[i];
     if (notes === 0) continue;
-    const x = i % w;
-    const y = (i / w) | 0;
-    let placed = 0;
-    for (const region of regionsOf(x, y)) {
-      for (let k = 0; k < region.cells.length; k++) {
-        const v = grid[region.cells[k]];
-        if (v !== 0) placed |= bit(v);
-      }
-    }
-    let removable = notes & placed;
+    let removable = notes & ruled[i];
     if (removable === 0) continue;
     // Guard: if striking all "obvious" notes would empty the cell, keep its lowest
     // note (clearing the lowest bit of `removable` leaves that candidate unstruck).
@@ -463,6 +488,8 @@ export function obviousCandidateMarks(
       removable &= removable - 1;
       if (removable === 0) continue;
     }
+    const x = i % w;
+    const y = (i / w) | 0;
     for (let n = 1; n <= values; n++) if (removable & bit(n)) marks.push({ x, y, n });
   }
   return marks;
@@ -477,8 +504,8 @@ export function fillAllNotes(i: number, w: number, enc?: NoteEncoding): number {
 /**
  * The candidates the player can read off the board: a blank cell's notes where
  * it has any, and where it has none, every note a fill-all would put there
- * ({@link NoteEncoding.all}) less each value already placed in one of its
- * `regionsOf`. A filled cell reads as `0`.
+ * ({@link NoteEncoding.all}) less each value a placed one rules out by `reach`.
+ * A filled cell reads as `0`.
  *
  * A written note is read as written, stale or not: a note the board still shows
  * is one a sentence may not treat as gone, so a plan clears stale notes with a
@@ -488,24 +515,14 @@ export function impliedNotes(
   grid: ArrayLike<number>,
   pencil: ArrayLike<number>,
   w: number,
-  regionsOf: (x: number, y: number) => readonly CellRegion[],
+  reach: Reach,
   enc?: NoteEncoding,
 ): Int32Array {
-  const bit = bitOf(enc);
+  const ruled = ruledOut(grid, reach, bitOf(enc));
   const out = new Int32Array(grid.length);
   for (let i = 0; i < grid.length; i++) {
     if (grid[i] !== 0) continue;
-    if (pencil[i] !== 0) {
-      out[i] = pencil[i];
-      continue;
-    }
-    let notes = fillAllNotes(i, w, enc);
-    for (const region of regionsOf(i % w, (i / w) | 0))
-      for (let k = 0; k < region.cells.length; k++) {
-        const v = grid[region.cells[k]];
-        if (v !== 0) notes &= ~bit(v);
-      }
-    out[i] = notes;
+    out[i] = pencil[i] !== 0 ? pencil[i] : fillAllNotes(i, w, enc) & ~ruled[i];
   }
   return out;
 }
@@ -629,7 +646,7 @@ export function adaptiveMarkAllMove<M>(
   enc?: NoteEncoding,
 ): M | null {
   return adaptiveMarkAll<M, Mark>(anyEmptyLacksNotes(grid, pencil), () =>
-    obviousCandidateMarks(grid, pencil, w, regionsOf, enc),
+    obviousCandidateMarks(grid, pencil, w, regionReach(w, regionsOf), enc),
   );
 }
 
@@ -704,12 +721,15 @@ export function addMove<M>(marks: Mark[], adapter?: CandidateMoveAdapter<M>): M 
 
 /** Emit the one-shot "clear the obvious candidates" step into a candidate-
  * elimination hint plan — the bulk equivalent of the adaptive Mark-all second
- * press. Strikes every {@link obviousCandidateMarks} (each penciled value already
- * placed in one of the cell's `regionsOf` regions) as one `pencilStrike`, applies
- * the marks to the working `pencil`, and pushes the step. The step is flagged
- * `continuesPrevious` when it directly follows the populate fill, so "fill, then
- * clear the obvious ones" reads and auto-plays as one setup journey; when the
- * board was already populated (so no fill step precedes it) it stands alone.
+ * press. Strikes every {@link obviousCandidateMarks} (each penciled value a
+ * placed one rules out, by `reach`) as one `pencilStrike`, applies the marks to
+ * the working `pencil`, and pushes the step.
+ *
+ * "Fill, then clear the obvious ones" is one setup journey, so the step continues
+ * the step before it exactly when that is the populate fill, and otherwise stands
+ * alone. Reading that step through the dialect rather than sniffing a `type`
+ * field is what lets a game whose populate move is spelled differently (Salad's
+ * `markAll`) still get the continuation.
  *
  * Returns `true` iff a step was emitted (there was something obvious to clear) —
  * the caller gates it to fire once, after notes exist and before teaching the real
@@ -721,55 +741,29 @@ export function emitObviousCleanStep<M, H>(
   grid: ArrayLike<number>,
   pencil: Int32Array,
   w: number,
-  regionsOf: (x: number, y: number) => readonly CellRegion[],
+  reach: Reach,
   explanation: string,
   opts?: { enc?: NoteEncoding; adapter?: CandidateMoveAdapter<M> },
 ): boolean {
   const bit = bitOf(opts?.enc);
-  const obvious = obviousCandidateMarks(grid, pencil, w, regionsOf, opts?.enc);
-  if (obvious.length === 0) return false;
-  for (const m of obvious) pencil[m.y * w + m.x] &= ~bit(m.n);
-  steps.push(
-    obviousCleanStep<M, H>(
-      steps[steps.length - 1] ?? null,
-      obvious,
-      explanation,
-      opts?.adapter,
-    ),
-  );
-  return true;
-}
-
-/**
- * The obvious-candidate clean as a step, given the step it follows. The half of
- * {@link emitObviousCleanStep} that does not decide *which* notes are obvious, for
- * a game whose placed values rule out more than their uniqueness regions — where
- * `regionsOf` cannot say what a value strikes, because the reach depends on the
- * value.
- *
- * "Fill, then clear the obvious ones" is one setup journey, so the step continues
- * `prev` exactly when that is the populate fill. Reading `prev` through the dialect
- * rather than sniffing a `type` field is what lets a game whose populate move is
- * spelled differently (Salad's `markAll`) still get the continuation.
- */
-export function obviousCleanStep<M, H>(
-  prev: HintStep<M, H> | null,
-  marks: Mark[],
-  explanation: string,
-  adapter?: CandidateMoveAdapter<M>,
-): HintStep<M, H> {
-  const dialect = adapterOf(adapter);
+  const marks = obviousCandidateMarks(grid, pencil, w, reach, opts?.enc);
+  if (marks.length === 0) return false;
+  for (const m of marks) pencil[m.y * w + m.x] &= ~bit(m.n);
+  const dialect = adapterOf(opts?.adapter);
+  const prev = steps[steps.length - 1];
   const highlights: CandidateHighlights = {
     area: [],
     targets: marks.map((m) => ({ x: m.x, y: m.y })),
     marks,
   };
-  return {
+  steps.push({
     move: dialect.strike(marks),
     explanation,
     highlights: highlights as unknown as H,
-    continuesPrevious: prev !== null && dialect.read(prev.move)?.type === "pencilAll",
-  };
+    continuesPrevious:
+      prev !== undefined && dialect.read(prev.move)?.type === "pencilAll",
+  });
+  return true;
 }
 
 /** Classify a player move against the displayed hint step (the engine's

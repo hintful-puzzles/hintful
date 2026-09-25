@@ -22,6 +22,7 @@ import {
   DEFAULT_CANDIDATE_READING,
   type Mark,
   obviousCandidateMarks,
+  regionReach,
 } from "../../engine/candidate-hint.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
@@ -276,7 +277,7 @@ function interpretMove(
             values,
             state.pencil,
             w,
-            romeRegions(state),
+            regionReach(w, romeRegions(state)),
             romeNotes(w, h),
           ),
         romeCandidateMoves,

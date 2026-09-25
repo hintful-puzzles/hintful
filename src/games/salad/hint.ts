@@ -44,6 +44,7 @@ import {
   type Mark,
   populateStep,
   refreshCandidateHintStep,
+  regionReach,
 } from "../../engine/candidate-hint.ts";
 import {
   type Firing,
@@ -587,7 +588,7 @@ function buildSteps(
         w.grid,
         w.pencil,
         o,
-        regionsOf,
+        regionReach(o, regionsOf),
         text.cleanObvious,
         { enc, adapter: saladCandidateMoves },
       )

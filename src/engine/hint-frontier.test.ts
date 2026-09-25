@@ -168,9 +168,9 @@ const MAX_AVOIDABLE = 0.1;
  * through the candidate walk, and so are outside the measurement below: derived
  * from their source, and each held by a guard of its own that the entry names.
  *
- * `planContinuity` reads a plan through a square grid (`grid`, `w = √n`, cells
- * as `{x, y}`), which is what every candidate game is and what a graph game is
- * not. Asserted as an exact set, so the next game to take the frontier directly
+ * `planContinuity` reads a plan through a grid (`grid`, its width `w` or `√n`,
+ * cells as `{x, y}`), which is what every candidate game is and what a graph
+ * game is not. Asserted as an exact set, so the next game to take the frontier directly
  * is not left out of every continuity check in silence.
  */
 const OWN_FRONTIER: Record<string, string> = {
@@ -178,6 +178,66 @@ const OWN_FRONTIER: Record<string, string> = {
     "its elements are regions of a graph; map-hint.test.ts holds that a " +
     "placement's newly single neighbor is where the plan goes next",
 };
+
+describe("the continuity instrument", () => {
+  /**
+   * A 3×2 board keeping note `n` at bit `n − 1`, as Seismic does. The plan
+   * strikes the 2 from the corner (2, 1), then places a 2 as the hidden single
+   * of the bottom row, which is read through that very strike: no jump. Read
+   * through a square of `√6` the corner is off the board, and read by bit index
+   * the strike cleared a "1"; either way it counts a jump.
+   */
+  it("reads a board that is not square, and a note by the value it stands for", () => {
+    type S = { w: number; grid: Uint8Array; pencil: Int32Array };
+    type M = { strike: [number, number] } | { place: [number, number] };
+    const bit = (n: number): number => 1 << (n - 1);
+    const game = {
+      hint: () => ({
+        ok: true,
+        steps: [
+          {
+            move: { strike: [5, 2] },
+            highlights: {
+              area: [{ x: 0, y: 0 }],
+              targets: [{ x: 2, y: 1 }],
+              marks: [{ x: 2, y: 1, n: 2 }],
+            },
+          },
+          {
+            move: { place: [4, 2] },
+            highlights: {
+              area: [],
+              hatch: [
+                { x: 0, y: 1 },
+                { x: 2, y: 1 },
+              ],
+              targets: [{ x: 1, y: 1 }],
+              marks: [],
+            },
+          },
+        ],
+      }),
+      executeMove: (s: S, m: M): S => {
+        const next = { ...s, grid: s.grid.slice(), pencil: s.pencil.slice() };
+        if ("strike" in m) next.pencil[m.strike[0]] &= ~bit(m.strike[1]);
+        else next.grid[m.place[0]] = m.place[1];
+        return next;
+      },
+    };
+    const state: S = {
+      w: 3,
+      grid: Uint8Array.from([1, 3, 0, 0, 0, 0]),
+      pencil: Int32Array.from([0, 0, bit(2), bit(1), bit(1) | bit(2), bit(2) | bit(3)]),
+    };
+    expect(
+      planContinuity(game as unknown as Parameters<typeof planContinuity>[0], state),
+    ).toEqual({
+      positions: 1,
+      jumps: 0,
+      avoidable: 0,
+    });
+  });
+});
 
 describe("hint plans continue from their previous step where they can", () => {
   it("finds the games that have a frontier", () => {

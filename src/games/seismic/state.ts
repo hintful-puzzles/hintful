@@ -17,6 +17,7 @@
  * min-dsf variant to "restore fidelity".
  */
 
+import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { digitValue, isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
@@ -276,6 +277,9 @@ export type SeismicMove =
    * one deduction can strike several and a pencil toggle is neither multi-cell nor
    * idempotent (docs/games/hints.md § "Persist, populate, and the moves"). */
   | { type: "pencilStrike"; marks: { x: number; y: number; n: number }[] }
+  /** Write several notes at once: how a hint puts down the candidates a
+   * deduction rests on, when the player leaves a cell's notes unwritten. */
+  | { type: "pencilAdd"; marks: { x: number; y: number; n: number }[] }
   /** Fill in the solver's answer. */
   | { type: "solve"; grid: number[] };
 
@@ -292,6 +296,8 @@ export interface SeismicUi {
   pencilSticky: boolean;
   /** Preference (default on): keep the mouse highlight after a pencil change. */
   pencilKeepHighlight: boolean;
+  /** Preference: how a hint pencils (`CandidateReading`). */
+  candidateReading: CandidateReading;
 }
 
 export function newUi(_state: SeismicState): SeismicUi {
@@ -301,6 +307,11 @@ export function newUi(_state: SeismicState): SeismicUi {
     pencilMode: false,
     pencilSticky: true,
     pencilKeepHighlight: true,
+    // Not the convention: an Easy board falls to singles the board shows, so
+    // the implicit plan writes no notes and is about half as long, with no cull
+    // after each placement; on Normal the two are about even
+    // (docs/games/hints.md § "Two readings of an unmarked cell").
+    candidateReading: "implicit",
   };
 }
 

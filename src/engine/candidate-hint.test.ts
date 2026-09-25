@@ -19,10 +19,10 @@ import {
   nakedSingle,
   nextPlace,
   obviousCandidateMarks,
-  obviousCleanStep,
   populateStep,
   refreshCandidateHintStep,
   regionDuplicateMarks,
+  regionReach,
 } from "./candidate-hint.ts";
 import type { HintStep } from "./game.ts";
 import { ALREADY_SOLVED, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
@@ -187,6 +187,9 @@ describe("anyEmptyLacksNotes", () => {
   });
 });
 
+const rc = (w: number) => (x: number, y: number) => rowColRegions(x, y, w);
+const rr = (w: number) => regionReach(w, rc(w));
+
 describe("regionDuplicateMarks", () => {
   it("marks every empty cell of the value's regions that still notes it", () => {
     // 3×3. Place 2 at (0,0); its row (cells 1,2) and column (cells 3,6) still
@@ -194,39 +197,25 @@ describe("regionDuplicateMarks", () => {
     // empty no-note. Only cells 1 and 3 should be struck.
     const grid = [2, 0, 0, 0, 0, 0, 0, 0, 0];
     const pencil = [0, bits(2), bits(1), bits(2, 3), 0, 0, 0, 0, 0];
-    const marks = regionDuplicateMarks(
-      grid,
-      pencil,
-      0,
-      0,
-      2,
-      3,
-      rowColRegions(0, 0, 3),
-    );
+    const marks = regionDuplicateMarks(grid, pencil, 0, 0, 2, 3, rr(3)(0, 2));
     expect(new Set(marks.map((m) => `${m.x},${m.y},${m.n}`))).toEqual(
       new Set(["1,0,2", "0,1,2"]),
     );
   });
 
   it("de-duplicates a cell reachable through two regions", () => {
-    // A custom region set where cell index 1 lies in both regions; it must be
-    // marked once, not twice.
+    // A reach listing cell index 1 twice, as one built from two regions sharing
+    // it does; it must be marked once, not twice.
     const grid = [3, 0, 0, 0];
     const pencil = [0, bits(3), 0, 0];
-    const regions = [
-      { cells: [0, 1], holdsEvery: true },
-      { cells: [1, 0], holdsEvery: true },
-    ];
-    const marks = regionDuplicateMarks(grid, pencil, 0, 0, 3, 2, regions);
+    const marks = regionDuplicateMarks(grid, pencil, 0, 0, 3, 2, [0, 1, 1, 0]);
     expect(marks).toEqual([{ x: 1, y: 0, n: 3 }]);
   });
 
   it("never marks the home cell and returns [] when nothing is live", () => {
     const grid = [1, 2, 0, 0];
     const pencil = [0, 0, bits(2), 0];
-    expect(
-      regionDuplicateMarks(grid, pencil, 0, 0, 1, 2, rowColRegions(0, 0, 2)),
-    ).toEqual([]);
+    expect(regionDuplicateMarks(grid, pencil, 0, 0, 1, 2, rr(2)(0, 1))).toEqual([]);
   });
 
   it("never marks the home cell even when it is still empty and notes the value", () => {
@@ -236,9 +225,9 @@ describe("regionDuplicateMarks", () => {
     // (0,0) empty and noting 1, with 1 as the value being placed there.
     const grid = [0, 0, 0, 0];
     const pencil = [bits(1), bits(1), 0, 0];
-    expect(
-      regionDuplicateMarks(grid, pencil, 0, 0, 1, 2, rowColRegions(0, 0, 2)),
-    ).toEqual([{ x: 1, y: 0, n: 1 }]);
+    expect(regionDuplicateMarks(grid, pencil, 0, 0, 1, 2, rr(2)(0, 1))).toEqual([
+      { x: 1, y: 0, n: 1 },
+    ]);
   });
 });
 
@@ -265,7 +254,6 @@ describe("findRegionDuplicate", () => {
   });
 });
 
-const rc = (w: number) => (x: number, y: number) => rowColRegions(x, y, w);
 const key = (m: { x: number; y: number; n: number }) => `${m.x},${m.y},${m.n}`;
 
 describe("obviousCandidateMarks", () => {
@@ -275,7 +263,7 @@ describe("obviousCandidateMarks", () => {
     // (2 is not in (2,0)'s row or column, so it stays.)
     const grid = [1, 0, 0, 0, 2, 0, 0, 0, 0];
     const pencil = [0, 0, bits(1, 2, 3), 0, 0, 0, 0, 0, 0];
-    const marks = obviousCandidateMarks(grid, pencil, 3, rc(3));
+    const marks = obviousCandidateMarks(grid, pencil, 3, rr(3));
     expect(new Set(marks.map(key))).toEqual(new Set(["2,0,1"]));
   });
 
@@ -285,19 +273,19 @@ describe("obviousCandidateMarks", () => {
     // the lowest (1), striking only 2, so the cell never empties.
     const grid = [1, 0, 0, 2];
     const pencil = [0, bits(1, 2), 0, 0];
-    const marks = obviousCandidateMarks(grid, pencil, 2, rc(2));
+    const marks = obviousCandidateMarks(grid, pencil, 2, rr(2));
     expect(marks.map(key)).toEqual(["1,0,2"]);
   });
 
   it("returns [] on an already-cleaned board (idempotent — a second pass strikes nothing)", () => {
     const grid = [1, 0, 0, 2];
     const pencil = [0, bits(2), bits(1), 0]; // each empty cell already obvious-free
-    expect(obviousCandidateMarks(grid, pencil, 2, rc(2))).toEqual([]);
+    expect(obviousCandidateMarks(grid, pencil, 2, rr(2))).toEqual([]);
   });
 });
 
 describe("impliedNotes", () => {
-  const rowCol = (x: number, y: number) => rowColRegions(x, y, 3);
+  const rowCol = rr(3);
 
   it("reads a note-less cell as what its regions leave, and a noted one as written", () => {
     // Row 0 holds a 2; (0,1) carries a stale 2 the reading must not drop.
@@ -318,6 +306,30 @@ describe("impliedNotes", () => {
     const shown = impliedNotes(new Uint8Array(9), new Int32Array(9), 3, rowCol, enc);
     expect(shown[0]).toBe(bits(1));
     expect(shown[1]).toBe(bits(1, 2, 3));
+  });
+
+  it("rules a value out as far as that value reaches", () => {
+    // One row of five, where an `n` reaches `n` cells either side (Seismic's
+    // rule): the 2 at the left rules 2 out of the next two cells and no further.
+    const reach = (i: number, n: number): number[] =>
+      [0, 1, 2, 3, 4].filter((j) => Math.abs(j - i) <= n);
+    const grid = Uint8Array.from([2, 0, 0, 0, 0]);
+    const shown = impliedNotes(grid, new Int32Array(5), 5, reach, {
+      all: () => bits(1, 2, 3),
+    });
+    expect([...shown]).toEqual([
+      0,
+      bits(1, 3),
+      bits(1, 3),
+      bits(1, 2, 3),
+      bits(1, 2, 3),
+    ]);
+    // The clean reads the same reach.
+    const pencil = Int32Array.from([0, bits(1, 2), bits(2, 3), bits(2, 3), 0]);
+    expect(obviousCandidateMarks(grid, pencil, 5, reach).map(key)).toEqual([
+      "1,0,2",
+      "2,0,2",
+    ]);
   });
 });
 
@@ -849,7 +861,7 @@ describe("emitObviousCleanStep", () => {
   it("pushes one strike step and applies its marks to the working notes", () => {
     const { grid, pencil, steps } = openBoard();
     expect(
-      emitObviousCleanStep(steps, grid, pencil, 2, rc(2), "clear the easy ones"),
+      emitObviousCleanStep(steps, grid, pencil, 2, rr(2), "clear the easy ones"),
     ).toBe(true);
     expect(steps).toHaveLength(1);
     expect(steps[0].move).toEqual({
@@ -870,14 +882,21 @@ describe("emitObviousCleanStep", () => {
     steps.push(
       populateStep<CandidateMove, CandidateHighlights>({ type: "pencilAll" }, "fill"),
     );
-    emitObviousCleanStep(steps, grid, pencil, 2, rc(2), "clear the easy ones");
+    emitObviousCleanStep(steps, grid, pencil, 2, rr(2), "clear the easy ones");
     expect(steps[1].continuesPrevious).toBe(true);
   });
 
   it("stands alone when the board was already populated", () => {
     const { grid, pencil, steps } = openBoard();
-    emitObviousCleanStep(steps, grid, pencil, 2, rc(2), "clear the easy ones");
+    emitObviousCleanStep(steps, grid, pencil, 2, rr(2), "clear the easy ones");
     expect(steps[0].continuesPrevious).toBe(false);
+  });
+
+  it("continues a populate fill and nothing else", () => {
+    const { grid, pencil, steps } = openBoard();
+    steps.push(step({ type: "set", x: 0, y: 0, n: 1, pencil: false }));
+    emitObviousCleanStep(steps, grid, pencil, 2, rr(2), "clear the easy ones");
+    expect(steps[1].continuesPrevious).toBe(false);
   });
 
   it("returns false and pushes nothing when there is nothing obvious to clear", () => {
@@ -885,35 +904,9 @@ describe("emitObviousCleanStep", () => {
     const pencil = Int32Array.from([0, bits(2), bits(1), 0]);
     const steps: HintStep<CandidateMove, CandidateHighlights>[] = [];
     expect(
-      emitObviousCleanStep(steps, grid, pencil, 2, rc(2), "clear the easy ones"),
+      emitObviousCleanStep(steps, grid, pencil, 2, rr(2), "clear the easy ones"),
     ).toBe(false);
     expect(steps).toEqual([]);
-  });
-});
-
-describe("obviousCleanStep", () => {
-  const marks = [{ x: 3, y: 1, n: 4 }];
-
-  it("strikes exactly the marks it is given, and marks their cells", () => {
-    const s = obviousCleanStep<CandidateMove, CandidateHighlights>(
-      null,
-      marks,
-      "clear",
-    );
-    expect(s.move).toEqual({ type: "pencilStrike", marks });
-    expect(s.highlights).toEqual({ area: [], targets: [{ x: 3, y: 1 }], marks });
-    expect(s.explanation).toBe("clear");
-  });
-
-  it("continues a populate fill, and nothing else", () => {
-    const fill = populateStep<CandidateMove, CandidateHighlights>(
-      { type: "pencilAll" },
-      "fill",
-    );
-    const place = step({ type: "set", x: 0, y: 0, n: 1, pencil: false });
-    expect(obviousCleanStep(fill, marks, "clear").continuesPrevious).toBe(true);
-    expect(obviousCleanStep(place, marks, "clear").continuesPrevious).toBe(false);
-    expect(obviousCleanStep(null, marks, "clear").continuesPrevious).toBe(false);
   });
 });
 
@@ -1002,7 +995,7 @@ describe("a game's own move dialect", () => {
     const steps: HintStep<DialectMove, CandidateHighlights>[] = [
       populateStep<DialectMove, CandidateHighlights>({ kind: "fillAll" }, "fill"),
     ];
-    emitObviousCleanStep(steps, grid, pencil, 2, rc(2), "clear", {
+    emitObviousCleanStep(steps, grid, pencil, 2, rr(2), "clear", {
       enc: { bit: bitFrom1 },
       adapter: dialect,
     });

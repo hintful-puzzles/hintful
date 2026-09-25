@@ -30,7 +30,9 @@ import {
   type Mark,
   type NoteEncoding,
   nakedSingles,
+  type Reach,
   regionDuplicateMarks,
+  regionReach,
 } from "./candidate-hint.ts";
 import type { DeductionRecord } from "./deduction-record.ts";
 import type { HintStep } from "./game.ts";
@@ -206,10 +208,15 @@ export interface CandidatePlan<
   /** Run the recording solver on the working board. Called at the start and
    * after every firing that decides a cell. */
   record: () => readonly R[];
-  /** A cell's regions, in narration preference order. A placed value is culled
-   * from all of them, and a single is classified in the ones that hold every
-   * value. */
+  /** A cell's regions, in narration preference order. A single is classified in
+   * the ones that hold every value, and unless {@link reach} says otherwise, a
+   * placed value rules itself out of all of them. */
   regionsOf: (x: number, y: number) => readonly Reg[];
+  /** The cells a value rules itself out of, where that depends on the value (a
+   * Seismic 3 reaches three cells along its row and column). The placement cull,
+   * the obvious clean and a note-less cell's implied candidates all read it.
+   * Default: every cell of the placed cell's `regionsOf`. */
+  reach?: Reach;
   /** The reason a single the board shows narrates as. */
   singleReason: (n: number, why: SingleWhy<WholeRegion<Reg>>) => Reason;
   /** A placement's words; `continues` is true on a journey's later legs. */
@@ -434,8 +441,8 @@ class CandidateWalk<
   private readonly place: (x: number, y: number, n: number, autoElim: boolean) => M;
   private readonly strike: (marks: Mark[]) => M;
   private readonly setUp: PlanSetUp;
-  private readonly populated: () => boolean;
   private readonly implicit: boolean;
+  private readonly reach: Reach;
   /** The candidates as the player reads them (`impliedNotes`), taken afresh on
    * every turn of the walk. */
   private shown: Int32Array;
@@ -450,29 +457,21 @@ class CandidateWalk<
     this.place = (dialect?.place ?? latinMoves.place) as typeof this.place;
     this.strike = (dialect?.strike ?? latinMoves.strike) as typeof this.strike;
     this.implicit = plan.reading === "implicit";
+    const reach = plan.reach ?? regionReach(w, plan.regionsOf);
+    this.reach = reach;
     if (plan.setUp) {
       // A setup of the game's own is a populate the walk cannot leave out.
       if (this.implicit)
         throw new Error(`${plan.label}: the implicit reading takes the default setup`);
-      const setUp = plan.setUp;
-      this.setUp = setUp;
-      this.populated = () => setUp.done();
+      this.setUp = plan.setUp;
     } else {
       const notes = plan.notes;
       if (!notes) throw new Error(`${plan.label}: give either notes or setUp`);
       const clean = (): boolean =>
-        emitObviousCleanStep(
-          steps,
-          grid,
-          pencil,
-          w,
-          plan.regionsOf,
-          notes.cleanObvious,
-          {
-            enc,
-            adapter: dialect,
-          },
-        );
+        emitObviousCleanStep(steps, grid, pencil, w, reach, notes.cleanObvious, {
+          enc,
+          adapter: dialect,
+        });
       if (this.implicit) {
         // Nothing to pencil in, but a note the player left stale is still on
         // the board, and every strike and hidden single after the opening
@@ -485,7 +484,6 @@ class CandidateWalk<
             return clean();
           },
         };
-        this.populated = () => cleaned;
       } else {
         const pop = lazyPopulate<M, H>(
           { grid, pencil },
@@ -497,7 +495,6 @@ class CandidateWalk<
           { enc, adapter: dialect },
         );
         this.setUp = populateThenClean(pop, clean);
-        this.populated = pop.done;
       }
     }
     this.shown = this.view();
@@ -512,9 +509,9 @@ class CandidateWalk<
    * blank cell without one is not read at all (Salad's settled empty squares
    * keep no note). */
   private view(): Int32Array {
-    const { grid, pencil, w, regionsOf, enc } = this.plan;
+    const { grid, pencil, w, enc } = this.plan;
     if (!this.implicit && this.setUp.done()) return pencil;
-    return impliedNotes(grid, pencil, w, regionsOf, enc);
+    return impliedNotes(grid, pencil, w, this.reach, enc);
   }
 
   run(): void {
@@ -540,7 +537,7 @@ class CandidateWalk<
         const firings = rung({
           nothingEarlier,
           ops: this.ops,
-          populated: this.populated(),
+          populated: this.setUp.done(),
           shown: this.shown,
         });
         if (firings.length > 0) nothingEarlier = false;
@@ -784,16 +781,14 @@ class CandidateWalk<
     const own = folded.get(i);
     if (own) return own.placed !== null || (own.bits & this.bit(n)) === 0;
     for (const [j, fold] of folded)
-      if (fold.placed === n && this.shareRegion(i, j)) return true;
+      if (fold.placed === n && this.rulesOut(j, n, i)) return true;
     return false;
   }
 
-  /** Whether cell `i` lies in one of cell `j`'s regions. */
-  private shareRegion(i: number, j: number): boolean {
-    const { w, regionsOf } = this.plan;
-    for (const region of regionsOf(j % w, (j / w) | 0))
-      for (let k = 0; k < region.cells.length; k++)
-        if (region.cells[k] === i) return true;
+  /** Whether an `n` at cell `j` rules `n` out of cell `i`. */
+  private rulesOut(j: number, n: number, i: number): boolean {
+    const cells = this.reach(j, n);
+    for (let k = 0; k < cells.length; k++) if (cells[k] === i) return true;
     return false;
   }
 
@@ -820,7 +815,7 @@ class CandidateWalk<
     // The view was taken before the firing, so a value an earlier fold placed
     // in one of this cell's regions is still in it.
     for (const [j, fold] of folded)
-      if (fold.placed !== null && this.shareRegion(i, j))
+      if (fold.placed !== null && this.rulesOut(j, fold.placed, i))
         bits &= ~this.bit(fold.placed);
     const left = this.valuesIn(bits);
     const highlights = { ...evidence, targets: [{ x, y }], marks: [] } as unknown as H;
@@ -937,8 +932,8 @@ class CandidateWalk<
     for (const m of marks) pencil[m.y * w + m.x] &= ~this.bit(m.n);
   }
 
-  /** Write a placement to the working board and strike its value from the rest
-   * of its regions: silently under auto-pencil, whose move does the same on the
+  /** Write a placement to the working board and strike its value from the cells
+   * it reaches: silently under auto-pencil, whose move does the same on the
    * real board, and otherwise as a leg continuing the placement's journey, so
    * the player is taught the cull they must make by hand. */
   private placeOnBoard({ x, y, n }: Mark): void {
@@ -954,7 +949,7 @@ class CandidateWalk<
       y,
       n,
       w,
-      plan.regionsOf(x, y),
+      this.reach(y * w + x, n),
       plan.enc,
     );
     this.clear(dup);

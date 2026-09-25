@@ -3,10 +3,12 @@
  *
  * Tiers (docs/games/testing.md § "The test tiers"): tier 1 for the plan, the
  * finders and the keep-track hooks; tier 2.5 for the frames the hint draws. The
- * cross-game guards enroll Seismic by its `hint`, so resume, purity, voice and
- * length are theirs and are not repeated here.
+ * cross-game guards enroll Seismic by its `hint` and its `candidateReading`, so
+ * resume, purity, voice, length, continuity and the implicit reading's premise
+ * duty are theirs and are not repeated here.
  */
 import { describe, expect, it } from "vitest";
+import { type CandidateReading, nakedSingles } from "../../engine/candidate-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
@@ -17,11 +19,9 @@ import {
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import {
   areasOf,
-  deduceSeismicPlan,
+  hiddenSingles,
   hintKeepTrack,
-  type PlaceWhy,
   refreshHintStep,
-  type SeismicFiring,
   type SeismicHint,
   starves,
   workingBoard,
@@ -29,8 +29,9 @@ import {
 import { say } from "./hint-text.ts";
 import { seismicGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL, COL_NUM_PENCIL } from "./render.ts";
-import { placeNumber, regionsViable, STATUS_COMPLETE } from "./solver.ts";
+import { placeNumber, regionsViable } from "./solver.ts";
 import {
+  areaBits,
   DIFF_EASY,
   DIFF_NORMAL,
   MODE_SEISMIC,
@@ -58,6 +59,8 @@ const SHAPES: SeismicParams[] = [
 
 const SEEDS = ["sh-a", "sh-b", "sh-c"];
 
+const READINGS: readonly CandidateReading[] = ["populate", "implicit"];
+
 interface Board {
   label: string;
   params: SeismicParams;
@@ -78,8 +81,16 @@ function boards(): Board[] {
   return corpus;
 }
 
-function planOf(label: string, state: SeismicState): Step[] {
-  const r = seismicGame.hint?.(state);
+function planOf(
+  label: string,
+  state: SeismicState,
+  reading?: CandidateReading,
+): Step[] {
+  const ui = seismicGame.newUi(state);
+  const r = seismicGame.hint?.(state, undefined, {
+    ...ui,
+    candidateReading: reading ?? ui.candidateReading,
+  });
   if (!r?.ok) throw new Error(`${label}: hint refused: ${r?.error}`);
   return r.steps as Step[];
 }
@@ -92,48 +103,107 @@ function highlightsOf(step: Step): SeismicHint {
 const cellIndex = (state: SeismicState, c: { x: number; y: number }): number =>
   c.y * state.w + c.x;
 
-// --- the corpus -------------------------------------------------------------
-
-/** Every premise the plan can speak. Adding a firing kind or a reason to place
- * fails to compile until it is listed here (docs/games/hints.md § "Census the
- * reasons, not only the rungs"). */
-type Kind = Exclude<SeismicFiring["kind"], "place"> | PlaceWhy | "cull";
-
-const KINDS: Record<Kind, true> = {
-  populate: true,
-  clean: true,
-  singleton: true,
-  naked: true,
-  hidden: true,
-  cull: true,
-  starve: true,
-};
-
-function kindsOf(f: SeismicFiring): Kind[] {
-  if (f.kind !== "place") return [f.kind];
-  return f.cull.length > 0 ? [f.why, "cull"] : [f.why];
+/**
+ * Every blank cell's candidates by the solver's own rule: fill every blank cell
+ * with what its area admits, then `placeNumber` every number on the board, which
+ * strikes it wherever it reaches. What a note-less cell reads as, held to the
+ * rule rather than to the hint's own `reach`.
+ */
+function byRule(state: SeismicState): Uint16Array {
+  const b = workingBoard(state);
+  for (let i = 0; i < b.grid.length; i++)
+    if (b.grid[i] === 0) b.pencil[i] = areaBits(b.dsf.size(i));
+  for (let i = 0; i < b.grid.length; i++)
+    if (b.grid[i] !== 0) placeNumber(b, i % b.w, (i / b.w) | 0, b.grid[i]);
+  return b.pencil;
 }
 
-describe("the corpus", () => {
-  it("finishes every board and reaches every premise, with nothing ledgered", () => {
+/** The notes a blank cell reads as: its own, or where it has none, the rule's. */
+function shownOf(state: SeismicState): Uint16Array {
+  const rule = byRule(state);
+  return state.pencil.map((p, i) => (state.grid[i] !== 0 ? 0 : p || rule[i]));
+}
+
+// --- the corpus -------------------------------------------------------------
+
+/** Every premise the plan can speak. Adding one fails the census below until it
+ * is listed here (docs/games/hints.md § "Census the reasons, not only the
+ * rungs"). */
+type Kind =
+  | "populate"
+  | "clean"
+  | "note"
+  | "singleton"
+  | "naked"
+  | "regionsFull"
+  | "hidden"
+  | "cull"
+  | "starve"
+  | "fold";
+
+const isStarve = (step: HintStep<SeismicMove>): boolean =>
+  step.explanation.startsWith("The striped area can put its");
+
+/** A step's premise, read off its words and its move. */
+function kindOf(step: Step, tectonic: boolean): Kind {
+  const m = step.move;
+  const text = step.explanation;
+  if (text === say.populate) return "populate";
+  if (text === say.clean(tectonic)) return "clean";
+  if (isStarve(step)) return m.type === "pencilStrike" ? "starve" : "fold";
+  if (m.type === "pencilAdd") return "note";
+  if (m.type === "pencilStrike") {
+    if (text.startsWith(say.cull(m.marks[0].n, tectonic))) return "cull";
+  } else if (m.type === "set") {
+    if (text === say.singleton) return "singleton";
+    if (text === say.naked(m.n)) return "naked";
+    if (text === say.regionsFull(m.n, tectonic)) return "regionsFull";
+    if (text === say.hidden(m.n)) return "hidden";
+  }
+  throw new Error(`an unclassified step: "${text}"`);
+}
+
+/** What each reading must reach over the corpus. The populate reading writes
+ * every note first, so it never writes one cell's; the implicit reading has
+ * nothing to fill or, on a fresh board, to clean, and its singles on a
+ * note-less cell are `regionsFull`. */
+const REACHES: Record<CandidateReading, readonly Kind[]> = {
+  populate: ["populate", "clean", "singleton", "naked", "hidden", "cull", "starve"],
+  implicit: [
+    "note",
+    "singleton",
+    "naked",
+    "regionsFull",
+    "hidden",
+    "cull",
+    "starve",
+    "fold",
+  ],
+};
+
+describe.each(READINGS)("the corpus, under the %s reading", (reading) => {
+  it("finishes every board and reaches every premise", () => {
     const seen = new Set<Kind>();
-    let firings = 0;
-    for (const { label, state } of boards()) {
-      const { status, plan } = deduceSeismicPlan(state);
-      expect(status, `${label} stalled`).toBe(STATUS_COMPLETE);
-      for (const f of plan) for (const k of kindsOf(f)) seen.add(k);
-      firings += plan.length;
+    let steps = 0;
+    for (const { label, params, state: start } of boards()) {
+      let state = start;
+      for (const step of planOf(label, start, reading)) {
+        seen.add(kindOf(step, params.mode === MODE_TECTONIC));
+        state = seismicGame.executeMove(state, step.move);
+      }
+      expect(state.completed, `${label} stalled`).toBe(true);
+      steps += planOf(label, start, reading).length;
     }
-    expect(firings, "the census walked almost nothing").toBeGreaterThan(500);
-    expect(Object.keys(KINDS).filter((k) => !seen.has(k as Kind))).toEqual([]);
+    expect(steps, "the census walked almost nothing").toBeGreaterThan(500);
+    expect([...seen].sort()).toEqual([...REACHES[reading]].sort());
   });
 
   it("needs a starved area on Normal boards and never on Easy ones", () => {
-    // Easy boards are certified by the naked and hidden singles alone, and the
-    // plan tries those first, so a starved area on one means the order broke.
+    // Easy boards are certified by the singles alone, and the starve rung waits
+    // for every single to be gone, so a starved area on one means that broke.
     let normal = 0;
     for (const { label, params, state } of boards()) {
-      const starved = deduceSeismicPlan(state).plan.filter((f) => f.kind === "starve");
+      const starved = planOf(label, state, reading).filter(isStarve);
       if (params.diff === DIFF_EASY) expect(starved, label).toEqual([]);
       else normal += starved.length;
     }
@@ -163,23 +233,33 @@ function rungRejects(state: SeismicState): string[] {
 
 describe("the starved-area finder", () => {
   it("strikes exactly what the trial rung rejects, wherever it is the next step", () => {
+    // The populate reading, so every cell's notes are on the board and the
+    // rung reads the same candidates the finder does.
     let points = 0;
     for (const { label, params, state: start } of boards()) {
       if (params.diff === DIFF_EASY) continue;
       let state = start;
       for (let move = 0; move < 500 && !state.completed; move++) {
-        if (deduceSeismicPlan(state).plan[0]?.kind === "starve") {
+        const plan = planOf(label, state, "populate");
+        if (isStarve(plan[0])) {
           points++;
           const b = workingBoard(state);
+          const areas = areasOf(b);
+          // Where it fires, the singles are spent: that is when the trial rung
+          // rejects nothing but a starved area's clashes.
+          expect(
+            nakedSingles(b.grid, b.pencil, b.w, { bit: numBit, values: 9 }),
+          ).toEqual([]);
+          expect(hiddenSingles(b, areas)).toEqual([]);
           // A set: two areas can each rule out the same note.
           const found = new Set<string>();
-          for (const s of starves(b, areasOf(b)))
+          for (const s of starves(b, areas))
             for (const c of s.targets) found.add(`${c}:${s.n}`);
           expect([...found].sort(), `${label} move ${move}`).toEqual(
             rungRejects(state),
           );
         }
-        state = seismicGame.executeMove(state, planOf(label, state)[0].move);
+        state = seismicGame.executeMove(state, plan[0].move);
       }
       expect(state.completed, `${label} never finished`).toBe(true);
     }
@@ -189,53 +269,70 @@ describe("the starved-area finder", () => {
 
 // --- words and pictures -----------------------------------------------------
 
-describe("each step's picture matches its words", () => {
+describe.each(
+  READINGS,
+)("each step's picture matches its words, under the %s reading", (reading) => {
   it("names, marks and strikes exactly what the deduction concerns", () => {
-    const counted = new Map<string, number>();
-    const count = (k: string) => counted.set(k, (counted.get(k) ?? 0) + 1);
+    const counted = new Map<Kind, number>();
     for (const { label, params, state: start } of boards()) {
       const tectonic = params.mode === MODE_TECTONIC;
       let state = start;
-      for (const step of planOf(label, start)) {
+      for (const step of planOf(label, start, reading)) {
         const m = step.move;
         const hl = highlightsOf(step);
         const where = `${label}: "${step.explanation}"`;
-        if (m.type === "set") {
-          const i = cellIndex(state, m);
-          expect(hl.targets, where).toEqual([{ x: m.x, y: m.y }]);
-          expect(hl.marks, where).toEqual([]);
-          if (step.explanation === say.singleton) {
-            expect([state.dsf.size(i), m.n], where).toEqual([1, 1]);
-            count("singleton");
-          } else if (step.explanation === say.naked(m.n)) {
+        const kind = kindOf(step, tectonic);
+        counted.set(kind, (counted.get(kind) ?? 0) + 1);
+        const shown = shownOf(state);
+        switch (kind) {
+          case "populate":
+          case "clean":
+            break;
+          case "singleton":
+          case "naked":
+          case "regionsFull":
+          case "hidden": {
+            if (m.type !== "set") throw new Error(where);
+            const i = cellIndex(state, m);
+            expect(hl.targets, where).toEqual([{ x: m.x, y: m.y }]);
+            expect(hl.marks, where).toEqual([]);
+            if (kind === "singleton")
+              expect([state.dsf.size(i), m.n], where).toEqual([1, 1]);
             // "Every other number has been ruled out" is true of the notes shown.
-            expect(state.pencil[i], where).toBe(numBit(m.n));
-            count("naked");
-          } else {
-            expect(step.explanation, where).toBe(say.hidden(m.n));
-            expect(hl.area, where).toEqual([]);
-            const area = (hl.hatch ?? []).map((c) => cellIndex(state, c));
-            expect(area, where).toContain(i);
-            expect(area.length, where).toBe(state.dsf.size(i));
-            const rivals = area.filter(
-              (j) => j !== i && state.grid[j] === 0 && state.pencil[j] & numBit(m.n),
-            );
-            expect(rivals, where).toEqual([]);
-            count("hidden");
+            if (kind === "naked") expect(state.pencil[i], where).toBe(numBit(m.n));
+            // …and of the rule, where the cell has none.
+            if (kind === "regionsFull") {
+              expect(state.pencil[i], where).toBe(0);
+              expect(shown[i], where).toBe(numBit(m.n));
+            }
+            if (kind === "hidden") {
+              expect(hl.area, where).toEqual([]);
+              const area = (hl.hatch ?? []).map((c) => cellIndex(state, c));
+              expect(area, where).toContain(i);
+              expect(area.length, where).toBe(state.dsf.size(i));
+              const rivals = area.filter(
+                (j) => j !== i && state.grid[j] === 0 && shown[j] & numBit(m.n),
+              );
+              expect(rivals, where).toEqual([]);
+            }
+            break;
           }
-        } else if (m.type === "pencilStrike") {
-          const struck = m.marks.map((k) => `${cellIndex(state, k)}:${k.n}`).sort();
-          const cells = (ps: readonly { x: number; y: number }[]) =>
-            [...new Set(ps.map((c) => cellIndex(state, c)))].sort((p, q) => p - q);
-          expect(
-            cells(hl.targets),
-            `${where}: the ringed cells are the struck ones`,
-          ).toEqual(cells(m.marks));
-          const n = m.marks[0].n;
-          if (step.explanation === say.clean(tectonic)) {
-            count("clean");
-          } else if (step.explanation === say.cull(n, tectonic)) {
+          case "note": {
+            // A note leg writes exactly what the rule leaves a note-less cell.
+            if (m.type !== "pencilAdd") throw new Error(where);
+            expect(new Set(m.marks.map((k) => cellIndex(state, k))).size, where).toBe(
+              1,
+            );
+            const i = cellIndex(state, m.marks[0]);
+            expect(state.pencil[i], where).toBe(0);
+            const bits = m.marks.reduce((a, k) => a | numBit(k.n), 0);
+            expect(bits, where).toBe(shown[i]);
+            break;
+          }
+          case "cull": {
             // The leg after a placement strikes what `placeNumber` itself strikes.
+            if (m.type !== "pencilStrike") throw new Error(where);
+            const n = m.marks[0].n;
             expect(step.continuesPrevious, where).toBe(true);
             expect(hl.area, where).toHaveLength(1);
             const p = cellIndex(state, hl.area[0]);
@@ -243,29 +340,54 @@ describe("each step's picture matches its words", () => {
             const b = workingBoard(state);
             const before = b.pencil.slice();
             placeNumber(b, p % b.w, (p / b.w) | 0, n);
-            const byRule: string[] = [];
+            const struck = m.marks.map((k) => `${cellIndex(state, k)}:${k.n}`).sort();
+            const rule: string[] = [];
             for (let j = 0; j < b.grid.length; j++)
               if (j !== p && b.grid[j] === 0 && before[j] !== b.pencil[j])
-                byRule.push(`${j}:${n}`);
-            expect(struck, where).toEqual(byRule.sort());
-            count("cull");
-          } else {
-            expect(step.explanation, where).toBe(
-              say.starve(n, hl.targets.length, tectonic),
-            );
-            expect(new Set(m.marks.map((k) => k.n)), where).toEqual(new Set([n]));
-            expect(hl.area, where).toEqual([]);
-            const area = (hl.hatch ?? []).map((c) => cellIndex(state, c));
-            expect(area.length, `${where}: a whole area`).toBe(state.dsf.size(area[0]));
-            for (const k of m.marks)
-              expect(area, `${where}: a struck cell sits outside`).not.toContain(
-                cellIndex(state, k),
-              );
-            count("starve");
+                rule.push(`${j}:${n}`);
+            expect(struck, where).toEqual(rule.sort());
+            break;
           }
-        } else {
-          expect(step.explanation, where).toBe(say.populate);
-          count("populate");
+          case "starve":
+          case "fold": {
+            const area = (hl.hatch ?? []).map((c) => cellIndex(state, c));
+            expect(hl.area, where).toEqual([]);
+            expect(area.length, `${where}: a whole area`).toBe(state.dsf.size(area[0]));
+            // The area's notes are the premise, so they are on the board.
+            for (const j of area)
+              if (state.grid[j] === 0) expect(state.pencil[j], where).not.toBe(0);
+            for (const t of hl.targets)
+              expect(area, `${where}: a struck cell sits outside`).not.toContain(
+                cellIndex(state, t),
+              );
+            if (kind === "starve") {
+              if (m.type !== "pencilStrike") throw new Error(where);
+              const cells = (ps: readonly { x: number; y: number }[]) =>
+                [...new Set(ps.map((c) => cellIndex(state, c)))].sort((a, b) => a - b);
+              expect(
+                cells(hl.targets),
+                `${where}: the ringed cells are the struck ones`,
+              ).toEqual(cells(m.marks));
+              expect(new Set(m.marks.map((k) => k.n)).size, where).toBe(1);
+            } else {
+              // A starve on a note-less cell ends in what it leaves there.
+              expect(hl.targets, where).toHaveLength(1);
+              const i = cellIndex(state, hl.targets[0]);
+              expect(state.pencil[i], where).toBe(0);
+              const left =
+                m.type === "set"
+                  ? numBit(m.n)
+                  : m.type === "pencilAdd"
+                    ? m.marks.reduce((a, k) => a | numBit(k.n), 0)
+                    : -1;
+              expect(
+                left & ~shown[i],
+                `${where}: leaves only what the rule allows`,
+              ).toBe(0);
+              expect(left, where).not.toBe(shown[i]);
+            }
+            break;
+          }
         }
         state = seismicGame.executeMove(state, m);
       }
@@ -275,9 +397,7 @@ describe("each step's picture matches its words", () => {
     }
     // The vacuity pair: enough steps, and every branch above taken.
     expect([...counted.values()].reduce((a, b) => a + b, 0)).toBeGreaterThan(1000);
-    expect([...counted.keys()].sort()).toEqual(
-      ["clean", "cull", "hidden", "naked", "populate", "singleton", "starve"].sort(),
-    );
+    expect([...counted.keys()].sort()).toEqual([...REACHES[reading]].sort());
   });
 });
 
@@ -323,17 +443,20 @@ describe("the player's own board", () => {
     expect(narrowed).toBeGreaterThan(3);
     expect(seismicGame.findMistakes?.(state)).toEqual([]);
 
-    const first = planOf(label, state);
-    expect(first.some((s) => s.move.type === "pencilAll")).toBe(false);
-    for (let move = 0; move < 500 && !state.completed; move++)
-      state = seismicGame.executeMove(state, planOf(label, state)[0].move);
-    expect(state.completed).toBe(true);
+    for (const reading of READINGS) {
+      let s = state;
+      const first = planOf(label, s, reading);
+      expect(first.some((step) => step.move.type === "pencilAll")).toBe(false);
+      for (let move = 0; move < 500 && !s.completed; move++)
+        s = seismicGame.executeMove(s, planOf(label, s, reading)[0].move);
+      expect(s.completed, reading).toBe(true);
+    }
   });
 
   it("follows a strike note by note, and refreshes a stored one to what is left", () => {
     const { label, state: start } = boardWhere((b) => b.params.diff === DIFF_NORMAL);
     let state = start;
-    const steps = planOf(label, start);
+    const steps = planOf(label, start, "populate");
     const at = steps.findIndex(
       (s) => s.move.type === "pencilStrike" && s.move.marks.length >= 2,
     );
@@ -377,20 +500,32 @@ describe("the sentences at their extremes", () => {
     expect(say.cull(9, false)).toContain("within 9 cells of it");
     expect(say.cull(3, true)).not.toContain("within");
     expect(say.starve(1, 1, false)).toBe(
-      "The striped area can put its 1 only in line with this cell and within 1 cell of it, so this cell can't be 1.",
+      "The striped area can put its 1 only in line with this cell and within 1 cell of it",
     );
     expect(say.starve(4, 3, true)).toBe(
-      "The striped area can put its 4 only in a cell touching each of these, so none of them can be 4.",
+      "The striped area can put its 4 only in a cell touching each of these",
+    );
+    expect(say.note([2], false, true)).toBe(
+      "Only 2 isn't already in this cell's area or in a cell touching it, so pencil it in.",
     );
   });
 
-  it("fits at a glance for every number, count and mode", () => {
+  it("fits at a glance for every number, count and mode, conclusions included", () => {
     const all: string[] = [say.populate, say.singleton];
+    // The longest ending the walk adds: a strike naming its notes, or on one
+    // note-less cell, a fold keeping four values.
+    const ending = (n: number, targets: number): string =>
+      targets === 1
+        ? ", so pencil in only 1, 2, 3 and 4."
+        : `, so we must cross out ${say.starved(n, targets)}.`;
     for (const tectonic of [false, true]) {
-      all.push(say.clean(tectonic));
+      all.push(say.clean(tectonic), say.note([1, 2, 3, 4], false, tectonic));
+      all.push(say.note([], true, tectonic));
       for (let n = 1; n <= 9; n++) {
-        all.push(say.naked(n), say.hidden(n), say.cull(n, tectonic));
-        for (const targets of [1, 2, 6]) all.push(say.starve(n, targets, tectonic));
+        all.push(say.naked(n), say.hidden(n), say.regionsFull(n, tectonic));
+        all.push(`${say.cull(n, tectonic)}, so we must cross out ${say.culled(n)}.`);
+        for (const targets of [1, 2, 6])
+          all.push(`${say.starve(n, targets, tectonic)}${ending(n, targets)}`);
       }
     }
     expect(all.filter((s) => s.length > 120)).toEqual([]);
@@ -398,9 +533,6 @@ describe("the sentences at their extremes", () => {
 });
 
 // --- frames -----------------------------------------------------------------
-
-const isStarve = (step: HintStep<SeismicMove>): boolean =>
-  step.explanation.startsWith("The striped area can put its");
 
 describe("the frames a hint draws", () => {
   it("rings each struck cell, hatches the starved area, and strikes each note through", () => {
@@ -412,9 +544,9 @@ describe("the frames a hint draws", () => {
         game: seismicGame,
         id: `${seismicGame.encodeParams(params, true)}#starve-${s}`,
         showHint: true,
-        hintUntil: isStarve,
+        hintUntil: (step) => isStarve(step) && step.move.type === "pencilStrike",
       });
-      if (r.hint && isStarve(r.hint)) found = r;
+      if (r.hint && isStarve(r.hint) && r.hint.move.type === "pencilStrike") found = r;
     }
     if (!found?.hint) throw new Error("no seed reached a starved-area step");
     const hl = found.hint.highlights as SeismicHint;

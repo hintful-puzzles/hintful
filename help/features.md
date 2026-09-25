@@ -123,10 +123,10 @@ In puzzles with pencil marks, you choose how a hint writes them, under
   as the ::mark-all:: button does, clears the ones the board already rules out,
   and reasons from the marks from then on.
 
-Each puzzle starts on whichever suits it better. Solo, Mathrax, Group and Map
-start on the first; puzzles where nearly every square ends up needing marks, such as
-Keen and Towers, start on the second. The hints teach the same deductions either
-way.
+Each puzzle starts on whichever suits it better: puzzles that mostly fall to
+squares with one possibility left, such as Solo and Seismic, start on the first;
+puzzles where nearly every square ends up needing marks, such as Keen and Towers,
+start on the second. The hints teach the same deductions either way.
 
 ### When there's no hint to give {#hint-refusals}
 

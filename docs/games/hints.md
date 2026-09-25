@@ -1521,7 +1521,7 @@ to a similar game:
 | Spokes | the forced spoke, in `COL_HINT` — **a line** when the move draws a line, **a rim dot** when the move places a mark (§ "Echo the move's shape in the hint color") | the hubs whose clue/lines/connectivity are the argument → `COL_HINT_CELL` ring. A saturated hub forces several spokes as one multi-leg journey, all in the one color |
 | Sticks | the forced square drawn as a `COL_HINT` **bar in the forced orientation**; green `COL_LINE` stays the placed line, so the hint is never mistaken for the move | the run / span / clue-sides the argument counts → one `evidence` list, cue split by the square's own state: a **white** square is washed `COL_HINT_CELL`, a **black clue** is *ringed* the same color (a wash would hide the blackness the argument is about). The list's length equals the number the sentence states |
 | Bridges | the **span** the step decides, drawn as the game's own shape: the bridge bundle it would become with only the *added* bars in `COL_HINT`, or the game's pair of crosses in `COL_HINT` when the step blocks it. The island a sentence *names* has its own rim and clue digit recolored `COL_HINT` (an annulus, so it is already a ring) | the islands and bridges the argument counts → `COL_HINT_CELL` on the same shapes. A premise that counts a **group** marks every member alike, the acted-from island included, because the sentence counts them together |
-| Seismic | the cell(s) a step decides, ringed `COL_HINT` inside the cell's own box (the gap between cells is the black its walls are made of); a struck note keeps its pencil color with a same-color line through it | the area a hidden single or a starved area reasons over → one `COL_HINT_CELL` contour; a placement's follow-on strikes outline the placed number's cell alone |
+| Seismic | the cell(s) a step decides, ringed `COL_HINT` inside the cell's own box (the gap between cells is the black its walls are made of); a struck note keeps its pencil color with a same-color line through it | the area a hidden single or a starved area reasons over → hatched, the sentence's "striped area"; a placement's follow-on strikes outline the placed number's cell alone |
 | Galaxies | the **deduced** cell, solid **purple** `COL_HINT` (not blue — see below); the 180° partner the same move claims, a `COL_HINT` **outline over the ordinary evidence shading** (same hue, they share a fate; far less weight, only one is what the words are about); the wall it draws, a `COL_HINT` bar drawn *whether or not the wall exists yet*; the dot it points at, a **filled `COL_HINT` halo with the dot repainted on top** — **unless the dot stands on a cell just filled**, where a mark in the fill's own color is invisible and the narration names the dot by position instead | the cells / walls / dots the argument reasons over → `COL_HINT_CELL` teal (a galaxy's reach, a cut-off piece, the partner across a dot, an already-drawn wall). One ring role at a time, so "the ringed dot" is never ambiguous |
 | Magnets | the square a placement decides, ringed `COL_HINT`; a domino decided whole (neutral, or marked `?`) as **one contour around both ends**, never a ring per end | the line a premise counts → one `COL_HINT_CELL` contour, and its clue digits recolor `COL_HINT` (Magnets draws no line numbers, so the digit is how "this row" is found); a pole the square touches → that square outlined; the domino's other end, when the sentence reasons about it, outlined too |
 | Map | the region the step decides, a solid `COL_HINT` band inside its whole boundary, twice the selection band's width, and the only hint mark on any border; the selection band, when on the same region, just inside it | a single (one color left) outlines **nothing**: the neighbors' fills are its premise. A pair's or chain's regions → a thin **dashed** `COL_HINT_CELL` line set in from their border by a band's width; a chain's regions numbered at their label points in the same color, with region numbers hidden while it shows |
@@ -3209,6 +3209,21 @@ its cage-mates and the notes never did, so a later single rested on a strike
 the player never saw, and the hint threw on about one fresh Killer board in
 six.
 
+**Where a value's reach depends on the value, the culls read the game's
+`reach`.** A Seismic 3 rules out 3s three cells along its row and column, which
+no fixed region can say. So the culls ask a function, `reach(i, n)`: the cells
+an `n` at cell `i` rules `n` out of. The walk reads it everywhere it asks what
+a placed value rules out: the placement cull, the obvious clean, a note-less
+cell's implied candidates, and a fold's check of what an earlier fold placed.
+The default is `regionReach`, every cell of `regionsOf`, so a game whose rule
+is its regions passes nothing. `regionsOf` keeps the job that does not depend on
+a value: the regions a hidden single is found in (Seismic's area, declared
+`holdsEvery`). "Two equal values may not stand together" is symmetric, and the
+helpers rely on it: they read the reach outward from each placed value, which
+is the same as asking what reaches a cell. Exemplar:
+[`seismic/hint.ts`](../../src/games/seismic/hint.ts), whose `reach` asks the
+game's own `clashes` of every cell once.
+
 **A region also carries the word a sentence calls it by.** Where narration
 cites *which kinds* of region a value may not repeat in — Solo's dup cull
 ("it can't repeat in its row, column, block, diagonal or cage") and its
@@ -3224,7 +3239,8 @@ diagonal is still told its notes were cleaned against them. Exemplar:
 [`solo/index.ts`](../../src/games/solo/index.ts)'s `regionsOf` +
 `noRepeatRegionNames`, guarded by `solo-hint.test.ts`'s "solo no-repeat region
 names". The name stays the game's rather than joining `CellRegion`, because
-**Solo is the only game that supplies a `regionsOf` at all** — every other
+**Solo is the only game with several kinds of region to tell apart**: Rome and
+Seismic each supply a `regionsOf` of one kind, their areas, and every other
 candidate-elimination game takes the row/column preset, whose region phrase is
 a constant.
 
@@ -3260,7 +3276,8 @@ last rung when every earlier one came up empty, the budget and cap (§
   named them, so the ending says "cross them out" rather than listing them
   twice.
 - **The walk plays each leg on the working board**, and after a placement
-  strikes its value from every one of its `regionsOf`: a leg
+  strikes its value from every cell it reaches (`reach`, by default its
+  `regionsOf`): a leg
   continuing the journey, or silent under auto-pencil, whose move carries the
   same cull to the real board. Every such game used to write this as its own
   `emitPlacement`, differing only in the words and the regions.
@@ -3281,7 +3298,8 @@ What a game genuinely decides: which rungs of its own it has, the strike-split
 axis (`strikeAxis` — by height, by cell, one leg for a digit confined to a
 region; dictated by what the narration names singular), its recording solver,
 its words, its regions **where they are a decision at all** (§ "The row/column
-preset" — for a plain Latin square they are not), the cells a step's
+preset" — for a plain Latin square they are not), a value's `reach` where it is
+not its regions, the cells a step's
 candidates rest on beyond those it outlines (`reads` on its words: a cage
 deduction hatches the cage and reads every cell of it), and the deviations the
 plan's optional hooks name (`singles`, `placeable`, `placed`, `placement`,
@@ -3451,7 +3469,10 @@ The driver keeps the phases: the naked singles and the game's own rungs (the
 note-free ones) compete until its setup is done, and setup — lazy populate then
 the obvious clean, built from the plan's `notes` words, or a `setUp` of the
 game's own (Salad's populate knows about empty squares) — is bookkeeping
-outside the frontier. A `setUp` says whether it is
+outside the frontier. An own rung that reads the notes waits for
+`RungContext.populated`, which is the setup being done, clean included: it once
+meant "penciled in" under the populate reading, and Seismic's rungs then struck
+between the fill and the clean. A `setUp` says whether it is
 *done*, not only whether it did something: a driver that learned "done" by
 asking once more stayed an extra round in the opening, where a second
 empty-square marker beat the hidden single continuing the last step. Exemplars:
@@ -3620,17 +3641,23 @@ with it (`fold-notes-into-conclusions`, both 2026-09-25):
 | Group | 1.02 | 1.04 | 13% |
 | Keen | 1.22 | 1.07 | 88% |
 | Map (on its own plan, which always folded) | 0.89 Easy, 0.98–1.03 Normal, 1.09–1.11 Tricky | | 0–18%, 34–51% Tricky |
+| Seismic (on the walk from `move-seismic-onto-the-candidate-walk`, folded only) | | 0.54–0.57 Easy, 0.79–1.14 Normal | 0% Easy, 26–67% Normal |
 
 The last column is not comparable with the first run's figures, which counted
 note legs rather than every cell a step writes notes into; a fold's "pencil in
 only …" counts here and had no counterpart there.
 
+Seismic's Easy figure is the whole board falling to singles the board shows, so
+the implicit plan writes no note and, with no notes to cull, has no cull leg
+after each placement either.
+
 Where the clues or cages drive the deductions, nearly every cell ends up needing
 notes, and writing them one cell at a time can still cost more than one
 populate. So the convention, `DEFAULT_CANDIDATE_READING`, is `populate`, and a
 game whose plan is shorter under the implicit reading overrides it in `newUi`
-and says why (Solo, Mathrax, Unequal, and Group for the few notes it writes; Map
-offers no choice). Rome's shorter implicit plan is declined for now: it jumps
+and says why (Solo, Mathrax, Unequal, Seismic, Group for the few notes it
+writes, and Map, whose plan always read this way). Rome's shorter implicit plan
+is declined for now: it jumps
 across the board past `hint-frontier.test.ts`'s continuity bound, which reads a
 game's default reading only, so **a game switching its default must pass that
 guard too**. A new game measures the same two numbers before choosing.
@@ -3642,8 +3669,7 @@ reading with a setup of the game's own. Nothing presses for more, so it stays
 populate-only by decision (2026-09-25). Of the note games that plan without the
 walk, Crossing already writes a square's notes only when a narrowing needs them
 (§ "Place the notes a fixpoint rests on (Crossing)"), with a `pencilAdd` of its
-own that predates the shared one; Seismic populates first, and whether it moves
-onto the walk is `move-seismic-onto-the-candidate-walk`'s question. **Undead
+own that predates the shared one. **Undead
 stays populate-only by decision** (2026-09-25): a monster may repeat in any
 line, so no region rules a candidate out and a note-less cell reads as every
 monster. Its implicit reading would be a populate done one cell at a time, the
@@ -4045,11 +4071,31 @@ above holds there in full.
 
 What else carried over, and what did not:
 
-- **A parallel recorder, held to the rung by a test.** Seismic's three rungs are
+- **No recorder: the game's own rungs read the walk's candidates.** Seismic is on
+  the shared walk with `record` returning nothing, so the walk's recorded strikes
+  and placements never fire, and its rungs (a whole-area cell, a hidden single in
+  an area, a starved area) read `RungContext.shown`: the notes, or under the
+  implicit reading what a note-less cell's reach leaves it. That is the same
+  soundness argument, since a note-less cell's implied candidates always hold its
+  answer. Every other walk game records, because its notes may be wrong.
+- **Held to the solver's rungs by a test.** Seismic's three solver rungs are
   sweeps that apply everything they find at once; each finder in `hint.ts` is the
   one-firing form of one of them. `seismic-hint.test.ts` holds the trial finder to
   what `placeNumber` + `regionsViable` reject at every point it is the next step,
-  which is what makes the re-derivation a projection rather than a second solver.
+  and every note the plan writes into a note-less cell to what `placeNumber`
+  leaves there, which is what makes the re-derivation a projection rather than a
+  second solver.
+- **A harder tier's rung waits for `nothingEarlier`.** The frontier takes any
+  rung's firing that continues the last step, so a starved area (Normal's
+  technique) would be taken over a hidden single elsewhere, and an Easy board,
+  which the singles alone certify, would be taught it. A recorded strike cannot
+  do this, because the solver records the harder deduction only once the easier
+  ones are spent; an own rung has to say so, and the starve rung fires only when
+  every earlier rung came up empty.
+- **An own rung's single defers to the naked one.** A cell whose notes are down
+  to its area's last home for a number is both singles, and the frontier prefers
+  the hidden one, whose hatched area continues more. The shared classifier calls
+  it naked (the cell alone says so), so Seismic's hidden-single finder skips it.
 - **A trial rung can be a Check in disguise.** `attempt` places a candidate and
   asks whether every area can still house its numbers. Placing `n` at `c` takes
   `n` from other cells and other numbers from `c` alone, so the area left short is
@@ -4059,9 +4105,10 @@ What else carried over, and what did not:
   ruled out by the same fact, so they are **one firing**. Read what the rung's
   rejection can possibly *be* before classifying it by the fact that it trials.
 - **A placed value's reach can depend on the value**, which `regionsOf` cannot
-  express: a Seismic 3 rules out 3s three cells along its row and column. The
-  bulk clean is then the game's own marks through the shared `obviousCleanStep`,
-  which keeps the "fill, then clean is one journey" rule in one place.
+  express: a Seismic 3 rules out 3s three cells along its row and column. The walk
+  takes it as `reach` (§ "The shared candidate-hint machinery"), and Seismic's is
+  its own `clashes`, the rule `placeNumber` applies, asked of every cell once.
+  What kept Seismic off the walk until then was this and nothing else.
 - **Not every note-taking board is square.** The shared helpers used to scan
   `w * w` cells, which on a Seismic board five wide and eight high stops three
   rows short. They read `grid.length` now.
@@ -4114,7 +4161,7 @@ worked around:
   UX").
 - **Three helpers spelled the populate move for themselves.** `lazyPopulate`,
   `adaptiveMarkAll` and the plan's default setup all wrote
-  `{ type: "pencilAll" }` literally, while `obviousCleanStep` had always *read*
+  `{ type: "pencilAll" }` literally, while the obvious clean had always *read*
   the same move through the dialect. `CandidateMoveAdapter.populate` is the
   writing half, and a `kind`-keyed game is what needed it.
 - **Graph reachability is a premise, not a rung shape.** Rome's `loops`,

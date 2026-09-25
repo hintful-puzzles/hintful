@@ -32,6 +32,7 @@ import {
 } from "../../engine/note-taking-cell.ts";
 import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
 import {
+  candidateReadingPref,
   pencilKeepHighlightPref,
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
@@ -222,6 +223,13 @@ function executeMove(state: SeismicState, move: SeismicMove): SeismicState {
       }
       return next;
     }
+    case "pencilAdd": {
+      for (const { x, y, n } of move.marks) {
+        const i = y * w + x;
+        if (next.grid[i] === 0) next.pencil[i] |= numBit(n);
+      }
+      return next;
+    }
     case "solve": {
       for (let i = 0; i < w * h; i++) {
         if (!(next.flags[i] & FM_FIXED)) next.grid[i] = move.grid[i];
@@ -354,7 +362,8 @@ export const seismicGame: Game<
   solve,
   difficulty,
   findMistakes,
-  hint: (state) => candidateHint(state, null, findMistakes, buildSteps),
+  hint: (state, _aux, ui) =>
+    candidateHint(state, ui ?? newUi(state), findMistakes, buildSteps),
   hintKeepTrack,
   refreshHintStep,
   // Sized to the regions the generator *makes*, not the nine the format admits:
@@ -363,7 +372,11 @@ export const seismicGame: Game<
   requestKeys: (p) => digitKeys(maxGeneratedRegionSize(p.mode)),
   textFormat,
 
-  prefs: [stickyPencilPref<SeismicUi>(), pencilKeepHighlightPref<SeismicUi>()],
+  prefs: [
+    stickyPencilPref<SeismicUi>(),
+    pencilKeepHighlightPref<SeismicUi>(),
+    candidateReadingPref<SeismicUi>(),
+  ],
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,
