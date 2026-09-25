@@ -688,14 +688,11 @@ export function redraw(
   // nothing else changed (`hint-overlay.test.ts`).
   packHint(ds, w, h, hint?.highlights);
   const border = borderFor(tile);
-  const drawWidth = w * tile + 2 * border;
-  const drawHeight = h * tile + 2 * border;
   const edgeThickness = Math.max(tile >> 4, 2);
   const flashing = flashTime > 0 && ((flashTime / 0.15) | 0) % 2 === 0;
 
-  // First-draw: own the window background and the outer border.
+  // First-draw: the outer border.
   if (!ds.started) {
-    dr.drawRect({ x: 0, y: 0, w: drawWidth, h: drawHeight }, COL_BACKGROUND);
     // Outer border edge frame, matching upstream's first-draw rect.
     dr.drawRect(
       {
@@ -706,7 +703,6 @@ export function redraw(
       },
       COL_EDGE,
     );
-    dr.drawUpdate({ x: 0, y: 0, w: drawWidth, h: drawHeight });
     ds.started = true;
   }
 

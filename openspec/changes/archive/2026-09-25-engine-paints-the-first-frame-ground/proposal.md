@@ -1,8 +1,8 @@
 # engine-paints-the-first-frame-ground
 
-**Status: scaffolded, not started.** Found by `test-touch-on-a-real-device`
-(2026-09-24). See its `device-report.md` § "Found on the way: four boards
-framed in unpainted canvas".
+Found by `test-touch-on-a-real-device` (2026-09-24). See its
+`device-report.md` § "Found on the way: four boards framed in unpainted
+canvas".
 
 ## Why
 
@@ -38,16 +38,24 @@ already repaints everything.
 - The `ts-engine` requirement stating "the engine emits no pixels of its own"
   is replaced, by `REMOVED` + `ADDED`, with one where the engine lays the
   ground and the game paints everything above it.
-- Each game's own color-0 full-canvas fill is deleted. A game whose ground is
-  another color (Bricks fills `COL_MIDLIGHT`) keeps its fill, which is the
-  override.
+- Each game's own color-0 full-canvas fill is deleted, with the full-canvas
+  `drawUpdate` beside it. A game whose ground is another color (Rect,
+  Untangle) keeps its fill, which is the override. Bricks, named here at
+  scaffolding as the override, is not one: its `COL_MIDLIGHT` is color 0.
+  A game that repaints its whole board every frame (Cube, Loopy) keeps its
+  fill too, because that fill erases the previous frame.
 - `first-frame-coverage.test.ts` stays, and now checks the engine too.
 
 ## Costs to weigh before starting
 
 - Every game's first-frame render snapshot gains or loses one rect. That is a
   mechanical re-baseline, verified by shape: every changed snapshot line is
-  that rect.
+  that rect. (Measured: most snapshots did not change, because the game's fill
+  was its first op with the same rectangle and color the midend now draws.
+  Twenty-five did, in four shapes, each checked line by line: Clusters and
+  Sticks had filled one pixel past their canvas, so the ground is 1px smaller;
+  Loopy, Rect and Untangle gain the ground under their own fill; and a Subsets
+  test that calls `redraw` without a midend loses the fill.)
 - Before deleting a game's fill, check that the game does not repaint its
   ground on a *later* frame. A flash that recolors the ground, for example,
   needs its own fill.

@@ -161,7 +161,6 @@ export function computeSize(p: SlantParams, ts: number): Size {
 // --- draw state -----------------------------------------------------------
 
 export interface SlantDrawState extends PencilIndicatorCache {
-  started: boolean;
   tileSize: number;
   /** Last-drawn packed word per tile of the (w+2)×(h+2) ring-extended grid;
    * −1 forces a draw. */
@@ -177,7 +176,6 @@ export interface SlantDrawState extends PencilIndicatorCache {
 export function newDrawState(state: SlantState, tileSize: number): SlantDrawState {
   const n = (state.w + 2) * (state.h + 2);
   return {
-    started: false,
     tileSize,
     grid: new Int32Array(n).fill(-1),
     todraw: new Int32Array(n).fill(-1),
@@ -503,14 +501,6 @@ export function redraw(
   const todraw = ds.todraw;
   const marks = ds.todrawSideKeys;
   marks.fill(0);
-
-  if (!ds.started) {
-    // The engine paints no pixels of its own: fill the whole background.
-    const size = computeSize({ w, h, diff: 0 }, ts);
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
-    dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
-    ds.started = true;
-  }
 
   // The upstream 3-phase flash: on for the first and last thirds.
   const flashing = flashTime > 0 && Math.floor((flashTime * 3) / FLASH_TIME) !== 1;

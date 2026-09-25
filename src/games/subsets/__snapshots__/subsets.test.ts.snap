@@ -3,15 +3,6 @@
 exports[`subsets rendering (tier 2.5) > completion flash: slots blink to the inner background on a flash beat 1`] = `
 [
   {
-    "color": 0,
-    "h": 540,
-    "op": "rect",
-    "rgb": "rgb(255, 255, 255)",
-    "w": 432,
-    "x": 0,
-    "y": 0,
-  },
-  {
     "color": 2,
     "h": 73,
     "op": "rect",

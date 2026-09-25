@@ -682,16 +682,10 @@ export function redraw(
   }
 
   if (!ds.started) {
-    // The whole canvas first, because the board no longer fills it: the margin
-    // grown for the pencil-mode indicator is outside the grid flood below, and
-    // an unpainted margin shows whatever the canvas happened to hold.
-    const canvas = computeSize(s.params, ts);
-    dr.drawRect({ x: 0, y: 0, ...canvas }, COL_BACKGROUND);
     dr.drawRect(
       { x: coord(0, ts), y: coord(0, ts), w: w * ts + 1, h: h * ts + 1 },
       COL_GRID,
     );
-    dr.drawUpdate({ x: 0, y: 0, ...canvas });
     ds.started = true;
   }
 

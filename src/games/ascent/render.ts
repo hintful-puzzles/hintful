@@ -394,8 +394,6 @@ export function redrawAscent(
   if (mistakes) for (const m of mistakes) mistakeSet[m.cell] = 1;
 
   if (!ds.started) {
-    dr.drawRect({ x: 0, y: 0, w: ds.pxW, h: ds.pxH }, COL_MIDLIGHT);
-    dr.drawUpdate({ x: 0, y: 0, w: ds.pxW, h: ds.pxH });
     ds.started = true;
     ds.colors.fill(-1);
     ds.oldpath.fill(-1);

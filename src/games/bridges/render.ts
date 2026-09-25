@@ -168,7 +168,6 @@ const H_L_LIMIT_SHIFT_H = 18;
 const H_L_LIMIT_SHIFT_V = 20;
 
 export interface BridgesDrawState {
-  started: boolean;
   tileSize: number;
   /** Per-cell packed draw descriptor from the last paint; -1 forces a redraw. */
   grid: Int32Array;
@@ -181,7 +180,6 @@ export interface BridgesDrawState {
 export function newDrawState(state: BridgesState, tileSize: number): BridgesDrawState {
   const n = state.w * state.h;
   return {
-    started: false,
     tileSize,
     grid: new Int32Array(n).fill(-1),
     newgrid: new Int32Array(n),
@@ -881,12 +879,6 @@ export function redrawBridges(
   if (flashTime) {
     const f = Math.trunc((flashTime * 5) / FLASH_TIME);
     if (f === 1 || f === 3) flash = true;
-  }
-
-  if (!ds.started) {
-    dr.drawRect({ x: 0, y: 0, w: w * ts + 2 * b, h: h * ts + 2 * b }, COL_BACKGROUND);
-    dr.drawUpdate({ x: 0, y: 0, w: w * ts + 2 * b, h: h * ts + 2 * b });
-    ds.started = true;
   }
 
   let dragSrc: { x: number; y: number } | null = null;

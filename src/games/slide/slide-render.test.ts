@@ -183,9 +183,7 @@ describe("slide opening frame", () => {
   it("paints the board, the target tint and the main block", () => {
     const ops = capture(newBoard());
 
-    // The engine paints no pixels of its own, so the game fills its own
-    // background on the first frame
-    // (docs/games/rendering.md § "The rendering doctrine").
+    // The midend's ground, in the floor color.
     expect(ops[0]).toMatchObject({
       op: "rect",
       x: 0,

@@ -135,7 +135,6 @@ export function computeSize(p: { w: number }, ts: number): Size {
 // --- draw state ------------------------------------------------------------
 
 export interface TowersDrawState {
-  started: boolean;
   tileSize: number;
   w: number;
   /** `(w+2)²` scratch tile values, rebuilt each redraw. */
@@ -163,7 +162,6 @@ export function newDrawState(state: TowersState, tileSize: number): TowersDrawSt
   const w = state.w;
   const W = w + 2;
   return {
-    started: false,
     tileSize,
     w,
     tiles: new Int32Array(W * W),
@@ -431,12 +429,6 @@ export function redraw(
   const W = w + 2;
   const threeD = ui.threeD;
 
-  if (!ds.started) {
-    const size = computeSize({ w }, ts);
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
-    dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
-  }
-
   checkErrors(state, ds.errtmp);
 
   // Pack both overlays per play cell (border-ring indexing).
@@ -538,6 +530,4 @@ export function redraw(
   });
 
   repaintPencilIndicator(dr, ds, ui.pencilMode, PENCIL_BOX(w, ts), PENCIL_STYLE);
-
-  ds.started = true;
 }

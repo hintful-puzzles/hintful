@@ -194,8 +194,6 @@ export function redraw(
   const wh = w * h;
 
   if (!ds.started) {
-    // The engine paints no pixels of its own; fill our own background.
-    dr.drawRect({ x: 0, y: 0, ...computeSize(state, ts) }, COL_BACKGROUND);
     drawRecessedFrame(dr, w, h, ts);
     ds.started = true;
   }

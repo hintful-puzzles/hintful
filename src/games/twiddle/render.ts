@@ -281,10 +281,6 @@ export function redraw(
   }
 
   if (!ds.started) {
-    // The engine paints no pixels of its own: fill our own background,
-    // then draw the recessed frame around the playfield.
-    const size = computeSize(state, ts);
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
     drawRecessedBorder(
       dr,
       {

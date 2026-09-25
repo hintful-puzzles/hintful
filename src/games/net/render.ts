@@ -78,7 +78,6 @@ const TILE_LOCKED = 1 << 28;
 export const lineThick = (ts: number): number => Math.floor((ts + 47) / 48);
 
 export interface NetDrawState {
-  started: boolean;
   tileSize: number;
   w: number;
   h: number;
@@ -92,7 +91,6 @@ export interface NetDrawState {
 export function newDrawState(s: NetState, tileSize: number): NetDrawState {
   const cells = (s.w + 2) * (s.h + 2);
   return {
-    started: false,
     tileSize,
     w: s.w,
     h: s.h,
@@ -384,13 +382,6 @@ export function redraw(
   flashTime: number,
 ): void {
   let state = current;
-
-  if (!ds.started) {
-    ds.started = true;
-    const size = computeSize(state, ds.tileSize);
-    dr.drawRect({ x: 0, y: 0, ...size }, COL_BACKGROUND);
-    dr.drawUpdate({ x: 0, y: 0, ...size });
-  }
 
   // Rotation animation: draw the *old* state and spin the rotating tile.
   let tx = -1;

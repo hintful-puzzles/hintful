@@ -12,7 +12,6 @@ import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { blackboxGame } from "./index.ts";
 import {
   type BlackboxDrawState,
-  COL_BACKGROUND,
   COL_BUTTON,
   COL_COVER,
   COL_WRONG,
@@ -71,24 +70,6 @@ function freshUi(s: BlackboxState): BlackboxUi {
 }
 
 describe("Black Box redraw", () => {
-  it("fills the background on first draw", () => {
-    const s = makeState(5, 5, [[0, 0]]);
-    const ds = freshDs(s);
-    const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, s, 1, freshUi(s), 0, 0);
-    const fullW = TS * (s.w + 2) + 2 * Math.floor(TS / 2);
-    expect(
-      ops.some(
-        (o) =>
-          o.op === "rect" &&
-          o.color === COL_BACKGROUND &&
-          o.x === 0 &&
-          o.y === 0 &&
-          o.w === fullW,
-      ),
-    ).toBe(true);
-  });
-
   it("draws covered arena cells before reveal", () => {
     const s = makeState(5, 5, [[0, 0]]);
     const ds = freshDs(s);

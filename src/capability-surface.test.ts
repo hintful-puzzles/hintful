@@ -113,10 +113,9 @@ describe("capability surface", () => {
     const has = (f: string) =>
       sets.filter((c) => c.drawState.includes(f)).map((c) => c.id);
     expect(has("pencilModeShown").length).toBeGreaterThan(5);
-    // `started` is the redraw doctrine's own "have I painted the ground yet"
-    // flag, so nearly every game carries it; a probe returning empty sets
-    // could not clear this.
-    expect(has("started").length).toBeGreaterThan(50);
+    // Every draw state carries `tileSize`, because `newDrawState` is handed
+    // one to keep; a probe returning empty sets could not clear this.
+    expect(has("tileSize").length).toBeGreaterThan(50);
   });
 
   it("matches the recorded capability surface", () => {

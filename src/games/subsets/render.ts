@@ -279,9 +279,6 @@ export function redraw(
     ds.tallyLook[ui.tallyCursor] |= TALLY_CURSOR;
 
   if (firstDraw) {
-    const all = { x: 0, y: 0, ...computeSize({ w, h }, ts) };
-    dr.drawRect(all, COL_OUTERBG);
-    dr.drawUpdate(all);
     // Gray backing behind each cell block; the slot squares drawn one pixel
     // smaller leave it showing as the inner grid lines.
     for (let y = 0; y < h; y++) {

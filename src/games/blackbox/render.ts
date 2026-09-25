@@ -319,10 +319,6 @@ export function redraw(
   }
 
   if (!ds.started) {
-    const { w: fullW, h: fullH } = computeSize(state, ts);
-    // The engine emits no pixels of its own: fill the background.
-    dr.drawRect(rect(0, 0, fullW, fullH), COL_BACKGROUND);
-
     const x0 = todraw(ds, 0) - 1;
     const y0 = todraw(ds, 0) - 1;
     const x1 = todraw(ds, state.w + 2);
@@ -342,7 +338,6 @@ export function redraw(
     dr.drawLine(pt(x0, y1 - ts), pt(x0, y0 + ts), COL_HIGHLIGHT, 1);
     dr.drawLine(pt(x0, y0 + ts), pt(x0 + ts, y0 + ts), COL_HIGHLIGHT, 1);
 
-    dr.drawUpdate(rect(0, 0, fullW, fullH));
     force = true;
     ds.started = true;
   }

@@ -136,7 +136,6 @@ export function computeSize(p: DominosaShape, ts: number): Size {
 // --- draw state -------------------------------------------------------------
 
 export interface DominosaDrawState {
-  started: boolean;
   tileSize: number;
   w: number;
   h: number;
@@ -152,7 +151,6 @@ export function newDrawState(
   tileSize: number,
 ): DominosaDrawState {
   return {
-    started: false,
     tileSize,
     w: state.w,
     h: state.h,
@@ -341,13 +339,6 @@ export function redraw(
     for (const t of hl.targets) hintTargets.add(t);
     for (const e of hl.evidence) hintEvidence.add(e);
     if (hl.edge) hintEdge = hl.edge;
-  }
-
-  if (!ds.started) {
-    const size = computeSize(state.params, ts);
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
-    dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
-    ds.started = true;
   }
 
   // Count domino-value occurrences (capped at 2) so a value placed twice

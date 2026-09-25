@@ -503,13 +503,6 @@ export function redraw(
   const full = !ds.started;
   const flash = flashTime > 0 ? ((flashTime / FLASH_FRAME) | 0) % 2 === 1 : false;
 
-  if (full) {
-    // The engine paints no pixels of its own (docs/games/rendering.md § "The rendering doctrine").
-    const size = computeSize(p, ts);
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
-    dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
-  }
-
   // The validation family writes its verdicts into caller-supplied arrays and
   // takes a mutable `BoatsBoard`, so give it a scratch copy rather than the
   // immutable state. (No `adjustShips` is needed here: `executeMove` already

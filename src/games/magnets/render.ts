@@ -435,12 +435,9 @@ export function redraw(
   const flash = Math.floor((flashTime * 5) / FLASH_TIME) % 2 !== 0;
 
   if (!ds.started) {
-    const size = computeSize(state, ts);
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
     // Corner +/− symbols.
     drawSym(dr, ts, -1, -1, POSITIVE, COL_TEXT);
     drawSym(dr, ts, w, h, NEGATIVE, COL_TEXT);
-    dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
   }
 
   const mistakeSet = new Set<number>();

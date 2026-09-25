@@ -560,12 +560,9 @@ export function redraw(
 ): void {
   const ts = ds.tileSize;
   const o = state.order;
-  const total = drawSize(o, ts);
 
   if (!ds.started) {
-    dr.drawRect({ x: 0, y: 0, w: total, h: total }, COL_BACKGROUND);
-    dr.drawUpdate({ x: 0, y: 0, w: total, h: total });
-    ds.marks.reset(); // that fill just erased every gap
+    ds.marks.reset(); // the midend's ground just erased every gap
   }
 
   const hflash =

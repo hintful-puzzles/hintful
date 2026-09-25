@@ -343,10 +343,6 @@ export function redraw(
   }
 
   if (!ds.started) {
-    // The whole canvas, indicator margin included, so nothing is left unpainted.
-    const { w: fullW, h: fullH } = computeSize({ w, h, diff: 0 }, ts);
-    dr.drawRect({ x: 0, y: 0, w: fullW, h: fullH }, COL_BACKGROUND);
-    dr.drawUpdate({ x: 0, y: 0, w: fullW, h: fullH });
     // The grid: every square's own rect is inset into this, so what survives
     // is the outline.
     dr.drawRect(

@@ -12,7 +12,6 @@ import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { guessGame } from "./index.ts";
 import {
   COL_1,
-  COL_BACKGROUND,
   COL_CORRECTPLACE,
   COL_HOLD,
   type GuessDrawState,
@@ -41,19 +40,6 @@ function freshUi(state = newState(params, "01020304")): GuessUi {
 }
 
 describe("Guess redraw", () => {
-  it("fills the background on first draw", () => {
-    const s = newState(params, "01020304");
-    const ds = freshDs();
-    const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, s, 1, freshUi(s), 0, 0);
-    expect(
-      ops.some(
-        (o) =>
-          o.op === "rect" && o.color === COL_BACKGROUND && o.w === ds.w && o.h === ds.h,
-      ),
-    ).toBe(true);
-  });
-
   it("draws a correct-place feedback marker after a scored guess", () => {
     const { desc } = newDesc(params, randomNew("render-fb"));
     const s0 = newState(params, desc);

@@ -160,10 +160,9 @@ its shortest path (upstream's `movedot_cb`).
 Completion SHALL trigger a flash. The game SHALL provide a statusbar
 string reporting move count, completion state, and current-puzzle
 difficulty when known, and a plain-text format of the board. Colors
-SHALL be derived from the supplied default background; the engine
-SHALL emit no pixels of its own — the Galaxies `redraw` owns its
-background fill in the `!ds.started` branch (per the
-`fix-flip-canvas-reshape` doctrine).
+SHALL be derived from the supplied default background; the Galaxies
+`redraw` SHALL paint its outer border in the `!ds.started` branch, over
+the ground the midend lays.
 
 An in-progress association drag SHALL preview **discretely**: the
 pointer's snapped drop-target tile and its 180° partner about the

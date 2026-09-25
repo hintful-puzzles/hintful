@@ -168,7 +168,8 @@ export interface EngineCore {
   /** Drop the drawstate and redraw. The worker adapter calls this when the
    * palette or font is replaced: neither clears the canvas, but both
    * invalidate the colors and fonts baked into cached tiles. The game's
-   * `!ds.started` branch repaints from scratch, background included. */
+   * `!ds.started` branch repaints from scratch, over the ground `redraw`
+   * lays first. */
   forceRedraw(dr: GameDrawing): void;
   delete(): void;
 }
@@ -218,6 +219,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   private pos = 0;
   private ui!: Ui;
   private drawState: DrawState | null = null;
+  /** Set by `freshDrawState` alone, so `size()` at an unchanged tile size
+   * never arms it: the next `redraw` lays the ground first. */
+  private groundPending = false;
   private currentTileSize: number;
   private cheated = false;
   /** Last-applied user preference values, keyed by pref `kw`. Retained
@@ -509,6 +513,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   }
 
   private freshDrawState(s: State): DrawState {
+    this.groundPending = true;
     return this.game.newDrawState(s, this.currentTileSize);
   }
 
@@ -1488,10 +1493,18 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
 
   redraw(dr: GameDrawing): void {
     if (this.drawState === null) return; // no board yet
-    // The engine paints no pixels of its own. A cleared canvas or a replaced
-    // palette reaches the game as a fresh drawstate (`canvasCleared`,
-    // `forceRedraw`), whose `!ds.started` branch repaints everything.
     dr.startDraw();
+    // The ground. A fresh drawstate means the canvas was cleared (to opaque
+    // black), the palette replaced or the tile size changed, so the game is
+    // about to repaint everything and color 0 belongs under all of it. No game
+    // has a reason to leave a pixel of its canvas bare; one whose ground is
+    // another color paints it over this in its first-frame branch.
+    if (this.groundPending) {
+      this.groundPending = false;
+      const { w, h } = this.game.computeSize(this.boardParams, this.currentTileSize);
+      dr.drawRect({ x: 0, y: 0, w, h }, 0);
+      dr.drawUpdate({ x: 0, y: 0, w, h });
+    }
     this.game.redraw(
       dr,
       this.drawState,

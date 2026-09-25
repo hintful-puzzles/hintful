@@ -74,7 +74,6 @@ const DRAWFLAG_MARGIN_D = 0x2000;
 const DRAWFLAG_MISTAKE = 0x4000;
 
 export interface MosaicDrawState {
-  started: boolean;
   tileSize: number;
   /** (width+1)×(height+1) cache of last-drawn packed cell values; -1
    * forces a draw (docs/games/rendering.md § "The tile cache and the diff
@@ -84,7 +83,6 @@ export interface MosaicDrawState {
 
 export function newDrawState(state: MosaicState, tileSize: number): MosaicDrawState {
   return {
-    started: false,
     tileSize,
     cache: new Int32Array((state.width + 1) * (state.height + 1)).fill(-1),
   };
@@ -184,13 +182,6 @@ export function redraw(
 ): void {
   const ts = ds.tileSize;
   const { width, height, board, cells } = state;
-
-  if (!ds.started) {
-    // The engine paints no pixels of its own; fill our own background.
-    const size = computeSize({ width, height, aggressive: true }, ts);
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
-    ds.started = true;
-  }
 
   // The flash inverts marked/blank during its first and last thirds.
   const flashing =

@@ -443,10 +443,7 @@ export function redraw(
   const ts = ds.tileSize;
 
   if (!ds.started) {
-    // The engine emits no pixels of its own — fill the whole canvas, then the
-    // grid rectangle (COL_GRID) the cells sit on top of.
-    const total = sizePx(w, ts);
-    dr.drawRect({ x: 0, y: 0, w: total, h: total }, COL_BACKGROUND);
+    // The grid rectangle (COL_GRID) the cells sit on top of.
     const ge = gridextra(ts);
     dr.drawRect(
       {
@@ -457,7 +454,6 @@ export function redraw(
       },
       COL_GRID,
     );
-    dr.drawUpdate({ x: 0, y: 0, w: total, h: total });
     ds.marks.reset(); // the backing rect just erased every gutter
     ds.started = true;
   }

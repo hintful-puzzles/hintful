@@ -159,8 +159,8 @@ bits) diffed against the previous frame, with every overlay rebuilt each
 frame so it is in the diff key. The drag sprite SHALL use a blitter
 (save-restore under the moving arrow), as the Pegs port does. The win-flash
 SHALL spin the arrows, honoring the `flash-type` preference (unidirectional
-vs meshing gears). The engine SHALL paint no pixels of its own; the
-first-draw branch fills the background.
+vs meshing gears). The first-draw branch SHALL paint the grid frame over
+the ground the midend lays.
 
 #### Scenario: Region colors repaint after linking
 

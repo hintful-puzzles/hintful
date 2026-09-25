@@ -436,12 +436,9 @@ export function redraw(
   const ts = ds.tileSize;
   const w = state.params.w;
   const ge = gridExtra(ts);
-  const size = computeSize({ w }, ts);
 
   if (!ds.started) {
-    // Engine paints no pixels of its own — fill the whole canvas, then the grid
-    // backing rectangle the thin lines show through.
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
+    // The grid backing rectangle the thin lines show through.
     dr.drawRect(
       {
         x: coord(0, ts) - ge,
@@ -451,7 +448,6 @@ export function redraw(
       },
       COL_GRID,
     );
-    dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
     ds.marks.reset(); // the backing rect just erased every gutter
     ds.started = true;
   }

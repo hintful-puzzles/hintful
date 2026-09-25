@@ -87,12 +87,6 @@ export function redraw(
   const b = border(tile);
 
   if (!ds.started) {
-    // A fresh draw state (first paint, resize, palette change) clears the whole
-    // window: the engine paints nothing of its own, so that it never overpaints
-    // cached tiles. Upstream's midend.c drew this first rect itself.
-    const winW = tile * w + 2 * b;
-    const winH = tile * h + 2 * b;
-    dr.drawRect({ x: 0, y: 0, w: winW, h: winH }, COL_BACKGROUND);
     for (let i = 0; i <= w; i++) {
       dr.drawLine(
         { x: i * tile + b, y: b },
@@ -109,7 +103,6 @@ export function redraw(
         1,
       );
     }
-    dr.drawUpdate({ x: 0, y: 0, w: winW, h: winH });
     ds.started = true;
   }
 

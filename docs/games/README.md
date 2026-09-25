@@ -156,7 +156,8 @@ A game (or a change to one) is done when **all** of these hold:
 - [ ] Idiomatic TS, not a transliteration
       ([`mechanics.md`](./mechanics.md) § "Idiomatic state, not a C transliteration").
 - [ ] Render cache keyed on `Int32Array`; every overlay in the diff key; the
-      engine paints no pixels of its own ([`rendering.md`](./rendering.md)).
+      the first frame paints over the midend's color-0 ground and never
+      repeats it ([`rendering.md`](./rendering.md)).
 - [ ] Config-summary header renders; preferences go through the `prefs` hook;
       a custom-params form is wired ([`mechanics.md`](./mechanics.md)).
 - [ ] A uniquely-solvable game ships `findMistakes` — Check & Save depends on

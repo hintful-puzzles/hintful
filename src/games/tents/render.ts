@@ -374,8 +374,6 @@ export function redraw(
   const { w, h, grid, numbers } = state;
 
   if (!ds.started) {
-    const size = computeSize({ w, h, diff: 0 }, ts);
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
     // The grid lines.
     for (let y = 0; y <= h; y++) {
       dr.drawLine(
@@ -393,7 +391,6 @@ export function redraw(
         1,
       );
     }
-    dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
     ds.started = true;
   }
 

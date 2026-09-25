@@ -681,13 +681,10 @@ export function redraw(
   const hatchedRow = new Set(hintRows);
 
   if (!ds.started) {
-    // The engine paints no pixels of its own: fill the background here.
-    dr.drawRect(rect(0, 0, ds.w, ds.h), COL_BACKGROUND);
     dr.drawRect(
       rect(SOLN_OX(ds), SOLN_OY(ds) - ds.gapsz - 1, SOLN_W(ds), 2),
       COL_FRAME,
     );
-    dr.drawUpdate(rect(0, 0, ds.w, ds.h));
   }
 
   // Past guesses + their hints (reverse order so the circular cursor on

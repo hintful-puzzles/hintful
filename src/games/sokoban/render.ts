@@ -2,8 +2,7 @@
  * Sokoban rendering (upstream `game_colours` / `game_redraw` / `draw_tile`):
  * a per-tile `Int32Array` cache (the cell char plus a flash-highlight bit), grid
  * lines drawn once, walls with a bevel, targets / pits / deep pits / player /
- * barrels as discs, and capital-letter barrel labels. The engine paints no
- * pixels of its own, so Sokoban fills its own background on the first draw.
+ * barrels as discs, and capital-letter barrel labels.
  *
  * There is no border (upstream's is a tile wide): the board is
  * `w * tileSize + 1` wide, the 1 for the closing grid line.
@@ -180,8 +179,6 @@ export function redraw(
   const { w, h } = state;
 
   if (!ds.started) {
-    const size = computeSize({ w, h }, ts);
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
     for (let y = 0; y <= h; y++)
       dr.drawLine({ x: 0, y: y * ts }, { x: w * ts, y: y * ts }, COL_GRID, 1);
     for (let x = 0; x <= w; x++)

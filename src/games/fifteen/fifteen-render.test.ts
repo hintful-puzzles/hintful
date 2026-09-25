@@ -40,15 +40,13 @@ function freshDs(state: FifteenState) {
 }
 
 describe("Fifteen rendering", () => {
-  it("first draw paints a background, the recessed border, and numbered tiles", () => {
+  it("first draw paints the recessed border and numbered tiles", () => {
     const state = solved(4, 4);
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
 
     redraw(dr, ds, null, state, 0, UI, 0, 0);
 
-    // A background rect at the origin covering the whole canvas.
-    expect(ops.some((o) => o.op === "rect" && o.x === 0 && o.y === 0)).toBe(true);
     // The two recessed-border bevels are drawn (highlight=2, lowlight=3)
     // before any tiles.
     const firstPolys = opsOfKind(ops, "polygon").slice(0, 2);

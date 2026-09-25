@@ -47,15 +47,13 @@ function solved3x3(): TwiddleState {
 }
 
 describe("Twiddle rendering", () => {
-  it("first draw paints a background, the recessed border, and numbered tiles", () => {
+  it("first draw paints the recessed border and numbered tiles", () => {
     const state = solved3x3();
     const ds = fresh(state);
     const { dr, ops } = recordingDrawing();
 
     redraw(dr, ds, null, state, 0, UI, 0, 0);
 
-    // Background rect at the origin.
-    expect(ops.some((o) => o.op === "rect" && o.x === 0 && o.y === 0)).toBe(true);
     // The two recessed-border bevels (highlight then lowlight) before tiles.
     const firstPolys = opsOfKind(ops, "polygon").slice(0, 2);
     expect(firstPolys.map((o) => o.fill)).toEqual([COL_HIGHLIGHT, COL_LOWLIGHT]);

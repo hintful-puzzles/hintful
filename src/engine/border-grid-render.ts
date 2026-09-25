@@ -217,7 +217,8 @@ function edgeColor(flags: number, dir: number, colors: BorderGridColors): number
   return colors.lineMaybe;
 }
 
-/** The board background and the grid's dots, drawn once on the first frame. */
+/** The grid's dots, drawn once on the first frame over the ground the midend
+ * lays in color 0. */
 export function drawBorderGridBackground(
   dr: GameDrawing,
   ts: number,
@@ -225,8 +226,6 @@ export function drawBorderGridBackground(
   h: number,
   colors: BorderGridColors,
 ): void {
-  const size = borderGridSize(w, h, ts);
-  dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, colors.background);
   const tw = tileWidth(ts);
   for (let r = 0; r <= h; r++) {
     for (let c = 0; c <= w; c++) {
@@ -236,7 +235,6 @@ export function drawBorderGridBackground(
       );
     }
   }
-  dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
 }
 
 /**

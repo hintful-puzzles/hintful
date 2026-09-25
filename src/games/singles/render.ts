@@ -269,8 +269,6 @@ export function redraw(
   const mistakeSet = new Set(mistakes?.map((m) => m.y * w + m.x));
 
   if (!ds.started) {
-    const size = computeSize({ w, h }, ts);
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
     // The outer grid frame (one pixel outside the tile grid).
     drawRectOutline(
       dr,
@@ -280,7 +278,6 @@ export function redraw(
       ts * h + 2,
       COL_GRID,
     );
-    dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
   }
 
   const flash = flashTime > 0 && Math.floor((flashTime * 5) / FLASH_TIME) % 2 === 1;

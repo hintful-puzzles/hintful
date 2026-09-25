@@ -428,18 +428,14 @@ export function redraw(
 ): void {
   const ts = ds.tileSize;
   const o = state.params.o;
-  const size = computeSize({ o }, ts);
   const firstFrame = !ds.started;
 
   if (firstFrame) {
-    // The engine paints no pixels of its own (docs/games/rendering.md § "The rendering doctrine") — the game fills
-    // its whole canvas, then the black rectangle the cell outlines sit on.
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
+    // The black rectangle the cell outlines sit on.
     dr.drawRect(
       { x: origin(ts), y: origin(ts) - 1, w: o * ts + 1, h: o * ts + 1 },
       COL_BORDER,
     );
-    dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
     ds.started = true;
   }
 

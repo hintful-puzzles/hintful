@@ -267,10 +267,7 @@ export function redrawFilling(
   const bw = borderWidth(ts);
 
   if (!ds.started) {
-    // The engine paints no pixels of its own: fill the background, then the
-    // black grid frame the cells draw on top of.
-    const size = computeSize(w, h, ts);
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
+    // The black grid frame the cells draw on top of.
     dr.drawRect(
       {
         x: border(ts) - bw,
@@ -280,7 +277,6 @@ export function redrawFilling(
       },
       COL_GRID,
     );
-    dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
     ds.started = true;
   }
 

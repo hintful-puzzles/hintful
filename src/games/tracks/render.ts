@@ -739,9 +739,6 @@ export function redraw(
   const hintedClues = new Set(step?.highlights?.clues ?? []);
 
   if (!ds.started) {
-    // The engine paints no pixels of its own: fill the whole background.
-    const size = computeSize(state, ds.tileSize);
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
     drawLoopEnds(dr, m, state, COL_CLUE);
     dr.drawRect(
       {
@@ -752,7 +749,6 @@ export function redraw(
       },
       COL_GRID,
     );
-    dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
     ds.started = true;
     force = true;
   }

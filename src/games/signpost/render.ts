@@ -374,11 +374,8 @@ export function redrawSignpost(
   if (!ds.started) {
     const aw = ts * state.w;
     const ah = ts * state.h;
-    // Engine paints nothing: fill the background ourselves, then the grid
-    // frame (upstream `game_redraw` first-draw block).
-    dr.drawRect({ x: 0, y: 0, w: aw + 2 * BORDER, h: ah + 2 * BORDER }, COL_BACKGROUND);
+    // The grid frame (upstream `game_redraw` first-draw block).
     drawRectOutline(dr, BORDER - 1, BORDER - 1, aw + 2, ah + 2, COL_GRID);
-    dr.drawUpdate({ x: 0, y: 0, w: aw + 2 * BORDER, h: ah + 2 * BORDER });
   }
 
   const mistakeSet = mistakes?.length ? new Set(mistakes.map((m) => m.index)) : null;

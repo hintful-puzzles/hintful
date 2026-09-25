@@ -344,12 +344,7 @@ export function redraw(
   }
 
   if (!ds.started) {
-    // The engine paints no pixels of its own: fill the whole background, then
-    // rule the grid.
-    const size = computeSize(s.params, ts);
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
-    dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
-
+    // Rule the grid.
     for (let y = 0; y <= h; y++) {
       dr.drawLine(
         { x: coord(0, ts), y: coord(y, ts) },

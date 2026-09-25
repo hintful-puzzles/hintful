@@ -12,6 +12,15 @@ exports[`Loopy hint frames > draws the pair a step places in the action color, a
     "y": 0,
   },
   {
+    "color": 0,
+    "h": 273,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 273,
+    "x": 0,
+    "y": 0,
+  },
+  {
     "color": 9,
     "op": "line",
     "rgb": "rgb(14, 88, 91)",

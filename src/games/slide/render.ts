@@ -251,7 +251,6 @@ const hasAll = (val: number, mask: number): boolean => (val & mask) === mask;
 // --- draw state -------------------------------------------------------
 
 export interface SlideDrawState {
-  started: boolean;
   tileSize: number;
   /** Last-drawn packed value per cell; `-1` forces a repaint. Every overlay
    * (drag, solve highlight, shadow, flash) is part of this one word, so they
@@ -261,7 +260,6 @@ export interface SlideDrawState {
 
 export function newDrawState(state: SlideState, tileSize: number): SlideDrawState {
   return {
-    started: false,
     tileSize,
     grid: new Int32Array(state.w * state.h).fill(-1),
   };
@@ -708,15 +706,6 @@ export function redraw(
 ): void {
   const { w, h } = state;
   const wh = w * h;
-  const ts = ds.tileSize;
-
-  if (!ds.started) {
-    // The engine paints no pixels of its own
-    // (docs/games/rendering.md § "The rendering doctrine").
-    const size = computeSize({ w, h }, ts);
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
-    ds.started = true;
-  }
 
   // The board we display, which is not state's board while a block is held:
   // the held block is drawn where it would land if it were put down now. That

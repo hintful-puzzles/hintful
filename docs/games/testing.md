@@ -130,16 +130,21 @@ evidence that the frame is right. Two habits:
   frame" in its sharpest form, because here the suite cannot in principle tell
   you.
 - **Assert the flood covers the canvas**, not the board, wherever a game paints
-  a ground layer. That *is* expressible as an op assertion — a `rect` at `(0,0)`
-  the size of `computeSize` — and it is the one part of the class a test can
-  hold.
+  a ground layer *of its own* — a whole-board repaint (Cube, Loopy) or a ground
+  in a color other than 0 (Rect, Untangle). That *is* expressible as an op
+  assertion — a `rect` at `(0,0)` the size of `computeSize` — and it is the one
+  part of the class a test can hold.
 
-For the first frame, `src/engine/first-frame-coverage.test.ts` already does
-this for every registered game at its default params. It rasterizes the filled
-ops and fails on any bare pixel. That is how Pegs, Sixteen, Mines and Pearl were
-found shipping black borders (`test-touch-on-a-real-device`). It does not see a
-margin that only a non-default param or a later frame opens up, so the two
-habits above still apply there.
+On the first frame of a fresh draw state the midend lays a color-0 ground over
+the whole of `computeSize` (`docs/games/rendering.md` § "The rendering
+doctrine"), so a grown margin can no longer be left black there; it is still
+worth looking at, because color 0 may not be the color the margin should be.
+`src/engine/first-frame-coverage.test.ts` rasterizes every registered game's
+first frame at its default params, fails on any bare pixel, and requires the
+ground to be the frame's first op. It was written when each game laid its own
+ground, and found Pegs, Sixteen, Mines and Pearl shipping black borders
+(`test-touch-on-a-real-device`). It does not see a margin that only a later
+frame opens up, so the two habits above still apply there.
 
 ## Render-op vocabulary
 

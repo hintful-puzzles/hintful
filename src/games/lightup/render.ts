@@ -307,8 +307,6 @@ export function redraw(
   const flashing = flashTime > 0 && Math.floor((flashTime * 3) / FLASH_TIME) !== 1;
 
   if (!ds.started) {
-    const size = computeSize({ w, h }, ts);
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
     drawRectOutline(
       dr,
       coord(0, ts) - 1,
@@ -317,7 +315,6 @@ export function redraw(
       ts * h + 2,
       COL_GRID,
     );
-    dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
     ds.started = true;
   }
 

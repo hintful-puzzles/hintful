@@ -5,7 +5,9 @@ Cube, the puzzle of rolling a solid across a grid to gather every painted square
 onto its faces in as few moves as possible. This capability specifies its port
 to the TS engine: how a roll turns the solid and exchanges paint with the grid,
 and how the solid and its rolling animation are drawn.
+
 ## Requirements
+
 ### Requirement: Cube game implements the Game interface
 
 The engine SHALL provide a registered `cube` game implementing
@@ -65,8 +67,8 @@ isometric shear and back-face culling, and a roll animation interpolating the
 solid's orientation from the previous square to the current one over the roll
 duration. Cube fully repaints every frame (its scene is a handful of polygons)
 — there is no per-tile cache and **no win flash** (upstream's `flash_length`
-is 0; completion is reported only in the status bar). The engine SHALL emit no
-pixels of its own: cube fills its own background rect each frame.
+is 0; completion is reported only in the status bar). Cube SHALL fill its
+background rect on every frame, which erases the previous one.
 
 #### Scenario: Draw output contains grid squares and the solid
 
@@ -84,4 +86,3 @@ pixels of its own: cube fills its own background rect each frame.
 - **AND** the grid squares and face paint drawn during the animation are the
   pre-move (old) state's, since the roll visibly happens before the paint
   swap settles
-

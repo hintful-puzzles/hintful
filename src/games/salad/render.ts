@@ -202,7 +202,6 @@ export function fromCoord(v: number, ts: number): number {
 // --- draw state ------------------------------------------------------------
 
 export interface SaladDrawState {
-  started: boolean;
   tileSize: number;
   order: number;
   /** `order²` display flags for this frame (upstream `ds->gridfs`). */
@@ -233,7 +232,6 @@ export function newDrawState(s: SaladState, tileSize: number): SaladDrawState {
   const o = s.order;
   const o2 = o * o;
   return {
-    started: false,
     tileSize,
     order: o,
     gridfs: new Int32Array(o2),
@@ -532,12 +530,6 @@ export function redraw(
     cursorShown = false;
   }
 
-  if (!ds.started) {
-    const size = computeSize(s, ts);
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
-    dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
-  }
-
   setDrawFlags(ds, ui, s, cursorShown);
   const flags = ds.gridfs;
   ds.wrong.packCells(mistakes ?? null, (x, y) => y * o + x);
@@ -736,6 +728,4 @@ export function redraw(
     pencilIndicatorBox(computeSize(s, ts), ts),
     PENCIL_STYLE,
   );
-
-  ds.started = true;
 }

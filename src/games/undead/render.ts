@@ -726,10 +726,6 @@ export function redraw(
   const hflash = Math.trunc((flashTime * 5) / FLASH_TIME) % 2 !== 0;
 
   if (!ds.started) {
-    // The canvas, not the board: `computeSize` grows a right margin for the
-    // pencil indicator, and a fill sized from the board would leave it bare.
-    const { w: fullW, h: fullH } = computeSize({ w, h }, ts);
-    dr.drawRect({ x: 0, y: 0, w: fullW, h: fullH }, COL_BACKGROUND);
     dr.drawRect(
       { x: b + ts - 1, y: b + 2 * ts - 1, w: w * ts + 3, h: h * ts + 3 },
       COL_GRID,
@@ -742,7 +738,6 @@ export function redraw(
         );
       }
     }
-    dr.drawUpdate({ x: 0, y: 0, w: fullW, h: fullH });
     ds.marks.reset(); // the backing rect just erased every grid line
   }
 

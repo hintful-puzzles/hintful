@@ -1,15 +1,16 @@
 /**
  * Every game's first frame paints every pixel of its canvas.
  *
- * The engine paints no pixels of its own, and the frontend's canvas is opaque
- * (`alpha: false`), so it starts black: any pixel a game's `!ds.started`
- * branch leaves bare shows as black on the player's screen. Pegs and Sixteen
- * shipped that way for months, framed in a black square in light mode, and
- * Mines and Pearl left a thin black ring — all with every snapshot green,
- * because a snapshot records what a frame drew and cannot see what it did not
- * (docs/games/testing.md § "A snapshot cannot see a hole").
+ * The frontend's canvas is opaque (`alpha: false`), so it starts black: any
+ * pixel a first frame leaves bare shows as black on the player's screen. Pegs
+ * and Sixteen shipped that way for months, framed in a black square in light
+ * mode, and Mines and Pearl left a thin black ring — all with every snapshot
+ * green, because a snapshot records what a frame drew and cannot see what it
+ * did not (docs/games/testing.md § "A snapshot cannot see a hole"). The midend
+ * now lays a color-0 ground under every first frame, so what this holds is that
+ * ground: present, first, and the size of the canvas the game was given.
  *
- * So this rasterizes the first frame's filled shapes — rects, lines, filled
+ * It rasterizes the first frame's filled shapes — rects, lines, filled
  * polygons and circles — and counts the canvas pixels none of them touched.
  * The raster is coarse (no antialiasing, integer-rounded ops), which errs
  * toward calling a pixel painted; a hole it reports is a real one.
@@ -92,5 +93,13 @@ describe("first-frame coverage", () => {
     const params = game.encodeParams(game.defaultParams(), true);
     const { recording, size } = renderScenario({ game, id: `${params}#coverage` });
     expect(unpaintedPixels(recording.ops, size.w, size.h)).toBe(0);
+    // Under everything the game drew, not over it.
+    expect(recording.ops[0]).toMatchObject({
+      op: "rect",
+      x: 0,
+      y: 0,
+      ...size,
+      color: 0,
+    });
   });
 });

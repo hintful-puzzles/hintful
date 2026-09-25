@@ -10,29 +10,41 @@ palette. This is one file of the [`docs/games/`](./README.md) set; input
 Authoritative specs:
 [`ts-engine`](../../openspec/specs/ts-engine/spec.md) (the `GameDrawing`
 contract; the repaint/animation requirement, which also owns the
-no-pixels/`canvasCleared` doctrine) ·
+ground/`canvasCleared` doctrine) ·
 [`repo-layout`](../../openspec/specs/repo-layout/spec.md) (in-process render
 verification). Exemplar to read end-to-end:
 [`galaxies/render.ts`](../../src/games/galaxies/render.ts).
 
 ## The rendering doctrine
 
-**The engine paints no pixels of its own.** Every visible pixel comes from a
-game's `redraw`; each game fills its own background in its `!ds.started`
-branch. **`Midend.size` touches nothing at an unchanged tile size**, and **a
-fresh draw state is the only cache-stale signal** — `size()` builds one when
-the tile size changes, the worker adapter calls `canvasCleared()` when the
-canvas backing store is genuinely recreated, and nothing else may invalidate a
-draw state. The midend repaints on every transition and drives the
-animation/flash timer; a game never schedules its own frames.
+**The engine lays the ground; the game paints everything above it.** On the
+first redraw of a fresh draw state the midend fills the whole canvas
+(`computeSize` at the current tile size) in color 0, before `game.redraw`
+runs; on every other redraw it paints nothing. So a game's first-frame branch
+draws only what is its own — grid frame, border, fixed artwork — and never
+repeats the color-0 fill. A game whose ground is another color paints that
+fill itself on its first frame, over the midend's (Rect, Untangle). A game
+that repaints its whole board every frame (Cube, Loopy) keeps its own fill,
+because it is erasing the last frame, not laying the ground.
+**`Midend.size` touches nothing at an unchanged tile size**, and **a fresh
+draw state is the only cache-stale signal** — `size()` builds one when the
+tile size changes, the worker adapter calls `canvasCleared()` when the canvas
+backing store is genuinely recreated, `forceRedraw` builds one when the palette
+or font is replaced, and nothing else may invalidate a draw state. The midend
+repaints on every transition and drives the animation/flash timer; a game
+never schedules its own frames.
 
-These four sentences are the survivors of Flip's three-iteration rendering
-story (`AGENTS.md`, "First game port"): mirroring `midend.c`'s
-`first_draw`/recreate-drawstate-in-`size()` too literally caused
-ResizeController-driven cache wipes, and an unconditionally-accumulated
-`flashTime` fired the solve celebration on every animated move. The owning
-requirement is `ts-engine` § "The midend repaints on every transition and
-drives animation" — link it, don't restate it.
+Upstream's midend laid the ground too (`first_draw` in `midend_redraw`). The
+port once withdrew it, because it was armed from every `size()` call and the
+frontend calls `size()` on every layout tick, so the board flickered. It came
+back once a fresh draw state could arise only from a real clear, a new palette
+or a new tile size, each of which repaints everything anyway; four games had
+meanwhile shipped a first frame with bare black pixels, which is what a fill
+every game must remember to write gets you. `first-frame-coverage.test.ts`
+rasterizes every game's first frame and holds it to full coverage. The owning
+requirement is `ts-engine` § "The midend repaints on every transition, rebuilds
+the draw state for a new tile size, and lays the ground under a fresh one" —
+link it, don't restate it.
 
 **Full-vs-incremental redraw is the game's own policy.** The engine imposes
 neither; upstream didn't either. In practice every game with per-cell state
@@ -564,8 +576,8 @@ input is reachable in play. Exemplar:
 ui)` return durations; the midend runs the timer and calls `redraw` with
 `animTime`/`flashTime`; the game interpolates. A non-animated transition
 paints once; animation frames — including the first — are driven by the
-timer (`ts-engine` § "The midend repaints on every transition and drives
-animation").
+timer (`ts-engine` § "The midend repaints on every transition, rebuilds the
+draw state for a new tile size, and lays the ground under a fresh one").
 
 **Most win flashes are one shared line.**
 [`flash.ts`](../../src/engine/flash.ts) (`winFlash`) encodes the convention

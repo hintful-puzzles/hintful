@@ -105,10 +105,10 @@ describe("Loopy render scenarios: every tiling draws its whole grid", () => {
       const { recording, size } = renderScenario({ game: loopyGame, id });
       const ops = recording.ops;
 
-      // The game paints its own background first; the engine emits no pixels
-      // of its own, so a missing opener rect means the board is drawn over
-      // whatever was there before.
+      // The midend's ground, then Loopy's own fill: Loopy repaints every frame
+      // whole, so without it a later frame is drawn over the one before.
       expect(ops[0]).toMatchObject({ op: "rect", x: 0, y: 0, color: COL_BACKGROUND });
+      expect(ops[1]).toMatchObject({ op: "rect", x: 0, y: 0, color: COL_BACKGROUND });
 
       // Nothing may be dropped or duplicated in the translation from grid to
       // screen: one dot is one circle, one edge is one line. A tiling whose

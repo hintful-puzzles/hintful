@@ -383,13 +383,10 @@ export function redraw(
 ): void {
   const ts = ds.tileSize;
   const { w, h } = state;
-  const size = computeSize(state.params, ts);
   const firstFrame = !ds.started;
 
   if (firstFrame) {
-    // The engine paints no pixels of its own (docs/games/rendering.md § "The rendering doctrine"): fill the whole
-    // canvas, then lay down the black rectangle the region walls show through.
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
+    // The black rectangle the region walls show through.
     dr.drawRect(
       {
         x: origin(ts) - GRIDEXTRA * 2,
@@ -399,7 +396,6 @@ export function redraw(
       },
       COL_BORDER,
     );
-    dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
     ds.started = true;
   }
 

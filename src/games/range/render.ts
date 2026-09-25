@@ -117,7 +117,6 @@ const HINT_FLAG = { none: 0, target: 1 << 20, area: 1 << 22, blackRef: 1 << 23 }
 type HintKind = keyof typeof HINT_FLAG;
 
 export interface RangeDrawState {
-  started: boolean;
   tileSize: number;
   w: number;
   h: number;
@@ -126,7 +125,6 @@ export interface RangeDrawState {
 
 export function newDrawState(state: RangeState, tileSize: number): RangeDrawState {
   return {
-    started: false,
     tileSize,
     w: state.w,
     h: state.h,
@@ -245,12 +243,6 @@ export function redraw(
 ): void {
   const ts = ds.tileSize;
   const { w, h, grid } = state;
-
-  if (!ds.started) {
-    const size = computeSize({ w, h }, ts);
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
-    ds.started = true;
-  }
 
   // Whole-board flash pulse: lowlight every non-black cell on alternate
   // beats of the flash.

@@ -282,10 +282,6 @@ export function redraw(
   }
 
   if (!ds.started) {
-    // The engine paints no pixels of its own, and the canvas starts opaque
-    // black; the recessed frame below stops short of the canvas edge.
-    dr.drawRect({ x: 0, y: 0, ...computeSize(s, ts) }, COL_BACKGROUND);
-
     // Recessed area framing the whole puzzle.
     const ohw = Math.max(border - 1, 1); // upstream's OUTER_HIGHLIGHT_WIDTH
     drawRecessedBorder(

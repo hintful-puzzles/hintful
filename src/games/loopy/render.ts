@@ -578,9 +578,7 @@ export function redraw(
   const w = board.w;
   const h = board.h;
 
-  // The game paints its own background; the engine emits no pixels of its own.
-  // Every frame is a full repaint, so this both establishes the background on
-  // the first draw and erases the previous frame on every later one.
+  // Every frame is a full repaint, so this erases the previous frame.
   dr.drawRect({ x: 0, y: 0, w, h }, COL_BACKGROUND);
 
   // The keyboard cursor, drawn from grid geometry like everything else, so it

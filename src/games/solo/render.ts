@@ -537,12 +537,9 @@ export function redraw(
   const cr = state.cr;
   const ge = gridExtra(ts);
   const b = border(ts);
-  const size = computeSize(cr, ts);
 
   if (!ds.started) {
-    // Engine paints no pixels of its own — fill the whole canvas, then the grid
-    // backing rectangle the thin lines show through.
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
+    // The grid backing rectangle the thin lines show through.
     dr.drawRect(
       {
         x: b - ge,
@@ -552,7 +549,6 @@ export function redraw(
       },
       COL_GRID,
     );
-    dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
     ds.marks.reset(); // the backing rect just erased every gutter
     ds.started = true;
   }

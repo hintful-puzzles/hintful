@@ -3,6 +3,15 @@
 exports[`Untangle render scenarios > hint frame: a COL_HINT line + destination marker are drawn 1`] = `
 [
   {
+    "color": 0,
+    "h": 320,
+    "op": "rect",
+    "rgb": "rgb(168, 168, 168)",
+    "w": 320,
+    "x": 0,
+    "y": 0,
+  },
+  {
     "color": 1,
     "h": 320,
     "op": "rect",
@@ -670,6 +679,15 @@ exports[`Untangle render scenarios > mid-drag frame: the grabbed vertex renders 
 
 exports[`Untangle render scenarios > opener frame: edges, crossed-edge red, and all vertices drawn 1`] = `
 [
+  {
+    "color": 0,
+    "h": 320,
+    "op": "rect",
+    "rgb": "rgb(168, 168, 168)",
+    "w": 320,
+    "x": 0,
+    "y": 0,
+  },
   {
     "color": 1,
     "h": 320,

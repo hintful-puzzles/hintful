@@ -146,7 +146,6 @@ export function toCoord(v: number, ts: number): number {
 // --- draw state -------------------------------------------------------------
 
 export interface SpokesDrawState {
-  started: boolean;
   tileSize: number;
   w: number;
   h: number;
@@ -194,7 +193,6 @@ export function newDrawState(state: SpokesState, tileSize: number): SpokesDrawSt
   const n = state.w * state.h;
   const cursorRadius = (tileSize * 0.2) | 0;
   return {
-    started: false,
     tileSize,
     w: state.w,
     h: state.h,
@@ -277,13 +275,6 @@ export function redraw(
     dr.blitterLoad(ds.cursorBlitter, origin);
     dr.drawUpdate({ ...origin, w: ds.cursorSize, h: ds.cursorSize });
     ds.cursorSaved = false;
-  }
-
-  if (!ds.started) {
-    // The engine paints no pixels of its own (docs/games/rendering.md § "The rendering doctrine").
-    dr.drawRect({ x: 0, y: 0, w: w * ts, h: h * ts }, COL_BACKGROUND);
-    dr.drawUpdate({ x: 0, y: 0, w: w * ts, h: h * ts });
-    ds.started = true;
   }
 
   const flash = flashTime > 0 && (Math.floor(flashTime / FLASH_FRAME) & 1) === 1;

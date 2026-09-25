@@ -12,6 +12,15 @@ exports[`Loopy render scenarios: error highlighting > reddens all three YES edge
     "y": 0,
   },
   {
+    "color": 0,
+    "h": 209,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 209,
+    "x": 0,
+    "y": 0,
+  },
+  {
     "align": "center",
     "baseline": "mathematical",
     "color": 1,
@@ -1120,6 +1129,15 @@ exports[`Loopy render scenarios: error highlighting > reddens all three YES edge
 
 exports[`Loopy render scenarios: every tiling draws its whole grid > dodecagonal 1`] = `
 [
+  {
+    "color": 0,
+    "h": 425,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 531,
+    "x": 0,
+    "y": 0,
+  },
   {
     "color": 0,
     "h": 425,
@@ -2922,6 +2940,15 @@ exports[`Loopy render scenarios: every tiling draws its whole grid > dodecagonal
 
 exports[`Loopy render scenarios: every tiling draws its whole grid > great-hexagonal 1`] = `
 [
+  {
+    "color": 0,
+    "h": 505,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 534,
+    "x": 0,
+    "y": 0,
+  },
   {
     "color": 0,
     "h": 505,
@@ -5100,6 +5127,15 @@ exports[`Loopy render scenarios: every tiling draws its whole grid > great-hexag
 
 exports[`Loopy render scenarios: every tiling draws its whole grid > hats 1`] = `
 [
+  {
+    "color": 0,
+    "h": 337,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 385,
+    "x": 0,
+    "y": 0,
+  },
   {
     "color": 0,
     "h": 337,
@@ -7990,6 +8026,15 @@ exports[`Loopy render scenarios: every tiling draws its whole grid > honeycomb 1
     "y": 0,
   },
   {
+    "color": 0,
+    "h": 252,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 219,
+    "x": 0,
+    "y": 0,
+  },
+  {
     "align": "center",
     "baseline": "mathematical",
     "color": 1,
@@ -9812,6 +9857,15 @@ exports[`Loopy render scenarios: every tiling draws its whole grid > penrose-kit
     "y": 0,
   },
   {
+    "color": 0,
+    "h": 241,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 241,
+    "x": 0,
+    "y": 0,
+  },
+  {
     "align": "center",
     "baseline": "mathematical",
     "color": 1,
@@ -10498,6 +10552,15 @@ exports[`Loopy render scenarios: every tiling draws its whole grid > penrose-rho
     "y": 0,
   },
   {
+    "color": 0,
+    "h": 241,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 241,
+    "x": 0,
+    "y": 0,
+  },
+  {
     "align": "center",
     "baseline": "mathematical",
     "color": 1,
@@ -11144,6 +11207,15 @@ exports[`Loopy render scenarios: every tiling draws its whole grid > penrose-rho
 
 exports[`Loopy render scenarios: every tiling draws its whole grid > spectres 1`] = `
 [
+  {
+    "color": 0,
+    "h": 385,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 385,
+    "x": 0,
+    "y": 0,
+  },
   {
     "color": 0,
     "h": 385,
@@ -13754,6 +13826,15 @@ exports[`Loopy render scenarios: every tiling draws its whole grid > squares 1`]
     "y": 0,
   },
   {
+    "color": 0,
+    "h": 209,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 209,
+    "x": 0,
+    "y": 0,
+  },
+  {
     "align": "center",
     "baseline": "mathematical",
     "color": 1,
@@ -14862,6 +14943,15 @@ exports[`Loopy render scenarios: every tiling draws its whole grid > squares 1`]
 
 exports[`Loopy render scenarios: every tiling draws its whole grid > triangular 1`] = `
 [
+  {
+    "color": 0,
+    "h": 280,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 369,
+    "x": 0,
+    "y": 0,
+  },
   {
     "color": 0,
     "h": 280,
@@ -16424,6 +16514,15 @@ exports[`Loopy render scenarios: every tiling draws its whole grid > triangular 
 
 exports[`Loopy render scenarios: line state and preferences > draws a YES edge black, a NO edge faint and the rest unknown 1`] = `
 [
+  {
+    "color": 0,
+    "h": 209,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 209,
+    "x": 0,
+    "y": 0,
+  },
   {
     "color": 0,
     "h": 209,

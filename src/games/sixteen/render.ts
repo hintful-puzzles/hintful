@@ -136,12 +136,6 @@ export function redraw(
   }
 
   if (!ds.started) {
-    // The engine paints no pixels of its own, and the canvas starts opaque
-    // black; the border and arrows below leave the gaps between them bare.
-    dr.drawRect(
-      { x: 0, y: 0, w: ts * state.w + 2 * ts, h: ts * state.h + 2 * ts },
-      COL_BACKGROUND,
-    );
     drawRecessedBorder(dr, state, ts, hw);
     for (let i = 0; i < state.w; i++) {
       drawArrow(dr, ts, coord(i, ts), coord(0, ts), 1, 0, COL_LOWLIGHT);

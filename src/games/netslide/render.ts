@@ -579,13 +579,6 @@ export function redraw(
 
   if (!ds.started) {
     ds.started = true;
-
-    // The engine paints no pixels of its own, so the game fills its own
-    // background (the gutter around the grid is never covered by a tile).
-    const size = computeSize(state, ts);
-    dr.drawRect({ x: 0, y: 0, ...size }, COL_BACKGROUND);
-    dr.drawUpdate({ x: 0, y: 0, ...size });
-
     drawExteriorBarriers(dr, ds, state);
     drawSlideArrows(dr, ds, state);
   }

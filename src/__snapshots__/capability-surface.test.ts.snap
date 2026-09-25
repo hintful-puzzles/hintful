@@ -168,7 +168,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "cache",
-      "started",
       "tileSize",
     ],
     "id": "bricks",
@@ -196,7 +195,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "grid",
       "hint",
       "newgrid",
-      "started",
       "tileSize",
     ],
     "id": "bridges",
@@ -263,7 +261,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "marks",
       "numberState",
       "pencilModeShown",
-      "started",
       "tileSize",
       "tiles",
       "wrong",
@@ -324,7 +321,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "drawState": [
       "h",
       "marks",
-      "started",
       "tileSize",
       "visible",
       "w",
@@ -893,7 +889,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "cache",
-      "started",
       "tileSize",
     ],
     "id": "mosaic",
@@ -919,7 +914,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "h",
-      "started",
       "tileSize",
       "toDraw",
       "visible",
@@ -1103,7 +1097,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "drawState": [
       "cache",
       "h",
-      "started",
       "tileSize",
       "w",
     ],
@@ -1211,7 +1204,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "order",
       "pencilModeShown",
       "rowcount",
-      "started",
       "tileSize",
       "wrong",
     ],
@@ -1441,7 +1433,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "grid",
       "pencilModeShown",
       "sideKeys",
-      "started",
       "tileSize",
       "todraw",
       "todrawSideKeys",
@@ -1472,7 +1463,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "grid",
-      "started",
       "tileSize",
     ],
     "id": "slide",
@@ -1567,7 +1557,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hint",
       "scratch",
       "spokes",
-      "started",
       "tileSize",
       "w",
       "wrong",
@@ -1694,7 +1683,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hint",
       "marks",
       "pencilModeShown",
-      "started",
       "tileSize",
       "tiles",
       "w",

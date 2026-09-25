@@ -5,8 +5,8 @@
  * Port of `game_redraw` in cube.c.
  *
  * Cube fully repaints every frame (a handful of polygons — cheap), so
- * there is no per-tile cache. The engine emits no pixels of its own; the
- * background rect drawn here on every frame is the game's own fill.
+ * there is no per-tile cache, and the background rect drawn here on every
+ * frame erases the last one.
  */
 
 import { BLUE } from "../../engine/color/colors.ts";

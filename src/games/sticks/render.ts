@@ -230,8 +230,6 @@ export function redraw(
   if (!ds.started) {
     const fullW = w * ts + 2 * b;
     const fullH = h * ts + 2 * b;
-    dr.drawRect({ x: 0, y: 0, w: fullW, h: fullH }, COL_BACKGROUND);
-    dr.drawUpdate({ x: 0, y: 0, w: fullW, h: fullH });
     // Outer grid frame (upstream: COORD(0) − tilesize/10 == 0); the per-tile
     // COL_GRID rects draw the interior lines.
     dr.drawRect({ x: 0, y: 0, w: fullW - 1, h: fullH - 1 }, COL_GRID);

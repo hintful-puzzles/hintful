@@ -355,10 +355,7 @@ export function redraw(
     v === ONE ? COL_1 : v === ZERO ? COL_0 : COL_EMPTY;
 
   if (!ds.started) {
-    // The engine paints no pixels of its own: fill the background, then the
-    // outer grid-edge frame.
-    const size = computeSize({ w2, h2, unique: state.unique, diff: 0 }, ts);
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
+    // The outer grid-edge frame.
     const o = outerEdge(ts);
     dr.drawRect(
       {
@@ -369,7 +366,6 @@ export function redraw(
       },
       COL_GRID,
     );
-    dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
     ds.started = true;
   }
 

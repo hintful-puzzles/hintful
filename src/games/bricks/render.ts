@@ -101,7 +101,6 @@ export function offsets(h: number, ts: number): { ox: number; oy: number } {
 // --- draw state -------------------------------------------------------------
 
 export interface BricksDrawState {
-  started: boolean;
   tileSize: number;
   /** Last drawn packed cell value per padded index (`-1` = never drawn). */
   cache: Int32Array;
@@ -109,7 +108,6 @@ export interface BricksDrawState {
 
 export function newDrawState(state: BricksState, tileSize: number): BricksDrawState {
   return {
-    started: false,
     tileSize: evenTs(tileSize),
     cache: new Int32Array(state.w * state.h).fill(-1),
   };
@@ -277,13 +275,6 @@ export function redraw(
   const hl = hint?.highlights;
   const hintTarget = hl?.target ?? -1;
   const hintEvid = hl ? new Set(hl.evidence) : null;
-
-  if (!ds.started) {
-    const { w: fullW, h: fullH } = computeSize({ w: state.pw, h, diff: 0 }, ts);
-    dr.drawRect({ x: 0, y: 0, w: fullW, h: fullH }, COL_MIDLIGHT);
-    dr.drawUpdate({ x: 0, y: 0, w: fullW, h: fullH });
-    ds.started = true;
-  }
 
   const flash = flashTime > 0 && ((flashTime / FLASH_FRAME) | 0) & 1;
 

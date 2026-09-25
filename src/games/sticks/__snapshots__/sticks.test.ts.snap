@@ -4,10 +4,10 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
 [
   {
     "color": 0,
-    "h": 200,
+    "h": 199,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 200,
+    "w": 199,
     "x": 0,
     "y": 0,
   },

@@ -328,10 +328,7 @@ export function redraw(
     hintLine < 0 ? false : hintLine < w ? x === hintLine : y === hintLine - w;
 
   if (!ds.started) {
-    // The engine paints no pixels of its own: fill the background, then the
-    // grid outline frame.
-    const size = computeSize({ w, h }, ts);
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_BACKGROUND);
+    // The grid outline frame.
     dr.drawRect(
       {
         x: toCoord(ts, w, 0) - 1,
@@ -341,7 +338,6 @@ export function redraw(
       },
       COL_GRID,
     );
-    dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
     ds.started = true;
   }
 

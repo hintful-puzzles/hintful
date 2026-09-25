@@ -298,7 +298,6 @@ export interface CrossingHint {
 }
 
 export interface CrossingDrawState {
-  started: boolean;
   tileSize: number;
   /** `w·h` last-drawn packed tile values (-1 = never drawn). */
   tiles: Int32Array;
@@ -324,7 +323,6 @@ export function newDrawState(
 ): CrossingDrawState {
   const { w, h, numbers } = state.puzzle;
   return {
-    started: false,
     tileSize,
     tiles: new Int32Array(w * h).fill(-1),
     wrong: new OverlaySidecar(w * h),
@@ -834,16 +832,6 @@ export function redraw(
   const ts = ds.tileSize;
   const puzzle = state.puzzle;
   const { w, h, walls, numbers, runs } = puzzle;
-
-  // Read before the block below clears it: the pencil indicator repaints at the
-  // end of this frame and needs to know it is the first one.
-  const firstFrame = !ds.started;
-  if (firstFrame) {
-    const size = computeSize(puzzle, ts);
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_OUTERBG);
-    dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
-    ds.started = true;
-  }
 
   const flash = flashTime > 0 ? Math.floor(flashTime / FLASH_FRAME) % 3 : -1;
   // Upstream hides the selection while the win flash runs.

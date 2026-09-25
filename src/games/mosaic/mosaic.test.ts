@@ -249,7 +249,6 @@ describe("Mosaic status / text", () => {
 
 describe("Mosaic input mapping", () => {
   const ds = {
-    started: false,
     tileSize: 32,
     cache: new Int32Array(0),
   };

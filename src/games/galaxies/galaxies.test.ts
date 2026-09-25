@@ -250,7 +250,7 @@ function recordingDrawing() {
 const galaxiesRedraw = galaxiesGame.redraw as NonNullable<typeof galaxiesGame.redraw>;
 
 describe("Galaxies rendering", () => {
-  it("first redraw paints the background once and updates per tile", () => {
+  it("first redraw paints every tile once", () => {
     const p: GalaxiesParams = { w: 3, h: 3, diff: GalaxiesDiff.Normal };
     const rng = randomNew("render-first-draw");
     const { desc } = galaxiesGame.newDesc(p, rng);
@@ -259,11 +259,6 @@ describe("Galaxies rendering", () => {
     const ds = preferredDrawState(galaxiesGame, s);
     const { dr, ops } = recordingDrawing();
     galaxiesRedraw(dr, ds, null, s, 1, ui, 0, 0);
-    // First-draw branch is responsible for the background fill —
-    // per the post-Flip doctrine, the engine emits no pixels of its
-    // own (see fix-flip-canvas-reshape).
-    const bgFills = ops.filter((o) => o.op === "drawRect" && o.x === 0 && o.y === 0);
-    expect(bgFills.length).toBeGreaterThanOrEqual(1);
     // Each tile (w*h = 9) should be clipped exactly once.
     const clips = ops.filter((o) => o.op === "clip").length;
     expect(clips).toBe(9);
@@ -282,8 +277,6 @@ describe("Galaxies rendering", () => {
     galaxiesRedraw(dr2, ds, null, s, 1, ui, 0, 0);
     // Cache hit on every tile — no clip/unclip pairs.
     expect(ops2.some((o) => o.op === "clip")).toBe(false);
-    // First-draw is over, so no full-window bg fill either.
-    expect(ops2.some((o) => o.op === "drawRect" && o.x === 0 && o.y === 0)).toBe(false);
   });
 });
 

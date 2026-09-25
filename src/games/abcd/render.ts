@@ -433,10 +433,7 @@ export function redraw(
   const { w, h, n } = state.params;
 
   if (!ds.started) {
-    const size = computeSize(state.params, ts);
-    dr.drawRect({ x: 0, y: 0, w: size.w, h: size.h }, COL_OUTERBG);
     drawBorderLetters(dr, ts, n);
-    dr.drawUpdate({ x: 0, y: 0, w: size.w, h: size.h });
     ds.started = true;
   }
 

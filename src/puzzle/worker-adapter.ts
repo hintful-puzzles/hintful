@@ -238,7 +238,7 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
     // `Drawing.resize` sets `canvas.width`/`height`, which under `{alpha:false}`
     // resets the backing store to opaque black, so every tile the game's
     // `redraw` has cached is gone. `canvasCleared` drops the drawstate, and the
-    // next `redraw` paints from scratch via the game's `!ds.started` branch.
+    // next `redraw` lays the ground and lets the game paint from scratch.
     this.drawing.resize(w, h, dpr);
     this.engine.canvasCleared();
   }

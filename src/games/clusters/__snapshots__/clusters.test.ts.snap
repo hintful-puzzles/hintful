@@ -4,10 +4,10 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
 [
   {
     "color": 0,
-    "h": 230,
+    "h": 229,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
-    "w": 230,
+    "w": 229,
     "x": 0,
     "y": 0,
   },

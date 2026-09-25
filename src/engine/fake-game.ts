@@ -30,9 +30,6 @@ export type FakeMove = "inc" | "dec" | "solve";
 
 export interface FakeDrawState {
   tileSize: number;
-  /** The first-paint flag every real game keeps (`ds.started`): `redraw`
-   * paints a one-off background rect while it is false, then sets it. */
-  started: boolean;
   /** Incremented every time `redraw` is called. */
   redrawCalls: number;
   /** The drawstate's identity counter, copied from a module-local
@@ -117,17 +114,11 @@ export const fakeGame: Game<FakeParams, FakeState, FakeMove, null, FakeDrawState
 
   newDrawState: (_s, tileSize) => ({
     tileSize,
-    started: false,
     redrawCalls: 0,
     instance: nextInstance++,
   }),
-  redraw: (dr, ds, _prev, s) => {
+  // Paints nothing, so every op a midend test records is the engine's own.
+  redraw: (_dr, ds) => {
     ds.redrawCalls += 1;
-    if (!ds.started) {
-      // First paint of this drawstate: the game owns its background fill, at
-      // the size `computeSize` reports.
-      dr.drawRect({ x: 0, y: 0, w: s.target * ds.tileSize, h: ds.tileSize }, 0);
-      ds.started = true;
-    }
   },
 };
