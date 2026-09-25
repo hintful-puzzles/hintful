@@ -326,9 +326,10 @@ describe("runCandidatePlan", () => {
         "note 0,0 123 every",
         "pair strike 1",
       ]);
-      // Read, not drawn: nothing the game did not mark is marked.
+      // Read, not drawn: nothing the game did not mark is outlined, and the
+      // read cells ride on the step as data a guard can check.
       expect(steps[2].highlights?.area).toEqual([]);
-      expect(steps[2].highlights).not.toHaveProperty("reads");
+      expect(steps[2].highlights?.reads).toEqual([{ x: 1, y: 0 }]);
     });
 
     it("places a cell its regions have narrowed to one with no notes at all", () => {

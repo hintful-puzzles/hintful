@@ -3552,7 +3552,10 @@ note legs find it; before, the sentence said "other cells" and marked none.
 `Ui` gets the game's own default, and a `pencilAdd` arm in its move union and
 `executeMove`. `candidate-reading.test.ts` finds the population by the `Ui`
 field and walks every member's other reading, the one every other hint guard
-misses.
+misses. It also holds, on the real board and under both readings, every blank
+cell a step outlines, `reads` or strikes from to showing notes when the step is
+spoken, which is why `reads` rides on the step's highlights as data. It cannot
+see a `reads` a new cage rule forgot to declare: that is the game's to state.
 
 **The default is a per-game convention with an override, and it was measured,
 not argued.** Over every preset at six seeds (`examine-implicit-candidates`,
@@ -3577,10 +3580,16 @@ Mathrax, Group). A new game measures the same two numbers before choosing.
 **Salad walks the populate reading only**: its setup is its own (the "might be
 empty" note is a candidate no row or column rules out, so an implicit Salad
 would have to decide when to write it), and the walk refuses the implicit
-reading with a setup of the game's own. Of the note games that plan without the
-walk, Undead and Seismic populate first, and Crossing already writes a square's
-notes only when a narrowing needs them (§ "Place the notes a fixpoint rests on
-(Crossing)"), with a `pencilAdd` of its own that predates the shared one.
+reading with a setup of the game's own. Nothing presses for more, so it stays
+populate-only by decision (2026-09-25). Of the note games that plan without the
+walk, Crossing already writes a square's notes only when a narrowing needs them
+(§ "Place the notes a fixpoint rests on (Crossing)"), with a `pencilAdd` of its
+own that predates the shared one; Seismic populates first, and whether it moves
+onto the walk is `move-seismic-onto-the-candidate-walk`'s question. **Undead
+stays populate-only by decision** (2026-09-25): a monster may repeat in any
+line, so no region rules a candidate out and a note-less cell reads as every
+monster. Its implicit reading would be a populate done one cell at a time, the
+shape that measured worst above.
 
 ### Re-derive a placement's why
 

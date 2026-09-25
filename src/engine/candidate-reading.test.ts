@@ -49,6 +49,52 @@ const moveKind = (m: unknown): string => {
   return o.type ?? o.kind ?? "";
 };
 
+interface Cell {
+  x: number;
+  y: number;
+}
+
+/**
+ * The cells a step reasons from whose notes must be on the board when it is
+ * spoken: what it outlines, what it reads, and what it strikes from. Setup and
+ * note steps rest on nothing, and a placement's own cell is what it fills.
+ */
+function premiseCells(step: { move: unknown; highlights?: unknown }): readonly Cell[] {
+  const kind = moveKind(step.move);
+  if (kind === "pencilAll" || kind === "pencilAdd") return [];
+  const h = step.highlights as
+    | { area?: Cell[]; reads?: Cell[]; targets?: Cell[] }
+    | undefined;
+  if (!h) return [];
+  return [
+    ...(h.area ?? []),
+    ...(h.reads ?? []),
+    ...(kind === "pencilStrike" ? (h.targets ?? []) : []),
+  ];
+}
+
+/**
+ * The blank cells of `cells` on `state`, each with whether it carries notes.
+ * Every note-taking game keeps its notes in `pencil` and its entries in `grid`,
+ * one slot per cell with 0 for blank (`mark-all.test.ts` reads the same field);
+ * a board that is not square says its width as `w`.
+ */
+function blanks(state: unknown, cells: readonly Cell[]): (Cell & { noted: boolean })[] {
+  const s = state as { grid: ArrayLike<number>; pencil: ArrayLike<number>; w?: number };
+  const w = typeof s.w === "number" ? s.w : Math.sqrt(s.pencil.length);
+  if (!Number.isInteger(w)) throw new Error("a board of unknown width");
+  const h = s.pencil.length / w;
+  return cells
+    .filter((c) => c.x >= 0 && c.y >= 0 && c.x < w && c.y < h)
+    .filter((c) => s.grid[c.y * w + c.x] === 0)
+    .map((c) => ({ ...c, noted: s.pencil[c.y * w + c.x] !== 0 }));
+}
+
+/** Premise cells checked while blank, per reading: the vacuity count for the
+ * premise check, which passes over nothing on a plan that never reasons from a
+ * blank cell. */
+const blankPremises: Record<CandidateReading, number> = { implicit: 0, populate: 0 };
+
 describe("the hint-notes preference", () => {
   it("is offered by a derived population, each member with a hint and the pref", () => {
     // The vacuity guard: the registry the filter read, and the filter's catch.
@@ -69,7 +115,7 @@ describe("the hint-notes preference", () => {
     describe(id, () => {
       for (const { title, params } of presetsOf(game)) {
         for (const reading of READINGS) {
-          it(`${title}, ${reading}: every step is live when shown, and the plan finishes`, () => {
+          it(`${title}, ${reading}: every step is live and its premise noted when shown, and the plan finishes`, () => {
             const { desc, aux } = game.newDesc(params, randomNew(`reading-${title}`));
             let state = game.newState(params, desc);
             const res = game.hint?.(state, aux, uiFor(game, state, reading));
@@ -84,6 +130,15 @@ describe("the hint-notes preference", () => {
               // changes nothing: no strike of a note the board lacks, no note
               // step for a note already written, no placement in a filled cell.
               expect(game.refreshHintStep?.(step, state), step.explanation).toBe(step);
+              // Every blank cell the step reasons from shows its notes: the
+              // premise is on the board, not left to be worked out
+              // (docs/games/hints.md § "Two readings of an unmarked cell").
+              const blank = blanks(state, premiseCells(step));
+              blankPremises[reading] += blank.length;
+              expect(
+                blank.filter((c) => !c.noted),
+                step.explanation,
+              ).toEqual([]);
               state = game.executeMove(state, step.move);
             }
             if (!permitsSearch(game, params)) expect(game.status(state)).toBe("solved");
@@ -112,4 +167,12 @@ describe("the hint-notes preference", () => {
       }
     });
   }
+
+  it("checked a blank premise cell under each reading", () => {
+    // Runs after the walks above, in file order. Under the implicit reading
+    // these are the cells a note leg wrote; under the populate reading, cells
+    // the populate did.
+    expect(blankPremises.implicit).toBeGreaterThan(0);
+    expect(blankPremises.populate).toBeGreaterThan(0);
+  });
 });

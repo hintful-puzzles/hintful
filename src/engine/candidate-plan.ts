@@ -75,8 +75,6 @@ export type Firing<M, H, Reason> = readonly Leg<M, H, Reason>[];
  * `apply` says whether it decided a cell, which is when the solver reruns. */
 interface Built<M, H> {
   step: HintStep<M, H>;
-  /** The step's {@link StepWords.reads}. */
-  reads: readonly Point[];
   apply(): boolean;
 }
 
@@ -110,7 +108,8 @@ export type CandidateRung<M, H, R, Reason> = (
  * outlines: a cage deduction hatches its cage, since the sentence names the
  * cage, yet what it concludes depends on what every cell of it can still be.
  * The walk treats them as premise: the frontier continues from them, and under
- * the implicit reading their notes go on the board first. Not drawn. */
+ * the implicit reading their notes go on the board first. They ride on the
+ * step's highlights (`CandidateHighlights.reads`) as data; nothing draws them. */
 export type StepWords<H> = Omit<H, "targets" | "marks"> & {
   explanation: string;
   reads?: readonly Point[];
@@ -627,9 +626,9 @@ class CandidateWalk<
    * (hatched, but reasoned over all the same), the cells whose candidates it
    * reads and the cells it acts on. */
   private premise(f: Firing<M, H, Reason>): Point[] {
-    return this.stepsOf(f).flatMap(({ step, reads }) => {
+    return this.stepsOf(f).flatMap(({ step }) => {
       const h = step.highlights;
-      return h ? [...h.area, ...(h.hatch ?? []), ...reads, ...h.targets] : [...reads];
+      return h ? [...h.area, ...(h.hatch ?? []), ...(h.reads ?? []), ...h.targets] : [];
     });
   }
 
@@ -649,7 +648,6 @@ class CandidateWalk<
     if ("step" in leg)
       return {
         step: leg.step,
-        reads: [],
         apply: () => {
           leg.apply();
           return true;
@@ -657,14 +655,14 @@ class CandidateWalk<
       };
     if ("strike" in leg)
       return {
-        ...this.strikeStep(leg.strike, leg.reason, continues),
+        step: this.strikeStep(leg.strike, leg.reason, continues),
         apply: () => {
           this.clear(leg.strike);
           return false;
         },
       };
     const { x, y, n } = leg.place;
-    const { explanation, reads, ...evidence } = this.plan.placeWords(
+    const { explanation, ...evidence } = this.plan.placeWords(
       leg.place,
       leg.reason,
       continues,
@@ -675,7 +673,6 @@ class CandidateWalk<
         explanation,
         highlights: { ...evidence, targets: [{ x, y }], marks: [] } as unknown as H,
       },
-      reads: reads ?? [],
       apply: () => {
         this.placeOnBoard(leg.place);
         return true;
@@ -710,9 +707,9 @@ class CandidateWalk<
       if (placed.has(i) || cells.includes(i)) return;
       cells.push(i);
     };
-    for (const { step, reads } of own) {
+    for (const { step } of own) {
       for (const p of step.highlights?.area ?? []) read(p);
-      for (const p of reads) read(p);
+      for (const p of step.highlights?.reads ?? []) read(p);
     }
     for (const leg of f) if ("strike" in leg) for (const m of leg.strike) read(m);
     return cells.map((i) => this.noteLeg(i));
@@ -736,7 +733,6 @@ class CandidateWalk<
         explanation: plan.notes.note({ x, y }, values, bits === this.fillAll(i)),
         highlights: { area: [], targets: [{ x, y }], marks: [] } as unknown as H,
       },
-      reads: [],
       apply: () => {
         plan.pencil[i] = bits;
         return false;
@@ -748,20 +744,17 @@ class CandidateWalk<
     struck: readonly Mark[],
     reason: Reason | DupReason,
     continues: boolean,
-  ): { step: HintStep<M, H>; reads: readonly Point[] } {
+  ): HintStep<M, H> {
     const marks = [...struck];
-    const { explanation, reads, ...evidence } = this.plan.strikeWords(
+    const { explanation, ...evidence } = this.plan.strikeWords(
       marks,
       reason,
       continues,
     );
     return {
-      step: {
-        move: this.strike(marks),
-        explanation,
-        highlights: { ...evidence, targets: cellsOf(marks), marks } as unknown as H,
-      },
-      reads: reads ?? [],
+      move: this.strike(marks),
+      explanation,
+      highlights: { ...evidence, targets: cellsOf(marks), marks } as unknown as H,
     };
   }
 
@@ -805,7 +798,7 @@ class CandidateWalk<
     );
     this.clear(dup);
     if (plan.autoClean || dup.length === 0) return;
-    const { step } = this.strikeStep(dup, { kind: "dup", n, px: x, py: y }, true);
+    const step = this.strikeStep(dup, { kind: "dup", n, px: x, py: y }, true);
     step.continuesPrevious = true;
     plan.steps.push(step);
   }

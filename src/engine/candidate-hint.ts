@@ -112,6 +112,10 @@ export interface CandidateHighlights {
   /** The cells of the line or region the sentence names, hatched rather
    * than outlined; left out when it names none. */
   hatch?: Cell[];
+  /** The cells whose candidates the step rests on beyond `area`
+   * (`candidate-plan.ts`'s `StepWords.reads`). Premise, not a mark: nothing
+   * draws it. */
+  reads?: readonly Cell[];
 }
 
 /**
