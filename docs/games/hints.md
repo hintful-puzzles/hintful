@@ -4100,9 +4100,13 @@ square-grid convention. The answers, per piece:
   candidates the way a player does and places dots only where a deduction
   removes a color no neighbor shows (`map/hint.ts`). What the walk owns that Map
   lacks (populate, the obvious clean, the dup culls) are all consequences of the
-  populate-first note model, so they did not transfer either. **The test for a
-  new note-taking game: is an unmarked element "no information" or "no
-  candidates"?** If the former, the walk's model is not the game's.
+  populate-first note model, so they did not transfer either. **That is a choice
+  about how to read candidates, not a fact about Map**: a Latin game could read
+  an unmarked cell as the values its lines leave it (Group already does, in
+  `visibleCandidates`), and Map could have used Mark-all. Whether the reading
+  should be an engine option, a per-game default or a player preference is open
+  in `examine-implicit-candidates`; until it settles, do not cite Map as a game
+  that *needs* its reading.
 - **The frontier transfers once it stops naming cells.** Its rule (continue from
   what the last steps wrote) never needed a geometry, only a way to tell two
   mentions of one element apart, so `HintFrontier` now takes a key: `gridKey(w,
