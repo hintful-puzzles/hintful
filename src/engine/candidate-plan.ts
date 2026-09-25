@@ -30,7 +30,7 @@ import {
 } from "./candidate-hint.ts";
 import type { DeductionRecord } from "./deduction-record.ts";
 import type { HintStep } from "./game.ts";
-import { type FrontierCandidate, HintFrontier } from "./hint-frontier.ts";
+import { type FrontierCandidate, gridKey, HintFrontier } from "./hint-frontier.ts";
 import { cleanObviousText, populateText } from "./hint-text.ts";
 import {
   availablePlacements,
@@ -412,7 +412,7 @@ class CandidateWalk<
   run(): void {
     const { plan } = this;
     const w = plan.w;
-    const frontier = new HintFrontier(w, plan.grid.length / w);
+    const frontier = new HintFrontier(gridKey(w, plan.grid.length / w));
     const budget = stepBudget(plan.label);
     const finished = plan.finished ?? (() => !plan.grid.includes(0));
     const own = plan.rungs ?? [];

@@ -32,11 +32,11 @@
 
 import type { Point } from "./types.ts";
 
-/** A firing the plan could take now: the cells its premise reads, and how to
- * take it (emit its steps and apply them to the working board). `reads` is
+/** A firing the plan could take now: the elements its premise reads, and how
+ * to take it (emit its steps and apply them to the working board). `reads` is
  * asked only while a frontier is looking for a continuation. */
-export interface FrontierCandidate {
-  reads(): readonly Point[];
+export interface FrontierCandidate<P = Point> {
+  reads(): readonly P[];
   take(): void;
 }
 
@@ -45,21 +45,28 @@ export interface FrontierCandidate {
  * them, against 23% for the last one alone (`findings.md` § 1.5). */
 const DEPTH = 3;
 
-export class HintFrontier {
-  /** The cells each recent step wrote, most recent last. */
+/**
+ * The key of a cell on a `w` × `h` board, for a frontier over a grid. `null`
+ * off the board (a clue in the margin): no step ever writes one, and a margin
+ * cell keyed blindly would alias the first cell of the next row.
+ */
+export function gridKey(w: number, h: number = w): (p: Point) => number | null {
+  return (p) => (p.x < 0 || p.y < 0 || p.x >= w || p.y >= h ? null : p.y * w + p.x);
+}
+
+/**
+ * The frontier over whatever a game's steps act on, each named by `key`.
+ *
+ * **What an element is belongs to the game.** A grid game's is a cell
+ * ({@link gridKey}); Map's is a region of a graph, which has no `(x, y)` at all
+ * and is keyed by its own index. The rule never needed a geometry, only a way
+ * to tell that two mentions name the same thing.
+ */
+export class HintFrontier<P = Point> {
+  /** The elements each recent step wrote, most recent last. */
   private readonly recent: Set<number>[] = [];
 
-  /** `w` × `h` is the board; reads and writes outside it (a clue in the
-   * margin) are ignored, since no step ever writes one. */
-  constructor(
-    private readonly w: number,
-    private readonly h: number = w,
-  ) {}
-
-  private cell(p: Point): number | null {
-    if (p.x < 0 || p.y < 0 || p.x >= this.w || p.y >= this.h) return null;
-    return p.y * this.w + p.x;
-  }
+  constructor(private readonly key: (p: P) => number | null) {}
 
   /**
    * Take the candidate that continues from the most recent step it can, trying
@@ -72,8 +79,8 @@ export class HintFrontier {
    * rather than what the game says it meant to do.
    */
   take(
-    rungs: readonly (readonly FrontierCandidate[])[],
-    steps: readonly { highlights?: { targets?: readonly Point[] } }[],
+    rungs: readonly (readonly FrontierCandidate<P>[])[],
+    steps: readonly { highlights?: { targets?: readonly P[] } }[],
   ): boolean {
     const chosen = this.choose(rungs);
     if (!chosen) return false;
@@ -82,7 +89,7 @@ export class HintFrontier {
     const wrote = new Set<number>();
     for (let i = from; i < steps.length; i++)
       for (const p of steps[i].highlights?.targets ?? []) {
-        const c = this.cell(p);
+        const c = this.key(p);
         if (c !== null) wrote.add(c);
       }
     this.recent.push(wrote);
@@ -91,15 +98,15 @@ export class HintFrontier {
   }
 
   private choose(
-    rungs: readonly (readonly FrontierCandidate[])[],
-  ): FrontierCandidate | null {
+    rungs: readonly (readonly FrontierCandidate<P>[])[],
+  ): FrontierCandidate<P> | null {
     for (let age = this.recent.length - 1; age >= 0; age--) {
       const wrote = this.recent[age];
       for (const rung of rungs)
         for (const c of rung)
           if (
             c.reads().some((p) => {
-              const i = this.cell(p);
+              const i = this.key(p);
               return i !== null && wrote.has(i);
             })
           )

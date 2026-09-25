@@ -3,7 +3,7 @@
  * every game that has one.
  */
 import { describe, expect, it } from "vitest";
-import { type FrontierCandidate, HintFrontier } from "./hint-frontier.ts";
+import { type FrontierCandidate, gridKey, HintFrontier } from "./hint-frontier.ts";
 import { randomNew } from "./random/index.ts";
 import { membersNotMentioning } from "./testing/enrollment.ts";
 import { HINT_GAMES, leafPresets } from "./testing/hint-games.ts";
@@ -36,7 +36,7 @@ describe("HintFrontier", () => {
   it("takes the rung order's first choice when nothing has been written yet", () => {
     const steps: Step[] = [];
     const log: string[] = [];
-    const f = new HintFrontier(4);
+    const f = new HintFrontier(gridKey(4));
     expect(
       f.take(
         [
@@ -54,7 +54,7 @@ describe("HintFrontier", () => {
   it("prefers a later rung's candidate that continues the last step", () => {
     const steps: Step[] = [];
     const log: string[] = [];
-    const f = new HintFrontier(4);
+    const f = new HintFrontier(gridKey(4));
     f.take([[cand("first", [], [at(1, 1)], steps, log)]], steps);
     f.take(
       [
@@ -69,7 +69,7 @@ describe("HintFrontier", () => {
   it("prefers the most recent step, and reaches back three", () => {
     const steps: Step[] = [];
     const log: string[] = [];
-    const f = new HintFrontier(4);
+    const f = new HintFrontier(gridKey(4));
     for (const x of [0, 1, 2, 3])
       f.take([[cand(`w${x}`, [], [at(x, 0)], steps, log)]], steps);
     // w3 is the latest; w1 two back; w0 four back, past the frontier.
@@ -96,7 +96,7 @@ describe("HintFrontier", () => {
   it("ignores reads and writes off the board", () => {
     const steps: Step[] = [];
     const log: string[] = [];
-    const f = new HintFrontier(3);
+    const f = new HintFrontier(gridKey(3));
     // A clue at x = 3 would alias the next row's first cell if indexed blindly.
     f.take([[cand("clue", [], [at(3, 0)], steps, log)]], steps);
     expect(
@@ -163,11 +163,34 @@ const PLAN_IMPORTERS: readonly string[] = (() => {
  */
 const MAX_AVOIDABLE = 0.1;
 
+/**
+ * The games that choose through a `HintFrontier` of their own rather than
+ * through the candidate walk, and so are outside the measurement below: derived
+ * from their source, and each held by a guard of its own that the entry names.
+ *
+ * `planContinuity` reads a plan through a square grid (`grid`, `w = √n`, cells
+ * as `{x, y}`), which is what every candidate game is and what a graph game is
+ * not. Asserted as an exact set, so the next game to take the frontier directly
+ * is not left out of every continuity check in silence.
+ */
+const OWN_FRONTIER: Record<string, string> = {
+  map:
+    "its elements are regions of a graph; map-hint.test.ts holds that a " +
+    "placement's newly single neighbor is where the plan goes next",
+};
+
 describe("hint plans continue from their previous step where they can", () => {
   it("finds the games that have a frontier", () => {
     expect(FRONTIER_GAMES).toContain("solo");
     expect(FRONTIER_GAMES.length).toBeGreaterThan(1);
     expect(FRONTIER_GAMES).toEqual(PLAN_IMPORTERS);
+  });
+
+  it("accounts for every game that takes the frontier directly", () => {
+    const ids = HINT_GAMES.map(([id]) => id);
+    const without = new Set(membersNotMentioning(ids, "new HintFrontier"));
+    const direct = ids.filter((id) => !without.has(id) && !FRONTIER_GAMES.includes(id));
+    expect(direct.sort()).toEqual(Object.keys(OWN_FRONTIER).sort());
   });
 
   for (const id of FRONTIER_GAMES) {

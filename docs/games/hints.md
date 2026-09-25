@@ -1520,6 +1520,7 @@ to a similar game:
 | Seismic | the cell(s) a step decides, ringed `COL_HINT` inside the cell's own box (the gap between cells is the black its walls are made of); a struck note keeps its pencil color with a same-color line through it | the area a hidden single or a starved area reasons over → one `COL_HINT_CELL` contour; a placement's follow-on strikes outline the placed number's cell alone |
 | Galaxies | the **deduced** cell, solid **purple** `COL_HINT` (not blue — see below); the 180° partner the same move claims, a `COL_HINT` **outline over the ordinary evidence shading** (same hue, they share a fate; far less weight, only one is what the words are about); the wall it draws, a `COL_HINT` bar drawn *whether or not the wall exists yet*; the dot it points at, a **filled `COL_HINT` halo with the dot repainted on top** — **unless the dot stands on a cell just filled**, where a mark in the fill's own color is invisible and the narration names the dot by position instead | the cells / walls / dots the argument reasons over → `COL_HINT_CELL` teal (a galaxy's reach, a cut-off piece, the partner across a dot, an already-drawn wall). One ring role at a time, so "the ringed dot" is never ambiguous |
 | Magnets | the square a placement decides, ringed `COL_HINT`; a domino decided whole (neutral, or marked `?`) as **one contour around both ends**, never a ring per end | the line a premise counts → one `COL_HINT_CELL` contour, and its clue digits recolor `COL_HINT` (Magnets draws no line numbers, so the digit is how "this row" is found); a pole the square touches → that square outlined; the domino's other end, when the sentence reasons about it, outlined too |
+| Map | the region the step decides, a `COL_HINT` band inside its whole boundary, twice the selection band's width; the selection band, when on the same region, just inside it | the regions a premise rests on (the neighbors whose colors decide a single, the pair, the chain) → a `COL_HINT_CELL` band of the selection's width; a chain's regions numbered at their label points in the same color, with region numbers hidden while it shows |
 | Loopy | the edges the step sets, a `COL_HINT` band *under* each (the edge's own state stays on top): solid for a line, broken for an edge that can't be one | the clue it counts → an outline inset inside its face; the dot it names → a ring under the dot; the loop an edge would close → a `COL_HINT_CELL` band under those lines; a **corner** or **pair** note the step reasons from → the player's own note, redrawn in `COL_HINT_CELL`; a note the step places → that note's own wedge or connector in `COL_HINT` (§ "Give the facts a notation (Loopy)") |
 
 **Mark the premise element in the action color only where the sentence names
@@ -1604,6 +1605,10 @@ first-class answer rather than a gap:
 - **Loopy** has no cells and no tiles at all. Every mark is drawn from
   `engine/grid/` geometry: a band under an edge, an outline inset in a face, a
   ring under a dot, a wedge in a face's angle.
+- **Map** decides **regions**, each a polyomino of half-cell triangles, so no
+  cell's border box is one. It already drew a band just inside a region's whole
+  boundary for its selection, and the hint's ring and outline are that band in
+  the hint colors (§ "A graph, not a grid (Map)").
 
 Two games in a row needed the second answer for part of their marks and one for
 all of them, so ask **what shape the game already draws for this action** before
@@ -2128,6 +2133,12 @@ not adjacent, so the arrows crossed the board. A *true* implication chain like t
 Latin family's is not thereby entitled to arrows either: one mark should mean one
 thing collection-wide, so every game draws the weakest claim every chain can
 make. See `walk-tactic-hint-chains` design D5 for the numbers.
+
+**The corner is a tile's, so a game without tiles says where instead (Map).** A
+Map region is not a tile, and the one point every region already owns is the
+label point its number is drawn at when the player turns numbers on. Map draws
+the ordinal there, in the ordinal's color, and hides the region numbers while a
+chain is shown, so "region 1" can mean only one thing on the board.
 
 The numbering also **ties the deixis** — see § "Two marks on the board, one 'this
 cell'". Exemplars: `forcingChainArea`/`narrateForcingChain` in
@@ -4071,6 +4082,69 @@ watch for, and it needs three things the other Latin games did not.
   two cells share no edge and joining them would outline board the clue does
   not constrain (`outlineSides`). Compare § "Off-board evidence", which is for
   a clue that sits outside the grid rather than between its cells.
+
+### A graph, not a grid (Map)
+
+Map was the collection's first hinted **graph**: its elements are regions with
+no `(x, y)`, its only relation is adjacency, and its candidates are four colors.
+It was taken on to find out which of the shared hint machinery is secretly a
+square-grid convention. The answers, per piece:
+
+- **The candidate walk does not fit, and should not be made to.**
+  `runCandidatePlan`'s notes are the *whole* candidate set, filled in by
+  populate and cleaned against the board. A Map region's colors are partly the
+  board itself: its dots when it has any, all four when it has none, less every
+  color a neighbor shows. Penciling four colors into thirty regions to strike
+  three from each would teach a procedure nobody plays, and it would make the
+  Easy tier, which needs no dots at all, need dozens. So Map reads its
+  candidates the way a player does and places dots only where a deduction
+  removes a color no neighbor shows (`map/hint.ts`). What the walk owns that Map
+  lacks (populate, the obvious clean, the dup culls) are all consequences of the
+  populate-first note model, so they did not transfer either. **The test for a
+  new note-taking game: is an unmarked element "no information" or "no
+  candidates"?** If the former, the walk's model is not the game's.
+- **The frontier transfers once it stops naming cells.** Its rule (continue from
+  what the last steps wrote) never needed a geometry, only a way to tell two
+  mentions of one element apart, so `HintFrontier` now takes a key: `gridKey(w,
+  h)` for a grid, the region index for Map. Map drives it from its own plan, and
+  since `plan-continuity.ts` reads a square grid, `hint-frontier.test.ts`
+  derives the games that take the frontier directly and holds them to a ledger
+  naming each one's own continuity guard.
+- **The shared marks do not reach a region, and nothing was bent to make them.**
+  `hint-mark.ts` bands a cell's border box. Map already drew its selection as a
+  band inside the region's whole boundary, clipped piece by piece through
+  divided cells, so the hint's ring and outline are that band in `COL_HINT` and
+  `COL_HINT_CELL` (§ "Echo the move's shape in the hint color"). The target's
+  band is twice the width of the evidence's, so the two differ by weight as well
+  as hue, and the selection band nests just inside a hint band rather than
+  vanishing under it.
+- **The forcing-chain sentence stays Map's own.** `narrateForcingChain` is
+  written for a line ("this cell's row already has it", "cross out"). Map's two
+  ends *touch* the target and its conclusion is one of three moves, so two of the
+  three clauses differ, which is the "decline when an arm's shape differs" rule
+  above. The ordinal is not declined: see § "Number the chain".
+- **A region is named by its mark, never by its number.** Region numbers sit
+  behind a preference that is off by default. "This region" is the ringed one,
+  "the outlined pair" the two outlined, and a chain's regions are "region 1" to
+  "region N" by the numbers the hint draws. A **color** is named by its word,
+  from `FOUR_NAMES` beside `FOUR_FILLS`, because in Map a color is the value,
+  not a hint role.
+
+Two rules of Map's own that another tiered game may want:
+
+- **Offer only the lowest rung that fires.** Map's tiers are exactly its rungs,
+  so the plan asks the frontier to choose within the easiest non-empty rung
+  rather than across all of them. An Easy board's plan then never shows a pair.
+  `map-hint.test.ts` holds it the strong way, against the board rather than the
+  labels: a pair is spoken only where no region anywhere is down to one color.
+  Its first cut asserted the labels per tier and passed with the rungs
+  reordered.
+- **A narrowing ends in whichever move the board calls for.** When a region
+  loses colors, one color left is a placement, a dotted region loses the struck
+  dots, and an undotted one gets dots for the colors left. The sentence names the
+  move ("…so it can't be either and must be yellow", "…: dot red and teal"),
+  and the next step may read those dots as its premise, which is exactly how a
+  player carries a fact forward.
 
 ## Probe before trusting a diagnosis
 

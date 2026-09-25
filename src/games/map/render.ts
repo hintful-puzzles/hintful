@@ -6,9 +6,16 @@
  */
 
 import { FOUR_FILLS } from "../../engine/color/colors.ts";
-import { CURSOR, ERROR, ERROR_TEXT, INK } from "../../engine/color/palette.ts";
+import {
+  CURSOR,
+  ERROR,
+  ERROR_TEXT,
+  HINT_ACTION,
+  HINT_EVIDENCE,
+  INK,
+} from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
-import type { GameDrawing } from "../../engine/game.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import {
   type PencilIndicatorStyle,
@@ -24,11 +31,13 @@ import {
   CURSOR_UP,
 } from "../../engine/pointer.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import type { MapHint } from "./hint.ts";
 import { BE, LE, type MapData, RE, TE } from "./map-data.ts";
 import {
   FLASH_ALL_TO_WHITE,
   FLASH_EACH_TO_WHITE,
   type MapMistake,
+  type MapMove,
   type MapParams,
   type MapState,
   type MapUi,
@@ -48,6 +57,11 @@ export const COL_ERRTEXT = 7;
 export const COL_MISTAKE = 8;
 /** The selected region's band and its notes triangle. */
 export const COL_CURSOR = 9;
+/** The region a hint step acts on: its band. */
+export const COL_HINT = 10;
+/** The regions a hint step's premise rests on: their band, and a chain's
+ * numbers. */
+export const COL_HINT_CELL = 11;
 
 const FOUR = 4;
 const FIVE = 5;
@@ -64,6 +78,8 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_ERRTEXT] = ERROR_TEXT;
   ret[COL_MISTAKE] = ERROR;
   ret[COL_CURSOR] = CURSOR;
+  ret[COL_HINT] = HINT_ACTION;
+  ret[COL_HINT_CELL] = HINT_EVIDENCE;
   return ret;
 }
 
@@ -81,6 +97,18 @@ const PENCIL_B_BASE = 0x00008000;
 const PENCIL_MASK = 0x007f8000;
 const ERR_BASE = 0x00800000;
 const ERR_MASK = 0xff800000;
+
+// --- the hint's cache word -------------------------------------------
+// A second word per cell, since the first has no room left: each piece's hint
+// role, and the chain number of each piece's region (0 = none).
+
+const HINT_TARGET = 1;
+const HINT_EVIDENCE_ROLE = 2;
+const HINT_ROLE_MASK = 3;
+const HINT_BOTTOM_SHIFT = 2;
+const ORDER_TOP_SHIFT = 4;
+const ORDER_BOTTOM_SHIFT = 12;
+const ORDER_MASK = 0xff;
 
 // --- geometry --------------------------------------------------------
 
@@ -229,6 +257,9 @@ export interface MapDrawState {
   /** Per-cell packed cache word; `-1` forces a repaint. */
   drawn: Int32Array;
   todraw: Int32Array;
+  /** Per-cell hint word, compared alongside `drawn`. */
+  drawnHint: Int32Array;
+  todrawHint: Int32Array;
   // floating drag/cursor blob
   bl: unknown | null;
   dragVisible: boolean;
@@ -254,6 +285,8 @@ export function newDrawState(s: MapState, tileSize: number): MapDrawState {
     tileSize,
     drawn: new Int32Array(wh).fill(-1),
     todraw: new Int32Array(wh),
+    drawnHint: new Int32Array(wh),
+    todrawHint: new Int32Array(wh),
     bl: null,
     dragVisible: false,
     dragX: -1,
@@ -437,24 +470,63 @@ function cellPieces(map: MapData, x: number, y: number, ts: number): [Piece, Pie
   ];
 }
 
-/** Paint the selection over cell `(x, y)`'s fills: the band in each selected
- * piece, and the notes triangle where this is the region's first cell. */
-function drawSelection(
+/** A band's reach inward from the region boundary, `from` to `to` pixels, in
+ * `color`. */
+interface Band {
+  from: number;
+  to: number;
+  color: number;
+}
+
+/**
+ * The bands piece `(x, y)`'s selection and hint put along its region's
+ * boundary, outermost first.
+ *
+ * A hint step's target takes a band twice the selection's width and its
+ * evidence one of the same width, so the region the step acts on differs from
+ * the ones it reasons over by weight as well as by hue. A selected region the
+ * hint also marks keeps its selection band, just inside the hint's, because
+ * that is where a player about to act on the hint is looking.
+ */
+function bandsOf(selected: boolean, hint: number, t: number): Band[] {
+  const out: Band[] = [];
+  let reach = 0;
+  if (hint === HINT_TARGET) {
+    out.push({ from: 0, to: 2 * t, color: COL_HINT });
+    reach = 2 * t;
+  } else if (hint === HINT_EVIDENCE_ROLE) {
+    out.push({ from: 0, to: t, color: COL_HINT_CELL });
+    reach = t;
+  }
+  if (selected) out.push({ from: reach, to: reach + t, color: COL_CURSOR });
+  return out;
+}
+
+/** Paint the selection and the hint over cell `(x, y)`'s fills: the bands in
+ * each marked piece, and the notes triangle where this is the region's first
+ * cell. */
+function drawBands(
   dr: GameDrawing,
   ts: number,
   map: MapData,
   x: number,
   y: number,
   v: number,
+  hv: number,
 ): void {
   const [topPiece, bottomPiece] = cellPieces(map, x, y, ts);
-  const pieces: Piece[] = [];
-  if (v & SEL_TOP) pieces.push(topPiece);
-  if (v & SEL_BOTTOM && bottomPiece !== topPiece) pieces.push(bottomPiece);
   const t = selectionBand(ts);
-  const fill = (poly: Pt[]) => {
-    if (poly.length >= 3) dr.drawPolygon(poly, COL_CURSOR, COL_CURSOR);
-  };
+  const marked: [Piece, Band[]][] = [];
+  const top = bandsOf((v & SEL_TOP) !== 0, hv & HINT_ROLE_MASK, t);
+  if (top.length > 0) marked.push([topPiece, top]);
+  if (bottomPiece !== topPiece) {
+    const bottom = bandsOf(
+      (v & SEL_BOTTOM) !== 0,
+      (hv >> HINT_BOTTOM_SHIFT) & HINT_ROLE_MASK,
+      t,
+    );
+    if (bottom.length > 0) marked.push([bottomPiece, bottom]);
+  }
   const x0 = coord(x, ts);
   const y0 = coord(y, ts);
   const corners = [
@@ -463,33 +535,63 @@ function drawSelection(
     { px: x + 1, py: y + 1, kx: x0 + ts, ky: y0 + ts },
     { px: x, py: y + 1, kx: x0, ky: y0 + ts },
   ];
-  for (const piece of pieces) {
-    const { poly, boundary } = piece;
-    for (let i = 0; i < poly.length; i++) {
-      if (!boundary[i]) continue;
-      const d = inwardDistance(poly, i);
-      fill(clipHalfPlane(poly, (p) => d(p) - t));
+  // Innermost first: an outer band's strip along one side reaches into the
+  // corner an inner band's strip along the other side also covers, and the
+  // outer one must be the one left showing there.
+  for (const [piece, bands] of marked)
+    for (const band of [...bands].reverse()) {
+      const { from, to, color } = band;
+      const fill = (poly: Pt[]) => {
+        if (poly.length >= 3) dr.drawPolygon(poly, color, color);
+      };
+      const { poly, boundary } = piece;
+      for (let i = 0; i < poly.length; i++) {
+        if (!boundary[i]) continue;
+        const d = inwardDistance(poly, i);
+        fill(
+          clipHalfPlane(
+            clipHalfPlane(poly, (p) => d(p) - to),
+            (p) => from - d(p),
+          ),
+        );
+      }
+      for (const k of corners) {
+        // A side of the piece already running along the boundary from this
+        // corner has covered it.
+        const own = poly.some(
+          (p, i) =>
+            boundary[i] &&
+            ((p.x === k.kx && p.y === k.ky) ||
+              (poly[(i + 1) % poly.length].x === k.kx &&
+                poly[(i + 1) % poly.length].y === k.ky)),
+        );
+        if (own || !boundaryAtPoint(map, k.px, k.py)) continue;
+        const sx = k.kx === x0 ? 1 : -1;
+        const sy = k.ky === y0 ? 1 : -1;
+        const along = (p: Pt) => sx * (p.x - k.kx);
+        const across = (p: Pt) => sy * (p.y - k.ky);
+        // The band's share of the corner square is an L between `from` and
+        // `to`, which is two convex pieces; at `from = 0` the second is empty.
+        const inCorner = clipHalfPlane(
+          clipHalfPlane(poly, (p) => along(p) - to),
+          (p) => across(p) - to,
+        );
+        fill(clipHalfPlane(inCorner, (p) => from - along(p)));
+        if (from > 0)
+          fill(
+            clipHalfPlane(
+              clipHalfPlane(inCorner, (p) => along(p) - from),
+              (p) => from - across(p),
+            ),
+          );
+      }
     }
-    for (const k of corners) {
-      // A side of the piece already running along the boundary from this
-      // corner has covered it.
-      const own = poly.some(
-        (p, i) =>
-          boundary[i] &&
-          ((p.x === k.kx && p.y === k.ky) ||
-            (poly[(i + 1) % poly.length].x === k.kx &&
-              poly[(i + 1) % poly.length].y === k.ky)),
-      );
-      if (own || !boundaryAtPoint(map, k.px, k.py)) continue;
-      const sx = k.kx === x0 ? 1 : -1;
-      const sy = k.ky === y0 ? 1 : -1;
-      const square = clipHalfPlane(
-        clipHalfPlane(poly, (p) => sx * (p.x - k.kx) - t),
-        (p) => sy * (p.y - k.ky) - t,
-      );
-      fill(square);
-    }
-  }
+  const pieces: Piece[] = [];
+  if (v & SEL_TOP) pieces.push(topPiece);
+  if (v & SEL_BOTTOM && bottomPiece !== topPiece) pieces.push(bottomPiece);
+  const fill = (poly: Pt[]) => {
+    if (poly.length >= 3) dr.drawPolygon(poly, COL_CURSOR, COL_CURSOR);
+  };
   if (v & SEL_NOTES) {
     const half = Math.floor(ts / 2);
     const corner = [
@@ -501,7 +603,7 @@ function drawSelection(
   }
   // The band reaches the diagonal, which is the second triangle's outline:
   // stroke it again, along the same line `drawSquare` outlines.
-  if (pieces.length > 0 && topPiece !== bottomPiece) {
+  if (marked.length > 0 && topPiece !== bottomPiece) {
     const wh = map.w * map.h;
     const c = y * map.w + x;
     const tlToBr = map.map[LE * wh + c] === map.map[BE * wh + c];
@@ -521,6 +623,7 @@ function drawSquare(
   x: number,
   y: number,
   vIn: number,
+  hv: number,
   largeStipples: boolean,
 ): void {
   const { w, h } = map;
@@ -562,7 +665,7 @@ function drawSquare(
     );
   }
 
-  drawSelection(dr, ts, map, x, y, vIn);
+  drawBands(dr, ts, map, x, y, vIn, hv);
 
   // Pencil-mark stipples (a square formation; FOUR == 4).
   const te = M[TE * wh + y * w + x];
@@ -614,26 +717,29 @@ function drawSquare(
           Math.floor((coord(y, ts) * 2 + ts * yo) / 2),
         );
 
-  // Region numbers, if desired.
-  if (showNumbers) {
-    let oldj = -1;
-    for (let i = 0; i < 2; i++) {
-      const j = M[(i ? BE : TE) * wh + y * w + x];
-      if (oldj === j) continue;
-      oldj = j;
-      const xo = map.regionx[j] - 2 * x;
-      const yo = map.regiony[j] - 2 * y;
-      if (xo >= 0 && xo <= 2 && yo >= 0 && yo <= 2) {
-        dr.drawText(
-          {
-            x: Math.floor((coord(x, ts) * 2 + ts * xo) / 2),
-            y: Math.floor((coord(y, ts) * 2 + ts * yo) / 2),
-          },
-          glyphFont(Math.floor((3 * ts) / 5)),
-          COL_GRID,
-          String(j),
-        );
-      }
+  // Region numbers, if desired, and a hint chain's numbers, at the same label
+  // point: a region is not a tile, so the chain number goes where the region's
+  // own name would, rather than in a tile corner. `redraw` hides the region
+  // numbers while a chain is up, so the two never share the board.
+  let oldj = -1;
+  for (let i = 0; i < 2; i++) {
+    const j = M[(i ? BE : TE) * wh + y * w + x];
+    if (oldj === j) continue;
+    oldj = j;
+    const order = (hv >> (i ? ORDER_BOTTOM_SHIFT : ORDER_TOP_SHIFT)) & ORDER_MASK;
+    if (!showNumbers && order === 0) continue;
+    const xo = map.regionx[j] - 2 * x;
+    const yo = map.regiony[j] - 2 * y;
+    if (xo >= 0 && xo <= 2 && yo >= 0 && yo <= 2) {
+      dr.drawText(
+        {
+          x: Math.floor((coord(x, ts) * 2 + ts * xo) / 2),
+          y: Math.floor((coord(y, ts) * 2 + ts * yo) / 2),
+        },
+        glyphFont(Math.floor((3 * ts) / 5)),
+        order ? COL_HINT_CELL : COL_GRID,
+        String(order || j),
+      );
     }
   }
 
@@ -664,7 +770,7 @@ export function redraw(
   ui: MapUi,
   _animTime: number,
   flashTime: number,
-  _hint?: unknown,
+  hint?: HintStep<MapMove>,
   mistakes?: readonly MapMistake[],
 ): void {
   const { w, h } = s.params;
@@ -700,6 +806,19 @@ export function redraw(
 
   const mistakeSet = new Set<number>();
   if (mistakes) for (const m of mistakes) mistakeSet.add(m.region);
+
+  // The hint's marks, per region: its role and its place in a chain.
+  const hintRole = new Uint8Array(n);
+  const hintOrder = new Uint8Array(n);
+  const hl = hint?.highlights as MapHint | undefined;
+  if (hl) {
+    for (const e of hl.evidence) {
+      hintRole[e.region] = HINT_EVIDENCE_ROLE;
+      if (e.order) hintOrder[e.region] = e.order;
+    }
+    for (const r of hl.targets) hintRole[r] = HINT_TARGET;
+  }
+  const chainShown = hintOrder.some((o) => o > 0);
 
   // The selected region, hidden while the completion flash plays, and in notes
   // mode the cell that carries the corner triangle: the region's first in
@@ -745,13 +864,18 @@ export function redraw(
           v |= PENCIL_B_BASE << i;
       }
 
-      if (ui.showNumbers) v |= SHOW_NUMBERS;
+      if (ui.showNumbers && !chainShown) v |= SHOW_NUMBERS;
       if (tRegion === selected) v |= SEL_TOP;
       if (bRegion === selected) v |= SEL_BOTTOM;
       if (y * w + x === notesCell) v |= SEL_NOTES;
       if (mistakeSet.has(tRegion) || mistakeSet.has(bRegion)) v |= MISTAKE;
 
       ds.todraw[y * w + x] = v;
+      ds.todrawHint[y * w + x] =
+        hintRole[tRegion] |
+        (hintRole[bRegion] << HINT_BOTTOM_SHIFT) |
+        (hintOrder[tRegion] << ORDER_TOP_SHIFT) |
+        (hintOrder[bRegion] << ORDER_BOTTOM_SHIFT);
     }
 
   // Overlay adjacency error markers.
@@ -779,14 +903,16 @@ export function redraw(
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const v = ds.todraw[y * w + x];
-      if (ds.drawn[y * w + x] !== v) {
-        drawSquare(dr, ts, map, x, y, v, ui.largeStipples);
+      const hv = ds.todrawHint[y * w + x];
+      if (ds.drawn[y * w + x] !== v || ds.drawnHint[y * w + x] !== hv) {
+        drawSquare(dr, ts, map, x, y, v, hv, ui.largeStipples);
         ds.drawn[y * w + x] = v;
+        ds.drawnHint[y * w + x] = hv;
       }
     }
 
   // The floating drag blob: the color (or the marks) in the player's hand.
-  // The selection itself is the band `drawSelection` paints; the blob is only
+  // The selection itself is the band `drawBands` paints; the blob is only
   // what is being carried.
   if (ui.dragColor > -2) {
     const bg = ui.dragColor >= 0 ? COL_0 + ui.dragColor : COL_BACKGROUND;

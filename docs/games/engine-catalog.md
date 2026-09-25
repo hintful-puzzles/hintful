@@ -524,8 +524,11 @@ type-check against it and calls `runCandidatePlan`. See
 `HintFrontier` takes, among the firings a candidate plan could make at once,
 the one continuing from what the plan's latest steps wrote, with the ladder
 order as the tiebreak; `runCandidatePlan` hands it each rung's candidates,
-each reading the `area ∪ targets` of the steps it would push. See
-[`hints.md`](./hints.md) § "Continue from the last step".
+each reading the `area ∪ targets` of the steps it would push. It is keyed on
+whatever a step acts on: a grid game passes `gridKey(w, h)`, and Map, whose
+steps act on regions of a graph, keys a region by its index and drives the
+frontier from its own plan. See [`hints.md`](./hints.md) § "Continue from the
+last step" and § "A graph, not a grid (Map)".
 
 ### `latin-hint.ts` — truthful Latin single classification
 
@@ -571,7 +574,10 @@ on, an **outline** around the region it reasons from. Both replace the cell's
 choosing a different color, and a joint search over both roles, every hue and
 both schemes found no feasible arrangement. `MarkBand` is how a game says where
 its border lives (outside the content box for the `COL_GRID`-backed games,
-inside it for the ones drawing their own per-cell outline).
+inside it for the ones drawing their own per-cell outline). It is for a mark on
+a **cell**: Map's regions are polyominoes of half-cell triangles, so Map rings
+and outlines them with its own region band instead (`hints.md` § "A graph, not
+a grid (Map)").
 
 ### `hatch.ts` — the line a step calls "this row"
 

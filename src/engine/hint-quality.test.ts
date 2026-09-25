@@ -219,6 +219,24 @@ const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
       'sentences (hints.md § "Conclude with the action the move makes").',
   },
   {
+    games: ["map"],
+    match: /^The outlined pair touch and can only be \w+ or \w+, so they use both\./,
+    why:
+      "Two premises: the pair are down to the same two colors, and, because " +
+      "they touch, they use both between them. The second is what makes " +
+      '"this region can\'t be either" follow; it is Palisade\'s "share a fate" ' +
+      "premise in Map's terms, and the sentence without it is the non-sequitur " +
+      "that exemplar was fixed for.",
+  },
+  {
+    games: ["map"],
+    match: /^Region 1 can only be \w+ or \w+\. If \w+, each numbered region/,
+    why:
+      "Map's chain Tactic, held to what ts-engine asks of every narrated chain: " +
+      "name both ends, cite the links by their numbers on the board, and state " +
+      "the case split, which is three clauses as in the Latin chain.",
+  },
+  {
     games: ["singles"],
     match:
       /^(?:A touching pair of \d+s sits at the corner|This (?:corner|inner) \d+ matches)/,

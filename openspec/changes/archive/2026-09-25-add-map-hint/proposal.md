@@ -1,6 +1,7 @@
 # add-map-hint
 
-**Status: scaffolded, not started.** Owner-requested, 2026-09-21.
+Owner-requested, 2026-09-21; implemented 2026-09-25 (`tasks.md` records what
+each open question below came to).
 
 ## Why now
 

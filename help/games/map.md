@@ -24,6 +24,14 @@ those dots instead of coloring, until you press it again. A
 right-click without a drag does the same as the Marks button and
 selects the region, as it does in the other note-taking puzzles.
 
+A region's dots are the colors it might still be, so Check treats a
+set of dots that leaves out the region's real color as a mistake,
+just as it does a wrong color. A region with no dots is simply
+unmarked. The hint works the same way: it reads what a blank region
+can be from its dots, or from all four colors when it has none, less
+the colors its neighbors already show, and places dots itself when a
+deduction rules out a color no neighbor shows.
+
 The selected region is outlined in green inside its border; while
 the buttons leave dots, a small green triangle also sits in its
 top-left corner.

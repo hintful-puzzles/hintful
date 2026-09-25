@@ -15,8 +15,9 @@
 
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
-import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
+import type { Game, HintResult, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { colorKeys } from "../../engine/key-labels.ts";
 import {
   dragEnteredNoteTakingCell,
@@ -52,6 +53,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { GameStatus, KeyLabel, Point } from "../../engine/types.ts";
 import { newMapDesc } from "./generator.ts";
+import { buildSteps, hintKeepTrack, type MapHint, refreshHintStep } from "./hint.ts";
 import { newMapData, validateDesc } from "./map-data.ts";
 import {
   COL_0,
@@ -395,8 +397,13 @@ function solve(orig: MapState, curr: MapState, aux?: string): SolveResult<MapMov
 
 /**
  * Boards are uniquely solvable, so any region colored against the unique
- * solution is a definite mistake. Re-solve from the clues; if not unique,
- * report none.
+ * solution is a definite mistake, and so is a blank region whose dots leave its
+ * answer out: a dot says the region *might* be that color (the help page), so a
+ * set of them without the right one is a claim the board refutes. Re-solve from
+ * the clues; if not unique, report none.
+ *
+ * The dots are what the hint reads a region's colors from, and this is what
+ * makes that sound (`hint.ts`).
  */
 function findMistakes(state: MapState): readonly MapMistake[] {
   const n = state.params.n;
@@ -408,10 +415,24 @@ function findMistakes(state: MapState): readonly MapMistake[] {
     return [];
 
   const out: MapMistake[] = [];
-  for (let i = 0; i < n; i++)
-    if (state.coloring[i] >= 0 && state.coloring[i] !== coloring[i])
+  for (let i = 0; i < n; i++) {
+    const c = state.coloring[i];
+    const dots = state.pencil[i];
+    if (c >= 0 ? c !== coloring[i] : dots !== 0 && !(dots & (1 << coloring[i])))
       out.push({ region: i });
+  }
   return out;
+}
+
+function hint(state: MapState): HintResult<MapMove, MapHint> {
+  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
+  if (refusal) return refusal;
+  const steps = buildSteps(state);
+  // Map's three rungs finish every board of the three tiers below Unreasonable
+  // (`difficulty-contract.test.ts` holds each board to its tier), so an empty
+  // plan here is a board whose tier permits search.
+  if (steps.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
+  return { ok: true, steps };
 }
 
 // --- flash -----------------------------------------------------------
@@ -504,6 +525,9 @@ export const mapGame: Game<
   solve,
   difficulty,
   findMistakes,
+  hint,
+  hintKeepTrack,
+  refreshHintStep,
   requestKeys,
 
   prefs: [

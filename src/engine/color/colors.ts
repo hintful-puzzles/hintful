@@ -401,3 +401,11 @@ export const FOUR_FILLS: readonly Color[] = [
   TEAL_WASH,
   PURPLE_WASH,
 ];
+
+/**
+ * {@link FOUR_FILLS}, as a player would say them. Map's hint names the color a
+ * region must take, and as with {@link TEN_NAMES} the word and the color come
+ * from one place, so recoloring the set cannot leave a sentence naming the old
+ * hue.
+ */
+export const FOUR_NAMES: readonly string[] = ["red", "yellow", "teal", "purple"];
