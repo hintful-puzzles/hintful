@@ -25,6 +25,7 @@ import { savedGames } from "../../store/saved-games.ts";
 import { cssWATweaks } from "../../utils/css.ts";
 import { puzzleContext } from "../contexts.ts";
 import type { Puzzle } from "../puzzle.ts";
+import { justSaved } from "../quick-save-actions.ts";
 import { shortcutLabel } from "../shortcuts.ts";
 
 // Component registration
@@ -45,8 +46,6 @@ interface Row {
    * all is not rendered disabled, it is not rendered: "present and grayed out"
    * teaches a player that the app is broken for this puzzle. */
   disabled?: boolean;
-  /** Drawn as a bordered button rather than a plain row. */
-  emphasis?: "bordered";
   /** Drawn quieter than its neighbors — a terminal or rarely-wanted action. */
   quiet?: boolean;
 }
@@ -131,9 +130,9 @@ export class PuzzleRail extends SignalWatcher(LitElement) {
         })}
         ${this.renderRow({
           command: "check-and-save",
-          icon: "check-and-save",
-          label: "Check & save",
-          emphasis: "bordered",
+          ...(justSaved(this.puzzle?.puzzleId ?? "")
+            ? { icon: "success", label: "Saved" }
+            : { icon: "check-and-save", label: "Check & save" }),
         })}
         ${this.renderRow({
           command: "quick-load",
@@ -366,16 +365,10 @@ export class PuzzleRail extends SignalWatcher(LitElement) {
    * so the label cannot become decorative. */
   private renderRow(row: Row): TemplateResult {
     const key = shortcutLabel(row.command);
-    const classes = [
-      row.emphasis === "bordered" ? "bordered" : "",
-      row.quiet ? "quiet" : "",
-    ]
-      .filter(Boolean)
-      .join(" ");
     return html`
       <button
           part="row"
-          class=${classes || nothing}
+          class=${row.quiet ? "quiet" : nothing}
           type="button"
           data-command=${row.command}
           ?disabled=${row.disabled === true}
@@ -538,13 +531,6 @@ export class PuzzleRail extends SignalWatcher(LitElement) {
        * hint, and the chrome offers one without urging it. The amber belongs
        * to the hint explanation below, the hint speaking rather than the
        * chrome recommending. */
-
-      /* Check & save reads as a button among plain rows, because it is the one
-       * row in this group that writes something. */
-      [part="row"].bordered {
-        border-color: var(--app-color-control-border);
-        background-color: var(--app-color-ground);
-      }
 
       [part="row"].quiet {
         color: var(--app-color-text-quiet);

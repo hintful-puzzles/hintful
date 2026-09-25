@@ -9,7 +9,11 @@ import { type PuzzleData, puzzleDataMap } from "../puzzle/catalog.ts";
 import type { PuzzleEvent } from "../puzzle/components/context.ts";
 import type { PuzzleKeyUnhandledEvent } from "../puzzle/components/view-interactive.ts";
 import type { Puzzle } from "../puzzle/puzzle.ts";
-import { checkAndSave, quickLoadPuzzle } from "../puzzle/quick-save-actions.ts";
+import {
+  checkAndSave,
+  justSaved,
+  quickLoadPuzzle,
+} from "../puzzle/quick-save-actions.ts";
 import { bareCommand, chordCommand } from "../puzzle/shortcuts.ts";
 import { helpUrl, homePageUrl } from "../routing.ts";
 import { savedGames } from "../store/saved-games.ts";
@@ -240,8 +244,8 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
    * cannot cover the sentence that explains the move — the whole point of an
    * explained hint. **`Check & save` holds a permanent slot** by owner request
    * (2026-09-07: *"I am very interested in it being in a highly accessible
-   * quick-access position"*), outlined rather than filled so the hint stays the
-   * one accent on the screen.
+   * quick-access position"*), drawn like its neighbors: it is a plain command
+   * that happens to be used often, not a special one (owner, 2026-09-25).
    */
   private renderPhoneChrome(): TemplateResult {
     const puzzle = this.puzzle;
@@ -303,13 +307,16 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
               )
             : nothing
         }
-        ${this.renderPhoneAction(
-          "check-and-save",
-          "check-and-save",
-          "Check & save",
-          false,
-          "outlined",
-        )}
+        ${
+          justSaved(this.puzzleId)
+            ? this.renderPhoneAction("check-and-save", "success", "Saved", false)
+            : this.renderPhoneAction(
+                "check-and-save",
+                "check-and-save",
+                "Check & save",
+                false,
+              )
+        }
         <button class="phone-action" type="button" @click=${this.openMoreSheet}>
           <wa-icon name="more"></wa-icon>
           <span>More</span>
@@ -336,11 +343,10 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     icon: string,
     label: string,
     disabled: boolean,
-    variant?: "outlined",
   ): TemplateResult {
     return html`
       <button
-          class=${variant ? `phone-action ${variant}` : "phone-action"}
+          class="phone-action"
           type="button"
           data-command=${command}
           ?disabled=${disabled}
@@ -1359,12 +1365,6 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         &:disabled {
           color: var(--app-color-text-faintest);
         }
-      }
-
-      /* Check & save holds a permanent slot by owner request, outlined rather
-       * than filled so the hint stays the only accent. */
-      .phone-action.outlined {
-        border-color: var(--app-color-control-border);
       }
 
       .more-sheet {

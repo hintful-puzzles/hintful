@@ -1,49 +1,25 @@
-# quick-save Specification
+## REMOVED Requirements
 
-## Purpose
-The one-slot quick save every puzzle offers, behind a Check & Save that, in a
-game with mistake-checking, leaves the checkpoint untouched while the board has
-mistakes, with its keyboard shortcut and non-blocking confirmations. It exists
-so a player can mark a position, checked wherever the game can check it, and
-come back to it without managing save files.
+### Requirement: Non-blocking confirmations use a transient toast
 
-## Requirements
+**Reason**: A clean Check & save no longer shows a toast. The owner found the
+confirmation too prominent for something done this often: *"It shouldn't be
+that special."*
+**Migration**: Replaced by "A clean save confirms on its own button; only a
+refused save interrupts" below. Quick-load keeps its toast, and a refused save
+keeps its modal.
 
-### Requirement: A single quick-save slot per puzzle
+### Requirement: Combined Check-&-Save gates the checkpoint on a clean board
 
-The app SHALL provide one dedicated quick-save slot per `puzzleId`,
-persisted in IndexedDB as a distinct save type, separate from the named
-save library and from autosave. Saving to the slot SHALL overwrite the
-previous quick-save for that puzzle. The slot SHALL be readable back into
-the puzzle via the same save codec the library uses, so it works for
-every game without per-game code. The presence of a slot for
-a puzzle SHALL be observable reactively so a quick-load control can
-enable/disable itself.
+**Reason**: The requirement said the control's label is "Quick-save" in a game
+without mistake-checking. The app has long used one name everywhere, and
+`help/features.md` tells players so ("the button reads the same and simply
+saves — one name for the save in every puzzle"). It also required a
+"confirmation" whose form the requirement below now states.
+**Migration**: Restated below with the label claim corrected. The scenarios
+that were true survive.
 
-#### Scenario: Quick-save then quick-load round-trips
-
-- **WHEN** the player quick-saves a board and later quick-loads
-- **THEN** the puzzle is restored to the quick-saved state
-- **AND** a second quick-save overwrites the slot rather than adding a
-  second record
-
-#### Scenario: Quick-load disabled with no slot
-
-- **WHEN** no quick-save exists for the current puzzle
-- **THEN** the quick-load control is disabled, and it becomes enabled as
-  soon as a quick-save is made
-
-### Requirement: Quick-save keyboard shortcut
-
-The app SHALL bind Cmd/Ctrl+S to the Check-&-Save action and SHALL
-prevent the browser's default "save page" behavior for that chord while
-a puzzle is open.
-
-#### Scenario: Cmd/Ctrl+S triggers Check-&-Save
-
-- **WHEN** the player presses Cmd/Ctrl+S with a puzzle open
-- **THEN** the Check-&-Save action runs and the browser does not show its
-  save-page dialog
+## ADDED Requirements
 
 ### Requirement: Check & save gates the checkpoint on a clean board
 

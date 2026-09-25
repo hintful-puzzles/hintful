@@ -4,26 +4,55 @@
  * Cmd/Ctrl+S shortcut (`puzzle-screen`). One implementation so the
  * check→save→confirm behavior is identical wherever it's invoked.
  */
+import { signal } from "@lit-labs/signals";
 import { showAlert } from "../dialogs/alert-dialog.ts";
-import { showToast } from "../dialogs/toast.ts";
+import { announce, showToast } from "../dialogs/toast.ts";
 import { savedGames } from "../store/saved-games.ts";
 import type { Puzzle } from "./puzzle.ts";
+
+/** How long the Check & save button reads "Saved" after a save succeeds. */
+const SAVED_FLASH_MS = 1500;
+
+/** The puzzle whose Check & save just succeeded, while its button says so. */
+const savedPuzzleId = signal<string | null>(null);
+let savedFlashTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * Whether `puzzleId`'s Check & save button should read "Saved" right now.
+ * Reactive: a `SignalWatcher` that reads it redraws when the moment passes.
+ */
+export function justSaved(puzzleId: string): boolean {
+  return savedPuzzleId.get() === puzzleId;
+}
+
+function flashSaved(puzzleId: string): void {
+  savedPuzzleId.set(puzzleId);
+  if (savedFlashTimer !== null) clearTimeout(savedFlashTimer);
+  savedFlashTimer = setTimeout(() => {
+    savedPuzzleId.set(null);
+    savedFlashTimer = null;
+  }, SAVED_FLASH_MS);
+}
 
 /**
  * Combined Check-&-Save. On a game with mistake-checking, validate first
  * and quick-save only a provably-clean board; on mistakes, leave the
  * previous quick-save intact and report them (the engine has already
  * highlighted them) via an interrupting modal. On a game without
- * mistake-checking, this is a plain quick-save. Success is confirmed with
- * a non-blocking toast, never a modal.
+ * mistake-checking, this is a plain quick-save.
+ *
+ * **Success is confirmed on the button itself** (owner, 2026-09-25: the save
+ * "shouldn't be that special"): it reads "Saved" for a moment through
+ * {@link justSaved}, and a screen reader hears the same thing. Only a refused
+ * save interrupts.
  *
  * **"Checkpoint" is the history panel's word and only its word**: this is the
  * one-slot quick-save, a different feature from the panel's numbered,
  * rewindable checkpoints (`help/features.md` §Checkpoints).
  *
- * The success label reports the *check*, not only the save, where there was one
- * to run: a player who pressed "Check and save" asked whether the board is
- * still sound, and the answer is the part they cannot see for themselves.
+ * The spoken confirmation reports the *check*, not only the save, where there
+ * was one to run: a player who pressed "Check and save" asked whether the board
+ * is still sound, and the answer is the part they cannot see for themselves.
  */
 export async function checkAndSave(puzzle: Puzzle): Promise<void> {
   const checked = puzzle.canFindMistakes;
@@ -42,11 +71,8 @@ export async function checkAndSave(puzzle: Puzzle): Promise<void> {
     }
   }
   await savedGames.quickSave(puzzle);
-  showToast({
-    label: checked ? "No mistakes — quick-saved" : "Quick-saved",
-    message: "Use Quick-load to return here.",
-    type: "success",
-  });
+  flashSaved(puzzle.puzzleId);
+  announce(checked ? "No mistakes. Saved." : "Saved.");
 }
 
 /** Restore the quick-save slot for `puzzle`, confirming success with a

@@ -43,6 +43,37 @@ export function showToast(options: ToastOptions): void {
   region.appendChild(toast);
 }
 
+const ANNOUNCE_REGION_ID = "app-announce-region";
+
+/**
+ * Tell assistive technology something without drawing anything: for an outcome
+ * whose visible confirmation is a change on the control itself, which a screen
+ * reader does not reliably speak. The region is polite, like the toasts'.
+ */
+export function announce(message: string): void {
+  let region = document.getElementById(ANNOUNCE_REGION_ID);
+  if (!region) {
+    region = document.createElement("div");
+    region.id = ANNOUNCE_REGION_ID;
+    region.setAttribute("aria-live", "polite");
+    region.setAttribute("role", "status");
+    Object.assign(region.style, {
+      position: "absolute",
+      width: "1px",
+      height: "1px",
+      overflow: "hidden",
+      clipPath: "inset(50%)",
+      whiteSpace: "nowrap",
+    });
+    document.body.appendChild(region);
+  }
+  // Clear first, so the same words said twice in a row are announced twice.
+  region.textContent = "";
+  requestAnimationFrame(() => {
+    if (region) region.textContent = message;
+  });
+}
+
 @customElement("app-toast")
 class AppToast extends LitElement {
   @property({ type: String })

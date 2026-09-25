@@ -30,6 +30,7 @@ interface AlertOptions {
 const {
   showAlert,
   showToast,
+  announce,
   quickSave,
   quickLoad,
   hasQuickSave,
@@ -40,6 +41,7 @@ const {
 } = vi.hoisted(() => ({
   showAlert: vi.fn(async (_options: AlertOptions) => undefined),
   showToast: vi.fn((_options: AlertOptions) => undefined),
+  announce: vi.fn((_message: string) => undefined),
   quickSave: vi.fn(async () => undefined),
   quickLoad: vi.fn(async () => ({ found: true as boolean, error: undefined })),
   hasQuickSave: vi.fn(() => true),
@@ -49,7 +51,7 @@ const {
   autoSavedPuzzles: new Set<string>(),
 }));
 vi.mock("../dialogs/alert-dialog.ts", () => ({ showAlert }));
-vi.mock("../dialogs/toast.ts", () => ({ showToast }));
+vi.mock("../dialogs/toast.ts", () => ({ showToast, announce }));
 vi.mock("../store/saved-games.ts", () => ({
   savedGames: {
     quickSave,
@@ -66,6 +68,7 @@ vi.mock("../store/saved-games.ts", () => ({
 // that a remembered board survives a reload, and a mocked store would assert
 // only that this file's own fake was called — the shape of guard this repo keeps
 // catching (a check aimed at a neighbor of the thing it claims to check).
+import { justSaved } from "../puzzle/quick-save-actions.ts";
 import { settings } from "../store/settings.ts";
 import { sleep } from "../utils/timing.ts";
 import { PuzzleScreen } from "./puzzle-screen.ts";
@@ -128,6 +131,7 @@ describe("puzzle-screen: Check-&-Save command", () => {
   beforeEach(() => {
     showAlert.mockClear();
     showToast.mockClear();
+    announce.mockClear();
     quickSave.mockClear();
     quickLoad.mockClear();
     hasQuickSave.mockClear();
@@ -136,23 +140,31 @@ describe("puzzle-screen: Check-&-Save command", () => {
     vi.restoreAllMocks();
   });
 
-  it("saves a clean board (0 mistakes) and confirms with a non-blocking toast", async () => {
-    const { host, findMistakes } = makeScreen({
-      canFindMistakes: true,
-      mistakeCount: 0,
-    });
-    await host.commandMap["check-and-save"].call(host);
-    expect(findMistakes).toHaveBeenCalledOnce();
-    expect(quickSave).toHaveBeenCalledOnce();
-    // Success is a transient toast, not a modal alert.
-    expect(showToast).toHaveBeenCalledOnce();
-    // The label reports the check as well as the save: "did the board survive?"
-    // is what the player pressed the button to find out, and it is the half
-    // they cannot see for themselves. "Checkpoint" is the history panel's word.
-    expect(showToast.mock.calls[0]?.[0]).toMatchObject({
-      label: "No mistakes — quick-saved",
-    });
-    expect(showAlert).not.toHaveBeenCalled();
+  it("saves a clean board (0 mistakes) and confirms on the button, not in a popup", async () => {
+    vi.useFakeTimers();
+    try {
+      const { host, findMistakes } = makeScreen({
+        canFindMistakes: true,
+        mistakeCount: 0,
+      });
+      expect(justSaved("galaxies")).toBe(false);
+      await host.commandMap["check-and-save"].call(host);
+      expect(findMistakes).toHaveBeenCalledOnce();
+      expect(quickSave).toHaveBeenCalledOnce();
+      // Owner, 2026-09-25: success is not special. No toast, no modal — the
+      // button reads "Saved" for a moment, and then it is Check & save again.
+      expect(showToast).not.toHaveBeenCalled();
+      expect(showAlert).not.toHaveBeenCalled();
+      expect(justSaved("galaxies")).toBe(true);
+      expect(justSaved("lightup")).toBe(false);
+      // A screen reader hears the check as well as the save: "did the board
+      // survive?" is what the player pressed the button to find out.
+      expect(announce).toHaveBeenCalledWith("No mistakes. Saved.");
+      vi.runAllTimers();
+      expect(justSaved("galaxies")).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("refuses to save when mistakes are present, and reports them in a modal", async () => {
@@ -182,9 +194,9 @@ describe("puzzle-screen: Check-&-Save command", () => {
     await host.commandMap["check-and-save"].call(host);
     expect(findMistakes).not.toHaveBeenCalled();
     expect(quickSave).toHaveBeenCalledOnce();
-    // No check ran, so the label claims none — the adaptive half of the same
-    // predicate the button's own label uses.
-    expect(showToast.mock.calls[0]?.[0]).toMatchObject({ label: "Quick-saved" });
+    // No check ran, so the announcement claims none.
+    expect(announce).toHaveBeenCalledWith("Saved.");
+    expect(showToast).not.toHaveBeenCalled();
   });
 
   it("Cmd/Ctrl+S routes to Check-&-Save and suppresses the browser default", async () => {
