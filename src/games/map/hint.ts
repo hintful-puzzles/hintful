@@ -257,15 +257,52 @@ function chains(b: MapBoard): Firing[] {
   });
   return [...found.values()].map(({ chain, color, other, ks }) => ({
     reads: [...chain, ...ks],
-    legs: (w) =>
-      narrowLegs(
-        w,
-        ks,
-        1 << color,
-        (c) => say.chain(color, other, chain.length, c),
-        chain.map((region, i) => ({ region, order: i + 1 })),
-      ),
+    legs: (w) => {
+      const numbered = chain.map((region, i) => ({ region, order: i + 1 }));
+      const legs = [
+        ...chainDots(w, chain, numbered),
+        ...narrowLegs(
+          w,
+          ks,
+          1 << color,
+          (c) => say.chain(color, other, chain.length, c),
+          numbered,
+        ),
+      ];
+      legs.forEach((s, i) => {
+        s.continuesPrevious = i > 0;
+      });
+      return legs;
+    },
   }));
+}
+
+/**
+ * Before a chain is followed, each of its regions shows its two colors as dots,
+ * one leg per region that does not already: "each numbered region has two
+ * colors left" is then on the board rather than four sums the player has to
+ * hold while following the chain (owner playtest, 2026-09-25). It is the
+ * notation a player solving alone would make, and the chain step then reads
+ * straight off it.
+ */
+function chainDots(
+  w: Work,
+  chain: readonly number[],
+  numbered: MapEvidence[],
+): MapHintStep[] {
+  const { graph, n, ngraph } = w.state.map;
+  const out: MapHintStep[] = [];
+  chain.forEach((r, i) => {
+    const two = colorsLeft(w, r);
+    if (w.pencil[r] === two) return;
+    let touched = 0;
+    for (const k of neighbors(graph, n, ngraph, r))
+      if (w.coloring[k] >= 0) touched |= 1 << w.coloring[k];
+    const explanation =
+      w.pencil[r] === 0 ? say.chainDot(i + 1, touched, two) : say.chainTrim(i + 1, two);
+    out.push(step(w, r, { dots: two }, explanation, numbered));
+  });
+  return out;
 }
 
 /** The whole remaining plan from `state`'s board: empty when deduction has run

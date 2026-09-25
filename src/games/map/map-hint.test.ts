@@ -25,9 +25,11 @@ const ARMS = {
   pairPlace: /^The outlined pair .* and must be \w+\.$/,
   pairStrike: /^The outlined pair .* must go\.$/,
   pairMark: /^The outlined pair .*: dot [\w ,]+\.$/,
-  chainPlace: /^Region 1 .* and must be \w+\.$/,
-  chainStrike: /^Region 1 .* must go\.$/,
-  chainMark: /^Region 1 .*: dot [\w ,]+\.$/,
+  chainPlace: /^Region 1 is .* and must be \w+\.$/,
+  chainStrike: /^Region 1 is .* must go\.$/,
+  chainMark: /^Region 1 is .*: dot [\w ,]+\.$/,
+  chainDot: /^Region \d+ touches /,
+  chainTrim: /^Region \d+'s other dots/,
 } satisfies Record<string, RegExp>;
 type Arm = keyof typeof ARMS;
 
@@ -40,6 +42,9 @@ type Arm = keyof typeof ARMS;
  * deadDots 156 on 87, pairPlace 466 on 156, pairMark 74 on 50, chainPlace 44 on
  * 37, chainStrike 5 on 5, chainMark 99 on 69.
  */
+const CHAIN_BOARD =
+  "15x20n30dh:echdkaebkheaaaaaiacaaabcbbabaacbhadbcacacegabaababacbaacbbdbachadaacjabbcaababgaaaaaaaaabdabbcabhadakabahccbdbecaahaibdbbbcdabbbacadeaaceccbbaaabbcacbdbdadabacfaaaaaaaalaaaadaaecabbadaaaibcccdcaadcdfdacza,a213c0a2e0a21d2b1a20";
+
 const PINNED: Partial<Record<Arm, string>> = {
   touches:
     "15x20n30de:ddbaganckacadacaaaeacaaaaaabdacacabacacagcfaeabaabaaaahabaaaccbaaabaacfaaccacdabdaabdabdaaaadacaaaaafdbaabdahbacbbbabbhaebaceaabcbabfaabdaacebabacfagaaafeabdeacdabcajhegaabbbeceabceacceaaaabaddafaaaacgaababmbbbabdaeacaabcaca,b02c3232a2g0312a203a2",
@@ -53,13 +58,13 @@ const PINNED: Partial<Record<Arm, string>> = {
     "15x20n30dh:caachabacccagbadadabbacaebcacababaaaaabbdccbmdhcbaadcbdakacbccdchcbaccfcifabjcdadbbabbfatdabdancpbbbahedaaabdbbafbcahbacbebaabcaaeaababbgaaagabafbbaaabaaabcbaccabcacahafbfaaaedecaalbcamd,1b0a1b1b3a02c2b2b13120a",
   chainStrike:
     "15x20n30dh:baccbaaagabacadcaadaaacbaaadfacceaaafaibcahbabhcaabbdbfbaagabbcbcbaabaeadaabadeababacbebaaacbaafcbcafabaacebbadbdabaaacaaaeccbgbaebckbbcabhacgaabaaaabcaabcadaacacbaaabcebcabbaabbbadabadacaabbbacfaabacfcbaabaabaibaadbhahaaaffcadbjbba,a230a3i13a2f1a3a2",
-  chainMark:
-    "15x20n30dh:echdkaebkheaaaaaiacaaabcbbabaacbhadbcacacegabaababacbaacbbdbachadaacjabbcaababgaaaaaaaaabdabbcabhadakabahccbdbecaahaibdbbbcdabbbacadeaaceccbbaaabbcacbdbdadabacfaaaaaaaalaaaadaaecabbadaaaibcccdcaadcdfdacza,a213c0a2e0a21d2b1a20",
+  chainMark: CHAIN_BOARD,
+  chainDot: CHAIN_BOARD,
 };
 
 /**
  * The arms no fresh board reaches, each with why and with the board built by
- * hand below. Both rest on dots the *player* made: the plan itself never leaves
+ * hand below. All rest on dots the *player* made: the plan itself never leaves
  * a region with one dot (it colors it instead), and it dots a region only when
  * narrowing it, after which the same region is rarely a pair's target again (0
  * of the 240 boards above).
@@ -67,6 +72,7 @@ const PINNED: Partial<Record<Arm, string>> = {
 const BUILT: Record<Exclude<Arm, keyof typeof PINNED>, string> = {
   lastDot: "a region the player dotted with its answer alone",
   pairStrike: "a pair's target the player had already dotted",
+  chainTrim: "a chain's region the player dotted with a color a neighbor shows",
 };
 
 function stateOf(id: string): MapState {
@@ -140,6 +146,23 @@ describe("map hint arms", () => {
     expect(spoken.map((s) => armOf(s.explanation))).toEqual([["lastDot"]]);
   });
 
+  it("chainTrim: a chain region carrying a dead dot loses it before the chain", () => {
+    const start = stateOf(CHAIN_BOARD);
+    const steps = plan(start);
+    const at = steps.findIndex((s) => ARMS.chainDot.test(s.explanation));
+    const before = walk(start, steps.slice(0, at), () => {});
+    const r = steps[at].highlights?.targets[0] as number;
+    // Dot every color on it, as a player marking "anything" would.
+    const dotted = [0, 1, 2, 3].reduce(
+      (s, bit) => mapGame.executeMove(s, { ops: [{ op: "pencil", region: r, bit }] }),
+      before,
+    );
+    const trims = plan(dotted).filter(
+      (s) => s.highlights?.targets[0] === r && ARMS.chainTrim.test(s.explanation),
+    );
+    expect(trims).toHaveLength(1);
+  });
+
   it("pairStrike: a pair's dotted target loses exactly the pair's dots", () => {
     const start = stateOf(PINNED.pairMark as string);
     const steps = plan(start);
@@ -186,13 +209,23 @@ describe("map hint claims hold on the board they are spoken over", () => {
           expect(bits(left(s, ev[0]))).toBe(2);
           expect(left(s, ev[0])).toBe(left(s, ev[1]));
           for (const e of ev) expect(adjacent(s, t, e)).toBe(true);
+        } else if (arm === "chainDot" || arm === "chainTrim") {
+          // A chain's own region, dotted with exactly the two colors it has.
+          expect(ev).toContain(t);
+          expect(bits(left(s, t))).toBe(2);
+          expect((hl.want as { dots: number }).dots).toBe(left(s, t));
+          expect(s.pencil[t]).not.toBe(left(s, t));
         } else if (arm?.startsWith("chain")) {
-          // Numbered 1..m, each touching the next, each down to two colors,
-          // and this region touching the first and the last.
+          // Numbered 1..m, each touching the next, each showing its two colors
+          // as dots (the journey's earlier legs put them there), and this
+          // region touching the first and the last.
           expect(hl.evidence.map((e) => e.order)).toEqual(ev.map((_, i) => i + 1));
           for (let i = 0; i + 1 < ev.length; i++)
             expect(adjacent(s, ev[i], ev[i + 1])).toBe(true);
-          for (const e of ev) expect(bits(left(s, e))).toBe(2);
+          for (const e of ev) {
+            expect(bits(left(s, e))).toBe(2);
+            expect(s.pencil[e], "a chain region shows its two dots").toBe(left(s, e));
+          }
           expect(adjacent(s, t, ev[0])).toBe(true);
           expect(adjacent(s, t, ev[ev.length - 1])).toBe(true);
           expect(ev).not.toContain(t);

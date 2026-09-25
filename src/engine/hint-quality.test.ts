@@ -230,7 +230,7 @@ const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
   },
   {
     games: ["map"],
-    match: /^Region 1 can only be \w+ or \w+\. If \w+, each numbered region/,
+    match: /^Region 1 is \w+ or \w+\. If \w+, each numbered region/,
     why:
       "Map's chain Tactic, held to what ts-engine asks of every narrated chain: " +
       "name both ends, cite the links by their numbers on the board, and state " +

@@ -4141,6 +4141,22 @@ square-grid convention. The answers, per piece:
   from `FOUR_NAMES` beside `FOUR_FILLS`, because in Map a color is the value,
   not a hint role.
 
+- **Numbering a chain is not enough; its premises go on the board too.** The
+  first cut numbered the chain's regions and said "each numbered region has two
+  colors left and forces the next". The owner found it too much to follow
+  (playtest, 2026-09-25): every link asked the player to work out, from the
+  neighbors, which two colors that region had, and to hold them all through the
+  case split. That is § "The forcing boundary"'s compressed chain with the
+  order fixed and the premises still in the head. The fix is the notation the
+  game already has. The chain's journey first dots each numbered region with
+  its two colors, one short leg each ("Region 2 touches red and purple, so it
+  can only be teal or yellow: dot those."), then speaks the chain as something
+  to read off the dots: each region loses the color the one before it takes.
+  `map-hint.test.ts` asserts every numbered region shows exactly its two dots
+  when the chain step is spoken. **For any chain Tactic, ask whether each link's
+  premise is on the board when the chain is spoken**; if it is a sum the player
+  must compute, the journey owes a leg that writes it down.
+
 Two rules of Map's own that another tiered game may want:
 
 - **Offer only the lowest rung that fires.** Map's tiers are exactly its rungs,

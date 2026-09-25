@@ -242,8 +242,8 @@ return the forced steps from the player's own board as an ordered plan.
 A blank region's colors SHALL be read as its dots, or all four colors when it
 has none, less every color a neighbor shows. That is sound because
 `findMistakes` flags any dots leaving out a region's answer. The plan SHALL
-place dots only where a deduction rules out a color no neighbor shows, so an
-Easy board's plan places none.
+place dots only where a deduction rules out a color no neighbor shows, or where
+a chain's premise needs them, so an Easy board's plan places none.
 
 The deductions SHALL be the solver's three rungs, reported by the same functions
 the solver runs: a region with one color left must take it; two touching regions
@@ -257,6 +257,12 @@ pair and a Normal board's never shows a chain. A narrowing step SHALL color its
 region when one color is left, remove the struck dots when the region has dots,
 and otherwise dot the colors left, and its sentence SHALL say which. One firing
 that narrows several regions SHALL be one journey, a leg per region.
+
+A chain firing SHALL open its journey with a leg for each numbered region that
+does not already show exactly its two colors as dots, dotting them (or removing
+the dots a neighbor's color rules out), so that when the chain step is spoken
+every numbered region shows its two colors and the chain can be followed on the
+board rather than worked out.
 
 A step SHALL ring the region it acts on with a solid band inside the region's
 boundary, in the hint's action color, and that band SHALL be the only hint mark
@@ -282,9 +288,11 @@ SHALL change no solver verdict.
 
 - **WHEN** the next deduction is a forcing chain striking a color from a region
   with no dots
-- **THEN** the step dots that region with the colors it has left, numbers the
-  chain's regions 1 to N on the board, and says region 1's two colors, the color
-  region N is driven to, and that this region touches both ends
+- **THEN** the journey first dots each numbered region without them with its two
+  colors, then its last step dots that region with the colors it has left,
+  numbers the chain's regions 1 to N on the board, and says region 1's two
+  colors, the color region N is driven to, and that this region touches both
+  ends
 
 #### Scenario: The hint's dots are the next step's premise
 

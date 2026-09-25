@@ -105,5 +105,17 @@ export const say = {
    * only the vocabulary differs, decline when an arm's shape does).
    */
   chain: (color: number, other: number, last: number, c: Conclusion): string =>
-    `Region 1 can only be ${colorName(color)} or ${colorName(other)}. If ${colorName(other)}, each numbered region has two colors left and forces the next, until region ${last} is ${colorName(color)}. This region touches regions 1 and ${last}, so ${conclude(c, `it can't be ${colorName(color)}`)}.`,
+    `Region 1 is ${colorName(color)} or ${colorName(other)}. If ${colorName(other)}, each numbered region loses the color the one before it takes, until region ${last} is ${colorName(color)}. This region touches regions 1 and ${last}, so ${conclude(c, `it can't be ${colorName(color)}`)}.`,
+
+  /**
+   * A chain's region, dotted with its two colors before the chain is followed:
+   * its neighbors show the other two. `touched` and `two` are masks.
+   */
+  chainDot: (k: number, touched: number, two: number): string =>
+    `Region ${k} touches ${joinWith(names(touched))}, so it can only be ${joinOr(names(two))}: dot those.`,
+
+  /** The same, for a chain's region whose dots include colors a neighbor
+   * already has. */
+  chainTrim: (k: number, two: number): string =>
+    `Region ${k}'s other dots match its neighbors' colors, so it can only be ${joinOr(names(two))}.`,
 } as const;
