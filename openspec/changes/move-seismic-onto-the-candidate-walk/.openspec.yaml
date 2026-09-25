@@ -1,0 +1,5 @@
+# No delta yet: whether the walk gains a value-dependent cull depends on what §1
+# measures. Written 2026-09-25; nothing is implemented.
+schema: spec-driven
+created: 2026-09-25
+skip_specs: true

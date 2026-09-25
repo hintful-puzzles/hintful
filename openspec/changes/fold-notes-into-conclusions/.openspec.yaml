@@ -1,0 +1,6 @@
+# No delta yet: the ts-engine candidate-plan requirement's note-leg clause moves
+# once the conclusion contract is designed. Written 2026-09-25; nothing is
+# implemented.
+schema: spec-driven
+created: 2026-09-25
+skip_specs: true
