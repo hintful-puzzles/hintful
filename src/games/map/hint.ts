@@ -229,8 +229,16 @@ function pairs(b: MapBoard): Firing[] {
   });
   return [...found.values()].map(({ a, b: b2, v, ks }) => ({
     reads: [a, b2, ...ks],
-    legs: (w) =>
-      narrowLegs(w, ks, v, (c) => say.pair(v, c), [{ region: a }, { region: b2 }]),
+    legs: (w) => {
+      const pair = [{ region: a }, { region: b2 }];
+      return journey([
+        ...premiseDots(w, [a, b2], pair, {
+          dot: (_i, touched, two) => say.pairDot(touched, two),
+          trim: (_i, two) => say.pairTrim(two),
+        }),
+        ...narrowLegs(w, ks, v, (c) => say.pair(v, c), pair),
+      ]);
+    },
   }));
 }
 
@@ -259,8 +267,11 @@ function chains(b: MapBoard): Firing[] {
     reads: [...chain, ...ks],
     legs: (w) => {
       const numbered = chain.map((region, i) => ({ region, order: i + 1 }));
-      const legs = [
-        ...chainDots(w, chain, numbered),
+      return journey([
+        ...premiseDots(w, chain, numbered, {
+          dot: (i, touched, two) => say.chainDot(i + 1, touched, two),
+          trim: (i, two) => say.chainTrim(i + 1, two),
+        }),
         ...narrowLegs(
           w,
           ks,
@@ -268,11 +279,7 @@ function chains(b: MapBoard): Firing[] {
           chainSentence(w, chain, color, other),
           numbered,
         ),
-      ];
-      legs.forEach((s, i) => {
-        s.continuesPrevious = i > 0;
-      });
-      return legs;
+      ]);
     },
   }));
 }
@@ -302,32 +309,49 @@ function chainSentence(
   return (c) => say.chain(color, forced, c);
 }
 
+/** How a premise-dotting leg speaks: `i` is the region's place in the
+ * premise's list, `touched` its neighbors' colors and `two` what they leave. */
+interface DotWords {
+  dot(i: number, touched: number, two: number): string;
+  trim(i: number, two: number): string;
+}
+
 /**
- * Before a chain is followed, each of its regions shows its two colors as dots,
- * one leg per region that does not already: "each numbered region has two
- * colors left" is then on the board rather than four sums the player has to
- * hold while following the chain (owner playtest, 2026-09-25). It is the
- * notation a player solving alone would make, and the chain step then reads
- * straight off it.
+ * Before a pair or a chain is stated, each region its premise rests on shows
+ * its two colors as dots, one leg per region that does not already. "Can only be
+ * yellow or teal" is then on the board rather than a sum the player has to work
+ * out from the neighbors and hold while following the deduction (owner
+ * playtests, 2026-09-25, a chain first and then a pair). It is the notation a
+ * player solving alone would make, and the deduction's step then reads straight
+ * off it.
  */
-function chainDots(
+function premiseDots(
   w: Work,
-  chain: readonly number[],
-  numbered: MapEvidence[],
+  regions: readonly number[],
+  evidence: MapEvidence[],
+  words: DotWords,
 ): MapHintStep[] {
   const { graph, n, ngraph } = w.state.map;
   const out: MapHintStep[] = [];
-  chain.forEach((r, i) => {
+  regions.forEach((r, i) => {
     const two = colorsLeft(w, r);
     if (w.pencil[r] === two) return;
     let touched = 0;
     for (const k of neighbors(graph, n, ngraph, r))
       if (w.coloring[k] >= 0) touched |= 1 << w.coloring[k];
     const explanation =
-      w.pencil[r] === 0 ? say.chainDot(i + 1, touched, two) : say.chainTrim(i + 1, two);
-    out.push(step(w, r, { dots: two }, explanation, numbered));
+      w.pencil[r] === 0 ? words.dot(i, touched, two) : words.trim(i, two);
+    out.push(step(w, r, { dots: two }, explanation, evidence));
   });
   return out;
+}
+
+/** One firing's legs as one journey: every leg after the first continues it. */
+function journey(legs: MapHintStep[]): MapHintStep[] {
+  legs.forEach((s, i) => {
+    s.continuesPrevious = i > 0;
+  });
+  return legs;
 }
 
 /** The whole remaining plan from `state`'s board: empty when deduction has run

@@ -243,7 +243,7 @@ A blank region's colors SHALL be read as its dots, or all four colors when it
 has none, less every color a neighbor shows. That is sound because
 `findMistakes` flags any dots leaving out a region's answer. The plan SHALL
 place dots only where a deduction rules out a color no neighbor shows, or where
-a chain's premise needs them, so an Easy board's plan places none.
+a pair's or chain's premise needs them, so an Easy board's plan places none.
 
 The deductions SHALL be the solver's three rungs, reported by the same functions
 the solver runs: a region with one color left must take it; two touching regions
@@ -258,11 +258,11 @@ region when one color is left, remove the struck dots when the region has dots,
 and otherwise dot the colors left, and its sentence SHALL say which. One firing
 that narrows several regions SHALL be one journey, a leg per region.
 
-A chain firing SHALL open its journey with a leg for each numbered region that
-does not already show exactly its two colors as dots, dotting them (or removing
-the dots a neighbor's color rules out), so that when the chain step is spoken
-every numbered region shows its two colors and the chain can be followed on the
-board rather than worked out.
+A pair or chain firing SHALL open its journey with a leg for each region its
+premise rests on that does not already show exactly its two colors as dots,
+dotting them (or removing the dots a neighbor's color rules out), so that when
+the pair or chain step is spoken every one of those regions shows its two
+colors and the deduction can be followed on the board rather than worked out.
 
 The chain step SHALL name what the dots show rather than a rule the player must
 run. When every numbered region has a dot of the struck color, it SHALL say so
@@ -293,6 +293,13 @@ SHALL change no solver verdict.
   and a hint is requested
 - **THEN** the step colors it the fourth, rings it, outlines nothing else, and
   names the three colors and the fourth
+
+#### Scenario: A pair's undotted region is dotted before the pair is stated
+
+- **WHEN** the next deduction is a pair one of whose regions shows no dots
+- **THEN** the journey's first step rings that region, outlines the other,
+  dots the two colors its neighbors leave it, and the pair step follows with
+  both regions showing their two dots
 
 #### Scenario: A chain's conclusion is dotted onto an unmarked region
 

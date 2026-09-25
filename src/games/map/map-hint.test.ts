@@ -21,7 +21,9 @@ import type { MapMove, MapParams, MapState } from "./state.ts";
 const ARMS = {
   touches: /^This region touches /,
   lastDot: /^The only dot in this region/,
-  deadDots: /^Its other dots match/,
+  deadDots: /^Its other dots match .* must be \w+\.$/,
+  pairDot: /^Its neighbors show /,
+  pairTrim: /^Its other dots match .* can only be /,
   pairPlace: /^The outlined pair .* and must be \w+\.$/,
   pairStrike: /^The outlined pair .* must go\.$/,
   pairMark: /^The outlined pair .*: dot [\w ,]+\.$/,
@@ -48,13 +50,16 @@ type Arm = keyof typeof ARMS;
 const CHAIN_BOARD =
   "15x20n30dh:echdkaebkheaaaaaiacaaabcbbabaacbhadbcacacegabaababacbaacbbdbachadaacjabbcaababgaaaaaaaaabdabbcabhadakabahccbdbecaahaibdbbbcdabbbacadeaaceccbbaaabbcacbdbdadabacfaaaaaaaalaaaadaaecabbadaaaibcccdcaadcdfdacza,a213c0a2e0a21d2b1a20";
 
+const PAIR_BOARD =
+  "15x20n30dn:jchajdgabaaacaaacbdaaabbiabcaahdabccaebabacabcbahacccabbaamaaaacbabeaacacadbaeaagbbacadbgciebacbbatagegaiebcagbdhcabgbbeadfbbcdaababhbbabcjadcaaacbdbaabbbkbgacbfaaaabibabaaaabaaabaeaiaababdddbf,3f00c0a3b32b3b0a1323";
+
 const PINNED: Partial<Record<Arm, string>> = {
   touches:
     "15x20n30de:ddbaganckacadacaaaeacaaaaaabdacacabacacagcfaeabaabaaaahabaaaccbaaabaacfaaccacdabdaabdabdaaaadacaaaaafdbaabdahbacbbbabbhaebaceaabcbabfaabdaacebabacfagaaafeabdeacdabcajhegaabbbeceabceacceaaaabaddafaaaacgaababmbbbabdaeacaabcaca,b02c3232a2g0312a203a2",
   deadDots:
     "15x20n30dn:lacbaacbehaabcbacciaaadbfahadacadaaccffahfhaaaaadaaabaaaahabcaaaaaaabbbbcbfbcbabaafaacdaebfaaaaccaeaaabaabgahbcacbdbecaaaadbbbeababcdaaabbabciaeacdaebhadbcadbddkadcbaddabcaaabbabgbcaaabcbabbaacbbbebcacaabcakaaaaacbcaiaaae,3a12a1200c0g00310a3b1",
-  pairPlace:
-    "15x20n30dn:jchajdgabaaacaaacbdaaabbiabcaahdabccaebabacabcbahacccabbaamaaaacbabeaacacadbaeaagbbacadbgciebacbbatagegaiebcagbdhcabgbbeadfbbcdaababhbbabcjadcaaacbdbaabbbkbgacbfaaaabibabaaaabaaabaeaiaababdddbf,3f00c0a3b32b3b0a1323",
+  pairPlace: PAIR_BOARD,
+  pairDot: PAIR_BOARD,
   pairMark:
     "15x20n30dn:lacbaacbehaabcbacciaaadbfahadacadaaccffahfhaaaaadaaabaaaahabcaaaaaaabbbbcbfbcbabaafaacdaebfaaaaccaeaaabaabgahbcacbdbecaaaadbbbeababcdaaabbabciaeacdaebhadbcadbddkadcbaddabcaaabbabgbcaaabcbabbaacbbbebcacaabcakaaaaacbcaiaaae,3a12a1200c0g00310a3b1",
   chainPlace:
@@ -84,6 +89,7 @@ const BUILT: Record<Exclude<Arm, keyof typeof PINNED>, string> = {
   lastDot: "a region the player dotted with its answer alone",
   pairStrike: "a pair's target the player had already dotted",
   chainTrim: "a chain's region the player dotted with a color a neighbor shows",
+  pairTrim: "a pair's region the player dotted with a color a neighbor shows",
 };
 
 function stateOf(id: string): MapState {
@@ -174,6 +180,22 @@ describe("map hint arms", () => {
     expect(trims).toHaveLength(1);
   });
 
+  it("pairTrim: a pair region carrying a dead dot loses it before the pair", () => {
+    const start = stateOf(PINNED.pairDot as string);
+    const steps = plan(start);
+    const at = steps.findIndex((s) => ARMS.pairDot.test(s.explanation));
+    const before = walk(start, steps.slice(0, at), () => {});
+    const r = steps[at].highlights?.targets[0] as number;
+    const dotted = [0, 1, 2, 3].reduce(
+      (s, bit) => mapGame.executeMove(s, { ops: [{ op: "pencil", region: r, bit }] }),
+      before,
+    );
+    const trims = plan(dotted).filter(
+      (s) => s.highlights?.targets[0] === r && ARMS.pairTrim.test(s.explanation),
+    );
+    expect(trims).toHaveLength(1);
+  });
+
   it("pairStrike: a pair's dotted target loses exactly the pair's dots", () => {
     const start = stateOf(PINNED.pairMark as string);
     const steps = plan(start);
@@ -185,7 +207,9 @@ describe("map hint arms", () => {
       (s, bit) => mapGame.executeMove(s, { ops: [{ op: "pencil", region: k, bit }] }),
       before,
     );
-    const [first] = plan(dotted);
+    // The pair's own regions may be dotted first, as legs of the same journey.
+    const first = plan(dotted).find((s) => !ARMS.pairDot.test(s.explanation));
+    if (!first) throw new Error("no step after the pair's dots");
     expect(armOf(first.explanation)).toEqual(["pairStrike"]);
     expect(first.highlights?.targets).toEqual([k]);
     const after = mapGame.executeMove(dotted, first.move);
@@ -212,14 +236,26 @@ describe("map hint claims hold on the board they are spoken over", () => {
           // fills are the evidence.
           expect(ev).toEqual([]);
           expect(bits(left(s, t))).toBe(1);
+        } else if (arm === "pairDot" || arm === "pairTrim") {
+          // One of the pair, ringed, dotted with exactly its two colors, the
+          // other outlined beside it.
+          expect(ev).toHaveLength(2);
+          expect(ev).toContain(t);
+          expect(bits(left(s, t))).toBe(2);
+          expect((hl.want as { dots: number }).dots).toBe(left(s, t));
+          expect(s.pencil[t]).not.toBe(left(s, t));
         } else if (arm?.startsWith("pair")) {
-          // "The outlined pair touch and can only be X or Y" and "this region
-          // touches both".
+          // "The outlined pair touch and can only be X or Y", each showing it
+          // as dots (the journey's earlier legs put them there), and "this
+          // region touches both".
           expect(ev).toHaveLength(2);
           expect(adjacent(s, ev[0], ev[1])).toBe(true);
           expect(bits(left(s, ev[0]))).toBe(2);
           expect(left(s, ev[0])).toBe(left(s, ev[1]));
-          for (const e of ev) expect(adjacent(s, t, e)).toBe(true);
+          for (const e of ev) {
+            expect(adjacent(s, t, e)).toBe(true);
+            expect(s.pencil[e], "a pair region shows its two dots").toBe(left(s, e));
+          }
         } else if (arm === "chainDot" || arm === "chainTrim") {
           // A chain's own region, dotted with exactly the two colors it has.
           expect(ev).toContain(t);

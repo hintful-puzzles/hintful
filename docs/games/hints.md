@@ -4155,7 +4155,14 @@ square-grid convention. The answers, per piece:
   `map-hint.test.ts` asserts every numbered region shows exactly its two dots
   when the chain step is spoken. **For any chain Tactic, ask whether each link's
   premise is on the board when the chain is spoken**; if it is a sum the player
-  must compute, the journey owes a leg that writes it down.
+  must compute, the journey owes a leg that writes it down. It is not only a
+  chain's problem: the pair rule below it had the same gap (one of the outlined
+  pair showing its two colors as dots, the other leaving them to be worked out)
+  and the owner found it in the next playtest. Both rungs now open their
+  journeys through one helper, `premiseDots`, and the test holds every premise
+  region of either to showing its two dots when its step is spoken. **Check
+  every rung for the gap once one has it**, rather than waiting for a player to
+  find each.
 - **And the chain step names what the dots show, never a rule to run.** With
   the dots down, "each region loses the color the one before it takes" was
   still too much (the owner's next playtest): it is a procedure, and following

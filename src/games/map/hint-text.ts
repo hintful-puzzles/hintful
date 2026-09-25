@@ -134,6 +134,19 @@ export const say = {
   },
 
   /**
+   * One of a pair's regions, dotted with its two colors before the pair is
+   * stated, so "both can only be yellow or teal" is on the board. The region
+   * dotted is ringed, the pair's other region outlined beside it.
+   */
+  pairDot: (touched: number, two: number): string =>
+    `Its neighbors show ${joinWith(names(touched))}, so this region can only be ${joinOr(names(two))}: dot those.`,
+
+  /** The same, for a pair's region whose dots include a color a neighbor
+   * already shows. */
+  pairTrim: (two: number): string =>
+    `Its other dots match its neighbors' colors, so this region can only be ${joinOr(names(two))}.`,
+
+  /**
    * A chain's region, dotted with its two colors before the chain is followed:
    * its neighbors show the other two. `touched` and `two` are masks.
    */
