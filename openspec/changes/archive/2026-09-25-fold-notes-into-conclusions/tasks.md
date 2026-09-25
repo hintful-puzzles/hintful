@@ -26,4 +26,5 @@
       readings, with its premise check widened to folded note steps.
 - [x] 3.2 Re-measure the defaults table and revisit each game's default
       (design D4).
-- [ ] 3.3 Owner reads the sentences in the app (player-visible).
+- [x] 3.3 Owner reads the sentences in the app (player-visible). Accepted
+      2026-09-25.

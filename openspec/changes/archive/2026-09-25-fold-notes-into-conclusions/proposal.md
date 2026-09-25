@@ -1,7 +1,6 @@
 # fold-notes-into-conclusions
 
-**Status: implemented, awaiting the owner's read of the sentences (task 3.3).**
-Owner-requested, 2026-09-25. Player-visible wording in eight games: the owner
+**Status: done, owner-accepted 2026-09-25.** Owner-requested, 2026-09-25. Player-visible wording in eight games: the owner
 judges the sentences. See `design.md` for what was built and measured.
 
 ## Why
