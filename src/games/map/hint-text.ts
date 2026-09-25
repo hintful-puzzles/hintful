@@ -70,6 +70,14 @@ function conclude(c: Conclusion, cannot: string): string {
 }
 
 export const say = {
+  /** The populate reading's opening, the Mark-all press's fill. */
+  fillAll:
+    "Start by dotting all four colors into each blank region, so there is something to cross out.",
+
+  /** The press's second half, which follows the fill in one journey. */
+  cleanNeighbors:
+    "Now clear the easy ones: remove from each blank region the dot of every color a neighbor already shows.",
+
   /** A region whose neighbors show every color but one, and which has no dots
    * to consult. `others` is the three colors its neighbors show. */
   touchesTheRest: (color: number, others: number): string =>

@@ -3556,6 +3556,10 @@ misses. It also holds, on the real board and under both readings, every blank
 cell a step outlines, `reads` or strikes from to showing notes when the step is
 spoken, which is why `reads` rides on the step's highlights as data. It cannot
 see a `reads` a new cage rule forgot to declare: that is the game's to state.
+It tells a fill from a note leg from a strike by **what the step does to the
+board** (notes added to several elements, to one, or only removed), not by the
+move's `type`, because a Map move is a list of ops with no discriminant; and it
+addresses Map's premise by region, from the step's `targets` and `evidence`.
 
 **The default is a per-game convention with an override, and it was measured,
 not argued.** Over every preset at six seeds (`examine-implicit-candidates`,
@@ -3570,12 +3574,13 @@ not argued.** Over every preset at six seeds (`examine-implicit-candidates`,
 | Unequal | 1.14 | 71% |
 | Rome | 1.18 | 80% |
 | Keen | 1.22 | 82% |
+| Map (added later, on its own plan) | 0.89 Easy, 0.98–1.03 Normal, 1.09–1.11 Tricky | 0–18%, 34–51% Tricky |
 
 Where the clues or cages drive the deductions, nearly every cell ends up needing
 notes, and writing them one cell at a time costs more than one populate. So the
 convention, `DEFAULT_CANDIDATE_READING`, is `populate`, and a game whose plan is
 no longer under the implicit reading overrides it in `newUi` and says why (Solo,
-Mathrax, Group). A new game measures the same two numbers before choosing.
+Mathrax, Group, Map). A new game measures the same two numbers before choosing.
 
 **Salad walks the populate reading only**: its setup is its own (the "might be
 empty" note is a candidate no row or column rules out, so an implicit Salad
@@ -4178,10 +4183,14 @@ square-grid convention. The answers, per piece:
   grid candidate game now offers as a player preference; it was a choice about
   how to read candidates, never a fact about Map. What still keeps Map off
   `runCandidatePlan` is geometry: the walk indexes cells by `(x, y)` on a grid
-  of stride `w`, and Map's elements are regions of a graph. Map offers the
-  implicit reading only. Penciling four colors into thirty regions to strike
-  three from each would make the Easy tier, which needs no dots at all, need
-  dozens, and Map has no Mark-all move for a populate step to follow.
+  of stride `w`, and Map's elements are regions of a graph. Map offers both
+  readings with the preference, on its own plan: under `populate` it opens
+  with its Mark-all press (`markAll`: dot all four colors into each dot-less
+  region, then remove the colors a neighbor shows) as one fill-and-clean
+  journey, after which the same rungs read the dots. Its default is implicit,
+  measured like the table in § "Two readings of an unmarked cell". Once it was
+  asked, nothing about a graph stood in the way of either: a move that is a
+  list of ops needed no new shape to be a fill.
 - **The frontier transfers once it stops naming cells.** Its rule (continue from
   what the last steps wrote) never needed a geometry, only a way to tell two
   mentions of one element apart, so `HintFrontier` now takes a key: `gridKey(w,

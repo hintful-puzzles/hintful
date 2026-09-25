@@ -116,14 +116,15 @@ In puzzles with pencil marks, you choose how a hint writes them, under
   players solve before they write anything down. A hint writes a square's marks
   only when its next deduction crosses one out or reasons from it, and tells
   you why those are the ones to write. Much of a sudoku then needs no marks at
-  all.
+  all. In Map, a region with no dots counts as any color its neighbors don't
+  show.
 
 * **Every candidate first.** The hint starts by filling in every square's marks,
   as the ::mark-all:: button does, clears the ones the board already rules out,
   and reasons from the marks from then on.
 
-Each puzzle starts on whichever suits it better. Solo, Mathrax and Group start
-on the first; puzzles where nearly every square ends up needing marks, such as
+Each puzzle starts on whichever suits it better. Solo, Mathrax, Group and Map
+start on the first; puzzles where nearly every square ends up needing marks, such as
 Keen and Towers, start on the second. The hints teach the same deductions either
 way.
 

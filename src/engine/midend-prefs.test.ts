@@ -8,6 +8,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { mapGame } from "../games/map/index.ts";
 import { fakeGame } from "./fake-game.ts";
 import type { Game } from "./game.ts";
 import { Midend } from "./midend.ts";
@@ -177,5 +178,29 @@ describe("engine preferences hook", () => {
     m.setPreferences({ highlight: false, style: 1 });
     m.newGame();
     expect(m.getPreferences()).toEqual({ highlight: false, style: 1 });
+  });
+
+  it("drops a stored hint plan when a preference changes, since the plan read them", () => {
+    // Map's plan opens with its Mark-all press under "Every candidate first"
+    // and never under the default, so the first step says which reading
+    // built the plan.
+    const m = new Midend(mapGame);
+    const shown: (string | null)[] = [];
+    m.setCallbacks(
+      (n) => {
+        if (n.type === "status-bar-change") shown.push(n.activeHintExplanation ?? null);
+      },
+      () => {},
+      () => {},
+    );
+    m.newGame();
+    expect(m.hint()).toBeNull();
+    expect(shown.at(-1)).not.toMatch(/^Start by dotting/);
+    // Apply the displayed step, so the plan is stored and continuing.
+    expect(m.executeHint()).toBeNull();
+    m.setPreferences({ "hint-notes": 1 });
+    expect(shown.at(-1)).toBeNull();
+    expect(m.hint()).toBeNull();
+    expect(shown.at(-1)).toMatch(/^Start by dotting/);
   });
 });

@@ -44,56 +44,117 @@ const uiFor = (game: AnyGame, state: unknown, reading: CandidateReading) => ({
   candidateReading: reading,
 });
 
-const moveKind = (m: unknown): string => {
-  const o = m as { type?: string; kind?: string };
-  return o.type ?? o.kind ?? "";
-};
-
 interface Cell {
   x: number;
   y: number;
 }
 
 /**
- * The cells a step reasons from whose notes must be on the board when it is
- * spoken: what it outlines, what it reads, and what it strikes from. Setup and
- * note steps rest on nothing, and a placement's own cell is what it fills.
+ * A board as this file reads it: one slot per element with its notes, and
+ * whether the element is blank. Every note-taking game keeps its notes in
+ * `pencil` (`mark-all.test.ts` reads the same field). A grid game's element is
+ * a cell and its entries are `grid`, 0 for blank, with a board that is not
+ * square saying its width as `w`; Map's is a region, and its entries are
+ * `coloring`, -1 for blank.
  */
-function premiseCells(step: { move: unknown; highlights?: unknown }): readonly Cell[] {
-  const kind = moveKind(step.move);
-  if (kind === "pencilAll" || kind === "pencilAdd") return [];
+interface Board {
+  notes: ArrayLike<number>;
+  blank(i: number): boolean;
+  /** A grid game's cells by index; `null` for Map, whose steps name regions. */
+  width: number | null;
+}
+
+function boardOf(state: unknown): Board {
+  const s = state as {
+    grid?: ArrayLike<number>;
+    coloring?: ArrayLike<number>;
+    pencil: ArrayLike<number>;
+    w?: number;
+  };
+  const { coloring, grid } = s;
+  if (coloring) return { notes: s.pencil, blank: (i) => coloring[i] < 0, width: null };
+  if (!grid) throw new Error("a board with neither grid nor coloring");
+  const w = typeof s.w === "number" ? s.w : Math.sqrt(s.pencil.length);
+  if (!Number.isInteger(w)) throw new Error("a board of unknown width");
+  return { notes: s.pencil, blank: (i) => grid[i] === 0, width: w };
+}
+
+/**
+ * What a step does to the notes, read off the board before and after it
+ * rather than off the move: `fill` adds notes to several elements and nothing
+ * else (the populate), `note` adds them to one (the implicit reading's note
+ * leg), `strike` only removes. Map's moves are op lists with no `type` or
+ * `kind` to read, and the board asks every game the same question.
+ */
+type Effect = "fill" | "note" | "strike" | "other";
+
+function effectOf(before: unknown, after: unknown): Effect {
+  const a = boardOf(before);
+  const b = boardOf(after);
+  let added = 0;
+  let removed = false;
+  for (let i = 0; i < a.notes.length; i++) {
+    if (a.blank(i) !== b.blank(i)) return "other";
+    if (b.notes[i] & ~a.notes[i]) added++;
+    if (a.notes[i] & ~b.notes[i]) removed = true;
+  }
+  if (removed) return added === 0 ? "strike" : "other";
+  return added > 1 ? "fill" : added === 1 ? "note" : "other";
+}
+
+/**
+ * The elements a step reasons from whose notes must be on the board when it
+ * is spoken: what it outlines, what it reads, and what it strikes from. Setup
+ * and note steps rest on nothing, and a placement's own element is what it
+ * fills.
+ *
+ * Map's evidence is the pair or chain a narrowing rests on. A step whose own
+ * target is one of those regions is writing that premise, not reasoning from
+ * it: its sentence reads the target's neighbors' colors, and the outline is
+ * context for what follows.
+ */
+function premiseOf(
+  board: Board,
+  step: { highlights?: unknown },
+  effect: Effect,
+): readonly number[] {
+  if (effect === "fill" || effect === "note") return [];
+  const strikes = effect === "strike";
+  if (board.width === null) {
+    const h = step.highlights as { targets: number[]; evidence: { region: number }[] };
+    const outlined = h.evidence.map((e) => e.region);
+    if (h.targets.some((r) => outlined.includes(r))) return strikes ? h.targets : [];
+    return [...outlined, ...(strikes ? h.targets : [])];
+  }
+  const w = board.width;
   const h = step.highlights as
     | { area?: Cell[]; reads?: Cell[]; targets?: Cell[] }
     | undefined;
   if (!h) return [];
-  return [
-    ...(h.area ?? []),
-    ...(h.reads ?? []),
-    ...(kind === "pencilStrike" ? (h.targets ?? []) : []),
-  ];
+  const rows = board.notes.length / w;
+  return [...(h.area ?? []), ...(h.reads ?? []), ...(strikes ? (h.targets ?? []) : [])]
+    .filter((c) => c.x >= 0 && c.y >= 0 && c.x < w && c.y < rows)
+    .map((c) => c.y * w + c.x);
 }
 
-/**
- * The blank cells of `cells` on `state`, each with whether it carries notes.
- * Every note-taking game keeps its notes in `pencil` and its entries in `grid`,
- * one slot per cell with 0 for blank (`mark-all.test.ts` reads the same field);
- * a board that is not square says its width as `w`.
- */
-function blanks(state: unknown, cells: readonly Cell[]): (Cell & { noted: boolean })[] {
-  const s = state as { grid: ArrayLike<number>; pencil: ArrayLike<number>; w?: number };
-  const w = typeof s.w === "number" ? s.w : Math.sqrt(s.pencil.length);
-  if (!Number.isInteger(w)) throw new Error("a board of unknown width");
-  const h = s.pencil.length / w;
-  return cells
-    .filter((c) => c.x >= 0 && c.y >= 0 && c.x < w && c.y < h)
-    .filter((c) => s.grid[c.y * w + c.x] === 0)
-    .map((c) => ({ ...c, noted: s.pencil[c.y * w + c.x] !== 0 }));
+/** The blank elements of `premise` on `state`, each with whether it carries
+ * notes. */
+function blanks(state: unknown, step: { highlights?: unknown }, effect: Effect) {
+  const board = boardOf(state);
+  return premiseOf(board, step, effect)
+    .filter((i) => board.blank(i))
+    .map((i) => ({ element: i, noted: board.notes[i] !== 0 }));
 }
 
 /** Premise cells checked while blank, per reading: the vacuity count for the
  * premise check, which passes over nothing on a plan that never reasons from a
  * blank cell. */
 const blankPremises: Record<CandidateReading, number> = { implicit: 0, populate: 0 };
+
+/** Plans that took their own reading's setup, per reading: the vacuity count
+ * for the setup check, which reads effects off the board and would agree about
+ * a board reader that saw none. */
+const seenSetUp: Record<CandidateReading, number> = { implicit: 0, populate: 0 };
 
 describe("the hint-notes preference", () => {
   it("is offered by a derived population, each member with a hint and the pref", () => {
@@ -120,27 +181,31 @@ describe("the hint-notes preference", () => {
             let state = game.newState(params, desc);
             const res = game.hint?.(state, aux, uiFor(game, state, reading));
             if (!res?.ok) throw new Error(`${title}: refused on a fresh board`);
-            const kinds = res.steps.map((s: { move: unknown }) => moveKind(s.move));
-            // Each reading's own setup move, and never the other's.
-            expect(
-              kinds.includes(reading === "implicit" ? "pencilAll" : "pencilAdd"),
-            ).toBe(false);
+            const effects = new Set<Effect>();
             for (const step of res.steps) {
               // Refreshing a step against the board it is about to be shown on
               // changes nothing: no strike of a note the board lacks, no note
               // step for a note already written, no placement in a filled cell.
               expect(game.refreshHintStep?.(step, state), step.explanation).toBe(step);
-              // Every blank cell the step reasons from shows its notes: the
+              const next = game.executeMove(state, step.move);
+              const effect = effectOf(state, next);
+              effects.add(effect);
+              // Every blank element the step reasons from shows its notes: the
               // premise is on the board, not left to be worked out
               // (docs/games/hints.md § "Two readings of an unmarked cell").
-              const blank = blanks(state, premiseCells(step));
+              const blank = blanks(state, step, effect);
               blankPremises[reading] += blank.length;
               expect(
                 blank.filter((c) => !c.noted),
                 step.explanation,
               ).toEqual([]);
-              state = game.executeMove(state, step.move);
+              state = next;
             }
+            // Each reading's own setup, and never the other's.
+            expect(effects.has(reading === "implicit" ? "fill" : "note")).toBe(false);
+            seenSetUp[reading] += effects.has(reading === "implicit" ? "note" : "fill")
+              ? 1
+              : 0;
             if (!permitsSearch(game, params)) expect(game.status(state)).toBe("solved");
           });
         }
@@ -174,5 +239,7 @@ describe("the hint-notes preference", () => {
     // the populate did.
     expect(blankPremises.implicit).toBeGreaterThan(0);
     expect(blankPremises.populate).toBeGreaterThan(0);
+    expect(seenSetUp.implicit).toBeGreaterThan(0);
+    expect(seenSetUp.populate).toBeGreaterThan(0);
   });
 });

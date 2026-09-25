@@ -279,7 +279,7 @@ const NECESSITY =
 
 /** The candidate-elimination games' mechanical openers — procedure the
  * player is walked through, not a deduction, so no necessity modal. */
-const MECHANICAL = /^Start by penciling|^Now clear the easy ones/;
+const MECHANICAL = /^Start by (?:penciling|dotting)|^Now clear the easy ones/;
 
 /**
  * Games whose hints narrate **moves** rather than deductions, with the reason

@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import { HINT_EVIDENCE } from "../../engine/color/palette.ts";
 import { FIX_MISTAKES_FIRST } from "../../engine/hint-refusal.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import type { MapHint, MapHintStep } from "./hint.ts";
 import { hintKeepTrack, refreshHintStep } from "./hint.ts";
@@ -487,5 +488,81 @@ describe("map hint rendering", () => {
         expect(long).toBeLessThan(ts / 2);
       }
     expect(recording.ops).toMatchSnapshot();
+  });
+});
+
+describe("map's Mark-all press and the populate reading", () => {
+  const mPress = (s: MapState): MapMove | null => {
+    const m = mapGame.interpretMove(
+      s,
+      mapGame.newUi(s),
+      preferredDrawState(mapGame, s),
+      { x: 0, y: 0 },
+      77, // 'M', as the toolbar button sends it
+    );
+    return m && typeof m === "object" && "ops" in m ? m : null;
+  };
+
+  /** Press `M`; `null` when it is no move. */
+  const press = (s: MapState): MapState | null => {
+    const m = mPress(s);
+    return m ? mapGame.executeMove(s, m) : null;
+  };
+
+  const blank = (s: MapState): number[] =>
+    [...s.coloring.keys()].filter((r) => s.coloring[r] < 0);
+
+  const populatePlan = (s: MapState): MapHintStep[] => {
+    const res = mapGame.hint?.(s, undefined, {
+      ...mapGame.newUi(s),
+      candidateReading: "populate",
+    });
+    if (!res?.ok) throw new Error(`refused: ${res?.error}`);
+    return res.steps as MapHintStep[];
+  };
+
+  it("fills all four colors, then leaves each region what its neighbors do", () => {
+    const start = stateOf(PINNED.touches as string);
+    expect(blank(start).length).toBeGreaterThan(10);
+    const filled = press(start) as MapState;
+    for (const r of blank(start)) expect(filled.pencil[r], `region ${r}`).toBe(0xf);
+    const cleaned = press(filled) as MapState;
+    // The clean has something to do on this board, or the check below would
+    // hold over a second fill.
+    expect(blank(start).some((r) => cleaned.pencil[r] !== 0xf)).toBe(true);
+    for (const r of blank(start))
+      expect(cleaned.pencil[r], `region ${r}`).toBe(left(start, r));
+    expect(press(cleaned)).toBeNull();
+  });
+
+  it("opens the populate plan with the press, fill and clean as one journey", () => {
+    const start = stateOf(PINNED.touches as string);
+    const [fill, clean, next] = populatePlan(start);
+    expect(fill.explanation).toMatch(/^Start by dotting all four colors/);
+    expect(clean.explanation).toMatch(/^Now clear the easy ones/);
+    expect(clean.continuesPrevious).toBe(true);
+    expect(next.continuesPrevious).toBeFalsy();
+    // The steps are the button's moves, so pressing it keeps the plan.
+    expect(hintKeepTrack(mPress(start) as MapMove, fill, start)).toBe("completed");
+    expect(refreshHintStep(clean, press(start) as MapState)).toBe(clean);
+    // Not a step of the implicit plan, which reads the neighbors instead.
+    expect(plan(start).some((s) => /^Start by dotting/.test(s.explanation))).toBe(
+      false,
+    );
+  });
+
+  it("a clean done dot by dot keeps the plan, and a finished one drops the step", () => {
+    const filled = press(stateOf(PINNED.touches as string)) as MapState;
+    const clean = populatePlan(filled)[0];
+    expect(clean.explanation).toMatch(/^Now clear the easy ones/);
+    const [first, ...rest] = clean.move.ops;
+    expect(rest.length).toBeGreaterThan(0);
+    expect(hintKeepTrack({ ops: [first] }, clean, filled)).toBe("onTrack");
+    const part = mapGame.executeMove(filled, { ops: [first] });
+    expect(refreshHintStep(clean, part)?.move.ops).toEqual(rest);
+    // A dot the clean does not remove is off the plan: here, re-adding the one
+    // just struck.
+    expect(hintKeepTrack({ ops: [first] }, clean, part)).toBe("off");
+    expect(refreshHintStep(clean, press(filled) as MapState)).toBeNull();
   });
 });

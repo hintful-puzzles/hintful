@@ -1236,6 +1236,14 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.prefValues = { ...this.prefValues, ...values };
     if (this.history.length > 0) {
       this.applyPrefs();
+      // A hint plan is built from the board *and* the preferences (how a hint
+      // pencils in, whether a placement's cull is taught), so a plan stored
+      // under the old values would go on teaching them after the player
+      // changed them. The next Hint builds afresh.
+      if (this.activeHint !== null) {
+        this.clearHint();
+        this.emitStatusBar();
+      }
       // A preference can change anything the game paints, yet it moves
       // none of the keys a game's redraw early-out watches (positions,
       // background, cursor) — so a plain repaint would be skipped by

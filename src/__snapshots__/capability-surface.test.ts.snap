@@ -788,6 +788,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "map",
     "members": [
+      "canMarkAll",
       "describeParams",
       "difficulty",
       "findMistakes",
@@ -803,6 +804,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "transposeParams",
     ],
     "ui": [
+      "candidateReading",
       "curLastmove",
       "curMoved",
       "cursor",

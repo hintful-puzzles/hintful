@@ -10,7 +10,8 @@
  * which is what puts a cursor under a finger.
  *
  * A color key (or the panel's swatch) colors the region at the cursor, or in
- * notes mode toggles that color as a mark; Clear empties it.
+ * notes mode toggles that color as a mark; Clear empties it. `M` is Mark-all
+ * (`markAll`).
  */
 
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
@@ -31,6 +32,7 @@ import {
   transposeDimensions,
 } from "../../engine/params.ts";
 import {
+  candidateReadingPref,
   pencilKeepHighlightPref,
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
@@ -53,7 +55,14 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { GameStatus, KeyLabel, Point } from "../../engine/types.ts";
 import { newMapDesc } from "./generator.ts";
-import { buildSteps, hintKeepTrack, type MapHint, refreshHintStep } from "./hint.ts";
+import {
+  buildSteps,
+  hintKeepTrack,
+  type MapHint,
+  markAll,
+  refreshHintStep,
+  regionsMove,
+} from "./hint.ts";
 import { newMapData, validateDesc } from "./map-data.ts";
 import {
   COL_0,
@@ -200,6 +209,13 @@ function interpretMove(
   if (button === PENCIL_MODE_BUTTON) {
     ui.pencilMode = !ui.pencilMode;
     return UI_UPDATE;
+  }
+
+  // Mark-all: dot every color into each blank region with no dots, and once
+  // none is left, remove the dots its neighbors' colors rule out.
+  if (button === 77 || button === 109) {
+    const press = markAll(state);
+    return press ? regionsMove(state.pencil, press.regions) : null;
   }
 
   if (isCursorMove(button)) {
@@ -424,10 +440,14 @@ function findMistakes(state: MapState): readonly MapMistake[] {
   return out;
 }
 
-function hint(state: MapState): HintResult<MapMove, MapHint> {
+function hint(
+  state: MapState,
+  _aux?: string,
+  ui?: MapUi,
+): HintResult<MapMove, MapHint> {
   const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
   if (refusal) return refusal;
-  const steps = buildSteps(state);
+  const steps = buildSteps(state, (ui ?? newUi(state)).candidateReading);
   // Map's three rungs finish every board of the three tiers below Unreasonable
   // (`difficulty-contract.test.ts` holds each board to its tier), so an empty
   // plan here is a board whose tier permits search.
@@ -477,6 +497,7 @@ export const mapGame: Game<
   isTimed: false,
   canSolve: true,
   canFormatAsText: false,
+  canMarkAll: true,
 
   defaultParams,
   presets,
@@ -562,6 +583,7 @@ export const mapGame: Game<
     },
     stickyPencilPref(),
     pencilKeepHighlightPref(),
+    candidateReadingPref(),
   ],
 
   colors,

@@ -13,11 +13,12 @@
  * deduction removes a color no neighbor shows (AGENTS.md § "Hint quality bar",
  * rule 6).
  *
- * That is why Map does not walk `runCandidatePlan`. That walk's notes are the
- * whole candidate set, filled in by a populate step and cleaned against the
- * board, where Map's candidates are partly the board itself. Penciling every
- * color into thirty regions to strike three of them from each would teach a
- * procedure no Map player follows.
+ * That is the candidate walk's implicit reading, and it is Map's default. The
+ * player may choose the populate reading instead (the `hint-notes`
+ * preference), and then the plan opens with the Mark-all press, fill and clean
+ * ({@link markAll}), after which every blank region is dotted and the same
+ * rungs read the dots. Map plans without `runCandidatePlan` because that walk
+ * indexes cells on a grid, and Map's elements are the regions of a graph.
  *
  * ## Why reading the dots is sound
  *
@@ -37,6 +38,7 @@
  * needs.
  */
 
+import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { HintFrontier } from "../../engine/hint-frontier.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
@@ -61,15 +63,26 @@ export interface MapEvidence {
   order?: number;
 }
 
+/** One region's dots as a setup step leaves them. */
+interface RegionDots {
+  region: number;
+  dots: number;
+}
+
 /** What a step marks and what it wants done, per region. */
 export interface MapHint {
-  /** The one region the step acts on, ringed. A list because the frontier and
-   * the cross-game guards read every step's `targets`. */
+  /** The region a deduction acts on, ringed; none for a setup step. A list
+   * because the frontier and the cross-game guards read every step's
+   * `targets`. */
   targets: number[];
   evidence: MapEvidence[];
-  /** The region's end state: this color, or exactly these dots. */
-  want: { color: number } | { dots: number };
+  /** The end state: the target's color or exactly its dots, or for a setup
+   * step (the Mark-all press) each region's dots. */
+  want: SingleWant | { regions: RegionDots[] };
 }
+
+/** A deduction's end state for its one target. */
+type SingleWant = { color: number } | { dots: number };
 
 export type MapHintStep = HintStep<MapMove, MapHint>;
 
@@ -104,8 +117,58 @@ function dotOps(r: number, from: number, to: number): MapOp[] {
   return colorsOf(from ^ to).map((bit) => ({ op: "pencil", region: r, bit }));
 }
 
+// --- the Mark-all press -------------------------------------------------------
+
+/**
+ * What the Mark-all press does to a board: `fill` dots all four colors into
+ * every blank region with no dots, and once none is left, `clean` removes from
+ * each blank region the dots of colors a neighbor shows. Empty when there is
+ * nothing to do, which makes the press no move.
+ *
+ * The fill is additive (`candidate-hint.ts`'s `adaptiveMarkAll` § "The
+ * additive rule, stated once"): a region the player has dotted keeps its dots.
+ * A clean that would empty a region keeps its lowest dot, as
+ * `obviousCandidateMarks` does, so a board contradicting itself does not cycle
+ * between the two.
+ *
+ * The hint's populate setup is this same press, so a player who presses the
+ * button while the setup step is shown has done exactly what it asked.
+ */
+export function markAll(
+  state: Pick<MapState, "map" | "coloring" | "pencil">,
+): { kind: "fill" | "clean"; regions: RegionDots[] } | null {
+  const { coloring, pencil } = state;
+  const { graph, n, ngraph } = state.map;
+  const fill: RegionDots[] = [];
+  for (let r = 0; r < n; r++)
+    if (coloring[r] < 0 && pencil[r] === 0) fill.push({ region: r, dots: ALL });
+  if (fill.length > 0) return { kind: "fill", regions: fill };
+  const clean: RegionDots[] = [];
+  for (let r = 0; r < n; r++) {
+    if (coloring[r] >= 0) continue;
+    let shown = 0;
+    for (const k of neighbors(graph, n, ngraph, r))
+      if (coloring[k] >= 0) shown |= 1 << coloring[k];
+    let struck = pencil[r] & shown;
+    if (struck === pencil[r]) struck &= struck - 1;
+    if (struck) clean.push({ region: r, dots: pencil[r] & ~struck });
+  }
+  return clean.length > 0 ? { kind: "clean", regions: clean } : null;
+}
+
+/** The move taking each region of `regions` from the dots `pencil` shows to its
+ * wanted dots. */
+export function regionsMove(
+  pencil: ArrayLike<number>,
+  regions: readonly RegionDots[],
+): MapMove {
+  return {
+    ops: regions.flatMap(({ region, dots }) => dotOps(region, pencil[region], dots)),
+  };
+}
+
 /** The move that realizes `want` on region `r` whose dots are `dots`. */
-function moveFor(r: number, dots: number, want: MapHint["want"]): MapMove {
+function moveFor(r: number, dots: number, want: SingleWant): MapMove {
   return "color" in want
     ? { ops: [{ op: "color", region: r, color: want.color }] }
     : { ops: dotOps(r, dots, want.dots) };
@@ -119,7 +182,7 @@ function narrowing(w: Work, r: number, struck: number): Conclusion {
   return { kind: "mark", left };
 }
 
-function wantOf(w: Work, r: number, c: Conclusion): MapHint["want"] {
+function wantOf(w: Work, r: number, c: Conclusion): SingleWant {
   switch (c.kind) {
     case "place":
       return { color: c.color };
@@ -131,7 +194,7 @@ function wantOf(w: Work, r: number, c: Conclusion): MapHint["want"] {
 }
 
 /** Play `want` on the working board. */
-function apply(w: Work, r: number, want: MapHint["want"]): void {
+function apply(w: Work, r: number, want: SingleWant): void {
   if ("color" in want) {
     w.coloring[r] = want.color;
     w.pencil[r] = 0;
@@ -149,7 +212,7 @@ interface Firing {
 function step(
   w: Work,
   r: number,
-  want: MapHint["want"],
+  want: SingleWant,
   explanation: string,
   evidence: MapEvidence[],
 ): MapHintStep {
@@ -354,15 +417,41 @@ function journey(legs: MapHintStep[]): MapHintStep[] {
   return legs;
 }
 
+/**
+ * The populate reading's opening: the Mark-all press, fill then clean, as one
+ * journey, each half only when the board needs it. After it every blank region
+ * shows its colors as dots and the rungs run exactly as they do on a board the
+ * player dotted by hand.
+ */
+function setUp(w: Work, steps: MapHintStep[]): void {
+  for (let first = true; ; first = false) {
+    const press = markAll({ map: w.state.map, coloring: w.coloring, pencil: w.pencil });
+    if (!press) return;
+    const clean = press.kind === "clean";
+    steps.push({
+      move: regionsMove(w.pencil, press.regions),
+      explanation: clean ? say.cleanNeighbors : say.fillAll,
+      // Rings nothing: a clean strikes from nearly every blank region, and a
+      // band around each ran together into one mark over the whole board
+      // (browser check, 2026-09-25). The sentence names every blank region.
+      highlights: { targets: [], evidence: [], want: { regions: press.regions } },
+      continuesPrevious: !first,
+    });
+    for (const { region, dots } of press.regions) w.pencil[region] = dots;
+    if (clean) return;
+  }
+}
+
 /** The whole remaining plan from `state`'s board: empty when deduction has run
  * out, which the caller refuses. */
-export function buildSteps(state: MapState): MapHintStep[] {
+export function buildSteps(state: MapState, reading: CandidateReading): MapHintStep[] {
   const w: Work = {
     state,
     coloring: Int32Array.from(state.coloring),
     pencil: Int32Array.from(state.pencil),
   };
   const steps: MapHintStep[] = [];
+  if (reading === "populate") setUp(w, steps);
   const frontier = new HintFrontier<number>((r) => r);
   const budget = stepBudget("map hint plan");
   for (;;) {
@@ -382,9 +471,14 @@ export function buildSteps(state: MapState): MapHintStep[] {
   }
 }
 
-/** The region a step acts on. */
-const regionOf = (step: HintStep<MapMove>): number =>
-  (step.highlights as MapHint).targets[0];
+/** The dots a step wants, per region, or `null` for a placement. */
+function wantedDots(hl: MapHint): readonly RegionDots[] | null {
+  const { want } = hl;
+  if ("color" in want) return null;
+  return "regions" in want
+    ? want.regions
+    : [{ region: hl.targets[0], dots: want.dots }];
+}
 
 /** Classify a player move against the displayed step, on the board it is about
  * to change. */
@@ -393,36 +487,56 @@ export function hintKeepTrack(
   step: HintStep<MapMove>,
   state: MapState,
 ): HintTrackVerdict {
-  const r = regionOf(step);
-  const { want } = step.highlights as MapHint;
-  if ("color" in want)
+  const hl = step.highlights as MapHint;
+  const wanted = wantedDots(hl);
+  if (!wanted) {
+    const r = hl.targets[0];
+    const { color } = hl.want as { color: number };
     return m.ops.length === 1 &&
       m.ops[0].op === "color" &&
       m.ops[0].region === r &&
-      m.ops[0].color === want.color
+      m.ops[0].color === color
       ? "completed"
       : "off";
-  // Dots: every toggle must move the region toward the wanted set.
-  let dots = state.pencil[r];
-  const needed = dots ^ want.dots;
-  for (const op of m.ops) {
-    if (op.op !== "pencil" || op.region !== r || !(needed & (1 << op.bit)))
-      return "off";
-    dots ^= 1 << op.bit;
   }
-  return dots === want.dots ? "completed" : "onTrack";
+  // Dots: every toggle must move its region toward the wanted set.
+  const goal = new Map(wanted.map(({ region, dots }) => [region, dots]));
+  const now = new Map(wanted.map(({ region }) => [region, state.pencil[region]]));
+  for (const op of m.ops) {
+    const want = goal.get(op.region);
+    const dots = now.get(op.region);
+    if (op.op !== "pencil" || want === undefined || dots === undefined) return "off";
+    if (!((dots ^ want) & (1 << op.bit))) return "off";
+    now.set(op.region, dots ^ (1 << op.bit));
+  }
+  for (const [region, want] of goal)
+    if (state.coloring[region] < 0 && now.get(region) !== want) return "onTrack";
+  return "completed";
 }
 
 /** Rebuild a stored step's move against the board it is about to be shown on,
- * or drop it once the board already shows what it wants. */
+ * or drop it once the board already shows what it wants. A step the board has
+ * not moved under comes back as itself. */
 export function refreshHintStep(
   step: HintStep<MapMove>,
   state: MapState,
 ): HintStep<MapMove> | null {
-  const r = regionOf(step);
-  const { want } = step.highlights as MapHint;
-  if (state.coloring[r] >= 0) return null;
-  if ("color" in want) return step;
-  if (state.pencil[r] === want.dots) return null;
-  return { ...step, move: moveFor(r, state.pencil[r], want) };
+  const hl = step.highlights as MapHint;
+  const wanted = wantedDots(hl);
+  if (!wanted) return state.coloring[hl.targets[0]] >= 0 ? null : step;
+  const left = wanted.filter(
+    ({ region, dots }) => state.coloring[region] < 0 && state.pencil[region] !== dots,
+  );
+  if (left.length === 0) return null;
+  const move = regionsMove(state.pencil, left);
+  if (sameOps(move.ops, step.move.ops)) return step;
+  if (!("regions" in hl.want)) return { ...step, move };
+  return { ...step, move, highlights: { ...hl, want: { regions: left } } };
+}
+
+function sameOps(a: readonly MapOp[], b: readonly MapOp[]): boolean {
+  return (
+    a.length === b.length &&
+    a.every((op, i) => JSON.stringify(op) === JSON.stringify(b[i]))
+  );
 }

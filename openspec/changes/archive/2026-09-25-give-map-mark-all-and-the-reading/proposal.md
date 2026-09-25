@@ -1,6 +1,6 @@
 # give-map-mark-all-and-the-reading
 
-**Status: scaffolded, not started.** Owner-requested, 2026-09-25.
+Owner-requested, 2026-09-25.
 
 ## Why
 
