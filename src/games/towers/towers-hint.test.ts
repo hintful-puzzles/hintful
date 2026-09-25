@@ -221,7 +221,7 @@ describe("towers hint", () => {
     // A deduction concludes either with a positive necessity ("can only be/sit"
     // for a placement) or with the necessity-voiced strike action ("we must
     // cross out the N") for an elimination — never a bare "is/are/stays".
-    const modal = /can only|can't|must (be|stay|hold|cross out)/i;
+    const modal = /can only|can't|must (be|stay|hold|cross)/i;
     for (const s of res.steps) {
       expect(s.explanation).toMatch(modal);
     }

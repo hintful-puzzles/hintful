@@ -23,37 +23,37 @@ export function unequalVocab(order: number): LatinVocab {
   return { noun: "number", value: (n) => displayChar(n, order) };
 }
 
-/** Values that all go ("cross out 1 and 2"), as the board prints them. */
+/** Values that all go ("clashes with 1 and 2"), as the board prints them. */
 const all = (ns: number[], order: number): string =>
   joinWith(ns.map((n) => displayChar(n, order)));
 
+/** A sign or bar deduction's premise; the walk concludes it with the move it
+ * makes (`engine/hint-text.ts`'s `Premise`). */
 export const say = {
   /** This cell is the larger side of a sign whose other cell is at least
    * `bound`. */
-  greater: (bound: number, ns: number[], order: number): string =>
+  greater: (bound: number, order: number): string =>
     bound <= 1
-      ? `The larger side of a greater-than sign can't hold the smallest number, so we must cross out ${all(ns, order)}.`
-      : `The cell across this greater-than sign is at least ${displayChar(bound, order)}, so this one must be larger; we must cross out ${all(ns, order)}.`,
+      ? "The larger side of a greater-than sign can't hold the smallest number"
+      : `The cell across this greater-than sign is at least ${displayChar(bound, order)}, and this one is larger`,
 
   /** This cell is the smaller side of a sign whose other cell is at most
    * `bound`, in a grid of `order`. */
-  lesser: (bound: number, order: number, ns: number[]): string =>
+  lesser: (bound: number, order: number): string =>
     bound >= order
-      ? `The smaller side of a greater-than sign can't hold the largest number, so we must cross out ${all(ns, order)}.`
-      : `The cell across this greater-than sign is at most ${displayChar(bound, order)}, so this one must be smaller; we must cross out ${all(ns, order)}.`,
+      ? "The smaller side of a greater-than sign can't hold the largest number"
+      : `The cell across this greater-than sign is at most ${displayChar(bound, order)}, and this one is smaller`,
 
   /** A bar joins this cell to its neighbor holding `v` (`bar`), or none does. */
-  adjacent: (bar: boolean, v: number, ns: number[], order: number): string =>
+  adjacent: (bar: boolean, v: number, order: number): string =>
     bar
-      ? `A bar joins this cell to the ${displayChar(v, order)} beside it, so they must differ by exactly 1: we must cross out ${all(ns, order)}.`
-      : `No bar joins this cell to the ${displayChar(v, order)} beside it, so they can't differ by 1: we must cross out ${all(ns, order)}.`,
+      ? `A bar joins this cell to the ${displayChar(v, order)} beside it, and they must differ by exactly 1`
+      : `No bar joins this cell to the ${displayChar(v, order)} beside it, and they can't differ by 1`,
 
   /** The same, against a neighbor that is still undecided: a struck value
    * fits none of the numbers still open there. */
-  adjacentSet: (bar: boolean, ns: number[], order: number): string => {
-    const them = ns.length === 1 ? "it" : "they";
-    return bar
-      ? `A bar joins this cell to its neighbor, but no number open there is one away from ${joinOr(ns.map((n) => displayChar(n, order)))}: ${them} must be crossed out.`
-      : `No bar joins this cell to its neighbor, and every number open there clashes with ${all(ns, order)}: ${them} must be crossed out.`;
-  },
+  adjacentSet: (bar: boolean, ns: number[], order: number): string =>
+    bar
+      ? `A bar joins this cell to a neighbor with nothing open one away from ${joinOr(ns.map((n) => displayChar(n, order)))}`
+      : `No bar joins this cell to a neighbor whose every open number clashes with ${all(ns, order)}`,
 };

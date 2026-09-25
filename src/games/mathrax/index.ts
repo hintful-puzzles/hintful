@@ -34,7 +34,11 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { narrateLatinReason } from "../../engine/hint-text.ts";
+import {
+  latinPremise,
+  narrateLatinReason,
+  type Premise,
+} from "../../engine/hint-text.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
 import { genericLatinArea, rowColRegions } from "../../engine/latin-hint.ts";
 import {
@@ -362,9 +366,9 @@ function findMistakes(state: MathraxState): readonly MathraxMistake[] {
 // --- hint ------------------------------------------------------------------
 
 /**
- * Narrate *why* a firing is forced (docs/games/hints.md § "Writing the
- * narration"): indication → reasoning → necessity-voice conclusion. `ns` is the
- * struck value list (a placement passes its single digit). The words are
+ * Why a strike is forced (docs/games/hints.md § "Writing the narration"):
+ * indication, then reasoning, which the walk concludes with the move it makes.
+ * `ns` is the struck value list. The words are
  * [`hint-text.ts`](./hint-text.ts)'s.
  *
  * **Which of the clue's two sentences it speaks is read off the working board,
@@ -375,26 +379,35 @@ function findMistakes(state: MathraxState): readonly MathraxMistake[] {
  * and the "nothing open across it" sentence otherwise. This is the rule
  * `latin-hint.ts` applies to a recorded `single`, aimed at a clue.
  */
-function narrate(
+function premise(
   reason: HintReason,
   ns: number[],
   target: Point,
   grid: ArrayLike<number>,
   o: number,
-): string {
+): Premise {
   switch (reason.kind) {
     case "clue": {
       const { clue, cx, cy } = reason;
-      if (clueIsParity(clue)) return say.parity(clueType(clue) === CLUE_EVN, ns);
+      if (clueIsParity(clue))
+        return { premise: say.parity(clueType(clue) === CLUE_EVN) };
       const across = clueOpposite(cx, cy, target);
       const v = grid[across.y * o + across.x];
-      return v ? say.paired(clue, v, ns) : say.open(clue, ns);
+      return v
+        ? { premise: say.paired(clue, v) }
+        : { premise: say.open(clue, ns), named: true };
     }
-    // The generic Latin arms (single / hiddenSingle / dup / set / forcing) read
-    // identically to Keen's and Unequal's — narrated once, shared.
+    // The generic Latin arms (dup / set / forcing) read identically to Keen's
+    // and Unequal's — narrated once, shared.
     default:
-      return narrateLatinReason(reason, ns);
+      return latinPremise(reason, ns);
   }
+}
+
+/** Why a placement is forced: always a generic single, since no clue places. */
+function narrate(reason: HintReason, n: number): string {
+  if (reason.kind === "clue") throw new Error("a clue deduction strikes");
+  return narrateLatinReason(reason, n);
 }
 
 /** The deduction's evidence cells to shade `COL_HINT_CELL`. A clue's cells are
@@ -437,7 +450,7 @@ function buildSteps(
     label: "mathrax hint plan",
     record: () => recordMathraxDeductions(o, state.clues, wGrid, maxdiff),
     placeWords: (m, reason) => ({
-      explanation: narrate(reason, [m.n], m, wGrid, o),
+      explanation: narrate(reason, m.n),
       // A naked single's own collapsed candidates are the premise, so it needs
       // no area; a hidden single's line is the preset's.
       area: [],
@@ -445,7 +458,7 @@ function buildSteps(
     strikeWords: (marks, reason) => {
       const target = { x: marks[0].x, y: marks[0].y };
       return {
-        explanation: narrate(reason, valuesOf(marks), target, wGrid, o),
+        ...premise(reason, valuesOf(marks), target, wGrid, o),
         area: reasonArea(reason, target),
       };
     },

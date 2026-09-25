@@ -30,6 +30,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import type { Premise } from "../../engine/hint-text.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
 import { forcingChainArea, type SingleWhy } from "../../engine/latin-hint.ts";
 import {
@@ -474,41 +475,53 @@ function soloSingleReason(
   }
 }
 
-/** Narrate *why* a firing is forced (docs/games/hints.md § "Writing the narration"): indication → reasoning →
- * necessity-voice conclusion. `ns` is the struck value list (a placement passes
- * its single digit); `at` is the cell the step acts on (a strike's first). */
-function narrate(
-  reason: SoloReason,
-  ns: number[],
-  state: SoloState,
-  at: Point,
-): string {
+/** Narrate *why* a placement is forced (docs/games/hints.md § "Writing the
+ * narration"): indication, reasoning, necessity-voice conclusion. `n` is the
+ * digit placed at `at`. */
+function narrate(reason: SoloReason, n: number, state: SoloState, at: Point): string {
   switch (reason.kind) {
     case "single":
-      return say.single(ns[0]);
+      return say.single(n);
     case "regionsFull":
-      return say.regionsFull(ns[0], noRepeatRegionNames(state, at));
+      return say.regionsFull(n, noRepeatRegionNames(state, at));
     case "hiddenSingle":
       return say.hiddenSingle(reason.region, reason.n);
-    case "dup":
-      return say.dup(
-        reason.n,
-        noRepeatRegionNames(state, { x: reason.px, y: reason.py }),
-      );
-    case "intersect":
-      return say.intersect(reason.confined, reason.target, reason.n);
-    case "set":
-      return say.set(reason.region ?? null, ns);
-    case "forcing":
-      return say.forcing(reason, ns[0], reason.shares, reason.lastShares);
     case "cageSingle":
-      return say.cageSingle(ns[0]);
+      return say.cageSingle(n);
     case "cageIntersect":
-      return say.cageIntersect(reason.region, (state.cr * (state.cr + 1)) / 2, ns[0]);
+      return say.cageIntersect(reason.region, (state.cr * (state.cr + 1)) / 2, n);
+    default:
+      throw new Error(`a ${reason.kind} deduction strikes`);
+  }
+}
+
+/** Why a strike is forced, which the walk concludes with the move it makes.
+ * `ns` is the struck values. */
+function premise(reason: SoloReason, ns: number[], state: SoloState): Premise {
+  switch (reason.kind) {
+    case "dup":
+      return {
+        premise: say.dup(
+          reason.n,
+          noRepeatRegionNames(state, { x: reason.px, y: reason.py }),
+        ),
+        where: say.dupWhere,
+      };
+    case "intersect":
+      return {
+        premise: say.intersect(reason.confined, reason.target, reason.n),
+        where: say.intersectWhere,
+      };
+    case "set":
+      return { premise: say.set(reason.region ?? null, ns), named: true };
+    case "forcing":
+      return { premise: say.forcing(reason, ns[0], reason.shares, reason.lastShares) };
     case "cageMinMax":
-      return say.cageMinMax(reason.clue, ns);
+      return { premise: say.cageMinMax(reason.clue, ns), named: true };
     case "cageSums":
-      return say.cageSums(reason.clue, ns);
+      return { premise: say.cageSums(reason.clue, ns), named: true };
+    default:
+      throw new Error(`a ${reason.kind} deduction places`);
   }
 }
 
@@ -593,18 +606,14 @@ function buildSteps(
     regionsOf: (x, y) => regionsOf(state, x, y),
     singleReason: soloSingleReason,
     placeWords: (m, reason) => ({
-      explanation: narrate(reason, [m.n], state, m),
+      explanation: narrate(reason, m.n, state, m),
       ...placementMarks(reason, state),
     }),
     strikeWords: (marks, reason) => ({
-      explanation: narrate(
-        reason,
-        reason.kind === "intersect" ? [reason.n] : valuesOf(marks),
-        state,
-        marks[0],
-      ),
+      ...premise(reason, valuesOf(marks), state),
       ...reasonMarks(reason, state),
     }),
+    conclude: say.conclude,
     // A digit confined to one region crosses that digit from several cells in
     // one sentence; every other firing's narration is about "this cell", so a
     // multi-digit strike never shows a value crossed in the wrong place.

@@ -21,6 +21,7 @@
  */
 
 import {
+  type Conclusions,
   cleanObviousText,
   joinOr,
   joinWith,
@@ -39,6 +40,9 @@ const WORD = ["", "up", "down", "left", "right"];
  * struck mark's own direction), which is what a deixis tie has to rest on
  * (docs/games/hints.md § "Two marks on the board, one 'this cell'"). */
 const NEIGHBOR = ["", "above", "below", "to the left", "to the right"];
+
+/** The same relation as an adjective, for "its left neighbor". */
+const SIDE = ["", "upper", "lower", "left", "right"];
 
 /** The arrow of value `n`, as a word. */
 export const arrow = (n: number): string => WORD[n];
@@ -80,32 +84,55 @@ export const say = {
   hiddenSingle: (n: number): string =>
     `Its area must hold all four arrows, and only this square can still point ${arrow(n)}, so it does.`,
 
+  /** How a step ends, by the move it makes, said of the ways a square points.
+   * A strike with a `where` speaks for the other squares it names; one whose
+   * premise named what goes refers back to it. */
+  conclude: {
+    // A pair strikes the same arrow from several squares; each is named once.
+    strike: (ns, { where, struck, named }) => {
+      const ways = joinOr([...new Set(ns)].sort((a, b) => a - b).map(arrow));
+      if (where) return `no other square ${where} can point ${ways}`;
+      if (struck) return `${struck} must go`;
+      if (named) return `${ns.length === 1 ? "that arrow" : "those arrows"} must go`;
+      return `this square can't point ${ways}`;
+    },
+    place: (n) => `this square must point ${arrow(n)}`,
+    keep: (ns) => `pencil in only ${joinWith(ns.map(arrow))}`,
+  } satisfies Conclusions,
+
+  // The strike arms below are premises, concluded in the words above.
+
   /** The cull around a placement, and the opening clean's per-firing form. */
-  dup: (n: number): string =>
-    `This area now has its ${arrow(n)} arrow, so no other square in it can point ${arrow(n)}.`,
+  dup: (n: number): string => `This area now has its ${arrow(n)} arrow`,
+  dupWhere: "in it",
 
   /** A candidate that would join a chain of arrows leading back to its own
    * square. `n` is the struck direction, so the chain starts at the neighbor it
    * points at. */
   loop: (n: number): string =>
-    `Following the arrows from the square ${neighbor(n)} leads back here, so this square can never point ${arrow(n)}.`,
+    `Following the arrows from the square ${neighbor(n)} leads back here`,
 
   /** A four-square area with only one home left for an arrow, seen as the
    * elimination of that square's other marks. */
   onlyHome: (only: number[]): string =>
-    `This is the only square in its area that can still point ${joinOr(only.map(arrow))}, so its other marks must go.`,
+    `Its area must hold all four arrows, and only this square can still point ${joinOr(only.map(arrow))}`,
+  onlyHomeStruck: "its other marks",
 
-  /** The one candidate anywhere that can still grow a goal's group. */
+  /** The one candidate anywhere that can still grow a goal's group, and what
+   * its strike calls the square's other marks. */
   reach: (): string =>
-    `Every square must reach a goal, and only this mark can still point into the striped group, so the rest must go.`,
+    "Every square must reach a goal, and only this mark still leads into the striped group",
+  reachStruck: "the rest",
 
   /** A neighbor that could only point along one axis, which a mark pointing
    * into it would turn into a two-square loop. `n` is the struck direction, so
-   * the two-way square is the neighbor it points at. */
+   * the two-way square is the neighbor it points at, and "an arrow into it"
+   * names what is struck. */
   opposite: (n: number, pair: number[]): string =>
-    `The square ${neighbor(n)} can only point ${joinOr(pair.map(arrow))}, so an arrow into it from here would point straight back.`,
+    `Its ${SIDE[n]} neighbor can only point ${joinOr(pair.map(arrow))}, and an arrow into it would point back`,
 
   /** Two squares of an area holding the same two candidates between them. */
   pair: (ns: number[]): string =>
-    `Two squares of this area must take ${joinOr(ns.map(arrow))} between them, so those marks must go from the rest.`,
+    `Two squares of this area must take ${joinOr(ns.map(arrow))} between them`,
+  pairWhere: "of the area",
 } as const;

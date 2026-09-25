@@ -144,10 +144,10 @@ describe("keen hint", () => {
     const res = keenGame.hint?.(populated);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
-    // A strike concludes "must cross out …" / "must be crossed out"; a placement
+    // A strike concludes "must cross out …" / "must cross them out"; a placement
     // "it can only be N"; never a bare "is/are/stays". (Populate is the lone
     // instruction.)
-    const modal = /can only|can't|must (be|cross out)|must be crossed out/i;
+    const modal = /can only|can't|must (be|cross)/i;
     for (const s of res.steps) {
       if ((s.move as KeenMove).type === "pencilAll") continue;
       expect(s.explanation).toMatch(modal);

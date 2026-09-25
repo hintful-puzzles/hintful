@@ -16,7 +16,7 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { narrate, type SaladHint } from "./hint.ts";
+import { narrate, premise, type SaladHint } from "./hint.ts";
 import { saladGame } from "./index.ts";
 import { recordSaladDeductions, saladSolution } from "./solver.ts";
 import {
@@ -80,7 +80,11 @@ describe("salad hint — the three signature techniques", () => {
     // Near the clue: the first square that could hold anything must hold the
     // clue's symbol, so every other symbol is crossed out of it.
     expect(
-      texts.some((t) => /sees [A-C] first.*so only [A-C] can go here/.test(t)),
+      texts.some((t) =>
+        /sees [A-C] first.*leaves only [A-C] for this square, so we must cross out/.test(
+          t,
+        ),
+      ),
     ).toBe(true);
     // Past its reach: bounded by how many empty squares the line may hold.
     expect(
@@ -216,7 +220,7 @@ describe("salad hint — narration arms", () => {
   const s = { mode: GAMEMODE_LETTERS, order: 5, nums: 3 };
 
   it("names a blocking ball when that is what bounds a clue's reach", () => {
-    const t = narrate(
+    const t = premise(
       {
         kind: "borderFar",
         clue: 5,
@@ -229,18 +233,22 @@ describe("salad hint — narration arms", () => {
       [3],
       s,
     );
-    expect(t).toMatch(/outlined square furthest from it already holds a letter/);
-    expect(t).toMatch(/must sit somewhere in the outlined run/);
+    expect(t.premise).toMatch(
+      /outlined square furthest from it already holds a letter/,
+    );
+    expect(t.premise).toMatch(/keeps the C somewhere in the outlined run/);
+    // Past the blocking square, which the conclusion names.
+    expect(t.where).toBe("past it");
   });
 
   it("reads correctly where a line holds exactly one empty square", () => {
     // The degenerate extreme: `nums = order − 1`.
     const tight = { mode: GAMEMODE_NUMBERS, order: 4, nums: 3 };
-    expect(narrate({ kind: "countHolesDone", line: "row", index: 0 }, [], tight)).toBe(
+    expect(narrate({ kind: "countHolesDone", line: "row", index: 0 }, 0, tight)).toBe(
       "This row already has its one empty square, so every other square in it must hold a number.",
     );
     expect(
-      narrate(
+      premise(
         {
           kind: "borderFar",
           clue: 4,
@@ -252,27 +260,27 @@ describe("salad hint — narration arms", () => {
         },
         [1],
         { mode: GAMEMODE_LETTERS, order: 4, nums: 3 },
-      ),
+      ).premise,
     ).toMatch(
-      /one of them is already marked later in the row, so the A must be in the square nearest the clue/,
+      /one of them is already marked later in the row, which keeps the A in the square nearest the clue$/,
     );
   });
 
   it("speaks each mode's own value vocabulary", () => {
     expect(symbolChar(GAMEMODE_LETTERS, 3)).toBe("C");
     expect(symbolChar(GAMEMODE_NUMBERS, 3)).toBe("3");
-    expect(narrate({ kind: "single" }, [1], s)).toBe(
+    expect(narrate({ kind: "single" }, 1, s)).toBe(
       "Every other letter has been ruled out in this square, so it can only be A.",
     );
-    expect(narrate({ kind: "single" }, [1], { ...s, mode: GAMEMODE_NUMBERS })).toBe(
+    expect(narrate({ kind: "single" }, 1, { ...s, mode: GAMEMODE_NUMBERS })).toBe(
       "Every other number has been ruled out in this square, so it can only be 1.",
     );
     // The shared `dup` arm picks its article by the rendered value, so a letter
     // value never reads as "a A".
-    expect(narrate({ kind: "dup", n: 1, px: 0, py: 0 }, [1], s)).toMatch(
+    expect(premise({ kind: "dup", n: 1, px: 0, py: 0 }, [1], s).premise).toMatch(
       /There's already an A in this row and column/,
     );
-    expect(narrate({ kind: "dup", n: 2, px: 0, py: 0 }, [2], s)).toMatch(
+    expect(premise({ kind: "dup", n: 2, px: 0, py: 0 }, [2], s).premise).toMatch(
       /There's already a B in this row and column/,
     );
   });

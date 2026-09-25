@@ -12,10 +12,7 @@
  * they have used (the `spent` flags, mutable).
  */
 
-import {
-  type CandidateReading,
-  DEFAULT_CANDIDATE_READING,
-} from "../../engine/candidate-hint.ts";
+import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import { digitOf, type GridCursor, newCursor } from "../../engine/pointer.ts";
@@ -282,7 +279,10 @@ export function newUi(_state: UnequalState): UnequalUi {
     // Off by default, so notes clear only via Mark-all or a hint unless the
     // player opts in.
     autoPencil: false,
-    candidateReading: DEFAULT_CANDIDATE_READING,
+    // Not the convention: a sign strikes from one cell at a time, and ending
+    // each strike in what it leaves makes the plan shorter than penciling in
+    // every candidate first, though it still notes most cells.
+    candidateReading: "implicit",
   };
 }
 

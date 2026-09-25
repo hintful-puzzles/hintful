@@ -53,7 +53,11 @@ import {
 } from "../../engine/candidate-plan.ts";
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { narrateLatinReason } from "../../engine/hint-text.ts";
+import {
+  latinPremise,
+  narrateLatinReason,
+  type Premise,
+} from "../../engine/hint-text.ts";
 import type { LatinRepeatReason } from "../../engine/latin.ts";
 import {
   type ForcingLink,
@@ -125,50 +129,85 @@ type SaladOp = DeductionRecord & { reason: SaladReason };
 // --- narration -------------------------------------------------------------
 
 /**
- * Narrate *why* a step is forced (docs/games/hints.md § "Writing the narration"): lead with the indication,
- * give the reasoning, conclude in the necessity voice. `ns` is the value list the
- * step acts on — the placed symbol for a placement, the struck candidates for a
- * strike. The words are [`hint-text.ts`](./hint-text.ts)'s.
+ * Narrate *why* a placement or a marker is forced (docs/games/hints.md §
+ * "Writing the narration"): lead with the indication, give the reasoning,
+ * conclude in the necessity voice. `n` is the placed symbol; a marker reads
+ * none. The words are [`hint-text.ts`](./hint-text.ts)'s.
  */
 export function narrate(
   reason: SaladReason,
-  ns: number[],
+  n: number,
   state: { mode: number; order: number; nums: number },
 ): string {
   const { mode, order, nums } = state;
   const text = say(mode);
   switch (reason.kind) {
-    case "borderNear":
-      return text.borderNear(
-        clueSide(reason.clue, order).side,
-        reason.clueVal,
-        reason.skipped,
-        ns,
-      );
-    case "borderFar": {
-      const { side, axis } = clueSide(reason.clue, order);
-      return text.borderFar({
-        side,
-        axis,
-        clueVal: reason.clueVal,
-        blocked: reason.circleAt !== null,
-        reach: reason.reach,
-        holes: reason.holes,
-        tightenedBy: reason.tightenedBy,
-      });
-    }
     case "countHolesDone":
       return text.countHolesDone(reason.line, order - nums);
     case "countLettersDone":
       return text.countLettersDone(reason.line, reason.allPlaced, nums);
     case "crossNaked":
       return text.crossNaked;
+    case "borderNear":
+    case "borderFar":
     case "circleXNote":
-      return text.circleXNote(reason.count);
     case "repeatFull":
-      return text.repeatFull(reason.line, reason.times);
+      throw new Error(`a ${reason.kind} deduction strikes`);
     default:
-      return narrateLatinReason(reason, ns, saladVocab(mode));
+      return narrateLatinReason(reason, n, saladVocab(mode));
+  }
+}
+
+/** Why a strike is forced, which the walk concludes with the move it makes.
+ * `ns` is the struck candidates. */
+export function premise(
+  reason: SaladReason,
+  ns: number[],
+  state: { mode: number; order: number; nums: number },
+): Premise {
+  const { mode, order } = state;
+  const text = say(mode);
+  switch (reason.kind) {
+    case "borderNear":
+      return {
+        premise: text.borderNear(
+          clueSide(reason.clue, order).side,
+          reason.clueVal,
+          reason.skipped,
+        ),
+      };
+    case "borderFar": {
+      const { side, axis } = clueSide(reason.clue, order);
+      const blocked = reason.circleAt !== null;
+      return {
+        premise: text.borderFar({
+          side,
+          axis,
+          clueVal: reason.clueVal,
+          blocked,
+          reach: reason.reach,
+          holes: reason.holes,
+          tightenedBy: reason.tightenedBy,
+        }),
+        where: text.borderFarWhere(blocked),
+      };
+    }
+    case "circleXNote":
+      return {
+        premise: text.circleXNote(reason.count),
+        struck: text.emptyMarks(reason.count),
+      };
+    case "repeatFull":
+      return {
+        premise: text.repeatFull(reason.line, reason.times),
+        struck: text.emptyMarks(1),
+      };
+    case "countHolesDone":
+    case "countLettersDone":
+    case "crossNaked":
+      throw new Error(`a ${reason.kind} deduction marks a square`);
+    default:
+      return latinPremise(reason, ns, saladVocab(mode));
   }
 }
 
@@ -432,7 +471,7 @@ function markerFiring(f: MarkerFiring, w: Working, state: SaladState): SaladFiri
   const legs: Leg<SaladMove, SaladHint, SaladReason>[] = f.cells.map((c) => ({
     step: {
       move: { type: "set", x: c.x, y: c.y, value: f.mark },
-      explanation: narrate(f.reason, [], state),
+      explanation: narrate(f.reason, 0, state),
       highlights: { ...ev, targets: [c], marks: [], ghost: f.mark },
     },
     apply: () => {
@@ -582,12 +621,12 @@ function buildSteps(
       return (rec.ops as SaladOp[]).filter((op) => op.kind === "place" || op.n <= nums);
     },
     placeWords: (m, reason) => ({
-      explanation: narrate(reason, [m.n], state),
+      explanation: narrate(reason, m.n, state),
       ...reasonEvidence(reason, o),
       ghost: m.n,
     }),
     strikeWords: (marks, reason) => ({
-      explanation: narrate(
+      ...premise(
         reason,
         marks.map((m) => m.n),
         state,
@@ -601,6 +640,8 @@ function buildSteps(
         ? `far:${op.n}`
         : `${op.reason.kind}:${op.y * o + op.x}`,
     setUp,
+    // The setup is Salad's own; the vocabulary still words the conclusions.
+    notes: { placedVerb: "placed", ...saladVocab(state.mode) },
     // The cheapest emptiness deductions: a line's counts, or a collapse onto
     // the empty-square mark. Both need no notes beyond what is on screen, so a
     // Number Ball board opens on them rather than on "pencil everything in".

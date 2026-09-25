@@ -51,9 +51,14 @@ export const say = {
     `The identity's row and column are just the element labels, so this cell must be ${value}.`,
 
   /** `E·O` (or `O·E` when not `left`) is `product`, not `O`, so `E` is not the
-   * identity. */
+   * identity: the premise, which the walk concludes by striking
+   * {@link say.identityMarks}. */
   identityElim: (E: string, O: string, product: string, left: boolean): string => {
     const shown = left ? `${E}·${O} = ${product}` : `${O}·${E} = ${product}`;
-    return `${shown}, not ${O}. The identity leaves every element unchanged, so ${E} can't be the identity. Cross out its identity marks.`;
+    return `${shown}, not ${O}, and the identity would leave ${O} unchanged, which rules ${E} out`;
   },
+
+  /** What an identity elimination strikes: in each cell of the element's row
+   * and column, the note that would make it the identity there. */
+  identityMarks: "its identity marks",
 };

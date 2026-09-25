@@ -12,7 +12,7 @@
  * `narrate`); this file decides only how it reads.
  */
 
-import { type LatinVocab, narrateForcingChain } from "../../engine/hint-text.ts";
+import { forcingChainPremise, type LatinVocab } from "../../engine/hint-text.ts";
 import type { ForcingLink } from "../../engine/latin-hint.ts";
 
 /** Towers speaks of heights, not numbers — the one word the shared chain
@@ -34,19 +34,24 @@ export const say = {
   facing: (n: number): string =>
     `These facing clues sum to one more than the grid size, pinning the tallest tower: height ${n} can only sit here.`,
 
+  // The strike arms below are premises, which the walk concludes with the move
+  // it makes (`engine/hint-text.ts`'s `Premise`).
+
   lineFull: (clue: number, n: number): string =>
-    `Clue ${clue} already sees all but one of its towers deeper in the line, so the cell nearest the clue must be tall enough to keep everything between it and them hidden. That is too tall for the shortest heights, so we must cross out the ${n}.`,
+    `Clue ${clue} already sees all but one of its towers deeper in the line, so the cell nearest the clue must be tall enough to keep everything between it and them hidden. Height ${n} is too short for that`,
 
   // "height N", never "a N": the article trap (docs/games/hints.md § "Name a
   // square by its value").
   lowerBound: (clue: number, n: number): string =>
-    `Clue ${clue} sees exactly ${clue} towers, so height ${n} this close would hide too many behind it; we must cross out the ${n}.`,
+    `Clue ${clue} sees exactly ${clue} towers, and height ${n} this close would hide too many behind it`,
 
   arrangement: (clue: number, n: number): string =>
-    `No way for clue ${clue} to show exactly ${clue} towers puts height ${n} here, so we must cross out the ${n}.`,
+    `No way for clue ${clue} to show exactly ${clue} towers puts height ${n} here`,
 
-  dup: (n: number): string =>
-    `A tower of height ${n} now sits in this row and column, so we must cross out the ${n} from every other cell they pass through.`,
+  dup: (n: number): string => `A tower of height ${n} now sits in this row and column`,
+
+  /** Where the placement's cull strikes from. */
+  dupWhere: "from every other cell they pass through",
 
   single: (n: number): string =>
     `Every other height has been ruled out in this cell, so it can only be ${n}.`,
@@ -58,7 +63,7 @@ export const say = {
     `In this ${line === "row" ? "row" : "column"}, height ${n} can go in only this cell, since every other cell in the ${line === "row" ? "row" : "column"} rules it out, so it must be ${n}.`,
 
   set: (n: number): string =>
-    `The outlined cells already account for a fixed set of heights that includes ${n}, so we must cross out the ${n} here.`,
+    `The outlined cells already account for a fixed set of heights that includes ${n}`,
 
   // The shared chain sentence, in Towers' own vocabulary: the value needs no
   // qualifying here, because "two heights left" contextualizes the bare
@@ -68,5 +73,5 @@ export const say = {
     n: number,
     shares: "row" | "col",
   ): string =>
-    narrateForcingChain(reason, n, TOWERS_VOCAB, shares === "row" ? "row" : "column"),
+    forcingChainPremise(reason, n, TOWERS_VOCAB, shares === "row" ? "row" : "column"),
 };

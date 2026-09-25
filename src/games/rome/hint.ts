@@ -48,6 +48,7 @@ import {
   valuesOf,
 } from "../../engine/candidate-plan.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
+import type { Premise } from "../../engine/hint-text.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import type { Point } from "../../engine/types.ts";
@@ -154,27 +155,38 @@ function marks(
   }
 }
 
-/** The sentence a reason speaks. `ns` is the values the step acts on. */
-function narrate(reason: RomeHintReason | DupReason, ns: number[]): string {
+/** The sentence a placement speaks. `n` is the arrow placed. */
+function narrate(reason: RomeHintReason | DupReason, n: number): string {
   switch (reason.kind) {
     case "single":
-      return say.single(ns[0]);
+      return say.single(n);
     case "regionsFull":
-      return say.regionsFull(ns[0]);
+      return say.regionsFull(n);
     case "hiddenSingle":
       return say.hiddenSingle(reason.n);
+    default:
+      throw new Error(`a ${reason.kind} deduction strikes`);
+  }
+}
+
+/** A strike's premise, which the walk concludes with the move it makes. `ns`
+ * is the struck arrows. */
+function premise(reason: RomeHintReason | DupReason, ns: number[]): Premise {
+  switch (reason.kind) {
     case "dup":
-      return say.dup(reason.n);
+      return { premise: say.dup(reason.n), where: say.dupWhere };
     case "loop":
-      return say.loop(ns[0]);
+      return { premise: say.loop(ns[0]) };
     case "onlyHome":
-      return say.onlyHome([...reason.only]);
+      return { premise: say.onlyHome([...reason.only]), struck: say.onlyHomeStruck };
     case "reach":
-      return say.reach();
+      return { premise: say.reach(), struck: say.reachStruck };
     case "opposite":
-      return say.opposite(ns[0], axisOf(ns[0]));
+      return { premise: say.opposite(ns[0], axisOf(ns[0])), named: true };
     case "pair":
-      return say.pair([...reason.values]);
+      return { premise: say.pair([...reason.values]), where: say.pairWhere };
+    default:
+      throw new Error(`a ${reason.kind} deduction places`);
   }
 }
 
@@ -245,13 +257,14 @@ export function buildSteps(
       }
     },
     placeWords: (m, reason) => ({
-      explanation: narrate(reason, [m.n]),
+      explanation: narrate(reason, m.n),
       ...marks(reason, w, areaOf),
     }),
     strikeWords: (struck, reason) => ({
-      explanation: narrate(reason, valuesOf(struck)),
+      ...premise(reason, valuesOf(struck)),
       ...marks(reason, w, areaOf),
     }),
+    conclude: say.conclude,
     // Every deduction here is about one square, so a firing's strikes stay
     // together; only the `pair` rung reaches several, and its sentence speaks
     // for the whole area at once.

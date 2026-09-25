@@ -5,7 +5,8 @@
  * A game's own sentences live in its `hint-text.ts`; these are the ones several
  * games speak word for word, so a wording pass on them lands once: the generic
  * Latin arms (Keen, Unequal, Group, Salad), the forcing chain (those four plus
- * Towers and Solo), the candidate games' two setup steps, the sliding-tile
+ * Towers and Solo), the candidate games' two setup steps and the conclusions
+ * their strikes end in, the sliding-tile
  * games' "Working on tile N:" prefix, and the helpers that join a list or
  * choose "a" or "an". Which sentence a step speaks is decided by
  * the deduction (`latin-hint.ts`, `candidate-hint.ts` and each game's hint);
@@ -123,6 +124,77 @@ export function noteText(
   return `Only ${joinWith([...values])} ${one ? "isn't" : "aren't"} already ${placedVerb} in this ${cell}'s ${regions}, so pencil ${one ? "it" : "them"} in.`;
 }
 
+// --- the candidate games' conclusions ---------------------------------------
+
+/**
+ * A strike's words before their conclusion: why the struck values go, as a
+ * clause the walk finishes with the move it makes (`candidate-plan.ts`'s
+ * `StrikeWords`). "No way to make this cage multiply to 5 puts 2, 3 or 4 in this
+ * cell" ends in "so we must cross out 2, 3 and 4" on a cell with notes, and in
+ * "so this cell must be 1" on one without.
+ *
+ * `where` names the cells a strike reaches beyond the one the premise is about,
+ * in the words its conclusion uses ("from the other cells they pass through").
+ * A strike with one speaks for cells other than "this cell", so its step never
+ * becomes one cell's placement.
+ *
+ * `struck` names the struck notes where a list of their values would misstate
+ * them (Group's identity marks are a different element in every cell) or say
+ * less than a word does (Rome's "the rest"). `named` says the premise has
+ * already named the struck values ("puts 2 or 3 in this cell"), so a strike
+ * refers back to them ("so we must cross them out") rather than listing them
+ * twice. Neither changes what a folded step concludes: that names the values
+ * left, which the premise never has.
+ */
+export interface Premise {
+  premise: string;
+  where?: string;
+  struck?: string;
+  named?: boolean;
+}
+
+/**
+ * How a candidate step ends, by the move it makes. The walk decides which; the
+ * game's vocabulary words it:
+ *
+ * - `strike` — the struck values go ("we must cross out 2 and 4");
+ * - `place` — a cell with no notes has one value left ("this cell must be 3");
+ * - `keep` — a cell with no notes has several left, and the step writes them
+ *   ("pencil in only 1 and 5").
+ *
+ * Each is the clause after "so"; the walk supplies the "so" and the full stop.
+ */
+export interface Conclusions {
+  /** `how` is what the premise said about the struck notes. */
+  strike(values: readonly number[], how: Omit<Premise, "premise">): string;
+  place(n: number): string;
+  keep(values: readonly number[]): string;
+}
+
+/** The {@link Conclusions} of a game whose values print one way everywhere, in
+ * its value vocabulary. A value struck in several cells is named once. */
+export function candidateConclusions(vocab: {
+  value(n: number): string;
+  cell?: string;
+}): Conclusions {
+  const v = vocab.value;
+  const cell = vocab.cell ?? "cell";
+  return {
+    strike: (values, { where, struck, named }) => {
+      const ns = distinct([...values]);
+      const at = where ? ` ${where}` : "";
+      if (struck) return `we must cross out ${struck}${at}`;
+      if (named) return `we must cross ${ns.length === 1 ? "it" : "them"} out${at}`;
+      const what = ns.length === 1 ? `the ${v(ns[0])}` : joinWith(ns.map(v));
+      return `we must cross out ${what}${at}`;
+    },
+    place: (n) => `this ${cell} must be ${v(n)}`,
+    // Short where it can be: the list is as long as the values left, and
+    // "only" says they are all the cell can be.
+    keep: (values) => `pencil in only ${joinWith(values.map(v))}`,
+  };
+}
+
 // --- the generic Latin arms --------------------------------------------------
 
 /**
@@ -156,56 +228,79 @@ export interface LatinVocab {
 
 const NUMBER_VOCAB: LatinVocab = { noun: "number", value: (n) => String(n) };
 
-/** Narrate a generic Latin reason — the six arms that read *identically* across
- * the row/column Latin games once their value vocabulary is factored out
- * ({@link LatinVocab}): Keen and Unequal (numbers), Group (elements) and Salad
- * (letters or numbers). Shared so a wording improvement to, say, the
- * hidden-single sentence lands in one place instead of drifting between them.
- * `ns` is the value list the arm refers to (the placed value for a single, the
- * struck values for `set` / `forcing`). `vocab` defaults to plain numbers.
+/** Narrate a generic Latin placement — the three single arms, which read
+ * *identically* across the row/column Latin games once their value vocabulary
+ * is factored out ({@link LatinVocab}): Keen and Unequal (numbers), Group
+ * (elements) and Salad (letters or numbers). Shared so a wording improvement to,
+ * say, the hidden-single sentence lands in one place instead of drifting between
+ * them. `n` is the placed value; `vocab` defaults to plain numbers. The strike
+ * arms are {@link latinPremise}'s.
  *
  * Each game still owns its game-specific arms (Keen's cage*, Unequal's
  * greater/lesser/adjacent*, Salad's border/count/sync, Group's associativity)
  * and delegates only the generic ones here. */
 export function narrateLatinReason(
   reason: GenericLatinReason,
-  ns: number[],
+  n: number,
   vocab: LatinVocab = NUMBER_VOCAB,
 ): string {
   const { noun } = vocab;
   const v = vocab.value;
   const cell = vocab.cell ?? "cell";
-  const cells = `${cell}s`;
-  const list = (xs: number[]): string => joinWith(xs.map(v));
   switch (reason.kind) {
     case "single":
-      return `Every other ${noun} has been ruled out in this ${cell}, so it can only be ${v(ns[0])}.`;
+      return `Every other ${noun} has been ruled out in this ${cell}, so it can only be ${v(n)}.`;
     case "regionsFull":
-      return `This ${cell}'s row and column already hold every other ${noun}, so it can only be ${v(ns[0])}.`;
+      return `This ${cell}'s row and column already hold every other ${noun}, so it can only be ${v(n)}.`;
     case "hiddenSingle":
       return `In this ${reason.line === "row" ? "row" : "column"}, ${v(reason.n)} can go in only this ${cell}, since every other ${cell} in the ${reason.line === "row" ? "row" : "column"} rules it out, so it must be ${v(reason.n)}.`;
+    default:
+      throw new Error(`a ${reason.kind} strikes, and is narrated by latinPremise`);
+  }
+}
+
+/** The premise of a generic Latin strike (the placement cull, a set, a forcing
+ * chain), shared as {@link narrateLatinReason} is. `ns` is the struck values. */
+export function latinPremise(
+  reason: GenericLatinReason,
+  ns: number[],
+  vocab: LatinVocab = NUMBER_VOCAB,
+): Premise {
+  const v = vocab.value;
+  const cells = `${vocab.cell ?? "cell"}s`;
+  switch (reason.kind) {
     case "dup": {
       const d = v(reason.n);
-      return `There's already ${indefinite(d)} ${d} in this row and column, so we must cross out the ${d} from the other ${cells} they pass through.`;
+      return {
+        premise: `There's already ${indefinite(d)} ${d} in this row and column`,
+        where: `from the other ${cells} they pass through`,
+      };
     }
     case "set":
       // One strike per cell can repeat a value, and the order is the solver's:
       // name each value once, smallest first.
-      return `The outlined ${cells} already account for ${list(distinct(ns))} between them, so we must cross out ${list(distinct(ns))} here.`;
+      return {
+        premise: `The outlined ${cells} already account for ${joinWith(distinct(ns).map(v))} between them`,
+      };
     case "forcing":
-      return narrateForcingChain(
-        reason,
-        ns[0],
-        vocab,
-        reason.shares === "row" ? "row" : "column",
-      );
+      return {
+        premise: forcingChainPremise(
+          reason,
+          ns[0],
+          vocab,
+          reason.shares === "row" ? "row" : "column",
+        ),
+      };
+    default:
+      throw new Error(`a ${reason.kind} places, and is narrated by narrateLatinReason`);
   }
 }
 
 /**
- * Narrate a forcing chain as the argument it actually is, rather than as "a
- * contradiction further along" — a claim the player could only check by redoing
- * the deduction.
+ * A forcing chain's premise, told as the argument it actually is rather than as
+ * "a contradiction further along" — a claim the player could only check by
+ * redoing the deduction. It ends in what both branches agree on, which the walk
+ * concludes as the move the board calls for.
  *
  * **The case split is the load-bearing part.** A forcing chain does not refute a
  * hypothesis; it concludes from *both* branches of one, and a walk that narrates
@@ -246,7 +341,7 @@ export function narrateLatinReason(
  * rather than by a color. See `docs/games/hints.md` § "Two marks on the board,
  * one "this cell" — tie them, and never by color".
  */
-export function narrateForcingChain(
+export function forcingChainPremise(
   reason: { chain: readonly ForcingLink[] },
   struck: number,
   vocab: LatinVocab,
@@ -260,5 +355,5 @@ export function narrateForcingChain(
   const last = reason.chain.length;
   const other = v(reason.chain[0].n);
   const s = v(struck);
-  return `${cap(cell)} 1 is ${s} or ${other}, and every numbered ${cell} has just two ${vocab.noun}s left, so each forces the next. If ${cell} 1 is ${s}, this ${cell}'s ${region} already has it; if ${other}, ${cell} ${last} is driven to ${s}, ${lastTie ?? `in line with this ${cell}`}. Either way, cross out ${s} here.`;
+  return `${cap(cell)} 1 is ${s} or ${other}, and every numbered ${cell} has just two ${vocab.noun}s left, so each forces the next. If ${cell} 1 is ${s}, this ${cell}'s ${region} already has it; if ${other}, ${cell} ${last} is driven to ${s}, ${lastTie ?? `in line with this ${cell}`}. Either way, ${s} is ruled out here`;
 }

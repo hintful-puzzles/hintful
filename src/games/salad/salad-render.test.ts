@@ -220,7 +220,10 @@ describe("salad hint frames", () => {
     // a single square, and saying so is honest rather than a missing area. One
     // square's contour is a ring — four sides, which is what the neighbor rule
     // gives when nothing beside it is evidence.
-    const { recording, hint } = hintFrame(LETTERS_ID, /so only [A-C] can go here/);
+    const { recording, hint } = hintFrame(
+      LETTERS_ID,
+      /leaves only [A-C] for this square/,
+    );
     expect(hint?.explanation).toMatch(/and this square is nearest to it/);
     expectRing(recording.ops, COL_HINT_CELL);
     expect(recording.ops.some((o) => o.op === "text" && o.color === COL_HINT)).toBe(

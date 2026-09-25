@@ -1,7 +1,8 @@
 # fold-notes-into-conclusions
 
-**Status: scaffolded, not started.** Owner-requested, 2026-09-25. Player-visible
-wording in seven games: the owner judges the sentences.
+**Status: implemented, awaiting the owner's read of the sentences (task 3.3).**
+Owner-requested, 2026-09-25. Player-visible wording in eight games: the owner
+judges the sentences. See `design.md` for what was built and measured.
 
 ## Why
 

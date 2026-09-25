@@ -16,12 +16,13 @@
  */
 
 import {
+  candidateConclusions,
   cleanObviousText,
+  forcingChainPremise,
   indefinite,
   joinOr,
   joinWith,
   type LatinVocab,
-  narrateForcingChain,
   noteText,
   populateText,
 } from "../../engine/hint-text.ts";
@@ -93,16 +94,23 @@ export const say = {
     return `In this ${r}, ${g(n)} can go in only this cell, since every other cell in the ${r} rules it out, so it must be ${g(n)}.`;
   },
 
+  // The strike arms below are premises, which the walk concludes with the move
+  // it makes, in these words (`engine/hint-text.ts`'s `Premise`).
+  conclude: candidateConclusions(SOLO_VOCAB),
+
   /** `regions` names the kinds of region the placed cell lies in. */
   dup: (n: number, regions: string[]): string =>
-    `${indefinite(g(n), true)} ${g(n)} is placed here, so it can't repeat in its ${joinOr(regions)}: cross out the ${g(n)} from these cells.`,
+    `${indefinite(g(n), true)} ${g(n)} is placed here and can't repeat in its ${joinOr(regions)}`,
+
+  /** Where the placement's cull strikes from. */
+  dupWhere: "from these cells",
 
   /** Every cell of `confined` that can take `n` also lies in `target`. */
-  intersect: (confined: SoloRegion, target: SoloRegion, n: number): string => {
-    const cName = regionName(confined);
-    const tName = regionName(target);
-    return `In this ${cName}, every cell that can still take ${g(n)} lies in this ${tName}, so ${g(n)} must be crossed out of the rest of it.`;
-  },
+  intersect: (confined: SoloRegion, target: SoloRegion, n: number): string =>
+    `In this ${regionName(confined)}, every cell that can still take ${g(n)} lies in this ${regionName(target)}`,
+
+  /** Where an intersection strikes from: the rest of the target region. */
+  intersectWhere: "from the rest of it",
 
   /** A set of cells inside `region` accounts for `ns`; with no region, the set
    * is a locked pattern across several lines.
@@ -113,8 +121,8 @@ export const say = {
    * digit fits nowhere else, so each of their rows is spoken for. */
   set: (region: SoloRegion | null, ns: number[]): string =>
     region
-      ? `Other cells in this ${regionName(region)} already account for ${all(ns)}, so ${ns.length === 1 ? "it" : "they"} must be crossed out here.`
-      : `The highlighted cells are the only places ${all(ns)} fits in their columns, so no other ${all(ns)} fits in their rows: cross out ${all(ns)}.`,
+      ? `Other cells in this ${regionName(region)} already account for ${all(ns)}`
+      : `Their columns fit ${all(ns)} only in the highlighted cells, leaving no other ${all(ns)} in their rows`,
 
   // The shared chain sentence, with Solo's own region vocabulary — its chain
   // hops through blocks and diagonals as well as lines, so both the region that
@@ -126,7 +134,7 @@ export const say = {
     shares: SoloRegion,
     lastShares: SoloRegion,
   ): string =>
-    narrateForcingChain(
+    forcingChainPremise(
       reason,
       struck,
       SOLO_VOCAB,
@@ -146,8 +154,8 @@ export const say = {
     `This ${regionName(region)} must total ${total}; the cages and digits inside it account for all but ${g(n)}, so its one open cell must be ${g(n)}.`,
 
   cageMinMax: (clue: number, ns: number[]): string =>
-    `This killer cage must total ${clue}; its other cells leave no room for ${any(ns)}, so ${ns.length === 1 ? "it" : "they"} must be crossed out.`,
+    `This killer cage must total ${clue}, and its other cells leave no room for ${any(ns)}`,
 
   cageSums: (clue: number, ns: number[]): string =>
-    `No way to make this killer cage total ${clue} uses ${any(ns)} in this cell, so ${ns.length === 1 ? "it" : "they"} must be crossed out.`,
+    `No way to make this killer cage total ${clue} uses ${any(ns)} in this cell`,
 };

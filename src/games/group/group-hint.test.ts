@@ -106,7 +106,12 @@ describe("group hint — plan solves boards", () => {
     for (const seed of ["h1", "h2", "h3", "h4", "h5", "h6"]) {
       const { texts, solved } = walk(HARD_HIDDEN, seed);
       if (solved) anySolved = true;
-      if (texts.some((t) => /can't be the identity/.test(t)) && solved) {
+      if (
+        texts.some((t) =>
+          /rules \w out, so we must cross out its identity marks/.test(t),
+        ) &&
+        solved
+      ) {
         sawElim = true;
         break;
       }

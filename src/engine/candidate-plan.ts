@@ -35,7 +35,14 @@ import {
 import type { DeductionRecord } from "./deduction-record.ts";
 import type { HintStep } from "./game.ts";
 import { type FrontierCandidate, gridKey, HintFrontier } from "./hint-frontier.ts";
-import { cleanObviousText, noteText, populateText } from "./hint-text.ts";
+import {
+  type Conclusions,
+  candidateConclusions,
+  cleanObviousText,
+  noteText,
+  type Premise,
+  populateText,
+} from "./hint-text.ts";
 import {
   availablePlacements,
   type CellRegion,
@@ -78,6 +85,13 @@ interface Built<M, H> {
   apply(): boolean;
 }
 
+/** A note-less cell a strike was folded into: the notes it now has, or the
+ * value placed there. */
+interface Folded {
+  bits: number;
+  placed: number | null;
+}
+
 /** What a rung is told each time it is asked. */
 export interface RungContext<R> {
   /** Every earlier rung came up empty this time, which is where a rung that may
@@ -114,6 +128,11 @@ export type StepWords<H> = Omit<H, "targets" | "marks"> & {
   explanation: string;
   reads?: readonly Point[];
 };
+
+/** What a strike says and shades: its {@link Premise}, which the walk finishes
+ * with the move the step makes (the plan's `conclude`), so a strike's ending is
+ * never the game's to write. */
+export type StrikeWords<H> = Omit<StepWords<H>, "explanation"> & Premise;
 
 /** The setup a candidate plan does before its every rung competes. */
 export interface PlanSetUp {
@@ -200,7 +219,11 @@ export interface CandidatePlan<
     marks: readonly Mark[],
     reason: Reason | DupReason,
     continues: boolean,
-  ) => StepWords<H>;
+  ) => StrikeWords<H>;
+  /** How a strike's sentence ends, by the move its step makes. Under the
+   * implicit reading a strike from one cell with no notes is not a strike at
+   * all: its step writes the values left, or places the one left. */
+  conclude: Conclusions;
   /** The axis a firing's strikes split into legs on: the ones sharing a key are
    * one leg, in the order their keys first appear. It follows what the
    * narration names singular (docs/games/hints.md § "Solve the way a human
@@ -307,15 +330,20 @@ export type LatinCandidatePlan<
   Reason,
 > = Omit<
   CandidatePlan<M, H, R, Reason, RowColRegion>,
-  "regionsOf" | "singleReason" | "notes"
+  "regionsOf" | "singleReason" | "notes" | "conclude"
 > & {
-  /** The words the shared setup sentences are built from: the game's singular
-   * noun for a cell's value ("number", "height", "element"), its verb for one
-   * already on the board ("standing", "placed"), and how a value prints where it
-   * is not a plain number (Group's letters). The region phrase is not among
-   * them — a game whose regions are a row and a column has no other answer.
-   * Omit only with `setUp`. */
-  notes?: { noun: string; placedVerb: string; value?: (n: number) => string };
+  /** The words the shared setup sentences and conclusions are built from: the
+   * game's singular noun for a cell's value ("number", "height", "element"), its
+   * verb for one already on the board ("standing", "placed"), how a value prints
+   * where it is not a plain number (Group's letters), and what it calls a cell
+   * where that is not "cell" (Salad's squares). The region phrase is not among
+   * them — a game whose regions are a row and a column has no other answer. */
+  notes: {
+    noun: string;
+    placedVerb: string;
+    value?: (n: number) => string;
+    cell?: string;
+  };
 };
 
 /**
@@ -335,7 +363,8 @@ export type LatinCandidatePlan<
  * - a hidden single's line ({@link hiddenSingleLine}) is hatched, for the same
  *   reason. The game's `placeWords` still says *why*; the preset marks
  *   *where*, and the game's other placement arms are untouched;
- * - the setup sentences, from the game's `notes` vocabulary.
+ * - the setup sentences and the conclusions, from the game's `notes`
+ *   vocabulary.
  *
  * A game whose regions, singles or setup genuinely differ stays on
  * {@link runCandidatePlan}, which every game may call and which the checker
@@ -348,9 +377,23 @@ export function runLatinCandidatePlan<
   Reason,
 >(plan: LatinCandidatePlan<M, H, R, Reason> & NarratesSingles<Reason>): void {
   const { w, notes, placeWords, ...rest } = plan;
+  const value = notes.value ?? String;
+  const cell = notes.cell ?? "cell";
+  const vocab = {
+    noun: notes.noun,
+    placedVerb: notes.placedVerb,
+    regions: "row or column",
+    cell,
+  };
   const full: CandidatePlan<M, H, R, Reason, RowColRegion> = {
     ...rest,
     w,
+    notes: {
+      populate: populateText(notes.noun, cell),
+      cleanObvious: cleanObviousText(notes.noun, notes.placedVerb, vocab.regions, cell),
+      note: (_cell, values, every) => noteText(values.map(value), every, vocab),
+    },
+    conclude: candidateConclusions({ value, cell }),
     regionsOf: (x, y) => rowColRegions(x, y, w),
     // Sound because `NarratesSingles` has already rejected a plan whose reason
     // union cannot hold what `singleReasonOf` returns; the checker cannot
@@ -376,19 +419,6 @@ export function runLatinCandidatePlan<
       } as StepWords<H>;
     },
   };
-  if (notes) {
-    const value = notes.value ?? String;
-    full.notes = {
-      populate: populateText(notes.noun),
-      cleanObvious: cleanObviousText(notes.noun, notes.placedVerb, "row or column"),
-      note: (_cell, values, every) =>
-        noteText(values.map(value), every, {
-          noun: notes.noun,
-          placedVerb: notes.placedVerb,
-          regions: "row or column",
-        }),
-    };
-  }
   runCandidatePlan(full);
 }
 
@@ -632,13 +662,15 @@ class CandidateWalk<
     });
   }
 
-  /** A firing's steps: its note legs under the implicit reading, then a step
-   * per leg. */
+  /** A firing's steps: a step per leg, and under the implicit reading the note
+   * legs its premise needs, with a strike from a note-less cell folded into its
+   * conclusion ({@link implicitSteps}). */
   private stepsOf(f: Firing<M, H, Reason>): Built<M, H>[] {
     let built = this.built.get(f);
     if (!built) {
-      const own = f.map((leg, i) => this.builtLeg(leg, i > 0));
-      built = this.implicit ? [...this.noteLegs(f, own), ...own] : own;
+      built = this.implicit
+        ? this.implicitSteps(f)
+        : f.map((leg, i) => this.builtLeg(leg, i > 0));
       this.built.set(f, built);
     }
     return built;
@@ -654,13 +686,10 @@ class CandidateWalk<
         },
       };
     if ("strike" in leg)
-      return {
-        step: this.strikeStep(leg.strike, leg.reason, continues),
-        apply: () => {
-          this.clear(leg.strike);
-          return false;
-        },
-      };
+      return this.struck(
+        leg.strike,
+        this.plan.strikeWords(leg.strike, leg.reason, continues),
+      );
     const { x, y, n } = leg.place;
     const { explanation, ...evidence } = this.plan.placeWords(
       leg.place,
@@ -681,47 +710,169 @@ class CandidateWalk<
   }
 
   /**
-   * Under the implicit reading, the legs writing down the candidates a firing
-   * reads: each blank, note-less cell it outlines as evidence (in outline order)
-   * or strikes from, but not one it places in. An outlined blank cell is
-   * evidence only through what it can still be, and a player following a
-   * deduction over several cells cannot hold each one's candidates in their head
-   * (Map's owner playtests, docs/games/hints.md § "A graph, not a grid (Map)").
-   * So are the cells a step's words say it `reads`. A hatched line is not read
-   * this way by default: a hidden single says no other cell of the line can
-   * take the value, which each cell shows by its own regions.
+   * Under the implicit reading, a firing's steps with the candidates it reads
+   * written down first. An outlined blank cell is evidence only through what it
+   * can still be, and a player following a deduction over several cells cannot
+   * hold each one's candidates in their head (Map's owner playtests,
+   * docs/games/hints.md § "A graph, not a grid (Map)"). So each blank, note-less
+   * cell a step outlines as evidence or `reads`, or strikes from, gets a note leg
+   * before the firing, and a cell it places in gets none. A hatched line is not
+   * read this way: a hidden single says no other cell of the line can take the
+   * value, which each cell shows by its own regions.
+   *
+   * **A strike from a note-less cell is not a strike, though: it is folded.** A
+   * note leg then a strike says one thing in two steps, the first writing
+   * candidates only for the second to cross them out. So a strike whose marks lie
+   * in one such cell, and whose words speak of that cell alone (no `where`),
+   * concludes with what it leaves instead: a placement when one value is left, a
+   * note of the survivors when several are. A cell an earlier leg reads, or a
+   * strike over several cells reaches, still gets its note leg, since it is read
+   * before the fold could write it.
    */
-  private noteLegs(
-    f: Firing<M, H, Reason>,
-    own: readonly Built<M, H>[],
-  ): Built<M, H>[] {
+  private implicitSteps(f: Firing<M, H, Reason>): Built<M, H>[] {
     const { grid, pencil, w } = this.plan;
     const h = grid.length / w;
     const placed = new Set<number>();
     for (const leg of f) if ("place" in leg) placed.add(leg.place.y * w + leg.place.x);
-    const cells: number[] = [];
-    const read = (p: Point): void => {
-      if (p.x < 0 || p.y < 0 || p.x >= w || p.y >= h) return;
+    /** The index of `p` when it is a blank cell with no notes, whose candidates
+     * are what the premise would have to show. */
+    const bare = (p: Point): number | null => {
+      if (p.x < 0 || p.y < 0 || p.x >= w || p.y >= h) return null;
       const i = p.y * w + p.x;
-      if (grid[i] !== 0 || pencil[i] !== 0 || this.shown[i] === 0) return;
-      if (placed.has(i) || cells.includes(i)) return;
-      cells.push(i);
+      if (grid[i] !== 0 || pencil[i] !== 0 || this.shown[i] === 0) return null;
+      return placed.has(i) ? null : i;
     };
-    for (const { step } of own) {
-      for (const p of step.highlights?.area ?? []) read(p);
-      for (const p of step.highlights?.reads ?? []) read(p);
+    const folded = new Map<number, Folded>();
+    const read: number[] = [];
+    const struck: number[] = [];
+    const note = (into: number[], p: Point): void => {
+      const i = bare(p);
+      if (i !== null && !folded.has(i) && !into.includes(i)) into.push(i);
+    };
+    const own: Built<M, H>[] = [];
+    f.forEach((leg, k) => {
+      let built: Built<M, H>;
+      if ("strike" in leg) {
+        // A fold earlier in this firing may already have settled a cell this
+        // leg strikes from.
+        const marks = leg.strike.filter((m) => !this.settled(m, folded));
+        if (marks.length === 0) return;
+        const words = this.plan.strikeWords(marks, leg.reason, k > 0);
+        const cells = cellsOf(marks);
+        const alone = cells.length === 1 && words.where === undefined;
+        const i = alone ? bare(cells[0]) : null;
+        if (i !== null && !folded.has(i) && !read.includes(i) && !struck.includes(i)) {
+          built = this.fold(i, marks, words, folded);
+        } else {
+          built = this.struck(marks, words);
+          for (const m of marks) note(struck, m);
+        }
+      } else built = this.builtLeg(leg, k > 0);
+      for (const p of built.step.highlights?.area ?? []) note(read, p);
+      for (const p of built.step.highlights?.reads ?? []) note(read, p);
+      own.push(built);
+    });
+    const cells = [...read, ...struck.filter((i) => !read.includes(i))];
+    return [...cells.map((i) => this.noteLeg(i)), ...own];
+  }
+
+  /** Whether a fold earlier in the firing has already dealt with `m`: its cell
+   * was placed, or kept only values `m` is not, or the value placed beside it
+   * in a region is `m`'s, which the placement's cull takes. */
+  private settled({ x, y, n }: Mark, folded: ReadonlyMap<number, Folded>): boolean {
+    const i = y * this.plan.w + x;
+    const own = folded.get(i);
+    if (own) return own.placed !== null || (own.bits & this.bit(n)) === 0;
+    for (const [j, fold] of folded)
+      if (fold.placed === n && this.shareRegion(i, j)) return true;
+    return false;
+  }
+
+  /** Whether cell `i` lies in one of cell `j`'s regions. */
+  private shareRegion(i: number, j: number): boolean {
+    const { w, regionsOf } = this.plan;
+    for (const region of regionsOf(j % w, (j / w) | 0))
+      for (let k = 0; k < region.cells.length; k++)
+        if (region.cells[k] === i) return true;
+    return false;
+  }
+
+  /** A strike from note-less cell `i`, concluded with what it leaves there: the
+   * one value placed, or the several written as its notes. */
+  private fold(
+    i: number,
+    marks: readonly Mark[],
+    words: StrikeWords<H>,
+    folded: Map<number, Folded>,
+  ): Built<M, H> {
+    const { plan } = this;
+    const x = i % plan.w;
+    const y = (i / plan.w) | 0;
+    const {
+      premise,
+      where: _where,
+      struck: _struck,
+      named: _named,
+      ...evidence
+    } = words;
+    let bits = this.shown[i];
+    for (const m of marks) bits &= ~this.bit(m.n);
+    // The view was taken before the firing, so a value an earlier fold placed
+    // in one of this cell's regions is still in it.
+    for (const [j, fold] of folded)
+      if (fold.placed !== null && this.shareRegion(i, j))
+        bits &= ~this.bit(fold.placed);
+    const left = this.valuesIn(bits);
+    const highlights = { ...evidence, targets: [{ x, y }], marks: [] } as unknown as H;
+    // Unreachable while the recording is sound: a strike never takes the
+    // solution's value, and a cell's implied notes always hold it.
+    if (left.length === 0)
+      throw new Error(`${plan.label}: a strike empties (${x}, ${y})`);
+    if (left.length === 1) {
+      const n = left[0];
+      folded.set(i, { bits: 0, placed: n });
+      return {
+        step: {
+          move: this.place(x, y, n, plan.autoClean),
+          explanation: `${premise}, so ${plan.conclude.place(n)}.`,
+          highlights,
+        },
+        apply: () => {
+          this.placeOnBoard({ x, y, n });
+          return true;
+        },
+      };
     }
-    for (const leg of f) if ("strike" in leg) for (const m of leg.strike) read(m);
-    return cells.map((i) => this.noteLeg(i));
+    folded.set(i, { bits, placed: null });
+    return {
+      step: {
+        move: addMove(
+          left.map((n) => ({ x, y, n })),
+          plan.moves,
+        ),
+        explanation: `${premise}, so ${plan.conclude.keep(left)}.`,
+        highlights,
+      },
+      apply: () => {
+        plan.pencil[i] = bits;
+        return false;
+      },
+    };
+  }
+
+  /** The values a note mask holds, smallest first. */
+  private valuesIn(bits: number): number[] {
+    const values: number[] = [];
+    for (let n = 1; n <= (this.plan.enc?.values ?? this.plan.w); n++)
+      if (bits & this.bit(n)) values.push(n);
+    return values;
   }
 
   private noteLeg(i: number): Built<M, H> {
     const { plan } = this;
     const x = i % plan.w;
     const y = (i / plan.w) | 0;
-    const values: number[] = [];
-    for (let n = 1; n <= (plan.enc?.values ?? plan.w); n++)
-      if (this.shown[i] & this.bit(n)) values.push(n);
+    const values = this.valuesIn(this.shown[i]);
     const marks = values.map((n) => ({ x, y, n }));
     const bits = this.shown[i];
     // Unreachable: the implicit reading refuses a game's own setup, and the
@@ -740,20 +891,30 @@ class CandidateWalk<
     };
   }
 
-  private strikeStep(
-    struck: readonly Mark[],
-    reason: Reason | DupReason,
-    continues: boolean,
-  ): HintStep<M, H> {
+  /** A strike's step, played by clearing its marks. */
+  private struck(marks: readonly Mark[], words: StrikeWords<H>): Built<M, H> {
+    return {
+      step: this.strikeStep(marks, words),
+      apply: () => {
+        this.clear(marks);
+        return false;
+      },
+    };
+  }
+
+  /** A strike concluded as one: its premise, then the plan's words for the
+   * values it crosses out. */
+  private strikeStep(struck: readonly Mark[], words: StrikeWords<H>): HintStep<M, H> {
     const marks = [...struck];
-    const { explanation, ...evidence } = this.plan.strikeWords(
-      marks,
-      reason,
-      continues,
-    );
+    const { premise, where, struck: noun, named, ...evidence } = words;
+    const ending = this.plan.conclude.strike(valuesOf(marks), {
+      where,
+      struck: noun,
+      named,
+    });
     return {
       move: this.strike(marks),
-      explanation,
+      explanation: `${premise}, so ${ending}.`,
       highlights: { ...evidence, targets: cellsOf(marks), marks } as unknown as H,
     };
   }
@@ -798,7 +959,10 @@ class CandidateWalk<
     );
     this.clear(dup);
     if (plan.autoClean || dup.length === 0) return;
-    const step = this.strikeStep(dup, { kind: "dup", n, px: x, py: y }, true);
+    const step = this.strikeStep(
+      dup,
+      plan.strikeWords(dup, { kind: "dup", n, px: x, py: y }, true),
+    );
     step.continuesPrevious = true;
     plan.steps.push(step);
   }

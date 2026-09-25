@@ -37,7 +37,11 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { narrateLatinReason } from "../../engine/hint-text.ts";
+import {
+  latinPremise,
+  narrateLatinReason,
+  type Premise,
+} from "../../engine/hint-text.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, latinVerdict } from "../../engine/latin.ts";
 import {
@@ -470,14 +474,13 @@ function findMistakes(state: GroupState): readonly GroupMistake[] {
  * reason is re-derived into. */
 type NarratableReason = HintReason | SingleReason;
 
-/** Narrate *why* a firing is forced (docs/games/hints.md § "Writing the
- * narration"). `ns` is the value list the step acts on (a placement passes its
- * single value; a strike its struck values). The generic Latin arms go to
- * `narrateLatinReason` under {@link groupVocab}; only Group's own three
+/** Narrate *why* a placement is forced (docs/games/hints.md § "Writing the
+ * narration"). `n` is the value placed. The generic Latin arms go to
+ * `narrateLatinReason` under {@link groupVocab}; only Group's own placing
  * techniques are chosen here. `identityFill`'s continuation legs are narrated
  * by `buildSteps`' `placeWords`. The words are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(reason: NarratableReason, ns: number[], id: boolean): string {
-  const ch = (n: number): string => toChar(n, id);
+function narrate(reason: NarratableReason, n: number, id: boolean): string {
+  const ch = (v: number): string => toChar(v, id);
   switch (reason.kind) {
     case "associativity":
       return say.associativity({
@@ -494,17 +497,35 @@ function narrate(reason: NarratableReason, ns: number[], id: boolean): string {
         ch(reason.a),
         ch(reason.b),
         reason.prod === reason.a,
-        ch(ns[0]),
+        ch(n),
       );
     case "identityElim":
-      return say.identityElim(
-        ch(reason.elem),
-        ch(reason.other),
-        ch(reason.product),
-        reason.left,
-      );
+      throw new Error("an identity elimination strikes");
     default:
-      return narrateLatinReason(reason, ns, groupVocab(id));
+      return narrateLatinReason(reason, n, groupVocab(id));
+  }
+}
+
+/** Why a strike is forced, which the walk concludes with the move it makes.
+ * `ns` is the struck values. */
+function premise(reason: NarratableReason, ns: number[], id: boolean): Premise {
+  const ch = (v: number): string => toChar(v, id);
+  switch (reason.kind) {
+    case "identityElim":
+      return {
+        premise: say.identityElim(
+          ch(reason.elem),
+          ch(reason.other),
+          ch(reason.product),
+          reason.left,
+        ),
+        struck: say.identityMarks,
+      };
+    case "associativity":
+    case "identityFill":
+      throw new Error(`a ${reason.kind} deduction places`);
+    default:
+      return latinPremise(reason, ns, groupVocab(id));
   }
 }
 
@@ -625,11 +646,11 @@ function buildSteps(
       explanation:
         continues && reason.kind === "identityFill"
           ? say.identityFillNext(toChar(m.n, id))
-          : narrate(reason, [m.n], id),
+          : narrate(reason, m.n, id),
       area: reasonArea(reason),
     }),
     strikeWords: (marks, reason) => ({
-      explanation: narrate(reason, valuesOf(marks), id),
+      ...premise(reason, valuesOf(marks), id),
       area: reasonArea(reason),
     }),
     notes: { noun: "element", placedVerb: "placed", value: (n) => toChar(n, id) },

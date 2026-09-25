@@ -9,7 +9,7 @@
  * vocabularies, so {@link say} takes the mode and returns its sentences in it.
  */
 
-import { cleanObviousText, joinWith, type LatinVocab } from "../../engine/hint-text.ts";
+import { cleanObviousText, type LatinVocab } from "../../engine/hint-text.ts";
 import { GAMEMODE_LETTERS, symbolChar } from "./state.ts";
 
 /** Salad's value vocabulary for the shared generic-Latin narration arms — the
@@ -52,22 +52,18 @@ export function say(mode: number) {
   const vocab = saladVocab(mode);
   const noun = vocab.noun;
   const sym = (n: number): string => symbolChar(mode, n);
-  const list = (xs: number[]): string => joinWith(xs.map(sym));
 
   return {
     populate: `Start by penciling every candidate ${noun} into each empty square that has none yet, so there is something to cross out.`,
 
     cleanObvious: cleanObviousText(noun, "placed", "row or column", "square"),
 
+    // The strike arms below are premises, which the walk concludes with the
+    // move it makes (`engine/hint-text.ts`'s `Premise`).
+
     /** The clue on `side` sees `clueVal` first, and the `skipped` squares
-     * between it and this one are empty: only `clueVal` can go here, so `ns`
-     * are struck. */
-    borderNear: (
-      side: Side,
-      clueVal: number,
-      skipped: number,
-      ns: number[],
-    ): string => {
+     * between it and this one are empty: only `clueVal` can go here. */
+    borderNear: (side: Side, clueVal: number, skipped: number): string => {
       const clue = sym(clueVal);
       const lead = `${clueName(side)} sees ${clue} first`;
       const gap =
@@ -76,7 +72,7 @@ export function say(mode: number) {
           : skipped === 1
             ? ", and the square between is marked empty"
             : `, and the ${count(skipped, "square")} between are marked empty`;
-      return `${lead}${gap}, so only ${clue} can go here: cross out ${list(ns)}.`;
+      return `${lead}${gap}, which leaves only ${clue} for this square`;
     },
 
     /** The clue's own symbol cannot sit this far in: cut off at a square known
@@ -93,12 +89,12 @@ export function say(mode: number) {
     }): string => {
       const clue = sym(p.clueVal);
       if (p.blocked) {
-        return `${clueName(p.side)} sees ${clue} first, and the outlined square furthest from it already holds a ${noun}, so the ${clue} must sit somewhere in the outlined run. We must cross out the ${clue} past it.`;
+        return `${clueName(p.side)} sees ${clue} first, and the outlined square furthest from it already holds a ${noun}, which keeps the ${clue} somewhere in the outlined run`;
       }
       const bound =
         p.reach === 0
-          ? `must be in the square nearest the clue`
-          : `must be within the first ${count(p.reach + 1, "square")} from the clue`;
+          ? `in the square nearest the clue`
+          : `within the first ${count(p.reach + 1, "square")} from the clue`;
       // "later in the row", not "further along": the phrase this used to say is
       // the collection's word for a deduction the reader has to carry on by
       // themselves ("a contradiction further along", engine/hint-text.ts), and
@@ -108,8 +104,12 @@ export function say(mode: number) {
         p.tightenedBy > 0
           ? ` and ${p.tightenedBy === 1 ? "one of them is" : `${p.tightenedBy} of them are`} already marked later in the ${p.axis}`
           : ``;
-      return `${clueName(p.side)} sees ${clue} first, so every square before its ${clue} must be empty. This ${p.axis} has room for only ${count(p.holes, "empty square")}${tighten}, so the ${clue} ${bound}. We must cross out the ${clue} beyond that.`;
+      return `${clueName(p.side)} sees ${clue} first, so every square before its ${clue} must be empty. This ${p.axis} has room for only ${count(p.holes, "empty square")}${tighten}, which keeps the ${clue} ${bound}`;
     },
+
+    /** Where a far border strike crosses the clue's symbol out: past the
+     * blocking square (`blocked`), or beyond the reach. */
+    borderFarWhere: (blocked: boolean): string => (blocked ? "past it" : "beyond that"),
 
     /** This line already has all `k` of its empty squares. */
     countHolesDone: (line: Line, k: number): string =>
@@ -133,12 +133,16 @@ export function say(mode: number) {
      * empty-square mark. */
     circleXNote: (count: number): string =>
       count === 1
-        ? `This square is now known to hold a ${noun}, so we must cross out its empty-square mark.`
-        : `These squares are now known to hold a ${noun}, so we must cross out their empty-square marks.`,
+        ? `This square is now known to hold a ${noun}`
+        : `These squares are now known to hold a ${noun}`,
+
+    /** What a strike of the "might be empty" note calls it, on `count` squares. */
+    emptyMarks: (count: number): string =>
+      count === 1 ? "its empty-square mark" : "their empty-square marks",
 
     /** This line already has all `times` of its empty squares, so this one
      * cannot be empty. */
     repeatFull: (line: Line, times: number): string =>
-      `This ${axisName(line)} already has ${allItsHoles(times)}, so this square cannot be empty; we must cross out its empty-square mark.`,
+      `This ${axisName(line)} already has ${allItsHoles(times)}, leaving none for this square`,
   };
 }

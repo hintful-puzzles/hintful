@@ -25,7 +25,7 @@ export const say = {
   /** An area of one cell owes only a 1, and needs no notes to say so. */
   singleton: "This area is a single cell, so it can only be 1.",
 
-  naked: (n: number): string => narrateLatinReason({ kind: "single" }, [n]),
+  naked: (n: number): string => narrateLatinReason({ kind: "single" }, n),
 
   hidden: (n: number): string =>
     `No other cell in the striped area can still be ${n}, so this cell must be ${n}.`,

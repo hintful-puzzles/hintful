@@ -159,6 +159,10 @@ function newUi(_state: RomeState): RomeUi {
     // useful built-in aid), leave loop highlighting off.
     sloops: false,
     sgoals: true,
+    // The convention, although the implicit plan is shorter: it leaves the
+    // squares its last step worked on for another part of the board too often
+    // for `hint-frontier.test.ts`'s continuity bound
+    // (`fold-notes-into-conclusions` design D4).
     candidateReading: DEFAULT_CANDIDATE_READING,
   };
 }

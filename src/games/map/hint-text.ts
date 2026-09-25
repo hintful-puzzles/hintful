@@ -111,9 +111,9 @@ export const say = {
    * read (owner playtest, 2026-09-25). This region touches region 1 and the
    * last, so one of its neighbors is `color` either way.
    *
-   * Map's own sentence rather than `narrateForcingChain`, which is written for
-   * a line: its "this cell's row already has it" and "cross out" become
-   * "touches" and one of three moves here, so two of its three clauses would
+   * Map's own sentence rather than `forcingChainPremise`, which is written for
+   * a line: its "this cell's row already has it" and the candidate walk's
+   * conclusion become "touches" and one of three moves here, so two of its three clauses would
    * differ (docs/games/hints.md § "Candidate-elimination games": extract when
    * only the vocabulary differs, decline when an arm's shape does).
    */

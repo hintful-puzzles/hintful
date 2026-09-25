@@ -608,8 +608,12 @@ owner-flagged 2026-06-22):
   conclude with the strike action naming the value (*"…so we must cross out
   the ${n}."*), not the abstract *"…so it can't go here"* repeated across
   every technique. A **placement** step keeps the positive necessity voice
-  (*"it can only be ${n}"*). The struck height is free to interpolate — the
-  step already knows its marks (`marks[0].n`). Exemplar: `narrate` in
+  (*"it can only be ${n}"*). **On the candidate walk the conclusion is not the
+  game's to write at all**: a strike's words are its premise, and the walk
+  ends it by the move the step makes, which under the implicit reading need not
+  be a strike (§ "The shared candidate-hint machinery"). So the rule holds by
+  construction there, and a game's sentences only have to read well before
+  ", so …". Exemplar: `premise` in
   [`towers/index.ts`](../../src/games/towers/index.ts).
 - **Never imply a placement the rule doesn't establish.** Towers' line-full
   rule strikes the *shortest* heights from the cell nearest the clue — but a
@@ -2141,9 +2145,10 @@ the ordinal there, in the ordinal's color, and hides the region numbers while a
 chain is shown, so "region 1" can mean only one thing on the board.
 
 The numbering also **ties the deixis** — see § "Two marks on the board, one 'this
-cell'". Exemplars: `forcingChainArea`/`narrateForcingChain` in
-[`engine/latin-hint.ts`](../../src/engine/latin-hint.ts) (one sentence, six
-games, `LatinVocab` for heights/elements/letters), and Clusters'
+cell'". Exemplars: `forcingChainArea` in
+[`engine/latin-hint.ts`](../../src/engine/latin-hint.ts) and
+`forcingChainPremise` in [`engine/hint-text.ts`](../../src/engine/hint-text.ts)
+(one sentence, six games, `LatinVocab` for heights/elements/letters), and Clusters'
 `buildHighlights`.
 
 ### Give the facts a notation (Loopy)
@@ -3240,6 +3245,20 @@ last rung when every earlier one came up empty, the budget and cap (§
   / `strikeWords` (the sentence and the evidence) and adds the move, the
   `targets` and the `marks` itself, so none of those can disagree with the
   move.
+- **A strike's words are a premise; the walk writes its conclusion.**
+  `strikeWords` returns a `Premise` (`engine/hint-text.ts`), the clause saying
+  why the values go, and the walk ends it with the plan's `conclude` words for
+  the move the step turns out to make: "so we must cross out 2 and 4" as a
+  strike, and under the implicit reading "so this cell must be 3" or "so
+  pencil in only 1 and 5" (§ "Two readings of an unmarked cell"). The row/column
+  preset builds `conclude` from the game's `notes` vocabulary; Solo takes the
+  engine's `candidateConclusions` in its digits, and Rome writes its own, in the
+  ways a square points. Three optional fields say how the conclusion refers to
+  the struck notes: `where` for a strike that reaches past "this cell" ("from
+  the other cells they pass through"), `struck` where a list of values would
+  misstate them (Group's identity marks), and `named` where the premise already
+  named them, so the ending says "cross them out" rather than listing them
+  twice.
 - **The walk plays each leg on the working board**, and after a placement
   strikes its value from every one of its `regionsOf`: a leg
   continuing the journey, or silent under auto-pencil, whose move carries the
@@ -3291,7 +3310,7 @@ helper:
 | `regionsOf` | `rowColRegions(x, y, w)`. The one genuine choice, and making it is what the preset *is* |
 | `singleReason` | `singleReasonOf`. Once `Reg` is a `RowColRegion` it is the **only inhabitant** of that signature |
 | a hidden single's placement evidence | its own line, `hiddenSingleLine`. The game's `placeWords` still says *why*; the preset shades *where*, over whatever area the game returned, and the game's other placement arms are untouched |
-| the two setup sentences | built from the game's `notes: { noun, placedVerb }`. The words are per-game ("height"/"standing", "element"/"placed"); the region phrase is not |
+| the two setup sentences and the conclusions | built from the game's `notes: { noun, placedVerb, value?, cell? }`. The words are per-game ("height"/"standing", "element"/"placed"); the region phrase is not. A game with a setup of its own (Salad) still gives `notes`, for the conclusions |
 
 The strongest form of the test is the middle two rows: not "six games happen to
 agree" but "the question has one answer once `regionsOf` is known". Before the
@@ -3528,18 +3547,43 @@ preference `candidateReadingPref` in
   then on. Everything above this section describes it.
 - **`implicit`**: every value its regions do not already hold, the way a player
   who pencils nothing yet reads a sudoku. There is no populate step. A firing
-  first writes the notes of each blank, note-less cell it strikes, outlines as
-  evidence or `reads` (one `pencilAdd` leg each, continuing its journey, in the
+  first writes the notes of each blank, note-less cell it outlines as evidence
+  or `reads` (one `pencilAdd` leg each, continuing its journey, in the
   engine's words: "Only 3 and 7 aren't already placed in this cell's row,
   column or block, so pencil them in."), and a single needs no notes at all: a
   note-less cell whose regions hold every other value is the `regionsFull`
   single, narrated as exactly that.
 
+**A strike from a note-less cell is folded into its conclusion.** A note leg
+that writes candidates only for the next step to cross them out says one thing
+in two steps (three, when a single follows: Mathrax's "pencil in 1 to 5",
+"cross out 1, 3, 4 and 5", "it can only be 2"). So when a strike's marks lie in
+one blank, note-less cell, and its premise has no `where`, the step ends in the
+move the board calls for, as Map's narrowings always did (§ "A graph, not a
+grid (Map)"): "…differ by 3, so this cell must be 2", or "…puts 2 or 3 in this
+cell, so pencil in only 1 and 4". The limits, each a way the fold would claim
+something the player could not see:
+
+- **A cell an earlier leg reads is noted first, and struck as written.** Its
+  candidates are that leg's premise, so they must be on the board before the
+  fold could write them. A Keen cage's firing therefore notes the cage's other
+  cells, folds the first, and strikes the rest.
+- **A strike with a `where` never folds**: it speaks for cells other than "this
+  cell" (a placement's cull, Solo's intersection).
+- **A later fold sees an earlier fold's placement.** The view the walk reads is
+  taken before the firing, so a value placed by the firing's first leg is still
+  in it; `fold` takes it out of what a later leg leaves in the same region.
+  Missing this threw on a Rome board (`candidate-plan.test.ts` pins the shape).
+
+The populate reading never folds, because every cell a strike reaches has notes
+there. Its plans kept every move, highlight and journey flag through the change
+(`fold-notes-into-conclusions` compared 516 plans).
+
 **Premise duty is the implicit reading's price, and the walk pays it for every
 game.** Map's playtests found that a premise read off neighbors is fine for one
 region and too much for several (§ "A graph, not a grid (Map)"). So the note
 legs cover every cell a step's candidates rest on: the outlined area, the struck
-cells, and `reads` for a region the sentence names but whose cells it reads (a
+cells a fold does not write, and `reads` for a region the sentence names but whose cells it reads (a
 Keen or Killer cage, a Towers `arrangement` line). **A hatched line is not
 read**: a hidden single says no other cell of the line can take the value, and
 each of those shows it by its own row and column. A generic Latin `set` records
@@ -3562,25 +3606,34 @@ move's `type`, because a Map move is a list of ops with no discriminant; and it
 addresses Map's premise by region, from the step's `targets` and `evidence`.
 
 **The default is a per-game convention with an override, and it was measured,
-not argued.** Over every preset at six seeds (`examine-implicit-candidates`,
-2026-09-25), the implicit plan against the populate plan:
+not argued.** Over every leaf preset at six seeds, the implicit plan against the
+populate plan, first without the fold (`examine-implicit-candidates`) and then
+with it (`fold-notes-into-conclusions`, both 2026-09-25):
 
-| Game | Steps, implicit ÷ populate | Blank cells the implicit plan notes |
-|---|---|---|
-| Solo | 0.72 | 12% |
-| Mathrax | 0.91 | 51% |
-| Group | 1.02 | 12% |
-| Towers | 1.11 | 58% |
-| Unequal | 1.14 | 71% |
-| Rome | 1.18 | 80% |
-| Keen | 1.22 | 82% |
-| Map (added later, on its own plan) | 0.89 Easy, 0.98–1.03 Normal, 1.09–1.11 Tricky | 0–18%, 34–51% Tricky |
+| Game | Steps, implicit ÷ populate, unfolded | Folded | Cells the folded plan writes notes into |
+|---|---|---|---|
+| Mathrax | 0.91 | 0.67 | 23% |
+| Rome | 1.18 | 0.70 | 38% |
+| Solo | 0.72 | 0.71 | 13% |
+| Unequal | 1.14 | 0.95 | 64% |
+| Towers | 1.11 | 1.03 | 69% |
+| Group | 1.02 | 1.04 | 13% |
+| Keen | 1.22 | 1.07 | 88% |
+| Map (on its own plan, which always folded) | 0.89 Easy, 0.98–1.03 Normal, 1.09–1.11 Tricky | | 0–18%, 34–51% Tricky |
+
+The last column is not comparable with the first run's figures, which counted
+note legs rather than every cell a step writes notes into; a fold's "pencil in
+only …" counts here and had no counterpart there.
 
 Where the clues or cages drive the deductions, nearly every cell ends up needing
-notes, and writing them one cell at a time costs more than one populate. So the
-convention, `DEFAULT_CANDIDATE_READING`, is `populate`, and a game whose plan is
-no longer under the implicit reading overrides it in `newUi` and says why (Solo,
-Mathrax, Group, Map). A new game measures the same two numbers before choosing.
+notes, and writing them one cell at a time can still cost more than one
+populate. So the convention, `DEFAULT_CANDIDATE_READING`, is `populate`, and a
+game whose plan is shorter under the implicit reading overrides it in `newUi`
+and says why (Solo, Mathrax, Unequal, and Group for the few notes it writes; Map
+offers no choice). Rome's shorter implicit plan is declined for now: it jumps
+across the board past `hint-frontier.test.ts`'s continuity bound, which reads a
+game's default reading only, so **a game switching its default must pass that
+guard too**. A new game measures the same two numbers before choosing.
 
 **Salad walks the populate reading only**: its setup is its own (the "might be
 empty" note is a candidate no row or column rules out, so an implicit Salad
@@ -4217,8 +4270,8 @@ square-grid convention. The answers, per piece:
   a band's width, so the target's solid band is the only mark on a boundary.
   Hue and weight alone did not separate them; a solid band on the edge against a
   dashed line inside does, and survives a player who cannot compare hues.
-- **The forcing-chain sentence stays Map's own.** `narrateForcingChain` is
-  written for a line ("this cell's row already has it", "cross out"). Map's two
+- **The forcing-chain sentence stays Map's own.** `forcingChainPremise` is
+  written for a line ("this cell's row already has it"). Map's two
   ends *touch* the target and its conclusion is one of three moves, so two of the
   three clauses differ, which is the "decline when an arm's shape differs" rule
   above. The ordinal is not declined: see § "Number the chain".

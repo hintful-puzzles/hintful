@@ -22,7 +22,7 @@
  * extremes").
  */
 
-import { joinNums, joinOr } from "../../engine/hint-text.ts";
+import { joinOr } from "../../engine/hint-text.ts";
 import {
   CLUE_ADD,
   CLUE_DIV,
@@ -74,20 +74,20 @@ function pairClause(clue: number, list: string): string {
   }
 }
 
+/** A clue deduction's premise; the walk concludes it with the move it makes
+ * (`engine/hint-text.ts`'s `Premise`). */
 export const say = {
   /** An `E`/`O` clue rules the wrong parity out of all four cells around it. */
-  parity: (even: boolean, ns: number[]): string =>
-    `The ${even ? "E" : "O"} clue means all four numbers around it are ${even ? "even" : "odd"}, so we must cross out ${joinNums(ns)}.`,
+  parity: (even: boolean): string =>
+    `The ${even ? "E" : "O"} clue means all four numbers around it are ${even ? "even" : "odd"}`,
 
   /** An arithmetic clue read against a diagonal partner that already shows
    * `v` — the whole deduction is arithmetic the player can do in their head. */
-  paired: (clue: number, v: number, ns: number[]): string =>
-    `The ${clueLabel(clue)} clue means this cell and the ${v} across it ${diagonalRule(clue)}, so we must cross out ${joinNums(ns)}.`,
+  paired: (clue: number, v: number): string =>
+    `The ${clueLabel(clue)} clue means this cell and the ${v} across it ${diagonalRule(clue)}`,
 
   /** The same clue read against a partner that is still open: nothing it could
    * hold pairs with the struck values. */
-  open: (clue: number, ns: number[]): string => {
-    const them = ns.length === 1 ? "it" : "them";
-    return `Nothing open across the ${clueLabel(clue)} clue ${pairClause(clue, joinOr(ns))}, so we must cross ${them} out.`;
-  },
+  open: (clue: number, ns: number[]): string =>
+    `Nothing open across the ${clueLabel(clue)} clue ${pairClause(clue, joinOr(ns))}`,
 };

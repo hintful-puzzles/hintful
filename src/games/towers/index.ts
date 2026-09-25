@@ -29,6 +29,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import type { Premise } from "../../engine/hint-text.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
 import { genericLatinArea, rowColRegions } from "../../engine/latin-hint.ts";
@@ -410,24 +411,35 @@ function narrate(reason: HintReason, n: number, continues = false): string {
       return say.tallestNearest(n);
     case "facing":
       return say.facing(n);
-    case "lineFull":
-      return say.lineFull(reason.clueVal, n);
-    case "lowerBound":
-      return say.lowerBound(reason.clueVal, n);
-    case "arrangement":
-      return say.arrangement(reason.clueVal, n);
-    case "dup":
-      return say.dup(reason.n);
     case "single":
       return say.single(n);
     case "regionsFull":
       return say.regionsFull(n);
     case "hiddenSingle":
       return say.hiddenSingle(reason.line, n);
+    default:
+      throw new Error(`a ${reason.kind} deduction strikes`);
+  }
+}
+
+/** Why a strike of height `n` is forced, which the walk concludes with the move
+ * it makes. */
+function premise(reason: HintReason, n: number): Premise {
+  switch (reason.kind) {
+    case "lineFull":
+      return { premise: say.lineFull(reason.clueVal, n) };
+    case "lowerBound":
+      return { premise: say.lowerBound(reason.clueVal, n) };
+    case "arrangement":
+      return { premise: say.arrangement(reason.clueVal, n) };
+    case "dup":
+      return { premise: say.dup(reason.n), where: say.dupWhere };
     case "set":
-      return say.set(n);
+      return { premise: say.set(n) };
     case "forcing":
-      return say.forcing(reason, n, reason.shares);
+      return { premise: say.forcing(reason, n, reason.shares) };
+    default:
+      throw new Error(`a ${reason.kind} deduction places`);
   }
 }
 
@@ -550,7 +562,7 @@ function buildSteps(
       ...reasonMarks(reason, w),
     }),
     strikeWords: (marks, reason) => ({
-      explanation: narrate(reason, marks[0].n),
+      ...premise(reason, marks[0].n),
       ...reasonMarks(reason, w),
     }),
     // The narration names one height ("a tower of height 5 can't go here"), so

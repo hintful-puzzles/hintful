@@ -30,7 +30,11 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { narrateLatinReason } from "../../engine/hint-text.ts";
+import {
+  latinPremise,
+  narrateLatinReason,
+  type Premise,
+} from "../../engine/hint-text.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
 import { genericLatinArea, rowColRegions } from "../../engine/latin-hint.ts";
@@ -380,24 +384,39 @@ function findMistakes(state: UnequalState): readonly UnequalMistake[] {
 
 // --- hint ------------------------------------------------------------------
 
-/** Narrate *why* a firing is forced (docs/games/hints.md § "Writing the narration"): indication → reasoning →
- * necessity-voice conclusion. `ns` is the struck value list (a placement passes
- * its single height); `o` is the grid order. Two-mode aware. The words, and how
- * they read at the value extremes, are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(reason: HintReason, ns: number[], o: number): string {
+/** Why a strike is forced (docs/games/hints.md § "Writing the narration"):
+ * indication, then reasoning, which the walk concludes with the move it makes.
+ * `ns` is the struck value list; `o` is the grid order. Two-mode aware. The
+ * words, and how they read at the value extremes, are
+ * [`hint-text.ts`](./hint-text.ts)'s. */
+function premise(reason: HintReason, ns: number[], o: number): Premise {
   switch (reason.kind) {
     case "greater":
-      return say.greater(reason.bound, ns, o);
+      return { premise: say.greater(reason.bound, o) };
     case "lesser":
-      return say.lesser(reason.bound, o, ns);
+      return { premise: say.lesser(reason.bound, o) };
     case "adjacent":
-      return say.adjacent(reason.bar, reason.v, ns, o);
+      return { premise: say.adjacent(reason.bar, reason.v, o) };
     case "adjacentSet":
-      return say.adjacentSet(reason.bar, ns, o);
-    // The generic Latin arms (single / hiddenSingle / dup / set /
-    // forcing) read identically to Keen's — narrated once, shared.
+      return { premise: say.adjacentSet(reason.bar, ns, o), named: true };
+    // The generic Latin arms (dup / set / forcing) read identically to Keen's
+    // — narrated once, shared.
     default:
-      return narrateLatinReason(reason, ns, unequalVocab(o));
+      return latinPremise(reason, ns, unequalVocab(o));
+  }
+}
+
+/** Why a placement is forced: always a generic single, since no sign or bar
+ * places. */
+function narrate(reason: HintReason, n: number, o: number): string {
+  switch (reason.kind) {
+    case "greater":
+    case "lesser":
+    case "adjacent":
+    case "adjacentSet":
+      throw new Error(`a ${reason.kind} deduction strikes`);
+    default:
+      return narrateLatinReason(reason, n, unequalVocab(o));
   }
 }
 
@@ -445,13 +464,13 @@ function buildSteps(
         maxdiff,
       ),
     placeWords: (m, reason) => ({
-      explanation: narrate(reason, [m.n], o),
+      explanation: narrate(reason, m.n, o),
       // A naked single's own collapsed candidates are the premise, so it needs
       // no area; a hidden single's line is the preset's.
       area: [],
     }),
     strikeWords: (marks, reason) => ({
-      explanation: narrate(reason, valuesOf(marks), o),
+      ...premise(reason, valuesOf(marks), o),
       area: reasonArea(reason, { x: marks[0].x, y: marks[0].y }),
     }),
     // The narration names a cell's relationship to its neighbor, so a firing is

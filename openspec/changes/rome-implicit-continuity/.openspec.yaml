@@ -1,0 +1,5 @@
+# No delta yet: whether anything normative moves depends on what the
+# measurement finds. Written 2026-09-25; nothing is implemented.
+schema: spec-driven
+created: 2026-09-25
+skip_specs: true

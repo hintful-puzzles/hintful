@@ -105,8 +105,9 @@ function effectOf(before: unknown, after: unknown): Effect {
 /**
  * The elements a step reasons from whose notes must be on the board when it
  * is spoken: what it outlines, what it reads, and what it strikes from. Setup
- * and note steps rest on nothing, and a placement's own element is what it
- * fills.
+ * rests on nothing, and a placement's or a note step's own element is what it
+ * fills; a note leg outlines nothing, but a strike folded into the notes it
+ * leaves (`candidate-plan.ts`'s `fold`) outlines its evidence like any strike.
  *
  * Map's evidence is the pair or chain a narrowing rests on. A step whose own
  * target is one of those regions is writing that premise, not reasoning from
@@ -118,7 +119,7 @@ function premiseOf(
   step: { highlights?: unknown },
   effect: Effect,
 ): readonly number[] {
-  if (effect === "fill" || effect === "note") return [];
+  if (effect === "fill") return [];
   const strikes = effect === "strike";
   if (board.width === null) {
     const h = step.highlights as { targets: number[]; evidence: { region: number }[] };
@@ -132,9 +133,14 @@ function premiseOf(
     | undefined;
   if (!h) return [];
   const rows = board.notes.length / w;
+  const at = (c: Cell): number => c.y * w + c.x;
+  // A step that writes or places its targets is not reasoning from them, even
+  // where its evidence covers them (a cage it reads whole).
+  const own = strikes ? [] : (h.targets ?? []).map(at);
   return [...(h.area ?? []), ...(h.reads ?? []), ...(strikes ? (h.targets ?? []) : [])]
     .filter((c) => c.x >= 0 && c.y >= 0 && c.x < w && c.y < rows)
-    .map((c) => c.y * w + c.x);
+    .map(at)
+    .filter((i) => !own.includes(i));
 }
 
 /** The blank elements of `premise` on `state`, each with whether it carries

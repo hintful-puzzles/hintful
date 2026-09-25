@@ -194,8 +194,8 @@ describe("solo hint", () => {
     const res = soloGame.hint?.(populated);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
-    const modal =
-      /can only|can't|must (be|sit|cross out)|must be|cross out the|cross out/i;
+    // The bare "cross out" is the obvious-clean setup step's.
+    const modal = /can only|can't|must (be|sit|cross)|cross out/i;
     for (const s of res.steps) {
       if ((s.move as SoloMove).type === "pencilAll") continue;
       expect(s.explanation, s.explanation).toMatch(modal);
@@ -214,7 +214,7 @@ describe("solo hint", () => {
           // Skip the basic-region dup opening (one placed value across its groups)
           // and the bulk obvious-candidate cleanup at populate (a setup step, not a
           // deductive strike — multi-cell and multi-digit by design).
-          if (/is placed here, so it can't repeat/.test(step.explanation)) continue;
+          if (/is placed here and can't repeat/.test(step.explanation)) continue;
           if (/clear the easy ones|fill all pencil marks/.test(step.explanation)) {
             continue;
           }
@@ -233,7 +233,7 @@ describe("solo hint", () => {
 
   it("auto-pencil off teaches more cleanup steps than on", () => {
     const { st } = gen(ADV, "autopencil");
-    const dupRe = /is placed here, so it can't repeat/;
+    const dupRe = /is placed here and can't repeat/;
     const uiOn = soloGame.newUi(st);
     uiOn.autoPencil = true;
     const on = soloGame.hint?.(st, undefined, uiOn);
@@ -390,7 +390,7 @@ describe("solo hint", () => {
       const res = soloGame.hint?.(st, aux);
       if (!res?.ok) continue;
       for (const step of res.steps as AnyStep[]) {
-        const said = /^The highlighted cells are the only places (\S+) fits/.exec(
+        const said = /^Their columns fit (\S+) only in the highlighted cells/.exec(
           step.explanation,
         );
         if (said === null) continue;
@@ -682,7 +682,7 @@ function strikeFrame(p: SoloParams, pred: (s: string) => boolean): string {
 describe("solo hint render", () => {
   it("a deductive elimination hatches its region and strikes the candidate", () => {
     const pred = (e: string) =>
-      /crossed out of the rest of it|already accounts? for/.test(e);
+      /cross out the \w from the rest of it|already accounts? for/.test(e);
     const id = strikeFrame(ADV, pred);
     const { recording, hint } = renderScenario({
       game: soloGame,

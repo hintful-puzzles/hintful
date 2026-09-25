@@ -4,7 +4,7 @@
  * (the generic `latin.ts` solver records all three under one `single` reason).
  */
 import { describe, expect, it } from "vitest";
-import { narrateLatinReason } from "./hint-text.ts";
+import { candidateConclusions, latinPremise, narrateLatinReason } from "./hint-text.ts";
 import {
   classifyPlacement,
   classifyPlacementInRegions,
@@ -195,27 +195,32 @@ describe("hiddenSingleLine", () => {
   });
 });
 
-describe("narrateLatinReason (shared row/column-game narration)", () => {
-  it("narrates each generic arm with the shared wording", () => {
-    expect(narrateLatinReason({ kind: "single" }, [3])).toBe(
+describe("narrateLatinReason and latinPremise (shared row/column-game narration)", () => {
+  it("narrates each generic placement arm with the shared wording", () => {
+    expect(narrateLatinReason({ kind: "single" }, 3)).toBe(
       "Every other number has been ruled out in this cell, so it can only be 3.",
     );
     expect(
-      narrateLatinReason({ kind: "hiddenSingle", n: 2, line: "col", index: 1 }, []),
+      narrateLatinReason({ kind: "hiddenSingle", n: 2, line: "col", index: 1 }, 2),
     ).toBe(
       "In this column, 2 can go in only this cell, since every other cell in the column rules it out, so it must be 2.",
     );
-    expect(narrateLatinReason({ kind: "dup", n: 1 }, [])).toBe(
-      "There's already a 1 in this row and column, so we must cross out the 1 from the other cells they pass through.",
-    );
-    expect(narrateLatinReason({ kind: "set", cells: [] }, [2, 3])).toBe(
-      "The outlined cells already account for 2 and 3 between them, so we must cross out 2 and 3 here.",
-    );
+    expect(() => narrateLatinReason({ kind: "dup", n: 1 }, 1)).toThrow(/latinPremise/);
+  });
+
+  it("gives each generic strike arm a premise the walk concludes", () => {
+    expect(latinPremise({ kind: "dup", n: 1 }, [1])).toEqual({
+      premise: "There's already a 1 in this row and column",
+      where: "from the other cells they pass through",
+    });
+    expect(latinPremise({ kind: "set", cells: [] }, [3, 2, 3])).toEqual({
+      premise: "The outlined cells already account for 2 and 3 between them",
+    });
     // A forcing chain concludes from *both* branches of the origin's two
     // candidates, so both are stated; the links between are numbered on the
     // board rather than recited.
     expect(
-      narrateLatinReason(
+      latinPremise(
         {
           kind: "forcing",
           chain: [
@@ -226,10 +231,11 @@ describe("narrateLatinReason (shared row/column-game narration)", () => {
           shares: "row",
         },
         [5],
-      ),
+      ).premise,
     ).toBe(
-      "Cell 1 is 5 or 2, and every numbered cell has just two numbers left, so each forces the next. If cell 1 is 5, this cell's row already has it; if 2, cell 3 is driven to 5, in line with this cell. Either way, cross out 5 here.",
+      "Cell 1 is 5 or 2, and every numbered cell has just two numbers left, so each forces the next. If cell 1 is 5, this cell's row already has it; if 2, cell 3 is driven to 5, in line with this cell. Either way, 5 is ruled out here",
     );
+    expect(() => latinPremise({ kind: "single" }, [3])).toThrow(/narrateLatinReason/);
   });
 
   it("ignores extra fields a dup reason may carry (only n is read)", () => {
@@ -237,8 +243,25 @@ describe("narrateLatinReason (shared row/column-game narration)", () => {
     // not as a literal — bind it so the assignment mirrors that, not an
     // excess-property literal check.
     const dupWithExtra = { kind: "dup" as const, n: 6, px: 0, py: 0 };
-    expect(narrateLatinReason(dupWithExtra, [])).toBe(
-      "There's already a 6 in this row and column, so we must cross out the 6 from the other cells they pass through.",
+    expect(latinPremise(dupWithExtra, [6]).premise).toBe(
+      "There's already a 6 in this row and column",
     );
+  });
+
+  it("concludes by the move: a strike, a placement, or the values left", () => {
+    const say = candidateConclusions({ value: String });
+    // A value struck in two cells is named once.
+    expect(say.strike([4, 2, 4], {})).toBe("we must cross out 2 and 4");
+    expect(say.strike([5], { where: "from these cells" })).toBe(
+      "we must cross out the 5 from these cells",
+    );
+    expect(say.strike([1, 2], { struck: "its identity marks" })).toBe(
+      "we must cross out its identity marks",
+    );
+    // A premise that already named the values is referred back to.
+    expect(say.strike([3], { named: true })).toBe("we must cross it out");
+    expect(say.strike([2, 3], { named: true })).toBe("we must cross them out");
+    expect(say.place(3)).toBe("this cell must be 3");
+    expect(say.keep([1, 5])).toBe("pencil in only 1 and 5");
   });
 });

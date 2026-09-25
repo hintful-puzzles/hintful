@@ -29,7 +29,11 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { narrateLatinReason } from "../../engine/hint-text.ts";
+import {
+  latinPremise,
+  narrateLatinReason,
+  type Premise,
+} from "../../engine/hint-text.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
 import { genericLatinArea, rowColRegions } from "../../engine/latin-hint.ts";
@@ -318,23 +322,30 @@ function findMistakes(state: KeenState): readonly KeenMistake[] {
 
 // --- hint ------------------------------------------------------------------
 
-/** Narrate *why* a firing is forced (docs/games/hints.md § "Writing the
- * narration"): indication → reasoning → necessity-voice conclusion. `ns` is the
- * struck value list (a placement passes its single digit). Cage deductions name
- * the cage by its clue; the generic Latin techniques carry no clean local area
- * (the struck notes carry the premise). The words are
+/** Why a strike is forced (docs/games/hints.md § "Writing the narration"):
+ * indication, then reasoning, which the walk concludes. `ns` is the struck value
+ * list. Cage deductions name the cage by its clue; the generic Latin arms read
+ * identically to Unequal's, narrated once, shared. The words are
  * [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(reason: HintReason, ns: number[]): string {
+function premise(reason: HintReason, ns: number[]): Premise {
   switch (reason.kind) {
     case "cage":
-      return say.cage(reason.op, reason.value, ns);
+      return { premise: say.cage(reason.op, reason.value, ns), named: true };
     case "cageLine":
-      return say.cageLine(reason.op, reason.value, ns[0], reason.horizontal);
-    // The generic Latin arms (single / hiddenSingle / dup / set /
-    // forcing) read identically to Unequal's — narrated once, shared.
+      return {
+        premise: say.cageLine(reason.op, reason.value, ns[0], reason.horizontal),
+      };
     default:
-      return narrateLatinReason(reason, ns);
+      return latinPremise(reason, ns);
   }
+}
+
+/** Why a placement is forced: always a generic single, since no cage deduction
+ * places. */
+function narrate(reason: HintReason, n: number): string {
+  if (reason.kind === "cage" || reason.kind === "cageLine")
+    throw new Error(`a ${reason.kind} deduction strikes`);
+  return narrateLatinReason(reason, n);
 }
 
 /** The deduction's marks: a cage deduction is about "this cage", so the cage is
@@ -375,13 +386,13 @@ function buildSteps(
     label: "keen hint plan",
     record: () => recordKeenDeductions(w, state.clues, Uint8Array.from(wGrid), maxdiff),
     placeWords: (m, reason) => ({
-      explanation: narrate(reason, [m.n]),
+      explanation: narrate(reason, m.n),
       // A naked single's own collapsed candidates are the premise, so it needs
       // no area; a hidden single's line is the preset's.
       area: [],
     }),
     strikeWords: (marks, reason) => ({
-      explanation: narrate(reason, valuesOf(marks)),
+      ...premise(reason, valuesOf(marks)),
       ...reasonMarks(reason),
     }),
     // A cage's narration is about "this cell", with the whole cage hatched on

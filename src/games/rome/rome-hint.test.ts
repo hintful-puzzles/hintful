@@ -300,13 +300,19 @@ describe("rome hint plan", () => {
 
 // --- tier 2.5: render --------------------------------------------------------
 
+/** Every square noted, as the Mark-all press leaves it: the frames below show a
+ * strike of marks on the board, which under the implicit reading a note-less
+ * square would fold into what it leaves. */
+const MARK_ALL: RomeMove[] = [{ kind: "pencilAll" }];
+
 /** Scan seeds for a board whose hint reaches a step matching `pred`, so a frame
  * is deterministic without a hand-written desc (docs/games/testing.md). */
 function frameFor(p: RomeParams, pred: (e: string) => boolean): string {
   for (let s = 0; s < 40; s++) {
     const seed = `frame-${p.w}-${s}`;
     const { st } = gen(p, seed);
-    if (buildSteps(st, POPULATE).some((step) => pred(step.explanation)))
+    const noted = romeGame.executeMove(st, MARK_ALL[0]);
+    if (buildSteps(noted, POPULATE).some((step) => pred(step.explanation)))
       return `${encodeParams(p, true)}#${seed}`;
   }
   throw new Error(`no matching frame for ${encodeParams(p, true)}`);
@@ -319,6 +325,7 @@ describe("rome hint render", () => {
       game: romeGame,
       id: frameFor(NORMAL, pred),
       defaultBackground: DEFAULT_BACKGROUND,
+      moves: MARK_ALL,
       showHint: true,
       hintUntil: (s) => pred(s.explanation),
     });
@@ -350,6 +357,7 @@ describe("rome hint render", () => {
       game: romeGame,
       id: frameFor(TRICKY, pred),
       defaultBackground: DEFAULT_BACKGROUND,
+      moves: MARK_ALL,
       showHint: true,
       hintUntil: (s) => pred(s.explanation),
     });

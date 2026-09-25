@@ -82,10 +82,20 @@ function firstHint(st: UnequalState) {
   return res;
 }
 
+/** The hint under the populate reading, which is not Unequal's default. */
+function populateHint(st: UnequalState) {
+  const res = unequalGame.hint?.(st, undefined, {
+    ...newUi(st),
+    candidateReading: "populate",
+  });
+  if (!res) throw new Error("no hint method");
+  return res;
+}
+
 describe("unequal hint", () => {
   it("populates before the first elimination", () => {
     const { st } = gen(UNEQ, "hint-empty");
-    const res = firstHint(st);
+    const res = populateHint(st);
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     const moves = res.steps.map((s) => (s.move as UnequalMove).type);
@@ -146,10 +156,11 @@ describe("unequal hint", () => {
       const res = unequalGame.hint?.(populated);
       expect(res?.ok).toBe(true);
       if (!res?.ok) continue;
-      // A strike concludes "we must cross out …"; a placement "it can only be N";
-      // never a bare "is/are/stays". (The populate fill and the bulk obvious-clean
-      // are setup instructions, not deductions, so they are exempt.)
-      const modal = /can only|can't|must (be|cross out)/i;
+      // A strike concludes "we must cross out …" or "… cross them out"; a
+      // placement "it can only be N"; never a bare "is/are/stays". (The populate
+      // fill and the bulk obvious-clean are setup instructions, not deductions,
+      // so they are exempt.)
+      const modal = /can only|can't|must (be|cross)/i;
       const isSetup = (s: (typeof res.steps)[number]) =>
         (s.move as UnequalMove).type === "pencilAll" ||
         /clear the easy ones|fill all pencil marks/.test(s.explanation);
@@ -251,7 +262,7 @@ describe("unequal hint", () => {
 describe("unequal hintKeepTrack", () => {
   it("matches a populate step, rejects anything else", () => {
     const { st } = gen(UNEQ, "kt-pop");
-    const res = firstHint(st);
+    const res = populateHint(st);
     if (!res.ok) throw new Error("refused");
     const step = res.steps.find((s) => (s.move as UnequalMove).type === "pencilAll");
     if (!step) throw new Error("no populate step");

@@ -555,10 +555,12 @@ sentences it classifies for are `hint-text.ts`'s.
 ### `hint-text.ts` — the sentences several games share
 
 The engine's half of the hint-text convention (a game's own sentences are its
-`hint-text.ts`): `narrateLatinReason` for the row/column games whose
-generic-arm wording is verbatim-identical (normative rule: the `ts-engine`
-"shared narrator" requirement), `narrateForcingChain`, the candidate games'
-`populateText`/`cleanObviousText`, the `LatinVocab` a value is spoken in, the
+`hint-text.ts`): `narrateLatinReason` and `latinPremise` for the row/column
+games whose generic-arm wording is verbatim-identical (normative rule: the
+`ts-engine` "shared narrator" requirement), `forcingChainPremise`, the
+candidate games' `populateText`/`cleanObviousText`, the `Premise` a strike's
+words are and the `Conclusions` the walk ends it with (`candidateConclusions`
+for a game whose values print one way), the `LatinVocab` a value is spoken in, the
 sliding-tile games' `workingOn(tile)` + `HINT_SETTING_UP` (so Fifteen, Sixteen
 and Netslide read as one voice), and the English list joiners
 `joinNums`/`joinWith`. Nothing in it decides which sentence fires. See
