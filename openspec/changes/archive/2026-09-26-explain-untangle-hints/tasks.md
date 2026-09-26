@@ -48,5 +48,6 @@
 ## 5. Verification
 - [x] 5.1 In Chrome: hint rings and narration at n = 25; a resumed (no-aux) game
   solved by hints alone.
-- [ ] 5.2 Owner acceptance of the wording, the rings and the path length (the
-  full hint walk takes 43–73 moves at n = 25).
+- [x] 5.2 Owner acceptance of the wording, the rings and the spacing
+  (2026-09-26, after three review rounds). The number of moves a full hint walk
+  takes is carried into `shorten-the-untangle-endgame`.

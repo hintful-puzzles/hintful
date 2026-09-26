@@ -14,17 +14,13 @@ The cause was two layers deep:
   its autosave), so the hint dropped to its fallback heuristic — and Solve
   refused outright ("Solution not known"), on every resumed game and every
   shared game ID.
-- **The fallback could not see a move.** It tried five spots per point (the
-  neighbor centroid and four pushes outward), so it stalled on boards where an
-  obvious move existed. Measured from realistic mid-game positions, a dense
-  search stalls too: greedy single moves ran out on 20–40% of boards scattered
-  at random or left by the old heuristic, and a two-move lookahead was slow and
-  still incomplete. Greedy play needs a guaranteed way out.
+- **The fallback could not see a move.** It tried five spots per point. Even a
+  dense search stalls on 20–40% of mid-game boards (see `docs/games/hints.md`), so
+  greedy play
+  needs a guaranteed way out.
 
-The owner also asked what an *explained* Untangle hint could look like —
-"moving nodes that would remove the most collisions". Untangle has no forced
-move, but it does have a measurable one, and a count of crossings is something
-the player can check on the board.
+The owner also asked for an *explained* hint — "moving nodes that would remove
+the most collisions": a count of crossings the player can check.
 
 ## What changes
 

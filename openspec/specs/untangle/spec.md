@@ -5,7 +5,9 @@ Untangle, the puzzle of dragging the points of a planar graph until none of its
 lines cross. This capability specifies its port to the TS engine: exact crossing
 detection, pointer and keyboard dragging, Solve through the recorded layout, and
 an animated move hint.
+
 ## Requirements
+
 ### Requirement: Untangle game implements the Game interface
 
 The engine SHALL provide a registered `untangle` game implementing
@@ -17,9 +19,9 @@ player has dragged the vertices so that no two edges cross. Params SHALL be
 `n < 4` and an unreasonably large `n`. The game SHALL report `wantsStatusbar`
 faithfully to upstream, `isTimed = false`, `canSolve = true`, and
 `canFormatAsText = false` (the upstream text format exists only in the excluded
-editor build). It SHALL NOT provide a `hint` hook (no deductive solver exists) and
-SHALL NOT provide a `findMistakes` hook (crossed edges are the built-in mistake
-feedback).
+editor build). It SHALL provide a `hint` hook (see "Untangle hints move the point
+that removes the most crossings") and SHALL NOT provide a `findMistakes` hook
+(crossed edges are the built-in mistake feedback).
 
 #### Scenario: Params round-trip
 
@@ -114,26 +116,6 @@ add/delete moves SHALL NOT be mapped.
 - **THEN** the reconstructed positions exactly match (the layout is restored by
   replaying the move log — Untangle requires no `supersede_desc` mechanism)
 
-### Requirement: Solve untangles via the recorded solution layout
-
-When `aux` (the solved layout) is available, `solve` SHALL return a single move
-repositioning every vertex to a crossing-free embedding, choosing among the eight
-dihedral symmetries of the solved layout the one closest to the current positions
-(shortest solve animation). When `aux` is unavailable (a loaded game), `solve` SHALL
-report that the solution is not known. The solve SHALL animate and SHALL be marked
-as solved-with-help.
-
-#### Scenario: Solve from a fresh game lands crossing-free
-
-- **WHEN** the player invokes Solve on a freshly generated game
-- **THEN** every vertex moves to a position where no edges cross, the move is marked
-  solved-with-help, and it animates
-
-#### Scenario: Solve is unavailable on a loaded game
-
-- **WHEN** the player invokes Solve on a game restored from a save (no `aux`)
-- **THEN** the game reports that the solution is not known
-
 ### Requirement: Rendering frames the play area and colors roles distinctly
 
 `redraw` SHALL draw a visible border around the playable area so the drop zone is
@@ -152,65 +134,91 @@ color (light blue), the dragged vertex white, and the keyboard-cursor vertex gra
   neighbor vertices render light blue (not red), so neighbors are not mistaken
   for a crossing/error indication
 
-### Requirement: Untangle provides a move hint with animation
+### Requirement: Solve untangles any planar board, with or without aux
 
-The `untangle` game SHALL implement `hint(state, aux?)` returning a plan-carrying
-hint that suggests vertex moves. Untangle is not a deductive puzzle, so — by
-explicit, owner-approved divergence from the Palisade hint quality bar — these
-hints carry **no explanatory narration** (an empty `explanation`); the visual
-highlight and the resulting move animation are the entire hint. `hint` SHALL refuse
-(a `{ ok: false }` result) when the board is already solved.
+`solve` SHALL return a single move repositioning every vertex to a crossing-free
+layout, choosing among the eight dihedral symmetries of that layout the one with
+the most vertices already in place and then the least motion. The layout SHALL
+be the generator's `aux` when the session has it, scaled to fill the play box,
+and otherwise a layout computed from the edges alone (a planarity embedding and a
+straight-line grid drawing, spread by a relaxation that never lets it tangle).
+Every layout SHALL be exact rationals, checked crossing-free with the game's
+exact crossing test before use. `solve` SHALL refuse only a graph that is not
+planar. The solve SHALL animate and SHALL be marked as solved-with-help.
 
-When the generator's solution is available (`aux` present), `hint` SHALL derive its
-plan from that known solution: it SHALL take the dihedral-symmetry image of the
-solution closest to the current positions, **rescale it with a uniform scale to
-fill the play box** (preserving planarity, so the result is both crossing-free and
-well-spaced rather than clustered toward the center), and emit a plan that places
-vertices one at a time, choosing at each step the still-unplaced vertex whose move
-to its solved position yields the fewest resulting crossings. Applying the whole
-plan SHALL leave the board untangled.
+#### Scenario: Solve from a fresh game lands crossing-free
 
-When no solution is available (`aux` absent), `hint` SHALL fall back to a local
-heuristic: from the current positions, repeatedly select — among the vertices on a
-currently-crossed edge — the single vertex move that strictly reduces the number of
-edge-crossing pairs, offering each candidate the centroid of its graph-neighbors
-plus outward-pushed variants and preferring, among equally-untangling targets, the
-one that most reduces a pairwise clustering score so the layout spreads rather than
-collapsing to the center. The fallback SHALL refuse when no single move reduces the
-crossings.
+- **WHEN** the player invokes Solve on a freshly generated game
+- **THEN** every vertex moves to a position where no edges cross, the move is marked
+  solved-with-help, and it animates
 
-Each returned `HintStep` SHALL carry a legal `executeMove` move and a highlight
-identifying the vertex and its suggested destination. `redraw` SHALL render the
-displayed step by drawing a hint-colored line from the hinted vertex to its
-suggested destination and a hint-colored marker at the destination. Because
-Untangle already animates vertex moves and the midend stretches a hint-executed
-move to the uniform hint-step duration, executing a hint step SHALL animate the
-vertex sliding to its destination; auto-hint SHALL thus progressively untangle the
-board.
+#### Scenario: Solve works on a loaded game
 
-#### Scenario: Hint walks a generated board to a crossing-free, spacious layout
+- **WHEN** the player invokes Solve on a game restored from a save (no `aux`)
+- **THEN** the board is solved, marked solved-with-help
 
-- **WHEN** `hint` is called with the generator's `aux` on an unsolved board
-- **THEN** it returns `{ ok: true }` with a non-empty list of steps
-- **AND** each step's move is a legal `executeMove`
-- **AND** applying every step in order leaves the board with no crossings and the
-  vertices spread across most of the play box (not clustered in the center)
+#### Scenario: Solve refuses a non-planar graph
 
-#### Scenario: Hint falls back to the heuristic without a solution
+- **WHEN** Solve is invoked on a hand-typed description of K5
+- **THEN** it reports that no solution exists and leaves the board unchanged
 
-- **WHEN** `hint` is called with no `aux` on an unsolved board that has a
-  crossing-reducing single-vertex move
-- **THEN** it returns `{ ok: true }` and applying the steps never increases, and
-  at least once decreases, the number of crossings
+### Requirement: Untangle hints move the point that removes the most crossings
+
+The `untangle` game SHALL implement `hint(state, aux?)`. Each step SHALL move one
+vertex, and SHALL be one of two kinds:
+
+- **Clearing**: the move of a vertex, not already in place, to a spot that
+  removes the most crossings among the spots searched (a grid over the whole
+  play box, the vertex's place in the solved layout, and its neighbors'
+  centroid). A spot SHALL keep, as fractions of the typical spacing between
+  points, a gap from every other vertex and from every line the vertex is not
+  an end of, and a margin from the frame; only when no spot with the full gaps
+  removes a crossing MAY a slightly tighter gap be used. The step's
+  explanation SHALL state, in numerals, how many crossings the vertex's lines
+  make before and after the move, both counted exactly as the board counts
+  them.
+- **Placing**, only when no single move removes a crossing: the move of a vertex
+  not already in place to its place in the solved layout (as Solve would
+  choose it). It SHALL prefer a vertex that is in some crossing, whose move is
+  visibly long, and whose place is clear in the same sense, and among those the
+  placement whose next move removes the most crossings net of what it adds. Its
+  explanation SHALL state what the move does to the vertex's crossings and,
+  when the next step removes at least as many crossings as this one adds, how
+  many; it SHALL NOT refer to the solved layout, which the player cannot see.
+
+A vertex exactly on its place in the solved layout SHALL NOT be moved by either
+kind of step. Following hints from any position of a planar board SHALL
+therefore end solved, recomputing after every step. `hint` SHALL refuse with the
+collection's already-solved wording on a solved board, and with its
+no-move-worth-making wording on a non-planar board once no single move removes a
+crossing.
+
+Each step SHALL carry a highlight naming the vertex, its destination, and where
+the crossings the move removes sit. `redraw` SHALL draw a hint-colored line from
+the vertex to its destination, the vertex and a destination marker in the hint
+color, and an unfilled hint-colored ring on each crossing the move removes.
+Executing a step SHALL animate the vertex sliding to its destination.
+
+#### Scenario: A clearing step's counts are true
+
+- **WHEN** a clearing step is applied
+- **THEN** its explanation names the moved vertex's crossings before and after,
+  the vertex makes fewer crossings afterward, and the board loses exactly the
+  difference
+
+#### Scenario: Following hints solves the board from anywhere
+
+- **WHEN** hints are requested and applied repeatedly from a freshly generated
+  board with `aux`, or from randomly scattered points without `aux`
+- **THEN** the board ends with no crossings
 
 #### Scenario: Hint refuses on a solved board
 
 - **WHEN** `hint` is called on a board with no crossings
-- **THEN** it returns `{ ok: false }` with a message
+- **THEN** it returns `{ ok: false }` with the collection's already-solved message
 
 #### Scenario: Displayed hint is rendered
 
 - **WHEN** a hint step is on display
 - **THEN** `redraw` draws a hint-colored line to, and a hint-colored marker at,
-  the suggested destination of the hinted vertex
-
+  the suggested destination, and one ring for each crossing the move removes

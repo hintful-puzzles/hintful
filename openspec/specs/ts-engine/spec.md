@@ -777,7 +777,7 @@ available only for a game generated in the current session.
 - **WHEN** a game is started from `newGame` or a `#seed` id and the user
   invokes Solve
 - **THEN** the midend passes the retained `aux` to the game's `solve`,
-  and a game that needs it (e.g. Untangle) solves the board
+  and a game that uses it solves the board
 
 #### Scenario: Solve is unavailable on a loaded game
 
