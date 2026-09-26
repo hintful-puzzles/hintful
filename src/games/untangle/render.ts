@@ -182,6 +182,13 @@ export function redrawUntangle(
       dr.drawCircle(center, CROSSING_RING, -1, COL_HINT);
       dr.drawCircle(center, CROSSING_RING + 1, -1, COL_HINT);
     }
+    // On a journey, ring the marked points still to move after this one, so
+    // the count in the narration is one the player can see.
+    for (const v of hint.marked) {
+      const center = { x: ds.x[v], y: ds.y[v] };
+      dr.drawCircle(center, CROSSING_RING, -1, COL_HINT);
+      dr.drawCircle(center, CROSSING_RING + 1, -1, COL_HINT);
+    }
     dr.drawLine(
       { x: ds.x[hintVertex], y: ds.y[hintVertex] },
       { x: hintTx, y: hintTy },

@@ -36,4 +36,43 @@ export const say = {
       ? `No single move cuts the crossings from here. Moving this point here ${change}.`
       : `Moving this point here ${change}, but frees a move that removes ${opens}.`;
   },
+
+  /**
+   * A leg of a journey that moves several marked points so that none of their
+   * lines crosses anything. The first leg says what the whole journey does —
+   * clears every crossing on the board, or every crossing the marked points
+   * are in — and each leg what its own move does to its point's crossings,
+   * which may rise on the way while the other marked points are still to move.
+   */
+  journey: (
+    leg: number,
+    legs: number,
+    finishes: boolean,
+    before: number,
+    after: number,
+  ): string => {
+    const change =
+      after === 0
+        ? before === 0
+          ? "its lines stay clear"
+          : before === 1
+            ? "it clears its only crossing"
+            : before === 2
+              ? "it clears both of its crossings"
+              : `it clears all ${before} of its crossings`
+        : after < before
+          ? `it cuts its crossings from ${before} to ${after}`
+          : after === before
+            ? `it keeps its crossings at ${before}`
+            : `it raises its crossings from ${before} to ${after}`;
+    if (leg === 0) {
+      const what = finishes
+        ? "clears every crossing"
+        : "clears every crossing they are in";
+      return `Moving the ${legs} marked points ${what}. This one first: ${change}.`;
+    }
+    return leg === legs - 1
+      ? `The last marked point: ${change}.`
+      : `The next marked point: ${change}.`;
+  },
 };

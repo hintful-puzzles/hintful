@@ -20,13 +20,24 @@
  * narrated only by what the player can see (`narrate`): the solved layout it
  * heads for is nothing they have ever been shown.
  *
- * The plan is capped at a few steps: every step is a fresh measurement of the
- * board, so the next request continues exactly where this one stopped.
+ * **Once few crossings are left**, single moves thrash, so the hint first looks
+ * for a journey (`endgame.ts`): a few marked points moved so that none of
+ * their lines crosses anything, found by lifting them off and placing them one
+ * at a time into the faces of what remains. A journey is the whole plan, one
+ * leg per point, each narrated by what it does to its own point's crossings.
+ * It keeps the walk terminating by the same argument, since its first leg
+ * always cuts crossings without moving a placed point (see `planEndgame`).
+ *
+ * Otherwise the plan is capped at a few steps: every step is a fresh
+ * measurement of the board, so the next request continues exactly where this
+ * one stopped. It stops early once few crossings are left, so that the next
+ * request can look for a journey.
  */
 
 import type { HintResult, HintStep } from "../../engine/game.ts";
 import { ALREADY_SOLVED, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
 import type { Point } from "../../engine/types.ts";
+import { ENDGAME_CROSSINGS, type Endgame, planEndgame } from "./endgame.ts";
 import {
   EDGE_GAP,
   intersection,
@@ -55,6 +66,8 @@ export interface UntangleHint {
   vertex: number;
   to: RationalPoint;
   cleared: Point[];
+  /** On a journey's leg, the other marked points still to move. */
+  marked: number[];
 }
 
 /** Spots tried per axis. Offset from the grid lines so a spot is not
@@ -442,12 +455,26 @@ export function deduceUntangleHintPlan(
     return v < 0 ? null : plan(board, v, targets[v]);
   };
 
+  const onPlace = board.pts.map((p, v) => targets !== null && samePoint(p, targets[v]));
+  const endgame = planEndgame(
+    state.n,
+    state.w,
+    state.edges,
+    board.pts,
+    targets,
+    onPlace,
+  );
+  if (endgame !== null) return { ok: true, steps: journey(board, endgame) };
+
   const planned: Planned[] = [];
   let next = nextMove();
   while (next !== null && planned.length < MAX_PLAN_STEPS) {
     planned.push(next);
     board.move(next.vertex, next.to);
     next = nextMove();
+    // Once few crossings are left, the next request may find a journey, so
+    // the plan stops here rather than walk past it.
+    if (findCrossings(board.pts, state.edges).count <= ENDGAME_CROSSINGS) break;
   }
   if (planned.length === 0) return { ok: false, error: NO_MOVE_WORTH_MAKING };
 
@@ -457,8 +484,35 @@ export function deduceUntangleHintPlan(
     (p, i): HintStep<UntangleMove, UntangleHint> => ({
       move: placeMove(p.vertex, p.to),
       explanation: narrate(p, planned[i + 1] ?? next),
-      highlights: { vertex: p.vertex, to: p.to, cleared: p.cleared },
+      highlights: { vertex: p.vertex, to: p.to, cleared: p.cleared, marked: [] },
     }),
   );
   return { ok: true, steps };
+}
+
+/** An endgame's moves as one journey: every leg is narrated by what it does to
+ * its own point's crossings, counted exactly on the board as it then stands,
+ * and marks the points still to move after it. */
+function journey(
+  board: Board,
+  { moves, finishes }: Endgame,
+): HintStep<UntangleMove, UntangleHint>[] {
+  return moves.map(({ vertex, to }, i) => {
+    const p = plan(board, vertex, to);
+    board.move(vertex, to);
+    return {
+      move: placeMove(vertex, to),
+      explanation:
+        moves.length === 1
+          ? narrate(p, null)
+          : say.journey(i, moves.length, finishes, p.before, p.after),
+      highlights: {
+        vertex,
+        to,
+        cleared: p.cleared,
+        marked: moves.slice(i + 1).map((m) => m.vertex),
+      },
+      ...(i > 0 ? { continuesPrevious: true } : {}),
+    };
+  });
 }

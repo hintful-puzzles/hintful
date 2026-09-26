@@ -1,6 +1,9 @@
 # Design notes: shorten-the-untangle-endgame
 
-Everything here was measured on 2026-09-26 against the hint at `fbd8490c`, with
+D1–D7 are the scaffold's findings; D8 is what was built, and where it overturns
+an earlier section it says so.
+
+Everything in D1–D7 was measured on 2026-09-26 against the hint at `fbd8490c`, with
 the prototype in `reference/`. Timings were taken at load average 10–19 on the
 development machine, so they are upper bounds; the ratios are what to trust.
 Re-measure before designing against any of them.
@@ -160,3 +163,113 @@ a person", measured on the pinned boards and a population, not optimality.
   `crossingsAt`).
 - A request should stay around 300 ms on the desktop at n = 25 (the current
   worst case), since a phone is several times slower.
+
+## D8. What was built, and what it measured
+
+`src/games/untangle/endgame.ts`, called first by `deduceUntangleHintPlan` once
+30 or fewer crossings are left. Measured 2026-09-26 on the same owner boards and
+the same 24-board population as D4 (the prototype's seeds), following the hint
+two ways: whole plans, as the app does, and recomputing after every step, as
+`hint-resume.test.ts` does. The machine was swapping (about 0.7 GB of 19 GB
+swap free) at load average 4–15, so the timings are upper bounds.
+
+| | before | whole plans | recompute each step |
+|---|---|---|---|
+| owner board (owner: 20) | 31 | 21 | 29 |
+| second owner board | 35 | 22 | 21 |
+| n = 10, average | 6.6 | 5.4 | 6.0 |
+| n = 20, average | 31.0 | 26.5 | 27.9 |
+| n = 25, average | 50.9 | 47.4 | 49.1 |
+
+Requests averaged 79 ms, the worst 289 ms.
+
+**Journeys, not only a finish (overturns D4's shape).** A full-board finish
+multiplies the choices for separate knots together. At n = 25 the crossings fall
+into groups that share no point, so each group seeds its own culprit sets, and a
+journey succeeds when none of *its* points' lines crosses anything. It is
+finishing if its culprits touch every crossing, and partial otherwise. One leaf
+test covers both: no crossing has a culprit at an end.
+
+**Neighbor order is a guide, not a mandate (settles D3's caveat).** On the
+25-point boards the wrong-order set was 8–15 points on boards a few moves from
+solved, and it swapped to roughly its complement between consecutive moves: on
+graphs that are not 3-connected, it mostly flags legitimate alternative
+embeddings. Making it mandatory, as the prototype did, pushed every set past the
+size cap. It now only ranks sets: a set is ordered by the points it adds
+*beyond* the wrong-order ones, then by size.
+
+**Growing a failed set.** When placement fails, the culprits that had nowhere to
+go name the fix: moving one of their neighbors is what opens room. So the set
+is re-queued grown by each neighbor of its two most-stuck culprits. On the
+owner's board at move 13, point 10 had to see points 4 and 15 on opposite sides
+of a drawing that reached the frame on both; no hitting set could place it, and
+the working set added point 4 for room.
+
+**Placement by face, as built (refines D4).** A face is named by the wedge at
+one settled neighbor that the line to the spot leaves through; each face offers
+up to 3 spots, well apart, with every face's best tried before any face's
+second. Three findings:
+
+- The grid could not be dropped for points with two or more settled neighbors
+  (a spot seeing them all can lie far from all of them), so it stays at 16×16,
+  beside samples in each neighbor's wedges.
+- **Fail-first ordering** decided it: placing the culprit with fewest options
+  next, and failing the branch as soon as any culprit has none. Before it,
+  placement of {3, 12, 24} on a 25-point board failed every time; after it, it
+  succeeded at once.
+- A **pull toward the settled neighbors' center** in the spot score. Without it,
+  roominess alone sends each culprit to the emptiest corner, where it walls in
+  the ones after it. On the owner's board at move 14 that took 5–22 times the
+  work, depending on grid size, and gave 6–7 moves against 5–6 with it.
+
+**A culprit left where it is (a defect found in the app's frames).** At first a
+staying culprit was checked at a tenth of the line gap everywhere, and a new
+line to a *moved* neighbor then ran straight through another point. Now only
+lines and points the search has not moved get the relaxed gap.
+
+**Termination.** Three cycles were seen on the way, each with the hint
+recomputed after every step, and all from journeys that could start by adding
+crossings or by moving a point on its solved-layout place. The rules that
+remove them: a journey's first leg always cuts crossings and never moves a
+placed point, and a partial journey moves no placed point at all. Then every
+executed step, of any kind, either places a point or cuts crossings without
+unplacing one, and the (placed, −crossings) potential of `explain-untangle-hints`
+holds. Only a finishing journey moves a placed point, after its first leg, and
+it ends solved. Freezing placed points in *every* journey also terminates, but
+it cost the owner's board 4 moves (20 → 24, measured before the pull above
+existed), because the flip there needs a point the stall-breaking step had just
+placed.
+
+**The budget.** Work is counted in candidate spots tested, so the same board
+gets the same hint on every machine. At 400k (then 131 ms average, 492 ms
+worst) the owner's board and the n = 20 average improved by 1.5 moves at most.
+A budget ten times larger, with sets of up to 11, took n = 20 to 23.6. It also
+raised the worst request to 14.6 s and cycled one board, before the termination
+rules above existed. 200k is the setting.
+
+**What is left: a mirrored cluster.** The n = 25 walks still thrash, mostly on
+boards where a whole cluster of about ten points is mirrored against the rest
+(the wrong-order set is exactly that cluster). No journey of up to 8 points
+unflips it, and none of up to 11 did either. A person would move the cluster
+bodily. A journey that re-places a whole cluster by a reflection of its current
+positions, checked like any other journey, is the direction to try next.
+
+**Narration (D5, decided in the app, owner acceptance pending).** The first leg
+reads "Moving the 6 marked points clears every crossing. This one first: it
+cuts its crossings from 6 to 5.", or "…clears every crossing they are in." for a
+partial journey. Later legs read "The next marked point: …" and "The last marked
+point: …". Each is checked against the board's own count in
+`untangle-hint.test.ts`. A leg may say its crossings rise: that is true on the
+board, and the first leg has said what the whole journey does. A point in no
+crossing is narrated like any other ("its lines stay clear"); D5's "flipped"
+sentence was not needed, because the count sentence is true and the journey
+sentence carries the reason. A one-leg journey is narrated as an ordinary
+clearing step. The marked points still to move wear a ring in the hint color,
+drawn on the point, not on a crossing.
+
+**Test cost.** Checking every leg's claims made the follow-hints test 10.1 s →
+38 s on four seeds per configuration, and Untangle's slices of the cross-game
+guards 6 s → 18 s. The per-commit test now runs two seeds of every size and kind
+of start (17 s), and the slow tier all four. One firing position, where a
+partial journey would otherwise unplace a point, is pinned as positions: the
+per-commit seeds do not reach it.

@@ -2682,8 +2682,31 @@ there was nothing to say; there was a number all along.
   solution's symmetry is re-chosen on each request as the one with the most
   points already in place. Then every step either removes a crossing or places
   one more point, and a hint recomputed after any step cannot loop.
+- **Finish a knot as one journey.** An objective that looks one move ahead
+  thrashes near the end: each move that clears one crossing makes another, and
+  Untangle's hint once took 31 moves on a board the owner finished in 20. A
+  person picks out the few points causing the trouble and puts each where its
+  lines cross nothing, so the hint does too
+  ([`untangle/endgame.ts`](../../src/games/untangle/endgame.ts)). It lifts a
+  small culprit set off the board (a hitting set of one group of crossings),
+  places the culprits one at a time into the faces of what remains, and emits
+  the result as a multi-leg journey whose marked points wear a ring. Three
+  things made the search work, and each was worth more than extra budget:
+  **fail-first ordering** (place the culprit with fewest options next, and give
+  up on a branch as soon as any has none); **growing a failed set** by a
+  neighbor of the culprit left with nowhere to go, since moving that neighbor
+  is what makes room; and a **pull toward the settled neighbors** in the spot
+  score, because roominess alone sends each culprit to the emptiest corner,
+  where it walls in the next. Count the budget in work, not time, so a hint is
+  the same on every machine. And a journey keeps the freeze rule above: its
+  first leg cuts crossings without moving a placed point, and a journey that
+  leaves crossings behind moves no placed point at all. Three cycles were
+  found, all recomputing after every step, before that was the rule
+  (`shorten-the-untangle-endgame` design D8).
 - **Short plans.** Every step is a fresh measurement and the midend recomputes
   when a plan runs out, so cap the plan (six steps) and keep each request cheap.
+  End it early, too, once the next request might find something better: here,
+  once few enough crossings are left for a journey.
 - **No `hintKeepTrack`.** The default `"off"` is correct: any deviation drops
   the plan and the next request measures again.
 - **Highlight = the suggestion.** Carry a `{ vertex/cell, to }` highlight and

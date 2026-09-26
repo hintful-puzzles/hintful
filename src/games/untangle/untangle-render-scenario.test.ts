@@ -21,7 +21,7 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { newUntangleDesc } from "./generator.ts";
-import type { UntangleHint } from "./hint.ts";
+import { deduceUntangleHintPlan, type UntangleHint } from "./hint.ts";
 import { untangleGame } from "./index.ts";
 import {
   COL_CROSSEDLINE,
@@ -124,6 +124,52 @@ describe("Untangle render scenarios", () => {
       (o) => o.op === "circle" && o.fill === -1 && o.outline === COL_HINT,
     );
     expect(rings).toHaveLength(2 * cleared.length);
+
+    expect(recording.ops).toMatchSnapshot();
+  });
+
+  it("journey frame: the marked points still to move are ringed", () => {
+    // The owner's board, followed by hint until a plan is a journey.
+    const seed = "343769d2db4f418cccd3b79e00c975d0";
+    const { desc, aux } = untangleGame.newDesc({ n: 20 }, randomNew(seed));
+    let s = untangleGame.newState({ n: 20 }, desc);
+    const moves = [];
+    for (;;) {
+      const res = deduceUntangleHintPlan(s, aux);
+      if (!res.ok) throw new Error(res.error);
+      if ((res.steps[0].highlights?.marked.length ?? 0) > 0) break;
+      for (const st of res.steps) {
+        moves.push(st.move);
+        s = untangleGame.executeMove(s, st.move);
+      }
+      if (moves.length > 40) throw new Error("no journey on the owner's board");
+    }
+
+    const { recording, hint } = renderScenario({
+      game: untangleGame,
+      id: `20#${seed}`,
+      moves,
+      showHint: true,
+    });
+    const h = hint?.highlights as UntangleHint | undefined;
+    const marked = h?.marked ?? [];
+    expect(marked.length).toBeGreaterThan(0);
+    expect(marked).not.toContain(h?.vertex);
+
+    // A two-stroke ring on each marked point, centered on it, besides the
+    // rings on the crossings the step removes.
+    const rings = recording.ops.filter(
+      (o) => o.op === "circle" && o.fill === -1 && o.outline === COL_HINT,
+    );
+    expect(rings).toHaveLength(2 * (marked.length + (h?.cleared.length ?? 0)));
+    const ts = untangleGame.preferredTileSize ?? 32;
+    for (const v of marked) {
+      const p = s.pts[v];
+      const at = { x: Math.trunc((p.x * ts) / p.d), y: Math.trunc((p.y * ts) / p.d) };
+      expect(
+        rings.filter((o) => o.op === "circle" && o.cx === at.x && o.cy === at.y),
+      ).toHaveLength(2);
+    }
 
     expect(recording.ops).toMatchSnapshot();
   });
