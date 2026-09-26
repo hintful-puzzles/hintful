@@ -6876,10 +6876,13 @@ shared `hint-notes` preference:
   The plan SHALL emit no fill-all step. Before a firing's own steps it SHALL write, as
   legs continuing the firing's journey, the notes of every blank, note-less cell the
   firing outlines as evidence or names as read (`StepWords.reads`), or strikes without
-  folding, each with the candidates that reading gives it, and never of a cell the
-  firing places a value in. A note-less cell whose regions leave one value SHALL be
-  placed as a single in its own words ("its row and column already hold every other
-  number"), not as a cell whose notes collapsed.
+  folding, each with the candidates that reading gives it. It SHALL NOT write the notes
+  of a cell for a leg that places a value in that cell or comes after the one that
+  does, and SHALL write them when a leg before the placing one outlines, reads or
+  strikes the cell, since that leg rests on what the cell can still be. A note-less
+  cell whose regions leave one value SHALL be placed as a single in its own words
+  ("its row and column already hold every other number"), not as a cell whose notes
+  collapsed.
 
 Under the implicit reading a strike SHALL be **folded** when its marks lie in one
 blank, note-less cell, its premise speaks of that cell alone (no `where`), and
@@ -6926,6 +6929,14 @@ those it would have without folding.
 - **WHEN** a firing's first leg folds into a placement and a later leg folds a cell
   sharing a region with it
 - **THEN** the later step leaves out the placed value
+
+#### Scenario: A journey's first step rests on a cell a later leg places in
+
+- **WHEN** under the implicit reading a firing's first leg outlines note-less cells as
+  evidence and a later leg of the same firing places a value in one of them (ABCD's
+  runs technique, which outlines a line and places in several of its cells)
+- **THEN** that cell's notes are written before the firing's first step, like every
+  other cell the step outlines
 
 #### Scenario: Every enrolled game keeps its hint promises under either reading
 
