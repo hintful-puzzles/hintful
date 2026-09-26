@@ -1,0 +1,5 @@
+# No delta yet: Pearl's outcome (adopt or no-go) decides what the specs say.
+# Written 2026-09-26; nothing is implemented.
+schema: spec-driven
+created: 2026-09-26
+skip_specs: true
