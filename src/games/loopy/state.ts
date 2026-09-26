@@ -517,8 +517,8 @@ export function checkCompletion(state: LoopyState): boolean {
  * square lattice, and there is no sensible text rendering of a Penrose patch.
  *
  * Upstream expresses this as a separate `game_can_format_as_text_now(params)`
- * returning false for every non-square type; this project's `Game` has a static
- * `canFormatAsText`, so the param-dependence is carried by returning
+ * returning false for every non-square type; this project's `Game` offers text
+ * by having `textFormat`, so the param-dependence is carried by returning
  * `null` instead (the midend and the share dialog treat an absent
  * rendering as "no text panel").
  */

@@ -480,9 +480,6 @@ export const sticksGame: Game<
   SticksMistake
 > = {
   id: "sticks",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

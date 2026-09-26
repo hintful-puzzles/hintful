@@ -240,9 +240,6 @@ function flashLength(a: PegsState, b: PegsState): number {
 
 export const pegsGame: Game<PegsParams, PegsState, PegsMove, PegsUi, PegsDrawState> = {
   id: "pegs",
-  wantsStatusbar: false,
-  canSolve: false,
-  canFormatAsText: true,
   // The whole game is one press-and-drag and the secondary button means
   // nothing, so a held press must not be promoted to it: that would destroy
   // the gesture of a touch player who pauses to pick a landing square.

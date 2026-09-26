@@ -1,5 +1,2 @@
-# No delta yet: the spec wording that replaces "SHALL report `canSolve = …`" is
-# written with the generated deltas, once the code change is made.
 schema: spec-driven
 created: 2026-09-26
-skip_specs: true

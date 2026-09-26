@@ -493,9 +493,6 @@ export const mapGame: Game<
   MapMistake
 > = {
   id: "map",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: false,
   canMarkAll: true,
 
   defaultParams,

@@ -358,9 +358,6 @@ export const pearlGame: Game<
   PearlMistake
 > = {
   id: "pearl",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

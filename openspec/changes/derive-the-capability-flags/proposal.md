@@ -1,6 +1,6 @@
 # derive-the-capability-flags
 
-**Status: scaffolded, not started.** Found while removing `isTimed`
+**Status: implemented.** Found while removing `isTimed`
 (`turn-the-timer-on-everywhere`, 2026-09-26).
 
 ## Why

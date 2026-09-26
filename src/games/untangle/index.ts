@@ -7,7 +7,7 @@
  *    changes; the player's dragged positions ride the serialized move
  *    log, which the midend save format already replays.
  *  - **Editor build excluded**: no `E` add/delete-edge moves, no text
- *    format (`canFormatAsText = false`).
+ *    format (no `textFormat`).
  *  - **No `findMistakes`**: crossed edges drawn red ARE the mistake
  *    feedback.
  *  - **A hint, and a Solve that needs no `aux`**: the hint moves the point
@@ -138,9 +138,6 @@ export const untangleGame: Game<
   UntangleDrawState
 > = {
   id: "untangle",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: false,
   preferredTileSize: PREFERRED_TILE_SIZE,
 
   // --- params --------------------------------------------------------

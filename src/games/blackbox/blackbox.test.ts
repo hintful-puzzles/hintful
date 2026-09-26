@@ -277,8 +277,8 @@ describe("Black Box — params", () => {
 describe("Black Box — Game surface", () => {
   it("reports its capability flags", () => {
     expect(blackboxGame.id).toBe("blackbox");
-    expect(blackboxGame.wantsStatusbar).toBe(true);
-    expect(blackboxGame.canSolve).toBe(true);
+    expect(blackboxGame.statusbarText).toBeDefined();
+    expect(blackboxGame.solve).toBeDefined();
     expect(blackboxGame.hint).toBeUndefined();
     expect(blackboxGame.findMistakes).toBeUndefined();
   });

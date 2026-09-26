@@ -478,9 +478,6 @@ export const singlesGame: Game<
   SinglesMistake
 > = {
   id: "singles",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

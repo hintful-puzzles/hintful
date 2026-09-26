@@ -307,9 +307,6 @@ export const seismicGame: Game<
   SeismicMistake
 > = {
   id: "seismic",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
   canMarkAll: true,
 
   defaultParams,

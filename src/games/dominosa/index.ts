@@ -614,9 +614,6 @@ export const dominosaGame: Game<
   DominosaMistake
 > = {
   id: "dominosa",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

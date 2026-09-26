@@ -215,9 +215,6 @@ export const netslideGame: Game<
   NetslideDrawState
 > = {
   id: "netslide",
-  wantsStatusbar: true,
-  canSolve: true,
-  canFormatAsText: false,
 
   defaultParams,
   presets: () => ({

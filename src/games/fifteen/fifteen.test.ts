@@ -460,9 +460,9 @@ describe("Fifteen hint", () => {
 describe("Fifteen capabilities", () => {
   it("reports the expected Game flags", () => {
     expect(fifteenGame.id).toBe("fifteen");
-    expect(fifteenGame.wantsStatusbar).toBe(true);
-    expect(fifteenGame.canSolve).toBe(true);
-    expect(fifteenGame.canFormatAsText).toBe(true);
+    expect(fifteenGame.statusbarText).toBeDefined();
+    expect(fifteenGame.solve).toBeDefined();
+    expect(fifteenGame.textFormat).toBeDefined();
     // No mistake-checking: every reachable position is legal.
     expect(fifteenGame.findMistakes).toBeUndefined();
   });

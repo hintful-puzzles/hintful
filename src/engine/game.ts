@@ -218,9 +218,6 @@ export interface Game<
 > {
   /** Catalog puzzleId; the registry key. */
   readonly id: string;
-  readonly wantsStatusbar: boolean;
-  readonly canSolve: boolean;
-  readonly canFormatAsText: boolean;
   /** The game supports the "fill every empty cell with all candidate pencil
    * marks" action (upstream's `M`/`m` key). A game that sets this MUST handle
    * the `M`/`m` key in `interpretMove`; the app shell surfaces a toolbar button
@@ -373,9 +370,9 @@ export interface Game<
 
   status(s: State): GameStatus;
 
-  /** Solve from `orig` (the initial state) given `curr`. Present iff
-   * `canSolve`. Returns a discriminated result so a `Move` that is
-   * itself a string can't be confused with an error message. */
+  /** Solve from `orig` (the initial state) given `curr`. Having it is what
+   * offers Solve to the player. Returns a discriminated result so a `Move`
+   * that is itself a string can't be confused with an error message. */
   solve?(orig: State, curr: State, aux?: string): SolveResult<Move>;
 
   /** Track the pointer over the board when no button is down, for a game
@@ -498,14 +495,13 @@ export interface Game<
   selectReference?(ui: Ui, key: string | null): boolean;
 
   /** Render the state as plain text for the share dialog. Returns `null`
-   * when *these particular* params have no text rendering, which the static
-   * `canFormatAsText` flag cannot express: Loopy's text format assumes a square
-   * lattice, so it is available on the square grid type only (upstream spells
-   * this as a separate `game_can_format_as_text_now(params)` entry point). The
-   * midend and the app treat an absent rendering as "no text panel", so a game
-   * with a param-dependent format sets `canFormatAsText: true` and returns
-   * `null` for the params it cannot render. */
+   * when *these particular* params have no text rendering, which having the
+   * method cannot express: Loopy's text format assumes a square lattice, so it
+   * is available on the square grid type only (upstream spells this as a
+   * separate `game_can_format_as_text_now(params)` entry point). The midend
+   * and the app treat an absent rendering as "no text panel". */
   textFormat?(s: State): string | null;
+  /** Having it is what gives the game a status bar. */
   statusbarText?(s: State, ui: Ui): string;
 
   /** The game's user preferences (upstream `get_prefs`/`set_prefs`),

@@ -418,9 +418,6 @@ export const rangeGame: Game<
   RangeMistake
 > = {
   id: "range",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

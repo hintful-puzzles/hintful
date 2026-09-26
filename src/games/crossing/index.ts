@@ -601,9 +601,6 @@ export const crossingGame: Game<
   CrossingMistake
 > = {
   id: "crossing",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

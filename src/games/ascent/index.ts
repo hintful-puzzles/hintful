@@ -376,9 +376,6 @@ export const ascentGame: Game<
   AscentMistake
 > = {
   id: "ascent",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
   preferredTileSize: 48,
 
   defaultParams,

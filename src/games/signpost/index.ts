@@ -367,9 +367,6 @@ export const signpostGame: Game<
   SignpostMistake
 > = {
   id: "signpost",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets() {

@@ -969,7 +969,7 @@ Normative: the on-screen-keys requirement in
   disabled state either. A key whose precondition is a board state therefore
   ships unconditionally, is **declined** when the precondition fails, and needs
   somewhere to say why: Guess's Submit key is the case, and it is the reason
-  that game turned `wantsStatusbar` on in the same change. A refusal that is
+  that game gained a status bar in the same change. A refusal that is
   merely silent is indistinguishable from a broken key.
 
   Such a key also strains the **inert-panel-key probe**, which primes the board

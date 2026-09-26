@@ -426,9 +426,6 @@ export const keenGame: Game<
   KeenMistake
 > = {
   id: "keen",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: false,
   canMarkAll: true,
 
   defaultParams,

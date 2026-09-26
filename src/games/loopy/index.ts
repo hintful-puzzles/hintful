@@ -738,12 +738,9 @@ export const loopyGame: Game<
   LoopyMistake
 > = {
   id: "loopy",
-  wantsStatusbar: false,
-  canSolve: true,
   // True in the sense the interface means it — Loopy *has* a text format — but
   // it only covers the square tiling, so `textFormat` returns `undefined` for
   // the other seventeen (upstream's `game_can_format_as_text_now(params)`).
-  canFormatAsText: true,
   // Loopy genuinely reads the stylus bit; see `nextLineState`.
   wantsStylusModifier: true,
 

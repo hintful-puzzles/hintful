@@ -443,9 +443,6 @@ export const bricksGame: Game<
   BricksMistake
 > = {
   id: "bricks",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

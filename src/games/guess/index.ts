@@ -498,9 +498,6 @@ export const guessGame: Game<
   GuessDrawState
 > = {
   id: "guess",
-  wantsStatusbar: true,
-  canSolve: true,
-  canFormatAsText: false,
 
   defaultParams,
   presets,

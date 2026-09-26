@@ -560,9 +560,6 @@ export const unequalGame: Game<
   UnequalMistake
 > = {
   id: "unequal",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
   canMarkAll: true,
 
   defaultParams,

@@ -232,9 +232,6 @@ export const magnetsGame: Game<
   MagnetsMistake
 > = {
   id: "magnets",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

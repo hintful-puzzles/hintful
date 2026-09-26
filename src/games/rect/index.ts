@@ -357,9 +357,6 @@ export const rectGame: Game<
   RectMistake
 > = {
   id: "rect",
-  wantsStatusbar: true,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

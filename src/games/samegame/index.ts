@@ -214,9 +214,6 @@ export const samegameGame: Game<
   SamegameDrawState
 > = {
   id: "samegame",
-  wantsStatusbar: true,
-  canSolve: false,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

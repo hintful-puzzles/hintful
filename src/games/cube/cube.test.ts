@@ -242,9 +242,9 @@ describe("cube rolling", () => {
 describe("cube Game wiring", () => {
   it("advertises the right capabilities", () => {
     expect(cubeGame.id).toBe("cube");
-    expect(cubeGame.canSolve).toBe(false);
-    expect(cubeGame.canFormatAsText).toBe(false);
-    expect(cubeGame.wantsStatusbar).toBe(true);
+    expect(cubeGame.solve).toBeUndefined();
+    expect(cubeGame.textFormat).toBeUndefined();
+    expect(cubeGame.statusbarText).toBeDefined();
     expect(cubeGame.hint).toBeUndefined();
     expect(cubeGame.findMistakes).toBeUndefined();
   });

@@ -332,9 +332,6 @@ export const slideGame: Game<
   SlideDrawState
 > = {
   id: "slide",
-  wantsStatusbar: true,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

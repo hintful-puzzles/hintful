@@ -662,11 +662,11 @@ describe("presets", () => {
 describe("game registration", () => {
   it("declares the capabilities the app keys off", () => {
     expect(loopyGame.id).toBe("loopy");
-    expect(loopyGame.canSolve).toBe(true);
+    expect(loopyGame.solve).toBeDefined();
     // Loopy genuinely reads MOD_STYLUS (a tap must reach all three states), so
     // it opts out of the midend's strip-the-bit default.
     expect(loopyGame.wantsStylusModifier).toBe(true);
-    expect(loopyGame.wantsStatusbar).toBe(false);
+    expect(loopyGame.statusbarText).toBeUndefined();
   });
 
   it("defaults to a 10x10 Easy square board", () => {

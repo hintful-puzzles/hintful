@@ -616,9 +616,6 @@ export const subsetsGame: Game<
   SubsetsMistake
 > = {
   id: "subsets",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
   // Touching the reference aid (tally / inspect icon / cursor) dismisses a
   // displayed hint, so the aid isn't suppressed by a still-active hint overlay.
   // Unconditional: Subsets' hint marks no square the player types into, so

@@ -285,7 +285,7 @@ describe("Midend status + solve", () => {
   it.each([
     [
       "solving",
-      { ...fakeGame, canSolve: false },
+      { ...fakeGame, solve: undefined },
       (m: Midend<never, never, never, never, never>) => m.solve(),
       "This game does not support solving",
     ],
@@ -1173,6 +1173,16 @@ describe("Midend hint plan lifecycle", () => {
     expect(props.canHint).toBe(true);
   });
 
+  it("canSolve and wantsStatusbar come from having solve and statusbarText", () => {
+    const full = new Midend(fakeGame).getStaticProperties();
+    expect(full.canSolve).toBe(true);
+    expect(full.wantsStatusbar).toBe(true);
+    const bare = { ...fakeGame, solve: undefined, statusbarText: undefined };
+    const none = new Midend(bare as typeof fakeGame).getStaticProperties();
+    expect(none.canSolve).toBe(false);
+    expect(none.wantsStatusbar).toBe(false);
+  });
+
   it("canMarkAll reflects the game flag (default false, opt-in true)", () => {
     expect(new Midend(fakeGame).getStaticProperties().canMarkAll).toBe(false);
     const marking = { ...fakeGame, canMarkAll: true } as typeof fakeGame;
@@ -1256,7 +1266,6 @@ function strikeGame(opts: {
       return { n: s.n, struck };
     },
     status: (s) => (s.struck === (1 << s.n) - 1 ? "solved" : "ongoing"),
-    canSolve: false,
     solve: undefined,
     hint: (s) => {
       const steps = [];

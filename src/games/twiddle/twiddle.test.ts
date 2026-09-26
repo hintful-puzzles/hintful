@@ -373,9 +373,9 @@ describe("Twiddle input", () => {
 describe("Twiddle game object", () => {
   it("reports the expected flags and id", () => {
     expect(twiddleGame.id).toBe("twiddle");
-    expect(twiddleGame.wantsStatusbar).toBe(true);
-    expect(twiddleGame.canSolve).toBe(true);
-    expect(twiddleGame.canFormatAsText).toBe(true);
+    expect(twiddleGame.statusbarText).toBeDefined();
+    expect(twiddleGame.solve).toBeDefined();
+    expect(twiddleGame.textFormat).toBeDefined();
     // Permutation puzzle: no mistake checking, no hint.
     expect(twiddleGame.findMistakes).toBeUndefined();
     expect(twiddleGame.hint).toBeUndefined();

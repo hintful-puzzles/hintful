@@ -45,7 +45,7 @@ function press(
   m.newGameFromId(id);
   const consumed = m.processInput(point.x, point.y, button);
   // Compare the *effect* of the press, not merely whether it was swallowed.
-  return { consumed, board: game.canFormatAsText ? m.formatAsText() : null };
+  return { consumed, board: game.textFormat ? m.formatAsText() : null };
 }
 
 // Read once, at collection time — importing the barrel above has already

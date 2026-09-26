@@ -123,9 +123,6 @@ export const separateGame: Game<
   SeparateMistake
 > = {
   id: "separate",
-  wantsStatusbar: true,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

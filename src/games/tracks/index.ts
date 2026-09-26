@@ -348,9 +348,6 @@ export const tracksGame: Game<
   Point
 > = {
   id: "tracks",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

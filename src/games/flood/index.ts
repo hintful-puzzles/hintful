@@ -211,9 +211,6 @@ export const floodGame: Game<
   FloodDrawState
 > = {
   id: "flood",
-  wantsStatusbar: true,
-  canSolve: true,
-  canFormatAsText: true,
   // Choosing a color is the only gesture; the secondary button has no
   // meaning, so a touch player's held press must not be promoted into one.
   ignoresSecondaryButton: true,

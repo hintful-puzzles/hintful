@@ -449,9 +449,6 @@ export const lightupGame: Game<
   LightupMistake
 > = {
   id: "lightup",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

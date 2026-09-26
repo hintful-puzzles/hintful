@@ -460,9 +460,6 @@ export const spokesGame: Game<
   SpokesMistake
 > = {
   id: "spokes",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

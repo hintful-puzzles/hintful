@@ -320,9 +320,6 @@ export const unrulyGame: Game<
   UnrulyMistake
 > = {
   id: "unruly",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

@@ -47,7 +47,7 @@ describe("midend integration", () => {
   });
 
   it("surfaces the hint explanation without a status bar and clears it on a move", () => {
-    // Range has wantsStatusbar=false but explained hints; the banner
+    // Range has no status bar but explained hints; the banner
     // (activeHintExplanation) must still be emitted, and cleared by a move.
     const params = decodeParams("9x6");
     const { desc } = rangeGame.newDesc(params, randomNew("range-hint-banner"));

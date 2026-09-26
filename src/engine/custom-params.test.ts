@@ -57,9 +57,6 @@ function makeGame(
 ): Game<TParams, TState, TMove, null, null> {
   return {
     id: "__cfg__",
-    wantsStatusbar: false,
-    canSolve: false,
-    canFormatAsText: false,
     defaultParams: () => ({ w: 5, flag: false, mode: 1 }),
     presets: () => ({ title: "root", params: { w: 5, flag: false, mode: 1 } }),
     encodeParams: (p) => `${p.w}${p.flag ? "f" : ""}m${p.mode}`,

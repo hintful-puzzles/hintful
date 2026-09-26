@@ -743,9 +743,6 @@ export const groupGame: Game<
   GroupMistake
 > = {
   id: "group",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
   canMarkAll: true,
 
   defaultParams,

@@ -203,9 +203,6 @@ export const mosaicGame: Game<
   MosaicMistake
 > = {
   id: "mosaic",
-  wantsStatusbar: true,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

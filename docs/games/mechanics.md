@@ -546,13 +546,29 @@ Solve is [solver & generator](./solver-and-generator.md) § "Solve and the gener
 
 ## Capability flags
 
+**A game offers a capability by having its method, never by declaring a flag
+beside it.** `Midend.getStaticProperties` derives the app's flags from the
+methods, so a game cannot claim a Solve button it has no `solve` behind:
+
+| App flag | Derived from | Trap |
+| --- | --- | --- |
+| `wantsStatusbar` | `statusbarText` | the timer is not in it; it has its own chrome |
+| `canSolve` | `solve` | test through a real `Midend` when `aux` matters |
+| `canHint` | `hint` | see [hints](./hints.md) |
+| `canFindMistakes` | `findMistakes` | |
+| `hasReference` | `reference` | |
+
+Text export follows the same rule: `textFormat` present means a text panel,
+and it may still return `null` for params with no rendering (Loopy: square
+grid only).
+
+What a game still declares is what the midend needs synchronously and cannot
+read off a method:
+
 | Flag | Means | Trap |
 | --- | --- | --- |
-| `wantsStatusbar` | game writes `statusbarText` | the timer is not in it; it has its own chrome |
-| `canSolve` | `solve` present | test through a real `Midend` when `aux` matters |
-| `canFormatAsText` | `textFormat` present | may still return `null` for params with no rendering (Loopy: square grid only) |
 | `canMarkAll` | game handles the `M`/`m` key; shell shows the button | see "Pencil marks" |
-| `needsRightButton` | game is unplayable without a secondary action | **nothing reads it today** — eighteen games declare it and the trail ends at `Puzzle.needsRightButton`; the touch affordance is offered to every game unconditionally. Kept pending `audit-input-mode-parity` task 4b.1, which wants the per-game control this is half of |
+| `ignoresSecondaryButton` | the secondary button means nothing in this game | a touch hold then stays a left press — [input](./input.md) § "A touch hold arrives as the right button" |
 | `wantsStylusModifier` | game handles `MOD_STYLUS` itself | **keep false** unless touch has its own behavior; the midend strips the bit for everyone else — [input](./input.md) § "Touch is stripped for you" |
 
 **A param-dependent capability the static flag can't express: widen the

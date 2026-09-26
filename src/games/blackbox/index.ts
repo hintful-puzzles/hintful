@@ -333,9 +333,6 @@ export const blackboxGame: Game<
   BlackboxDrawState
 > = {
   id: "blackbox",
-  wantsStatusbar: true,
-  canSolve: true,
-  canFormatAsText: false,
 
   defaultParams,
   presets,

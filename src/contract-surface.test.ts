@@ -180,8 +180,8 @@ function propertyReads(): {
   // can only be read through a `Puzzle`, which lives in the app shell — the
   // engine produces the struct and never reads it back. Narrowing to the app is
   // what makes that sweep say anything the `Game` sweep does not: the two
-  // contracts share field names, so an engine read of `game.canSolve` would
-  // otherwise vouch for `PuzzleStaticAttributes.canSolve`.
+  // contracts share field names, so an engine read of `game.canMarkAll` would
+  // otherwise vouch for `PuzzleStaticAttributes.canMarkAll`.
   const app = new Set<string>();
   let scanned = 0;
   let appScanned = 0;
@@ -345,7 +345,7 @@ describe("the Game contract carries no capability without a consumer", () => {
  * the catalog on every path). Both are gone; this is what stops a third.
  *
  * Scoped to app-shell reads on purpose. The two contracts share field names —
- * `canSolve` is a `Game` member too — so an *engine* read of `game.canSolve`
+ * `canMarkAll` is a `Game` member too — so an *engine* read of `game.canMarkAll`
  * would vouch for an app field nothing touches.
  *
  * The limitation, stated as before: this catches the `canConfigure` shape (a

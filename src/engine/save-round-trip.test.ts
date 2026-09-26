@@ -124,7 +124,7 @@ describe("a saved game reloads in every ported game", () => {
 
       // The board came back. `formatAsText` is the game's own description of
       // its state, so this compares what the player would see.
-      if (game.canFormatAsText) {
+      if (game.textFormat) {
         expect(loaded.formatAsText(), `${id}: board differs after reload`).toBe(
           played.formatAsText(),
         );

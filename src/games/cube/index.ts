@@ -306,9 +306,6 @@ function status(state: CubeState): GameStatus {
 
 export const cubeGame: Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawState> = {
   id: "cube",
-  wantsStatusbar: true,
-  canSolve: false,
-  canFormatAsText: false,
   // Rolling the cube is the only gesture; the secondary button has no meaning,
   // so a touch player's held press must not be promoted into one.
   ignoresSecondaryButton: true,

@@ -271,9 +271,6 @@ export const slantGame: Game<
   SlantMistake
 > = {
   id: "slant",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

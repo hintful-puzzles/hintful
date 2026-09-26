@@ -37,9 +37,6 @@ interface PrefState {
  * ON and a two-way choice pref defaulting to index 0. */
 const prefGame: Game<{ n: number }, PrefState, "noop", PrefUi> = {
   id: "__pref__",
-  wantsStatusbar: false,
-  canSolve: false,
-  canFormatAsText: false,
   defaultParams: () => ({ n: 1 }),
   presets: () => ({ title: "root", params: { n: 1 } }),
   encodeParams: (p) => `n${p.n}`,

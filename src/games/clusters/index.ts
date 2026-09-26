@@ -383,9 +383,6 @@ export const clustersGame: Game<
   ClustersMistake
 > = {
   id: "clusters",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

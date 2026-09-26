@@ -256,9 +256,6 @@ export const fifteenGame: Game<
   FifteenDrawState
 > = {
   id: "fifteen",
-  wantsStatusbar: true,
-  canSolve: true,
-  canFormatAsText: true,
   // Sliding a tile is the only gesture; the secondary button has no meaning,
   // so a touch player's held press must not be promoted into one.
   ignoresSecondaryButton: true,

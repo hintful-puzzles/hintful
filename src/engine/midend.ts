@@ -306,13 +306,13 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
 
   getStaticProperties(): PuzzleStaticAttributes {
     return {
-      canSolve: this.game.canSolve,
+      canSolve: this.game.solve !== undefined,
       canHint: this.game.hint !== undefined,
       canFindMistakes: this.game.findMistakes !== undefined,
       hasReference: this.game.reference !== undefined,
       canMarkAll: this.game.canMarkAll ?? false,
       ignoresSecondaryButton: this.game.ignoresSecondaryButton ?? false,
-      wantsStatusbar: this.game.wantsStatusbar,
+      wantsStatusbar: this.game.statusbarText !== undefined,
     };
   }
 
@@ -736,7 +736,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   }
 
   solve(): string | null {
-    if (!this.game.canSolve || !this.game.solve) {
+    if (!this.game.solve) {
       return "This game does not support solving";
     }
     const result = this.game.solve(this.history[0], this.state, this.aux);
@@ -1394,7 +1394,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   }
 
   formatAsText(): string | null {
-    if (!this.game.canFormatAsText || !this.game.textFormat) return null;
+    if (!this.game.textFormat) return null;
     return this.game.textFormat(this.state);
   }
 
@@ -1691,12 +1691,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // The notification carries both the status-bar text and the hint banner.
     // A game may want the banner without a status bar (Range), so a
     // hint-capable game always emits, letting its explanation appear and
-    // clear; only a game with neither is skipped. `components/view.ts` gates the
-    // status-bar DOM on `wantsStatusbar`, so the empty text is inert.
-    if (!this.game.wantsStatusbar && !this.game.hint) return;
-    const text = this.game.wantsStatusbar
-      ? (this.game.statusbarText?.(this.state, this.ui) ?? "")
-      : "";
+    // clear; only a game with neither is skipped.
+    if (!this.game.statusbarText && !this.game.hint) return;
+    const text = this.game.statusbarText?.(this.state, this.ui) ?? "";
     this.emit({
       type: "status-bar-change",
       statusBarText: text,

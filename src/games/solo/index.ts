@@ -681,9 +681,6 @@ export const soloGame: Game<
   SoloMistake
 > = {
   id: "solo",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: false,
   canMarkAll: true,
 
   defaultParams,

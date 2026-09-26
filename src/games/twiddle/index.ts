@@ -222,9 +222,6 @@ export const twiddleGame: Game<
   TwiddleDrawState
 > = {
   id: "twiddle",
-  wantsStatusbar: true,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

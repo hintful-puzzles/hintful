@@ -777,9 +777,6 @@ export const undeadGame: Game<
   UndeadMistake
 > = {
   id: "undead",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
   canMarkAll: true,
 
   defaultParams,

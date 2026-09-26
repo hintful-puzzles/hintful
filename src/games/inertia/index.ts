@@ -273,9 +273,6 @@ export const inertiaGame: Game<
   InertiaDrawState
 > = {
   id: "inertia",
-  wantsStatusbar: true,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets() {

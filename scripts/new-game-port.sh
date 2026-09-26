@@ -142,10 +142,6 @@ export const ${GAME}Game: Game<
   ${P}Mistake
 > = {
   id: "${GAME}",
-  wantsStatusbar: false,
-  isTimed: false,
-  canSolve: false,
-  canFormatAsText: false,
 
   defaultParams(): ${P}Params {
     return { w: 5, h: 5 };

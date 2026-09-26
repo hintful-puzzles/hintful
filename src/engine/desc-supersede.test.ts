@@ -33,9 +33,6 @@ type MinesishMove = { click: number };
  * desc: `"blank"` — no layout at all, which is why it must be superseded. */
 const minesish: Game<MinesishParams, MinesishState, MinesishMove, null, null> = {
   id: "__minesish__",
-  wantsStatusbar: false,
-  canSolve: false,
-  canFormatAsText: true,
   defaultParams: () => ({ size: 9 }),
   presets: () => ({ title: "root", params: { size: 9 } }),
   encodeParams: (p) => `s${p.size}`,

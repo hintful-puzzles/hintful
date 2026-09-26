@@ -620,9 +620,6 @@ export const romeGame: Game<
   RomeMistake
 > = {
   id: "rome",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: false,
   canMarkAll: true,
 
   defaultParams,

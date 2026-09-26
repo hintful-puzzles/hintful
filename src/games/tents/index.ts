@@ -279,9 +279,6 @@ export const tentsGame: Game<
   TentsMistake
 > = {
   id: "tents",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

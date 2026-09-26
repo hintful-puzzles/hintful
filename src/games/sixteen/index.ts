@@ -702,9 +702,6 @@ export const sixteenGame: Game<
   SixteenDrawState
 > = {
   id: "sixteen",
-  wantsStatusbar: true,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,

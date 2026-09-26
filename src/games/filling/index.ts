@@ -281,9 +281,6 @@ export const fillingGame: Game<
   Point
 > = {
   id: "filling",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
   // Selection is a left press or a left drag across a run of cells, and the
   // secondary button has no meaning, so a held press must not be promoted
   // into one: that would kill the drag mid-gesture.

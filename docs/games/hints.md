@@ -1209,7 +1209,7 @@ first" *with the cells actually highlighted* for free.
 The refusal message reaches the player via the banner on **both** paths —
 manual Hint and Auto-Hint route the returned string into the transient banner
 ([`src/puzzle/puzzle.ts`](../../src/puzzle/puzzle.ts) `hint()` →
-`setHelpMessage`). A hint-carrying game with `wantsStatusbar = false`
+`setHelpMessage`). A hint-carrying game with no `statusbarText`
 (e.g. Range) still shows and clears the banner. (Both behaviors are
 requirements in the [`ts-engine`](../../openspec/specs/ts-engine/spec.md)
 Hint System.) A refused **Solve** uses the same banner, so a game's `solve`

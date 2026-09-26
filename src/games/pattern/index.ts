@@ -378,9 +378,6 @@ export const patternGame: Game<
   PatternMistake
 > = {
   id: "pattern",
-  wantsStatusbar: false,
-  canSolve: true,
-  canFormatAsText: true,
   // Pattern wants the raw MOD_STYLUS bit: with no right button to hand, a touch
   // press cycles the cell through its three states instead of just filling it.
   // `touch-input.test.ts` holds this declaration to an actual read.

@@ -261,9 +261,6 @@ export const palisadeGame: Game<
   PalisadeMistake
 > = {
   id: "palisade",
-  wantsStatusbar: true,
-  canSolve: true,
-  canFormatAsText: true,
 
   defaultParams,
   presets,
