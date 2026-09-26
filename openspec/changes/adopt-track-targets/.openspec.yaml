@@ -1,0 +1,4 @@
+# An engine-internal refactor: no requirement changes, so no spec delta.
+schema: spec-driven
+created: 2026-09-27
+skip_specs: true
