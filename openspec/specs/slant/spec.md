@@ -20,8 +20,7 @@ Params SHALL be `w`, `h` and `diff` (Easy / Normal), encoded `{w}x{h}d{e|h}`
 (short form `{w}x{h}`, square shorthand `{n}`). Six presets
 (5×5, 8×8, 10×12 × Easy/Normal; upstream's 12×10 turned to draw taller than
 wide) SHALL be offered. `validateParams` SHALL
-enforce minimum size 2×2. The game SHALL report `canSolve = true` and
-`canFormatAsText = true` and SHALL drive a solve-completion flash suppressed
+enforce minimum size 2×2. The game SHALL provide `solve` and `textFormat` and SHALL drive a solve-completion flash suppressed
 after Solve.
 
 #### Scenario: Params round-trip

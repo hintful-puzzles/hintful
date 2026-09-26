@@ -22,8 +22,7 @@ form a single connected group. Params SHALL be `w`, `h`, `maxb`, `islands`
 (percentage island density), `expansion` (percentage), `allowloops` (boolean)
 and `difficulty` (Easy / Normal / Tricky). All 9 upstream presets SHALL be offered
 (7×7, 10×10, 15×15 × Easy/Normal/Tricky, each `maxb = 2`, `islands = 30`,
-`expansion = 10`, `allowloops = true`). The game SHALL report `canSolve = true`
-and `canFormatAsText = true`.
+`expansion = 10`, `allowloops = true`). The game SHALL provide `solve` and `textFormat`.
 
 #### Scenario: Params round-trip
 

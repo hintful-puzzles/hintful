@@ -20,8 +20,7 @@ follows its cell's arrow and the numbers run consecutively. Params SHALL be
 trailing `c` when corner-start is set (square shorthand `{n}`). All 6
 upstream presets (4×4, 4×4 free ends, 5×5, 5×5 free ends, 6×6, 7×7) SHALL
 be offered. `validateParams` SHALL reject non-positive dimensions and a
-1×1 full generation. The game SHALL report `canSolve = true` and
-`canFormatAsText = true` and SHALL drive a spin win-flash suppressed after
+1×1 full generation. The game SHALL provide `solve` and `textFormat` and SHALL drive a spin win-flash suppressed after
 Solve.
 
 #### Scenario: Params round-trip

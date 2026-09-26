@@ -24,8 +24,7 @@ upstream presets SHALL be offered. Decoding SHALL keep upstream's lenient
 quirks: a bare `WxH` id demotes 4-way-rotational symmetry to 2-way-rotational
 when `w ≠ h`, and the legacy `r` flag decodes as difficulty 2. `validateParams`
 SHALL enforce minimum size 2×2, blackpc 5–100, 4-way symmetry only on
-square grids of at least 3×3, and known symmetry/difficulty values. The game
-SHALL report `canSolve = true` and `canFormatAsText = true` and SHALL drive a
+square grids of at least 3×3, and known symmetry/difficulty values. The game SHALL provide `solve` and `textFormat` and SHALL drive a
 solve-completion flash.
 
 #### Scenario: Params round-trip

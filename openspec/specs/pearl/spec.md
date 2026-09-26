@@ -94,8 +94,7 @@ after). Params SHALL be `w`, `h`, `difficulty` (Easy or Normal) and `nosolve`
 `validateParams` SHALL enforce `w ≥ 5`, `h ≥ 5`, that width×height does not
 overflow, and that a Normal board has `w + h ≥ 11`. Eight presets
 (6×6, 8×8, 10×10, 8×12 each at Easy and Normal; upstream's 12×8 turned to draw
-taller than wide) SHALL be offered. The game SHALL
-report `canSolve = true` and `canFormatAsText = true`, and SHALL drive a
+taller than wide) SHALL be offered. The game SHALL provide `solve` and `textFormat`, and SHALL drive a
 completion flash suppressed after Solve. The two upstream appearance styles
 (traditional Masyu and loopy) SHALL be selectable via an `appearance`
 preference (default traditional).

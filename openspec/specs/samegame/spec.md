@@ -24,9 +24,7 @@ close leftward, so a board of Same Game SHALL NOT declare `transposeParams`: a
 tall board is a different game from a wide one, not the same one turned.
 `validateParams` SHALL require `w ≥ 1`, `h ≥ 1`, `ncols ≤ 9`, `scoresub ∈ {1,2}`,
 and — when soluble — `ncols ≥ 3` and `w·h > 1`, or — when not soluble —
-`ncols ≥ 2` and `w·h ≥ 2·ncols`. The game SHALL report `wantsStatusbar = true`,
-`canSolve = false`, and `canFormatAsText = true`, and SHALL
-NOT provide `solve`, `hint`, or `findMistakes`.
+`ncols ≥ 2` and `w·h ≥ 2·ncols`. The game SHALL provide `statusbarText` and `textFormat`, and SHALL NOT provide `solve`, `hint`, or `findMistakes`.
 
 #### Scenario: Params round-trip and lenient decode
 

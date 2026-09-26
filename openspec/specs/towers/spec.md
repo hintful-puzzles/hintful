@@ -23,8 +23,7 @@ Unreasonable, held as the values `"easy"`, `"hard"`, `"extreme"` and
 `"unreasonable"`), encoded `{w}d{c}` when full (`c` = `e`/`h`/`x`/`u`) and `{w}`
 otherwise, with presets at 4×4 Easy, 5×5 Easy/Normal, and 6×6
 Easy/Normal/Tricky/Unreasonable. `validateParams` SHALL require `3 ≤ w ≤ 9` and
-(when full) a known difficulty. The game SHALL report `wantsStatusbar = false`,
-`canSolve = true`, and `canFormatAsText = true`.
+(when full) a known difficulty. The game SHALL provide `solve` and `textFormat`, and SHALL NOT provide `statusbarText`.
 
 #### Scenario: Params round-trip
 

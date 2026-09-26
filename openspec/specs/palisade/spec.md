@@ -22,7 +22,7 @@ draw taller than wide — SHALL be offered, and
 the type summary SHALL render via the `width`/`height`/`region-size` config
 keys. `validateParams` SHALL require `k ≥ 1`, `w ≥ 1`, `h ≥ 1`, `k` dividing
 `w·h`, `k < w·h`, and (for full validation) reject `k = 2` unless `w` or `h` is
-1. The game SHALL report `wantsStatusbar = true`, `canSolve = true`, and `canFormatAsText = true`.
+1. The game SHALL provide `statusbarText`, `solve` and `textFormat`.
 
 #### Scenario: Params round-trip
 

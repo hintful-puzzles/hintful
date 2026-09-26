@@ -18,8 +18,7 @@ matches its sequence of run-length clues. Params SHALL be `w` and `h` (positive
 integers), encoded `{w}x{h}` with a bare `{w}` decoding to a square `w × w`
 grid. The upstream presets (10×10, 15×15, 20×20, 25×25, 30×30) SHALL be offered.
 `validateParams` SHALL reject a non-positive dimension and an unreasonably large
-`w·h`. The game SHALL report `canSolve = true` and `canFormatAsText = true`, and
-SHALL drive a solve-completion flash.
+`w·h`. The game SHALL provide `solve` and `textFormat`, and SHALL drive a solve-completion flash.
 
 #### Scenario: Params round-trip
 

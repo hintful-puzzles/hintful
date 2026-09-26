@@ -17,9 +17,7 @@ solid's faces. Params SHALL be `solid` (one of tetrahedron/cube/octahedron/
 icosahedron), `d1`, `d2`, encoded `<t|c|o|i><d1>x<d2>` with lenient decode (a
 missing leading solid letter and a missing `x<d2>` both tolerated, `d2`
 defaulting to `d1`). The four upstream presets (Cube `c4x4`, Tetrahedron
-`t1x2`, Octahedron `o2x2`, Icosahedron `i3x3`) SHALL be offered. The game
-SHALL report `wantsStatusbar = true`, `canSolve = false`,
-and `canFormatAsText = false` (Cube is a route puzzle with no solver, hint,
+`t1x2`, Octahedron `o2x2`, Icosahedron `i3x3`) SHALL be offered. The game SHALL provide `statusbarText`, and SHALL NOT provide `solve` or `textFormat` (Cube is a route puzzle with no solver, hint,
 mistake-check, or text format).
 
 #### Scenario: Params round-trip and lenient decode

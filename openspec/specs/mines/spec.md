@@ -22,7 +22,7 @@ with a custom `n%` form meaning "percentage of area". Six presets (9×9/10,
 board turned to draw taller than wide, SHALL be offered. `validateParams` SHALL
 require `n ≥ 1` and `n ≤ w·h − 9`, and additionally `w > 2 && h > 2` when `unique`.
 
-The game SHALL report `canSolve = true`, `canFormatAsText = true`, and `wantsStatusbar = true`.
+The game SHALL provide `solve`, `textFormat` and `statusbarText`.
 
 #### Scenario: Params round-trip
 

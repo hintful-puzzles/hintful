@@ -22,8 +22,7 @@ omitted `nN` defaults `n` to `w*h/8`, a `.` in the region count is tolerated
 (truncated), and an unknown difficulty char is ignored. Six presets (15×20 with
 30 regions at each difficulty, and 25×30 with 75 regions at Normal and Tricky),
 upstream's landscape sizes turned to draw taller than wide, SHALL be offered. `validateParams` SHALL enforce `w ≥ 2`,
-`h ≥ 2`, `n ≥ 5`, `n ≤ w*h`, and the width×height overflow guard. The game SHALL
-report `canSolve = true` and `canFormatAsText = true`, and SHALL drive a
+`h ≥ 2`, `n ≥ 5`, `n ≤ w*h`, and the width×height overflow guard. The game SHALL provide `solve` and `textFormat`, and SHALL drive a
 completion flash suppressed after Solve.
 
 #### Scenario: Params round-trip

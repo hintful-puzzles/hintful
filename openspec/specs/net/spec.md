@@ -21,7 +21,7 @@ unique). Upstream's presets SHALL be offered, its two 13×11 boards (plain and
 wrapping) turned to 11×13 so that no preset draws wider than tall. `validateParams` SHALL reject a `unique`
 `wrapping` board with a side of length 2.
 
-The game SHALL report `canSolve = true`, `canFormatAsText = false` and `wantsStatusbar = true`.
+The game SHALL provide `solve` and `statusbarText`, and SHALL NOT provide `textFormat`.
 
 #### Scenario: Params round-trip
 

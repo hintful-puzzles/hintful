@@ -25,8 +25,7 @@ difficulty char. The 7 upstream presets (8×8, 10×10, 14×14 across the offered
 difficulties) SHALL be offered. `validateParams` SHALL reject an odd or
 below-6 dimension, an unreasonably large `w2·h2`, a `unique`-mode grid too tall
 or too long for any valid set of distinct rows (the A177790 bound), and an
-unknown difficulty. The game SHALL report `wantsStatusbar = false`,
-`canSolve = true`, and `canFormatAsText = true`.
+unknown difficulty. The game SHALL provide `solve` and `textFormat`, and SHALL NOT provide `statusbarText`.
 
 #### Scenario: Params round-trip
 

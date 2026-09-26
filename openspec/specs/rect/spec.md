@@ -20,8 +20,7 @@ default true), encoded `{w}x{h}` with a full-form `e{%g}` expansion-factor
 suffix when non-zero and an `a` suffix when `unique` is false (square shorthand
 `{n}`). All 7 upstream presets (7×7, 9×9, 11×11, 13×13, 15×15, 17×17, 19×19)
 SHALL be offered. `validateParams` SHALL enforce `w > 0`, `h > 0`, `w*h ≥ 2`,
-and a non-negative expansion factor. The game SHALL report `canSolve = true`
-and `canFormatAsText = true`, and SHALL drive a completion flash suppressed
+and a non-negative expansion factor. The game SHALL provide `solve` and `textFormat`, and SHALL drive a completion flash suppressed
 after Solve.
 
 #### Scenario: Params round-trip

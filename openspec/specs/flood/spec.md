@@ -17,9 +17,7 @@ whole grid is one color within a move limit. Params SHALL be `w`, `h`,
 `colors` (3–10), and `leniency`, encoded `WxH` with `c{colors}m{leniency}`
 appended when `full`, with lenient decode (a bare `W` yields a square `W×W`
 board). The seven upstream presets SHALL be offered. `validateParams` SHALL
-reject `w·h < 2`, `colors` outside 3–10, and negative `leniency`. The game
-SHALL report `wantsStatusbar = true`, `canSolve = true`,
-`canFormatAsText = true`, and SHALL NOT provide `findMistakes` (no per-move
+reject `w·h < 2`, `colors` outside 3–10, and negative `leniency`. The game SHALL provide `statusbarText`, `solve` and `textFormat`, and SHALL NOT provide `findMistakes` (no per-move
 mistake; the failure mode is the lose status).
 
 #### Scenario: Params round-trip and lenient decode

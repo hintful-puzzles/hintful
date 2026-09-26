@@ -22,8 +22,7 @@ white squares visible from it in a straight line (itself counted once,
 SHALL be offered. `validateParams` SHALL
 reject non-positive dimensions, a `w + h` that overflows the cell encoding,
 and (when `full`) the degenerate 1×1, 1×2, 2×1, and 2×2 grids that admit no
-good puzzle. The game SHALL report `wantsStatusbar = false`,
-`canSolve = true`, and `canFormatAsText = true`.
+good puzzle. The game SHALL provide `solve` and `textFormat`, and SHALL NOT provide `statusbarText`.
 
 #### Scenario: Params round-trip
 

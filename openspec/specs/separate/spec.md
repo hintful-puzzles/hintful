@@ -21,7 +21,7 @@ contains exactly one of each letter. Params SHALL be `w`, `h`, and `k`
 square `w × w` grid with `k = w`. `validateParams` SHALL reject a non-positive
 dimension, a `k` that does not divide `w·h`, an unreasonably large `w·h`, and (on
 a full validation) `k` equal to the whole grid. The game SHALL offer a menu of
-presets, report `canSolve = true` and `canFormatAsText = true`, and drive a
+presets, provide `solve` and `textFormat`, and drive a
 solve-completion flash.
 
 #### Scenario: Params round-trip

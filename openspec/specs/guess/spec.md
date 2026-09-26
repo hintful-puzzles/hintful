@@ -20,9 +20,7 @@ drawn from `ncolors` colors within `nguesses` guess rows. Params SHALL be
 ignored). The two upstream presets — **Standard** (`6,4,10,false,true`) and
 **Super** (`8,5,12,false,true`) — SHALL be offered. `validateParams` SHALL reject
 `ncolors < 2` or `npegs < 2`, `ncolors > 10`, `nguesses < 1`, and
-`allowMultiple = false` with `ncolors < npegs`. The game SHALL report
-`wantsStatusbar = true`, `canSolve = true`, and
-`canFormatAsText = false`, and SHALL NOT provide `findMistakes`.
+`allowMultiple = false` with `ncolors < npegs`. The game SHALL provide `statusbarText` and `solve`, and SHALL NOT provide `textFormat` or `findMistakes`.
 
 #### Scenario: Params round-trip and lenient decode
 
@@ -245,7 +243,7 @@ checked against `npegs`, rather than from declining the key.
 
 ### Requirement: Guess says why a row will not go
 
-Guess SHALL report `wantsStatusbar` and SHALL provide `statusbarText`. The line
+Guess SHALL provide `statusbarText`. The line
 SHALL name the guess in progress and the number available, and — when the
 working row cannot be submitted because a color repeats under
 `allowMultiple: false` — SHALL say so.

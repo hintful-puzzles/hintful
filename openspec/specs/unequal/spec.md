@@ -30,9 +30,7 @@ difficulty character stays `r`, so an existing game ID names the same board. The
 tier names SHALL have a single definition in the game, read by both the preset
 menu and the custom-params dialog, so the two cannot disagree. `validateParams`
 SHALL require `3 ≤ order ≤ 32`, a known difficulty, and `order ≥ 5` for Adjacent
-puzzles of Tricky difficulty or harder. The game SHALL report
-`wantsStatusbar = false`, `canSolve = true`,
-`canFormatAsText = true`, and `canMarkAll = true`.
+puzzles of Tricky difficulty or harder. The game SHALL provide `solve` and `textFormat`, SHALL NOT provide `statusbarText`, and SHALL report `canMarkAll = true`.
 
 #### Scenario: Params round-trip
 

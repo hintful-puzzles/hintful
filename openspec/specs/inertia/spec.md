@@ -19,8 +19,7 @@ directions until it lands on a stop-square or the next square in its path is a
 wall; it collects every gem it passes over and dies on any mine it touches. The
 game is won when every gem has been collected. Params SHALL be `w` and `h`, and
 three presets (8×10, 12×15, 16×20), upstream's sizes turned to draw taller
-than wide, SHALL be offered. The game SHALL
-report `canSolve = true`, `canFormatAsText = true` and `wantsStatusbar = true`.
+than wide, SHALL be offered. The game SHALL provide `solve`, `textFormat` and `statusbarText`.
 
 The game SHALL NOT implement `findMistakes`: every reachable position is legal — a
 death is undone, not corrected — so there is no wrong-but-legal state to flag, and

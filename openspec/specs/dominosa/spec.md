@@ -26,8 +26,7 @@ upstream's `Extreme` because its forcing-chain deduction is a search over a
 closure of all placements, and it is the last tier that is a difficulty —
 `Ambiguous` follows it in the list but relaxes the puzzle's promise rather than
 deepening its ladder. All 12 upstream presets SHALL be offered, dealt tall. `validateParams`
-SHALL enforce `n ≥ 1`, a valid difficulty, and the upstream overflow bound. The
-game SHALL report `canSolve = true` and `canFormatAsText = true` (for `n < 1000`).
+SHALL enforce `n ≥ 1`, a valid difficulty, and the upstream overflow bound. The game SHALL provide `solve` and `textFormat` (for `n < 1000`).
 
 #### Scenario: Params round-trip
 

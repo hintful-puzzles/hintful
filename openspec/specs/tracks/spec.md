@@ -21,8 +21,7 @@ consecutive 1-clues), encoded `{w}x{h}` with a full-form `d{e|t|h}` difficulty
 suffix and an `o` suffix when `single_ones` is false (square shorthand `{n}`).
 Upstream's 12 presets SHALL be offered, its landscape sizes turned to
 draw taller than wide (8×10, 10×15). `validateParams` SHALL enforce a
-minimum size of 4×4. The game SHALL report `canSolve = true` and
-`canFormatAsText = true`, and SHALL drive a completion flash suppressed after
+minimum size of 4×4. The game SHALL provide `solve` and `textFormat`, and SHALL drive a completion flash suppressed after
 Solve.
 
 #### Scenario: Params round-trip

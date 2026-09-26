@@ -28,8 +28,7 @@ easy / medium / hard) SHALL be offered. `validateParams` SHALL require width
 and height both greater than one, a barrier probability in `[0, 1]`, and a
 non-negative move target.
 
-The game SHALL report `canSolve = true`, `canFormatAsText = false` and
-`wantsStatusbar = true`.
+The game SHALL provide `solve` and `statusbarText`, and SHALL NOT provide `textFormat`.
 
 #### Scenario: Params round-trip
 

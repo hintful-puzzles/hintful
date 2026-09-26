@@ -22,9 +22,7 @@ balls`, `10×10, 5 balls`, `10×10, 4-10 balls` — SHALL be offered. The
 preset/custom **type summary** SHALL read `{w}x{h}, {n} balls` (or `{min}-{max}
 balls`) via a `no-of-balls` annotation key mapped in the worker adapter.
 `validateParams` SHALL reject `w < 2` or `h < 2`, `w > 255` or `h > 255`,
-`minballs < 1`, `minballs > maxballs`, and `minballs >= w*h`. The game SHALL
-report `wantsStatusbar = true`, `canSolve = true`, and
-`canFormatAsText = false`, and SHALL NOT provide `hint` or `findMistakes`.
+`minballs < 1`, `minballs > maxballs`, and `minballs >= w*h`. The game SHALL provide `statusbarText` and `solve`, and SHALL NOT provide `textFormat`, `hint` or `findMistakes`.
 
 #### Scenario: Params round-trip and lenient decode
 

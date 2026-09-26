@@ -21,8 +21,7 @@ four composable variants: **standard** (rectangular `c × r` sub-blocks),
 diagonals must also contain every digit), and **killer** (`killer` — a second
 cage partition with digit-sum clues). Params SHALL be
 `{ c, r, symm, diff, kdiff, xtype, killer }` with two difficulty axes (the
-standard solver difficulty and the killer-cage difficulty). The game SHALL report
-`canSolve = true`, `canMarkAll = true`, and implement `findMistakes`.
+standard solver difficulty and the killer-cage difficulty). The game SHALL provide `solve` and `findMistakes`, and SHALL report `canMarkAll = true`.
 
 #### Scenario: Variants are served from one registered game
 
