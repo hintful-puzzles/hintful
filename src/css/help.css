@@ -210,6 +210,9 @@ table.puzzles-list td:not(:last-child) {
 .icon-show-solution {
   --icon: url(/node_modules/lucide-static/icons/sparkles.svg);
 }
+.icon-timer {
+  --icon: url(/node_modules/lucide-static/icons/timer.svg);
+}
 .icon-undo {
   --icon: url(/node_modules/lucide-static/icons/undo-2.svg);
 }

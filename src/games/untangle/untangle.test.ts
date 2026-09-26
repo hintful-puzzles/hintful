@@ -415,6 +415,7 @@ describe("preferences defaults", () => {
       "snap-to-grid": false,
       "show-crossed-edges": true,
       "vertex-style": 0,
+      "show-timer": false,
     });
     expect(me.getPreferencesConfig().items["vertex-style"]).toEqual({
       type: "choices",

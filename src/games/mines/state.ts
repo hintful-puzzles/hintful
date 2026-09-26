@@ -101,9 +101,6 @@ export interface MinesUi {
   flashIsDeath: boolean;
   /** Death counter; survives undo and a save. */
   deaths: number;
-  /** Set once the game was ever won; stops the clock permanently. Unlike
-   * `MinesState.completed` it survives an undo, and `encodeUi` saves it as `C`. */
-  everCompleted: boolean;
   cursor: GridCursor;
 }
 
@@ -314,15 +311,15 @@ export function cloneState(s: MinesState): MinesState {
 
 // --- ui serialization (mines.c encode_ui/decode_ui:2492) ---------------
 
-/** `D<deaths>` optionally followed by `C` (completed) — the only two ui
- * fields upstream preserves across a save. */
+/** `D<deaths>`. Upstream also saved a `C` for "ever completed", which only
+ * stopped the clock; the engine's timer keeps that fact itself, so a `C` in
+ * an older save is read past. */
 export function encodeUi(ui: MinesUi): string {
-  return `D${ui.deaths}${ui.everCompleted ? "C" : ""}`;
+  return `D${ui.deaths}`;
 }
 
 export function decodeUi(ui: MinesUi, encoded: string): void {
-  const m = /^D(\d+)(C?)/.exec(encoded);
+  const m = /^D(\d+)/.exec(encoded);
   if (!m) return;
   ui.deaths = Number(m[1]);
-  if (m[2] === "C") ui.everCompleted = true;
 }

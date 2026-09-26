@@ -11,7 +11,15 @@ import { describe, expect, it } from "vitest";
 import { mapGame } from "../games/map/index.ts";
 import { fakeGame } from "./fake-game.ts";
 import type { Game } from "./game.ts";
-import { Midend } from "./midend.ts";
+import { Midend, SHOW_TIMER_PREF } from "./midend.ts";
+import type { ConfigValues } from "./types.ts";
+
+/** The game's own preferences: every game also carries the engine's timer
+ * preference, which `midend.test.ts` covers. */
+function gamePrefs(m: { getPreferences(): ConfigValues }): ConfigValues {
+  const { [SHOW_TIMER_PREF]: _, ...rest } = m.getPreferences();
+  return rest;
+}
 
 /** A ui carrying the two preference shapes: a boolean and a choice. */
 interface PrefUi {
@@ -105,19 +113,19 @@ describe("engine preferences hook", () => {
   });
 
   it("reports current values read off the live ui (defaults from newUi)", () => {
-    expect(start().getPreferences()).toEqual({ highlight: true, style: 0 });
+    expect(gamePrefs(start())).toEqual({ highlight: true, style: 0 });
   });
 
   it("round-trips set → get for both item types", () => {
     const m = start();
     expect(m.setPreferences({ highlight: false, style: 1 })).toBeUndefined();
-    expect(m.getPreferences()).toEqual({ highlight: false, style: 1 });
+    expect(gamePrefs(m)).toEqual({ highlight: false, style: 1 });
   });
 
   it("applies only the keys present, leaving others unchanged", () => {
     const m = start();
     m.setPreferences({ style: 1 });
-    expect(m.getPreferences()).toEqual({ highlight: true, style: 1 });
+    expect(gamePrefs(m)).toEqual({ highlight: true, style: 1 });
   });
 
   it("coerces loosely-typed values (DB JSON / legacy)", () => {
@@ -125,9 +133,9 @@ describe("engine preferences hook", () => {
     // A string index for a choice, a string boolean — as a permissive
     // store might hand back.
     m.setPreferences({ highlight: "true", style: "1" });
-    expect(m.getPreferences()).toEqual({ highlight: true, style: 1 });
+    expect(gamePrefs(m)).toEqual({ highlight: true, style: 1 });
     m.setPreferences({ highlight: false });
-    expect(m.getPreferences()).toEqual({ highlight: false, style: 1 });
+    expect(gamePrefs(m)).toEqual({ highlight: false, style: 1 });
   });
 
   it("repaints when a preference changes", () => {
@@ -150,10 +158,10 @@ describe("engine preferences hook", () => {
     const m = start();
     m.setPreferences({ highlight: false, style: 1 });
     m.newGame(); // recreates ui via newUi (defaults highlight=true, style=0)
-    expect(m.getPreferences()).toEqual({ highlight: false, style: 1 });
+    expect(gamePrefs(m)).toEqual({ highlight: false, style: 1 });
   });
 
-  it("reports an empty set for a game that declares no prefs", () => {
+  it("offers only the engine's own preference for a game that declares none", () => {
     const m = new Midend(fakeGame);
     m.setCallbacks(
       () => {},
@@ -161,8 +169,8 @@ describe("engine preferences hook", () => {
       () => {},
     );
     m.newGame();
-    expect(m.getPreferencesConfig().items).toEqual({});
-    expect(m.getPreferences()).toEqual({});
+    expect(Object.keys(m.getPreferencesConfig().items)).toEqual([SHOW_TIMER_PREF]);
+    expect(gamePrefs(m)).toEqual({});
     expect(m.setPreferences({ anything: true })).toBeUndefined();
   });
 
@@ -174,10 +182,10 @@ describe("engine preferences hook", () => {
       () => {},
     );
     // No game yet: setPreferences stores but cannot apply (no ui).
-    expect(m.getPreferences()).toEqual({});
+    expect(gamePrefs(m)).toEqual({});
     m.setPreferences({ highlight: false, style: 1 });
     m.newGame();
-    expect(m.getPreferences()).toEqual({ highlight: false, style: 1 });
+    expect(gamePrefs(m)).toEqual({ highlight: false, style: 1 });
   });
 
   it("drops a stored hint plan when a preference changes, since the plan read them", () => {

@@ -55,6 +55,7 @@ import squareMenuIcon from "lucide-static/icons/square-menu.svg";
 import squarePenIcon from "lucide-static/icons/square-pen.svg";
 import swatchBookIcon from "lucide-static/icons/swatch-book.svg";
 import thumbsUpIcon from "lucide-static/icons/thumbs-up.svg";
+import timerIcon from "lucide-static/icons/timer.svg";
 import trash2Icon from "lucide-static/icons/trash-2.svg";
 import triangleAlertIcon from "lucide-static/icons/triangle-alert.svg";
 import undo2Icon from "lucide-static/icons/undo-2.svg";
@@ -108,6 +109,7 @@ const defaultIcons: IconMap = {
   "history": historyIcon,
   "history-checkpoint": circleCheckIcon,
   "history-current-move": playIcon,
+  "timer": timerIcon,
   "install-offline": installDesktopIcon, // adds license info for icon used in docs
   "new-game": plusIcon,
   "options": squareMenuIcon,

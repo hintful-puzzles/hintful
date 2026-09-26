@@ -47,6 +47,7 @@ import type {
   PuzzleStaticAttributes,
   ReferenceModel,
   Size,
+  TimerReadout,
 } from "./types.ts";
 
 /** Wall-clock duration (seconds) of a hint-executed move's slow-motion
@@ -55,6 +56,10 @@ import type {
  * auto-hint flows as continuous motion with no frozen gap between steps. A game
  * with no move animation (`animLength` 0) stays instant; the dwell paces it. */
 const HINT_ANIM_S = 1.0;
+
+/** The preference key of the solve timer, which the engine offers in every
+ * game beside the game's own `prefs`. */
+export const SHOW_TIMER_PREF = "show-timer";
 
 export type NotifyChange = (message: ChangeNotification) => void;
 export type NotifyTimerState = (isActive: boolean) => void;
@@ -164,6 +169,9 @@ export interface EngineCore {
   saveGame(): Uint8Array<ArrayBuffer>;
   loadGame(data: Uint8Array): string | null;
   timer(tplus: number): void;
+  /** Hold the solve timer while the player cannot be playing (the page is
+   * hidden); animation still ticks. */
+  setTimerPaused(paused: boolean): void;
   redraw(dr: GameDrawing): void;
   /** Drop the drawstate and redraw. The worker adapter calls this when the
    * palette or font is replaced: neither clears the canvas, but both
@@ -250,6 +258,20 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * shown until the next transition, exactly like a displayed hint. */
   private activeMistakes: readonly unknown[] | null = null;
   private timerElapsed = 0;
+  /** The `show-timer` preference. Every game has it; `isTimed` is its default. */
+  private showTimer: boolean;
+  /** The frontend has paused the timer (the page is hidden). */
+  private timerPaused = false;
+  /** This board has been solved, so its time is final: an undo after the win
+   * does not start the clock again. Saved, since the history cannot always
+   * show it (a solve undone and played differently leaves no solved state). */
+  private timerStopped = false;
+  /** A hint has been shown on this board. With `cheated`, what makes a time
+   * read as assisted; saved alongside it. */
+  private hinted = false;
+  /** The last `timer-change` sent, as a comparable key, so the per-frame tick
+   * reports only when the readout changes. */
+  private lastTimerKey: string | null = null;
   private notify?: NotifyChange;
   private notifyTimer?: NotifyTimerState;
   private notifyRedraw?: NotifyRedraw;
@@ -275,6 +297,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   constructor(private readonly game: Game<Params, State, Move, Ui, DrawState>) {
     this.params = game.defaultParams();
     this.boardParams = this.params;
+    this.showTimer = game.isTimed;
     this.currentTileSize = this.preferredTileSize;
   }
 
@@ -288,7 +311,6 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       hasReference: this.game.reference !== undefined,
       canMarkAll: this.game.canMarkAll ?? false,
       ignoresSecondaryButton: this.game.ignoresSecondaryButton ?? false,
-      isTimed: this.game.isTimed,
       wantsStatusbar: this.game.wantsStatusbar,
     };
   }
@@ -448,6 +470,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.clearHint();
     this.clearMistakes();
     this.timerElapsed = 0;
+    this.timerStopped = false;
+    this.hinted = false;
     this.clearAnimation();
     this.emitIdChange();
     this.emitParamsChange();
@@ -861,6 +885,10 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.activeHint = { steps: result.steps, index: 0 };
     this.advanceHintOnAnimationEnd = false;
     this.hintDisplayed = true;
+    // Every displayed step comes from a plan made here, so this is the one
+    // place a board can first be helped by a hint.
+    this.hinted = true;
+    this.emitTimer();
     return null;
   }
 
@@ -1214,6 +1242,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
           ? { type: "boolean", name: p.name }
           : { type: "choices", name: p.name, choicenames: p.choices };
     }
+    items[SHOW_TIMER_PREF] = { type: "boolean", name: "Show timer" };
     return { items };
   }
 
@@ -1225,6 +1254,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     for (const p of this.game.prefs ?? []) {
       values[p.kw] = p.get(this.ui);
     }
+    values[SHOW_TIMER_PREF] = this.showTimer;
     return values;
   }
 
@@ -1234,6 +1264,13 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // "highlight crossed edges" or "vertex style" changes what `redraw`
     // paints.
     this.prefValues = { ...this.prefValues, ...values };
+    // The engine's own preference lives on the midend rather than a game's
+    // `Ui`, so it is read here and never reaches `applyPrefs`.
+    const showTimer = values[SHOW_TIMER_PREF];
+    if (showTimer !== undefined) {
+      this.showTimer = showTimer === true || showTimer === "true" || showTimer === 1;
+      this.syncTimer();
+    }
     if (this.history.length > 0) {
       this.applyPrefs();
       // A hint plan is built from the board *and* the preferences (how a hint
@@ -1373,6 +1410,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       moves: this.moveLog.map(serMove),
       pos: this.pos,
       timerElapsed: this.timerElapsed,
+      ...(this.timerStopped ? { timerStopped: true } : {}),
+      ...(this.hinted ? { hinted: true } : {}),
       cheated: this.cheated,
       ...(this.game.encodeUi ? { ui: this.game.encodeUi(this.ui) } : {}),
     };
@@ -1431,6 +1470,10 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.pos = Math.min(env.pos, this.history.length - 1);
     this.cheated = env.cheated;
     this.timerElapsed = env.timerElapsed;
+    // OR, not assign: the replay above already stopped the clock if the kept
+    // history passes through a solve.
+    this.timerStopped ||= env.timerStopped === true;
+    this.hinted = env.hinted === true;
     // Restore Ui state the move log cannot reconstruct (Mines' death counter /
     // completion flag), after the replay above — replay goes through
     // `executeMove`, never `interpretMove`, so a death removed from the log by
@@ -1445,29 +1488,61 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
 
   // --- timer -------------------------------------------------------
 
-  /** A timed-clock game with its clock running (e.g. Mines), distinct
-   * from animation. */
-  private timedClockActive(): boolean {
-    if (!this.game.isTimed) return false;
-    if (this.game.timingState) return this.game.timingState(this.state, this.ui);
-    return this.currentStatus() === "ongoing";
+  /**
+   * Whether the solve timer is counting. One rule for every game: it runs
+   * while the player is solving — shown, from their first move, until the
+   * board is decided — and not while the page is hidden. A loss, or a board
+   * the game says holds the timer (a Mines death), pauses it only while the
+   * board stays that way, since an undo plays on; a solve ends it for good
+   * ({@link timerStopped}).
+   */
+  private timerRunning(): boolean {
+    return (
+      this.showTimer &&
+      !this.timerPaused &&
+      !this.timerStopped &&
+      this.moveLog.length > 0 &&
+      this.currentStatus() === "ongoing" &&
+      !(this.game.timerHolds?.(this.state) ?? false)
+    );
   }
 
-  /** The timer must run while either the game clock is ticking or an
-   * animation/flash is in progress (the worker adapter drives a
-   * rAF loop that calls `timer()` while this is true). */
+  setTimerPaused(paused: boolean): void {
+    this.timerPaused = paused;
+    this.syncTimer();
+  }
+
+  /** The frontend's tick must run while either the solve timer is counting
+   * or an animation/flash is in progress (the worker adapter drives a rAF
+   * loop that calls `timer()` while this is true). */
   private syncTimer(): void {
-    const want = this.timedClockActive() || this.animating;
+    const status = this.history.length > 0 ? this.currentStatus() : "ongoing";
+    if (status === "solved" || status === "solved-with-help") this.timerStopped = true;
+    const want = this.timerRunning() || this.animating;
     if (want !== this.timerWanted) {
       this.timerWanted = want;
       this.notifyTimer?.(want);
     }
+    this.emitTimer();
+  }
+
+  private emitTimer(): void {
+    const timer: TimerReadout | null = this.showTimer
+      ? {
+          seconds: Math.floor(this.timerElapsed),
+          assisted: this.hinted || this.cheated,
+        }
+      : null;
+    const key = timer === null ? "" : `${timer.seconds}:${timer.assisted}`;
+    if (key === this.lastTimerKey) return;
+    this.lastTimerKey = key;
+    this.emit({ type: "timer-change", timer });
   }
 
   timer(tplus: number): void {
-    if (this.timedClockActive()) {
+    if (this.timerRunning()) {
       this.timerElapsed += tplus;
-      this.emitStatusBar();
+      this.emitTimer();
     }
     if (this.animating) {
       this.animTime += tplus;
@@ -1618,15 +1693,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // clear; only a game with neither is skipped. `components/view.ts` gates the
     // status-bar DOM on `wantsStatusbar`, so the empty text is inert.
     if (!this.game.wantsStatusbar && !this.game.hint) return;
-    let text = this.game.wantsStatusbar
+    const text = this.game.wantsStatusbar
       ? (this.game.statusbarText?.(this.state, this.ui) ?? "")
       : "";
-    // A timed game's status text gets an elapsed `[M:SS]` prefix: upstream
-    // `midend_rewrite_statusbar` (midend.c:2204), the midend's job.
-    if (this.game.isTimed && this.game.wantsStatusbar) {
-      const sec = Math.floor(this.timerElapsed);
-      text = `[${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}] ${text}`;
-    }
     this.emit({
       type: "status-bar-change",
       statusBarText: text,

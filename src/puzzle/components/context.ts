@@ -34,8 +34,11 @@ export class PuzzleContext extends SignalWatcher(LitElement) {
   protected currentMove?: number;
   @state()
   protected checkpoints?: ReadonlySet<number>;
+  /** The solve timer's seconds, so the autosave keeps up with a running clock
+   * and not only with moves; `null` while the timer is off, which costs a game
+   * without it no dispatches. */
   @state()
-  protected statusbarText?: string; // for timed puzzles
+  protected timerSeconds?: number | null;
   /** The saveable `Ui`, for a game that has one. A row composed in Guess is a
    * `Ui` edit and not a move, so none of the three above moves and the autosave
    * would never be refreshed — the encoding was right and nothing asked for it.
@@ -45,6 +48,7 @@ export class PuzzleContext extends SignalWatcher(LitElement) {
 
   override async connectedCallback() {
     super.connectedCallback();
+    document.addEventListener("visibilitychange", this.handleVisibilityChange);
     if (!this._puzzle) {
       await this._loadPuzzle();
     }
@@ -52,8 +56,15 @@ export class PuzzleContext extends SignalWatcher(LitElement) {
 
   override async disconnectedCallback() {
     super.disconnectedCallback();
+    document.removeEventListener("visibilitychange", this.handleVisibilityChange);
     await this._unloadPuzzle();
   }
+
+  /** Nobody is solving a puzzle they cannot see, so the solve timer holds
+   * while the page is hidden. */
+  private handleVisibilityChange = async () => {
+    await this._puzzle?.setTimerPaused(document.visibilityState === "hidden");
+  };
 
   protected override render() {
     return html`<slot></slot>`;
@@ -77,11 +88,7 @@ export class PuzzleContext extends SignalWatcher(LitElement) {
         this.params = this.puzzle.currentParams;
       }
       this.checkpoints = this.puzzle.checkpoints;
-      if (this.puzzle.isTimed && this.puzzle.statusbarText !== null) {
-        // Timed puzzles (mines) use the statusbar to display time;
-        // this will dispatch puzzle-game-state-change when time is updated.
-        this.statusbarText = this.puzzle.statusbarText;
-      }
+      this.timerSeconds = this.puzzle.timer?.seconds ?? null;
       this.uiState = this.puzzle.uiState;
     }
     this.currentMove = this.puzzle?.currentMove;
@@ -96,7 +103,7 @@ export class PuzzleContext extends SignalWatcher(LitElement) {
       (changedProps.has("gameId") ||
         changedProps.has("currentMove") ||
         changedProps.has("checkpoints") ||
-        changedProps.has("statusbarText") ||
+        changedProps.has("timerSeconds") ||
         changedProps.has("uiState"))
     ) {
       this.dispatchPuzzleEvent("puzzle-game-state-change");
@@ -108,6 +115,7 @@ export class PuzzleContext extends SignalWatcher(LitElement) {
       throw new Error("puzzle-context requires puzzleid");
     }
     this._puzzle = await Puzzle.create(this.puzzleId);
+    await this.handleVisibilityChange();
 
     // Notify puzzle-loaded. Listeners can preventDefault() to disable further setup.
     const event = this.dispatchPuzzleEvent("puzzle-loaded");

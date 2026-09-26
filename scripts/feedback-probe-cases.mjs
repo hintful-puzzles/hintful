@@ -307,8 +307,8 @@ export const MODULES = [
       },
       {
         within: "Midend.syncTimer",
-        why: "the timer runs during animation but not for a timed game's clock",
-        find: "    const want = this.timedClockActive() || this.animating;",
+        why: "the tick runs during animation but not for the solve timer",
+        find: "    const want = this.timerRunning() || this.animating;",
         replace: "    const want = this.animating;",
       },
       {

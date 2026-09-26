@@ -16,6 +16,7 @@ import type {
   PuzzleStaticAttributes,
   ReferenceModel,
   Size,
+  TimerReadout,
 } from "../engine/types.ts";
 import {
   installWorkerErrorReceivers,
@@ -24,6 +25,7 @@ import {
 import { nextAnimationFrame } from "../utils/timing.ts";
 import { type ChoiceNames, puzzleAugmentations } from "./augmentation.ts";
 import { puzzleDataMap } from "./catalog.ts";
+import { sameTimer } from "./timer.ts";
 import type { RemoteWorkerPuzzle, RemoteWorkerPuzzleFactory } from "./worker.ts";
 
 const sentryWebWorkerIntegration = import.meta.env.VITE_SENTRY_DSN
@@ -107,7 +109,6 @@ export class Puzzle {
       hasReference,
       canMarkAll,
       ignoresSecondaryButton,
-      isTimed,
       wantsStatusbar,
     }: PuzzleStaticAttributes,
   ) {
@@ -122,7 +123,6 @@ export class Puzzle {
     this.hasReference = hasReference;
     this.canMarkAll = canMarkAll;
     this.ignoresSecondaryButton = ignoresSecondaryButton;
-    this.isTimed = isTimed;
     this.wantsStatusbar = wantsStatusbar;
   }
 
@@ -198,6 +198,11 @@ export class Puzzle {
             : "",
         );
         break;
+      case "timer-change":
+        // Compared by value: the engine sends a fresh object each second.
+        if (!sameTimer(this._timer.get(), message.timer))
+          this._timer.set(message.timer);
+        break;
       default:
         assertNever(message, "Puzzle: notifyChange");
     }
@@ -225,7 +230,6 @@ export class Puzzle {
   public readonly hasReference: boolean;
   public readonly canMarkAll: boolean;
   public readonly ignoresSecondaryButton: boolean;
-  public readonly isTimed: boolean;
   public readonly wantsStatusbar: boolean;
 
   // Reactive properties
@@ -267,6 +271,9 @@ export class Puzzle {
   private _restoreGameId = signal<string | null>(null);
   private _canFormatAsText = signal(false);
   private _statusbarText = signal<string>("");
+  /** The solve timer, or `null` while the player has it switched off for this
+   * game. */
+  private _timer = signal<TimerReadout | null>(null);
   private _generatingGame = signal<boolean>(false);
   private _autoHintActive = signal<boolean>(false);
   private _helpMessage = signal<string>("");
@@ -442,6 +449,14 @@ export class Puzzle {
 
   public get statusbarText(): string | null {
     return this._statusbarText.get();
+  }
+
+  public get timer(): TimerReadout | null {
+    return this._timer.get();
+  }
+
+  public async setTimerPaused(paused: boolean): Promise<void> {
+    await this.workerPuzzle.setTimerPaused(paused);
   }
 
   public get generatingGame(): boolean {

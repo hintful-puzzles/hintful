@@ -35,6 +35,7 @@ import "@awesome.me/webawesome/dist/components/dropdown/dropdown.js";
 import "@awesome.me/webawesome/dist/components/dropdown-item/dropdown-item.js";
 import "@awesome.me/webawesome/dist/components/icon/icon.js";
 import "./history.ts";
+import "./timer.ts";
 import "./type-menu.ts";
 
 /** One row of the rail. */
@@ -115,6 +116,7 @@ export class PuzzleRail extends SignalWatcher(LitElement) {
       <section part="group" aria-label="Your position in this game">
         <h2 part="group-label">Your position</h2>
         <puzzle-history part="timeline"></puzzle-history>
+        <puzzle-timer></puzzle-timer>
         ${this.renderStatusLine()}
         ${this.renderRow({
           command: "undo",
@@ -453,6 +455,14 @@ export class PuzzleRail extends SignalWatcher(LitElement) {
         letter-spacing: 0.06em;
         text-transform: uppercase;
         color: var(--app-color-text-faint);
+      }
+
+      /* Aligned with the move counter above it, icon over icon. */
+      puzzle-timer::part(base) {
+        display: flex;
+        gap: 0.625rem;
+        min-height: var(--app-row-rail);
+        padding-inline: 0.5rem;
       }
 
       [part="status"] {

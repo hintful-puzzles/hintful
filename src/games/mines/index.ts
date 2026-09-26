@@ -4,7 +4,7 @@
  * Mines is the collection's exemplar of desc supersession
  * (`Game.supersededDesc`): it generates its mine layout on the *first click*,
  * so the desc the player starts from names no layout at all, and must be
- * replaced once the real board exists. It also runs a live timer (`isTimed`).
+ * replaced once the real board exists. Its timer is on by default (`isTimed`).
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
@@ -297,15 +297,11 @@ export const minesGame: Game<
       validradius: 0,
       flashIsDeath: false,
       deaths: 0,
-      everCompleted: false,
       cursor: newCursor(),
     };
   },
   encodeUi,
   decodeUi,
-  changedState(ui: MinesUi, _old: MinesState | null, newState: MinesState): void {
-    if (newState.completed) ui.everCompleted = true;
-  },
 
   interpretMove(
     s: MinesState,
@@ -438,6 +434,9 @@ export const minesGame: Game<
               : around(w, h, x, y).filter((q) => mines[q.y * w + q.x]).length;
           }
         }
+        // The board is finished, and `cheated` makes it "solved-with-help".
+        // Upstream never set this, so its Solve left the game "ongoing".
+        ret.completed = true;
       } else {
         // A full corrections grid, standard-Minesweeper style (mines.c:2788).
         for (let i = 0; i < w * h; i++) {
@@ -504,6 +503,12 @@ export const minesGame: Game<
     return s.completed ? "solved" : "ongoing";
   },
 
+  // A death is not a loss (the player undoes and plays on), yet nobody is
+  // playing a dead board, so the timer holds on it.
+  timerHolds(s: MinesState): boolean {
+    return s.dead;
+  },
+
   statusbarText(s: MinesState, ui: MinesUi): string {
     let mines = 0;
     let markers = 0;
@@ -567,12 +572,6 @@ export const minesGame: Game<
       }
     }
     return 0;
-  },
-
-  timingState(s: MinesState, ui: MinesUi): boolean {
-    // The clock stops before the first click, after death, after a win, and
-    // once the game has ever been completed (mines.c game_timing_state:3332).
-    return !(s.dead || s.completed || ui.everCompleted || !s.layout.mines);
   },
 
   colors(defaultBackground: Color): Color[] {

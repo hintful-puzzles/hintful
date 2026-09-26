@@ -277,7 +277,7 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
   preferredTileSize: { kind: "internal", why: "layout" },
   animLength: { kind: "internal", why: "animation timing" },
   flashLength: { kind: "internal", why: "animation timing" },
-  timingState: { kind: "internal", why: "whether the clock runs" },
+  timerHolds: { kind: "internal", why: "when the solve timer waits" },
   serializeMove: { kind: "internal", why: "save format" },
   deserializeMove: { kind: "internal", why: "save format" },
   encodeUi: { kind: "internal", why: "save format" },

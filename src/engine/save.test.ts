@@ -16,13 +16,13 @@ function driven(game: typeof fakeGame = fakeGame) {
     [...notes].reverse().find((n) => n.type === "game-state-change") as
       | Extract<ChangeNotification, { type: "game-state-change" }>
       | undefined;
-  const statusBar = () =>
+  const timer = () =>
     (
-      [...notes].reverse().find((n) => n.type === "status-bar-change") as
-        | Extract<ChangeNotification, { type: "status-bar-change" }>
+      [...notes].reverse().find((n) => n.type === "timer-change") as
+        | Extract<ChangeNotification, { type: "timer-change" }>
         | undefined
-    )?.statusBarText;
-  return { m, state, statusBar };
+    )?.timer ?? null;
+  return { m, state, timer };
 }
 
 describe("save codec", () => {
@@ -309,12 +309,13 @@ describe("Midend save/restore round-trip", () => {
     const timed = { ...fakeGame, isTimed: true };
     const a = driven(timed);
     a.m.newGame();
+    a.m.processInput(0, 0, LEFT_BUTTON); // the timer counts from the first move
     a.m.timer(83);
 
     const b = driven(timed);
     expect(b.m.loadGame(a.m.saveGame())).toBeNull();
     expect(decodeSave(a.m.saveGame()).timerElapsed).toBe(83);
-    expect(b.statusBar()).toMatch(/^\[1:23\]/);
+    expect(b.timer()?.seconds).toBe(83);
   });
 
   it("refuses a save belonging to a different puzzle", () => {

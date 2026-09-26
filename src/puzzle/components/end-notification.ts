@@ -8,6 +8,7 @@ import { cssWATweaks } from "../../utils/css.ts";
 import { sleep } from "../../utils/timing.ts";
 import { puzzleContext } from "../contexts.ts";
 import type { Puzzle } from "../puzzle.ts";
+import { formatElapsed } from "../timer.ts";
 
 // Register components
 import "@awesome.me/webawesome/dist/components/button/button.js";
@@ -109,7 +110,7 @@ export class PuzzleEndNotification extends SignalWatcher(LitElement) {
       >
         <div part="header">
           ${icon ? html`<wa-icon part="icon" name=${icon}></wa-icon>` : nothing}
-          <div part="message" id="message">${message}</div>
+          <div part="message" id="message">${message}${this.renderTime()}</div>
           <wa-button part="dismiss" appearance="plain" @click=${this.handleDismissClick}>
             <wa-icon library="system" name="xmark" variant="solid" label="Close"></wa-icon>
           </wa-button>
@@ -119,6 +120,20 @@ export class PuzzleEndNotification extends SignalWatcher(LitElement) {
         </div>
       </dialog>
     `;
+  }
+
+  /**
+   * The solve time, for a player who has the timer on. **Help is said beside
+   * it**: a time reached with a hint or the solver is still the player's time,
+   * but presenting it bare would claim something it is not.
+   */
+  private renderTime() {
+    const timer = this.puzzle?.timer ?? null;
+    if (timer === null || this.puzzle?.status === "lost") return nothing;
+    const time = formatElapsed(timer.seconds);
+    return html`<div part="time">
+      ${timer.assisted ? `Finished in ${time}, with help` : `Solved in ${time}`}
+    </div>`;
   }
 
   private renderLostActions() {
@@ -339,6 +354,13 @@ export class PuzzleEndNotification extends SignalWatcher(LitElement) {
         font-size: var(--wa-font-size-l);
         font-weight: var(--wa-font-weight-semibold);
         line-height: var(--wa-line-height-condensed);
+      }
+      [part~="time"] {
+        margin-block-start: var(--wa-space-2xs);
+        font-size: var(--wa-font-size-s);
+        font-weight: var(--wa-font-weight-normal);
+        color: var(--wa-color-text-quiet);
+        font-variant-numeric: tabular-nums;
       }
       [part~="dismiss"] {
         margin: calc(-1 * var(--wa-space-xs));

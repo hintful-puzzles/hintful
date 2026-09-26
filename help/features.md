@@ -337,6 +337,23 @@ want goes with its ::checkpoint-remove:: delete button.
 
 ::experimental:: Checkpoints are experimental and may change shape.
 
+## Timing your solve {#timer}
+
+Any puzzle can time you. Turn on *Show timer* in that puzzle’s
+<command-link command="settings:puzzle">preferences</command-link> and a
+::timer:: clock appears beside the move count. Each puzzle remembers its own
+choice. Mines starts with the timer on, since its players expect one; every
+other puzzle starts with it off.
+
+The clock starts with your first move, not when the board is dealt, and it
+stops while the app is out of sight. Once you have solved the board, the time
+is final: undoing afterwards will not restart it. If you lose (in Mines, say),
+the clock waits while the board stays lost and carries on if you undo.
+
+When you solve the board, the time appears in the message that congratulates
+you. If you used a hint or the solver on that board, the message says so
+beside the time.
+
 ## Autosave {#autosave}
 
 Each puzzle keeps your game in progress and resumes it when you come back,

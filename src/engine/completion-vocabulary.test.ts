@@ -31,10 +31,6 @@
  * `cheated`, and a `v: 1` save that spells it `usedSolve` is upgraded on read
  * rather than discarded (`save.ts`). One word, one meaning, from a game's state
  * through to the file.
- *
- * `MinesUi.everCompleted` is deliberately not covered: it is a `Ui` field
- * meaning "was *ever* won" — it survives an undo, unlike the state's, and the
- * two would otherwise read as duplicates sitting next to each other.
  */
 
 import { beforeAll, describe, expect, it } from "vitest";

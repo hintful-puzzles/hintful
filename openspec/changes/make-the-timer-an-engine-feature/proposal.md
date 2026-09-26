@@ -1,6 +1,6 @@
 # make-the-timer-an-engine-feature
 
-**Status: scaffolded, not started.** Owner request from the device pass
+Owner request from the device pass
 (`test-touch-on-a-real-device`, 2026-09-24): *"why does only Mines have a timer?
 I think we should make the timer an engine feature that could be enabled in any
 game."*

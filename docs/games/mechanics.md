@@ -548,8 +548,8 @@ Solve is [solver & generator](./solver-and-generator.md) § "Solve and the gener
 
 | Flag | Means | Trap |
 | --- | --- | --- |
-| `wantsStatusbar` | game writes `statusbarText` | timed games get a `[M:SS]` prefix engine-side |
-| `isTimed` | midend runs the clock while `timingState(state, ui)` is true | browser-verify the tick/freeze/resume — see "Timed games" |
+| `wantsStatusbar` | game writes `statusbarText` | the timer is not in it; it has its own chrome |
+| `isTimed` | the solve timer starts **on** for this game | only the default of the engine's `show-timer` preference — see "Timed games" |
 | `canSolve` | `solve` present | test through a real `Midend` when `aux` matters |
 | `canFormatAsText` | `textFormat` present | may still return `null` for params with no rendering (Loopy: square grid only) |
 | `canMarkAll` | game handles the `M`/`m` key; shell shows the button | see "Pencil marks" |
@@ -639,12 +639,21 @@ games declare the shared prefs from
 
 ## Timed games
 
-`isTimed: true` + `timingState(state, ui)`: the midend runs the clock while
-the predicate holds and prefixes the status bar engine-side; your
-`statusbarText` returns only the game text. Mines stops the clock before the
-first click, on death, on a win, and for ever once `ui.completed` was set.
-**Browser-verify a timed game** — watch the clock tick, freeze and resume; the
-timer path is real-frontend behavior no unit tier exercises.
+**Every game has the solve timer; a game writes nothing to get it.** The midend
+offers a `show-timer` preference in every game (`isTimed` is only its default)
+and decides when it counts: from the first move, while the status is `ongoing`,
+never while the page is hidden, and never again once the board has been solved
+(`Midend.timerRunning`). So a game's `status` is what stops its clock: a Solve
+that leaves the board `ongoing` keeps the clock running, and that is a
+bookkeeping bug to fix (Mines had it).
+
+The one thing a game may add is `timerHolds(state)`: a board nobody can play on
+that `status` still calls `ongoing`, because the player is meant to undo out of
+it. Mines' death is the case. It states a fact about the board, never a clock
+policy; if you want the clock to behave differently, the rule is the engine's
+to change. **Browser-verify** the tick, the hold and the resume: the frame loop
+and the page-visibility pause are real-frontend behavior that no unit tier
+exercises.
 
 ## A board decided at first click
 

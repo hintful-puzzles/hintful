@@ -40,6 +40,7 @@ import "../puzzle/components/history.ts";
 import "../puzzle/components/keys.ts";
 import "../puzzle/components/type-menu.ts";
 import "../puzzle/components/rail.ts";
+import "../puzzle/components/timer.ts";
 import "../components/puzzle-switcher.ts";
 import "../puzzle/components/view-interactive.ts";
 import "../puzzle/components/end-notification.ts";
@@ -214,9 +215,10 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
 
   /**
    * The phone's top bar: back, the game's name, its two parameter chips and
-   * the move count. **Four items**, which is the point — a non-wrapping row of
-   * commands overflows at 390px. The commands live in the bottom bar and behind
-   * it instead, so nothing here competes for the width.
+   * the move count, then the solve timer when the player has it on. **Readouts,
+   * not commands**, which is the point — a non-wrapping row of commands
+   * overflows at 390px. The commands live in the bottom bar and behind it
+   * instead, so nothing here competes for the width.
    */
   private renderTopBar(): TemplateResult {
     return html`
@@ -232,6 +234,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         ></puzzle-type-menu>
         <puzzle-history class="top-counter" @click=${this.handleChromeClick}>
         </puzzle-history>
+        <puzzle-timer></puzzle-timer>
       </header>
     `;
   }
@@ -1254,6 +1257,12 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
       .top-counter {
         flex: 0 0 auto;
         margin-inline-start: auto;
+      }
+
+      /* The width is the game's name's: an M:SS beside the move count reads as
+       * a time without its icon. */
+      .top-bar puzzle-timer::part(icon) {
+        display: none;
       }
 
       /* The status line and the hint sit ABOVE the bar, where a thumb resting

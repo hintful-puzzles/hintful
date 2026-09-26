@@ -104,6 +104,8 @@ export interface PuzzleEngineSurface {
 
   loadGame(data: Uint8Array<ArrayBuffer>): string | null;
   saveGame(): Uint8Array<ArrayBuffer>;
+  /** Hold the solve timer while the page is hidden; see `EngineCore`. */
+  setTimerPaused(paused: boolean): void;
 
   attachCanvas(canvas: OffscreenCanvas, fontInfo: FontInfo): void;
   deleteDrawing(): void;

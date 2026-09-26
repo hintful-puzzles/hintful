@@ -5,7 +5,7 @@ import { type FakeDrawState, fakeGame } from "./fake-game.ts";
 import type { Game, GameDrawing } from "./game.ts";
 import { UI_UPDATE } from "./game.ts";
 import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
-import { Midend } from "./midend.ts";
+import { Midend, SHOW_TIMER_PREF } from "./midend.ts";
 import { LEFT_BUTTON, RIGHT_BUTTON } from "./pointer.ts";
 import { decodeSave, encodeSave } from "./save.ts";
 import type { ChangeNotification, Color } from "./types.ts";
@@ -134,7 +134,7 @@ describe("Midend lifecycle + notifications", () => {
     h.m.newGame();
   });
 
-  it("newGame emits id, params, state and status-bar notifications", () => {
+  it("newGame emits id, params, state, status-bar and timer notifications", () => {
     const types = new Set(h.notes.map((n) => n.type));
     expect(types).toEqual(
       new Set([
@@ -142,6 +142,7 @@ describe("Midend lifecycle + notifications", () => {
         "params-change",
         "game-state-change",
         "status-bar-change",
+        "timer-change",
       ]),
     );
   });
@@ -515,51 +516,124 @@ describe("Midend.requestKeys forwards Game.requestKeys", () => {
 });
 
 describe("Midend timer", () => {
-  /** Mines is the real `isTimed` game; this is the same contract in miniature. */
+  /** `isTimed` is only the default of the engine's `show-timer` preference. */
   const timedGame = { ...fakeGame, isTimed: true } as typeof fakeGame;
-  const clock = (h: ReturnType<typeof harness>) =>
-    /^\[(\d+):(\d\d)\]/.exec(
-      (
-        h.last("status-bar-change") as Extract<
-          ChangeNotification,
-          { type: "status-bar-change" }
-        >
-      ).statusBarText,
-    );
+  const readout = (h: ReturnType<typeof harness>) =>
+    (h.last("timer-change") as Extract<ChangeNotification, { type: "timer-change" }>)
+      .timer;
+  const inc = (h: ReturnType<typeof harness>) => h.m.processInput(0, 0, LEFT_BUTTON);
+  const dec = (h: ReturnType<typeof harness>) => h.m.processInput(0, 0, RIGHT_BUTTON);
 
-  it("an untimed game never activates the timer and timer() is inert", () => {
+  it("is off by default in a game that does not ask for it, and its tick is inert", () => {
     const h = harness();
     h.m.newGame();
+    dec(h);
     h.m.timer(1.5);
+    expect(readout(h)).toBeNull();
     expect(h.timerActive()).toBe(false);
-    // No status-bar churn from the inert tick beyond the newGame ones.
-    expect(h.m.formatAsText()).toBe("count=0");
   });
 
-  // The other half of the same predicate. `syncTimer` wants the clock running
-  // when *either* the game is timed or an animation is in flight, and the fake
-  // game does not animate — so with only the test above, the timed disjunct
-  // could be deleted and nothing would notice, on the one hook Mines' whole
-  // scoring rests on.
-  it("a timed game runs its clock while play is ongoing and stops when solved", () => {
+  it("is offered in every game as the engine's own preference", () => {
+    const h = harness();
+    h.m.newGame();
+    // The fake game declares no `prefs` at all.
+    expect(h.m.getPreferencesConfig().items[SHOW_TIMER_PREF]).toEqual({
+      type: "boolean",
+      name: "Show timer",
+    });
+    expect(h.m.getPreferences()[SHOW_TIMER_PREF]).toBe(false);
+    h.m.setPreferences({ [SHOW_TIMER_PREF]: true });
+    expect(h.m.getPreferences()[SHOW_TIMER_PREF]).toBe(true);
+    expect(readout(h)).toEqual({ seconds: 0, assisted: false });
+  });
+
+  // `syncTimer` wants the tick when *either* the timer counts or an animation
+  // is in flight, and the fake game does not animate — so this is what holds
+  // the counting disjunct.
+  it("counts from the first move while play is ongoing", () => {
     const h = harness(timedGame);
     h.m.newGame();
+    expect(readout(h)).toEqual({ seconds: 0, assisted: false });
+    expect(h.timerActive()).toBe(false);
+    h.m.timer(5);
+    expect(readout(h)?.seconds).toBe(0);
+
+    dec(h);
     expect(h.timerActive()).toBe(true);
+    h.m.timer(65.5);
+    expect(readout(h)).toEqual({ seconds: 65, assisted: false });
+  });
 
-    h.m.timer(65);
-    expect(clock(h)?.slice(1)).toEqual(["1", "05"]);
+  it("holds while paused and picks up where it stopped", () => {
+    const h = harness(timedGame);
+    h.m.newGame();
+    dec(h);
+    h.m.timer(10);
+    h.m.setTimerPaused(true);
+    expect(h.timerActive()).toBe(false);
+    h.m.timer(100);
+    expect(readout(h)?.seconds).toBe(10);
+    h.m.setTimerPaused(false);
+    h.m.timer(2);
+    expect(readout(h)?.seconds).toBe(12);
+  });
 
-    for (let i = 0; i < 3; i++) h.m.processInput(0, 0, LEFT_BUTTON); // reach the target
+  it("stops for good at a solve, even after undoing it, and across a save", () => {
+    const h = harness(timedGame);
+    h.m.newGame();
+    for (let i = 0; i < 3; i++) inc(h);
     expect(h.state()?.status).toBe("solved");
     expect(h.timerActive()).toBe(false);
+    h.m.undo();
+    expect(h.state()?.status).toBe("ongoing");
+    h.m.timer(30);
+    expect(h.timerActive()).toBe(false);
+    expect(readout(h)?.seconds).toBe(0);
+
+    // Undone and played differently, the history no longer passes through
+    // the solve, so only the save's own flag can say the time is final.
+    dec(h);
+    const env = decodeSave(h.m.saveGame());
+    expect(env.timerStopped).toBe(true);
+    const b = harness(timedGame);
+    expect(b.m.loadGame(h.m.saveGame())).toBeNull();
+    expect(b.timerActive()).toBe(false);
   });
 
-  it("a new game resets the clock", () => {
+  it("says a time was helped once a hint is shown, and a new game resets both", () => {
     const h = harness(timedGame);
     h.m.newGame();
+    dec(h);
     h.m.timer(42);
+    expect(h.m.hint()).toBeNull();
+    expect(readout(h)).toEqual({ seconds: 42, assisted: true });
+    expect(decodeSave(h.m.saveGame()).hinted).toBe(true);
+
     h.m.newGame();
-    expect(clock(h)?.slice(1)).toEqual(["0", "00"]);
+    expect(readout(h)).toEqual({ seconds: 0, assisted: false });
+  });
+
+  it("waits on a board the game says holds it, and resumes when it no longer does", () => {
+    // A Mines death in miniature: below zero the board is "dead" but ongoing.
+    const h = harness({ ...timedGame, timerHolds: (s) => s.count < 0 });
+    h.m.newGame();
+    dec(h);
+    h.m.timer(10);
+    expect(h.timerActive()).toBe(false);
+    expect(readout(h)?.seconds).toBe(0);
+    h.m.undo();
+    inc(h);
+    h.m.timer(4);
+    expect(readout(h)?.seconds).toBe(4);
+  });
+
+  it("switched off mid-game, stops counting and reports nothing", () => {
+    const h = harness(timedGame);
+    h.m.newGame();
+    dec(h);
+    h.m.setPreferences({ [SHOW_TIMER_PREF]: false });
+    expect(readout(h)).toBeNull();
+    expect(h.timerActive()).toBe(false);
   });
 });
 

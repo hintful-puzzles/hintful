@@ -222,6 +222,14 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
     return transfer(data, [data.buffer]);
   }
 
+  setTimerPaused(paused: boolean): void {
+    // A hidden page gets no animation frames, so a loop that stayed armed for
+    // an animation would hand the whole hidden interval to the first frame
+    // after resuming, and the clock would count it.
+    if (!paused) this.lastTimeMs = self.performance.now();
+    this.engine.setTimerPaused(paused);
+  }
+
   // --- drawing ----------------------------------------------------
 
   attachCanvas(canvas: OffscreenCanvas, fontInfo: FontInfo): void {

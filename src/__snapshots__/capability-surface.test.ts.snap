@@ -873,7 +873,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "mines",
     "members": [
-      "changedState",
       "decodeUi",
       "describeParams",
       "encodeUi",
@@ -884,13 +883,12 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "statusbarText",
       "supersededDesc",
       "textFormat",
-      "timingState",
+      "timerHolds",
       "transposeParams",
     ],
     "ui": [
       "cursor",
       "deaths",
-      "everCompleted",
       "flashIsDeath",
       "hradius",
       "hx",

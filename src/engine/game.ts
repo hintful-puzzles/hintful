@@ -219,6 +219,10 @@ export interface Game<
   /** Catalog puzzleId; the registry key. */
   readonly id: string;
   readonly wantsStatusbar: boolean;
+  /** Whether the solve timer is on for this game before the player chooses.
+   * Every game has the timer, through the engine's `show-timer` preference;
+   * this is only its default, for a game whose players expect a clock (Mines).
+   * When it runs is the engine's rule, not the game's (`Midend.timerRunning`). */
   readonly isTimed: boolean;
   readonly canSolve: boolean;
   readonly canFormatAsText: boolean;
@@ -585,7 +589,11 @@ export interface Game<
   ): void;
   animLength?(a: State, b: State, dir: number, ui: Ui): number;
   flashLength?(a: State, b: State, dir: number, ui: Ui): number;
-  timingState?(s: State, ui: Ui): boolean;
+  /** A board nobody can play on that `status` still calls "ongoing", because
+   * the player is expected to undo out of it (a Mines death). The solve timer
+   * holds while this is true. When the timer runs is otherwise the engine's
+   * rule; this states a fact about the board, not a clock policy. */
+  timerHolds?(s: State): boolean;
 
   /** Serialize/parse a move for the save file. Default: the move must
    * be structured-clone/JSON-safe and is stored as-is. */

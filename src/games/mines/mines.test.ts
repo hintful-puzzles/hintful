@@ -14,6 +14,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { decodeSave } from "../../engine/save.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import type { ChangeNotification } from "../../engine/types.ts";
 import { minegen } from "./generator.ts";
 import { minesGame } from "./index.ts";
 import { borderFor } from "./render.ts";
@@ -402,16 +403,17 @@ describe("mines supersede + midend", () => {
     expect(solved.grid[1]).toBe(66); // the wrong flag, crossed out
   });
 
-  it("encodeUi / decodeUi round-trips deaths + completed (design D7)", () => {
+  it("encodeUi / decodeUi round-trips deaths, and reads an older save's C", () => {
     const ui = minesGame.newUi({} as never);
     ui.deaths = 3;
-    ui.everCompleted = true;
     const enc = minesGame.encodeUi?.(ui) ?? "";
-    expect(enc).toBe("D3C");
+    expect(enc).toBe("D3");
     const ui2 = minesGame.newUi({} as never);
     minesGame.decodeUi?.(ui2, enc);
     expect(ui2.deaths).toBe(3);
-    expect(ui2.everCompleted).toBe(true);
+    const ui3 = minesGame.newUi({} as never);
+    minesGame.decodeUi?.(ui3, "D4C");
+    expect(ui3.deaths).toBe(4);
   });
 });
 
@@ -489,24 +491,43 @@ describe("mines chord preview", () => {
 // --- timer -------------------------------------------------------------
 
 describe("mines timer", () => {
-  it("does not run before the first click, runs after, stops on win/completed", () => {
-    const p = decodeParams("9x9n10");
-    // Before any layout: clock stopped.
-    const preState = minesGame.newState(
-      p,
-      minesGame.newDesc(p, randomNew("timer")).desc,
+  // Mines keeps upstream's clock through the engine's rule alone: the first
+  // click is the first move, and a win is a solve.
+  it("is on by default, starts at the first click and stays stopped after a win", () => {
+    const notes: ChangeNotification[] = [];
+    let ticking = false;
+    const m = new Midend(minesGame);
+    m.setCallbacks(
+      (n) => notes.push(n),
+      (active) => {
+        ticking = active;
+      },
     );
-    const ui = minesGame.newUi(preState);
-    expect(minesGame.timingState?.(preState, ui)).toBe(false);
+    expect(m.newGameFromId(seedId("9x9n10", "timer"))).toBeNull();
+    const seconds = () =>
+      (
+        [...notes].reverse().find((n) => n.type === "timer-change") as
+          | Extract<ChangeNotification, { type: "timer-change" }>
+          | undefined
+      )?.timer?.seconds;
 
-    // After the first click the clock runs…
-    const started = minesGame.executeMove(preState, openMove(4, 4));
-    expect(started.completed).toBe(false);
-    expect(minesGame.timingState?.(started, ui)).toBe(true);
-    // …and a game ever won (the ui flag `changedState` sets) stops it for good.
-    const wonUi = minesGame.newUi(started);
-    wonUi.everCompleted = true;
-    expect(minesGame.timingState?.(started, wonUi)).toBe(false);
+    expect(seconds()).toBe(0);
+    expect(ticking).toBe(false);
+    m.playMoves([openMove(4, 4)]);
+    expect(ticking).toBe(true);
+    m.timer(7);
+    expect(seconds()).toBe(7);
+
+    // The win's flash keeps the tick alive a moment, so the time is what is
+    // asserted, not the tick.
+    expect(m.solve()).toBeNull();
+    m.timer(5);
+    expect(seconds()).toBe(7);
+    expect(ticking).toBe(false);
+    m.undo();
+    m.timer(5);
+    expect(seconds()).toBe(7);
+    expect(ticking).toBe(false);
   });
 });
 
