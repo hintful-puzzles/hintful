@@ -271,8 +271,9 @@ it's revealing the answer.
   (Easy/Normal/Hard/Tricky/Extreme/…) may require guessing.
 - **Movement / objective games are out of scope.** Fifteen, Sixteen, Flood and
   Untangle are always solvable and carry no deductive "why"; their hints are
-  imperative/heuristic by design (hints.md § "Non-deductive (heuristic) hints"), and
-  Untangle's `aux`-walk is the sanctioned non-deductive form.
+  imperative/heuristic by design (hints.md § "Non-deductive (heuristic) hints"),
+  and Untangle's narrated objective with a solution fallback is the sanctioned
+  non-deductive form.
 
 ### Check, Tactic, Search
 
@@ -815,8 +816,10 @@ generated game.** The midend retains `aux` from `newDesc` and passes it to
 `solve(orig, curr, aux)` — but only for a new game or a `#seed` id; a `:desc`
 id or a loaded save has no aux, so Solve correctly reports "not known",
 faithful to upstream. Most games re-derive the solution in `solve` and ignore
-`aux`; reach for `aux` only when re-derivation is impractical (Untangle
-stores the untangled layout). If you take `aux`, **test Solve through a real
+`aux`; reach for `aux` only when re-derivation is impractical, and check that
+it really is — Untangle leaned on `aux` for its layout until a resumed game's
+Solve and hint both failed, and a layout computed from the edges turned out to
+take tens of milliseconds. If you take `aux`, **test Solve through a real
 `Midend`**, not just the game's `solve` directly — the threading lives in the
 midend, so a direct unit test can pass while the shipped Solve is a no-op.
 

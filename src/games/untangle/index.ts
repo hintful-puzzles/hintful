@@ -10,9 +10,11 @@
  *    format (`canFormatAsText = false`).
  *  - **No `findMistakes`**: crossed edges drawn red ARE the mistake
  *    feedback.
- *  - **The hint is unnarrated**: Untangle has no deduction to teach, so by
- *    owner-approved divergence from the Palisade quality bar the hint is a
- *    suggested move (highlight + the existing move animation). See `hint.ts`.
+ *  - **A hint, and a Solve that needs no `aux`**: the hint moves the point
+ *    that removes the most crossings and says how many (`hint.ts`); both it
+ *    and Solve fall back on a layout computed from the edges alone
+ *    (`solution.ts`), so a shared game ID or a resumed save is as solvable
+ *    as a freshly generated board. Upstream's Solve refuses without `aux`.
  *  - **Preferences** via the engine `prefs` hook: snap-to-grid,
  *    show-crossed-edges (default ON), vertex-style.
  */
@@ -47,17 +49,16 @@ import type { Color, Point, Size } from "../../engine/types.ts";
 import { newUntangleDesc } from "./generator.ts";
 import { deduceUntangleHintPlan, type UntangleHint } from "./hint.ts";
 import { FLASH_TIME, redrawUntangle } from "./render.ts";
+import { closestOrientation, solvedLayout } from "./solution.ts";
 import {
   buildEdges,
   coordLimit,
   DRAG_THRESHOLD,
   decodeGame,
-  dihedralSolvedUnits,
   findCrossings,
   makeCircle,
   PLAY_MARGIN,
   PREFERRED_TILE_SIZE,
-  parseAux,
   placeMove,
   type UntangleDrawState,
   type UntangleMove,
@@ -394,24 +395,17 @@ export const untangleGame: Game<
 
   status: (s) => (s.completed ? "solved" : "ongoing"),
 
-  // --- hint (aux solution when known, else heuristic; see hint.ts) ---
+  // --- hint (the move that clears the most crossings; see hint.ts) ---
   hint: (s, aux) => deduceUntangleHintPlan(s, aux),
 
-  // --- solve (decode aux, pick the closest of 8 dihedral symmetries) -
-  solve: (orig, curr, aux) => {
-    const auxPts = parseAux(aux ?? null, orig.n);
-    if (auxPts === null) {
-      return aux
-        ? { ok: false, error: "Internal error: aux_info badly formatted" }
-        : { ok: false, error: "Solution not known for this puzzle" };
-    }
-    // Quantize the dihedral-matched model-unit solution to the d=2 grid
-    // upstream's solve emits.
-    const points = dihedralSolvedUnits(curr, auxPts).map((p, i) => ({
+  // --- solve (the solved layout, in the symmetry closest to the board) -
+  solve: (_orig, curr, aux) => {
+    const layout = solvedLayout(curr.n, curr.w, curr.edges, aux);
+    if (layout === null)
+      return { ok: false, error: "No solution exists for this puzzle" };
+    const points = closestOrientation(layout, curr.pts, curr.w).map((p, i) => ({
       i,
-      x: Math.floor(p.x * 2 + 0.5),
-      y: Math.floor(p.y * 2 + 0.5),
-      d: 2,
+      ...p,
     }));
     return { ok: true, move: { kind: "place", points, solving: true } };
   },

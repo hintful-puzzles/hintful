@@ -77,10 +77,6 @@ const EXCEPTIONS: Record<string, string> = {
   "The ball is dead: no move can be played from here. Undo to bring it back.":
     "Inertia: not 'deduction ran out' but a board state with no legal move at " +
     "all. Naming the actual situation is the whole of the hint's value here.",
-  "No single move reduces the crossings, so try moving a tangled vertex.":
-    "Untangle, the game with genuinely nothing to deduce: its hint's whole " +
-    "value is naming what the player can still try, which no shared message " +
-    "could say for it.",
 
   // --- not hint refusals: Solve, and the description parsers --------------
   "Unable to find a solution from this starting point":
@@ -110,7 +106,6 @@ const EXCEPTIONS: Record<string, string> = {
   "Puzzle is inconsistent": "Solve.",
   "Puzzle is unsolvable": "Solve.",
   "Puzzle is already solved": "Solve.",
-  "This puzzle is already solved.": "Solve.",
   "This puzzle instance contains a contradiction": "Solve.",
   "Game is already solved": "Solve.",
   "Game has not been started yet": "Solve, before Mines' first click.",
@@ -129,7 +124,6 @@ const EXCEPTIONS: Record<string, string> = {
   "Border description contains invalid characters.": "Description parser.",
   "Border description is too long.": "Description parser.",
   "invalid char in aux": "Aux parser.",
-  "Internal error: aux_info badly formatted": "Aux parser.",
 };
 
 interface Found {

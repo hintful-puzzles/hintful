@@ -206,8 +206,8 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * `history[0]` holds. */
   private descSuperseded = false;
   /** The solved-layout hint a generator returns alongside `desc` (upstream
-   * `aux_info`), handed to a game's `solve` and `hint` (Untangle reconstructs
-   * the untangled positions from it). Set only on a freshly *generated* game,
+   * `aux_info`), handed to a game's `solve` and `hint`. Set only on a freshly
+   * *generated* game,
    * never for a `:desc` id or a loaded save, as upstream. */
   private aux?: string;
   private seed?: string;

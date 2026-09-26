@@ -204,8 +204,9 @@ description. The collection has **two houses**, chosen by whether the move is
 - **Movement / objective games** (Fifteen, Sixteen, Flood — the suggested move
   is *not* a logical necessity, just the recommended next action): use the
   **imperative** ("slide it into place", "move it to column 5", "fill with
-  red"). A necessity modal would be wrong. Untangle's heuristic hint carries
-  an empty explanation and is exempt entirely.
+  red"). A necessity modal would be wrong. Untangle states a measurement
+  instead ("This point's lines make 16 crossings. Moved here, they make only
+  four."), which is neither voice and needs neither.
 
 Pick the house by the *nature of the move*, not the genre: a deductive game
 whose hint ever recommends a non-forced move uses the imperative for that
@@ -545,7 +546,7 @@ seam to replace. Sentences several games speak word for word are the engine's
 `hint-text.ts` (the generic Latin arms, the forcing chain, the candidate
 games' two setup steps, the sliding-tile "Working on tile N:" prefix, and the
 list joiners). Exemplar: `src/games/tracks/hint-text.ts`. A hint that speaks
-no words (Untangle's) has no text file.
+no words would have no text file.
 
 - **Values arrive as the board means them, never as words.** An axis, a count,
   a direction constant, a monster bitmask: the plural, "both" at two, "a"/"an",
@@ -790,7 +791,8 @@ The `Game` hooks and the `Midend` lifecycle are in
   `explanation` and `highlights` (game-specific render data). Compute the
   **whole remaining plan** once; the midend advances steps as the player
   follows or auto-play executes them. `aux` (the generator's solution, when
-  present) enables the aux-walk (§ "Non-deductive (heuristic) hints"). The
+  present) is there for a hint that falls back on the solution (§ "Non-deductive
+  (heuristic) hints"). The
   optional third `ui` arg lets a game read a relevant preference (Towers'
   auto-pencil) — the midend passes `this.ui`; games that don't need it ignore
   it.
@@ -1134,8 +1136,10 @@ and so does an inlined copy of an approved one. It reads `src/games/**` **and
 the engine's hint builders**, because a refusal lives wherever a `hint()` is
 built and eleven of them are not built under `games/`. A game that genuinely
 should read differently adds itself to that test's `EXCEPTIONS` with the reason;
-Untangle and Inertia are the two that qualify today, and both qualify because
-naming their specific dead end *is* the hint's value.
+Inertia qualifies, because naming its specific dead end *is* the hint's value.
+Untangle once did too, with a refusal telling the player to move a tangled
+vertex themselves — the one thing the hint existed to do for them. It was
+replaced by a hint that never runs out on a solvable board.
 
 **There is one message for running out of deduction, not two.** It used to be a
 bare `NO_DEDUCTION_LEFT` and a `…_TRIAL_AND_ERROR` variant, and the distinction
@@ -2621,36 +2625,51 @@ animation are correct, which is exactly why it survived to a player.
 
 ## Non-deductive (heuristic) hints
 
-Not every game is deductive, and the two poles are **Untangle** (nothing to
-say) and **Inertia** (a great deal to say). Decide which you are before
-writing a line: ask *what does a move here cost the player if they get it
-wrong, and can I check that claim?* If the answer is "nothing you could
-name" — Untangle: no move is forced, you just want fewer crossings — a
-narration would fabricate a non-sequitur, and the hint ships with an **empty
-`explanation`** (owner-approved). If a move has a consequence you can
-*verify*, narrate it.
+Not every game is deductive. Its hint still has to say something true, and the
+question to ask before writing a line is *what can I measure or prove about
+this move, that the player can check?* **Untangle** has no forced move, but it
+has a measurable one: a point's crossings before and after. **Inertia** has a
+consequence it can prove (a gem stranded for ever). Narrate the measurement or
+the proof. Untangle once shipped with an empty `explanation` on the theory that
+there was nothing to say; there was a number all along.
 
-**Untangle's pattern** — the floor, not the ceiling. Exemplar:
+**Untangle's pattern — narrate an objective.** Exemplar:
 [`untangle/hint.ts`](../../src/games/untangle/hint.ts):
 
-- **Objective, not deduction.** Pick the move that most improves a cheap
-  scalar objective (edge-crossing pairs from `findCrossings`). A greedy loop
-  on a *working copy* — take the best strictly-improving single move, apply,
-  repeat until solved / no improvement / step cap — yields a multi-step plan
-  auto-hint plays as a progressive cleanup.
-- **Secondary objectives as a tie-break, not a second pass.** The plain
-  barycentric step collapses the layout toward the center; give each move
-  several candidate targets and, among those with the *best primary score*,
-  pick the best on a secondary objective (pairwise anti-clustering). Keep the
-  primary strictly primary; verify with a same-board A/B that the enhanced
-  heuristic stalls no more than the plain one. A tie-break beats an
-  "untangle, then spread" second pass, since the puzzle ends the instant the
-  primary hits zero — the final frame must already be spacious.
-- **Refuse honestly.** `{ ok: false }` when solved, and also when *no* single
-  move improves the objective — never a no-op or worsening move.
-- **No `hintKeepTrack`.** The default `"off"` is correct: the greedy tail was
-  computed for exact targets, so any deviation should drop the plan and
-  recompute.
+- **Objective, not deduction.** Pick the move that most improves a scalar the
+  player can count (crossing pairs), and say the count: *"This point's lines
+  make 16 crossings. Moved here, they make only four."* Search in floats for
+  speed, then **recount the chosen move exactly** with the game's own test; the
+  sentence quotes the exact numbers. Claim no more than was searched: a grid
+  search is not exhaustive, so the sentence never says "the best move".
+- **Show the number on the board.** Ring each crossing the move removes, and
+  draw the moved point in the hint color, so "this point" and "16 crossings"
+  are both things the player can see and count — the quality bar's "a hint
+  relies only on marks the player can make", from the other side.
+- **Search wide.** A handful of hand-picked candidate spots (neighbor centroid,
+  a few pushes outward) stalls on boards where an obvious move exists; a grid
+  over the whole board does not. Settle candidates one gain at a time, so the
+  expensive checks (clearance, spread, the exact recount) run only on the top
+  tier.
+- **Secondary objectives as a tie-break, not a second pass.** Among equal
+  gains, prefer the move that puts the point in its final place, then the
+  roomiest spot, counting the walls as crowding. Without the walls, "roomiest"
+  always means "against the frame". A tie-break beats an "untangle, then spread"
+  second pass, since the puzzle ends the instant the primary hits zero.
+- **Never refuse on a solvable board.** Greedy play genuinely runs out: from
+  realistic mid-game positions it did so on 20–40% of boards. The way out is the
+  solution itself (next paragraph). A refusal that tells the player to do what
+  the hint is for is the failure this pattern was rewritten to remove.
+- **Freeze what is placed, and orient to keep it placed.** Mixing greedy steps
+  with "move a point to its solved spot" cycles if greedy may move a placed
+  point off its spot again. So a point exactly in place is never moved, and the
+  solution's symmetry is re-chosen on each request as the one with the most
+  points already in place. Then every step either removes a crossing or places
+  one more point, and a hint recomputed after any step cannot loop.
+- **Short plans.** Every step is a fresh measurement and the midend recomputes
+  when a plan runs out, so cap the plan (six steps) and keep each request cheap.
+- **No `hintKeepTrack`.** The default `"off"` is correct: any deviation drops
+  the plan and the next request measures again.
 - **Highlight = the suggestion.** Carry a `{ vertex/cell, to }` highlight and
   draw the move (a `COL_HINT` line from piece to destination + a marker). Read
   the *source* from live state so an auto-hint slide shows the line shrink to
@@ -2661,16 +2680,16 @@ narration would fabricate a non-sequitur, and the hint ships with an **empty
   nothing extra: a hint-executed move rides that pipeline and the midend
   stretches it to `HINT_ANIM_S`.
 
-**Walk to the known solution via `aux` when a local heuristic can't finish.**
-A local objective can **stall at a local minimum** and look bad doing it. If
-the game *knows* its solution — the generator's `aux`, the same value `solve`
-uses — walking the player there is legitimate and robust. `hint(state, aux?)`
-receives `aux` (present for generated games, absent for descriptive ids), so
-prefer the `aux` plan when present and keep the heuristic as a fallback.
-Untangle's `deduceAuxPlan`: match the closest symmetry so the motion is
-minimal; rescale freely (affine maps preserve planarity) for a spacious
-reveal; order the reveal greedily so intermediate crossings stay low; share
-the `aux` parse + symmetry match with `solve`.
+**Fall back on the solution — and don't depend on `aux` for it.** A local
+objective can stall at a local minimum. Walking the player to the solution from
+there is legitimate, but `aux` is absent for a resumed save and for a shared
+game ID, and those are exactly the games a player comes back to stuck. So derive
+the solution from the board where it can be done: Untangle computes a
+crossing-free layout from the edges alone
+([`untangle/solution.ts`](../../src/games/untangle/solution.ts), over
+[`planar.ts`](../../src/games/untangle/planar.ts)), prefers `aux` only because
+the generator's layout is tidier, and verifies every layout with the game's own
+exact test before a player sees it. Solve shares the same layout.
 
 ### A non-deductive game with plenty to say
 

@@ -21,6 +21,7 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { newUntangleDesc } from "./generator.ts";
+import type { UntangleHint } from "./hint.ts";
 import { untangleGame } from "./index.ts";
 import {
   COL_CROSSEDLINE,
@@ -115,6 +116,14 @@ describe("Untangle render scenarios", () => {
     expect(recording.ops.some((o) => o.op === "circle" && o.fill === COL_HINT)).toBe(
       true,
     );
+
+    // Each crossing the step removes gets an unfilled two-stroke ring.
+    const cleared = (hint?.highlights as UntangleHint | undefined)?.cleared ?? [];
+    expect(cleared.length).toBeGreaterThan(0);
+    const rings = recording.ops.filter(
+      (o) => o.op === "circle" && o.fill === -1 && o.outline === COL_HINT,
+    );
+    expect(rings).toHaveLength(2 * cleared.length);
 
     expect(recording.ops).toMatchSnapshot();
   });

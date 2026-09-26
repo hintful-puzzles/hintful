@@ -4,7 +4,7 @@
  *
  * **Both populations are derived.** The games are the registry's hinting games
  * (`HINT_GAMES`), split by whether a hint on a real board says anything — which
- * is how Untangle, whose steps carry no words, is excused without a ledger. The
+ * is how a game whose steps carried no words would be excused without a ledger. The
  * text modules are whatever `hint-text.ts` files exist. Each side is asserted
  * against the other, so a speaking game without one fails, and so does a text
  * module left behind by a game whose hint stopped speaking.

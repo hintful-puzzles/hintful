@@ -304,7 +304,9 @@ const NARRATES_MOVES: Record<string, string> = {
   inertia:
     "movement: the one thing it can prove is a gem's unreachability, and its " +
     "steps narrate the consequence a slide has (`add-inertia-hint`)",
-  untangle: "non-deductive: it has genuinely nothing to say and ships no words",
+  untangle:
+    "objective: a step names how many crossings a point's lines make before " +
+    "and after the move, not a forced fact",
 };
 
 /** The games the necessity-voice rule applies to — every hinting game the

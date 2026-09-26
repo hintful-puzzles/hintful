@@ -17,8 +17,6 @@
  * `d` in the cross-multiplication.
  */
 
-import type { Point } from "../../engine/types.ts";
-
 /**
  * A point as the rational `(x/d, y/d)`. **Invariant: `x`, `y`, `d` are
  * all integers and `d > 0`** — the exact-integer `cross()` relies on it
@@ -308,7 +306,7 @@ export function decodeGame(desc: string, n: number): Edge[] {
 
 /** Parse the generator's `aux` solved layout (`S` then `P<i>:x,y/d`
  * per vertex, `;`-separated) into rational points, or `null` if it is
- * absent or malformed. Shared by `solve` and the aux-based hint. */
+ * absent or malformed. */
 export function parseAux(aux: string | null, n: number): RationalPoint[] | null {
   if (!aux || aux[0] !== "S") return null;
   const parts = aux
@@ -327,46 +325,9 @@ export function parseAux(aux: string | null, n: number): RationalPoint[] | null 
 
 /** The 8 dihedral (rotate/reflect) transforms of the square, as the
  * 2×2 matrix `[m0 m1; m2 m3]` (upstream `solve`'s `matrix`). */
-function dihedralMatrix(i: number): [number, number, number, number] {
+export function dihedralMatrix(i: number): [number, number, number, number] {
   const mat: [number, number, number, number] = [0, 0, 0, 0];
   mat[i & 1] = i & 2 ? 1 : -1;
   mat[3 - (i & 1)] = i & 4 ? 1 : -1;
   return mat;
-}
-
-/** The aux solved layout transformed by whichever of the 8 dihedral
- * symmetries sits closest to the current positions (so the suggested
- * motion is minimal), returned in **model units** (`x/d` divided out,
- * centered on the board's `w/2`). Faithful to upstream `solve`'s symmetry
- * search; `solve` and the aux hint both build on it. */
-export function dihedralSolvedUnits(
-  curr: UntangleState,
-  auxPts: readonly RationalPoint[],
-): Point[] {
-  const c = curr.w / 2;
-  let besti = -1;
-  let bestd = 0;
-  for (let i = 0; i < 8; i++) {
-    const mat = dihedralMatrix(i);
-    let d = 0;
-    for (let j = 0; j < curr.n; j++) {
-      const px = auxPts[j].x / auxPts[j].d - c;
-      const py = auxPts[j].y / auxPts[j].d - c;
-      const ox = mat[0] * px + mat[1] * py + c;
-      const oy = mat[2] * px + mat[3] * py + c;
-      const sx = curr.pts[j].x / curr.pts[j].d;
-      const sy = curr.pts[j].y / curr.pts[j].d;
-      d += (ox - sx) ** 2 + (oy - sy) ** 2;
-    }
-    if (besti < 0 || bestd > d) {
-      besti = i;
-      bestd = d;
-    }
-  }
-  const mat = dihedralMatrix(besti);
-  return auxPts.map((p) => {
-    const px = p.x / p.d - c;
-    const py = p.y / p.d - c;
-    return { x: mat[0] * px + mat[1] * py + c, y: mat[2] * px + mat[3] * py + c };
-  });
 }

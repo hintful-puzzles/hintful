@@ -292,11 +292,25 @@ describe("moves and solve", () => {
     }
   });
 
-  it("Solve refuses without aux", () => {
-    const { desc } = untangleGame.newDesc({ n: 6 }, randomNew("no-aux"));
-    const init = untangleGame.newState({ n: 6 }, desc);
-    const res = untangleGame.solve?.(init, init, undefined);
-    expect(res?.ok).toBe(false);
+  it("Solve works from the edges alone, without aux", () => {
+    for (const n of [6, 10, 25]) {
+      const { desc } = untangleGame.newDesc({ n }, randomNew(`no-aux-${n}`));
+      const init = untangleGame.newState({ n }, desc);
+      const res = untangleGame.solve?.(init, init, undefined);
+      if (!res?.ok) throw new Error(`Solve refused n=${n}`);
+      expect(untangleGame.executeMove(init, res.move).completed).toBe(true);
+    }
+  });
+
+  it("Solve refuses a graph that cannot be untangled", () => {
+    const init = untangleGame.newState(
+      { n: 5 },
+      "0-1,0-2,0-3,0-4,1-2,1-3,1-4,2-3,2-4,3-4",
+    );
+    expect(untangleGame.solve?.(init, init, undefined)).toEqual({
+      ok: false,
+      error: "No solution exists for this puzzle",
+    });
   });
 
   it("midend threads aux into Solve and reports solved status (regression)", () => {
@@ -315,8 +329,8 @@ describe("moves and solve", () => {
     expect(lastStatus).toBe("solved-with-help");
   });
 
-  it("midend Solve refuses on a loaded game (no aux this session)", () => {
-    // Faithful to upstream: Solve only works on a freshly generated game.
+  it("midend Solve works on a loaded game, which has no aux", () => {
+    // A resumed save carries no aux; the layout comes from the edges instead.
     const gen = new Midend(untangleGame);
     gen.setCallbacks(
       () => {},
@@ -327,13 +341,17 @@ describe("moves and solve", () => {
     const saved = gen.saveGame();
 
     const loaded = new Midend(untangleGame);
+    let lastStatus = "";
     loaded.setCallbacks(
-      () => {},
+      (n) => {
+        if (n.type === "game-state-change") lastStatus = n.status;
+      },
       () => {},
       () => {},
     );
-    loaded.loadGame(saved);
-    expect(loaded.solve()).toBe("Solution not known for this puzzle");
+    expect(loaded.loadGame(saved)).toBeNull();
+    expect(loaded.solve()).toBeNull();
+    expect(lastStatus).toBe("solved-with-help");
   });
 });
 

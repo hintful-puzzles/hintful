@@ -37,6 +37,10 @@ export const COL_HINT = 10;
 
 export const FLASH_TIME = 0.3;
 
+/** Radius (px) of the ring round a crossing a hint step removes — just wider
+ * than a point, so a ring is never mistaken for one. */
+const CROSSING_RING = CIRCLE_RADIUS + 3;
+
 /** Linear interpolation between two rational points (upstream `mix`),
  * keeping exact integer rational arithmetic. `t` runs 0→1. */
 function mix(a: RationalPoint, b: RationalPoint, t: number): RationalPoint {
@@ -171,6 +175,13 @@ export function redrawUntangle(
   // drawn position (ds.x/y), so during an auto-hint slide the line shrinks
   // to nothing as the vertex arrives.
   if (hint) {
+    // Ring each crossing the move removes, so the count the hint states is
+    // one the player can see. Unfilled, so the crossing stays visible inside.
+    for (const c of hint.cleared) {
+      const center = { x: Math.trunc(c.x * ts), y: Math.trunc(c.y * ts) };
+      dr.drawCircle(center, CROSSING_RING, -1, COL_HINT);
+      dr.drawCircle(center, CROSSING_RING + 1, -1, COL_HINT);
+    }
     dr.drawLine(
       { x: ds.x[hintVertex], y: ds.y[hintVertex] },
       { x: hintTx, y: hintTy },
@@ -178,6 +189,14 @@ export function redrawUntangle(
       2,
     );
     dr.drawCircle({ x: hintTx, y: hintTy }, CIRCLE_RADIUS, COL_HINT, COL_OUTLINE);
+    // The point the step moves wears the hint color too, so "this point" in
+    // the narration names one of the two ends of the line.
+    dr.drawCircle(
+      { x: ds.x[hintVertex], y: ds.y[hintVertex] },
+      CIRCLE_RADIUS,
+      COL_HINT,
+      COL_OUTLINE,
+    );
   }
 
   dr.drawUpdate({ x: 0, y: 0, w: size, h: size });

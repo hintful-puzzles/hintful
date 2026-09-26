@@ -410,7 +410,7 @@ export interface Game<
    * `aux` is the generator's solution hint (upstream `aux_info`), the
    * same value passed to `solve` — present for freshly-generated games,
    * absent for descriptive game ids or some loaded saves. A game whose
-   * best hint derives from the known solution (Untangle) uses it when
+   * best hint derives from the known solution uses it when
    * present and falls back otherwise; deductive games ignore it.
    *
    * `ui` is the live game UI, passed so a hint can honor a player
