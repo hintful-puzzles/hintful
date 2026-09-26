@@ -47,9 +47,9 @@ export const ENDGAME_CROSSINGS = 30;
 const MAX_HITTING = 6;
 const SETS_PER_SIZE = 40;
 
-/** Largest culprit set placed. What is left beyond it is mostly a whole
- * cluster of ten or so points mirrored against the rest, which sets of up to
- * 11 did not reach either (design D8). */
+/** Largest culprit set placed. Sets of up to 11 did not finish more boards
+ * (design D8), and neither did flipping the points in mirror order whole
+ * (`openspec/postmortems/2026-09-26-unflip-a-mirrored-untangle-cluster-withdrawal.md`). */
 const MAX_CULPRITS = 8;
 
 /** Candidate spots one request may test, over all culprit sets: the bound on

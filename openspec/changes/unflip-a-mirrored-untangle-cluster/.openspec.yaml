@@ -1,6 +1,0 @@
-# No delta yet: whether a cluster moves as a journey or as one step is for the
-# change to decide. Remove skip_specs when the delta is written.
-# Written 2026-09-26; nothing is implemented.
-schema: spec-driven
-created: 2026-09-26
-skip_specs: true
