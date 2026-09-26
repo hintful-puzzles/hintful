@@ -12,6 +12,14 @@ import type { RationalPoint } from "./state.ts";
  * size, and far finer than any clearance the searches keep. */
 const LAYOUT_DENOM = 64;
 
+/** The typical distance between points when `n` of them share a `w`-square.
+ * Gaps are fractions of it, so they look alike at every board size (the tile
+ * size shrinks as `n`, and so `w`, grows). */
+export const pointSpacing = (n: number, w: number): number => w / Math.sqrt(n);
+
+/** How far any computed position keeps from the frame, in point spacings. */
+export const EDGE_GAP = 0.35;
+
 export const units = (p: RationalPoint): Point => ({ x: p.x / p.d, y: p.y / p.d });
 
 export const toRational = (p: Point): RationalPoint => ({

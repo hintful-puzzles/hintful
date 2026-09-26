@@ -13,22 +13,23 @@ import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { deduceUntangleHintPlan } from "./hint.ts";
 import { say } from "./hint-text.ts";
 import { untangleGame } from "./index.ts";
-import { cross, findCrossings, type UntangleState } from "./state.ts";
+import { findCrossings, type UntangleState } from "./state.ts";
 
 function generated(n: number, seed: string) {
   const { desc, aux } = untangleGame.newDesc({ n }, randomNew(seed));
   return { state: untangleGame.newState({ n }, desc), aux };
 }
 
-/** The same board with every point scattered at random — the kind of
- * half-untangled mess a player leaves, where greedy moves run out. */
-function scattered(s: UntangleState, seed: string): UntangleState {
+/** The same board with every point scattered at random on a `1/d` grid — the
+ * kind of half-untangled mess a player leaves, where greedy moves run out. A
+ * coarse grid (snap-to-grid play) puts points exactly on lines, where `cross()`
+ * stops being symmetric and a careless count disagrees with the board. */
+function scattered(s: UntangleState, seed: string, d: number): UntangleState {
   const rng = randomNew(seed);
-  const d = 64;
   const points = s.pts.map((_, i) => ({
     i,
-    x: Math.round(d * 0.3) + randomUpto(rng, Math.floor(d * (s.w - 0.6))),
-    y: Math.round(d * 0.3) + randomUpto(rng, Math.floor(d * (s.w - 0.6))),
+    x: 1 + randomUpto(rng, d * s.w - 1),
+    y: 1 + randomUpto(rng, d * s.w - 1),
     d,
   }));
   return untangleGame.executeMove(s, { kind: "place", points, solving: false });
@@ -36,18 +37,13 @@ function scattered(s: UntangleState, seed: string): UntangleState {
 
 const count = (s: UntangleState): number => findCrossings(s.pts, s.edges).count;
 
-/** Crossings `v`'s lines make, recounted independently of the hint. */
+/** Crossings `v`'s lines make, as the board itself counts them: its total less
+ * the total with `v`'s lines taken away. Independent of the hint's own count,
+ * and immune to `cross()`'s asymmetry when a point lies on a line, because the
+ * board's own pairing does both counts. */
 function lineCrossings(s: UntangleState, v: number): number {
-  let c = 0;
-  for (const e of s.edges) {
-    if (e.a !== v && e.b !== v) continue;
-    const u = e.a === v ? e.b : e.a;
-    for (const f of s.edges) {
-      if (f.a === v || f.b === v || f.a === u || f.b === u) continue;
-      if (cross(s.pts[v], s.pts[u], s.pts[f.a], s.pts[f.b])) c++;
-    }
-  }
-  return c;
+  const rest = s.edges.filter((e) => e.a !== v && e.b !== v);
+  return count(s) - findCrossings(s.pts, rest).count;
 }
 
 /**
@@ -59,27 +55,39 @@ function followHints(start: UntangleState, aux?: string) {
   let s = start;
   let clears = 0;
   let rebuilds = 0;
+  // A rearranging step's sentence depends on the move after it, which may be
+  // the head of the next request's plan; it is checked once that is known.
+  let pending: { explanation: string; before: number; after: number } | null = null;
+  const settle = (nextGain: number | null) => {
+    if (pending === null) return;
+    const opens = nextGain !== null && nextGain > 0 ? nextGain : null;
+    expect(pending.explanation).toBe(
+      say.rearrange(pending.before, pending.after, opens),
+    );
+    pending = null;
+  };
   for (let asks = 0; asks < 60; asks++) {
-    if (s.completed) return { s, clears, rebuilds };
+    if (s.completed) {
+      settle(null);
+      return { s, clears, rebuilds };
+    }
     const res = deduceUntangleHintPlan(s, aux);
     if (!res.ok) throw new Error(`hint gave up on an unsolved board: ${res.error}`);
     for (const st of res.steps) {
       const v = st.move.points[0].i;
       expect(st.highlights?.vertex).toBe(v);
       const before = lineCrossings(s, v);
-      const total = count(s);
       const next = untangleGame.executeMove(s, st.move);
       const after = lineCrossings(next, v);
-      if (st.explanation === say.rebuild) {
-        rebuilds++;
-      } else {
+      settle(before - after);
+      if (after < before) {
         clears++;
         expect(st.explanation).toBe(say.clear(before, after));
-        expect(after).toBeLessThan(before);
-        // Only v's lines moved, so the board loses exactly what they did.
-        expect(count(next)).toBe(total - (before - after));
         // A ring for at least every crossing the step takes away.
         expect(st.highlights?.cleared.length).toBeGreaterThanOrEqual(before - after);
+      } else {
+        rebuilds++;
+        pending = { explanation: st.explanation, before, after };
       }
       s = next;
     }
@@ -98,7 +106,8 @@ describe("Untangle hint", () => {
         const { state, aux } = generated(n, `hint-${n}-${i}`);
         for (const [start, withAux] of [
           [state, aux],
-          [scattered(state, `scatter-${n}-${i}`), undefined],
+          [scattered(state, `scatter-${n}-${i}`, 64), undefined],
+          [scattered(state, `snapped-${n}-${i}`, 1), aux],
         ] as const) {
           const out = followHints(start, withAux);
           expect(out.s.completed).toBe(true);
@@ -107,7 +116,7 @@ describe("Untangle hint", () => {
         }
       }
     }
-    expect(boards).toBe(32);
+    expect(boards).toBe(48);
     // Vacuity: the fallback for "no single move helps" must actually have run,
     // or this test says nothing about the stall that made the old hint give up.
     expect(rebuilds).toBeGreaterThan(0);

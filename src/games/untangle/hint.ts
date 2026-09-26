@@ -16,7 +16,9 @@
  * already on their place are never moved again by either kind of step, which
  * is what makes the walk terminate and keeps it recompute-stable: a step either
  * removes a crossing without disturbing a placed point, or places one more
- * point, so a hint recomputed after any step cannot cycle.
+ * point, so a hint recomputed after any step cannot cycle. Such a step is
+ * narrated only by what the player can see (`narrate`): the solved layout it
+ * heads for is nothing they have ever been shown.
  *
  * The plan is capped at a few steps: every step is a fresh measurement of the
  * board, so the next request continues exactly where this one stopped.
@@ -25,7 +27,15 @@
 import type { HintResult, HintStep } from "../../engine/game.ts";
 import { ALREADY_SOLVED, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
 import type { Point } from "../../engine/types.ts";
-import { intersection, samePoint, segDist2, toRational, units } from "./geometry.ts";
+import {
+  EDGE_GAP,
+  intersection,
+  pointSpacing,
+  samePoint,
+  segDist2,
+  toRational,
+  units,
+} from "./geometry.ts";
 import { say } from "./hint-text.ts";
 import { closestOrientation, solvedLayout } from "./solution.ts";
 import {
@@ -51,11 +61,16 @@ export interface UntangleHint {
  * collinear with points that sit on whole or half units. */
 const GRID = 24;
 
-/** How far (model units) a suggested spot keeps from another point, and a
- * point or line from a line it is not an end of — so the result never looks
- * as if a line runs through a point. */
-const POINT_GAP = 0.3;
-const LINE_GAP = 0.15;
+/** How far, in point spacings, a suggested spot keeps from another point, and
+ * a point from a line it is not an end of (either way round) — so a move lands
+ * in open space and never looks as if a line runs through a point. */
+const POINT_GAP = 0.45;
+const LINE_GAP = 0.2;
+
+/** The gaps' scale for the second search, when no roomy spot helps. Slightly
+ * tighter is enough: in a sample of 12 boards followed to the end, it took the
+ * rearranging steps with no visible payoff from 55 to none. */
+const CRAMPED = 0.8;
 
 /** Softening term for the spread score, so a coincident pair scores high but
  * finite. */
@@ -67,6 +82,10 @@ const MAX_PLAN_STEPS = 6;
 class Board {
   readonly adj: number[][];
   pu: Point[];
+  /** The gaps above, and the frame margin, in model units for this board. */
+  readonly pointGap: number;
+  readonly lineGap: number;
+  readonly edgeGap: number;
 
   constructor(
     readonly n: number,
@@ -74,6 +93,10 @@ class Board {
     readonly edges: readonly Edge[],
     readonly pts: RationalPoint[],
   ) {
+    const spacing = pointSpacing(n, w);
+    this.pointGap = POINT_GAP * spacing;
+    this.lineGap = LINE_GAP * spacing;
+    this.edgeGap = EDGE_GAP * spacing;
     this.adj = Array.from({ length: n }, () => []);
     for (const e of edges) {
       this.adj[e.a].push(e.b);
@@ -124,32 +147,48 @@ class Board {
     };
   }
 
-  /** The lines of `v`'s crossing pairs with `v` at `p`, exactly. */
+  /** The lines of `v`'s crossing pairs with `v` at `p`, exactly as the board
+   * counts them. `cross()` is not symmetric when a point lies on a line, so
+   * each pair is tested in `findCrossings`' argument order — the later edge
+   * first — or a count could differ by one from the red lines on screen. */
   crossingsAt(v: number, p: RationalPoint): { u: number; f: Edge }[] {
+    const { edges } = this;
+    const at = (x: number): RationalPoint => (x === v ? p : this.pts[x]);
     const out: { u: number; f: Edge }[] = [];
-    for (const u of this.adj[v]) {
-      for (const f of this.edges) {
+    for (let i = 0; i < edges.length; i++) {
+      const e = edges[i];
+      if (e.a !== v && e.b !== v) continue;
+      const u = e.a === v ? e.b : e.a;
+      for (let j = 0; j < edges.length; j++) {
+        const f = edges[j];
         if (f.a === v || f.b === v || f.a === u || f.b === u) continue;
-        if (cross(p, this.pts[u], this.pts[f.a], this.pts[f.b])) out.push({ u, f });
+        const [hi, lo] = j > i ? [f, e] : [e, f];
+        if (cross(at(hi.a), at(hi.b), at(lo.a), at(lo.b))) out.push({ u, f });
       }
     }
     return out;
   }
 
-  /** Is `p` a clear spot for `v`: away from the other points, off every line
-   * it is not an end of, and with its own lines passing no other point? */
-  isClear(v: number, p: Point): boolean {
-    const pu = this.pu;
+  /** Is `p` a clear spot for `v`: off the frame, away from the other points,
+   * off every line it is not an end of, and with its own lines passing no
+   * other point? `scale` shrinks the point and line gaps, never the frame's. */
+  isClear(v: number, p: Point, scale = 1): boolean {
+    const { pu, edgeGap, w } = this;
+    const pointGap = this.pointGap * scale;
+    const lineGap = this.lineGap * scale;
+    // A hairline under the margin passes: the solved layout sits exactly on
+    // it before positions are rounded to 1/64.
+    if (Math.min(p.x, p.y, w - p.x, w - p.y) < edgeGap - 1 / 32) return false;
     for (let x = 0; x < this.n; x++) {
       if (x === v) continue;
-      if ((p.x - pu[x].x) ** 2 + (p.y - pu[x].y) ** 2 < POINT_GAP ** 2) return false;
+      if ((p.x - pu[x].x) ** 2 + (p.y - pu[x].y) ** 2 < pointGap ** 2) return false;
       for (const u of this.adj[v]) {
-        if (x !== u && segDist2(pu[x], p, pu[u]) < LINE_GAP ** 2) return false;
+        if (x !== u && segDist2(pu[x], p, pu[u]) < lineGap ** 2) return false;
       }
     }
     for (const f of this.edges) {
       if (f.a === v || f.b === v) continue;
-      if (segDist2(p, pu[f.a], pu[f.b]) < LINE_GAP ** 2) return false;
+      if (segDist2(p, pu[f.a], pu[f.b]) < lineGap ** 2) return false;
     }
     return true;
   }
@@ -193,9 +232,9 @@ class Board {
   }
 }
 
-/** The spots tried for every point: an offset grid over the play box. */
-function gridSpots(w: number): RationalPoint[] {
-  const lo = 0.3;
+/** The spots tried for every point: an offset grid over the play box, inside
+ * the frame margin `lo`. */
+function gridSpots(w: number, lo: number): RationalPoint[] {
   const span = w - 2 * lo;
   const spots: RationalPoint[] = [];
   for (let i = 0; i < GRID; i++) {
@@ -214,20 +253,19 @@ function gridSpots(w: number): RationalPoint[] {
 interface Clearing {
   vertex: number;
   to: RationalPoint;
-  before: number;
-  after: number;
 }
 
 /**
  * The unplaced point and clear spot that remove the most crossings, the
  * roomiest spot among equals — checked exactly, or `null` if no single move
- * removes any.
+ * to a spot clear at gap `scale` removes any.
  */
 function bestClearing(
   board: Board,
   spots: readonly RationalPoint[],
   placed: readonly boolean[],
   targets: readonly RationalPoint[] | null,
+  scale: number,
 ): Clearing | null {
   const found: { v: number; p: RationalPoint; gain: number }[] = [];
   for (let v = 0; v < board.n; v++) {
@@ -257,7 +295,7 @@ function bestClearing(
     // — it will not have to move again — then the roomiest spot.
     const tier = found
       .slice(i, j)
-      .filter(({ v, p }) => board.isClear(v, units(p)))
+      .filter(({ v, p }) => board.isClear(v, units(p), scale))
       .map((c) => ({
         ...c,
         home: targets !== null && samePoint(c.p, targets[c.v]) ? 0 : 1,
@@ -271,15 +309,17 @@ function bestClearing(
         before.set(v, b);
       }
       const after = board.crossingsAt(v, p).length;
-      if (after < b) return { vertex: v, to: p, before: b, after };
+      if (after < b) return { vertex: v, to: p };
     }
     i = j;
   }
   return null;
 }
 
-/** The unplaced point whose move to its place leaves the fewest crossings,
- * preferring a place no other point is sitting near. */
+/** The unplaced point to move to its place: one whose place is clear (no
+ * point near it, no line through it), if there is one — a point dropped beside
+ * another or onto a line reads as a mistake — then the one that leaves the
+ * fewest crossings. */
 function nextToPlace(
   board: Board,
   placed: readonly boolean[],
@@ -290,32 +330,45 @@ function nextToPlace(
   for (let v = 0; v < board.n; v++) {
     if (placed[v]) continue;
     const t = units(targets[v]);
+    const crowded = board.isClear(v, t) ? 0 : 1;
     const estimate = board.estimator(v);
     const delta = estimate(t) - estimate(board.pu[v]);
-    const crowded = board.pu.some(
-      (q, u) => u !== v && (q.x - t.x) ** 2 + (q.y - t.y) ** 2 < POINT_GAP ** 2,
-    )
-      ? 1
-      : 0;
-    if (delta < bestKey[0] || (delta === bestKey[0] && crowded < bestKey[1])) {
+    if (crowded < bestKey[0] || (crowded === bestKey[0] && delta < bestKey[1])) {
       best = v;
-      bestKey = [delta, crowded];
+      bestKey = [crowded, delta];
     }
   }
   return best;
 }
 
-function step(
-  board: Board,
-  vertex: number,
-  to: RationalPoint,
-  explanation: string,
-): HintStep<UntangleMove, UntangleHint> {
+/** A planned move and the exact counts its sentence is built from. */
+interface Planned {
+  vertex: number;
+  to: RationalPoint;
+  /** The point's crossings before and after the move. */
+  before: number;
+  after: number;
+  cleared: Point[];
+}
+
+function plan(board: Board, vertex: number, to: RationalPoint): Planned {
   return {
-    move: placeMove(vertex, to),
-    explanation,
-    highlights: { vertex, to, cleared: board.cleared(vertex, to) },
+    vertex,
+    to,
+    before: board.crossingsAt(vertex, board.pts[vertex]).length,
+    after: board.crossingsAt(vertex, to).length,
+    cleared: board.cleared(vertex, to),
   };
+}
+
+/** A step's sentence. A move to the solved layout is narrated by what it does
+ * on the board — the layout itself is nothing the player can see — and by the
+ * crossings the next move removes, when the next move is one that does. */
+function narrate(p: Planned, next: Planned | null): string {
+  if (p.after < p.before) return say.clear(p.before, p.after);
+  const opens =
+    next !== null && next.after < next.before ? next.before - next.after : null;
+  return say.rearrange(p.before, p.after, opens);
 }
 
 export function deduceUntangleHintPlan(
@@ -327,30 +380,42 @@ export function deduceUntangleHintPlan(
   const board = new Board(state.n, state.w, state.edges, state.pts.slice());
   const layout = solvedLayout(state.n, state.w, state.edges, aux);
   const targets = layout ? closestOrientation(layout, board.pts, state.w) : null;
-  const spots = gridSpots(state.w);
-  const steps: HintStep<UntangleMove, UntangleHint>[] = [];
-
-  while (steps.length < MAX_PLAN_STEPS) {
-    if (findCrossings(board.pts, state.edges).completed) break;
+  const spots = gridSpots(state.w, board.edgeGap);
+  /** The next move from the board as it stands, or `null` when it is solved or
+   * nothing is left to try. */
+  const nextMove = (): Planned | null => {
+    if (findCrossings(board.pts, state.edges).completed) return null;
     const placed = board.pts.map(
       (p, v) => targets !== null && samePoint(p, targets[v]),
     );
-
-    const clearing = bestClearing(board, spots, placed, targets);
-    if (clearing) {
-      const { vertex, to, before, after } = clearing;
-      steps.push(step(board, vertex, to, say.clear(before, after)));
-      board.move(vertex, to);
-      continue;
-    }
-
-    if (targets === null) break;
+    // A roomy spot if one removes a crossing, else a tighter one: a cramped
+    // move that helps beats a rearrangement the player cannot see a reason for.
+    const clearing =
+      bestClearing(board, spots, placed, targets, 1) ??
+      bestClearing(board, spots, placed, targets, CRAMPED);
+    if (clearing) return plan(board, clearing.vertex, clearing.to);
+    if (targets === null) return null;
     const v = nextToPlace(board, placed, targets);
-    if (v < 0) break;
-    steps.push(step(board, v, targets[v], say.rebuild));
-    board.move(v, targets[v]);
-  }
+    return v < 0 ? null : plan(board, v, targets[v]);
+  };
 
-  if (steps.length === 0) return { ok: false, error: NO_MOVE_WORTH_MAKING };
+  const planned: Planned[] = [];
+  let next = nextMove();
+  while (next !== null && planned.length < MAX_PLAN_STEPS) {
+    planned.push(next);
+    board.move(next.vertex, next.to);
+    next = nextMove();
+  }
+  if (planned.length === 0) return { ok: false, error: NO_MOVE_WORTH_MAKING };
+
+  // `next` is now the move after the plan's last step, so that step is narrated
+  // exactly as it would be at the head of the next request's plan.
+  const steps = planned.map(
+    (p, i): HintStep<UntangleMove, UntangleHint> => ({
+      move: placeMove(p.vertex, p.to),
+      explanation: narrate(p, planned[i + 1] ?? next),
+      highlights: { vertex: p.vertex, to: p.to, cleared: p.cleared },
+    }),
+  );
   return { ok: true, steps };
 }

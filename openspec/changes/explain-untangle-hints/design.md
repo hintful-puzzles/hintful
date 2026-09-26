@@ -35,8 +35,9 @@ a time, best first. Within a gain tier the order is: a move onto the point's
 place first (so it will not need moving again), then the least crowded spot,
 counting the box walls as crowding (without them the roomiest spot is always
 against the frame). Spots too near another point or line are excluded, so a
-line never appears to run through a point. The chosen move is then recounted
-with the exact `cross()`; the narration's numbers are those exact counts.
+line never appears to run through a point (the gaps are in D3a). The chosen
+move is then recounted with the exact `cross()`; the narration's numbers are
+those exact counts.
 
 **What the sentence claims, and what it does not.** It states the point's
 crossings before and after — checked. It does not say "the best move", because
@@ -63,6 +64,42 @@ and the walk ends solved. Removing the first rule makes
 "In place" is exact rational equality, not pixel tolerance: the targets are
 now fixed exact rationals, so the jitter that once forced a pixel tolerance
 (`hint-resume.test.ts`'s Untangle history) no longer exists.
+
+## D3a. Wording, spacing and the board's own count (owner review, 2026-09-26)
+
+The first cut said *"This point's lines make 12 crossings. Moved here, they
+make only three."*: a fragment with a full stop, and "12" beside "three". Now
+one sentence with numerals throughout: *"Moving this point here cuts its
+crossings from 12 to 3."*, *"…clears all 12 of its crossings."*, *"…clears
+both of its crossings."*
+
+The fallback step said the point "goes to its place in an untangled layout".
+The player has never seen that layout, so the sentence rested on hidden
+information. It now reports what the board shows: *"Moving this point here
+keeps its crossings at 1, but frees a move that removes 2."* The payoff is
+the next step's measured removal, looked up past the plan's end so a step
+reads the same wherever it falls in a plan. Without a payoff: *"No single move
+cuts the crossings from here. Moving this point here raises its crossings from
+1 to 2."* Every sentence stays under the collection's 120-character ledger.
+
+Owner: moves put points too close to others and to the frame. The gaps are now
+fractions of the typical point spacing `w/√n` (0.45 to a point, 0.2 to a line,
+0.35 to the frame), shared with the solved layout's margin and relaxation, and
+the fallback prefers a place that passes the same clearance check. Measured on
+12 boards followed to solved, the 10th-percentile distance from a hinted spot
+to its nearest point rose from 0.23–0.28 spacings to about 0.5, and the frame
+margin from 0.19 to 0.35. But strict gaps made the search stall more often
+(55 payoff-less fallback steps at n = 25). A second search at 0.8 of the gaps
+before falling back removed all of them, at a 10th percentile of 0.35–0.41.
+
+Following the fallback steps also exposed a counting defect: `cross()` is a
+verbatim port of upstream's and is not symmetric when a point lies exactly on
+a line. The hint tested each pair in a different argument order from
+`findCrossings`, so in that case a narrated count could differ by one from the
+red lines. `crossingsAt` now tests each pair in the board's order, and the test
+counts a point's crossings as the board's total less the total without that
+point's lines. A snap-to-grid start makes the case common, and it catches the
+old order (checked).
 
 ## D4. Plans are short
 

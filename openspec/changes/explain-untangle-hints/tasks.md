@@ -19,15 +19,20 @@
 ## 3. The hint
 - [x] 3.1 `hint.ts`: most-crossings-removed search, exact recount, stall
   fallback to the solved layout, placed points frozen, six-step plans.
-- [x] 3.2 `hint-text.ts`: the two sentences.
+- [x] 3.2 `hint-text.ts`: the clearing and rearranging sentences.
 - [x] 3.3 `render.ts`: rings on the removed crossings; the moved point in the
   hint color.
-- [x] 3.4 `untangle-hint.test.ts`: every narrated count checked against an
-  independent recount; 32 boards (with aux from the circle, without aux from a
-  random scatter) followed to solved; the stall fallback asserted to have run;
-  K5 ends in `NO_MOVE_WORTH_MAKING`. Removing the freeze fails it.
+- [x] 3.4 `untangle-hint.test.ts`: every narrated count, both sentence kinds and
+  the payoff clause, checked against the board's own count; 48 boards (with
+  aux from the circle, without aux from a fine random scatter, with aux from a
+  snap-grid scatter) followed to solved; the stall fallback asserted to have
+  run; K5 ends in `NO_MOVE_WORTH_MAKING`. Removing the freeze fails it, and so
+  does testing crossing pairs in the other argument order.
 - [x] 3.5 Render scenario asserts two ring strokes per removed crossing;
   snapshot re-baselined.
+- [x] 3.6 Owner review: sentences reworded (numerals, whole sentences, nothing
+  about the unseen layout); spacing as fractions of point spacing with a frame
+  margin and a tighter second search (design D3a).
 
 ## 4. Cross-game ledgers and docs
 - [x] 4.1 `hint-quality` ledger reason; dead `hint-refusal` exceptions removed.

@@ -38,14 +38,19 @@ the player can check on the board.
    It refuses only a hand-typed graph that is not planar.
 3. **The hint speaks.** Each step moves the point that removes the most
    crossings, found by trying every point in a crossing against a grid of spots
-   over the whole board, and says *"This point's lines make 16 crossings. Moved
-   here, they make only four."* The point and its destination are drawn in the
+   over the whole board, and says *"Moving this point here cuts its crossings
+   from 16 to 4."* The point and its destination are drawn in the
    hint color and every crossing the move removes gets a ring, so the claim can
    be counted on the board.
 4. **When no single move helps, the step moves a point to its place in the
-   solved layout** and says so. Points in place are never moved again, which
-   makes the walk terminate and keeps it recompute-stable.
-5. The hint's refusals become the collection's shared wording
+   solved layout**, narrated only by what the player can see: what the move
+   does to that point's crossings, and how many the next move removes. The
+   layout itself is never mentioned; the player has never seen it. Points in
+   place are never moved again, which makes the walk terminate and keeps it
+   recompute-stable.
+5. **Moves land in open space**: away from other points and lines, and inside a
+   margin from the frame, all as fractions of the typical point spacing.
+6. The hint's refusals become the collection's shared wording
    (`ALREADY_SOLVED`, and `NO_MOVE_WORTH_MAKING` for a non-planar graph once
    greedy runs out). Untangle's bespoke refusal leaves the exception ledger.
 

@@ -11,7 +11,15 @@
  */
 
 import type { Point } from "../../engine/types.ts";
-import { properCross, samePoint, segDist2, toRational, units } from "./geometry.ts";
+import {
+  EDGE_GAP,
+  pointSpacing,
+  properCross,
+  samePoint,
+  segDist2,
+  toRational,
+  units,
+} from "./geometry.ts";
 import { planarLayout } from "./planar.ts";
 import {
   dihedralMatrix,
@@ -21,12 +29,13 @@ import {
   type RationalPoint,
 } from "./state.ts";
 
-/** Margin (model units) the layout keeps inside the play box. */
-const FILL_MARGIN = 0.3;
+/** The margin the layout keeps inside the play box — the hint's frame margin,
+ * so a point placed by the hint's fallback sits as far in as any other. */
+const fillMargin = (n: number, w: number): number => EDGE_GAP * pointSpacing(n, w);
 
-/** The closest (model units) the relaxation lets a point come to another point
- * or to a line it is not an end of — well clear of a vertex blob. */
-const CLEARANCE = 0.25;
+/** The closest, in point spacings, the relaxation lets a point come to another
+ * point or to a line it is not an end of. */
+const CLEARANCE = 0.4;
 
 const RELAX_ITERATIONS = 120;
 
@@ -49,7 +58,7 @@ function fillBox(pts: readonly Point[], w: number, stretch: boolean): Point[] {
   const minY = Math.min(...ys);
   const bw = Math.max(...xs) - minX;
   const bh = Math.max(...ys) - minY;
-  const avail = w - 2 * FILL_MARGIN;
+  const avail = w - 2 * fillMargin(pts.length, w);
   const sx = bw > 1e-9 ? avail / bw : 1;
   const sy = bh > 1e-9 ? avail / bh : 1;
   const s = Math.min(sx, sy);
@@ -64,7 +73,8 @@ function fillBox(pts: readonly Point[], w: number, stretch: boolean): Point[] {
  * Spread a crossing-free drawing out without ever letting it tangle: a
  * spring-and-repulsion pull on each point in turn, where a step is taken only
  * if the point's lines still cross nothing and it comes no closer than
- * `CLEARANCE` to any other point or line than it already was. The shift
+ * `CLEARANCE` point spacings to any other point or line (or no closer than it
+ * already was). The shift
  * drawing it starts from crowds its points along one edge of a triangle; this
  * is what makes the result read as a layout rather than a proof.
  */
@@ -76,8 +86,9 @@ function relax(start: readonly Point[], edges: readonly Edge[], w: number): Poin
     adj[e.a].push(e.b);
     adj[e.b].push(e.a);
   }
-  const lo = FILL_MARGIN;
-  const hi = w - FILL_MARGIN;
+  const lo = fillMargin(n, w);
+  const hi = w - lo;
+  const minGap = CLEARANCE * pointSpacing(n, w);
   const k = (hi - lo) / Math.sqrt(n);
 
   /** The smallest distance from point `v` at `p` to another point or a line
@@ -129,7 +140,7 @@ function relax(start: readonly Point[], edges: readonly Edge[], w: number): Poin
       const f = Math.hypot(fx, fy);
       if (f < 1e-9) continue;
       const before = clearance(v, pos[v]);
-      const floor = Math.min(CLEARANCE, before);
+      const floor = Math.min(minGap, before);
       // The full step, else half of it, else a quarter.
       for (let scale = 1; scale >= 0.25; scale /= 2) {
         const step = Math.min(f, temp) * scale;

@@ -205,8 +205,8 @@ description. The collection has **two houses**, chosen by whether the move is
   is *not* a logical necessity, just the recommended next action): use the
   **imperative** ("slide it into place", "move it to column 5", "fill with
   red"). A necessity modal would be wrong. Untangle states a measurement
-  instead ("This point's lines make 16 crossings. Moved here, they make only
-  four."), which is neither voice and needs neither.
+  instead ("Moving this point here cuts its crossings from 16 to 4."), which is
+  neither voice and needs neither.
 
 Pick the house by the *nature of the move*, not the genre: a deductive game
 whose hint ever recommends a non-forced move uses the imperative for that
@@ -2637,15 +2637,31 @@ there was nothing to say; there was a number all along.
 [`untangle/hint.ts`](../../src/games/untangle/hint.ts):
 
 - **Objective, not deduction.** Pick the move that most improves a scalar the
-  player can count (crossing pairs), and say the count: *"This point's lines
-  make 16 crossings. Moved here, they make only four."* Search in floats for
-  speed, then **recount the chosen move exactly** with the game's own test; the
-  sentence quotes the exact numbers. Claim no more than was searched: a grid
-  search is not exhaustive, so the sentence never says "the best move".
+  player can count (crossing pairs), and say the count: *"Moving this point
+  here cuts its crossings from 16 to 4."* One whole sentence, numerals
+  throughout — a sentence that says "16" and then "four" makes the player
+  reconcile two notations. Search in floats for speed, then **recount the
+  chosen move exactly, in the board's own pairing**: Untangle's `cross()` is not
+  symmetric when a point lies on a line, so a count that tests a pair the other
+  way round can differ by one from the red lines on screen (a snap-to-grid
+  start in the test is what exposes it). Claim no more than was searched: a
+  grid search is not exhaustive, so the sentence never says "the best move".
 - **Show the number on the board.** Ring each crossing the move removes, and
   draw the moved point in the hint color, so "this point" and "16 crossings"
   are both things the player can see and count — the quality bar's "a hint
   relies only on marks the player can make", from the other side.
+- **Narrate the fallback by what the player can see, too.** A move toward the
+  solved layout cannot say so: the player has never seen that layout. It says
+  what the move does to the point's crossings and, when the next move removes
+  some, how many ("…keeps its crossings at 1, but frees a move that removes
+  2"), which the next hint shows them.
+- **Land in open space.** A suggested spot keeps a fraction of the typical
+  point spacing (`w/√n`) from every other point and line, and a margin from the
+  frame; being fractions of the spacing, they look alike at every board size.
+  When no roomy spot helps, search again slightly tighter before falling back —
+  a cramped move that removes crossings beats a rearrangement with no visible
+  reason, and that one step removed every payoff-less fallback in a
+  twelve-board sample.
 - **Search wide.** A handful of hand-picked candidate spots (neighbor centroid,
   a few pushes outward) stalls on boards where an obvious move exists; a grid
   over the whole board does not. Settle candidates one gain at a time, so the

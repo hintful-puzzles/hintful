@@ -83,13 +83,19 @@ vertex, and SHALL be one of two kinds:
 - **Clearing**: the move of a vertex, not already in place, to a spot that
   removes the most crossings among the spots searched (a grid over the whole
   play box, the vertex's place in the solved layout, and its neighbors'
-  centroid). A spot too near another vertex, or on or beside a line the vertex
-  is not an end of, SHALL NOT be suggested. The step's explanation SHALL state
-  how many crossings the vertex's lines make before and after the move, both
-  counted with the exact crossing test.
+  centroid). A spot SHALL keep, as fractions of the typical spacing between
+  points, a gap from every other vertex and from every line the vertex is not
+  an end of, and a margin from the frame; only when no spot with the full gaps
+  removes a crossing MAY a slightly tighter gap be used. The step's
+  explanation SHALL state, in numerals, how many crossings the vertex's lines
+  make before and after the move, both counted exactly as the board counts
+  them.
 - **Placing**, only when no single move removes a crossing: the move of a vertex
   not already in place to its place in the solved layout (as Solve would
-  choose it), with an explanation saying that no single move helps.
+  choose it), preferring a place that is clear in the same sense. Its
+  explanation SHALL state what the move does to the vertex's crossings and,
+  when the next step removes crossings, how many; it SHALL NOT refer to the
+  solved layout, which the player cannot see.
 
 A vertex exactly on its place in the solved layout SHALL NOT be moved by either
 kind of step. Following hints from any position of a planar board SHALL
