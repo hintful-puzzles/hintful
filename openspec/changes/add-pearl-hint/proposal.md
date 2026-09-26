@@ -11,23 +11,47 @@ relying on them.
 - **What the player can mark.** A line or a no-line cross on each edge
   (`PearlState.lines` / `marks`).
 - **What the solver reasons over.** Besides the edges, a per-square set of the
-  six shapes a square may still take (`bLR`, `bUD`, `bLU`, …, in the `ws`
-  workspace of `pearlSolve`). Its rungs discard shapes inconsistent with known
-  edges, nail edges a square's surviving shapes agree on, and reason about the
-  two kinds of pearl further along a line. A shape set is exactly the kind of
-  fact AGENTS.md's hint bar, rule 6, is about. It may always be readable off the
-  edges around the square, or it may need the notation Loopy got, or the tier
-  that needs it becomes `Unreasonable`. Measure which before designing.
-- **The shortcut-loop rung** refuses an edge or shape that would close a loop
-  short of every pearl. It reads the drawn loop pieces, which the player can
-  see, and it is one placement and one check, a **Check** under
-  `solver-and-generator.md` § "Check, Tactic, Search".
+  six shapes a square may still take, plus blank (`bLR`, `bUD`, `bLU`, …, in
+  the workspace of `pearl/solver.ts`). A shape set is exactly the kind of fact
+  AGENTS.md's hint bar, rule 6, is about.
+- **The ladder** is a certified `runDeductionFixpoint` ladder
+  (`certify-the-tents-and-pearl-ladders`), so the hint plans with
+  `singleFirings` over `pearlLadder`. Its rungs, and what each writes:
+  - `shapes-from-edges` (Easy) strikes the shapes the known edges rule out. It
+    writes **only shape sets**, which the player cannot see, and it fires about
+    as often as the next rung. On its own it is bookkeeping, readable off the
+    square's four edges, and it makes a natural first half of one journey with
+    the next rung.
+  - `edges-from-shapes` (Easy) nails an edge every surviving shape agrees on.
+  - `pearl-clues` (Easy) holds four pearl rules. Two set or strike shapes
+    directly: a black pearl's line forces a straight beyond it, and a white
+    pearl whose neighbors on an axis cannot turn into it cannot run that way.
+    A third makes the square past a known straight a corner. The fourth
+    disconnects an edge. **The shape writes are what the rule-6 question is
+    about**, because after them a square's shape set is no longer readable off
+    its edges.
+  - `closed-loop` (Easy) is terminal: a loop has closed, everything off it is
+    blank, and the ladder stops. It fires once per board, and there is nothing
+    to narrate beyond "the loop is closed".
+  - `shortcut-loop` (Tricky) refuses an edge that would close a loop short of
+    every square that cannot be blank, and **also strikes a shape** whose two
+    ends lead into the same loop piece. The edge half reads drawn loop pieces
+    the player can see, and is one placement and one check, a **Check** under
+    `solver-and-generator.md` § "Check, Tactic, Search". The shape half is
+    another rule-6 case. It fires on every Tricky board, which is by
+    construction: the generator rejects Tricky boards that Easy finishes.
+- So the question to measure is narrower than "is a shape set readable off
+  the edges?". Ask it only of the shape strikes by `pearl-clues` and
+  `shortcut-loop`: can each one be restated as an edge fact the player can
+  mark in the same journey? If it can, the shape set can stay internal. If it
+  cannot, those strikes need the notation Loopy got, or the tier that needs
+  them becomes `Unreasonable`.
 
 ## Prerequisite
 
-`certify-the-tents-and-pearl-ladders`: it settles whether Pearl's Tricky pass is
-restart-equivalent (adopt the runner) or a recorded no-go, and gives the rungs a
-firing census either way. Design the narration against that census.
+`certify-the-tents-and-pearl-ladders`: done. Pearl is on the runner (the
+Tricky pass the proposal worried about turned out to be dead code), and its
+design.md has the census.
 
 ## What changes
 
@@ -42,5 +66,5 @@ firing census either way. Design the narration against that census.
   marks and hatch, its notation machinery. Read `src/games/loopy/hint.ts` and
   `notes.ts` before writing a second copy, and extract what the two games would
   plainly share. Record what stays per game, and why.
-- If Pearl stays off the runner, the bespoke loop still owes the three
-  obligations in `solver-and-generator.md` § "What a bespoke loop still owes".
+- Every rung sweeps the whole grid, so the hint needs a finder that yields one
+  square's or one pearl's firing at a time (`add-abcd-hint`'s lesson).

@@ -107,6 +107,8 @@ Converged call sites to read as exemplars, easiest first:
 | a per-iteration **prologue** carried by `settled` rather than by a never-firing rung | [`subsets/solver.ts`](../../src/games/subsets/solver.ts) (`subsetsSolveGame`) |
 | a rung that **sweeps a whole population before reporting** — legal, because the runner's "return after first firing" is about the *ladder* | [`bridges/solver.ts`](../../src/games/bridges/solver.ts) (`Solver.ladder`) |
 | a recorder threaded through the rungs, untouched by adoption, so an explained hint survives it | [`galaxies/solver.ts`](../../src/games/galaxies/solver.ts) (`galaxiesLadder`) |
+| Tricky deductions upstream folds into Easy sweeps, each split into a rung of its own, and a rung whose tier sits *below* Easy because the generator caps there | [`tents/solver.ts`](../../src/games/tents/solver.ts) (`tentsLadder`) |
+| a terminal rung that ends the ladder through `settled`, and a rung that rebuilds shared state the rung before it just built | [`pearl/solver.ts`](../../src/games/pearl/solver.ts) (`pearlLadder`) |
 
 ### Proving an adoption: the fixtures are not enough
 
@@ -150,6 +152,27 @@ weakened solver dealt only boards it could finish, and only the census (and 11
 of the differential's 18 fixtures) went red
 ([`abcd-ladder.test.ts`](../../src/games/abcd/abcd-ladder.test.ts)). Plant a
 rung before trusting the board comparison to see it.
+
+**A rung can fire often and still not be needed, and then only the census sees
+it.** Tents' diagonal-pair elimination fires on most Tricky boards (on 34 of
+40 at 10x10), but other rungs reach the same conclusion on all but about one
+Tricky board in fifty. Silencing it left every board comparison and the whole
+frozen differential green; only the census went red
+([`tents-ladder.test.ts`](../../src/games/tents/tents-ladder.test.ts)). So a
+rung's firing count tells you it runs, not that anything depends on it. To
+find out whether a board depends on it, solve with the rung silenced and see
+whether the board still finishes.
+
+**Give a Tricky deduction its own rung when upstream folds it into an Easy
+sweep.** Upstream Tents runs the diagonal pair inside its tree sweep and the
+neighboring-line reading inside its line count, each behind a difficulty test.
+As one rung each, a Tricky firing is counted against an Easy name, and a
+census cannot say whether the Tricky half is ever reached. Split out, each is a
+rung with a Tricky `tier` that runs after the Easy rungs have stalled. That
+changes when it runs, not what the ladder concludes on a ladder of sound,
+monotone rungs, and the board comparison at every cap proves it. Have the split
+rung write only what the Tricky half deduces. If it also wrote what the Easy
+rung would find, those writes would be counted against the Tricky rung too.
 
 **The census costs the adopting game one optional parameter**, forwarded straight
 to `runDeductionFixpoint`'s `firings` sink; the runner does the counting. That is
@@ -245,7 +268,15 @@ to be an early-out, not a grade. So did ABCD's "sweeps the whole ladder before
 restarting": its loop runs its first two techniques in one pass, but the first
 only retires lines and places nothing, so trying it again before the second, as
 the runner does, finds nothing, and the two walks are the same
-(`add-abcd-hint`). **Read the loop, not the reason somebody recorded for it.**
+(`add-abcd-hint`). The hint-assessment audit's class B, "sweeps the whole
+ladder before restarting", was that one label on three games, and it was wrong
+for all three. Tents' loop restarts after every sweep that fires. Pearl's
+seemed to run its Tricky rung in the same pass as an earlier stage that had
+fired, but the `continue` that suggested it sits in an Easy-only branch that is
+only reached when nothing has fired. It was dead code, and the stage before it
+had already restarted (`certify-the-tents-and-pearl-ladders`). **Read the loop,
+not the reason somebody recorded for it**, and when a `continue` looks as if it
+decides the walk, check whether anything can reach it.
 
 #### What a bespoke loop still owes
 
