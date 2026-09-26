@@ -1,7 +1,6 @@
 # shorten-the-untangle-endgame
 
-**Status: implemented 2026-09-26; awaiting owner acceptance of the wording, the
-marked-point rings and the move counts (tasks 5.3).** Owner-requested,
+**Status: implemented and owner-accepted 2026-09-26.** Owner-requested,
 2026-09-26, from `explain-untangle-hints`. What was built, and where it departs
 from the plan below, is `design.md` § "D8".
 

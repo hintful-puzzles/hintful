@@ -43,8 +43,8 @@
   from `.openspec.yaml`.
 - [x] 5.2 `docs/games/hints.md` § "Non-deductive (heuristic) hints": the
   endgame pattern and what it measured.
-- [ ] 5.3 Run the app (done: the owner's board solves in 21 moves by hint, every
+- [x] 5.3 Run the app (the owner's board solves in 21 moves by hint, every
   leg's sentence checked on screen); owner acceptance of wording, highlight and
-  move counts.
+  move counts (accepted 2026-09-26).
 - [x] 5.4 Follow-up: the mirrored cluster the 25-point walks still thrash on
   (D8, "What is left"), scaffolded as `unflip-a-mirrored-untangle-cluster`.
