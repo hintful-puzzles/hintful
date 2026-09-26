@@ -58,7 +58,6 @@ function makeGame(
   return {
     id: "__cfg__",
     wantsStatusbar: false,
-    isTimed: false,
     canSolve: false,
     canFormatAsText: false,
     defaultParams: () => ({ w: 5, flag: false, mode: 1 }),

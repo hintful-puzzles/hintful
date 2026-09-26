@@ -339,11 +339,10 @@ want goes with its ::checkpoint-remove:: delete button.
 
 ## Timing your solve {#timer}
 
-Any puzzle can time you. Turn on *Show timer* in that puzzle’s
-<command-link command="settings:puzzle">preferences</command-link> and a
-::timer:: clock appears beside the move count. Each puzzle remembers its own
-choice. Mines starts with the timer on, since its players expect one; every
-other puzzle starts with it off.
+Every puzzle times you, with a ::timer:: clock beside the move count. If you
+would rather not see it, turn off *Show timer* in that puzzle’s
+<command-link command="settings:puzzle">preferences</command-link>. Each puzzle
+remembers its own choice.
 
 The clock starts with your first move, not when the board is dealt, and it
 stops while the app is out of sight. Once you have solved the board, the time

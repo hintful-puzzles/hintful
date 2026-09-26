@@ -744,7 +744,6 @@ export const groupGame: Game<
 > = {
   id: "group",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
   canMarkAll: true,

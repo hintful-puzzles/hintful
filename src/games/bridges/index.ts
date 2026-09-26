@@ -566,7 +566,6 @@ export const bridgesGame: Game<
 > = {
   id: "bridges",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
   preferredTileSize: PREFERRED_TILE_SIZE,

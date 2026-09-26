@@ -384,7 +384,6 @@ export const clustersGame: Game<
 > = {
   id: "clusters",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

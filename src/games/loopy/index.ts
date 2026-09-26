@@ -739,7 +739,6 @@ export const loopyGame: Game<
 > = {
   id: "loopy",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   // True in the sense the interface means it — Loopy *has* a text format — but
   // it only covers the square tiling, so `textFormat` returns `undefined` for

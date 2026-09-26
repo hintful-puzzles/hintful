@@ -479,7 +479,6 @@ export const singlesGame: Game<
 > = {
   id: "singles",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

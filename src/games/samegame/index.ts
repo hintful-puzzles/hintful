@@ -215,7 +215,6 @@ export const samegameGame: Game<
 > = {
   id: "samegame",
   wantsStatusbar: true,
-  isTimed: false,
   canSolve: false,
   canFormatAsText: true,
 

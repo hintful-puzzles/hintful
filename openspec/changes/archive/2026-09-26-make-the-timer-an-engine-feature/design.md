@@ -70,9 +70,9 @@ who switched the timer on.
 
 ## Not in this change
 
-Best times per game and params (the proposal's "obvious next step") stay a
-separate change: they need a store and a place to show them, and nothing here
-constrains either.
+Best times per game and params, which the proposal called the obvious next
+step, are not wanted: the owner declined them on 2026-09-26, since the current
+vision deliberately has no progression features (AGENTS.md § "Goal").
 
 ## What replaces the old checks
 

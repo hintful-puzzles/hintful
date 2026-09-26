@@ -44,7 +44,6 @@ let nextInstance = 0;
 export const fakeGame: Game<FakeParams, FakeState, FakeMove, null, FakeDrawState> = {
   id: "__fake__",
   wantsStatusbar: true,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
   preferredTileSize: 10,

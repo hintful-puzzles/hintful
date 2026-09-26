@@ -212,7 +212,6 @@ export const floodGame: Game<
 > = {
   id: "flood",
   wantsStatusbar: true,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
   // Choosing a color is the only gesture; the secondary button has no

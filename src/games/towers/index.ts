@@ -604,7 +604,6 @@ export const towersGame: Game<
 > = {
   id: "towers",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
   canMarkAll: true, // handles 'M' (pencilAll) in interpretMove

@@ -333,7 +333,6 @@ export const slideGame: Game<
 > = {
   id: "slide",
   wantsStatusbar: true,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

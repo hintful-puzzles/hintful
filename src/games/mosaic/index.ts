@@ -204,7 +204,6 @@ export const mosaicGame: Game<
 > = {
   id: "mosaic",
   wantsStatusbar: true,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

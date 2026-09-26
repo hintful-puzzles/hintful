@@ -308,7 +308,6 @@ export const seismicGame: Game<
 > = {
   id: "seismic",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
   canMarkAll: true,

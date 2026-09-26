@@ -219,11 +219,6 @@ export interface Game<
   /** Catalog puzzleId; the registry key. */
   readonly id: string;
   readonly wantsStatusbar: boolean;
-  /** Whether the solve timer is on for this game before the player chooses.
-   * Every game has the timer, through the engine's `show-timer` preference;
-   * this is only its default, for a game whose players expect a clock (Mines).
-   * When it runs is the engine's rule, not the game's (`Midend.timerRunning`). */
-  readonly isTimed: boolean;
   readonly canSolve: boolean;
   readonly canFormatAsText: boolean;
   /** The game supports the "fill every empty cell with all candidate pencil

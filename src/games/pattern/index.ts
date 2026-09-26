@@ -379,7 +379,6 @@ export const patternGame: Game<
 > = {
   id: "pattern",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
   // Pattern wants the raw MOD_STYLUS bit: with no right button to hand, a touch

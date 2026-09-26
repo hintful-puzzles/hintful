@@ -621,7 +621,6 @@ export const romeGame: Game<
 > = {
   id: "rome",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: false,
   canMarkAll: true,

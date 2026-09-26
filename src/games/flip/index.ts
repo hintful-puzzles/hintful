@@ -55,7 +55,6 @@ const INT_MAX = 2147483647;
 export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawState> = {
   id: "flip",
   wantsStatusbar: true,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
   // Flipping a cell is the only gesture; the secondary button has no meaning,

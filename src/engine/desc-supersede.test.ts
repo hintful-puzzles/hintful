@@ -35,7 +35,6 @@ type MinesishMove = { click: number };
 const minesish: Game<MinesishParams, MinesishState, MinesishMove, null, null> = {
   id: "__minesish__",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: false,
   canFormatAsText: true,
   defaultParams: () => ({ size: 9 }),

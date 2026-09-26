@@ -450,7 +450,6 @@ export const lightupGame: Game<
 > = {
   id: "lightup",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

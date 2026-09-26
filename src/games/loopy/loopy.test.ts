@@ -666,7 +666,6 @@ describe("game registration", () => {
     // Loopy genuinely reads MOD_STYLUS (a tap must reach all three states), so
     // it opts out of the midend's strip-the-bit default.
     expect(loopyGame.wantsStylusModifier).toBe(true);
-    expect(loopyGame.isTimed).toBe(false);
     expect(loopyGame.wantsStatusbar).toBe(false);
   });
 

@@ -359,7 +359,6 @@ export const pearlGame: Game<
 > = {
   id: "pearl",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

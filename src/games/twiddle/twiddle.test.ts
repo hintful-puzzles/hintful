@@ -374,7 +374,6 @@ describe("Twiddle game object", () => {
   it("reports the expected flags and id", () => {
     expect(twiddleGame.id).toBe("twiddle");
     expect(twiddleGame.wantsStatusbar).toBe(true);
-    expect(twiddleGame.isTimed).toBe(false);
     expect(twiddleGame.canSolve).toBe(true);
     expect(twiddleGame.canFormatAsText).toBe(true);
     // Permutation puzzle: no mistake checking, no hint.

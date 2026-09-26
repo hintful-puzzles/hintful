@@ -301,18 +301,16 @@ describe("Midend save/restore round-trip", () => {
     expect(b.m.formatAsText()).toBe("count=2");
   });
 
-  it("round-trips the elapsed clock of a timed game", () => {
-    // `timerElapsed` is the only field of a Mines save that no move can
-    // reconstruct: replaying the log rebuilds the board exactly and the clock
-    // not at all, so a save that drops it silently gives the player their time
-    // back.
-    const timed = { ...fakeGame, isTimed: true };
-    const a = driven(timed);
+  it("round-trips the elapsed time", () => {
+    // `timerElapsed` is the one field of a save that no move can reconstruct:
+    // replaying the log rebuilds the board exactly and the time not at all, so
+    // a save that drops it silently gives the player their time back.
+    const a = driven();
     a.m.newGame();
     a.m.processInput(0, 0, LEFT_BUTTON); // the timer counts from the first move
     a.m.timer(83);
 
-    const b = driven(timed);
+    const b = driven();
     expect(b.m.loadGame(a.m.saveGame())).toBeNull();
     expect(decodeSave(a.m.saveGame()).timerElapsed).toBe(83);
     expect(b.timer()?.seconds).toBe(83);

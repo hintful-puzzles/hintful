@@ -4,7 +4,7 @@
  * Mines is the collection's exemplar of desc supersession
  * (`Game.supersededDesc`): it generates its mine layout on the *first click*,
  * so the desc the player starts from names no layout at all, and must be
- * replaced once the real board exists. Its timer is on by default (`isTimed`).
+ * replaced once the real board exists.
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
@@ -201,7 +201,6 @@ export const minesGame: Game<
 > = {
   id: "mines",
   wantsStatusbar: true,
-  isTimed: true,
   canSolve: true,
   canFormatAsText: true,
   preferredTileSize: PREFERRED_TILE_SIZE,

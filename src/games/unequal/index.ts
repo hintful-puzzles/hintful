@@ -561,7 +561,6 @@ export const unequalGame: Game<
 > = {
   id: "unequal",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
   canMarkAll: true,

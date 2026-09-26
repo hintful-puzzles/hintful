@@ -419,7 +419,6 @@ export const rangeGame: Game<
 > = {
   id: "range",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

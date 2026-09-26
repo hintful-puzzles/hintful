@@ -349,7 +349,6 @@ export const tracksGame: Game<
 > = {
   id: "tracks",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

@@ -363,7 +363,6 @@ function statusbarText(s: NetState, ui: NetUi): string {
 export const netGame: Game<NetParams, NetState, NetMove, NetUi, NetDrawState> = {
   id: "net",
   wantsStatusbar: true,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: false,
 

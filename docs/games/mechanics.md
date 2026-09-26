@@ -549,7 +549,6 @@ Solve is [solver & generator](./solver-and-generator.md) § "Solve and the gener
 | Flag | Means | Trap |
 | --- | --- | --- |
 | `wantsStatusbar` | game writes `statusbarText` | the timer is not in it; it has its own chrome |
-| `isTimed` | the solve timer starts **on** for this game | only the default of the engine's `show-timer` preference — see "Timed games" |
 | `canSolve` | `solve` present | test through a real `Midend` when `aux` matters |
 | `canFormatAsText` | `textFormat` present | may still return `null` for params with no rendering (Loopy: square grid only) |
 | `canMarkAll` | game handles the `M`/`m` key; shell shows the button | see "Pencil marks" |
@@ -640,8 +639,8 @@ games declare the shared prefs from
 ## Timed games
 
 **Every game has the solve timer; a game writes nothing to get it.** The midend
-offers a `show-timer` preference in every game (`isTimed` is only its default)
-and decides when it counts: from the first move, while the status is `ongoing`,
+offers a `show-timer` preference in every game, on by default, and decides
+when it counts: from the first move, while the status is `ongoing`,
 never while the page is hidden, and never again once the board has been solved
 (`Midend.timerRunning`). So a game's `status` is what stops its clock: a Solve
 that leaves the board `ongoing` keeps the clock running, and that is a

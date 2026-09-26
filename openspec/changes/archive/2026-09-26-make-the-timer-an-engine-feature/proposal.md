@@ -38,8 +38,8 @@ against `src/engine/midend.ts`:
   while the page is hidden (`visibilitychange`) and while the reference or
   More sheet is open; stopped at completion. Once hints exist, does a hinted
   solve say so beside the time?
-- **Where the time goes.** Shown on the completion notification. Best times
-  per game and params are an obvious next step, but a separate change.
+- **Where the time goes.** Shown on the completion notification. (Best times
+  were once suggested here as a next step; see design.md, "Not in this change".)
 - `timedClockActive()`'s conditions are read and restated as the engine's rule,
   not Mines' rule.
 

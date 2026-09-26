@@ -343,7 +343,6 @@ export const saladGame: Game<
   id: "salad",
   // The symbol range, as upstream shows it in its non-stylus builds.
   wantsStatusbar: true,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
   canMarkAll: true, // the adaptive 'M' press in interpretMove

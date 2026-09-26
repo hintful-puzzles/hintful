@@ -444,7 +444,6 @@ export const bricksGame: Game<
 > = {
   id: "bricks",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

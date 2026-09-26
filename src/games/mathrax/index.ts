@@ -535,7 +535,6 @@ export const mathraxGame: Game<
 > = {
   id: "mathrax",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: false,
   canMarkAll: true,

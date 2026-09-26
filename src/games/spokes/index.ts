@@ -461,7 +461,6 @@ export const spokesGame: Game<
 > = {
   id: "spokes",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

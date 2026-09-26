@@ -499,7 +499,6 @@ export const guessGame: Game<
 > = {
   id: "guess",
   wantsStatusbar: true,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: false,
 

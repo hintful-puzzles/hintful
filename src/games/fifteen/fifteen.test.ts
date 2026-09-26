@@ -461,7 +461,6 @@ describe("Fifteen capabilities", () => {
   it("reports the expected Game flags", () => {
     expect(fifteenGame.id).toBe("fifteen");
     expect(fifteenGame.wantsStatusbar).toBe(true);
-    expect(fifteenGame.isTimed).toBe(false);
     expect(fifteenGame.canSolve).toBe(true);
     expect(fifteenGame.canFormatAsText).toBe(true);
     // No mistake-checking: every reachable position is legal.

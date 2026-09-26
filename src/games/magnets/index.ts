@@ -233,7 +233,6 @@ export const magnetsGame: Game<
 > = {
   id: "magnets",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

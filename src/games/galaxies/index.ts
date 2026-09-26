@@ -953,7 +953,6 @@ export const galaxiesGame: Game<
 > = {
   id: "galaxies",
   wantsStatusbar: true,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
   preferredTileSize: PREFERRED_TILE_SIZE,

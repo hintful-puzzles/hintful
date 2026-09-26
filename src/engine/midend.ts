@@ -258,8 +258,10 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * shown until the next transition, exactly like a displayed hint. */
   private activeMistakes: readonly unknown[] | null = null;
   private timerElapsed = 0;
-  /** The `show-timer` preference. Every game has it; `isTimed` is its default. */
-  private showTimer: boolean;
+  /** The `show-timer` preference. Every game has it, and it starts on: the
+   * readout is small enough that a player who does not want it can switch it
+   * off, where one who does would not know to look. */
+  private showTimer = true;
   /** The frontend has paused the timer (the page is hidden). */
   private timerPaused = false;
   /** This board has been solved, so its time is final: an undo after the win
@@ -297,7 +299,6 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   constructor(private readonly game: Game<Params, State, Move, Ui, DrawState>) {
     this.params = game.defaultParams();
     this.boardParams = this.params;
-    this.showTimer = game.isTimed;
     this.currentTileSize = this.preferredTileSize;
   }
 

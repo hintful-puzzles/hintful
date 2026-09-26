@@ -427,7 +427,6 @@ export const keenGame: Game<
 > = {
   id: "keen",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: false,
   canMarkAll: true,

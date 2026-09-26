@@ -368,7 +368,6 @@ export const signpostGame: Game<
 > = {
   id: "signpost",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

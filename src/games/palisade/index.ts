@@ -262,7 +262,6 @@ export const palisadeGame: Game<
 > = {
   id: "palisade",
   wantsStatusbar: true,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

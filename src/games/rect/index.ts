@@ -358,7 +358,6 @@ export const rectGame: Game<
 > = {
   id: "rect",
   wantsStatusbar: true,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

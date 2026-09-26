@@ -321,7 +321,6 @@ export const unrulyGame: Game<
 > = {
   id: "unruly",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

@@ -272,7 +272,6 @@ export const slantGame: Game<
 > = {
   id: "slant",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

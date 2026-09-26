@@ -282,7 +282,6 @@ export const fillingGame: Game<
 > = {
   id: "filling",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
   // Selection is a left press or a left drag across a run of cells, and the

@@ -319,7 +319,6 @@ export const abcdGame: Game<
 > = {
   id: "abcd",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   // `textFormat` still declines a board whose clues could be two digits.
   canFormatAsText: true,

@@ -257,7 +257,6 @@ export const fifteenGame: Game<
 > = {
   id: "fifteen",
   wantsStatusbar: true,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
   // Sliding a tile is the only gesture; the secondary button has no meaning,

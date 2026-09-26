@@ -334,7 +334,6 @@ export const blackboxGame: Game<
 > = {
   id: "blackbox",
   wantsStatusbar: true,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: false,
 

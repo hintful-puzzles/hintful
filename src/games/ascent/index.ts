@@ -377,7 +377,6 @@ export const ascentGame: Game<
 > = {
   id: "ascent",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
   preferredTileSize: 48,

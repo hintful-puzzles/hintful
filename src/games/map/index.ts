@@ -494,7 +494,6 @@ export const mapGame: Game<
 > = {
   id: "map",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: false,
   canMarkAll: true,

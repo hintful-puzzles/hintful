@@ -241,7 +241,6 @@ function flashLength(a: PegsState, b: PegsState): number {
 export const pegsGame: Game<PegsParams, PegsState, PegsMove, PegsUi, PegsDrawState> = {
   id: "pegs",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: false,
   canFormatAsText: true,
   // The whole game is one press-and-drag and the secondary button means

@@ -703,7 +703,6 @@ export const sixteenGame: Game<
 > = {
   id: "sixteen",
   wantsStatusbar: true,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

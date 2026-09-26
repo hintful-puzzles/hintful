@@ -139,7 +139,6 @@ export const untangleGame: Game<
 > = {
   id: "untangle",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: false,
   preferredTileSize: PREFERRED_TILE_SIZE,

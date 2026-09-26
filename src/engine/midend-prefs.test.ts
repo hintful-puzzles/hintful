@@ -37,7 +37,6 @@ interface PrefState {
 const prefGame: Game<{ n: number }, PrefState, "noop", PrefUi> = {
   id: "__pref__",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: false,
   canFormatAsText: false,
   defaultParams: () => ({ n: 1 }),

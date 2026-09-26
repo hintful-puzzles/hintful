@@ -493,7 +493,7 @@ describe("mines chord preview", () => {
 describe("mines timer", () => {
   // Mines keeps upstream's clock through the engine's rule alone: the first
   // click is the first move, and a win is a solve.
-  it("is on by default, starts at the first click and stays stopped after a win", () => {
+  it("starts at the first click and stays stopped after a win", () => {
     const notes: ChangeNotification[] = [];
     let ticking = false;
     const m = new Midend(minesGame);

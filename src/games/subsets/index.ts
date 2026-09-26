@@ -617,7 +617,6 @@ export const subsetsGame: Game<
 > = {
   id: "subsets",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
   // Touching the reference aid (tally / inspect icon / cursor) dismisses a

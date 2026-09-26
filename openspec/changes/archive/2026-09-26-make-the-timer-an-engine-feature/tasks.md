@@ -31,4 +31,5 @@
 ## 4. Acceptance
 
 - [x] 4.1 Run the app: the timer on and off, in the rail and at phone width.
-- [ ] 4.2 Owner tries it on a phone (deployed).
+- [x] 4.2 Owner tries it on a phone (deployed). Accepted 2026-09-26, with the
+      request to have the timer on by default everywhere (a follow-up change).

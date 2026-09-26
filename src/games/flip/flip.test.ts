@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { type GameDrawing, Midend, UI_UPDATE } from "../../engine/index.ts";
+import { SHOW_TIMER_PREF } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { type ChangeNotification, PuzzleButton } from "../../engine/types.ts";
@@ -500,6 +501,9 @@ describe("Flip animation/redraw lifecycle (regression: clicks not rendered)", ()
         redraws++;
       },
     );
+    // The solve timer shares the tick; switched off, the tick is the
+    // animation's alone.
+    me.setPreferences({ [SHOW_TIMER_PREF]: false });
     expect(me.newGameFromId(`3x3c:${desc}`)).toBeNull();
     expect(timerActive).toBe(false); // settled, no animation yet
     const afterLoad = redraws;

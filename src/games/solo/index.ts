@@ -682,7 +682,6 @@ export const soloGame: Game<
 > = {
   id: "solo",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: false,
   canMarkAll: true,

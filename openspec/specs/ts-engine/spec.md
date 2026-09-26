@@ -1511,19 +1511,6 @@ persisted `Ui` reports nothing and costs nothing.
 - **THEN** the reported encoding changes, while moving the keyboard cursor — which the save
   does not record — leaves it unchanged
 
-### Requirement: The midend displays a timed game's elapsed clock in the status bar
-
-For a game with `isTimed = true` and `wantsStatusbar = true`, the midend SHALL prefix the
-game's status-bar text with the elapsed time as `[M:SS] ` (upstream
-`midend_rewrite_statusbar`). The prefix is the midend's responsibility, not the game's —
-`statusbarText` returns only the game-specific text. A non-timed game's status bar SHALL be
-unaffected.
-
-#### Scenario: A timed game shows the clock
-
-- **WHEN** a timed game's status bar is emitted with 75 seconds elapsed
-- **THEN** the status-bar text begins with `[1:15] `, followed by the game's own status text
-
 ### Requirement: Adapting a color to another scheme preserves its relation to the board
 
 A calculated per-scheme value SHALL preserve the color's relationship to its own
@@ -7019,3 +7006,41 @@ square's repaint on the sides drawn around it rather than on its role alone.
 - **WHEN** a game supplies no piece relation
 - **THEN** each target square is ringed on all four sides and a contiguous
   evidence region is one contour
+
+### Requirement: Every game has a solve timer, and the engine decides when it runs
+
+The midend SHALL offer a `show-timer` boolean preference ("Show timer") in every game, beside
+the game's own `prefs`, defaulting to the game's `isTimed`. While it is on, the midend SHALL
+count elapsed time only while the player is solving: after the first move of the board, while
+the status is `ongoing`, while the game's optional `timerHolds(state)` is not true, and while
+the frontend has not paused it (`setTimerPaused`, which the app sets while the page is hidden).
+Once the board has been solved, with or without help, its time SHALL be final: undoing the
+solve SHALL NOT restart the timer, and a save SHALL carry that fact. A new board SHALL reset
+the time. The midend SHALL report the timer as a `timer-change` notification carrying either
+`null` (the timer is off) or the whole seconds elapsed and whether help was taken on the board
+(a hint shown, or the solver used), sent only when that readout changes.
+
+#### Scenario: A game that does not ask for a timer offers one
+
+- **WHEN** a game with `isTimed = false` and no `prefs` of its own is started
+- **THEN** its preferences include `show-timer`, off, and the timer reports `null`
+
+#### Scenario: The timer counts from the first move
+
+- **WHEN** the timer is on and a new board is dealt
+- **THEN** it does not count until the player's first move, and counts during play after it
+
+#### Scenario: A solve is final
+
+- **WHEN** a timed board is solved and the player undoes the solving move
+- **THEN** the timer does not count again, including after a save and a restore
+
+#### Scenario: A hidden page does not count
+
+- **WHEN** the frontend pauses the timer and later resumes it
+- **THEN** no time is counted in between, and counting continues from where it stopped
+
+#### Scenario: A helped time says so
+
+- **WHEN** a hint is shown on a timed board
+- **THEN** the timer's readout reports the board as assisted, until a new board is dealt

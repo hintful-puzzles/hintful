@@ -84,6 +84,13 @@ mistake checking, honest difficulty, endless generation, offline play — are
 exactly what sets it apart from the games being reimplemented, and the shared
 layer is what makes each one a per-game freebie instead of a per-game project.
 
+**No progression features** (owner, 2026-09-26: *"I intentionally don't want
+any progression or mention functionality in my current vision"*). No best
+times, streaks, statistics, achievements or unlocks, and no nudges built on
+them. A solve is complete in itself: the timer shows the time of *this* board
+and keeps no record of it. Don't propose or scaffold these as "obvious next
+steps"; the vision would have to change first.
+
 ### Convention over configuration: one obvious way, and no unnecessary decisions
 
 **A game's directory should contain what is essential to *that puzzle* — its

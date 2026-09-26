@@ -274,7 +274,6 @@ export const inertiaGame: Game<
 > = {
   id: "inertia",
   wantsStatusbar: true,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

@@ -535,7 +535,6 @@ export const boatsGame: Game<
 > = {
   id: "boats",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   // Param-dependent: `textFormat` returns undefined past 10×10.
   canFormatAsText: true,

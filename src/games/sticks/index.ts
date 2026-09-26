@@ -481,7 +481,6 @@ export const sticksGame: Game<
 > = {
   id: "sticks",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

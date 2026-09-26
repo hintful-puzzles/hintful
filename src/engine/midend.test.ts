@@ -202,7 +202,9 @@ describe("Midend repaints on every transition (regression: TS games rendered no 
 
   it("a non-animated game does not start the animation timer", () => {
     // fakeGame has no animLength/flashLength ⇒ move paints once,
-    // no rAF loop requested.
+    // no rAF loop requested. The solve timer, the tick's other client, is
+    // switched off so this sees only the animation.
+    h.m.setPreferences({ [SHOW_TIMER_PREF]: false });
     h.m.processInput(0, 0, LEFT_BUTTON);
     expect(h.timerActive()).toBe(false);
   });
@@ -516,16 +518,27 @@ describe("Midend.requestKeys forwards Game.requestKeys", () => {
 });
 
 describe("Midend timer", () => {
-  /** `isTimed` is only the default of the engine's `show-timer` preference. */
-  const timedGame = { ...fakeGame, isTimed: true } as typeof fakeGame;
   const readout = (h: ReturnType<typeof harness>) =>
     (h.last("timer-change") as Extract<ChangeNotification, { type: "timer-change" }>)
       .timer;
   const inc = (h: ReturnType<typeof harness>) => h.m.processInput(0, 0, LEFT_BUTTON);
   const dec = (h: ReturnType<typeof harness>) => h.m.processInput(0, 0, RIGHT_BUTTON);
 
-  it("is off by default in a game that does not ask for it, and its tick is inert", () => {
+  it("is offered, on, in every game as the engine's own preference", () => {
     const h = harness();
+    h.m.newGame();
+    // The fake game declares no `prefs` at all, and nothing about a clock.
+    expect(h.m.getPreferencesConfig().items[SHOW_TIMER_PREF]).toEqual({
+      type: "boolean",
+      name: "Show timer",
+    });
+    expect(h.m.getPreferences()[SHOW_TIMER_PREF]).toBe(true);
+    expect(readout(h)).toEqual({ seconds: 0, assisted: false });
+  });
+
+  it("switched off, reports nothing and its tick is inert", () => {
+    const h = harness();
+    h.m.setPreferences({ [SHOW_TIMER_PREF]: false });
     h.m.newGame();
     dec(h);
     h.m.timer(1.5);
@@ -533,25 +546,11 @@ describe("Midend timer", () => {
     expect(h.timerActive()).toBe(false);
   });
 
-  it("is offered in every game as the engine's own preference", () => {
-    const h = harness();
-    h.m.newGame();
-    // The fake game declares no `prefs` at all.
-    expect(h.m.getPreferencesConfig().items[SHOW_TIMER_PREF]).toEqual({
-      type: "boolean",
-      name: "Show timer",
-    });
-    expect(h.m.getPreferences()[SHOW_TIMER_PREF]).toBe(false);
-    h.m.setPreferences({ [SHOW_TIMER_PREF]: true });
-    expect(h.m.getPreferences()[SHOW_TIMER_PREF]).toBe(true);
-    expect(readout(h)).toEqual({ seconds: 0, assisted: false });
-  });
-
   // `syncTimer` wants the tick when *either* the timer counts or an animation
   // is in flight, and the fake game does not animate — so this is what holds
   // the counting disjunct.
   it("counts from the first move while play is ongoing", () => {
-    const h = harness(timedGame);
+    const h = harness();
     h.m.newGame();
     expect(readout(h)).toEqual({ seconds: 0, assisted: false });
     expect(h.timerActive()).toBe(false);
@@ -565,7 +564,7 @@ describe("Midend timer", () => {
   });
 
   it("holds while paused and picks up where it stopped", () => {
-    const h = harness(timedGame);
+    const h = harness();
     h.m.newGame();
     dec(h);
     h.m.timer(10);
@@ -579,7 +578,7 @@ describe("Midend timer", () => {
   });
 
   it("stops for good at a solve, even after undoing it, and across a save", () => {
-    const h = harness(timedGame);
+    const h = harness();
     h.m.newGame();
     for (let i = 0; i < 3; i++) inc(h);
     expect(h.state()?.status).toBe("solved");
@@ -595,13 +594,13 @@ describe("Midend timer", () => {
     dec(h);
     const env = decodeSave(h.m.saveGame());
     expect(env.timerStopped).toBe(true);
-    const b = harness(timedGame);
+    const b = harness();
     expect(b.m.loadGame(h.m.saveGame())).toBeNull();
     expect(b.timerActive()).toBe(false);
   });
 
   it("says a time was helped once a hint is shown, and a new game resets both", () => {
-    const h = harness(timedGame);
+    const h = harness();
     h.m.newGame();
     dec(h);
     h.m.timer(42);
@@ -615,7 +614,7 @@ describe("Midend timer", () => {
 
   it("waits on a board the game says holds it, and resumes when it no longer does", () => {
     // A Mines death in miniature: below zero the board is "dead" but ongoing.
-    const h = harness({ ...timedGame, timerHolds: (s) => s.count < 0 });
+    const h = harness({ ...fakeGame, timerHolds: (s) => s.count < 0 });
     h.m.newGame();
     dec(h);
     h.m.timer(10);
@@ -628,7 +627,7 @@ describe("Midend timer", () => {
   });
 
   it("switched off mid-game, stops counting and reports nothing", () => {
-    const h = harness(timedGame);
+    const h = harness();
     h.m.newGame();
     dec(h);
     h.m.setPreferences({ [SHOW_TIMER_PREF]: false });

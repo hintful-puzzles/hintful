@@ -124,7 +124,6 @@ export const separateGame: Game<
 > = {
   id: "separate",
   wantsStatusbar: true,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

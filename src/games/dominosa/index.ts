@@ -615,7 +615,6 @@ export const dominosaGame: Game<
 > = {
   id: "dominosa",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

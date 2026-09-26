@@ -602,7 +602,6 @@ export const crossingGame: Game<
 > = {
   id: "crossing",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

@@ -280,7 +280,6 @@ export const tentsGame: Game<
 > = {
   id: "tents",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: true,
   canFormatAsText: true,
 

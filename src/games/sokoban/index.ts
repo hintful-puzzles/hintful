@@ -172,7 +172,6 @@ export const sokobanGame: Game<
 > = {
   id: "sokoban",
   wantsStatusbar: false,
-  isTimed: false,
   canSolve: false,
   canFormatAsText: false,
   // Stepping the player is the only gesture; the secondary button has no
