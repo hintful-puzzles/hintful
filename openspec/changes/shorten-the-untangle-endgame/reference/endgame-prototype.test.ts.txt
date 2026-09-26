@@ -1,0 +1,345 @@
+import { it } from "vitest";
+import { randomNew, randomUpto } from "../../engine/random/index.ts";
+import { deduceUntangleHintPlan } from "./hint.ts";
+import { untangleGame } from "./index.ts";
+import { solvedLayout } from "./solution.ts";
+import { type Edge, type UntangleState } from "./state.ts";
+
+type P = { x: number; y: number };
+const o = (p: P, q: P, r: P) => (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
+const xs = (a: P, b: P, c: P, d: P) => o(c, d, a) * o(c, d, b) < 0 && o(a, b, c) * o(a, b, d) < 0;
+function segDist2(p: P, a: P, b: P) {
+  const vx = b.x - a.x, vy = b.y - a.y, l = vx * vx + vy * vy;
+  const t = l > 0 ? Math.max(0, Math.min(1, ((p.x - a.x) * vx + (p.y - a.y) * vy) / l)) : 0;
+  return (p.x - a.x - t * vx) ** 2 + (p.y - a.y - t * vy) ** 2;
+}
+
+/** Crossing pairs as [edgeIndex, edgeIndex]. */
+function crossingPairs(pts: P[], edges: readonly Edge[]): [number, number][] {
+  const out: [number, number][] = [];
+  for (let i = 0; i < edges.length; i++)
+    for (let j = i + 1; j < edges.length; j++) {
+      const e = edges[i], f = edges[j];
+      if (f.a === e.a || f.a === e.b || f.b === e.a || f.b === e.b) continue;
+      if (xs(pts[e.a], pts[e.b], pts[f.a], pts[f.b])) out.push([i, j]);
+    }
+  return out;
+}
+
+/** All hitting sets of size exactly k (vertex sets touching every pair), by branching. */
+function hittingSets(pairs: [number, number][], edges: readonly Edge[], k: number, cap: number): number[][] {
+  const found = new Set<string>();
+  const res: number[][] = [];
+  const rec = (chosen: number[]) => {
+    if (res.length >= cap) return;
+    const open = pairs.find(([i, j]) => {
+      const vs = [edges[i].a, edges[i].b, edges[j].a, edges[j].b];
+      return !vs.some((v) => chosen.includes(v));
+    });
+    if (!open) {
+      const key = chosen.slice().sort((a, b) => a - b).join(",");
+      if (!found.has(key)) { found.add(key); res.push(chosen.slice().sort((a, b) => a - b)); }
+      return;
+    }
+    if (chosen.length === k) return;
+    const [i, j] = open;
+    for (const v of [edges[i].a, edges[i].b, edges[j].a, edges[j].b]) rec([...chosen, v]);
+  };
+  rec([]);
+  return res;
+}
+
+let LOOSE = false;
+/** Backtracking re-placement: up to `width` spots per point. */
+function replaceBT(s: UntangleState, pts0: P[], R: number[], width = 6): { v: number; p: P }[] | null {
+  const n = s.n, w = s.w, edges = s.edges;
+  const spacing = w / Math.sqrt(n);
+  const pg = (LOOSE ? 0.1 : 0.45) * spacing, lg = (LOOSE ? 0.03 : 0.2) * spacing;
+  const adj: number[][] = Array.from({ length: n }, () => []);
+  for (const e of edges) { adj[e.a].push(e.b); adj[e.b].push(e.a); }
+  const G = LOOSE ? 40 : 24, lo = 0.35 * spacing;
+  const spots: P[] = [];
+  for (let i = 0; i < G; i++) for (let j = 0; j < G; j++)
+    spots.push({ x: lo + ((w - 2 * lo) * (i + 0.37)) / (G - 0.26), y: lo + ((w - 2 * lo) * (j + 0.61)) / (G - 0.26) });
+  let nodes = 0;
+  const rec = (pts: P[], settled: Set<number>, todo: number[]): { v: number; p: P }[] | null => {
+    if (todo.length === 0) return crossingPairs(pts, edges).length === 0 ? [] : null;
+    if (++nodes > 3000) return null;
+    const order = todo.slice().sort((a, b) => adj[b].filter((u) => settled.has(u)).length - adj[a].filter((u) => settled.has(u)).length);
+    const v = order[0];
+    const rest = order.slice(1);
+    const setEdges = edges.filter((e) => settled.has(e.a) && settled.has(e.b));
+    const ok: { p: P; score: number }[] = [];
+    for (const p of spots) {
+      let good = true;
+      for (const u of adj[v]) {
+        if (!settled.has(u)) continue;
+        for (const f of setEdges) {
+          if (f.a === u || f.b === u) continue;
+          if (xs(p, pts[u], pts[f.a], pts[f.b])) { good = false; break; }
+        }
+        if (!good) break;
+        for (const x of settled) if (x !== u && segDist2(pts[x], p, pts[u]) < lg ** 2) { good = false; break; }
+        if (!good) break;
+      }
+      if (!good) continue;
+      let crowd = 0;
+      for (const x of settled) {
+        const d = Math.hypot(p.x - pts[x].x, p.y - pts[x].y);
+        if (d < pg) { good = false; break; }
+        crowd += 1 / (d + 0.25);
+      }
+      if (!good) continue;
+      for (const f of setEdges) if (segDist2(p, pts[f.a], pts[f.b]) < lg ** 2) { good = false; break; }
+      if (!good) continue;
+      ok.push({ p, score: crowd });
+    }
+    ok.sort((a, b) => a.score - b.score);
+    // spread the tried spots out: take every k-th of the ranked list
+    const step = Math.max(1, Math.floor(ok.length / width));
+    for (let i = 0; i < ok.length && i / step < width; i += step) {
+      const next = pts.slice();
+      next[v] = ok[i].p;
+      const got = rec(next, new Set([...settled, v]), rest);
+      if (got) return [{ v, p: ok[i].p }, ...got];
+    }
+    return null;
+  };
+  const settled0 = new Set<number>([...Array(n).keys()].filter((v) => !R.includes(v)));
+  return rec(pts0.map((p) => ({ ...p })), settled0, R.slice());
+}
+
+/** Try to re-place R so its lines cross nothing; returns the moves or null. */
+function replace(s: UntangleState, pts0: P[], R: number[]): { v: number; p: P }[] | null {
+  return replaceBT(s, pts0, R);
+}
+function replaceGreedy(s: UntangleState, pts0: P[], R: number[]): { v: number; p: P }[] | null {
+  const n = s.n, w = s.w, edges = s.edges;
+  const spacing = w / Math.sqrt(n);
+  const pts = pts0.map((p) => ({ ...p }));
+  const adj: number[][] = Array.from({ length: n }, () => []);
+  for (const e of edges) { adj[e.a].push(e.b); adj[e.b].push(e.a); }
+  const settled = new Set<number>([...Array(n).keys()].filter((v) => !R.includes(v)));
+  const todo = R.slice();
+  const moves: { v: number; p: P }[] = [];
+  const G = 24, lo = 0.35 * spacing;
+  const spots: P[] = [];
+  for (let i = 0; i < G; i++) for (let j = 0; j < G; j++)
+    spots.push({ x: lo + ((w - 2 * lo) * (i + 0.37)) / (G - 0.26), y: lo + ((w - 2 * lo) * (j + 0.61)) / (G - 0.26) });
+  while (todo.length) {
+    // most-constrained first
+    todo.sort((a, b) => adj[b].filter((u) => settled.has(u)).length - adj[a].filter((u) => settled.has(u)).length);
+    const v = todo.shift() as number;
+    const setEdges = edges.filter((e) => settled.has(e.a) && settled.has(e.b));
+    let best: { p: P; score: number } | null = null;
+    for (const p of spots) {
+      let ok = true;
+      for (const u of adj[v]) {
+        if (!settled.has(u)) continue;
+        for (const f of setEdges) {
+          if (f.a === u || f.b === u) continue;
+          if (xs(p, pts[u], pts[f.a], pts[f.b])) { ok = false; break; }
+        }
+        if (!ok) break;
+        for (const x of settled) if (x !== u && segDist2(pts[x], p, pts[u]) < (0.2 * spacing) ** 2) { ok = false; break; }
+        if (!ok) break;
+      }
+      if (!ok) continue;
+      let crowd = 0;
+      let clear = true;
+      for (const x of settled) {
+        const d = Math.hypot(p.x - pts[x].x, p.y - pts[x].y);
+        if (d < 0.45 * spacing) { clear = false; break; }
+        crowd += 1 / (d + 0.25);
+      }
+      if (!clear) continue;
+      for (const f of setEdges) if (segDist2(p, pts[f.a], pts[f.b]) < (0.2 * spacing) ** 2) { clear = false; break; }
+      if (!clear) continue;
+      // prefer short moves a little, and roomy spots
+      const score = crowd + 0.3 * Math.hypot(p.x - pts[v].x, p.y - pts[v].y) / spacing;
+      if (!best || score < best.score) best = { p, score };
+    }
+    if (!best) return null;
+    pts[v] = best.p;
+    settled.add(v);
+    moves.push({ v, p: best.p });
+  }
+  return crossingPairs(pts, edges).length === 0 ? moves : null;
+}
+
+let egTime = 0;
+let egWorst = 0;
+function endgame(s: UntangleState, pts: P[], maxK: number, aux?: string) {
+  const t0 = performance.now();
+  try {
+    const pairs = crossingPairs(pts, s.edges);
+    if (pairs.length === 0) return [];
+    if (pairs.length > 30) return null;
+    const layout = (solvedLayout(s.n, s.w, s.edges, aux) ?? []).map((p) => ({ x: p.x / p.d, y: p.y / p.d }));
+    const wrong = wrongOrder(s, pts, layout);
+    for (let k = 0; k <= maxK; k++) {
+      for (const H of k === 0 ? [[]] : hittingSets(pairs, s.edges, k, 40)) {
+        const R = [...new Set([...H, ...wrong])];
+        if (R.length > 8) continue;
+        const m = replace(s, pts, R);
+        if (m) return m;
+      }
+    }
+    return null;
+  } finally {
+    const dt = performance.now() - t0;
+    egTime += dt;
+    egWorst = Math.max(egWorst, dt);
+  }
+}
+
+const toState = (s: UntangleState, v: number, p: P) =>
+  untangleGame.executeMove(s, { kind: "place", points: [{ i: v, x: Math.round(p.x * 64), y: Math.round(p.y * 64), d: 64 }], solving: false });
+
+function policy(start: UntangleState, aux: string | undefined, maxK: number) {
+  let s = start;
+  let moves = 0;
+  let switchedAt = -1;
+  while (!s.completed && moves < 200) {
+    const pts = s.pts.map((p) => ({ x: p.x / p.d, y: p.y / p.d }));
+    const eg = endgame(s, pts, maxK, aux);
+    if (eg) {
+      switchedAt = moves;
+      for (const m of eg) { s = toState(s, m.v, m.p); moves++; }
+      break;
+    }
+    const r = deduceUntangleHintPlan(s, aux);
+    if (!r.ok) break;
+    s = untangleGame.executeMove(s, r.steps[0].move);
+    moves++;
+  }
+  return { moves, solved: s.completed, switchedAt };
+}
+
+function current(start: UntangleState, aux: string | undefined) {
+  let s = start;
+  let moves = 0;
+  while (!s.completed && moves < 300) {
+    const r = deduceUntangleHintPlan(s, aux);
+    if (!r.ok) break;
+    s = untangleGame.executeMove(s, r.steps[0].move);
+    moves++;
+  }
+  return moves;
+}
+
+/** Neighbors of each vertex in angular order around it. */
+function rotations(pts: P[], n: number, edges: readonly Edge[]): number[][] {
+  const adj: number[][] = Array.from({ length: n }, () => []);
+  for (const e of edges) { adj[e.a].push(e.b); adj[e.b].push(e.a); }
+  return adj.map((nb, v) =>
+    nb.slice().sort((a, b) => Math.atan2(pts[a].y - pts[v].y, pts[a].x - pts[v].x) - Math.atan2(pts[b].y - pts[v].y, pts[b].x - pts[v].x)),
+  );
+}
+const sameCycle = (a: number[], b: number[]) => {
+  if (a.length !== b.length) return false;
+  if (a.length < 3) return true;
+  const k = b.indexOf(a[0]);
+  return k >= 0 && a.every((x, i) => b[(k + i) % b.length] === x);
+};
+
+/** Vertices whose neighbor order disagrees with the solved layout's, for the
+ * better of its two mirror images. */
+function wrongOrder(s: UntangleState, pts: P[], layout: P[]): number[] {
+  const cur = rotations(pts, s.n, s.edges);
+  const sol = rotations(layout, s.n, s.edges);
+  const bad = (mirror: boolean) =>
+    cur.map((r, v) => (sameCycle(r, mirror ? sol[v].slice().reverse() : sol[v]) ? -1 : v)).filter((v) => v >= 0);
+  const a = bad(false), b = bad(true);
+  return a.length <= b.length ? a : b;
+}
+
+it.skip("rotation-guided endgame on the owner's walk", async () => {
+  const { solvedLayout } = await import("./solution.ts");
+  const { desc, aux } = untangleGame.newDesc({ n: 20 }, randomNew("343769d2db4f418cccd3b79e00c975d0"));
+  let s = untangleGame.newState({ n: 20 }, desc);
+  const layout = (solvedLayout(s.n, s.w, s.edges, aux) ?? []).map((p) => ({ x: p.x / p.d, y: p.y / p.d }));
+  const lines: string[] = [];
+  for (let m = 0; m < 20 && !s.completed; m++) {
+    const pts = s.pts.map((p) => ({ x: p.x / p.d, y: p.y / p.d }));
+    const pairs = crossingPairs(pts, s.edges);
+    const wrong = wrongOrder(s, pts, layout);
+    if (pairs.length <= 30) {
+      // culprits: smallest hitting sets, unioned with the wrong-order points
+      let result = "none";
+      for (let k = 0; k <= 6 && result === "none"; k++) {
+        for (const H of k === 0 ? [[]] : hittingSets(pairs, s.edges, k, 100)) {
+          const R = [...new Set([...H, ...wrong])];
+          if (R.length > 8) continue;
+          const moves = replace(s, pts, R);
+          if (moves) { result = `${moves.length} moves (culprits ${H.join(",")} + wrong-order ${wrong.join(",")})`; break; }
+        }
+      }
+      lines.push(`move ${m}: ${pairs.length} crossings, wrong-order ${wrong.length} [${wrong.join(",")}] -> ${result}`);
+    }
+    const r = deduceUntangleHintPlan(s, aux);
+    if (!r.ok) break;
+    s = untangleGame.executeMove(s, r.steps[0].move);
+  }
+  throw new Error(lines.join("\n"));
+});
+
+it.skip("diagnose the owner's walk", () => {
+  const { desc, aux } = untangleGame.newDesc({ n: 20 }, randomNew("343769d2db4f418cccd3b79e00c975d0"));
+  let s = untangleGame.newState({ n: 20 }, desc);
+  const lines: string[] = [];
+  for (let m = 0; m < 30 && !s.completed; m++) {
+    const pts = s.pts.map((p) => ({ x: p.x / p.d, y: p.y / p.d }));
+    const pairs = crossingPairs(pts, s.edges);
+    if (pairs.length <= 30) {
+      let kmin = -1;
+      let tried = 0;
+      let ok = -1;
+      for (let k = 1; k <= 7 && ok < 0; k++) {
+        const sets = hittingSets(pairs, s.edges, k, 200);
+        if (sets.length && kmin < 0) kmin = k;
+        for (const R of sets) {
+          tried++;
+          if (replace(s, pts, R)) { ok = k; break; }
+        }
+      }
+      lines.push(`move ${m}: ${pairs.length} crossings, smallest culprit set ${kmin}, first re-placeable set size ${ok} (${tried} sets tried)`);
+    }
+    const r = deduceUntangleHintPlan(s, aux);
+    if (!r.ok) break;
+    s = untangleGame.executeMove(s, r.steps[0].move);
+  }
+  throw new Error(lines.join("\n"));
+});
+
+it("endgame prototype", () => {
+  const lines: string[] = [];
+  {
+    const { desc, aux } = untangleGame.newDesc({ n: 20 }, randomNew("343769d2db4f418cccd3b79e00c975d0"));
+    const s = untangleGame.newState({ n: 20 }, desc);
+    const t0 = performance.now();
+    const r = policy(s, aux, 6);
+    lines.push(`owner board: current ${current(s, aux)} moves; endgame policy ${r.moves} moves (switched at ${r.switchedAt}), solved=${r.solved}, ${(performance.now() - t0).toFixed(0)}ms`);
+  }
+  for (const n of [10, 20, 25]) {
+    let cur = 0, eg = 0, unsolved = 0;
+    const sw: number[] = [];
+    for (let i = 0; i < 8; i++) {
+      const { desc, aux } = untangleGame.newDesc({ n }, randomNew(`eg-${n}-${i}`));
+      let s = untangleGame.newState({ n }, desc);
+      if (i % 2) {
+        const rng = randomNew(`egs-${n}-${i}`);
+        const points = s.pts.map((_, j) => ({ i: j, x: 1 + randomUpto(rng, 64 * s.w - 1), y: 1 + randomUpto(rng, 64 * s.w - 1), d: 64 }));
+        s = untangleGame.executeMove(s, { kind: "place", points, solving: false });
+      }
+      cur += current(s, aux);
+      const r = policy(s, aux, 6);
+      eg += r.moves;
+      sw.push(r.switchedAt);
+      if (!r.solved) unsolved++;
+    }
+    lines.push(`n=${n}: current avg ${(cur / 8).toFixed(1)} | endgame policy avg ${(eg / 8).toFixed(1)}, unsolved ${unsolved}, switched at ${sw.join(",")} | endgame search worst ${egWorst.toFixed(0)}ms`);
+    egWorst = 0;
+  }
+  throw new Error(lines.join("\n"));
+});

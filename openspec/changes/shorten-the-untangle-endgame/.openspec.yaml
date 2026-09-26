@@ -1,0 +1,7 @@
+# No delta yet: the endgame's shape (when it fires, what it narrates) is for the
+# change to decide, and the delta to the untangle hint requirement is task 5.1.
+# Remove skip_specs when that delta is written.
+# Written 2026-09-26; nothing is implemented.
+schema: spec-driven
+created: 2026-09-26
+skip_specs: true
