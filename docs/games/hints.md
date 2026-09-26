@@ -1527,7 +1527,8 @@ to a similar game:
 | Bridges | the **span** the step decides, drawn as the game's own shape: the bridge bundle it would become with only the *added* bars in `COL_HINT`, or the game's pair of crosses in `COL_HINT` when the step blocks it. The island a sentence *names* has its own rim and clue digit recolored `COL_HINT` (an annulus, so it is already a ring) | the islands and bridges the argument counts → `COL_HINT_CELL` on the same shapes. A premise that counts a **group** marks every member alike, the acted-from island included, because the sentence counts them together |
 | Seismic | the cell(s) a step decides, ringed `COL_HINT` inside the cell's own box (the gap between cells is the black its walls are made of); a struck note keeps its pencil color with a same-color line through it | the area a hidden single or a starved area reasons over → hatched, the sentence's "striped area"; a placement's follow-on strikes outline the placed number's cell alone |
 | Galaxies | the **deduced** cell, solid **purple** `COL_HINT` (not blue — see below); the 180° partner the same move claims, a `COL_HINT` **outline over the ordinary evidence shading** (same hue, they share a fate; far less weight, only one is what the words are about); the wall it draws, a `COL_HINT` bar drawn *whether or not the wall exists yet*; the dot it points at, a **filled `COL_HINT` halo with the dot repainted on top** — **unless the dot stands on a cell just filled**, where a mark in the fill's own color is invisible and the narration names the dot by position instead | the cells / walls / dots the argument reasons over → `COL_HINT_CELL` teal (a galaxy's reach, a cut-off piece, the partner across a dot, an already-drawn wall). One ring role at a time, so "the ringed dot" is never ambiguous |
-| Magnets | the square a placement decides, ringed `COL_HINT`; a domino decided whole (neutral, or marked `?`) as **one contour around both ends**, never a ring per end | the line a premise counts → one `COL_HINT_CELL` contour, and its clue digits recolor `COL_HINT` (Magnets draws no line numbers, so the digit is how "this row" is found); a pole the square touches → that square outlined; the domino's other end, when the sentence reasons about it, outlined too |
+| Magnets | the square a placement decides, ringed `COL_HINT`; a domino decided whole (neutral, or marked `?`) as **one ring around both ends** (§ "Shade vs ring", a piece), never a ring per end | the line a premise counts → one `COL_HINT_CELL` contour, and its clue digits recolor `COL_HINT` (Magnets draws no line numbers, so the digit is how "this row" is found); a pole the square touches → that square outlined; the domino's other end, when the sentence reasons about it, outlined too; evidence joins only across a domino, so two dominoes side by side stay two shapes |
+| Dominosa | a placement's domino, **one `COL_HINT` ring around both squares**; a barrier's two squares ringed one each, with the wall between them a `COL_HINT` bar | the squares the deduction reasons over → one `COL_HINT_CELL` contour per connected run ("the outlined square(s)") |
 | Map | the region the step decides, a solid `COL_HINT` band inside its whole boundary, twice the selection band's width, and the only hint mark on any border; the selection band, when on the same region, just inside it | a single (one color left) outlines **nothing**: the neighbors' fills are its premise. A pair's or chain's regions → a thin **dashed** `COL_HINT_CELL` line set in from their border by a band's width; a chain's regions numbered at their label points in the same color, with region numbers hidden while it shows |
 | Loopy | the edges the step sets, a `COL_HINT` band *under* each (the edge's own state stays on top): solid for a line, broken for an edge that can't be one | the clue it counts → an outline inset inside its face; the dot it names → a ring under the dot; the loop an edge would close → a `COL_HINT_CELL` band under those lines; a **corner** or **pair** note the step reasons from → the player's own note, redrawn in `COL_HINT_CELL`; a note the step places → that note's own wedge or connector in `COL_HINT` (§ "Give the facts a notation (Loopy)") |
 
@@ -1618,6 +1619,20 @@ first-class answer rather than a gap:
   boundary for its selection, and the hint's ring and outline are that band in
   the hint colors (§ "A graph, not a grid (Map)").
 
+**A piece is ringed as one shape.** A target spanning several squares — the
+domino a Dominosa placement asks for, the domino Magnets decides whole — is one
+ring around the piece, not a box per square with a double bar across its middle.
+The one thing the game knows and the painter does not is which squares belong
+together, so that is all it says: `HintMarkStyle.joinTargets(a, b)` for the
+target, and `joinEvidence` when evidence is whole pieces too (Magnets, so two
+dominoes side by side do not merge into a shape that is not on the board).
+Omitted, targets never join and evidence always does, which is every other
+game's frame unchanged. The relation can come from the hint rather than the
+board: Dominosa's pieces are not placed yet, so it joins a *placement's* two
+squares and leaves a barrier's two apart. `expectPieceRing` in
+[`engine/testing/mark-shape.ts`](../../src/engine/testing/mark-shape.ts) holds
+the six sides of a domino.
+
 Two games in a row needed the second answer for part of their marks and one for
 all of them, so ask **what shape the game already draws for this action** before
 reaching for the band. **Seismic, the deductive hint after them, used the band
@@ -1686,7 +1701,11 @@ it decides who undoes the mark:
   step can outline that cell's whole area. Its packed word is `HINT_AREA` both
   times, so it kept the sides it no longer had until `OverlaySidecar` took each
   evidence cell's outline sides into its diff key (`add-seismic-hint`). Nothing
-  to wire: `pack` computes them.
+  to wire: `pack` computes them. A game that keys its own tile word and passes a
+  join relation takes the same sides from `MarkOutlines.packed`: a target whose
+  partner leaves keeps its role while its sides change, and the side that has to
+  go lives in the square that did not (Dominosa's `markSides` lane, Magnets'
+  tile word).
 - **Both** — Group, Undead and Clusters have a one-pixel gutter plus a couple of
   pixels of the cell's own edge.
 - **Inset** — Galaxies and Palisade put the mark *inside* the cell body, because

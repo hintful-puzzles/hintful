@@ -589,8 +589,11 @@ on, an **outline** around the region it reasons from. Both replace the cell's
 choosing a different color, and a joint search over both roles, every hue and
 both schemes found no feasible arrangement. `MarkBand` is how a game says where
 its border lives (outside the content box for the `COL_GRID`-backed games,
-inside it for the ones drawing their own per-cell outline). It is for a mark on
-a **cell**: Map's regions are polyominoes of half-cell triangles, so Map rings
+inside it for the ones drawing their own per-cell outline). A target spanning a
+**piece** — a domino — is one ring around it when the game passes
+`joinTargets` (and `joinEvidence` for evidence that is whole pieces);
+`MarkOutlines` hands the resulting sides to a game whose tile cache has to key on
+them (`hints.md` § "Shade vs ring"). It is for a mark on a **cell**: Map's regions are polyominoes of half-cell triangles, so Map rings
 and outlines them with its own region band instead (`hints.md` § "A graph, not
 a grid (Map)").
 

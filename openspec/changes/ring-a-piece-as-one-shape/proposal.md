@@ -1,7 +1,6 @@
 # ring-a-piece-as-one-shape
 
-**Status: scaffolded, not started.** Owner-requested, 2026-09-21, from
-`add-magnets-hint`.
+Owner-requested, 2026-09-21, from `add-magnets-hint`.
 
 ## Why
 

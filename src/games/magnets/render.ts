@@ -28,7 +28,13 @@ import {
 import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
-import { drawMarkSides, type MarkBand, outlineSides } from "../../engine/hint-mark.ts";
+import {
+  type HintMarkStyle,
+  HintMarks,
+  type MarkBand,
+  type MarkCell,
+  MarkOutlines,
+} from "../../engine/hint-mark.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import type { MagnetsHighlights } from "./hint.ts";
 import {
@@ -109,11 +115,11 @@ const DS_NOTNEG = 0x100;
 const DS_NOTNEU = 0x200;
 const DS_FLASH = 0x400;
 const DS_MISTAKE = 0x800; // fork overlay
-// The hint's marks, as the sides of this square each role draws: part of the
-// diff key, so a square whose outline changes repaints and takes the old one
-// with it (docs/games/hints.md § "Where the band goes, and who rubs it out").
-const DS_HINT_TARGET_SHIFT = 12;
-const DS_HINT_AREA_SHIFT = 16;
+// The hint's marks, as the sides of this square each role draws
+// (`MarkOutlines.packed`, a byte): part of the diff key, so a square whose
+// outline changes repaints and takes the old one with it (docs/games/hints.md §
+// "Where the band goes, and who rubs it out").
+const DS_HINT_SIDES_SHIFT = 12;
 /** The square is on the line the hint's sentence calls "this row/column". */
 const DS_HINT_LINE = 1 << 20;
 
@@ -140,6 +146,8 @@ export interface MagnetsDrawState {
   colwhat: Int32Array;
   /** Last-drawn color per row clue (3·h). */
   rowwhat: Int32Array;
+  /** The hint's target ring and evidence outline, drawn after the tile loop. */
+  marks: HintMarks;
 }
 
 export function newDrawState(state: MagnetsState, tileSize: number): MagnetsDrawState {
@@ -151,6 +159,7 @@ export function newDrawState(state: MagnetsState, tileSize: number): MagnetsDraw
     what: new Int32Array(state.wh).fill(-1),
     colwhat: new Int32Array(state.w * 3).fill(-1),
     rowwhat: new Int32Array(state.h * 3).fill(-1),
+    marks: new HintMarks(),
   };
 }
 
@@ -447,39 +456,37 @@ export function redraw(
   const cy = ui.cursor.visible ? ui.cursor.y : -1;
 
   // A domino the hint decides, or reasons from, is one ring around its squares
-  // in that role: each square draws only the sides not shared with its partner.
-  // The line the sentence counts is the hatch, so no outline has to trace it.
-  const hintTargets = new Set(hint?.highlights?.targets);
-  const area = new Set(hint?.highlights?.area);
+  // in that role. The line the sentence counts is the hatch, so no outline has
+  // to trace it.
   const hintedClues = new Set(hint?.highlights?.clues);
   const reasonClues = new Set(hint?.highlights?.reasonClues);
   const line = hint?.highlights?.line ?? null;
   const onLine = (roworcol: number, num: number): boolean =>
     line !== null && line.roworcol === roworcol && line.num === num;
-  const inSet =
-    (set: ReadonlySet<number>) =>
-    (x: number, y: number): boolean =>
-      x >= 0 && x < w && y >= 0 && y < h && set.has(y * w + x);
-  const inTargets = inSet(hintTargets);
-  const inArea = inSet(area);
-  const marked: number[] = [];
+  const cellsOf = (squares: readonly number[]): MarkCell[] =>
+    [...new Set(squares)]
+      .sort((a, b) => a - b)
+      .map((i) => ({ x: i % w, y: Math.floor(i / w) }));
+  const hintTargets = cellsOf(hint?.highlights?.targets ?? []);
+  const area = cellsOf(hint?.highlights?.area ?? []);
+  // Both roles join a square only to its own partner, so two dominoes side by
+  // side stay two shapes rather than one that is not on the board.
+  const partners = (a: MarkCell, b: MarkCell): boolean =>
+    dominoes[a.y * w + a.x] === b.y * w + b.x;
+  const markStyle: HintMarkStyle = {
+    band: (x, y) => markBand(ts, x, y),
+    targetColor: COL_HINT,
+    evidenceColor: COL_HINT_CELL,
+    joinTargets: partners,
+    joinEvidence: partners,
+  };
+  const outlines = new MarkOutlines(hintTargets, area, markStyle);
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const idx = y * w + x;
       let c = grid[idx];
-      // Each role joins a square only to its own partner, so two dominoes side
-      // by side stay two shapes rather than one that is not on the board.
-      const partnerIn =
-        (inRole: (x: number, y: number) => boolean) => (nx: number, ny: number) =>
-          inRole(nx, ny) && dominoes[idx] === ny * w + nx;
-      const targetSides = hintTargets.has(idx)
-        ? outlineSides(x, y, partnerIn(inTargets))
-        : 0;
-      const areaSides = area.has(idx) ? outlineSides(x, y, partnerIn(inArea)) : 0;
-      if (targetSides || areaSides) marked.push(idx);
-      c |= targetSides << DS_HINT_TARGET_SHIFT;
-      c |= areaSides << DS_HINT_AREA_SHIFT;
+      c |= outlines.packed(x, y) << DS_HINT_SIDES_SHIFT;
       if (onLine(ROW, y) || onLine(COLUMN, x)) c |= DS_HINT_LINE;
       if (flags[idx] & GS_ERROR) c |= DS_ERROR;
       if (flags[idx] & GS_SET) c |= DS_SET;
@@ -496,17 +503,10 @@ export function redraw(
     }
   }
 
-  // After every tile, and every frame: a domino's body reaches a pixel into
-  // its partner's box, so a partner repainting for its own reasons can clip a
-  // band it did not draw. The evidence first, so a side both roles want is the
-  // target's.
-  for (const role of [DS_HINT_AREA_SHIFT, DS_HINT_TARGET_SHIFT]) {
-    for (const idx of marked) {
-      const sides = (ds.what[idx] >> role) & 0xf;
-      const color = role === DS_HINT_TARGET_SHIFT ? COL_HINT : COL_HINT_CELL;
-      drawMarkSides(dr, markBand(ts, idx % w, Math.floor(idx / w)), sides, color);
-    }
-  }
+  // After every tile, and every frame — which is how `HintMarks.paint` always
+  // draws: a domino's body reaches a pixel into its partner's box, so a partner
+  // repainting for its own reasons can clip a band it did not draw.
+  ds.marks.paint(dr, hintTargets, area, markStyle);
 
   // Clue counts around the four borders.
   for (const which of [POSITIVE, NEGATIVE]) {

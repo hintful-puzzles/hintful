@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
-  expectContour,
+  expectPieceRing,
   expectRing,
   isThin,
   markSides,
@@ -119,8 +119,8 @@ describe("magnets render scenarios", () => {
         s.highlights?.targets.length === 2 &&
         s.highlights.clues.length > 0,
     );
-    // One contour around both ends, not a ring per square.
-    expectContour(recording.ops, COL_HINT, 2);
+    // One ring around both ends, not a ring per square.
+    expectPieceRing(recording.ops, COL_HINT);
     const hinted = recording.ops.filter((o) => o.op === "text" && o.color === COL_HINT);
     expect(hinted.length).toBe(step.highlights?.clues.length);
     expect(recording.ops).toMatchSnapshot();

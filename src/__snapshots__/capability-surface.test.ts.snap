@@ -320,6 +320,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "h",
+      "markSides",
       "marks",
       "tileSize",
       "visible",
@@ -747,6 +748,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "drawState": [
       "colwhat",
       "h",
+      "marks",
       "rowwhat",
       "started",
       "tileSize",

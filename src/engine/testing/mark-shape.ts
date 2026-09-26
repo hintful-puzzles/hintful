@@ -47,6 +47,25 @@ export function expectRing(ops: readonly RectOp[], color: number, rings = 1): vo
     );
 }
 
+/** `color` draws exactly one straight `cells`-cell outline: `2·cells + 2` thin
+ * sides, where a ring per cell would be `4·cells`. */
+function expectOneShape(
+  ops: readonly RectOp[],
+  color: number,
+  cells: number,
+  shape: string,
+): void {
+  const sides = markSides(ops, color);
+  expect(
+    sides.length,
+    `a ${cells}-cell ${shape} is ${2 * cells + 2} sides, not ${4 * cells} per-cell rings`,
+  ).toBe(2 * cells + 2);
+  for (const s of sides)
+    expect(isThin(s), `${shape} side ${s.w}x${s.h} is not thin — that is a fill`).toBe(
+      true,
+    );
+}
+
 /**
  * A contiguous `cells`-cell evidence region is **one contour**: `2·cells + 2`
  * sides for a straight line or rectangle-free run, never `4·cells`.
@@ -59,13 +78,18 @@ export function expectContour(
   color: number,
   cells: number,
 ): void {
-  const sides = markSides(ops, color);
-  expect(
-    sides.length,
-    `a ${cells}-cell contour is ${2 * cells + 2} sides, not ${4 * cells} per-cell rings`,
-  ).toBe(2 * cells + 2);
-  for (const s of sides)
-    expect(isThin(s), `contour side ${s.w}x${s.h} is not thin — that is a fill`).toBe(
-      true,
-    );
+  expectOneShape(ops, color, cells, "contour");
+}
+
+/**
+ * A piece the step acts on — a domino — is **one ring** around its squares:
+ * six sides for a domino, never the eight of a box per square with a double
+ * bar across its middle.
+ */
+export function expectPieceRing(
+  ops: readonly RectOp[],
+  color: number,
+  squares = 2,
+): void {
+  expectOneShape(ops, color, squares, "piece ring");
 }

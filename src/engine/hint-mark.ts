@@ -119,9 +119,76 @@ export interface HintMarkStyle {
    * then wholly inside the cell, and the cell's own repaint undoes it.
    */
   gutterColor?: number;
+  /**
+   * Whether two edge-adjacent targets are one **piece**, ringed as one shape. A
+   * domino the hint places is one ring of six sides, not two boxes with a double
+   * bar across its middle. Omitted, no two targets join: a ring per cell.
+   */
+  joinTargets?: (a: MarkCell, b: MarkCell) => boolean;
+  /**
+   * Whether two edge-adjacent evidence cells share one outline. Omitted, any two
+   * do — one contour around a region. A game whose evidence is whole pieces
+   * joins only within a piece, so two dominoes side by side stay two shapes
+   * rather than one that is not on the board.
+   */
+  joinEvidence?: (a: MarkCell, b: MarkCell) => boolean;
 }
 
 const key = (c: MarkCell): number => c.y * 8192 + c.x;
+
+/** The sides of each cell in `cells` that face away from its role: a side is
+ * drawn unless the neighbor across it is in `cells` and `join`s it. */
+function roleSides(
+  cells: readonly MarkCell[],
+  join: ((a: MarkCell, b: MarkCell) => boolean) | null,
+): Map<number, number> {
+  const inRole = new Set(cells.map(key));
+  const out = new Map<number, number>();
+  for (const c of cells) {
+    const joined = (x: number, y: number): boolean =>
+      inRole.has(key({ x, y })) && (join === null || join(c, { x, y }));
+    out.set(key(c), outlineSides(c.x, c.y, joined));
+  }
+  return out;
+}
+
+const never = (): boolean => false;
+
+/**
+ * Which sides of each cell a frame's marks paint, per role.
+ *
+ * {@link HintMarks.paint} draws from this. A game whose band is inside the box
+ * also keys its tile cache on {@link MarkOutlines.packed} once it joins cells:
+ * a cell can stay a target while its partner leaves, and the side between them
+ * lives in the cell that did not change.
+ */
+export class MarkOutlines {
+  private readonly target: Map<number, number>;
+  private readonly evidence: Map<number, number>;
+
+  constructor(
+    targets: readonly MarkCell[],
+    evidence: readonly MarkCell[],
+    joins: Pick<HintMarkStyle, "joinTargets" | "joinEvidence">,
+  ) {
+    this.target = roleSides(targets, joins.joinTargets ?? never);
+    this.evidence = roleSides(evidence, joins.joinEvidence ?? null);
+  }
+
+  targetSides(x: number, y: number): number {
+    return this.target.get(key({ x, y })) ?? 0;
+  }
+
+  evidenceSides(x: number, y: number): number {
+    return this.evidence.get(key({ x, y })) ?? 0;
+  }
+
+  /** Both roles' sides in one byte — the target's low nibble, the evidence's
+   * high — for a tile's cache word. */
+  packed(x: number, y: number): number {
+    return this.targetSides(x, y) | (this.evidenceSides(x, y) << 4);
+  }
+}
 
 /**
  * The pass that paints a frame's hint marks, run **after** the tile loop and
@@ -148,7 +215,11 @@ export class HintMarks {
     evidence: readonly MarkCell[],
     style: HintMarkStyle,
   ): void {
-    const signature = `${targets.map(key).join()}|${evidence.map(key).join()}`;
+    const outlines = new MarkOutlines(targets, evidence, style);
+    // The sides as well as the cells: a join can move a side while every cell
+    // keeps its role.
+    const cell = (c: MarkCell): string => `${key(c)}:${outlines.packed(c.x, c.y)}`;
+    const signature = `${targets.map(cell).join()}|${evidence.map(cell).join()}`;
     // Erase before drawing anything, and all four sides of every cell: a side
     // still wanted is repainted below, and going in this order is what stops a
     // shrinking region leaving an interior edge behind. Only when the marks
@@ -157,18 +228,21 @@ export class HintMarks {
       for (const c of this.painted)
         drawMarkSides(dr, style.band(c.x, c.y), MARK_ALL, style.gutterColor);
     }
-    const region = new Set(evidence.map(key));
-    const inRegion = (x: number, y: number): boolean => region.has(key({ x, y }));
     for (const c of evidence)
       drawMarkSides(
         dr,
         style.band(c.x, c.y),
-        outlineSides(c.x, c.y, inRegion),
+        outlines.evidenceSides(c.x, c.y),
         style.evidenceColor,
       );
     // The target last, so it wins any border the two share.
     for (const c of targets)
-      drawMarkSides(dr, style.band(c.x, c.y), MARK_ALL, style.targetColor);
+      drawMarkSides(
+        dr,
+        style.band(c.x, c.y),
+        outlines.targetSides(c.x, c.y),
+        style.targetColor,
+      );
     this.signature = signature;
     this.painted = [...evidence, ...targets];
   }

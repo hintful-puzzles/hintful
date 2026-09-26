@@ -3,6 +3,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
+import { expectPieceRing } from "../../engine/testing/mark-shape.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newDominosaDesc } from "./generator.ts";
 import { type DominosaHint, dominosaGame } from "./index.ts";
@@ -101,7 +102,7 @@ describe("dominosa hint — narration + plan", () => {
 });
 
 describe("dominosa hint — render", () => {
-  it("draws the forced domino's cells in COL_HINT", () => {
+  it("rings the forced domino as one shape in COL_HINT", () => {
     const p = { n: 4, diff: DIFF_TRIVIAL, tall: false };
     const { desc } = newDominosaDesc(p, randomNew("hint-render"));
     const { recording, hint } = renderScenario({
@@ -112,7 +113,10 @@ describe("dominosa hint — render", () => {
     const hintRects = recording.ops.flatMap((o) =>
       o.op === "rect" && o.color === COL_HINT ? [o] : [],
     );
-    expect(hintRects.length).toBeGreaterThan(0);
+    // Six sides around the domino, not a box per square with a double bar
+    // across its middle.
+    expect((hint?.highlights as DominosaHint | undefined)?.kind).toBe("place");
+    expectPieceRing(recording.ops, COL_HINT);
     // Every mark lies inside one of the step's two target squares.
     const ts = PREFERRED_TILE_SIZE;
     const w = p.n + 2;
@@ -126,5 +130,39 @@ describe("dominosa hint — render", () => {
       });
       expect(inside).toBe(true);
     }
+  });
+
+  it("rings a domino on the board's edge whole, on the canvas", () => {
+    // The outer squares' gutters bleed off the canvas, so a band laid in them
+    // draws sides nobody sees. A fixed-seed scan for a placement touching the
+    // edge; every side of its ring must land on the canvas.
+    const p = { n: 4, diff: DIFF_TRIVIAL, tall: false };
+    const { w, h } = { w: p.n + 2, h: p.n + 1 };
+    const onEdge = (i: number): boolean =>
+      i % w === 0 || i % w === w - 1 || i < w || i >= w * (h - 1);
+    for (let seed = 0; seed < 20; seed++) {
+      const { desc } = newDominosaDesc(p, randomNew(`hint-edge-${seed}`));
+      const { recording, hint, size } = renderScenario({
+        game: dominosaGame,
+        id: `${encodeParams(p, true)}:${desc}`,
+        showHint: true,
+        hintUntil: (s) => {
+          const hl = s.highlights as DominosaHint | undefined;
+          return hl?.kind === "place" && hl.targets.some(onEdge);
+        },
+      });
+      const hl = hint?.highlights as DominosaHint | undefined;
+      if (!(hl?.kind === "place" && hl.targets.some(onEdge))) continue;
+      expectPieceRing(recording.ops, COL_HINT);
+      for (const r of recording.ops.flatMap((o) =>
+        o.op === "rect" && o.color === COL_HINT ? [o] : [],
+      ))
+        expect(
+          r.x >= 0 && r.y >= 0 && r.x + r.w <= size.w && r.y + r.h <= size.h,
+          `ring side at ${r.x},${r.y} ${r.w}x${r.h} is off the ${size.w}x${size.h} canvas`,
+        ).toBe(true);
+      return;
+    }
+    throw new Error("no board shows a placement on the edge");
   });
 });
