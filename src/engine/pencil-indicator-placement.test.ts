@@ -21,7 +21,6 @@
 
 import { beforeAll, describe, expect, it } from "vitest";
 import { registerAllGames } from "../games/index.ts";
-import type { GameDrawing } from "./game.ts";
 import { type PencilIndicatorBox, pencilIndicatorBox } from "./pencil-indicator.ts";
 import { type AnyGame, builtGames, enrolledIn } from "./testing/enrollment.ts";
 import { paramsCorpus } from "./testing/params-corpus.ts";
@@ -86,16 +85,7 @@ function frameWith(
   ui.pencilMode = on;
   if (ui.cursor) ui.cursor.visible = false;
   const dr = new RecordingDrawing(game.colors(DEFAULT_BACKGROUND));
-  game.redraw(
-    dr as unknown as GameDrawing,
-    game.newDrawState(state, ts),
-    null,
-    state,
-    1,
-    ui,
-    0,
-    0,
-  );
+  game.redraw(dr, game.newDrawState(state, ts), null, state, 1, ui, 0, 0);
   return dr.ops;
 }
 

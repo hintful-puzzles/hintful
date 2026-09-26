@@ -2,38 +2,23 @@
 // a winning fill, a losing fill (exhausting the limit → "lost"), undo /
 // redo, a forced redraw, and a hint.
 import { describe, expect, it } from "vitest";
-import type { GameDrawing } from "../../engine/game.ts";
 import { CURSOR_RIGHT, CURSOR_SELECT } from "../../engine/pointer.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
+import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { floodGame } from "./index.ts";
-
-function recordingDrawing() {
-  const ops: Array<{ op: string; color?: number }> = [];
-  const dr: GameDrawing = {
-    startDraw: () => ops.push({ op: "startDraw" }),
-    endDraw: () => ops.push({ op: "endDraw" }),
-    drawUpdate: () => ops.push({ op: "drawUpdate" }),
-    clip: () => ops.push({ op: "clip" }),
-    unclip: () => ops.push({ op: "unclip" }),
-    drawRect: (_r, color) => ops.push({ op: "drawRect", color }),
-    drawLine: (_a, _b, color) => ops.push({ op: "drawLine", color }),
-    drawPolygon: (_p, color) => ops.push({ op: "drawPolygon", color }),
-    drawCircle: (_p, _r, color) => ops.push({ op: "drawCircle", color }),
-    drawText: (_p, _o, color) => ops.push({ op: "drawText", color }),
-    blitterNew: () => ({}),
-    blitterFree: () => {},
-    blitterSave: () => {},
-    blitterLoad: () => {},
-    drawHatch: () => {},
-  };
-  return { dr, ops };
-}
 
 function harness() {
   const h = driveMidend(floodGame);
   const status = () => h.last("game-state-change")?.status;
   const statusBar = () => h.last("status-bar-change");
-  return { m: h.midend, status, statusBar };
+  /** A forced redraw, recorded. */
+  const painted = () => {
+    const dr = new RecordingDrawing(h.midend.getColorPalette(DEFAULT_BACKGROUND));
+    h.midend.forceRedraw(dr);
+    return dr.ops;
+  };
+  return { m: h.midend, status, statusBar, painted };
 }
 
 describe("Flood midend lifecycle", () => {
@@ -41,11 +26,10 @@ describe("Flood midend lifecycle", () => {
     const h = harness();
     // 3×3, three colors, generous limit.
     expect(h.m.newGameFromId("3x3c3m9:011000222,9")).toBeNull();
-    const { dr, ops } = recordingDrawing();
-    h.m.forceRedraw(dr);
+    const ops = h.painted();
     // Background + recessed bevels + one rect per tile.
-    expect(ops.filter((o) => o.op === "drawRect").length).toBeGreaterThanOrEqual(9);
-    expect(ops.filter((o) => o.op === "drawPolygon").length).toBe(2);
+    expect(opsOfKind(ops, "rect").length).toBeGreaterThanOrEqual(9);
+    expect(opsOfKind(ops, "polygon").length).toBe(2);
   });
 
   it("a fill advances the move counter", () => {
@@ -95,10 +79,8 @@ describe("Flood midend lifecycle", () => {
     const h = harness();
     expect(h.m.newGameFromId("3x3c3m9:011000222,9")).toBeNull();
     expect(h.m.hint()).toBeNull();
-    const { dr, ops } = recordingDrawing();
-    h.m.forceRedraw(dr);
     // The hint highlights the next-fill squares with a separator-color
     // circle (palette index 1).
-    expect(ops.some((o) => o.op === "drawCircle" && o.color === 1)).toBe(true);
+    expect(opsOfKind(h.painted(), "circle").some((o) => o.fill === 1)).toBe(true);
   });
 });

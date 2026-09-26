@@ -1,34 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { type GameDrawing, Midend, UI_UPDATE } from "../../engine/index.ts";
+import { Midend, UI_UPDATE } from "../../engine/index.ts";
 import { SHOW_TIMER_PREF } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
+import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { PuzzleButton } from "../../engine/types.ts";
 import { type FlipParams, type FlipState, flipGame } from "./index.ts";
 
-/** Recording fake of the full `GameDrawing` surface. */
 function recordingDrawing() {
-  const ops: Array<{ op: string; color?: number }> = [];
-  const rec = (op: string, color?: number) => ops.push({ op, color });
-  const dr: GameDrawing = {
-    startDraw: () => rec("startDraw"),
-    endDraw: () => rec("endDraw"),
-    drawUpdate: () => rec("drawUpdate"),
-    clip: () => rec("clip"),
-    unclip: () => rec("unclip"),
-    drawRect: (_r, c) => rec("drawRect", c),
-    drawLine: (_a, _b, c) => rec("drawLine", c),
-    drawPolygon: (_p, f) => rec("drawPolygon", f),
-    drawCircle: (_p, _r, f) => rec("drawCircle", f),
-    drawText: (_p, _o, c) => rec("drawText", c),
-    blitterNew: () => ({}),
-    blitterFree: () => rec("blitterFree"),
-    blitterSave: () => rec("blitterSave"),
-    blitterLoad: () => rec("blitterLoad"),
-    drawHatch: (_r, c) => rec("drawHatch", c),
-  };
-  return { dr, ops };
+  const dr = new RecordingDrawing(flipGame.colors(DEFAULT_BACKGROUND));
+  return { dr, ops: dr.ops };
 }
 
 const COL_GRID = 3;
@@ -300,17 +283,17 @@ describe("Flip redraw", () => {
     const a = recordingDrawing();
     flipGame.redraw(a.dr, ds, null, s, 1, ui, 0, 0);
     // (w+1)+(h+1) = 8 grid lines, all COL_GRID, drawn once.
-    const gridLines = a.ops.filter((o) => o.op === "drawLine" && o.color === COL_GRID);
+    const gridLines = a.ops.filter((o) => o.op === "line" && o.color === COL_GRID);
     expect(gridLines.length).toBe(8);
-    expect(a.ops.some((o) => o.op === "drawRect")).toBe(true);
+    expect(a.ops.some((o) => o.op === "rect")).toBe(true);
 
     // Re-drawing the identical state: grid already started, every tile
     // unchanged ⇒ no new tile/grid ops (the cache that keeps animation
     // from repainting the whole board every frame).
     const b = recordingDrawing();
     flipGame.redraw(b.dr, ds, null, s, 1, ui, 0, 0);
-    expect(b.ops.filter((o) => o.op === "drawLine").length).toBe(0);
-    expect(b.ops.filter((o) => o.op === "drawRect").length).toBe(0);
+    expect(b.ops.filter((o) => o.op === "line").length).toBe(0);
+    expect(b.ops.filter((o) => o.op === "rect").length).toBe(0);
   });
 
   it("renders solver hint outlines when hints are active", () => {
@@ -323,7 +306,7 @@ describe("Flip redraw", () => {
     const ds = flipGame.newDrawState(hinted, flipGame.preferredTileSize ?? 32);
     const a = recordingDrawing();
     flipGame.redraw(a.dr, ds, null, hinted, 1, ui, 0, 0);
-    expect(a.ops.some((o) => o.op === "drawLine" && o.color === COL_HINT)).toBe(true);
+    expect(a.ops.some((o) => o.op === "line" && o.color === COL_HINT)).toBe(true);
   });
 });
 
@@ -351,7 +334,7 @@ describe("Flip reshape (regression: black canvas when shapes share a tile size)"
     const first = recordingDrawing();
     me.redraw(first.dr);
     const firstGridLines = first.ops.filter(
-      (o) => o.op === "drawLine" && o.color === COL_GRID,
+      (o) => o.op === "line" && o.color === COL_GRID,
     ).length;
     expect(firstGridLines).toBeGreaterThan(0); // grid drawn once
 
@@ -375,9 +358,9 @@ describe("Flip reshape (regression: black canvas when shapes share a tile size)"
     me.redraw(armed.dr);
     const idle = recordingDrawing();
     me.redraw(idle.dr);
-    expect(
-      idle.ops.filter((o) => o.op === "drawLine" && o.color === COL_GRID).length,
-    ).toBe(0);
+    expect(idle.ops.filter((o) => o.op === "line" && o.color === COL_GRID).length).toBe(
+      0,
+    );
 
     me.canvasCleared(); // app calls this from `resizeDrawing`
     const second = recordingDrawing();
@@ -385,9 +368,9 @@ describe("Flip reshape (regression: black canvas when shapes share a tile size)"
 
     // Flip's `!ds.started` branch fired: full-window bg fill +
     // grid lines.
-    expect(second.ops.some((o) => o.op === "drawRect" && o.color === 0)).toBe(true);
+    expect(second.ops.some((o) => o.op === "rect" && o.color === 0)).toBe(true);
     const secondGridLines = second.ops.filter(
-      (o) => o.op === "drawLine" && o.color === COL_GRID,
+      (o) => o.op === "line" && o.color === COL_GRID,
     ).length;
     expect(secondGridLines).toBeGreaterThan(0);
   });

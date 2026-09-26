@@ -1004,7 +1004,9 @@ test suite's minimal game).
 **every render test drives `RecordingDrawing`; do not hand-roll a double.** A
 local double records only the calls its author anticipated, so a game that
 starts drawing something new leaves it green. `opsOfKind(ops, "rect")` narrows
-the op union, which `Array.filter` will not do; `dr.updates` holds the
+the op union, which `Array.filter` will not do; `paintsWith(op, COL_X)` asks
+whether any primitive paints in a color, reading a polygon's or circle's fill
+and outline as well as a `color`; `dr.updates` holds the
 `drawUpdate` rects, kept off `ops` so they are assertable without a line in
 every snapshot),
 `drive-midend.ts` (`driveMidend(game)` / `observeMidend(midend)` — **what a

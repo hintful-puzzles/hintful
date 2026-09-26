@@ -2,34 +2,13 @@
 // new game, a mouse edge toggle, undo/redo, the Solve command, a
 // save/load round-trip, and the mistake count on a fresh board.
 import { describe, expect, it } from "vitest";
-import type { GameDrawing } from "../../engine/game.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
+import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { palisadeGame } from "./index.ts";
 import { newDesc } from "./solver.ts";
-
-function recordingDrawing() {
-  const ops: Array<{ op: string }> = [];
-  const dr: GameDrawing = {
-    startDraw: () => ops.push({ op: "startDraw" }),
-    endDraw: () => ops.push({ op: "endDraw" }),
-    drawUpdate: () => {},
-    clip: () => {},
-    unclip: () => {},
-    drawRect: () => ops.push({ op: "drawRect" }),
-    drawLine: () => ops.push({ op: "drawLine" }),
-    drawPolygon: () => ops.push({ op: "drawPolygon" }),
-    drawCircle: () => ops.push({ op: "drawCircle" }),
-    drawText: () => ops.push({ op: "drawText" }),
-    blitterNew: () => ({}),
-    blitterFree: () => {},
-    blitterSave: () => {},
-    blitterLoad: () => {},
-    drawHatch: () => {},
-  };
-  return { dr, ops };
-}
 
 function harness() {
   const h = driveMidend(palisadeGame);
@@ -56,10 +35,10 @@ describe("Palisade midend lifecycle", () => {
     expect(h.statusBar()).toBe("Region size: 5");
     expect(h.status()).toBe("ongoing");
 
-    const { dr, ops } = recordingDrawing();
+    const dr = new RecordingDrawing(h.m.getColorPalette(DEFAULT_BACKGROUND));
     h.m.forceRedraw(dr);
-    expect(ops.filter((o) => o.op === "drawRect").length).toBeGreaterThan(20);
-    expect(ops.some((o) => o.op === "drawText")).toBe(true);
+    expect(opsOfKind(dr.ops, "rect").length).toBeGreaterThan(20);
+    expect(opsOfKind(dr.ops, "text").length).toBeGreaterThan(0);
   });
 
   it("toggles an edge, then undo reverts and redo reapplies it", () => {

@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { raisedBevelWidth } from "../../engine/draw.ts";
 import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
-import type { GameDrawing, HintStep } from "../../engine/index.ts";
+import type { HintStep } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  opsOfKind,
+  paintsWith,
+  RecordingDrawing,
+} from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { itSlow } from "../../engine/testing/slow.ts";
 import { executeMove, sixteenGame } from "./index.ts";
@@ -44,28 +48,9 @@ function solvedState(w: number, h: number): SixteenState {
   };
 }
 
-/** A `GameDrawing` that records each call's name and color. */
-function recordingDrawing() {
-  const ops: Array<{ op: string; color?: number }> = [];
-  const rec = (op: string, color?: number) => ops.push({ op, color });
-  const dr: GameDrawing = {
-    startDraw: () => rec("startDraw"),
-    endDraw: () => rec("endDraw"),
-    drawUpdate: () => rec("drawUpdate"),
-    clip: () => rec("clip"),
-    unclip: () => rec("unclip"),
-    drawRect: (_r, c) => rec("drawRect", c),
-    drawLine: (_a, _b, c) => rec("drawLine", c),
-    drawPolygon: (_p, f) => rec("drawPolygon", f),
-    drawCircle: (_p, _r, f) => rec("drawCircle", f),
-    drawText: (_p, _o, c) => rec("drawText", c),
-    blitterNew: () => ({}),
-    blitterFree: () => rec("blitterFree"),
-    blitterSave: () => rec("blitterSave"),
-    blitterLoad: () => rec("blitterLoad"),
-    drawHatch: (_r, c) => rec("drawHatch", c),
-  };
-  return { dr, ops };
+function recordingDrawing(): { dr: RecordingDrawing; ops: RecordingDrawing["ops"] } {
+  const dr = new RecordingDrawing(sixteenGame.colors(DEFAULT_BACKGROUND));
+  return { dr, ops: dr.ops };
 }
 
 // --- params -----------------------------------------------------------
@@ -987,7 +972,7 @@ describe("Sixteen hint rendering", () => {
     // The tile fill and target border (rects) and the arrow (polygon) all paint
     // in COL_HINT, which is color index 4.
     const COL_HINT_INDEX = 4;
-    const hintOps = ops.filter((o) => o.color === COL_HINT_INDEX);
+    const hintOps = ops.filter((o) => paintsWith(o, COL_HINT_INDEX));
     expect(hintOps.length).toBeGreaterThan(0);
   });
 
@@ -1138,16 +1123,6 @@ describe("the hint marks while the hinted slide animates", () => {
   const HW = raisedBevelWidth(TS); // read from the helper, so it cannot go stale
   const px = (cell: number) => cell * TS + BORDER;
 
-  /** The shared recorder. The local double this replaced dropped every line and
-   * circle, and kept only a polygon's first vertex. */
-  function coordRecordingDrawing(): {
-    dr: RecordingDrawing;
-    ops: RecordingDrawing["ops"];
-  } {
-    const dr = new RecordingDrawing(sixteenGame.colors(DEFAULT_BACKGROUND));
-    return { dr, ops: dr.ops };
-  }
-
   /** A mid-slide frame of the hinted move, on the first board whose hint step
    * slides its tile one straight (unwrapped) cell and aims the target border
    * at a cell on the line being slid — the only case where a border wrongly
@@ -1189,21 +1164,11 @@ describe("the hint marks while the hinted slide animates", () => {
 
       // Paint the still pre-move frame first, so the cache is warm exactly
       // as in the app when the hinted slide begins.
-      sixteenGame.redraw?.(
-        coordRecordingDrawing().dr,
-        ds,
-        null,
-        state,
-        1,
-        ui,
-        0,
-        0,
-        step,
-      );
+      sixteenGame.redraw?.(recordingDrawing().dr, ds, null, state, 1, ui, 0, 0, step);
 
       // Halfway through the slide.
       const anim = sixteenGame.animLength?.(state, after, 1, ui) ?? 0;
-      const { dr, ops } = coordRecordingDrawing();
+      const { dr, ops } = recordingDrawing();
       sixteenGame.redraw?.(dr, ds, state, after, 1, ui, anim / 2, 0, step);
       return { state, after, m, hl, from, ops };
     }

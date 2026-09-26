@@ -2,37 +2,22 @@
 // game through a slide, undo, redo, and a hint, asserting the
 // statusbar notifications and that a redraw paints the board.
 import { beforeEach, describe, expect, it } from "vitest";
-import type { GameDrawing } from "../../engine/game.ts";
 import { CURSOR_LEFT } from "../../engine/pointer.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
+import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { fifteenGame } from "./index.ts";
-
-function recordingDrawing() {
-  const ops: Array<{ op: string; color?: number }> = [];
-  const dr: GameDrawing = {
-    startDraw: () => ops.push({ op: "startDraw" }),
-    endDraw: () => ops.push({ op: "endDraw" }),
-    drawUpdate: () => ops.push({ op: "drawUpdate" }),
-    clip: () => ops.push({ op: "clip" }),
-    unclip: () => ops.push({ op: "unclip" }),
-    drawRect: (_r, color) => ops.push({ op: "drawRect", color }),
-    drawLine: (_a, _b, color) => ops.push({ op: "drawLine", color }),
-    drawPolygon: (_p, color) => ops.push({ op: "drawPolygon", color }),
-    drawCircle: (_p, _r, color) => ops.push({ op: "drawCircle", color }),
-    drawText: (_p, _o, color) => ops.push({ op: "drawText", color }),
-    blitterNew: () => ({}),
-    blitterFree: () => {},
-    blitterSave: () => {},
-    blitterLoad: () => {},
-    drawHatch: () => {},
-  };
-  return { dr, ops };
-}
 
 function harness() {
   const h = driveMidend(fifteenGame);
   const status = () => h.last("status-bar-change");
-  return { m: h.midend, status };
+  /** A forced redraw, recorded. */
+  const painted = () => {
+    const dr = new RecordingDrawing(h.midend.getColorPalette(DEFAULT_BACKGROUND));
+    h.midend.forceRedraw(dr);
+    return dr.ops;
+  };
+  return { m: h.midend, status, painted };
 }
 
 describe("Fifteen midend lifecycle", () => {
@@ -46,13 +31,12 @@ describe("Fifteen midend lifecycle", () => {
   });
 
   it("paints the board on a forced redraw", () => {
-    const { dr, ops } = recordingDrawing();
-    h.m.forceRedraw(dr);
+    const ops = h.painted();
     // A background rect, the two recessed-border bevels, and a numbered
     // beveled tile (3 polygons each) for every non-gap cell.
-    expect(ops.some((o) => o.op === "drawRect")).toBe(true);
-    expect(ops.filter((o) => o.op === "drawPolygon").length).toBeGreaterThan(2);
-    expect(ops.filter((o) => o.op === "drawText").length).toBe(15);
+    expect(opsOfKind(ops, "rect").length).toBeGreaterThan(0);
+    expect(opsOfKind(ops, "polygon").length).toBeGreaterThan(2);
+    expect(opsOfKind(ops, "text").length).toBe(15);
   });
 
   it("slides on a cursor key and reports the move in the status bar", () => {
@@ -75,10 +59,8 @@ describe("Fifteen midend lifecycle", () => {
   it("surfaces a hint and renders it with the hint color", () => {
     // hint() returns undefined on success.
     expect(h.m.hint()).toBeNull();
-    const { dr, ops } = recordingDrawing();
-    h.m.forceRedraw(dr);
     // The hinted tile is filled with COL_HINT (palette index 4).
-    expect(ops.some((o) => o.op === "drawRect" && o.color === 4)).toBe(true);
+    expect(opsOfKind(h.painted(), "rect").some((o) => o.color === 4)).toBe(true);
   });
 
   it("stretches a hint-executed move to the uniform 1s, despite Fifteen's 0.13s base", () => {

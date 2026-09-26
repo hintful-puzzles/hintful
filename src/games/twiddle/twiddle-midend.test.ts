@@ -2,34 +2,13 @@
 // game through a rotation, undo, redo, and solve, asserting the
 // statusbar notifications and that a redraw paints the board.
 import { beforeEach, describe, expect, it } from "vitest";
-import type { GameDrawing } from "../../engine/game.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
+import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { twiddleGame } from "./index.ts";
 
 // 'A' rotates the top-left 2×2 block anticlockwise (dir -1).
 const KEY_A = 0x41;
-
-function recordingDrawing() {
-  const ops: Array<{ op: string; color?: number }> = [];
-  const dr: GameDrawing = {
-    startDraw: () => ops.push({ op: "startDraw" }),
-    endDraw: () => ops.push({ op: "endDraw" }),
-    drawUpdate: () => ops.push({ op: "drawUpdate" }),
-    clip: () => ops.push({ op: "clip" }),
-    unclip: () => ops.push({ op: "unclip" }),
-    drawRect: (_r, color) => ops.push({ op: "drawRect", color }),
-    drawLine: (_a, _b, color) => ops.push({ op: "drawLine", color }),
-    drawPolygon: (_p, color) => ops.push({ op: "drawPolygon", color }),
-    drawCircle: (_p, _r, color) => ops.push({ op: "drawCircle", color }),
-    drawText: (_p, _o, color) => ops.push({ op: "drawText", color }),
-    blitterNew: () => ({}),
-    blitterFree: () => {},
-    blitterSave: () => {},
-    blitterLoad: () => {},
-    drawHatch: () => {},
-  };
-  return { dr, ops };
-}
 
 function harness() {
   const h = driveMidend(twiddleGame);
@@ -47,13 +26,13 @@ describe("Twiddle midend lifecycle", () => {
   });
 
   it("paints the board on a forced redraw", () => {
-    const { dr, ops } = recordingDrawing();
+    const dr = new RecordingDrawing(h.m.getColorPalette(DEFAULT_BACKGROUND));
     h.m.forceRedraw(dr);
-    expect(ops.some((o) => o.op === "drawRect")).toBe(true);
+    expect(opsOfKind(dr.ops, "rect").length).toBeGreaterThan(0);
     // Bevel triangles per tile plus the two recessed-border bevels.
-    expect(ops.filter((o) => o.op === "drawPolygon").length).toBeGreaterThan(2);
+    expect(opsOfKind(dr.ops, "polygon").length).toBeGreaterThan(2);
     // One number per cell.
-    expect(ops.filter((o) => o.op === "drawText").length).toBe(9);
+    expect(opsOfKind(dr.ops, "text").length).toBe(9);
   });
 
   it("rotates on a key and reports the move in the status bar", () => {

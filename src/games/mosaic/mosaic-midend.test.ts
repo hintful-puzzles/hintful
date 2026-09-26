@@ -2,7 +2,6 @@
 // a full keyboard solve, undo/redo, the Solve command, the mistake
 // overlay, and a forced redraw.
 import { describe, expect, it } from "vitest";
-import type { GameDrawing } from "../../engine/game.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -11,29 +10,9 @@ import {
   CURSOR_SELECT2,
 } from "../../engine/pointer.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
+import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { mosaicGame } from "./index.ts";
-
-function recordingDrawing() {
-  const ops: Array<{ op: string; color?: number }> = [];
-  const dr: GameDrawing = {
-    startDraw: () => ops.push({ op: "startDraw" }),
-    endDraw: () => ops.push({ op: "endDraw" }),
-    drawUpdate: () => {},
-    clip: () => {},
-    unclip: () => {},
-    drawRect: (_r, color) => ops.push({ op: "drawRect", color }),
-    drawLine: (_a, _b, color) => ops.push({ op: "drawLine", color }),
-    drawPolygon: (_p, color) => ops.push({ op: "drawPolygon", color }),
-    drawCircle: (_p, _r, color) => ops.push({ op: "drawCircle", color }),
-    drawText: (_p, _o, color) => ops.push({ op: "drawText", color }),
-    blitterNew: () => ({}),
-    blitterFree: () => {},
-    blitterSave: () => {},
-    blitterLoad: () => {},
-    drawHatch: () => {},
-  };
-  return { dr, ops };
-}
 
 function harness() {
   const h = driveMidend(mosaicGame);
@@ -72,10 +51,10 @@ describe("Mosaic midend lifecycle", () => {
   it("paints the board on a forced redraw", () => {
     const h = harness();
     expect(h.m.newGameFromId(GAME_ID)).toBeNull();
-    const { dr, ops } = recordingDrawing();
+    const dr = new RecordingDrawing(h.m.getColorPalette(DEFAULT_BACKGROUND));
     h.m.forceRedraw(dr);
-    expect(ops.filter((o) => o.op === "drawRect").length).toBeGreaterThanOrEqual(9);
-    expect(ops.filter((o) => o.op === "drawText").length).toBe(9);
+    expect(opsOfKind(dr.ops, "rect").length).toBeGreaterThanOrEqual(9);
+    expect(opsOfKind(dr.ops, "text").length).toBe(9);
   });
 
   it("tracks the clue count and completes via keyboard marking", () => {

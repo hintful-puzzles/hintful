@@ -5,7 +5,6 @@
 // moving tile at an interpolated coordinate.
 import { describe, expect, it } from "vitest";
 import { raisedBevelWidth } from "../../engine/draw.ts";
-import type { GameDrawing } from "../../engine/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
@@ -63,7 +62,7 @@ describe("Fifteen rendering", () => {
     const state = executeMove(prev, { type: "move", x: 2, y: 3 }); // tile 15 → (3,3)
     const ds = freshDs(state);
     // Settle the cache with a static draw of the new state first…
-    redraw(dr0(ds, state), ds, null, state, 0, UI, 0, 0);
+    redraw(recordingDrawing().dr, ds, null, state, 0, UI, 0, 0);
 
     // …then redraw mid-animation from prev → state at half the anim time.
     const { dr, ops } = recordingDrawing();
@@ -82,7 +81,7 @@ describe("Fifteen rendering", () => {
     const state = solved(4, 4);
     const ds = freshDs(state);
     // Prime the cache.
-    redraw(dr0(ds, state), ds, null, state, 0, UI, 0, 0);
+    redraw(recordingDrawing().dr, ds, null, state, 0, UI, 0, 0);
     const { dr, ops } = recordingDrawing();
     // flashTime within the first frame → COL_HIGHLIGHT (2) background.
     redraw(dr, ds, null, state, 0, UI, 0, 0.05);
@@ -90,11 +89,6 @@ describe("Fifteen rendering", () => {
     expect(ops.some((o) => o.op === "rect" && o.color === 2)).toBe(true);
   });
 });
-
-// A throwaway recording drawing used only to prime the cache.
-function dr0(_ds: unknown, _state: unknown): GameDrawing {
-  return recordingDrawing().dr;
-}
 
 describe("the hint mark while the hinted slide animates", () => {
   // Netslide's defect class: a hint mark on a *moving tile* must ride the
@@ -120,7 +114,7 @@ describe("the hint mark while the hinted slide animates", () => {
 
       const ds = freshDs(state);
       // Warm the cache with the still pre-move frame, hint displayed.
-      redraw(dr0(ds, state), ds, null, state, 0, UI, 0, 0, step);
+      redraw(recordingDrawing().dr, ds, null, state, 0, UI, 0, 0, step);
 
       // Halfway through the slide into the gap.
       const anim = fifteenGame.animLength?.(state, after, 1, UI) ?? 0;

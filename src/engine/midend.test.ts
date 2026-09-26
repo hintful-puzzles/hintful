@@ -2,40 +2,20 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { mkhighlightBackground } from "./color/color-mkhighlight.ts";
 import { token } from "./color/color-token.ts";
 import { type FakeDrawState, fakeGame } from "./fake-game.ts";
-import type { Game, GameDrawing } from "./game.ts";
+import type { Game } from "./game.ts";
 import { UI_UPDATE } from "./game.ts";
 import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { Midend, SHOW_TIMER_PREF } from "./midend.ts";
 import { LEFT_BUTTON, RIGHT_BUTTON } from "./pointer.ts";
 import { decodeSave, encodeSave } from "./save.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
+import { RecordingDrawing } from "./testing/recording-drawing.ts";
+import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 import type { ChangeNotification, Color } from "./types.ts";
 
-/** Recording fake `GameDrawing` for engine-level redraw assertions. */
 function recordingDrawing() {
-  const ops: Array<{
-    op: string;
-    color?: number;
-    rect?: { x: number; y: number; w: number; h: number };
-  }> = [];
-  const dr: GameDrawing = {
-    startDraw: () => ops.push({ op: "startDraw" }),
-    endDraw: () => ops.push({ op: "endDraw" }),
-    drawUpdate: (rect) => ops.push({ op: "drawUpdate", rect }),
-    clip: () => ops.push({ op: "clip" }),
-    unclip: () => ops.push({ op: "unclip" }),
-    drawRect: (rect, color) => ops.push({ op: "drawRect", rect, color }),
-    drawLine: (_a, _b, color) => ops.push({ op: "drawLine", color }),
-    drawPolygon: (_p, color) => ops.push({ op: "drawPolygon", color }),
-    drawCircle: (_p, _r, color) => ops.push({ op: "drawCircle", color }),
-    drawText: (_p, _o, color) => ops.push({ op: "drawText", color }),
-    blitterNew: () => ({}),
-    blitterFree: () => {},
-    blitterSave: () => {},
-    blitterLoad: () => {},
-    drawHatch: () => {},
-  };
-  return { dr, ops };
+  const dr = new RecordingDrawing(fakeGame.colors(DEFAULT_BACKGROUND));
+  return { dr, ops: dr.ops };
 }
 
 /** A fake game that exposes the reference-aid hooks over a tiny mutable Ui,
@@ -681,7 +661,7 @@ describe("Midend.size rebuilds the drawstate only for a new tile size (regressio
     // First redraw of a fresh drawstate: the midend lays the ground.
     const a = recordingDrawing();
     m.redraw(a.dr);
-    expect(a.ops.some((o) => o.op === "drawRect" && o.color === 0)).toBe(true);
+    expect(a.ops.some((o) => o.op === "rect" && o.color === 0)).toBe(true);
 
     // A slot that resolves to the same tile (66) is a layout jiggle: the
     // drawstate is preserved, so no ground is laid over the game's pixels.
@@ -689,7 +669,7 @@ describe("Midend.size rebuilds the drawstate only for a new tile size (regressio
     m.size({ w: 200, h: 199 });
     const b = recordingDrawing();
     m.redraw(b.dr);
-    expect(b.ops.some((o) => o.op === "drawRect" && o.color === 0)).toBe(false);
+    expect(b.ops.some((o) => o.op === "rect" && o.color === 0)).toBe(false);
   });
 
   it("a redraw after a new-tile size() paints from scratch", () => {
@@ -700,7 +680,7 @@ describe("Midend.size rebuilds the drawstate only for a new tile size (regressio
     m.size({ w: 400, h: 400 });
     const b = recordingDrawing();
     m.redraw(b.dr);
-    expect(b.ops.some((o) => o.op === "drawRect" && o.color === 0)).toBe(true);
+    expect(b.ops.some((o) => o.op === "rect" && o.color === 0)).toBe(true);
   });
 });
 
@@ -730,12 +710,12 @@ describe("Midend.canvasCleared invalidates the drawstate (the only real signal)"
     // Pre-clear: redraws are cache-suppressed for unchanged state.
     const pre = recordingDrawing();
     m.redraw(pre.dr);
-    expect(pre.ops.some((o) => o.op === "drawRect" && o.color === 0)).toBe(false);
+    expect(pre.ops.some((o) => o.op === "rect" && o.color === 0)).toBe(false);
 
     m.canvasCleared();
     const post = recordingDrawing();
     m.redraw(post.dr);
-    expect(post.ops.some((o) => o.op === "drawRect" && o.color === 0)).toBe(true);
+    expect(post.ops.some((o) => o.op === "rect" && o.color === 0)).toBe(true);
   });
 
   it("is a no-op without a game (defensive guard)", () => {
@@ -762,14 +742,14 @@ describe("Midend.forceRedraw is canvasCleared + redraw (palette/font replacement
     const after = (m as unknown as { drawState: FakeDrawState }).drawState.instance;
     expect(after).not.toBe(before);
     // The ground is laid as part of the forced redraw.
-    expect(ops.some((o) => o.op === "drawRect" && o.color === 0)).toBe(true);
+    expect(ops.some((o) => o.op === "rect" && o.color === 0)).toBe(true);
   });
 
   it("is a no-op without a game (defensive guard)", () => {
     const fresh = new Midend(fakeGame);
     const { dr, ops } = recordingDrawing();
     expect(() => fresh.forceRedraw(dr)).not.toThrow();
-    expect(ops.filter((o) => o.op === "drawRect").length).toBe(0);
+    expect(ops.filter((o) => o.op === "rect").length).toBe(0);
   });
 });
 
@@ -781,25 +761,25 @@ describe("The engine lays the ground on a fresh drawstate, and paints nothing el
     return m;
   }
   function drawn(m: ReturnType<typeof started>) {
-    const { dr, ops } = recordingDrawing();
+    const { dr } = recordingDrawing();
     m.redraw(dr);
-    return ops.filter((o) => o.op !== "startDraw" && o.op !== "endDraw");
+    return { ops: dr.ops, updates: dr.updates };
   }
 
   it("the first redraw fills the whole canvas in color 0", () => {
     const m = started();
     const { w, h } = m.size({ w: 200, h: 200 });
-    expect(drawn(m)).toEqual([
-      { op: "drawRect", rect: { x: 0, y: 0, w, h }, color: 0 },
-      { op: "drawUpdate", rect: { x: 0, y: 0, w, h } },
-    ]);
+    expect(drawn(m)).toEqual({
+      ops: [{ op: "rect", x: 0, y: 0, w, h, color: 0, rgb: "rgb(255, 255, 255)" }],
+      updates: [{ x: 0, y: 0, w, h }],
+    });
   });
 
   it("a later redraw of the same drawstate emits nothing of the engine's own", () => {
     const m = started();
     m.size({ w: 200, h: 200 });
     drawn(m);
-    expect(drawn(m)).toEqual([]);
+    expect(drawn(m)).toEqual({ ops: [], updates: [] });
   });
 });
 
@@ -1487,7 +1467,7 @@ describe("Midend mistake overlay (findMistakes lifecycle)", () => {
     },
   };
   const sawSentinel = (ops: ReturnType<typeof recordingDrawing>["ops"]) =>
-    ops.some((o) => o.op === "drawCircle" && o.color === MISTAKE_SENTINEL);
+    ops.some((o) => o.op === "circle" && o.fill === MISTAKE_SENTINEL);
 
   it("reports the capability and count, and displays then clears the overlay", () => {
     const h = harness(mistakeGame);

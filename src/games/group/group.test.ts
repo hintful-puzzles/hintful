@@ -8,6 +8,7 @@
 import { describe, expect, it } from "vitest";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE } from "../../engine/latin.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { newGameDesc } from "./generator.ts";
 import { groupGame } from "./index.ts";
 import { colors, newDrawState, redraw } from "./render.ts";
@@ -255,19 +256,10 @@ describe("rendering smoke", () => {
     expect(pal).toHaveLength(11);
 
     const ds = newDrawState(state, 48);
-    const ops: string[] = [];
-    // Minimal GameDrawing double: record op names, ignore geometry.
-    const dr = {
-      drawRect: () => ops.push("rect"),
-      drawLine: () => ops.push("line"),
-      drawPolygon: () => ops.push("poly"),
-      drawCircle: () => ops.push("circle"),
-      drawText: () => ops.push("text"),
-      clip: () => {},
-      unclip: () => {},
-      drawUpdate: () => {},
-    } as unknown as Parameters<typeof redraw>[0];
+    const dr = new RecordingDrawing(pal);
     redraw(dr, ds, null, state, 0, newUi(state), 0, 0);
-    expect(ops.length).toBeGreaterThan(0);
+    expect(
+      dr.ops.filter((o) => o.op !== "clip" && o.op !== "unclip").length,
+    ).toBeGreaterThan(0);
   });
 });

@@ -1,6 +1,6 @@
 # retire-the-hand-rolled-drawing-doubles
 
-**Status: scaffolded, not started.** Found while migrating tests onto
+**Status: implemented 2026-09-26; see `tasks.md` for what was measured.** Found while migrating tests onto
 `drive-midend.ts` (`share-the-midend-test-harness`, 2026-09-26): the same
 files that hand-rolled a notification recorder also hand-roll a drawing one.
 

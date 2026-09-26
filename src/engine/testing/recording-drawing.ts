@@ -240,3 +240,12 @@ export function opsOfKind<K extends DrawOp["op"]>(
 ): Extract<DrawOp, { op: K }>[] {
   return ops.filter((o): o is Extract<DrawOp, { op: K }> => o.op === kind);
 }
+
+/** Whether `op` paints in palette index `color` — as its `color`, or as a
+ * polygon's or circle's fill or outline. For a test asking "is anything in
+ * COL_HINT" without caring which primitive carries it. */
+export function paintsWith(op: DrawOp, color: number): boolean {
+  if ("color" in op) return op.color === color;
+  if ("fill" in op) return op.fill === color || op.outline === color;
+  return false;
+}

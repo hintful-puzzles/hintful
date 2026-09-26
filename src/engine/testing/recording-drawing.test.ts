@@ -4,7 +4,7 @@
 // for an undefined index).
 import { describe, expect, it } from "vitest";
 import type { Color } from "../types.ts";
-import { RecordingDrawing } from "./recording-drawing.ts";
+import { paintsWith, RecordingDrawing } from "./recording-drawing.ts";
 
 // index 0 black, 1 white, 2 a clear blue (0.13, 0.5, 0.85).
 const PALETTE: Color[] = [
@@ -107,5 +107,16 @@ describe("RecordingDrawing", () => {
     const dr = new RecordingDrawing(PALETTE);
     dr.drawRect({ x: 0, y: 0, w: 1, h: 1 }, 99);
     expect(dr.ops[0]).toMatchObject({ color: 99, rgb: "color#99" });
+  });
+
+  it("paintsWith reads a color, a fill or an outline, and nothing from a clip", () => {
+    const dr = new RecordingDrawing(PALETTE);
+    dr.drawRect({ x: 0, y: 0, w: 1, h: 1 }, 1);
+    dr.drawPolygon([{ x: 0, y: 0 }], 0, 2);
+    dr.drawCircle({ x: 0, y: 0 }, 1, 2, 0);
+    dr.clip({ x: 0, y: 0, w: 1, h: 1 });
+    expect([0, 1, 2].map((c) => dr.ops.filter((o) => paintsWith(o, c)).length)).toEqual(
+      [2, 1, 2],
+    );
   });
 });

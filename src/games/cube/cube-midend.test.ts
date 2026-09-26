@@ -2,32 +2,11 @@
 // game through a roll, undo, and redo, asserting the state/statusbar
 // notifications and that a redraw paints the board.
 import { beforeEach, describe, expect, it } from "vitest";
-import type { GameDrawing } from "../../engine/game.ts";
 import { CURSOR_RIGHT } from "../../engine/pointer.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
+import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { cubeGame } from "./index.ts";
-
-function recordingDrawing() {
-  const ops: Array<{ op: string; color?: number }> = [];
-  const dr: GameDrawing = {
-    startDraw: () => ops.push({ op: "startDraw" }),
-    endDraw: () => ops.push({ op: "endDraw" }),
-    drawUpdate: () => ops.push({ op: "drawUpdate" }),
-    clip: () => ops.push({ op: "clip" }),
-    unclip: () => ops.push({ op: "unclip" }),
-    drawRect: (_r, color) => ops.push({ op: "drawRect", color }),
-    drawLine: (_a, _b, color) => ops.push({ op: "drawLine", color }),
-    drawPolygon: (_p, color) => ops.push({ op: "drawPolygon", color }),
-    drawCircle: (_p, _r, color) => ops.push({ op: "drawCircle", color }),
-    drawText: (_p, _o, color) => ops.push({ op: "drawText", color }),
-    blitterNew: () => ({}),
-    blitterFree: () => {},
-    blitterSave: () => {},
-    blitterLoad: () => {},
-    drawHatch: () => {},
-  };
-  return { dr, ops };
-}
 
 function harness() {
   const h = driveMidend(cubeGame);
@@ -45,11 +24,11 @@ describe("Cube midend lifecycle", () => {
   });
 
   it("paints the board on a forced redraw", () => {
-    const { dr, ops } = recordingDrawing();
+    const dr = new RecordingDrawing(h.m.getColorPalette(DEFAULT_BACKGROUND));
     h.m.forceRedraw(dr);
     // A background rect plus a polygon per grid square (9) and the solid.
-    expect(ops.filter((o) => o.op === "drawPolygon").length).toBeGreaterThan(9);
-    expect(ops.some((o) => o.op === "drawRect")).toBe(true);
+    expect(opsOfKind(dr.ops, "polygon").length).toBeGreaterThan(9);
+    expect(opsOfKind(dr.ops, "rect").length).toBeGreaterThan(0);
   });
 
   it("rolls on a cursor key and reports the move in the status bar", () => {
