@@ -38,10 +38,10 @@ const DIFF_CHARS = "et"; // ENCODE chars, indexed by difficulty
 // The solver walks orthogonal neighbors in this fixed order; the generator
 // and completion check reuse dx/dy so byte-order-sensitive loops match.
 export const N = 0;
-const U = 1;
-const L = 2;
-const R = 3;
-const D = 4;
+export const U = 1;
+export const L = 2;
+export const R = 3;
+export const D = 4;
 export const MAXDIR = 5;
 export const DX = (d: number): number => (d === R ? 1 : 0) - (d === L ? 1 : 0);
 export const DY = (d: number): number => (d === D ? 1 : 0) - (d === U ? 1 : 0);
@@ -62,16 +62,24 @@ export interface TentsState {
   readonly numbers: Int32Array;
   /** Per-cell BLANK/TREE/TENT/NONTENT, cloned per move. */
   readonly grid: Int8Array;
+  /** The player's notation: per square, the direction of the tree or tent it
+   * is joined to, or `N`. Only a tent and an orthogonally adjacent tree are
+   * ever joined, and always both ways. The win condition never reads it. */
+  readonly links: Int8Array;
   readonly completed: boolean;
   readonly cheated: boolean;
 }
 
 /** A `cells` batch is the C `B`/`T`/`N` compound (one gesture's edits);
- * `solve` is the `S;T…` compound as the list of tent cell indices. Both are
- * JSON-save-safe. */
+ * `solve` is the `S;T…` compound as the list of tent cell indices; `link`
+ * joins (`on`) or parts the tent and tree at `(x, y)` and its neighbor toward
+ * `d`, and joining a tree to an open square places the tent there too. A link
+ * move sets rather than toggles, so replaying one is harmless.
+ * All are JSON-save-safe. */
 export type TentsMove =
   | { type: "cells"; cells: readonly { x: number; y: number; v: number }[] }
-  | { type: "solve"; tents: readonly number[] };
+  | { type: "solve"; tents: readonly number[] }
+  | { type: "link"; x: number; y: number; d: number; on: boolean };
 
 export interface TentsUi {
   /** The drag's anchor and current cell, in grid coordinates. */
@@ -86,6 +94,9 @@ export interface TentsUi {
    * (this and Boats) need it, which is why it is not in {@link GridDrag}. */
   dragOk: boolean;
   cursor: GridCursor;
+  /** `L` was pressed on the cursor's tent, tree or open square: the next arrow
+   * joins it to the neighbor that way. The keyboard's form of the link drag. */
+  linkArmed: boolean;
 }
 
 /** A placed square that contradicts the unique solution (surfaced by Check &
@@ -94,7 +105,7 @@ export interface TentsUi {
 export interface TentsMistake {
   x: number;
   y: number;
-  kind: "tent" | "nontent";
+  kind: "tent" | "nontent" | "link";
 }
 
 // --- params --------------------------------------------------------------
@@ -244,7 +255,8 @@ export function decodeDesc(
 
 export function newState(p: TentsParams, desc: string): TentsState {
   const { grid, numbers } = decodeDesc(p, desc);
-  return { w: p.w, h: p.h, numbers, grid, completed: false, cheated: false };
+  const links = new Int8Array(p.w * p.h).fill(N);
+  return { w: p.w, h: p.h, numbers, grid, links, completed: false, cheated: false };
 }
 
 // --- completion check (upstream execute_move tail) ------------------------
@@ -315,6 +327,7 @@ export function checkCompletion(
 export function executeMove(state: TentsState, move: TentsMove): TentsState {
   const { w, h } = state;
   const grid = Int8Array.from(state.grid);
+  const links = Int8Array.from(state.links);
   let cheated = state.cheated;
 
   if (move.type === "solve") {
@@ -325,18 +338,67 @@ export function executeMove(state: TentsState, move: TentsMove): TentsState {
         throw new Error("Bad solve move");
       grid[idx] = TENT;
     }
+    links.fill(N);
   } else if (move.type === "cells") {
     for (const { x, y, v } of move.cells) {
       if (x < 0 || x >= w || y < 0 || y >= h) throw new Error("Move out of bounds");
       if (grid[y * w + x] === TREE) throw new Error("Cannot modify a tree");
       grid[y * w + x] = v;
+      // A square that stops being a tent lets go of its tree.
+      if (v !== TENT) unlink(w, links, y * w + x);
+    }
+  } else if (move.type === "link") {
+    const { x, y, d, on } = move;
+    const x2 = x + DX(d);
+    const y2 = y + DY(d);
+    if (d <= N || d >= MAXDIR || !inGrid(w, h, x, y) || !inGrid(w, h, x2, y2))
+      throw new Error("Link out of bounds");
+    const a = y * w + x;
+    const b = y2 * w + x2;
+    if (!canJoin(grid, a, b)) throw new Error("A link joins a tent to a tree");
+    if (on) {
+      // Joining a tree to an open square places the tent and joins it at once.
+      if (grid[a] === BLANK) grid[a] = TENT;
+      if (grid[b] === BLANK) grid[b] = TENT;
+      unlink(w, links, a);
+      unlink(w, links, b);
+      links[a] = d;
+      links[b] = FLIP(d);
+    } else if (links[a] === d) {
+      unlink(w, links, a);
     }
   } else {
     return assertNever(move, "tents: executeMove");
   }
 
   const completed = state.completed || checkCompletion(w, h, grid, state.numbers);
-  return { ...state, grid, completed, cheated };
+  return { ...state, grid, links, completed, cheated };
+}
+
+const inGrid = (w: number, h: number, x: number, y: number): boolean =>
+  x >= 0 && x < w && y >= 0 && y < h;
+
+/** Squares `a` and `b` are a tree and, in either order, a tent or an open
+ * square, which joining makes a tent. */
+export const canJoin = (grid: Int8Array, a: number, b: number): boolean => {
+  const tentable = (v: number) => v === TENT || v === BLANK;
+  return (
+    (tentable(grid[a]) && grid[b] === TREE) || (grid[a] === TREE && tentable(grid[b]))
+  );
+};
+
+/** Part square `i` from whatever it is joined to, at both ends. */
+function unlink(w: number, links: Int8Array, i: number): void {
+  const d = links[i];
+  if (d === N) return;
+  links[i + DY(d) * w + DX(d)] = N;
+  links[i] = N;
+}
+
+/** The square joined to `i`, or -1. */
+export function partnerOf(w: number, links: Int8Array, i: number): number {
+  const d = links[i];
+  return d === N ? -1 : i + DY(d) * w + DX(d);
 }
 
 // --- status / text -------------------------------------------------------

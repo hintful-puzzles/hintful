@@ -17,6 +17,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { trackTargets } from "../../engine/hint-track.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -356,17 +357,18 @@ function hintKeepTrack(
   const t = step.highlights;
   if (!t) return "off";
   const changed = cellsChangedBy(m, state);
-  if (changed.size === 0) return "off";
-  const targets = new Set(t.cells);
-  for (const [cell, value] of changed) {
-    if (!targets.has(cell) || value !== t.value) return "off";
+  const { verdict, left } = trackTargets({
+    targets: t.cells,
+    changes: changed,
+    key: (c) => c,
+    want: () => t.value,
+    holds: (c) => changed.has(c),
+  });
+  if (verdict === "onTrack") {
+    step.highlights = { ...t, cells: left };
+    step.move = { type: "fillCells", value: t.value, cells: left };
   }
-  const remaining = t.cells.filter((c) => !changed.has(c));
-  if (remaining.length === t.cells.length) return "off";
-  if (remaining.length === 0) return "completed";
-  step.highlights = { ...t, cells: remaining };
-  step.move = { type: "fillCells", value: t.value, cells: remaining };
-  return "onTrack";
+  return verdict;
 }
 
 export const patternGame: Game<

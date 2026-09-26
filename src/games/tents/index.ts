@@ -8,6 +8,12 @@
  * non-blank); a right click sets a blank to a non-tent; a right-drag paints
  * blanks to non-tents along one row/column. A keyboard cursor places
  * tents/non-tents via select/select2 and the literal keys T/N/B.
+ *
+ * The link is this fork's notation: a left drag between a tree and the tent
+ * beside it (either way) joins the two, or parts them, and a drag between a
+ * tree and an open square places the tent and joins it in one go. `L` then an
+ * arrow does the same from the keyboard. The hint reasons from links, and places one where
+ * a deduction rests on a pairing the board does not show.
  */
 
 import type { DifficultyContract } from "../../engine/difficulty.ts";
@@ -15,10 +21,13 @@ import { winFlash } from "../../engine/flash.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
+import { commonHintRefusal } from "../../engine/hint-refusal.ts";
+import { matching } from "../../engine/latin.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
+  cursorDelta,
   endDrag,
   hideCursor,
   isCursorMove,
@@ -39,9 +48,12 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newTentsDesc } from "./generator.ts";
+import { tentsHint, tentsKeepTrack } from "./hint.ts";
 import {
   colors,
   computeSize,
+  dirTo,
+  dragLink,
   dragXform,
   FLASH_TIME,
   newDrawState,
@@ -53,14 +65,19 @@ import {
 import { tentsSolve } from "./solver.ts";
 import {
   BLANK,
+  canJoin,
   DIFF_COUNT,
+  DX,
+  DY,
   decodeParams,
   defaultParams,
   encodeParams,
   executeMove,
+  MAXDIR,
   NONTENT,
   newState,
   paramConfig,
+  partnerOf,
   presets,
   status,
   TENT,
@@ -82,6 +99,8 @@ const KEY_N = "N".charCodeAt(0);
 const KEY_n = "n".charCodeAt(0);
 const KEY_B = "B".charCodeAt(0);
 const KEY_b = "b".charCodeAt(0);
+const KEY_L = "L".charCodeAt(0);
+const KEY_l = "l".charCodeAt(0);
 
 function newUi(_state: TentsState): TentsUi {
   return {
@@ -89,6 +108,7 @@ function newUi(_state: TentsState): TentsUi {
     dragButton: -1,
     dragOk: false,
     cursor: newCursor(),
+    linkArmed: false,
   };
 }
 
@@ -113,6 +133,7 @@ function interpretMove(
     ui.dragButton = button;
     startDrag(ui.drag, x, y);
     ui.dragOk = true;
+    ui.linkArmed = false;
     hideCursor(ui.cursor);
     return UI_UPDATE;
   }
@@ -146,6 +167,7 @@ function interpretMove(
       endDrag(ui.drag);
       return UI_UPDATE;
     }
+    const link = dragLink(ui, state);
     const xmin = Math.min(ui.drag.sx, ui.drag.ex);
     const xmax = Math.max(ui.drag.sx, ui.drag.ex);
     const ymin = Math.min(ui.drag.sy, ui.drag.ey);
@@ -153,14 +175,46 @@ function interpretMove(
     const cells: { x: number; y: number; v: number }[] = [];
     for (let yy = ymin; yy <= ymax; yy++) {
       for (let xx = xmin; xx <= xmax; xx++) {
-        const v = dragXform(ui, xx, yy, grid[yy * w + xx]);
+        const v = dragXform(ui, state, xx, yy);
         if (grid[yy * w + xx] !== v) cells.push({ x: xx, y: yy, v });
       }
     }
     ui.dragButton = -1;
     endDrag(ui.drag);
+    if (link) return link;
     if (cells.length === 0) return UI_UPDATE;
     return { type: "cells", cells };
+  }
+
+  // `L` arms a link from the cursor's tent, tree or open square, and the next
+  // arrow joins it to the neighbor that way (or parts them), taking the cursor
+  // along: the keyboard's form of the link drag.
+  if (ui.linkArmed) {
+    ui.linkArmed = false;
+    const delta = cursorDelta(button);
+    if (delta) {
+      const { x, y } = ui.cursor;
+      const x2 = x + delta.dx;
+      const y2 = y + delta.dy;
+      const d = dirTo(delta.dx, delta.dy);
+      if (
+        x2 >= 0 &&
+        x2 < w &&
+        y2 >= 0 &&
+        y2 < h &&
+        canJoin(grid, y * w + x, y2 * w + x2)
+      ) {
+        moveCursor(ui.cursor, button, w, h);
+        return { type: "link", x, y, d, on: state.links[y * w + x] !== d };
+      }
+    }
+    if (button === KEY_L || button === KEY_l || delta) return UI_UPDATE;
+  }
+  if ((button === KEY_L || button === KEY_l) && ui.cursor.visible) {
+    const v = grid[ui.cursor.y * w + ui.cursor.x];
+    if (v === NONTENT) return null;
+    ui.linkArmed = true;
+    return UI_UPDATE;
   }
 
   if (isCursorMove(button)) {
@@ -242,8 +296,9 @@ function solve(
 
 /** Re-solve from the clues and flag every placed square that contradicts the
  * unique solution (a tent where none belongs, a non-tent where a tent
- * belongs). Blanks are never mistakes; a non-uniquely-solvable board yields
- * none. */
+ * belongs), and every link no pairing of that solution can hold. Blanks are
+ * never mistakes; a non-uniquely-solvable board yields none. The hint takes
+ * tents, grass and links as facts, so this must vouch for all three. */
 function findMistakes(state: TentsState): readonly TentsMistake[] {
   const { ret, soln } = solveFromClues(state);
   if (ret !== 1) return [];
@@ -257,7 +312,70 @@ function findMistakes(state: TentsState): readonly TentsMistake[] {
       else if (g === NONTENT && s === TENT) out.push({ x, y, kind: "nontent" });
     }
   }
+  for (const i of badLinks(state, soln)) {
+    out.push({ x: i % w, y: Math.floor(i / w), kind: "link" });
+  }
   return out;
+}
+
+/**
+ * The tents whose link no pairing of the solution `soln` can hold, in reading
+ * order.
+ *
+ * The solution's tents are unique but its pairing need not be: two trees and
+ * two tents round a square pair either way. So a link is judged by whether
+ * some pairing keeps it, together with every link before it that passed.
+ * Judging each link alone would pass two that exclude each other.
+ */
+function badLinks(state: TentsState, soln: Int8Array): number[] {
+  const { w, h, links } = state;
+  const trees: number[] = [];
+  const tents: number[] = [];
+  for (let i = 0; i < w * h; i++) {
+    if (soln[i] === TREE) trees.push(i);
+    else if (soln[i] === TENT) tents.push(i);
+  }
+  const treeId = new Map(trees.map((t, k) => [t, k]));
+  const kept = new Map<number, number>(); // tent square -> tree square
+  const pairs = (): boolean => {
+    const taken = new Set(kept.values());
+    const adj = tents.map((t) => {
+      const tree = kept.get(t);
+      if (tree !== undefined) return [treeId.get(tree) ?? -1];
+      const out: number[] = [];
+      for (let d = 1; d < MAXDIR; d++) {
+        const x = (t % w) + DX(d);
+        const y = Math.floor(t / w) + DY(d);
+        const j = y * w + x;
+        if (x >= 0 && x < w && y >= 0 && y < h && soln[j] === TREE && !taken.has(j))
+          out.push(treeId.get(j) ?? -1);
+      }
+      return out;
+    });
+    const got = matching(
+      tents.length,
+      trees.length,
+      adj,
+      adj.map((l) => l.length),
+    );
+    return !got.includes(-1);
+  };
+
+  const bad: number[] = [];
+  for (let i = 0; i < w * h; i++) {
+    const tree = partnerOf(w, links, i);
+    if (tree < 0 || state.grid[i] !== TENT) continue;
+    if (soln[i] !== TENT || soln[tree] !== TREE) {
+      bad.push(i);
+      continue;
+    }
+    kept.set(i, tree);
+    if (!pairs()) {
+      kept.delete(i);
+      bad.push(i);
+    }
+  }
+  return bad;
 }
 
 /** Tents' difficulty contract (`engine/difficulty.ts`). */
@@ -305,6 +423,9 @@ export const tentsGame: Game<
   solve,
   difficulty,
   findMistakes,
+  hint: (state) =>
+    commonHintRefusal(state.completed, findMistakes(state).length) ?? tentsHint(state),
+  hintKeepTrack: tentsKeepTrack,
 
   textFormat,
 

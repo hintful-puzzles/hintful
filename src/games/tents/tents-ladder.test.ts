@@ -54,6 +54,7 @@ describeLadderEquivalence<Board>({
     "grass-away-from-trees",
     "grass-next-to-tents",
     "tree-single",
+    "tree-link",
     "tree-diagonal-pair",
     "line-count",
     "line-neighbors",

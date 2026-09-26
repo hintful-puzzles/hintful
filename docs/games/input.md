@@ -675,6 +675,13 @@ distinction is the whole reason the flag exists. Do not spell it `aiming`:
 Bridges did briefly, and Inertia's `aiming`/`aimDir` mean the *aimed direction*
 of an aim drag, which is a different thing. One name, one concept.
 
+**Tents resolves by where the drag ends, not by how far it went.** Upstream's
+left drag was only ever "a click at the start", so its link gesture (a drag
+between a tree and the tent or empty square beside it) takes the drag only when
+the two ends make that pair; a wobble between any other two squares is still the
+click. One function, `dragLink`, answers "is this the gesture?" for the preview,
+the release and the error feedback alike, so they cannot disagree.
+
 ## A press you do not act on must still be consumed
 
 **Returning `null` from a press is not "nothing to repaint" — it is "I don't

@@ -10,10 +10,60 @@ Place tents in the empty squares in such a way that:
   other tents).
 
 Click in a square to place or remove a tent. Right-click to mark a
-square as empty (not a tent). Right-click and drag along a row or
-column to mark many squares at once as empty.
+square as grass (not a tent). Right-click and drag along a row or
+column to mark many squares at once as grass.
 
 Warning '!' marks appear to indicate adjacent tents. Numbers round
 the edge of the grid light up red to indicate they do not match the
 number of tents in the row. Groups of tents light up red to indicate
 that they have too few trees between them, and vice versa.
+
+## Joining a tent to its tree
+
+The matching is the part of Tents you have to keep in your head, so you
+can write it down. **Drag from a tree to the square beside it**, or from
+the square to the tree, to join them with a short line: if the square is
+empty, this places the tent there too. Drag between them again to part
+them. From the keyboard, press **L** on a tree, tent or empty square and
+then the arrow toward its neighbor.
+
+Links are notes for you: the puzzle is solved by the tents alone. A link
+that no correct matching could contain is shown as a mistake.
+
+## Hints
+
+**Hint** explains the next step rather than simply making it. It reasons
+only from your tents, your grass, the numbers and the links, so it
+carries on from wherever you are, as long as none of those is wrong; if
+one is, it asks you to fix the highlighted mistakes first. An *open*
+square, in its words, is one still empty: neither a tent nor grass.
+
+* **A ring** marks the squares the step decides.
+* **An outline** marks what it reasons from: a tree, or a tent that
+  already belongs to another tree.
+* **Stripes** mark the row or column whose number it counts with, and
+  that number is shown in the hint's color.
+* **A blue line** between a tent and a tree is a link the step asks you
+  to draw.
+
+A tree has its tent once they are joined, and also when you can see it
+at a glance: the tent touches no other tree still free, or it is the
+only square beside the tree that is empty or holds a tent. When a step
+needs a pairing that takes more than a glance, the hint asks you to draw
+that link first.
+
+A few ideas are worth learning by name:
+
+* **Every tent needs a tree.** A square beside no tree, or beside trees
+  that all have their tents, must be grass.
+* **A tree with one square left** has its tent there.
+* **A tree with two squares left round a corner**: whichever holds the
+  tent, the square diagonal to the tree between them touches it, so it
+  must be grass.
+* **No spare room.** A run of empty squares in a row holds at most half
+  its length, rounded up, in tents that don't touch. When a row needs
+  exactly as many tents as its runs can hold, the odd-length runs must be
+  filled alternately.
+* On harder boards: **wherever a row's tents go**, some squares in the
+  rows beside it are always touched by one of them, so they must be
+  grass.

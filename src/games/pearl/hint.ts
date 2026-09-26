@@ -21,6 +21,7 @@ import {
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
+import { trackTargets } from "../../engine/hint-track.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { type Axis, type LeftOut, type NoStraight, say } from "./hint-text.ts";
 import { executeMove } from "./moves.ts";
@@ -315,10 +316,9 @@ function edgeOn(state: PearlState, t: PearlEdgeOp): "line" | "cross" | null {
  * Classify a player move against the displayed step.
  *
  * A step that decides several edges is one step, and the player makes them one
- * click or one drag at a time. So the move is judged by what it does to the
- * board rather than by its ops (a drag and a click spell the same edge
- * differently): every edge it changes must be one the step asks for, set the
- * way the step asks, and the step shrinks in place to what is left.
+ * click or one drag at a time, a drag and a click spelling the same edge
+ * differently. So the move is judged by the edges it changes
+ * (`engine/hint-track.ts`), and the step shrinks in place to what is left.
  */
 export function pearlKeepTrack(
   m: PearlMove,
@@ -333,23 +333,26 @@ export function pearlKeepTrack(
   } catch {
     return "off";
   }
-  let changed = 0;
+  const changes = new Map<number, "line" | "cross" | null>();
+  const keyOf = (e: { sq: number; dir: number }) => e.sq * 16 + e.dir;
   for (let sq = 0; sq < state.w * state.h; sq++)
     for (const dir of [R, D]) {
       const e = { sq, dir, line: false };
-      const was = edgeOn(state, e);
       const now = edgeOn(after, e);
-      if (was === now) continue;
-      changed++;
-      const t = targets.find((t) => t.sq === sq && t.dir === dir);
-      if (!t || now !== (t.line ? "line" : "cross")) return "off";
+      if (edgeOn(state, e) !== now) changes.set(keyOf(e), now);
     }
-  if (changed === 0) return "off";
-
-  const left = targets.filter((t) => edgeOn(after, t) !== (t.line ? "line" : "cross"));
-  if (left.length === 0) return "completed";
-  hintStep.move = moveOf(boardOf(state), left);
-  if (hintStep.highlights)
-    hintStep.highlights = { ...hintStep.highlights, targets: left };
-  return "onTrack";
+  const want = (t: PearlEdgeOp) => (t.line ? "line" : "cross");
+  const { verdict, left } = trackTargets<PearlEdgeOp, number, "line" | "cross" | null>({
+    targets,
+    changes,
+    key: keyOf,
+    want,
+    holds: (t) => edgeOn(after, t) === want(t),
+  });
+  if (verdict === "onTrack") {
+    hintStep.move = moveOf(boardOf(state), left);
+    if (hintStep.highlights)
+      hintStep.highlights = { ...hintStep.highlights, targets: left };
+  }
+  return verdict;
 }

@@ -1888,7 +1888,11 @@ instead of dribbling them out one per request. Exemplar: `nextRegionGroup` in
   `"completed"` when it fills the last one, else `"onTrack"` with the step
   **shrunk in place** (`step.move` / `step.highlights` updated to the
   remaining cells) so a later `executeHint` doesn't re-fill what's done. A
-  non-target cell, or the wrong value, is `"off"`.
+  non-target cell, or the wrong value, is `"off"`. That verdict is
+  [`engine/hint-track.ts`](../../src/engine/hint-track.ts)'s `trackTargets`:
+  hand it what the move changed (a board diff, as Pearl and Tents take, or the
+  move's own cells, as Pattern does), how a target is keyed, what it wants and
+  whether it holds after the move, and rebuild the shrunk move yourself.
 
 A clean seam for the `continuesPrevious`-legs form: when the solver fills a
 whole line through a shared helper (Unruly's `fillRow`), thread the recorder
@@ -2434,6 +2438,33 @@ record. What settled it, in [`games/pearl/`](../../src/games/pearl/):
   (`pearl-hint.test.ts`). Removing the reset turns it red. The take-back
   alone is covered by the reset, which wipes a kept strike before the next
   firing reads it.
+
+Tents is the sixth (`add-tents-hint`), and Pearl's measurement came out the
+other way: its solver pairs each tent with a tree as it goes, and a solver that
+forgets the pairing lost up to half the boards at 15x15. What it added, in
+[`games/tents/`](../../src/games/tents/):
+
+- **Measure in layers, not only "forget it or keep it".** Between forgetting the
+  hidden fact and keeping it lies what the board shows at a glance. Here that
+  reading (a tent touching only one free tree, a tree whose only open square
+  holds a tent) kept 90–99% of boards, and chaining it twice kept all but one in
+  a few hundred. That told the owner what a notation would carry (short chains,
+  rarely) before they chose one.
+- **The reading is the premise, and the notation extends it.** The recording
+  pass rebuilds the pairing before every firing from the links drawn plus the
+  glance reading of them (`TentsBoard.readLinks`), so a sentence may say "this
+  tree already has its tent" whenever the board shows it, drawn or not. Only a
+  pairing past that reading becomes a step that draws the link.
+- **Draw a note only when a step rests on it, and test that claim.** A link is
+  drawn when some rung that had stalled fires once it is drawn, trying the
+  easier rungs first (`drawLinkFor`). The guard is that the firing after a
+  link-only step could not have fired before it. Drawing the first pending link
+  instead turned it red, while every board still finished.
+- **Let the notation's gesture carry the placement it explains.** In
+  playtesting the owner asked that joining a tree to an empty square place the
+  tent too, and that the hint use that move. So "this tree's only open square"
+  is one step placing the tent joined. A player who clicks the tent in instead
+  is on track, and the step shrinks to the link.
 
 ### Place the notes a fixpoint rests on (Crossing)
 

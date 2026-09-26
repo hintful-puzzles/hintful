@@ -479,6 +479,17 @@ result's `hidden` count is what a test reads to prove it saw any. Hide only what
 the player can already see — a later step may cite it. See
 [`hints.md`](./hints.md) § "Show only what the board does not already say".
 
+### `hint-track.ts` — following a step that asks for several things
+
+`trackTargets`: the `hintKeepTrack` verdict for a step that decides several
+squares or edges, judged by what the player's move changed rather than by its
+ops. Every change must be a target set the way it asks; nothing changed is off;
+otherwise `"completed"` once every target holds, else `"onTrack"` with the
+targets left, which the game turns back into its own move and highlights. Pearl,
+Pattern and Tents use it; a game that reads the changes off its move's ops fits
+it as well as one that diffs the board. See [`hints.md`](./hints.md) § "Group
+one firing into one step".
+
 ### `candidate-hint.ts` — candidate-elimination plan plumbing
 
 The pure helpers for pencil-notes games: the naked singles and the available

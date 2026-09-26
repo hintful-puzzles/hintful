@@ -6,8 +6,10 @@
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import {
+  CURSOR_RIGHT,
   cancelDrags,
   LEFT_BUTTON,
+  LEFT_DRAG,
   LEFT_RELEASE,
   RIGHT_BUTTON,
   RIGHT_DRAG,
@@ -16,9 +18,10 @@ import {
 import { randomNew } from "../../engine/random/index.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
+import type { Point } from "../../engine/types.ts";
 import { newTentsDesc } from "./generator.ts";
 import { tentsGame } from "./index.ts";
-import { COL_MISTAKE, computeSize, newDrawState, redraw } from "./render.ts";
+import { COL_MISTAKE, computeSize, dragXform, newDrawState, redraw } from "./render.ts";
 import { tentsSolve } from "./solver.ts";
 import {
   BLANK,
@@ -31,7 +34,9 @@ import {
   executeMove,
   NONTENT,
   newState,
+  partnerOf,
   TENT,
+  type TentsMove,
   type TentsParams,
   type TentsState,
   TREE,
@@ -367,6 +372,102 @@ describe("tents input (drag model)", () => {
     expect(ui.drag.live).toBe(true);
     tentsGame.interpretMove(state, ui, ds, at(2, 2), LEFT_RELEASE);
     expect(ui.drag.live).toBe(false);
+  });
+});
+
+describe("the link notation", () => {
+  const TS = 32;
+  const at = (x: number, y: number) => ({ x: x * TS + 17, y: y * TS + 17 });
+
+  /** A board with an open square beside a tree, the square and the tree. */
+  function rig(seed: string) {
+    const p = { w: 8, h: 8, diff: DIFF_EASY };
+    const { state } = genBoard(p, seed);
+    for (let i = 0; i < p.w * p.h; i++) {
+      if (state.grid[i] !== TREE) continue;
+      const x = i % p.w;
+      const y = Math.floor(i / p.w);
+      if (x + 1 < p.w && state.grid[i + 1] === BLANK) {
+        const ui = tentsGame.newUi(state);
+        return {
+          p,
+          state,
+          ui,
+          ds: newDrawState(state, TS),
+          tree: { x, y },
+          open: { x: x + 1, y },
+        };
+      }
+    }
+    throw new Error("no tree with an open square to its right");
+  }
+
+  function drag(r: ReturnType<typeof rig>, s: TentsState, from: Point, to: Point) {
+    tentsGame.interpretMove(s, r.ui, r.ds, at(from.x, from.y), LEFT_BUTTON);
+    tentsGame.interpretMove(s, r.ui, r.ds, at(to.x, to.y), LEFT_DRAG);
+    return tentsGame.interpretMove(s, r.ui, r.ds, at(to.x, to.y), LEFT_RELEASE);
+  }
+
+  it("a drag from a tree to an open square places the tent joined to it", () => {
+    const r = rig("link-a");
+    const m = drag(r, r.state, r.tree, r.open);
+    expect(m).toMatchObject({ type: "link", on: true });
+    const s = executeMove(r.state, m as TentsMove);
+    const tent = r.open.y * r.p.w + r.open.x;
+    expect(s.grid[tent]).toBe(TENT);
+    expect(partnerOf(r.p.w, s.links, tent)).toBe(r.tree.y * r.p.w + r.tree.x);
+  });
+
+  it("works from the open square's end, and a second drag parts them", () => {
+    const r = rig("link-b");
+    const m = drag(r, r.state, r.open, r.tree);
+    const s = executeMove(r.state, m as TentsMove);
+    const tent = r.open.y * r.p.w + r.open.x;
+    expect(partnerOf(r.p.w, s.links, tent)).toBe(r.tree.y * r.p.w + r.tree.x);
+    const parted = executeMove(s, drag(r, s, r.tree, r.open) as TentsMove);
+    expect(parted.grid[tent]).toBe(TENT);
+    expect(partnerOf(r.p.w, parted.links, tent)).toBe(-1);
+  });
+
+  it("previews the tent while the drag is held", () => {
+    const r = rig("link-c");
+    tentsGame.interpretMove(r.state, r.ui, r.ds, at(r.tree.x, r.tree.y), LEFT_BUTTON);
+    tentsGame.interpretMove(r.state, r.ui, r.ds, at(r.open.x, r.open.y), LEFT_DRAG);
+    expect(dragXform(r.ui, r.state, r.open.x, r.open.y)).toBe(TENT);
+  });
+
+  it("the keyboard does the same with L and an arrow", () => {
+    const r = rig("link-d");
+    r.ui.cursor.visible = true;
+    r.ui.cursor.x = r.tree.x;
+    r.ui.cursor.y = r.tree.y;
+    expect(
+      tentsGame.interpretMove(r.state, r.ui, r.ds, { x: 0, y: 0 }, "l".charCodeAt(0)),
+    ).toBe(UI_UPDATE);
+    const m = tentsGame.interpretMove(
+      r.state,
+      r.ui,
+      r.ds,
+      { x: 0, y: 0 },
+      CURSOR_RIGHT,
+    );
+    expect(m).toMatchObject({ type: "link", on: true });
+    expect(r.ui.cursor.x).toBe(r.open.x);
+    expect(r.ui.linkArmed).toBe(false);
+  });
+
+  it("a stone's-throw wobble off a square that is no pair still clicks", () => {
+    // Two open squares side by side: not the link gesture, so the old
+    // click-at-the-start stands.
+    const r = rig("link-e");
+    const { grid } = r.state;
+    const i = [...grid.keys()].find(
+      (k) => k % r.p.w < r.p.w - 1 && grid[k] === BLANK && grid[k + 1] === BLANK,
+    );
+    if (i === undefined) throw new Error("no two open squares side by side");
+    const from = { x: i % r.p.w, y: Math.floor(i / r.p.w) };
+    const m = drag(r, r.state, from, { x: from.x + 1, y: from.y });
+    expect(m).toMatchObject({ type: "cells", cells: [{ ...from, v: TENT }] });
   });
 });
 

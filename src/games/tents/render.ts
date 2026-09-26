@@ -11,9 +11,10 @@
  * and `TS + 2` bottom/right to hold the numbers.
  *
  * The per-tile cache packs the square value plus every error / cursor / flash
- * / mistake overlay bit into one `Int32Array` word, so the diff key covers
- * every overlay (docs/games/rendering.md § "Overlay sidecars"). Edge numbers
- * diff a parallel error-flag array.
+ * / mistake overlay bit and the square's link into one `Int32Array` word, and
+ * the hint's rings, outlines, hatch and link into a second, so the diff key
+ * covers every overlay (docs/games/rendering.md § "Overlay sidecars"). Edge
+ * numbers diff a parallel key of their error flag and hatch.
  */
 
 import {
@@ -23,15 +24,40 @@ import {
   ORANGE,
   RED_BOLD,
 } from "../../engine/color/colors.ts";
-import { ERROR, ERROR_TEXT, INK } from "../../engine/color/palette.ts";
+import {
+  ERROR,
+  ERROR_TEXT,
+  HINT_ACTION,
+  HINT_EVIDENCE,
+  INK,
+} from "../../engine/color/palette.ts";
 import { drawThickRectOutline } from "../../engine/draw.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
+import {
+  type HintMarkStyle,
+  HintMarks,
+  type MarkBand,
+  type MarkCell,
+  MarkOutlines,
+} from "../../engine/hint-mark.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import type { TentsHighlights } from "./hint.ts";
 import {
   BLANK,
+  canJoin,
+  D,
+  DX,
+  DY,
+  executeMove,
+  FLIP,
+  L,
+  N,
   NONTENT,
+  partnerOf,
+  R,
   TENT,
   type TentsMistake,
   type TentsMove,
@@ -39,6 +65,7 @@ import {
   type TentsState,
   type TentsUi,
   TREE,
+  U,
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
@@ -56,6 +83,14 @@ export const COL_ERRTEXT = 7;
 export const COL_ERRTRUNK = 8;
 // The findMistakes overlay, appended past upstream's enum.
 export const COL_MISTAKE = 9;
+/** The hint's action color: the ring round what a step decides, the link it
+ * asks for, and the clue it counts with. */
+export const COL_HINT = 10;
+/** The hint's evidence outline. */
+export const COL_HINT_CELL = 11;
+/** A link between a tent and its tree: the ink of the grid and the clues, the
+ * color of the player's own notation. */
+const COL_LINK = COL_GRID;
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -69,6 +104,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_ERRTEXT] = ERROR_TEXT;
   out[COL_ERRTRUNK] = RED_BOLD;
   out[COL_MISTAKE] = ERROR;
+  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT_CELL] = HINT_EVIDENCE;
   return out;
 }
 
@@ -85,6 +122,20 @@ const ERR_OVERCOMMITTED = 1 << 12;
 const CURSOR_BIT = 1 << 13;
 const FLASH_BIT = 1 << 14;
 const MISTAKE_BIT = 1 << 15;
+/** The direction of the square's link, `N` for none. */
+const LINK_SHIFT = 16;
+const LINK_MASK = 7 << LINK_SHIFT;
+/** The link is one no pairing of the solution holds. */
+const LINK_MISTAKE_BIT = 1 << 19;
+/** The keyboard has armed a link from this square (the cursor's). */
+const ARMED_BIT = 1 << 20;
+
+// --- the hint's word, a second cache key per tile ---------------------------
+// The ring and outline sides (`MarkOutlines.packed`) in the low byte.
+/** The square lies on the line the step's sentence names. */
+const HINT_LINE_BIT = 1 << 8;
+/** The direction of the link the step asks for from this square. */
+const HINT_LINK_SHIFT = 9;
 
 // --- geometry (NARROW_BORDERS) --------------------------------------------
 /** The board's pixel origin. Exported so `interpretMove` reads the same number
@@ -107,8 +158,13 @@ export interface TentsDrawState {
   tileSize: number;
   /** Last-drawn packed word per tile; -1 forces a draw. */
   drawn: Int32Array;
-  /** Last-drawn error flag per edge number; -1 forces a draw. */
+  /** Last-drawn hint word per tile, the second half of the key. */
+  hintDrawn: Int32Array;
+  /** Last-drawn key per edge number (its error flag, hatch and hint color);
+   * -1 forces a draw. */
   numbersDrawn: Int32Array;
+  /** The hint's rings and outlines, painted after the tile loop. */
+  marks: HintMarks;
 }
 
 export function newDrawState(state: TentsState, tileSize: number): TentsDrawState {
@@ -116,7 +172,9 @@ export function newDrawState(state: TentsState, tileSize: number): TentsDrawStat
     started: false,
     tileSize,
     drawn: new Int32Array(state.w * state.h).fill(-1),
+    hintDrawn: new Int32Array(state.w * state.h).fill(-1),
     numbersDrawn: new Int32Array(state.w + state.h).fill(-1),
+    marks: new HintMarks(),
   };
 }
 
@@ -215,15 +273,54 @@ export function findErrors(
 
 // --- drag transform (upstream drag_xform) ---------------------------------
 
-/** Apply an in-progress drag's effect to cell `(x, y)`'s value `v`, for the
- * live preview, the error feedback and the move a release makes. `dragButton`
- * is the left or the right button. Upstream's stylus branches are absent: the
- * pointer model delivers no `MOD_STYLUS`. */
-export function dragXform(ui: TentsUi, x: number, y: number, v: number): number {
+/** The direction from one square to its orthogonal neighbor, or `N`. */
+export function dirTo(dx: number, dy: number): number {
+  if (dy === 0 && dx === 1) return R;
+  if (dy === 0 && dx === -1) return L;
+  if (dx === 0 && dy === 1) return D;
+  if (dx === 0 && dy === -1) return U;
+  return N;
+}
+
+/** A left drag between a tree and the tent or open square beside it, either
+ * way, is the link gesture: the move it makes on release, or `null` for any
+ * other drag. It places the tent when the square is open, and parts the two
+ * when they are already joined. */
+export function dragLink(
+  ui: TentsUi,
+  state: Pick<TentsState, "w" | "grid" | "links">,
+): Extract<TentsMove, { type: "link" }> | null {
+  const { live, sx, sy, ex, ey } = ui.drag;
+  if (!live || ui.dragButton !== LEFT_BUTTON) return null;
+  const d = dirTo(ex - sx, ey - sy);
+  const { w, grid, links } = state;
+  if (d === N || !canJoin(grid, sy * w + sx, ey * w + ex)) return null;
+  return { type: "link", x: sx, y: sy, d, on: links[sy * w + sx] !== d };
+}
+
+/** Apply an in-progress drag's effect to cell `(x, y)`, for the live preview,
+ * the error feedback and the move a release makes. `dragButton` is the left or
+ * the right button. Upstream's stylus branches are absent: the pointer model
+ * delivers no `MOD_STYLUS`. */
+export function dragXform(
+  ui: TentsUi,
+  state: Pick<TentsState, "w" | "grid" | "links">,
+  x: number,
+  y: number,
+): number {
+  const v = state.grid[y * state.w + x];
   if (v === TREE) return v; // trees are inviolate
   const { sx, sy, ex, ey } = ui.drag;
   if (ui.dragButton === LEFT_BUTTON) {
-    // Left-dragging has no effect: it acts as a click at the drag start.
+    // Left-dragging acts as a click at the drag start, unless it is the link
+    // gesture, which changes only an open square it joins, to a tent.
+    const link = dragLink(ui, state);
+    if (link)
+      return link.on &&
+        v === BLANK &&
+        ((x === sx && y === sy) || (x === ex && y === ey))
+        ? TENT
+        : v;
     if (x !== sx || y !== sy) return v;
     return v === BLANK ? TENT : BLANK;
   }
@@ -261,12 +358,38 @@ function drawErrAdj(dr: GameDrawing, ts: number, x: number, y: number): void {
   );
 }
 
+/**
+ * This square's half of a link toward `d`: a thin line from the shared edge a
+ * quarter of the way in, so the neighbor's half completes it across the grid
+ * line. Thin and in ink, it reads as a mark the player made; a bar in the
+ * trunk's brown read as more trunk when the link ran up or down through a tree.
+ */
+function drawLinkHalf(
+  dr: GameDrawing,
+  ts: number,
+  tx: number,
+  ty: number,
+  d: number,
+  color: number,
+): void {
+  const th = Math.max(2, Math.floor(ts / 14));
+  const len = Math.floor(ts / 4) + 1;
+  const mid = Math.floor(ts / 2) - Math.floor(th / 2);
+  if (d === L) dr.drawRect({ x: tx, y: ty + mid, w: len, h: th }, color);
+  else if (d === R)
+    dr.drawRect({ x: tx + ts - len, y: ty + mid, w: len, h: th }, color);
+  else if (d === U) dr.drawRect({ x: tx + mid, y: ty, w: th, h: len }, color);
+  else if (d === D)
+    dr.drawRect({ x: tx + mid, y: ty + ts - len, w: th, h: len }, color);
+}
+
 function drawTile(
   dr: GameDrawing,
   ts: number,
   x: number,
   y: number,
   packed: number,
+  hintWord: number,
   cur: boolean,
 ): void {
   const err = packed & ~15;
@@ -283,6 +406,14 @@ function drawTile(
     { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 },
     v === BLANK ? COL_BACKGROUND : COL_GRASS,
   );
+  // The line the hint's sentence names, under the content so it stays whole.
+  if (hintWord & HINT_LINE_BIT) {
+    dr.drawHatch(
+      { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 },
+      COL_HINT,
+      hatchPeriod(ts),
+    );
+  }
 
   const over = (err & ERR_OVERCOMMITTED) !== 0;
   if (v === TREE) {
@@ -318,6 +449,20 @@ function drawTile(
     );
   }
 
+  const link = (packed & LINK_MASK) >> LINK_SHIFT;
+  if (link !== N) {
+    drawLinkHalf(
+      dr,
+      ts,
+      tx,
+      ty,
+      link,
+      packed & LINK_MISTAKE_BIT ? COL_MISTAKE : COL_LINK,
+    );
+  }
+  const hintLink = hintWord >> HINT_LINK_SHIFT;
+  if (hintLink !== N) drawLinkHalf(dr, ts, tx, ty, hintLink, COL_HINT);
+
   const half = Math.floor(ts / 2);
   if (err & ERR_ADJ_TOPLEFT) drawErrAdj(dr, ts, tx, ty);
   if (err & ERR_ADJ_TOP) drawErrAdj(dr, ts, tx + half, ty);
@@ -338,18 +483,11 @@ function drawTile(
   }
 
   if (cur) {
+    // A stroked outline, heavier while `L` has armed a link from this square.
     const coff = Math.floor(ts / 8);
-    // A stroked outline via four thin rects (drawRectOutline analog).
-    dr.drawRect({ x: tx + coff, y: ty + coff, w: ts - coff * 2 + 1, h: 1 }, COL_GRID);
-    dr.drawRect(
-      { x: tx + coff, y: ty + ts - coff, w: ts - coff * 2 + 1, h: 1 },
-      COL_GRID,
-    );
-    dr.drawRect({ x: tx + coff, y: ty + coff, w: 1, h: ts - coff * 2 + 1 }, COL_GRID);
-    dr.drawRect(
-      { x: tx + ts - coff, y: ty + coff, w: 1, h: ts - coff * 2 + 1 },
-      COL_GRID,
-    );
+    const span = ts - coff * 2 + 1;
+    const thick = packed & ARMED_BIT ? Math.max(2, Math.floor(ts / 12)) : 1;
+    drawThickRectOutline(dr, tx + coff, ty + coff, span, span, thick, COL_GRID);
   }
 
   dr.unclip();
@@ -357,6 +495,19 @@ function drawTile(
 }
 
 // --- redraw -----------------------------------------------------------------
+
+/**
+ * Where a hint mark sits round square `(x, y)`: inside its own box, over the
+ * grid line it owns, so a square whose marks change repaints itself and takes
+ * the old ones with it.
+ */
+function markBand(ts: number, x: number, y: number): MarkBand {
+  return {
+    box: { x: coord(x, ts), y: coord(y, ts), w: ts, h: ts },
+    outer: 0,
+    inner: Math.max(2, ts >> 4),
+  };
+}
 
 export function redraw(
   dr: GameDrawing,
@@ -367,7 +518,7 @@ export function redraw(
   ui: TentsUi,
   _animTime: number,
   flashTime: number,
-  _hint?: HintStep<TentsMove>,
+  hint?: HintStep<TentsMove, TentsHighlights>,
   mistakes?: readonly TentsMistake[],
 ): void {
   const ts = ds.tileSize;
@@ -405,69 +556,112 @@ export function redraw(
   if (ui.drag.live) {
     const { sx, sy } = ui.drag;
     errGrid = Int8Array.from(grid);
-    errGrid[sy * w + sx] = dragXform(ui, sx, sy, errGrid[sy * w + sx]);
+    errGrid[sy * w + sx] = dragXform(ui, state, sx, sy);
   }
   const errors = findErrors(w, h, errGrid, numbers);
 
-  const mistakeSet = new Set(mistakes?.map((m) => m.y * w + m.x));
+  // The links as drawn, with a link drag's result previewed.
+  let links = state.links;
+  const gesture = dragLink(ui, state);
+  if (gesture) links = executeMove(state, gesture).links;
+
+  const mistakeSet = new Set<number>();
+  const badLinkSet = new Set<number>();
+  for (const m of mistakes ?? []) {
+    const i = m.y * w + m.x;
+    if (m.kind !== "link") mistakeSet.add(i);
+    else {
+      // Both halves of the bar take the mistake color.
+      badLinkSet.add(i);
+      badLinkSet.add(partnerOf(w, state.links, i));
+    }
+  }
 
   const cx = ui.cursor.visible ? ui.cursor.x : -1;
   const cy = ui.cursor.visible ? ui.cursor.y : -1;
 
+  // The hint: a ring round each square it decides (a link's two squares as one
+  // shape), an outline round the squares it reasons from, the line its sentence
+  // names hatched, and the link it asks for in its own color.
+  const hl = hint?.highlights;
+  const cellsOf = (squares: readonly number[]): MarkCell[] =>
+    [...new Set(squares)]
+      .sort((a, b) => a - b)
+      .map((i) => ({ x: i % w, y: Math.floor(i / w) }));
+  const hintTargets = cellsOf(hl?.targets ?? []);
+  const area = cellsOf(hl?.area ?? []);
+  const hintLinks = new Int8Array(w * h);
+  if (hl?.link) {
+    const { sq, d } = hl.link;
+    hintLinks[sq] = d;
+    hintLinks[sq + DY(d) * w + DX(d)] = FLIP(d);
+  }
+  const markStyle: HintMarkStyle = {
+    band: (x, y) => markBand(ts, x, y),
+    targetColor: COL_HINT,
+    evidenceColor: COL_HINT_CELL,
+    joinTargets: (a, b) => hintLinks[a.y * w + a.x] === dirTo(b.x - a.x, b.y - a.y),
+  };
+  const outlines = new MarkOutlines(hintTargets, area, markStyle);
+  const line = hl?.line ?? null;
+  const onLine = (x: number, y: number): boolean =>
+    line !== null && (line < w ? x === line : y === line - w);
+
   // Draw the grid squares whose packed word changed.
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      let v = grid[y * w + x];
-      if (ui.drag.live) v = dragXform(ui, x, y, v);
+      const i = y * w + x;
+      let v = ui.drag.live ? dragXform(ui, state, x, y) : grid[i];
       if (flashing && (v === TREE || v === TENT)) v = NONTENT;
-      let packed = v | errors.cell[y * w + x];
+      let packed = v | errors.cell[i];
       const isCur = x === cx && y === cy;
       if (isCur) packed |= CURSOR_BIT;
+      if (isCur && ui.linkArmed) packed |= ARMED_BIT;
       if (flashing) packed |= FLASH_BIT;
-      if (mistakeSet.has(y * w + x)) packed |= MISTAKE_BIT;
-      if (ds.drawn[y * w + x] !== packed) {
-        drawTile(dr, ts, x, y, packed, isCur);
-        ds.drawn[y * w + x] = packed;
+      if (mistakeSet.has(i)) packed |= MISTAKE_BIT;
+      if (!flashing) packed |= links[i] << LINK_SHIFT;
+      if (badLinkSet.has(i)) packed |= LINK_MISTAKE_BIT;
+      let hintWord = outlines.packed(x, y) | (hintLinks[i] << HINT_LINK_SHIFT);
+      if (onLine(x, y)) hintWord |= HINT_LINE_BIT;
+      if (ds.drawn[i] !== packed || ds.hintDrawn[i] !== hintWord) {
+        drawTile(dr, ts, x, y, packed, hintWord, isCur);
+        ds.drawn[i] = packed;
+        ds.hintDrawn[i] = hintWord;
       }
     }
   }
 
-  // Edge numbers (redraw when their error state changed, or on first draw).
+  // After every tile, and every frame: `HintMarks.paint` always draws.
+  ds.marks.paint(dr, hintTargets, area, markStyle);
+
+  // Edge numbers. The clue a hint counts with takes the action color, and its
+  // line's hatch runs on through the clue's slot.
   const numberSize = Math.floor(ts / 2);
-  for (let x = 0; x < w; x++) {
-    if (ds.numbersDrawn[x] === errors.num[x]) continue;
-    const box = { x: coord(x, ts), y: coord(h, ts) + 1, w: ts, h: brBorder(ts) - 1 };
+  for (let k = 0; k < w + h; k++) {
+    const hatched = line === k;
+    const color = errors.num[k] ? COL_ERROR : hatched ? COL_HINT : COL_GRID;
+    const key = errors.num[k] | (hatched ? 2 : 0);
+    if (ds.numbersDrawn[k] === key) continue;
+    const column = k < w;
+    const box = column
+      ? { x: coord(k, ts), y: coord(h, ts) + 1, w: ts, h: brBorder(ts) - 1 }
+      : { x: coord(w, ts) + 1, y: coord(k - w, ts), w: brBorder(ts) - 1, h: ts };
     dr.drawRect(box, COL_BACKGROUND);
+    if (hatched) dr.drawHatch(box, COL_HINT, hatchPeriod(ts));
     dr.drawText(
-      { x: coord(x, ts) + Math.floor(ts / 2), y: coord(h + 1, ts) },
+      column
+        ? { x: coord(k, ts) + Math.floor(ts / 2), y: coord(h + 1, ts) }
+        : { x: coord(w + 1, ts), y: coord(k - w, ts) + Math.floor(ts / 2) },
       {
-        align: "center",
-        baseline: "alphabetic",
+        align: column ? "center" : "right",
+        baseline: column ? "alphabetic" : "mathematical",
         fontType: "variable",
         size: numberSize,
       },
-      errors.num[x] ? COL_ERROR : COL_GRID,
-      String(numbers[x]),
+      color,
+      String(numbers[k]),
     );
     dr.drawUpdate(box);
-    ds.numbersDrawn[x] = errors.num[x];
-  }
-  for (let y = 0; y < h; y++) {
-    if (ds.numbersDrawn[w + y] === errors.num[w + y]) continue;
-    const box = { x: coord(w, ts) + 1, y: coord(y, ts), w: brBorder(ts) - 1, h: ts };
-    dr.drawRect(box, COL_BACKGROUND);
-    dr.drawText(
-      { x: coord(w + 1, ts), y: coord(y, ts) + Math.floor(ts / 2) },
-      {
-        align: "right",
-        baseline: "mathematical",
-        fontType: "variable",
-        size: numberSize,
-      },
-      errors.num[w + y] ? COL_ERROR : COL_GRID,
-      String(numbers[w + y]),
-    );
-    dr.drawUpdate(box);
-    ds.numbersDrawn[w + y] = errors.num[w + y];
+    ds.numbersDrawn[k] = key;
   }
 }
