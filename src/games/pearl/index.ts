@@ -7,7 +7,7 @@
  * Left-drag traces a loop path along grid edges (committed as line flips);
  * a left-click near an edge toggles that segment; a right-click / right-drag
  * marks "no-line" crosses; a keyboard cursor draws lines (Ctrl) or marks
- * (Shift). `H` autosolves in place.
+ * (Shift). `H` is not the game's: the app reads it as Next hint.
  */
 
 import { c2nUpper } from "../../engine/desc-alphabet.ts";
@@ -15,6 +15,7 @@ import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import type { Game, GamePref, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { commonHintRefusal } from "../../engine/hint-refusal.ts";
 import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -39,6 +40,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
+import { pearlHint, pearlKeepTrack } from "./hint.ts";
 import { executeMove, interpretUiDrag, updateUiDrag } from "./moves.ts";
 import {
   centeredCoord,
@@ -81,12 +83,13 @@ import {
   validateParams,
 } from "./state.ts";
 
-/** A wrong loop segment surfaced by `findMistakes` (a player line the unique
- * solution does not contain). */
+/** A wrong edge surfaced by `findMistakes`: a player line the unique solution
+ * does not contain, or a cross on an edge it does. */
 export interface PearlMistake {
   x: number;
   y: number;
   dir: number;
+  cross: boolean;
 }
 
 function newUi(state: PearlState): PearlUi {
@@ -274,8 +277,6 @@ function interpretMove(
     }
   }
 
-  if (button === 72 || button === 104) return { ops: [{ kind: "hint" }] }; // 'H' / 'h'
-
   return null;
 }
 
@@ -309,8 +310,9 @@ function solve(
 }
 
 /** Boards are uniquely solvable by default: re-solve from the clues and flag
- * every player line segment the unique solution does not contain (a definite
- * mistake). A non-uniquely-solvable board yields no mistakes. */
+ * every player line the unique solution does not contain, and every cross on an
+ * edge it does (each a definite mistake). The crosses matter because the hint
+ * reasons from them. A non-uniquely-solvable board yields no mistakes. */
 function findMistakes(state: PearlState): readonly PearlMistake[] {
   const { w, h } = state;
   const sol = new Uint8Array(w * h);
@@ -318,9 +320,11 @@ function findMistakes(state: PearlState): readonly PearlMistake[] {
   const out: PearlMistake[] = [];
   for (let i = 0; i < w * h; i++) {
     const extra = state.lines[i] & ~sol[i] & (R | U | L | D);
-    if (extra)
-      for (let d = 1; d <= 8; d += d)
-        if (extra & d) out.push({ x: i % w, y: (i / w) | 0, dir: d });
+    const crossed = state.marks[i] & sol[i] & (R | U | L | D);
+    for (let d = 1; d <= 8; d += d) {
+      if (extra & d) out.push({ x: i % w, y: (i / w) | 0, dir: d, cross: false });
+      if (crossed & d) out.push({ x: i % w, y: (i / w) | 0, dir: d, cross: true });
+    }
   }
   return out;
 }
@@ -406,6 +410,9 @@ export const pearlGame: Game<
   solve,
   difficulty,
   findMistakes,
+  hint: (state) =>
+    commonHintRefusal(state.completed, findMistakes(state).length) ?? pearlHint(state),
+  hintKeepTrack: pearlKeepTrack,
 
   textFormat,
 

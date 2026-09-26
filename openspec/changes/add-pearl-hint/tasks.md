@@ -7,26 +7,31 @@ Read `docs/games/hints.md` (§ "Give the facts a notation (Loopy)" first) and
 
 - [x] 1.1 `certify-the-tents-and-pearl-ladders` is done: Pearl is on the
       runner, and every rung is reached.
-- [ ] 1.2 Census the premises one level finer than the rungs: the four
-      `pearl-clues` rules and the two halves of `shortcut-loop`.
-- [ ] 1.3 The shape-set question, for the shape strikes by `pearl-clues` and
-      `shortcut-loop`: can each be restated as an edge fact the player can mark
-      in the same journey? Measure; then a notation (owner-visible), or the
-      `Unreasonable` fallback.
-- [ ] 1.4 Read Loopy's hint and notation code and decide, per piece, share or
-      keep separate. Record each no-go with its reason.
+- [x] 1.2 Census the premises one level finer than the rungs: the four
+      `pearl-clues` rules and the two halves of `shortcut-loop` (design D1;
+      the reason-kind census in `pearl-hint.test.ts`).
+- [x] 1.3 The shape-set question. Measured: the only shape strikes that never
+      settle an edge are `shortcut-loop`'s several-states-left case, and a
+      solver that forgets them agrees on all 11,568 verdicts. No notation, no
+      `Unreasonable` tier (design D1).
+- [x] 1.4 Loopy's hint and notation code read, per piece: nothing to share
+      beyond what is already shared (design D6).
 
 ## 2. The hint
 
-- [ ] 2.1 A recording projection (`singleFirings`), one pearl or square per
-      firing, pairing a `shapes-from-edges` firing with the edges it lets
-      `edges-from-shapes` nail.
-- [ ] 2.2 Narration to the Palisade bar in `hint-text.ts`, each sentence under
-      120 characters.
+- [x] 2.1 A recording projection (`pearlRecordingPass`, `singleFirings`), one
+      premise per firing, a shape strike settled at its own square in the same
+      firing, every square re-read from its edges before each firing.
+- [x] 2.2 Narration to the Palisade bar in `hint-text.ts`, each sentence under
+      120 characters; crosses beside a full square are never asked for (D3).
 
 ## 3. Tests and close out
 
-- [ ] 3.1 Enrollment by declaring `hint()`; bump the census counts it moves.
-- [ ] 3.2 Tier-2.5 frame for a pearl deduction.
-- [ ] 3.3 Help page: a Hints section.
-- [ ] 3.4 Spec delta for `pearl`; guides updated; run the app.
+- [x] 3.1 Enrollment by declaring `hint()`; `hint-mark.test.ts`'s count bumped,
+      the capability snapshot re-recorded, and Pearl's stale entry in the
+      shortcut ledger removed (`H` no longer autosolves).
+- [x] 3.2 Tier-2.5 frames: a line target and a cross target.
+- [x] 3.3 Help page: a Hints section.
+- [x] 3.4 Spec delta for `pearl`; `hints.md` updated; ran the app (Chromium):
+      line and cross targets, outlines, and following the hint to a finished
+      board.

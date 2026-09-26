@@ -191,7 +191,7 @@ describe("pearl input + executeMove", () => {
     expect(pearlGame.flashLength?.(state, done, 0, pearlGame.newUi(state))).toBe(0);
   });
 
-  it("the H hint autosolves the board in place", () => {
+  it("a saved autosolve move still replays in place", () => {
     const state = generate(EASY_6, "hint");
     const done = executeMove(state, { ops: [{ kind: "hint" }] });
     const sol = solutionLines(state);

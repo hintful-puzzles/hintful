@@ -20,11 +20,15 @@ import {
   ERROR,
   FLASH,
   GRID_DARK,
+  HINT_ACTION,
+  HINT_EVIDENCE,
   highlightWash,
   RULED_OUT,
 } from "../../engine/color/palette.ts";
-import type { GameDrawing } from "../../engine/game.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import type { PearlHint } from "./hint.ts";
 import { interpretUiDrag } from "./moves.ts";
 import {
   CW,
@@ -35,6 +39,7 @@ import {
   F,
   L,
   NOCLUE,
+  type PearlMove,
   type PearlParams,
   type PearlState,
   type PearlUi,
@@ -65,6 +70,10 @@ export const COL_CURSOR_BACKGROUND = 11;
 /** The player's edge crosses. Their own slot rather than upstream's pearl
  * `COL_BLACK`, which stays black in both schemes and sank into a dark board. */
 export const COL_RULED_OUT = 12;
+/** The edges a hint step decides, drawn as the line or cross it asks for. */
+export const COL_HINT = 13;
+/** The squares a hint step reasons from, outlined. */
+export const COL_HINT_CELL = 14;
 
 export function colors(defaultBackground: Color): Color[] {
   const { background, highlight, lowlight } = mkhighlight(defaultBackground);
@@ -84,6 +93,8 @@ export function colors(defaultBackground: Color): Color[] {
   // Solo's family uses, not the green mark, which as a cell fill would shout.
   out[COL_CURSOR_BACKGROUND] = highlightWash(background);
   out[COL_RULED_OUT] = RULED_OUT;
+  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT_CELL] = HINT_EVIDENCE;
   return out;
 }
 
@@ -99,6 +110,17 @@ const DS_XSHIFT = 16; // R/U/L/D shift, findMistakes wrong-edge overlay
 const DS_ERROR_CLUE = 1 << 20;
 const DS_FLASH = 1 << 21;
 const DS_CURSOR = 1 << 22;
+const DS_WSHIFT = 23; // R/U/L/D shift, findMistakes wrong-cross overlay
+
+// --- hint draw flags ------------------------------------------------------
+//
+// A word of its own beside `lflags`, compared in the same cache-miss test, so a
+// hint displayed on an otherwise unchanged board still repaints
+// (docs/games/rendering.md § "The tile cache and the diff key"). Edge bits are
+// set on both squares sharing the edge, and each paints its own half.
+const H_LINE_SHIFT = 0; // 4 bits: edges the step says must be lines
+const H_CROSS_SHIFT = 4; // 4 bits: edges the step says can't be
+const H_AREA_SHIFT = 8; // 4 bits: sides of the evidence outline to paint
 
 export interface PearlDrawState {
   started: boolean;
@@ -106,6 +128,8 @@ export interface PearlDrawState {
   w: number;
   h: number;
   lflags: Int32Array;
+  /** Per-square hint marks: part of the diff key, see the `H_*` bits. */
+  hint: Int32Array;
 }
 
 export function newDrawState(state: PearlState, tileSize: number): PearlDrawState {
@@ -115,6 +139,7 @@ export function newDrawState(state: PearlState, tileSize: number): PearlDrawStat
     w: state.w,
     h: state.h,
     lflags: new Int32Array(state.w * state.h),
+    hint: new Int32Array(state.w * state.h),
   };
 }
 
@@ -209,6 +234,7 @@ function drawSquare(
   x: number,
   y: number,
   lflags: number,
+  hint: number,
   clue: number,
 ): void {
   const m = metrics(ds.tileSize);
@@ -232,7 +258,24 @@ function drawSquare(
     drawLine(dr, ox, oy, ox, coord(y + 1, m), COL_GRID);
   }
 
-  // Thin gridlines or no-line marks (drawn first; thick lines go on top).
+  // The hint's evidence outline, on the square's border and under everything
+  // the square holds, so the lines crossing that border stay on top of it.
+  const band = Math.max(2, Math.floor(m.tile / 14));
+  const box = { x: ox, y: oy, w: m.tile, h: m.tile };
+  drawMarkSides(
+    dr,
+    { box, outer: 0, inner: band },
+    hint >> H_AREA_SHIFT,
+    COL_HINT_CELL,
+  );
+
+  // Thin gridlines or no-line marks (drawn first; thick lines go on top). A
+  // cross the step asks for is the player's cross in the hint's color, drawn
+  // heavier so it reads as a mark rather than a stroke of the grid.
+  const cross = (mx: number, my: number, msz: number, c: number, thick: number) => {
+    dr.drawLine({ x: mx - msz, y: my - msz }, { x: mx + msz, y: my + msz }, c, thick);
+    dr.drawLine({ x: mx - msz, y: my + msz }, { x: mx + msz, y: my - msz }, c, thick);
+  };
   for (let d = 1; d < 16; d *= 2) {
     const xoff = t2 * DX(d);
     const yoff = t2 * DY(d);
@@ -244,15 +287,25 @@ function drawSquare(
     )
       continue; // no gridlines out to the border
     if ((lflags >> DS_MSHIFT) & d) {
-      const mx = cx + xoff;
-      const my = cy + yoff;
-      const msz = t16;
-      drawLine(dr, mx - msz, my - msz, mx + msz, my + msz, COL_RULED_OUT);
-      drawLine(dr, mx - msz, my + msz, mx + msz, my - msz, COL_RULED_OUT);
+      const wrong = (lflags >> DS_WSHIFT) & d;
+      cross(cx + xoff, cy + yoff, t16, wrong ? COL_MISTAKE : COL_RULED_OUT, 1);
+    } else if ((hint >> H_CROSS_SHIFT) & d) {
+      cross(cx + xoff, cy + yoff, t16, COL_HINT, Math.max(2, band));
     } else if (guiStyle === GUI_LOOPY) {
       drawLine(dr, cx, cy, cx + xoff, cy + yoff, COL_GRID);
     }
   }
+
+  // The lines the step asks for: the path the player's own will take, drawn at
+  // half its weight so it reads as proposed rather than laid.
+  for (let d = 1; d < 16; d *= 2)
+    if ((hint >> H_LINE_SHIFT) & d)
+      dr.drawLine(
+        { x: cx, y: cy },
+        { x: cx + t2 * DX(d), y: cy + t2 * DY(d) },
+        COL_HINT,
+        Math.max(2, t16),
+      );
 
   // Laid lines. Order matters for the exposed end-cap colors.
   drawLinesSpecific(dr, m, x, y, lflags, 0, lflags & DS_FLASH ? COL_FLASH : COL_BLACK);
@@ -282,8 +335,8 @@ export function redraw(
   ui: PearlUi,
   _animTime: number,
   flashTime: number,
-  _hint?: unknown,
-  mistakes?: readonly { x: number; y: number; dir: number }[],
+  hint?: HintStep<PearlMove, PearlHint>,
+  mistakes?: readonly { x: number; y: number; dir: number; cross: boolean }[],
 ): void {
   const { w, h } = state;
   const m = metrics(ds.tileSize);
@@ -331,9 +384,14 @@ export function redraw(
     }
   }
 
-  // findMistakes wrong-edge overlay → per-cell bitmap.
+  // findMistakes wrong-edge overlay → per-cell bitmaps, lines and crosses.
   const wrong = new Uint8Array(w * h);
-  if (mistakes) for (const mk of mistakes) wrong[mk.y * w + mk.x] |= mk.dir;
+  const wrongCross = new Uint8Array(w * h);
+  if (mistakes)
+    for (const mk of mistakes)
+      (mk.cross ? wrongCross : wrong)[mk.y * w + mk.x] |= mk.dir;
+
+  const hintWords = hintFlags(state, hint);
 
   for (let x = 0; x < w; x++)
     for (let y = 0; y < h; y++) {
@@ -343,13 +401,44 @@ export function redraw(
       f |= draglines[i] << DS_DSHIFT;
       f |= state.marks[i] << DS_MSHIFT;
       f |= wrong[i] << DS_XSHIFT;
+      f |= wrongCross[i] << DS_WSHIFT;
       if (state.errors[i] & ERROR_CLUE) f |= DS_ERROR_CLUE;
       f |= flashing;
       if (ui.cursor.visible && x === ui.cursor.x && y === ui.cursor.y) f |= DS_CURSOR;
 
-      if (f !== ds.lflags[i] || force) {
+      if (f !== ds.lflags[i] || hintWords[i] !== ds.hint[i] || force) {
         ds.lflags[i] = f;
-        drawSquare(dr, ds, guiStyle, x, y, f, state.clues[i]);
+        ds.hint[i] = hintWords[i];
+        drawSquare(dr, ds, guiStyle, x, y, f, hintWords[i], state.clues[i]);
       }
     }
+}
+
+/** The `H_*` word for every square, from the displayed step. */
+function hintFlags(
+  state: PearlState,
+  step?: HintStep<PearlMove, PearlHint>,
+): Int32Array {
+  const { w, h } = state;
+  const out = new Int32Array(w * h);
+  const hl = step?.highlights;
+  if (!hl) return out;
+  for (const t of hl.targets) {
+    const shift = t.line ? H_LINE_SHIFT : H_CROSS_SHIFT;
+    const far = t.sq + DY(t.dir) * w + DX(t.dir);
+    out[t.sq] |= t.dir << shift;
+    out[far] |= F(t.dir) << shift;
+  }
+  // One contour round a contiguous region, one ring per scattered square
+  // (`engine/hint-mark.ts`).
+  const inArea = new Set(hl.area);
+  for (const c of hl.area) {
+    const sides = outlineSides(
+      c % w,
+      Math.floor(c / w),
+      (ax, ay) => ax >= 0 && ax < w && ay >= 0 && ay < h && inArea.has(ay * w + ax),
+    );
+    out[c] |= sides << H_AREA_SHIFT;
+  }
+  return out;
 }

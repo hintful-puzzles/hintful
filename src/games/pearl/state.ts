@@ -227,7 +227,9 @@ export type PearlOp =
   | { kind: "flip"; l: number; x: number; y: number } // 'F': lines ^= l
   | { kind: "mark"; l: number; x: number; y: number } // 'M': marks ^= l
   | { kind: "solve" } // 'S'
-  | { kind: "hint" }; // 'H': in-place autosolve
+  // 'H': upstream's in-place autosolve. No input makes it any more; it stays
+  // so a saved game that used it still replays.
+  | { kind: "hint" };
 
 export interface PearlMove {
   ops: PearlOp[];

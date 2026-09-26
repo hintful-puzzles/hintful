@@ -130,9 +130,6 @@ describe("the app's keyboard shortcuts", () => {
  * would agree with.
  */
 const BINDS_A_SHORTCUT_LETTER: Record<string, string> = {
-  pearl:
-    "binds 'h' (with 'H') to its own hint, which is the same command the bare " +
-    "letter would have run — a player pressing h gets a hint either way.",
   tents:
     "binds 'n' to 'not a tent', upstream's T/N/B cell vocabulary, and only " +
     "while the keyboard cursor is visible — which is exactly when a player " +

@@ -2406,6 +2406,35 @@ the player can write one, the `?`. What settled it, in
   it the first press drops the plan, and the recomputed hint then refuses over
   a neutral domino that is a mistake.
 
+Pearl is the fifth (`add-pearl-hint`), and the second with **no new mark**,
+by a different route from Magnets'. Its solver keeps a set of possible shapes
+per square, and one rung derives a genuine pair fact from them: "this square
+can't join those two line ends". That is exactly the fact Loopy's corners
+record. What settled it, in [`games/pearl/`](../../src/games/pearl/):
+
+- **Ask whether the hidden fact is ever *needed*, not only whether it exists.**
+  Build the forgetful solver: it re-reads every square off its edges before
+  each firing and keeps nothing else. Compare its verdicts with the real one on
+  the boards the generator actually visits, a maximal clue set thinned one clue
+  at a time. Pearl's agreed on all 11,568. The pair fact is real and nothing
+  ever rests on it, because while it stays invisible its premise stays true, so
+  the rung finds it again whenever it would matter.
+- **Then make the hint forgetful by construction.** `pearlRecordingPass` resets
+  every square from its edges before each firing. A shape a rung strikes
+  counts only through the edges it settles at its own square in that same
+  firing; one that settles none is taken back. So a step is "strike and
+  settle", never "strike now, use later", and the corpus test that the hint
+  finishes every board is the guard on the bet.
+- **"Recomputing gives the same step" cannot see a leaked fact that the scan
+  re-derives.** The first guard written for this compared each step of a plan
+  with a fresh hint from the player's board. It stayed green with both
+  defenses removed, because the recompute's scan struck the same hidden shapes
+  on its way to the same firing. What catches it is the invariant itself:
+  every firing's `before` snapshot must equal the board re-read from its edges
+  (`pearl-hint.test.ts`). Removing the reset turns it red. The take-back
+  alone is covered by the reset, which wipes a kept strike before the next
+  firing reads it.
+
 ### Place the notes a fixpoint rests on (Crossing)
 
 When the notation already exists and only the plan skips it, the fix is in the

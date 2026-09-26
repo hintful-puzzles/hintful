@@ -1,5 +1,2 @@
-# No delta yet: the shape-set question may add a player notation, which decides
-# what the spec says. Written 2026-09-26; nothing is implemented.
 schema: spec-driven
 created: 2026-09-26
-skip_specs: true

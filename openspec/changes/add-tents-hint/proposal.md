@@ -27,7 +27,13 @@ Facts below were read on 2026-09-26; re-check them before relying on them.
   `Unreasonable`. First find out whether any narrated premise really needs a
   link, or whether "this tree's only possible tent" can always be read off the
   board as drawn. A `tent-link` firing is at best a hidden step
-  (`deduceHintPlan`'s `showable`) unless links become a notation.
+  (`deduceHintPlan`'s `showable`) unless links become a notation. Pearl
+  answered the same question for its shape sets by measurement
+  (`add-pearl-hint`'s design D1, and `docs/games/hints.md` § "Give the facts a
+  notation (Loopy)"): build the solver that forgets the hidden state before
+  every rung, keeping only what the board shows, compare its verdicts with the real
+  solver's on generator-shaped boards, and only design a notation if they
+  differ.
 - **Line enumeration** is two rungs. `line-count` enumerates every placement
   of a row's or column's remaining tents and fixes each square every placement
   agrees on: nonogram overlap reasoning, whose narration the collection has not

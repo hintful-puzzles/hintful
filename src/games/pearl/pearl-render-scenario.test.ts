@@ -10,8 +10,16 @@ import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/midend.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import type { PearlHint } from "./hint.ts";
 import { pearlGame } from "./index.ts";
-import { COL_BLACK, COL_GRID, COL_MISTAKE, COL_WHITE } from "./render.ts";
+import {
+  COL_BLACK,
+  COL_GRID,
+  COL_HINT,
+  COL_HINT_CELL,
+  COL_MISTAKE,
+  COL_WHITE,
+} from "./render.ts";
 import { pearlSolve } from "./solver.ts";
 import {
   DIFF_COUNT,
@@ -80,6 +88,47 @@ describe("Pearl render scenarios", () => {
     expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(
       true,
     );
+  });
+
+  it("a hint draws the line it asks for and outlines the pearl it reasons from", () => {
+    const { recording, hint } = renderScenario({
+      game: pearlGame,
+      id: ID,
+      showHint: true,
+      hintUntil: (step) =>
+        (step.highlights as PearlHint).targets.some((t) => t.line) &&
+        /black pearl must turn/.test(step.explanation),
+    });
+    const hl = hint?.highlights as PearlHint | undefined;
+    expect(hl?.area.length).toBe(1);
+    // The target is the proposed line, a stroke rather than a laid rect.
+    expect(recording.ops.some((o) => o.op === "line" && o.color === COL_HINT)).toBe(
+      true,
+    );
+    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(
+      false,
+    );
+    // The evidence square is outlined, a band on each of its four sides.
+    const band = recording.ops.filter(
+      (o) => o.op === "rect" && o.color === COL_HINT_CELL,
+    );
+    expect(band).toHaveLength(4);
+    expect(recording.ops).toMatchSnapshot();
+  });
+
+  it("a hint that rules an edge out draws the cross it asks for", () => {
+    const { recording, hint } = renderScenario({
+      game: pearlGame,
+      id: ID,
+      showHint: true,
+      hintUntil: (step) => (step.highlights as PearlHint).targets.some((t) => !t.line),
+    });
+    expect(hint).not.toBeNull();
+    const crosses = recording.ops.filter(
+      (o) => o.op === "line" && o.color === COL_HINT,
+    );
+    // Two strokes per half cross, one half from each square beside the edge.
+    expect(crosses.length).toBeGreaterThanOrEqual(4);
   });
 
   it("the loopy appearance draws center-dot grid instead of a black border", () => {
