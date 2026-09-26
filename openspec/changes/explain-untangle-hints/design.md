@@ -101,6 +101,30 @@ counts a point's crossings as the board's total less the total without that
 point's lines. A snap-to-grid start makes the case common, and it catches the
 old order (checked).
 
+## D3b. Which point a stall-breaking step moves (owner review, 2026-09-26)
+
+On a shared 20-point board (pinned in `untangle-hint.test.ts`) the fallback
+nudged a crossing-free point 0.18 units and said it "keeps its lines clear":
+a move with nothing to show. Any unplaced point keeps the walk terminating
+(D3), so the choice is free, and it had been made only by "place clear, fewest
+crossings added", which ranks exactly that move best. The choice is now:
+
+1. Points in some crossing, moving at least a point gap, onto a clear place,
+   before any other.
+2. Among the six such placements that add the fewest crossings, look one move
+   past each, and take the one whose next move removes the most, net of what the
+   placement adds.
+
+Across 24 boards followed to solved (half scattered), idle fallback moves went
+from 81 to 1, and moves to solve at n = 20 from 40 to 30. The lookahead is
+capped at six placements because each one is a full search; uncapped, the
+worst request at n = 25 was 897 ms, capped 311 ms (both under load).
+
+The payoff clause ("…but frees a move that removes N") is said only when N is
+at least what the move adds. Otherwise the "but" would promise a payoff that
+does not cover the cost, as in "raises its crossings from 1 to 5, but frees a
+move that removes 1".
+
 ## D4. Plans are short
 
 A plan holds at most six steps. Every step is a fresh measurement, and the

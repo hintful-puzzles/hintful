@@ -92,10 +92,12 @@ vertex, and SHALL be one of two kinds:
   them.
 - **Placing**, only when no single move removes a crossing: the move of a vertex
   not already in place to its place in the solved layout (as Solve would
-  choose it), preferring a place that is clear in the same sense. Its
+  choose it). It SHALL prefer a vertex that is in some crossing, whose move is
+  visibly long, and whose place is clear in the same sense, and among those the
+  placement whose next move removes the most crossings net of what it adds. Its
   explanation SHALL state what the move does to the vertex's crossings and,
-  when the next step removes crossings, how many; it SHALL NOT refer to the
-  solved layout, which the player cannot see.
+  when the next step removes at least as many crossings as this one adds, how
+  many; it SHALL NOT refer to the solved layout, which the player cannot see.
 
 A vertex exactly on its place in the solved layout SHALL NOT be moved by either
 kind of step. Following hints from any position of a planar board SHALL

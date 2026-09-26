@@ -60,7 +60,9 @@ function followHints(start: UntangleState, aux?: string) {
   let pending: { explanation: string; before: number; after: number } | null = null;
   const settle = (nextGain: number | null) => {
     if (pending === null) return;
-    const opens = nextGain !== null && nextGain > 0 ? nextGain : null;
+    const added = pending.after - pending.before;
+    const opens =
+      nextGain !== null && nextGain > 0 && nextGain >= added ? nextGain : null;
     expect(pending.explanation).toBe(
       say.rearrange(pending.before, pending.after, opens),
     );
@@ -120,6 +122,31 @@ describe("Untangle hint", () => {
     // Vacuity: the fallback for "no single move helps" must actually have run,
     // or this test says nothing about the stall that made the old hint give up.
     expect(rebuilds).toBeGreaterThan(0);
+  });
+
+  it("never spends a stall-breaking move on a point with nothing to untangle", () => {
+    // The owner's board (a shared ID, so no aux): following hints, the fallback
+    // once nudged a crossing-free point 0.18 units and said it "keeps its lines
+    // clear". Pinned as the description, since that is what the hint reads.
+    const desc =
+      "0-5,0-10,0-12,0-19,1-4,1-8,1-10,1-16,2-6,2-13,2-17,3-7,3-14,3-19,4-8,4-18," +
+      "5-7,5-12,5-19,6-9,6-11,6-17,7-14,7-19,8-16,8-18,9-11,9-15,10-12,13-14," +
+      "13-15,13-17,14-17,15-16,15-18,16-18";
+    const start = untangleGame.newState({ n: 20 }, desc);
+    let steps = 0;
+    let s = start;
+    while (!s.completed && steps < 200) {
+      const res = deduceUntangleHintPlan(s);
+      if (!res.ok) throw new Error(res.error);
+      for (const st of res.steps) {
+        expect(st.explanation).not.toContain("keeps its lines clear");
+        s = untangleGame.executeMove(s, st.move);
+        steps++;
+      }
+    }
+    expect(s.completed).toBe(true);
+    // ...and the full checks, counts included, hold on it too.
+    expect(followHints(start).s.completed).toBe(true);
   });
 
   it("finishes spacious rather than knotted in the middle", () => {

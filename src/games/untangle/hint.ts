@@ -78,6 +78,9 @@ const SPREAD_EPS = 0.25;
 
 const MAX_PLAN_STEPS = 6;
 
+/** How many placements a stall-breaking step looks one move past. */
+const LOOKAHEAD = 6;
+
 /** One board under consideration: positions, and what is fixed about it. */
 class Board {
   readonly adj: number[][];
@@ -316,29 +319,67 @@ function bestClearing(
   return null;
 }
 
-/** The unplaced point to move to its place: one whose place is clear (no
- * point near it, no line through it), if there is one — a point dropped beside
- * another or onto a line reads as a mistake — then the one that leaves the
- * fewest crossings. */
+/**
+ * The unplaced point to move to its place when no move removes a crossing.
+ *
+ * Any unplaced point keeps the walk terminating, so the choice is free, and it
+ * is made for what the player sees. A point in no crossing, or one a hair from
+ * its place, makes a move with nothing to show for it, so those go last; so
+ * does a place that is crowded or has a line through it. Among the rest, each
+ * placement is tried and the next move searched, and the one whose next move
+ * removes the most crossings, less any the placement adds, wins — the payoff
+ * the narration can then name.
+ */
 function nextToPlace(
   board: Board,
+  spots: readonly RationalPoint[],
   placed: readonly boolean[],
   targets: readonly RationalPoint[],
 ): number {
-  let best = -1;
-  let bestKey = [Infinity, Infinity];
+  const candidates: { v: number; rank: number; net: number }[] = [];
   for (let v = 0; v < board.n; v++) {
     if (placed[v]) continue;
     const t = units(targets[v]);
-    const crowded = board.isClear(v, t) ? 0 : 1;
+    const here = board.pu[v];
     const estimate = board.estimator(v);
-    const delta = estimate(t) - estimate(board.pu[v]);
-    if (crowded < bestKey[0] || (crowded === bestKey[0] && delta < bestKey[1])) {
-      best = v;
-      bestKey = [crowded, delta];
-    }
+    const now = estimate(here);
+    const idle = now === 0 || Math.hypot(t.x - here.x, t.y - here.y) < board.pointGap;
+    const crowded = !board.isClear(v, t);
+    candidates.push({
+      v,
+      rank: (idle ? 2 : 0) + (crowded ? 1 : 0),
+      net: -(estimate(t) - now),
+    });
   }
-  return best;
+  if (candidates.length === 0) return -1;
+  const bestRank = Math.min(...candidates.map((c) => c.rank));
+  // Each lookahead is a full search, so only the few that add fewest crossings
+  // are looked past.
+  const tier = candidates
+    .filter((c) => c.rank === bestRank)
+    .sort((a, b) => b.net - a.net || a.v - b.v)
+    .slice(0, LOOKAHEAD);
+
+  // Look one move past each placement in the best tier.
+  const trialPlaced = placed.slice();
+  for (const c of tier) {
+    const from = board.pts[c.v];
+    board.move(c.v, targets[c.v]);
+    trialPlaced[c.v] = true;
+    const next =
+      bestClearing(board, spots, trialPlaced, targets, 1) ??
+      bestClearing(board, spots, trialPlaced, targets, CRAMPED);
+    if (next) {
+      const x = next.vertex;
+      c.net +=
+        board.crossingsAt(x, board.pts[x]).length -
+        board.crossingsAt(x, next.to).length;
+    }
+    trialPlaced[c.v] = false;
+    board.move(c.v, from);
+  }
+  tier.sort((a, b) => b.net - a.net || a.v - b.v);
+  return tier[0].v;
 }
 
 /** A planned move and the exact counts its sentence is built from. */
@@ -363,11 +404,13 @@ function plan(board: Board, vertex: number, to: RationalPoint): Planned {
 
 /** A step's sentence. A move to the solved layout is narrated by what it does
  * on the board — the layout itself is nothing the player can see — and by the
- * crossings the next move removes, when the next move is one that does. */
+ * crossings the next move removes, when that repays what this one adds. */
 function narrate(p: Planned, next: Planned | null): string {
   if (p.after < p.before) return say.clear(p.before, p.after);
-  const opens =
-    next !== null && next.after < next.before ? next.before - next.after : null;
+  // "…but frees a move that removes N" justifies the move, so it is said only
+  // when the next move takes back at least what this one adds.
+  const gain = next === null ? 0 : next.before - next.after;
+  const opens = gain > 0 && gain >= p.after - p.before ? gain : null;
   return say.rearrange(p.before, p.after, opens);
 }
 
@@ -395,7 +438,7 @@ export function deduceUntangleHintPlan(
       bestClearing(board, spots, placed, targets, CRAMPED);
     if (clearing) return plan(board, clearing.vertex, clearing.to);
     if (targets === null) return null;
-    const v = nextToPlace(board, placed, targets);
+    const v = nextToPlace(board, spots, placed, targets);
     return v < 0 ? null : plan(board, v, targets[v]);
   };
 

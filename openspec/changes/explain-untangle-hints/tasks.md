@@ -33,6 +33,10 @@
 - [x] 3.6 Owner review: sentences reworded (numerals, whole sentences, nothing
   about the unseen layout); spacing as fractions of point spacing with a frame
   margin and a tighter second search (design D3a).
+- [x] 3.7 Owner board: a stall-breaking step that moved a crossing-free point.
+  Fallback choice ranks tangled, visible, clear placements first and looks one
+  move ahead; the payoff clause only when it repays the move (design D3b). The
+  board is pinned as its description, and the committed code fails the test.
 
 ## 4. Cross-game ledgers and docs
 - [x] 4.1 `hint-quality` ledger reason; dead `hint-refusal` exceptions removed.
