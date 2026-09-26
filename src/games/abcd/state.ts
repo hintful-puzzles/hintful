@@ -9,15 +9,23 @@
  *
  * C uses one `clues[w·h·n]` array for two unrelated jobs, the player's pencil
  * marks and the solver's candidate cube. Here they are separate:
- * {@link AbcdState.pencil}, and a fresh cube local to {@link ./solver.ts}.
+ * {@link AbcdState.pencil}, a per-cell bitmask like every other note-taking
+ * game's, and a fresh cube local to {@link ./solver.ts}.
  */
 
+import {
+  type CandidateReading,
+  DEFAULT_CANDIDATE_READING,
+} from "../../engine/candidate-hint.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 
 // --- constants -------------------------------------------------------------
 
-/** An empty grid cell (upstream `EMPTY = 127`; a letter index is `0..n-1`). */
-export const EMPTY = -1;
+/** An empty grid cell. Upstream's is 127 with letter `i` stored as `i`; here a
+ * grid stores letter `i` (`0..n-1`, the index clues and moves use) as `i + 1`,
+ * so an empty cell is 0 as it is in every other note-taking game, which the
+ * shared candidate walk and the cross-game hint guards read. */
+export const EMPTY = 0;
 /** A hidden edge clue (upstream `NO_NUMBER = -1`). */
 export const NO_NUMBER = -1;
 
@@ -26,6 +34,10 @@ export const NO_NUMBER = -1;
 /** Candidate-cube / pencil-mark index for letter `i` at cell `(x, y)`. */
 export function cuboid(x: number, y: number, i: number, n: number, w: number): number {
   return i + x * n + y * n * w;
+}
+/** The pencil-mask bit for letter `i` (`0..n-1`). */
+export function letterBit(i: number): number {
+  return 1 << i;
 }
 /** `numbers` index of the row-`y` clue counting letter `i`. */
 export function horClue(y: number, i: number, n: number): number {
@@ -206,10 +218,11 @@ export function parseNumbers(p: AbcdParams, desc: string): Int32Array {
 
 export interface AbcdState {
   params: AbcdParams;
-  /** `w·h` entered letters (`0..n-1`) or {@link EMPTY}; cloned per move. */
+  /** `w·h` entered letters, letter `i` as `i + 1`, or {@link EMPTY}; cloned
+   * per move. */
   grid: Int8Array;
-  /** `w·h·n` pencil-mark cube (1 = mark present); cloned per move. */
-  pencil: Uint8Array;
+  /** `w·h` pencil marks, letter `i` at {@link letterBit}; cloned per move. */
+  pencil: Int32Array;
   /** `(w+h)·n` immutable edge clues (`NO_NUMBER` for hidden); shared by
    * reference across every clone (never mutated after `newState`). */
   readonly numbers: Int32Array;
@@ -221,8 +234,8 @@ export function newState(p: AbcdParams, desc: string): AbcdState {
   const a = p.w * p.h;
   return {
     params: p,
-    grid: new Int8Array(a).fill(EMPTY),
-    pencil: new Uint8Array(a * p.n), // pencil marks start empty
+    grid: new Int8Array(a),
+    pencil: new Int32Array(a), // pencil marks start empty
     numbers: parseNumbers(p, desc),
     completed: false,
     cheated: false,
@@ -320,7 +333,7 @@ function validateClues(
       if (clue === NO_NUMBER) continue;
       let found = 0;
       for (let b = 0; b < bmx; b++) {
-        if (grid[horizontal ? a * w + b : b * w + a] === i) found++;
+        if (grid[horizontal ? a * w + b : b * w + a] === i + 1) found++;
       }
       if (found > clue) return -1;
       if (found < clue) unsatisfied = true;
@@ -331,17 +344,23 @@ function validateClues(
 
 // --- moves -----------------------------------------------------------------
 
+/** A move names letters by index (`0..n-1`), never by their grid encoding: the
+ * move log is what a save replays. */
 export type AbcdMove =
   /** Enter (`letter` = index) or clear (`letter` = null) an ink letter at `(x,y)`. */
   | { type: "enter"; x: number; y: number; letter: number | null }
   /** Toggle pencil mark `letter` at `(x,y)`. */
   | { type: "pencil"; x: number; y: number; letter: number }
-  /** Fill every note-less empty cell's whole candidate cube — the first press
-   * of the adaptive mark-all (the `M` key), shared with the Latin family. */
+  /** Fill every note-less empty cell with every letter — the first press of the
+   * adaptive mark-all (the `M` key), shared with the Latin family. */
   | { type: "pencilAll" }
   /** Strike the listed candidate marks atomically — the adaptive mark-all's
-   * subsequent presses (obvious eliminations only, never a re-fill). */
+   * subsequent presses (obvious eliminations only, never a re-fill), and a
+   * hint's strikes. */
   | { type: "pencilStrike"; marks: { x: number; y: number; letter: number }[] }
+  /** Write the listed candidate marks: a hint putting a note-less cell's
+   * candidates on the board before a deduction reads them. */
+  | { type: "pencilAdd"; marks: { x: number; y: number; letter: number }[] }
   /** Auto-solve: overwrite the grid with the canonical solution. */
   | { type: "solve"; grid: number[] };
 
@@ -359,6 +378,8 @@ export interface AbcdUi {
   pencilSticky: boolean;
   /** Preference (default on): keep the mouse highlight after a pencil change. */
   pencilKeepHighlight: boolean;
+  /** Preference: how a hint pencils (`CandidateReading`). */
+  candidateReading: CandidateReading;
 }
 
 export function newUi(_state: AbcdState): AbcdUi {
@@ -368,6 +389,7 @@ export function newUi(_state: AbcdState): AbcdUi {
     cursorFromKeyboard: false,
     pencilSticky: true,
     pencilKeepHighlight: true,
+    candidateReading: DEFAULT_CANDIDATE_READING,
   };
 }
 
@@ -434,7 +456,7 @@ export function textFormat(state: AbcdState): string | null {
     for (let x = 0; x < w; x++) {
       const c = grid[y * w + x];
       buf[rw * (n + y + 1) + (n + x) * 2] =
-        c !== EMPTY ? String.fromCharCode(65 + c) : ".";
+        c !== EMPTY ? String.fromCharCode(64 + c) : ".";
     }
 
   return buf.join("");

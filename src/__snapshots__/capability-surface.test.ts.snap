@@ -4,7 +4,9 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
 [
   {
     "drawState": [
-      "clueErr",
+      "clueLook",
+      "hint",
+      "marks",
       "pencilModeShown",
       "started",
       "tileSize",
@@ -19,15 +21,19 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "describeParams",
       "findMistakes",
       "flashLength",
+      "hint",
+      "hintKeepTrack",
       "paramConfig",
       "preferredTileSize",
       "prefs",
+      "refreshHintStep",
       "requestKeys",
       "solve",
       "textFormat",
       "transposeParams",
     ],
     "ui": [
+      "candidateReading",
       "cursor",
       "cursorFromKeyboard",
       "pencilKeepHighlight",

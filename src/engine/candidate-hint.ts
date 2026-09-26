@@ -585,8 +585,8 @@ export function lazyPopulate<M, H>(
  * Deliberately knows nothing about how a game stores its grid/pencil or what
  * "obvious" means: a square-Latin game passes `anyEmptyLacksNotes` +
  * {@link obviousCandidateMarks} (via {@link adaptiveMarkAllMove}); a
- * rectangular / non-Latin game (ABCD — adjacency + satisfied-clue eliminations
- * over a candidate *cube*) passes its own. So "multiple presses only ever
+ * rectangular / non-Latin game (ABCD — adjacency + satisfied-clue eliminations)
+ * passes its own. So "multiple presses only ever
  * remove, never reset" reads identically across the collection. The `Mark` type
  * is the game's own — the `pencilStrike` payload it will apply.
  *
@@ -608,13 +608,11 @@ export function lazyPopulate<M, H>(
  * *empty* means (Undead's `guess[i] === MON_NONE`, Salad's extra CROSS
  * exclusion) and what *every candidate* means — a scalar mask for the square
  * Latin games, a per-cell `areaBits(dsf.size(i))` for Seismic, one of two masks
- * by hole type for Salad, and `n` contiguous slots of a candidate cube for ABCD.
- * A shared loop over those needs three callbacks and is longer at each call site
+ * by hole type for Salad. A shared loop over those needs three callbacks and is longer at each call site
  * than the four lines it would replace.
  *
  * **What enforces it:** `mark-all.test.ts`, over every game whose `canMarkAll`
- * is true, representation-agnostically — a new game with the press joins by
- * shipping the press. */
+ * is true — a new game with the press joins by shipping the press. */
 export function adaptiveMarkAll<M, Mk>(
   needsFill: boolean,
   computeMarks: () => readonly Mk[],

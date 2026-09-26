@@ -21,6 +21,8 @@ import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import {
   ERROR,
   GRID_MID,
+  HINT_ACTION,
+  HINT_EVIDENCE,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -29,15 +31,22 @@ import {
 } from "../../engine/color/palette.ts";
 import { abcdBorderLetter } from "../../engine/color/palette-games.ts";
 import { glyphFont } from "../../engine/draw.ts";
-import type { GameDrawing } from "../../engine/game.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as geometryFromCoord } from "../../engine/geometry.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
+import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import {
   type CellHighlight,
   cellHighlight,
   drawCellBackground,
   HIGHLIGHT_NONE,
 } from "../../engine/note-taking-cell.ts";
-import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
+import {
+  HINT_AREA,
+  HINT_TARGET,
+  hintMarkBit,
+  OverlaySidecar,
+} from "../../engine/overlay-sidecar.ts";
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
@@ -46,12 +55,14 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import type { AbcdHint } from "./hint.ts";
 import {
+  type AbcdMove,
   type AbcdState,
   type AbcdUi,
-  cuboid,
   EMPTY,
   horClue,
+  letterBit,
   NO_NUMBER,
   verClue,
 } from "./state.ts";
@@ -80,6 +91,10 @@ export const COL_PENCIL_BODY = 10;
  * used `COL_HIGHLIGHT`, mkhighlight's near-white, which the dark-mode pass
  * inverts to near-black; that one stays the completion flash's light stripe. */
 export const COL_CURSOR = 11;
+/** The hint's action color: its target rings, hatch and the clue it reads. */
+export const COL_HINT = 12;
+/** The hint's evidence color: the outline of the squares a reason rests on. */
+export const COL_HINT_CELL = 13;
 
 export function colors(defaultBackground: Color): Color[] {
   const outer = defaultBackground;
@@ -99,6 +114,8 @@ export function colors(defaultBackground: Color): Color[] {
   // A fill under the letter and its notes: the note-taking cell's "you are
   // here" wash, which every game in that mechanic shares, not the green mark.
   out[COL_CURSOR] = highlightWash(inner);
+  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT_CELL] = HINT_EVIDENCE;
   return out;
 }
 
@@ -137,13 +154,26 @@ export interface AbcdDrawState {
   tileSize: number;
   /** `w·h` last-drawn packed tile values (-1 = never drawn). */
   tiles: Int32Array;
-  /** `(w+h)·n` last-drawn clue-error flags (-1 = never drawn). */
-  clueErr: Int8Array;
+  /** `(w+h)·n` last-drawn clue looks (-1 = never drawn): {@link CLUE_ERR},
+   * {@link CLUE_HATCHED}, {@link CLUE_READ}. */
+  clueLook: Int8Array;
   /** Mistake-overlay sidecar (fork addition) — keeps Check & Save in the diff key. */
   wrong: OverlaySidecar;
+  /** The displayed hint: target and evidence bits, the hatch, and each struck
+   * note at `hintMarkBit(letter)`. */
+  hint: OverlaySidecar;
+  /** The hint's rings and outline, painted once per frame after the tiles. */
+  marks: HintMarks;
   /** Whether the pencil-mode indicator was on last frame (fork addition). */
   pencilModeShown: boolean | null;
 }
+
+/** A clue that is exceeded or can no longer be met. */
+const CLUE_ERR = 1;
+/** A clue slot on the line the hint names. */
+const CLUE_HATCHED = 2;
+/** The clue whose count the hint reads. */
+const CLUE_READ = 4;
 
 export function newDrawState(state: AbcdState, tileSize: number): AbcdDrawState {
   const { w, h, n } = state.params;
@@ -151,8 +181,10 @@ export function newDrawState(state: AbcdState, tileSize: number): AbcdDrawState 
     started: false,
     tileSize,
     tiles: new Int32Array(w * h).fill(-1),
-    clueErr: new Int8Array((w + h) * n).fill(-1),
+    clueLook: new Int8Array((w + h) * n).fill(-1),
     wrong: new OverlaySidecar(w * h),
+    hint: new OverlaySidecar(w * h),
+    marks: new HintMarks(),
     pencilModeShown: null,
   };
 }
@@ -176,7 +208,7 @@ function computeClueErrors(state: AbcdState): Uint8Array {
         let empty = 0;
         for (let b = 0; b < bmx; b++) {
           const g = grid[horizontal ? a * w + b : b * w + a];
-          if (g === i) found++;
+          if (g === i + 1) found++;
           else if (g === EMPTY) empty++;
         }
         if (found > clue || found + empty < clue) err[pos] = 1;
@@ -247,18 +279,23 @@ function drawBorderLetters(dr: GameDrawing, ts: number, n: number): void {
   }
 }
 
+/** A cell's pencil marks, laid out by upstream's arithmetic. Bit
+ * `hintMarkBit(i)` of `struck` is a letter the displayed hint rules out, drawn
+ * with a line through it. */
 function drawPencilMarks(
   dr: GameDrawing,
   state: AbcdState,
   ts: number,
   x: number,
   y: number,
+  struck: number,
 ): void {
   const { w, n } = state.params;
+  const notes = state.pencil[y * w + x];
   const ox = innerCoord(x, ts, n);
   const oy = innerCoord(y, ts, n);
   let nhints = 0;
-  for (let i = 0; i < n; i++) if (state.pencil[cuboid(x, y, i, n, w)]) nhints++;
+  for (let i = 0; i < n; i++) if (notes & letterBit(i)) nhints++;
   if (nhints === 0) return;
 
   let hw = 1;
@@ -272,20 +309,32 @@ function drawPencilMarks(
 
   let j = 0;
   for (let i = 0; i < n; i++) {
-    if (!state.pencil[cuboid(x, y, i, n, w)]) continue;
+    if (!(notes & letterBit(i))) continue;
     const hx = j % hw;
     const hy = (j / hw) | 0;
-    dr.drawText(
-      {
-        x: (ox + ((4 * hx + 3) * ts) / (4 * hw + 2)) | 0,
-        y: (oy + ((4 * hy + 3) * ts) / (4 * hh + 2)) | 0,
-      },
-      glyphFont(fontsz),
-      COL_PENCIL,
-      String.fromCharCode(65 + i),
-    );
+    const at = {
+      x: (ox + ((4 * hx + 3) * ts) / (4 * hw + 2)) | 0,
+      y: (oy + ((4 * hy + 3) * ts) / (4 * hh + 2)) | 0,
+    };
+    dr.drawText(at, glyphFont(fontsz), COL_PENCIL, String.fromCharCode(65 + i));
+    // The struck note keeps its own color, so it still reads as the player's
+    // note; the line through it is what says the hint rules it out.
+    if (struck & hintMarkBit(i)) {
+      const r = Math.max(2, (fontsz / 3) | 0);
+      dr.drawLine({ x: at.x - r, y: at.y }, { x: at.x + r, y: at.y }, COL_PENCIL, 2);
+    }
     j++;
   }
+}
+
+/** The box a cell's background fills, and so where a hint's band sits inside
+ * it: the cell's own repaint then undoes a band that moves on. */
+function cellBox(x: number, y: number, ts: number, n: number) {
+  return { x: innerCoord(x, ts, n) + 1, y: innerCoord(y, ts, n), w: ts - 1, h: ts - 1 };
+}
+
+function markBand(x: number, y: number, ts: number, n: number): MarkBand {
+  return { box: cellBox(x, y, ts, n), outer: 0, inner: Math.max(2, ts >> 4) };
 }
 
 function drawTile(
@@ -303,12 +352,14 @@ function drawTile(
   const tx = innerCoord(x, ts, n);
   const ty = innerCoord(y, ts, n);
   const flashing = flash >= 0;
-  const letter = state.grid[y * w + x];
+  const i = y * w + x;
+  const letter = state.grid[i];
+  const box = cellBox(x, y, ts, n);
 
   // Background: a diagonal stripe while flashing, else the cell's highlight.
   drawCellBackground(
     dr,
-    { x: tx + 1, y: ty, w: ts - 1, h: ts - 1 },
+    box,
     flashing ? HIGHLIGHT_NONE : (((fs >> K_HIGHLIGHT) & 3) as CellHighlight),
     COL_CURSOR,
     flashing && (x + y) % 3 === flash
@@ -317,16 +368,17 @@ function drawTile(
         ? COL_LOWLIGHT
         : COL_INNERBG,
   );
+  ds.hint.drawHatch(dr, i, box, COL_HINT, ts);
 
   if (letter !== EMPTY) {
     dr.drawText(
       { x: tx + ((ts / 2) | 0), y: ty + ((ts / 2) | 0) },
       glyphFont((ts / 2) | 0),
       fs & DF_ERR ? COL_ERROR : COL_GUESS,
-      String.fromCharCode(65 + letter),
+      String.fromCharCode(64 + letter),
     );
   } else {
-    drawPencilMarks(dr, state, ts, x, y);
+    drawPencilMarks(dr, state, ts, x, y, ds.hint.packed[i]);
   }
 
   // Cell border.
@@ -426,7 +478,7 @@ export function redraw(
   ui: AbcdUi,
   _animTime: number,
   flashTime: number,
-  _hint?: unknown,
+  hint?: HintStep<AbcdMove, AbcdHint>,
   mistakes?: readonly Point[],
 ): void {
   const ts = ds.tileSize;
@@ -438,34 +490,49 @@ export function redraw(
   }
 
   const flash = flashTime > 0 ? Math.floor(flashTime / FLASH_FRAME) % 3 : -1;
+  const index = (x: number, y: number): number => y * w + x;
+  ds.wrong.packCells(mistakes ?? null, index);
+  ds.hint.pack(hint?.highlights ?? null, index, (m) => hintMarkBit(m.n - 1));
 
-  // Clues (redraw only those whose error flag flipped).
+  // Clues (redraw only those whose look changed). The hint hatches the named
+  // line on through its clue slots, and draws the count it reads in its color.
   const clueErr = computeClueErrors(state);
+  const read = hint?.highlights?.clue ?? -1;
+  // The clue's line: `numbers` holds the row clues, then the column clues.
+  const readLine = read < 0 ? -1 : Math.floor(read / n);
+  const lineHatched = read >= 0 && (hint?.highlights?.hatch?.length ?? 0) > 0;
   for (const horizontal of [true, false]) {
     const amx = horizontal ? h : w;
     for (let a = 0; a < amx; a++) {
+      const hatched = lineHatched && readLine === (horizontal ? a : h + a);
       for (let i = 0; i < n; i++) {
         const pos = horizontal ? horClue(a, i, n) : verClue(a, i, n, h);
-        if (ds.clueErr[pos] === clueErr[pos]) continue;
+        const look =
+          (clueErr[pos] ? CLUE_ERR : 0) |
+          (hatched ? CLUE_HATCHED : 0) |
+          (pos === read ? CLUE_READ : 0);
+        if (ds.clueLook[pos] === look) continue;
         const oo = outerCoord(i, ts);
         const oi = innerCoord(a, ts, n);
         const ox = horizontal ? oo : oi;
         const oy = horizontal ? oi : oo;
-        dr.drawRect({ x: ox, y: oy, w: ts - 1, h: ts - 1 }, COL_OUTERBG);
+        const slot = { x: ox, y: oy, w: ts - 1, h: ts - 1 };
+        dr.drawRect(slot, COL_OUTERBG);
+        if (look & CLUE_HATCHED) dr.drawHatch(slot, COL_HINT, hatchPeriod(ts));
         const clue = state.numbers[pos];
         if (clue !== NO_NUMBER) {
-          const color = clueErr[pos] ? COL_ERROR : COL_TEXT;
+          const color =
+            look & CLUE_ERR ? COL_ERROR : look & CLUE_READ ? COL_HINT : COL_TEXT;
           drawTileText(dr, ox, oy, ts, color, String(clue));
         }
-        dr.drawUpdate({ x: ox, y: oy, w: ts - 1, h: ts - 1 });
-        ds.clueErr[pos] = clueErr[pos];
+        dr.drawUpdate(slot);
+        ds.clueLook[pos] = look;
       }
     }
   }
 
   // Grid tiles.
   const adjErr = computeAdjacencyErrors(state);
-  ds.wrong.packCells(mistakes ?? null, (x, y) => y * w + x);
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -475,24 +542,32 @@ export function redraw(
       if (adjErr[i]) fs |= DF_ERR;
 
       const letter = state.grid[i];
-      let pencilMask = 0;
-      if (letter === EMPTY) {
-        for (let c = 0; c < n; c++)
-          if (state.pencil[cuboid(x, y, c, n, w)]) pencilMask |= 1 << c;
-      }
+      const pencilMask = letter === EMPTY ? state.pencil[i] : 0;
       const tile =
-        ((letter === EMPTY ? 0 : letter + 1) << K_LETTER) |
-        fs |
-        ((flash + 1) << K_FLASH) |
-        (pencilMask << K_PENCIL);
+        (letter << K_LETTER) | fs | ((flash + 1) << K_FLASH) | (pencilMask << K_PENCIL);
 
-      if (ds.tiles[i] !== tile || ds.wrong.stale(i)) {
+      if (ds.tiles[i] !== tile || ds.wrong.stale(i) || ds.hint.stale(i)) {
         drawTile(dr, ds, state, x, y, fs, flash, ds.wrong.at(i));
         ds.tiles[i] = tile;
         ds.wrong.commit(i);
+        ds.hint.commit(i);
       }
     }
   }
+
+  // The hint's marks, after every tile, so no tile painted this frame covers one.
+  const targets: MarkCell[] = [];
+  const evidence: MarkCell[] = [];
+  for (let i = 0; i < w * h; i++) {
+    const c = { x: i % w, y: (i / w) | 0 };
+    if (ds.hint.packed[i] & HINT_TARGET) targets.push(c);
+    if (ds.hint.packed[i] & HINT_AREA) evidence.push(c);
+  }
+  ds.marks.paint(dr, targets, evidence, {
+    band: (x, y) => markBand(x, y, ts, n),
+    targetColor: COL_HINT,
+    evidenceColor: COL_HINT_CELL,
+  });
 
   // Pencil-mode indicator (fork addition): the sticky-pencil "mode on" glyph.
   repaintPencilIndicator(

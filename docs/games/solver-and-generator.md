@@ -141,6 +141,16 @@ foreclosed by the primitive beneath it, in the C exactly as in the port
 ([`magnets-ladder.test.ts`](../../src/games/magnets/magnets-ladder.test.ts)
 argues it) — in which case "empty is the goal" is a diagnosis, not a target.
 
+**On a ladder whose every rung only removes candidates, the census is the half
+that bites.** Such a ladder reaches the same fixpoint in any order, and the
+corpus is dealt by a generator gated on the very solver under test, so a plant
+that weakens a rung changes the corpus along with the verdicts. ABCD is the case:
+silencing its runs rung left all 24 board comparisons green, because the
+weakened solver dealt only boards it could finish, and only the census (and 11
+of the differential's 18 fixtures) went red
+([`abcd-ladder.test.ts`](../../src/games/abcd/abcd-ladder.test.ts)). Plant a
+rung before trusting the board comparison to see it.
+
 **The census costs the adopting game one optional parameter**, forwarded straight
 to `runDeductionFixpoint`'s `firings` sink; the runner does the counting. That is
 the whole of it — if you find yourself wrapping the ladder in a closure to
@@ -231,8 +241,11 @@ flag standing in for a `-1` return, a pre-pass at the top of each iteration, a
 verdict richer than a boolean — each reads as structural and each has adopted,
 because a technique can hold state and guard itself (the exemplar table above
 names where). Spokes' accumulator was once listed as a hatch case and turned out
-to be an early-out, not a grade. **Read the loop, not the reason somebody
-recorded for it.**
+to be an early-out, not a grade. So did ABCD's "sweeps the whole ladder before
+restarting": its loop runs its first two techniques in one pass, but the first
+only retires lines and places nothing, so trying it again before the second, as
+the runner does, finds nothing, and the two walks are the same
+(`add-abcd-hint`). **Read the loop, not the reason somebody recorded for it.**
 
 #### What a bespoke loop still owes
 

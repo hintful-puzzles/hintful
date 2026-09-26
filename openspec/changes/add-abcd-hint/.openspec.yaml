@@ -1,6 +1,2 @@
-# No delta yet: where the ordering rule for a sweeping solver lives is the
-# decision the change exists to make, and the ladder census may split out as a
-# change of its own before any of it is written.
 schema: spec-driven
 created: 2026-09-20
-skip_specs: true

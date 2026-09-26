@@ -10,7 +10,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import { adaptiveMarkAll } from "../../engine/candidate-hint.ts";
+import { adaptiveMarkAll, candidateHint } from "../../engine/candidate-hint.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
@@ -31,6 +31,7 @@ import {
   transposeDimensions,
 } from "../../engine/params.ts";
 import {
+  candidateReadingPref,
   pencilKeepHighlightPref,
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
@@ -45,6 +46,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { ConfigValues, KeyLabel, Point } from "../../engine/types.ts";
 import { newAbcdDesc } from "./generator.ts";
+import { buildSteps, hintKeepTrack, refreshHintStep } from "./hint.ts";
 import {
   type AbcdDrawState,
   colors,
@@ -63,12 +65,12 @@ import {
   type AbcdUi,
   abcdPresets,
   cloneState,
-  cuboid,
   decodeParams,
   defaultParams,
   EMPTY,
   encodeParams,
   isCompleted,
+  letterBit,
   newState,
   newUi,
   status,
@@ -110,12 +112,6 @@ function keyLetter(button: number, n: number): number | "clear" | null {
   return null;
 }
 
-/** Cell `i`'s pencil marks: a view of its `n` contiguous slots in the cube. */
-function notesOf(state: AbcdState, i: number): Uint8Array {
-  const { n } = state.params;
-  return state.pencil.subarray(i * n, (i + 1) * n);
-}
-
 /**
  * Would writing `letter` into `(x, y)` leave the state exactly as it is?
  *
@@ -131,8 +127,8 @@ function noOpEntry(
   letter: number | null,
 ): boolean {
   const i = y * state.params.w + x;
-  if (letter !== null) return state.grid[i] === letter;
-  return state.grid[i] === EMPTY && !notesOf(state, i).includes(1);
+  if (letter !== null) return state.grid[i] === letter + 1;
+  return state.grid[i] === EMPTY && state.pencil[i] === 0;
 }
 
 function interpretMove(
@@ -205,9 +201,7 @@ function interpretMove(
   // strike the obvious eliminations, never re-fill
   // (docs/games/mechanics.md § "Pencil marks: the full note-taking UX").
   if (button === KEY_M || button === KEY_m) {
-    const needsFill = state.grid.some(
-      (c, i) => c === EMPTY && !notesOf(state, i).includes(1),
-    );
+    const needsFill = state.grid.some((c, i) => c === EMPTY && state.pencil[i] === 0);
     return adaptiveMarkAll<AbcdMove, AbcdMark>(needsFill, () =>
       abcdObviousMarks(p, state.grid, state.pencil, state.numbers),
     );
@@ -227,34 +221,36 @@ function executeMove(state: AbcdState, move: AbcdMove): AbcdState {
       if (move.letter === null) {
         // Clearing wipes the cell's pencil marks too (and never completes).
         next.grid[i] = EMPTY;
-        notesOf(next, i).fill(0);
+        next.pencil[i] = 0;
         return next;
       }
-      next.grid[i] = move.letter;
+      next.grid[i] = move.letter + 1;
       if (!next.completed && isCompleted(next)) next.completed = true;
       return next;
     }
     case "pencil": {
-      const idx = cuboid(move.x, move.y, move.letter, n, w);
-      next.pencil[idx] = next.pencil[idx] ? 0 : 1;
+      next.pencil[move.y * w + move.x] ^= letterBit(move.letter);
       return next;
     }
     case "pencilAll": {
       // Fill every note-less empty cell with every candidate, never resetting a
       // narrowed one: `candidate-hint.ts`'s `adaptiveMarkAll` § "The additive
       // rule, stated once".
-      for (let i = 0; i < w * p.h; i++) {
-        const notes = notesOf(next, i);
-        if (next.grid[i] === EMPTY && !notes.includes(1)) notes.fill(1);
-      }
+      const every = (1 << n) - 1;
+      for (let i = 0; i < w * p.h; i++)
+        if (next.grid[i] === EMPTY && next.pencil[i] === 0) next.pencil[i] = every;
       return next;
     }
     case "pencilStrike": {
-      for (const m of move.marks) next.pencil[cuboid(m.x, m.y, m.letter, n, w)] = 0;
+      for (const m of move.marks) next.pencil[m.y * w + m.x] &= ~letterBit(m.letter);
+      return next;
+    }
+    case "pencilAdd": {
+      for (const m of move.marks) next.pencil[m.y * w + m.x] |= letterBit(m.letter);
       return next;
     }
     case "solve": {
-      for (let i = 0; i < w * p.h; i++) next.grid[i] = move.grid[i];
+      for (let i = 0; i < w * p.h; i++) next.grid[i] = move.grid[i] + 1;
       next.completed = true;
       next.cheated = true;
       return next;
@@ -284,9 +280,17 @@ function solve(orig: AbcdState): SolveResult<AbcdMove> {
     return { ok: false, error: "No solution exists for this puzzle." };
   if (res.status === "ambiguous")
     return { ok: false, error: "Solver could not find a unique solution." };
-  return { ok: true, move: { type: "solve", grid: Array.from(res.grid) } };
+  // The move carries letter indices, as the saves that replay it always have.
+  return {
+    ok: true,
+    move: { type: "solve", grid: Array.from(res.grid, (v) => v - 1) },
+  };
 }
 
+/** Entries that contradict the unique solution, and empty cells whose notes
+ * have crossed out their answer. The notes count because the hint reasons
+ * from them (`hint.ts`), which is sound only while each still holds its cell's
+ * answer; notes with merely extra letters are ordinary mid-solve state. */
 function findMistakes(state: AbcdState): readonly AbcdMistake[] {
   const res = solveAbcd(state.params, state.numbers);
   if (res.status !== "solved") return [];
@@ -295,7 +299,13 @@ function findMistakes(state: AbcdState): readonly AbcdMistake[] {
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
-      if (state.grid[i] !== EMPTY && state.grid[i] !== res.grid[i]) out.push({ x, y });
+      const entry = state.grid[i];
+      const notes = state.pencil[i];
+      const wrong =
+        entry !== EMPTY
+          ? entry !== res.grid[i]
+          : notes !== 0 && !(notes & letterBit(res.grid[i] - 1));
+      if (wrong) out.push({ x, y });
     }
   }
   return out;
@@ -378,10 +388,18 @@ export const abcdGame: Game<
 
   solve,
   findMistakes,
+  hint: (state, _aux, ui) =>
+    candidateHint(state, ui ?? newUi(state), findMistakes, buildSteps),
+  hintKeepTrack,
+  refreshHintStep,
   requestKeys,
   textFormat,
 
-  prefs: [stickyPencilPref<AbcdUi>(), pencilKeepHighlightPref<AbcdUi>()],
+  prefs: [
+    stickyPencilPref<AbcdUi>(),
+    pencilKeepHighlightPref<AbcdUi>(),
+    candidateReadingPref<AbcdUi>(),
+  ],
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

@@ -713,7 +713,10 @@ class CandidateWalk<
    * hold each one's candidates in their head (Map's owner playtests,
    * docs/games/hints.md § "A graph, not a grid (Map)"). So each blank, note-less
    * cell a step outlines as evidence or `reads`, or strikes from, gets a note leg
-   * before the firing, and a cell it places in gets none. A hatched line is not
+   * before the firing, and a cell gets none from the step that places in it or
+   * any step after. A cell a *later* leg places is still premise to the steps
+   * before it: ABCD's runs journey outlines a whole line and places in several
+   * of its cells, and its first step rests on every one of them. A hatched line is not
    * read this way: a hidden single says no other cell of the line can take the
    * value, which each cell shows by its own regions.
    *
@@ -729,21 +732,27 @@ class CandidateWalk<
   private implicitSteps(f: Firing<M, H, Reason>): Built<M, H>[] {
     const { grid, pencil, w } = this.plan;
     const h = grid.length / w;
-    const placed = new Set<number>();
-    for (const leg of f) if ("place" in leg) placed.add(leg.place.y * w + leg.place.x);
+    /** Each cell a leg places in, and the first leg to. */
+    const placedAt = new Map<number, number>();
+    f.forEach((leg, k) => {
+      if (!("place" in leg)) return;
+      const i = leg.place.y * w + leg.place.x;
+      if (!placedAt.has(i)) placedAt.set(i, k);
+    });
     /** The index of `p` when it is a blank cell with no notes, whose candidates
-     * are what the premise would have to show. */
-    const bare = (p: Point): number | null => {
+     * are what leg `k`'s premise would have to show: not yet placed in by then. */
+    const bare = (p: Point, k: number): number | null => {
       if (p.x < 0 || p.y < 0 || p.x >= w || p.y >= h) return null;
       const i = p.y * w + p.x;
       if (grid[i] !== 0 || pencil[i] !== 0 || this.shown[i] === 0) return null;
-      return placed.has(i) ? null : i;
+      const at = placedAt.get(i);
+      return at !== undefined && at <= k ? null : i;
     };
     const folded = new Map<number, Folded>();
     const read: number[] = [];
     const struck: number[] = [];
-    const note = (into: number[], p: Point): void => {
-      const i = bare(p);
+    const note = (into: number[], p: Point, k: number): void => {
+      const i = bare(p, k);
       if (i !== null && !folded.has(i) && !into.includes(i)) into.push(i);
     };
     const own: Built<M, H>[] = [];
@@ -757,16 +766,16 @@ class CandidateWalk<
         const words = this.plan.strikeWords(marks, leg.reason, k > 0);
         const cells = cellsOf(marks);
         const alone = cells.length === 1 && words.where === undefined;
-        const i = alone ? bare(cells[0]) : null;
+        const i = alone ? bare(cells[0], k) : null;
         if (i !== null && !folded.has(i) && !read.includes(i) && !struck.includes(i)) {
           built = this.fold(i, marks, words, folded);
         } else {
           built = this.struck(marks, words);
-          for (const m of marks) note(struck, m);
+          for (const m of marks) note(struck, m, k);
         }
       } else built = this.builtLeg(leg, k > 0);
-      for (const p of built.step.highlights?.area ?? []) note(read, p);
-      for (const p of built.step.highlights?.reads ?? []) note(read, p);
+      for (const p of built.step.highlights?.area ?? []) note(read, p, k);
+      for (const p of built.step.highlights?.reads ?? []) note(read, p, k);
       own.push(built);
     });
     const cells = [...read, ...struck.filter((i) => !read.includes(i))];

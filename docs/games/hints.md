@@ -4309,6 +4309,56 @@ square whose marks rule out its answer is a `kind: "note"` mistake. If you are
 porting a note-taking game whose notes have no stated meaning, decide this
 *before* the hint, not during it.
 
+### A solver that sweeps (ABCD)
+
+ABCD's techniques each sweep every line and letter per call and apply all they
+find, and it was picked as the test of whether a hint plan must impose an order
+its solver does not have. **It does not have to: the plan already owns the
+order.** A rung returns every firing it can take now, and the `HintFrontier`
+chooses among them (§ "Continue from the last step"), so the order a solver
+sweeps in never reaches the player. What a sweeping technique owes the hint is
+the § "A rung is not a premise, so return per premise" shape one level up: a finder that yields **one
+line's firing at a time** (`satisfiedLines`, `packedLines` in
+[`abcd/hint.ts`](../../src/games/abcd/hint.ts)). Nothing about ordering had to be
+added to the walk. The "sweeps before restarting" classification did not survive
+reading the loop either (`solver-and-generator.md` § "Where the fixpoint does not
+fit").
+
+What carried over, and what was new:
+
+- **Seismic's shape**: the plan records nothing and its rungs read the notes the
+  walk shows, which is sound because `findMistakes` refuses on a note that has
+  crossed out its cell's answer (§ "Deduce from the notes when the mistake check
+  vouches for them (Seismic)"). A game adopting this shape adds that half of
+  `findMistakes` in the same change.
+- **Share the arithmetic, not only the rule.** The runs technique's counting
+  lives in one function, `runsForce` in `abcd/solver.ts`, which both the
+  solver's rung and the hint's finder call, so the sentence a hint speaks about a
+  line is the one the solver acted on. Its claim ("the outlined cells fit only 3
+  apart, so each stretch is full") is checked against a brute-force enumeration
+  of every arrangement, not against itself (`abcd-hint.test.ts`).
+- **A counting argument fits in one step when the picture carries the parts.**
+  The line is hatched through its clue slots, the count the sentence reads is
+  drawn in the action color, and the cells that can still take the letter are
+  outlined, so the sentence says only the count and the conclusion: *"This row
+  needs 3 Ds, and the outlined cells fit only 3 apart, so each stretch is full:
+  this cell must be D."* The first cut named "with none touching" and ran to 130
+  characters; "apart" says the same over the outlines.
+- **A journey can outline the cells its later legs place.** A runs firing places
+  in several cells of the line it outlines, so under the implicit reading its
+  first step rests on cells the firing has not yet filled. The walk used to write
+  no notes for any cell the firing placed in; it now skips only the step that
+  places and the ones after, and `candidate-reading.test.ts` is what found it.
+- **Two engine exceptions went with the representation.** ABCD kept notes as a
+  candidate cube (`n` flags per cell) and an empty cell as `-1` with letter A
+  as `0`. The cube was a named exception in `mark-all.test.ts` and in
+  `adaptiveMarkAll`'s doc; the `-1` made `candidate-reading.test.ts` read every
+  placed A as blank. Both were memory layout, not facts about the puzzle, so
+  ABCD now stores a bitmask per cell and letter `i` as `i + 1`, and its moves keep
+  naming letters by index, which is what a save replays. **Before teaching the
+  walk a new layout, ask whether the game's layout is a decision about the
+  puzzle.**
+
 ### A populate step never resets notes
 
 **A populate step must never *reset* the player's notes — and the shared

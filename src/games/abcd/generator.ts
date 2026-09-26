@@ -70,7 +70,7 @@ export function newAbcdDesc(p: AbcdParams, rng: RandomState): { desc: string } {
     numbers = new Int32Array(l * n);
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
-        const letter = grid[y * w + x];
+        const letter = grid[y * w + x] - 1;
         numbers[horClue(y, letter, n)]++;
         numbers[verClue(x, letter, n, h)]++;
       }

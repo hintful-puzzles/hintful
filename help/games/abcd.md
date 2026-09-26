@@ -21,6 +21,16 @@ You can also use the arrow keys to move the selected cell around. Press Enter to
 
 Press the 'M' key to fill every empty cell with all possible pencil marks.
 
+## Hints
+
+**Hint** explains the next step rather than simply making it. It starts by filling in every cell's pencil marks (the same as pressing 'M'), then works from your own marks, so as long as none of them has crossed out a cell's answer it carries on from wherever you are. If you would rather it leave a cell unmarked until a step needs it, set **Hints pencil in** to **Only as needed** in the preferences: a cell with no marks then counts as holding every letter not already beside it.
+
+* **A cell ringed in the hint color** is the cell the step is about: the letter to enter there, or the pencil marks to cross out, which are shown with a line through them.
+* **A striped row or column** is the line the step reasons from, and the number it reads is drawn in the hint color.
+* **Outlined cells** are the particular cells the reason rests on: the letters a row already holds, or the cells that can still take a letter.
+
+Most steps are the plain rules at work: a cell with only one pencil mark left, a letter crossed out beside the same letter, or a row that already holds as many of a letter as its number says. One idea goes further. Since no two of the same letter may touch, a stretch of empty cells can hold at most every other cell's worth: 3 in a stretch of 5, 1 in a stretch of 2. When the stretches of a row that can take a letter hold at most exactly as many as the row still needs, every stretch must be full, and a full stretch of odd length has only one shape: that letter in its first cell, its last, and every other cell between.
+
 ## ABCD parameters
 
 These parameters are available from the ‘Custom…’ option on the ‘Type’ menu. 

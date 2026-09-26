@@ -32,20 +32,9 @@ import { preferredDrawState } from "./testing/preferred-draw-state.ts";
 // reset the shared registry under `isolate: false`.
 beforeAll(registerAllGames);
 
-/** How many array slots one cell's notes own, for the games where it is not
- * one — the ledger, with the reason. ABCD's notes are a candidate *cube*: `n`
- * contiguous slots per cell (see its `cuboid(x, y, i, n, w) = i + x*n + y*n*w`).
- * Every other game packs a cell's candidates into one bitmask. */
-// biome-ignore lint/suspicious/noExplicitAny: params shape differs per game.
-const MULTI_SLOT_NOTES: Record<string, (params: any) => number> = {
-  abcd: (p) => p.n,
-};
-
 interface Row {
   name: string;
   game: AnyGame;
-  // biome-ignore lint/suspicious/noExplicitAny: params shape differs per game.
-  slots: (params: any) => number;
 }
 
 /**
@@ -55,8 +44,7 @@ interface Row {
  * lived in, because the collection spelled that field three ways (`pencil`,
  * `marks`, `pencils`). `unify-the-note-taking-vocabulary` made it one word, and
  * the roster went with it: a game shipping the press is guarded here the day it
- * ships, and a row can no longer be forgotten. What survives as a list is the
- * one thing a game genuinely answers differently — the slot arity above.
+ * ships, and a row can no longer be forgotten.
  *
  * The enrollment check this replaces compared the roster with the flag. Now that
  * the roster *is* the flag, that comparison is a tautology and asserts nothing;
@@ -66,31 +54,21 @@ interface Row {
 const MARK_ALL_GAMES: Row[] = registeredGameIds()
   .sort()
   .filter((id) => getTsGame(id)?.canMarkAll === true)
-  .map((id) => ({
-    name: id,
-    game: getTsGame(id) as AnyGame,
-    slots: MULTI_SLOT_NOTES[id] ?? (() => 1),
-  }));
+  .map((id) => ({ name: id, game: getTsGame(id) as AnyGame }));
 
-/** Every note-taking game keeps its candidates in `pencil`, so the probe reads
- * one field rather than being told where to look, per game. */
+/** Every note-taking game keeps its candidates in `pencil`, one bitmask per
+ * cell, so the probe reads one field rather than being told where to look, per
+ * game. A game storing one flag per candidate instead would fail the narrowing
+ * test below, which looks for a cell word holding two candidates. */
 // biome-ignore lint/suspicious/noExplicitAny: a deliberately game-agnostic probe.
 const notesOf = (state: any): Int32Array | Uint8Array | Uint16Array => state.pencil;
 
-it("drew a populated roster, and the slot ledger is honest", () => {
+it("drew a populated roster, and every member keeps its notes in `pencil`", () => {
   // Vacuity: an empty registry yields an empty roster, and every `it()` built
   // from it below simply never runs — which `--passWithNoTests` reports green.
   expect(MARK_ALL_GAMES.length).toBeGreaterThan(5);
-  const ids = new Set(MARK_ALL_GAMES.map((r) => r.name));
-  for (const id of Object.keys(MULTI_SLOT_NOTES))
-    expect(
-      ids.has(id),
-      `${id} has a slot-arity entry but does not offer Mark-all`,
-    ).toBe(true);
   // Every enrolled game really does keep its notes under the shared noun — on
-  // every board the gate slice offers, because the shape of a cell's notes is a
-  // thing a mode changes: ABCD's arity is its letter count, and its presets run
-  // from three letters to five.
+  // every board the gate slice offers.
   for (const row of MARK_ALL_GAMES) {
     for (const { title, params } of gatePresets(row.name, row.game)) {
       const { desc } = row.game.newDesc(
@@ -277,28 +255,6 @@ describe("the Mark-all press converges", () => {
   }
 });
 
-/** Remove exactly one candidate from cell `cell`, leaving at least one behind —
- * i.e. *narrow* it, the way a player crossing out a note does. Reports whether
- * the cell had two candidates to narrow between. Handles both note shapes: a
- * bitmask in one slot, or ABCD's one-flag-per-slot cube. */
-function narrowOne(
-  notes: Int32Array | Uint8Array | Uint16Array,
-  cell: number,
-  slots: number,
-): boolean {
-  if (slots === 1) {
-    const v = notes[cell];
-    if (v === 0 || (v & (v - 1)) === 0) return false; // needs two candidates
-    notes[cell] = v & (v - 1); // clear the lowest set bit
-    return true;
-  }
-  const set: number[] = [];
-  for (let k = 0; k < slots; k++) if (notes[cell + k]) set.push(k);
-  if (set.length < 2) return false;
-  notes[cell + set[0]] = 0;
-  return true;
-}
-
 describe("the Mark-all press never resets a note the player narrowed", () => {
   for (const row of MARK_ALL_GAMES) {
     it(`${row.name}: a fill leaves every already-noted cell bit-for-bit alone`, () => {
@@ -330,32 +286,17 @@ describe("the Mark-all press never resets a note the player narrowed", () => {
         // bug hides (which it did in the first cut of this test — Towers has no
         // givens, so its clean press strikes nothing and every cell keeps its full
         // candidate set).
-        const slots = row.slots(params);
         const notes = notesOf(cur);
-        let narrowed = -1;
-        for (let i = 0; i + slots <= notes.length; i += slots) {
-          if (narrowOne(notes, i, slots)) {
-            narrowed = i;
-            break;
-          }
-        }
+        const narrowed = notes.findIndex((v) => v !== 0 && (v & (v - 1)) !== 0);
         expect(
           narrowed,
           `${at}: no cell had two candidates to narrow between`,
         ).toBeGreaterThanOrEqual(0);
+        notes[narrowed] &= notes[narrowed] - 1; // clear its lowest candidate
 
-        let blank = -1;
-        for (let i = 0; i + slots <= notes.length; i += slots) {
-          if (i === narrowed) continue;
-          let any = false;
-          for (let k = 0; k < slots; k++) if (notes[i + k] !== 0) any = true;
-          if (any) {
-            blank = i;
-            break;
-          }
-        }
+        const blank = notes.findIndex((v, i) => i !== narrowed && v !== 0);
         expect(blank, `${at}: no second noted cell to blank`).toBeGreaterThanOrEqual(0);
-        for (let k = 0; k < slots; k++) notes[blank + k] = 0;
+        notes[blank] = 0;
         const before = Array.from(notes);
 
         const after = press(row, cur, ui);
@@ -363,15 +304,12 @@ describe("the Mark-all press never resets a note the player narrowed", () => {
         const filled = Array.from(notesOf(after));
 
         // The blank cell is filled again…
-        expect(
-          filled.slice(blank, blank + slots).some((v) => v !== 0),
-          `${at}: the note-less cell was not refilled`,
-        ).toBe(true);
+        expect(filled[blank], `${at}: the note-less cell was not refilled`).not.toBe(0);
         // …and every other cell is untouched — in particular the narrowed one keeps
         // the candidate it lost. This is the whole regression: a resetting fill
         // widens every narrowed cell back to its full set.
         for (let i = 0; i < before.length; i++) {
-          if (i >= blank && i < blank + slots) continue;
+          if (i === blank) continue;
           expect(
             filled[i],
             `${at}: the fill changed an already-noted cell at index ${i}`,

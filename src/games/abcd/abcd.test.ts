@@ -33,11 +33,11 @@ import {
   type AbcdState,
   type AbcdUi,
   abcdPresets,
-  cuboid,
   decodeParams,
   EMPTY,
   encodeParams,
   horClue,
+  letterBit,
   NO_NUMBER,
   newState,
   newUi,
@@ -55,6 +55,10 @@ const P = (
 ): AbcdParams => ({ w, h, n, diag, removenums });
 
 const RENDER_ID = "5x5n4#abcd-render";
+
+/** Whether cell `(x, y)` carries a pencil note for `letter`. */
+const noted = (s: AbcdState, x: number, y: number, letter: number): boolean =>
+  (s.pencil[y * s.params.w + x] & letterBit(letter)) !== 0;
 
 /** Reach into a driven Midend for its live state. */
 function stateOf(
@@ -202,7 +206,7 @@ describe("abcd solver", () => {
     const res = solveAbcd(p, parseNumbers(p, desc));
     expect(res.status).toBe("solved");
     // Every cell filled with a valid letter.
-    for (const g of res.grid) expect(g).toBeGreaterThanOrEqual(0);
+    for (const g of res.grid) expect(g).toBeGreaterThanOrEqual(1);
   });
 
   it("reports an all-hidden clue set as ambiguous", () => {
@@ -230,16 +234,15 @@ describe("abcd moves through a Midend", () => {
     const w = stateOf(me).params.w;
 
     me.playMoves([{ type: "enter", x: 1, y: 1, letter: 2 }]);
-    expect(stateOf(me).grid[1 * w + 1]).toBe(2);
+    expect(stateOf(me).grid[1 * w + 1]).toBe(3); // letter 2, stored as 2 + 1
 
     me.playMoves([{ type: "enter", x: 1, y: 1, letter: null }]);
     expect(stateOf(me).grid[1 * w + 1]).toBe(EMPTY);
 
-    const n = stateOf(me).params.n;
     me.playMoves([{ type: "pencil", x: 0, y: 0, letter: 1 }]);
-    expect(stateOf(me).pencil[cuboid(0, 0, 1, n, w)]).toBe(1);
+    expect(noted(stateOf(me), 0, 0, 1)).toBe(true);
     me.playMoves([{ type: "pencil", x: 0, y: 0, letter: 1 }]); // toggle off
-    expect(stateOf(me).pencil[cuboid(0, 0, 1, n, w)]).toBe(0);
+    expect(noted(stateOf(me), 0, 0, 1)).toBe(false);
   });
 
   it("costs no undo step for an entry that would change nothing", () => {
@@ -295,7 +298,7 @@ describe("abcd moves through a Midend", () => {
     const st = newState(p, newAbcdDesc(p, randomNew("m-1")).desc);
     const ui = newUi(st);
     const ds = newDrawState(st, ts);
-    const { w, n } = p;
+    const { n } = p;
     const KEY_M = 77;
 
     // Put an ink letter down so we can confirm the fill skips filled cells.
@@ -312,8 +315,8 @@ describe("abcd moves through a Midend", () => {
     const filled = abcdGame.executeMove(withLetter, m1 as AbcdMove);
     // Every empty cell has all n candidates; the filled cell has none.
     for (let c = 0; c < n; c++) {
-      expect(filled.pencil[cuboid(0, 0, c, n, w)]).toBe(1);
-      expect(filled.pencil[cuboid(2, 2, c, n, w)]).toBe(0);
+      expect(noted(filled, 0, 0, c)).toBe(true);
+      expect(noted(filled, 2, 2, c)).toBe(false);
     }
 
     // Manually erase one candidate the player decided against.
@@ -323,7 +326,7 @@ describe("abcd moves through a Midend", () => {
       y: 0,
       letter: 1,
     });
-    expect(erased.pencil[cuboid(0, 0, 1, n, w)]).toBe(0);
+    expect(noted(erased, 0, 0, 1)).toBe(false);
 
     // A repeat M press must NEVER re-fill: it is either a strike or a no-op.
     const m2 = abcdGame.interpretMove(erased, ui, ds, { x: 0, y: 0 }, KEY_M);
@@ -331,7 +334,7 @@ describe("abcd moves through a Midend", () => {
     if (m2 !== null) {
       const after = abcdGame.executeMove(erased, m2 as AbcdMove);
       // The manually-erased candidate stays erased (strike only removes).
-      expect(after.pencil[cuboid(0, 0, 1, n, w)]).toBe(0);
+      expect(noted(after, 0, 0, 1)).toBe(false);
     }
   });
 
@@ -343,18 +346,16 @@ describe("abcd moves through a Midend", () => {
     const st = newState(p, newAbcdDesc(p, randomNew("m-2")).desc);
     const ui = newUi(st);
     const ds = newDrawState(st, ts);
-    const { w, n } = p;
-
     let s = abcdGame.executeMove(st, { type: "enter", x: 1, y: 1, letter: 0 });
     s = abcdGame.executeMove(s, { type: "pencilAll" });
     // A-candidate is still noted in the neighbor (1,0) right after the fill.
-    expect(s.pencil[cuboid(1, 0, 0, n, w)]).toBe(1);
+    expect(noted(s, 1, 0, 0)).toBe(true);
 
     const m = abcdGame.interpretMove(s, ui, ds, { x: 0, y: 0 }, 77);
     expect((m as { type: string }).type).toBe("pencilStrike");
     const after = abcdGame.executeMove(s, m as AbcdMove);
     // The neighbor can no longer be 'A' (adjacent to the placed A).
-    expect(after.pencil[cuboid(1, 0, 0, n, w)]).toBe(0);
+    expect(noted(after, 1, 0, 0)).toBe(false);
   });
 
   it("Solve completes the board and reports solved-with-help", () => {
@@ -374,7 +375,7 @@ describe("abcd moves through a Midend", () => {
     const moves: AbcdMove[] = [];
     for (let y = 0; y < h; y++)
       for (let x = 0; x < w; x++)
-        moves.push({ type: "enter", x, y, letter: sol[y * w + x] });
+        moves.push({ type: "enter", x, y, letter: sol[y * w + x] - 1 });
     me.playMoves(moves);
     expect(stateOf(me).completed).toBe(true);
     expect(stateOf(me).cheated).toBe(false); // a genuine (non-cheated) solve
@@ -452,7 +453,7 @@ describe("abcd findMistakes", () => {
     const { desc } = newAbcdDesc(p, randomNew("mist-1"));
     const st = newState(p, desc);
     const sol = solveAbcd(p, st.numbers).grid;
-    const wrong = (sol[0] + 1) % p.n;
+    const wrong = sol[0] % p.n; // the letter after the answer, `sol[0] - 1`
 
     const bad = abcdGame.executeMove(st, { type: "enter", x: 0, y: 0, letter: wrong });
     expect(abcdGame.findMistakes?.(bad)).toContainEqual({ x: 0, y: 0 });
@@ -461,7 +462,7 @@ describe("abcd findMistakes", () => {
       type: "enter",
       x: 0,
       y: 0,
-      letter: sol[0],
+      letter: sol[0] - 1,
     });
     expect(abcdGame.findMistakes?.(good) ?? []).toHaveLength(0);
   });
@@ -587,7 +588,12 @@ describe("abcd render", () => {
     const { w, h } = p;
     for (let y = 0; y < h; y++)
       for (let x = 0; x < w; x++)
-        s = abcdGame.executeMove(s, { type: "enter", x, y, letter: sol[y * w + x] });
+        s = abcdGame.executeMove(s, {
+          type: "enter",
+          x,
+          y,
+          letter: sol[y * w + x] - 1,
+        });
     expect(s.completed).toBe(true);
     const flash = abcdGame.flashLength?.(st, s, 1, newUi(s)) ?? 0;
     expect(flash).toBeGreaterThan(0);
@@ -607,7 +613,7 @@ describe("abcd render", () => {
     expect(me.newGameFromId(RENDER_ID)).toBeNull();
     const st = stateOf(me);
     const sol = solveAbcd(st.params, st.numbers).grid;
-    const wrong = (sol[0] + 1) % st.params.n;
+    const wrong = sol[0] % st.params.n; // the letter after the answer
     me.playMoves([{ type: "enter", x: 0, y: 0, letter: wrong }]);
 
     const palette = abcdGame.colors([0.9, 0.9, 0.9]);
