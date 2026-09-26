@@ -26,7 +26,7 @@ import {
   RIGHT_RELEASE,
 } from "../pointer.ts";
 import { randomNew } from "../random/index.ts";
-import type { Color, Point, Size } from "../types.ts";
+import type { Color, ConfigValues, Point, Size } from "../types.ts";
 import { RecordingDrawing } from "./recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./render-scenario.ts";
 
@@ -38,27 +38,81 @@ export interface ProbeBoard {
   readonly tileSize: number;
   readonly size: Size;
   readonly m: AnyMidend;
-  /** Return the board to its opening position. */
+  /** Return the board to its opening position, with a fresh `Ui`. */
   readonly reset: () => void;
+  /** The `Ui` the midend is holding, as of a frame painted now. */
+  readonly ui: () => unknown;
+  /** The midend's current move number, as its last notification reported it. */
+  readonly moves: () => number;
 }
 
-/** One board per game, built once — the generators are the expensive part. */
-export function probeBoard(game: AnyGame, id: string): ProbeBoard {
+export interface ProbeOptions {
+  /** Player preferences, applied before the board is dealt and kept across
+   * every `reset`. */
+  readonly preferences?: ConfigValues;
+}
+
+/**
+ * One board per game, built once — the generators are the expensive part.
+ *
+ * The board comes from a fixed seed, so a failure names the same board every
+ * run. `reset` deals the same id again rather than calling `restartGame`,
+ * which replaces the board but keeps the `Ui`: a highlight or mode left by one
+ * probe point would otherwise answer for the next.
+ *
+ * `ui` reads the `Ui` where the engine already hands it out — to `redraw` —
+ * rather than opening the midend up, so it is the state the frontend would
+ * have painted from. It paints only when called, because the sweeps that never
+ * read a `Ui` visit hundreds of points.
+ */
+export function probeBoard(
+  game: AnyGame,
+  id: string,
+  options: ProbeOptions = {},
+): ProbeBoard {
   const params = game.defaultParams();
   const desc = game.newDesc(params, randomNew(`parity-${id}`)).desc;
   const tileSize = game.preferredTileSize ?? 32;
-  const m = new Midend(game);
+  let seen: unknown = null;
+  let painted = false;
+  const spy: AnyGame = {
+    ...game,
+    redraw: (dr, ds, prev, s, dir, ui, ...rest) => {
+      seen = ui;
+      painted = true;
+      return game.redraw(dr, ds, prev, s, dir, ui, ...rest);
+    },
+  };
+  const m = new Midend(spy);
+  let moveCount = 0;
   m.setCallbacks(
-    () => {},
+    (n) => {
+      if (n.type === "game-state-change") moveCount = n.currentMove;
+    },
     () => {},
     () => {},
   );
+  if (options.preferences) m.setPreferences(options.preferences);
   const gameId = `${game.encodeParams(params, true)}:${desc}`;
   const reset = () => {
     m.newGameFromId(gameId);
   };
   reset();
-  return { params, tileSize, size: game.computeSize(params, tileSize), m, reset };
+  const ui = () => {
+    painted = false;
+    m.redraw(new RecordingDrawing(m.getColorPalette(DEFAULT_BACKGROUND)));
+    if (!painted) throw new Error(`${id} painted no frame`);
+    return seen;
+  };
+  return {
+    params,
+    tileSize,
+    size: game.computeSize(params, tileSize),
+    m,
+    reset,
+    ui,
+    moves: () => moveCount,
+  };
 }
 
 /** A stable digest of everything a save carries — board, history and whatever

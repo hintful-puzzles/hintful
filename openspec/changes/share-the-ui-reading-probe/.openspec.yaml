@@ -1,7 +1,0 @@
-# No delta yet: whether anything normative moves depends on §1 — the
-# repo-layout requirement on the in-process harness may already cover a probe
-# that reads the `Ui`, in which case this is a helper's shape and stays out of
-# the specs. Written 2026-09-22; nothing is implemented.
-schema: spec-driven
-created: 2026-09-22
-skip_specs: true

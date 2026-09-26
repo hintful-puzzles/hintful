@@ -1,6 +1,6 @@
 # share-the-ui-reading-probe
 
-**Status: scaffolded, not started.** Found while writing
+**Status: done, 2026-09-26.** Found while writing
 `select-or-drag.test.ts` (2026-09-22, `own-the-select-or-drag-gesture`): the new
 guard hit two sweep hazards in a row, and both were already solved — in a helper
 it could not use.
@@ -77,12 +77,26 @@ from, rather than a field a test reached in and took.
 
 ## Tasks
 
-- [ ] 1.1 Decide whether this is spec-visible or a helper's shape; `.openspec.yaml`
-      assumes the latter until checked.
-- [ ] 1.2 Add the lazy `ui()` reader to `probeBoard`.
-- [ ] 1.3 Move both sweeps onto it; delete `midendAndUi` and `member`.
-- [ ] 1.4 Plant a defect in each moved sweep and watch it still name the right
+- [x] 1.1 Decide whether this is spec-visible or a helper's shape; `.openspec.yaml`
+      assumes the latter until checked. *A helper's shape: no spec names
+      `probeBoard`, either private copy, or how a sweep resets (2026-09-26).*
+- [x] 1.2 Add the lazy `ui()` reader to `probeBoard`. *Also `moves()`, from the
+      notification `drag-cancel` counted with, and a `preferences` option, which
+      `select-or-drag` needs applied before the deal.*
+- [x] 1.3 Move both sweeps onto it; delete `midendAndUi` and `member`.
+      *`member` survives as a four-line reader of the highlight over
+      `probeBoard`, not as a second midend. `select-or-drag` now deals from the
+      shared `parity-` seed instead of its own, and still reaches the sticky
+      carve-out on every member. `drag-cancel` keeps `restartGame` where the
+      replacement is the thing under test, and resets between probe points by
+      dealing the id.*
+- [x] 1.4 Plant a defect in each moved sweep and watch it still name the right
       game — a harness swap that silently narrows a sweep is the failure this
-      change would otherwise introduce.
-- [ ] 1.5 Say in `docs/games/testing.md` that a sweep resets by dealing the id,
-      never by `restartGame`, and why.
+      change would otherwise introduce. *Dropping `cancelDrags` in
+      `stateReplaced` failed both drag tests naming Boats. Dropping the
+      repeat-tap deselect in `note-taking-cell.ts` failed rule 1 naming all
+      thirteen members. Two runs of the planted suite gave byte-identical
+      failure output.*
+- [x] 1.5 Say in `docs/games/testing.md` that a sweep resets by dealing the id,
+      never by `restartGame`, and why. *§ "How a cross-game guard finds its
+      population", rule 8.*

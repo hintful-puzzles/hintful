@@ -661,6 +661,18 @@ is the `ts-engine` spec, "A shared mechanic is joined by having it".
 
    **Tell:** the covered set is a single `includes("…")` while the population
    above it took twenty lines to derive.
+8. **A behavioral sweep drives its board through `probeBoard`**
+   ([`testing/input-probe.ts`](../../src/engine/testing/input-probe.ts)), and
+   reads a `Ui` through its `ui()`, which reads the one the midend hands to
+   `redraw`. It answers two questions every such sweep has to answer. The board
+   is dealt from a fixed seed, so a failure names the same board every run. And
+   `reset()` **deals the id again, never `restartGame`**, which replaces the
+   board but keeps the `Ui`. A highlight left showing by one probe point then
+   answers for the next: `select-or-drag.test.ts`'s first cut reported repeat
+   taps as inert in Crossing, which has no such defect. `drag-cancel.test.ts`
+   had its own midend, dealt a random board per run and reset by restarting,
+   until `share-the-ui-reading-probe` moved it onto the shared probe. Use
+   `restartGame` only where the state replacement is the thing under test.
 
 ### Slicing a preset sweep for the gate
 

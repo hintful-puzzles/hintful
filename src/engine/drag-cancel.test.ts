@@ -18,10 +18,8 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { registerAllGames } from "../games/index.ts";
 import { Midend } from "./midend.ts";
 import { GridDrag, LEFT_BUTTON, LEFT_RELEASE, startDrag } from "./pointer.ts";
-import { type AnyGame, builtGames } from "./testing/enrollment.ts";
-import { probePoints } from "./testing/input-probe.ts";
-import { RecordingDrawing } from "./testing/recording-drawing.ts";
-import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
+import { builtGames } from "./testing/enrollment.ts";
+import { probeBoard, probePoints } from "./testing/input-probe.ts";
 import type { Point } from "./types.ts";
 
 beforeAll(registerAllGames);
@@ -30,40 +28,6 @@ beforeAll(registerAllGames);
 function dragsOf(ui: unknown): GridDrag[] {
   if (typeof ui !== "object" || ui === null) return [];
   return Object.values(ui).filter((v): v is GridDrag => v instanceof GridDrag);
-}
-
-/**
- * A midend over `game`, plus the `Ui` it is actually holding.
- *
- * The `Ui` is private to the midend, and rather than open it up for a test,
- * this reads it where the engine already hands it out: `redraw` receives it.
- * The wrapper delegates to the real game, so the midend is driving the real
- * thing throughout.
- */
-function midendAndUi(game: AnyGame) {
-  let ui: unknown;
-  const spy: AnyGame = {
-    ...game,
-    redraw: (dr, ds, prev, s, dir, seen, ...rest) => {
-      ui = seen;
-      return game.redraw(dr, ds, prev, s, dir, seen, ...rest);
-    },
-  };
-  const m = new Midend(spy);
-  let moveCount = 0;
-  m.setCallbacks(
-    (n) => {
-      if (n.type === "game-state-change") moveCount = n.currentMove;
-    },
-    () => {},
-    () => {},
-  );
-  m.newGame();
-  const read = () => {
-    m.redraw(new RecordingDrawing(m.getColorPalette(DEFAULT_BACKGROUND)));
-    return ui;
-  };
-  return { m, read, moves: () => moveCount };
 }
 
 /** The games whose `newUi` actually returns a `GridDrag`. Derived, not listed:
@@ -85,13 +49,13 @@ describe("a drag does not survive a state replacement", () => {
   it("ends every drag on the Ui when the midend replaces the state", () => {
     const checked: string[] = [];
     for (const { id, game } of dragGames()) {
-      const { m, read } = midendAndUi(game);
+      const { m, ui } = probeBoard(game, id);
 
       // Arm every drag the game carries, by hand: this asks about the engine's
       // cancel, not about any game's gesture vocabulary, so it must not depend
       // on knowing how a given game starts one.
-      const drags = dragsOf(read());
-      expect(drags.length, `${id} kept its drag through newGame`).toBeGreaterThan(0);
+      const drags = dragsOf(ui());
+      expect(drags.length, `${id} kept its drag through the deal`).toBeGreaterThan(0);
       for (const d of drags) startDrag(d, 1, 1);
 
       // Any state replacement will do; restart is the one every game has.
@@ -117,16 +81,16 @@ describe("a drag does not survive a state replacement", () => {
     // and releases.
     let exercised = 0;
     for (const { id, game } of dragGames()) {
-      const { m, read, moves } = midendAndUi(game);
+      const { m, ui, moves, reset } = probeBoard(game, id);
       const size = m.preferredSize();
 
       // Find a press that actually arms this game's drag. Derived by trying —
       // a table of "where each game's drag starts" would be a manifest.
       let armed: Point | null = null;
       for (const p of probePoints(size)) {
-        m.restartGame();
+        reset();
         m.processInput(p.x, p.y, LEFT_BUTTON);
-        if (dragsOf(read()).some((d) => d.live)) {
+        if (dragsOf(ui()).some((d) => d.live)) {
           armed = p;
           break;
         }

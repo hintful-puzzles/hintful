@@ -1,0 +1,5 @@
+# No delta: a helper's shape. No spec names `probeBoard` or how a sweep resets,
+# so the rule went to docs/games/testing.md instead (task 1.1, 2026-09-26).
+schema: spec-driven
+created: 2026-09-22
+skip_specs: true

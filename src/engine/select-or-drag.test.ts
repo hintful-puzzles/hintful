@@ -38,13 +38,9 @@
 
 import { beforeAll, describe, expect, it } from "vitest";
 import { registerAllGames } from "../games/index.ts";
-import { Midend } from "./midend.ts";
 import { LEFT_BUTTON, LEFT_RELEASE, RIGHT_BUTTON, RIGHT_RELEASE } from "./pointer.ts";
-import { randomNew } from "./random/index.ts";
 import { type AnyGame, builtGames, enrolledIn } from "./testing/enrollment.ts";
-import { fingerprint, probePoints } from "./testing/input-probe.ts";
-import { RecordingDrawing } from "./testing/recording-drawing.ts";
-import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
+import { fingerprint, probeBoard, probePoints } from "./testing/input-probe.ts";
 import type { Point } from "./types.ts";
 
 beforeAll(registerAllGames);
@@ -70,52 +66,17 @@ interface Selection {
   all: string;
 }
 
-/**
- * A midend over a real board, plus the `Ui` it is holding.
- *
- * The `Ui` is the midend's own, read where the engine already hands it out — to
- * `redraw` — rather than by opening the midend up for a test. That also means
- * every field read below is the state the frontend would have painted from.
- */
+/** A member's probe board, read as the highlight the mechanic keeps. */
 function member(game: AnyGame, id: string) {
-  let seen: Record<string, unknown> | null = null;
-  const spy: AnyGame = {
-    ...game,
-    redraw: (dr, ds, prev, s, dir, ui, ...rest) => {
-      seen = ui as Record<string, unknown>;
-      return game.redraw(dr, ds, prev, s, dir, ui, ...rest);
-    },
-  };
-  const m = new Midend(spy);
-  m.setCallbacks(
-    () => {},
-    () => {},
-    () => {},
-  );
   // The player's choice, not a `newUi` default: this is the mode rule 2 is
   // about, and `applyPrefs` re-applies it across every new board. A game
   // without the preference (Group) simply never gains the field, which is how
   // it stays out of rule 2 without anybody keeping a roster.
-  m.setPreferences({ "sticky-pencil-mode": true });
-  // A board from a fixed seed, never `newGame`'s random one: the counts below
-  // are per-board, so a random deal makes a failure name a different number of
-  // squares every run and an intermittent one impossible to reproduce.
-  const params = game.defaultParams();
-  const desc = game.newDesc(params, randomNew(`select-or-drag-${id}`)).desc;
-  const gameId = `${game.encodeParams(params, true)}:${desc}`;
-  // Not `restartGame`, which replaces the board and **keeps the `Ui`**: a
-  // highlight left showing by the previous probe point would then answer for
-  // the next one, and a sweep whose points contaminate each other reports on a
-  // gesture nobody made. Dealing the same id again is what gives a fresh `Ui`.
-  const reset = () => {
-    m.newGameFromId(gameId);
-  };
-  reset();
+  const board = probeBoard(game, id, { preferences: { "sticky-pencil-mode": true } });
+  const { m, reset } = board;
 
   const selection = (): Selection => {
-    m.redraw(new RecordingDrawing(m.getColorPalette(DEFAULT_BACKGROUND)));
-    const ui = seen;
-    if (ui === null) throw new Error("the game painted no frame");
+    const ui = board.ui() as Record<string, unknown>;
     const cursor = ui["cursor"] as { x: number; y: number; visible: boolean };
     return {
       ...cursor,
