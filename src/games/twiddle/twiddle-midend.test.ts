@@ -3,8 +3,7 @@
 // statusbar notifications and that a redraw paints the board.
 import { beforeEach, describe, expect, it } from "vitest";
 import type { GameDrawing } from "../../engine/game.ts";
-import { Midend } from "../../engine/midend.ts";
-import type { ChangeNotification } from "../../engine/types.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { twiddleGame } from "./index.ts";
 
 // 'A' rotates the top-left 2×2 block anticlockwise (dir -1).
@@ -33,18 +32,9 @@ function recordingDrawing() {
 }
 
 function harness() {
-  const notes: ChangeNotification[] = [];
-  const m = new Midend(twiddleGame);
-  m.setCallbacks(
-    (n) => notes.push(n),
-    () => {},
-    () => {},
-  );
-  const status = () =>
-    [...notes].reverse().find((n) => n.type === "status-bar-change") as
-      | Extract<ChangeNotification, { type: "status-bar-change" }>
-      | undefined;
-  return { m, notes, status };
+  const h = driveMidend(twiddleGame);
+  const status = () => h.last("status-bar-change");
+  return { m: h.midend, status };
 }
 
 describe("Twiddle midend lifecycle", () => {

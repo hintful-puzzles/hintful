@@ -25,9 +25,9 @@ import type { Game } from "./game.ts";
 import { Midend } from "./midend.ts";
 import { CURSOR_RIGHT } from "./pointer.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
+import { observeMidend } from "./testing/drive-midend.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
-import type { ChangeNotification } from "./types.ts";
 
 beforeAll(registerAllGames);
 
@@ -43,7 +43,6 @@ type AnyGame = Game<unknown, unknown, unknown, unknown, unknown>;
  * throughout (the idiom is `drag-cancel.test.ts`'s `midendAndUi`).
  */
 function boardFor(game: AnyGame) {
-  const notes: ChangeNotification[] = [];
   let ui: unknown;
   const spy: AnyGame = {
     ...game,
@@ -52,17 +51,13 @@ function boardFor(game: AnyGame) {
       game.redraw(dr, ds, prev, state, dir, seen, animTime, flashTime, hint, mistakes);
     },
   };
-  const m = new Midend(spy);
-  m.setCallbacks(
-    (n) => notes.push(n),
-    () => {},
-  );
+  const { midend: m, last } = observeMidend(new Midend(spy));
   m.newGame();
   const uiNow = (): unknown => {
     m.forceRedraw(new RecordingDrawing(m.getColorPalette(DEFAULT_BACKGROUND)));
     return ui;
   };
-  return { m, notes, uiNow };
+  return { m, last, uiNow };
 }
 
 /**
@@ -74,12 +69,12 @@ function boardFor(game: AnyGame) {
  * gone quiet would read as "this game reports no Ui" and pass every assertion
  * below.
  */
-function lastUiState(notes: ChangeNotification[]): string | null {
-  for (let i = notes.length - 1; i >= 0; i--) {
-    const note = notes[i];
-    if (note.type === "game-state-change") return note.uiState ?? null;
+function lastUiState(last: ReturnType<typeof boardFor>["last"]): string | null {
+  const note = last("game-state-change");
+  if (note === null) {
+    throw new Error("midend-ui-state: the midend emitted no game-state-change");
   }
-  throw new Error("midend-ui-state: the midend emitted no game-state-change");
+  return note.uiState ?? null;
 }
 
 const PERSISTS_UI = registeredGameIds().filter(
@@ -92,8 +87,8 @@ describe("a game's saveable Ui is reported to the app", () => {
   for (const id of PERSISTS_UI) {
     it(`${id}: reports its encoded Ui with every state change`, () => {
       const game = getTsGame(id) as AnyGame;
-      const { notes, uiNow } = boardFor(game);
-      const reported = lastUiState(notes);
+      const { last, uiNow } = boardFor(game);
+      const reported = lastUiState(last);
       expect(reported, `${id} persists a Ui but reports no uiState`).toBe(
         game.encodeUi?.(uiNow()),
       );
@@ -105,8 +100,8 @@ describe("a game's saveable Ui is reported to the app", () => {
     const game = getTsGame(id) as AnyGame | undefined;
     if (!game || game.encodeUi) continue;
     it(`${id}: reports no Ui, having none to save`, () => {
-      const { notes } = boardFor(game);
-      expect(lastUiState(notes)).toBeNull();
+      const { last } = boardFor(game);
+      expect(lastUiState(last)).toBeNull();
       swept++;
     });
   }
@@ -128,15 +123,15 @@ describe("the reported Ui tracks a Ui edit that is not a move", () => {
     // does not move and nothing else the app watches does either; before the
     // midend reported the encoding, a composed row was never autosaved.
     const game = getTsGame("guess") as AnyGame;
-    const { m, notes } = boardFor(game);
-    const before = lastUiState(notes);
+    const { m, last } = boardFor(game);
+    const before = lastUiState(last);
     expect(before).not.toBeNull();
 
     const colors = m.requestKeys().filter((k) => k.swatch !== undefined);
     expect(colors.length).toBeGreaterThan(0);
     expect(m.processInput(0, 0, colors[0].button)).toBe(true);
 
-    const after = lastUiState(notes);
+    const after = lastUiState(last);
     expect(after, "a composed peg left the reported Ui unchanged").not.toBe(before);
   });
 
@@ -145,12 +140,12 @@ describe("the reported Ui tracks a Ui edit that is not a move", () => {
     // "something happened" counter: where the cursor sits is not in the save,
     // and re-saving for it would be a DB write per arrow key.
     const game = getTsGame("guess") as AnyGame;
-    const { m, notes } = boardFor(game);
-    const before = lastUiState(notes);
+    const { m, last } = boardFor(game);
+    const before = lastUiState(last);
     expect(
       m.processInput(0, 0, CURSOR_RIGHT),
       "the cursor did not move, so nothing was tested",
     ).toBe(true);
-    expect(lastUiState(notes)).toBe(before);
+    expect(lastUiState(last)).toBe(before);
   });
 });

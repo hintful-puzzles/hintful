@@ -8,6 +8,7 @@ import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { Midend, SHOW_TIMER_PREF } from "./midend.ts";
 import { LEFT_BUTTON, RIGHT_BUTTON } from "./pointer.ts";
 import { decodeSave, encodeSave } from "./save.ts";
+import { driveMidend } from "./testing/drive-midend.ts";
 import type { ChangeNotification, Color } from "./types.ts";
 
 /** Recording fake `GameDrawing` for engine-level redraw assertions. */
@@ -98,33 +99,14 @@ function tieredGame(): typeof fakeGame {
 
 /** Drive a fresh midend and record every notification it emits. */
 function harness(game: typeof fakeGame = fakeGame) {
-  const notes: ChangeNotification[] = [];
-  let timerActive = false;
-  let redraws = 0;
-  const m = new Midend(game);
-  m.setCallbacks(
-    (n) => notes.push(n),
-    (active) => {
-      timerActive = active;
-    },
-    () => {
-      redraws++;
-    },
-  );
-  const last = <T extends ChangeNotification["type"]>(type: T) =>
-    [...notes].reverse().find((n) => n.type === type);
-  const state = () =>
-    last("game-state-change") as
-      | Extract<ChangeNotification, { type: "game-state-change" }>
-      | undefined;
-  return {
-    m,
-    notes,
-    state,
-    timerActive: () => timerActive,
-    redraws: () => redraws,
-    last,
+  const d = driveMidend(game);
+  /** The latest notification of `type`, for a test that needs it to exist. */
+  const sent = <T extends ChangeNotification["type"]>(type: T) => {
+    const n = d.last(type);
+    if (n === null) throw new Error(`the midend sent no ${type}`);
+    return n;
   };
+  return { ...d, m: d.midend, state: () => d.last("game-state-change"), sent };
 }
 
 describe("Midend lifecycle + notifications", () => {
@@ -159,10 +141,7 @@ describe("Midend lifecycle + notifications", () => {
   });
 
   it("game id is the reproducible params:desc form with a seed", () => {
-    const id = h.last("game-id-change") as Extract<
-      ChangeNotification,
-      { type: "game-id-change" }
-    >;
+    const id = h.sent("game-id-change");
     expect(id.currentGameId).toMatch(/^t3:g3-\d+$/);
     expect(id.randomSeed).toMatch(/^t3#[0-9a-f]+$/);
   });
@@ -380,10 +359,7 @@ describe("Midend params + presets", () => {
     const h = harness(tieredGame());
     expect(h.m.setParams("t3d1")).toBeNull();
     h.m.newGame();
-    const id = h.last("game-id-change") as Extract<
-      ChangeNotification,
-      { type: "game-id-change" }
-    >;
+    const id = h.sent("game-id-change");
     // Seed form regenerates the puzzle ⇒ must include the full suffix.
     expect(id.randomSeed).toMatch(/^t3d1#[0-9a-f]+$/);
     // Descriptive form ⇒ desc specifies the puzzle, suffix omitted.
@@ -403,10 +379,7 @@ describe("Midend params + presets", () => {
     const h = harness(tieredGame());
     expect(h.m.setParams("t3d1")).toBeNull();
     h.m.newGame();
-    const id = h.last("game-id-change") as Extract<
-      ChangeNotification,
-      { type: "game-id-change" }
-    >;
+    const id = h.sent("game-id-change");
 
     const restored = harness(tieredGame());
     expect(restored.m.newGameFromId(id.restoreGameId)).toBeNull();
@@ -518,9 +491,7 @@ describe("Midend.requestKeys forwards Game.requestKeys", () => {
 });
 
 describe("Midend timer", () => {
-  const readout = (h: ReturnType<typeof harness>) =>
-    (h.last("timer-change") as Extract<ChangeNotification, { type: "timer-change" }>)
-      .timer;
+  const readout = (h: ReturnType<typeof harness>) => h.sent("timer-change").timer;
   const inc = (h: ReturnType<typeof harness>) => h.m.processInput(0, 0, LEFT_BUTTON);
   const dec = (h: ReturnType<typeof harness>) => h.m.processInput(0, 0, RIGHT_BUTTON);
 
@@ -645,10 +616,6 @@ describe("Midend.size rebuilds the drawstate only for a new tile size (regressio
   // cached tile is the wrong size, so it is a new drawstate.
   function midend() {
     const m = new Midend(fakeGame);
-    m.setCallbacks(
-      () => {},
-      () => {},
-    );
     m.newGame();
     return m;
   }
@@ -661,10 +628,6 @@ describe("Midend.size rebuilds the drawstate only for a new tile size (regressio
     expect(midend().preferredSize()).toEqual({ w: 3 * 10, h: 10 });
 
     const bigTiles = new Midend({ ...fakeGame, preferredTileSize: 24 });
-    bigTiles.setCallbacks(
-      () => {},
-      () => {},
-    );
     bigTiles.newGame();
     expect(bigTiles.preferredSize()).toEqual({ w: 3 * 24, h: 24 });
   });
@@ -747,10 +710,6 @@ describe("Midend.canvasCleared invalidates the drawstate (the only real signal)"
   // redraw must lay the ground and let the game paint from scratch.
   function midend() {
     const m = new Midend(fakeGame);
-    m.setCallbacks(
-      () => {},
-      () => {},
-    );
     m.newGame();
     m.size({ w: 200, h: 200 });
     const { dr } = recordingDrawing();
@@ -788,10 +747,6 @@ describe("Midend.canvasCleared invalidates the drawstate (the only real signal)"
 describe("Midend.forceRedraw is canvasCleared + redraw (palette/font replacement)", () => {
   function midend() {
     const m = new Midend(fakeGame);
-    m.setCallbacks(
-      () => {},
-      () => {},
-    );
     m.newGame();
     m.size({ w: 200, h: 200 });
     const { dr } = recordingDrawing();
@@ -812,10 +767,6 @@ describe("Midend.forceRedraw is canvasCleared + redraw (palette/font replacement
 
   it("is a no-op without a game (defensive guard)", () => {
     const fresh = new Midend(fakeGame);
-    fresh.setCallbacks(
-      () => {},
-      () => {},
-    );
     const { dr, ops } = recordingDrawing();
     expect(() => fresh.forceRedraw(dr)).not.toThrow();
     expect(ops.filter((o) => o.op === "drawRect").length).toBe(0);
@@ -826,10 +777,6 @@ describe("The engine lays the ground on a fresh drawstate, and paints nothing el
   // The fake game paints nothing, so every op recorded here is the engine's.
   function started() {
     const m = new Midend(fakeGame);
-    m.setCallbacks(
-      () => {},
-      () => {},
-    );
     m.newGame();
     return m;
   }
@@ -972,12 +919,7 @@ describe("Midend: a board carries the tier it needs", () => {
     return g as unknown as typeof fakeGame;
   }
   const restoreId = (h: ReturnType<typeof harness>) =>
-    (
-      h.last("game-id-change") as Extract<
-        ChangeNotification,
-        { type: "game-id-change" }
-      >
-    ).restoreGameId;
+    h.sent("game-id-change").restoreGameId;
 
   it("an id pinning a tier below the board's is raised to the tier it needs", () => {
     // What a build that mislabeled a board left in the remembered id.
@@ -1043,13 +985,7 @@ function countingHintGame(): { game: typeof fakeGame; hintCalls: () => number } 
 
 describe("Midend hint plan lifecycle", () => {
   let h: ReturnType<typeof harness>;
-  const explanation = () =>
-    (
-      h.last("status-bar-change") as Extract<
-        ChangeNotification,
-        { type: "status-bar-change" }
-      >
-    ).activeHintExplanation;
+  const explanation = () => h.sent("status-bar-change").activeHintExplanation;
 
   beforeEach(() => {
     h = harness();
@@ -1254,30 +1190,20 @@ describe("Midend hint plan lifecycle", () => {
   });
 
   it("selectReference repaints and spotlights but records no move", () => {
-    const notes: ChangeNotification[] = [];
-    let redraws = 0;
-    const m = new Midend(refGame());
-    m.setCallbacks(
-      (n) => notes.push(n),
-      () => {},
-      () => {
-        redraws++;
-      },
-    );
+    const d = driveMidend(refGame());
+    const m = d.midend;
     m.newGameFromId("t3:g3-0");
 
     const lastMoveCounts = () => {
-      const s = [...notes].reverse().find((n) => n.type === "game-state-change") as
-        | Extract<ChangeNotification, { type: "game-state-change" }>
-        | undefined;
+      const s = d.last("game-state-change");
       return { current: s?.currentMove, total: s?.totalMoves, canUndo: s?.canUndo };
     };
     const before = lastMoveCounts();
-    const redrawsBefore = redraws;
+    const redrawsBefore = d.redraws();
 
     m.selectReference("b");
 
-    expect(redraws).toBe(redrawsBefore + 1); // it repainted
+    expect(d.redraws()).toBe(redrawsBefore + 1); // it repainted
     expect(m.getReference()?.selected).toBe("b"); // it spotlighted
     // …but added no history entry: move counters are unchanged.
     expect(lastMoveCounts()).toEqual(before);
@@ -1393,22 +1319,20 @@ describe("Midend re-validates a kept plan (a displayed step is never stale)", ()
     // already has — a lead leg plus the steps flagged `continuesPrevious` — so
     // this is derived from what the game says for its own reasons, and a game
     // that never groups steps simply reports a journey of one.
-    const m = new Midend(strikeGame({ sideEffect: false }));
-    const seen: { index: number; length: number }[] = [];
-    m.setCallbacks(
-      (n) => {
-        if (n.type === "status-bar-change" && n.hintJourney) seen.push(n.hintJourney);
-      },
-      () => {},
-    );
+    const d = driveMidend(strikeGame({ sideEffect: false }));
+    const m = d.midend;
+    const seen = () =>
+      d.notes.flatMap((n) =>
+        n.type === "status-bar-change" && n.hintJourney ? [n.hintJourney] : [],
+      );
     m.newGame();
     m.hint(); // plan: strike 0, 1, 2 — legs 1 and 2 continue the first
-    expect(seen.at(-1)).toEqual({ index: 1, length: 3 });
+    expect(seen().at(-1)).toEqual({ index: 1, length: 3 });
 
     m.processInput(0, 0, 100); // strike 0; the journey stays displayed
-    expect(seen.at(-1)).toEqual({ index: 2, length: 3 });
+    expect(seen().at(-1)).toEqual({ index: 2, length: 3 });
 
-    expect(seen, "the whole run, so an off-by-one is visible").toEqual([
+    expect(seen(), "the whole run, so an off-by-one is visible").toEqual([
       { index: 1, length: 3 },
       { index: 2, length: 3 },
     ]);
@@ -1418,15 +1342,11 @@ describe("Midend re-validates a kept plan (a displayed step is never stale)", ()
     // The absence matters as much as the number: a stale "Step 3 of 3" left
     // beside a board with no hint on it is a label for something that is not
     // there.
-    const m = new Midend(strikeGame({ sideEffect: false }));
-    const seen: unknown[] = [];
-    m.setCallbacks(
-      (n) => {
-        if (n.type === "status-bar-change") seen.push(n.hintJourney);
-      },
-      () => {},
+    const d = driveMidend(strikeGame({ sideEffect: false }));
+    d.midend.newGame();
+    const seen = d.notes.flatMap((n) =>
+      n.type === "status-bar-change" ? [n.hintJourney] : [],
     );
-    m.newGame();
     expect(seen.length).toBeGreaterThan(0);
     expect(seen.at(-1)).toBeNull();
   });
@@ -1450,13 +1370,7 @@ describe("Midend re-validates a kept plan (a displayed step is never stale)", ()
 
 describe("Midend executeHint plays the stored plan", () => {
   let h: ReturnType<typeof harness>;
-  const explanation = () =>
-    (
-      h.last("status-bar-change") as Extract<
-        ChangeNotification,
-        { type: "status-bar-change" }
-      >
-    ).activeHintExplanation;
+  const explanation = () => h.sent("status-bar-change").activeHintExplanation;
 
   it("executes the whole plan verbatim — hint() is computed once, not per step", () => {
     const c = countingHintGame();
@@ -1670,19 +1584,9 @@ describe("Midend changedState hook (upstream game_changed_state)", () => {
     return { game, calls };
   }
 
-  function drive<P, S, M, U, D>(game: Game<P, S, M, U, D>) {
-    const m = new Midend(game);
-    m.setCallbacks(
-      () => {},
-      () => {},
-      () => {},
-    );
-    return m;
-  }
-
   it("fires once at new-game with oldState = null", () => {
     const { game, calls } = makeRecordingGame();
-    const m = drive(game);
+    const m = new Midend(game);
     m.newGame();
     expect(calls).toHaveLength(1);
     expect(calls[0].old).toBeNull();
@@ -1691,7 +1595,7 @@ describe("Midend changedState hook (upstream game_changed_state)", () => {
 
   it("fires on move, undo, redo, and restart", () => {
     const { game, calls } = makeRecordingGame();
-    const m = drive(game);
+    const m = new Midend(game);
     m.newGame();
     calls.length = 0;
 
@@ -1712,7 +1616,7 @@ describe("Midend changedState hook (upstream game_changed_state)", () => {
 
   it("does NOT fire on a bare UI_UPDATE", () => {
     const { game, calls } = makeRecordingGame();
-    const m = drive(game);
+    const m = new Midend(game);
     m.newGame();
     calls.length = 0;
     const handled = m.processInput(0, 0, RIGHT_BUTTON); // UI_UPDATE

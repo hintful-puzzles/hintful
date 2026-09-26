@@ -3,7 +3,6 @@
 // overlay, and a forced redraw.
 import { describe, expect, it } from "vitest";
 import type { GameDrawing } from "../../engine/game.ts";
-import { Midend } from "../../engine/midend.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -11,7 +10,7 @@ import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
 } from "../../engine/pointer.ts";
-import type { ChangeNotification, GameStatus } from "../../engine/types.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { mosaicGame } from "./index.ts";
 
 function recordingDrawing() {
@@ -37,25 +36,10 @@ function recordingDrawing() {
 }
 
 function harness() {
-  const notes: ChangeNotification[] = [];
-  const m = new Midend(mosaicGame);
-  m.setCallbacks(
-    (n) => notes.push(n),
-    () => {},
-    () => {},
-  );
-  const status = () =>
-    (
-      [...notes].reverse().find((n) => n.type === "game-state-change") as
-        | Extract<ChangeNotification, { type: "game-state-change" }>
-        | undefined
-    )?.status as GameStatus | undefined;
-  const statusBar = () =>
-    (
-      [...notes].reverse().find((n) => n.type === "status-bar-change") as
-        | Extract<ChangeNotification, { type: "status-bar-change" }>
-        | undefined
-    )?.statusBarText;
+  const h = driveMidend(mosaicGame);
+  const m = h.midend;
+  const status = () => h.last("game-state-change")?.status;
+  const statusBar = () => h.last("status-bar-change")?.statusBarText;
   // Keyboard driver: track the cursor ourselves and walk it to each cell.
   const cursor = { x: 0, y: 0, shown: false };
   const selectAt = (x: number, y: number, double = false) => {

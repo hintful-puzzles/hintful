@@ -28,7 +28,8 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import type { ChangeNotification, GameStatus, Point } from "../../engine/types.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
+import type { GameStatus, Point } from "../../engine/types.ts";
 import { newRomeDesc } from "./generator.ts";
 import { romeGame } from "./index.ts";
 import { origin, PREFERRED_TILE_SIZE } from "./render.ts";
@@ -758,20 +759,9 @@ function firstDeviatingPlacement(): {
 // --- Midend integration -----------------------------------------------------
 
 function harness() {
-  const notes: ChangeNotification[] = [];
-  const m = new Midend(romeGame);
-  m.setCallbacks(
-    (n) => notes.push(n),
-    () => {},
-    () => {},
-  );
-  const status = (): GameStatus | null =>
-    (
-      [...notes].reverse().find((n) => n.type === "game-state-change") as
-        | Extract<ChangeNotification, { type: "game-state-change" }>
-        | undefined
-    )?.status ?? null;
-  return { m, status };
+  const h = driveMidend(romeGame);
+  const status = () => h.last("game-state-change")?.status ?? null;
+  return { m: h.midend, status };
 }
 
 describe("midend integration", () => {

@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { Midend } from "../../engine/midend.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -9,7 +8,7 @@ import {
   LEFT_DRAG,
   LEFT_RELEASE,
 } from "../../engine/pointer.ts";
-import type { ChangeNotification } from "../../engine/types.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { sixteenGame } from "./index.ts";
 import type { SixteenMove } from "./state.ts";
 
@@ -21,23 +20,9 @@ interface PrivateHintView {
 }
 
 function harness(game: typeof sixteenGame = sixteenGame) {
-  const notes: ChangeNotification[] = [];
-  let redraws = 0;
-  const m = new Midend(game);
-  m.setCallbacks(
-    (n) => notes.push(n),
-    () => {},
-    () => {
-      redraws++;
-    },
-  );
-  const last = <T extends ChangeNotification["type"]>(type: T) =>
-    [...notes].reverse().find((n) => n.type === type);
-  const state = () =>
-    last("game-state-change") as
-      | Extract<ChangeNotification, { type: "game-state-change" }>
-      | undefined;
-  return { m, notes, state, redraws: () => redraws, last };
+  const h = driveMidend(game);
+  const state = () => h.last("game-state-change");
+  return { ...h, m: h.midend, state };
 }
 
 // --- lifecycle --------------------------------------------------------
@@ -133,9 +118,7 @@ describe("Sixteen midend integration — presets", () => {
     expect(err).toBeNull();
     h.m.newGame();
     // The game should now be 3×3 — check params-change notification.
-    const params = h.last("params-change") as
-      | Extract<ChangeNotification, { type: "params-change" }>
-      | undefined;
+    const params = h.last("params-change");
     expect(params?.params).toContain("3x3");
   });
 });
@@ -249,12 +232,7 @@ describe("Sixteen midend integration — hint persistence", () => {
     h.m.newGameFromId(
       "5x5:1,2,3,4,6,7,13,8,9,5,11,12,18,14,15,16,17,24,19,20,21,22,23,10,25",
     );
-    const banner = () => {
-      const n = h.last("status-bar-change") as
-        | Extract<ChangeNotification, { type: "status-bar-change" }>
-        | undefined;
-      return n?.activeHintExplanation;
-    };
+    const banner = () => h.last("status-bar-change")?.activeHintExplanation;
     expect(h.m.hint()).toBeNull();
     expect(banner()).toBe(
       "Working on tile 6: move it to the nearer outlined square, then the other (setting up).",

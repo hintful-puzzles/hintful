@@ -2,8 +2,9 @@ import { describe, expect, it } from "vitest";
 import { type GameDrawing, Midend, UI_UPDATE } from "../../engine/index.ts";
 import { SHOW_TIMER_PREF } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
-import { type ChangeNotification, PuzzleButton } from "../../engine/types.ts";
+import { PuzzleButton } from "../../engine/types.ts";
 import { type FlipParams, type FlipState, flipGame } from "./index.ts";
 
 /** Recording fake of the full `GameDrawing` surface. */
@@ -339,10 +340,6 @@ describe("Flip reshape (regression: black canvas when shapes share a tile size)"
     const { desc: desc5 } = flipGame.newDesc(p5, randomNew("flip-reshape-5"));
 
     const me = new Midend(flipGame);
-    me.setCallbacks(
-      () => {},
-      () => {},
-    );
     // First game (3x3): size + first redraw paints bg + grid + tiles.
     //
     // The slot is the board's own size at tile 48, so `size()` resolves to
@@ -405,10 +402,6 @@ describe("Flip flash-overlay isolation (regression: wave through every cell)", (
     const params: FlipParams = { w: 3, h: 3, matrixType: "crosses" };
     const { desc } = flipGame.newDesc(params, randomNew("flip-flash-iso"));
     const me = new Midend(flipGame);
-    me.setCallbacks(
-      () => {},
-      () => {},
-    );
     expect(me.newGameFromId(`3x3c:${desc}`)).toBeNull();
 
     // Click (0,0), which must not solve this seed's board (so flashLength
@@ -438,10 +431,6 @@ describe("Flip flash-overlay isolation (regression: wave through every cell)", (
     const params: FlipParams = { w: 3, h: 3, matrixType: "crosses" };
     const { desc } = flipGame.newDesc(params, randomNew("flip-flash-solve"));
     const me = new Midend(flipGame);
-    me.setCallbacks(
-      () => {},
-      () => {},
-    );
     expect(me.newGameFromId(`3x3c:${desc}`)).toBeNull();
 
     // Use the solver to find the moves, then play each in turn.
@@ -489,24 +478,13 @@ describe("Flip animation/redraw lifecycle (regression: clicks not rendered)", ()
   it("a click repaints, runs the anim timer, then settles", () => {
     const params: FlipParams = { w: 3, h: 3, matrixType: "crosses" };
     const { desc } = flipGame.newDesc(params, randomNew("flip-anim-seed"));
-    let timerActive = false;
-    let redraws = 0;
-    const me = new Midend(flipGame);
-    me.setCallbacks(
-      () => {},
-      (a) => {
-        timerActive = a;
-      },
-      () => {
-        redraws++;
-      },
-    );
+    const { midend: me, timerActive, redraws } = driveMidend(flipGame);
     // The solve timer shares the tick; switched off, the tick is the
     // animation's alone.
     me.setPreferences({ [SHOW_TIMER_PREF]: false });
     expect(me.newGameFromId(`3x3c:${desc}`)).toBeNull();
-    expect(timerActive).toBe(false); // settled, no animation yet
-    const afterLoad = redraws;
+    expect(timerActive()).toBe(false); // settled, no animation yet
+    const afterLoad = redraws();
 
     const tile = flipGame.preferredTileSize ?? 32;
     const border = tile >> 1;
@@ -514,17 +492,17 @@ describe("Flip animation/redraw lifecycle (regression: clicks not rendered)", ()
     expect(me.processInput(border + 1, border + 1, 0x0200)).toBe(true);
     // An animated move does NOT paint synchronously (a frame-0 paint
     // flickers); it arms the rAF timer instead.
-    expect(redraws).toBe(afterLoad);
-    expect(timerActive).toBe(true); // ANIM_TIME>0 ⇒ rAF loop requested
+    expect(redraws()).toBe(afterLoad);
+    expect(timerActive()).toBe(true); // ANIM_TIME>0 ⇒ rAF loop requested
 
     me.timer(0.1); // first timer tick paints the first animation frame
-    expect(redraws).toBeGreaterThan(afterLoad);
-    expect(timerActive).toBe(true);
+    expect(redraws()).toBeGreaterThan(afterLoad);
+    expect(timerActive()).toBe(true);
 
-    const midAnim = redraws;
+    const midAnim = redraws();
     me.timer(0.3); // past ANIM_TIME ⇒ final settle paint, timer released
-    expect(redraws).toBeGreaterThan(midAnim);
-    expect(timerActive).toBe(false);
+    expect(redraws()).toBeGreaterThan(midAnim);
+    expect(timerActive()).toBe(false);
   });
 });
 
@@ -537,12 +515,8 @@ describe("Flip through the midend", () => {
     expect(solved.ok).toBe(true);
     if (!solved.ok || solved.move.kind !== "solve") return;
 
-    const notes: ChangeNotification[] = [];
-    const me = new Midend(flipGame);
-    me.setCallbacks(
-      (m) => notes.push(m),
-      () => {},
-    );
+    const h = driveMidend(flipGame);
+    const me = h.midend;
     expect(
       me.newGameFromId(`${flipGame.encodeParams(params, false)}:${desc}`),
     ).toBeNull();
@@ -564,17 +538,10 @@ describe("Flip through the midend", () => {
       }
     });
 
-    const last = [...notes].reverse().find((n) => n.type === "game-state-change");
-    expect(last && last.type === "game-state-change" && last.status).toBe(
-      "solved-with-help",
-    );
+    expect(h.last("game-state-change")?.status).toBe("solved-with-help");
 
     const saved = me.saveGame();
     const me2 = new Midend(flipGame);
-    me2.setCallbacks(
-      () => {},
-      () => {},
-    );
     expect(me2.loadGame(saved)).toBeNull();
     expect(me2.formatAsText()).toContain("+");
   });

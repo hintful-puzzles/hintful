@@ -1,5 +1,7 @@
-# No delta yet: a test harness may need no requirement at all, or one line in
-# repo-layout's testing tiers; decided when the driver's shape is.
+# No delta: the driver is a test helper with no behavior a requirement would
+# govern. Its discoverability is the engine catalog's job and its use is
+# docs/games/testing.md § "Observing a midend"; a requirement saying "tests
+# use it" would be a manifest only a reviewer reads.
 schema: spec-driven
 created: 2026-09-26
 skip_specs: true

@@ -2,35 +2,18 @@
 // generated id through the Solve command, an honest move-by-move solve,
 // and the mistake overlay.
 import { describe, expect, it } from "vitest";
-import { Midend } from "../../engine/midend.ts";
 import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import type { ChangeNotification, GameStatus } from "../../engine/types.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { rangeGame } from "./index.ts";
 import { fullSolve } from "./solver.ts";
 import { BLACK, decodeParams, idx, newState, type RangeMove, WHITE } from "./state.ts";
 
 function harness() {
-  const notes: ChangeNotification[] = [];
-  const m = new Midend(rangeGame);
-  m.setCallbacks(
-    (n) => notes.push(n),
-    () => {},
-    () => {},
-  );
-  const status = (): GameStatus | null =>
-    (
-      [...notes].reverse().find((n) => n.type === "game-state-change") as
-        | Extract<ChangeNotification, { type: "game-state-change" }>
-        | undefined
-    )?.status ?? null;
-  const hintBanner = (): string | null =>
-    (
-      [...notes].reverse().find((n) => n.type === "status-bar-change") as
-        | Extract<ChangeNotification, { type: "status-bar-change" }>
-        | undefined
-    )?.activeHintExplanation ?? null;
-  return { m, status, hintBanner };
+  const h = driveMidend(rangeGame);
+  const status = () => h.last("game-state-change")?.status ?? null;
+  const hintBanner = () => h.last("status-bar-change")?.activeHintExplanation ?? null;
+  return { m: h.midend, status, hintBanner };
 }
 
 describe("midend integration", () => {

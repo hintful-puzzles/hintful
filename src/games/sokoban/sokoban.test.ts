@@ -14,13 +14,13 @@ import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
 import { CURSOR_DOWN, CURSOR_RIGHT, LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
-import type { ChangeNotification, GameStatus } from "../../engine/types.ts";
 import { newSokobanDesc } from "./generator.ts";
 import { executeMove, sokobanGame } from "./index.ts";
 import type { SokobanDrawState } from "./render.ts";
@@ -323,20 +323,9 @@ describe("Sokoban generator", () => {
 // --- midend lifecycle -------------------------------------------------
 
 function harness() {
-  const notes: ChangeNotification[] = [];
-  const m = new Midend(sokobanGame);
-  m.setCallbacks(
-    (n) => notes.push(n),
-    () => {},
-    () => {},
-  );
-  const status = () =>
-    (
-      [...notes].reverse().find((n) => n.type === "game-state-change") as
-        | Extract<ChangeNotification, { type: "game-state-change" }>
-        | undefined
-    )?.status as GameStatus | undefined;
-  return { m, status };
+  const h = driveMidend(sokobanGame);
+  const status = () => h.last("game-state-change")?.status;
+  return { m: h.midend, status };
 }
 
 describe("Sokoban midend lifecycle", () => {

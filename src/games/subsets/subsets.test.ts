@@ -19,11 +19,11 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { seedBudget } from "../../engine/testing/slow.ts";
-import type { ChangeNotification, GameStatus } from "../../engine/types.ts";
 import cReference from "./__fixtures__/subsets-c-reference.json" with { type: "json" };
 import { generateCandidate, newSubsetsDesc } from "./generator.ts";
 import { subsetsGame } from "./index.ts";
@@ -123,20 +123,9 @@ const slotCenter = (
 
 /** A midend plus a reader of the last notified game status. */
 function harness() {
-  const notes: ChangeNotification[] = [];
-  const m = new Midend(subsetsGame);
-  m.setCallbacks(
-    (n) => notes.push(n),
-    () => {},
-    () => {},
-  );
-  const status = (): GameStatus | null =>
-    (
-      [...notes].reverse().find((n) => n.type === "game-state-change") as
-        | Extract<ChangeNotification, { type: "game-state-change" }>
-        | undefined
-    )?.status ?? null;
-  return { m, status };
+  const h = driveMidend(subsetsGame);
+  const status = () => h.last("game-state-change")?.status ?? null;
+  return { m: h.midend, status };
 }
 
 // ---------------------------------------------------------------------------

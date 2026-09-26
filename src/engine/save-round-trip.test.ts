@@ -35,6 +35,7 @@ import {
 import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { encodeSave } from "./save.ts";
+import { observeMidend } from "./testing/drive-midend.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 
 type AnyGame = Game<unknown, unknown, unknown, unknown, unknown>;
@@ -42,13 +43,7 @@ type AnyGame = Game<unknown, unknown, unknown, unknown, unknown>;
 const KEY_M = 77; // adaptive mark-all, for the games that offer it
 
 function midendFor(game: AnyGame): Midend<unknown, unknown, unknown, unknown, unknown> {
-  const m = new Midend(game);
-  m.setCallbacks(
-    () => {},
-    () => {},
-    () => {},
-  );
-  return m;
+  return new Midend(game);
 }
 
 /**
@@ -265,15 +260,8 @@ describe("a v1 save still loads", () => {
       const params = game.defaultParams();
       const desc = game.newDesc(params, randomNew(`legacy-${id}`)).desc;
 
-      let playedStatus: string | null = null;
-      const played = midendFor(game);
-      played.setCallbacks(
-        (n) => {
-          if (n.type === "game-state-change") playedStatus = n.status;
-        },
-        () => {},
-        () => {},
-      );
+      const playedObs = observeMidend(midendFor(game));
+      const played = playedObs.midend;
       played.newGameFromId(`${game.encodeParams(params, true)}:${desc}`);
       // One real click first — press *and* release, because Mines opens on the
       // release. Mines needs it (its layout does not exist until the first
@@ -292,16 +280,11 @@ describe("a v1 save still loads", () => {
       const { cheated, ...rest } = current;
       const legacy = encodeSave({ ...rest, v: 1, usedSolve: cheated } as never);
 
-      const restored = midendFor(game);
-      let status: string | null = null;
-      restored.setCallbacks(
-        (n) => {
-          if (n.type === "game-state-change") status = n.status;
-        },
-        () => {},
-        () => {},
-      );
+      const restoredObs = observeMidend(midendFor(game));
+      const restored = restoredObs.midend;
       expect(restored.loadGame(legacy), `${id}: v1 save refused`).toBeFalsy();
+      const status = restoredObs.last("game-state-change")?.status ?? null;
+      const playedStatus = playedObs.last("game-state-change")?.status ?? null;
       // The invariant is *fidelity*, not a hard-coded verdict: whatever the
       // game reported when it was saved, it reports again when restored. That
       // is the assertion the flag is load-bearing for — and it covers Mines,

@@ -3,35 +3,18 @@
 // UI_UPDATE), a removal that scores and compacts, undo, and a win that
 // reports "solved".
 import { describe, expect, it } from "vitest";
-import { Midend } from "../../engine/midend.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
-import type { ChangeNotification, GameStatus } from "../../engine/types.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { samegameGame } from "./index.ts";
 
 const TS = 32; // the midend sets the preferred tile size (32); border = 16.
 const at = (cx: number, cy: number) => ({ x: cx * TS + 16 + 10, y: cy * TS + 16 + 10 });
 
 function harness() {
-  const notes: ChangeNotification[] = [];
-  const m = new Midend(samegameGame);
-  m.setCallbacks(
-    (n) => notes.push(n),
-    () => {},
-    () => {},
-  );
-  const status = () =>
-    (
-      [...notes].reverse().find((n) => n.type === "game-state-change") as
-        | Extract<ChangeNotification, { type: "game-state-change" }>
-        | undefined
-    )?.status as GameStatus | undefined;
-  const statusBar = () =>
-    (
-      [...notes].reverse().find((n) => n.type === "status-bar-change") as
-        | Extract<ChangeNotification, { type: "status-bar-change" }>
-        | undefined
-    )?.statusBarText;
-  return { m, notes, status, statusBar };
+  const h = driveMidend(samegameGame);
+  const status = () => h.last("game-state-change")?.status;
+  const statusBar = () => h.last("status-bar-change")?.statusBarText;
+  return { m: h.midend, status, statusBar };
 }
 
 describe("Same Game midend lifecycle", () => {

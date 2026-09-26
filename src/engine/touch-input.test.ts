@@ -42,11 +42,6 @@ function press(
   point: { x: number; y: number },
 ): { consumed: boolean; board: string | null } {
   const m = new Midend(game);
-  m.setCallbacks(
-    () => {},
-    () => {},
-    () => {},
-  );
   m.newGameFromId(id);
   const consumed = m.processInput(point.x, point.y, button);
   // Compare the *effect* of the press, not merely whether it was swallowed.

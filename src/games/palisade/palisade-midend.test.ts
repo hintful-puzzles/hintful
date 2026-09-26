@@ -3,10 +3,9 @@
 // save/load round-trip, and the mistake count on a fresh board.
 import { describe, expect, it } from "vitest";
 import type { GameDrawing } from "../../engine/game.ts";
-import { Midend } from "../../engine/midend.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import type { ChangeNotification, GameStatus } from "../../engine/types.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { palisadeGame } from "./index.ts";
 import { newDesc } from "./solver.ts";
 
@@ -33,26 +32,10 @@ function recordingDrawing() {
 }
 
 function harness() {
-  const notes: ChangeNotification[] = [];
-  const m = new Midend(palisadeGame);
-  m.setCallbacks(
-    (n) => notes.push(n),
-    () => {},
-    () => {},
-  );
-  const status = () =>
-    (
-      [...notes].reverse().find((n) => n.type === "game-state-change") as
-        | Extract<ChangeNotification, { type: "game-state-change" }>
-        | undefined
-    )?.status as GameStatus | undefined;
-  const statusBar = () =>
-    (
-      [...notes].reverse().find((n) => n.type === "status-bar-change") as
-        | Extract<ChangeNotification, { type: "status-bar-change" }>
-        | undefined
-    )?.statusBarText;
-  return { m, status, statusBar };
+  const h = driveMidend(palisadeGame);
+  const status = () => h.last("game-state-change")?.status;
+  const statusBar = () => h.last("status-bar-change")?.statusBarText;
+  return { m: h.midend, status, statusBar };
 }
 
 const bytesEqual = (a: Uint8Array, b: Uint8Array): boolean =>

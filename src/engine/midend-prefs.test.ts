@@ -12,6 +12,7 @@ import { mapGame } from "../games/map/index.ts";
 import { fakeGame } from "./fake-game.ts";
 import type { Game } from "./game.ts";
 import { Midend, SHOW_TIMER_PREF } from "./midend.ts";
+import { driveMidend } from "./testing/drive-midend.ts";
 import type { ConfigValues } from "./types.ts";
 
 /** The game's own preferences: every game also carries the engine's timer
@@ -88,11 +89,6 @@ function start(
   game = prefGame,
 ): Midend<{ n: number }, PrefState, "noop", PrefUi, unknown> {
   const m = new Midend(game);
-  m.setCallbacks(
-    () => {},
-    () => {},
-    () => {},
-  );
   m.newGame();
   return m;
 }
@@ -138,19 +134,11 @@ describe("engine preferences hook", () => {
   });
 
   it("repaints when a preference changes", () => {
-    let redraws = 0;
-    const m = new Midend(prefGame);
-    m.setCallbacks(
-      () => {},
-      () => {},
-      () => {
-        redraws++;
-      },
-    );
-    m.newGame();
-    const before = redraws;
-    m.setPreferences({ highlight: false });
-    expect(redraws).toBeGreaterThan(before);
+    const d = driveMidend(prefGame);
+    d.midend.newGame();
+    const before = d.redraws();
+    d.midend.setPreferences({ highlight: false });
+    expect(d.redraws()).toBeGreaterThan(before);
   });
 
   it("retains a preference across a new game (ui is recreated by newUi)", () => {
@@ -162,11 +150,6 @@ describe("engine preferences hook", () => {
 
   it("offers only the engine's own preference for a game that declares none", () => {
     const m = new Midend(fakeGame);
-    m.setCallbacks(
-      () => {},
-      () => {},
-      () => {},
-    );
     m.newGame();
     expect(Object.keys(m.getPreferencesConfig().items)).toEqual([SHOW_TIMER_PREF]);
     expect(gamePrefs(m)).toEqual({});
@@ -175,11 +158,6 @@ describe("engine preferences hook", () => {
 
   it("stores prefs set before a game starts and applies them on start", () => {
     const m = new Midend(prefGame);
-    m.setCallbacks(
-      () => {},
-      () => {},
-      () => {},
-    );
     // No game yet: setPreferences stores but cannot apply (no ui).
     expect(gamePrefs(m)).toEqual({});
     m.setPreferences({ highlight: false, style: 1 });
@@ -191,23 +169,17 @@ describe("engine preferences hook", () => {
     // Map's plan opens with its Mark-all press under "Every candidate first"
     // and never under the default, so the first step says which reading
     // built the plan.
-    const m = new Midend(mapGame);
-    const shown: (string | null)[] = [];
-    m.setCallbacks(
-      (n) => {
-        if (n.type === "status-bar-change") shown.push(n.activeHintExplanation ?? null);
-      },
-      () => {},
-      () => {},
-    );
+    const d = driveMidend(mapGame);
+    const m = d.midend;
+    const shown = () => d.last("status-bar-change")?.activeHintExplanation ?? null;
     m.newGame();
     expect(m.hint()).toBeNull();
-    expect(shown.at(-1)).not.toMatch(/^Start by dotting/);
+    expect(shown()).not.toMatch(/^Start by dotting/);
     // Apply the displayed step, so the plan is stored and continuing.
     expect(m.executeHint()).toBeNull();
     m.setPreferences({ "hint-notes": 1 });
-    expect(shown.at(-1)).toBeNull();
+    expect(shown()).toBeNull();
     expect(m.hint()).toBeNull();
-    expect(shown.at(-1)).toMatch(/^Start by dotting/);
+    expect(shown()).toMatch(/^Start by dotting/);
   });
 });

@@ -15,8 +15,9 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import type { ChangeNotification, GameStatus, Point } from "../../engine/types.ts";
+import type { Point } from "../../engine/types.ts";
 import { newClustersDesc } from "./generator.ts";
 import { clustersGame } from "./index.ts";
 import { COL_ERROR } from "./render.ts";
@@ -342,20 +343,9 @@ describe("executeMove + completion", () => {
 // --- Midend integration ----------------------------------------------------
 
 function harness() {
-  const notes: ChangeNotification[] = [];
-  const m = new Midend(clustersGame);
-  m.setCallbacks(
-    (n) => notes.push(n),
-    () => {},
-    () => {},
-  );
-  const status = (): GameStatus | null =>
-    (
-      [...notes].reverse().find((n) => n.type === "game-state-change") as
-        | Extract<ChangeNotification, { type: "game-state-change" }>
-        | undefined
-    )?.status ?? null;
-  return { m, status };
+  const h = driveMidend(clustersGame);
+  const status = () => h.last("game-state-change")?.status ?? null;
+  return { m: h.midend, status };
 }
 
 /** A 7x7 game and moves that break a rule: its first non-given cell painted

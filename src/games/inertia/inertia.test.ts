@@ -6,15 +6,14 @@
  */
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
-import { Midend } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import {
   type DrawOp,
   RecordingDrawing,
 } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import type { ChangeNotification } from "../../engine/types.ts";
 import { newInertiaDesc } from "./generator.ts";
 import { inertiaGame } from "./index.ts";
 import {
@@ -46,20 +45,9 @@ function withoutGems(s: InertiaState): Board {
 
 /** A `Midend` that records its status-bar notifications. */
 function harness() {
-  const notes: ChangeNotification[] = [];
-  const m = new Midend(inertiaGame);
-  m.setCallbacks(
-    (n) => notes.push(n),
-    () => {},
-    () => {},
-  );
-  const status = (): string => {
-    const last = [...notes].reverse().find((n) => n.type === "status-bar-change") as
-      | Extract<ChangeNotification, { type: "status-bar-change" }>
-      | undefined;
-    return last?.statusBarText ?? "";
-  };
-  return { m, status };
+  const h = driveMidend(inertiaGame);
+  const status = () => h.last("status-bar-change")?.statusBarText ?? "";
+  return { m: h.midend, status };
 }
 
 /** Directions, by the name a reader can follow. */

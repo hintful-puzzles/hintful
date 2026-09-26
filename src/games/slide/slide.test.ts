@@ -27,8 +27,9 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
-import type { ChangeNotification, GameStatus } from "../../engine/types.ts";
+import type { GameStatus } from "../../engine/types.ts";
 import { newSlideDesc } from "./generator.ts";
 import { slideGame } from "./index.ts";
 import { computeReachable, executeMove, movePiece } from "./moves.ts";
@@ -71,20 +72,9 @@ function stateOf(me: SlideMidend): SlideState {
 
 /** A midend plus a reader for the status it last notified. */
 function makeMidend(): { m: SlideMidend; status: () => GameStatus | null } {
-  const notes: ChangeNotification[] = [];
-  const m: SlideMidend = new Midend(slideGame);
-  m.setCallbacks(
-    (n) => notes.push(n),
-    () => {},
-    () => {},
-  );
-  const status = (): GameStatus | null =>
-    (
-      [...notes].reverse().find((n) => n.type === "game-state-change") as
-        | Extract<ChangeNotification, { type: "game-state-change" }>
-        | undefined
-    )?.status ?? null;
-  return { m, status };
+  const h = driveMidend(slideGame);
+  const status = () => h.last("game-state-change")?.status ?? null;
+  return { m: h.midend, status };
 }
 
 /** A midend already running `id`. */

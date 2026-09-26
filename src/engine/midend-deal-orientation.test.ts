@@ -7,23 +7,19 @@
 
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
-import type { EngineCore } from "./midend.ts";
-import { createTsEngine } from "./registry.ts";
-import type { ChangeNotification, Size } from "./types.ts";
+import { getTsGame } from "./registry.ts";
+import { driveMidend } from "./testing/drive-midend.ts";
+import type { Size } from "./types.ts";
 
 const UPRIGHT_PHONE: Size = { w: 390, h: 640 };
 const DESKTOP: Size = { w: 1200, h: 700 };
 
 function engine(puzzleId: string) {
-  const m = createTsEngine(puzzleId) as EngineCore;
-  let boardParams = "";
-  m.setCallbacks(
-    (n: ChangeNotification) => {
-      if (n.type === "game-id-change") boardParams = n.restoreGameId.split(":")[0];
-    },
-    () => {},
-  );
-  return { m, board: () => boardParams };
+  const game = getTsGame(puzzleId);
+  if (game === null) throw new Error(`no game registered as "${puzzleId}"`);
+  const d = driveMidend(game);
+  const board = () => d.last("game-id-change")?.restoreGameId.split(":")[0] ?? "";
+  return { m: d.midend, board };
 }
 
 describe("dealing to fit the board area", () => {

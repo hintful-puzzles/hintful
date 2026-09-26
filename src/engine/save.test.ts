@@ -3,26 +3,13 @@ import { fakeGame } from "./fake-game.ts";
 import { Midend } from "./midend.ts";
 import { LEFT_BUTTON } from "./pointer.ts";
 import { decodeSave, encodeSave, type SaveEnvelope } from "./save.ts";
-import type { ChangeNotification } from "./types.ts";
+import { driveMidend } from "./testing/drive-midend.ts";
 
 function driven(game: typeof fakeGame = fakeGame) {
-  const notes: ChangeNotification[] = [];
-  const m = new Midend(game);
-  m.setCallbacks(
-    (n) => notes.push(n),
-    () => {},
-  );
-  const state = () =>
-    [...notes].reverse().find((n) => n.type === "game-state-change") as
-      | Extract<ChangeNotification, { type: "game-state-change" }>
-      | undefined;
-  const timer = () =>
-    (
-      [...notes].reverse().find((n) => n.type === "timer-change") as
-        | Extract<ChangeNotification, { type: "timer-change" }>
-        | undefined
-    )?.timer ?? null;
-  return { m, state, timer };
+  const d = driveMidend(game);
+  const state = () => d.last("game-state-change");
+  const timer = () => d.last("timer-change")?.timer ?? null;
+  return { m: d.midend, state, timer };
 }
 
 describe("save codec", () => {
@@ -328,10 +315,6 @@ describe("Midend save/restore round-trip", () => {
       cheated: false,
     };
     const m = new Midend(fakeGame);
-    m.setCallbacks(
-      () => {},
-      () => {},
-    );
     expect(m.loadGame(encodeSave(env))).toMatch(/not "__fake__"/);
   });
 });

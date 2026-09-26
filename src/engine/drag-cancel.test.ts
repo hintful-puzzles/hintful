@@ -142,11 +142,6 @@ describe("a drag does not survive a state replacement", () => {
     expect(empty.length).toBeGreaterThan(0);
     for (const { game } of empty) {
       const m = new Midend(game);
-      m.setCallbacks(
-        () => {},
-        () => {},
-        () => {},
-      );
       expect(() => {
         m.newGame();
         m.restartGame();

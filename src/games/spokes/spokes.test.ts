@@ -24,13 +24,14 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
-import type { ChangeNotification, GameStatus, Point } from "../../engine/types.ts";
+import type { Point } from "../../engine/types.ts";
 import { newSpokesDesc } from "./generator.ts";
 import { spokesGame } from "./index.ts";
 import {
@@ -86,20 +87,9 @@ const hub = (x: number, y: number): Point => ({
 });
 
 function harness() {
-  const notes: ChangeNotification[] = [];
-  const m = new Midend(spokesGame);
-  m.setCallbacks(
-    (n) => notes.push(n),
-    () => {},
-    () => {},
-  );
-  const status = (): GameStatus | null =>
-    (
-      [...notes].reverse().find((n) => n.type === "game-state-change") as
-        | Extract<ChangeNotification, { type: "game-state-change" }>
-        | undefined
-    )?.status ?? null;
-  return { m, status };
+  const h = driveMidend(spokesGame);
+  const status = () => h.last("game-state-change")?.status ?? null;
+  return { m: h.midend, status };
 }
 
 function press(

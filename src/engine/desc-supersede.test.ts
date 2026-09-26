@@ -13,9 +13,8 @@
 
 import { describe, expect, it } from "vitest";
 import type { Game } from "./game.ts";
-import { Midend } from "./midend.ts";
 import { decodeSave } from "./save.ts";
-import type { ChangeNotification } from "./types.ts";
+import { driveMidend } from "./testing/drive-midend.ts";
 
 interface MinesishParams {
   size: number;
@@ -96,17 +95,11 @@ const plain: Game<MinesishParams, MinesishState, MinesishMove, null, null> = {
 const BLANK = "layout=null clicked=null opened=[]";
 
 function harness(game = minesish) {
-  const notes: ChangeNotification[] = [];
-  const m = new Midend(game);
-  m.setCallbacks(
-    (n) => notes.push(n),
-    () => {},
-    () => {},
-  );
-  const gameId = () =>
-    [...notes].reverse().find((n) => n.type === "game-id-change")?.currentGameId;
-  const idChanges = () => notes.filter((n) => n.type === "game-id-change").length;
-  return { m, notes, gameId, idChanges, board: () => m.formatAsText() };
+  const d = driveMidend(game);
+  const m = d.midend;
+  const gameId = () => d.last("game-id-change")?.currentGameId;
+  const idChanges = () => d.notes.filter((n) => n.type === "game-id-change").length;
+  return { m, gameId, idChanges, board: () => m.formatAsText() };
 }
 
 describe("desc supersession", () => {

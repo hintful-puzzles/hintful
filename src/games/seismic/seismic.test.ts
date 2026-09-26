@@ -13,6 +13,7 @@ import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, MOD_STYLUS, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import {
   type DrawOp,
@@ -866,17 +867,11 @@ describe("seismic moves", () => {
   it("completes the board on Solve, and marks it solved-with-help", () => {
     // Driven through a real Midend: the interactive completion path is not the
     // one the differential exercises (docs/games/testing.md § "The test tiers").
-    const me = new Midend(seismicGame);
-    let status = "";
-    me.setCallbacks(
-      (n) => {
-        if (n.type === "game-state-change") status = n.status;
-      },
-      () => {},
-    );
+    const h = driveMidend(seismicGame);
+    const me = h.midend;
     expect(me.newGameFromId(idOf(SMALL))).toBeNull();
     expect(me.solve()).toBeNull();
-    expect(status).toBe("solved-with-help");
+    expect(h.last("game-state-change")?.status).toBe("solved-with-help");
     // Every cell is filled in, so Solve really finished the job.
     expect(me.formatAsText()).not.toContain(".");
 

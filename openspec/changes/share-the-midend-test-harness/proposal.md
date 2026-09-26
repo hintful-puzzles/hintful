@@ -1,6 +1,6 @@
 # share-the-midend-test-harness
 
-**Status: scaffolded, not started.** Found while writing the timer's tests
+Found while writing the timer's tests
 (`make-the-timer-an-engine-feature`, 2026-09-26), which added a third copy of
 the thing this would share.
 
@@ -58,3 +58,34 @@ twenty-ninth copy.
 ## Player-visible
 
 No.
+
+## Decisions
+
+- **Beside `render-scenario.ts`, not under it.** `renderScenario` answers "what
+  does this frame look like" and sets no callbacks at all; this answers "what
+  did the midend tell the app". Nesting one in the other would hand every render
+  test callbacks it never reads.
+- **Two entry points**: `driveMidend(game)` for a fresh midend and
+  `observeMidend(midend)` for one a test already holds (a loaded save, a midend
+  over a wrapped game). Neither deals a game; the test chooses how.
+- **`last(type)` returns `null` when absent**, per the absence convention.
+  `midend.test.ts` keeps a local `sent(type)` that throws instead, for the reads
+  that need the notification to exist; one file needs it, so it stays local.
+- **An all-no-op `setCallbacks` is deleted, not migrated.** The callbacks are
+  optional on `Midend`, so those calls were ceremony. That widened the
+  population from the 28 files the shape grep found to the 40 that call
+  `setCallbacks` at all (the worker adapter's own test drives a different class
+  and stays).
+- **No spec delta.** A test helper has no behavior a requirement would govern;
+  its discoverability is the engine catalog's job, its use
+  `docs/games/testing.md` § "Observing a midend".
+
+## Verification
+
+- Every `it`/`test` and `expect(` count per file is unchanged across all 40
+  files, and vitest ran the same 1255 tests before and after, all passing.
+- Every changed `expect(` line in the diff is a read that became an accessor
+  call, or a recorded variable that became `last(...)`; each was checked against
+  its old initial value.
+- Planting "oldest match instead of newest" in `last()` turned 11 tests red
+  across four files.

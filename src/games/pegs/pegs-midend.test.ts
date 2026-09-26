@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { Midend } from "../../engine/midend.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -9,27 +8,13 @@ import {
   LEFT_DRAG,
   LEFT_RELEASE,
 } from "../../engine/pointer.ts";
-import type { ChangeNotification } from "../../engine/types.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { pegsGame } from "./index.ts";
 
 function harness() {
-  const notes: ChangeNotification[] = [];
-  let redraws = 0;
-  const m = new Midend(pegsGame);
-  m.setCallbacks(
-    (n) => notes.push(n),
-    () => {},
-    () => {
-      redraws++;
-    },
-  );
-  const last = <T extends ChangeNotification["type"]>(type: T) =>
-    [...notes].reverse().find((n) => n.type === type);
-  const state = () =>
-    last("game-state-change") as
-      | Extract<ChangeNotification, { type: "game-state-change" }>
-      | undefined;
-  return { m, notes, state, redraws: () => redraws, last };
+  const h = driveMidend(pegsGame);
+  const state = () => h.last("game-state-change");
+  return { ...h, m: h.midend, state };
 }
 
 /**

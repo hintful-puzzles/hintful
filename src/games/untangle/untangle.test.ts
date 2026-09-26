@@ -12,6 +12,7 @@ import { Midend, UI_UPDATE } from "../../engine/index.ts";
 import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { decodeSave } from "../../engine/save.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { untangleGame } from "./index.ts";
 import {
   cross,
@@ -315,43 +316,24 @@ describe("moves and solve", () => {
 
   it("midend threads aux into Solve and reports solved status (regression)", () => {
     // Solve needs the midend to thread `aux` through from `newDesc`.
-    const me = new Midend(untangleGame);
-    let lastStatus = "";
-    me.setCallbacks(
-      (n) => {
-        if (n.type === "game-state-change") lastStatus = n.status;
-      },
-      () => {},
-      () => {},
-    );
+    const h = driveMidend(untangleGame);
+    const me = h.midend;
     me.newGameFromId("10#midend-aux-status");
     me.solve();
-    expect(lastStatus).toBe("solved-with-help");
+    expect(h.last("game-state-change")?.status).toBe("solved-with-help");
   });
 
   it("midend Solve works on a loaded game, which has no aux", () => {
     // A resumed save carries no aux; the layout comes from the edges instead.
     const gen = new Midend(untangleGame);
-    gen.setCallbacks(
-      () => {},
-      () => {},
-      () => {},
-    );
     gen.newGameFromId("10#loaded-no-aux");
     const saved = gen.saveGame();
 
-    const loaded = new Midend(untangleGame);
-    let lastStatus = "";
-    loaded.setCallbacks(
-      (n) => {
-        if (n.type === "game-state-change") lastStatus = n.status;
-      },
-      () => {},
-      () => {},
-    );
+    const h = driveMidend(untangleGame);
+    const loaded = h.midend;
     expect(loaded.loadGame(saved)).toBeNull();
     expect(loaded.solve()).toBeNull();
-    expect(lastStatus).toBe("solved-with-help");
+    expect(h.last("game-state-change")?.status).toBe("solved-with-help");
   });
 });
 
@@ -376,11 +358,6 @@ describe("save → moves → load reproduces vertex positions (move-log, no supe
 
   it("midend-level: saveGame → loadGame → identical re-save (moves persisted)", () => {
     const me = new Midend(untangleGame);
-    me.setCallbacks(
-      () => {},
-      () => {},
-      () => {},
-    );
     expect(me.newGameFromId("10#midend-save")).toBeNull();
     me.playMoves(playthrough());
     const saved = me.saveGame();
@@ -390,11 +367,6 @@ describe("save → moves → load reproduces vertex positions (move-log, no supe
     expect(env.moves.length).toBe(3);
 
     const me2 = new Midend(untangleGame);
-    me2.setCallbacks(
-      () => {},
-      () => {},
-      () => {},
-    );
     expect(me2.loadGame(saved)).toBeNull();
     // Re-saving the loaded game yields the same bytes — desc + move log
     // (and thus every reconstructed position) round-tripped exactly.
@@ -405,11 +377,6 @@ describe("save → moves → load reproduces vertex positions (move-log, no supe
 describe("preferences defaults", () => {
   it("ships show-crossed-edges ON, snap OFF, vertex-style Circles", () => {
     const me = new Midend(untangleGame);
-    me.setCallbacks(
-      () => {},
-      () => {},
-      () => {},
-    );
     me.newGameFromId("10#prefs");
     expect(me.getPreferences()).toEqual({
       "snap-to-grid": false,

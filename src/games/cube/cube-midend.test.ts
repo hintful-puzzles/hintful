@@ -3,9 +3,8 @@
 // notifications and that a redraw paints the board.
 import { beforeEach, describe, expect, it } from "vitest";
 import type { GameDrawing } from "../../engine/game.ts";
-import { Midend } from "../../engine/midend.ts";
 import { CURSOR_RIGHT } from "../../engine/pointer.ts";
-import type { ChangeNotification } from "../../engine/types.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { cubeGame } from "./index.ts";
 
 function recordingDrawing() {
@@ -31,18 +30,9 @@ function recordingDrawing() {
 }
 
 function harness() {
-  const notes: ChangeNotification[] = [];
-  const m = new Midend(cubeGame);
-  m.setCallbacks(
-    (n) => notes.push(n),
-    () => {},
-    () => {},
-  );
-  const status = () =>
-    [...notes].reverse().find((n) => n.type === "status-bar-change") as
-      | Extract<ChangeNotification, { type: "status-bar-change" }>
-      | undefined;
-  return { m, notes, status };
+  const h = driveMidend(cubeGame);
+  const status = () => h.last("status-bar-change");
+  return { m: h.midend, status };
 }
 
 describe("Cube midend lifecycle", () => {

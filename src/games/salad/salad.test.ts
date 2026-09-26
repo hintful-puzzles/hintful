@@ -19,10 +19,10 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
-import type { ChangeNotification } from "../../engine/types.ts";
 import { newSaladDesc } from "./generator.ts";
 import { saladGame } from "./index.ts";
 import { COL_MISTAKE, PREFERRED_TILE_SIZE } from "./render.ts";
@@ -351,21 +351,14 @@ describe("salad moves", () => {
   });
 
   it("Solve completes the board and reports solved-with-help", () => {
-    const notes: ChangeNotification[] = [];
-    const me = new Midend(saladGame);
-    me.setCallbacks(
-      (n) => notes.push(n),
-      () => {},
-      () => {},
-    );
+    const h = driveMidend(saladGame);
+    const me = h.midend;
     expect(me.newGameFromId(LETTERS_ID)).toBeNull();
     expect(me.solve()).toBeNull();
     const st = (me as unknown as { state: SaladState }).state;
     expect(st.completed).toBe(true);
     expect(st.cheated).toBe(true);
-    const status = [...notes].reverse().find((n) => n.type === "game-state-change") as
-      | Extract<ChangeNotification, { type: "game-state-change" }>
-      | undefined;
+    const status = h.last("game-state-change");
     expect(status?.status).toBe("solved-with-help");
     // A solver fill must not fire the win flash.
     expect(saladGame.flashLength?.(stateOf(play(LETTERS_ID)), st, 1, newUi(st))).toBe(

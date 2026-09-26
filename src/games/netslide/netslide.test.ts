@@ -20,11 +20,11 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import type { ChangeNotification } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import { netslideGame } from "./index.ts";
 import {
@@ -500,20 +500,10 @@ describe("netslide play", () => {
 
 /** Drive a midend and keep its notifications, so the status bar is observable. */
 function driven(id: string) {
-  const notes: ChangeNotification[] = [];
-  const me = new Midend(netslideGame);
-  me.setCallbacks(
-    (n) => notes.push(n),
-    () => {},
-  );
+  const h = driveMidend(netslideGame);
+  const me = h.midend;
   expect(me.newGameFromId(id)).toBeNull();
-  const statusBar = () =>
-    [...notes]
-      .reverse()
-      .find(
-        (n): n is Extract<ChangeNotification, { type: "status-bar-change" }> =>
-          n.type === "status-bar-change",
-      )?.statusBarText ?? "";
+  const statusBar = () => h.last("status-bar-change")?.statusBarText ?? "";
   return { me, statusBar };
 }
 
@@ -548,10 +538,6 @@ describe("netslide solve and save", () => {
     expect(statusBar()).toContain("Moves: 2");
 
     const me2 = new Midend(netslideGame);
-    me2.setCallbacks(
-      () => {},
-      () => {},
-    );
     expect(me2.loadGame(saved)).toBeNull();
 
     // The restored board must *draw* identically, not merely report the same

@@ -12,9 +12,9 @@ import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, LEFT_RELEASE, MIDDLE_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { decodeSave } from "../../engine/save.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import type { ChangeNotification } from "../../engine/types.ts";
 import { minegen } from "./generator.ts";
 import { minesGame } from "./index.ts";
 import { borderFor } from "./render.ts";
@@ -41,17 +41,10 @@ const openMove = (x: number, y: number): MinesMove => ({
 });
 
 function fresh(id: string) {
-  const notes: { type: string; currentGameId?: string }[] = [];
-  const m = new Midend(minesGame);
-  m.setCallbacks(
-    (n) => notes.push(n as { type: string; currentGameId?: string }),
-    () => {},
-    () => {},
-  );
-  expect(m.newGameFromId(id)).toBeNull();
-  const gameId = () =>
-    [...notes].reverse().find((n) => n.type === "game-id-change")?.currentGameId;
-  return { m, notes, gameId };
+  const h = driveMidend(minesGame);
+  expect(h.midend.newGameFromId(id)).toBeNull();
+  const gameId = () => h.last("game-id-change")?.currentGameId;
+  return { m: h.midend, gameId };
 }
 
 /** A genuinely covered cell (`?` in the text format) — a flag on an opened
@@ -263,11 +256,6 @@ describe("mines supersede + midend", () => {
     const data = h.m.saveGame();
 
     const m2 = new Midend(minesGame);
-    m2.setCallbacks(
-      () => {},
-      () => {},
-      () => {},
-    );
     expect(m2.loadGame(data)).toBeNull();
     expect(m2.formatAsText()).toBe(before);
     // Undo to state 0: rebuilt from the private desc (layout, no click), so the
@@ -494,27 +482,14 @@ describe("mines timer", () => {
   // Mines keeps upstream's clock through the engine's rule alone: the first
   // click is the first move, and a win is a solve.
   it("starts at the first click and stays stopped after a win", () => {
-    const notes: ChangeNotification[] = [];
-    let ticking = false;
-    const m = new Midend(minesGame);
-    m.setCallbacks(
-      (n) => notes.push(n),
-      (active) => {
-        ticking = active;
-      },
-    );
+    const { midend: m, last, timerActive: ticking } = driveMidend(minesGame);
     expect(m.newGameFromId(seedId("9x9n10", "timer"))).toBeNull();
-    const seconds = () =>
-      (
-        [...notes].reverse().find((n) => n.type === "timer-change") as
-          | Extract<ChangeNotification, { type: "timer-change" }>
-          | undefined
-      )?.timer?.seconds;
+    const seconds = () => last("timer-change")?.timer?.seconds;
 
     expect(seconds()).toBe(0);
-    expect(ticking).toBe(false);
+    expect(ticking()).toBe(false);
     m.playMoves([openMove(4, 4)]);
-    expect(ticking).toBe(true);
+    expect(ticking()).toBe(true);
     m.timer(7);
     expect(seconds()).toBe(7);
 
@@ -523,11 +498,11 @@ describe("mines timer", () => {
     expect(m.solve()).toBeNull();
     m.timer(5);
     expect(seconds()).toBe(7);
-    expect(ticking).toBe(false);
+    expect(ticking()).toBe(false);
     m.undo();
     m.timer(5);
     expect(seconds()).toBe(7);
-    expect(ticking).toBe(false);
+    expect(ticking()).toBe(false);
   });
 });
 

@@ -146,6 +146,27 @@ ground, and found Pegs, Sixteen, Mines and Pearl shipping black borders
 (`test-touch-on-a-real-device`). It does not see a margin that only a later
 frame opens up, so the two habits above still apply there.
 
+## Observing a midend
+
+A render scenario answers "what does this frame look like". The other question
+a midend-level test asks is **what the midend told the app** — the status bar,
+the game state, the id, the timer readout, whether it wants the clock, how
+often it asked for a repaint. Ask it through
+[`drive-midend.ts`](../../src/engine/testing/drive-midend.ts):
+
+```ts
+const h = driveMidend(cubeGame); // or observeMidend(aMidendYouHold)
+h.midend.newGameFromId("c3x3:000,4");
+expect(h.last("status-bar-change")?.statusBarText).toContain("Moves: 0");
+```
+
+`last(type)` is typed from its argument, so a call site never restates a
+notification's shape in a cast — a renamed field is a type error everywhere it
+is read, rather than a hand-written `Extract<…>` that went on compiling. It
+returns `null` when nothing of that type was sent. Clear `h.notes` to look only
+at what follows. A test that only needs the midend to run passes no callbacks at
+all: they are optional, and an all-no-op `setCallbacks` is ceremony.
+
 ## Render-op vocabulary
 
 **Know which primitive records as which op, or your assertion silently never

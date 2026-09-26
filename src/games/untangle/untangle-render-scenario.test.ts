@@ -185,11 +185,6 @@ describe("Untangle render scenarios", () => {
     // would leave the early-out armed) so the first `before` redraw is a
     // full paint.
     const midend = new Midend(untangleGame);
-    midend.setCallbacks(
-      () => {},
-      () => {},
-      () => {},
-    );
     midend.newGameFromId(id);
     const palette = untangleGame.colors(DEFAULT_BACKGROUND);
 

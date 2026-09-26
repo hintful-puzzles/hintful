@@ -1007,6 +1007,11 @@ starts drawing something new leaves it green. `opsOfKind(ops, "rect")` narrows
 the op union, which `Array.filter` will not do; `dr.updates` holds the
 `drawUpdate` rects, kept off `ops` so they are assertable without a line in
 every snapshot),
+`drive-midend.ts` (`driveMidend(game)` / `observeMidend(midend)` — **what a
+midend told the app**: the notifications, `last(type)` typed by its argument,
+`timerActive()` and `redraws()`. Every test that asks what a midend reported
+goes through it; do not hand-roll a `setCallbacks` recorder, and do not set
+all-no-op callbacks, which the midend does not need),
 `differential.ts` (`describeDescDifferential`, the byte-for-byte desc shape +
 the one statement that fixtures are frozen and unregenerable),
 `enrollment.ts` + `hint-games.ts` (**how a cross-game guard finds its

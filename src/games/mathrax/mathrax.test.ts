@@ -17,13 +17,13 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
-import type { ChangeNotification, GameStatus } from "../../engine/types.ts";
 import cReference from "./__fixtures__/mathrax-c-reference.json" with { type: "json" };
 import { mathraxCandidateClue, newMathraxDesc } from "./generator.ts";
 import { mathraxGame } from "./index.ts";
@@ -120,20 +120,9 @@ function press(
 }
 
 function harness() {
-  const notes: ChangeNotification[] = [];
-  const m = new Midend(mathraxGame);
-  m.setCallbacks(
-    (n) => notes.push(n),
-    () => {},
-    () => {},
-  );
-  const status = (): GameStatus | null =>
-    (
-      [...notes].reverse().find((n) => n.type === "game-state-change") as
-        | Extract<ChangeNotification, { type: "game-state-change" }>
-        | undefined
-    )?.status ?? null;
-  return { m, status };
+  const h = driveMidend(mathraxGame);
+  const status = () => h.last("game-state-change")?.status ?? null;
+  return { m: h.midend, status };
 }
 
 /** The unique solution of a fixture board, from the givens alone. */

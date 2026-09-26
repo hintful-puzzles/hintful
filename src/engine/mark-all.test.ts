@@ -22,9 +22,9 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { registerAllGames } from "../games/index.ts";
 import { UI_UPDATE } from "./game.ts";
-import { Midend } from "./midend.ts";
 import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
+import { driveMidend } from "./testing/drive-midend.ts";
 import { type AnyGame, gatePresets } from "./testing/hint-games.ts";
 import { preferredDrawState } from "./testing/preferred-draw-state.ts";
 
@@ -234,21 +234,16 @@ describe("the chrome can tell a bare board from a marked one", () => {
    */
   for (const row of MARK_ALL_GAMES) {
     it(`${row.name}: reports no marks on a fresh board, and marks after a press`, () => {
-      const m = new Midend(row.game);
-      const seen: boolean[] = [];
-      m.setCallbacks(
-        (n) => {
-          if (n.type === "game-state-change") seen.push(n.hasPencilMarks);
-        },
-        () => {},
-      );
+      const d = driveMidend(row.game);
+      const m = d.midend;
+      const marked = () => d.last("game-state-change")?.hasPencilMarks;
       m.newGame();
-      expect(seen.at(-1), `${row.name}: a fresh board has no pencil marks`).toBe(false);
+      expect(marked(), `${row.name}: a fresh board has no pencil marks`).toBe(false);
 
       // 'M' (77) is the Mark-all press the chrome injects.
       expect(m.processInput(0, 0, 77), `${row.name}: the press did nothing`).toBe(true);
       expect(
-        seen.at(-1),
+        marked(),
         `${row.name}: pencil marks were written but the board still reports none`,
       ).toBe(true);
     });

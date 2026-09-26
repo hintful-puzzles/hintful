@@ -9,7 +9,6 @@
  */
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
-import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
@@ -19,10 +18,10 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { colorToOKLCH } from "../../engine/testing/oklch.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import type { ChangeNotification, GameStatus } from "../../engine/types.ts";
 import cReference from "./__fixtures__/crossing-c-reference.json" with { type: "json" };
 import { newCrossingDesc } from "./generator.ts";
 import { crossingGame } from "./index.ts";
@@ -123,20 +122,9 @@ const cellCenter = (x: number, y: number): { x: number; y: number } => ({
 
 /** A midend plus a reader of the last notified game status. */
 function harness() {
-  const notes: ChangeNotification[] = [];
-  const m = new Midend(crossingGame);
-  m.setCallbacks(
-    (n) => notes.push(n),
-    () => {},
-    () => {},
-  );
-  const status = (): GameStatus | null =>
-    (
-      [...notes].reverse().find((n) => n.type === "game-state-change") as
-        | Extract<ChangeNotification, { type: "game-state-change" }>
-        | undefined
-    )?.status ?? null;
-  return { m, status };
+  const h = driveMidend(crossingGame);
+  const status = () => h.last("game-state-change")?.status ?? null;
+  return { m: h.midend, status };
 }
 
 // ---------------------------------------------------------------------------

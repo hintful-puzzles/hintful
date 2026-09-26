@@ -20,6 +20,7 @@ import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { decodeSave, encodeSave } from "../../engine/save.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
+import { observeMidend } from "../../engine/testing/drive-midend.ts";
 import { newBridgesDesc } from "./generator.ts";
 import { type BridgesHighlights, narrate } from "./hint.ts";
 import { say } from "./hint-text.ts";
@@ -576,18 +577,13 @@ describe("a board shared without its difficulty", () => {
 
     for (const me of [byId, bySave]) {
       expect(decodeParams(me.getParams()).difficulty).toBe(1);
-      let status = "";
-      me.setCallbacks(
-        (n) => {
-          if (n.type === "game-state-change") status = n.status;
-        },
-        () => {},
-      );
-      for (let moves = 0; !status.startsWith("solved") && moves < 200; moves++) {
+      const o = observeMidend(me);
+      const status = () => o.last("game-state-change")?.status ?? "";
+      for (let moves = 0; !status().startsWith("solved") && moves < 200; moves++) {
         expect(me.executeHint()).toBeNull();
         me.timer(10);
       }
-      expect(status).toMatch(/^solved/);
+      expect(status()).toMatch(/^solved/);
     }
   });
 });
