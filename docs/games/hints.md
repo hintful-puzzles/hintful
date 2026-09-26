@@ -2702,7 +2702,9 @@ there was nothing to say; there was a number all along.
   first leg cuts crossings without moving a placed point, and a journey that
   leaves crossings behind moves no placed point at all. Three cycles were
   found, all recomputing after every step, before that was the rule
-  (`shorten-the-untangle-endgame` design D8).
+  (`shorten-the-untangle-endgame` design D8). Flipping a "mirrored" piece whole
+  was tried next and did not help (`unflip-a-mirrored-untangle-cluster`, in
+  `openspec/postmortems/`).
 - **Short plans.** Every step is a fresh measurement and the midend recomputes
   when a plan runs out, so cap the plan (six steps) and keep each request cheap.
   End it early, too, once the next request might find something better: here,
@@ -2729,6 +2731,39 @@ crossing-free layout from the edges alone
 [`planar.ts`](../../src/games/untangle/planar.ts)), prefers `aux` only because
 the generator's layout is tidier, and verifies every layout with the game's own
 exact test before a player sees it. Solve shares the same layout.
+
+### Judging an idea for a heuristic plan
+
+A deductive hint is right or wrong. A heuristic plan is better or worse, so an
+idea for one has to be measured, and Untangle's endgame work shows three ways
+the measurement lies.
+
+- **Reproduce the baseline first, on a fixed population, following hints to
+  the end.** Use named seeds and both kinds of start (the generator's board and
+  a scrambled one). Walk each board to solved by applying whole plans, as the
+  app does, and count moves. If today's code doesn't reproduce the recorded
+  figure, the instrument is wrong or the code has moved, and nothing measured
+  against it means anything. On Untangle's eight 25-point boards a change of
+  about half a move in the average was noise.
+- **Probe under the constraints the plan must ship with.** A feasibility probe
+  that leaves out a shipping constraint measures a different idea. Untangle's
+  probe for flipping a mirrored piece skipped the clearance gaps and suggested
+  many finishes. With the gaps in place, 3 of 111 placements survived and the
+  average did not move. The constraints that matter are usually the ones
+  already in the code: clearance and presentation rules, the termination rule
+  that keeps a recomputed plan from cycling (§ "Recompute-stable plans"), and
+  the per-request work budget. Put all of them in the probe from the start, or
+  measure how much each one filters and report it.
+- **Check a theorem's hypotheses on the boards the generator makes.** Untangle's
+  neighbor-order signal rests on a 3-connected planar graph having one embedding
+  up to mirroring. Generated graphs often are not 3-connected, so a point in
+  "mirror order" is often a legitimate alternative, and a design that treated
+  the signal as proof (move these points) failed twice. Use such a signal to
+  rank candidates. Before it can decide anything, measure how often its
+  hypothesis holds on generated boards.
+
+When an idea fails these tests, withdraw it with a postmortem that says what
+would reopen it, and fix any comment or doc that states the disproved cause.
 
 ### A non-deductive game with plenty to say
 
