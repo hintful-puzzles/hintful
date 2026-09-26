@@ -1,0 +1,4 @@
+# No delta: moving tests onto an existing test helper changes no requirement.
+schema: spec-driven
+skip_specs: true
+created: 2026-09-26
