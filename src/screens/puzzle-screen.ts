@@ -867,6 +867,13 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     const { puzzle } = event.detail;
     event.preventDefault(); // We'll set up our own new game (or restore one from autoSave)
 
+    // `this.puzzle` reads through a `@query`, which is not reactive, and the
+    // first render ran before the puzzle existed. Without this the phone bar
+    // keeps that puzzle-less render — no Hint, no Fill marks — until
+    // `puzzleLoaded` is set, which waits for the first board to be dealt: on a
+    // slow phone, seconds with Hint missing from the bar but present in More.
+    this.requestUpdate();
+
     await settings.loaded;
     const prefs = await settings.getPuzzlePreferences(puzzle.puzzleId);
     await puzzle.setPreferences(prefs);
@@ -874,14 +881,16 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     // Set up the default params for all new games in this session.
     // Prefer the url's ?type=<params> if provided from the router and valid.
     // Otherwise, try the last used params stored in our settings.
-    // (If nothing works, every puzzle has its own defaults.)
+    // Otherwise the first preset: see below.
     // This applies even when puzzleGameId is provided, to set the default
     // params for subsequent new games.
     const settingsParams = await settings.getParams(puzzle.puzzleId);
+    let paramsChosen = false;
     for (const params of [this.params, settingsParams]) {
       if (params) {
         const error = await puzzle.setParams(params);
         if (!error) {
+          paramsChosen = true;
           break; // successfully set default params
         }
         console.warn(
@@ -897,6 +906,22 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
             message: `type=${params}: ${error}`,
             type: "warning",
           });
+        }
+      }
+    }
+    if (!paramsChosen) {
+      // A player who has never chosen a type starts on the first preset, not
+      // on the game's `defaultParams()`, which is often a mid-sized, mid-tier
+      // board and slower to deal (owner, 2026-09-26: "on every fresh use, we
+      // have it use the easiest game type"). Every presets menu ran smallest
+      // and easiest first when all of them were read on that date.
+      const first = (await puzzle.getPresets(true)).find((entry) => !entry.submenu);
+      if (first) {
+        const error = await puzzle.setParams(first.params);
+        if (error) {
+          throw new Error(
+            `${puzzle.puzzleId} rejects its own first preset "${first.params}": ${error}`,
+          );
         }
       }
     }

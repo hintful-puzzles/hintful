@@ -393,7 +393,15 @@ function makeLoadPuzzle(opts: { rejectId?: (id: string) => string | null } = {})
     currentGameId: "",
     restoreGameId: "",
     setPreferences: vi.fn(async () => undefined),
-    setParams: vi.fn(async () => null),
+    setParams: vi.fn(async (_params: string) => null),
+    // The flattened form, a submenu's heading before its members, as
+    // `Puzzle.getPresets(true)` returns it: the heading carries no params of
+    // its own to deal, so the first *leaf* is the first preset.
+    getPresets: vi.fn(async (_flat?: boolean) => [
+      { title: "4x4", params: "", submenu: [{ title: "4x4 Easy", params: "4x4n4d0" }] },
+      { title: "4x4 Easy", params: "4x4n4d0" },
+      { title: "5x5 Normal", params: "5x5n4d1" },
+    ]),
     newGame: vi.fn(async () => {
       dealt += 1;
       puzzle.restoreGameId = `5x5n4d1:fresh-${dealt}`;
@@ -557,6 +565,47 @@ describe("which board a puzzle page opens with", () => {
     expect(showAlert).not.toHaveBeenCalled();
     // ...and forgot it, so the next load does not retry the same failure.
     expect(await settings.getLastGameId("abcd")).not.toBe(stale);
+  });
+
+  it("deals a player who never chose a type the first preset", async () => {
+    const puzzle = makeLoadPuzzle();
+    await load(puzzle);
+    expect(puzzle.setParams).toHaveBeenCalledWith("4x4n4d0");
+    // Before the deal, or the first board is dealt at the game's defaults.
+    expect(puzzle.setParams.mock.invocationCallOrder[0]).toBeLessThan(
+      puzzle.newGame.mock.invocationCallOrder[0],
+    );
+  });
+
+  it("keeps a type the player chose, from settings or from the URL", async () => {
+    await settings.setParams("abcd", "6x6n4");
+    const remembered = makeLoadPuzzle();
+    await load(remembered);
+    expect(remembered.setParams.mock.calls).toEqual([["6x6n4"]]);
+
+    await settings.setParams("abcd", null);
+    const asked = makeLoadPuzzle();
+    await load(asked, { params: "7x7n3" });
+    expect(asked.setParams.mock.calls).toEqual([["7x7n3"]]);
+  });
+
+  it("redraws its chrome once the puzzle exists, without waiting for the deal", async () => {
+    // The phone bar reads the puzzle through a non-reactive `@query`, so a
+    // render requested only by `puzzleLoaded` left Hint off the bar for as long
+    // as the first board took to deal.
+    const puzzle = makeLoadPuzzle();
+    const screen = new PuzzleScreen();
+    const requestUpdate = vi.spyOn(screen, "requestUpdate");
+    let rendersBeforeDeal = -1;
+    puzzle.newGame.mockImplementationOnce(async () => {
+      rendersBeforeDeal = requestUpdate.mock.calls.length;
+    });
+    const loaded = (
+      screen as unknown as { handlePuzzleLoaded: (e: unknown) => Promise<void> }
+    ).handlePuzzleLoaded;
+    await loaded.call(screen, { detail: { puzzle }, preventDefault: vi.fn() });
+    expect(puzzle.newGame).toHaveBeenCalled();
+    expect(rendersBeforeDeal).toBeGreaterThan(0);
   });
 
   it("still alerts for a bad game id in the URL, which the player did ask for", async () => {
