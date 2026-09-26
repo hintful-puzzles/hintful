@@ -24,7 +24,7 @@ Unreasonable, held as the values `"easy"`, `"hard"`, `"extreme"` and
 otherwise, with presets at 4×4 Easy, 5×5 Easy/Normal, and 6×6
 Easy/Normal/Tricky/Unreasonable. `validateParams` SHALL require `3 ≤ w ≤ 9` and
 (when full) a known difficulty. The game SHALL report `wantsStatusbar = false`,
-`isTimed = false`, `canSolve = true`, and `canFormatAsText = true`.
+`canSolve = true`, and `canFormatAsText = true`.
 
 #### Scenario: Params round-trip
 

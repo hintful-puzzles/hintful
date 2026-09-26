@@ -18,7 +18,7 @@ numbers contains exactly `n` cells. Params SHALL be `w` and `h`, encoded
 `{w}x{h}`, with presets 7×9, 9×13 (default), and 13×17: upstream's sizes turned to
 draw taller than wide. `validateParams` SHALL
 require `w ≥ 1`, `h ≥ 1`, and `w·h` not unreasonably large. The game SHALL
-report `wantsStatusbar = false`, `isTimed = false`, `canSolve = true`, and
+report `wantsStatusbar = false`, `canSolve = true`, and
 `canFormatAsText = true`.
 
 #### Scenario: Params round-trip

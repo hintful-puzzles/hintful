@@ -7010,7 +7010,7 @@ square's repaint on the sides drawn around it rather than on its role alone.
 ### Requirement: Every game has a solve timer, and the engine decides when it runs
 
 The midend SHALL offer a `show-timer` boolean preference ("Show timer") in every game, beside
-the game's own `prefs`, defaulting to the game's `isTimed`. While it is on, the midend SHALL
+the game's own `prefs`, on by default; no game declares anything to have it. While it is on, the midend SHALL
 count elapsed time only while the player is solving: after the first move of the board, while
 the status is `ongoing`, while the game's optional `timerHolds(state)` is not true, and while
 the frontend has not paused it (`setTimerPaused`, which the app sets while the page is hidden).
@@ -7022,8 +7022,8 @@ the time. The midend SHALL report the timer as a `timer-change` notification car
 
 #### Scenario: A game that does not ask for a timer offers one
 
-- **WHEN** a game with `isTimed = false` and no `prefs` of its own is started
-- **THEN** its preferences include `show-timer`, off, and the timer reports `null`
+- **WHEN** a game with no `prefs` of its own, and nothing about a clock, is started
+- **THEN** its preferences include `show-timer`, on, and the timer reports zero seconds
 
 #### Scenario: The timer counts from the first move
 

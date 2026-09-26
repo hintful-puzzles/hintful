@@ -5,7 +5,9 @@ Flood, the puzzle of turning the whole grid one color within a move limit by
 repeatedly flood-filling from the top-left corner. This capability specifies its
 port to the TS engine: pure fill and solve moves, win and lose status, and a
 hint plan backed by the solver.
+
 ## Requirements
+
 ### Requirement: Flood game implements the Game interface
 
 The engine SHALL provide a registered `flood` game implementing
@@ -16,7 +18,7 @@ whole grid is one color within a move limit. Params SHALL be `w`, `h`,
 appended when `full`, with lenient decode (a bare `W` yields a square `W×W`
 board). The seven upstream presets SHALL be offered. `validateParams` SHALL
 reject `w·h < 2`, `colors` outside 3–10, and negative `leniency`. The game
-SHALL report `wantsStatusbar = true`, `isTimed = false`, `canSolve = true`,
+SHALL report `wantsStatusbar = true`, `canSolve = true`,
 `canFormatAsText = true`, and SHALL NOT provide `findMistakes` (no per-move
 mistake; the failure mode is the lose status).
 
@@ -98,4 +100,3 @@ player makes the step's fill and drop it otherwise.
 - **WHEN** the player makes the current step's fill
 - **THEN** `hintKeepTrack` reports it completed and the plan advances
 - **AND** a different fill reports `"off"`
-

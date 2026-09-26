@@ -26,7 +26,7 @@ difficulties) SHALL be offered. `validateParams` SHALL reject an odd or
 below-6 dimension, an unreasonably large `w2·h2`, a `unique`-mode grid too tall
 or too long for any valid set of distinct rows (the A177790 bound), and an
 unknown difficulty. The game SHALL report `wantsStatusbar = false`,
-`isTimed = false`, `canSolve = true`, and `canFormatAsText = true`.
+`canSolve = true`, and `canFormatAsText = true`.
 
 #### Scenario: Params round-trip
 

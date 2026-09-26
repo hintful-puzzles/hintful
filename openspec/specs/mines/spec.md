@@ -22,8 +22,7 @@ with a custom `n%` form meaning "percentage of area". Six presets (9×9/10,
 board turned to draw taller than wide, SHALL be offered. `validateParams` SHALL
 require `n ≥ 1` and `n ≤ w·h − 9`, and additionally `w > 2 && h > 2` when `unique`.
 
-The game SHALL report `canSolve = true`, `canFormatAsText = true`, `wantsStatusbar = true`
-and `isTimed = true`.
+The game SHALL report `canSolve = true`, `canFormatAsText = true`, and `wantsStatusbar = true`.
 
 #### Scenario: Params round-trip
 
@@ -117,8 +116,7 @@ quick-save, as it does for every other game without `findMistakes`.
 
 ### Requirement: The clock reflects the state of play
 
-Mines SHALL show the solve timer by default (`isTimed = true`), and SHALL leave when it runs
-to the engine's rule, stating only that a dead board holds it (`timerHolds`). The timer SHALL
+Mines SHALL leave when its solve timer runs to the engine's rule, stating only that a dead board holds it (`timerHolds`). The timer SHALL
 therefore not run before the first click (there is no board yet), SHALL run during play, and
 SHALL stop on death, on completion, and once the game has been completed even if the player
 subsequently undoes. Solve on a live board SHALL complete it, so the game reports

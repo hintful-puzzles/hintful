@@ -20,7 +20,7 @@ and `movetarget`, encoded as `WxHnN` with trailing `r` (rowsonly) / `o`
 yields a square `W×W` board, default `n = 2`). The eight upstream presets SHALL
 be offered. `validateParams` SHALL reject `n < 2`, `w < n`, `h < n`, an
 unreasonably large `w·h`, and a negative `movetarget`. The game SHALL report
-`wantsStatusbar = true`, `isTimed = false`, `canSolve = true`, and
+`wantsStatusbar = true`, `canSolve = true`, and
 `canFormatAsText = true`. It SHALL NOT provide a `findMistakes` hook (every
 reachable position is legal) and SHALL NOT provide a `hint` hook (no upstream
 human solver exists for subsquare rotation).

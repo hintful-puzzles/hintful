@@ -1,0 +1,5 @@
+# No delta yet: a test harness may need no requirement at all, or one line in
+# repo-layout's testing tiers; decided when the driver's shape is.
+schema: spec-driven
+created: 2026-09-26
+skip_specs: true

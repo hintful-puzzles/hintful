@@ -18,7 +18,7 @@ an `w×h` grid of numbered tiles with one empty gap, solved when the tiles read
 encoded `WxH` with lenient decode (a bare `W` yields a square `W×W` board). The
 single upstream preset (`4x4`) SHALL be offered, and `validateParams` SHALL
 reject `w < 2` or `h < 2`. The game SHALL report `wantsStatusbar = true`,
-`isTimed = false`, `canSolve = true`, and `canFormatAsText = true`. It SHALL
+`canSolve = true`, and `canFormatAsText = true`. It SHALL
 NOT provide a `findMistakes` hook (every reachable position is legal).
 
 #### Scenario: Params round-trip and lenient decode

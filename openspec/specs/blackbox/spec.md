@@ -6,7 +6,9 @@ lasers in from its edge and reading whether each one hits a ball, is reflected
 back, or emerges, and where. This capability specifies its port to the TS
 engine, centered on the deterministic laser tracing that every reveal and every
 verdict on the player's guess rests on.
+
 ## Requirements
+
 ### Requirement: Black Box game implements the Game interface
 
 The engine SHALL provide a registered `blackbox` game implementing
@@ -21,7 +23,7 @@ preset/custom **type summary** SHALL read `{w}x{h}, {n} balls` (or `{min}-{max}
 balls`) via a `no-of-balls` annotation key mapped in the worker adapter.
 `validateParams` SHALL reject `w < 2` or `h < 2`, `w > 255` or `h > 255`,
 `minballs < 1`, `minballs > maxballs`, and `minballs >= w*h`. The game SHALL
-report `wantsStatusbar = true`, `isTimed = false`, `canSolve = true`, and
+report `wantsStatusbar = true`, `canSolve = true`, and
 `canFormatAsText = false`, and SHALL NOT provide `hint` or `findMistakes`.
 
 #### Scenario: Params round-trip and lenient decode
@@ -150,4 +152,3 @@ session error counter shown in the status bar.
 
 - **WHEN** the player solves (gives up) or verifies with missed/wrong balls
 - **THEN** `status` returns `"lost"` and the missed balls are shown
-

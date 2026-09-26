@@ -31,7 +31,7 @@ tier names SHALL have a single definition in the game, read by both the preset
 menu and the custom-params dialog, so the two cannot disagree. `validateParams`
 SHALL require `3 ≤ order ≤ 32`, a known difficulty, and `order ≥ 5` for Adjacent
 puzzles of Tricky difficulty or harder. The game SHALL report
-`wantsStatusbar = false`, `isTimed = false`, `canSolve = true`,
+`wantsStatusbar = false`, `canSolve = true`,
 `canFormatAsText = true`, and `canMarkAll = true`.
 
 #### Scenario: Params round-trip

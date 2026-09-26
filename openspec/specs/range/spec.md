@@ -23,7 +23,7 @@ SHALL be offered. `validateParams` SHALL
 reject non-positive dimensions, a `w + h` that overflows the cell encoding,
 and (when `full`) the degenerate 1×1, 1×2, 2×1, and 2×2 grids that admit no
 good puzzle. The game SHALL report `wantsStatusbar = false`,
-`isTimed = false`, `canSolve = true`, and `canFormatAsText = true`.
+`canSolve = true`, and `canFormatAsText = true`.
 
 #### Scenario: Params round-trip
 

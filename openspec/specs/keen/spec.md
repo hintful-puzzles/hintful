@@ -24,8 +24,7 @@ tier is `"hard"`), and `multiplicationOnly`,
 encoded `{w}` without `full` and `{w}d{c}{m?}` with `full` (`c` =
 `e`/`n`/`h`/`x`/`u`; a trailing `m` for multiplication-only), with the upstream
 preset list. `validateParams` SHALL require `3 ≤ w ≤ 9` and a known difficulty.
-The game SHALL report `wantsStatusbar = false`, `isTimed = false`,
-`canSolve = true`, `canFormatAsText = false`, and `canMarkAll = true`.
+The game SHALL report `wantsStatusbar = false`, `canSolve = true`, `canFormatAsText = false`, and `canMarkAll = true`.
 
 #### Scenario: Params round-trip
 

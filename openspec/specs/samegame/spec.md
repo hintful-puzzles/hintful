@@ -25,7 +25,7 @@ tall board is a different game from a wide one, not the same one turned.
 `validateParams` SHALL require `w ≥ 1`, `h ≥ 1`, `ncols ≤ 9`, `scoresub ∈ {1,2}`,
 and — when soluble — `ncols ≥ 3` and `w·h > 1`, or — when not soluble —
 `ncols ≥ 2` and `w·h ≥ 2·ncols`. The game SHALL report `wantsStatusbar = true`,
-`isTimed = false`, `canSolve = false`, and `canFormatAsText = true`, and SHALL
+`canSolve = false`, and `canFormatAsText = true`, and SHALL
 NOT provide `solve`, `hint`, or `findMistakes`.
 
 #### Scenario: Params round-trip and lenient decode

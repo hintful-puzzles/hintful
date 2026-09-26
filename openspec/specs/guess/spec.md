@@ -21,7 +21,7 @@ ignored). The two upstream presets — **Standard** (`6,4,10,false,true`) and
 **Super** (`8,5,12,false,true`) — SHALL be offered. `validateParams` SHALL reject
 `ncolors < 2` or `npegs < 2`, `ncolors > 10`, `nguesses < 1`, and
 `allowMultiple = false` with `ncolors < npegs`. The game SHALL report
-`wantsStatusbar = true`, `isTimed = false`, `canSolve = true`, and
+`wantsStatusbar = true`, `canSolve = true`, and
 `canFormatAsText = false`, and SHALL NOT provide `findMistakes`.
 
 #### Scenario: Params round-trip and lenient decode

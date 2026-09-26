@@ -25,8 +25,7 @@ and `"tricky"`), encoded `{w}x{h}` without `full` and `{w}x{h}d{c}` with `full`
 the forcing rung, which runs the deduction fixpoint from a hypothesis; its
 difficulty character stays `t`, so an existing game ID names the same board.
 `validateParams` SHALL require `w ≥ 3`, `h ≥ 3`, `w·h ≤ 54`, and a known
-difficulty. The game SHALL report `wantsStatusbar = false`, `isTimed = false`,
-`canSolve = true`, `canFormatAsText = true`, and `canMarkAll = true`.
+difficulty. The game SHALL report `wantsStatusbar = false`, `canSolve = true`, `canFormatAsText = true`, and `canMarkAll = true`.
 
 #### Scenario: Params round-trip
 

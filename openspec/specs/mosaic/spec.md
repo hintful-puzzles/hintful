@@ -23,7 +23,7 @@ upstream presets — 3×3, 5×5, 10×10, 15×15, 25×25 (aggressive) and 50×50
 the `width`/`height`/`aggressive-generation` config keys with `aggressive`
 surfaced as a boolean. `validateParams` SHALL reject boards smaller than 3×3
 or larger than 10000 tiles. The game SHALL report `wantsStatusbar = true`,
-`isTimed = false`, `canSolve = true`, and `canFormatAsText = true`.
+`canSolve = true`, and `canFormatAsText = true`.
 
 #### Scenario: Params round-trip
 

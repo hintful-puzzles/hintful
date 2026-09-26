@@ -21,7 +21,7 @@ SHALL be `w`, `h`, and `diff` (Easy or Normal), encoded `{w}x{h}d{c}` when full
 (`c` = `e`/`k`) and `{w}x{h}` otherwise, with presets at 5×5, 6×6, 8×8, 10×10,
 and 12×12 in both Easy and Normal. `validateParams` SHALL require `w ≥ 2`,
 `h ≥ 2`, both `≤ 62`, and (when full) a known difficulty. The game SHALL report
-`wantsStatusbar = false`, `isTimed = false`, `canSolve = true`, and
+`wantsStatusbar = false`, `canSolve = true`, and
 `canFormatAsText = true`.
 
 #### Scenario: Params round-trip
