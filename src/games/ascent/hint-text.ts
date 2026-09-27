@@ -258,7 +258,8 @@ export const say = {
    * The whole run between `from` and `to` has one route: through the empty
    * squares at all ("plain"), through every striped square no other run can
    * reach ("must"), or the only one leaving the run between `room.from` and
-   * `room.to` a way through what is left ("room").
+   * `room.to` a way through what is left ("room"). `arrows` when, in Edges mode,
+   * the numbers' arrows are what leave only that route.
    */
   wholeRun: (
     from: number | null,
@@ -267,8 +268,17 @@ export const say = {
       | { kind: "plain" }
       | { kind: "must" }
       | { kind: "room"; from: number | null; to: number | null },
+    arrows = false,
   ): string => {
     const run = runName(from, to);
+    // Edges: the arrows are why there is one route, so the sentence says so.
+    // The route is "the one drawn", since "the line" would read as an arrow's.
+    if (arrows && why.kind === "plain")
+      return `With each number on its arrow's line, ${run} has only one route, so it must take the one drawn.`;
+    if (arrows && why.kind === "must") {
+      const said = `No other run reaches the striped squares, so ${run} must take them, on the one route its arrows allow.`;
+      if (said.length <= GLANCE) return said;
+    }
     if (why.kind === "must")
       return `No other run reaches the striped squares, so ${run} must take them all, and only one route does.`;
     if (why.kind === "room")

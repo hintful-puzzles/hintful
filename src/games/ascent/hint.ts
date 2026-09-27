@@ -133,6 +133,9 @@ export type HintReason =
       /** The neighboring run, by its first number, when the route is the only
        * one leaving that run a way through the squares that remain. */
       room: number | null;
+      /** Edges: the route is the only one because each number keeps to its
+       * arrow's line; ignoring the arrows, there are more. */
+      arrows: boolean;
       tier: number;
     };
 
@@ -490,9 +493,16 @@ function wholeRun(first: AscentFiring, tier: number): AscentFiring | null {
     }
   }
   if (!route) return null;
+  // Say the arrows decide it only when a count without them finds another
+  // route; a count that gave up has shown nothing either way.
+  const loose =
+    before.mode === MODE_EDGES && room === null
+      ? runRoutes(before, run, must, 2, false)
+      : null;
+  const arrows = loose !== null && loose.length > 1;
   const cells = route.map((cell, k) => ({ cell, n: run.lo + k }));
   return {
-    reason: { kind: "wholeRun", cells, must, room, tier },
+    reason: { kind: "wholeRun", cells, must, room, arrows, tier },
     n: first.n,
     cell: first.cell,
     before,
@@ -736,13 +746,16 @@ const ROUTE_SEARCH_LIMIT = 200_000;
  * from the placed number at one end to the one at the other, taking in every
  * square of `must`, and in Edges mode keeping each number on its arrow's line.
  * Stops at `limit`: two answers "is there exactly one?", more lists them all
- * when there are few. `null` when the search gives up first.
+ * when there are few. `null` when the search gives up first. Without
+ * `onArrows`, the arrows are ignored: whether they are what makes a route the
+ * only one.
  */
 function runRoutes(
   state: AscentState,
   run: Run,
   must: readonly number[],
   limit = 2,
+  onArrows = true,
 ): number[][] | null {
   const { w, h, grid } = state;
   const len = run.hi - run.lo + 1;
@@ -753,9 +766,10 @@ function runRoutes(
   const numberAt = (k: number) => (forward ? run.lo + k : run.hi - k);
   const far = forward ? run.b : run.a;
   const arrows = new Map<number, number>();
-  grid.forEach((v, i) => {
-    if (isNumberEdge(v)) arrows.set(fromNumberEdge(v), i);
-  });
+  if (onArrows)
+    grid.forEach((v, i) => {
+      if (isNumberEdge(v)) arrows.set(fromNumberEdge(v), i);
+    });
   const mustSet = new Set(must);
   const found: number[][] = [];
   const path: number[] = [];
@@ -876,7 +890,14 @@ export function stepOf(f: AscentFiring): AscentStep {
               to: other.b ? shown(other.b.m) : null,
             }
           : { kind: f.reason.must.length > 0 ? "must" : "plain" },
+        f.reason.arrows,
       );
+      // The arrows that keep the run to its route, when they are the reason.
+      if (f.reason.arrows)
+        for (const { n: m } of f.reason.cells) {
+          const a = arrowOf(before, m);
+          if (a >= 0) ends.push(a);
+        }
       const route = [
         ...(run.a ? [run.a.cell] : []),
         ...path,

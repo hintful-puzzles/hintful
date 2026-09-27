@@ -401,6 +401,7 @@ describe("every premise, restated from the board, singles out its square", () =>
     expect(firings.length).toBeGreaterThan(20);
     let withMust = 0;
     let withRoom = 0;
+    let withArrows = 0;
     for (const { board, firing } of firings) {
       if (firing.reason.kind !== "wholeRun") continue;
       const { before } = firing;
@@ -448,9 +449,27 @@ describe("every premise, restated from the board, singles out its square", () =>
         }
       }
       expect(stepOf(firing).highlights?.route.length, at).toBeGreaterThan(cells.length);
+      // "With each number on its arrow's line": only when, counted here with
+      // the arrows ignored, the run has another route; then the run's arrows
+      // are outlined.
+      const { explanation, highlights } = stepOf(firing);
+      const said = /arrow/.test(explanation);
+      if (firing.reason.arrows || said) {
+        withArrows++;
+        // A "must" sentence too long to add the arrows keeps its old words.
+        expect(firing.reason.arrows, `${at}: "${explanation}"`).toBe(true);
+        if (!said) expect(must.length, `${at}: "${explanation}"`).toBeGreaterThan(0);
+        expect(listRoutes(before, run, must, 2, false).length, at).toBe(2);
+        for (const m of run) {
+          const a = arrowOf(before, m);
+          if (a >= 0) expect(highlights?.area, at).toContain(a);
+        }
+      } else if (board.params.mode === MODE_EDGES && room === null)
+        expect(listRoutes(before, run, must, 2, false).length, at).toBe(1);
     }
     expect(withMust).toBeGreaterThan(0);
     expect(withRoom).toBeGreaterThan(0);
+    expect(withArrows).toBeGreaterThan(0);
   });
 
   it("Edges lines: the square is the one on its line near every line and number named", () => {
@@ -578,6 +597,7 @@ function listRoutes(
   run: number[],
   must: number[],
   cap: number,
+  onArrows = true,
 ): number[][] {
   const { w, h, grid, mode, last } = state;
   let reversed = false;
@@ -610,7 +630,7 @@ function listRoutes(
     for (const c of empties) {
       if (used.includes(c) || (prev >= 0 && !adj(prev, c))) continue;
       if (to >= 0 && stepDistance(c, to, w, mode) > run.length - k) continue;
-      const a = arrow(run[k]);
+      const a = onArrows ? arrow(run[k]) : -1;
       if (a >= 0 && !isEdgeValid(a, c, w, h)) continue;
       used.push(c);
       place(k + 1);
