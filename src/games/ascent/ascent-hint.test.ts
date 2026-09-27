@@ -33,12 +33,12 @@ import {
   moveOf,
   runShortfall,
   runsOf,
-  squaresWithin,
   stepOf,
   whyNotEnd,
 } from "./hint.ts";
 import { ascentGame } from "./index.ts";
 import { executeAscentMove } from "./moves.ts";
+import { type Placed, readBoard, squaresMeeting } from "./premises.ts";
 import {
   type AscentParams,
   type AscentState,
@@ -184,6 +184,20 @@ function arrowOf(state: AscentState, n: number): number {
   return state.grid.findIndex((v) => isNumberEdge(v) && fromNumberEdge(v) === n);
 }
 
+/** The shape of the line `arrow` points along, read off its place on the
+ * border: a side's middle squares hold rows or columns, a corner a diagonal. */
+function shapeOf(state: AscentState, arrow: number): string {
+  const { w, h } = state;
+  const [r, c] = [Math.trunc(arrow / w), arrow % w];
+  if (r > 0 && r < h - 1) return "row";
+  if (c > 0 && c < w - 1) return "column";
+  return "diagonal";
+}
+
+/** The empty squares on `arrow`'s line (any, at -1) within reach of every bound. */
+const squaresWithin = (state: AscentState, bounds: readonly Placed[], arrow: number) =>
+  squaresMeeting(readBoard(state), arrow, bounds);
+
 /** The numbers missing from the board. */
 function missing(state: AscentState): number[] {
   const placed = new Set(state.grid.filter((v) => v >= 0));
@@ -230,7 +244,10 @@ describe("every premise, restated from the board, singles out its square", () =>
         expect(explanation, at).toContain(String(b.m + 1));
         expect(highlights?.area, at).toContain(b.cell);
       }
-      expect(explanation.includes("arrow"), at).toBe(arrow >= 0);
+      expect(
+        explanation.match(/ on its (row|column|diagonal)\b/)?.[1] ?? null,
+        at,
+      ).toBe(arrow < 0 ? null : shapeOf(firing.before, arrow));
       expect((highlights?.hatch.length ?? 0) > 0, at).toBe(arrow >= 0);
     }
     // Vacuity: the arrow branch ran.
@@ -457,7 +474,11 @@ describe("every premise, restated from the board, singles out its square", () =>
           expect(p.arrow, at).toBe(arrowOf(before, p.m));
           lineNamed++;
         }
-        expect(explanation, at).toContain(String(p.m + 1));
+        expect(explanation, at).toContain(
+          p.arrow === null
+            ? String(p.m + 1)
+            : `${p.m + 1}'s ${shapeOf(before, p.arrow)}`,
+        );
         expect(highlights?.area, at).toContain(p.arrow ?? p.cell);
       }
       expect(

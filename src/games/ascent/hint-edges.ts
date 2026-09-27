@@ -24,34 +24,21 @@
  * change a hint on any other board.
  */
 
-import type { AscentState } from "./state.ts";
 import {
+  allows,
+  type Premise,
+  premisesOf,
+  readBoard,
+  squaresMeeting,
+  squaresOnLine,
+} from "./premises.ts";
+import {
+  type AscentState,
   CELL_NONE,
   DIFF_HARD,
   DIFF_TRICKY,
-  fromNumberEdge,
-  isBorderCell,
   isEdgeValid,
-  isNumberEdge,
-  NUMBER_EMPTY,
-  stepDistance,
-  updatePositions,
 } from "./state.ts";
-
-/** The shape of an arrow's line, as a sentence names it. */
-export type LineKind = "row" | "column" | "diagonal";
-
-/**
- * What a number's square must be near: number `m`, `d` places from it in the
- * sequence. Placed, `m` is measured from its square (`cell`); missing, from its
- * arrow's line (`arrow`, the border square).
- */
-export interface Premise {
-  m: number;
-  d: number;
-  cell: number | null;
-  arrow: number | null;
-}
 
 /** A number ruled out of a square, and the premise it fails there. */
 export interface RuledOut {
@@ -63,85 +50,6 @@ export interface RuledOut {
 
 /** The most premises a `lines` sentence names beside the number's own line. */
 const MOST_PREMISES = 3;
-
-/** The border square holding each missing number's arrow, and where the
- * placed ones stand. */
-interface EdgesBoard {
-  state: AscentState;
-  positions: Int32Array;
-  arrows: Int32Array;
-  empty: number[];
-}
-
-function edgesBoard(state: AscentState): EdgesBoard {
-  const s = state.w * state.h;
-  const positions = new Int32Array(s);
-  updatePositions(positions, state.grid, s);
-  const arrows = new Int32Array(state.last + 1).fill(-1);
-  const empty: number[] = [];
-  state.grid.forEach((v, i) => {
-    if (isNumberEdge(v)) arrows[fromNumberEdge(v)] = i;
-    else if (v === NUMBER_EMPTY) empty.push(i);
-  });
-  return { state, positions, arrows, empty };
-}
-
-/** The squares inside the border along the line `arrow` points. */
-export function lineSquares(state: AscentState, arrow: number): number[] {
-  const { w, h } = state;
-  const out: number[] = [];
-  for (let i = 0; i < w * h; i++)
-    if (!isBorderCell(i, w, h) && isEdgeValid(arrow, i, w, h)) out.push(i);
-  return out;
-}
-
-export function lineKind(state: AscentState, arrow: number): LineKind {
-  const { w, h } = state;
-  const r = Math.trunc(arrow / w);
-  const c = arrow % w;
-  if (r > 0 && r < h - 1) return "row";
-  if (c > 0 && c < w - 1) return "column";
-  return "diagonal";
-}
-
-/**
- * Every premise on `n`: walking the sequence away from `n` on each side, each
- * missing number with an arrow, up to and including the first placed number.
- */
-function premisesOf(b: EdgesBoard, n: number): Premise[] {
-  const out: Premise[] = [];
-  const { last } = b.state;
-  for (const dir of [-1, 1]) {
-    for (let m = n + dir, d = 1; m >= 0 && m <= last; m += dir, d++) {
-      const cell = b.positions[m];
-      if (cell !== CELL_NONE) {
-        out.push({ m, d, cell, arrow: null });
-        break;
-      }
-      if (b.arrows[m] >= 0) out.push({ m, d, cell: null, arrow: b.arrows[m] });
-    }
-  }
-  return out;
-}
-
-/** Whether `sq` satisfies `p`: within `p.d` steps of its square or of an
- * empty square on its line. */
-function allows(b: EdgesBoard, p: Premise, sq: number): boolean {
-  const { w, mode } = b.state;
-  if (p.cell !== null) return stepDistance(sq, p.cell, w, mode) <= p.d;
-  const arrow = p.arrow as number;
-  return b.empty.some(
-    (e) => isEdgeValid(arrow, e, w, b.state.h) && stepDistance(sq, e, w, mode) <= p.d,
-  );
-}
-
-/** The empty squares on `n`'s line, or all of them when it has no arrow. */
-function ownSquares(b: EdgesBoard, n: number): number[] {
-  const arrow = b.arrows[n];
-  if (arrow < 0) return b.empty;
-  const { w, h } = b.state;
-  return b.empty.filter((e) => isEdgeValid(arrow, e, w, h));
-}
 
 /** Subsets of `xs` of size `k`, in order. */
 function* choose<T>(xs: readonly T[], k: number, from = 0): Generator<T[]> {
@@ -169,24 +77,25 @@ export function findLines(
   state: AscentState,
   focus: { lo: number; hi: number } | null,
 ): LinesFound | null {
-  const b = edgesBoard(state);
+  const b = readBoard(state);
   let best: LinesFound | null = null;
   const cost = (f: LinesFound) =>
     f.premises.length * 100 + Math.max(0, ...f.premises.map((p) => p.d));
   for (let n = 0; n <= state.last; n++) {
     if (b.positions[n] !== CELL_NONE) continue;
     if (focus && (n < focus.lo || n > focus.hi)) continue;
-    const own = ownSquares(b, n);
+    const own = b.arrows[n];
     const all = premisesOf(b, n).sort((x, y) => x.d - y.d);
-    const left = own.filter((sq) => all.every((p) => allows(b, p, sq)));
+    const left = squaresMeeting(b, own, all);
     if (left.length !== 1) continue;
     const cell = left[0];
     // The fewest premises that single the square out on their own.
+    const line = squaresOnLine(b, own);
     let chosen: Premise[] | null = null;
     for (let k = 1; k <= MOST_PREMISES && !chosen; k++)
       for (const ps of choose(all, k)) {
         if (!ps.some((p) => p.arrow !== null)) continue;
-        if (own.filter((sq) => ps.every((p) => allows(b, p, sq))).length === 1) {
+        if (line.filter((sq) => ps.every((p) => allows(b, p, sq))).length === 1) {
           chosen = ps;
           break;
         }
@@ -216,7 +125,7 @@ export function findPointers(
   state: AscentState,
   focus: { lo: number; hi: number } | null,
 ): PointersFound | null {
-  const b = edgesBoard(state);
+  const b = readBoard(state);
   const { w, h, last } = state;
   const premises = new Map<number, Premise[]>();
   const premisesFor = (m: number) => {

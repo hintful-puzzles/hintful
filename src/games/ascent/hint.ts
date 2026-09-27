@@ -33,14 +33,7 @@ import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import {
-  findLines,
-  findPointers,
-  lineKind,
-  lineSquares,
-  type Premise,
-  type RuledOut,
-} from "./hint-edges.ts";
+import { findLines, findPointers, type RuledOut } from "./hint-edges.ts";
 import {
   type Bound,
   type Count,
@@ -51,6 +44,15 @@ import {
   say,
 } from "./hint-text.ts";
 import { executeAscentMove } from "./moves.ts";
+import {
+  lineKind,
+  lineSquares,
+  type Placed,
+  type Premise,
+  premisesOf,
+  readBoard,
+  squaresMeeting,
+} from "./premises.ts";
 import {
   SolverScratch,
   solverOverlap,
@@ -75,7 +77,6 @@ import {
   movementForMode,
   NUMBER_EMPTY,
   stepDistance,
-  updatePositions,
 } from "./state.ts";
 
 /**
@@ -179,12 +180,7 @@ function neighbors(state: AscentState, i: number): number[] {
 }
 
 /** Where each number sits, `CELL_NONE` where it is missing. */
-function positionsOf(state: AscentState): Int32Array {
-  const s = state.w * state.h;
-  const positions = new Int32Array(s);
-  updatePositions(positions, state.grid, s);
-  return positions;
-}
+const positionsOf = (state: AscentState): Int32Array => readBoard(state).positions;
 
 /** What a technique found: the number, its square, and why. */
 interface Found {
@@ -568,59 +564,25 @@ function bracket(state: AscentState, n: number) {
 }
 
 /** The border square holding `n`'s arrow, or -1. */
-function arrowOf(state: AscentState, n: number): number {
-  const { grid } = state;
-  for (let i = 0; i < grid.length; i++)
-    if (isNumberEdge(grid[i]) && fromNumberEdge(grid[i]) === n) return i;
-  return -1;
-}
-
-/** A placed number a premise measures from. */
-interface Measured {
-  m: number;
-  cell: number;
-  d: number;
-}
+const arrowOf = (state: AscentState, n: number): number => readBoard(state).arrows[n];
 
 /**
- * The empty squares within reach of every bound, and on `arrow`'s line when
- * there is one: a premise restated from the board alone, so a test can check
- * it singles out the square the step fills.
- */
-export function squaresWithin(
-  state: AscentState,
-  bounds: readonly Measured[],
-  arrow: number,
-): number[] {
-  const { w, h, grid, mode } = state;
-  const out: number[] = [];
-  for (let i = 0; i < w * h; i++) {
-    if (grid[i] !== NUMBER_EMPTY) continue;
-    if (arrow >= 0 && !isEdgeValid(arrow, i, w, h)) continue;
-    if (bounds.every((b) => stepDistance(i, b.cell, w, mode) <= b.d)) out.push(i);
-  }
-  return out;
-}
-
-/**
- * The bounds a `touch` or `reach` firing measured `n` from: the placed numbers
+ * The placed numbers a `touch` or `reach` firing measured `n` from: those
  * either side of it, and for `touch` only a neighbor in the sequence.
  */
-export function boundsOf(f: AscentFiring): Measured[] {
-  const { n, before } = f;
-  const { below, above } = bracket(before, n);
-  const out: Measured[] = [];
+export function boundsOf(f: AscentFiring): Placed[] {
   const touch = f.reason.kind === "touch";
-  if (below && (!touch || below.m === n - 1)) out.push({ ...below, d: n - below.m });
-  if (above && (!touch || above.m === n + 1)) out.push({ ...above, d: above.m - n });
-  return out;
+  return premisesOf(readBoard(f.before), f.n).filter(
+    (p): p is Placed => p.cell !== null && (!touch || p.d === 1),
+  );
 }
 
 /** Whether `n`'s arrow is needed to single the square out, and where it is. */
-function arrowNeeded(f: AscentFiring, bounds: readonly Measured[]): number {
-  const arrow = arrowOf(f.before, f.n);
+function arrowNeeded(f: AscentFiring, bounds: readonly Placed[]): number {
+  const b = readBoard(f.before);
+  const arrow = b.arrows[f.n];
   if (arrow < 0) return -1;
-  return squaresWithin(f.before, bounds, -1).length > 1 ? arrow : -1;
+  return squaresMeeting(b, -1, bounds).length > 1 ? arrow : -1;
 }
 
 /**
@@ -844,7 +806,9 @@ export function whyNotEnd(
     before: state,
     joins: false,
   };
-  return squaresWithin(state, boundsOf(f), -1).includes(cell) ? "arrow" : "reach";
+  return squaresMeeting(readBoard(state), -1, boundsOf(f)).includes(cell)
+    ? "arrow"
+    : "reach";
 }
 
 /** The number shown on the board for `n`. */
@@ -927,17 +891,18 @@ export function stepOf(f: AscentFiring): AscentStep {
       const area = bounds.map((b) => b.cell);
       if (arrow >= 0) area.push(arrow);
       const hatch = arrow >= 0 ? lineSquares(before, arrow) : [];
+      const line = arrow >= 0 ? lineKind(before, arrow) : null;
       const text =
         f.reason.kind === "touch"
           ? say.touch(
               shown(n),
               bounds.map((b) => shown(b.m)),
-              arrow >= 0,
+              line,
             )
           : say.reach(
               shown(n),
               bounds.map((b): Bound => ({ m: shown(b.m), d: b.d })),
-              arrow >= 0,
+              line,
             );
       return step(text, area, hatch);
     }

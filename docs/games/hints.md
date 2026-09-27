@@ -2575,6 +2575,14 @@ reusable part. In [`games/ascent/`](../../src/games/ascent/):
   not in their ladder) and were checked plan for plan against the previous
   commit over every non-Edges shape. Proving the ladder unchanged is cheaper
   than a census of its output, so do that first when adding to one mode.
+  **The two modes differ in narration, not in reasoning.** A premise is "within
+  `d` steps of where `m` stands", and `m` stands on a square or, in Edges, on
+  its line ([`premises.ts`](../../src/games/ascent/premises.ts)). With no
+  arrows, the premise list is straight reach, so the run techniques and the
+  Edges techniques read one model. What differs is the unit a sentence groups
+  its rivals by: the run where the board shows only placed numbers, the line
+  where it shows arrows. A census of the regular modes found no step there
+  that the line reading would improve.
 
 ### Place the notes a fixpoint rests on (Crossing)
 

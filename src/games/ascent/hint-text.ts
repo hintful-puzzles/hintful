@@ -14,8 +14,11 @@
  * and it **steps** from one to the other through empty squares. The square a
  * step fills is "this square", the squares it reasons from are outlined, and
  * what is striped is either the line an arrow points along or the squares a
- * run can reach.
+ * run can reach. In Edges mode a number's own line is named by its shape ("on
+ * its column"), in every technique alike.
  */
+
+import type { LineKind } from "./premises.ts";
 
 /** How close a number must be to `m`, which is `d` places from it in the sequence. */
 const near = (d: number, m: number): string =>
@@ -48,7 +51,8 @@ export interface Bound {
   d: number;
 }
 
-const ARROW = "on its arrow's striped line";
+/** Its arrow's line, named as the Edges line techniques name it. */
+const onLine = (line: LineKind) => `on its ${line}`;
 
 /**
  * The run that comes closest to a square without reaching it, between `from`
@@ -84,7 +88,7 @@ export interface Count {
 export interface Near {
   m: number;
   d: number;
-  line: "row" | "column" | "diagonal" | null;
+  line: LineKind | null;
 }
 
 /** The collection's limit on a step's sentence (`hint-quality.test.ts`). */
@@ -114,32 +118,32 @@ export type EndRuledOut = "placed" | "reach" | "arrow";
 
 export const say = {
   /** `n` must sit next to each of `beside`, its placed neighbors in the
-   * sequence; `arrow` when its arrow's line is needed to single the square out. */
-  touch: (n: number, beside: number[], arrow: boolean): string => {
+   * sequence; `line`, its arrow's, when that is needed to single the square out. */
+  touch: (n: number, beside: number[], line: LineKind | null): string => {
     const where =
       beside.length === 2
         ? `next to both ${beside[0]} and ${beside[1]}`
         : beside.length === 1
           ? `next to ${beside[0]}`
           : "";
-    if (!arrow) {
+    if (!line) {
       if (!where) return `This is the last empty square, so it must be ${n}.`;
       return `${n} must sit ${where}, and this is the only empty square that does, so it must be ${n}.`;
     }
     if (!where)
-      return `${n} must sit ${ARROW}, and this is its only empty square, so it must be ${n}.`;
-    return `${n} must sit ${where}, ${ARROW}. Only this square does, so it must be ${n}.`;
+      return `${n} must be ${onLine(line)}, and this is its only empty square, so it must be ${n}.`;
+    return `${n} must sit ${where}, ${onLine(line)}. Only this square does, so it must be ${n}.`;
   },
 
-  /** `n` must be within reach of each bound; `arrow` as for {@link say.touch}. */
-  reach: (n: number, bounds: Bound[], arrow: boolean): string => {
+  /** `n` must be within reach of each bound; `line` as for {@link say.touch}. */
+  reach: (n: number, bounds: Bound[], line: LineKind | null): string => {
     const where =
       bounds.length === 2
         ? nearBoth(bounds[0], bounds[1])
         : near(bounds[0].d, bounds[0].m);
-    if (!arrow)
+    if (!line)
       return `${n} must be ${where}, and only this empty square is, so it must be ${n}.`;
-    return `${n} must be ${where}, ${ARROW}. Only this square is, so it must be ${n}.`;
+    return `${n} must be ${where}, ${onLine(line)}. Only this square is, so it must be ${n}.`;
   },
 
   /** The path can reach this square from one neighbor only; `other` is the

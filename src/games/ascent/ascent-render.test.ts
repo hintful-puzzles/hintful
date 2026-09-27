@@ -220,7 +220,7 @@ describe("ascent hint frames", () => {
     });
     const marks = hl(hint);
     expect(marks?.hatch.length).toBeGreaterThan(0);
-    expect(hint?.explanation).toMatch(/arrow's striped line/);
+    expect(hint?.explanation).toMatch(/, on its (row|column|diagonal)\./);
     const hatches = recording.ops.filter(
       (o) => o.op === "hatch" && o.color === COL_HINT,
     );
