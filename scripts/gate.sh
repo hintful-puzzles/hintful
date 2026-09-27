@@ -195,6 +195,18 @@ node scripts/checks/absence-spelling.mjs
 node scripts/checks/openspec-version.mjs
 npx --no-install openspec validate --all --strict
 
+# --- 1c-i. The deploy's build-only run. ---
+#
+# CI's deploy job runs the checks above and the production build, and nothing
+# else: every commit has already passed the hook's gate, and the suite runs in
+# CI's own job beside the deploy, so waiting on it again before publishing buys
+# minutes of delay per push and no check (owner, 2026-09-27). The build here
+# is the artifact that ships, with the deploy-time environment.
+if [ "${GATE_BUILD_ONLY:-}" = "1" ]; then
+  npx vite build
+  exit 0
+fi
+
 # --- 1c-ii. A note on what else GATE_PRECOMMIT reaches. ---
 #
 # The toggle is set once, by `.husky/pre-commit`, and vitest inherits it — so a

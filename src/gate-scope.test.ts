@@ -123,7 +123,8 @@ describe("the gate's per-commit scopings stay safe", () => {
     // The hook sets it (so the narrowing is reachable at all) ...
     expect(hook, "the hook no longer sets GATE_PRECOMMIT").toMatch(/GATE_PRECOMMIT=1/);
     // ... and CI runs the gate without it (so nothing hides from `main`).
-    expect(ci, "CI no longer runs the full gate").toMatch(/npm run gate/);
+    // A step running the whole gate, not only the deploy's build-only run.
+    expect(ci, "CI no longer runs the full gate").toMatch(/^\s*run: npm run gate\s*$/m);
     expect(
       /GATE_PRECOMMIT/.test(ci),
       "CI sets GATE_PRECOMMIT, so every check deferred to push now runs nowhere",

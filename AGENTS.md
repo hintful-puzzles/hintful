@@ -517,11 +517,14 @@ So the question to ask of any inherited invariant is not "is it true?" but **"wh
 - `npm run check` — biome format + lint with autofix.
 - **The app is live at <https://hintful.click>**, on Cloudflare Pages (the
   `hintful-puzzles` project, also served at `hintful-puzzles.pages.dev`), and
-  **nobody deploys it by hand**: `.github/workflows/ci.yml` runs the
-  gate on push to `main` and a second job publishes **the gate's own build
-  artifact**. A deploy is therefore always a commit that passed the full gate,
-  and the bytes that shipped are the bytes that were checked — the deploy job
-  downloads, it does not rebuild. Direct upload, deliberately **not** the Pages
+  **nobody deploys it by hand**: on push to `main`, `.github/workflows/ci.yml`
+  runs the gate's fast checks and the production build (`GATE_BUILD_ONLY=1`),
+  and a second job publishes **that build artifact**. The full gate runs in a
+  third job beside them and marks the commit red if the suite fails, but does
+  not hold the deploy back (owner, 2026-09-27: velocity until there are more
+  players; the hook has already run the gate on every commit). The bytes that
+  shipped are the bytes that were checked — the deploy job downloads, it does
+  not rebuild. Direct upload, deliberately **not** the Pages
   GitHub integration, which cannot wait on a check and would publish exactly
   the commits CI exists to catch.
   - **`_headers` is a real deploy artifact**, read verbatim by Cloudflare and

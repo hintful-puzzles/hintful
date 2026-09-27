@@ -4,7 +4,9 @@
 # gate as the husky pre-commit hook (`npm run gate`: tsgo over both projects →
 # biome ci → probe-anchor check → vitest run → vite build), so a `--no-verify` commit or
 # a fresh clone whose hooks never installed can no longer land breakage on
-# `main` undetected. (If contributors arrive later and PRs become useful, add a
+# `main` undetected. The deploy waits only on the gate's fast checks and the
+# build (the `build` job); the full gate runs beside it and marks the commit red
+# after the fact. (If contributors arrive later and PRs become useful, add a
 # `pull_request:` trigger here.)
 #
 # Nothing is generated, so this job is `npm ci` and the gate. It used to say the
@@ -36,13 +38,36 @@ permissions:
   contents: read
 
 jobs:
+  # The full gate, beside the deploy rather than in front of it (owner,
+  # 2026-09-27: ten minutes per push was the velocity cost). Every commit has
+  # passed the hook's gate already; this job is the backstop for what the hook
+  # scopes away (tests a commit could not have affected, checks deferred to
+  # push) and for a `--no-verify` commit, and it still fails the run and marks
+  # the commit red. It builds too, and throws that build away.
   gate:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install npm dependencies
+        run: npm ci
+      - name: Run the gate (typecheck → lint/format → test → prod build)
+        run: npm run gate
 
-    # The gate's `vite build` IS the artifact that gets published, so it runs
+  # The gate's fast checks and the production build, which is the artifact
+  # that ships: typecheck, lint, the source checks and openspec validation run
+  # first, so a commit that breaks any of those still does not deploy.
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # This job's `vite build` IS the artifact that gets published, so it runs
     # with the deploy-time environment rather than a bare one. Without this the
-    # deploy job would have to rebuild, and "deployed only from a green gate"
+    # deploy job would have to rebuild, and "deployed only from a checked build"
     # would mean "deployed from a build resembling one that passed" — the CSP
     # would differ (no Sentry origin), and the sitemap and canonical links
     # would be absent from the thing that was checked but present in the thing
@@ -77,12 +102,12 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Run the gate (typecheck → lint/format → test → prod build)
-        run: npm run gate
+      - name: Run the gate's fast checks and the prod build
+        run: GATE_BUILD_ONLY=1 npm run gate
 
-      # `npm run gate` runs `vite build` into dist/, so this is that exact
-      # output — not a second build of the same commit.
-      - name: Keep the gated build for the deploy job
+      # The gate's build-only run ends in `vite build` into dist/, so this is
+      # that exact output, not a second build of the same commit.
+      - name: Keep the build for the deploy job
         uses: actions/upload-artifact@v7
         with:
           name: dist
@@ -104,7 +129,7 @@ jobs:
   # the public URL" forbids. It would also mean a second build environment,
   # built from the same source by a different toolchain, free to drift.
   deploy:
-    needs: gate
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # `main` only. `workflow_dispatch` on another ref runs the gate and stops.
