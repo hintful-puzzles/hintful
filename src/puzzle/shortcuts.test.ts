@@ -21,6 +21,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { CURSOR_RIGHT } from "../engine/pointer.ts";
 import { getTsGame, registeredGameIds } from "../engine/registry.ts";
 import { type AnyGame, probeBoard } from "../engine/testing/input-probe.ts";
+import { inSweep } from "../engine/testing/slow.ts";
 import { registerAllGames } from "../games/index.ts";
 import { bareCommand, chordCommand, SHORTCUTS, shortcutLabel } from "./shortcuts.ts";
 
@@ -206,9 +207,9 @@ describe("a bare shortcut letter reaches the app in every game", () => {
   }
 
   it("swept every registered game", () => {
-    expect(swept).toBe(registeredGameIds().length);
+    expect(swept).toBe(registeredGameIds().filter(inSweep).length);
     expect(Object.keys(found).sort()).toEqual(
-      Object.keys(BINDS_A_SHORTCUT_LETTER).sort(),
+      Object.keys(BINDS_A_SHORTCUT_LETTER).filter(inSweep).sort(),
     );
     for (const reason of Object.values(BINDS_A_SHORTCUT_LETTER))
       expect(reason.length).toBeGreaterThan(80);

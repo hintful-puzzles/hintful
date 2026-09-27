@@ -45,6 +45,7 @@
  * from every commit. State the remaining coverage when you mark something.
  */
 import { describe, it } from "vitest";
+import { scopeFromEnv } from "./game-scope.ts";
 
 /** True when the run was asked for the expensive tier (`npm run test:slow`).
  *
@@ -84,6 +85,39 @@ export const SLOW_TESTS_ENABLED = Boolean(env?.["PUZZLES_SLOW_TESTS"]);
  * one") applies here with the same force.
  */
 export const PRECOMMIT_HOOK_RUN = env?.["GATE_PRECOMMIT"] === "1";
+
+/** The games this run's cross-game sweeps are narrowed to, or `null` when every
+ * sweep is whole. Only the per-commit hook narrows, and only for a commit that
+ * touched nothing but game directories; `game-scope.ts` states when that is
+ * sound, and `vitest.config.ts` skips the other games' `<id>: ` cases from the
+ * same variable. */
+const SWEEP_SCOPE: ReadonlySet<string> | null = (() => {
+  const ids = scopeFromEnv(env ?? {});
+  return ids === null ? null : new Set(ids);
+})();
+
+/**
+ * Whether game `id`'s cases run in this sweep. True for every game unless the
+ * hook narrowed the run.
+ *
+ * **For an assertion that compares a ledger against what a sweep found.** Filter
+ * the ledger with this, so a narrowed run still holds the touched game's entry
+ * to what its case observed, rather than skipping the check or failing on every
+ * game whose case never ran.
+ */
+export function inSweep(id: string): boolean {
+  return SWEEP_SCOPE === null || SWEEP_SCOPE.has(id);
+}
+
+/**
+ * `it`, skipped when the hook narrowed the sweeps. **For a floor over a whole
+ * sweep** ("walked more than 100 boards", "found gestures in more than 1,000
+ * places"), which no subset of games can be expected to meet and which the
+ * narrowed run could only pass or fail meaninglessly. The build-pipeline spec
+ * requires an assertion whose verdict depends on narrowed work to be narrowed
+ * with it, and skipping reports that it was.
+ */
+export const itOverWholeSweep = it.skipIf(SWEEP_SCOPE !== null);
 
 /** `describe`, skipped unless the slow tier was asked for. */
 export const describeSlow = describe.skipIf(!SLOW_TESTS_ENABLED);

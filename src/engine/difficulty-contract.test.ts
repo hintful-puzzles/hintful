@@ -34,7 +34,7 @@ import type { Game, PresetMenu } from "./game.ts";
 import { Midend } from "./midend.ts";
 import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
-import { SLOW_TESTS_ENABLED, seedBudget } from "./testing/slow.ts";
+import { itOverWholeSweep, SLOW_TESTS_ENABLED, seedBudget } from "./testing/slow.ts";
 
 // biome-ignore lint/suspicious/noExplicitAny: a deliberately game-agnostic probe.
 type AnyGame = Game<any, any, any, any, any, any>;
@@ -146,348 +146,354 @@ describe("the tiered-game set is derived from the registry", () => {
   });
 });
 
-describe.each(tiered)("$id difficulty contract", ({ id, game, contract, tiers }) => {
-  it("offers a readable menu of at least two distinct tiers", () => {
-    // The tier list has one copy, so it cannot disagree with another. What a
-    // single list can still get wrong is a menu with one entry (nothing to
-    // choose), or two entries a player cannot tell apart.
-    expect(tiers.length).toBeGreaterThan(1);
-    expect(new Set(tiers).size, `${id}: two tiers share a name`).toBe(tiers.length);
-    expect(
-      tiers.every((t) => t.trim().length > 0),
-      `${id}: a tier has no name`,
-    ).toBe(true);
-  });
+// A plain loop rather than `describe.each`, whose `$id` renders the id quoted
+// (`'keen'`), so the title would not name the game the way every cross-game
+// case does (`testing/game-scope.ts`).
+for (const { id, game, contract, tiers } of tiered) {
+  describe(`${id}: difficulty contract`, () => {
+    it("offers a readable menu of at least two distinct tiers", () => {
+      // The tier list has one copy, so it cannot disagree with another. What a
+      // single list can still get wrong is a menu with one entry (nothing to
+      // choose), or two entries a player cannot tell apart.
+      expect(tiers.length).toBeGreaterThan(1);
+      expect(new Set(tiers).size, `${id}: two tiers share a name`).toBe(tiers.length);
+      expect(
+        tiers.every((t) => t.trim().length > 0),
+        `${id}: a tier has no name`,
+      ).toBe(true);
+    });
 
-  it("names its tiers from the collection's scale", () => {
-    // CONVENTION OVER CONFIGURATION: the name follows the position, so a word
-    // means the same rung in every game, and this is what stops it drifting
-    // back one port at a time.
-    //
-    // **A tier a game declares non-unique is exempt, and needs no list.**
-    // Dominosa's "Ambiguous" is not a difficulty but a relaxation of what the
-    // puzzle promises, and it already says so through `nonUniqueTiers` — so the
-    // exemption is derived from a declaration the game makes for its own
-    // reasons, rather than from a roster this file would have to maintain.
-    //
-    // **What this deliberately does NOT check**, stated rather than implied:
-    // `search` is read off the game's own top name, so this cannot tell a game
-    // that has earned `Unreasonable` from one that merely claims it. That is
-    // the Search classification, and `docs/games/solver-and-generator.md`
-    // § "Check / Tactic / Search" records that nothing can check it
-    // mechanically — "this rung is a Search" is a judgment about the code. So
-    // the guard covers the shape of the list and not the promise its last word
-    // makes; do not read a pass here as the promise being kept.
-    const exempt = new Set(contract.nonUniqueTiers ?? []);
-    const conventional = tiers.filter((_t, i) => !exempt.has(i));
-    const search = conventional.at(-1) === "Unreasonable";
-    expect(
-      conventional,
-      `${id}: tier names are not the conventional ${conventional.length}-tier list. ` +
-        "Use tierNames(n) — or declare an override in the change that needs one.",
-    ).toEqual(tierNames(conventional.length, { search }));
-  });
+    it("names its tiers from the collection's scale", () => {
+      // CONVENTION OVER CONFIGURATION: the name follows the position, so a word
+      // means the same rung in every game, and this is what stops it drifting
+      // back one port at a time.
+      //
+      // **A tier a game declares non-unique is exempt, and needs no list.**
+      // Dominosa's "Ambiguous" is not a difficulty but a relaxation of what the
+      // puzzle promises, and it already says so through `nonUniqueTiers` — so the
+      // exemption is derived from a declaration the game makes for its own
+      // reasons, rather than from a roster this file would have to maintain.
+      //
+      // **What this deliberately does NOT check**, stated rather than implied:
+      // `search` is read off the game's own top name, so this cannot tell a game
+      // that has earned `Unreasonable` from one that merely claims it. That is
+      // the Search classification, and `docs/games/solver-and-generator.md`
+      // § "Check / Tactic / Search" records that nothing can check it
+      // mechanically — "this rung is a Search" is a judgment about the code. So
+      // the guard covers the shape of the list and not the promise its last word
+      // makes; do not read a pass here as the promise being kept.
+      const exempt = new Set(contract.nonUniqueTiers ?? []);
+      const conventional = tiers.filter((_t, i) => !exempt.has(i));
+      const search = conventional.at(-1) === "Unreasonable";
+      expect(
+        conventional,
+        `${id}: tier names are not the conventional ${conventional.length}-tier list. ` +
+          "Use tierNames(n) — or declare an override in the change that needs one.",
+      ).toEqual(tierNames(conventional.length, { search }));
+    });
 
-  it("never names a tier in a preset title that is not that preset's tier", () => {
-    // THE COPY NOBODY COUNTED: tier words written by hand in a preset title,
-    // where no other test looks. Solo's menu once said "3x3 Intermediate" while
-    // its Custom dialog offered "Tricky", and Galaxies' said "7x7 Normal" for a
-    // tier named Easy.
-    //
-    // **Stated as a prohibition, so it needs no exemption list.** "Every title
-    // carries its tier" would be the stronger rule and would need one: Salad's
-    // presets name a symbol range instead, and Solo's Killer preset is named for
-    // its mode. Both are correct, and a guard whose exceptions are a roster rots
-    // the way the roster does. So: a title may say nothing about difficulty, but
-    // if it uses one of the collection's difficulty words it must be its own.
-    //
-    // What this therefore cannot catch: a title naming a tier in words outside
-    // the scale ("3x3 Basic"), which is what both defects above actually were.
-    // Deriving the titles is what fixed those; this stops the next one that
-    // reaches for a real tier word.
-    const SCALE = new Set([...tierNames(5), "Unreasonable"]);
-    const offenders: string[] = [];
-    for (const { title, params } of allLeafEntries(game.presets())) {
-      const own = tiers[contract.tierOf(params)];
-      for (const word of SCALE) {
-        if (word === own) continue;
-        if (new RegExp(`\\b${word}\\b`).test(title)) {
-          offenders.push(`"${title}" is tier "${own}" but says "${word}"`);
+    it("never names a tier in a preset title that is not that preset's tier", () => {
+      // THE COPY NOBODY COUNTED: tier words written by hand in a preset title,
+      // where no other test looks. Solo's menu once said "3x3 Intermediate" while
+      // its Custom dialog offered "Tricky", and Galaxies' said "7x7 Normal" for a
+      // tier named Easy.
+      //
+      // **Stated as a prohibition, so it needs no exemption list.** "Every title
+      // carries its tier" would be the stronger rule and would need one: Salad's
+      // presets name a symbol range instead, and Solo's Killer preset is named for
+      // its mode. Both are correct, and a guard whose exceptions are a roster rots
+      // the way the roster does. So: a title may say nothing about difficulty, but
+      // if it uses one of the collection's difficulty words it must be its own.
+      //
+      // What this therefore cannot catch: a title naming a tier in words outside
+      // the scale ("3x3 Basic"), which is what both defects above actually were.
+      // Deriving the titles is what fixed those; this stops the next one that
+      // reaches for a real tier word.
+      const SCALE = new Set([...tierNames(5), "Unreasonable"]);
+      const offenders: string[] = [];
+      for (const { title, params } of allLeafEntries(game.presets())) {
+        const own = tiers[contract.tierOf(params)];
+        for (const word of SCALE) {
+          if (word === own) continue;
+          if (new RegExp(`\\b${word}\\b`).test(title)) {
+            offenders.push(`"${title}" is tier "${own}" but says "${word}"`);
+          }
         }
       }
-    }
-    expect(offenders, `${id}: preset titles disagree with their tiers`).toEqual([]);
-  });
+      expect(offenders, `${id}: preset titles disagree with their tiers`).toEqual([]);
+    });
 
-  it("reads its tiers off the same params field the contract writes", () => {
-    // The coupling between the form and the contract, made explicit.
-    // `difficultyTiers` finds the form item by a `kw` prefix; if
-    // it found some *other* `choices` item — a mode list, a symmetry list —
-    // every loop above would run over the wrong length and pass, having covered
-    // a different param. Two string arrays being equal never ruled that out.
-    // Asking the item to move the tier that `tierOf` reads does.
-    const item = difficultyChoiceItem(game);
-    expect(item, `${id}: no difficulty choice item`).not.toBeNull();
-    if (!item) return;
-    expect(item.choices, `${id}: the tier list is that item's choices`).toBe(tiers);
-    const base = firstLeaf(game.presets());
-    for (let tier = 0; tier < tiers.length; tier++) {
-      expect(
-        item.get(contract.withTier(base, tier)),
-        `${id}: withTier(${tier}) is invisible to the "${item.kw}" form item`,
-      ).toBe(tier);
-      const p = structuredClone(base);
-      item.set(p, tier);
-      expect(
-        contract.tierOf(p),
-        `${id}: setting "${item.kw}" to ${tier} is invisible to tierOf`,
-      ).toBe(tier);
-    }
-  });
+    it("reads its tiers off the same params field the contract writes", () => {
+      // The coupling between the form and the contract, made explicit.
+      // `difficultyTiers` finds the form item by a `kw` prefix; if
+      // it found some *other* `choices` item — a mode list, a symmetry list —
+      // every loop above would run over the wrong length and pass, having covered
+      // a different param. Two string arrays being equal never ruled that out.
+      // Asking the item to move the tier that `tierOf` reads does.
+      const item = difficultyChoiceItem(game);
+      expect(item, `${id}: no difficulty choice item`).not.toBeNull();
+      if (!item) return;
+      expect(item.choices, `${id}: the tier list is that item's choices`).toBe(tiers);
+      const base = firstLeaf(game.presets());
+      for (let tier = 0; tier < tiers.length; tier++) {
+        expect(
+          item.get(contract.withTier(base, tier)),
+          `${id}: withTier(${tier}) is invisible to the "${item.kw}" form item`,
+        ).toBe(tier);
+        const p = structuredClone(base);
+        item.set(p, tier);
+        expect(
+          contract.tierOf(p),
+          `${id}: setting "${item.kw}" to ${tier} is invisible to tierOf`,
+        ).toBe(tier);
+      }
+    });
 
-  it("round-trips every declared tier through the params codec", () => {
-    // Non-vacuous everywhere, unlike the check above: it proves each tier has a
-    // distinct encoding, i.e. that a game which gained a rung also extended its
-    // `DIFF_CHARS`. Without that, two tiers share a game ID and the board a
-    // shared link produces is not the board that was shared.
-    const base = firstLeaf(game.presets());
-    const seen = new Set<string>();
-    for (let tier = 0; tier < tiers.length; tier++) {
-      const p = contract.withTier(base, tier);
-      expect(contract.tierOf(p), `${id}: withTier(${tier}) did not read back`).toBe(
-        tier,
-      );
-      const encoded = game.encodeParams(p, true);
-      expect(
-        contract.tierOf(game.decodeParams(encoded)),
-        `${id}: tier ${tier} does not survive "${encoded}"`,
-      ).toBe(tier);
-      expect(seen.has(encoded), `${id}: tier ${tier} encodes as an earlier tier`).toBe(
-        false,
-      );
-      seen.add(encoded);
-    }
-  });
+    it("round-trips every declared tier through the params codec", () => {
+      // Non-vacuous everywhere, unlike the check above: it proves each tier has a
+      // distinct encoding, i.e. that a game which gained a rung also extended its
+      // `DIFF_CHARS`. Without that, two tiers share a game ID and the board a
+      // shared link produces is not the board that was shared.
+      const base = firstLeaf(game.presets());
+      const seen = new Set<string>();
+      for (let tier = 0; tier < tiers.length; tier++) {
+        const p = contract.withTier(base, tier);
+        expect(contract.tierOf(p), `${id}: withTier(${tier}) did not read back`).toBe(
+          tier,
+        );
+        const encoded = game.encodeParams(p, true);
+        expect(
+          contract.tierOf(game.decodeParams(encoded)),
+          `${id}: tier ${tier} does not survive "${encoded}"`,
+        ).toBe(tier);
+        expect(
+          seen.has(encoded),
+          `${id}: tier ${tier} encodes as an earlier tier`,
+        ).toBe(false);
+        seen.add(encoded);
+      }
+    });
 
-  it("does not mutate the params it is given", () => {
-    const base = firstLeaf(game.presets());
-    const before = JSON.stringify(base);
-    for (let tier = 0; tier < tiers.length; tier++) contract.withTier(base, tier);
-    contract.tierOf(base);
-    expect(JSON.stringify(base)).toBe(before);
-  });
+    it("does not mutate the params it is given", () => {
+      const base = firstLeaf(game.presets());
+      const before = JSON.stringify(base);
+      for (let tier = 0; tier < tiers.length; tier++) contract.withTier(base, tier);
+      contract.tierOf(base);
+      expect(JSON.stringify(base)).toBe(before);
+    });
 
-  it("either generates every declared tier, or refuses it with a reason", () => {
-    // A tier that exists in the solver but that no size can generate is allowed
-    // — `grade-difficulty-tiers-honestly` deliberately created two, refusing
-    // them at generation rather than silently downgrading them (Bricks' Tricky
-    // rung never decides anything its Normal rung has not). What is *not*
-    // allowed is a tier that fails to generate and says nothing about why.
-    for (let tier = 0; tier < tiers.length; tier++) {
-      const p = paramsForTier({ id, game, contract, tiers }, tier);
-      if (p !== null) continue;
-      const refusals = allLeaves(game.presets()).map((leaf) =>
-        game.validateParams(contract.withTier(leaf, tier), true),
-      );
-      expect(
-        refusals.every((r) => typeof r === "string" && r.length > 0),
-        `${id}: tier ${tier} ("${tiers[tier]}") generates at no preset and gives no reason`,
-      ).toBe(true);
-    }
-  });
-
-  it(
-    contract.nonMonotone
-      ? "solves at some tier (non-monotone)"
-      : "is monotone in its cap",
-    () => {
-      // THE PROPERTY THIS WHOLE CONTRACT EXISTS FOR. Generate a real board at each
-      // reachable tier, find the lowest cap that solves it, and require every
-      // higher cap to solve it too.
-      //
-      // Seed-deterministic and bounded, never clock-gated (docs/games/testing.md § "Seed-deterministic, never clock-gated").
-      //
-      // **Four boards per tier, and the number was measured rather than guessed.**
-      // The first version generated one, and it was proved insufficient the only
-      // way that counts: removing Boats' `nonMonotone` declaration and checking
-      // the guard fires. It did not — Boats' first tier-0 seed happens to be
-      // monotone, so the guard was passing on luck while claiming to hunt exactly
-      // that defect. A direct probe put the real rate at **7 of 8** Boats Easy
-      // boards non-monotone, so one sample misses it 1 time in 8 and four samples
-      // miss it about 1 time in 4,000. With four, removing the declaration fails
-      // on the first board.
-      //
-      // The general lesson, which is why this comment is long: *a guard that has
-      // never been shown to fail is not known to work*, and sampling is where a
-      // cross-game guard silently becomes decorative.
-      const boards = seedBudget(4, 12);
-      let checked = 0;
-
+    it("either generates every declared tier, or refuses it with a reason", () => {
+      // A tier that exists in the solver but that no size can generate is allowed
+      // — `grade-difficulty-tiers-honestly` deliberately created two, refusing
+      // them at generation rather than silently downgrading them (Bricks' Tricky
+      // rung never decides anything its Normal rung has not). What is *not*
+      // allowed is a tier that fails to generate and says nothing about why.
       for (let tier = 0; tier < tiers.length; tier++) {
         const p = paramsForTier({ id, game, contract, tiers }, tier);
-        if (p === null) continue; // an ungenerable tier; covered by the test above
+        if (p !== null) continue;
+        const refusals = allLeaves(game.presets()).map((leaf) =>
+          game.validateParams(contract.withTier(leaf, tier), true),
+        );
+        expect(
+          refusals.every((r) => typeof r === "string" && r.length > 0),
+          `${id}: tier ${tier} ("${tiers[tier]}") generates at no preset and gives no reason`,
+        ).toBe(true);
+      }
+    });
 
-        for (let seed = 0; seed < boards; seed++) {
-          const { desc } = game.newDesc(
-            p,
-            randomNew(`difficulty-${id}-${tier}-${seed}`),
-          );
-          const solve = cappedSolveFor(contract, p, desc);
-          const lowest = lowestSolvingCap(solve, tiers.length);
-          checked++;
+    it(
+      contract.nonMonotone
+        ? "solves at some tier (non-monotone)"
+        : "is monotone in its cap",
+      () => {
+        // THE PROPERTY THIS WHOLE CONTRACT EXISTS FOR. Generate a real board at each
+        // reachable tier, find the lowest cap that solves it, and require every
+        // higher cap to solve it too.
+        //
+        // Seed-deterministic and bounded, never clock-gated (docs/games/testing.md § "Seed-deterministic, never clock-gated").
+        //
+        // **Four boards per tier, and the number was measured rather than guessed.**
+        // The first version generated one, and it was proved insufficient the only
+        // way that counts: removing Boats' `nonMonotone` declaration and checking
+        // the guard fires. It did not — Boats' first tier-0 seed happens to be
+        // monotone, so the guard was passing on luck while claiming to hunt exactly
+        // that defect. A direct probe put the real rate at **7 of 8** Boats Easy
+        // boards non-monotone, so one sample misses it 1 time in 8 and four samples
+        // miss it about 1 time in 4,000. With four, removing the declaration fails
+        // on the first board.
+        //
+        // The general lesson, which is why this comment is long: *a guard that has
+        // never been shown to fail is not known to work*, and sampling is where a
+        // cross-game guard silently becomes decorative.
+        const boards = seedBudget(4, 12);
+        let checked = 0;
 
-          if (contract.nonUniqueTiers?.includes(tier)) {
-            // Dominosa's "Ambiguous". The tier promises the *opposite* of unique
-            // solvability, so the guard swaps rather than skips: the board must
-            // genuinely come out non-unique. If it started solving uniquely, the
-            // tier would have stopped meaning what its menu entry says.
+        for (let tier = 0; tier < tiers.length; tier++) {
+          const p = paramsForTier({ id, game, contract, tiers }, tier);
+          if (p === null) continue; // an ungenerable tier; covered by the test above
+
+          for (let seed = 0; seed < boards; seed++) {
+            const { desc } = game.newDesc(
+              p,
+              randomNew(`difficulty-${id}-${tier}-${seed}`),
+            );
+            const solve = cappedSolveFor(contract, p, desc);
+            const lowest = lowestSolvingCap(solve, tiers.length);
+            checked++;
+
+            if (contract.nonUniqueTiers?.includes(tier)) {
+              // Dominosa's "Ambiguous". The tier promises the *opposite* of unique
+              // solvability, so the guard swaps rather than skips: the board must
+              // genuinely come out non-unique. If it started solving uniquely, the
+              // tier would have stopped meaning what its menu entry says.
+              expect(
+                lowest,
+                `${id}: tier ${tier} ("${tiers[tier]}") is declared non-unique but the board solves at cap ${lowest}`,
+              ).toBeNull();
+              continue;
+            }
+
             expect(
               lowest,
-              `${id}: tier ${tier} ("${tiers[tier]}") is declared non-unique but the board solves at cap ${lowest}`,
-            ).toBeNull();
-            continue;
-          }
+              `${id}: a board generated at tier ${tier} ("${tiers[tier]}", seed ${seed}) solves at no cap`,
+            ).not.toBeNull();
+            if (lowest === null) continue;
 
+            if (contract.nonMonotone) {
+              // Boats. Its solver really does fail at a higher cap what it solves at
+              // a lower one, so the property under test is the WORKAROUND its spec
+              // promises and every consumer applies — solve at each tier in turn and
+              // take the first success. Asserting that, rather than skipping the
+              // game, keeps the exemption itself under test: if the underlying
+              // `checkDsf` defect were ever fixed, the monotonicity branch below
+              // would start applying and this branch would have to be removed
+              // deliberately.
+              continue;
+            }
+
+            for (let cap = lowest; cap < tiers.length; cap++) {
+              expect(
+                solve(cap),
+                `${id}: tier ${tier} seed ${seed} solves at cap ${lowest} but not at cap ${cap}`,
+              ).toBe("solved");
+            }
+          }
+        }
+
+        // Per-game instrument guard: a game whose every tier turned out ungenerable
+        // would pass the loop above having solved nothing.
+        expect(checked, `${id}: no board was generated at any tier`).toBeGreaterThan(0);
+      },
+    );
+
+    it("deals boards that need the tier the preset claims", () => {
+      // THE PROPERTY `ts-migration` NAMED AND NOTHING CHECKED. "A difficulty tier
+      // binds the board it generates" has been a requirement since the byte-match
+      // oracle was released, and `engine/difficulty.ts`'s `solvableAtExactlyTier`
+      // is its one expression — but no test in the collection ever compared the
+      // tier a board was *generated* at with the tier it *needs*. The monotonicity
+      // test above computes exactly that number and uses it only as a floor.
+      //
+      // **The rule has two spellings, and this is what makes them meet.** A
+      // generator states tier acceptance in its own terms; `solveAtCap` states it
+      // again for every cross-game consumer. A game's own tests exercise only the
+      // first, so a contract whose cap is *wider* than the tier it names is
+      // invisible: Undead bounded Easy at three arc-consistency passes in its
+      // generator and ran arc-consistency unbounded in its contract, so all three
+      // of its Normal presets graded as Easy-solvable while every Undead test
+      // passed (`assert-that-tiers-bind`).
+      //
+      // ON THE KEY, which is the part not to simplify away. This walks **the
+      // presets a player can pick**, reading each one's own tier — NOT
+      // `paramsForTier`. That helper answers "the cheapest preset valid at this
+      // tier", which is a different question and the wrong one here: applying a
+      // hard tier to the collection's smallest preset asks something no generator
+      // can answer (a 4x4 Solo board cannot be Hard however its params are
+      // labeled), and `validateParams` accepting a params record is not evidence a
+      // board can carry the tier in it. Keyed that way, the first version of this
+      // test convicted Solo, Group, Undead and Unequal across ten cases; keyed on
+      // what the menu offers, it reports three, in one game, and they were real.
+      //
+      // Cost: the full matrix is ~150 s. The gate slice keeps **one preset per
+      // declared tier** — tier is the axis the property is about, so a slice that
+      // dropped to a single preset would stop measuring it — and the slow tier
+      // walks every preset with more seeds.
+      const entries = allLeafEntries(game.presets()).filter(
+        (e) => typeof contract.tierOf(e.params) === "number",
+      );
+      const walked = SLOW_TESTS_ENABLED
+        ? entries
+        : entries.filter(
+            (e, i) =>
+              entries.findIndex(
+                (f) => contract.tierOf(f.params) === contract.tierOf(e.params),
+              ) === i,
+          );
+      const seeds = seedBudget(1, 3);
+      let checked = 0;
+      let sharedReloaded = false;
+
+      for (const { title, params } of walked) {
+        const tier = contract.tierOf(params);
+        // A tier the game declares non-unique promises the opposite of unique
+        // solvability, so "the lowest cap that solves it" is not a thing it has —
+        // the same declaration that exempts it from the sweep above, read here for
+        // the same reason. Exemptions are derived from what the game already says;
+        // there is no roster.
+        if (contract.nonUniqueTiers?.includes(tier)) continue;
+        // Boats: its solver fails at a higher cap what it solves at a lower one,
+        // so there is no well-defined lowest cap to compare against.
+        if (contract.nonMonotone) continue;
+
+        for (let seed = 0; seed < seeds; seed++) {
+          const { desc } = game.newDesc(
+            params,
+            randomNew(`binds-${id}-${title}-${seed}`),
+          );
+          const lowest = lowestSolvingCap(
+            cappedSolveFor(contract, params, desc),
+            tiers.length,
+          );
+          checked++;
           expect(
             lowest,
-            `${id}: a board generated at tier ${tier} ("${tiers[tier]}", seed ${seed}) solves at no cap`,
-          ).not.toBeNull();
-          if (lowest === null) continue;
-
-          if (contract.nonMonotone) {
-            // Boats. Its solver really does fail at a higher cap what it solves at
-            // a lower one, so the property under test is the WORKAROUND its spec
-            // promises and every consumer applies — solve at each tier in turn and
-            // take the first success. Asserting that, rather than skipping the
-            // game, keeps the exemption itself under test: if the underlying
-            // `checkDsf` defect were ever fixed, the monotonicity branch below
-            // would start applying and this branch would have to be removed
-            // deliberately.
-            continue;
-          }
-
-          for (let cap = lowest; cap < tiers.length; cap++) {
-            expect(
-              solve(cap),
-              `${id}: tier ${tier} seed ${seed} solves at cap ${lowest} but not at cap ${cap}`,
-            ).toBe("solved");
-          }
-        }
-      }
-
-      // Per-game instrument guard: a game whose every tier turned out ungenerable
-      // would pass the loop above having solved nothing.
-      expect(checked, `${id}: no board was generated at any tier`).toBeGreaterThan(0);
-    },
-  );
-
-  it("deals boards that need the tier the preset claims", () => {
-    // THE PROPERTY `ts-migration` NAMED AND NOTHING CHECKED. "A difficulty tier
-    // binds the board it generates" has been a requirement since the byte-match
-    // oracle was released, and `engine/difficulty.ts`'s `solvableAtExactlyTier`
-    // is its one expression — but no test in the collection ever compared the
-    // tier a board was *generated* at with the tier it *needs*. The monotonicity
-    // test above computes exactly that number and uses it only as a floor.
-    //
-    // **The rule has two spellings, and this is what makes them meet.** A
-    // generator states tier acceptance in its own terms; `solveAtCap` states it
-    // again for every cross-game consumer. A game's own tests exercise only the
-    // first, so a contract whose cap is *wider* than the tier it names is
-    // invisible: Undead bounded Easy at three arc-consistency passes in its
-    // generator and ran arc-consistency unbounded in its contract, so all three
-    // of its Normal presets graded as Easy-solvable while every Undead test
-    // passed (`assert-that-tiers-bind`).
-    //
-    // ON THE KEY, which is the part not to simplify away. This walks **the
-    // presets a player can pick**, reading each one's own tier — NOT
-    // `paramsForTier`. That helper answers "the cheapest preset valid at this
-    // tier", which is a different question and the wrong one here: applying a
-    // hard tier to the collection's smallest preset asks something no generator
-    // can answer (a 4x4 Solo board cannot be Hard however its params are
-    // labeled), and `validateParams` accepting a params record is not evidence a
-    // board can carry the tier in it. Keyed that way, the first version of this
-    // test convicted Solo, Group, Undead and Unequal across ten cases; keyed on
-    // what the menu offers, it reports three, in one game, and they were real.
-    //
-    // Cost: the full matrix is ~150 s. The gate slice keeps **one preset per
-    // declared tier** — tier is the axis the property is about, so a slice that
-    // dropped to a single preset would stop measuring it — and the slow tier
-    // walks every preset with more seeds.
-    const entries = allLeafEntries(game.presets()).filter(
-      (e) => typeof contract.tierOf(e.params) === "number",
-    );
-    const walked = SLOW_TESTS_ENABLED
-      ? entries
-      : entries.filter(
-          (e, i) =>
-            entries.findIndex(
-              (f) => contract.tierOf(f.params) === contract.tierOf(e.params),
-            ) === i,
-        );
-    const seeds = seedBudget(1, 3);
-    let checked = 0;
-    let sharedReloaded = false;
-
-    for (const { title, params } of walked) {
-      const tier = contract.tierOf(params);
-      // A tier the game declares non-unique promises the opposite of unique
-      // solvability, so "the lowest cap that solves it" is not a thing it has —
-      // the same declaration that exempts it from the sweep above, read here for
-      // the same reason. Exemptions are derived from what the game already says;
-      // there is no roster.
-      if (contract.nonUniqueTiers?.includes(tier)) continue;
-      // Boats: its solver fails at a higher cap what it solves at a lower one,
-      // so there is no well-defined lowest cap to compare against.
-      if (contract.nonMonotone) continue;
-
-      for (let seed = 0; seed < seeds; seed++) {
-        const { desc } = game.newDesc(
-          params,
-          randomNew(`binds-${id}-${title}-${seed}`),
-        );
-        const lowest = lowestSolvingCap(
-          cappedSolveFor(contract, params, desc),
-          tiers.length,
-        );
-        checked++;
-        expect(
-          lowest,
-          `${id}: "${title}" claims tier ${tier} ("${tiers[tier]}") but its board needs cap ${lowest}`,
-        ).toBe(tier);
-
-        // What the equality above buys a player: a board shared by the id that
-        // omits its difficulty loads at the tier it was dealt at, because the
-        // midend grades it. Only a board whose short id decodes to some *other*
-        // tier can tell grading from the default, and once per game is enough,
-        // since the grading is the same call the assertion above just made.
-        const shortParams = game.encodeParams(params, false);
-        if (
-          !sharedReloaded &&
-          contract.tierOf(game.decodeParams(shortParams)) !== tier
-        ) {
-          sharedReloaded = true;
-          sharedReloads++;
-          const me = new Midend(game);
-          const shared = `${shortParams}:${desc}`;
-          expect(me.newGameFromId(shared), `${id}: ${shared}`).toBeNull();
-          expect(
-            contract.tierOf(game.decodeParams(me.getParams())),
-            `${id}: "${title}" shared as ${shared} reloaded at the wrong tier`,
+            `${id}: "${title}" claims tier ${tier} ("${tiers[tier]}") but its board needs cap ${lowest}`,
           ).toBe(tier);
+
+          // What the equality above buys a player: a board shared by the id that
+          // omits its difficulty loads at the tier it was dealt at, because the
+          // midend grades it. Only a board whose short id decodes to some *other*
+          // tier can tell grading from the default, and once per game is enough,
+          // since the grading is the same call the assertion above just made.
+          const shortParams = game.encodeParams(params, false);
+          if (
+            !sharedReloaded &&
+            contract.tierOf(game.decodeParams(shortParams)) !== tier
+          ) {
+            sharedReloaded = true;
+            sharedReloads++;
+            const me = new Midend(game);
+            const shared = `${shortParams}:${desc}`;
+            expect(me.newGameFromId(shared), `${id}: ${shared}`).toBeNull();
+            expect(
+              contract.tierOf(game.decodeParams(me.getParams())),
+              `${id}: "${title}" shared as ${shared} reloaded at the wrong tier`,
+            ).toBe(tier);
+          }
         }
       }
-    }
 
-    boardsThatBound += checked;
-    // Per-game vacuity: a contract whose `tierOf` stopped reporting a number
-    // would leave this loop asserting nothing while reporting health. Every
-    // tiered game has at least one preset naming a tier, by the menu assertions
-    // above — except a wholly non-monotone or non-unique one, which is exempt.
-    if (!contract.nonMonotone) {
-      expect(checked, `${id}: no preset named a tier to check`).toBeGreaterThan(0);
-    }
+      boardsThatBound += checked;
+      // Per-game vacuity: a contract whose `tierOf` stopped reporting a number
+      // would leave this loop asserting nothing while reporting health. Every
+      // tiered game has at least one preset naming a tier, by the menu assertions
+      // above — except a wholly non-monotone or non-unique one, which is exempt.
+      if (!contract.nonMonotone) {
+        expect(checked, `${id}: no preset named a tier to check`).toBeGreaterThan(0);
+      }
+    });
   });
-});
+}
 
 /** How many boards the tier-binding check actually graded, across every game —
  * the sweep-wide half of the vacuity guard. Accumulated by the per-game test
@@ -499,14 +505,14 @@ let boardsThatBound = 0;
 let sharedReloads = 0;
 
 describe("the tier-binding sweep", () => {
-  it("reloaded shared boards in enough games to mean something", () => {
+  itOverWholeSweep("reloaded shared boards in enough games to mean something", () => {
     // Most tiered games omit the difficulty from the id they share, so most
     // should reach the reload above; a floor well under that count fails only
     // when the reload stopped happening at all.
     expect(sharedReloads).toBeGreaterThan(10);
   });
 
-  it("graded enough boards to mean something", () => {
+  itOverWholeSweep("graded enough boards to mean something", () => {
     // The floor separates "working" from "enumerating nothing" and is set well
     // below the gate slice's true count (~90 boards over 29 games when written),
     // so it is not a ratchet a legitimate change has to bump. A structural change

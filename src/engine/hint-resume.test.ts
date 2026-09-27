@@ -30,6 +30,7 @@ import {
   HINT_GAMES,
   SEARCH_PLANNING_GAMES,
 } from "./testing/hint-games.ts";
+import { itOverWholeSweep } from "./testing/slow.ts";
 
 /** Walk a fresh board to solved, recomputing the hint after every move.
  * Returns the move count, or throws with a diagnostic if a hint gives up or
@@ -437,7 +438,7 @@ describe("a hint can solve from any mid-game position", () => {
 let walkedCases = 0;
 
 describe("the resume walk", () => {
-  it("covered enough boards to mean something", () => {
+  itOverWholeSweep("covered enough boards to mean something", () => {
     // **The floor has to sit above the ways the slice can silently collapse,**
     // not merely above zero — that is what makes it a vacuity guard rather than
     // a decoration. Three counts, measured 2026-09-20: one board per game is

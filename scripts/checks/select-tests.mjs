@@ -60,6 +60,7 @@
 import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
+import { gameScope } from "../../src/engine/testing/game-scope.ts";
 
 const ROOT = path.resolve(import.meta.dirname, "../..");
 
@@ -191,14 +192,28 @@ function graphSelected() {
   );
 }
 
-function main() {
-  const staged = execFileSync(
+function stagedPaths() {
+  return execFileSync(
     "git",
     ["diff", "--cached", "--name-only", "--diff-filter=ACMRD"],
-    { cwd: ROOT, encoding: "utf8" },
+    {
+      cwd: ROOT,
+      encoding: "utf8",
+    },
   )
     .split("\n")
     .filter(Boolean);
+}
+
+/** `--game-scope`: the games this commit touched, comma-separated, or an empty
+ * line when it touched anything else. The hook exports it as `GATE_GAME_SCOPE`;
+ * `src/engine/testing/game-scope.ts` says what reads it and when that is sound. */
+function gameScopeLine() {
+  return (gameScope(stagedPaths()) ?? []).join(",");
+}
+
+function main() {
+  const staged = stagedPaths();
 
   if (staged.length === 0) return "ALL";
   // A path this script does not model — a config file, a template, a script,
@@ -213,11 +228,13 @@ function main() {
 }
 
 if (process.argv[1] === import.meta.filename) {
+  const wantsScope = process.argv.includes("--game-scope");
   try {
-    process.stdout.write(`${main()}\n`);
+    process.stdout.write(`${wantsScope ? gameScopeLine() : main()}\n`);
   } catch {
     // Any failure at all — vitest missing, git unavailable, a parse error —
-    // resolves to the safe answer rather than to a smaller test run.
-    process.stdout.write("ALL\n");
+    // resolves to the safe answer rather than to a smaller test run: the whole
+    // list, or no game scope.
+    process.stdout.write(wantsScope ? "\n" : "ALL\n");
   }
 }

@@ -43,6 +43,7 @@ import {
   HINT_GAMES,
 } from "./testing/hint-games.ts";
 import { DEFAULT_BACKGROUND, renderScenario } from "./testing/render-scenario.ts";
+import { inSweep } from "./testing/slow.ts";
 import type { Color } from "./types.ts";
 
 const SEEDS = ["ord-a", "ord-b", "ord-c"];
@@ -238,7 +239,7 @@ describe("an ordered hint chain carries its order to the canvas", () => {
   // zero assertions run — the silent-shrink shape the probe's test-file floor
   // and `touch-input.test.ts`'s registry count both exist to catch.
   it("the set of games that number a chain has not shrunk", () => {
-    for (const name of ORDERING_GAMES) {
+    for (const name of [...ORDERING_GAMES].filter(inSweep)) {
       expect(sawOrdinals.has(name), `${name} no longer numbers its forcing chain`).toBe(
         true,
       );

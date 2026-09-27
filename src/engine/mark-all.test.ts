@@ -27,6 +27,7 @@ import { getTsGame, registeredGameIds } from "./registry.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
 import { type AnyGame, gatePresets } from "./testing/hint-games.ts";
 import { preferredDrawState } from "./testing/preferred-draw-state.ts";
+import { inSweep, itOverWholeSweep } from "./testing/slow.ts";
 
 // Registers every ported game; `beforeAll` re-runs it in case a sibling file
 // reset the shared registry under `isolate: false`.
@@ -84,7 +85,7 @@ it("drew a populated roster, and every member keeps its notes in `pencil`", () =
   }
 });
 
-it("every game declaring the press answers it, and no other game does", () => {
+describe("every game declaring the press answers it, and no other game does", () => {
   /*
    * **The declaration held to the behavior**, which the check above does not do:
    * it compares the roster with the flag, so a flag that lies agrees with a
@@ -111,62 +112,77 @@ it("every game declaring the press answers it, and no other game does", () => {
    * board is exactly the defect a small one cannot see, and because a
    * per-guard variant of the slice is the thing `gatePresets` exists to stop.
    * The file is not near the gate's critical path.
+   *
+   * One case per game, so a commit touching one game walks only that game's
+   * boards (`GATE_GAME_SCOPE` in `testing/game-scope.ts`).
    */
   const ids = registeredGameIds().sort();
-  expect(ids.length, "an empty registry would agree with anything").toBeGreaterThan(50);
-
-  const declared: string[] = [];
+  const declared = ids.filter((id) => getTsGame(id)?.canMarkAll === true);
   const answers: string[] = [];
   let boards = 0;
+
+  it("drew its population from a populated registry", () => {
+    expect(ids.length, "an empty registry would agree with anything").toBeGreaterThan(
+      50,
+    );
+  });
+
   for (const id of ids) {
     const game = getTsGame(id) as AnyGame | undefined;
     if (!game) continue;
-    if (game.canMarkAll === true) declared.push(id);
-    // **Every board the gate slice offers, not the easiest one.** The flag is
-    // per game but the answer need not be: a game whose `interpretMove` reads
-    // the press behind a size or mode test would ship a button that works on
-    // some presets and is dead on the others, and one board could not tell.
-    // Group is the near miss that makes the point — it intercepts *uppercase*
-    // 'M' ahead of its value keys precisely because lowercase 'm' is its
-    // element 13 once `w >= 13`, which is a preset, not a hypothesis.
-    const answeredOn: string[] = [];
-    const presets = gatePresets(id, game);
-    for (const { title, params } of presets) {
-      const { desc } = game.newDesc(params, randomNew(`mark-all-${id}-${title}`));
-      const state = game.newState(params, desc);
-      boards++;
-      const move = game.interpretMove(
-        state,
-        game.newUi(state),
-        preferredDrawState(game, state),
-        { x: 0, y: 0 },
-        77, // 'M', exactly what the toolbar button injects.
-      );
-      if (move !== null && move !== UI_UPDATE) answeredOn.push(title);
-    }
-    // All or none: a game that answers on some presets and not others is the
-    // dead-button case above, and it fails here by joining `answers` while
-    // (if declared) also being named below.
-    expect(
-      answeredOn.length === 0 || answeredOn.length === presets.length,
-      `${id} answers 'M' on ${answeredOn.length} of its ${presets.length} sliced presets (${answeredOn.join(", ")}) — the toolbar button is dead on the rest`,
-    ).toBe(true);
-    if (answeredOn.length > 0) answers.push(id);
+    it(`${id}: answers 'M' on every sliced preset iff it declares canMarkAll`, () => {
+      // **Every board the gate slice offers, not the easiest one.** The flag is
+      // per game but the answer need not be: a game whose `interpretMove` reads
+      // the press behind a size or mode test would ship a button that works on
+      // some presets and is dead on the others, and one board could not tell.
+      // Group is the near miss that makes the point — it intercepts *uppercase*
+      // 'M' ahead of its value keys precisely because lowercase 'm' is its
+      // element 13 once `w >= 13`, which is a preset, not a hypothesis.
+      const answeredOn: string[] = [];
+      const presets = gatePresets(id, game);
+      for (const { title, params } of presets) {
+        const { desc } = game.newDesc(params, randomNew(`mark-all-${id}-${title}`));
+        const state = game.newState(params, desc);
+        boards++;
+        const move = game.interpretMove(
+          state,
+          game.newUi(state),
+          preferredDrawState(game, state),
+          { x: 0, y: 0 },
+          77, // 'M', exactly what the toolbar button injects.
+        );
+        if (move !== null && move !== UI_UPDATE) answeredOn.push(title);
+      }
+      // All or none: a game that answers on some presets and not others is the
+      // dead-button case above.
+      expect(
+        answeredOn.length === 0 || answeredOn.length === presets.length,
+        `${id} answers 'M' on ${answeredOn.length} of its ${presets.length} sliced presets (${answeredOn.join(", ")}) — the toolbar button is dead on the rest`,
+      ).toBe(true);
+      if (answeredOn.length > 0) answers.push(id);
+      expect(
+        answeredOn.length > 0,
+        "canMarkAll disagrees with what the game does with an 'M' press — a " +
+          "declared game with no answer ships a dead toolbar button, and an " +
+          "undeclared one hides a press it handles",
+      ).toBe(game.canMarkAll === true);
+    });
   }
-  expect(
-    answers.length,
-    "no game answered M — the probe found nothing",
-  ).toBeGreaterThan(5);
-  // The "how many did I look at?" guard, now that the count is a slice rather
-  // than one board per game: a `gatePresets` that flattened to nothing would
-  // leave the comparison below agreeing about two empty lists.
-  expect(boards, "the slice yielded almost no boards").toBeGreaterThan(150);
-  expect(
-    answers,
-    "canMarkAll disagrees with what the game does with an 'M' press — a " +
-      "declared game with no answer ships a dead toolbar button, and an " +
-      "undeclared one hides a press it handles",
-  ).toEqual(declared);
+
+  it("found the games that declare it, and only those", () => {
+    expect(answers).toEqual(declared.filter(inSweep));
+  });
+
+  itOverWholeSweep("found enough games and boards to mean something", () => {
+    expect(
+      answers.length,
+      "no game answered M — the probe found nothing",
+    ).toBeGreaterThan(5);
+    // The "how many did I look at?" guard, now that the count is a slice rather
+    // than one board per game: a `gatePresets` that flattened to nothing would
+    // leave the comparison above agreeing about two empty lists.
+    expect(boards, "the slice yielded almost no boards").toBeGreaterThan(150);
+  });
 });
 
 /** Press `M` — ASCII **77**, exactly what the toolbar button injects

@@ -24,6 +24,7 @@ import {
   HINT_GAMES,
   leafPresets,
 } from "./testing/hint-games.ts";
+import { itOverWholeSweep } from "./testing/slow.ts";
 
 const READINGS: readonly CandidateReading[] = ["implicit", "populate"];
 
@@ -179,7 +180,7 @@ describe("the hint-notes preference", () => {
 
   for (const id of OFFERING.ids) {
     const game = gameOf(id);
-    describe(id, () => {
+    describe(`${id}: every preset`, () => {
       for (const { title, params } of presetsOf(game)) {
         for (const reading of READINGS) {
           it(`${title}, ${reading}: every step is live and its premise noted when shown, and the plan finishes`, () => {
@@ -239,7 +240,7 @@ describe("the hint-notes preference", () => {
     });
   }
 
-  it("checked a blank premise cell under each reading", () => {
+  itOverWholeSweep("checked a blank premise cell under each reading", () => {
     // Runs after the walks above, in file order. Under the implicit reading
     // these are the cells a note leg wrote; under the populate reading, cells
     // the populate did.

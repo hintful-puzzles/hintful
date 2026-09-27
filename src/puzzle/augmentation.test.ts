@@ -12,6 +12,7 @@ import { puzzleIds } from "./catalog.ts";
 beforeAll(registerAllGames);
 
 import { difficultyChoiceItem, difficultyTiers } from "../engine/difficulty.ts";
+import { itOverWholeSweep } from "../engine/testing/slow.ts";
 import type { ConfigValues, PuzzleId } from "../engine/types.ts";
 import { type ChoiceNames, puzzleAugmentations } from "./augmentation.ts";
 
@@ -139,7 +140,7 @@ describe("the type header names the tier the game declares", () => {
     });
   }
 
-  it("looked at enough tiers to be worth asserting", () => {
+  itOverWholeSweep("looked at enough tiers to be worth asserting", () => {
     // The vacuity guard: a template scan that matched nothing, or a registry
     // that came up empty, would leave every assertion above passing over
     // nothing. 29 games declare tiers, most with two or three.

@@ -28,6 +28,7 @@ import { getTsGame, registeredGameIds } from "./registry.ts";
 import { observeMidend } from "./testing/drive-midend.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
+import { inSweep } from "./testing/slow.ts";
 
 beforeAll(registerAllGames);
 
@@ -112,7 +113,7 @@ describe("a game's saveable Ui is reported to the app", () => {
     // above passes over nothing and the sweep reports health. The first catches
     // the quieter shape: a registry that answers with a *subset* leaves most
     // games unswept while both loops still run.
-    expect(swept).toBe(registeredGameIds().length);
+    expect(swept).toBe(registeredGameIds().filter(inSweep).length);
     expect(PERSISTS_UI.length).toBeGreaterThan(0);
   });
 });

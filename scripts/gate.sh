@@ -282,6 +282,15 @@ fi
 # The selector fails closed: any staged path it does not model, an empty result,
 # or any error at all yields `ALL`. `src/test-selection.test.ts` fails the build
 # if a test acquires a read channel the selector cannot see.
+#
+# **Within those files, a commit confined to game directories skips every other
+# game's cases.** A cross-game guard titles each case `<id>: …`, and on a
+# Pearl-only change 413 s of 593 s of test time was those cases for games the
+# commit could not have changed. `--game-scope` prints the touched games, or
+# nothing, and exporting them as GATE_GAME_SCOPE is all this script does with
+# them: what reads it, and why that is sound, is in
+# `src/engine/testing/game-scope.ts`. Skipped cases are reported as skipped,
+# and CI runs them all.
 selected=""
 if [ "${GATE_PRECOMMIT:-}" = "1" ]; then
   selected=$(node scripts/checks/select-tests.mjs 2>/dev/null) || selected="ALL"
@@ -289,6 +298,12 @@ if [ "${GATE_PRECOMMIT:-}" = "1" ]; then
   if [ "$selected" != "ALL" ]; then
     echo "✓ running $(printf '%s\n' "$selected" | wc -l | tr -d ' ') of $(find src vite-plugins -name '*.test.ts' | wc -l | tr -d ' ') test files for this commit."
     echo "  (CI runs all of them on push; \`npm run gate\` runs all of them here.)"
+  fi
+  GATE_GAME_SCOPE=$(node scripts/checks/select-tests.mjs --game-scope 2>/dev/null) ||
+    GATE_GAME_SCOPE=""
+  export GATE_GAME_SCOPE
+  if [ -n "$GATE_GAME_SCOPE" ]; then
+    echo "✓ only $GATE_GAME_SCOPE is staged — skipping every other game's cross-game cases."
   fi
 fi
 

@@ -27,6 +27,7 @@ import { paramsCorpus } from "./testing/params-corpus.ts";
 import type { DrawOp } from "./testing/recording-drawing.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
+import { inSweep } from "./testing/slow.ts";
 import type { Size } from "./types.ts";
 
 beforeAll(registerAllGames);
@@ -224,7 +225,9 @@ describe("every note-taking game keeps the glyph's box clear", () => {
   }
 
   it("looked at a frame per game and tile size", () => {
-    expect(framesChecked).toBe(noteTaking.ids.length * SWEEP_TILES.length);
+    expect(framesChecked).toBe(
+      noteTaking.ids.filter(inSweep).length * SWEEP_TILES.length,
+    );
   });
 });
 
@@ -277,6 +280,8 @@ describe("the glyph reads against the canvas it sits on", () => {
   }
 
   it("measured every member at every slot", () => {
-    expect(cases).toBeGreaterThanOrEqual(noteTaking.ids.length * SLOTS.length);
+    expect(cases).toBeGreaterThanOrEqual(
+      noteTaking.ids.filter(inSweep).length * SLOTS.length,
+    );
   });
 });

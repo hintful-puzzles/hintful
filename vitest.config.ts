@@ -1,6 +1,8 @@
+import { readdirSync } from "node:fs";
 import { availableParallelism } from "node:os";
 import { configDefaults, defineConfig } from "vitest/config";
 import { sourceScanTests } from "./scripts/checks/source-scans.ts";
+import { otherGamesFilter, scopeFromEnv } from "./src/engine/testing/game-scope.ts";
 
 const INCLUDE = ["src/**/*.test.ts", "vite-plugins/**/*.test.ts"];
 
@@ -25,6 +27,23 @@ function passFiles(): { include: string[]; exclude: string[] } {
   throw new Error(
     `GATE_TEST_PASS must be "scan" or "main", not ${JSON.stringify(pass)}`,
   );
+}
+
+/**
+ * The name filter that skips every other game's cross-game cases, when the
+ * pre-commit hook scoped this run to the games a commit touched. `slow.ts`
+ * reads the same variable for the assertions that span a sweep, so the cases
+ * skipped here and the ledgers narrowed there cannot disagree about which games
+ * ran. Unset everywhere but the hook, so CI never narrows.
+ */
+function gameScopeFilter(): { testNamePattern?: string } {
+  const scope = scopeFromEnv(process.env);
+  if (scope === null) return {};
+  const allIds = readdirSync("src/games", { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name);
+  const pattern = otherGamesFilter(scope, allIds);
+  return pattern === null ? {} : { testNamePattern: pattern };
 }
 
 /** How many checkouts the developer typically has open at once (owner,
@@ -114,6 +133,7 @@ export default defineConfig({
     // `tsconfig.node.json`, so they may use Node types the browser-shaped
     // `src/` project does not have.
     ...passFiles(),
+    ...gameScopeFilter(),
     environment: "node",
     maxWorkers: maxWorkers(),
     // ONE generous ceiling for the whole suite; no test sets its own.

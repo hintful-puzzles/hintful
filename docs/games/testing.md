@@ -470,14 +470,45 @@ directory and 30% once its cases inside the cross-game guards are counted. The
 per-game `it` title is the join key; this is `AGENTS.md` § "A scan that keys on a
 name" aimed at a cost model.
 
-**Don't reach for "run only the affected tests".** It was measured
-(`measure-test-impact-selection`, 2026-09-09) and it does not work here.
-`vitest related` walks the static import graph, but 26 test files reach their
-subjects through `import.meta.glob(..., "?raw")` — reading game source as *text*,
-because a cross-game guard derives its population from what a game **is**. A
-file read as text forms no import edge, so a game change omits five glob-only
-guards and a `help/` change selects **nothing at all**. The rule that makes the
-guards impossible to forget is what makes them invisible to the graph.
+**The import graph alone cannot say which tests a change affects.** Measured
+(`measure-test-impact-selection`, 2026-09-09): `vitest related` walks the static
+import graph, but 26 test files reach their subjects through
+`import.meta.glob(..., "?raw")` — reading game source as *text*, because a
+cross-game guard derives its population from what a game **is**. A file read as
+text forms no import edge, so a game change omits five glob-only guards and a
+`help/` change selects **nothing at all**. The rule that makes the guards
+impossible to forget is what makes them invisible to the graph. That is why the
+hook's selection (`scripts/checks/select-tests.mjs`) is the union of the graph
+and every glob that reaches a staged path, and never the graph alone.
+
+**Title a cross-game case `<id>: …`, and let it read only that game.** Any
+change to a game reaches the registry, and every cross-game guard imports the
+registry, so file selection saves nothing there; the cost is inside the files.
+Measured 2026-09-27 on a Pearl-only change, 518 s of 593 s of test time was
+per-game cases in cross-game guards, and 413 s of that was games other than
+Pearl. So when every staged path is under `src/games/<id>/`, the hook sets
+`GATE_GAME_SCOPE` and vitest skips every case titled for another game. That
+took the Pearl commit's selection from 310 s to 103 s of wall time. The
+soundness condition and both of the things that read the variable are in
+[`game-scope.ts`](../../src/engine/testing/game-scope.ts). A case titled some
+other way still runs, which costs time and never a check. A case titled for one
+game that reads another would be skipped unsoundly, so don't write one. Build
+the title with a template, never `describe.each(...)("$id: …")`: vitest renders
+a `$` field quoted, so the title comes out as `'keen': …`. That is how
+`difficulty-contract.test.ts` escaped the narrowing until it became a loop.
+
+**An assertion over a whole sweep has to narrow with it.** A narrowed run's
+counters see only the touched game's cases, so a count held against the
+registry or a floor like "walked more than 100 boards" goes red on an innocent
+commit. [`slow.ts`](../../src/engine/testing/slow.ts) has the two answers. Filter
+a ledger compared against what the cases found with `inSweep`, so the touched
+game's entry is still checked. Put a floor no single game could meet in
+`itOverWholeSweep`, which skips it on a narrowed run. When a touched game *could*
+fail a floor on its own, for example by dropping out of the population so that
+it has no case left, compute the floor from the games directly rather than from
+the cases, and keep it in a plain `it` (`input-parity.test.ts`'s `offered`
+keypads). To check a new guard, run it with `GATE_PRECOMMIT=1
+GATE_GAME_SCOPE=<one game>`; what fails there is what the hook would reject.
 
 **Measure CPU rather than wall — and check what the box is short of first.**
 Contention inflates wall several-fold and unevenly (5.2× on one file, 1.6× on

@@ -93,6 +93,7 @@ import {
   UNACTIONABLE,
   unactionableClaims,
 } from "./testing/input-probe.ts";
+import { inSweep, itOverWholeSweep } from "./testing/slow.ts";
 
 beforeAll(registerAllGames);
 
@@ -214,9 +215,11 @@ describe("a game does not claim a button it did not act on", () => {
   }
 
   it("swept every registered game, over codes that exist", () => {
-    expect(sweptGames).toBe(REGISTERED.length);
+    expect(sweptGames).toBe(REGISTERED.filter(inSweep).length);
     expect(UNACTIONABLE.length).toBeGreaterThan(1);
-    expect(claimants.sort()).toEqual(Object.keys(CLAIMS_UNACTIONABLE).sort());
+    expect(claimants.sort()).toEqual(
+      Object.keys(CLAIMS_UNACTIONABLE).filter(inSweep).sort(),
+    );
   });
 });
 
@@ -295,7 +298,10 @@ describe("a gesture from a finger does what the same gesture from a mouse does",
   }
 
   it("swept every registered game, and found gestures in each", () => {
-    expect(sweptGames).toBe(REGISTERED.length);
+    expect(sweptGames).toBe(REGISTERED.filter(inSweep).length);
+  });
+
+  itOverWholeSweep("found more gestures than a broken probe could", () => {
     expect(sweptGestures).toBeGreaterThan(1000);
   });
 });
@@ -350,11 +356,14 @@ describe("a long press cannot silently swallow a gesture", () => {
     });
   }
 
-  it("found the games it claims to have found", () => {
+  itOverWholeSweep("observed a plausible share of games ignoring the button", () => {
     // Vacuity: a probe that observed nothing anywhere would declare all 57
     // games secondary-button-free and demand the flag on every one of them.
     expect(observed.length).toBeGreaterThan(0);
     expect(observed.length).toBeLessThan(REGISTERED.length / 2);
+  });
+
+  it("found the games it claims to have found", () => {
     expect(declared).toEqual(observed);
   });
 });
@@ -392,9 +401,12 @@ describe("keyboard reachability is a recorded decision for every game", () => {
     });
   }
 
-  it("the exemption list names only games that really have no keyboard", () => {
+  itOverWholeSweep("found a keyboard in most games", () => {
     expect(withKeyboard.length).toBeGreaterThan(50);
-    expect(Object.keys(NO_KEYBOARD).sort()).toEqual(without.sort());
+  });
+
+  it("the exemption list names only games that really have no keyboard", () => {
+    expect(Object.keys(NO_KEYBOARD).filter(inSweep).sort()).toEqual(without.sort());
     for (const reason of Object.values(NO_KEYBOARD))
       expect(reason.length).toBeGreaterThan(80);
   });
@@ -414,6 +426,13 @@ describe("every on-screen key a game offers reaches that game", () => {
    */
   let panelGames = 0;
   let panelKeys = 0;
+  /** Every game offering a panel, read without building a board, so the floor
+   * below holds even on a run whose cases were narrowed to one game — a game
+   * that loses its keypad has no case left to fail. */
+  const offered = REGISTERED.filter((id) => {
+    const game = getTsGame(id) as AnyGame | undefined;
+    return (game?.requestKeys?.(game.defaultParams()) ?? []).length > 0;
+  });
 
   for (const id of REGISTERED) {
     const game = getTsGame(id) as AnyGame | undefined;
@@ -484,7 +503,11 @@ describe("every on-screen key a game offers reaches that game", () => {
     // that *loses* its keypad has every on-screen key made unreachable at once,
     // which is the largest version of the defect this describe block exists to
     // catch, and it was the one thing it could not see.
-    expect(panelGames).toBeGreaterThanOrEqual(12);
+    expect(offered.length).toBeGreaterThanOrEqual(12);
+    expect(panelGames).toBe(offered.filter(inSweep).length);
+  });
+
+  itOverWholeSweep("swept a plausible number of on-screen keys", () => {
     expect(panelKeys).toBeGreaterThan(60);
   });
 });
