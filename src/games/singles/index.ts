@@ -24,6 +24,7 @@ import {
 } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { changedCells, trackTargets } from "../../engine/hint-track.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -210,19 +211,19 @@ function executeMove(state: SinglesState, move: SinglesMove): SinglesState {
   return next;
 }
 
+/** The mark a player has put on cell `i`. */
+function cellValue(s: SinglesState, i: number): CellValue {
+  const f = s.flags[i];
+  return f & F_BLACK ? "black" : f & F_CIRCLE ? "circle" : "empty";
+}
+
 /** The B/C/E diff between two states (upstream game_state_diff). */
 function diffMove(src: SinglesState, dst: SinglesState): SinglesMove {
   const sets: SinglesMove["sets"] = [];
   for (let x = 0; x < dst.w; x++) {
     for (let y = 0; y < dst.h; y++) {
-      const i = y * dst.w + x;
-      const sm = src.flags[i] & (F_BLACK | F_CIRCLE);
-      const dm = dst.flags[i] & (F_BLACK | F_CIRCLE);
-      if (sm !== dm) {
-        const value: CellValue =
-          dm & F_BLACK ? "black" : dm & F_CIRCLE ? "circle" : "empty";
-        sets.push({ x, y, value });
-      }
+      const value = cellValue(dst, y * dst.w + x);
+      if (cellValue(src, y * dst.w + x) !== value) sets.push({ x, y, value });
     }
   }
   return { sets, solve: true };
@@ -431,31 +432,34 @@ function hint(state: SinglesState): HintResult<SinglesMove, SinglesHint> {
   return { ok: true, steps };
 }
 
-/** A move completes a step when it sets every target cell to its hinted
- * value; a move filling a strict subset of a multi-cell step (and nothing
- * else) is `"onTrack"`, shrinking the step in place to what remains. */
+/** Classify a player move by what it did to the board
+ * (`engine/hint-track.ts`); a multi-cell step shrinks in place to the cells
+ * still outstanding. */
 function hintKeepTrack(
   m: SinglesMove,
   step: HintStep<SinglesMove, SinglesHint>,
   state: SinglesState,
 ): HintTrackVerdict {
   const hl = step.highlights;
-  if (m.solve || !hl || hl.targets.length === 0) return "off";
-  const key = (c: Point): number => c.y * state.w + c.x;
-  const want = new Map<number, CellValue>(hl.targets.map((t) => [key(t), t.value]));
-  for (const s of m.sets) {
-    if (want.get(key(s)) !== s.value) return "off";
+  if (m.solve || !hl) return "off";
+  const after = executeMove(state, m);
+  const index = (c: Point): number => c.y * state.w + c.x;
+  const { verdict, left } = trackTargets({
+    targets: hl.targets,
+    changes: changedCells(
+      state.flags.length,
+      (i) => cellValue(state, i),
+      (i) => cellValue(after, i),
+    ),
+    key: (t) => index(t),
+    want: (t): CellValue => t.value,
+    holds: (t) => cellValue(after, index(t)) === t.value,
+  });
+  if (verdict === "onTrack") {
+    step.move = { sets: left.map((t) => ({ ...t })) };
+    step.highlights = { ...hl, targets: left };
   }
-  if (m.sets.length === 0) return "off";
-  if (m.sets.length === want.size) return "completed";
-
-  // Strict subset of a multi-cell step: keep it displayed, shrunk to the
-  // cells still outstanding (permitted on "onTrack").
-  const done = new Set(m.sets.map(key));
-  const remaining = hl.targets.filter((t) => !done.has(key(t)));
-  step.move = { sets: remaining.map((t) => ({ ...t })) };
-  step.highlights = { ...hl, targets: remaining };
-  return "onTrack";
+  return verdict;
 }
 
 /** Singles' difficulty contract (`engine/difficulty.ts`). `solveSpecific`

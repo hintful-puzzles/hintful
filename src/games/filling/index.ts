@@ -19,6 +19,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { changedCells, trackTargets } from "../../engine/hint-track.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -248,28 +249,33 @@ function hint(state: FillingState): HintResult<FillingMove, FillingHint> {
   return { ok: true, steps };
 }
 
-/** Classify a player move against a (possibly multi-square) hint step. The
- * move must set the hinted value into a subset of the step's cells (and
- * nothing else): filling all of them completes the step, filling some keeps
- * it on track (the step shrinks so a later auto-hint fills only the rest),
- * and anything else drops the plan to recompute. */
+/** Classify a player move by what it did to the board
+ * (`engine/hint-track.ts`); a multi-square step shrinks in place so a later
+ * auto-hint fills only the rest. */
 function hintKeepTrack(
   m: FillingMove,
   step: HintStep<FillingMove, FillingHint>,
-  _state: FillingState,
+  state: FillingState,
 ): HintTrackVerdict {
-  if (m.type !== "set") return "off";
   const t = step.highlights;
-  if (!t || m.value !== t.value) return "off";
-  if (!m.cells.every((c) => t.cells.includes(c))) return "off"; // touched a non-target
-  const filled = new Set(m.cells);
-  const remaining = t.cells.filter((c) => !filled.has(c));
-  if (remaining.length === t.cells.length) return "off"; // hit none of the targets
-  if (remaining.length === 0) return "completed";
-  // Partial progress: shrink the step to the squares still to fill.
-  step.highlights = { ...t, cells: remaining };
-  step.move = { type: "set", cells: remaining, value: t.value };
-  return "onTrack";
+  if (m.type !== "set" || !t) return "off";
+  const after = executeMove(state, m);
+  const { verdict, left } = trackTargets({
+    targets: t.cells,
+    changes: changedCells(
+      state.board.length,
+      (i) => state.board[i],
+      (i) => after.board[i],
+    ),
+    key: (c) => c,
+    want: () => t.value,
+    holds: (c) => after.board[c] === t.value,
+  });
+  if (verdict === "onTrack") {
+    step.highlights = { ...t, cells: left };
+    step.move = { type: "set", cells: left, value: t.value };
+  }
+  return verdict;
 }
 
 export const fillingGame: Game<

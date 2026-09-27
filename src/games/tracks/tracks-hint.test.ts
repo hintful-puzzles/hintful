@@ -44,6 +44,7 @@ import {
   DX,
   DY,
   E_TRACK,
+  FLIP,
   inGrid,
   R,
   S_TRACK,
@@ -566,6 +567,34 @@ describe("following one step at a time", () => {
         expect(step.move.ops).not.toContainEqual(wanted[i]);
       }
     }
+  });
+
+  it("an edge named from the square on its other side is the same edge", () => {
+    // An edge flag lives on both squares it separates, and a drag may name it
+    // from either one.
+    const params = SHAPES[0];
+    const { steps } = walk(params, "keeptrack-a");
+    const found = steps.flatMap(({ step, before }) =>
+      step.move.ops
+        .filter((op) => op.kind === "edge")
+        .map((op) => ({ step, before, op })),
+    );
+    const other = found.find(({ op, before }) =>
+      inGrid(before, op.x + DX(op.dir ?? 0), op.y + DY(op.dir ?? 0)),
+    );
+    expect(other, "no interior edge op in the corpus").toBeDefined();
+    if (!other) return;
+    const { step, before, op } = other;
+    const dir = op.dir ?? 0;
+    const flipped: TracksOp = {
+      ...op,
+      x: op.x + DX(dir),
+      y: op.y + DY(dir),
+      dir: FLIP(dir),
+    };
+    expect(tracksGame.hintKeepTrack?.({ ops: [flipped] }, step, before)).not.toBe(
+      "off",
+    );
   });
 
   it("a move the step never asked for is off-plan", () => {

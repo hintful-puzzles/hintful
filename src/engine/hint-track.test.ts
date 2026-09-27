@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { trackTargets } from "./hint-track.ts";
+import { changedCells, trackTargets } from "./hint-track.ts";
 
 /** Squares 1, 2 and 3 should each become 9; `board` is the board after the
  * move, `changes` what the move changed. */
@@ -44,5 +44,21 @@ describe("trackTargets", () => {
       verdict: "completed",
       left: [],
     });
+  });
+});
+
+describe("changedCells", () => {
+  it("keys every differing cell to its new value, and nothing else", () => {
+    const before = [0, 1, 2, 3];
+    const after = [0, 5, 2, 0];
+    const changes = changedCells(
+      4,
+      (i) => before[i],
+      (i) => after[i],
+    );
+    expect([...changes]).toEqual([
+      [1, 5],
+      [3, 0],
+    ]);
   });
 });

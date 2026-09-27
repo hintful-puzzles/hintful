@@ -16,23 +16,27 @@
  * words point at something visible.
  */
 
-import type { HintStep } from "../../engine/game.ts";
+import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
+import { trackTargets } from "../../engine/hint-track.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { type Axis, say } from "./hint-text.ts";
+import { executeMove } from "./moves.ts";
 import { type TracksFiring, type TracksReason, tracksRecordingPass } from "./solver.ts";
 import {
   type Board,
   checkCompletion,
+  DIRS,
   DX,
   DY,
   E_TRACK,
   FLIP,
   inGrid,
+  L,
   S_NOTRACK,
   S_NOTRACK_SHIFT,
   S_TRACK,
@@ -42,6 +46,7 @@ import {
   type TracksMove,
   type TracksOp,
   type TracksState,
+  U,
 } from "./state.ts";
 
 /**
@@ -302,42 +307,75 @@ export function tracksHint(
 
 // --- following the plan ---------------------------------------------------
 
-const sameOp = (a: TracksOp, b: TracksOp): boolean =>
-  a.kind === b.kind &&
-  a.x === b.x &&
-  a.y === b.y &&
-  a.track === b.track &&
-  a.set === b.set &&
-  (a.kind === "square" || a.dir === b.dir);
+/**
+ * One flag of the board, named the same whichever square an op spells it
+ * from: an edge flag is stored on both squares it separates, so an edge named
+ * leftward or upward is keyed from its neighbor, when there is one.
+ */
+function flagKey(
+  b: { w: number; h: number },
+  kind: TracksOp["kind"],
+  x: number,
+  y: number,
+  dir: number,
+  track: boolean,
+): string {
+  if (kind === "square") return `s ${x} ${y} ${track}`;
+  if ((dir === L || dir === U) && inGrid(b, x + DX(dir), y + DY(dir)))
+    return `e ${x + DX(dir)} ${y + DY(dir)} ${FLIP(dir)} ${track}`;
+  return `e ${x} ${y} ${dir} ${track}`;
+}
+
+const opKey = (b: { w: number; h: number }, op: TracksOp): string =>
+  flagKey(b, op.kind, op.x, op.y, op.dir ?? 0, op.track);
+
+/** Every square and edge flag that differs between two boards, with whether
+ * it is now set. */
+function flagChanges(before: Board, after: Board): Map<string, boolean> {
+  const out = new Map<string, boolean>();
+  for (let y = 0; y < before.h; y++) {
+    for (let x = 0; x < before.w; x++) {
+      for (const track of [true, false]) {
+        const sq: TracksOp = { kind: "square", x, y, track, set: true };
+        const now = appliedIn(after, sq);
+        if (appliedIn(before, sq) !== now) out.set(opKey(before, sq), now);
+        for (const dir of DIRS) {
+          const edge: TracksOp = { kind: "edge", x, y, dir, track, set: true };
+          const on = appliedIn(after, edge);
+          if (appliedIn(before, edge) !== on) out.set(opKey(before, edge), on);
+        }
+      }
+    }
+  }
+  return out;
+}
 
 /**
- * Classify a player move against the displayed step.
+ * Classify a player move against the displayed step, by what it did to the
+ * board (`engine/hint-track.ts`), so a drag and a click that set the same
+ * flags are the same move.
  *
  * A firing that forces several squares is one step whose move carries all of
  * them (docs/games/hints.md § "Group one firing into one step"), and the player
- * places them one click or one drag at a time. So the verdict is judged on the
- * step's *own* op list: every op the player made must belong to it, and the
- * step is shrunk in place to what is left so a later `executeHint` does not
- * re-apply what is already done.
+ * places them one click or one drag at a time, so the step is shrunk in place
+ * to what is left and a later `executeHint` does not re-apply what is done.
  */
 export function tracksKeepTrack(
   m: TracksMove,
   step: HintStep<TracksMove, TracksHighlights>,
   state: TracksState,
-): "completed" | "onTrack" | "off" {
+): HintTrackVerdict {
   if (m.solve) return "off";
-  const wanted = step.move.ops;
-  if (m.ops.length === 0) return "off";
-  if (!m.ops.every((op) => wanted.some((wop) => sameOp(op, wop)))) return "off";
-
-  // `state` is the board the move is about to change (the midend classifies
-  // before applying), so an op is done if the player's own move carries it or
-  // it was already set.
-  const board = stateToBoard(state);
-  const done = (op: TracksOp): boolean =>
-    m.ops.some((pop) => sameOp(op, pop)) || appliedIn(board, op);
-  const left = wanted.filter((op) => !done(op));
-  if (left.length === 0) return "completed";
+  const before = stateToBoard(state);
+  const after = stateToBoard(executeMove(state, m));
+  const { verdict, left } = trackTargets({
+    targets: step.move.ops,
+    changes: flagChanges(before, after),
+    key: (op) => opKey(before, op),
+    want: (op) => op.set,
+    holds: (op) => appliedIn(after, op) === op.set,
+  });
+  if (verdict !== "onTrack") return verdict;
 
   step.move = { ops: left };
   if (step.highlights) {
@@ -354,7 +392,7 @@ export function tracksKeepTrack(
   return "onTrack";
 }
 
-/** Is this op's flag already set on `b`? */
+/** Is the flag this op names set on `b`? */
 function appliedIn(b: Board, op: TracksOp): boolean {
   const f = b.sflags[op.y * b.w + op.x];
   if (op.kind === "square") return (f & (op.track ? S_TRACK : S_NOTRACK)) !== 0;

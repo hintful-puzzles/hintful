@@ -1905,9 +1905,15 @@ instead of dribbling them out one per request. Exemplar: `nextRegionGroup` in
   remaining cells) so a later `executeHint` doesn't re-fill what's done. A
   non-target cell, or the wrong value, is `"off"`. That verdict is
   [`engine/hint-track.ts`](../../src/engine/hint-track.ts)'s `trackTargets`:
-  hand it what the move changed (a board diff, as Pearl and Tents take, or the
-  move's own cells, as Pattern does), how a target is keyed, what it wants and
-  whether it holds after the move, and rebuild the shrunk move yourself.
+  hand it what the move changed, how a target is keyed, what it wants and
+  whether it holds after the move, and rebuild the shrunk move yourself. **Take
+  the changes from a board diff** (`executeMove` on the pre-move state), not
+  from the move's ops: a toggle that takes a mark back off, or an op that
+  changes nothing, then answers itself. A board with one value per cell diffs
+  with `changedCells` (Singles, Light Up, Filling); a game whose elements are
+  something else keys its own, and an element stored in two places must be
+  keyed once — Tracks names an edge from the square on its right or below
+  whichever side the move spelled it from.
 
 A clean seam for the `continuesPrevious`-legs form: when the solver fills a
 whole line through a shared helper (Unruly's `fillRow`), thread the recorder

@@ -485,10 +485,11 @@ the player can already see — a later step may cite it. See
 squares or edges, judged by what the player's move changed rather than by its
 ops. Every change must be a target set the way it asks; nothing changed is off;
 otherwise `"completed"` once every target holds, else `"onTrack"` with the
-targets left, which the game turns back into its own move and highlights. Pearl,
-Pattern and Tents use it; a game that reads the changes off its move's ops fits
-it as well as one that diffs the board. See [`hints.md`](./hints.md) § "Group
-one firing into one step".
+targets left, which the game turns back into its own move and highlights.
+`changedCells` is the changes of a board with one value per cell, diffed across
+the move; a game whose elements are edges, links or flags writes its own diff.
+Take the population with `npm run refs -- src/engine/hint-track.ts trackTargets`.
+See [`hints.md`](./hints.md) § "Group one firing into one step".
 
 ### `candidate-hint.ts` — candidate-elimination plan plumbing
 

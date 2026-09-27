@@ -22,6 +22,7 @@ import type {
 } from "../../engine/game.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { changedCells, trackTargets } from "../../engine/hint-track.ts";
 import {
   dimensionParamConfig,
   parseConfigInt,
@@ -375,20 +376,25 @@ function hint(state: LightupState): HintResult<LightupMove, LightupHint> {
   return { ok: true, steps: plan.map(buildStep) };
 }
 
-/** Does the cell already carry the step's mark? (`state` is pre-move: a
- * toggle op on such a cell would *remove* the mark — off-plan.) */
+/** The player's mark on cell `i`: `F_LIGHT`, `F_IMPOSSIBLE` or 0. */
+const markAt = (state: LightupState, i: number): number =>
+  state.flags[i] & (F_LIGHT | F_IMPOSSIBLE);
+
+const markFlag = (kind: "light" | "impossible"): number =>
+  kind === "light" ? F_LIGHT : F_IMPOSSIBLE;
+
+/** Does the cell already carry the step's mark? */
 function hasMark(
   state: LightupState,
   cell: Point,
   kind: "light" | "impossible",
 ): boolean {
-  const flags = state.flags[idx(cell.x, cell.y, state.w)];
-  return kind === "light" ? !!(flags & F_LIGHT) : !!(flags & F_IMPOSSIBLE);
+  return markAt(state, idx(cell.x, cell.y, state.w)) === markFlag(kind);
 }
 
-/** A player move that places the step's mark on a subset of its cells is
- * on track (shrink the step in place); covering the last cell completes
- * it; anything else drops the plan to recompute. `state` is pre-move. */
+/** Classify a player move by what it did to the board
+ * (`engine/hint-track.ts`), so a toggle that takes a mark back off is a change
+ * the step never asked for; a multi-cell step shrinks in place. */
 function hintKeepTrack(
   m: LightupMove,
   step: HintStep<LightupMove, LightupHint>,
@@ -397,19 +403,23 @@ function hintKeepTrack(
   if (m.solve) return "off";
   const hl = step.highlights;
   if (!hl) return "off";
-  const remaining = hl.targets.filter((t) => !hasMark(state, t, hl.kind));
-  if (remaining.length === 0) return "off";
-  for (const op of m.ops) {
-    if (op.kind !== hl.kind) return "off";
-    // The op must place the mark on a still-pending target; a toggle on a
-    // done cell would remove it again.
-    if (!remaining.some((t) => sameCell(t, op))) return "off";
+  const after = executeMove(state, m);
+  const { verdict, left } = trackTargets({
+    targets: hl.targets,
+    changes: changedCells(
+      state.flags.length,
+      (i) => markAt(state, i),
+      (i) => markAt(after, i),
+    ),
+    key: (c) => idx(c.x, c.y, state.w),
+    want: () => markFlag(hl.kind),
+    holds: (c) => hasMark(after, c, hl.kind),
+  });
+  if (verdict === "onTrack") {
+    step.move = { ops: left.map((c) => ({ kind: hl.kind, x: c.x, y: c.y })) };
+    step.highlights = { ...hl, targets: left };
   }
-  const left = remaining.filter((t) => !m.ops.some((op) => sameCell(op, t)));
-  if (left.length === 0) return "completed";
-  step.move = { ops: left.map((c) => ({ kind: hl.kind, x: c.x, y: c.y })) };
-  step.highlights = { ...hl, targets: left };
-  return "onTrack";
+  return verdict;
 }
 
 /** Validate-at-display: drop targets that already carry the step's mark

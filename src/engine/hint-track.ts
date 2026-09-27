@@ -49,3 +49,21 @@ export function trackTargets<Target, Key, Value>(
   const left = targets.filter((t) => !spec.holds(t));
   return { verdict: left.length === 0 ? "completed" : "onTrack", left };
 }
+
+/**
+ * The {@link TargetTrack.changes} of a board with one value per cell: every
+ * index in `[0, size)` whose value differs, with the value it now holds.
+ * A game whose elements are not simply its cells (edges, links) keys its own.
+ */
+export function changedCells<V>(
+  size: number,
+  before: (i: number) => V,
+  after: (i: number) => V,
+): Map<number, V> {
+  const out = new Map<number, V>();
+  for (let i = 0; i < size; i++) {
+    const v = after(i);
+    if (before(i) !== v) out.set(i, v);
+  }
+  return out;
+}
