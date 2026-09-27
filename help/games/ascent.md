@@ -34,13 +34,13 @@ Where a cell has exactly two candidate numbers like that, right-clicking cycles 
 
 * **A ring** marks the square the step fills.
 * **An outline** marks what it reasons from: the numbers the new one sits between, a dead end's one way in, or the squares a missing run has to step through.
-* **Stripes** mark the row, column or diagonal an arrow points along.
+* **Stripes** mark the row, column or diagonal an arrow points along, or every square a run of missing numbers can reach.
 
 A *step* is one move to a neighboring square, so two numbers can be no more steps apart than they are apart in the sequence. That one idea gives most of the hint's reasons:
 
 * **Next to its neighbors.** A number must sit next to the numbers just before and after it, so when only one empty square touches both, or the one that is placed, it goes there.
 * **Within reach.** A number must be within as many steps of the nearest placed numbers below and above it as they are apart in the sequence: 10 is within 2 steps of 8 and within 3 of 13. When only one empty square is in reach of both, the number goes there. In Edges mode it must also be on its arrow's line.
-* **Only one number can reach it.** Turned round, an empty square that no missing number but one can reach must hold that one.
+* **Only one run can reach it.** A *run* is the missing numbers between two placed ones, like 14 and 15 between 13 and 16. A run can only use squares close enough to both its ends: here, the steps to 13 and the steps to 16 add up to at most 3. So each run has an area it can reach, and an empty square inside only one run's area belongs to that run. The hint stripes that area and outlines the run's ends; check the runs nearby and you will see none of them gets there. Which number of the run it is follows the same way: only one is close enough to both ends.
 * **A dead end.** A square the path can enter from only one neighbor must be an end of the path, so it holds 1 or the highest number. A neighbor is closed to the path when it is a wall, an arrow, or a number already joined to both of its neighbors in the sequence.
 * On harder boards, and in Edges mode: **stepping through empty squares.** A missing run of numbers has to step from one placed number to the next through empty squares, one square per number, so walls and filled squares in the way stretch the distance. Sometimes only one square works for a number on any such route.
 

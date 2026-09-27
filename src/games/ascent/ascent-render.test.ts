@@ -134,6 +134,34 @@ describe("ascent hint frames", () => {
     expect(recording.ops).toMatchSnapshot();
   });
 
+  it("stripes the reach of the one run that can fill a square, square or hexagon", () => {
+    for (const [p, perCell] of [
+      [{ ...RECT, diff: 2 }, 1],
+      [{ ...HEXAGON, w: 7, h: 7, diff: 2 }, 7],
+    ] as const) {
+      let found = false;
+      for (let seed = 0; seed < 20 && !found; seed++) {
+        const { recording, hint } = renderScenario({
+          game: ascentGame,
+          id: id(p, `render-run-${seed}`),
+          showHint: true,
+          hintUntil: (s) => /^Only the run/.test(s.explanation),
+        });
+        if (!hint || !/^Only the run/.test(hint.explanation)) continue;
+        found = true;
+        const marks = hl(hint);
+        expect(marks?.hatch).toContain(marks?.target);
+        // Every striped cell is hatched, a hexagon on rects that stay inside it.
+        const hatches = recording.ops.filter(
+          (o) => o.op === "hatch" && o.color === COL_HINT,
+        );
+        expect(hatches).toHaveLength((marks?.hatch.length ?? -1) * perCell);
+        expect(recording.ops).toMatchSnapshot();
+      }
+      expect(found, `no run step on ${ascentGame.encodeParams(p, true)}`).toBe(true);
+    }
+  });
+
   it("Edges: stripes the line an arrow points along when the sentence names it", () => {
     const { recording, hint } = renderScenario({
       game: ascentGame,

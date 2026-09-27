@@ -377,18 +377,32 @@ function arrowNeeded(f: AscentFiring, bounds: readonly Measured[]): number {
   return squaresWithin(f.before, bounds, -1).length > 1 ? arrow : -1;
 }
 
-/** The squares the missing run around `n` may use, by the route reading. */
-function routeSquares(f: AscentFiring): { lo: number; hi: number; squares: number[] } {
+/**
+ * The run of missing numbers `n` belongs to: `lo` to `hi`, the placed numbers
+ * either side of it (absent at an end of the path), their squares, and every
+ * square the run's numbers may use by `reach`.
+ */
+function runOf(f: AscentFiring, reach: Reach) {
   const { n, before } = f;
   const { below, above } = bracket(before, n);
   const lo = below ? below.m + 1 : 0;
   const hi = above ? above.m - 1 : before.last;
-  const sc = reading(before, "route");
+  const sc = reading(before, reach);
   const s = before.w * before.h;
   const squares = new Set<number>();
   for (let k = lo; k <= hi; k++)
     for (let i = 0; i < s; i++) if (sc.marks[i * s + k]) squares.add(i);
-  return { lo, hi, squares: [...squares].sort((a, b) => a - b) };
+  const ends: number[] = [];
+  if (below) ends.push(below.cell);
+  if (above) ends.push(above.cell);
+  return {
+    lo,
+    hi,
+    below: below ? below.m : null,
+    above: above ? above.m : null,
+    ends,
+    squares: [...squares].sort((a, b) => a - b),
+  };
 }
 
 /**
@@ -445,40 +459,37 @@ export function stepOf(f: AscentFiring): AscentStep {
       ]);
     }
     case "onlyBeside":
-    case "routeBeside": {
-      const positions = positionsOf(before);
-      const beside = [n - 1, n + 1].find(
-        (m) => m >= 0 && m <= before.last && positions[m] !== CELL_NONE,
-      );
-      if (beside === undefined)
-        throw new Error("ascent hint: a single number with no placed neighbor");
-      const text =
-        f.reason.kind === "onlyBeside"
-          ? say.only(shown(n), shown(beside))
-          : say.routeOnly(shown(n), shown(beside));
-      return step(text, [positions[beside]]);
-    }
     case "only":
-      return step(say.only(shown(n), null), []);
+    case "routeBeside":
+    case "routeOnly": {
+      // The square is in one run's reach and no other's: stripe that reach
+      // and outline the run's ends, so the run the sentence names is on the
+      // board beside the others the player can compare it with.
+      const byRoute = f.reason.kind === "routeBeside" || f.reason.kind === "routeOnly";
+      const run = runOf(f, byRoute ? "route" : "reach");
+      const text = say.onlyRun(
+        shown(n),
+        shown(run.lo),
+        shown(run.hi),
+        run.below === null ? null : shown(run.below),
+        run.above === null ? null : shown(run.above),
+        byRoute,
+      );
+      return step(text, run.ends, run.squares);
+    }
     case "route": {
-      const { below, above } = bracket(before, n);
-      const { lo, hi, squares } = routeSquares(f);
-      const ends: number[] = [];
-      if (below) ends.push(below.cell);
-      if (above) ends.push(above.cell);
+      const run = runOf(f, "route");
       return step(
         say.route(
           shown(n),
-          shown(lo),
-          shown(hi),
-          below ? shown(below.m) : null,
-          above ? shown(above.m) : null,
+          shown(run.lo),
+          shown(run.hi),
+          run.below === null ? null : shown(run.below),
+          run.above === null ? null : shown(run.above),
         ),
-        [...ends, ...squares.filter((i) => i !== cell)],
+        [...run.ends, ...run.squares.filter((i) => i !== cell)],
       );
     }
-    case "routeOnly":
-      return step(say.routeOnly(shown(n), null), []);
   }
 }
 

@@ -10,10 +10,11 @@
  * The words are the help page's: a **step** is one move to a neighboring
  * square, so a number sits within as many steps of another as they are apart
  * in the sequence; a square is a **dead end** when the path can reach it from
- * only one neighbor; a missing run of numbers **steps** from one placed number
- * to the next through empty squares. The square a step fills is "this square",
- * the squares it reasons from are outlined, and the line an arrow points along
- * is striped.
+ * only one neighbor; a **run** is the missing numbers between two placed ones,
+ * and it **steps** from one to the other through empty squares. The square a
+ * step fills is "this square", the squares it reasons from are outlined, and
+ * what is striped is either the line an arrow points along or the squares a
+ * run can reach.
  */
 
 /** How close a number must be to `m`, which is `d` places from it in the sequence. */
@@ -82,12 +83,32 @@ export const say = {
     return `${lead} ${other}'s arrow points elsewhere, so it must be ${n}.`;
   },
 
-  /** No missing number but `n` can reach this square; `beside` is its placed
-   * neighbor in the sequence, which the square touches, when there is one. */
-  only: (n: number, beside: number | null): string =>
-    beside === null
-      ? `No missing number but ${n} can reach this square, so it must be ${n}.`
-      : `This square is next to ${beside}, and no other missing number can reach it, so it must be ${n}.`,
+  /**
+   * Of all the runs of missing numbers, only `lo`..`hi` reaches this square
+   * (its reach is striped), and of its numbers only `n` does. `from` and `to`
+   * are its placed ends, either absent at an end of the path; `byRoute` when
+   * reach is counted through empty squares.
+   */
+  onlyRun: (
+    n: number,
+    lo: number,
+    hi: number,
+    from: number | null,
+    to: number | null,
+    byRoute: boolean,
+  ): string => {
+    const ends =
+      from !== null && to !== null
+        ? `between ${from} and ${to}`
+        : from !== null
+          ? `after ${from}`
+          : `before ${to}`;
+    const reach = byRoute
+      ? "can step here through empty squares"
+      : "can reach this square";
+    if (lo === hi) return `Only ${n}, ${ends}, ${reach}, so it must be ${n}.`;
+    return `Only the run ${lo} to ${hi} ${ends} ${reach}, and of those only ${n} can, so it must be ${n}.`;
+  },
 
   /**
    * The missing run `lo`..`hi` must step between its placed ends, `from` below
@@ -110,11 +131,4 @@ export const say = {
           : `back from ${to}`;
     return `${numbers} must step ${way} through the outlined squares, so ${n} can only go here.`;
   },
-
-  /** No missing number but `n` can step to this square through empty squares;
-   * `beside` as for {@link say.only}. */
-  routeOnly: (n: number, beside: number | null): string =>
-    beside === null
-      ? `No missing number but ${n} can step to this square through empty squares, so it must be ${n}.`
-      : `This square is next to ${beside}, and no other missing number can step to it through empty squares, so it must be ${n}.`,
 };

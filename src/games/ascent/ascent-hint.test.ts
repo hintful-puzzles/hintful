@@ -41,7 +41,6 @@ import {
   type AscentState,
   fromNumberEdge,
   isEdgeValid,
-  isNear,
   isNumberEdge,
   MODE_EDGES,
   MODE_HONEYCOMB,
@@ -286,16 +285,50 @@ describe("every premise, restated from the board, singles out its square", () =>
       const { before, cell, n } = firing;
       const others = missing(before).filter((m) => m !== n && reaches(before, m, cell));
       expect(others, board.label).toEqual([]);
-      // "This square is next to m": it is, and m is n's neighbor in the sequence.
+
+      // The picture: the run's reach striped, exactly, and its ends outlined.
       const { explanation, highlights } = stepOf(firing);
-      if (firing.reason.kind !== "onlyBeside") continue;
-      const [beside] = highlights?.area ?? [];
-      expect(isNear(cell, beside, before.w, before.mode), explanation).toBe(true);
-      expect(Math.abs(before.grid[beside] - n), explanation).toBe(1);
-      expect(explanation).toContain(`next to ${before.grid[beside] + 1},`);
+      const at = `${board.label}: "${explanation}"`;
+      const run = missing(before).filter((m) => sameRun(before, m, n));
+      const lo = Math.min(...run);
+      const hi = Math.max(...run);
+      const reach = new Set<number>();
+      for (let i = 0; i < before.grid.length; i++)
+        if (run.some((m) => reaches(before, m, i))) reach.add(i);
+      expect(highlights?.hatch, at).toEqual([...reach].sort((a, b) => a - b));
+      expect(highlights?.hatch, at).toContain(cell);
+      const ends = [lo - 1, hi + 1].filter((m) => m >= 0 && m <= before.last);
+      expect(highlights?.area, at).toEqual(ends.map((m) => before.grid.indexOf(m)));
+      for (const m of ends) expect(explanation, at).toContain(String(m + 1));
+    }
+  });
+
+  it("names the run a route step's stripes belong to", () => {
+    const firings = byKind("routeBeside", "routeOnly");
+    expect(firings.length).toBeGreaterThan(3);
+    for (const { board, firing } of firings) {
+      const { explanation, highlights } = stepOf(firing);
+      // A route reaches no square straight reach does not.
+      for (const i of highlights?.hatch ?? [])
+        expect(
+          missing(firing.before).some(
+            (m) => sameRun(firing.before, m, firing.n) && reaches(firing.before, m, i),
+          ),
+          board.label,
+        ).toBe(true);
+      expect(highlights?.hatch, explanation).toContain(firing.cell);
+      expect(explanation).toMatch(/through empty squares/);
     }
   });
 });
+
+/** Whether missing numbers `a` and `b` lie in one run, no placed number between. */
+function sameRun(state: AscentState, a: number, b: number): boolean {
+  const placed = new Set(state.grid.filter((v) => v >= 0));
+  for (let m = Math.min(a, b); m <= Math.max(a, b); m++)
+    if (placed.has(m)) return false;
+  return true;
+}
 
 describe("every technique is reached", () => {
   const KINDS: Record<HintReason["kind"], true> = {

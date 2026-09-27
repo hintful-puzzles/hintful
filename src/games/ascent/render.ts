@@ -20,7 +20,7 @@ import {
 import { drawRectCorners, glyphFont, strokeScaledPolygon } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
-import type { Color, Point } from "../../engine/types.ts";
+import type { Color, Point, Rect } from "../../engine/types.ts";
 import type { AscentHighlights } from "./hint.ts";
 import {
   type AscentMistake,
@@ -242,6 +242,30 @@ function hexVertices(cx: number, cy: number, tileSize: number): Point[] {
     { x: cx - hw, y: cy + hr },
     { x: cx - hw, y: cy - hr },
   ];
+}
+
+/**
+ * Rects wholly inside a pointy-top hexagon that between them cover most of it:
+ * the full-width band between its two upright sides, and above and below it a
+ * stack of strips, each as wide as the slanted sides allow at its narrow end.
+ * A hatch drawn on them never reaches a neighboring cell, which the hexagon's
+ * bounding rect would.
+ */
+function hexHatchRects(cx: number, cy: number, tileSize: number): Rect[] {
+  const r = hexR(tileSize);
+  const steps = 4;
+  const h = r / 2 / steps;
+  const out: Rect[] = [
+    { x: cx - tileSize / 2 + 1, y: cy - r / 2, w: tileSize - 2, h: r },
+  ];
+  for (let j = 0; j < steps; j++) {
+    // Strip `j` away from the band, whose far edge is `(j + 1) * h` out.
+    const w = tileSize * (1 - ((j + 1) * h) / (r / 2)) - 2;
+    if (w <= 0) continue;
+    out.push({ x: cx - w / 2, y: cy - r / 2 - (j + 1) * h, w, h });
+    out.push({ x: cx - w / 2, y: cy + r / 2 + j * h, w, h });
+  }
+  return out;
 }
 
 /** Upstream `game_set_offsets` under `NARROW_BORDERS` (BORDER = 0), where only
@@ -594,14 +618,12 @@ export function redrawAscent(
     }
     ds.colors[i] = color;
 
-    // The arrow line a hint names, under the content. Only Edges mode has
-    // arrows, and it is square.
-    if (hintMarks[i] & HINT_HATCH && !hex)
-      dr.drawHatch(
-        { x: tx + 1, y: ty + 1, w: tileSize - 1, h: tileSize - 1 },
-        COL_HINT,
-        hatchPeriod(tileSize),
-      );
+    // The line or run's reach a hint names, under the content.
+    if (hintMarks[i] & HINT_HATCH)
+      for (const rect of hex
+        ? hexHatchRects(cx, cy, tileSize)
+        : [{ x: tx + 1, y: ty + 1, w: tileSize - 1, h: tileSize - 1 }])
+        dr.drawHatch(rect, COL_HINT, hatchPeriod(tileSize));
 
     if (ui.typingCell !== i) {
       const linecolor = ds.path[i] & FLAG_USER ? COL_LINE : COL_HIGHLIGHT;

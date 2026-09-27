@@ -1530,7 +1530,7 @@ to a similar game:
 | Magnets | the square a placement decides, ringed `COL_HINT`; a domino decided whole (neutral, or marked `?`) as **one ring around both ends** (§ "Shade vs ring", a piece), never a ring per end | the line a premise counts → one `COL_HINT_CELL` contour, and its clue digits recolor `COL_HINT` (Magnets draws no line numbers, so the digit is how "this row" is found); a pole the square touches → that square outlined; the domino's other end, when the sentence reasons about it, outlined too; evidence joins only across a domino, so two dominoes side by side stay two shapes |
 | Dominosa | a placement's domino, **one `COL_HINT` ring around both squares**; a barrier's two squares ringed one each, with the wall between them a `COL_HINT` bar | the squares the deduction reasons over → one `COL_HINT_CELL` contour per connected run ("the outlined square(s)") |
 | Map | the region the step decides, a solid `COL_HINT` band inside its whole boundary, twice the selection band's width, and the only hint mark on any border; the selection band, when on the same region, just inside it | a single (one color left) outlines **nothing**: the neighbors' fills are its premise. A pair's or chain's regions → a thin **dashed** `COL_HINT_CELL` line set in from their border by a band's width; a chain's regions numbered at their label points in the same color, with region numbers hidden while it shows |
-| Ascent | the square the step fills, a `COL_HINT` ring inside the cell's own outline, square or hexagon (`strokeScaledPolygon`); the number is never drawn | the numbers it measures from, a dead end's one way in, the squares a missing run may step through → each cell outlined `COL_HINT_CELL` the same way; the line an arrow points along, when the sentence names it → hatched, the arrow outlined |
+| Ascent | the square the step fills, a `COL_HINT` ring inside the cell's own outline, square or hexagon (`strokeScaledPolygon`); the number is never drawn | the numbers it measures from, a dead end's one way in, the squares a missing run may step through → each cell outlined `COL_HINT_CELL` the same way; the line an arrow points along, when the sentence names it → hatched, the arrow outlined; a square only one run can reach → that run's whole reach hatched (a hexagon on rects inside it) and its two ends outlined |
 | Loopy | the edges the step sets, a `COL_HINT` band *under* each (the edge's own state stays on top): solid for a line, broken for an edge that can't be one | the clue it counts → an outline inset inside its face; the dot it names → a ring under the dot; the loop an edge would close → a `COL_HINT_CELL` band under those lines; a **corner** or **pair** note the step reasons from → the player's own note, redrawn in `COL_HINT_CELL`; a note the step places → that note's own wedge or connector in `COL_HINT` (§ "Give the facts a notation (Loopy)") |
 
 **Mark the premise element in the action color only where the sentence names
@@ -2502,6 +2502,16 @@ reusable part. In [`games/ascent/`](../../src/games/ascent/):
   solver was grading some boards a tier too high, the solver was fixed instead
   (`fix-ascent-last-number-reach`) and the hint's patch deleted. The board stays
   pinned in `ascent-hint.test.ts`.
+- **"No other X can" is a claim over a population; find the unit the player
+  can check it in.** "No other missing number can reach this square" named
+  dozens of numbers and read as abstract (owner, 2026-09-27). Measured, 97% of
+  those steps rest on one fact per **run** of missing numbers (its two placed
+  ends must both be in reach), so the claim is over a handful of runs, and the
+  step now names the one run that reaches the square and hatches everything
+  that run can reach. The same measurement found the old sentence's "next to
+  16, so 17" was not a valid inference in general (18 could sit there too);
+  what forces the number within its run is reach again, and the sentence says
+  so.
 - **A move with side effects ends the plan.** A line the player drew fills in
   numbers when a number lands at its end. Those are the player's to vouch for, so
   a step that fills more than its own square is the plan's last, and the next
