@@ -87,8 +87,8 @@ export const SLOW_TESTS_ENABLED = Boolean(env?.["PUZZLES_SLOW_TESTS"]);
 export const PRECOMMIT_HOOK_RUN = env?.["GATE_PRECOMMIT"] === "1";
 
 /** The games this run's cross-game sweeps are narrowed to, or `null` when every
- * sweep is whole. Only the per-commit hook narrows, and only for a commit that
- * touched nothing but game directories; `game-scope.ts` states when that is
+ * sweep is whole. Only the per-commit hook narrows, and only to the games whose
+ * code reaches what the commit staged; `game-scope.ts` states when that is
  * sound, and `vitest.config.ts` skips the other games' `<id>: ` cases from the
  * same variable. */
 const SWEEP_SCOPE: ReadonlySet<string> | null = (() => {

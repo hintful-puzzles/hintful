@@ -265,10 +265,10 @@ fi
 
 # --- 1e. Which tests can this commit have broken? (pre-commit hook only) ---
 #
-# `scripts/checks/select-tests.mjs` prints either `ALL` or a list of test files.
-# It unions TWO channels, because neither alone is sound here: the static import
-# graph (`vitest list --changed`), and every test whose `import.meta.glob`
-# pattern reaches a staged path. The second exists because this repo's
+# `scripts/checks/select-tests.ts` prints a plan: either `ALL`, or the test
+# files to run, each marked `whole` or `narrow`, and a `scope` of games. It
+# selects a file when the static import graph (`vitest list --changed`) or
+# `reach.ts`'s walk reaches a staged path. The walk exists because this repo's
 # cross-game guards read game source as *text* — `AGENTS.md` requires a guard to
 # derive its population from what a game IS — and text reads form no import
 # edge. Measured: on a `help/` page the graph alone selects **nothing**, against
@@ -281,30 +281,34 @@ fi
 #
 # The selector fails closed: any staged path it does not model, an empty result,
 # or any error at all yields `ALL`. `src/test-selection.test.ts` fails the build
-# if a test acquires a read channel the selector cannot see.
+# if a test acquires a read channel the selector cannot see, and step 1f holds
+# the walk to known positives.
 #
-# **Within those files, a commit confined to game directories skips every other
-# game's cases.** A cross-game guard titles each case `<id>: …`, and on a
-# Pearl-only change 413 s of 593 s of test time was those cases for games the
-# commit could not have changed. `--game-scope` prints the touched games, or
-# nothing, and exporting them as GATE_GAME_SCOPE is all this script does with
-# them: what reads it, and why that is sound, is in
-# `src/engine/testing/game-scope.ts`. Skipped cases are reported as skipped,
-# and CI runs them all.
-selected=""
+# **Within those files, a `narrow` file skips the cases of games outside the
+# scope.** A cross-game guard titles each case `<id>: …`, and on a Pearl-only
+# change 413 s of 593 s of test time was those cases for games the commit could
+# not have changed. The scope is the games whose own code reaches a staged path;
+# a file that reaches one *itself*, not through a game, is `whole`. It runs in a
+# vitest invocation of its own with GATE_GAME_SCOPE unset, because the name
+# filter is one per run. What reads the variable, and why narrowing is sound, is
+# in `src/engine/testing/game-scope.ts` and `scripts/checks/reach.ts`. Skipped
+# cases are reported as skipped, and CI runs them all.
+plan="ALL"
 if [ "${GATE_PRECOMMIT:-}" = "1" ]; then
-  selected=$(node scripts/checks/select-tests.mjs 2>/dev/null) || selected="ALL"
-  [ -n "$selected" ] || selected="ALL"
-  if [ "$selected" != "ALL" ]; then
-    echo "✓ running $(printf '%s\n' "$selected" | wc -l | tr -d ' ') of $(find src vite-plugins -name '*.test.ts' | wc -l | tr -d ' ') test files for this commit."
-    echo "  (CI runs all of them on push; \`npm run gate\` runs all of them here.)"
+  plan=$(node scripts/checks/select-tests.ts 2>/dev/null) || plan="ALL"
+  [ -n "$plan" ] || plan="ALL"
+fi
+plan_lines() { printf '%s\n' "$plan" | sed -n "s/^$1 //p"; }
+scope=$(plan_lines scope)
+whole=$(plan_lines whole)
+narrow=$(plan_lines narrow)
+if [ "$plan" != "ALL" ]; then
+  count() { [ -n "$1" ] && printf '%s\n' "$1" | wc -l | tr -d ' ' || echo 0; }
+  echo "✓ running $(($(count "$whole") + $(count "$narrow"))) of $(find src vite-plugins -name '*.test.ts' | wc -l | tr -d ' ') test files for this commit."
+  if [ -n "$narrow" ]; then
+    echo "✓ $(count "$narrow") of them run only the cross-game cases of: $scope."
   fi
-  GATE_GAME_SCOPE=$(node scripts/checks/select-tests.mjs --game-scope 2>/dev/null) ||
-    GATE_GAME_SCOPE=""
-  export GATE_GAME_SCOPE
-  if [ -n "$GATE_GAME_SCOPE" ]; then
-    echo "✓ only $GATE_GAME_SCOPE is staged — skipping every other game's cross-game cases."
-  fi
+  echo "  (CI runs everything on push; \`npm run gate\` runs everything here.)"
 fi
 
 # --- 1f. The source scans, ahead of everything that builds a board. ~6s. ---
@@ -322,17 +326,31 @@ fi
 # file is in exactly one pass. A file that fell out of both would otherwise pass
 # by never running, which is the failure this gate exists to refuse.
 #
-# The hook's selection applies to both passes unchanged, since a filter that
-# names a file outside a pass's include matches nothing there.
+# The hook's plan applies to both passes unchanged, since a filter that names a
+# file outside a pass's include matches nothing there.
+#
+# `select-tests.ts --verify` sits here for the neighboring reason: the plan is
+# only as good as the walk under it, and a walk that went blind to a coupling
+# would report a narrow plan that looks like health. ~1s.
 node scripts/checks/source-scans.ts --verify
+node scripts/checks/select-tests.ts --verify
 run_tests() {
-  if [ "$selected" = "ALL" ] || [ -z "$selected" ]; then
+  if [ "$plan" = "ALL" ]; then
     GATE_TEST_PASS=$1 $NICE_TESTS npx vitest run --passWithNoTests
-  else
-    # shellcheck disable=SC2086 # the list is newline-separated paths, no globs.
-    GATE_TEST_PASS=$1 $NICE_TESTS npx vitest run --passWithNoTests \
-      $(printf '%s ' $selected)
+    return
   fi
+  tests_rc=0
+  # shellcheck disable=SC2086 # the lists are newline-separated paths, no globs.
+  if [ -n "$whole" ]; then
+    GATE_TEST_PASS=$1 $NICE_TESTS npx vitest run --passWithNoTests \
+      $(printf '%s ' $whole) || tests_rc=$?
+  fi
+  # shellcheck disable=SC2086
+  if [ -n "$narrow" ]; then
+    GATE_TEST_PASS=$1 GATE_GAME_SCOPE=$scope $NICE_TESTS npx vitest run \
+      --passWithNoTests $(printf '%s ' $narrow) || tests_rc=$?
+  fi
+  return $tests_rc
 }
 if ! run_tests scan; then
   echo ""

@@ -1,6 +1,8 @@
 /**
- * **The guard under `game-scope.ts`**: when a commit touches only game
- * directories, the hook skips every other game's cross-game cases.
+ * **The guard under `game-scope.ts`**: the hook skips the cross-game cases of
+ * every game outside a commit's scope. Which games are in it is the walk's
+ * question, and `scripts/checks/select-tests.ts --verify` holds that to known
+ * positives; this holds the filter and the variable.
  *
  * The names below are joined the way vitest joins them before matching `-t`:
  * each describe title, then the test's own, separated by single spaces with no
@@ -9,7 +11,7 @@
  * costs time and never a case.
  */
 import { describe, expect, it } from "vitest";
-import { gameScope, otherGamesFilter, scopeFromEnv } from "./game-scope.ts";
+import { otherGamesFilter, scopeFromEnv } from "./game-scope.ts";
 
 const ALL = ["loopy", "net", "netslide", "pearl", "solo"];
 
@@ -17,24 +19,6 @@ function runs(scope: string[], name: string): boolean {
   const pattern = otherGamesFilter(scope, ALL);
   return pattern === null || new RegExp(pattern).test(name);
 }
-
-describe("a commit's game scope", () => {
-  it("is the games whose directories hold every staged path", () => {
-    expect(
-      gameScope(["src/games/pearl/hint.ts", "src/games/pearl/pearl.test.ts"]),
-    ).toEqual(["pearl"]);
-    expect(gameScope(["src/games/solo/solver.ts", "src/games/loopy/index.ts"])).toEqual(
-      ["loopy", "solo"],
-    );
-  });
-
-  it("is nothing once any path lies outside a game directory", () => {
-    expect(gameScope(["src/games/pearl/hint.ts", "src/engine/midend.ts"])).toBeNull();
-    expect(gameScope(["src/games/index.ts"])).toBeNull();
-    expect(gameScope(["src/games/pearl/hint.ts", "help/games/pearl.md"])).toBeNull();
-    expect(gameScope([])).toBeNull();
-  });
-});
 
 describe("the scope a run was given", () => {
   it("is honored only in the per-commit hook", () => {

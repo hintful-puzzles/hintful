@@ -1,9 +1,10 @@
 /**
- * **The guard under `scripts/checks/select-tests.mjs`.**
+ * **The guard under `scripts/checks/select-tests.ts`.**
  *
  * The pre-commit hook may run a *subset* of the suite, chosen by that script
- * from two channels: the static import graph, and every test whose
- * `import.meta.glob` pattern reaches a changed path. A test that reaches its
+ * from two channels: the static import graph, and a walk that follows imports
+ * and the `import.meta.glob` calls of every module it visits
+ * (`scripts/checks/reach.ts`). A test that reaches its
  * subject through some **third** channel is invisible to both, and the failure
  * is silent — the commit passes, having never run the guard.
  *
@@ -51,8 +52,8 @@ const FS_READERS_OUTSIDE_THE_GATE = "scripts/checks/";
  * here: a doc comment that mentions a glob pattern contains `**` followed by
  * `/`, so the comment terminates at the pattern and the stripper goes on to eat
  * live code. That is not hypothetical — it silently removed three help guards
- * from a real selection while this file was being written, and
- * `select-tests.mjs` now carries the same warning at the same shape.
+ * from a real selection while this file was being written. The selector's own
+ * walk reads globs from the syntax tree instead, where a comment is not code.
  *
  * A line whose first non-space character is `*`, `//` or `/*` is prose. Every
  * `import.meta.glob` call in this tree begins a statement, so nothing real is
@@ -74,8 +75,10 @@ describe("the pre-commit test selector can see every coupling", () => {
   });
 
   it("every import.meta.glob pattern is statically resolvable", () => {
-    // A computed pattern is one `select-tests.mjs` cannot resolve, so the test
-    // holding it would drop out of the glob channel. Vite accepts two literal
+    // A computed pattern is one `select-tests.ts` cannot resolve. Its walk then
+    // takes the test to read everything, so it is selected on every commit and
+    // never narrowed: safe, and the whole of the saving lost for that file.
+    // The vitest graph channel alone would miss it. Vite accepts two literal
     // forms and BOTH are fine — a single pattern, and an array of them:
     //
     //   import.meta.glob("../games/**\/*.ts", …)
@@ -110,9 +113,9 @@ describe("the pre-commit test selector can see every coupling", () => {
     ).toBeGreaterThan(20);
     expect(
       offenders,
-      "a computed glob pattern is invisible to scripts/checks/select-tests.mjs, " +
-        "so the pre-commit hook may skip this test on a commit that breaks it. " +
-        "Use a string literal or an array of them, or teach the selector.",
+      "a computed glob pattern cannot be resolved by scripts/checks/reach.ts, so " +
+        "the pre-commit hook runs this test in full on every commit. " +
+        "Use a string literal or an array of them, or teach the walk.",
     ).toEqual([]);
   });
 

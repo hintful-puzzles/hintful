@@ -106,7 +106,7 @@ const CONCURRENT_REPOS = 4;
  * module graph is paid once and reused across files, so the marginal worker is a
  * whole extra graph rather than a slice of one — which is exactly the term that
  * multiplies by four here. And the pre-commit hook no longer runs the whole
- * suite anyway (`scripts/checks/select-tests.mjs`), so the common case is ~47
+ * suite anyway (`scripts/checks/select-tests.ts`), so the common case is ~47
  * files rather than 302.
  *
  * `VITEST_MAX_WORKERS` overrides, and is the right tool when the box *is* free

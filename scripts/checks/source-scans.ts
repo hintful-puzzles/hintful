@@ -20,10 +20,10 @@
  * module under `src/games/`. A file that cannot reach one cannot build a board,
  * and cannot even pay the import cost of the registry.
  *
- * The closure is walked over relative specifiers with `ts.preProcessFile`, which
- * reads imports the way the compiler does. It counts `import type` as an edge,
- * and a specifier it cannot resolve ends membership. Both can only move a file
- * *out* of the scan set, and a file outside it still runs, in the main pass.
+ * The closure is `reach.ts`'s walk, which reads imports the way the compiler
+ * does. It counts `import type` as an edge, and a specifier it cannot resolve
+ * ends membership. Both can only move a file *out* of the scan set, and a file
+ * outside it still runs, in the main pass.
  *
  * ## Why a wrong answer here cannot lose a test
  *
@@ -33,118 +33,20 @@
  * The worst a misclassification can do is put a slow file in the fast pass.
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
-import ts from "typescript";
-
-const ROOT = path.resolve(import.meta.dirname, "../..");
-
-/** Mirrors `vitest.config.ts`'s `include`; `--verify` checks the two agree. */
-const TEST_ROOTS = ["src", "vite-plugins"];
-
-const GAMES = `${path.join(ROOT, "src", "games")}${path.sep}`;
-
-function walk(dir: string, out: string[] = []): string[] {
-  for (const entry of readdirSync(dir)) {
-    if (entry === "node_modules" || entry.startsWith(".")) continue;
-    const full = path.join(dir, entry);
-    if (statSync(full).isDirectory()) walk(full, out);
-    else if (entry.endsWith(".test.ts")) out.push(full);
-  }
-  return out;
-}
-
-function allTestFiles(): string[] {
-  return TEST_ROOTS.flatMap((r) => walk(path.join(ROOT, r)))
-    .map((f) => path.relative(ROOT, f))
-    .sort();
-}
-
-type GlobQuery = "?raw" | "?url" | null;
-
-/**
- * The query of every `import.meta.glob` call in `text`, or `null` for a glob
- * that imports modules.
- *
- * Read from the syntax tree rather than with a regular expression, because the
- * doc comments in this tree mention `import.meta.glob(…)` constantly. A regex
- * first pass took that prose for calls and dropped `test-selection.test.ts`.
- * The query sits either in the pattern (`"./x/*.ts?raw"`) or in the options
- * (`{ query: "?raw" }`).
- */
-function globQueries(file: string, text: string): GlobQuery[] {
-  const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
-  const out: GlobQuery[] = [];
-  const visit = (node: ts.Node): void => {
-    if (
-      ts.isCallExpression(node) &&
-      node.expression.getText(source) === "import.meta.glob"
-    ) {
-      const [patterns, options] = node.arguments;
-      let query: string | null = null;
-      if (options && ts.isObjectLiteralExpression(options)) {
-        for (const p of options.properties) {
-          if (
-            ts.isPropertyAssignment(p) &&
-            p.name.getText(source) === "query" &&
-            ts.isStringLiteralLike(p.initializer)
-          ) {
-            query = p.initializer.text;
-          }
-        }
-      }
-      const inPattern = patterns?.getText(source).match(/\?(raw|url)\b/);
-      if (query === null && inPattern) query = `?${inPattern[1]}`;
-      out.push(query === "?raw" || query === "?url" ? query : null);
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(source);
-  return out;
-}
-
-/** The files `file` imports by relative specifier, resolved as the bundler
- * resolves them (as written, then `.ts`, then `index.ts`). A queried import
- * (`?raw`, `?url`) is text and is skipped; an unresolvable one is `null`. */
-function importTargets(file: string, text: string): (string | null)[] {
-  const out: (string | null)[] = [];
-  for (const { fileName } of ts.preProcessFile(text, true, true).importedFiles) {
-    if (!fileName.startsWith(".") && !fileName.startsWith("/")) continue;
-    if (fileName.includes("?")) continue;
-    const abs = fileName.startsWith("/")
-      ? path.join(ROOT, fileName)
-      : path.resolve(path.dirname(file), fileName);
-    const resolved = [abs, `${abs}.ts`, path.join(abs, "index.ts")].find(
-      (candidate) => existsSync(candidate) && statSync(candidate).isFile(),
-    );
-    out.push(resolved ?? null);
-  }
-  return out;
-}
+import { allTestFiles, edges, gameOf, ROOT, reach } from "./reach.ts";
 
 function isSourceScan(file: string): boolean {
-  const text = readFileSync(file, "utf8");
-  const queries = globQueries(file, text);
+  const queries = edges(file).globs.map((g) => g.query);
   if (!queries.includes("?raw")) return false;
   if (queries.includes(null)) return false;
-
-  const seen = new Set([file]);
-  const queue = [file];
-  for (let current = queue.pop(); current !== undefined; current = queue.pop()) {
-    const source = current === file ? text : readFileSync(current, "utf8");
-    for (const target of importTargets(current, source)) {
-      if (target === null || target.startsWith(GAMES)) return false;
-      if (seen.has(target) || !/\.[mc]?[jt]s$/.test(target)) continue;
-      seen.add(target);
-      queue.push(target);
-    }
-  }
-  return true;
+  const walk = reach(file);
+  return !walk.everything && ![...walk.files].some((f) => gameOf(f) !== null);
 }
 
 /** The source-scan test files, repo-relative and sorted. */
 export function sourceScanTests(): string[] {
-  return allTestFiles().filter((f) => isSourceScan(path.join(ROOT, f)));
+  return allTestFiles().filter(isSourceScan);
 }
 
 /** What vitest will run under `GATE_TEST_PASS=<pass>`, repo-relative. */

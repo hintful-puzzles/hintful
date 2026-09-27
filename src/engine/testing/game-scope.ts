@@ -1,6 +1,6 @@
 /**
- * Which games can a commit have changed, and how the per-commit hook narrows
- * the cross-game sweeps to them.
+ * How the per-commit hook narrows the cross-game sweeps to the games a commit
+ * can have changed.
  *
  * A cross-game guard runs one case per game, and nearly all of a game commit's
  * test time is those cases for games it did not touch: measured 2026-09-27 on a
@@ -10,40 +10,28 @@
  * **The soundness condition**, both halves of which must hold for a skipped case
  * to be one the commit could not have turned red:
  *
- *   1. every staged path lies under `src/games/<id>/`, so no engine module, no
- *      guard and no shared test helper changed; and
+ *   1. the test file reaches no staged path except through a game, and every
+ *      game whose code reaches one is in the scope. `commitPlan` in
+ *      `scripts/checks/reach.ts` computes both, and runs a file that fails the
+ *      first *whole*, in a vitest run of its own with no scope; and
  *   2. a case titled `<id>: …` depends on no game but `<id>`. A game cannot
  *      import another game (`src/module-layering.test.ts`), so a case reaches a
  *      second game only by reading it on purpose, and none does today.
  *
- * Both halves fail open. A path outside a game directory yields no scope, and a
+ * Both halves fail open. A path the walk cannot model yields no scope, and a
  * guard that titles its cases some other way is simply not narrowed.
  *
  * **The scope travels as one variable, `GATE_GAME_SCOPE`**, which
- * `scripts/gate.sh` sets from `select-tests.mjs --game-scope`. Two things read
- * it, and they must agree about which games ran: `vitest.config.ts` turns it
- * into the name filter that skips the other games' cases, and `slow.ts` turns
- * it into {@link inSweep} and `itOverWholeSweep` for the assertions that read
- * across a sweep. Both honor it only beside `GATE_PRECOMMIT=1`, so it inherits
- * that toggle's backstop in `src/gate-scope.test.ts`.
+ * `scripts/gate.sh` sets from `select-tests.ts`'s plan. Two things read it, and
+ * they must agree about which games ran: `vitest.config.ts` turns it into the
+ * name filter that skips the other games' cases, and `slow.ts` turns it into
+ * {@link inSweep} and `itOverWholeSweep` for the assertions that read across a
+ * sweep. Both honor it only beside `GATE_PRECOMMIT=1`, so it inherits that
+ * toggle's backstop in `src/gate-scope.test.ts`.
  *
  * Pure and free of Node APIs, so the build side and the suite can both import
  * it.
  */
-
-const GAME_PATH = /^src\/games\/([^/]+)\/./;
-
-/** The games a commit touched, or `null` when it touched anything else. */
-export function gameScope(staged: readonly string[]): string[] | null {
-  if (staged.length === 0) return null;
-  const ids = new Set<string>();
-  for (const path of staged) {
-    const id = GAME_PATH.exec(path)?.[1];
-    if (id === undefined) return null;
-    ids.add(id);
-  }
-  return [...ids].sort();
-}
 
 /** The scope a run was given, or `null` when its sweeps are whole. */
 export function scopeFromEnv(

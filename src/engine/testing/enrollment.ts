@@ -26,6 +26,7 @@ import "../../games/index.ts";
 import type { Game } from "../game.ts";
 import { randomNew } from "../random/index.ts";
 import { getTsGame, registeredGameIds } from "../registry.ts";
+import { linesMatching, stripComments } from "./code-lines.ts";
 import { preferredDrawState } from "./preferred-draw-state.ts";
 
 // biome-ignore lint/suspicious/noExplicitAny: a deliberately game-agnostic probe.
@@ -204,24 +205,6 @@ export const SCANNED_SOURCE_FILES = [...sourceText.values()].reduce(
   0,
 );
 
-/**
- * Source text with every comment removed — **because a comment is not a use**.
- * A raw-text scan once scored a flag consumed on the strength of a
- * commented-out line, and convicted Net of a stylus branch for the comment
- * documenting its absence.
- *
- * Stripping beats a narrower marker, because narrowing the key is the error:
- * `& MOD_STYLUS` misses a game that writes the test across two lines. Key on the
- * name, take the superset, and remove the one context in which a name is not a
- * use. `transpileModule` is the cheap way to drop comments without mangling a
- * string that contains `//`; at ~5 ms per file a whole-collection scan pays
- * ~1.5 s once per worker, and only the guards that scan pay it.
- */
-const stripComments = (text: string): string =>
-  ts.transpileModule(text, {
-    compilerOptions: { removeComments: true, target: ts.ScriptTarget.ESNext },
-  }).outputText;
-
 /** Each game's comment-stripped sources, computed on first ask and kept. */
 const codeText = new Map<string, string[]>();
 
@@ -231,14 +214,6 @@ function gameCode(id: string): string[] {
   const stripped = (sourceText.get(id) ?? []).map(stripComments);
   codeText.set(id, stripped);
   return stripped;
-}
-
-/** Every line of `code` matching `re`, trimmed and tagged with `id`. */
-function linesMatching(id: string, code: string, re: RegExp) {
-  return code
-    .split("\n")
-    .filter((line) => re.test(line))
-    .map((line) => ({ id, line: line.trim() }));
 }
 
 /**
@@ -275,91 +250,5 @@ export function codeLinesMatching(
 ): { id: string; line: string }[] {
   return ids.flatMap((id) =>
     gameCode(id).flatMap((code) => linesMatching(id, code, re)),
-  );
-}
-
-/**
- * The engine's own shipped sources, by module path — **excluding `testing/`**,
- * which is dev-only infrastructure by the repo's layout rather than by a list
- * of filenames anyone has to maintain.
- *
- * A rule about what a game says to a player cannot stop at the game
- * directories, because a family's narration is often written *once* in the
- * engine and shared: `latin-hint.ts` narrates for the Latin games and
- * `candidate-hint.ts` for the candidate-elimination ones, so a sweep over
- * `games/**` alone reports a clean collection while the sentence every one of
- * those games actually shows sits outside it.
- */
-const engineSource = (() => {
-  // Root-anchored deliberately: a `../**/*.ts` glob from this file normalizes a
-  // sibling back to `./name.ts`, so a `/testing/` filter would match nothing
-  // and the exclusion below would not happen.
-  const modules = import.meta.glob<string>("/src/engine/**/*.ts", {
-    query: "?raw",
-    import: "default",
-    eager: true,
-  });
-  const out = new Map<string, string>();
-  for (const [path, text] of Object.entries(modules)) {
-    if (path.includes(".test.") || path.includes("/engine/testing/")) continue;
-    out.set(path.replace("/src/", ""), text);
-  }
-  return out;
-})();
-
-/** How many engine modules {@link engineCodeLinesMatching} scans — its vacuity
- * number, owed for the same reason {@link SCANNED_SOURCE_FILES} is. */
-export const SCANNED_ENGINE_FILES = engineSource.size;
-
-/** Every line of the engine's shipped code matching `re`, tagged by module.
- * The engine counterpart to {@link codeLinesMatching}, comment-stripped for the
- * same reason. */
-export function engineCodeLinesMatching(re: RegExp): { id: string; line: string }[] {
-  return [...engineSource].flatMap(([path, text]) =>
-    linesMatching(path, stripComments(text), re),
-  );
-}
-
-/**
- * The suite's own sources, by file path — the two scanners above turned on the
- * tests rather than on what they test.
- *
- * **A rule about how a guard is written needs this, and nothing else can give
- * it.** `slice-the-first-leaf-hint-guards-by-axis` found every cross-game sweep
- * but one building its own board population out of `firstLeaf` and `withTier`,
- * including three inside the file whose main walk had already been fixed. The
- * lesson there is not the count: it is that a sweep fixed once is not a sweep
- * that stays fixed, and the only thing that makes such a rule stick is a check
- * that reads the tests.
- */
-const testSource = (() => {
-  const modules = {
-    ...import.meta.glob<string>("/src/**/*.test.ts", {
-      query: "?raw",
-      import: "default",
-      eager: true,
-    }),
-    ...import.meta.glob<string>("/scripts/**/*.test.ts", {
-      query: "?raw",
-      import: "default",
-      eager: true,
-    }),
-  };
-  const out = new Map<string, string>();
-  for (const [path, text] of Object.entries(modules)) out.set(path.slice(1), text);
-  return out;
-})();
-
-/** How many test files {@link testCodeLinesMatching} scans — its vacuity
- * number, owed for the same reason {@link SCANNED_ENGINE_FILES} is. */
-export const SCANNED_TEST_FILES = testSource.size;
-
-/** Every line of the suite's own code matching `re`, tagged by file path.
- * Comment-stripped like its two siblings, so a doc comment *about* a pattern
- * does not read as a use of it — which matters more here than anywhere, since
- * a guard's comment is usually where the pattern is explained. */
-export function testCodeLinesMatching(re: RegExp): { id: string; line: string }[] {
-  return [...testSource].flatMap(([path, text]) =>
-    linesMatching(path, stripComments(text), re),
   );
 }

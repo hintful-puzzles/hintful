@@ -46,12 +46,12 @@ state matches — pinned by a recorded first-hit (see "Right-sizing the gate").
 round-trip, params codec and even its source text (color literals, hint
 wording, note vocabulary) are checked by cross-game guards that live outside
 `src/games/`, so `vitest run src/games/<game>` can be green on a change the
-commit hook then refuses. The hook's own list is
-`node scripts/checks/select-tests.mjs` over what is staged; the guards name
-their per-game cases after the game or its file path, so filter the list with
-`-t <game>` and check the count is not zero. Pass the list through `xargs`:
-zsh does not word-split an unquoted `$VAR`, and `vitest run $LIST` then finds
-no tests at all.
+commit hook then refuses. The hook's own plan is
+`node scripts/checks/select-tests.ts` over what is staged: each test file on a
+line of its own after `whole` or `narrow`. The guards name their per-game cases
+after the game or its file path, so filter the files with `-t <game>` and check
+the count is not zero. Pass the list through `xargs`: zsh does not word-split
+an unquoted `$VAR`, and `vitest run $LIST` then finds no tests at all.
 
 ## Render scenarios
 
@@ -478,18 +478,24 @@ cross-game guard derives its population from what a game **is**. A file read as
 text forms no import edge, so a game change omits five glob-only guards and a
 `help/` change selects **nothing at all**. The rule that makes the guards
 impossible to forget is what makes them invisible to the graph. That is why the
-hook's selection (`scripts/checks/select-tests.mjs`) is the union of the graph
-and every glob that reaches a staged path, and never the graph alone.
+hook's selection (`scripts/checks/select-tests.ts`) is the union of the graph
+and a walk that follows imports *and* globs, and never the graph alone. The walk
+is [`reach.ts`](../../scripts/checks/reach.ts), and it reads the globs in every
+module it visits, not only in the test file: a guard that reads source through a
+helper reads whatever the helper's glob matches.
 
 **Title a cross-game case `<id>: …`, and let it read only that game.** Any
 change to a game reaches the registry, and every cross-game guard imports the
 registry, so file selection saves nothing there; the cost is inside the files.
 Measured 2026-09-27 on a Pearl-only change, 518 s of 593 s of test time was
 per-game cases in cross-game guards, and 413 s of that was games other than
-Pearl. So when every staged path is under `src/games/<id>/`, the hook sets
-`GATE_GAME_SCOPE` and vitest skips every case titled for another game. That
-took the Pearl commit's selection from 310 s to 103 s of wall time. The
-soundness condition and both of the things that read the variable are in
+Pearl. So the hook scopes a commit to the games whose own code reaches a staged
+path: a game directory's own files, or the engine modules its imports reach.
+It sets `GATE_GAME_SCOPE`, and vitest skips every case titled for a game outside
+it. That took the Pearl commit's selection from 310 s to 103 s of wall time. A
+test file that reaches a staged path *itself*, not through a game, runs whole in
+a vitest run of its own, because nothing but the games is partitioned by title.
+The soundness condition and both of the things that read the variable are in
 [`game-scope.ts`](../../src/engine/testing/game-scope.ts). A case titled some
 other way still runs, which costs time and never a check. A case titled for one
 game that reads another would be skipped unsoundly, so don't write one. Build
@@ -509,6 +515,19 @@ it has no case left, compute the floor from the games directly rather than from
 the cases, and keep it in a plain `it` (`input-parity.test.ts`'s `offered`
 keypads). To check a new guard, run it with `GATE_PRECOMMIT=1
 GATE_GAME_SCOPE=<one game>`; what fails there is what the hook would reject.
+
+**A helper's glob is paid for by every file that imports it.** The walk works
+at the grain of a module, so a helper that reads every engine module as text
+makes each of its importers run whole on any engine commit, whether or not the
+importer calls the function that reads them. `engine/testing/enrollment.ts` once
+held the engine-source and test-source scanners beside `builtGames`, and every
+hint guard imported it through `hint-games.ts`: on an engine commit none of the
+heavy guards could narrow. So a glob over a broad tree lives in a module of its
+own (`engine-source.ts`, `test-source.ts`, beside `code-lines.ts` for the shared
+comment-stripping), and a scan over that tree lives in a test file of its own
+(`hint-em-dash.test.ts`, split out of `hint-quality.test.ts`). The same holds
+for a test file: one cheap `describe` reading the engine makes every sweep in
+the file run whole.
 
 **Measure CPU rather than wall — and check what the box is short of first.**
 Contention inflates wall several-fold and unevenly (5.2× on one file, 1.6× on
