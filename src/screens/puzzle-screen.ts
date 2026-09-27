@@ -900,8 +900,16 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
             `${error}. Ignoring.`,
         );
         if (params === settingsParams) {
-          // Don't try those again
+          // Don't try those again. Say so, because the board the player gets
+          // is not the one they last chose. The toast names no board of its
+          // own: a saved game restored below may bring its own type.
           await settings.setParams(puzzle.puzzleId, null);
+          showToast({
+            label: "Your last board type could not be restored",
+            message: "It may be from an older version of the app.",
+            type: "warning",
+            duration: 6000,
+          });
         } else {
           void showAlert({
             label: `Ignoring invalid type in URL`,

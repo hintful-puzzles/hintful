@@ -20,7 +20,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 const reportError = vi.hoisted(() => vi.fn());
 vi.mock("../dialogs/crash-dialog.ts", () => ({ reportError }));
 
-import { installErrorHandlers } from "./errors.ts";
+import { installErrorHandlers, StaleBuildError } from "./errors.ts";
 
 /** The event Vite dispatches when a preloaded chunk fails to load. */
 function firePreloadError(message = "Failed to fetch dynamically imported module") {
@@ -98,4 +98,34 @@ describe("a stale chunk after a deploy recovers by reloading", () => {
     expect(reload).toHaveBeenCalledTimes(1);
     expect(reportError).not.toHaveBeenCalled();
   });
+
+  // The puzzle worker is not a lazy import, so Vite never fires its event for
+  // it: `Puzzle.create` raises a StaleBuildError, and the rejection reaches
+  // here. It must land in the same recovery, bounded by the same cooldown.
+  it("recovers the same way from a StaleBuildError nobody caught", () => {
+    const event = fireRejection(new StaleBuildError("worker script missing"));
+
+    expect(reload).toHaveBeenCalledTimes(1);
+    expect(reportError).not.toHaveBeenCalled();
+    expect(event.defaultPrevented).toBe(true);
+
+    fireRejection(new StaleBuildError("worker script missing"));
+    expect(reload).toHaveBeenCalledTimes(1);
+    expect(String(reportError.mock.calls[0][0])).toContain("reloading did not help");
+  });
+
+  it("still reports any other rejection as a crash", () => {
+    fireRejection(new Error("an ordinary bug"));
+
+    expect(reload).not.toHaveBeenCalled();
+    expect(reportError).toHaveBeenCalledTimes(1);
+  });
 });
+
+/** What the browser dispatches for a rejection nobody handled. */
+function fireRejection(reason: unknown) {
+  const event = new Event("unhandledrejection", { cancelable: true });
+  (event as Event & { reason: unknown }).reason = reason;
+  window.dispatchEvent(event);
+  return event;
+}

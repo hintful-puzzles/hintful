@@ -40,6 +40,27 @@ function recentlyReloadedForStaleChunks(): boolean {
 }
 
 /**
+ * A file this page needs could not be loaded, which after a deploy means the
+ * page is stale rather than broken. Thrown where the failure is noticed and
+ * recovered from by the unhandled-rejection handler below, so every stale-page
+ * signal ends in the one recovery.
+ */
+export class StaleBuildError extends Error {
+  override name = "StaleBuildError";
+}
+
+/** Reload once; if a reload has just been tried, report instead. */
+function recoverFromStaleBuild(message: string, error: unknown) {
+  if (recentlyReloadedForStaleChunks()) {
+    // A second failure this soon means reloading did not fix it, so a reload
+    // loop is the risk now rather than the cure. Report it for real.
+    void reportError(`${message} [stale build, and reloading did not help]`, error);
+    return;
+  }
+  location.reload();
+}
+
+/**
  * Install last-resort error handlers on the main thread.
  * These will report unhandled exceptions and promise rejections.
  */
@@ -67,16 +88,7 @@ export function installErrorHandlers() {
   window.addEventListener("vite:preloadError", (event) => {
     // Suppress Vite's default rethrow; we are handling it.
     event.preventDefault();
-    if (recentlyReloadedForStaleChunks()) {
-      // A second failure this soon means reloading did not fix it, so a reload
-      // loop is the risk now rather than the cure. Report it for real.
-      void reportError(
-        `${String(event.payload).trim()} [stale chunk, and reloading did not help]`,
-        event.payload,
-      );
-      return;
-    }
-    location.reload();
+    recoverFromStaleBuild(String(event.payload).trim(), event.payload);
   });
 
   // Catch otherwise unhandled JavaScript errors
@@ -95,6 +107,11 @@ export function installErrorHandlers() {
 
   // Catch unhandled promise rejections
   window.addEventListener("unhandledrejection", (event) => {
+    if (event.reason instanceof StaleBuildError) {
+      event.preventDefault();
+      recoverFromStaleBuild(event.reason.message, event.reason);
+      return;
+    }
     try {
       const error = event.reason instanceof Error ? event.reason : undefined;
       const errorMessage = [

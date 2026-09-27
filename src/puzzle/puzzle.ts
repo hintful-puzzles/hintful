@@ -20,6 +20,7 @@ import type {
 } from "../engine/types.ts";
 import {
   installWorkerErrorReceivers,
+  StaleBuildError,
   uninstallWorkerErrorReceivers,
 } from "../utils/errors.ts";
 import { nextAnimationFrame } from "../utils/timing.ts";
@@ -56,6 +57,40 @@ export const HINT_PENDING_MS = 300;
 export const HINT_PENDING_MESSAGE = "Thinking…";
 
 /**
+ * `request`, unless the worker fails to start first.
+ *
+ * A worker whose script never runs never answers, so without this a Comlink
+ * call to it waits for ever: the board stays blank, the chips say "Type…", and
+ * nothing is reported. That reached the owner's phone as a deploy landed
+ * (2026-09-27): the page named the previous build's worker file, which
+ * Cloudflare Pages had stopped serving. A failed script load arrives as a plain
+ * `Event`, and is a stale page; an `ErrorEvent` is the worker's own code
+ * throwing as it starts, and is a bug. `puzzle-worker-start.test.ts` holds both.
+ */
+export async function unlessWorkerFailsToStart<T>(
+  worker: Worker,
+  request: Promise<T>,
+): Promise<T> {
+  let onError = (_event: Event) => {};
+  const failed = new Promise<never>((_, reject) => {
+    onError = (event) =>
+      reject(
+        event instanceof ErrorEvent
+          ? new Error(`The puzzle worker failed as it started: ${event.message}`)
+          : new StaleBuildError("The puzzle worker's script could not be loaded"),
+      );
+    worker.addEventListener("error", onError);
+  });
+  try {
+    return await Promise.race([request, failed]);
+  } finally {
+    // Once the worker has answered, a later error is not a failure to start;
+    // left attached, it would reject a promise nobody is waiting on.
+    worker.removeEventListener("error", onError);
+  }
+}
+
+/**
  * Public API to the puzzle engine running in a worker.
  *
  * Exposes reactive properties for puzzle state, and async methods that proxy
@@ -89,7 +124,10 @@ export class Puzzle {
     }
     installWorkerErrorReceivers(worker);
     const workerFactory = wrap<RemoteWorkerPuzzleFactory>(worker);
-    const workerPuzzle = await workerFactory.create(puzzleId);
+    const workerPuzzle = await unlessWorkerFailsToStart(
+      worker,
+      workerFactory.create(puzzleId),
+    );
 
     const staticProps = await workerPuzzle.getStaticProperties();
     const puzzle = new Puzzle(puzzleId, worker, workerPuzzle, staticProps);
