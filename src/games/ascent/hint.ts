@@ -117,6 +117,9 @@ export type HintReason =
       kind: "wholeRun";
       cells: { cell: number; n: number }[];
       must: number[];
+      /** The neighboring run, by its first number, when the route is the only
+       * one leaving that run a way through the squares that remain. */
+      room: number | null;
       tier: number;
     };
 
@@ -351,13 +354,12 @@ export function ascentPlan(start: AscentState): AscentFiring[] {
       if (queued) return { ...queued, before: board.state, joins: true };
       found = null;
       if (!pass.next() || !found) return null;
+      // When the run has only one route that leaves no gap, it is one
+      // deduction, and the player's (owner, 2026-09-27): say that, once.
+      const whole = wholeRun(found, firingTier(found, start.mode));
+      if (whole) return whole;
       following = followRun(found);
-      if (following.length === 0) return found;
-      // When the run has only one route, it is one deduction: say that, once.
-      const whole = wholeRun(found, following, firingTier(found, start.mode));
-      if (!whole) return found;
-      following = [];
-      return whole;
+      return found;
     },
     apply: (b, f) => {
       const after = executeAscentMove(b.state, moveOf(f));
@@ -400,36 +402,91 @@ function cellsOf(f: AscentFiring): number[] {
 }
 
 /**
- * `first` and the rest of its run `rest` as one step, when the run has exactly
- * one route: through the empty squares at all, or through every square no
- * other run can reach. Checked by counting the routes, not assumed from the
- * deductions that found the numbers; `null` when there is more than one.
+ * The whole run `first` belongs to as one step, when the run has exactly one
+ * route: through the empty squares at all, or through every square no other
+ * run can reach, which would otherwise be left empty. Checked by counting the
+ * routes, and the route must put `first` where the ladder did; `null` when
+ * there is more than one.
+ *
+ * `tier` is the ladder technique's that found `first`. The route count is not
+ * a solver rung, so a Tricky board may meet it where its own techniques would
+ * have placed the run a number at a time; the owner prefers it there, as the
+ * way a player sees the run (2026-09-27).
  */
-function wholeRun(
-  first: AscentFiring,
-  rest: Found[],
-  tier: number,
-): AscentFiring | null {
+function wholeRun(first: AscentFiring, tier: number): AscentFiring | null {
   const { before } = first;
   const run = runsOf(before).find((r) => r.lo <= first.n && first.n <= r.hi);
-  if (!run) return null;
-  const at = new Map([first, ...rest].map((p) => [p.n, p.cell]));
-  const matches = (route: number[]) => route.every((c, k) => at.get(run.lo + k) === c);
-  const only = (must: number[]) => {
+  if (!run || run.lo === run.hi || run.hi - run.lo + 1 > WHOLE_RUN_MAX) return null;
+  // The one route, if there is one; it must agree with the step that began it.
+  const one = (must: number[]) => {
     const routes = runRoutes(before, run, must);
-    return routes !== null && routes.length === 1 && matches(routes[0]);
+    const route = routes !== null && routes.length === 1 ? routes[0] : null;
+    return route && route[first.n - run.lo] === first.cell ? route : null;
   };
-  const must = only([]) ? [] : mustVisit(before, run);
-  if (must.length > 0 && !only(must)) return null;
-  if (must.length === 0 && !only([])) return null;
-  const cells = [...at].sort((a, b) => a[0] - b[0]).map(([n, cell]) => ({ cell, n }));
+  let must: number[] = [];
+  let room: number | null = null;
+  let route = one(must);
+  if (!route) {
+    must = mustVisit(before, run);
+    route = must.length > 0 ? one(must) : null;
+  }
+  if (!route) {
+    must = [];
+    const left = leavesRoom(before, run);
+    if (left && left.route[first.n - run.lo] === first.cell) {
+      route = left.route;
+      room = left.other.lo;
+    }
+  }
+  if (!route) return null;
+  const cells = route.map((cell, k) => ({ cell, n: run.lo + k }));
   return {
-    reason: { kind: "wholeRun", cells, must, tier },
+    reason: { kind: "wholeRun", cells, must, room, tier },
     n: first.n,
     cell: first.cell,
     before,
     joins: false,
   };
+}
+
+/** How many of a run's routes the gap check will weigh one by one. */
+const ROOM_ROUTES_MAX = 24;
+
+/**
+ * The one route for `run` that leaves a neighboring run a way through, when
+ * every other route would leave it none: the gap a player sees when a run
+ * turned the wrong way would strand the squares another run needs. The other
+ * run is one whose reach meets a square of this run's routes; it needs only
+ * *a* route in the squares left, so the claim is exactly that the rest leave it
+ * none. `null` when no single run makes the choice, or when the routes are too
+ * many to weigh.
+ */
+function leavesRoom(
+  state: AscentState,
+  run: Run,
+): { route: number[]; other: Run } | null {
+  const routes = runRoutes(state, run, [], ROOM_ROUTES_MAX + 1);
+  if (!routes || routes.length < 2 || routes.length > ROOM_ROUTES_MAX) return null;
+  const squares = new Set(routes.flat());
+  const neighbors = runsOf(state).filter(
+    (r) =>
+      r.lo !== run.lo &&
+      r.hi - r.lo + 1 <= WHOLE_RUN_MAX &&
+      [...squares].some((c) => runShortfall(state, r, c) <= 0),
+  );
+  for (const other of neighbors) {
+    const fits = routes.filter((route) => {
+      const grid = state.grid.slice();
+      route.forEach((c, k) => {
+        grid[c] = run.lo + k;
+      });
+      const found = runRoutes({ ...state, grid }, other, [], 1);
+      return found === null || found.length > 0;
+    });
+    // `null` above counts as fitting: a search that gave up has shown nothing.
+    if (fits.length === 1) return { route: fits[0], other };
+  }
+  return null;
 }
 
 export function ascentHint(
@@ -619,41 +676,25 @@ function fillReason(
     const r = close[0].r;
     const ends = [r.a, r.b].filter((e) => e !== null);
     area.push(...ends.map((e) => e.cell));
+    const from = r.a ? shown(r.a.m) : null;
+    const to = r.b ? shown(r.b.m) : null;
     if (r.lo === r.hi) {
-      const touched = (e: { cell: number }) => stepDistance(cell, e.cell, w, mode) <= 1;
-      rival = {
-        kind: "one",
-        k: shown(r.lo),
-        need: ends.filter((e) => !touched(e)).map((e) => shown(e.m)),
-        touches: ends.some(touched),
-      };
-    } else
-      rival = {
-        kind: "run",
-        from: r.a ? shown(r.a.m) : null,
-        to: r.b ? shown(r.b.m) : null,
-      };
+      const missed = ends.filter((e) => stepDistance(cell, e.cell, w, mode) > 1);
+      rival = { kind: "one", from, to, need: missed.map((e) => shown(e.m)) };
+    } else rival = { kind: "run", from, to };
   }
 
   const counts: Count[] = [];
   if (n > own.lo) {
     const a = own.a;
     if (!a || a.m + stepDistance(cell, a.cell, w, mode) !== n) return null;
-    const d = n - a.m;
-    counts.push({
-      m: shown(a.m),
-      d,
-      k: shown(n - 1),
-      more: n - 1 > own.lo,
-      dir: "down",
-    });
+    counts.push({ m: shown(a.m), d: n - a.m, side: "lower" });
     area.push(a.cell);
   }
   if (n < own.hi) {
     const b = own.b;
     if (!b || b.m - stepDistance(cell, b.cell, w, mode) !== n) return null;
-    const d = b.m - n;
-    counts.push({ m: shown(b.m), d, k: shown(n + 1), more: n + 1 < own.hi, dir: "up" });
+    counts.push({ m: shown(b.m), d: b.m - n, side: "higher" });
     area.push(b.cell);
   }
   return { rival, counts, area: [...new Set(area)] };
@@ -675,6 +716,10 @@ function mustVisit(state: AscentState, run: Run): number[] {
   return out;
 }
 
+/** The longest run a step places whole: past it a unique route is rare, and a
+ * sentence claiming one would ask the player to check too much. */
+const WHOLE_RUN_MAX = 8;
+
 /** Past this many search steps a route count gives up, and says "not one". */
 const ROUTE_SEARCH_LIMIT = 200_000;
 
@@ -682,13 +727,14 @@ const ROUTE_SEARCH_LIMIT = 200_000;
  * The routes `run` could take through empty squares, one square per number,
  * from the placed number at one end to the one at the other, taking in every
  * square of `must`, and in Edges mode keeping each number on its arrow's line.
- * Stops at two: the question is only whether there is exactly one. `null`
- * when the search gives up.
+ * Stops at `limit`: two answers "is there exactly one?", more lists them all
+ * when there are few. `null` when the search gives up first.
  */
 function runRoutes(
   state: AscentState,
   run: Run,
   must: readonly number[],
+  limit = 2,
 ): number[][] | null {
   const { w, h, grid } = state;
   const len = run.hi - run.lo + 1;
@@ -713,7 +759,7 @@ function runRoutes(
       if (far && stepDistance(from, far.cell, w, state.mode) !== 1) return true;
       if ([...mustSet].some((c) => !used.has(c))) return true;
       found.push(forward ? [...path] : [...path].reverse());
-      return found.length < 2;
+      return found.length < limit;
     }
     // A square must still be able to reach the far end in the numbers left.
     for (const c of neighbors(state, from)) {
@@ -731,7 +777,7 @@ function runRoutes(
     return true;
   };
   const finished = dfs(anchor.cell, 0);
-  if (!finished && found.length < 2) return null;
+  if (!finished && found.length < limit) return null;
   return found;
 }
 
@@ -780,17 +826,30 @@ export function stepOf(f: AscentFiring): AscentStep {
       if (run.a) ends.push(run.a.cell);
       if (run.b) ends.push(run.b.cell);
       const path = f.reason.cells.map((c) => c.cell);
+      const { room } = f.reason;
+      const other =
+        room === null ? null : (runsOf(before).find((r) => r.lo === room) ?? null);
+      // The neighboring run the route leaves room for is named by its ends,
+      // so they are outlined too.
+      if (other?.a) ends.push(other.a.cell);
+      if (other?.b) ends.push(other.b.cell);
       const text = say.wholeRun(
         run.a ? shown(run.a.m) : null,
         run.b ? shown(run.b.m) : null,
-        f.reason.must.length > 0,
+        other
+          ? {
+              kind: "room",
+              from: other.a ? shown(other.a.m) : null,
+              to: other.b ? shown(other.b.m) : null,
+            }
+          : { kind: f.reason.must.length > 0 ? "must" : "plain" },
       );
       const route = [
         ...(run.a ? [run.a.cell] : []),
         ...path,
         ...(run.b ? [run.b.cell] : []),
       ];
-      return step(text, ends, f.reason.must, route);
+      return step(text, [...new Set(ends)], f.reason.must, route);
     }
     case "touch":
     case "reach": {

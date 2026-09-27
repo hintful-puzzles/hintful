@@ -51,32 +51,30 @@ export interface Bound {
 const ARROW = "on its arrow's striped line";
 
 /**
- * The run that comes closest to a square without reaching it. A single number
- * `k` must touch both its neighbors in the sequence (`need`, the ones the square
- * does not touch); a longer run, between `from` and `to`, is too far from them.
+ * The run that comes closest to a square without reaching it, between `from`
+ * and `to`. A run of one number must touch both, so the square fails when it
+ * does not touch one of them (`need`, the ends it misses); a longer run is too
+ * far away. Only placed numbers are named: a sentence speaks of what is on the
+ * board, and of the number it places (owner, 2026-09-27).
  */
 export type Rival =
-  | { kind: "one"; k: number; need: number[]; touches: boolean }
+  | { kind: "one"; from: number | null; to: number | null; need: number[] }
   | { kind: "run"; from: number | null; to: number | null };
 
 function rivalText(r: Rival): string {
   if (r.kind === "run") return `${runName(r.from, r.to)} is too far away`;
-  const need = r.need.join(" and ");
-  return r.touches
-    ? `${r.k} would have to touch ${need} too`
-    : `${r.k} would have to touch ${need}`;
+  return `${runName(r.from, r.to)} can't, as this square doesn't touch ${r.need.join(" or ")}`;
 }
 
 /**
- * A step count ruling out part of the run: this square is `d` steps from `m`,
- * too far for `k` and (when `more`) every number beyond it in direction `dir`.
+ * A step count that rules out the rest of the run: this square is `d` steps
+ * from the placed `m`, too far for the run's numbers on the side away from it.
  */
 export interface Count {
   m: number;
   d: number;
-  k: number;
-  more: boolean;
-  dir: "up" | "down";
+  /** Which of the run's numbers it rules out, relative to the one placed. */
+  side: "lower" | "higher";
 }
 
 /** Why a dead end cannot hold the path's other end. */
@@ -118,7 +116,8 @@ export const say = {
     const lead =
       "Only the outlined square leads into this one, so the path must end here.";
     if (why === "placed") return `${lead} With ${other} placed, it must be ${n}.`;
-    if (why === "reach") return `${lead} ${other} can't reach it, so it must be ${n}.`;
+    if (why === "reach")
+      return `${lead} The path's ${n === 1 ? "last" : "first"} number can't reach it, so it must be ${n}.`;
     return `${lead} ${other}'s arrow points elsewhere, so it must be ${n}.`;
   },
 
@@ -129,11 +128,12 @@ export const say = {
    */
   fill: (n: number, rival: Rival | null, counts: Count[]): string => {
     const why = rival === null ? "no other run comes close" : rivalText(rival);
-    const rest = counts.map(
-      (c) =>
-        `${c.d} steps from ${c.m} is too far for ${c.k}${c.more ? ` ${c.dir}` : ""}`,
-    );
-    return `Only ${n} can fill this square: ${[why, ...rest].join(", and ")}.`;
+    if (counts.length === 0) return `Only ${n} can fill this square: ${why}.`;
+    const rest =
+      counts.length === 2
+        ? `${counts[0].d} steps from ${counts[0].m} and ${counts[1].d} from ${counts[1].m} rule out the rest`
+        : `${counts[0].d} steps from ${counts[0].m} rules out anything ${counts[0].side}`;
+    return `Only ${n} can fill this square: ${why}, and ${rest}.`;
   },
 
   /**
@@ -168,12 +168,24 @@ export const say = {
     `${capitalized(runName(from, to))} must step through the outlined squares, so ${n} can only go here.`,
 
   /**
-   * The whole run between `from` and `to` has one route: through every striped
-   * square, when `mustVisit` (squares no other run can reach), or through the
-   * empty squares at all otherwise.
+   * The whole run between `from` and `to` has one route: through the empty
+   * squares at all ("plain"), through every striped square no other run can
+   * reach ("must"), or the only one leaving the run between `room.from` and
+   * `room.to` a way through what is left ("room").
    */
-  wholeRun: (from: number | null, to: number | null, mustVisit: boolean): string =>
-    mustVisit
-      ? `No other run reaches the striped squares, so ${runName(from, to)} must take them all, and only one route does.`
-      : `${capitalized(runName(from, to))} has only one route through the empty squares, so it must go along the line.`,
+  wholeRun: (
+    from: number | null,
+    to: number | null,
+    why:
+      | { kind: "plain" }
+      | { kind: "must" }
+      | { kind: "room"; from: number | null; to: number | null },
+  ): string => {
+    const run = runName(from, to);
+    if (why.kind === "must")
+      return `No other run reaches the striped squares, so ${run} must take them all, and only one route does.`;
+    if (why.kind === "room")
+      return `Only one route for ${run} leaves ${runName(why.from, why.to)} a way through, so it must take the line.`;
+    return `${capitalized(run)} has only one route through the empty squares, so it must go along the line.`;
+  },
 };

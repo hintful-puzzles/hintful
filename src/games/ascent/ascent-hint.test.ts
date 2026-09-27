@@ -89,7 +89,7 @@ const PINNED = [
   // a dead end, its other end out of reach
   "6x6mOEdn:a35a7b25c5d3b23_28o14",
   // a dead end, its other end placed
-  "6x6mOEdh:a13_16a20n8a2c29j",
+  "6x6mOEdn:e1_35g8a20_13a28e29h17a",
   // a dead end, its other end's arrow pointing elsewhere
   "5x5mEEdt:11_19_16_7_8_13_5_2_17d1_20e15_21e14_10e23_9e25_3_22_24_6_4_12_18",
   // routeBeside
@@ -310,14 +310,14 @@ describe("every premise, restated from the board, singles out its square", () =>
         else {
           const r = rivals[0];
           const named =
-            r.lo === r.hi
-              ? `${r.lo + 1} would have to touch`
-              : r.a && r.b
-                ? `the run between ${r.a.m + 1} and ${r.b.m + 1}`
-                : r.a
-                  ? `the run after ${r.a.m + 1}`
-                  : `the run before ${(r.b?.m ?? -1) + 1}`;
+            r.a && r.b
+              ? `the run between ${r.a.m + 1} and ${r.b.m + 1}`
+              : r.a
+                ? `the run after ${r.a.m + 1}`
+                : `the run before ${(r.b?.m ?? -1) + 1}`;
           expect(explanation, at).toContain(named);
+          // A run of one number fails for a square it cannot touch both ends of.
+          if (r.lo === r.hi) expect(explanation, at).toContain("doesn't touch");
           for (const e of [r.a, r.b])
             if (e) expect(highlights?.area, at).toContain(e.cell);
         }
@@ -380,6 +380,7 @@ describe("every premise, restated from the board, singles out its square", () =>
     );
     expect(firings.length).toBeGreaterThan(20);
     let withMust = 0;
+    let withRoom = 0;
     for (const { board, firing } of firings) {
       if (firing.reason.kind !== "wholeRun") continue;
       const { before } = firing;
@@ -401,12 +402,35 @@ describe("every premise, restated from the board, singles out its square", () =>
         ).toEqual([run[0]]);
       }
       if (must.length > 0) withMust++;
-      // And it is the only route, counted here independently.
-      const routes = countRoutes(before, run, must);
-      expect(routes, at).toBe(1);
+      const { room } = firing.reason;
+      if (room === null) {
+        // It is the only route, counted here independently.
+        expect(countRoutes(before, run, must), at).toBe(1);
+      } else {
+        // Every other route leaves the named run no route in what is left, and
+        // this one leaves it one: listed here independently.
+        withRoom++;
+        const other = missing(before).filter((m) => sameRun(before, m, room));
+        const chosen = cells.map((c) => c.cell);
+        const routes = listRoutes(before, run, [], 50);
+        expect(routes.length, at).toBeLessThan(50);
+        expect(
+          routes.map((r) => r.join()),
+          at,
+        ).toContain(chosen.join());
+        for (const r of routes) {
+          const grid = before.grid.slice();
+          r.forEach((c, k) => {
+            grid[c] = run[k];
+          });
+          const fits = listRoutes({ ...before, grid }, other, [], 1).length > 0;
+          expect(fits, `${at} via ${r.join()}`).toBe(r.join() === chosen.join());
+        }
+      }
       expect(stepOf(firing).highlights?.route.length, at).toBeGreaterThan(cells.length);
     }
     expect(withMust).toBeGreaterThan(0);
+    expect(withRoom).toBeGreaterThan(0);
   });
 
   it("names the run a route step's stripes belong to", () => {
@@ -435,7 +459,19 @@ describe("every premise, restated from the board, singles out its square", () =>
  * on each number's arrow line. Stops counting at two.
  */
 function countRoutes(state: AscentState, run: number[], must: number[]): number {
+  return listRoutes(state, run, must, 2).length;
+}
+
+/** The routes {@link countRoutes} counts, each as its squares in the run's
+ * order, up to `cap` of them. */
+function listRoutes(
+  state: AscentState,
+  run: number[],
+  must: number[],
+  cap: number,
+): number[][] {
   const { w, h, grid, mode, last } = state;
+  let reversed = false;
   const adj = (a: number, b: number) => isNear(a, b, w, mode);
   const cellOf = (m: number) => grid.indexOf(m);
   const lo = run[0];
@@ -446,17 +482,19 @@ function countRoutes(state: AscentState, run: number[], must: number[]): number 
   if (from < 0) {
     [from, to] = [to, from];
     run = [...run].reverse();
+    reversed = true;
   }
   const arrow = (m: number) =>
     grid.findIndex((v) => isNumberEdge(v) && fromNumberEdge(v) === m);
   const empties = [...grid.keys()].filter((i) => grid[i] === NUMBER_EMPTY);
-  let count = 0;
+  const out: number[][] = [];
   const used: number[] = [];
   const place = (k: number) => {
-    if (count >= 2) return;
+    if (out.length >= cap) return;
     if (k === run.length) {
       if (to >= 0 && !adj(used[k - 1], to)) return;
-      if (must.every((c) => used.includes(c))) count++;
+      if (must.every((c) => used.includes(c)))
+        out.push(reversed ? [...used].reverse() : [...used]);
       return;
     }
     const prev = k === 0 ? from : used[k - 1];
@@ -471,7 +509,7 @@ function countRoutes(state: AscentState, run: number[], must: number[]): number 
     }
   };
   place(0);
-  return count;
+  return out;
 }
 
 /** Whether missing numbers `a` and `b` lie in one run, no placed number between. */
@@ -481,6 +519,66 @@ function sameRun(state: AscentState, a: number, b: number): boolean {
     if (placed.has(m)) return false;
   return true;
 }
+
+describe("positions from the owner's playtest", () => {
+  /** A Hexagon Hard board with the numbers listed missing and the rest placed. */
+  function position(seed: string, missingNumbers: number[]): AscentState {
+    const params = ascentGame.decodeParams("7x7mHdh");
+    const start = newAscentState(
+      params,
+      ascentGame.newDesc(params, randomNew(seed)).desc,
+    );
+    const solved = ascentGame.solve?.(start, start);
+    if (!solved?.ok || solved.move.kind !== "solve") throw new Error("unsolvable");
+    // The solve move reports only numbers; walls stay the board's own.
+    const answer = solved.move.grid;
+    const grid = start.grid.map((v, i) =>
+      answer[i] >= 0 && !missingNumbers.includes(answer[i] + 1) ? answer[i] : v,
+    );
+    return { ...start, grid };
+  }
+
+  it("places the run between 33 and 37 along the one route that leaves 28 to 33 room", () => {
+    const state = position(
+      "87afd06a94569a0c5c643d036285edc3",
+      [29, 30, 31, 32, 34, 35, 36],
+    );
+    const [first] = ascentPlan(state);
+    const step = stepOf(first);
+    expect(step.move.kind).toBe("places");
+    expect(step.explanation).toBe(
+      "Only one route for the run between 33 and 37 leaves the run between 28 and 33 a way through, so it must take the line.",
+    );
+  });
+});
+
+describe("a sentence names only numbers the player can see", () => {
+  it("names placed numbers, arrow clues, and the numbers the step places", () => {
+    // A number followed by "step(s)", "of" or "from" is a distance, not a
+    // number on the path: "within 2 steps of 8 and 3 of 13".
+    const NUMBER = /\b(\d+)\b(?! steps?\b| of\b| from\b)/g;
+    let checked = 0;
+    for (const { board, firing } of walk().seen) {
+      const { grid } = firing.before;
+      const visible = new Set<number>();
+      for (const v of grid) {
+        if (v >= 0) visible.add(v + 1);
+        else if (isNumberEdge(v)) visible.add(fromNumberEdge(v) + 1);
+      }
+      const move = moveOf(firing);
+      const placing = move.kind === "places" ? move.cells.map((c) => c.n) : [firing.n];
+      for (const n of placing) visible.add(n + 1);
+      const { explanation } = stepOf(firing);
+      for (const [, digits] of explanation.matchAll(NUMBER)) {
+        expect(visible.has(Number(digits)), `${board.label}: "${explanation}"`).toBe(
+          true,
+        );
+        checked++;
+      }
+    }
+    expect(checked).toBeGreaterThan(1000);
+  });
+});
 
 describe("every technique is reached", () => {
   const KINDS: Record<HintReason["kind"], true> = {

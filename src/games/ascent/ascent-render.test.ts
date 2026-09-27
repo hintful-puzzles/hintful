@@ -110,7 +110,7 @@ describe("ascent hint frames", () => {
       game: ascentGame,
       id: id(RECT, "render-hint-rect"),
       showHint: true,
-      hintUntil: (s) => (hl(s)?.area.length ?? 0) === 2,
+      hintUntil: (s) => s.move.kind === "place" && (hl(s)?.area.length ?? 0) === 2,
     });
     const marks = hl(hint);
     expect(marks?.area).toHaveLength(2);

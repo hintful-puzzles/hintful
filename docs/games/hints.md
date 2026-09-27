@@ -2517,10 +2517,17 @@ reusable part. In [`games/ascent/`](../../src/games/ascent/):
   was "why not 42?" and "why not 45?". So when exactly one other run comes
   within two steps, the step names it and why it fails, and gives the step
   count that rules out the rest of the answer's run: *"Only 44 can fill this
-  square: 42 would have to touch 41 too, and 4 steps from 48 is too far for 45
-  up."* With two or more close rivals, naming one would imply it was the only
-  contender, so the step keeps the striped run; `ascent-hint.test.ts` holds the
-  named rival to being the only close one.
+  square: the run between 41 and 43 can't, as this square doesn't touch 41, and
+  4 steps from 48 rules out anything higher."* With two or more close rivals,
+  naming one would imply it was the only contender, so the step keeps the
+  striped run; `ascent-hint.test.ts` holds the named rival to being the only
+  close one.
+- **Name only what the player can see.** A sentence names numbers on the board
+  and the one it places, never another missing number (owner, 2026-09-27, of a
+  sentence naming a missing 35: "the mention of 35 doesn't help"). A rival
+  is named as its run, the reason as the placed end it misses, and the count
+  as the side it rules out. `ascent-hint.test.ts` scans every sentence of a
+  sweep for a number that is neither on the board nor placed by the step.
 - **Follow a run the player has started as one journey, without raising the
   bar.** Players write a forced run down in one go (owner, 2026-09-27). After a
   step places a run's first number, the plan asks the same techniques about that
@@ -2531,13 +2538,20 @@ reusable part. In [`games/ascent/`](../../src/games/ascent/):
 - **When the run has one route, say so once, and prove it by counting.** The
   owner found a six-leg journey still read as six deductions, when the player's
   thought was one: squares no other run reaches must be on this run's route, and
-  only one route takes them all. So a followed run whose route is unique, with
-  or without those must-visit squares, is one step placing every number (a
-  hint-only `places` move), drawn as the game's own path line in the hint color.
-  The uniqueness is counted (`runRoutes`), never inferred from the deductions
-  that found the numbers, and `ascent-hint.test.ts` recounts it by brute force.
-  A run is named by its ends ("the run between 13 and 20"): its numbers follow
-  from them.
+  only one route takes them all. So a run whose route is unique, with or
+  without those must-visit squares, is one step placing every number (a
+  hint-only `places` move), drawn as the game's own path line in the hint color,
+  and whenever a technique finds a placement, the plan first asks whether that
+  number's whole run is forced. The uniqueness is counted
+  (`runRoutes`), never inferred from the deductions that found the numbers, and
+  `ascent-hint.test.ts` recounts it by brute force. A run is named by its ends
+  ("the run between 13 and 20"): its numbers follow from them.
+- **A gap is a route count too.** The owner's reason for a run of three was
+  "only one placement doesn't leave a gap": of its six routes, five cut the
+  neighboring run off from one of its ends. `leavesRoom` counts, for each
+  route, the neighbor's routes through what is left, and the step fires when
+  exactly one route leaves the neighbor at least one. The owner's board is
+  pinned by rebuilding it from its seed with that run and its neighbor removed.
 - **A move with side effects ends the plan.** A line the player drew fills in
   numbers when a number lands at its end. Those are the player's to vouch for, so
   a step that fills more than its own square is the plan's last, and the next
