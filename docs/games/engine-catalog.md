@@ -546,7 +546,8 @@ type-check against it and calls `runCandidatePlan`. See
 `HintFrontier` takes, among the firings a candidate plan could make at once,
 the one continuing from what the plan's latest steps wrote, with the ladder
 order as the tiebreak; `runCandidatePlan` hands it each rung's candidates,
-each reading the `area ∪ targets` of the steps it would push. It is keyed on
+each reading the `area ∪ hatch ∪ reads ∪ targets` of the steps it would push.
+It is keyed on
 whatever a step acts on: a grid game passes `gridKey(w, h)`, and Map, whose
 steps act on regions of a graph, keys a region by its index and drives the
 frontier from its own plan. See [`hints.md`](./hints.md) § "Continue from the

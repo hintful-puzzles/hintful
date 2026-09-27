@@ -5684,14 +5684,21 @@ rung order says.
 The engine SHALL own the choice (`HintFrontier` in `src/engine/hint-frontier.ts`, which
 the shared candidate-plan walk drives) and SHALL read each firing's premise off the
 steps the firing
-would push: the `area ∪ targets` of every one of them, built before the choice and
-pushed unchanged if it is taken. No firing SHALL carry a second statement of its
-premise. The game SHALL own which firings are available. A firing SHALL be offered to
+would push: the `area ∪ hatch ∪ reads ∪ targets` of every one of them, built before
+the choice and pushed unchanged if it is taken. No firing SHALL carry a second
+statement of its premise. The game SHALL own which firings are available. A firing
+SHALL be offered to
 the frontier only when the working board already shows its premise: a strike recorded
 before the solver's next unmade placement whose premise cells hold no mark an earlier
 firing has yet to strike, a placement the notes show as a naked or hidden single, and a
 placement forced by a clue only where the plan has nothing else to take. The frontier
 SHALL read what a step wrote from the targets of the steps it pushed.
+
+A single's step SHALL carry in its `reads` the placed cells it rests on through a cell
+with no notes, which the walk adds and nothing draws: for a single in a cell with no
+notes, every placed cell ruling out one of the cell's other values; for a hidden
+single, the placed cells ruling the value out of each blank cell of its region that
+has no notes.
 
 The frontier SHALL key only on the plan's own earlier steps, never on the midend's
 displayed step or the player's moves, so the same board always yields the same plan.
@@ -5701,7 +5708,10 @@ order because of it.
 The population the guard measures SHALL be derived from the games' own sources, and
 SHALL be keyed on the shape every entry into the walk shares rather than on one entry
 point's name, so a preset over the walk does not silently remove its games from the
-measurement.
+measurement. The guard SHALL walk every reading of an unmarked cell a game offers the
+player, derived from the game's `Ui`, and SHALL read each step's premise as the
+frontier does. A reading known to exceed the bound SHALL be named, with the change
+that owns it, in a ledger the guard holds still over the bound.
 
 #### Scenario: a firing beside the last step is taken over an easier one elsewhere
 
@@ -5744,6 +5754,20 @@ measurement.
   prefers the first, and only the second shades that cell as evidence, acting on a
   cell elsewhere
 - **THEN** the plan takes the second
+
+#### Scenario: a placement continues into the single it completes
+
+- **WHEN** under the implicit reading a plan places a value in a region, leaving one
+  cell of the region with no notes and one value its regions do not hold
+- **THEN** that single's step reads the placed cell, and the plan takes it next over a
+  single elsewhere that the rung order reaches first
+
+#### Scenario: both readings are measured
+
+- **WHEN** a game offers the player both readings of an unmarked cell
+- **THEN** its plans are measured under each, and a reading over the bound fails the
+  guard unless the ledger names it, while a named reading that has come under the
+  bound fails it too
 
 ### Requirement: A cell's regions are one definition per relation
 

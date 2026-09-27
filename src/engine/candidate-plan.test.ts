@@ -434,6 +434,23 @@ describe("runCandidatePlan", () => {
       expect(steps.some((s) => s.move.type === "pencilAll")).toBe(false);
     });
 
+    it("continues into the single a placement completes, reading its placed premise", () => {
+      // 0,0 is the first single. It completes 0,2's column (with the 2 at 0,1),
+      // and the scan reaches 2,1, a single all along, first.
+      const steps = implicitWalk(Uint8Array.from([0, 2, 3, 2, 3, 0, 0, 0, 0]), []);
+      expect(steps.slice(0, 2).map((s) => s.explanation)).toEqual([
+        "regionsFull 0,0",
+        "regionsFull 0,2",
+      ]);
+      expect(steps[1].highlights?.reads).toEqual(
+        expect.arrayContaining([
+          { x: 0, y: 0 },
+          { x: 0, y: 1 },
+        ]),
+      );
+      expect(steps[1].highlights?.area).toEqual([]);
+    });
+
     it("leaves the populate reading as it was: a note-less cell is no single", () => {
       const steps: Step[] = [];
       walk({

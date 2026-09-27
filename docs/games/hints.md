@@ -3760,15 +3760,29 @@ takes the candidate reading a cell the plan's latest step wrote, then the step
 before, three deep, and otherwise the ladder's own first choice, so a fresh
 plan opens exactly as the ladder says.
 
-**A firing reads exactly what its steps show: their `area ∪ targets`.** The
-walk builds a firing's steps before choosing among them and reads the premise
-off those, the same steps it will push. The candidates used to carry a
-hand-built `reads` beside the steps they would push, and the two disagreed in
-three games without anything noticing: Towers' strikes read their clue's line
-but not the cells they struck, Unequal's link read one end, and Group's
-identity fill read one cell of the row and column it placed. Reading the steps
-cut the jumps `plan-continuity.ts` counts as avoidable in all four games whose
-plans moved (`candidate-plan-kit`).
+**A firing reads exactly what its steps carry: their `area ∪ hatch ∪ reads ∪
+targets`.** The walk builds a firing's steps before choosing among them and
+reads the premise off those, the same steps it will push. The candidates used
+to carry a hand-built `reads` beside the steps they would push, and the two
+disagreed in three games without anything noticing: Towers' strikes read their
+clue's line but not the cells they struck, Unequal's link read one end, and
+Group's identity fill read one cell of the row and column it placed. Reading
+the steps cut the jumps `plan-continuity.ts` counts as avoidable in all four
+games whose plans moved (`candidate-plan-kit`).
+
+**A single in a cell with no notes rests on the values placed around it, and
+the walk says so.** "This cell's row, column and block already hold every other
+number" names no cell, yet it is true only because of particular placed ones.
+So the walk adds to a `regionsFull` single's `reads` every placed cell that
+rules one of its other values out, and to a hidden single's the placed cells
+that rule the value out of each note-less cell of its line. Nothing draws them.
+Without them the frontier could not see that a placement continues into the
+single it completes, and `plan-continuity.ts` could not either. Measured over
+every leaf preset at six seeds (`rome-implicit-continuity`, 2026-09-28), the
+instrument put 14.5% of Rome's implicit jumps past a continuing firing where
+6.3% were, and the same blind spot hid 14–22% in Solo's, Group's, Seismic's and
+Mathrax's implicit plans, their defaults, which it had read as 4–9%. With the
+walk reading the premise, all four came under the bound.
 
 **Offer only what you can vouch for, because the frontier takes whatever it
 is handed.** For the standard rungs the walk does it with the shared listers;
@@ -3803,7 +3817,10 @@ associativity placements available whenever their three products are on the
 board) and Salad (marker rungs, and a `stuck` check). Guard:
 `hint-frontier.test.ts`, which reads each plan from outside through
 `engine/testing/plan-continuity.ts` and bounds the jumps that passed over a
-firing that continued.
+firing that continued, under **every reading the game offers**: a player may
+pick either, so either plan ships. A reading known to be over the bound sits in
+the test's `OVER_BOUND` ledger with the change that owns it, and the walk
+asserts it is still over, so fixing it retires the entry.
 
 ### The recorder and the soundness boundary
 
@@ -3978,11 +3995,11 @@ notes, and writing them one cell at a time can still cost more than one
 populate. So the convention, `DEFAULT_CANDIDATE_READING`, is `populate`, and a
 game whose plan is shorter under the implicit reading overrides it in `newUi`
 and says why (Solo, Mathrax, Unequal, Seismic, Group for the few notes it
-writes, and Map, whose plan always read this way). Rome's shorter implicit plan
-is declined for now: it jumps
-across the board past `hint-frontier.test.ts`'s continuity bound, which reads a
-game's default reading only, so **a game switching its default must pass that
-guard too**. A new game measures the same two numbers before choosing.
+writes, Rome, and Map, whose plan always read this way). Rome was held back a
+while by a continuity figure that turned out to be the instrument's (§
+"Continue from the last step"). `hint-frontier.test.ts` walks both readings, so
+**the continuity bound holds whichever a game defaults to**. A new game
+measures the same two numbers before choosing.
 
 **Salad walks the populate reading only**: its setup is its own (the "might be
 empty" note is a candidate no row or column rules out, so an implicit Salad

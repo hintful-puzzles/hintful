@@ -3,9 +3,10 @@
  * every game that has one.
  */
 import { describe, expect, it } from "vitest";
+import type { CandidateReading } from "./candidate-hint.ts";
 import { type FrontierCandidate, gridKey, HintFrontier } from "./hint-frontier.ts";
 import { randomNew } from "./random/index.ts";
-import { membersNotMentioning } from "./testing/enrollment.ts";
+import { enrolledIn, membersNotMentioning } from "./testing/enrollment.ts";
 import { HINT_GAMES, leafPresets } from "./testing/hint-games.ts";
 import { planContinuity } from "./testing/plan-continuity.ts";
 import type { Point } from "./types.ts";
@@ -164,6 +165,30 @@ const PLAN_IMPORTERS: readonly string[] = (() => {
 const MAX_AVOIDABLE = 0.1;
 
 /**
+ * The readings each game's plan is walked under: both, for a game whose `Ui`
+ * carries a `candidateReading` (the player may pick either, so either plan
+ * ships), and otherwise `null`, the game's own. Derived from the `Ui` as
+ * `candidate-reading.test.ts` derives it. Walking the default alone once left
+ * Rome's implicit plan unmeasured while players could choose it
+ * (`rome-implicit-continuity`).
+ */
+const OFFERING = enrolledIn((g) => typeof g.ui["candidateReading"] === "string").ids;
+const readingsOf = (id: string): readonly (CandidateReading | null)[] =>
+  OFFERING.includes(id) ? ["implicit", "populate"] : [null];
+
+/**
+ * The readings known to pass over more continuing firings than the bound
+ * allows, each with why and the change that owns it. The walk asserts each is
+ * still over, so fixing one fails here until its entry goes.
+ */
+const OVER_BOUND: Record<string, string> = {
+  "towers/implicit":
+    "a clue strike that continues the last placement waits behind the " +
+    "recording's next unmade placement, which the populate reading hides " +
+    "behind its populate; towers-implicit-strike-window",
+};
+
+/**
  * The games that choose through a `HintFrontier` of their own rather than
  * through the candidate walk, and so are outside the measurement below: derived
  * from their source, and each held by a guard of its own that the entry names.
@@ -253,25 +278,45 @@ describe("hint plans continue from their previous step where they can", () => {
     expect(direct.sort()).toEqual(Object.keys(OWN_FRONTIER).sort());
   });
 
+  it("walks both readings of every game that offers the choice", () => {
+    expect(FRONTIER_GAMES.filter((id) => readingsOf(id).length > 1)).toContain("rome");
+    for (const key of Object.keys(OVER_BOUND)) {
+      const [id, reading] = key.split("/");
+      expect(readingsOf(id), key).toContain(reading);
+    }
+  });
+
   for (const id of FRONTIER_GAMES) {
     const game = HINT_GAMES.find(([g]) => g === id)?.[1];
-    it(`${id}: few jumps pass over a firing that continued`, () => {
-      if (!game) throw new Error(`${id} is not a hint game`);
-      let jumps = 0;
-      let avoidable = 0;
-      for (const p of leafPresets(game.presets())) {
-        for (let s = 0; s < 2; s++) {
-          const { desc } = game.newDesc(
-            p.params,
-            randomNew(`continuity-${p.title}-${s}`),
-          );
-          const c = planContinuity(game, game.newState(p.params, desc));
-          jumps += c.jumps;
-          avoidable += c.avoidable;
+    for (const reading of readingsOf(id)) {
+      const key = reading ? `${id}/${reading}` : id;
+      it(`${key}: few jumps pass over a firing that continued`, () => {
+        if (!game) throw new Error(`${id} is not a hint game`);
+        let jumps = 0;
+        let avoidable = 0;
+        for (const p of leafPresets(game.presets())) {
+          for (let s = 0; s < 2; s++) {
+            const { desc } = game.newDesc(
+              p.params,
+              randomNew(`continuity-${p.title}-${s}`),
+            );
+            const state = game.newState(p.params, desc);
+            const ui = reading
+              ? { ...(game.newUi(state) as object), candidateReading: reading }
+              : undefined;
+            const c = planContinuity(game, state, ui);
+            jumps += c.jumps;
+            avoidable += c.avoidable;
+          }
         }
-      }
-      expect(jumps).toBeGreaterThan(50);
-      expect(avoidable / jumps).toBeLessThan(MAX_AVOIDABLE);
-    });
+        expect(jumps).toBeGreaterThan(50);
+        // An excused reading must still be over, so fixing it retires the entry.
+        if (key in OVER_BOUND)
+          expect(avoidable / jumps, OVER_BOUND[key]).toBeGreaterThanOrEqual(
+            MAX_AVOIDABLE,
+          );
+        else expect(avoidable / jumps).toBeLessThan(MAX_AVOIDABLE);
+      });
+    }
   }
 });

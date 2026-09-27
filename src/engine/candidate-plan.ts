@@ -13,8 +13,8 @@
  * **A firing is data, and its steps are built here.** A rung returns firings as
  * lists of legs (a placement, a strike, or a step of the game's own), and the
  * walk turns each leg into the step the player is shown. The frontier reads a
- * firing's premise off those same steps (`area ∪ targets`), so what the plan
- * continues from can never differ from what the player sees.
+ * firing's premise off those same steps (`area ∪ hatch ∪ reads ∪ targets`),
+ * so what the plan continues from can never differ from what the steps carry.
  */
 
 import {
@@ -71,9 +71,10 @@ export interface DupReason {
 
 /** One leg of a firing: one step the player is shown. A `step` leg is a move the
  * canonical shapes have no room for (Salad's markers), built by the game and
- * applied to the working board by its own `apply`. */
+ * applied to the working board by its own `apply`. A `place` leg's `reads` is
+ * premise the walk knows and the game's words do not ({@link StepWords}'s). */
 export type Leg<M, H, Reason> =
-  | { place: Mark; reason: Reason }
+  | { place: Mark; reason: Reason; reads?: readonly Point[] }
   | { strike: readonly Mark[]; reason: Reason }
   | { step: HintStep<M, H>; apply(): void };
 
@@ -570,13 +571,53 @@ class CandidateWalk<
     const notes = this.implicit ? this.shown : plan.pencil;
     const marks = plan.singles?.() ?? nakedSingles(plan.grid, notes, plan.w, plan.enc);
     return marks.map((m) =>
-      this.placing(
-        m,
-        plan.singleReason(m.n, {
-          kind: plan.pencil[m.y * plan.w + m.x] === 0 ? "regionsFull" : "naked",
-        }),
-      ),
+      this.single(m, {
+        kind: plan.pencil[m.y * plan.w + m.x] === 0 ? "regionsFull" : "naked",
+      }),
     );
+  }
+
+  /**
+   * A single's firing, with the reason the game gives it, and the placed cells
+   * it rests on although the game's words mark none of them. A cell with no
+   * notes reads as what its regions leave it, so its candidates are the values
+   * placed around it: a single in one rests on every value its regions hold,
+   * and a hidden single on the value's holders beside each note-less cell of
+   * its line. Without them the frontier cannot see that a placement continues
+   * into the single it completes, and `plan-continuity.ts` counts the single
+   * available before it was (`rome-implicit-continuity`).
+   */
+  private single(m: Mark, why: SingleWhy<WholeRegion<Reg>>): Firing<M, H, Reason> {
+    const f = this.placing(m, this.plan.singleReason(m.n, why));
+    const { grid, pencil, w } = this.plan;
+    const i = m.y * w + m.x;
+    const reads: Point[] = [];
+    if (why.kind === "regionsFull") {
+      for (const v of this.valuesIn(this.fillAll(i)))
+        if (v !== m.n) this.holders(i, v, reads);
+    } else if (why.kind === "hidden") {
+      const { cells } = why.region;
+      for (let k = 0; k < cells.length; k++) {
+        const j = cells[k];
+        if (j !== i && grid[j] === 0 && pencil[j] === 0) this.holders(j, m.n, reads);
+      }
+    }
+    if (reads.length === 0) return f;
+    return f.map((leg) =>
+      "place" in leg && leg.place.x === m.x && leg.place.y === m.y
+        ? { ...leg, reads: [...(leg.reads ?? []), ...reads] }
+        : leg,
+    );
+  }
+
+  /** Push onto `out` the placed cells ruling `n` out of cell `i`. */
+  private holders(i: number, n: number, out: Point[]): void {
+    const { grid, w } = this.plan;
+    const cells = this.reach(i, n);
+    for (let k = 0; k < cells.length; k++) {
+      const j = cells[k];
+      if (j !== i && grid[j] === n) out.push({ x: j % w, y: (j / w) | 0 });
+    }
   }
 
   private strikes(): Firing<M, H, Reason>[] {
@@ -631,10 +672,9 @@ class CandidateWalk<
       nothingEarlier,
       { enc: plan.enc, placed: plan.placed?.(), written: plan.pencil },
     ).map(({ op, why }) =>
-      this.placing(
-        op,
-        why.kind === "recorded" ? (op.reason as Reason) : plan.singleReason(op.n, why),
-      ),
+      why.kind === "recorded"
+        ? this.placing(op, op.reason as Reason)
+        : this.single(op, why),
     );
   }
 
@@ -693,11 +733,17 @@ class CandidateWalk<
       leg.reason,
       continues,
     );
+    const reads = [...(evidence.reads ?? []), ...(leg.reads ?? [])];
     return {
       step: {
         move: this.place(x, y, n, this.plan.autoClean),
         explanation,
-        highlights: { ...evidence, targets: [{ x, y }], marks: [] } as unknown as H,
+        highlights: {
+          ...evidence,
+          ...(reads.length > 0 ? { reads } : {}),
+          targets: [{ x, y }],
+          marks: [],
+        } as unknown as H,
       },
       apply: () => {
         this.placeOnBoard(leg.place);

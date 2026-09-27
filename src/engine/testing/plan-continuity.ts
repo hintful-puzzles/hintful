@@ -12,8 +12,9 @@
  *   legs);
  * - **what it wrote** is diffed off the state across its steps, never read off
  *   the move, so it cannot disagree with the board;
- * - **what it read** is its steps' `area ∪ hatch ∪ targets`, the premise the
- *   hint shows,
+ * - **what it read** is its steps' `area ∪ hatch ∪ reads ∪ targets`, the
+ *   premise the hint shows and the premise it rests on without drawing (a
+ *   single in a note-less cell reads the cells holding its other values),
  *   narrowed for a placement to the placed value along its evidence (a hidden 7
  *   in a row reads only the row's 7s);
  * - **a candidate** at a position is a later firing of the same plan that reads
@@ -76,11 +77,12 @@ function firingsOf(
     const hl = (s.highlights ?? {}) as {
       area?: Pt[];
       hatch?: Pt[];
+      reads?: Pt[];
       targets?: Pt[];
       marks?: (Pt & { n: number })[];
     };
     // The line a step hatches is read as much as the cells it outlines.
-    const read = [...(hl.area ?? []), ...(hl.hatch ?? [])];
+    const read = [...(hl.area ?? []), ...(hl.hatch ?? []), ...(hl.reads ?? [])];
     let f = firings[firings.length - 1];
     if (!s.continuesPrevious || !f) {
       const area = read.filter((p) => cell(p) !== null);
@@ -170,9 +172,10 @@ export interface Continuity {
   avoidable: number;
 }
 
-/** The plan `game.hint` gives for `state`, walked and measured. */
-export function planContinuity(game: AnyGame, state: unknown): Continuity {
-  const res = game.hint?.(state);
+/** The plan `game.hint` gives for `state`, walked and measured. With no `ui`
+ * the game plans on its own defaults. */
+export function planContinuity(game: AnyGame, state: unknown, ui?: object): Continuity {
+  const res = game.hint?.(state, undefined, ui);
   if (!res?.ok) return { positions: 0, jumps: 0, avoidable: 0 };
   const firings = firingsOf(game, state as Record<string, unknown>, res.steps);
   const out: Continuity = { positions: 0, jumps: 0, avoidable: 0 };
