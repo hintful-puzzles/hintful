@@ -1,0 +1,4 @@
+# No delta yet: which requirement moves depends on whether the property holds.
+schema: spec-driven
+created: 2026-09-27
+skip_specs: true

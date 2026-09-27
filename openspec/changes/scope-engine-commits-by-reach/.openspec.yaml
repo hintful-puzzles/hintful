@@ -1,0 +1,4 @@
+# No delta yet: whether a requirement moves depends on what step 1 measures.
+schema: spec-driven
+created: 2026-09-27
+skip_specs: true
