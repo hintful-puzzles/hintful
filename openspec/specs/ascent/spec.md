@@ -233,17 +233,18 @@ solver's own rungs, before every step, and SHALL NOT read lines the player drew.
 The techniques, easiest first by their tier in the board's grid mode, SHALL be:
 a number next to its placed neighbors in the sequence; a number within reach of
 the nearest placed numbers below and above it; a dead end, a square the path can
-enter from one neighbor only, holding an end of the path; a square only one
-missing number can reach; and the same two readings with reach counted along
-routes of empty squares. No step SHALL use a technique above the board's tier.
-Each step SHALL say why its number is forced in one sentence of at most 120
-characters, naming numbers by value; SHALL ring the square it fills without
-drawing the number; SHALL outline the numbers and squares it reasons from, in
-square and hexagonal cells alike; and SHALL stripe an arrow's line when the
-sentence names it. A step whose move fills in more than its own square SHALL end
-the plan. The hint SHALL refuse on a solved board and while `findMistakes`
-reports anything, and a step SHALL be followed by placing its number in its
-square by any gesture.
+enter from one neighbor only, holding an end of the path; a square only one run
+of missing numbers can reach, and only one number of that run; and the same two
+readings with reach counted along routes of empty squares. No step SHALL use a
+technique above the board's tier. Each step SHALL say why its number is forced
+in one sentence of at most 120 characters, naming numbers by value; SHALL ring
+the square it fills without drawing the number; SHALL outline the numbers and
+squares it reasons from, in square and hexagonal cells alike; SHALL stripe an
+arrow's line when the sentence names it; and, for a square only one run can
+reach, SHALL name that run and stripe every square it can reach. A step whose
+move fills in more than its own square SHALL end the plan. The hint SHALL refuse
+on a solved board and while `findMistakes` reports anything, and a step SHALL be
+followed by placing its number in its square by any gesture.
 
 #### Scenario: Following the hint finishes the board
 
@@ -262,6 +263,14 @@ square by any gesture.
 
 - **WHEN** a hint is asked on a board generated at a tier
 - **THEN** no step uses a technique belonging to a harder tier in that grid mode
+
+#### Scenario: A square only one run can reach shows that run's reach
+
+- **WHEN** a step fills a square because only one run of missing numbers can
+  reach it
+- **THEN** the sentence names the run and its placed ends, the run's ends are
+  outlined, and every square the run can reach is striped, the filled square
+  among them
 
 ### Requirement: Ascent's solver treats the last number like any other
 
