@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Pearl render scenarios > a hint draws the line it asks for and outlines the pearl it reasons from 1`] = `
+exports[`Pearl render scenarios > a hint draws a black pearl's whole arm and outlines the pearl it reasons from 1`] = `
 [
   {
     "color": 0,
@@ -450,6 +450,16 @@ exports[`Pearl render scenarios > a hint draws the line it asks for and outlines
     "rgb": "rgb(21, 113, 233)",
     "thickness": 3,
     "x1": 48,
+    "x2": 63,
+    "y1": 79,
+    "y2": 79,
+  },
+  {
+    "color": 13,
+    "op": "line",
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 3,
+    "x1": 48,
     "x2": 33,
     "y1": 79,
     "y2": 79,
@@ -697,6 +707,16 @@ exports[`Pearl render scenarios > a hint draws the line it asks for and outlines
     "x2": 64,
     "y1": 64,
     "y2": 95,
+  },
+  {
+    "color": 13,
+    "op": "line",
+    "rgb": "rgb(21, 113, 233)",
+    "thickness": 3,
+    "x1": 79,
+    "x2": 64,
+    "y1": 79,
+    "y2": 79,
   },
   {
     "cx": 79,

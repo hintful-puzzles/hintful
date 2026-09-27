@@ -54,15 +54,21 @@ export const say = {
     "This square has no line and no other open edge, so a line here would dead-end: this edge can't be a line.",
 
   /** One axis of a black pearl, whose opposite edge is a line (`line`), ruled
-   * out, or the board's edge. */
-  blackOpposite: (opposite: "line" | "ruledOut" | "boardEdge"): string => {
+   * out, or the board's edge; `runsOn` when the step also draws that line on
+   * through the next square. */
+  blackOpposite: (
+    opposite: "line" | "ruledOut" | "boardEdge",
+    runsOn = false,
+  ): string => {
     if (opposite === "line")
       return "This black pearl must turn, and the opposite edge is a line, so this edge can't be one.";
     const which =
       opposite === "boardEdge"
         ? "the board's edge is opposite"
         : "the opposite edge is ruled out";
-    return `This black pearl must turn, and ${which}, so this edge must be a line.`;
+    return runsOn
+      ? `This black pearl must turn, and ${which}, so its line must run this way through the next square.`
+      : `This black pearl must turn, and ${which}, so this edge must be a line.`;
   },
 
   whiteCarriesOn:

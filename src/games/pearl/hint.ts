@@ -64,10 +64,13 @@ export interface PearlHint {
   area: number[];
 }
 
-/** A firing with the edges it asks the player for: all it decided, less the
- * crosses beside a square that already has two lines. */
+/** A firing with the edges it asks the player for: all it decided and the
+ * run-ons of its black pearls' lines, less the crosses beside a square that
+ * already has two lines. */
 interface ShownFiring extends PearlFiring {
   shown: PearlEdgeOp[];
+  /** The lines drawn because a line the firing decided leaves a black pearl. */
+  runOn: PearlEdgeOp[];
 }
 
 // --- reading a workspace --------------------------------------------------
@@ -120,6 +123,36 @@ function leftOut(
   return "lines";
 }
 
+/**
+ * Draw, on the working board, the run-on of every line in `ops` that leaves a
+ * black pearl: the pearl's line goes straight through the next square, so
+ * that square's far edge is a line too. It goes in the same step because the
+ * arm is the pearl's own rule, and asking for half of it costs the player a
+ * second step that teaches nothing (owner, 2026-09-27).
+ */
+function drawRunOns(b: PearlBoard, ops: readonly PearlEdgeOp[]): PearlEdgeOp[] {
+  const drawn: PearlEdgeOp[] = [];
+  for (const op of ops) {
+    if (!op.line) continue;
+    const far = step(b, op.sq, op.dir);
+    for (const [pearl, next, d] of [
+      [op.sq, far, op.dir],
+      [far, op.sq, F(op.dir)],
+    ]) {
+      if (b.clues[pearl] !== CORNER || !onBoard(b, next, d)) continue;
+      const e = b.edgeAt(next % b.w, Math.floor(next / b.w), d);
+      if (b.ws[e] !== 3) continue;
+      b.ws[e] = 1;
+      drawn.push(
+        d === R || d === D
+          ? { sq: next, dir: d, line: true }
+          : { sq: step(b, next, d), dir: F(d), line: true },
+      );
+    }
+  }
+  return drawn;
+}
+
 // --- narration ------------------------------------------------------------
 
 /** Why the square past a black pearl cannot run straight on toward `d`. */
@@ -136,7 +169,7 @@ function noStraight(
 }
 
 /** A firing that reads one square's own edges. */
-function narrateSquare(b: PearlBoard, f: PearlFiring, sq: number): string {
+function narrateSquare(b: PearlBoard, f: ShownFiring, sq: number): string {
   const ws = f.before;
   const clue = b.clues[sq];
   if (clue === CORNER) {
@@ -144,7 +177,10 @@ function narrateSquare(b: PearlBoard, f: PearlFiring, sq: number): string {
     const d = dirFrom(b, f.ops[0], sq);
     const opposite = edgeState(b, ws, sq, F(d));
     if (opposite === 1) return say.blackOpposite("line");
-    return say.blackOpposite(onBoard(b, sq, F(d)) ? "ruledOut" : "boardEdge");
+    return say.blackOpposite(
+      onBoard(b, sq, F(d)) ? "ruledOut" : "boardEdge",
+      f.runOn.length > 0,
+    );
   }
   if (clue === STRAIGHT) {
     if (linesAt(b, ws, sq) > 0) return say.whiteCarriesOn;
@@ -159,8 +195,15 @@ function narrateSquare(b: PearlBoard, f: PearlFiring, sq: number): string {
 }
 
 /** Which sentence a firing speaks, and with what values. */
-function narrate(b: PearlBoard, f: PearlFiring, reason: PearlReason): string {
+function narrate(b: PearlBoard, f: ShownFiring, reason: PearlReason): string {
   const ws = f.before;
+  // Only a black pearl's own square firing draws a line whose run-on is still
+  // open; the other rungs that draw a line beside one draw its run-on too.
+  if (
+    f.runOn.length > 0 &&
+    !(reason.kind === "square" && b.clues[reason.sq] === CORNER)
+  )
+    throw new Error(`pearl hint: a ${reason.kind} step drew a black pearl's run-on`);
   switch (reason.kind) {
     case "square":
       return narrateSquare(b, f, reason.sq);
@@ -263,7 +306,10 @@ export function pearlHint(
     incomplete: "open",
     next: (b) => {
       const f = pass.next();
-      return f && { ...f, shown: f.ops.filter((op) => !evident(b, op)) };
+      if (!f) return null;
+      const runOn = drawRunOns(b, f.ops);
+      const shown = [...f.ops, ...runOn].filter((op) => !evident(b, op));
+      return { ...f, runOn, shown };
     },
     showable: (_b, f) => f.reason !== null && f.shown.length > 0,
     planCap: PLAN_CAP,

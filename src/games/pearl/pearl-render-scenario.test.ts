@@ -90,7 +90,7 @@ describe("Pearl render scenarios", () => {
     );
   });
 
-  it("a hint draws the line it asks for and outlines the pearl it reasons from", () => {
+  it("a hint draws a black pearl's whole arm and outlines the pearl it reasons from", () => {
     const { recording, hint } = renderScenario({
       game: pearlGame,
       id: ID,
@@ -101,6 +101,9 @@ describe("Pearl render scenarios", () => {
     });
     const hl = hint?.highlights as PearlHint | undefined;
     expect(hl?.area.length).toBe(1);
+    // The pearl's whole arm: its own edge and the run-on past the next square.
+    expect(hint?.explanation).toMatch(/through the next square/);
+    expect(hl?.targets.filter((t) => t.line)).toHaveLength(2);
     // The target is the proposed line, a stroke rather than a laid rect.
     expect(recording.ops.some((o) => o.op === "line" && o.color === COL_HINT)).toBe(
       true,

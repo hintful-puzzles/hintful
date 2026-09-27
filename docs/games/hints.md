@@ -695,6 +695,16 @@ of them. Guard the result with a **max-length assertion** over a scan of
 boards (`netslide-hint.test.ts` holds every sentence to ≤ 120 chars), so the
 preamble cannot creep back.
 
+**The rule's own consequence goes in the same step.** The flip side: a move
+that a rule makes follow from the one just asked for is not a deduction worth a
+step of its own. Pearl asked for a black pearl's edge in one step and for the
+line's run-on through the next square in the next, and the second step only
+restated the rule the help already teaches (owner-flagged 2026-09-27). Drawing
+the whole arm in one step cut 17% of a plan's steps. Fold such a consequence in
+where the plan is built (`drawRunOns` in `src/games/pearl/hint.ts`), name it in
+the sentence, and make the narration fail loudly on any step that folds one in
+without naming it.
+
 ### Hint the move that advances the goal
 
 A solver makes *every* forced deduction; a hint should offer the ones that
