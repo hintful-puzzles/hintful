@@ -14,7 +14,7 @@ More information: http://www.janko.at/Raetsel/Hidoku/index.htm
 
 There are three ways to enter a number:
 
-1. Click a number to highlight it, then click (or drag to) an adjacent cell to place the next number in the sequence. If the number just before it is placed and the one after is not, that is the one after; the other way round, the one before; and if neither is placed yet, the one after. Click the same square again for the one before, and once more to empty it. The arrow keys and Enter can be used to emulate mouse clicks.
+1. Click a number to highlight it, then click (or drag to) an adjacent cell to place the next number in the sequence. If the number just before it is placed and the one after is not, that is the one after; the other way round, the one before; and if neither is placed yet, the one after. Then click the highlighted number again to offer the one before instead, and once more to deselect it; or, once a number is placed beside it, click that square again for the one before, and once more to empty it. The arrow keys and Enter can be used to emulate mouse clicks.
 
 2. Click an empty cell, then type a multi-digit number. To confirm a number, either press Enter, an arrow key, or click any cell.
 

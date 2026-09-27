@@ -590,9 +590,12 @@ function mouseClick(
         ui.held = i;
         return move;
       }
-      /* Highlight a placed number */
-      ui.held = i;
-      uiSeek(ui, state);
+      /* Highlight a placed number. One already selected keeps what it offers,
+       * so a drag from it places that and a release can cycle it. */
+      if (ui.held !== i) {
+        ui.held = i;
+        uiSeek(ui, state);
+      }
       return null;
     }
     if (
@@ -612,7 +615,21 @@ function mouseClick(
 
   if (button === LEFT_RELEASE) {
     ui.dragColumn = ui.dragRow = -1;
-    if (ui.doubleclickCell === i) {
+    if (
+      ui.doubleclickCell === i &&
+      n > 0 &&
+      ui.select === n + 1 &&
+      ui.positions[n - 1] === CELL_NONE &&
+      ui.positions[n + 1] === CELL_NONE
+    ) {
+      /* A second tap on a number with neither neighbor placed offers the one
+       * below instead of the one above; the next tap deselects (owner: "cycle
+       * between placing the number above, the number below and a
+       * deselection"). */
+      ui.dir = -1;
+      ui.select = n - 1;
+      ui.doubleclickCell = -1;
+    } else if (ui.doubleclickCell === i) {
       uiClear(ui);
       if (mouseCursor(ui)) hideCursor(ui.cursor);
     } else if (

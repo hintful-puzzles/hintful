@@ -516,6 +516,25 @@ describe("ascent right-click two-option toggle", () => {
     tap(cellB);
     expect(state.grid[cellB]).toBe(bigN + 1);
 
+    // Tapping the selected number itself cycles what it offers (owner): the
+    // number above, then the one below, then nothing selected.
+    tap(cellB);
+    tap(cellB);
+    expect(state.grid[cellB]).toBe(NUMBER_EMPTY);
+    expect([ui.held, ui.select]).toEqual([cellA, bigN + 1]);
+    tap(cellA);
+    expect([ui.held, ui.select]).toEqual([cellA, bigN - 1]);
+    tap(cellA);
+    expect(ui.held).toBe(-1);
+    tap(cellA);
+    expect([ui.held, ui.select]).toEqual([cellA, bigN + 1]);
+    tap(cellA);
+    expect([ui.held, ui.select]).toEqual([cellA, bigN - 1]);
+    tap(cellB);
+    expect(state.grid[cellB]).toBe(bigN - 1);
+    press(cellB, RIGHT_BUTTON);
+    expect(state.grid[cellB]).toBe(bigN + 1);
+
     // Any other press ends the cycle: a later tap selects the number instead.
     tap(cellA);
     tap(cellB);
