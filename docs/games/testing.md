@@ -527,7 +527,10 @@ own (`engine-source.ts`, `test-source.ts`, beside `code-lines.ts` for the shared
 comment-stripping), and a scan over that tree lives in a test file of its own
 (`hint-em-dash.test.ts`, split out of `hint-quality.test.ts`). The same holds
 for a test file: one cheap `describe` reading the engine makes every sweep in
-the file run whole.
+the file run whole. Losing the narrowing fails nothing and only costs time, so
+`select-tests.ts --verify` holds four heavy hint guards to running narrowed on
+an engine module only some games reach; if it goes red, find the import that
+now reads a broad tree rather than widening the check.
 
 **Measure CPU rather than wall — and check what the box is short of first.**
 Contention inflates wall several-fold and unevenly (5.2× on one file, 1.6× on

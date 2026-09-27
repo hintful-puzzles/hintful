@@ -183,6 +183,16 @@ function verify(): void {
     engine.scope.includes("solo") && !engine.scope.includes("pearl"),
     "latin-hint.ts reaches Solo and not Pearl",
   );
+  // The other direction: the saving itself. A broad glob added to a helper
+  // every hint guard imports (`hint-games.ts`, `enrollment.ts`) would make
+  // them all whole on every engine commit, and nothing would go red, only slow.
+  // `engine-source.ts` and `test-source.ts` exist so that it does not.
+  for (const guard of ["hint-resume", "hint-quality", "hint-ordinal", "mark-all"]) {
+    expect(
+      engine.narrow.includes(`src/engine/${guard}.test.ts`),
+      `${guard} narrows on an engine module only some games reach`,
+    );
+  }
 
   const test = facts(["src/engine/hint-quality.test.ts"]);
   expect(
@@ -204,11 +214,13 @@ function verify(): void {
   );
 
   if (problems.length > 0) {
-    console.error("✗ select-tests.ts is blind to a known coupling:");
+    console.error("✗ select-tests.ts missed a known coupling, or stopped narrowing:");
     for (const p of problems) console.error(`  ${p}`);
     process.exit(1);
   }
-  console.log("✓ select-tests.ts sees every known coupling (8 plans).");
+  console.log(
+    "✓ select-tests.ts sees every known coupling, and still narrows (8 plans).",
+  );
 }
 
 if (process.argv[1] === import.meta.filename) {
