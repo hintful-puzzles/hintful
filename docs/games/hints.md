@@ -2512,6 +2512,22 @@ reusable part. In [`games/ascent/`](../../src/games/ascent/):
   16, so 17" was not a valid inference in general (18 could sit there too);
   what forces the number within its run is reach again, and the sentence says
   so.
+- **Name the one rival a player would think of, and say when there are more.**
+  The owner still found the striped run abstract on a board where the question
+  was "why not 42?" and "why not 45?". So when exactly one other run comes
+  within two steps, the step names it and why it fails, and gives the step
+  count that rules out the rest of the answer's run: *"Only 44 can fill this
+  square: 42 would have to touch 41 too, and 4 steps from 48 is too far for 45
+  up."* With two or more close rivals, naming one would imply it was the only
+  contender, so the step keeps the striped run; `ascent-hint.test.ts` holds the
+  named rival to being the only close one.
+- **Follow a run the player has started as one journey, without raising the
+  bar.** Players write a forced run down in one go (owner, 2026-09-27). After a
+  step places a run's first number, the plan asks the same techniques about that
+  run alone, none harder than the one that began it, and when that fills the
+  run the placements become one journey of legs, each with its own sentence. It
+  took 39% of placements into journeys on the presets. The plan cap never cuts a
+  journey in half.
 - **A move with side effects ends the plan.** A line the player drew fills in
   numbers when a number lands at its end. Those are the player's to vouch for, so
   a step that fills more than its own square is the plan's last, and the next

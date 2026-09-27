@@ -33,7 +33,13 @@ import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import { type Bound, type EndRuledOut, say } from "./hint-text.ts";
+import {
+  type Bound,
+  type Count,
+  type EndRuledOut,
+  type Rival,
+  say,
+} from "./hint-text.ts";
 import { executeAscentMove } from "./moves.ts";
 import {
   SolverScratch,
@@ -70,6 +76,9 @@ import {
  */
 const PLAN_CAP = 24;
 
+/** The collection's limit on a step's sentence (`hint-quality.test.ts`). */
+const GLANCE = 120;
+
 /** What one step marks. */
 export interface AscentHighlights {
   /** The square the step fills, ringed. */
@@ -101,6 +110,8 @@ export interface AscentFiring {
   n: number;
   cell: number;
   before: AscentState;
+  /** It carries on the run the step before it began, as one journey. */
+  joins: boolean;
 }
 
 // --- reading the board -------------------------------------------------------
@@ -151,14 +162,21 @@ interface Found {
   cell: number;
 }
 
+/** The numbers of one run, when a technique is asked about that run alone. */
+type Focus = { lo: number; hi: number } | null;
+
+/** Find the next placement a technique makes, within `focus` when given. */
+type Finder = (state: AscentState, focus: Focus) => Found | null;
+
 /** Place with a placing rung over a reading, reporting the first placement. */
 function placeBy(
   reason: HintReason,
   reach: Reach,
   rung: (sc: SolverScratch) => number,
-): (state: AscentState) => Found | null {
-  return (state) => {
+): Finder {
+  return (state, focus) => {
     const sc = reading(state, reach);
+    sc.focus = focus;
     return rung(sc) > 0 && sc.placed ? { reason, ...sc.placed } : null;
   };
 }
@@ -169,7 +187,7 @@ function placeBy(
  * a neighbor in the sequence not yet placed beside it; walls, arrows, and
  * numbers already joined on both sides are closed.
  */
-function deadEnd(state: AscentState): Found | null {
+function deadEnd(state: AscentState, focus: Focus): Found | null {
   const { grid, last } = state;
   const sc = reading(state, "reach");
   const s = state.w * state.h;
@@ -183,8 +201,9 @@ function deadEnd(state: AscentState): Found | null {
     );
     if (open.length !== 1) continue;
     const ends = [0, last].filter((n) => !placed(n) && sc.marks[c * s + n]);
-    if (ends.length === 1)
-      return { reason: { kind: "deadEnd", open: open[0] }, n: ends[0], cell: c };
+    const n = ends.length === 1 ? ends[0] : -1;
+    if (n >= 0 && (!focus || (focus.lo <= n && n <= focus.hi)))
+      return { reason: { kind: "deadEnd", open: open[0] }, n, cell: c };
   }
   return null;
 }
@@ -231,37 +250,69 @@ interface Board {
  * the easiest techniques first, which is the order a hint wants anyway.
  */
 export function ascentPlan(start: AscentState): AscentFiring[] {
-  const board: Board = { state: start, spilled: false };
-  let found: AscentFiring | null = null;
-  const technique = (
-    id: HintReason["kind"],
-    find: (s: AscentState) => Found | null,
-  ): DeductionTechnique => ({
-    id,
-    tier: techniqueTier(id, start.mode),
-    run: () => {
-      const f = find(board.state);
-      if (!f) return 0;
-      found = { ...f, before: board.state };
-      return 1;
-    },
-  });
   const number = (simple: boolean) => (sc: SolverScratch) =>
     solverSingleNumber(sc, simple);
+  // Easiest first; the sort is stable, so within a tier the order is as listed.
+  const ladder: { kind: HintReason["kind"]; tier: number; find: Finder }[] = (
+    [
+      ["touch", placeBy({ kind: "touch" }, "touch", solverSinglePosition)],
+      ["reach", placeBy({ kind: "reach" }, "reach", solverSinglePosition)],
+      ["deadEnd", deadEnd],
+      ["onlyBeside", placeBy({ kind: "onlyBeside" }, "reach", number(true))],
+      ["only", placeBy({ kind: "only" }, "reach", number(false))],
+      ["route", placeBy({ kind: "route" }, "route", solverSinglePosition)],
+      ["routeBeside", placeBy({ kind: "routeBeside" }, "route", number(true))],
+      ["routeOnly", placeBy({ kind: "routeOnly" }, "route", number(false))],
+    ] as const
+  )
+    .map(([kind, find]) => ({ kind, tier: techniqueTier(kind, start.mode), find }))
+    .sort((a, b) => a.tier - b.tier);
+
+  const board: Board = { state: start, spilled: false };
+  let found: AscentFiring | null = null;
   const pass = singleFirings({
-    // Easiest first; the sort is stable, so within a tier the order is as listed.
-    techniques: [
-      technique("touch", placeBy({ kind: "touch" }, "touch", solverSinglePosition)),
-      technique("reach", placeBy({ kind: "reach" }, "reach", solverSinglePosition)),
-      technique("deadEnd", deadEnd),
-      technique("onlyBeside", placeBy({ kind: "onlyBeside" }, "reach", number(true))),
-      technique("only", placeBy({ kind: "only" }, "reach", number(false))),
-      technique("route", placeBy({ kind: "route" }, "route", solverSinglePosition)),
-      technique("routeBeside", placeBy({ kind: "routeBeside" }, "route", number(true))),
-      technique("routeOnly", placeBy({ kind: "routeOnly" }, "route", number(false))),
-    ].sort((a, b) => a.tier - b.tier),
+    techniques: ladder.map(
+      ({ kind, tier, find }): DeductionTechnique => ({
+        id: kind,
+        tier,
+        run: () => {
+          const f = find(board.state, null);
+          if (!f) return 0;
+          found = { ...f, before: board.state, joins: false };
+          return 1;
+        },
+      }),
+    ),
     budget: stepBudget("ascent hint"),
   });
+
+  // The rest of a run, when the step that began it lets it be finished there
+  // and then: the same techniques, asked about that run alone and none harder
+  // than the one that began it, so the journey teaches nothing above it.
+  let following: Found[] = [];
+  const followRun = (f: AscentFiring): Found[] => {
+    const run = runsOf(f.before).find((r) => r.lo <= f.n && f.n <= r.hi);
+    if (!run || run.lo === run.hi) return [];
+    const focus = { lo: run.lo, hi: run.hi };
+    const cap = techniqueTier(f.reason.kind, start.mode);
+    const out: Found[] = [];
+    let state = executeAscentMove(f.before, placeOf(f));
+    for (let left = run.hi - run.lo; left > 0; left--) {
+      let next: Found | null = null;
+      for (const t of ladder) {
+        if (t.tier > cap) continue;
+        next = t.find(state, focus);
+        if (next) break;
+      }
+      if (!next) return [];
+      const after = executeAscentMove(state, placeOf(next));
+      if (after.grid.some((v, i) => v !== state.grid[i] && i !== next.cell)) return [];
+      out.push(next);
+      state = after;
+    }
+    return out;
+  };
+
   const { plan } = deduceHintPlan<Board, AscentFiring, "open" | "done">({
     board,
     // A step that spilled past its own square ends the plan: the numbers a
@@ -270,8 +321,12 @@ export function ascentPlan(start: AscentState): AscentFiring[] {
     status: (b) => (b.state.completed || b.spilled ? "done" : "open"),
     incomplete: "open",
     next: () => {
+      const queued = following.shift();
+      if (queued) return { ...queued, before: board.state, joins: true };
       found = null;
-      return pass.next() ? found : null;
+      if (!pass.next() || !found) return null;
+      following = followRun(found);
+      return found;
     },
     apply: (b, f) => {
       const after = executeAscentMove(b.state, placeOf(f));
@@ -280,10 +335,21 @@ export function ascentPlan(start: AscentState): AscentFiring[] {
     },
     planCap: PLAN_CAP,
   });
+  // The cap never ends a plan partway through a run it is following.
+  for (const f of following) {
+    if (board.spilled || board.state.completed) break;
+    const firing = { ...f, before: board.state, joins: true };
+    plan.push(firing);
+    const after = executeAscentMove(board.state, placeOf(firing));
+    board.spilled = after.grid.some(
+      (v, i) => v !== board.state.grid[i] && i !== f.cell,
+    );
+    board.state = after;
+  }
   return plan;
 }
 
-const placeOf = (f: AscentFiring): AscentMove => ({
+const placeOf = (f: { cell: number; n: number }): AscentMove => ({
   kind: "place",
   cell: f.cell,
   n: f.n,
@@ -405,6 +471,118 @@ function runOf(f: AscentFiring, reach: Reach) {
   };
 }
 
+/** A run of missing numbers, `lo` to `hi`, and the placed numbers either side. */
+interface Run {
+  lo: number;
+  hi: number;
+  a: { m: number; cell: number } | null;
+  b: { m: number; cell: number } | null;
+}
+
+/** Every run of missing numbers on the board. */
+export function runsOf(state: AscentState): Run[] {
+  const positions = positionsOf(state);
+  const at = (m: number) => ({ m, cell: positions[m] });
+  const out: Run[] = [];
+  for (let n = 0; n <= state.last; n++) {
+    if (positions[n] !== CELL_NONE) continue;
+    const lo = n;
+    while (n + 1 <= state.last && positions[n + 1] === CELL_NONE) n++;
+    out.push({
+      lo,
+      hi: n,
+      a: lo > 0 ? at(lo - 1) : null,
+      b: n < state.last ? at(n + 1) : null,
+    });
+  }
+  return out;
+}
+
+/**
+ * How many steps too far `cell` is for any number of `run` to stand on, by
+ * straight reach: a number there must be within as many steps of each end as
+ * they are apart, so the steps to both ends together may be at most the gap.
+ * At most zero means the run reaches it.
+ */
+export function runShortfall(state: AscentState, run: Run, cell: number): number {
+  const { w, mode } = state;
+  const d = (end: { cell: number }) => stepDistance(cell, end.cell, w, mode);
+  if (run.a && run.b) return d(run.a) + d(run.b) - (run.b.m - run.a.m);
+  if (run.a) return d(run.a) - (run.hi - run.a.m);
+  if (run.b) return d(run.b) - (run.b.m - run.lo);
+  return Number.NEGATIVE_INFINITY;
+}
+
+/**
+ * The "only this number can fill it" reasons, when they can be said plainly:
+ * the one other run that comes within two steps and why it fails (or none
+ * does), and the step counts to the run's own ends that rule out its other
+ * numbers. `null` when more than one rival comes close, when a rival is ruled
+ * out by more than straight reach, or when the counts alone do not single the
+ * number out; the step then stripes the run's reach instead.
+ */
+function fillReason(
+  f: AscentFiring,
+): { rival: Rival | null; counts: Count[]; area: number[] } | null {
+  const { n, cell, before } = f;
+  const { w, mode } = before;
+  const runs = runsOf(before);
+  const own = runs.find((r) => r.lo <= n && n <= r.hi);
+  if (!own) return null;
+  const area: number[] = [];
+
+  const shortfalls = runs
+    .filter((r) => r !== own)
+    .map((r) => ({ r, by: runShortfall(before, r, cell) }));
+  if (shortfalls.some(({ by }) => by <= 0)) return null;
+  const close = shortfalls.filter(({ by }) => by <= 2);
+  if (close.length > 1) return null;
+  let rival: Rival | null = null;
+  if (close.length === 1) {
+    const r = close[0].r;
+    const ends = [r.a, r.b].filter((e) => e !== null);
+    area.push(...ends.map((e) => e.cell));
+    if (r.lo === r.hi) {
+      const touched = (e: { cell: number }) => stepDistance(cell, e.cell, w, mode) <= 1;
+      rival = {
+        kind: "one",
+        k: shown(r.lo),
+        need: ends.filter((e) => !touched(e)).map((e) => shown(e.m)),
+        touches: ends.some(touched),
+      };
+    } else
+      rival = {
+        kind: "run",
+        lo: shown(r.lo),
+        hi: shown(r.hi),
+        ends: ends.map((e) => shown(e.m)),
+      };
+  }
+
+  const counts: Count[] = [];
+  if (n > own.lo) {
+    const a = own.a;
+    if (!a || a.m + stepDistance(cell, a.cell, w, mode) !== n) return null;
+    const d = n - a.m;
+    counts.push({
+      m: shown(a.m),
+      d,
+      k: shown(n - 1),
+      more: n - 1 > own.lo,
+      dir: "down",
+    });
+    area.push(a.cell);
+  }
+  if (n < own.hi) {
+    const b = own.b;
+    if (!b || b.m - stepDistance(cell, b.cell, w, mode) !== n) return null;
+    const d = b.m - n;
+    counts.push({ m: shown(b.m), d, k: shown(n + 1), more: n + 1 < own.hi, dir: "up" });
+    area.push(b.cell);
+  }
+  return { rival, counts, area: [...new Set(area)] };
+}
+
 /**
  * Why the path's other end, `other`, cannot be at `cell`: it is placed, it is
  * out of reach of the placed numbers beside it, or its arrow points elsewhere.
@@ -415,7 +593,13 @@ export function whyNotEnd(
   cell: number,
 ): EndRuledOut {
   if (positionsOf(state)[other] !== CELL_NONE) return "placed";
-  const f: AscentFiring = { reason: { kind: "reach" }, n: other, cell, before: state };
+  const f: AscentFiring = {
+    reason: { kind: "reach" },
+    n: other,
+    cell,
+    before: state,
+    joins: false,
+  };
   return squaresWithin(state, boundsOf(f), -1).includes(cell) ? "arrow" : "reach";
 }
 
@@ -429,6 +613,7 @@ export function stepOf(f: AscentFiring): AscentStep {
     move: placeOf(f),
     explanation,
     highlights: { target: cell, area, hatch },
+    ...(f.joins ? { continuesPrevious: true } : {}),
   });
   switch (f.reason.kind) {
     case "touch":
@@ -465,6 +650,12 @@ export function stepOf(f: AscentFiring): AscentStep {
       // The square is in one run's reach and no other's: stripe that reach
       // and outline the run's ends, so the run the sentence names is on the
       // board beside the others the player can compare it with.
+      // Name the rival and the counts when that fits at a glance; a rival and
+      // counts on both sides run long, and the run's striped reach says it
+      // shorter.
+      const fill = fillReason(f);
+      const said = fill ? say.fill(shown(n), fill.rival, fill.counts) : "";
+      if (fill && said.length <= GLANCE) return step(said, fill.area);
       const byRoute = f.reason.kind === "routeBeside" || f.reason.kind === "routeOnly";
       const run = runOf(f, byRoute ? "route" : "reach");
       const text = say.onlyRun(

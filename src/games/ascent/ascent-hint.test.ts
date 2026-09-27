@@ -29,6 +29,8 @@ import {
   ascentPlan,
   boundsOf,
   type HintReason,
+  runShortfall,
+  runsOf,
   squaresWithin,
   stepOf,
   techniqueTier,
@@ -86,7 +88,7 @@ const PINNED = [
   // a dead end, its other end placed
   "6x6mOEdh:a13_16a20n8a2c29j",
   // a dead end, its other end's arrow pointing elsewhere
-  "5x5mEEdn:1_25_12_14_2_5_11_19e22_4e17_15e3_10e13_9c7a8_21_16_18_23_20_6_24",
+  "5x5mEEdt:11_19_16_7_8_13_5_2_17d1_20e15_21e14_10e23_9e25_3_22_24_6_4_12_18",
   // routeBeside
   "6x6mOEdh:12c16d24c7e28a26k32a34",
   // onlyBeside
@@ -191,7 +193,13 @@ function missing(state: AscentState): number[] {
 
 /** Whether `m` could stand at `cell` by straight reach and its arrow alone. */
 function reaches(state: AscentState, m: number, cell: number): boolean {
-  const f: AscentFiring = { reason: { kind: "reach" }, n: m, cell, before: state };
+  const f: AscentFiring = {
+    reason: { kind: "reach" },
+    n: m,
+    cell,
+    before: state,
+    joins: false,
+  };
   return squaresWithin(state, boundsOf(f), arrowOf(state, m)).includes(cell);
 }
 
@@ -257,6 +265,7 @@ describe("every premise, restated from the board, singles out its square", () =>
         n: other,
         cell,
         before,
+        joins: false,
       };
       const inReach = squaresWithin(before, boundsOf(pseudo), -1).includes(cell);
       expect(why, board.label).toBe(
@@ -281,14 +290,39 @@ describe("every premise, restated from the board, singles out its square", () =>
   it("only one number can reach the square", () => {
     const firings = byKind("onlyBeside", "only");
     expect(firings.length).toBeGreaterThan(20);
+    let fills = 0;
+    let stripes = 0;
     for (const { board, firing } of firings) {
       const { before, cell, n } = firing;
       const others = missing(before).filter((m) => m !== n && reaches(before, m, cell));
       expect(others, board.label).toEqual([]);
 
-      // The picture: the run's reach striped, exactly, and its ends outlined.
       const { explanation, highlights } = stepOf(firing);
       const at = `${board.label}: "${explanation}"`;
+      // "Only n can fill this square: <the one close rival fails>, and <counts>."
+      if (explanation.startsWith(`Only ${n + 1} can fill`)) {
+        fills++;
+        expect(highlights?.hatch, at).toEqual([]);
+        const rivals = runsOf(before)
+          .filter((r) => !(r.lo <= n && n <= r.hi))
+          .filter((r) => runShortfall(before, r, cell) <= 2);
+        expect(rivals.length, at).toBeLessThanOrEqual(1);
+        if (rivals.length === 0)
+          expect(explanation, at).toContain("no other run comes close");
+        else {
+          const r = rivals[0];
+          const named =
+            r.lo === r.hi
+              ? `${r.lo + 1} would have to touch`
+              : `the run ${r.lo + 1} to ${r.hi + 1}`;
+          expect(explanation, at).toContain(named);
+          for (const e of [r.a, r.b])
+            if (e) expect(highlights?.area, at).toContain(e.cell);
+        }
+        continue;
+      }
+      stripes++;
+      // The picture: the run's reach striped, exactly, and its ends outlined.
       const run = missing(before).filter((m) => sameRun(before, m, n));
       const lo = Math.min(...run);
       const hi = Math.max(...run);
@@ -301,6 +335,42 @@ describe("every premise, restated from the board, singles out its square", () =>
       expect(highlights?.area, at).toEqual(ends.map((m) => before.grid.indexOf(m)));
       for (const m of ends) expect(explanation, at).toContain(String(m + 1));
     }
+    // Vacuity: both forms were checked.
+    expect(fills).toBeGreaterThan(10);
+    expect(stripes).toBeGreaterThan(10);
+  });
+
+  it("follows a run to its end in one journey, with nothing harder than its start", () => {
+    const { seen } = walk();
+    let journeys = 0;
+    for (let i = 0; i < seen.length; i++) {
+      const { board, firing } = seen[i];
+      if (!firing.joins) continue;
+      const lead = seen.slice(0, i).findLast((s) => !s.firing.joins);
+      if (!lead) throw new Error("a joined step with nothing before it");
+      const at = `${board.label}: ${firing.reason.kind} after ${lead.firing.reason.kind}`;
+      expect(sameRun(lead.firing.before, lead.firing.n, firing.n), at).toBe(true);
+      expect(
+        techniqueTier(firing.reason.kind, board.params.mode),
+        at,
+      ).toBeLessThanOrEqual(techniqueTier(lead.firing.reason.kind, board.params.mode));
+      expect(stepOf(firing).continuesPrevious, at).toBe(true);
+      // The journey ends with the run filled.
+      const last = seen[i + 1]?.firing.joins !== true;
+      if (last) {
+        journeys++;
+        const after = executeAscentMove(firing.before, {
+          kind: "place",
+          cell: firing.cell,
+          n: firing.n,
+        });
+        const left = missing(after).filter((m) =>
+          sameRun(lead.firing.before, m, lead.firing.n),
+        );
+        expect(left, at).toEqual([]);
+      }
+    }
+    expect(journeys).toBeGreaterThan(20);
   });
 
   it("names the run a route step's stripes belong to", () => {

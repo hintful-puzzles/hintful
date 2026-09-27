@@ -66,6 +66,9 @@ export class SolverScratch {
    */
   recording = false;
   placed: { n: number; cell: number } | null = null;
+  /** The hint's run in progress: while set, a placing rung places only numbers
+   * from `lo` to `hi`, still judging each square against every number. */
+  focus: { lo: number; hi: number } | null = null;
 
   constructor(w: number, h: number, mode: number, last: number) {
     const n = w * h;
@@ -110,6 +113,7 @@ export function solverSinglePosition(sc: SolverScratch): number {
 
   for (let n = 0; n <= sc.end; n++) {
     if (sc.positions[n] !== CELL_NONE) continue;
+    if (sc.focus && (n < sc.focus.lo || n > sc.focus.hi)) continue;
     let found = CELL_NONE;
     for (let i = 0; i < s; i++) {
       if (sc.grid[i] !== NUMBER_EMPTY) continue;
@@ -140,6 +144,7 @@ export function solverSingleNumber(sc: SolverScratch, simple: boolean): number {
       found = found === NUMBER_EMPTY ? n : NUMBER_WALL;
     }
     if (found >= 0) {
+      if (sc.focus && (found < sc.focus.lo || found > sc.focus.hi)) continue;
       if (
         simple &&
         (found === 0 || sc.positions[found - 1] === CELL_NONE) &&

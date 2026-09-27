@@ -140,7 +140,7 @@ describe("ascent hint frames", () => {
       [{ ...HEXAGON, w: 7, h: 7, diff: 2 }, 7],
     ] as const) {
       let found = false;
-      for (let seed = 0; seed < 20 && !found; seed++) {
+      for (let seed = 0; seed < 80 && !found; seed++) {
         const { recording, hint } = renderScenario({
           game: ascentGame,
           id: id(p, `render-run-${seed}`),
@@ -160,6 +160,29 @@ describe("ascent hint frames", () => {
       }
       expect(found, `no run step on ${ascentGame.encodeParams(p, true)}`).toBe(true);
     }
+  });
+
+  it("outlines the rival and the ends a fill step counts from, and stripes nothing", () => {
+    const isFill = (s: HintStep<AscentMove>) =>
+      / can fill this square: /.test(s.explanation);
+    for (let seed = 0; seed < 80; seed++) {
+      const { recording, hint } = renderScenario({
+        game: ascentGame,
+        id: id({ ...RECT, diff: 2 }, `render-fill-${seed}`),
+        showHint: true,
+        hintUntil: isFill,
+      });
+      if (!hint || !isFill(hint)) continue;
+      const marks = hl(hint);
+      expect(marks?.hatch).toEqual([]);
+      expect(recording.ops.some((o) => o.op === "hatch")).toBe(false);
+      expect(strokes(recording.ops, COL_HINT_CELL)).toHaveLength(
+        4 * (marks?.area.length ?? -1),
+      );
+      expect(recording.ops).toMatchSnapshot();
+      return;
+    }
+    throw new Error("no fill step in 80 seeds");
   });
 
   it("Edges: stripes the line an arrow points along when the sentence names it", () => {

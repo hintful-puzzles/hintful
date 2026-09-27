@@ -40,6 +40,36 @@ export interface Bound {
 
 const ARROW = "on its arrow's striped line";
 
+/**
+ * The run that comes closest to a square without reaching it. A single number
+ * `k` must touch both its neighbors in the sequence (`need`, the ones the square
+ * does not touch); a longer run `lo`..`hi` is too far from its ends `ends`.
+ */
+export type Rival =
+  | { kind: "one"; k: number; need: number[]; touches: boolean }
+  | { kind: "run"; lo: number; hi: number; ends: number[] };
+
+function rivalText(r: Rival): string {
+  if (r.kind === "run")
+    return `the run ${r.lo} to ${r.hi} is too far from ${r.ends.join(" and ")}`;
+  const need = r.need.join(" and ");
+  return r.touches
+    ? `${r.k} would have to touch ${need} too`
+    : `${r.k} would have to touch ${need}`;
+}
+
+/**
+ * A step count ruling out part of the run: this square is `d` steps from `m`,
+ * too far for `k` and (when `more`) every number beyond it in direction `dir`.
+ */
+export interface Count {
+  m: number;
+  d: number;
+  k: number;
+  more: boolean;
+  dir: "up" | "down";
+}
+
 /** Why a dead end cannot hold the path's other end. */
 export type EndRuledOut = "placed" | "reach" | "arrow";
 
@@ -81,6 +111,20 @@ export const say = {
     if (why === "placed") return `${lead} With ${other} placed, it must be ${n}.`;
     if (why === "reach") return `${lead} ${other} can't reach it, so it must be ${n}.`;
     return `${lead} ${other}'s arrow points elsewhere, so it must be ${n}.`;
+  },
+
+  /**
+   * Only `n` can fill this square: the one run that comes close fails (`rival`,
+   * or none does), and the step counts to the run's own ends rule out the rest
+   * of it (`counts`, empty when `n` is its run's only number).
+   */
+  fill: (n: number, rival: Rival | null, counts: Count[]): string => {
+    const why = rival === null ? "no other run comes close" : rivalText(rival);
+    const rest = counts.map(
+      (c) =>
+        `${c.d} steps from ${c.m} is too far for ${c.k}${c.more ? ` ${c.dir}` : ""}`,
+    );
+    return `Only ${n} can fill this square: ${[why, ...rest].join(", and ")}.`;
   },
 
   /**
