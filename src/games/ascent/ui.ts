@@ -121,6 +121,10 @@ export interface AscentUi {
   /** Preference: when advancing, skip past an already-placed run of numbers so
    * the focus lands on its leading edge and recommends the next open number. */
   autoAdvanceRuns: boolean;
+  /** A tap that placed `n + 1` in `cell` beside `n` at `anchor` while `n - 1`
+   * was missing too: tapping `cell` again cycles it to `n - 1`, then empty.
+   * Any other press ends it, so a later tap on the number still selects it. */
+  tapCycle: { cell: number; anchor: number; n: number } | null;
 }
 
 const isCursorSelect = (b: number) => b === CURSOR_SELECT || b === CURSOR_SELECT2;
@@ -149,6 +153,7 @@ export function newAscentUi(state: AscentState): AscentUi {
     dragRow: -1,
     moveWithNumpad: false,
     autoAdvanceRuns: true,
+    tapCycle: null,
   };
 
   /* Cursor starts at the first non-boundary cell. */
@@ -432,6 +437,8 @@ function mouseClick(
   const i = gy * w + gx;
   const n = state.grid[i];
   const start = ui.held >= 0 ? state.grid[ui.held] : NUMBER_EMPTY;
+  const cycle = ui.tapCycle;
+  if (button !== LEFT_RELEASE && button !== LEFT_DRAG) ui.tapCycle = null;
 
   /* The LEFT_DRAG arm, which upstream's LEFT_BUTTON case falls into. It reads
    * the outer `button`, so its LEFT_BUTTON- and LEFT_DRAG-only branches still
@@ -478,6 +485,13 @@ function mouseClick(
       const move: AscentMove = { kind: "place", cell: i, n: ui.select };
       const placedNum = ui.select;
       const placedDir = ui.dir;
+      if (
+        button === LEFT_BUTTON &&
+        start > 0 &&
+        placedNum === start + 1 &&
+        ui.positions[start - 1] === CELL_NONE
+      )
+        ui.tapCycle = { cell: i, anchor: ui.held, n: start };
       ui.held = i;
       /* Auto-advance across an already-placed run (preference, default on):
        * if the numbers past the one just placed are already on the board, jump
@@ -539,6 +553,23 @@ function mouseClick(
 
   if (button === LEFT_BUTTON) {
     ui.doubleclickCell = ui.held === i ? i : -1;
+
+    /* Tap the square again: the number above, then the one below, then empty
+     * (and a tap on the empty square places the one above again). */
+    if (cycle?.cell === i && state.grid[cycle.anchor] === cycle.n) {
+      const lower = cycle.n - 1;
+      if (n === cycle.n + 1 && ui.positions[lower] === CELL_NONE) {
+        ui.doubleclickCell = -1;
+        ui.tapCycle = cycle;
+        ui.held = i;
+        return { kind: "place", cell: i, n: lower };
+      }
+      if (n === lower) {
+        ui.doubleclickCell = -1;
+        ui.held = cycle.anchor;
+        return { kind: "clear", cell: i };
+      }
+    }
 
     /* Click on edge number */
     if (isNumberEdge(n) && ui.positions[fromNumberEdge(n)] === CELL_NONE) {

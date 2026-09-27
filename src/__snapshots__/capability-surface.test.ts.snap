@@ -104,6 +104,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "prevhints",
       "s",
       "select",
+      "tapCycle",
       "typingCell",
       "typingNumber",
     ],

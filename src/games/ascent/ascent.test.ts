@@ -7,7 +7,12 @@
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
-import { CURSOR_RIGHT, LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
+import {
+  CURSOR_RIGHT,
+  LEFT_BUTTON,
+  LEFT_RELEASE,
+  RIGHT_BUTTON,
+} from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   type DrawOp,
@@ -477,11 +482,31 @@ describe("ascent right-click two-option toggle", () => {
       }
     };
 
-    press(cellA, LEFT_BUTTON);
-    press(cellB, LEFT_BUTTON);
+    const tap = (c: number) => {
+      press(c, LEFT_BUTTON);
+      press(c, LEFT_RELEASE);
+    };
+
+    // Tapping the square again cycles it (owner: "cycling seems more
+    // intuitive" than a long press): higher → lower → empty → higher.
+    tap(cellA);
+    tap(cellB);
     expect(state.grid[cellB]).toBe(bigN + 1);
-    press(cellB, LEFT_BUTTON);
-    // higher → empty → lower → higher.
+    tap(cellB);
+    expect(state.grid[cellB]).toBe(bigN - 1);
+    tap(cellB);
+    expect(state.grid[cellB]).toBe(NUMBER_EMPTY);
+    expect(ui.held).toBe(cellA);
+    tap(cellB);
+    expect(state.grid[cellB]).toBe(bigN + 1);
+
+    // Any other press ends the cycle: a later tap selects the number instead.
+    tap(cellA);
+    tap(cellB);
+    expect(state.grid[cellB]).toBe(bigN + 1);
+    expect(ui.held).toBe(cellB);
+
+    // The long press (right button) cycles too: higher → empty → lower → higher.
     press(cellB, RIGHT_BUTTON);
     expect(state.grid[cellB]).toBe(NUMBER_EMPTY);
     press(cellB, RIGHT_BUTTON);

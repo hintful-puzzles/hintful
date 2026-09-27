@@ -14,7 +14,7 @@ More information: http://www.janko.at/Raetsel/Hidoku/index.htm
 
 There are three ways to enter a number:
 
-1. Click a number to highlight it, then click (or drag to) an adjacent cell to place the next number in the sequence. If the number just before it is placed and the one after is not, that is the one after; the other way round, the one before; and if neither is placed yet, the one after, with a right-click (a long press on a touch screen) on the square switching it to the one before. The arrow keys and Enter can be used to emulate mouse clicks.
+1. Click a number to highlight it, then click (or drag to) an adjacent cell to place the next number in the sequence. If the number just before it is placed and the one after is not, that is the one after; the other way round, the one before; and if neither is placed yet, the one after. Click the same square again for the one before, and once more to empty it. The arrow keys and Enter can be used to emulate mouse clicks.
 
 2. Click an empty cell, then type a multi-digit number. To confirm a number, either press Enter, an arrow key, or click any cell.
 
@@ -26,7 +26,7 @@ It's also possible to draw a path while the numbers inside the path are still un
 
 If a path has only a single number, the endpoints will display one or two smaller numbers, which represent the numbers which are valid for this cell.
 
-Where a cell has exactly two candidate numbers like that, right-clicking (on a touch screen, a long press) cycles through them instead of clearing — empty, then the lower number, then the higher, then empty again — so an either-or square can be tried both ways without typing. After a tap has placed the higher number, a long press on it clears it and the next one gives the lower. Middle-click still clears it outright.
+Where a cell has exactly two candidate numbers like that, right-clicking (on a touch screen, a long press) cycles through them instead of clearing — empty, then the lower number, then the higher, then empty again — so an either-or square can be tried both ways without typing. Middle-click still clears it outright.
 
 ## Hints
 
