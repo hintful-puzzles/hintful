@@ -80,6 +80,11 @@ export const say = {
       ? "This white pearl sits on the board's edge, so its line must run along it."
       : `A white pearl's line runs straight through it, and one edge is ruled out, so it must run ${runs(along)}.`,
 
+  /** Said after any sentence whose step also draws the line on out through
+   * the white pearl (`several`: pearls) it runs into. */
+  throughNextWhite: (several: boolean): string =>
+    `It runs straight on through the next white ${several ? "pearls" : "pearl"} too.`,
+
   // --- the pearls' longer reach ---------------------------------------------
 
   blackRunsOn:

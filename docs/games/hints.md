@@ -700,10 +700,14 @@ that a rule makes follow from the one just asked for is not a deduction worth a
 step of its own. Pearl asked for a black pearl's edge in one step and for the
 line's run-on through the next square in the next, and the second step only
 restated the rule the help already teaches (owner-flagged 2026-09-27). Drawing
-the whole arm in one step cut 17% of a plan's steps. Fold such a consequence in
-where the plan is built (`drawRunOns` in `src/games/pearl/hint.ts`), name it in
-the sentence, and make the narration fail loudly on any step that folds one in
-without naming it.
+the whole arm in one step cut 17% of a plan's steps; carrying lines on through
+white pearls too, the same afternoon, cut another 4%. Fold such consequences in
+where the plan is built, to closure, since one rule's line can enter another
+pearl (`carryOn` in `src/games/pearl/hint.ts`). Name each fold in the sentence,
+and make the narration fail loudly on any step that folds one in without
+naming it. A fold that can follow any deduction gets one fixed second sentence
+("It runs straight on through the next white pearl too."), listed in
+`LONG_NARRATIONS`, rather than a rewrite of every sentence it can follow.
 
 ### Hint the move that advances the goal
 

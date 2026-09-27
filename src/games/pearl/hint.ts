@@ -64,13 +64,19 @@ export interface PearlHint {
   area: number[];
 }
 
+/** A line a pearl's rule carries on from a line the step draws: through the
+ * square past a black pearl, or out through a white one. */
+interface Carried {
+  op: PearlEdgeOp;
+  rule: "black" | "white";
+}
+
 /** A firing with the edges it asks the player for: all it decided and the
- * run-ons of its black pearls' lines, less the crosses beside a square that
+ * lines the pearls carry on from it, less the crosses beside a square that
  * already has two lines. */
 interface ShownFiring extends PearlFiring {
   shown: PearlEdgeOp[];
-  /** The lines drawn because a line the firing decided leaves a black pearl. */
-  runOn: PearlEdgeOp[];
+  carried: Carried[];
 }
 
 // --- reading a workspace --------------------------------------------------
@@ -124,33 +130,40 @@ function leftOut(
 }
 
 /**
- * Draw, on the working board, the run-on of every line in `ops` that leaves a
- * black pearl: the pearl's line goes straight through the next square, so
- * that square's far edge is a line too. It goes in the same step because the
- * arm is the pearl's own rule, and asking for half of it costs the player a
- * second step that teaches nothing (owner, 2026-09-27).
+ * Draw, on the working board, every line the pearls' own rules carry on from
+ * the lines in `ops`, and the lines those carry on in turn: a line leaving a
+ * black pearl runs straight through the next square, and a line entering a
+ * white pearl leaves by its opposite edge. They go in the same step because
+ * they are the rules, not deductions, and asking for them one at a time costs
+ * the player steps that teach nothing (owner, 2026-09-27).
  */
-function drawRunOns(b: PearlBoard, ops: readonly PearlEdgeOp[]): PearlEdgeOp[] {
-  const drawn: PearlEdgeOp[] = [];
-  for (const op of ops) {
-    if (!op.line) continue;
+function carryOn(b: PearlBoard, ops: readonly PearlEdgeOp[]): Carried[] {
+  const carried: Carried[] = [];
+  const work = ops.filter((op) => op.line);
+  const draw = (sq: number, d: number, rule: Carried["rule"]) => {
+    if (!onBoard(b, sq, d)) return;
+    const e = b.edgeAt(sq % b.w, Math.floor(sq / b.w), d);
+    if (b.ws[e] !== 3) return;
+    b.ws[e] = 1;
+    const op =
+      d === R || d === D
+        ? { sq, dir: d, line: true }
+        : { sq: step(b, sq, d), dir: F(d), line: true };
+    carried.push({ op, rule });
+    work.push(op);
+  };
+  for (let op = work.pop(); op; op = work.pop()) {
     const far = step(b, op.sq, op.dir);
-    for (const [pearl, next, d] of [
+    for (const [sq, next, d] of [
       [op.sq, far, op.dir],
       [far, op.sq, F(op.dir)],
     ]) {
-      if (b.clues[pearl] !== CORNER || !onBoard(b, next, d)) continue;
-      const e = b.edgeAt(next % b.w, Math.floor(next / b.w), d);
-      if (b.ws[e] !== 3) continue;
-      b.ws[e] = 1;
-      drawn.push(
-        d === R || d === D
-          ? { sq: next, dir: d, line: true }
-          : { sq: step(b, next, d), dir: F(d), line: true },
-      );
+      // `d` leads from `sq` along the line to `next`.
+      if (b.clues[sq] === CORNER) draw(next, d, "black");
+      if (b.clues[sq] === STRAIGHT) draw(sq, F(d), "white");
     }
   }
-  return drawn;
+  return carried;
 }
 
 // --- narration ------------------------------------------------------------
@@ -179,7 +192,7 @@ function narrateSquare(b: PearlBoard, f: ShownFiring, sq: number): string {
     if (opposite === 1) return say.blackOpposite("line");
     return say.blackOpposite(
       onBoard(b, sq, F(d)) ? "ruledOut" : "boardEdge",
-      f.runOn.length > 0,
+      f.carried.some((c) => c.rule === "black"),
     );
   }
   if (clue === STRAIGHT) {
@@ -196,14 +209,22 @@ function narrateSquare(b: PearlBoard, f: ShownFiring, sq: number): string {
 
 /** Which sentence a firing speaks, and with what values. */
 function narrate(b: PearlBoard, f: ShownFiring, reason: PearlReason): string {
-  const ws = f.before;
   // Only a black pearl's own square firing draws a line whose run-on is still
-  // open; the other rungs that draw a line beside one draw its run-on too.
+  // open, and its sentence names it; the other rungs that draw a line beside
+  // one draw its run-on too.
   if (
-    f.runOn.length > 0 &&
+    f.carried.some((c) => c.rule === "black") &&
     !(reason.kind === "square" && b.clues[reason.sq] === CORNER)
   )
     throw new Error(`pearl hint: a ${reason.kind} step drew a black pearl's run-on`);
+  const whites = f.carried.filter((c) => c.rule === "white").length;
+  const base = premise(b, f, reason);
+  return whites > 0 ? `${base} ${say.throughNextWhite(whites > 1)}` : base;
+}
+
+/** The sentence for the firing's own deduction. */
+function premise(b: PearlBoard, f: ShownFiring, reason: PearlReason): string {
+  const ws = f.before;
   switch (reason.kind) {
     case "square":
       return narrateSquare(b, f, reason.sq);
@@ -307,9 +328,11 @@ export function pearlHint(
     next: (b) => {
       const f = pass.next();
       if (!f) return null;
-      const runOn = drawRunOns(b, f.ops);
-      const shown = [...f.ops, ...runOn].filter((op) => !evident(b, op));
-      return { ...f, runOn, shown };
+      const carried = carryOn(b, f.ops);
+      const shown = [...f.ops, ...carried.map((c) => c.op)].filter(
+        (op) => !evident(b, op),
+      );
+      return { ...f, carried, shown };
     },
     showable: (_b, f) => f.reason !== null && f.shown.length > 0,
     planCap: PLAN_CAP,

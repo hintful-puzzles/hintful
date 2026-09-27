@@ -176,6 +176,14 @@ const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
       "which the sentence has to say to be true.",
   },
   {
+    games: ["pearl"],
+    match: / It runs straight on through the next white pearls? too\.$/,
+    why:
+      "The owner's 2026-09-27 request (pearl/hint.ts, carryOn): a step also " +
+      "draws the line on through a white pearl it runs into, and says so in a " +
+      "second sentence after its own deduction, whichever deduction that is.",
+  },
+  {
     games: ["subsets"],
     match: / For instance, /,
     why:

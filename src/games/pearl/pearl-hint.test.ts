@@ -28,6 +28,7 @@ import { type PearlMistake, pearlGame } from "./index.ts";
 import { executeMove } from "./moves.ts";
 import { type PearlReason, pearlRecordingPass, pearlSolve } from "./solver.ts";
 import {
+  CORNER,
   DIFF_COUNT,
   DIFF_EASY,
   DIFF_TRICKY,
@@ -38,6 +39,7 @@ import {
   type PearlMove,
   type PearlParams,
   type PearlState,
+  STRAIGHT,
 } from "./state.ts";
 
 const SHAPES: PearlParams[] = [
@@ -101,6 +103,57 @@ describe("following the hint finishes every board, one sound step at a time", ()
       }
     });
   }
+});
+
+describe("a step draws what the pearls' rules carry on from its lines", () => {
+  // Every line a step draws that leaves a black pearl has its run-on through
+  // the next square, and every one entering a white pearl leaves by the
+  // opposite edge: already on the board, or in the same step.
+  it("over the whole corpus, and the second sentence names the white pearl", () => {
+    let carried = 0;
+    for (const { p, seed } of CORPUS) {
+      for (const { step, before } of walk(deal(p, seed)).seen) {
+        const targets = step.highlights?.targets ?? [];
+        const drawn = (sq: number, d: number) => {
+          const x = (sq % p.w) + DX(d);
+          const y = Math.floor(sq / p.w) + DY(d);
+          if (x < 0 || x >= p.w || y < 0 || y >= p.h) return true;
+          const far = y * p.w + x;
+          return (
+            !!(before.lines[sq] & d) ||
+            targets.some(
+              (t) =>
+                t.line &&
+                ((t.sq === sq && t.dir === d) || (t.sq === far && t.dir === F(d))),
+            )
+          );
+        };
+        let whiteCarry = false;
+        for (const t of targets.filter((t) => t.line)) {
+          const far = t.sq + DY(t.dir) * p.w + DX(t.dir);
+          for (const [sq, next, d] of [
+            [t.sq, far, t.dir],
+            [far, t.sq, F(t.dir)],
+          ]) {
+            if (before.clues[sq] === CORNER)
+              expect(drawn(next, d), step.explanation).toBe(true);
+            if (before.clues[sq] === STRAIGHT) {
+              expect(drawn(sq, F(d)), step.explanation).toBe(true);
+              // A white pearl this step's own deduction did not reach.
+              if (
+                !before.lines[sq] &&
+                !/white pearl/.test(step.explanation.split(". ")[0])
+              )
+                whiteCarry = true;
+            }
+          }
+        }
+        if (/next white pearls? too\.$/.test(step.explanation)) carried++;
+        else if (whiteCarry) expect.fail(`unnamed carry: ${step.explanation}`);
+      }
+    }
+    expect(carried, "no step carried a line through a white pearl").toBeGreaterThan(0);
+  });
 });
 
 describe("every step stands on the board the player can see", () => {

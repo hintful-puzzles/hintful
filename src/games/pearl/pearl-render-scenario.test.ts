@@ -101,9 +101,12 @@ describe("Pearl render scenarios", () => {
     });
     const hl = hint?.highlights as PearlHint | undefined;
     expect(hl?.area.length).toBe(1);
-    // The pearl's whole arm: its own edge and the run-on past the next square.
-    expect(hint?.explanation).toMatch(/through the next square/);
-    expect(hl?.targets.filter((t) => t.line)).toHaveLength(2);
+    // The pearl's whole arm, its own edge and the run-on past the next square,
+    // and on out through the white pearl that run-on enters.
+    expect(hint?.explanation).toMatch(
+      /through the next square\. It runs straight on through the next white pearl too\.$/,
+    );
+    expect(hl?.targets.filter((t) => t.line)).toHaveLength(3);
     // The target is the proposed line, a stroke rather than a laid rect.
     expect(recording.ops.some((o) => o.op === "line" && o.color === COL_HINT)).toBe(
       true,
