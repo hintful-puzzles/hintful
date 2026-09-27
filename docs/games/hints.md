@@ -2519,9 +2519,21 @@ reusable part. In [`games/ascent/`](../../src/games/ascent/):
   count that rules out the rest of the answer's run: *"Only 44 can fill this
   square: the run between 41 and 43 can't, as this square doesn't touch 41, and
   4 steps from 48 rules out anything higher."* With two or more close rivals,
-  naming one would imply it was the only contender, so the step keeps the
-  striped run; `ascent-hint.test.ts` holds the named rival to being the only
-  close one.
+  naming one would imply it was the only contender; `ascent-hint.test.ts`
+  holds the named rival to being the only close one.
+- **When the roll call is too long, keep the part that is the reason.** Two to
+  seven runs commonly come within two steps of a square, so naming each one
+  does not fit at a glance. The striped run was the fallback, and on an 8x10
+  Hard board it striped a quarter of the board without saying why *70* of the
+  run and not 68 (owner, 2026-09-27). What singles the number out is the step
+  count to each end of its own run, and that is always short to say. So the
+  step says only that no other run can reach the square, gives the counts,
+  and outlines their ends: *"Only 70 can fill this square: no other run can
+  reach it, and 3 steps from 67 and 2 from 72 rule out the rest."* A run of
+  one number has no counts, and its striped reach is two or three squares,
+  which says more than an unnamed "no other run", so it keeps the stripes.
+  The general form: when a picture stands in for a sentence that ran long,
+  ask which clause of that sentence carried the deduction, and keep that one.
 - **Name only what the player can see.** A sentence names numbers on the board
   and the one it places, never another missing number (owner, 2026-09-27, of a
   sentence naming a missing 35: "the mention of 35 doesn't help"). A rival

@@ -40,6 +40,7 @@ import {
   type EndRuledOut,
   GLANCE,
   type Near,
+  type Others,
   type Rival,
   say,
 } from "./hint-text.ts";
@@ -665,57 +666,77 @@ export function runShortfall(state: AscentState, run: Run, cell: number): number
   return Number.NEGATIVE_INFINITY;
 }
 
+/** A way to say why only `n` can fill its square, and the ends it names. */
+interface Fill {
+  others: Others;
+  counts: Count[];
+  area: number[];
+}
+
 /**
- * The "only this number can fill it" reasons, when they can be said plainly:
- * the one other run that comes within two steps and why it fails (or none
- * does), and the step counts to the run's own ends that rule out its other
- * numbers. `null` when more than one rival comes close, when a rival is ruled
- * out by more than straight reach, or when the counts alone do not single the
- * number out; the step then stripes the run's reach instead.
+ * The "only this number can fill it" reasons that can be said plainly, most
+ * helpful first: the one other run that comes within two steps and why it
+ * fails (or that none does), then, when several come close, only that none
+ * reaches the square; each with the step counts to the run's own ends that
+ * rule out its other numbers. Empty when a rival is ruled out by more than
+ * straight reach, or when the counts alone do not single the number out; the
+ * step then stripes the run's reach instead. A run of one number has no counts
+ * to say, so its striped reach, two or three squares, is the better picture
+ * than an unnamed "no other run".
  */
-function fillReason(
-  f: AscentFiring,
-): { rival: Rival | null; counts: Count[]; area: number[] } | null {
+function fillReasons(f: AscentFiring): Fill[] {
   const { n, cell, before } = f;
   const { w, mode } = before;
   const runs = runsOf(before);
   const own = runs.find((r) => r.lo <= n && n <= r.hi);
-  if (!own) return null;
-  const area: number[] = [];
+  if (!own) return [];
 
   const shortfalls = runs
     .filter((r) => r !== own)
     .map((r) => ({ r, by: runShortfall(before, r, cell) }));
-  if (shortfalls.some(({ by }) => by <= 0)) return null;
-  const close = shortfalls.filter(({ by }) => by <= 2);
-  if (close.length > 1) return null;
-  let rival: Rival | null = null;
-  if (close.length === 1) {
-    const r = close[0].r;
-    const ends = [r.a, r.b].filter((e) => e !== null);
-    area.push(...ends.map((e) => e.cell));
-    const from = r.a ? shown(r.a.m) : null;
-    const to = r.b ? shown(r.b.m) : null;
-    if (r.lo === r.hi) {
-      const missed = ends.filter((e) => stepDistance(cell, e.cell, w, mode) > 1);
-      rival = { kind: "one", from, to, need: missed.map((e) => shown(e.m)) };
-    } else rival = { kind: "run", from, to };
-  }
+  if (shortfalls.some(({ by }) => by <= 0)) return [];
 
   const counts: Count[] = [];
+  const countEnds: number[] = [];
   if (n > own.lo) {
     const a = own.a;
-    if (!a || a.m + stepDistance(cell, a.cell, w, mode) !== n) return null;
+    if (!a || a.m + stepDistance(cell, a.cell, w, mode) !== n) return [];
     counts.push({ m: shown(a.m), d: n - a.m, side: "lower" });
-    area.push(a.cell);
+    countEnds.push(a.cell);
   }
   if (n < own.hi) {
     const b = own.b;
-    if (!b || b.m - stepDistance(cell, b.cell, w, mode) !== n) return null;
+    if (!b || b.m - stepDistance(cell, b.cell, w, mode) !== n) return [];
     counts.push({ m: shown(b.m), d: b.m - n, side: "higher" });
-    area.push(b.cell);
+    countEnds.push(b.cell);
   }
-  return { rival, counts, area: [...new Set(area)] };
+
+  const out: Fill[] = [];
+  const close = shortfalls.filter(({ by }) => by <= 2);
+  if (close.length === 0)
+    out.push({ others: { kind: "none" }, counts, area: countEnds });
+  if (close.length === 1) {
+    const r = close[0].r;
+    const ends = [r.a, r.b].filter((e) => e !== null);
+    const from = r.a ? shown(r.a.m) : null;
+    const to = r.b ? shown(r.b.m) : null;
+    const others: Rival =
+      r.lo === r.hi
+        ? {
+            kind: "one",
+            from,
+            to,
+            need: ends
+              .filter((e) => stepDistance(cell, e.cell, w, mode) > 1)
+              .map((e) => shown(e.m)),
+          }
+        : { kind: "run", from, to };
+    const area = [...new Set([...ends.map((e) => e.cell), ...countEnds])];
+    out.push({ others, counts, area });
+  }
+  if (close.length > 0 && counts.length > 0)
+    out.push({ others: { kind: "unnamed" }, counts, area: countEnds });
+  return out;
 }
 
 /**
@@ -970,15 +991,15 @@ export function stepOf(f: AscentFiring): AscentStep {
     case "only":
     case "routeBeside":
     case "routeOnly": {
-      // The square is in one run's reach and no other's: stripe that reach
-      // and outline the run's ends, so the run the sentence names is on the
-      // board beside the others the player can compare it with.
-      // Name the rival and the counts when that fits at a glance; a rival and
-      // counts on both sides run long, and the run's striped reach says it
-      // shorter.
-      const fill = fillReason(f);
-      const said = fill ? say.fill(shown(n), fill.rival, fill.counts) : "";
-      if (fill && said.length <= GLANCE) return step(said, fill.area);
+      // Say the reason in words when it fits at a glance: the counts are what
+      // single the number out of its run, which the stripes cannot show.
+      for (const fill of fillReasons(f)) {
+        const said = say.fill(shown(n), fill.others, fill.counts);
+        if (said.length <= GLANCE) return step(said, fill.area);
+      }
+      // Otherwise the square is in one run's reach and no other's: stripe that
+      // reach and outline the run's ends, so the run the sentence names is on
+      // the board beside the others the player can compare it with.
       const byRoute = f.reason.kind === "routeBeside" || f.reason.kind === "routeOnly";
       const run = runOf(f, byRoute ? "route" : "reach");
       const text = say.onlyRun(

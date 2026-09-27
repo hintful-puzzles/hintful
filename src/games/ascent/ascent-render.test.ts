@@ -139,15 +139,17 @@ describe("ascent hint frames", () => {
       [{ ...RECT, diff: 2 }, 1],
       [{ ...HEXAGON, w: 7, h: 7, diff: 2 }, 7],
     ] as const) {
+      // The striped sentences: "Only the run between …" and "Only 12, between …".
+      const striped = /^Only (the run|\d+, between)/;
       let found = false;
       for (let seed = 0; seed < 80 && !found; seed++) {
         const { recording, hint } = renderScenario({
           game: ascentGame,
           id: id(p, `render-run-${seed}`),
           showHint: true,
-          hintUntil: (s) => /^Only the run/.test(s.explanation),
+          hintUntil: (s) => striped.test(s.explanation),
         });
-        if (!hint || !/^Only the run/.test(hint.explanation)) continue;
+        if (!hint || !striped.test(hint.explanation)) continue;
         found = true;
         const marks = hl(hint);
         for (const t of marks?.targets ?? []) expect(marks?.hatch).toContain(t);

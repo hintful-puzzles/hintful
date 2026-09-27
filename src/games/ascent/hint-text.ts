@@ -65,9 +65,18 @@ export type Rival =
   | { kind: "one"; from: number | null; to: number | null; need: number[] }
   | { kind: "run"; from: number | null; to: number | null };
 
-function rivalText(r: Rival): string {
-  if (r.kind === "run") return `${runName(r.from, r.to)} is too far away`;
-  return `${runName(r.from, r.to)} can't, as this square doesn't touch ${r.need.join(" or ")}`;
+/**
+ * Why no other run fills a square: none comes within two steps of it
+ * (`none`), the one that does fails (a {@link Rival}), or several come close
+ * and each falls short (`unnamed`), too many to name at a glance.
+ */
+export type Others = { kind: "none" } | { kind: "unnamed" } | Rival;
+
+function othersText(o: Others): string {
+  if (o.kind === "none") return "no other run comes close";
+  if (o.kind === "unnamed") return "no other run can reach it";
+  if (o.kind === "run") return `${runName(o.from, o.to)} is too far away`;
+  return `${runName(o.from, o.to)} can't, as this square doesn't touch ${o.need.join(" or ")}`;
 }
 
 /**
@@ -158,12 +167,12 @@ export const say = {
   },
 
   /**
-   * Only `n` can fill this square: the one run that comes close fails (`rival`,
-   * or none does), and the step counts to the run's own ends rule out the rest
-   * of it (`counts`, empty when `n` is its run's only number).
+   * Only `n` can fill this square: no other run can (`others`), and the step
+   * counts to the run's own ends rule out the rest of it (`counts`, empty when
+   * `n` is its run's only number).
    */
-  fill: (n: number, rival: Rival | null, counts: Count[]): string => {
-    const why = rival === null ? "no other run comes close" : rivalText(rival);
+  fill: (n: number, others: Others, counts: Count[]): string => {
+    const why = othersText(others);
     if (counts.length === 0) return `Only ${n} can fill this square: ${why}.`;
     const rest =
       counts.length === 2

@@ -306,28 +306,59 @@ describe("every premise, restated from the board, singles out its square", () =>
   });
 
   it("only one number can reach the square", () => {
-    const firings = byKind("onlyBeside", "only");
+    const firings = byKind("onlyBeside", "only", "routeBeside", "routeOnly");
     expect(firings.length).toBeGreaterThan(20);
     let fills = 0;
+    let unnamed = 0;
     let stripes = 0;
     for (const { board, firing } of firings) {
       const { before, cell, n } = firing;
+      const byRoute = firing.reason.kind.startsWith("route");
+      // By straight reach, no other number stands here; a route reading needs
+      // the route to rule some out, so that is checked through its sentence.
       const others = missing(before).filter((m) => m !== n && reaches(before, m, cell));
-      expect(others, board.label).toEqual([]);
+      if (!byRoute) expect(others, board.label).toEqual([]);
 
       const { explanation, highlights } = stepOf(firing);
       const at = `${board.label}: "${explanation}"`;
-      // "Only n can fill this square: <the one close rival fails>, and <counts>."
+      // "Only n can fill this square: <why no other run can>, and <counts>."
       if (explanation.startsWith(`Only ${n + 1} can fill`)) {
         fills++;
+        // Every claim in it holds by straight reach, whatever the technique.
+        expect(others, at).toEqual([]);
         expect(highlights?.hatch, at).toEqual([]);
+        const { w, mode } = before;
+        const dist = (c: number) => stepDistance(cell, c, w, mode);
+        const outlined = new Set(highlights?.area);
+        // Each count, "d steps from m", is the square's distance from the
+        // placed m and the gap from m to n, and m is outlined.
+        const counts = [...explanation.matchAll(/(\d+) (?:steps )?from (\d+)/g)];
+        const run = missing(before).filter((m) => sameRun(before, m, n));
+        expect(counts.length, at).toBe(
+          (n > Math.min(...run) ? 1 : 0) + (n < Math.max(...run) ? 1 : 0),
+        );
+        const countEnds: number[] = [];
+        for (const [, d, m] of counts) {
+          const c = before.grid.indexOf(Number(m) - 1);
+          expect(dist(c), at).toBe(Number(d));
+          expect(Math.abs(n + 1 - Number(m)), at).toBe(Number(d));
+          expect(outlined.has(c), at).toBe(true);
+          countEnds.push(c);
+        }
         const rivals = runsOf(before)
           .filter((r) => !(r.lo <= n && n <= r.hi))
           .filter((r) => runShortfall(before, r, cell) <= 2);
-        expect(rivals.length, at).toBeLessThanOrEqual(1);
-        if (rivals.length === 0)
-          expect(explanation, at).toContain("no other run comes close");
-        else {
+        if (explanation.includes("no other run comes close"))
+          expect(rivals, at).toEqual([]);
+        else if (explanation.includes("no other run can reach it")) {
+          // Close rivals too many or too long to name: only the counts' ends
+          // are outlined, and the run has numbers for the counts to rule out.
+          unnamed++;
+          expect(rivals.length, at).toBeGreaterThan(0);
+          expect(counts.length, at).toBeGreaterThan(0);
+          expect([...outlined].sort(), at).toEqual([...new Set(countEnds)].sort());
+        } else {
+          expect(rivals.length, at).toBe(1);
           const r = rivals[0];
           const named =
             r.a && r.b
@@ -336,6 +367,10 @@ describe("every premise, restated from the board, singles out its square", () =>
                 ? `the run after ${r.a.m + 1}`
                 : `the run before ${(r.b?.m ?? -1) + 1}`;
           expect(explanation, at).toContain(named);
+          // The rival's shortfall, restated: the steps to its ends add up to
+          // more than the numbers between them allow.
+          if (r.a && r.b)
+            expect(dist(r.a.cell) + dist(r.b.cell), at).toBeGreaterThan(r.b.m - r.a.m);
           // A run of one number fails for a square it cannot touch both ends of.
           if (r.lo === r.hi) expect(explanation, at).toContain("doesn't touch");
           for (const e of [r.a, r.b])
@@ -343,6 +378,7 @@ describe("every premise, restated from the board, singles out its square", () =>
         }
         continue;
       }
+      if (byRoute) continue;
       stripes++;
       // The picture: the run's reach striped, exactly, and its ends outlined.
       const run = missing(before).filter((m) => sameRun(before, m, n));
@@ -357,8 +393,9 @@ describe("every premise, restated from the board, singles out its square", () =>
       expect(highlights?.area, at).toEqual(ends.map((m) => before.grid.indexOf(m)));
       for (const m of ends) expect(explanation, at).toContain(String(m + 1));
     }
-    // Vacuity: both forms were checked.
+    // Vacuity: every form was checked.
     expect(fills).toBeGreaterThan(10);
+    expect(unnamed).toBeGreaterThan(5);
     expect(stripes).toBeGreaterThan(10);
   });
 
@@ -710,6 +747,32 @@ describe("positions from the owner's playtest", () => {
     expect(step.explanation).toBe(
       "Only one route for the run between 33 and 37 leaves the run between 28 and 33 a way through, so it must take the line.",
     );
+  });
+
+  it("says the counts that leave only 70 in the corner, with two runs close", () => {
+    // 8x10 Hard, several numbers in: the runs between 61 and 67 and between 72
+    // and 76 miss the corner by 2 and by 1, too many to name at a glance.
+    const params = ascentGame.decodeParams("8x10mRdh");
+    const state = newAscentState(
+      params,
+      "c76b80k72a46d67b44a54c18a43_61a52a21c42_37_38c10_15_36_41_39_24_7d35_40_1_2_6a13a31_34_3_4_5b30_32_33",
+    );
+    const at = (m: number) => state.grid.indexOf(m - 1);
+    const rivals = runsOf(state).filter(
+      (r) => r.a && runShortfall(state, r, 0) > 0 && runShortfall(state, r, 0) <= 2,
+    );
+    expect(rivals.map((r) => [r.a?.m, r.b?.m].map((m) => (m ?? -2) + 1))).toEqual([
+      [61, 67],
+      [72, 76],
+    ]);
+    const [first] = ascentPlan(state);
+    const step = stepOf(first);
+    expect(first.cell).toBe(0);
+    expect(step.explanation).toBe(
+      "Only 70 can fill this square: no other run can reach it, and 3 steps from 67 and 2 from 72 rule out the rest.",
+    );
+    expect(step.highlights?.area).toEqual([at(67), at(72)]);
+    expect(step.highlights?.hatch).toEqual([]);
   });
 });
 

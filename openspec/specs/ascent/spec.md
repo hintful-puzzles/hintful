@@ -241,10 +241,12 @@ in one sentence of at most 120 characters, naming numbers by value; SHALL ring
 the square it fills without drawing the number; SHALL outline the numbers and
 squares it reasons from, in square and hexagonal cells alike; SHALL stripe an
 arrow's line when the sentence names it; and, for a square only one run can
-reach, SHALL name that run and stripe every square it can reach. A step whose
-move fills in more than its own square SHALL end the plan. The hint SHALL refuse
-on a solved board and while `findMistakes` reports anything, and a step SHALL be
-followed by placing its number in its square by any gesture.
+reach, SHALL either say in words why no other run or number can fill it, as
+"Ascent's hint follows a run and names the close rival" sets out, or name that
+run and stripe every square it can reach. A step whose move fills in more than
+its own square SHALL end the plan. The hint SHALL refuse on a solved board and
+while `findMistakes` reports anything, and a step SHALL be followed by placing
+its number in its square by any gesture.
 
 #### Scenario: Following the hint finishes the board
 
@@ -267,7 +269,7 @@ followed by placing its number in its square by any gesture.
 #### Scenario: A square only one run can reach shows that run's reach
 
 - **WHEN** a step fills a square because only one run of missing numbers can
-  reach it
+  reach it, and its sentence does not give the reason in words
 - **THEN** the sentence names the run and its placed ends, the run's ends are
   outlined, and every square the run can reach is striped, the filled square
   among them
@@ -300,10 +302,14 @@ ask the same techniques about that run alone, none harder than the technique
 that placed the first number, and when that fills the run SHALL present the
 placements as one journey, each leg with its own sentence. The plan's length
 cap SHALL NOT split such a journey. A step placing a number because only its run
-can reach the square SHALL, when exactly one other run comes within two steps of
-the square or none does, and straight reach rules out every other number, say
-which rival fails and why and the step counts that rule out the rest of its own
-run, outlining the ends it names; otherwise it SHALL stripe its run's reach.
+can reach the square SHALL, when straight reach rules out every other run and
+the step counts to its own run's ends rule out every other number of it, say
+so in words, outlining the ends it names: when exactly one other run comes
+within two steps of the square, or none does, it SHALL say which rival fails
+and why, with the counts; when that runs past 120 characters or several runs
+come close, and the run has more than one number, it SHALL say that no other
+run can reach the square, with the counts, and outline only the counts' ends.
+Otherwise it SHALL stripe its run's reach.
 
 #### Scenario: A forced run arrives as one hint
 
@@ -318,6 +324,14 @@ run, outlining the ends it names; otherwise it SHALL stripe its run's reach.
   steps of it
 - **THEN** the step names that run and why it falls short, with the step counts
   that single out the number
+
+#### Scenario: Several close rivals give way to the counts
+
+- **WHEN** a square only one run of several numbers can reach has two or more
+  other runs within two steps of it, and the step counts to the run's ends
+  single out the number
+- **THEN** the step says that no other run can reach the square and gives those
+  counts, outlines the placed numbers they count from, and stripes nothing
 
 ### Requirement: Ascent always offers a number beside the one selected
 

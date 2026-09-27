@@ -1,5 +1,0 @@
-# No delta yet: the sentence and marks are the owner's to choose, and the
-# delta follows the choice. Written 2026-09-27; nothing is implemented.
-schema: spec-driven
-created: 2026-09-27
-skip_specs: true
