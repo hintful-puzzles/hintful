@@ -11,6 +11,7 @@ import type {
   PresetMenu,
   SolveResult,
 } from "../../engine/game.ts";
+import { commonHintRefusal } from "../../engine/hint-refusal.ts";
 import {
   dimensionParamConfig,
   parseDimensions,
@@ -19,6 +20,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { ConfigValues } from "../../engine/types.ts";
 import { newAscentDesc } from "./generator.ts";
+import { ascentHint, ascentKeepTrack } from "./hint.ts";
 import { executeAscentMove } from "./moves.ts";
 import {
   type AscentDrawState,
@@ -401,6 +403,11 @@ export const ascentGame: Game<
 
   solve,
   findMistakes,
+  // `findMistakes` compares every entered number with the unique solution, so
+  // a board it passes is one the hint may deduce from.
+  hint: (state) =>
+    commonHintRefusal(state.completed, findMistakes(state).length) ?? ascentHint(state),
+  hintKeepTrack: ascentKeepTrack,
   difficulty,
   textFormat,
 

@@ -889,6 +889,17 @@ describe("Loopy hint frames", () => {
     expect(ops).toMatchSnapshot();
   });
 
+  it("outlines the clue a step counts inside its face", () => {
+    const { result } = frame((s) => marksOf(s).faces.length === 1);
+    const ops = result.recording.ops;
+    const outline = ops.filter((o) => o.op === "line" && o.color === COL_HINT_CELL);
+    // One stroke per side of the face, and every face has three at least; a loop
+    // band shares the color.
+    expect(outline.length).toBeGreaterThanOrEqual(3);
+    // The snapshot is what holds the outline's place inside the face.
+    expect(ops).toMatchSnapshot();
+  });
+
   it("draws the corner a step places in the action color, over the corner it cites", () => {
     const { result, step } = frame(
       (s) => s.move.kind === "corner" && marksOf(s).corners.length > 0,

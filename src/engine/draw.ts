@@ -1,6 +1,6 @@
 /** Shared `GameDrawing` primitives. */
 import type { GameDrawing } from "./game.ts";
-import type { DrawTextOptions } from "./types.ts";
+import type { DrawTextOptions, Point } from "./types.ts";
 
 /**
  * The text options for a glyph centered in a tile — the digit in a Sudoku
@@ -177,6 +177,32 @@ export function drawThickRectOutline(
   dr.drawRect({ x, y, w: thickness, h }, color);
   dr.drawRect({ x, y: y + h - thickness, w, h: thickness }, color);
   dr.drawRect({ x: x + w - thickness, y, w: thickness, h }, color);
+}
+
+/**
+ * A closed polygon stroked `scale` of the way from `center` to each corner: an
+ * outline that sits **inside** a cell of any shape and never on its edges,
+ * where a border, a wall or a neighbor's outline lives. Loopy's clue outline
+ * and Ascent's hint marks, whose cells are faces of a tiling and hexagons, where
+ * `hint-mark.ts`'s square bands cannot go.
+ *
+ * Corners are rounded after scaling, so a square cell's stroke lands on whole
+ * pixels. One `drawLine` per side, in corner order.
+ */
+export function strokeScaledPolygon(
+  dr: GameDrawing,
+  corners: readonly Point[],
+  center: Point,
+  scale: number,
+  color: number,
+  thickness: number,
+): void {
+  const at = corners.map((p) => ({
+    x: Math.round(center.x + (p.x - center.x) * scale),
+    y: Math.round(center.y + (p.y - center.y) * scale),
+  }));
+  for (let i = 0; i < at.length; i++)
+    dr.drawLine(at[i], at[(i + 1) % at.length], color, thickness);
 }
 
 /**

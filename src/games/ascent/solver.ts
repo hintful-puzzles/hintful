@@ -30,16 +30,15 @@ import {
   findDirection,
   fromNumberEdge,
   isEdgeValid,
-  isHexagonal,
   isNear,
   isNumberEdge,
   isObstacle,
   MAXIMUM_DIRS,
   MODE_EDGES,
-  MODE_ORTHOGONAL,
   movementForMode,
   NUMBER_EMPTY,
   NUMBER_WALL,
+  stepDistance,
   updatePositions,
 } from "./state.ts";
 
@@ -60,6 +59,13 @@ export class SolverScratch {
   foundEndpoints: boolean;
   /** Scratch for `solverOverlap`: `overlap[i]` prev-adjacency, `overlap[i+s]` next. */
   readonly overlap: Uint8Array;
+  /**
+   * The hint's recorder. While `recording`, a placing rung stops at its first
+   * placement and leaves it in `placed`, so one firing is one step. The
+   * generator never sets it, so its sweeps place everything they find.
+   */
+  recording = false;
+  placed: { n: number; cell: number } | null = null;
 
   constructor(w: number, h: number, mode: number, last: number) {
     const n = w * h;
@@ -97,7 +103,7 @@ function solverPlace(sc: SolverScratch, pos: number, num: number): number {
   return 1;
 }
 
-function solverSinglePosition(sc: SolverScratch): number {
+export function solverSinglePosition(sc: SolverScratch): number {
   const s = sc.w * sc.h;
   let ret = 0;
 
@@ -109,13 +115,19 @@ function solverSinglePosition(sc: SolverScratch): number {
       if (!sc.marks[i * s + n]) continue;
       found = found === CELL_NONE ? i : CELL_MULTIPLE;
     }
-    if (found >= 0) ret += solverPlace(sc, found, n);
+    if (found >= 0) {
+      ret += solverPlace(sc, found, n);
+      if (sc.recording) {
+        sc.placed = { n, cell: found };
+        return ret;
+      }
+    }
   }
 
   return ret;
 }
 
-function solverSingleNumber(sc: SolverScratch, simple: boolean): number {
+export function solverSingleNumber(sc: SolverScratch, simple: boolean): number {
   const s = sc.w * sc.h;
   let ret = 0;
 
@@ -135,6 +147,10 @@ function solverSingleNumber(sc: SolverScratch, simple: boolean): number {
         continue;
       }
       ret += solverPlace(sc, i, found);
+      if (sc.recording) {
+        sc.placed = { n: found, cell: i };
+        return ret;
+      }
     }
   }
 
@@ -153,18 +169,7 @@ function solverNear(
 
   for (let i = 0; i < s; i++) {
     if (!sc.marks[i * s + num]) continue;
-    const hdist = (i % w) - (near % w);
-    const vdist = Math.trunc(i / w) - Math.trunc(near / w);
-    if (
-      sc.mode === MODE_ORTHOGONAL ||
-      (isHexagonal(sc.mode) && ((hdist < 0 && vdist < 0) || (hdist > 0 && vdist > 0)))
-    ) {
-      /* Manhattan distance */
-      if (Math.abs(hdist) + Math.abs(vdist) <= distance) continue;
-    } else {
-      /* Chebyshev distance */
-      if (Math.max(Math.abs(hdist), Math.abs(vdist)) <= distance) continue;
-    }
+    if (stepDistance(i, near, w, sc.mode) <= distance) continue;
     sc.marks[i * s + num] = 0;
     ret++;
   }
@@ -172,7 +177,7 @@ function solverNear(
   return ret;
 }
 
-function solverProximitySimple(sc: SolverScratch): number {
+export function solverProximitySimple(sc: SolverScratch): number {
   const end = sc.end;
   let ret = 0;
 
@@ -187,7 +192,7 @@ function solverProximitySimple(sc: SolverScratch): number {
   return ret;
 }
 
-function solverProximityFull(sc: SolverScratch): number {
+export function solverProximityFull(sc: SolverScratch): number {
   const end = sc.end;
   let ret = 0;
 
@@ -396,7 +401,7 @@ function solverRemoveBlocks(sc: SolverScratch): number {
   return ret;
 }
 
-function solverOverlap(sc: SolverScratch): number {
+export function solverOverlap(sc: SolverScratch): number {
   const { w, mode } = sc;
   const s = w * sc.h;
   let ret = 0;
@@ -452,7 +457,7 @@ function solverEdges(sc: SolverScratch): void {
 }
 
 /** Load `puzzle` into the scratch, seed every candidate, and set up the path. */
-function solverStart(puzzle: Int16Array, sc: SolverScratch): void {
+export function solverStart(puzzle: Int16Array, sc: SolverScratch): void {
   const s = sc.w * sc.h;
 
   if (puzzle !== sc.grid) sc.grid.set(puzzle);

@@ -4,6 +4,7 @@ import {
   drawRecessedBorder,
   drawRectOutline,
   drawThickRectOutline,
+  strokeScaledPolygon,
 } from "./draw.ts";
 import { opsOfKind, RecordingDrawing } from "./testing/recording-drawing.ts";
 
@@ -117,5 +118,41 @@ describe("drawThickRectOutline", () => {
       expect(o.x + o.w).toBeLessThanOrEqual(8);
       expect(o.y + o.h).toBeLessThanOrEqual(8);
     }
+  });
+});
+
+describe("strokeScaledPolygon", () => {
+  it("strokes each side with its corners drawn toward the center, rounded", () => {
+    const { dr, ops: all } = recordingDrawing();
+    // A 40-square at (10, 20), center (30, 40), drawn at 0.8: corners 16 in.
+    const square = [
+      { x: 10, y: 20 },
+      { x: 50, y: 20 },
+      { x: 50, y: 60 },
+      { x: 10, y: 60 },
+    ];
+    strokeScaledPolygon(dr, square, { x: 30, y: 40 }, 0.8, 5, 3);
+    const lines = opsOfKind(all, "line");
+    expect(lines.map((o) => [o.x1, o.y1, o.x2, o.y2])).toEqual([
+      [14, 24, 46, 24],
+      [46, 24, 46, 56],
+      [46, 56, 14, 56],
+      [14, 56, 14, 24],
+    ]);
+    for (const o of lines) expect(o).toMatchObject({ color: 5, thickness: 3 });
+  });
+
+  it("closes a polygon of any number of sides", () => {
+    const { dr, ops: all } = recordingDrawing();
+    const hexagon = Array.from({ length: 6 }, (_, k) => ({
+      x: 100 + 30 * Math.cos((k * Math.PI) / 3),
+      y: 100 + 30 * Math.sin((k * Math.PI) / 3),
+    }));
+    strokeScaledPolygon(dr, hexagon, { x: 100, y: 100 }, 0.5, 1, 2);
+    const lines = opsOfKind(all, "line");
+    expect(lines).toHaveLength(6);
+    // The last side returns to the first corner.
+    expect([lines[5].x2, lines[5].y2]).toEqual([lines[0].x1, lines[0].y1]);
+    expect([lines[0].x1, lines[0].y1]).toEqual([115, 100]);
   });
 });

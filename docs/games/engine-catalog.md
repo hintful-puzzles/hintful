@@ -848,7 +848,10 @@ companion `raisedBevelWidth` (the raised *tile* — its opposite number),
 brackets marking a keyboard cursor — promoted from **seven** byte-identical
 copies; if you are typing eight `drawLine` calls around a center point, it
 exists), `glyphFont(size)` (the text options for a glyph centered in a tile —
-the only argument is the size).
+the only argument is the size), `strokeScaledPolygon` (a cell's own outline
+drawn a fraction of the way in toward its center: the mark for a cell that is
+not a square, where `hint-mark.ts`'s bands cannot go — Loopy's faces and
+Ascent's hexagons).
 
 **`glyphFont` is the one to reach for when drawing a digit or a letter.**
 Measured 2026-09-12: 56 copies of `{ align: "center", baseline: "mathematical",

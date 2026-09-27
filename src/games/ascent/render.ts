@@ -9,12 +9,22 @@
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { BLUE, YELLOW_WASH } from "../../engine/color/colors.ts";
-import { CURSOR, ERROR, INK, playerEntryColor } from "../../engine/color/palette.ts";
-import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
-import type { GameDrawing } from "../../engine/game.ts";
+import {
+  CURSOR,
+  ERROR,
+  HINT_ACTION,
+  HINT_EVIDENCE,
+  INK,
+  playerEntryColor,
+} from "../../engine/color/palette.ts";
+import { drawRectCorners, glyphFont, strokeScaledPolygon } from "../../engine/draw.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
 import type { Color, Point } from "../../engine/types.ts";
+import type { AscentHighlights } from "./hint.ts";
 import {
   type AscentMistake,
+  type AscentMove,
   type AscentState,
   CELL_MULTIPLE,
   FLAG_COMPLETE,
@@ -57,7 +67,20 @@ export const COL_IMMUTABLE = 5;
 export const COL_ERROR = 6;
 export const COL_CURSOR = 7;
 export const COL_ARROW = 8;
-export const NCOLORS = 9;
+/** The hint's action color: the ring round the square a step fills, and the
+ * stripes along the arrow line it names. */
+export const COL_HINT = 9;
+/** The hint's evidence outline. */
+export const COL_HINT_CELL = 10;
+export const NCOLORS = 11;
+
+/** A cell's part in the displayed hint, one bit per mark: its diff key. */
+const HINT_TARGET = 1;
+const HINT_AREA = 2;
+const HINT_HATCH = 4;
+/** How far out from a cell's center its hint marks sit: clear of the border,
+ * and of a number drawn in the middle. */
+const HINT_MARK_SCALE = 0.84;
 
 export const FLASH_FRAME = 0.03;
 export const FLASH_SIZE = 4;
@@ -88,6 +111,8 @@ export interface AscentDrawState {
   nexthints: Int32Array;
   oldpositions: Int32Array;
   oldmistake: Uint8Array;
+  /** Each cell's `HINT_*` bits as last drawn. */
+  oldhint: Uint8Array;
   oldcursor: number;
 }
 
@@ -132,6 +157,7 @@ export function newAscentDrawState(
     nexthints: new Int32Array(s).fill(-0x7fff),
     oldpositions: new Int32Array(s).fill(-3),
     oldmistake: new Uint8Array(s),
+    oldhint: new Uint8Array(s),
     oldcursor: -1,
   };
 }
@@ -245,6 +271,8 @@ export function ascentColors(defaultBackground: Color): Color[] {
   ret[COL_ERROR] = ERROR;
   ret[COL_CURSOR] = CURSOR;
   ret[COL_ARROW] = YELLOW_WASH;
+  ret[COL_HINT] = HINT_ACTION;
+  ret[COL_HINT_CELL] = HINT_EVIDENCE;
   return ret;
 }
 
@@ -378,7 +406,7 @@ export function redrawAscent(
   ui: AscentUi,
   _animTime: number,
   flashTime: number,
-  _hint?: unknown,
+  hint?: HintStep<AscentMove, AscentHighlights>,
   mistakes?: readonly AscentMistake[],
 ): void {
   const w = state.w;
@@ -392,6 +420,14 @@ export function redrawAscent(
 
   const mistakeSet = new Uint8Array(w * h);
   if (mistakes) for (const m of mistakes) mistakeSet[m.cell] = 1;
+
+  const hintMarks = new Uint8Array(w * h);
+  const hl = hint?.highlights;
+  if (hl) {
+    for (const i of hl.hatch) hintMarks[i] |= HINT_HATCH;
+    for (const i of hl.area) hintMarks[i] |= HINT_AREA;
+    hintMarks[hl.target] |= HINT_TARGET;
+  }
 
   if (!ds.started) {
     ds.started = true;
@@ -478,6 +514,10 @@ export function redrawAscent(
       ds.oldmistake[i] = mistakeSet[i];
       dirty = true;
     }
+    if (ds.oldhint[i] !== hintMarks[i]) {
+      ds.oldhint[i] = hintMarks[i];
+      dirty = true;
+    }
     if ((cursorCell === i) !== (ds.oldcursor === i)) dirty = true;
 
     if (dirty) ds.colors[i] = -1;
@@ -553,6 +593,15 @@ export function redrawAscent(
       );
     }
     ds.colors[i] = color;
+
+    // The arrow line a hint names, under the content. Only Edges mode has
+    // arrows, and it is square.
+    if (hintMarks[i] & HINT_HATCH && !hex)
+      dr.drawHatch(
+        { x: tx + 1, y: ty + 1, w: tileSize - 1, h: tileSize - 1 },
+        COL_HINT,
+        hatchPeriod(tileSize),
+      );
 
     if (ui.typingCell !== i) {
       const linecolor = ds.path[i] & FLAG_USER ? COL_LINE : COL_HIGHLIGHT;
@@ -730,6 +779,21 @@ export function redrawAscent(
         ],
         -1,
         COL_ERROR,
+      );
+    }
+
+    /* The hint's marks, inside the cell's own outline so they never sit on
+     * its border: a ring round the square a step fills, an outline round what
+     * it reasons from. */
+    if (hintMarks[i] & (HINT_TARGET | HINT_AREA)) {
+      const target = (hintMarks[i] & HINT_TARGET) !== 0;
+      strokeScaledPolygon(
+        dr,
+        hex ? hexVertices(cx, cy, tileSize) : squareCorners(tx, ty, tileSize),
+        center,
+        HINT_MARK_SCALE,
+        target ? COL_HINT : COL_HINT_CELL,
+        Math.max(2, Math.round(tileSize / (target ? 14 : 20))),
       );
     }
 

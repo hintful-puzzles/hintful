@@ -8,10 +8,25 @@
  * with no per-mode board code, so these three cover the geometry differences.
  */
 import { describe, expect, it } from "vitest";
+import type { HintStep } from "../../engine/game.ts";
+import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import type { AscentHighlights } from "./hint.ts";
 import { ascentGame } from "./index.ts";
-import { COL_ARROW, COL_BORDER, COL_MIDLIGHT } from "./render.ts";
-import { type AscentParams, MODE_EDGES, MODE_HEXAGON, MODE_RECT } from "./state.ts";
+import {
+  COL_ARROW,
+  COL_BORDER,
+  COL_HINT,
+  COL_HINT_CELL,
+  COL_MIDLIGHT,
+} from "./render.ts";
+import {
+  type AscentMove,
+  type AscentParams,
+  MODE_EDGES,
+  MODE_HEXAGON,
+  MODE_RECT,
+} from "./state.ts";
 
 function id(p: AscentParams, seed: string): string {
   return `${ascentGame.encodeParams(p, true)}#${seed}`;
@@ -81,5 +96,58 @@ describe("ascent render", () => {
     expect(ops.some((o) => o.op === "polygon" && o.fill === COL_ARROW)).toBe(true);
     expect(ops.some((o) => o.op === "text")).toBe(true);
     expect(ops).toMatchSnapshot();
+  });
+});
+
+describe("ascent hint frames", () => {
+  const hl = (step?: HintStep<AscentMove>) =>
+    (step?.highlights ?? null) as AscentHighlights | null;
+  const strokes = (ops: DrawOp[], color: number) =>
+    ops.filter((o) => o.op === "line" && o.color === color);
+
+  it("Rectangle: rings the square to fill and outlines the numbers it sits between", () => {
+    const { recording, hint } = renderScenario({
+      game: ascentGame,
+      id: id(RECT, "render-hint-rect"),
+      showHint: true,
+      hintUntil: (s) => (hl(s)?.area.length ?? 0) === 2,
+    });
+    const marks = hl(hint);
+    expect(marks?.area).toHaveLength(2);
+    const ops = recording.ops;
+    // A ring is one stroke per side of the cell, and no fill: four for a square.
+    expect(strokes(ops, COL_HINT)).toHaveLength(4);
+    expect(strokes(ops, COL_HINT_CELL)).toHaveLength(4 * 2);
+    // Highlight, never perform: the number the step places is not drawn.
+    const n = hint?.move.kind === "place" ? hint.move.n : -1;
+    expect(ops.some((o) => o.op === "text" && o.text === String(n + 1))).toBe(false);
+    expect(ops).toMatchSnapshot();
+  });
+
+  it("Hexagon: the ring follows the hexagon", () => {
+    const { recording } = renderScenario({
+      game: ascentGame,
+      id: id(HEXAGON, "render-hint-hex"),
+      showHint: true,
+    });
+    expect(strokes(recording.ops, COL_HINT)).toHaveLength(6);
+    expect(recording.ops).toMatchSnapshot();
+  });
+
+  it("Edges: stripes the line an arrow points along when the sentence names it", () => {
+    const { recording, hint } = renderScenario({
+      game: ascentGame,
+      id: id(EDGES, "render-hint-edges"),
+      showHint: true,
+      hintUntil: (s) => (hl(s)?.hatch.length ?? 0) > 0,
+    });
+    const marks = hl(hint);
+    expect(marks?.hatch.length).toBeGreaterThan(0);
+    expect(hint?.explanation).toMatch(/arrow's striped line/);
+    const hatches = recording.ops.filter(
+      (o) => o.op === "hatch" && o.color === COL_HINT,
+    );
+    expect(hatches).toHaveLength(marks?.hatch.length ?? -1);
+    expect(recording.ops).toMatchSnapshot();
   });
 });

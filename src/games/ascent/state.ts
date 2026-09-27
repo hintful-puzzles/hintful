@@ -209,6 +209,19 @@ export function isBorderCell(i: number, w: number, h: number): boolean {
   return x === 0 || y === 0 || x === w - 1 || y === h - 1;
 }
 
+/**
+ * How many moves apart two cells are in `mode`, ignoring what lies between:
+ * king moves on a square grid, rook-and-one-diagonal on a hexagonal one (a step
+ * down-right or up-left is two moves there), plain steps without diagonals.
+ */
+export function stepDistance(a: number, b: number, w: number, mode: number): number {
+  const dx = (a % w) - (b % w);
+  const dy = Math.trunc(a / w) - Math.trunc(b / w);
+  if (mode === MODE_ORTHOGONAL || (isHexagonal(mode) && dx * dy > 0))
+    return Math.abs(dx) + Math.abs(dy);
+  return Math.max(Math.abs(dx), Math.abs(dy));
+}
+
 export function isNear(a: number, b: number, w: number, mode: number): boolean {
   const dx = (a % w) - (b % w);
   const dy = Math.trunc(a / w) - Math.trunc(b / w);

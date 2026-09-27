@@ -1530,6 +1530,7 @@ to a similar game:
 | Magnets | the square a placement decides, ringed `COL_HINT`; a domino decided whole (neutral, or marked `?`) as **one ring around both ends** (§ "Shade vs ring", a piece), never a ring per end | the line a premise counts → one `COL_HINT_CELL` contour, and its clue digits recolor `COL_HINT` (Magnets draws no line numbers, so the digit is how "this row" is found); a pole the square touches → that square outlined; the domino's other end, when the sentence reasons about it, outlined too; evidence joins only across a domino, so two dominoes side by side stay two shapes |
 | Dominosa | a placement's domino, **one `COL_HINT` ring around both squares**; a barrier's two squares ringed one each, with the wall between them a `COL_HINT` bar | the squares the deduction reasons over → one `COL_HINT_CELL` contour per connected run ("the outlined square(s)") |
 | Map | the region the step decides, a solid `COL_HINT` band inside its whole boundary, twice the selection band's width, and the only hint mark on any border; the selection band, when on the same region, just inside it | a single (one color left) outlines **nothing**: the neighbors' fills are its premise. A pair's or chain's regions → a thin **dashed** `COL_HINT_CELL` line set in from their border by a band's width; a chain's regions numbered at their label points in the same color, with region numbers hidden while it shows |
+| Ascent | the square the step fills, a `COL_HINT` ring inside the cell's own outline, square or hexagon (`strokeScaledPolygon`); the number is never drawn | the numbers it measures from, a dead end's one way in, the squares a missing run may step through → each cell outlined `COL_HINT_CELL` the same way; the line an arrow points along, when the sentence names it → hatched, the arrow outlined |
 | Loopy | the edges the step sets, a `COL_HINT` band *under* each (the edge's own state stays on top): solid for a line, broken for an edge that can't be one | the clue it counts → an outline inset inside its face; the dot it names → a ring under the dot; the loop an edge would close → a `COL_HINT_CELL` band under those lines; a **corner** or **pair** note the step reasons from → the player's own note, redrawn in `COL_HINT_CELL`; a note the step places → that note's own wedge or connector in `COL_HINT` (§ "Give the facts a notation (Loopy)") |
 
 **Mark the premise element in the action color only where the sentence names
@@ -2465,6 +2466,46 @@ forgets the pairing lost up to half the boards at 15x15. What it added, in
   tent too, and that the hint use that move. So "this tree's only open square"
   is one step placing the tent joined. A player who clicks the tent in instead
   is on track, and the step shrinks to the link.
+
+Ascent is the seventh (`add-ascent-hint`), and the first where the hidden
+state is a whole **candidate bitmap of numbers per square**, plus a second one
+of possible path links. It needed no notation, and the route there is the
+reusable part. In [`games/ascent/`](../../src/games/ascent/):
+
+- **Measure the hint's own ladder, not only the solver's.** A forgetful solver
+  that re-read everything before each rung but placed every single it found at
+  once still needed path reasoning on Hard boards. The same readings run as the
+  hint runs them, one placement per step and easiest technique first, needed
+  none on any preset. The two differ because the order changes which facts are
+  in place when a technique is asked. Measure with the order the hint will
+  actually use.
+- **Then widen past the presets before trusting the answer.** Custom options no
+  preset carries (the ends hidden outside Edges mode) brought path reasoning
+  back, and the stalled boards showed one human pattern every time: a **dead
+  end**, a square the path can enter from one neighbor only, which must be an
+  end of the path. The solver reaches it through three path rungs. The hint
+  reads it off the numbers, and with it 320 of 320 boards across every mode,
+  tier and option finished.
+- **Each technique is a solver rung over a fresh reading.** `reading` builds the
+  candidate bitmap from the board through the solver's own reach rungs, and a
+  placing rung with the recorder standing (`SolverScratch.recording`) stops at
+  its first placement. Nothing survives between steps, so no step can rest on a
+  fact the board does not show.
+- **Order by the tier in the board's own mode.** Edges mode runs the route rung
+  from Normal, so a Normal Edges board otherwise got a Tricky step before the
+  Normal one that was waiting. `techniqueTier` states each technique's tier once,
+  and `ascent-hint.test.ts` holds every step to its board's tier.
+- **A rung's asymmetry may be the generator's to keep and the hint's to drop.**
+  Upstream's reach rungs never measure the last number from the one below it,
+  and the generator's verdicts depend on that, so it stays in the solver. The
+  hint measures it (`reachLast`), because "49 must sit next to 48" is the same
+  deduction a player makes, and without it one Tricky board in the census needed
+  a Hard route. It can only let an easier technique fire first. The board is
+  pinned, since nothing else notices the difference.
+- **A move with side effects ends the plan.** A line the player drew fills in
+  numbers when a number lands at its end. Those are the player's to vouch for, so
+  a step that fills more than its own square is the plan's last, and the next
+  hint reads the result after the mistake check has seen it.
 
 ### Place the notes a fixpoint rests on (Crossing)
 

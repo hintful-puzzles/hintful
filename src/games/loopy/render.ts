@@ -36,7 +36,7 @@ import {
   PENCIL_BODY,
   pencilColor,
 } from "../../engine/color/palette.ts";
-import { glyphFont } from "../../engine/draw.ts";
+import { glyphFont, strokeScaledPolygon } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import type { Grid, GridDot, GridFace, GridType } from "../../engine/grid/index.ts";
 import { gridComputeSize, gridFindIncenter } from "../../engine/grid/index.ts";
@@ -314,26 +314,9 @@ function drawTargetBand(
 function drawFaceOutline(dr: GameDrawing, g: Grid, ts: number, f: GridFace): void {
   gridFindIncenter(f);
   const [cx, cy] = toScreen(g, ts, f.ix, f.iy);
-  const shrink = 0.8;
-  const corners = f.dots.flatMap((d) => {
-    if (d === null) return [];
-    const p = dotAt(g, ts, d);
-    return [
-      {
-        x: Math.round(cx + (p.x - cx) * shrink),
-        y: Math.round(cy + (p.y - cy) * shrink),
-      },
-    ];
-  });
+  const corners = f.dots.flatMap((d) => (d === null ? [] : [dotAt(g, ts, d)]));
   const thickness = Math.max(2, Math.round(lineThickness(ts) * 0.7));
-  for (let i = 0; i < corners.length; i++) {
-    dr.drawLine(
-      corners[i],
-      corners[(i + 1) % corners.length],
-      COL_HINT_CELL,
-      thickness,
-    );
-  }
+  strokeScaledPolygon(dr, corners, { x: cx, y: cy }, 0.8, COL_HINT_CELL, thickness);
 }
 
 /** A ring round a dot the sentence names: an annulus, painted before the edges so
