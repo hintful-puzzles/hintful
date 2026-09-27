@@ -93,8 +93,7 @@ const PINNED = [
   // onlyBeside
   "6x6mOEdh:13a7g2e3k31a24e",
   // Tricky, and needs the last number measured from the one below it ("49 must
-  // sit next to 48"), which the solver's reach rungs never do: without it the
-  // hint reaches for a Hard route.
+  // sit next to 48"): without that the hint reaches for a Hard route.
   "7x7mREdt:b46_39a30a48_44c37a5_43c33c7a25_35c9g10_16_20b13c19_21",
 ];
 

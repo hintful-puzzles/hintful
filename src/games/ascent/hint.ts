@@ -119,28 +119,9 @@ function reading(state: AscentState, reach: Reach): SolverScratch {
   solverStart(state.grid, sc);
   if (reach === "touch") solverProximitySimple(sc);
   else solverProximityFull(sc);
-  reachLast(sc, reach);
   if (reach === "route") while (solverOverlap(sc) > 0);
   sc.recording = true;
   return sc;
-}
-
-/**
- * Measure the last number from the placed number below it, which the reach
- * rungs never do. That asymmetry is upstream's, and it stays in the solver
- * because the generator's verdicts decide which boards exist; a player makes
- * the deduction ("49 must sit next to 48") and so does the hint. It can only
- * let an easier technique fire first, never a harder one.
- */
-function reachLast(sc: SolverScratch, reach: Reach): void {
-  const { w, h, mode, end, positions, marks } = sc;
-  if (positions[end] !== CELL_NONE) return;
-  let m = end - 1;
-  while (m >= 0 && positions[m] === CELL_NONE) m--;
-  if (m < 0 || (reach === "touch" && m !== end - 1)) return;
-  const s = w * h;
-  for (let c = 0; c < s; c++)
-    if (stepDistance(c, positions[m], w, mode) > end - m) marks[c * s + end] = 0;
 }
 
 /** The squares a move away from `i`. */

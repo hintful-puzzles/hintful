@@ -2495,13 +2495,13 @@ reusable part. In [`games/ascent/`](../../src/games/ascent/):
   from Normal, so a Normal Edges board otherwise got a Tricky step before the
   Normal one that was waiting. `techniqueTier` states each technique's tier once,
   and `ascent-hint.test.ts` holds every step to its board's tier.
-- **A rung's asymmetry may be the generator's to keep and the hint's to drop.**
-  Upstream's reach rungs never measure the last number from the one below it,
-  and the generator's verdicts depend on that, so it stays in the solver. The
-  hint measures it (`reachLast`), because "49 must sit next to 48" is the same
-  deduction a player makes, and without it one Tricky board in the census needed
-  a Hard route. It can only let an easier technique fire first. The board is
-  pinned, since nothing else notices the difference.
+- **A hint that has to patch the solver's reading is a solver defect to fix.**
+  Upstream's rungs stopped one short of the last number, so "49 must sit next to
+  48" was a deduction no rung made, and one Tricky board in the census needed a
+  Hard route. The hint first patched its own reading; since that meant the
+  solver was grading some boards a tier too high, the solver was fixed instead
+  (`fix-ascent-last-number-reach`) and the hint's patch deleted. The board stays
+  pinned in `ascent-hint.test.ts`.
 - **A move with side effects ends the plan.** A line the player drew fills in
   numbers when a number lands at its end. Those are the player's to vouch for, so
   a step that fills more than its own square is the plan's last, and the next

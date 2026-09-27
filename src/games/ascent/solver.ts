@@ -83,7 +83,7 @@ export class SolverScratch {
   }
 }
 
-function solverPlace(sc: SolverScratch, pos: number, num: number): number {
+export function solverPlace(sc: SolverScratch, pos: number, num: number): number {
   const s = sc.w * sc.h;
 
   sc.grid[pos] = num;
@@ -94,8 +94,9 @@ function solverPlace(sc: SolverScratch, pos: number, num: number): number {
     if (i === pos) continue;
     sc.marks[i * s + num] = 0;
   }
-  /* Rule out all other numbers in this cell */
-  for (let nn = 0; nn < sc.end; nn++) {
+  /* Rule out all other numbers in this cell, the last one included (upstream
+   * stops one short; see `fix-ascent-last-number-reach`). */
+  for (let nn = 0; nn <= sc.end; nn++) {
     if (nn === num) continue;
     sc.marks[pos * s + nn] = 0;
   }
@@ -185,7 +186,7 @@ export function solverProximitySimple(sc: SolverScratch): number {
     const i = sc.positions[n];
     if (i < 0) continue;
     if (n > 0 && sc.positions[n - 1] === CELL_NONE) ret += solverNear(sc, i, n - 1, 1);
-    if (n < end - 1 && sc.positions[n + 1] === CELL_NONE)
+    if (n < end && sc.positions[n + 1] === CELL_NONE)
       ret += solverNear(sc, i, n + 1, 1);
   }
 
@@ -206,7 +207,7 @@ export function solverProximityFull(sc: SolverScratch): number {
       n2--;
     }
     n2 = n + 1;
-    while (n2 <= end - 1 && sc.positions[n2] === CELL_NONE) {
+    while (n2 <= end && sc.positions[n2] === CELL_NONE) {
       ret += solverNear(sc, i, n2, Math.abs(n - n2));
       n2++;
     }
@@ -406,7 +407,7 @@ export function solverOverlap(sc: SolverScratch): number {
   const s = w * sc.h;
   let ret = 0;
 
-  for (let n = 0; n < sc.end; n++) {
+  for (let n = 0; n <= sc.end; n++) {
     if (sc.positions[n] !== CELL_NONE) continue;
 
     sc.overlap.fill(0, 0, s * 2);
@@ -421,7 +422,7 @@ export function solverOverlap(sc: SolverScratch): number {
       }
     }
 
-    if (n < sc.end - 1) {
+    if (n < sc.end) {
       for (let i1 = 0; i1 < s; i1++) {
         if (sc.marks[i1 * s + (n + 1)]) {
           for (let i2 = 0; i2 < s; i2++) {
@@ -433,8 +434,7 @@ export function solverOverlap(sc: SolverScratch): number {
 
     for (let i1 = 0; i1 < s; i1++) {
       if (!sc.marks[i1 * s + n]) continue;
-      if ((n === 0 || sc.overlap[i1]) && (n === sc.end - 1 || sc.overlap[i1 + s]))
-        continue;
+      if ((n === 0 || sc.overlap[i1]) && (n === sc.end || sc.overlap[i1 + s])) continue;
       sc.marks[i1 * s + n] = 0;
       ret++;
     }

@@ -16,7 +16,15 @@ import {
 import { newAscentDesc } from "./generator.ts";
 import { ascentGame } from "./index.ts";
 import { COL_HIGHLIGHT } from "./render.ts";
-import { ascentSolve, SolverScratch } from "./solver.ts";
+import {
+  ascentSolve,
+  SolverScratch,
+  solverOverlap,
+  solverPlace,
+  solverProximityFull,
+  solverProximitySimple,
+  solverStart,
+} from "./solver.ts";
 import {
   type AscentMove,
   type AscentParams,
@@ -32,6 +40,7 @@ import {
   NUMBER_BOUND,
   NUMBER_EMPTY,
   newAscentState,
+  stepDistance,
   validateAscentDesc,
 } from "./state.ts";
 import { keyboardCursor, mouseCursor } from "./ui.ts";
@@ -439,5 +448,83 @@ describe("ascent findMistakes", () => {
     dirty.grid[victim] = wrongVal;
     const mistakes = ascentGame.findMistakes?.(dirty) ?? [];
     expect(mistakes.some((m) => m.cell === victim)).toBe(true);
+  });
+});
+
+/**
+ * Upstream's rungs stopped one short of the last number: reach never measured
+ * it from the number below, `overlap` never narrowed it, and a placement left
+ * it a candidate in the filled square. A board could then need a harder tier
+ * than a player does ("49 must sit next to 48"), so its label overstated it
+ * (`fix-ascent-last-number-reach`).
+ */
+describe("ascent treats the last number like any other", () => {
+  /** A solved 6x6 board, the solution grid, and its last number. */
+  function solved() {
+    const p = mk(6, 6, 1, MODE_RECT);
+    const state = newAscentState(p, newAscentDesc(p, randomNew("last-seed")).desc);
+    const sc = new SolverScratch(state.w, state.h, state.mode, state.last);
+    ascentSolve(state.grid, DIFFCOUNT, sc);
+    return { state, grid: sc.grid.slice(), last: state.last, s: state.w * state.h };
+  }
+
+  /** The solution with `blank` numbers removed, read into a fresh scratch. */
+  function readWithout(blank: number[]) {
+    const { state, grid, last, s } = solved();
+    const puzzle = grid.slice();
+    for (const n of blank) puzzle[grid.indexOf(n)] = NUMBER_EMPTY;
+    const sc = new SolverScratch(state.w, state.h, state.mode, last);
+    solverStart(puzzle, sc);
+    const at = (n: number) => grid.indexOf(n);
+    const far = (from: number, d: number) =>
+      blank.find(
+        (n) => n !== last && stepDistance(at(n), at(from), state.w, state.mode) > d,
+      );
+    return { sc, at, far, last, s };
+  }
+
+  it("measures it from the number below, one step and further", () => {
+    // Blank the last number and every number far from the one below it.
+    const probe = readWithout([]);
+    const nearOf = (from: number, d: number) =>
+      Array.from({ length: probe.last }, (_, n) => n).filter(
+        (n) => stepDistance(probe.at(n), probe.at(from), 6, MODE_RECT) > d,
+      );
+    const simple = readWithout([probe.last, ...nearOf(probe.last - 1, 1).slice(0, 3)]);
+    const f1 = simple.far(simple.last - 1, 1);
+    expect(f1).toBeDefined();
+    solverProximitySimple(simple.sc);
+    expect(simple.sc.marks[simple.at(f1 ?? -1) * simple.s + simple.last]).toBe(0);
+
+    const blanks = [
+      probe.last,
+      probe.last - 1,
+      ...nearOf(probe.last - 2, 2).slice(0, 3),
+    ];
+    const full = readWithout(blanks);
+    const f2 = full.far(full.last - 2, 2);
+    expect(f2).toBeDefined();
+    solverProximityFull(full.sc);
+    expect(full.sc.marks[full.at(f2 ?? -1) * full.s + full.last]).toBe(0);
+  });
+
+  it("narrows it by overlap, and clears it from a square a placement fills", () => {
+    const probe = readWithout([]);
+    // The last two numbers and a far one blanked: the last must touch a square
+    // the one before it could take, which `overlap` alone decides.
+    const others = Array.from({ length: probe.last - 2 }, (_, n) => n).filter(
+      (n) => stepDistance(probe.at(n), probe.at(probe.last - 2), 6, MODE_RECT) > 2,
+    );
+    const r = readWithout([probe.last, probe.last - 1, others[0]]);
+    const farCell = r.at(others[0]);
+    while (solverOverlap(r.sc) > 0);
+    expect(r.sc.marks[farCell * r.s + r.last]).toBe(0);
+
+    // Placing a number in a square rules every other number out of it.
+    const p = readWithout([probe.last, others[0]]);
+    const square = p.at(others[0]);
+    expect(p.sc.marks[square * p.s + p.last]).toBe(1);
+    solverPlace(p.sc, square, others[0]);
+    expect(p.sc.marks[square * p.s + p.last]).toBe(0);
   });
 });
