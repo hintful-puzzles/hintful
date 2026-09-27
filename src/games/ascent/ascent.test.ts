@@ -10,6 +10,7 @@ import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_RIGHT,
   LEFT_BUTTON,
+  LEFT_DRAG,
   LEFT_RELEASE,
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
@@ -497,6 +498,21 @@ describe("ascent right-click two-option toggle", () => {
     tap(cellB);
     expect(state.grid[cellB]).toBe(NUMBER_EMPTY);
     expect(ui.held).toBe(cellA);
+    tap(cellB);
+    expect(state.grid[cellB]).toBe(bigN + 1);
+
+    // Dragging from the number onto the square arms it too (owner, on a phone:
+    // a drag-placed number then only deselected on the next tap).
+    tap(cellB);
+    tap(cellB);
+    expect(state.grid[cellB]).toBe(NUMBER_EMPTY);
+    press(cellA, LEFT_BUTTON);
+    press(cellB, LEFT_DRAG);
+    press(cellB, LEFT_RELEASE);
+    expect(state.grid[cellB]).toBe(bigN + 1);
+    tap(cellB);
+    expect(state.grid[cellB]).toBe(bigN - 1);
+    tap(cellB);
     tap(cellB);
     expect(state.grid[cellB]).toBe(bigN + 1);
 

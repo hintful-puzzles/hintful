@@ -485,13 +485,12 @@ function mouseClick(
       const move: AscentMove = { kind: "place", cell: i, n: ui.select };
       const placedNum = ui.select;
       const placedDir = ui.dir;
-      if (
-        button === LEFT_BUTTON &&
-        start > 0 &&
-        placedNum === start + 1 &&
-        ui.positions[start - 1] === CELL_NONE
-      )
-        ui.tapCycle = { cell: i, anchor: ui.held, n: start };
+      // A tap or a drag onto the square arms the cycle; a drag that goes on to
+      // place more drops it, so a tap cannot break the chain it drew.
+      ui.tapCycle =
+        start > 0 && placedNum === start + 1 && ui.positions[start - 1] === CELL_NONE
+          ? { cell: i, anchor: ui.held, n: start }
+          : null;
       ui.held = i;
       /* Auto-advance across an already-placed run (preference, default on):
        * if the numbers past the one just placed are already on the board, jump
