@@ -345,3 +345,60 @@ describe("every puzzle command has exactly one home in the rail", () => {
     ).not.toContain("mark-all");
   });
 });
+
+/** Every menu trigger under `root`, descending through shadow roots. */
+function triggersIn(root: ParentNode): Element[] {
+  const out = [...root.querySelectorAll('[slot="trigger"]')];
+  for (const el of root.querySelectorAll("*")) {
+    if (el.shadowRoot) out.push(...triggersIn(el.shadowRoot));
+  }
+  return out;
+}
+
+describe("a menu inside the phone's More sheet", () => {
+  beforeEach(() => {
+    document.body.replaceChildren();
+  });
+
+  it("is opened by a trigger that is not also a command", async () => {
+    // A command chosen from the sheet closes it, and closing the sheet takes
+    // any menu inside it along. The timeline's counter carried
+    // `show-timeline`, and tapping it in the sheet only appeared to work
+    // because that command then opened a second copy in the top bar; once the
+    // top bar stopped carrying one, the tap closed the sheet and showed
+    // nothing.
+    const sheet = await mountRail("sheet", fullyCapablePuzzle());
+    const triggers = triggersIn(sheet.shadowRoot as ParentNode);
+    // Vacuity floor: the timeline's counter. (The sheet lays the rail's
+    // overflow entries out as rows, so that menu has no trigger here.)
+    expect(triggers.length).toBeGreaterThanOrEqual(1);
+    expect(
+      triggers
+        .filter((el) => el.closest("[data-command]"))
+        .map((el) => el.closest("[data-command]")?.getAttribute("data-command")),
+    ).toEqual([]);
+  });
+
+  it("closes the sheet when a choice is made in it", () => {
+    const screen = new PuzzleScreen();
+    const puzzle = fullyCapablePuzzle();
+    Object.defineProperty(screen, "puzzle", { get: () => puzzle });
+    Object.defineProperty(screen, "puzzleId", { value: puzzle.puzzleId });
+    const host = screen as unknown as {
+      renderPhoneChrome(): TemplateResult;
+      closeMoreSheet(): void;
+      focusBoard(): void;
+    };
+    const close = vi.spyOn(host, "closeMoreSheet").mockImplementation(() => {});
+    vi.spyOn(host, "focusBoard").mockImplementation(() => {});
+    const root = document.createElement("div");
+    document.body.append(root);
+    render(host.renderPhoneChrome(), root);
+    const rail = root.querySelector("dialog.more-sheet puzzle-rail");
+    if (!rail) throw new Error("renderPhoneChrome drew no sheet");
+    // What `wa-dropdown` fires on a choice: bubbling and composed, so it
+    // leaves the shadow roots of the history and the rail.
+    rail.dispatchEvent(new Event("wa-select", { bubbles: true, composed: true }));
+    expect(close).toHaveBeenCalledOnce();
+  });
+});

@@ -86,7 +86,7 @@ export class PuzzleHistory extends SignalWatcher(LitElement) {
           placement="bottom-start"
           @wa-select=${this.handleSelectCheckpoint}
       >
-        <button part="counter" slot="trigger" type="button" data-command="show-timeline">
+        <button part="counter" slot="trigger" type="button">
           <wa-icon name="history" label="Timeline"></wa-icon>
           <span part="counter-text">Move <b>${current}</b> of <b>${total}</b></span>
         </button>
@@ -227,13 +227,6 @@ export class PuzzleHistory extends SignalWatcher(LitElement) {
         ${moves > 1 ? html`<small>&hellip; ${moves} moves &hellip;</small>` : nothing}
       </div>
     `;
-  }
-
-  /** Open the timeline from somewhere other than its own trigger — the command
-   * bus, so a shortcut or another surface can name it without building a second
-   * dropdown that would then be a second thing to keep in step. */
-  showTimeline() {
-    if (this.dropdown) this.dropdown.open = true;
   }
 
   private handleHistoryCloseButton() {

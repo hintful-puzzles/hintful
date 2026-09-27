@@ -214,11 +214,15 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
   }
 
   /**
-   * The phone's top bar: back, the game's name, its two parameter chips and
-   * the move count, then the solve timer when the player has it on. **Readouts,
-   * not commands**, which is the point — a non-wrapping row of commands
-   * overflows at 390px. The commands live in the bottom bar and behind it
-   * instead, so nothing here competes for the width.
+   * The phone's top bar: back, the game's name, its parameter chips, then the
+   * solve timer when the player has it on. **Readouts, not commands**, in one
+   * row at 320px: the commands live in the bottom bar and behind it instead, so
+   * nothing here competes for the width.
+   *
+   * **The move counter is not here.** It is the timeline control, and the More
+   * sheet's "Your position" group carries it; beside Undo and Redo its number
+   * told a phone player little. It was the widest item in the row, and with the
+   * timer on it squeezed the game's name to two letters.
    */
   private renderTopBar(): TemplateResult {
     return html`
@@ -232,8 +236,6 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
             presentation="chips"
             placement="bottom"
         ></puzzle-type-menu>
-        <puzzle-history class="top-counter" @click=${this.handleChromeClick}>
-        </puzzle-history>
         <puzzle-timer></puzzle-timer>
       </header>
     `;
@@ -330,6 +332,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
           class="more-sheet"
           @click=${this.handleSheetClick}
           @keydown=${this.handleSheetKeyDown}
+          @wa-select=${this.handleSheetSelect}
       >
         <puzzle-rail
             variant="sheet"
@@ -477,7 +480,6 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
       "mark-all": this.handleMarkAll,
       "toggle-pencil-mode": this.handleTogglePencilMode,
       "toggle-auto-hint": this.handleAutoHintToggle,
-      "show-timeline": this.showTimeline,
       "switch-puzzle": this.openPuzzleSwitcher,
       "copy-image": () => this.puzzle?.copyImage(),
       "enter-gameid": this.showEnterGameIDDialog,
@@ -817,17 +819,6 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     }
   }
 
-  /**
-   * Open the timeline. The move counter *is* the control, so a real click on it
-   * opens its own dropdown and never reaches here; this exists for the command
-   * bus (a keyboard shortcut, say), and drives that same dropdown rather than a
-   * second copy of it.
-   */
-  private showTimeline() {
-    const history = this.shadowRoot?.querySelector("puzzle-history");
-    history?.showTimeline();
-  }
-
   /** The quick-switch, shared with the home screen: `Ctrl/Cmd+K`, and the
    * `Switch puzzle…` row in `More…` so touch keeps the capability the
    * `Other puzzles` menu used to provide. */
@@ -848,6 +839,17 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
    * it and drop a reference spotlight the player never asked to lose. */
   private handleSheetKeyDown = (event: KeyboardEvent) => {
     if (event.key === "Escape") event.stopPropagation();
+  };
+
+  /**
+   * A choice made in a menu inside the sheet — a checkpoint picked from the
+   * timeline — closes the sheet, as a command chosen from it does. The trigger
+   * that opened that menu must *not* close it, which is why the timeline is a
+   * menu here and not a command: closing the sheet takes the menu with it.
+   */
+  private handleSheetSelect = () => {
+    this.closeMoreSheet();
+    this.focusBoard();
   };
 
   /** A tap in the sheet does both jobs: outside the panel it dismisses, inside
@@ -1171,7 +1173,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
        * Two layouts, chosen by --app-chrome (common.css).
        *
        * rail: a 284px command column beside the board.
-       * bar:  a four-item top bar, the board, and a five- or six-slot bottom bar.
+       * bar:  a top bar of readouts, the board, and a five- or six-slot bottom bar.
        *
        * The board area is the flex child that grows in both, so the canvas
        * fills what the chrome leaves rather than sitting small inside a panel
@@ -1264,9 +1266,14 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         text-decoration: none;
       }
 
+      /* **The chips give way, not the name.** A clipped chip still opens the
+       * type menu and names the whole type to a screen reader; a clipped name
+       * leaves the bar anonymous. The cap binds only for a long name on the
+       * narrowest phones, where it ellipsizes rather than pushing the timer off
+       * the row. */
       .top-name {
-        flex: 0 1 auto;
-        min-width: 0;
+        flex: 0 0 auto;
+        max-width: 45%;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -1274,18 +1281,28 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         font-weight: var(--wa-font-weight-bold);
       }
 
+      /* overflow: hidden as well as min-width: 0, because a no-wrap chip in a box
+       * allowed to shrink otherwise spills out of it, under the timer. */
       .top-chips {
         flex: 0 1 auto;
         min-width: 0;
+        overflow: hidden;
+      }
+      .top-chips::part(trigger) {
+        flex-wrap: nowrap;
+      }
+      .top-chips::part(chip) {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
-      .top-counter {
+      /* An M:SS at the end of the row reads as a time without its icon, and
+       * the icon's width is better spent on the chips. */
+      .top-bar puzzle-timer::part(base) {
         flex: 0 0 auto;
         margin-inline-start: auto;
       }
-
-      /* The width is the game's name's: an M:SS beside the move count reads as
-       * a time without its icon. */
       .top-bar puzzle-timer::part(icon) {
         display: none;
       }
