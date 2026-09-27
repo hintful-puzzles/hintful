@@ -77,6 +77,38 @@ export interface Count {
   side: "lower" | "higher";
 }
 
+/**
+ * What a number must be near, in Edges mode: placed number `m`, or the line of
+ * the missing `m` (`line`, its shape), `d` places away in the sequence.
+ */
+export interface Near {
+  m: number;
+  d: number;
+  line: "row" | "column" | "diagonal" | null;
+}
+
+/** The collection's limit on a step's sentence (`hint-quality.test.ts`). */
+export const GLANCE = 120;
+
+const nearTarget = (p: Near) => (p.line ? `${p.m}'s ${p.line}` : `${p.m}`);
+const stepsOf = (d: number) => (d === 1 ? "a step" : `${d} steps`);
+
+/** "within a step of 11's row and 13's row and 3 steps of 20": premises of one
+ * distance share it. */
+function within(ps: readonly Near[]): string {
+  const groups: { d: number; targets: string[] }[] = [];
+  for (const p of [...ps].sort((a, b) => a.d - b.d)) {
+    const g = groups.at(-1);
+    if (g && g.d === p.d) g.targets.push(nearTarget(p));
+    else groups.push({ d: p.d, targets: [nearTarget(p)] });
+  }
+  return `within ${groups.map((g) => `${stepsOf(g.d)} of ${g.targets.join(" and ")}`).join(" and ")}`;
+}
+
+/** Names joined as a sentence lists them: "7, 3 and 18". */
+const listed = (xs: readonly string[]) =>
+  xs.length <= 1 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs.at(-1)}`;
+
 /** Why a dead end cannot hold the path's other end. */
 export type EndRuledOut = "placed" | "reach" | "arrow";
 
@@ -166,6 +198,57 @@ export const say = {
    */
   route: (n: number, from: number | null, to: number | null) =>
     `${capitalized(runName(from, to))} must step through the outlined squares, so ${n} can only go here.`,
+
+  /**
+   * Edges: `n` is on its arrow's line (`own`, its shape; `null` when it has no
+   * arrow) and within reach of each of `near`, and only this square is.
+   */
+  lines: (n: number, own: Near["line"], near: readonly Near[]): string =>
+    own
+      ? `${n} must be on its ${own}, ${within(near)}. Only this square is, so it must be ${n}.`
+      : `${n} has no arrow, but must be ${within(near)}. Only this square is, so it must be ${n}.`,
+
+  /**
+   * Edges: of the missing numbers, only `n` and those of `out` can stand here
+   * (their arrows point here, or they have none), and each of `out` is too far
+   * from what it must be near.
+   */
+  pointers: (
+    n: number,
+    ownArrow: boolean,
+    out: readonly { m: number; arrowless: boolean; by: Near }[],
+  ): string => {
+    if (out.length === 0)
+      return ownArrow
+        ? `Of the missing numbers, only ${n}'s arrow points here, so it must be ${n}.`
+        : `No missing number's arrow points here, and only ${n} has none, so it must be ${n}.`;
+    // A number without an arrow points nowhere, so it "could go" here.
+    const arrowless = !ownArrow || out.some((o) => o.arrowless);
+    const names = [...out.map((o) => o.m), n]
+      .sort((a, b) => a - b)
+      .map((m) =>
+        (m === n ? !ownArrow : out.find((o) => o.m === m)?.arrowless)
+          ? `${m} (no arrow)`
+          : `${m}`,
+      );
+    const lead = `Of the missing numbers, only ${listed(names)} ${arrowless ? "could go" : "point"} here`;
+    const why = out.map((o, k) =>
+      k === 0
+        ? `${o.m} is too far from ${nearTarget(o.by)}`
+        : `${o.m} from ${nearTarget(o.by)}`,
+    );
+    const full = `${lead}. ${listed(why)}, so it must be ${n}.`;
+    if (full.length <= GLANCE) return full;
+    // Too many to name each reason at a glance: they are drawn instead.
+    const drawn = out.some((o) => o.by.line === null)
+      ? "the striped lines and outlined numbers"
+      : "the striped lines";
+    const shorter = [
+      `${lead}, and ${drawn} rule out all but ${n}, so it must be ${n}.`,
+      `Of the missing numbers that ${arrowless ? "could go" : "point"} here, ${drawn} rule out all but ${n}, so it must be ${n}.`,
+    ];
+    return shorter.find((s) => s.length <= GLANCE) ?? shorter[shorter.length - 1];
+  },
 
   /**
    * The whole run between `from` and `to` has one route: through the empty

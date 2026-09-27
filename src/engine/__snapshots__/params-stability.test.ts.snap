@@ -23,21 +23,15 @@ preset:Ascent/8x10 Easy  full=8x10mRde  brief=8x10mR
 preset:Ascent/8x10 Normal  full=8x10mRdn  brief=8x10mR
 preset:Ascent/8x10 Tricky  full=8x10mRdt  brief=8x10mR
 preset:Ascent/8x10 Hard  full=8x10mRdh  brief=8x10mR
-preset:Ascent/5x5 Edges Normal  full=5x5mEEdn  brief=5x5mE
-preset:Ascent/5x5 Edges Tricky  full=5x5mEEdt  brief=5x5mE
-preset:Ascent/5x5 Edges Hard  full=5x5mEEdh  brief=5x5mE
-preset:Ascent/Honeycomb/6x8 Honeycomb Normal  full=6x8mCdn  brief=6x8mC
-preset:Ascent/Honeycomb/6x8 Honeycomb Tricky  full=6x8mCdt  brief=6x8mC
-preset:Ascent/Honeycomb/6x8 Honeycomb Hard  full=6x8mCdh  brief=6x8mC
-preset:Ascent/Honeycomb/8x10 Honeycomb Normal  full=8x10mCdn  brief=8x10mC
-preset:Ascent/Honeycomb/8x10 Honeycomb Tricky  full=8x10mCdt  brief=8x10mC
-preset:Ascent/Honeycomb/8x10 Honeycomb Hard  full=8x10mCdh  brief=8x10mC
-preset:Ascent/Hexagon/Size 7 Hexagon Normal  full=7x7mHdn  brief=7x7mH
-preset:Ascent/Hexagon/Size 7 Hexagon Tricky  full=7x7mHdt  brief=7x7mH
-preset:Ascent/Hexagon/Size 7 Hexagon Hard  full=7x7mHdh  brief=7x7mH
-preset:Ascent/Hexagon/Size 9 Hexagon Normal  full=9x9mHdn  brief=9x9mH
-preset:Ascent/Hexagon/Size 9 Hexagon Tricky  full=9x9mHdt  brief=9x9mH
-preset:Ascent/Hexagon/Size 9 Hexagon Hard  full=9x9mHdh  brief=9x9mH
+preset:Ascent/Hex/6x8 Honeycomb Normal  full=6x8mCdn  brief=6x8mC
+preset:Ascent/Hex/6x8 Honeycomb Tricky  full=6x8mCdt  brief=6x8mC
+preset:Ascent/Hex/6x8 Honeycomb Hard  full=6x8mCdh  brief=6x8mC
+preset:Ascent/Hex/Size 7 Hexagon Normal  full=7x7mHdn  brief=7x7mH
+preset:Ascent/Hex/Size 7 Hexagon Tricky  full=7x7mHdt  brief=7x7mH
+preset:Ascent/Hex/Size 7 Hexagon Hard  full=7x7mHdh  brief=7x7mH
+preset:Ascent/Edges/5x5 Edges Normal  full=5x5mEEdn  brief=5x5mE
+preset:Ascent/Edges/5x5 Edges Tricky  full=5x5mEEdt  brief=5x5mE
+preset:Ascent/Edges/5x5 Edges Hard  full=5x5mEEdh  brief=5x5mE
 bump:w  full=7x7mRde  brief=7x7mR
 bump:h  full=6x8mRde  brief=6x8mR
 bump:mode  full=6x7mHde  brief=6x7mH

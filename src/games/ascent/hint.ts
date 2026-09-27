@@ -34,9 +34,19 @@ import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import {
+  findLines,
+  findPointers,
+  lineKind,
+  lineSquares,
+  type Premise,
+  type RuledOut,
+} from "./hint-edges.ts";
+import {
   type Bound,
   type Count,
   type EndRuledOut,
+  GLANCE,
+  type Near,
   type Rival,
   say,
 } from "./hint-text.ts";
@@ -59,7 +69,6 @@ import {
   DIFF_NORMAL,
   DIFF_TRICKY,
   fromNumberEdge,
-  isBorderCell,
   isEdgeValid,
   isNumberEdge,
   MODE_EDGES,
@@ -75,9 +84,6 @@ import {
  * way, and the plan is recomputed then anyway.
  */
 const PLAN_CAP = 24;
-
-/** The collection's limit on a step's sentence (`hint-quality.test.ts`). */
-const GLANCE = 120;
 
 /** What one step marks. */
 export interface AscentHighlights {
@@ -107,6 +113,12 @@ export type HintReason =
   | { kind: "route" }
   | { kind: "routeBeside" }
   | { kind: "routeOnly" }
+  /** Edges only: its own line and `premises` single the square out. */
+  | { kind: "lines"; premises: Premise[] }
+  /** Edges only: every other number that could stand here fails a premise;
+   * `tier` is Tricky when `n` has a placed neighbor, as `single-number`'s
+   * simple form asks, Hard otherwise. */
+  | { kind: "pointers"; ruledOut: RuledOut[]; tier: number }
   /**
    * A whole run placed at once along its only route: `cells` in order, and
    * `must` the squares no other run reaches, when the route is only unique
@@ -227,13 +239,32 @@ function deadEnd(state: AscentState, focus: Focus): Found | null {
   return null;
 }
 
+const linesFinder: Finder = (state, focus) => {
+  const f = findLines(state, focus);
+  return f && { reason: { kind: "lines", premises: f.premises }, n: f.n, cell: f.cell };
+};
+
+/** `pointers` firings at or below `tier`. */
+const pointersFinder =
+  (tier: number): Finder =>
+  (state, focus) => {
+    const f = findPointers(state, focus);
+    return f && f.tier <= tier
+      ? {
+          reason: { kind: "pointers", ruledOut: f.ruledOut, tier: f.tier },
+          n: f.n,
+          cell: f.cell,
+        }
+      : null;
+  };
+
 /**
  * The tier a technique belongs to in `mode`: the tier of the solver rungs it
  * projects. Edges mode runs `overlap` from Normal up, so a route there comes
  * before the Tricky and Hard techniques.
  */
 function techniqueTier(
-  kind: Exclude<HintReason["kind"], "wholeRun">,
+  kind: Exclude<HintReason["kind"], "wholeRun" | "pointers">,
   mode: number,
 ): number {
   const edges = mode === MODE_EDGES;
@@ -249,6 +280,7 @@ function techniqueTier(
     case "routeOnly":
       return DIFF_HARD;
     case "route":
+    case "lines":
       return edges ? DIFF_NORMAL : DIFF_HARD;
     case "routeBeside":
       return edges ? DIFF_TRICKY : DIFF_HARD;
@@ -257,7 +289,7 @@ function techniqueTier(
 
 /** The tier a firing's reasoning belongs to in `mode`. */
 export function firingTier(f: AscentFiring, mode: number): number {
-  return f.reason.kind === "wholeRun"
+  return f.reason.kind === "wholeRun" || f.reason.kind === "pointers"
     ? f.reason.tier
     : techniqueTier(f.reason.kind, mode);
 }
@@ -282,20 +314,43 @@ export function ascentPlan(start: AscentState): AscentFiring[] {
   const number = (simple: boolean) => (sc: SolverScratch) =>
     solverSingleNumber(sc, simple);
   // Easiest first; the sort is stable, so within a tier the order is as listed.
-  const ladder: { kind: HintReason["kind"]; tier: number; find: Finder }[] = (
-    [
-      ["touch", placeBy({ kind: "touch" }, "touch", solverSinglePosition)],
-      ["reach", placeBy({ kind: "reach" }, "reach", solverSinglePosition)],
-      ["deadEnd", deadEnd],
-      ["onlyBeside", placeBy({ kind: "onlyBeside" }, "reach", number(true))],
-      ["only", placeBy({ kind: "only" }, "reach", number(false))],
-      ["route", placeBy({ kind: "route" }, "route", solverSinglePosition)],
-      ["routeBeside", placeBy({ kind: "routeBeside" }, "route", number(true))],
-      ["routeOnly", placeBy({ kind: "routeOnly" }, "route", number(false))],
-    ] as const
-  )
-    .map(([kind, find]) => ({ kind, tier: techniqueTier(kind, start.mode), find }))
-    .sort((a, b) => a.tier - b.tier);
+  const tech = (
+    kind: Exclude<HintReason["kind"], "wholeRun" | "pointers">,
+    find: Finder,
+  ) => ({
+    kind,
+    tier: techniqueTier(kind, start.mode),
+    find,
+  });
+  // The Edges techniques are listed ahead of the run techniques of their
+  // tier, which the stable sort keeps: on an Edges board the arrows decide
+  // more than the runs do. On any other board they are absent.
+  const edges = start.mode === MODE_EDGES;
+  const ladder: { kind: HintReason["kind"]; tier: number; find: Finder }[] = [
+    tech("touch", placeBy({ kind: "touch" }, "touch", solverSinglePosition)),
+    tech("reach", placeBy({ kind: "reach" }, "reach", solverSinglePosition)),
+    tech("deadEnd", deadEnd),
+    ...(edges
+      ? [
+          tech("lines", linesFinder),
+          {
+            kind: "pointers" as const,
+            tier: DIFF_TRICKY,
+            find: pointersFinder(DIFF_TRICKY),
+          },
+          {
+            kind: "pointers" as const,
+            tier: DIFF_HARD,
+            find: pointersFinder(DIFF_HARD),
+          },
+        ]
+      : []),
+    tech("onlyBeside", placeBy({ kind: "onlyBeside" }, "reach", number(true))),
+    tech("only", placeBy({ kind: "only" }, "reach", number(false))),
+    tech("route", placeBy({ kind: "route" }, "route", solverSinglePosition)),
+    tech("routeBeside", placeBy({ kind: "routeBeside" }, "route", number(true))),
+    tech("routeOnly", placeBy({ kind: "routeOnly" }, "route", number(false))),
+  ].sort((a, b) => a.tier - b.tier);
 
   const board: Board = { state: start, spilled: false };
   let found: AscentFiring | null = null;
@@ -518,15 +573,6 @@ function arrowOf(state: AscentState, n: number): number {
   for (let i = 0; i < grid.length; i++)
     if (isNumberEdge(grid[i]) && fromNumberEdge(grid[i]) === n) return i;
   return -1;
-}
-
-/** The squares inside the border along the line `arrow` points. */
-function arrowLine(state: AscentState, arrow: number): number[] {
-  const { w, h } = state;
-  const out: number[] = [];
-  for (let i = 0; i < w * h; i++)
-    if (!isBorderCell(i, w, h) && isEdgeValid(arrow, i, w, h)) out.push(i);
-  return out;
 }
 
 /** A placed number a premise measures from. */
@@ -804,6 +850,29 @@ export function whyNotEnd(
 /** The number shown on the board for `n`. */
 const shown = (n: number) => n + 1;
 
+/** An Edges premise as a sentence names it. */
+const nearOf = (state: AscentState, p: Premise): Near => ({
+  m: shown(p.m),
+  d: p.d,
+  line: p.arrow === null ? null : lineKind(state, p.arrow),
+});
+
+/** The arrows and placed numbers an Edges step names, `own` first when it
+ * has one. */
+function premiseMarks(own: number, premises: readonly Premise[]): number[] {
+  const out = own >= 0 ? [own] : [];
+  for (const p of premises) out.push(p.arrow ?? (p.cell as number));
+  return [...new Set(out)];
+}
+
+/** The lines of the missing numbers an Edges step names. */
+function premiseLines(state: AscentState, premises: readonly Premise[]): number[] {
+  const out = new Set<number>();
+  for (const p of premises)
+    if (p.arrow !== null) for (const i of lineSquares(state, p.arrow)) out.add(i);
+  return [...out];
+}
+
 /** The step a firing shows: its move, its sentence and its marks. */
 export function stepOf(f: AscentFiring): AscentStep {
   const { n, cell, before } = f;
@@ -857,7 +926,7 @@ export function stepOf(f: AscentFiring): AscentStep {
       const arrow = arrowNeeded(f, bounds);
       const area = bounds.map((b) => b.cell);
       if (arrow >= 0) area.push(arrow);
-      const hatch = arrow >= 0 ? arrowLine(before, arrow) : [];
+      const hatch = arrow >= 0 ? lineSquares(before, arrow) : [];
       const text =
         f.reason.kind === "touch"
           ? say.touch(
@@ -871,6 +940,39 @@ export function stepOf(f: AscentFiring): AscentStep {
               arrow >= 0,
             );
       return step(text, area, hatch);
+    }
+    case "lines": {
+      const own = arrowOf(before, n);
+      const { premises } = f.reason;
+      const text = say.lines(
+        shown(n),
+        own >= 0 ? lineKind(before, own) : null,
+        premises.map((p) => nearOf(before, p)),
+      );
+      // Its own line is named by its outlined arrow; the lines it must be
+      // near are striped, so the square is where they cross it.
+      return step(text, premiseMarks(own, premises), premiseLines(before, premises));
+    }
+    case "pointers": {
+      const own = arrowOf(before, n);
+      const { ruledOut } = f.reason;
+      const text = say.pointers(
+        shown(n),
+        own >= 0,
+        ruledOut.map((o) => ({
+          m: shown(o.m),
+          arrowless: o.arrowless,
+          by: nearOf(before, o.by),
+        })),
+      );
+      // Every arrow pointing here is outlined, the rivals' reasons with them.
+      const rivals = ruledOut.map((o) => arrowOf(before, o.m)).filter((a) => a >= 0);
+      const bys = ruledOut.map((o) => o.by);
+      return step(
+        text,
+        [...new Set([...rivals, ...premiseMarks(own, bys)])],
+        premiseLines(before, bys),
+      );
     }
     case "deadEnd": {
       const other = n === 0 ? before.last : 0;

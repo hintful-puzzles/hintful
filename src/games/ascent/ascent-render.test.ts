@@ -227,4 +227,48 @@ describe("ascent hint frames", () => {
     expect(hatches).toHaveLength(marks?.hatch.length ?? -1);
     expect(recording.ops).toMatchSnapshot();
   });
+
+  it("Edges: a lines step stripes the lines it must be near and outlines their arrows", () => {
+    const { recording, hint } = renderScenario({
+      game: ascentGame,
+      id: id(EDGES, "render-hint-edges"),
+      showHint: true,
+      hintUntil: (s) =>
+        / must be on its (row|column|diagonal), within /.test(s.explanation),
+    });
+    const marks = hl(hint);
+    expect(hint?.explanation).toMatch(/'s (row|column|diagonal)\b/);
+    expect(marks?.hatch.length).toBeGreaterThan(0);
+    // Its own arrow and each arrow named: outlined, never striped.
+    expect(marks?.area.length).toBeGreaterThanOrEqual(2);
+    for (const a of marks?.area ?? []) expect(marks?.hatch).not.toContain(a);
+    const hatches = recording.ops.filter(
+      (o) => o.op === "hatch" && o.color === COL_HINT,
+    );
+    expect(hatches).toHaveLength(marks?.hatch.length ?? -1);
+    expect(recording.ops).toMatchSnapshot();
+  });
+
+  it("Edges: a pointers step outlines every missing number's arrow pointing at the square", () => {
+    const pointers = (s: HintStep<AscentMove>) =>
+      /^Of the missing numbers, only \d+(, \d+)* and \d+ point here\. /.test(
+        s.explanation,
+      );
+    for (let seed = 0; seed < 40; seed++) {
+      const { recording, hint } = renderScenario({
+        game: ascentGame,
+        id: id({ ...EDGES, diff: 3 }, `render-pointers-${seed}`),
+        showHint: true,
+        hintUntil: pointers,
+      });
+      if (!hint || !pointers(hint)) continue;
+      const marks = hl(hint);
+      // Two or more arrows point here: the rival's and the one placed.
+      expect(marks?.area.length).toBeGreaterThanOrEqual(2);
+      expect(marks?.hatch.length).toBeGreaterThan(0);
+      expect(recording.ops).toMatchSnapshot();
+      return;
+    }
+    throw new Error("no pointers step in 40 seeds");
+  });
 });

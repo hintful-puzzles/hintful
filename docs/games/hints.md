@@ -2556,6 +2556,25 @@ reusable part. In [`games/ascent/`](../../src/games/ascent/):
   numbers when a number lands at its end. Those are the player's to vouch for, so
   a step that fills more than its own square is the plan's last, and the next
   hint reads the result after the mistake check has seen it.
+- **A mode that changes what is visible is a different game to narrate.**
+  Edges mode (1to25) gives every missing number a line the player can see, its
+  arrow's, and places few numbers, so the run techniques above read the right
+  facts in the wrong unit. The solver's `overlap` rung was deducing from the
+  arrows' lines, and the hint narrated it as "the run before 20 must step
+  through the outlined squares" with most of the board outlined (owner,
+  2026-09-27: "almost useless"). Measured over 30 boards per tier, a quarter of
+  the 5x5 Edges steps were that `route` step, and 85% of them marked more than
+  a third of the board. The fix was the unit the player sees, two techniques in
+  [`hint-edges.ts`](../../src/games/ascent/hint-edges.ts), offered only in Edges
+  mode: `lines` (on its own line, within `k` steps of the line of the number `k`
+  away, and where those cross one square remains) and `pointers` (of the
+  missing numbers whose arrows point here, all but one are too far from a line
+  or number). They took `route` down to about 1% of Edges steps, and a line
+  premise is always a line on the board, so nothing needs a notation. **The
+  other modes are held to their old hints by construction** (the techniques are
+  not in their ladder) and were checked plan for plan against the previous
+  commit over every non-Edges shape. Proving the ladder unchanged is cheaper
+  than a census of its output, so do that first when adding to one mode.
 
 ### Place the notes a fixpoint rests on (Crossing)
 

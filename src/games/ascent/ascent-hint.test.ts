@@ -43,6 +43,7 @@ import {
   type AscentParams,
   type AscentState,
   fromNumberEdge,
+  isBorderCell,
   isEdgeValid,
   isNear,
   isNumberEdge,
@@ -84,8 +85,10 @@ const SEEDS = ["ah-a", "ah-b"];
  * each hidden-ends shape; the census below fails if one stops firing.
  */
 const PINNED = [
-  // route, only, routeOnly
+  // only, routeOnly
   "6x6mOEdh:j27a36a10b25_3b12m20",
+  // route, since a whole run took the one above's
+  "8x10mCdh:DhDd30b48Ca18fDa20a23_35b51C11a1b43bDb2c54aC8d40bD6b67_65cCa71a76b61aDc77_80b58D",
   // a dead end, its other end out of reach
   "6x6mOEdn:a35a7b25c5d3b23_28o14",
   // a dead end, its other end placed
@@ -433,6 +436,91 @@ describe("every premise, restated from the board, singles out its square", () =>
     expect(withRoom).toBeGreaterThan(0);
   });
 
+  it("Edges lines: the square is the one on its line near every line and number named", () => {
+    const firings = byKind("lines");
+    expect(firings.length).toBeGreaterThan(20);
+    let lineNamed = 0;
+    for (const { board, firing } of firings) {
+      if (firing.reason.kind !== "lines") continue;
+      expect(board.params.mode, board.label).toBe(MODE_EDGES);
+      const { before, cell, n } = firing;
+      const { premises } = firing.reason;
+      const { explanation, highlights } = stepOf(firing);
+      const at = `${board.label}: "${explanation}"`;
+      // Restated from the board: each premise's number is as far from `n` in
+      // the sequence as it says, placed where it says, or missing with an arrow.
+      for (const p of premises) {
+        expect(Math.abs(p.m - n), at).toBe(p.d);
+        if (p.cell !== null) expect(before.grid[p.cell], at).toBe(p.m);
+        else {
+          expect(before.grid.includes(p.m), at).toBe(false);
+          expect(p.arrow, at).toBe(arrowOf(before, p.m));
+          lineNamed++;
+        }
+        expect(explanation, at).toContain(String(p.m + 1));
+        expect(highlights?.area, at).toContain(p.arrow ?? p.cell);
+      }
+      expect(
+        premises.some((p) => p.arrow !== null),
+        at,
+      ).toBe(true);
+      // Where the arrows' lines cross: exactly the one square.
+      expect(squaresNear(before, n, premises), at).toEqual([cell]);
+      // The lines named are striped, and nothing else.
+      const striped = new Set<number>();
+      for (const p of premises)
+        if (p.arrow !== null)
+          for (let i = 0; i < before.grid.length; i++)
+            if (
+              !isBorderCell(i, before.w, before.h) &&
+              isEdgeValid(p.arrow, i, before.w, before.h)
+            )
+              striped.add(i);
+      expect(
+        [...(highlights?.hatch ?? [])].sort((a, b) => a - b),
+        at,
+      ).toEqual([...striped].sort((a, b) => a - b));
+    }
+    expect(lineNamed).toBeGreaterThan(20);
+  });
+
+  it("Edges pointers: every other missing number that could stand here fails its premise", () => {
+    const firings = byKind("pointers");
+    expect(firings.length).toBeGreaterThan(10);
+    let ruled = 0;
+    for (const { board, firing } of firings) {
+      if (firing.reason.kind !== "pointers") continue;
+      const { before, cell, n } = firing;
+      const { ruledOut, tier } = firing.reason;
+      const { explanation, highlights } = stepOf(firing);
+      const at = `${board.label}: "${explanation}"`;
+      // The rivals, found from the board: every missing number whose arrow
+      // points at the square, or that has none.
+      const rivals = missing(before).filter((m) => {
+        const a = arrowOf(before, m);
+        return m !== n && (a < 0 || isEdgeValid(a, cell, before.w, before.h));
+      });
+      expect(
+        ruledOut.map((o) => o.m).sort((a, b) => a - b),
+        at,
+      ).toEqual(rivals);
+      for (const o of ruledOut) {
+        ruled++;
+        expect(Math.abs(o.by.m - o.m), at).toBe(o.by.d);
+        expect(squaresNear(before, o.m, [o.by]).includes(cell), at).toBe(false);
+        expect(explanation, at).toContain(String(o.m + 1));
+      }
+      // It stands here by every premise the rivals were measured by.
+      expect(squaresNear(before, n, []).includes(cell), at).toBe(true);
+      // Tricky only with a placed neighbor, as `single-number`'s simple form asks.
+      const beside = [n - 1, n + 1].some((m) => before.grid.includes(m));
+      expect(tier, at).toBe(beside ? 2 : 3);
+      for (const a of ruledOut.map((o) => arrowOf(before, o.m)).filter((a) => a >= 0))
+        expect(highlights?.area, at).toContain(a);
+    }
+    expect(ruled).toBeGreaterThan(20);
+  });
+
   it("names the run a route step's stripes belong to", () => {
     const firings = byKind("routeBeside", "routeOnly");
     expect(firings.length).toBeGreaterThan(3);
@@ -510,6 +598,38 @@ function listRoutes(
   };
   place(0);
   return out;
+}
+
+/**
+ * The empty squares on `n`'s arrow line (all of them, when it has none) within
+ * `p.d` steps of each premise: of the placed number's square, or of some empty
+ * square on the missing number's arrow line.
+ */
+function squaresNear(
+  state: AscentState,
+  n: number,
+  premises: readonly {
+    m: number;
+    d: number;
+    cell: number | null;
+    arrow: number | null;
+  }[],
+): number[] {
+  const { w, h, grid, mode } = state;
+  const empties = [...grid.keys()].filter((i) => grid[i] === NUMBER_EMPTY);
+  const onLine = (a: number, i: number) => a < 0 || isEdgeValid(a, i, w, h);
+  const own = arrowOf(state, n);
+  return empties.filter(
+    (i) =>
+      onLine(own, i) &&
+      premises.every((p) =>
+        p.cell !== null
+          ? stepDistance(i, p.cell, w, mode) <= p.d
+          : empties.some(
+              (e) => onLine(p.arrow as number, e) && stepDistance(i, e, w, mode) <= p.d,
+            ),
+      ),
+  );
 }
 
 /** Whether missing numbers `a` and `b` lie in one run, no placed number between. */
@@ -591,6 +711,8 @@ describe("every technique is reached", () => {
     routeBeside: true,
     routeOnly: true,
     wholeRun: true,
+    lines: true,
+    pointers: true,
   };
 
   it("fires each technique somewhere in the corpus", () => {
@@ -602,7 +724,8 @@ describe("every technique is reached", () => {
     const routes = walk().seen.filter(({ firing }) =>
       firing.reason.kind.startsWith("route"),
     );
-    expect(routes.length).toBeGreaterThan(20);
+    // Edges boards read few since the arrows' techniques took most of theirs.
+    expect(routes.length).toBeGreaterThan(10);
     const elsewhere = routes.filter(
       ({ board }) => board.params.diff !== 3 && board.params.mode !== MODE_EDGES,
     );

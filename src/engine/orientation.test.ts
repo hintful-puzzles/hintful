@@ -44,7 +44,7 @@ const WIDE_BY_NATURE: Record<string, { reason: string; params: string[] }> = {
     reason:
       "Hexagon mode's board is a regular hexagon, wider across its corners " +
       "than across its flats at every size.",
-    params: ["7x7mH", "9x9mH"],
+    params: ["7x7mH"],
   },
 };
 

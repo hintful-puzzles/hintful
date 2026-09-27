@@ -89,55 +89,45 @@ const MAIN_PRESETS: AscentParams[] = [
   mk(8, 10, 1, MODE_RECT, false, false),
   mk(8, 10, 2, MODE_RECT, false, false),
   mk(8, 10, 3, MODE_RECT, false, false),
+];
+
+// One size of each hexagonal shape: the larger ones are a Custom away. The
+// honeycomb is not the square preset transposed, as a honeycomb cannot be
+// turned on its side; 6x8 is the nearest size to upstream's 7x6 that draws
+// taller than wide.
+const HEX_PRESETS: AscentParams[] = [
+  mk(6, 8, 1, MODE_HONEYCOMB, false, false),
+  mk(6, 8, 2, MODE_HONEYCOMB, false, false),
+  mk(6, 8, 3, MODE_HONEYCOMB, false, false),
+  mk(7, 7, 1, MODE_HEXAGON, false, false),
+  mk(7, 7, 2, MODE_HEXAGON, false, false),
+  mk(7, 7, 3, MODE_HEXAGON, false, false),
+];
+
+// Edges is 1to25 more than Hidato, so it has a heading of its own.
+const EDGES_PRESETS: AscentParams[] = [
   mk(5, 5, 1, MODE_EDGES, true, false),
   mk(5, 5, 2, MODE_EDGES, true, false),
   mk(5, 5, 3, MODE_EDGES, true, false),
 ];
 
-// Not the square presets transposed: a honeycomb cannot be turned on its side,
-// so these are the nearest sizes to upstream's 7x6 and 10x8 that draw taller
-// than wide.
-const HONEYCOMB_PRESETS: AscentParams[] = [
-  mk(6, 8, 1, MODE_HONEYCOMB, false, false),
-  mk(6, 8, 2, MODE_HONEYCOMB, false, false),
-  mk(6, 8, 3, MODE_HONEYCOMB, false, false),
-  mk(8, 10, 1, MODE_HONEYCOMB, false, false),
-  mk(8, 10, 2, MODE_HONEYCOMB, false, false),
-  mk(8, 10, 3, MODE_HONEYCOMB, false, false),
-];
-
-const HEXAGON_PRESETS: AscentParams[] = [
-  mk(7, 7, 1, MODE_HEXAGON, false, false),
-  mk(7, 7, 2, MODE_HEXAGON, false, false),
-  mk(7, 7, 3, MODE_HEXAGON, false, false),
-  mk(9, 9, 1, MODE_HEXAGON, false, false),
-  mk(9, 9, 2, MODE_HEXAGON, false, false),
-  mk(9, 9, 3, MODE_HEXAGON, false, false),
-];
-
 function presetTitle(p: AscentParams): string {
-  return `${p.w}x${p.h} ${p.mode === MODE_EDGES ? "Edges " : ""}${ASCENT_DIFFNAMES[p.diff]}`;
+  const tier = ASCENT_DIFFNAMES[p.diff];
+  if (p.mode === MODE_HEXAGON) return `Size ${p.w} Hexagon ${tier}`;
+  const shape =
+    p.mode === MODE_HONEYCOMB ? "Honeycomb " : p.mode === MODE_EDGES ? "Edges " : "";
+  return `${p.w}x${p.h} ${shape}${tier}`;
 }
 
 function presets(): PresetMenu<AscentParams> {
+  const entries = (ps: AscentParams[]) =>
+    ps.map((p) => ({ title: presetTitle(p), params: p }));
   return {
     title: "Ascent",
     submenu: [
-      ...MAIN_PRESETS.map((p) => ({ title: presetTitle(p), params: p })),
-      {
-        title: "Honeycomb",
-        submenu: HONEYCOMB_PRESETS.map((p) => ({
-          title: `${p.w}x${p.h} Honeycomb ${ASCENT_DIFFNAMES[p.diff]}`,
-          params: p,
-        })),
-      },
-      {
-        title: "Hexagon",
-        submenu: HEXAGON_PRESETS.map((p) => ({
-          title: `Size ${p.w} Hexagon ${ASCENT_DIFFNAMES[p.diff]}`,
-          params: p,
-        })),
-      },
+      ...entries(MAIN_PRESETS),
+      { title: "Hex", submenu: entries(HEX_PRESETS) },
+      { title: "Edges", submenu: entries(EDGES_PRESETS) },
     ],
   };
 }
