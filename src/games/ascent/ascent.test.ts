@@ -432,6 +432,63 @@ describe("ascent right-click two-option toggle", () => {
     rightClick();
     expect(state.grid[cellB]).toBe(NUMBER_EMPTY);
   });
+
+  // Owner, on a phone: with 10 selected, no touch route led to a 9 beside it.
+  it("after a tap places the higher number, a long press cycles back to the lower", () => {
+    const p = mk(6, 5, 1, MODE_RECT);
+    const { desc } = newAscentDesc(p, randomNew("toggle-seed"));
+    let state = newAscentState(p, desc);
+    const w = state.w;
+    const s = w * state.h;
+    const positions = new Int32Array(state.last + 1).fill(-1);
+    for (let i = 0; i < s; i++) if (state.grid[i] >= 0) positions[state.grid[i]] = i;
+    const near = (a: number, b: number) => a >= 0 && isNear(a, b, w, MODE_RECT);
+
+    // A placed N with N±1 missing, and an empty B beside it that N+2 does not
+    // touch (or 8 would be forced between 7 and 9, with no pair to cycle).
+    let cellA = -1;
+    let cellB = -1;
+    let bigN = -1;
+    for (let a = 0; a < s && cellB < 0; a++) {
+      const nn = state.grid[a];
+      if (nn <= 1 || nn >= state.last - 1) continue;
+      if (positions[nn - 1] >= 0 || positions[nn + 1] >= 0) continue;
+      for (let b = 0; b < s && cellB < 0; b++) {
+        if (state.grid[b] !== NUMBER_EMPTY || !isNear(a, b, w, MODE_RECT)) continue;
+        if (near(positions[nn + 2], b) || near(positions[nn - 2], b)) continue;
+        [cellA, cellB, bigN] = [a, b, nn];
+      }
+    }
+    expect(cellB).toBeGreaterThanOrEqual(0);
+
+    const ui = ascentGame.newUi(state);
+    const ds = ascentGame.newDrawState(state, ascentGame.preferredTileSize ?? 48);
+    const ts = ds.tileSize;
+    const at = (c: number) => ({
+      x: ds.offsetX + (c % w) * ts + ts / 2,
+      y: ds.offsetY + Math.trunc(c / w) * ts + ts / 2,
+    });
+    const press = (c: number, button: number) => {
+      const m = ascentGame.interpretMove(state, ui, ds, at(c), button);
+      if (m && typeof m === "object") {
+        const old = state;
+        state = ascentGame.executeMove(state, m as AscentMove);
+        ascentGame.changedState?.(ui, old, state);
+      }
+    };
+
+    press(cellA, LEFT_BUTTON);
+    press(cellB, LEFT_BUTTON);
+    expect(state.grid[cellB]).toBe(bigN + 1);
+    press(cellB, LEFT_BUTTON);
+    // higher → empty → lower → higher.
+    press(cellB, RIGHT_BUTTON);
+    expect(state.grid[cellB]).toBe(NUMBER_EMPTY);
+    press(cellB, RIGHT_BUTTON);
+    expect(state.grid[cellB]).toBe(bigN - 1);
+    press(cellB, RIGHT_BUTTON);
+    expect(state.grid[cellB]).toBe(bigN + 1);
+  });
 });
 
 describe("ascent findMistakes", () => {

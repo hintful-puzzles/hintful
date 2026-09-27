@@ -609,9 +609,14 @@ function mouseClick(
           : state.grid[i] === cands[1]
             ? NUMBER_EMPTY
             : cands[0];
-      return target === NUMBER_EMPTY
-        ? { kind: "clear", cell: i }
-        : { kind: "place", cell: i, n: target };
+      if (target !== NUMBER_EMPTY) return { kind: "place", cell: i, n: target };
+      // Hold the number the pair sits either side of, so the next press starts
+      // the cycle again: a tap that placed the higher number is otherwise left
+      // with no touch route to the lower one.
+      const anchor = ui.positions[(cands[0] + cands[1]) / 2] ?? CELL_NONE;
+      if (cands[1] - cands[0] === 2 && anchor >= 0 && isNear(anchor, i, w, state.mode))
+        ui.held = anchor;
+      return { kind: "clear", cell: i };
     }
     if (n === NUMBER_EMPTY || state.immutable[i]) uiClear(ui);
     return rightDragArm();
