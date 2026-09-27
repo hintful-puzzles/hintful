@@ -141,6 +141,13 @@ export function executeAscentMove(state: AscentState, move: AscentMove): AscentS
       ret.grid[move.cell] = move.n;
       break;
     }
+    case "places": {
+      for (const { cell, n } of move.cells) {
+        if (state.immutable[cell]) throw new Error("ascent: place on immutable cell");
+        ret.grid[cell] = n;
+      }
+      break;
+    }
     case "line": {
       if (!move.erase && !ret.path) {
         ret.path = new Int16Array(w * h);

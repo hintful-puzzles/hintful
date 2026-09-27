@@ -150,7 +150,7 @@ describe("ascent hint frames", () => {
         if (!hint || !/^Only the run/.test(hint.explanation)) continue;
         found = true;
         const marks = hl(hint);
-        expect(marks?.hatch).toContain(marks?.target);
+        for (const t of marks?.targets ?? []) expect(marks?.hatch).toContain(t);
         // Every striped cell is hatched, a hexagon on rects that stay inside it.
         const hatches = recording.ops.filter(
           (o) => o.op === "hatch" && o.color === COL_HINT,
@@ -183,6 +183,32 @@ describe("ascent hint frames", () => {
       return;
     }
     throw new Error("no fill step in 80 seeds");
+  });
+
+  it("draws a whole run's route as a path line in the hint's color, ringing its squares", () => {
+    const whole = (s: HintStep<AscentMove>) => / only one route/.test(s.explanation);
+    for (let seed = 0; seed < 40; seed++) {
+      const { recording, hint } = renderScenario({
+        game: ascentGame,
+        id: `${ascentGame.encodeParams({ ...RECT, w: 6, h: 7, diff: 2 }, true)}#whole-${seed}`,
+        showHint: true,
+        hintUntil: whole,
+      });
+      if (!hint || !whole(hint)) continue;
+      const marks = hl(hint);
+      const route = marks?.route ?? [];
+      expect(hint.move.kind).toBe("places");
+      expect(route.length).toBeGreaterThan(2);
+      // One half-segment from each end of every link, and a four-sided ring on
+      // every square the step fills.
+      const rings = 4 * (marks?.targets.length ?? 0);
+      expect(strokes(recording.ops, COL_HINT)).toHaveLength(
+        2 * (route.length - 1) + rings,
+      );
+      expect(recording.ops).toMatchSnapshot();
+      return;
+    }
+    throw new Error("no whole-run step in 40 seeds");
   });
 
   it("Edges: stripes the line an arrow points along when the sentence names it", () => {

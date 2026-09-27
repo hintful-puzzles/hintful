@@ -28,12 +28,13 @@ import {
   ascentKeepTrack,
   ascentPlan,
   boundsOf,
+  firingTier,
   type HintReason,
+  moveOf,
   runShortfall,
   runsOf,
   squaresWithin,
   stepOf,
-  techniqueTier,
   whyNotEnd,
 } from "./hint.ts";
 import { ascentGame } from "./index.ts";
@@ -43,6 +44,7 @@ import {
   type AscentState,
   fromNumberEdge,
   isEdgeValid,
+  isNear,
   isNumberEdge,
   MODE_EDGES,
   MODE_HONEYCOMB,
@@ -51,6 +53,7 @@ import {
   movementForMode,
   NUMBER_EMPTY,
   newAscentState,
+  stepDistance,
 } from "./state.ts";
 
 const custom = (
@@ -84,7 +87,7 @@ const PINNED = [
   // route, only, routeOnly
   "6x6mOEdh:j27a36a10b25_3b12m20",
   // a dead end, its other end out of reach
-  "6x6mOEdh:a27g18e19i7b14a3c11a",
+  "6x6mOEdn:a35a7b25c5d3b23_28o14",
   // a dead end, its other end placed
   "6x6mOEdh:a13_16a20n8a2c29j",
   // a dead end, its other end's arrow pointing elsewhere
@@ -141,11 +144,7 @@ function walk(): NonNullable<typeof WALK> {
       if (plan.length === 0) break;
       for (const firing of plan) {
         seen.push({ board, firing });
-        state = executeAscentMove(state, {
-          kind: "place",
-          cell: firing.cell,
-          n: firing.n,
-        });
+        state = executeAscentMove(state, moveOf(firing));
         const mistakes = ascentGame.findMistakes?.(state) ?? [];
         if (mistakes.length > 0)
           throw new Error(
@@ -164,13 +163,12 @@ describe("following the hint", () => {
     const { seen, finished, unfinished } = walk();
     expect(unfinished).toEqual([]);
     expect(finished.length).toBe(SHAPES.length * SEEDS.length + PINNED.length);
-    expect(seen.length).toBeGreaterThan(2000);
+    expect(seen.length).toBeGreaterThan(1000);
   });
 
   it("never uses a technique above its board's tier", () => {
     const over = walk().seen.filter(
-      ({ board, firing }) =>
-        techniqueTier(firing.reason.kind, board.params.mode) > board.params.diff,
+      ({ board, firing }) => firingTier(firing, board.params.mode) > board.params.diff,
     );
     expect(
       over.map(({ board, firing }) => `${board.label}: ${firing.reason.kind}`),
@@ -209,7 +207,7 @@ describe("every premise, restated from the board, singles out its square", () =>
 
   it("touch and reach: the reach the sentence names, and the arrow when it is needed", () => {
     const firings = byKind("touch", "reach");
-    expect(firings.length).toBeGreaterThan(1000);
+    expect(firings.length).toBeGreaterThan(500);
     let arrows = 0;
     for (const { board, firing } of firings) {
       const bounds = boundsOf(firing);
@@ -314,7 +312,11 @@ describe("every premise, restated from the board, singles out its square", () =>
           const named =
             r.lo === r.hi
               ? `${r.lo + 1} would have to touch`
-              : `the run ${r.lo + 1} to ${r.hi + 1}`;
+              : r.a && r.b
+                ? `the run between ${r.a.m + 1} and ${r.b.m + 1}`
+                : r.a
+                  ? `the run after ${r.a.m + 1}`
+                  : `the run before ${(r.b?.m ?? -1) + 1}`;
           expect(explanation, at).toContain(named);
           for (const e of [r.a, r.b])
             if (e) expect(highlights?.area, at).toContain(e.cell);
@@ -350,10 +352,9 @@ describe("every premise, restated from the board, singles out its square", () =>
       if (!lead) throw new Error("a joined step with nothing before it");
       const at = `${board.label}: ${firing.reason.kind} after ${lead.firing.reason.kind}`;
       expect(sameRun(lead.firing.before, lead.firing.n, firing.n), at).toBe(true);
-      expect(
-        techniqueTier(firing.reason.kind, board.params.mode),
-        at,
-      ).toBeLessThanOrEqual(techniqueTier(lead.firing.reason.kind, board.params.mode));
+      expect(firingTier(firing, board.params.mode), at).toBeLessThanOrEqual(
+        firingTier(lead.firing, board.params.mode),
+      );
       expect(stepOf(firing).continuesPrevious, at).toBe(true);
       // The journey ends with the run filled.
       const last = seen[i + 1]?.firing.joins !== true;
@@ -370,7 +371,42 @@ describe("every premise, restated from the board, singles out its square", () =>
         expect(left, at).toEqual([]);
       }
     }
-    expect(journeys).toBeGreaterThan(20);
+    expect(journeys).toBeGreaterThan(5);
+  });
+
+  it("places a whole run at once only along its one route", () => {
+    const firings = walk().seen.filter(
+      ({ firing }) => firing.reason.kind === "wholeRun",
+    );
+    expect(firings.length).toBeGreaterThan(20);
+    let withMust = 0;
+    for (const { board, firing } of firings) {
+      if (firing.reason.kind !== "wholeRun") continue;
+      const { before } = firing;
+      const { cells, must } = firing.reason;
+      const at = `${board.label}: ${cells.map((c) => c.n + 1).join(",")}`;
+      // The whole run, in order.
+      const run = missing(before).filter((m) => sameRun(before, m, firing.n));
+      expect(
+        cells.map((c) => c.n),
+        at,
+      ).toEqual(run);
+      // Every square the sentence says no other run reaches: this run's alone.
+      const runs = runsOf(before);
+      for (const c of must) {
+        const reaching = runs.filter((r) => runShortfall(before, r, c) <= 0);
+        expect(
+          reaching.map((r) => r.lo),
+          at,
+        ).toEqual([run[0]]);
+      }
+      if (must.length > 0) withMust++;
+      // And it is the only route, counted here independently.
+      const routes = countRoutes(before, run, must);
+      expect(routes, at).toBe(1);
+      expect(stepOf(firing).highlights?.route.length, at).toBeGreaterThan(cells.length);
+    }
+    expect(withMust).toBeGreaterThan(0);
   });
 
   it("names the run a route step's stripes belong to", () => {
@@ -392,6 +428,52 @@ describe("every premise, restated from the board, singles out its square", () =>
   });
 });
 
+/**
+ * The routes a run can take, counted by brute force: every assignment of its
+ * numbers to distinct empty squares with each next to the one before, the
+ * placed ends included, taking in every square of `must`, and in Edges mode
+ * on each number's arrow line. Stops counting at two.
+ */
+function countRoutes(state: AscentState, run: number[], must: number[]): number {
+  const { w, h, grid, mode, last } = state;
+  const adj = (a: number, b: number) => isNear(a, b, w, mode);
+  const cellOf = (m: number) => grid.indexOf(m);
+  const lo = run[0];
+  const hi = run[run.length - 1];
+  let from = lo > 0 ? cellOf(lo - 1) : -1;
+  let to = hi < last ? cellOf(hi + 1) : -1;
+  // Walk from a placed end: a route read backwards is the same route.
+  if (from < 0) {
+    [from, to] = [to, from];
+    run = [...run].reverse();
+  }
+  const arrow = (m: number) =>
+    grid.findIndex((v) => isNumberEdge(v) && fromNumberEdge(v) === m);
+  const empties = [...grid.keys()].filter((i) => grid[i] === NUMBER_EMPTY);
+  let count = 0;
+  const used: number[] = [];
+  const place = (k: number) => {
+    if (count >= 2) return;
+    if (k === run.length) {
+      if (to >= 0 && !adj(used[k - 1], to)) return;
+      if (must.every((c) => used.includes(c))) count++;
+      return;
+    }
+    const prev = k === 0 ? from : used[k - 1];
+    for (const c of empties) {
+      if (used.includes(c) || (prev >= 0 && !adj(prev, c))) continue;
+      if (to >= 0 && stepDistance(c, to, w, mode) > run.length - k) continue;
+      const a = arrow(run[k]);
+      if (a >= 0 && !isEdgeValid(a, c, w, h)) continue;
+      used.push(c);
+      place(k + 1);
+      used.pop();
+    }
+  };
+  place(0);
+  return count;
+}
+
 /** Whether missing numbers `a` and `b` lie in one run, no placed number between. */
 function sameRun(state: AscentState, a: number, b: number): boolean {
   const placed = new Set(state.grid.filter((v) => v >= 0));
@@ -410,6 +492,7 @@ describe("every technique is reached", () => {
     route: true,
     routeBeside: true,
     routeOnly: true,
+    wholeRun: true,
   };
 
   it("fires each technique somewhere in the corpus", () => {

@@ -55,6 +55,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "oldnum",
       "oldpath",
       "oldpositions",
+      "oldroute",
       "path",
       "prevhints",
       "pxH",

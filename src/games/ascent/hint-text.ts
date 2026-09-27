@@ -28,9 +28,19 @@ const nearBoth = (a: Bound, b: Bound): string =>
     ? `${near(a.d, a.m)} and ${b.d} of ${b.m}`
     : `${near(a.d, a.m)} and ${near(b.d, b.m)}`;
 
-/** The run of numbers from `lo` to `hi`. */
-const run = (lo: number, hi: number): string =>
-  lo === hi ? `${lo}` : `The numbers ${lo} to ${hi}`;
+/**
+ * A run of missing numbers, named by the placed numbers at its ends: the
+ * numbers in between follow from them, so naming those too is only noise
+ * (owner, 2026-09-27). Either end may be absent, at an end of the path.
+ */
+const runName = (from: number | null, to: number | null): string =>
+  from !== null && to !== null
+    ? `the run between ${from} and ${to}`
+    : from !== null
+      ? `the run after ${from}`
+      : `the run before ${to}`;
+
+const capitalized = (s: string) => s[0].toUpperCase() + s.slice(1);
 
 /** A placed number a premise measures from: its value and how far it is. */
 export interface Bound {
@@ -43,15 +53,14 @@ const ARROW = "on its arrow's striped line";
 /**
  * The run that comes closest to a square without reaching it. A single number
  * `k` must touch both its neighbors in the sequence (`need`, the ones the square
- * does not touch); a longer run `lo`..`hi` is too far from its ends `ends`.
+ * does not touch); a longer run, between `from` and `to`, is too far from them.
  */
 export type Rival =
   | { kind: "one"; k: number; need: number[]; touches: boolean }
-  | { kind: "run"; lo: number; hi: number; ends: number[] };
+  | { kind: "run"; from: number | null; to: number | null };
 
 function rivalText(r: Rival): string {
-  if (r.kind === "run")
-    return `the run ${r.lo} to ${r.hi} is too far from ${r.ends.join(" and ")}`;
+  if (r.kind === "run") return `${runName(r.from, r.to)} is too far away`;
   const need = r.need.join(" and ");
   return r.touches
     ? `${r.k} would have to touch ${need} too`
@@ -128,51 +137,43 @@ export const say = {
   },
 
   /**
-   * Of all the runs of missing numbers, only `lo`..`hi` reaches this square
-   * (its reach is striped), and of its numbers only `n` does. `from` and `to`
-   * are its placed ends, either absent at an end of the path; `byRoute` when
-   * reach is counted through empty squares.
+   * Of all the runs of missing numbers, only the one between `from` and `to`
+   * reaches this square (its reach is striped), and of its numbers only `n`
+   * does; `single` when `n` is its only number. `byRoute` when reach is counted
+   * through empty squares.
    */
   onlyRun: (
     n: number,
-    lo: number,
-    hi: number,
+    single: boolean,
     from: number | null,
     to: number | null,
     byRoute: boolean,
   ): string => {
-    const ends =
-      from !== null && to !== null
-        ? `between ${from} and ${to}`
-        : from !== null
-          ? `after ${from}`
-          : `before ${to}`;
     const reach = byRoute
       ? "can step here through empty squares"
       : "can reach this square";
-    if (lo === hi) return `Only ${n}, ${ends}, ${reach}, so it must be ${n}.`;
-    return `Only the run ${lo} to ${hi} ${ends} ${reach}, and of those only ${n} can, so it must be ${n}.`;
+    // A single number is named for itself: "Only 3, between 2 and 4, …".
+    const who = single
+      ? `Only ${n}, ${runName(from, to).slice("the run ".length)},`
+      : `Only ${runName(from, to)}`;
+    if (single) return `${who} ${reach}, so it must be ${n}.`;
+    return `${who} ${reach}, and of its numbers only ${n} can, so it must be ${n}.`;
   },
 
   /**
-   * The missing run `lo`..`hi` must step between its placed ends, `from` below
-   * and `to` above (either may be absent, at an end of the path), through the
-   * outlined squares, and `n` has only this square on any such route.
+   * The run between `from` and `to` must step through the outlined squares, one
+   * square per number, and `n` has only this square on any such route.
    */
-  route: (
-    n: number,
-    lo: number,
-    hi: number,
-    from: number | null,
-    to: number | null,
-  ) => {
-    const numbers = run(lo, hi);
-    const way =
-      from !== null && to !== null
-        ? `from ${from} to ${to}`
-        : from !== null
-          ? `on from ${from}`
-          : `back from ${to}`;
-    return `${numbers} must step ${way} through the outlined squares, so ${n} can only go here.`;
-  },
+  route: (n: number, from: number | null, to: number | null) =>
+    `${capitalized(runName(from, to))} must step through the outlined squares, so ${n} can only go here.`,
+
+  /**
+   * The whole run between `from` and `to` has one route: through every striped
+   * square, when `mustVisit` (squares no other run can reach), or through the
+   * empty squares at all otherwise.
+   */
+  wholeRun: (from: number | null, to: number | null, mustVisit: boolean): string =>
+    mustVisit
+      ? `No other run reaches the striped squares, so ${runName(from, to)} must take them all, and only one route does.`
+      : `${capitalized(runName(from, to))} has only one route through the empty squares, so it must go along the line.`,
 };

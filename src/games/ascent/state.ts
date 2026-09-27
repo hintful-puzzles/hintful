@@ -177,6 +177,9 @@ export interface AscentState {
  * `C`/`S`). A gesture never emits more than one fragment. */
 export type AscentMove =
   | { kind: "place"; cell: number; n: number }
+  /** Several numbers at once: a hint step placing a whole run. No gesture
+   * makes one. */
+  | { kind: "places"; cells: { cell: number; n: number }[] }
   | { kind: "line"; from: number; to: number; erase: boolean }
   | { kind: "clear"; cell: number }
   | { kind: "solve"; grid: number[] };

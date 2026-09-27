@@ -81,14 +81,18 @@ const GLANCE = 120;
 
 /** What one step marks. */
 export interface AscentHighlights {
-  /** The square the step fills, ringed. */
-  target: number;
+  /** The squares the step fills, ringed: one, or a whole run. */
+  targets: number[];
   /** The numbers and squares the reason rests on, outlined: a placed number
    * the sentence names, the arrow it reads, a dead end's one way in, the
    * squares a route may use. */
   area: number[];
-  /** The line an arrow points along, when the sentence names it, striped. */
+  /** The line an arrow points along, a run's reach, or the squares no other
+   * run reaches, when the sentence names them, striped. */
   hatch: number[];
+  /** A whole run's route, drawn as the game's own path line in the hint's
+   * color: its squares in order, from one placed end to the other. */
+  route: number[];
 }
 
 type AscentStep = HintStep<AscentMove, AscentHighlights>;
@@ -102,7 +106,19 @@ export type HintReason =
   | { kind: "only" }
   | { kind: "route" }
   | { kind: "routeBeside" }
-  | { kind: "routeOnly" };
+  | { kind: "routeOnly" }
+  /**
+   * A whole run placed at once along its only route: `cells` in order, and
+   * `must` the squares no other run reaches, when the route is only unique
+   * because it has to take them. `tier` is that of the technique that began
+   * the run, whose own deductions reach the same numbers.
+   */
+  | {
+      kind: "wholeRun";
+      cells: { cell: number; n: number }[];
+      must: number[];
+      tier: number;
+    };
 
 /** One placement, with the board it was read from. */
 export interface AscentFiring {
@@ -213,7 +229,10 @@ function deadEnd(state: AscentState, focus: Focus): Found | null {
  * projects. Edges mode runs `overlap` from Normal up, so a route there comes
  * before the Tricky and Hard techniques.
  */
-export function techniqueTier(kind: HintReason["kind"], mode: number): number {
+function techniqueTier(
+  kind: Exclude<HintReason["kind"], "wholeRun">,
+  mode: number,
+): number {
   const edges = mode === MODE_EDGES;
   switch (kind) {
     case "touch":
@@ -231,6 +250,13 @@ export function techniqueTier(kind: HintReason["kind"], mode: number): number {
     case "routeBeside":
       return edges ? DIFF_TRICKY : DIFF_HARD;
   }
+}
+
+/** The tier a firing's reasoning belongs to in `mode`. */
+export function firingTier(f: AscentFiring, mode: number): number {
+  return f.reason.kind === "wholeRun"
+    ? f.reason.tier
+    : techniqueTier(f.reason.kind, mode);
 }
 
 // --- the plan ----------------------------------------------------------------
@@ -294,7 +320,7 @@ export function ascentPlan(start: AscentState): AscentFiring[] {
     const run = runsOf(f.before).find((r) => r.lo <= f.n && f.n <= r.hi);
     if (!run || run.lo === run.hi) return [];
     const focus = { lo: run.lo, hi: run.hi };
-    const cap = techniqueTier(f.reason.kind, start.mode);
+    const cap = firingTier(f, start.mode);
     const out: Found[] = [];
     let state = executeAscentMove(f.before, placeOf(f));
     for (let left = run.hi - run.lo; left > 0; left--) {
@@ -326,11 +352,17 @@ export function ascentPlan(start: AscentState): AscentFiring[] {
       found = null;
       if (!pass.next() || !found) return null;
       following = followRun(found);
-      return found;
+      if (following.length === 0) return found;
+      // When the run has only one route, it is one deduction: say that, once.
+      const whole = wholeRun(found, following, firingTier(found, start.mode));
+      if (!whole) return found;
+      following = [];
+      return whole;
     },
     apply: (b, f) => {
-      const after = executeAscentMove(b.state, placeOf(f));
-      b.spilled = after.grid.some((v, i) => v !== b.state.grid[i] && i !== f.cell);
+      const after = executeAscentMove(b.state, moveOf(f));
+      const own = new Set(cellsOf(f));
+      b.spilled = after.grid.some((v, i) => v !== b.state.grid[i] && !own.has(i));
       b.state = after;
     },
     planCap: PLAN_CAP,
@@ -354,6 +386,51 @@ const placeOf = (f: { cell: number; n: number }): AscentMove => ({
   cell: f.cell,
   n: f.n,
 });
+
+/** The move a firing's step makes: a whole run at once, or one number. */
+export function moveOf(f: AscentFiring): AscentMove {
+  return f.reason.kind === "wholeRun"
+    ? { kind: "places", cells: f.reason.cells }
+    : placeOf(f);
+}
+
+/** The squares a firing fills. */
+function cellsOf(f: AscentFiring): number[] {
+  return f.reason.kind === "wholeRun" ? f.reason.cells.map((c) => c.cell) : [f.cell];
+}
+
+/**
+ * `first` and the rest of its run `rest` as one step, when the run has exactly
+ * one route: through the empty squares at all, or through every square no
+ * other run can reach. Checked by counting the routes, not assumed from the
+ * deductions that found the numbers; `null` when there is more than one.
+ */
+function wholeRun(
+  first: AscentFiring,
+  rest: Found[],
+  tier: number,
+): AscentFiring | null {
+  const { before } = first;
+  const run = runsOf(before).find((r) => r.lo <= first.n && first.n <= r.hi);
+  if (!run) return null;
+  const at = new Map([first, ...rest].map((p) => [p.n, p.cell]));
+  const matches = (route: number[]) => route.every((c, k) => at.get(run.lo + k) === c);
+  const only = (must: number[]) => {
+    const routes = runRoutes(before, run, must);
+    return routes !== null && routes.length === 1 && matches(routes[0]);
+  };
+  const must = only([]) ? [] : mustVisit(before, run);
+  if (must.length > 0 && !only(must)) return null;
+  if (must.length === 0 && !only([])) return null;
+  const cells = [...at].sort((a, b) => a[0] - b[0]).map(([n, cell]) => ({ cell, n }));
+  return {
+    reason: { kind: "wholeRun", cells, must, tier },
+    n: first.n,
+    cell: first.cell,
+    before,
+    joins: false,
+  };
+}
 
 export function ascentHint(
   state: AscentState,
@@ -553,9 +630,8 @@ function fillReason(
     } else
       rival = {
         kind: "run",
-        lo: shown(r.lo),
-        hi: shown(r.hi),
-        ends: ends.map((e) => shown(e.m)),
+        from: r.a ? shown(r.a.m) : null,
+        to: r.b ? shown(r.b.m) : null,
       };
   }
 
@@ -584,6 +660,82 @@ function fillReason(
 }
 
 /**
+ * The empty squares only `run` can reach, by straight reach: every other run
+ * falls short of each. Nothing but this run can fill them, so its route must
+ * take them all.
+ */
+function mustVisit(state: AscentState, run: Run): number[] {
+  const others = runsOf(state).filter((r) => r.lo !== run.lo);
+  const out: number[] = [];
+  for (let c = 0; c < state.grid.length; c++) {
+    if (state.grid[c] !== NUMBER_EMPTY) continue;
+    if (runShortfall(state, run, c) > 0) continue;
+    if (others.every((r) => runShortfall(state, r, c) > 0)) out.push(c);
+  }
+  return out;
+}
+
+/** Past this many search steps a route count gives up, and says "not one". */
+const ROUTE_SEARCH_LIMIT = 200_000;
+
+/**
+ * The routes `run` could take through empty squares, one square per number,
+ * from the placed number at one end to the one at the other, taking in every
+ * square of `must`, and in Edges mode keeping each number on its arrow's line.
+ * Stops at two: the question is only whether there is exactly one. `null`
+ * when the search gives up.
+ */
+function runRoutes(
+  state: AscentState,
+  run: Run,
+  must: readonly number[],
+): number[][] | null {
+  const { w, h, grid } = state;
+  const len = run.hi - run.lo + 1;
+  // Walk from a placed end; with none, there is nothing to anchor a route to.
+  const forward = run.a !== null;
+  const anchor = run.a ?? run.b;
+  if (!anchor) return null;
+  const numberAt = (k: number) => (forward ? run.lo + k : run.hi - k);
+  const far = forward ? run.b : run.a;
+  const arrows = new Map<number, number>();
+  grid.forEach((v, i) => {
+    if (isNumberEdge(v)) arrows.set(fromNumberEdge(v), i);
+  });
+  const mustSet = new Set(must);
+  const found: number[][] = [];
+  const path: number[] = [];
+  const used = new Set<number>();
+  let steps = 0;
+  const dfs = (from: number, k: number): boolean => {
+    if (++steps > ROUTE_SEARCH_LIMIT) return false;
+    if (k === len) {
+      if (far && stepDistance(from, far.cell, w, state.mode) !== 1) return true;
+      if ([...mustSet].some((c) => !used.has(c))) return true;
+      found.push(forward ? [...path] : [...path].reverse());
+      return found.length < 2;
+    }
+    // A square must still be able to reach the far end in the numbers left.
+    for (const c of neighbors(state, from)) {
+      if (grid[c] !== NUMBER_EMPTY || used.has(c)) continue;
+      const arrow = arrows.get(numberAt(k));
+      if (arrow !== undefined && !isEdgeValid(arrow, c, w, h)) continue;
+      if (far && stepDistance(c, far.cell, w, state.mode) > len - k) continue;
+      path.push(c);
+      used.add(c);
+      const go = dfs(c, k + 1);
+      path.pop();
+      used.delete(c);
+      if (!go) return false;
+    }
+    return true;
+  };
+  const finished = dfs(anchor.cell, 0);
+  if (!finished && found.length < 2) return null;
+  return found;
+}
+
+/**
  * Why the path's other end, `other`, cannot be at `cell`: it is placed, it is
  * out of reach of the placed numbers beside it, or its arrow points elsewhere.
  */
@@ -609,13 +761,37 @@ const shown = (n: number) => n + 1;
 /** The step a firing shows: its move, its sentence and its marks. */
 export function stepOf(f: AscentFiring): AscentStep {
   const { n, cell, before } = f;
-  const step = (explanation: string, area: number[], hatch: number[] = []) => ({
-    move: placeOf(f),
+  const step = (
+    explanation: string,
+    area: number[],
+    hatch: number[] = [],
+    route: number[] = [],
+  ) => ({
+    move: moveOf(f),
     explanation,
-    highlights: { target: cell, area, hatch },
+    highlights: { targets: cellsOf(f), area, hatch, route },
     ...(f.joins ? { continuesPrevious: true } : {}),
   });
   switch (f.reason.kind) {
+    case "wholeRun": {
+      const run = runsOf(before).find((r) => r.lo <= n && n <= r.hi);
+      if (!run) throw new Error("ascent hint: a whole run that is not a run");
+      const ends: number[] = [];
+      if (run.a) ends.push(run.a.cell);
+      if (run.b) ends.push(run.b.cell);
+      const path = f.reason.cells.map((c) => c.cell);
+      const text = say.wholeRun(
+        run.a ? shown(run.a.m) : null,
+        run.b ? shown(run.b.m) : null,
+        f.reason.must.length > 0,
+      );
+      const route = [
+        ...(run.a ? [run.a.cell] : []),
+        ...path,
+        ...(run.b ? [run.b.cell] : []),
+      ];
+      return step(text, ends, f.reason.must, route);
+    }
     case "touch":
     case "reach": {
       const bounds = boundsOf(f);
@@ -660,8 +836,7 @@ export function stepOf(f: AscentFiring): AscentStep {
       const run = runOf(f, byRoute ? "route" : "reach");
       const text = say.onlyRun(
         shown(n),
-        shown(run.lo),
-        shown(run.hi),
+        run.lo === run.hi,
         run.below === null ? null : shown(run.below),
         run.above === null ? null : shown(run.above),
         byRoute,
@@ -673,8 +848,6 @@ export function stepOf(f: AscentFiring): AscentStep {
       return step(
         say.route(
           shown(n),
-          shown(run.lo),
-          shown(run.hi),
           run.below === null ? null : shown(run.below),
           run.above === null ? null : shown(run.above),
         ),
@@ -686,12 +859,31 @@ export function stepOf(f: AscentFiring): AscentStep {
 
 // --- following the plan ------------------------------------------------------
 
-/** A step is followed by placing its number in its square, by any gesture. */
+/** A step is followed by placing its numbers in their squares, by any gesture. */
 export function ascentKeepTrack(
   m: AscentMove,
   step: HintStep<AscentMove>,
 ): HintTrackVerdict {
   const want = step.move;
-  if (want.kind !== "place" || m.kind !== "place") return "off";
-  return m.cell === want.cell && m.n === want.n ? "completed" : "off";
+  if (want.kind === "place")
+    return m.kind === "place" && m.cell === want.cell && m.n === want.n
+      ? "completed"
+      : "off";
+  if (want.kind !== "places") return "off";
+  // A whole run: the hint's own move takes it all; a player places it a number
+  // at a time, in any order, and the step shrinks to what is left.
+  const same = (a: { cell: number; n: number }, b: { cell: number; n: number }) =>
+    a.cell === b.cell && a.n === b.n;
+  if (m.kind === "places")
+    return m.cells.length === want.cells.length &&
+      m.cells.every((c) => want.cells.some((w) => same(c, w)))
+      ? "completed"
+      : "off";
+  if (m.kind !== "place" || !want.cells.some((w) => same(w, m))) return "off";
+  const left = want.cells.filter((w) => !same(w, m));
+  if (left.length === 0) return "completed";
+  step.move = { kind: "places", cells: left };
+  const hl = (step.highlights ?? null) as AscentHighlights | null;
+  if (hl) step.highlights = { ...hl, targets: left.map((c) => c.cell) };
+  return "onTrack";
 }

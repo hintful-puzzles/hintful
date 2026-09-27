@@ -113,6 +113,8 @@ export interface AscentDrawState {
   oldmistake: Uint8Array;
   /** Each cell's `HINT_*` bits as last drawn. */
   oldhint: Uint8Array;
+  /** Each cell's hint-route directions (`1 << dir`) as last drawn. */
+  oldroute: Int32Array;
   oldcursor: number;
 }
 
@@ -158,6 +160,7 @@ export function newAscentDrawState(
     oldpositions: new Int32Array(s).fill(-3),
     oldmistake: new Uint8Array(s),
     oldhint: new Uint8Array(s),
+    oldroute: new Int32Array(s),
     oldcursor: -1,
   };
 }
@@ -450,7 +453,15 @@ export function redrawAscent(
   if (hl) {
     for (const i of hl.hatch) hintMarks[i] |= HINT_HATCH;
     for (const i of hl.area) hintMarks[i] |= HINT_AREA;
-    hintMarks[hl.target] |= HINT_TARGET;
+    for (const i of hl.targets) hintMarks[i] |= HINT_TARGET;
+  }
+  // A whole run's route: each square the directions it joins its neighbors on.
+  const routeBits = new Int32Array(w * h);
+  const route = hl?.route ?? [];
+  for (let k = 1; k < route.length; k++) {
+    const [p, q] = [route[k - 1], route[k]];
+    routeBits[p] |= 1 << findDirection(p, q, w, movement);
+    routeBits[q] |= 1 << findDirection(q, p, w, movement);
   }
 
   if (!ds.started) {
@@ -540,6 +551,10 @@ export function redrawAscent(
     }
     if (ds.oldhint[i] !== hintMarks[i]) {
       ds.oldhint[i] = hintMarks[i];
+      dirty = true;
+    }
+    if (ds.oldroute[i] !== routeBits[i]) {
+      ds.oldroute[i] = routeBits[i];
       dirty = true;
     }
     if ((cursorCell === i) !== (ds.oldcursor === i)) dirty = true;
@@ -690,6 +705,24 @@ export function redrawAscent(
         const ey = hex ? (cy + nc.cy) / 2 : nc.cy;
         thickLine(dr, ds.thickness, tx1, ty1, ex, ey, COL_HIGHLIGHT);
       }
+    }
+
+    /* A whole run's route, the game's own path line in the hint's color. Each
+     * square draws to the midpoint toward each route neighbor, so the line
+     * stays inside the square and its neighbor draws the other half. */
+    for (let dir = 0; dir < movement.dircount; dir++) {
+      if (!(routeBits[i] & (1 << dir))) continue;
+      const j = i + w * movement.dirs[dir].dy + movement.dirs[dir].dx;
+      const nc = cellCenter(j, w, state.mode, tileSize, ds.offsetX, ds.offsetY);
+      thickLine(
+        dr,
+        ds.thickness,
+        tx1,
+        ty1,
+        (cx + nc.cx) / 2,
+        (cy + nc.cy) / 2,
+        COL_HINT,
+      );
     }
 
     /* Cell border. */
