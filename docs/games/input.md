@@ -291,7 +291,11 @@ Three resolutions, by whether the game uses the secondary button:
   cell↔dot notation was reachable only by holding still for 350 ms and *then*
   dragging. It is now a plain drag, with the right button unchanged for anyone
   who has the habit. The price is that the left button then has two meanings —
-  see § "A button with two meanings resolves on the release".
+  see § "A button with two meanings resolves on the release". Ascent is the
+  second case: choosing the number below a selected one was a right-click, so
+  on a phone it took a long press nobody found, and the owner asked for a tap
+  instead ("cycling seems more intuitive"). A second tap on the number now
+  does it, and the right-click still works.
 
 **Tell:** a drag lifecycle that matches `LEFT_DRAG` specifically where
 `isMouseDrag` is meant — it strands the touch player whose press was promoted.
@@ -674,6 +678,15 @@ confused with `GridDrag.live`, which a press sets immediately — that
 distinction is the whole reason the flag exists. Do not spell it `aiming`:
 Bridges did briefly, and Inertia's `aiming`/`aimDir` mean the *aimed direction*
 of an aim drag, which is a different thing. One name, one concept.
+
+**A second tap that cycles belongs on the release too.** Ascent's selected
+number cycles what it offers on the squares around it (the number above, the
+one below, then deselected), and the first cut acted on the press. But a press
+on the selected number is also how a drag from it begins, so the drag then
+placed the other number. The cycle now acts on the release, where the
+double-tap deselect already lived, and a press on the number already selected
+leaves what it offers alone, or the release could not tell which state it was
+in. `ascent.test.ts` walks both the taps and the drag.
 
 **Tents resolves by where the drag ends, not by how far it went.** Upstream's
 left drag was only ever "a click at the start", so its link gesture (a drag
