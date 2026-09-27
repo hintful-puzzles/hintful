@@ -318,6 +318,18 @@ function scratch() {
   return { state, ui, ds, center };
 }
 
+describe("ascent places beside a number with neither neighbor placed", () => {
+  it("offers the next number, and places it on the square clicked beside it", () => {
+    const { state, ui, ds, center } = scratch();
+    state.grid[12] = 10; // alone: neither 9 nor 11 is on the board
+    ascentGame.changedState?.(ui, null, state);
+    ascentGame.interpretMove(state, ui, ds, center(12), LEFT_BUTTON);
+    expect(ui.select).toBe(11);
+    const m = ascentGame.interpretMove(state, ui, ds, center(13), LEFT_BUTTON);
+    expect(m).toMatchObject({ kind: "place", cell: 13, n: 11 });
+  });
+});
+
 describe("ascent auto-advance past a placed run", () => {
   it("jumps the focus to the run's leading edge and recommends the next open number", () => {
     const { state, ui, ds, center } = scratch();

@@ -14,7 +14,7 @@ More information: http://www.janko.at/Raetsel/Hidoku/index.htm
 
 There are three ways to enter a number:
 
-1. Click a number to highlight it, then click (or drag to) an adjacent cell to place the next number in the sequence. The arrow keys and Enter can be used to emulate mouse clicks.
+1. Click a number to highlight it, then click (or drag to) an adjacent cell to place the next number in the sequence. If the number just before it is placed and the one after is not, that is the one after; the other way round, the one before; and if neither is placed yet, the one after, with a right-click on the square switching it to the one before. The arrow keys and Enter can be used to emulate mouse clicks.
 
 2. Click an empty cell, then type a multi-digit number. To confirm a number, either press Enter, an arrow key, or click any cell.
 
@@ -22,7 +22,7 @@ There are three ways to enter a number:
 
 To remove numbers, right-click or right-drag a number. Middle-click clears too.
 
-It's also possible to draw a path while the numbers inside the path are still unknown. Left-click and drag across cells to draw a line. Right-click or right-drag to clear the line going through a cell.
+It's also possible to draw a path while the numbers inside the path are still unknown. Left-click and drag across cells to draw a line, starting from an empty cell (a drag starting from a number places numbers instead). Right-click or right-drag to clear the line going through a cell.
 
 If a path has only a single number, the endpoints will display one or two smaller numbers, which represent the numbers which are valid for this cell.
 

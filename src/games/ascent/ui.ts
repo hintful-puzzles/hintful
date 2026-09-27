@@ -193,7 +193,10 @@ function uiSeek(ui: AscentUi, state: AscentState): void {
   let n = start;
   let hasnext = n === state.last || ui.positions[n + 1] !== CELL_NONE;
   let hasprev = n === 0 || ui.positions[n - 1] !== CELL_NONE;
-  ui.dir = n < 0 || (hasnext && hasprev) ? 0 : hasnext ? -1 : hasprev ? +1 : 0;
+  // A number with neither neighbor placed offers the next one: upstream offered
+  // nothing, so the square beside it would take no number at all. A right-click
+  // there cycles the previous one in (`candidatesFor`).
+  ui.dir = n < 0 || (hasnext && hasprev) ? 0 : hasnext ? -1 : +1;
   ui.select = start + ui.dir;
 
   n = start;
