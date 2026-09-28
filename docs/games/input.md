@@ -869,6 +869,22 @@ Normative: the on-screen-keys requirement in
   What a game still owes is that the key *acts*: the engine can put it on the
   panel, only the game can make it toggle. `pencil-mode-key.test.ts` asserts
   both, with an exemption ledger that is empty and still asserts something.
+- **Whether a game has a keypad is checked per game, from what its board is.**
+  A board with a `pencil` array (`hasPencilArray`, the board arm of
+  `takesNotes`) writes its notes by typing a symbol, so it must offer a keypad;
+  a game that offers one *without* such an array is named in
+  `input-parity.test.ts`'s `KEYPAD_WITHOUT_PENCIL` with the reason touch play
+  needs it (Filling, whose numbers are only ever typed; Guess, whose colors are
+  only ever pressed). The check is a biconditional, so adding a keypad to a
+  game with no pencil array fails until the game is ledgered. It replaced a
+  floor under the number of keypads, which went slack by three as keypads were
+  added and would have let any of them be lost unnoticed
+  (`derive-the-keypad-floor`).
+- **Clear and Backspace are one key.** The panel's Clear sends `CLEAR_BUTTON`
+  (8) and the keyboard's Backspace sends `DELETE` (127), so test for
+  `isEraseKey`, never for the panel's code. Unequal tested `8` alone and
+  shipped a Backspace its help page promised; the inert-key case now presses
+  Backspace wherever a panel offers Clear.
 - **Put a game's markable elements on the panel, wherever they are an
   enumerable per-cell set.** Every digit game already does — select a cell, tap
   a value, and in notes mode the same key toggles it as a mark. **Rome did not**

@@ -65,6 +65,7 @@
 
 import { beforeAll, describe, expect, it } from "vitest";
 import { registerAllGames } from "../games/index.ts";
+import { CLEAR_BUTTON, hasPencilArray } from "./key-labels.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -73,6 +74,7 @@ import {
   CURSOR_SELECT2,
   CURSOR_UP,
   cursorDelta,
+  DELETE,
   isCancelKey,
   isMouseDown,
   isMouseDrag,
@@ -83,6 +85,7 @@ import {
   MOD_MASK,
   MOD_STYLUS,
 } from "./pointer.ts";
+import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import {
   type AnyGame,
@@ -137,6 +140,23 @@ const INERT_PANEL_KEYS: Record<string, string[]> = {
  * the keyboard origin fell through to the `finishTyping` tail's `UI_UPDATE`.
  */
 const CLAIMS_UNACTIONABLE: Record<string, string> = {};
+
+/**
+ * Games that offer a keypad although their board has no `pencil` array, each
+ * with the reason. A `pencil` array is derived as needing one
+ * ({@link hasPencilArray}); these are the games whose need cannot be read off
+ * the board, so it is written down — and asserted exact, so a game here that
+ * loses its keypad fails, and a game that gains one must say why.
+ */
+const KEYPAD_WITHOUT_PENCIL: Record<string, string> = {
+  filling:
+    "A number is placed only by typing it into a selected square; no pointer " +
+    "gesture writes one, so on touch the keypad is the only way to fill a square.",
+  guess:
+    "A color is entered only by pressing its key: a tap chooses which peg the " +
+    "next color goes into, never the color. Its notes rule colors out of the " +
+    "answer row rather than living in a per-cell pencil array.",
+};
 
 describe("a game does not claim a button it did not act on", () => {
   /**
@@ -426,12 +446,51 @@ describe("every on-screen key a game offers reaches that game", () => {
    */
   let panelGames = 0;
   let panelKeys = 0;
-  /** Every game offering a panel, read without building a board, so the floor
-   * below holds even on a run whose cases were narrowed to one game — a game
-   * that loses its keypad has no case left to fail. */
+  const offersKeypad = (game: AnyGame) =>
+    (game.requestKeys?.(game.defaultParams()) ?? []).length > 0;
   const offered = REGISTERED.filter((id) => {
     const game = getTsGame(id) as AnyGame | undefined;
-    return (game?.requestKeys?.(game.defaultParams()) ?? []).length > 0;
+    return !!game && offersKeypad(game);
+  });
+
+  /*
+   * A game that *loses* its keypad has every on-screen key made unreachable at
+   * once, which is the largest version of the defect this block exists to
+   * catch — and the key-by-key case below cannot see it, because that game no
+   * longer has a case. So every game carries a case of its own asking whether
+   * it should have a keypad, from what its board is, rather than a floor under
+   * the population that stays green while one game drops out.
+   */
+  for (const id of REGISTERED) {
+    const game = getTsGame(id) as AnyGame | undefined;
+    if (!game) continue;
+
+    it(`${id}: offers a keypad exactly when its entry needs one`, () => {
+      const params = game.defaultParams();
+      const state = game.newState(
+        params,
+        game.newDesc(params, randomNew(`keypad-${id}`)).desc,
+      );
+      const needs = hasPencilArray(state) || id in KEYPAD_WITHOUT_PENCIL;
+      expect(
+        offersKeypad(game),
+        needs
+          ? `${id} offers no keypad, but ${
+              id in KEYPAD_WITHOUT_PENCIL
+                ? "KEYPAD_WITHOUT_PENCIL says its entry is typed"
+                : "its notes are a pencil array, written by typing a symbol"
+            } — and on touch the keypad is the only way to type.`
+          : `${id} offers a keypad without a pencil array. Add it to ` +
+              "KEYPAD_WITHOUT_PENCIL with the reason touch play needs one.",
+      ).toBe(needs);
+    });
+  }
+
+  it("the keypad ledger names only registered games, each with its reason", () => {
+    for (const [id, why] of Object.entries(KEYPAD_WITHOUT_PENCIL)) {
+      expect(REGISTERED, `${id} is ledgered but not registered`).toContain(id);
+      expect(why.length, `${id}'s entry states no reason`).toBeGreaterThan(80);
+    }
   });
 
   for (const id of REGISTERED) {
@@ -460,31 +519,30 @@ describe("every on-screen key a game offers reaches that game", () => {
        * is too long only ever costs time.
        */
       const primes = [0, 1, 12];
-      for (const k of panel) {
-        let reached = false;
+      const reaches = (button: number): boolean => {
         // Walk the keyboard cursor, and separately select a cell with the
         // pointer, since a panel key acts on whichever the game tracks.
-        for (let j = 0; j < 8 && !reached; j++)
-          for (let i = 0; i < 8 && !reached; i++)
+        for (let j = 0; j < 8; j++)
+          for (let i = 0; i < 8; i++)
             for (const prime of primes) {
               reset();
               for (let n = 0; n <= i; n++) m.processInput(0, 0, CURSOR_RIGHT);
               for (let n = 0; n < j; n++) m.processInput(0, 0, CURSOR_DOWN);
               for (let n = 0; n < prime; n++) m.processInput(0, 0, panel[0].button);
-              if (m.processInput(0, 0, k.button)) reached = true;
+              if (m.processInput(0, 0, button)) return true;
             }
-        for (const p of pts) {
-          if (reached) break;
+        for (const p of pts)
           for (const prime of primes) {
             reset();
             m.processInput(p.x, p.y, LEFT_BUTTON);
             m.processInput(p.x, p.y, LEFT_RELEASE);
             for (let n = 0; n < prime; n++) m.processInput(0, 0, panel[0].button);
-            if (m.processInput(0, 0, k.button)) reached = true;
+            if (m.processInput(0, 0, button)) return true;
           }
-        }
-        if (!reached) dead.push(`${k.label} (button ${k.button})`);
-      }
+        return false;
+      };
+      for (const k of panel)
+        if (!reaches(k.button)) dead.push(`${k.label} (button ${k.button})`);
 
       expect(
         dead,
@@ -492,18 +550,20 @@ describe("every on-screen key a game offers reaches that game", () => {
           "touch the panel is the only way to type, so these are inputs a " +
           "touch player cannot make.",
       ).toEqual(INERT_PANEL_KEYS[id] ?? []);
+
+      // The panel's Clear sends `CLEAR_BUTTON` and the keyboard's Backspace
+      // sends `DELETE`, so a game can honor one and not the other. Unequal did,
+      // with its help page promising Backspace.
+      if (panel.some((k) => k.button === CLEAR_BUTTON))
+        expect(
+          reaches(DELETE),
+          `${id}'s panel Clear works but Backspace from a keyboard does not; ` +
+            "test for `isEraseKey`, not for the panel's code alone.",
+        ).toBe(true);
     });
   }
 
-  it("swept a plausible number of panels", () => {
-    // A floor that only ever moves up. It is set at the twelve panels present
-    // when written rather than comfortably below them, because the loose
-    // version of this line is what let a deliberately-removed `requestKeys`
-    // hook pass unnoticed while task 3.4 was proving these guards fail: a game
-    // that *loses* its keypad has every on-screen key made unreachable at once,
-    // which is the largest version of the defect this describe block exists to
-    // catch, and it was the one thing it could not see.
-    expect(offered.length).toBeGreaterThanOrEqual(12);
+  it("swept every panel in the sweep", () => {
     expect(panelGames).toBe(offered.filter(inSweep).length);
   });
 

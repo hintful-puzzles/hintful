@@ -42,9 +42,18 @@ export const pencilModeKey: KeyLabel = { button: PENCIL_MODE_BUTTON, label: "Mar
  * § "A game joins a shared mechanic by *having* it").
  */
 export function takesNotes(state: unknown, ui: unknown): boolean {
-  const pencil = (state as { pencil?: ArrayLike<number> } | undefined)?.pencil;
-  if (pencil && typeof pencil.length === "number") return true;
+  if (hasPencilArray(state)) return true;
   return typeof (ui as { pencilMode?: unknown } | undefined)?.pencilMode === "boolean";
+}
+
+/**
+ * The board arm of {@link takesNotes}: a `pencil` array, one set of symbols per
+ * cell. A note there is written by typing a symbol, so on touch it needs the
+ * keypad, where the flag arm's notes (Loopy's edges, Slant's lines) do not.
+ */
+export function hasPencilArray(state: unknown): boolean {
+  const pencil = (state as { pencil?: ArrayLike<number> } | undefined)?.pencil;
+  return !!pencil && typeof pencil.length === "number";
 }
 
 /**

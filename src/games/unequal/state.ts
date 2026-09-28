@@ -16,7 +16,12 @@ import { MAX_CANDIDATE_VALUE } from "../../engine/candidate-bits.ts";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { tierNames } from "../../engine/difficulty.ts";
-import { digitOf, type GridCursor, newCursor } from "../../engine/pointer.ts";
+import {
+  digitOf,
+  type GridCursor,
+  isEraseKey,
+  newCursor,
+} from "../../engine/pointer.ts";
 
 // --- difficulty ------------------------------------------------------------
 
@@ -179,7 +184,7 @@ export function displayChar(n: number, order: number): string {
  * 0. Mirrors upstream `c2n` (includes keypresses for `interpretMove`). */
 export function charValue(c: number, order: number): number {
   if (c < 0 || c > 0xff) return -1;
-  if (c === 32 || c === 8) return 0; // space / backspace
+  if (c === 32 || isEraseKey(c)) return 0;
   // Above order 9 the digits shift up by one: `'0'` is 1 and `'9'` is 10.
   const digit = digitOf(c);
   if (digit !== null) return order < 10 ? digit : digit + 1;
