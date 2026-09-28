@@ -1,6 +1,7 @@
 # add-separate-hint
 
-**Status: scaffolded, not started.** Chosen 2026-09-28, after
+**Status: implemented 2026-09-28; `design.md` records how each question below
+was answered.** Chosen 2026-09-28, after
 `solo-ladder-as-declared-techniques`, from the hintless games that still have a
 deduction solver: Separate, Signpost and Mosaic (`characterize-the-hint-
 assessment-corpus` ranked the rest of that corpus, and all of it has since

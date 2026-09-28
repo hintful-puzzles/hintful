@@ -14,19 +14,22 @@ import {
   DISABLED,
   DX,
   DY,
-  FLIP,
   interpretBorderGridInput,
 } from "../../engine/border-grid.ts";
+import {
+  borderHintJourney,
+  borderHintKeepTrack,
+} from "../../engine/border-grid-hint.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type HintResult,
   type HintStep,
-  type HintTrackVerdict,
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { edgeContinuation } from "../../engine/hint-text.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor, stripModifiers } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
@@ -130,7 +133,7 @@ function explain(
   leg: number,
   groupSize: number,
 ): string {
-  if (leg > 0) return say.continuation(fe.kind);
+  if (leg > 0) return edgeContinuation(fe.kind);
   const c = clues[fe.y * w + fe.x];
   const multi = groupSize > 1;
   switch (fe.rule) {
@@ -152,55 +155,6 @@ function explain(
   }
 }
 
-/** Translate one leg of a firing into a narrated, highlighted hint step:
- * the two-sided `edges` edit that sets this edge, the firing's still-to-do
- * edges as sibling highlights, the referenced cells (a clue pair or the
- * region), and `continuesPrevious` on every leg past the first — so a
- * multi-edge deduction reads and plays as one journey. */
-function buildStep(
-  group: ForcedEdge[],
-  leg: number,
-  clues: Int8Array,
-  w: number,
-  k: number,
-): HintStep<PalisadeMove, PalisadeHint> {
-  const fe = group[leg];
-  const { x, y, dir, kind } = fe;
-  const hx = x + DX[dir];
-  const hy = y + DY[dir];
-  const bit = kind === "wall" ? BORDER(dir) : DISABLED(BORDER(dir));
-  const flip = kind === "wall" ? BORDER(FLIP(dir)) : DISABLED(BORDER(FLIP(dir)));
-  // Siblings = the firing's edges not yet acted on, so leg 0 shows the
-  // whole set and the orange siblings drop off as the legs complete.
-  const siblings = group.slice(leg + 1);
-  return {
-    move: {
-      type: "edges",
-      edits: [
-        { x, y, flag: bit },
-        { x: hx, y: hy, flag: flip },
-      ],
-    },
-    explanation: explain(fe, clues, w, k, leg, group.length),
-    ...(leg > 0 ? { continuesPrevious: true } : {}),
-    highlights: {
-      x,
-      y,
-      dir,
-      kind,
-      // The one region a sentence is about is its hatch (docs/games/hints.md
-      // § "Hatch the line the sentence names"); a clue, a corner or the two
-      // regions a join would merge stay outlined.
-      ...(fe.rule === "notTooSmall" || fe.rule === "equivalentEdges"
-        ? { hatch: fe.cells?.map((i) => ({ x: i % w, y: Math.floor(i / w) })) }
-        : { cells: fe.cells?.map((i) => ({ x: i % w, y: Math.floor(i / w) })) }),
-      edges: siblings.length
-        ? siblings.map((s) => ({ x: s.x, y: s.y, dir: s.dir }))
-        : undefined,
-    },
-  };
-}
-
 /** Compute the next deductions as a hint plan, seeded from the player's
  * current borders and no-wall marks. Refuses on a solved board or one
  * carrying a mistake, so a hint is never built on a wrong wall. Edges
@@ -220,34 +174,26 @@ function hint(state: PalisadeState): HintResult<PalisadeMove, PalisadeHint> {
   for (let g = 0; g < forced.length; ) {
     let end = g + 1;
     while (end < forced.length && forced[end].group === forced[g].group) end++;
-    const groupEdges = forced.slice(g, end);
-    for (let leg = 0; leg < groupEdges.length; leg++) {
-      steps.push(buildStep(groupEdges, leg, state.clues, state.w, state.k));
-    }
+    const group = forced.slice(g, end);
+    const fe = group[0];
+    const cells = fe.cells ?? [];
+    steps.push(
+      ...borderHintJourney(
+        state.w,
+        group,
+        (leg) => explain(fe, state.clues, state.w, state.k, leg, group.length),
+        // The one region a sentence is about is its hatch (docs/games/hints.md
+        // § "Hatch the line the sentence names"); a clue, a corner or the two
+        // regions a join would merge stay outlined.
+        fe.rule === "notTooSmall" || fe.rule === "equivalentEdges"
+          ? { hatch: cells }
+          : { cells },
+        (edits): PalisadeMove => ({ type: "edges", edits }),
+      ),
+    );
     g = end;
   }
   return { ok: true, steps };
-}
-
-/** The player's move completes the step iff its edit on the hinted cell
- * toggles the hinted bit *on*. Side-agnostic (the shared edge is always
- * recorded on the hinted cell's `dir` side) and button-checked (a
- * wrong-button click sets the other bit → `"off"`). */
-function hintKeepTrack(
-  m: PalisadeMove,
-  step: HintStep<PalisadeMove>,
-  state: PalisadeState,
-): HintTrackVerdict {
-  if (m.type !== "edges") return "off";
-  const hl = step.highlights as PalisadeHint;
-  const i = hl.y * state.w + hl.x;
-  const bit = hl.kind === "wall" ? BORDER(hl.dir) : DISABLED(BORDER(hl.dir));
-  for (const e of m.edits) {
-    if (e.x === hl.x && e.y === hl.y) {
-      return (state.borders[i] ^ e.flag) & bit ? "completed" : "off";
-    }
-  }
-  return "off";
 }
 
 // --- Game object -----------------------------------------------------------
@@ -293,7 +239,13 @@ export const palisadeGame: Game<
 
   findMistakes,
   hint,
-  hintKeepTrack,
+  hintKeepTrack: (m, step, state) =>
+    borderHintKeepTrack(
+      m.type === "edges" ? m.edits : null,
+      step,
+      state.w,
+      state.borders,
+    ),
 
   textFormat,
   statusbarText: (s) => `Region size: ${s.k}`,

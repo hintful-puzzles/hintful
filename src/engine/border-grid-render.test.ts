@@ -16,13 +16,19 @@
 
 import { describe, expect, it } from "vitest";
 import { BORDER, margin, moveBorderCursor } from "./border-grid.ts";
+import * as render from "./border-grid-render.ts";
 import {
   BORDER_ERROR,
   borderGridSize,
   CONTAINS_CURSOR,
   center,
   cursorBits,
+  EDGE_HINT,
+  F_CLUE_ERROR,
   F_CORRECT,
+  F_FLASH,
+  F_HINT_CELL,
+  F_HINT_REGION,
   GAME_FLAG_SHIFT,
   mistakeEdgeBits,
   tileWidth,
@@ -92,13 +98,42 @@ describe("the Check & Save overlay folds into the live error channel", () => {
 });
 
 describe("the packed flags do not collide", () => {
+  // Every flag the module exports, each at its widest. A new one missing from
+  // this list is the one gap the checks below cannot see, so the module's
+  // exports are counted against it.
+  const FLAGS: Record<string, number> = {
+    borders: 0xff, // the border bits themselves, and their DISABLED companions
+    BORDER_ERROR: BORDER_ERROR(0xf),
+    F_CLUE_ERROR,
+    F_FLASH,
+    CONTAINS_CURSOR: CONTAINS_CURSOR(0x1ff),
+    F_CORRECT,
+    EDGE_HINT: EDGE_HINT(0xf),
+    F_HINT_CELL,
+    F_HINT_REGION,
+  };
+
+  it("lists every flag the module exports", () => {
+    const exported = Object.keys(render).filter((n) =>
+      /^(F_[A-Z_]+|[A-Z_]+_ERROR|CONTAINS_CURSOR|EDGE_HINT)$/.test(n),
+    );
+    expect(exported.sort()).toEqual(
+      Object.keys(FLAGS)
+        .filter((n) => n !== "borders")
+        .sort(),
+    );
+  });
+
+  it("claims no bit twice", () => {
+    const names = Object.keys(FLAGS);
+    const pairs = names.flatMap((a, i) => names.slice(i + 1).map((b) => [a, b]));
+    expect(pairs).toHaveLength((names.length * (names.length - 1)) / 2);
+    for (const [a, b] of pairs)
+      expect(FLAGS[a] & FLAGS[b], `${a} overlaps ${b}`).toBe(0);
+  });
+
   it("leaves a game's own bits clear of every shared one", () => {
-    const shared =
-      BORDER_ERROR(0xf) |
-      F_CORRECT |
-      CONTAINS_CURSOR(0x1ff) |
-      // the border bits themselves, and their DISABLED companions
-      0xff;
+    const shared = Object.values(FLAGS).reduce((acc, f) => acc | f, 0);
     // Every bit a game may use starts at GAME_FLAG_SHIFT, and the shared layout
     // must claim none of them. Asserted rather than eyeballed, because the two
     // grow independently and a collision is invisible — it would show up as a

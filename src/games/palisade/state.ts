@@ -9,13 +9,14 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import type { BorderHint } from "../../engine/border-grid-hint.ts";
 import { digitValue } from "../../engine/decimal.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig, parseConfigInt } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
-import type { GameStatus, Point } from "../../engine/types.ts";
+import type { GameStatus } from "../../engine/types.ts";
 
 // The edge encoding, direction tables and bounds test are shared with Separate
 // in `engine/border-grid.ts`. Import them from there, never through this file:
@@ -84,21 +85,10 @@ export interface PalisadeMistake {
   dir: number;
 }
 
-/** A displayed hint step's highlight: the edge the player should set
- * (`(x,y)` + `dir`, `kind` = wall to draw / no-wall to mark), the particular
- * cells the explanation references (a clue, a clue pair, a corner, two regions
- * to be joined), outlined, the one region it is about ("this region", "the
- * same region"), hatched, and the firing's other still-to-do edges,
- * highlighted alongside. */
-export interface PalisadeHint {
-  x: number;
-  y: number;
-  dir: number;
-  kind: "wall" | "nowall";
-  cells?: ReadonlyArray<Point>;
-  hatch?: ReadonlyArray<Point>;
-  edges?: ReadonlyArray<{ x: number; y: number; dir: number }>;
-}
+/** A displayed hint step's highlight: the border grid's own. The cells Palisade
+ * outlines are a clue, a clue pair, a corner or two regions a join would merge;
+ * the region it hatches is the one "this region" / "the same region" names. */
+export type PalisadeHint = BorderHint;
 
 // --- params ---------------------------------------------------------------
 

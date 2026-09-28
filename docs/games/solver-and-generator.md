@@ -109,6 +109,7 @@ Converged call sites to read as exemplars, easiest first:
 | a recorder threaded through the rungs, untouched by adoption, so an explained hint survives it | [`galaxies/solver.ts`](../../src/games/galaxies/solver.ts) (`galaxiesLadder`) |
 | Tricky deductions upstream folds into Easy sweeps, each split into a rung of its own, and a rung whose tier sits *below* Easy because the generator caps there | [`tents/solver.ts`](../../src/games/tents/solver.ts) (`tentsLadder`) |
 | a terminal rung that ends the ladder through `settled`, and a rung that rebuilds shared state the rung before it just built | [`pearl/solver.ts`](../../src/games/pearl/solver.ts) (`pearlLadder`) |
+| a rung that exists only because the player's **notation** needs it: it writes the edge walls a merge leaves implied (upstream ORs a disconnect matrix silently), touches nothing the generator reads, and so moves no board and shows only in the census; and a sweep split per firing on the recording path because its disconnects are order-independent | [`separate/solver.ts`](../../src/games/separate/solver.ts) (`separateLadder`) |
 | **two grades with a cap each**, so the runner's one grade and `maxTier` go unused: the ladder holds only the rungs both caps admit and each rung raises its own scale; and rungs that work shared state out afresh (cages reduced by their filled cells, partial cages cached by filled-cell count) so any one can run alone | [`solo/solver.ts`](../../src/games/solo/solver.ts) (`SolverUsage.ladder`) |
 
 ### Proving an adoption: the fixtures are not enough

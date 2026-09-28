@@ -13,18 +13,23 @@
  * - **The four edge rects**, keyed off the border bits the module defines, and
  *   the tile skeleton around them — clip, body, content, edges, unclip, update.
  * - **The geometry.**
+ * - **The hint's marks**: its forced edges, the region its sentence is about
+ *   (hatched) and the squares it cites (outlined). A hint here always ends in
+ *   the player's own edge notation, so how it shows is the notation's.
  *
  * WHAT DOES NOT live here is the clue layer and everything below it. Palisade
- * draws a digit, counts a cell's walls, and has an explained hint with its own
- * marks; Separate draws a letter, shades regions and reddens a letter repeated
- * inside one. Those are the puzzles. A game supplies its own palette indices and
+ * draws a digit and counts a cell's walls; Separate draws a letter, shades
+ * regions and reddens a letter repeated inside one. Those are the puzzles. A game supplies its own palette indices and
  * a `drawContent` callback for the middle of the tile, and computes its own
  * validity — the shared code never asks which game it is drawing.
  */
 
 import { BORDER, DISABLED, DX, DY, margin, outOfBounds } from "./border-grid.ts";
+import type { BorderHint } from "./border-grid-hint.ts";
 import type { Dsf } from "./dsf.ts";
 import type { GameDrawing } from "./game.ts";
+import { hatchPeriod } from "./hatch.ts";
+import { drawMarkSides, MARK_ALL } from "./hint-mark.ts";
 import type { GridCursor } from "./pointer.ts";
 import type { Rect, Size } from "./types.ts";
 
@@ -74,10 +79,14 @@ export const CONTAINS_CURSOR = (x: number): number => x << 14;
 export const F_CORRECT = 1 << 23;
 /** This edge is one the displayed hint forces. Unused by a game with no hint. */
 export const EDGE_HINT = (border: number): number => border << 24;
-/** The first bit a game may use for something of its own (Palisade's
- * hint-referenced cell). Kept as a named floor so a new flag here and a new
- * flag in a game cannot silently collide. */
-export const GAME_FLAG_SHIFT = 28;
+/** A square the displayed hint's sentence cites, outlined (a clue, one of two
+ * regions). */
+export const F_HINT_CELL = 1 << 28;
+/** A square of the one region the displayed hint's sentence is about, hatched. */
+export const F_HINT_REGION = 1 << 29;
+/** The first bit a game may use for something of its own. Kept as a named
+ * floor so a new flag here and a new flag in a game cannot silently collide. */
+export const GAME_FLAG_SHIFT = 30;
 
 /** Colors the shared parts draw with, by each game's own palette index. */
 export interface BorderGridColors {
@@ -91,8 +100,11 @@ export interface BorderGridColors {
   /** A border not yet decided. */
   lineMaybe: number;
   error: number;
-  /** An edge the displayed hint forces; omit in a game with no hint. */
+  /** An edge the displayed hint forces, and the hatch over the region its
+   * sentence is about; omit in a game with no hint. */
   hintEdge?: number;
+  /** The outline on a square the displayed hint cites; omit with `hintEdge`. */
+  hintEvidence?: number;
   /** The keyboard cursor's outline. */
   cursor: number;
 }
@@ -169,6 +181,27 @@ export function mistakeEdgeBits(
 ): Int32Array {
   const mask = new Int32Array(w * h);
   for (const m of mistakes ?? []) mask[m.y * w + m.x] |= BORDER_ERROR(BORDER(m.dir));
+  return mask;
+}
+
+/**
+ * The displayed hint step, as per-cell bits: its edge and the firing's other
+ * edges on both squares each separates (they share a fate, so they share one
+ * channel and one color), and the squares its sentence cites.
+ */
+export function hintTileBits(w: number, h: number, hl?: BorderHint): Int32Array {
+  const mask = new Int32Array(w * h);
+  if (!hl) return mask;
+  const markEdge = (ex: number, ey: number, edir: number): void => {
+    mask[ey * w + ex] |= EDGE_HINT(BORDER(edir));
+    const nx = ex + DX[edir];
+    const ny = ey + DY[edir];
+    if (!outOfBounds(nx, ny, w, h)) mask[ny * w + nx] |= EDGE_HINT(BORDER(edir ^ 2));
+  };
+  markEdge(hl.x, hl.y, hl.dir);
+  for (const e of hl.edges ?? []) markEdge(e.x, e.y, e.dir);
+  for (const cell of hl.cells ?? []) mask[cell.y * w + cell.x] |= F_HINT_CELL;
+  for (const cell of hl.hatch ?? []) mask[cell.y * w + cell.x] |= F_HINT_REGION;
   return mask;
 }
 
@@ -276,6 +309,22 @@ export function drawBorderTile(
         ? colors.correct
         : colors.background,
   );
+
+  // The hint's evidence sits under the game's content: a region is hatched, a
+  // cited square outlined rather than washed, because a wash would cover the
+  // glyph the deduction reads and the `F_CORRECT` shade that shows a region is
+  // finished. The outline is inset in the body because the square's border is
+  // where the hint's own forced edges are drawn.
+  if (colors.hintEdge !== undefined && flags & F_HINT_REGION)
+    dr.drawHatch(body, colors.hintEdge, hatchPeriod(ts));
+  if (colors.hintEvidence !== undefined && flags & F_HINT_CELL) {
+    drawMarkSides(
+      dr,
+      { box: body, outer: 0, inner: Math.max(2, ts >> 4) },
+      MARK_ALL,
+      colors.hintEvidence,
+    );
+  }
 
   drawContent?.(body, { x, y });
 

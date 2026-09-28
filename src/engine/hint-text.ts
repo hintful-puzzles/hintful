@@ -7,7 +7,8 @@
  * Latin arms (Keen, Unequal, Group, Salad), the forcing chain (those four plus
  * Towers and Solo), the candidate games' two setup steps and the conclusions
  * their strikes end in, the sliding-tile
- * games' "Working on tile N:" prefix, and the helpers that join a list or
+ * games' "Working on tile N:" prefix, the border-grid games' later legs, and
+ * the helpers that join a list or
  * choose "a" or "an". Which sentence a step speaks is decided by
  * the deduction (`latin-hint.ts`, `candidate-hint.ts` and each game's hint);
  * nothing here decides anything.
@@ -74,6 +75,17 @@ export function workingOn(tile: number): string {
 /** Shared marker appended to a staging move (one that does not yet land
  * its tile in its final spot). */
 export const HINT_SETTING_UP = "(setting up)";
+
+// --- the border-grid games' later legs ---------------------------------------
+
+/** A later leg of a firing that sets several edges (Palisade, Separate): short
+ * and kind-specific, because the first leg gave the full reason and is still
+ * on screen. */
+export function edgeContinuation(kind: "wall" | "nowall"): string {
+  return kind === "wall"
+    ? "…and this edge must be a wall too."
+    : "…and this edge can't be a wall either.";
+}
 
 // --- the candidate games' setup steps ---------------------------------------
 

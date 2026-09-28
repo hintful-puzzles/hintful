@@ -14,13 +14,6 @@
 type EdgeKind = "wall" | "nowall";
 
 export const say = {
-  /** A later leg of a multi-edge firing: short and kind-specific, because the
-   * first leg already gave the full reason and is still on screen. */
-  continuation: (kind: EdgeKind): string =>
-    kind === "wall"
-      ? "…and this edge must be a wall too."
-      : "…and this edge can't be a wall either.",
-
   // Upstream's `solver_connected_clues_versus_region_size`, whose bound the
   // narration has to *show* rather than assert: if the shared edge were open,
   // each clue's walls would all sit on its other three sides, leaving

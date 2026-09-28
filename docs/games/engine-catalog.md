@@ -137,8 +137,22 @@ The third layer: the error model over the two DSFs (a region over `k`, under
 *moves*, the four edge rects, the tile skeleton (clip, body, content, edges,
 unclip, update) and the board geometry. A game supplies its palette indices as
 `BorderGridColors` and a `drawContent` callback for the middle of the tile, and
-keeps its clue layer entirely — Palisade's digit and hint marks, Separate's
-letter and region shading.
+keeps its clue layer entirely — Palisade's digit, Separate's letter and region
+shading. The hint's marks are the mechanic's: `hintTileBits` folds a displayed
+step into the tile flags, and the tile draws its hatched region and outlined
+squares under the game's content when the palette names `hintEdge` and
+`hintEvidence`.
+
+### `border-grid-hint.ts` — that mechanic's explained hint
+
+The fourth layer, from `add-separate-hint`: the `BorderHint` highlight, the
+journey one firing becomes (a leg per edge, each two-sided, the rest
+`continuesPrevious`), and the keep-track verdict on a click. A game hands in its
+forced edges, its sentence per leg and the squares it cites, and wraps the
+edits in its own `Move`, keeping the input layer's rule that no two games' save
+formats couple through the shared code. The later-leg sentence is
+`edgeContinuation` in `hint-text.ts`. Reach for it in any new border-grid game's
+hint; the deduction and the sentence stay the game's.
 
 Its header records **why a decline was reopened**, which is the part worth
 reading before reopening another: `border-grid.ts` declined sharing "a loop over

@@ -2693,6 +2693,38 @@ The recorder + driver shape that made it clean and resume-safe:
 The recorder is **gated** (`this.recording`), so `runSolver` — the generator's
 path — is byte-identical and the differential is unaffected by construction.
 
+### A solver's silent bookkeeping is the player's work (Separate)
+
+**A fact a solver's data structure carries for free can be a move the player
+still has to make.** Separate's upstream solver keeps "these two components are
+different regions" in a matrix and ORs its rows on a merge, so a grown region
+inherits every separation silently. On the player's board, which knows only
+edges, that inheritance is visible work: the grown region's new boundary with
+its neighbor is still open, the wall-bounded DSF joins the two, and a plan that
+narrates only the solver's own firings ends with a board that is never solved.
+
+The fix was a rung, not a patch in the hint: `walled-apart` walls an open edge
+between two components already disconnected. It writes only the edge state, which
+the generator never reads, so it moves no board, and it narrates as a real
+deduction ("A wall already separates the hatched and outlined regions, so this
+edge between them must be a wall too"), which a player marking their own walls
+needs as often as the hint does. **Before seeding a recording pass from the
+player's marks, list what the solver's state implies that the marks do not
+say**; each item is a rung or a missing notation.
+
+**Two regions in one sentence take two mark shapes.** Outlining both reads as one
+blob, because the per-square outline draws no boundary between them. Separate
+hatches the first and outlines the second and says so ("the hatched and outlined
+regions"); a lone square is named by its letter instead. The border grid's hint
+layer (`engine/border-grid-hint.ts`, the render fold in `border-grid-render.ts`)
+carries both marks, so a third edge game gets them without drawing code.
+
+**A non-monotone rung owes a test from the player's positions.** Separate's
+`only-way` counts a region's neighboring squares, so a region that grows can
+gain choices and a board with more correct marks could say less. The cross-game
+resume walk follows only the hint's own moves; `separate-hint.test.ts` also walks
+from random correct partial boards (909 measured, no stall, a slice kept).
+
 ### Notation and goal are different move sets (Galaxies)
 
 Most games' hints teach in the vocabulary the win condition is written in.

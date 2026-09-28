@@ -2,7 +2,8 @@
  * Separate rendering — the clue layer over the shared border-grid renderer.
  *
  * The mechanic's own look — the three-valued border edges, the error model over
- * the two DSFs, the half-grid cursor, the tile skeleton and the geometry — is
+ * the two DSFs, the half-grid cursor, the tile skeleton, the hint's marks and
+ * the geometry — is
  * [`engine/border-grid-render.ts`](../../engine/border-grid-render.ts), shared
  * with Palisade. What is Separate's and stays here: a cell carries a **letter**,
  * a letter that repeats inside a *completed* wall-bounded region reddens, and a
@@ -10,6 +11,7 @@
  */
 
 import { buildDsf } from "../../engine/border-grid.ts";
+import type { BorderHint } from "../../engine/border-grid-hint.ts";
 import {
   type BorderGridColors,
   type BorderGridDrawState,
@@ -23,6 +25,7 @@ import {
   F_CLUE_ERROR,
   F_CORRECT,
   F_FLASH,
+  hintTileBits,
   invalidateDanglingRegions,
   mistakeEdgeBits,
   newBorderGridDrawState,
@@ -34,15 +37,18 @@ import {
 import {
   ERROR,
   FLASH,
+  HINT_ACTION,
+  HINT_EVIDENCE,
   INK,
   lineMaybeColor,
   lineNoColor,
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
-import type { GameDrawing } from "../../engine/game.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import type {
   SeparateMistake,
+  SeparateMove,
   SeparateParams,
   SeparateState,
   SeparateUi,
@@ -62,6 +68,8 @@ export const COL_LINE_MAYBE = 3;
 export const COL_LINE_NO = 4;
 export const COL_ERROR = 5;
 export const COL_CORRECT = 6; // a completed, correct region (shared gray shade)
+export const COL_HINT = 7; // the edges a hint step sets, and its hatched region
+export const COL_HINT_CELL = 8; // the outline on a square a hint step cites
 
 export function colors(defaultBackground: Color): Color[] {
   const { background } = mkhighlight(defaultBackground);
@@ -70,14 +78,16 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_FLASH] = FLASH;
   out[COL_GRID] = INK;
   out[COL_ERROR] = ERROR;
+  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT_CELL] = HINT_EVIDENCE;
   out[COL_CORRECT] = correctRegionColor(background);
   out[COL_LINE_MAYBE] = lineMaybeColor(background);
   out[COL_LINE_NO] = lineNoColor(background);
   return out;
 }
 
-/** Separate's palette indices, in the shared renderer's terms. It has no hint,
- * so no `hintEdge`, and its cursor is drawn in the grid's own ink. */
+/** Separate's palette indices, in the shared renderer's terms. Its cursor is
+ * drawn in the grid's own ink. */
 const PALETTE: BorderGridColors = {
   background: COL_BACKGROUND,
   flash: COL_FLASH,
@@ -86,6 +96,8 @@ const PALETTE: BorderGridColors = {
   lineNo: COL_LINE_NO,
   lineMaybe: COL_LINE_MAYBE,
   error: COL_ERROR,
+  hintEdge: COL_HINT,
+  hintEvidence: COL_HINT_CELL,
   cursor: COL_GRID,
 };
 
@@ -117,7 +129,7 @@ export function redraw(
   ui: SeparateUi,
   _animTime: number,
   flashTime: number,
-  _hint?: unknown,
+  hint?: HintStep<SeparateMove, BorderHint>,
   mistakes?: readonly SeparateMistake[],
 ): void {
   const ts = ds.tileSize;
@@ -163,11 +175,12 @@ export function redraw(
   invalidateDanglingRegions(w, h, borders, blackDsf, validRoot);
 
   const mistakeMask = mistakeEdgeBits(w, h, mistakes);
+  const hintMask = hintTileBits(w, h, hint?.highlights);
 
   for (let r = 0; r < h; r++) {
     for (let c = 0; c < w; c++) {
       const i = r * w + c;
-      let flags = borders[i] | mistakeMask[i];
+      let flags = borders[i] | mistakeMask[i] | hintMask[i];
 
       if (flash) flags |= F_FLASH;
 

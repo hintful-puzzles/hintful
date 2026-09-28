@@ -2,22 +2,15 @@
  * Palisade rendering — the clue layer over the shared border-grid renderer.
  *
  * The mechanic's own look — the three-valued border edges, the error model over
- * the two DSFs, the half-grid cursor, the tile skeleton and the geometry — is
+ * the two DSFs, the half-grid cursor, the tile skeleton, the hint's marks and
+ * the geometry — is
  * [`engine/border-grid-render.ts`](../../engine/border-grid-render.ts), shared
  * with Separate. What is Palisade's and stays here: a cell carries a **clue**
- * counting its walls, a clue the board already contradicts reddens, a region
- * counts as finished when it is size `k` with every clue in it satisfied, and
- * the explained hint paints its forced edges and outlines its referenced cells.
+ * counting its walls, a clue the board already contradicts reddens, and a region
+ * counts as finished when it is size `k` with every clue in it satisfied.
  */
 
-import {
-  BORDER,
-  BORDER_MASK,
-  buildDsf,
-  DX,
-  DY,
-  outOfBounds,
-} from "../../engine/border-grid.ts";
+import { BORDER_MASK, buildDsf } from "../../engine/border-grid.ts";
 import {
   type BorderGridColors,
   type BorderGridDrawState,
@@ -28,11 +21,10 @@ import {
   drawBorderCursor,
   drawBorderGridBackground,
   drawBorderTile,
-  EDGE_HINT,
   F_CLUE_ERROR,
   F_CORRECT,
   F_FLASH,
-  GAME_FLAG_SHIFT,
+  hintTileBits,
   invalidateDanglingRegions,
   mistakeEdgeBits,
   newBorderGridDrawState,
@@ -53,8 +45,6 @@ import {
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { hatchPeriod } from "../../engine/hatch.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import {
   bitcount,
@@ -111,6 +101,7 @@ const PALETTE: BorderGridColors = {
   lineMaybe: COL_LINE_MAYBE,
   error: COL_ERROR,
   hintEdge: COL_HINT,
+  hintEvidence: COL_HINT_CELL,
   cursor: COL_CURSOR,
 };
 
@@ -119,15 +110,6 @@ const PALETTE: BorderGridColors = {
 export function computeSize(p: PalisadeParams, ts: number): Size {
   return borderGridSize(p.w, p.h, ts);
 }
-
-// --- Palisade's own packed flag ---------------------------------------------
-
-/** A hint-referenced cell (a clue, a clue pair, a corner). Palisade's own bits
- * start at the first index the module reserves for a game, so the two cannot
- * collide silently. */
-const F_HINT_CELL = 1 << GAME_FLAG_SHIFT;
-/** A cell of the region the hint's sentence is about, hatched. */
-const F_HINT_REGION = 1 << (GAME_FLAG_SHIFT + 1);
 
 // --- draw state ------------------------------------------------------------
 
@@ -159,26 +141,7 @@ export function redraw(
   const wh = w * h;
   const flash = Math.floor((flashTime * 5) / FLASH_TIME) % 2;
 
-  // Fold the displayed hint step into per-tile hint channels. The action edge
-  // and the firing's other forced edges (`hl.edges`) share a fate, so they
-  // share one mask and one color; each edge is marked on both of its cells.
-  const hintEdgeMask = new Int32Array(wh);
-  const hintCellMask = new Int32Array(wh);
-  const hl = hint?.highlights;
-  if (hl) {
-    const markEdge = (ex: number, ey: number, edir: number): void => {
-      hintEdgeMask[ey * w + ex] |= BORDER(edir);
-      const nx = ex + DX[edir];
-      const ny = ey + DY[edir];
-      if (!outOfBounds(nx, ny, w, h)) hintEdgeMask[ny * w + nx] |= BORDER(edir ^ 2);
-    };
-    markEdge(hl.x, hl.y, hl.dir);
-    if (hl.edges) for (const e of hl.edges) markEdge(e.x, e.y, e.dir);
-    if (hl.cells)
-      for (const cell of hl.cells) hintCellMask[cell.y * w + cell.x] |= F_HINT_CELL;
-    if (hl.hatch)
-      for (const cell of hl.hatch) hintCellMask[cell.y * w + cell.x] |= F_HINT_REGION;
-  }
+  const hintMask = hintTileBits(w, h, hint?.highlights);
 
   if (!ds.started) {
     drawBorderGridBackground(dr, ts, w, h, PALETTE);
@@ -210,8 +173,7 @@ export function redraw(
     for (let c = 0; c < w; c++) {
       const i = r * w + c;
       const clue = clues[i];
-      let flags =
-        borders[i] | mistakeMask[i] | EDGE_HINT(hintEdgeMask[i]) | hintCellMask[i];
+      let flags = borders[i] | mistakeMask[i] | hintMask[i];
 
       if (validRoot.get(blackDsf.canonify(i))) flags |= F_CORRECT;
       if (flash) flags |= F_FLASH;
@@ -225,22 +187,7 @@ export function redraw(
 
       if (ds.cache[i] !== flags) {
         ds.cache[i] = flags;
-        drawBorderTile(dr, ts, r, c, flags, PALETTE, (body, o) => {
-          if (flags & F_HINT_REGION) dr.drawHatch(body, COL_HINT, hatchPeriod(ts));
-          // The referenced cells are outlined, not washed: a wash would cover
-          // the clue digit the deduction counts with, and the `F_CORRECT`
-          // background that shows a region is finished. The outline is inset in
-          // the cell body because the cell's border is a wall, where the hint's
-          // own forced edges are drawn.
-          if (flags & F_HINT_CELL) {
-            drawMarkSides(
-              dr,
-              { box: body, outer: 0, inner: Math.max(2, ts >> 4) },
-              MARK_ALL,
-              COL_HINT_CELL,
-            );
-          }
-
+        drawBorderTile(dr, ts, r, c, flags, PALETTE, (_body, o) => {
           if (clue !== EMPTY) {
             dr.drawText(
               { x: o.x + center(ts), y: o.y + center(ts) },
