@@ -262,16 +262,18 @@ export function firstUnreflectedPlaceIndex(
 
 /**
  * Every deduction-strike *firing* a plan could take now, in solver order — the
- * choices `HintFrontier` picks among. Only eliminations valid against the
- * current grid count: those before the solver's first placement the board has
- * not made (see {@link firstUnreflectedPlaceIndex}).
+ * choices `HintFrontier` picks among.
  *
- * The first firing with a live teachable mark is always available: every
- * firing before it is already reflected on the notes. A later one is available
- * when its premise, the cells `reads` names for it, holds no mark an earlier
- * firing has yet to strike; otherwise it may rest on that strike, and narrating
- * it now would cite a board the player does not have. A later firing whose
- * `reads` is empty cannot be vouched for and is not offered.
+ * The recording ran on the solver's candidates, which differ from the board the
+ * player has by exactly the marks the solver made and the board has not: a
+ * strike still live in the notes, and a placement whose cell is still empty
+ * (its cell, and its `dup` culls, which it records beside it). The first
+ * firing with a live teachable mark, before any such placement, is always
+ * available: everything before it is already on the board. A later one is
+ * available when its premise, the cells `reads` names for it, holds none of
+ * those marks; otherwise it may rest on one, and narrating it now would cite a
+ * board the player does not have. A later firing whose `reads` is empty cannot
+ * be vouched for and is not offered.
  *
  * Each firing is returned as its still-live records, one `group` (one
  * cage/line/region firing) that the caller splits into a per-cell (or whole)
@@ -287,13 +289,13 @@ export function availableStrikes<R extends DeductionRecord>(
   opts?: {
     /** The note encoding, when the game's is not `1 << n`. */
     enc?: NoteEncoding;
-    /** Which cells count as already-decided for the placement window — see
+    /** Which cells a recorded placement counts as already made in — see
      * {@link firstUnreflectedPlaceIndex}. Defaults to `grid`. */
     placed?: ArrayLike<number>;
   },
 ): R[][] {
   const bit = bitOf(opts?.enc);
-  const lim = firstUnreflectedPlaceIndex(ops, opts?.placed ?? grid, w);
+  const placed = opts?.placed ?? grid;
   const liveAt = (op: R): boolean =>
     op.kind === "elim" &&
     grid[op.y * w + op.x] === 0 &&
@@ -305,15 +307,25 @@ export function availableStrikes<R extends DeductionRecord>(
       .filter((p) => p.x >= 0 && p.y >= 0 && p.x < w && p.y < rows)
       .map((p) => p.y * w + p.x);
   /** Cells an earlier firing still has a live mark in, `dup` bookkeeping
-   * included: it is a strike the board does not show yet either. */
+   * included: it is a strike the board does not show yet either. An unmade
+   * placement's cell is one too. */
   const pending = new Set<number>();
   const out: R[][] = [];
   let first = true;
   let i = 0;
-  while (i < lim) {
-    const g = ops[i].group;
+  while (i < ops.length) {
+    const op = ops[i];
+    if (op.kind === "place") {
+      i++;
+      if (placed[op.y * w + op.x] !== 0) continue;
+      pending.add(op.y * w + op.x);
+      first = false;
+      continue;
+    }
+    const g = op.group;
     const group: R[] = [];
-    while (i < lim && ops[i].group === g) group.push(ops[i++]);
+    while (i < ops.length && ops[i].group === g && ops[i].kind !== "place")
+      group.push(ops[i++]);
     const live = group.filter(liveAt);
     const teachable = live.filter(
       (op) => (op.reason as { kind?: string }).kind !== "dup",

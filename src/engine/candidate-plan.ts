@@ -30,6 +30,7 @@ import {
   type Mark,
   type NoteEncoding,
   nakedSingles,
+  obviousCandidateMarks,
   type Reach,
   regionDuplicateMarks,
   regionReach,
@@ -476,10 +477,15 @@ class CandidateWalk<
       if (this.implicit) {
         // Nothing to pencil in, but a note the player left stale is still on
         // the board, and every strike and hidden single after the opening
-        // reads the notes as written.
+        // reads the notes as written. With none stale there is nothing to set
+        // up, so there is no opening: holding the strikes back behind one
+        // passed over the strike that continued a placement
+        // (`towers-implicit-strike-window`).
         let cleaned = false;
         this.setUp = {
-          done: () => cleaned,
+          done: () =>
+            (cleaned ||=
+              obviousCandidateMarks(grid, pencil, w, reach, enc).length === 0),
           step: () => {
             cleaned = true;
             return clean();

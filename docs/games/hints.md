@@ -3574,7 +3574,13 @@ last rung when every earlier one came up empty, the budget and cap (§
 
 - **The ladder is standard.** Naked singles, then the game's own `rungs`, then
   the recorded strikes, then the recorded placements, in the note-free opening
-  and after it alike. Towers' clue lines, Group's leads and Salad's markers are
+  and after it alike. The opening runs only while the setup is unfinished:
+  under the populate reading until the notes are penciled in, and under the
+  implicit reading only while a stale note waits for the obvious clean. A
+  fresh board under the implicit reading has no opening at all, because an
+  opening that held the strikes back while the singles and clue lines chained
+  from line to line passed over the strike continuing each placement
+  (`towers-implicit-strike-window`). Towers' clue lines, Group's leads and Salad's markers are
   the own rungs so far; each sits in the same slot, which is why the slot is
   fixed rather than configured.
 - **A firing is data.** A rung returns firings as lists of **legs** — a
@@ -4092,12 +4098,22 @@ owner-driven and worth copying:
   next); else (2) the next **clue elimination** (the deduction worth
   teaching); else (3) a forced **placement**. Re-record from the working grid
   after each placement; advance through strikes by filtering to still-live
-  marks. **Gotcha that hid every clue deduction:** the recording solver
-  commits the facing-clue placement *first*, so a naive "strikes before the
-  first recorded placement" window is empty. Fix: the strike window extends to
-  the first *unreflected* placement (one whose cell isn't yet on the working
-  grid). `runCandidatePlan` does all of this; the window is
-  `firstUnreflectedPlaceIndex` in
+  marks. **A strike is offered by its premise, never by its position in the
+  recording.** The recording ran on the solver's candidates, which differ from
+  the player's board by exactly the marks the board does not show yet: a
+  strike still live in the notes, and a placement whose cell is still empty
+  (that cell, and the `dup` culls it records beside it). A recorded strike is
+  available when the cells its step reads hold none of them. Two windows came
+  before this and both hid deductions that were true on the board: "strikes
+  before the first recorded placement" was empty, because the solver commits
+  Towers' facing-clue placement *first*; "strikes before the first *unmade*
+  placement" passed over a clue strike on the line a placement had just
+  finished, because the solver records the singles elsewhere ahead of it
+  (`towers-implicit-strike-window`). So a step's premise must name every cell
+  whose candidates *or placed value* it rests on — a clue rung reading the
+  heights along its line hatches that line — or it will be offered before the
+  board supports it. `runCandidatePlan` does all of this; the rule is
+  `availableStrikes` in
   [`candidate-hint.ts`](../../src/engine/candidate-hint.ts).
 - **Surface a *whole-line forcing* as one ordered placement journey, before
   populate; pencil in notes lazily.** A clue at an extreme value can force a

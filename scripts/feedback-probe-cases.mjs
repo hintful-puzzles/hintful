@@ -809,9 +809,9 @@ export const MODULES = [
       },
       {
         within: "availableStrikes",
-        why: "strikes are taught from past the next placement, so the premise the player's board shows is gone",
-        find: "  const lim = firstUnreflectedPlaceIndex(ops, opts?.placed ?? grid, w);",
-        replace: "  const lim = ops.length;",
+        why: "a strike past an unmade placement is taught though its premise reads that placement's cell, which the player's board does not show yet",
+        find: "      pending.add(op.y * w + op.x);\n      first = false;",
+        replace: "      first = false;",
       },
       {
         within: "availableStrikes",

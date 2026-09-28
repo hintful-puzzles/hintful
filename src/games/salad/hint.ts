@@ -292,12 +292,12 @@ function startWorking(s: SaladState): Working {
 }
 
 /**
- * The grid the *placement* window is judged against — `firstUnreflectedPlaceIndex`
+ * The grid a recorded placement is judged made against — `availableStrikes`'
  * and `nextPlace`'s "is this cell decided yet?". Salad is the first game where
  * that differs from the symbol grid: the cube places its hole symbol in a square
  * the player settles with an empty-square marker, and that square's grid entry
  * stays blank for ever, so judging by `grid` alone would leave the op permanently
- * unreflected and wall off every strike recorded after it.
+ * unmade and hold back every strike whose premise reads that square.
  */
 function placedProbe(w: Working): Uint8Array {
   const out = Uint8Array.from(w.grid);
@@ -614,8 +614,8 @@ function buildSteps(
     finished: () => latinholesCheck(board()),
     // Strikes *of* the hole symbol are dropped: the same fact reaches the
     // player as a marker step (file header, point 1), and teaching it twice
-    // would be noise. Hole *placements* are kept, because they still bound the
-    // window of strikes whose premise the board already supports.
+    // would be noise. Hole *placements* are kept, because a strike whose
+    // premise reads a square the board has not settled yet still waits for it.
     record: () => {
       const rec = recordSaladDeductions(board(), state.diff);
       holes = rec.holes;

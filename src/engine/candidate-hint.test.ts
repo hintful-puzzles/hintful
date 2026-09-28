@@ -426,20 +426,53 @@ describe("availableStrikes", () => {
     expect(nextStrike([op("elim", 0, 0, 1, 0, "set")], grid, pencil, 2)).toBeNull();
   });
 
-  it("stops at the first placement the player's board has not made yet", () => {
-    // The window is what keeps a strike's premise true on the board in front of
-    // the player: every op before the first unreflected placement is valid
-    // against it, and everything after it is only valid once that placement is
-    // made. Here the one *live* elimination sits past that line, so there is
-    // nothing to teach yet — surfacing it would narrate a deduction from a board
-    // state the player has not reached (docs/games/hints.md § "Solve the way a human does").
-    const [grid, pencil] = board([0, 0, 0, 0], [bits(2), 0, bits(1), 0]);
+  it("withholds a firing that reads a placement the board has not made, or its cull", () => {
+    // The recording past an unmade placement ran on a board with that cell
+    // decided and its cull struck, so a firing reading either rests on a state
+    // the player has not reached (docs/games/hints.md § "Solve the way a human
+    // does").
+    const [grid, pencil] = board(
+      [0, 0, 0, 0],
+      [bits(1), bits(1, 2), bits(1, 2), bits(1, 2)],
+    );
     const ops = [
-      op("elim", 0, 0, 1, 0, "set"), // dead: (0,0) no longer notes 1
-      op("place", 1, 0, 2, 1), // unreflected — (1,0) is still empty
-      op("elim", 0, 1, 1, 2, "set"), // live, but only *after* that placement
+      op("place", 1, 0, 1, 0), // unmade: (1,0) is still empty
+      op("elim", 1, 1, 1, 0, "dup"), // its cull, still live at (1,1)
+      op("elim", 0, 1, 2, 1, "set"), // reads (0,1) and the placed cell
+      op("elim", 0, 1, 2, 2, "set"), // reads (0,1) and the cull
     ];
-    expect(nextStrike(ops, grid, pencil, 2)).toBeNull();
+    const readsPlaced = () => [
+      { x: 0, y: 1 },
+      { x: 1, y: 0 },
+    ];
+    const readsCull = () => [
+      { x: 0, y: 1 },
+      { x: 1, y: 1 },
+    ];
+    expect(availableStrikes(ops.slice(0, 3), grid, pencil, 2, readsPlaced)).toEqual([]);
+    expect(
+      availableStrikes([...ops.slice(0, 2), ops[3]], grid, pencil, 2, readsCull),
+    ).toEqual([]);
+  });
+
+  it("offers a firing past an unmade placement whose premise does not touch it", () => {
+    // A clue strike far from the solver's next placement is as true now as
+    // after it, and withholding it made the plan jump away from the line it was
+    // working (`towers-implicit-strike-window`).
+    const [grid, pencil] = board(
+      [0, 0, 0, 0],
+      [bits(1), bits(1, 2), bits(1, 2), bits(1, 2)],
+    );
+    const ops = [
+      op("place", 1, 0, 1, 0), // unmade
+      op("elim", 1, 1, 1, 0, "dup"),
+      op("elim", 0, 1, 2, 1, "set"), // reads only (0,1)
+    ];
+    expect(
+      availableStrikes(ops, grid, pencil, 2, ownCells).map((f) => f[0].group),
+    ).toEqual([1]);
+    // No firing past it is "first": one naming no premise cannot be vouched for.
+    expect(availableStrikes(ops, grid, pencil, 2, () => [])).toEqual([]);
   });
 
   it("ignores an elimination on a cell the player has already filled", () => {

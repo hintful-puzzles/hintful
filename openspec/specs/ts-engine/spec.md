@@ -5688,10 +5688,13 @@ would push: the `area ∪ hatch ∪ reads ∪ targets` of every one of them, bui
 the choice and pushed unchanged if it is taken. No firing SHALL carry a second
 statement of its premise. The game SHALL own which firings are available. A firing
 SHALL be offered to
-the frontier only when the working board already shows its premise: a strike recorded
-before the solver's next unmade placement whose premise cells hold no mark an earlier
-firing has yet to strike, a placement the notes show as a naked or hidden single, and a
-placement forced by a clue only where the plan has nothing else to take. The frontier
+the frontier only when the working board already shows its premise: a recorded strike
+whose premise cells hold no mark the board does not show yet (a live mark an earlier
+recorded firing has yet to strike, or the cell of a recorded placement the board has
+not made, whose culls count as that placement's marks), a placement the notes show as
+a naked or hidden single, and a placement forced by a clue only where the plan has
+nothing else to take. A strike SHALL NOT be withheld only because the solver recorded
+it after a placement the board has not made. The frontier
 SHALL read what a step wrote from the targets of the steps it pushed.
 
 A single's step SHALL carry in its `reads` the placed cells it rests on through a cell
@@ -5730,6 +5733,12 @@ that owns it, in a ledger the guard holds still over the bound.
 - **WHEN** a strike's premise cells still hold a mark an earlier recorded firing has
   yet to strike
 - **THEN** the strike is not offered to the frontier until that mark is struck
+
+#### Scenario: a strike past an unmade placement is offered by its premise
+
+- **WHEN** the solver records a strike after a placement the board has not made
+- **THEN** the strike is offered when its premise reads neither that placement's cell
+  nor a cell holding one of its live culls, and withheld when it reads either
 
 #### Scenario: the plans are measured from outside
 
@@ -7096,3 +7105,24 @@ cannot advertise a capability it has no method behind.
 
 - **WHEN** a game provides `solve` and `statusbarText`
 - **THEN** its static properties report `canSolve` and `wantsStatusbar` true
+
+### Requirement: The implicit reading opens only on a stale note
+
+Under the implicit reading the candidate-plan walk's setup SHALL count as done while no
+note on the working board is one the obvious clean would strike, so a board with no
+stale note has no note-free opening and every rung competes from the first step. While
+a stale note remains, the note-free opening SHALL run as under the populate reading,
+ending with the clean.
+
+#### Scenario: a fresh board competes every rung from the start
+
+- **WHEN** an implicit-reading plan is built on a board whose notes hold nothing a
+  placed value rules out
+- **THEN** a recorded strike may be taken before the singles and clue lines are
+  exhausted
+
+#### Scenario: a stale note still lets a single go first
+
+- **WHEN** an implicit-reading plan is built on a board whose notes still carry values
+  the placed ones rule out, and a naked single is on the board
+- **THEN** the plan places the single before it cleans the stale notes

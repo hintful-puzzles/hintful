@@ -155,7 +155,8 @@ const PLAN_IMPORTERS: readonly string[] = (() => {
  * Measured on this corpus (every leaf preset, two seeds) when the frontier
  * landed: **3.9–8.3%** per game, against **14.8–32.1%** for the scan order it
  * replaced. The residual is firings the frontier is deliberately not offered —
- * strikes past the solver's next placement, and singles it has not recorded.
+ * strikes whose premise holds a mark the board has yet to show, and singles it
+ * has not recorded.
  * So the bound separates the two with room on both sides, and a game that
  * stops building its candidate lists, or a comparator that stops preferring
  * continuity, fails it. Never assert on the jumps alone: some are forced, and a
@@ -181,12 +182,7 @@ const readingsOf = (id: string): readonly (CandidateReading | null)[] =>
  * allows, each with why and the change that owns it. The walk asserts each is
  * still over, so fixing one fails here until its entry goes.
  */
-const OVER_BOUND: Record<string, string> = {
-  "towers/implicit":
-    "a clue strike that continues the last placement waits behind the " +
-    "recording's next unmade placement, which the populate reading hides " +
-    "behind its populate; towers-implicit-strike-window",
-};
+const OVER_BOUND: Record<string, string> = {};
 
 /**
  * The games that choose through a `HintFrontier` of their own rather than
