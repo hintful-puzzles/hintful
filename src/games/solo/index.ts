@@ -487,9 +487,7 @@ function narrate(reason: SoloReason, n: number, state: SoloState, at: Point): st
     case "hiddenSingle":
       return say.hiddenSingle(reason.region, reason.n);
     case "cageSingle":
-      return say.cageSingle(n);
-    case "cageIntersect":
-      return say.cageIntersect(reason.region, (state.cr * (state.cr + 1)) / 2, n);
+      return say.cageSingle(reason.origin, n, (state.cr * (state.cr + 1)) / 2);
     default:
       throw new Error(`a ${reason.kind} deduction strikes`);
   }
@@ -517,9 +515,9 @@ function premise(reason: SoloReason, ns: number[], state: SoloState): Premise {
     case "forcing":
       return { premise: say.forcing(reason, ns[0], reason.shares, reason.lastShares) };
     case "cageMinMax":
-      return { premise: say.cageMinMax(reason.clue, ns), named: true };
+      return { premise: say.cageMinMax(reason.origin, reason.clue, ns), named: true };
     case "cageSums":
-      return { premise: say.cageSums(reason.clue, ns), named: true };
+      return { premise: say.cageSums(reason.origin, reason.clue, ns), named: true };
     default:
       throw new Error(`a ${reason.kind} deduction places`);
   }
@@ -552,15 +550,19 @@ function reasonMarks(reason: SoloReason, state: SoloState): SoloMarks {
       return reason.region
         ? { area: reason.cells, hatch: regionCells(reason.region, state) }
         : { area: reason.cells };
-    case "cageIntersect":
-      return namedRegion(reason.region, state);
-    // "This killer cage": the cage is the hatch. What its sum leaves a cell
-    // depends on what its other cells can still be, so those are read too.
+    // What the sum leaves a cell depends on what the other cells can still be,
+    // so those are read too. A cage's open cells are the hatch, as "this
+    // killer cage"; a sum the region rule worked out hatches the region the
+    // sentence names and outlines the cells it calls highlighted.
     case "cageMinMax":
     case "cageSums":
-      return { area: [], hatch: reason.cells, reads: reason.cells };
-    case "cageSingle":
-      return { area: [], hatch: reason.cells };
+      return reason.origin.kind === "cage"
+        ? { area: [], hatch: reason.cells, reads: reason.cells }
+        : {
+            area: reason.cells,
+            hatch: regionCells(reason.origin.region, state),
+            reads: reason.cells,
+          };
     // A forcing chain names the cells it ran through, **numbered**, so the
     // narration can cite them and the player can walk it.
     case "forcing":
@@ -574,13 +576,22 @@ function reasonMarks(reason: SoloReason, state: SoloState): SoloMarks {
 }
 
 /** A placement's marks: a hidden single hatches the region it reasons over, as
- * does a deduced extra-cage (the region whose total the sentence counts down)
- * and a killer placement its cage; a naked single needs none. */
+ * does a killer single the region rule placed (the region whose total the
+ * sentence counts down), outlining the cage's cells inside it when the cell
+ * lies outside; a killer single in its own cage hatches the cell; a naked
+ * single needs none. */
 function placementMarks(reason: SoloReason, state: SoloState): SoloMarks {
-  if (reason.kind === "hiddenSingle" || reason.kind === "cageIntersect")
-    return namedRegion(reason.region, state);
-  if (reason.kind === "cageSingle") return { area: [], hatch: reason.cells };
-  return { area: [] };
+  if (reason.kind === "hiddenSingle") return namedRegion(reason.region, state);
+  if (reason.kind !== "cageSingle") return { area: [] };
+  const { origin } = reason;
+  switch (origin.kind) {
+    case "cage":
+      return { area: [], hatch: reason.cells };
+    case "region":
+      return namedRegion(origin.region, state);
+    case "outside":
+      return { area: origin.inside, hatch: regionCells(origin.region, state) };
+  }
 }
 
 /** Build the hint plan by walking a working copy of the board the way a person

@@ -5,14 +5,16 @@
  *
  * The solver doubles as the generator's grading oracle: the solver-gated
  * minimizer removes givens while this solver still solves at the target
- * difficulty, so the published board depends on this reaching C's *exact*
- * verdict on every intermediate grid. It is therefore ported logic-faithfully,
- * including the few upstream quirks called out below.
+ * difficulty, so the published board depends on its verdict on every
+ * intermediate grid. It is ported logic-faithfully, including the few upstream
+ * quirks called out below, with one deliberate divergence: the killer region
+ * rule (`DIFF_KINTERSECT`) derives its partial cages afresh each pass from the
+ * cages on the board, where upstream split its working cages for good, so that
+ * every sum a hint cites can be worked out from the board in one sentence
+ * (`teach-solo-cage-splits`).
  *
  * The killer working cages are plain arrays (`Cages`) rather than C's flat
- * `block_structure`: removal and split always take the top unprocessed element
- * by unique cell, so array mutation matches C's compacting semantics (see
- * `removeFromBlock`/`splitBlock`).
+ * `block_structure`; a cage keeps its index as its filled cells leave it.
  */
 
 import {
@@ -66,9 +68,8 @@ export type SoloRegion =
  * The placement reasons (`single` / `hiddenSingle`) are
  * re-derived from the working board at emit time, because the recorded `place`
  * carries a bare `single`: the solver's positional and numeric `elim` conflate
- * naked and hidden singles. The killer placement reasons (`cageSingle` /
- * `cageIntersect`) are recorded directly because the working board can't
- * re-derive them. */
+ * naked and hidden singles. The killer placement reason (`cageSingle`) is
+ * recorded directly because the working board can't re-derive it. */
 export type SoloReason =
   /** A forced single placement — re-derived to naked or hidden at emit. */
   | { kind: "single" }
@@ -98,31 +99,49 @@ export type SoloReason =
     }
   /** A *hidden* single — digit `n` fits only one cell of `region`. */
   | { kind: "hiddenSingle"; n: number; region: SoloRegion }
-  /** Killer: the remaining cell(s) of a cage must total `clue`; with one left it
-   * is forced. `reads` is the rest of the cage, whose values made `clue` what
-   * is left (`DeductionRecord`). */
-  | { kind: "cageSingle"; cells: Point[]; clue: number; reads: Point[] }
-  /** Killer: a deduced extra-cage (a region minus the cages it fully contains)
-   * with one undetermined cell, forced to the residual sum. `region` is the row,
-   * column or block the residual was taken from — the evidence the sentence
-   * points at, and without it the step shades only the cell it is about.
-   * `reads` is the filled cells outside the region of each cage counted as
-   * inside it (`DeductionRecord`). */
+  /** Killer: the open cells of a {@link CageSum} come down to one, which must
+   * make its whole `clue`. */
+  | ({ kind: "cageSingle" } & CageSum)
+  /** Killer: even the extreme the other cells of a {@link CageSum} can reach
+   * leaves no room for `n` here. */
+  | ({ kind: "cageMinMax" } & CageSum)
+  /** Killer: no way to make a {@link CageSum}'s `clue` from different digits
+   * uses `n` in this cell. */
+  | ({ kind: "cageSums" } & CageSum);
+
+/** Open cells a killer deduction knows the total of: `cells` must make `clue`,
+ * for the reason `origin` gives. `reads` is what that rests on beyond `cells`
+ * and the region `origin` names (`DeductionRecord`): the cage's filled cells,
+ * and the cells outside the region of any cage counted as inside it. */
+export interface CageSum {
+  cells: Point[];
+  clue: number;
+  origin: CageOrigin;
+  reads: Point[];
+}
+
+/** Why a {@link CageSum}'s cells must make its clue, each worked out from the
+ * board in one step:
+ *
+ * - `cage`: they are a cage's open cells, whose digits so far make `placed`
+ *   of its `total`.
+ * - `region`: they are what a row, column or block leaves once its filled
+ *   cells and the cages wholly inside it are taken out, so they make the rest
+ *   of the region's total. They may span several cages.
+ * - `outside`: they are a cage's open cells outside a region whose leftover
+ *   cells, `inside`, all lie in that cage. The region says `inside` makes
+ *   `insideSum`, so these make the cage's `total` less that and `placed`. */
+export type CageOrigin =
+  | { kind: "cage"; total: number; placed: number }
+  | { kind: "region"; region: SoloRegion }
   | {
-      kind: "cageIntersect";
-      cells: Point[];
-      clue: number;
+      kind: "outside";
       region: SoloRegion;
-      reads: Point[];
-    }
-  /** Killer: even the extreme the other cage cells can reach leaves no room for
-   * `n` here. `cells` and `clue` are what the solver has left of the cage, and
-   * `reads` what that rests on (`DeductionRecord`): the rest of the cage, or
-   * for a deduced extra-cage its region and the cages taken out of it. */
-  | { kind: "cageMinMax"; cells: Point[]; clue: number; reads: Point[] }
-  /** Killer: no combination of digits summing to the clue uses `n` in this cell.
-   * `reads` as for `cageMinMax`. */
-  | { kind: "cageSums"; cells: Point[]; clue: number; reads: Point[] };
+      total: number;
+      placed: number;
+      inside: Point[];
+      insideSum: number;
+    };
 
 /** A reason attached to a recorded Solo deduction (the narrowed hint reason). */
 export type HintReason = SoloReason;
@@ -196,12 +215,28 @@ interface Cages {
   blocks: number[][];
 }
 
-/** The killer working state: the mutable cages + their running per-cage clue
- *  totals (length `cr*cr`, indexed by cage). Present together or not at all. */
+/** The killer working state: the mutable cages, their running per-cage clue
+ *  totals, and the clues as given (length `cr*cr`, indexed by cage). Present
+ *  together or not at all. */
 interface KillerWork {
   kblocks: Cages;
   kclues: number[];
+  totals: readonly number[];
 }
+
+/** Open cells whose total the killer region rule has worked out, which the
+ * cage-sum rungs treat as a cage for the rest of the pass. `inCage` says they
+ * lie in one cage, so they cannot repeat a digit. `note` is what a recorded
+ * reason says of them, on the hint path only. */
+interface PartialCage {
+  cells: number[];
+  clue: number;
+  inCage: boolean;
+  note: CageNote | null;
+}
+
+/** A {@link CageSum} but its cells and clue, which the rung has already. */
+type CageNote = Pick<CageSum, "origin" | "reads">;
 
 function dupCages(src: BlockStructure): Cages {
   return {
@@ -215,16 +250,6 @@ function removeFromBlock(cages: Cages, b: number, n: number): void {
   cages.whichblock[n] = -1;
   const blk = cages.blocks[b];
   blk.splice(blk.indexOf(n), 1);
-}
-
-/** `split_block`: peel `squares` off their (shared) cage into a brand-new one,
- * which takes ownership of the array. */
-function splitBlock(cages: Cages, squares: number[]): void {
-  const previous = cages.whichblock[squares[0]];
-  for (const sq of squares) cages.whichblock[sq] = cages.blocks.length;
-  cages.blocks.push(squares);
-  const moved = new Set(squares);
-  cages.blocks[previous] = cages.blocks[previous].filter((sq) => !moved.has(sq));
 }
 
 /** Compact a 0/1 list (first `cr` entries) into the leading indices of its 1s;
@@ -242,12 +267,8 @@ class SolverUsage {
   readonly blocks: BlockStructure;
   /** Killer working cages + clue totals (null for non-killer). */
   killer: KillerWork | null;
-  /** Deduced "extra" cages and their sums, rebuilt each KINTERSECT pass. */
-  extraCages: number[][] = [];
-  extraClues: number[] = [];
-  /** What each extra cage's sum rests on, on the hint path: its region, and the
-   * cells outside it of the cages taken out of it. */
-  extraReads: Point[][] = [];
+  /** What the killer region rule worked out, rebuilt each KINTERSECT pass. */
+  partials: PartialCage[] = [];
 
   /** Candidate cube: cube[(y*cr+x)*cr + n-1] truthy ⇒ digit n possible there. */
   readonly cube: Uint8Array;
@@ -315,7 +336,7 @@ class SolverUsage {
           if (kgrid[cell] !== 0) kclues[i] = kgrid[cell];
         }
       }
-      this.killer = { kblocks: dupCages(kblocks), kclues };
+      this.killer = { kblocks: dupCages(kblocks), kclues, totals: kclues.slice() };
     } else {
       this.killer = null;
     }
@@ -739,18 +760,34 @@ class SolverUsage {
     return cells.map((c) => ({ x: c % cr, y: (c / cr) | 0 }));
   }
 
+  /** Place the one open cell of a {@link CageSum}, which must make its clue
+   * `v`; false if it cannot. `note` is what the sum rests on, for the hint. */
+  private placeCageSingle(cell: number, v: number, note: CageNote | null): boolean {
+    const cr = this.cr;
+    const x = cell % cr;
+    const y = (cell / cr) | 0;
+    if (v < 1 || v > cr || !this.cubeAt(x, y, v)) return false;
+    this.place(
+      x,
+      y,
+      v,
+      note ? { kind: "cageSingle", cells: [{ x, y }], clue: v, ...note } : undefined,
+    );
+    return true;
+  }
+
   /** `solver_killer_minmax` for a single cage's cell list + clue. +1 / 0.
-   * `reads` is what `clue` rests on beyond `cells`, for the hint. */
-  private killerMinmax(cells: number[], clue: number, reads: Point[]): number {
+   * `note` says why `cells` make `clue`, for the hint. */
+  private killerMinmax(cells: number[], clue: number, note: CageNote | null): number {
     const cr = this.cr;
     let ret = 0;
     const nsquares = cells.length;
     if (clue === 0) return 0;
     let cageCells: Point[] | null = null;
     const recCage = (xy: number, n: number): void => {
-      if (!this.recorder) return;
+      if (!this.recorder || !note) return;
       if (!cageCells) cageCells = this.cellsXY(cells);
-      this.recElim(xy, n, { kind: "cageMinMax", cells: cageCells, clue, reads });
+      this.recElim(xy, n, { kind: "cageMinMax", cells: cageCells, clue, ...note });
     };
 
     for (let i = 0; i < nsquares; i++) {
@@ -784,12 +821,12 @@ class SolverUsage {
   }
 
   /** `solver_killer_sums` for a single cage's cell list + clue. +1 / 0 / -1.
-   * `reads` is what `clue` rests on beyond `cells`, for the hint. */
+   * `note` says why `cells` make `clue`, for the hint. */
   private killerSums(
     cells: number[],
     clue: number,
     cageIsRegion: boolean,
-    reads: Point[],
+    note: CageNote | null,
   ): number {
     const cr = this.cr;
     const nsquares = cells.length;
@@ -855,9 +892,9 @@ class SolverUsage {
       for (let n = 1; n <= cr; n++) {
         if (!this.cube2At(x, n)) continue;
         if ((possibleAddends & (1 << n)) === 0) {
-          if (this.recorder) {
+          if (this.recorder && note) {
             if (!cageCells) cageCells = this.cellsXY(cells);
-            this.recElim(x, n, { kind: "cageSums", cells: cageCells, clue, reads });
+            this.recElim(x, n, { kind: "cageSums", cells: cageCells, clue, ...note });
           }
           this.setCube2(x, n, 0);
           ret = 1;
@@ -1006,14 +1043,16 @@ class SolverUsage {
     this.recorder = this.pendingRecorder;
     this.audit?.seeded();
 
-    /** The cells the solver has taken out of cage `b` (filled, or split off),
-     * which its reduced clue rests on: the rest of the cage the player sees.
-     * Hint path only (`DeductionRecord`). */
-    const cageReads = (b: number): Point[] => {
-      const now = this.killer?.kblocks.blocks[b];
-      if (!this.recorder || !kblocksImmutable || !now?.length) return [];
-      const whole = kblocksImmutable.blocks[kblocksImmutable.whichblock[now[0]]];
-      return this.cellsXY(whole.filter((c) => !now.includes(c)));
+    /** What cage `b`'s open cells rest on: its clue, and its filled cells,
+     * whose digits make the rest of it. Hint path only (`DeductionRecord`). */
+    const cageNote = (b: number): CageNote | null => {
+      if (!this.recorder || !this.killer || !kblocksImmutable) return null;
+      const filled = kblocksImmutable.blocks[b].filter((c) => grid[c] !== 0);
+      const total = this.killer.totals[b];
+      return {
+        origin: { kind: "cage", total, placed: total - this.killer.kclues[b] },
+        reads: this.cellsXY(filled),
+      };
     };
 
     mainloop: while (true) {
@@ -1062,24 +1101,10 @@ class SolverUsage {
         // Killer singles (`DIFF_KSINGLE`): fill single-square cages.
         for (let b = 0; b < kblocks.blocks.length; b++) {
           if (kblocks.blocks[b].length === 1) {
-            const v = kclues[b];
-            if (v < 1 || v > cr) {
+            if (!this.placeCageSingle(kblocks.blocks[b][0], kclues[b], cageNote(b))) {
               finish(DIFF_IMPOSSIBLE);
               return;
             }
-            const cell = kblocks.blocks[b][0];
-            const x = cell % cr;
-            const y = (cell / cr) | 0;
-            if (!this.cubeAt(x, y, v)) {
-              finish(DIFF_IMPOSSIBLE);
-              return;
-            }
-            this.place(x, y, v, {
-              kind: "cageSingle",
-              cells: [{ x, y }],
-              clue: v,
-              reads: cageReads(b),
-            });
             changed = true;
           }
         }
@@ -1091,11 +1116,9 @@ class SolverUsage {
       }
 
       if (dlev.maxkdiff >= DIFF_KINTERSECT && this.killer !== null) {
-        const { kblocks, kclues } = this.killer;
+        const { kblocks, kclues, totals } = this.killer;
         let changed = false;
-        this.extraCages = [];
-        this.extraClues = [];
-        this.extraReads = [];
+        this.partials = [];
 
         for (let i = 0; i < 3; i++) {
           for (let n = 0; n < cr; n++) {
@@ -1122,53 +1145,70 @@ class SolverUsage {
             }
 
             const cells = extraList.slice(0, nsquares);
+            const region = SolverUsage.extraRegion(i, n);
             // A cage counts as inside the region once its cells outside it are
             // filled, so what the region leaves rests on those too.
-            const outside: number[] = [];
-            if (inRegion && whole && kblocksImmutable)
+            let regionNote: CageNote | null = null;
+            if (inRegion && whole && kblocksImmutable) {
+              const outside: number[] = [];
               for (const b of whole)
-                for (const c of kblocksImmutable.blocks[
-                  kblocksImmutable.whichblock[kblocks.blocks[b][0]]
-                ])
+                for (const c of kblocksImmutable.blocks[b])
                   if (!inRegion.has(c)) outside.push(c);
+              regionNote = {
+                origin: { kind: "region", region },
+                reads: this.cellsXY([...inRegion, ...outside]),
+              };
+            }
             if (nsquares === 1) {
-              if (sum > cr) {
+              if (!this.placeCageSingle(cells[0], sum, regionNote)) {
                 finish(DIFF_IMPOSSIBLE);
                 return;
               }
-              const x = cells[0] % cr;
-              const y = (cells[0] / cr) | 0;
-              if (!this.cubeAt(x, y, sum)) {
-                finish(DIFF_IMPOSSIBLE);
-                return;
-              }
-              this.place(x, y, sum, {
-                kind: "cageIntersect",
-                cells: [{ x, y }],
-                clue: sum,
-                region: SolverUsage.extraRegion(i, n),
-                reads: this.cellsXY(outside),
-              });
               changed = true;
+              continue;
             }
 
             const b0 = kblocks.whichblock[cells[0]];
-            let allSame = nsquares;
-            for (let k = 1; k < nsquares; k++)
-              if (kblocks.whichblock[cells[k]] !== b0) {
-                allSame = k;
-                break;
+            const inCage = cells.every((c) => kblocks.whichblock[c] === b0);
+            this.partials.push({ cells, clue: sum, inCage, note: regionNote });
+            if (!inCage) continue;
+
+            // The region's leftover cells all lie in one cage, so the rest of
+            // that cage makes what the cage's clue leaves beyond them. Cells
+            // this pass has filled are still in the working cage.
+            const inside = new Set(cells);
+            let placed = totals[b0] - kclues[b0];
+            const rest: number[] = [];
+            for (const c of kblocks.blocks[b0]) {
+              if (grid[c]) placed += grid[c];
+              else if (!inside.has(c)) rest.push(c);
+            }
+            const clue = totals[b0] - placed - sum;
+            const note: CageNote | null =
+              regionNote && kblocksImmutable
+                ? {
+                    origin: {
+                      kind: "outside",
+                      region,
+                      total: totals[b0],
+                      placed,
+                      inside: this.cellsXY(cells),
+                      insideSum: sum,
+                    },
+                    reads: [
+                      ...regionNote.reads,
+                      ...this.cellsXY(kblocksImmutable.blocks[b0]),
+                    ],
+                  }
+                : null;
+            if (rest.length === 1) {
+              if (!this.placeCageSingle(rest[0], clue, note)) {
+                finish(DIFF_IMPOSSIBLE);
+                return;
               }
-            if (allSame === nsquares) {
-              splitBlock(kblocks, cells);
-              kclues[kblocks.blocks.length - 1] = sum;
-              kclues[b0] -= sum;
-            } else {
-              this.extraCages.push(cells);
-              this.extraClues.push(sum);
-              this.extraReads.push(
-                inRegion ? this.cellsXY([...inRegion, ...outside]) : [],
-              );
+              changed = true;
+            } else if (rest.length > 1) {
+              this.partials.push({ cells: rest, clue, inCage: true, note });
             }
           }
         }
@@ -1182,19 +1222,15 @@ class SolverUsage {
         const { kblocks, kclues } = this.killer;
         let changed = false;
         for (let b = 0; b < kblocks.blocks.length; b++) {
-          const ret = this.killerMinmax(kblocks.blocks[b], kclues[b], cageReads(b));
+          const ret = this.killerMinmax(kblocks.blocks[b], kclues[b], cageNote(b));
           if (ret > 0) {
             changed = true;
             if (this.recorder) break; // one cage = one firing on the hint path
           }
         }
         if (!(this.recorder && changed))
-          for (let b = 0; b < this.extraCages.length; b++) {
-            const ret = this.killerMinmax(
-              this.extraCages[b],
-              this.extraClues[b],
-              this.extraReads[b],
-            );
+          for (const part of this.partials) {
+            const ret = this.killerMinmax(part.cells, part.clue, part.note);
             if (ret > 0) {
               changed = true;
               if (this.recorder) break;
@@ -1210,7 +1246,7 @@ class SolverUsage {
         const { kblocks, kclues } = this.killer;
         let changed = false;
         for (let b = 0; b < kblocks.blocks.length; b++) {
-          const ret = this.killerSums(kblocks.blocks[b], kclues[b], true, cageReads(b));
+          const ret = this.killerSums(kblocks.blocks[b], kclues[b], true, cageNote(b));
           if (ret > 0) {
             changed = true;
             kdiff = Math.max(kdiff, DIFF_KSUMS);
@@ -1221,13 +1257,8 @@ class SolverUsage {
           }
         }
         if (!(this.recorder && changed))
-          for (let b = 0; b < this.extraCages.length; b++) {
-            const ret = this.killerSums(
-              this.extraCages[b],
-              this.extraClues[b],
-              false,
-              this.extraReads[b],
-            );
+          for (const part of this.partials) {
+            const ret = this.killerSums(part.cells, part.clue, part.inCage, part.note);
             if (ret > 0) {
               changed = true;
               kdiff = Math.max(kdiff, DIFF_KSUMS);
@@ -1590,12 +1621,7 @@ export function recordSoloDeductions(
   };
   const usage = new SolverUsage(s.cr, s.blocks, kblocks, s.xtype, grid, kgrid);
   usage.pendingRecorder = (rec) => ops.push(rec as HintOp);
-  // A killer board offers no replay: the solver splits and shrinks its cages
-  // as it deduces, which is state a replay's cells do not carry, and which cage
-  // counts as inside a region turns on which cells are filled, so a returned
-  // cell can let a rung conclude more rather than less.
-  const replay =
-    auditingPremises() && !kblocks ? soloReplay(usage, s, { ...dlev }) : null;
+  const replay = auditingPremises() ? soloReplay(usage, s, { ...dlev }) : null;
   usage.run(s.blocks, kblocks, s.xtype, kgrid, dlev);
   if (replay?.replay) offerReplay(replay.replay);
   return ops;
@@ -1615,6 +1641,8 @@ function soloReplay(
   dlev: Difficulty,
 ): { replay: FiringReplay<null> | null } {
   const { cr, blocks, xtype } = s;
+  const kblocks = s.killerData?.kblocks ?? null;
+  const kgrid = s.killerData?.kgrid ?? null;
   const capture = (from: SolverUsage): CellBoard => {
     const values = Int32Array.from(from.grid);
     const cands = new Int32Array(cr * cr);
@@ -1633,10 +1661,10 @@ function soloReplay(
         const run = new SolverUsage(
           cr,
           blocks,
-          null,
+          kblocks,
           xtype,
           Int8Array.from(now.values),
-          null,
+          kgrid,
         );
         // The recording path's techniques behave as recorded only with a recorder.
         run.pendingRecorder = () => {};
@@ -1651,7 +1679,7 @@ function soloReplay(
           // The second pass means the first one fired.
           pass: () => ++passes > 1,
         };
-        run.run(blocks, null, xtype, null, { ...dlev });
+        run.run(blocks, kblocks, xtype, kgrid, { ...dlev });
         now = capture(run);
         return { after: now, ret: passes > 1 ? 1 : 0 };
       };

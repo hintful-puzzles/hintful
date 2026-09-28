@@ -3892,8 +3892,18 @@ reading.
   such gate against a pinned board. A cell the firing's own technique puts back
   before reaching it is not tested (Salad tests none, the lowest Latin rung
   few), and the audit counts what it tested. Solo replays its whole loop, not
-  one technique, and offers no replay on a Killer board, whose split cages are
-  solver state; the guard names both.
+  one technique, so its lower rungs fill a returned cell again before a Killer
+  cage rung is reached, and a Killer sum's reads are held by a recording test
+  in `solo-hint.test.ts` instead (`teach-solo-cage-splits`).
+- **A derived fact the solver keeps is a fact the hint must teach.** Upstream
+  Killer split a cage along a row for good and later treated the piece as a
+  cage, so the hint called it "this killer cage" and said its other cells were
+  filled when they were empty. Before narrating state a solver carries between
+  passes, ask whether the player could write it down. If not, derive it afresh
+  each pass so every use is one step from the board, and narrate it from where
+  it came from. What the solver loses by that goes to a tier the hint does not
+  teach (§ "Give the facts a notation (Loopy)"'s fallback); for Killer it was
+  1.5% of boards.
 
 ### Persist, populate, and the moves
 

@@ -1,7 +1,8 @@
 # teach-solo-cage-splits
 
-**Status: scaffolded, not started.** Found by `guard-recorded-firing-premises`,
-2026-09-28.
+Found by `guard-recorded-firing-premises`, 2026-09-28. Decided in `design.md`:
+the region rule stops keeping its splits, so every sum it uses is one step from
+the board and one sentence long.
 
 ## Why
 

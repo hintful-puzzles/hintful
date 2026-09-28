@@ -129,6 +129,15 @@ const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
       "conclusion rests on a case split, and that is three clauses.",
   },
   {
+    games: ["solo"],
+    match: /^This (?:row|column|block)'s whole cages and digits leave \d+ for .*; /,
+    why:
+      "Killer's region rule under a cage-sum strike is two premises: what the " +
+      "row, column or block leaves its open cells, which the player needs to " +
+      "see worked out because nothing on the board records it, and then the " +
+      "min/max or combination rung on that sum (`teach-solo-cage-splits`).",
+  },
+  {
     games: ["singles"],
     match: /^There's a pair of \d+s in one (?:column|row)/,
     why:

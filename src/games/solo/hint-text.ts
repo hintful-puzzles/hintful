@@ -28,7 +28,7 @@ import {
 } from "../../engine/hint-text.ts";
 import type { ForcingLink } from "../../engine/latin-hint.ts";
 import { digitChar } from "./render.ts";
-import type { SoloRegion } from "./solver.ts";
+import type { CageOrigin, SoloRegion } from "./solver.ts";
 
 /** The reader-facing name of a region — the one statement of what a sentence
  * calls each region, read both by the sentences below and by `regionsOf`, which
@@ -142,20 +142,59 @@ export const say = {
       lastTie(lastShares),
     ),
 
-  cageSingle: (n: number): string =>
-    `The rest of this killer cage is filled in, and the one cell left must bring the cage to its total, so it can only be ${g(n)}.`,
+  /** The one open cell of a {@link CageSum} must make its whole clue `n`. */
+  cageSingle: (origin: CageOrigin, n: number, total: number): string => {
+    switch (origin.kind) {
+      case "cage":
+        return origin.placed === 0
+          ? `This killer cage has only this cell, so it must be its total, ${g(n)}.`
+          : `This killer cage must total ${origin.total} and its other cells already make ${origin.placed}, so its last cell must be ${g(n)}.`;
+      // The one sentence that states the region rule in full, the 45 and all:
+      // the residual *is* the digit, so it says the number once, as the thing
+      // left over, and has the room.
+      case "region":
+        return `This ${regionName(origin.region)} must total ${total}; the cages and digits inside it account for all but ${g(n)}, so its one open cell must be ${g(n)}.`;
+      case "outside":
+        return `${outsideRest(origin)}, so its last cell must be ${g(n)}.`;
+    }
+  },
 
-  /** A row, column or block whose cages and filled digits leave one open cell.
-   * The residual *is* the digit on this rung, so the sentence says it once, as
-   * the thing left over. `total` is what the region must come to; every cell of
-   * it belongs to some cage, so "the cages and digits inside it" never names an
-   * empty set. */
-  cageIntersect: (region: SoloRegion, total: number, n: number): string =>
-    `This ${regionName(region)} must total ${total}; the cages and digits inside it account for all but ${g(n)}, so its one open cell must be ${g(n)}.`,
+  /** Even the extremes the other cells of a {@link CageSum} can reach leave no
+   * room for `ns`. */
+  cageMinMax: (origin: CageOrigin, clue: number, ns: number[]): string =>
+    origin.kind === "cage" && origin.placed === 0
+      ? `This killer cage must total ${clue}, and its other cells leave no room for ${any(ns)}`
+      : `${cageSum(origin, clue)}; the others leave no room for ${any(ns)}`,
 
-  cageMinMax: (clue: number, ns: number[]): string =>
-    `This killer cage must total ${clue}, and its other cells leave no room for ${any(ns)}`,
-
-  cageSums: (clue: number, ns: number[]): string =>
-    `No way to make this killer cage total ${clue} uses ${any(ns)} in this cell`,
+  /** No way to make a {@link CageSum}'s clue uses `ns` in this cell. */
+  cageSums: (origin: CageOrigin, clue: number, ns: number[]): string =>
+    origin.kind === "cage" && origin.placed === 0
+      ? `No way to make this killer cage total ${clue} uses ${any(ns)} in this cell`
+      : `${cageSum(origin, clue)}; no way to make that uses ${any(ns)} here`,
 };
+
+// The sums below lean on the picture: the region they name is hatched, the
+// cells they leave a sum to are outlined, and a cage's clue and placed digits
+// are on the board, so the sentence gives only the sum those leave. "Whole"
+// cages are the ones the region rule takes out, not the one it leaves cells of.
+// A strike on a region's sum is still two premises, the sum and the rung, and
+// is listed long for it (`hint-quality.test.ts`'s `LONG_NARRATIONS`).
+
+/** The region rule, as far as the cage its leftover cells all lie in. */
+function outsideRest(origin: CageOrigin & { kind: "outside" }): string {
+  const r = regionName(origin.region);
+  return `This ${r}'s whole cages and digits leave ${origin.insideSum} for this killer cage's cells in the ${r}`;
+}
+
+/** Why the cells of a {@link CageSum} must make `clue`, as a clause that ends
+ * on that sum. */
+function cageSum(origin: CageOrigin, clue: number): string {
+  switch (origin.kind) {
+    case "cage":
+      return `This killer cage's open cells make ${clue}`;
+    case "region":
+      return `This ${regionName(origin.region)}'s whole cages and digits leave ${clue} for the highlighted cells`;
+    case "outside":
+      return `${outsideRest(origin)}, so ${clue} for the highlighted ones`;
+  }
+}

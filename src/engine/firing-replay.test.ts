@@ -223,9 +223,7 @@ const UNREPRODUCED: Record<string, string> = {};
  * Games some of whose recordings offer no replay, and why: those firings go
  * unaudited, which the audit reports rather than skips.
  */
-const UNREPLAYED: Record<string, string> = {
-  solo: "a killer board: the solver splits and shrinks its cages as it deduces, state a replay's cells do not carry (see recordSoloDeductions)",
-};
+const UNREPLAYED: Record<string, string> = {};
 
 /** The boards that show each ledger entry, as the input its technique reads. */
 const PINNED: { key: string; id: string; board: string }[] = [

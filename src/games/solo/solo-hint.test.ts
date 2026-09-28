@@ -19,7 +19,12 @@ import {
 import { newSoloDesc } from "./generator.ts";
 import { noRepeatRegionNames, regionsOf, soloGame } from "./index.ts";
 import { COL_HINT, COL_PENCIL, digitChar } from "./render.ts";
-import { type HintReason, recordSoloDeductions } from "./solver.ts";
+import {
+  type HintReason,
+  recordSoloDeductions,
+  type SoloRegion,
+  solveSolo,
+} from "./solver.ts";
 import {
   DIFF_BLOCK,
   DIFF_EXTREME,
@@ -112,30 +117,114 @@ describe("solo recording solver", () => {
   });
 
   /**
-   * A cage the solver has shrunk by filling its cells is still the cage the
-   * player sees, and what is left of it rests on what was filled: without
-   * those cells the plan could offer "the rest of this killer cage is filled
-   * in" while they were empty on the board (`guard-recorded-firing-premises`).
-   * A killer board offers the premise audit no replay, so this holds it, and
-   * through `cageReads` the cage-sum strikes' reads with it.
+   * Every killer sum a recording cites must be one the player can work out,
+   * in one step, from the board as it stands and the cells the step rests on:
+   * a cage's clue less its filled cells, a region's total less its filled
+   * cells and the cages inside it, or a cage's clue less that. Upstream kept
+   * splitting its working cages, so a sum could rest on another the board
+   * never showed (`teach-solo-cage-splits`). The premise audit replays Solo's
+   * whole ladder, which fills a returned cell again before it reaches a cage
+   * rung, so it cannot hold these reads; this does, from the recording.
    */
-  it("reads the rest of the cage a killer single fills", () => {
-    let seen = 0;
-    for (let s = 0; s < 4; s++) {
-      const { st } = gen(KILLER, `cage-rest-${s}`);
-      const cages = st.killerData?.kblocks;
-      if (!cages) throw new Error("not a killer board");
-      const at = (c: number): string => `${c % st.cr},${(c / st.cr) | 0}`;
+  it("works out every killer sum it cites from the board and its reads", () => {
+    const seen = { cage: 0, region: 0, outside: 0 };
+    for (let s = 0; s < 6; s++) {
+      const { st } = gen(KILLER, `cage-sum-${s}`);
+      const killer = st.killerData;
+      if (!killer) throw new Error("not a killer board");
+      const { cr } = st;
+      const sol = solveSolo(st).grid;
+      const grid = Int8Array.from(st.grid);
+      const idx = (p: { x: number; y: number }): number => p.y * cr + p.x;
+      const cageOf = (c: number): number[] =>
+        killer.kblocks.blocks[killer.kblocks.whichblock[c]];
+      const totalOf = (c: number): number =>
+        cageOf(c).reduce((t, d) => t + killer.kgrid[d], 0);
+      const filledSum = (cells: number[]): number =>
+        cells.reduce((t, c) => t + grid[c], 0);
+      const regionOf = (r: SoloRegion): number[] =>
+        Array.from({ length: cr * cr }, (_, c) => c).filter((c) => {
+          const x = c % cr;
+          const y = (c / cr) | 0;
+          if (r.kind === "row") return y === r.index;
+          if (r.kind === "col") return x === r.index;
+          if (r.kind === "block") return st.blocks.whichblock[c] === r.index;
+          throw new Error(`the region rule never uses a ${r.kind}`);
+        });
+      /** What the region leaves once its filled cells and the cages whose open
+       * cells all lie inside it are taken out, checking each of those cages'
+       * filled cells is read. */
+      const regionLeaves = (region: number[], open: number[], reads: Set<number>) => {
+        let left = (cr * (cr + 1)) / 2;
+        const counted = new Set<number>();
+        for (const c of region) {
+          if (grid[c] !== 0) left -= grid[c];
+          else if (!open.includes(c)) {
+            const cage = cageOf(c);
+            if (counted.has(cage[0])) continue;
+            counted.add(cage[0]);
+            for (const d of cage) {
+              if (grid[d] === 0) expect(region, "a cage counted inside").toContain(d);
+              else
+                expect(reads.has(d), `filled cell ${d} of a cage counted inside`).toBe(
+                  true,
+                );
+            }
+            left -= totalOf(c) - filledSum(cage.filter((d) => grid[d] !== 0));
+          }
+        }
+        return left;
+      };
       for (const op of recordSoloDeductions(st, DIFF_BLOCK, DIFF_KINTERSECT)) {
         const r = op.reason as HintReason;
-        if (r.kind !== "cageSingle") continue;
-        seen++;
-        const cell = op.y * st.cr + op.x;
-        const rest = cages.blocks[cages.whichblock[cell]].filter((c) => c !== cell);
-        expect(r.reads.map((p) => `${p.x},${p.y}`).sort()).toEqual(rest.map(at).sort());
+        if (
+          r.kind === "cageSingle" ||
+          r.kind === "cageMinMax" ||
+          r.kind === "cageSums"
+        ) {
+          const cells = r.cells.map(idx);
+          const reads = new Set(r.reads.map(idx));
+          const why = JSON.stringify(r);
+          for (const c of cells) expect(grid[c], why).toBe(0);
+          expect(
+            cells.reduce((t, c) => t + sol[c], 0),
+            "the sum is the solution's",
+          ).toBe(r.clue);
+          const o = r.origin;
+          seen[o.kind]++;
+          if (o.kind === "cage") {
+            const cage = cageOf(cells[0]);
+            const filled = cage.filter((c) => grid[c] !== 0);
+            expect([...cells, ...filled].sort(), why).toEqual([...cage].sort());
+            for (const c of filled) expect(reads.has(c), why).toBe(true);
+            expect(o.total, why).toBe(totalOf(cells[0]));
+            expect(o.placed, why).toBe(filledSum(filled));
+            expect(r.clue, why).toBe(o.total - o.placed);
+          } else if (o.kind === "region") {
+            const region = regionOf(o.region);
+            for (const c of region) expect(reads.has(c), why).toBe(true);
+            expect(regionLeaves(region, cells, reads), why).toBe(r.clue);
+          } else {
+            const region = regionOf(o.region);
+            const inside = o.inside.map(idx);
+            for (const c of region) expect(reads.has(c), why).toBe(true);
+            expect(regionLeaves(region, inside, reads), why).toBe(o.insideSum);
+            const cage = cageOf(cells[0]);
+            const filled = cage.filter((c) => grid[c] !== 0);
+            expect([...cells, ...inside, ...filled].sort(), why).toEqual(
+              [...cage].sort(),
+            );
+            for (const c of filled) expect(reads.has(c), why).toBe(true);
+            expect(o.total, why).toBe(totalOf(cells[0]));
+            expect(o.placed, why).toBe(filledSum(filled));
+            expect(r.clue, why).toBe(o.total - o.placed - o.insideSum);
+          }
+        }
+        if (op.kind === "place") grid[idx(op)] = op.n;
       }
     }
-    expect(seen, "killer singles looked at").toBeGreaterThan(3);
+    for (const [kind, n] of Object.entries(seen))
+      expect(n, `${kind} sums looked at`).toBeGreaterThan(3);
   });
 });
 
@@ -506,6 +595,50 @@ describe("solo killer cages forbid repeats", () => {
       state = soloGame.executeMove(state, res.steps[0].move);
     }
     expect(soloStatus(state)).toBe("solved");
+  });
+
+  /**
+   * "Its other cells already make N" is a claim about the board the player is
+   * looking at. It was false on about one Killer single in twenty (then "the
+   * rest of this killer cage is filled in"), whose cage the solver had split
+   * along a row, column or block and silently treated as two
+   * (`teach-solo-cage-splits`); this board is one of them.
+   */
+  it("a killer single's cage is filled in wherever the hint says so", () => {
+    const SPLIT =
+      "zzzc,__a_aa_a_______aa___aa_____a______________________a___aaacaaaaaab_aab" +
+      "____a_a___a__a_aaa_ba_aaabaaa_,15_9_5a16_10a23c4b13a9a7_8_19_12d5d13a22_7a7" +
+      "_11_13_8a12b6c11_8b9a7_26_14b8_10a13c12c21e12d";
+    const boards = [newState(KILLER, SPLIT)];
+    for (let s = 0; s < 6; s++) boards.push(gen(KILLER, `filled-${s}`).st);
+    let checked = 0;
+    for (const start of boards) {
+      for (const ui of [undefined, populating(start)]) {
+        let state = start;
+        const res = soloGame.hint?.(state, undefined, ui);
+        if (!res?.ok) throw new Error("hint refused");
+        const cages = state.killerData?.kblocks;
+        if (!cages) throw new Error("not a killer board");
+        for (const step of res.steps as AnyStep[]) {
+          const said = /its other cells already make (\d+),/.exec(step.explanation);
+          if (said) {
+            const m = step.move as SoloMove & { type: "set" };
+            const cell = m.y * state.cr + m.x;
+            const others = cages.blocks[cages.whichblock[cell]].filter(
+              (c) => c !== cell,
+            );
+            expect(
+              others.filter((c) => state.grid[c] === 0),
+              step.explanation,
+            ).toEqual([]);
+            expect(others.reduce((t, c) => t + state.grid[c], 0)).toBe(Number(said[1]));
+            checked++;
+          }
+          state = soloGame.executeMove(state, step.move);
+        }
+      }
+    }
+    expect(checked, "killer singles looked at").toBeGreaterThan(20);
   });
 
   it("a hinted placement leaves no cage-mate noting its digit", () => {
