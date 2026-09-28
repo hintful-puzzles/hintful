@@ -40,6 +40,12 @@
 import { type DeductionTechnique, runDeductionFixpoint } from "./deduction-fixpoint.ts";
 import type { DeductionRecorder } from "./deduction-record.ts";
 import type { DifficultyVerdict } from "./difficulty.ts";
+import {
+  auditingPremises,
+  type CellBoard,
+  FiringReplay,
+  offerReplay,
+} from "./firing-replay.ts";
 import { type RandomState, randomUpto } from "./random/index.ts";
 import { shuffle } from "./shuffle.ts";
 import { type StepBudget, stepBudget } from "./step-budget.ts";
@@ -83,11 +89,48 @@ export type LatinReason =
   /** Height `n` was just placed at `(px, py)`, which rules it out of the rest
    * of that row and column. */
   | { kind: "dup"; n: number; px: number; py: number }
-  /** A naked-subset ("set") elimination. `cells` are the subset: the cells
-   * whose candidates account for the struck values between them. */
-  | { kind: "set"; cells: readonly { x: number; y: number }[] }
+  | LatinSetReason
   /** A forcing-chain elimination, with the chain it actually followed. */
   | { kind: "forcing"; chain: ForcingLink[]; shares: "row" | "col" };
+
+/** A set elimination. `cells` are the subset: the cells whose candidates
+ * account for the struck values between them. `reads` is the rest of the lines
+ * whose candidates the set rests on, present only when there is one: a naked
+ * set reads its own cells, but a hidden set or a fish reads where the values
+ * are *not*, across every other cell of its lines. The candidate walk treats it
+ * as premise (`DeductionRecord`). */
+type LatinSetReason = {
+  kind: "set";
+  cells: readonly { x: number; y: number }[];
+  reads?: readonly { x: number; y: number }[];
+};
+
+/** Cube positions gathered as the distinct cells they lie in, in the order
+ * first met. `stride` is the cube's symbols per cell. */
+class CellList {
+  readonly cells: { x: number; y: number }[] = [];
+  private readonly seen = new Set<number>();
+  constructor(
+    private readonly o: number,
+    private readonly stride: number,
+    /** Cells already listed elsewhere, left out of this one. */
+    skip?: CellList,
+  ) {
+    if (skip) for (const c of skip.seen) this.seen.add(c);
+  }
+  add(pos: number): void {
+    const c = (pos / this.stride) | 0;
+    if (this.seen.has(c)) return;
+    this.seen.add(c);
+    this.cells.push({ x: (c / this.o) | 0, y: c % this.o });
+  }
+}
+
+function setReason(cells: CellList, reads: CellList): LatinSetReason {
+  return reads.cells.length > 0
+    ? { kind: "set", cells: cells.cells, reads: reads.cells }
+    : { kind: "set", cells: cells.cells };
+}
 
 /**
  * The one reason only a solver with {@link LatinRepeats} ever records: the
@@ -181,6 +224,9 @@ export class LatinSolver {
   /** Current firing id — bumped once per top-level deduction attempt so every
    * record of one firing shares a `group`. */
   group = 0;
+  /** Called as each rung is about to run, after {@link group} moves on. Set
+   * only while a premise audit records this solver (`latinReplay`). */
+  onGroup?: (rung: number) => void;
 
   constructor(o: number, repeats: LatinRepeats | null = null) {
     this.o = o;
@@ -443,27 +489,31 @@ export class LatinSolver {
           // premise a hint outlines ("these cells account for …"). A row is a
           // cell of a line in the two line slices, and a line of the grid in the
           // value slice, whose premise is then the cells of the rectangle.
-          let premise: { x: number; y: number }[] | null = null;
-          const premiseCells = (): { x: number; y: number }[] => {
-            const seen = new Set<number>();
-            const out: { x: number; y: number }[] = [];
+          let premise: LatinSetReason | null = null;
+          const premiseCells = (): LatinSetReason => {
+            const inside: number[] = [];
             for (let i = 0; i < n; i++) {
-              let inside = true;
+              let ok = true;
               for (let j = 0; j < n; j++)
                 if (set[j] && grid[i * o + j]) {
-                  inside = false;
+                  ok = false;
                   break;
                 }
-              if (!inside) continue;
-              for (let j = 0; j < n; j++) {
-                if (set[j] || !grid[i * o + j]) continue;
-                const rest = ((start + rowidx[i] * step1 + colidx[j] * step2) / o) | 0;
-                if (seen.has(rest)) continue;
-                seen.add(rest);
-                out.push({ x: (rest / o) | 0, y: rest % o });
-              }
+              if (ok) inside.push(i);
             }
-            return out;
+            const cells = new CellList(o, o);
+            for (const i of inside)
+              for (let j = 0; j < n; j++)
+                if (!set[j] && grid[i * o + j])
+                  cells.add(start + rowidx[i] * step1 + colidx[j] * step2);
+            // A row reads every column, the ones the reduction dropped too: in
+            // the value slice that is the rest of the line, where the value is
+            // known to be absent.
+            const reads = new CellList(o, o, cells);
+            for (const i of inside)
+              for (let j = 0; j < o; j++)
+                reads.add(start + rowidx[i] * step1 + j * step2);
+            return setReason(cells, reads);
           };
           for (let i = 0; i < n; i++) {
             let ok = true;
@@ -486,7 +536,7 @@ export class LatinSolver {
                       x: (rest / o) | 0,
                       y: rest % o,
                       n: en,
-                      reason: { kind: "set", cells: premise },
+                      reason: premise,
                       group: this.group,
                     });
                   }
@@ -752,13 +802,13 @@ export class LatinSolver {
       const rest = (pos / s) | 0;
       return { x: (rest / this.o) | 0, y: rest % this.o };
     };
-    const strike = (pos: number, cells: readonly { x: number; y: number }[]): void => {
-      if (rec) {
+    const strike = (pos: number, reason: LatinSetReason | null): void => {
+      if (rec && reason) {
         rec({
           kind: "elim",
           ...cellOf(pos),
           n: 1 + (pos % s),
-          reason: { kind: "set", cells },
+          reason,
           group: this.group,
         });
       }
@@ -798,14 +848,18 @@ export class LatinSolver {
         const pos = (a: number, b: number): number =>
           side === "rows" ? at(a, b) : at(b, a);
         // The subset's own live pairings, as cells: the premise a hint outlines.
-        const premise: { x: number; y: number }[] = [];
-        if (rec)
+        // It reads its rows' every pairing, the dead ones too.
+        let premise: LatinSetReason | null = null;
+        if (rec) {
+          const cells = new CellList(this.o, s);
+          const reads = new CellList(this.o, s, cells);
           for (let a = 0; a < nSub; a++)
             for (let b = 0; b < nOther; b++)
-              if (mask & (1 << a) && live(a, b)) {
-                const c = cellOf(pos(a, b));
-                if (!premise.some((p) => p.x === c.x && p.y === c.y)) premise.push(c);
-              }
+              if (mask & (1 << a) && live(a, b)) cells.add(pos(a, b));
+          for (let a = 0; a < nSub; a++)
+            for (let b = 0; b < nOther; b++) if (mask & (1 << a)) reads.add(pos(a, b));
+          premise = setReason(cells, reads);
+        }
         let progress = false;
         for (let a = 0; a < nSub; a++) {
           if (mask & (1 << a)) continue;
@@ -877,36 +931,37 @@ export interface LatinSolverConfig<Ctx> {
   cubeOut?: Uint8Array;
 }
 
+/** Rung `i` of the ladder (0..maxdiff): the game's own `usersolvers[i]` first,
+ * then whichever built-in technique that difficulty level maps to. Returns
+ * `-1` (contradiction) / `0` (nothing) / `>0` (fired), the runner's contract. */
+function latinRung<Ctx>(
+  solver: LatinSolver,
+  cfg: LatinSolverConfig<Ctx>,
+  i: number,
+): number {
+  const { diffSimple, diffSet0, diffSet1, diffForcing, usersolvers, ctx } = cfg;
+  let ret = 0;
+  if (usersolvers[i]) ret = (usersolvers[i] as UserSolver<Ctx>)(solver, ctx);
+  if (ret === 0 && i === diffSimple) ret = solver.diffSimple();
+  if (ret === 0 && i === diffSet0) ret = solver.diffSet(false);
+  if (ret === 0 && i === diffSet1) ret = solver.diffSet(true);
+  if (ret === 0 && i === diffForcing) ret = solver.forcing();
+  return ret;
+}
+
 function latinSolverTop<Ctx>(solver: LatinSolver, cfg: LatinSolverConfig<Ctx>): number {
-  const {
-    maxdiff,
-    diffSimple,
-    diffSet0,
-    diffSet1,
-    diffForcing,
-    diffRecursive,
-    usersolvers,
-    ctx,
-  } = cfg;
-  // The ordered rung `i` (0..maxdiff): the game's own `usersolvers[i]` first,
-  // then whichever built-in technique that difficulty level maps to. Returns
-  // `-1` (contradiction) / `0` (nothing) / `>0` (fired), the runner's contract.
-  const applyRung = (i: number): number => {
-    let ret = 0;
-    if (usersolvers[i]) ret = (usersolvers[i] as UserSolver<Ctx>)(solver, ctx);
-    if (ret === 0 && i === diffSimple) ret = solver.diffSimple();
-    if (ret === 0 && i === diffSet0) ret = solver.diffSet(false);
-    if (ret === 0 && i === diffSet1) ret = solver.diffSet(true);
-    if (ret === 0 && i === diffForcing) ret = solver.forcing();
-    return ret;
-  };
+  const { maxdiff, diffSimple, diffRecursive } = cfg;
   // Rung `i` **is** difficulty level `i` here — `diffSimple`, `diffSet0`,
   // `diffSet1` and `diffForcing` are level numbers the game hands in, and
-  // `applyRung` dispatches on them — so the technique's tier is its index, and
+  // `latinRung` dispatches on them — so the technique's tier is its index, and
   // the cap is the game's own `maxdiff` rather than a position derived from it.
   const techniques: DeductionTechnique[] = [];
   for (let i = 0; i <= maxdiff; i++) {
-    techniques.push({ id: `latin-level-${i}`, tier: i, run: () => applyRung(i) });
+    techniques.push({
+      id: `latin-level-${i}`,
+      tier: i,
+      run: () => latinRung(solver, cfg, i),
+    });
   }
 
   const fp = runDeductionFixpoint({
@@ -914,7 +969,10 @@ function latinSolverTop<Ctx>(solver: LatinSolver, cfg: LatinSolverConfig<Ctx>): 
     maxTier: maxdiff,
     baseGrade: diffSimple,
     budget: solver.budget,
-    beforeTechnique: () => solver.group++,
+    beforeTechnique: (technique) => {
+      solver.group++;
+      solver.onGroup?.(technique.tier);
+    },
   });
   if (fp.impossible) return finish(solver, cfg, DIFF_IMPOSSIBLE);
   let diff = fp.grade;
@@ -1034,11 +1092,67 @@ export function latinSolver<Ctx>(
     solver.recorder = cfg.recorder;
     solver.budget = stepBudget(cfg.budgetLabel ?? "towers hint");
   }
+  const replay = cfg.recorder && auditingPremises() ? latinReplay(solver, cfg) : null;
   const ret = latinSolverTop(solver, cfg);
+  if (replay) offerReplay(replay);
   // Expose the final candidate cube (upstream's `memcpy(state->hints, ...)`),
   // for a generator that grades clues by remaining possibilities (Unequal).
   if (cfg.cubeOut) cfg.cubeOut.set(solver.cube);
   return ret;
+}
+
+/**
+ * The premise audit's replay of a recording run (`firing-replay.ts`), installed
+ * on the solver the recording uses before it runs. A firing's technique is its
+ * rung, run alone from the edited state.
+ *
+ * The replay starts from the context the run started with, because a context
+ * may narrow as the run goes (Mathrax mirrors the cube in its own marks, and
+ * pulls the cube into them at every call).
+ */
+function latinReplay<Ctx>(
+  solver: LatinSolver,
+  cfg: LatinSolverConfig<Ctx>,
+): FiringReplay<number> {
+  const { o, symbols: s } = solver;
+  const clone = (ctx: Ctx): Ctx =>
+    cfg.ctxNew ? cfg.ctxNew(ctx) : structuredClone(ctx);
+  const ctx = clone(cfg.ctx);
+  const capture = (from: LatinSolver): CellBoard => {
+    const values = Int32Array.from(from.grid);
+    const cands = new Int32Array(o * o);
+    for (let c = 0; c < o * o; c++)
+      for (let n = 1; n <= s; n++)
+        if (from.cubeGet(c % o, (c / o) | 0, n)) cands[c] |= 1 << n;
+    return { values, cands };
+  };
+  const replay = new FiringReplay<number>({
+    w: o,
+    h: o,
+    capture: () => capture(solver),
+    name: (rung) => `latin-level-${rung}`,
+    run: (board, rung) => {
+      const run = new LatinSolver(o, cfg.repeats);
+      if (!run.alloc(Uint8Array.from(board.values)))
+        throw new Error("latin replay: the edited state is inconsistent");
+      for (let c = 0; c < o * o; c++)
+        for (let n = 1; n <= s; n++)
+          if (!(board.cands[c] & (1 << n)))
+            run.cube[run.cubepos(c % o, (c / o) | 0, n)] = 0;
+      // The recording path's techniques behave as recorded only with a recorder.
+      run.recorder = () => {};
+      const replayed = { ...cfg, ctx: clone(ctx) };
+      return () => {
+        const ret = latinRung(run, replayed, rung);
+        return { after: capture(run), ret };
+      };
+    },
+  });
+  solver.onGroup = (rung) => {
+    replay.before(rung);
+    replay.open(solver.group);
+  };
+  return replay;
 }
 
 // --- generator (matching.c / latin.c, RNG-faithful) ------------------------

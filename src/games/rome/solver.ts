@@ -49,6 +49,12 @@ import {
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import {
+  auditingPremises,
+  type CellBoard,
+  FiringReplay,
+  offerReplay,
+} from "../../engine/firing-replay.ts";
+import {
   DIFF_EASY,
   DIFF_NORMAL,
   DIFF_TRICKY,
@@ -63,6 +69,7 @@ import {
   FE_MASK,
   FM_ARROWMASK,
   FM_DOWN,
+  FM_FIXED,
   FM_GOAL,
   FM_LEFT,
   FM_RIGHT,
@@ -269,8 +276,15 @@ export type RomeReason =
    * arrows in `only`, so it can be nothing else. `region` is the four squares. */
   | { kind: "onlyHome"; only: readonly number[]; region: readonly number[] }
   /** The only arrow left anywhere that can point into `group`, the squares
-   * already leading to the goal at `goal`. */
-  | { kind: "reach"; goal: number; group: readonly number[] }
+   * already leading to the goal at `goal`. `reads` is every square bordering
+   * the group, whose marks show that none of the others can
+   * (`DeductionRecord`). */
+  | {
+      kind: "reach";
+      goal: number;
+      group: readonly number[];
+      reads: readonly { x: number; y: number }[];
+    }
   /** `(px, py)` can only point along this axis, and both its neighbors on it
    * share its region, so a neighbor pointing back would close a two-square
    * loop. */
@@ -310,12 +324,16 @@ export interface RomeHintOp extends DeductionRecord {
 class RomeRecording {
   private g = 0;
   readonly ops: RomeHintOp[] = [];
+  /** The premise audit's replay of this run, only while it runs (`romeReplay`). */
+  replay: FiringReplay<string> | null = null;
 
   constructor(private readonly w: number) {}
 
   /** Open a firing and return its group id. */
   open(): number {
-    return ++this.g;
+    this.g++;
+    this.replay?.open(this.g);
+    return this.g;
   }
 
   add(
@@ -661,10 +679,26 @@ function solverExpand(board: RomeBoard, dsf: Dsf, rec: RomeRecording | null): nu
     // one firing however many of the square's other notes it clears.
     if (rec && grid[idx] === EMPTY) {
       const group = rec.open();
+      const component = componentOf(dsf, grid.length, goal);
+      const inside = new Set(component);
+      const border = new Set<number>();
+      for (const i of component) {
+        const x = i % w;
+        const y = (i / w) | 0;
+        for (const [nx, ny] of [
+          [x + 1, y],
+          [x - 1, y],
+          [x, y + 1],
+          [x, y - 1],
+        ])
+          if (nx >= 0 && ny >= 0 && nx < w && ny < h && !inside.has(ny * w + nx))
+            border.add(ny * w + nx);
+      }
       const reason: RomeReason = {
         kind: "reach",
         goal,
-        group: componentOf(dsf, grid.length, goal),
+        group: component,
+        reads: [...border].map((i) => ({ x: i % w, y: (i / w) | 0 })),
       };
       for (const n of valuesIn(prev & ~dir)) {
         rec.add("elim", idx, DIR_BITS[n - 1], reason, group);
@@ -736,6 +770,37 @@ function initCandidates(board: RomeBoard): void {
   }
 }
 
+/** The solver's ladder over `board`, reading the forest and region arrow sets
+ * `validateGame` leaves in `scratch`. */
+function romeLadder(
+  board: RomeBoard,
+  scratch: ValidateScratch,
+  rec: RomeRecording | null,
+): DeductionTechnique[] {
+  const s = board.w * board.h;
+  const { dsf, sets } = scratch;
+  const members = regionMembers(board);
+  const singles = new Int32Array(s);
+  const doubles = new Int32Array(s);
+  return [
+    { id: "single", tier: DIFF_EASY, run: () => solverSingle(board, rec) },
+    { id: "doubles", tier: DIFF_EASY, run: () => solverDoubles(board, sets, rec) },
+    { id: "loops", tier: DIFF_EASY, run: () => solverLoops(board, dsf, rec) },
+    {
+      id: "find-4-position",
+      tier: DIFF_NORMAL,
+      run: () => find4Position(board, singles, doubles, members, rec),
+    },
+    {
+      id: "naked-pairs",
+      tier: DIFF_NORMAL,
+      run: () => nakedPairs(board, members, rec),
+    },
+    { id: "expand", tier: DIFF_NORMAL, run: () => solverExpand(board, dsf, rec) },
+    { id: "opposites", tier: DIFF_TRICKY, run: () => solverOpposites(board, rec) },
+  ];
+}
+
 /**
  * Solve `board` in place by pure deduction up to `maxdiff`, returning the
  * final `STATUS_*`. Upstream `rome_solve`.
@@ -753,42 +818,22 @@ export function romeSolve(
 ): number {
   const s = board.w * board.h;
   const scratch = newValidateScratch(s);
-  const { dsf, sets } = scratch;
   initCandidates(board);
+  if (rec && auditingPremises()) rec.replay = romeReplay(board);
 
-  const members = regionMembers(board);
-  const singles = new Int32Array(s);
-  const doubles = new Int32Array(s);
   const maxIterations = 5 * s + 16;
   let status = STATUS_INCOMPLETE;
   let iteration = 0;
 
-  const ladder: DeductionTechnique[] = [
-    { id: "single", tier: DIFF_EASY, run: () => solverSingle(board, rec) },
-    { id: "doubles", tier: DIFF_EASY, run: () => solverDoubles(board, sets, rec) },
-    { id: "loops", tier: DIFF_EASY, run: () => solverLoops(board, dsf, rec) },
-    {
-      id: "find-4-position",
-      tier: DIFF_NORMAL,
-      run: () => find4Position(board, singles, doubles, members, rec),
-    },
-    {
-      id: "naked-pairs",
-      tier: DIFF_NORMAL,
-      run: () => nakedPairs(board, members, rec),
-    },
-    { id: "expand", tier: DIFF_NORMAL, run: () => solverExpand(board, dsf, rec) },
-    { id: "opposites", tier: DIFF_TRICKY, run: () => solverOpposites(board, rec) },
-  ];
-
   runDeductionFixpoint({
-    techniques: ladder,
+    techniques: romeLadder(board, scratch, rec),
     firings,
     // Upstream breaks out of the ladder at the first over-cap rung, where
     // `maxTier` skips only the over-cap rungs. The two agree because this
     // ladder is tier-sorted — they would not for a ladder that puts a cheap
     // rung after an expensive one. Check the ordering before copying this.
     maxTier: maxdiff,
+    beforeTechnique: (t) => rec?.replay?.before(t.id),
     // Rome's own non-convergence guard, run where upstream ran it: at the top
     // of every iteration. Not the shared `stepBudget`, which is the recording
     // path's guard; the throw message and limit are this path's behavior.
@@ -801,7 +846,59 @@ export function romeSolve(
     },
   });
 
+  if (rec?.replay) offerReplay(rec.replay);
   return status;
+}
+
+/**
+ * The premise audit's replay of a recording run (`firing-replay.ts`), from
+ * `board` as the run starts: a firing's technique is its rung, run alone on a
+ * fresh board, validated first as the ladder validates before each pass.
+ */
+function romeReplay(board: RomeBoard): FiringReplay<string> {
+  const { w, h, regions } = board;
+  const fixed = board.grid.map((g) => g & (FM_FIXED | FM_GOAL));
+  const capture = (from: RomeBoard): CellBoard => {
+    const values = new Int32Array(w * h);
+    const cands = new Int32Array(w * h);
+    for (let i = 0; i < w * h; i++) {
+      const arrow = from.grid[i] & FM_ARROWMASK;
+      if (arrow) values[i] = dirValue(arrow);
+      for (const bit of DIR_BITS)
+        if (from.pencil[i] & bit) cands[i] |= 1 << dirValue(bit);
+    }
+    return { values, cands };
+  };
+  return new FiringReplay<string>({
+    w,
+    h,
+    capture: () => capture(board),
+    name: (id) => id,
+    run: (b, id) => {
+      const fresh: RomeBoard = {
+        w,
+        h,
+        regions,
+        grid: fixed.map((f, i) => f | (b.values[i] ? DIR_BITS[b.values[i] - 1] : 0)),
+        pencil: new Int32Array(w * h),
+      };
+      for (let i = 0; i < w * h; i++)
+        for (const bit of DIR_BITS)
+          if (b.cands[i] & (1 << dirValue(bit))) fresh.pencil[i] |= bit;
+      const scratch = newValidateScratch(w * h);
+      // The recording path's techniques behave as recorded only with a recorder.
+      const technique = romeLadder(fresh, scratch, new RomeRecording(w)).find(
+        (t) => t.id === id,
+      );
+      if (!technique) throw new Error(`rome replay: no technique ${id}`);
+      return () => {
+        if (validateGame(fresh, false, scratch) !== STATUS_INCOMPLETE)
+          return { after: capture(fresh), ret: 0 };
+        const ret = technique.run();
+        return { after: capture(fresh), ret };
+      };
+    },
+  });
 }
 
 /**

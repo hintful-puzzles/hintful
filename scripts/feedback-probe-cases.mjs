@@ -1496,4 +1496,27 @@ export const MODULES = [
       },
     ],
   },
+  {
+    module: "src/engine/firing-replay.ts",
+    cases: [
+      {
+        within: "FiringReplay.edited",
+        why: "no cell outside a premise is returned to the start, so nothing a premise leaves out is ever tested",
+        find: "    for (const c of reset) {",
+        replace: "    for (const c of new Set<number>()) {",
+      },
+      {
+        within: "checkPremise",
+        why: "a replay that cannot make the recorded firing again judges premises anyway",
+        find: "  if (!concludes(recorded)) {",
+        replace: "  if (false) {",
+      },
+      {
+        within: "checkPremise",
+        why: "an earlier firing that a returned cell shows again is reported as a finding against the firing under audit",
+        find: "    if (at.length > 0 && at.every((c) => reset.has(c))) {",
+        replace: "    if (false) {",
+      },
+    ],
+  },
 ];

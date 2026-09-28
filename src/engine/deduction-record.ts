@@ -17,7 +17,12 @@
  * `group` ties together every record of a single deduction *firing* (one
  * top-level deduction attempt), so a firing forcing several strikes becomes one
  * grouped hint step. `reason` is the game's own reason object (a `LatinReason`
- * for the generic Latin deductions). */
+ * for the generic Latin deductions).
+ *
+ * A reason may carry `reads`, the cells the deduction reads beyond what the
+ * game's words for it outline: a fish reads that its value is absent from the
+ * rest of its lines. The candidate walk adds them to the step's premise, so the
+ * solver, which is the one place that knows what it read, can say so. */
 export interface DeductionRecord {
   kind: "place" | "elim";
   x: number;

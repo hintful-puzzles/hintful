@@ -1,5 +1,0 @@
-# No delta yet: whether a requirement moves depends on what the
-# investigation finds. Written 2026-09-28; nothing is implemented.
-schema: spec-driven
-created: 2026-09-28
-skip_specs: true

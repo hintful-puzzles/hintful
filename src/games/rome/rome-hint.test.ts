@@ -125,6 +125,49 @@ describe("rome recording projection", () => {
    * neighbor arrives at the struck square — against the board it was recorded
    * from (AGENTS.md § "Hint quality bar", rule 5).
    */
+  /**
+   * "Only this mark still leads into the striped group" is a claim about every
+   * square around the group, so the firing reads them all; without them the
+   * plan could offer it while one of them still showed a mark pointing in
+   * (`guard-recorded-firing-premises`). The premise audit cannot hold this
+   * one: the rung reads the whole board to decide whether to fire at all.
+   */
+  it("reads every square bordering the group a reach strike names", () => {
+    let seen = 0;
+    for (const p of [NORMAL, TRICKY]) {
+      for (let s = 0; s < 6; s++) {
+        const { st } = gen(p, `reach-${p.w}-${s}`);
+        for (const op of recordRomeDeductions(st, DIFFCOUNT)) {
+          const r = op.reason as RomeReason;
+          if (r.kind !== "reach") continue;
+          seen++;
+          const inside = new Set(r.group);
+          const border = new Set<string>();
+          for (const i of r.group) {
+            const x = i % p.w;
+            const y = (i / p.w) | 0;
+            for (const [nx, ny] of [
+              [x + 1, y],
+              [x - 1, y],
+              [x, y + 1],
+              [x, y - 1],
+            ])
+              if (
+                nx >= 0 &&
+                ny >= 0 &&
+                nx < p.w &&
+                ny < p.h &&
+                !inside.has(ny * p.w + nx)
+              )
+                border.add(`${nx},${ny}`);
+          }
+          expect(new Set(r.reads.map((q) => `${q.x},${q.y}`))).toEqual(border);
+        }
+      }
+    }
+    expect(seen, "reach strikes looked at").toBeGreaterThan(3);
+  });
+
   it("records a loop path that really leads back to the square it strikes", () => {
     let checked = 0;
     for (let s = 0; s < 8; s++) {

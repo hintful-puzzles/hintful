@@ -37,6 +37,7 @@ import {
   regionReach,
 } from "./candidate-hint.ts";
 import type { DeductionRecord } from "./deduction-record.ts";
+import { checkPremise, type FiringReplay, takeReplay } from "./firing-replay.ts";
 import type { HintStep } from "./game.ts";
 import { type FrontierCandidate, gridKey, HintFrontier } from "./hint-frontier.ts";
 import {
@@ -297,6 +298,12 @@ export function valuesOf(marks: readonly Mark[]): number[] {
   return marks.map((m) => m.n).sort((a, b) => a - b);
 }
 
+/** The cells a recorded reason says its deduction reads beyond what its words
+ * outline (`DeductionRecord`); none when it says nothing. */
+function recordedReads(reason: unknown): readonly Point[] {
+  return (reason as { reads?: readonly Point[] }).reads ?? [];
+}
+
 /** The cells `marks` act on, each once, in the order they first appear. */
 function cellsOf(marks: readonly Mark[]): Point[] {
   const seen = new Set<string>();
@@ -445,6 +452,8 @@ class CandidateWalk<
   Reg extends CellRegion,
 > {
   private ops: readonly R[];
+  /** The recording's replay, offered only while a premise audit runs. */
+  private replay: FiringReplay | null;
   private readonly bit: (n: number) => number;
   private readonly place: (x: number, y: number, n: number, autoElim: boolean) => M;
   private readonly strike: (marks: Mark[]) => M;
@@ -464,6 +473,7 @@ class CandidateWalk<
   constructor(private readonly plan: CandidatePlan<M, H, R, Reason, Reg>) {
     const { w, grid, pencil, steps, enc } = plan;
     this.ops = plan.record();
+    this.replay = takeReplay(plan.label, this.ops.length);
     this.bit = enc?.bit ?? ((n: number): number => 1 << n);
     const dialect = plan.moves;
     this.place = (dialect?.place ?? latinMoves.place) as typeof this.place;
@@ -674,7 +684,34 @@ class CandidateWalk<
       this.reach,
       { enc: plan.enc, placed: plan.placed?.() },
     );
+    if (this.replay) this.audit(this.replay, this.available);
     return this.available;
+  }
+
+  /** Check that each firing offered follows from the premise its steps name
+   * (`firing-replay.ts`). A placement's own cell stays as the solver had it. */
+  private audit(replay: FiringReplay, available: AvailableFirings<R>): void {
+    const { label } = this.plan;
+    for (const live of available.strikes)
+      checkPremise(replay, {
+        label,
+        group: live[0].group,
+        reason: live[0].reason,
+        premise: this.premise(this.strikeFiring(live)),
+        targets: live.map(({ x, y, n }) => ({ kind: "elim", x, y, n })),
+      });
+    for (const op of available.placements) {
+      // A single is not offered by its premise: the board shows it or not.
+      if ((op.reason as { kind?: string }).kind === "single") continue;
+      const { x, y, n } = op;
+      checkPremise(replay, {
+        label,
+        group: op.group,
+        reason: op.reason,
+        premise: [...this.evidence(this.placing(op, op.reason as Reason)), { x, y }],
+        targets: [{ kind: "place", x, y, n }],
+      });
+    }
   }
 
   /** One firing's live strikes as legs, split on the game's axis. */
@@ -738,14 +775,25 @@ class CandidateWalk<
     });
   }
 
-  /** What a firing reasons from, leaving out the cells it acts on: a line it
-   * hatches may run through them (Towers' facing clues). */
+  /** What a firing reasons from, leaving out the cells its legs act on: a line
+   * it hatches may run through them (Towers' facing clues). A note leg acts on
+   * a cell only because the firing reads it, so its cell stays premise, or a
+   * placement resting on a product the board has not placed yet is offered
+   * (Group's associativity, `guard-recorded-firing-premises`). */
   private evidence(f: Firing<M, H, Reason>): Point[] {
-    const steps = this.stepsOf(f).map(({ step }) => step.highlights);
     const acted = new Set(
-      steps.flatMap((h) => (h ? h.targets.map((p) => `${p.x},${p.y}`) : [])),
+      f
+        .flatMap((leg): readonly Point[] =>
+          "place" in leg
+            ? [leg.place]
+            : "strike" in leg
+              ? leg.strike
+              : (leg.step.highlights?.targets ?? []),
+        )
+        .map((p) => `${p.x},${p.y}`),
     );
-    return steps
+    return this.stepsOf(f)
+      .map(({ step }) => step.highlights)
       .flatMap((h) => (h ? [...h.area, ...(h.hatch ?? []), ...(h.reads ?? [])] : []))
       .filter((p) => !acted.has(`${p.x},${p.y}`));
   }
@@ -764,6 +812,19 @@ class CandidateWalk<
     return built;
   }
 
+  /** A strike's words, with the cells its recorded reason reads beyond them. */
+  private strikeWords(
+    marks: readonly Mark[],
+    reason: Reason | DupReason,
+    continues: boolean,
+  ): StrikeWords<H> {
+    const words = this.plan.strikeWords(marks, reason, continues);
+    const more = recordedReads(reason);
+    return more.length > 0
+      ? { ...words, reads: [...(words.reads ?? []), ...more] }
+      : words;
+  }
+
   private builtLeg(leg: Leg<M, H, Reason>, continues: boolean): Built<M, H> {
     if ("step" in leg)
       return {
@@ -776,7 +837,7 @@ class CandidateWalk<
     if ("strike" in leg)
       return this.struck(
         leg.strike,
-        this.plan.strikeWords(leg.strike, leg.reason, continues),
+        this.strikeWords(leg.strike, leg.reason, continues),
       );
     const { x, y, n } = leg.place;
     const { explanation, ...evidence } = this.plan.placeWords(
@@ -784,7 +845,11 @@ class CandidateWalk<
       leg.reason,
       continues,
     );
-    const reads = [...(evidence.reads ?? []), ...(leg.reads ?? [])];
+    const reads = [
+      ...(evidence.reads ?? []),
+      ...(leg.reads ?? []),
+      ...recordedReads(leg.reason),
+    ];
     return {
       step: {
         move: this.place(x, y, n, this.plan.autoClean),
@@ -860,7 +925,7 @@ class CandidateWalk<
         // leg strikes from.
         const marks = leg.strike.filter((m) => !this.settled(m, folded));
         if (marks.length === 0) return;
-        const words = this.plan.strikeWords(marks, leg.reason, k > 0);
+        const words = this.strikeWords(marks, leg.reason, k > 0);
         const cells = cellsOf(marks);
         const alone = cells.length === 1 && words.where === undefined;
         const i = alone ? bare(cells[0], k) : null;
@@ -1030,7 +1095,10 @@ class CandidateWalk<
       plan.steps.push(step);
       if (apply()) decided = true;
     });
-    if (decided) this.ops = plan.record();
+    if (decided) {
+      this.ops = plan.record();
+      this.replay = takeReplay(plan.label, this.ops.length);
+    }
   }
 
   private clear(marks: readonly Mark[]): void {

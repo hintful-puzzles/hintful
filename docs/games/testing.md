@@ -614,6 +614,14 @@ while both of these were red.
   `--passWithNoTests`, under which "nothing to run" is **green**. Asserting the
   derivation against its own definition would have been a tautology; the floors
   are the part that can actually fail.
+- **Recorded premises**: a game whose hint calls the candidate walk is in
+  [`firing-replay.test.ts`](../../src/engine/firing-replay.test.ts), which
+  audits that every recorded firing it offers follows from its premise. The
+  solver's part is a replay: a `latinSolver` game has one already, and a
+  bespoke recording solver writes a `ReplayAdapter`. One that records without
+  offering a replay is reported, not skipped, so a new solver cannot go
+  unaudited in silence. See [`hints.md`](./hints.md) § "A premise names
+  everything its deduction reads".
 - **Difficulty tiers**: declaring `Game.difficulty`
   ([`difficulty.ts`](../../src/engine/difficulty.ts)) *is* the enrollment —
   [`difficulty-contract.test.ts`](../../src/engine/difficulty-contract.test.ts)

@@ -455,7 +455,22 @@ run out of deduction, so reach for it rather than comparing names yourself.
 `DeductionRecord`/`DeductionRecorder`: the seam between a game's recording
 deduction pass and the shared candidate-hint mechanics. `reason` is `unknown`
 precisely so each game attaches its own; `group` ties every record of one
-firing together so one firing becomes one grouped hint step.
+firing together so one firing becomes one grouped hint step. A reason's
+`reads` names cells the deduction reads beyond what the game's words outline,
+and the candidate walk makes them premise.
+
+### `firing-replay.ts` — the premise audit
+
+A test-only instrument, idle unless `auditRecordedPremises` is running: it
+checks that each recorded firing the candidate walk offers still follows once
+every cell outside its premise is returned to the recording's start.
+`FiringReplay` keeps the state before each firing and reruns its technique from
+an edited copy; a solver joins through a `ReplayAdapter` (read its state as a
+`CellBoard`, run one technique). `latinSolver` builds one for every Latin game,
+and Rome and Solo write their own. The audit reports what it could not do (a
+firing it could not reproduce, a recording it had no replay for) and how many
+cells it actually tested. Guard: `firing-replay.test.ts`. See
+[`hints.md`](./hints.md) § "A premise names everything its deduction reads".
 
 ## Hint machinery
 

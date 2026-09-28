@@ -3856,6 +3856,45 @@ asserts it is still over, so fixing it retires the entry.
   difficulty, **deductive only** (cap below recursion — a guess isn't a
   teachable note strike).
 
+### A premise names everything its deduction reads
+
+The walk offers a recorded firing once its premise shows nothing the board has
+yet to show (§ "Solve the way a human does"), so a step whose premise leaves
+out a cell the deduction read is offered while that cell may still say
+otherwise, and its sentence is false on the player's board. Every test stays
+green while it happens. Four did, found by the audit below
+(`guard-recorded-firing-premises`): an X-wing's lines, a Rome group's border,
+a Killer cage's filled cells, and Group's own products under the implicit
+reading.
+
+- **Absence is read too.** "4 can only go in these cells of these columns"
+  reads every *other* cell of the columns, where 4 is not. A naked set reads
+  only its own cells; a hidden set and a fish read the rest of their lines.
+  "Only this mark leads into the group" reads every square around the group.
+- **Where the words cannot say it, the solver does.** A recorded reason may
+  carry `reads`, the cells its deduction reads beyond what the game's words
+  outline, and the walk adds them to the step's premise (and under the
+  implicit reading writes their notes first). The solver is the one place that
+  knows what it read: `latin.ts`'s set reasons, Rome's `reach`, Solo's cage
+  reasons. Words that already name the cells need nothing more.
+- **Say what the sentence rests on, not what the solver's state is.** A Killer
+  cage the solver has shrunk by filling cells is still the cage the player
+  sees, so "the rest of this cage is filled in" rests on those cells.
+- **The audit holds it.** `engine/firing-replay.ts` takes the solver's state
+  at each firing the walk offers, returns every cell outside the step's premise
+  to where the recording started, and runs the firing's technique again: a
+  firing that no longer follows is the finding. `firing-replay.test.ts` runs it
+  over every candidate walk. A solver on `latinSolver` takes part with no code
+  of its own; a bespoke one writes a `ReplayAdapter` (Rome's, Solo's).
+- **What it cannot see, it says.** A technique reading more to decide
+  *whether* to fire than its conclusion rests on (Mathrax's Easy gate, Rome's
+  `expand`) is flagged though its premise is honest, so the guard ledgers each
+  such gate against a pinned board. A cell the firing's own technique puts back
+  before reaching it is not tested (Salad tests none, the lowest Latin rung
+  few), and the audit counts what it tested. Solo replays its whole loop, not
+  one technique, and offers no replay on a Killer board, whose split cages are
+  solver state; the guard names both.
+
 ### Persist, populate, and the moves
 
 - **Persist + populate.** Express the recorded script against the live notes
@@ -4122,7 +4161,8 @@ owner-driven and worth copying:
   (`towers-implicit-strike-window`). So a step's premise must name every cell
   whose candidates *or placed value* it rests on — a clue rung reading the
   heights along its line hatches that line — or it will be offered before the
-  board supports it. `runCandidatePlan` does all of this; the rule is
+  board supports it (§ "A premise names everything its deduction reads").
+  `runCandidatePlan` does all of this; the rule is
   `availableFirings` in
   [`candidate-hint.ts`](../../src/engine/candidate-hint.ts).
 - **Surface a *whole-line forcing* as one ordered placement journey, before

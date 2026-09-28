@@ -110,6 +110,33 @@ describe("solo recording solver", () => {
     }
     expect([...kinds].some((k) => k.startsWith("cage"))).toBe(true);
   });
+
+  /**
+   * A cage the solver has shrunk by filling its cells is still the cage the
+   * player sees, and what is left of it rests on what was filled: without
+   * those cells the plan could offer "the rest of this killer cage is filled
+   * in" while they were empty on the board (`guard-recorded-firing-premises`).
+   * A killer board offers the premise audit no replay, so this holds it, and
+   * through `cageReads` the cage-sum strikes' reads with it.
+   */
+  it("reads the rest of the cage a killer single fills", () => {
+    let seen = 0;
+    for (let s = 0; s < 4; s++) {
+      const { st } = gen(KILLER, `cage-rest-${s}`);
+      const cages = st.killerData?.kblocks;
+      if (!cages) throw new Error("not a killer board");
+      const at = (c: number): string => `${c % st.cr},${(c / st.cr) | 0}`;
+      for (const op of recordSoloDeductions(st, DIFF_BLOCK, DIFF_KINTERSECT)) {
+        const r = op.reason as HintReason;
+        if (r.kind !== "cageSingle") continue;
+        seen++;
+        const cell = op.y * st.cr + op.x;
+        const rest = cages.blocks[cages.whichblock[cell]].filter((c) => c !== cell);
+        expect(r.reads.map((p) => `${p.x},${p.y}`).sort()).toEqual(rest.map(at).sort());
+      }
+    }
+    expect(seen, "killer singles looked at").toBeGreaterThan(3);
+  });
 });
 
 // --- tier 1: hint plan ------------------------------------------------------

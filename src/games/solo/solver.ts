@@ -15,6 +15,13 @@
  * `removeFromBlock`/`splitBlock`).
  */
 
+import {
+  auditingPremises,
+  type CellBoard,
+  FiringReplay,
+  offerReplay,
+  type ReplayAdapter,
+} from "../../engine/firing-replay.ts";
 import type {
   DeductionRecord,
   DeductionRecorder,
@@ -92,18 +99,30 @@ export type SoloReason =
   /** A *hidden* single — digit `n` fits only one cell of `region`. */
   | { kind: "hiddenSingle"; n: number; region: SoloRegion }
   /** Killer: the remaining cell(s) of a cage must total `clue`; with one left it
-   * is forced. */
-  | { kind: "cageSingle"; cells: Point[]; clue: number }
+   * is forced. `reads` is the rest of the cage, whose values made `clue` what
+   * is left (`DeductionRecord`). */
+  | { kind: "cageSingle"; cells: Point[]; clue: number; reads: Point[] }
   /** Killer: a deduced extra-cage (a region minus the cages it fully contains)
    * with one undetermined cell, forced to the residual sum. `region` is the row,
    * column or block the residual was taken from — the evidence the sentence
-   * points at, and without it the step shades only the cell it is about. */
-  | { kind: "cageIntersect"; cells: Point[]; clue: number; region: SoloRegion }
+   * points at, and without it the step shades only the cell it is about.
+   * `reads` is the filled cells outside the region of each cage counted as
+   * inside it (`DeductionRecord`). */
+  | {
+      kind: "cageIntersect";
+      cells: Point[];
+      clue: number;
+      region: SoloRegion;
+      reads: Point[];
+    }
   /** Killer: even the extreme the other cage cells can reach leaves no room for
-   * `n` here. */
-  | { kind: "cageMinMax"; cells: Point[]; clue: number }
-  /** Killer: no combination of digits summing to the clue uses `n` in this cell. */
-  | { kind: "cageSums"; cells: Point[]; clue: number };
+   * `n` here. `cells` and `clue` are what the solver has left of the cage, and
+   * `reads` what that rests on (`DeductionRecord`): the rest of the cage, or
+   * for a deduced extra-cage its region and the cages taken out of it. */
+  | { kind: "cageMinMax"; cells: Point[]; clue: number; reads: Point[] }
+  /** Killer: no combination of digits summing to the clue uses `n` in this cell.
+   * `reads` as for `cageMinMax`. */
+  | { kind: "cageSums"; cells: Point[]; clue: number; reads: Point[] };
 
 /** A reason attached to a recorded Solo deduction (the narrowed hint reason). */
 export type HintReason = SoloReason;
@@ -226,6 +245,9 @@ class SolverUsage {
   /** Deduced "extra" cages and their sums, rebuilt each KINTERSECT pass. */
   extraCages: number[][] = [];
   extraClues: number[] = [];
+  /** What each extra cage's sum rests on, on the hint path: its region, and the
+   * cells outside it of the cages taken out of it. */
+  extraReads: Point[][] = [];
 
   /** Candidate cube: cube[(y*cr+x)*cr + n-1] truthy ⇒ digit n possible there. */
   readonly cube: Uint8Array;
@@ -264,6 +286,10 @@ class SolverUsage {
   /** Current firing id — bumped once per top-level deduction attempt so every
    * record of one firing shares a `group`. */
   group = 0;
+  /** The premise audit's hooks (`soloReplay`), set only while it runs:
+   * `seeded` once the givens are placed, and `pass` at the top of each pass of
+   * the main loop, after {@link group} moves on, ending the loop if it says so. */
+  audit?: { seeded(): void; pass(): boolean };
 
   constructor(
     cr: number,
@@ -713,8 +739,9 @@ class SolverUsage {
     return cells.map((c) => ({ x: c % cr, y: (c / cr) | 0 }));
   }
 
-  /** `solver_killer_minmax` for a single cage's cell list + clue. +1 / 0. */
-  private killerMinmax(cells: number[], clue: number): number {
+  /** `solver_killer_minmax` for a single cage's cell list + clue. +1 / 0.
+   * `reads` is what `clue` rests on beyond `cells`, for the hint. */
+  private killerMinmax(cells: number[], clue: number, reads: Point[]): number {
     const cr = this.cr;
     let ret = 0;
     const nsquares = cells.length;
@@ -723,7 +750,7 @@ class SolverUsage {
     const recCage = (xy: number, n: number): void => {
       if (!this.recorder) return;
       if (!cageCells) cageCells = this.cellsXY(cells);
-      this.recElim(xy, n, { kind: "cageMinMax", cells: cageCells, clue });
+      this.recElim(xy, n, { kind: "cageMinMax", cells: cageCells, clue, reads });
     };
 
     for (let i = 0; i < nsquares; i++) {
@@ -756,8 +783,14 @@ class SolverUsage {
     return ret;
   }
 
-  /** `solver_killer_sums` for a single cage's cell list + clue. +1 / 0 / -1. */
-  private killerSums(cells: number[], clue: number, cageIsRegion: boolean): number {
+  /** `solver_killer_sums` for a single cage's cell list + clue. +1 / 0 / -1.
+   * `reads` is what `clue` rests on beyond `cells`, for the hint. */
+  private killerSums(
+    cells: number[],
+    clue: number,
+    cageIsRegion: boolean,
+    reads: Point[],
+  ): number {
     const cr = this.cr;
     const nsquares = cells.length;
 
@@ -824,7 +857,7 @@ class SolverUsage {
         if ((possibleAddends & (1 << n)) === 0) {
           if (this.recorder) {
             if (!cageCells) cageCells = this.cellsXY(cells);
-            this.recElim(x, n, { kind: "cageSums", cells: cageCells, clue });
+            this.recElim(x, n, { kind: "cageSums", cells: cageCells, clue, reads });
           }
           this.setCube2(x, n, 0);
           ret = 1;
@@ -841,6 +874,8 @@ class SolverUsage {
     squares: number[],
     kblocks: Cages,
     kclues: number[],
+    /** Collects each whole cage filtered out, by index, where not `null`. */
+    whole: number[] | null,
   ): { len: number; filteredSum: number } {
     let filteredSum = 0;
     let n = squares.length;
@@ -875,6 +910,7 @@ class SolverUsage {
       for (let k = off; k + matched < n; k++) squares[k] = squares[k + matched];
       n -= matched;
       filteredSum += kclues[b];
+      whole?.push(b);
     }
     return { len: off, filteredSum };
   }
@@ -968,12 +1004,24 @@ class SolverUsage {
     // aren't mistaken for deductions — `docs/games/hints.md` § "The recorder
     // and the soundness boundary").
     this.recorder = this.pendingRecorder;
+    this.audit?.seeded();
+
+    /** The cells the solver has taken out of cage `b` (filled, or split off),
+     * which its reduced clue rests on: the rest of the cage the player sees.
+     * Hint path only (`DeductionRecord`). */
+    const cageReads = (b: number): Point[] => {
+      const now = this.killer?.kblocks.blocks[b];
+      if (!this.recorder || !kblocksImmutable || !now?.length) return [];
+      const whole = kblocksImmutable.blocks[kblocksImmutable.whichblock[now[0]]];
+      return this.cellsXY(whole.filter((c) => !now.includes(c)));
+    };
 
     mainloop: while (true) {
       // One mainloop iteration = at most one firing (each technique `continue`s
       // to the top on progress), so bumping the group here gives every record of
       // one firing a shared group id.
       this.group++;
+      if (this.audit?.pass()) break;
       // Blockwise positional elimination.
       for (let b = 0; b < cr; b++)
         for (let n = 1; n <= cr; n++)
@@ -1026,7 +1074,12 @@ class SolverUsage {
               finish(DIFF_IMPOSSIBLE);
               return;
             }
-            this.place(x, y, v, { kind: "cageSingle", cells: [{ x, y }], clue: v });
+            this.place(x, y, v, {
+              kind: "cageSingle",
+              cells: [{ x, y }],
+              clue: v,
+              reads: cageReads(b),
+            });
             changed = true;
           }
         }
@@ -1042,15 +1095,19 @@ class SolverUsage {
         let changed = false;
         this.extraCages = [];
         this.extraClues = [];
+        this.extraReads = [];
 
         for (let i = 0; i < 3; i++) {
           for (let n = 0; n < cr; n++) {
             const extraList = this.regionCells(i, n);
+            const inRegion = this.recorder ? new Set(extraList) : null;
+            const whole: number[] | null = this.recorder ? [] : null;
             let sum = (cr * (cr + 1)) / 2;
             const { len: nsquares, filteredSum } = this.filterWholeCages(
               extraList,
               kblocks,
               kclues,
+              whole,
             );
             sum -= filteredSum;
             if (nsquares === cr || nsquares === 0) continue;
@@ -1065,6 +1122,15 @@ class SolverUsage {
             }
 
             const cells = extraList.slice(0, nsquares);
+            // A cage counts as inside the region once its cells outside it are
+            // filled, so what the region leaves rests on those too.
+            const outside: number[] = [];
+            if (inRegion && whole && kblocksImmutable)
+              for (const b of whole)
+                for (const c of kblocksImmutable.blocks[
+                  kblocksImmutable.whichblock[kblocks.blocks[b][0]]
+                ])
+                  if (!inRegion.has(c)) outside.push(c);
             if (nsquares === 1) {
               if (sum > cr) {
                 finish(DIFF_IMPOSSIBLE);
@@ -1081,6 +1147,7 @@ class SolverUsage {
                 cells: [{ x, y }],
                 clue: sum,
                 region: SolverUsage.extraRegion(i, n),
+                reads: this.cellsXY(outside),
               });
               changed = true;
             }
@@ -1099,6 +1166,9 @@ class SolverUsage {
             } else {
               this.extraCages.push(cells);
               this.extraClues.push(sum);
+              this.extraReads.push(
+                inRegion ? this.cellsXY([...inRegion, ...outside]) : [],
+              );
             }
           }
         }
@@ -1112,7 +1182,7 @@ class SolverUsage {
         const { kblocks, kclues } = this.killer;
         let changed = false;
         for (let b = 0; b < kblocks.blocks.length; b++) {
-          const ret = this.killerMinmax(kblocks.blocks[b], kclues[b]);
+          const ret = this.killerMinmax(kblocks.blocks[b], kclues[b], cageReads(b));
           if (ret > 0) {
             changed = true;
             if (this.recorder) break; // one cage = one firing on the hint path
@@ -1120,7 +1190,11 @@ class SolverUsage {
         }
         if (!(this.recorder && changed))
           for (let b = 0; b < this.extraCages.length; b++) {
-            const ret = this.killerMinmax(this.extraCages[b], this.extraClues[b]);
+            const ret = this.killerMinmax(
+              this.extraCages[b],
+              this.extraClues[b],
+              this.extraReads[b],
+            );
             if (ret > 0) {
               changed = true;
               if (this.recorder) break;
@@ -1136,7 +1210,7 @@ class SolverUsage {
         const { kblocks, kclues } = this.killer;
         let changed = false;
         for (let b = 0; b < kblocks.blocks.length; b++) {
-          const ret = this.killerSums(kblocks.blocks[b], kclues[b], true);
+          const ret = this.killerSums(kblocks.blocks[b], kclues[b], true, cageReads(b));
           if (ret > 0) {
             changed = true;
             kdiff = Math.max(kdiff, DIFF_KSUMS);
@@ -1148,7 +1222,12 @@ class SolverUsage {
         }
         if (!(this.recorder && changed))
           for (let b = 0; b < this.extraCages.length; b++) {
-            const ret = this.killerSums(this.extraCages[b], this.extraClues[b], false);
+            const ret = this.killerSums(
+              this.extraCages[b],
+              this.extraClues[b],
+              false,
+              this.extraReads[b],
+            );
             if (ret > 0) {
               changed = true;
               kdiff = Math.max(kdiff, DIFF_KSUMS);
@@ -1511,6 +1590,83 @@ export function recordSoloDeductions(
   };
   const usage = new SolverUsage(s.cr, s.blocks, kblocks, s.xtype, grid, kgrid);
   usage.pendingRecorder = (rec) => ops.push(rec as HintOp);
+  // A killer board offers no replay: the solver splits and shrinks its cages
+  // as it deduces, which is state a replay's cells do not carry, and which cage
+  // counts as inside a region turns on which cells are filled, so a returned
+  // cell can let a rung conclude more rather than less.
+  const replay =
+    auditingPremises() && !kblocks ? soloReplay(usage, s, { ...dlev }) : null;
   usage.run(s.blocks, kblocks, s.xtype, kgrid, dlev);
+  if (replay?.replay) offerReplay(replay.replay);
   return ops;
+}
+
+/**
+ * The premise audit's replay of a recording run on a board without cages
+ * (`firing-replay.ts`). Solo's techniques live in one loop, so a firing's
+ * technique is the whole ladder,
+ * run for one pass from the edited state: weaker than one technique alone,
+ * since a lower rung may put back a cell the audit returned, and sound, since
+ * every rung before the firing's found nothing on the recorded state.
+ */
+function soloReplay(
+  usage: SolverUsage,
+  s: SoloState,
+  dlev: Difficulty,
+): { replay: FiringReplay<null> | null } {
+  const { cr, blocks, xtype } = s;
+  const capture = (from: SolverUsage): CellBoard => {
+    const values = Int32Array.from(from.grid);
+    const cands = new Int32Array(cr * cr);
+    for (let c = 0; c < cr * cr; c++)
+      for (let n = 1; n <= cr; n++) if (from.cube[c * cr + n - 1]) cands[c] |= 1 << n;
+    return { values, cands };
+  };
+  const adapter: ReplayAdapter<null> = {
+    w: cr,
+    h: cr,
+    capture: () => capture(usage),
+    name: () => "solo ladder",
+    run: (board) => {
+      let now = board;
+      return () => {
+        const run = new SolverUsage(
+          cr,
+          blocks,
+          null,
+          xtype,
+          Int8Array.from(now.values),
+          null,
+        );
+        // The recording path's techniques behave as recorded only with a recorder.
+        run.pendingRecorder = () => {};
+        let passes = 0;
+        const cands = now.cands;
+        run.audit = {
+          seeded: () => {
+            for (let c = 0; c < cr * cr; c++)
+              for (let n = 1; n <= cr; n++)
+                if (!(cands[c] & (1 << n))) run.cube[c * cr + n - 1] = 0;
+          },
+          // The second pass means the first one fired.
+          pass: () => ++passes > 1,
+        };
+        run.run(blocks, null, xtype, null, { ...dlev });
+        now = capture(run);
+        return { after: now, ret: passes > 1 ? 1 : 0 };
+      };
+    },
+  };
+  const out: { replay: FiringReplay<null> | null } = { replay: null };
+  usage.audit = {
+    seeded: () => {
+      out.replay = new FiringReplay(adapter);
+    },
+    pass: () => {
+      out.replay?.before(null);
+      out.replay?.open(usage.group);
+      return false;
+    },
+  };
+  return out;
 }
