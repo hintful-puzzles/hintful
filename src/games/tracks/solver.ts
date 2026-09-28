@@ -8,18 +8,18 @@
  * § "Solver-gated generation"). Reused by `solve()` and `findMistakes`.
  *
  * **The ladder runs on the shared `runDeductionFixpoint`**, and three things
- * make it agree exactly with the hand-written loop it replaced
- * (`tracksSolveLegacy`):
+ * keep it upstream's ladder:
  *
  *  - **The tier guard skips, it does not stop.** A rung above `maxTier` is
- *    skipped and the ladder keeps going, as each `diff >= TIER` guard did.
- *  - **The grade means the same number**: the highest tier that fired. A game
- *    that bumps its grade on *reaching* a tier is not this shape.
+ *    skipped and the ladder keeps going, as each `diff >= TIER` guard does in
+ *    `tracks.c`.
+ *  - **The grade is the highest tier that fired.** A game that bumps its grade
+ *    on *reaching* a tier is not this shape.
  *  - **`b.impossible` is a board flag, not a `< 0` return**, and `settled`
- *    reads it where the loop did, at the top of each pass.
+ *    reads it at the top of each pass.
  *
- * Proved by `tracks-ladder.test.ts`, not by the differential; see its header
- * for why the fixtures could not certify this on their own.
+ * `tracks-ladder.test.ts` holds the census of which rungs fire; see its header
+ * for why the fixtures could not certify the ladder on their own.
  */
 import {
   type DeductionTechnique,
@@ -940,7 +940,7 @@ function tracksLadder(b: Board, bridgeDsf: Dsf): DeductionTechnique[] {
   ];
 }
 
-/** The setup both `tracksSolve` and its equivalence oracle need: clear the
+/** The setup both `tracksSolve` and `tracksRecordingPass` need: clear the
  * impossible flag, discount the four outside edges, and hand back the scratch
  * dsf the parity rung uses. */
 function tracksSolveInit(b: Board): Dsf {
@@ -964,8 +964,8 @@ function tracksSolveInit(b: Board): Dsf {
  *
  * @param firings test seam: the runner tallies each rung's firings into it.
  * Unused in production and deliberately so: `tracks-ladder.test.ts` has to
- * prove its corpus reaches every rung, and a ladder-equivalence test that could
- * pass over boards needing only the easiest rung would certify nothing.
+ * prove its corpus reaches every rung, and a ladder test that could pass over
+ * boards needing only the easiest rung would certify nothing.
  */
 export function tracksSolve(
   b: Board,
@@ -1032,58 +1032,6 @@ export function tracksRecordingPass(
     if (!firings.next() || b.impossible) return null;
     return { reason: rec.reason as TracksReason | null, ops: rec.ops };
   };
-}
-
-/**
- * The hand-written ladder this solver ran before adopting the runner, kept
- * **only** as the oracle `tracks-ladder.test.ts` proves the adoption against;
- * the rungs are module-private, so the comparison has to live in this file.
- */
-export function tracksSolveLegacy(
-  b: Board,
-  diff: number,
-): { ret: number; maxDiff: number } {
-  let maxDiff = DIFF_EASY;
-  const bridgeDsf = tracksSolveInit(b);
-
-  while (!b.impossible) {
-    if (diff >= DIFF_EASY && updateFlags(b)) {
-      maxDiff = Math.max(maxDiff, DIFF_EASY);
-      continue;
-    }
-    if (diff >= DIFF_EASY && countClues(b)) {
-      maxDiff = Math.max(maxDiff, DIFF_EASY);
-      continue;
-    }
-    if (diff >= DIFF_EASY && checkLoop(b)) {
-      maxDiff = Math.max(maxDiff, DIFF_EASY);
-      continue;
-    }
-    if (diff >= DIFF_TRICKY && checkSingle(b)) {
-      maxDiff = Math.max(maxDiff, DIFF_TRICKY);
-      continue;
-    }
-    if (diff >= DIFF_TRICKY && checkLooseEnds(b)) {
-      maxDiff = Math.max(maxDiff, DIFF_TRICKY);
-      continue;
-    }
-    if (diff >= DIFF_TRICKY && checkNeighbors(b, false)) {
-      maxDiff = Math.max(maxDiff, DIFF_TRICKY);
-      continue;
-    }
-    if (diff >= DIFF_HARD && checkNeighbors(b, true)) {
-      maxDiff = Math.max(maxDiff, DIFF_HARD);
-      continue;
-    }
-    if (diff >= DIFF_HARD && checkBridgeParity(b, bridgeDsf)) {
-      maxDiff = Math.max(maxDiff, DIFF_HARD);
-      continue;
-    }
-    break;
-  }
-
-  const ret = b.impossible ? -1 : checkCompletion(b, false) ? 1 : 0;
-  return { ret, maxDiff };
 }
 
 /**

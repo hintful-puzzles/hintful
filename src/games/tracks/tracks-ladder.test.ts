@@ -1,19 +1,19 @@
 /*
- * Tracks' adoption of `runDeductionFixpoint`, proved by equivalence. The
- * harness and the argument for it are `engine/testing/ladder-equivalence.ts`;
- * this file is the declaration.
+ * Tracks' `runDeductionFixpoint` ladder, certified by a census of which rungs
+ * fire. The harness and the argument for it are
+ * `engine/testing/ladder-census.ts`; this file is the declaration.
  *
  * **The byte-match differential cannot certify the ladder on its own.**
  * Mis-declare a rung's *tier* and it goes red, but delete `check-single`
- * entirely, from the new ladder or the old loop, and it stays green: that rung
- * fires on no board this generator produces (measured: 324 solves, every other
- * rung firing, that one zero), and no corpus can guard what nothing reaches.
+ * entirely and it stays green: that rung fires on no board this generator
+ * produces (measured: 324 solves, every other rung firing, that one zero), and
+ * no corpus can guard what nothing reaches.
  */
 
 import { randomNew } from "../../engine/random/index.ts";
-import { describeLadderEquivalence } from "../../engine/testing/ladder-equivalence.ts";
+import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newDesc } from "./generator.ts";
-import { tracksSolve, tracksSolveLegacy } from "./solver.ts";
+import { tracksSolve } from "./solver.ts";
 import {
   DIFF_EASY,
   DIFF_HARD,
@@ -42,7 +42,7 @@ const cases = SHAPES.flatMap((params) =>
   }),
 );
 
-describeLadderEquivalence({
+describeLadderCensus({
   game: "tracks",
   rungs: [
     "update-flags",
@@ -68,10 +68,5 @@ describeLadderEquivalence({
   },
   caps: [DIFF_EASY, DIFF_TRICKY, DIFF_HARD],
   cases,
-  viaRunner: tracksSolve,
-  viaLegacy: tracksSolveLegacy,
-  // `sflags` is the whole board state: Tracks packs a square's four TRACK and
-  // four NOTRACK *edge* bits into the same word as its square flags
-  // (`sESet`/`sEFlags` shift by `S_TRACK_SHIFT` / `S_NOTRACK_SHIFT`).
-  key: (b) => `${b.impossible ? "X" : "-"}|${Array.from(b.sflags).join(",")}`,
+  solve: tracksSolve,
 });

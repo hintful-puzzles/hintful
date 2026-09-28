@@ -434,8 +434,8 @@ its attribution tally outlives a call. Callers: a reference query for
 `singleFirings`. The followable form is [`hints.md`](./hints.md) § "Recording
 the deduction".
 
-An adoption is proved by a **ladder-equivalence** test, not by the game's
-byte-match differential — see
+A ladder is certified by a **ladder census** (`testing/ladder-census.ts`), not
+by the game's byte-match differential alone — see
 [`solver-and-generator.md`](./solver-and-generator.md) § "Proving an adoption",
 and read it before adopting or "fixing" a game that doesn't use this.
 
@@ -745,11 +745,11 @@ test `=== 26` after it, Pearl grows a run by *incrementing the letter it already
 wrote* and starts a fresh `a` at `z`, Palisade nested two `while`s. Five
 spellings of one grammar is the argument for the module.
 
-A desc is a player promise, so the encoder is fuzzed against the code it
-replaced rather than trusted — 4,000 trials biased toward long runs, with the
-prior nested-`while` encoder kept in `run-length.test.ts` as the oracle. That
-exists because Palisade, the first game converted, has no frozen differential;
-the other seven adopters have one and all seven are byte-clean.
+A desc is a player promise, so when the grammar was extracted the encoder was
+fuzzed against the code it replaced, 4,000 trials biased toward long runs.
+`run-length.test.ts` now pins the bytes at every run boundary and fuzzes the
+round trip, because Palisade, the first game converted, has no frozen
+differential; the other seven adopters have one and all seven are byte-clean.
 
 The adopter roster is derived from who imports the module and swept by
 [`run-length-desc.test.ts`](../../src/run-length-desc.test.ts), which also

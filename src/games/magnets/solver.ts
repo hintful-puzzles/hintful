@@ -527,74 +527,12 @@ export class MagnetsSolver {
     return this.allSet();
   }
 
-  /** The loop `solveUnnumbered` ran before it adopted the shared runner, kept
-   * as the oracle `magnets-ladder.test.ts` certifies the runner against
-   * (`engine/testing/ladder-equivalence.ts` says why a differential alone
-   * cannot). Not for production use. */
-  solveUnnumberedLegacy(): number {
-    while (true) {
-      let ret = this.force();
-      if (ret > 0) continue;
-      if (ret < 0) return -1;
-      ret = this.neither();
-      if (ret > 0) continue;
-      if (ret < 0) return -1;
-      break;
-    }
-    return this.allSet();
-  }
-
   /** 1 when every cell is set, else 0 — the unnumbered solve's verdict. */
   private allSet(): number {
     for (let i = 0; i < this.wh; i++) {
       if (!(this.flags[i] & GS_SET)) return 0;
     }
     return 1;
-  }
-
-  /** The loop `solve` ran before it adopted the shared runner, kept as the
-   * oracle `magnets-ladder.test.ts` certifies the runner against — including
-   * upstream's `if (diff < DIFF_TRICKY) break;` in the middle of the ladder,
-   * which the runner's tier cap replaces. Not for production use. */
-  solveLegacy(diff: number): number {
-    while (true) {
-      let ret = this.force();
-      if (ret > 0) continue;
-      if (ret < 0) return -1;
-
-      ret = this.neither();
-      if (ret > 0) continue;
-      if (ret < 0) return -1;
-
-      ret = this.rowcols(this.checkfull);
-      if (ret < 0) return -1;
-      if (ret > 0) continue;
-
-      ret = this.rowcols(this.oddlength);
-      if (ret < 0) return -1;
-      if (ret > 0) continue;
-
-      if (diff < DIFF_TRICKY) break;
-
-      ret = this.rowcols(this.advancedfull);
-      if (ret < 0) return -1;
-      if (ret > 0) continue;
-
-      ret = this.rowcols(this.nonneutral);
-      if (ret < 0) return -1;
-      if (ret > 0) continue;
-
-      ret = this.rowcols(this.countdominoesNeutral);
-      if (ret < 0) return -1;
-      if (ret > 0) continue;
-
-      ret = this.rowcols(this.countdominoesNonneutral);
-      if (ret < 0) return -1;
-      if (ret > 0) continue;
-
-      break;
-    }
-    return checkCompletion(this);
   }
 
   /**

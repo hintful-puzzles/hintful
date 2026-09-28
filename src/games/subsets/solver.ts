@@ -416,48 +416,6 @@ export function subsetsSolveGame(
   return status;
 }
 
-/**
- * The hand-written ladder, upstream's loop shape, kept as the oracle
- * `subsets-ladder.test.ts` proves {@link subsetsSolveGame} against.
- *
- * Subsets uses neither of the runner's graded features: it returns a
- * *verdict*, not a tier, and its difficulty is a boolean handed to one rung
- * rather than a cap over the ladder, so `maxTier` is unused. What the runner
- * gives it is the loop, the restart discipline, named rungs in the
- * step-budget's non-termination message, and the firing census.
- */
-export function subsetsSolveGameLegacy(
-  state: SubsetsState,
-  maxdiff: number,
-): SubsetsStatus {
-  const s = state.w * state.h;
-  const n2 = 1 << state.n;
-  const counts = new Int32Array(s);
-  const cube = new Uint8Array(s * n2).fill(1);
-
-  for (let i = 0; i < s; i++) {
-    if (state.immutable[i]) continue;
-    state.known[i] = 0;
-    state.mask[i] = ALL_BITS(state.n);
-  }
-
-  for (;;) {
-    const ret = subsetsValidate(state, null, counts);
-    if (ret !== "unfinished") return ret;
-
-    syncCube(state, cube);
-    cubeSingleCount(state, counts, cube);
-
-    if (applyArrows(state)) continue;
-    if (disjoint(state, cube)) continue;
-    if (bitsFromCube(state, cube)) continue;
-    if (solveSinglePosition(state, counts, cube)) continue;
-    if (applyArrowsAdvanced(state, cube, maxdiff >= DIFF_TRICKY)) continue;
-
-    return ret;
-  }
-}
-
 // --- findMistakes: the rule validator's error set ----------------------------
 
 /**

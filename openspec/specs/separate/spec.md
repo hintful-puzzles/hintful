@@ -221,14 +221,15 @@ component with exactly one legal neighboring square merges with it, marking the
 edges between them "no wall"). The working state SHALL carry the same facts as
 border-grid bytes, so the generator and the hint run the same techniques on the
 same state. The ladder SHALL generate exactly the boards upstream's loop did, and
-the hand-written loop SHALL be kept as the oracle a ladder-equivalence test proves
-it against.
+a firing census over generator runs SHALL assert that every technique fires. The
+hand-written loop the ladder replaced SHALL NOT be kept once the adoption is
+proved; git holds it.
 
 #### Scenario: The ladder moves no board
 
 - **WHEN** the generator runs on the ladder
 - **THEN** the frozen differential's descs are unchanged
-- **AND** over generator runs the ladder and the legacy loop agree on partition, sizes, disconnects, locked letters and verdict, with every rung fired
+- **AND** the firing census over generator runs, which keep one scratch across letter refills, reaches every rung
 
 ### Requirement: Separate offers a deduction-based hint
 

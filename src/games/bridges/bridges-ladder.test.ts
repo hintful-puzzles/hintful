@@ -1,13 +1,13 @@
 /*
- * Bridges' `runDeductionFixpoint` ladder, proved equivalent to the hand-written
- * stage loop (`solveSubLegacy`). The harness and the argument for it are
- * `engine/testing/ladder-equivalence.ts`; why a rung that sweeps every island
- * before reporting is legal is at `Solver.ladder`.
+ * The firing census of Bridges' `runDeductionFixpoint` ladder: which stages the
+ * generated corpus reaches. The harness and the argument for it are
+ * `engine/testing/ladder-census.ts`; why a rung that sweeps every island before
+ * reporting is legal is at `Solver.ladder`.
  */
 import { randomNew } from "../../engine/random/index.ts";
-import { describeLadderEquivalence } from "../../engine/testing/ladder-equivalence.ts";
+import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newBridgesDesc } from "./generator.ts";
-import { solveFromScratch, solveFromScratchLegacy } from "./solver.ts";
+import { solveFromScratch } from "./solver.ts";
 import {
   BRIDGES_PRESETS,
   type BridgesParams,
@@ -34,7 +34,7 @@ const cases = SHAPES.flatMap((params) =>
   }),
 );
 
-describeLadderEquivalence<BridgesState>({
+describeLadderCensus<BridgesState>({
   game: "bridges",
   rungs: [
     "stage1-arithmetic",
@@ -46,15 +46,5 @@ describeLadderEquivalence<BridgesState>({
   // The stages' own tiers, plus one above the top, where `difficulty` caps nothing.
   caps: [0, 1, 2, 3],
   cases,
-  viaRunner: (s, cap, firings) => solveFromScratch(s, cap, firings),
-  viaLegacy: (s, cap) => solveFromScratchLegacy(s, cap),
-  // Everything the stages write: the bridge/mark bits per cell, the line counts,
-  // and the per-direction possibility masks the counting stage narrows.
-  key: (s) =>
-    [
-      Array.from(s.grid).join(","),
-      Array.from(s.lines).join(","),
-      Array.from(s.possv).join(","),
-      Array.from(s.possh).join(","),
-    ].join("|"),
+  solve: (s, cap, firings) => solveFromScratch(s, cap, firings),
 });

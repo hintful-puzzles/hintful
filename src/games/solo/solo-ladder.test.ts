@@ -1,17 +1,16 @@
 /*
- * Solo's adoption of `runDeductionFixpoint`, proved by equivalence. The
- * harness and the argument for it are `engine/testing/ladder-equivalence.ts`;
- * this file is the declaration.
+ * Solo's `runDeductionFixpoint` ladder, certified by a census of which rungs
+ * fire. The harness and the argument for it are
+ * `engine/testing/ladder-census.ts`; this file is the declaration.
  *
  * **Solo grades on two scales**, sudoku `diff` and killer `kdiff`, each with
  * its own cap, where the harness walks one number: a cap here is
  * `maxdiff * 10 + maxkdiff`, and every pair is walked.
  */
-import { describeLadderEquivalence } from "../../engine/testing/ladder-equivalence.ts";
+import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { solveSolo } from "./solver.ts";
 import {
   DIFF_EXTREME,
-  DIFF_IMPOSSIBLE,
   DIFF_KINTERSECT,
   DIFF_RECURSIVE,
   decodeParams,
@@ -109,42 +108,25 @@ function misplaced(board: string): SoloState {
   throw new Error(`${board}: no digit to misplace`);
 }
 
-interface Board {
-  s: SoloState;
-  /** The grid the solve left, filled in by the solve. */
-  after: string;
-}
-
 const cases = [
-  ...BOARDS.map(({ label, board }) => ({
-    label,
-    board: (): Board => ({ s: stateOf(board), after: "" }),
-  })),
+  ...BOARDS.map(({ label, board }) => ({ label, board: () => stateOf(board) })),
   ...BOARDS.filter((b) => /Tricky|Hard$|Killer,/.test(b.label)).map(
     ({ label, board }) => ({
       label: `${label}, one digit wrong`,
-      board: (): Board => ({ s: misplaced(board), after: "" }),
+      board: () => misplaced(board),
     }),
   ),
 ];
 
 // Every pair of deduction caps, and search at the top one only: a search
-// branch is a fresh solve through the runner on both sides, and searching a
-// killer board with its killer rungs capped away takes minutes.
+// branch is a fresh solve through the ladder, and searching a killer board
+// with its killer rungs capped away takes minutes.
 const caps: number[] = [DIFF_RECURSIVE * 10 + DIFF_KINTERSECT];
 for (let maxdiff = 0; maxdiff <= DIFF_EXTREME; maxdiff++)
   for (let maxkdiff = 0; maxkdiff <= DIFF_KINTERSECT; maxkdiff++)
     caps.push(maxdiff * 10 + maxkdiff);
 
-const solveWith =
-  (legacy: boolean) => (b: Board, cap: number, firings?: Map<string, number>) => {
-    const r = solveSolo(b.s, Math.floor(cap / 10), cap % 10, firings, legacy);
-    b.after = r.grid.join("");
-    // A killer grade means nothing once the board is proved inconsistent.
-    return { diff: r.diff, kdiff: r.diff === DIFF_IMPOSSIBLE ? null : r.kdiff };
-  };
-
-describeLadderEquivalence({
+describeLadderCensus<SoloState>({
   game: "solo",
   rungs: [
     "block-single",
@@ -165,8 +147,5 @@ describeLadderEquivalence({
   unreached: {},
   caps,
   cases,
-  viaRunner: solveWith(false),
-  viaLegacy: solveWith(true),
-  // The grid is all of its written state a solve hands back.
-  key: (b) => b.after,
+  solve: (s, cap, firings) => solveSolo(s, Math.floor(cap / 10), cap % 10, firings),
 });

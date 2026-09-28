@@ -501,8 +501,7 @@ export function ascentSolve(
   runDeductionFixpoint({
     techniques: ascentLadder(sc, diff),
     firings,
-    // The ladder is tier-sorted, so skipping over-cap rungs matches the legacy
-    // ladder's `break`s.
+    // `diff` is purely a cap: every rung above it is skipped.
     maxTier: diff,
   });
 }
@@ -551,36 +550,4 @@ function ascentLadder(sc: SolverScratch, diff: number): DeductionTechnique[] {
       run: () => solverSingleNumber(sc, false),
     },
   ];
-}
-
-/** The hand-written ladder `ascentSolve` replaced, kept as the oracle
- * `ascent-ladder.test.ts` checks it against. */
-export function ascentSolveLegacy(
-  puzzle: Int16Array,
-  diff: number,
-  sc: SolverScratch,
-): void {
-  solverStart(puzzle, sc);
-  while (true) {
-    if (solverSinglePosition(sc)) continue;
-    if (solverProximitySimple(sc)) continue;
-
-    if (diff < DIFF_NORMAL) break;
-
-    if (solverUpdatePath(sc)) continue;
-    if (solverAdjacentPath(sc)) continue;
-    if (solverRemoveEndpoints(sc)) continue;
-    if (solverRemovePath(sc)) continue;
-    if (solverProximityFull(sc)) continue;
-
-    if ((diff >= DIFF_HARD || sc.mode === MODE_EDGES) && solverOverlap(sc)) continue;
-
-    if (diff < DIFF_TRICKY) break;
-
-    if (diff < DIFF_HARD && solverSingleNumber(sc, true)) continue;
-    if (diff < DIFF_HARD) break;
-
-    if (solverSingleNumber(sc, false)) continue;
-    break;
-  }
 }

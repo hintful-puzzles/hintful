@@ -1,17 +1,12 @@
 /*
- * Rome's adoption of `runDeductionFixpoint`, proved by equivalence. The
- * harness and the argument for it are `engine/testing/ladder-equivalence.ts`;
- * this file is the declaration.
- *
- * **Rome is the adopter whose tier gates were mid-ladder `break`s**, and the
- * runner *skips* over-cap rungs instead. The two agree only because Rome's
- * ladder is tier-sorted, which `romeSolve` says at the `maxTier` line — this
- * file is the check on real boards at all three caps.
+ * The census of Rome's `runDeductionFixpoint` ladder: which rungs the corpus
+ * fires, at all three caps. The harness and the argument for it are
+ * `engine/testing/ladder-census.ts`; this file is the declaration.
  */
 import { randomNew } from "../../engine/random/index.ts";
-import { describeLadderEquivalence } from "../../engine/testing/ladder-equivalence.ts";
+import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newRomeDesc } from "./generator.ts";
-import { romeSolve, romeSolveLegacy } from "./solver.ts";
+import { romeSolve } from "./solver.ts";
 import {
   DIFF_EASY,
   DIFF_NORMAL,
@@ -74,7 +69,7 @@ const cases = [
   })),
 ];
 
-describeLadderEquivalence({
+describeLadderCensus({
   game: "rome",
   rungs: [
     "single",
@@ -91,9 +86,5 @@ describeLadderEquivalence({
   unreached: {},
   caps: [DIFF_EASY, DIFF_NORMAL, DIFF_TRICKY],
   cases,
-  viaRunner: romeSolve,
-  viaLegacy: romeSolveLegacy,
-  // `grid` is the placed arrows, `pencil` the solver's live candidate set;
-  // `regions` is the static layout and is never merged while solving.
-  key: (b) => `${Array.from(b.grid).join(",")}|${Array.from(b.pencil).join(",")}`,
+  solve: romeSolve,
 });

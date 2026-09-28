@@ -1,22 +1,23 @@
 /*
- * Ascent's adoption of `runDeductionFixpoint`, proved by equivalence against
- * `ascentSolveLegacy`. The harness and the argument for it are
- * `engine/testing/ladder-equivalence.ts`; this file is the declaration.
+ * The firing census of Ascent's `runDeductionFixpoint` ladder: which rungs the
+ * generated corpus reaches. The harness and the argument for it are
+ * `engine/testing/ladder-census.ts`; this file is the declaration.
  *
  * Two rungs have availability no `tier` can express and guard themselves
  * (`ascentLadder`'s doc comment has the argument). One of them,
- * `single-number-simple`, runs at Tricky and **not** at Hard, which is visible
- * only by comparing those two caps, so this walks **all four caps**.
+ * `single-number-simple`, runs at Tricky and **not** at Hard, so this walks
+ * **all four caps**.
  *
  * **Each case builds a fresh `SolverScratch` per solve, deliberately.**
  * `foundEndpoints` persists across solves on one scratch (an upstream quirk the
- * differential holds), so sharing a scratch between the two sides would make
- * them diverge for a reason that has nothing to do with the ladder.
+ * differential holds), and a latched scratch silences `remove-endpoints`, so a
+ * shared one would starve the census for a reason that has nothing to do with
+ * the ladder.
  */
 import { randomNew } from "../../engine/random/index.ts";
-import { describeLadderEquivalence } from "../../engine/testing/ladder-equivalence.ts";
+import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newAscentDesc } from "./generator.ts";
-import { ascentSolve, ascentSolveLegacy, SolverScratch } from "./solver.ts";
+import { ascentSolve, SolverScratch } from "./solver.ts";
 import {
   type AscentParams,
   DIFF_EASY,
@@ -72,7 +73,7 @@ const cases = SHAPES.flatMap(([name, params]) =>
   }),
 );
 
-describeLadderEquivalence<AscentCase>({
+describeLadderCensus<AscentCase>({
   game: "ascent",
   rungs: [
     "single-position",
@@ -89,15 +90,5 @@ describeLadderEquivalence<AscentCase>({
   unreached: {},
   caps: [DIFF_EASY, DIFF_NORMAL, DIFF_TRICKY, DIFF_HARD],
   cases,
-  viaRunner: (b, cap, firings) => ascentSolve(b.grid, cap, b.sc, firings),
-  viaLegacy: (b, cap) => ascentSolveLegacy(b.grid, cap, b.sc),
-  // Every array the rungs write: the working grid, the candidate bitmap, the
-  // path segments, and the endpoint latch whose persistence is the quirk above.
-  key: (b) =>
-    [
-      Array.from(b.sc.grid).join(","),
-      Array.from(b.sc.marks).join(","),
-      Array.from(b.sc.path).join(","),
-      b.sc.foundEndpoints ? "E" : "-",
-    ].join("|"),
+  solve: (b, cap, firings) => ascentSolve(b.grid, cap, b.sc, firings),
 });

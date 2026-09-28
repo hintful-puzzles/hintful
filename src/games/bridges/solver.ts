@@ -822,52 +822,10 @@ class Solver {
     const { impossible } = runDeductionFixpoint({
       techniques: this.ladder(),
       firings,
-      // The ladder is tier-sorted, so a `maxTier` cap agrees with the stage
-      // gates of `solveSubLegacy`.
+      // Each stage's tier is the difficulty that unlocks it.
       maxTier: difficulty,
     });
     if (impossible) return 0;
-    return this.mapCheck() ? 1 : 0;
-  }
-
-  /** The hand-written stage loop, kept as the oracle `bridges-ladder.test.ts`
-   * proves the runner against. */
-  solveSubLegacy(difficulty: number): number {
-    const st = this.st;
-    while (true) {
-      let didsth = false;
-
-      for (const is of st.islands) {
-        const r = this.solveIslandStage1(is);
-        if (!r.ok) return 0;
-        if (r.didsth) didsth = true;
-      }
-      if (didsth) continue;
-      else if (difficulty < 1) break;
-
-      for (const is of st.islands) {
-        if (st.gridAt(is.x, is.y) & G_MARK) continue; // CONTINUE_IF_FULL
-        const r = this.solveIslandStage2(is);
-        if (!r.ok) return 0;
-        if (r.didsth) didsth = true;
-      }
-      if (didsth) continue;
-
-      for (const is of st.islands) {
-        const r = this.solveIslandSeal(is);
-        if (!r.ok) return 0;
-        if (r.didsth) didsth = true;
-      }
-      if (didsth) continue;
-      else if (difficulty < 2) break;
-
-      for (const is of st.islands) {
-        const r = this.solveIslandStage3(is);
-        if (!r.ok) return 0;
-        if (r.didsth) didsth = true;
-      }
-      if (!didsth) break;
-    }
     return this.mapCheck() ? 1 : 0;
   }
 }
@@ -888,19 +846,6 @@ export function solveFromScratch(
   solver.mapGroup();
   state.mapUpdatePossibles();
   return solver.solveSub(difficulty, firings);
-}
-
-/** {@link solveFromScratch} through the hand-written loop — the oracle
- * `bridges-ladder.test.ts` proves the runner against. */
-export function solveFromScratchLegacy(
-  state: BridgesState,
-  difficulty: number,
-): number {
-  state.mapClear();
-  const solver = new Solver(state);
-  solver.mapGroup();
-  state.mapUpdatePossibles();
-  return solver.solveSubLegacy(difficulty);
 }
 
 /**

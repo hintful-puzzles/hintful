@@ -11,8 +11,8 @@
  * **reachability** firing whose evidence is a numbered chain of arrows.
  *
  * What these catch that no cheaper test would: the cross-game guards walk a
- * plan and check its *form*, and `rome-ladder.test.ts` checks the solver's
- * rungs against their oracle — but nothing else checks that the recorder is a
+ * plan and check its *form*, and `rome-ladder.test.ts` checks that every rung
+ * of the solver fires — but nothing else checks that the recorder is a
  * pure observer of that solver, and nothing else reads a premise back to see
  * that it is true of the board rather than merely present.
  */

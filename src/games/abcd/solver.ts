@@ -18,8 +18,7 @@
  * one pass and tries 3 only when neither fired (`if (busy) continue;`), which
  * is the runner's restart-at-first-firing walk under another name: 1 retires
  * the lines it finds and places nothing, so running it again straight after
- * itself finds nothing. {@link solveBoardLegacy} keeps upstream's loop as the
- * oracle `abcd-ladder.test.ts` proves that on.
+ * itself finds nothing.
  *
  * This is arithmetic over the candidate cube, not a Latin square: the
  * constraint is a per-line count plus a no-touch rule, so `engine/latin.ts`
@@ -374,30 +373,6 @@ export function solveBoard(
   firings?: FiringTally,
 ): AbcdSolveResult {
   runDeductionFixpoint({ techniques: abcdLadder(b), firings });
-  return verdict(b, numbers);
-}
-
-/**
- * Upstream's hand-written loop, kept as the oracle `abcd-ladder.test.ts` proves
- * {@link solveBoard} against.
- *
- * **Where the two differ, and why it does not matter.** On a board where a cell
- * runs out of candidates, this loop still tries technique 3 once if technique 2
- * placed nothing in the same pass, while the runner stops at the `-1`. Both
- * then report `"contradiction"`, and no caller reads the grid of a contradiction.
- * A generated board never reaches one: its clues come from a real fill, and
- * every technique is sound.
- */
-export function solveBoardLegacy(b: SolverBoard, numbers: Int32Array): AbcdSolveResult {
-  let busy = true;
-  while (busy && !b.contradiction) {
-    busy = false;
-    if (solverSatisfied(b) > 0) busy = true;
-    if (solverSingles(b) > 0) busy = true;
-    // Rerun the two cheap techniques before trying runs again.
-    if (busy) continue;
-    if (solverRuns(b) > 0) busy = true;
-  }
   return verdict(b, numbers);
 }
 

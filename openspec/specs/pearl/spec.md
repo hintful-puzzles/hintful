@@ -146,17 +146,15 @@ Pearl's solver SHALL run its deductions as a `runDeductionFixpoint` ladder of fi
 rungs: square shapes from known edges, edges from surviving shapes, the pearl clue
 deductions, and a closed-loop rung, all at Easy; and the shortcut-loop rule at
 Tricky. The closed-loop rung SHALL end the ladder through `settled` once a loop has
-closed and everything off it is blank. The solver SHALL keep upstream's hand-written
-loop as an oracle only a test calls. A ladder-equivalence test SHALL prove, over
-generated boards at both tiers, that the ladder leaves the same verdict and the same
-workspace as the oracle at both caps. The workspace is every square's surviving
-shapes and every edge. The test SHALL also carry a firing census asserting that
-every rung fires on the corpus.
+closed and everything off it is blank. A firing census SHALL walk generated boards
+at both tiers, at both caps, and assert that every rung fires on the corpus. The
+hand-written loop the ladder replaced SHALL NOT be kept once the adoption is
+proved; git holds it.
 
 #### Scenario: A silenced rung fails
 
 - **WHEN** any rung is removed from the ladder
-- **THEN** the ladder-equivalence test or the frozen differential fails
+- **THEN** the firing census or the frozen differential fails
 
 #### Scenario: A mis-tiered shortcut rung fails
 

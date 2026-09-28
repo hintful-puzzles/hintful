@@ -33,7 +33,7 @@
  *
  * The callers are `latinSolverTop` and a comment-stripped scan for
  * `runDeductionFixpoint` under `src/games/`. A game adopting this runner ships a
- * ladder-equivalence test (`engine/testing/ladder-equivalence.ts`), because a
+ * ladder census (`engine/testing/ladder-census.ts`), because a
  * fixture corpus certifies only the rungs it fires: deleting one of Tracks'
  * eight rungs entirely left every one of its tests green, since that rung fires
  * on no board its generator produces.
@@ -118,7 +118,7 @@ export interface DeductionFixpointOptions {
    * A caller-supplied tally the runner writes each firing into, keyed by
    * {@link DeductionTechnique.id} — **how a caller observes which rungs a board
    * actually reached.** Nothing in a game's own results says which rungs are
-   * reachable, so a corpus that walks the ladder (`ladder-equivalence.ts`)
+   * reachable, so a corpus that walks the ladder (`ladder-census.ts`)
    * needs this census.
    *
    * **A sink rather than a returned value, deliberately.** This runner is called

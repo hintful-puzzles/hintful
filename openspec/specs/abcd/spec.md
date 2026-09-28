@@ -197,19 +197,17 @@ request.
 ### Requirement: ABCD's solver is a certified deduction ladder
 
 ABCD's solver SHALL run its three techniques (satisfied clue, single possibility,
-runs) as a `runDeductionFixpoint` ladder, and SHALL keep upstream's hand-written
-loop as an oracle only a test calls. A ladder-equivalence test SHALL prove, over
-generated boards covering every preset shape, diagonal mode and a thin board, that
-the ladder leaves the same verdict and the same working board (grid, candidate cube
-and outstanding counts) as the oracle, and SHALL carry a firing census asserting
-that every technique fires on the corpus, with a count of the boards compared.
+runs) as a `runDeductionFixpoint` ladder. A firing census SHALL walk generated
+boards covering every preset shape, diagonal mode and a thin board, and assert
+that every technique fires on the corpus, with a count of the boards solved. The
+hand-written loop the ladder replaced SHALL NOT be kept once the adoption is
+proved; git holds it.
 
 #### Scenario: A technique the corpus never reaches fails the census
 
 - **WHEN** a technique is removed from the ladder
-- **THEN** the census reports it as never fired, even where every board comparison
-  still agrees because the generator, gated on the same solver, dealt only boards
-  the weakened ladder finishes
+- **THEN** the census reports it as never fired, even though the generator, gated
+  on the same solver, deals only boards the weakened ladder finishes
 
 ### Requirement: ABCD offers an explained hint
 

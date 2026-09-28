@@ -1,17 +1,12 @@
 /*
- * Seismic's `runDeductionFixpoint` ladder, proved equivalent to the hand-written
- * `solveGameLegacy`. The harness and the argument for it are
- * `engine/testing/ladder-equivalence.ts`; this file is the declaration.
- *
- * **Seismic is the game the "same grade?" check was written for**: its
- * hand-written loop bumps the grade on *reaching* the second tier, not on firing
- * it. `solveGameLegacy`'s doc comment argues the two coincide here; this file
- * checks that they do, on real boards, at every cap.
+ * The census of Seismic's `runDeductionFixpoint` ladder: which rungs the corpus
+ * fires, in both modes at both caps. The harness and the argument for it are
+ * `engine/testing/ladder-census.ts`; this file is the declaration.
  */
 import { randomNew } from "../../engine/random/index.ts";
-import { describeLadderEquivalence } from "../../engine/testing/ladder-equivalence.ts";
+import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newSeismicDesc } from "./generator.ts";
-import { solveGame, solveGameLegacy } from "./solver.ts";
+import { solveGame } from "./solver.ts";
 import {
   DIFF_EASY,
   DIFF_NORMAL,
@@ -41,16 +36,11 @@ const cases = SHAPES.flatMap((params) =>
   }),
 );
 
-describeLadderEquivalence({
+describeLadderCensus({
   game: "seismic",
   rungs: ["marks", "areas", "attempt"],
   unreached: {},
   caps: [DIFF_EASY, DIFF_NORMAL],
   cases,
-  viaRunner: solveGame,
-  viaLegacy: solveGameLegacy,
-  // Everything a rung writes: the placements, the candidate masks and the error
-  // flags. The dsf is the region partition and is never mutated while solving.
-  key: (b) =>
-    `${Array.from(b.grid).join(",")}|${Array.from(b.pencil).join(",")}|${Array.from(b.flags).join(",")}`,
+  solve: solveGame,
 });

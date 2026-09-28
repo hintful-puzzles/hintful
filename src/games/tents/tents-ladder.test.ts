@@ -1,23 +1,20 @@
 /*
- * Tents' `runDeductionFixpoint` ladder, proved equivalent to upstream's
- * hand-written loop (`tentsSolveLegacy`). The harness and the argument for it
- * are `engine/testing/ladder-equivalence.ts`; this file is the declaration.
+ * Tents' `runDeductionFixpoint` ladder, certified by a census of which rungs
+ * fire. The harness and the argument for it are
+ * `engine/testing/ladder-census.ts`; this file is the declaration.
  *
- * **What needed proving.** Upstream's loop already restarts after any sweep
- * that fires, which is the runner's walk. What the adoption changes is that
- * each Tricky deduction upstream folds into an Easy sweep behind a difficulty
+ * Each Tricky deduction upstream folds into an Easy sweep behind a difficulty
  * test (the diagonal pair inside the tree sweep, the neighboring lines inside
- * the line count) is a rung of its own, so at Tricky it runs later than it
- * did. Every rung is sound and only decides squares or ties links, so the two
- * reach the same board; the board comparison at every cap is the check.
+ * the line count) is a rung of its own here, so the census can see each one
+ * fire rather than taking the sweep it once hid in as evidence.
  *
  * The caps are the tiers the generator asks for: links alone (an Easy board's
  * "not solvable one level down"), Easy and Tricky.
  */
 import { randomNew } from "../../engine/random/index.ts";
-import { describeLadderEquivalence } from "../../engine/testing/ladder-equivalence.ts";
+import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newTentsDesc } from "./generator.ts";
-import { tentsSolve, tentsSolveLegacy } from "./solver.ts";
+import { tentsSolve } from "./solver.ts";
 import { DIFF_EASY, DIFF_TRICKY, decodeDesc, type TentsParams, TREE } from "./state.ts";
 
 const SHAPES: TentsParams[] = [
@@ -47,7 +44,7 @@ const cases = SHAPES.flatMap((p) =>
   }),
 );
 
-describeLadderEquivalence<Board>({
+describeLadderCensus<Board>({
   game: "tents",
   rungs: [
     "tent-link",
@@ -62,15 +59,6 @@ describeLadderEquivalence<Board>({
   unreached: {},
   caps: [DIFF_EASY - 1, DIFF_EASY, DIFF_TRICKY],
   cases,
-  viaRunner: ({ p, puzzle, numbers }, cap, firings) => {
-    const r = tentsSolve(p.w, p.h, puzzle, numbers, cap, firings);
-    return { ret: r.ret, key: `${r.soln.join(",")}|${r.links.join(",")}` };
-  },
-  viaLegacy: ({ p, puzzle, numbers }, cap) => {
-    const r = tentsSolveLegacy(p.w, p.h, puzzle, numbers, cap);
-    return { ret: r.ret, key: `${r.soln.join(",")}|${r.links.join(",")}` };
-  },
-  // The solvers copy the puzzle, so the whole working state (squares and
-  // links) travels in the verdict above rather than on the input board.
-  key: ({ puzzle }) => puzzle.join(","),
+  solve: ({ p, puzzle, numbers }, cap, firings) =>
+    tentsSolve(p.w, p.h, puzzle, numbers, cap, firings),
 });

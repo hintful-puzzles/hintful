@@ -121,16 +121,28 @@ have failed it: deleting one of its eight rungs outright — from the new ladder
 that rung fires on no board its generator produces (measured: 324 solves, every
 other rung firing, that one zero).
 
-So a game adopting the runner keeps its hand-written loop as an oracle and ships
-a **ladder-equivalence** test —
-[`engine/testing/ladder-equivalence.ts`](../../src/engine/testing/ladder-equivalence.ts)
-— asserting three things the fixtures do not: the two agree on verdict, grade
-**and full board state** (so a ladder reaching the same answer by different
-deductions fails); at **every cap** (the cap is what selects rungs); and with a
-**firing census**, so agreement over boards that only need the easiest rung
-cannot pass for proof. A rung the corpus cannot reach is recorded with its
-reason — and checked against the C first, because an unreachable deduction is
-exactly the shape a porting bug takes.
+So an adoption is proved in two halves, one temporary and one permanent.
+
+- **While adopting, compare against the loop being replaced**: the two must
+  agree on verdict, grade **and full board state** (so a ladder reaching the
+  same answer by different deductions fails), at **every cap** (the cap is what
+  selects rungs), over a corpus the census below shows reaches every rung. Then
+  **delete the old loop in the same change**. It is reference code once the
+  comparison has passed, and git keeps it (owner, 2026-09-28: *"delete any old
+  code that's just used for reference; that's what git is for"*). Thirteen
+  adoptions kept theirs as permanent oracles until `retire-the-ladder-oracles`
+  removed them.
+- **What stays is the firing census** —
+  [`engine/testing/ladder-census.ts`](../../src/engine/testing/ladder-census.ts)
+  — walking a corpus at every cap and asserting which rungs fired. A rung the
+  corpus cannot reach is recorded with its reason, and checked against the C
+  first, because an unreachable deduction is exactly the shape a porting bug
+  takes. From then on the frozen differential, where a game has one, is what
+  says a refactor moved a board. **A census cannot see a mis-tiered or
+  reordered rung**, because the rung still fires; the differential can, and
+  Solo's did for both when planted after its oracle went (a mis-tier turned five
+  fixtures red, a reorder one). A game with no differential has only the
+  census, so plant a mis-tier before relying on it.
 
 **Size the corpus by planting, once per upper-tier rung.** Fifteen Magnets
 boards passed every equivalence check and then stayed green with
@@ -172,7 +184,7 @@ As one rung each, a Tricky firing is counted against an Easy name, and a
 census cannot say whether the Tricky half is ever reached. Split out, each is a
 rung with a Tricky `tier` that runs after the Easy rungs have stalled. That
 changes when it runs, not what the ladder concludes on a ladder of sound,
-monotone rungs, and the board comparison at every cap proves it. Have the split
+monotone rungs, and the board comparison at every cap proved it. Have the split
 rung write only what the Tricky half deduces. If it also wrote what the Easy
 rung would find, those writes would be counted against the Tricky rung too.
 

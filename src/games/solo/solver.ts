@@ -1489,128 +1489,9 @@ class SolverUsage {
    * The solve (`solver`'s body): place the givens, run the ladder to a
    * fixpoint, then search if the caps allow it. Mutates `this.grid` and writes
    * `dlev.diff`/`dlev.kdiff`. Recurses through the module-level `runSolver`.
-   * `firings` is the ladder-equivalence census (`solo-ladder.test.ts`).
+   * `firings` is the ladder census's channel (`solo-ladder.test.ts`).
    */
   run(dlev: Difficulty, firings?: FiringTally): void {
-    this.solve(dlev, (grade) =>
-      runDeductionFixpoint({
-        techniques: this.ladder(dlev, grade),
-        firings,
-        beforeTechnique: (t) => {
-          this.group++;
-          this.replay?.before(t.id);
-          this.replay?.open(this.group);
-        },
-      }),
-    );
-  }
-
-  /**
-   * Upstream's hand-written loop over the same rungs, which {@link run}
-   * replaced with the shared runner; kept as the oracle `solo-ladder.test.ts`
-   * checks the runner against.
-   */
-  runLegacy(dlev: Difficulty): void {
-    this.solve(dlev, (grade) => ({ impossible: this.legacyLoop(dlev, grade) }));
-  }
-
-  private legacyLoop(
-    dlev: Difficulty,
-    grade: { diff: number; kdiff: number },
-  ): boolean {
-    const { diag, killer } = this;
-    const raise = (scale: "diff" | "kdiff", tier: number): void => {
-      if (tier > grade[scale]) grade[scale] = tier;
-    };
-    let ret: number;
-    for (;;) {
-      this.group++;
-      ret = this.blockSingles();
-      if (ret < 0) return true;
-      if (ret > 0) {
-        raise("diff", DIFF_BLOCK);
-        continue;
-      }
-      if (killer) {
-        const regions = dlev.maxkdiff >= DIFF_KINTERSECT;
-        ret = this.killerSingles(killer);
-        if (ret < 0) return true;
-        if (ret > 0) {
-          raise("kdiff", DIFF_KSINGLE);
-          continue;
-        }
-        if (regions) {
-          ret = this.killerRegions(killer, true);
-          if (ret < 0) return true;
-          if (ret > 0) {
-            raise("kdiff", DIFF_KINTERSECT);
-            continue;
-          }
-        }
-        if (dlev.maxkdiff >= DIFF_KMINMAX) {
-          ret = this.killerMinmaxAll(killer, regions);
-          if (ret < 0) return true;
-          if (ret > 0) {
-            raise("kdiff", DIFF_KMINMAX);
-            continue;
-          }
-        }
-        if (dlev.maxkdiff >= DIFF_KSUMS) {
-          ret = this.killerSumsAll(killer, regions);
-          if (ret < 0) return true;
-          if (ret > 0) {
-            raise("kdiff", DIFF_KSUMS);
-            continue;
-          }
-        }
-      }
-      if (dlev.maxdiff <= DIFF_BLOCK) break;
-
-      ret = this.lineSingles();
-      if (ret === 0 && diag) ret = this.diagSingles(diag);
-      if (ret === 0) ret = this.nakedSingles();
-      if (ret < 0) return true;
-      if (ret > 0) {
-        raise("diff", DIFF_SIMPLE);
-        continue;
-      }
-      if (dlev.maxdiff <= DIFF_SIMPLE) break;
-
-      ret = this.lineIntersections();
-      if (ret === 0 && diag) ret = this.diagIntersections(diag);
-      if (ret > 0) {
-        raise("diff", DIFF_INTERSECT);
-        continue;
-      }
-      if (dlev.maxdiff <= DIFF_INTERSECT) break;
-
-      ret = this.regionSets();
-      if (ret === 0 && diag) ret = this.diagSets();
-      if (ret < 0) return true;
-      if (ret > 0) {
-        raise("diff", DIFF_SET);
-        continue;
-      }
-      if (dlev.maxdiff <= DIFF_SET) break;
-
-      ret = this.digitSets();
-      if (ret === 0) ret = this.forcing();
-      if (ret < 0) return true;
-      if (ret > 0) {
-        raise("diff", DIFF_EXTREME);
-        continue;
-      }
-      break;
-    }
-    return false;
-  }
-
-  /** The solve around a deduction loop, which reports whether a rung proved
-   * the board inconsistent and raises `grade` as rungs fire. */
-  private solve(
-    dlev: Difficulty,
-    deduce: (grade: { diff: number; kdiff: number }) => { impossible: boolean },
-  ): void {
     const cr = this.cr;
     const grid = this.grid;
     const grade = { diff: DIFF_BLOCK, kdiff: DIFF_KSINGLE };
@@ -1630,7 +1511,16 @@ class SolverUsage {
     this.recorder = this.pendingRecorder;
     this.onSeeded?.();
 
-    if (deduce(grade).impossible) {
+    const { impossible } = runDeductionFixpoint({
+      techniques: this.ladder(dlev, grade),
+      firings,
+      beforeTechnique: (t) => {
+        this.group++;
+        this.replay?.before(t.id);
+        this.replay?.open(this.group);
+      },
+    });
+    if (impossible) {
       finish(DIFF_IMPOSSIBLE);
       return;
     }
@@ -1707,15 +1597,13 @@ export function runSolver(
  * Convenience wrapper over a `SoloState`: clone the working grid, solve it
  * under the given difficulty caps, and return the verdict + (mutated) grid.
  * `diff` is `DIFF_*` (a real difficulty), `DIFF_AMBIGUOUS`, or `DIFF_IMPOSSIBLE`.
- * `firings` is the ladder-equivalence census (`solo-ladder.test.ts`), and
- * `legacy` runs the hand-written loop it checks the runner against.
+ * `firings` is the ladder census's channel (`solo-ladder.test.ts`).
  */
 export function solveSolo(
   s: SoloState,
   maxdiff = DIFF_RECURSIVE,
   maxkdiff = DIFF_KINTERSECT,
   firings?: FiringTally,
-  legacy = false,
 ): { diff: number; kdiff: number; grid: Int8Array } {
   const grid = s.grid.slice();
   const dlev: Difficulty = {
@@ -1732,8 +1620,7 @@ export function solveSolo(
     grid,
     s.killerData?.kgrid ?? null,
   );
-  if (legacy) usage.runLegacy(dlev);
-  else usage.run(dlev, firings);
+  usage.run(dlev, firings);
   return { diff: dlev.diff, kdiff: dlev.kdiff, grid };
 }
 

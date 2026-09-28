@@ -1,31 +1,23 @@
 /*
- * Galaxies' adoption of `runDeductionFixpoint`, proved by equivalence
- * (`adopt-the-deduction-runner-where-it-rewires`). The harness and the argument
- * for it are `engine/testing/ladder-equivalence.ts`; this file is the
- * declaration.
+ * The firing census of Galaxies' `runDeductionFixpoint` ladder: which rungs the
+ * generated corpus reaches. The harness and the argument for it are
+ * `engine/testing/ladder-census.ts`; this file is the declaration.
  *
  * **Galaxies was the adoption allowed to fail.** It is the only adopter that
- * already threads a `SolverRecorder` through its rungs — the recorder its
- * explained hint narrates from — and the task said in terms that if the shared
- * runner could not carry that, Galaxies stays out. It carries it without
- * touching it: `runDeductionFixpoint` is oblivious to a rung's side effects, so
- * each rung still takes `rec` and still records the same firings. The proof that
- * no word moved is `galaxies-hint.test.ts`, which asserts the narration strings
- * and is unchanged; this file proves the deductions themselves are identical.
+ * threads a `SolverRecorder` through its rungs — the recorder its explained
+ * hint narrates from — and the task said in terms that if the shared runner
+ * could not carry that, Galaxies stays out. It carried it without touching it:
+ * `runDeductionFixpoint` is oblivious to a rung's side effects, so each rung
+ * still takes `rec` and still records the same firings. `galaxies-hint.test.ts`
+ * asserts the narration strings.
  *
- * **The comparison stops at the ladder**, where `galaxiesLadderLegacy` stops.
- * `solverRecurse` sits above it and was not re-plumbed, so running it here would
- * compare two identical code paths at considerable expense.
+ * **The census solves at `Normal`, so it stops at the ladder.** `maxDiff` gates
+ * only `solverRecurse` above it, which takes no tally.
  */
 import { randomNew } from "../../engine/random/index.ts";
-import { describeLadderEquivalence } from "../../engine/testing/ladder-equivalence.ts";
+import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { galaxiesGame } from "./index.ts";
-import {
-  clearForSolve,
-  GalaxiesDiff,
-  galaxiesLadderLegacy,
-  galaxiesLadderOnly,
-} from "./solver.ts";
+import { clearForSolve, GalaxiesDiff, solverState } from "./solver.ts";
 import { cloneState, type GalaxiesState } from "./state.ts";
 
 interface Shape {
@@ -61,24 +53,13 @@ const cases = SHAPES.flatMap((p) =>
   }),
 );
 
-describeLadderEquivalence<GalaxiesState>({
+describeLadderCensus<GalaxiesState>({
   game: "galaxies",
   rungs: ["lines-opposite", "spaces-oneposs", "expand-dots", "extend-exclaves"],
   unreached: {},
-  // Every rung is `GalaxiesDiff.Normal` and `maxDiff` gates only the recursion
-  // above the ladder, so there is a single cap to walk. The enum's other values
-  // are verdict sentinels, not harder tiers.
+  // Every rung is `GalaxiesDiff.Normal`, so there is a single cap to walk. The
+  // enum's other values are verdict sentinels, not harder tiers.
   caps: [GalaxiesDiff.Normal],
   cases,
-  viaRunner: (s, _cap, firings) => galaxiesLadderOnly(s, firings),
-  viaLegacy: (s) => galaxiesLadderLegacy(s),
-  // Everything the rungs write: the wall/edge flag word per space, and the
-  // per-tile association (which dot owns it) with its count.
-  key: (s) =>
-    [
-      Array.from(s.flags).join(","),
-      Array.from(s.dotx).join(","),
-      Array.from(s.doty).join(","),
-      Array.from(s.nassoc).join(","),
-    ].join("|"),
+  solve: (s, cap, firings) => solverState(s, cap, firings),
 });

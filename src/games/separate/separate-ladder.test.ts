@@ -1,17 +1,11 @@
 /*
- * Separate's `runDeductionFixpoint` ladder, proved equivalent to upstream's
- * hand-written loop (`solverAttemptLegacy`). The harness and the argument for
- * it are `engine/testing/ladder-equivalence.ts`; this file is the declaration.
- *
- * **What needed proving.** Upstream sweeps every shared-letter disconnect in
- * one pass before extending anything; the runner restarts after each rung
- * that fires, and the ladder adds `walled-apart`, which only writes walls. So
- * the comparison is over the state the generator reads: the partition, the
- * disconnect matrix, the sizes, the letters locked and the verdict.
+ * Separate's `runDeductionFixpoint` ladder, certified by a census of which
+ * rungs fire. The harness and the argument for it are
+ * `engine/testing/ladder-census.ts`; this file is the declaration.
  *
  * **Each case is a generator run, not a single solve**, because the generator
  * keeps one scratch across refills of the letters it has not locked, and a
- * rung that misbehaved only on a carried-over component would pass a fresh
+ * rung that fired only on a carried-over component would go unseen by a fresh
  * solve. The refill below is `newSeparateDesc`'s, run to its first verdict
  * that ends the loop, so the corpus holds stuck, progressing and solved
  * attempts alike.
@@ -19,14 +13,8 @@
 import { divvyRectangle } from "../../engine/divvy.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import { describeLadderEquivalence } from "../../engine/testing/ladder-equivalence.ts";
-import {
-  SOLVED,
-  SolverScratch,
-  STUCK,
-  solverAttempt,
-  solverAttemptLegacy,
-} from "./solver.ts";
+import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
+import { SOLVED, SolverScratch, STUCK, solverAttempt } from "./solver.ts";
 import type { SeparateParams } from "./state.ts";
 
 const SHAPES: SeparateParams[] = [
@@ -47,7 +35,7 @@ interface Board {
 type Attempt = (sc: SolverScratch, letters: Uint8Array, lock: Uint8Array) => number;
 
 /** One divvy's worth of `newSeparateDesc`, with the solve step swapped in. */
-function generatorRun({ p, seed }: Board, attempt: Attempt): string {
+function generatorRun({ p, seed }: Board, attempt: Attempt): void {
   const { w, h, k } = p;
   const wh = w * h;
   const rng = randomNew(`separate-ladder-${seed}`);
@@ -61,7 +49,6 @@ function generatorRun({ p, seed }: Board, attempt: Attempt): string {
   sc.init();
   const grid = new Uint8Array(wh);
   const lock = new Uint8Array(wh);
-  const verdicts: number[] = [];
   let retries = k * k;
   for (;;) {
     for (const squares of ominoes.values()) {
@@ -73,18 +60,9 @@ function generatorRun({ p, seed }: Board, attempt: Attempt): string {
       for (const s of squares) if (!lock[s]) grid[s] = free.pop() as number;
     }
     const m = attempt(sc, grid, lock);
-    verdicts.push(m);
     if (m === SOLVED || (m === STUCK && retries-- <= 0)) break;
     if (m !== STUCK) retries = k * k;
   }
-  const partition = Array.from({ length: wh }, (_, i) => sc.dsf.canonify(i));
-  return [
-    verdicts.join(""),
-    partition.join(","),
-    Array.from(sc.size).join(","),
-    Array.from(sc.disconnect).join(""),
-    Array.from(lock).join(""),
-  ].join("|");
 }
 
 const cases = SHAPES.flatMap((p) =>
@@ -94,18 +72,15 @@ const cases = SHAPES.flatMap((p) =>
   }),
 );
 
-describeLadderEquivalence<Board>({
+describeLadderCensus<Board>({
   game: "separate",
   rungs: ["shared-letter", "walled-apart", "only-way"],
   unreached: {},
   // Untiered: every rung is tier 0.
   caps: [0],
   cases,
-  viaRunner: (board, _cap, firings) =>
+  solve: (board, _cap, firings) =>
     generatorRun(board, (sc, letters, lock) =>
       solverAttempt(sc, letters, lock, firings),
     ),
-  viaLegacy: (board) => generatorRun(board, solverAttemptLegacy),
-  // The generator's whole working state travels in the verdict string above.
-  key: ({ seed }) => seed,
 });

@@ -1,8 +1,9 @@
 /*
- * Magnets' two ladders on `runDeductionFixpoint`, certified by equivalence.
- * The harness and the argument for it are `engine/testing/ladder-equivalence.ts`;
- * this file is the declaration. The frozen differential proves no board moved,
- * which certifies only the rungs its corpus happens to fire.
+ * The firing census of Magnets' two `runDeductionFixpoint` ladders: which rungs
+ * the generated corpus reaches. The harness and the argument for it are
+ * `engine/testing/ladder-census.ts`; this file is the declaration. The frozen
+ * differential proves no board moved, which certifies only the rungs its corpus
+ * happens to fire.
  *
  * **Two runner call sites, so two blocks.** `solve` walks the eight-rung graded
  * ladder over a clued board; `solveUnnumbered` walks `force`/`neither` over a
@@ -13,7 +14,7 @@
  */
 import { randomNew } from "../../engine/random/index.ts";
 import { shuffle } from "../../engine/shuffle.ts";
-import { describeLadderEquivalence } from "../../engine/testing/ladder-equivalence.ts";
+import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newMagnetsDesc } from "./generator.ts";
 import { MagnetsSolver } from "./solver.ts";
 import {
@@ -43,9 +44,8 @@ const SHAPES: MagnetsParams[] = [
 
 /** Eight seeds, not three: a mis-tiered `advancedfull` shows only on a Normal
  * board where it is the first Normal rung to fire from the Easy stall, and
- * fifteen boards contained none such — the differential caught the plant on
- * one fixture while the ladder stayed green. The corpus is sized so the tier
- * plant is red here too, which the whole cap walk is for. */
+ * fifteen boards contained none such. A census cannot see a mis-tiered rung,
+ * which fires either way; the differential caught that plant on one fixture. */
 const SEEDS = ["lad-a", "lad-b", "lad-c", "lad-d", "lad-e", "lad-f", "lad-g", "lad-h"];
 
 const generated = SHAPES.flatMap((params) =>
@@ -90,12 +90,7 @@ const NEITHER_IS_SUBSUMED_BY_FORCE =
   "NOT-negative, and `force` fires on it first. Same in `magnets.c`. See the " +
   "comment above.";
 
-/** Everything a rung writes: the scratch grid and the flag word per cell (SET,
- * the three NOT bits, ERROR). The dominoes and the counts are inputs. */
-const key = (s: MagnetsSolver): string =>
-  `${Array.from(s.grid).join(",")}|${Array.from(s.flags).join(",")}`;
-
-describeLadderEquivalence({
+describeLadderCensus({
   game: "magnets",
   rungs: [
     "force",
@@ -113,9 +108,7 @@ describeLadderEquivalence({
     label: g.label,
     board: () => cluedSolver(g.params, g.desc),
   })),
-  viaRunner: (b, cap, firings) => b.solve(cap, firings),
-  viaLegacy: (b, cap) => b.solveLegacy(cap),
-  key,
+  solve: (b, cap, firings) => b.solve(cap, firings),
 });
 
 /** The generator's shape: no counts, a seeded prefix of the solution laid
@@ -145,14 +138,12 @@ const unnumbered = generated.flatMap((g) =>
   })),
 );
 
-describeLadderEquivalence({
+describeLadderCensus({
   game: "magnets (unnumbered)",
   rungs: ["force", "neither"],
   unreached: { neither: NEITHER_IS_SUBSUMED_BY_FORCE },
   // The unnumbered solve has no cap; one walk per board.
   caps: [DIFF_EASY],
   cases: unnumbered,
-  viaRunner: (b, _cap, firings) => b.solveUnnumbered(firings),
-  viaLegacy: (b) => b.solveUnnumberedLegacy(),
-  key,
+  solve: (b, _cap, firings) => b.solveUnnumbered(firings),
 });

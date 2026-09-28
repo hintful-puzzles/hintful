@@ -110,7 +110,7 @@ export type GalaxiesFiring =
  * normally sweeps the whole board and accumulates, which is right for solving
  * and wrong for narrating (one firing = one hint).
  */
-export interface SolverRecorder {
+interface SolverRecorder {
   /** Return from a rule as soon as one firing is recorded. */
   stopAtFirstFiring: boolean;
   /** The firing this pass recorded, if any. */
@@ -772,67 +772,6 @@ export function solverState(
   firings?: FiringTally,
 ): GalaxiesDiff {
   return solverStateInner(s, maxDiff, 0, undefined, firings);
-}
-
-/**
- * The hand-written ladder the runner replaced, kept as the oracle
- * `galaxies-ladder.test.ts` checks it against. It stops before the recursion,
- * which was not re-plumbed and would only compare a path with itself.
- */
-export function galaxiesLadderLegacy(
-  s: GalaxiesState,
-  rec?: SolverRecorder,
-): GalaxiesDiff {
-  let ret = solverObvious(s, rec);
-  if (ret === IMPOSSIBLE) return GalaxiesDiff.Impossible;
-
-  let diff = GalaxiesDiff.Normal;
-  while (true) {
-    ret = solverLinesOpposite(s, rec);
-    if (ret === IMPOSSIBLE) return GalaxiesDiff.Impossible;
-    if (ret === PROGRESS) {
-      diff = Math.max(diff, GalaxiesDiff.Normal);
-      continue;
-    }
-    ret = solverSpacesOneposs(s, rec);
-    if (ret === IMPOSSIBLE) return GalaxiesDiff.Impossible;
-    if (ret === PROGRESS) {
-      diff = Math.max(diff, GalaxiesDiff.Normal);
-      continue;
-    }
-    ret = solverExpandDots(s, rec);
-    if (ret === IMPOSSIBLE) return GalaxiesDiff.Impossible;
-    if (ret === PROGRESS) {
-      diff = Math.max(diff, GalaxiesDiff.Normal);
-      continue;
-    }
-    ret = solverExtendExclaves(s, rec);
-    if (ret === IMPOSSIBLE) return GalaxiesDiff.Impossible;
-    if (ret === PROGRESS) {
-      diff = Math.max(diff, GalaxiesDiff.Normal);
-      continue;
-    }
-    break;
-  }
-  return diff;
-}
-
-/** The adopted ladder alone, stopping where {@link galaxiesLadderLegacy} does,
- * so the two are comparable. */
-export function galaxiesLadderOnly(
-  s: GalaxiesState,
-  firings?: FiringTally,
-): GalaxiesDiff {
-  const ret = solverObvious(s, undefined);
-  if (ret === IMPOSSIBLE) return GalaxiesDiff.Impossible;
-
-  const ladder = galaxiesLadder(s, undefined);
-  const { grade, impossible } = runDeductionFixpoint({
-    techniques: ladder,
-    firings,
-    baseGrade: GalaxiesDiff.Normal,
-  });
-  return impossible ? GalaxiesDiff.Impossible : grade;
 }
 
 // --- the hint's two entry points into these rules --------------------

@@ -412,11 +412,10 @@ SHALL carry its tier on its own scale, sudoku or killer; the ladder SHALL hold
 only the rungs both caps admit, and a rung that fires SHALL raise its own
 scale's grade. A rung SHALL read nothing a rung before it left behind in the
 same pass, so that the premise audit's replay runs a firing's own rung alone.
-The solver SHALL keep upstream's hand-written loop, over the same rungs, as an
-oracle only a test calls. A ladder-equivalence test SHALL prove, over pinned
-boards covering every variant, that the ladder leaves the same verdict, grade
-and grid as the oracle at every pair of deduction caps and at search, and SHALL
-carry a firing census asserting that every rung fires on the corpus.
+A firing census SHALL walk pinned boards covering every variant at every pair of
+deduction caps and at search, and assert that every rung fires on the corpus.
+The hand-written loop the ladder replaced SHALL NOT be kept once the adoption is
+proved; git holds it.
 
 A killer region whose filled cells and whole cages leave nothing for its open
 cells SHALL be a contradiction.
@@ -424,7 +423,7 @@ cells SHALL be a contradiction.
 #### Scenario: A mis-tiered or reordered rung fails
 
 - **WHEN** a rung is declared at another tier, or moved past the rung after it
-- **THEN** the ladder-equivalence test fails
+- **THEN** the frozen differential or the firing census fails
 
 #### Scenario: A premise cut short is found
 

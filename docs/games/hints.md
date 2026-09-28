@@ -883,7 +883,7 @@ is right and the duplication is not the cost it looks like.
 loop, the tier cap, the restart rule, the grade and the budget; a technique's
 `run` returns a `number` and the runner is explicitly *oblivious* to what it
 recorded. So an adopted game still chooses, and its `onFiring` seam — which
-reports a rung **id** for `ladder-equivalence.ts`'s firing census — is not a
+reports a rung **id** for `ladder-census.ts`'s firing census — is not a
 recorder. What adoption *does* give a hint author is a **declared, certified
 ladder**: the rungs are named, and the game's `<game>-ladder.test.ts` says which
 of them the generator ever reaches, so a rung in the `unreached` ledger needs no
