@@ -25,9 +25,20 @@ You can also use the arrow keys to move the selected cell around. Press Enter to
 
 Press the 'M' key to fill every empty cell with all possible pencil marks.
 
+## Hints
+
+**Hint** explains the next step rather than simply making it. When a step needs pencil marks, it starts by filling in every candidate, 'X' included, in each empty square that has none yet (the same as pressing 'M'), then works from your own marks, so it carries on from wherever you are. If a letter, 'X' or 'O' you've entered is wrong, or a square's pencil marks have crossed out its answer, it asks you to fix the highlighted mistakes first.
+
+* **A ringed square** is the one the step is about. What to enter there is previewed in it in the hint color: a letter or number, an X for "empty", or a circle for "holds a letter" (or number). Pencil marks to cross out are shown with a line through them.
+* **A clue in the hint color** is the one the sentence names ("this column's top clue"), and **the striped row or column** is the line it looks along. Without a clue, a striped line is the one the sentence calls "this row" or "this column".
+* **Outlined squares** are the ones the reason rests on: the squares a clue looks across before its letter, the run of squares its letter must lie in, or squares that between them already account for the letters being crossed out.
+* **Numbered squares** are a chain of squares with two candidates left each, read in order: the sentence says how the chain rules a letter out of the ringed square.
+
+The hint speaks of *squares*, and a clue *sees* the first letter along its line. The pencil-mark 'X', the note that a square might be empty, is its *empty-square mark*. Each row and column has a fixed number of empty squares, so counting them is half the game: once a line has all its empty squares, the rest must hold letters, and once it has all its letters, the rest must be empty. In Number Ball, where every symbol is a number, the hint says "number" wherever this says "letter".
+
 ## Salad parameters
 
-These parameters are available from the ‘Custom…’ option on the ‘Type’ menu. 
+These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu. 
 
 <dl>
 	<dt>Game mode</dt>

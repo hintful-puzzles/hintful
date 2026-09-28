@@ -15,21 +15,24 @@
  *
  * **Where the border lives differs by game, and {@link MarkBand} is how a game
  * says so.** Keen and Solo sit on a `COL_GRID` backing rectangle with a
- * `2·GRIDEXTRA + 1` gutter between cells, so their band is entirely *outside*
- * the content box and costs the content nothing. Towers, Group, Undead, Filling
- * and Crossing draw their own per-cell outline on abutting tiles, so their band
- * is *inside* the box, over the pixels that outline already occupies. Unequal
- * splits the difference: it has a `TILESIZE/2` gap, but the greater-than
- * chevrons live in it, so only the quarter nearest the cell is free.
+ * `2·GRIDEXTRA + 1` gutter between cells, so their band lies *outside* the
+ * content box and costs the content nothing — but not in pure gutter: inside a
+ * cage or sub-block each cell widens its background into the gutter, under the
+ * band. Towers, Group, Undead, Filling and Crossing draw their own per-cell
+ * outline on abutting tiles, so their band is *inside* the box, over the pixels
+ * that outline already occupies; Clusters, Group and Undead add one pixel of
+ * true gutter outside it. Unequal splits the difference: it has a `TILESIZE/2`
+ * gap, but the greater-than chevrons live in it, so only the quarter nearest
+ * the cell is free.
  *
  * **Who undoes a mark follows from that.** A band inside the box is undone by
  * the cell's own repaint, which the hint `OverlaySidecar` already triggers when
- * the overlay changes — so `gutterColor` is omitted and {@link HintMarks} keeps
- * no history. A band outside the box belongs to no tile: nothing repaints it, so
- * a mark that moved has to be painted back to the gutter's resting color
- * explicitly, and a mark that stayed has to be restamped every frame, because a
- * neighbor repainting for its own reasons widens its background into the shared
- * gutter and would clip a side off.
+ * the overlay changes, so a game with no `outer` part only paints. An `outer`
+ * part lies in the gutter, which no one tile owns and some tiles paint into, so
+ * a mark that moved is erased explicitly — before the tile loop, by
+ * {@link HintMarks.eraseBeforeTiles}, so the tiles it touches repaint on top —
+ * and a mark that stayed is restamped every frame, because a neighbor
+ * repainting for its own reasons can paint over a side.
  */
 
 import type { GameDrawing } from "./game.ts";
@@ -114,12 +117,6 @@ export interface HintMarkStyle {
   /** The outline around the region it reasons from. */
   evidenceColor: number;
   /**
-   * The resting color of the pixels *outside* the content box, for undoing a
-   * mark that moved or went. Omit when {@link MarkBand.outer} is 0: the band is
-   * then wholly inside the cell, and the cell's own repaint undoes it.
-   */
-  gutterColor?: number;
-  /**
    * Whether two edge-adjacent targets are one **piece**, ringed as one shape. A
    * domino the hint places is one ring of six sides, not two boxes with a double
    * bar across its middle. Omitted, no two targets join: a ring per cell.
@@ -135,6 +132,18 @@ export interface HintMarkStyle {
 }
 
 const key = (c: MarkCell): number => c.y * 8192 + c.x;
+
+/** What a frame's marks look like on the canvas. The sides as well as the
+ * cells: a join can move a side while every cell keeps its role. */
+function signatureOf(
+  targets: readonly MarkCell[],
+  evidence: readonly MarkCell[],
+  style: HintMarkStyle,
+  outlines = new MarkOutlines(targets, evidence, style),
+): string {
+  const cell = (c: MarkCell): string => `${key(c)}:${outlines.packed(c.x, c.y)}`;
+  return `${targets.map(cell).join()}|${evidence.map(cell).join()}`;
+}
 
 /** The sides of each cell in `cells` that face away from its role: a side is
  * drawn unless the neighbor across it is in `cells` and `join`s it. */
@@ -191,13 +200,14 @@ export class MarkOutlines {
 }
 
 /**
- * The pass that paints a frame's hint marks, run **after** the tile loop and
- * outside every clip.
+ * A frame's hint marks, in two phases around the tile loop:
+ * {@link HintMarks.eraseBeforeTiles} before it, for a band with an `outer`
+ * part, and {@link HintMarks.paint} after it and outside every clip.
  *
- * After, because a mark that straddles the gutter has to survive its neighbors'
- * repaints and, in a game whose tiles overlap (Towers' 3D towers spill into the
- * cell up-left), has to sit on top of them. Once per frame, not once per tile:
- * Towers repaints each tile up to four times inside a single clip.
+ * Paint after, because a mark that straddles the gutter has to survive its
+ * neighbors' repaints and, in a game whose tiles overlap (Towers' 3D towers
+ * spill into the cell up-left), has to sit on top of them. Once per frame, not
+ * once per tile: Towers repaints each tile up to four times inside a single clip.
  */
 export class HintMarks {
   private signature = "";
@@ -209,6 +219,41 @@ export class HintMarks {
     this.painted = [];
   }
 
+  /**
+   * Erase, **before** the tile loop, every mark this frame will not draw as it
+   * stands: the whole band, all four sides of every cell, back to `gutterColor`,
+   * the resting color of the pixels outside the content box. `overlaps` is
+   * called for each erased cell and its eight neighbors (which may lie off the
+   * board), and the game repaints those tiles in its loop, on top of the erase.
+   *
+   * Before the tiles, because no color painted after them is right everywhere:
+   * the band's inside part is the cell's own border, and a neighbor can widen
+   * its background under the outside part (Keen's cages, Solo's sub-blocks).
+   * Erasing first and letting every tile the band touches repaint settles both.
+   * All four sides, because a side still wanted is restamped by {@link paint},
+   * and erasing any less leaves a shrinking region's interior edge behind. Only
+   * when the marks changed: erase-then-restamp every frame would flicker.
+   *
+   * Every game whose band has an `outer` part calls this; a band wholly inside
+   * the box needs no erase, because the hint `OverlaySidecar` repaints the cell.
+   */
+  eraseBeforeTiles(
+    dr: GameDrawing,
+    targets: readonly MarkCell[],
+    evidence: readonly MarkCell[],
+    style: HintMarkStyle,
+    gutterColor: number,
+    overlaps: (x: number, y: number) => void,
+  ): void {
+    if (signatureOf(targets, evidence, style) === this.signature) return;
+    for (const c of this.painted) {
+      drawMarkSides(dr, style.band(c.x, c.y), MARK_ALL, gutterColor);
+      for (let dy = -1; dy <= 1; dy++)
+        for (let dx = -1; dx <= 1; dx++) overlaps(c.x + dx, c.y + dy);
+    }
+    this.reset();
+  }
+
   paint(
     dr: GameDrawing,
     targets: readonly MarkCell[],
@@ -216,18 +261,7 @@ export class HintMarks {
     style: HintMarkStyle,
   ): void {
     const outlines = new MarkOutlines(targets, evidence, style);
-    // The sides as well as the cells: a join can move a side while every cell
-    // keeps its role.
-    const cell = (c: MarkCell): string => `${key(c)}:${outlines.packed(c.x, c.y)}`;
-    const signature = `${targets.map(cell).join()}|${evidence.map(cell).join()}`;
-    // Erase before drawing anything, and all four sides of every cell: a side
-    // still wanted is repainted below, and going in this order is what stops a
-    // shrinking region leaving an interior edge behind. Only when the marks
-    // actually changed — erase-then-repaint every frame would flicker.
-    if (signature !== this.signature && style.gutterColor !== undefined) {
-      for (const c of this.painted)
-        drawMarkSides(dr, style.band(c.x, c.y), MARK_ALL, style.gutterColor);
-    }
+    const signature = signatureOf(targets, evidence, style, outlines);
     for (const c of evidence)
       drawMarkSides(
         dr,

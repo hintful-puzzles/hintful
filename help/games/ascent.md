@@ -51,7 +51,7 @@ A *step* is one move to a neighboring square, so two numbers can be no more step
 
 ## Ascent parameters
 
-These parameters are available from the ‘Custom…’ option on the ‘Type’ menu. 
+These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu. 
 
 <dl>
 	<dt>Width, Height</dt>

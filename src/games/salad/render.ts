@@ -15,6 +15,7 @@
  * every square that contradicts the *unique solution* with an inset red box.
  */
 
+import { valueBit } from "../../engine/candidate-bits.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { GREEN_WASH } from "../../engine/color/colors.ts";
 import {
@@ -42,7 +43,6 @@ import {
 import {
   HINT_AREA,
   HINT_TARGET,
-  hintMarkBit,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
 import {
@@ -160,10 +160,11 @@ const FD_HINT = 0x20;
 
 // --- hint overlay bits (packed into `ds.hint`) ------------------------------
 
-/** Bits 0–1 are the shared target/area flags and bits 2+ the struck candidates
- * (`hintMarkBit(n)`, `n` up to `nums + 1` ⇒ at most bit 11). The *entry* a step
- * asks for — Salad has three move shapes, each echoed in the hint color — is
- * packed above them: a symbol `1..9` verbatim, or one of the two marker codes. */
+/** Bits 0–1 are the shared target/area flags; the struck candidates live in the
+ * sidecar's `struck` lane (`valueBit(n)`, `n` up to `nums + 1`). The *entry* a
+ * step asks for — Salad has three move shapes, each echoed in the hint color —
+ * is packed above the flags: a symbol `1..9` verbatim, or one of the two marker
+ * codes. */
 const HINT_GHOST_SHIFT = 16;
 const HINT_GHOST_MASK = 0xf << HINT_GHOST_SHIFT;
 const GHOST_CROSS = 10;
@@ -541,7 +542,7 @@ export function redraw(
   ds.hint.pack(
     hl ?? null,
     (x, y) => y * o + x,
-    (m) => hintMarkBit(m.n),
+    (m) => valueBit(m.n),
   );
   if (hl?.ghost !== undefined) {
     const code = ghostCode(hl.ghost);
@@ -565,9 +566,8 @@ export function redraw(
 
       const tx = cellOrigin(x, ts);
       const ty = cellOrigin(y, ts);
-      const overlay = ds.hint.packed[i];
-      const struck = (overlay & ~HINT_GHOST_MASK) >> 2;
-      const ghost = (overlay & HINT_GHOST_MASK) >> HINT_GHOST_SHIFT;
+      const struck = ds.hint.struck[i];
+      const ghost = (ds.hint.packed[i] & HINT_GHOST_MASK) >> HINT_GHOST_SHIFT;
 
       // Background, or the three-phase completion wave (letters mode paints the
       // whole cell; numbers mode waves the ball backgrounds instead). Neither

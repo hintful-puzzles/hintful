@@ -9,7 +9,12 @@ import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { CONTRADICTION_UNLOCALIZED } from "../../engine/hint-refusal.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  DEFAULT_BACKGROUND,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
+import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
 import { type BricksHint, bricksGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
@@ -29,6 +34,7 @@ import {
   DIFF_EASY,
   DIFF_TRICKY,
   encodeParams,
+  F_BOUND,
   F_EMPTY,
   F_SHADE,
   F_UNSHADE,
@@ -345,5 +351,52 @@ describe("bricks hint — rendering (tier 2.5)", () => {
       hasEvidence || (result.hint ? hl(result.hint).evidence.length : 0) === 0,
     ).toBe(true);
     expect(ops).toMatchSnapshot();
+  });
+
+  it("paints the ring the same whichever neighbors repainted before it", () => {
+    // The ring covers the border lines the cell shares with its neighbors. A
+    // fresh frame repaints every neighbor; a warm one, where only the target's
+    // cell changed, repaints none — the two canvases must still agree.
+    const state = newState(FIX_PARAMS, FIX.desc);
+    const w = state.w;
+    const target = [...state.grid.keys()].find(
+      (i) =>
+        i % w < w - 1 &&
+        i + w < state.grid.length &&
+        !(state.grid[i] & F_BOUND) &&
+        !(state.grid[i + 1] & F_BOUND) &&
+        !(state.grid[i + w] & F_BOUND),
+    );
+    if (target === undefined)
+      throw new Error("no cell with a right and lower neighbor");
+    const planned = bricksGame.hint?.(state);
+    if (!planned?.ok) throw new Error("the fixture has no hint");
+    const step = {
+      ...planned.steps[0],
+      highlights: { ...hl(planned.steps[0]), target, evidence: [] },
+    };
+    const ts = bricksGame.preferredTileSize ?? 32;
+    const size = bricksGame.computeSize(FIX_PARAMS, ts);
+    const palette = bricksGame.colors(DEFAULT_BACKGROUND);
+    const frame = (
+      ds: ReturnType<typeof bricksGame.newDrawState>,
+      hint?: typeof step,
+    ) => {
+      const rec = new RecordingDrawing(palette);
+      bricksGame.redraw(rec, ds, null, state, 0, bricksGame.newUi(state), 0, 0, hint);
+      return rec.ops;
+    };
+
+    const ds = bricksGame.newDrawState(state, ts);
+    const warm = new BoxRaster(size.w, size.h);
+    warm.apply(frame(ds));
+    const ringed = frame(ds, step);
+    expect(ringed.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(true);
+    warm.apply(ringed);
+    const fresh = new BoxRaster(size.w, size.h);
+    fresh.apply(frame(bricksGame.newDrawState(state, ts), step));
+
+    const differing = [...warm.px.keys()].filter((i) => warm.px[i] !== fresh.px[i]);
+    expect(differing.length, "pixels a warm canvas shows differently").toBe(0);
   });
 });

@@ -20,9 +20,43 @@ Because a diagonal line visibly blocks the other diagonal of the same square, dr
 
 A hub is grayed out once it carries as many lines as its number asks for. That's a visual reminder only — the hub stays fully editable — and it can be switched off in the game's preferences.
 
+## Hints
+
+**Hint** explains the next step rather than simply making it. It reasons
+only from the numbers, your lines and the dots you have marked as unused,
+so it carries on from wherever you are, as long as none of those is
+wrong; if one is, it asks you to fix the highlighted mistakes first.
+
+* **A line in the hint color** is a line the step asks you to draw.
+* **A ring round a dot on a hub's rim** is a spoke the step asks you to
+  rule out: mark that dot as unused, as described above.
+* **A halo in a second color** around a hub marks the hub the step reasons
+  from. The hint calls these the *ringed* hubs.
+
+In the hint's words, a *spoke* is one of a hub's dots, the start of a line
+it could draw, and a *free* spoke is one that is neither a line yet nor
+ruled out. When one deduction settles several spokes at once, the hint
+walks through them one at a time as a single step.
+
+Most steps are the rules at work. A hub with just as many free spokes as
+it still needs lines must use them all; a hub that already has all its
+lines can use none of the rest; and a line joining two 1-hubs would leave
+that pair cut off from everything else. When those run out, which on
+**Normal** boards they do, the hint tries a spoke the other way and shows
+where that goes wrong within a few moves: it would give
+the ringed hub more lines than its number, force two diagonals to cross,
+or strand the ringed hubs in a group of their own.
+
+Every hint is a deduction you could have made from what is on the board.
+On an **Unreasonable** board there may come a point where no deduction is
+left and the only way on is to try something and see whether it works —
+that is what [the difficulty name means](../features#difficulty). The hint
+says so rather than guessing for you: save your position, try it, and
+undo if it breaks.
+
 ## Spokes parameters
 
-These parameters are available from the ‘Custom…’ option on the ‘Type’ menu.
+These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
 
 <dl>
 	<dt>Width, Height</dt>

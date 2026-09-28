@@ -235,22 +235,30 @@ function drawTile(
     drawThickRectOutline(dr, tx + m, ty + m, ts - 2 * m, ts - 2 * m, t, COL_HINT_CELL);
   }
 
-  // The acted-on cell's ring, on the square's own border — where the evidence
-  // ring is *inset*, so a cell that is both keeps both marks legible.
-  if (n & HINT_TARGET) {
-    drawMarkSides(
-      dr,
-      {
-        box: { x: tx, y: ty, w: ts + 1, h: ts + 1 },
-        outer: 0,
-        inner: Math.max(2, (ts / 12) | 0),
-      },
-      MARK_ALL,
-      COL_HINT,
-    );
-  }
-
   dr.drawUpdate({ x: tx, y: ty, w: ts + 1, h: ts + 1 });
+}
+
+/**
+ * The acted-on cell's ring, on the square's own border — where the evidence
+ * ring is *inset*, so a cell that is both keeps both marks legible.
+ *
+ * Stamped after the tile loop on every frame, because the border lines are
+ * shared: a neighbor repainting strokes its own border over the ring's outer
+ * line, and whether one did would otherwise depend on which tiles happened to
+ * repaint. The cell still keys on `HINT_TARGET`, so when the ring goes, the
+ * cell's own border stroke is what paints those lines back.
+ */
+function drawTargetRing(dr: GameDrawing, ts: number, tx: number, ty: number): void {
+  drawMarkSides(
+    dr,
+    {
+      box: { x: tx, y: ty, w: ts + 1, h: ts + 1 },
+      outer: 0,
+      inner: Math.max(2, (ts / 12) | 0),
+    },
+    MARK_ALL,
+    COL_HINT,
+  );
 }
 
 // --- redraw -----------------------------------------------------------------
@@ -315,8 +323,12 @@ export function redraw(
     if (ds.cache[i] === n) continue;
     ds.cache[i] = n;
 
-    const tx = x * ts + ox + y * (ts >> 1);
-    const ty = y * ts + oy;
-    drawTile(dr, ts, tx, ty, n);
+    drawTile(dr, ts, x * ts + ox + y * (ts >> 1), y * ts + oy, n);
+  }
+
+  if (hintTarget >= 0) {
+    const x = hintTarget % w;
+    const y = (hintTarget / w) | 0;
+    drawTargetRing(dr, ts, x * ts + ox + y * (ts >> 1), y * ts + oy);
   }
 }

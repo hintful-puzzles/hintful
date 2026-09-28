@@ -5,6 +5,8 @@ columns contain the same number of track segments as are indicated in the
 clues to the top and right of the grid. There are only straight and
 90-degree curved rail sections, and the track may not cross itself.
 
+## Controls
+
 Left-click on an edge between two squares to add a track segment between
 the two squares. Right-click on an edge to add a cross on the edge,
 indicating no track is possible there.
@@ -17,6 +19,10 @@ track segment.
 Left- or right-drag between squares to lay a straight line of is-track or
 is-not-track indicators, useful for filling in rows or columns to match the
 clue.
+
+With the keyboard, the arrow keys move a cursor over the squares and the
+edges between them. Enter does what a left-click does to the square or
+edge under the cursor, and Space what a right-click does.
 
 ## Hints
 
@@ -43,3 +49,16 @@ Every hint is a deduction you could have made from what is on the board, so it
 never guesses. It is refused while anything you have marked contradicts the
 solution; the offending squares light up instead, exactly as they do for
 **Check & save**.
+
+## Tracks parameters
+
+These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
+
+<dl>
+	<dt>Width, Height</dt>
+	<dd>Size of the grid in squares, at least 4 each way.</dd>
+	<dt>Difficulty</dt>
+	<dd>How hard the reasoning the puzzle needs may be (<a href="../features#difficulty">what the names mean</a>).</dd>
+	<dt>Disallow consecutive 1 clues</dt>
+	<dd>Read the clues along the top from left to right and then down the right-hand side. With this on, no two clues next to each other in that run are both 1, and neither the first nor the last of them is a 1. Every clue is at least 1 either way.</dd>
+</dl>

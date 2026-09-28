@@ -129,7 +129,7 @@ export const say = {
    * the two-way square is the neighbor it points at, and "an arrow into it"
    * names what is struck. */
   opposite: (n: number, pair: number[]): string =>
-    `Its ${SIDE[n]} neighbor can only point ${joinOr(pair.map(arrow))}, and an arrow into it would point back`,
+    `Its ${SIDE[n]} neighbor in this area can only point ${joinOr(pair.map(arrow))}: an arrow into it would close a loop or be the area's second ${arrow(n)}`,
 
   /** Two squares of an area holding the same two candidates between them. */
   pair: (ns: number[]): string =>

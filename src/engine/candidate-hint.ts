@@ -14,6 +14,7 @@
  * `docs/games/hints.md` § "Candidate-elimination games".
  */
 
+import { valueBit, valuesOneTo } from "./candidate-bits.ts";
 import type { DeductionRecord } from "./deduction-record.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "./game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
@@ -75,7 +76,7 @@ export interface NoteEncoding {
 
 /** `enc.bit`, defaulted to the Latin family's `1 << n`. */
 function bitOf(enc?: NoteEncoding): (n: number) => number {
-  return enc?.bit ?? ((n: number): number => 1 << n);
+  return enc?.bit ?? valueBit;
 }
 
 /** The move variants a candidate-elimination hint plan ever emits. Every such
@@ -97,6 +98,41 @@ export type CandidateMove =
   | { type: "pencilAll" }
   | { type: "pencilStrike"; marks: Mark[] }
   | { type: "pencilAdd"; marks: Mark[] };
+
+/** The three {@link CandidateMove}s that touch only notes, as a game's own
+ * `Move` union may spell them (its marks read-only). */
+export type NoteMove =
+  | { type: "pencilAll" }
+  | { type: "pencilStrike" | "pencilAdd"; marks: readonly Mark[] };
+
+/**
+ * Apply a {@link NoteMove} in place to a square board of order `w` whose empty
+ * cells are `0` and whose notes are the default encoding (`valueBit`,
+ * `valuesOneTo`). A game whose notes or emptiness differ keeps its own arms.
+ *
+ * `pencilAll` is **additive**: it fills only the empty cells with no notes yet
+ * and never resets a narrowed one (`adaptiveMarkAll` states why).
+ */
+export function applyNoteMove(
+  move: NoteMove,
+  grid: ArrayLike<number>,
+  pencil: { [i: number]: number },
+  w: number,
+): void {
+  switch (move.type) {
+    case "pencilAll": {
+      const all = valuesOneTo(w);
+      for (let i = 0; i < w * w; i++) if (!grid[i] && pencil[i] === 0) pencil[i] = all;
+      return;
+    }
+    case "pencilStrike":
+      for (const { x, y, n } of move.marks) pencil[y * w + x] &= ~valueBit(n);
+      return;
+    case "pencilAdd":
+      for (const { x, y, n } of move.marks) pencil[y * w + x] |= valueBit(n);
+      return;
+  }
+}
 
 /** The highlight shape every candidate-elimination game's hint renders: the
  * deduction's evidence (`area`), the cell(s) it acts on (`targets`), and the
@@ -523,7 +559,7 @@ export function obviousCandidateMarks(
 /** What a fill-all puts in blank cell `i`: {@link NoteEncoding.all}, or every
  * value of the note alphabet, whose size defaults to `w`. */
 export function fillAllNotes(i: number, w: number, enc?: NoteEncoding): number {
-  return enc?.all?.(i) ?? (1 << ((enc?.values ?? w) + 1)) - (1 << 1);
+  return enc?.all?.(i) ?? valuesOneTo(enc?.values ?? w);
 }
 
 /**

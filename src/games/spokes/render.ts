@@ -426,21 +426,19 @@ export function redraw(
 
       drawHub(dr, tx, ty, radius, thick, state.spokes[i], wrongBits, border, fill);
 
-      // Hint marks: recolor the rim dot of each still-empty spoke the hint
-      // would *rule out* (drawn on top of the hub's own faint placeable dot),
-      // so a "rule this out" reads as a mark, not as a line to draw.
+      // Hint marks: ring the rim dot of each still-empty spoke the hint would
+      // *rule out*, so a "rule this out" reads as a mark, not as a line to
+      // draw. The dot itself keeps its unmarked look: filled, it was
+      // indistinguishable from a spoke the player had already marked.
       const edge = radius - thick;
       const pr = radius / 4;
       for (let d = 0; d < 8; d++) {
         if (!(hintBits & hintMarkBit(d))) continue;
         if (getSpoke(state.spokes[i], d) !== SPOKE_EMPTY) continue;
         const unit = spokeUnit(d);
-        dr.drawCircle(
-          { x: tx + edge * unit.x, y: ty + edge * unit.y },
-          pr,
-          COL_HINT,
-          COL_HINT,
-        );
+        const at = { x: tx + edge * unit.x, y: ty + edge * unit.y };
+        dr.drawCircle(at, pr + thick, -1, COL_HINT);
+        dr.drawCircle(at, pr + thick + 1, -1, COL_HINT);
       }
 
       dr.drawText(

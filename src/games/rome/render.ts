@@ -30,6 +30,7 @@
  * first").
  */
 
+import { valueBit } from "../../engine/candidate-bits.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { BLUE, BLUE_BOLD } from "../../engine/color/colors.ts";
 import {
@@ -57,7 +58,6 @@ import {
 import {
   HINT_AREA,
   HINT_TARGET,
-  hintMarkBit,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
 import {
@@ -191,7 +191,8 @@ export interface RomeDrawState {
   cache: Int32Array;
   mistakes: OverlaySidecar;
   /** Hint overlay (fork addition): bit 0 = the square acted on, bit 1 =
-   * evidence, bits 2.. = the arrow marks this firing rules out. */
+   * evidence, and in its `struck` lane the arrow marks this firing rules out
+   * (`valueBit(n)`). */
   hint: OverlaySidecar;
   /** The hint's ring and outline, painted after the square loop. */
   marks: HintMarks;
@@ -230,8 +231,8 @@ const PENCIL_STYLE: PencilIndicatorStyle = {
  * region boundary that nothing repaints. Insetting by `2 * GRIDEXTRA` clears
  * the widest inset any square takes (`GRIDEXTRA` on a boundary side, plus
  * `GRIDEXTRA * 2` off the far edge), so the band is always strictly within the
- * background rect and the square's own repaint undoes it. That is why no
- * `gutterColor` is passed.
+ * background rect and the square's own repaint undoes it. That is why it has
+ * no erase phase (`HintMarks.eraseBeforeTiles`).
  */
 function markBand(ds: RomeDrawState, x: number, y: number): MarkBand {
   const ts = ds.tileSize;
@@ -364,7 +365,7 @@ export function redraw(
   ds.hint.pack(
     hint?.highlights ?? null,
     (hx, hy) => hy * w + hx,
-    (m) => hintMarkBit(m.n),
+    (m) => valueBit(m.n),
   );
 
   for (let y = 0; y < h; y++) {
@@ -476,11 +477,11 @@ export function redraw(
         // strikethrough in the same color — the collection's "ruled out" cue
         // (docs/games/hints.md § "The element-type color legend"). The hint
         // says what to cross off; it never crosses it off for the player.
-        const struck = ds.hint.packed[i1];
+        const struck = ds.hint.struck[i1];
         const markAt = (bit: number, mx: number, my: number, n: number): void => {
           if (!(p & bit)) return;
           drawArrow(dr, mx, my, q, bit, COL_ARROW_PENCIL);
-          if (struck & hintMarkBit(n)) {
+          if (struck & valueBit(n)) {
             line(dr, 1, mx - q, my + q, mx + q, my - q, COL_ARROW_PENCIL);
           }
         };

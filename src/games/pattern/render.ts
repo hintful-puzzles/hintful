@@ -135,8 +135,8 @@ const K_MISTAKE = 1 << 3;
 // Hint-overlay bits (no upstream analog), also folded into the cache key.
 const K_HINT_TARGET = 1 << 4; // a forced cell (COL_HINT highlight)
 const K_HINT_LINE = 1 << 5; // a cell of the reasoned line (hatched)
-const K_HINT_BLACKREF = 1 << 6; // a cited black mark (teal ring)
-const K_HINT_WHITEREF = 1 << 7; // a cited white mark (violet ring)
+const K_HINT_BLACKREF = 1 << 6; // a cited black mark (COL_HINT_BLACKREF ring)
+const K_HINT_WHITEREF = 1 << 7; // a cited white mark (COL_HINT_WHITEREF ring)
 
 function gridSquare(
   dr: GameDrawing,

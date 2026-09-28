@@ -24,6 +24,7 @@
  * cell still repaints when flagged (docs/games/rendering.md § "Overlay sidecars").
  */
 
+import { valueBit } from "../../engine/candidate-bits.ts";
 import {
   ERROR,
   HINT_ACTION,
@@ -50,7 +51,6 @@ import {
 import {
   HINT_AREA,
   HINT_TARGET,
-  hintMarkBit,
   type OrderedCell,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
@@ -166,7 +166,7 @@ export interface SoloDrawState {
   /** `cr²` last-drawn pencil bitmaps (-1 = never drawn). */
   pencil: Int32Array;
   /** `cr²` hint-overlay sidecar (fork addition): bit 0 = target cell, bit 1 =
-   * evidence cell, bits 2.. = struck-candidate mask (`hintMarkBit(n)`). A
+   * evidence cell, struck candidates at `valueBit(n)` in its `struck` lane. A
    * sidecar rather than a tile bit, because digit and pencil already fill the
    * two cache words (docs/games/rendering.md § "The tile cache and the diff
    * key"). */
@@ -177,8 +177,9 @@ export interface SoloDrawState {
   /** Whether the pencil-mode indicator was on last frame (fork addition). */
   pencilModeShown: boolean | null;
   /** The hint target's ring and the evidence region's outline (fork additions),
-   * both drawn in the **gutter**, which no tile repaints — so their removal is
-   * driven from here rather than from the tile cache. See {@link markBand}. */
+   * both drawn in the **gutter**, which a tile paints into only inside a
+   * sub-block — so their removal is driven from here, before the tiles repaint.
+   * See {@link markBand}. */
   marks: HintMarks;
 }
 
@@ -207,8 +208,9 @@ export function newDrawState(state: SoloState, tileSize: number): SoloDrawState 
  * edge, and the gutter is `2·ge + 1` of `COL_GRID` backing that belongs to no
  * tile. Two cells in the same sub-block sit a single pixel apart (each widens by
  * `ge` toward the other), so a mark there overlaps the neighbor's background by
- * `ge` on that side; it is grid-colored space either way, and the block
- * boundary — the wide gutter — is where the ring is thickest and reads best.
+ * `ge` on that side, which is why erasing one repaints the neighbors (see
+ * `redraw`); the block boundary — the wide gutter — is where the ring is
+ * thickest and reads best.
  */
 function markBand(ds: SoloDrawState, x: number, y: number): MarkBand {
   const ts = ds.tileSize;
@@ -243,7 +245,7 @@ function drawNumber(
   y: number,
   hl: number,
   wrong: boolean,
-  hint: number,
+  struck: number,
   hintOrder: number,
 ): void {
   const ts = ds.tileSize;
@@ -257,8 +259,8 @@ function drawNumber(
   // Hint overlay (docs/games/hints.md § "The element-type color legend"): both
   // cell-level marks are read in `redraw`, which draws the target's ring and the
   // evidence region's outline in the gutter. What is left here is `struck`, the
-  // set of candidates this firing rules out, crossed through among the marks.
-  const struck = hint >> 2; // bit n ⇒ candidate n struck
+  // set of candidates this firing rules out (bit n ⇒ candidate n), crossed
+  // through among the marks.
 
   const tx = b + x * ts + 1 + ge;
   const ty = b + y * ts + 1 + ge;
@@ -587,8 +589,27 @@ export function redraw(
 
   // Pack both overlays per cell.
   const index = (x: number, y: number) => y * cr + x;
-  ds.hint.pack(hint?.highlights ?? null, index, (m) => hintMarkBit(m.n));
+  ds.hint.pack(hint?.highlights ?? null, index, (m) => valueBit(m.n));
   ds.wrong.packCells(mistakes ?? null, index);
+
+  // Marks that moved are erased before the tile loop, not after it: inside a
+  // sub-block the band covers the neighbors' widened backgrounds, so every cell
+  // whose background reaches an erased band repaints over it.
+  const targets: MarkCell[] = [];
+  const evidence: MarkCell[] = [];
+  for (let i = 0; i < cr * cr; i++) {
+    const c = { x: i % cr, y: (i / cr) | 0 };
+    if (ds.hint.packed[i] & HINT_TARGET) targets.push(c);
+    if (ds.hint.packed[i] & HINT_AREA) evidence.push(c);
+  }
+  const markStyle = {
+    band: (x: number, y: number) => markBand(ds, x, y),
+    targetColor: COL_HINT,
+    evidenceColor: COL_HINT_CELL,
+  };
+  ds.marks.eraseBeforeTiles(dr, targets, evidence, markStyle, COL_GRID, (x, y) => {
+    if (x >= 0 && x < cr && y >= 0 && y < cr) ds.tiles[y * cr + x] = -1;
+  });
 
   const flash =
     flashTime > 0 && (flashTime <= FLASH_TIME / 3 || flashTime >= (FLASH_TIME * 2) / 3);
@@ -634,7 +655,7 @@ export function redraw(
           y,
           hl,
           ds.wrong.at(cell),
-          ds.hint.packed[cell],
+          ds.hint.struck[cell],
           ds.hint.order[cell],
         );
         ds.tiles[cell] = tile;
@@ -646,22 +667,8 @@ export function redraw(
   }
 
   // The hint marks, **after** the tile loop and outside every clip, because they
-  // live in the gutter, which no tile owns. `gutterColor` is what tells
-  // `HintMarks` to undo a mark that moved: the cell underneath does repaint (the
-  // sidecar sees the overlay change) but stops at its own edge.
-  const targets: MarkCell[] = [];
-  const evidence: MarkCell[] = [];
-  for (let i = 0; i < cr * cr; i++) {
-    const c = { x: i % cr, y: (i / cr) | 0 };
-    if (ds.hint.packed[i] & HINT_TARGET) targets.push(c);
-    if (ds.hint.packed[i] & HINT_AREA) evidence.push(c);
-  }
-  ds.marks.paint(dr, targets, evidence, {
-    band: (x, y) => markBand(ds, x, y),
-    targetColor: COL_HINT,
-    evidenceColor: COL_HINT_CELL,
-    gutterColor: COL_GRID,
-  });
+  // straddle the gutter between tiles.
+  ds.marks.paint(dr, targets, evidence, markStyle);
 
   // Pencil-mode indicator (fork addition).
   repaintPencilIndicator(dr, ds, ui.pencilMode, PENCIL_BOX(cr, ts), PENCIL_STYLE);

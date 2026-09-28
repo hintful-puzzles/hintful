@@ -295,10 +295,11 @@ function drawTile(
   // no wire crosses it. It must look unlike the single inset ring
   // `drawHintOutline` puts on the destination *cell* ("move this piece" against
   // "to here"). Drawn here, at the shifted origin, it rides with the tile
-  // through the slide.
+  // through the slide. On the face, inside the borders shared with the
+  // neighbors: a neighbor repaints its border without this tile.
   if (tile & HINT_TILE) {
     const t = Math.max(2, Math.round(ts / 16));
-    const box = { x: bx, y: by, w: ts + TILE_BORDER, h: ts + TILE_BORDER };
+    const box = face;
     drawMarkSides(dr, { box, outer: 0, inner: t }, MARK_ALL, COL_HINT);
     drawMarkSides(
       dr,
@@ -694,7 +695,14 @@ export function redraw(
       // A tile on the line that last moved is repainted every frame: while the
       // animation runs, where it is drawn does not follow from its value.
       const moving = x === state.lastMoveCol || y === state.lastMoveRow;
-      if (ds.visible[i] === c && !moving) continue;
+      // A tile shares its border rows with its neighbors, so a sliding tile
+      // paints over the edge of the lines beside it, where their wires reach.
+      // Those repaint too while it slides, in the same order as everything.
+      const besideMoving =
+        animating &&
+        ((state.lastMoveCol !== -1 && Math.abs(x - state.lastMoveCol) === 1) ||
+          (state.lastMoveRow !== -1 && Math.abs(y - state.lastMoveRow) === 1));
+      if (ds.visible[i] === c && !moving && !besideMoving) continue;
 
       const xs = y === state.lastMoveRow ? xshift : 0;
       const ys = x === state.lastMoveCol ? yshift : 0;

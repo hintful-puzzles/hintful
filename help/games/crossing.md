@@ -12,7 +12,7 @@ Crossing uses the same control scheme as Solo.
 
 Left-click to select a cell, then type a number on your keyboard to enter it. Press Backspace or Space to clear a cell.
 
-Right-click a cell, then type a number to add a pencil mark. Pencil marks can be used for any purpose. A preference makes right-click switch on a *sticky* pencil mode instead, which stays on until you right-click again.
+Right-click a cell, then type a number to add a pencil mark. A cell's pencil marks are the digits it can still take, so **Check & save** flags a set of marks that leaves out the cell's answer, and the hint reads them the same way. A preference makes right-click switch on a *sticky* pencil mode instead, which stays on until you right-click again.
 
 You can also use the arrow keys to move the selected cell around. Press Enter to toggle between entering numbers and entering pencil marks.
 
@@ -30,9 +30,28 @@ Across and down runs are drawn in two different colors, and each number in the l
 
 Both the auto-advance and the two clue-list aids — highlighting the runs through the selected cell, and coloring the list by where each number could go — can be switched off in the game's preferences.
 
+## Hints
+
+**Hint** explains the next step rather than simply making it. It reasons from the digits you have entered and from your pencil marks, which it reads as the only digits a square can still take. So it carries on from wherever you are, as long as none of them is wrong; if one is, it asks you to fix the highlighted mistakes first. Since blue and amber already mean across and down here, the hint's marks are green.
+
+* **A green ring** marks the square the step fills, or every square of a run it fills with a whole number.
+* **Green stripes** mark the run the sentence names: "this across run", "this down run". When a step uses both runs through a square, both are striped.
+* **A box round a number in the list** marks the numbers that still fit that run. The number the step writes in, if any, is boxed in the same green as the ring.
+* **A line through a pencil mark** is a digit the step rules out of that square.
+
+A number *still fits* a run, in the hint's words, when it is the run's length, is not already written in elsewhere, and agrees with every square of the run: the digit you entered, or else its pencil marks.
+
+When the hint needs to narrow a square down before it can say more, it writes the digits that square can still take into its pencil marks ("so note them"), or crosses out the ones it can't ("so rule it out"), as steps of their own.
+
+A few ideas are worth learning by name:
+
+* **Only one number fits.** A run whose length only one listed number shares, or whose other numbers of that length are all used, must be that number.
+* **Every fitting number agrees.** If every number that still fits a run has the same digit in one of its squares, that square is that digit.
+* **Crossing runs.** The across number allows some digits in a square and the down number allows others; when they share just one, that is the square's digit.
+
 ## Crossing parameters
 
-These parameters are available from the ‘Custom…’ option on the ‘Type’ menu.
+These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
 
 <dl>
 	<dt>Width, Height</dt>

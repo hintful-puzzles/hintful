@@ -7,6 +7,7 @@
  * the techniques fire, and the solved/stuck verdict the generator's clue
  * minimization depends on is C's because both reach the same fixpoint.
  */
+import { valuesOneTo } from "../../engine/candidate-bits.ts";
 import { runDeductionFixpoint } from "../../engine/deduction-fixpoint.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
@@ -386,7 +387,7 @@ class FillingSolver {
     const bmdsf = new Dsf(sz);
     const minsize = new Int32Array(sz);
     let learn = false;
-    const ALL = (1 << 10) - (1 << 1); // bits 1..9
+    const ALL = valuesOneTo(9);
 
     for (let i = 0; i < sz; i++) bm[i] = ALL;
 

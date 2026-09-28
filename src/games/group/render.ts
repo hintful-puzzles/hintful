@@ -10,6 +10,7 @@
  * pencil bitmap + error word + mistake bit).
  */
 
+import { valueBit } from "../../engine/candidate-bits.ts";
 import {
   ERROR,
   HINT_ACTION,
@@ -37,7 +38,6 @@ import {
 import {
   HINT_AREA,
   HINT_TARGET,
-  hintMarkBit,
   type OrderedCell,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
@@ -183,7 +183,7 @@ export interface GroupDrawState {
   /** Per-display-cell mistake-bit cache. */
   mistakes: Uint8Array;
   /** Grid-indexed hint-overlay sidecar: bit 0 = target cell, bit 1 = evidence,
-   * bits 2.. = struck-candidate mask (`hintMarkBit(n)`). Keyed by grid cell
+   * and the struck candidates at `valueBit(n)` in its `struck` lane. Keyed by grid cell
    * (`y·w + x`) so the overlay follows an element through a display reorder
    * (docs/games/rendering.md § "Overlay sidecars"). */
   hint: OverlaySidecar;
@@ -269,7 +269,7 @@ function drawTile(
   pencil: number,
   error: number,
   mistake: boolean,
-  hint: number,
+  struck: number,
   hintOrder: number,
   hatched: boolean,
 ): void {
@@ -281,8 +281,7 @@ function drawTile(
   // Hint overlay (docs/games/hints.md § "The element-type color legend"): both
   // cell-level marks are drawn by `redraw` on the cell's own border, so a hint
   // never paints over the elements it is talking about. What is left here is
-  // `struck` (bit `2 + n`): the candidates this firing rules out, crossed through.
-  const struck = hint >> 2;
+  // `struck` (bit `n`): the candidates this firing rules out, crossed through.
 
   const tx = coord(x, ts) + 1;
   const ty = coord(y, ts) + 1;
@@ -472,7 +471,7 @@ export function redraw(
   ds.hint.pack(
     hint?.highlights ?? null,
     (x, y) => y * w + x,
-    (m) => hintMarkBit(m.n),
+    (m) => valueBit(m.n),
   );
 
   // Legend row/column.
@@ -485,6 +484,27 @@ export function redraw(
       drawTile(dr, ds, x, -1, tile, 0, 0, false, 0, 0, false);
     }
   }
+
+  // The hint marks by display position, before the cells: the overlay is keyed
+  // by grid cell so it follows an element through a reorder, and this is where
+  // it is resolved back to where that element is currently *shown*.
+  const targets: MarkCell[] = [];
+  const evidence: MarkCell[] = [];
+  for (let y = 0; y < w; y++) {
+    for (let x = 0; x < w; x++) {
+      const packed = ds.hint.packed[ds.sequence[y] * w + ds.sequence[x]];
+      if (packed & HINT_TARGET) targets.push({ x, y });
+      if (packed & HINT_AREA) evidence.push({ x, y });
+    }
+  }
+  const markStyle = {
+    band: (x: number, y: number) => markBand(ds, x, y),
+    targetColor: COL_HINT,
+    evidenceColor: COL_HINT_CELL,
+  };
+  ds.marks.eraseBeforeTiles(dr, targets, evidence, markStyle, COL_GRID, (x, y) => {
+    if (x >= 0 && x < w && y >= 0 && y < w) ds.tiles[y * w + x] = -1;
+  });
 
   // Cells.
   const flashOn =
@@ -530,7 +550,6 @@ export function redraw(
       const gi = sy * w + sx;
       const error = ds.errtmp[gi];
       const mistake = mistakeFlags[gi] !== 0;
-      const hintWord = ds.hint.packed[gi];
 
       const idx = y * w + x;
       if (
@@ -553,7 +572,7 @@ export function redraw(
           pencil,
           error,
           mistake,
-          hintWord,
+          ds.hint.struck[gi],
           ds.hint.order[gi],
           ds.hint.hatched[gi] === 1,
         );
@@ -562,24 +581,8 @@ export function redraw(
     }
   }
 
-  // The hint marks, after the tile loop and outside every clip. The overlay is
-  // keyed by grid cell so it follows an element through a reorder, so this is
-  // where it is resolved back to where that element is currently *shown*.
-  const targets: MarkCell[] = [];
-  const evidence: MarkCell[] = [];
-  for (let y = 0; y < w; y++) {
-    for (let x = 0; x < w; x++) {
-      const packed = ds.hint.packed[ds.sequence[y] * w + ds.sequence[x]];
-      if (packed & HINT_TARGET) targets.push({ x, y });
-      if (packed & HINT_AREA) evidence.push({ x, y });
-    }
-  }
-  ds.marks.paint(dr, targets, evidence, {
-    band: (x, y) => markBand(ds, x, y),
-    targetColor: COL_HINT,
-    evidenceColor: COL_HINT_CELL,
-    gutterColor: COL_GRID,
-  });
+  // The hint marks, after the tile loop and outside every clip.
+  ds.marks.paint(dr, targets, evidence, markStyle);
 
   // Group takes pencil marks like the rest of the Latin family, so it says so
   // the same way: the collection's glyph, where the engine puts it.

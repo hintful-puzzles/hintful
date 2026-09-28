@@ -25,9 +25,22 @@ You can also use the arrow keys to move the selected cell around. Press Enter to
 
 Press the 'M' key to fill every empty cell with all possible pencil marks.
 
+## Hints
+
+**Hint** explains the next step rather than simply making it. It works from your own numbers and pencil marks, so it carries on from wherever you are; if a number you've entered is wrong, or a cell's pencil marks have crossed out its answer, it asks you to fix the highlighted mistakes first. It pencils in only as it needs to: a cell with no marks counts as holding every number its row and column don't already hold, and the hint writes a cell's marks only when its next step crosses one out or reasons from them. If you would rather it filled in every cell's marks first (the same as pressing 'M'), set **Hints pencil in** to **Every candidate first** in the preferences.
+
+* **A ringed cell** is the one the step is about: the number to enter there, or the pencil marks to cross out, which are shown with a line through them.
+* **Outlined cells** are the ones the reason rests on: the two cells diagonally across a clue, or all four cells around an E or O clue. Elsewhere, outlined cells between them already account for the numbers being crossed out.
+* **A striped row or column** is the line the sentence calls "this row" or "this column".
+* **Numbered cells** are a chain of cells with two numbers left each, read in order: the sentence says how the chain rules a number out of the ringed cell.
+
+The hint names a clue as it is drawn ("the 7+ clue", "the 2÷ clue", "the = clue"), and "the 3 across it" is the number in the cell diagonally opposite across that clue. A number is *open* in a cell while it is still possible there: in the cell's pencil marks, or, in a cell with no marks, not yet ruled out by its row and column. So "nothing open across the 7+ clue adds with 1 to make 7" means the cell across can't be 6, so this cell can't be 1.
+
+If you've turned on the preference that removes a number from pencil marks in its row and column when you place it, the hint leaves that tidying to the placement rather than spelling it out as a step of its own. On an Unreasonable board, deduction can run out before the grid is full; the hint says so rather than guessing.
+
 ## Mathrax parameters
 
-These parameters are available from the ‘Custom…’ option on the ‘Type’ menu. 
+These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu. 
 
 <dl>
 	<dt>Size (s*s)</dt>

@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
+import { valueBit } from "./candidate-bits.ts";
 import {
   HINT_AREA,
   HINT_TARGET,
-  hintMarkBit,
   OVERLAY_FLAG,
   OverlaySidecar,
 } from "./overlay-sidecar.ts";
 
 describe("OverlaySidecar", () => {
   const idx = (x: number, y: number) => y * 3 + x;
-  const marks = (m: { x: number; y: number; n: number }) => hintMarkBit(m.n);
+  const marks = (m: { x: number; y: number; n: number }) => valueBit(m.n);
 
   it("every cell is stale before its first commit", () => {
     const s = new OverlaySidecar(9);
@@ -28,9 +28,26 @@ describe("OverlaySidecar", () => {
       marks,
     );
     expect(s.packed[0]).toBe(HINT_AREA);
-    expect(s.packed[1]).toBe(HINT_TARGET | hintMarkBit(3));
+    expect(s.packed[1]).toBe(HINT_TARGET);
+    expect(s.struck[1]).toBe(valueBit(3));
     s.commit(1);
     expect(s.stale(1)).toBe(false);
+    expect(s.stale(0)).toBe(true);
+  });
+
+  it("keeps a candidate mask's highest values off the roles, and repaints on them", () => {
+    // Solo and Unequal reach 31 values. Sharing one word, a strike on 30 once
+    // packed exactly as "this cell is the target", and swapping the two
+    // repainted nothing.
+    const s = new OverlaySidecar(9);
+    s.pack({ targets: [{ x: 0, y: 0 }] }, idx, marks);
+    s.commit(0);
+    s.pack({ marks: [{ x: 0, y: 0, n: 30 }] }, idx, marks);
+    expect(s.packed[0]).toBe(0);
+    expect(s.struck[0]).toBe(valueBit(30));
+    expect(s.stale(0)).toBe(true);
+    s.commit(0);
+    s.pack({ marks: [{ x: 0, y: 0, n: 31 }] }, idx, marks);
     expect(s.stale(0)).toBe(true);
   });
 

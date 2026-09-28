@@ -26,6 +26,7 @@
  * collection's mode-indicator glyph, in the margin corner the engine picks.
  */
 
+import { valueBit } from "../../engine/candidate-bits.ts";
 import {
   mkhighlight,
   mkhighlightSpecific,
@@ -70,7 +71,6 @@ import {
 import {
   HINT_AREA,
   HINT_TARGET,
-  hintMarkBit,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
 import {
@@ -511,7 +511,7 @@ function drawCell(
   flags: number,
   flash: number,
   wrong: boolean,
-  hintBits: number,
+  struck: number,
 ): void {
   const ts = ds.tileSize;
   const { w, walls } = puzzle;
@@ -524,10 +524,8 @@ function drawCell(
   // The ring is drawn in `redraw` on the square's own border, and the run the
   // sentence names is hatched translucently here, so a hint never takes the
   // background from the run wash or from the penciled candidates it is ruling
-  // out. What is left here besides is `struck`: `hintMarkBit(n)` is bit `2 + n` and the
-  // pencil grid indexes digit `n` at bit `n − 1`, so shifting by 3 re-bases one
-  // onto the other.
-  const struck = hintBits >> 3;
+  // out. What is left here besides is `struck`, packed at bit `n − 1` for digit
+  // `n` so it indexes the same way as the pencil grid.
   const runWash = flags & DF_ACROSS ? COL_ACROSS : flags & DF_DOWN ? COL_DOWN : -1;
   const wash = runWash >= 0 ? runWash : COL_INNERBG;
 
@@ -864,7 +862,7 @@ export function redraw(
   ds.hint.pack(
     hint?.highlights ?? null,
     (x, y) => y * w + x,
-    (m) => hintMarkBit(m.n),
+    (m) => valueBit(m.n - 1),
   );
   const hintNumbers = new Set(hint?.highlights?.numbers ?? []);
   const hintNumberTarget = hint?.highlights?.numberTarget ?? null;
@@ -960,7 +958,7 @@ export function redraw(
           flags,
           flash,
           ds.wrong.at(i),
-          ds.hint.packed[i],
+          ds.hint.struck[i],
         );
         ds.tiles[i] = tile;
         ds.wrong.commit(i);

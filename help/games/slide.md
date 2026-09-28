@@ -4,6 +4,8 @@ Slide the blocks to move the blue key block to the green exit area.
 Blocks can slide up, down, left or right into empty spaces.
 Only the key block can slide into the exit gate.
 
+## Controls
+
 Use the mouse or a finger to drag the blocks around. A block follows the
 pointer and settles on the nearest space it can actually reach, so you can
 aim roughly and let it snap.
@@ -23,6 +25,19 @@ move and outlines where it should go. Enter or Space then plays the route
 one move at a time. While a route is showing, those keys belong to it —
 make any move of your own and the route steps aside.
 
+## Generating a puzzle
+
 Generating a new puzzle takes a moment, and longer on the larger sizes —
 the generator solves the board from scratch after every change it makes,
 to be sure the puzzle it hands you is still solvable.
+
+## Slide parameters
+
+These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
+
+<dl>
+	<dt>Width, Height</dt>
+	<dd>Size of the board in squares, counting its wall. The width must be at least 5 and the height at least 4, and the whole board can have at most 48 squares: past that, working out whether a board can be solved takes more memory than a browser has to give.</dd>
+	<dt>Solution length limit</dt>
+	<dd>The most moves the puzzle's shortest solution may take. The generator keeps joining blocks together only while the board can still be solved within this many moves, so a higher limit tends to give a harder puzzle. Enter a negative number for no limit at all.</dd>
+</dl>

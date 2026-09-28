@@ -15,8 +15,11 @@ import {
   isThin,
   markSides,
 } from "../../engine/testing/mark-shape.ts";
-import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  DEFAULT_BACKGROUND,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
 import type { MagnetsHighlights } from "./hint.ts";
 import { magnetsGame } from "./index.ts";
 import {
@@ -25,6 +28,10 @@ import {
   COL_MISTAKE,
   COL_NEGATIVE,
   COL_POSITIVE,
+  colors,
+  newDrawState,
+  PREFERRED_TILE_SIZE,
+  redraw,
 } from "./render.ts";
 import {
   DIFF_EASY,
@@ -161,5 +168,43 @@ describe("magnets render scenarios", () => {
     expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(
       true,
     );
+  });
+
+  it("a square repainting alone paints nothing into its partner's box", () => {
+    const { state } = board(P, "mrs-0");
+    const ts = PREFERRED_TILE_SIZE;
+    const ds = newDrawState(state, ts);
+    const ui = { cursor: { x: 0, y: 0, visible: false } };
+    redraw(new RecordingDrawing(colors(DEFAULT_BACKGROUND)), ds, state, ui, 0);
+    const leaders = [
+      horizontalDomino(state),
+      state.common.dominoes.findIndex((o, i) => o === i + state.w),
+    ];
+    expect(leaders[1]).toBeGreaterThanOrEqual(0);
+    for (const i of leaders) {
+      const x = i % state.w;
+      const y = Math.floor(i / state.w);
+      ui.cursor = { x, y, visible: false };
+      redraw(new RecordingDrawing(colors(DEFAULT_BACKGROUND)), ds, state, ui, 0);
+      // The cursor arriving repaints this square and not its partner, so
+      // whatever the square paints past its own box stays on the canvas.
+      ui.cursor = { x, y, visible: true };
+      const dr = new RecordingDrawing(colors(DEFAULT_BACKGROUND));
+      redraw(dr, ds, state, ui, 0);
+      const box = {
+        x0: (x + 1) * ts,
+        y0: (y + 1) * ts,
+        x1: (x + 2) * ts,
+        y1: (y + 2) * ts,
+      };
+      const rects = opsOfKind(dr.ops, "rect");
+      expect(rects.length).toBeGreaterThan(0);
+      for (const r of rects) {
+        expect(r.x).toBeGreaterThanOrEqual(box.x0);
+        expect(r.y).toBeGreaterThanOrEqual(box.y0);
+        expect(r.x + r.w).toBeLessThanOrEqual(box.x1);
+        expect(r.y + r.h).toBeLessThanOrEqual(box.y1);
+      }
+    }
   });
 });

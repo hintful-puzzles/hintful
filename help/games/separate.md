@@ -6,6 +6,8 @@ letter appears the same number of times in the grid, so the regions all
 come out the same size: a 6×6 grid using four letters divides into nine
 four-square regions, each holding one A, one B, one C and one D.
 
+## Controls
+
 Click on a grid edge to mark it as a division between regions (black),
 and again to return to marking it as undecided (yellow). Right-click on
 a grid edge to mark it as definitely not a division (faint gray), and
@@ -31,3 +33,14 @@ When a hint talks about two regions, one is **hatched** and the other
 **outlined**, so you can tell them apart even where they touch: "the hatched
 and outlined regions both hold an A" means those two regions, and no others. A
 single square is named by its letter instead ("these two Ds").
+
+## Separate parameters
+
+These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
+
+<dl>
+	<dt>Width, Height</dt>
+	<dd>Size of the grid in squares.</dd>
+	<dt>Letters</dt>
+	<dd>How many different letters the grid uses, which is also how many squares each region holds: from 2 to 26. It must divide the number of squares in the grid exactly, and be smaller than it.</dd>
+</dl>

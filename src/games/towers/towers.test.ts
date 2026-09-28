@@ -8,6 +8,7 @@
  * and a mistake overlay, each with targeted op assertions plus a snapshot.
  */
 import { describe, expect, it } from "vitest";
+import type { HintStep } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -16,9 +17,17 @@ import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
+import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { newTowersDesc } from "./generator.ts";
 import { towersGame } from "./index.ts";
-import { COL_ERROR, COL_PENCIL_BODY, coord, newDrawState, redraw } from "./render.ts";
+import {
+  COL_ERROR,
+  COL_PENCIL_BODY,
+  coord,
+  newDrawState,
+  redraw,
+  type TowersHint,
+} from "./render.ts";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, solveTowers } from "./solver.ts";
 import {
   clueIndex,
@@ -579,6 +588,43 @@ describe("towers render", () => {
     expect(recording.ops.some((o) => o.op === "line" && o.color === COL_ERROR)).toBe(
       true,
     );
+  });
+
+  // A 3D tower's top face spills into the clip above it, which paints that
+  // tower too, so withdrawing the tower's overlay repaints that clip as well.
+  it.each([
+    "hatch",
+    "mistake",
+  ] as const)("a withdrawn %s on a 3D tower leaves the canvas a fresh paint would show", (kind) => {
+    const ts = towersGame.preferredTileSize ?? 48;
+    const palette = towersGame.colors(DEFAULT_BACKGROUND);
+    const size = towersGame.computeSize(RENDER.p, ts);
+    const set: TowersMove = { type: "set", x: 0, y: 1, n: 6, pencil: false };
+    const st = towersGame.executeMove(newState(RENDER.p, RENDER.desc), set);
+    const ui = newUi(st);
+    expect(ui.threeD).toBe(true);
+    const hint: HintStep<TowersMove, TowersHint> = {
+      move: set,
+      explanation: "",
+      highlights: { area: [], targets: [], marks: [], hatch: [{ x: 0, y: 1 }] },
+    };
+    const frame = (ds: ReturnType<typeof newDrawState>, on: boolean) => {
+      const dr = new RecordingDrawing(palette);
+      const lit = on && kind === "hatch" ? hint : undefined;
+      const wrong = on && kind === "mistake" ? [{ x: 0, y: 1 }] : undefined;
+      redraw(dr, ds, null, st, 1, ui, 0, 0, lit, wrong);
+      return dr.ops;
+    };
+
+    const warmDs = newDrawState(st, ts);
+    const warm = new BoxRaster(size.w, size.h);
+    warm.apply(frame(warmDs, true));
+    warm.apply(frame(warmDs, false));
+    const fresh = new BoxRaster(size.w, size.h);
+    fresh.apply(frame(newDrawState(st, ts), false));
+
+    const differing = warm.px.filter((v, i) => v !== fresh.px[i]).length;
+    expect(differing).toBe(0);
   });
 });
 

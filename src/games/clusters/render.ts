@@ -318,6 +318,22 @@ export function redraw(
     }
   }
 
+  const targets: MarkCell[] = [];
+  const chain: MarkCell[] = [];
+  for (let i = 0; i < w * h; i++) {
+    const c = { x: i % w, y: (i / w) | 0 };
+    if (ds.hint.packed[i] & HB_TARGET) targets.push(c);
+    if (ds.hint.packed[i] & (HB_CHAIN_0 | HB_CHAIN_1)) chain.push(c);
+  }
+  const markStyle = {
+    band: (x: number, y: number) => markBand(ds, x, y),
+    targetColor: COL_HINT,
+    evidenceColor: COL_HINT_CELL,
+  };
+  ds.marks.eraseBeforeTiles(dr, targets, chain, markStyle, COL_GRID, (x, y) => {
+    if (x >= 0 && x < w && y >= 0 && y < h) ds.cache[y * w + x] = -1;
+  });
+
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i = y * w + x;
@@ -353,18 +369,6 @@ export function redraw(
   }
 
   // The hint marks, after the tile loop and outside every clip, because they
-  // straddle the grid line, which no tile repaints.
-  const targets: MarkCell[] = [];
-  const chain: MarkCell[] = [];
-  for (let i = 0; i < w * h; i++) {
-    const c = { x: i % w, y: (i / w) | 0 };
-    if (ds.hint.packed[i] & HB_TARGET) targets.push(c);
-    if (ds.hint.packed[i] & (HB_CHAIN_0 | HB_CHAIN_1)) chain.push(c);
-  }
-  ds.marks.paint(dr, targets, chain, {
-    band: (x, y) => markBand(ds, x, y),
-    targetColor: COL_HINT,
-    evidenceColor: COL_HINT_CELL,
-    gutterColor: COL_GRID,
-  });
+  // straddle the grid line.
+  ds.marks.paint(dr, targets, chain, markStyle);
 }

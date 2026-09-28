@@ -16,10 +16,12 @@
  * in `docs/games/hints.md` § "Shade vs ring".
  */
 import { describe, expect, it } from "vitest";
+import { HintMarks, type MarkCell } from "./hint-mark.ts";
 import { Midend } from "./index.ts";
 import { gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
+import type { Color, Rect } from "./types.ts";
 
 const RENDERERS = import.meta.glob<Record<string, unknown>>("../games/*/render.ts", {
   eager: true,
@@ -172,4 +174,118 @@ describe("a hint marks beside the content, never behind it", () => {
       }
     });
   }
+});
+
+describe("HintMarks undoes a mark the way a fresh canvas never had it", () => {
+  // One cell on a gutter-colored backing, with a band that reaches inside the
+  // cell (Clusters, Group and Undead draw theirs that way).
+  const GUTTER = 1;
+  const FILL = 0;
+  const TARGET = 2;
+  const backing = (dr: RecordingDrawing) => {
+    dr.drawRect({ x: 0, y: 0, w: 30, h: 30 }, GUTTER);
+  };
+  const palette: Color[] = [
+    [0.8, 0.8, 0.8],
+    [0, 0, 0],
+    [0, 0, 1],
+    [0, 1, 1],
+  ];
+  const marked: MarkCell[] = [{ x: 0, y: 0 }];
+  // Every op here is a rect, so a canvas of palette indices is exact.
+  const paintOn = (px: Int8Array, rec: RecordingDrawing): Int8Array => {
+    for (const o of rec.ops) {
+      if (o.op !== "rect") throw new Error(`unexpected ${o.op}`);
+      for (let y = o.y; y < o.y + o.h; y++)
+        px.fill(o.color, y * 30 + o.x, y * 30 + o.x + o.w);
+    }
+    return px;
+  };
+  const differing = (a: Int8Array, b: Int8Array) =>
+    [...a.keys()]
+      .filter((i) => a[i] !== b[i])
+      .map((i) => `${i % 30},${Math.floor(i / 30)}`);
+
+  /**
+   * Mark cell (0,0), then drop the mark on the same HintMarks and canvas the
+   * way a game does — erase, repaint the tiles it names, restamp — and return
+   * that canvas beside a fresh paint of the second frame, plus what the erase
+   * named.
+   */
+  function dropMark(
+    band: { box: Rect; outer: number; inner: number },
+    tiles: Record<string, (dr: RecordingDrawing) => void>,
+    probe: number,
+  ) {
+    const style = { band: () => band, targetColor: TARGET, evidenceColor: 3 };
+    const board = (dr: RecordingDrawing) => {
+      backing(dr);
+      for (const t of Object.values(tiles)) t(dr);
+    };
+    const marks = new HintMarks();
+    const first = new RecordingDrawing(palette);
+    board(first);
+    marks.paint(first, marked, [], style);
+    const warm = paintOn(new Int8Array(900), first);
+    // Known positive: the mark really covered the pixel under test.
+    expect(warm[probe]).toBe(TARGET);
+
+    const second = new RecordingDrawing(palette);
+    const named = new Set<string>();
+    marks.eraseBeforeTiles(second, [], [], style, GUTTER, (x, y) =>
+      named.add(`${x},${y}`),
+    );
+    for (const k of named) tiles[k]?.(second);
+    marks.paint(second, [], [], style);
+    paintOn(warm, second);
+
+    const cold = new RecordingDrawing(palette);
+    board(cold);
+    new HintMarks().paint(cold, [], [], style);
+    return { warm, fresh: paintOn(new Int8Array(900), cold), named };
+  }
+
+  it("repaints the cell over a band that reaches inside it", () => {
+    // Clusters, Group and Undead: one pixel of gutter, three of the cell's edge.
+    const box = { x: 5, y: 5, w: 20, h: 20 };
+    const { warm, fresh } = dropMark(
+      { box, outer: 1, inner: 3 },
+      { "0,0": (dr) => dr.drawRect(box, FILL) },
+      (box.y + 1) * 30 + box.x + 10,
+    );
+    expect(differing(warm, fresh), "pixels a warm canvas shows differently").toEqual(
+      [],
+    );
+  });
+
+  it("repaints a neighbor whose tile paints under the band", () => {
+    // Keen's cage and Solo's sub-block: the band lies wholly outside cell A's
+    // box, but cell B widens its background two pixels into it.
+    const a = { x: 4, y: 10, w: 8, h: 8 };
+    const { warm, fresh, named } = dropMark(
+      { box: a, outer: 2, inner: 0 },
+      {
+        "0,0": (dr) => dr.drawRect(a, FILL),
+        "1,0": (dr) => dr.drawRect({ x: 12, y: 10, w: 10, h: 8 }, FILL),
+      },
+      12 * 30 + 12,
+    );
+    expect(named.has("1,0"), "the neighbor under the band is named").toBe(true);
+    expect(differing(warm, fresh)).toEqual([]);
+  });
+
+  it("does nothing before the tiles while the marks stand", () => {
+    const style = {
+      band: () => ({ box: { x: 5, y: 5, w: 20, h: 20 }, outer: 1, inner: 3 }),
+      targetColor: TARGET,
+      evidenceColor: 3,
+    };
+    const marks = new HintMarks();
+    marks.paint(new RecordingDrawing(palette), marked, [], style);
+    const again = new RecordingDrawing(palette);
+    let named = 0;
+    marks.eraseBeforeTiles(again, marked, [], style, GUTTER, () => named++);
+    expect(again.ops).toEqual([]);
+    expect(named).toBe(0);
+  });
 });

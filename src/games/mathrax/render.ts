@@ -20,6 +20,7 @@
  * are exactly upstream's.
  */
 
+import { valueBit } from "../../engine/candidate-bits.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import {
   ERROR,
@@ -45,7 +46,6 @@ import {
 import {
   HINT_AREA,
   HINT_TARGET,
-  hintMarkBit,
   type OrderedCell,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
@@ -179,8 +179,8 @@ export interface MathraxDrawState {
   tiles: Int32Array;
   /** `o²` Check-&-Save mistake overlay. */
   wrong: OverlaySidecar;
-  /** `o²` hint overlay: bit 0 = target cell, bit 1 = evidence, bits 2.. = the
-   * struck-candidate mask (`hintMarkBit(n)`). Owns the chain ordinal and the
+  /** `o²` hint overlay: bit 0 = target cell, bit 1 = evidence, and the struck
+   * candidates at `valueBit(n)` in its `struck` lane. Owns the chain ordinal and the
    * evidence outline lanes too (docs/games/rendering.md § "Overlay sidecars"). */
   hint: OverlaySidecar;
   /** The hint target's ring and the evidence region's outline. */
@@ -263,7 +263,7 @@ function drawTile(
   y: number,
   fs: number,
   wrong: boolean,
-  hint: number,
+  struck: number,
 ): void {
   const ts = ds.tileSize;
   const o = state.params.o;
@@ -272,7 +272,6 @@ function drawTile(
   // Of the hint overlay, a tile draws only `struck`, the candidates this firing
   // rules out. The target's ring and the evidence outline are painted after the
   // tile loop, unclipped, so a neighbor's repaint cannot bury them.
-  const struck = hint >> 2;
   const tx = origin(ts) + x * ts;
   const ty = origin(ts) + y * ts;
   const cell = { x: tx, y: ty, w: ts, h: ts };
@@ -442,7 +441,7 @@ export function redraw(
   const flash = flashTime > 0 ? Math.floor(flashTime / FLASH_FRAME) % 3 : -1;
   const index = (x: number, y: number): number => y * o + x;
   ds.wrong.packCells(mistakes ?? null, index);
-  ds.hint.pack(hint?.highlights ?? null, index, (m) => hintMarkBit(m.n));
+  ds.hint.pack(hint?.highlights ?? null, index, (m) => valueBit(m.n));
 
   for (let y = 0; y < o; y++) {
     for (let x = 0; x < o; x++) {
@@ -454,7 +453,7 @@ export function redraw(
 
       const tile = state.grid[i] | (state.pencil[i] << 4) | (fs << 14);
       if (ds.tiles[i] !== tile || ds.wrong.stale(i) || ds.hint.stale(i)) {
-        drawTile(dr, ds, state, x, y, fs, ds.wrong.at(i), ds.hint.packed[i]);
+        drawTile(dr, ds, state, x, y, fs, ds.wrong.at(i), ds.hint.struck[i]);
         ds.tiles[i] = tile;
         ds.wrong.commit(i);
         ds.hint.commit(i);

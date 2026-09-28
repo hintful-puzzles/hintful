@@ -115,14 +115,14 @@ export const say = {
   /** A set of cells inside `region` accounts for `ns`; with no region, the set
    * is a locked pattern across several lines.
    *
-   * The region-less arm speaks of the cells the step shades, because there is no
+   * The region-less arm speaks of the cells the step outlines, because there is no
    * region to name and the lines it used to point at were never marked. What it
    * claims is what the firing checks: in the columns those cells sit in, the
    * digit fits nowhere else, so each of their rows is spoken for. */
   set: (region: SoloRegion | null, ns: number[]): string =>
     region
       ? `Other cells in this ${regionName(region)} already account for ${all(ns)}`
-      : `Their columns fit ${all(ns)} only in the highlighted cells, leaving no other ${all(ns)} in their rows`,
+      : `Their columns fit ${all(ns)} only in the outlined cells, leaving no other ${all(ns)} in their rows`,
 
   // The shared chain sentence, with Solo's own region vocabulary — its chain
   // hops through blocks and diagonals as well as lines, so both the region that
@@ -193,8 +193,8 @@ function cageSum(origin: CageOrigin, clue: number): string {
     case "cage":
       return `This killer cage's open cells make ${clue}`;
     case "region":
-      return `This ${regionName(origin.region)}'s whole cages and digits leave ${clue} for the highlighted cells`;
+      return `This ${regionName(origin.region)}'s whole cages and digits leave ${clue} for the outlined cells`;
     case "outside":
-      return `${outsideRest(origin)}, so ${clue} for the highlighted ones`;
+      return `${outsideRest(origin)}, so ${clue} for the outlined ones`;
   }
 }

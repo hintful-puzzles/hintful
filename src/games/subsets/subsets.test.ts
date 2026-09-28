@@ -23,6 +23,7 @@ import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { seedBudget } from "../../engine/testing/slow.ts";
 import cReference from "./__fixtures__/subsets-c-reference.json" with { type: "json" };
 import { generateCandidate, newSubsetsDesc } from "./generator.ts";
@@ -658,5 +659,29 @@ describe("subsets rendering (tier 2.5)", () => {
       true,
     );
     expect(dr.ops).toMatchSnapshot();
+  });
+
+  // A cell's frame crosses the grid lines between its slots, which the slot
+  // squares do not cover, so the cell's repaint has to restore them.
+  it("a withdrawn cell frame leaves the canvas a fresh paint would show", () => {
+    const state = newState(PARAMS, FIX.desc);
+    const palette = subsetsGame.colors([1, 1, 1]);
+    const size = subsetsGame.computeSize(PARAMS, 36);
+    const frame = (ds: ReturnType<typeof newDrawState>, ui: SubsetsUi) => {
+      const dr = new RecordingDrawing(palette);
+      redraw(dr, ds, null, state, 1, ui, 0, 0);
+      return dr.ops;
+    };
+    const focused = { ...newUi(), highlightCell: 0 };
+
+    const warmDs = newDrawState(state, 36);
+    const warm = new BoxRaster(size.w, size.h);
+    warm.apply(frame(warmDs, focused));
+    warm.apply(frame(warmDs, newUi()));
+    const fresh = new BoxRaster(size.w, size.h);
+    fresh.apply(frame(newDrawState(state, 36), newUi()));
+
+    const differing = warm.px.filter((v, i) => v !== fresh.px[i]).length;
+    expect(differing).toBe(0);
   });
 });

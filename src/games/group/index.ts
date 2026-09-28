@@ -12,6 +12,7 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAllMove,
+  applyNoteMove,
   type CandidateMoveAdapter,
   type CandidatePlanPrefs,
   candidateHint,
@@ -306,7 +307,6 @@ function interpretMove(
 
 function executeMove(from: GroupState, move: GroupMove): GroupState {
   const w = from.w;
-  const a = w * w;
 
   switch (move.type) {
     case "solve": {
@@ -352,24 +352,11 @@ function executeMove(from: GroupState, move: GroupMove): GroupState {
       ret.dividers[move.i] = ret.dividers[move.i] === move.j ? -1 : move.j;
       return ret;
     }
-    case "pencilAll": {
-      const ret = cloneState(from);
-      const all = (1 << (w + 1)) - (1 << 1); // bits 1..w set
-      // Additive — fill only note-less empty cells, never reset a narrowed one:
-      // `candidate-hint.ts`'s `adaptiveMarkAll` § "The additive rule, stated once".
-      for (let i = 0; i < a; i++) {
-        if (!ret.grid[i] && ret.pencil[i] === 0) ret.pencil[i] = all;
-      }
-      return ret;
-    }
-    case "pencilStrike": {
-      const ret = cloneState(from);
-      for (const { x, y, n } of move.marks) ret.pencil[y * w + x] &= ~(1 << n);
-      return ret;
-    }
+    case "pencilAll":
+    case "pencilStrike":
     case "pencilAdd": {
       const ret = cloneState(from);
-      for (const { x, y, n } of move.marks) ret.pencil[y * w + x] |= 1 << n;
+      applyNoteMove(move, ret.grid, ret.pencil, w);
       return ret;
     }
     default:

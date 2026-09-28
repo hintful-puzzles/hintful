@@ -28,6 +28,7 @@ import {
   COL_GUESS,
   COL_HINT,
   COL_HINT_CELL,
+  COL_HINT_SPOT,
   newDrawState,
 } from "./render.ts";
 import {
@@ -162,6 +163,33 @@ describe("subsets rule-out input", () => {
     expect(press(s, u, CURSOR_UP)).toBe(UI_UPDATE);
     expect(u.tallyCursor).toBeNull();
     expect(u.highlightCell).toBe(cell);
+  });
+});
+
+describe("the reference aid repaints on a warm draw state", () => {
+  it("fills a cell's badge when it is clicked while the other aid lights it", () => {
+    // Both aids mark the cell alike, so its key once stayed the same and the
+    // badge never filled. A fresh draw state would repaint anyway; this one
+    // is reused.
+    const s = gen(DIFF_EASY, "badge-warm");
+    const cell = firstUndecided(s);
+    const set = candidateSets(s, cell)[0];
+    expect(candidateCells(s, set)).toContain(cell);
+    const ds = newDrawState(s, TS);
+    const ui = subsetsGame.newUi(s);
+    const frame = () => {
+      const rec = new RecordingDrawing(subsetsGame.colors(DEFAULT_BACKGROUND));
+      subsetsGame.redraw(rec, ds, null, s, 0, ui, 0, 0);
+      return rec.ops.filter((o) => o.op === "circle" && o.fill === COL_HINT_SPOT);
+    };
+    ui.highlightSet = set;
+    expect(frame()).toEqual([]);
+    ui.highlightSet = null;
+    ui.highlightCell = cell;
+    expect(frame()).toHaveLength(1);
+    ui.highlightCell = null;
+    ui.highlightSet = set;
+    expect(frame()).toEqual([]);
   });
 });
 

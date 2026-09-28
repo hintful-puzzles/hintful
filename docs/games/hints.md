@@ -709,6 +709,20 @@ naming it. A fold that can follow any deduction gets one fixed second sentence
 ("It runs straight on through the next white pearl too."), listed in
 `LONG_NARRATIONS`, rather than a rewrite of every sentence it can follow.
 
+### The help teaches the marks
+
+Every game with a hint has a `## Hints` section on its help page, and that
+section is where a mark's meaning lives, so the sentence can use it without
+defining it: what is ringed, outlined, striped or hatched *in that game*, which
+marks are the player's own notation and how to make them, and the words the
+sentences use for them ("an *open* square, in its words, is…"). Write it from
+the game's `hint-text.ts` and one rendered hint, never from memory: writing
+these sections found hints whose words and marks disagreed (a "striped column"
+drawn as rings in Boats, "highlighted cells" drawn as outlines in Solo, a
+rule-out dot in Spokes identical to a finished one). A change to what
+a hint draws or calls its marks updates the section in the same change;
+`src/help-coverage.test.ts` checks only that it is there.
+
 ### Hint the move that advances the goal
 
 A solver makes *every* forced deduction; a hint should offer the ones that
@@ -1697,11 +1711,20 @@ far **inside**. That is the one thing that genuinely differs between games, and
 it decides who undoes the mark:
 
 - **Outside** (`outer > 0`) — Keen and Solo have a `2·GRIDEXTRA + 1` gutter of
-  `COL_GRID` backing; Unequal has a `TILESIZE/2` gap. The mark costs the content
-  nothing. **No tile owns those pixels**, so `HintMarks` is told the gutter's
-  resting color: it paints a moved mark back, and **restamps a mark that stayed
-  every frame**, because a neighbor repainting for its own reasons widens its
-  background into the shared gutter and would clip a side off.
+  `COL_GRID` backing; Unequal has a `TILESIZE/2` gap; Clusters, Group and Undead
+  add one pixel of real gutter to a band that is otherwise inside. The mark costs
+  the content nothing. Every one of these games calls
+  `HintMarks.eraseBeforeTiles(…, gutterColor, overlaps)` **before** its tile
+  loop and dirties the tiles `overlaps` names; `paint` after the loop only
+  stamps, and **restamps a mark that stayed every frame**, because a neighbor
+  repainting for its own reasons can paint over a side. Before, because no color
+  painted after the tiles is right everywhere: a band's inside part is its
+  cell's own border, and Keen's cages and Solo's sub-blocks widen each cell's
+  background `GRIDEXTRA` under the outside part. Erasing first and letting every
+  tile the band touches repaint on top settles both. The erase runs when the
+  marks' *shape* changes — which cells, and which sides — so a side a joining
+  neighbor closes, or a mark a Group row reorder carries onto a cell that looks
+  the same, is dirtied without the game keying anything on it.
 - **Inside** (`outer = 0`) — Towers, Filling, Crossing, Dominosa and Salad tile
   exactly and draw their own per-cell outline, so the band replaces it. Nothing
   needs erasing: the cell whose overlay changed repaints itself and takes its
@@ -1722,7 +1745,8 @@ it decides who undoes the mark:
   go lives in the square that did not (Dominosa's `markSides` lane, Magnets'
   tile word).
 - **Both** — Group, Undead and Clusters have a one-pixel gutter plus a couple of
-  pixels of the cell's own edge.
+  pixels of the cell's own edge. The `outer` part makes them outside-band games:
+  they erase before the tiles like the rest, which also covers the inside part.
 - **Inset** — Galaxies and Palisade put the mark *inside* the cell body, because
   in those games the cell border is where a **wall** lives and a mark there would
   read as one.
@@ -2157,9 +2181,8 @@ costume. Eight games shipped exactly this
 
 **Declare each link's position and let the shared mechanism draw it.** A link
 carries `order` (`OrderedCell`, `engine/overlay-sidecar.ts`), the sidecar keeps
-it in an ordinal lane of its own — `hintMarkBit` already reaches bit 28 in Group,
-so there is no bit budget to borrow, and an ordinal is a small integer rather
-than a flag — and `drawHintOrdinal` (`engine/hint-ordinal.ts`) puts it in the
+it in an ordinal lane of its own — an ordinal is a small integer rather than a
+flag — and `drawHintOrdinal` (`engine/hint-ordinal.ts`) puts it in the
 tile's bottom-right corner in `HINT_ORDER`. Three things to know:
 
 - **Declare it as data, not as an array index.** The renderer reads `c.order`; a

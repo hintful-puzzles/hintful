@@ -176,6 +176,10 @@ A game (or a change to one) is done when **all** of these hold:
       ([`testing.md`](./testing.md)).
 - [ ] An explained hint meeting the quality bar ([`hints.md`](./hints.md)) —
       or its own follow-up change, opened, not implied.
+- [ ] A help page in the standard skeleton — rules, `## Controls`, `## Hints`
+      when there is a hint, `## <Name> parameters` last — which
+      `src/help-coverage.test.ts` holds to the game's `hint()` and
+      `paramConfig` ([`hints.md`](./hints.md) § "The help teaches the marks").
 - [ ] **Owner-accepted** full behavioral parity/quality — rendering,
       animation, input — never a green suite alone (§ "The acceptance gate").
 - [ ] The openspec change kept current and archived on acceptance

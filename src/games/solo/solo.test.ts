@@ -10,16 +10,29 @@
  * deterministic without running the (slow) generator.
  */
 import { describe, expect, it } from "vitest";
+import type { HintStep } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { leafPresets } from "../../engine/testing/hint-games.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  DEFAULT_BACKGROUND,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
+import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import cReference from "./__fixtures__/solo-c-reference.json" with { type: "json" };
 import { soloGame } from "./index.ts";
-import { COL_KILLER, COL_XDIAGONALS } from "./render.ts";
+import {
+  COL_KILLER,
+  COL_XDIAGONALS,
+  PREFERRED_TILE_SIZE,
+  type SoloDrawState,
+  type SoloHint,
+} from "./render.ts";
 import {
   checkValid,
   encodeParams,
   newState,
+  type SoloMove,
   type SoloParams,
   type SoloState,
 } from "./state.ts";
@@ -254,6 +267,36 @@ describe("solo render (initial frame)", () => {
       true,
     );
     expect(recording.ops).toMatchSnapshot();
+  });
+
+  // The ring's band crosses the one-pixel line into the neighbor's widened
+  // background inside a sub-block, so erasing it repaints that neighbor too.
+  it("a withdrawn hint ring leaves the canvas a fresh paint would show", () => {
+    const state = stateOf(STD);
+    const palette = soloGame.colors(DEFAULT_BACKGROUND);
+    const size = soloGame.computeSize(paramsOf(STD), PREFERRED_TILE_SIZE);
+    const ui = soloGame.newUi(state);
+    // (0, 4) shares its sub-block with (0, 3) above it.
+    const hint: HintStep<SoloMove, SoloHint> = {
+      move: { type: "set", x: 0, y: 4, n: 1, pencil: false },
+      explanation: "",
+      highlights: { area: [], targets: [{ x: 0, y: 4 }], marks: [] },
+    };
+    const frame = (ds: SoloDrawState, h?: typeof hint) => {
+      const rec = new RecordingDrawing(palette);
+      soloGame.redraw(rec, ds, null, state, 0, ui, 0, 0, h);
+      return rec.ops;
+    };
+
+    const warmDs = soloGame.newDrawState(state, PREFERRED_TILE_SIZE);
+    const warm = new BoxRaster(size.w, size.h);
+    warm.apply(frame(warmDs, hint));
+    warm.apply(frame(warmDs));
+    const fresh = new BoxRaster(size.w, size.h);
+    fresh.apply(frame(soloGame.newDrawState(state, PREFERRED_TILE_SIZE)));
+
+    const differing = warm.px.filter((v, i) => v !== fresh.px[i]).length;
+    expect(differing).toBe(0);
   });
 
   it("mistake overlay path runs cleanly on a correct board", () => {

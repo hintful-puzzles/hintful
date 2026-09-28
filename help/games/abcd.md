@@ -33,7 +33,7 @@ Most steps are the plain rules at work: a cell with only one pencil mark left, a
 
 ## ABCD parameters
 
-These parameters are available from the ‘Custom…’ option on the ‘Type’ menu. 
+These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu. 
 
 <dl>
 	<dt>Width, Height</dt>

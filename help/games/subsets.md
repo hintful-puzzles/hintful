@@ -27,6 +27,19 @@ With a keyboard, move the cursor down past the bottom row of the grid into the t
 
 Check & Save treats a set ruled out of the cell it belongs in as a mistake.
 
+## Hints
+
+**Hint** explains the next step rather than simply making it, one letter or one ruled-out set at a time. It reasons only from the horseshoes, the given sets and your own letters and rule-outs, so it carries on from wherever you are, as long as none of those is wrong. If one breaks a rule, it asks you to fix the highlighted mistakes first; if one is wrong without breaking any rule yet, it says your entries contradict each other, and you can undo or clear the ones you are unsure of.
+
+In its words, to *mark* a letter *present* is to add it (left-click its position, or Enter), and to *clear* a letter is to rule it out (right-click, or Space).
+
+* **A frame in the hint color around one letter's position** is the letter the step decides. A step that rules a whole set out frames the whole cell instead, and boxes that set in the tally.
+* **A frame in a second color** around a cell is what the hint calls "the highlighted cell": the neighbor across a horseshoe it reasons from, or a cell where a set is already placed.
+* **Sets boxed in the tally in that second color** are "the highlighted sets": the sets the step is counting, such as the only ones that can still go in the cell.
+* **A cell framed in the spotlight color** (the one *Where can this go?* uses) is the one cell a set still fits, when the hint says a set can go nowhere else.
+
+While a hint is on show, the tally strikes through the sets already ruled out of the cell the step is about, just as it does for a cell in focus.
+
 The hint rules sets out too, when a deduction needs it, and says why. The usual reason is a horseshoe: the set at its open end must be strictly bigger than the set at its closed end. So a set can't go at the open end if none of the sets that can still go at the closed end fits inside it with room to spare, and a set can't go at the closed end if none of the sets that can still go at the open end holds it and more.
 
 ## Subsets parameters

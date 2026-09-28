@@ -25,16 +25,42 @@ To place a line without dragging the mouse, left-click to place a vertical line 
 
 To play with a keyboard, use the arrow keys to move the cursor. Press Enter to place a vertical line, and press Space to place a horizontal line.
 
+## Hints
+
+**Hint** explains the next step rather than simply making it. It reasons
+only from the numbers and the lines you have placed, so it carries on from
+wherever you are, as long as none of your lines is wrong; if one is, it
+asks you to fix the highlighted mistakes first.
+
+* **A line in the hint color** shows the line the step asks you to place,
+  running the way it must go: across for horizontal, up and down for
+  vertical.
+* **An outline in a second color** marks the cells the step reasons from:
+  the cells a numbered line runs through or could still reach, or a black
+  cell together with the lines already running into it or the cells beside
+  it where one still could.
+
+Every step rules one direction out and so leaves the other. The hint
+names the square by its number when it has one ("this 2 must be
+vertical"), and a black cell's number as "the black 2". The reasons it
+gives are the rules: a line that would grow too long for its number, one
+that would leave a number too little room to reach its length, one that
+would join two numbers into a single line, one that would run into a
+black cell that already has all its lines, and one that would close off a
+side a black cell still needs, which the hint calls an *open side*. When
+one number rules out several squares, the hint walks through them one at
+a time as a single step.
+
 ## Sticks parameters
 
-These parameters are available from the ‘Custom…’ option on the ‘Type’ menu.
+These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
 
 <dl>
 	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares.</dd>
+	<dd>Size of the grid in squares, at least 2 each way.</dd>
 	<dt>%age of black squares</dt>
-	<dd>Rough percentage of black squares in the grid.</dd>
+	<dd>Rough percentage of black squares in the grid, from 5 to 100.</dd>
 	<dt>Symmetry</dt>
-	<dd>Allows you to specify the required symmetry of the black squares in the grid.</dd>
+	<dd>The pattern the black squares follow. <em>None</em> places them freely. <em>2-way mirror</em> makes the bottom half a mirror image of the top half, and <em>2-way rotational</em> makes the grid look the same turned upside down. <em>4-way mirror</em> mirrors top to bottom and left to right, and <em>4-way rotational</em> makes the grid look the same after a quarter turn, which needs a square grid.</dd>
 </dl>
 

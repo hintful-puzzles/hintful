@@ -11,9 +11,15 @@
 
 import { describe, expect, it } from "vitest";
 import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  DEFAULT_BACKGROUND,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
+import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { groupGame } from "./index.ts";
 import { COL_DIAGONAL, COL_GRID, COL_HINT, COL_HINT_CELL } from "./render.ts";
+import type { GroupMove } from "./state.ts";
 
 // A 6x6 identity-shown board (group-trace-5 fixture): the identity row/column
 // are given, so the frame exercises legend, diagonal, and immutable digits.
@@ -109,5 +115,76 @@ describe("group render scenarios", () => {
     for (const s of evidence) expect(isThin(s)).toBe(true);
 
     expect(frame.recording.ops).toMatchSnapshot();
+  });
+});
+
+describe("group hint marks on a warm canvas", () => {
+  // An empty board, so any two rows look alike to the tile cache.
+  const [params, desc] = ID.split(":");
+  const p = groupGame.decodeParams(params);
+  const given = groupGame.newState(p, desc);
+  const blank = {
+    ...given,
+    grid: new Uint8Array(given.grid.length),
+    pencil: new Int32Array(given.pencil.length),
+    immutable: new Uint8Array(given.immutable.length),
+  };
+  const ts = groupGame.preferredTileSize ?? 32;
+  const size = groupGame.computeSize(p, ts);
+  const palette = groupGame.colors(DEFAULT_BACKGROUND);
+  const hintOver = (area: { x: number; y: number }[]) => ({
+    move: { type: "set", cells: [], n: 0 } satisfies GroupMove,
+    explanation: "",
+    highlights: { area, targets: [], marks: [] },
+  });
+  const paint = (
+    raster: BoxRaster,
+    ds: ReturnType<typeof groupGame.newDrawState>,
+    state: typeof blank,
+    hint: ReturnType<typeof hintOver>,
+  ) => {
+    const rec = new RecordingDrawing(palette);
+    groupGame.redraw(rec, ds, null, state, 0, groupGame.newUi(state), 0, 0, hint);
+    raster.apply(rec.ops);
+  };
+  /** Paint `frames` in order on one draw state, and the last on a fresh one. */
+  const mismatch = (frames: [typeof blank, ReturnType<typeof hintOver>][]) => {
+    const ds = groupGame.newDrawState(blank, ts);
+    const warm = new BoxRaster(size.w, size.h);
+    for (const [s, h] of frames) paint(warm, ds, s, h);
+    const fresh = new BoxRaster(size.w, size.h);
+    const [s, h] = frames[frames.length - 1];
+    paint(fresh, groupGame.newDrawState(blank, ts), s, h);
+    return [...warm.px.keys()].filter((i) => warm.px[i] !== fresh.px[i]).length;
+  };
+
+  it("a reorder moves a mark onto a cell that looks the same, and both repaint", () => {
+    const swapped = { ...blank, sequence: blank.sequence.slice() };
+    [swapped.sequence[1], swapped.sequence[2]] = [
+      swapped.sequence[2],
+      swapped.sequence[1],
+    ];
+    const hint = hintOver([{ x: 1, y: 1 }]);
+    expect(
+      mismatch([
+        [blank, hint],
+        [swapped, hint],
+      ]),
+    ).toBe(0);
+  });
+
+  it("a neighbor joining the area closes a side of a cell whose overlay held", () => {
+    expect(
+      mismatch([
+        [blank, hintOver([{ x: 1, y: 1 }])],
+        [
+          blank,
+          hintOver([
+            { x: 1, y: 1 },
+            { x: 2, y: 1 },
+          ]),
+        ],
+      ]),
+    ).toBe(0);
   });
 });

@@ -175,6 +175,40 @@ it is a repaint cache, not a wire format, so nothing outside the renderer
 constrains its type. Do it as a deliberate step and say so in a comment, because
 the failure mode of getting it wrong is silence.
 
+### A tile paints only its own box, and tiles that share pixels repaint together
+
+**A warm frame must look like a fresh paint of the same state**, and
+`src/engine/warm-repaint.test.ts` holds every game to it by driving a real
+`Midend` through seeded input and comparing each frame with its fresh twin
+(`engine/testing/repaint-differential.ts`). Every way a cache goes wrong shows
+up there as the same symptom, whatever the cause. When it convicts a game, the
+cause has so far always been one of these:
+
+- **An input the key does not carry.** The painter reads something (a `Ui`
+  field, a mode) that no key term names. Subsets' inspect badge read
+  `ui.highlightCell`; the fix gave it a bit of its own and made the painter read
+  that bit, so what it shows cannot leave the key.
+- **A field wider than its lane.** A shift counts mod 32, so a value past bit 31
+  lands on another field. Candidate masks go through `engine/candidate-bits.ts`,
+  which throws instead.
+- **A tile painting outside its box.** Magnets drew a domino half one pixel into
+  its partner, so the half repainting alone overwrote the partner's edge. Paint
+  to `ts - 1`, and let the neighbor fill from its own edge.
+- **Pixels two tiles share, repainted by one.** A shared border row, or a mark
+  band laid over the border, belongs to both tiles, and a fresh paint settles it
+  in loop order. Netslide's sliding line painted over the border it shares with
+  the line beside it; the fix repaints that line too while the slide runs.
+  `HintMarks` erasing a removed band over a cell that had just repainted was the
+  engine's own case of it; the answer is to erase *before* the tile loop
+  (`eraseBeforeTiles`) and let every tile the band touches repaint on top —
+  [`hints.md`](hints.md) § "Where the band goes, and who rubs it out".
+
+Read the report before the code: it names the frame, the event before it, the
+first differing pixel, what each canvas shows there and which frame painted
+the warm one. And suspect the instrument too — it is a raster of inks, exact
+for rects, polygons, circles and one-pixel strokes, estimated for text and thick
+lines, and each of its approximations has convicted an innocent game once.
+
 ### Prove the overlay repaints
 
 **A cold-frame test proves nothing about an overlay.** On frame 1 every cell

@@ -20,6 +20,7 @@ import ts from "typescript";
 import { beforeAll, describe, expect, it } from "vitest";
 import { difficultyTiers } from "./engine/difficulty.ts";
 import { getTsGame, registeredGameIds } from "./engine/registry.ts";
+import { HINT_GAMES } from "./engine/testing/hint-games.ts";
 // Registers every ported game; `beforeAll` re-runs it in case a sibling file
 // reset the shared registry under `isolate: false`.
 import { registerAllGames } from "./games/index.ts";
@@ -59,6 +60,88 @@ describe("help page coverage", () => {
 
   it("is not vacuous — the glob found the pages", () => {
     expect(pageIds.length).toBeGreaterThan(50);
+  });
+});
+
+describe("every game's page has the one skeleton", () => {
+  // The rules, unheaded; `## Controls`; any sections of the game's own; then
+  // `## Hints` when the game has a hint, and `## <Name> parameters` last. Every
+  // part of that is read off the game, never off a list: `hint()` decides the
+  // Hints section and `paramConfig` decides what the parameters section names.
+  //
+  // A hint's sentence names its marks ("the hatched and outlined regions", "the
+  // ringed dot"), and a player who was never told what they mean has to decode
+  // them on the spot, which is what the Hints section is for. The check on it
+  // is PRESENCE, NOT CONTENT: a heading proves a section exists and nothing
+  // about whether it teaches the marks. What it says is held to the game's own
+  // `hint-text.ts` by whoever writes either.
+  //
+  // The parameters check is a content check, and a sound one, because it keys
+  // on the labels the Custom dialog itself shows: a field the dialog offers
+  // that the page never names is exactly the gap AGENTS.md § "Documentation"
+  // found in Unequal's Adjacent mode. A choice is held too when it is a word
+  // rather than a value ("Adjacent", not "5%"). Tier names are the exception,
+  // derived from the difficulty item the game already declares: they mean the
+  // same in every game and `features.md` says what, once.
+  const hinted = new Set(HINT_GAMES.map(([id]) => id));
+
+  function sections(page: string): string[] {
+    return [...page.matchAll(/^## (.+)$/gm)].map((m) => m[1].trim());
+  }
+
+  function parametersSection(page: string, heading: string): string {
+    const at = page.indexOf(`\n## ${heading}\n`);
+    if (at < 0) return "";
+    const rest = page.slice(at + 1);
+    const next = rest.indexOf("\n## ", 1);
+    return next < 0 ? rest : rest.slice(0, next);
+  }
+
+  /** What a page's parameters section must name, read off the dialog. */
+  function namesOwed(id: string): string[] {
+    const game = getTsGame(id);
+    if (!game) throw new Error(`${id} is not registered`);
+    const tiers = difficultyTiers(game);
+    const owed: string[] = [];
+    for (const item of game.paramConfig ?? []) {
+      owed.push(item.name);
+      if (item.type === "choices" && item.choices !== tiers)
+        owed.push(...item.choices.filter((c) => /[a-z]/i.test(c)));
+    }
+    return owed;
+  }
+
+  it("is not vacuous — the registry offered hinted games and dialog fields", () => {
+    expect(hinted.size).toBeGreaterThan(30);
+    expect(puzzleIds.flatMap(namesOwed).length).toBeGreaterThan(150);
+  });
+
+  it.each(puzzleIds)("%s: has its sections, in order", (id) => {
+    const page = helpPages[`../help/games/${id}.md`] ?? "";
+    const name = puzzleDataMap[id].name;
+    const have = sections(page);
+    const where = (h: string) => have.indexOf(h);
+    const params = `${name} parameters`;
+
+    expect(where("Controls"), `help/games/${id}.md has no "## Controls"`).toBe(0);
+    if (hinted.has(id))
+      expect(where("Hints"), `${id} has a hint, and no "## Hints"`).toBeGreaterThan(0);
+    else expect(where("Hints"), `${id} has no hint, but a "## Hints"`).toBe(-1);
+    expect(have.at(-1), `the last section is "## ${params}"`).toBe(params);
+    expect(have.filter((h) => h === params)).toHaveLength(1);
+    if (hinted.has(id)) expect(where("Hints")).toBe(have.length - 2);
+  });
+
+  it.each(puzzleIds)("%s: names every field its Custom dialog offers", (id) => {
+    const name = puzzleDataMap[id].name;
+    const section = parametersSection(
+      helpPages[`../help/games/${id}.md`] ?? "",
+      `${name} parameters`,
+    ).toLowerCase();
+    const missing = namesOwed(id).filter((n) => !section.includes(n.toLowerCase()));
+    expect(missing, `help/games/${id}.md § "${name} parameters" never names`).toEqual(
+      [],
+    );
   });
 });
 

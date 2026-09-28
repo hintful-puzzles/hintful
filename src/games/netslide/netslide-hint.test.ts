@@ -637,14 +637,13 @@ describe("the hint marks while the hinted slide animates", () => {
   const border = (ts: number) => Math.floor((3 * ts) / 4) + 1;
 
   /** The top side of the hinted **tile's** double ring, by its distinctive size:
-   * it spans the whole tile frame, where the destination's outline is inset past
-   * the tile border. */
+   * it spans the tile's face, where the destination's outline is inset past it. */
   function hintFill(ops: RecordingDrawing["ops"]) {
     return ops.find(
       (op) =>
         op.op === "rect" &&
         op.color === COL_HINT &&
-        op.w === TS + TILE_BORDER &&
+        op.w === TS - TILE_BORDER &&
         op.h === Math.max(2, Math.round(TS / 16)),
     );
   }
@@ -723,7 +722,32 @@ describe("the hint marks while the hinted slide animates", () => {
 
     const fill = hintFill(rec.ops);
     expect(fill, "the hinted tile carries no mark at all").toBeDefined();
-    expect(fill).toMatchObject({ x: bx, y: by });
+    expect(fill).toMatchObject({ x: bx + TILE_BORDER, y: by + TILE_BORDER });
+  });
+
+  it("repaints the lines beside a sliding line, whose shared border it paints over", () => {
+    const { after, slide, rec } = animatingFrame();
+    const across = slide.axis === "row" ? after.h : after.w;
+    const along = slide.axis === "row" ? after.w : after.h;
+    const beside = [slide.index - 1, slide.index + 1].filter(
+      (k) => k >= 0 && k < across,
+    );
+    expect(beside.length).toBeGreaterThan(0);
+
+    // A tile's repaint starts by blanking its whole frame, borders included.
+    const blanks = opsOfKind(rec.ops, "rect").filter(
+      (o) => o.w === TS + TILE_BORDER && o.h === TS + TILE_BORDER,
+    );
+    for (const k of beside) {
+      for (let j = 0; j < along; j++) {
+        const [x, y] = slide.axis === "row" ? [j, k] : [k, j];
+        const at = { x: border(TS) + TS * x, y: border(TS) + TS * y };
+        expect(
+          blanks.some((o) => o.x === at.x && o.y === at.y),
+          `tile ${x},${y} beside the slide was not repainted`,
+        ).toBe(true);
+      }
+    }
   });
 
   it("leaves the destination mark where the destination is", () => {

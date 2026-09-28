@@ -130,8 +130,11 @@ export function noteText(
 ): string {
   const { noun, placedVerb, regions } = vocab;
   const cell = vocab.cell ?? "cell";
+  // The noun is a word ("element"), not a letter name, so `indefinite` would
+  // misread it ("an number").
+  const a = /^[aeiou]/i.test(noun) ? "an" : "a";
   if (every)
-    return `Nothing in this ${cell}'s ${regions} rules out a ${noun} yet, so pencil in every one.`;
+    return `Nothing in this ${cell}'s ${regions} rules out ${a} ${noun} yet, so pencil in every one.`;
   const one = values.length === 1;
   return `Only ${joinWith([...values])} ${one ? "isn't" : "aren't"} already ${placedVerb} in this ${cell}'s ${regions}, so pencil ${one ? "it" : "them"} in.`;
 }

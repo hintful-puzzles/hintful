@@ -114,7 +114,7 @@ export function validateParams(p: PegsParams, full: boolean): string | null {
   if (full && p.type === TYPE_CROSS) {
     const side = (n: number) => n === 5 || n === 7 || n === 9;
     if (!side(p.w) || !side(p.h) || (p.w === 5 && p.h === 5)) {
-      return "This board type is only supported at 5×7, 5×9, 7×7, 7×9, and 9×9";
+      return "This board type needs each side to be 5, 7 or 9, and not both 5";
     }
   }
   if (full && p.type === TYPE_OCTAGON && (p.w !== 7 || p.h !== 7)) {

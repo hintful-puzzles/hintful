@@ -1,3 +1,4 @@
+import { valuesOneTo } from "../../engine/candidate-bits.ts";
 import {
   type CandidateReading,
   DEFAULT_CANDIDATE_READING,
@@ -361,7 +362,7 @@ export function checkErrors(state: TowersState, errors?: Uint8Array): boolean {
 
   if (errors) errors.fill(0);
 
-  const full = (1 << (w + 1)) - (1 << 1); // bits 1..w set
+  const full = valuesOneTo(w);
 
   // Row duplicates.
   for (let y = 0; y < w; y++) {

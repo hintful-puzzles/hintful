@@ -138,6 +138,16 @@ const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
       "min/max or combination rung on that sum (`teach-solo-cage-splits`).",
   },
   {
+    games: ["rome"],
+    match: /^Its \w+ neighbor in this area can only point \w+ or \w+: /,
+    why:
+      "Rome's opposite rule has two branches, and dropping either is a " +
+      "non-sequitur: an arrow into a square that can only point along its " +
+      "axis is either pointed straight back at (a loop) or repeated (a second " +
+      "arrow of that direction in the area), and the same-area premise is what " +
+      "makes the second one illegal.",
+  },
+  {
     games: ["singles"],
     match: /^There's a pair of \d+s in one (?:column|row)/,
     why:

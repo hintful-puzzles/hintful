@@ -20,6 +20,7 @@
  * solution `aux` string, never in the desc.
  */
 
+import { valuesOneTo } from "../../engine/candidate-bits.ts";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
 import { tierNames } from "../../engine/difficulty.ts";
@@ -437,7 +438,7 @@ export function checkErrors(state: GroupState, errors?: Int32Array): boolean {
         errmask |= mask & bit;
         mask |= bit;
       }
-      if (mask !== (1 << (w + 1)) - (1 << 1)) {
+      if (mask !== valuesOneTo(w)) {
         errs = true;
         errmask &= ~1;
         if (errors) {

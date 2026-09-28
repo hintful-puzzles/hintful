@@ -327,11 +327,8 @@ function noDanglingEdges(ctx: SolverCtx): boolean {
       // The four cells meeting at this vertex, highlighting "this corner".
       const corner = ctx.record ? [i, i - 1, i - w, j] : undefined;
 
-      if (4 - noline === 1) {
-        ctx.disconnect(e, de, corner);
-        changed = true;
-        continue;
-      }
+      // Exactly one unconnected pair cannot happen: three connected pairs round
+      // a vertex put all four squares in one class, the fourth pair included.
       if (4 - noline !== 2) continue;
 
       if (borders[e] & BORDER(de)) {

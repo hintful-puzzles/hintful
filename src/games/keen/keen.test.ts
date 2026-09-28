@@ -9,6 +9,7 @@
  * mistake overlay, each with targeted op assertions plus a snapshot.
  */
 import { describe, expect, it } from "vitest";
+import type { HintStep } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -17,9 +18,17 @@ import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
+import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { newKeenDesc } from "./generator.ts";
 import { keenGame } from "./index.ts";
-import { COL_ERROR, COL_PENCIL_BODY, newDrawState, redraw } from "./render.ts";
+import {
+  COL_ERROR,
+  COL_PENCIL_BODY,
+  type KeenDrawState,
+  type KeenHint,
+  newDrawState,
+  redraw,
+} from "./render.ts";
 import { solveKeen } from "./solver.ts";
 import {
   C_DIV,
@@ -30,6 +39,7 @@ import {
   decodeParams,
   diffToLevel,
   encodeParams,
+  type KeenMove,
   type KeenParams,
   type KeenState,
   newState,
@@ -391,6 +401,42 @@ describe("keen render", () => {
     const after = new RecordingDrawing(palette);
     me.redraw(after);
     expect(after.ops.some((o) => o.op === "line" && o.color === COL_ERROR)).toBe(true);
+  });
+
+  // The ring's band crosses the one-pixel line into the neighbor's widened
+  // background inside a cage, so erasing it repaints that neighbor too.
+  it("a withdrawn hint ring leaves the canvas a fresh paint would show", () => {
+    const st = newState(P4, D4);
+    const ts = keenGame.preferredTileSize ?? 48;
+    const palette = keenGame.colors(DEFAULT_BACKGROUND);
+    const size = keenGame.computeSize(P4, ts);
+    const ui = newUi(st);
+    const w = P4.w;
+    const cell = [...Array(w * w).keys()].find(
+      (i) => i % w < w - 1 && st.clues.dsf.equivalent(i, i + 1),
+    );
+    if (cell === undefined) throw new Error("no two cells side by side share a cage");
+    const target = { x: cell % w, y: Math.floor(cell / w) };
+    const hint: HintStep<KeenMove, KeenHint> = {
+      move: { type: "set", ...target, n: 1, pencil: false },
+      explanation: "",
+      highlights: { area: [], targets: [target], marks: [] },
+    };
+    const frame = (ds: KeenDrawState, h?: typeof hint) => {
+      const rec = new RecordingDrawing(palette);
+      redraw(rec, ds, null, st, 0, ui, 0, 0, h);
+      return rec.ops;
+    };
+
+    const warmDs = newDrawState(st, ts);
+    const warm = new BoxRaster(size.w, size.h);
+    warm.apply(frame(warmDs, hint));
+    warm.apply(frame(warmDs));
+    const fresh = new BoxRaster(size.w, size.h);
+    fresh.apply(frame(newDrawState(st, ts)));
+
+    const differing = warm.px.filter((v, i) => v !== fresh.px[i]).length;
+    expect(differing).toBe(0);
   });
 });
 

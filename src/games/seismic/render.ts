@@ -27,6 +27,7 @@
  * the engine puts the indicator in.
  */
 
+import { valueBit } from "../../engine/candidate-bits.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import {
   ERROR,
@@ -50,7 +51,6 @@ import {
 import {
   HINT_AREA,
   HINT_TARGET,
-  hintMarkBit,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
 import {
@@ -173,7 +173,7 @@ export interface SeismicDrawState {
   /** The Check-&-Save mistake overlay. */
   wrong: OverlaySidecar;
   /** The displayed hint: target and evidence bits, and each struck note at
-   * `hintMarkBit(n)`. */
+   * `valueBit(n)` in the `struck` lane. */
   hint: OverlaySidecar;
   /** The hint's rings and outline, painted once per frame after the tiles. */
   marks: HintMarks;
@@ -405,7 +405,7 @@ export function redraw(
 
   const index = (x: number, y: number): number => y * w + x;
   ds.wrong.packCells(mistakes ?? null, index);
-  ds.hint.pack(hint?.highlights ?? null, index, (m) => hintMarkBit(m.n));
+  ds.hint.pack(hint?.highlights ?? null, index, (m) => valueBit(m.n));
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -426,7 +426,7 @@ export function redraw(
         (highlight << 18);
 
       if (ds.tiles[i] !== tile || ds.wrong.stale(i) || ds.hint.stale(i)) {
-        const struck = ds.hint.packed[i] >> 2;
+        const struck = ds.hint.struck[i];
         drawTile(dr, ds, state, x, y, color, highlight, ds.wrong.at(i), struck);
         ds.tiles[i] = tile;
         ds.wrong.commit(i);

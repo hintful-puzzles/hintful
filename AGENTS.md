@@ -434,7 +434,7 @@ Explained hints are a core deliberate-divergence product value of this fork, not
 5. **Claim only what you have checked, and make the plan recompute-stable.** Every sentence a hint utters is a claim; if it isn't verified in code, it is a lie waiting to be read by a player who trusts it ("no slide from here reaches it" was *assumed* in Inertia's design and is false — a plan can decline a grab it could take). And a *heuristic* plan must not merely be correct but **stable across recomputes**: a plan is recomputed whenever the player goes their own way, and Inertia's first cut sent the ball north-east, then — one move later, from a freshly-grown heuristic tour — south-west, for ever. The fix is a monotone potential (go for the nearest goal you can safely take), never "cache the plan", which only hides it. Guarded cross-game by `hint-resume.test.ts`; see [`docs/games/hints.md`](docs/games/hints.md) § "Recompute-stable plans".
 6. **A hint relies only on marks the player can make** (owner, 2026-09-15). A hint exists to teach the player to solve the next board alone, so every fact a step rests on must be something the player can see on the board or put there with the game's own input. If a tier's deductions need a kind of mark the game does not offer, give the player that notation and make the hint's steps place those marks as moves. Never ship a hint-only overlay of facts the player has no way to record, however clearly it draws them: it shows reasoning the player cannot reproduce. **If a notation would genuinely be too hard to manage, the fallback is the tier, not the hint:** the difficulty that needs it becomes `Unreasonable`, where the hint refuses and says deduction has run out instead of teaching reasoning the player cannot record. Loopy's corners and pairs of edges are the case that established this (`add-loopy-notation`); see [`docs/games/hints.md`](docs/games/hints.md) § "Give the facts a notation (Loopy)".
 
-**A non-deductive game is not exempt from the bar** — it is exempt only from *deduction*. Untangle has genuinely nothing to say and ships an empty explanation; **Inertia** (the non-deductive exemplar, `add-inertia-hint`, owner-endorsed 2026-07-13) shows the other pole: find the one thing the game can *prove* (there, "this gem can never be reached again") and lead with it, hold a stable subgoal and mark it when the game has no name for it, and narrate each move by the consequence it actually has.
+**A non-deductive game is not exempt from the bar** — it is exempt only from *deduction*. Untangle has no forced move, so it narrates a measurement it can check instead: what the move does to the point's crossings ([`docs/games/hints.md`](docs/games/hints.md) § "Non-deductive (heuristic) hints"); **Inertia** (the non-deductive exemplar, `add-inertia-hint`, owner-endorsed 2026-07-13) shows the other pole: find the one thing the game can *prove* (there, "this gem can never be reached again") and lead with it, hold a stable subgoal and mark it when the game has no name for it, and narrate each move by the consequence it actually has.
 
 **A new game implementation ships with a hint** (owner, 2026-09-04). That is the forward-looking bar, and it is not retroactive: **a game `HINT_GAMES` leaves out is deliberately being left hintless for now**, because implementing those hints is how the framework work gets assessed — a target contract is tested by writing real hints against it, not by re-reading the games that already have one. So a hintless game is not a defect to be swept up, and the corpus is characterized rather than closed — `characterize-the-hint-assessment-corpus`'s `audit.md` classified the hintless games of its day into seven shapes, said per game what a hint there would press on, and recommended the order to take them in. **Pick from it rather than alphabetically**: the point of characterizing was to be able to choose the game that presses hardest on whatever is being tested, and the cheapest hint in the corpus is the worst assessment. Enrollment in the cross-game hint guards is derived from the `hint()` declaration itself (`src/engine/testing/hint-games.ts`), so a game acquires every guard the moment it acquires a hint, and none before.
 
@@ -744,14 +744,21 @@ presets. An omission inherited from a fragment is ours to fix; "keeps
 upstream's wording" protects the words that are there, not the ones that never
 were.
 
-**Do not try to guard this by sweeping preset-title vocabulary against the
-page.** It was measured: filtering out sizes and tier names still flagged 18 games
-— Loopy's fifteen grid names, Cube's solids, Pegs' board shapes, "free ends",
-"multiplication only" — for the one real gap, and nothing mechanically separates
-a rule mode from a board shape without a manifest. Cube's page passed on the
-merits while failing the sweep, because it says "other regular solids" rather
-than "Octahedron". Read the presets menus instead; they are a readable
-population, and reading them is what found the one.
+**Every page has one skeleton, and the game decides what it owes**: the rules,
+unheaded; `## Controls`; any sections of the game's own; `## Hints` exactly when
+the game has a `hint()`; and `## <Name> parameters` last, naming every field the
+Custom dialog offers and every choice that is a word. `src/help-coverage.test.ts`
+reads all of that off the registered game. The parameters half is where a
+missing mode now fails, because it keys on the dialog's own labels (`paramConfig`),
+which is what a player picks from. **A preset-title sweep is not that guard and
+never was**: filtering sizes and tier names out of preset titles still flagged 18
+games for one real gap, because a title is a label someone composed, not the
+field it sets. Key on the field.
+
+**A Hints section is checked for presence, not content.** It says what the hint's
+marks mean in that game, which of them are the player's own notation, and the
+words its sentences use for them; so a change to a hint's marks or words updates
+that section in the same change.
 
 Update `/help` when adding features that diverge from upstream.
 

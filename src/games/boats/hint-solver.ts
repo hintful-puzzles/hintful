@@ -1075,12 +1075,16 @@ function findRefuted(ctx: Ctx): BoatsFiring | null {
         const forced: BoatsSquare = vertical
           ? { x, y: y + 1, ship: false }
           : { x: x + 1, y, ship: false };
-        const f = firing(
-          ctx,
-          { kind: "refuted", trialShip: true, breach: found.breach },
-          [forced],
-          [{ x, y }, ...found.cells],
-        );
+        // A count breach names its line, so the line is hatched, as above.
+        const kind = {
+          kind: "refuted",
+          trialShip: true,
+          breach: found.breach,
+        } as const;
+        const f =
+          found.breach.kind === "count"
+            ? firing(ctx, kind, [forced], [{ x, y }], found.cells)
+            : firing(ctx, kind, [forced], [{ x, y }, ...found.cells]);
         if (f) return f;
       }
     }

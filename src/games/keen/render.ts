@@ -13,6 +13,7 @@
  * overlay tracked in a sidecar so Check & Save repaints an already-drawn cell.
  */
 
+import { valueBit } from "../../engine/candidate-bits.ts";
 import {
   ERROR,
   HINT_ACTION,
@@ -37,7 +38,6 @@ import {
 import {
   HINT_AREA,
   HINT_TARGET,
-  hintMarkBit,
   type OrderedCell,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
@@ -162,7 +162,7 @@ export interface KeenDrawState {
   /** `w²` scratch error flags, refilled each redraw by `checkErrors`. */
   errors: Int32Array;
   /** `w²` hint-overlay sidecar (fork addition): bit 0 = target cell, bit 1 =
-   * evidence, bits 2.. = struck-candidate mask (`hintMarkBit(n)`). Owns the
+   * evidence, struck candidates at `valueBit(n)` in its `struck` lane. Owns the
    * repack/stale/commit dance that keeps the overlay in the cache diff key
    * (docs/games/rendering.md § "The tile cache and the diff key"). */
   hint: OverlaySidecar;
@@ -172,8 +172,9 @@ export interface KeenDrawState {
   /** Whether the pencil-mode indicator was on last frame (fork addition). */
   pencilModeShown: boolean | null;
   /** The hint target's ring and the evidence region's outline (fork additions),
-   * both drawn in the **gutter**, which no tile repaints — so their removal is
-   * driven from here rather than from the tile cache. See {@link markBand}. */
+   * both drawn in the **gutter**, which a tile paints into only inside a cage —
+   * so their removal is driven from here, before the tiles repaint. See
+   * {@link markBand}. */
   marks: HintMarks;
 }
 
@@ -213,7 +214,7 @@ function drawTile(
   // here, crossed through among the marks. The target's ring and the evidence
   // region's outline are drawn by `redraw` in the gutter, so a hint never
   // paints over the digits it is talking about.
-  const struck = ds.hint.packed[cell] >> 2; // bit n ⇒ candidate n struck
+  const struck = ds.hint.struck[cell]; // bit n ⇒ candidate n struck
 
   const tx = border(ts) + x * ts + 1 + ge;
   const ty = border(ts) + y * ts + 1 + ge;
@@ -388,6 +389,9 @@ function drawTile(
  * `2·ge + 1` apart (cell `x` ends at `border + x·ts − ge`, cell `x + 1` starts at
  * `border + (x + 1)·ts + 1 + ge`), which is the most a mark can take while
  * touching neither tile. It reads as a highlight by *color*, not by weight.
+ * Inside a cage each neighbor's *background* widens `ge` into the gutter, so the
+ * band covers it there, which is why erasing one repaints the neighbors (see
+ * `redraw`).
  */
 function markBand(ds: KeenDrawState, x: number, y: number): MarkBand {
   const ts = ds.tileSize;
@@ -456,8 +460,27 @@ export function redraw(
 
   // Pack both overlays per cell.
   const index = (x: number, y: number) => y * w + x;
-  ds.hint.pack(hint?.highlights ?? null, index, (m) => hintMarkBit(m.n));
+  ds.hint.pack(hint?.highlights ?? null, index, (m) => valueBit(m.n));
   ds.wrong.packCells(mistakes ?? null, index);
+
+  // Marks that moved are erased before the tile loop, not after it: the band
+  // covers the `ge` strip each neighbor widens its background into inside a
+  // cage, so every cell whose background reaches an erased band repaints over it.
+  const targets: MarkCell[] = [];
+  const evidence: MarkCell[] = [];
+  for (let i = 0; i < w * w; i++) {
+    const cell = { x: i % w, y: (i / w) | 0 };
+    if (ds.hint.packed[i] & HINT_TARGET) targets.push(cell);
+    if (ds.hint.packed[i] & HINT_AREA) evidence.push(cell);
+  }
+  const markStyle = {
+    band: (x: number, y: number) => markBand(ds, x, y),
+    targetColor: COL_HINT,
+    evidenceColor: COL_HINT_CELL,
+  };
+  ds.marks.eraseBeforeTiles(dr, targets, evidence, markStyle, COL_GRID, (x, y) => {
+    if (x >= 0 && x < w && y >= 0 && y < w) ds.tiles[y * w + x] = -1;
+  });
 
   const flash =
     flashTime > 0 && (flashTime <= FLASH_TIME / 3 || flashTime >= (FLASH_TIME * 2) / 3);
@@ -480,22 +503,8 @@ export function redraw(
   }
 
   // The hint marks, **after** the tile loop and outside every clip, because they
-  // live in the gutter, which no tile owns. `gutterColor` is what tells
-  // `HintMarks` to undo a mark that moved: the cell underneath does repaint (the
-  // sidecar sees the overlay change) but stops at its own edge.
-  const targets: MarkCell[] = [];
-  const evidence: MarkCell[] = [];
-  for (let i = 0; i < w * w; i++) {
-    const cell = { x: i % w, y: (i / w) | 0 };
-    if (ds.hint.packed[i] & HINT_TARGET) targets.push(cell);
-    if (ds.hint.packed[i] & HINT_AREA) evidence.push(cell);
-  }
-  ds.marks.paint(dr, targets, evidence, {
-    band: (x, y) => markBand(ds, x, y),
-    targetColor: COL_HINT,
-    evidenceColor: COL_HINT_CELL,
-    gutterColor: COL_GRID,
-  });
+  // straddle the gutter between tiles.
+  ds.marks.paint(dr, targets, evidence, markStyle);
 
   // Pencil-mode indicator (fork addition).
   repaintPencilIndicator(dr, ds, ui.pencilMode, PENCIL_BOX(w, ts), PENCIL_STYLE);

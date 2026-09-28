@@ -34,6 +34,7 @@ import {
   type BoatsMove,
   type BoatsState,
   boardOf,
+  decodeParams,
   EMPTY,
   encodeParams,
   fillOf,
@@ -312,6 +313,29 @@ describe("boats hint — narration", () => {
     expect(step?.explanation).toMatch(
       /(touching corner to corner|could no longer reach its \d+|complete a boat the fleet has no room for|more boat squares than the whole fleet|rest of the fleet would no longer fit|given segment's own shape|could no longer be placed legally)/,
     );
+  });
+
+  it("stripes every line a sentence calls striped", () => {
+    // A middle segment's refutation once ringed the breached column while the
+    // sentence called it striped. Pinned as the desc the rung fired on, plus a
+    // sweep so a second firing site that forgets `line` is caught too.
+    const pinned = newState(
+      decodeParams("10x12f5dh,5,4,3,2,1"),
+      "5,4,4,2,5,2,3,3,0,7,1,4,3,4,4,2,3,2,2,5,0,5,fTdCzwCoTz",
+    );
+    const boards = [pinned, ...[8, 9, 11].map((p) => board(p, `striped-${p}`))];
+    let striped = 0;
+    for (const state of boards) {
+      const r = hintOf(state);
+      if (!r.ok) continue;
+      for (const step of r.steps) {
+        if (!step.explanation.includes("striped")) continue;
+        striped++;
+        const line = (step.highlights as BoatsHint | undefined)?.line ?? [];
+        expect(line.length, step.explanation).toBeGreaterThan(0);
+      }
+    }
+    expect(striped, "no step called a line striped").toBeGreaterThan(0);
   });
 
   it("never narrates the never-touch water as a deduction of its own", () => {

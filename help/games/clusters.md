@@ -13,9 +13,21 @@ Left-click to place blue squares. Right-click to place red squares. You can also
 
 To play with a keyboard, use the arrow keys to move the cursor. Press Enter to place a blue square, and press Space to place a red square.
 
+## Hints
+
+**Hint** explains the next step rather than simply making it. Each step decides the color of one square, by showing that the other color would break a rule. It reasons from the dots and the squares you have colored, so it carries on from wherever you are. Because blue is one of the colors you paint with, the hint's own marks here are purple and orange, never blue.
+
+* **A purple ring** marks the square the step colors: "this cell", in the hint's words.
+* **A double orange ring** marks the square where the other color would break a rule: the "ringed" dot or neighbor the sentence names.
+* **Numbered outlined squares, each holding a small square of red or blue**, appear on Normal boards, where one color leads further before it fails. The hint supposes this cell were the wrong color, and the numbers show which squares that would force, in order, and to which color. They are only a supposition: nothing is placed there.
+
+The rules a step shows breaking are the ones the puzzle states: a dot touches exactly one square of its own color, and every other square touches at least two. A square whose neighbors are all the other color, or that can only ever match one of them, can't be that color.
+
+If a square you colored breaks a rule, the hint asks you to fix the highlighted mistakes first. If your squares break no rule yet but cannot all be right, it says they contradict each other, and asks you to undo or clear the ones you are unsure of.
+
 ## Clusters parameters
 
-These parameters are available from the ‘Custom…’ option on the ‘Type’ menu.
+These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
 
 <dl>
 	<dt>Width, Height</dt>

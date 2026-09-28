@@ -4,9 +4,21 @@ Fill in a diagonal line in every grid square so that there are no
 loops in the grid, and so that every numbered point has that many
 lines meeting at it.
 
+## Controls
+
 Left-click in a square to mark it with a `\`; right-click
 to mark it with a `/`. Keep clicking in a square to
-cycle it between `\`, `/` and empty.
+cycle it between `\`, `/` and empty. The **Mouse button order**
+preference swaps the two buttons.
+
+With the keyboard, the arrow keys move a cursor around the grid. Enter
+cycles the square under it the way a left-click does, and Space the way a
+right-click does. You can also type `\` or `/` to draw that line
+directly, and Backspace or Delete to empty the square.
+
+The **Fade grounded components** preference dims every line that is
+joined, through other lines, to the edge of the grid: such a line can
+never be part of a loop.
 
 ## Notes
 
@@ -41,3 +53,14 @@ A mark that turns out to be wrong shows in red when you check the board.
 The hint carries on from the diagonals you have drawn and your marks, as long
 as none of them is wrong. When a step needs to know that two squares slant the
 same way, it puts the mark down first, as a step of its own that says why.
+
+## Slant parameters
+
+These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
+
+<dl>
+	<dt>Width, Height</dt>
+	<dd>Size of the grid in squares, at least 2 each way.</dd>
+	<dt>Difficulty</dt>
+	<dd>How hard the reasoning the puzzle needs may be (<a href="../features#difficulty">what the names mean</a>).</dd>
+</dl>

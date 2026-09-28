@@ -171,7 +171,7 @@ export interface UndeadDrawState {
   countGap: number;
   countPadding: number;
   /** `wh` hint-overlay sidecar (fork addition): bit 0 = target cell, bit 1 =
-   * evidence area, bits 2.. = struck-monster mask (`monster << 2`). Owns the
+   * evidence area, and the struck-monster mask in its `struck` lane. Owns the
    * repack/stale/commit dance that keeps the overlay in the cache diff key
    * (docs/games/rendering.md § "The tile cache and the diff key"). */
   hint: OverlaySidecar;
@@ -807,10 +807,30 @@ export function redraw(
     drawClueAt(path.gridEnd, path.sightingsEnd);
   }
 
-  // The two overlay sidecars. Hint: bit 0 target, bit 1 area, bits 2.. struck mask.
+  // The two overlay sidecars. Hint: bit 0 target, bit 1 area, and the struck
+  // monster mask in its `struck` lane.
   const index = (x: number, y: number) => x + y * stride;
-  ds.hint.pack(hint?.highlights ?? null, index, (m) => m.monster << 2);
+  ds.hint.pack(hint?.highlights ?? null, index, (m) => m.monster);
   ds.wrong.packCells(mistakes ?? null, index);
+
+  const targets: MarkCell[] = [];
+  const evidence: MarkCell[] = [];
+  for (let x = 1; x < w + 1; x++) {
+    for (let y = 1; y < h + 1; y++) {
+      const packed = ds.hint.packed[x + y * stride];
+      if (packed & HINT_TARGET) targets.push({ x, y });
+      if (packed & HINT_AREA) evidence.push({ x, y });
+    }
+  }
+  const markStyle = {
+    band: (x: number, y: number) => markBand(ds, x, y),
+    targetColor: COL_HINT,
+    evidenceColor: COL_HINT_CELL,
+  };
+  const underErased = new Uint8Array(ds.hint.packed.length);
+  ds.marks.eraseBeforeTiles(dr, targets, evidence, markStyle, COL_GRID, (x, y) => {
+    if (x >= 1 && x <= w && y >= 1 && y <= h) underErased[x + y * stride] = 1;
+  });
 
   // Grid cells.
   for (let x = 1; x < w + 1; x++) {
@@ -819,7 +839,8 @@ export function redraw(
       const xi = common.xinfo[xy];
       const c = common.grid[xy];
 
-      let stale = !ds.started || ds.hflash !== hflash || changedAscii;
+      let stale =
+        !ds.started || ds.hflash !== hflash || changedAscii || underErased[xy] === 1;
       if (
         hchanged &&
         ((x === ui.cursor.x && y === ui.cursor.y) ||
@@ -842,7 +863,7 @@ export function redraw(
       if (ds.wrong.stale(xy)) stale = true;
 
       if (stale) {
-        const struck = (ds.hint.packed[xy] >> 2) & 7;
+        const struck = ds.hint.struck[xy];
         // Both hint marks are drawn after this loop, on the cell's border, so
         // the cell paints its ordinary background and a marked cell keeps
         // showing the candidates the hint is reasoning about.
@@ -883,22 +904,8 @@ export function redraw(
   }
 
   // The hint marks, after the cell loop and outside every clip, because they
-  // straddle the grid line, which no cell repaints.
-  const targets: MarkCell[] = [];
-  const evidence: MarkCell[] = [];
-  for (let x = 1; x < w + 1; x++) {
-    for (let y = 1; y < h + 1; y++) {
-      const packed = ds.hint.packed[x + y * stride];
-      if (packed & HINT_TARGET) targets.push({ x, y });
-      if (packed & HINT_AREA) evidence.push({ x, y });
-    }
-  }
-  ds.marks.paint(dr, targets, evidence, {
-    band: (x, y) => markBand(ds, x, y),
-    targetColor: COL_HINT,
-    evidenceColor: COL_HINT_CELL,
-    gutterColor: COL_GRID,
-  });
+  // straddle the grid line.
+  ds.marks.paint(dr, targets, evidence, markStyle);
 
   // Pencil-mode indicator (fork addition).
   repaintPencilIndicator(dr, ds, ui.pencilMode, PENCIL_BOX(ds), PENCIL_STYLE);

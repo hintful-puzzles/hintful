@@ -546,7 +546,9 @@ convention `DEFAULT_CANDIDATE_READING`; `impliedNotes` is the implicit one as a
 board (notes where written, otherwise what the regions leave), and
 `fillAllNotes` what a fill-all puts in a cell. `pencilAdd` is the shared move
 dialect's note-writing mirror of `pencilStrike`, built through
-`CandidateMoveAdapter.add`. See [`hints.md`](./hints.md) § "Two readings of an
+`CandidateMoveAdapter.add`. `applyNoteMove` applies the three note moves to a
+square board with the default encoding, so a Latin game's `executeMove` routes
+them there rather than restating the bit arithmetic. See [`hints.md`](./hints.md) § "Two readings of an
 unmarked cell".
 
 ### `candidate-plan.ts` — the candidate-elimination plan walk
@@ -638,7 +640,10 @@ inside it for the ones drawing their own per-cell outline). A target spanning a
 **piece** — a domino — is one ring around it when the game passes
 `joinTargets` (and `joinEvidence` for evidence that is whole pieces);
 `MarkOutlines` hands the resulting sides to a game whose tile cache has to key on
-them (`hints.md` § "Shade vs ring"). It is for a mark on a **cell**: Map's regions are polyominoes of half-cell triangles, so Map rings
+them (`hints.md` § "Shade vs ring"). `HintMarks.paint` stamps a frame's marks
+after the tile loop and never erases; a game whose band has an `outer` part
+also calls `HintMarks.eraseBeforeTiles` before the loop and dirties the tiles it
+names (`hints.md` § "Where the band goes, and who rubs it out"). It is for a mark on a **cell**: Map's regions are polyominoes of half-cell triangles, so Map rings
 and outlines them with its own region band instead (`hints.md` § "A graph, not
 a grid (Map)").
 
@@ -871,7 +876,18 @@ doesn't live in the packed tile value. **Never hand-write the two-array
 dance.** Entry points by shape: `pack` (a hint step's highlights), `packCells`
 (a `findMistakes` list), `clear()`+`add()` (an overlay with its own topology).
 `pack` also keys an evidence cell on its outline sides, so a cell that stays
-evidence while the area around it changes shape still repaints.
+evidence while the area around it changes shape still repaints. A step's marks
+land in a `struck` lane of their own, in the game's encoding (`valueBit(n)`
+for a candidate), never in the word beside the roles: a candidate mask needs
+every bit a cell's values reach.
+
+### `candidate-bits.ts` — one candidate encoding, range-checked
+
+Value `n` at bit `n` (`valueBit`), the full set 1..n (`valuesOneTo`), and the
+largest value a 32-bit mask holds (`MAX_CANDIDATE_VALUE`, 31). Both functions
+throw rather than wrap: a shift counts mod 32, so an out-of-range value lands on
+another value's bit and a cache keyed on the mask repaints nothing. Take a
+game's size limit from the constant rather than writing a number beside it.
 
 ### `draw.ts` — shared drawing primitives
 

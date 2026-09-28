@@ -29,11 +29,6 @@ import type { Rect } from "./types.ts";
 export const HINT_TARGET = 1;
 /** Bit 1: the evidence area (`COL_HINT_CELL` shade). */
 export const HINT_AREA = 2;
-/** Bits 2+: candidate `n` struck, in the candidate games' encoding. A game
- * with a different mark payload (Undead's monster bitmask) passes its own
- * `markBits` to {@link OverlaySidecar.pack} instead. */
-export const hintMarkBit = (n: number): number => 1 << (2 + n);
-
 /** The word a listed cell gets from {@link OverlaySidecar.packCells} — the
  * mistake overlay is a plain "flagged or not", so one bit is the payload. */
 export const OVERLAY_FLAG = 1;
@@ -52,9 +47,8 @@ interface Cell {
  * that speaks of one consequence leading to the next names nothing they can
  * follow. The order is what makes the shading a *chain* rather than a heap.
  *
- * It rides in its own lane rather than in the packed word: `hintMarkBit` already
- * reaches bit 28 in Group (26 elements), so there is no bit budget left to
- * borrow, and an ordinal is a small integer rather than a flag.
+ * It rides in its own lane rather than in the packed word because an ordinal is
+ * a small integer rather than a flag.
  */
 export interface OrderedCell extends Cell {
   /** 1-based position in the chain. Omitted ⇒ ordinary evidence, no ordinal. */
@@ -74,8 +68,19 @@ export interface PackableHighlights<Mark extends Cell> {
 }
 
 export class OverlaySidecar {
-  /** Per-cell packed overlay for the frame being drawn. */
+  /** Per-cell packed overlay for the frame being drawn: the roles
+   * ({@link HINT_TARGET}, {@link HINT_AREA}) and whatever a game `add`s. */
   readonly packed: Int32Array;
+  /**
+   * Per-cell struck marks for the frame being drawn: the OR of `markBits` over
+   * the cell's marks, in the game's own encoding (`valueBit(n)` for a candidate
+   * `n`, Undead's monster mask).
+   *
+   * A lane of its own because a candidate mask needs every bit a cell's values
+   * reach: sharing the word with the two roles left Solo and Unequal's highest
+   * values wrapping onto them.
+   */
+  readonly struck: Int32Array;
   /** Per-cell chain ordinal for the frame being drawn (0 = none) — see
    * {@link OrderedCell} for why this is a lane of its own. */
   readonly order: Int32Array;
@@ -99,16 +104,19 @@ export class OverlaySidecar {
   /** What the canvas currently shows per cell (-1 = never drawn, so the
    * first frame always misses). */
   private readonly drawn: Int32Array;
+  private readonly drawnStruck: Int32Array;
   private readonly drawnOrder: Int32Array;
   private readonly drawnOutline: Int32Array;
   private readonly drawnHatched: Uint8Array;
 
   constructor(cells: number) {
     this.packed = new Int32Array(cells);
+    this.struck = new Int32Array(cells);
     this.order = new Int32Array(cells);
     this.outline = new Int32Array(cells);
     this.hatched = new Uint8Array(cells);
     this.drawn = new Int32Array(cells).fill(-1);
+    this.drawnStruck = new Int32Array(cells);
     this.drawnOrder = new Int32Array(cells).fill(-1);
     this.drawnOutline = new Int32Array(cells);
     this.drawnHatched = new Uint8Array(cells);
@@ -118,6 +126,7 @@ export class OverlaySidecar {
    * it; a game packing its own topology calls it, then {@link add}. */
   clear(): void {
     this.packed.fill(0);
+    this.struck.fill(0);
     this.order.fill(0);
     this.outline.fill(0);
     this.hatched.fill(0);
@@ -154,7 +163,7 @@ export class OverlaySidecar {
       if (a.order !== undefined) this.setOrder(i, a.order);
     }
     for (const t of hl.targets ?? []) this.add(index(t.x, t.y), HINT_TARGET);
-    for (const m of hl.marks ?? []) this.add(index(m.x, m.y), markBits(m));
+    for (const m of hl.marks ?? []) this.struck[index(m.x, m.y)] |= markBits(m);
     for (const c of hl.hatch ?? []) this.hatched[index(c.x, c.y)] = 1;
   }
 
@@ -183,7 +192,7 @@ export class OverlaySidecar {
 
   /** True when cell `i` carries any overlay this frame. */
   at(i: number): boolean {
-    return this.packed[i] !== 0;
+    return this.packed[i] !== 0 || this.struck[i] !== 0;
   }
 
   /** True when cell `i`'s drawn overlay differs from this frame's — one
@@ -193,6 +202,7 @@ export class OverlaySidecar {
   stale(i: number): boolean {
     return (
       this.packed[i] !== this.drawn[i] ||
+      this.struck[i] !== this.drawnStruck[i] ||
       this.order[i] !== this.drawnOrder[i] ||
       this.outline[i] !== this.drawnOutline[i] ||
       this.hatched[i] !== this.drawnHatched[i]
@@ -202,6 +212,7 @@ export class OverlaySidecar {
   /** Record that cell `i` now shows this frame's overlay. */
   commit(i: number): void {
     this.drawn[i] = this.packed[i];
+    this.drawnStruck[i] = this.struck[i];
     this.drawnOrder[i] = this.order[i];
     this.drawnOutline[i] = this.outline[i];
     this.drawnHatched[i] = this.hatched[i];

@@ -506,7 +506,7 @@ describe("solo hint", () => {
       const res = soloGame.hint?.(st, aux);
       if (!res?.ok) continue;
       for (const step of res.steps as AnyStep[]) {
-        const said = /^Their columns fit (\S+) only in the highlighted cells/.exec(
+        const said = /^Their columns fit (\S+) only in the outlined cells/.exec(
           step.explanation,
         );
         if (said === null) continue;
@@ -515,7 +515,7 @@ describe("solo hint", () => {
         const marks = step.highlights.marks as { x: number; y: number; n: number }[];
         expect(
           area.length,
-          "'the highlighted cells' with nothing highlighted",
+          "'the outlined cells' with nothing outlined",
         ).toBeGreaterThan(3);
         const rows = new Set(area.map((c) => c.y));
         const cols = new Set(area.map((c) => c.x));

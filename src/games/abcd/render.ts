@@ -17,6 +17,7 @@
  * tile cache and the diff key").
  */
 
+import { valueBit } from "../../engine/candidate-bits.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import {
   ERROR,
@@ -44,7 +45,6 @@ import {
 import {
   HINT_AREA,
   HINT_TARGET,
-  hintMarkBit,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
 import {
@@ -160,7 +160,7 @@ export interface AbcdDrawState {
   /** Mistake-overlay sidecar (fork addition) — keeps Check & Save in the diff key. */
   wrong: OverlaySidecar;
   /** The displayed hint: target and evidence bits, the hatch, and each struck
-   * note at `hintMarkBit(letter)`. */
+   * note at `valueBit(letter)` in the `struck` lane. */
   hint: OverlaySidecar;
   /** The hint's rings and outline, painted once per frame after the tiles. */
   marks: HintMarks;
@@ -280,7 +280,7 @@ function drawBorderLetters(dr: GameDrawing, ts: number, n: number): void {
 }
 
 /** A cell's pencil marks, laid out by upstream's arithmetic. Bit
- * `hintMarkBit(i)` of `struck` is a letter the displayed hint rules out, drawn
+ * `valueBit(i)` of `struck` is a letter the displayed hint rules out, drawn
  * with a line through it. */
 function drawPencilMarks(
   dr: GameDrawing,
@@ -319,7 +319,7 @@ function drawPencilMarks(
     dr.drawText(at, glyphFont(fontsz), COL_PENCIL, String.fromCharCode(65 + i));
     // The struck note keeps its own color, so it still reads as the player's
     // note; the line through it is what says the hint rules it out.
-    if (struck & hintMarkBit(i)) {
+    if (struck & valueBit(i)) {
       const r = Math.max(2, (fontsz / 3) | 0);
       dr.drawLine({ x: at.x - r, y: at.y }, { x: at.x + r, y: at.y }, COL_PENCIL, 2);
     }
@@ -378,7 +378,7 @@ function drawTile(
       String.fromCharCode(64 + letter),
     );
   } else {
-    drawPencilMarks(dr, state, ts, x, y, ds.hint.packed[i]);
+    drawPencilMarks(dr, state, ts, x, y, ds.hint.struck[i]);
   }
 
   // Cell border.
@@ -492,7 +492,7 @@ export function redraw(
   const flash = flashTime > 0 ? Math.floor(flashTime / FLASH_FRAME) % 3 : -1;
   const index = (x: number, y: number): number => y * w + x;
   ds.wrong.packCells(mistakes ?? null, index);
-  ds.hint.pack(hint?.highlights ?? null, index, (m) => hintMarkBit(m.n - 1));
+  ds.hint.pack(hint?.highlights ?? null, index, (m) => valueBit(m.n - 1));
 
   // Clues (redraw only those whose look changed). The hint hatches the named
   // line on through its clue slots, and draws the count it reads in its color.

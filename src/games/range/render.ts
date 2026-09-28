@@ -56,7 +56,7 @@ export const COL_FLASH = 3; // upstream's COL_LOWLIGHT slot: the solved flash
 export const COL_HINT = 4; // the cell the displayed hint forces — ringed
 export const COL_HINT_CELL = 5; // the deduction's premise/area cells — outlined
 export const COL_WHITEBG = 6; // a known-white cell: a clue or the player's white mark
-export const COL_HINT_BLACKREF = 7; // a cited decided-black premise (teal ring)
+export const COL_HINT_BLACKREF = 7; // a cited decided-black premise (ring)
 // Appended past the upstream enum (Range has no index-keyed dark overrides).
 export const COL_CURSOR = 8; // the keyboard cursor, upstream's COL_LOWLIGHT alias
 /** A shaded square — and the ink of the dot or digit on a known-white cell,

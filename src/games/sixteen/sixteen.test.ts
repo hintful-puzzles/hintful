@@ -9,6 +9,7 @@ import {
   RecordingDrawing,
 } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
+import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { itSlow } from "../../engine/testing/slow.ts";
 import { executeMove, sixteenGame } from "./index.ts";
 import type { SixteenHintHighlights } from "./render.ts";
@@ -996,6 +997,37 @@ describe("Sixteen hint rendering", () => {
         expect(hl.ultimatePos).not.toBe(hl.targetPos);
       }
     }
+  });
+
+  // The tiles under withdrawn marks repaint with the background the tile loop
+  // gives them, the cursor's lowlight included.
+  it("a withdrawn hint leaves the canvas a fresh paint would show", () => {
+    const s = solvedState(4, 4);
+    const ui = { ...sixteenGame.newUi(s), cursor: { x: 0, y: 0, visible: true } };
+    const size = sixteenGame.computeSize(defaultParams(), 32);
+    const hint: HintStep<SixteenMove, SixteenHintHighlights> = {
+      move: { type: "slide", axis: "row", index: 1, delta: -1 },
+      explanation: "",
+      highlights: { tile: 6, targetPos: 4, ultimatePos: 0 },
+    };
+    const frame = (
+      ds: ReturnType<typeof sixteenGame.newDrawState>,
+      h?: typeof hint,
+    ) => {
+      const { dr, ops } = recordingDrawing();
+      sixteenGame.redraw(dr, ds, null, s, 1, ui, 0, 0, h);
+      return ops;
+    };
+
+    const warmDs = sixteenGame.newDrawState(s, 32);
+    const warm = new BoxRaster(size.w, size.h);
+    warm.apply(frame(warmDs, hint));
+    warm.apply(frame(warmDs));
+    const fresh = new BoxRaster(size.w, size.h);
+    fresh.apply(frame(sixteenGame.newDrawState(s, 32)));
+
+    const differing = warm.px.filter((v, i) => v !== fresh.px[i]).length;
+    expect(differing).toBe(0);
   });
 });
 

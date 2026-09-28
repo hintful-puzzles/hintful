@@ -8,6 +8,8 @@ exactly one dot which is in its center, and should contain no lines
 separating two of its own squares from each other. A region satisfying
 all of these requirements will be automatically highlighted.
 
+## Controls
+
 Click on a grid edge to add or remove a line.
 
 Drag from a dot into a grid square to place an arrow there pointing
@@ -64,3 +66,14 @@ if it breaks. (Or use **Solve**, if you would rather see the answer.)
 A hint is refused while anything on the board contradicts the solution.
 The offending squares and lines light up instead, exactly as they do
 for **Check & save**.
+
+## Galaxies parameters
+
+These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
+
+<dl>
+	<dt>Width, Height</dt>
+	<dd>Size of the grid in squares, from 3 to 100 each.</dd>
+	<dt>Difficulty</dt>
+	<dd>Determine the difficulty of the generated puzzle; see <a href="../features#difficulty">what the names mean</a>.</dd>
+</dl>

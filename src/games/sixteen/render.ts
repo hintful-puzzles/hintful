@@ -236,22 +236,16 @@ export function redraw(
     hintTarget !== ds.hintTarget ||
     hintUltimate !== ds.hintUltimate
   ) {
-    // Erase the old marks by repainting those tiles.
-    if (ds.hintTile !== null) {
-      const oldPos = state.tiles.indexOf(ds.hintTile);
-      if (oldPos >= 0) drawHintOverlay(dr, ts, hw, state, oldPos, COL_BACKGROUND);
-    }
-    if (ds.hintTarget !== null) {
-      drawHintOverlay(dr, ts, hw, state, ds.hintTarget, COL_BACKGROUND);
-    }
-    if (ds.hintUltimate !== null) {
-      drawHintOverlay(dr, ts, hw, state, ds.hintUltimate, COL_BACKGROUND);
-    }
-    // Draw the new source fill.
-    if (hintTile !== null) {
-      const pos = state.tiles.indexOf(hintTile);
-      if (pos >= 0) drawHintOverlay(dr, ts, hw, state, pos, COL_HINT);
-    }
+    // The tile loop repaints the tiles under the old marks and the new source,
+    // so each takes the background the loop would give it (a cursor's lowlight
+    // included), not one chosen here.
+    const repaint = [
+      ds.hintTile === null ? -1 : state.tiles.indexOf(ds.hintTile),
+      ds.hintTarget ?? -1,
+      ds.hintUltimate ?? -1,
+      hintTile === null ? -1 : state.tiles.indexOf(hintTile),
+    ];
+    for (const pos of repaint) if (pos >= 0) ds.tiles[pos] = -1;
     ds.hintTile = hintTile;
     ds.hintTarget = hintTarget;
     ds.hintUltimate = hintUltimate;
@@ -446,28 +440,6 @@ function drawTile(
     String(tile),
   );
   dr.drawUpdate({ x, y, w: ts, h: ts });
-}
-
-/** Erase (`COL_BACKGROUND`) or paint (`COL_HINT`) the hint fill on the tile in
- * cell `pos`, keeping its number visible. Targets are outlined instead, by
- * {@link drawHintBorder}. */
-function drawHintOverlay(
-  dr: GameDrawing,
-  ts: number,
-  hw: number,
-  state: SixteenState,
-  pos: number,
-  color: number,
-): void {
-  const x = coord(pos % state.w, ts);
-  const y = coord(Math.floor(pos / state.w), ts);
-  const tile = state.tiles[pos];
-
-  if (color === COL_BACKGROUND) {
-    drawTile(dr, ts, hw, x, y, tile, COL_BACKGROUND);
-  } else {
-    drawTile(dr, ts, hw, x, y, tile, COL_HINT);
-  }
 }
 
 function drawArrow(

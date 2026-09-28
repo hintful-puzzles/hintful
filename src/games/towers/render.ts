@@ -12,6 +12,7 @@
  * (the upstream four-corner cache key).
  */
 
+import { valueBit } from "../../engine/candidate-bits.ts";
 import type { CandidateHighlights } from "../../engine/candidate-hint.ts";
 import {
   clueDoneColor,
@@ -40,7 +41,6 @@ import {
 import {
   HINT_AREA,
   HINT_TARGET,
-  hintMarkBit,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
 import {
@@ -144,8 +144,8 @@ export interface TowersDrawState {
   /** `(w+2)²` error flags, refilled each redraw by `checkErrors`. */
   errtmp: Uint8Array;
   /** `(w+2)²` hint-overlay sidecar (fork addition): bit 0 = target cell,
-   * bit 1 = evidence area, bits 2.. = struck-candidate mask
-   * (`hintMarkBit(height)`). */
+   * bit 1 = evidence area, and the struck candidates at `valueBit(height)` in
+   * its `struck` lane. */
   hint: OverlaySidecar;
   /** `(w+2)²` mistake-overlay sidecar (fork addition). Neither overlay changes
    * a cell's tile value, so both are in the diff key (docs/games/rendering.md
@@ -227,7 +227,7 @@ function drawTile(
   y: number,
   tile: number,
   wrong: boolean,
-  hint: number,
+  struck: number,
   hintOrder: number,
   hatched: boolean,
 ): void {
@@ -236,7 +236,6 @@ function drawTile(
   const digit = tile & DF_DIGIT_MASK;
   // `redraw` draws the hint's target ring and evidence outline once per frame;
   // a tile draws only `struck`, the candidate heights this firing rules out.
-  const struck = hint >> 2;
   const highlight = ((tile >> DF_HIGHLIGHT_SHIFT) & 3) as CellHighlight;
   // The faces take the top's fill, so a raised tower reads as one selected cell.
   const bg = highlightFill(highlight, COL_HIGHLIGHT, COL_BACKGROUND);
@@ -433,7 +432,7 @@ export function redraw(
 
   // Pack both overlays per play cell (border-ring indexing).
   const index = (x: number, y: number) => (y + 1) * W + (x + 1);
-  ds.hint.pack(hint?.highlights ?? null, index, (m) => hintMarkBit(m.n));
+  ds.hint.pack(hint?.highlights ?? null, index, (m) => valueBit(m.n));
   ds.wrong.packCells(mistakes ?? null, index);
 
   // Build the tile values.
@@ -473,11 +472,17 @@ export function redraw(
       y,
       tile,
       ds.wrong.at(j),
-      ds.hint.packed[j],
+      ds.hint.struck[j],
       ds.hint.order[j],
       ds.hint.hatched[j] === 1,
     );
   };
+  // A clip paints four cells, so it repaints when any of their overlays moved,
+  // not only its own: a 3D tower's top face spills into the clips up and to the
+  // right of it. Taken before the loop, which commits as it goes.
+  const overlayMoved = new Uint8Array(W * W);
+  for (let i = 0; i < W * W; i++)
+    overlayMoved[i] = ds.hint.stale(i) || ds.wrong.stale(i) ? 1 : 0;
   for (let y = 0; y < W; y++) {
     for (let x = 0; x < W; x++) {
       const i = y * W + x;
@@ -491,8 +496,10 @@ export function redraw(
         ds.drawn[i * 4 + 1] !== tr ||
         ds.drawn[i * 4 + 2] !== bl ||
         ds.drawn[i * 4 + 3] !== br ||
-        ds.hint.stale(i) ||
-        ds.wrong.stale(i)
+        overlayMoved[i] ||
+        (x > 0 && overlayMoved[i - 1]) ||
+        (y <= w && overlayMoved[i + W]) ||
+        (x > 0 && y <= w && overlayMoved[i + W - 1])
       ) {
         dr.clip({ x: coord(x - 1, ts), y: coord(y - 1, ts), w: ts, h: ts });
         paint(x - 1, y - 1, tr);

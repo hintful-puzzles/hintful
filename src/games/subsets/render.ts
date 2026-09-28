@@ -89,9 +89,14 @@ export const COL_HINT_PLACED = 12;
 const HINT_SPOT = 4;
 /** Sidecar bit: the cell a clicked *placed* set already sits in. */
 const HINT_PLACED = 8;
+/** Sidecar bit: the cell whose inspect badge is lit (the cell→sets aid). Its
+ * own bit, because the set→cells aid marks its cells `HINT_SPOT` too and only
+ * this cell's badge fills: sharing the bit, clicking the badge of a cell the
+ * other aid had lit changed nothing the cache compares. */
+const HINT_INSPECTED = 16;
 /** Bit offset of the target slot index in the hint sidecar's packed word,
- * above the four flag bits. */
-const HINT_SLOT_SHIFT = 4;
+ * above the five flag bits. Everything above it is the slot. */
+const HINT_SLOT_SHIFT = 5;
 
 const CODE_A = "A".charCodeAt(0);
 
@@ -264,7 +269,7 @@ export function redraw(
     // Reference aid, cell→sets: a focused cell lights up, and every set it
     // could still hold is boxed in the tally.
     tallyCell = ui.highlightCell;
-    ds.hint.add(tallyCell, HINT_SPOT);
+    ds.hint.add(tallyCell, HINT_SPOT | HINT_INSPECTED);
     for (const v of candidateSets(state, tallyCell)) ds.tallyLook[v] = TALLY_BOX_SET;
   }
   if (tallyCell !== null) {
@@ -316,6 +321,15 @@ export function redraw(
       )
         continue;
 
+      // The cell block's top-left corner and side.
+      const bx = Math.floor((x * (cw + 1) + 0.5) * ts);
+      const by = Math.floor((y * (ch + 1) + 0.5) * ts);
+      const bw = ts * cw - 1;
+
+      // The grid lines between the slots, which the frames below cross and the
+      // slot squares leave uncovered.
+      dr.drawRect({ x: bx, y: by, w: bw, h: ts * ch - 1 }, COL_GRID);
+
       for (let cy = 0; cy < ch; cy++) {
         for (let cx = 0; cx < cw; cx++) {
           const cn = cy * cw + cx;
@@ -354,11 +368,6 @@ export function redraw(
         }
       }
 
-      // The cell block's top-left corner and side.
-      const bx = Math.floor((x * (cw + 1) + 0.5) * ts);
-      const by = Math.floor((y * (ch + 1) + 0.5) * ts);
-      const bw = ts * cw - 1;
-
       // Reference-aid inspect icon: a badge in the margin *above* the block —
       // outside it, so it reads as belonging to the whole cell, not one slot.
       // Clicking it (a touch-sized strip along the block's top edge, index.ts
@@ -368,7 +377,8 @@ export function redraw(
       const iconR = Math.max(3, Math.floor(ts * 0.16));
       const iconY = by - Math.floor(ts * 0.28);
       const icx = bx + Math.floor(ts * 0.22);
-      const active = !hl && ui.highlightCell === i;
+      // Read off the key, so what the badge shows cannot leave it.
+      const active = (ds.hint.packed[i] & HINT_INSPECTED) !== 0;
       // Clear the badge's patch of margin, then draw the ring / green disc.
       dr.drawRect(
         {

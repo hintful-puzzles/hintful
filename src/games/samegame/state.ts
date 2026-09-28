@@ -95,7 +95,7 @@ export function validateParams(p: SamegameParams, _full: boolean): string | null
     if (p.ncols < 3) return "Number of colors must be at least three";
     if (p.w * p.h <= 1) return "Grid area must be greater than 1";
   } else {
-    if (p.ncols < 2) return "Number of colors must be at least three";
+    if (p.ncols < 2) return "Number of colors must be at least two";
     // Need at least two of each color for theoretical solubility.
     if (p.w * p.h < p.ncols * 2)
       return "Too many colors makes given grid size impossible";

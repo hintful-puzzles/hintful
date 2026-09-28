@@ -262,9 +262,12 @@ function drawTileCol(
     let y1 = cy + (k ? coffset : gutter);
     let x2 = cx + ts - 1 - (k ? gutter : coffset);
     let y2 = cy + ts - 1 - (k ? coffset : gutter);
-    if (type === TYPE_L) x2 = cx + ts;
+    // Up to the tile's own edge and no further: the partner fills from its
+    // edge, and a pixel past ours would be left behind whenever this square
+    // repaints without its partner (upstream reached one pixel over).
+    if (type === TYPE_L) x2 = cx + ts - 1;
     else if (type === TYPE_R) x1 = cx;
-    else if (type === TYPE_T) y2 = cy + ts;
+    else if (type === TYPE_T) y2 = cy + ts - 1;
     else if (type === TYPE_B) y1 = cy;
     dr.drawRect({ x: x1, y: y1, w: x2 - x1 + 1, h: y2 - y1 + 1 }, bg);
   }
@@ -504,8 +507,7 @@ export function redraw(
   }
 
   // After every tile, and every frame — which is how `HintMarks.paint` always
-  // draws: a domino's body reaches a pixel into its partner's box, so a partner
-  // repainting for its own reasons can clip a band it did not draw.
+  // draws.
   ds.marks.paint(dr, hintTargets, area, markStyle);
 
   // Clue counts around the four borders.

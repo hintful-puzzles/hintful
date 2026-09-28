@@ -1,7 +1,10 @@
 # cover-hints-in-help-and-guard-tile-flags
 
-**Status: scaffolded, not started.** Owner-requested 2026-09-28, during
-`add-separate-hint`, for a separate session.
+**Status: implemented; widened by the owner to standardize every help page.**
+Owner-requested 2026-09-28, during `add-separate-hint`. What was built differs
+from the plan below where the survey disproved it — the help guard's reason not
+to be a vitest file, and the tile-flag guard's whole shape; `design.md` says
+why, and is the account to read.
 
 ## 1. Every game with a hint has a Hints section in its help
 

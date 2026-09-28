@@ -907,8 +907,8 @@ export const MODULES = [
       {
         within: "fillAllNotes",
         why: "the populate fill omits the top candidate, so no elimination of it is ever taught",
-        find: "  return enc?.all?.(i) ?? (1 << ((enc?.values ?? w) + 1)) - (1 << 1);",
-        replace: "  return enc?.all?.(i) ?? (1 << (enc?.values ?? w)) - (1 << 1);",
+        find: "  return enc?.all?.(i) ?? valuesOneTo(enc?.values ?? w);",
+        replace: "  return enc?.all?.(i) ?? valuesOneTo((enc?.values ?? w) - 1);",
       },
       {
         within: "emitObviousCleanStep",

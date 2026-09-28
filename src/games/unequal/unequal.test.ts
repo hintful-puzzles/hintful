@@ -7,7 +7,12 @@ import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  DEFAULT_BACKGROUND,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
+import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { newUnequalDesc } from "./generator.ts";
 import { unequalGame } from "./index.ts";
 import { computeSize, coord, PREFERRED_TILE_SIZE } from "./render.ts";
@@ -363,6 +368,32 @@ describe("unequal render", () => {
     });
     const texts = r.recording.ops.filter((o) => o.op === "text");
     expect(texts.length).toBeGreaterThan(0);
+  });
+
+  // A tile's outline stays on the tile's own pixels: the gap beside it is
+  // painted only on the first frame, so a stroke there outlives the tile.
+  it("a repainted tile leaves the canvas a fresh paint would show", () => {
+    // (2, 0) has no clue to its right, so nothing else paints that gap; moving
+    // the cursor onto it from below repaints it alone.
+    const st = newState(decodeParams("4de"), "0,0,0L,0L,0,0,0,0U,0,0,0L,0D,0,0,0,0,");
+    const palette = unequalGame.colors(DEFAULT_BACKGROUND);
+    const size = computeSize({ order: st.order }, PREFERRED_TILE_SIZE);
+    const at = (y: number) => ({ ...newUi(st), cursor: { x: 2, y, visible: true } });
+    const frame = (ds: ReturnType<typeof unequalGame.newDrawState>, y: number) => {
+      const dr = new RecordingDrawing(palette);
+      unequalGame.redraw(dr, ds, null, st, 1, at(y), 0, 0);
+      return dr.ops;
+    };
+
+    const warmDs = unequalGame.newDrawState(st, PREFERRED_TILE_SIZE);
+    const warm = new BoxRaster(size.w, size.h);
+    warm.apply(frame(warmDs, 1));
+    warm.apply(frame(warmDs, 0));
+    const fresh = new BoxRaster(size.w, size.h);
+    fresh.apply(frame(unequalGame.newDrawState(st, PREFERRED_TILE_SIZE), 0));
+
+    const differing = warm.px.filter((v, i) => v !== fresh.px[i]).length;
+    expect(differing).toBe(0);
   });
 });
 

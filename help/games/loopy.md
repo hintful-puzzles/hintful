@@ -12,6 +12,11 @@ loop running through it — which is why a hint can say *"this edge must be a
 line"*, meaning the loop has no choice but to run along it, or *"this edge can't
 be a line"*, meaning it must run somewhere else.
 
+When you have mastered the square grid, look in the Type menu for
+many other types of tiling!
+
+## Controls
+
 Click on a grid edge to mark it as part of the loop (black), and
 again to return to marking it as undecided (yellow). Right-click on
 a grid edge to mark it as definitely not part of the loop (faint
@@ -53,9 +58,6 @@ that inks where it has been:
 The cursor is drawn as a green disc on its dot, with a green halo
 under the edge your keys will act on.
 
-When you have mastered the square grid, look in the Type menu for
-many other types of tiling!
-
 ## Notes
 
 On harder boards you will often know something about a corner or a pair of
@@ -82,6 +84,17 @@ From the keyboard, in notes mode:
 - **Space** pins the chosen edge; walk to another edge and press **Space**
   again to note the pair, and keep pressing on a pair to cycle it.
 - **Escape** lets go of a pinned edge.
+
+## Checking your lines
+
+**Check & save** compares your board with the puzzle's answer. A line the
+loop does not use turns red, and an edge you ruled out that the loop needs
+gets a red cross, even if you have chosen not to show ruled-out edges. A note
+the answer contradicts turns red too.
+
+Some red appears without asking, too: when the lines you have drawn break
+a rule, such as a dot with three lines or a closed loop that is not the
+only one.
 
 ## Hints
 
@@ -119,13 +132,15 @@ writes each one down as a note before it uses it, just as you would:
 - Two pairs that share an edge relate their other two edges, so a longer
   chain of pairs is written down one link at a time.
 
-## Checking your lines
+## Loopy parameters
 
-**Check & save** compares your board with the puzzle's answer. A line the
-loop does not use turns red, and an edge you ruled out that the loop needs
-gets a red cross, even if you have chosen not to show ruled-out edges. A note
-the answer contradicts turns red too.
+These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
 
-Some red appears without asking, too: when the lines you have drawn break
-a rule, such as a dot with three lines or a closed loop that is not the
-only one.
+<dl>
+	<dt>Width, Height</dt>
+	<dd>Size of the board, counted in the chosen tiling's own repeating units rather than in faces, so the same numbers make boards of quite different sizes on different tilings. Each tiling has a smallest size it allows: at least 3 by 3 for most (with one side at least 4 for Cairo), 2 by 2 for the four dodecagonal ones, 1 by 2 for Floret, 6 by 6 for Hats and Spectres, and a width of at least 4 for Penrose (kite/dart).</dd>
+	<dt>Grid type</dt>
+	<dd>The tiling the loop is drawn on. Squares, Triangular and Honeycomb (hexagons) are the familiar ones; Cairo is made of pentagons and Kites of kite shapes; Snub-Square, Great-Hexagonal, Octagonal, Floret, Dodecagonal, Great-Dodecagonal, Great-Great-Dodecagonal, Kagome and Compass-Dodecagonal each mix faces of more than one shape, or of an unusual one. Penrose (kite/dart), Penrose (rhombs), Hats and Spectres are aperiodic: their pattern never repeats.</dd>
+	<dt>Difficulty</dt>
+	<dd>Determine the difficulty of the generated puzzle (<a href="../features#difficulty">what the names mean</a>).</dd>
+</dl>

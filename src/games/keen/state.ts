@@ -12,6 +12,7 @@
  * starts blank.
  */
 
+import { valuesOneTo } from "../../engine/candidate-bits.ts";
 import {
   type CandidateReading,
   DEFAULT_CANDIDATE_READING,
@@ -403,7 +404,7 @@ export function checkErrors(state: KeenState, errors?: Int32Array): boolean {
   // Each row, then each column; `cellOf(line, k)` is the line's k-th cell.
   const cellOf = (line: number, k: number): number =>
     line < w ? line * w + k : k * w + line - w;
-  const fullMask = (1 << (w + 1)) - (1 << 1); // bits 1..w
+  const fullMask = valuesOneTo(w);
   for (let line = 0; line < 2 * w; line++) {
     let mask = 0;
     let errmask = 0;

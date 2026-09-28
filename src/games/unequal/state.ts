@@ -12,6 +12,7 @@
  * they have used (the `spent` flags, mutable).
  */
 
+import { MAX_CANDIDATE_VALUE } from "../../engine/candidate-bits.ts";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { tierNames } from "../../engine/difficulty.ts";
@@ -147,7 +148,9 @@ export function decodeParams(s: string): UnequalParams {
 }
 
 export function validateParams(p: UnequalParams, _full: boolean): string | null {
-  if (p.order < 3 || p.order > 32) return "Order must be between 3 and 32";
+  // One more would not fit a candidate mask (`engine/candidate-bits.ts`).
+  if (p.order < 3 || p.order > MAX_CANDIDATE_VALUE)
+    return `Order must be between 3 and ${MAX_CANDIDATE_VALUE}`;
   if (p.order < 5 && p.mode === "adjacent" && diffToLevel(p.diff) >= DIFF_SET)
     return "Order must be at least 5 for Adjacent puzzles of this difficulty.";
   return null;

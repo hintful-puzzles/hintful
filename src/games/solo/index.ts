@@ -12,6 +12,7 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   adaptiveMarkAllMove,
+  applyNoteMove,
   type CandidatePlanPrefs,
   candidateHint,
   keepCandidateHintTrack,
@@ -272,24 +273,11 @@ function executeMove(state: SoloState, move: SoloMove): SoloState {
       }
       return next;
     }
-    case "pencilAll": {
-      // Bits 1..cr set (digit n ⇒ bit 1<<n).
-      const all = ((1 << (cr + 1)) - (1 << 1)) | 0;
-      // Additive — fill only note-less empty cells, never reset a narrowed one:
-      // `candidate-hint.ts`'s `adaptiveMarkAll` § "The additive rule, stated once".
-      for (let i = 0; i < cr * cr; i++) {
-        if (!next.grid[i] && next.pencil[i] === 0) next.pencil[i] = all;
-      }
+    case "pencilAll":
+    case "pencilStrike":
+    case "pencilAdd":
+      applyNoteMove(move, next.grid, next.pencil, cr);
       return next;
-    }
-    case "pencilStrike": {
-      for (const { x, y, n } of move.marks) next.pencil[y * cr + x] &= ~(1 << n);
-      return next;
-    }
-    case "pencilAdd": {
-      for (const { x, y, n } of move.marks) next.pencil[y * cr + x] |= 1 << n;
-      return next;
-    }
     case "solve": {
       for (let i = 0; i < cr * cr; i++) {
         next.grid[i] = move.grid[i];

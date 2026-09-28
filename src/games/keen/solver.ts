@@ -19,6 +19,7 @@
  * `grid[transpose(s)]`.
  */
 
+import { valuesOneTo } from "../../engine/candidate-bits.ts";
 import {
   type DeductionRecord,
   DIFF_AMBIGUOUS,
@@ -211,7 +212,7 @@ function solverCommon(solver: LatinSolver, ctx: KeenCtx, diff: number): number {
 
     // Initialize iscratch for this cage.
     if (diff === DIFF_HARD) {
-      for (let i = 0; i < 2 * w; i++) iscratch[i] = (1 << (w + 1)) - (1 << 1);
+      for (let i = 0; i < 2 * w; i++) iscratch[i] = valuesOneTo(w);
     } else {
       for (let i = 0; i < n; i++) iscratch[i] = 0;
     }

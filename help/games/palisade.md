@@ -5,7 +5,75 @@ divided into connected regions, all of the size shown in the status
 line. Also, each square containing a number should have that many of
 its edges drawn in.
 
+## Controls
+
 Click on a grid edge to mark it as a division between regions (black),
 and again to return to marking it as undecided (yellow). Right-click
-on a grid edge to mark it as definitely not part of the loop (faint
+on a grid edge to mark it as definitely not a division (faint
 gray), and again to mark it as undecided again.
+
+The arrow keys move a cursor over the edges of the grid; Enter marks
+the edge under it as a division, and Space marks it as definitely not
+one.
+
+## Hints
+
+**Hint** explains the next step rather than simply making it, and it
+always says *why*: every sentence names the fact that forces the move,
+not just the move. It reasons only from the numbers, the region size and
+the edges you have decided, your walls and your "no wall" marks, so it
+carries on from wherever you are, as long as none of them is wrong; if
+one is, it asks you to fix the highlighted mistakes first.
+
+* **Edges drawn in the hint color** are the ones the step decides. The
+  sentence says which way: "must be a wall" means click the edge, and
+  "can't be a wall" (or "clear them") means right-click it to mark it as
+  no wall. When one reason decides several edges at once, they are all
+  colored together, because they share one fate, and each drops back to
+  normal as you set it.
+* **Hatching** covers the one region the sentence is about: "this
+  region", or "the same region" two edges both border.
+* **An outline** inside a square marks what the step reasons from: the
+  clue it counts, the two clues either side of an edge, the four squares
+  meeting at "this corner", or the two regions a join would merge.
+
+A region, in the hint's words, is a group of squares your own "no wall"
+marks already join, so a single square counts as one too. The size it
+compares against is the one in the status line.
+
+These are the ideas the hint teaches, from the plainest up:
+
+* **A clue that is full, or that needs everything left.** A clue that
+  already has all its walls allows no more, so its other edges are open;
+  a clue that can reach its number only if every remaining edge is a wall
+  gets them all. A 0 allows no walls at all.
+* **Regions are all one size.** An edge whose opening would join two
+  regions into more squares than a region holds must be a wall. A region
+  still short of its size, with just one edge left to grow through, must
+  grow through it.
+* **A wall can't stop in mid-air.** Where a wall arrives at a corner and
+  only one other edge there could carry it on, that edge must be a wall.
+* **Two clues side by side.** If the edge between two neighboring clues
+  were open, each clue's walls would all have to go on its other three
+  sides, and whatever sides are left open lead further into the same
+  region. On boards with small regions that can make the shared region
+  bigger than a region may be, so the edge between them must be a wall.
+  Two 3s are the sharpest case: each keeps just one side open, so their
+  region would be the two squares alone, which is too small.
+* **Edges that share a fate.** When two undecided edges of a clue both
+  border the same region, the clue's square either joins that region,
+  and both edges are open, or is walled off from it, and both are walls.
+  It can't do one of each. So if walling both would exceed the clue,
+  neither can be a wall; and if leaving both open would leave it short,
+  both must be walls.
+
+## Palisade parameters
+
+These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
+
+<dl>
+	<dt>Width, Height</dt>
+	<dd>Size of the grid in squares.</dd>
+	<dt>Region size</dt>
+	<dd>How many squares each region holds. It must divide the number of squares in the grid exactly, and be smaller than it. A size of 2 is allowed only on a grid one square wide or high.</dd>
+</dl>

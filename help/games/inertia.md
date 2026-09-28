@@ -5,10 +5,61 @@ ball moves, it will keep sliding until it either hits a wall, or
 stops on a stop square (the broken circles). Try to collect every
 gem without running into any of the mines.
 
+If you hit a mine and explode, you can Undo and continue playing; the
+game will track how many times you died.
+
+## Controls
+
 Use the numeric keypad to slide the ball horizontally, vertically or
 diagonally. Alternatively, click on the grid to make the ball move
 towards where you clicked.
 
-If you hit a mine and explode, you can select Undo from the Game
-menu and continue playing; the game will track how many times you
-died.
+You can also press on the ball itself and drag out the way you want it
+to go: an arrow on the ball shows the direction, and letting go sends
+it. Let go on the ball to call the slide off. This works with a finger
+as well.
+
+The arrow keys slide the ball horizontally and vertically, and the
+digit keys work like the numeric keypad even without one: 8 is up, 9
+up and right, 6 right, and so on round. After *Show solution…*, Enter
+or Space makes the next move of the solution.
+
+## Hints
+
+**Hint** shows the next slide rather than simply making it. Nothing in
+Inertia is forced by logic, so the hint goes for the gem the fewest
+slides away that the ball can take without leaving any other gem out of
+reach, and tells you what each slide does on the way.
+
+* **An arrow on the ball**, in the hint's color, points the way to
+  slide.
+* **A ring** round a gem, in a second color, marks the gem the hint is
+  working on — *the marked gem*, in its words. It stays marked through
+  every slide the hint spends working toward it.
+
+The thing the hint keeps reminding you of is the rule that catches
+everyone out: **you don't choose where you stop.** A slide that collects
+says what brings the ball to a halt — a wall, or a stop square. When a
+slide could grab the marked gem but would leave the ball somewhere it
+can never reach other gems from, the hint says so and goes another way.
+When the ball has only one way to go, because walls block the rest or
+every other way runs onto a mine, it says that too.
+
+Using the hint is not the same as using *Show solution…*: only the
+solution marks the game as auto-solved.
+
+The hint refuses when there is nothing it can do from here: if the ball
+is dead, or has already left a gem where it can never be reached, it
+asks you to undo back to a position where it can.
+
+## Inertia parameters
+
+These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
+
+<dl>
+	<dt>Width, Height</dt>
+	<dd>Size of the grid in squares. Both must be at least 2, and the grid
+	at least six squares in all. About a fifth of the squares are walls,
+	a fifth stop squares and a fifth mines, and there are as many gems
+	as there are mines, placed only where the ball can collect them.</dd>
+</dl>

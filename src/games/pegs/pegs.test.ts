@@ -56,7 +56,9 @@ describe("Pegs params", () => {
     expect(G.validateParams({ w: 3, h: 3, type: 0 }, true)).toMatch(
       /greater than three/,
     );
-    expect(G.validateParams({ w: 6, h: 6, type: 0 }, true)).toMatch(/only supported/);
+    expect(G.validateParams({ w: 6, h: 6, type: 0 }, true)).toMatch(/5, 7 or 9/);
+    // The message once listed only one of each transposed pair it accepts.
+    expect(G.validateParams({ w: 9, h: 5, type: 0 }, true)).toBeNull();
   });
 
   it("validates octagon is 7x7 only", () => {

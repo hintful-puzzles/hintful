@@ -11,7 +11,7 @@ import { say as crossing } from "../games/crossing/hint-text.ts";
 import { say as dominosa } from "../games/dominosa/hint-text.ts";
 import { say as keen } from "../games/keen/hint-text.ts";
 import { say as solo } from "../games/solo/hint-text.ts";
-import { indefinite } from "./hint-text.ts";
+import { indefinite, noteText } from "./hint-text.ts";
 
 type SharedDigit = Parameters<typeof crossing.sharedDigit>[0];
 type NoteStrike = Parameters<typeof crossing.noteStrike>[0];
@@ -50,6 +50,13 @@ describe("a number after an article gets the article it is pronounced with", () 
       crossing.noteStrike({ technique: "noteStrike", digits } as NoteStrike, false);
     expect(strike([8])).toContain("puts an 8 in this square");
     expect(strike([3])).toContain("puts a 3 in this square");
+  });
+
+  it("the shared note step, before a word rather than a value", () => {
+    // Group's noun is "element": "rules out a element" shipped.
+    const vocab = (noun: string) => ({ noun, placedVerb: "placed", regions: "row" });
+    expect(noteText([], true, vocab("element"))).toContain("rules out an element yet");
+    expect(noteText([], true, vocab("number"))).toContain("rules out a number yet");
   });
 
   it("Dominosa's duplicate dominoes", () => {

@@ -19,9 +19,24 @@ Squares whose arrows already lead to a goal are shaded, so you can see how much 
 
 The keyboard can also be used. Move the cursor with the arrow keys, and press Enter followed with an arrow key to place an arrow. Use Space to add pencil marks. A question mark shows in the square while it waits for the arrow key. Alternatively, use the arrows on the numpad to enter arrows directly.
 
+## Hints
+
+**Hint** explains the next step rather than simply making it. It works from your arrows and your pencil marks, so as long as no arrow is wrong and no square's marks have crossed out its answer, it carries on from wherever you are; otherwise it asks you to fix the highlighted mistakes first. A square with no marks counts as holding every arrow its area hasn't used yet that doesn't point off the board, and the hint pencils marks in only when a step needs them. If you would rather it start from a fully marked grid, set **Hints pencil in** to **Every candidate first** in the preferences: it then begins by pressing Mark all twice, just as you would.
+
+* **A ring in the hint color** marks the square the step decides: the arrow to place, the marks to pencil in, or the marks to cross off, which are drawn with a line through them.
+* **Stripes** mark the area the sentence calls "its area" or "this area", or "the striped group": a goal and the squares already leading into it.
+* **An outline in a second color** marks the squares it reasons from: the arrow the area already has, a neighbor that can only point two ways, or the two squares of a pair.
+* **Numbers in the second color** mark a trail of arrows, numbered in the order you follow them from the square next door, when a sentence says "following the arrows … leads back here".
+
+A few ideas are worth learning by name:
+
+* **One of each.** Once an area has an arrow, no other square in it can point that way. An area of four squares must hold all four arrows, so an arrow with only one square left to go in goes there.
+* **No loops.** An arrow pointing at a square whose arrows lead back here would go round in a circle and never reach a goal, so it is ruled out. The shortest loop is two neighbors pointing at each other. If the square to the left, in the same area, can only point left or right, this square can't point left into it: the area can't hold two left arrows, so that square would have to point right, straight back.
+* **A pair.** Two squares of an area that must take the same two arrows between them leave those arrows to no other square of the area.
+
 ## Rome parameters
 
-These parameters are available from the ‘Custom…’ option on the ‘Type’ menu. 
+These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu. 
 
 <dl>
 	<dt>Width, Height</dt>

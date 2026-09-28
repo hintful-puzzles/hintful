@@ -19,7 +19,12 @@ import { describe, expect, it } from "vitest";
 import { CONTRADICTION_UNLOCALIZED } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  DEFAULT_BACKGROUND,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
+import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { type ClustersHintHighlights, clustersGame } from "./index.ts";
 import { COL_0, COL_1, COL_HINT, COL_HINT_CELL, COL_HINT_DANGER } from "./render.ts";
 import {
@@ -422,5 +427,58 @@ describe("hint rendering (tier 2.5)", () => {
     );
 
     expect(ops).toMatchSnapshot();
+  });
+
+  it("a chain cell whose outline side closes repaints, keeping its own overlay", () => {
+    // The chain's outline joins neighboring cells, so a cell can keep its role,
+    // color and ordinal while a neighbor joining it removes the side between
+    // them — the one change the overlay bits cannot see.
+    const state = generate("join-side");
+    const ts = clustersGame.preferredTileSize ?? 32;
+    const size = clustersGame.computeSize(P, ts);
+    const palette = clustersGame.colors(DEFAULT_BACKGROUND);
+    const step = (chain: ClustersHintHighlights["chain"]) => ({
+      move: { kind: "paint", cells: [] } satisfies ClustersMove,
+      explanation: "",
+      highlights: { target: { x: 0, y: 0 }, chain } satisfies ClustersHintHighlights,
+    });
+    const alone = step([{ x: 3, y: 3, fill: F_COLOR_0, order: 1 }]);
+    const joined = step([
+      { x: 3, y: 3, fill: F_COLOR_0, order: 1 },
+      { x: 2, y: 3, fill: F_COLOR_0, order: 2 },
+    ]);
+    const frame = (
+      ds: ReturnType<typeof clustersGame.newDrawState>,
+      hint: typeof alone,
+    ) => {
+      const rec = new RecordingDrawing(palette);
+      clustersGame.redraw(
+        rec,
+        ds,
+        null,
+        state,
+        0,
+        clustersGame.newUi(state),
+        0,
+        0,
+        hint,
+      );
+      return rec.ops;
+    };
+
+    const ds = clustersGame.newDrawState(state, ts);
+    const warm = new BoxRaster(size.w, size.h);
+    warm.apply(frame(ds, alone));
+    warm.apply(frame(ds, joined));
+    const fresh = new BoxRaster(size.w, size.h);
+    fresh.apply(frame(clustersGame.newDrawState(state, ts), joined));
+
+    // Known positive: the lone cell's left side is drawn in the first frame.
+    const left = new BoxRaster(size.w, size.h);
+    left.apply(frame(clustersGame.newDrawState(state, ts), alone));
+    const differing = (a: BoxRaster, b: BoxRaster) =>
+      [...a.px.keys()].filter((i) => a.px[i] !== b.px[i]).length;
+    expect(differing(left, fresh)).toBeGreaterThan(0);
+    expect(differing(warm, fresh), "pixels a warm canvas shows differently").toBe(0);
   });
 });

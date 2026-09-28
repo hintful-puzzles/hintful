@@ -7,10 +7,19 @@ square containing a black circle must be a corner not connected
 directly to another corner; every square containing a white circle
 must be a straight which is connected to *at least one* corner.
 
+## Controls
+
 Drag between squares to draw or undraw pieces of the loop.
 Alternatively, left-click the edge between two squares to turn it on
 or off. Right-click an edge to mark it with a cross indicating that
 you are sure the loop does not go through it.
+
+The keyboard can also be used. The arrow keys move a cursor. Press
+Enter to start drawing, move the cursor along the path you want, and
+press Enter again to draw or undraw it; Space or Escape abandons the
+path instead. Holding Ctrl while pressing an arrow key draws or
+undraws the line in that direction and moves along it, and holding
+Shift marks or unmarks a cross on that edge.
 
 ## Hints
 
@@ -48,3 +57,16 @@ A few are worth learning, because they settle a pearl from farther away:
 A square that already has its two lines needs no crosses on its other edges,
 so the hint never asks you to draw them, and it counts such an edge as
 closed when it reasons.
+
+## Pearl parameters
+
+These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
+
+<dl>
+	<dt>Width, Height</dt>
+	<dd>Size of the grid in squares, at least 5 each. The harder of the two difficulties needs one of them to be at least 6.</dd>
+	<dt>Difficulty</dt>
+	<dd>Determine the difficulty of the generated puzzle. Higher difficulties require more complex reasoning (<a href="../features#difficulty">what the names mean</a>).</dd>
+	<dt>Allow unsoluble</dt>
+	<dd>Skip checking the puzzle at all: every pearl the generated loop allows is kept, and nothing makes sure the puzzle has only one solution or can be solved by reasoning. Such a board may have more than one loop that fits, and the difficulty setting has no effect on it.</dd>
+</dl>

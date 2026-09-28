@@ -12,6 +12,7 @@
  * pencil-mode overlay).
  */
 
+import { valueBit } from "../../engine/candidate-bits.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import {
   ERROR,
@@ -35,7 +36,6 @@ import { cellHighlight, drawCellBackground } from "../../engine/note-taking-cell
 import {
   HINT_AREA,
   HINT_TARGET,
-  hintMarkBit,
   type OrderedCell,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
@@ -173,7 +173,7 @@ export interface UnequalDrawState {
   /** `order³` last-drawn pencil bitmaps (one byte per candidate). */
   hints: Uint8Array;
   /** `order²` hint-overlay sidecar (fork addition): bit 0 = target cell, bit 1 =
-   * evidence, bits 2.. = struck-candidate mask (`hintMarkBit(n)`). Owns the
+   * evidence, struck candidates at `valueBit(n)` in its `struck` lane. Owns the
    * repack/stale/commit dance that keeps the overlay in the cache diff key
    * (docs/games/rendering.md § "The tile cache and the diff key"). */
   hint: OverlaySidecar;
@@ -387,7 +387,10 @@ function drawAdjs(
   dr.drawUpdate({ x: ox, y: oy + ts, w: ts, h: g });
 }
 
-/** A stroked rectangle outline (the canvas `Drawing` has no native one). */
+/** A stroked rectangle outline (the canvas `Drawing` has no native one), on the
+ * `w × h` pixels from `(x, y)`: the far edges sit at `x + w - 1` and `y + h - 1`,
+ * as upstream's `draw_rect_outline` has them, because a stroke at `x + w` lands
+ * in the next pixel column, outside the rect whose repaint is meant to own it. */
 function rectOutline(
   dr: GameDrawing,
   x: number,
@@ -396,12 +399,14 @@ function rectOutline(
   h: number,
   color: number,
 ): void {
+  const r = x + w - 1;
+  const b = y + h - 1;
   dr.drawPolygon(
     [
       { x, y },
-      { x: x + w, y },
-      { x: x + w, y: y + h },
-      { x, y: y + h },
+      { x: r, y },
+      { x: r, y: b },
+      { x, y: b },
     ],
     -1,
     color,
@@ -424,7 +429,7 @@ function drawCell(
   pencil: number,
   wrong: boolean,
   hflash: boolean,
-  hint: number,
+  struck: number,
   hintOrder: number,
   hatched: boolean,
 ): void {
@@ -436,8 +441,8 @@ function drawCell(
   // cell-level marks are read in `redraw`, which rings the target and outlines
   // the evidence region in the gap around the cell, so a hint never paints over
   // the digits it is talking about. What is left here is `struck`, the set of
-  // candidates this firing rules out, drawn crossed through among the marks.
-  const struck = hint >> 2; // bit (2 + n) ⇒ candidate n struck
+  // candidates this firing rules out (bit n ⇒ candidate n), drawn crossed
+  // through among the marks.
   drawCellBackground(
     dr,
     { x: ox, y: oy, w: ts, h: ts },
@@ -572,7 +577,7 @@ export function redraw(
 
   // Pack both overlays per cell.
   const index = (x: number, y: number) => y * o + x;
-  ds.hint.pack(hint?.highlights ?? null, index, (m) => hintMarkBit(m.n));
+  ds.hint.pack(hint?.highlights ?? null, index, (m) => valueBit(m.n));
   ds.wrong.packCells(mistakes ?? null, index);
 
   const hchanged =
@@ -580,6 +585,30 @@ export function redraw(
     ds.cursor.y !== ui.cursor.y ||
     ds.cursor.visible !== ui.cursor.visible ||
     ds.pencilMode !== ui.pencilMode;
+
+  const targets: MarkCell[] = [];
+  const evidence: MarkCell[] = [];
+  for (let i = 0; i < o * o; i++) {
+    const c = { x: i % o, y: (i / o) | 0 };
+    if (ds.hint.packed[i] & HINT_TARGET) targets.push(c);
+    if (ds.hint.packed[i] & HINT_AREA) evidence.push(c);
+  }
+  const markStyle = {
+    band: (x: number, y: number) => markBand(ds, x, y),
+    targetColor: COL_HINT,
+    evidenceColor: COL_HINT_CELL,
+  };
+  const underErased = new Uint8Array(o * o);
+  ds.marks.eraseBeforeTiles(
+    dr,
+    targets,
+    evidence,
+    markStyle,
+    COL_BACKGROUND,
+    (x, y) => {
+      if (x >= 0 && x < o && y >= 0 && y < o) underErased[y * o + x] = 1;
+    },
+  );
 
   for (let x = 0; x < o; x++) {
     for (let y = 0; y < o; y++) {
@@ -592,7 +621,7 @@ export function redraw(
         (state.immutable[i] ? DF_IMMUTABLE : 0);
       const pencil = num === 0 ? state.pencil[i] : 0;
 
-      let stale = !ds.started || hflash !== ds.hflash;
+      let stale = !ds.started || hflash !== ds.hflash || underErased[i] === 1;
       if (
         hchanged &&
         ((x === ui.cursor.x && y === ui.cursor.y) ||
@@ -622,7 +651,7 @@ export function redraw(
           pencil,
           ds.wrong.at(i),
           hflash,
-          ds.hint.packed[i],
+          ds.hint.struck[i],
           ds.hint.order[i],
           ds.hint.hatched[i] === 1,
         );
@@ -636,20 +665,8 @@ export function redraw(
   }
 
   // The hint marks, after the tile loop, because they live in the gap between
-  // cells, which no cell owns.
-  const targets: MarkCell[] = [];
-  const evidence: MarkCell[] = [];
-  for (let i = 0; i < o * o; i++) {
-    const c = { x: i % o, y: (i / o) | 0 };
-    if (ds.hint.packed[i] & HINT_TARGET) targets.push(c);
-    if (ds.hint.packed[i] & HINT_AREA) evidence.push(c);
-  }
-  ds.marks.paint(dr, targets, evidence, {
-    band: (x, y) => markBand(ds, x, y),
-    targetColor: COL_HINT,
-    evidenceColor: COL_HINT_CELL,
-    gutterColor: COL_BACKGROUND,
-  });
+  // cells.
+  ds.marks.paint(dr, targets, evidence, markStyle);
 
   // Pencil-mode indicator (fork addition).
   repaintPencilIndicator(dr, ds, ui.pencilMode, PENCIL_BOX(o, ts), PENCIL_STYLE);

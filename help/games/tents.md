@@ -9,9 +9,18 @@ Place tents in the empty squares in such a way that:
   orthogonally adjacent to its own tent (but may also be adjacent to
   other tents).
 
+## Controls
+
 Click in a square to place or remove a tent. Right-click to mark a
 square as grass (not a tent). Right-click and drag along a row or
 column to mark many squares at once as grass.
+
+With the keyboard, the arrow keys move a cursor around the grid. On an
+empty square, Enter places a tent and Space marks grass; on a square
+that is already filled, either key empties it. T, N and B
+set the square to a tent, grass or empty outright. Hold Shift while
+moving the cursor to mark the empty squares it passes over as grass, or
+Ctrl to turn tents it passes over into grass as well.
 
 Warning '!' marks appear to indicate adjacent tents. Numbers round
 the edge of the grid light up red to indicate they do not match the
@@ -67,3 +76,14 @@ A few ideas are worth learning by name:
 * On harder boards: **wherever a row's tents go**, some squares in the
   rows beside it are always touched by one of them, so they must be
   grass.
+
+## Tents parameters
+
+These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
+
+<dl>
+	<dt>Width, Height</dt>
+	<dd>Size of the grid in squares, at least 4 each way.</dd>
+	<dt>Difficulty</dt>
+	<dd>How hard the reasoning the puzzle needs may be (<a href="../features#difficulty">what the names mean</a>).</dd>
+</dl>

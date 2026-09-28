@@ -39,6 +39,7 @@ import {
   newState,
   SPOKE_DIRS,
   SPOKE_LINE,
+  SPOKE_MARKED,
   type SpokesBoard,
   type SpokesParams,
   type SpokesState,
@@ -409,6 +410,24 @@ describe("the hint frame paints the overlay", () => {
     expect(isDiagLine(result.hint?.highlights as SpokesHint | undefined)).toBe(true);
 
     expect(ops).toMatchSnapshot();
+  });
+
+  it("rings a spoke to rule out rather than drawing it already marked", () => {
+    // A filled COL_HINT dot is exactly how a marked spoke looks, so the step
+    // read as already done.
+    const isRuleOut = (h?: SpokesHint): boolean =>
+      h?.spokes?.some((s) => s.state === SPOKE_MARKED) ?? false;
+    const result = renderScenario({
+      game: spokesGame,
+      id: `${spokesGame.encodeParams(TRICKY, true)}#rule-out-frame`,
+      showHint: true,
+      hintUntil: (step) => isRuleOut(step.highlights as SpokesHint | undefined),
+      defaultBackground: DEFAULT_BACKGROUND,
+    });
+    expect(isRuleOut(result.hint?.highlights as SpokesHint | undefined)).toBe(true);
+    const circles = result.recording.ops.filter((o) => o.op === "circle");
+    expect(circles.some((o) => o.outline === COL_HINT && o.fill === -1)).toBe(true);
+    expect(circles.filter((o) => o.fill === COL_HINT)).toEqual([]);
   });
 });
 

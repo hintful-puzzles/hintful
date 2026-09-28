@@ -12,5 +12,57 @@ Color some squares black, so as to meet the following conditions:
   direction there must be one white square and then a black one beyond
   it.)
 
+## Controls
+
 Left-click to color a square black. Right-click to mark a square
 with a dot, if you know it should not be black.
+
+Clicking again moves on round the same three states: a left-click
+turns a black square into a dot and a dot back into an empty square,
+and a right-click turns a dot black and a black square empty.
+
+The keyboard can also be used. The arrow keys move a cursor; Enter
+does what a left-click does to the square under it, and Space what a
+right-click does. Hold Shift while moving to put a dot in every empty
+square the cursor passes over.
+
+## Hints
+
+**Hint** explains the next step rather than simply making it. It reasons
+only from the numbers, your black squares and your dots, so it carries
+on from wherever you are, as long as none of those is wrong; if one is,
+it asks you to fix the highlighted mistakes first. Its sentences call a
+square a *cell*, and when one says a cell "must be white" it means
+you can mark it with a dot.
+
+* **A ring in the hint color** marks the cell the step decides.
+* **A number drawn in the hint color** is "the highlighted" clue the
+  step counts from.
+* **An outline in a second color** marks the white cells it reasons
+  from: the cells a clue already sees, or the cells around one that
+  black would cut off.
+* **Stripes** mark "the striped run": the stretch a clue has to see
+  along, as far as the ringed cell.
+* **A black square with a double ring** in a third color is the black
+  square the step reasons from.
+
+The ideas it teaches:
+
+* **Black squares never touch**, so every cell beside a black square is
+  white.
+* **A clue that sees enough** stops at the first cell past what it sees,
+  so that cell must be black. Likewise, a cell that would let a clue see
+  too far must be black.
+* **A clue that needs to see further** than its other directions allow
+  must see along the rest of the way, so those cells are white.
+* **White stays connected.** A cell whose blackening would cut some of
+  the white cells around it off from the rest must stay white.
+
+## Range parameters
+
+These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
+
+<dl>
+	<dt>Width, Height</dt>
+	<dd>Size of the grid in squares. At least one of them must be 3 or more, and together they can come to at most 128.</dd>
+</dl>
