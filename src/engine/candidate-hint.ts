@@ -75,7 +75,7 @@ export interface NoteEncoding {
 }
 
 /** `enc.bit`, defaulted to the Latin family's `1 << n`. */
-function bitOf(enc?: NoteEncoding): (n: number) => number {
+export function noteBitOf(enc?: NoteEncoding): (n: number) => number {
   return enc?.bit ?? valueBit;
 }
 
@@ -246,7 +246,7 @@ export function nakedSingles(
   w: number,
   enc?: NoteEncoding,
 ): Mark[] {
-  const bit = bitOf(enc);
+  const bit = noteBitOf(enc);
   const values = enc?.values ?? w;
   const out: Mark[] = [];
   for (let i = 0; i < grid.length; i++) {
@@ -327,7 +327,7 @@ export function availableFirings<R extends DeductionRecord>(
     placed?: ArrayLike<number>;
   },
 ): AvailableFirings<R> {
-  const bit = bitOf(opts?.enc);
+  const bit = noteBitOf(opts?.enc);
   const placed = opts?.placed ?? grid;
   const liveAt = (op: R): boolean =>
     op.kind === "elim" &&
@@ -476,7 +476,7 @@ export function regionDuplicateMarks(
   enc?: NoteEncoding,
 ): Mark[] {
   const home = y * w + x;
-  const bit = bitOf(enc)(n);
+  const bit = noteBitOf(enc)(n);
   const seen = new Set<number>();
   const marks: Mark[] = [];
   for (let i = 0; i < reached.length; i++) {
@@ -533,7 +533,7 @@ export function obviousCandidateMarks(
   reach: Reach,
   enc?: NoteEncoding,
 ): Mark[] {
-  const bit = bitOf(enc);
+  const bit = noteBitOf(enc);
   const values = enc?.values ?? w;
   const ruled = ruledOut(grid, reach, bit);
   const marks: Mark[] = [];
@@ -579,7 +579,7 @@ export function impliedNotes(
   reach: Reach,
   enc?: NoteEncoding,
 ): Int32Array {
-  const ruled = ruledOut(grid, reach, bitOf(enc));
+  const ruled = ruledOut(grid, reach, noteBitOf(enc));
   const out = new Int32Array(grid.length);
   for (let i = 0; i < grid.length; i++) {
     if (grid[i] !== 0) continue;
@@ -804,7 +804,7 @@ export function emitObviousCleanStep<M, H>(
   explanation: string,
   opts?: { enc?: NoteEncoding; adapter?: CandidateMoveAdapter<M> },
 ): boolean {
-  const bit = bitOf(opts?.enc);
+  const bit = noteBitOf(opts?.enc);
   const marks = obviousCandidateMarks(grid, pencil, w, reach, opts?.enc);
   if (marks.length === 0) return false;
   for (const m of marks) pencil[m.y * w + m.x] &= ~bit(m.n);
@@ -846,7 +846,7 @@ export function keepCandidateHintTrack<M, H extends CandidateHighlights>(
   adapter?: CandidateMoveAdapter<M>,
 ): HintTrackVerdict {
   const dialect = adapterOf(adapter);
-  const bit = bitOf(dialect);
+  const bit = noteBitOf(dialect);
   const pm = dialect.read(m);
   const sm = dialect.read(step.move);
   if (pm === null || sm === null) return "off";
@@ -908,7 +908,7 @@ export function refreshCandidateHintStep<M, H extends CandidateHighlights>(
   adapter?: CandidateMoveAdapter<M>,
 ): HintStep<M, H> | null {
   const dialect = adapterOf(adapter);
-  const bit = bitOf(dialect);
+  const bit = noteBitOf(dialect);
   const m = dialect.read(step.move);
   if (m === null) return step;
   if (m.type === "pencilStrike" || m.type === "pencilAdd") {

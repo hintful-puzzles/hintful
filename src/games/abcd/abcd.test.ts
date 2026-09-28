@@ -456,7 +456,7 @@ describe("abcd findMistakes", () => {
     const wrong = sol[0] % p.n; // the letter after the answer, `sol[0] - 1`
 
     const bad = abcdGame.executeMove(st, { type: "enter", x: 0, y: 0, letter: wrong });
-    expect(abcdGame.findMistakes?.(bad)).toContainEqual({ x: 0, y: 0 });
+    expect(abcdGame.findMistakes?.(bad)).toContainEqual({ x: 0, y: 0, kind: "cell" });
 
     const good = abcdGame.executeMove(st, {
       type: "enter",

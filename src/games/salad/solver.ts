@@ -34,6 +34,7 @@
  */
 
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
+import { type EntryBoard, entryMistake } from "../../engine/entry-mistakes.ts";
 import {
   DIFF_IMPOSSIBLE,
   type LatinRepeats,
@@ -52,6 +53,7 @@ import {
   latinholesCheck,
   type SaladBoard,
   type SaladState,
+  saladNotes,
   scratchBoard,
 } from "./state.ts";
 
@@ -512,6 +514,14 @@ export function findMistakes(s: SaladState): SaladMistake[] {
   const sol = saladSolution(s);
   if (!sol) return [];
 
+  // The "might be empty" mark is the note value just past the symbols, so a
+  // hole's answer reads as that value — which no placed symbol can equal.
+  const board: EntryBoard = {
+    answer: sol.map((v) => (v === 0 ? nums + 1 : v)),
+    entry: s.grid,
+    notes: s.pencil,
+    enc: saladNotes(nums),
+  };
   const out: SaladMistake[] = [];
   for (let i = 0; i < o * o; i++) {
     const clue = s.gridclues[i];
@@ -519,25 +529,20 @@ export function findMistakes(s: SaladState): SaladMistake[] {
     // leaves the square's symbol up to the player.
     if (clue && clue !== CIRCLE) continue;
 
-    const soln = sol[i];
     const x = i % o;
     const y = (i / o) | 0;
-
-    if (s.grid[i] !== 0) {
-      if (s.grid[i] !== soln) out.push({ kind: "cell", x, y });
-      continue;
+    if (s.grid[i] === 0) {
+      if (s.holes[i] === CROSS) {
+        if (sol[i] !== 0) out.push({ kind: "cross", x, y });
+        continue;
+      }
+      if (s.holes[i] === CIRCLE && sol[i] === 0) {
+        out.push({ kind: "circle", x, y });
+        continue;
+      }
     }
-    if (s.holes[i] === CROSS) {
-      if (soln !== 0) out.push({ kind: "cross", x, y });
-      continue;
-    }
-    if (s.holes[i] === CIRCLE && soln === 0) {
-      out.push({ kind: "circle", x, y });
-      continue;
-    }
-    // Notes: bit `n−1` is symbol `n`, bit `nums` the "might be empty" mark.
-    const solnBit = soln === 0 ? 1 << nums : 1 << (soln - 1);
-    if (s.pencil[i] !== 0 && !(s.pencil[i] & solnBit)) out.push({ kind: "note", x, y });
+    const kind = entryMistake(board, i);
+    if (kind) out.push({ kind, x, y });
   }
   return out;
 }

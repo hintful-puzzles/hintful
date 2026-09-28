@@ -27,6 +27,7 @@ import {
   valuesOf,
 } from "../../engine/candidate-plan.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import {
   type Game,
   type HintResult,
@@ -432,8 +433,7 @@ function solve(
   return { ok: true, move: { type: "solve", grid: Array.from(soln) } };
 }
 
-/** Flag every user entry that contradicts the unique solution (re-solved from
- * the givens only), for Check & Save. */
+/** Check & Save against the unique solution, re-solved from the givens only. */
 function findMistakes(state: GroupState): readonly GroupMistake[] {
   const w = state.w;
   const a = w * w;
@@ -441,14 +441,15 @@ function findMistakes(state: GroupState): readonly GroupMistake[] {
   for (let i = 0; i < a; i++) if (state.immutable[i]) soln[i] = state.grid[i];
   const ret = solveGroup(soln, w, DIFF_UNREASONABLE);
   if (ret === DIFF_IMPOSSIBLE || ret === DIFF_AMBIGUOUS) return [];
-
-  const out: GroupMistake[] = [];
-  for (let i = 0; i < a; i++) {
-    if (state.immutable[i]) continue;
-    if (state.grid[i] && state.grid[i] !== soln[i])
-      out.push({ x: i % w, y: (i / w) | 0 });
-  }
-  return out;
+  return entryMistakes(
+    {
+      answer: soln,
+      entry: state.grid,
+      notes: state.pencil,
+      fixed: (i) => state.immutable[i] !== 0,
+    },
+    gridCell(w),
+  );
 }
 
 // --- hint ------------------------------------------------------------------

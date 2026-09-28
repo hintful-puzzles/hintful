@@ -14,6 +14,7 @@
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { tierNames } from "../../engine/difficulty.ts";
+import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
@@ -230,7 +231,9 @@ export function cloneState(s: MapState): MapState {
   return { ...s, coloring: s.coloring.slice(), pencil: s.pencil.slice() };
 }
 
-/** A flagged region whose color contradicts the unique solution. */
+/** A flagged region whose color contradicts the unique solution, or whose dots
+ * leave that color out. */
 export interface MapMistake {
   region: number;
+  kind: EntryMistakeKind;
 }

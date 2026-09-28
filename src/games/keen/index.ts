@@ -21,6 +21,7 @@ import {
 import { runLatinCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
 import { digitValue } from "../../engine/decimal.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
@@ -297,16 +298,10 @@ function findMistakes(state: KeenState): readonly KeenMistake[] {
   const soln = new Uint8Array(w * w);
   const ret = solveKeen(w, state.clues, soln, DIFF_UNREASONABLE);
   if (ret === DIFF_IMPOSSIBLE || ret === DIFF_AMBIGUOUS) return [];
-  const out: KeenMistake[] = [];
-  for (let i = 0; i < w * w; i++) {
-    if (state.grid[i]) {
-      if (state.grid[i] !== soln[i])
-        out.push({ kind: "cell", x: i % w, y: (i / w) | 0 });
-    } else if (state.pencil[i] !== 0 && !(state.pencil[i] & (1 << soln[i]))) {
-      out.push({ kind: "note", x: i % w, y: (i / w) | 0 });
-    }
-  }
-  return out;
+  return entryMistakes(
+    { answer: soln, entry: state.grid, notes: state.pencil },
+    gridCell(w),
+  );
 }
 
 // --- hint ------------------------------------------------------------------

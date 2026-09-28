@@ -20,6 +20,7 @@
  * covers it end to end.
  */
 
+import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import {
   type CrossingPuzzle,
   type CrossingState,
@@ -150,23 +151,18 @@ export interface CrossingMistake {
  * check never judges a position it cannot prove.
  */
 export function findMistakes(state: CrossingState): CrossingMistake[] {
-  const { w, h, walls } = state.puzzle;
+  const { w, walls } = state.puzzle;
   const solved = solveCrossing(state.puzzle);
   if (solved.status !== "valid") return [];
 
-  const out: CrossingMistake[] = [];
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      if (walls[i]) continue;
-      const answer = solved.grid[i];
-      const entered = state.grid[i];
-      if (entered !== 0) {
-        if (entered !== answer) out.push({ x, y, kind: "cell" });
-      } else if (state.pencil[i] !== 0 && !(state.pencil[i] & bit(answer))) {
-        out.push({ x, y, kind: "note" });
-      }
-    }
-  }
-  return out;
+  return entryMistakes(
+    {
+      answer: solved.grid,
+      entry: state.grid,
+      notes: state.pencil,
+      enc: { bit },
+      fixed: (i) => walls[i] !== 0,
+    },
+    gridCell(w),
+  );
 }

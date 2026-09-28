@@ -14,6 +14,7 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
@@ -392,18 +393,18 @@ function findMistakes(state: UndeadState): readonly UndeadMistake[] {
   if (!sol.ok) return [];
 
   const xyOf = monsterCellXY(common);
-  const out: UndeadMistake[] = [];
-  for (let i = 0; i < common.numTotal; i++) {
-    if (common.fixed[i]) continue;
-    const { x, y } = xyOf[i];
-    const g = state.guess[i];
-    if (isSingleton(g)) {
-      if (g !== sol.guess[i]) out.push({ kind: "cell", x, y });
-    } else if (state.pencil[i] !== 0 && !(state.pencil[i] & sol.guess[i])) {
-      out.push({ kind: "note", x, y });
-    }
-  }
-  return out;
+  // A guess is a mask of the monsters still possible, so a placed monster is a
+  // singleton mask and its note bit is the mask itself.
+  return entryMistakes(
+    {
+      answer: sol.guess,
+      entry: state.guess.map((g) => (isSingleton(g) ? g : 0)),
+      notes: state.pencil,
+      enc: { bit: (mask) => mask },
+      fixed: (i) => common.fixed[i] !== 0,
+    },
+    (i) => xyOf[i],
+  );
 }
 
 // --- hint ------------------------------------------------------------------

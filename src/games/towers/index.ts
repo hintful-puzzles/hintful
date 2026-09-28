@@ -21,6 +21,7 @@ import {
 } from "../../engine/candidate-hint.ts";
 import { runLatinCandidatePlan } from "../../engine/candidate-plan.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
@@ -365,21 +366,15 @@ function findMistakes(state: TowersState): readonly TowersMistake[] {
   const soln = Uint8Array.from(state.immutable);
   const ret = solveTowers(w, state.clues, soln, DIFF_UNREASONABLE);
   if (ret === DIFF_IMPOSSIBLE || ret === DIFF_AMBIGUOUS) return [];
-  const out: TowersMistake[] = [];
-  for (let i = 0; i < w * w; i++) {
-    if (state.immutable[i]) continue; // givens are always correct
-    if (state.grid[i]) {
-      // A filled cell whose height contradicts the unique solution.
-      if (state.grid[i] !== soln[i])
-        out.push({ kind: "cell", x: i % w, y: (i / w) | 0 });
-    } else if (state.pencil[i] !== 0 && !(state.pencil[i] & (1 << soln[i]))) {
-      // An empty cell whose non-empty notes have crossed out the correct
-      // height. (Notes carrying extra, non-solution candidates are fine — that
-      // is ordinary mid-solve state.)
-      out.push({ kind: "note", x: i % w, y: (i / w) | 0 });
-    }
-  }
-  return out;
+  return entryMistakes(
+    {
+      answer: soln,
+      entry: state.grid,
+      notes: state.pencil,
+      fixed: (i) => state.immutable[i] !== 0,
+    },
+    gridCell(w),
+  );
 }
 
 // --- hint ------------------------------------------------------------------

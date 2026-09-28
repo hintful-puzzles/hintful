@@ -263,7 +263,7 @@ describe("the player's own board", () => {
     let state = abcdGame.executeMove(start, { type: "pencilAll" });
     expect(abcdGame.findMistakes?.(state)).toEqual([]);
     state = abcdGame.executeMove(state, { type: "pencil", x: 0, y: 0, letter: answer });
-    expect(abcdGame.findMistakes?.(state)).toEqual([{ x: 0, y: 0 }]);
+    expect(abcdGame.findMistakes?.(state)).toEqual([{ x: 0, y: 0, kind: "note" }]);
     expect(abcdGame.hint?.(state, undefined)?.ok).toBe(false);
   });
 

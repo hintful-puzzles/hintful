@@ -58,8 +58,9 @@ letter like any other, on grids large enough to use it).
 
 **Hint** explains the next step rather than simply making it. It works
 from your own letters and pencil marks, so it carries on from wherever
-you are; if a letter you've placed is wrong, it asks you to fix the
-highlighted mistakes first. It pencils in only as it needs to: a cell
+you are; if a letter you've placed is wrong, or a cell's pencil marks
+have crossed out its answer, it asks you to fix the highlighted
+mistakes first. It pencils in only as it needs to: a cell
 with no marks counts as holding every element its row and column don't
 already hold, and the hint writes a cell's marks only when its next
 step crosses one out or reasons from them. If you would rather it

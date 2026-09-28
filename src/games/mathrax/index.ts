@@ -24,6 +24,7 @@ import {
 } from "../../engine/candidate-hint.ts";
 import { runLatinCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
@@ -336,20 +337,10 @@ function findMistakes(state: MathraxState): readonly MathraxMistake[] {
   const o = state.params.o;
   const soln = solveFromGivens(state, true);
   if (!soln) return [];
-
-  const out: MathraxMistake[] = [];
-  for (let i = 0; i < o * o; i++) {
-    const x = i % o;
-    const y = (i / o) | 0;
-    if (state.grid[i]) {
-      if (state.grid[i] !== soln[i]) out.push({ kind: "cell", x, y });
-    } else if (state.pencil[i] !== 0 && !(state.pencil[i] & (1 << soln[i]))) {
-      // Notes are first-class markings: crossing the solution digit out of a
-      // cell is as wrong as writing the wrong digit in it.
-      out.push({ kind: "note", x, y });
-    }
-  }
-  return out;
+  return entryMistakes(
+    { answer: soln, entry: state.grid, notes: state.pencil },
+    gridCell(o),
+  );
 }
 
 // --- hint ------------------------------------------------------------------

@@ -12,6 +12,7 @@
 
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
+import { FIX_MISTAKES_FIRST } from "../../engine/hint-refusal.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { groupGame } from "./index.ts";
 import { type HintReason, recordGroupDeductions } from "./solver.ts";
@@ -213,6 +214,37 @@ describe("group hint — refusals", () => {
     expect(groupGame.findMistakes?.(bad).length ?? 0).toBeGreaterThan(0);
     const res = groupGame.hint?.(bad, undefined);
     expect(res?.ok).toBe(false);
+  });
+
+  it("refuses on marks that have crossed out a cell's answer, and flags them", () => {
+    const orig = board(NORMAL, "refuse-note-mistake");
+    const sr = groupGame.solve?.(orig, orig, undefined);
+    if (!sr?.ok || sr.move.type !== "solve") throw new Error("solve() failed");
+    const soln = sr.move.grid;
+    const w = orig.w;
+    const target = orig.immutable.findIndex((fixed) => !fixed);
+    expect(target).toBeGreaterThanOrEqual(0);
+    const x = target % w;
+    const y = (target / w) | 0;
+    const wrong = (soln[target] % w) + 1;
+
+    // Extra candidates beside the answer are ordinary mid-solve state.
+    const extra = groupGame.executeMove(orig, {
+      type: "pencilAdd",
+      marks: [
+        { x, y, n: soln[target] },
+        { x, y, n: wrong },
+      ],
+    });
+    expect(groupGame.findMistakes?.(extra)).toEqual([]);
+
+    const bad = groupGame.executeMove(orig, {
+      type: "pencilAdd",
+      marks: [{ x, y, n: wrong }],
+    });
+    expect(groupGame.findMistakes?.(bad)).toEqual([{ x, y, kind: "note" }]);
+    const res = groupGame.hint?.(bad, undefined);
+    expect(res).toEqual({ ok: false, error: FIX_MISTAKES_FIRST });
   });
 });
 

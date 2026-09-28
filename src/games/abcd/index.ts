@@ -11,6 +11,11 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import { adaptiveMarkAll, candidateHint } from "../../engine/candidate-hint.ts";
+import {
+  type EntryMistakeKind,
+  entryMistakes,
+  gridCell,
+} from "../../engine/entry-mistakes.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
@@ -79,8 +84,9 @@ import {
   validateParams,
 } from "./state.ts";
 
-/** A player entry that contradicts the puzzle's unique solution. */
-export type AbcdMistake = Point;
+/** A player entry that contradicts the puzzle's unique solution, or marks that
+ * have crossed it out. */
+export type AbcdMistake = Point & { kind: EntryMistakeKind };
 
 const KEY_M = 77;
 const KEY_m = 109;
@@ -294,21 +300,16 @@ function solve(orig: AbcdState): SolveResult<AbcdMove> {
 function findMistakes(state: AbcdState): readonly AbcdMistake[] {
   const res = solveAbcd(state.params, state.numbers);
   if (res.status !== "solved") return [];
-  const { w, h } = state.params;
-  const out: AbcdMistake[] = [];
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      const entry = state.grid[i];
-      const notes = state.pencil[i];
-      const wrong =
-        entry !== EMPTY
-          ? entry !== res.grid[i]
-          : notes !== 0 && !(notes & letterBit(res.grid[i] - 1));
-      if (wrong) out.push({ x, y });
-    }
-  }
-  return out;
+  return entryMistakes(
+    {
+      answer: res.grid,
+      entry: state.grid,
+      notes: state.pencil,
+      empty: EMPTY,
+      enc: { bit: (n) => letterBit(n - 1) },
+    },
+    gridCell(state.params.w),
+  );
 }
 
 function requestKeys(p: AbcdParams): KeyLabel[] {

@@ -447,7 +447,7 @@ describe("map hint bookkeeping", () => {
     const s = mapGame.executeMove(start, {
       ops: [{ op: "pencil", region: r, bit: wrong }],
     });
-    expect(mapGame.findMistakes?.(s)).toEqual([{ region: r }]);
+    expect(mapGame.findMistakes?.(s)).toEqual([{ region: r, kind: "note" }]);
     expect(mapGame.hint?.(s)).toEqual({ ok: false, error: FIX_MISTAKES_FIRST });
   });
 });

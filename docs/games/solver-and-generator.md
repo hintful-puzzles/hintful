@@ -915,6 +915,20 @@ overlay must be in the render diff key
 ([rendering.md](./rendering.md) § "Overlay sidecars"), and the refusal/banner
 coupling is in [hints.md](./hints.md).
 
+### Marks are checked like entries
+
+**Where the player pencils candidates, a blank cell whose marks leave out its
+answer is a mistake, exactly as a wrong entry is** — and a candidate hint
+depends on it, because it reasons from those marks. Marks carrying extra
+candidates beside the answer are ordinary mid-solve state, and a cell with no
+marks says nothing. Don't write this loop: `entryMistakes` in
+[`engine/entry-mistakes.ts`](../../src/engine/entry-mistakes.ts) owns it, and
+the game hands it the answer, its arrays, its `NoteEncoding` and its fixed
+cells ([engine-catalog.md](./engine-catalog.md) § "`entry-mistakes.ts` — Check
+& Save for one value or a set of marks per cell"). Group once checked entries
+only, and its hint narrated from a mark set that had already crossed out the
+answer.
+
 ### Edge games flag set edges only
 
 **Where the player draws walls, flag the player's edges that contradict the

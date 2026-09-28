@@ -24,6 +24,7 @@ import {
   regionReach,
 } from "../../engine/candidate-hint.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { type EntryMistakeKind, entryMistakes } from "../../engine/entry-mistakes.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
@@ -126,13 +127,13 @@ import {
 
 /**
  * A square Check & Save flags. `bounds` / `double` / `loop` are the rule
- * violations the board already shows live; `wrong` is an arrow that breaks no
+ * violations the board already shows live; `cell` is an arrow that breaks no
  * rule *yet* but contradicts the puzzle's unique solution; `note` is an empty
  * square whose marks have crossed out the arrow the solution wants there.
  */
 export interface RomeMistake {
   index: number;
-  kind: "bounds" | "double" | "loop" | "wrong" | "note";
+  kind: "bounds" | "double" | "loop" | EntryMistakeKind;
 }
 
 // --- setup ------------------------------------------------------------------
@@ -566,22 +567,21 @@ function findMistakes(state: RomeState): readonly RomeMistake[] {
 
   const solution = solutionGrid(state);
   if (solution) {
-    for (let i = 0; i < grid.length; i++) {
-      // A clue is never wrong, and a rule violation is already reported.
-      if (grid[i] & (FM_FIXED | FE_BOUNDS | FE_DOUBLE | FE_LOOP)) continue;
-      const answer = solution[i] & FM_ARROWMASK;
-      const arrow = grid[i] & FM_ARROWMASK;
-      if (arrow !== 0) {
-        if (arrow !== answer) out.push({ index: i, kind: "wrong" });
-        continue;
-      }
-      // An empty square is incomplete, never wrong — but its marks can be. A
-      // square with no marks is saying nothing, which is why the emptiness test
-      // is on the marks rather than on the square.
-      if (state.pencil[i] !== EMPTY && !(state.pencil[i] & answer)) {
-        out.push({ index: i, kind: "note" });
-      }
-    }
+    // The arrows are already note bits, so each value is its own bit.
+    const arrows = (cells: Int32Array) => cells.map((c) => c & FM_ARROWMASK);
+    out.push(
+      ...entryMistakes(
+        {
+          answer: arrows(solution),
+          entry: arrows(grid),
+          notes: state.pencil,
+          enc: { bit: (arrow) => arrow },
+          // A clue is never wrong, and a rule violation is already reported.
+          fixed: (i) => (grid[i] & (FM_FIXED | FE_BOUNDS | FE_DOUBLE | FE_LOOP)) !== 0,
+        },
+        (index) => ({ index }),
+      ),
+    );
   }
 
   return out;

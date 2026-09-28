@@ -16,6 +16,7 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import { anyEmptyLacksNotes, candidateHint } from "../../engine/candidate-hint.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
@@ -271,18 +272,10 @@ function solve(orig: SeismicState): SolveResult<SeismicMove> {
 function findMistakes(state: SeismicState): readonly SeismicMistake[] {
   const soln = solveFromGivens(state);
   if (!soln) return [];
-
-  const out: SeismicMistake[] = [];
-  for (let i = 0; i < state.w * state.h; i++) {
-    const x = i % state.w;
-    const y = (i / state.w) | 0;
-    if (state.grid[i]) {
-      if (state.grid[i] !== soln[i]) out.push({ kind: "cell", x, y });
-    } else if (state.pencil[i] !== 0 && !(state.pencil[i] & numBit(soln[i]))) {
-      out.push({ kind: "note", x, y });
-    }
-  }
-  return out;
+  return entryMistakes(
+    { answer: soln, entry: state.grid, notes: state.pencil, enc: { bit: numBit } },
+    gridCell(state.w),
+  );
 }
 
 // --- the game --------------------------------------------------------------

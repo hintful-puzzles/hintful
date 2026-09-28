@@ -699,7 +699,7 @@ describe("findMistakes", () => {
     });
     // Nothing is broken yet — the live rules are all satisfied.
     expect(validateGame(after, true)).toBe(STATUS_INCOMPLETE);
-    expect(romeGame.findMistakes?.(after)).toEqual([{ index, kind: "wrong" }]);
+    expect(romeGame.findMistakes?.(after)).toEqual([{ index, kind: "cell" }]);
   });
 
   it("says nothing about a correct partial board, or about pencil marks", () => {

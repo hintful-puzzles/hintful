@@ -20,6 +20,7 @@ import {
 } from "../../engine/candidate-hint.ts";
 import { runCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
@@ -339,17 +340,15 @@ function findMistakes(state: SoloState): readonly SoloMistake[] {
     DIFF_KINTERSECT,
   );
   if (diff === DIFF_IMPOSSIBLE || diff === DIFF_AMBIGUOUS) return [];
-  const out: SoloMistake[] = [];
-  for (let i = 0; i < cr * cr; i++) {
-    if (state.immutable[i]) continue;
-    if (state.grid[i]) {
-      if (state.grid[i] !== soln[i])
-        out.push({ kind: "cell", x: i % cr, y: (i / cr) | 0 });
-    } else if (state.pencil[i] !== 0 && !(state.pencil[i] & (1 << soln[i]))) {
-      out.push({ kind: "note", x: i % cr, y: (i / cr) | 0 });
-    }
-  }
-  return out;
+  return entryMistakes(
+    {
+      answer: soln,
+      entry: state.grid,
+      notes: state.pencil,
+      fixed: (i) => state.immutable[i] !== 0,
+    },
+    gridCell(cr),
+  );
 }
 
 // --- hint ------------------------------------------------------------------

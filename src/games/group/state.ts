@@ -24,6 +24,7 @@ import { valuesOneTo } from "../../engine/candidate-bits.ts";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
 import { tierNames } from "../../engine/difficulty.ts";
+import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
@@ -184,8 +185,9 @@ export type GroupMove =
    * step. */
   | { type: "pencilAdd"; marks: readonly { x: number; y: number; n: number }[] };
 
-/** A cell whose filled value contradicts the unique solution (Check & Save). */
-export type GroupMistake = Point;
+/** A cell whose filled value contradicts the unique solution, or whose marks
+ * have crossed it out (Check & Save). */
+export type GroupMistake = Point & { kind: EntryMistakeKind };
 
 // --- state -----------------------------------------------------------------
 

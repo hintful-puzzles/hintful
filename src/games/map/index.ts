@@ -16,6 +16,7 @@
 
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import type { Game, HintResult, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
@@ -430,14 +431,10 @@ function findMistakes(state: MapState): readonly MapMistake[] {
   )
     return [];
 
-  const out: MapMistake[] = [];
-  for (let i = 0; i < n; i++) {
-    const c = state.coloring[i];
-    const dots = state.pencil[i];
-    if (c >= 0 ? c !== coloring[i] : dots !== 0 && !(dots & (1 << coloring[i])))
-      out.push({ region: i });
-  }
-  return out;
+  return entryMistakes(
+    { answer: coloring, entry: state.coloring, notes: state.pencil, empty: -1 },
+    (region) => ({ region }),
+  );
 }
 
 function hint(

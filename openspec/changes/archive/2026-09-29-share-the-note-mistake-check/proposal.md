@@ -1,6 +1,7 @@
 # share-the-note-mistake-check
 
-**Status: scaffolded, not started.** Found 2026-09-28 during
+**Status: done 2026-09-29** (see `tasks.md` for what the population reading
+found). Found 2026-09-28 during
 `cover-hints-in-help-and-guard-tile-flags`, while writing Group's help section.
 
 ## Why
@@ -23,7 +24,7 @@ each game whose `findMistakes` emits `kind: "note"` (take the population with
 in what "the player can change" means. Group is the copy that dropped half of
 it, which is the failure a hand-copied loop invites.
 
-## What
+## What Changes
 
 - An engine helper that owns the loop, with the game supplying the solved
   answer, the entry and note arrays, the note-bit spelling and the fixed-cell
