@@ -116,8 +116,13 @@ single — it is a genuine decision and stays with the game. If they could not, 
 is a convention somebody forgot to make, and N games are each paying to
 re-answer it. **N games sharing a defect means the layer below them is wrong.**
 
-**Every convention ships with an override**, and the override is first-class: a
-game writes the explicit form and says why in its change. What a convention must
+**A game that does not fit a convention is first a question about the
+convention** (owner, 2026-09-28). The catalog is to grow significantly, and
+what looks like an exception today is reasonably likely to be the first of a new
+category tomorrow, so a misfit first asks whether the shape can be made more
+flexible — a parameter, a variant, a family of shapes. **Only when it genuinely
+cannot does the game take the override**, which is then first-class: the game
+writes the explicit form and says why in its change. What a convention must
 never become is a contortion — game-specific logic is never bent to fit a
 contract, and an exemplar hint never loses a word to an abstraction. Two
 conventions in the tree show the shape to copy: a tier a game declares

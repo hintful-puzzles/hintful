@@ -65,10 +65,15 @@ contract could make impossible rather than merely detectable:
   Some obligations are semantic — a deduction is valid, a plan survives
   recomputing, a generated board is unique at its stated difficulty. The
   contract can still name them and the engine run their validators.
-- **Escape routes are first-class.** Where a shared shape fits most games but
-  not all (the gesture-table exploration found 14 clean, 14 hatched, 29 partial
-  fits for input), the contract offers a default and a typed override, and
-  game-specific logic is never contorted to fit.
+- **A game that does not fit a shared shape is a reason to reexamine the
+  shape** (owner, 2026-09-28). The catalog is to grow significantly over the
+  coming year, and what looks like an exception now is reasonably likely to be
+  the first of a new category. So a misfit first asks whether the shape can be
+  made more flexible — a parameter, a variant, a family of shapes — and only
+  when it genuinely cannot does the game take a typed override, saying why.
+  Game-specific logic is never contorted to fit. The gesture-table exploration
+  found 14 clean, 14 hatched and 29 partial fits for input; read the 29 as
+  evidence about the shape, not only about the games.
 - **Draft is computed, and visible.** A contract section is implemented or an
   explicit draft placeholder; the catalog label is derived from those, never a
   flag a game sets about itself.
@@ -89,7 +94,8 @@ contract could make impossible rather than merely detectable:
   view and is clipped to a declared footprint, and tiles that share pixels are
   known to the engine.
 - **Input**: declared where the shape is shared, with keyboard and touch
-  equivalents derived, and a typed override for the rest.
+  equivalents derived; the games that fit only partly are first a question of
+  how flexible the shapes can be, and a typed override only for what remains.
 - **Text elements**: refusal messages, status text, error strings — which of
   them belong in the contract.
 - **Completeness and the draft label**: how a game is defined (a builder,
