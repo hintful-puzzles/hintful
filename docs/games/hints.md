@@ -5,8 +5,8 @@ a `hint()` — explained hints are a **core deliberate-divergence product
 value** of this fork, not a nicety — but coverage is not yet complete: the
 games still lacking one are the registered games that declare no `hint`, which
 [`engine/testing/hint-games.ts`](../../src/engine/testing/hint-games.ts) derives.
-A hintless game is left that way deliberately until its hint is taken as an
-assessment of the framework, and `characterize-the-hint-assessment-corpus`'s
+A hintless game is a draft, and every game is to have a hint by the end of
+October 2026 (AGENTS.md § "Hint quality bar"); `characterize-the-hint-assessment-corpus`'s
 audit is where the order is chosen. Upstream's `'h'` returns one next move with
 no explanation; that is below the bar. Adding a hint to a game is its **own
 openspec change** (`add-<game>-hint`), acceptance-gated like a port.

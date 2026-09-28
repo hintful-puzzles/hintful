@@ -862,7 +862,8 @@ to detect.
 ([`capability-surface.test.ts`](../../src/capability-surface.test.ts)), which
 records every game's field names — its `Ui` *and* its draw state — sorted, in
 one file. It asserts nothing about which names a game may use; an approved
-vocabulary would be the manifest this collection refuses. Its whole job is to
+vocabulary that nothing consumed would be a second copy of the names, with nothing
+to keep it true. Its whole job is to
 put the collection's vocabulary somewhere a person can **read** it, and to make
 a change to that vocabulary a reviewable line in a text diff. Reading all 57
 once is how the `dragType`/`dragtype` split, the `aiming` collision and a

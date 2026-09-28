@@ -140,24 +140,31 @@ loop") was reversed once the loop carried the frontier, the setup phases and
 the rung ordering. Re-read any recorded "deliberately not shared" in that light
 rather than inheriting it.
 
-**A game joins a shared mechanic by *having* it, never by declaring that it
-has it.** Carrying the `Ui` fields, calling the arm, declaring the method — that
-*is* the enrollment, and a cross-game guard finds its population by reading what
-the game is (the registered object, the `Ui` its `newUi` returns, its own
-comment-stripped source; `src/engine/testing/enrollment.ts` asks all three).
-Nothing in the tree enrolls from a manifest, and three attempts to build one have
-been reversed — eighteen `needsRightButton` declarations deleted, the gesture
-table withdrawn, the hint list derived. The reason is not taste: a manifest can
-be forgotten by a new game, left behind by a changed one, or simply wrong, and
-*nothing notices*.
+**One source of truth: a declaration is healthy exactly when the engine runs
+it or builds from it.** A value a mechanism **consumes** — a technique's tier, a
+`paramConfig` field list, a presets menu — is an input: the dialog, the codec
+and the tier names are built from `paramConfig`, so it cannot disagree with them.
+A statement **about** a game that sits beside the code it describes, read only
+by a check, is a second copy, and that is the one to refuse: it can be forgotten
+by a new game, left behind by a changed one, or simply wrong, and *nothing
+notices*. Three such copies were reversed here — eighteen `needsRightButton`
+declarations, a gesture table described beside `interpretMove`, a hand-kept hint
+list. What failed each time was the copy, not the declaring.
 
-**Two things wear the word "declaration" and only one of them is that.** A value
-a mechanism **consumes** — a technique's tier, a `paramConfig` field list, a
-presets menu — is an input, it is healthy, and the deduction end runs on it. A
-statement **about** a game that only a guard reads is a manifest, and that is the
-one to refuse. Before designing a declaration, ask which it is; then ask what the
-consumer is already being sent, because twice now the declaration a concern
-should have derived from was already crossing the boundary.
+**So the direction is more declaration, not less — of the consumed kind** (owner,
+2026-09-28). The project is a rewrite of games written by many authors at many
+times into one coherent whole on an opinionated engine, and the engine is to hold
+a detailed contract of what a game provides — functionality, parameters, text,
+the words a hint uses for its marks — checked by types and by validation
+functions, with a game that lacks part of it shown as a **draft**. Where a
+guard today *derives* a population because nothing declared it, that is a
+stopgap, not a principle: a contract the engine consumes supersedes it.
+`envision-the-game-contract` is where that is being worked out; until it lands,
+a game joins a shared mechanic by having it, and a cross-game guard finds its
+population by reading what the game is (`src/engine/testing/enrollment.ts`).
+Before designing a declaration, ask what consumes it; then ask what the consumer
+is already being sent, because twice now the declaration a concern should have
+come from was already crossing the boundary.
 
 **Where intent genuinely cannot be observed, attach it to the derived member, not
 to the enrollment.** The guard derives *who*, and carries a ledger saying *why* a
@@ -436,7 +443,7 @@ Explained hints are a core deliberate-divergence product value of this fork, not
 
 **A non-deductive game is not exempt from the bar** — it is exempt only from *deduction*. Untangle has no forced move, so it narrates a measurement it can check instead: what the move does to the point's crossings ([`docs/games/hints.md`](docs/games/hints.md) § "Non-deductive (heuristic) hints"); **Inertia** (the non-deductive exemplar, `add-inertia-hint`, owner-endorsed 2026-07-13) shows the other pole: find the one thing the game can *prove* (there, "this gem can never be reached again") and lead with it, hold a stable subgoal and mark it when the game has no name for it, and narrate each move by the consequence it actually has.
 
-**A new game implementation ships with a hint** (owner, 2026-09-04). That is the forward-looking bar, and it is not retroactive: **a game `HINT_GAMES` leaves out is deliberately being left hintless for now**, because implementing those hints is how the framework work gets assessed — a target contract is tested by writing real hints against it, not by re-reading the games that already have one. So a hintless game is not a defect to be swept up, and the corpus is characterized rather than closed — `characterize-the-hint-assessment-corpus`'s `audit.md` classified the hintless games of its day into seven shapes, said per game what a hint there would press on, and recommended the order to take them in. **Pick from it rather than alphabetically**: the point of characterizing was to be able to choose the game that presses hardest on whatever is being tested, and the cheapest hint in the corpus is the worst assessment. Enrollment in the cross-game hint guards is derived from the `hint()` declaration itself (`src/engine/testing/hint-games.ts`), so a game acquires every guard the moment it acquires a hint, and none before.
+**Every game has a hint, and a game without one is a draft** (owner, 2026-09-28: the project is called Hintful on purpose). The goal is every game hinted by the end of October 2026. A new game ships with its hint. The remaining hintless games are also how the framework work gets assessed — a target contract is tested by writing real hints against it — so the order still matters: `characterize-the-hint-assessment-corpus`'s `audit.md` classified the hintless games of its day into seven shapes, said per game what a hint there would press on, and recommended the order to take them in. **Pick from it rather than alphabetically**: choose the game that presses hardest on whatever is being built, because the cheapest hint in the corpus is the worst assessment — and while `envision-the-game-contract` is open, write each new hint in a way that keeps its mark words and its marks easy to bind together later rather than further apart. Enrollment in the cross-game hint guards is derived from the `hint()` declaration itself (`src/engine/testing/hint-games.ts`), so a game acquires every guard the moment it acquires a hint, and none before.
 
 Aspirational next step (owner-flagged 2026-06-15): lift Fifteen/Sixteen hints from "Slide tile 10 into the space" to a Palisade-grade *why* — does the move place a tile in its final home, or is it a helper/setup move toward sorting another tile? Inertia's stable-subgoal narration is the shape this wants.
 

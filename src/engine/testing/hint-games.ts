@@ -9,9 +9,8 @@
  * because games mention `hint` without declaring one (an unused `redraw`
  * parameter, Guess's unrelated `ui.hint`).
  *
- * **A game with no `hint()` is not a defect.** Some logic games stay hintless
- * deliberately, as the corpus for assessing the framework work; the bar that a
- * new game ships with a hint is stated in AGENTS.md.
+ * **A game with no `hint()` is a draft** (AGENTS.md § "Hint quality bar"), and
+ * joins every guard here the moment it gains one.
  *
  * Dev/test-only; never imported by production code.
  */
