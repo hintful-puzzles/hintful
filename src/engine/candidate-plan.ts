@@ -18,8 +18,9 @@
  */
 
 import {
+  type AvailableFirings,
   addMove,
-  availableStrikes,
+  availableFirings,
   type CandidateHighlights,
   type CandidateMoveAdapter,
   type CandidateReading,
@@ -96,12 +97,17 @@ interface Folded {
   placed: number | null;
 }
 
-/** What a rung is told each time it is asked. */
-export interface RungContext<R> {
+/** What a rung is told each time it is asked. `F` is the plan's firing. */
+export interface RungContext<R, F = unknown> {
   /** Every earlier rung came up empty this time, which is where a rung that may
-   * fire only as the plan's last resort (a clue-forced placement,
-   * `availablePlacements`' `nothingElse`) is allowed to. */
+   * fire only as the plan's last resort is allowed to (`availablePlacements`'
+   * `nothingElse`, which only the classification of a skipped single reads). */
   nothingEarlier: boolean;
+  /** The recorded placements the plan could take now, as the walk's own
+   * placement rung builds them: the singles the board shows, and (`recorded`)
+   * each placement with a reason of its own whose premise the board supports.
+   * For a game whose deductions are placements and should lead (Group). */
+  placements: () => readonly { firing: F; recorded: boolean }[];
   /** The recording of the working board as it stands. */
   ops: readonly R[];
   /** Whether the notes have been set up: penciled in and cleaned under the
@@ -115,7 +121,7 @@ export interface RungContext<R> {
 
 /** One rung of a plan's ladder: the firings of one kind it could take now. */
 export type CandidateRung<M, H, R, Reason> = (
-  ctx: RungContext<R>,
+  ctx: RungContext<R, Firing<M, H, Reason>>,
 ) => readonly Firing<M, H, Reason>[];
 
 /** What a step says and shades. The walk adds the move, the `targets` (the
@@ -258,8 +264,8 @@ export interface CandidatePlan<
   /** Whether a recorded placement is one the plan places (Salad's hole symbols
    * are settled by markers instead). Default: all of them. */
   placeable?: (op: R) => boolean;
-  /** Which cells are already decided, where that differs from `grid`
-   * (`firstUnreflectedPlaceIndex`). */
+  /** Which cells a recorded placement counts as already made in, where that
+   * differs from `grid` (`availableFirings`). */
   placed?: () => ArrayLike<number>;
   /** The firing a placement belongs to, where one placement forces others
    * (Group's identity row and column). Default: the placement alone. */
@@ -448,6 +454,10 @@ class CandidateWalk<
   /** The candidates as the player reads them (`impliedNotes`), taken afresh on
    * every turn of the walk. */
   private shown: Int32Array;
+  /** The recorded firings the board supports, taken with {@link shown}. */
+  private available: AvailableFirings<R> | null = null;
+  /** Each firing's strikes as legs, keyed by its live records, for the turn. */
+  private strikeFirings = new Map<readonly R[], Firing<M, H, Reason>>();
   /** Each firing's steps, built once whether the frontier or the take asks. */
   private readonly built = new WeakMap<Firing<M, H, Reason>, Built<M, H>[]>();
 
@@ -531,7 +541,7 @@ class CandidateWalk<
     const singles: CandidateRung<M, H, R, Reason> = () => this.singles();
     const strikes: CandidateRung<M, H, R, Reason> = () => this.strikes();
     const places: CandidateRung<M, H, R, Reason> = (ctx) =>
-      this.places(ctx.nothingEarlier);
+      this.placements(ctx.nothingEarlier).map((p) => p.firing);
     const opening = [singles, ...own];
     const ladder = [singles, ...own, strikes, places];
     const listed = (
@@ -540,9 +550,13 @@ class CandidateWalk<
       const lists: FrontierCandidate[][] = [];
       let nothingEarlier = true;
       this.shown = this.view();
+      this.available = null;
+      this.strikeFirings = new Map();
+      const placements = () => this.placements(false);
       for (const rung of rungs) {
         const firings = rung({
           nothingEarlier,
+          placements,
           ops: this.ops,
           populated: this.setUp.done(),
           shown: this.shown,
@@ -627,25 +641,40 @@ class CandidateWalk<
   }
 
   private strikes(): Firing<M, H, Reason>[] {
+    return this.availableNow().strikes.map((live) => this.strikeFiring(live));
+  }
+
+  private strikeFiring(live: readonly R[]): Firing<M, H, Reason> {
+    let f = this.strikeFirings.get(live);
+    if (!f) {
+      f = this.split(live);
+      this.strikeFirings.set(live, f);
+    }
+    return f;
+  }
+
+  /** The recorded firings the board supports this turn. A strike rests on its
+   * steps' whole premise; a placement on its evidence, since the cells it
+   * places are the ones it overwrites. A single needs no vouching: whether
+   * the board shows it is the question `availablePlacements` asks. */
+  private availableNow(): AvailableFirings<R> {
     const { plan } = this;
-    const firings = new Map<readonly R[], Firing<M, H, Reason>>();
-    const firingOf = (live: readonly R[]): Firing<M, H, Reason> => {
-      let f = firings.get(live);
-      if (!f) {
-        f = this.split(live);
-        firings.set(live, f);
-      }
-      return f;
-    };
-    return availableStrikes(
+    this.available ??= availableFirings(
       this.ops,
       plan.grid,
       this.shown,
       plan.w,
-      (live) => this.premise(firingOf(live)),
+      (f) => {
+        const op = f[0];
+        if (op.kind !== "place") return this.premise(this.strikeFiring(f));
+        if ((op.reason as { kind?: string }).kind === "single") return [];
+        if (plan.placeable && !plan.placeable(op)) return [];
+        return this.evidence(this.placing(op, op.reason as Reason));
+      },
       this.reach,
       { enc: plan.enc, placed: plan.placed?.() },
-    ).map(firingOf);
+    );
+    return this.available;
   }
 
   /** One firing's live strikes as legs, split on the game's axis. */
@@ -664,7 +693,9 @@ class CandidateWalk<
     }));
   }
 
-  private places(nothingEarlier: boolean): Firing<M, H, Reason>[] {
+  private placements(
+    nothingEarlier: boolean,
+  ): { firing: Firing<M, H, Reason>; recorded: boolean }[] {
     const { plan } = this;
     const placeable = plan.placeable;
     const ops = placeable
@@ -677,11 +708,12 @@ class CandidateWalk<
       plan.w,
       plan.regionsOf,
       nothingEarlier,
+      this.availableNow().placements,
       { enc: plan.enc, placed: plan.placed?.(), written: plan.pencil },
     ).map(({ op, why }) =>
       why.kind === "recorded"
-        ? this.placing(op, op.reason as Reason)
-        : this.single(op, why),
+        ? { firing: this.placing(op, op.reason as Reason), recorded: true }
+        : { firing: this.single(op, why), recorded: false },
     );
   }
 
@@ -704,6 +736,18 @@ class CandidateWalk<
       const h = step.highlights;
       return h ? [...h.area, ...(h.hatch ?? []), ...(h.reads ?? []), ...h.targets] : [];
     });
+  }
+
+  /** What a firing reasons from, leaving out the cells it acts on: a line it
+   * hatches may run through them (Towers' facing clues). */
+  private evidence(f: Firing<M, H, Reason>): Point[] {
+    const steps = this.stepsOf(f).map(({ step }) => step.highlights);
+    const acted = new Set(
+      steps.flatMap((h) => (h ? h.targets.map((p) => `${p.x},${p.y}`) : [])),
+    );
+    return steps
+      .flatMap((h) => (h ? [...h.area, ...(h.hatch ?? []), ...(h.reads ?? [])] : []))
+      .filter((p) => !acted.has(`${p.x},${p.y}`));
   }
 
   /** A firing's steps: a step per leg, and under the implicit reading the note

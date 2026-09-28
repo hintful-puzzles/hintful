@@ -5686,15 +5686,18 @@ the shared candidate-plan walk drives) and SHALL read each firing's premise off 
 steps the firing
 would push: the `area ∪ hatch ∪ reads ∪ targets` of every one of them, built before
 the choice and pushed unchanged if it is taken. No firing SHALL carry a second
-statement of its premise. The game SHALL own which firings are available. A firing
-SHALL be offered to
-the frontier only when the working board already shows its premise: a recorded strike
-whose premise cells hold no mark the board does not show yet (a live mark an earlier
-recorded firing has yet to strike, or the cell of a recorded placement the board has
-not made, whose culls count as that placement's marks), a placement the notes show as
-a naked or hidden single, and a placement forced by a clue only where the plan has
-nothing else to take. A strike SHALL NOT be withheld only because the solver recorded
-it after a placement the board has not made. The frontier
+statement of its premise. The game SHALL own which firings of its own rungs are
+available, and the walk SHALL own which recorded firings are. A firing SHALL be offered
+to the frontier only when the working board already shows its premise. A recorded
+firing SHALL be judged by one rule whether it strikes or places: it is available when
+nothing the board does not show yet comes before it in the recording, or when its
+premise cells hold none of those marks, which are a live mark an earlier recorded
+firing has yet to strike, and the cell of a recorded placement the board has not made
+with every cell its value rules out that still shows the value. A strike's premise
+SHALL be its steps' whole premise; a placement's SHALL leave out the cells it places.
+A placement the notes show as a naked or hidden single SHALL be offered as the notes
+show it. No recorded firing SHALL be withheld only because of its position in the
+recording, or held back as a last resort while its premise holds. The frontier
 SHALL read what a step wrote from the targets of the steps it pushed.
 
 A single's step SHALL carry in its `reads` the placed cells it rests on through a cell
@@ -5739,6 +5742,13 @@ that owns it, in a ledger the guard holds still over the bound.
 - **WHEN** the solver records a strike after a placement the board has not made
 - **THEN** the strike is offered when its premise reads neither that placement's cell
   nor a cell holding one of its live culls, and withheld when it reads either
+
+#### Scenario: a clue-forced placement is offered where its premise holds
+
+- **WHEN** the solver records a placement with a reason of its own, and a strike the
+  board supports is also available
+- **THEN** the placement is offered beside the strike when its evidence reads no mark
+  the board does not show yet, and withheld when it reads one
 
 #### Scenario: the plans are measured from outside
 
@@ -7126,3 +7136,19 @@ ending with the clean.
 - **WHEN** an implicit-reading plan is built on a board whose notes still carry values
   the placed ones rule out, and a naked single is on the board
 - **THEN** the plan places the single before it cleans the stale notes
+
+### Requirement: A game's rung reads the walk's recorded placements
+
+The candidate-plan walk SHALL hand every rung the placements its own placement rung
+would offer (`RungContext.placements`): the singles the board shows, and each recorded
+placement with a reason of its own that the walk judged available, marked as such. A
+game whose deductions are placements and should lead the strikes SHALL take them from
+there, choosing which to offer when, and SHALL NOT decide a recorded placement's
+availability itself.
+
+#### Scenario: Group's placements lead without a rule of Group's own
+
+- **WHEN** a Group plan's recording holds an associativity placement whose three
+  products are on the board, behind other unmade placements
+- **THEN** Group's rung offers it, read from the walk's placements, ahead of the
+  strikes

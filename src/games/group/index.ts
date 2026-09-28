@@ -15,7 +15,6 @@ import {
   type CandidateMoveAdapter,
   type CandidatePlanPrefs,
   candidateHint,
-  firstUnreflectedPlaceIndex,
   keepCandidateHintTrack,
   type Mark,
   refreshCandidateHintStep,
@@ -45,11 +44,9 @@ import {
 import { clearKey } from "../../engine/key-labels.ts";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, latinVerdict } from "../../engine/latin.ts";
 import {
-  availablePlacements,
   genericLatinArea,
   rowColRegions,
   type SingleReason,
-  singleReasonOf,
 } from "../../engine/latin-hint.ts";
 import {
   pressNoteTakingCell,
@@ -566,7 +563,6 @@ function buildSteps(
   const wGrid = Uint8Array.from(state.grid);
   const wPen = Int32Array.from(state.pencil);
   const maxdiff = Math.min(state.diff, DIFF_EXTREME);
-  const regions = (x: number, y: number) => rowColRegions(x, y, w);
   type Legs = Firing<GroupMove, GroupHint, NarratableReason>;
 
   /** A placement's firing. Learning the identity forces every empty cell of its
@@ -584,53 +580,14 @@ function buildSteps(
       )
       .map((op) => ({ place: op, reason: op.reason }));
   };
-  // A placement of Group's own that is the solver's immediate next deduction
-  // (nothing precedes it in solver order). `ops.length > 0` is load-bearing:
-  // `firstUnreflectedPlaceIndex` returns `ops.length` for "no placement", which
-  // is 0 when `ops` is empty, and that is ordinary on an Unreasonable board,
-  // whose rungs the cap withholds. Any associativity placement is available once
-  // the three products it reads are all on the board, since those are its whole
-  // premise. Before the notes are set up, so is any recorded single the player
-  // can read off the board; once they are, singles wait behind the strikes.
-  const leads = ({ ops, populated, shown }: RungContext<HintOp>): Legs[] => {
-    const out: Legs[] = [];
-    // A *single* never leads: whether the board shows it is the question
-    // `availablePlacements` answers below, and a lead would have to assert it.
-    // A single resting on a strike the board still shows (a stale note the
-    // player left: place an element without culling your own notes, which is
-    // Group's default, then ask for a hint) is not readable yet, and asserting
-    // it threw. Found by `hint-resume.test.ts` once its Latin block walked 8x8
-    // Tricky rather than the first preset; that walk follows one leg of each
-    // journey, which is exactly the player who takes the placement and leaves
-    // its cull.
-    const lead =
-      ops.length > 0 &&
-      firstUnreflectedPlaceIndex(ops, wGrid, w) === 0 &&
-      ops[0].reason.kind !== "single";
-    if (lead) out.push(placing(ops[0], ops[0].reason, ops));
-    for (const op of ops)
-      if (
-        (op !== ops[0] || !lead) &&
-        op.kind === "place" &&
-        op.reason.kind === "associativity" &&
-        wGrid[op.y * w + op.x] === 0 &&
-        reasonArea(op.reason).every((p) => wGrid[p.y * w + p.x] !== 0)
-      )
-        out.push(placing(op, op.reason, ops));
-    if (!populated)
-      for (const { op, why } of availablePlacements(
-        ops,
-        wGrid,
-        shown,
-        w,
-        regions,
-        false,
-        { written: wPen },
-      ))
-        if (why.kind !== "recorded")
-          out.push(placing(op, singleReasonOf(op.n, why), ops));
-    return out;
-  };
+  // Group's deductions are placements, so the ones the board supports lead the
+  // strikes: associativity and the identity fill wherever their premise holds,
+  // and, before the notes are set up, every single the board shows. Once they
+  // are, singles wait behind the strikes like any other game's.
+  const leads = ({ placements, populated }: RungContext<HintOp, Legs>): Legs[] =>
+    placements()
+      .filter((p) => p.recorded || !populated)
+      .map((p) => p.firing);
 
   runLatinCandidatePlan<GroupMove, GroupHint, HintOp, NarratableReason>({
     w,

@@ -493,8 +493,9 @@ See [`hints.md`](./hints.md) § "Group one firing into one step".
 
 ### `candidate-hint.ts` — candidate-elimination plan plumbing
 
-The pure helpers for pencil-notes games: the naked singles and the available
-strikes a plan could take now, lazy-populate check, next-place lookup, the
+The pure helpers for pencil-notes games: the naked singles, the recorded
+strikes and placements a plan could take now (`availableFirings`, one rule for
+both), lazy-populate check, next-place lookup, the
 obvious-clean step (`emitObviousCleanStep`), what a placed value rules out
 (`Reach`, and `regionReach` where that is a cell's regions whatever the value) — the
 move dialect (`CandidateMoveAdapter`) and the generic
@@ -559,8 +560,10 @@ Re-derives whether a recorded `single` is **naked** or **hidden** from the
 working board, so no Latin game narrates "every other number has been ruled
 out in this cell" at a cell visibly holding several candidates, and throws on a
 placement that is neither, which is a strike the plan skipped.
-`availablePlacements` lists the recorded placements a plan could take now, and
-a single in a cell with no notes written is `regionsFull`. `genericLatinArea`
+`availablePlacements` lists the recorded placements a plan could take now (the
+singles the board shows, and the placements `candidate-hint.ts`'s
+`availableFirings` vouched for), and a single in a cell with no notes written is
+`regionsFull`. `genericLatinArea`
 is what a generic Latin elimination outlines (a forcing chain, numbered; a
 set's cells), for a game's own area function to fall through to. The
 sentences it classifies for are `hint-text.ts`'s.

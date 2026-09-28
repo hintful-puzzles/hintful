@@ -238,64 +238,59 @@ export function anyEmptyLacksNotes(
   return false;
 }
 
-/** Index of the first recorded placement whose cell is *not yet* decided on the
- * working board: every op before it is valid against that board (placements
- * before it are already reflected), so a strike there can be surfaced now with a
- * premise the player's board supports (docs/games/hints.md § "Solve the way a human does", the
- * "facing-place buries clue deductions" gotcha).
- *
- * `placed` is "which cells the solver's placements are already reflected in".
- * For most games that is simply the working grid; **Salad** is the first where
- * the two differ — the cube may place one of its interchangeable *hole* symbols
- * in a cell the player settles with an empty-square marker, leaving the grid
- * blank for ever — so it passes a grid marked at those cells too. */
-export function firstUnreflectedPlaceIndex(
-  ops: readonly DeductionRecord[],
-  placed: ArrayLike<number>,
-  w: number,
-): number {
-  for (let i = 0; i < ops.length; i++) {
-    if (ops[i].kind === "place" && placed[ops[i].y * w + ops[i].x] === 0) return i;
-  }
-  return ops.length;
+/** The recorded firings a plan could take now ({@link availableFirings}). */
+export interface AvailableFirings<R> {
+  /** Each strike firing's still-live teachable records, in solver order. */
+  strikes: R[][];
+  /** The unmade placements whose premise the board already supports. */
+  placements: ReadonlySet<R>;
 }
 
 /**
- * Every deduction-strike *firing* a plan could take now, in solver order — the
- * choices `HintFrontier` picks among.
+ * Every recorded firing a plan could take now, in solver order — the choices
+ * `HintFrontier` picks among.
  *
  * The recording ran on the solver's candidates, which differ from the board the
  * player has by exactly the marks the solver made and the board has not: a
  * strike still live in the notes, and a placement whose cell is still empty
  * (its cell, and each cell `reach` says its value rules out that still shows
- * that value). The first
- * firing with a live teachable mark, before any such placement, is always
- * available: everything before it is already on the board. A later one is
- * available when its premise, the cells `reads` names for it, holds none of
- * those marks; otherwise it may rest on one, and narrating it now would cite a
- * board the player does not have. A later firing whose `reads` is empty cannot
- * be vouched for and is not offered.
+ * that value). A firing with nothing of either kind before it is available:
+ * everything it could rest on is already on the board. A later one is available
+ * when its premise, the cells `reads` names for it, holds none of those marks;
+ * otherwise it may rest on one, and narrating it now would cite a board the
+ * player does not have. A later firing whose `reads` is empty cannot be vouched
+ * for and is not offered. The rule is the same for a strike and a placement,
+ * so a placement a clue or a cage forces is offered where its premise holds,
+ * not only once nothing else is left (`offer-recorded-placements-by-premise`).
  *
- * Each firing is returned as its still-live records, one `group` (one
- * cage/line/region firing) that the caller splits into a per-cell (or whole)
- * journey. `dup` strikes are excluded — those are placement bookkeeping handled
- * by the placement emitter, not a technique to teach.
+ * `reads` is asked about a strike firing as its live teachable records, and
+ * about a placement as the placement alone; for a placement it should leave
+ * out the placement's own cell, whose notes the placement overwrites. A strike
+ * firing is one `group` (one cage/line/region firing) that the caller splits
+ * into a per-cell (or whole) journey. `dup` strikes are not offered — those are
+ * placement bookkeeping handled by the placement emitter, not a technique to
+ * teach.
+ *
+ * `placed` is which cells a recorded placement counts as already made in. For
+ * most games that is the working grid; Salad's cube places a hole symbol in a
+ * square the player settles with a marker, leaving the grid blank for ever, so
+ * it passes a grid marked at those squares too.
  */
-export function availableStrikes<R extends DeductionRecord>(
+export function availableFirings<R extends DeductionRecord>(
   ops: readonly R[],
   grid: ArrayLike<number>,
   pencil: ArrayLike<number>,
   w: number,
-  reads: (live: readonly R[]) => readonly Point[],
+  reads: (firing: readonly R[]) => readonly Point[],
   reach: Reach,
   opts?: {
     /** The note encoding, when the game's is not `1 << n`. */
     enc?: NoteEncoding;
-    /** Which cells a recorded placement counts as already made in — see
-     * {@link firstUnreflectedPlaceIndex}. Defaults to `grid`. */
+    /** Which cells a recorded placement counts as already made in. Defaults to
+     * `grid`. */
     placed?: ArrayLike<number>;
   },
-): R[][] {
+): AvailableFirings<R> {
   const bit = bitOf(opts?.enc);
   const placed = opts?.placed ?? grid;
   const liveAt = (op: R): boolean =>
@@ -312,8 +307,15 @@ export function availableStrikes<R extends DeductionRecord>(
    * included: it is a strike the board does not show yet either. An unmade
    * placement's cell is one too, and so is every cell it culls. */
   const pending = new Set<number>();
-  const out: R[][] = [];
+  const strikes: R[][] = [];
+  const placements = new Set<R>();
+  /** Nothing the board has yet to show comes before this firing. */
   let first = true;
+  const vouched = (firing: readonly R[]): boolean => {
+    if (first) return true;
+    const premise = onBoard(reads(firing));
+    return premise.length > 0 && !premise.some((c) => pending.has(c));
+  };
   let i = 0;
   while (i < ops.length) {
     const op = ops[i];
@@ -321,6 +323,7 @@ export function availableStrikes<R extends DeductionRecord>(
       i++;
       const c = op.y * w + op.x;
       if (placed[c] !== 0) continue;
+      if (vouched([op])) placements.add(op);
       pending.add(c);
       // Read off `reach`, not the recording: a solver need not record the
       // cull (Solo's does not), and a strike reading a cell it clears rests on
@@ -342,14 +345,12 @@ export function availableStrikes<R extends DeductionRecord>(
       (op) => (op.reason as { kind?: string }).kind !== "dup",
     );
     if (teachable.length > 0) {
-      const premise = first ? [] : onBoard(reads(teachable));
-      if (first || (premise.length > 0 && !premise.some((c) => pending.has(c))))
-        out.push(teachable);
+      if (vouched(teachable)) strikes.push(teachable);
       first = false;
     }
     for (const op of live) pending.add(op.y * w + op.x);
   }
-  return out;
+  return { strikes, placements };
 }
 
 /** The next forced placement the recording solver makes whose cell is still empty

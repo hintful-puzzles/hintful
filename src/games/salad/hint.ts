@@ -292,7 +292,7 @@ function startWorking(s: SaladState): Working {
 }
 
 /**
- * The grid a recorded placement is judged made against — `availableStrikes`'
+ * The grid a recorded placement is judged made against — `availableFirings`'
  * and `nextPlace`'s "is this cell decided yet?". Salad is the first game where
  * that differs from the symbol grid: the cube places its hole symbol in a square
  * the player settles with an empty-square marker, and that square's grid entry

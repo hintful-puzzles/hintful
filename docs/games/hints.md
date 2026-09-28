@@ -3493,8 +3493,8 @@ preset")
 pieces it composes live in
 [`engine/candidate-hint.ts`](../../src/engine/candidate-hint.ts): the pure
 plan helpers (`nakedSingles`, `anyEmptyLacksNotes`,
-`firstUnreflectedPlaceIndex`, `availableStrikes` — whole-firing,
-dup-excluded — `nextPlace`, `joinNums`) and the generic
+`availableFirings` — whole-firing strikes, dup-excluded, and the recorded
+placements the board supports — `nextPlace`, `joinNums`) and the generic
 `keepCandidateHintTrack` / `refreshCandidateHintStep` over the shared
 `CandidateMove` / `CandidateHighlights`. A game wires
 `hintKeepTrack`/`refreshHintStep` as one-line wrappers passing
@@ -3733,13 +3733,13 @@ consumer.** The mark helpers take an optional
 `NoteEncoding { bit?(n), values? }`: `values` is the highest candidate a cell
 may note when that is *shorter* than the grid order (Salad notes `nums`
 symbols plus one "might be empty" mark on an `order`-strided grid).
-**`availableStrikes`/`availablePlacements`/`nextPlace`/`firstUnreflectedPlaceIndex` also take a `placed`
+**`availableFirings`/`availablePlacements`/`nextPlace` also take a `placed`
 grid distinct from `grid`** — "which cells are already decided" versus "which
 cells can still take notes". They coincide everywhere but Salad, where a
 square the player settles with an *empty-square marker* stays blank in `grid`
-for ever — judging by `grid` alone leaves that op permanently unreflected and
-walls off every strike recorded after it. If your game can decide a cell
-without writing a value into the grid, you need this.
+for ever — judging by `grid` alone leaves that op permanently unmade and holds
+back every firing whose premise reads that square. If your game can decide a
+cell without writing a value into the grid, you need this.
 
 **Not every candidate game fits, and Undead is the recorded no-go.** The
 shared helpers assume `0`-empty, `{x, y}` cells on a `w`-strided grid, and a
@@ -3795,17 +3795,22 @@ is handed.** For the standard rungs the walk does it with the shared listers;
 a game's own rung carries the same duty:
 
 - `nakedSingles` — every cell whose notes are down to one.
-- `availableStrikes` — every live firing before the solver's next unmade
-  placement whose premise cells hold no mark an earlier firing has yet to
-  strike. The first is always in the list; it is what the plan took before.
+- `availableFirings` — every recorded firing whose premise the board already
+  shows, strikes and placements by one rule: nothing the board has yet to show
+  comes before it, or its premise reads none of it. The strikes are the live
+  teachable ones; the placements are those with a reason of their own (a clue,
+  a cage, Group's associativity), vouched by their evidence without the cells
+  they place.
 - `availablePlacements` — every recorded single the notes show as naked or
-  hidden. A placement with a reason of its own (a clue, a cage) is offered only
-  as the last resort, where the plan reached it before, and only there does a
-  single the notes do not show throw. Its `nothingElse` is the
-  `nothingEarlier` the driver passes the rung: every earlier rung came up
-  empty, not merely "nothing to strike", since a marker or a single on an
-  earlier rung may be the very premise it waits on (eight of Salad's own tests
-  threw until that was so).
+  hidden, and every placement with a reason of its own that `availableFirings`
+  vouched for. Only at the last resort, the first unmade placement once every
+  earlier rung came up empty, does a single the notes do not show throw. That
+  `nothingElse` is the `nothingEarlier` the driver passes the rung, not merely
+  "nothing to strike", since a marker or a single on an earlier rung may be the
+  very premise it waits on (eight of Salad's own tests threw until that was so).
+- A game whose deductions are placements and should lead the strikes reads the
+  walk's own list, `RungContext.placements()`, from a rung of its own (Group's
+  `leads` is a filter over it), rather than deciding availability itself.
 
 The driver keeps the phases: the naked singles and the game's own rungs (the
 note-free ones) compete until its setup is done, and setup — lazy populate then
@@ -4098,13 +4103,14 @@ owner-driven and worth copying:
   next); else (2) the next **clue elimination** (the deduction worth
   teaching); else (3) a forced **placement**. Re-record from the working grid
   after each placement; advance through strikes by filtering to still-live
-  marks. **A strike is offered by its premise, never by its position in the
-  recording.** The recording ran on the solver's candidates, which differ from
-  the player's board by exactly the marks the board does not show yet: a
-  strike still live in the notes, and a placement whose cell is still empty
-  (that cell, and every cell its value rules out by the plan's `reach` that
-  still shows the value). A recorded strike is available when the cells its
-  step reads hold none of them. The cull is read off `reach` rather than the
+  marks. **A recorded firing is offered by its premise, never by its position
+  in the recording.** The recording ran on the solver's candidates, which
+  differ from the player's board by exactly the marks the board does not show
+  yet: a strike still live in the notes, and a placement whose cell is still
+  empty (that cell, and every cell its value rules out by the plan's `reach`
+  that still shows the value). A recorded strike, or a placement with a reason
+  of its own, is available when the cells its step reads hold none of them (a
+  placement's own cells aside, since it overwrites them). The cull is read off `reach` rather than the
   recording because a solver need not record it: Solo's does not, and while
   the rule read `dup` records, Solo's plans taught strikes resting on a cull
   the board did not show. Two windows came
@@ -4117,7 +4123,7 @@ owner-driven and worth copying:
   whose candidates *or placed value* it rests on — a clue rung reading the
   heights along its line hatches that line — or it will be offered before the
   board supports it. `runCandidatePlan` does all of this; the rule is
-  `availableStrikes` in
+  `availableFirings` in
   [`candidate-hint.ts`](../../src/engine/candidate-hint.ts).
 - **Surface a *whole-line forcing* as one ordered placement journey, before
   populate; pencil in notes lazily.** A clue at an extreme value can force a
@@ -4321,14 +4327,15 @@ decision:
   associativity (`(a·b)·c = a·(b·c)` forces the fourth product) and the
   identity fill — are **placements**, not candidate culls. So the plan leads
   with placements and only populates when an *elimination* is the next thing
-  to teach. The gate that keeps this honest is
-  `firstUnreflectedPlaceIndex(ops, wGrid, w) === 0`: when a placement is the
-  solver's *immediate* next deduction, emit it directly (no populate).
-  **Don't gate populate on `availableStrikes` returning a strike** — it
-  only counts a strike whose candidate is *present in the notes*, so with no
-  notes yet it returns null and you deadlock. That chicken-and-egg was the one
-  real bug in the port; the fix is the `firstUnreflectedPlaceIndex` peek,
-  which reads solver order without needing notes. Placing first means
+  to teach: its own rung offers `RungContext.placements()` — every recorded
+  placement whose premise the board supports, and before the notes are set up
+  every single the board shows — ahead of the strikes, and in the note-free
+  opening. **Don't gate populate on a strike being available** — a strike
+  counts only where its candidate is *present in the notes*, so with no notes
+  yet there is none and you deadlock. That chicken-and-egg was the one real bug
+  in the port. The placements need no notes to be vouched for: an
+  associativity placement reads three placed products, the identity fill its
+  witness cell (`offer-recorded-placements-by-premise`). Placing first means
   classifying on a board with few notes or none, so the obvious-cull clean runs
   ahead of the placement arm, and a note-less cell is read by what its lines
   leave it (§ "Re-derive a placement's why").

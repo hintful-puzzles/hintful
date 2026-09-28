@@ -132,15 +132,15 @@ export type PlacementWhy<R> = SingleWhy<R> | { kind: "recorded" };
  * holds every value; the solver's having placed it is what makes trusting the
  * notes sound. A placement
  * with a reason of its own (a clue or cage that forces it) rests on the solver's
- * cube rather than on the notes, so it is offered only as the plan's last
- * resort: the first unreflected placement, when `nothingElse` says every other
- * rung of the plan came up empty.
+ * cube rather than on the notes, so it is offered when `vouched` holds it: when
+ * the board already supports its premise ({@link availableFirings}).
  *
- * In that position a plain single the notes do not show is the plan having
- * skipped a strike, and it is classified with the throwing
- * {@link classifyPlacementInRegions}, so the cross-game hint walks stay the
- * guard for it. Anywhere earlier it is merely not available yet: another
- * rung's firing may be the very premise it waits on.
+ * The first unmade placement, when `nothingElse` says every other rung of the
+ * plan came up empty, is the plan's last resort. A plain single there that the
+ * notes do not show is the plan having skipped a strike, and it is classified
+ * with the throwing {@link classifyPlacementInRegions}, so the cross-game hint
+ * walks stay the guard for it. Anywhere earlier it is merely not available yet:
+ * another rung's firing may be the very premise it waits on.
  *
  * `pencil` is the candidates as the player reads them (`impliedNotes`), and
  * `written` the notes actually on the board: a single in a cell with none
@@ -154,6 +154,7 @@ export function availablePlacements<Op extends DeductionRecord, R extends CellRe
   w: number,
   regionsOf: (x: number, y: number) => readonly R[],
   nothingElse: boolean,
+  vouched: ReadonlySet<Op>,
   opts?: {
     enc?: NoteEncoding;
     placed?: ArrayLike<number>;
@@ -168,11 +169,11 @@ export function availablePlacements<Op extends DeductionRecord, R extends CellRe
     if (op.kind !== "place" || placed[op.y * w + op.x] !== 0) continue;
     const cell = op.y * w + op.x;
     const regions = regionsOf(op.x, op.y);
-    const lead = op === first && nothingElse;
     if ((op.reason as { kind?: string }).kind !== "single") {
-      if (lead) out.push({ op, why: { kind: "recorded" } });
+      if (vouched.has(op)) out.push({ op, why: { kind: "recorded" } });
       continue;
     }
+    const lead = op === first && nothingElse;
     const why = lead
       ? classifyPlacementInRegions(grid, pencil, cell, op.n, regions, opts?.enc)
       : placementInRegions(grid, pencil, cell, op.n, regions, opts?.enc);
