@@ -267,7 +267,8 @@ export function firstUnreflectedPlaceIndex(
  * The recording ran on the solver's candidates, which differ from the board the
  * player has by exactly the marks the solver made and the board has not: a
  * strike still live in the notes, and a placement whose cell is still empty
- * (its cell, and its `dup` culls, which it records beside it). The first
+ * (its cell, and each cell `reach` says its value rules out that still shows
+ * that value). The first
  * firing with a live teachable mark, before any such placement, is always
  * available: everything before it is already on the board. A later one is
  * available when its premise, the cells `reads` names for it, holds none of
@@ -286,6 +287,7 @@ export function availableStrikes<R extends DeductionRecord>(
   pencil: ArrayLike<number>,
   w: number,
   reads: (live: readonly R[]) => readonly Point[],
+  reach: Reach,
   opts?: {
     /** The note encoding, when the game's is not `1 << n`. */
     enc?: NoteEncoding;
@@ -308,7 +310,7 @@ export function availableStrikes<R extends DeductionRecord>(
       .map((p) => p.y * w + p.x);
   /** Cells an earlier firing still has a live mark in, `dup` bookkeeping
    * included: it is a strike the board does not show yet either. An unmade
-   * placement's cell is one too. */
+   * placement's cell is one too, and so is every cell it culls. */
   const pending = new Set<number>();
   const out: R[][] = [];
   let first = true;
@@ -317,8 +319,17 @@ export function availableStrikes<R extends DeductionRecord>(
     const op = ops[i];
     if (op.kind === "place") {
       i++;
-      if (placed[op.y * w + op.x] !== 0) continue;
-      pending.add(op.y * w + op.x);
+      const c = op.y * w + op.x;
+      if (placed[c] !== 0) continue;
+      pending.add(c);
+      // Read off `reach`, not the recording: a solver need not record the
+      // cull (Solo's does not), and a strike reading a cell it clears rests on
+      // a board the player does not have.
+      const culled = reach(c, op.n);
+      for (let k = 0; k < culled.length; k++) {
+        const j = culled[k];
+        if (grid[j] === 0 && (pencil[j] & bit(op.n)) !== 0) pending.add(j);
+      }
       first = false;
       continue;
     }

@@ -810,8 +810,14 @@ export const MODULES = [
       {
         within: "availableStrikes",
         why: "a strike past an unmade placement is taught though its premise reads that placement's cell, which the player's board does not show yet",
-        find: "      pending.add(op.y * w + op.x);\n      first = false;",
-        replace: "      first = false;",
+        find: "      pending.add(c);\n",
+        replace: "",
+      },
+      {
+        within: "availableStrikes",
+        why: "a strike past an unmade placement is taught though it reads a cell the placement culls, when the solver did not record the cull",
+        find: "(pencil[j] & bit(op.n)) !== 0) pending.add(j);",
+        replace: "(pencil[j] & bit(op.n)) !== 0) void j;",
       },
       {
         within: "availableStrikes",

@@ -643,6 +643,7 @@ class CandidateWalk<
       this.shown,
       plan.w,
       (live) => this.premise(firingOf(live)),
+      this.reach,
       { enc: plan.enc, placed: plan.placed?.() },
     ).map(firingOf);
   }

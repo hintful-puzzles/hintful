@@ -4102,8 +4102,12 @@ owner-driven and worth copying:
   recording.** The recording ran on the solver's candidates, which differ from
   the player's board by exactly the marks the board does not show yet: a
   strike still live in the notes, and a placement whose cell is still empty
-  (that cell, and the `dup` culls it records beside it). A recorded strike is
-  available when the cells its step reads hold none of them. Two windows came
+  (that cell, and every cell its value rules out by the plan's `reach` that
+  still shows the value). A recorded strike is available when the cells its
+  step reads hold none of them. The cull is read off `reach` rather than the
+  recording because a solver need not record it: Solo's does not, and while
+  the rule read `dup` records, Solo's plans taught strikes resting on a cull
+  the board did not show. Two windows came
   before this and both hid deductions that were true on the board: "strikes
   before the first recorded placement" was empty, because the solver commits
   Towers' facing-clue placement *first*; "strikes before the first *unmade*

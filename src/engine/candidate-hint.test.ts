@@ -390,13 +390,15 @@ describe("availableStrikes", () => {
   /** What each firing reads: its own cells, the premise a strike's evidence
    * would name in a game. */
   const ownCells = (live: readonly DeductionRecord[]) => live;
+  /** What a placed value culls on these 2×2 boards: its row and column. */
+  const reach = regionReach(2, (x, y) => rowColRegions(x, y, 2));
   /** The firing a plan with no frontier takes: the first available one. */
   const nextStrike = (
     ops: DeductionRecord[],
     grid: ArrayLike<number>,
     pencil: ArrayLike<number>,
     w: number,
-  ) => availableStrikes(ops, grid, pencil, w, ownCells)[0] ?? null;
+  ) => availableStrikes(ops, grid, pencil, w, ownCells, reach)[0] ?? null;
 
   it("returns one firing's still-live elims and excludes dup-reason bookkeeping", () => {
     const [grid, pencil] = board(
@@ -449,9 +451,16 @@ describe("availableStrikes", () => {
       { x: 0, y: 1 },
       { x: 1, y: 1 },
     ];
-    expect(availableStrikes(ops.slice(0, 3), grid, pencil, 2, readsPlaced)).toEqual([]);
     expect(
-      availableStrikes([...ops.slice(0, 2), ops[3]], grid, pencil, 2, readsCull),
+      availableStrikes(ops.slice(0, 3), grid, pencil, 2, readsPlaced, reach),
+    ).toEqual([]);
+    expect(
+      availableStrikes([...ops.slice(0, 2), ops[3]], grid, pencil, 2, readsCull, reach),
+    ).toEqual([]);
+    // A solver need not record the cull at all (Solo's does not): what the
+    // placement clears is read off the reach, not the recording.
+    expect(
+      availableStrikes([ops[0], ops[3]], grid, pencil, 2, readsCull, reach),
     ).toEqual([]);
   });
 
@@ -469,10 +478,10 @@ describe("availableStrikes", () => {
       op("elim", 0, 1, 2, 1, "set"), // reads only (0,1)
     ];
     expect(
-      availableStrikes(ops, grid, pencil, 2, ownCells).map((f) => f[0].group),
+      availableStrikes(ops, grid, pencil, 2, ownCells, reach).map((f) => f[0].group),
     ).toEqual([1]);
     // No firing past it is "first": one naming no premise cannot be vouched for.
-    expect(availableStrikes(ops, grid, pencil, 2, () => [])).toEqual([]);
+    expect(availableStrikes(ops, grid, pencil, 2, () => [], reach)).toEqual([]);
   });
 
   it("ignores an elimination on a cell the player has already filled", () => {
@@ -489,7 +498,7 @@ describe("availableStrikes", () => {
       op("elim", 1, 0, 1, 1, "set"), // reads only (1,0): independent
     ];
     expect(
-      availableStrikes(ops, grid, pencil, 2, ownCells).map((f) => f[0].group),
+      availableStrikes(ops, grid, pencil, 2, ownCells, reach).map((f) => f[0].group),
     ).toEqual([0, 1]);
   });
 
@@ -501,20 +510,20 @@ describe("availableStrikes", () => {
       { x: 1, y: 0 },
     ];
     expect(
-      availableStrikes(ops, grid, pencil, 2, readsBoth).map((f) => f[0].group),
+      availableStrikes(ops, grid, pencil, 2, readsBoth, reach).map((f) => f[0].group),
     ).toEqual([0]);
   });
 
   it("withholds a later firing that names no premise, and ignores one off the board", () => {
     const [grid, pencil] = board([0, 0, 0, 0], [bits(1, 2), bits(1, 2), 0, 0]);
     const ops = [op("elim", 0, 0, 1, 0, "set"), op("elim", 1, 0, 2, 1, "set")];
-    expect(availableStrikes(ops, grid, pencil, 2, () => []).length).toBe(1);
+    expect(availableStrikes(ops, grid, pencil, 2, () => [], reach).length).toBe(1);
     // A clue at x = 2 would alias (0,1) if indexed blindly; (0,0) is pending.
     const clueAndSelf = (live: readonly DeductionRecord[]) => [
       { x: 2, y: -1 },
       ...live,
     ];
-    expect(availableStrikes(ops, grid, pencil, 2, clueAndSelf).length).toBe(2);
+    expect(availableStrikes(ops, grid, pencil, 2, clueAndSelf, reach).length).toBe(2);
   });
 });
 
