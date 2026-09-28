@@ -1,7 +1,7 @@
 # solo-ladder-as-declared-techniques
 
-**Status: scaffolded, not started.** Found by `guard-recorded-firing-premises`,
-2026-09-28.
+Found by `guard-recorded-firing-premises`, 2026-09-28; done the same day
+(`design.md` has what it found).
 
 ## Why
 

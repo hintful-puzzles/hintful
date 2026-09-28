@@ -12,6 +12,7 @@ import {
   DIFF_KINTERSECT,
   DIFF_RECURSIVE,
   DIFF_SIMPLE,
+  decodeParams,
   defaultParams,
   encodeBlockStructureDesc,
   encodeGrid,
@@ -94,6 +95,25 @@ describe("solo solver — variant paths (codec → solve round-trips)", () => {
     const { diff, grid } = solveSolo(s, DIFF_RECURSIVE, DIFF_KINTERSECT);
     expect(diff).toBeLessThan(DIFF_AMBIGUOUS);
     expect([...grid]).toEqual(SOLUTION);
+  });
+
+  it("reports IMPOSSIBLE when a region's digits and whole cages leave its open cells nothing", () => {
+    // Three stray digits on a published Killer board. The killer region rule
+    // finds a region whose filled cells and whole cages already make 45 with
+    // cells still open; upstream's verdict there was the grade so far, which
+    // called this board solved at Easy and returned it unfinished.
+    const board =
+      "3x3ka:zzzc,___a__a__a_________________aaa_a__aa__________a____aaaaaba_aba__aaa_" +
+      "aa_a__a_aaaba_a_aa_a__a_a___aaa__,15_14_8_8a5_12_11d19c5_10_7_11_8_12a14_11f10c" +
+      "12_4a15b9a12a6_17a17a9_10a13a14a12e14a8a6_10a11f11a15a";
+    const colon = board.indexOf(":");
+    const s = newState(decodeParams(board.slice(0, colon)), board.slice(colon + 1));
+    const grid = Int8Array.from(
+      "000000000800000000000000000000000900000000000000900000000000000000006000080000000",
+      Number,
+    );
+    const { diff } = solveSolo({ ...s, grid }, DIFF_RECURSIVE, DIFF_KINTERSECT);
+    expect(diff).toBe(DIFF_IMPOSSIBLE);
   });
 
   it("solves a jigsaw board (blocks = the 3×3 rectangles) to the solution", () => {

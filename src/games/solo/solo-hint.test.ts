@@ -122,9 +122,9 @@ describe("solo recording solver", () => {
    * a cage's clue less its filled cells, a region's total less its filled
    * cells and the cages inside it, or a cage's clue less that. Upstream kept
    * splitting its working cages, so a sum could rest on another the board
-   * never showed (`teach-solo-cage-splits`). The premise audit replays Solo's
-   * whole ladder, which fills a returned cell again before it reaches a cage
-   * rung, so it cannot hold these reads; this does, from the recording.
+   * never showed (`teach-solo-cage-splits`). The premise audit finds a cage's
+   * filled cell cut from its reads, but on its boards misses either of the
+   * region rule's reads cut short; this holds all three, from the recording.
    */
   it("works out every killer sum it cites from the board and its reads", () => {
     const seen = { cage: 0, region: 0, outside: 0 };

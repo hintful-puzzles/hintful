@@ -7,22 +7,31 @@
  * minimizer removes givens while this solver still solves at the target
  * difficulty, so the published board depends on its verdict on every
  * intermediate grid. It is ported logic-faithfully, including the few upstream
- * quirks called out below, with one deliberate divergence: the killer region
- * rule (`DIFF_KINTERSECT`) derives its partial cages afresh each pass from the
+ * quirks called out below, with two deliberate divergences in the killer
+ * region rule (`DIFF_KINTERSECT`): it derives its partial cages afresh from the
  * cages on the board, where upstream split its working cages for good, so that
  * every sum a hint cites can be worked out from the board in one sentence
- * (`teach-solo-cage-splits`).
+ * (`teach-solo-cage-splits`); and a region with nothing left for its open
+ * cells is a contradiction, where upstream reported the grade so far
+ * (`solo-ladder-as-declared-techniques`).
+ *
+ * Upstream's techniques are the rungs of a declared ladder driven by the shared
+ * `runDeductionFixpoint` ({@link SolverUsage.ladder}), each able to run alone.
  *
  * The killer working cages are plain arrays (`Cages`) rather than C's flat
  * `block_structure`; a cage keeps its index as its filled cells leave it.
  */
 
 import {
+  type DeductionTechnique,
+  type FiringTally,
+  runDeductionFixpoint,
+} from "../../engine/deduction-fixpoint.ts";
+import {
   auditingPremises,
   type CellBoard,
   FiringReplay,
   offerReplay,
-  type ReplayAdapter,
 } from "../../engine/firing-replay.ts";
 import type {
   DeductionRecord,
@@ -265,10 +274,18 @@ function compactIndices(arr: Uint8Array, cr: number): number {
 class SolverUsage {
   readonly cr: number;
   readonly blocks: BlockStructure;
+  /** The killer cages as given, which the working cages start from. */
+  private readonly cages: BlockStructure | null;
+  private readonly xtype: boolean;
+  private readonly kgrid: ArrayLike<number> | null;
   /** Killer working cages + clue totals (null for non-killer). */
   killer: KillerWork | null;
-  /** What the killer region rule worked out, rebuilt each KINTERSECT pass. */
-  partials: PartialCage[] = [];
+  /** Cells placed so far, which is all the killer region rule's partial cages
+   * depend on: they are worked out from the filled cells and the cages. */
+  private filled = 0;
+  /** What the killer region rule last worked out, and at how many filled
+   * cells ({@link regionPartials}). */
+  private partials: { filled: number; parts: PartialCage[] } | null = null;
 
   /** Candidate cube: cube[(y*cr+x)*cr + n-1] truthy ⇒ digit n possible there. */
   readonly cube: Uint8Array;
@@ -304,13 +321,14 @@ class SolverUsage {
   /** Stashed by {@link recordSoloDeductions}; promoted to `recorder` after the
    * givens are placed. */
   pendingRecorder?: DeductionRecorder;
-  /** Current firing id — bumped once per top-level deduction attempt so every
-   * record of one firing shares a `group`. */
+  /** Current firing id — bumped before each technique attempt so every record
+   * of one firing shares a `group`. */
   group = 0;
-  /** The premise audit's hooks (`soloReplay`), set only while it runs:
-   * `seeded` once the givens are placed, and `pass` at the top of each pass of
-   * the main loop, after {@link group} moves on, ending the loop if it says so. */
-  audit?: { seeded(): void; pass(): boolean };
+  /** Called once the givens are placed and the recorder is on: where the
+   * premise audit starts its replay (`recordSoloDeductions`). */
+  onSeeded?: () => void;
+  /** The premise audit's replay of this run, only while it runs. */
+  replay: FiringReplay<string> | null = null;
 
   constructor(
     cr: number,
@@ -323,6 +341,9 @@ class SolverUsage {
     const area = cr * cr;
     this.cr = cr;
     this.blocks = blocks;
+    this.cages = kblocks;
+    this.xtype = xtype;
+    this.kgrid = kgrid;
     this.grid = grid;
 
     // Killer state exists iff we have both the cages and the clue grid (upstream
@@ -413,6 +434,7 @@ class SolverUsage {
     }
 
     this.grid[sqindex] = n;
+    this.filled++;
     this.row[y * cr + n - 1] = 1;
     this.col[x * cr + n - 1] = 1;
     this.blk[bi * cr + n - 1] = 1;
@@ -999,504 +1021,620 @@ class SolverUsage {
     return out;
   }
 
+  // --- the rungs -------------------------------------------------------------
+  // Each rung runs once from the solver's state and says what it did as
+  // `DeductionTechnique.run` does: `> 0` fired, `0` found nothing, `< 0` proved
+  // the board inconsistent. A rung reads nothing but that state, and the killer
+  // rungs work their cages out from it each time, so any one of them can run
+  // alone: the premise audit's replay does (`soloReplay`).
+
+  /** Blockwise positional elimination: a digit with one place left in a block. */
+  private blockSingles(): number {
+    const cr = this.cr;
+    const idx = this.sIndexlist;
+    for (let b = 0; b < cr; b++)
+      for (let n = 1; n <= cr; n++)
+        if (!this.blk[b * cr + n - 1]) {
+          for (let i = 0; i < cr; i++) idx[i] = this.blocks.blocks[b][i] * cr + n - 1;
+          const ret = this.elim(idx);
+          if (ret !== 0) return ret;
+        }
+    return 0;
+  }
+
+  /** Row-wise, then column-wise, positional elimination. */
+  private lineSingles(): number {
+    const cr = this.cr;
+    const idx = this.sIndexlist;
+    for (let y = 0; y < cr; y++)
+      for (let n = 1; n <= cr; n++)
+        if (!this.row[y * cr + n - 1]) {
+          for (let x = 0; x < cr; x++) idx[x] = (y * cr + x) * cr + n - 1;
+          const ret = this.elim(idx);
+          if (ret !== 0) return ret;
+        }
+    for (let x = 0; x < cr; x++)
+      for (let n = 1; n <= cr; n++)
+        if (!this.col[x * cr + n - 1]) {
+          for (let y = 0; y < cr; y++) idx[y] = (y * cr + x) * cr + n - 1;
+          const ret = this.elim(idx);
+          if (ret !== 0) return ret;
+        }
+    return 0;
+  }
+
+  /** Positional elimination along each diagonal of an X board. */
+  private diagSingles(diag: Uint8Array): number {
+    const cr = this.cr;
+    const idx = this.sIndexlist;
+    for (let n = 1; n <= cr; n++)
+      if (!diag[n - 1]) {
+        for (let i = 0; i < cr; i++) idx[i] = diag0(i, cr) * cr + n - 1;
+        const ret = this.elim(idx);
+        if (ret !== 0) return ret;
+      }
+    for (let n = 1; n <= cr; n++)
+      if (!diag[cr + n - 1]) {
+        for (let i = 0; i < cr; i++) idx[i] = diag1(i, cr) * cr + n - 1;
+        const ret = this.elim(idx);
+        if (ret !== 0) return ret;
+      }
+    return 0;
+  }
+
+  /** Numeric elimination: a cell with one digit left. */
+  private nakedSingles(): number {
+    const cr = this.cr;
+    const idx = this.sIndexlist;
+    for (let x = 0; x < cr; x++)
+      for (let y = 0; y < cr; y++)
+        if (!this.grid[y * cr + x]) {
+          for (let n = 1; n <= cr; n++) idx[n - 1] = (y * cr + x) * cr + n - 1;
+          const ret = this.elim(idx);
+          if (ret !== 0) return ret;
+        }
+    return 0;
+  }
+
+  /** Intersectional analysis between each row, then each column, and each
+   * block. */
+  private lineIntersections(): number {
+    const cr = this.cr;
+    const idx = this.sIndexlist;
+    for (let y = 0; y < cr; y++)
+      for (let b = 0; b < cr; b++)
+        for (let n = 1; n <= cr; n++) {
+          if (this.row[y * cr + n - 1] || this.blk[b * cr + n - 1]) continue;
+          for (let i = 0; i < cr; i++) idx[i] = (y * cr + i) * cr + n - 1;
+          if (this.intersectWithBlock(n, { kind: "row", index: y }, b)) return 1;
+        }
+    for (let x = 0; x < cr; x++)
+      for (let b = 0; b < cr; b++)
+        for (let n = 1; n <= cr; n++) {
+          if (this.col[x * cr + n - 1] || this.blk[b * cr + n - 1]) continue;
+          for (let i = 0; i < cr; i++) idx[i] = (i * cr + x) * cr + n - 1;
+          if (this.intersectWithBlock(n, { kind: "col", index: x }, b)) return 1;
+        }
+    return 0;
+  }
+
+  /** Intersectional analysis between each diagonal of an X board and each
+   * block. */
+  private diagIntersections(diag: Uint8Array): number {
+    const cr = this.cr;
+    const idx = this.sIndexlist;
+    for (let b = 0; b < cr; b++)
+      for (let n = 1; n <= cr; n++) {
+        if (diag[n - 1] || this.blk[b * cr + n - 1]) continue;
+        for (let i = 0; i < cr; i++) idx[i] = diag0(i, cr) * cr + n - 1;
+        if (this.intersectWithBlock(n, { kind: "diag0" }, b)) return 1;
+      }
+    for (let b = 0; b < cr; b++)
+      for (let n = 1; n <= cr; n++) {
+        if (diag[cr + n - 1] || this.blk[b * cr + n - 1]) continue;
+        for (let i = 0; i < cr; i++) idx[i] = diag1(i, cr) * cr + n - 1;
+        if (this.intersectWithBlock(n, { kind: "diag1" }, b)) return 1;
+      }
+    return 0;
+  }
+
+  /** Set elimination within each block, then each row, then each column. */
+  private regionSets(): number {
+    const cr = this.cr;
+    const idx = this.sIndexlist;
+    for (let b = 0; b < cr; b++) {
+      for (let i = 0; i < cr; i++)
+        for (let n = 1; n <= cr; n++)
+          idx[i * cr + n - 1] = this.blocks.blocks[b][i] * cr + n - 1;
+      const ret = this.set_(idx, { kind: "block", index: b });
+      if (ret !== 0) return ret;
+    }
+    for (let y = 0; y < cr; y++) {
+      for (let x = 0; x < cr; x++)
+        for (let n = 1; n <= cr; n++) idx[x * cr + n - 1] = (y * cr + x) * cr + n - 1;
+      const ret = this.set_(idx, { kind: "row", index: y });
+      if (ret !== 0) return ret;
+    }
+    for (let x = 0; x < cr; x++) {
+      for (let y = 0; y < cr; y++)
+        for (let n = 1; n <= cr; n++) idx[y * cr + n - 1] = (y * cr + x) * cr + n - 1;
+      const ret = this.set_(idx, { kind: "col", index: x });
+      if (ret !== 0) return ret;
+    }
+    return 0;
+  }
+
+  /** Set elimination along each diagonal of an X board. */
+  private diagSets(): number {
+    const cr = this.cr;
+    const idx = this.sIndexlist;
+    for (let i = 0; i < cr; i++)
+      for (let n = 1; n <= cr; n++) idx[i * cr + n - 1] = diag0(i, cr) * cr + n - 1;
+    const ret = this.set_(idx, { kind: "diag0" });
+    if (ret !== 0) return ret;
+    for (let i = 0; i < cr; i++)
+      for (let n = 1; n <= cr; n++) idx[i * cr + n - 1] = diag1(i, cr) * cr + n - 1;
+    return this.set_(idx, { kind: "diag1" });
+  }
+
+  /** Set elimination on one digit across the rows and columns: the digit's
+   * places in some rows lie in as many columns. */
+  private digitSets(): number {
+    const cr = this.cr;
+    const idx = this.sIndexlist;
+    for (let n = 1; n <= cr; n++) {
+      for (let y = 0; y < cr; y++)
+        for (let x = 0; x < cr; x++) idx[y * cr + x] = (y * cr + x) * cr + n - 1;
+      const ret = this.set_(idx);
+      if (ret !== 0) return ret;
+    }
+    return 0;
+  }
+
+  /** Take each cage's newly filled cells out of its working cage and its clue,
+   * striking their digits from the rest of the cage; -1 if a digit is more
+   * than its cage has left. A no-op until another cell is placed. */
+  private reduceCages(k: KillerWork): number {
+    const { kblocks, kclues } = k;
+    // Reverse walk: removal compacts.
+    for (let b = 0; b < kblocks.blocks.length; b++) {
+      for (let i = kblocks.blocks[b].length - 1; i >= 0; i--) {
+        const x = kblocks.blocks[b][i];
+        const t = this.grid[x];
+        if (t === 0) continue;
+        removeFromBlock(kblocks, b, x);
+        if (t > kclues[b]) return -1;
+        kclues[b] -= t;
+        for (let nn = 0; nn < kblocks.blocks[b].length; nn++)
+          this.setCube2(kblocks.blocks[b][nn], t, 0);
+      }
+    }
+    return 0;
+  }
+
+  /** What cage `b`'s open cells rest on: its clue, and its filled cells, whose
+   * digits make the rest of it. Hint path only (`DeductionRecord`). */
+  private cageNote(k: KillerWork, b: number): CageNote | null {
+    if (!this.recorder || !this.cages) return null;
+    const filled = this.cages.blocks[b].filter((c) => this.grid[c] !== 0);
+    const total = k.totals[b];
+    return {
+      origin: { kind: "cage", total, placed: total - k.kclues[b] },
+      reads: this.cellsXY(filled),
+    };
+  }
+
+  /** Killer singles (`DIFF_KSINGLE`): fill every cage with one open cell. */
+  private killerSingles(k: KillerWork): number {
+    if (this.reduceCages(k) < 0) return -1;
+    const { kblocks, kclues } = k;
+    let changed = 0;
+    for (let b = 0; b < kblocks.blocks.length; b++) {
+      if (kblocks.blocks[b].length !== 1) continue;
+      if (!this.placeCageSingle(kblocks.blocks[b][0], kclues[b], this.cageNote(k, b)))
+        return -1;
+      changed = 1;
+    }
+    return changed;
+  }
+
   /**
-   * The main deduction driver (`solver`'s body). Mutates `this.grid` and writes
-   * `dlev.diff`/`dlev.kdiff`. Recurses through the module-level `runSolver`.
+   * The killer region rule (`DIFF_KINTERSECT`): what each row, column and
+   * block leaves its open cells once its filled cells and whole cages are taken
+   * out, and, where those cells lie in one cage, what that leaves the cage's
+   * other open cells. A sum left to one cell places it; the rest are the partial
+   * cages the cage-sum rungs read ({@link regionPartials}). With `place` false
+   * it only works them out.
    */
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Solo's full technique ladder from naked singles up to set/forcing-chain rungs.
-  run(
-    blocksImmutable: BlockStructure,
-    kblocksImmutable: BlockStructure | null,
-    xtype: boolean,
-    kgrid: ArrayLike<number> | null,
-    dlev: Difficulty,
-  ): void {
+  private killerRegions(k: KillerWork, place: boolean): number {
+    this.partials = null;
+    if (this.reduceCages(k) < 0) return -1;
     const cr = this.cr;
     const grid = this.grid;
-    const idx = this.sIndexlist;
-    let diff = DIFF_BLOCK;
-    let kdiff = DIFF_KSINGLE;
+    const { kblocks, kclues, totals } = k;
+    const cages = this.cages;
+    const filled = this.filled;
+    const parts: PartialCage[] = [];
+    let changed = 0;
 
-    const finish = (d: number): void => {
-      dlev.diff = d;
-      dlev.kdiff = kdiff;
-    };
+    for (let i = 0; i < 3; i++) {
+      for (let n = 0; n < cr; n++) {
+        const extraList = this.regionCells(i, n);
+        const inRegion = this.recorder ? new Set(extraList) : null;
+        const whole: number[] | null = this.recorder ? [] : null;
+        let sum = (cr * (cr + 1)) / 2;
+        const { len: nsquares, filteredSum } = this.filterWholeCages(
+          extraList,
+          kblocks,
+          kclues,
+          whole,
+        );
+        sum -= filteredSum;
+        if (nsquares === cr || nsquares === 0) continue;
+        // Nothing left for open cells. Upstream checks this only while
+        // searching and meant it as a contradiction, but its `got_result`
+        // label reported the grade so far instead, so a wrong guess counted
+        // as a solution.
+        if (sum <= 0) return -1;
 
-    // Place all given clues.
-    for (let x = 0; x < cr; x++) {
-      for (let y = 0; y < cr; y++) {
-        const n = grid[y * cr + x];
-        if (n) {
-          if (!this.cubeAt(x, y, n)) {
-            finish(DIFF_IMPOSSIBLE);
-            return;
+        const cells = extraList.slice(0, nsquares);
+        const region = SolverUsage.extraRegion(i, n);
+        // A cage counts as inside the region once its cells outside it are
+        // filled, so what the region leaves rests on those too.
+        let regionNote: CageNote | null = null;
+        if (inRegion && whole && cages) {
+          const outside: number[] = [];
+          for (const b of whole)
+            for (const c of cages.blocks[b]) if (!inRegion.has(c)) outside.push(c);
+          regionNote = {
+            origin: { kind: "region", region },
+            reads: this.cellsXY([...inRegion, ...outside]),
+          };
+        }
+        if (nsquares === 1) {
+          if (place) {
+            if (!this.placeCageSingle(cells[0], sum, regionNote)) return -1;
+            changed = 1;
           }
-          this.place(x, y, n);
+          continue;
+        }
+
+        const b0 = kblocks.whichblock[cells[0]];
+        const inCage = cells.every((c) => kblocks.whichblock[c] === b0);
+        parts.push({ cells, clue: sum, inCage, note: regionNote });
+        if (!inCage) continue;
+
+        // The region's leftover cells all lie in one cage, so the rest of
+        // that cage makes what the cage's clue leaves beyond them. Cells
+        // this pass has filled are still in the working cage.
+        const inside = new Set(cells);
+        let placed = totals[b0] - kclues[b0];
+        const rest: number[] = [];
+        for (const c of kblocks.blocks[b0]) {
+          if (grid[c]) placed += grid[c];
+          else if (!inside.has(c)) rest.push(c);
+        }
+        const clue = totals[b0] - placed - sum;
+        const note: CageNote | null =
+          regionNote && cages
+            ? {
+                origin: {
+                  kind: "outside",
+                  region,
+                  total: totals[b0],
+                  placed,
+                  inside: this.cellsXY(cells),
+                  insideSum: sum,
+                },
+                reads: [...regionNote.reads, ...this.cellsXY(cages.blocks[b0])],
+              }
+            : null;
+        if (rest.length === 1) {
+          if (place) {
+            if (!this.placeCageSingle(rest[0], clue, note)) return -1;
+            changed = 1;
+          }
+        } else if (rest.length > 1) {
+          parts.push({ cells: rest, clue, inCage: true, note });
         }
       }
     }
+    // Keyed by the cells filled before this run: a placement above leaves it
+    // stale at once.
+    this.partials = { filled, parts };
+    return changed;
+  }
 
+  /** The partial cages the region rule works out from the board as it stands,
+   * worked out again only once another cell is placed. */
+  private regionPartials(k: KillerWork): PartialCage[] {
+    if (this.partials?.filled !== this.filled) this.killerRegions(k, false);
+    return this.partials?.parts ?? [];
+  }
+
+  /** Killer min/max (`DIFF_KMINMAX`) over every cage, then every partial cage
+   * when `regions` (the region rule is in reach). One cage is one firing on the
+   * hint path. */
+  private killerMinmaxAll(k: KillerWork, regions: boolean): number {
+    if (this.reduceCages(k) < 0) return -1;
+    const { kblocks, kclues } = k;
+    const parts = regions ? this.regionPartials(k) : [];
+    let changed = 0;
+    for (let b = 0; b < kblocks.blocks.length; b++) {
+      if (this.killerMinmax(kblocks.blocks[b], kclues[b], this.cageNote(k, b)) > 0) {
+        changed = 1;
+        if (this.recorder) return changed;
+      }
+    }
+    for (const part of parts) {
+      if (this.killerMinmax(part.cells, part.clue, part.note) > 0) {
+        changed = 1;
+        if (this.recorder) return changed;
+      }
+    }
+    return changed;
+  }
+
+  /** Killer sums (`DIFF_KSUMS`) over every cage, then every partial cage when
+   * `regions`. One cage is one firing on the hint path. */
+  private killerSumsAll(k: KillerWork, regions: boolean): number {
+    if (this.reduceCages(k) < 0) return -1;
+    const { kblocks, kclues } = k;
+    const parts = regions ? this.regionPartials(k) : [];
+    let changed = 0;
+    for (let b = 0; b < kblocks.blocks.length; b++) {
+      const ret = this.killerSums(
+        kblocks.blocks[b],
+        kclues[b],
+        true,
+        this.cageNote(k, b),
+      );
+      if (ret < 0) return ret;
+      if (ret > 0) {
+        changed = 1;
+        if (this.recorder) return changed;
+      }
+    }
+    for (const part of parts) {
+      const ret = this.killerSums(part.cells, part.clue, part.inCage, part.note);
+      if (ret < 0) return ret;
+      if (ret > 0) {
+        changed = 1;
+        if (this.recorder) return changed;
+      }
+    }
+    return changed;
+  }
+
+  // --- the ladder ------------------------------------------------------------
+
+  /**
+   * The ladder at `dlev`'s caps, easiest first, in upstream's order.
+   *
+   * Solo grades on two scales, `diff` for the sudoku rungs and `kdiff` for the
+   * killer ones, so a rung's `tier` is on its own rung's scale. The shared
+   * runner has one grade and one cap, so neither is used: the ladder holds only
+   * the rungs both caps admit, and a rung that fires raises its own scale in
+   * `grade`. Leaving a rung out is the same as upstream's `break` at the first
+   * over-cap sudoku rung because the sudoku rungs are in tier order and every
+   * killer rung comes before the first `break`; the killer rungs are not in
+   * `kdiff` order, and upstream skips them one by one.
+   */
+  ladder(
+    dlev: Difficulty,
+    grade: { diff: number; kdiff: number },
+  ): DeductionTechnique[] {
+    const rungs: DeductionTechnique[] = [];
+    const rung = (
+      scale: "diff" | "kdiff",
+      id: string,
+      tier: number,
+      run: () => number,
+    ): void => {
+      if (tier > (scale === "diff" ? dlev.maxdiff : dlev.maxkdiff)) return;
+      rungs.push({
+        id,
+        tier,
+        run: () => {
+          const ret = run();
+          if (ret > 0 && tier > grade[scale]) grade[scale] = tier;
+          return ret;
+        },
+      });
+    };
+    const { diag, killer } = this;
+    rung("diff", "block-single", DIFF_BLOCK, () => this.blockSingles());
+    if (killer) {
+      const regions = dlev.maxkdiff >= DIFF_KINTERSECT;
+      rung("kdiff", "killer-single", DIFF_KSINGLE, () => this.killerSingles(killer));
+      rung("kdiff", "killer-region", DIFF_KINTERSECT, () =>
+        this.killerRegions(killer, true),
+      );
+      rung("kdiff", "killer-minmax", DIFF_KMINMAX, () =>
+        this.killerMinmaxAll(killer, regions),
+      );
+      rung("kdiff", "killer-sums", DIFF_KSUMS, () =>
+        this.killerSumsAll(killer, regions),
+      );
+    }
+    rung("diff", "line-single", DIFF_SIMPLE, () => this.lineSingles());
+    if (diag) rung("diff", "diag-single", DIFF_SIMPLE, () => this.diagSingles(diag));
+    rung("diff", "naked-single", DIFF_SIMPLE, () => this.nakedSingles());
+    rung("diff", "line-intersect", DIFF_INTERSECT, () => this.lineIntersections());
+    if (diag)
+      rung("diff", "diag-intersect", DIFF_INTERSECT, () =>
+        this.diagIntersections(diag),
+      );
+    rung("diff", "region-set", DIFF_SET, () => this.regionSets());
+    if (diag) rung("diff", "diag-set", DIFF_SET, () => this.diagSets());
+    rung("diff", "digit-set", DIFF_EXTREME, () => this.digitSets());
+    rung("diff", "forcing-chain", DIFF_EXTREME, () => this.forcing());
+    return rungs;
+  }
+
+  /** Place every given; false if two of them clash. */
+  seed(): boolean {
+    const cr = this.cr;
+    for (let x = 0; x < cr; x++)
+      for (let y = 0; y < cr; y++) {
+        const n = this.grid[y * cr + x];
+        if (!n) continue;
+        if (!this.cubeAt(x, y, n)) return false;
+        this.place(x, y, n);
+      }
+    return true;
+  }
+
+  /**
+   * The solve (`solver`'s body): place the givens, run the ladder to a
+   * fixpoint, then search if the caps allow it. Mutates `this.grid` and writes
+   * `dlev.diff`/`dlev.kdiff`. Recurses through the module-level `runSolver`.
+   * `firings` is the ladder-equivalence census (`solo-ladder.test.ts`).
+   */
+  run(dlev: Difficulty, firings?: FiringTally): void {
+    this.solve(dlev, (grade) =>
+      runDeductionFixpoint({
+        techniques: this.ladder(dlev, grade),
+        firings,
+        beforeTechnique: (t) => {
+          this.group++;
+          this.replay?.before(t.id);
+          this.replay?.open(this.group);
+        },
+      }),
+    );
+  }
+
+  /**
+   * Upstream's hand-written loop over the same rungs, which {@link run}
+   * replaced with the shared runner; kept as the oracle `solo-ladder.test.ts`
+   * checks the runner against.
+   */
+  runLegacy(dlev: Difficulty): void {
+    this.solve(dlev, (grade) => ({ impossible: this.legacyLoop(dlev, grade) }));
+  }
+
+  private legacyLoop(
+    dlev: Difficulty,
+    grade: { diff: number; kdiff: number },
+  ): boolean {
+    const { diag, killer } = this;
+    const raise = (scale: "diff" | "kdiff", tier: number): void => {
+      if (tier > grade[scale]) grade[scale] = tier;
+    };
+    let ret: number;
+    for (;;) {
+      this.group++;
+      ret = this.blockSingles();
+      if (ret < 0) return true;
+      if (ret > 0) {
+        raise("diff", DIFF_BLOCK);
+        continue;
+      }
+      if (killer) {
+        const regions = dlev.maxkdiff >= DIFF_KINTERSECT;
+        ret = this.killerSingles(killer);
+        if (ret < 0) return true;
+        if (ret > 0) {
+          raise("kdiff", DIFF_KSINGLE);
+          continue;
+        }
+        if (regions) {
+          ret = this.killerRegions(killer, true);
+          if (ret < 0) return true;
+          if (ret > 0) {
+            raise("kdiff", DIFF_KINTERSECT);
+            continue;
+          }
+        }
+        if (dlev.maxkdiff >= DIFF_KMINMAX) {
+          ret = this.killerMinmaxAll(killer, regions);
+          if (ret < 0) return true;
+          if (ret > 0) {
+            raise("kdiff", DIFF_KMINMAX);
+            continue;
+          }
+        }
+        if (dlev.maxkdiff >= DIFF_KSUMS) {
+          ret = this.killerSumsAll(killer, regions);
+          if (ret < 0) return true;
+          if (ret > 0) {
+            raise("kdiff", DIFF_KSUMS);
+            continue;
+          }
+        }
+      }
+      if (dlev.maxdiff <= DIFF_BLOCK) break;
+
+      ret = this.lineSingles();
+      if (ret === 0 && diag) ret = this.diagSingles(diag);
+      if (ret === 0) ret = this.nakedSingles();
+      if (ret < 0) return true;
+      if (ret > 0) {
+        raise("diff", DIFF_SIMPLE);
+        continue;
+      }
+      if (dlev.maxdiff <= DIFF_SIMPLE) break;
+
+      ret = this.lineIntersections();
+      if (ret === 0 && diag) ret = this.diagIntersections(diag);
+      if (ret > 0) {
+        raise("diff", DIFF_INTERSECT);
+        continue;
+      }
+      if (dlev.maxdiff <= DIFF_INTERSECT) break;
+
+      ret = this.regionSets();
+      if (ret === 0 && diag) ret = this.diagSets();
+      if (ret < 0) return true;
+      if (ret > 0) {
+        raise("diff", DIFF_SET);
+        continue;
+      }
+      if (dlev.maxdiff <= DIFF_SET) break;
+
+      ret = this.digitSets();
+      if (ret === 0) ret = this.forcing();
+      if (ret < 0) return true;
+      if (ret > 0) {
+        raise("diff", DIFF_EXTREME);
+        continue;
+      }
+      break;
+    }
+    return false;
+  }
+
+  /** The solve around a deduction loop, which reports whether a rung proved
+   * the board inconsistent and raises `grade` as rungs fire. */
+  private solve(
+    dlev: Difficulty,
+    deduce: (grade: { diff: number; kdiff: number }) => { impossible: boolean },
+  ): void {
+    const cr = this.cr;
+    const grid = this.grid;
+    const grade = { diff: DIFF_BLOCK, kdiff: DIFF_KSINGLE };
+    const finish = (d: number): void => {
+      dlev.diff = d;
+      dlev.kdiff = grade.kdiff;
+    };
+
+    if (!this.seed()) {
+      finish(DIFF_IMPOSSIBLE);
+      return;
+    }
     // Givens are seeded; from here every deduction is teachable, so enable the
     // recorder (kept off through the given placement above so cube-seeding dups
     // aren't mistaken for deductions — `docs/games/hints.md` § "The recorder
     // and the soundness boundary").
     this.recorder = this.pendingRecorder;
-    this.audit?.seeded();
+    this.onSeeded?.();
 
-    /** What cage `b`'s open cells rest on: its clue, and its filled cells,
-     * whose digits make the rest of it. Hint path only (`DeductionRecord`). */
-    const cageNote = (b: number): CageNote | null => {
-      if (!this.recorder || !this.killer || !kblocksImmutable) return null;
-      const filled = kblocksImmutable.blocks[b].filter((c) => grid[c] !== 0);
-      const total = this.killer.totals[b];
-      return {
-        origin: { kind: "cage", total, placed: total - this.killer.kclues[b] },
-        reads: this.cellsXY(filled),
-      };
-    };
-
-    mainloop: while (true) {
-      // One mainloop iteration = at most one firing (each technique `continue`s
-      // to the top on progress), so bumping the group here gives every record of
-      // one firing a shared group id.
-      this.group++;
-      if (this.audit?.pass()) break;
-      // Blockwise positional elimination.
-      for (let b = 0; b < cr; b++)
-        for (let n = 1; n <= cr; n++)
-          if (!this.blk[b * cr + n - 1]) {
-            for (let i = 0; i < cr; i++) idx[i] = this.blocks.blocks[b][i] * cr + n - 1;
-            const ret = this.elim(idx);
-            if (ret < 0) {
-              finish(DIFF_IMPOSSIBLE);
-              return;
-            }
-            if (ret > 0) {
-              diff = Math.max(diff, DIFF_BLOCK);
-              continue mainloop;
-            }
-          }
-
-      if (this.killer !== null) {
-        const { kblocks, kclues } = this.killer;
-        let changed = false;
-
-        // Reduce cages by their filled-in squares (reverse walk: removal compacts).
-        for (let b = 0; b < kblocks.blocks.length; b++) {
-          for (let i = kblocks.blocks[b].length - 1; i >= 0; i--) {
-            const x = kblocks.blocks[b][i];
-            const t = grid[x];
-            if (t === 0) continue;
-            removeFromBlock(kblocks, b, x);
-            if (t > kclues[b]) {
-              finish(DIFF_IMPOSSIBLE);
-              return;
-            }
-            kclues[b] -= t;
-            for (let nn = 0; nn < kblocks.blocks[b].length; nn++)
-              this.setCube2(kblocks.blocks[b][nn], t, 0);
-          }
-        }
-
-        // Killer singles (`DIFF_KSINGLE`): fill single-square cages.
-        for (let b = 0; b < kblocks.blocks.length; b++) {
-          if (kblocks.blocks[b].length === 1) {
-            if (!this.placeCageSingle(kblocks.blocks[b][0], kclues[b], cageNote(b))) {
-              finish(DIFF_IMPOSSIBLE);
-              return;
-            }
-            changed = true;
-          }
-        }
-
-        if (changed) {
-          kdiff = Math.max(kdiff, DIFF_KSINGLE);
-          continue;
-        }
-      }
-
-      if (dlev.maxkdiff >= DIFF_KINTERSECT && this.killer !== null) {
-        const { kblocks, kclues, totals } = this.killer;
-        let changed = false;
-        this.partials = [];
-
-        for (let i = 0; i < 3; i++) {
-          for (let n = 0; n < cr; n++) {
-            const extraList = this.regionCells(i, n);
-            const inRegion = this.recorder ? new Set(extraList) : null;
-            const whole: number[] | null = this.recorder ? [] : null;
-            let sum = (cr * (cr + 1)) / 2;
-            const { len: nsquares, filteredSum } = this.filterWholeCages(
-              extraList,
-              kblocks,
-              kclues,
-              whole,
-            );
-            sum -= filteredSum;
-            if (nsquares === cr || nsquares === 0) continue;
-            if (dlev.maxdiff >= DIFF_RECURSIVE) {
-              // NB: upstream sets dlev->diff = DIFF_IMPOSSIBLE here, but the
-              // got_result label immediately overwrites it with the local
-              // `diff`; we replicate that (effective) behavior faithfully.
-              if (sum <= 0) {
-                finish(diff);
-                return;
-              }
-            }
-
-            const cells = extraList.slice(0, nsquares);
-            const region = SolverUsage.extraRegion(i, n);
-            // A cage counts as inside the region once its cells outside it are
-            // filled, so what the region leaves rests on those too.
-            let regionNote: CageNote | null = null;
-            if (inRegion && whole && kblocksImmutable) {
-              const outside: number[] = [];
-              for (const b of whole)
-                for (const c of kblocksImmutable.blocks[b])
-                  if (!inRegion.has(c)) outside.push(c);
-              regionNote = {
-                origin: { kind: "region", region },
-                reads: this.cellsXY([...inRegion, ...outside]),
-              };
-            }
-            if (nsquares === 1) {
-              if (!this.placeCageSingle(cells[0], sum, regionNote)) {
-                finish(DIFF_IMPOSSIBLE);
-                return;
-              }
-              changed = true;
-              continue;
-            }
-
-            const b0 = kblocks.whichblock[cells[0]];
-            const inCage = cells.every((c) => kblocks.whichblock[c] === b0);
-            this.partials.push({ cells, clue: sum, inCage, note: regionNote });
-            if (!inCage) continue;
-
-            // The region's leftover cells all lie in one cage, so the rest of
-            // that cage makes what the cage's clue leaves beyond them. Cells
-            // this pass has filled are still in the working cage.
-            const inside = new Set(cells);
-            let placed = totals[b0] - kclues[b0];
-            const rest: number[] = [];
-            for (const c of kblocks.blocks[b0]) {
-              if (grid[c]) placed += grid[c];
-              else if (!inside.has(c)) rest.push(c);
-            }
-            const clue = totals[b0] - placed - sum;
-            const note: CageNote | null =
-              regionNote && kblocksImmutable
-                ? {
-                    origin: {
-                      kind: "outside",
-                      region,
-                      total: totals[b0],
-                      placed,
-                      inside: this.cellsXY(cells),
-                      insideSum: sum,
-                    },
-                    reads: [
-                      ...regionNote.reads,
-                      ...this.cellsXY(kblocksImmutable.blocks[b0]),
-                    ],
-                  }
-                : null;
-            if (rest.length === 1) {
-              if (!this.placeCageSingle(rest[0], clue, note)) {
-                finish(DIFF_IMPOSSIBLE);
-                return;
-              }
-              changed = true;
-            } else if (rest.length > 1) {
-              this.partials.push({ cells: rest, clue, inCage: true, note });
-            }
-          }
-        }
-        if (changed) {
-          kdiff = Math.max(kdiff, DIFF_KINTERSECT);
-          continue;
-        }
-      }
-
-      if (dlev.maxkdiff >= DIFF_KMINMAX && this.killer !== null) {
-        const { kblocks, kclues } = this.killer;
-        let changed = false;
-        for (let b = 0; b < kblocks.blocks.length; b++) {
-          const ret = this.killerMinmax(kblocks.blocks[b], kclues[b], cageNote(b));
-          if (ret > 0) {
-            changed = true;
-            if (this.recorder) break; // one cage = one firing on the hint path
-          }
-        }
-        if (!(this.recorder && changed))
-          for (const part of this.partials) {
-            const ret = this.killerMinmax(part.cells, part.clue, part.note);
-            if (ret > 0) {
-              changed = true;
-              if (this.recorder) break;
-            }
-          }
-        if (changed) {
-          kdiff = Math.max(kdiff, DIFF_KMINMAX);
-          continue;
-        }
-      }
-
-      if (dlev.maxkdiff >= DIFF_KSUMS && this.killer !== null) {
-        const { kblocks, kclues } = this.killer;
-        let changed = false;
-        for (let b = 0; b < kblocks.blocks.length; b++) {
-          const ret = this.killerSums(kblocks.blocks[b], kclues[b], true, cageNote(b));
-          if (ret > 0) {
-            changed = true;
-            kdiff = Math.max(kdiff, DIFF_KSUMS);
-            if (this.recorder) break; // one cage = one firing on the hint path
-          } else if (ret < 0) {
-            finish(DIFF_IMPOSSIBLE);
-            return;
-          }
-        }
-        if (!(this.recorder && changed))
-          for (const part of this.partials) {
-            const ret = this.killerSums(part.cells, part.clue, part.inCage, part.note);
-            if (ret > 0) {
-              changed = true;
-              kdiff = Math.max(kdiff, DIFF_KSUMS);
-              if (this.recorder) break;
-            } else if (ret < 0) {
-              finish(DIFF_IMPOSSIBLE);
-              return;
-            }
-          }
-        if (changed) continue;
-      }
-
-      if (dlev.maxdiff <= DIFF_BLOCK) break;
-
-      // Row-wise positional elimination.
-      for (let y = 0; y < cr; y++)
-        for (let n = 1; n <= cr; n++)
-          if (!this.row[y * cr + n - 1]) {
-            for (let x = 0; x < cr; x++) idx[x] = (y * cr + x) * cr + n - 1;
-            const ret = this.elim(idx);
-            if (ret < 0) {
-              finish(DIFF_IMPOSSIBLE);
-              return;
-            }
-            if (ret > 0) {
-              diff = Math.max(diff, DIFF_SIMPLE);
-              continue mainloop;
-            }
-          }
-      // Column-wise positional elimination.
-      for (let x = 0; x < cr; x++)
-        for (let n = 1; n <= cr; n++)
-          if (!this.col[x * cr + n - 1]) {
-            for (let y = 0; y < cr; y++) idx[y] = (y * cr + x) * cr + n - 1;
-            const ret = this.elim(idx);
-            if (ret < 0) {
-              finish(DIFF_IMPOSSIBLE);
-              return;
-            }
-            if (ret > 0) {
-              diff = Math.max(diff, DIFF_SIMPLE);
-              continue mainloop;
-            }
-          }
-
-      // X-diagonal positional elimination.
-      if (this.diag) {
-        for (let n = 1; n <= cr; n++)
-          if (!this.diag[n - 1]) {
-            for (let i = 0; i < cr; i++) idx[i] = diag0(i, cr) * cr + n - 1;
-            const ret = this.elim(idx);
-            if (ret < 0) {
-              finish(DIFF_IMPOSSIBLE);
-              return;
-            }
-            if (ret > 0) {
-              diff = Math.max(diff, DIFF_SIMPLE);
-              continue mainloop;
-            }
-          }
-        for (let n = 1; n <= cr; n++)
-          if (!this.diag[cr + n - 1]) {
-            for (let i = 0; i < cr; i++) idx[i] = diag1(i, cr) * cr + n - 1;
-            const ret = this.elim(idx);
-            if (ret < 0) {
-              finish(DIFF_IMPOSSIBLE);
-              return;
-            }
-            if (ret > 0) {
-              diff = Math.max(diff, DIFF_SIMPLE);
-              continue mainloop;
-            }
-          }
-      }
-
-      // Numeric elimination.
-      for (let x = 0; x < cr; x++)
-        for (let y = 0; y < cr; y++)
-          if (!grid[y * cr + x]) {
-            for (let n = 1; n <= cr; n++) idx[n - 1] = (y * cr + x) * cr + n - 1;
-            const ret = this.elim(idx);
-            if (ret < 0) {
-              finish(DIFF_IMPOSSIBLE);
-              return;
-            }
-            if (ret > 0) {
-              diff = Math.max(diff, DIFF_SIMPLE);
-              continue mainloop;
-            }
-          }
-
-      if (dlev.maxdiff <= DIFF_SIMPLE) break;
-
-      // Intersectional analysis, rows vs blocks.
-      for (let y = 0; y < cr; y++)
-        for (let b = 0; b < cr; b++)
-          for (let n = 1; n <= cr; n++) {
-            if (this.row[y * cr + n - 1] || this.blk[b * cr + n - 1]) continue;
-            for (let i = 0; i < cr; i++) idx[i] = (y * cr + i) * cr + n - 1;
-            if (this.intersectWithBlock(n, { kind: "row", index: y }, b)) {
-              diff = Math.max(diff, DIFF_INTERSECT);
-              continue mainloop;
-            }
-          }
-      // Intersectional analysis, columns vs blocks.
-      for (let x = 0; x < cr; x++)
-        for (let b = 0; b < cr; b++)
-          for (let n = 1; n <= cr; n++) {
-            if (this.col[x * cr + n - 1] || this.blk[b * cr + n - 1]) continue;
-            for (let i = 0; i < cr; i++) idx[i] = (i * cr + x) * cr + n - 1;
-            if (this.intersectWithBlock(n, { kind: "col", index: x }, b)) {
-              diff = Math.max(diff, DIFF_INTERSECT);
-              continue mainloop;
-            }
-          }
-
-      if (this.diag) {
-        // \-diagonal vs blocks.
-        for (let b = 0; b < cr; b++)
-          for (let n = 1; n <= cr; n++) {
-            if (this.diag[n - 1] || this.blk[b * cr + n - 1]) continue;
-            for (let i = 0; i < cr; i++) idx[i] = diag0(i, cr) * cr + n - 1;
-            if (this.intersectWithBlock(n, { kind: "diag0" }, b)) {
-              diff = Math.max(diff, DIFF_INTERSECT);
-              continue mainloop;
-            }
-          }
-        // /-diagonal vs blocks.
-        for (let b = 0; b < cr; b++)
-          for (let n = 1; n <= cr; n++) {
-            if (this.diag[cr + n - 1] || this.blk[b * cr + n - 1]) continue;
-            for (let i = 0; i < cr; i++) idx[i] = diag1(i, cr) * cr + n - 1;
-            if (this.intersectWithBlock(n, { kind: "diag1" }, b)) {
-              diff = Math.max(diff, DIFF_INTERSECT);
-              continue mainloop;
-            }
-          }
-      }
-
-      if (dlev.maxdiff <= DIFF_INTERSECT) break;
-
-      // Blockwise set elimination.
-      for (let b = 0; b < cr; b++) {
-        for (let i = 0; i < cr; i++)
-          for (let n = 1; n <= cr; n++)
-            idx[i * cr + n - 1] = this.blocks.blocks[b][i] * cr + n - 1;
-        const ret = this.set_(idx, { kind: "block", index: b });
-        if (ret < 0) {
-          finish(DIFF_IMPOSSIBLE);
-          return;
-        }
-        if (ret > 0) {
-          diff = Math.max(diff, DIFF_SET);
-          continue mainloop;
-        }
-      }
-      // Row-wise set elimination.
-      for (let y = 0; y < cr; y++) {
-        for (let x = 0; x < cr; x++)
-          for (let n = 1; n <= cr; n++) idx[x * cr + n - 1] = (y * cr + x) * cr + n - 1;
-        const ret = this.set_(idx, { kind: "row", index: y });
-        if (ret < 0) {
-          finish(DIFF_IMPOSSIBLE);
-          return;
-        }
-        if (ret > 0) {
-          diff = Math.max(diff, DIFF_SET);
-          continue mainloop;
-        }
-      }
-      // Column-wise set elimination.
-      for (let x = 0; x < cr; x++) {
-        for (let y = 0; y < cr; y++)
-          for (let n = 1; n <= cr; n++) idx[y * cr + n - 1] = (y * cr + x) * cr + n - 1;
-        const ret = this.set_(idx, { kind: "col", index: x });
-        if (ret < 0) {
-          finish(DIFF_IMPOSSIBLE);
-          return;
-        }
-        if (ret > 0) {
-          diff = Math.max(diff, DIFF_SET);
-          continue mainloop;
-        }
-      }
-
-      if (this.diag) {
-        // \-diagonal set elimination.
-        for (let i = 0; i < cr; i++)
-          for (let n = 1; n <= cr; n++) idx[i * cr + n - 1] = diag0(i, cr) * cr + n - 1;
-        let ret = this.set_(idx, { kind: "diag0" });
-        if (ret < 0) {
-          finish(DIFF_IMPOSSIBLE);
-          return;
-        }
-        if (ret > 0) {
-          diff = Math.max(diff, DIFF_SET);
-          continue;
-        }
-        // /-diagonal set elimination.
-        for (let i = 0; i < cr; i++)
-          for (let n = 1; n <= cr; n++) idx[i * cr + n - 1] = diag1(i, cr) * cr + n - 1;
-        ret = this.set_(idx, { kind: "diag1" });
-        if (ret < 0) {
-          finish(DIFF_IMPOSSIBLE);
-          return;
-        }
-        if (ret > 0) {
-          diff = Math.max(diff, DIFF_SET);
-          continue;
-        }
-      }
-
-      if (dlev.maxdiff <= DIFF_SET) break;
-
-      // Row-vs-column set elimination on a single number.
-      for (let n = 1; n <= cr; n++) {
-        for (let y = 0; y < cr; y++)
-          for (let x = 0; x < cr; x++) idx[y * cr + x] = (y * cr + x) * cr + n - 1;
-        const ret = this.set_(idx);
-        if (ret < 0) {
-          finish(DIFF_IMPOSSIBLE);
-          return;
-        }
-        if (ret > 0) {
-          diff = Math.max(diff, DIFF_EXTREME);
-          continue mainloop;
-        }
-      }
-
-      // Forcing chains.
-      if (this.forcing()) {
-        diff = Math.max(diff, DIFF_EXTREME);
-        continue;
-      }
-
-      // No deductions this iteration — terminate.
-      break;
+    if (deduce(grade).impossible) {
+      finish(DIFF_IMPOSSIBLE);
+      return;
     }
+    let diff = grade.diff;
 
     // Recursion, if permitted and the grid is not yet full.
     if (dlev.maxdiff >= DIFF_RECURSIVE) {
@@ -1527,7 +1665,7 @@ class SolverUsage {
           const outgrid = ingrid.slice();
           outgrid[y * cr + x] = list[i];
 
-          runSolver(cr, blocksImmutable, kblocksImmutable, xtype, outgrid, kgrid, dlev);
+          runSolver(cr, this.blocks, this.cages, this.xtype, outgrid, this.kgrid, dlev);
 
           if (diff === DIFF_IMPOSSIBLE && dlev.diff !== DIFF_IMPOSSIBLE)
             grid.set(outgrid);
@@ -1562,19 +1700,22 @@ export function runSolver(
   kgrid: ArrayLike<number> | null,
   dlev: Difficulty,
 ): void {
-  const usage = new SolverUsage(cr, blocks, kblocks, xtype, grid, kgrid);
-  usage.run(blocks, kblocks, xtype, kgrid, dlev);
+  new SolverUsage(cr, blocks, kblocks, xtype, grid, kgrid).run(dlev);
 }
 
 /**
  * Convenience wrapper over a `SoloState`: clone the working grid, solve it
  * under the given difficulty caps, and return the verdict + (mutated) grid.
  * `diff` is `DIFF_*` (a real difficulty), `DIFF_AMBIGUOUS`, or `DIFF_IMPOSSIBLE`.
+ * `firings` is the ladder-equivalence census (`solo-ladder.test.ts`), and
+ * `legacy` runs the hand-written loop it checks the runner against.
  */
 export function solveSolo(
   s: SoloState,
   maxdiff = DIFF_RECURSIVE,
   maxkdiff = DIFF_KINTERSECT,
+  firings?: FiringTally,
+  legacy = false,
 ): { diff: number; kdiff: number; grid: Int8Array } {
   const grid = s.grid.slice();
   const dlev: Difficulty = {
@@ -1583,15 +1724,16 @@ export function solveSolo(
     diff: DIFF_IMPOSSIBLE,
     kdiff: DIFF_KSINGLE,
   };
-  runSolver(
+  const usage = new SolverUsage(
     s.cr,
     s.blocks,
     s.killerData?.kblocks ?? null,
     s.xtype,
     grid,
     s.killerData?.kgrid ?? null,
-    dlev,
   );
+  if (legacy) usage.runLegacy(dlev);
+  else usage.run(dlev, firings);
   return { diff: dlev.diff, kdiff: dlev.kdiff, grid };
 }
 
@@ -1600,9 +1742,9 @@ export function solveSolo(
  * placed entries only — never the player's notes), capped **below** recursion,
  * and return every candidate elimination and cell placement it makes, in solver
  * order, each tagged with the rule + premise that forced it. This is the raw
- * deduction script a hint narrates; the recorder-off path (`solveSolo`) is
- * byte-for-byte unchanged (the existing C differential is the guard). `s.grid`
- * is treated read-only (a working copy is solved internally).
+ * deduction script a hint narrates; the recorder-off path (`solveSolo`) makes
+ * the same deductions. `s.grid` is treated read-only (a working copy is solved
+ * internally).
  */
 export function recordSoloDeductions(
   s: SoloState,
@@ -1621,25 +1763,27 @@ export function recordSoloDeductions(
   };
   const usage = new SolverUsage(s.cr, s.blocks, kblocks, s.xtype, grid, kgrid);
   usage.pendingRecorder = (rec) => ops.push(rec as HintOp);
-  const replay = auditingPremises() ? soloReplay(usage, s, { ...dlev }) : null;
-  usage.run(s.blocks, kblocks, s.xtype, kgrid, dlev);
-  if (replay?.replay) offerReplay(replay.replay);
+  if (auditingPremises()) {
+    const caps = { ...dlev };
+    usage.onSeeded = () => {
+      usage.replay = soloReplay(usage, s, caps);
+    };
+  }
+  usage.run(dlev);
+  if (usage.replay) offerReplay(usage.replay);
   return ops;
 }
 
 /**
- * The premise audit's replay of a recording run on a board without cages
- * (`firing-replay.ts`). Solo's techniques live in one loop, so a firing's
- * technique is the whole ladder,
- * run for one pass from the edited state: weaker than one technique alone,
- * since a lower rung may put back a cell the audit returned, and sound, since
- * every rung before the firing's found nothing on the recorded state.
+ * The premise audit's replay of a recording run (`firing-replay.ts`): a
+ * firing's technique is its rung, run alone on a fresh solver holding the
+ * edited state, with the recording's caps.
  */
 function soloReplay(
   usage: SolverUsage,
   s: SoloState,
   dlev: Difficulty,
-): { replay: FiringReplay<null> | null } {
+): FiringReplay<string> {
   const { cr, blocks, xtype } = s;
   const kblocks = s.killerData?.kblocks ?? null;
   const kgrid = s.killerData?.kgrid ?? null;
@@ -1650,51 +1794,34 @@ function soloReplay(
       for (let n = 1; n <= cr; n++) if (from.cube[c * cr + n - 1]) cands[c] |= 1 << n;
     return { values, cands };
   };
-  const adapter: ReplayAdapter<null> = {
+  return new FiringReplay<string>({
     w: cr,
     h: cr,
     capture: () => capture(usage),
-    name: () => "solo ladder",
-    run: (board) => {
-      let now = board;
+    name: (id) => id,
+    run: (board, id) => {
+      const fresh = new SolverUsage(
+        cr,
+        blocks,
+        kblocks,
+        xtype,
+        Int8Array.from(board.values),
+        kgrid,
+      );
+      if (!fresh.seed())
+        throw new Error("solo replay: the edited board's digits clash");
+      for (let c = 0; c < cr * cr; c++)
+        for (let n = 1; n <= cr; n++)
+          if (!(board.cands[c] & (1 << n))) fresh.cube[c * cr + n - 1] = 0;
+      // The recording path's techniques behave as recorded only with a recorder.
+      fresh.recorder = () => {};
+      const grade = { diff: DIFF_BLOCK, kdiff: DIFF_KSINGLE };
+      const technique = fresh.ladder(dlev, grade).find((t) => t.id === id);
+      if (!technique) throw new Error(`solo replay: no technique ${id}`);
       return () => {
-        const run = new SolverUsage(
-          cr,
-          blocks,
-          kblocks,
-          xtype,
-          Int8Array.from(now.values),
-          kgrid,
-        );
-        // The recording path's techniques behave as recorded only with a recorder.
-        run.pendingRecorder = () => {};
-        let passes = 0;
-        const cands = now.cands;
-        run.audit = {
-          seeded: () => {
-            for (let c = 0; c < cr * cr; c++)
-              for (let n = 1; n <= cr; n++)
-                if (!(cands[c] & (1 << n))) run.cube[c * cr + n - 1] = 0;
-          },
-          // The second pass means the first one fired.
-          pass: () => ++passes > 1,
-        };
-        run.run(blocks, kblocks, xtype, kgrid, { ...dlev });
-        now = capture(run);
-        return { after: now, ret: passes > 1 ? 1 : 0 };
+        const ret = technique.run();
+        return { after: capture(fresh), ret };
       };
     },
-  };
-  const out: { replay: FiringReplay<null> | null } = { replay: null };
-  usage.audit = {
-    seeded: () => {
-      out.replay = new FiringReplay(adapter);
-    },
-    pass: () => {
-      out.replay?.before(null);
-      out.replay?.open(usage.group);
-      return false;
-    },
-  };
-  return out;
+  });
 }

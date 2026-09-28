@@ -3891,10 +3891,18 @@ reading.
   `expand`) is flagged though its premise is honest, so the guard ledgers each
   such gate against a pinned board. A cell the firing's own technique puts back
   before reaching it is not tested (Salad tests none, the lowest Latin rung
-  few), and the audit counts what it tested. Solo replays its whole loop, not
-  one technique, so its lower rungs fill a returned cell again before a Killer
-  cage rung is reached, and a Killer sum's reads are held by a recording test
-  in `solo-hint.test.ts` instead (`teach-solo-cage-splits`).
+  few), and the audit counts what it tested. **A replay has to run one
+  technique, not the ladder**: Solo's used to rerun its whole loop for a pass,
+  whose lower rungs put a returned cell back before the firing's rung was
+  reached, so it tested 61 cells to 782 put back and a line-block intersection
+  stripped of its confined line passed. Run one rung at a time
+  (`solo-ladder-as-declared-techniques`), the same boards test about 1,160 to
+  440, and that plant is found. So a rung the replay runs must read nothing a
+  rung before it left behind in the same pass: work such state out from the
+  board inside the rung. The audit now finds a Killer cage's filled cell cut
+  from its reads, but misses either of the region rule's reads cut short on the
+  guard's boards, so a recording test in `solo-hint.test.ts` holds those
+  (`teach-solo-cage-splits`).
 - **A derived fact the solver keeps is a fact the hint must teach.** Upstream
   Killer split a cage along a row for good and later treated the piece as a
   cage, so the hint called it "this killer cage" and said its other cells were
