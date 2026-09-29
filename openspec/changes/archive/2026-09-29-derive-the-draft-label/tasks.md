@@ -52,10 +52,10 @@
 - [x] 5.2 Ran the app (Chromium, dev server): the eleven hintless games carry
       the label at desktop and phone width, no other game does; Fifteen's help
       shows its reason above its parameters.
-- [ ] 5.3 **Owner acceptance**: the label's wording and placement on the home
+- [x] 5.3 **Owner acceptance**: the label's wording and placement on the home
       screen, and the "Not in this game" wording. Owner, 2026-09-29: reasoning
       and words fine, label too inconspicuous in dark mode; now filled with the
-      quiet warning pair, checked in both schemes.
+      quiet warning pair, checked in both schemes, and accepted.
 - [x] 5.4 The owner's dev server threw `"wa-button" has already been used`
       after going from the menu to a game and back. The pages come from
       templates, so Vite's dependency scan found no entry and discovered the

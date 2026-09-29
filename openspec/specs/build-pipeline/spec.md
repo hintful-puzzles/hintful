@@ -929,11 +929,13 @@ Measured 2026-09-09 with the installed `vitest related`:
 
 The cause is structural rather than incidental, and it follows from a rule this
 project holds deliberately: a cross-game guard finds its population by reading
-**what a game is**, including its own source text, never a manifest. 26 test
-files therefore reach their subjects through `import.meta.glob(..., "?raw")`,
-and a file read as text forms no import edge. The design that makes these guards
-impossible to forget is the same design that makes them invisible to import-graph
-selection.
+**what a game is**, including its own source text, never a roster kept in a
+test file. A declaration on the game that a mechanism consumes — a contract
+section's `notApplicable` reason, which the help page shows — is part of what
+the game is; a list that only a check reads is not. 26 test files therefore
+reach their subjects through `import.meta.glob(..., "?raw")`, and a file read
+as text forms no import edge. The design that makes these guards impossible to
+forget is the same design that makes them invisible to import-graph selection.
 
 **What has changed is that the missing channel turned out to be derivable.**
 Every `import.meta.glob` call in the tree takes a literal pattern — a string, or

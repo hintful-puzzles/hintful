@@ -1,6 +1,6 @@
 # derive-the-draft-label
 
-**Status: implemented, awaiting owner acceptance of the label (tasks 5.3).**
+**Status: done, label accepted by the owner (2026-09-29).**
 Phase 3 of `envision-the-game-contract`. The classification and the decisions
 are `design.md`.
 
