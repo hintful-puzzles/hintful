@@ -564,35 +564,6 @@ game's generator.
 - **THEN** the result is `1`
 - **AND** a permutation with an even number of inversions yields `0`
 
-### Requirement: A game maps its params to type-summary config values via a Game hook
-
-A game with custom parameters SHALL expose its type-summary configuration values
-through an optional `describeParams?(p: Params): ConfigValues` member on the
-`Game` interface, receiving its own decoded, typed `Params` and returning the
-`ConfigValues` record consumed by the app's type-summary formatter. Boolean
-config values SHALL be real booleans and choice values SHALL be numeric indices
-(never their string renderings), matching upstream `config_values_from_config`
-typing. The worker adapter's `decodeCustomParams` SHALL build a generic
-`{ width, height }` base from `w`/`h` params and spread the game's
-`describeParams` result over it, rather than branching on `puzzleId` in a central
-switch. A game whose parameters are exactly `w`/`h` MAY omit the hook.
-
-#### Scenario: A custom-params game surfaces its config through the hook
-
-- **WHEN** the adapter decodes a custom params string for a game implementing
-  `describeParams`
-- **THEN** the adapter merges the generic width/height base with the game's
-  returned config values
-- **AND** the resulting `ConfigValues` is value-for-value what the prior central
-  switch produced
-
-#### Scenario: Boolean config values keep their type through the hook
-
-- **WHEN** a game's `describeParams` returns a boolean config value (e.g. Guess's
-  `allow-blanks`)
-- **THEN** the value is a real `boolean`, so the type-summary formatter's
-  numeric-index coercion does not NaN it out and the annotation renders
-
 ### Requirement: Hint explanation surfaces independent of the status bar
 
 The active hint step's explanation SHALL be surfaced to the UI (the hint
@@ -1095,15 +1066,12 @@ supply the common dimension fields so a plain w/h game declares them in one line
 
 The `Midend` SHALL build the app's `ConfigDescription` and initial `ConfigValues`
 from `paramConfig` and the current params, and SHALL apply a submitted form by
-mapping the values back onto a copy of the params, validating them with the
-game's own `validateParams`, and — on success — adopting the new params (so the
-app generates a new game) or — on failure — returning the validation error string
-without applying. The worker-side adapter SHALL forward these to the midend rather
-than return an empty configuration. A game that declares no `paramConfig` keeps an
+mapping the values back onto a copy of the params, validating them with
+`paramsError`, and — on success — adopting the new params (so the app generates
+a new game) or — on failure — returning the validation error string without
+applying. The worker-side adapter SHALL forward these to the midend rather than
+return an empty configuration. A game that declares no `paramConfig` keeps an
 empty custom dialog (correct for a preset-only game).
-
-This is independent of the type-summary `describeParams` hook (which renders the
-menu label, not the form) and of the preferences surface.
 
 #### Scenario: A width/height game's custom dialog is populated and applied
 
@@ -1851,25 +1819,18 @@ makes it enforceable rather than aspirational.
 ### Requirement: A tiered game declares its difficulty contract
 
 A game with difficulty tiers SHALL declare an optional `difficulty` contract on
-its `Game`: `tierOf(params)`, a pure `withTier(params, tier)`, and
-`solveAtCap(params, desc, cap)` running the game's solver with its deduction
-ladder capped at `cap`. A game without tiers omits it, exactly as a game without
-a solver omits `solve`.
+its `Game`: `solveAtCap(params, desc, cap)` running the game's solver with its
+deduction ladder capped at `cap`, and the declared exceptions to the tier guards.
+A game without tiers omits it, exactly as a game without a solver omits `solve`.
 
-The contract SHALL NOT carry the tier list. **The tier names are read off the
-game's own difficulty `paramConfig` item** — `difficultyTiers(game)` — which is
-the list a player picks from, and which decides both *whether* a game is tiered
-and *what its tiers are*. A `tiers` array on the contract was a second
-hand-maintained copy of that list held equal to it by an assertion, and eight
-games really did write the names out as two separate literals; there is nothing
-for a derived list to disagree with.
-
-Deriving the list SHALL NOT weaken the coupling the removed assertion carried.
-Two equal string arrays never proved the contract and the form addressed the
-same params field, so the guard SHALL instead assert that the form item's
-`get`/`set` and the contract's `tierOf`/`withTier` move the same tier, for every
-tier — a strictly stronger statement, and the one that fails when the derivation
-finds some other `choices` item.
+The contract SHALL NOT carry the tier list or the tier accessors. **The tier
+names are read off the game's difficulty item** — `difficultyTiers(game)` — which
+is the list a player picks from, and which decides both *whether* a game is
+tiered and *what its tiers are*; `tierOf` and `withTier` read and move a tier
+through the same item. A `tiers` array on the contract was a second
+hand-maintained copy of that list held equal to it by an assertion, and the
+accessors were a second pair held equal to the item's `get`/`set` the same way;
+with both derived from the item, there is nothing for either to disagree with.
 
 `solveAtCap` SHALL return a **discriminated verdict** (`"solved"` /
 `"unsolved"` / `"impossible"`), not the raw integer its solver uses. The
@@ -1910,8 +1871,8 @@ be a relaxation of what the puzzle promises.
 
 Because generation is already uniform through `Game.newDesc(params, rng)`, the
 contract SHALL NOT add a separate "generate at tier" entry point —
-`newDesc(withTier(p, t), rng)` is that, and a second spelling of an existing
-capability is how a contract sprawls.
+`newDesc(withTier(game, p, t), rng)` is that, and a second spelling of an
+existing capability is how a contract sprawls.
 
 #### Scenario: A newly tiered game is enrolled by declaring the contract
 
@@ -3172,12 +3133,14 @@ functions that must be exact inverses of each other.
 The grammar is what the 57 hand-written codecs turned out to spell, and no
 more: a `dims` prefix (`WxH`, with upstream's square fallback) or a `size`
 (one untagged leading integer), followed by tagged segments — `num` (`n12`),
-`choice` (a tag plus one letter from a table) — and bare `flag` letters. The
-options are the variations those codecs actually contained: `full` for a
-generator-only field the brief encoding omits, `invalid` for the out-of-range
-value an unrecognized difficulty letter leaves behind, `means` for a letter
-written when its field is *off*, `omitWhen` for a field written only when
-non-zero, and `whenAbsent` for a default computed from params already decoded.
+`choice` (a tag plus one letter from a table) — bare `flag` letters, and
+`letters`, a choices field written as one bare letter per choice (Salad's `L`
+and `B`, Seismic's `T` or nothing). The options are the variations those
+codecs actually contained: `full` for a generator-only field the brief encoding
+omits, `invalid` for the out-of-range value an unrecognized difficulty letter
+leaves behind, `means` for a letter written when its field is *off*,
+`omitWhen` for a field written only when non-zero, and `whenAbsent` for a
+default computed from params already decoded.
 
 **A segment SHALL name a `paramConfig` field by its `kw` and reuse that item's
 `get`/`set`.** This is the requirement's substance rather than an
@@ -3186,8 +3149,16 @@ of one field list, and naming the field through the form makes it impossible
 for a field to appear in the Custom dialog and be dropped from the game ID, or
 the reverse. It also keeps a field's representation the game's own business —
 three of the converted games store a difficulty tier as something other than an
-index, and none of them changed to become encodable. A field the dialog does
-not offer may still be encoded by supplying accessors on the segment.
+index, and none of them changed to become encodable. An integer that is not a
+text field's value — a choices field upstream writes as its stored number
+(Bridges' `i30`, Loopy's `t4`), or a field the dialog does not offer — SHALL be
+encoded by handing `num` an accessor pair in place of the `kw`.
+
+A game's codec SHALL move from hand-written to declared only when decoding is
+identical on every string the old codec accepted — shown by a differential over
+the recorded corpus, each entry truncated and with junk appended, and the
+legacy forms the old decoder handles — and encoding is identical for every
+record the engine's params check accepts.
 
 **A segment naming a `kw` no item declares SHALL throw**, rather than encoding
 nothing. A silently skipped segment would drop a field from every game ID the
@@ -3230,29 +3201,6 @@ An option earns its place by serving several games, as `whenAbsent` does.
 - **THEN** its encodings are asserted by the same byte-stability guard as every
   declared one, so the two shapes differ in how they are written and not in
   what is promised
-
-### Requirement: A game's config field is spelled the same everywhere it is named
-
-A `paramConfig` item's `kw` SHALL be the same string the game's `describeParams`
-emits for that field, because the two are joined by key wherever a value is
-rendered with its declared name.
-
-Loopy spelled its difficulty item `diff` while `describeParams` emitted
-`difficulty`. Nothing failed: the Custom dialog reads the item and the type
-header read the value, and neither had occasion to look the other up — until the
-header started resolving names from the declaration, at which point the join
-missed and it rendered a raw tier index. `difficultyChoiceItem` matches the `kw`
-by prefix (`/^diff/`) precisely so a variant spelling stays *enrolled*, which is
-a different guarantee from the two spellings being *joinable*.
-
-A game with a genuine reason to differ states the mapping explicitly rather than
-relying on the keys happening to match.
-
-#### Scenario: A field named in two places uses one spelling
-
-- **WHEN** a game declares a `paramConfig` item and emits the same field from
-  `describeParams`
-- **THEN** both use the same key, so a lookup by that key resolves
 
 ### Requirement: A shared mechanic is joined by having it, not by declaring it
 
@@ -7437,3 +7385,101 @@ hinted game's help page SHALL list its marks from its legend.
 
 - **WHEN** a registered game declares `hint` and not `hintMarks`
 - **THEN** the hint-quality suite fails, naming the game
+
+### Requirement: A params field declares what it means, its range and its words
+
+Every `paramConfig` item SHALL carry a `doc` saying what the field means, as the
+help's Parameters section states it; an item documented together with the one
+before it (Height with Width) SHALL say so with `{ with: kw }` naming that item.
+A numeric text field SHALL declare its unconditional range as `bounds`, and a
+field MAY declare a `label` saying which slot of a params label its words fill.
+
+These are the facts the Custom dialog, the preset titles, the type header, the
+bounds check and the help were each keeping a copy of, and the item is the one
+place all of them are consumed from. A choices field's `doc` SHALL name each of
+its word choices, because a mode the dialog offers and the help never explains
+is the gap Unequal's Adjacent sat in.
+
+A tiered game SHALL declare its difficulty field with the engine's
+`difficultyItem(tiers, field)` rather than writing the item, and the tier
+accessors `tierOf(game, p)` and `withTier(game, p, tier)` SHALL be derived from
+that item.
+
+#### Scenario: A field without a doc
+
+- **WHEN** a registered game declares an item with an empty `doc`, or a
+  `{ with }` doc not naming the item before it
+- **THEN** `params-declared.test.ts` fails, naming the game and the field
+
+#### Scenario: A mode the help never names
+
+- **WHEN** a choices field offers a word its doc does not mention
+- **THEN** `params-declared.test.ts` fails, listing the missing words
+
+#### Scenario: A tiered game writes its own difficulty item
+
+- **WHEN** a game's difficulty field is not labeled as the tier slot the engine's
+  item fills
+- **THEN** `params-declared.test.ts` fails, so the field is built by
+  `difficultyItem` and the accessors read the one declaration
+
+### Requirement: One describer labels every params set
+
+A set of params SHALL be named for a player by one engine function,
+`describeParams(game, p)`, composing the items' label words in the order
+`[lead: ]size[ kind…][ tier][, tail…]`. The preset menu's titles, the type
+header of a board matching no preset, and every test reading a title SHALL go
+through it — a preset leaf is its params, and its title is their label.
+
+A leaf MAY keep a declared title only for a name upstream gave it that no field
+says (Guess's "Standard"). Such a name SHALL differ from the leaf's label, and no
+two presets of a game SHALL share a label.
+
+The slot order is the collection's convention and the words are each game's:
+two games could want different words for a field, but not the tier in a
+different place.
+
+#### Scenario: A tier renders as its declared name
+
+- **WHEN** a label is composed for params at any tier of any tiered game
+- **THEN** the text contains that tier's declared name
+
+#### Scenario: Two presets read the same
+
+- **WHEN** two leaves of a game's preset menu get one label, or a named leaf's
+  title is its label
+- **THEN** `params-declared.test.ts` fails, naming the game and the title
+
+#### Scenario: The menu and the header name one board one way
+
+- **WHEN** a player opens a preset, and later reaches the same params through
+  the Custom dialog
+- **THEN** the type header reads the same both times, because both are the one
+  label
+
+### Requirement: Params validity is the engine's check
+
+Whether params can be played SHALL be decided by the engine's `paramsError(game,
+p, full)`: each item's `bounds`, each choice inside its list, then the game's own
+`validateParams`, which is optional and holds only what the items cannot state —
+a limit depending on another field, or one that applies only when generating.
+The midend, and every test asking whether params are valid, SHALL call it.
+
+A bound's refusal SHALL name the field by the label its Custom dialog shows.
+Where a requirement elsewhere in the specs says a game's `validateParams` SHALL
+reject some params, that requirement is met by this check.
+
+A generation-only limit SHALL NOT move into `bounds`, because a bound applies
+whatever the `full` flag says and would refuse a description-carrying game ID
+that loads today.
+
+#### Scenario: A value outside its range
+
+- **WHEN** the Custom dialog submits a width below its declared minimum
+- **THEN** the engine refuses it with "Width must be at least N", and the game's
+  own `validateParams` is not asked
+
+#### Scenario: A choice outside its list
+
+- **WHEN** a decoded game ID carries a difficulty index past the tier list
+- **THEN** the engine refuses it, naming the field and its choices

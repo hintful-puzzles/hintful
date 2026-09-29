@@ -2058,19 +2058,27 @@ changes either.
 - **WHEN** a change alters what a game's hint draws or the words it uses for a mark
 - **THEN** the same change updates that game's `## Hints` section
 
-### Requirement: A game's parameters section names every field its Custom dialog offers
+### Requirement: A game's parameters section is generated from its paramConfig
 
-A page's `## <Name> parameters` section SHALL name every field of the game's
-`paramConfig` by the label the Custom dialog shows, and every choice of a choices
-field that is a word rather than a value. The difficulty field's choices are
-exempt, derived from the difficulty item the game already declares: tier names
-mean the same in every game, and `help/features.md` says what, once.
+A page's `## <Name> parameters` section SHALL write `{{parameters}}` where its
+list of fields goes, and the help build SHALL replace it with a list generated
+from the game's `paramConfig`: each field's dialog label, its `doc`, and a
+sentence stating its declared `bounds`, with the difficulty field's standard
+text linking to what the tier names mean. Prose around the placeholder stays
+hand-written.
 
-This is a content check, and a sound one, because it keys on the labels the dialog
-itself renders: a field the dialog offers that the page never names is the gap.
+The list was a hand-written copy of the dialog, checked only for mentioning each
+field's name; its ranges were stated in prose nothing checked, and nine tiered
+games' pages did not link what their tier names mean.
 
-#### Scenario: A game gains a mode the page does not mention
+#### Scenario: A page without the placeholder
 
-- **WHEN** a game adds a `paramConfig` field, or a word choice to one, and its page
-  does not name it
-- **THEN** `src/help-coverage.test.ts` fails, listing the names the section owes
+- **WHEN** a game page's parameters section does not carry `{{parameters}}`
+- **THEN** `src/help-coverage.test.ts` fails, naming the page
+- **AND** the help build refuses it too
+
+#### Scenario: A game gains a field
+
+- **WHEN** a game adds a `paramConfig` field
+- **THEN** its page lists the field with no edit to the page, and the field's
+  `doc` is what the page says of it
