@@ -1800,6 +1800,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "twiddle",
     "members": [
       "animLength",
+      "describeParams",
       "flashLength",
       "paramConfig",
       "preferredTileSize",

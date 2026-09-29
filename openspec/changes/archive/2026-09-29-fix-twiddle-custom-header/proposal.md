@@ -1,6 +1,6 @@
 # fix-twiddle-custom-header
 
-**Status: in progress.** Phase 0 of `envision-the-game-contract` (its
+**Status: implemented (2026-09-29).** Phase 0 of `envision-the-game-contract` (its
 `design.md` § "Phase 0").
 
 ## Why

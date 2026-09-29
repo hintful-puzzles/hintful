@@ -28,7 +28,7 @@ import {
   showCursor,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { Color, Point } from "../../engine/types.ts";
+import type { Color, ConfigValues, Point } from "../../engine/types.ts";
 import {
   animLength,
   buildColors,
@@ -268,6 +268,12 @@ export const twiddleGame: Game<
       },
     },
   ],
+  describeParams: (p): ConfigValues => ({
+    "rotating-block-size": String(p.n),
+    "one-number-per-row": p.rowsonly,
+    "orientation-matters": p.orientable,
+    "number-of-shuffling-moves": String(p.movetarget),
+  }),
 
   newDesc,
   validateDesc,

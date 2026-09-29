@@ -76,7 +76,7 @@ describe("describeParams covers every augmentation template field", () => {
       continue;
     }
     const describeConfig = aug.describeConfig;
-    it(`${id}: no unsubstituted {field} placeholder in any preset header`, () => {
+    it(`${id}: every preset header substitutes a real value for every field`, () => {
       const game = getTsGame(id);
       expect(game, `${id} is in the catalog but not registered`).not.toBeNull();
       if (!game) {
@@ -89,6 +89,13 @@ describe("describeParams covers every augmentation template field", () => {
         expect(
           TEMPLATE_FIELD.test(rendered),
           `${id} params ${JSON.stringify(p)} rendered "${rendered}" with an unsubstituted template field`,
+        ).toBe(false);
+        // A function formatter never leaves a placeholder: it reads the
+        // missing key as `undefined` and prints that, or `NaN` once numbered
+        // (Twiddle's "rotating NaNxNaN blocks", before it had describeParams).
+        expect(
+          /NaN|undefined/.test(rendered),
+          `${id} params ${JSON.stringify(p)} rendered "${rendered}" from a key describeParams never supplied`,
         ).toBe(false);
       }
     });
