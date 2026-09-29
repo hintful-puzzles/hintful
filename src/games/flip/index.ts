@@ -9,12 +9,14 @@ import {
   dimensionParamConfig,
   fromCoord,
   type Game,
+  type ParamConfigItem,
   registerGame,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/index.ts";
-import { parseDimensions, transposeDimensions } from "../../engine/params.ts";
+import { transposeDimensions } from "../../engine/params.ts";
+import { dims, letters, paramsCodec } from "../../engine/params-codec.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -50,6 +52,38 @@ export type { FlipMove, FlipParams, FlipState, FlipUi };
 /** Upstream's `INT_MAX`, for the overflow guards in `validateParams`. */
 const INT_MAX = 2147483647;
 
+// --- params ---------------------------------------------------------
+
+function defaultParams(): FlipParams {
+  return { w: 5, h: 5, matrixType: "crosses" };
+}
+
+const paramConfig: ParamConfigItem<FlipParams>[] = [
+  ...dimensionParamConfig<FlipParams>({
+    doc: "Size of the grid in squares.",
+    bounds: { min: 1 },
+  }),
+  {
+    kw: "shape-type",
+    name: "Shape type",
+    type: "choices",
+    choices: ["Crosses", "Random"],
+    doc: "Which squares a click flips. With <em>Crosses</em>, every square flips itself and the squares directly above, below and to either side. With <em>Random</em>, every square flips itself and its own random selection of the eight squares around it, as its diagram shows.",
+    label: { slot: "kind" },
+    get: (p) => (p.matrixType === "crosses" ? 0 : 1),
+    set: (p, v) => {
+      p.matrixType = v === 0 ? "crosses" : "random";
+    },
+  },
+];
+
+/** `WxH`, plus the generator-only shape letter. A missing or unknown letter
+ * leaves the default, Crosses. */
+const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
+  dims(paramConfig),
+  letters(paramConfig, "shape-type", ["c", "r"], { full: true }),
+]);
+
 // --- the Game -------------------------------------------------------
 
 export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawState> = {
@@ -59,9 +93,7 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
   ignoresSecondaryButton: true,
   preferredTileSize: PREFERRED_TILE_SIZE,
 
-  defaultParams(): FlipParams {
-    return { w: 5, h: 5, matrixType: "crosses" };
-  },
+  defaultParams,
 
   presets() {
     const mk = (w: number, h: number, matrixType: MatrixType) => ({
@@ -80,14 +112,8 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
     };
   },
 
-  encodeParams(p, full): string {
-    return `${p.w}x${p.h}${full ? (p.matrixType === "crosses" ? "c" : "r") : ""}`;
-  },
-
-  decodeParams(s): FlipParams {
-    const { w, h, next } = parseDimensions(s);
-    return { w, h, matrixType: s[next] === "r" ? "random" : "crosses" };
-  },
+  encodeParams,
+  decodeParams,
 
   validateParams(p): string | null {
     if (p.w > (INT_MAX - 3) / p.h) {
@@ -101,24 +127,7 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
   },
 
   transposeParams: transposeDimensions(),
-  paramConfig: [
-    ...dimensionParamConfig<FlipParams>({
-      doc: "Size of the grid in squares.",
-      bounds: { min: 1 },
-    }),
-    {
-      kw: "shape-type",
-      name: "Shape type",
-      type: "choices",
-      choices: ["Crosses", "Random"],
-      doc: "Which squares a click flips. With <em>Crosses</em>, every square flips itself and the squares directly above, below and to either side. With <em>Random</em>, every square flips itself and its own random selection of the eight squares around it, as its diagram shows.",
-      label: { slot: "kind" },
-      get: (p) => (p.matrixType === "crosses" ? 0 : 1),
-      set: (p, v) => {
-        p.matrixType = v === 0 ? "crosses" : "random";
-      },
-    },
-  ],
+  paramConfig,
 
   newDesc(p, rng) {
     const { w, h } = p;

@@ -26,16 +26,14 @@ import {
   type HintResult,
   type HintStep,
   type HintTrackVerdict,
+  type ParamConfigItem,
   registerGame,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/index.ts";
-import {
-  dimensionParamConfig,
-  parseDimensions,
-  transposeDimensions,
-} from "../../engine/params.ts";
+import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
+import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import {
   CURSOR_SELECT,
@@ -189,22 +187,6 @@ export interface GalaxiesUi {
 
 export type { GalaxiesDrawState, GalaxiesState };
 export { GalaxiesDiff };
-
-// --- params ---------------------------------------------------------
-
-const DIFFCHARS = "nu";
-
-function decodeParams(s: string): GalaxiesParams {
-  const { w, h, next } = parseDimensions(s, 0);
-  const d = s[next] === "d" ? DIFFCHARS.indexOf(s[next + 1] ?? "") : -1;
-  return { w, h, diff: d >= 0 ? (d as GalaxiesDiff) : GalaxiesDiff.Normal };
-}
-
-function encodeParams(p: GalaxiesParams, full: boolean): string {
-  let out = `${p.w}x${p.h}`;
-  if (full) out += `d${DIFFCHARS[p.diff] ?? "n"}`;
-  return out;
-}
 
 // --- interaction helpers -------------------------------------------
 
@@ -900,6 +882,26 @@ const GALAXIES_TIERS = tierNames(2, { search: true });
 
 const DIFF_NAMES = [...GALAXIES_TIERS, "Impossible", "Ambiguous", "Unfinished"];
 
+// --- params ---------------------------------------------------------
+
+function defaultParams(): GalaxiesParams {
+  return { w: 7, h: 7, diff: GalaxiesDiff.Normal };
+}
+
+const paramConfig: ParamConfigItem<GalaxiesParams>[] = [
+  ...dimensionParamConfig<GalaxiesParams>({
+    doc: "Size of the grid in squares.",
+    bounds: { min: 3, max: 100 },
+  }),
+  difficultyItem(GALAXIES_TIERS, "diff"),
+];
+
+/** `WxH`, then the generator-only difficulty letter. */
+const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
+  dims(paramConfig),
+  choice(paramConfig, "d", "difficulty", "nu", { full: true }),
+]);
+
 function statusbarText(s: GalaxiesState, _ui: GalaxiesUi): string {
   // Solved once, on first ask, and kept: the verdict depends only on the dots.
   if (s.cachedDiff === -1) {
@@ -950,9 +952,7 @@ export const galaxiesGame: Game<
   id: "galaxies",
   preferredTileSize: PREFERRED_TILE_SIZE,
 
-  defaultParams(): GalaxiesParams {
-    return { w: 7, h: 7, diff: GalaxiesDiff.Normal };
-  },
+  defaultParams,
 
   presets() {
     const mk = (w: number, h: number, diff: GalaxiesDiff) => ({
@@ -974,13 +974,7 @@ export const galaxiesGame: Game<
   encodeParams,
   decodeParams,
   transposeParams: transposeDimensions(),
-  paramConfig: [
-    ...dimensionParamConfig<GalaxiesParams>({
-      doc: "Size of the grid in squares.",
-      bounds: { min: 3, max: 100 },
-    }),
-    difficultyItem(GALAXIES_TIERS, "diff"),
-  ],
+  paramConfig,
 
   newDesc(p: GalaxiesParams, rng: RandomState) {
     return { desc: newGameDesc(p, rng) };

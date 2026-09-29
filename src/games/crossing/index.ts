@@ -38,7 +38,7 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
+import { transposeDimensions } from "../../engine/params.ts";
 import {
   pencilKeepHighlightPref,
   stickyPencilPref,
@@ -92,6 +92,7 @@ import {
   newState,
   newUi,
   nextInRun,
+  paramConfig,
   placedRuns,
   runForNumber,
   snapDirection,
@@ -628,23 +629,7 @@ export const crossingGame: Game<
   decodeParams,
   validateParams,
   transposeParams: transposeDimensions(),
-  paramConfig: [
-    ...dimensionParamConfig<CrossingParams>({
-      doc: "Size of the grid in squares. Very large boards are refused, because a puzzle whose runs all read as distinct numbers becomes impossible to generate as the grid grows.",
-      bounds: { min: 2 },
-    }),
-    {
-      kw: "symmetric-walls",
-      name: "Symmetric walls",
-      type: "boolean",
-      doc: "When enabled, all walls form a rotationally symmetric pattern.",
-      label: { slot: "kind", words: (p) => (p.sym ? "symmetric" : null) },
-      get: (p) => p.sym,
-      set: (p, v) => {
-        p.sym = v;
-      },
-    },
-  ],
+  paramConfig,
 
   newDesc: (p, rng) => newCrossingDesc(p, rng),
   validateDesc,

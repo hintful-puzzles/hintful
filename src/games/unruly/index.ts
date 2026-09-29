@@ -8,7 +8,7 @@
  * right-click cycles the other way; number keys place directly.
  */
 
-import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
+import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
@@ -20,7 +20,7 @@ import {
 } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { CELL, type MarkRef, type Narration } from "../../engine/hint-words.ts";
-import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
+import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -36,7 +36,7 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
-import { type Cell, DIFF_NAMES, EMPTY, ONE, ZERO } from "./constants.ts";
+import { type Cell, EMPTY, ONE, ZERO } from "./constants.ts";
 import { newDesc, solvableAt } from "./generator.ts";
 import { type Marked, say } from "./hint-text.ts";
 import {
@@ -62,6 +62,7 @@ import {
   encodeParams,
   executeMove,
   newState,
+  paramConfig,
   presets,
   status,
   textFormat,
@@ -355,27 +356,7 @@ export const unrulyGame: Game<
   decodeParams,
   validateParams,
   transposeParams: transposeDimensions<UnrulyParams>({ w: "w2", h: "h2" }),
-  paramConfig: [
-    // Upstream's `w2`/`h2` are the *full* grid extent, not halves, so the
-    // fields are mapped rather than the game renamed.
-    ...dimensionParamConfig<UnrulyParams>({
-      fields: { w: "w2", h: "h2" },
-      doc: "Size of the grid in squares. Both must be even.",
-      bounds: { min: 6 },
-    }),
-    difficultyItem(DIFF_NAMES, "diff"),
-    {
-      kw: "unique-rows-and-columns",
-      name: "Unique rows and columns",
-      type: "boolean",
-      doc: "Adds the rule that no two rows may be the same, and no two columns. There are only so many different rows of a given width, so this limits how tall the grid can be for its width, and the other way round: a grid 6 squares wide can be at most 14 high, and one 8 wide at most 34.",
-      label: { slot: "tail", words: (p) => (p.unique ? "unique" : null) },
-      get: (p) => p.unique,
-      set: (p, v) => {
-        p.unique = v;
-      },
-    },
-  ],
+  paramConfig,
 
   newDesc,
   validateDesc,

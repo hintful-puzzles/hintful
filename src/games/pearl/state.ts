@@ -5,9 +5,10 @@
  * `clues` grid is shared frozen (upstream's ref-counted `shared_state`).
  */
 
-import { tierNames } from "../../engine/difficulty.ts";
-import type { PresetMenu } from "../../engine/game.ts";
-import { parseDimensions } from "../../engine/params.ts";
+import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
+import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import { dimensionParamConfig } from "../../engine/params.ts";
+import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import type { GameStatus } from "../../engine/types.ts";
@@ -105,23 +106,37 @@ export function presets(): PresetMenu<PearlParams> {
   };
 }
 
-export function decodeParams(s: string): PearlParams {
-  const { w, h, next } = parseDimensions(s);
-  let i = next;
-  let difficulty = DIFF_EASY;
-  if (s[i] === "d") {
-    i++;
-    for (let d = 0; d < DIFF_COUNT; d++) if (s[i] === DIFF_CHARS[d]) difficulty = d;
-    if (i < s.length) i++;
-  }
-  return { w, h, difficulty, nosolve: s[i] === "n" };
-}
+/** The "Custom type…" form, and the field list the codec below encodes. */
+export const paramConfig: ParamConfigItem<PearlParams>[] = [
+  ...dimensionParamConfig<PearlParams>({
+    doc: "Size of the grid in squares. The harder of the two difficulties needs one of them to be at least 6.",
+    bounds: { min: 5 },
+  }),
+  difficultyItem(DIFF_NAMES, "difficulty"),
+  {
+    kw: "allow-unsoluble",
+    name: "Allow unsoluble",
+    type: "boolean",
+    doc: "Skip checking the puzzle at all: every pearl the generated loop allows is kept, and nothing makes sure the puzzle has only one solution or can be solved by reasoning. Such a board may have more than one loop that fits, and the difficulty setting has no effect on it.",
+    label: { slot: "tail", words: (p) => (p.nosolve ? "ambiguous" : null) },
+    get: (p) => p.nosolve,
+    set: (p, v) => {
+      p.nosolve = v;
+    },
+  },
+];
 
-export function encodeParams(p: PearlParams, full: boolean): string {
-  let buf = `${p.w}x${p.h}`;
-  if (full) buf += `d${DIFF_CHARS[p.difficulty]}${p.nosolve ? "n" : ""}`;
-  return buf;
-}
+/** `WxH`, then the generator-only difficulty letter and `n` for unsoluble. A
+ * string without a difficulty letter is Easy, as upstream reads it, rather
+ * than the default preset's tier. */
+export const { encodeParams, decodeParams } = paramsCodec(
+  () => ({ ...defaultParams(), difficulty: DIFF_EASY }),
+  [
+    dims(paramConfig),
+    choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
+    flag(paramConfig, "n", "allow-unsoluble", { full: true }),
+  ],
+);
 
 export function validateParams(p: PearlParams, _full: boolean): string | null {
   if (p.w > Math.floor(0x7fffffff / p.h))

@@ -861,7 +861,13 @@ any export here. Read its header for the one shape it still cannot see.
 `paramsCodec` derives **both** halves of `encodeParams`/`decodeParams` from one
 ordered segment list, so the two cannot drift apart. A segment names a
 `paramConfig` field by its `kw` and reuses that item's accessors, which makes
-the Custom dialog and the codec one field list rather than two. Five grammars
+the Custom dialog and the codec one field list rather than two. A choices field
+upstream writes as its stored number (Bridges' `i30`) goes through `num` with an
+`IntAccess` pair; one written as a bare letter per choice (Salad's `L`/`B`) is
+`letters`. **Moving a codec here is proven by a differential**, not by the
+stability table alone: old against new decoder over the corpus, truncated, with
+junk appended and with every legacy form the old decoder handles, since a
+hand-written decoder accepts strings no encoder writes. Five grammars
 genuinely escape it (a float param, a leading letter before the dimensions, a
 `switch` over multi-character strings, a `while` loop over the tail, a boolean
 encoded as an integer) — those are named in the `ts-engine` spec, and a game

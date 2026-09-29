@@ -4,9 +4,11 @@
  * orthogonal neighbors (`points`). Upstream's refcounted `solver_state` (two
  * dsfs) is not part of the state; the solver builds its own dsf on demand.
  */
-import { parseLeadingInt } from "../../engine/decimal.ts";
 import { c2nUpper, n2cUpper } from "../../engine/desc-alphabet.ts";
-import { tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
+import type { ParamConfigItem } from "../../engine/game.ts";
+import { dimensionParamConfig } from "../../engine/params.ts";
+import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 
@@ -59,7 +61,7 @@ export interface Island {
   nislands: number;
 }
 
-export const DIFFICULTY_NAMES: readonly string[] = tierNames(3);
+const DIFFICULTY_NAMES: readonly string[] = tierNames(3);
 
 /** A square board of this size at every tier. */
 const presetsOfSize = (size: number): BridgesParams[] =>
@@ -86,51 +88,132 @@ export function defaultParams(): BridgesParams {
 
 // --- Params codec (bridges.c decode_params/encode_params/validate_params) ---
 
-export function decodeParams(s: string): BridgesParams {
-  const p = defaultParams();
-  let i = 0;
-  const num = (): number => {
-    const r = parseLeadingInt(s, i);
-    i = r.next;
-    return r.value;
-  };
-  p.w = num();
-  p.h = p.w;
-  if (s[i] === "x") {
-    i++;
-    p.h = num();
-  }
-  if (s[i] === "i") {
-    i++;
-    p.islands = num();
-  }
-  if (s[i] === "e") {
-    i++;
-    p.expansion = num();
-  }
-  if (s[i] === "m") {
-    i++;
-    p.maxb = num();
-  }
-  if (s[i] === "L") {
-    i++;
-    p.allowloops = false;
-  }
-  if (s[i] === "d") {
-    i++;
-    p.difficulty = num();
-  }
-  return p;
-}
+/** The Custom "Type…" dialog, index-for-index with bridges.c `game_configure`,
+ * and the field list the codec below encodes. */
+export const paramConfig: ParamConfigItem<BridgesParams>[] = [
+  ...dimensionParamConfig<BridgesParams>({
+    doc: "Size of the grid in squares.",
+    bounds: { min: 3 },
+  }),
+  difficultyItem(DIFFICULTY_NAMES, "difficulty", {
+    doc: "Tricky needs lines that can carry at least two bridges.",
+  }),
+  {
+    kw: "allow-loops",
+    name: "Allow loops",
+    type: "boolean",
+    doc: "Whether the bridges may form a closed loop. When this is off, no solution contains one, and a board with a loop of bridges on it does not count as finished.",
+    label: { slot: "tail", words: (p) => (p.allowloops ? null : "no loops") },
+    get: (p) => p.allowloops,
+    set: (p, v) => {
+      p.allowloops = v;
+    },
+  },
+  {
+    kw: "max-bridges-per-direction",
+    name: "Max. bridges per direction",
+    type: "choices",
+    choices: ["1", "2", "3", "4"],
+    doc: "The most bridges that may join one pair of islands.",
+    label: {
+      slot: "tail",
+      words: (p) =>
+        p.maxb === 2 ? null : `max ${p.maxb} ${p.maxb === 1 ? "bridge" : "bridges"}`,
+    },
+    get: (p) => p.maxb - 1,
+    set: (p, v) => {
+      p.maxb = v + 1;
+    },
+  },
+  {
+    kw: "percentage-of-island-squares",
+    name: "%age of island squares",
+    type: "choices",
+    choices: ["5%", "10%", "15%", "20%", "25%", "30%"],
+    doc: "Roughly what share of the grid's squares are islands. There are always at least three, and the generator may stop short of the target when it runs out of room.",
+    label: {
+      slot: "tail",
+      words: (p) => (p.islands === 30 ? null : `${p.islands}% islands`),
+    },
+    get: (p) => Math.trunc(p.islands / 5) - 1,
+    set: (p, v) => {
+      p.islands = (v + 1) * 5;
+    },
+  },
+  {
+    kw: "expansion-factor",
+    name: "Expansion factor (%age)",
+    doc: "How often a new island is placed as far away as it can go, rather than at a random distance, when the generator grows the puzzle; higher values give longer bridges. With loops allowed, it is also how often a bridge joins an island that is already there, which is what makes loops.",
+    label: {
+      slot: "tail",
+      words: (p) => (p.expansion === 10 ? null : `${p.expansion}% expansion`),
+    },
+    type: "choices",
+    choices: [
+      "0%",
+      "10%",
+      "20%",
+      "30%",
+      "40%",
+      "50%",
+      "60%",
+      "70%",
+      "80%",
+      "90%",
+      "100%",
+    ],
+    get: (p) => Math.trunc(p.expansion / 10),
+    set: (p, v) => {
+      p.expansion = v * 10;
+    },
+  },
+];
 
-export function encodeParams(p: BridgesParams, full: boolean): string {
-  if (full) {
-    return `${p.w}x${p.h}i${p.islands}e${p.expansion}m${p.maxb}${
-      p.allowloops ? "" : "L"
-    }d${p.difficulty}`;
-  }
-  return `${p.w}x${p.h}m${p.maxb}${p.allowloops ? "" : "L"}`;
-}
+/** Upstream writes each choices field by the number it stores, not by its
+ * choice index: `i30` is 30% islands, `m2` two bridges, `d1` the tier. */
+export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
+  dims(paramConfig),
+  num(
+    paramConfig,
+    "i",
+    {
+      get: (p) => p.islands,
+      set: (p, v) => {
+        p.islands = v;
+      },
+    },
+    { full: true },
+  ),
+  num(
+    paramConfig,
+    "e",
+    {
+      get: (p) => p.expansion,
+      set: (p, v) => {
+        p.expansion = v;
+      },
+    },
+    { full: true },
+  ),
+  num(paramConfig, "m", {
+    get: (p) => p.maxb,
+    set: (p, v) => {
+      p.maxb = v;
+    },
+  }),
+  flag(paramConfig, "L", "allow-loops", { means: false }),
+  num(
+    paramConfig,
+    "d",
+    {
+      get: (p) => p.difficulty,
+      set: (p, v) => {
+        p.difficulty = v;
+      },
+    },
+    { full: true },
+  ),
+]);
 
 export function validateParams(p: BridgesParams, full: boolean): string | null {
   if (p.w > Math.floor(0x7fffffff / p.h))

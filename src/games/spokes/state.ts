@@ -23,8 +23,11 @@
  *   the `readonly` type is the whole guarantee).
  */
 
-import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
-import { tierNames } from "../../engine/difficulty.ts";
+import { digitValue } from "../../engine/decimal.ts";
+import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
+import type { ParamConfigItem } from "../../engine/game.ts";
+import { dimensionParamConfig } from "../../engine/params.ts";
+import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 
 // --- spoke states -----------------------------------------------------------
@@ -94,8 +97,11 @@ const DIFF_CHARS = "eth";
 export function diffToLevel(d: SpokesDiff): number {
   return DIFFS.indexOf(d);
 }
+/** An out-of-range level stays invalid, for `paramsError` to refuse, rather
+ * than quietly becoming Easy: upstream never checks the letter, so `6x6dz`
+ * would index its `spokes_diffchars` out of bounds. */
 export function diffFromLevel(level: number): SpokesDiff {
-  return DIFFS[level] ?? "easy";
+  return DIFFS[level] ?? ("invalid" as SpokesDiff);
 }
 
 // --- params -----------------------------------------------------------------
@@ -120,37 +126,29 @@ export function defaultParams(): SpokesParams {
   return { ...PRESETS[3] };
 }
 
-export function encodeParams(p: SpokesParams, full: boolean): string {
-  const base = `${p.w}x${p.h}`;
-  return full ? `${base}d${DIFF_CHARS[diffToLevel(p.diff)]}` : base;
-}
+/** The "Custom type…" form, and the field list the codec below encodes. */
+export const paramConfig: ParamConfigItem<SpokesParams>[] = [
+  ...dimensionParamConfig<SpokesParams>({
+    doc: "Size of the grid in squares.",
+    bounds: { min: 2 },
+  }),
+  difficultyItem(DIFF_NAMES, {
+    get: (p: SpokesParams) => diffToLevel(p.diff),
+    set: (p: SpokesParams, tier: number) => {
+      p.diff = diffFromLevel(tier);
+    },
+  }),
+];
 
-export function decodeParams(s: string): SpokesParams {
-  const p = defaultParams();
-  let i = 0;
-  const digits = (): number => {
-    const r = parseLeadingInt(s, i);
-    i = r.next;
-    return r.value;
-  };
-  p.w = digits();
-  if (s[i] === "x") {
-    i++;
-    p.h = digits();
-  } else {
-    p.h = p.w;
-  }
-  if (s[i] === "d") {
-    i++;
-    // An unrecognized or missing letter leaves the difficulty invalid, for
-    // `paramsError` to reject. Upstream never checks it, so `6x6dz` would
-    // index its `spokes_diffchars` out of bounds.
-    const idx = i < s.length ? DIFF_CHARS.indexOf(s[i]) : -1;
-    p.diff = idx >= 0 ? diffFromLevel(idx) : ("invalid" as SpokesDiff);
-    if (i < s.length) i++;
-  }
-  return p;
-}
+/** `WxH`, plus the generator-only difficulty letter. A missing or unknown
+ * letter leaves the difficulty invalid (see `diffFromLevel`). */
+export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
+  dims(paramConfig),
+  choice(paramConfig, "d", "difficulty", DIFF_CHARS, {
+    full: true,
+    invalid: DIFFCOUNT,
+  }),
+]);
 
 // --- boards -----------------------------------------------------------------
 

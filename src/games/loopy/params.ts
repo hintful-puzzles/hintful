@@ -9,11 +9,11 @@
  * names, the encode char and the min-size error messages are *derived* from it.
  */
 
-import { parseLeadingInt } from "../../engine/decimal.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { type GridType, gridValidateParams } from "../../engine/grid/index.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
+import { choice, dims, num, paramsCodec } from "../../engine/params-codec.ts";
 
 /**
  * Loopy's grid types, in **Loopy's own ordering** — which is deliberately not
@@ -94,12 +94,11 @@ export const LOOPY_GRIDS = [
   turns: boolean;
 }[];
 
-/** Difficulty levels, in encode order. `char` is the params encoding (`d<c>`);
- * the index is the internal `diff` value the solver caps its rungs by. */
+/** Difficulty levels, in encode order: a level's letter is its params encoding
+ * (`d<c>`), and its index the internal `diff` value the solver caps its rungs
+ * by. */
 const LOOPY_DIFF_CHARS = "enth";
-export const LOOPY_DIFFS: readonly { title: string; char: string }[] = tierNames(
-  LOOPY_DIFF_CHARS.length,
-).map((title, i) => ({ title, char: LOOPY_DIFF_CHARS[i] }));
+export const LOOPY_DIFFS: readonly string[] = tierNames(LOOPY_DIFF_CHARS.length);
 
 export const DIFF_EASY = 0;
 export const DIFF_NORMAL = 1;
@@ -125,39 +124,6 @@ export function gridTypeOf(p: LoopyParams): GridType {
 
 export function defaultParams(): LoopyParams {
   return { w: 10, h: 10, diff: DIFF_EASY, type: 0 };
-}
-
-export function encodeParams(p: LoopyParams, full: boolean): string {
-  const base = `${p.w}x${p.h}t${p.type}`;
-  return full ? `${base}d${LOOPY_DIFFS[p.diff].char}` : base;
-}
-
-/** Parse a params string (`<w>x<h>t<type>d<diffchar>`). Every part after the
- * width is optional: a missing height copies the width, and a missing type or
- * difficulty keeps its {@link defaultParams} value. */
-export function decodeParams(s: string): LoopyParams {
-  const p = defaultParams();
-  let i = 0;
-  const int = (): number => {
-    const r = parseLeadingInt(s, i);
-    i = r.next;
-    return r.value;
-  };
-
-  p.h = p.w = int();
-  if (s[i] === "x") {
-    i++;
-    p.h = int();
-  }
-  if (s[i] === "t") {
-    i++;
-    p.type = int();
-  }
-  if (s[i] === "d") {
-    const found = LOOPY_DIFFS.findIndex((d) => d.char === s[i + 1]);
-    if (found >= 0) p.diff = found;
-  }
-  return p;
 }
 
 export function validateParams(p: LoopyParams, _full: boolean): string | null {
@@ -195,11 +161,23 @@ export const paramConfig: ParamConfigItem<LoopyParams>[] = [
       p.type = v;
     },
   },
-  difficultyItem(
-    LOOPY_DIFFS.map((d) => d.title),
-    "diff",
-  ),
+  difficultyItem(LOOPY_DIFFS, "diff"),
 ];
+
+/** `<w>x<h>t<type>`, plus the generator-only `d<diffchar>`. Every part after
+ * the width is optional: a missing height copies the width, and a missing type
+ * or an unknown difficulty letter keeps its {@link defaultParams} value. The
+ * type is its {@link LOOPY_GRIDS} index, which is the wire format. */
+export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
+  dims(paramConfig),
+  num(paramConfig, "t", {
+    get: (p) => p.type,
+    set: (p, v) => {
+      p.type = v;
+    },
+  }),
+  choice(paramConfig, "d", "difficulty", LOOPY_DIFF_CHARS, { full: true }),
+]);
 
 const preset = (w: number, h: number, diff: number, type: number): LoopyParams => ({
   w,

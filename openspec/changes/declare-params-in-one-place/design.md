@@ -147,6 +147,24 @@ names. What the grammar cannot express (floats, a leading solid letter, Solo's
 multi-character symmetry) stays hand-written, as `params-codec.ts` already
 records.
 
+### D6. What a codec migration must preserve
+
+A hand-written codec moves to `paramsCodec` only when **decoding** is identical
+on every string an old codec accepts. The evidence is a differential of old
+against new over the recorded corpus, each entry cut short and with junk
+appended, and the legacy forms the old decoder visibly handles. **Encoding**
+must be identical for every record `paramsError` accepts. A record it refuses
+cannot reach a game ID, so its encoding is not a promise: Spokes, Salad and
+Seismic wrote an unknown tier as `dundefined` and now write `d?`.
+
+Two segment options were added because more than one game needed each:
+`num` takes an `IntAccess` pair in place of a `kw` (Bridges, Same Game,
+Loopy, Sticks), and `letters` writes a choices field as a bare letter (Flip,
+Salad, Seismic). The first makes true a claim the module header had long
+made and the code did not support. An option that only one game needed
+(Ascent's `omitWhen` on a flag; Subsets's accessor-taking `dims`) was
+declined, and those games keep their codecs.
+
 ## What this does not do
 
 - It does not touch the tier *list*: `tierNames` stays how a game names its

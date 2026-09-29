@@ -11,12 +11,12 @@
  */
 
 import { c2nUpper } from "../../engine/desc-alphabet.ts";
-import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
+import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import type { Game, GamePref, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { commonHintRefusal } from "../../engine/hint-refusal.ts";
-import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
+import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -59,7 +59,6 @@ import { pearlSolve } from "./solver.ts";
 import {
   D,
   DIFF_COUNT,
-  DIFF_NAMES,
   DX,
   DY,
   decodeParams,
@@ -74,6 +73,7 @@ import {
   type PearlParams,
   type PearlState,
   type PearlUi,
+  paramConfig,
   presets,
   R,
   status,
@@ -368,24 +368,7 @@ export const pearlGame: Game<
   decodeParams,
   validateParams,
   transposeParams: transposeDimensions(),
-  paramConfig: [
-    ...dimensionParamConfig<PearlParams>({
-      doc: "Size of the grid in squares. The harder of the two difficulties needs one of them to be at least 6.",
-      bounds: { min: 5 },
-    }),
-    difficultyItem(DIFF_NAMES, "difficulty"),
-    {
-      kw: "allow-unsoluble",
-      name: "Allow unsoluble",
-      type: "boolean",
-      doc: "Skip checking the puzzle at all: every pearl the generated loop allows is kept, and nothing makes sure the puzzle has only one solution or can be solved by reasoning. Such a board may have more than one loop that fits, and the difficulty setting has no effect on it.",
-      label: { slot: "tail", words: (p) => (p.nosolve ? "ambiguous" : null) },
-      get: (p) => p.nosolve,
-      set: (p, v) => {
-        p.nosolve = v;
-      },
-    },
-  ],
+  paramConfig,
 
   newDesc,
   validateDesc,

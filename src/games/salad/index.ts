@@ -19,7 +19,7 @@ import {
   obviousCandidateMarks,
   regionReach,
 } from "../../engine/candidate-hint.ts";
-import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
+import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
@@ -34,7 +34,6 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import { numberItem, squareSize } from "../../engine/params.ts";
 import {
   pencilKeepHighlightPref,
   stickyPencilPref,
@@ -78,17 +77,15 @@ import {
   CIRCLE,
   CROSS,
   cloneState,
-  DIFF_NAMES,
   decodeParams,
   defaultParams,
   encodeParams,
-  GAMEMODE_LETTERS,
-  GAMEMODE_NUMBERS,
   isComplete,
   needsPencilFill,
   newState,
   newUi,
   PRESETS,
+  paramConfig,
   type SaladEntry,
   type SaladMark,
   type SaladMove,
@@ -353,36 +350,7 @@ export const saladGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
-  paramConfig: [
-    {
-      kw: "game-mode",
-      name: "Game Mode",
-      type: "choices",
-      choices: ["ABC End View", "Number Ball"],
-      doc: "Switch between ABC End View and Number Ball mode.",
-      label: {
-        slot: "lead",
-        words: (p) => (p.mode === GAMEMODE_LETTERS ? "Letters" : "Numbers"),
-      },
-      get: (p) => p.mode,
-      set: (p, v) => {
-        p.mode = v === GAMEMODE_NUMBERS ? GAMEMODE_NUMBERS : GAMEMODE_LETTERS;
-      },
-    },
-    numberItem<SaladParams>("size", "Size (s*s)", "order", {
-      doc: "Size of the grid in squares.",
-      bounds: { min: 3 },
-      label: { slot: "size", words: squareSize("order") },
-    }),
-    numberItem<SaladParams>("symbols", "Symbols", "nums", {
-      doc: "The amount of different symbols that appear in each row.",
-      bounds: { min: 2, max: 9 },
-      label: { slot: "kind", words: symbolRange },
-    }),
-    difficultyItem(DIFF_NAMES, "diff", {
-      doc: "A Normal puzzle always needs a technique the Easy level does not have, so the setting you choose is the difficulty you get. Normal Number Ball puzzles are rare, so one can take a few seconds to appear.",
-    }),
-  ],
+  paramConfig,
 
   newDesc: (p, rng) => newSaladDesc(p, rng),
   validateDesc,

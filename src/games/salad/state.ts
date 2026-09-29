@@ -20,9 +20,12 @@
  */
 
 import type { NoteEncoding } from "../../engine/candidate-hint.ts";
-import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
-import { tierNames } from "../../engine/difficulty.ts";
+import { digitValue } from "../../engine/decimal.ts";
+import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
+import type { ParamConfigItem } from "../../engine/game.ts";
 import { type RowColRegion, rowColRegions } from "../../engine/latin-hint.ts";
+import { numberItem, squareSize } from "../../engine/params.ts";
+import { choice, letters, num, paramsCodec, size } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
 
@@ -34,7 +37,7 @@ export const DIFF_EASY = 0;
 export const DIFF_HARD = 1;
 const DIFFCOUNT = 2;
 
-export const DIFF_NAMES: readonly string[] = tierNames(2);
+const DIFF_NAMES: readonly string[] = tierNames(2);
 /** The difficulty letters `encodeParams` writes and `decodeParams` reads. */
 const DIFF_CHARS = "ex";
 
@@ -96,47 +99,51 @@ export function symbolRange(p: SaladParams): string {
     : `1~${p.nums}`;
 }
 
-export function encodeParams(p: SaladParams, full: boolean): string {
-  let s = `${p.order}n${p.nums}${p.mode === GAMEMODE_LETTERS ? "L" : "B"}`;
-  if (full) s += `d${DIFF_CHARS[p.diff]}`;
-  return s;
-}
+/** The "Custom type…" form, and the field list the codec below encodes. */
+export const paramConfig: ParamConfigItem<SaladParams>[] = [
+  {
+    kw: "game-mode",
+    name: "Game Mode",
+    type: "choices",
+    choices: ["ABC End View", "Number Ball"],
+    doc: "Switch between ABC End View and Number Ball mode.",
+    label: {
+      slot: "lead",
+      words: (p) => (p.mode === GAMEMODE_LETTERS ? "Letters" : "Numbers"),
+    },
+    get: (p) => p.mode,
+    set: (p, v) => {
+      p.mode = v === GAMEMODE_NUMBERS ? GAMEMODE_NUMBERS : GAMEMODE_LETTERS;
+    },
+  },
+  numberItem<SaladParams>("size", "Size (s*s)", "order", {
+    doc: "Size of the grid in squares.",
+    bounds: { min: 3 },
+    label: { slot: "size", words: squareSize("order") },
+  }),
+  numberItem<SaladParams>("symbols", "Symbols", "nums", {
+    doc: "The amount of different symbols that appear in each row.",
+    bounds: { min: 2, max: 9 },
+    label: { slot: "kind", words: symbolRange },
+  }),
+  difficultyItem(DIFF_NAMES, "diff", {
+    doc: "A Normal puzzle always needs a technique the Easy level does not have, so the setting you choose is the difficulty you get. Normal Number Ball puzzles are rare, so one can take a few seconds to appear.",
+  }),
+];
 
-export function decodeParams(s: string): SaladParams {
-  const p = defaultParams();
-
-  const order = parseLeadingInt(s, 0);
-  p.order = order.value;
-  let i = order.next;
-
-  if (s[i] === "n") {
-    const nums = parseLeadingInt(s, i + 1);
-    p.nums = nums.value;
-    i = nums.next;
-  }
-
-  if (s[i] === "B") {
-    p.mode = GAMEMODE_NUMBERS;
-    i++;
-  } else if (s[i] === "L") {
-    p.mode = GAMEMODE_LETTERS;
-    i++;
-  }
-
-  if (s[i] === "d") {
-    i++;
-    // Upstream parks an out-of-range value here so an unknown letter is
-    // rejected by validateParams rather than silently defaulted.
-    p.diff = DIFFCOUNT + 1;
-    if (i < s.length) {
-      const found = DIFF_CHARS.indexOf(s[i]);
-      if (found >= 0) p.diff = found;
-      i++;
-    }
-  }
-
-  return p;
-}
+/** Order, `n` and the symbol count, `L` or `B` for the mode, then the
+ * generator-only difficulty letter. Upstream parks an unknown difficulty letter
+ * out of range so that it is refused with a reason rather than silently
+ * defaulted. */
+export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
+  size(paramConfig, "size"),
+  num(paramConfig, "n", "symbols"),
+  letters(paramConfig, "game-mode", ["L", "B"]),
+  choice(paramConfig, "d", "difficulty", DIFF_CHARS, {
+    full: true,
+    invalid: DIFFCOUNT + 1,
+  }),
+]);
 
 export function validateParams(p: SaladParams, _full: boolean): string | null {
   if (p.nums >= p.order) return "Symbols must be lower than the size.";

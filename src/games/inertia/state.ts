@@ -7,7 +7,9 @@
  * reference (where upstream refcounts its `struct soln`).
  */
 
-import { parseDimensions } from "../../engine/params.ts";
+import type { ParamConfigItem } from "../../engine/game.ts";
+import { dimensionParamConfig } from "../../engine/params.ts";
+import { dims, paramsCodec } from "../../engine/params-codec.ts";
 
 // --- cells -----------------------------------------------------------
 
@@ -56,14 +58,18 @@ export function defaultParams(): InertiaParams {
   return { w: 8, h: 10 };
 }
 
-export function encodeParams(p: InertiaParams): string {
-  return `${p.w}x${p.h}`;
-}
+/** The "Custom type…" form, and the field list the codec below encodes. */
+export const paramConfig: ParamConfigItem<InertiaParams>[] = dimensionParamConfig({
+  doc: "Size of the grid in squares. The grid must be at least six squares in all. About a fifth of the squares are walls, a fifth stop squares and a fifth mines, and there are as many gems as there are mines, placed only where the ball can collect them.",
+  // Degenerate single-row/column grids are excluded: they could be generated
+  // but would be extremely boring, and are slow to hit at random.
+  bounds: { min: 2 },
+});
 
-export function decodeParams(s: string): InertiaParams {
-  const { w, h } = parseDimensions(s);
-  return { w, h };
-}
+/** `WxH`, and nothing else in either form. */
+export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
+  dims(paramConfig),
+]);
 
 export function validateParams(p: InertiaParams): string | null {
   if (!Number.isSafeInteger(p.w * p.h)) {

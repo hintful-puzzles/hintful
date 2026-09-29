@@ -17,6 +17,9 @@ import {
   type CandidateReading,
   DEFAULT_CANDIDATE_READING,
 } from "../../engine/candidate-hint.ts";
+import type { ParamConfigItem } from "../../engine/game.ts";
+import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
+import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 
 // --- constants -------------------------------------------------------------
@@ -77,26 +80,54 @@ export function defaultParams(): AbcdParams {
   return { ...abcdPresets[2] };
 }
 
-export function encodeParams(p: AbcdParams, full: boolean): string {
-  let s = `${p.w}x${p.h}n${p.n}`;
-  if (p.diag) s += "D";
-  if (full && p.removenums) s += "R";
-  return s;
-}
+/** The "Custom type…" form, and the field list the codec below encodes. */
+export const paramConfig: ParamConfigItem<AbcdParams>[] = [
+  // A width or height under 2 could break the solver.
+  ...dimensionParamConfig<AbcdParams>({
+    doc: "Size of the grid in squares (excluding the size of the numbers on the edge). How large a board can be depends on the number of letters, because each extra letter is another count every row and column has to satisfy: with three letters a board can reach about 130 squares, with four about 80, and from six letters up about 65. Long thin boards go much further, because a short row is almost settled by its own numbers, so anything up to about 160 squares is allowed when one side is under 6. Past those limits no puzzle with a single solution is likely to exist at all, so the game says so rather than searching for one.",
+    bounds: { min: 2 },
+  }),
+  numberItem<AbcdParams>("letters", "Letters", "n", {
+    doc: "The amount of different letters that can appear in the puzzle. Without diagonal touching there must be at least 5.",
+    // 2-letter puzzles are dull and even×even 2-letter grids have no unique
+    // solution. The ceiling avoids clashing with midend hotkeys and fits the
+    // keypad.
+    bounds: { min: 3, max: 9 },
+    label: { slot: "tail", words: (p) => `${p.n} letters` },
+  }),
+  {
+    kw: "remove-clues",
+    name: "Remove clues",
+    type: "boolean",
+    doc: "When enabled, the difficulty is increased by hiding certain number clues.",
+    label: { slot: "kind", words: (p) => (p.removenums ? "Hard" : "Easy") },
+    get: (p) => p.removenums,
+    set: (p, v) => {
+      p.removenums = v;
+    },
+  },
+  {
+    // The option is the inverse of the stored flag, as upstream's is.
+    kw: "allow-diagonal-touching",
+    name: "Allow diagonal touching",
+    type: "boolean",
+    doc: "When disabled, letters cannot be diagonally adjacent (in addition to letters not being orthogonally adjacent). Counter-intuitively this <em>raises</em> the size limit described above rather than lowering it: the extra restriction gives you more to reason from, so larger boards still work out to a single solution.",
+    label: { slot: "tail", words: (p) => (p.diag ? "no diagonal" : null) },
+    get: (p) => !p.diag,
+    set: (p, v) => {
+      p.diag = !v;
+    },
+  },
+];
 
-export function decodeParams(s: string): AbcdParams {
-  // `W[xH][nN][D][R]`: a missing height is the width, and missing digits are 0.
-  const [, w, h, n, diag, removenums] =
-    /^(\d*)(?:x(\d*))?(?:n(\d*))?(D)?(R)?/.exec(s) ?? [];
-  const int = (d?: string): number => (d ? Number.parseInt(d, 10) : 0);
-  return {
-    w: int(w),
-    h: int(h ?? w),
-    n: n === undefined ? defaultParams().n : int(n),
-    diag: diag !== undefined,
-    removenums: removenums !== undefined,
-  };
-}
+/** `WxHn<letters>[D][R]`: a missing height is the width, missing digits are 0,
+ * and the clue removal is generator-only. */
+export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
+  dims(paramConfig),
+  num(paramConfig, "n", "letters"),
+  flag(paramConfig, "D", "allow-diagonal-touching", { means: false }),
+  flag(paramConfig, "R", "remove-clues", { full: true }),
+]);
 
 /**
  * The largest board area that generates in a tolerable time, per letter count

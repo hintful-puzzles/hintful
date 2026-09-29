@@ -1,7 +1,6 @@
 import { rejectMove } from "../../engine/assert-never.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
-import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -31,6 +30,7 @@ import {
   newDesc,
   newState,
   npoints,
+  paramConfig,
   presets,
   type SamegameMove,
   type SamegameParams,
@@ -220,41 +220,7 @@ export const samegameGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
-  paramConfig: [
-    ...dimensionParamConfig<SamegameParams>({
-      doc: "Size of the grid in squares.",
-      bounds: { min: 1 },
-    }),
-    numberItem<SamegameParams>("no-of-colors", "No. of colors", "ncols", {
-      doc: "How many different colors the squares come in; at least 3 when Ensure solubility is on. Fewer colors make bigger groups.",
-      bounds: { max: 9 },
-      label: { slot: "tail", words: (p) => `${p.ncols} colors` },
-    }),
-    {
-      // Upstream's C_CHOICES: the choice index is `scoresub - 1`.
-      kw: "scoring-system",
-      name: "Scoring system",
-      type: "choices",
-      choices: ["(n-1)²", "(n-2)²"],
-      doc: "How many points removing a group of <em>n</em> squares scores: (n-1)² or (n-2)². Under (n-2)², the default, a group of two scores nothing, so it pays even more to save up large groups.",
-      label: { slot: "tail", words: (p) => (p.scoresub === 2 ? null : "alt. scoring") },
-      get: (p) => p.scoresub - 1,
-      set: (p, v) => {
-        p.scoresub = v + 1;
-      },
-    },
-    {
-      kw: "ensure-solubility",
-      name: "Ensure solubility",
-      type: "boolean",
-      doc: "When enabled, the grid is built by playing the game backwards, so it can always be cleared completely. When disabled, the colors are scattered at random and there is no guarantee.",
-      label: { slot: "tail", words: (p) => (p.soluble ? null : "ambiguous") },
-      get: (p) => p.soluble,
-      set: (p, v) => {
-        p.soluble = v;
-      },
-    },
-  ],
+  paramConfig,
 
   newDesc,
   validateDesc,

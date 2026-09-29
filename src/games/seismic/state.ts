@@ -19,8 +19,11 @@
 
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { digitValue, isDigit, parseLeadingInt } from "../../engine/decimal.ts";
-import { tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
+import type { ParamConfigItem } from "../../engine/game.ts";
+import { dimensionParamConfig } from "../../engine/params.ts";
+import { choice, dims, letters, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
 
@@ -99,48 +102,40 @@ export function defaultParams(): SeismicParams {
   return { ...PRESETS[DEFAULT_PRESET] };
 }
 
-export function encodeParams(p: SeismicParams, full: boolean): string {
-  let s = `${p.w}x${p.h}`;
-  if (p.mode === MODE_TECTONIC) s += "T";
-  if (full) s += `d${DIFF_CHARS[p.diff]}`;
-  return s;
-}
+/** The "Custom type…" form, and the field list the codec below encodes. */
+export const paramConfig: ParamConfigItem<SeismicParams>[] = [
+  ...dimensionParamConfig<SeismicParams>({
+    doc: "Size of the grid in squares. The limit depends on the mode: Tectonic goes up to 100 squares, Seismic up to 64. Seismic's keep-apart rule gets harder to satisfy the larger the board, so past that size a puzzle may never be found at all. Large boards can take several seconds to generate, which is why the ready-made types in the ‘Type’ menu stop at 8×8.",
+    bounds: { min: 4 },
+  }),
+  difficultyItem(DIFF_NAMES, "diff", {
+    doc: "Higher difficulties require more complex reasoning.",
+  }),
+  {
+    kw: "game-mode",
+    name: "Game mode",
+    type: "choices",
+    choices: [...MODE_NAMES],
+    doc: "Switch between Seismic and Tectonic mode.",
+    label: { slot: "lead" },
+    get: (p) => p.mode,
+    set: (p, v) => {
+      p.mode = v === MODE_TECTONIC ? MODE_TECTONIC : MODE_SEISMIC;
+    },
+  },
+];
 
-export function decodeParams(s: string): SeismicParams {
-  const p = defaultParams();
-
-  const wParse = parseLeadingInt(s, 0);
-  p.w = wParse.value;
-  let i = wParse.next;
-  if (s[i] === "x") {
-    const hParse = parseLeadingInt(s, i + 1);
-    p.h = hParse.value;
-    i = hParse.next;
-  } else {
-    p.h = p.w;
-  }
-
-  // The mode letter precedes the difficulty suffix, as upstream writes it.
-  p.mode = MODE_SEISMIC;
-  if (s[i] === "T") {
-    p.mode = MODE_TECTONIC;
-    i++;
-  }
-
-  if (s[i] === "d") {
-    i++;
-    // Upstream deliberately parks an out-of-range value here so an unknown
-    // letter is rejected by validateParams rather than silently defaulted.
-    p.diff = DIFFCOUNT + 1;
-    if (i < s.length) {
-      const found = DIFF_CHARS.indexOf(s[i]);
-      if (found >= 0) p.diff = found;
-      i++;
-    }
-  }
-
-  return p;
-}
+/** `WxH`, a `T` for Tectonic (Seismic writes nothing), then the generator-only
+ * difficulty letter. Upstream deliberately parks an unknown letter out of range
+ * so that it is refused with a reason rather than silently defaulted. */
+export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
+  dims(paramConfig),
+  letters(paramConfig, "game-mode", ["", "T"]),
+  choice(paramConfig, "d", "difficulty", DIFF_CHARS, {
+    full: true,
+    invalid: DIFFCOUNT + 1,
+  }),
+]);
 
 /**
  * The largest board each mode's generator will be asked for, in cells. Two

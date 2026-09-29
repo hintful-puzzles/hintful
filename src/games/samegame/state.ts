@@ -1,5 +1,7 @@
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
-import { parseDimensions } from "../../engine/params.ts";
+import type { ParamConfigItem } from "../../engine/game.ts";
+import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
+import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import type { GameStatus } from "../../engine/types.ts";
@@ -62,29 +64,57 @@ export function defaultParams(): SamegameParams {
   return { w: 5, h: 5, ncols: 3, scoresub: 2, soluble: true };
 }
 
-export function encodeParams(p: SamegameParams, full: boolean): string {
-  return `${p.w}x${p.h}c${p.ncols}s${p.scoresub}${full && !p.soluble ? "r" : ""}`;
-}
+/** The "Custom type…" form, and the field list the codec below encodes. */
+export const paramConfig: ParamConfigItem<SamegameParams>[] = [
+  ...dimensionParamConfig<SamegameParams>({
+    doc: "Size of the grid in squares.",
+    bounds: { min: 1 },
+  }),
+  numberItem<SamegameParams>("no-of-colors", "No. of colors", "ncols", {
+    doc: "How many different colors the squares come in; at least 3 when Ensure solubility is on. Fewer colors make bigger groups.",
+    bounds: { max: 9 },
+    label: { slot: "tail", words: (p) => `${p.ncols} colors` },
+  }),
+  {
+    // Upstream's C_CHOICES: the choice index is `scoresub - 1`.
+    kw: "scoring-system",
+    name: "Scoring system",
+    type: "choices",
+    choices: ["(n-1)²", "(n-2)²"],
+    doc: "How many points removing a group of <em>n</em> squares scores: (n-1)² or (n-2)². Under (n-2)², the default, a group of two scores nothing, so it pays even more to save up large groups.",
+    label: { slot: "tail", words: (p) => (p.scoresub === 2 ? null : "alt. scoring") },
+    get: (p) => p.scoresub - 1,
+    set: (p, v) => {
+      p.scoresub = v + 1;
+    },
+  },
+  {
+    kw: "ensure-solubility",
+    name: "Ensure solubility",
+    type: "boolean",
+    doc: "When enabled, the grid is built by playing the game backwards, so it can always be cleared completely. When disabled, the colors are scattered at random and there is no guarantee.",
+    label: { slot: "tail", words: (p) => (p.soluble ? null : "ambiguous") },
+    get: (p) => p.soluble,
+    set: (p, v) => {
+      p.soluble = v;
+    },
+  },
+];
 
-export function decodeParams(s: string): SamegameParams {
-  // Faithful to upstream `decode_params`: `W[xH][cN][sS][r]`, lenient.
-  const { w, h, next } = parseDimensions(s);
-  const ret = { ...defaultParams(), w, h };
-  let i = next;
-  if (s[i] === "c") {
-    const r = parseLeadingInt(s, i + 1);
-    ret.ncols = r.value;
-    i = r.next;
-  }
-  if (s[i] === "s") {
-    const r = parseLeadingInt(s, i + 1);
-    ret.scoresub = r.value;
-    i = r.next;
-  }
-  // `r` selects the not-guaranteed-soluble generator; absent ⇒ soluble.
-  ret.soluble = s[i] !== "r";
-  return ret;
-}
+/** Upstream's `W[xH][cN][sS][r]`. The scoring system is written as `scoresub`
+ * itself, not as its choice index; `r` selects the not-guaranteed-soluble
+ * generator, and its absence means soluble. */
+export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
+  dims(paramConfig),
+  num(paramConfig, "c", "no-of-colors"),
+  num(paramConfig, "s", {
+    get: (p) => p.scoresub,
+    set: (p, v) => {
+      p.scoresub = v;
+    },
+  }),
+  flag(paramConfig, "r", "ensure-solubility", { means: false, full: true }),
+]);
 
 export function validateParams(p: SamegameParams, _full: boolean): string | null {
   if (p.w > Number.MAX_SAFE_INTEGER / p.h)

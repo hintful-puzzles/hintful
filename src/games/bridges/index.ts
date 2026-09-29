@@ -7,7 +7,7 @@
  */
 
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
-import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
+import type { DifficultyContract } from "../../engine/difficulty.ts";
 import {
   type Game,
   type GamePref,
@@ -21,7 +21,7 @@ import {
 } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import { commonHintRefusal } from "../../engine/hint-refusal.ts";
-import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
+import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -75,7 +75,6 @@ import {
   type BridgesParams,
   type BridgesState,
   type BridgesUi,
-  DIFFICULTY_NAMES,
   decodeParams,
   defaultParams,
   encodeParams,
@@ -88,6 +87,7 @@ import {
   G_NOLINEH,
   G_NOLINEV,
   newStateFromDesc,
+  paramConfig,
   textFormat,
   validateDesc,
   validateParams,
@@ -582,86 +582,8 @@ export const bridgesGame: Game<
   decodeParams,
   validateParams,
 
-  // Custom "Type…" dialog — index-for-index with bridges.c game_configure.
   transposeParams: transposeDimensions(),
-  paramConfig: [
-    ...dimensionParamConfig<BridgesParams>({
-      doc: "Size of the grid in squares.",
-      bounds: { min: 3 },
-    }),
-    difficultyItem(DIFFICULTY_NAMES, "difficulty", {
-      doc: "Tricky needs lines that can carry at least two bridges.",
-    }),
-    {
-      kw: "allow-loops",
-      name: "Allow loops",
-      type: "boolean",
-      doc: "Whether the bridges may form a closed loop. When this is off, no solution contains one, and a board with a loop of bridges on it does not count as finished.",
-      label: { slot: "tail", words: (p) => (p.allowloops ? null : "no loops") },
-      get: (p) => p.allowloops,
-      set: (p, v) => {
-        p.allowloops = v;
-      },
-    },
-    {
-      kw: "max-bridges-per-direction",
-      name: "Max. bridges per direction",
-      type: "choices",
-      choices: ["1", "2", "3", "4"],
-      doc: "The most bridges that may join one pair of islands.",
-      label: {
-        slot: "tail",
-        words: (p) =>
-          p.maxb === 2 ? null : `max ${p.maxb} ${p.maxb === 1 ? "bridge" : "bridges"}`,
-      },
-      get: (p) => p.maxb - 1,
-      set: (p, v) => {
-        p.maxb = v + 1;
-      },
-    },
-    {
-      kw: "percentage-of-island-squares",
-      name: "%age of island squares",
-      type: "choices",
-      choices: ["5%", "10%", "15%", "20%", "25%", "30%"],
-      doc: "Roughly what share of the grid's squares are islands. There are always at least three, and the generator may stop short of the target when it runs out of room.",
-      label: {
-        slot: "tail",
-        words: (p) => (p.islands === 30 ? null : `${p.islands}% islands`),
-      },
-      get: (p) => Math.trunc(p.islands / 5) - 1,
-      set: (p, v) => {
-        p.islands = (v + 1) * 5;
-      },
-    },
-    {
-      kw: "expansion-factor",
-      name: "Expansion factor (%age)",
-      doc: "How often a new island is placed as far away as it can go, rather than at a random distance, when the generator grows the puzzle; higher values give longer bridges. With loops allowed, it is also how often a bridge joins an island that is already there, which is what makes loops.",
-      label: {
-        slot: "tail",
-        words: (p) => (p.expansion === 10 ? null : `${p.expansion}% expansion`),
-      },
-      type: "choices",
-      choices: [
-        "0%",
-        "10%",
-        "20%",
-        "30%",
-        "40%",
-        "50%",
-        "60%",
-        "70%",
-        "80%",
-        "90%",
-        "100%",
-      ],
-      get: (p) => Math.trunc(p.expansion / 10),
-      set: (p, v) => {
-        p.expansion = v * 10;
-      },
-    },
-  ],
+  paramConfig,
 
   newDesc: newBridgesDesc,
   validateDesc,

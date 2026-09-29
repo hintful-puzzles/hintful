@@ -18,7 +18,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
+import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
@@ -37,7 +37,7 @@ import {
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import type { MarkRef, Narration } from "../../engine/hint-words.ts";
-import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
+import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -76,17 +76,15 @@ import {
   cloneBoard,
   cloneState,
   crossingSpoke,
-  DIFF_NAMES,
   DIFFCOUNT,
   decodeParams,
   defaultParams,
-  diffFromLevel,
-  diffToLevel,
   encodeParams,
   getSpoke,
   newState,
   newUi,
   PRESETS,
+  paramConfig,
   SPOKE_DIRS,
   SPOKE_EMPTY,
   SPOKE_HIDDEN,
@@ -488,18 +486,7 @@ export const spokesGame: Game<
   decodeParams,
 
   transposeParams: transposeDimensions(),
-  paramConfig: [
-    ...dimensionParamConfig<SpokesParams>({
-      doc: "Size of the grid in squares.",
-      bounds: { min: 2 },
-    }),
-    difficultyItem(DIFF_NAMES, {
-      get: (p: SpokesParams) => diffToLevel(p.diff),
-      set: (p: SpokesParams, tier: number) => {
-        p.diff = diffFromLevel(tier);
-      },
-    }),
-  ],
+  paramConfig,
 
   newDesc: newSpokesDesc,
   validateDesc,

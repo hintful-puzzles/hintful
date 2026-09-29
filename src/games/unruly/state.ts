@@ -6,8 +6,10 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import type { PresetMenu } from "../../engine/game.ts";
-import { parseDimensions } from "../../engine/params.ts";
+import { difficultyItem } from "../../engine/difficulty.ts";
+import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import { dimensionParamConfig } from "../../engine/params.ts";
+import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import type { GameStatus } from "../../engine/types.ts";
 import {
@@ -15,6 +17,7 @@ import {
   DIFF_CHARS,
   DIFF_COUNT,
   DIFF_EASY,
+  DIFF_NAMES,
   DIFF_NORMAL,
   DIFF_TRIVIAL,
   ONE,
@@ -88,28 +91,39 @@ export function presets(): PresetMenu<UnrulyParams> {
   };
 }
 
-export function encodeParams(p: UnrulyParams, full: boolean): string {
-  let s = `${p.w2}x${p.h2}`;
-  if (p.unique) s += "u";
-  if (full) s += `d${DIFF_CHARS[p.diff] ?? "?"}`;
-  return s;
-}
+/** The "Custom type…" form, and the field list the codec below encodes. */
+export const paramConfig: ParamConfigItem<UnrulyParams>[] = [
+  // Upstream's `w2`/`h2` are the *full* grid extent, not halves, so the
+  // fields are mapped rather than the game renamed.
+  ...dimensionParamConfig<UnrulyParams>({
+    fields: { w: "w2", h: "h2" },
+    doc: "Size of the grid in squares. Both must be even.",
+    bounds: { min: 6 },
+  }),
+  difficultyItem(DIFF_NAMES, "diff"),
+  {
+    kw: "unique-rows-and-columns",
+    name: "Unique rows and columns",
+    type: "boolean",
+    doc: "Adds the rule that no two rows may be the same, and no two columns. There are only so many different rows of a given width, so this limits how tall the grid can be for its width, and the other way round: a grid 6 squares wide can be at most 14 high, and one 8 wide at most 34.",
+    label: { slot: "tail", words: (p) => (p.unique ? "unique" : null) },
+    get: (p) => p.unique,
+    set: (p, v) => {
+      p.unique = v;
+    },
+  },
+];
 
-export function decodeParams(s: string): UnrulyParams {
-  const dims = parseDimensions(s, 0);
-  const ret = { ...defaultParams(), w2: dims.w, h2: dims.h };
-  let i = dims.next;
-  if (s[i] === "u") {
-    ret.unique = true;
-    i++;
-  }
-  if (s[i] === "d") {
-    // A missing or unknown letter leaves a difficulty `paramsError` rejects.
-    const idx = i + 1 < s.length ? DIFF_CHARS.indexOf(s[i + 1]) : -1;
-    ret.diff = idx >= 0 ? idx : DIFF_COUNT + 1;
-  }
-  return ret;
-}
+/** `WxH`, the unique-rows letter, then the generator-only difficulty letter. A
+ * missing or unknown difficulty letter leaves one `paramsError` rejects. */
+export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
+  dims(paramConfig),
+  flag(paramConfig, "u", "unique-rows-and-columns"),
+  choice(paramConfig, "d", "difficulty", DIFF_CHARS, {
+    full: true,
+    invalid: DIFF_COUNT + 1,
+  }),
+]);
 
 // The nth element gives the count of distinct valid Unruly rows of length
 // 2n (n ones, n zeros, no three-in-a-row), for as long as it fits a signed

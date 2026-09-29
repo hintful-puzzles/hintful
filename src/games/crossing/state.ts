@@ -16,6 +16,9 @@
  */
 
 import { digitValue, isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import type { ParamConfigItem } from "../../engine/game.ts";
+import { dimensionParamConfig } from "../../engine/params.ts";
+import { dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import type { Point } from "../../engine/types.ts";
 
@@ -57,15 +60,30 @@ export function defaultParams(): CrossingParams {
   return { ...crossingPresets[0] };
 }
 
-export function encodeParams(p: CrossingParams, full: boolean): string {
-  return `${p.w}x${p.h}${full && p.sym ? "S" : ""}`;
-}
+/** The "Custom type…" form, and the field list the codec below encodes. */
+export const paramConfig: ParamConfigItem<CrossingParams>[] = [
+  ...dimensionParamConfig<CrossingParams>({
+    doc: "Size of the grid in squares. Very large boards are refused, because a puzzle whose runs all read as distinct numbers becomes impossible to generate as the grid grows.",
+    bounds: { min: 2 },
+  }),
+  {
+    kw: "symmetric-walls",
+    name: "Symmetric walls",
+    type: "boolean",
+    doc: "When enabled, all walls form a rotationally symmetric pattern.",
+    label: { slot: "kind", words: (p) => (p.sym ? "symmetric" : null) },
+    get: (p) => p.sym,
+    set: (p, v) => {
+      p.sym = v;
+    },
+  },
+];
 
-export function decodeParams(s: string): CrossingParams {
-  const w = parseLeadingInt(s, 0);
-  const h = s[w.next] === "x" ? parseLeadingInt(s, w.next + 1) : w;
-  return { w: w.value, h: h.value, sym: s[h.next] === "S" };
-}
+/** `WxH[S]`, a bare `W` being square; the symmetry is generator-only. */
+export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
+  dims(paramConfig),
+  flag(paramConfig, "S", "symmetric-walls", { full: true }),
+]);
 
 /**
  * The largest board the generator can actually produce, in squares.

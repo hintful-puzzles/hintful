@@ -34,8 +34,9 @@
  * neither has to change to be encodable, because the codec only ever moves
  * values through the accessors the game already wrote.
  *
- * A field the Custom dialog does not offer (Mines' first-click coordinates) can
- * still be encoded by supplying `get`/`set` on the segment directly.
+ * An integer that is not a text field's value — a choices field upstream
+ * encodes by its stored number, or a field the Custom dialog does not offer —
+ * is encoded by handing `num` an `IntAccess` pair in place of the `kw`.
  *
  * ## What it does not do
  *
@@ -146,7 +147,7 @@ export function size<P>(config: Config<P>, kw: string): ParamsSegment<P> {
 export function num<P>(
   config: Config<P>,
   tag: string,
-  kw: string,
+  kw: string | IntAccess<P>,
   opts: SegmentOptions & {
     /** Omit the segment when this holds — an upstream encoder that writes a
      * field only when it is non-zero (Sixteen's and Twiddle's move target). */
@@ -164,7 +165,7 @@ export function num<P>(
     whenAbsent?: (p: P) => void;
   } = {},
 ): ParamsSegment<P> {
-  const field = item(config, kw, "string");
+  const field = intAccess(config, kw);
   return {
     encode: (p, full) => {
       if (opts.full && !full) return "";
@@ -177,8 +178,59 @@ export function num<P>(
         return i;
       }
       const parsed = parseLeadingInt(s, i + tag.length);
-      field.set(p, String(parsed.value));
+      field.set(p, parsed.value);
       return parsed.next;
+    },
+  };
+}
+
+/**
+ * The integer a segment writes, when it is not a text field's own value: a
+ * choices field that upstream encodes by its stored number rather than its
+ * index (Bridges' `i30` is the island percentage, not the choice at index 5),
+ * or a field the Custom dialog does not offer.
+ */
+export interface IntAccess<P> {
+  get(p: P): number;
+  set(p: P, value: number): void;
+}
+
+function intAccess<P>(config: Config<P>, kw: string | IntAccess<P>): IntAccess<P> {
+  if (typeof kw !== "string") return kw;
+  const field = item(config, kw, "string");
+  return {
+    get: (p) => Number(field.get(p)),
+    set: (p, value) => field.set(p, String(value)),
+  };
+}
+
+/**
+ * A choices field written as one bare letter per choice, with no tag: Salad's
+ * `L` / `B`, Flip's `c` / `r`. A choice whose letter is `""` writes nothing,
+ * and is what an absent letter decodes to (Seismic's Tectonic is `T`, Seismic
+ * is nothing). When no choice is `""`, an absent letter leaves the default.
+ */
+export function letters<P>(
+  config: Config<P>,
+  kw: string,
+  byChoice: readonly string[],
+  opts: SegmentOptions = {},
+): ParamsSegment<P> {
+  const field = item(config, kw, "choices");
+  const silent = byChoice.indexOf("");
+  return {
+    encode: (p, full) => {
+      if (opts.full && !full) return "";
+      return byChoice[field.get(p)] ?? "";
+    },
+    decode: (s, i, p) => {
+      const found = byChoice.findIndex((l) => l !== "" && s.startsWith(l, i));
+      if (found >= 0) {
+        field.set(p, found);
+        return i + byChoice[found].length;
+      }
+      if (silent >= 0) field.set(p, silent);
+      return i;
     },
   };
 }

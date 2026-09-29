@@ -12,10 +12,16 @@
  */
 
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
-import type { PresetMenu } from "../../engine/game.ts";
-import { parseDimensions } from "../../engine/params.ts";
+import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
+import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import { SYMM_ROT2, SYMM_ROT4 } from "../../engine/symmetric-blacks.ts";
+import {
+  SYMM_NONE,
+  SYMM_ROT2,
+  SYMM_ROT4,
+  SYMMETRY_CHOICES,
+} from "../../engine/symmetric-blacks.ts";
 import type { GameStatus } from "../../engine/types.ts";
 
 // --- cell flag bits (upstream values) ---------------------------------------
@@ -117,27 +123,66 @@ export function presets(): PresetMenu<SticksParams> {
   };
 }
 
-export function encodeParams(p: SticksParams, full: boolean): string {
-  return full ? `${p.w}x${p.h}b${p.blackpc}s${p.symm}` : `${p.w}x${p.h}`;
-}
+/** The "Custom type…" form, and the field list the codec below encodes. */
+export const paramConfig: ParamConfigItem<SticksParams>[] = [
+  ...dimensionParamConfig<SticksParams>({
+    doc: "Size of the grid in squares.",
+    bounds: { min: 2 },
+  }),
+  numberItem<SticksParams>(
+    "percentage-of-black-squares",
+    "%age of black squares",
+    "blackpc",
+    {
+      doc: "Rough percentage of black squares in the grid, from 5 to 100.",
+      label: {
+        slot: "tail",
+        words: (p) => (p.blackpc === 20 ? null : `${p.blackpc}% black squares`),
+      },
+    },
+  ),
+  {
+    kw: "symmetry",
+    name: "Symmetry",
+    type: "choices",
+    choices: SYMMETRY_CHOICES,
+    doc: "The pattern the black squares follow. <em>None</em> places them freely. <em>2-way mirror</em> makes the bottom half a mirror image of the top half, and <em>2-way rotational</em> makes the grid look the same turned upside down. <em>4-way mirror</em> mirrors top to bottom and left to right, and <em>4-way rotational</em> makes the grid look the same after a quarter turn, which needs a square grid.",
+    label: {
+      slot: "tail",
+      words: (p) =>
+        p.symm === SYMM_ROT2
+          ? null
+          : p.symm === SYMM_NONE
+            ? "no symmetry"
+            : SYMMETRY_CHOICES[p.symm],
+    },
+    get: (p) => p.symm,
+    set: (p, v) => {
+      p.symm = v;
+    },
+  },
+];
 
-export function decodeParams(s: string): SticksParams {
-  // Lenient like upstream decode_params: a missing field keeps the default
-  // preset's value. Upstream's fix-up of a default ROT4 on a non-square grid
-  // has nothing to fix, since that default is ROT2.
-  const p = defaultParams();
-  const { w, h, next } = parseDimensions(s);
-  p.w = w;
-  p.h = h;
-  let pos = next;
-  if (s[pos] === "b") {
-    const r = parseLeadingInt(s, pos + 1);
-    p.blackpc = r.value;
-    pos = r.next;
-  }
-  if (s[pos] === "s") p.symm = parseLeadingInt(s, pos + 1).value;
-  return p;
-}
+/** `WxH`, then the generator-only black percentage and symmetry. Lenient like
+ * upstream `decode_params`: a missing field keeps the default preset's value.
+ * The symmetry is written as its `SYMM_*` number, a whole digit run rather than
+ * `choice`'s one letter, so an out-of-range one decodes for `paramsError` to
+ * refuse. */
+export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
+  dims(paramConfig),
+  num(paramConfig, "b", "percentage-of-black-squares", { full: true }),
+  num(
+    paramConfig,
+    "s",
+    {
+      get: (p) => p.symm,
+      set: (p, v) => {
+        p.symm = v;
+      },
+    },
+    { full: true },
+  ),
+]);
 
 export function validateParams(p: SticksParams, full: boolean): string | null {
   if (full) {

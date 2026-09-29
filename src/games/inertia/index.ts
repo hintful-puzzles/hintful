@@ -22,7 +22,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { coord, fromCoord } from "../../engine/geometry.ts";
-import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
+import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -72,6 +72,7 @@ import {
   type InertiaUi,
   newState,
   PRESETS,
+  paramConfig,
   slide,
   textFormat,
   validateDesc,
@@ -292,12 +293,7 @@ export const inertiaGame: Game<
   decodeParams,
   validateParams,
   transposeParams: transposeDimensions(),
-  paramConfig: dimensionParamConfig<InertiaParams>({
-    doc: "Size of the grid in squares. The grid must be at least six squares in all. About a fifth of the squares are walls, a fifth stop squares and a fifth mines, and there are as many gems as there are mines, placed only where the ball can collect them.",
-    // Degenerate single-row/column grids are excluded: they could be generated
-    // but would be extremely boring, and are slow to hit at random.
-    bounds: { min: 2 },
-  }),
+  paramConfig,
 
   newDesc: newInertiaDesc,
   validateDesc,

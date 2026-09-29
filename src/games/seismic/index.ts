@@ -19,7 +19,7 @@ import {
   candidateHint,
   candidateHintMarks,
 } from "../../engine/candidate-hint.ts";
-import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
+import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
@@ -35,7 +35,7 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
+import { transposeDimensions } from "../../engine/params.ts";
 import {
   candidateReadingPref,
   pencilKeepHighlightPref,
@@ -72,19 +72,16 @@ import { SOLVE_FAILED, STATUS_COMPLETE, solveGame, validateGame } from "./solver
 import {
   areaBits,
   cloneState,
-  DIFF_NAMES,
   DIFFCOUNT,
   decodeParams,
   defaultParams,
   encodeParams,
   FM_FIXED,
-  MODE_NAMES,
-  MODE_SEISMIC,
-  MODE_TECTONIC,
   newState,
   newUi,
   numBit,
   PRESETS,
+  paramConfig,
   type SeismicMove,
   type SeismicParams,
   type SeismicState,
@@ -314,27 +311,7 @@ export const seismicGame: Game<
   validateParams,
 
   transposeParams: transposeDimensions(),
-  paramConfig: [
-    ...dimensionParamConfig<SeismicParams>({
-      doc: "Size of the grid in squares. The limit depends on the mode: Tectonic goes up to 100 squares, Seismic up to 64. Seismic's keep-apart rule gets harder to satisfy the larger the board, so past that size a puzzle may never be found at all. Large boards can take several seconds to generate, which is why the ready-made types in the ‘Type’ menu stop at 8×8.",
-      bounds: { min: 4 },
-    }),
-    difficultyItem(DIFF_NAMES, "diff", {
-      doc: "Higher difficulties require more complex reasoning.",
-    }),
-    {
-      kw: "game-mode",
-      name: "Game mode",
-      type: "choices",
-      choices: [...MODE_NAMES],
-      doc: "Switch between Seismic and Tectonic mode.",
-      label: { slot: "lead" },
-      get: (p) => p.mode,
-      set: (p, v) => {
-        p.mode = v === MODE_TECTONIC ? MODE_TECTONIC : MODE_SEISMIC;
-      },
-    },
-  ],
+  paramConfig,
 
   newDesc: (p, rng) => newSeismicDesc(p, rng),
   validateDesc,

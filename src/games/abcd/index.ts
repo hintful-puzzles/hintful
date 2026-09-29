@@ -30,11 +30,7 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import {
-  dimensionParamConfig,
-  numberItem,
-  transposeDimensions,
-} from "../../engine/params.ts";
+import { transposeDimensions } from "../../engine/params.ts";
 import {
   candidateReadingPref,
   pencilKeepHighlightPref,
@@ -84,6 +80,7 @@ import {
   letterBit,
   newState,
   newUi,
+  paramConfig,
   status,
   textFormat,
   validateDesc,
@@ -337,44 +334,7 @@ export const abcdGame: Game<
   decodeParams,
   validateParams,
   transposeParams: transposeDimensions(),
-  paramConfig: [
-    // A width or height under 2 could break the solver.
-    ...dimensionParamConfig<AbcdParams>({
-      doc: "Size of the grid in squares (excluding the size of the numbers on the edge). How large a board can be depends on the number of letters, because each extra letter is another count every row and column has to satisfy: with three letters a board can reach about 130 squares, with four about 80, and from six letters up about 65. Long thin boards go much further, because a short row is almost settled by its own numbers, so anything up to about 160 squares is allowed when one side is under 6. Past those limits no puzzle with a single solution is likely to exist at all, so the game says so rather than searching for one.",
-      bounds: { min: 2 },
-    }),
-    numberItem<AbcdParams>("letters", "Letters", "n", {
-      doc: "The amount of different letters that can appear in the puzzle. Without diagonal touching there must be at least 5.",
-      // 2-letter puzzles are dull and even×even 2-letter grids have no unique
-      // solution. The ceiling avoids clashing with midend hotkeys and fits the
-      // keypad.
-      bounds: { min: 3, max: 9 },
-      label: { slot: "tail", words: (p) => `${p.n} letters` },
-    }),
-    {
-      kw: "remove-clues",
-      name: "Remove clues",
-      type: "boolean",
-      doc: "When enabled, the difficulty is increased by hiding certain number clues.",
-      label: { slot: "kind", words: (p) => (p.removenums ? "Hard" : "Easy") },
-      get: (p) => p.removenums,
-      set: (p, v) => {
-        p.removenums = v;
-      },
-    },
-    {
-      // The option is the inverse of the stored flag, as upstream's is.
-      kw: "allow-diagonal-touching",
-      name: "Allow diagonal touching",
-      type: "boolean",
-      doc: "When disabled, letters cannot be diagonally adjacent (in addition to letters not being orthogonally adjacent). Counter-intuitively this <em>raises</em> the size limit described above rather than lowering it: the extra restriction gives you more to reason from, so larger boards still work out to a single solution.",
-      label: { slot: "tail", words: (p) => (p.diag ? "no diagonal" : null) },
-      get: (p) => !p.diag,
-      set: (p, v) => {
-        p.diag = !v;
-      },
-    },
-  ],
+  paramConfig,
 
   newDesc: newAbcdDesc,
   validateDesc,
