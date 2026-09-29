@@ -5,10 +5,9 @@ of them.
 
 ## Controls
 
-Click in a square to flip it and some of its neighbors. The diagram
-in each square indicates which other squares will flip.
+{{controls}}
 
-To play with a keyboard, use the arrow keys to move the cursor, and press Enter or Space to flip the square under it.
+The diagram in each square indicates which other squares will flip.
 
 Select one of the 'Random' settings from the Type menu for more
 varied puzzles.

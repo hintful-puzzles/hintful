@@ -145,7 +145,7 @@ function interpretMove(
   // Any press outside the grid flips the "numbers on black squares" setting.
   if (
     isMouseDown(stripModifiers(rawButton)) &&
-    geometry.pointerTarget(state, ds, p) === null
+    geometry.pointerTarget(state, ds, p, ui) === null
   ) {
     ui.cursor.visible = false;
     ui.showBlackNums = !ui.showBlackNums;

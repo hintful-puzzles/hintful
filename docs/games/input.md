@@ -357,11 +357,29 @@ had written a dozen ways:
 
 Declare the verbs as `Game.targetVerbs` and end `interpretMove` with
 `interpretTargetVerbs(targetVerbs, …)`. Most games want
-`squareGrid({ size, border })` as their geometry. **Anything else the game does
+`squareGrid({ size, border })` as their geometry; a "square" there is a
+tile-sized catchment, so Twiddle's block centers are a `squareGrid` whose
+`border` reads the block size from the state. **Anything else the game does
 with input is an arm of its own, tried first**: Unruly's digits, Range's
-dotting Shift-arrows and Singles' click outside the grid each sit above the
-one-line hand-off in their `interpretMove`. Exemplars: Light Up (verbs only),
-Unruly (verbs plus a digit arm and a middle verb with keys).
+dotting Shift-arrows, Singles' click outside the grid, Twiddle's corner keys
+and Net's Ctrl- and Shift-arrows each sit above the one-line hand-off in their
+`interpretMove`. Exemplars: Light Up (verbs only), Unruly (verbs plus a digit
+arm and a middle verb with keys), Net (a geometry of its own and all four verb
+slots).
+
+The slots are `primary` (left, Enter), `secondary` (right, Space), `middle`
+(middle or Shift-click, keys only through its `keys`) and `keyOnly` — verbs no
+button applies, such as Net's half turn on F. **Space is always the right
+button's verb.** Net once put its lock on Space; no puzzle explains that, so
+Net's lock moved to its own key (S) and Space rotates clockwise like the
+right button. A game that wants a different key for a verb gives the verb
+`keys`; it does not remap Space.
+
+**Keep the `Ui` to where the player is.** The guard walks the cursor by
+comparing `Ui` digests, so a field that differs on every `newUi` — Net's jumble
+RNG, seeded from entropy, once lived there — makes every position look new and
+runs the walk out of budget. State that is neither the player's position nor
+read by replay belongs outside the `Ui`.
 
 Two things follow from declaring:
 
@@ -382,10 +400,10 @@ dotted square", Range's three-state cycle and Singles' "either button clears"
 are each a line in the verb's `apply`; the model has no switch for any of them.
 
 **What the model is not for.** A drag game's keyboard is a design (below), and
-its drag arm is an arm of its own; a game can still declare the click half. And
-a game whose Space means the middle button (Net's lock) or whose keyboard walks
-something other than the targets is not yet expressible — measure it with
-`boardsReached` (`testing/input-probe.ts`) before bending the model to it.
+its drag arm is an arm of its own; a game can still declare the click half. A
+game whose keyboard walks something other than the targets is not expressible —
+measure it with `boardsReached` (`testing/input-probe.ts`) before bending the
+model to it.
 
 ## Keyboard cursors
 

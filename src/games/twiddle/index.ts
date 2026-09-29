@@ -9,32 +9,25 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import type { Game, UiUpdate } from "../../engine/game.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
 import {
   dimensionParamConfig,
   numberItem,
   transposeDimensions,
 } from "../../engine/params.ts";
-import {
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
-  isCursorMove,
-  LEFT_BUTTON,
-  MOD_MASK,
-  MOD_NUM_KEYPAD,
-  moveCursor,
-  newCursor,
-  RIGHT_BUTTON,
-  showCursor,
-} from "../../engine/pointer.ts";
+import { MOD_MASK, MOD_NUM_KEYPAD, newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  interpretTargetVerbs,
+  squareGrid,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { Color, Point } from "../../engine/types.ts";
 import {
   animLength,
+  border,
   buildColors,
   computeSize,
   FLASH_FRAME,
-  fromCoord,
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
@@ -81,6 +74,33 @@ function rotateMove(x: number, y: number, dir: 1 | -1): TwiddleMove {
   return { type: "rotate", x, y, dir };
 }
 
+/** A target is a block, named by its top-left square: the cursor moves over the
+ * `(w-n+1) × (h-n+1)` block origins, and a click lands on the block whose
+ * *center* it is nearest, which is why the inset grows by (n-1) half-tiles. */
+const targetVerbs: TargetVerbs<
+  TwiddleState,
+  TwiddleUi,
+  TwiddleDrawState,
+  Point,
+  TwiddleMove
+> = {
+  geometry: {
+    ...squareGrid<TwiddleState, TwiddleDrawState>({
+      size: (s) => ({ w: s.w - s.n + 1, h: s.h - s.n + 1 }),
+      border: (ts, s) => border(ts) + ((s.n - 1) * ts) / 2,
+    }),
+    noun: "block",
+  },
+  primary: {
+    does: "rotate it anticlockwise",
+    apply: (_s, { x, y }) => rotateMove(x, y, 1),
+  },
+  secondary: {
+    does: "rotate it clockwise",
+    apply: (_s, { x, y }) => rotateMove(x, y, -1),
+  },
+};
+
 function interpretMove(
   state: TwiddleState,
   ui: TwiddleUi,
@@ -88,35 +108,22 @@ function interpretMove(
   p: Point,
   rawButton: number,
 ): TwiddleMove | null | UiUpdate {
+  return (
+    fixedBlockKey(state, rawButton) ??
+    interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton)
+  );
+}
+
+/**
+ * The keys that turn a block wherever the cursor is: letters a–d and numpad
+ * 7/9/1/3 turn a corner block (a capital turns it back); numpad 8/2/4/6/5 turn
+ * the block exactly midway along an edge, or at the center, when there is one.
+ */
+function fixedBlockKey(state: TwiddleState, rawButton: number): TwiddleMove | null {
   const { w, h, n } = state;
   // Every modifier but the numpad bit (so not `stripModifiers`): the keypad
-  // rotations below need it.
+  // rotations need it.
   const button = rawButton & (~MOD_MASK | MOD_NUM_KEYPAD);
-  const ts = ds.tileSize;
-
-  // The cursor moves over the rotation-origin space, clamped.
-  if (isCursorMove(button)) {
-    return moveCursor(ui.cursor, button, w - n + 1, h - n + 1) ? UI_UPDATE : null;
-  }
-
-  if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
-    // Offset by (n-1) half-tiles so the user clicks the *center* of a
-    // rotation region rather than its corner.
-    const x = fromCoord(p.x - ((n - 1) * ts) / 2, ts);
-    const y = fromCoord(p.y - ((n - 1) * ts) / 2, ts);
-    if (x < 0 || x > w - n || y < 0 || y > h - n) return null;
-    ui.cursor.visible = false;
-    return rotateMove(x, y, button === LEFT_BUTTON ? 1 : -1);
-  }
-
-  if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
-    if (showCursor(ui.cursor)) return UI_UPDATE;
-    return rotateMove(ui.cursor.x, ui.cursor.y, button === CURSOR_SELECT2 ? -1 : 1);
-  }
-
-  // Letters a–d and numpad 7/9/1/3 turn a corner block (a capital turns it
-  // back); numpad 8/2/4/6/5 turn the block exactly midway along an edge, or
-  // at the center, when there is one.
   if (button === KEY_a || button === KEY_A || button === (MOD_NUM_KEYPAD | 0x37)) {
     return rotateMove(0, 0, button === KEY_A ? -1 : 1);
   }
@@ -283,6 +290,7 @@ export const twiddleGame: Game<
   newState,
   newUi,
 
+  targetVerbs,
   interpretMove,
   executeMove,
   status,

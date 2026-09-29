@@ -67,8 +67,9 @@ export interface TargetVerb<State, Target, Move> {
 export interface TargetGeometry<State, Ui, DrawState, Target> {
   /** What a target is called in the Controls paragraph: `"square"`. */
   readonly noun: string;
-  /** The target a press at `p` addresses, or `null` for none. */
-  pointerTarget(state: State, ds: DrawState, p: Point): Target | null;
+  /** The target a press at `p` addresses, or `null` for none. `ui` is there for
+   * a view the player can scroll: Net's wrapping grid, drawn from an origin. */
+  pointerTarget(state: State, ds: DrawState, p: Point, ui: Ui): Target | null;
   /** The target the cursor addresses, or `null` where it rests on none. */
   cursorTarget(state: State, ui: Ui): Target | null;
   /** Put the cursor on `target`, without showing it. */
@@ -88,6 +89,15 @@ export interface TargetVerbs<State, Ui, DrawState, Target, Move> {
   /** The middle button. No select key reaches it; a game binds it a key
    * through `keys`. */
   readonly middle?: TargetVerb<State, Target, Move>;
+  /** Verbs no button applies, reached only by their `keys` at the cursor: Net's
+   * half turn. */
+  readonly keyOnly?: readonly KeyOnlyVerb<State, Target, Move>[];
+}
+
+/** A verb with no button, so its keys are the only way to it. */
+export interface KeyOnlyVerb<State, Target, Move>
+  extends TargetVerb<State, Target, Move> {
+  readonly keys: readonly VerbKey[];
 }
 
 /** The `Ui` this model reads: the collection's shared cursor. */
@@ -99,13 +109,17 @@ export interface TargetVerbUi {
  * The common geometry: a grid of squares, `size(state)` of them, inset by
  * `border` pixels, whose target is the square `{ x, y }` and whose cursor sits
  * on one. `wrap` makes the arrows wrap at the edges, which Singles' cursor does.
+ *
+ * A "square" is a tile-sized catchment, not necessarily a drawn cell: Twiddle's
+ * target is a block's center, so its inset grows with the block and `border`
+ * reads the state.
  */
 export function squareGrid<
   State,
   DrawState extends { readonly tileSize: number },
 >(options: {
   size: (state: State) => Size;
-  border: (tileSize: number) => number;
+  border: (tileSize: number, state: State) => number;
   wrap?: boolean;
 }): TargetGeometry<State, TargetVerbUi, DrawState, Point> {
   const inGrid = (s: State, x: number, y: number) => {
@@ -115,7 +129,7 @@ export function squareGrid<
   return {
     noun: "square",
     pointerTarget(s, ds, p) {
-      const b = options.border(ds.tileSize);
+      const b = options.border(ds.tileSize, s);
       const x = Math.floor((p.x - b) / ds.tileSize);
       const y = Math.floor((p.y - b) / ds.tileSize);
       return inGrid(s, x, y) ? { x, y } : null;
@@ -149,7 +163,7 @@ function pointerVerb<S, U, D, T, M>(v: Verbs<S, U, D, T, M>, button: number) {
 function keyVerb<S, U, D, T, M>(v: Verbs<S, U, D, T, M>, button: number) {
   if (button === CURSOR_SELECT) return v.primary;
   if (button === CURSOR_SELECT2) return v.secondary ?? v.primary;
-  for (const verb of [v.primary, v.secondary, v.middle])
+  for (const verb of [v.primary, v.secondary, v.middle, ...(v.keyOnly ?? [])])
     if (verb?.keys?.some((k) => k.codes.includes(button))) return verb;
   return null;
 }
@@ -172,7 +186,7 @@ export function interpretTargetVerbs<S, U extends TargetVerbUi, D, T, M>(
 
   const pressed = pointerVerb(verbs, button);
   if (pressed) {
-    const target = geometry.pointerTarget(state, ds, p);
+    const target = geometry.pointerTarget(state, ds, p, ui);
     if (target === null) return null;
     // Parking a hidden cursor changes nothing on screen, so only hiding a
     // shown one makes a press that applies nothing worth a repaint.
@@ -216,7 +230,10 @@ export function controlsMarkdown<S, U, D, T, M>(verbs: Verbs<S, U, D, T, M>): st
     pointer.push(
       `Right-click it (on a touch screen, a long press) to ${verbs.secondary.does}.`,
     );
-  if (verbs.middle) pointer.push(`Middle-click it to ${verbs.middle.does}.`);
+  // The frontend sends a Shift-click as the middle button, for a mouse or
+  // trackpad without one (`view-interactive.ts`).
+  if (verbs.middle)
+    pointer.push(`Middle-click it (or Shift-click it) to ${verbs.middle.does}.`);
 
   const primary = verbs.primary as TargetVerb<unknown, unknown, unknown>;
   const keyboard = verbs.secondary
@@ -232,10 +249,13 @@ export function controlsMarkdown<S, U, D, T, M>(verbs: Verbs<S, U, D, T, M>): st
     middleKeys.length === 0
       ? ""
       : ` ${middleKeys.map((k) => k.name).join(" or ")} does what a middle-click does.`;
+  const keyOnly = (verbs.keyOnly ?? [])
+    .map((v) => ` Press ${v.keys.map((k) => k.name).join(" or ")} to ${v.does}.`)
+    .join("");
   return (
     `${pointer.join(" ")}\n\n` +
     `With the keyboard, the arrow keys move a cursor around the grid. ` +
-    `${keyboard}${middle}`
+    `${keyboard}${middle}${keyOnly}`
   );
 }
 

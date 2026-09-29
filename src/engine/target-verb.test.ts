@@ -109,6 +109,35 @@ describe("the model", () => {
     expect(controlsMarkdown(one)).toContain("Enter or Space does what a click does");
   });
 
+  it("a key-only verb applies at the cursor, and the paragraph says so", () => {
+    const more = {
+      ...verbs,
+      middle: {
+        does: "star it",
+        keys: [{ codes: [0x73], name: "S" }],
+        apply: at("star"),
+      },
+      keyOnly: [
+        {
+          does: "flip the square",
+          keys: [{ codes: [0x66], name: "F" }],
+          apply: at("flip"),
+        },
+      ],
+    };
+    const ui = { cursor: newCursor(1, 0, true) };
+    expect(interpretTargetVerbs(more, state, ui, ds, { x: 0, y: 0 }, 0x66)).toEqual({
+      verb: "flip",
+      at: { x: 1, y: 0 },
+    });
+    expect(controlsMarkdown(more)).toContain(
+      "Middle-click it (or Shift-click it) to star it.",
+    );
+    expect(controlsMarkdown(more)).toContain(
+      "S does what a middle-click does. Press F to flip the square.",
+    );
+  });
+
   it("the Controls paragraph names each verb's button and key", () => {
     expect(controlsMarkdown(verbs)).toBe(
       "Click a square to fill it. Right-click it (on a touch screen, a long press) " +
@@ -182,5 +211,11 @@ describe("a game's declared verbs are what its buttons and keys do", () => {
         for (const code of k.codes)
           expect(primed.key(code), `${k.name} against its button`).toEqual(clicks);
     }
+    // A key-only verb has no button to agree with; the paragraph still says
+    // the key does something, so it must.
+    for (const verb of verbs.keyOnly ?? [])
+      for (const k of verb.keys)
+        for (const code of k.codes)
+          expect(primed.key(code).size, `${k.name}: no board`).toBeGreaterThan(0);
   });
 });

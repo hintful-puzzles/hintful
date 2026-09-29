@@ -4,7 +4,6 @@ import { parseLeadingInt } from "../../engine/decimal.ts";
 import { atof, formatG } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
-import { type RandomState, randomNew } from "../../engine/random/index.ts";
 import {
   addBorderBarriers,
   computeActive as computeActiveWires,
@@ -235,10 +234,6 @@ export interface NetUi {
   cursor: GridCursor;
   /** Highlight loops that involve unlocked squares (the one preference). */
   unlockedLoops: boolean;
-  /** The jumble RNG, seeded from entropy and never serialized: replay depends
-   * only on the *expanded* jumble move, so a different sequence each session
-   * is fine. */
-  rs: RandomState;
 }
 
 export function newUi(s: NetState): NetUi {
@@ -251,6 +246,5 @@ export function newUi(s: NetState): NetUi {
     cy,
     cursor: newCursor(cx, cy),
     unlockedLoops: true,
-    rs: randomNew(crypto.getRandomValues(new Uint8Array(16))),
   };
 }

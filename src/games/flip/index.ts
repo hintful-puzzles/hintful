@@ -7,24 +7,22 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import {
   dimensionParamConfig,
-  fromCoord,
   type Game,
   type ParamConfigItem,
   registerGame,
   type SolveResult,
-  UI_UPDATE,
   type UiUpdate,
 } from "../../engine/index.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { dims, letters, paramsCodec } from "../../engine/params-codec.ts";
-import {
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
-  cursorDelta,
-  LEFT_BUTTON,
-  newCursor,
-} from "../../engine/pointer.ts";
+import { newCursor } from "../../engine/pointer.ts";
 import { randomUpto } from "../../engine/random/index.ts";
+import {
+  interpretTargetVerbs,
+  squareGrid,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
+import type { Point } from "../../engine/types.ts";
 import { genCrossesMatrix, genRandomMatrix } from "./generator.ts";
 import {
   ANIM_TIME,
@@ -83,6 +81,23 @@ const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
   letters(paramConfig, "shape-type", ["c", "r"], { full: true }),
 ]);
+
+// --- input ----------------------------------------------------------
+
+/** Flip square `{ x, y }`. A square with an empty matrix row flips nothing
+ * (upstream's MOVE_NO_EFFECT), so it makes no move. */
+function flipAt(s: FlipState, { x, y }: Point): FlipMove | null {
+  const wh = s.w * s.h;
+  const i = y * s.w + x;
+  return s.matrix.subarray(i * wh, (i + 1) * wh).includes(1)
+    ? { kind: "flip", x, y }
+    : null;
+}
+
+const targetVerbs: TargetVerbs<FlipState, FlipUi, FlipDrawState, Point, FlipMove> = {
+  geometry: squareGrid({ size: (s) => s, border }),
+  primary: { does: "flip it and some of its neighbors", apply: flipAt },
+};
 
 // --- the Game -------------------------------------------------------
 
@@ -197,40 +212,10 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
   computeSize,
   redraw,
 
+  targetVerbs,
+
   interpretMove(s, ui, ds, point, button): FlipMove | null | UiUpdate {
-    const { w, h } = s;
-    const isSelect = button === CURSOR_SELECT || button === CURSOR_SELECT2;
-    if (button === LEFT_BUTTON || isSelect) {
-      let tx: number;
-      let ty: number;
-      if (button === LEFT_BUTTON) {
-        const b = border(ds.tileSize);
-        tx = fromCoord(point.x, ds.tileSize, b);
-        ty = fromCoord(point.y, ds.tileSize, b);
-        ui.cursor.visible = false;
-      } else {
-        tx = ui.cursor.x;
-        ty = ui.cursor.y;
-        ui.cursor.visible = true;
-      }
-      if (tx < 0 || tx >= w || ty < 0 || ty >= h) return UI_UPDATE;
-      // A cell with an empty matrix row flips nothing (upstream's MOVE_NO_EFFECT).
-      const wh = w * h;
-      const i = ty * w + tx;
-      if (!s.matrix.subarray(i * wh, (i + 1) * wh).includes(1)) return null;
-      return { kind: "flip", x: tx, y: ty };
-    }
-
-    const d = cursorDelta(button);
-    if (!d) return null;
-
-    const nx = Math.min(w - 1, Math.max(0, ui.cursor.x + d.dx));
-    const ny = Math.min(h - 1, Math.max(0, ui.cursor.y + d.dy));
-    const changed = nx !== ui.cursor.x || ny !== ui.cursor.y || !ui.cursor.visible;
-    ui.cursor.x = nx;
-    ui.cursor.y = ny;
-    ui.cursor.visible = true;
-    return changed ? UI_UPDATE : null;
+    return interpretTargetVerbs(targetVerbs, s, ui, ds, point, button);
   },
 
   executeMove(from, move): FlipState {

@@ -11,14 +11,13 @@ round as well as in the right place. Or both!
 
 ## Controls
 
-In the basic game, you rotate a 2×2 square section. Left-click
-in the center of that section (i.e. on a corner point between four
-squares) to rotate the whole section anticlockwise. Right-click to
-rotate the section clockwise.
+{{controls}}
 
-With the keyboard, the arrow keys move a cursor that outlines the block
-it would turn. Enter turns that block anticlockwise and Space turns it
-clockwise. The keys A, B, C and D turn the block in the top-left,
+A block is the square section that turns, 2×2 in the basic game. Aim a
+click at its center, which for a 2×2 block is the corner point between
+its four squares; the keyboard's cursor outlines the whole block.
+
+The keys A, B, C and D turn the block in the top-left,
 top-right, bottom-left and bottom-right corner anticlockwise, and
 the capital letter (with Shift) turns it clockwise. On the numeric keypad, 7,
 9, 1 and 3 turn the corner blocks, and 8, 2, 4, 6 and 5 turn the block

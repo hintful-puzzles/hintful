@@ -6,11 +6,7 @@ different colors.
 
 ## Controls
 
-Click in a square to flood-fill the top left corner with that square's
-color.
-
-On the keyboard, the arrow keys move a cursor over the grid, and Enter
-fills with the color under it.
+{{controls}}
 
 ## Hints
 

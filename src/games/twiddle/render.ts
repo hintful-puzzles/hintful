@@ -12,7 +12,7 @@ import {
 } from "../../engine/color/palette-games.ts";
 import { drawRecessedBorder, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing } from "../../engine/game.ts";
-import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
+import { coord as coordE } from "../../engine/geometry.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import type { TwiddleState, TwiddleUi } from "./state.ts";
 
@@ -50,10 +50,6 @@ export function border(ts: number): number {
 
 export function coord(pos: number, ts: number): number {
   return coordE(pos, ts, border(ts));
-}
-
-export function fromCoord(pixel: number, ts: number): number {
-  return fromCoordE(pixel, ts, border(ts));
 }
 
 function highlightWidth(ts: number): number {

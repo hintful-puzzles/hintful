@@ -377,10 +377,14 @@ describe("no game tests a button this frontend cannot send", () => {
     for (const { path, text } of sources) {
       if (!/MOD_NUM_KEYPAD\s*\|/.test(text)) continue;
       // The bare form of the same key must be accepted somewhere in the file:
-      // a named cursor key, or `digitOf`, which looks through the keypad bit and
-      // so is a bare-key route by construction.
+      // a named cursor key; `digitOf`, which looks through the keypad bit and
+      // so is a bare-key route by construction; or a hand-off to the
+      // target-verb model, whose arrows and Enter reach every target (Twiddle's
+      // keypad turns a block the cursor can reach and Enter turns).
       expect(
-        /button === CURSOR_/.test(text) || /\bdigitOf\(/.test(text),
+        /button === CURSOR_/.test(text) ||
+          /\bdigitOf\(/.test(text) ||
+          /\binterpretTargetVerbs\(/.test(text),
         `${path} binds MOD_NUM_KEYPAD with no bare-key route`,
       ).toBe(true);
       binders++;

@@ -1,28 +1,24 @@
 import { assertNever } from "../../engine/assert-never.ts";
-import {
-  type Game,
-  type HintResult,
-  type HintStep,
-  type HintTrackVerdict,
-  UI_UPDATE,
-  type UiUpdate,
+import type {
+  Game,
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+  UiUpdate,
 } from "../../engine/game.ts";
-import { fromCoord } from "../../engine/geometry.ts";
 import { ALREADY_SOLVED, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
 import {
   dimensionParamConfig,
   numberItem,
   transposeDimensions,
 } from "../../engine/params.ts";
-import {
-  CURSOR_SELECT,
-  gridCursorMove,
-  isCursorMove,
-  LEFT_BUTTON,
-  newCursor,
-  stripModifiers,
-} from "../../engine/pointer.ts";
+import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  interpretTargetVerbs,
+  squareGrid,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { say } from "./hint-text.ts";
 import {
@@ -96,6 +92,22 @@ function newUi(_state: FloodState): FloodUi {
   return { cursor: newCursor(FILLX, FILLY) };
 }
 
+/** Flood-fill from the corner with the color of square `{ x, y }`. A completed
+ * grid is one color, so it offers no fill. */
+function fillWith(state: FloodState, { x, y }: Point): FloodMove | null {
+  const color = state.grid[y * state.w + x];
+  return color === state.grid[FILLY * state.w + FILLX] ? null : { type: "fill", color };
+}
+
+const targetVerbs: TargetVerbs<FloodState, FloodUi, FloodDrawState, Point, FloodMove> =
+  {
+    geometry: squareGrid({ size: (s) => s, border: (ts) => Math.floor(ts / 2) }),
+    primary: {
+      does: "flood-fill the top left corner with that square's color",
+      apply: fillWith,
+    },
+  };
+
 function interpretMove(
   state: FloodState,
   ui: FloodUi,
@@ -103,41 +115,7 @@ function interpretMove(
   p: Point,
   button: number,
 ): FloodMove | null | UiUpdate {
-  const { w, h } = state;
-  const raw = stripModifiers(button);
-  let tx: number;
-  let ty: number;
-  let uiUpdated = false;
-
-  if (raw === LEFT_BUTTON) {
-    const ts = ds.tileSize;
-    tx = fromCoord(p.x, ts, Math.floor(ts / 2));
-    ty = fromCoord(p.y, ts, Math.floor(ts / 2));
-    if (ui.cursor.visible) {
-      ui.cursor.visible = false;
-      uiUpdated = true;
-    }
-  } else if (isCursorMove(raw)) {
-    const moved = gridCursorMove(raw, ui.cursor.x, ui.cursor.y, w, h);
-    if (moved) {
-      ui.cursor.x = moved.x;
-      ui.cursor.y = moved.y;
-    }
-    ui.cursor.visible = true;
-    return UI_UPDATE;
-  } else if (raw === CURSOR_SELECT) {
-    tx = ui.cursor.x;
-    ty = ui.cursor.y;
-  } else {
-    return null;
-  }
-
-  // A completed grid is one color, so it offers no fill.
-  if (tx >= 0 && tx < w && ty >= 0 && ty < h) {
-    const color = state.grid[ty * w + tx];
-    if (color !== state.grid[FILLY * w + FILLX]) return { type: "fill", color };
-  }
-  return uiUpdated ? UI_UPDATE : null;
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, button);
 }
 
 // --- status bar -------------------------------------------------------
@@ -260,6 +238,7 @@ export const floodGame: Game<
   newState,
   newUi,
 
+  targetVerbs,
   interpretMove,
   executeMove,
   status,

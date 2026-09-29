@@ -164,7 +164,7 @@ describe("Flip interpretMove", () => {
     expect(ui.cursor.visible).toBe(false);
   });
 
-  it("left-click outside the grid is a UI update, not a move", () => {
+  it("left-click outside the grid does nothing", () => {
     const s = flipGame.newState(p, desc);
     const ui = flipGame.newUi(s);
     expect(
@@ -175,7 +175,7 @@ describe("Flip interpretMove", () => {
         { x: 9999, y: 9999 },
         0x0200,
       ),
-    ).toBe(UI_UPDATE);
+    ).toBeNull();
   });
 
   it("cursor move is a UI update and advances the cursor; select acts", () => {

@@ -230,9 +230,11 @@ describe("moves", () => {
 
   it("a rotate on a locked tile yields no move", () => {
     const s = base();
-    // The cursor starts at the center (2,2); lock that tile, then 'a' rotates it.
+    // The cursor starts at the center (2,2); lock that tile, then 'a' rotates it
+    // once the cursor is showing (the first press only shows it).
     const locked = netGame.executeMove(s, { type: "lock", x: 2, y: 2 });
     const ui = newUi(locked);
+    ui.cursor.visible = true;
     expect(
       netGame.interpretMove(
         locked,

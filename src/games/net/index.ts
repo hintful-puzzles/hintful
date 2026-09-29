@@ -20,19 +20,19 @@ import {
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
   CURSOR_UP,
   isCursorMove,
-  LEFT_BUTTON,
-  MIDDLE_BUTTON,
   MOD_CTRL,
   MOD_SHFT,
-  RIGHT_BUTTON,
   stripModifiers,
 } from "../../engine/pointer.ts";
-import { randomUpto } from "../../engine/random/index.ts";
+import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  interpretTargetVerbs,
+  type TargetGeometry,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import {
   anticlockwise,
@@ -158,6 +158,86 @@ function rotateMove(s: NetState, op: "A" | "C" | "F", x: number, y: number) {
   return s.tiles[y * s.w + x] & LOCKED ? null : ({ type: "rotate", op, x, y } as const);
 }
 
+/** The jumble's RNG, seeded from entropy on first use. It is neither the
+ * player's position nor anything replay reads (a jumble is recorded as its
+ * expanded ops), so it stays out of `NetUi`, whose every field is. */
+let jumbleRs: RandomState | null = null;
+
+function arrowDir(button: number): number {
+  if (button === CURSOR_UP) return U;
+  if (button === CURSOR_DOWN) return D;
+  return button === CURSOR_LEFT ? L : R;
+}
+
+/**
+ * A target is a tile, named in the state's own coordinates. On screen the grid
+ * is drawn scrolled by the origin, so a press is shifted by it; the cursor
+ * already lives in state coordinates. A press on the gutter between tiles hits
+ * nothing. The arrows wrap at the edges even on a bounded grid.
+ */
+const geometry: TargetGeometry<NetState, NetUi, NetDrawState, Point> = {
+  noun: "square",
+  pointerTarget(s, ds, p, ui) {
+    const ts = ds.tileSize;
+    const lt = lineThick(ts);
+    const px = Math.floor(p.x) - lt;
+    const py = Math.floor(p.y) - lt;
+    const tx = Math.floor(px / ts);
+    const ty = Math.floor(py / ts);
+    if (px < 0 || py < 0 || tx >= s.w || ty >= s.h) return null;
+    if (px % ts >= ts - lt || py % ts >= ts - lt) return null;
+    return { x: (tx + ui.orgX) % s.w, y: (ty + ui.orgY) % s.h };
+  },
+  cursorTarget: (_s, ui) => ({ x: ui.cursor.x, y: ui.cursor.y }),
+  parkCursor(ui, t) {
+    ui.cursor.x = t.x;
+    ui.cursor.y = t.y;
+  },
+  moveCursor(s, ui, button) {
+    const o = offset(ui.cursor.x, ui.cursor.y, arrowDir(button), s.w, s.h);
+    ui.cursor.x = o.x;
+    ui.cursor.y = o.y;
+    ui.cursor.visible = true;
+    return true;
+  },
+};
+
+const rotate =
+  (op: "A" | "C" | "F") =>
+  (s: NetState, { x, y }: Point) =>
+    rotateMove(s, op, x, y);
+
+// (No stylus branch: the midend strips MOD_STYLUS, so a touch tap rotates
+// anticlockwise and a long press clockwise — docs/games/input.md § "Touch is
+// stripped for you".)
+const targetVerbs: TargetVerbs<NetState, NetUi, NetDrawState, Point, NetMove> = {
+  geometry,
+  primary: {
+    does: "rotate it anticlockwise",
+    keys: [{ codes: [0x61, 0x41], name: "A" }],
+    apply: rotate("A"),
+  },
+  secondary: {
+    does: "rotate it clockwise",
+    keys: [{ codes: [0x64, 0x44], name: "D" }],
+    apply: rotate("C"),
+  },
+  middle: {
+    does:
+      "lock it once you think it is correct, so you don't rotate it by accident, " +
+      "or unlock it again",
+    keys: [{ codes: [0x73, 0x53], name: "S" }],
+    apply: (_s, { x, y }) => ({ type: "lock", x, y }),
+  },
+  keyOnly: [
+    {
+      does: "rotate the square under the cursor half a turn",
+      keys: [{ codes: [0x66, 0x46], name: "F" }],
+      apply: rotate("F"),
+    },
+  ],
+};
+
 function interpretMove(
   s: NetState,
   ui: NetUi,
@@ -167,40 +247,12 @@ function interpretMove(
 ): NetMove | null | UiUpdate {
   const button = stripModifiers(rawButton);
 
-  if (button === LEFT_BUTTON || button === MIDDLE_BUTTON || button === RIGHT_BUTTON) {
-    const nullret = ui.cursor.visible ? UI_UPDATE : null;
-    ui.cursor.visible = false;
-
-    // Pixel → tile. (No stylus branch: the midend strips MOD_STYLUS for us, so a
-    // touch tap rotates left and a long-press right — deliberate divergence,
-    // docs/games/input.md § "Touch is stripped for you". Lock stays on the middle button / `s`.)
-    const ts = ds.tileSize;
-    const lt = lineThick(ts);
-    const px = Math.floor(p.x) - lt;
-    const py = Math.floor(p.y) - lt;
-    const tx = Math.floor(px / ts);
-    const ty = Math.floor(py / ts);
-    if (px < 0 || py < 0 || tx >= s.w || ty >= s.h) return nullret;
-    if (px % ts >= ts - lt || py % ts >= ts - lt) return nullret; // in the gutter
-    const x = (tx + ui.orgX) % s.w;
-    const y = (ty + ui.orgY) % s.h;
-    if (button === MIDDLE_BUTTON) return { type: "lock", x, y };
-    return rotateMove(s, button === LEFT_BUTTON ? "A" : "C", x, y) ?? nullret;
-  }
-
-  if (isCursorMove(button)) {
-    const dir =
-      button === CURSOR_UP
-        ? U
-        : button === CURSOR_DOWN
-          ? D
-          : button === CURSOR_LEFT
-            ? L
-            : R;
-    // Shift moves the origin, Ctrl the source, both together moves both, and
-    // a bare arrow moves the cursor. All are UI-only.
-    const shift = (rawButton & MOD_SHFT) !== 0;
-    const ctrl = (rawButton & MOD_CTRL) !== 0;
+  // Shift moves the origin, Ctrl the source, both together moves both. All are
+  // UI-only; a bare arrow is the model's.
+  const shift = (rawButton & MOD_SHFT) !== 0;
+  const ctrl = (rawButton & MOD_CTRL) !== 0;
+  if (isCursorMove(button) && (shift || ctrl)) {
+    const dir = arrowDir(button);
     if (shift) {
       if (!s.wrapping) return null; // origin shift is meaningless when bounded
       const o = offset(ui.orgX, ui.orgY, dir, s.w, s.h);
@@ -212,43 +264,25 @@ function interpretMove(
       ui.cx = o.x;
       ui.cy = o.y;
     }
-    if (!shift && !ctrl) {
-      const o = offset(ui.cursor.x, ui.cursor.y, dir, s.w, s.h);
-      ui.cursor.x = o.x;
-      ui.cursor.y = o.y;
-      ui.cursor.visible = true;
-    }
     return UI_UPDATE;
-  }
-
-  // Keys act on the cursor's tile: `a` `d` `f` rotate it anticlockwise,
-  // clockwise and 180°, and `s` locks it.
-  let op: NetOp["op"] | null = null;
-  if (button === 0x61 || button === 0x41 || button === CURSOR_SELECT) op = "A";
-  else if (button === 0x64 || button === 0x44) op = "C";
-  else if (button === 0x66 || button === 0x46) op = "F";
-  else if (button === 0x73 || button === 0x53 || button === CURSOR_SELECT2) op = "L";
-  if (op) {
-    const { x, y } = ui.cursor;
-    ui.cursor.visible = true;
-    return op === "L" ? { type: "lock", x, y } : rotateMove(s, op, x, y);
   }
 
   if (button === 0x6a || button === 0x4a) {
     // j: rotate every unlocked tile a random amount, expanded into an explicit
     // op list so replay is deterministic.
+    jumbleRs ??= randomNew(crypto.getRandomValues(new Uint8Array(16)));
     const ops: NetOp[] = [];
     for (let y = 0; y < s.h; y++) {
       for (let x = 0; x < s.w; x++) {
         if (s.tiles[y * s.w + x] & LOCKED) continue;
-        const r = randomUpto(ui.rs, 4);
+        const r = randomUpto(jumbleRs, 4);
         if (r) ops.push({ op: (["A", "F", "C"] as const)[r - 1], x, y });
       }
     }
     return { type: "jumble", ops };
   }
 
-  return null;
+  return interpretTargetVerbs(targetVerbs, s, ui, ds, p, rawButton);
 }
 
 /* ----------------------------------------------------------------------
@@ -422,6 +456,7 @@ export const netGame: Game<NetParams, NetState, NetMove, NetUi, NetDrawState> = 
   newState,
   newUi,
 
+  targetVerbs,
   interpretMove,
   executeMove,
 
