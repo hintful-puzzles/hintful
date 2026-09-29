@@ -254,11 +254,14 @@ export class CatalogCard extends LitElement {
       [part="draft"] {
         flex: none;
         padding-inline: 0.375rem;
-        border: 1px solid var(--app-color-row-rule);
         border-radius: var(--app-radius-control);
         font-size: var(--app-font-size-detail);
+        font-weight: var(--wa-font-weight-semibold);
         line-height: var(--wa-line-height-condensed);
-        color: var(--app-color-text-quiet);
+        /* Filled, not outlined: an outline in the row-rule color all but
+         * vanished in dark mode (owner, 2026-09-29). */
+        background-color: var(--wa-color-warning-fill-quiet);
+        color: var(--wa-color-warning-on-quiet);
       }
 
       [part="description"] {

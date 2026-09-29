@@ -438,6 +438,15 @@ export default defineConfig(async ({ command, mode }) => {
 
   return {
     appType: "mpa",
+    optimizeDeps: {
+      // The pages are generated from templates, so the dependency scan finds
+      // no page to start from and discovers each page's dependencies only when
+      // it is first opened. The re-bundle that follows loads a second copy of
+      // Lit beside the first, and Web Awesome's elements are defined twice
+      // ("the name "wa-button" has already been used"). Name the page scripts
+      // the templates load.
+      entries: ["src/home-page.ts", "src/puzzle-page.ts"],
+    },
     build: {
       rollupOptions: {
         input: [

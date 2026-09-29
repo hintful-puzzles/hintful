@@ -53,4 +53,13 @@
       the label at desktop and phone width, no other game does; Fifteen's help
       shows its reason above its parameters.
 - [ ] 5.3 **Owner acceptance**: the label's wording and placement on the home
-      screen, and the "Not in this game" wording.
+      screen, and the "Not in this game" wording. Owner, 2026-09-29: reasoning
+      and words fine, label too inconspicuous in dark mode; now filled with the
+      quiet warning pair, checked in both schemes.
+- [x] 5.4 The owner's dev server threw `"wa-button" has already been used`
+      after going from the menu to a game and back. The pages come from
+      templates, so Vite's dependency scan found no entry and discovered the
+      puzzle page's dependencies on first visit; the re-bundle loaded a second
+      Lit. This change's config edit had wiped the dependency cache, which is
+      what exposed it. `optimizeDeps.entries` names the two page scripts;
+      reproduced before, and gone from a cold cache (`--force`) after.
