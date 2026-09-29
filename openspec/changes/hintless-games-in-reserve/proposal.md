@@ -22,6 +22,8 @@ Every other hintless game: Black Box, Cube, Flip, Mines, Mosaic, Same Game,
 Slide, Sokoban and Twiddle. No phase claims them. A game leaves the reserve
 when a framework change (open or yet to be proposed) turns out to press on it
 harder than its named game does, or when the decision point below says so.
+Rect has left: `draw-hint-marks-from-roles` wrote its hint (archived
+2026-09-29).
 Re-take the population from the registry (games without `hint`, as
 `HINT_GAMES` derives the hinted ones) rather than trusting this list.
 

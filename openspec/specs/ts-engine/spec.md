@@ -7323,19 +7323,26 @@ it.
 ### Requirement: A bound hint step's words SHALL name exactly the marks it draws
 
 A game MAY declare the `hintMarks` section of its contract: what each role marks
-in that game, and the marks a step's highlights draw. A game that declares it is
-**bound**, and every one of its hint steps SHALL carry its sentence as words
-built from references to marks, with the explanation equal to their text.
+in that game. A game that declares it is **bound**, and every one of its hint
+steps SHALL carry its sentence as words built from references to marks, with
+the explanation equal to their text.
 
-For every step of a bound game, every mark its words name SHALL be one it draws,
-every mark it draws SHALL be named by its words, and every role it draws SHALL
-be listed in the game's legend. The hint-quality walk SHALL check this on every
-step it visits, through whole games and under each candidate reading a game
-offers, and on each step as a refresh returns it.
+A bound game's renderer SHALL paint every hint mark from the step's words, by
+role and kind (`stepMarks`), and from nothing else. A highlight field MAY carry
+data that is not a mark, painted only where a named mark is. The glyph a role
+takes on a kind remains the game's.
 
-Where a shared mechanic builds the steps, it SHALL derive what it can from the
-words rather than take it beside them: the candidate walk's outlined and striped
-cells, and the border grid's, are the references the sentence makes.
+For every step of a bound game, measured on the frame its renderer paints from a
+fresh draw state: removing any one element the words name from them SHALL
+change the frame; removing every reference SHALL leave the frame the game paints
+with no hint shown; and every role the words name SHALL be listed in the game's
+legend. The hint-quality walk SHALL check this on every step it visits, through
+whole games and under each candidate reading a game offers, and on each step as
+a refresh returns it.
+
+Where a shared mechanic paints for several games, it SHALL read the words: the
+candidate games' overlay and the border grid's marks are the references the
+sentence makes.
 
 #### Scenario: A step draws a mark its words never name
 
@@ -7348,6 +7355,20 @@ cells, and the border grid's, are the references the sentence makes.
   leg reasoned from
 - **THEN** its sentence names that evidence ("for the same striped region") as
   well as the edges it rings
+
+#### Scenario: The words name a mark the renderer does not paint
+
+- **WHEN** a bound game's words call a square outlined and its renderer paints
+  no outline there, because a ring wins that square
+- **THEN** the walk fails, naming the outline as not drawn, because removing it
+  from the words leaves the frame unchanged
+
+#### Scenario: A renderer still paints a mark from a highlight field
+
+- **WHEN** a bound game's renderer outlines squares listed in its highlights
+  rather than the squares its words outline
+- **THEN** the walk fails, because the frame with every reference removed still
+  shows the outline
 
 ### Requirement: A refresh that shrinks a hint step SHALL rewrite its words
 
