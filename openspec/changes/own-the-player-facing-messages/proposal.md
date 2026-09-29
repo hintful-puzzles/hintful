@@ -53,12 +53,13 @@ a reason per entry.
 Upstream had no solver for Cube, Pegs, Same Game or Sokoban, so a hint for any
 of them needs one, and its refusal ("no solution from this position") is the
 same concept as `SolveResult`'s "no solution" kind. That is the overlap this
-change should be checked against: **Pegs** first, then **Same Game**. Their
-hints' refusals and their `solve` failures should come from one message kind,
-through `hint-refusal.ts`'s shape, not as two wordings for one fact. If the
-kinds cannot express what those hints need to say, that is a finding for this
-change, not for the hint.
+change should be checked against, with one game: **Pegs**. Its hint's
+refusals and its `solve` failures should come from one message kind, through
+`hint-refusal.ts`'s shape, not as two wordings for one fact. If the kinds
+cannot express what the hint needs to say, that is a finding for this change,
+not for the hint.
 
-Both are search games, so their hints are heuristic (docs/games/hints.md §
-"Non-deductive (heuristic) hints"): write each in its own change, with a short
-design pass on what it can prove first, as Inertia did.
+Pegs is a search game, so its hint is heuristic (docs/games/hints.md §
+"Non-deductive (heuristic) hints"): write it in its own change, with a short
+design pass on what it can prove first, as Inertia did. The others without a
+solver stay in reserve (`hintless-games-in-reserve`).

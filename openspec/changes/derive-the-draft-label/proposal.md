@@ -51,10 +51,7 @@ reason. A hint is never not-applicable.
 None. A hint is never `notApplicable`, so every hintless game is a draft by
 this change's own rule, and they are its test population as they stand: the
 label should appear on each of them and on no hinted game. Pulling one in
-would only shrink that population. The hintless games are assigned to the
-phases that they check (`derive-target-verb-input`,
-`own-the-player-facing-messages`, `draw-hint-marks-from-roles`) and to
-`hint-the-unpaired-games`.
+would only shrink that population (`hintless-games-in-reserve`).
 
 ## Tasks, in order
 

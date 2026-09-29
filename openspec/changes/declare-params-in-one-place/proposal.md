@@ -61,8 +61,4 @@ a time as a check on the framework's ergonomics. **This change has no hint that
 checks it**: a hint reads params only through its tier, and the tier list is
 already one declaration. So pull none in *for* this change.
 
-If the October target needs a hint written alongside it anyway, take
-**Mosaic**, on its own merit: every mark it needs (a ring on a cell, stripes
-over a 3×3 block) already exists, which is why it was the pilot's runner-up
-and why it assesses nothing (pilot `design.md` D1). Say in its change that it
-was pulled in for pace, not as an assessment.
+The hintless games stay in reserve (`hintless-games-in-reserve`).
