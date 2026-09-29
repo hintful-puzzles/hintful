@@ -1,9 +1,13 @@
 # envision-the-game-contract
 
-**Status: scaffolded, not started. A vision change, deliberately not
-over-specified.** Owner-requested 2026-09-28. Its session explores what is
-possible and ends by **scaffolding independent changes**, one per concern or
-phase, in an order; it implements little or nothing itself.
+**Status: decided (owner, 2026-09-29).** The vision is `design.md`. It
+scaffolded six phases as their own changes: `strengthen-the-repaint-differential`
+and `fix-twiddle-custom-header` (phase 0), `bind-hint-words-to-marks`,
+`declare-params-in-one-place`, `derive-the-draft-label`,
+`derive-target-verb-input` and `own-the-player-facing-messages`.
+Owner-requested 2026-09-28 as a vision change, deliberately not
+over-specified, that ends by scaffolding independent changes and implements
+nothing itself.
 
 ## The direction (owner, 2026-09-28)
 

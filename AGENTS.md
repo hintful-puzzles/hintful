@@ -164,8 +164,13 @@ the words a hint uses for its marks — checked by types and by validation
 functions, with a game that lacks part of it shown as a **draft**. Where a
 guard today *derives* a population because nothing declared it, that is a
 stopgap, not a principle: a contract the engine consumes supersedes it.
-`envision-the-game-contract` is where that is being worked out; until it lands,
-a game joins a shared mechanic by having it, and a cross-game guard finds its
+`envision-the-game-contract`'s `design.md` is the plan: `Game` stays the
+contract and gains typed sections, and each section is implemented, is
+`notApplicable(reason)`, or is absent. An absent section makes the game a
+draft. The sections land as the changes it scaffolded, and are built only
+where two channels must agree: a hint's words and its marks, params and their
+labels and help, input and its controls text. Until a section lands, a game
+joins that shared mechanic by having it, and a cross-game guard finds its
 population by reading what the game is (`src/engine/testing/enrollment.ts`).
 Before designing a declaration, ask what consumes it; then ask what the consumer
 is already being sent, because twice now the declaration a concern should have
@@ -448,7 +453,7 @@ Explained hints are a core deliberate-divergence product value of this fork, not
 
 **A non-deductive game is not exempt from the bar** — it is exempt only from *deduction*. Untangle has no forced move, so it narrates a measurement it can check instead: what the move does to the point's crossings ([`docs/games/hints.md`](docs/games/hints.md) § "Non-deductive (heuristic) hints"); **Inertia** (the non-deductive exemplar, `add-inertia-hint`, owner-endorsed 2026-07-13) shows the other pole: find the one thing the game can *prove* (there, "this gem can never be reached again") and lead with it, hold a stable subgoal and mark it when the game has no name for it, and narrate each move by the consequence it actually has.
 
-**Every game has a hint, and a game without one is a draft** (owner, 2026-09-28: the project is called Hintful on purpose). The goal is every game hinted by the end of October 2026. A new game ships with its hint. The remaining hintless games are also how the framework work gets assessed — a target contract is tested by writing real hints against it — so the order still matters: `characterize-the-hint-assessment-corpus`'s `audit.md` classified the hintless games of its day into seven shapes, said per game what a hint there would press on, and recommended the order to take them in. **Pick from it rather than alphabetically**: choose the game that presses hardest on whatever is being built, because the cheapest hint in the corpus is the worst assessment — and while `envision-the-game-contract` is open, write each new hint in a way that keeps its mark words and its marks easy to bind together later rather than further apart. Enrollment in the cross-game hint guards is derived from the `hint()` declaration itself (`src/engine/testing/hint-games.ts`), so a game acquires every guard the moment it acquires a hint, and none before.
+**Every game has a hint, and a game without one is a draft** (owner, 2026-09-28: the project is called Hintful on purpose). The goal is every game hinted by the end of October 2026. A new game ships with its hint. The remaining hintless games are also how the framework work gets assessed — a target contract is tested by writing real hints against it — so the order still matters. **Choose the game that presses hardest on whatever is being built**, rather than alphabetically, because the cheapest hint in the corpus is the worst assessment. `characterize-the-hint-assessment-corpus`'s `audit.md` shows how to read a game for that, though every game its order picked now has a hint. Until `bind-hint-words-to-marks` lands, write each new hint so its mark words and its marks stay easy to bind together (one function per mark reference) rather than spread through string literals. Enrollment in the cross-game hint guards is derived from the `hint()` declaration itself (`src/engine/testing/hint-games.ts`), so a game acquires every guard the moment it acquires a hint, and none before.
 
 Aspirational next step (owner-flagged 2026-06-15): lift Fifteen/Sixteen hints from "Slide tile 10 into the space" to a Palisade-grade *why* — does the move place a tile in its final home, or is it a helper/setup move toward sorting another tile? Inertia's stable-subgoal narration is the shape this wants.
 
