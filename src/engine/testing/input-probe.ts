@@ -57,6 +57,8 @@ export interface ProbeBoard {
   /** The state and `Ui` behind {@link where}, live — the midend's own objects,
    * to be read and never written. */
   readonly live: () => { readonly state: unknown; readonly ui: unknown };
+  /** {@link board}'s digest of any state this board has held, memoized. */
+  readonly digestOf: (state: unknown) => string;
 }
 
 export interface ProbeOptions {
@@ -133,6 +135,21 @@ export function probeBoard(
     if (!painted) throw new Error(`${id} painted no frame`);
     return seen;
   };
+  // A state is immutable once built (docs/games/mechanics.md), so its digest is
+  // too: memoized by identity, a walk that revisits one board hundreds of times
+  // serializes it once. Loopy's state holds its whole cyclic grid, which made
+  // the target-verb guard's walk over it cost ~18 s unmemoized.
+  const stateDigests = new WeakMap<object, string>();
+  const digestOf = (state: unknown) => {
+    if (typeof state !== "object" || state === null) return digest(state);
+    let d = stateDigests.get(state);
+    if (d === undefined) {
+      d = digest(state);
+      stateDigests.set(state, d);
+    }
+    return d;
+  };
+  const stateDigest = () => digestOf(current);
   return {
     params,
     tileSize,
@@ -141,9 +158,10 @@ export function probeBoard(
     reset,
     ui,
     moves: () => moveCount,
-    board: () => digest(current),
-    where: () => `${digest(liveUi)}|${digest(current)}`,
+    board: stateDigest,
+    where: () => `${digest(liveUi)}|${stateDigest()}`,
     live: () => ({ state: current, ui: liveUi }),
+    digestOf,
   };
 }
 
@@ -202,11 +220,19 @@ export function boardsReached(
 ): BoardsReached {
   const b = probeBoard(game, id);
   const { m, size, tileSize } = b;
+  // A board changes only through a committed move, so while the move count
+  // stands where the deal left it, the board is the deal's: serialized once
+  // here rather than once per attempt, which for Loopy's grid is most of the
+  // cost of a walk.
+  let startMoves = 0;
   const start = () => {
     b.reset();
     prime(b);
-    return b.board();
+    startMoves = b.moves();
   };
+  start();
+  const startBoard = b.board();
+  const boardNow = () => (b.moves() === startMoves ? startBoard : b.board());
   const pointArgs: Point[] = [];
   const step = Math.max(2, Math.floor(tileSize / 4));
   for (let x = 1; x < size.w; x += step)
@@ -215,11 +241,11 @@ export function boardsReached(
   const click = (button: number) => {
     const out = new Set<string>();
     for (const p of pointArgs) {
-      const before = start();
+      start();
       m.processInput(p.x, p.y, button);
       m.processInput(p.x, p.y, button + (LEFT_RELEASE - LEFT_BUTTON));
-      const after = b.board();
-      if (after !== before) out.add(after);
+      const after = boardNow();
+      if (after !== startBoard) out.add(after);
     }
     return out;
   };
@@ -232,10 +258,18 @@ export function boardsReached(
     start();
     for (const k of path) m.processInput(0, 0, k);
   };
-  const where = b.where;
+  // The `Ui` is mutated in place, so it is serialized afresh every time.
+  const where = () => `${digest(b.live().ui)}|${boardNow()}`;
+  // Whether a key is pressed at the position just replayed, asked during the
+  // walk so no path is replayed again only to ask it.
+  const pressHere = () => {
+    const { state, ui } = b.live();
+    return keyAt(state, ui);
+  };
   replay([]);
   const met = new Set([where()]);
   const paths: number[][] = [[]];
+  const keyPaths: number[][] = pressHere() ? [[]] : [];
   for (let i = 0; i < paths.length && paths.length < CURSOR_CAP; i++)
     for (const a of arrows) {
       const path = [...paths[i], a];
@@ -244,27 +278,23 @@ export function boardsReached(
       if (met.has(at)) continue;
       met.add(at);
       paths.push(path);
+      if (pressHere()) keyPaths.push(path);
     }
 
   const key = (code: number) => {
     const out = new Set<string>();
-    for (const path of paths) {
+    for (const path of keyPaths) {
       replay(path);
-      const { state, ui } = b.live();
-      if (!keyAt(state, ui)) continue;
-      const before = b.board();
+      const moves = b.moves();
+      const before = b.live().state;
       m.processInput(0, 0, code);
+      if (b.moves() === moves) continue;
       const after = b.board();
-      if (after !== before) out.add(after);
+      if (after !== b.digestOf(before)) out.add(after);
     }
     return out;
   };
-  const keyPositions = paths.filter((path) => {
-    replay(path);
-    const { state, ui } = b.live();
-    return keyAt(state, ui);
-  }).length;
-  return { click, key, cursorPositions: paths.length, keyPositions };
+  return { click, key, cursorPositions: paths.length, keyPositions: keyPaths.length };
 }
 
 /** Past this many cursor positions the walk stops; a guard reading the walk

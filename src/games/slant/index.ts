@@ -26,6 +26,7 @@ import {
   DELETE,
   hideCursor,
   isCancelKey,
+  isEraseKey,
   LEFT_BUTTON,
   newCursor,
   PENCIL_MODE_BUTTON,
@@ -206,8 +207,8 @@ function interpretMove(
     return UI_UPDATE;
   }
 
-  // Erase keys empty the square through the model, so only Escape reaches this.
-  if (isCancelKey(button) && ui.pin !== null) {
+  // Escape; the erase keys empty the square through the model.
+  if (isCancelKey(button) && !isEraseKey(button) && ui.pin !== null) {
     ui.pin = null;
     return UI_UPDATE;
   }

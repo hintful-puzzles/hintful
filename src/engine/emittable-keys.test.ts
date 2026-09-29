@@ -287,13 +287,14 @@ describe("no game tests a button this frontend cannot send", () => {
   });
 
   it("finds the switch-on-button cases it claims to check", () => {
-    // Vacuity for the second shape, on the same terms as the first: five games
-    // switch on a button, and if that stops being true this scan has gone
-    // stale rather than the collection having become clean.
+    // Vacuity for the second shape, on the same terms as the first: if no file
+    // switches on a button, this scan has gone stale rather than the collection
+    // having become clean. (The population shrinks as games hand their buttons
+    // to the target-verb model, which is why this is not a fixed count.)
     const subjects = sources.filter((f) =>
       /switch\s*\(\s*(?:button|btn|raw|rawButton|key)\s*\)/.test(f.text),
     );
-    expect(subjects.length).toBeGreaterThanOrEqual(5);
+    expect(subjects.length).toBeGreaterThan(0);
     // No numeric label is left in the population — the last three were Unruly's
     // `'0'`, `'1'`, `'2'`, retired by `digitOf` — so the scanner is proved on a
     // planted switch instead of on a floor the collection would have to fail to

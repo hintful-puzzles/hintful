@@ -15,17 +15,13 @@ import {
   parseConfigInt,
   transposeDimensions,
 } from "../../engine/params.ts";
-import {
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
-  gridCursorMove,
-  isCursorMove,
-  LEFT_BUTTON,
-  LEFT_RELEASE,
-  newCursor,
-  RIGHT_BUTTON,
-} from "../../engine/pointer.ts";
+import { gridCursorMove, LEFT_RELEASE, newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  interpretTargetVerbs,
+  type TargetGeometry,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import {
   animLength,
@@ -106,126 +102,118 @@ function interpretMove(
   p: Point,
   button: number,
 ): BlackboxMove | null | UiUpdate {
-  let gx = -1;
-  let gy = -1;
-  let wouldflash = 0;
-
-  if (isCursorMove(button)) {
-    // Move the cursor over the (w+2)×(h+2) grid, no wrap, no corners. An
-    // edge no-op leaves it in place but still reveals it and repaints.
-    const { x: cx, y: cy } = gridCursorMove(
-      button,
-      ui.cursor.x,
-      ui.cursor.y,
-      state.w + 2,
-      state.h + 2,
-    ) ?? { x: ui.cursor.x, y: ui.cursor.y };
-    if (
-      (cx === 0 && cy === 0 && !canReveal(state)) ||
-      (cx === 0 && cy === state.h + 1) ||
-      (cx === state.w + 1 && cy === 0) ||
-      (cx === state.w + 1 && cy === state.h + 1)
-    )
-      return null; // disallow moving the cursor to a corner
-    ui.cursor.x = cx;
-    ui.cursor.y = cy;
-    ui.cursor.visible = true;
-    return UI_UPDATE;
-  }
-
-  let effective = button;
-  if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
-    gx = fromDraw(p.x, ds.tileSize);
-    gy = fromDraw(p.y, ds.tileSize);
-    ui.cursor.visible = false;
-    wouldflash = 1;
-  } else if (button === LEFT_RELEASE) {
+  // The flash a click starts lasts while the button is held.
+  if (button === LEFT_RELEASE) {
     ui.flashLaser = 0;
     return UI_UPDATE;
-  } else if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
-    if (ui.cursor.visible) {
-      gx = ui.cursor.x;
-      gy = ui.cursor.y;
-      ui.flashLaser = 0;
-      wouldflash = 2;
-    } else {
-      ui.cursor.visible = true;
-      return UI_UPDATE;
-    }
-    effective = button === CURSOR_SELECT2 ? RIGHT_BUTTON : LEFT_BUTTON;
-  } else {
-    return null;
   }
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, button);
+}
 
-  // Classify the targeted cell.
-  type Action =
-    | "none"
-    | "toggleBall"
-    | "toggleLock"
-    | "fire"
-    | "reveal"
-    | "toggleColumnLock"
-    | "toggleRowLock";
-  let action: Action = "none";
-  let rangeno = -1;
+const interior = (s: BlackboxState, { x, y }: Point) =>
+  x >= 1 && x <= s.w && y >= 1 && y <= s.h;
 
-  if (gx === 0 && gy === 0 && effective === LEFT_BUTTON) action = "reveal";
-  if (gx >= 1 && gx <= state.w && gy >= 1 && gy <= state.h) {
-    if (effective === LEFT_BUTTON) {
-      if (!(gridGet(state, gx, gy) & BALL_LOCK)) action = "toggleBall";
-    } else {
-      action = "toggleLock";
-    }
-  }
-  const r = grid2range(state.w, state.h, gx, gy);
-  if (r !== null) {
-    rangeno = r;
-    if (effective === LEFT_BUTTON) action = "fire";
-    else if (gy === 0 || gy > state.h) action = "toggleColumnLock";
-    else action = "toggleRowLock";
-  }
+/** Whether `(x, y)` on the `(w+2) × (h+2)` grid is anywhere to aim: the box,
+ * an entry point around its edge, or the corner's "I'm done" button while it
+ * shows. */
+function onTarget(s: BlackboxState, t: Point): boolean {
+  if (t.x === 0 && t.y === 0) return canReveal(s);
+  return interior(s, t) || grid2range(s.w, s.h, t.x, t.y) !== null;
+}
 
-  let move: BlackboxMove | null = null;
-  let uiUpdated = false;
+/**
+ * A target is a square of the box, an entry point around its edge, or the
+ * corner button. The cursor walks the `(w+2) × (h+2)` grid, never onto a
+ * corner but the button's, and only while the button shows.
+ */
+const geometry: TargetGeometry<BlackboxState, BlackboxUi, BlackboxDrawState, Point> = {
+  noun: "square",
+  pointerTarget(s, ds, p) {
+    const t = { x: fromDraw(p.x, ds.tileSize), y: fromDraw(p.y, ds.tileSize) };
+    return onTarget(s, t) ? t : null;
+  },
+  cursorTarget: (s, ui) =>
+    onTarget(s, ui.cursor) ? { x: ui.cursor.x, y: ui.cursor.y } : null,
+  parkCursor(ui, t) {
+    ui.cursor.x = t.x;
+    ui.cursor.y = t.y;
+  },
+  moveCursor(s, ui, button) {
+    // An edge no-op leaves the cursor in place but still reveals it and
+    // repaints.
+    const to = gridCursorMove(button, ui.cursor.x, ui.cursor.y, s.w + 2, s.h + 2) ?? {
+      x: ui.cursor.x,
+      y: ui.cursor.y,
+    };
+    const corner = (to.x === 0 || to.x === s.w + 1) && (to.y === 0 || to.y === s.h + 1);
+    if (corner && !(to.x === 0 && to.y === 0 && canReveal(s))) return false;
+    ui.cursor.x = to.x;
+    ui.cursor.y = to.y;
+    ui.cursor.visible = true;
+    return true;
+  },
+};
 
-  switch (action) {
-    case "toggleBall":
-      move = { type: "toggleBall", x: gx, y: gy };
-      break;
-    case "toggleLock":
-      move = { type: "toggleLock", x: gx, y: gy };
-      break;
-    case "toggleColumnLock":
-      move = { type: "toggleColumnLock", x: gx };
-      break;
-    case "toggleRowLock":
-      move = { type: "toggleRowLock", y: gy };
-      break;
-    case "fire": {
-      if (state.reveal && state.exits[rangeno] === LASER_EMPTY) return null;
-      ui.flashLaserno = rangeno;
-      ui.flashLaser = wouldflash;
-      uiUpdated = true;
-      if (state.exits[rangeno] !== LASER_EMPTY) return UI_UPDATE; // re-flash
-      move = { type: "fire", rangeno };
-      break;
-    }
-    case "reveal":
-      if (!canReveal(state)) return null;
-      if (ui.cursor.visible) {
-        ui.cursor.x = 1;
-        ui.cursor.y = 1;
-      }
-      move = { type: "reveal" };
-      break;
-    default:
-      return null;
-  }
-
-  if (state.reveal) return uiUpdated ? UI_UPDATE : null;
+/** A move the player made, as opposed to one on a revealed board, which only
+ * the flash of a laser can change; `newmove` lets `changedState` count a wrong
+ * guess once. */
+function played(
+  s: BlackboxState,
+  ui: BlackboxUi,
+  move: BlackboxMove,
+): BlackboxMove | null {
+  if (s.reveal) return null;
   ui.newmove = true;
   return move;
 }
+
+const targetVerbs: TargetVerbs<
+  BlackboxState,
+  BlackboxUi,
+  BlackboxDrawState,
+  Point,
+  BlackboxMove
+> = {
+  geometry,
+  primary: {
+    does:
+      "send a beam into the box from a square around its edge, or place or " +
+      "remove a guessed ball on a square inside it",
+    apply(s, t, ui) {
+      if (t.x === 0 && t.y === 0) {
+        if (ui.cursor.visible) {
+          ui.cursor.x = 1;
+          ui.cursor.y = 1;
+        }
+        return played(s, ui, { type: "reveal" });
+      }
+      if (interior(s, t))
+        return gridGet(s, t.x, t.y) & BALL_LOCK
+          ? null
+          : played(s, ui, { type: "toggleBall", x: t.x, y: t.y });
+      const rangeno = grid2range(s.w, s.h, t.x, t.y) ?? LASER_EMPTY;
+      if (s.reveal && s.exits[rangeno] === LASER_EMPTY) return null;
+      // A click's flash lasts while the button is held, a key's for a moment;
+      // the model shows the cursor exactly when a key is driving.
+      ui.flashLaserno = rangeno;
+      ui.flashLaser = ui.cursor.visible ? 2 : 1;
+      if (s.exits[rangeno] !== LASER_EMPTY) return UI_UPDATE; // re-flash
+      return played(s, ui, { type: "fire", rangeno });
+    },
+  },
+  secondary: {
+    does:
+      "mark a square inside the box as definitely known, so it takes no ball, " +
+      "or a square around the edge to mark the whole row or column it looks into",
+    apply(s, t, ui) {
+      if (t.x === 0 && t.y === 0) return null;
+      if (interior(s, t)) return played(s, ui, { type: "toggleLock", x: t.x, y: t.y });
+      return t.y === 0 || t.y > s.h
+        ? played(s, ui, { type: "toggleColumnLock", x: t.x })
+        : played(s, ui, { type: "toggleRowLock", y: t.y });
+    },
+  },
+};
 
 // --- moves ------------------------------------------------------------
 
@@ -375,6 +363,7 @@ export const blackboxGame: Game<
   newUi,
   changedState,
 
+  targetVerbs,
   interpretMove,
   executeMove,
   status,

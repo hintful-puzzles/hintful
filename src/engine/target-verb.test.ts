@@ -211,9 +211,13 @@ describe("a game's declared verbs are what its buttons and keys do", () => {
     ] as const;
     for (const [verb, button] of slots) {
       if (!verb) continue;
+      // Only a verb with keys has anything to compare, and the comparison is
+      // vacuous over no boards. (Mines' chord needs flags placed first, which
+      // one priming click never does, and it has no key.)
+      if (!verb.keys?.length) continue;
       const clicks = primed.click(button);
       expect(clicks.size, `${verb.does}: no board`).toBeGreaterThan(0);
-      for (const k of verb.keys ?? [])
+      for (const k of verb.keys)
         for (const code of k.codes)
           expect(primed.key(code), `${k.name} against its button`).toEqual(clicks);
     }

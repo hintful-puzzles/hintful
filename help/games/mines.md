@@ -17,18 +17,11 @@ the game generation.
 
 ## Controls
 
-Click in a square to open it. Every opened square is marked with
-the number of mines in the surrounding 8 squares, if there are any;
-if not, all the surrounding squares are automatically opened.
+{{controls}}
 
-Right-click in a square to mark it with a flag if you think it is a
-mine. If a numbered square has exactly the right number of flags
-around it, you can click in it to open all the squares around it
-that are not flagged.
-
-Middle-clicking a numbered square does the same, and while you hold the button down it shows the squares around it that it would open.
-
-To play with a keyboard, use the arrow keys to move the cursor. Press Enter to open the square under it, or, on a numbered square, to open the squares around it; press Space to place or remove a flag.
+Every opened square is marked with the number of mines in the
+surrounding 8 squares, if there are any; if not, all the surrounding
+squares are automatically opened.
 
 ## Mines parameters
 

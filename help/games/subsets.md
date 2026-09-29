@@ -9,9 +9,9 @@ This puzzle type was invented by Inaba Naoki under the name *サブセットリ�
 
 ## Controls
 
-Every letter has a fixed position in each set. Left-click a cell to add the letter in that position, or right-click a cell to rule out the letter in that position.
+Every letter has a fixed position in each cell.
 
-To play with a keyboard, use the arrow keys to move the cursor. Press Enter to place a letter, and press Space to rule out a letter.
+{{controls}}
 
 ### Where can this go?
 

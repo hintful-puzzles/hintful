@@ -247,6 +247,15 @@ describe("slant input", () => {
     expect(input(state, u, { x: 0, y: 0 }, CURSOR_SELECT2)).toEqual(set(0, 0, 1));
   });
 
+  it("Backspace empties the square even with a notes pin set; Escape drops the pin", () => {
+    const u = ui({ cursor: newCursor(1, 0, true), pin: { x: 1, y: 0 } });
+    const s = { ...state, soln: state.soln.map((v, i) => (i === 1 ? -1 : v)) };
+    expect(input(s, u, { x: 0, y: 0 }, 8)).toEqual(set(1, 0, 0));
+    expect(u.pin).toEqual({ x: 1, y: 0 });
+    expect(input(s, u, { x: 0, y: 0 }, 27)).toBe(UI_UPDATE);
+    expect(u.pin).toBeNull();
+  });
+
   it("direct keys place at the cursor; a no-op returns null", () => {
     const u = ui({ cursor: newCursor(1, 0, true) });
     expect(input(state, u, { x: 0, y: 0 }, 92)).toEqual(set(1, 0, -1));

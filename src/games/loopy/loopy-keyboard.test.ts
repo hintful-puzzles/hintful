@@ -416,15 +416,12 @@ describe("the cursor", () => {
     expect(move).not.toBe(UI_UPDATE);
     expect(ui.cursor.visible).toBe(false);
 
-    // A click that sets nothing still repaints when it hid the cursor...
+    // A press on no edge is nobody's: it leaves the cursor where it was.
     press(s, ui, ds, CURSOR_RIGHT);
     expect(
       loopyGame.interpretMove(s, ui, ds, { x: -1000, y: -1000 }, LEFT_BUTTON),
-    ).toBe(UI_UPDATE);
-    // ...and is a no-op once it is already hidden.
-    expect(
-      loopyGame.interpretMove(s, ui, ds, { x: -1000, y: -1000 }, LEFT_BUTTON),
     ).toBeNull();
+    expect(ui.cursor.visible).toBe(true);
   });
 });
 
@@ -586,10 +583,12 @@ describe("the cursor is drawn, on an aperiodic tiling", () => {
   });
 
   it("goes away on a pointer press", () => {
-    const { midend, capture } = frame(17, 6, 6, "kb-render-spectres");
+    const { s, midend, capture } = frame(17, 6, 6, "kb-render-spectres");
     midend.processInput(0, 0, CURSOR_RIGHT);
     expect(cursorOps(capture())).toHaveLength(2);
-    midend.processInput(-1000, -1000, LEFT_BUTTON);
+    const ds = { tileSize: PREFERRED_TILE_SIZE } as LoopyDrawState;
+    const at = midpoint(s, ds, s.grid.edges[0]);
+    midend.processInput(at.x, at.y, LEFT_BUTTON);
     expect(cursorOps(capture())).toHaveLength(0);
   });
 });

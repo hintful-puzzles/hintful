@@ -13,7 +13,7 @@
       targets (design.md § "What the rest of the members needed").
 - [x] 2.1 Magnets: the clue ring as targets the cursor reaches; cursor drawn on
       a clue (tier 2.5).
-- [ ] 2.2 Subsets: the tally band.
+- [x] 2.2 Subsets: the tally band stays an arm; the slots are the model's.
 
 ## 3. The half-cell geometry
 
@@ -24,7 +24,9 @@
 ## 4. The rest of the members
 
 - [x] 4.1 Slant (notes mode an arm, swapped buttons through `apply`'s `ui`).
-- [ ] 4.2 Mines, Black Box, Loopy: the release question.
+- [x] 4.2 Mines, Black Box, Loopy: no release hook; each keeps a release arm
+      calling the declared verbs. Probe memoizes state digests (Loopy 18 s →
+      11 s).
 - [ ] 4.3 The drag games' click half: measure whether it needs
       resolve-on-release.
 

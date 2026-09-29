@@ -45,14 +45,16 @@ import {
   cursorDelta,
   DELETE,
   isEraseKey,
-  isMouseDown,
   LEFT_BUTTON,
-  MIDDLE_BUTTON,
   newCursor,
-  RIGHT_BUTTON,
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  interpretTargetVerbs,
+  type TargetGeometry,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSubsetsDesc } from "./generator.ts";
 import { type LegMarks, say } from "./hint-text.ts";
@@ -222,8 +224,6 @@ function interpretMove(
   rawButton: number,
 ): SubsetsMove | null | UiUpdate {
   const { w, h } = state;
-  const cw = CELL_WIDTH;
-  const ch = CELL_HEIGHT;
   const button = stripModifiers(rawButton);
   const ts = ds.tileSize;
 
@@ -242,10 +242,8 @@ function interpretMove(
   }
 
   // --- the keyboard in the tally band: arrows move, select presses --------
-  const delta = cursorDelta(button);
-  const gw = w * (cw + 1) - 1;
-  const gh = h * (ch + 1) - 1;
   if (ui.tallyCursor !== null) {
+    const delta = cursorDelta(button);
     if (delta) return moveInTally(ui, delta.dx, delta.dy, w, h);
     if (button === CURSOR_SELECT || button === CURSOR_SELECT2)
       return pressTally(state, ui, ui.tallyCursor);
@@ -258,13 +256,67 @@ function interpretMove(
     }
   }
 
-  // --- cursor movement over the virtual slot grid, skipping the gaps -------
-  if (delta) {
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
+}
+
+/** A letter's slot in one cell: its cell `pos` and letter `num`, and `(gx,
+ * gy)`, where it sits on the virtual slot grid the cursor walks. */
+interface Slot {
+  pos: number;
+  num: number;
+  gx: number;
+  gy: number;
+}
+
+/** The slot at virtual slot-grid `(gx, gy)`, or `null` off the grid or on the
+ * gap between two cells. */
+function slotAt(s: SubsetsState, gx: number, gy: number): Slot | null {
+  const cw = CELL_WIDTH;
+  const ch = CELL_HEIGHT;
+  const cellx = Math.floor(gx / (cw + 1));
+  const celly = Math.floor(gy / (ch + 1));
+  const numx = gx % (cw + 1);
+  const numy = gy % (ch + 1);
+  if (gx < 0 || gy < 0 || cellx >= s.w || celly >= s.h) return null;
+  if (numx >= cw || numy >= ch) return null;
+  return { pos: celly * s.w + cellx, num: numy * cw + numx, gx, gy };
+}
+
+/**
+ * A target is one letter's slot in one cell. The cursor walks the slots,
+ * skipping the gap rows and columns between cells, and down past the grid's
+ * bottom row it enters the tally band (an arm of the game's own), where it
+ * rests on no slot.
+ */
+const geometry: TargetGeometry<SubsetsState, SubsetsUi, SubsetsDrawState, Slot> = {
+  noun: "letter",
+  pointerTarget(s, ds, p) {
+    const ts = ds.tileSize;
+    if (p.x < ts / 2 || p.y < ts / 2) return null;
+    // Upstream FROM_COORD: the board is inset by half a tile.
+    const gx = Math.floor((p.x - Math.floor(ts / 2)) / ts);
+    const gy = Math.floor((p.y - Math.floor(ts / 2)) / ts);
+    return slotAt(s, gx, gy);
+  },
+  cursorTarget: (s, ui) =>
+    ui.tallyCursor === null ? slotAt(s, ui.cursor.x, ui.cursor.y) : null,
+  parkCursor(ui, slot) {
+    ui.cursor.x = slot.gx;
+    ui.cursor.y = slot.gy;
+    ui.tallyCursor = null;
+  },
+  moveCursor(s, ui, button) {
+    const delta = cursorDelta(button);
+    if (delta === null) return false;
+    const cw = CELL_WIDTH;
+    const ch = CELL_HEIGHT;
+    const gw = s.w * (cw + 1) - 1;
+    const gh = s.h * (ch + 1) - 1;
     // Down from the grid's bottom row enters the tally band below it, keeping
     // the cell in focus, so its sets can be ruled out from the keyboard.
     if (delta.dy > 0 && ui.cursor.visible && ui.cursor.y === gh - 1) {
-      ui.tallyCursor = Math.floor(ui.cursor.x / (cw + 1)) * h;
-      return UI_UPDATE;
+      ui.tallyCursor = Math.floor(ui.cursor.x / (cw + 1)) * s.h;
+      return true;
     }
     // Upstream repeats move_cursor while the cursor rests on a gap row or
     // column between cell blocks; gaps never touch the clamped edges, so
@@ -275,75 +327,56 @@ function interpretMove(
       ui.cursor.visible = true;
     } while (ui.cursor.x % (cw + 1) === cw || ui.cursor.y % (ch + 1) === ch);
     // Reverse aid: the cursor cell's still-possible sets light up in the tally.
-    ui.highlightCell = cursorCell(ui, w);
+    ui.highlightCell = cursorCell(ui, s.w);
     ui.highlightSet = null;
-    return UI_UPDATE;
-  }
+    return true;
+  },
+};
 
-  // --- pick the targeted slot (cursor select or pointer) --------------------
-  const isSelect =
-    button === CURSOR_SELECT || button === CURSOR_SELECT2 || isEraseKey(button);
-
-  let gx: number;
-  let gy: number;
-  if (isSelect && ui.cursor.visible) {
-    gx = ui.cursor.x;
-    gy = ui.cursor.y;
-  } else if (!isMouseDown(button) || p.x < ts / 2 || p.y < ts / 2) {
-    return null;
-  } else {
-    // Upstream FROM_COORD: the board is inset by half a tile.
-    gx = Math.floor((p.x - Math.floor(ts / 2)) / ts);
-    gy = Math.floor((p.y - Math.floor(ts / 2)) / ts);
-  }
-
-  const cellx = Math.floor(gx / (cw + 1));
-  const celly = Math.floor(gy / (ch + 1));
-  const numx = gx % (cw + 1);
-  const numy = gy % (ch + 1);
-
-  if (cellx >= w || celly >= h) return null;
-  if (numx >= cw || numy >= ch) return null;
-
-  const pos = celly * w + cellx;
-  const num = numy * cw + numx;
-  const bit = 1 << num;
-
-  if (state.immutable[pos] & bit) return null;
-
-  const oldtype: SlotType =
-    state.known[pos] & bit ? "known" : state.mask[pos] & bit ? "unknown" : "cleared";
-
-  let newtype: SlotType = oldtype;
-  switch (button) {
-    case LEFT_BUTTON:
-    case CURSOR_SELECT:
-      newtype =
-        oldtype === "unknown" ? "known" : oldtype === "known" ? "cleared" : "unknown";
-      break;
-    case RIGHT_BUTTON:
-    case CURSOR_SELECT2:
-      newtype =
-        oldtype === "unknown" ? "cleared" : oldtype === "cleared" ? "known" : "unknown";
-      break;
-    case MIDDLE_BUTTON:
-    // Both erase codes, spelled out because a `case` cannot call `isEraseKey`.
-    case BACKSPACE:
-    case DELETE:
-      newtype = "unknown";
-      break;
-    default:
-      break;
-  }
-
-  if (oldtype === newtype) return null;
-  if (isMouseDown(button)) {
-    ui.cursor.visible = false;
-    ui.tallyCursor = null;
-  }
-
-  return { kind: "set", type: newtype, pos, bit: num };
+/** Move `slot` on from its current type by `next`; a given letter never moves,
+ * and a verb that leaves the type as it is makes no move. */
+function setSlot(next: (old: SlotType) => SlotType) {
+  return (s: SubsetsState, { pos, num }: Slot): SubsetsMove | null => {
+    const bit = 1 << num;
+    if (s.immutable[pos] & bit) return null;
+    const old: SlotType =
+      s.known[pos] & bit ? "known" : s.mask[pos] & bit ? "unknown" : "cleared";
+    const type = next(old);
+    return type === old ? null : { kind: "set", type, pos, bit: num };
+  };
 }
+
+const targetVerbs: TargetVerbs<
+  SubsetsState,
+  SubsetsUi,
+  SubsetsDrawState,
+  Slot,
+  SubsetsMove
+> = {
+  geometry,
+  primary: {
+    does:
+      "add it to that cell's set; again to rule it out, and a third time to leave " +
+      "it undecided",
+    apply: setSlot((t) =>
+      t === "unknown" ? "known" : t === "known" ? "cleared" : "unknown",
+    ),
+  },
+  secondary: {
+    does: "rule it out of that cell's set, going round the other way",
+    apply: setSlot((t) =>
+      t === "unknown" ? "cleared" : t === "cleared" ? "known" : "unknown",
+    ),
+  },
+  middle: {
+    does: "leave it undecided",
+    keys: [
+      { codes: [BACKSPACE], name: "Backspace" },
+      { codes: [DELETE], name: "Delete" },
+    ],
+    apply: setSlot(() => "unknown"),
+  },
+};
 
 function executeMove(state: SubsetsState, move: SubsetsMove): SubsetsState {
   if (move.kind === "solve") {
@@ -629,6 +662,7 @@ export const subsetsGame: Game<
   newState,
   newUi,
 
+  targetVerbs,
   interpretMove,
   executeMove,
   status,

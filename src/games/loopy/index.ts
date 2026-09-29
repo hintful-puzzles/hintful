@@ -43,8 +43,10 @@ import {
 import type { Grid, GridDot, GridEdge } from "../../engine/grid/index.ts";
 import { gridNearestEdge } from "../../engine/grid/index.ts";
 import {
+  BACKSPACE,
   CURSOR_SELECT,
   CURSOR_SELECT2,
+  DELETE,
   isCancelKey,
   isCursorMove,
   isEraseKey,
@@ -60,6 +62,11 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  interpretTargetVerbs,
+  type TargetGeometry,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import {
   farDot,
@@ -504,24 +511,26 @@ function interpretMove(
     return UI_UPDATE;
   }
 
-  if (isMouseDown(button)) {
-    // A pointer press takes the board over: the cursor goes away, and a click
-    // that sets nothing still has to repaint if it hid one.
+  if (isMouseDown(button) && ui.pencilMode) {
+    // A tap notes a corner and a drag notes a pair, and only the release can
+    // tell them apart, so the press is claimed and decided then
+    // (docs/games/input.md § "A button with two meanings resolves on the release").
+    cursor.visible = false;
+    const e = edgeAt(g, ds.tileSize, p);
+    ui.pin = -1;
+    ui.noteDrag = { start: p, at: p, from: e?.index ?? -1, button, dragged: false };
+    return UI_UPDATE;
+  }
+
+  if (isMouseDown(button) && stylus) {
+    // A finger has one button, so each tap cycles through all three states
+    // rather than the two a mouse button toggles between.
     const hadCursor = cursor.visible;
     cursor.visible = false;
-    if (ui.pencilMode) {
-      // A tap notes a corner and a drag notes a pair, and only the release can
-      // tell them apart, so the press is claimed and decided then
-      // (docs/games/input.md § "A button with two meanings resolves on the release").
-      const e = edgeAt(g, ds.tileSize, p);
-      ui.pin = -1;
-      ui.noteDrag = { start: p, at: p, from: e?.index ?? -1, button, dragged: false };
-      return UI_UPDATE;
-    }
     const e = edgeAt(g, ds.tileSize, p);
-    const move = e === null ? null : setEdge(state, ui, e, button, stylus);
-    if (move !== null) return move;
-    return hadCursor ? UI_UPDATE : null;
+    if (e === null) return hadCursor ? UI_UPDATE : null;
+    geometry.parkCursor(ui, e);
+    return setEdge(state, ui, e, button, true) ?? (hadCursor ? UI_UPDATE : null);
   }
 
   if (isMouseDrag(button) || isMouseRelease(button)) {
@@ -538,43 +547,29 @@ function interpretMove(
     return releaseNote(state, ds, drag) ?? UI_UPDATE;
   }
 
-  if (isCursorMove(button)) {
-    const dot = g.dots[cursor.dot];
-    if (shift) {
-      // Aim without moving: the nearest edge this way, or — on a repeat of the
-      // same arrow — the next one round. The fallback for the few edges no
-      // walk can select (`cursor.ts`); the first press also reveals the cursor
-      // without acting, as an arrow that is itself an action must.
-      const e = nextEdgeFor(cursor, dot, button);
-      if (e === null) return null;
-      cursor.edge = e.index;
-      cursor.arrow = button;
-      cursor.visible = true;
-      return UI_UPDATE;
-    }
-    // Walk: one dot along the edge that best continues this way, which becomes
-    // the chosen edge — Enter then marks the line behind you.
-    const e = walkEdge(dot, button);
+  if (isCursorMove(button) && shift) {
+    // Aim without moving: the nearest edge this way, or — on a repeat of the
+    // same arrow — the next one round. The fallback for the few edges no walk
+    // can select (`cursor.ts`); the first press also reveals the cursor without
+    // acting, as an arrow that is itself an action must.
+    const e = nextEdgeFor(cursor, g.dots[cursor.dot], button);
     if (e === null) return null;
-    moveCursorAlong(cursor, dot, e);
+    cursor.edge = e.index;
+    cursor.arrow = button;
+    cursor.visible = true;
     return UI_UPDATE;
   }
 
   const asButton = buttonForKey(button);
-  if (asButton !== null) {
+  if (asButton !== null && ui.pencilMode) {
     const revealed = !cursor.visible;
     cursor.visible = true;
     if (cursor.edge < 0) return revealed ? UI_UPDATE : null; // nothing chosen yet
-    const move = ui.pencilMode
-      ? noteByKey(state, ui, asButton)
-      : setEdge(state, ui, g.edges[cursor.edge], asButton, false);
-    if (move === null) return revealed ? UI_UPDATE : null;
-    // The cursor stays put: it is already at the far end of the edge it walked,
-    // so the same key again undoes the mark just made.
-    return move;
+    return noteByKey(state, ui, asButton) ?? (revealed ? UI_UPDATE : null);
   }
 
-  if (isCancelKey(button)) {
+  // Escape; the erase keys are the middle verb's, below.
+  if (isCancelKey(button) && !isEraseKey(button)) {
     if (ui.pin >= 0) {
       ui.pin = -1;
       return UI_UPDATE;
@@ -584,8 +579,70 @@ function interpretMove(
     return UI_UPDATE;
   }
 
-  return null;
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
 }
+
+/**
+ * A target is an edge. A press names the nearest; the cursor is a dot and the
+ * edge it last walked along (or aimed at), and the arrows walk it from dot to
+ * dot, so Enter marks the line behind it — a pen that inks where it has been.
+ * The cursor stays put after a key: it is already at the far end of the edge,
+ * so the same key again undoes the mark just made.
+ */
+const geometry: TargetGeometry<LoopyState, LoopyUi, LoopyDrawState, GridEdge> = {
+  noun: "edge",
+  pointerTarget: (s, ds, p) => edgeAt(s.grid, ds.tileSize, p),
+  cursorTarget: (s, ui) => (ui.cursor.edge < 0 ? null : s.grid.edges[ui.cursor.edge]),
+  parkCursor(ui, e) {
+    const { cursor } = ui;
+    if (e.dot1.index !== cursor.dot && e.dot2.index !== cursor.dot)
+      cursor.dot = e.dot1.index;
+    cursor.edge = e.index;
+    cursor.arrow = 0;
+  },
+  moveCursor(s, ui, button) {
+    // One dot along the edge that best continues this way, which becomes the
+    // chosen edge.
+    const dot = s.grid.dots[ui.cursor.dot];
+    const e = walkEdge(dot, button);
+    if (e === null) return false;
+    moveCursorAlong(ui.cursor, dot, e);
+    return true;
+  },
+};
+
+const lineVerb = (button: number) => (s: LoopyState, e: GridEdge, ui: LoopyUi) =>
+  setEdge(s, ui, e, button, false);
+
+const targetVerbs: TargetVerbs<
+  LoopyState,
+  LoopyUi,
+  LoopyDrawState,
+  GridEdge,
+  LoopyMove
+> = {
+  geometry,
+  primary: {
+    does:
+      "mark it as part of the loop (black), and again to return it to undecided " +
+      "(yellow)",
+    apply: lineVerb(LEFT_BUTTON),
+  },
+  secondary: {
+    does:
+      "mark it as definitely not part of the loop (faint gray), and again to " +
+      "return it to undecided",
+    apply: lineVerb(RIGHT_BUTTON),
+  },
+  middle: {
+    does: "return it to undecided",
+    keys: [
+      { codes: [BACKSPACE], name: "Backspace" },
+      { codes: [DELETE], name: "Delete" },
+    ],
+    apply: lineVerb(MIDDLE_BUTTON),
+  },
+};
 
 /** Carry the cursor over `e` to its far dot, keeping `e` chosen (it is incident
  * to the new dot too) and forgetting which arrow chose it, so the next arrow
@@ -755,6 +812,7 @@ export const loopyGame: Game<
   newState,
   newUi,
 
+  targetVerbs,
   interpretMove,
   executeMove,
   hover,

@@ -17,10 +17,7 @@ many other types of tiling!
 
 ## Controls
 
-Click on a grid edge to mark it as part of the loop (black), and
-again to return to marking it as undecided (yellow). Right-click on
-a grid edge to mark it as definitely not part of the loop (faint
-gray), and again to mark it as undecided again.
+{{controls}}
 
 Resting the mouse pointer on a line highlights every line joined to it, so you
 can see at a glance which pieces of the loop are already one piece.
@@ -36,19 +33,13 @@ solving — so they arrive with the line you drew, and a single undo takes the
 whole lot back together. If you would rather keep your own board, turn off
 **Rule out edges that counting has already settled** under Loopy preferences.
 
-You can also play entirely from the keyboard. Everywhere else in this
-collection the cursor sits on a square; here you are marking the *edges*
+You can play entirely from the keyboard. Here you are marking the *edges*
 between squares, so the cursor sits on a **dot**, where edges meet, and the
-arrow keys walk it from dot to dot along the grid's edges. The
-edge you just walked along is the one your keys act on — think of a pen
-that inks where it has been:
+arrow keys walk it from dot to dot along the grid's edges. The edge you just
+walked along is the one your keys act on — think of a pen that inks where it
+has been. Walk, Enter, walk, Enter traces a loop; walk back over a marked
+edge and press Enter again to clear it.
 
-- **Enter** marks the edge you just walked as part of the loop, exactly
-  as a left click does. Walk, Enter, walk, Enter traces a loop; walk back
-  over a marked edge and press Enter again to clear it.
-- **Space** marks it as definitely not part of the loop, exactly as a
-  right click does, and again to clear it.
-- **Backspace** or **Delete** clears it.
 - **Shift + arrow** aims at an edge leaving your dot in that direction
   *without* moving; press it again to step round to the next edge that
   way. You will only ever need this on the Penrose kite/dart tiling, where

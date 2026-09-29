@@ -32,24 +32,24 @@ import {
 } from "../../engine/index.ts";
 import { dimensionParamConfig, parseConfigInt } from "../../engine/params.ts";
 import {
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
-  isCursorMove,
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
   MIDDLE_BUTTON,
   MIDDLE_DRAG,
   MIDDLE_RELEASE,
-  moveCursor,
   newCursor,
-  RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import {
   type RandomState,
   randomStateEncode,
   randomUpto,
 } from "../../engine/random/index.ts";
+import {
+  interpretTargetVerbs,
+  squareGrid,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { Color, GameStatus, Point } from "../../engine/types.ts";
 import { minegen } from "./generator.ts";
 import {
@@ -183,6 +183,64 @@ function openSquare(state: MinesState, x: number, y: number): void {
   }
 }
 
+// --- input -------------------------------------------------------------
+
+/** Open the covered (or queried) square `{ x, y }`, counting a death if a mine
+ * is under it; anything else opens nothing. */
+function openAt(s: MinesState, { x, y }: Point, ui: MinesUi): MinesMove | null {
+  const v = s.grid[y * s.w + x];
+  if (v !== COVERED && v !== QUERY) return null;
+  if (s.layout.mines?.[y * s.w + x]) ui.deaths++;
+  return { type: "ops", ops: [{ op: "O", x, y }] };
+}
+
+/** Chord the number at `{ x, y }` (upstream `goto uncover`, mines.c:2682): if
+ * its flags match its count, open every covered neighbor (`C`) — unless one of
+ * them is really a mine (a misplaced flag), in which case reveal *only* those
+ * mines and count a death. */
+function chordAt(s: MinesState, { x, y }: Point, ui: MinesUi): MinesMove | null {
+  const { w, h } = s;
+  if (s.grid[y * w + x] <= 0) return null;
+  const near = around(w, h, x, y);
+  const flags = near.filter((q) => s.grid[q.y * w + q.x] === FLAG).length;
+  if (flags !== s.grid[y * w + x]) return null;
+  const ops: MineOp[] = near
+    .filter((q) => s.grid[q.y * w + q.x] !== FLAG && s.layout.mines?.[q.y * w + q.x])
+    .map((q) => ({ op: "O", x: q.x, y: q.y }));
+  if (ops.length > 0) {
+    ui.deaths++;
+    return { type: "ops", ops };
+  }
+  return { type: "ops", ops: [{ op: "C", x, y }] };
+}
+
+const targetVerbs: TargetVerbs<MinesState, MinesUi, MinesDrawState, Point, MinesMove> =
+  {
+    geometry: squareGrid({ size: (s) => s, border: borderFor }),
+    primary: {
+      does:
+        "open it, or, on a numbered square with exactly the right number of flags " +
+        "around it, open all the squares around it that are not flagged",
+      apply: (s, t, ui) => openAt(s, t, ui) ?? chordAt(s, t, ui),
+    },
+    secondary: {
+      does: "place or remove a flag, if you think it is a mine",
+      // Toggles a covered square between flagged and unflagged only.
+      apply: (s, { x, y }) => {
+        const v = s.grid[y * s.w + x];
+        return v !== COVERED && v !== FLAG
+          ? null
+          : { type: "ops", ops: [{ op: "F", x, y }] };
+      },
+    },
+    middle: {
+      does:
+        "open only the squares around it, never the square itself; while you " +
+        "hold the button down it shows the squares it would open",
+      apply: chordAt,
+    },
+  };
+
 // --- Game object -------------------------------------------------------
 
 const mk = (w: number, h: number, n: number): MinesParams => ({
@@ -300,6 +358,8 @@ export const minesGame: Game<
   encodeUi,
   decodeUi,
 
+  targetVerbs,
+
   interpretMove(
     s: MinesState,
     ui: MinesUi,
@@ -312,58 +372,11 @@ export const minesGame: Game<
 
     const tileSize = ds.tileSize;
     const border = borderFor(tileSize);
-    let cx = fromCoord(p.x, tileSize, border);
-    let cy = fromCoord(p.y, tileSize, border);
+    const cx = fromCoord(p.x, tileSize, border);
+    const cy = fromCoord(p.y, tileSize, border);
 
-    /** Chord the number at (cx, cy) (upstream `goto uncover`, mines.c:2682): if
-     * its flags match its count, open every covered neighbor (`C`) — unless one
-     * of them is really a mine (a misplaced flag), in which case reveal *only*
-     * those mines and count a death. */
-    const uncover = (): MinesMove | null | UiUpdate => {
-      if (s.grid[cy * w + cx] > 0 && ui.validradius === 1) {
-        const near = around(w, h, cx, cy);
-        const flags = near.filter((q) => s.grid[q.y * w + q.x] === FLAG).length;
-        if (flags === s.grid[cy * w + cx]) {
-          const ops: MineOp[] = near
-            .filter(
-              (q) => s.grid[q.y * w + q.x] !== FLAG && s.layout.mines?.[q.y * w + q.x],
-            )
-            .map((q) => ({ op: "O", x: q.x, y: q.y }));
-          if (ops.length > 0) {
-            ui.deaths++;
-            return { type: "ops", ops };
-          }
-          return { type: "ops", ops: [{ op: "C", x: cx, y: cy }] };
-        }
-      }
-      return UI_UPDATE;
-    };
-
-    if (isCursorMove(button)) {
-      return moveCursor(ui.cursor, button, w, h) ? UI_UPDATE : null;
-    }
-
-    if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
-      const v = s.grid[ui.cursor.y * w + ui.cursor.x];
-      if (!ui.cursor.visible) {
-        ui.cursor.visible = true;
-        return UI_UPDATE;
-      }
-      if (button === CURSOR_SELECT2) {
-        if (v !== COVERED && v !== FLAG) return null;
-        return { type: "ops", ops: [{ op: "F", x: ui.cursor.x, y: ui.cursor.y }] };
-      }
-      // CURSOR_SELECT behaves as LEFT_BUTTON on a single square.
-      if (v === COVERED || v === QUERY) {
-        if (s.layout.mines?.[ui.cursor.y * w + ui.cursor.x]) ui.deaths++;
-        return { type: "ops", ops: [{ op: "O", x: ui.cursor.x, y: ui.cursor.y }] };
-      }
-      cx = ui.cursor.x;
-      cy = ui.cursor.y;
-      ui.validradius = 1;
-      return uncover();
-    }
-
+    // The left and middle buttons depress on the press and act on the release,
+    // through the same verbs Enter and the right button reach via the model.
     if (
       button === LEFT_BUTTON ||
       button === LEFT_DRAG ||
@@ -386,15 +399,9 @@ export const minesGame: Game<
       // release chords a number (1) and opens a covered square (0).
       if (button === LEFT_BUTTON) ui.validradius = onNumber ? 1 : 0;
       else if (button === MIDDLE_BUTTON) ui.validradius = 1;
+      targetVerbs.geometry.parkCursor(ui, { x: cx, y: cy });
       ui.cursor.visible = false;
       return UI_UPDATE;
-    }
-
-    if (button === RIGHT_BUTTON) {
-      if (cx < 0 || cx >= w || cy < 0 || cy >= h) return null;
-      // Toggles a covered square between flagged and unflagged only.
-      if (s.grid[cy * w + cx] !== COVERED && s.grid[cy * w + cx] !== FLAG) return null;
-      return { type: "ops", ops: [{ op: "F", x: cx, y: cy }] };
     }
 
     if (button === LEFT_RELEASE || button === MIDDLE_RELEASE) {
@@ -402,18 +409,17 @@ export const minesGame: Game<
       ui.hradius = 0;
       // Past this point we have adjusted the ui, so never return null.
       if (cx < 0 || cx >= w || cy < 0 || cy >= h) return UI_UPDATE;
-      if (
-        button === LEFT_RELEASE &&
-        (s.grid[cy * w + cx] === COVERED || s.grid[cy * w + cx] === QUERY) &&
-        ui.validradius === 0
-      ) {
-        if (s.layout.mines?.[cy * w + cx]) ui.deaths++;
-        return { type: "ops", ops: [{ op: "O", x: cx, y: cy }] };
-      }
-      return uncover();
+      const at = { x: cx, y: cy };
+      // What the press intended, wherever the release lands: a covered square
+      // pressed opens, a number pressed chords.
+      const move =
+        button === LEFT_RELEASE && ui.validradius === 0
+          ? openAt(s, at, ui)
+          : chordAt(s, at, ui);
+      return move ?? UI_UPDATE;
     }
 
-    return null;
+    return interpretTargetVerbs(targetVerbs, s, ui, ds, p, button);
   },
 
   executeMove(s: MinesState, m: MinesMove): MinesState {
