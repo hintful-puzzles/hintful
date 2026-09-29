@@ -27,8 +27,9 @@
 - [x] 4.2 Mines, Black Box, Loopy: no release hook; each keeps a release arm
       calling the declared verbs. Probe memoizes state digests (Loopy 18 s →
       11 s).
-- [ ] 4.3 The drag games' click half: measure whether it needs
-      resolve-on-release.
+- [x] 4.3 The drag games' click half: it does not need resolve-on-release
+      (Mines' release arm calling its verbs is the shape). Converting the nine
+      is scaffolded as `declare-drag-games-click-half`.
 
 ## 5. Net's hint
 
@@ -36,4 +37,9 @@
 
 ## 6. Close
 
-- [ ] 6.1 Docs, spec delta, run the app, archive.
+- [x] 6.1 Docs (`input.md`, `engine-catalog.md`) and the `ts-engine` delta.
+- [x] 6.2 Ran the app (2026-09-30): Net's help paragraph; Net's Space rotates
+      clockwise and S locks; Magnets' cursor reaches a clue and Enter grays it;
+      Loopy's walk-and-Enter traces a line.
+- [ ] 6.3 Archive, after Net's hint (`add-net-hint`) reports what it found
+      about the model.
