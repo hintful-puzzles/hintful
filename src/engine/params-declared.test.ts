@@ -10,6 +10,7 @@ import type { Game, PresetMenu } from "./game.ts";
 import { describeParams, presetMenu, type TitledPresetMenu } from "./param-label.ts";
 import { paramsError } from "./params.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
+import { itOverWholeSweep } from "./testing/slow.ts";
 
 beforeAll(registerAllGames);
 registerAllGames();
@@ -121,6 +122,11 @@ describe("one describer labels every params set", () => {
 
   it("looked at the collection", () => {
     expect(ids.length).toBeGreaterThan(50);
+  });
+
+  // A floor over every game's presets: a commit the hook narrows to a few
+  // games labels a few games' worth.
+  itOverWholeSweep("labeled the collection's presets", () => {
     expect(labeled).toBeGreaterThan(400);
   });
 });

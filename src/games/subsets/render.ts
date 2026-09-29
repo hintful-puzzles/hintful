@@ -77,9 +77,9 @@ export const COL_ERROR = 7;
 export const COL_CURSOR = 8;
 // Hint / reference-aid legend: the slot the current step decides gets a bold
 // COL_HINT frame; a highlighted neighbor cell (across a horseshoe) or
-// highlighted tally set is COL_HINT_CELL; and the cells a spotlit set can still
-// go in (a hidden single's one home, or the player-clicked reference-aid set)
-// get a COL_HINT_SPOT frame.
+// highlighted tally set is COL_HINT_CELL; the one cell a hidden single names is
+// hatched in COL_HINT; and the cells a clicked reference-aid set can still go
+// in get a COL_HINT_SPOT frame.
 export const COL_HINT = 9;
 export const COL_HINT_CELL = 10;
 export const COL_HINT_SPOT = 11;
@@ -254,7 +254,7 @@ export function redraw(
       ds.hint.add(tallyCell, HINT_TARGET);
     }
     for (const e of marks.of("outline", CELL)) ds.hint.add(at(e), HINT_AREA);
-    for (const c of marks.of("stripes", CELL)) ds.hint.add(at(c), HINT_SPOT);
+    for (const c of marks.of("stripes", CELL)) ds.hint.setHatched(at(c));
     for (const v of marks.of("outline", TALLY_SET))
       if (v >= 0 && v < w * h) ds.tallyLook[v] = TALLY_BOX_SET;
     for (const v of marks.of("ring", TALLY_SET)) ds.tallyLook[v] = TALLY_BOX_RULE;
@@ -353,6 +353,14 @@ export function redraw(
           dr.drawRect(
             { x: tx, y: ty, w: ts - 1, h: ts - 1 },
             flash || unknown ? COL_INNERBG : COL_HIGHLIGHT,
+          );
+          // The cell the hint's sentence names, under its letters.
+          ds.hint.drawHatch(
+            dr,
+            i,
+            { x: tx, y: ty, w: ts - 1, h: ts - 1 },
+            COL_HINT,
+            ts,
           );
 
           if (state.known[i] & bit) {

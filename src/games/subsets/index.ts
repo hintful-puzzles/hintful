@@ -642,7 +642,7 @@ export const subsetsGame: Game<
       outline:
         "what the step reasons from: the neighbor across a horseshoe, or the cell where a set is already placed, framed in a second color; and the sets it counts, such as the only ones that can still go in the cell, boxed in the tally in that color.",
       stripes:
-        "the one cell a set still fits, in the spotlight color that *Where can this go?* uses, when the sentence says the set can go nowhere else.",
+        "the one cell a set still fits, when the sentence says the set can go nowhere else.",
     },
   },
   hintKeepTrack,

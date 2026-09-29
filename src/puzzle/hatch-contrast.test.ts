@@ -110,15 +110,7 @@ describe("a step that names a line or region draws it, and only then", () => {
       .filter((r) => r.role === "stripes")
       .reduce((n, r) => n + r.elements.length, 0);
 
-  /** Games whose stripes glyph is not a hatch, each with its reason. Asserted
-   * exact: every entry must reach a step that stripes something. */
-  const NOT_HATCHED: Readonly<Record<string, string>> = {
-    subsets:
-      "stripes the one cell a set still fits as the green spotlight frame the Where can this go? aid uses, so the hint and the aid show that fact alike",
-  };
-
   it("draws a hatch exactly where a step names a line or region, over every hinting game", () => {
-    const ledgerSeen = new Set<string>();
     let naming = 0;
     let silent = 0;
     const gamesNaming = new Set<string>();
@@ -138,9 +130,7 @@ describe("a step that names a line or region draws it, and only then", () => {
           midend.forceRedraw(frame);
           const drawn = opsOfKind(frame.ops, "hatch").length;
           const cells = named(midend.activeHintStep());
-          if (cells > 0 && id in NOT_HATCHED) {
-            ledgerSeen.add(id);
-          } else if (cells > 0) {
+          if (cells > 0) {
             expect(
               drawn,
               `${id}: a step names a line or region and draws no hatch`,
@@ -160,7 +150,6 @@ describe("a step that names a line or region draws it, and only then", () => {
     // their own hint tests pin their hatch.)
     expect(naming).toBeGreaterThan(0);
     expect(silent).toBeGreaterThan(0);
-    expect([...ledgerSeen].sort()).toEqual(Object.keys(NOT_HATCHED).sort());
     for (const id of ["magnets", "keen", "rome", "filling", "palisade", "crossing"])
       expect([...gamesNaming], id).toContain(id);
   });

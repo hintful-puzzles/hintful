@@ -3084,7 +3084,7 @@ exports[`hint rendering (tier 2.5) > a collapse hint frame boxes the highlighted
 ]
 `;
 
-exports[`hint rendering (tier 2.5) > a hidden-single hint frame spotlights the set's candidate cell (COL_HINT_SPOT) 1`] = `
+exports[`hint rendering (tier 2.5) > a hidden-single hint frame hatches the set's one candidate cell 1`] = `
 [
   {
     "color": 0,
@@ -3766,6 +3766,16 @@ exports[`hint rendering (tier 2.5) > a hidden-single hint frame spotlights the s
     "y": 126,
   },
   {
+    "color": 9,
+    "h": 35,
+    "op": "hatch",
+    "period": 12,
+    "rgb": "rgb(21, 113, 233)",
+    "w": 35,
+    "x": 342,
+    "y": 126,
+  },
+  {
     "align": "center",
     "baseline": "mathematical",
     "color": 6,
@@ -3782,6 +3792,16 @@ exports[`hint rendering (tier 2.5) > a hidden-single hint frame spotlights the s
     "h": 35,
     "op": "rect",
     "rgb": "rgb(253, 253, 253)",
+    "w": 35,
+    "x": 378,
+    "y": 126,
+  },
+  {
+    "color": 9,
+    "h": 35,
+    "op": "hatch",
+    "period": 12,
+    "rgb": "rgb(21, 113, 233)",
     "w": 35,
     "x": 378,
     "y": 126,
@@ -3808,10 +3828,30 @@ exports[`hint rendering (tier 2.5) > a hidden-single hint frame spotlights the s
     "y": 162,
   },
   {
+    "color": 9,
+    "h": 35,
+    "op": "hatch",
+    "period": 12,
+    "rgb": "rgb(21, 113, 233)",
+    "w": 35,
+    "x": 342,
+    "y": 162,
+  },
+  {
     "color": 3,
     "h": 35,
     "op": "rect",
     "rgb": "rgb(253, 253, 253)",
+    "w": 35,
+    "x": 378,
+    "y": 162,
+  },
+  {
+    "color": 9,
+    "h": 35,
+    "op": "hatch",
+    "period": 12,
+    "rgb": "rgb(21, 113, 233)",
     "w": 35,
     "x": 378,
     "y": 162,
@@ -3846,42 +3886,6 @@ exports[`hint rendering (tier 2.5) > a hidden-single hint frame spotlights the s
     "outline": 0,
     "outlineRgb": "rgb(211, 211, 211)",
     "r": 5,
-  },
-  {
-    "color": 11,
-    "h": 3,
-    "op": "rect",
-    "rgb": "rgb(33, 167, 73)",
-    "w": 71,
-    "x": 342,
-    "y": 126,
-  },
-  {
-    "color": 11,
-    "h": 71,
-    "op": "rect",
-    "rgb": "rgb(33, 167, 73)",
-    "w": 3,
-    "x": 342,
-    "y": 126,
-  },
-  {
-    "color": 11,
-    "h": 3,
-    "op": "rect",
-    "rgb": "rgb(33, 167, 73)",
-    "w": 71,
-    "x": 342,
-    "y": 194,
-  },
-  {
-    "color": 11,
-    "h": 71,
-    "op": "rect",
-    "rgb": "rgb(33, 167, 73)",
-    "w": 3,
-    "x": 410,
-    "y": 126,
   },
   {
     "color": 9,

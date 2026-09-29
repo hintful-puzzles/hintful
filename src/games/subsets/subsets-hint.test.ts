@@ -697,7 +697,7 @@ describe("hint rendering (tier 2.5)", () => {
     expect(ops).toMatchSnapshot();
   });
 
-  it("a hidden-single hint frame spotlights the set's candidate cell (COL_HINT_SPOT)", () => {
+  it("a hidden-single hint frame hatches the set's one candidate cell", () => {
     let seed: string | null = null;
     let moves: SubsetsMove[] | null = null;
     for (let s = 0; s < 60 && !moves; s++) {
@@ -719,7 +719,12 @@ describe("hint rendering (tier 2.5)", () => {
     expect(stepMarks(result.hint).of("stripes", CELL)).toHaveLength(1);
     const ops = result.recording.ops;
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(true);
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_SPOT)).toBe(true);
+    // Striped like every other game's named line or region, one hatch per
+    // letter square of the cell; the spotlight frame stays the aid's.
+    const hatches = ops.filter((o) => o.op === "hatch");
+    expect(hatches.length).toBe(4);
+    expect(hatches.every((o) => o.color === COL_HINT)).toBe(true);
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_SPOT)).toBe(false);
     expect(ops).toMatchSnapshot();
   });
 });

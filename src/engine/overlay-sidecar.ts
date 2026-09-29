@@ -126,6 +126,11 @@ export class OverlaySidecar {
     this.packed[i] |= bits;
   }
 
+  /** Stripe cell `i` this frame (drawn by {@link drawHatch}). */
+  setHatched(i: number): void {
+    this.hatched[i] = 1;
+  }
+
   /** Give cell `i` its 1-based place in this frame's chain. */
   setOrder(i: number, k: number): void {
     this.order[i] = k;
