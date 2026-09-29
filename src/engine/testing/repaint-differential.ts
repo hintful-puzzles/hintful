@@ -313,16 +313,40 @@ export interface RepaintMismatch {
   fresh: string;
 }
 
+/** What the run actually put in front of the game — the power behind a pass.
+ * A frame that never showed a hint says nothing about the hint's repaint. */
+export interface RepaintReach {
+  /** Frames painted mid-animation or mid-flash. */
+  animated: number;
+  /** Events after which the midend had an animation armed, read from
+   * `currentAnimationMs`, which does not depend on how the run ticks. A run
+   * that armed one and painted no animated frame has stopped looking. */
+  armed: number;
+  /** Frames painted with a hint step displayed. */
+  hinted: number;
+  /** Frames painted with a non-empty mistake overlay. */
+  mistaken: number;
+}
+
 export interface RepaintRun {
   /** Frames compared — the vacuity count. */
   frames: number;
   mismatch: RepaintMismatch | null;
+  reached: RepaintReach;
 }
 
+/** One tick of the run's clock, in the seconds `Midend.timer` takes: short
+ * enough that every animation and flash in the collection is painted
+ * part-way through at least once. */
+const TICK_S = 0.05;
+/** Ticks before the run stops waiting for a frame to settle (6 s). */
+const MAX_TICKS = 120;
+
 /**
- * Drive `game` through `events` seeded input events on a board from its first
- * preset, comparing every frame against a fresh draw state's. Stops at the
- * first mismatch.
+ * Drive `game` through `events` seeded input events on a board of `params`
+ * (its default params unless given), comparing every frame against a fresh
+ * draw state's, the frames of every animation included. Stops at the first
+ * mismatch.
  */
 export function repaintDifferential(
   game: AnyGame,
@@ -337,11 +361,17 @@ export function repaintDifferential(
   let frames = 0;
   let mismatch: RepaintMismatch | null = null;
   let lastEvent = "the first frame";
+  const reached: RepaintReach = { animated: 0, armed: 0, hinted: 0, mistaken: 0 };
+  let moving = false;
 
   const spy: AnyGame = {
     ...game,
     // The midend's own drawing is a sink: the warm frame is recorded here.
     redraw: (_dr, ds, prev, s, dir, ui, anim, flash, hint, mistakes) => {
+      moving = anim > 0 || flash > 0;
+      if (moving) reached.animated++;
+      if (hint) reached.hinted++;
+      if (mistakes && mistakes.length > 0) reached.mistaken++;
       // The fresh twin runs first, on its own copy of the Ui, so neither call
       // can see what the other one wrote.
       const cold = new BlitterRecording(palette);
@@ -399,7 +429,38 @@ export function repaintDifferential(
     m.redraw(sink);
     sink.ops.length = 0;
   };
+  // Paint the frame an event left, then tick the clock and paint every frame
+  // until one comes out still, so an animation's and a flash's frames are
+  // compared and not only where they end. `Midend.timer` takes seconds, so a
+  // tick of a whole second or more ends every animation in the collection
+  // unseen inside it. The last tick settles anything longer than the cap.
+  const settle = () => {
+    paint();
+    if (m.currentAnimationMs() > 0) reached.armed++;
+    for (let t = 0; t < MAX_TICKS; t++) {
+      m.timer(TICK_S);
+      paint();
+      if (!moving) return;
+    }
+    m.timer(30);
+    paint();
+  };
   paint();
+
+  // A hinted game first shows its hint and plays a few of its steps: a random
+  // run on an empty board rarely asks for one, and once its moves have made
+  // the board wrong the hint only refuses, so most hinted games never showed
+  // a hint frame at all.
+  if (typeof game.hint === "function") {
+    lastEvent = "hint";
+    m.hint();
+    settle();
+    for (let s = 0; s < 3; s++) {
+      lastEvent = "next hint step";
+      m.executeHint();
+      settle();
+    }
+  }
 
   const rs = randomNew(`repaint-events-${seed}`);
   const pick = (n: number) => randomUpto(rs, n);
@@ -429,6 +490,9 @@ export function repaintDifferential(
         lastEvent = `left drag ${p.x},${p.y} → ${q.x},${q.y}`;
         m.processInput(p.x, p.y, LEFT_BUTTON);
         m.processInput(q.x, q.y, LEFT_DRAG);
+        // The drag's own preview is a frame too, and what it leaves behind
+        // after the release is repainted by whatever the release changed.
+        paint();
         m.processInput(q.x, q.y, LEFT_RELEASE);
         break;
       }
@@ -470,9 +534,7 @@ export function repaintDifferential(
         else m.redo();
         break;
     }
-    paint();
-    m.timer(30);
-    paint();
+    settle();
   }
-  return { frames, mismatch };
+  return { frames, mismatch, reached };
 }

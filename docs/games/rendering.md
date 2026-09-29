@@ -202,6 +202,34 @@ cause has so far always been one of these:
   engine's own case of it; the answer is to erase *before* the tile loop
   (`eraseBeforeTiles`) and let every tile the band touches repaint on top —
   [`hints.md`](hints.md) § "Where the band goes, and who rubs it out".
+- **A mark drawn whole across its neighbors.** Bricks' three-in-a-row bar and
+  gravity diamond sit across tile edges, and every tile the mark crosses carries
+  a flag for it. Drawn unclipped, the piece over a neighbor stayed after the flag
+  cleared, whenever that neighbor had no reason of its own to repaint. Clip each
+  tile to its own box, as upstream does, so each piece belongs to the tile that
+  carries its flag.
+- **A decoration that repaints only on its own change, inside a tile's box.**
+  Towers' pencil-mode indicator lives in a corner square of the clue ring. When
+  that square repainted for a hint mark beside it, it filled over the indicator,
+  which `repaintPencilIndicator` draws only when the mode changes. A tile that
+  repaints over a decoration must forget what the decoration showed.
+
+**What the run reaches is part of the result.** A pass means nothing for a
+frame the run never painted. So the run:
+
+- ticks the clock in 0.05 s steps after every event, painting each frame until
+  one comes out still (`Midend.timer` takes seconds);
+- paints once mid-drag;
+- starts a hinted game by showing its hint and playing three steps.
+
+`RepaintRun.reached` counts animated, hinted and mistaken frames, and the test
+requires:
+
+- an armed animation to have been painted part-way;
+- a hinted game to have painted a hint frame.
+
+Each requirement was proven red by planting its absence. Mistake frames are
+counted but not required, for the reason the next section gives.
 
 Read the report before the code: it names the frame, the event before it, the
 first differing pixel, what each canvas shows there and which frame painted

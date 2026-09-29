@@ -10,6 +10,14 @@
  * collisions that census found was two named flags sharing a bit.
  *
  * Population: every registered game, from the registry.
+ *
+ * **A pass is only as strong as what the run showed the game**, so each game
+ * also answers for its reach. An animation the midend armed must have been
+ * painted part-way at least once, which is what failed while the run ticked
+ * its clock in whole seconds; and a game with a hint must have painted a hint
+ * frame. Mistake frames are counted but not required: reaching a board with a
+ * mistake takes a move that is specific to the game, which is why
+ * `src/mistake-overlay-coverage.test.ts` is a ledger rather than a guard.
  */
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
@@ -26,8 +34,20 @@ describe("a warm frame matches a fresh one", () => {
   });
 
   it.each(IDS)("%s: repaints every tile it must", (id) => {
-    const run = repaintDifferential(getTsGame(id) as AnyGame, id, EVENTS);
+    const game = getTsGame(id) as AnyGame;
+    const run = repaintDifferential(game, id, EVENTS);
     expect(run.mismatch, JSON.stringify(run.mismatch)).toBeNull();
     expect(run.frames).toBeGreaterThan(EVENTS);
+    if (run.reached.armed > 0) {
+      expect(
+        run.reached.animated,
+        "armed an animation, painted none of it",
+      ).toBeGreaterThan(0);
+    }
+    if (typeof game.hint === "function") {
+      expect(run.reached.hinted, "has a hint, painted no hint frame").toBeGreaterThan(
+        0,
+      );
+    }
   });
 });

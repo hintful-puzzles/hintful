@@ -12,6 +12,22 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     "y": 0,
   },
   {
+    "color": 0,
+    "h": 47,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 47,
+    "x": -47,
+    "y": 1,
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 97,
+    "x": -48,
+    "y": 0,
+  },
+  {
     "color": 2,
     "h": 47,
     "op": "rect",
@@ -94,6 +110,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     "y": 4,
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 48,
+    "y": 0,
+  },
+  {
     "color": 0,
     "h": 47,
     "op": "rect",
@@ -126,6 +152,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
         48,
       ],
     ],
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 96,
+    "y": 0,
   },
   {
     "color": 0,
@@ -162,6 +198,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     ],
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 144,
+    "y": 0,
+  },
+  {
     "color": 0,
     "h": 47,
     "op": "rect",
@@ -194,6 +240,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
         48,
       ],
     ],
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 192,
+    "y": 0,
   },
   {
     "color": 2,
@@ -242,6 +298,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     "y": 24,
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 240,
+    "y": 0,
+  },
+  {
     "color": 2,
     "h": 47,
     "op": "rect",
@@ -288,6 +354,25 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     "y": 24,
   },
   {
+    "op": "unclip",
+  },
+  {
+    "color": 0,
+    "h": 47,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 47,
+    "x": 337,
+    "y": 1,
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 97,
+    "x": 288,
+    "y": 0,
+  },
+  {
     "color": 0,
     "h": 47,
     "op": "rect",
@@ -320,6 +405,25 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
         48,
       ],
     ],
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "color": 0,
+    "h": 47,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 47,
+    "x": -23,
+    "y": 49,
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 97,
+    "x": -24,
+    "y": 48,
   },
   {
     "color": 0,
@@ -356,6 +460,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     ],
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 72,
+    "y": 48,
+  },
+  {
     "color": 0,
     "h": 47,
     "op": "rect",
@@ -388,6 +502,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
         96,
       ],
     ],
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 120,
+    "y": 48,
   },
   {
     "color": 2,
@@ -436,6 +560,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     "y": 72,
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 168,
+    "y": 48,
+  },
+  {
     "color": 0,
     "h": 47,
     "op": "rect",
@@ -468,6 +602,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
         96,
       ],
     ],
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 216,
+    "y": 48,
   },
   {
     "color": 0,
@@ -504,6 +648,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     ],
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 264,
+    "y": 48,
+  },
+  {
     "color": 0,
     "h": 47,
     "op": "rect",
@@ -536,6 +690,25 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
         96,
       ],
     ],
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "color": 0,
+    "h": 47,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 47,
+    "x": 361,
+    "y": 49,
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 97,
+    "x": 312,
+    "y": 48,
   },
   {
     "color": 2,
@@ -584,6 +757,25 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     "y": 72,
   },
   {
+    "op": "unclip",
+  },
+  {
+    "color": 0,
+    "h": 47,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 47,
+    "x": -47,
+    "y": 97,
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 97,
+    "x": -48,
+    "y": 96,
+  },
+  {
     "color": 2,
     "h": 47,
     "op": "rect",
@@ -630,6 +822,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     "y": 120,
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 48,
+    "y": 96,
+  },
+  {
     "color": 0,
     "h": 47,
     "op": "rect",
@@ -662,6 +864,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
         144,
       ],
     ],
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 96,
+    "y": 96,
   },
   {
     "color": 0,
@@ -698,6 +910,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     ],
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 144,
+    "y": 96,
+  },
+  {
     "color": 0,
     "h": 47,
     "op": "rect",
@@ -730,6 +952,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
         144,
       ],
     ],
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 192,
+    "y": 96,
   },
   {
     "color": 0,
@@ -766,6 +998,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     ],
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 240,
+    "y": 96,
+  },
+  {
     "color": 0,
     "h": 47,
     "op": "rect",
@@ -798,6 +1040,25 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
         144,
       ],
     ],
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "color": 0,
+    "h": 47,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 47,
+    "x": 337,
+    "y": 97,
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 97,
+    "x": 288,
+    "y": 96,
   },
   {
     "color": 0,
@@ -834,6 +1095,25 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     ],
   },
   {
+    "op": "unclip",
+  },
+  {
+    "color": 0,
+    "h": 47,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 47,
+    "x": -23,
+    "y": 145,
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 97,
+    "x": -24,
+    "y": 144,
+  },
+  {
     "color": 0,
     "h": 47,
     "op": "rect",
@@ -868,6 +1148,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     ],
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 72,
+    "y": 144,
+  },
+  {
     "color": 0,
     "h": 47,
     "op": "rect",
@@ -900,6 +1190,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
         192,
       ],
     ],
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 120,
+    "y": 144,
   },
   {
     "color": 2,
@@ -946,6 +1246,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     "text": "2",
     "x": 144,
     "y": 168,
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 168,
+    "y": 144,
   },
   {
     "color": 2,
@@ -994,6 +1304,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     "y": 168,
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 216,
+    "y": 144,
+  },
+  {
     "color": 0,
     "h": 47,
     "op": "rect",
@@ -1026,6 +1346,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
         192,
       ],
     ],
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 264,
+    "y": 144,
   },
   {
     "color": 2,
@@ -1074,6 +1404,25 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     "y": 168,
   },
   {
+    "op": "unclip",
+  },
+  {
+    "color": 0,
+    "h": 47,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 47,
+    "x": 361,
+    "y": 145,
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 97,
+    "x": 312,
+    "y": 144,
+  },
+  {
     "color": 0,
     "h": 47,
     "op": "rect",
@@ -1106,6 +1455,25 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
         192,
       ],
     ],
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "color": 0,
+    "h": 47,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 47,
+    "x": -47,
+    "y": 193,
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 97,
+    "x": -48,
+    "y": 192,
   },
   {
     "color": 2,
@@ -1154,6 +1522,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     "y": 216,
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 48,
+    "y": 192,
+  },
+  {
     "color": 0,
     "h": 47,
     "op": "rect",
@@ -1186,6 +1564,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
         240,
       ],
     ],
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 96,
+    "y": 192,
   },
   {
     "color": 0,
@@ -1222,6 +1610,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     ],
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 144,
+    "y": 192,
+  },
+  {
     "color": 0,
     "h": 47,
     "op": "rect",
@@ -1254,6 +1652,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
         240,
       ],
     ],
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 192,
+    "y": 192,
   },
   {
     "color": 0,
@@ -1290,6 +1698,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     ],
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 240,
+    "y": 192,
+  },
+  {
     "color": 0,
     "h": 47,
     "op": "rect",
@@ -1322,6 +1740,25 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
         240,
       ],
     ],
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "color": 0,
+    "h": 47,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 47,
+    "x": 337,
+    "y": 193,
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 97,
+    "x": 288,
+    "y": 192,
   },
   {
     "color": 0,
@@ -1358,6 +1795,25 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     ],
   },
   {
+    "op": "unclip",
+  },
+  {
+    "color": 0,
+    "h": 47,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 47,
+    "x": -23,
+    "y": 241,
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 97,
+    "x": -24,
+    "y": 240,
+  },
+  {
     "color": 0,
     "h": 47,
     "op": "rect",
@@ -1392,6 +1848,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     ],
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 72,
+    "y": 240,
+  },
+  {
     "color": 0,
     "h": 47,
     "op": "rect",
@@ -1424,6 +1890,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
         288,
       ],
     ],
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 120,
+    "y": 240,
   },
   {
     "color": 2,
@@ -1472,6 +1948,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     "y": 264,
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 168,
+    "y": 240,
+  },
+  {
     "color": 0,
     "h": 47,
     "op": "rect",
@@ -1504,6 +1990,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
         288,
       ],
     ],
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 216,
+    "y": 240,
   },
   {
     "color": 2,
@@ -1552,6 +2048,16 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     "y": 264,
   },
   {
+    "op": "unclip",
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 49,
+    "x": 264,
+    "y": 240,
+  },
+  {
     "color": 0,
     "h": 47,
     "op": "rect",
@@ -1584,6 +2090,25 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
         288,
       ],
     ],
+  },
+  {
+    "op": "unclip",
+  },
+  {
+    "color": 0,
+    "h": 47,
+    "op": "rect",
+    "rgb": "rgb(211, 211, 211)",
+    "w": 47,
+    "x": 361,
+    "y": 241,
+  },
+  {
+    "h": 49,
+    "op": "clip",
+    "w": 97,
+    "x": 312,
+    "y": 240,
   },
   {
     "color": 2,
@@ -1630,6 +2155,9 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target COL_HINT and th
     "text": "2",
     "x": 336,
     "y": 264,
+  },
+  {
+    "op": "unclip",
   },
   {
     "color": 7,

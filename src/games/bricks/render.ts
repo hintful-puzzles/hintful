@@ -323,7 +323,32 @@ export function redraw(
     if (ds.cache[i] === n) continue;
     ds.cache[i] = n;
 
-    drawTile(dr, ts, x * ts + ox + y * (ts >> 1), y * ts + oy, n);
+    // Each tile paints inside its own square, as upstream clips it. A rule
+    // mark is drawn whole but lands in pieces: the three-in-a-row bar reaches
+    // half a square into each barred neighbor and a gravity diamond sits on a
+    // shared edge or corner, and the neighbors carry the flags for their own
+    // pieces. The clip is what makes each piece the business of the square
+    // that carries its flag, so a piece goes when that square repaints. A
+    // square with no neighbor beside it owns the ground there as well, where a
+    // diamond on the board's side edge lands.
+    const tx = x * ts + ox + y * (ts >> 1);
+    const ty = y * ts + oy;
+    let clipX = tx;
+    let clipW = ts + 1;
+    if (x === 0 || shown[i - 1] & F_BOUND) {
+      clipX -= ts;
+      clipW += ts;
+      dr.drawRect({ x: tx - ts + 1, y: ty + 1, w: ts - 1, h: ts - 1 }, COL_MIDLIGHT);
+      dr.drawUpdate({ x: tx - ts + 1, y: ty, w: ts + 1, h: ts + 1 });
+    }
+    if (x === w - 1 || shown[i + 1] & F_BOUND) {
+      clipW += ts;
+      dr.drawRect({ x: tx + ts + 1, y: ty + 1, w: ts - 1, h: ts - 1 }, COL_MIDLIGHT);
+      dr.drawUpdate({ x: tx + ts + 1, y: ty, w: ts + 1, h: ts + 1 });
+    }
+    dr.clip({ x: clipX, y: ty, w: clipW, h: ts + 1 });
+    drawTile(dr, ts, tx, ty, n);
+    dr.unclip();
   }
 
   if (hintTarget >= 0) {

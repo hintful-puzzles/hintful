@@ -483,6 +483,15 @@ export function redraw(
   const overlayMoved = new Uint8Array(W * W);
   for (let i = 0; i < W * W; i++)
     overlayMoved[i] = ds.hint.stale(i) || ds.wrong.stale(i) ? 1 : 0;
+  // The indicator sits in the clue ring's top-right corner square, inside that
+  // square's clip, whose repaint fills over it. Forgetting what it showed makes
+  // `repaintPencilIndicator` paint it again after the loop.
+  const pencilBox = PENCIL_BOX(w, ts);
+  const coversPencilBox = (cx: number, cy: number) =>
+    cx < pencilBox.x + pencilBox.size &&
+    cx + ts > pencilBox.x &&
+    cy < pencilBox.y + pencilBox.size &&
+    cy + ts > pencilBox.y;
   for (let y = 0; y < W; y++) {
     for (let x = 0; x < W; x++) {
       const i = y * W + x;
@@ -508,6 +517,8 @@ export function redraw(
         if (x > 0 && y <= w) paint(x - 2, y, bl);
         dr.unclip();
         dr.drawUpdate({ x: coord(x - 1, ts), y: coord(y - 1, ts), w: ts, h: ts });
+        if (coversPencilBox(coord(x - 1, ts), coord(y - 1, ts)))
+          ds.pencilModeShown = null;
 
         ds.drawn[i * 4] = tl;
         ds.drawn[i * 4 + 1] = tr;
@@ -536,5 +547,5 @@ export function redraw(
     evidenceColor: COL_HINT_CELL,
   });
 
-  repaintPencilIndicator(dr, ds, ui.pencilMode, PENCIL_BOX(w, ts), PENCIL_STYLE);
+  repaintPencilIndicator(dr, ds, ui.pencilMode, pencilBox, PENCIL_STYLE);
 }
