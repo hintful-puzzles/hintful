@@ -1,6 +1,6 @@
 # bind-the-remaining-hints
 
-**Status: scaffolded, not started.** The sweep `bind-hint-words-to-marks` ends
+**Status: done (2026-09-29).** The sweep `bind-hint-words-to-marks` ends
 by scaffolding. That change's `design.md` and the "Bind the words to the marks"
 section of `docs/games/hints.md` are the how; read both first.
 

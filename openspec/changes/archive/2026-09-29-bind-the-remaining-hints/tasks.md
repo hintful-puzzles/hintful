@@ -46,4 +46,6 @@ rather than one at a time.
       square and the rest of it must be empty" (design D3).
 - [x] 5.3 Retiring `hintMarks.drawn` touches every renderer, so it is its own
       change: `draw-hint-marks-from-roles`, scaffolded.
-- [ ] 5.4 Run the app on a game from each batch.
+- [x] 5.4 Run the app on a game from each batch: Unruly, Magnets, Loopy and
+      Flood in Chromium, each step's marks as its sentence names them, and the
+      help pages' generated lists of marks.
