@@ -123,10 +123,12 @@ Two lessons, both byte-match surface:
 ### `border-grid.ts` — the shared border-marking mechanic
 
 The tri-state edge grid (wall / not-a-wall / undecided) Palisade and Separate
-share: edge bit vocabulary, tile-size geometry, and the input mechanic. Each
-game keeps its own clue semantics, solver, generator, completion test — and its
-own `Move` type (the shared code reports *which edge, which cycle*, never a
-move, so two save formats aren't coupled). Its header states the sharing test
+share: edge bit vocabulary, tile-size geometry, and the input mechanic, which
+is target verbs over an edge geometry (`borderGridVerbs`, `borderGridGeometry`,
+`edgeEdits`). Each game keeps its own clue semantics, solver, generator,
+completion test — and its own `Move` type (the shared code reports *which edge,
+which cycle*, and the game's `toMove` wraps it, so two save formats aren't
+coupled). Its header states the sharing test
 worth reusing anywhere: not "are these the same text" but *"would a change here
 have to happen in both games at once?"*
 

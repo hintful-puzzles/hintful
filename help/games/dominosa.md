@@ -6,16 +6,16 @@ pair of numbers, including doubles).
 
 ## Controls
 
-Click between two adjacent numbers to place or remove a domino.
-Right-click to place a line between numbers if you think a domino
-definitely cannot go there. Dominoes light up red if two identical
-ones appear on the grid.
+{{controls}}
 
-A new domino replaces any dominoes it overlaps, and clears the lines around it. A line can only go between two squares that are not part of a domino; right-click it again to remove it.
+Aim a click between the two numbers, nearer their shared edge than the
+middle of either; the keyboard's cursor moves by half a square, so it
+rests on those edges. Dominoes light up red if two identical ones
+appear on the grid.
+
+A new domino replaces any dominoes it overlaps, and clears the lines around it. A line can only go between two squares that are not part of a domino.
 
 Right-click the middle of a square, or type a number, to highlight every square showing that number; up to two numbers can be highlighted at once, and doing it again turns the highlight off.
-
-To play with a keyboard, use the arrow keys to move the cursor onto the edge between two squares. Press Enter to place or remove a domino there, and Space to place or remove a line.
 
 The reference panel lists every domino in the set, marking the ones you have placed and flagging any placed twice. Pick one to highlight where on the board it could still go.
 

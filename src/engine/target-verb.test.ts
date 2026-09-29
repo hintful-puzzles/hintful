@@ -185,12 +185,18 @@ describe("a game's declared verbs are what its buttons and keys do", () => {
     const game = getTsGame(id) as unknown as AnyGame;
     const verbs = game.targetVerbs;
     if (!verbs) throw new Error(`${id} declares no verbs`);
-    const fresh = boardsReached(game, id);
-    const primed = boardsReached(game, id, primeWithAClick());
-    for (const r of [fresh, primed])
+    // Keys are pressed where the cursor rests on a target, which is all the
+    // paragraph speaks for; a rest on none is an arm's (Subsets' tally band).
+    const onTarget = (s: unknown, ui: unknown) =>
+      verbs.geometry.cursorTarget(s, ui) !== null;
+    const fresh = boardsReached(game, id, () => {}, onTarget);
+    const primed = boardsReached(game, id, primeWithAClick(), onTarget);
+    for (const r of [fresh, primed]) {
       expect(r.cursorPositions, "the cursor walk ran out of budget").toBeLessThan(
         CURSOR_CAP,
       );
+      expect(r.keyPositions, "the cursor rests on no target").toBeGreaterThan(1);
+    }
 
     const left = fresh.click(LEFT_BUTTON);
     expect(left.size, "a left-click reaches no board").toBeGreaterThan(0);

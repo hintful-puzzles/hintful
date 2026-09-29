@@ -48,15 +48,20 @@ export interface VerbKey {
 }
 
 /** One thing a button does to a target. */
-export interface TargetVerb<State, Target, Move> {
+export interface TargetVerb<State, Ui, Target, Move> {
   /** What the verb does, as the Controls paragraph completes "Click a square
    * to …": `"place or remove a light"`. */
   readonly does: string;
   /** Further keys that apply this verb at the cursor. */
   readonly keys?: readonly VerbKey[];
-  /** The move this verb makes at `target`, or `null` where it means nothing
-   * there (a clue square, a light on a dot). */
-  apply(state: State, target: Target): Move | null;
+  /**
+   * The move this verb makes at `target`, `UI_UPDATE` where it changes only
+   * what the player sees (Black Box re-flashing a laser already fired), or
+   * `null` where it means nothing there (a clue square, a light on a dot).
+   * `ui` is the player's own: a preference that swaps the buttons (Slant), or
+   * a tally the move keeps beside the board (Mines' deaths).
+   */
+  apply(state: State, target: Target, ui: Ui): Move | UiUpdate | null;
 }
 
 /**
@@ -82,27 +87,29 @@ export interface TargetGeometry<State, Ui, DrawState, Target> {
 export interface TargetVerbs<State, Ui, DrawState, Target, Move> {
   readonly geometry: TargetGeometry<State, Ui, DrawState, Target>;
   /** The left button, and Enter at the cursor. */
-  readonly primary: TargetVerb<State, Target, Move>;
+  readonly primary: TargetVerb<State, Ui, Target, Move>;
   /** The right button, and Space at the cursor. A game without one takes
    * Space as a second Enter. */
-  readonly secondary?: TargetVerb<State, Target, Move>;
+  readonly secondary?: TargetVerb<State, Ui, Target, Move>;
   /** The middle button. No select key reaches it; a game binds it a key
    * through `keys`. */
-  readonly middle?: TargetVerb<State, Target, Move>;
+  readonly middle?: TargetVerb<State, Ui, Target, Move>;
   /** Verbs no button applies, reached only by their `keys` at the cursor: Net's
    * half turn. */
-  readonly keyOnly?: readonly KeyOnlyVerb<State, Target, Move>[];
+  readonly keyOnly?: readonly KeyOnlyVerb<State, Ui, Target, Move>[];
 }
 
 /** A verb with no button, so its keys are the only way to it. */
-export interface KeyOnlyVerb<State, Target, Move>
-  extends TargetVerb<State, Target, Move> {
+export interface KeyOnlyVerb<State, Ui, Target, Move>
+  extends TargetVerb<State, Ui, Target, Move> {
   readonly keys: readonly VerbKey[];
 }
 
-/** The `Ui` this model reads: the collection's shared cursor. */
+/** The `Ui` this model reads: only whether the cursor shows. Where the cursor
+ * is belongs to the geometry — a square for most games, a dot and an edge for
+ * Loopy. */
 export interface TargetVerbUi {
-  cursor: GridCursor;
+  cursor: { visible: boolean };
 }
 
 /**
@@ -121,7 +128,7 @@ export function squareGrid<
   size: (state: State) => Size;
   border: (tileSize: number, state: State) => number;
   wrap?: boolean;
-}): TargetGeometry<State, TargetVerbUi, DrawState, Point> {
+}): TargetGeometry<State, { cursor: GridCursor }, DrawState, Point> {
   const inGrid = (s: State, x: number, y: number) => {
     const { w, h } = options.size(s);
     return x >= 0 && y >= 0 && x < w && y < h;
@@ -193,7 +200,7 @@ export function interpretTargetVerbs<S, U extends TargetVerbUi, D, T, M>(
     const wasShown = ui.cursor.visible;
     geometry.parkCursor(ui, target);
     ui.cursor.visible = false;
-    return pressed.apply(state, target) ?? (wasShown ? UI_UPDATE : null);
+    return pressed.apply(state, target, ui) ?? (wasShown ? UI_UPDATE : null);
   }
 
   if (isCursorMove(button))
@@ -206,13 +213,13 @@ export function interpretTargetVerbs<S, U extends TargetVerbUi, D, T, M>(
       return UI_UPDATE;
     }
     const target = geometry.cursorTarget(state, ui);
-    return target === null ? null : keyed.apply(state, target);
+    return target === null ? null : keyed.apply(state, target, ui);
   }
   return null;
 }
 
 /** "Enter", "Space (or I)": a select key and the verb's own keys. */
-function keyNames(select: string, verb: TargetVerb<unknown, unknown, unknown>) {
+function keyNames(select: string, verb: { readonly keys?: readonly VerbKey[] }) {
   const own = (verb.keys ?? []).map((k) => k.name);
   return own.length === 0 ? select : `${select} (or ${own.join(" or ")})`;
 }
@@ -235,14 +242,10 @@ export function controlsMarkdown<S, U, D, T, M>(verbs: Verbs<S, U, D, T, M>): st
   if (verbs.middle)
     pointer.push(`Middle-click it (or Shift-click it) to ${verbs.middle.does}.`);
 
-  const primary = verbs.primary as TargetVerb<unknown, unknown, unknown>;
   const keyboard = verbs.secondary
-    ? `${keyNames("Enter", primary)} does what a click does to the ${noun} ` +
-      `under it, and ${keyNames(
-        "Space",
-        verbs.secondary as TargetVerb<unknown, unknown, unknown>,
-      )} what a right-click does.`
-    : `${keyNames("Enter or Space", primary)} does what a click does to the ` +
+    ? `${keyNames("Enter", verbs.primary)} does what a click does to the ${noun} ` +
+      `under it, and ${keyNames("Space", verbs.secondary)} what a right-click does.`
+    : `${keyNames("Enter or Space", verbs.primary)} does what a click does to the ` +
       `${noun} under it.`;
   const middleKeys = verbs.middle?.keys ?? [];
   const middle =

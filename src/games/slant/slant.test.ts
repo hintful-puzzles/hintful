@@ -232,8 +232,8 @@ describe("slant input", () => {
     const u = ui();
     expect(input(state, u, { x: 0, y: 0 }, CURSOR_RIGHT)).toBe(UI_UPDATE);
     expect(u.cursor).toEqual({ x: 1, y: 0, visible: true });
-    // Clamped at the edge, still a UI update.
-    expect(input(state, u, { x: 0, y: 0 }, CURSOR_RIGHT)).toBe(UI_UPDATE);
+    // Clamped at the edge on a showing cursor: nothing changed.
+    expect(input(state, u, { x: 0, y: 0 }, CURSOR_RIGHT)).toBeNull();
     expect(u.cursor.x).toBe(1);
     expect(input(state, u, { x: 0, y: 0 }, CURSOR_LEFT)).toBe(UI_UPDATE);
     expect(u.cursor.x).toBe(0);

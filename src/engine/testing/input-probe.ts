@@ -54,6 +54,9 @@ export interface ProbeBoard {
   /** A digest of the state together with the `Ui` — where the player is, and
    * not only what the board says. Read without painting a frame. */
   readonly where: () => string;
+  /** The state and `Ui` behind {@link where}, live — the midend's own objects,
+   * to be read and never written. */
+  readonly live: () => { readonly state: unknown; readonly ui: unknown };
 }
 
 export interface ProbeOptions {
@@ -140,6 +143,7 @@ export function probeBoard(
     moves: () => moveCount,
     board: () => digest(current),
     where: () => `${digest(liveUi)}|${digest(current)}`,
+    live: () => ({ state: current, ui: liveUi }),
   };
 }
 
@@ -169,6 +173,8 @@ export interface BoardsReached {
   readonly key: (code: number) => ReadonlySet<string>;
   /** How many cursor positions the arrows reached — the key half's power. */
   readonly cursorPositions: number;
+  /** How many of those `keyAt` let a key be pressed at. */
+  readonly keyPositions: number;
 }
 
 /**
@@ -182,12 +188,17 @@ export interface BoardsReached {
  * so no game's geometry is written down here.
  *
  * `prime` is played first on every attempt, because a verb that empties a square
- * has nothing to do on a fresh board.
+ * has nothing to do on a fresh board. `keyAt` narrows the positions a key is
+ * pressed at: the target-verb guard presses only where the cursor rests on a
+ * target, because a position resting on none (Subsets' tally band) belongs to
+ * an arm of the game's own, and the paragraph the guard checks says nothing
+ * about it. The walk still passes through such positions.
  */
 export function boardsReached(
   game: AnyGame,
   id: string,
   prime: (b: ProbeBoard) => void = () => {},
+  keyAt: (state: unknown, ui: unknown) => boolean = () => true,
 ): BoardsReached {
   const b = probeBoard(game, id);
   const { m, size, tileSize } = b;
@@ -239,6 +250,8 @@ export function boardsReached(
     const out = new Set<string>();
     for (const path of paths) {
       replay(path);
+      const { state, ui } = b.live();
+      if (!keyAt(state, ui)) continue;
       const before = b.board();
       m.processInput(0, 0, code);
       const after = b.board();
@@ -246,7 +259,12 @@ export function boardsReached(
     }
     return out;
   };
-  return { click, key, cursorPositions: paths.length };
+  const keyPositions = paths.filter((path) => {
+    replay(path);
+    const { state, ui } = b.live();
+    return keyAt(state, ui);
+  }).length;
+  return { click, key, cursorPositions: paths.length, keyPositions };
 }
 
 /** Past this many cursor positions the walk stops; a guard reading the walk

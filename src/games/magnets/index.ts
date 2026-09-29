@@ -2,11 +2,6 @@
  * Magnets — native TS port of `magnets.c`. Fill a grid of pre-laid dominoes so
  * each domino is a magnet (`+`/`−`) or neutral, no two orthogonally-adjacent
  * cells share a polarity, and each row/column holds its `+`/`−` clue counts.
- *
- * Input: left-click / `CURSOR_SELECT` cycles a domino cell empty→`+`→`−`→empty
- * (the magnet cycle); right-click / `CURSOR_SELECT2` cycles empty→neutral→
- * not-neutral(`?`)→empty over the domino; a left-click on a border clue toggles
- * its "done" gray; cursor keys move a keyboard cursor.
  */
 
 import type { DifficultyContract } from "../../engine/difficulty.ts";
@@ -18,21 +13,16 @@ import type {
   SolveResult,
   UiUpdate,
 } from "../../engine/game.ts";
-import { UI_UPDATE } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { commonHintRefusal } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
-import {
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
-  gridCursorMove,
-  isCursorMove,
-  LEFT_BUTTON,
-  newCursor,
-  RIGHT_BUTTON,
-  stripModifiers,
-} from "../../engine/pointer.ts";
+import { gridCursorMove, newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  interpretTargetVerbs,
+  type TargetGeometry,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newMagnetsDesc } from "./generator.ts";
 import { type MagnetsHighlights, magnetsHint, magnetsKeepTrack } from "./hint.ts";
@@ -87,8 +77,95 @@ function changedState(
   if (oldState && !oldState.completed && newState_.completed) ui.cursor.visible = false;
 }
 
-const CYCLE_MAGNET = 0;
-const CYCLE_NEUTRAL = 1;
+/** Whether `(x, y)`, in the clue ring's coordinates, is a tile or a clue. */
+const onBoard = (s: MagnetsState, x: number, y: number) =>
+  (x >= 0 && x < s.w && y >= 0 && y < s.h) || isClue(s.w, s.h, x, y);
+
+/**
+ * A target is a tile or a clue: `(x, y)` runs from −1 to `w` and `h`, the ring
+ * outside the grid holding the clues. The cursor walks the ring too, so a
+ * keyboard player can mark a clue done, and skips the four corners, which hold
+ * no clue.
+ */
+const geometry: TargetGeometry<MagnetsState, MagnetsUi, MagnetsDrawState, Point> = {
+  noun: "tile",
+  pointerTarget(s, ds, p) {
+    const ts = ds.tileSize;
+    const x = fromCoordE(p.x, ts, origin(ts));
+    const y = fromCoordE(p.y, ts, origin(ts));
+    return onBoard(s, x, y) ? { x, y } : null;
+  },
+  cursorTarget: (s, ui) =>
+    onBoard(s, ui.cursor.x, ui.cursor.y) ? { x: ui.cursor.x, y: ui.cursor.y } : null,
+  parkCursor(ui, t) {
+    ui.cursor.x = t.x;
+    ui.cursor.y = t.y;
+  },
+  moveCursor(s, ui, button) {
+    const wasShown = ui.cursor.visible;
+    ui.cursor.visible = true;
+    const moved = gridCursorMove(
+      button,
+      ui.cursor.x + 1,
+      ui.cursor.y + 1,
+      s.w + 2,
+      s.h + 2,
+    );
+    if (moved === null || !onBoard(s, moved.x - 1, moved.y - 1)) return !wasShown;
+    ui.cursor.x = moved.x - 1;
+    ui.cursor.y = moved.y - 1;
+    return true;
+  },
+};
+
+/** The tile's index, or `null` for a clue or a singleton, which never holds a
+ * magnet. */
+function tileAt(s: MagnetsState, { x, y }: Point): number | null {
+  if (x < 0 || x >= s.w || y < 0 || y >= s.h) return null;
+  const idx = y * s.w + x;
+  return s.common.dominoes[idx] === idx ? null : idx;
+}
+
+const targetVerbs: TargetVerbs<
+  MagnetsState,
+  MagnetsUi,
+  MagnetsDrawState,
+  Point,
+  MagnetsMove
+> = {
+  geometry,
+  primary: {
+    does:
+      "make it a magnet, with the + in the end you click; click it again to turn " +
+      "the magnet round, and a third time to empty it",
+    // empty → + → − → empty; can't cycle a magnet from a placed neutral. On a
+    // clue, marks it done or not.
+    apply(s, t) {
+      if (isClue(s.w, s.h, t.x, t.y))
+        return { type: "clue", clue: clueIndex(s.w, s.h, t.x, t.y) };
+      const idx = tileAt(s, t);
+      if (idx === null) return null;
+      const curr = s.grid[idx];
+      if (curr === NEUTRAL && s.flags[idx] & GS_SET) return null;
+      if (curr === EMPTY) return { type: "set", idx, which: POSITIVE };
+      if (curr === POSITIVE) return { type: "set", idx, which: NEGATIVE };
+      return { type: "flag", idx, mode: "empty" };
+    },
+  },
+  secondary: {
+    does:
+      "cycle it between empty, neutral, and a ? mark saying you're sure it's a " +
+      "magnet but don't yet know which way round it goes",
+    // empty → neutral → not-neutral → empty; not from a magnet.
+    apply(s, t) {
+      const idx = tileAt(s, t);
+      if (idx === null || s.grid[idx] !== NEUTRAL) return null;
+      if (s.flags[idx] & GS_SET) return { type: "flag", idx, mode: "notneutral" };
+      if (s.flags[idx] & GS_NOTNEUTRAL) return { type: "flag", idx, mode: "empty" };
+      return { type: "flag", idx, mode: "neutral" };
+    },
+  },
+};
 
 function interpretMove(
   state: MagnetsState,
@@ -97,68 +174,7 @@ function interpretMove(
   p: Point,
   rawButton: number,
 ): MagnetsMove | null | UiUpdate {
-  const { w, h, grid, flags, common } = state;
-  const button = stripModifiers(rawButton);
-  const ts = ds.tileSize;
-  const fromCoord = (v: number) => fromCoordE(v, ts, origin(ts));
-
-  let gx = fromCoord(p.x);
-  let gy = fromCoord(p.y);
-  let action: number;
-  let nullret: null | UiUpdate = null;
-
-  if (isCursorMove(button)) {
-    const wasVisible = ui.cursor.visible;
-    const moved = gridCursorMove(button, ui.cursor.x, ui.cursor.y, w, h);
-    if (moved) {
-      ui.cursor.x = moved.x;
-      ui.cursor.y = moved.y;
-    }
-    ui.cursor.visible = true;
-    return moved || !wasVisible ? UI_UPDATE : null;
-  }
-  if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
-    if (!ui.cursor.visible) {
-      ui.cursor.visible = true;
-      return UI_UPDATE;
-    }
-    action = button === CURSOR_SELECT ? CYCLE_MAGNET : CYCLE_NEUTRAL;
-    gx = ui.cursor.x;
-    gy = ui.cursor.y;
-  } else if (
-    gx >= 0 &&
-    gx < w &&
-    gy >= 0 &&
-    gy < h &&
-    (button === LEFT_BUTTON || button === RIGHT_BUTTON)
-  ) {
-    if (ui.cursor.visible) {
-      ui.cursor.visible = false;
-      nullret = UI_UPDATE;
-    }
-    action = button === LEFT_BUTTON ? CYCLE_MAGNET : CYCLE_NEUTRAL;
-  } else if (button === LEFT_BUTTON && isClue(w, h, gx, gy)) {
-    return { type: "clue", clue: clueIndex(w, h, gx, gy) };
-  } else {
-    return null;
-  }
-
-  const idx = gy * w + gx;
-  if (common.dominoes[idx] === idx) return nullret; // singleton
-  const curr = grid[idx];
-
-  if (action === CYCLE_MAGNET) {
-    // empty → + → − → empty; can't cycle a magnet from a placed neutral.
-    if (grid[idx] === NEUTRAL && flags[idx] & GS_SET) return nullret;
-    if (curr === EMPTY) return { type: "set", idx, which: POSITIVE };
-    if (curr === POSITIVE) return { type: "set", idx, which: NEGATIVE };
-    return { type: "flag", idx, mode: "empty" };
-  }
-  // CYCLE_NEUTRAL — empty → neutral → not-neutral → empty; not from a magnet.
-  if (grid[idx] !== NEUTRAL) return nullret;
-  if (flags[idx] & GS_SET) return { type: "flag", idx, mode: "notneutral" };
-  if (flags[idx] & GS_NOTNEUTRAL) return { type: "flag", idx, mode: "empty" };
-  return { type: "flag", idx, mode: "neutral" };
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
 }
 
 const CHAR2GRID = (c: string): number =>
@@ -246,6 +262,7 @@ export const magnetsGame: Game<
   newUi,
   changedState,
 
+  targetVerbs,
   interpretMove,
   executeMove,
   status,

@@ -341,10 +341,12 @@ function drawTile(
 /** Added to a clue slot's drawn color when the slot is hatched: above every
  * palette index, so the two never collide in `colwhat`/`rowwhat`. */
 const CLUE_HATCHED = 0x100;
+/** Likewise, for the keyboard cursor resting on the slot. */
+const CLUE_CURSOR = 0x200;
 
-/** A clue slot: its background, the hint's hatch when its line is hatched, and
- * the count unless it was stripped. A stripped slot still paints, since a hatch
- * can come and go on it. */
+/** A clue slot: its background (the cursor's, when it rests there), the hint's
+ * hatch when its line is hatched, and the count unless it was stripped. A
+ * stripped slot still paints, since a hatch can come and go on it. */
 function drawNum(
   dr: GameDrawing,
   ds: MagnetsDrawState,
@@ -354,6 +356,7 @@ function drawNum(
   col: number,
   num: number,
   hatched: boolean,
+  cursor: boolean,
 ): void {
   const ts = ds.tileSize;
   const text = String(num);
@@ -372,7 +375,7 @@ function drawNum(
     cy = which === NEGATIVE ? ts * (ds.h + 1) : 0;
   }
 
-  dr.drawRect({ x: cx, y: cy, w: ts, h: ts }, COL_BACKGROUND);
+  dr.drawRect({ x: cx, y: cy, w: ts, h: ts }, cursor ? COL_CURSOR : COL_BACKGROUND);
   if (hatched) dr.drawHatch({ x: cx, y: cy, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
   if (num >= 0) {
     dr.drawText(
@@ -536,9 +539,12 @@ export function redraw(
         // The hatch runs on through the line's clue slots, so the strip ends at
         // the count it is read against. Part of the key, as a color is.
         const hatched = onLine(rowcol, i);
-        const key = color + (hatched ? CLUE_HATCHED : 0);
+        const edge = which === POSITIVE ? -1 : rowcol === COLUMN ? h : w;
+        const cursor =
+          rowcol === COLUMN ? cx === i && cy === edge : cx === edge && cy === i;
+        const key = color + (hatched ? CLUE_HATCHED : 0) + (cursor ? CLUE_CURSOR : 0);
         if (drawn[index] !== key) {
-          drawNum(dr, ds, rowcol, which, i, color, targets[index], hatched);
+          drawNum(dr, ds, rowcol, which, i, color, targets[index], hatched, cursor);
           drawn[index] = key;
         }
       }

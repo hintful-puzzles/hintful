@@ -375,6 +375,22 @@ Net's lock moved to its own key (S) and Space rotates clockwise like the
 right button. A game that wants a different key for a verb gives the verb
 `keys`; it does not remap Space.
 
+**A target is whatever the game aims at**, and the geometry is where the game
+says so: an edge between two cells (`borderGridGeometry` in
+[`engine/border-grid.ts`](../../src/engine/border-grid.ts), Palisade and
+Separate; Dominosa's pair of numbers), a tile or a clue in the ring around the
+grid (Magnets, whose keyboard reaches the clues it can mark done), a tile
+drawn from a scrolled origin (Net — which is why `pointerTarget` receives the
+`Ui`). The model reads only `ui.cursor.visible`; where the cursor is, and how
+it moves, belongs to the geometry. A cursor position that rests on no target
+(a Magnets corner is skipped; a half-grid corner is not) makes Enter do
+nothing there.
+
+A verb's `apply(state, target, ui)` sees the `Ui` for what the player owns — a
+preference that swaps the buttons (Slant), a tally kept beside the board
+(Mines' deaths) — and may return `UI_UPDATE` for a verb that only changes what
+is shown (Black Box re-flashing a laser already fired).
+
 **Keep the `Ui` to where the player is.** The guard walks the cursor by
 comparing `Ui` digests, so a field that differs on every `newUi` — Net's jumble
 RNG, seeded from entropy, once lived there — makes every position look new and
@@ -390,9 +406,11 @@ Two things follow from declaring:
   cycle's full story ("clicking again moves on round…") to the page.
 - **The declaration is held to the behavior.**
   [`target-verb.test.ts`](../../src/engine/target-verb.test.ts) plays every
-  declaring game and asserts that Enter at every cursor position reaches exactly
-  the boards a left-click reaches, Space those of its verb's button, and each
-  verb key those of its button — which is what the generated paragraph claims.
+  declaring game and asserts that Enter at every cursor position resting on a
+  target reaches exactly the boards a left-click reaches, Space those of its
+  verb's button, and each verb key those of its button — which is what the
+  generated paragraph claims. Positions resting on no target are walked through
+  but not pressed at, because what a key does there is an arm's business.
   An arm of your own that handles Enter differently from the click fails there.
 
 **Verb semantics are functions, never flags.** Light Up's "a bulb refuses a

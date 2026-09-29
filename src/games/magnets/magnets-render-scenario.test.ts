@@ -9,6 +9,7 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
+import { CURSOR_SELECT, CURSOR_UP } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   expectPieceRing,
@@ -25,6 +26,8 @@ import type { MagnetsHighlights } from "./hint.ts";
 import { CLUE, LINE, SQUARE } from "./hint-text.ts";
 import { magnetsGame } from "./index.ts";
 import {
+  COL_CURSOR,
+  COL_DONE,
   COL_HINT,
   COL_HINT_CELL,
   COL_MISTAKE,
@@ -61,6 +64,34 @@ function horizontalDomino(state: ReturnType<typeof newState>): number {
 const P: MagnetsParams = { w: 6, h: 5, diff: DIFF_EASY, stripclues: false };
 
 describe("magnets render scenarios", () => {
+  it("the keyboard cursor steps onto a clue, and Enter marks it done", () => {
+    const { id } = board(P, "mrs-0");
+    const ts = PREFERRED_TILE_SIZE;
+    // Up from the top-left tile is the first column's + clue, one tile in.
+    const cursorOnSlot = (ops: RecordingDrawing["ops"]) =>
+      ops.some(
+        (o) =>
+          o.op === "rect" &&
+          o.x === ts &&
+          o.y === 0 &&
+          o.w === ts &&
+          o.color === COL_CURSOR,
+      );
+    const hidden = renderScenario({ game: magnetsGame, id });
+    expect(cursorOnSlot(hidden.recording.ops)).toBe(false);
+    const up = renderScenario({ game: magnetsGame, id, presses: [CURSOR_UP] });
+    expect(cursorOnSlot(up.recording.ops)).toBe(true);
+    const done = renderScenario({
+      game: magnetsGame,
+      id,
+      presses: [CURSOR_UP, CURSOR_SELECT],
+    });
+    const clueText = (ops: RecordingDrawing["ops"]) =>
+      opsOfKind(ops, "text").find((o) => o.x === ts + Math.floor(ts / 2) && o.y < ts);
+    expect(clueText(up.recording.ops)?.color).not.toBe(COL_DONE);
+    expect(clueText(done.recording.ops)?.color).toBe(COL_DONE);
+  });
+
   it("opener frame: domino fills + clue numbers", () => {
     const { id } = board(P, "mrs-0");
     const { recording, size } = renderScenario({ game: magnetsGame, id });

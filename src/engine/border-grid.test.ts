@@ -8,15 +8,17 @@
 import { describe, expect, it } from "vitest";
 import {
   BORDER,
+  type BorderEdit,
   type BorderGridState,
   type BorderGridUi,
+  borderGridGeometry,
+  borderGridVerbs,
   buildDsf,
   DISABLED,
+  edgeEdits,
   FLIP,
   initBorders,
-  interpretBorderGridInput,
   pointerEdge,
-  selectEdge,
 } from "./border-grid.ts";
 import {
   CURSOR_DOWN,
@@ -29,6 +31,7 @@ import {
   newCursor,
   RIGHT_BUTTON,
 } from "./pointer.ts";
+import { interpretTargetVerbs } from "./target-verb.ts";
 
 const TS = 32;
 const grid = (w: number, h: number, borders?: Uint8Array): BorderGridState => ({
@@ -96,35 +99,13 @@ describe("buildDsf", () => {
 });
 
 describe("pointerEdge", () => {
-  it("left button cycles undecided → wall → undecided", () => {
-    const s = grid(3, 3);
-    const u = ui();
+  it("names the interior edge nearest the press", () => {
     const p = edgeMidpoint(1, 1, 1); // right edge of the center cell
-
-    const first = pointerEdge(s, u, p.x, p.y, TS, true);
-    expect(first).not.toBeNull();
-    // Both cells the edge separates are edited, with facing bits.
-    expect(first).toHaveLength(2);
-    expect(first?.[0]).toEqual({ x: 1, y: 1, flag: BORDER(1) });
-    expect(first?.[1]).toEqual({ x: 2, y: 1, flag: BORDER(FLIP(1)) });
-
-    // Apply it, then press again: the wall comes back off.
-    const b = initBorders(3, 3);
-    b[1 * 3 + 1] |= BORDER(1);
-    const second = pointerEdge(grid(3, 3, b), ui(), p.x, p.y, TS, true);
-    expect(second?.[0]).toEqual({ x: 1, y: 1, flag: BORDER(1) });
-  });
-
-  it("right button marks NOT-a-wall, on the disabled nibble", () => {
-    const s = grid(3, 3);
-    const p = edgeMidpoint(1, 1, 1);
-    const r = pointerEdge(s, ui(), p.x, p.y, TS, false);
-    expect(r?.[0]).toEqual({ x: 1, y: 1, flag: DISABLED(BORDER(1)) });
-    expect(r?.[1]).toEqual({ x: 2, y: 1, flag: DISABLED(BORDER(FLIP(1))) });
+    expect(pointerEdge(grid(3, 3), p.x, p.y, TS)).toEqual({ x: 1, y: 1, dir: 1 });
   });
 
   it("returns null outside the grid", () => {
-    expect(pointerEdge(grid(3, 3), ui(), -50, -50, TS, true)).toBeNull();
+    expect(pointerEdge(grid(3, 3), -50, -50, TS)).toBeNull();
   });
 
   it("breaks the tie toward the down edge at an exact tile center", () => {
@@ -134,87 +115,74 @@ describe("pointerEdge", () => {
     // reachable input (a precise click, or a synthetic tap at a tile's midpoint)
     // and the alternative — resolving to nothing — would put a dead zone in the
     // middle of every tile.
-    const s = grid(3, 3);
     const m = Math.floor(TS / 2);
     const center = { x: m + TS + TS / 2, y: m + TS + TS / 2 };
-    const r = pointerEdge(s, ui(), center.x, center.y, TS, true);
-    expect(r?.[0]).toEqual({ x: 1, y: 1, flag: BORDER(2) });
-    expect(r?.[1]).toEqual({ x: 1, y: 2, flag: BORDER(FLIP(2)) });
+    expect(pointerEdge(grid(3, 3), center.x, center.y, TS)).toEqual({
+      x: 1,
+      y: 1,
+      dir: 2,
+    });
   });
 
   it("returns null on a rim edge, which has no second cell to pair with", () => {
-    const s = grid(3, 3);
     const p = edgeMidpoint(0, 0, 0); // top edge of the top-left cell
-    expect(pointerEdge(s, ui(), p.x, p.y, TS, true)).toBeNull();
+    expect(pointerEdge(grid(3, 3), p.x, p.y, TS)).toBeNull();
+  });
+});
+
+describe("edgeEdits", () => {
+  const edge = { x: 1, y: 1, dir: 1 };
+  const wall = [
+    { x: 1, y: 1, flag: BORDER(1) },
+    { x: 2, y: 1, flag: BORDER(FLIP(1)) },
+  ];
+  const notWall = [
+    { x: 1, y: 1, flag: DISABLED(BORDER(1)) },
+    { x: 2, y: 1, flag: DISABLED(BORDER(FLIP(1))) },
+  ];
+  const marked = (flag: number) => {
+    const b = initBorders(3, 3);
+    b[1 * 3 + 1] |= flag;
+    return grid(3, 3, b);
+  };
+
+  it("toward a wall: undecided → wall → undecided, on both cells", () => {
+    expect(edgeEdits(grid(3, 3), edge, true)).toEqual(wall);
+    expect(edgeEdits(marked(BORDER(1)), edge, true)).toEqual(wall);
   });
 
-  it("parks the cursor on the edge it hit and hides it", () => {
+  it("toward not-a-wall: the disabled nibble, the same way", () => {
+    expect(edgeEdits(grid(3, 3), edge, false)).toEqual(notWall);
+    expect(edgeEdits(marked(DISABLED(BORDER(1))), edge, false)).toEqual(notWall);
+  });
+
+  it("an edge marked the other way switches straight over", () => {
+    const both = (a: BorderEdit[], b: BorderEdit[]) =>
+      a.map((e, i) => ({ ...e, flag: e.flag | b[i].flag }));
+    expect(edgeEdits(marked(DISABLED(BORDER(1))), edge, true)).toEqual(
+      both(wall, notWall),
+    );
+    expect(edgeEdits(marked(BORDER(1)), edge, false)).toEqual(both(wall, notWall));
+  });
+});
+
+describe("borderGridGeometry", () => {
+  const geometry = borderGridGeometry<BorderGridState, { tileSize: number }>();
+
+  it("the cursor names an edge on a half-cell, and nothing on a corner or center", () => {
     const s = grid(3, 3);
-    const u = ui(1, 1, true);
-    const p = edgeMidpoint(1, 1, 1);
-    pointerEdge(s, u, p.x, p.y, TS, true);
+    expect(geometry.cursorTarget(s, ui(2, 3))).toEqual({ x: 1, y: 1, dir: 3 });
+    expect(geometry.cursorTarget(s, ui(3, 2))).toEqual({ x: 1, y: 1, dir: 0 });
+    expect(geometry.cursorTarget(s, ui(3, 3))).toBeNull();
+    expect(geometry.cursorTarget(s, ui(2, 2))).toBeNull();
+  });
+
+  it("parking puts the cursor on the edge a press named", () => {
+    const u = ui();
+    geometry.parkCursor(u, { x: 1, y: 1, dir: 1 });
     // Half-cell coordinates: the edge right of cell (1,1) is at x = 2*1+1+1 = 4.
-    expect(u.cursor.x).toBe(4);
-    expect(u.cursor.y).toBe(3);
-    expect(u.cursor.visible).toBe(false);
-  });
-});
-
-describe("selectEdge", () => {
-  it("the first press only reveals a hidden cursor", () => {
-    const u = ui(2, 3, false);
-    expect(selectEdge(grid(3, 3), u, false)).toBe("ui");
-    expect(u.cursor.visible).toBe(true);
-  });
-
-  it("does nothing on a corner or a tile center", () => {
-    // Both coordinates odd = a tile center; both even = a corner. The mechanic
-    // rejects each because `px === py`.
-    expect(selectEdge(grid(3, 3), ui(3, 3, true), false)).toBeNull();
-    expect(selectEdge(grid(3, 3), ui(2, 2, true), false)).toBeNull();
-  });
-
-  it("select toggles the wall, select2 the not-a-wall mark", () => {
-    const s = grid(3, 3);
-    const wall = selectEdge(s, ui(2, 3, true), false);
-    expect(wall).toEqual([
-      { x: 1, y: 1, flag: BORDER(3) },
-      { x: 0, y: 1, flag: BORDER(FLIP(3)) },
-    ]);
-    const notWall = selectEdge(s, ui(2, 3, true), true);
-    expect(notWall).toEqual([
-      { x: 1, y: 1, flag: DISABLED(BORDER(3)) },
-      { x: 0, y: 1, flag: DISABLED(BORDER(FLIP(3))) },
-    ]);
-  });
-});
-
-describe("interpretBorderGridInput", () => {
-  it("dispatches pointer, cursor and select to the right path", () => {
-    const s = grid(3, 3);
-    const p = edgeMidpoint(1, 1, 1);
-
-    expect(interpretBorderGridInput(s, ui(), p, LEFT_BUTTON, TS)).toHaveLength(2);
-    expect(interpretBorderGridInput(s, ui(), p, RIGHT_BUTTON, TS)).toHaveLength(2);
-
-    const u = ui(3, 3, true);
-    expect(interpretBorderGridInput(s, u, p, CURSOR_UP, TS)).toBe("ui");
-    expect(u.cursor.y).toBe(2);
-
-    expect(interpretBorderGridInput(s, ui(2, 3, true), p, CURSOR_SELECT, TS)).toEqual([
-      { x: 1, y: 1, flag: BORDER(3) },
-      { x: 0, y: 1, flag: BORDER(FLIP(3)) },
-    ]);
-    expect(interpretBorderGridInput(s, ui(2, 3, true), p, CURSOR_SELECT2, TS)).toEqual([
-      { x: 1, y: 1, flag: DISABLED(BORDER(3)) },
-      { x: 0, y: 1, flag: DISABLED(BORDER(FLIP(3))) },
-    ]);
-  });
-
-  it("ignores a button it does not handle", () => {
-    expect(
-      interpretBorderGridInput(grid(3, 3), ui(), { x: 0, y: 0 }, 0, TS),
-    ).toBeNull();
+    expect(u.cursor).toMatchObject({ x: 4, y: 3 });
+    expect(geometry.cursorTarget(grid(3, 3), u)).toEqual({ x: 2, y: 1, dir: 3 });
   });
 
   // Both axes, and both ends of each: a walk along one axis alone leaves the
@@ -228,10 +196,27 @@ describe("interpretBorderGridInput", () => {
     // Half-cell coordinates on a 3×3 board run 1..2*3-1 = 1..5.
     const s = grid(3, 3);
     const u = ui(3, 3, true);
-    for (let i = 0; i < 10; i++)
-      interpretBorderGridInput(s, u, { x: 0, y: 0 }, key, TS);
+    for (let i = 0; i < 10; i++) geometry.moveCursor(s, u, key);
     expect(u.cursor[axis]).toBe(limit);
     // The other axis did not drift while this one was clamped.
     expect(u.cursor[axis === "x" ? "y" : "x"]).toBe(3);
+  });
+});
+
+describe("borderGridVerbs", () => {
+  const verbs = borderGridVerbs<
+    BorderGridState,
+    BorderGridUi,
+    { tileSize: number },
+    BorderEdit[]
+  >((edits) => edits);
+  const run = (u: BorderGridUi, button: number, p = { x: 0, y: 0 }) =>
+    interpretTargetVerbs(verbs, grid(3, 3), u, { tileSize: TS }, p, button);
+
+  it("a click and a key on the same edge make the same edits", () => {
+    const p = edgeMidpoint(1, 1, 3); // left edge of the center cell
+    const u = ui();
+    expect(run(u, LEFT_BUTTON, p)).toEqual(run(ui(2, 3, true), CURSOR_SELECT));
+    expect(run(u, RIGHT_BUTTON, p)).toEqual(run(ui(2, 3, true), CURSOR_SELECT2));
   });
 });

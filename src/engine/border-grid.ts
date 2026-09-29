@@ -29,14 +29,8 @@
  * cursor pass, being the rendering *of this mechanic*.
  */
 import { Dsf } from "./dsf.ts";
-import {
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
-  cursorDelta,
-  type GridCursor,
-  LEFT_BUTTON,
-  RIGHT_BUTTON,
-} from "./pointer.ts";
+import { cursorDelta, type GridCursor } from "./pointer.ts";
+import type { TargetGeometry, TargetVerbs } from "./target-verb.ts";
 
 // --- the edge bit vocabulary -----------------------------------------------
 // A cell stores its four borders in the low nibble and their "definitely not a
@@ -113,31 +107,25 @@ export interface BorderEdit {
   flag: number;
 }
 
-/** What `interpretBorderGridInput` decided. `null` means "nothing happened";
- * `"ui"` means the cursor moved and the caller should return its own
- * `UI_UPDATE`; otherwise the edits to apply. */
-export type BorderGridInput = BorderEdit[] | "ui" | null;
+/** An edge between two cells, named from the cell `(x, y)` in direction `dir`.
+ * The rim of the grid, with no second cell, is never one. */
+export interface BorderEdge {
+  x: number;
+  y: number;
+  dir: number;
+}
 
 /**
- * Which edge a pointer press targets, and how its state should cycle.
- *
- * Left button cycles undecided → wall → undecided; right button cycles
- * undecided → not-a-wall → undecided. Returns the paired edits for the two
- * cells the edge separates, or `null` if the press did not land on exactly one
- * edge (a corner, the center of a tile, or outside the grid).
- *
- * Mutates `ui` to park the cursor on the edge that was hit and hide it, which is
- * what makes a subsequent keyboard press continue from where the mouse was.
+ * The interior edge nearest a press at `(px0, py0)`, or `null` outside the grid
+ * or on its rim.
  */
 export function pointerEdge(
   state: BorderGridState,
-  ui: BorderGridUi,
   px0: number,
   py0: number,
   ts: number,
-  isLeftButton: boolean,
-): BorderEdit[] | null {
-  const { w, h, borders } = state;
+): BorderEdge | null {
+  const { w, h } = state;
   const gx = fromCoord(px0, ts);
   const gy = fromCoord(py0, ts);
   if (outOfBounds(gx, gy, w, h)) return null;
@@ -161,34 +149,100 @@ export function pointerEdge(
   let dir = 0;
   for (; dir < 4 && BORDER(dir) !== possible; dir++);
   if (dir === 4) return null; // defensive: see above, unreachable
+  if (outOfBounds(gx + DX[dir], gy + DY[dir], w, h)) return null;
+  return { x: gx, y: gy, dir };
+}
 
-  ui.cursor.x = clamp(2 * gx + 1 + DX[dir], 1, 2 * w - 1);
-  ui.cursor.y = clamp(2 * gy + 1 + DY[dir], 1, 2 * h - 1);
-
-  const hx = gx + DX[dir];
-  const hy = gy + DY[dir];
-  if (outOfBounds(hx, hy, w, h)) return null;
-
-  ui.cursor.visible = false;
-
-  const i = gy * w + gx;
-  const cur =
-    borders[i] & BORDER(dir) ? YES : borders[i] & DISABLED(BORDER(dir)) ? NO : MAYBE;
-  const next = isLeftButton ? (cur === YES ? MAYBE : YES) : cur === NO ? MAYBE : NO;
+/**
+ * The paired edits that cycle `edge` one way. Toward a wall: undecided → wall →
+ * undecided, and a not-a-wall mark goes straight to a wall. Toward not-a-wall
+ * the same, mirrored. Both cells the edge separates are edited, since a wall
+ * belongs to both and they must agree.
+ */
+export function edgeEdits(
+  state: BorderGridState,
+  { x, y, dir }: BorderEdge,
+  towardWall: boolean,
+): BorderEdit[] {
+  const b = state.borders[y * state.w + x];
+  const cur = b & BORDER(dir) ? YES : b & DISABLED(BORDER(dir)) ? NO : MAYBE;
+  const next = towardWall ? (cur === YES ? MAYBE : YES) : cur === NO ? MAYBE : NO;
 
   let gdiff = 0;
   if ((cur === YES) !== (next === YES)) gdiff |= BORDER(dir);
   if ((cur === NO) !== (next === NO)) gdiff |= DISABLED(BORDER(dir));
-  if (gdiff === 0) return null;
 
   // The neighbor's bits are the same toggles seen from the other side: shift
   // each nibble from `dir` to the facing direction.
   const hdiff =
     ((gdiff >> dir) << FLIP(dir)) | ((gdiff >> (dir + 4)) << (FLIP(dir) + 4));
   return [
-    { x: gx, y: gy, flag: gdiff },
-    { x: hx, y: hy, flag: hdiff },
+    { x, y, flag: gdiff },
+    { x: x + DX[dir], y: y + DY[dir], flag: hdiff },
   ];
+}
+
+/**
+ * The mechanic's geometry for the target-verb model: a press addresses the
+ * nearest interior edge, and the half-cell cursor (see {@link BorderGridUi})
+ * addresses the edge it rests on, or nothing on a corner or a tile center.
+ */
+export function borderGridGeometry<
+  State extends BorderGridState,
+  DrawState extends { readonly tileSize: number },
+>(): TargetGeometry<State, BorderGridUi, DrawState, BorderEdge> {
+  return {
+    noun: "edge",
+    pointerTarget: (s, ds, p) => pointerEdge(s, p.x, p.y, ds.tileSize),
+    cursorTarget(_s, ui) {
+      const { x, y } = ui.cursor;
+      if (x % 2 === y % 2) return null;
+      // An even coordinate is the line left of, or above, a cell.
+      return { x: Math.floor(x / 2), y: Math.floor(y / 2), dir: x % 2 === 0 ? 3 : 0 };
+    },
+    parkCursor(ui, e) {
+      ui.cursor.x = 2 * e.x + 1 + DX[e.dir];
+      ui.cursor.y = 2 * e.y + 1 + DY[e.dir];
+    },
+    moveCursor(s, ui, button) {
+      const d = cursorDelta(button);
+      if (d === null) return false;
+      moveBorderCursor(ui, d, s.w, s.h);
+      return true;
+    },
+  };
+}
+
+/**
+ * The whole input mechanic as target verbs: the left button draws a wall and
+ * the right marks not-a-wall. The game supplies only how a list of edits
+ * becomes a `Move` of its own — this module knows which edge was addressed and
+ * how its tri-state cycles, and coupling the two games' moves would couple two
+ * save formats.
+ */
+export function borderGridVerbs<
+  State extends BorderGridState,
+  Ui extends BorderGridUi,
+  DrawState extends { readonly tileSize: number },
+  Move,
+>(
+  toMove: (edits: BorderEdit[]) => Move,
+): TargetVerbs<State, Ui, DrawState, BorderEdge, Move> {
+  return {
+    geometry: borderGridGeometry<State, DrawState>(),
+    primary: {
+      does:
+        "mark it as a division between regions (black), and again to return it " +
+        "to undecided (yellow)",
+      apply: (s, e) => toMove(edgeEdits(s, e, true)),
+    },
+    secondary: {
+      does:
+        "mark it as definitely not a division (faint gray), and again to return " +
+        "it to undecided",
+      apply: (s, e) => toMove(edgeEdits(s, e, false)),
+    },
+  };
 }
 
 /** Move the half-cell cursor by one step, clamped inside the grid. Named apart
@@ -203,43 +257,6 @@ export function moveBorderCursor(
   ui.cursor.visible = true;
   ui.cursor.x = clamp(ui.cursor.x + d.dx, 1, 2 * w - 1);
   ui.cursor.y = clamp(ui.cursor.y + d.dy, 1, 2 * h - 1);
-}
-
-/**
- * What a select keypress on the cursor's current position should do.
- *
- * The first press only reveals a hidden cursor. On an edge, `select` toggles the
- * wall and `select2` toggles the not-a-wall mark — except that either press on
- * an edge already marked the *other* way clears that mark. A corner or tile
- * center means nothing.
- */
-export function selectEdge(
-  state: BorderGridState,
-  ui: BorderGridUi,
-  isSelect2: boolean,
-): BorderGridInput {
-  const { w, borders } = state;
-  const px = ui.cursor.x % 2;
-  const py = ui.cursor.y % 2;
-  const gx = Math.floor(ui.cursor.x / 2);
-  const gy = Math.floor(ui.cursor.y / 2);
-  const dir = px === 0 ? 3 : 0; // left : up
-  const i = gy * w + gx;
-
-  if (!ui.cursor.visible) {
-    ui.cursor.visible = true;
-    return "ui";
-  }
-  if (px === py) return null; // a corner or center: no edge
-
-  const isWall = (borders[i] & BORDER(dir)) !== 0;
-  const isNotWall = (borders[i] & DISABLED(BORDER(dir))) !== 0;
-  const togglesWall = !isNotWall && (isWall || !isSelect2);
-  const flag = (d: number) => (togglesWall ? BORDER(d) : DISABLED(BORDER(d)));
-  return [
-    { x: gx, y: gy, flag: flag(dir) },
-    { x: gx + DX[dir], y: gy + DY[dir], flag: flag(FLIP(dir)) },
-  ];
 }
 
 // --- border-array construction and connectivity ------------------------------
@@ -291,37 +308,4 @@ export function buildDsf(
     }
   }
   return dsf;
-}
-
-/**
- * The whole input mechanic: dispatch a button press to the pointer, cursor or
- * select path and report what it decided.
- *
- * The caller supplies the tile size and turns the resulting edits into its own
- * `Move`. That split is deliberate — this module knows which edge was addressed
- * and how its tri-state should cycle; only the game knows what a move of its own
- * looks like, and coupling the two would couple two save formats.
- */
-export function interpretBorderGridInput(
-  state: BorderGridState,
-  ui: BorderGridUi,
-  p: { x: number; y: number },
-  button: number,
-  ts: number,
-): BorderGridInput {
-  if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
-    return pointerEdge(state, ui, p.x, p.y, ts, button === LEFT_BUTTON);
-  }
-
-  const d = cursorDelta(button);
-  if (d) {
-    moveBorderCursor(ui, d, state.w, state.h);
-    return "ui";
-  }
-
-  if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
-    return selectEdge(state, ui, button === CURSOR_SELECT2);
-  }
-
-  return null;
 }

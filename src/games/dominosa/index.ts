@@ -29,16 +29,19 @@ import {
 } from "../../engine/hint-refusal.ts";
 import { numberItem } from "../../engine/params.ts";
 import {
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
   digitOf,
   gridCursorMove,
-  isCursorMove,
-  LEFT_BUTTON,
+  isMouseDown,
   newCursor,
   RIGHT_BUTTON,
+  stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  interpretTargetVerbs,
+  type TargetGeometry,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { Point, ReferenceItem, ReferenceModel } from "../../engine/types.ts";
 import { newDominosaDesc } from "./generator.ts";
 import { say } from "./hint-text.ts";
@@ -105,96 +108,9 @@ function interpretMove(
   ui: DominosaUi,
   ds: DominosaDrawState,
   p: Point,
-  button: number,
+  rawButton: number,
 ): DominosaMove | null | UiUpdate {
-  const { w, h } = state;
-  const ts = ds.tileSize;
-  const b = border(ts);
-  const coord = (v: number) => v * ts + b;
-  const fromCoord = (px: number) => fromCoordE(px, ts, b);
-
-  if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
-    const tx = fromCoord(p.x);
-    const ty = fromCoord(p.y);
-    const t = ty * w + tx;
-    if (tx < 0 || tx >= w || ty < 0 || ty >= h) return null;
-
-    // Any tap on the board dismisses the reference spotlight — the discoverable,
-    // mobile-friendly clear (Esc is neither). If the tap otherwise does nothing,
-    // we still repaint below so the cleared highlight disappears.
-    const dismissRef = ui.highlightPair !== null;
-    ui.highlightPair = null;
-
-    // Which edge of the square is the click closest to?
-    const dx = 2 * (p.x - coord(tx)) - ts;
-    const dy = 2 * (p.y - coord(ty)) - ts;
-
-    if (
-      button === RIGHT_BUTTON &&
-      Math.abs(dx) < (ts * 2) / 5 &&
-      Math.abs(dy) < (ts * 2) / 5
-    ) {
-      // Right-clicked on the number → toggle its highlight.
-      toggleHighlight(ui, state.numbers[t]);
-      return UI_UPDATE;
-    }
-
-    let d1: number;
-    let d2: number;
-    if (Math.abs(dx) > Math.abs(dy) && dx < 0 && tx > 0) {
-      d1 = t - 1;
-      d2 = t;
-    } else if (Math.abs(dx) > Math.abs(dy) && dx > 0 && tx + 1 < w) {
-      d1 = t;
-      d2 = t + 1;
-    } else if (Math.abs(dy) > Math.abs(dx) && dy < 0 && ty > 0) {
-      d1 = t - w;
-      d2 = t;
-    } else if (Math.abs(dy) > Math.abs(dx) && dy > 0 && ty + 1 < h) {
-      d1 = t;
-      d2 = t + w;
-    } else {
-      return dismissRef ? UI_UPDATE : null; // clicked precisely on a diagonal
-    }
-
-    // A barrier edge can't be marked next to any placed domino.
-    if (button === RIGHT_BUTTON && (state.grid[d1] !== d1 || state.grid[d2] !== d2))
-      return dismissRef ? UI_UPDATE : null;
-
-    ui.cursor.visible = false;
-    return button === RIGHT_BUTTON
-      ? { type: "edge", d1, d2 }
-      : { type: "domino", d1, d2 };
-  }
-
-  if (isCursorMove(button)) {
-    const moved = gridCursorMove(
-      button,
-      ui.cursor.x,
-      ui.cursor.y,
-      2 * w - 1,
-      2 * h - 1,
-    );
-    if (moved) {
-      ui.cursor.x = moved.x;
-      ui.cursor.y = moved.y;
-    }
-    ui.cursor.visible = true;
-    return UI_UPDATE;
-  }
-
-  if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
-    if (!((ui.cursor.x ^ ui.cursor.y) & 1)) return null; // need exactly one dimension odd
-    const d1 = Math.floor(ui.cursor.y / 2) * w + Math.floor(ui.cursor.x / 2);
-    const d2 =
-      Math.floor((ui.cursor.y + 1) / 2) * w + Math.floor((ui.cursor.x + 1) / 2);
-    if (button === CURSOR_SELECT2 && (state.grid[d1] !== d1 || state.grid[d2] !== d2))
-      return null;
-    return button === CURSOR_SELECT2
-      ? { type: "edge", d1, d2 }
-      : { type: "domino", d1, d2 };
-  }
-
+  const button = stripModifiers(rawButton);
   // Digit keys toggle a value highlight.
   const num = digitOf(button);
   if (num !== null) {
@@ -203,8 +119,128 @@ function interpretMove(
     return UI_UPDATE;
   }
 
-  return null;
+  if (isMouseDown(button)) {
+    const sq = squareAt(state, ds, p);
+    if (sq === null) return null;
+    // Any tap on the board dismisses the reference spotlight — the
+    // discoverable, mobile-friendly clear (Esc is neither) — and still repaints
+    // when the tap does nothing else, so the cleared highlight disappears.
+    const dismissed = ui.highlightPair !== null;
+    ui.highlightPair = null;
+    if (button === RIGHT_BUTTON && sq.onNumber) {
+      toggleHighlight(ui, state.numbers[sq.t]);
+      return UI_UPDATE;
+    }
+    const r = interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
+    return r ?? (dismissed ? UI_UPDATE : null);
+  }
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
 }
+
+/** The square a press lands in, how far from its center (`dx`, `dy`, in
+ * half-pixels), and whether it is near enough the center to be on the number. */
+function squareAt(state: DominosaState, ds: DominosaDrawState, p: Point) {
+  const { w, h } = state;
+  const ts = ds.tileSize;
+  const b = border(ts);
+  const tx = fromCoordE(p.x, ts, b);
+  const ty = fromCoordE(p.y, ts, b);
+  if (tx < 0 || tx >= w || ty < 0 || ty >= h) return null;
+  const dx = 2 * (p.x - (tx * ts + b)) - ts;
+  const dy = 2 * (p.y - (ty * ts + b)) - ts;
+  const near = (ts * 2) / 5;
+  return {
+    tx,
+    ty,
+    t: ty * w + tx,
+    dx,
+    dy,
+    onNumber: Math.abs(dx) < near && Math.abs(dy) < near,
+  };
+}
+
+/** A pair of adjacent squares, `d1` before `d2` in reading order: the place a
+ * domino or a line goes. `(x, y)` is the edge between them on the half-grid
+ * the cursor walks, where square `(sx, sy)` is `(2sx, 2sy)`. */
+interface Pair {
+  d1: number;
+  d2: number;
+  x: number;
+  y: number;
+}
+
+/** The pair whose edge is at half-grid `(x, y)`: exactly one odd coordinate. */
+function pairAt(w: number, x: number, y: number): Pair | null {
+  if (!((x ^ y) & 1)) return null;
+  return {
+    d1: Math.floor(y / 2) * w + Math.floor(x / 2),
+    d2: Math.floor((y + 1) / 2) * w + Math.floor((x + 1) / 2),
+    x,
+    y,
+  };
+}
+
+/**
+ * A target is the edge between two squares. A press names the one nearest it
+ * in its square; the cursor walks the half-grid, `(2w−1) × (2h−1)`.
+ */
+const geometry: TargetGeometry<DominosaState, DominosaUi, DominosaDrawState, Pair> = {
+  noun: "pair of numbers",
+  pointerTarget(s, ds, p) {
+    const sq = squareAt(s, ds, p);
+    if (sq === null) return null;
+    const { w, h } = s;
+    const { tx, ty, dx, dy } = sq;
+    const [x, y] = [2 * tx, 2 * ty];
+    if (Math.abs(dx) > Math.abs(dy) && dx < 0 && tx > 0) return pairAt(w, x - 1, y);
+    if (Math.abs(dx) > Math.abs(dy) && dx > 0 && tx + 1 < w) return pairAt(w, x + 1, y);
+    if (Math.abs(dy) > Math.abs(dx) && dy < 0 && ty > 0) return pairAt(w, x, y - 1);
+    if (Math.abs(dy) > Math.abs(dx) && dy > 0 && ty + 1 < h) return pairAt(w, x, y + 1);
+    return null; // precisely on a diagonal
+  },
+  cursorTarget: (s, ui) => pairAt(s.w, ui.cursor.x, ui.cursor.y),
+  parkCursor(ui, pair) {
+    ui.cursor.x = pair.x;
+    ui.cursor.y = pair.y;
+  },
+  moveCursor(s, ui, button) {
+    const moved = gridCursorMove(
+      button,
+      ui.cursor.x,
+      ui.cursor.y,
+      2 * s.w - 1,
+      2 * s.h - 1,
+    );
+    if (moved) {
+      ui.cursor.x = moved.x;
+      ui.cursor.y = moved.y;
+    }
+    ui.cursor.visible = true;
+    return true;
+  },
+};
+
+const targetVerbs: TargetVerbs<
+  DominosaState,
+  DominosaUi,
+  DominosaDrawState,
+  Pair,
+  DominosaMove
+> = {
+  geometry,
+  primary: {
+    does: "place or remove a domino covering them",
+    apply: (_s, { d1, d2 }) => ({ type: "domino", d1, d2 }),
+  },
+  secondary: {
+    does:
+      "place or remove a line between them, if you think a domino definitely " +
+      "cannot go there",
+    // A line can't go beside a placed domino.
+    apply: (s, { d1, d2 }) =>
+      s.grid[d1] !== d1 || s.grid[d2] !== d2 ? null : { type: "edge", d1, d2 },
+  },
+};
 
 /** Erase every barrier edge lurking around a square that has just become part
  * of a domino (clearing the reciprocal bit on the neighbor). */
@@ -647,6 +683,7 @@ export const dominosaGame: Game<
   newState,
   newUi,
 
+  targetVerbs,
   interpretMove,
   executeMove,
   status,

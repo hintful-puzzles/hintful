@@ -6,15 +6,10 @@ lines meeting at it.
 
 ## Controls
 
-Left-click in a square to mark it with a `\`; right-click
-to mark it with a `/`. Keep clicking in a square to
-cycle it between `\`, `/` and empty. The **Mouse button order**
-preference swaps the two buttons.
+{{controls}}
 
-With the keyboard, the arrow keys move a cursor around the grid. Enter
-cycles the square under it the way a left-click does, and Space the way a
-right-click does. You can also type `\` or `/` to draw that line
-directly, and Backspace or Delete to empty the square.
+The **Mouse button order** preference swaps the two buttons, and Enter
+and Space with them.
 
 The **Fade grounded components** preference dims every line that is
 joined, through other lines, to the edge of the grid: such a line can

@@ -13,8 +13,8 @@
 import {
   BORDER,
   BORDER_MASK,
+  borderGridVerbs,
   DISABLED,
-  interpretBorderGridInput,
 } from "../../engine/border-grid.ts";
 import {
   type BorderHint,
@@ -23,12 +23,7 @@ import {
   type ForcedBorderEdge,
 } from "../../engine/border-grid-hint.ts";
 import { winFlash } from "../../engine/flash.ts";
-import {
-  type Game,
-  type HintResult,
-  UI_UPDATE,
-  type UiUpdate,
-} from "../../engine/game.ts";
+import type { Game, HintResult, UiUpdate } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
   commonHintRefusal,
@@ -38,9 +33,10 @@ import {
 import { edgeContinuation } from "../../engine/hint-text.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
-import { newCursor, stripModifiers } from "../../engine/pointer.ts";
+import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
+import { interpretTargetVerbs } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSeparateDesc } from "./generator.ts";
 import { say } from "./hint-text.ts";
@@ -89,6 +85,13 @@ function paramsOf(state: SeparateState): SeparateParams {
 
 // --- input -----------------------------------------------------------------
 
+const targetVerbs = borderGridVerbs<
+  SeparateState,
+  SeparateUi,
+  SeparateDrawState,
+  SeparateMove
+>((edits) => ({ type: "edges", edits }));
+
 function interpretMove(
   state: SeparateState,
   ui: SeparateUi,
@@ -96,15 +99,7 @@ function interpretMove(
   p: Point,
   rawButton: number,
 ): SeparateMove | null | UiUpdate {
-  const r = interpretBorderGridInput(
-    state,
-    ui,
-    p,
-    stripModifiers(rawButton),
-    ds.tileSize,
-  );
-  if (r === null) return null;
-  return r === "ui" ? UI_UPDATE : { type: "edges", edits: r };
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
 }
 
 // --- flash -----------------------------------------------------------------
@@ -256,6 +251,7 @@ export const separateGame: Game<
   newState,
   newUi,
 
+  targetVerbs,
   interpretMove,
   executeMove,
   status,

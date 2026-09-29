@@ -449,11 +449,11 @@ export const MODULES = [
       {
         within: "pointerEdge",
         why: "a click on the outer border toggles a border with no neighbor",
-        find: "  if (outOfBounds(hx, hy, w, h)) return null;",
+        find: "  if (outOfBounds(gx + DX[dir], gy + DY[dir], w, h)) return null;",
         replace: "  if (false) return null;",
       },
       {
-        within: "pointerEdge",
+        within: "edgeEdits",
         why: "a toggle is applied to this cell but not mirrored on its neighbor",
         find: "    ((gdiff >> dir) << FLIP(dir)) | ((gdiff >> (dir + 4)) << (FLIP(dir) + 4));",
         replace: "    0;",

@@ -144,7 +144,7 @@ describe("the packed flags do not collide", () => {
 
 describe("both border-grid games use the shared renderer", () => {
   // The reverse direction, and the one the byte-clean snapshots cannot see: a
-  // third game could adopt `interpretBorderGridInput` and hand-roll the look
+  // third game could adopt `borderGridVerbs` and hand-roll the look
   // beside it, which is exactly how two renderers came to exist. What is being
   // asserted is that no such code exists, so it has to be a source scan.
   //
@@ -152,7 +152,7 @@ describe("both border-grid games use the shared renderer", () => {
   // what makes a game a border-grid game is that it calls the input mechanic.
   // Same question, different fact about the game.
   const borderGrid = enrolledIn(
-    (g) => membersNotMentioning([g.id], "interpretBorderGridInput").length === 0,
+    (g) => membersNotMentioning([g.id], "borderGridVerbs").length === 0,
   );
 
   it("looked at the whole registry and every game's source (vacuity guard)", () => {

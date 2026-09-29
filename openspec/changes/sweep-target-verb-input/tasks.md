@@ -8,18 +8,22 @@
 
 ## 2. Second target kinds
 
-- [ ] 2.1 Magnets: the clue gutter as a target the cursor reaches.
+- [x] 2.0 The model: `apply` sees the `Ui` and may return `UI_UPDATE`; the
+      model reads only `cursor.visible`; the guard presses keys only on
+      targets (design.md § "What the rest of the members needed").
+- [x] 2.1 Magnets: the clue ring as targets the cursor reaches; cursor drawn on
+      a clue (tier 2.5).
 - [ ] 2.2 Subsets: the tally band.
 
 ## 3. The half-cell geometry
 
-- [ ] 3.1 Palisade and Separate: `interpretBorderGridInput` becomes a
-      `TargetGeometry`.
-- [ ] 3.2 Dominosa's edge cursor on the same geometry, if it fits.
+- [x] 3.1 Palisade and Separate: `borderGridGeometry` + `borderGridVerbs`
+      replace `interpretBorderGridInput`.
+- [x] 3.2 Dominosa: its own pair geometry on the same half-grid idea.
 
 ## 4. The rest of the members
 
-- [ ] 4.1 Slant (pencil mode, swapped buttons).
+- [x] 4.1 Slant (notes mode an arm, swapped buttons through `apply`'s `ui`).
 - [ ] 4.2 Mines, Black Box, Loopy: the release question.
 - [ ] 4.3 The drag games' click half: measure whether it needs
       resolve-on-release.

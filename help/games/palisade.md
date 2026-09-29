@@ -7,14 +7,10 @@ its edges drawn in.
 
 ## Controls
 
-Click on a grid edge to mark it as a division between regions (black),
-and again to return to marking it as undecided (yellow). Right-click
-on a grid edge to mark it as definitely not a division (faint
-gray), and again to mark it as undecided again.
+{{controls}}
 
-The arrow keys move a cursor over the edges of the grid; Enter marks
-the edge under it as a division, and Space marks it as definitely not
-one.
+The cursor moves by half a square, so it rests on the edges between
+squares as well as on the squares themselves.
 
 ## Hints
 

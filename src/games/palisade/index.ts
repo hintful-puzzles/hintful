@@ -11,10 +11,10 @@
 import {
   BORDER,
   BORDER_MASK,
+  borderGridVerbs,
   DISABLED,
   DX,
   DY,
-  interpretBorderGridInput,
 } from "../../engine/border-grid.ts";
 import {
   borderHintJourney,
@@ -22,19 +22,14 @@ import {
   type ForcedBorderEdge,
 } from "../../engine/border-grid-hint.ts";
 import { winFlash } from "../../engine/flash.ts";
-import {
-  type Game,
-  type HintResult,
-  type HintStep,
-  UI_UPDATE,
-  type UiUpdate,
-} from "../../engine/game.ts";
+import type { Game, HintResult, HintStep, UiUpdate } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { edgeContinuation } from "../../engine/hint-text.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
-import { newCursor, stripModifiers } from "../../engine/pointer.ts";
+import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { interpretTargetVerbs } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { say } from "./hint-text.ts";
 import {
@@ -82,6 +77,13 @@ function paramsOf(state: PalisadeState): PalisadeParams {
 
 // --- input -----------------------------------------------------------------
 
+const targetVerbs = borderGridVerbs<
+  PalisadeState,
+  PalisadeUi,
+  PalisadeDrawState,
+  PalisadeMove
+>((edits) => ({ type: "edges", edits }));
+
 function interpretMove(
   state: PalisadeState,
   ui: PalisadeUi,
@@ -89,15 +91,7 @@ function interpretMove(
   p: Point,
   rawButton: number,
 ): PalisadeMove | null | UiUpdate {
-  const r = interpretBorderGridInput(
-    state,
-    ui,
-    p,
-    stripModifiers(rawButton),
-    ds.tileSize,
-  );
-  if (r === null) return null;
-  return r === "ui" ? UI_UPDATE : { type: "edges", edits: r };
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
 }
 
 // --- mistakes --------------------------------------------------------------
@@ -240,6 +234,7 @@ export const palisadeGame: Game<
   newState,
   newUi,
 
+  targetVerbs,
   interpretMove,
   executeMove,
   status,

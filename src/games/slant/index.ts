@@ -20,14 +20,13 @@ import { UI_UPDATE } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
+  BACKSPACE,
   CURSOR_SELECT,
   CURSOR_SELECT2,
+  DELETE,
   hideCursor,
   isCancelKey,
-  isCursorMove,
-  isEraseKey,
   LEFT_BUTTON,
-  moveCursor,
   newCursor,
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
@@ -35,6 +34,11 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  interpretTargetVerbs,
+  squareGrid,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import { type SlantHint, slantHint, slantHintKeepTrack } from "./hint.ts";
@@ -101,6 +105,57 @@ function cycle(current: number, clockwise: boolean): Slash {
   return v as Slash;
 }
 
+/** Cycle square `{ x, y }` one way round; the **Mouse button order**
+ * preference swaps which way each button goes, and Enter and Space with them,
+ * since each does what its button does. */
+const cycleAt =
+  (clockwise: boolean) =>
+  (s: SlantState, { x, y }: Point, ui: SlantUi): SlantMove => ({
+    type: "set",
+    x,
+    y,
+    v: cycle(s.soln[y * s.w + x], clockwise !== ui.swapButtons),
+  });
+
+/** Draw `v` in square `{ x, y }` outright, or nothing if it is there already. */
+const setTo =
+  (v: Slash) =>
+  (s: SlantState, { x, y }: Point): SlantMove | null =>
+    s.soln[y * s.w + x] === v ? null : { type: "set", x, y, v };
+
+const targetVerbs: TargetVerbs<SlantState, SlantUi, SlantDrawState, Point, SlantMove> =
+  {
+    geometry: squareGrid({ size: (s) => s, border }),
+    primary: {
+      does: "cycle it through `\\`, `/` and empty",
+      apply: cycleAt(true),
+    },
+    secondary: {
+      does: "cycle it the other way, through `/`, `\\` and empty",
+      apply: cycleAt(false),
+    },
+    keyOnly: [
+      {
+        does: "draw a `\\` in the square under the cursor",
+        keys: [{ codes: [KEY_BACKSLASH], name: "`\\`" }],
+        apply: setTo(-1),
+      },
+      {
+        does: "draw a `/` in it",
+        keys: [{ codes: [KEY_SLASH], name: "`/`" }],
+        apply: setTo(1),
+      },
+      {
+        does: "empty it",
+        keys: [
+          { codes: [BACKSPACE], name: "Backspace" },
+          { codes: [DELETE], name: "Delete" },
+        ],
+        apply: setTo(0),
+      },
+    ],
+  };
+
 function interpretMove(
   state: SlantState,
   ui: SlantUi,
@@ -117,74 +172,47 @@ function interpretMove(
     return UI_UPDATE;
   }
 
-  if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
+  // Notes mode: a tap marks the side of the square it lands nearest, and the
+  // keyboard pins one square and marks toward a neighbor. The model's verbs
+  // are the lines, so notes are an arm of their own.
+  if (ui.pencilMode && (button === LEFT_BUTTON || button === RIGHT_BUTTON)) {
     const ts = ds.tileSize;
     const x = fromCoord(p.x, ts, border(ts));
     const y = fromCoord(p.y, ts, border(ts));
     if (x < 0 || y < 0 || x >= w || y >= h) return null;
     hideCursor(ui.cursor);
-    if (ui.pencilMode) {
-      // The mark on the square's side nearest the tap: the diagonals cut the
-      // square into four triangles, one per side.
-      const fx = (p.x - border(ts)) / ts - x;
-      const fy = (p.y - border(ts)) / ts - y;
-      const side = [fx, 1 - fx, fy, 1 - fy];
-      const near = side.indexOf(Math.min(...side));
-      const [nx, ny] = [
-        [x - 1, y],
-        [x + 1, y],
-        [x, y - 1],
-        [x, y + 1],
-      ][near];
-      return toggleMark(state, { x, y }, { x: nx, y: ny });
-    }
-    return {
-      type: "set",
-      x,
-      y,
-      v: cycle(state.soln[y * w + x], (button === LEFT_BUTTON) !== ui.swapButtons),
-    };
+    // The diagonals cut the square into four triangles, one per side.
+    const fx = (p.x - border(ts)) / ts - x;
+    const fy = (p.y - border(ts)) / ts - y;
+    const side = [fx, 1 - fx, fy, 1 - fy];
+    const near = side.indexOf(Math.min(...side));
+    const [nx, ny] = [
+      [x - 1, y],
+      [x + 1, y],
+      [x, y - 1],
+      [x, y + 1],
+    ][near];
+    return toggleMark(state, { x, y }, { x: nx, y: ny });
   }
-
-  if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
+  if (ui.pencilMode && (button === CURSOR_SELECT || button === CURSOR_SELECT2)) {
     if (showCursor(ui.cursor)) return UI_UPDATE;
     const { x, y } = ui.cursor;
-    if (ui.pencilMode) {
-      const pin = ui.pin;
-      if (pin !== null && Math.abs(pin.x - x) + Math.abs(pin.y - y) === 1) {
-        ui.pin = null;
-        return toggleMark(state, pin, { x, y }) ?? UI_UPDATE;
-      }
-      ui.pin = pin !== null && pin.x === x && pin.y === y ? null : { x, y };
-      return UI_UPDATE;
+    const pin = ui.pin;
+    if (pin !== null && Math.abs(pin.x - x) + Math.abs(pin.y - y) === 1) {
+      ui.pin = null;
+      return toggleMark(state, pin, { x, y }) ?? UI_UPDATE;
     }
-    return {
-      type: "set",
-      x,
-      y,
-      v: cycle(state.soln[y * w + x], button === CURSOR_SELECT),
-    };
-  }
-
-  if (isCursorMove(button)) {
-    moveCursor(ui.cursor, button, w, h);
+    ui.pin = pin !== null && pin.x === x && pin.y === y ? null : { x, y };
     return UI_UPDATE;
   }
 
-  if (button === KEY_BACKSLASH || button === KEY_SLASH || isEraseKey(button)) {
-    const { x, y } = ui.cursor;
-    const v: Slash = button === KEY_BACKSLASH ? -1 : button === KEY_SLASH ? 1 : 0;
-    if (state.soln[y * w + x] === v) return null;
-    return { type: "set", x, y, v };
-  }
-
-  // Erase keys set the square above, so only Escape reaches this.
+  // Erase keys empty the square through the model, so only Escape reaches this.
   if (isCancelKey(button) && ui.pin !== null) {
     ui.pin = null;
     return UI_UPDATE;
   }
 
-  return null;
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
 }
 
 /** The mark joining two squares that share a side, as `alike` stores it. */
@@ -284,6 +312,7 @@ export const slantGame: Game<
   newState,
   newUi,
 
+  targetVerbs,
   interpretMove,
   executeMove,
   status,

@@ -8,12 +8,10 @@ four-square regions, each holding one A, one B, one C and one D.
 
 ## Controls
 
-Click on a grid edge to mark it as a division between regions (black),
-and again to return to marking it as undecided (yellow). Right-click on
-a grid edge to mark it as definitely not a division (faint gray), and
-again to mark it as undecided again. The arrow keys move a cursor over
-the edges of the grid; Enter marks the edge as a division, and Space
-marks it as definitely not one.
+{{controls}}
+
+The cursor moves by half a square, so it rests on the edges between
+squares as well as on the squares themselves.
 
 A region is shaded once it is complete and correct. Lines that close off
 a region of the wrong size are shown in red, as is a letter that appears
