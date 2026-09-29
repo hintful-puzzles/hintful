@@ -56,3 +56,28 @@ derivation").
   three-state cycle, Singles' "either key clears", Mines' chord and Net's lock.
 - Pilot on three or four click-only games (Light Up, Singles, Range, Unruly)
   before any sweep.
+
+## Hints to pull in (2026-09-29)
+
+Five of the hintless games are members of the model: **Net, Mines, Black Box,
+Flip and Twiddle**. This is the phase where a new hint checks the framework
+best, because a hint's steps are moves, and in these games the moves are
+exactly the verbs the model derives. A step's move should be spelled through
+the declared verb, not beside it, and a hint that has to hand-build a move the
+model already names is a finding about the model.
+
+Take them after the pilot, one at a time, in the order they press:
+
+1. **Net** first: its lock is a verb with game-supplied semantics (Task 0's
+   list), its decided element is a tile's rotation (a new mark kind), and its
+   deductions are connectivity, which the hint bar can narrate.
+2. **Mines**: the chord verb, and a desc that changes mid-game
+   (`Game.supersededDesc`), which a hint's plan must survive.
+3. **Black Box**, **Flip**, **Twiddle** after that, each checked against the
+   model as built. Twiddle's hint is a sliding-permutation planner (see how
+   Fifteen and Sixteen were bound), and Flip's is linear algebra over the
+   board: decide whether each is deductive or heuristic before building it,
+   in its own change.
+
+Re-check membership before starting: this list is the input survey's, and a
+member can move to `interpretMove`'s override once the second falsifier runs.

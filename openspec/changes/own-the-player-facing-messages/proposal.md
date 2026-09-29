@@ -47,3 +47,18 @@ a reason per entry.
   narrows to Solve and status.
 - **Player-visible wording.** Choose the wording for each kind once. It is the
   owner's to accept where uncertain.
+
+## Hints to pull in (2026-09-29)
+
+Upstream had no solver for Cube, Pegs, Same Game or Sokoban, so a hint for any
+of them needs one, and its refusal ("no solution from this position") is the
+same concept as `SolveResult`'s "no solution" kind. That is the overlap this
+change should be checked against: **Pegs** first, then **Same Game**. Their
+hints' refusals and their `solve` failures should come from one message kind,
+through `hint-refusal.ts`'s shape, not as two wordings for one fact. If the
+kinds cannot express what those hints need to say, that is a finding for this
+change, not for the hint.
+
+Both are search games, so their hints are heuristic (docs/games/hints.md §
+"Non-deductive (heuristic) hints"): write each in its own change, with a short
+design pass on what it can prove first, as Inertia did.

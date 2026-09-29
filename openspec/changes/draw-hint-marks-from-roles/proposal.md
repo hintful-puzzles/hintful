@@ -33,6 +33,17 @@ for `drawn` to say.
    words against what `redraw` records instead (tier 2.5), which measures the
    thing itself rather than a statement about it.
 
+## Hints to pull in (2026-09-29)
+
+**Rect** is the hintless game that presses on this change. Its decided element
+is a rectangle, which straddles tiles. The pilot proposal (item 2) has a game
+declare the footprint of a mark the engine draws across tiles, and its design
+D2 declared none, because nothing moved painting behind the engine.
+A Rect hint written against role-drawn marks either fits the model or shows
+exactly what a straddling mark needs. Write it after step 3 lands, so it is
+the first hint whose words are checked against the recorded frame rather than
+against `drawn`.
+
 ## Before starting
 
 Re-derive the population and the blocker: count the games whose `drawn` is not

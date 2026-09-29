@@ -1,0 +1,5 @@
+# No delta: each game's hint lands in its own change, under the existing
+# hint requirements.
+schema: spec-driven
+created: 2026-09-29
+skip_specs: true
