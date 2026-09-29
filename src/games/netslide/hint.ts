@@ -24,13 +24,14 @@
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { ALREADY_SOLVED, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
+import { CELL, type MarkRef, type Narration } from "../../engine/hint-words.ts";
 import {
   planSlides,
   type SlideMove,
   slidePieces,
   toroidalDist,
 } from "../../engine/slide-planner.ts";
-import { type Landing, say } from "./hint-text.ts";
+import { type Marked, SQUARE, say, TILE } from "./hint-text.ts";
 import { reconstructSolution } from "./reconstruct.ts";
 import { isComplete, type NetslideMove, type NetslideState } from "./state.ts";
 
@@ -56,6 +57,8 @@ export interface NetslideHint {
    * hatched; empty when it names none (docs/games/hints.md § "Hatch the line
    * the sentence names"). */
   line: number[];
+  /** The grid width the flat cells are in. */
+  w: number;
 }
 
 /** The forward-search budget. Netslide slides only ±1, so its plans are several
@@ -617,12 +620,8 @@ function narrateStep(
     belongs: focus.belongs,
     ...arrowFor(s, move),
     line: [],
+    w,
   };
-
-  // Named by the mark `drawHintTargets` puts on the landing square: solid only
-  // when it is the destination and the tile belongs there.
-  const to: Landing =
-    focus.landing === focus.destination && focus.belongs ? "solid" : "dashed";
 
   // "Where it belongs" is a claim, so it is only made when the finished board
   // really does want this tile's wires in the cell the slide is delivering it to.
@@ -630,35 +629,56 @@ function narrateStep(
   // and there the honest thing to say is that it is being set up.
   const arrivesHome = focus.arrives && focus.belongs;
 
-  if (continuesPrevious) {
-    return {
-      move,
-      explanation: say.next(to, arrivesHome),
-      highlights,
-      continuesPrevious: true,
-    };
-  }
-
   const row = Math.floor(focus.from / w);
   const col = focus.from % w;
 
   // The single degree of freedom. A tile in the source's row sits on a line that
   // never slides, so the only line that can move it is its column — and the other
   // way about. The row is "this row", striped: the board draws no numbers.
-  let explanation: string;
-  if (row === cy && m.axis === "col") {
-    explanation = say.rowFixed(mask, to, arrivesHome);
+  let words: (m: Marked) => Narration;
+  if (continuesPrevious) {
+    words = (m) => say.next(m, arrivesHome);
+  } else if (row === cy && m.axis === "col") {
+    words = (m) => say.rowFixed(m, arrivesHome);
     highlights.line = Array.from({ length: w }, (_, x) => cy * w + x);
   } else if (col === cx && m.axis === "row") {
-    explanation = say.colFixed(mask, to, arrivesHome);
+    words = (m) => say.colFixed(m, arrivesHome);
     highlights.line = Array.from({ length: s.h }, (_, y) => y * w + cx);
   } else if (focus.belongs && isBesideSource(focus.destination, w, cx, cy)) {
-    explanation = say.besideSource(mask, to, arrivesHome);
+    words = (m) => say.besideSource(m, arrivesHome);
   } else {
-    explanation = say.working(mask, to, arrivesHome);
+    words = (m) => say.working(m, arrivesHome);
   }
 
-  return { move, explanation, highlights };
+  const said = words({ ...markedOf(highlights), mask });
+  return {
+    move,
+    explanation: said.text,
+    words: said,
+    highlights,
+    ...(continuesPrevious ? { continuesPrevious } : {}),
+  };
+}
+
+/** A step's highlights as the marks its words name, less the tile's shape. */
+function markedOf(hl: NetslideHint): Omit<Marked, "mask"> {
+  return {
+    tile: hl.tile,
+    landing: hl.landing,
+    destination: hl.destination,
+    line: hl.line.map((i) => ({ x: i % hl.w, y: Math.floor(i / hl.w) })),
+  };
+}
+
+/** What a step's highlights draw: the `drawn` half of Netslide's legend. The
+ * tile's double ring and the arrow that slides it are one mark. */
+export function netslideHintMarks(hl: NetslideHint): MarkRef[] {
+  const m = markedOf(hl);
+  return [
+    { role: "ring", kind: TILE, elements: [m.tile] },
+    { role: "ring", kind: SQUARE, elements: [m.landing, m.destination] },
+    { role: "stripes", kind: CELL, elements: m.line },
+  ] as MarkRef[];
 }
 
 /** Is `cell` orthogonally adjacent to the source — the tile power flows from, whose

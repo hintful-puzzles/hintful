@@ -23,8 +23,9 @@ import {
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
+import type { MarkRef, Narration } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import { type Axis, say } from "./hint-text.ts";
+import { type Axis, LINE, type Marked, PIECE, type Piece, say } from "./hint-text.ts";
 import { executeMove } from "./moves.ts";
 import { type TracksFiring, type TracksReason, tracksRecordingPass } from "./solver.ts";
 import {
@@ -140,44 +141,78 @@ function lineOf(b: Board, line: number) {
  * nobody can ever read or check (`tracks-ladder.test.ts`'s `unreached` ledger,
  * and `tracks-hint.test.ts` asserts it stays that way).
  */
-export function narrate(b: Board, reason: TracksReason): string {
+export function narrate(
+  b: Board,
+  reason: TracksReason,
+  hl: TracksHighlights,
+): Narration {
+  const m = markedOf(hl);
   switch (reason.kind) {
     case "onlyOneSideLeft":
-      return say.onlyOneSideLeft(reason.open);
+      return say.onlyOneSideLeft(reason.open, m);
     case "bothSidesLeft":
-      return say.bothSidesLeft;
+      return say.bothSidesLeft(m);
     case "clueFull": {
       const { axis, target } = lineOf(b, reason.line);
-      return say.clueFull(axis, target);
+      return say.clueFull(axis, target, m);
     }
     case "clueExact": {
       const { axis, target, len } = lineOf(b, reason.line);
-      return say.clueExact(axis, target, len);
+      return say.clueExact(axis, target, len, m);
     }
     case "wouldCloseLoop":
-      return say.wouldCloseLoop;
+      return say.wouldCloseLoop(m);
     case "wouldStrandTrack":
-      return say.wouldStrandTrack;
+      return say.wouldStrandTrack(m);
     case "wouldFinishEarly":
-      return say.wouldFinishEarly(lineOf(b, reason.unmet).axis);
+      return say.wouldFinishEarly(lineOf(b, reason.unmet).axis, m);
     case "looseEndsFill": {
       const { axis, target } = lineOf(b, reason.line);
-      return say.looseEndsFill(axis, target);
+      return say.looseEndsFill(axis, target, m);
     }
     case "looseEndSpans":
-      return say.looseEndSpans(lineOf(b, reason.line).axis);
+      return say.looseEndSpans(lineOf(b, reason.line).axis, m);
     case "sharedFate": {
       const { axis } = lineOf(b, reason.line);
       const { dir } = reason;
-      if (reason.fills && reason.empties) return say.sharedFateBoth(axis, dir);
-      if (reason.fills) return say.sharedFateFills(axis, dir);
-      return say.sharedFateEmpties(axis, FLIP(dir));
+      if (reason.fills && reason.empties) return say.sharedFateBoth(axis, dir, m);
+      if (reason.fills) return say.sharedFateFills(axis, dir, m);
+      return say.sharedFateEmpties(axis, FLIP(dir), m);
     }
     case "crossingParity":
       // The track crosses a closed block's border an even number of times, so
       // an odd count so far means the last side must carry it.
-      return say.crossingParity(reason.crossings, reason.crossings % 2 === 1);
+      return say.crossingParity(reason.crossings, reason.crossings % 2 === 1, m);
   }
+}
+
+const cellOf = ({ x, y }: { x: number; y: number }): Piece => ({ x, y });
+const sideOf = ({ x, y, dir }: TracksHintEdge): Piece => ({ x, y, dir });
+
+/** A step's highlights as the marks its words name. */
+function markedOf(hl: TracksHighlights): Marked {
+  return {
+    decided: [...hl.targets.map(cellOf), ...hl.targetEdges.map(sideOf)],
+    emptied: hl.targets.filter((t) => !t.track).map(cellOf),
+    filled: hl.targets.filter((t) => t.track).map(cellOf),
+    cells: hl.area.map(cellOf),
+    sides: hl.areaEdges.map(sideOf),
+    clues: hl.clues.map((clue) => ({ clue })),
+    line: hl.line === null ? [] : [hl.line],
+    block: hl.hatch.map(cellOf),
+  };
+}
+
+/** What a step's highlights draw: the `drawn` half of Tracks' legend. The
+ * named line is striped through its clue, which is one mark. */
+export function tracksHintMarks(hl: TracksHighlights): MarkRef[] {
+  const m = markedOf(hl);
+  return [
+    { role: "ring", kind: PIECE, elements: m.decided },
+    { role: "outline", kind: PIECE, elements: [...m.cells, ...m.sides, ...m.clues] },
+    { role: "stripes", kind: LINE, elements: m.line },
+    { role: "stripes", kind: PIECE, elements: m.block },
+  ] as MarkRef[];
 }
 
 // --- highlights from a firing ---------------------------------------------
@@ -296,10 +331,13 @@ export function tracksHint(
       // and that should reach Sentry rather than render a blank sentence.
       const { reason } = firing;
       if (!reason) throw new Error("tracks hint: a step with no premise was shown");
+      const highlights = highlightsOf(board, reason, firing);
+      const words = narrate(board, reason, highlights);
       return {
         move: { ops: firing.ops },
-        explanation: narrate(board, reason),
-        highlights: highlightsOf(board, reason, firing),
+        explanation: words.text,
+        words,
+        highlights,
       };
     }),
   };
@@ -388,6 +426,13 @@ export function tracksKeepTrack(
         .filter((o) => o.kind === "edge")
         .map((o) => ({ x: o.x, y: o.y, dir: o.dir ?? 0, track: o.track })),
     };
+    if (step.words) {
+      const kept = new Set(markedOf(step.highlights).decided.map((p) => PIECE.key(p)));
+      step.words = step.words.narrow(
+        (role, _kind, key) => role !== "ring" || kept.has(key),
+      );
+      step.explanation = step.words.text;
+    }
   }
   return "onTrack";
 }

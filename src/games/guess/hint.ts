@@ -17,7 +17,8 @@
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { commonHintRefusal, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
-import { type Reason, say } from "./hint-text.ts";
+import type { MarkRef } from "../../engine/hint-words.ts";
+import { COLOR, type Reason, ROW, SLOT, say } from "./hint-text.ts";
 import {
   FEEDBACK_CORRECTPLACE,
   type GuessMove,
@@ -506,7 +507,7 @@ function chooseProbe(state: GuessState, out: Int32Array): Probe | null {
 export function guessHint(
   state: GuessState,
   ui?: { holds: boolean[] },
-): HintResult<GuessMove> {
+): HintResult<GuessMove, GuessHighlights> {
   const refusal = commonHintRefusal(state.solved !== 0, 0);
   if (refusal) return refusal;
   const p = state.params;
@@ -522,10 +523,13 @@ export function guessHint(
     const place = f.marks.filter((m) => !(board[m.pos] & bit(m.color)));
     if (place.length === 0) continue;
     for (const m of place) board[m.pos] |= bit(m.color);
+    const highlights: GuessHighlights = { line: f.rows, slots: f.slots, marked: place };
+    const words = say(f.reason, highlights);
     steps.push({
       move: { type: "mark", marks: place, ruledOut: true },
-      explanation: say(f.reason),
-      highlights: { line: f.rows, slots: f.slots, marked: place },
+      explanation: words.text,
+      words,
+      highlights,
     });
   }
 
@@ -537,18 +541,21 @@ export function guessHint(
       ? { ok: true, steps }
       : { ok: false, error: SEARCH_OUT_OF_REACH };
   }
+  const highlights: GuessHighlights = {
+    line: [],
+    slots: [],
+    marked: probe.guess.map((color, pos) => ({ pos, color })),
+  };
+  const words = say(probeReason(probe), highlights);
   steps.push({
     move: {
       type: "guess",
       pegs: probe.guess,
       holds: ui ? ui.holds.slice() : new Array(p.npegs).fill(false),
     },
-    explanation: say(probeReason(probe)),
-    highlights: {
-      line: [],
-      slots: [],
-      marked: probe.guess.map((color, pos) => ({ pos, color })),
-    },
+    explanation: words.text,
+    words,
+    highlights,
   });
   return { ok: true, steps };
 }
@@ -586,18 +593,34 @@ export function guessHintKeepTrack(
 
 /** Drop the marks a stored step would set that are already on the board. */
 export function guessRefreshHintStep(
-  step: HintStep<GuessMove>,
+  step: HintStep<GuessMove, GuessHighlights>,
   state: GuessState,
-): HintStep<GuessMove> | null {
+): HintStep<GuessMove, GuessHighlights> | null {
   const move = step.move;
   if (move.type !== "mark") return step;
   const live = move.marks.filter((m) => !(state.ruledOut[m.pos] & bit(m.color)));
   if (live.length === 0) return null;
   if (live.length === move.marks.length) return step;
   const hl = step.highlights as GuessHighlights;
+  // The words keep naming what is still framed (design D4).
+  const keep = new Set(live.map((m) => COLOR.key(m)));
+  const words = step.words?.narrow(
+    (role, kind, key) => role !== "ring" || kind !== COLOR.name || keep.has(key),
+  );
   return {
     ...step,
     move: { ...move, marks: live },
     highlights: { ...hl, marked: live },
+    ...(words ? { words, explanation: words.text } : {}),
   };
+}
+
+/** What a step's highlights draw: the `drawn` half of Guess's legend. Every
+ * row a step reads is a scored one, so the renderer draws each. */
+export function guessHintMarks(hl: GuessHighlights): MarkRef[] {
+  return [
+    { role: "stripes", kind: ROW, elements: hl.line },
+    { role: "outline", kind: SLOT, elements: hl.slots },
+    { role: "ring", kind: COLOR, elements: hl.marked },
+  ] as MarkRef[];
 }

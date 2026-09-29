@@ -47,7 +47,11 @@ import {
 } from "../../engine/pointer.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { newUntangleDesc } from "./generator.ts";
-import { deduceUntangleHintPlan, type UntangleHint } from "./hint.ts";
+import {
+  deduceUntangleHintPlan,
+  type UntangleHint,
+  untangleHintMarks,
+} from "./hint.ts";
 import { FLASH_TIME, redrawUntangle } from "./render.ts";
 import { closestOrientation, solvedLayout } from "./solution.ts";
 import {
@@ -135,7 +139,9 @@ export const untangleGame: Game<
   UntangleState,
   UntangleMove,
   UntangleUi,
-  UntangleDrawState
+  UntangleDrawState,
+  unknown,
+  UntangleHint
 > = {
   id: "untangle",
   preferredTileSize: PREFERRED_TILE_SIZE,
@@ -393,6 +399,14 @@ export const untangleGame: Game<
 
   // --- hint (the move that clears the most crossings; see hint.ts) ---
   hint: (s, aux) => deduceUntangleHintPlan(s, aux),
+  hintMarks: {
+    roles: {
+      ring: "the move the step decides: the point to move, drawn in the hint's color, with a line in the same color running to the spot to drop it on, which is also drawn as a point. When only a few crossings are left, the hint may move several points together so that none of their lines crosses anything; the other points it will move next are ringed too (*the marked points*, in its words), and it moves them one at a time.",
+      outline:
+        "the crossings the move clears, each with a ring round it, so you can count them.",
+    },
+    drawn: untangleHintMarks,
+  },
 
   // --- solve (the solved layout, in the symmetry closest to the board) -
   solve: (_orig, curr, aux) => {

@@ -20,27 +20,50 @@
  *
  * A line is "this row", striped on the board, never a number the board does not
  * draw, and never "the center": `cx` is `⌊w/2⌋`, so on an even-sized board the
- * source is visibly off-center and the player can see the claim is false. Where
- * a slide takes a tile is named by the mark on that square: dashed for a square
- * on the way, outlined for one it belongs in.
+ * source is visibly off-center and the player can see the claim is false.
+ *
+ * Everything else a step marks is what it decides, so it is ringed in the roles
+ * of `engine/hint-words.ts`, whatever its glyph: the tile to move (a double ring,
+ * with the arrow to click in the hint's color) and the squares the slide takes
+ * it to (a solid outline where it belongs, a dashed one on the way). The words
+ * that point at them are references.
  *
  * The move itself is *not* forced by logic — Netslide is a movement game — so
  * the conclusion is an imperative, never a modal of necessity.
  */
 
 import { HINT_SETTING_UP } from "../../engine/hint-text.ts";
+import {
+  CELL,
+  type MarkKind,
+  mark,
+  type Narration,
+  phrase,
+  whole,
+} from "../../engine/hint-words.ts";
+import type { Point } from "../../engine/types.ts";
 import { D, L, R, U, wireCount } from "./state.ts";
 
-/** Where a slide lands the tile, by the mark on that square: `solid` when it
- * lands where it belongs, `dashed` on the way there. */
-export type Landing = "solid" | "dashed";
+/** The tile a step moves, by the cell it sits in; its mark includes the arrow
+ * that slides it. */
+export const TILE: MarkKind<number> = { name: "tile", key: String };
 
-const place = (to: Landing): string =>
-  to === "solid" ? "the outlined square" : "the dashed square";
+/** A square the slide takes the tile to, by flat index. */
+export const SQUARE: MarkKind<number> = { name: "square", key: String };
+
+/** What a step marks: the tile (wired as `mask`), where this slide lands it,
+ * where its journey ends, and the line the sentence names (empty when none). */
+export interface Marked {
+  tile: number;
+  mask: number;
+  landing: number;
+  destination: number;
+  line: readonly Point[];
+}
 
 /** A tile's name is its shape, which is the one thing about it the player can
  * see. There is no "tile 8" in Netslide, so the shape names the *kind* and the
- * board's highlight says *which one*. */
+ * board's mark says *which one*. */
 function tileName(mask: number): string {
   const wires = wireCount(mask);
   if (wires === 1) return "loose end";
@@ -49,6 +72,21 @@ function tileName(mask: number): string {
   return mask === (L | R) || mask === (U | D) ? "straight" : "corner";
 }
 
+const tile = (m: Marked, words: string): Narration =>
+  mark.as("ring", TILE, [m.tile], words);
+const thisTile = (m: Marked, lead = "this"): Narration =>
+  tile(m, `${lead} ${tileName(m.mask)}`);
+
+/** Where the slide takes the tile: its landing, and the end of its journey
+ * when that is further on. */
+const place = (m: Marked): Narration =>
+  m.landing === m.destination
+    ? mark.as("ring", SQUARE, [m.landing], "the ringed square")
+    : mark.as("ring", SQUARE, [m.landing, m.destination], "the two ringed squares");
+
+const thisLine = (m: Marked, noun: "row" | "column"): Narration =>
+  mark.this("stripes", whole(CELL), m.line, noun).capitalized();
+
 /** How a first leg closes: on the arrival, or on the shared staging marker. */
 const tail = (home: boolean): string =>
   home ? ", where it belongs" : ` ${HINT_SETTING_UP}`;
@@ -56,27 +94,27 @@ const tail = (home: boolean): string =>
 export const say = {
   /** A later leg of the journey: it neither re-introduces the tile nor
    * re-explains the why, since leg one carried both and is still on screen. */
-  next: (to: Landing, home: boolean): string =>
-    `Now on to ${place(to)}${home ? ", where it belongs" : ""}.`,
+  next: (m: Marked, home: boolean): Narration =>
+    phrase`Now take ${tile(m, "it")} on to ${place(m)}${home ? ", where it belongs" : ""}.`,
 
-  /** The tile (wired as `mask`) sits in the source's row, striped. */
-  rowFixed: (mask: number, to: Landing, home: boolean): string =>
-    `This row never slides, so only a column move can shift this ${tileName(mask)}: take it to ${place(to)}${tail(home)}.`,
+  /** The tile sits in the source's row, striped. */
+  rowFixed: (m: Marked, home: boolean): Narration =>
+    phrase`${thisLine(m, "row")} never slides, so only a column move can shift ${thisTile(m)}: take it to ${place(m)}${tail(home)}.`,
 
   /** The tile sits in the source's column, striped. */
-  colFixed: (mask: number, to: Landing, home: boolean): string =>
-    `This column never slides, so only a row move can shift this ${tileName(mask)}: take it to ${place(to)}${tail(home)}.`,
+  colFixed: (m: Marked, home: boolean): Narration =>
+    phrase`${thisLine(m, "column")} never slides, so only a row move can shift ${thisTile(m)}: take it to ${place(m)}${tail(home)}.`,
 
   // Stated, not argued: *why* the source is fixed is a rule, and rules live in
   // the help text. "Belongs beside the source" is itself the arrival marker, so
   // the arriving leg closes on it rather than on `tail`'s ", where it belongs"
   // (which would say "belongs" twice); a leg still on its way keeps the shared
   // "(setting up)" marker.
-  besideSource: (mask: number, to: Landing, home: boolean): string =>
+  besideSource: (m: Marked, home: boolean): Narration =>
     home
-      ? `Take this ${tileName(mask)} to ${place(to)}; it belongs beside the source.`
-      : `This ${tileName(mask)} belongs beside the source: take it to ${place(to)} ${HINT_SETTING_UP}.`,
+      ? phrase`Take ${thisTile(m)} to ${place(m)}; it belongs beside the source.`
+      : phrase`${thisTile(m, "This")} belongs beside the source: take it to ${place(m)} ${HINT_SETTING_UP}.`,
 
-  working: (mask: number, to: Landing, home: boolean): string =>
-    `Working on the highlighted ${tileName(mask)}: take it to ${place(to)}${tail(home)}.`,
+  working: (m: Marked, home: boolean): Narration =>
+    phrase`Working on ${thisTile(m)}: take it to ${place(m)}${tail(home)}.`,
 };

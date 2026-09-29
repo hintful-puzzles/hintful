@@ -29,13 +29,21 @@ rather than one at a time.
 
 - [x] 4.1 Fifteen, Sixteen (a slide's tile and landing are both what the step
       decides, so both are rings).
-- [ ] 4.2 Netslide, Inertia, Untangle, Flood, Guess.
+- [x] 4.2 Netslide, Inertia, Untangle, Flood, Guess. Flood had no
+      highlights: its renderer's dots moved into `joinedBy`, which the hint
+      and the renderer share.
+- [x] 4.3 Ascent and Tracks, which the proposal's batches left out: its list
+      was read off imports, and both have hint machinery of their own. The
+      guard that replaced the binding floor ("every hinted game is bound")
+      named them on its first run.
 
 ## 5. Close
 
-- [ ] 5.1 The binding walk's floor equals the hinted population.
+- [x] 5.1 The binding walk's floor is the hinted population: "every hinted
+      game is bound" names any hinted game without a legend (proved red on
+      the seven then unbound).
 - [x] 5.2 Salad's count-marker legs name the square they ring: "so this
       square and the rest of it must be empty" (design D3).
-- [ ] 5.3 Retire `hintMarks.drawn` once renderers draw from the roles, or
-      scaffold it as its own change with the reason.
+- [x] 5.3 Retiring `hintMarks.drawn` touches every renderer, so it is its own
+      change: `draw-hint-marks-from-roles`, scaffolded.
 - [ ] 5.4 Run the app on a game from each batch.

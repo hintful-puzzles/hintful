@@ -47,7 +47,12 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
-import { type TracksHighlights, tracksHint, tracksKeepTrack } from "./hint.ts";
+import {
+  type TracksHighlights,
+  tracksHint,
+  tracksHintMarks,
+  tracksKeepTrack,
+} from "./hint.ts";
 import {
   copyAndApplyDrag,
   executeMove,
@@ -345,7 +350,8 @@ export const tracksGame: Game<
   TracksMove,
   TracksUi,
   TracksDrawState,
-  Point
+  Point,
+  TracksHighlights
 > = {
   id: "tracks",
 
@@ -376,6 +382,16 @@ export const tracksGame: Game<
   difficulty,
   findMistakes,
   hint,
+  hintMarks: {
+    roles: {
+      ring: "what the step decides, in the hint color: a ring round a square means that square is settled (with a cross in it as well, it must be empty; a ring on its own means it must carry track, though not yet which way); a short pair of rail ends poking through a side means the track must cross that side, and a cross on a side means it must not.",
+      outline:
+        "what the step reasons from, in a second color: an outline round the squares it counts, a short bar on a side whose state is part of the argument, and the clue number it counts with, recolored in the margin.",
+      stripes:
+        "the row or column the sentence calls “this row” or “this column”, striped through its clue, or the closed block a sentence about crossings is about.",
+    },
+    drawn: tracksHintMarks,
+  },
   hintKeepTrack: (
     m: TracksMove,
     step: HintStep<TracksMove>,

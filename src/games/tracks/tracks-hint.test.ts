@@ -424,13 +424,13 @@ describe("every narratable premise the corpus reaches is reached", () => {
     expect(sentences.size).toBeGreaterThanOrEqual(12);
     const all = [...sentences].join("\n");
     for (const marker of [
-      "with only two of its sides still open", // bothSidesLeft
-      "Only one side of this square is still open", // onlyOneSideLeft
+      "has two sides blocked, so it must run through the other two", // bothSidesLeft
+      "of this square but one is blocked", // onlyOneSideLeft
       "the track squares its clue allows", // clueFull
       "can leave only", // clueExact
       "would close a loop", // wouldCloseLoop
       "stranding the outlined track", // wouldStrandTrack
-      "this loose end must run straight on", // looseEndSpans
+      "the loose end must run straight on", // looseEndSpans
       "Track here would carry on", // sharedFate, fill arm
       "No track here means none", // sharedFate, empty arm
       "enters the striped block it must leave", // crossingParity
@@ -449,30 +449,42 @@ describe("narration reads correctly at the degenerate extremes", () => {
     tracksGame.newState(SHAPES[0], tracksGame.newDesc(SHAPES[0], randomNew("x")).desc),
   );
   const ev = { cells: [], edges: [], clues: [] };
-  const say = (r: TracksReason) => narrate(board, r);
+  // No marks: the words are read apart from any picture.
+  const hl: TracksHighlights = {
+    targets: [],
+    targetEdges: [],
+    area: [],
+    areaEdges: [],
+    clues: [],
+    line: null,
+    hatch: [],
+  };
+  const narrateText = (b: typeof board, r: TracksReason): string =>
+    narrate(b, r, hl).text;
+  const say = (r: TracksReason) => narrateText(board, r);
 
   it("a square with no side left open does not claim it has one", () => {
     expect(say({ kind: "onlyOneSideLeft", x: 0, y: 0, open: 0, ev })).toContain(
       "Every side of this square is blocked",
     );
     expect(say({ kind: "onlyOneSideLeft", x: 0, y: 0, open: 1, ev })).toMatch(
-      /only one side/i,
+      /but one is blocked/i,
     );
   });
 
   it("a clue of one is singular, and a clue of zero says so", () => {
     const b0 = { ...board, numbers: Int32Array.from(board.numbers) };
     b0.numbers[0] = 0;
-    expect(narrate(b0, { kind: "clueFull", line: 0, ev })).toContain(
+    expect(narrateText(b0, { kind: "clueFull", line: 0, ev })).toContain(
       "clue is 0, so no track can run along it",
     );
     b0.numbers[0] = 1;
-    expect(narrate(b0, { kind: "clueFull", line: 0, ev })).toContain(
+    expect(narrateText(b0, { kind: "clueFull", line: 0, ev })).toContain(
       "the one track square its clue allows",
     );
     // "all 2 of" is grammatical and reads wrong.
     b0.numbers[0] = 2;
-    expect(narrate(b0, { kind: "clueFull", line: 0, ev })).toContain(
+    expect(narrateText(b0, { kind: "clueFull", line: 0, ev })).toContain(
       "both of the track squares its clue allows",
     );
   });
@@ -480,7 +492,7 @@ describe("narration reads correctly at the degenerate extremes", () => {
   it("a line with no room to be empty is not asked to leave 0 squares empty", () => {
     const bFull = { ...board, numbers: Int32Array.from(board.numbers) };
     bFull.numbers[0] = board.h;
-    const s = narrate(bFull, { kind: "clueExact", line: 0, ev });
+    const s = narrateText(bFull, { kind: "clueExact", line: 0, ev });
     expect(s).toContain("squares long, so every square in it must carry track");
     expect(s).not.toContain("only 0");
   });

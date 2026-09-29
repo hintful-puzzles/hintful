@@ -14,9 +14,12 @@ fills with the color under it.
 
 ## Hints
 
-**Hint** names the next color to fill with — *"Fill with orange"* — and
-puts a black dot on every square that fill would join to your region,
-so you can see what it gains. Nothing in Flood is forced by logic, so
+**Hint** names the next color to fill with — *"Fill with orange to join
+the dotted squares to your region"*.
+
+{{hint-marks}}
+
+Nothing in Flood is forced by logic, so
 the hint plays a few fills ahead and picks the one that looks best; it
 does not promise the shortest way to finish. The move limit is set by
 the same planner playing from the start, plus the extra moves the game

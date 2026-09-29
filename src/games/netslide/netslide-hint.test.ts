@@ -429,7 +429,7 @@ describe("netslide hint narration", () => {
         seen = true;
         // A continuation leg works the same tile the leg before it did, and it
         // does not re-explain itself.
-        expect(res.steps[k].explanation).toMatch(/^Now on to/);
+        expect(res.steps[k].explanation).toMatch(/^Now take it on to/);
       }
     }
     expect(seen, "no plan in 30 boards ever needed a multi-slide journey").toBe(true);

@@ -214,7 +214,7 @@ function drawTile(dr: GameDrawing, ts: number, x: number, y: number, v: number):
   }
 
   // The gem a hint is going for. Inertia's gems are anonymous, so the narration
-  // says "the marked gem" and this is the mark it means.
+  // says "the outlined gem" and this is the mark it means.
   if (v & HINT_GOAL) {
     const center = { x: tx + Math.floor(ts / 2), y: ty + Math.floor(ts / 2) };
     const r = Math.floor(ts / 2) - 2;

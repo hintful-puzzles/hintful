@@ -237,6 +237,30 @@ mean one of each. So the arrow is a kind of its own (`signpost/hint-marks.ts`'s
 as its cell's (`MarkKind.within`): "we must cross out the 4" names the ringed
 cell it strikes from.
 
+**What binding a hint turns up, and the answers that held** across the sweep
+over every hinted game (`bind-the-remaining-hints`):
+
+- **Evidence the old words called "ringed" is outlined**, whatever glyph draws
+  it: a ring is what the step decides. Rename the highlight field too (Unruly's
+  `ring` became `outline`), so the code speaks the role's word.
+- **A mark drawn and never named is the common defect**, not the rare one.
+  Name it in the sentence ("given the outlined cells", "it and its partner");
+  when a clause would be pure overhead on every step, and the mark is there by
+  the owner's choice, ledger the clause's length rather than drop the mark
+  (Boats' ", with the water around it").
+- **A leg names the element it rings**, not everything the firing will decide:
+  "so this cell and every other empty one in it must be white", never "every
+  remaining cell" over one ring.
+- **A step that shrinks on keep-track narrows its words** with
+  `Narration.narrow` and resets `explanation`; the binding walk plays refresh
+  but not keep-track, so the game's own test asserts `bindingDefects` after a
+  shrink (Tents).
+- **A renderer that reads a mark off the move hides it from `drawn`.** Put it
+  on the highlights (Loopy's `placedCorner`) so the legend can see it.
+- **A rule word is not a mark word.** "Shaded" is a shading genre's cell state
+  (Bricks) and the lint allows it; "hatched" and "highlighted" only ever named
+  marks.
+
 ### Necessity for deductions, imperative for moves
 
 A hint exists to tell the player **the next action to take**, so the clause

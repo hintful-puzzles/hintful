@@ -164,7 +164,7 @@ describe("inertia hint narration", () => {
     // so the collecting narration always says what brought it to a halt.
     const stopped = firstStep(stateOf(["bbbbb", "Sbbgs", "bbbbb"]));
     expect(stopped.explanation).toContain("Slide east");
-    expect(stopped.explanation).toContain("sweeps up the marked gem");
+    expect(stopped.explanation).toContain("sweeps up the outlined gem");
     expect(stopped.explanation).toContain("the stop square at the end catches you");
 
     const walled = firstStep(stateOf(["bbbbb", "Sbbbg", "bbbbb"]));
@@ -177,7 +177,7 @@ describe("inertia hint narration", () => {
     // at a near gem and return than sweep a whole line and be left in a corner,
     // so the sweep has to be the only way through for the route to take it.
     const step = firstStep(stateOf(["wwwwww", "Sbgggs"]));
-    expect(step.explanation).toContain("sweeps up two gems and then the marked gem");
+    expect(step.explanation).toContain("sweeps up two gems and then the outlined gem");
   });
 
   it("calls a move forced when every other direction runs onto a mine", () => {
@@ -205,7 +205,7 @@ describe("inertia hint narration", () => {
     expect(legalDirections(s.board, s.px, s.py)).toHaveLength(3);
 
     const step = firstStep(s);
-    expect(step.explanation).toContain("Working on the marked gem");
+    expect(step.explanation).toContain("Working on the outlined gem");
     expect(step.explanation).toContain("no slide from here reaches it");
     expect(step.explanation).toContain("one more slide sweeps it up");
     expect((step.highlights as InertiaHintHighlights).goal).toBe(s.board.square(4, 2));
@@ -305,7 +305,7 @@ describe("inertia hint narration", () => {
     expect(s.py).toBe(2);
 
     const step = firstStep(s);
-    expect(step.explanation).toContain("Sliding east grabs the marked gem");
+    expect(step.explanation).toContain("Sliding east grabs the outlined gem");
     expect(step.explanation).toContain("you can't pick where you stop");
     // "strands" is the proved claim (`unreachableGems`): a gem the ball can
     // never reach again.
@@ -459,8 +459,8 @@ describe("inertia hint rendering", () => {
       showHint: true,
     });
 
-    // The ring: Inertia's gems are anonymous, so "the marked gem" has to *be*
-    // marked. It is drawn on a tile, so it also has to survive the per-tile
+    // The ring: Inertia's gems are anonymous, so "the outlined gem" has to
+    // *be* marked. It is drawn on a tile, so it also has to survive the per-tile
     // cache — a ring that never repaints is the classic overlay-cache trap.
     expect(
       result.recording.ops.some(
@@ -474,7 +474,7 @@ describe("inertia hint rendering", () => {
       result.recording.ops.some((o) => o.op === "polygon" && o.fill === COL_HINT),
     ).toBe(true);
 
-    expect(result.hint?.explanation).toContain("Working on the marked gem");
+    expect(result.hint?.explanation).toContain("Working on the outlined gem");
     expect(result.recording.ops).toMatchSnapshot();
   });
 

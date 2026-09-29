@@ -36,6 +36,7 @@
 
 import type { HintResult, HintStep } from "../../engine/game.ts";
 import { ALREADY_SOLVED, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
+import type { MarkRef, Narration } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import { ENDGAME_CROSSINGS, type Endgame, planEndgame } from "./endgame.ts";
 import {
@@ -47,7 +48,7 @@ import {
   toRational,
   units,
 } from "./geometry.ts";
-import { say } from "./hint-text.ts";
+import { CROSSING, SPOT, say, type UntangleMarks, VERTEX } from "./hint-text.ts";
 import { closestOrientation, solvedLayout } from "./solution.ts";
 import {
   cross,
@@ -418,13 +419,30 @@ function plan(board: Board, vertex: number, to: RationalPoint): Planned {
 /** A step's sentence. A move to the solved layout is narrated by what it does
  * on the board — the layout itself is nothing the player can see — and by the
  * crossings the next move removes, when that repays what this one adds. */
-function narrate(p: Planned, next: Planned | null): string {
-  if (p.after < p.before) return say.clear(p.before, p.after);
+function narrate(p: Planned, next: Planned | null): Narration {
+  const m: UntangleMarks = {
+    vertex: p.vertex,
+    to: p.to,
+    cleared: p.cleared,
+    marked: [],
+  };
+  if (p.after < p.before) return say.clear(m, p.before, p.after);
   // "…but frees a move that removes N" justifies the move, so it is said only
   // when the next move takes back at least what this one adds.
   const gain = next === null ? 0 : next.before - next.after;
   const opens = gain > 0 && gain >= p.after - p.before ? gain : null;
-  return say.rearrange(p.before, p.after, opens);
+  return say.rearrange(m, p.before, p.after, opens);
+}
+
+/** What a step's highlights draw: the `drawn` half of Untangle's legend. The
+ * point is drawn in the hint color with a line to its spot, and the crossings
+ * it clears and the points still to move are ringed. */
+export function untangleHintMarks(hl: UntangleHint): MarkRef[] {
+  return [
+    { role: "ring", kind: VERTEX, elements: [hl.vertex, ...hl.marked] },
+    { role: "ring", kind: SPOT, elements: [hl.to] },
+    { role: "outline", kind: CROSSING, elements: hl.cleared },
+  ] as MarkRef[];
 }
 
 export function deduceUntangleHintPlan(
@@ -480,13 +498,15 @@ export function deduceUntangleHintPlan(
 
   // `next` is now the move after the plan's last step, so that step is narrated
   // exactly as it would be at the head of the next request's plan.
-  const steps = planned.map(
-    (p, i): HintStep<UntangleMove, UntangleHint> => ({
+  const steps = planned.map((p, i): HintStep<UntangleMove, UntangleHint> => {
+    const words = narrate(p, planned[i + 1] ?? next);
+    return {
       move: placeMove(p.vertex, p.to),
-      explanation: narrate(p, planned[i + 1] ?? next),
+      explanation: words.text,
+      words,
       highlights: { vertex: p.vertex, to: p.to, cleared: p.cleared, marked: [] },
-    }),
-  );
+    };
+  });
   return { ok: true, steps };
 }
 
@@ -500,18 +520,21 @@ function journey(
   return moves.map(({ vertex, to }, i) => {
     const p = plan(board, vertex, to);
     board.move(vertex, to);
+    const highlights: UntangleHint = {
+      vertex,
+      to,
+      cleared: p.cleared,
+      marked: moves.slice(i + 1).map((m) => m.vertex),
+    };
+    const words =
+      moves.length === 1
+        ? narrate(p, null)
+        : say.journey(highlights, i, moves.length, finishes, p.before, p.after);
     return {
       move: placeMove(vertex, to),
-      explanation:
-        moves.length === 1
-          ? narrate(p, null)
-          : say.journey(i, moves.length, finishes, p.before, p.after),
-      highlights: {
-        vertex,
-        to,
-        cleared: p.cleared,
-        marked: moves.slice(i + 1).map((m) => m.vertex),
-      },
+      explanation: words.text,
+      words,
+      highlights,
       ...(i > 0 ? { continuesPrevious: true } : {}),
     };
   });

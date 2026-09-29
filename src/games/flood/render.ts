@@ -178,6 +178,28 @@ function drawRecessedFrame(dr: GameDrawing, w: number, h: number, ts: number): v
   );
 }
 
+/**
+ * The squares filling with `color` would join to the controlled region: the
+ * ones the hint dots. Found as upstream does: fill to that color, fill again in
+ * an out-of-range sentinel, and keep what was originally that color. None when
+ * the region is already that color.
+ */
+export function joinedBy(
+  state: Pick<FloodState, "w" | "h" | "grid" | "colors">,
+  color: number,
+): number[] {
+  const { w, h, grid: from } = state;
+  if (from[FILLY * w + FILLX] === color) return [];
+  const grid = Uint8Array.from(from);
+  const queue = new Int32Array(w * h);
+  fill(w, h, grid, FILLX, FILLY, color, queue);
+  fill(w, h, grid, FILLX, FILLY, state.colors, queue);
+  const out: number[] = [];
+  for (let i = 0; i < w * h; i++)
+    if (grid[i] === state.colors && from[i] === color) out.push(i);
+  return out;
+}
+
 export function redraw(
   dr: GameDrawing,
   ds: FloodDrawState,
@@ -191,7 +213,6 @@ export function redraw(
 ): void {
   const ts = ds.tileSize;
   const { w, h, colors: ncolors } = state;
-  const wh = w * h;
 
   if (!ds.started) {
     drawRecessedFrame(dr, w, h, ts);
@@ -211,23 +232,13 @@ export function redraw(
   // Build the display grid (a mutable copy we may overlay onto).
   const grid = Uint8Array.from(state.grid);
 
-  // Hint overlay: mark every square of the next fill's color that is
-  // adjacent to the controlled region (upstream's SOLNNEXT), found as
-  // upstream does: fill to that color, fill again in an out-of-range
-  // sentinel (`ncolors`), then revert whatever was not originally that color.
+  // Hint overlay: mark every square the next fill joins to the controlled
+  // region (upstream's SOLNNEXT) with the out-of-range sentinel `ncolors`.
   let hintColor = 0;
   const next = activeHint?.move;
-  if (
-    next?.type === "fill" &&
-    !state.completed &&
-    state.grid[FILLY * w + FILLX] !== next.color
-  ) {
+  if (next?.type === "fill" && !state.completed) {
     hintColor = next.color;
-    const queue = new Int32Array(wh);
-    fill(w, h, grid, FILLX, FILLY, hintColor, queue);
-    fill(w, h, grid, FILLX, FILLY, ncolors, queue);
-    for (let i = 0; i < wh; i++)
-      if (grid[i] === ncolors && state.grid[i] !== hintColor) grid[i] = state.grid[i];
+    for (const i of joinedBy(state, hintColor)) grid[i] = ncolors;
   }
 
   // Victory rainbow: superimpose the radiating color wave.

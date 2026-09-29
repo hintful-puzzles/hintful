@@ -31,16 +31,12 @@ Inertia is forced by logic, so the hint goes for the gem the fewest
 slides away that the ball can take without leaving any other gem out of
 reach, and tells you what each slide does on the way.
 
-* **An arrow on the ball**, in the hint's color, points the way to
-  slide.
-* **A ring** round a gem, in a second color, marks the gem the hint is
-  working on — *the marked gem*, in its words. It stays marked through
-  every slide the hint spends working toward it.
+{{hint-marks}}
 
 The thing the hint keeps reminding you of is the rule that catches
 everyone out: **you don't choose where you stop.** A slide that collects
 says what brings the ball to a halt — a wall, or a stop square. When a
-slide could grab the marked gem but would leave the ball somewhere it
+slide could grab the outlined gem but would leave the ball somewhere it
 can never reach other gems from, the hint says so and goes another way.
 When the ball has only one way to go, because walls block the rest or
 every other way runs onto a mine, it says that too.

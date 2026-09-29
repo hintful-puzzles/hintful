@@ -60,13 +60,10 @@ your answer row does not show yet, and rules those colors out of their
 slots for you, as marks you could have made yourself. It reasons only
 from the scores, never from the marks already in your answer row.
 
-* **Stripes** across a scored row, its score included, mark *the
-  striped row* the step reads.
-* **An outline** round an answer slot, in a second color, marks *the
-  outlined slot*: one whose colors the step already knows and leans on.
-* **A frame** beside a color in the answer row marks one of *the framed
-  colors*: the ones the step rules out, or, when it suggests a guess,
-  the color it picks for each slot.
+{{hint-marks}}
+
+The ring's mark here is a frame, because it follows the square shape of
+the color blocks, so the hint calls those colors *framed*.
 
 Some things a single row tells you for certain:
 

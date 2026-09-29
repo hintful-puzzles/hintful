@@ -34,16 +34,7 @@ Netslide is forced by logic, so the hint searches for a way to finish
 from where you are, one slide at a time, and tells you what each slide
 is for.
 
-* **A double ring** round a square marks the piece the hint is placing.
-  Its words name the piece by its shape: a *loose end*, a *straight*, a
-  *corner*, a *T-piece* or a *cross*.
-* **A solid outline** marks the square where the piece belongs.
-* **A dashed outline** marks a square it is only passing through on the
-  way, or one it is being parked in to set up a later move.
-* **The arrow** to click is drawn in the hint's color.
-* **Stripes** across the source's row or column mark the line the hint
-  says never slides: a piece sitting in it can only be moved along the
-  other direction.
+{{hint-marks}}
 
 A step ends by saying whether the piece arrives *where it belongs* (or
 *beside the source*), or is only *setting up*.

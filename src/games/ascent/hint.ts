@@ -32,16 +32,21 @@ import {
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import type { MarkRef, MarkRole, Narration } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { findLines, findPointers, type RuledOut } from "./hint-edges.ts";
 import {
+  type Arrowed,
   type Bound,
   type Count,
   type EndRuledOut,
   GLANCE,
   type Near,
   type Others,
+  PATH,
   type Rival,
+  type RunEnds,
+  SQUARE,
   say,
 } from "./hint-text.ts";
 import { executeAscentMove } from "./moves.ts";
@@ -666,12 +671,18 @@ export function runShortfall(state: AscentState, run: Run, cell: number): number
   return Number.NEGATIVE_INFINITY;
 }
 
-/** A way to say why only `n` can fill its square, and the ends it names. */
+/** A way to say why only `n` can fill its square. */
 interface Fill {
   others: Others;
   counts: Count[];
-  area: number[];
 }
+
+/** A run's placed ends, as a sentence names them. */
+const endsOf = (r: Run): RunEnds => ({
+  from: r.a ? shown(r.a.m) : null,
+  to: r.b ? shown(r.b.m) : null,
+  cells: [r.a, r.b].flatMap((e) => (e ? [e.cell] : [])),
+});
 
 /**
  * The "only this number can fill it" reasons that can be said plainly, most
@@ -697,45 +708,37 @@ function fillReasons(f: AscentFiring): Fill[] {
   if (shortfalls.some(({ by }) => by <= 0)) return [];
 
   const counts: Count[] = [];
-  const countEnds: number[] = [];
   if (n > own.lo) {
     const a = own.a;
     if (!a || a.m + stepDistance(cell, a.cell, w, mode) !== n) return [];
-    counts.push({ m: shown(a.m), d: n - a.m, side: "lower" });
-    countEnds.push(a.cell);
+    counts.push({ m: shown(a.m), d: n - a.m, cell: a.cell, side: "lower" });
   }
   if (n < own.hi) {
     const b = own.b;
     if (!b || b.m - stepDistance(cell, b.cell, w, mode) !== n) return [];
-    counts.push({ m: shown(b.m), d: b.m - n, side: "higher" });
-    countEnds.push(b.cell);
+    counts.push({ m: shown(b.m), d: b.m - n, cell: b.cell, side: "higher" });
   }
 
   const out: Fill[] = [];
   const close = shortfalls.filter(({ by }) => by <= 2);
-  if (close.length === 0)
-    out.push({ others: { kind: "none" }, counts, area: countEnds });
+  if (close.length === 0) out.push({ others: { kind: "none" }, counts });
   if (close.length === 1) {
     const r = close[0].r;
     const ends = [r.a, r.b].filter((e) => e !== null);
-    const from = r.a ? shown(r.a.m) : null;
-    const to = r.b ? shown(r.b.m) : null;
     const others: Rival =
       r.lo === r.hi
         ? {
             kind: "one",
-            from,
-            to,
+            run: endsOf(r),
             need: ends
               .filter((e) => stepDistance(cell, e.cell, w, mode) > 1)
               .map((e) => shown(e.m)),
           }
-        : { kind: "run", from, to };
-    const area = [...new Set([...ends.map((e) => e.cell), ...countEnds])];
-    out.push({ others, counts, area });
+        : { kind: "run", run: endsOf(r) };
+    out.push({ others, counts });
   }
   if (close.length > 0 && counts.length > 0)
-    out.push({ others: { kind: "unnamed" }, counts, area: countEnds });
+    out.push({ others: { kind: "unnamed" }, counts });
   return out;
 }
 
@@ -849,143 +852,139 @@ export function whyNotEnd(
 /** The number shown on the board for `n`. */
 const shown = (n: number) => n + 1;
 
-/** An Edges premise as a sentence names it. */
+/** An arrow as a sentence names it, with its line when the step stripes it. */
+const arrowed = (state: AscentState, arrow: number, striped: boolean): Arrowed => ({
+  kind: lineKind(state, arrow),
+  arrow,
+  line: striped ? lineSquares(state, arrow) : null,
+});
+
+/** An Edges premise as a sentence names it: a placed number, or a missing
+ * one's arrow and its striped line. */
 const nearOf = (state: AscentState, p: Premise): Near => ({
   m: shown(p.m),
   d: p.d,
-  line: p.arrow === null ? null : lineKind(state, p.arrow),
+  cell: p.cell ?? -1,
+  line: p.arrow === null ? null : arrowed(state, p.arrow, true),
 });
 
-/** The arrows and placed numbers an Edges step names, `own` first when it
- * has one. */
-function premiseMarks(own: number, premises: readonly Premise[]): number[] {
-  const out = own >= 0 ? [own] : [];
-  for (const p of premises) out.push(p.arrow ?? (p.cell as number));
-  return [...new Set(out)];
-}
-
-/** The lines of the missing numbers an Edges step names. */
-function premiseLines(state: AscentState, premises: readonly Premise[]): number[] {
+/** The squares a step's words name in `role`: what the step draws in it. */
+function named(words: Narration, role: MarkRole): number[] {
   const out = new Set<number>();
-  for (const p of premises)
-    if (p.arrow !== null) for (const i of lineSquares(state, p.arrow)) out.add(i);
+  for (const r of words.refs)
+    if (r.role === role && r.kind === SQUARE)
+      for (const e of r.elements) out.add(e as number);
   return [...out];
 }
 
 /** The step a firing shows: its move, its sentence and its marks. */
 export function stepOf(f: AscentFiring): AscentStep {
   const { n, cell, before } = f;
-  const step = (
-    explanation: string,
-    area: number[],
-    hatch: number[] = [],
-    route: number[] = [],
-  ) => ({
+  const at = cellsOf(f);
+  // The step draws what its words name: the outlines and stripes are read off
+  // the references, so no mark goes unnamed and no name goes undrawn.
+  const step = (words: Narration, route: number[] = []): AscentStep => ({
     move: moveOf(f),
-    explanation,
-    highlights: { targets: cellsOf(f), area, hatch, route },
+    explanation: words.text,
+    words,
+    highlights: {
+      targets: at,
+      area: named(words, "outline"),
+      hatch: named(words, "stripes"),
+      route,
+    },
     ...(f.joins ? { continuesPrevious: true } : {}),
+  });
+  /** A run of `runOf`'s, as a sentence names it. */
+  const runEnds = (run: ReturnType<typeof runOf>): RunEnds => ({
+    from: run.below === null ? null : shown(run.below),
+    to: run.above === null ? null : shown(run.above),
+    cells: run.ends,
   });
   switch (f.reason.kind) {
     case "wholeRun": {
       const run = runsOf(before).find((r) => r.lo <= n && n <= r.hi);
       if (!run) throw new Error("ascent hint: a whole run that is not a run");
-      const ends: number[] = [];
-      if (run.a) ends.push(run.a.cell);
-      if (run.b) ends.push(run.b.cell);
       const path = f.reason.cells.map((c) => c.cell);
       const { room } = f.reason;
       const other =
         room === null ? null : (runsOf(before).find((r) => r.lo === room) ?? null);
-      // The neighboring run the route leaves room for is named by its ends,
-      // so they are outlined too.
-      if (other?.a) ends.push(other.a.cell);
-      if (other?.b) ends.push(other.b.cell);
-      const text = say.wholeRun(
-        run.a ? shown(run.a.m) : null,
-        run.b ? shown(run.b.m) : null,
-        other
-          ? {
-              kind: "room",
-              from: other.a ? shown(other.a.m) : null,
-              to: other.b ? shown(other.b.m) : null,
-            }
-          : { kind: f.reason.must.length > 0 ? "must" : "plain" },
-        f.reason.arrows,
-      );
       // The arrows that keep the run to its route, when they are the reason.
-      if (f.reason.arrows)
-        for (const { n: m } of f.reason.cells) {
-          const a = arrowOf(before, m);
-          if (a >= 0) ends.push(a);
-        }
+      const arrows = f.reason.arrows
+        ? f.reason.cells.map(({ n: m }) => arrowOf(before, m)).filter((a) => a >= 0)
+        : null;
       const route = [
         ...(run.a ? [run.a.cell] : []),
         ...path,
         ...(run.b ? [run.b.cell] : []),
       ];
-      return step(text, [...new Set(ends)], f.reason.must, route);
+      // The neighboring run the route leaves room for is named by its ends,
+      // so they are outlined too.
+      const words = say.wholeRun(
+        endsOf(run),
+        route,
+        other
+          ? { kind: "room", run: endsOf(other) }
+          : f.reason.must.length > 0
+            ? { kind: "must", squares: f.reason.must }
+            : { kind: "plain" },
+        arrows,
+      );
+      return step(words, route);
     }
     case "touch":
     case "reach": {
       const bounds = boundsOf(f);
       const arrow = arrowNeeded(f, bounds);
-      const area = bounds.map((b) => b.cell);
-      if (arrow >= 0) area.push(arrow);
-      const hatch = arrow >= 0 ? lineSquares(before, arrow) : [];
-      const line = arrow >= 0 ? lineKind(before, arrow) : null;
-      const text =
+      const line = arrow >= 0 ? arrowed(before, arrow, true) : null;
+      const shownBounds = bounds.map(
+        (b): Bound => ({ m: shown(b.m), d: b.d, cell: b.cell }),
+      );
+      return step(
         f.reason.kind === "touch"
-          ? say.touch(
-              shown(n),
-              bounds.map((b) => shown(b.m)),
-              line,
-            )
-          : say.reach(
-              shown(n),
-              bounds.map((b): Bound => ({ m: shown(b.m), d: b.d })),
-              line,
-            );
-      return step(text, area, hatch);
+          ? say.touch(at, shown(n), shownBounds, line)
+          : say.reach(at, shown(n), shownBounds, line),
+      );
     }
     case "lines": {
       const own = arrowOf(before, n);
-      const { premises } = f.reason;
-      const text = say.lines(
-        shown(n),
-        own >= 0 ? lineKind(before, own) : null,
-        premises.map((p) => nearOf(before, p)),
-      );
       // Its own line is named by its outlined arrow; the lines it must be
       // near are striped, so the square is where they cross it.
-      return step(text, premiseMarks(own, premises), premiseLines(before, premises));
+      return step(
+        say.lines(
+          at,
+          shown(n),
+          own >= 0 ? arrowed(before, own, false) : null,
+          f.reason.premises.map((p) => nearOf(before, p)),
+        ),
+      );
     }
     case "pointers": {
-      const own = arrowOf(before, n);
-      const { ruledOut } = f.reason;
-      const text = say.pointers(
-        shown(n),
-        own >= 0,
-        ruledOut.map((o) => ({
-          m: shown(o.m),
-          arrowless: o.arrowless,
-          by: nearOf(before, o.by),
-        })),
-      );
       // Every arrow pointing here is outlined, the rivals' reasons with them.
-      const rivals = ruledOut.map((o) => arrowOf(before, o.m)).filter((a) => a >= 0);
-      const bys = ruledOut.map((o) => o.by);
       return step(
-        text,
-        [...new Set([...rivals, ...premiseMarks(own, bys)])],
-        premiseLines(before, bys),
+        say.pointers(
+          at,
+          shown(n),
+          arrowOf(before, n),
+          f.reason.ruledOut.map((o) => ({
+            m: shown(o.m),
+            arrow: o.arrowless ? -1 : arrowOf(before, o.m),
+            by: nearOf(before, o.by),
+          })),
+        ),
       );
     }
     case "deadEnd": {
       const other = n === 0 ? before.last : 0;
-      return step(say.deadEnd(shown(n), shown(other), whyNotEnd(before, other, cell)), [
-        f.reason.open,
-      ]);
+      return step(
+        say.deadEnd(
+          at,
+          f.reason.open,
+          shown(n),
+          shown(other),
+          whyNotEnd(before, other, cell),
+        ),
+      );
     }
     case "onlyBeside":
     case "only":
@@ -994,35 +993,50 @@ export function stepOf(f: AscentFiring): AscentStep {
       // Say the reason in words when it fits at a glance: the counts are what
       // single the number out of its run, which the stripes cannot show.
       for (const fill of fillReasons(f)) {
-        const said = say.fill(shown(n), fill.others, fill.counts);
-        if (said.length <= GLANCE) return step(said, fill.area);
+        const said = say.fill(at, shown(n), fill.others, fill.counts);
+        if (said.text.length <= GLANCE) return step(said);
       }
       // Otherwise the square is in one run's reach and no other's: stripe that
       // reach and outline the run's ends, so the run the sentence names is on
       // the board beside the others the player can compare it with.
       const byRoute = f.reason.kind === "routeBeside" || f.reason.kind === "routeOnly";
       const run = runOf(f, byRoute ? "route" : "reach");
-      const text = say.onlyRun(
-        shown(n),
-        run.lo === run.hi,
-        run.below === null ? null : shown(run.below),
-        run.above === null ? null : shown(run.above),
-        byRoute,
+      return step(
+        say.onlyRun(
+          at,
+          shown(n),
+          run.lo === run.hi,
+          runEnds(run),
+          run.squares,
+          byRoute,
+        ),
       );
-      return step(text, run.ends, run.squares);
     }
     case "route": {
       const run = runOf(f, "route");
       return step(
         say.route(
+          at,
           shown(n),
-          run.below === null ? null : shown(run.below),
-          run.above === null ? null : shown(run.above),
+          runEnds(run),
+          run.squares.filter((i) => i !== cell),
         ),
-        [...run.ends, ...run.squares.filter((i) => i !== cell)],
       );
     }
   }
+}
+
+/** What a step's highlights draw: the `drawn` half of Ascent's legend. A ring
+ * wins a square over an outline, and the route is drawn through the squares
+ * it rings. */
+export function ascentHintMarks(hl: AscentHighlights): MarkRef[] {
+  const targets = new Set(hl.targets);
+  return [
+    { role: "ring", kind: SQUARE, elements: hl.targets },
+    { role: "ring", kind: PATH, elements: hl.route },
+    { role: "outline", kind: SQUARE, elements: hl.area.filter((i) => !targets.has(i)) },
+    { role: "stripes", kind: SQUARE, elements: hl.hatch },
+  ] as MarkRef[];
 }
 
 // --- following the plan ------------------------------------------------------

@@ -20,7 +20,12 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { ConfigValues } from "../../engine/types.ts";
 import { newAscentDesc } from "./generator.ts";
-import { ascentHint, ascentKeepTrack } from "./hint.ts";
+import {
+  type AscentHighlights,
+  ascentHint,
+  ascentHintMarks,
+  ascentKeepTrack,
+} from "./hint.ts";
 import { executeAscentMove } from "./moves.ts";
 import {
   type AscentDrawState,
@@ -365,7 +370,8 @@ export const ascentGame: Game<
   AscentMove,
   AscentUi,
   AscentDrawState,
-  AscentMistake
+  AscentMistake,
+  AscentHighlights
 > = {
   id: "ascent",
   preferredTileSize: 48,
@@ -397,6 +403,16 @@ export const ascentGame: Game<
   // a board it passes is one the hint may deduce from.
   hint: (state) =>
     commonHintRefusal(state.completed, findMistakes(state).length) ?? ascentHint(state),
+  hintMarks: {
+    roles: {
+      ring: "the square the step fills. When the step fills a whole run at once, a line in the hint's color runs along its only route from one end to the other.",
+      outline:
+        "what the step reasons from: the numbers the new one sits between, a dead end's one way in, the squares a missing run has to step through, and in Edges mode an arrow the step reads.",
+      stripes:
+        "the row, column or diagonal an arrow points along, or every square a run of missing numbers can reach.",
+    },
+    drawn: ascentHintMarks,
+  },
   hintKeepTrack: ascentKeepTrack,
   difficulty,
   textFormat,

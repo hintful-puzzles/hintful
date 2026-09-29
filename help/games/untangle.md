@@ -18,14 +18,7 @@ moving it. Nothing in Untangle is forced by logic, so the hint looks for
 the move that takes the most crossings off the board, and says how many
 crossings the point's lines are in before and after.
 
-* **The point to move** is drawn in the hint's color, with a line in
-  the same color running to **the spot** to drop it on, which is also
-  drawn as a point.
-* **Rings** mark the crossings the move removes, so you can count them.
-* When only a few crossings are left, the hint may move several
-  points together so that none of their lines crosses anything. The
-  other points it will move next are ringed too — *the marked points*,
-  in its words — and it moves them one at a time.
+{{hint-marks}}
 
 When no single move takes a crossing away, the hint says so and moves a
 point toward an untangled layout anyway, telling you what that does to

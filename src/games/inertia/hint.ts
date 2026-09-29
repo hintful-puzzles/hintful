@@ -29,7 +29,8 @@
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { ALREADY_SOLVED, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
-import { gemsPhrase, say } from "./hint-text.ts";
+import type { MarkRef, Narration } from "../../engine/hint-words.ts";
+import { ARROW, GEM, gemsPhrase, say } from "./hint-text.ts";
 import { solveRoute, unreachableGems } from "./solver.ts";
 import {
   type InertiaMove,
@@ -44,7 +45,7 @@ import {
 export interface InertiaHintHighlights {
   /** The gem the current leg is going for, as a square index. Inertia's gems
    * are anonymous — there is no "tile 8" to name one by — so the narration says
-   * "the marked gem" and the board carries the reference (docs/games/hints.md § "Name a square by its value").
+   * "the outlined gem" and the board carries the reference (docs/games/hints.md § "Name a square by its value").
    */
   readonly goal: number;
   /** The direction to play, drawn as an arrow on the ball. */
@@ -119,29 +120,38 @@ function narrate(
   goal: number,
   /** How many moves of this leg are left, counting this one. */
   toGoal: number,
-): string {
+): Narration {
   const only = onlyMove(before, dir);
+  const m = { dir, goal };
 
   // The leg's payoff. The goal is the *last* gem on the path, so any others are
   // swept up on the way to it.
   if (path.gems.length > 0) {
-    return say.collect(dir, path.gems.length - 1, only, path.stopper);
+    return say.collect(m, path.gems.length - 1, only, path.stopper);
   }
-  if (only) return say.forced(dir, only);
+  if (only) return say.forced(m, only);
 
   const grab = oneSlideGrab(before, goal);
   if (grab !== null) {
     const stranded = unreachableGems(slide(before, grab));
     return stranded.length > 0
-      ? say.strands(grab, stranded.length, dir)
-      : say.declined(dir);
+      ? say.strands(m, grab, stranded.length)
+      : say.declined(m);
   }
 
   // "One more slide" is a promise about the *plan's own next move*, not about
   // some slide existing: the route may reach the gem from a side no single
   // slide from here can, and a promise it then breaks reads as a hint that has
   // lost the plot.
-  return say.positioning(dir, toGoal === 2);
+  return say.positioning(m, toGoal === 2);
+}
+
+/** What a step's highlights draw: the `drawn` half of Inertia's legend. */
+export function inertiaHintMarks(hl: InertiaHintHighlights): MarkRef[] {
+  return [
+    { role: "ring", kind: ARROW, elements: [hl.dir] },
+    { role: "outline", kind: GEM, elements: [hl.goal] },
+  ] as MarkRef[];
 }
 
 // --- planning: the nearest gem the ball can safely take ---------------
@@ -307,15 +317,17 @@ export function hint(
     if (leg === null) break;
 
     leg.dirs.forEach((dir, i) => {
+      const words = narrate(
+        leg.states[i],
+        dir,
+        leg.paths[i],
+        leg.goal,
+        leg.dirs.length - i,
+      );
       steps.push({
         move: { type: "move", dir },
-        explanation: narrate(
-          leg.states[i],
-          dir,
-          leg.paths[i],
-          leg.goal,
-          leg.dirs.length - i,
-        ),
+        explanation: words.text,
+        words,
         // The goal is carried across every step of the leg, not re-derived
         // from where the ball is standing.
         highlights: { goal: leg.goal, dir },

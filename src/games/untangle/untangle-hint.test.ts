@@ -12,7 +12,7 @@ import { ALREADY_SOLVED, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { SLOW_TESTS_ENABLED } from "../../engine/testing/slow.ts";
 import { samePoint } from "./geometry.ts";
-import { deduceUntangleHintPlan } from "./hint.ts";
+import { deduceUntangleHintPlan, type UntangleHint } from "./hint.ts";
 import { say } from "./hint-text.ts";
 import { untangleGame } from "./index.ts";
 import { closestOrientation, solvedLayout } from "./solution.ts";
@@ -63,16 +63,25 @@ function followHints(start: UntangleState, aux?: string) {
   let moves = 0;
   // A rearranging step's sentence depends on the move after it, which may be
   // the head of the next request's plan; it is checked once that is known.
-  let pending: { explanation: string; before: number; after: number } | null = null;
+  let pending: {
+    explanation: string;
+    marks: UntangleHint;
+    before: number;
+    after: number;
+  } | null = null;
   const settle = (nextGain: number | null) => {
     if (pending === null) return;
     const added = pending.after - pending.before;
     const opens =
       nextGain !== null && nextGain > 0 && nextGain >= added ? nextGain : null;
     expect(pending.explanation).toBe(
-      say.rearrange(pending.before, pending.after, opens),
+      say.rearrange(pending.marks, pending.before, pending.after, opens).text,
     );
     pending = null;
+  };
+  const marksOf = (st: { highlights?: UntangleHint }): UntangleHint => {
+    if (!st.highlights) throw new Error("a step with no highlights");
+    return st.highlights;
   };
   for (let asks = 0; asks < 60; asks++) {
     if (s.completed) {
@@ -90,10 +99,13 @@ function followHints(start: UntangleState, aux?: string) {
       // The step before may name the single move it frees, which the search
       // found and the journey then did better than: only its form is checked.
       if (pending !== null) {
-        const { explanation, before, after } = pending;
+        const { explanation, marks, before, after } = pending;
         expect([
-          say.rearrange(before, after, null),
-          ...Array.from({ length: 40 }, (_, k) => say.rearrange(before, after, k + 1)),
+          say.rearrange(marks, before, after, null).text,
+          ...Array.from(
+            { length: 40 },
+            (_, k) => say.rearrange(marks, before, after, k + 1).text,
+          ),
         ]).toContain(explanation);
         pending = null;
       }
@@ -122,7 +134,7 @@ function followHints(start: UntangleState, aux?: string) {
         moves++;
         const after = lineCrossings(s, v);
         expect(st.explanation).toBe(
-          say.journey(i, res.steps.length, finishes, before, after),
+          say.journey(marksOf(st), i, res.steps.length, finishes, before, after).text,
         );
         expect(st.explanation.length).toBeLessThanOrEqual(120);
         // What keeps a hint recomputed after any step from cycling.
@@ -142,12 +154,12 @@ function followHints(start: UntangleState, aux?: string) {
       settle(before - after);
       if (after < before) {
         clears++;
-        expect(st.explanation).toBe(say.clear(before, after));
+        expect(st.explanation).toBe(say.clear(marksOf(st), before, after).text);
         // A ring for at least every crossing the step takes away.
         expect(st.highlights?.cleared.length).toBeGreaterThanOrEqual(before - after);
       } else {
         rebuilds++;
-        pending = { explanation: st.explanation, before, after };
+        pending = { explanation: st.explanation, marks: marksOf(st), before, after };
       }
       s = next;
       moves++;

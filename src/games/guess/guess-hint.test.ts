@@ -291,7 +291,10 @@ describe("the plan", () => {
     if (!other) throw new Error("no second answer fits those rows");
     const plans = [first, rows.reduce(play, withAnswer(p, other))];
     const [a, b] = plans.map((s) => guessHint(s));
-    expect(a).toEqual(b);
+    // A step's words hold functions, so the plans are compared by their data.
+    const data = (r: typeof a) =>
+      r.ok ? r.steps.map(({ words: _, ...rest }) => rest) : r.error;
+    expect(data(a)).toEqual(data(b));
     if (!a.ok) throw new Error(a.error);
     expect(a.steps.at(-1)?.move.type).toBe("guess");
   });

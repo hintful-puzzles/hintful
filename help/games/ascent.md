@@ -32,10 +32,7 @@ Where a cell has exactly two candidate numbers like that, right-clicking (on a t
 
 **Hint** explains the next step rather than simply making it. Every step places one number, and it reasons only from the numbers on the board and, in Edges mode, the arrows, so it carries on from wherever you are, as long as none of your numbers is wrong; if one is, it asks you to fix the highlighted mistakes first. Lines you have drawn are yours: the hint neither reads them nor draws any.
 
-* **A ring** marks the square the step fills.
-* **An outline** marks what it reasons from: the numbers the new one sits between, a dead end's one way in, or the squares a missing run has to step through.
-* **Stripes** mark the row, column or diagonal an arrow points along, or every square a run of missing numbers can reach.
-* In Edges mode, **an outlined arrow** is one the step reads.
+{{hint-marks}}
 
 When a step places the first number of a run and the rest of that run follows just as simply, the hint carries on through the run as one hint, a number at a time, each with its reason. And when the run has **only one route** between its two ends, the hint shows the whole run at once: a line in the hint's color from one end to the other, with every square on it ringed. Often a run is forced onto its route because some squares can be reached by no other run: those have to be on this run's route, or they would be left empty, so the hint stripes them. And sometimes a run could take several routes, but every one except one would cut a neighboring run off from its own ends: then the run must take the one that leaves room. In Edges mode, the arrows often leave a run only one route: when they are the reason, the hint says so and outlines them.
 

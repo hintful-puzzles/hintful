@@ -11,7 +11,26 @@
  * there.
  */
 
+import {
+  type MarkKind,
+  mark,
+  type Narration,
+  phrase,
+} from "../../engine/hint-words.ts";
 import type { SlidePath } from "./state.ts";
+
+/** The arrow on the ball, by the direction it points. */
+export const ARROW: MarkKind<number> = { name: "arrow", key: String };
+
+/** A gem, by its square. */
+export const GEM: MarkKind<number> = { name: "gem", key: String };
+
+/** What a step marks: the direction the arrow on the ball points, and the gem
+ * the leg is going for. */
+export interface Marked {
+  dir: number;
+  goal: number;
+}
 
 const DIR_NAMES = [
   "north",
@@ -42,50 +61,57 @@ function stopClause(stopper: SlidePath["stopper"]): string {
  * mine. */
 type Only = "mines" | "walls";
 
-const working = "Working on the marked gem";
+/** "Slide north", pointing at the arrow on the ball. */
+const slideWay = (m: Marked, verb = "Slide"): Narration =>
+  mark.as("ring", ARROW, [m.dir], `${verb} ${DIR_NAMES[m.dir]}`);
+
+/** The gem the leg is going for: circled, and an outline in role, since it is
+ * what the step works toward rather than what it decides. */
+const theGem = (m: Marked): Narration => mark.the("outline", GEM, [m.goal], "gem");
+
+const working = (m: Marked): Narration => phrase`Working on ${theGem(m)}`;
 
 export const say = {
-  /** The leg's payoff: the slide sweeps up the marked gem, after `extras`
+  /** The leg's payoff: the slide sweeps up the goal gem, after `extras`
    * others on the way, and stops against `stopper`. */
   collect: (
-    dir: number,
+    m: Marked,
     extras: number,
     only: Only | null,
     stopper: SlidePath["stopper"],
-  ): string => {
-    const d = DIR_NAMES[dir];
+  ): Narration => {
     const sweep = extras
-      ? `it sweeps up ${gemsPhrase(extras)} and then the marked gem`
-      : "it sweeps up the marked gem";
+      ? phrase`it sweeps up ${gemsPhrase(extras)} and then ${theGem(m)}`
+      : phrase`it sweeps up ${theGem(m)}`;
     if (only === "mines") {
-      return `Slide ${d}, the only way that doesn't run you onto a mine: ${sweep}.`;
+      return phrase`${slideWay(m)}, the only way that doesn't run you onto a mine: ${sweep}.`;
     }
     if (only === "walls") {
-      return `Slide ${d}: ${sweep}, and walls block every other direction.`;
+      return phrase`${slideWay(m)}: ${sweep}, and walls block every other direction.`;
     }
-    return `Slide ${d}: ${sweep}, and ${stopClause(stopper)}.`;
+    return phrase`${slideWay(m)}: ${sweep}, and ${stopClause(stopper)}.`;
   },
 
   // A move that collects nothing says what it is *for*.
   /** The only move the ball has, collecting nothing. */
-  forced: (dir: number, only: Only): string =>
+  forced: (m: Marked, only: Only): Narration =>
     only === "mines"
-      ? `${working}: slide ${DIR_NAMES[dir]}, because every other direction you can set off in runs you onto a mine.`
-      : `${working}: slide ${DIR_NAMES[dir]}, because walls block every other direction.`,
+      ? phrase`${working(m)}: ${slideWay(m, "slide")}, because every other direction you can set off in runs you onto a mine.`
+      : phrase`${working(m)}: ${slideWay(m, "slide")}, because walls block every other direction.`,
 
   /** Sliding `grab` would take the gem but strand `stranded` others. */
-  strands: (grab: number, stranded: number, dir: number): string =>
-    `Sliding ${DIR_NAMES[grab]} grabs the marked gem, but you can't pick where you stop and it strands ${gemsPhrase(stranded)}: slide ${DIR_NAMES[dir]}.`,
+  strands: (m: Marked, grab: number, stranded: number): Narration =>
+    phrase`Sliding ${DIR_NAMES[grab]} grabs ${theGem(m)}, but you can't pick where you stop and it strands ${gemsPhrase(stranded)}: ${slideWay(m, "slide")}.`,
 
   // The route declines a grab it could take. Which side the ball comes at a
   // gem from decides where it fetches up, so this is a real trade-off — but we
   // have not proved the grab is a trap, so we don't say it is.
-  declined: (dir: number): string =>
-    `${working}: slide ${DIR_NAMES[dir]}. You could grab it from here, but the route comes at it from another side.`,
+  declined: (m: Marked): Narration =>
+    phrase`${working(m)}: ${slideWay(m, "slide")}. You could grab it from here, but the route comes at it from another side.`,
 
   /** No slide reaches the gem yet; `oneMore` when the plan's next slide does. */
-  positioning: (dir: number, oneMore: boolean): string =>
+  positioning: (m: Marked, oneMore: boolean): Narration =>
     oneMore
-      ? `${working}: no slide from here reaches it. Slide ${DIR_NAMES[dir]}, and one more slide sweeps it up.`
-      : `${working}: no slide from here reaches it. Slide ${DIR_NAMES[dir]} to work the ball round toward it.`,
+      ? phrase`${working(m)}: no slide from here reaches it. ${slideWay(m)}, and one more slide sweeps it up.`
+      : phrase`${working(m)}: no slide from here reaches it. ${slideWay(m)} to work the ball round toward it.`,
 };

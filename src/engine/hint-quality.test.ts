@@ -586,10 +586,15 @@ function readingsOf(game: AnyGame, params: unknown): readonly (string | null)[] 
 }
 
 describe("a bound hint's words name exactly the marks it draws", () => {
-  it("has games to check", () => {
-    // Vacuity: fewer bound games than this means a declaration went missing.
-    // `bind-the-remaining-hints` brings it to every hinted game.
-    expect(BOUND_GAMES.length).toBeGreaterThanOrEqual(38);
+  it("every hinted game is bound", () => {
+    // A hint whose game declares no legend is checked by nothing here, so an
+    // unbound hint is named rather than passed over.
+    expect(HINT_GAMES.filter(([, g]) => !g.hintMarks).map(([name]) => name)).toEqual(
+      [],
+    );
+    // Vacuity: the population itself, so an empty registry cannot pass.
+    expect(BOUND_GAMES.length).toBe(HINT_GAMES.length);
+    expect(HINT_GAMES.length).toBeGreaterThan(40);
   });
 
   for (const [name, game] of BOUND_GAMES) {

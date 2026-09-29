@@ -41,7 +41,12 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newInertiaDesc } from "./generator.ts";
-import { hint, hintKeepTrack } from "./hint.ts";
+import {
+  hint,
+  hintKeepTrack,
+  type InertiaHintHighlights,
+  inertiaHintMarks,
+} from "./hint.ts";
 import {
   animLength,
   BORDER,
@@ -270,7 +275,9 @@ export const inertiaGame: Game<
   InertiaState,
   InertiaMove,
   InertiaUi,
-  InertiaDrawState
+  InertiaDrawState,
+  unknown,
+  InertiaHintHighlights
 > = {
   id: "inertia",
 
@@ -331,6 +338,14 @@ export const inertiaGame: Game<
 
   // A nudge, not Solve: it installs no route and never sets `cheated`.
   hint,
+  hintMarks: {
+    roles: {
+      ring: "the way to slide: an arrow on the ball, in the hint's color.",
+      outline:
+        "the gem the hint is working on, circled in a second color: *the outlined gem*, in its words. It stays circled through every slide the hint spends working toward it.",
+    },
+    drawn: inertiaHintMarks,
+  },
   hintKeepTrack,
 
   colors,

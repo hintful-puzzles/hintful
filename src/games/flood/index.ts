@@ -9,6 +9,7 @@ import {
 } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import { ALREADY_SOLVED, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
+import { CELL, type MarkRef } from "../../engine/hint-words.ts";
 import {
   dimensionParamConfig,
   parseConfigInt,
@@ -30,6 +31,7 @@ import {
   computeSize,
   DEFEAT_FLASH_FRAME,
   type FloodDrawState,
+  joinedBy,
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
@@ -158,18 +160,40 @@ function statusbarText(state: FloodState, _ui: FloodUi): string {
 /** The solver's whole remaining fill sequence, one narrated step per fill.
  * Returning the full plan rather than one step keeps the hint banner
  * populated through an auto-hint run. */
-function hint(state: FloodState): HintResult<FloodMove> {
+function hint(state: FloodState): HintResult<FloodMove, FloodHint> {
   if (state.completed) return { ok: false, error: ALREADY_SOLVED };
   const moves = solveMoves(state.w, state.h, state.grid, state.colors);
   if (moves.length === 0) return { ok: false, error: NO_MOVE_WORTH_MAKING };
-  const steps = moves.map(
-    (color): HintStep<FloodMove> => ({
+  // Each step's dots are read off the board it is shown on: the one the
+  // fills before it leave.
+  let board = state;
+  const steps = moves.map((color): HintStep<FloodMove, FloodHint> => {
+    const highlights: FloodHint = { joined: joinedBy(board, color), w: state.w };
+    const words = say.fill(color, pointsOf(highlights));
+    board = applyFills(board, [color]);
+    return {
       move: { type: "fill", color },
-      explanation: say.fill(color),
-    }),
-  );
+      explanation: words.text,
+      words,
+      highlights,
+    };
+  });
   return { ok: true, steps };
 }
+
+/** What a Flood hint step marks: the squares its fill joins to the region
+ * (`joinedBy`, which the renderer dots), by flat index in a grid `w` wide. */
+export interface FloodHint {
+  joined: number[];
+  w: number;
+}
+
+const pointsOf = (hl: FloodHint): Point[] =>
+  hl.joined.map((i) => ({ x: i % hl.w, y: Math.floor(i / hl.w) }));
+
+/** What a step's highlights draw: the `drawn` half of Flood's legend. */
+const floodHintMarks = (hl: FloodHint): MarkRef[] =>
+  [{ role: "ring", kind: CELL, elements: pointsOf(hl) }] as MarkRef[];
 
 /** A player fill of the step's color completes it (the plan advances);
  * anything else deviates and drops the plan. */
@@ -208,7 +232,9 @@ export const floodGame: Game<
   FloodState,
   FloodMove,
   FloodUi,
-  FloodDrawState
+  FloodDrawState,
+  unknown,
+  FloodHint
 > = {
   id: "flood",
   // Choosing a color is the only gesture; the secondary button has no
@@ -262,6 +288,12 @@ export const floodGame: Game<
   },
 
   hint,
+  hintMarks: {
+    roles: {
+      ring: "what the step decides: a black dot on every square the named color's fill would join to your region, so you can see what it gains.",
+    },
+    drawn: floodHintMarks,
+  },
   hintKeepTrack,
 
   textFormat,

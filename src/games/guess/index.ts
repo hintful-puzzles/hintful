@@ -28,7 +28,13 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
-import { guessHint, guessHintKeepTrack, guessRefreshHintStep } from "./hint.ts";
+import {
+  type GuessHighlights,
+  guessHint,
+  guessHintKeepTrack,
+  guessHintMarks,
+  guessRefreshHintStep,
+} from "./hint.ts";
 import {
   answerSlotAt,
   COL_1,
@@ -495,7 +501,9 @@ export const guessGame: Game<
   GuessState,
   GuessMove,
   GuessUi,
-  GuessDrawState
+  GuessDrawState,
+  unknown,
+  GuessHighlights
 > = {
   id: "guess",
 
@@ -578,6 +586,15 @@ export const guessGame: Game<
     return { ok: true, move: { type: "solve" } };
   },
   hint: (state, _aux, ui) => guessHint(state, ui),
+  hintMarks: {
+    roles: {
+      ring: "the colors the step acts on, each with a frame beside it in the answer row: *the framed colors*, which the step rules out, or, when it suggests a guess, the color it picks for each slot.",
+      outline:
+        "an answer slot, in a second color: *the outlined slot*, one whose colors the step already knows and leans on.",
+      stripes: "a scored row, its score included: *the striped row* the step reads.",
+    },
+    drawn: guessHintMarks,
+  },
   hintKeepTrack: guessHintKeepTrack,
   refreshHintStep: guessRefreshHintStep,
 
