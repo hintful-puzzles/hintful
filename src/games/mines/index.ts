@@ -500,6 +500,11 @@ export const minesGame: Game<
     return s.completed ? "solved" : "ongoing";
   },
 
+  notApplicable: {
+    findMistakes:
+      "The mines are hidden, and checking your flags against them would give them away.",
+  },
+
   // A death is not a loss (the player undoes and plays on), yet nobody is
   // playing a dead board, so the timer holds on it.
   timerHolds(s: MinesState): boolean {

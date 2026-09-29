@@ -67,6 +67,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { SQUARE_GRID } from "../../engine/sections.ts";
 import type { KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newGameDesc } from "./generator.ts";
 import { groupVocab, say } from "./hint-text.ts";
@@ -710,6 +711,7 @@ export const groupGame: Game<
   interpretMove,
   executeMove,
   status,
+  notApplicable: { transposeParams: SQUARE_GRID },
 
   solve,
   difficulty,

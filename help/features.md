@@ -64,6 +64,12 @@ beside the board (or in the bar along the bottom, on a phone). It doesn't simply
 explains why that move is forced*, so that what you take away is a technique you
 can use again by yourself rather than one square you didn't work out.
 
+Every puzzle is meant to have one. A puzzle still waiting for its hint, or for
+another of the features on this page, is marked **Draft** on the home screen.
+It plays just the same; hold the pointer over the label to see what's still to
+come. When a puzzle has no such thing by its nature, such as mistakes to check
+in a sliding-tile puzzle, its own help page says why under *Not in this game*.
+
 Hint works in two beats:
 
 * **Press once to see it.** The board marks what the hint is talking about and
@@ -241,7 +247,8 @@ Turning your device never changes a game you're in the middle of: the next new
 game fits the new shape. A few boards are always dealt the way you chose them,
 because turned they would be a different puzzle: Same Game and Bricks, where
 things fall downward; Slide, whose exit is always on the right; and the grid
-types in Loopy and Ascent that become a different grid on their side.
+types in Loopy and Ascent that become a different grid on their side. Square
+boards, like every Latin square, are the same either way round.
 
 ## Filling in all the pencil marks {#mark-all}
 

@@ -269,6 +269,11 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
     return s.completed ? "solved" : "ongoing";
   },
 
+  notApplicable: {
+    findMistakes:
+      "Pressing a square twice undoes it, and the order of presses never matters, so no press can be wrong, only unneeded.",
+  },
+
   solve(_orig, curr): SolveResult<FlipMove> {
     const wh = curr.w * curr.h;
     // equations[i] : wh coefficients + 1 value, over GF(2).

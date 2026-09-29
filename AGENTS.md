@@ -165,12 +165,16 @@ functions, with a game that lacks part of it shown as a **draft**. Where a
 guard today *derives* a population because nothing declared it, that is a
 stopgap, not a principle: a contract the engine consumes supersedes it.
 `envision-the-game-contract`'s `design.md` is the plan: `Game` stays the
-contract and gains typed sections, and each section is implemented, is
-`notApplicable(reason)`, or is absent. An absent section makes the game a
-draft. The sections land as the changes it scaffolded, and are built only
-where two channels must agree: a hint's words and its marks, params and their
-labels and help, input and its controls text. Until a section lands, a game
-joins that shared mechanic by having it, and a cross-game guard finds its
+contract and gains typed sections. **The draft computation is live**
+(`src/engine/sections.ts`): `hint`, `findMistakes`, `solve` and
+`transposeParams` are each implemented, excused in `Game.notApplicable` with the
+puzzle's reason (which the help page prints), or absent, and an absent one
+labels the game "Draft" on the home screen. A reason is a fact about the
+puzzle; "nobody wrote it yet" is what draft means, and a hint is never
+excused. The other sections land as the changes it scaffolded, and are built
+only where two channels must agree: a hint's words and its marks, params and
+their labels and help, input and its controls text. Until a section lands, a
+game joins that shared mechanic by having it, and a cross-game guard finds its
 population by reading what the game is (`src/engine/testing/enrollment.ts`).
 Before designing a declaration, ask what consumes it; then ask what the consumer
 is already being sent, because twice now the declaration a concern should have

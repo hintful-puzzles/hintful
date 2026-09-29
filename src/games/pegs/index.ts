@@ -279,6 +279,10 @@ export const pegsGame: Game<PegsParams, PegsState, PegsMove, PegsUi, PegsDrawSta
   interpretMove,
   executeMove,
   status,
+  notApplicable: {
+    findMistakes:
+      "Any sequence of jumps that leaves a single peg wins, so there is no single answer to check a move against.",
+  },
 
   textFormat,
   serializeMove,

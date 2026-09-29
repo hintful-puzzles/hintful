@@ -632,6 +632,10 @@ export const subsetsGame: Game<
   interpretMove,
   executeMove,
   status,
+  notApplicable: {
+    transposeParams:
+      "There is one board, a square grid of the sixteen sets, so it is the same shape either way round.",
+  },
 
   solve,
   difficulty,

@@ -9,13 +9,15 @@
  * union/boolean types instead of integer sentinels.
  *
  * An absent optional member means "this game does not have that capability"
- * (no solver, no `solve`; no preferences, no `prefs`), which the midend treats
- * as the correct behavior, not a stub.
+ * (no preferences, no `prefs`), and the midend runs without it. For the members
+ * `sections.ts` names, it also means the game is a draft, unless the game gives
+ * the puzzle's reason in `notApplicable`.
  */
 
 import type { DifficultyContract } from "./difficulty.ts";
 import type { MarkRole, Narration } from "./hint-words.ts";
 import type { RandomState } from "./random/index.ts";
+import type { NotApplicableReasons } from "./sections.ts";
 import type {
   Color,
   DrawTextOptions,
@@ -662,6 +664,15 @@ export interface Game<
    * holds while this is true. When the timer runs is otherwise the engine's
    * rule; this states a fact about the board, not a clock policy. */
   timerHolds?(s: State): boolean;
+
+  /** The contract sections this game has no such thing as, each with the
+   * reason in the puzzle's rules: Fifteen has no mistakes to check, because
+   * every arrangement of its tiles is a step on the way. The help page shows
+   * the reason, and a section neither implemented nor declared here makes the
+   * game a draft (`sections.ts`, which also refuses a game that does both).
+   * "Nobody has written it yet" is not a reason; that absence is what draft
+   * means. */
+  readonly notApplicable?: NotApplicableReasons;
 
   /** Serialize/parse a move for the save file. Default: the move must
    * be structured-clone/JSON-safe and is stored as-is. */

@@ -462,6 +462,10 @@ export const bricksGame: Game<
   interpretMove,
   executeMove,
   status,
+  notApplicable: {
+    transposeParams:
+      "A shaded brick rests on the row below it, and no three may lie in a horizontal line, so a board turned on its side would be a different puzzle.",
+  },
 
   solve,
   difficulty,

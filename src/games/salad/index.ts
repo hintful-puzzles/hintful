@@ -48,6 +48,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { SQUARE_GRID } from "../../engine/sections.ts";
 import type { GameStatus, KeyLabel, Point } from "../../engine/types.ts";
 import { newSaladDesc } from "./generator.ts";
 import { hint, hintKeepTrack, refreshHintStep, type SaladHint } from "./hint.ts";
@@ -354,6 +355,7 @@ export const saladGame: Game<
   interpretMove,
   executeMove,
   status: (s): GameStatus => (s.completed ? "solved" : "ongoing"),
+  notApplicable: { transposeParams: SQUARE_GRID },
 
   solve,
   difficulty,

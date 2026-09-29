@@ -351,6 +351,10 @@ export const cubeGame: Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawSta
   interpretMove,
   executeMove,
   status,
+  notApplicable: {
+    findMistakes:
+      "Every position of the solid is a step on the way to the answer, so no roll can be wrong, only longer.",
+  },
 
   statusbarText,
 

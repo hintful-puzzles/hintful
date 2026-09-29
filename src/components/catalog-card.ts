@@ -45,6 +45,11 @@ export class CatalogCard extends LitElement {
   @property({ type: Boolean })
   favorite = false;
 
+  /** The parts of the game contract this puzzle still lacks, by the names a
+   * player knows them by; any at all makes it a draft. */
+  @property({ attribute: false })
+  missing: readonly string[] = [];
+
   @state()
   private icon1x = "";
 
@@ -105,6 +110,15 @@ export class CatalogCard extends LitElement {
       : nothing;
   }
 
+  /** Playable, and labeled as not yet complete, never hidden. */
+  private renderDraftLabel() {
+    if (this.missing.length === 0) return nothing;
+    const still = new Intl.ListFormat("en", { type: "conjunction" }).format(
+      this.missing,
+    );
+    return html`<span part="draft" title="Draft: ${still} still to come">Draft</span>`;
+  }
+
   protected override render() {
     // (The tabindex should be automatic for an <a>, but Safari seems to need it)
     return html`
@@ -112,6 +126,7 @@ export class CatalogCard extends LitElement {
         ${this.renderIcon()}
         <span part="name-line">
           <span part="title">${this.name}</span>
+          ${this.renderDraftLabel()}
           ${this.renderGameInProgressBadge()}
         </span>
         <span part="description">${this.objective}</span>
@@ -234,6 +249,16 @@ export class CatalogCard extends LitElement {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      [part="draft"] {
+        flex: none;
+        padding-inline: 0.375rem;
+        border: 1px solid var(--app-color-row-rule);
+        border-radius: var(--app-radius-control);
+        font-size: var(--app-font-size-detail);
+        line-height: var(--wa-line-height-condensed);
+        color: var(--app-color-text-quiet);
       }
 
       [part="description"] {

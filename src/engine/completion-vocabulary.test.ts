@@ -38,6 +38,7 @@ import { registerAllGames } from "../games/index.ts";
 import type { Game } from "./game.ts";
 import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
+import { sectionState } from "./sections.ts";
 
 beforeAll(registerAllGames);
 
@@ -65,17 +66,19 @@ const FLASH_SRC: string = Object.values(
  * Per field rather than per game on purpose. Inertia has `cheated` and derives
  * completion from its gem count; exempting the whole game would hide the day it
  * lost `cheated` too.
+ *
+ * A game without `solve` owes no `cheated` flag, and is not listed: its `solve`
+ * section says so, and the derivation reads it there.
  */
 const NO_FLAG: Record<string, Partial<Record<"completed" | "cheated", string>>> = {
   blackbox: {
     completed: "the board is revealed rather than solved",
-    cheated: "there is no Solve to cheat with",
+    cheated: "Solve reveals the balls and scores the game as a loss",
   },
   bridges: { cheated: "the solve move is replayed like any other, leaving no flag" },
-  cube: { cheated: "no solver" },
   guess: {
     completed: "the last row's feedback, read off the guess history",
-    cheated: "no solver",
+    cheated: "Solve reveals the code and scores the game as a loss",
   },
   inertia: {
     completed: "the gem count reaching zero — and dying is a second outcome",
@@ -83,12 +86,12 @@ const NO_FLAG: Record<string, Partial<Record<"completed" | "cheated", string>>> 
   mosaic: {
     completed: "`notCompletedClues === 0`, the counter its win flash also reads",
   },
-  pegs: { cheated: "no solver" },
-  samegame: {
-    cheated: "no solver; and 'stuck with moves left' is a second outcome",
-  },
-  sokoban: { cheated: "no solver" },
 };
+
+/** Whether `game` is excused `field` without an entry: nothing to cheat with. */
+function excusedBySection(game: AnyGame, field: "completed" | "cheated"): boolean {
+  return field === "cheated" && sectionState(game, "solve").kind !== "implemented";
+}
 
 describe("one completion vocabulary", () => {
   it("names the two fields `winFlash` actually reads", () => {
@@ -120,7 +123,7 @@ describe("one completion vocabulary", () => {
         if (Object.hasOwn(state, field)) {
           if (field === "completed") withCompleted++;
           else withCheated++;
-        } else if (!NO_FLAG[id]?.[field]) {
+        } else if (!NO_FLAG[id]?.[field] && !excusedBySection(game, field)) {
           offenders.push(
             `${id}: no \`${field}\` on its state, and no reason on record`,
           );
@@ -149,6 +152,11 @@ describe("one completion vocabulary", () => {
       for (const field of Object.keys(fields)) {
         if (Object.hasOwn(state, field)) {
           stale.push(`${id}.${field} is exempted but the field exists`);
+        }
+        if (excusedBySection(game, field as "completed" | "cheated")) {
+          stale.push(
+            `${id}.${field} is exempted, and the game's sections already say so`,
+          );
         }
       }
     }

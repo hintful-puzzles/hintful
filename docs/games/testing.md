@@ -677,6 +677,11 @@ is the `ts-engine` spec, "A shared mechanic is joined by having it".
    `completion-vocabulary.test.ts`'s `NO_FLAG`, `hint-quality.test.ts`'s
    `NARRATES_MOVES`, `contract-surface.test.ts`'s `NO_CONSUMER`. Several are
    **empty and meant to stay so**, which is a real assertion and not a stub.
+   **An excuse that says the game has no such section is not a ledger entry**:
+   it is the game's `notApplicable` reason, which its help page prints, and the
+   guard reads it with `sectionState` ([mechanics](./mechanics.md) § "Contract
+   sections, and what makes a draft"). That is where `NOT_TURNED`, the "no
+   solver" half of `NO_FLAG` and three `OPENS_ITS_OWN_REFUSAL` entries went.
 4. **Where the game must declare a flag because production needs the answer
    synchronously, hold the flag to the behavior.** The `Game` contract carries
    exactly three boolean declarations, and each is now asserted equal to a

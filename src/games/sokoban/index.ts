@@ -189,6 +189,10 @@ export const sokobanGame: Game<
   interpretMove,
   executeMove,
   status,
+  notApplicable: {
+    findMistakes:
+      "Any sequence of pushes that gets every barrel onto a target wins, so there is no single answer to check a move against.",
+  },
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

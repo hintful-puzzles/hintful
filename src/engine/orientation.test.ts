@@ -13,14 +13,15 @@
  *    same board on its side. That last property is what lets the midend's
  *    deal-time choice between the two be a plain comparison of tile sizes.
  *
- * Who may turn is derived: every game whose Custom dialog asks for a width and
- * a height either has `transposeParams` or is in {@link NOT_TURNED} with the
- * reason a tall board of it is a different game.
+ * Who may turn is the game's own `transposeParams` section: it turns, or it
+ * says in `notApplicable` why a turned board would be a different game (or the
+ * same one), or it is a draft (`sections.ts`).
  */
 
 import { describe, expect, it } from "vitest";
 import type { PresetMenu } from "./game.ts";
 import { paramsError } from "./params.ts";
+import { SQUARE_GRID, sectionState } from "./sections.ts";
 import {
   type AnyGame,
   type AnyParams,
@@ -47,17 +48,6 @@ const WIDE_BY_NATURE: Record<string, { reason: string; params: string[] }> = {
       "than across its flats at every size.",
     params: ["7x7mH"],
   },
-};
-
-/** Games with a width and a height that deliberately cannot be turned. */
-const NOT_TURNED: Record<string, string> = {
-  bricks:
-    "Gravity: a shaded brick rests on the row below, and no three may lie in " +
-    "a horizontal line.",
-  samegame: "Gravity: tiles fall down and emptied columns close up leftward.",
-  slide:
-    "The key block starts in the top-left corner and leaves by a gate in the " +
-    "right-hand wall.",
 };
 
 /** Games whose turned board does not exchange its drawn width and height
@@ -151,18 +141,22 @@ describe("turning a board on its side", () => {
   });
 
   it("is offered by every game with a width and a height, or excused", () => {
-    const missing = PARAMS_GAMES.filter(
-      ([, g]) => hasWidthAndHeight(g) && g.transposeParams === undefined,
-    ).map(([id]) => id);
-    expect(missing.sort()).toEqual(Object.keys(NOT_TURNED).sort());
-    // An excuse for a game that turns after all, or has no width to turn, is
-    // stale.
-    for (const id of Object.keys(NOT_TURNED)) {
-      const game = PARAMS_GAMES.find(([g]) => g === id)?.[1];
-      expect(`${id}:${game !== undefined && hasWidthAndHeight(game)}`).toBe(
-        `${id}:true`,
-      );
+    // A game that forgets to turn is a draft, and the catalog says so; what
+    // fails here is a reason that is not the puzzle's.
+    const excused = PARAMS_GAMES.filter(
+      ([, g]) => sectionState(g, "transposeParams").kind === "notApplicable",
+    );
+    // Known positive: gravity is the reason a width and a height do not turn.
+    expect(excused.map(([id]) => id)).toContain("bricks");
+    for (const [id, game] of excused) {
+      if (game.notApplicable?.transposeParams !== SQUARE_GRID) continue;
+      // "The grid is square" is a claim, so every board on the menu is held to it.
+      for (const p of menuParams(game)) {
+        const { w, h } = drawn(game, p);
+        expect(`${id}:${game.encodeParams(p, false)}:${w === h}`).toMatch(/:true$/);
+      }
     }
+    expect(excused.filter(([, g]) => hasWidthAndHeight(g)).length).toBeGreaterThan(0);
   });
 
   it("turns valid params into valid params and back again", () => {

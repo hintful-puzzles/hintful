@@ -64,6 +64,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { SQUARE_GRID } from "../../engine/sections.ts";
 import type { Point } from "../../engine/types.ts";
 import { newTowersDesc } from "./generator.ts";
 import { type ClueSight, say } from "./hint-text.ts";
@@ -586,6 +587,7 @@ export const towersGame: Game<
   interpretMove,
   executeMove,
   status,
+  notApplicable: { transposeParams: SQUARE_GRID },
 
   solve,
   difficulty,

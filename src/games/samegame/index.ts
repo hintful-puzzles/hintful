@@ -231,6 +231,12 @@ export const samegameGame: Game<
   interpretMove,
   executeMove,
   status,
+  notApplicable: {
+    findMistakes:
+      "Any order of removals that empties the grid wins, so there is no single answer to check a move against.",
+    transposeParams:
+      "Squares fall down and emptied columns close up to the left, so a board turned on its side would be a different puzzle.",
+  },
 
   textFormat,
   statusbarText,

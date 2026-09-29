@@ -565,6 +565,12 @@ export const guessGame: Game<
   interpretMove,
   executeMove,
   status,
+  notApplicable: {
+    findMistakes:
+      "The code is hidden, and checking a guess against it would give it away. Each row's feedback pegs are the check.",
+    transposeParams:
+      "Your guesses run down the board in the order you made them, so there is no grid to turn.",
+  },
   requestKeys,
   statusbarText,
 

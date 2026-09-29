@@ -378,6 +378,10 @@ export const blackboxGame: Game<
   interpretMove,
   executeMove,
   status,
+  notApplicable: {
+    findMistakes:
+      "The balls are hidden, and checking your guesses against them would give them away. They are checked once, when you say you are done.",
+  },
 
   solve() {
     // Reveal the real layout: a give-up, scored as a loss unless the

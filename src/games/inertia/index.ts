@@ -319,6 +319,10 @@ export const inertiaGame: Game<
   executeMove,
 
   status: (s: InertiaState): GameStatus => (s.gems === 0 ? "solved" : "ongoing"),
+  notApplicable: {
+    findMistakes:
+      "Any route that collects every gem wins, so there is no single answer to check a move against.",
+  },
 
   solve(_orig: InertiaState, curr: InertiaState): SolveResult<InertiaMove> {
     const result = solveRoute(curr);

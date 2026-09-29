@@ -377,6 +377,12 @@ export const untangleGame: Game<
   },
 
   status: (s) => (s.completed ? "solved" : "ongoing"),
+  notApplicable: {
+    findMistakes:
+      "Any arrangement of the points with no lines crossing wins, so there is no single answer to check a move against.",
+    transposeParams:
+      "The points move about a square area, so the board is the same shape either way round.",
+  },
 
   // --- hint (the move that clears the most crossings; see hint.ts) ---
   hint: (s, aux) => deduceUntangleHintPlan(s, aux),

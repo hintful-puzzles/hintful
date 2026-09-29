@@ -263,6 +263,10 @@ export const floodGame: Game<
   interpretMove,
   executeMove,
   status,
+  notApplicable: {
+    findMistakes:
+      "Any sequence of floods that fills the grid within the move limit wins, so there is no single answer to check a move against.",
+  },
 
   solve(_orig, curr) {
     if (curr.completed) return { ok: false, error: "Puzzle is already solved" };

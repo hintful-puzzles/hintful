@@ -17,6 +17,7 @@ import {
 import { puzzleIds, puzzleCatalog as puzzles } from "./src/puzzle/catalog-data.ts";
 import { canonicalCoverage } from "./vite-plugins/canonical-coverage.ts";
 import { dependencyNotices } from "./vite-plugins/dependency-notices.ts";
+import { draftPuzzles } from "./vite-plugins/draft-puzzles.ts";
 import {
   extraPages,
   renderHandlebars,
@@ -24,6 +25,7 @@ import {
   type Transform,
 } from "./vite-plugins/extra-pages.ts";
 import { withHintMarks } from "./vite-plugins/hint-marks.ts";
+import { withNotApplicable } from "./vite-plugins/not-applicable.ts";
 import { withParameters } from "./vite-plugins/parameters.ts";
 import { precacheCoverage } from "./vite-plugins/precache-coverage.ts";
 
@@ -493,6 +495,7 @@ export default defineConfig(async ({ command, mode }) => {
           },
         },
       }),
+      draftPuzzles(),
       extraPages({
         // debug: true,
         pages: [
@@ -556,6 +559,7 @@ export default defineConfig(async ({ command, mode }) => {
               (data) => ({ ...commonTemplateData, ...data }),
               withHintMarks,
               withParameters,
+              withNotApplicable,
               renderMarkdown({
                 html: true, // allow HTML tags in markdown
                 linkify: true,

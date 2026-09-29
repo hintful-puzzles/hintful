@@ -371,6 +371,12 @@ export const slideGame: Game<
   interpretMove,
   executeMove,
   status,
+  notApplicable: {
+    findMistakes:
+      "Every arrangement of the blocks is a step on the way to the answer, so no move can be wrong, only longer.",
+    transposeParams:
+      "The key block leaves by a gate in the right-hand wall, so a board turned on its side would be a different puzzle.",
+  },
 
   solve,
   textFormat,

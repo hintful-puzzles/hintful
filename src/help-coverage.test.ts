@@ -335,6 +335,11 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
     anchor: "sharing",
     why: "Copy as text, in the share dialog",
   },
+  notApplicable: {
+    kind: "features",
+    anchor: "hints",
+    why: "the Draft label, and each game page's generated Not in this game section",
+  },
 
   // --- the original collection's, covered by the manual features.md links to ---
   solve: { kind: "upstream", why: "Solve is upstream's, with upstream's meaning" },

@@ -1,7 +1,8 @@
 # derive-the-draft-label
 
-**Status: scaffolded, not started.** Phase 3 of `envision-the-game-contract`.
-Read that change's `design.md` first.
+**Status: implemented, awaiting owner acceptance of the label (tasks 5.3).**
+Phase 3 of `envision-the-game-contract`. The classification and the decisions
+are `design.md`.
 
 ## Why
 

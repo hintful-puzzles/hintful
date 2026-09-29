@@ -238,11 +238,13 @@ else that is laid out on the grid too (Mines' forced first click), return
 of its own (Dominosa's `tall`, which decodes absent as the old wide board so
 existing ids keep loading).
 
-**Leave it out only when a tall board is a different game**: gravity (Same
-Game, Bricks), a goal on a fixed side (Slide). The guard derives who must
-decide: every game whose Custom dialog has a width and a height either has
-`transposeParams` or has an entry in `NOT_TURNED` saying why not. The same
-file holds each implementation to turning back exactly and to drawing the
+**Leave it out only when a tall board is a different game**, gravity (Same
+Game, Bricks) or a goal on a fixed side (Slide), **or the same one**, a square
+grid (the Latin games: `SQUARE_GRID`). Say which in
+`notApplicable.transposeParams` (see "Contract sections, and what makes a
+draft" below); a game that neither turns nor says why is a draft.
+`orientation.test.ts` holds a `SQUARE_GRID` reason to every menu board drawing
+square, and holds each implementation to turning back exactly and to drawing the
 turned board with width and height exchanged, on non-square boards it builds
 through the game's own width item; a game that draws something along one side
 only records it in `UNEVEN_FRAME`.
@@ -606,6 +608,40 @@ adopted by nobody, later deleted as phantom API. When one game needs a
 refinement, prefer the narrowest change the existing consumers already
 tolerate.
 
+### Contract sections, and what makes a draft
+
+Four members are **sections** ([`sections.ts`](../../src/engine/sections.ts)):
+`hint`, `findMistakes`, `solve` and `transposeParams`. Each is implemented, not
+applicable, or absent, and **an absent one makes the game a draft**: still
+playable, labeled "Draft" on the home screen, never hidden. Nothing sets draft
+by hand; the build computes it (`vite-plugins/draft-puzzles.ts`).
+
+When the puzzle has no such thing, say why in `notApplicable`, keyed by
+section:
+
+```ts
+notApplicable: {
+  findMistakes: "Every arrangement of the tiles is a step on the way to the answer, so no move can be wrong, only longer.",
+},
+```
+
+- **A reason is a fact about the puzzle** a player could check against its
+  rules, written as a sentence: it is printed on the game's help page under
+  "Not in this game". "Upstream never wrote one" is history, not a reason; that
+  game is a draft until someone writes the section.
+- **A hint is never not applicable.** The type refuses the key.
+- **Implemented and excused at once is refused** wherever a section state is
+  read, the production build included.
+- **A guard that would excuse a game for lacking a section reads the reason**
+  (`sectionState`) instead of keeping a ledger: `orientation.test.ts`,
+  `completion-vocabulary.test.ts` (no `solve`, no `cheated` owed) and
+  `hint-refusal-opening.test.ts` do.
+
+`difficulty`, `textFormat` and the affordances (`hover`, `reference`, `prefs`,
+the keypad) are not sections: nothing tells a puzzle that has no such thing
+from an unfinished one, so their absence says nothing. The measurement behind
+that line is `derive-the-draft-label`'s design.
+
 ## Ui
 
 `Ui` is the ephemeral interaction state (cursor, drag anchors, typing buffers,
@@ -757,7 +793,10 @@ the Marks key below, whatever the marks themselves look like.
 depends on it.** The shell hard-blocks a bad save only when `canFindMistakes`
 is true, which is exactly `game.findMistakes !== undefined`; without it the
 control silently degrades to a plain quick-save and **blesses a wrong board**
-(shipped in Unruly's first cut, caught on owner smoke-test). The four
+(shipped in Unruly's first cut, caught on owner smoke-test). A game with no
+mistake to check (rearranging pieces, many solutions, a hidden answer) says so
+in `notApplicable.findMistakes`; see "Contract sections, and what makes a
+draft". The four
 computation shapes (re-solve, edge-contradiction, both-layers, rule-checker)
 are [solver & generator](./solver-and-generator.md) § "findMistakes";
 the overlay-repaint trap is [rendering](./rendering.md) § "Overlay sidecars";

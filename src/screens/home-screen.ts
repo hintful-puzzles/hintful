@@ -11,6 +11,8 @@
  * looking at this page right now, not a preference, and a player who returns to
  * a filtered catalog they do not remember setting has lost the other 50 games.
  */
+
+import draftPuzzles from "virtual:draft-puzzles";
 import { SignalWatcher } from "@lit-labs/signals";
 import { css, html, unsafeCSS } from "lit";
 import { customElement, state } from "lit/decorators.js";
@@ -297,6 +299,7 @@ export class HomeScreen extends SignalWatcher(Screen) {
         objective=${objective}
         ?game-in-progress=${savedGames.autoSavedPuzzles.has(puzzleId)}
         ?favorite=${isFavorite}
+        .missing=${draftPuzzles[puzzleId] ?? []}
       ></catalog-card>
     `;
   }

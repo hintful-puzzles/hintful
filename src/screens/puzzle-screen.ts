@@ -1108,10 +1108,6 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
     if (command) this.handleCommand(command);
   };
 
-  /* There is no unfinished-puzzle warning, and no catalog `unfinished` flag for
-   * one to fire on: every puzzle ships finished, and a new game is implemented
-   * in one go. */
-
   //
   // Styles
   //

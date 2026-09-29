@@ -19,4 +19,8 @@ interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
 
-declare const __PUZZLE_IDS__: string[];
+/** Each draft game's id and the sections it lacks (`vite-plugins/draft-puzzles.ts`). */
+declare module "virtual:draft-puzzles" {
+  const drafts: Readonly<Record<string, readonly string[]>>;
+  export default drafts;
+}

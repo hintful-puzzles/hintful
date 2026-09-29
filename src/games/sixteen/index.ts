@@ -721,6 +721,10 @@ export const sixteenGame: Game<
   interpretMove,
   executeMove,
   status,
+  notApplicable: {
+    findMistakes:
+      "Every arrangement of the tiles is a step on the way to the answer, so no move can be wrong, only longer.",
+  },
 
   solve: () => ({ ok: true, move: { type: "solve" } }),
 

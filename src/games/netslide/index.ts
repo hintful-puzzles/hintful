@@ -289,6 +289,10 @@ export const netslideGame: Game<
 
   // The midend upgrades this to "solved-with-help" when Solve was used.
   status: (s): GameStatus => (s.completed ? "solved" : "ongoing"),
+  notApplicable: {
+    findMistakes:
+      "Every arrangement of the tiles is a step on the way to the answer, so no move can be wrong, only longer.",
+  },
 
   // Netslide has no solver, so the answer is the generator's unshuffled grid.
   // A game that arrived as a shared link or a bookmark carries no `aux`, and

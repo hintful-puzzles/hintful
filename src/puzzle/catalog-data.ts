@@ -70,8 +70,9 @@ export interface PuzzleData {
    * per-game subtitle, nearly unique per game.
    */
   family: PuzzleFamily;
-  // No `unfinished` flag: every game ships finished, and a new one is
-  // implemented in one go.
+  // Whether a game is a draft is not here: the home screen reads it from the
+  // game's own contract sections, computed at build time
+  // (`vite-plugins/draft-puzzles.ts`).
 }
 
 export const puzzleCatalog = {

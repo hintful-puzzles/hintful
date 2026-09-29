@@ -70,6 +70,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { SQUARE_GRID } from "../../engine/sections.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newUnequalDesc } from "./generator.ts";
 import { say, unequalVocab } from "./hint-text.ts";
@@ -571,6 +572,7 @@ export const unequalGame: Game<
   interpretMove,
   executeMove,
   status,
+  notApplicable: { transposeParams: SQUARE_GRID },
 
   solve,
   difficulty,

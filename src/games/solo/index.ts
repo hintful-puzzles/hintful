@@ -59,6 +59,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { SQUARE_GRID } from "../../engine/sections.ts";
 import type { KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newSoloDesc } from "./generator.ts";
 import { type RegionCells, regionName, say } from "./hint-text.ts";
@@ -741,6 +742,7 @@ export const soloGame: Game<
   interpretMove,
   executeMove,
   status: soloStatus,
+  notApplicable: { transposeParams: SQUARE_GRID },
 
   solve,
   difficulty,

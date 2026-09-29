@@ -468,6 +468,17 @@ Details: [`mechanics.md`](./mechanics.md) (declaring) and
 check and `hint-resume.test.ts`'s walk both use it to decide whether a board may
 run out of deduction, so reach for it rather than comparing names yourself.
 
+### `sections.ts` — contract sections and the draft label
+
+`sectionState(game, section)` reads whether `hint`, `findMistakes`, `solve` or
+`transposeParams` is implemented, not applicable (with the game's reason from
+`Game.notApplicable`) or absent; `draftSections` is what the home screen's
+"Draft" label is built from, and `notApplicableMarkdown` the help page's "Not in
+this game" section. `SQUARE_GRID` is the shared `transposeParams` reason of a
+game whose grid has one side. A guard that would excuse a game for lacking a
+section reads `sectionState` rather than keeping a ledger. Details:
+[`mechanics.md`](./mechanics.md) § "Contract sections, and what makes a draft".
+
 ### `deduction-record.ts` — the recorded-firing shape
 
 `DeductionRecord`/`DeductionRecorder`: the seam between a game's recording
