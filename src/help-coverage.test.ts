@@ -22,6 +22,7 @@ import { difficultyTiers } from "./engine/difficulty.ts";
 import { HINT_MARKS_PLACEHOLDER } from "./engine/hint-words.ts";
 import { PARAMETERS_PLACEHOLDER } from "./engine/param-help.ts";
 import { getTsGame, registeredGameIds } from "./engine/registry.ts";
+import { CONTROLS_PLACEHOLDER } from "./engine/target-verb.ts";
 import { HINT_GAMES } from "./engine/testing/hint-games.ts";
 // Registers every ported game; `beforeAll` re-runs it in case a sibling file
 // reset the shared registry under `isolate: false`.
@@ -89,7 +90,7 @@ describe("every game's page has the one skeleton", () => {
     return [...page.matchAll(/^## (.+)$/gm)].map((m) => m[1].trim());
   }
 
-  function parametersSection(page: string, heading: string): string {
+  function sectionBody(page: string, heading: string): string {
     const at = page.indexOf(`\n## ${heading}\n`);
     if (at < 0) return "";
     const rest = page.slice(at + 1);
@@ -127,11 +128,24 @@ describe("every game's page has the one skeleton", () => {
     expect(page.includes(HINT_MARKS_PLACEHOLDER), `help/games/${id}.md`).toBe(bound);
   });
 
+  // A game declaring `targetVerbs` has its Controls paragraph generated
+  // (`vite-plugins/controls.ts`), inside its Controls section, and no other page
+  // carries the placeholder. The build refuses both mismatches too.
+  it.each(puzzleIds)("%s: carries the controls placeholder iff it has verbs", (id) => {
+    const page = helpPages[`../help/games/${id}.md`] ?? "";
+    const declares = getTsGame(id)?.targetVerbs !== undefined;
+    const controls = sectionBody(page, "Controls");
+    expect(controls.includes(CONTROLS_PLACEHOLDER), `help/games/${id}.md`).toBe(
+      declares,
+    );
+    expect(page.split(CONTROLS_PLACEHOLDER).length - 1).toBe(declares ? 1 : 0);
+  });
+
   // The build refuses a page without it too; this says so before a ten-minute
   // gate reaches `vite build`.
   it.each(puzzleIds)("%s: its parameters section carries the generated list", (id) => {
     const name = puzzleDataMap[id].name;
-    const section = parametersSection(
+    const section = sectionBody(
       helpPages[`../help/games/${id}.md`] ?? "",
       `${name} parameters`,
     );
@@ -362,6 +376,10 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
   hintMarks: {
     kind: "internal",
     why: "the game page's list of marks, generated from it rather than told once",
+  },
+  targetVerbs: {
+    kind: "internal",
+    why: "the game page's Controls paragraph, generated from it rather than told once",
   },
   refreshHintStep: { kind: "internal", why: "re-validating a stored step" },
   uiUpdateClearsHint: { kind: "internal", why: "when a UI change invalidates a step" },

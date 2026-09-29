@@ -1,8 +1,9 @@
 # derive-target-verb-input
 
-**Status: scaffolded, not started.** Phase 4 of `envision-the-game-contract`.
-Read that change's `design.md` first, and the postmortem
-`2026-09-05-gesture-table-withdrawal.md`.
+Phase 4 of `envision-the-game-contract`. Read that change's `design.md` first,
+and the postmortem `2026-09-05-gesture-table-withdrawal.md`. What was measured
+and built is this change's `design.md`; the rest of the members, and Net's hint,
+are `sweep-target-verb-input`.
 
 ## Why
 

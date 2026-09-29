@@ -12,14 +12,11 @@ With **Unique rows and columns** switched on (from ‘Custom type…’ on the
 
 ## Controls
 
-Left-click in an empty square to turn it black, or right-click to turn
-it white. Click again in an already-filled square to cycle it between
-black and white and empty; middle-click to reset any square to empty.
+{{controls}}
 
-With the keyboard, the arrow keys move a cursor around the grid. Enter
-cycles the square under it the way a left-click does, and Space the way a
-right-click does. You can also press 1 for black, 0 or 2 for white, and
-Backspace or Delete to empty the square.
+Clicking a filled square again moves it on round black, white and empty,
+and a right-click goes round the other way. You can also press 1 for
+black, and 0 or 2 for white.
 
 ## Hints
 

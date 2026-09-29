@@ -25,7 +25,6 @@ import {
 } from "../../engine/color/palette.ts";
 import { drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
-import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
@@ -92,9 +91,6 @@ export function colors(defaultBackground: Color): Color[] {
 
 export const border = (ts: number): number => Math.floor(ts / 2);
 export const coord = (v: number, ts: number): number => v * ts + border(ts);
-/** Pixel → cell (upstream FROMCOORD). */
-export const fromCoord = (v: number, ts: number): number =>
-  fromCoordE(v, ts, border(ts));
 
 export function computeSize(p: { w: number; h: number }, ts: number): Size {
   return { w: p.w * ts + 2 * border(ts), h: p.h * ts + 2 * border(ts) };

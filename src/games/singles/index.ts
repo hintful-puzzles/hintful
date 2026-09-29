@@ -23,23 +23,17 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
 import { CELL, type Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
-import {
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
-  cursorDelta,
-  isCursorMove,
-  LEFT_BUTTON,
-  MIDDLE_BUTTON,
-  newCursor,
-  RIGHT_BUTTON,
-  stripModifiers,
-} from "../../engine/pointer.ts";
+import { isMouseDown, newCursor, stripModifiers } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  interpretTargetVerbs,
+  squareGrid,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSinglesDesc } from "./generator.ts";
 import { type Marked, say } from "./hint-text.ts";
@@ -111,6 +105,36 @@ function changedState(
   if (oldState && !oldState.completed && newSt.completed) ui.cursor.visible = false;
 }
 
+/** Black out or circle square `{ x, y }`; either clears a square that is
+ * already one or the other. */
+function mark(value: "black" | "circle") {
+  return (state: SinglesState, { x, y }: Point): SinglesMove => {
+    const filled = state.flags[y * state.w + x] & (F_BLACK | F_CIRCLE);
+    return { sets: [{ x, y, value: filled ? "empty" : value }] };
+  };
+}
+
+const geometry = squareGrid<SinglesState, SinglesDrawState>({
+  size: (s) => s,
+  border,
+  wrap: true,
+});
+
+const targetVerbs: TargetVerbs<
+  SinglesState,
+  SinglesUi,
+  SinglesDrawState,
+  Point,
+  SinglesMove
+> = {
+  geometry,
+  primary: { does: "black it out", apply: mark("black") },
+  secondary: {
+    does: "circle it, marking a square you are sure should not be blacked out",
+    apply: mark("circle"),
+  },
+};
+
 function interpretMove(
   state: SinglesState,
   ui: SinglesUi,
@@ -118,68 +142,16 @@ function interpretMove(
   p: Point,
   rawButton: number,
 ): SinglesMove | null | UiUpdate {
-  const button = stripModifiers(rawButton);
-  const { w, h } = state;
-
-  // Cursor movement: wraps toroidally; first press only reveals the cursor.
-  if (isCursorMove(button)) {
-    const delta = cursorDelta(button);
-    if (!delta) return null;
-    const ox = ui.cursor.x;
-    const oy = ui.cursor.y;
-    ui.cursor.x = (((ui.cursor.x + delta.dx) % w) + w) % w;
-    ui.cursor.y = (((ui.cursor.y + delta.dy) % h) + h) % h;
-    if (!ui.cursor.visible) {
-      ui.cursor.visible = true;
-      return UI_UPDATE;
-    }
-    return ui.cursor.x !== ox || ui.cursor.y !== oy ? UI_UPDATE : null;
-  }
-
-  let x: number;
-  let y: number;
-  let action: "none" | "black" | "circle" | "ui" = "none";
-
-  if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
-    x = ui.cursor.x;
-    y = ui.cursor.y;
-    if (!ui.cursor.visible) ui.cursor.visible = true;
-    action = button === CURSOR_SELECT ? "black" : "circle";
-  } else if (
-    button === LEFT_BUTTON ||
-    button === MIDDLE_BUTTON ||
-    button === RIGHT_BUTTON
+  // Any press outside the grid flips the "numbers on black squares" setting.
+  if (
+    isMouseDown(stripModifiers(rawButton)) &&
+    geometry.pointerTarget(state, ds, p) === null
   ) {
-    const ts = ds.tileSize;
-    const b = border(ts);
-    const fromCoord = (v: number): number => fromCoordE(v, ts, b);
-    x = fromCoord(p.x);
-    y = fromCoord(p.y);
-    if (ui.cursor.visible) {
-      ui.cursor.visible = false;
-      action = "ui";
-    }
-    if (!inGrid(state, x, y)) {
-      ui.showBlackNums = !ui.showBlackNums;
-      action = "ui";
-    } else if (button === LEFT_BUTTON) {
-      action = "black";
-    } else if (button === RIGHT_BUTTON) {
-      action = "circle";
-    }
-  } else {
-    return null;
+    ui.cursor.visible = false;
+    ui.showBlackNums = !ui.showBlackNums;
+    return UI_UPDATE;
   }
-
-  if (action === "ui") return UI_UPDATE;
-  if (action === "black" || action === "circle") {
-    const i = y * w + x;
-    let value: CellValue;
-    if (state.flags[i] & (F_BLACK | F_CIRCLE)) value = "empty";
-    else value = action === "black" ? "black" : "circle";
-    return { sets: [{ x, y, value }] };
-  }
-  return null;
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
 }
 
 function executeMove(state: SinglesState, move: SinglesMove): SinglesState {
@@ -518,6 +490,7 @@ export const singlesGame: Game<
   changedState,
 
   interpretMove,
+  targetVerbs,
   executeMove,
   status,
 

@@ -18,6 +18,7 @@ import type { DifficultyContract } from "./difficulty.ts";
 import type { MarkRole, Narration } from "./hint-words.ts";
 import type { RandomState } from "./random/index.ts";
 import type { NotApplicableReasons } from "./sections.ts";
+import type { TargetVerbs } from "./target-verb.ts";
 import type {
   Color,
   DrawTextOptions,
@@ -436,6 +437,11 @@ export interface Game<
     p: Point,
     button: number,
   ): Move | null | UiUpdate;
+  /** The game's input as targets and verbs, for a game that plays that way
+   * (`target-verb.ts`). Its `interpretMove` hands the verbs to
+   * `interpretTargetVerbs`, and the help renders its Controls paragraph from
+   * this; `target-verb.test.ts` holds the two to each other. */
+  readonly targetVerbs?: TargetVerbs<State, Ui, DrawState, unknown, Move>;
   /** Pure: returns a NEW state. Throws if the move is illegal. */
   executeMove(s: State, m: Move): State;
 

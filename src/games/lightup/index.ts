@@ -15,12 +15,13 @@ import { assertNever, rejectMove } from "../../engine/assert-never.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import type {
+  Game,
   HintResult,
   HintStep,
   HintTrackVerdict,
   SolveResult,
+  UiUpdate,
 } from "../../engine/game.ts";
-import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
 import { CELL, type Narration } from "../../engine/hint-words.ts";
@@ -29,16 +30,7 @@ import {
   numberItem,
   transposeDimensions,
 } from "../../engine/params.ts";
-import {
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
-  gridCursorMove,
-  isCursorMove,
-  LEFT_BUTTON,
-  newCursor,
-  RIGHT_BUTTON,
-  stripModifiers,
-} from "../../engine/pointer.ts";
+import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
   SYMM_NONE,
@@ -46,14 +38,19 @@ import {
   SYMM_ROT4,
   SYMMETRY_CHOICES,
 } from "../../engine/symmetric-blacks.ts";
+import {
+  interpretTargetVerbs,
+  squareGrid,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newLightupDesc, puzzleIsGood } from "./generator.ts";
 import { type Marked, say } from "./hint-text.ts";
 import {
+  border,
   colors,
   computeSize,
   FLASH_TIME,
-  fromCoord,
   type LightupDrawState,
   newDrawState,
   PREFERRED_TILE_SIZE,
@@ -116,67 +113,41 @@ function changedState(
   if (next.completed) ui.cursor.visible = false;
 }
 
+/** A bulb or a dot on square `{ x, y }`: toggled, except that each refuses a
+ * square holding the other. */
+function toggle(kind: "light" | "impossible") {
+  return (state: LightupState, { x, y }: Point): LightupMove | null => {
+    const flags = state.flags[idx(x, y, state.w)];
+    if (flags & F_BLACK) return null;
+    if (flags & (kind === "light" ? F_IMPOSSIBLE : F_LIGHT)) return null;
+    return { ops: [{ kind, x, y }] };
+  };
+}
+
+const targetVerbs: TargetVerbs<
+  LightupState,
+  LightupUi,
+  LightupDrawState,
+  Point,
+  LightupMove
+> = {
+  geometry: squareGrid({ size: (s) => s, border }),
+  primary: { does: "place or remove a light", apply: toggle("light") },
+  secondary: {
+    does: "place or remove a dot, marking a square you think holds no light",
+    keys: [{ codes: [KEY_I_LOWER, KEY_I_UPPER], name: "I" }],
+    apply: toggle("impossible"),
+  },
+};
+
 function interpretMove(
   state: LightupState,
   ui: LightupUi,
   ds: LightupDrawState,
   p: Point,
-  rawButton: number,
+  button: number,
 ): LightupMove | null | UiUpdate {
-  const button = stripModifiers(rawButton);
-  const { w, h } = state;
-
-  let x: number;
-  let y: number;
-  let action: "light" | "impossible";
-  /** What an ineffective pointer action returns: hiding a visible cursor
-   * is itself a UI change (upstream's `nullret = empty`). */
-  let nullret: null | UiUpdate = null;
-
-  if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
-    if (ui.cursor.visible) nullret = UI_UPDATE;
-    ui.cursor.visible = false;
-    x = fromCoord(p.x, ds.tileSize);
-    y = fromCoord(p.y, ds.tileSize);
-    action = button === LEFT_BUTTON ? "light" : "impossible";
-  } else if (
-    button === CURSOR_SELECT ||
-    button === CURSOR_SELECT2 ||
-    button === KEY_I_LOWER ||
-    button === KEY_I_UPPER
-  ) {
-    if (ui.cursor.visible) {
-      // Cursor-effect operations only apply to a visible cursor.
-      x = ui.cursor.x;
-      y = ui.cursor.y;
-      action = button === CURSOR_SELECT ? "light" : "impossible";
-    } else {
-      ui.cursor.visible = true;
-      return UI_UPDATE;
-    }
-  } else if (isCursorMove(button)) {
-    // Upstream `move_cursor`: move (clamped), reveal if hidden; a
-    // clamped-edge no-op with a visible cursor is no effect.
-    const pos = gridCursorMove(button, ui.cursor.x, ui.cursor.y, w, h);
-    if (pos) {
-      ui.cursor.x = pos.x;
-      ui.cursor.y = pos.y;
-    }
-    if (!ui.cursor.visible) {
-      ui.cursor.visible = true;
-      return UI_UPDATE;
-    }
-    return pos ? UI_UPDATE : null;
-  } else {
-    return null;
-  }
-
-  if (x < 0 || y < 0 || x >= w || y >= h) return nullret;
-  const flags = state.flags[idx(x, y, w)];
-  if (flags & F_BLACK) return nullret;
-  // A bulb and a mark each refuse the square holding the other.
-  if (flags & (action === "light" ? F_IMPOSSIBLE : F_LIGHT)) return nullret;
-  return { ops: [{ kind: action, x, y }] };
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, button);
 }
 
 function executeMove(state: LightupState, move: LightupMove): LightupState {
@@ -549,6 +520,7 @@ export const lightupGame: Game<
   changedState,
 
   interpretMove,
+  targetVerbs,
   executeMove,
   status,
 

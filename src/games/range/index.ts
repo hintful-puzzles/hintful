@@ -22,24 +22,22 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { fromCoord } from "../../engine/geometry.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
   cursorDelta,
-  isMouseDown,
-  LEFT_BUTTON,
   MOD_SHFT,
-  moveCursor,
   newCursor,
-  RIGHT_BUTTON,
   showCursor,
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  interpretTargetVerbs,
+  squareGrid,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { type Marked, say } from "./hint-text.ts";
 import {
@@ -104,6 +102,26 @@ function cycle(cell: number, forwards: boolean): RangeCellValue {
   return CYCLE[(i + (forwards ? 1 : 2)) % 3];
 }
 
+/** Cycle the non-clue square `{ x, y }` one way round. The cursor is (x, y),
+ * transposed from Range's own `(r, c)` here (see `RangeUi`). */
+function cycleAt(forwards: boolean) {
+  return (state: RangeState, { x: c, y: r }: Point): RangeMove | null => {
+    const cell = state.grid[idx(r, c, state.w)];
+    if (cell > 0) return null; // clue cell — inert
+    return { sets: [{ r, c, value: cycle(cell, forwards) }] };
+  };
+}
+
+const targetVerbs: TargetVerbs<RangeState, RangeUi, RangeDrawState, Point, RangeMove> =
+  {
+    geometry: squareGrid({ size: (s) => s, border }),
+    primary: { does: "color it black", apply: cycleAt(false) },
+    secondary: {
+      does: "mark it with a dot, if you know it should not be black",
+      apply: cycleAt(true),
+    },
+  };
+
 function interpretMove(
   state: RangeState,
   ui: RangeUi,
@@ -112,62 +130,28 @@ function interpretMove(
   rawButton: number,
 ): RangeMove | null | UiUpdate {
   const { w, h, grid } = state;
-  const shift = !!(rawButton & MOD_SHFT);
-  const button = stripModifiers(rawButton);
-
-  if ((button === CURSOR_SELECT || button === CURSOR_SELECT2) && !ui.cursor.visible) {
-    return null;
-  }
-
-  let r = ui.cursor.y;
-  let c = ui.cursor.x;
-
-  if (isMouseDown(button)) {
-    const ts = ds.tileSize;
-    r = fromCoord(p.y, ts, border(ts));
-    c = fromCoord(p.x, ts, border(ts));
-    if (outOfBounds(r, c, w, h)) return null;
-    ui.cursor.y = r;
-    ui.cursor.x = c;
-    ui.cursor.visible = false;
-  }
-
-  const delta = cursorDelta(button);
-  if (delta) {
+  const delta = cursorDelta(stripModifiers(rawButton));
+  if (delta && rawButton & MOD_SHFT) {
+    // A shifted arrow *dots* the cells it passes, which is too much to do to
+    // a player who cannot yet see the cursor — that one still only reveals.
+    if (showCursor(ui.cursor)) return UI_UPDATE;
     const dr = delta.dy;
     const dc = delta.dx;
-    if (shift) {
-      // A shifted arrow *dots* the cells it passes, which is too much to do to
-      // a player who cannot yet see the cursor — that one still only reveals.
-      if (showCursor(ui.cursor)) return UI_UPDATE;
-      const preR = ui.cursor.y;
-      const preC = ui.cursor.x;
-      const doPre = grid[idx(preR, preC, w)] === EMPTY;
-      if (outOfBounds(ui.cursor.y + dr, ui.cursor.x + dc, w, h)) {
-        return doPre ? { sets: [{ r: preR, c: preC, value: "white" }] } : null;
-      }
-      ui.cursor.y += dr;
-      ui.cursor.x += dc;
-      const doPost = grid[idx(ui.cursor.y, ui.cursor.x, w)] === EMPTY;
-      const sets: RangeMove["sets"] = [];
-      if (doPre) sets.push({ r: preR, c: preC, value: "white" });
-      if (doPost) sets.push({ r: ui.cursor.y, c: ui.cursor.x, value: "white" });
-      return sets.length > 0 ? { sets } : UI_UPDATE;
+    const preR = ui.cursor.y;
+    const preC = ui.cursor.x;
+    const doPre = grid[idx(preR, preC, w)] === EMPTY;
+    if (outOfBounds(ui.cursor.y + dr, ui.cursor.x + dc, w, h)) {
+      return doPre ? { sets: [{ r: preR, c: preC, value: "white" }] } : null;
     }
-    // Reveal *and* move in one press. The cursor is (x, y), transposed from
-    // Range's own `(r, c)` at the boundary (see `RangeUi`).
-    moveCursor(ui.cursor, button, w, h);
-    return UI_UPDATE;
+    ui.cursor.y += dr;
+    ui.cursor.x += dc;
+    const doPost = grid[idx(ui.cursor.y, ui.cursor.x, w)] === EMPTY;
+    const sets: RangeMove["sets"] = [];
+    if (doPre) sets.push({ r: preR, c: preC, value: "white" });
+    if (doPost) sets.push({ r: ui.cursor.y, c: ui.cursor.x, value: "white" });
+    return sets.length > 0 ? { sets } : UI_UPDATE;
   }
-
-  let forwards: boolean;
-  if (button === LEFT_BUTTON || button === CURSOR_SELECT) forwards = false;
-  else if (button === RIGHT_BUTTON || button === CURSOR_SELECT2) forwards = true;
-  else return null;
-
-  const cell = grid[idx(r, c, w)];
-  if (cell > 0) return null; // clue cell — inert
-  return { sets: [{ r, c, value: cycle(cell, forwards) }] };
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
 }
 
 function executeMove(state: RangeState, move: RangeMove): RangeState {
@@ -440,6 +424,7 @@ export const rangeGame: Game<
   newUi,
 
   interpretMove,
+  targetVerbs,
   executeMove,
   status,
 

@@ -8,12 +8,9 @@ orthogonally adjacent to exactly the given number of lights.
 
 ## Controls
 
-Click on a square to place or remove a light. Right-click to place a
-dot indicating that you think there is no light in that square.
+{{controls}}
 
 A square holding a dot takes no light until you remove the dot (right-click it again), and a square holding a light takes no dot.
-
-To play with a keyboard, use the arrow keys to move the cursor. Press Enter to place or remove a light, and Space (or I) to place or remove a dot.
 
 ## Hints
 

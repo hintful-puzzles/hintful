@@ -14,17 +14,14 @@ Color some squares black, so as to meet the following conditions:
 
 ## Controls
 
-Left-click to color a square black. Right-click to mark a square
-with a dot, if you know it should not be black.
+{{controls}}
 
 Clicking again moves on round the same three states: a left-click
 turns a black square into a dot and a dot back into an empty square,
 and a right-click turns a dot black and a black square empty.
 
-The keyboard can also be used. The arrow keys move a cursor; Enter
-does what a left-click does to the square under it, and Space what a
-right-click does. Hold Shift while moving to put a dot in every empty
-square the cursor passes over.
+Hold Shift while moving the cursor to put a dot in every empty square
+it passes over.
 
 ## Hints
 

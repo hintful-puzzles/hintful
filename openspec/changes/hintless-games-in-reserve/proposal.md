@@ -10,7 +10,8 @@ pulled in **one at a time** as a check on the framework's ergonomics, and most
 kept in reserve. Three open framework changes each name the one game that
 checks them best:
 
-- `derive-target-verb-input`: Net.
+- `sweep-target-verb-input`: Net. It was `derive-target-verb-input`'s, which
+  found Net not yet expressible in the model and passed it to the sweep.
 - `own-the-player-facing-messages`: Pegs.
 - `draw-hint-marks-from-roles`: Rect.
 

@@ -163,6 +163,17 @@ reading before reopening another: `border-grid.ts` declined sharing "a loop over
 *generic* resemblance and simply does not reach the rendering of the mechanic
 the module already owns. The decline was made when only the input had moved.
 
+### `target-verb.ts` — aim at a target, apply a verb
+
+The input model of the click games: the game declares a geometry (pointer to
+target, cursor to target, how the arrows move) and a verb per button, each a
+function returning its own `Move`; `interpretTargetVerbs` owns the parking,
+the reveal-first select, Enter and Space, and `controlsMarkdown` writes the
+help's Controls paragraph from the same declaration. `squareGrid` is the common
+geometry. Reach for it in any game whose buttons each do one thing to what they
+land on; `target-verb.test.ts` holds a declaring game's keys to its buttons.
+How to adopt it is [`input.md`](./input.md) § "Targets and verbs".
+
 ### `note-taking-cell.ts` — the shared highlight-and-type mechanic
 
 *Highlight a cell, type a value into it, pencil candidate marks in it* — the

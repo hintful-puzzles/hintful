@@ -336,6 +336,57 @@ control gives the keyboard back to the board"; its two carve-outs are a click
 that opens a menu (the menu needs the focus) and a keyboard activation of a
 button (that player is in the tab order deliberately).
 
+## Targets and verbs
+
+**If your game is "aim at a square, and each button does something there",
+declare it rather than writing it.** That is the target-verb model,
+[`engine/target-verb.ts`](../../src/engine/target-verb.ts): the game supplies a
+**geometry** (which target a press addresses, which one the cursor rests on, how
+the arrows move the cursor) and a **verb** per button — a sentence fragment for
+the help and a function from `(state, target)` to the game's own `Move` or
+`null`. The model owns the rest, and the rest is exactly what the collection
+had written a dozen ways:
+
+- a press parks the cursor, hidden, on the target it hit, so the keyboard
+  carries on from where the pointer was;
+- the first Enter or Space on a hidden cursor only shows it;
+- Enter applies the left-click verb, Space the right-click verb (or the
+  left-click verb again, when there is no second one), and a verb's own `keys`
+  apply it too;
+- a press on no target, or a button with no verb, is not the model's (`null`).
+
+Declare the verbs as `Game.targetVerbs` and end `interpretMove` with
+`interpretTargetVerbs(targetVerbs, …)`. Most games want
+`squareGrid({ size, border })` as their geometry. **Anything else the game does
+with input is an arm of its own, tried first**: Unruly's digits, Range's
+dotting Shift-arrows and Singles' click outside the grid each sit above the
+one-line hand-off in their `interpretMove`. Exemplars: Light Up (verbs only),
+Unruly (verbs plus a digit arm and a middle verb with keys).
+
+Two things follow from declaring:
+
+- **The help's Controls paragraph is generated.** The page writes
+  `{{controls}}` where it goes (`vite-plugins/controls.ts`) and adds, after it,
+  only what the game does beyond its verbs. So write each verb's `does` as the
+  end of "Click a square to …" — and describe the *common* case there, leaving a
+  cycle's full story ("clicking again moves on round…") to the page.
+- **The declaration is held to the behavior.**
+  [`target-verb.test.ts`](../../src/engine/target-verb.test.ts) plays every
+  declaring game and asserts that Enter at every cursor position reaches exactly
+  the boards a left-click reaches, Space those of its verb's button, and each
+  verb key those of its button — which is what the generated paragraph claims.
+  An arm of your own that handles Enter differently from the click fails there.
+
+**Verb semantics are functions, never flags.** Light Up's "a bulb refuses a
+dotted square", Range's three-state cycle and Singles' "either button clears"
+are each a line in the verb's `apply`; the model has no switch for any of them.
+
+**What the model is not for.** A drag game's keyboard is a design (below), and
+its drag arm is an arm of its own; a game can still declare the click half. And
+a game whose Space means the middle button (Net's lock) or whose keyboard walks
+something other than the targets is not yet expressible — measure it with
+`boardsReached` (`testing/input-probe.ts`) before bending the model to it.
+
 ## Keyboard cursors
 
 **Never restate anything `pointer.ts` exports.** Not the button codes, not the
@@ -1094,6 +1145,9 @@ and Undead.
 
 ## Checklist
 
+- [ ] A game whose input is targets and verbs declares `targetVerbs` and hands
+      its buttons to `interpretTargetVerbs`, and its help page writes
+      `{{controls}}` (§ "Targets and verbs").
 - [ ] No comparison against a raw button that could carry `MOD_STYLUS` (the
       registry sweep will tell you).
 - [ ] No binding on `MOD_NUM_KEYPAD | …` or a bare character literal without

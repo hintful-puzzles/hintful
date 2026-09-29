@@ -16,6 +16,7 @@ import {
 } from "./src/project-identity.ts";
 import { puzzleIds, puzzleCatalog as puzzles } from "./src/puzzle/catalog-data.ts";
 import { canonicalCoverage } from "./vite-plugins/canonical-coverage.ts";
+import { withControls } from "./vite-plugins/controls.ts";
 import { dependencyNotices } from "./vite-plugins/dependency-notices.ts";
 import { draftPuzzles } from "./vite-plugins/draft-puzzles.ts";
 import {
@@ -566,6 +567,7 @@ export default defineConfig(async ({ command, mode }) => {
             resolve: { url: "help/", path: "help/games/" },
             transforms: [
               (data) => ({ ...commonTemplateData, ...data }),
+              withControls,
               withHintMarks,
               withParameters,
               withNotApplicable,

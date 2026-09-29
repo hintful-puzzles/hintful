@@ -13,8 +13,12 @@
 import type { Game } from "../game.ts";
 import { Midend } from "../midend.ts";
 import {
+  CURSOR_DOWN,
+  CURSOR_LEFT,
+  CURSOR_RIGHT,
   CURSOR_SELECT,
   CURSOR_SELECT2,
+  CURSOR_UP,
   isMouseDown,
   isMouseDrag,
   isMouseRelease,
@@ -44,6 +48,12 @@ export interface ProbeBoard {
   readonly ui: () => unknown;
   /** The midend's current move number, as its last notification reported it. */
   readonly moves: () => number;
+  /** A digest of the state the midend holds. Two moves spelled differently
+   * that leave the same board read the same. */
+  readonly board: () => string;
+  /** A digest of the state together with the `Ui` — where the player is, and
+   * not only what the board says. Read without painting a frame. */
+  readonly where: () => string;
 }
 
 export interface ProbeOptions {
@@ -75,8 +85,24 @@ export function probeBoard(
   const tileSize = game.preferredTileSize ?? 32;
   let seen: unknown = null;
   let painted = false;
+  // The state the midend holds and the `Ui` it mutates, as the game's own
+  // constructors and moves hand them over, so reading them costs no frame.
+  let current: unknown = null;
+  let liveUi: unknown = null;
   const spy: AnyGame = {
     ...game,
+    newState: (...args) => {
+      current = game.newState(...args);
+      return current;
+    },
+    newUi: (...args) => {
+      liveUi = game.newUi(...args);
+      return liveUi;
+    },
+    executeMove: (...args) => {
+      current = game.executeMove(...args);
+      return current;
+    },
     redraw: (dr, ds, prev, s, dir, ui, ...rest) => {
       seen = ui;
       painted = true;
@@ -112,8 +138,121 @@ export function probeBoard(
     reset,
     ui,
     moves: () => moveCount,
+    board: () => digest(current),
+    where: () => `${digest(liveUi)}|${digest(current)}`,
   };
 }
+
+/** A deterministic text for a state or `Ui`: maps and sets as their entries, a
+ * typed array as its values, and an object met a second time as `~`, which is
+ * what lets a state holding a cyclic grid be read at all. */
+function digest(value: unknown): string {
+  const met = new WeakSet<object>();
+  return JSON.stringify(value, (_key, v: unknown) => {
+    if (v instanceof Map) return [...v];
+    if (v instanceof Set) return [...v];
+    if (typeof v === "object" && v !== null) {
+      if (met.has(v)) return "~";
+      met.add(v);
+    }
+    return v;
+  });
+}
+
+/** What one input reaches from a position: the boards it leaves behind. */
+export interface BoardsReached {
+  /** Each distinct board a press-and-release of `button` left, across every
+   * probe point. A press that changed no board adds nothing. */
+  readonly click: (button: number) => ReadonlySet<string>;
+  /** Each distinct board `code` left, pressed at every cursor position the
+   * arrows reach. */
+  readonly key: (code: number) => ReadonlySet<string>;
+  /** How many cursor positions the arrows reached — the key half's power. */
+  readonly cursorPositions: number;
+}
+
+/**
+ * **What each button and key does, as a set of boards** — Task 0 of
+ * `derive-target-verb-input`, kept as the instrument its guard reads.
+ *
+ * A pointer button is pressed and released at every probe point from the
+ * opening position; a key is pressed at every position the arrow keys can walk
+ * the cursor to. Comparing the two sets asks "does Enter at the cursor do what a
+ * left-click at a target does?" without knowing where any target is on screen,
+ * so no game's geometry is written down here.
+ *
+ * `prime` is played first on every attempt, because a verb that empties a square
+ * has nothing to do on a fresh board.
+ */
+export function boardsReached(
+  game: AnyGame,
+  id: string,
+  prime: (b: ProbeBoard) => void = () => {},
+): BoardsReached {
+  const b = probeBoard(game, id);
+  const { m, size, tileSize } = b;
+  const start = () => {
+    b.reset();
+    prime(b);
+    return b.board();
+  };
+  const pointArgs: Point[] = [];
+  const step = Math.max(2, Math.floor(tileSize / 4));
+  for (let x = 1; x < size.w; x += step)
+    for (let y = 1; y < size.h; y += step) pointArgs.push({ x, y });
+
+  const click = (button: number) => {
+    const out = new Set<string>();
+    for (const p of pointArgs) {
+      const before = start();
+      m.processInput(p.x, p.y, button);
+      m.processInput(p.x, p.y, button + (LEFT_RELEASE - LEFT_BUTTON));
+      const after = b.board();
+      if (after !== before) out.add(after);
+    }
+    return out;
+  };
+
+  // Every cursor position the arrows reach, as the key presses that reach it.
+  // A position is the `Ui` together with the board, since an arrow that moves
+  // the board (a sliding puzzle) is a different position too.
+  const arrows = [CURSOR_UP, CURSOR_DOWN, CURSOR_LEFT, CURSOR_RIGHT];
+  const replay = (path: readonly number[]) => {
+    start();
+    for (const k of path) m.processInput(0, 0, k);
+  };
+  const where = b.where;
+  replay([]);
+  const met = new Set([where()]);
+  const paths: number[][] = [[]];
+  for (let i = 0; i < paths.length && paths.length < CURSOR_CAP; i++)
+    for (const a of arrows) {
+      const path = [...paths[i], a];
+      replay(path);
+      const at = where();
+      if (met.has(at)) continue;
+      met.add(at);
+      paths.push(path);
+    }
+
+  const key = (code: number) => {
+    const out = new Set<string>();
+    for (const path of paths) {
+      replay(path);
+      const before = b.board();
+      m.processInput(0, 0, code);
+      const after = b.board();
+      if (after !== before) out.add(after);
+    }
+    return out;
+  };
+  return { click, key, cursorPositions: paths.length };
+}
+
+/** Past this many cursor positions the walk stops; a guard reading the walk
+ * asserts it stayed under, so a cursor that never repeats cannot pass by
+ * running out of budget. */
+export const CURSOR_CAP = 2000;
 
 /** A stable digest of everything a save carries — board, history and whatever
  * UI state the game chooses to persist. */

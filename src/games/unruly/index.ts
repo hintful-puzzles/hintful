@@ -10,31 +10,29 @@
 
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
-import {
-  type Game,
-  type HintResult,
-  type HintStep,
-  type HintTrackVerdict,
-  UI_UPDATE,
-  type UiUpdate,
+import type {
+  Game,
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+  UiUpdate,
 } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
+  BACKSPACE,
+  DELETE,
   digitOf,
-  gridCursorMove,
-  isCursorMove,
-  isEraseKey,
-  LEFT_BUTTON,
-  MIDDLE_BUTTON,
   newCursor,
-  RIGHT_BUTTON,
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  interpretTargetVerbs,
+  squareGrid,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { type Cell, EMPTY, ONE, ZERO } from "./constants.ts";
 import { newDesc, solvableAt } from "./generator.ts";
@@ -81,26 +79,42 @@ function newUi(_state: UnrulyState): UnrulyUi {
 
 /** The cell value a key/click decided to set (upstream's `c`), or `null`
  * for "no change requested". */
-function decideValue(button: number, current: Cell): Cell | null {
-  const digit = digitOf(button);
-  if (digit === 1) return ONE;
-  if (digit === 0 || digit === 2) return ZERO;
-  if (isEraseKey(button)) return EMPTY;
-  switch (button) {
-    case MIDDLE_BUTTON:
-      return EMPTY;
-    case CURSOR_SELECT2:
-    case RIGHT_BUTTON:
-      // empty → zero → one → empty
-      return current === EMPTY ? ZERO : current === ZERO ? ONE : EMPTY;
-    case CURSOR_SELECT:
-    case LEFT_BUTTON:
-      // empty → one → zero → empty
-      return current === EMPTY ? ONE : current === ONE ? ZERO : EMPTY;
-    default:
-      return null;
-  }
+/** Set the square `{ x, y }` to the value `next` picks from its current one;
+ * a clue square, or one already holding that value, takes nothing. */
+function place(next: Cell | ((current: Cell) => Cell)) {
+  return (state: UnrulyState, { x, y }: Point): UnrulyMove | null => {
+    const i = y * state.w2 + x;
+    if (state.immutable[i]) return null;
+    const current = state.grid[i] as Cell;
+    const value = typeof next === "function" ? next(current) : next;
+    return value === current ? null : { type: "place", x, y, value };
+  };
 }
+
+const targetVerbs: TargetVerbs<
+  UnrulyState,
+  UnrulyUi,
+  UnrulyDrawState,
+  Point,
+  UnrulyMove
+> = {
+  geometry: squareGrid({ size: (s) => ({ w: s.w2, h: s.h2 }), border }),
+  // empty → black → white → empty
+  primary: {
+    does: "turn it black",
+    apply: place((c) => (c === EMPTY ? ONE : c === ONE ? ZERO : EMPTY)),
+  },
+  // empty → white → black → empty
+  secondary: {
+    does: "turn it white",
+    apply: place((c) => (c === EMPTY ? ZERO : c === ZERO ? ONE : EMPTY)),
+  },
+  middle: {
+    does: "empty it",
+    keys: [{ codes: [BACKSPACE, DELETE], name: "Backspace or Delete" }],
+    apply: place(EMPTY),
+  },
+};
 
 function interpretMove(
   state: UnrulyState,
@@ -109,58 +123,12 @@ function interpretMove(
   p: Point,
   rawButton: number,
 ): UnrulyMove | null | UiUpdate {
-  const button = stripModifiers(rawButton);
-  const { w2, h2 } = state;
-  const ts = ds.tileSize;
-  const b = border(ts);
-
-  let hx = ui.cursor.x;
-  let hy = ui.cursor.y;
-  let nullret: null | UiUpdate = null;
-
-  const isMouse =
-    button === LEFT_BUTTON || button === RIGHT_BUTTON || button === MIDDLE_BUTTON;
-
-  if (isMouse) {
-    hx = Math.floor((p.x - b) / ts);
-    hy = Math.floor((p.y - b) / ts);
-    if (hx < 0 || hy < 0 || hx >= w2 || hy >= h2) return null;
-    if (ui.cursor.visible) {
-      ui.cursor.visible = false;
-      nullret = UI_UPDATE;
-    }
-  }
-
-  // Keyboard cursor movement (clamped, no wrap). An edge no-op still reveals
-  // the cursor and repaints.
-  if (isCursorMove(button)) {
-    const moved = gridCursorMove(button, ui.cursor.x, ui.cursor.y, w2, h2);
-    if (moved) {
-      ui.cursor.x = moved.x;
-      ui.cursor.y = moved.y;
-    }
-    ui.cursor.visible = true;
-    return UI_UPDATE;
-  }
-
-  // Placement: a marking key while the cursor is shown, or any mouse click.
-  const digit = digitOf(button);
-  const isKeyPlace =
-    ui.cursor.visible &&
-    (button === CURSOR_SELECT ||
-      button === CURSOR_SELECT2 ||
-      isEraseKey(button) ||
-      (digit !== null && digit <= 2));
-
-  if (isKeyPlace || isMouse) {
-    const i = hy * w2 + hx;
-    if (state.immutable[i]) return nullret;
-    const value = decideValue(button, state.grid[i] as Cell);
-    if (value === null || state.grid[i] === value) return nullret; // no-op
-    return { type: "place", x: hx, y: hy, value };
-  }
-
-  return nullret;
+  // A digit sets the square under a shown cursor outright: 1 black, 0 or 2
+  // white.
+  const digit = digitOf(stripModifiers(rawButton));
+  if (digit !== null && digit <= 2 && ui.cursor.visible)
+    return place(digit === 1 ? ONE : ZERO)(state, ui.cursor);
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
 }
 
 function flashLength(
@@ -336,6 +304,7 @@ export const unrulyGame: Game<
   newUi,
 
   interpretMove,
+  targetVerbs,
   executeMove,
   status,
 

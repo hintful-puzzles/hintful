@@ -9,13 +9,10 @@ Black out some of the squares, in such a way that:
 
 ## Controls
 
-Click in a square to black it out, and again to uncover it.
-Right-click in a square to mark it with a circle, indicating that
-you're sure it should *not* be blacked out.
+{{controls}}
 
-With the keyboard, the arrow keys move a cursor around the grid. Press
-Enter to black out the square under it, or Space to circle it; either key
-clears a square that is already blacked out or circled.
+Either button, or either key, clears a square that is already blacked
+out or circled.
 
 A blacked-out square hides its number. Clicking outside the grid shows
 the numbers on the black squares, and clicking there again hides them;
