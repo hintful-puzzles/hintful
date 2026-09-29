@@ -54,6 +54,8 @@ The hint carries on from the diagonals you have drawn and your marks, as long
 as none of them is wrong. When a step needs to know that two squares slant the
 same way, it puts the mark down first, as a step of its own that says why.
 
+{{hint-marks}}
+
 ## Slant parameters
 
 These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.

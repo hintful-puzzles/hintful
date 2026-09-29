@@ -27,6 +27,7 @@ import {
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
+import { CELL, type MarkRef } from "../../engine/hint-words.ts";
 import { parseConfigInt } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -41,7 +42,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point, ReferenceItem, ReferenceModel } from "../../engine/types.ts";
 import { newDominosaDesc } from "./generator.ts";
-import { say } from "./hint-text.ts";
+import { SPOT, say } from "./hint-text.ts";
 import {
   border,
   colors,
@@ -339,6 +340,20 @@ export interface DominosaHint {
   targets: number[];
   evidence: number[];
   edge?: [number, number];
+  /** The grid's width, which the squares above index. */
+  w: number;
+}
+
+const pointOf = (i: number, w: number): Point => ({ x: i % w, y: Math.floor(i / w) });
+
+/** What a step's highlights draw: the `drawn` half of Dominosa's legend. The
+ * two targets are one spot, however the renderer joins them. */
+function dominosaHintMarks(hl: DominosaHint): MarkRef[] {
+  const [a, b] = hl.targets;
+  return [
+    { role: "ring", kind: SPOT, elements: [[a, b]] },
+    { role: "outline", kind: CELL, elements: hl.evidence.map((i) => pointOf(i, hl.w)) },
+  ] as MarkRef[];
 }
 
 const edgeKey = (a: number, b: number): string => (a < b ? `${a}-${b}` : `${b}-${a}`);
@@ -383,29 +398,42 @@ function hint(state: DominosaState): HintResult<DominosaMove, DominosaHint> {
       const [a, b] = firing.place;
       placed.add(DINDEX(numbers[a], numbers[b]));
       solver.forcePlacement(a, b);
+      const evidence = firing.evidence.map((i) => pointOf(i, w));
+      const words = say.place(
+        firing.technique,
+        numbers[a],
+        numbers[b],
+        [a, b],
+        evidence,
+      );
       steps.push({
         move: { type: "domino", d1: a, d2: b },
-        explanation: say.place(firing.technique, numbers[a], numbers[b]),
-        highlights: { kind: "place", targets: [a, b], evidence: firing.evidence },
+        explanation: words.text,
+        words,
+        highlights: { kind: "place", targets: [a, b], evidence: firing.evidence, w },
       });
     } else {
       const fresh = firing.barriers.filter(([a, b]) => !seenEdges.has(edgeKey(a, b)));
       for (let idx = 0; idx < fresh.length; idx++) {
         const [a, b] = fresh[idx];
         seenEdges.add(edgeKey(a, b));
+        const evidence = firing.evidence.map((i) => pointOf(i, w));
+        // A later barrier of the same firing does not repeat the reason.
+        const words =
+          idx > 0
+            ? say.barrierNext([a, b], evidence)
+            : say.barrier(firing.technique, numbers[a], numbers[b], [a, b], evidence);
         steps.push({
           move: { type: "edge", d1: a, d2: b },
-          // A later barrier of the same firing does not repeat the reason.
-          explanation:
-            idx > 0
-              ? say.barrierNext
-              : say.barrier(firing.technique, numbers[a], numbers[b]),
+          explanation: words.text,
+          words,
           ...(idx > 0 ? { continuesPrevious: true } : {}),
           highlights: {
             kind: "barrier",
             targets: [a, b],
             evidence: firing.evidence,
             edge: [a, b],
+            w,
           },
         });
       }
@@ -611,7 +639,8 @@ export const dominosaGame: Game<
   DominosaMove,
   DominosaUi,
   DominosaDrawState,
-  DominosaMistake
+  DominosaMistake,
+  DominosaHint
 > = {
   id: "dominosa",
 
@@ -662,6 +691,14 @@ export const dominosaGame: Game<
   reference,
   selectReference,
   hint,
+  hintMarks: {
+    roles: {
+      ring: "the spot the step is about, round its two squares: joined as one domino where a domino must go, or apart, with a thick line in the hint color between them, where one can't. That line is the one the step asks you to draw.",
+      outline:
+        "the squares the reason rests on, such as a square with only one neighbor left to pair with, or the spots left for a domino.",
+    },
+    drawn: dominosaHintMarks,
+  },
   hintKeepTrack,
 
   textFormat,

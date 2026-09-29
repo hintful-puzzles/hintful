@@ -37,7 +37,8 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
-import { slantHint, slantHintKeepTrack } from "./hint.ts";
+import { type SlantHint, slantHint, slantHintKeepTrack } from "./hint.ts";
+import { slantHintMarks } from "./hint-marks.ts";
 import {
   border,
   colors,
@@ -268,7 +269,8 @@ export const slantGame: Game<
   SlantMove,
   SlantUi,
   SlantDrawState,
-  SlantMistake
+  SlantMistake,
+  SlantHint
 > = {
   id: "slant",
 
@@ -298,6 +300,14 @@ export const slantGame: Game<
   difficulty,
   findMistakes,
   hint: (state) => slantHint(state, findMistakes(state).length),
+  hintMarks: {
+    roles: {
+      ring: "what the step decides: the squares a clue forces, all ringed together because they share its reason, or the same-slant mark to put down, drawn in the hint color. The sentence says which way a square must slant.",
+      outline:
+        "what the step reasons from: the clues it reads, drawn in the hint color; the diagonals already around them, the chain a loop would close or the pairs along a line of 2s; the marks it relies on; and, doubled, a square already drawn that a mark ties the ringed one to.",
+    },
+    drawn: slantHintMarks,
+  },
   hintKeepTrack: slantHintKeepTrack,
 
   textFormat,

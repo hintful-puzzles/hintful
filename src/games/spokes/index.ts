@@ -36,6 +36,7 @@ import {
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
+import type { MarkRef, Narration } from "../../engine/hint-words.ts";
 import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -53,7 +54,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { ConfigValues, GameStatus, Point } from "../../engine/types.ts";
 import { newSpokesDesc } from "./generator.ts";
-import { say } from "./hint-text.ts";
+import { HUB, type Marked, SPOKE, type Spoke, say } from "./hint-text.ts";
 import {
   colors,
   computeSize,
@@ -329,55 +330,82 @@ function findMistakes(state: SpokesState): readonly SpokesMistake[] {
 // --- hint (a second projection of the deductive solver) ---------------------
 
 /**
- * Highlight data for a Spokes hint leg. `spokes` are *all* the spokes the
- * firing forces (only shown where the board still has them EMPTY — a leg
- * already followed has become a real line or mark); a `SPOKE_LINE` spoke is
- * drawn as a `COL_HINT` line ("draw this"), a `SPOKE_MARKED` spoke as a
- * `COL_HINT` dot at its rim ("rule this out"), so the picture never claims a
- * different action than the words. `evidence` are the hubs whose clue or lines
- * are the argument, ringed `COL_HINT_CELL`. Every leg of one firing carries the
- * same object, so the whole deduction stays visible while its legs are followed
- * one at a time.
+ * Highlight data for a Spokes hint leg. `spokes` are the spokes the firing
+ * still forces from this leg on (the earlier legs', once followed, are real
+ * lines or marks, and the renderer tints only a spoke that is still EMPTY); a
+ * `SPOKE_LINE` spoke is drawn as a `COL_HINT` line ("draw this"), a
+ * `SPOKE_MARKED` spoke as a `COL_HINT` dot at its rim ("rule this out"), so the
+ * picture never claims a different action than the words. `evidence` are the
+ * hubs whose clue or lines are the argument, ringed `COL_HINT_CELL`. The whole
+ * deduction stays visible while its legs are followed one at a time. `w` is
+ * the grid width, which a spoke's canonical end is taken in.
  */
 export interface SpokesHint {
   spokes: SpokesSpokeRef[];
   evidence: number[];
+  w: number;
 }
+
+const spokeOf = (sp: SpokesSpokeRef, w: number): Spoke =>
+  canonicalEdge(sp.index, sp.dir, w);
+
+const markedOf = (hl: SpokesHint): Marked => ({
+  spokes: hl.spokes.map((sp) => spokeOf(sp, hl.w)),
+  hubs: hl.evidence,
+});
 
 /**
  * Narrate why a firing is forced — one crisp line for a player who knows the
  * rules, premise then conclusion, in the necessity voice (the hint quality bar).
  * Every claim here is one {@link deduceSpokesPlan} has checked.
  */
-function narrate(f: SpokesFiring): string {
+function narrate(f: SpokesFiring, hl: SpokesHint): Narration {
+  const m = markedOf(hl);
   switch (f.kind) {
     case "twoOnes":
-      return say.twoOnes;
+      return say.twoOnes(m);
     case "saturation":
-      return say.saturation(f.forced.length);
+      return say.saturation(f.forced.length, m);
     case "exhaustion":
-      return say.exhaustion;
+      return say.exhaustion(m);
     case "contradiction":
-      return say.contradiction(f.hypothesis?.state === SPOKE_LINE, f.breakKind);
+      return say.contradiction(f.hypothesis?.state === SPOKE_LINE, f.breakKind, m);
   }
 }
 
 /** The short continuation narration for legs 2+ of a multi-spoke firing. */
-function continuation(f: SpokesFiring): string {
-  return say.continuation(f.kind === "saturation");
+function continuation(f: SpokesFiring, hl: SpokesHint): Narration {
+  return say.continuation(f.kind === "saturation", markedOf(hl));
+}
+
+/** What a leg's highlights draw: the `drawn` half of Spokes' legend. */
+function spokesHintMarks(hl: SpokesHint): MarkRef[] {
+  const m = markedOf(hl);
+  return [
+    { role: "ring", kind: SPOKE, elements: m.spokes },
+    { role: "outline", kind: HUB, elements: m.hubs },
+  ] as MarkRef[];
 }
 
 /** Flatten one firing into its journey of legs: leg 0 carries the full
- * narration, the rest continue it. All legs share the highlight, so the whole
- * deduction stays on screen as its spokes are drawn one by one. */
-function stepsOfFiring(f: SpokesFiring): HintStep<SpokesMove, SpokesHint>[] {
-  const highlights: SpokesHint = { spokes: f.forced, evidence: f.evidenceHubs };
-  return f.forced.map((sp, leg) => ({
-    move: { kind: "set", ...sp },
-    explanation: leg === 0 ? narrate(f) : continuation(f),
-    highlights,
-    continuesPrevious: leg > 0,
-  }));
+ * narration, the rest continue it. Each leg shows the spokes still to settle,
+ * so the whole deduction stays on screen as its spokes are drawn one by one. */
+function stepsOfFiring(f: SpokesFiring, w: number): HintStep<SpokesMove, SpokesHint>[] {
+  return f.forced.map((sp, leg) => {
+    const highlights: SpokesHint = {
+      spokes: f.forced.slice(leg),
+      evidence: f.evidenceHubs,
+      w,
+    };
+    const words = leg === 0 ? narrate(f, highlights) : continuation(f, highlights);
+    return {
+      move: { kind: "set", ...sp },
+      explanation: words.text,
+      words,
+      highlights,
+      continuesPrevious: leg > 0,
+    };
+  });
 }
 
 function hint(state: SpokesState): HintResult<SpokesMove, SpokesHint> {
@@ -394,7 +422,7 @@ function hint(state: SpokesState): HintResult<SpokesMove, SpokesHint> {
   if (plan.length === 0) {
     return { ok: false, error: DEDUCTION_EXHAUSTED };
   }
-  return { ok: true, steps: plan.flatMap(stepsOfFiring) };
+  return { ok: true, steps: plan.flatMap((f) => stepsOfFiring(f, state.w)) };
 }
 
 /** A move completes the current leg when it sets the leg's exact spoke to the
@@ -457,7 +485,8 @@ export const spokesGame: Game<
   SpokesMove,
   SpokesUi,
   SpokesDrawState,
-  SpokesMistake
+  SpokesMistake,
+  SpokesHint
 > = {
   id: "spokes",
 
@@ -512,6 +541,13 @@ export const spokesGame: Game<
   solve,
   difficulty,
   hint,
+  hintMarks: {
+    roles: {
+      ring: "each spoke the step decides: a line in the hint color is one to draw, and a ring round a dot on a hub's rim is one to rule out by marking that dot as unused, as described above.",
+      outline: "the hubs the step reasons from, with a halo in a second color.",
+    },
+    drawn: spokesHintMarks,
+  },
   hintKeepTrack,
   findMistakes,
   textFormat,

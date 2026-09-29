@@ -154,7 +154,7 @@ export type BoatsTechnique =
   /** Every square of water is accounted for, so the rest is fleet. */
   | { kind: "allWaterPlaced" }
   /** A center segment with water to one side must run along the other axis. */
-  | { kind: "centerForced"; vertical: boolean }
+  | { kind: "centerForced"; vertical: boolean; center: Point; water: Point }
   /** Every 1-boat is placed, so a square hemmed in on all four sides is water. */
   | { kind: "isolated" }
   /** Every 1-boat is placed, so a segment hemmed in on three sides continues
@@ -178,8 +178,15 @@ export type BoatsTechnique =
    * a ship either way, so the shared neighbors are water. */
   | { kind: "sharedDiagonal"; line: BoatsLine; room: number }
   // --- Hard ---
-  /** The opposite placement immediately contradicts the board. */
-  | { kind: "refuted"; trialShip: boolean; breach: BoatsBreach };
+  /** The opposite placement immediately contradicts the board. `center` is the
+   * given middle segment when the trial ran its boat one way through it
+   * (`vertical`), rather than trying a single square. */
+  | {
+      kind: "refuted";
+      trialShip: boolean;
+      breach: BoatsBreach;
+      center: { at: Point; vertical: boolean } | null;
+    };
 
 /** One deduction: what it forces, what follows from that by the never-touch
  * rule, and the squares it reasons over. */
@@ -482,7 +489,12 @@ function findCenterForced(ctx: Ctx): BoatsFiring | null {
         continue;
       }
 
-      const f = firing(ctx, { kind: "centerForced", vertical }, forced, evidence);
+      const f = firing(
+        ctx,
+        { kind: "centerForced", vertical, center: evidence[0], water: evidence[1] },
+        forced,
+        evidence,
+      );
       if (f) return f;
     }
   }
@@ -1032,21 +1044,16 @@ function findRefuted(ctx: Ctx): BoatsFiring | null {
           const found = classifyBreach(ctx, trial);
           // A line that could no longer reach its number is the one line the
           // sentence names, so it is the hatch rather than an outline.
+          const kind = {
+            kind: "refuted",
+            trialShip,
+            breach: found.breach,
+            center: null,
+          } as const;
           const f =
             found.breach.kind === "count"
-              ? firing(
-                  ctx,
-                  { kind: "refuted", trialShip, breach: found.breach },
-                  [{ x, y, ship: !trialShip }],
-                  [],
-                  found.cells,
-                )
-              : firing(
-                  ctx,
-                  { kind: "refuted", trialShip, breach: found.breach },
-                  [{ x, y, ship: !trialShip }],
-                  found.cells,
-                );
+              ? firing(ctx, kind, [{ x, y, ship: !trialShip }], [], found.cells)
+              : firing(ctx, kind, [{ x, y, ship: !trialShip }], found.cells);
           if (f) return f;
         }
       }
@@ -1080,6 +1087,7 @@ function findRefuted(ctx: Ctx): BoatsFiring | null {
           kind: "refuted",
           trialShip: true,
           breach: found.breach,
+          center: { at: { x, y }, vertical },
         } as const;
         const f =
           found.breach.kind === "count"

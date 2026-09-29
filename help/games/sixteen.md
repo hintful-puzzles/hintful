@@ -27,12 +27,10 @@ you press it again.
 Sixteen is forced by logic, so the hint searches for a way to finish
 from where you are and tells you what each move is for.
 
-* **The tile it is moving** is filled in the hint's color.
-* **The arrow** to click is drawn in the same color.
-* **An outlined square** is where the move takes the tile. When the tile
-  is on a journey of two moves, one along a row and one along a column,
-  both squares are marked: the nearer one, where this move lands it,
-  with a dashed outline, and the other with a solid one.
+{{hint-marks}}
+
+Everything a step marks is part of the move it asks for, so the hint calls
+the square it lands on "the ringed square", whatever its outline looks like.
 
 Each step opens by naming the tile it is working on — *"Working on tile
 5:"* — and ends by saying whether the move takes it to *its final spot*

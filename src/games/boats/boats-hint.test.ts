@@ -273,17 +273,20 @@ describe("boats hint — narration", () => {
   const NARRATIONS: [BoatsFiring["technique"]["kind"], RegExp][] = [
     ["givenClue", /boat's (top|bottom|left|right) end|one-square boat/],
     ["neverTouch", /Boats never touch, not even at a corner/],
-    ["lineSatisfied", /(already shows the \d+ ships? its number allows|number is 0)/],
+    [
+      "lineSatisfied",
+      /(already has the \d+ boat squares? its number allows|number is 0|can only be \d+, and it already has)/,
+    ],
     ["lineForced", /still needs .* and has (just|only) .* free square/],
     ["allWaterPlaced", /Every square of water .* is already marked/],
-    ["centerForced", /middle segment has water/],
+    ["centerForced", /middle segment has (water|the board's edge)/],
     ["isolated", /water or the board's edge surrounds this square/],
     ["mustExtend", /closes three sides/],
     [
       "centerCount",
-      /so a boat can't run (?:across|up and down) through this middle segment/,
+      /no room for a boat running (?:across|up and down) through this middle segment/,
     ],
-    ["growTooLong", /would make a boat of \d+/],
+    ["growTooLong", /joins .* into a boat of \d+/],
     ["runTooShort", /every \d+-boat is already placed/],
     ["onlyRunsLeft", /run[s]? can still hold the \d+-boat/],
     ["sharedDiagonal", /can take only \d+ more water squares?/],
@@ -311,7 +314,7 @@ describe("boats hint — narration", () => {
     // A "so it is forced" with no named rule is exactly the un-narrated step
     // the spec forbids.
     expect(step?.explanation).toMatch(
-      /(touching corner to corner|could no longer reach its \d+|complete a boat the fleet has no room for|more boat squares than the whole fleet|rest of the fleet would no longer fit|given segment's own shape|could no longer be placed legally)/,
+      /(touching corner to corner|could no longer reach its \d+|make a boat the fleet has no room for|more boat squares than the whole fleet|rest of the fleet would no longer fit|given segment's own shape|could no longer be placed legally)/,
     );
   });
 

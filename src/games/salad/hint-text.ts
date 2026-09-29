@@ -54,6 +54,12 @@ const axisName = (line: Line): string => (line === "row" ? "row" : "column");
 const thisLine = (line: Line, cells: Squares): Narration =>
   mark.this("stripes", whole(CELL), cells, axisName(line));
 
+/** The square a count leg settles, ringed, and the others it will settle after
+ * it, which the words name but the leg does not ring: each leg of the journey
+ * rings its own. */
+const thisSquareAndTheRest = (at: Point): Narration =>
+  phrase`${mark.this("ring", CELL, [at], "square")} and the rest of it`;
+
 /** A border clue named by where the player sees it, as a sentence opener:
  * the line it looks along, striped, and the clue itself, lit. */
 function clueName(side: Side, clue: number, line: Squares): Narration {
@@ -171,7 +177,7 @@ export function say(mode: number) {
     /** The line `cells` already has all `k` of its empty squares; `at` is the
      * square the leg settles. */
     countHolesDone: (line: Line, cells: Squares, k: number, at: Point): Narration =>
-      phrase`${thisLine(line, cells).capitalized()} already has ${allItsHoles(k)}, so ${mark.as("ring", CELL, [at], "every other square in it")} must hold a ${noun}.`,
+      phrase`${thisLine(line, cells).capitalized()} already has ${allItsHoles(k)}, so ${thisSquareAndTheRest(at)} must hold a ${noun}.`,
 
     /** The line `cells`' `nums` symbols are all placed (`allPlaced`), or at
      * least their squares are known; `at` is the square the leg settles. */
@@ -183,7 +189,7 @@ export function say(mode: number) {
       at: Point,
     ): Narration => {
       const theLine = thisLine(line, cells);
-      const rest = mark.as("ring", CELL, [at], "every other square in it");
+      const rest = thisSquareAndTheRest(at);
       // The two halves of one firing: either the line's symbols are all written
       // in, or we merely know *which* squares hold them (a line of balls). Each
       // claims only what it has.

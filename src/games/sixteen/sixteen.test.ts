@@ -349,10 +349,10 @@ describe("Sixteen hint", () => {
     const result = sixteenGame.hint?.(s);
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
-    // Format: "Working on tile T: move it to the outlined square" (the nearer of
+    // Format: "Working on tile T: move it to the ringed square" (the nearer of
     // two when the next slide is previewed); never a row or column number.
     expect(result.steps[0].explanation).toMatch(
-      /^Working on tile \d+: move it to the (nearer )?outlined square/,
+      /^Working on tile \d+: move it to the (nearer )?ringed square/,
     );
     expect(result.steps[0].explanation).not.toMatch(/\b(row|column) \d/);
   });
@@ -750,14 +750,16 @@ describe("Sixteen hint", () => {
     // Tile 7's journey ends at index 1 (its home is index 6), so the
     // first leg carries the "(setting up)" why for the whole journey.
     expect(step1.explanation).toBe(
-      "Working on tile 7: move it to the nearer outlined square, then the other (setting up).",
+      "Working on tile 7: move it to the nearer ringed square, then the other (setting up).",
     );
     expect(hl1.ultimatePos).toBe(1);
 
     // (b) journey continuity: the second leg narrates tile 7's journey
     // and is flagged so the midend keeps it displayed when leg 1
     // completes (the journey was presented as one hint).
-    expect(step2.explanation).toBe("Working on tile 7: then to the outlined square.");
+    expect(step2.explanation).toBe(
+      "Working on tile 7: move it on to the ringed square.",
+    );
     expect(hl2.tile).toBe(7);
     expect(hl2.targetPos).toBe(1);
     expect(step2.continuesPrevious).toBe(true);
@@ -912,7 +914,7 @@ describe("Sixteen hint", () => {
         expect(next.tiles.indexOf(hl.tile)).toBe(hl.targetPos);
         expect(step.explanation).toMatch(
           new RegExp(
-            `^Working on tile ${hl.tile}: (move it|then) to the (nearer )?outlined square`,
+            `^Working on tile ${hl.tile}: move it (on )?to the (nearer )?ringed square`,
           ),
         );
         checked++;
@@ -988,11 +990,11 @@ describe("Sixteen hint rendering", () => {
     for (const step of result.steps) {
       const hl = step.highlights as SixteenHintHighlights;
       // A previewed two-leg journey (first leg, not a continuation) reads
-      // "move it to the nearer outlined square, then the other" and carries a
+      // "move it to the nearer ringed square, then the other" and carries a
       // distinct ultimatePos.
       if (hl.ultimatePos !== null && !step.continuesPrevious) {
         expect(step.explanation).toMatch(
-          /^Working on tile \d+: move it to the nearer outlined square, then the other/,
+          /^Working on tile \d+: move it to the nearer ringed square, then the other/,
         );
         expect(hl.ultimatePos).not.toBe(hl.targetPos);
       }

@@ -103,11 +103,9 @@ from the lines you have drawn, the edges you have ruled out and your notes,
 so it carries on from wherever you are, as long as none of them is wrong; if
 one is, it asks you to fix the highlighted mistakes first.
 
-- **A blue band** along an edge is the edge the step is about: solid when
-  it must be a line, broken when it can't be one.
-- **An outlined clue** is the clue the step counts, and **a ringed dot**
-  is the dot it reasons about. Every dot takes either no lines or two.
-- **A band under drawn lines** marks the loop an edge would close.
+{{hint-marks}}
+
+Every dot takes either no lines or two.
 
 Most steps are the rules at work: a clue that already has its lines, a
 clue with only as many edges left as it needs, a line with only one way
@@ -123,14 +121,10 @@ of each and leaving the clue short. With that edge gone, every other open
 edge of the clue must be a line.
 
 On harder boards the reasoning turns on corners and pairs, and the hint
-writes each one down as a note before it uses it, just as you would:
-
-- A step that **places a note** draws it in blue, and calls it "this corner"
-  or "these two edges".
-- A note the step **reasons from** is already on the board, highlighted, and
-  called "the marked corner" or "the marked pair".
-- Two pairs that share an edge relate their other two edges, so a longer
-  chain of pairs is written down one link at a time.
+writes each one down as a note before it uses it, just as you would. A note
+a step reasons from is already on the board. Two pairs that share an edge
+relate their other two edges, so a longer chain of pairs is written down one
+link at a time.
 
 ## Loopy parameters
 

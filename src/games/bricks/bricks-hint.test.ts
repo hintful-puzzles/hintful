@@ -190,12 +190,12 @@ describe("bricks hint — the full hint()", () => {
 });
 
 describe("bricks hint — a second mark on the board is named", () => {
-  /** The phrases that tie the acted-on cell to the ringed evidence, one per
+  /** The phrases that tie the acted-on cell to the outlined evidence, one per
    * reason. Geometric or relational throughout — never a color name, which
    * `docs/games/hints.md` § "Two marks on the board, one 'this cell'" forbids
    * as scheme-relative and invisible to a color-blind reader. */
   const TIE =
-    /next to the ringed shaded bricks|ringed cells? below this one|ringed \d+ beside (it|this cell)|above rests only on this cell|the unringed one/;
+    /next to the outlined shaded bricks?|outlined cells? below this cell|outlined \d+ beside (it|this cell)|above rests only on this cell|break the board at the outlined cells?/;
 
   it("every step that rings a cell says how that cell relates to the target", () => {
     // Sweep partial positions, not just the openers: each fixture is replayed

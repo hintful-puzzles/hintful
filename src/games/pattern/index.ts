@@ -18,6 +18,7 @@ import {
 } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
+import { CELL, type Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -46,7 +47,8 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newPatternDesc } from "./generator.ts";
-import { say } from "./hint-text.ts";
+import { cellAt, patternHintMarks } from "./hint-marks.ts";
+import { type Marked, say } from "./hint-text.ts";
 import {
   colors,
   computeSize,
@@ -262,35 +264,38 @@ function interpretMove(
  * never pre-filled (the narration says black vs white). `line` is the row /
  * column the sentence names: its squares and clue strip are hatched, and its
  * clue takes the action color. `blackRefs` / `whiteRefs` are the already-placed marks the
- * deduction leans on, ringed teal / violet so their own color stays visible
- * (the cross-game element-type legend). */
+ * deduction leans on, outlined teal / violet so their own color stays visible
+ * (the cross-game element-type legend). `clued` is whether the line has numbers
+ * to recolor, and cells are indices into a grid `w` wide. */
 export interface PatternHint {
   cells: number[];
   value: GridVal;
   line: number;
+  clued: boolean;
   blackRefs: number[];
   whiteRefs: number[];
+  w: number;
 }
 
-/** Narrate *why* the cells are forced. The words are
- * [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(
-  reason: PatternHintReason,
-  count: number,
-  line: number,
-  w: number,
-): string {
-  const orient = line < w ? "column" : "row";
-  const many = count > 1;
+/** Narrate *why* the cells are forced, naming the marks `hl` draws. The words
+ * are [`hint-text.ts`](./hint-text.ts)'s. */
+function narrate(reason: PatternHintReason, hl: PatternHint): Narration {
+  const at = (i: number) => cellAt(i, hl.w);
+  const m: Marked = {
+    cells: hl.cells.map(at),
+    refs: [...hl.blackRefs, ...hl.whiteRefs].map(at),
+    line: hl.line,
+    orient: hl.line < hl.w ? "column" : "row",
+  };
   switch (reason.kind) {
     case "overlap":
-      return say.overlap(orient, reason.run, reason.slack, many);
+      return say.overlap(m, reason.run, reason.slack);
     case "unreachable":
-      return say.unreachable(orient, many);
+      return say.unreachable(m);
     case "lineEmpty":
-      return say.lineEmpty(orient, many);
+      return say.lineEmpty(m);
     case "intersection":
-      return say.intersection(orient, reason.black, many);
+      return say.intersection(m, reason.black);
   }
 }
 
@@ -301,18 +306,25 @@ function hint(state: PatternState): HintResult<PatternMove, PatternHint> {
   if (plan.length === 0) {
     return { ok: false, error: DEDUCTION_EXHAUSTED };
   }
-  const { w } = state.common;
-  const steps: HintStep<PatternMove, PatternHint>[] = plan.map((m) => ({
-    move: { type: "fillCells", value: m.value, cells: m.cells },
-    explanation: narrate(m.reason, m.cells.length, m.line, w),
-    highlights: {
+  const { w, clues } = state.common;
+  const steps: HintStep<PatternMove, PatternHint>[] = plan.map((m) => {
+    const highlights: PatternHint = {
       cells: m.cells,
       value: m.value,
       line: m.line,
+      clued: clues[m.line].length > 0,
       blackRefs: m.blackRefs,
       whiteRefs: m.whiteRefs,
-    },
-  }));
+      w,
+    };
+    const words = narrate(m.reason, highlights);
+    return {
+      move: { type: "fillCells", value: m.value, cells: m.cells },
+      explanation: words.text,
+      words,
+      highlights,
+    };
+  });
   return { ok: true, steps };
 }
 
@@ -367,6 +379,13 @@ function hintKeepTrack(
   if (verdict === "onTrack") {
     step.highlights = { ...t, cells: left };
     step.move = { type: "fillCells", value: t.value, cells: left };
+    if (step.words) {
+      const kept = new Set(left.map((i) => CELL.key(cellAt(i, t.w))));
+      step.words = step.words.narrow(
+        (role, kind, key) => role !== "ring" || kind !== CELL.name || kept.has(key),
+      );
+      step.explanation = step.words.text;
+    }
   }
   return verdict;
 }
@@ -377,7 +396,8 @@ export const patternGame: Game<
   PatternMove,
   PatternUi,
   PatternDrawState,
-  PatternMistake
+  PatternMistake,
+  PatternHint
 > = {
   id: "pattern",
   // Pattern wants the raw MOD_STYLUS bit: with no right button to hand, a touch
@@ -410,6 +430,15 @@ export const patternGame: Game<
   },
 
   hint,
+  hintMarks: {
+    roles: {
+      ring: "the cells the step decides; the sentence says whether they must be black or white.",
+      outline:
+        "what the step reasons from: the numbers of its row or column, drawn in the hint color, and any squares already marked black or white that hold a run in place, outlined in a color of their own.",
+      stripes: "the row or column the sentence names, running on through its numbers.",
+    },
+    drawn: patternHintMarks,
+  },
   hintKeepTrack,
   findMistakes,
   textFormat,

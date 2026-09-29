@@ -160,7 +160,7 @@ describe("narration states the premise, in the necessity voice", () => {
     expect(found).not.toBeNull();
     if (!found) return;
     const text = hintSteps(found.state)[0].explanation;
-    expect(text).toMatch(/two 1-hubs/);
+    expect(text).toMatch(/outlined 1-hubs/);
     expect(text).toMatch(/strand/);
     expect(text).toMatch(/rule out this spoke/);
     expect(text.length).toBeLessThan(120);
@@ -182,7 +182,7 @@ describe("narration states the premise, in the necessity voice", () => {
     if (!found) return;
     const text = hintSteps(found.state)[0].explanation;
     expect(text).toMatch(/already has all its lines/);
-    expect(text).toMatch(/[Rr]ule them out/);
+    expect(text).toMatch(/Rule out (?:this spoke|these spokes)\.$/);
     expect(text.length).toBeLessThan(120);
   });
 
@@ -191,10 +191,10 @@ describe("narration states the premise, in the necessity voice", () => {
     expect(found).not.toBeNull();
     if (!found) return;
     const step = hintSteps(found.state)[0];
-    expect(step.explanation).toMatch(/^(?:Drawing this line|Ruling this out)/);
-    expect(step.explanation).toMatch(/(?:over-fill|force two diagonals|strand)/);
+    expect(step.explanation).toMatch(/^(?:Drawing this line|Ruling this spoke out)/);
+    expect(step.explanation).toMatch(/(?:over-fill|force the diagonals|strand)/);
     expect(step.explanation).toMatch(/(?:rule it out|must be a line)/);
-    // The break it names is ringed as evidence (words and picture agree).
+    // The break it names is outlined as evidence (words and picture agree).
     expect(found.firing.breakKind).toBeDefined();
     expect((step.highlights as SpokesHint).evidence.length).toBeGreaterThan(0);
     expect(step.explanation.length).toBeLessThan(120);
@@ -289,11 +289,19 @@ describe("a saturated hub is one multi-leg journey, one color", () => {
     expect(legs[0].continuesPrevious).toBeFalsy();
     for (let i = 1; i < k; i++) expect(legs[i].continuesPrevious).toBe(true);
 
-    // All legs render the same set of spokes (shared fate, shared color) —
-    // one highlight object across the firing.
+    // Every leg renders the spokes still to settle (shared fate, shared
+    // color): leg 0 all of them, each later leg one fewer, and its words name
+    // just those.
     const first = legs[0].highlights as SpokesHint;
-    for (const leg of legs) expect(leg.highlights).toBe(first);
     expect(first.spokes.length).toBe(k);
+    legs.forEach((leg, i) => {
+      const hl = leg.highlights as SpokesHint;
+      expect(hl.spokes).toEqual(first.spokes.slice(i));
+      expect(hl.evidence).toEqual(first.evidence);
+    });
+    expect(legs[k - 1].explanation).toBe(
+      "And this one must be a line too, for the outlined hub.",
+    );
 
     // Each leg draws a distinct spoke.
     const drawn = new Set(

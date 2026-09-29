@@ -28,13 +28,7 @@ only from the squares already colored, so it carries on from wherever you
 are, as long as none of them is wrong; if one is, it asks you to fix the
 highlighted mistakes first.
 
-* **A ring in the hint color** marks the square to color. It is drawn
-  empty: the sentence says whether it must be black or white.
-* **Rings in a second color** mark the squares the step reasons from.
-  When a sentence says "a ringed cell" or "the ringed row", these are the
-  rings it means.
-* **Stripes** mark the row or column the sentence calls "this row" or
-  "this column".
+{{hint-marks}}
 
 The hint uses four ideas:
 
@@ -43,13 +37,13 @@ The hint uses four ideas:
 * **A full quota.** A row or column that already holds all its black
   squares must be white everywhere else, and the other way round.
 * **The last one has few places to go.** When a row or column needs just
-  one more of a color, and every place but the ringed squares would force
+  one more of a color, and every place but the outlined squares would force
   three of the other color together, the rest of the line is the other
   color.
 * **No two lines alike**, when *Unique rows and columns* is switched on
-  in ‘Custom type…’. When the ringed row already holds all its black squares,
-  and this row holds all but one of its own in the same places, putting
-  the last one where the ringed row has its remaining black would make the
+  in ‘Custom type…’. When the outlined row already holds all its black squares,
+  and the striped row holds all but one of its own in the same places, putting
+  the last one where the outlined row has its remaining black would make the
   two rows identical, so that square must be white (and the same with the
   colors swapped, or with columns).
 

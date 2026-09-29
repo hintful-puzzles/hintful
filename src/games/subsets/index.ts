@@ -37,6 +37,7 @@ import {
   commonHintRefusal,
   DEDUCTION_EXHAUSTED,
 } from "../../engine/hint-refusal.ts";
+import { phrase } from "../../engine/hint-words.ts";
 import {
   BACKSPACE,
   CURSOR_SELECT,
@@ -54,6 +55,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSubsetsDesc } from "./generator.ts";
+import { subsetsHintMarks } from "./hint-marks.ts";
 import { say } from "./hint-text.ts";
 import {
   colors,
@@ -422,11 +424,12 @@ function solve(orig: SubsetsState): SolveResult<SubsetsMove> {
 
 /** Highlight roles of a Subsets hint step (see the COL_HINT block in
  * render.ts). Every narration is *attention → deduction → action*, per slot:
- * - `target` — the cell being decided; its acted-on slot gets the bold
- *   `COL_HINT` frame (the *action* location);
- * - `cells` — a neighbor cell the narration calls "the highlighted cell"
+ * - `target` — the cell being decided; its acted-on slot, `slot`, gets the
+ *   bold `COL_HINT` frame (the *action* location), and a rule-out step, which
+ *   decides no slot, frames the whole cell;
+ * - `cells` — a neighbor cell the narration calls "the outlined cell"
  *   (the cell across a horseshoe), framed `COL_HINT_CELL`;
- * - `sets` — set-values the narration calls "the highlighted set(s)", tinted
+ * - `sets` — set-values the narration calls "the outlined set(s)", boxed
  *   in the tally band (a collapse's surviving candidates, or the placed set);
  * - `spotlight` — the cells a *hidden single*'s set can still go in (its one
  *   home), lit `COL_HINT_SPOT` — the same set→placement spotlight the
@@ -436,6 +439,7 @@ function solve(orig: SubsetsState): SolveResult<SubsetsMove> {
  *   across the horseshoe can still hold (the premise). */
 export interface SubsetsHintHighlights {
   target: Point;
+  slot: number | null;
   cells: Point[];
   sets: number[];
   spotlight: Point[];
@@ -449,13 +453,21 @@ function ruleOutStep(
   board: SubsetsState,
   mark: RuleOutMark,
 ): HintStep<SubsetsMove, SubsetsHintHighlights> {
+  const target = pointOf(mark.pos, board.w);
+  const via = pointOf(mark.why.via, board.w);
+  // The set ruled out is the action, boxed as such even where the neighbor
+  // could hold it too.
+  const sets = candidateSets(board, mark.why.via).filter((v) => v !== mark.value);
+  const words = say.ruleOut(mark, board.n, target, via, sets);
   return {
     move: { kind: "rule", pos: mark.pos, value: mark.value, on: true },
-    explanation: say.ruleOut(mark, board.n),
+    explanation: words.text,
+    words,
     highlights: {
-      target: pointOf(mark.pos, board.w),
-      cells: [pointOf(mark.why.via, board.w)],
-      sets: candidateSets(board, mark.why.via),
+      target,
+      slot: null,
+      cells: [via],
+      sets,
       spotlight: [],
       rule: mark.value,
     },
@@ -466,30 +478,41 @@ function buildHighlights(
   state: SubsetsState,
   d: SubsetsDeduction,
   exclusion: CollapseExclusion | null,
+  k: number,
 ): SubsetsHintHighlights {
   const w = state.w;
   const pt = (i: number): Point => pointOf(i, w);
   const r = d.reason;
   // Arrows point at a neighbor *cell*; a placement points at the *set* in the
   // tally; a hidden single also *spotlights* where the set can go (its one
-  // home). A collapse highlights the excluded competitor's blocker cell, so
-  // "the highlighted cell" in the "why not …" clause has a referent.
-  const blockerCell = (ex: CollapseExclusion): number =>
-    ex.block.kind === "placed" ? ex.block.cell : ex.block.neighbor;
+  // home). A collapse's lead outlines the excluded competitor's blocker cell,
+  // so "the outlined cell" in the "why not …" clause has a referent; the legs
+  // after it do not say that clause, so they do not draw its cell.
   const cells: number[] =
     r.kind === "arrowKnown"
       ? [r.to]
       : r.kind === "arrowMask"
         ? [r.from]
-        : exclusion
+        : exclusion && k === 0
           ? [blockerCell(exclusion)]
           : [];
   const sets =
     r.kind === "hiddenSingle" ? [r.value] : r.kind === "collapse" ? r.survivors : [];
   const spotlight =
     r.kind === "hiddenSingle" ? candidateCells(state, r.value).map(pt) : [];
-  return { target: pt(d.pos), cells: cells.map(pt), sets, spotlight, rule: null };
+  return {
+    target: pt(d.pos),
+    slot: d.sets[k].bit,
+    cells: cells.map(pt),
+    sets,
+    spotlight,
+    rule: null,
+  };
 }
+
+/** The cell whose rule keeps a collapse's excluded competitor out. */
+const blockerCell = (ex: CollapseExclusion): number =>
+  ex.block.kind === "placed" ? ex.block.cell : ex.block.neighbor;
 
 /**
  * A firing (one deduction deciding a cell's letters) becomes one sub-goal
@@ -512,13 +535,22 @@ function stepsForFiring(
     d.reason.kind === "collapse"
       ? pickExclusion(board, d.pos, d.reason.survivors)
       : null;
-  const highlights = buildHighlights(board, d, exclusion);
   d.sets.forEach((set, k) => {
-    let explanation = say.leg(d, k);
-    if (k === 0 && exclusion) explanation += say.exclusion(exclusion, board.n);
+    const highlights = buildHighlights(board, d, exclusion, k);
+    const leg = say.leg(d, k, {
+      slot: { ...highlights.target, bit: set.bit },
+      cells: highlights.cells,
+      sets: highlights.sets,
+      spotlight: highlights.spotlight,
+    });
+    const words =
+      k === 0 && exclusion
+        ? phrase`${leg}${say.exclusion(exclusion, board.n, pointOf(blockerCell(exclusion), board.w))}`
+        : leg;
     steps.push({
       move: { kind: "set", type: set.type, pos: d.pos, bit: set.bit },
-      explanation,
+      explanation: words.text,
+      words,
       highlights,
     });
   });
@@ -613,7 +645,8 @@ export const subsetsGame: Game<
   SubsetsMove,
   SubsetsUi,
   SubsetsDrawState,
-  SubsetsMistake
+  SubsetsMistake,
+  SubsetsHintHighlights
 > = {
   id: "subsets",
   // Touching the reference aid (tally / inspect icon / cursor) dismisses a
@@ -657,6 +690,16 @@ export const subsetsGame: Game<
   solve,
   difficulty,
   hint,
+  hintMarks: {
+    roles: {
+      ring: "what the step decides: the one letter position it marks present or clears, which the sentence names by its letter, or, when it rules a whole set out of a cell, that cell and the set's entry in the tally.",
+      outline:
+        "what the step reasons from: the neighbor across a horseshoe, or the cell where a set is already placed, framed in a second color; and the sets it counts, such as the only ones that can still go in the cell, boxed in the tally in that color.",
+      stripes:
+        "the one cell a set still fits, in the spotlight color that *Where can this go?* uses, when the sentence says the set can go nowhere else.",
+    },
+    drawn: subsetsHintMarks,
+  },
   hintKeepTrack,
   findMistakes,
   textFormat,

@@ -2,19 +2,29 @@
  * Every sentence Tents' hint speaks, and every word inside one.
  *
  * The deduction decides which sentence and with what values ([`hint.ts`](./hint.ts)'s
- * `narrate`); this file decides only how it reads. Each sentence runs
+ * `stepsOf`); this file decides only how it reads. Each sentence runs
  * indication, reasoning, conclusion, with the conclusion in the necessity voice
  * (docs/games/hints.md § "Writing the narration").
  *
  * The words are the help page's: a square is a tent, grass, or open (still
  * blank), and a tent **belongs to** a tree once the two are joined, which the
  * player sees as a link drawn between them or reads off the board at a glance.
- * The squares a step decides are ringed ("these squares"), the ones it reasons
- * from outlined, and the row or column it counts with is hatched ("this row").
+ * Every word that points at the board is a reference to the mark it points at
+ * (`engine/hint-words.ts`): the squares a step decides, and a link it asks for,
+ * are ringed; the squares it reasons from are outlined, and so is the number it
+ * counts with; and the row or column it counts along is striped ("this row").
  * That every tent sits beside a tree of its own and that tents never touch are
  * the rules, and sit in the help (docs/games/hints.md § "Rules belong in the
  * help").
+ *
+ * A step that decides several squares shrinks as the player makes some of them
+ * (`tentsKeepTrack`), and its words are narrowed with it, so every word that
+ * counts the ringed squares is a reference that re-renders from them.
  */
+
+import { CELL, mark, type Narration, phrase, whole } from "../../engine/hint-words.ts";
+import type { Point } from "../../engine/types.ts";
+import { type HintLink, LINK, NUMBER } from "./hint-marks.ts";
 
 /** Which kind of line a count is read along. */
 export type LineKind = "row" | "column";
@@ -38,76 +48,136 @@ const TENT_AT: Record<Dir, string> = {
 
 const tents = (n: number): string => (n === 1 ? "1 tent" : `${n} tents`);
 const more = (n: number): string => (n === 1 ? "1 more tent" : `${n} more tents`);
-const these = (n: number): string => (n === 1 ? "this square" : "these squares");
-const mustBe = (n: number): string => (n === 1 ? "it must be" : "they must be");
+
+/** Words for the ringed squares, by how many are left. */
+const ringed = (cells: readonly Point[], one: string, many: string): Narration =>
+  mark.as("ring", CELL, cells, (els) => (els.length > 1 ? many : one));
+
+const these = (cells: readonly Point[]): Narration =>
+  mark.this("ring", CELL, cells, "square");
+
+/** "it must be" / "they must be", over the ringed squares. */
+const mustBe = (cells: readonly Point[]): Narration =>
+  phrase`${ringed(cells, "it", "they")} must be`;
+
+/** The line a count is read along, and the number it is read against. */
+export interface Counted {
+  kind: LineKind;
+  squares: readonly Point[];
+  line: number;
+}
+
+const thisLine = (c: Counted): Narration =>
+  mark.this("stripes", whole(CELL), c.squares, c.kind);
+
+const number = (c: Counted, words: string): Narration =>
+  mark.as("outline", NUMBER, [c.line], words);
+
+const join = (link: HintLink, words: string): Narration =>
+  mark.as("ring", LINK, [link], words);
 
 export const say = {
   // --- grass --------------------------------------------------------------
 
-  /** `n` squares no tree is beside. */
-  noTree: (n: number): string =>
-    `Every tent sits beside a tree, and no tree is beside ${these(n)}, so ${mustBe(n)} grass.`,
+  /** Squares no tree is beside. */
+  noTree: (cells: readonly Point[]): Narration =>
+    phrase`Every tent sits beside a tree, and no tree is beside ${these(cells)}, so ${mustBe(cells)} grass.`,
 
-  /** `n` squares every tree beside which already has its tent. */
-  treesDone: (n: number): string =>
-    `Every tree beside ${these(n)} already has its tent, so ${mustBe(n)} grass.`,
+  /** Squares every tree beside which already has its tent, shown in `area`. */
+  treesDone: (cells: readonly Point[], area: readonly Point[]): Narration => {
+    const has = area.length
+      ? mark.paren("outline", CELL, area, "already has its tent")
+      : phrase`already has its tent`;
+    return phrase`Every tree beside ${these(cells)} ${has}, so ${mustBe(cells)} grass.`;
+  },
 
   /** The open squares round one tent. */
-  nextToTent: (n: number): string =>
-    `Tents never touch, even diagonally, so ${n === 1 ? "the open square" : "every open square"} around this tent must be grass.`,
+  nextToTent: (cells: readonly Point[], tent: Point): Narration =>
+    phrase`Tents never touch, even diagonally, so ${ringed(cells, "the open square", "every open square")} around ${mark.the("outline", CELL, [tent], "tent")} must be grass.`,
 
-  treeDiagonal:
-    "This tree's tent must go in one of the two outlined squares, and either would touch the ringed one, so it must be grass.",
+  treeDiagonal: (cell: Point, tree: Point, pair: readonly Point[]): Narration =>
+    phrase`${mark.as("outline", CELL, [tree], "The outlined tree")}'s tent must go in one of ${mark.the("outline", CELL, pair, "square", "the two")}; either touches ${mark.as("ring", CELL, [cell], "the ringed one")}, so it must be grass.`,
 
   // --- a tree's own tent ---------------------------------------------------
 
-  /** A tree with one open square left; `taken` when a tent beside it already
-   * belongs to another tree. */
-  treeSingle: (taken: boolean): string =>
-    taken
-      ? "The outlined tent belongs to another tree, so this tree's tent must go in its only open square, joined to it."
-      : "This tree's only open square is the ringed one, so its tent must go there, joined to it.",
+  /** A tree with one open square left; `taken` the tents beside it that
+   * already belong to other trees. */
+  treeSingle: (
+    square: Point,
+    tree: Point,
+    taken: readonly Point[],
+    link: HintLink,
+  ): Narration => {
+    const joined = join(link, "joined to it");
+    const theTree = mark.as("outline", CELL, [tree], "the outlined tree");
+    return taken.length
+      ? phrase`${mark.the("outline", CELL, taken, "tent").capitalized()} ${taken.length > 1 ? "belong to other trees" : "belongs to another tree"}, so ${theTree}'s tent must go in ${mark.as("ring", CELL, [square], "its only open square")}, ${joined}.`
+      : phrase`${theTree.capitalized()}'s only open square is ${mark.as("ring", CELL, [square], "the ringed one")}, so its tent must go there, ${joined}.`;
+  },
 
   // --- joining a tent to its tree -----------------------------------------
 
-  /** A tent every other tree beside which already has its tent. */
-  tentLink: (to: Dir): string =>
-    `Every other tree beside the ringed tent already has its tent, so it must belong to ${TREE_AT[to]}: join them.`,
+  /** A tent every other tree beside which already has its tent (shown in
+   * `area`). */
+  tentLink: (
+    tent: Point,
+    tree: Point,
+    to: Dir,
+    area: readonly Point[],
+    link: HintLink,
+  ): Narration => {
+    const has = area.length
+      ? mark.paren("outline", CELL, area, "has its tent")
+      : phrase`already has its tent`;
+    return phrase`Every other tree beside ${mark.as("ring", CELL, [tent], "the ringed tent")} ${has}, so it must belong to ${mark.as("ring", CELL, [tree], TREE_AT[to])}: ${join(link, "join them")}.`;
+  },
 
   /** A tree with no open square, and one tent beside it not already another
-   * tree's; `taken` when some tent beside it is. */
-  treeLink: (to: Dir, taken: boolean): string =>
-    taken
-      ? `The outlined tent belongs to another tree, so the ringed tree's tent must be ${TENT_AT[to]}: join them.`
-      : `The ringed tree has no open square beside it, so its tent must be ${TENT_AT[to]}: join them.`,
+   * tree's; `taken` the tents beside it that are, with their trees. */
+  treeLink: (
+    tree: Point,
+    tent: Point,
+    to: Dir,
+    taken: readonly Point[],
+    others: number,
+    link: HintLink,
+  ): Narration => {
+    const theTent = mark.as("ring", CELL, [tent], TENT_AT[to]);
+    const joined = join(link, "join them");
+    if (!taken.length)
+      return phrase`${mark.as("ring", CELL, [tree], "The ringed tree")} has no open square beside it, so its tent must be ${theTent}: ${joined}.`;
+    const belong =
+      others > 1
+        ? "The outlined tents belong to other trees"
+        : "The outlined tent belongs to another tree";
+    return phrase`${mark.as("outline", CELL, taken, belong)}, so ${mark.as("ring", CELL, [tree], "the ringed tree")}'s tent must be ${theTent}: ${joined}.`;
+  },
 
   // --- counting along a line ----------------------------------------------
 
   /** A line whose count of `clue` is already met. */
-  countMet: (kind: LineKind, clue: number): string =>
+  countMet: (c: Counted, clue: number, cells: readonly Point[]): Narration =>
     clue === 0
-      ? `This ${kind} has no tents, so its open squares must be grass.`
-      : `This ${kind} already has its ${tents(clue)}, so its open squares must be grass.`,
+      ? phrase`${thisLine(c).capitalized()}'s ${number(c, "number")} is 0, so ${ringed(cells, "its open square", "its open squares")} must be grass.`
+      : phrase`${thisLine(c).capitalized()} already has ${number(c, `its ${tents(clue)}`)}, so ${ringed(cells, "its open square", "its open squares")} must be grass.`,
 
   /** A line needing `need` tents with exactly `need` open squares, none side
    * by side. */
-  allOpen: (kind: LineKind, need: number): string =>
-    need === 1
-      ? `This ${kind} needs 1 more tent and has only 1 open square, so it must be a tent.`
-      : `This ${kind} needs ${need} more tents and has only ${need} open squares, so they must all be tents.`,
+  allOpen: (c: Counted, need: number, cells: readonly Point[]): Narration =>
+    phrase`${thisLine(c).capitalized()} needs ${number(c, more(need))} and has only ${need === 1 ? "1 open square" : `${need} open squares`}, so ${ringed(cells, "this square must be a tent", "these squares must all be tents")}.`,
 
   /** A line whose open squares have room for exactly `need` tents that do not
-   * touch, so `n` squares must hold one. */
-  noSpareRoom: (kind: LineKind, need: number, n: number): string =>
-    `This ${kind} needs ${more(need)}, and its open squares have room for only ${need} that don't touch, so ${n === 1 ? "this one must be a tent" : "these must be tents"}.`,
+   * touch, so the ringed squares must hold one each. */
+  noSpareRoom: (c: Counted, need: number, cells: readonly Point[]): Narration =>
+    phrase`${thisLine(c).capitalized()} needs ${number(c, more(need))}, and its open squares have room for only ${need} that don't touch, so ${ringed(cells, "this one must be a tent", "these must be tents")}.`,
 
-  /** The same firing's other leg: `n` squares between those tents. */
-  betweenThem: (n: number): string =>
-    `Tents never touch, so ${n === 1 ? "the square" : "the squares"} between them must be grass.`,
+  /** The same firing's other leg: squares between those tents. */
+  betweenThem: (c: Counted, cells: readonly Point[]): Narration =>
+    phrase`Tents never touch, so ${ringed(cells, "the square", "the squares")} between the tents that ${thisLine(c)}'s ${number(c, "number")} needs must be grass.`,
 
-  /** Every placement touches `n` squares in the lines alongside. */
-  touchesBeside: (kind: LineKind, need: number, n: number): string =>
+  /** Every placement touches the ringed squares in the lines alongside. */
+  touchesBeside: (c: Counted, need: number, cells: readonly Point[]): Narration =>
     need === 1
-      ? `Wherever this ${kind}'s last tent goes, it touches ${these(n)} beside it, so ${mustBe(n)} grass.`
-      : `Wherever this ${kind}'s ${need} remaining tents go, one touches ${n === 1 ? "this square" : "each of these squares"} beside it, so ${mustBe(n)} grass.`,
+      ? phrase`Wherever ${thisLine(c)}'s ${number(c, "last tent")} goes, it touches ${these(cells)} beside it, so ${mustBe(cells)} grass.`
+      : phrase`Wherever ${thisLine(c)}'s ${number(c, `${need} remaining tents`)} go, one touches ${ringed(cells, "this square", "each of these squares")} beside it, so ${mustBe(cells)} grass.`,
 };

@@ -27,6 +27,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { CELL, type MarkRef, type Narration } from "../../engine/hint-words.ts";
 import {
   dimensionParamConfig,
   parseConfigInt,
@@ -58,7 +59,7 @@ import { registerGame } from "../../engine/registry.ts";
 import { SYMMETRY_CHOICES } from "../../engine/symmetric-blacks.ts";
 import type { ConfigValues, Point } from "../../engine/types.ts";
 import { newSticksDesc } from "./generator.ts";
-import { say } from "./hint-text.ts";
+import { type SticksMarks, say } from "./hint-text.ts";
 import {
   border,
   colors,
@@ -395,27 +396,63 @@ function evidenceOf(reason: SticksReason, target: number): number[] {
  * numbers the sentence names off the board. `continues` is a later leg of the
  * same firing. The words are [`hint-text.ts`](./hint-text.ts)'s.
  */
-function narrate(firing: SticksFiring, state: SticksState, continues: boolean): string {
+function narrate(
+  firing: SticksFiring,
+  state: SticksState,
+  continues: boolean,
+): Narration {
   const { reason, to } = firing;
-  // The square's own clue, or -1: what the closing sentence names it by.
-  const clue = state.numbers[firing.index];
+  const at = (i: number): Point => pointOf(i, state.w);
+  // The evidence, split by the part each cell plays in the sentence; together
+  // the two are `evidenceOf`.
+  const [clues, cells] = ((): [number[], number[]] => {
+    switch (reason.kind) {
+      case "tooLong":
+        return [[reason.clue], reason.segment];
+      case "unreachable":
+        return [[reason.clue], reason.span];
+      case "twoClues":
+        return [reason.clues, reason.segment];
+      case "overConnected":
+        return [[reason.clue], reason.lines.filter((c) => c !== firing.index)];
+      case "starved":
+        return [[reason.clue], reason.open];
+    }
+  })();
+  const m: SticksMarks = {
+    target: at(firing.index),
+    // The square's own clue, or -1: what the closing sentence names it by.
+    clue: state.numbers[firing.index],
+    clues: clues.map(at),
+    cells: cells.map(at),
+  };
   switch (reason.kind) {
     case "tooLong":
-      return say.tooLong(reason, to, clue, continues);
+      return say.tooLong(reason, to, m, continues);
     case "unreachable":
-      return say.unreachable(reason, to, clue, continues);
+      return say.unreachable(reason, to, m, continues);
     case "twoClues":
       return say.twoClues(
         reason.clues.map((c) => state.numbers[c]),
         to,
-        clue,
+        m,
         continues,
       );
     case "overConnected":
-      return say.overConnected(reason, to, clue, continues);
+      return say.overConnected(reason, to, m, continues);
     case "starved":
-      return say.starved(reason, to, clue, continues);
+      return say.starved(reason, to, m, continues);
   }
+}
+
+const pointOf = (i: number, w: number): Point => ({ x: i % w, y: Math.floor(i / w) });
+
+/** What a step's highlights draw: the `drawn` half of Sticks' legend. */
+function sticksHintMarks(hl: SticksHint): MarkRef[] {
+  return [
+    { role: "ring", kind: CELL, elements: [pointOf(hl.target, hl.w)] },
+    { role: "outline", kind: CELL, elements: hl.evidence.map((i) => pointOf(i, hl.w)) },
+  ] as MarkRef[];
 }
 
 function hint(state: SticksState): HintResult<SticksMove, SticksHint> {
@@ -433,13 +470,16 @@ function hint(state: SticksState): HintResult<SticksMove, SticksHint> {
     // is one insight, so its later squares continue the step rather than
     // queueing up as separate hints (quality-bar rule 2).
     group.forEach((f, leg) => {
+      const words = narrate(f, state, leg > 0);
       steps.push({
         move: { kind: "set", changes: [{ index: f.index, line: f.to }] },
-        explanation: narrate(f, state, leg > 0),
+        explanation: words.text,
+        words,
         highlights: {
           target: f.index,
           to: f.to,
           evidence: evidenceOf(f.reason, f.index),
+          w: state.w,
         },
         continuesPrevious: leg > 0,
       });
@@ -477,7 +517,8 @@ export const sticksGame: Game<
   SticksMove,
   SticksUi,
   SticksDrawState,
-  SticksMistake
+  SticksMistake,
+  SticksHint
 > = {
   id: "sticks",
 
@@ -529,6 +570,14 @@ export const sticksGame: Game<
   solve,
   findMistakes,
   hint,
+  hintMarks: {
+    roles: {
+      ring: "the square the step decides, as the line it asks you to place, drawn in the hint color and running the way it must go: across for horizontal, up and down for vertical.",
+      outline:
+        "the cells the step reasons from: the cells a numbered line runs through or could still reach, or a black cell together with the lines already running into it or the cells beside it where one still could.",
+    },
+    drawn: sticksHintMarks,
+  },
   hintKeepTrack,
   textFormat,
 

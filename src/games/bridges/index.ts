@@ -49,7 +49,12 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newBridgesDesc } from "./generator.ts";
-import { type BridgesHighlights, bridgesHint, bridgesKeepTrack } from "./hint.ts";
+import {
+  type BridgesHighlights,
+  bridgesHint,
+  bridgesHintMarks,
+  bridgesKeepTrack,
+} from "./hint.ts";
 import {
   type BridgesDrawState,
   border,
@@ -562,7 +567,8 @@ export const bridgesGame: Game<
   BridgesMove,
   BridgesUi,
   BridgesDrawState,
-  BridgesMistake
+  BridgesMistake,
+  BridgesHighlights
 > = {
   id: "bridges",
   preferredTileSize: PREFERRED_TILE_SIZE,
@@ -680,6 +686,14 @@ export const bridgesGame: Game<
   computeSize,
   newDrawState,
   hint,
+  hintMarks: {
+    roles: {
+      ring: "what the step decides along a line, in the hint color. Bridges drawn in the hint color are the ones to add; a line that already carries a bridge keeps it in the board's own ink, so you can see how many the hint is asking you to add. A pair of small crosses means no bridge may ever run there, and a ≤1 means at most one may: the same marks you draw yourself with the right mouse button, and later hints count on them being there. The sentence points at these by direction: “this way”.",
+      outline:
+        "what the step reasons from. The island the sentence is about (“this 5”) is recolored in the hint color. The islands it counts, and the bridges between them, are outlined in a second color: when a hint says “these 2 islands” or “the outlined group”, these are the ones it means.",
+    },
+    drawn: bridgesHintMarks,
+  },
   hintKeepTrack: (
     m: BridgesMove,
     step: HintStep<BridgesMove>,

@@ -255,7 +255,9 @@ describe("sticks hint — grouping", () => {
       expect(r.steps[0].continuesPrevious).toBe(false);
       for (const s of r.steps) {
         if (s.continuesPrevious)
-          expect(s.explanation).toMatch(/rules this square out too|same numbers/);
+          expect(s.explanation).toMatch(
+            /rules this (square|\d) out too|same numbers|close another side/,
+          );
       }
     }
   });

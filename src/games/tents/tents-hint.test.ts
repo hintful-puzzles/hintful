@@ -22,6 +22,7 @@ import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { FIX_MISTAKES_FIRST } from "../../engine/hint-refusal.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { boardOf, type TentsHighlights, tentsKeepTrack, tentsPlan } from "./hint.ts";
 import { say } from "./hint-text.ts";
 import { tentsGame } from "./index.ts";
@@ -189,7 +190,7 @@ describe("every premise the corpus reaches is reached", () => {
   };
   /** The sentences a line count speaks, told apart by their opening words. */
   const LINE_CASES = {
-    countMet: /already has|has no tents/,
+    countMet: /already has|number is 0/,
     allOpen: /has only \d+ open/,
     noSpareRoom: /have room for only/,
     betweenThem: /^Tents never touch, so/,
@@ -212,11 +213,21 @@ describe("every premise the corpus reaches is reached", () => {
   });
 
   it("says a line's count from the clue, singular and plural", () => {
-    expect(say.countMet("row", 1)).toBe(
+    const row = {
+      kind: "row" as const,
+      line: 5,
+      squares: [0, 1, 2].map((x) => ({ x, y: 0 })),
+    };
+    const column = { kind: "column" as const, line: 0, squares: [{ x: 0, y: 0 }] };
+    const one = [{ x: 1, y: 0 }];
+    const two = [...one, { x: 2, y: 0 }];
+    expect(say.countMet(row, 1, two).text).toBe(
       "This row already has its 1 tent, so its open squares must be grass.",
     );
-    expect(say.allOpen("column", 1)).toMatch(/1 open square, so it must be a tent/);
-    expect(say.noSpareRoom("row", 2, 1)).toMatch(/this one must be a tent\.$/);
+    expect(say.allOpen(column, 1, one).text).toMatch(
+      /1 open square, so this square must be a tent/,
+    );
+    expect(say.noSpareRoom(row, 2, one).text).toMatch(/this one must be a tent\.$/);
   });
 });
 
@@ -318,6 +329,14 @@ describe("the player's links", () => {
 });
 
 describe("following a step by hand", () => {
+  // A step's words hold functions, so a copy clones only the data keep-track
+  // rewrites in place.
+  const copy = (s: Step): Step => ({
+    ...s,
+    move: structuredClone(s.move),
+    highlights: structuredClone(s.highlights),
+  });
+
   /** The first step in the corpus deciding at least `n` grass squares. */
   function grassStep(n: number): { state: TentsState; step: Step } {
     for (const { p, seed } of CORPUS) {
@@ -330,7 +349,7 @@ describe("following a step by hand", () => {
           s.move.cells.length >= n &&
           s.move.cells[0].v === NONTENT,
       );
-      if (step && step === res.steps[0]) return { state, step: structuredClone(step) };
+      if (step && step === res.steps[0]) return { state, step: copy(step) };
     }
     throw new Error("no opening grass step");
   }
@@ -340,8 +359,14 @@ describe("following a step by hand", () => {
     if (step.move.type !== "cells") throw new Error("not a cells step");
     const [first, ...rest] = step.move.cells;
     const one: TentsMove = { type: "cells", cells: [first] };
+    const before = step.explanation;
     expect(tentsKeepTrack(one, step, state)).toBe("onTrack");
     expect(step.highlights?.targets).toHaveLength(rest.length);
+    // Its words shrink with it, naming just the rings left.
+    const legend = tentsGame.hintMarks;
+    if (!legend) throw new Error("Tents declares its marks");
+    expect(bindingDefects(step, legend)).toEqual([]);
+    if (rest.length === 1) expect(step.explanation).not.toBe(before);
     const after = executeMove(state, one);
     expect(tentsKeepTrack({ type: "cells", cells: rest }, step, after)).toBe(
       "completed",
@@ -384,12 +409,12 @@ describe("following a step by hand", () => {
       const { x, y } = step.move;
       expect(state.grid[y * p.w + x]).toBe(0);
       const click: TentsMove = { type: "cells", cells: [{ x, y, v: TENT }] };
-      const followed = structuredClone(step);
+      const followed = copy(step);
       expect(tentsKeepTrack(click, followed, state)).toBe("onTrack");
       const placed = executeMove(state, click);
       expect(tentsKeepTrack(followed.move, followed, placed)).toBe("completed");
       // The combined move itself completes it at once.
-      expect(tentsKeepTrack(step.move, structuredClone(step), state)).toBe("completed");
+      expect(tentsKeepTrack(step.move, copy(step), state)).toBe("completed");
       return;
     }
     throw new Error("no opening tree-single step in the corpus");
@@ -414,7 +439,7 @@ describe("following a step by hand", () => {
         d: FLIP(d),
         on: true,
       };
-      expect(tentsKeepTrack(fromTree, structuredClone(step), state)).toBe("completed");
+      expect(tentsKeepTrack(fromTree, copy(step), state)).toBe("completed");
       return;
     }
     throw new Error("no link step in the corpus");

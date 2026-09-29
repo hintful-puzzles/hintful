@@ -131,7 +131,7 @@ describe("narration", () => {
     }
   });
 
-  it("words and picture agree: 'ringed'/'shaded'/'highlighted clue' only when present", () => {
+  it("words and picture agree: the dark square and the clue are named only when drawn", () => {
     let checked = 0;
     for (const [params, seed] of [
       [EASY, "lh-wp-e"],
@@ -141,22 +141,14 @@ describe("narration", () => {
       for (const step of steps) {
         const hl = step.highlights;
         if (!hl) throw new Error("step without highlights");
-        if (/ringed (dark )?square/.test(step.explanation)) {
-          expect(hl.dark).toBeDefined();
-          checked++;
-        }
-        if (step.explanation.includes("shaded square")) {
-          expect(hl.area.length).toBeGreaterThan(0);
-          checked++;
-        }
-        if (step.explanation.includes("highlighted clue")) {
-          expect(hl.clue).toBeDefined();
-          checked++;
-        }
+        expect(step.explanation.includes("outlined dark square")).toBe(
+          hl.dark !== undefined,
+        );
+        expect(step.explanation.includes("outlined clue")).toBe(hl.clue !== undefined);
+        if (hl.dark !== undefined || hl.clue !== undefined) checked++;
       }
     }
-    // All three arms key on a phrase, so a rewording would empty the scan.
-    expect(checked, "no step used any of the three phrases").toBeGreaterThan(0);
+    expect(checked, "no step drew a dark square or a clue").toBeGreaterThan(0);
   });
 });
 
@@ -170,7 +162,7 @@ describe("narration — a second mark on the board is named", () => {
    * or in line with the target, so the tie is the reach relation `discountSet`
    * does guarantee. */
   const TIE =
-    /only this square can still light it|Nothing else can light this|would leave each of them lit/;
+    /[Oo]nly this square can|Nothing else can light this|would leave each of them lit/;
 
   it("no step points bare at a square while a second mark is displayed", () => {
     const kinds = new Set<string>();

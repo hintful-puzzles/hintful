@@ -35,7 +35,12 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newMagnetsDesc } from "./generator.ts";
-import { type MagnetsHighlights, magnetsHint, magnetsKeepTrack } from "./hint.ts";
+import {
+  type MagnetsHighlights,
+  magnetsHint,
+  magnetsHintMarks,
+  magnetsKeepTrack,
+} from "./hint.ts";
 import {
   colors,
   computeSize,
@@ -229,7 +234,8 @@ export const magnetsGame: Game<
   MagnetsMove,
   MagnetsUi,
   MagnetsDrawState,
-  MagnetsMistake
+  MagnetsMistake,
+  MagnetsHighlights
 > = {
   id: "magnets",
 
@@ -260,6 +266,16 @@ export const magnetsGame: Game<
   solve,
   findMistakes,
   hint,
+  hintMarks: {
+    roles: {
+      ring: "what the step decides: one end of a magnet, or a whole tile to make neutral or to mark ?.",
+      outline:
+        'what the step reasons from: the magnet a pole would touch, the tiles elsewhere in the line that can\'t take the pole ("either outlined tile"), and the numbers it reads. The number a step counts with is drawn in the hint color, and the number of a line it only cites, because that line already has all its + or − poles, in a second color: "its row", "the column beside it".',
+      stripes:
+        'the row or column the sentence calls "this row" or "this column", running on through its numbers.',
+    },
+    drawn: magnetsHintMarks,
+  },
   hintKeepTrack: magnetsKeepTrack,
   difficulty,
 

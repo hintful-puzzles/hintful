@@ -70,11 +70,11 @@ describe("hint", () => {
     expect(cur.completed).toBe(true);
   });
 
-  it("gives every step visible evidence (an area to shade or a black to ring)", () => {
+  it("gives every step visible evidence (an area or a black to outline)", () => {
     // The product goal: a hint shows *why*, not just *what*. Across the
-    // whole plan, no step may be a bare conclusion — each carries either a
-    // shaded area (a clue's line of sight / a reach run / the white cells a
-    // cut would isolate) or a ringed black premise cell.
+    // whole plan, no step may be a bare conclusion — each carries an outlined
+    // area (a clue's line of sight / the white cells a cut would isolate), a
+    // striped reach run, or an outlined black premise cell.
     for (const seed of ["range-hint-plan", "range-evidence-2", "range-evidence-3"]) {
       const st = fromSeed("9x6", seed);
       const res = rangeGame.hint?.(st);
@@ -102,7 +102,7 @@ describe("hint", () => {
     // on the board" forbids as scheme-relative and invisible to a color-blind
     // reader.
     const TIE =
-      /right next to the ringed black square|just past (?:it|them|the outlined cells)|along the striped run as far as this cell|the outlined cells around it/;
+      /right next to the outlined black square|just past (?:it|them|the outlined cells?)|along the striped run to the ringed cell|the outlined cells? around it/;
     const kinds = new Set<string>();
     let checked = 0;
     for (const seed of ["range-hint-plan", "range-evidence-2", "range-evidence-3"]) {
@@ -123,12 +123,12 @@ describe("hint", () => {
             `${plan[i].reason.kind}: ${step.explanation} — a second mark is shown but "this cell" is not tied to it`,
           ).toBe(true);
           // Words and picture agree in *both* directions: a sentence saying
-          // "the highlighted N" is pointing at a mark, so the mark must exist.
-          // The clue is named this way rather than as "clue N" because a clue
-          // sits inside its own shaded line of sight and that run can hold a
+          // "this N" is pointing at a mark, so the mark must exist. The clue
+          // is named this way rather than as "clue N" because a clue sits
+          // inside its own shaded line of sight and that run can hold a
           // second clue of the same value — seen live on 9x6, two 13s.
           const hl = step.highlights as RangeHint;
-          if (/the highlighted \d+/i.test(step.explanation)) {
+          if (/\bthis \d+/i.test(step.explanation)) {
             expect(hl.clue, `${step.explanation} — no clue is marked`).toBeDefined();
           } else {
             expect(hl.clue).toBeUndefined();

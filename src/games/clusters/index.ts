@@ -31,6 +31,7 @@ import {
   DEDUCTION_EXHAUSTED,
   FIX_MISTAKES_FIRST,
 } from "../../engine/hint-refusal.ts";
+import { CELL, type MarkRef, type Narration } from "../../engine/hint-words.ts";
 import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -53,7 +54,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { ConfigValues, Point } from "../../engine/types.ts";
 import { newClustersDesc } from "./generator.ts";
-import { say } from "./hint-text.ts";
+import { type Marked, say } from "./hint-text.ts";
 import {
   border,
   type ClustersDrawState,
@@ -281,9 +282,9 @@ function findMistakes(state: ClustersState): readonly ClustersMistake[] {
 // --- hint ------------------------------------------------------------------
 
 /** Highlight roles of a Clusters hint step (the render legend — see the
- * COL_HINT block in render.ts). `target` is the forced cell; `danger` is the
- * tile the refuted coloring would break — the only element the narration
- * calls "ringed" — when that isn't the target itself; `chain` is a lookahead
+ * COL_HINT block in render.ts). `target` is the forced cell, ringed; `danger`
+ * is the tile the refuted coloring would break — the one element the narration
+ * calls "outlined" — when that isn't the target itself; `chain` is a lookahead
  * firing's what-if walk, each cell marked with the color the hypothesis
  * would force it to. No other premise needs a highlight or a palette role:
  * every tile the three local rules read sits orthogonally adjacent to the
@@ -298,12 +299,23 @@ export interface ClustersHintHighlights {
   chain: (OrderedCell & { fill: ClustersFill })[];
 }
 
-/** Narrate the proof by contradiction. The words, and how each ties "this
- * cell" to the ringed tile, are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(d: ClustersDeduction): string {
-  return d.reason.kind === "chain"
-    ? say.chain(d, d.reason.steps.length)
-    : say.direct(d);
+/** Narrate the proof by contradiction, naming the cells `hl` marks. The words,
+ * and how each ties "this cell" to the outlined tile, are
+ * [`hint-text.ts`](./hint-text.ts)'s. */
+function narrate(d: ClustersDeduction, hl: ClustersHintHighlights): Narration {
+  const m: Marked = { target: hl.target, danger: hl.danger ?? null, chain: hl.chain };
+  return d.reason.kind === "chain" ? say.chain(d, m) : say.direct(d, m);
+}
+
+/** What a step's highlights draw: the `drawn` half of Clusters' legend. The
+ * danger tile's double ring and the chain's numbered squares are both
+ * evidence, told apart in the words by their nouns. */
+function clustersHintMarks(hl: ClustersHintHighlights): MarkRef[] {
+  return [
+    { role: "ring", kind: CELL, elements: [hl.target] },
+    { role: "outline", kind: CELL, elements: hl.danger ? [hl.danger] : [] },
+    { role: "outline", kind: CELL, elements: hl.chain.map(({ x, y }) => ({ x, y })) },
+  ] as MarkRef[];
 }
 
 function buildHighlights(d: ClustersDeduction, w: number): ClustersHintHighlights {
@@ -335,11 +347,16 @@ function hint(state: ClustersState): HintResult<ClustersMove, ClustersHintHighli
     return { ok: false, error: DEDUCTION_EXHAUSTED };
   }
   const steps: HintStep<ClustersMove, ClustersHintHighlights>[] = plan.deductions.map(
-    (d) => ({
-      move: { kind: "paint", cells: [{ index: d.index, fill: d.fill }] },
-      explanation: narrate(d),
-      highlights: buildHighlights(d, state.w),
-    }),
+    (d) => {
+      const highlights = buildHighlights(d, state.w);
+      const words = narrate(d, highlights);
+      return {
+        move: { kind: "paint", cells: [{ index: d.index, fill: d.fill }] },
+        explanation: words.text,
+        words,
+        highlights,
+      };
+    },
   );
   return { ok: true, steps };
 }
@@ -380,7 +397,8 @@ export const clustersGame: Game<
   ClustersMove,
   ClustersUi,
   ClustersDrawState,
-  ClustersMistake
+  ClustersMistake,
+  ClustersHintHighlights
 > = {
   id: "clusters",
 
@@ -410,6 +428,14 @@ export const clustersGame: Game<
   solve,
   difficulty,
   hint,
+  hintMarks: {
+    roles: {
+      ring: "the square the step colors. It is drawn in purple, never blue, so it cannot be mistaken for a painted square: the sentence says which color it must be.",
+      outline:
+        "the squares the step reasons from. A double orange ring is on the dot or square where the other color would break a rule. On Normal boards, numbered outlined squares, each holding a small square of red or blue, show what supposing the other color would force, in order, and to which color: they are only a supposition, and nothing is placed there.",
+    },
+    drawn: clustersHintMarks,
+  },
   hintKeepTrack,
   findMistakes,
   textFormat,

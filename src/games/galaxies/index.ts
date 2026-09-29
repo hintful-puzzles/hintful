@@ -53,6 +53,8 @@ import {
   outstanding,
   stepSatisfied,
 } from "./hint.ts";
+import { galaxiesHintMarks } from "./hint-marks.ts";
+import { tell } from "./hint-text.ts";
 import {
   addAssocWithOpposite,
   legalDotsFor,
@@ -860,7 +862,9 @@ function refreshHintStep(
     left.some((l) => l.x === t.x && l.y === t.y),
   );
   if (targets.length === hl.targets.length) return step;
-  return { ...step, highlights: { ...hl, targets } };
+  const highlights = { ...hl, targets };
+  const words = tell(highlights);
+  return { ...step, highlights, words, explanation: words.text };
 }
 
 // --- text format and statusbar -------------------------------------
@@ -949,7 +953,8 @@ export const galaxiesGame: Game<
   GalaxiesMove,
   GalaxiesUi,
   GalaxiesDrawState,
-  GalaxiesMistake
+  GalaxiesMistake,
+  GalaxiesHint
 > = {
   id: "galaxies",
   preferredTileSize: PREFERRED_TILE_SIZE,
@@ -1044,6 +1049,16 @@ export const galaxiesGame: Game<
   hint,
   hintKeepTrack,
   refreshHintStep,
+  hintMarks: {
+    roles: {
+      ring: "what the step decides: the square whose dot it settles, ringed twice, with the square opposite the dot (its partner) ringed once, since the same arrow brings it along; the line it asks you to draw; and the dot the arrow points at.",
+      outline:
+        "what the step reasons from: squares such as the ways out of a square or two partners across a dot, a wall it mirrors, and a dot it cites.",
+      stripes:
+        "the galaxy, or the piece of one, the sentence names: how far a galaxy can still stretch, or the piece cut off from its dot.",
+    },
+    drawn: galaxiesHintMarks,
+  },
 
   /** The rings, not the gesture, and not the information either. Once the
    * preview is honest (`reachableFromDot`), waving the pointer around shows

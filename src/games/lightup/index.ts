@@ -23,6 +23,7 @@ import type {
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
+import { CELL, type MarkRef, type Narration } from "../../engine/hint-words.ts";
 import {
   dimensionParamConfig,
   parseConfigInt,
@@ -42,7 +43,7 @@ import { registerGame } from "../../engine/registry.ts";
 import { SYMMETRY_CHOICES } from "../../engine/symmetric-blacks.ts";
 import type { ConfigValues, Point } from "../../engine/types.ts";
 import { newLightupDesc, puzzleIsGood } from "./generator.ts";
-import { say } from "./hint-text.ts";
+import { type Marked, say } from "./hint-text.ts";
 import {
   colors,
   computeSize,
@@ -330,38 +331,70 @@ function buildHighlights(f: LightupFiring): LightupHint {
  * player is looking at**, so a branch can tell whether a second mark is even
  * on the board before deciding how much to say. The words, and the deixis
  * ties they carry, are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(f: LightupFiring, hl: LightupHint): string {
-  const many = f.cells.length > 1;
+function narrate(f: LightupFiring, hl: LightupHint): Narration {
+  const m: Marked = {
+    targets: hl.targets,
+    area: hl.area,
+    dark: hl.dark ?? null,
+    clue: hl.clue ?? null,
+  };
   switch (f.reason.kind) {
     case "forcedLight": {
       const dark = f.reason.dark;
       return f.cells.some((t) => sameCell(t, dark))
-        ? say.forcedLightSelf(hl.area.length !== 0)
-        : say.forcedLightOther;
+        ? say.forcedLightSelf(m)
+        : say.forcedLightOther(m);
     }
     case "clueSatisfied":
-      return say.clueSatisfied(f.reason.n, many);
+      return say.clueSatisfied(f.reason.n, m);
     case "clueSaturated":
-      return say.clueSaturated(f.reason.need);
+      return say.clueSaturated(m);
     case "discountUnlit": {
       const dark = f.reason.dark;
       return say.discountUnlit(
-        hl.area.length,
         f.reason.set.some((c) => sameCell(c, dark)),
+        m,
       );
     }
     case "discountClue":
-      return say.discountClue;
+      return say.discountClue(m);
   }
+}
+
+/** What a step's highlights draw: the `drawn` half of Light Up's legend. The
+ * evidence takes three glyphs (a recolored clue digit, the dark square's
+ * double ring, the set's shade or ring), all of them the outline role. */
+function lightupHintMarks(hl: LightupHint): MarkRef[] {
+  return [
+    { role: "ring", kind: CELL, elements: hl.targets },
+    { role: "outline", kind: CELL, elements: hl.area },
+    { role: "outline", kind: CELL, elements: hl.dark ? [hl.dark] : [] },
+    { role: "outline", kind: CELL, elements: hl.clue ? [hl.clue] : [] },
+  ] as MarkRef[];
+}
+
+/** `step`'s words narrowed to the targets `left`, as its highlights are. */
+function narrowWords(
+  step: HintStep<LightupMove, LightupHint>,
+  left: readonly Point[],
+): Pick<HintStep<LightupMove, LightupHint>, "words" | "explanation"> {
+  if (!step.words) return { explanation: step.explanation };
+  const kept = new Set(left.map((c) => CELL.key(c)));
+  const words = step.words.narrow(
+    (role, _kind, key) => role !== "ring" || kept.has(key),
+  );
+  return { words, explanation: words.text };
 }
 
 function buildStep(f: LightupFiring): HintStep<LightupMove, LightupHint> {
   // One value, read by both the sentence and the frame — a narration can only
   // be held to "say which mark you mean" if it is given the marks.
   const highlights = buildHighlights(f);
+  const words = narrate(f, highlights);
   return {
     move: { ops: f.cells.map((c) => ({ kind: f.kind, x: c.x, y: c.y })) },
-    explanation: narrate(f, highlights),
+    explanation: words.text,
+    words,
     highlights,
   };
 }
@@ -418,6 +451,7 @@ function hintKeepTrack(
   if (verdict === "onTrack") {
     step.move = { ops: left.map((c) => ({ kind: hl.kind, x: c.x, y: c.y })) };
     step.highlights = { ...hl, targets: left };
+    Object.assign(step, narrowWords(step, left));
   }
   return verdict;
 }
@@ -435,6 +469,7 @@ function refreshHintStep(
   if (left.length === hl.targets.length) return step;
   return {
     ...step,
+    ...narrowWords(step, left),
     move: { ops: left.map((c) => ({ kind: hl.kind, x: c.x, y: c.y })) },
     highlights: { ...hl, targets: left },
   };
@@ -456,7 +491,8 @@ export const lightupGame: Game<
   LightupMove,
   LightupUi,
   LightupDrawState,
-  LightupMistake
+  LightupMistake,
+  LightupHint
 > = {
   id: "lightup",
 
@@ -522,6 +558,14 @@ export const lightupGame: Game<
   difficulty,
 
   hint,
+  hintMarks: {
+    roles: {
+      ring: 'each square the step decides: it takes a bulb, or, when the sentence says it "can\'t hold a bulb", a dot.',
+      outline:
+        "what the step reasons from, told apart by the sentence's nouns and drawn three ways: “the outlined clue” has its number in the hint color; “the outlined dark square”, which still has to be lit, has a purple double ring; and the other squares the reason rests on, such as a clue's bulbs, are shaded when dark and have a green double ring when lit.",
+    },
+    drawn: lightupHintMarks,
+  },
   hintKeepTrack,
   refreshHintStep,
 

@@ -21,10 +21,9 @@ You can also use the numpad (keys 1, 3, 7, 9) to move the cursor diagonally.
 
 **Hint** explains the next step rather than simply making it. Each step decides one cell: either it must be shaded, or it must *stay clear*, which means marking it unshaded (right-click, or Space). The hint reasons from the numbers and your own shaded and unshaded cells, so it carries on from wherever you are.
 
-* **A ring in the hint color, on the cell's own border**, marks the cell the step decides.
-* **A smaller ring inside a cell** marks what the step reasons from: a number, the shaded bricks beside the cell, or the cells beneath it.
+{{hint-marks}}
 
-A *shaded brick*, in the hint's words, is a shaded cell. Where a sentence says "this cell", it means the one with the outer ring; the inner rings are the "ringed" cells it names.
+A *shaded brick*, in the hint's words, is a shaded cell. Where a sentence says "this cell", it means the ringed one; the smaller rings inside cells are the "outlined" cells it names.
 
 Each step is one of the rules at work on a single cell: shading it would make three in a row, leave it with nothing shaded beneath it to rest on, or give a number too many shaded neighbors; or clearing it would leave a shaded brick above with nothing to rest on, or leave a number unable to reach its count.
 

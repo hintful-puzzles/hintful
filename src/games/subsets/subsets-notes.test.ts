@@ -346,10 +346,10 @@ function walkClaims(start: SubsetsState, tally: WalkTally): void {
       expect(m.on).toBe(true);
       expect(solved.known[m.pos]).not.toBe(m.value);
       expect(canHold(board, m.pos, m.value)).toBe(true);
-      // "No highlighted set is a bigger set holding / smaller set inside it."
+      // "No outlined set is a bigger set holding / smaller set inside it."
       expect(hl.cells).toHaveLength(1);
       const via = hl.cells[0].y * board.w + hl.cells[0].x;
-      expect(hl.sets).toEqual(candidateSets(board, via));
+      expect(hl.sets).toEqual(candidateSets(board, via).filter((v) => v !== m.value));
       const head = arrow(board, via, m.pos);
       expect(head || arrow(board, m.pos, via), "a rule-out across no horseshoe").toBe(
         true,

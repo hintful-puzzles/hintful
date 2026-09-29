@@ -14,6 +14,7 @@ import { assertNever } from "../../engine/assert-never.ts";
 import {
   type CandidateMoveAdapter,
   candidateHint,
+  candidateHintMarks,
   keepCandidateHintTrack,
   type Mark,
   refreshCandidateHintStep,
@@ -29,6 +30,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { CELL, type MarkRef } from "../../engine/hint-words.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
 import {
   highlightIsOn,
@@ -60,6 +62,7 @@ import {
   deduceCrossingPlan,
   narrateCrossing,
 } from "./hint-solver.ts";
+import { LISTED } from "./hint-text.ts";
 import {
   type CrossingDrawState,
   type CrossingHint,
@@ -468,12 +471,28 @@ function hintHighlights(puzzle: CrossingPuzzle, f: CrossingFiring): CrossingHint
 function buildSteps(state: CrossingState): HintStep<CrossingMove, CrossingHint>[] {
   const { puzzle } = state;
   const firings = deduceCrossingPlan(state).firings;
-  return firings.map((f, j) => ({
-    move: hintMove(puzzle, f),
-    explanation: narrateCrossing(puzzle, f),
-    highlights: hintHighlights(puzzle, f),
-    ...(j > 0 && sameNoteDeduction(firings[j - 1], f) && { continuesPrevious: true }),
-  }));
+  return firings.map((f, j) => {
+    const words = narrateCrossing(puzzle, f);
+    return {
+      move: hintMove(puzzle, f),
+      explanation: words.text,
+      words,
+      highlights: hintHighlights(puzzle, f),
+      ...(j > 0 && sameNoteDeduction(firings[j - 1], f) && { continuesPrevious: true }),
+    };
+  });
+}
+
+/** What a step's highlights draw: the board's marks, and in the clue list the
+ * number the step writes in (ringed) and the others that still fit
+ * (outlined). The `drawn` half of Crossing's legend. */
+function crossingHintMarks(hl: CrossingHint): MarkRef[] {
+  const target = hl.numberTarget;
+  return [
+    ...candidateHintMarks(hl),
+    { role: "ring", kind: LISTED, elements: target === null ? [] : [target] },
+    { role: "outline", kind: LISTED, elements: hl.numbers.filter((l) => l !== target) },
+  ] as MarkRef[];
 }
 
 type NoteFiring = Extract<CrossingFiring, { technique: "noteDigits" | "noteStrike" }>;
@@ -564,12 +583,15 @@ function refreshHintStep(
     const empty = cells.filter((i) => state.grid[i] === 0);
     if (empty.length === 0) return null;
     if (!step.highlights || empty.length === cells.length) return step;
+    const targets = empty.map((i) => cellAt(state.puzzle, i));
+    const kept = new Set(targets.map((c) => CELL.key(c)));
+    const words = step.words?.narrow(
+      (role, kind, key) => role !== "ring" || kind !== CELL.name || kept.has(key),
+    );
     return {
       ...step,
-      highlights: {
-        ...step.highlights,
-        targets: empty.map((i) => cellAt(state.puzzle, i)),
-      },
+      ...(words && { words, explanation: words.text }),
+      highlights: { ...step.highlights, targets },
     };
   }
   if (m.kind === "pencilAdd") {
@@ -598,7 +620,8 @@ export const crossingGame: Game<
   CrossingMove,
   CrossingUi,
   CrossingDrawState,
-  CrossingMistake
+  CrossingMistake,
+  CrossingHint
 > = {
   id: "crossing",
 
@@ -639,6 +662,15 @@ export const crossingGame: Game<
   solve,
   findMistakes,
   hint,
+  hintMarks: {
+    roles: {
+      ring: "what the step decides, in green: the square it fills, or every square of a run it fills with a whole number, and then the number in the list it writes in, boxed; or a line through a pencil mark, a digit it rules out of that square.",
+      outline: "the numbers in the list that still fit the run, boxed.",
+      stripes:
+        "the run the sentence names: “this across run”, “this down run”. When a step uses both runs through a square, both are striped.",
+    },
+    drawn: crossingHintMarks,
+  },
   hintKeepTrack,
   refreshHintStep,
   /**

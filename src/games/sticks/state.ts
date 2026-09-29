@@ -95,6 +95,8 @@ export interface SticksHint {
   target: number;
   to: Exclude<SticksLine, "none">;
   evidence: number[];
+  /** The grid's width, which the cells above index. */
+  w: number;
 }
 
 // --- params -----------------------------------------------------------------

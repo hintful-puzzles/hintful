@@ -17,8 +17,9 @@ direction of the arrow.
 
 **Hint** shows the next slide rather than simply making it. Nothing in
 Fifteen is forced by logic, so the hint plans a way to finish from
-wherever you are and tells you what each slide is for. The tile to slide
-is filled in the hint's color.
+wherever you are and tells you what each slide is for.
+
+{{hint-marks}}
 
 The plan puts the tiles home one at a time, and each step opens by
 naming the tile it is working on — *"Working on tile 3:"* — which stays

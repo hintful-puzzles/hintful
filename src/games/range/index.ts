@@ -24,6 +24,7 @@ import {
 } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { CELL, type MarkRef, type Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -40,7 +41,7 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
-import { say } from "./hint-text.ts";
+import { CLUE, type Marked, say } from "./hint-text.ts";
 import {
   border,
   colors,
@@ -237,7 +238,7 @@ function findMistakes(state: RangeState): readonly RangeMistake[] {
  * arms), or the non-black cells a cut would isolate — so a beginner can
  * *see* the reasoning, not just the conclusion (the Palisade
  * region-highlight convention). `blackRefs` are black premise cells (an
- * adjacent black) that stay black and are ringed instead. */
+ * adjacent black) that stay black and take a doubled outline instead. */
 export interface RangeHint {
   target: { r: number; c: number; value: RangeCellValue };
   area: Cell[];
@@ -320,22 +321,46 @@ function nonBlackNeighbors(
   return out;
 }
 
-/** Narrate *why* the move is forced, per the deduction rule. The words, and
- * the deixis ties each carries to the highlighted evidence, are
- * [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(reason: HintReason): string {
+const pointOf = (cell: Cell): Point => ({ x: cell.c, y: cell.r });
+
+/** Narrate *why* the move is forced, per the deduction rule, naming the marks
+ * `hl` draws. The words, and the tie each carries from the ringed cell to the
+ * evidence, are [`hint-text.ts`](./hint-text.ts)'s. */
+function narrate(reason: HintReason, hl: RangeHint): Narration {
+  const m: Marked = {
+    target: pointOf(hl.target),
+    area: hl.area.map(pointOf),
+    blacks: (hl.blackRefs ?? []).map(pointOf),
+    run: (hl.hatch ?? []).map(pointOf),
+    clue: hl.clue ? pointOf(hl.clue) : null,
+  };
   switch (reason.kind) {
     case "adjacency":
-      return say.adjacency;
+      return say.adjacency(m);
     case "satisfied":
-      return say.satisfied(reason.n);
+      return say.satisfied(m, reason.n);
     case "overrun":
-      return say.overrun(reason.n);
+      return say.overrun(m, reason.n);
     case "reach":
-      return say.reach(reason.n);
+      return say.reach(m, reason.n);
     case "connect":
-      return say.connect;
+      return say.connect(m);
   }
+}
+
+/** What a step's highlights draw: the `drawn` half of Range's legend. A black
+ * premise is outlined as a cell, and the clue's recolored number as a clue. */
+function rangeHintMarks(hl: RangeHint): MarkRef[] {
+  return [
+    { role: "ring", kind: CELL, elements: [pointOf(hl.target)] },
+    {
+      role: "outline",
+      kind: CELL,
+      elements: [...hl.area, ...(hl.blackRefs ?? [])].map(pointOf),
+    },
+    { role: "outline", kind: CLUE, elements: hl.clue ? [pointOf(hl.clue)] : [] },
+    { role: "stripes", kind: CELL, elements: (hl.hatch ?? []).map(pointOf) },
+  ] as MarkRef[];
 }
 
 /** Build the highlight payload for a forced move: the area to outline and
@@ -387,10 +412,13 @@ function hint(state: RangeState): HintResult<RangeMove, RangeHint> {
   const steps: HintStep<RangeMove, RangeHint>[] = plan.map((m) => {
     const value = gridValueToCell(m.value);
     const target = { r: m.r, c: m.c, value };
+    const highlights = buildHighlights(m.grid, state.w, state.h, m.reason, target);
+    const words = narrate(m.reason, highlights);
     return {
       move: { sets: [{ r: m.r, c: m.c, value }] },
-      explanation: narrate(m.reason),
-      highlights: buildHighlights(m.grid, state.w, state.h, m.reason, target),
+      explanation: words.text,
+      words,
+      highlights,
     };
   });
   return { ok: true, steps };
@@ -415,7 +443,8 @@ export const rangeGame: Game<
   RangeMove,
   RangeUi,
   RangeDrawState,
-  RangeMistake
+  RangeMistake,
+  RangeHint
 > = {
   id: "range",
 
@@ -438,6 +467,16 @@ export const rangeGame: Game<
 
   solve,
   hint,
+  hintMarks: {
+    roles: {
+      ring: "the cell the step decides.",
+      outline:
+        "what the step reasons from: the cells a clue already sees, the cells around one that black would cut off, or a black square beside it, which takes a doubled outline. The clue the step counts from has its number drawn in the hint color.",
+      stripes:
+        "the run a clue has to see along, from the clue as far as the ringed cell.",
+    },
+    drawn: rangeHintMarks,
+  },
   hintKeepTrack,
   findMistakes,
 

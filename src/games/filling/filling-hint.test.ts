@@ -170,6 +170,9 @@ describe("hintKeepTrack", () => {
     // The step shrank to the remaining two squares.
     expect((step.highlights as FillingHint).cells).toHaveLength(2);
     expect((step.highlights as FillingHint).cells).not.toContain(hl.cells[0]);
+    // …and its words with it: the sentence rings the two squares left.
+    expect(step.words?.refs.find((r) => r.role === "ring")?.elements).toHaveLength(2);
+    expect(step.explanation).toBe(step.words?.text);
   });
 });
 

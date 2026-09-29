@@ -95,7 +95,9 @@ describe("the literal words may not say what a reference must", () => {
   it("refuses deixis and every mark adjective in a literal", () => {
     expect(() => phrase`In this row, 3 goes here.`).toThrow(/"this"/);
     expect(() => phrase`The striped row is full.`).toThrow(/striped/);
-    expect(() => phrase`The shaded squares are dark.`).toThrow(/shaded/);
+    expect(() => phrase`The highlighted squares are dark.`).toThrow(/highlighted/);
+    // A shading genre's cell state, not a mark (hint-words.ts's retired list).
+    expect(phrase`The cell must be shaded.`.text).toBe("The cell must be shaded.");
     expect(() => Narration.plain("these cells")).toThrow(/these/);
   });
 

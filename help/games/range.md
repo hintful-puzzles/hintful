@@ -35,16 +35,7 @@ it asks you to fix the highlighted mistakes first. Its sentences call a
 square a *cell*, and when one says a cell "must be white" it means
 you can mark it with a dot.
 
-* **A ring in the hint color** marks the cell the step decides.
-* **A number drawn in the hint color** is "the highlighted" clue the
-  step counts from.
-* **An outline in a second color** marks the white cells it reasons
-  from: the cells a clue already sees, or the cells around one that
-  black would cut off.
-* **Stripes** mark "the striped run": the stretch a clue has to see
-  along, as far as the ringed cell.
-* **A black square with a double ring** in a third color is the black
-  square the step reasons from.
+{{hint-marks}}
 
 The ideas it teaches:
 

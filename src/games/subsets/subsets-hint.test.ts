@@ -309,17 +309,19 @@ describe("hint", () => {
       // also names the highlighted thing it reasons from (attention → deduction
       // → action).
       expect(step.explanation).toMatch(
-        step.move.kind === "rule" ? /rules .* out here/ : /(mark .*present|clear)/i,
+        step.move.kind === "rule"
+          ? /rules .* out of this cell/
+          : /(mark .*present|clear)/i,
       );
       if (!step.continuesPrevious) {
-        expect(step.explanation).toMatch(/highlighted (cell|set)/i);
+        expect(step.explanation).toMatch(/outlined (cell|set)/i);
       }
     }
   });
 
   it("groups a multi-letter firing into one continuesPrevious journey", () => {
     // Find a firing that decides >1 letter, then check hint emits it as a lead
-    // + continuation legs sharing one highlight object.
+    // + continuation legs on one cell, each ringing its own letter.
     const hit = findFiring((d) => d.sets.length > 1);
     expect(hit).not.toBeNull();
     if (!hit) return;
@@ -330,7 +332,12 @@ describe("hint", () => {
     const firstLen = deduceHintPlan(hit.state).deductions[0].sets.length;
     for (let k = 1; k < firstLen; k++) {
       expect(res.steps[k].continuesPrevious).toBe(true);
-      expect(res.steps[k].highlights).toBe(res.steps[0].highlights);
+      const hl = res.steps[k].highlights as SubsetsHintHighlights;
+      const lead = res.steps[0].highlights as SubsetsHintHighlights;
+      const move = res.steps[k].move;
+      expect(hl.target).toEqual(lead.target);
+      expect(hl.sets).toEqual(lead.sets);
+      expect(move.kind === "set" && hl.slot === move.bit).toBe(true);
     }
     expect(res.steps[0].continuesPrevious).toBeUndefined();
   });
@@ -565,11 +572,9 @@ describe("subgoal continuation narration", () => {
         res.steps.forEach((st, k) => {
           if (!st.continuesPrevious) return;
           checked++;
-          // The referent is explicit — "the highlighted cell/set(s)" — never a
+          // The referent is explicit — "the outlined cell/set(s)" — never a
           // sentence-leading bare "It"/"They"/"None of them".
-          expect(st.explanation).toMatch(
-            /the highlighted (cell|sets?)|highlighted set/,
-          );
+          expect(st.explanation).toMatch(/the outlined (cell|sets?)|outlined set/);
           expect(st.explanation).not.toMatch(/^(It|They|None of them)\b/);
           // A letter after a letter of the same cell continues that cell's
           // sub-goal; a firing's lead after its rule-outs states its own.
@@ -606,8 +611,12 @@ describe("collapse exclusion (#2 — why not X)", () => {
               /For instance, .* (can't go here|already placed)/,
             );
             const hl = lead.highlights as SubsetsHintHighlights;
-            // The blocker cell is highlighted so the clause has a referent.
+            // The blocker cell is outlined so the clause has a referent, and
+            // only on the leg that says the clause.
             expect(hl.cells.length).toBeGreaterThan(0);
+            const next = res.steps[d.marks.length + 1];
+            if (next?.continuesPrevious)
+              expect((next.highlights as SubsetsHintHighlights).cells).toEqual([]);
             found = true;
           }
           break;

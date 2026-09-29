@@ -153,7 +153,7 @@ describe("hint", () => {
       if (!res?.ok) throw new Error("expected a plan");
       for (const step of res.steps) {
         const hl = step.highlights as UnrulyHint;
-        expect(hl.line.length > 0 || hl.ring.length > 0).toBe(true);
+        expect(hl.line.length > 0 || hl.outline.length > 0).toBe(true);
         // A hatched line is one whole row or column, through the target.
         if (hl.line.length > 0) {
           const ti = hl.target.y * st.w2 + hl.target.x;

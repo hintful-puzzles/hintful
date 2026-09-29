@@ -3,33 +3,60 @@
  *
  * The deduction decides which sentence and with what values (`index.ts`'s
  * `narrate`); this file decides only how it reads: the indication (the spotted
- * pattern) first, the conclusion in the necessity voice, terse. `many` says
- * whether the step forces several cells or one.
+ * pattern) first, the conclusion in the necessity voice, terse. Every word that
+ * points at the board is a reference to the mark it points at
+ * (`engine/hint-words.ts`, `hint-marks.ts`).
  */
 
-type Orient = "row" | "column";
+import {
+  CELL,
+  mark,
+  type Narration,
+  phrase,
+  pronoun,
+} from "../../engine/hint-words.ts";
+import type { Point } from "../../engine/types.ts";
+import { CLUE, LINE } from "./hint-marks.ts";
 
-const these = (many: boolean): string => (many ? "these cells" : "this cell");
-const they = (many: boolean): string => (many ? "they" : "it");
+/** What a step marks: the cells it decides, the placed cells it reasons from,
+ * and its line, whose clue is `line` too. */
+export interface Marked {
+  cells: readonly Point[];
+  refs: readonly Point[];
+  line: number;
+  orient: "row" | "column";
+}
+
+const theseCells = (m: Marked): Narration => mark.this("ring", CELL, m.cells, "cell");
+/** "it" or "they" for the decided cells, re-rendered when a step shrinks. */
+const they = (m: Marked): Narration =>
+  mark.as("ring", CELL, m.cells, (els) =>
+    pronoun(CELL, els) === "it" ? "it" : "they",
+  );
+const thisLine = (m: Marked): Narration =>
+  mark.this("stripes", LINE, [m.line], m.orient);
+const clue = (m: Marked, words: string): Narration =>
+  mark.as("outline", CLUE, [m.line], words);
+/** ", given the outlined cells" when the step cites placed cells. */
+const given = (m: Marked): Narration | string =>
+  m.refs.length > 0 ? phrase`, given ${mark.the("outline", CELL, m.refs, "cell")}` : "";
 
 export const say = {
   /** A run of `run` that can slide only `slack` cells along the line. */
-  overlap: (orient: Orient, run: number, slack: number, many: boolean): string =>
+  overlap: (m: Marked, run: number, slack: number): Narration =>
     slack === 0
-      ? `This ${orient}'s run of ${run} has nowhere to slide, so ${these(many)} must be black.`
-      : `This ${orient}'s run of ${run} can slide only ${slack} cell${
+      ? phrase`${thisLine(m).capitalized()}'s ${clue(m, `run of ${run}`)} has nowhere to slide${given(m)}, so ${theseCells(m)} must be black.`
+      : phrase`${thisLine(m).capitalized()}'s ${clue(m, `run of ${run}`)} can slide only ${slack} cell${
           slack > 1 ? "s" : ""
-        }, so ${these(many)} must be black.`,
+        }${given(m)}, so ${theseCells(m)} must be black.`,
 
-  unreachable: (orient: Orient, many: boolean): string =>
-    `No run can reach ${these(many)} in this ${orient}, so ${they(many)} must be white.`,
+  unreachable: (m: Marked): Narration =>
+    phrase`No run of ${thisLine(m)}'s ${clue(m, "clue")} can reach ${theseCells(m)}, so ${they(m)} must be white.`,
 
-  lineEmpty: (orient: Orient, many: boolean): string =>
-    `This ${orient} has no clues, so ${these(many)} must be white.`,
+  lineEmpty: (m: Marked): Narration =>
+    phrase`${thisLine(m).capitalized()} has no clues, so ${theseCells(m)} must be white.`,
 
   /** Every fit of the line's runs agrees these cells are `black`, or white. */
-  intersection: (orient: Orient, black: boolean, many: boolean): string =>
-    black
-      ? `Whichever way this ${orient}'s runs fit, ${these(many)} must be black.`
-      : `Whichever way this ${orient}'s runs fit, ${these(many)} must be white.`,
+  intersection: (m: Marked, black: boolean): Narration =>
+    phrase`Whichever way ${thisLine(m)}'s ${clue(m, "runs")} fit, ${theseCells(m)} must be ${black ? "black" : "white"}.`,
 };

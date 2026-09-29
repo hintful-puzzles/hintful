@@ -29,6 +29,7 @@ import { executeMove } from "./moves.ts";
 import { type PearlReason, pearlRecordingPass, pearlSolve } from "./solver.ts";
 import {
   CORNER,
+  D,
   DIFF_COUNT,
   DIFF_EASY,
   DIFF_TRICKY,
@@ -39,6 +40,7 @@ import {
   type PearlMove,
   type PearlParams,
   type PearlState,
+  R,
   STRAIGHT,
 } from "./state.ts";
 
@@ -219,13 +221,15 @@ describe("every narratable premise the corpus reaches is reached", () => {
   });
 
   it("the arms no corpus board reaches still read as English, in the necessity voice", () => {
-    for (const text of [
-      say.closesEarly("lines"),
-      say.closesEarlyThrough("lines"),
-      say.closesEarlyWhite("across", "upDown", "lines"),
-      say.closesEarlyWhite("upDown", "across", "lines"),
-      say.squareFull(1),
-      say.squareFull(2),
+    const one = { own: [{ sq: 0, dir: R }], black: [], white: [], area: [1] };
+    const two = { ...one, own: [...one.own, { sq: 0, dir: D }] };
+    for (const { text } of [
+      say.closesEarly("lines", one),
+      say.closesEarlyThrough("lines", two),
+      say.closesEarlyWhite("across", "upDown", "lines", two),
+      say.closesEarlyWhite("upDown", "across", "lines", two),
+      say.squareFull(one),
+      say.squareFull(two),
     ]) {
       expect(text.length, text).toBeLessThanOrEqual(120);
       expect(text).toMatch(/must|can't/);

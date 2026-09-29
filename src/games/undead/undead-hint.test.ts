@@ -37,10 +37,10 @@ function gen(p: UndeadParams, seed: string): UndeadState {
   return newState(p, desc);
 }
 
-function fullPlan(st: UndeadState): HintStep<UndeadMove>[] {
+function fullPlan(st: UndeadState): HintStep<UndeadMove, UndeadHint>[] {
   const r = undeadGame.hint?.(st);
   if (!r?.ok) throw new Error(`hint refused: ${r && !r.ok ? r.error : "no hint"}`);
-  return r.steps as HintStep<UndeadMove>[];
+  return r.steps;
 }
 
 /** Apply a whole plan in order and report whether it reaches solved. */
@@ -242,7 +242,7 @@ describe("undead hintKeepTrack", () => {
   function firstStepOfType(
     st: UndeadState,
     type: UndeadMove["type"],
-  ): HintStep<UndeadMove> {
+  ): HintStep<UndeadMove, UndeadHint> {
     // Walk the plan, applying steps, until we reach one of the requested type.
     let s = st;
     for (let guard = 0; guard < 200; guard++) {

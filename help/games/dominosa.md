@@ -23,9 +23,7 @@ The reference panel lists every domino in the set, marking the ones you have pla
 
 **Hint** explains the next step rather than simply making it. It reasons from the dominoes you have placed and the lines you have drawn between numbers, so it carries on from wherever you are, as long as none of them is wrong; if one is, it asks you to fix the highlighted mistakes first. A *spot*, in its words, is a pair of neighboring squares a domino could cover.
 
-* **A ring round two squares** marks the spot the step is about: where a domino must go, or where one can't.
-* **A thick line in the hint color** between those two squares is a line the step asks you to draw, saying no domino goes there.
-* **Outlined squares** are the ones the reason rests on, such as a square with only one neighbor left to pair with, or the spots left for a domino.
+{{hint-marks}}
 
 When one reason rules out several spots, the hint shows them one after another, saying "for the same reason" rather than repeating it.
 

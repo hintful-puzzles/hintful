@@ -33,10 +33,7 @@ Check & Save treats a set ruled out of the cell it belongs in as a mistake.
 
 In its words, to *mark* a letter *present* is to add it (left-click its position, or Enter), and to *clear* a letter is to rule it out (right-click, or Space).
 
-* **A frame in the hint color around one letter's position** is the letter the step decides. A step that rules a whole set out frames the whole cell instead, and boxes that set in the tally.
-* **A frame in a second color** around a cell is what the hint calls "the highlighted cell": the neighbor across a horseshoe it reasons from, or a cell where a set is already placed.
-* **Sets boxed in the tally in that second color** are "the highlighted sets": the sets the step is counting, such as the only ones that can still go in the cell.
-* **A cell framed in the spotlight color** (the one *Where can this go?* uses) is the one cell a set still fits, when the hint says a set can go nowhere else.
+{{hint-marks}}
 
 While a hint is on show, the tally strikes through the sets already ruled out of the cell the step is about, just as it does for a cell in focus.
 

@@ -25,6 +25,7 @@ import {
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
+import { CELL, type MarkRef, type Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -40,7 +41,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSinglesDesc } from "./generator.ts";
-import { say } from "./hint-text.ts";
+import { type Marked, say } from "./hint-text.ts";
 import {
   border,
   colors,
@@ -259,8 +260,9 @@ function findMistakes(state: SinglesState): readonly SinglesMistake[] {
 /** Highlight data for a Singles hint step. `targets` are the cell(s) the
  * displayed deduction forces, each with the mark it forces; a firing that
  * forces several cells at once carries them all. `evidence` are the
- * deduction's premise cells — `redraw` outlines an undecided one and rings a
- * decided black/circle cell whose state *is* the reason. `strand` is the
+ * deduction's premise cells — `redraw` outlines an undecided one in the
+ * evidence color and a decided black/circle cell, whose state *is* the reason,
+ * in that state's own color. `strand` is the
  * distinct corner cell a 2×2-corner deduction is protecting from being
  * sealed off — drawn in its own color so the player can tell the corner
  * at risk apart from the matching numbers that share a value. */
@@ -307,48 +309,80 @@ const opValue = (op: number): "black" | "circle" =>
 
 const sameCell = (a: Point, b: Point): boolean => a.x === b.x && a.y === b.y;
 
-/** Narrate *why* the grouped firing forces its cell(s), reading each number the
- * sentence names off the board. The words are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(reason: SinglesReason, targets: Point[], state: SinglesState): string {
+/** Narrate *why* the grouped firing forces its cell(s), naming the marks `hl`
+ * draws and reading each number the sentence names off the board. The words are
+ * [`hint-text.ts`](./hint-text.ts)'s. */
+function narrate(
+  reason: SinglesReason,
+  hl: SinglesHint,
+  state: SinglesState,
+): Narration {
   const numAt = (c: Point): number => state.nums[c.y * state.w + c.x];
+  const m: Marked = {
+    targets: hl.targets.map(({ x, y }) => ({ x, y })),
+    evidence: hl.evidence,
+    strand: hl.strand,
+    line: hl.line,
+    num: numAt,
+  };
+  const targets = m.targets;
   switch (reason.kind) {
     case "sandwich":
-      return say.sandwich(numAt(reason.ends[0]), numAt(targets[0]));
+      return say.sandwich(m, numAt(reason.ends[0]));
     case "pair":
-      return say.pair(numAt(reason.pair[0]));
-    case "corner4":
-      return say.corner4(numAt(reason.block[0]));
+      return say.pair(m, numAt(reason.pair[0]));
+    case "corner4": {
+      const [corner, side1, side2, inner] = reason.block;
+      return say.corner4(m, numAt(corner), corner, [side1, side2], inner);
+    }
     case "corner3": {
       // Branch A shades the corner itself; branch B the inner cell, to save
-      // the (separately highlighted) corner.
-      const m = numAt(reason.matched[1]);
+      // the (separately outlined) corner.
+      const n = numAt(reason.matched[1]);
       const t = numAt(targets[0]);
       return targets.some((tg) => sameCell(tg, reason.corner))
-        ? say.corner3Corner(t, m)
-        : say.corner3Inner(t, m, numAt(reason.corner));
+        ? say.corner3Corner(m, t, n)
+        : say.corner3Inner(m, t, n, numAt(reason.corner));
     }
-    case "corner2":
-      return say.corner2(
-        numAt(reason.pair[0]),
-        numAt(reason.corner),
-        numAt(targets[0]),
+    case "corner2": {
+      const { corner, pair } = reason;
+      const side = pair.find(
+        (p) => Math.abs(p.x - corner.x) + Math.abs(p.y - corner.y) === 1,
       );
-    case "offset":
+      if (!side) throw new Error("corner2: the pair has no square beside the corner");
+      return say.corner2(m, pair, side, numAt(pair[0]), numAt(corner));
+    }
+    case "offset": {
       // quad = [A1, B1, A2, B2]: the A-pair shares one line, the B-pair the next.
+      const [a1, b1, a2, b2] = reason.quad;
       return say.offset(
-        numAt(reason.quad[0]),
-        numAt(reason.quad[1]),
-        reason.quad[0].x === reason.quad[2].x ? "column" : "row",
+        m,
+        [a1, a2],
+        [b1, b2],
+        numAt(a1),
+        numAt(b1),
+        a1.x === a2.x ? "column" : "row",
       );
+    }
     case "adjBlack":
-      return say.adjBlack(targets.map((t) => numAt(t)));
+      return say.adjBlack(m);
     case "sameLine":
-      return say.sameLine(numAt(targets[0]), targets.length > 1);
+      return say.sameLine(m, numAt(targets[0]));
     case "boxedIn":
-      return say.boxedIn(numAt(targets[0]));
+      return say.boxedIn(m, numAt(targets[0]));
     case "split":
-      return say.split(numAt(targets[0]));
+      return say.split(m, numAt(targets[0]));
   }
+}
+
+/** What a step's highlights draw: the `drawn` half of Singles' legend. The
+ * protected corner is an outline too, in a color of its own. */
+function singlesHintMarks(hl: SinglesHint): MarkRef[] {
+  return [
+    { role: "ring", kind: CELL, elements: hl.targets.map(({ x, y }) => ({ x, y })) },
+    { role: "outline", kind: CELL, elements: [...hl.evidence, ...hl.strand] },
+    { role: "stripes", kind: CELL, elements: hl.line },
+  ] as MarkRef[];
 }
 
 /** The premise cells a reason reasons over (its visible evidence — the
@@ -417,15 +451,18 @@ function hint(state: SinglesState): HintResult<SinglesMove, SinglesHint> {
       const evidence = evidenceOf(reason).filter(
         (c) => !targetKey.has(key(c)) && !strandKey.has(key(c)),
       );
+      const highlights: SinglesHint = {
+        targets,
+        evidence,
+        strand,
+        line: namedLine(reason, targets, state.w, state.h),
+      };
+      const words = narrate(reason, highlights, state);
       return {
         move: { sets: targets.map((t) => ({ ...t })) },
-        explanation: narrate(reason, targets, state),
-        highlights: {
-          targets,
-          evidence,
-          strand,
-          line: namedLine(reason, targets, state.w, state.h),
-        },
+        explanation: words.text,
+        words,
+        highlights,
       };
     },
   );
@@ -458,6 +495,13 @@ function hintKeepTrack(
   if (verdict === "onTrack") {
     step.move = { sets: left.map((t) => ({ ...t })) };
     step.highlights = { ...hl, targets: left };
+    if (step.words) {
+      const kept = new Set(left.map((t) => CELL.key(t)));
+      step.words = step.words.narrow(
+        (role, kind, key) => role !== "ring" || kind !== CELL.name || kept.has(key),
+      );
+      step.explanation = step.words.text;
+    }
   }
   return verdict;
 }
@@ -479,7 +523,8 @@ export const singlesGame: Game<
   SinglesMove,
   SinglesUi,
   SinglesDrawState,
-  SinglesMistake
+  SinglesMistake,
+  SinglesHint
 > = {
   id: "singles",
 
@@ -508,6 +553,15 @@ export const singlesGame: Game<
   solve,
   difficulty,
   hint,
+  hintMarks: {
+    roles: {
+      ring: "the square the step decides. It is drawn empty: the sentence says whether to shade it or circle it.",
+      outline:
+        "the squares the step reasons from, such as two matching numbers one square apart. One you have already shaded or circled is outlined in a color of its own, one for shaded and another for circled, and the corner a step keeps from being boxed in has a color of its own too.",
+      stripes: 'the row or column the sentence calls "this row" or "this column".',
+    },
+    drawn: singlesHintMarks,
+  },
   hintKeepTrack,
   findMistakes,
 

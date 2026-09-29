@@ -6,8 +6,10 @@
  */
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
+import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { newMagnetsDesc } from "./generator.ts";
 import {
   type MagnetsHighlights,
@@ -15,7 +17,15 @@ import {
   recordingPass,
   seedSolver,
 } from "./hint.ts";
-import { type Axis, type Cause, type OnlyEnd, type RuleOut, say } from "./hint-text.ts";
+import {
+  type Axis,
+  type Cause,
+  type LineMarks,
+  type OnlyEnd,
+  type RuleOut,
+  SQUARE,
+  say,
+} from "./hint-text.ts";
 import { magnetsGame } from "./index.ts";
 import type { MagnetsReason } from "./solver.ts";
 import {
@@ -314,7 +324,7 @@ describe("a count premise shows why the rest of its line is ruled out", () => {
     );
     if (!step) throw new Error("the plan never neutralizes the top left domino");
     expect(step.explanation).toContain(
-      "it touches a +, and a − there would overfill its column",
+      "it touches a +, and a − there would exceed its column's clue",
     );
     // "Its column" is the only line named, so it is hatched, with its count.
     expect(step.highlights?.line).toEqual({ roworcol: COLUMN, num: 1 });
@@ -336,11 +346,15 @@ describe("a count premise shows why the rest of its line is ruled out", () => {
 describe("magnets hint sentences", () => {
   const axes: Axis[] = ["row", "column"];
   const poles = [POSITIVE, NEGATIVE];
+  // The marks a sentence cites change none of its words, so any will do.
   const causes: Cause[] = axes.flatMap((axis) => [
-    { kind: "touch" as const },
-    { kind: "full" as const, axis, line: 0, marked: false },
-    { kind: "full" as const, axis, line: 1, marked: true },
+    { kind: "touch" as const, at: 1 },
+    { kind: "full" as const, axis, line: 0, marked: false, clue: 0, hatched: null },
+    { kind: "full" as const, axis, line: 1, marked: true, clue: 1, hatched: null },
   ]);
+  const T = [0];
+  const M: LineMarks = { line: { roworcol: 0, num: 0 }, clues: [0], targets: T };
+  const rest = (why: RuleOut[], tiles: number) => ({ why, ruled: [2], tiles });
 
   /** Every reason a square of a line counted along `axis` can have: its own
    * met line always crosses the counted one, and its partner's met line is the
@@ -348,12 +362,12 @@ describe("magnets hint sentences", () => {
   const ruleOutsFor = (axis: Axis): RuleOut[] => {
     const across: Axis = axis === "row" ? "column" : "row";
     return [
-      { kind: "touch" },
-      { kind: "full", axis: across },
-      { kind: "partnerTouch" },
-      { kind: "partnerFull", axis, place: "same" },
-      { kind: "partnerFull", axis, place: "beside" },
-      { kind: "partnerFull", axis: across, place: "across" },
+      { kind: "touch", at: [3] },
+      { kind: "full", axis: across, clues: [4] },
+      { kind: "partnerTouch", at: [3] },
+      { kind: "partnerFull", axis, place: "same", clues: [5] },
+      { kind: "partnerFull", axis, place: "beside", clues: [6] },
+      { kind: "partnerFull", axis: across, place: "across", clues: [7] },
     ];
   };
 
@@ -384,7 +398,7 @@ describe("magnets hint sentences", () => {
               ? [0, 1, 2, 3]
               : [0]) {
               out.push({
-                text: say.lineExact(axis, pole, n, elsewhere, tiles),
+                text: say.lineExact(M, axis, pole, n, rest(elsewhere, tiles)).text,
                 reasoned: elsewhere.length > 0,
               });
               // A far end lying along the line is ruled out through the ringed
@@ -397,12 +411,20 @@ describe("magnets hint sentences", () => {
                   .filter(
                     (why) => !(why.kind === "partnerFull" && why.place === "beside"),
                   )
-                  .map((why) => ({ kind: "along" as const, why })),
+                  .map((why) => ({ kind: "along" as const, why, far: 8 })),
               ];
               for (const end of ends)
                 for (const along of [0, 1]) {
                   out.push({
-                    text: say.onlyEndLeft(axis, pole, n, along, elsewhere, tiles, end),
+                    text: say.onlyEndLeft(
+                      M,
+                      axis,
+                      pole,
+                      n,
+                      along,
+                      rest(elsewhere, tiles),
+                      end,
+                    ).text,
                     reasoned: elsewhere.length > 0 || end.kind === "along",
                   });
                 }
@@ -418,31 +440,35 @@ describe("magnets hint sentences", () => {
     const out: string[] = everyCountSentence()
       .filter((s) => !s.reasoned)
       .map((s) => s.text);
+    const said: Narration[] = [];
     for (const pole of poles) {
-      out.push(say.bothEndsTouch(pole));
+      said.push(say.bothEndsTouch(T, pole, [1, 2]));
       for (const c of causes) {
-        out.push(say.magnetHere(pole, c), say.magnetThere(pole, c));
+        said.push(say.magnetHere(T, 9, pole, c), say.magnetThere(T, 9, pole, c));
         if (c.kind === "full") {
-          out.push(say.alongFull(pole, c));
+          said.push(say.alongFull(T, pole, c));
           for (const d of causes)
             if (d.kind === "full" && d.axis === c.axis)
-              out.push(say.bothInFull(pole, c, d));
+              said.push(say.bothInFull(T, pole, c, d));
         }
         for (const d of causes) {
-          out.push(say.neitherEnd(pole, c, d), say.oneEndNeither(c, d));
+          said.push(say.neitherEnd(T, pole, c, d), say.oneEndNeither(T, c, d));
         }
       }
       for (const axis of axes) {
-        for (const n of [1, 2, 9]) out.push(say.everyDominoNeeded(axis, pole, n));
-        out.push(say.oddGap(axis, pole));
+        for (const n of [1, 2, 9]) said.push(say.everyDominoNeeded(M, axis, pole, n));
+        said.push(say.oddGap(M, axis, pole));
       }
     }
-    for (const axis of axes) {
-      out.push(say.polesEverywhere(axis), say.noPolesLeft(axis));
-      for (const n of [1, 2, 9]) {
-        out.push(say.neutralExact(axis, n), say.oneNeutralLeft(axis, n));
+    // A line with one clue stripped says "clue", with both "clues".
+    for (const m of [M, { ...M, clues: [0, 1] }])
+      for (const axis of axes) {
+        said.push(say.polesEverywhere(m, axis), say.noPolesLeft(m, axis));
+        for (const n of [1, 2, 9]) {
+          said.push(say.neutralExact(m, axis, n, [2]), say.oneNeutralLeft(m, axis, n));
+        }
       }
-    }
+    out.push(...said.map((s) => s.text));
     return out;
   }
 
@@ -493,26 +519,34 @@ describe("magnets hint sentences", () => {
 
   it("lists each reason once, in a fixed order", () => {
     const s = say.lineExact(
+      M,
       "row",
       POSITIVE,
       2,
-      [{ kind: "partnerTouch" }, { kind: "touch" }, { kind: "touch" }],
-      0,
+      rest(
+        [
+          { kind: "partnerTouch", at: [3] },
+          { kind: "touch", at: [4] },
+          { kind: "touch", at: [5] },
+        ],
+        0,
+      ),
     );
-    expect(s).toContain("a + anywhere else would touch a + or put a − beside a −,");
+    expect(s.text).toContain(
+      "a + anywhere else would touch a + or put a − beside a −,",
+    );
+    // One clause names both touched poles.
+    const touched = s.refs.find((r) => r.kind === SQUARE && r.elements.includes(4));
+    expect(touched?.elements).toEqual([4, 5]);
   });
 
   it("names the ruled-out squares by their outlined tiles when it outlines them", () => {
-    const partner: RuleOut[] = [{ kind: "partnerTouch" }];
-    expect(say.lineExact("row", POSITIVE, 2, partner, 1)).toContain(
-      "a + in the outlined tile would put a − beside a −",
-    );
-    expect(say.lineExact("row", POSITIVE, 2, partner, 2)).toContain(
-      "a + in either outlined tile would",
-    );
-    expect(say.lineExact("row", POSITIVE, 2, partner, 3)).toContain(
-      "a + in any outlined tile would",
-    );
+    const partner: RuleOut[] = [{ kind: "partnerTouch", at: [3] }];
+    const said = (tiles: number) =>
+      say.lineExact(M, "row", POSITIVE, 2, rest(partner, tiles)).text;
+    expect(said(1)).toContain("a + in the outlined tile would put a − beside a −");
+    expect(said(2)).toContain("a + in either outlined tile would");
+    expect(said(3)).toContain("a + in any outlined tile would");
   });
 
   it("never cites a marked magnet on a board with none", () => {
@@ -530,10 +564,11 @@ describe("magnets hint sentences", () => {
   });
 
   it("speaks the singular at one", () => {
-    expect(say.lineExact("row", POSITIVE, 1, [], 0)).toContain("one more +");
-    expect(say.lineExact("row", POSITIVE, 1, [], 0)).toContain("this square");
-    expect(say.oneNeutralLeft("column", 1)).toContain("this tile");
-    expect(say.neutralExact("row", 1)).toContain("this one");
+    const one = say.lineExact(M, "row", POSITIVE, 1, rest([], 0)).text;
+    expect(one).toContain("one more +");
+    expect(one).toContain("this square");
+    expect(say.oneNeutralLeft(M, "column", 1).text).toContain("this tile");
+    expect(say.neutralExact(M, "row", 1, [2]).text).toContain("this one");
   });
 
   it("rings as many squares as the sentence names, in every plan", () => {
@@ -564,6 +599,8 @@ describe("magnets hint sentences", () => {
         "2....,1222..,21...,....03,LRLRTTLRTBBLRBTLRLRBLRLRTLRLRB",
       ],
     ];
+    const legend = magnetsGame.hintMarks;
+    if (!legend) throw new Error("magnets declares no hintMarks");
     const boards = [
       ...CORPUS,
       ...pinned.map(([p, desc]) => ({ label: desc, state: newState(p, desc) })),
@@ -574,6 +611,10 @@ describe("magnets hint sentences", () => {
         const res = hint(state);
         if (!res.ok) break;
         for (const step of res.steps as HintStep<MagnetsMove, MagnetsHighlights>[]) {
+          // Its words name exactly its marks, on every board this walks.
+          expect(bindingDefects(step, legend), `${label}: ${step.explanation}`).toEqual(
+            [],
+          );
           const rings = step.highlights?.targets.length;
           const many = /\bthese (\d+) squares\b/.exec(step.explanation);
           if (many) {

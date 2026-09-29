@@ -14,6 +14,7 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import {
   type GalaxiesHint,
   galaxiesHintPlan,
@@ -194,30 +195,34 @@ describe("each deduction is narrated in its own vocabulary", () => {
     ],
     [
       "the only dot that could own a cell",
-      "Only the ringed white dot can own this cell: for any other dot, its partner cell is off the board or on a dot.",
+      "Only the ringed white dot can own this cell and its partner: any other dot mirrors it off the board or onto a dot.",
     ],
     [
       "the limit of a galaxy's reach",
-      "No other galaxy can reach this cell, so it must belong to the ringed white dot, whose reach the stripes show.",
+      "No other galaxy reaches this cell, so it and its partner must join the ringed white dot, whose reach the stripes show.",
     ],
     [
       "a wall mirrored about the dot",
-      "The outlined cells are partners across the white dot, so the marked wall beside one must be matched beside the other.",
+      "The outlined cells are partners across the white dot, so the outlined wall must be mirrored by this wall.",
     ],
     [
       "a wall mirrored off the board's edge",
-      "The outlined cells are partners across the white dot; one meets the board's edge, so the other must be walled to match.",
+      "The outlined cells are partners across the white dot; one meets the board's edge, so this wall must match it.",
+    ],
+    [
+      "a wall mirrored about the dot a cell is centered on",
+      "The outlined cell is its own partner across the white dot, so the outlined wall must be mirrored by this wall.",
     ],
     // Two ways out, three or four: one wording now, since the walled sides are
     // drawn on the board rather than recited. (One way out is a second wording
     // the scan never reaches — see the branch test below.)
     [
       "a cell whose every way out leads into one galaxy",
-      "Every way out of this cell leads into the striped galaxy, so this cell must belong to the ringed white dot.",
+      "Every way out of this cell leads into the striped galaxy, so it and its partner must belong to the ringed white dot.",
     ],
     [
       "a detached piece of a galaxy",
-      "The striped cells are cut off from their ringed dot, and this is their only way back, so it must be that dot's too.",
+      "The striped cells can reach their ringed dot only through this cell, so it and its partner must be that dot's too.",
     ],
   ];
 
@@ -251,7 +256,7 @@ describe("each deduction is narrated in its own vocabulary", () => {
         galaxy: [{ x: 5, y: 3 }],
       }).replace("black dot", "white dot"),
     ).toBe(
-      "The only way out of this cell leads into the striped galaxy, so this cell must belong to the ringed white dot.",
+      "The only way out of this cell leads into the striped galaxy, so it must belong to the ringed white dot.",
     );
   });
 });
@@ -582,6 +587,33 @@ describe("following the plan", () => {
     // Either the pair the game commits atomically finished the step, or the
     // step wants more cells and stays displayed — never "off".
     expect(["completed", "onTrack"]).toContain(verdict);
+  });
+
+  it("re-reads a step the player has partly made from what it still draws", () => {
+    // A dot on a corner owns four cells, and one arrow commits a cell with its
+    // partner, so the player's own arrow leaves two: the step shrinks, and its
+    // sentence and its dot ring follow.
+    const found = firstStepMatching(
+      NORMAL_7,
+      SCAN_SEEDS,
+      (s) => (s.highlights?.targets.length ?? 0) === 4,
+    );
+    expect(found, "no corner dot in the scan").not.toBeNull();
+    if (!found) return;
+    const hl = found.step.highlights;
+    if (!hl?.targetDot) throw new Error("a dot's cells go to the dot");
+    const [t] = hl.targets;
+    const s = galaxiesGame.executeMove(found.state, {
+      ops: [{ kind: "assoc", x: t.x, y: t.y, ax: hl.targetDot.x, ay: hl.targetDot.y }],
+      solving: false,
+    });
+    const live = galaxiesGame.refreshHintStep?.(found.step, s);
+    if (!live) throw new Error("the step was left half made");
+    expect(live.highlights?.targets).toHaveLength(2);
+    expect(live.explanation).toMatch(/so both these cells must belong to/);
+    const legend = galaxiesGame.hintMarks;
+    if (!legend) throw new Error("galaxies declares no hintMarks");
+    expect(bindingDefects(live, legend)).toEqual([]);
   });
 
   it("drops the plan when the player goes their own way", () => {

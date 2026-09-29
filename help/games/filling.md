@@ -19,9 +19,7 @@ To play with a keyboard, use the arrow keys to move the cursor and type a number
 
 **Hint** explains the next step rather than simply making it. It reasons from the numbers given and the numbers you have written, so it carries on from wherever you are, as long as none of them is wrong; if one is, it asks you to fix the highlighted mistakes first.
 
-* **A ring in the hint color** marks each square the step fills. The number to write there is the one the sentence names.
-* **Stripes** mark "the striped region": a group of equal numbers already on the board that is not yet as big as its number. The squares the step fills take that same number.
-* **Outlined squares** are the neighbors the reason rests on, when it is about the number the ringed square can take rather than about one region.
+{{hint-marks}}
 
 A few ideas are worth learning by name:
 

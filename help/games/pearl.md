@@ -28,11 +28,7 @@ only from the lines you have drawn, the edges you have crossed out and the
 pearls, so it carries on from wherever you are, as long as none of those is
 wrong; if one is, it asks you to fix the highlighted mistakes first.
 
-* **A blue line** from a square's center to its edge means the loop must go
-  through that edge.
-* **A blue cross** on an edge means it can't.
-* **An outline** marks the squares the step reasons from: the pearl or square
-  it is about, the squares beside a pearl, or a stretch of loop drawn so far.
+{{hint-marks}}
 
 Most steps are the rules at work. A square the loop enters has to be left by
 another edge, and a square with nowhere else to go stays empty. A black pearl

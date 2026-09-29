@@ -218,7 +218,7 @@ describe("Unruly redraw", () => {
     const hint: HintStep<UnrulyMove, UnrulyHint> = {
       move: { type: "place", x: 2, y: 0, value: ONE },
       explanation: "test",
-      highlights: { target, line: row0, ring: [0] },
+      highlights: { target, line: row0, outline: [0], w2: state.w2 },
     };
     const { dr, ops } = recordingDrawing();
     redraw(dr, ds, null, state, 1, freshUi(), 0, 0, hint);

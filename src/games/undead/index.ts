@@ -27,6 +27,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { CELL, type MarkRef, Narration, NOTE } from "../../engine/hint-words.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import {
   noOpEntryResult,
@@ -64,7 +65,7 @@ import type {
   Size,
 } from "../../engine/types.ts";
 import { newUndeadDesc } from "./generator.ts";
-import { say } from "./hint-text.ts";
+import { type Marked, say } from "./hint-text.ts";
 import {
   border,
   colors,
@@ -428,20 +429,67 @@ function narrate(
   reason: UndeadReason,
   bits: number,
   continues: boolean,
-): string {
+  hl: UndeadHint,
+): Narration {
+  const m = markedOf(hl);
   switch (reason.kind) {
     case "sightline": {
-      if (continues) return say.sightlineNext(bits);
+      if (continues) return say.sightlineNext(m);
       const path = common.paths[reason.path];
-      return say.sightline(path.sightingsStart, path.sightingsEnd, bits);
+      return say.sightline(path.sightingsStart, path.sightingsEnd, bits, m);
     }
     case "total":
-      return say.total(reason.monster);
+      return say.total(reason.monster, m);
     case "onlyCells":
-      return say.onlyCells(reason.monster);
+      return say.onlyCells(reason.monster, m);
     case "single":
-      return say.single(bits);
+      return say.single(bits, m);
   }
+}
+
+/** A step's highlights as the marks its words name: a struck monster is the
+ * note whose `n` is its bit. */
+function markedOf(hl: UndeadHint): Marked {
+  return {
+    targets: hl.targets,
+    notes: hl.marks.map(({ x, y, monster }) => ({ x, y, n: monster })),
+    area: hl.area,
+  };
+}
+
+/** What a step's highlights draw: the `drawn` half of Undead's legend. */
+function undeadHintMarks(hl: UndeadHint): MarkRef[] {
+  const m = markedOf(hl);
+  return [
+    { role: "ring", kind: CELL, elements: m.targets },
+    { role: "ring", kind: NOTE, elements: m.notes },
+    { role: "outline", kind: CELL, elements: m.area },
+  ] as MarkRef[];
+}
+
+/** A step, its words narrowed to the highlights a shrunk strike keeps. */
+function narrowedTo(
+  step: HintStep<UndeadMove, UndeadHint>,
+  hl: UndeadHint,
+): HintStep<UndeadMove, UndeadHint> {
+  if (!step.words) return { ...step, highlights: hl };
+  const m = markedOf(hl);
+  const notes = new Set(m.notes.map((k) => NOTE.key(k)));
+  const cells = new Set(m.targets.map((c) => CELL.key(c)));
+  const words = step.words.narrow((role, kind, key) => {
+    if (role !== "ring") return true;
+    return kind === NOTE.name ? notes.has(key) : cells.has(key);
+  });
+  return { ...step, highlights: hl, words, explanation: words.text };
+}
+
+/** A step with its words and their text. */
+function spoken(
+  move: UndeadMove,
+  highlights: UndeadHint,
+  words: Narration,
+): HintStep<UndeadMove, UndeadHint> {
+  return { move, explanation: words.text, words, highlights };
 }
 
 /** The evidence area to shade: a sightline shades its whole bounce path; the
@@ -527,13 +575,16 @@ function emitFiring(
     for (const [cell, cellOps] of byCell) {
       let bits = 0;
       for (const op of cellOps) bits |= op.monster;
+      const highlights = { area, targets: [xyOf[cell]], marks: cellOps.map(markOf) };
       steps.push({
-        move: {
-          type: "pencilStrike",
-          marks: cellOps.map((op) => ({ cell, monster: op.monster })),
-        },
-        explanation: narrate(common, reason, bits, leg > 0),
-        highlights: { area, targets: [xyOf[cell]], marks: cellOps.map(markOf) },
+        ...spoken(
+          {
+            type: "pencilStrike",
+            marks: cellOps.map((op) => ({ cell, monster: op.monster })),
+          },
+          highlights,
+          narrate(common, reason, bits, leg > 0, highlights),
+        ),
         continuesPrevious: leg > 0,
       });
       leg++;
@@ -542,18 +593,21 @@ function emitFiring(
   }
 
   // A total firing: one monster struck across many cells, in one step.
-  steps.push({
-    move: {
-      type: "pencilStrike",
-      marks: ops.map((op) => ({ cell: op.cell, monster: op.monster })),
-    },
-    explanation: narrate(common, reason, ops[0].monster, false),
-    highlights: {
-      area: [],
-      targets: ops.map((op) => xyOf[op.cell]),
-      marks: ops.map(markOf),
-    },
-  });
+  const highlights = {
+    area: [],
+    targets: ops.map((op) => xyOf[op.cell]),
+    marks: ops.map(markOf),
+  };
+  steps.push(
+    spoken(
+      {
+        type: "pencilStrike",
+        marks: ops.map((op) => ({ cell: op.cell, monster: op.monster })),
+      },
+      highlights,
+      narrate(common, reason, ops[0].monster, false, highlights),
+    ),
+  );
 }
 
 /** Build the deductive hint plan by walking a working copy of the board the way
@@ -581,24 +635,29 @@ function buildSteps(state: UndeadState): HintStep<UndeadMove, UndeadHint>[] {
     for (let i = 0; i < wGuess.length; i++) {
       if (wGuess[i] === MON_NONE && wPen[i] === 0) wPen[i] = MON_NONE;
     }
-    steps.push({
-      move: { type: "markAll" },
-      explanation: say.populate,
-      highlights: { area: [], targets: [], marks: [] },
-    });
+    steps.push(
+      spoken(
+        { type: "markAll" },
+        { area: [], targets: [], marks: [] },
+        Narration.plain(say.populate),
+      ),
+    );
     populated = true;
   };
   // Push a placement step and advance the working grid.
   const place = (cell: number, monster: number, reason: UndeadReason): void => {
-    steps.push({
-      move: { type: "set", cell, monster },
-      explanation: narrate(common, reason, monster, false),
-      highlights: {
-        area: reasonArea(common, reason),
-        targets: [xyOf[cell]],
-        marks: [],
-      },
-    });
+    const highlights = {
+      area: reasonArea(common, reason),
+      targets: [xyOf[cell]],
+      marks: [],
+    };
+    steps.push(
+      spoken(
+        { type: "set", cell, monster },
+        highlights,
+        narrate(common, reason, monster, false, highlights),
+      ),
+    );
     wGuess[cell] = monster;
     wPen[cell] = 0;
     ops = recordUndeadDeductions(common, wGuess);
@@ -694,10 +753,16 @@ function hintKeepTrack(
     const remaining = sm.marks.filter((_, j) => j !== hit);
     if (remaining.length === 0) return "completed";
     step.move = { type: "pencilStrike", marks: remaining };
-    step.highlights = strikeHighlights(
-      monsterCellXY(state.common),
-      step.highlights ?? null,
-      remaining,
+    Object.assign(
+      step,
+      narrowedTo(
+        step,
+        strikeHighlights(
+          monsterCellXY(state.common),
+          step.highlights ?? null,
+          remaining,
+        ),
+      ),
     );
     return "onTrack";
   }
@@ -719,13 +784,11 @@ function refreshHintStep(
     if (live.length === 0) return null;
     if (live.length === m.marks.length) return step;
     return {
-      ...step,
-      move: { type: "pencilStrike", marks: live },
-      highlights: strikeHighlights(
-        monsterCellXY(state.common),
-        step.highlights ?? null,
-        live,
+      ...narrowedTo(
+        step,
+        strikeHighlights(monsterCellXY(state.common), step.highlights ?? null, live),
       ),
+      move: { type: "pencilStrike", marks: live },
     };
   }
   if (m.type === "set") {
@@ -775,7 +838,8 @@ export const undeadGame: Game<
   UndeadMove,
   UndeadUi,
   UndeadDrawState,
-  UndeadMistake
+  UndeadMistake,
+  UndeadHint
 > = {
   id: "undead",
   canMarkAll: true,
@@ -807,6 +871,14 @@ export const undeadGame: Game<
   solve,
   difficulty,
   hint,
+  hintMarks: {
+    roles: {
+      ring: "what the step decides, in the hint color: the square to fill, or the square whose pencil marks to cross out, with a line through each pencil mark to cross out. To cross one out yourself, right-click the square and type that monster's letter.",
+      outline:
+        "the *sightline* the step reasons from, in a second color: the squares, mirrors included, that a line of sight passes through between the two numbers at its ends.",
+    },
+    drawn: undeadHintMarks,
+  },
   hintKeepTrack,
   refreshHintStep,
   findMistakes,

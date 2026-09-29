@@ -26,8 +26,18 @@ import {
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
+import type { MarkRef, Narration } from "../../engine/hint-words.ts";
 import { type StepBudget, stepBudget } from "../../engine/step-budget.ts";
-import { type Axis, type Cause, type RuleOut, say } from "./hint-text.ts";
+import {
+  type Axis,
+  type Cause,
+  CLUE,
+  LINE,
+  type LineMarks,
+  type RuleOut,
+  SQUARE,
+  say,
+} from "./hint-text.ts";
 import {
   lineCells,
   lineTarget,
@@ -201,6 +211,17 @@ export interface MagnetsHighlights {
   line: MagnetsLine | null;
 }
 
+/** What a step's highlights draw: the `drawn` half of Magnets' legend. Both
+ * colors of clue digit are outlines: the count read and a met line cited. */
+export function magnetsHintMarks(h: MagnetsHighlights): MarkRef[] {
+  return [
+    { role: "ring", kind: SQUARE, elements: h.targets },
+    { role: "outline", kind: SQUARE, elements: h.area },
+    { role: "outline", kind: CLUE, elements: [...h.clues, ...h.reasonClues] },
+    { role: "stripes", kind: LINE, elements: h.line ? [h.line] : [] },
+  ] as MarkRef[];
+}
+
 const axisOf = (line: MagnetsLine): Axis => (line.roworcol === ROW ? "row" : "column");
 
 /** The ring index of a line's clue for `pole` (+ top/left, − bottom/right). */
@@ -211,16 +232,27 @@ function clueOf(b: ReadableBoard, line: MagnetsLine, pole: number): number {
     : clueIndex(b.w, b.h, line.num, edge);
 }
 
-/** A board reason in the sentence's terms. */
-function causeOf(r: NotReason): Cause {
-  if (r.kind === "partner") return causeOf(r.inner);
-  if (r.kind === "touch") return { kind: "touch" };
+/** A board reason that `pole` cannot go at a square, in the sentence's terms:
+ * read through the partner, it is the partner's reason for the opposite pole.
+ * No line is hatched yet; {@link hatchedIn} says which is. */
+function causeOf(b: ReadableBoard, r: NotReason, pole: number): Cause {
+  if (r.kind === "partner") return causeOf(b, r.inner, opposite(pole));
+  if (r.kind === "touch") return { kind: "touch", at: r.at };
   return {
     kind: "full",
     axis: axisOf(r.line),
     line: r.line.num,
     marked: r.magnets.length > 0,
+    clue: clueOf(b, r.line, pole),
+    hatched: null,
   };
+}
+
+/** `c`, with its line striped when it is the step's hatched `line`. */
+function hatchedIn(c: Cause, line?: MagnetsLine): Cause {
+  if (c.kind !== "full" || !line) return c;
+  const axis = axisOf(line);
+  return axis === c.axis && line.num === c.line ? { ...c, hatched: line } : c;
 }
 
 /** What a board reason points at: the pole it touches, or the met line's clue.
@@ -272,14 +304,14 @@ interface EndFact {
   cause: Cause;
 }
 
-function endFact(i: number, pole: number, r: NotReason): EndFact {
+function endFact(b: ReadableBoard, i: number, pole: number, r: NotReason): EndFact {
   return r.kind === "partner"
-    ? { end: r.at, pole: opposite(pole), cause: causeOf(r) }
-    : { end: i, pole, cause: causeOf(r) };
+    ? { end: r.at, pole: opposite(pole), cause: causeOf(b, r, pole) }
+    : { end: i, pole, cause: causeOf(b, r, pole) };
 }
 
 interface Told {
-  text: string;
+  words: Narration;
   area: number[];
   /** The clue digits of the line the sentence counts. */
   clues: number[];
@@ -294,27 +326,37 @@ interface Told {
 
 /** A square forced by the two poles (or the pole and the neutral) its board
  * rules out. `value` is what it becomes. */
-function tellForce(b: ReadableBoard, cell: number, value: number): Told {
+function tellForce(
+  b: ReadableBoard,
+  cell: number,
+  value: number,
+  targets: readonly number[],
+): Told {
   const partner = b.common.dominoes[cell];
   if (value !== NEUTRAL) {
     // A marked magnet with one pole ruled out of this end.
     const banned = opposite(value);
     const r = mustRead(b, cell, banned);
     const ev = evidenceOf(b, r, banned);
-    const text =
+    const named = namedLine(ev.lines, ev.reasonClues);
+    const words =
       r.kind === "partner"
-        ? say.magnetThere(value, causeOf(r))
-        : say.magnetHere(banned, causeOf(r));
-    return {
-      text,
-      area: [partner, ...ev.area],
-      ...namedLine(ev.lines, ev.reasonClues),
-    };
+        ? say.magnetThere(
+            targets,
+            partner,
+            value,
+            hatchedIn(causeOf(b, r, banned), named.line),
+          )
+        : say.magnetHere(
+            targets,
+            partner,
+            banned,
+            hatchedIn(causeOf(b, r, banned), named.line),
+          );
+    return { words, area: [partner, ...ev.area], ...named };
   }
   const rp = mustRead(b, cell, POSITIVE);
   const rm = mustRead(b, cell, NEGATIVE);
-  const plus = endFact(cell, POSITIVE, rp);
-  const minus = endFact(cell, NEGATIVE, rm);
   const ep = evidenceOf(b, rp, POSITIVE);
   const em = evidenceOf(b, rm, NEGATIVE);
   const area = [...ep.area, ...em.area];
@@ -322,12 +364,18 @@ function tellForce(b: ReadableBoard, cell: number, value: number): Told {
     [...ep.lines, ...em.lines],
     [...ep.reasonClues, ...em.reasonClues],
   );
+  const fact = (pole: number, r: NotReason): EndFact => {
+    const f = endFact(b, cell, pole, r);
+    return { ...f, cause: hatchedIn(f.cause, named.line) };
+  };
+  const plus = fact(POSITIVE, rp);
+  const minus = fact(NEGATIVE, rm);
   if (plus.end === minus.end) {
     // Each fact is about the pole it names at that end, which is the opposite
     // of the one asked about when it was read through the partner.
     const [atPlus, atMinus] = plus.pole === POSITIVE ? [plus, minus] : [minus, plus];
     return {
-      text: say.oneEndNeither(atPlus.cause, atMinus.cause),
+      words: say.oneEndNeither(targets, atPlus.cause, atMinus.cause),
       area,
       ...named,
     };
@@ -335,12 +383,16 @@ function tellForce(b: ReadableBoard, cell: number, value: number): Told {
   // Different ends, so the same pole is ruled out of both.
   const { pole } = plus;
   const [a, b2] = [plus.cause, minus.cause];
-  let text: string;
-  if (a.kind === "touch" && b2.kind === "touch") text = say.bothEndsTouch(pole);
+  let words: Narration;
+  if (a.kind === "touch" && b2.kind === "touch")
+    words = say.bothEndsTouch(targets, pole, [a.at, b2.at]);
   else if (a.kind === "full" && b2.kind === "full" && a.axis === b2.axis) {
-    text = a.line === b2.line ? say.alongFull(pole, a) : say.bothInFull(pole, a, b2);
-  } else text = say.neitherEnd(pole, a, b2);
-  return { text, area, ...named };
+    words =
+      a.line === b2.line
+        ? say.alongFull(targets, pole, a)
+        : say.bothInFull(targets, pole, a, b2);
+  } else words = say.neitherEnd(targets, pole, a, b2);
+  return { words, area, ...named };
 }
 
 /** Both clue digits of a line, for a premise about its neutral squares. */
@@ -357,59 +409,65 @@ const needed = (b: ReadableBoard, line: MagnetsLine, pole: number): number =>
 function tell(f: MagnetsFiring, targets: number[]): Told {
   const b = f.before;
   const r = f.reason;
-  if (r.kind === "force") return tellForce(b, r.cell, f.placed[0].which);
+  if (r.kind === "force") return tellForce(b, r.cell, f.placed[0].which, targets);
   // The line itself is the hatch; the outline is kept for the squares a
   // sentence singles out within it.
   const { line } = r;
   const axis = axisOf(line);
+  const marks = (clues: number[]): LineMarks => ({ line, clues, targets });
   switch (r.kind) {
-    case "lineFull":
+    case "lineFull": {
       // Only the neutral arm is ever shown: the ± arms set bits the board
       // already says (see the module doc).
-      return {
-        text: say.polesEverywhere(axis),
-        area: [],
-        clues: bothClues(b, line),
-        line,
-      };
+      const clues = bothClues(b, line);
+      return { words: say.polesEverywhere(marks(clues), axis), area: [], clues, line };
+    }
     case "lineExact":
       if (r.which === NEUTRAL) {
         // With no marked magnet in the line to set aside, "only these aren't
         // in marked magnets" would cite marks that are not there.
         const empty = lineCells(b, line).filter((i) => !(b.flags[i] & GS_SET));
         const onTargets = new Set(targets);
+        const area = empty.filter((i) => !onTargets.has(i));
+        const clues = bothClues(b, line);
         return {
-          text:
+          words:
             empty.length === targets.length
-              ? say.noPolesLeft(axis)
-              : say.neutralExact(axis, targets.length),
-          area: empty.filter((i) => !onTargets.has(i)),
-          clues: bothClues(b, line),
+              ? say.noPolesLeft(marks(clues), axis)
+              : say.neutralExact(marks(clues), axis, targets.length, area),
+          area,
+          clues,
           line,
         };
       }
       throw new Error("magnets hint: a count premise is told leg by leg");
-    case "oneNeutralLeft":
+    case "oneNeutralLeft": {
+      const clues = bothClues(b, line);
       return {
-        text: say.oneNeutralLeft(axis, f.marked.length),
+        words: say.oneNeutralLeft(marks(clues), axis, f.marked.length),
         area: [],
-        clues: bothClues(b, line),
+        clues,
         line,
       };
-    case "everyDominoNeeded":
+    }
+    case "everyDominoNeeded": {
+      const clues = [clueOf(b, line, r.which)];
       return {
-        text: say.everyDominoNeeded(axis, r.which, needed(b, line, r.which)),
+        words: say.everyDominoNeeded(
+          marks(clues),
+          axis,
+          r.which,
+          needed(b, line, r.which),
+        ),
         area: [],
-        clues: [clueOf(b, line, r.which)],
+        clues,
         line,
       };
-    case "oddGap":
-      return {
-        text: say.oddGap(axis, r.which),
-        area: [],
-        clues: bothClues(b, line),
-        line,
-      };
+    }
+    case "oddGap": {
+      const clues = bothClues(b, line);
+      return { words: say.oddGap(marks(clues), axis, r.which), area: [], clues, line };
+    }
     case "onlyEndLeft":
       throw new Error("magnets hint: a count premise is told leg by leg");
     case "magnetsFill":
@@ -426,10 +484,16 @@ function countPremise(r: MagnetsReason): r is CountReason {
 }
 
 /** A board reason as the thing the pole at the square would do. */
-function ruleOutOf(r: NotReason, counted: MagnetsLine): RuleOut {
-  if (r.kind === "touch") return { kind: "touch" };
-  if (r.kind === "full") return { kind: "full", axis: axisOf(r.line) };
-  if (r.inner.kind === "touch") return { kind: "partnerTouch" };
+function ruleOutOf(
+  b: ReadableBoard,
+  r: NotReason,
+  counted: MagnetsLine,
+  pole: number,
+): RuleOut {
+  if (r.kind === "touch") return { kind: "touch", at: [r.at] };
+  if (r.kind === "full")
+    return { kind: "full", axis: axisOf(r.line), clues: [clueOf(b, r.line, pole)] };
+  if (r.inner.kind === "touch") return { kind: "partnerTouch", at: [r.inner.at] };
   if (r.inner.kind === "full") {
     const { line } = r.inner;
     // The other end is next to this square, so a parallel line that is not
@@ -440,7 +504,12 @@ function ruleOutOf(r: NotReason, counted: MagnetsLine): RuleOut {
         : line.num === counted.num
           ? "same"
           : "beside";
-    return { kind: "partnerFull", axis: axisOf(line), place };
+    return {
+      kind: "partnerFull",
+      axis: axisOf(line),
+      place,
+      clues: [clueOf(b, line, opposite(pole))],
+    };
   }
   throw new Error("magnets hint: a partner's reason is its own square's");
 }
@@ -482,6 +551,9 @@ function tellCount(
   );
   const elsewhere: RuleOut[] = [];
   const area: number[] = [];
+  /** The squares "anywhere else" rules out, with their far halves when read
+   * through them: the tiles "either outlined tile" names. */
+  const ruled: number[] = [];
   const clues = [clueOf(b, r.line, pole)];
   const reasonClues: number[] = [];
   const ruledTiles = new Set<number>();
@@ -507,8 +579,10 @@ function tellCount(
       continue;
     }
     const ev = evidenceOf(b, why, pole);
-    elsewhere.push(ruleOutOf(why, r.line));
+    elsewhere.push(ruleOutOf(b, why, r.line, pole));
     area.push(i, ...ev.area);
+    ruled.push(i);
+    if (why.kind === "partner") ruled.push(why.at);
     reasonClues.push(...ev.reasonClues);
     // Read through its partner, a square's evidence begins with that partner,
     // so both halves are outlined: the tile is what the board shows. Unless
@@ -542,13 +616,16 @@ function tellCount(
     // domino) out of those that can, so the count is the board's as it stands.
     const board = withLegs(b, legs.slice(0, k));
     const n = needed(board, r.line, pole);
+    const rest = { why: elsewhere, ruled, tiles };
     if (r.kind === "lineExact") {
+      const targets = legs.slice(k).map(idxOf);
       return {
-        text: say.lineExact(axis, pole, n, elsewhere, tiles),
+        words: say.lineExact({ line, clues, targets }, axis, pole, n, rest),
         area,
         clues,
         line,
         reasonClues,
+        targets,
       };
     }
     // The dominoes the sentence counts, read off this leg's board: exactly
@@ -578,7 +655,7 @@ function tellCount(
         .map(idxOf)
         .filter((i) => farEnd(board, i).kind === "crosses");
       return {
-        text: say.onlyEndLeft(axis, pole, n, along, elsewhere, tiles, {
+        words: say.onlyEndLeft({ line, clues, targets }, axis, pole, n, along, rest, {
           kind: "crosses",
           squares: targets.length,
         }),
@@ -592,10 +669,19 @@ function tellCount(
     const j = b.common.dominoes[idx];
     const ev = evidenceOf(board, end.why, pole);
     return {
-      text: say.onlyEndLeft(axis, pole, n, along, elsewhere, tiles, {
-        kind: "along",
-        why: ruleOutOf(end.why, r.line),
-      }),
+      words: say.onlyEndLeft(
+        { line, clues, targets: [idx] },
+        axis,
+        pole,
+        n,
+        along,
+        rest,
+        {
+          kind: "along",
+          why: ruleOutOf(board, end.why, r.line, pole),
+          far: j,
+        },
+      ),
       area: [...area, j, ...ev.area],
       clues,
       line,
@@ -669,17 +755,27 @@ function stepsOf(f: MagnetsFiring): HintStep<MagnetsMove, MagnetsHighlights>[] {
   }
   return legs.map((leg, k) => {
     const told = toldLeg(k);
-    // A leg already done is part of what the sentence counts, so it rejoins
-    // the evidence rather than vanishing from the picture.
+    // A leg already done is on the board now, and the sentence's count is
+    // taken after it, so it leaves the picture with its ring.
     const targets = told.targets ?? legs.slice(k).flatMap((l) => l.squares);
     const onTargets = new Set(targets);
-    const area = [...told.area, ...legs.slice(0, k).flatMap((l) => l.squares)];
+    const area = [...new Set(told.area)].filter((i) => !onTargets.has(i));
+    // One premise's words serve every leg, so each leg keeps the references
+    // to what it still draws: a square the journey rings is not outlined.
+    const drawn = new Set([
+      ...targets.map((i) => `ring|${i}`),
+      ...area.map((i) => `outline|${i}`),
+    ]);
+    const words = told.words.narrow(
+      (role, kind, key) => kind !== SQUARE.name || drawn.has(`${role}|${key}`),
+    );
     return {
       move: leg.move,
-      explanation: told.text,
+      explanation: words.text,
+      words,
       highlights: {
         targets,
-        area: [...new Set(area)].filter((i) => !onTargets.has(i)),
+        area,
         clues: [...new Set(told.clues)],
         reasonClues: [...new Set(told.reasonClues)],
         line: told.line ?? null,

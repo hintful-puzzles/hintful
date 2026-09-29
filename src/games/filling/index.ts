@@ -20,6 +20,7 @@ import {
 } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
+import { CELL, type MarkRef, type Narration } from "../../engine/hint-words.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -38,7 +39,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newFillingDesc } from "./generator.ts";
-import { say } from "./hint-text.ts";
+import { type Marked, say } from "./hint-text.ts";
 import {
   colors,
   computeSize,
@@ -205,33 +206,51 @@ function findMistakes(state: FillingState): readonly Point[] {
  * `hatch` is the region the sentence is about ("the striped region of N"), and
  * `area` the neighbors that pin a lonely or eliminated cell, outlined, so the
  * player sees the reasoning, not just the conclusion (docs/games/hints.md
- * § "Hatch the line the sentence names"). */
+ * § "Hatch the line the sentence names"). Cells are indices into a grid `w`
+ * wide. */
 export interface FillingHint {
   cells: number[];
   value: number;
   area: number[];
   hatch: number[];
+  w: number;
 }
 
 /** A growth or blocked step is about one region, which is its hatch. */
 const namesRegion = (reason: FillingHintReason): boolean =>
   reason.kind === "growth" || reason.kind === "blocked";
 
-/** Narrate *why* the squares are forced, per the technique that fired. `count`
- * is how many squares the step forces (singular vs plural wording). The words
- * are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(reason: FillingHintReason, count: number): string {
-  const many = count > 1;
+const pointOf = (i: number, w: number): Point => ({ x: i % w, y: (i / w) | 0 });
+
+/** Narrate *why* the squares are forced, per the technique that fired, naming
+ * the cells `hl` marks. The words are [`hint-text.ts`](./hint-text.ts)'s. */
+function narrate(reason: FillingHintReason, hl: FillingHint): Narration {
+  const at = (i: number): Point => pointOf(i, hl.w);
+  const m: Marked = {
+    cells: hl.cells.map(at),
+    region: hl.hatch.map(at),
+    evidence: hl.area.map(at),
+  };
   switch (reason.kind) {
     case "growth":
-      return say.growth(reason.n, reason.exact, many);
+      return say.growth(reason.n, reason.exact, m);
     case "blocked":
-      return say.blocked(reason.n);
+      return say.blocked(reason.n, m);
     case "lonely":
-      return say.lonely;
+      return say.lonely(m);
     case "bitmap":
-      return say.bitmap(reason.n);
+      return say.bitmap(reason.n, m);
   }
+}
+
+/** What a step's highlights draw: the `drawn` half of Filling's legend. */
+function fillingHintMarks(hl: FillingHint): MarkRef[] {
+  const at = (i: number): Point => pointOf(i, hl.w);
+  return [
+    { role: "ring", kind: CELL, elements: hl.cells.map(at) },
+    { role: "outline", kind: CELL, elements: hl.area.map(at) },
+    { role: "stripes", kind: CELL, elements: hl.hatch.map(at) },
+  ] as MarkRef[];
 }
 
 function hint(state: FillingState): HintResult<FillingMove, FillingHint> {
@@ -239,13 +258,19 @@ function hint(state: FillingState): HintResult<FillingMove, FillingHint> {
   if (refusal) return refusal;
   const plan = deduceHintPlan(state.board, state.w, state.h);
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
-  const steps: HintStep<FillingMove, FillingHint>[] = plan.map((m) => ({
-    move: { type: "set", cells: m.cells, value: m.value },
-    explanation: narrate(m.reason, m.cells.length),
-    highlights: namesRegion(m.reason)
-      ? { cells: m.cells, value: m.value, area: [], hatch: m.area }
-      : { cells: m.cells, value: m.value, area: m.area, hatch: [] },
-  }));
+  const w = state.w;
+  const steps: HintStep<FillingMove, FillingHint>[] = plan.map((m) => {
+    const highlights: FillingHint = namesRegion(m.reason)
+      ? { cells: m.cells, value: m.value, area: [], hatch: m.area, w }
+      : { cells: m.cells, value: m.value, area: m.area, hatch: [], w };
+    const words = narrate(m.reason, highlights);
+    return {
+      move: { type: "set", cells: m.cells, value: m.value },
+      explanation: words.text,
+      words,
+      highlights,
+    };
+  });
   return { ok: true, steps };
 }
 
@@ -274,6 +299,13 @@ function hintKeepTrack(
   if (verdict === "onTrack") {
     step.highlights = { ...t, cells: left };
     step.move = { type: "set", cells: left, value: t.value };
+    if (step.words) {
+      const kept = new Set(left.map((i) => CELL.key(pointOf(i, t.w))));
+      step.words = step.words.narrow(
+        (role, _kind, key) => role !== "ring" || kept.has(key),
+      );
+      step.explanation = step.words.text;
+    }
   }
   return verdict;
 }
@@ -284,7 +316,8 @@ export const fillingGame: Game<
   FillingMove,
   FillingUi,
   FillingDrawState,
-  Point
+  Point,
+  FillingHint
 > = {
   id: "filling",
   // Selection is a left press or a left drag across a run of cells, and the
@@ -312,6 +345,16 @@ export const fillingGame: Game<
 
   solve,
   hint,
+  hintMarks: {
+    roles: {
+      ring: "each square the step fills. The number to write there is the one the sentence names.",
+      outline:
+        "the neighbors the reason rests on, when it is about the number a square can take rather than about one region.",
+      stripes:
+        "the region the sentence names: a group of equal numbers already on the board that is not yet as big as its number. The squares the step fills take that same number.",
+    },
+    drawn: fillingHintMarks,
+  },
   hintKeepTrack,
   findMistakes,
   // Upstream's keypad is a fixed 1..9 (region sizes never exceed 9).

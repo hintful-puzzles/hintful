@@ -21,8 +21,9 @@ import {
   CONTRADICTION_UNLOCALIZED,
   DEDUCTION_EXHAUSTED,
 } from "../../engine/hint-refusal.ts";
+import type { MarkRef, Narration } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import { say } from "./hint-text.ts";
+import { PIECE, SPAN, say } from "./hint-text.ts";
 import {
   type BridgesFiring,
   type BridgesReason,
@@ -86,31 +87,47 @@ export interface BridgesHighlights {
 // --- narration ------------------------------------------------------------
 
 /**
- * Which sentence a firing speaks, and with what values. The words are
- * [`hint-text.ts`](./hint-text.ts)'s.
+ * Which sentence a firing speaks, and with what values, naming what `hl`
+ * marks. The words are [`hint-text.ts`](./hint-text.ts)'s.
  */
-export function narrate(state: BridgesState, reason: BridgesReason): string {
+export function narrate(
+  state: BridgesState,
+  reason: BridgesReason,
+  hl: BridgesHighlights,
+): Narration {
   const clue = state.islands[reason.island].count;
   switch (reason.kind) {
     case "exactSpace":
-      return say.exactSpace(clue, reason.missing);
+      return say.exactSpace(clue, reason.missing, hl);
     case "everyNeighbor":
-      return say.everyNeighbor(clue, reason.neighbors);
+      return say.everyNeighbor(clue, reason.neighbors, hl);
     case "wouldCloseLoop":
-      return say.wouldCloseLoop;
+      return say.wouldCloseLoop(hl);
     case "needsThisWay":
-      return say.needsThisWay(clue, reason.elsewhere);
+      return say.needsThisWay(clue, reason.elsewhere, hl);
     case "wouldSealGroup":
-      return say.wouldSealGroup(reason.group, reason.limit);
+      return say.wouldSealGroup(reason.group, reason.limit, hl);
     case "wouldStarve":
       // "The outlined island" is a lie when the starved island *is* the one the
       // bridge starts from, because nothing else is then left to outline. The
       // sentence and the picture ask `namesFocus` the same question, so they
       // cannot disagree about which arm this is.
-      return say.wouldStarve(clue, namesFocus(reason), reason.limit);
+      return say.wouldStarve(clue, namesFocus(reason), reason.limit, hl);
     case "mustReachOut":
-      return say.mustReachOut(clue);
+      return say.mustReachOut(clue, hl);
   }
+}
+
+/** What a step's highlights draw: the `drawn` half of Bridges' legend. The
+ * recolored island and the cited islands and bridges are all evidence. */
+export function bridgesHintMarks(hl: BridgesHighlights): MarkRef[] {
+  const span = ({ x1, y1, x2, y2 }: BridgesSpan): BridgesSpan => ({ x1, y1, x2, y2 });
+  return [
+    { role: "ring", kind: SPAN, elements: hl.targets.map(span) },
+    { role: "outline", kind: PIECE, elements: hl.focus ? [hl.focus] : [] },
+    { role: "outline", kind: PIECE, elements: hl.islands },
+    { role: "outline", kind: PIECE, elements: hl.spans.map(span) },
+  ] as MarkRef[];
 }
 
 // --- highlights from a firing ---------------------------------------------
@@ -239,10 +256,13 @@ export function bridgesHint(
       // and that should reach Sentry rather than render a blank sentence.
       const { reason } = firing;
       if (!reason) throw new Error("bridges hint: a step with no premise was shown");
+      const highlights = highlightsOf(work, reason, firing);
+      const words = narrate(work, reason, highlights);
       return {
         move: { ops: firing.ops },
-        explanation: narrate(work, reason),
-        highlights: highlightsOf(work, reason, firing),
+        explanation: words.text,
+        words,
+        highlights,
       };
     }),
   };
@@ -349,12 +369,17 @@ export function bridgesKeepTrack(
 
   step.move = { ops: left };
   if (step.highlights) {
-    step.highlights = {
-      ...step.highlights,
-      targets: step.highlights.targets.filter((t) =>
-        left.some((w) => w.op !== "S" && w.op !== "M" && sameSpan(w, t)),
-      ),
-    };
+    const targets = step.highlights.targets.filter((t) =>
+      left.some((w) => w.op !== "S" && w.op !== "M" && sameSpan(w, t)),
+    );
+    step.highlights = { ...step.highlights, targets };
+    if (step.words) {
+      const kept = new Set(targets.map((t) => SPAN.key(t)));
+      step.words = step.words.narrow(
+        (role, _kind, key) => role !== "ring" || kept.has(key),
+      );
+      step.explanation = step.words.text;
+    }
   }
   return "onTrack";
 }

@@ -48,13 +48,7 @@ first step pencils every monster into each empty square that has no marks
 yet. You can do the same yourself by pressing M. A square you have already
 narrowed down keeps its marks.
 
-* **An outline in the hint color** marks the square the step is about:
-  the square to fill, or the square whose pencil marks to cross out.
-* **A line in the hint color through a pencil mark** is a monster to cross
-  out: right-click the square and type that monster's letter.
-* **An outline in a second color** marks the *sightline* the step reasons
-  from: the squares, mirrors included, that a line of sight passes through
-  between the two numbers at its ends.
+{{hint-marks}}
 
 The hint crosses out a monster for one of two reasons: a sightline's two
 numbers leave no room for it in a square along that sightline, or the

@@ -27,7 +27,7 @@ import {
   refreshHintStep,
   sentenceExpires,
 } from "./hint.ts";
-import { say } from "./hint-text.ts";
+import { type Marked, say } from "./hint-text.ts";
 import { type LoopyMove, loopyGame } from "./index.ts";
 import {
   DIFF_EASY,
@@ -56,6 +56,18 @@ interface Board {
   id: string;
   state: LoopyState;
 }
+
+/** A step that marks nothing, for reading a sentence apart from any board. */
+const NO_MARKS: Marked = {
+  targets: [],
+  placedCorner: null,
+  placedPair: null,
+  faces: [],
+  dots: [],
+  edges: [],
+  corners: [],
+  pairs: [],
+};
 
 function board(name: string, p: LoopyParams, seed: string): Board {
   const { desc } = loopyGame.newDesc(p, randomNew(`loopy-hint-${name}-${seed}`));
@@ -576,11 +588,17 @@ describe("Loopy hint: the premises the corpus reaches", () => {
   });
 
   it("speaks the ledgered premises' sentences in the necessity voice", () => {
-    expect(say.closesLoop).toMatch(/must be a line\.$/);
-    expect(say.related(false, true, true)).toBe(
+    const m = {
+      ...NO_MARKS,
+      targets: [0],
+      edges: [1],
+      pairs: [{ a: 0, b: 2, opposite: false }],
+    };
+    expect(say.closesLoop(m).text).toMatch(/must be a line\.$/);
+    expect(say.related(false, true, true, m).text).toBe(
       "The marked pair makes this edge match the marked line, so it must be a line.",
     );
-    expect(say.related(true, false, true)).toBe(
+    expect(say.related(true, false, true, m).text).toBe(
       "The marked pair makes this edge the opposite of the marked ruled-out edge, so it must be a line.",
     );
   });
@@ -625,10 +643,10 @@ describe("Loopy hint: the words and the marks agree", () => {
       const marks = marksOf(step);
       const at = `${b.name} step ${i}: "${text}"`;
       expect(marks.targets, at).toEqual(opsOf(step.move).map((o) => o.edge));
-      if (/both ringed dots/i.test(text)) {
+      if (/both outlined dots/i.test(text)) {
         expect(marks.dots, at).toHaveLength(2);
         kinds.add("both dots");
-      } else if (/the ringed dot/i.test(text)) {
+      } else if (/the outlined dot/i.test(text)) {
         expect(marks.dots, at).toHaveLength(1);
         kinds.add("dot");
       } else {
@@ -718,6 +736,11 @@ describe("Loopy hint: following and refreshing a step", () => {
       stepOps.slice(1).map((o) => o.edge),
     );
     expect(two.edge).toBe(refreshedOps[0]?.edge);
+    // Its words name only the edges left.
+    expect(refreshed?.explanation).toBe(refreshed?.words?.text);
+    expect(refreshed?.words?.refs.find((r) => r.role === "ring")?.elements).toEqual(
+      refreshedOps.map((o) => o.edge),
+    );
     expect(refreshHintStep(step, loopyGame.executeMove(state, step.move))).toBeNull();
   });
 
@@ -993,13 +1016,13 @@ describe("Loopy hint: two blocked dots settle a clue", () => {
   });
 
   it("rings both dots and bands all of the face's edges", () => {
-    // The sentence says "both ringed dots"; with one ring the reader cannot tell
+    // The sentence says "both outlined dots"; with one ring the reader cannot tell
     // which pair of edges is meant to be blocked. Judged on where the pixels
     // land rather than on the marks the step carries.
     let found = false;
     for (let seed = 0; seed < 20 && !found; seed++) {
       const id = `${encodeParams({ w: 7, h: 7, diff: DIFF_HARD, type: 0 }, true)}#blocked-pair-${seed}`;
-      const want = (s: Step): boolean => /both ringed dots/i.test(s.explanation);
+      const want = (s: Step): boolean => /both outlined dots/i.test(s.explanation);
       const result = renderScenario({
         game: loopyGame,
         id,
@@ -1029,9 +1052,12 @@ describe("Loopy hint: two blocked dots settle a clue", () => {
   it("names the clue, and says the same thing with a different digit", () => {
     // The clue is the only part that varies. A 2 whose fourth edge is already
     // out reads with 2 throughout, a 3 in a square with 3.
-    expect(say.clueBlockedPair(3)).toBe(
-      "Both ringed dots already have a line, so joining them leaves this 3 short. That edge is out; the other 3 are lines.",
+    const m = { ...NO_MARKS, targets: [0, 1, 2], faces: [0], dots: [0, 1] };
+    expect(say.clueBlockedPair(3, m).text).toBe(
+      "Both outlined dots already have a line, so joining them leaves this 3 short. That edge is out; the other 3 are lines.",
     );
-    expect(say.clueBlockedPair(2)).toBe(say.clueBlockedPair(3).replaceAll("3", "2"));
+    expect(say.clueBlockedPair(2, m).text).toBe(
+      say.clueBlockedPair(3, m).text.replaceAll("3", "2"),
+    );
   });
 });

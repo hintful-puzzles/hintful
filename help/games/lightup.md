@@ -19,17 +19,13 @@ To play with a keyboard, use the arrow keys to move the cursor. Press Enter to p
 
 **Hint** explains the next step rather than simply making it. Each step either puts a bulb in a square or, when a square "can't hold a bulb", marks it with a dot. The hint reasons from the numbers and your own bulbs and dots, so it carries on from wherever you are, as long as none of them is wrong; if one is, it asks you to fix the highlighted mistakes first. A *dark* square, in its words, is a blank square no bulb lights yet; a *free* one is a blank square with neither a bulb nor a dot.
 
-* **A ring in the hint color** marks each square the step decides: "this square".
-* **A number drawn in the hint color** is "the highlighted clue" the step counts with.
-* **Shaded squares** are dark squares the reason rests on, such as the only squares left that could light some square.
-* **A green double ring** marks a lit square or a bulb the reason rests on, such as the bulbs a clue already has.
-* **A purple double ring** marks "the ringed square": a dark square that still has to be lit by something.
+{{hint-marks}}
 
 A few ideas are worth learning by name:
 
 * **A clue that is full**, or a 0, rules out bulbs in its other free neighbors; **a clue with just enough room** needs a bulb in every free neighbor it has left.
 * **Only one way to light it.** A dark square that nothing else can light must get its light from the one square that still can, perhaps itself.
-* On harder boards: **a bulb that would spoil every option**. When some square has to be lit, or some clue has to get a bulb, from one of a few shaded squares, a square whose bulb would leave each of them lit or beside a full clue can't hold a bulb.
+* On harder boards: **a bulb that would spoil every option**. When some square has to be lit, or some clue has to get a bulb, from one of a few outlined squares, a square whose bulb would leave each of them lit or beside a full clue can't hold a bulb.
 
 On an Unreasonable board the hint may stop and say that nothing further follows by deduction.
 

@@ -11,8 +11,9 @@
 import { Dsf } from "../../engine/dsf.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
-import { say } from "./hint-text.ts";
+import { type Beyond, type ClueSources, say } from "./hint-text.ts";
 import {
   deduceHintPlan,
   type SlantFiring,
@@ -35,8 +36,10 @@ export interface SlantMark {
  * same-slant mark a step places, drawn in the hint color. `area` is the
  * deduction's evidence to outline (a clue's decided neighbors, a loop chain,
  * the trapped dead-end components, the pairs a v-shape argument reads);
- * `marks` are the marks it cites; `ref` rings a cited already-filled square;
- * `clues` recolors the clues it reads. */
+ * `marks` are the marks it cites; `ref` is a cited already-filled square,
+ * drawn as a doubled ring in the evidence color; `clues` recolors the clues it
+ * reads. All but the target, its siblings and `mark` are evidence, outlined in
+ * the words (`hint-marks.ts`). */
 export interface SlantHint {
   target?: Point;
   siblings?: Point[];
@@ -191,14 +194,41 @@ function lineReason(
   }
 }
 
+/** Grid point index `p` of a `(w+1)`-wide grid, as a point. */
+const gridPoint = (p: number, w: number): Point => ({
+  x: p % (w + 1),
+  y: Math.floor(p / (w + 1)),
+});
+
+/** What `ev` read beyond a 2, sorted for the words that name it: the 2s other
+ * than `skip`, the squares other than `except`, and the 1 or 3 capping them. */
+function beyondOf(
+  ev: VEvidence,
+  clues: Int8Array,
+  w: number,
+  skip: readonly number[],
+  except: readonly number[],
+): Beyond {
+  const pts = [...new Set(ev.clues)].filter((p) => !skip.includes(p));
+  const cap = pts.find((p) => clues[p] !== 2);
+  return {
+    twos: pts.filter((p) => clues[p] === 2).map((p) => gridPoint(p, w)),
+    pairs: [...new Set(ev.squares)]
+      .filter((s) => !except.includes(s))
+      .map((s) => pointOf(s, w)),
+    cap: cap === undefined ? null : gridPoint(cap, w),
+  };
+}
+
 /** The clause saying why the pair can't form v-shape `key`. */
 function vClause(
   trace: SlantTrace,
   key: number,
   w: number,
   soln: Int8Array,
+  clues: Int8Array,
   ev: VEvidence,
-): string {
+): Narration {
   const why: VWhy | null = trace.vWhy[key];
   const sq = key >> 2;
   const g = vGeometry(sq, key & 3, w);
@@ -207,7 +237,8 @@ function vClause(
     case "clue": {
       ev.clues.push(why.pt);
       const where = whereOf(sq, g.horizontal, why.pt, w);
-      return why.c === 1 ? say.vClause.one(where) : say.vClause.three(where);
+      const pt = gridPoint(why.pt, w);
+      return why.c === 1 ? say.vClause.one(pt, where) : say.vClause.three(pt, where);
     }
     case "slash":
       ev.squares.push(why.sq);
@@ -216,8 +247,12 @@ function vClause(
       ev.clues.push(why.pt);
       const where = whereOf(sq, g.horizontal, why.pt, w);
       const touch = why.pt === g.meet;
-      const { end, hops } = lineReason(trace, why.from, why.pt, touch, w, soln, ev);
-      return say.vClause.across(touch, where, end, hops > 1);
+      const sub: VEvidence = { clues: [], squares: [] };
+      const { end } = lineReason(trace, why.from, why.pt, touch, w, soln, sub);
+      ev.clues.push(...sub.clues);
+      ev.squares.push(...sub.squares);
+      const beyond = beyondOf(sub, clues, w, [why.pt], []);
+      return say.vClause.across(touch, gridPoint(why.pt, w), where, end, beyond);
     }
   }
 }
@@ -229,19 +264,20 @@ function vClauses(
   keys: number[],
   w: number,
   soln: Int8Array,
+  clues: Int8Array,
   ev: VEvidence,
-): string[] {
+): Narration[] {
   const whys = keys.map((k) => trace.vWhy[k]);
   const [a, b] = whys;
   if (a?.kind === "clue" && b?.kind === "clue" && a.c === b.c) {
     ev.clues.push(a.pt, b.pt);
-    return [say.vBoth(a.c)];
+    return [say.vBoth(a.c, [gridPoint(a.pt, w), gridPoint(b.pt, w)])];
   }
   // A clause carried across a 2 has its own "as", so it goes last, where the
   // sentence's closing "so" cannot be read as part of the other clause.
   const across = (k: number) => (trace.vWhy[k]?.kind === "two" ? 1 : 0);
   const ordered = [...keys].sort((x, y) => across(x) - across(y));
-  return ordered.map((k) => vClause(trace, k, w, soln, ev));
+  return ordered.map((k) => vClause(trace, k, w, soln, clues, ev));
 }
 
 /** One end of a line of 2s: how many 2s lie between the pair and the cap,
@@ -312,13 +348,17 @@ function lineEnd(
 function vLine(
   trace: SlantTrace,
   keys: number[],
+  mark: SlantMark,
+  pair: readonly number[],
   w: number,
   soln: Int8Array,
   clues: Int8Array,
   ev: VEvidence,
-): string | null {
-  const scratch: VEvidence = { clues: [], squares: [] };
-  const [a, b] = keys.map((k) => lineEnd(trace, k, w, soln, scratch));
+): Narration | null {
+  // One scratch per end, so the words can tell the pair across a 2 from the
+  // pairs beyond it.
+  const scratches: VEvidence[] = keys.map(() => ({ clues: [], squares: [] }));
+  const [a, b] = keys.map((k, i) => lineEnd(trace, k, w, soln, scratches[i]));
   // A placed diagonal caps the line at the end it does not miss, and its kind
   // is the other end's: the pair gives that end exactly what the far side
   // lets it.
@@ -341,23 +381,46 @@ function vLine(
     const beyond = own === a ? b : a;
     if (own === undefined || own.end === undefined || beyond.end === undefined)
       return null;
-    ev.clues.push(...scratch.clues);
-    ev.squares.push(...scratch.squares);
-    return say.vAcross(own.end === "touches", beyond.twos - 1, beyond.end);
+    const ownEv = scratches[own === a ? 0 : 1];
+    const beyondEv = scratches[own === a ? 1 : 0];
+    for (const s of scratches) {
+      ev.clues.push(...s.clues);
+      ev.squares.push(...s.squares);
+    }
+    const across = [...new Set(ownEv.squares)].filter((s) => !pair.includes(s));
+    return say.vAcross(
+      mark,
+      gridPoint(own.at, w),
+      across.map((s) => pointOf(s, w)),
+      own.end === "touches",
+      beyond.end,
+      beyondOf(beyondEv, clues, w, [own.at], [...across, ...pair]),
+    );
   }
   if (a.kind !== b.kind) throw new Error("slant hint: a line of 2s capped two ways");
   // A diagonal capping the line may have the clue that caps it just as well
   // beyond it; the clue reads more plainly.
   const digit = a.kind === "one" ? 1 : 3;
-  for (const cap of [a, b]) {
+  [a, b].forEach((cap, i) => {
     if (!cap.clue && cap.capAt >= 0 && clues[cap.capAt] === digit) {
       cap.clue = true;
-      scratch.clues.push(cap.capAt);
+      scratches[i].clues.push(cap.capAt);
     }
+  });
+  const all: VEvidence = { clues: [], squares: [] };
+  for (const s of scratches) {
+    all.clues.push(...s.clues);
+    all.squares.push(...s.squares);
   }
-  ev.clues.push(...scratch.clues);
-  ev.squares.push(...scratch.squares);
-  return say.vLine(a.twos + b.twos, a.kind === "one", [a.clue, b.clue]);
+  ev.clues.push(...all.clues);
+  ev.squares.push(...all.squares);
+  const line = beyondOf(all, clues, w, [], pair);
+  const caps = [...new Set(all.clues)]
+    .filter((p) => clues[p] !== 2)
+    .map((p) => gridPoint(p, w));
+  if (line.twos.length !== a.twos + b.twos || caps.length !== +a.clue + +b.clue)
+    throw new Error("slant hint: a line of 2s read two ways");
+  return say.vLine(mark, line.twos, line.pairs, a.kind === "one", caps);
 }
 
 // --- the plan ---------------------------------------------------------------
@@ -440,24 +503,29 @@ function markStep(
 ): Step {
   const mark = markOf(m.a, m.b, w);
   const W = w + 1;
-  let explanation: string;
+  let words: Narration;
   const hl: SlantHint = { mark };
   if (m.why.kind === "clue") {
     const { pt, c, pair } = m.why;
-    explanation = say.markClue(c, pair !== null);
     const px = pt % W;
     const py = Math.floor(pt / W);
     hl.clues = [{ x: px, y: py }];
     const area = incidentSquares(px, py, w, h).filter((s) => grid[s.y * w + s.x] !== 0);
     if (area.length) hl.area = area;
+    words = say.markClue(
+      { x: px, y: py },
+      c,
+      sourcesOf({ x: px, y: py }, pair !== null ? cites : null, area, grid, w),
+      mark,
+    );
   } else {
     const lo = Math.min(m.a, m.b);
     const bits = Math.max(m.a, m.b) === lo + 1 ? [1, 0] : [3, 2];
     const ev: VEvidence = { clues: [], squares: [] };
     const keys = bits.map((bit) => lo * 4 + bit);
-    explanation =
-      vLine(trace, keys, w, grid, clues, ev) ??
-      say.markV(vClauses(trace, keys, w, grid, ev));
+    words =
+      vLine(trace, keys, mark, [m.a, m.b], w, grid, clues, ev) ??
+      say.markV(mark, vClauses(trace, keys, w, grid, clues, ev));
     const read = [...new Set(ev.clues)].map((p) => ({
       x: p % W,
       y: Math.floor(p / W),
@@ -471,9 +539,25 @@ function markStep(
   if (cites.length) hl.marks = cites;
   return {
     move: { type: "alike", ...mark, on: true },
-    explanation,
+    explanation: words.text,
+    words,
     highlights: hl,
   };
+}
+
+/** What clue `clue` already has: the marks joining the pair it counts as one
+ * line, if it counts one, and its decided squares on `grid`. */
+function sourcesOf(
+  clue: Point,
+  pair: readonly SlantMark[] | null,
+  area: readonly Point[],
+  grid: Int8Array,
+  w: number,
+): ClueSources {
+  const touching = area.filter((s) =>
+    touches(s.x, s.y, grid[s.y * w + s.x], clue.x, clue.y),
+  ).length;
+  return { pair, area, touching };
 }
 
 /** Build the highlight payload for one leg of a firing. */
@@ -541,20 +625,45 @@ function firingHighlights(
 
 /** Narrate why this leg's move is forced. The words are
  * [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(firing: SlantFiring, leg: number, chain: boolean): string {
-  if (leg > 0) return say.continuation(firing.technique === "clue-empty");
-  const c = firing.clue?.c ?? 0;
+function narrate(
+  firing: SlantFiring,
+  leg: number,
+  hl: SlantHint,
+  w: number,
+): Narration {
+  const target = hl.target;
+  if (!target) throw new Error("slant hint: a firing leg with no target");
+  const cells = [target, ...(hl.siblings ?? [])];
+  const area = hl.area ?? [];
+  const clue = firing.clue;
+  if (leg > 0) {
+    if (!clue) throw new Error("slant hint: a continued firing with no clue");
+    return say.continuation(clue, area, cells, firing.technique === "clue-empty");
+  }
   switch (firing.technique) {
     case "clue-fill":
-      return firing.pair ? say.clueFillPair(c, chain) : say.clueFill(c);
-    case "clue-empty":
-      return firing.pair ? say.clueEmptyPair(c, chain) : say.clueEmpty(c);
+    case "clue-empty": {
+      if (!clue) throw new Error("slant hint: a clue firing with no clue");
+      // The board before this firing: its squares, which the evidence skips,
+      // are empty on it.
+      const src = sourcesOf(
+        clue,
+        firing.pair ? (hl.marks ?? []) : null,
+        area,
+        firing.grid,
+        w,
+      );
+      return firing.technique === "clue-fill"
+        ? say.clueFill(clue, clue.c, src, cells)
+        : say.clueEmpty(clue, clue.c, src, cells);
+    }
     case "loop":
-      return say.loop;
+      return say.loop(target, area);
     case "deadend":
-      return say.deadend;
+      return say.deadend(target, area);
     case "equiv":
-      return say.equiv(firing.moves[0].v, chain);
+      if (!hl.ref) throw new Error("slant hint: an equivalence with no anchor");
+      return say.equiv(target, hl.ref, firing.moves[0].v, hl.marks ?? []);
   }
 }
 
@@ -651,9 +760,11 @@ export function slantHint(
       if (leg === 0 && cites.length) highlights.marks = marksOf(cites);
       const anchor = anchors[i];
       if (anchor !== null) highlights.ref = pointOf(anchor, w);
+      const words = narrate(firing, leg, highlights, w);
       push({
         move: { type: "set", ...firing.moves[leg] },
-        explanation: narrate(firing, leg, cites.length > 1),
+        explanation: words.text,
+        words,
         highlights,
       });
     }

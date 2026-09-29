@@ -8,6 +8,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
+import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { type PatternHint, patternGame } from "./index.ts";
 import { deduceHintPlan, solveState } from "./solver.ts";
 import {
@@ -251,6 +252,11 @@ describe("pattern hint — keep track", () => {
     const clone = { ...step, highlights: { ...h }, move: step.move };
     expect(patternGame.hintKeepTrack?.(partial, clone, state)).toBe("onTrack");
     expect((clone.highlights as PatternHint).cells).toEqual(h.cells.slice(1));
+    // The shrunk step's words name only the cells left, and say so in its text.
+    const legend = patternGame.hintMarks;
+    if (!legend) throw new Error("pattern declares no hintMarks");
+    expect(bindingDefects(clone, legend)).toEqual([]);
+    if (h.cells.length === 2) expect(clone.explanation).toMatch(/\bthis cell\b/);
 
     // Filling all cells at once → completed.
     const fresh = res.steps.find((s) => (s.highlights as PatternHint).cells.length > 1);

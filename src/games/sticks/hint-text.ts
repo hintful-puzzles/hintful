@@ -6,12 +6,18 @@
  * only how it reads: why the square can only take one orientation, by naming
  * the clue the other orientation would break and how it would break it.
  *
+ * Every word that points at the board is a reference to the mark it points at
+ * (`engine/hint-words.ts`): the square the step decides is ringed (its line
+ * drawn in the hint color), and the cells its argument rests on are outlined.
+ *
  * `continues` is a later leg of the same firing — the same clue and the same
  * rule ruling out a further square — so it says so and drops the premise the
  * opening leg has already taught, while keeping its own numbers and the
  * necessity modal (Slant's leg convention).
  */
 
+import { CELL, mark, type Narration, phrase } from "../../engine/hint-words.ts";
+import type { Point } from "../../engine/types.ts";
 import type { SticksFiring, SticksReason } from "./solver.ts";
 
 type R<K extends SticksReason["kind"]> = Extract<SticksReason, { kind: K }>;
@@ -19,22 +25,47 @@ type To = SticksFiring["to"];
 
 const ORIENT = { hor: "horizontal", ver: "vertical" } as const;
 
-/** The orientation ruled out, and the closing sentence naming the one left.
- * A square shows a number only when it carries a clue of its own (`clue`, else
- * -1); otherwise there is no value to name it by and the clue in the sentence
- * locates it. */
-function frame(to: To, clue: number): { bad: string; tail: string } {
-  const bad = ORIENT[to === "hor" ? "ver" : "hor"];
-  const here = clue === -1 ? "this square" : `this ${clue}`;
-  return { bad, tail: `So ${here} must be ${ORIENT[to]}.` };
+/** Where a step's marks sit: the square it decides, its own clue (-1 when it
+ * has none), and the cells its argument rests on, by the part each plays. */
+export interface SticksMarks {
+  target: Point;
+  clue: number;
+  /** The clue cell or cells the sentence names. */
+  clues: readonly Point[];
+  /** The rest of the evidence: a line's squares, a black clue's lines or its
+   * open sides. */
+  cells: readonly Point[];
 }
 
+/** The square decided, by its number when it has one ("this 2"): there is
+ * otherwise no value to name it by, and the clue in the sentence locates it. */
+const square = (m: SticksMarks): Narration =>
+  mark.this("ring", CELL, [m.target], m.clue === -1 ? "square" : `${m.clue}`);
+
+/** The orientation ruled out, and the closing sentence naming the one left. */
+function frame(to: To, m: SticksMarks): { bad: string; tail: Narration } {
+  const bad = ORIENT[to === "hor" ? "ver" : "hor"];
+  return { bad, tail: phrase`So ${square(m)} must be ${ORIENT[to]}.` };
+}
+
+const clueRef = (m: SticksMarks, words: string): Narration =>
+  mark.as("outline", CELL, m.clues, words);
+
+const cellsRef = (m: SticksMarks, words: string): Narration =>
+  mark.as("outline", CELL, m.cells, words);
+
 export const say = {
-  tooLong: (reason: R<"tooLong">, to: To, clue: number, continues: boolean): string => {
-    const { bad, tail } = frame(to, clue);
+  tooLong: (
+    reason: R<"tooLong">,
+    to: To,
+    m: SticksMarks,
+    continues: boolean,
+  ): Narration => {
+    const { bad, tail } = frame(to, m);
+    const run = cellsRef(m, `${reason.size} squares`);
     return continues
-      ? `The ${reason.value} rules this square out too: a ${bad} line would run its line to ${reason.size} squares. ${tail}`
-      : `A ${bad} line here would run the ${reason.value}'s line to ${reason.size} squares, too long for it. ${tail}`;
+      ? phrase`${clueRef(m, `The ${reason.value}`)} rules ${square(m)} out too: a ${bad} line would run its line to ${run}. ${tail}`
+      : phrase`A ${bad} line here would run ${clueRef(m, `the ${reason.value}`)}'s line to ${run}, too long for it. ${tail}`;
   },
 
   // Leads with the clue, not with the ruled-out move: the signal a player has
@@ -43,30 +74,31 @@ export const say = {
   unreachable: (
     reason: R<"unreachable">,
     to: To,
-    clue: number,
+    m: SticksMarks,
     continues: boolean,
-  ): string => {
-    const { bad, tail } = frame(to, clue);
-    const room = `${reason.max} square${reason.max === 1 ? "" : "s"}`;
+  ): Narration => {
+    const { bad, tail } = frame(to, m);
+    const room = cellsRef(m, `${reason.max} square${reason.max === 1 ? "" : "s"}`);
     return continues
-      ? `The ${reason.value} rules this square out too: a ${bad} line would leave it only ${room}. ${tail}`
-      : `The ${reason.value} needs a longer line, and a ${bad} line here would leave it only ${room}. ${tail}`;
+      ? phrase`${clueRef(m, `The ${reason.value}`)} rules ${square(m)} out too: a ${bad} line would leave it only ${room}. ${tail}`
+      : phrase`${clueRef(m, `The ${reason.value}`)} needs a longer line, and a ${bad} line here would leave it only ${room}. ${tail}`;
   },
 
   /** A line here would join clues showing `vals` into one line. */
-  twoClues: (vals: number[], to: To, clue: number, continues: boolean): string => {
-    const { bad, tail } = frame(to, clue);
+  twoClues: (vals: number[], to: To, m: SticksMarks, continues: boolean): Narration => {
+    const { bad, tail } = frame(to, m);
+    const line = cellsRef(m, "one line");
     if (continues)
-      return `The same numbers rule this square out too: a ${bad} line would join them into one line. ${tail}`;
+      return phrase`${clueRef(m, "The same numbers")} rule ${square(m)} out too: a ${bad} line would join them into ${line}. ${tail}`;
     const joined =
       vals.length !== 2
-        ? `put ${vals.length} numbers on one line`
+        ? phrase`put ${clueRef(m, `${vals.length} numbers`)} on ${line}`
         : vals[0] === vals[1]
-          ? `join two ${vals[0]}s into one line`
-          : `join the ${vals[0]} and the ${vals[1]} into one line`;
+          ? phrase`join ${clueRef(m, `two ${vals[0]}s`)} into ${line}`
+          : phrase`join ${clueRef(m, `the ${vals[0]} and the ${vals[1]}`)} into ${line}`;
     // One number per line is the rule, and the help teaches it
     // (docs/games/hints.md § "Rules belong in the help").
-    return `A ${bad} line here would ${joined}. ${tail}`;
+    return phrase`A ${bad} line here would ${joined}. ${tail}`;
   },
 
   // No "as well" on the continuation: at a black 0 nothing runs into it yet,
@@ -75,23 +107,39 @@ export const say = {
   overConnected: (
     reason: R<"overConnected">,
     to: To,
-    clue: number,
+    m: SticksMarks,
     continues: boolean,
-  ): string => {
-    const { bad, tail } = frame(to, clue);
+  ): Narration => {
+    const { bad, tail } = frame(to, m);
+    const black = (cap: boolean) =>
+      clueRef(m, `${cap ? "The" : "the"} black ${reason.value}`);
+    const lines = cellsRef(
+      m,
+      `its ${reason.value} line${reason.value === 1 ? "" : "s"}`,
+    );
     if (continues)
-      return `The black ${reason.value} rules this square out too: a ${bad} line here would run into it. ${tail}`;
+      return m.cells.length
+        ? phrase`${black(true)} rules ${square(m)} out too: a ${bad} line here would add to ${lines}. ${tail}`
+        : phrase`${black(true)} rules ${square(m)} out too: a ${bad} line here would run into it. ${tail}`;
     return reason.value === 0
-      ? `The black 0 takes no lines, and a ${bad} line here would run straight into it. ${tail}`
-      : `The black ${reason.value} already has its ${reason.value} line${reason.value === 1 ? "" : "s"}, and a ${bad} line here would add another. ${tail}`;
+      ? phrase`${black(true)} takes no lines, and a ${bad} line here would run straight into it. ${tail}`
+      : phrase`${black(true)} already has ${lines}, and a ${bad} line here would add another. ${tail}`;
   },
 
-  starved: (reason: R<"starved">, to: To, clue: number, continues: boolean): string => {
-    const { bad, tail } = frame(to, clue);
+  starved: (
+    reason: R<"starved">,
+    to: To,
+    m: SticksMarks,
+    continues: boolean,
+  ): Narration => {
+    const { bad, tail } = frame(to, m);
+    const black = clueRef(m, `The black ${reason.value}`);
+    // The continuation leads with the ruled-out line: "rules this square out
+    // too" leaves no room to name the open sides still drawn.
     if (continues)
-      return `The black ${reason.value} rules this square out too: a ${bad} line would close another open side. ${tail}`;
+      return phrase`A ${bad} line would close another side ${clueRef(m, `the black ${reason.value}`)} needs, like ${mark.the("outline", CELL, m.cells, ["one", "ones"])}. ${tail}`;
     return reason.value === 1
-      ? `The black 1 has one open side left, and a ${bad} line here would close it off. ${tail}`
-      : `The black ${reason.value} needs ${reason.value === 2 ? "both" : `all ${reason.value}`} of its open sides, and a ${bad} line here would close one. ${tail}`;
+      ? phrase`${black} has one open side left, and a ${bad} line here would close it off. ${tail}`
+      : phrase`${black} needs ${cellsRef(m, reason.value === 2 ? "both" : `all ${reason.value}`)} of its open sides, and a ${bad} line here would close one. ${tail}`;
   },
 };

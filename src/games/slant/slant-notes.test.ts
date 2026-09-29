@@ -261,15 +261,13 @@ function walkPlan(s: SlantState): { marks: number; steps: number } {
     for (const [, digit] of text.matchAll(/either ([13])/g)) {
       for (const pt of Object.values(ends)) expect(board.clues[pt]).toBe(Number(digit));
     }
-    const clue = text.match(
-      /^This (\d) clue (needs one more line|gets one line from its)/,
-    );
+    const clue = text.match(/^This (\d) clue (needs one line|has .* needs one more)/);
     if (clue) {
       // Some clue of that value at an end of the shared side needs exactly one
       // more line, and its only open squares are these two (and, if the
       // sentence says so, a marked pair it counts as one line).
       const c = Number(clue[1]);
-      const pair = clue[2].startsWith("gets");
+      const pair = /from its (?:marked|chained) pair/.test(clue[2]);
       const holds = Object.values(ends).some((pt) => {
         if (board.clues[pt] !== c) return false;
         const px = pt % W;
@@ -304,8 +302,11 @@ function walkPlan(s: SlantState): { marks: number; steps: number } {
       });
       expect(holds).toBe(true);
     }
-    const line = text.match(/^(This 2 lies|These 2s lie) in a line between (.*), so /);
-    if (line) checkLine(board, line[1] === "This 2 lies", line[2], Object.values(ends));
+    const line = text.match(
+      /^(This 2 and its pair|These 2s and their pairs) line up between (.*), so /,
+    );
+    if (line)
+      checkLine(board, line[1].startsWith("This 2"), line[2], Object.values(ends));
     if (/^The pair across this 2 /.test(text)) {
       expect(Object.values(ends).some((pt) => board.clues[pt] === 2)).toBe(true);
     }

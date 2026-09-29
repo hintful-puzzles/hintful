@@ -234,7 +234,7 @@ describe("salad hint frames", () => {
   it("previews an empty-square marker as a cross in the hint color", () => {
     const { recording, hint } = hintFrame(
       NUMBERS_ID,
-      /so every other square in it must be empty|must be empty\.$/,
+      /and the rest of it must be empty|must be empty\.$/,
     );
     expect(hint?.explanation).toMatch(/must be empty/);
     // Salad writes three shapes, so the hint echoes the one it is asking for —

@@ -7,6 +7,7 @@ import type {
   UiUpdate,
 } from "../../engine/game.ts";
 import { ALREADY_SOLVED, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
+import type { MarkRef, Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
@@ -20,7 +21,7 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
-import { say } from "./hint-text.ts";
+import { say, TILE } from "./hint-text.ts";
 import {
   ANIM_TIME,
   colors,
@@ -177,7 +178,7 @@ function narrateFifteenStep(
   tile: number,
   goal: number,
   dest: Point,
-): string {
+): Narration {
   const w = board.w;
   const landsAtOwnHome = board.gapPos === tile - 1;
 
@@ -219,11 +220,8 @@ function hint(state: FifteenState): HintResult<FifteenMove, FifteenHintHighlight
     const tile = board.tiles[dest.y * board.w + dest.x];
     goal = goal === null ? dest.target : Math.max(goal, dest.target);
     const move: FifteenMove = { type: "move", x: dest.x, y: dest.y };
-    steps.push({
-      move,
-      explanation: narrateFifteenStep(board, tile, goal, dest),
-      highlights: { tile },
-    });
+    const words = narrateFifteenStep(board, tile, goal, dest);
+    steps.push({ move, explanation: words.text, words, highlights: { tile } });
     const homedGoal = tile === goal && board.gapPos === goal - 1;
     board = executeMove(board, move);
     if (homedGoal) goal = null;
@@ -253,7 +251,9 @@ export const fifteenGame: Game<
   FifteenState,
   FifteenMove,
   FifteenUi,
-  FifteenDrawState
+  FifteenDrawState,
+  unknown,
+  FifteenHintHighlights
 > = {
   id: "fifteen",
   // Sliding a tile is the only gesture; the secondary button has no meaning,
@@ -280,6 +280,12 @@ export const fifteenGame: Game<
   solve: () => ({ ok: true, move: { type: "solve" } }),
 
   hint,
+  hintMarks: {
+    roles: {
+      ring: "what the step decides: the tile to slide, filled in the hint's color.",
+    },
+    drawn: (hl) => [{ role: "ring", kind: TILE, elements: [hl.tile] }] as MarkRef[],
+  },
   hintKeepTrack,
 
   textFormat,

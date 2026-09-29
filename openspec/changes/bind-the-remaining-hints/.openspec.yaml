@@ -1,5 +1,2 @@
-# No delta yet: the requirements are bind-hint-words-to-marks', which this
-# sweep extends to every hinted game. Write one only if a batch changes a rule.
 schema: spec-driven
 created: 2026-09-29
-skip_specs: true

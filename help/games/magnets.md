@@ -34,17 +34,7 @@ only from the numbers, the tiles you have filled in and your ? marks, so
 it carries on from wherever you are, as long as none of those is wrong;
 if one is, it asks you to fix the highlighted mistakes first.
 
-* **A ring in the hint color** marks what the step decides: one end of a
-  magnet, or a whole tile to make neutral or to mark ?.
-* **An outline in a second color** marks the tiles it reasons from: the
-  magnet a pole would touch, or the tiles elsewhere in the line that
-  can't take the pole ("either outlined tile").
-* **Stripes** mark the row or column the sentence calls "this row" or
-  "this column", running on through its numbers, and the number it
-  counts with is drawn in the hint color.
-* **A number in the second color** is the count of a line the step only
-  cites, because that line already has all its + or − poles: "its row",
-  "the column beside it".
+{{hint-marks}}
 
 When a step says a tile must be a magnet but not which way round, it
 asks you for a ? mark: right-click the tile until the ? shows. Since a ?

@@ -34,10 +34,7 @@ Both the auto-advance and the two clue-list aids — highlighting the runs throu
 
 **Hint** explains the next step rather than simply making it. It reasons from the digits you have entered and from your pencil marks, which it reads as the only digits a square can still take. So it carries on from wherever you are, as long as none of them is wrong; if one is, it asks you to fix the highlighted mistakes first. Since blue and amber already mean across and down here, the hint's marks are green.
 
-* **A green ring** marks the square the step fills, or every square of a run it fills with a whole number.
-* **Green stripes** mark the run the sentence names: "this across run", "this down run". When a step uses both runs through a square, both are striped.
-* **A box round a number in the list** marks the numbers that still fit that run. The number the step writes in, if any, is boxed in the same green as the ring.
-* **A line through a pencil mark** is a digit the step rules out of that square.
+{{hint-marks}}
 
 A number *still fits* a run, in the hint's words, when it is the run's length, is not already written in elsewhere, and agrees with every square of the run: the digit you entered, or else its pencil marks.
 

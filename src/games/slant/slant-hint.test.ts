@@ -124,7 +124,9 @@ describe("slant hint", () => {
           res.steps[i - 1].move.type === "set"
         ) {
           sawGroupedJourney = true;
-          expect(res.steps[i].explanation).toMatch(/^The same clue forces this square/);
+          expect(res.steps[i].explanation).toMatch(
+            /^The same clue(?:, with the outlined squares?,)? forces (?:this square|these squares) too/,
+          );
         }
       }
     }
@@ -140,9 +142,9 @@ describe("slant hint", () => {
       if (!res?.ok) continue;
       for (const step of res.steps) {
         const e = step.explanation;
-        if (/already joined by a chain/.test(e)) seen.add("loop");
+        if (/join two corners/.test(e)) seen.add("loop");
         if (/one way out each/.test(e)) seen.add("deadend");
-        if (/slant the same as the ringed one|chain of marks links/.test(e)) {
+        if (/links? this square to the outlined square/.test(e)) {
           seen.add("equiv");
           const hl = step.highlights as SlantHint;
           expect(hl.ref).toBeDefined();

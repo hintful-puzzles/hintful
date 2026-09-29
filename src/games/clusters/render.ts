@@ -56,7 +56,7 @@ export const COL_1_DOT = 5; // dot on a blue tile (white)
 export const COL_ERROR = 6;
 export const COL_CURSOR = 7;
 // Hint legend: the forced cell is marked COL_HINT; the tile the refuted
-// coloring would break — the one element the narration calls "ringed" — gets a
+// coloring would break — the one element the narration calls "outlined" — gets a
 // double COL_HINT_DANGER ring (an outline, because the tile's own color *is*
 // part of the premise; doubled so it cannot be confused with the single red
 // live-error frame); a lookahead chain's what-if cells are outlined

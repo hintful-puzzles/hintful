@@ -76,8 +76,11 @@ export function legendMarkdown(roles: Partial<Record<MarkRole, string>>): string
 }
 
 /** Adjectives the collection used for marks before the roles were fixed. A
- * bound sentence never says them: each named a mark that now has a role's word. */
-const RETIRED_ADJECTIVES = ["hatched", "shaded", "highlighted"] as const;
+ * bound sentence never says them: each named a mark that now has a role's word.
+ * "Shaded" is not among them although it once named a mark, because in a
+ * shading genre it is what the rules call a cell's state (Bricks: "each shaded
+ * cell must have one below it"), and a hint speaks the rules' words. */
+const RETIRED_ADJECTIVES = ["hatched", "highlighted"] as const;
 
 const ROLE_ADJECTIVES = Object.values(MARK_ROLES).map((r) => r.adjective);
 

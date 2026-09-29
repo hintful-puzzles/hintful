@@ -11,6 +11,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
+import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
@@ -174,7 +175,7 @@ describe("hint", () => {
       const res = singlesGame.hint?.(s);
       if (!res?.ok) continue;
       const step = res.steps.find((st) =>
-        st.explanation.includes("shaded next to each other"),
+        st.explanation.includes("black next to each other"),
       );
       if (step) {
         expect(step.explanation).toMatch(/\d/); // concrete value(s)
@@ -319,6 +320,10 @@ describe("hintKeepTrack", () => {
       ),
     ).toBe("onTrack");
     expect(step.move.sets).toEqual([{ x: b.x, y: b.y, value: b.value }]);
+    // The shrunk step's words name only the square left.
+    const legend = singlesGame.hintMarks;
+    if (!legend) throw new Error("singles declares no hintMarks");
+    expect(bindingDefects(step as never, legend)).toEqual([]);
 
     // Now fill the second → completed.
     expect(
@@ -334,7 +339,10 @@ describe("hintKeepTrack", () => {
 describe("singles hint: the line a sentence names", () => {
   it.each([
     ["a touching pair", /touch, so one of them stays white/],
-    ["a number sharing a line with a ringed white one", /shares? a line with/],
+    [
+      "a number sharing a line with an outlined white one",
+      /shares? (?:this row|this column) with/,
+    ],
   ])("%s hatches the one row or column it names", (_, sentence) => {
     let checked = 0;
     for (let s = 0; s < 12 && checked === 0; s++) {
@@ -394,7 +402,7 @@ describe("singles hint render", () => {
       game: singlesGame,
       id: "6x6dk#scan-0",
       showHint: true,
-      hintUntil: (s) => s.explanation.includes("can't be adjacent"),
+      hintUntil: (s) => /touch(?:es)? a black square/.test(s.explanation),
     });
     const ops = recording.ops;
     const color = (c: number) => ops.some((o) => "color" in o && o.color === c);
@@ -403,16 +411,17 @@ describe("singles hint render", () => {
     expect(COL_HINT_BLACKREF).not.toBe(COL_HINT);
   });
 
-  it("rings a cited ringed-white square in COL_HINT_WHITEREF", () => {
+  it("outlines a cited circled square in COL_HINT_WHITEREF", () => {
     // Walk to a sameLine frame: a circled white square forces line-mates
-    // shaded. The white premise rings in the white-ref legend color.
+    // shaded. The white premise is outlined in the white-ref legend color.
     const { recording } = renderScenario({
       game: singlesGame,
       id: "6x6dk#scan-0",
       showHint: true,
-      // "share a line" is unique to sameLine (boxedIn also cites a "ringed
-      // white square", so predicate on the sameLine-only phrase).
-      hintUntil: (s) => s.explanation.includes("share a line"),
+      // "share(s) … with" is unique to sameLine (boxedIn also cites an
+      // "outlined white square", so predicate on the sameLine-only phrase).
+      hintUntil: (s) =>
+        /shares? (?:a line|this row|this column) with/.test(s.explanation),
     });
     const ops = recording.ops;
     expect(ops.some((o) => "color" in o && o.color === COL_HINT_WHITEREF)).toBe(true);

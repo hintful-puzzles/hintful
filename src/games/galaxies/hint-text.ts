@@ -2,67 +2,121 @@
  * Every sentence Galaxies' hint speaks, and the words inside them.
  *
  * The deduction decides which sentence and with what values (`hint.ts`'s
- * `narrate`, which reads each dot's color and whether a wall is the board's own
- * rim); this file decides only how it reads.
+ * `saidOf`, which reads each dot's color and whether a wall is the board's own
+ * rim, into the step's `said`); this file decides only how it reads. Every word
+ * that points at the board is a reference to the mark it points at
+ * (`engine/hint-words.ts`, `hint-marks.ts`), read off the step's highlights, so
+ * a step shrunk by the player's own moves re-reads from what it still draws.
  */
+
+import { CELL, mark, type Narration, phrase, whole } from "../../engine/hint-words.ts";
+import type { Point } from "../../engine/types.ts";
+import type { GalaxiesHint } from "./hint.ts";
+import { DOT, type Painted, painted, WALL } from "./hint-marks.ts";
+
+/** What a sentence says beyond its marks: the values it reads off the board. */
+export type GalaxiesSaid =
+  /** `n` is how many cells the dot sits on, which says where it is. */
+  | { kind: "dotTile"; black: boolean; n: number }
+  /** `points` when both cells show arrows. */
+  | { kind: "separate"; points: boolean }
+  /** `edge` when the wall to match is the board's rim. */
+  | { kind: "mirrorWall"; black: boolean; edge: boolean }
+  | { kind: "enclosed"; black: boolean; openings: number }
+  | { kind: "soleOwner"; black: boolean }
+  | { kind: "onlyReach"; black: boolean }
+  | { kind: "exclave" };
 
 /** A dot, named by its color. */
 const dot = (black: boolean): string => (black ? "black dot" : "white dot");
 
-export const say = {
-  /** The `n` cells a dot sits on, whose color is `black` or white. */
-  dotTile: (n: number, black: boolean): string => {
-    const cells =
-      n === 1 ? "this cell" : n === 2 ? "both these cells" : `these ${n} cells`;
-    // Named by where it is, not by a ring: the dot is *on* the cells being
-    // filled, so a ring would be the hint's color on the hint's color.
-    const where =
-      n === 2 ? "between them" : n === 4 ? "at their shared corner" : "they touch";
-    return `A galaxy covers the cells its dot sits on, so ${cells} must belong to the ${dot(black)} ${where}.`;
-  },
+const els = (p: Point | null): Point[] => (p ? [p] : []);
 
-  // A cell that *holds* its own dot draws no arrow — there is nothing to point
-  // at from inside itself — so "point at different dots" would send the player
-  // looking for an arrow that is not there. Both cells are still visibly
-  // settled: one shows an arrow, the other shows the dot.
-  /** Two cells settled to different dots; `points` when both show arrows. */
-  separate: (points: boolean): string =>
-    `These two cells ${points ? "point at" : "go with"} different dots, so they belong to different galaxies, and a wall must run between them.`,
+/** "this cell", or "this cell and its partner" when the move brings the cell
+ * across the dot along. */
+const thisCell = (p: Painted): Narration =>
+  mark.as("ring", CELL, els(p.focus), "this cell");
+const partner = (p: Painted, words = "its partner"): Narration | string =>
+  p.others.length > 0 ? phrase` and ${mark.as("ring", CELL, p.others, words)}` : "";
+/** "it", with its partner when there is one. */
+const itAnd = (p: Painted): Narration =>
+  phrase`${mark.as("ring", CELL, els(p.focus), "it")}${partner(p)}`;
+const ringedDot = (p: Painted, words: string): Narration =>
+  mark.as("ring", DOT, els(p.targetDot), words);
 
-  // The mirrored wall is very often the board's own rim, and calling that "the
-  // marked wall" would have the player hunting for a wall they are already
-  // looking at the edge of. "Outlined" for a **cell**, "ringed" for a **dot**:
-  // both marks are rings now, so the noun is what keeps them apart and the
-  // words follow it.
-  /** Partners across a dot; `edge` when the wall to match is the board's rim. */
-  mirrorWall: (black: boolean, edge: boolean): string =>
-    edge
-      ? `The outlined cells are partners across the ${dot(black)}; one meets the board's edge, so the other must be walled to match.`
-      : `The outlined cells are partners across the ${dot(black)}, so the marked wall beside one must be matched beside the other.`,
+function sentence(p: Painted, said: GalaxiesSaid): Narration {
+  switch (said.kind) {
+    case "dotTile": {
+      const cells = mark.as("ring", CELL, p.others, (cs) =>
+        cs.length === 1
+          ? "this cell"
+          : cs.length === 2
+            ? "both these cells"
+            : `these ${cs.length} cells`,
+      );
+      // Named by where it is: the dot is *on* the cells being filled, so it is
+      // ringed only where a cell around it is not.
+      const where =
+        said.n === 2
+          ? "between them"
+          : said.n === 4
+            ? "at their shared corner"
+            : "they touch";
+      return phrase`A galaxy covers the cells its dot sits on, so ${cells} must belong to ${ringedDot(p, `the ${dot(said.black)}`)} ${where}.`;
+    }
 
-  // Its walled sides are drawn on the board, and "every way out" already
-  // excludes them; that a galaxy is connected is the rule, and the help teaches
-  // it (docs/games/hints.md § "Rules belong in the help").
-  /** Every one of the cell's `openings` leads into the ringed dot's galaxy. */
-  enclosed: (openings: number, black: boolean): string => {
-    const lead =
-      openings === 1
-        ? "The only way out of this cell leads"
-        : "Every way out of this cell leads";
-    return `${lead} into the striped galaxy, so this cell must belong to the ringed ${dot(black)}.`;
-  },
+    // A cell that *holds* its own dot draws no arrow — there is nothing to point
+    // at from inside itself — so "point at different dots" would send the player
+    // looking for an arrow that is not there. Both cells are still visibly
+    // settled: one shows an arrow, the other shows the dot.
+    case "separate":
+      return phrase`${mark.as("outline", CELL, p.area, "These two cells")} ${said.points ? "point at" : "go with"} ${mark.as("outline", DOT, p.refDots, "different dots")}, so they belong to different galaxies, and ${mark.as("ring", WALL, p.targetWalls, "a wall")} must run between them.`;
 
-  // The claim *is* this rung's own condition, so it is checkable by the player
-  // with the gesture they already have: drag from the cell and count the rings.
-  soleOwner: (black: boolean): string =>
-    `Only the ringed ${dot(black)} can own this cell: for any other dot, its partner cell is off the board or on a dot.`,
+    // The mirrored wall is very often the board's own rim, and calling that
+    // "the outlined wall" would have the player hunting for a wall they are
+    // already looking at the edge of.
+    // A cell the dot sits in the middle of is its own partner, and its walls
+    // mirror to its own other side.
+    case "mirrorWall": {
+      const across = mark.as("outline", DOT, p.refDots, `the ${dot(said.black)}`);
+      const pair =
+        p.area.length === 1
+          ? phrase`${mark.as("outline", CELL, p.area, "The outlined cell")} is its own partner across ${across}`
+          : phrase`${mark.the("outline", CELL, p.area, "cell").capitalized()} are partners across ${across}`;
+      const wall = mark.this("ring", WALL, p.targetWalls, "wall");
+      return said.edge
+        ? phrase`${pair}; one ${p.area.length === 1 ? "side " : ""}meets ${mark.as("outline", WALL, p.walls, "the board's edge")}, so ${wall} must match it.`
+        : phrase`${pair}, so ${mark.the("outline", WALL, p.walls, "wall")} must be mirrored by ${wall}.`;
+    }
 
-  // "shows how far", not "is everywhere": the acted-on cell carries the action
-  // mark rather than the hatch, so the striped set is the reach minus one
-  // square and an absolute claim would be a shade off true.
-  onlyReach: (black: boolean): string =>
-    `No other galaxy can reach this cell, so it must belong to the ringed ${dot(black)}, whose reach the stripes show.`,
+    // Its walled sides are drawn on the board, and "every way out" already
+    // excludes them; that a galaxy is connected is the rule, and the help teaches
+    // it (docs/games/hints.md § "Rules belong in the help").
+    case "enclosed": {
+      const lead = mark.as(
+        "outline",
+        CELL,
+        p.area,
+        said.openings === 1 ? "The only way out" : "Every way out",
+      );
+      return phrase`${lead} of ${thisCell(p)} leads into ${mark.the("stripes", whole(CELL), p.hatch, "galaxy")}, so ${itAnd(p)} must belong to ${ringedDot(p, `the ringed ${dot(said.black)}`)}.`;
+    }
 
-  exclave:
-    "The striped cells are cut off from their ringed dot, and this is their only way back, so it must be that dot's too.",
-};
+    // The claim *is* this rung's own condition, so it is checkable by the player
+    // with the gesture they already have: drag from the cell and count the rings.
+    case "soleOwner":
+      return phrase`Only ${ringedDot(p, `the ringed ${dot(said.black)}`)} can own ${thisCell(p)}${partner(p)}: any other dot mirrors it off the board or onto a dot.`;
+
+    // "shows how far", not "is everywhere": the acted-on cell carries the action
+    // mark rather than the hatch, so the striped set is the reach minus one
+    // square and an absolute claim would be a shade off true.
+    case "onlyReach":
+      return phrase`No other galaxy reaches ${thisCell(p)}, so ${itAnd(p)} must join ${ringedDot(p, `the ringed ${dot(said.black)}`)}, whose reach ${mark.as("stripes", CELL, p.hatch, "the stripes show")}.`;
+
+    case "exclave":
+      return phrase`${mark.the("stripes", CELL, p.hatch, "cell").capitalized()} can reach ${ringedDot(p, p.hatch.length === 1 ? "its ringed dot" : "their ringed dot")} only through ${thisCell(p)}, so ${itAnd(p)} must be that dot's too.`;
+  }
+}
+
+/** A step's sentence, from its highlights. */
+export const tell = (hl: GalaxiesHint): Narration => sentence(painted(hl), hl.said);

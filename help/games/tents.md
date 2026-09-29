@@ -47,13 +47,7 @@ carries on from wherever you are, as long as none of those is wrong; if
 one is, it asks you to fix the highlighted mistakes first. An *open*
 square, in its words, is one still empty: neither a tent nor grass.
 
-* **A ring** marks the squares the step decides.
-* **An outline** marks what it reasons from: a tree, or a tent that
-  already belongs to another tree.
-* **Stripes** mark the row or column whose number it counts with, and
-  that number is shown in the hint's color.
-* **A blue line** between a tent and a tree is a link the step asks you
-  to draw.
+{{hint-marks}}
 
 A tree has its tent once they are joined, and also when you can see it
 at a glance: the tent touches no other tree still free, or it is the

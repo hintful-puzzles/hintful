@@ -19,6 +19,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { CELL, type MarkRef, type Narration } from "../../engine/hint-words.ts";
 import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -37,7 +38,7 @@ import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { type Cell, DIFF_NAMES, EMPTY, ONE, ZERO } from "./constants.ts";
 import { newDesc, solvableAt } from "./generator.ts";
-import { say } from "./hint-text.ts";
+import { type Marked, say } from "./hint-text.ts";
 import {
   border,
   colors,
@@ -174,17 +175,19 @@ function flashLength(
 
 /** Highlight data for an Unruly hint step. `target` is the cell the
  * deduction forces, ringed in `COL_HINT`. `line` is the row or column the
- * sentence names, hatched whatever its cells hold. `ring` cells are the premise
- * cells whose color is the evidence (the same-color pair, the completed quota,
- * the near-complete reserved window, the reference row), ringed in
- * `COL_HINT_REF` so the color that *is* the reason stays visible. */
+ * sentence names, hatched whatever its cells hold. `outline` cells are the
+ * premise cells whose color is the evidence (the same-color pair, the completed
+ * quota, the near-complete reserved window, the reference row), outlined in
+ * `COL_HINT_REF` so the color that *is* the reason stays visible. Cells are
+ * indices into a grid `w2` wide. */
 export interface UnrulyHint {
   target: Point & { value: Cell };
   /** The cells of the row or column the sentence calls "this row", hatched
    * (docs/games/hints.md § "Hatch the line the sentence names"). */
   line: number[];
-  /** The cited premise cells, ringed. */
-  ring: number[];
+  /** The cited premise cells. */
+  outline: number[];
+  w2: number;
 }
 
 /** Every cell index of a row (`horizontal`) or column. */
@@ -200,19 +203,39 @@ function lineCells(
   return out;
 }
 
-/** Narrate *why* the move is forced, per the deduction technique. The words
- * are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(reason: HintReason): string {
+const pointOf = (i: number, w2: number): Point => ({
+  x: i % w2,
+  y: Math.floor(i / w2),
+});
+
+/** Narrate *why* the move is forced, per the deduction technique, naming the
+ * cells `hl` marks. The words are [`hint-text.ts`](./hint-text.ts)'s. */
+function narrate(reason: HintReason, hl: UnrulyHint): Narration {
+  const m: Marked = {
+    target: hl.target,
+    evidence: hl.outline.map((i) => pointOf(i, hl.w2)),
+    line: hl.line.map((i) => pointOf(i, hl.w2)),
+  };
   switch (reason.kind) {
     case "threes":
-      return say.threes(reason);
+      return say.threes(reason, m);
     case "complete":
-      return say.complete(reason);
+      return say.complete(reason, m);
     case "unique":
-      return say.unique(reason);
+      return say.unique(reason, m);
     case "nearcomplete":
-      return say.nearcomplete(reason);
+      return say.nearcomplete(reason, m);
   }
+}
+
+/** What a step's highlights draw: the `drawn` half of Unruly's legend. */
+function unrulyHintMarks(hl: UnrulyHint): MarkRef[] {
+  const at = (i: number): Point => pointOf(i, hl.w2);
+  return [
+    { role: "ring", kind: CELL, elements: [{ x: hl.target.x, y: hl.target.y }] },
+    { role: "outline", kind: CELL, elements: hl.outline.map(at) },
+    { role: "stripes", kind: CELL, elements: hl.line.map(at) },
+  ] as MarkRef[];
 }
 
 /** Build the highlight payload for a forced move from its reason: the line the
@@ -226,30 +249,33 @@ function buildHighlights(
 
   switch (reason.kind) {
     case "threes":
-      return { target, line: [], ring: [...reason.refs] };
+      return { target, line: [], outline: [...reason.refs], w2 };
     case "complete": {
       const cells = lineCells(reason.line, reason.horizontal, w2, h2);
       // The already-placed `full` cells are the quota the sentence counts.
       return {
         target,
         line: cells,
-        ring: cells.filter((i) => grid[i] === reason.full),
+        outline: cells.filter((i) => grid[i] === reason.full),
+        w2,
       };
     }
     case "unique":
       // "This row" is the one being completed; the reference row it would copy
-      // is "the ringed row", named by its mark.
+      // is "the outlined row", named by its mark.
       return {
         target,
         line: lineCells(reason.rowB, reason.horizontal, w2, h2),
-        ring: lineCells(reason.rowA, reason.horizontal, w2, h2),
+        outline: lineCells(reason.rowA, reason.horizontal, w2, h2),
+        w2,
       };
     case "nearcomplete":
       return {
         target,
         line: lineCells(reason.line, reason.horizontal, w2, h2),
-        ring:
+        outline:
           reason.anchor >= 0 ? [...reason.window, reason.anchor] : [...reason.window],
+        w2,
       };
   }
 }
@@ -264,10 +290,13 @@ function hint(state: UnrulyState): HintResult<UnrulyMove, UnrulyHint> {
     const x = m.index % state.w2;
     const y = Math.floor(m.index / state.w2);
     const target = { x, y, value };
+    const highlights = buildHighlights(m.reason, target, state);
+    const words = narrate(m.reason, highlights);
     return {
       move: { type: "place", x, y, value },
-      explanation: narrate(m.reason),
-      highlights: buildHighlights(m.reason, target, state),
+      explanation: words.text,
+      words,
+      highlights,
       continuesPrevious: m.continuesPrevious,
     };
   });
@@ -317,7 +346,8 @@ export const unrulyGame: Game<
   UnrulyMove,
   UnrulyUi,
   UnrulyDrawState,
-  UnrulyMistake
+  UnrulyMistake,
+  UnrulyHint
 > = {
   id: "unruly",
 
@@ -376,6 +406,15 @@ export const unrulyGame: Game<
   },
 
   hint,
+  hintMarks: {
+    roles: {
+      ring: "the square to color. It is drawn empty: the sentence says whether it must be black or white.",
+      outline:
+        "the squares whose colors the step reasons from: the pair that would make three, the full quota, the only places the last one can go, or the row a match would copy.",
+      stripes: 'the row or column the sentence calls "this row" or "this column".',
+    },
+    drawn: unrulyHintMarks,
+  },
   hintKeepTrack,
   findMistakes,
 

@@ -32,13 +32,7 @@ only from the numbers and the lines you have placed, so it carries on from
 wherever you are, as long as none of your lines is wrong; if one is, it
 asks you to fix the highlighted mistakes first.
 
-* **A line in the hint color** shows the line the step asks you to place,
-  running the way it must go: across for horizontal, up and down for
-  vertical.
-* **An outline in a second color** marks the cells the step reasons from:
-  the cells a numbered line runs through or could still reach, or a black
-  cell together with the lines already running into it or the cells beside
-  it where one still could.
+{{hint-marks}}
 
 Every step rules one direction out and so leaves the other. The hint
 names the square by its number when it has one ("this 2 must be

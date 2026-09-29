@@ -29,38 +29,29 @@ only from the numbers and your own black squares and circles, so it
 carries on from wherever you are, as long as none of those is wrong; if
 one is, it asks you to fix the highlighted mistakes first.
 
-In its words, a *shaded* square is one you have blacked out, and a
+In its words, a *black* square is one you have blacked out, and a
 *white* square is one that stays uncovered. When a step says a square
 must be white, record that with a circle (right-click); when it must be
-shaded, click it.
+black, click it.
 
-* **A ring in the hint color** marks the square the step decides. It is
-  drawn empty: the sentence says whether to shade it or circle it.
-* **An outline in a second color** marks the numbers the step reasons
-  from, such as two matching numbers one square apart.
-* **A square you have already shaded or circled** that the step reasons
-  from is outlined in a color of its own, one for shaded and another for
-  circled. A circled one is what the hint calls "the ringed white square".
-* **An outline in a third color** marks a corner square the step is
-  keeping from being boxed in.
-* **Stripes** mark the row or column the sentence talks about ("every
-  other 2 in the line").
+{{hint-marks}}
 
 A few patterns are worth learning by name:
 
 * **A sandwich.** Two equal numbers with one square between them: one of
-  the two must be shaded, so the square between them must be white.
+  the two must be black, so the square between them must be white.
 * **A touching pair.** Two equal numbers side by side: one of them stays
   white, so every other copy of that number in their row or column must
-  be shaded.
+  be black.
 * **Pairs in neighboring lines.** A pair of equal numbers in one row and
-  another pair in the next, lined up so that shading either of two
-  squares would force two shaded squares side by side. Both must be white.
+  another pair in the next, lined up so that blacking out either of two
+  squares would force two black squares side by side. Both must be white.
 * **Corners.** Where matching numbers crowd a corner of the grid, some
-  ways of shading them would leave the corner square with no white
+  ways of blacking them out would leave the corner square with no white
   neighbor, so those are ruled out.
-* **Keeping the white squares joined.** A square whose shading would cut
-  the white squares in two, or seal a white square off, must be white.
+* **Keeping the white squares joined.** A square that would cut the
+  white squares in two if black, or seal a white square off, must be
+  white.
 
 ## Singles parameters
 

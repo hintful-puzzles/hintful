@@ -345,7 +345,7 @@ export function redraw(
   const hl = hint?.highlights;
   const hintTarget = hl ? hl.target.y * w2 + hl.target.x : -1;
   const hintLineSet = hl ? new Set(hl.line) : null;
-  const hintRingSet = hl ? new Set(hl.ring) : null;
+  const hintRingSet = hl ? new Set(hl.outline) : null;
 
   // A placement animates only when the engine is driving timed redraws
   // (animTime > 0) and we have a from-state to grow out of.

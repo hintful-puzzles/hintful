@@ -190,7 +190,7 @@ describe("crossing hint — techniques and narration", () => {
       walk(state, (f, before) => {
         if (f.technique !== "onlyNumber" || seen.has(f.because)) return;
         seen.add(f.because);
-        const text = narrateCrossing(before.puzzle, f);
+        const text = narrateCrossing(before.puzzle, f).text;
         if (f.because === "digits") {
           expect(text).toMatch(/matches the digits already in this run/);
         } else {
@@ -214,7 +214,7 @@ describe("crossing hint — techniques and narration", () => {
   it("narrates each technique in the necessity voice, naming its premise", () => {
     const texts = new Map<string, string>();
     for (const [k, { f, state }] of found) {
-      texts.set(k, narrateCrossing(state.puzzle, f));
+      texts.set(k, narrateCrossing(state.puzzle, f).text);
     }
     expect(texts.get("onlyNumber")).toMatch(/so it must be \d+\.$/);
     expect(texts.get("sharedDigit")).toMatch(
@@ -224,14 +224,16 @@ describe("crossing hint — techniques and narration", () => {
     // The crossing deduction names both runs and never lists candidates with
     // "and" (which would read as "both at once", the opposite of the claim).
     const cross = texts.get("crossRuns") ?? "";
-    expect(cross).toMatch(/^(Across|Down), this square can only be/);
-    expect(cross).toMatch(/rules out all but (\d), so it must be \1\.$/);
-    expect(cross.split(", and the ")[0]).not.toMatch(/ and /);
+    expect(cross).toMatch(/^The (across|down) run's numbers leave this square only /);
+    expect(cross).toMatch(
+      /; those of the (across|down) run rule out all but (\d), so it must be \2\.$/,
+    );
+    expect(cross.split("; those ")[0]).not.toMatch(/ and /);
   });
 
   it("keeps every narration terse enough to read in the banner", () => {
     for (const [, { f, state }] of found) {
-      expect(narrateCrossing(state.puzzle, f).length).toBeLessThanOrEqual(300);
+      expect(narrateCrossing(state.puzzle, f).text.length).toBeLessThanOrEqual(300);
     }
   });
 });
@@ -418,7 +420,9 @@ describe("crossing hint — every premise is on the board", () => {
     // Two runs, two deductions: not one journey.
     expect(second.continuesPrevious).toBeUndefined();
     expect(third.move.kind).toBe("set");
-    expect(third.explanation).toMatch(/^Across, this square can only be 3 or 4/);
+    expect(third.explanation).toMatch(
+      /^The across run's numbers leave this square only 3 or 4; those of the down run/,
+    );
   });
 
   it("writes one run's notes in several squares as one journey", () => {

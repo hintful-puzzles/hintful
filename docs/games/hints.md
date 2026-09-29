@@ -1890,14 +1890,15 @@ outlined is a *piece* ("the outlined island", "this segment") and particular
 squares: a Seismic cull's placed number, Range's already-seen arms beside the
 striped run. Every mark then has one meaning, and the three roles (ring,
 outline, stripes) are the engine's: § "Bind the words to the marks" has them,
-and `engine/hint-words.ts` holds their words. The two clue-digit recolorings
-below are not roles yet: a game still draws them itself, until the sweep
-binds the games that use them.
+and `engine/hint-words.ts` holds their words.
 
-| mark | means |
-|---|---|
-| clue digit, action color | the count the sentence reads |
-| clue digit, evidence color | a line cited only as a reason |
+**A recolored clue digit is an outline, not a role of its own.** A game may
+paint the count the sentence reads in the action color and a clue cited only
+as a reason in the evidence color, but both are what the step reasons from, so
+both are outline references, told apart by their nouns ("this row's clue",
+"the clue of the column beside it"). The color is the game's glyph for the
+outline on a clue; a clue slot outside the grid gets a kind of its own
+(`bind-the-remaining-hints`, design D1).
 
 **No line is named by a number the board does not draw.** "Row 3" sends the
 player counting; say "this row" over the hatch, or name a destination by the

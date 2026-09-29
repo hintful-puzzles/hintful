@@ -18,7 +18,7 @@ import { deduceHintPlan, type HintPlanResult } from "../../engine/hint-plan.ts";
 import type { HintStep } from "../../engine/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import type { Point } from "../../engine/types.ts";
-import { say } from "./hint-text.ts";
+import { type GalaxiesSaid, tell } from "./hint-text.ts";
 import type { GalaxiesMove } from "./index.ts";
 import { okToAddAssocWithOpposite, reachableFromDot } from "./moves.ts";
 import { type GalaxiesFiring, RUNGS } from "./solver.ts";
@@ -79,6 +79,9 @@ export interface GalaxiesHint {
   /** Dots the argument cites (never the one it acts on — one ring role per
    * color, so "the ringed dot" is never ambiguous). */
   refDots: Point[];
+  /** What the sentence reads off the board besides these marks, so a step
+   * re-reads from its highlights when they shrink (`tell`). */
+  said: GalaxiesSaid;
 }
 
 /**
@@ -93,7 +96,7 @@ export interface GalaxiesHint {
  */
 const PLAN_CAP = 20;
 
-const EMPTY: Omit<GalaxiesHint, "targets"> = {
+const EMPTY: Omit<GalaxiesHint, "targets" | "said"> = {
   focus: null,
   targetWalls: [],
   targetDot: null,
@@ -254,28 +257,41 @@ function isBlack(s: GalaxiesState, dot: Point): boolean {
 
 /** Which sentence a firing speaks, and with what values. The words are
  * [`hint-text.ts`](./hint-text.ts)'s. */
-export function narrate(s: GalaxiesState, firing: GalaxiesFiring): string {
+function saidOf(s: GalaxiesState, firing: GalaxiesFiring): GalaxiesSaid {
   switch (firing.kind) {
     case "dotTile":
-      return say.dotTile(firing.tiles.length, isBlack(s, firing.dot));
+      return { kind: "dotTile", black: isBlack(s, firing.dot), n: firing.tiles.length };
     case "separate":
       // Whether both cells draw arrows: a cell that holds its own dot does not.
-      return say.separate(
-        firing.tiles.every(
+      return {
+        kind: "separate",
+        points: firing.tiles.every(
           (t, n) => t.x !== firing.dots[n].x || t.y !== firing.dots[n].y,
         ),
-      );
+      };
     case "mirrorWall":
-      return say.mirrorWall(isBlack(s, firing.dot), atBoardEdge(s, firing.from));
+      return {
+        kind: "mirrorWall",
+        black: isBlack(s, firing.dot),
+        edge: atBoardEdge(s, firing.from),
+      };
     case "enclosed":
-      return say.enclosed(firing.openings.length, isBlack(s, firing.dot));
+      return {
+        kind: "enclosed",
+        black: isBlack(s, firing.dot),
+        openings: firing.openings.length,
+      };
     case "soleOwner":
-      return say.soleOwner(isBlack(s, firing.dot));
     case "onlyReach":
-      return say.onlyReach(isBlack(s, firing.dot));
+      return { kind: firing.kind, black: isBlack(s, firing.dot) };
     case "exclave":
-      return say.exclave;
+      return { kind: "exclave" };
   }
+}
+
+/** A firing's sentence, as its step speaks it. */
+export function narrate(s: GalaxiesState, firing: GalaxiesFiring): string {
+  return tell(highlightsOf(s, firing)).text;
 }
 
 // --- highlights -------------------------------------------------------
@@ -290,7 +306,9 @@ function pair(tile: Point, opp: Point | null): Point[] {
 
 /** The action of an association firing: the claimed pair, the deduced cell
  * and the dot. */
-function claim(f: { tile: Point; opp: Point | null; dot: Point }): GalaxiesHint {
+type Marks = Omit<GalaxiesHint, "said">;
+
+function claim(f: { tile: Point; opp: Point | null; dot: Point }): Marks {
   return { ...EMPTY, targets: pair(f.tile, f.opp), focus: f.tile, targetDot: f.dot };
 }
 
@@ -303,7 +321,11 @@ function evidenceFor(cells: Point[], focus: Point): Point[] {
   return cells.filter((c) => c.x !== focus.x || c.y !== focus.y);
 }
 
-function highlightsOf(firing: GalaxiesFiring): GalaxiesHint {
+function highlightsOf(s: GalaxiesState, firing: GalaxiesFiring): GalaxiesHint {
+  return { ...marksOf(firing), said: saidOf(s, firing) };
+}
+
+function marksOf(firing: GalaxiesFiring): Marks {
   switch (firing.kind) {
     case "dotTile":
       return { ...EMPTY, targets: firing.tiles, targetDot: firing.dot };
@@ -375,11 +397,11 @@ function moveOf(firing: GalaxiesFiring): GalaxiesMove {
 export function galaxiesHintSteps(
   state: GalaxiesState,
 ): HintStep<GalaxiesMove, GalaxiesHint>[] {
-  return galaxiesHintPlan(state).plan.map((p) => ({
-    move: moveOf(p.firing),
-    explanation: narrate(state, p.firing),
-    highlights: highlightsOf(p.firing),
-  }));
+  return galaxiesHintPlan(state).plan.map((p) => {
+    const highlights = highlightsOf(state, p.firing);
+    const words = tell(highlights);
+    return { move: moveOf(p.firing), explanation: words.text, words, highlights };
+  });
 }
 
 // --- following the plan -----------------------------------------------

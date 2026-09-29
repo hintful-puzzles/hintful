@@ -653,34 +653,48 @@ describe("the sentences at their extremes", () => {
   // The only instrument that can read a sentence a board never produces
   // (docs/games/hints.md § "Census the reasons, not only the rungs").
   it("reads correctly at the smallest and largest values", () => {
-    expect(say.exactSpace(1, 1)).toContain("one more bridge");
-    expect(say.exactSpace(16, 8)).toContain("8 more bridges");
-    expect(say.everyNeighbor(1, 1)).toContain("just one neighbor");
-    expect(say.everyNeighbor(4, 2)).toContain("either neighbor");
-    expect(say.everyNeighbor(16, 4)).toContain("any 3 of its 4 neighbors");
-    expect(say.needsThisWay(3, 0)).toContain("no bridges at all");
-    expect(say.needsThisWay(3, 1)).toContain("at most 1 bridge from");
-    expect(say.needsThisWay(3, 2)).toContain("at most 2 bridges from");
-    expect(say.wouldSealGroup(2, 0)).toContain("these 2 islands");
-    expect(say.wouldSealGroup(2, 0)).toMatch(/^A bridge here .* must be blocked\.$/);
-    expect(say.wouldSealGroup(2, 1)).toMatch(
+    // Every mark present, so every reference has something to name.
+    const m = {
+      targets: [{ x1: 0, y1: 0, x2: 2, y2: 0 }],
+      focus: { x: 0, y: 0 },
+      islands: [{ x: 0, y: 2 }],
+      spans: [{ x1: 0, y1: 2, x2: 2, y2: 2 }],
+    };
+    const t = (n: { text: string }): string => n.text;
+    expect(t(say.exactSpace(1, 1, m))).toContain("one more bridge");
+    expect(t(say.exactSpace(16, 8, m))).toContain("8 more bridges");
+    expect(t(say.everyNeighbor(1, 1, m))).toContain("just one neighbor");
+    expect(t(say.everyNeighbor(4, 2, m))).toContain("either neighbor");
+    expect(t(say.everyNeighbor(16, 4, m))).toContain("any 3 of its 4 neighbors");
+    expect(t(say.needsThisWay(3, 0, m))).toContain("no bridges at all");
+    expect(t(say.needsThisWay(3, 1, m))).toContain("at most 1 bridge from");
+    expect(t(say.needsThisWay(3, 2, m))).toContain("at most 2 bridges from");
+    expect(t(say.wouldSealGroup(2, 0, m))).toContain("these 2 islands");
+    expect(t(say.wouldSealGroup(2, 0, m))).toMatch(
+      /^A bridge here .* must be blocked\.$/,
+    );
+    expect(t(say.wouldSealGroup(2, 1, m))).toMatch(
       /^Two bridges here .* at most one can run/,
     );
-    expect(say.wouldSealGroup(2, 3)).toMatch(/^Four bridges here .* at most three can/);
-    expect(say.wouldStarve(5, true, 0)).toContain("this 5 itself");
-    expect(say.wouldStarve(5, false, 0)).toContain("the outlined island");
-    expect(say.wouldStarve(5, false, 1)).toMatch(/^Two bridges .* at most one can run/);
+    expect(t(say.wouldSealGroup(2, 3, m))).toMatch(
+      /^Four bridges here .* at most three can/,
+    );
+    expect(t(say.wouldStarve(5, true, 0, m))).toContain("this 5 itself");
+    expect(t(say.wouldStarve(5, false, 0, m))).toContain("the outlined island");
+    expect(t(say.wouldStarve(5, false, 1, m))).toMatch(
+      /^Two bridges .* at most one can run/,
+    );
     for (const s of [
-      say.exactSpace(16, 8),
-      say.everyNeighbor(16, 4),
-      say.wouldCloseLoop,
-      say.needsThisWay(16, 12),
-      say.wouldSealGroup(64, 3),
-      say.wouldStarve(16, false, 3),
-      say.wouldStarve(16, true, 3),
-      say.mustReachOut(16),
+      say.exactSpace(16, 8, m),
+      say.everyNeighbor(16, 4, m),
+      say.wouldCloseLoop(m),
+      say.needsThisWay(16, 12, m),
+      say.wouldSealGroup(64, 3, m),
+      say.wouldStarve(16, false, 3, m),
+      say.wouldStarve(16, true, 3, m),
+      say.mustReachOut(16, m),
     ]) {
-      expect(s.length, s).toBeLessThanOrEqual(120);
+      expect(s.text.length, s.text).toBeLessThanOrEqual(120);
     }
   });
 
@@ -688,21 +702,20 @@ describe("the sentences at their extremes", () => {
     // The sentence's self arm and the picture's filter run the same test, so
     // "the outlined island" is never spoken over an empty outline.
     const state = makeBoard(BRIDGES_PRESETS[2], "bh-a");
+    const hl: BridgesHighlights = { targets: [], focus: null, islands: [], spans: [] };
     expect(
-      narrate(state, {
-        kind: "wouldStarve",
-        island: 0,
-        limit: 0,
-        ev: { islands: [0], spans: [] },
-      }),
+      narrate(
+        state,
+        { kind: "wouldStarve", island: 0, limit: 0, ev: { islands: [0], spans: [] } },
+        hl,
+      ).text,
     ).toContain("itself");
     expect(
-      narrate(state, {
-        kind: "wouldStarve",
-        island: 0,
-        limit: 0,
-        ev: { islands: [1], spans: [] },
-      }),
+      narrate(
+        state,
+        { kind: "wouldStarve", island: 0, limit: 0, ev: { islands: [1], spans: [] } },
+        hl,
+      ).text,
     ).toContain("the outlined island");
   });
 });

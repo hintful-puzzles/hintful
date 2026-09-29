@@ -100,14 +100,14 @@ describe("salad hint — the three signature techniques", () => {
     const texts = ["c1", "c2", "c3"].flatMap((s) => walk(NUMBERS, s).texts);
     expect(
       texts.some((t) =>
-        /already has (its one empty square|both of its empty squares|all \d+ of its empty squares), so every other square in it must hold a number/.test(
+        /already has (its one empty square|both of its empty squares|all \d+ of its empty squares), so this square and the rest of it must hold a number/.test(
           t,
         ),
       ),
     ).toBe(true);
     expect(
       texts.some((t) =>
-        /(All \d+ numbers of this (row|column) are already placed|We already know which \d+ squares of this (row|column) hold its numbers), so every other square in it must be empty/.test(
+        /(All \d+ numbers of this (row|column) are already placed|We already know which \d+ squares of this (row|column) hold its numbers), so this square and the rest of it must be empty/.test(
           t,
         ),
       ),
@@ -129,7 +129,7 @@ describe("salad hint — the three signature techniques", () => {
     // The standing bar: no "just because" fallback (docs/games/solver-and-generator.md § "Guess-free generation"). Every
     // narration must match one of the arms the game knows how to say.
     const KNOWN =
-      /(sees [A-C1-9] first|empty squares?, so every other|so every other square in it must be empty|empty-square mark is the only one left|no (letter|number) can still go here|can't be empty: it must hold|cross out (?:their|its) empty-square marks?|ruled out in this square|can go in only this square|together, only|just placed |already accounts? for|Following a chain|Start by penciling|Now clear the easy ones)/;
+      /(sees [A-C1-9] first|empty squares?, so this square and the rest|and the rest of it must be empty|empty-square mark is the only one left|no (letter|number) can still go here|can't be empty: it must hold|cross out (?:their|its) empty-square marks?|ruled out in this square|can go in only this square|together, only|just placed |already accounts? for|Following a chain|Start by penciling|Now clear the easy ones)/;
     for (const p of [LETTERS, NUMBERS, { ...LETTERS, diff: DIFF_HARD }]) {
       for (const t of walk(p, "bar-1").texts) {
         expect(t, `unnamed technique: ${t}`).toMatch(KNOWN);
@@ -254,7 +254,7 @@ describe("salad hint — narration arms", () => {
         tight,
       ).text,
     ).toBe(
-      "This row already has its one empty square, so every other square in it must hold a number.",
+      "This row already has its one empty square, so this square and the rest of it must hold a number.",
     );
     expect(
       premise(

@@ -235,7 +235,7 @@ describe("Sixteen midend integration — hint persistence", () => {
     const banner = () => h.last("status-bar-change")?.activeHintExplanation;
     expect(h.m.hint()).toBeNull();
     expect(banner()).toBe(
-      "Working on tile 6: move it to the nearer outlined square, then the other (setting up).",
+      "Working on tile 6: move it to the nearer ringed square, then the other (setting up).",
     );
 
     // Leg 1: slide row 0 left by 1 (cursor at (0,0), shift+left).
@@ -243,7 +243,7 @@ describe("Sixteen midend integration — hint persistence", () => {
     h.m.processInput(0, 0, 0x2000 | CURSOR_LEFT);
     // The journey continues: leg 2 is displayed without a new request.
     expect(banner()).toBe(
-      "Working on tile 6: then to the nearer outlined square, then the other.",
+      "Working on tile 6: move it on to the nearer ringed square, then the other.",
     );
 
     // Leg 2: slide column 3 down by 1 (cursor right ×3, shift+down).
@@ -251,7 +251,7 @@ describe("Sixteen midend integration — hint persistence", () => {
     h.m.processInput(0, 0, CURSOR_RIGHT);
     h.m.processInput(0, 0, CURSOR_RIGHT);
     h.m.processInput(0, 0, 0x2000 | CURSOR_DOWN);
-    expect(banner()).toBe("Working on tile 6: then to the outlined square.");
+    expect(banner()).toBe("Working on tile 6: move it on to the ringed square.");
 
     // Leg 3 ends the journey: slide row 1 right by 1.
     h.m.processInput(0, 0, CURSOR_DOWN);

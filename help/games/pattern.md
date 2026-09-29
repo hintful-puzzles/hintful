@@ -28,13 +28,7 @@ wherever you are, as long as none of those is wrong; if one is, it asks
 you to fix the highlighted mistakes first. Its sentences call a square a
 *cell*.
 
-* **A ring in the hint color** marks the cells the step decides; the
-  sentence says whether they must be black or white.
-* **Stripes** mark the row or column it reasons along, running on
-  through its numbers, which are drawn in the hint color.
-* **A ring in a second color** marks a black square it reasons from, and
-  **a ring in a third color** a white one: squares already marked that
-  pin a run in place.
+{{hint-marks}}
 
 A few ideas are worth learning by name:
 

@@ -48,7 +48,8 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newTentsDesc } from "./generator.ts";
-import { tentsHint, tentsKeepTrack } from "./hint.ts";
+import { type TentsHighlights, tentsHint, tentsKeepTrack } from "./hint.ts";
+import { tentsHintMarks } from "./hint-marks.ts";
 import {
   colors,
   computeSize,
@@ -394,7 +395,8 @@ export const tentsGame: Game<
   TentsMove,
   TentsUi,
   TentsDrawState,
-  TentsMistake
+  TentsMistake,
+  TentsHighlights
 > = {
   id: "tents",
 
@@ -425,6 +427,15 @@ export const tentsGame: Game<
   findMistakes,
   hint: (state) =>
     commonHintRefusal(state.completed, findMistakes(state).length) ?? tentsHint(state),
+  hintMarks: {
+    roles: {
+      ring: "the squares the step decides. When it asks for a link, the tent and the tree are ringed as one shape, and the link is drawn between them in the hint color.",
+      outline:
+        "what it reasons from: a tree, or a tent that already belongs to another tree, and the number of the row or column it counts with, which is shown in the hint's color.",
+      stripes: 'the row or column the sentence calls "this row" or "this column".',
+    },
+    drawn: tentsHintMarks,
+  },
   hintKeepTrack: tentsKeepTrack,
 
   textFormat,

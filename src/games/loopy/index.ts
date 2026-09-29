@@ -70,7 +70,13 @@ import {
 } from "./cursor.ts";
 import { dlineEnds } from "./dlines.ts";
 import { newDesc } from "./generator.ts";
-import { hint, hintKeepTrack, refreshHintStep } from "./hint.ts";
+import {
+  hint,
+  hintKeepTrack,
+  type LoopyHint,
+  loopyHintMarks,
+  refreshHintStep,
+} from "./hint.ts";
 import { cornerAt, cursorCorner, nextCornerNote, nextPairNote } from "./notes.ts";
 import {
   DIFF_MAX,
@@ -735,7 +741,8 @@ export const loopyGame: Game<
   LoopyMove,
   LoopyUi,
   LoopyDrawState,
-  LoopyMistake
+  LoopyMistake,
+  LoopyHint
 > = {
   id: "loopy",
   // True in the sense the interface means it — Loopy *has* a text format — but
@@ -775,6 +782,14 @@ export const loopyGame: Game<
   difficulty,
   findMistakes,
   hint: (state) => hint(state, findMistakes(state).length),
+  hintMarks: {
+    roles: {
+      ring: "what the step decides, in blue: a band along an edge it sets, solid when it must be a line and broken when it can't be one, or a note it places, called “this corner” or “these two edges”.",
+      outline:
+        "what the step reasons from: the clue it counts (“this 3”) outlined, the dot it reasons about (“the outlined dot”) ringed, a band under the drawn lines it cites, such as the loop an edge would close (“the marked lines”), and the notes it cites (“the marked corner”, “the marked pair”), highlighted.",
+    },
+    drawn: loopyHintMarks,
+  },
   hintKeepTrack,
   refreshHintStep,
   textFormat,

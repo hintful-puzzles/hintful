@@ -27,11 +27,7 @@ only from the numbers, your lines and the dots you have marked as unused,
 so it carries on from wherever you are, as long as none of those is
 wrong; if one is, it asks you to fix the highlighted mistakes first.
 
-* **A line in the hint color** is a line the step asks you to draw.
-* **A ring round a dot on a hub's rim** is a spoke the step asks you to
-  rule out: mark that dot as unused, as described above.
-* **A halo in a second color** around a hub marks the hub the step reasons
-  from. The hint calls these the *ringed* hubs.
+{{hint-marks}}
 
 In the hint's words, a *spoke* is one of a hub's dots, the start of a line
 it could draw, and a *free* spoke is one that is neither a line yet nor
@@ -44,8 +40,8 @@ lines can use none of the rest; and a line joining two 1-hubs would leave
 that pair cut off from everything else. When those run out, which on
 **Normal** boards they do, the hint tries a spoke the other way and shows
 where that goes wrong within a few moves: it would give
-the ringed hub more lines than its number, force two diagonals to cross,
-or strand the ringed hubs in a group of their own.
+the outlined hub more lines than its number, force the diagonals of the
+outlined hubs to cross, or strand the outlined hubs in a group of their own.
 
 Every hint is a deduction you could have made from what is on the board.
 On an **Unreasonable** board there may come a point where no deduction is

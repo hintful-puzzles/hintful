@@ -54,8 +54,10 @@
  */
 
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import { say } from "./hint-text.ts";
+import type { Point } from "../../engine/types.ts";
+import { leadsAcross, type Marked, say } from "./hint-text.ts";
 import {
   type CrossingPuzzle,
   type CrossingState,
@@ -350,6 +352,9 @@ export type CrossingFiring =
       /** What each run's still-fitting numbers allow in this square. */
       acrossDigits: number[];
       downDigits: number[];
+      /** Each run's still-fitting numbers; `fitting` is both. */
+      acrossFitting: number[];
+      downFitting: number[];
       fitting: number[];
     }
   | ({ technique: "noteDigits" } & NoteFiring)
@@ -473,6 +478,8 @@ function placementFiring(
       downRun: down,
       acrossDigits: digitsOf(acrossDigits),
       downDigits: digitsOf(downDigits),
+      acrossFitting: fitting[across],
+      downFitting: fitting[down],
       fitting: [...fitting[across], ...fitting[down]],
     };
   }
@@ -648,7 +655,8 @@ export function deduceCrossingPlan(state: CrossingState): CrossingPlan {
 export function narrateCrossing(
   puzzle: CrossingPuzzle,
   firing: CrossingFiring,
-): string {
+): Narration {
+  const m = markedOf(puzzle, firing);
   switch (firing.technique) {
     case "onlyNumber": {
       const run = puzzle.runs[firing.run];
@@ -656,15 +664,64 @@ export function narrateCrossing(
         firing,
         run.cells.length,
         puzzle.numbers[firing.number].join(""),
+        m,
       );
     }
     case "sharedDigit":
-      return say.sharedDigit(firing, puzzle.runs[firing.run].horizontal);
+      return say.sharedDigit(firing, puzzle.runs[firing.run].horizontal, m);
     case "crossRuns":
-      return say.crossRuns(firing);
+      return say.crossRuns(firing, m);
     case "noteDigits":
-      return say.noteDigits(firing, puzzle.runs[firing.run].horizontal);
+      return say.noteDigits(firing, puzzle.runs[firing.run].horizontal, m);
     case "noteStrike":
-      return say.noteStrike(firing, puzzle.runs[firing.run].horizontal);
+      return say.noteStrike(firing, puzzle.runs[firing.run].horizontal, m);
+  }
+}
+
+/** What a firing's step marks, split the way its words name it; the same
+ * elements `index.ts`'s highlights draw. */
+function markedOf(puzzle: CrossingPuzzle, f: CrossingFiring): Marked {
+  const at = (i: number): Point => ({ x: i % puzzle.w, y: Math.floor(i / puzzle.w) });
+  const runCells = (r: number): Point[] => puzzle.runs[r].cells.map(at);
+  const none = { notes: [], otherRun: [], otherFitting: [], number: null };
+  switch (f.technique) {
+    case "onlyNumber":
+      return {
+        ...none,
+        targets: f.fill.map(at),
+        run: runCells(f.run),
+        fitting: f.fitting.filter((l) => l !== f.number),
+        number: f.number,
+      };
+    case "crossRuns": {
+      const leadAcross = leadsAcross(f);
+      const [near, far] = leadAcross
+        ? [f.acrossRun, f.downRun]
+        : [f.downRun, f.acrossRun];
+      return {
+        ...none,
+        targets: [at(f.cell)],
+        run: runCells(near),
+        otherRun: runCells(far),
+        fitting: leadAcross ? f.acrossFitting : f.downFitting,
+        otherFitting: leadAcross ? f.downFitting : f.acrossFitting,
+      };
+    }
+    case "sharedDigit":
+    case "noteDigits":
+      return {
+        ...none,
+        targets: [at(f.cell)],
+        run: runCells(f.run),
+        fitting: f.fitting,
+      };
+    case "noteStrike":
+      return {
+        ...none,
+        targets: [at(f.cell)],
+        notes: f.digits.map((n) => ({ ...at(f.cell), n })),
+        run: runCells(f.run),
+        fitting: f.fitting,
+      };
   }
 }

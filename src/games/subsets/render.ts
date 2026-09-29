@@ -240,8 +240,8 @@ export function redraw(
   // The cell whose rule-outs the tally shows: the one a hint step is about,
   // else the one in focus.
   let tallyCell: number | null = null;
-  if (hl && hint) {
-    const slot = hint.move.kind === "set" ? hint.move.bit : -1;
+  if (hl) {
+    const slot = hl.slot ?? -1;
     tallyCell = hl.target.y * w + hl.target.x;
     ds.hint.add(tallyCell, HINT_TARGET | ((slot + 1) << HINT_SLOT_SHIFT));
     for (const e of hl.cells) ds.hint.add(e.y * w + e.x, HINT_AREA);

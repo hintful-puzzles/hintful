@@ -40,6 +40,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { CELL, type MarkRef, type Narration } from "../../engine/hint-words.ts";
 import {
   dimensionParamConfig,
   parseConfigInt,
@@ -68,7 +69,7 @@ import { registerGame } from "../../engine/registry.ts";
 import type { ConfigValues, GameStatus, Point } from "../../engine/types.ts";
 import { newBoatsDesc, validateParams } from "./generator.ts";
 import { type BoatsFiring, type BoatsSquare, deduceBoatsPlan } from "./hint-solver.ts";
-import { say } from "./hint-text.ts";
+import { type BoatsMarks, say } from "./hint-text.ts";
 import {
   type BoatsDrawState,
   colors,
@@ -310,46 +311,79 @@ export interface BoatsHint {
   targets: BoatsSquare[];
   evidence: Point[];
   line: Point[];
+  /** The board's size, which bounds what the renderer draws. */
+  w: number;
+  h: number;
 }
 
-/** Which sentence a firing speaks, and with what values: the counts of boat
- * and water squares it decides. The words are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(f: BoatsFiring): string {
+/** The squares `hl` draws on a `w` by `h` board, by role: the renderer skips
+ * any off the board, and draws a decided square's mark over an outline. */
+function drawnSquares(hl: BoatsHint, w: number, h: number) {
+  const on = (c: Point): boolean => c.x >= 0 && c.y >= 0 && c.x < w && c.y < h;
+  const targets = hl.targets.filter(on);
+  const decided = new Set(targets.map((t) => t.y * w + t.x));
+  return {
+    targets,
+    evidence: hl.evidence.filter((c) => on(c) && !decided.has(c.y * w + c.x)),
+    line: hl.line.filter(on),
+  };
+}
+
+/** What a step's highlights draw: the `drawn` half of Boats' legend. */
+function boatsHintMarks(hl: BoatsHint): MarkRef[] {
+  const { targets, evidence, line } = drawnSquares(hl, hl.w, hl.h);
+  return [
+    { role: "ring", kind: CELL, elements: targets.map(({ x, y }) => ({ x, y })) },
+    { role: "outline", kind: CELL, elements: evidence },
+    { role: "stripes", kind: CELL, elements: line },
+  ] as MarkRef[];
+}
+
+/** Which sentence a firing speaks, and with what values, naming the squares
+ * `hl` marks. The words are [`hint-text.ts`](./hint-text.ts)'s. */
+function narrate(f: BoatsFiring, hl: BoatsHint): Narration {
   const t = f.technique;
-  const ships = f.squares.filter((s) => s.ship).length;
-  const waters = f.squares.length - ships;
+  const { evidence, line } = drawnSquares(hl, hl.w, hl.h);
+  const pt = ({ x, y }: Point): Point => ({ x, y });
+  const m: BoatsMarks = {
+    ships: f.squares.filter((s) => s.ship).map(pt),
+    waters: f.squares.filter((s) => !s.ship).map(pt),
+    follows: f.consequences.map(pt),
+    evidence,
+    line,
+  };
 
   switch (t.kind) {
     case "givenClue":
-      return say.givenClue(t, ships, waters);
+      return say.givenClue(t, m);
     case "neverTouch":
-      return say.neverTouch(waters);
+      return say.neverTouch(m);
     case "lineSatisfied":
-      return say.lineSatisfied(t);
+      return say.lineSatisfied(t, m);
     case "lineForced":
-      return say.lineForced(t, ships);
+      return say.lineForced(t, m);
     case "allWaterPlaced":
-      return say.allWaterPlaced;
+      return say.allWaterPlaced(m);
     case "centerForced":
-      return say.centerForced(t);
+      return say.centerForced(t, m);
     case "isolated":
-      return say.isolated;
+      return say.isolated(m);
     case "mustExtend":
-      return say.mustExtend;
+      return say.mustExtend(m);
     case "centerCount":
-      return say.centerCount(t);
+      return say.centerCount(t, m);
     case "growTooLong":
-      return say.growTooLong(t);
+      return say.growTooLong(t, m);
     case "mustGrow":
-      return say.mustGrow(t);
+      return say.mustGrow(t, m);
     case "runTooShort":
-      return say.runTooShort(t);
+      return say.runTooShort(t, m);
     case "onlyRunsLeft":
-      return say.onlyRunsLeft(t);
+      return say.onlyRunsLeft(t, m);
     case "sharedDiagonal":
-      return say.sharedDiagonal(t);
+      return say.sharedDiagonal(t, m);
     case "refuted":
-      return say.refuted(t);
+      return say.refuted(t, m);
   }
 }
 
@@ -397,17 +431,22 @@ function legMoves(f: BoatsFiring, w: number, squares: BoatsSquare[]): BoatsMove[
  * rides on the opening leg; the rest carry the same highlight so the picture
  * never shrinks mid-journey.
  */
-function stepsFor(f: BoatsFiring, w: number): HintStep<BoatsMove, BoatsHint>[] {
+function stepsFor(
+  f: BoatsFiring,
+  w: number,
+  h: number,
+): HintStep<BoatsMove, BoatsHint>[] {
   // The never-touch water a placement drags along is part of *this* step — it
   // is the rule doing its work, not a further deduction — so it is highlighted
-  // and moved with the firing, and never narrated separately.
+  // and moved with the firing, and named only in a closing clause.
   const targets = [...f.squares, ...f.consequences];
-  const highlights: BoatsHint = { targets, evidence: f.evidence, line: f.line };
-  const explanation = narrate(f);
+  const highlights: BoatsHint = { targets, evidence: f.evidence, line: f.line, w, h };
+  const words = narrate(f, highlights);
 
   return legMoves(f, w, targets).map((move, i) => ({
     move,
-    explanation,
+    explanation: words.text,
+    words,
     highlights,
     continuesPrevious: i > 0,
   }));
@@ -422,7 +461,9 @@ function hint(state: BoatsState): HintResult<BoatsMove, BoatsHint> {
   if (refusal) return refusal;
 
   const plan = deduceBoatsPlan(state);
-  const steps = plan.firings.flatMap((f) => stepsFor(f, state.params.w));
+  const steps = plan.firings.flatMap((f) =>
+    stepsFor(f, state.params.w, state.params.h),
+  );
   if (steps.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
   return { ok: true, steps };
 }
@@ -531,7 +572,8 @@ export const boatsGame: Game<
   BoatsMove,
   BoatsUi,
   BoatsDrawState,
-  BoatsMistake
+  BoatsMistake,
+  BoatsHint
 > = {
   id: "boats",
   // Param-dependent: `textFormat` returns undefined past 10×10.
@@ -609,6 +651,16 @@ export const boatsGame: Game<
   findMistakes,
   difficulty,
   hint,
+  hintMarks: {
+    roles: {
+      ring: "the squares the step decides, drawn in the hint color in the shape of what goes there: a small boat segment for a boat square, two wavy lines, like a given water square's, for water. A step that places a boat segment also shows the water that has to go round it.",
+      outline:
+        "the squares it reasons from, such as a given segment, the rest of an unfinished boat, or the water that closes a square in.",
+      stripes:
+        "the row or column whose number it counts with, and the stripes run on through that number.",
+    },
+    drawn: boatsHintMarks,
+  },
   hintKeepTrack,
   textFormat,
 

@@ -22,8 +22,18 @@ import {
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
+import { type MarkRef, type Narration, phrase } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import { type Axis, type LeftOut, type NoStraight, say } from "./hint-text.ts";
+import {
+  type Axis,
+  EDGE,
+  type Edge,
+  type LeftOut,
+  type Marked,
+  type NoStraight,
+  SQUARE,
+  say,
+} from "./hint-text.ts";
 import { executeMove } from "./moves.ts";
 import {
   PearlBoard,
@@ -182,33 +192,54 @@ function noStraight(
 }
 
 /** A firing that reads one square's own edges. */
-function narrateSquare(b: PearlBoard, f: ShownFiring, sq: number): string {
+function narrateSquare(
+  b: PearlBoard,
+  f: ShownFiring,
+  sq: number,
+  m: Marked,
+): Narration {
   const ws = f.before;
   const clue = b.clues[sq];
   if (clue === CORNER) {
     // One axis: the op's edge, and the edge opposite it.
     const d = dirFrom(b, f.ops[0], sq);
     const opposite = edgeState(b, ws, sq, F(d));
-    if (opposite === 1) return say.blackOpposite("line");
+    if (opposite === 1) return say.blackOpposite("line", m);
     return say.blackOpposite(
       onBoard(b, sq, F(d)) ? "ruledOut" : "boardEdge",
-      f.carried.some((c) => c.rule === "black"),
+      m,
+      m.black.length > 0,
     );
   }
   if (clue === STRAIGHT) {
-    if (linesAt(b, ws, sq) > 0) return say.whiteCarriesOn;
+    if (linesAt(b, ws, sq) > 0) return say.whiteCarriesOn(m);
     for (const d of DIRS)
       if (edgeState(b, ws, sq, d) === 2)
-        return say.whiteBlocked(otherAxis(axisOf(d)), !onBoard(b, sq, d));
+        return say.whiteBlocked(otherAxis(axisOf(d)), !onBoard(b, sq, d), m);
     throw new Error("pearl hint: a white pearl settled with nothing beside it");
   }
   const lines = linesAt(b, ws, sq);
-  if (lines === 2) return say.squareFull(f.ops.length);
-  return lines === 1 ? say.lineGoesOn : say.deadEnd;
+  if (lines === 2) return say.squareFull(m);
+  return lines === 1 ? say.lineGoesOn(m) : say.deadEnd(m);
+}
+
+const edgeOf = (op: PearlEdgeOp): Edge => ({ sq: op.sq, dir: op.dir });
+
+/** What a firing's step marks, split the way its words name it: the edges its
+ * own deduction decides, and the lines each pearl rule carries on from them. */
+function markedOf(b: PearlBoard, f: ShownFiring, reason: PearlReason): Marked {
+  const carried = new Map(f.carried.map((c) => [EDGE.key(c.op), c.rule]));
+  const rule = (op: PearlEdgeOp) => carried.get(EDGE.key(op)) ?? null;
+  return {
+    own: f.shown.filter((op) => rule(op) === null).map(edgeOf),
+    black: f.shown.filter((op) => rule(op) === "black").map(edgeOf),
+    white: f.shown.filter((op) => rule(op) === "white").map(edgeOf),
+    area: areaOf(b, reason),
+  };
 }
 
 /** Which sentence a firing speaks, and with what values. */
-function narrate(b: PearlBoard, f: ShownFiring, reason: PearlReason): string {
+function narrate(b: PearlBoard, f: ShownFiring, reason: PearlReason): Narration {
   // Only a black pearl's own square firing draws a line whose run-on is still
   // open, and its sentence names it; the other rungs that draw a line beside
   // one draw its run-on too.
@@ -217,40 +248,55 @@ function narrate(b: PearlBoard, f: ShownFiring, reason: PearlReason): string {
     !(reason.kind === "square" && b.clues[reason.sq] === CORNER)
   )
     throw new Error(`pearl hint: a ${reason.kind} step drew a black pearl's run-on`);
-  const whites = f.carried.filter((c) => c.rule === "white").length;
-  const base = premise(b, f, reason);
-  return whites > 0 ? `${base} ${say.throughNextWhite(whites > 1)}` : base;
+  const m = markedOf(b, f, reason);
+  const base = premise(b, f, reason, m);
+  return m.white.length > 0
+    ? phrase`${base} ${say.throughNextWhite(m.white.length > 1, m)}`
+    : base;
 }
 
 /** The sentence for the firing's own deduction. */
-function premise(b: PearlBoard, f: ShownFiring, reason: PearlReason): string {
+function premise(
+  b: PearlBoard,
+  f: ShownFiring,
+  reason: PearlReason,
+  m: Marked,
+): Narration {
   const ws = f.before;
   switch (reason.kind) {
     case "square":
-      return narrateSquare(b, f, reason.sq);
+      return narrateSquare(b, f, reason.sq, m);
     case "blackRunsOn":
-      return say.blackRunsOn;
+      return say.blackRunsOn(m);
     case "blackCannotRunOn": {
       const next = step(b, reason.pearl, reason.dir);
-      return say.blackCannotRunOn(noStraight(b, ws, next, reason.dir));
+      return say.blackCannotRunOn(noStraight(b, ws, next, reason.dir), m);
     }
     case "whiteCannotTurn": {
       const blocked = axisOf(reason.axis);
-      return say.whiteCannotTurn(blocked, otherAxis(blocked));
+      return say.whiteCannotTurn(blocked, otherAxis(blocked), m);
     }
     case "whiteTurnsOpposite":
-      return say.whiteTurnsOpposite;
+      return say.whiteTurnsOpposite(f.ops[0].line, m);
     case "closesEarly":
-      return say.closesEarly(leftOut(b, reason.piece, null));
+      return say.closesEarly(leftOut(b, reason.piece, null), m);
     case "closesEarlyThrough": {
       const out = leftOut(b, reason.piece, reason.sq);
       if (b.clues[reason.sq] === STRAIGHT) {
         const blocked = axisOf(reason.shape & -reason.shape);
-        return say.closesEarlyWhite(blocked, otherAxis(blocked), out);
+        return say.closesEarlyWhite(blocked, otherAxis(blocked), out, m);
       }
-      return say.closesEarlyThrough(out);
+      return say.closesEarlyThrough(out, m);
     }
   }
+}
+
+/** What a step's highlights draw: the `drawn` half of Pearl's legend. */
+export function pearlHintMarks(hl: PearlHint): MarkRef[] {
+  return [
+    { role: "ring", kind: EDGE, elements: hl.targets.map(edgeOf) },
+    { role: "outline", kind: SQUARE, elements: hl.area },
+  ] as MarkRef[];
 }
 
 // --- highlights -----------------------------------------------------------
@@ -349,9 +395,11 @@ export function pearlHint(
       // `showable` admits only firings with a premise.
       const { reason } = f;
       if (!reason) throw new Error("pearl hint: a step with no premise was shown");
+      const words = narrate(board, f, reason);
       return {
         move: moveOf(board, f.shown),
-        explanation: narrate(board, f, reason),
+        explanation: words.text,
+        words,
         highlights: { targets: f.shown, area: areaOf(board, reason) },
       };
     }),
@@ -422,6 +470,13 @@ export function pearlKeepTrack(
     hintStep.move = moveOf(boardOf(state), left);
     if (hintStep.highlights)
       hintStep.highlights = { ...hintStep.highlights, targets: left };
+    if (hintStep.words) {
+      const kept = new Set(left.map((t) => EDGE.key(t)));
+      hintStep.words = hintStep.words.narrow(
+        (role, _kind, key) => role !== "ring" || kept.has(key),
+      );
+      hintStep.explanation = hintStep.words.text;
+    }
   }
   return verdict;
 }

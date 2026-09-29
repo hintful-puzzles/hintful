@@ -7,7 +7,10 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { say as crossing } from "../games/crossing/hint-text.ts";
+import {
+  type Marked as CrossingMarked,
+  say as crossing,
+} from "../games/crossing/hint-text.ts";
 import { say as dominosa } from "../games/dominosa/hint-text.ts";
 import { say as keen } from "../games/keen/hint-text.ts";
 import { indefinite, noteText } from "./hint-text.ts";
@@ -41,12 +44,30 @@ describe("a number after an article gets the article it is pronounced with", () 
   });
 
   it("Crossing's shared digit and single note strike", () => {
+    const at = { x: 0, y: 0 };
+    const marked = (digits: number[]): CrossingMarked => ({
+      targets: [at],
+      notes: digits.map((n) => ({ ...at, n })),
+      run: [at],
+      otherRun: [],
+      fitting: [1, 2],
+      otherFitting: [],
+      number: null,
+    });
     const shared = (digit: number) =>
-      crossing.sharedDigit({ technique: "sharedDigit", digit } as SharedDigit, true);
+      crossing.sharedDigit(
+        { technique: "sharedDigit", digit } as SharedDigit,
+        true,
+        marked([]),
+      ).text;
     expect(shared(8)).toContain("has an 8 in this square");
     expect(shared(3)).toContain("has a 3 in this square");
     const strike = (digits: number[]) =>
-      crossing.noteStrike({ technique: "noteStrike", digits } as NoteStrike, false);
+      crossing.noteStrike(
+        { technique: "noteStrike", digits } as NoteStrike,
+        false,
+        marked(digits),
+      ).text;
     expect(strike([8])).toContain("puts an 8 in this square");
     expect(strike([3])).toContain("puts a 3 in this square");
   });
@@ -64,7 +85,12 @@ describe("a number after an article gets the article it is pronounced with", () 
   });
 
   it("Dominosa's duplicate dominoes", () => {
-    expect(dominosa.barrier("localDuplicate", 8, 8)).toMatch(/^An 8–8 domino here/);
-    expect(dominosa.barrier("localDuplicate", 1, 8)).toMatch(/^A 1–8 domino here/);
+    const spot = [0, 1] as const;
+    expect(dominosa.barrier("localDuplicate", 8, 8, spot, []).text).toMatch(
+      /^An 8–8 domino here/,
+    );
+    expect(dominosa.barrier("localDuplicate", 1, 8, spot, []).text).toMatch(
+      /^A 1–8 domino here/,
+    );
   });
 });

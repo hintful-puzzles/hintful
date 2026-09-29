@@ -56,7 +56,7 @@ describe("Slant hint render scenarios", () => {
       game: slantGame,
       id: boardId({ w: 8, h: 8, diff: DIFF_HARD }, "srs-hard-0"),
       showHint: true,
-      hintUntil: (step) => /already joined by a chain/.test(step.explanation ?? ""),
+      hintUntil: (step) => /join two corners/.test(step.explanation ?? ""),
     });
 
     const h = hl(hint);
@@ -77,7 +77,7 @@ describe("Slant hint render scenarios", () => {
       id: boardId({ w: 12, h: 10, diff: DIFF_HARD }, "srs-hard-eq"),
       showHint: true,
       hintUntil: (step) =>
-        /slant the same as the ringed one/.test(step.explanation ?? ""),
+        /links? this square to the outlined square/.test(step.explanation ?? ""),
     });
 
     const h = hl(hint);

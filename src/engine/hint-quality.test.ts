@@ -160,10 +160,19 @@ const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
     games: ["lightup"],
     match: /would leave each of them lit or beside a full clue/,
     why:
-      "Two premises and a quantifier: one of a set must light the ringed square " +
+      "Two premises and a quantifier: one of a set must light the outlined dark square " +
       "or fill the clue, and a bulb here disqualifies every member. The reach " +
       "relation is also the deixis tie: the driving clue is never adjacent to or " +
       "in line with the target (lightup/index.ts, measured).",
+  },
+  {
+    games: ["boats"],
+    match: /, with the water around it\.$/,
+    why:
+      "A step that places a boat segment also rings the water boats never " +
+      "touch, by the owner's choice to show that rule on the board rather than " +
+      "spend a step restating it; a bound step names every mark it draws, so " +
+      "the sentence carries one clause for it.",
   },
   {
     games: ["palisade"],
@@ -578,9 +587,9 @@ function readingsOf(game: AnyGame, params: unknown): readonly (string | null)[] 
 
 describe("a bound hint's words name exactly the marks it draws", () => {
   it("has games to check", () => {
-    // Vacuity: the pilot bound Palisade, Separate, Signpost and the eleven
-    // games on the candidate walk; fewer means a declaration went missing.
-    expect(BOUND_GAMES.length).toBeGreaterThanOrEqual(14);
+    // Vacuity: fewer bound games than this means a declaration went missing.
+    // `bind-the-remaining-hints` brings it to every hinted game.
+    expect(BOUND_GAMES.length).toBeGreaterThanOrEqual(38);
   });
 
   for (const [name, game] of BOUND_GAMES) {

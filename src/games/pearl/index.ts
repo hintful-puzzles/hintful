@@ -40,7 +40,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
-import { pearlHint, pearlKeepTrack } from "./hint.ts";
+import { type PearlHint, pearlHint, pearlHintMarks, pearlKeepTrack } from "./hint.ts";
 import { executeMove, interpretUiDrag, updateUiDrag } from "./moves.ts";
 import {
   centeredCoord,
@@ -359,7 +359,8 @@ export const pearlGame: Game<
   PearlMove,
   PearlUi,
   PearlDrawState,
-  PearlMistake
+  PearlMistake,
+  PearlHint
 > = {
   id: "pearl",
 
@@ -412,6 +413,14 @@ export const pearlGame: Game<
   findMistakes,
   hint: (state) =>
     commonHintRefusal(state.completed, findMistakes(state).length) ?? pearlHint(state),
+  hintMarks: {
+    roles: {
+      ring: "the edges the step decides: a blue line from a square's center to its edge means the loop must go through that edge, and a blue cross on an edge means it can't. The sentence calls one “this edge”, or names the pearl or square whose edges they are.",
+      outline:
+        "the squares the step reasons from: the pearl or square it is about, the squares beside a pearl, or a stretch of loop drawn so far.",
+    },
+    drawn: pearlHintMarks,
+  },
   hintKeepTrack: pearlKeepTrack,
 
   textFormat,
