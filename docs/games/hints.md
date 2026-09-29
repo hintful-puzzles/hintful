@@ -268,6 +268,11 @@ over every hinted game (`bind-the-remaining-hints`):
   `Narration.narrow` and resets `explanation`; the binding walk plays refresh
   but not keep-track, so the game's own test asserts `bindingDefects` after a
   shrink (Tents).
+- **A kind's key must tell apart every mark that can be drawn separately.**
+  `stepMarks` keeps one element per key, so two marks sharing a key merge and
+  one is never painted. Untangle keyed crossings by position, and two crossings
+  can share a point (a line through another's end); it keys them by their pair
+  of lines.
 - **A renderer rule is a rule about the words.** Where a renderer lets one mark
   win an element over another (Ascent's ring over an outline), the words must
   not name the losing mark there: the ablation finds a named mark whose removal
