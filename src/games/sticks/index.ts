@@ -27,7 +27,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { CELL, type MarkRef, type Narration } from "../../engine/hint-words.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_LEFT,
@@ -69,7 +69,6 @@ import {
   deduceSticksPlan,
   findMistakes,
   type SticksFiring,
-  type SticksReason,
   sticksSolveGame,
   sticksValidate,
 } from "./solver.ts";
@@ -360,37 +359,20 @@ function solve(orig: SticksState): SolveResult<SticksMove> {
 // --- hint (a second projection of the one contradiction technique) ----------
 
 /**
- * The cells a reason reasons over. Each list is exactly what its sentence
- * claims, so the player can count the picture against the words.
- *
- * The forced square is deliberately **kept** in the three length arguments and
- * left out of the two black-clue ones, because that is where it honestly
- * belongs: the run a length argument measures does contain the square being
- * decided ("would run the 2's line to 3 squares" shades all three, with the
- * blue bar on the one to act on), while the lines a black clue already counts
- * do not include the one being ruled out. Dropping it everywhere leaves an
- * `unreachable` step whose whole evidence *is* the target with nothing on the
- * board (docs/games/hints.md § "Show the evidence as an area").
- */
-function evidenceOf(reason: SticksReason, target: number): number[] {
-  switch (reason.kind) {
-    case "tooLong":
-      return reason.segment;
-    case "unreachable":
-      return reason.span;
-    case "twoClues":
-      return [...reason.segment, ...reason.clues];
-    case "overConnected":
-      return [reason.clue, ...reason.lines.filter((c) => c !== target)];
-    case "starved":
-      return [reason.clue, ...reason.open];
-  }
-}
-
-/**
  * Narrate *why* the square can only take one orientation, reading the clue
  * numbers the sentence names off the board. `continues` is a later leg of the
  * same firing. The words are [`hint-text.ts`](./hint-text.ts)'s.
+ *
+ * The cells it outlines are exactly what its sentence claims, so the player
+ * can count the picture against the words. The forced square is deliberately
+ * **kept** in the three length arguments and left out of the two black-clue
+ * ones, because that is where it honestly belongs: the run a length argument
+ * measures does contain the square being decided ("would run the 2's line to
+ * 3 squares" shades all three, with the blue bar on the one to act on), while
+ * the lines a black clue already counts do not include the one being ruled
+ * out. Dropping it everywhere leaves an `unreachable` step whose whole
+ * evidence *is* the target with nothing on the board (docs/games/hints.md
+ * § "Show the evidence as an area").
  */
 function narrate(
   firing: SticksFiring,
@@ -399,8 +381,7 @@ function narrate(
 ): Narration {
   const { reason, to } = firing;
   const at = (i: number): Point => pointOf(i, state.w);
-  // The evidence, split by the part each cell plays in the sentence; together
-  // the two are `evidenceOf`.
+  // The evidence, split by the part each cell plays in the sentence.
   const [clues, cells] = ((): [number[], number[]] => {
     switch (reason.kind) {
       case "tooLong":
@@ -443,14 +424,6 @@ function narrate(
 
 const pointOf = (i: number, w: number): Point => ({ x: i % w, y: Math.floor(i / w) });
 
-/** What a step's highlights draw: the `drawn` half of Sticks' legend. */
-function sticksHintMarks(hl: SticksHint): MarkRef[] {
-  return [
-    { role: "ring", kind: CELL, elements: [pointOf(hl.target, hl.w)] },
-    { role: "outline", kind: CELL, elements: hl.evidence.map((i) => pointOf(i, hl.w)) },
-  ] as MarkRef[];
-}
-
 function hint(state: SticksState): HintResult<SticksMove, SticksHint> {
   // A wrong line makes every deduction from here worthless, so refuse and let
   // the midend light the offenders through findMistakes.
@@ -471,12 +444,7 @@ function hint(state: SticksState): HintResult<SticksMove, SticksHint> {
         move: { kind: "set", changes: [{ index: f.index, line: f.to }] },
         explanation: words.text,
         words,
-        highlights: {
-          target: f.index,
-          to: f.to,
-          evidence: evidenceOf(f.reason, f.index),
-          w: state.w,
-        },
+        highlights: { target: f.index, to: f.to },
         continuesPrevious: leg > 0,
       });
     });
@@ -544,7 +512,6 @@ export const sticksGame: Game<
       outline:
         "the cells the step reasons from: the cells a numbered line runs through or could still reach, or a black cell together with the lines already running into it or the cells beside it where one still could.",
     },
-    drawn: sticksHintMarks,
   },
   hintKeepTrack,
   textFormat,

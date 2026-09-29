@@ -7,9 +7,8 @@
  * rule-out step decides is ringed, and the sets a step counts are outlined.
  */
 
-import { CELL, type MarkKind, type MarkRef } from "../../engine/hint-words.ts";
+import type { MarkKind } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
-import type { SubsetsHintHighlights } from "./index.ts";
 
 /** One letter's position in a cell: letter `bit` of the cell at (x, y). */
 export type Slot = Point & { readonly bit: number };
@@ -28,16 +27,3 @@ export const TALLY_SET: MarkKind<number> = {
   name: "tally set",
   key: (v) => `${v}`,
 };
-
-/** What a step's highlights draw: the `drawn` half of Subsets' legend. */
-export function subsetsHintMarks(h: SubsetsHintHighlights): MarkRef[] {
-  return [
-    h.slot === null
-      ? { role: "ring", kind: CELL, elements: [h.target] }
-      : { role: "ring", kind: SLOT, elements: [{ ...h.target, bit: h.slot }] },
-    { role: "ring", kind: TALLY_SET, elements: h.rule === null ? [] : [h.rule] },
-    { role: "outline", kind: CELL, elements: h.cells },
-    { role: "outline", kind: TALLY_SET, elements: h.sets },
-    { role: "stripes", kind: CELL, elements: h.spotlight },
-  ] as MarkRef[];
-}

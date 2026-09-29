@@ -28,8 +28,9 @@ import {
 import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
-import type { Color, Size } from "../../engine/types.ts";
+import type { Color, Point, Size } from "../../engine/types.ts";
 import { findLiveErrors } from "./solver.ts";
 import {
   F_BLOCK,
@@ -252,11 +253,13 @@ export function redraw(
   ds.mistakes.clear();
   for (const m of mistakes ?? []) ds.mistakes.add(m.index, 1);
 
-  // The displayed hint step's forced square and the cells its argument rests on.
-  const hl = hint?.highlights;
-  const hintTarget = hl?.target ?? -1;
-  const hintBits = hl ? (hl.to === "hor" ? F_HOR : F_VER) : 0;
-  const hintEvidence = hl ? new Set(hl.evidence) : null;
+  // The displayed hint step's forced square, which carries the forced line,
+  // and the cells its argument rests on.
+  const marks = stepMarks(hint);
+  const at = (p: Point): number => p.y * w + p.x;
+  const hintTargets = new Set(marks.of("ring", CELL).map(at));
+  const hintBits = hint?.highlights?.to === "hor" ? F_HOR : F_VER;
+  const hintEvidence = new Set(marks.of("outline", CELL).map(at));
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -271,8 +274,8 @@ export function redraw(
       // A previewed (uncommitted) cell suppresses its error highlight — the
       // committed grid is what the error check ran on.
       const error = preview === undefined && (errorSet?.has(i) ?? false);
-      const hintLine = i === hintTarget ? hintBits : 0;
-      const evidence = hintEvidence?.has(i) ?? false;
+      const hintLine = hintTargets.has(i) ? hintBits : 0;
+      const evidence = hintEvidence.has(i);
 
       const packed =
         (tile & 0x7) |

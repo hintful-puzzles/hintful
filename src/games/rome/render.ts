@@ -48,6 +48,7 @@ import { drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import {
   type CellHighlight,
   cellHighlight,
@@ -363,7 +364,7 @@ export function redraw(
     for (const m of mistakes) ds.mistakes.add(m.index, HB_MISTAKE);
   }
   ds.hint.pack(
-    hint?.highlights ?? null,
+    stepMarks(hint),
     (hx, hy) => hy * w + hx,
     (m) => valueBit(m.n),
   );

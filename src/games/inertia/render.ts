@@ -24,8 +24,9 @@ import {
 import { drawRaisedBevel, raisedBevelWidth } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE } from "../../engine/geometry.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
-import type { InertiaHintHighlights } from "./hint.ts";
+import { ARROW, GEM as GEM_MARK } from "./hint-text.ts";
 import {
   BLANK,
   DIRECTIONS,
@@ -325,10 +326,12 @@ export function redraw(
   ui: InertiaUi,
   animTime: number,
   flashTime: number,
-  hint?: HintStep<InertiaMove, InertiaHintHighlights>,
+  hint?: HintStep<InertiaMove>,
 ): void {
   const { w, h } = s.params;
   const ts = ds.tileSize;
+  const marks = stepMarks(hint);
+  const goals = new Set(marks.of("outline", GEM_MARK));
 
   // The flash blinks over its length: on for the first and third of three
   // phases, off for the middle one.
@@ -388,7 +391,7 @@ export function redraw(
       // it — but only once the move has finished playing out.
       if (v === MINE && !prev && s.dead && x === s.px && y === s.py) v = BLANK;
 
-      if (v === GEM && hint?.highlights?.goal === y * w + x) v |= HINT_GOAL;
+      if (v === GEM && goals.has(y * w + x)) v |= HINT_GOAL;
 
       v |= flashType;
 
@@ -413,7 +416,7 @@ export function redraw(
   // "the solver would go this way", and the hint is the one just asked for.
   const settled = !prev;
   const aimDir = settled && ui.aiming ? ui.aimDir : -1;
-  const hintDir = settled && hint?.highlights ? hint.highlights.dir : -1;
+  const hintDir = settled ? (marks.of("ring", ARROW)[0] ?? -1) : -1;
   const routeDir = settled && s.route ? s.route[s.routePos] : -1;
   const solverDir = hintDir >= 0 ? hintDir : routeDir;
 

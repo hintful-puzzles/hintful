@@ -38,7 +38,6 @@ import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import { type SlantHint, slantHint, slantHintKeepTrack } from "./hint.ts";
-import { slantHintMarks } from "./hint-marks.ts";
 import {
   border,
   colors,
@@ -299,7 +298,6 @@ export const slantGame: Game<
       outline:
         "what the step reasons from: the clues it reads, drawn in the hint color; the diagonals already around them, the chain a loop would close or the pairs along a line of 2s; the marks it relies on; and, doubled, a square already drawn that a mark ties the ringed one to.",
     },
-    drawn: slantHintMarks,
   },
   hintKeepTrack: slantHintKeepTrack,
 

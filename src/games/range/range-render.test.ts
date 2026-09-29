@@ -5,10 +5,12 @@
 // reviewable text diff.
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { CLUE, say } from "./hint-text.ts";
 import { type RangeHint, rangeGame } from "./index.ts";
 import {
   COL_BLACK,
@@ -56,14 +58,18 @@ describe("hint color legend", () => {
     // the cited black square and the forced cell in *different* colors.
     const grid = [EMPTY, EMPTY, EMPTY, EMPTY, BLACK, EMPTY, EMPTY, EMPTY, EMPTY];
     const state = makeState(3, 3, grid);
+    const words = say.adjacency({
+      target: { x: 1, y: 0 },
+      area: [],
+      blacks: [{ x: 1, y: 1 }],
+      run: [],
+      clue: null,
+    });
     const step: HintStep<RangeMove, RangeHint> = {
       move: { sets: [{ r: 0, c: 1, value: "white" }] },
-      explanation: "adjacency",
-      highlights: {
-        target: { r: 0, c: 1, value: "white" },
-        area: [],
-        blackRefs: [{ r: 1, c: 1 }],
-      },
+      explanation: words.text,
+      words,
+      highlights: { target: { r: 0, c: 1, value: "white" } },
     };
     const rec = new RecordingDrawing(palette);
     const ds = newDrawState(state, 32);
@@ -147,10 +153,10 @@ describe("render scenario snapshot", () => {
     // None is an opaque fill: a Range premise runs along a clue's arms and takes
     // in the clue cell, so it carries the very digit the deduction counts with.
     expectRing(ops, COL_HINT);
-    const hl = result.hint?.highlights as RangeHint | undefined;
+    const marks = stepMarks(result.hint);
     const premise = markSides(ops, COL_HINT_CELL);
     for (const s of premise) expect(isThin(s)).toBe(true);
-    const run = hl?.hatch ?? [];
+    const run = marks.of("stripes", CELL);
     const hatched = opsOfKind(ops, "hatch");
     expect(new Set(hatched.map((o) => `${o.x},${o.y}`)).size).toBe(run.length);
     expect(premise.length + run.length).toBeGreaterThan(0);
@@ -160,7 +166,7 @@ describe("render scenario snapshot", () => {
     // is what lets the narration say "the highlighted 5". A clue sits inside
     // its own shaded line of sight and that run can hold a second clue of the
     // same value (seen live on 9x6 `range-a`), so the value alone is not a name.
-    expect(hl?.clue).toBeDefined();
+    expect(marks.of("outline", CLUE)).toHaveLength(1);
     expect(ops.some((o) => o.op === "text" && o.color === COL_HINT)).toBe(true);
     expect(result.recording.ops).toMatchSnapshot();
   });

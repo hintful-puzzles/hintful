@@ -35,7 +35,6 @@ import {
 import type { Color, GameStatus, Point, Size } from "../../engine/types.ts";
 import { newSignpostDesc } from "./generator.ts";
 import { type SignpostHint, signpostHint, signpostKeepTrack } from "./hint.ts";
-import { signpostHintMarks } from "./hint-marks.ts";
 import { dragReleaseMove, executeMove } from "./moves.ts";
 import { BORDER, buildPalette, FLASH_SPIN, redrawSignpost } from "./render.ts";
 import { solveState } from "./solver.ts";
@@ -404,7 +403,6 @@ export const signpostGame: Game<
       stripes:
         "the squares an arrow points at, when the sentence says which of them can come next.",
     },
-    drawn: signpostHintMarks,
   },
   hintKeepTrack: signpostKeepTrack,
 

@@ -15,7 +15,6 @@ import {
   applyNoteMove,
   type CandidatePlanPrefs,
   candidateHint,
-  candidateHintMarks,
   keepCandidateHintTrack,
   type Mark,
   refreshCandidateHintStep,
@@ -754,7 +753,6 @@ export const soloGame: Game<
       stripes:
         'the row, column, block, diagonal or killer cage the sentence names: "in this block", "this killer cage".',
     },
-    drawn: candidateHintMarks,
   },
   hintKeepTrack,
   refreshHintStep,

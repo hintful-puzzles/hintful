@@ -26,13 +26,11 @@ import {
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
-import type { MarkRef, Narration } from "../../engine/hint-words.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import { type StepBudget, stepBudget } from "../../engine/step-budget.ts";
 import {
   type Axis,
   type Cause,
-  CLUE,
-  LINE,
   type LineMarks,
   type RuleOut,
   SQUARE,
@@ -193,33 +191,14 @@ export function recordingPass(
 
 // --- narration ------------------------------------------------------------
 
-/** What one step marks, in three roles (docs/games/hints.md § "The
- * element-type color legend"). */
+/** What a step's outlined clue digits are, beyond being outlined. Both colors
+ * of clue digit are outlines (docs/games/hints.md § "The element-type color
+ * legend"): the count of the line it counts takes the action color, and a clue
+ * cited as a reason, a met line's count, the evidence color. */
 export interface MagnetsHighlights {
-  /** Squares the step decides: ringed in the action color. */
-  targets: number[];
-  /** Squares the deduction reasons from: outlined in the evidence color, one
-   * outline per domino. */
-  area: number[];
-  /** The clue digits of the line it counts, as `countsDone` ring indices: the
-   * action color. */
-  clues: number[];
-  /** Clue digits cited as a reason, a met line's count: the evidence color. */
+  /** The outlined clue digits cited as a reason, as `countsDone` ring
+   * indices. */
   reasonClues: number[];
-  /** The row or column the sentence calls "this row" or "this column",
-   * hatched with its clues; `null` when the sentence is about a domino. */
-  line: MagnetsLine | null;
-}
-
-/** What a step's highlights draw: the `drawn` half of Magnets' legend. Both
- * colors of clue digit are outlines: the count read and a met line cited. */
-export function magnetsHintMarks(h: MagnetsHighlights): MarkRef[] {
-  return [
-    { role: "ring", kind: SQUARE, elements: h.targets },
-    { role: "outline", kind: SQUARE, elements: h.area },
-    { role: "outline", kind: CLUE, elements: [...h.clues, ...h.reasonClues] },
-    { role: "stripes", kind: LINE, elements: h.line ? [h.line] : [] },
-  ] as MarkRef[];
 }
 
 const axisOf = (line: MagnetsLine): Axis => (line.roworcol === ROW ? "row" : "column");
@@ -760,26 +739,20 @@ function stepsOf(f: MagnetsFiring): HintStep<MagnetsMove, MagnetsHighlights>[] {
     const targets = told.targets ?? legs.slice(k).flatMap((l) => l.squares);
     const onTargets = new Set(targets);
     const area = [...new Set(told.area)].filter((i) => !onTargets.has(i));
-    // One premise's words serve every leg, so each leg keeps the references
-    // to what it still draws: a square the journey rings is not outlined.
-    const drawn = new Set([
+    // One premise's words serve every leg, so each leg keeps only the squares
+    // still in its picture: a square the journey rings is not outlined.
+    const shown = new Set([
       ...targets.map((i) => `ring|${i}`),
       ...area.map((i) => `outline|${i}`),
     ]);
     const words = told.words.narrow(
-      (role, kind, key) => kind !== SQUARE.name || drawn.has(`${role}|${key}`),
+      (role, kind, key) => kind !== SQUARE.name || shown.has(`${role}|${key}`),
     );
     return {
       move: leg.move,
       explanation: words.text,
       words,
-      highlights: {
-        targets,
-        area,
-        clues: [...new Set(told.clues)],
-        reasonClues: [...new Set(told.reasonClues)],
-        line: told.line ?? null,
-      },
+      highlights: { reasonClues: [...new Set(told.reasonClues)] },
       ...(k > 0 ? { continuesPrevious: true } : {}),
     };
   });

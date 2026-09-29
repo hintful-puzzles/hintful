@@ -15,7 +15,6 @@ import {
   applyNoteMove,
   type CandidatePlanPrefs,
   candidateHint,
-  candidateHintMarks,
   keepCandidateHintTrack,
   type Mark,
   refreshCandidateHintStep,
@@ -458,7 +457,6 @@ export const keenGame: Game<
       stripes:
         'the cage, row or column the sentence names: "this cage", "this row" or "this column".',
     },
-    drawn: candidateHintMarks,
   },
   // The shared candidate-elimination keep-track and stale-step check;
   // `KeenHint` is structurally `CandidateHighlights`.

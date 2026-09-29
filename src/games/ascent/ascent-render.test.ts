@@ -9,9 +9,10 @@
  */
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import type { AscentHighlights } from "./hint.ts";
+import { PATH, SQUARE } from "./hint-text.ts";
 import { ascentGame } from "./index.ts";
 import {
   COL_ARROW,
@@ -100,8 +101,17 @@ describe("ascent render", () => {
 });
 
 describe("ascent hint frames", () => {
-  const hl = (step?: HintStep<AscentMove>) =>
-    (step?.highlights ?? null) as AscentHighlights | null;
+  /** The squares a step's words name, by role, and a whole run's route. */
+  const hl = (step?: HintStep<AscentMove>) => {
+    if (!step) return null;
+    const marks = stepMarks(step);
+    return {
+      targets: [...marks.of("ring", SQUARE)],
+      area: [...marks.of("outline", SQUARE)],
+      hatch: [...marks.of("stripes", SQUARE)],
+      route: [...marks.of("ring", PATH)],
+    };
+  };
   const strokes = (ops: DrawOp[], color: number) =>
     ops.filter((o) => o.op === "line" && o.color === color);
 
@@ -203,7 +213,7 @@ describe("ascent hint frames", () => {
       expect(route.length).toBeGreaterThan(2);
       // One half-segment from each end of every link, and a four-sided ring on
       // every square the step fills.
-      const rings = 4 * (marks?.targets.length ?? 0);
+      const rings = 4 * (hint.move.kind === "places" ? hint.move.cells.length : 0);
       expect(strokes(recording.ops, COL_HINT)).toHaveLength(
         2 * (route.length - 1) + rings,
       );

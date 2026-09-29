@@ -60,7 +60,6 @@ import {
   buildSteps,
   hintKeepTrack,
   type MapHint,
-  mapHintMarks,
   markAll,
   refreshHintStep,
   regionsMove,
@@ -530,7 +529,6 @@ export const mapGame: Game<
       outline:
         'a region the step reasons from: a thin dashed line in a second color, set in from its border. "The outlined pair" are the two regions drawn this way, and the regions of a chain carry numbers in that color, "region 1" to the last, where a region\'s number would go; while a chain is shown, the map\'s own region numbers are hidden.',
     },
-    drawn: mapHintMarks,
   },
   hintKeepTrack,
   refreshHintStep,

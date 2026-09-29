@@ -7,7 +7,7 @@ import type {
   UiUpdate,
 } from "../../engine/game.ts";
 import { ALREADY_SOLVED, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
-import type { MarkRef, Narration } from "../../engine/hint-words.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
@@ -21,13 +21,12 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
-import { say, TILE } from "./hint-text.ts";
+import { say } from "./hint-text.ts";
 import {
   ANIM_TIME,
   colors,
   computeSize,
   type FifteenDrawState,
-  type FifteenHintHighlights,
   FLASH_FRAME,
   fromCoord,
   newDrawState,
@@ -201,12 +200,12 @@ function narrateFifteenStep(
  * clearing and recomputing on every step, as Sixteen's plan does. The
  * solver is cheap, and the plan is recomputed only when the player
  * deviates (see `hintKeepTrack`). */
-function hint(state: FifteenState): HintResult<FifteenMove, FifteenHintHighlights> {
+function hint(state: FifteenState): HintResult<FifteenMove> {
   if (isCompletedTiles(state.tiles, state.n)) {
     return { ok: false, error: ALREADY_SOLVED };
   }
 
-  const steps: HintStep<FifteenMove, FifteenHintHighlights>[] = [];
+  const steps: HintStep<FifteenMove>[] = [];
   let board = state;
   // The goal is the running maximum of the solver's `target` until it is
   // homed: mid-rotation the target drops to the tile being restored.
@@ -220,7 +219,7 @@ function hint(state: FifteenState): HintResult<FifteenMove, FifteenHintHighlight
     goal = goal === null ? dest.target : Math.max(goal, dest.target);
     const move: FifteenMove = { type: "move", x: dest.x, y: dest.y };
     const words = narrateFifteenStep(board, tile, goal, dest);
-    steps.push({ move, explanation: words.text, words, highlights: { tile } });
+    steps.push({ move, explanation: words.text, words });
     const homedGoal = tile === goal && board.gapPos === goal - 1;
     board = executeMove(board, move);
     if (homedGoal) goal = null;
@@ -234,10 +233,7 @@ function hint(state: FifteenState): HintResult<FifteenMove, FifteenHintHighlight
  * destination leaves exactly the board the plan expects and completes the
  * step. Anything else is a deviation, which drops the plan for the next
  * hint request to recompute. */
-function hintKeepTrack(
-  m: FifteenMove,
-  step: HintStep<FifteenMove, FifteenHintHighlights>,
-): HintTrackVerdict {
+function hintKeepTrack(m: FifteenMove, step: HintStep<FifteenMove>): HintTrackVerdict {
   const hinted = step.move;
   if (m.type !== "move" || hinted.type !== "move") return "off";
   return m.x === hinted.x && m.y === hinted.y ? "completed" : "off";
@@ -250,9 +246,7 @@ export const fifteenGame: Game<
   FifteenState,
   FifteenMove,
   FifteenUi,
-  FifteenDrawState,
-  unknown,
-  FifteenHintHighlights
+  FifteenDrawState
 > = {
   id: "fifteen",
   // Sliding a tile is the only gesture; the secondary button has no meaning,
@@ -282,7 +276,6 @@ export const fifteenGame: Game<
     roles: {
       ring: "what the step decides: the tile to slide, filled in the hint's color.",
     },
-    drawn: (hl) => [{ role: "ring", kind: TILE, elements: [hl.tile] }] as MarkRef[],
   },
   hintKeepTrack,
 

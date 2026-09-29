@@ -6,6 +6,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { type HintStep, UI_UPDATE } from "../../engine/game.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import {
   BACKSPACE,
   CURSOR_DOWN,
@@ -22,7 +23,8 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { newSubsetsDesc } from "./generator.ts";
-import { type SubsetsHintHighlights, subsetsGame } from "./index.ts";
+import { TALLY_SET } from "./hint-marks.ts";
+import { subsetsGame } from "./index.ts";
 import {
   COL_ERROR,
   COL_GUESS,
@@ -258,7 +260,7 @@ describe("subsets rule-out mistakes", () => {
 
 // --- the hint's claims, walked against the board --------------------------
 
-type Step = HintStep<SubsetsMove, SubsetsHintHighlights>;
+type Step = HintStep<SubsetsMove>;
 
 /** Is there a horseshoe from `sup` (superset end) to its neighbor `sub`? */
 function arrow(s: SubsetsState, sup: number, sub: number): boolean {
@@ -315,7 +317,7 @@ function walkClaims(start: SubsetsState, tally: WalkTally): void {
       const usedLater = journey.slice(k + 1).some((later) => {
         const lm = later.move;
         if (lm.kind !== "rule") return false;
-        const via = later.highlights?.cells[0];
+        const via = stepMarks(later).of("outline", CELL)[0];
         if (!via || via.y * 4 + via.x !== m.pos) return false;
         const head = arrow(board, m.pos, lm.pos);
         return head ? strictSub(lm.value, m.value) : strictSub(m.value, lm.value);
@@ -324,7 +326,8 @@ function walkClaims(start: SubsetsState, tally: WalkTally): void {
         lead !== undefined &&
         lead.move.kind === "set" &&
         (single
-          ? m.pos !== lead.move.pos && lead.highlights?.sets[0] === m.value
+          ? m.pos !== lead.move.pos &&
+            stepMarks(lead).of("outline", TALLY_SET)[0] === m.value
           : m.pos === lead.move.pos &&
             ((marked & ~m.value) !== 0 || (cleared & m.value) !== 0));
       expect(usedLater || byFiring, `an unused rule-out: ${JSON.stringify(m)}`).toBe(
@@ -338,8 +341,9 @@ function walkClaims(start: SubsetsState, tally: WalkTally): void {
     if (!st.continuesPrevious) closeJourney();
     journey.push(st);
     const m = st.move;
-    const hl = st.highlights;
-    if (!hl) throw new Error("a step with no highlights");
+    const marks = stepMarks(st);
+    const cells = marks.of("outline", CELL);
+    const sets = marks.of("outline", TALLY_SET);
     if (m.kind === "rule") {
       tally.ruleOuts++;
       // True, and not already on the board in any form.
@@ -347,9 +351,9 @@ function walkClaims(start: SubsetsState, tally: WalkTally): void {
       expect(solved.known[m.pos]).not.toBe(m.value);
       expect(canHold(board, m.pos, m.value)).toBe(true);
       // "No outlined set is a bigger set holding / smaller set inside it."
-      expect(hl.cells).toHaveLength(1);
-      const via = hl.cells[0].y * board.w + hl.cells[0].x;
-      expect(hl.sets).toEqual(candidateSets(board, via).filter((v) => v !== m.value));
+      expect(cells).toHaveLength(1);
+      const via = cells[0].y * board.w + cells[0].x;
+      expect(sets).toEqual(candidateSets(board, via).filter((v) => v !== m.value));
       const head = arrow(board, via, m.pos);
       expect(head || arrow(board, m.pos, via), "a rule-out across no horseshoe").toBe(
         true,
@@ -358,16 +362,16 @@ function walkClaims(start: SubsetsState, tally: WalkTally): void {
       expect(st.explanation).toContain(
         head ? "bigger set holding" : "smaller set inside",
       );
-      for (const v of hl.sets)
+      for (const v of sets)
         expect(head ? strictSub(m.value, v) : strictSub(v, m.value)).toBe(false);
-      expect(hl.rule).toBe(m.value);
+      expect(marks.of("ring", TALLY_SET)).toEqual([m.value]);
     } else if (m.kind === "set" && !st.explanation.startsWith("Still filling")) {
       if (/can go nowhere but this cell/.test(st.explanation))
-        expect(candidateCells(board, hl.sets[0])).toEqual([m.pos]);
+        expect(candidateCells(board, sets[0])).toEqual([m.pos]);
       if (/can still go in this cell/.test(st.explanation)) {
-        expect(hl.sets).toEqual(candidateSets(board, m.pos));
+        expect(sets).toEqual(candidateSets(board, m.pos));
         const b = 1 << m.bit;
-        for (const v of hl.sets) expect((v & b) !== 0).toBe(m.type === "known");
+        for (const v of sets) expect((v & b) !== 0).toBe(m.type === "known");
       }
     }
     board = subsetsGame.executeMove(board, m);

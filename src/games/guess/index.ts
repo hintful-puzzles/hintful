@@ -32,7 +32,6 @@ import {
   type GuessHighlights,
   guessHint,
   guessHintKeepTrack,
-  guessHintMarks,
   guessRefreshHintStep,
 } from "./hint.ts";
 import {
@@ -581,7 +580,6 @@ export const guessGame: Game<
         "an answer slot, in a second color: *the outlined slot*, one whose colors the step already knows and leans on.",
       stripes: "a scored row, its score included: *the striped row* the step reads.",
     },
-    drawn: guessHintMarks,
   },
   hintKeepTrack: guessHintKeepTrack,
   refreshHintStep: guessRefreshHintStep,

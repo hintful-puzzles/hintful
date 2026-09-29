@@ -10,11 +10,14 @@
  * frame (the blue target + evidence, numbers still drawn).
  */
 import { describe, expect, it } from "vitest";
+import type { HintStep } from "../../engine/game.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import type { Point } from "../../engine/types.ts";
 import { type SinglesHint, singlesGame } from "./index.ts";
 import {
   COL_HINT,
@@ -199,13 +202,15 @@ describe("hint", () => {
       if (!res?.ok) throw new Error("expected a plan");
       for (const step of res.steps) {
         const hl = step.highlights as SinglesHint;
-        expect(hl.evidence.length + hl.strand.length).toBeGreaterThan(0);
-        // The three roles (target / evidence / strand) never overlap.
-        const targets = new Set(hl.targets.map((t) => `${t.x},${t.y}`));
-        const strand = new Set(hl.strand.map((c) => `${c.x},${c.y}`));
-        expect(hl.evidence.some((e) => targets.has(`${e.x},${e.y}`))).toBe(false);
-        expect(hl.evidence.some((e) => strand.has(`${e.x},${e.y}`))).toBe(false);
-        expect(hl.strand.some((c) => targets.has(`${c.x},${c.y}`))).toBe(false);
+        const outlined = stepMarks(step).of("outline", CELL);
+        expect(outlined.length).toBeGreaterThan(0);
+        // The three roles (target / evidence / strand) never overlap: the
+        // strand is outlined, and nothing outlined is a target.
+        const key = (c: Point) => `${c.x},${c.y}`;
+        const targets = new Set(hl.targets.map(key));
+        const outlinedKeys = new Set(outlined.map(key));
+        expect(outlined.some((e) => targets.has(key(e)))).toBe(false);
+        expect(hl.strand.every((c) => outlinedKeys.has(key(c)))).toBe(true);
       }
     }
   });
@@ -227,8 +232,10 @@ describe("hint", () => {
     // The corner (4 at 0,0) is the strand; the matching pair (the two 3s)
     // is the shaded evidence; the corner is not among them.
     expect(hl.strand).toEqual([{ x: 0, y: 0 }]);
-    expect(hl.evidence.length).toBeGreaterThanOrEqual(1);
-    expect(hl.evidence.some((e) => e.x === 0 && e.y === 0)).toBe(false);
+    const evidence = stepMarks(cornerStep)
+      .of("outline", CELL)
+      .filter((e) => !(e.x === 0 && e.y === 0));
+    expect(evidence.length).toBeGreaterThanOrEqual(1);
     // Narration opens on the spotted pattern, names the actual numbers, and
     // follows the contradiction arc (the touching pair → shading the target →
     // trapping the corner), never the confusing "two corner squares".
@@ -295,7 +302,7 @@ describe("hintKeepTrack", () => {
   });
 
   it("onTracks a multi-cell step filled one cell at a time, then completes", () => {
-    let step: { move: SinglesMove; highlights?: SinglesHint } | null = null;
+    let step: HintStep<SinglesMove, SinglesHint> | null = null;
     let state: SinglesState | null = null;
     for (const seed of ["hint-plan", "sh-1", "sh-2", "sh-3", "two-cell"]) {
       const s = fromSeed({ w: 6, h: 6, diff: "tricky" }, seed);
@@ -303,7 +310,7 @@ describe("hintKeepTrack", () => {
       if (!res?.ok) continue;
       const multi = res.steps.find((st) => st.move.sets.length === 2);
       if (multi) {
-        step = multi as { move: SinglesMove; highlights?: SinglesHint };
+        step = multi;
         state = s;
         break;
       }
@@ -320,10 +327,14 @@ describe("hintKeepTrack", () => {
       ),
     ).toBe("onTrack");
     expect(step.move.sets).toEqual([{ x: b.x, y: b.y, value: b.value }]);
-    // The shrunk step's words name only the square left.
-    const legend = singlesGame.hintMarks;
-    if (!legend) throw new Error("singles declares no hintMarks");
-    expect(bindingDefects(step as never, legend)).toEqual([]);
+    // The shrunk step's words name only the square left, over the board the
+    // first fill left.
+    const filled = singlesGame.executeMove(state, {
+      sets: [{ x: a.x, y: a.y, value: a.value }],
+    });
+    expect(
+      bindingDefects(singlesGame, filled, singlesGame.newUi(filled), step as never),
+    ).toEqual([]);
 
     // Now fill the second → completed.
     expect(
@@ -352,15 +363,15 @@ describe("singles hint: the line a sentence names", () => {
         showHint: true,
         hintUntil: (step) =>
           sentence.test(step.explanation) &&
-          (step.highlights as SinglesHint).line.length > 0,
+          stepMarks(step).of("stripes", CELL).length > 0,
       });
-      const hl = hint?.highlights as SinglesHint | undefined;
-      if (!hint || !sentence.test(hint.explanation) || !hl?.line.length) continue;
+      const line = stepMarks(hint).of("stripes", CELL);
+      if (!hint || !sentence.test(hint.explanation) || !line.length) continue;
       // One whole row or column, through every target.
-      const row = hl.line.every((c) => c.y === hl.line[0].y);
-      expect(hl.line).toHaveLength(6);
-      for (const t of hl.targets) {
-        expect(hl.line.some((c) => c.x === t.x && c.y === t.y)).toBe(true);
+      const row = line.every((c) => c.y === line[0].y);
+      expect(line).toHaveLength(6);
+      for (const t of (hint.highlights as SinglesHint).targets) {
+        expect(line.some((c) => c.x === t.x && c.y === t.y)).toBe(true);
       }
       const hatches = opsOfKind(recording.ops, "hatch");
       expect(hatches).toHaveLength(6);

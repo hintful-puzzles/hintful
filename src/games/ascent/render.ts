@@ -20,8 +20,10 @@ import {
 import { drawRectCorners, glyphFont, strokeScaledPolygon } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Rect } from "../../engine/types.ts";
 import type { AscentHighlights } from "./hint.ts";
+import { PATH, SQUARE } from "./hint-text.ts";
 import {
   type AscentMistake,
   type AscentMove,
@@ -449,15 +451,17 @@ export function redrawAscent(
   if (mistakes) for (const m of mistakes) mistakeSet[m.cell] = 1;
 
   const hintMarks = new Uint8Array(w * h);
-  const hl = hint?.highlights;
-  if (hl) {
-    for (const i of hl.hatch) hintMarks[i] |= HINT_HATCH;
-    for (const i of hl.area) hintMarks[i] |= HINT_AREA;
-    for (const i of hl.targets) hintMarks[i] |= HINT_TARGET;
-  }
-  // A whole run's route: each square the directions it joins its neighbors on.
+  const marks = stepMarks(hint);
+  for (const i of marks.of("stripes", SQUARE)) hintMarks[i] |= HINT_HATCH;
+  for (const i of marks.of("outline", SQUARE)) hintMarks[i] |= HINT_AREA;
+  for (const i of marks.of("ring", SQUARE)) hintMarks[i] |= HINT_TARGET;
+  // A whole run's route rings the squares it still has to fill; its placed
+  // ends, and a number the player has placed along it since, carry the line only.
+  const route = marks.of("ring", PATH);
+  for (const i of route)
+    if (state.grid[i] === NUMBER_EMPTY) hintMarks[i] |= HINT_TARGET;
+  // Each route square: the directions it joins its neighbors on.
   const routeBits = new Int32Array(w * h);
-  const route = hl?.route ?? [];
   for (let k = 1; k < route.length; k++) {
     const [p, q] = [route[k - 1], route[k]];
     routeBits[p] |= 1 << findDirection(p, q, w, movement);

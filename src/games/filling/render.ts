@@ -24,6 +24,7 @@ import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import type { FillingHint } from "./index.ts";
 import {
@@ -288,9 +289,11 @@ export function redrawFilling(
     mistakes && mistakes.length > 0
       ? new Set(mistakes.map((m) => m.y * w + m.x))
       : null;
-  const hintTargets = new Set(hint?.highlights?.cells);
-  const hintArea = new Set(hint?.highlights?.area);
-  const hintRegion = new Set(hint?.highlights?.hatch);
+  const marks = stepMarks(hint);
+  const indexOf = (p: Point): number => p.y * w + p.x;
+  const hintTargets = new Set(marks.of("ring", CELL).map(indexOf));
+  const hintArea = new Set(marks.of("outline", CELL).map(indexOf));
+  const hintRegion = new Set(marks.of("stripes", CELL).map(indexOf));
 
   // Border between two differing cells when both are filled, or either's
   // region is complete/overfull. Bit 1 = border to the right, bit 2 = below.

@@ -47,13 +47,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newAbcdDesc } from "./generator.ts";
-import {
-  type AbcdHint,
-  abcdHintMarks,
-  buildSteps,
-  hintKeepTrack,
-  refreshHintStep,
-} from "./hint.ts";
+import { type AbcdHint, buildSteps, hintKeepTrack, refreshHintStep } from "./hint.ts";
 import {
   type AbcdDrawState,
   colors,
@@ -357,7 +351,6 @@ export const abcdGame: Game<
         'the particular cells the reason rests on: the letters a row already holds, the cells that can still take a letter, or the letter just placed. The number the sentence reads ("its one A", "needs 2 more Bs") is drawn in the hint color among the clues.',
       stripes: 'the row or column the step reasons from: "this row", "this column".',
     },
-    drawn: abcdHintMarks,
   },
   hintKeepTrack,
   refreshHintStep,

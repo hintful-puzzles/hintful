@@ -26,7 +26,7 @@ import {
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
-import { CELL, type MarkRef, type Narration } from "../../engine/hint-words.ts";
+import { CELL, type Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -250,20 +250,26 @@ function findMistakes(state: SinglesState): readonly SinglesMistake[] {
 
 /** Highlight data for a Singles hint step. `targets` are the cell(s) the
  * displayed deduction forces, each with the mark it forces; a firing that
- * forces several cells at once carries them all. `evidence` are the
- * deduction's premise cells — `redraw` outlines an undecided one in the
- * evidence color and a decided black/circle cell, whose state *is* the reason,
- * in that state's own color. `strand` is the
- * distinct corner cell a 2×2-corner deduction is protecting from being
- * sealed off — drawn in its own color so the player can tell the corner
- * at risk apart from the matching numbers that share a value. */
+ * forces several cells at once carries them all. `strand` is the distinct
+ * corner cell a 2×2-corner deduction is protecting from being sealed off —
+ * among the outlined cells, `redraw` draws it in its own color so the player
+ * can tell the corner at risk apart from the matching numbers that share a
+ * value. */
 export interface SinglesHint {
   targets: { x: number; y: number; value: "black" | "circle" }[];
+  strand: Point[];
+}
+
+/** What a step's sentence names. `evidence` are the deduction's premise
+ * cells — `redraw` outlines an undecided one in the evidence color and a
+ * decided black/circle cell, whose state *is* the reason, in that state's own
+ * color. `line` is the row or column the sentence names ("in the line",
+ * "shares a line with"), hatched; empty when it names none
+ * (docs/games/hints.md § "Hatch the line the sentence names"). */
+interface Named {
+  targets: readonly Point[];
   evidence: Point[];
   strand: Point[];
-  /** The row or column the sentence names ("in the line", "shares a line
-   * with"), hatched; empty when it names none (docs/games/hints.md § "Hatch
-   * the line the sentence names"). */
   line: Point[];
 }
 
@@ -300,20 +306,16 @@ const opValue = (op: number): "black" | "circle" =>
 
 const sameCell = (a: Point, b: Point): boolean => a.x === b.x && a.y === b.y;
 
-/** Narrate *why* the grouped firing forces its cell(s), naming the marks `hl`
- * draws and reading each number the sentence names off the board. The words are
- * [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(
-  reason: SinglesReason,
-  hl: SinglesHint,
-  state: SinglesState,
-): Narration {
+/** Narrate *why* the grouped firing forces its cell(s), naming the marks in
+ * `named` and reading each number the sentence names off the board. The words
+ * are [`hint-text.ts`](./hint-text.ts)'s. */
+function narrate(reason: SinglesReason, named: Named, state: SinglesState): Narration {
   const numAt = (c: Point): number => state.nums[c.y * state.w + c.x];
   const m: Marked = {
-    targets: hl.targets.map(({ x, y }) => ({ x, y })),
-    evidence: hl.evidence,
-    strand: hl.strand,
-    line: hl.line,
+    targets: named.targets.map(({ x, y }) => ({ x, y })),
+    evidence: named.evidence,
+    strand: named.strand,
+    line: named.line,
     num: numAt,
   };
   const targets = m.targets;
@@ -364,16 +366,6 @@ function narrate(
     case "split":
       return say.split(m, numAt(targets[0]));
   }
-}
-
-/** What a step's highlights draw: the `drawn` half of Singles' legend. The
- * protected corner is an outline too, in a color of its own. */
-function singlesHintMarks(hl: SinglesHint): MarkRef[] {
-  return [
-    { role: "ring", kind: CELL, elements: hl.targets.map(({ x, y }) => ({ x, y })) },
-    { role: "outline", kind: CELL, elements: [...hl.evidence, ...hl.strand] },
-    { role: "stripes", kind: CELL, elements: hl.line },
-  ] as MarkRef[];
 }
 
 /** The premise cells a reason reasons over (its visible evidence — the
@@ -442,18 +434,13 @@ function hint(state: SinglesState): HintResult<SinglesMove, SinglesHint> {
       const evidence = evidenceOf(reason).filter(
         (c) => !targetKey.has(key(c)) && !strandKey.has(key(c)),
       );
-      const highlights: SinglesHint = {
-        targets,
-        evidence,
-        strand,
-        line: namedLine(reason, targets, state.w, state.h),
-      };
-      const words = narrate(reason, highlights, state);
+      const line = namedLine(reason, targets, state.w, state.h);
+      const words = narrate(reason, { targets, evidence, strand, line }, state);
       return {
         move: { sets: targets.map((t) => ({ ...t })) },
         explanation: words.text,
         words,
-        highlights,
+        highlights: { targets, strand },
       };
     },
   );
@@ -544,7 +531,6 @@ export const singlesGame: Game<
         "the squares the step reasons from, such as two matching numbers one square apart. One you have already shaded or circled is outlined in a color of its own, one for shaded and another for circled, and the corner a step keeps from being boxed in has a color of its own too.",
       stripes: 'the row or column the sentence calls "this row" or "this column".',
     },
-    drawn: singlesHintMarks,
   },
   hintKeepTrack,
   findMistakes,

@@ -33,6 +33,7 @@ import {
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import { cellHighlight, drawCellBackground } from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
@@ -810,7 +811,7 @@ export function redraw(
   // The two overlay sidecars. Hint: bit 0 target, bit 1 area, and the struck
   // monster mask in its `struck` lane.
   const index = (x: number, y: number) => x + y * stride;
-  ds.hint.pack(hint?.highlights ?? null, index, (m) => m.monster);
+  ds.hint.pack(stepMarks(hint), index, (m) => m.n);
   ds.wrong.packCells(mistakes ?? null, index);
 
   const targets: MarkCell[] = [];

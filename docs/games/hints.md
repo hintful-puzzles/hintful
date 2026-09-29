@@ -209,23 +209,36 @@ reference whose words use another role's adjective. The words re-render from a
 reference's elements, which is how a refresh that shrinks a step's marks
 rewrites its sentence (`Narration.narrow`).
 
-**A game is bound when it declares `hintMarks`**: the roles its steps draw, in
-the words its help page's list of marks gives them, and `drawn(highlights)`, the
-marks a step's highlights paint. `testing/hint-binding.ts` then holds every step
-the hint-quality walk visits to its words: each mark named is drawn, each mark
-drawn is named, and each role drawn is in the legend. A bound game's page writes
+**A game is bound when it declares `hintMarks`**: the roles its steps name, in
+the words its help page's list of marks gives them. A bound game's page writes
 `{{hint-marks}}` where its list goes, and the help build fills it
 (`vite-plugins/hint-marks.ts`).
 
-Where the machinery can, it derives the marks from the words, so a step cannot
-draw what its sentence does not name: the border grid's legs take their
-outlined and striped squares from their references. **A continuation leg names
-what it still shows**: "…and these edges can't be walls either, for clue 3"
-rings the edges left and points back at the evidence the first leg named. The
-candidate walk derives the same way: a step's `area` is what its words outline
-and its `hatch` what they stripe, and a strike's ending is a reference to the
-struck notes, so a refresh that finds some already gone rewrites "cross out 2
-and 4" as "cross out the 4".
+**The renderer paints every hint mark from the words.** `stepMarks(hint)` is
+the step's references grouped by role and kind, and `marks.of("outline", CELL)`
+is what the words outline, once each, carrying whatever the reference named
+(an outlined cell keeps its chain ordinal). Nothing else is a source for a mark:
+a highlight field may carry data that is not a mark (a ghost glyph, a route, an
+animation), painted only where a named mark is. The glyph a role takes on a kind
+stays the game's. The shared painters read the words too:
+`OverlaySidecar.pack(stepMarks(hint), …)` for the candidate games and
+`hintTileBits` for the border grid. A contained kind marks its container with it
+(`MarkKind.within`): a ringed note rings its cell, so the painter must ring the
+cell from the note even when no reference names the cell.
+
+**The check is measured on the frame.** `testing/hint-binding.ts` renders every
+step the hint-quality walk visits, from a fresh draw state, and ablates the
+words. Narrowing any one named element out of them (`Narration.narrow`) must
+change the frame, and narrowing all of them out must leave the frame with no hint
+at all. It needs no statement of what a glyph looks like or where an element
+sits, only whether the paint comes and goes with the reference, and it cannot
+pass a renderer that still reads a mark off a highlight field.
+
+**A continuation leg names what it still shows**: "…and these edges can't be
+walls either, for clue 3" rings the edges left and points back at the evidence
+the first leg named. A strike's ending is a reference to the struck notes, so a
+refresh that finds some already gone rewrites "cross out 2 and 4" as "cross out
+the 4", and the marks follow because they are read from the words.
 
 **Two marks of one role are told apart by their kind, not their color.** A
 Signpost step decides a link, whose two ends are different things: the arrow
@@ -255,8 +268,10 @@ over every hinted game (`bind-the-remaining-hints`):
   `Narration.narrow` and resets `explanation`; the binding walk plays refresh
   but not keep-track, so the game's own test asserts `bindingDefects` after a
   shrink (Tents).
-- **A renderer that reads a mark off the move hides it from `drawn`.** Put it
-  on the highlights (Loopy's `placedCorner`) so the legend can see it.
+- **A renderer rule is a rule about the words.** Where a renderer lets one mark
+  win an element over another (Ascent's ring over an outline), the words must
+  not name the losing mark there: the ablation finds a named mark whose removal
+  changes nothing.
 - **A rule word is not a mark word.** "Shaded" is a shading genre's cell state
   (Bricks) and the lint allows it; "hatched" and "highlighted" only ever named
   marks.

@@ -25,8 +25,10 @@ import { drawRectCorners, drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point } from "../../engine/types.ts";
 import type { SignpostHint } from "./hint.ts";
+import { ARROW } from "./hint-marks.ts";
 import { dragReleaseMove, executeMove } from "./moves.ts";
 import {
   FLAG_ERROR,
@@ -420,17 +422,15 @@ export function redrawSignpost(
 
   const mistakeSet = mistakes?.length ? new Set(mistakes.map((m) => m.index)) : null;
   const hintFlags = new Map<number, number>();
-  const hl = hint?.highlights;
-  if (hl) {
-    const add = (p: Point, flag: number): void => {
-      const i = p.y * w + p.x;
-      hintFlags.set(i, (hintFlags.get(i) ?? 0) | flag);
-    };
-    for (const p of hl.line) add(p, F_HINT_LINE);
-    for (const p of hl.others) add(p, F_HINT_OUTLINE);
-    add(hl.arrow, F_HINT_ARROW);
-    add(hl.target, F_HINT_RING);
-  }
+  const marks = stepMarks(hint);
+  const add = (flag: number) => (p: Point) => {
+    const i = p.y * w + p.x;
+    hintFlags.set(i, (hintFlags.get(i) ?? 0) | flag);
+  };
+  marks.of("stripes", CELL).forEach(add(F_HINT_LINE));
+  marks.of("outline", CELL).forEach(add(F_HINT_OUTLINE));
+  marks.of("ring", ARROW).forEach(add(F_HINT_ARROW));
+  marks.of("ring", CELL).forEach(add(F_HINT_RING));
 
   for (let x = 0; x < state.w; x++) {
     for (let y = 0; y < state.h; y++) {

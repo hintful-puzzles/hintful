@@ -40,7 +40,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { CELL, type MarkRef, type Narration } from "../../engine/hint-words.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import {
   dimensionParamConfig,
   parseConfigInt,
@@ -295,44 +295,33 @@ function status(s: BoatsState): GameStatus {
 // --- hint (a second projection of the deduction engine) ---------------------
 
 /**
- * What a Boats hint step marks on the board. `targets` are the squares to
- * decide — drawn in `COL_HINT` in the shape of the action each one is (a boat
- * mark for a segment, a water mark for water), because a single color standing
- * for two different actions reads as one action (docs/games/hints.md § "Echo
- * the move's shape in the hint color"). `evidence` is the particular squares
- * the deduction reasons from, outlined `COL_HINT_CELL`; `line` the row or column
- * the sentence names, hatched with its clue.
+ * What a Boats hint step is about; its marks are the ones its words name.
+ * `targets` are the squares to decide, each with what goes there: a ringed
+ * square is drawn in `COL_HINT` in the shape of that action (a boat mark for a
+ * segment, a water mark for water), because a single color standing for two
+ * different actions reads as one action (docs/games/hints.md § "Echo the
+ * move's shape in the hint color"). `evidence` is the particular squares the
+ * deduction reasons from; `line` the row or column the sentence names.
  */
 export interface BoatsHint {
   targets: BoatsSquare[];
   evidence: Point[];
   line: Point[];
-  /** The board's size, which bounds what the renderer draws. */
+  /** The board's size, which bounds what the words name. */
   w: number;
   h: number;
 }
 
-/** The squares `hl` draws on a `w` by `h` board, by role: the renderer skips
- * any off the board, and draws a decided square's mark over an outline. */
+/** The squares of `hl` a step's words may name on a `w` by `h` board: the
+ * renderer skips any off the board, and draws a decided square's mark over an
+ * outline. */
 function drawnSquares(hl: BoatsHint, w: number, h: number) {
   const on = (c: Point): boolean => c.x >= 0 && c.y >= 0 && c.x < w && c.y < h;
-  const targets = hl.targets.filter(on);
-  const decided = new Set(targets.map((t) => t.y * w + t.x));
+  const decided = new Set(hl.targets.filter(on).map((t) => t.y * w + t.x));
   return {
-    targets,
     evidence: hl.evidence.filter((c) => on(c) && !decided.has(c.y * w + c.x)),
     line: hl.line.filter(on),
   };
-}
-
-/** What a step's highlights draw: the `drawn` half of Boats' legend. */
-function boatsHintMarks(hl: BoatsHint): MarkRef[] {
-  const { targets, evidence, line } = drawnSquares(hl, hl.w, hl.h);
-  return [
-    { role: "ring", kind: CELL, elements: targets.map(({ x, y }) => ({ x, y })) },
-    { role: "outline", kind: CELL, elements: evidence },
-    { role: "stripes", kind: CELL, elements: line },
-  ] as MarkRef[];
 }
 
 /** Which sentence a firing speaks, and with what values, naming the squares
@@ -648,7 +637,6 @@ export const boatsGame: Game<
       stripes:
         "the row or column whose number it counts with, and the stripes run on through that number.",
     },
-    drawn: boatsHintMarks,
   },
   hintKeepTrack,
   textFormat,

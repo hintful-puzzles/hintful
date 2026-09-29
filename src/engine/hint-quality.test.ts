@@ -600,13 +600,16 @@ describe("a bound hint's words name exactly the marks it draws", () => {
 
   for (const [name, game] of BOUND_GAMES) {
     it(`${name}: every step, fresh and refreshed`, () => {
-      const legend = game.hintMarks;
-      if (!legend) throw new Error("filtered on hintMarks");
       let checked = 0;
       const defects: string[] = [];
-      const check = (step: Parameters<typeof bindingDefects>[0], at: string): void => {
+      const check = (
+        state: unknown,
+        ui: unknown,
+        step: Parameters<typeof bindingDefects>[3],
+        at: string,
+      ): void => {
         checked++;
-        for (const d of bindingDefects(step, legend))
+        for (const d of bindingDefects(game, state, ui, step))
           defects.push(`${at}: "${step.explanation}": ${d}`);
       };
       for (const { title, params } of gatePresets(name, game))
@@ -628,17 +631,17 @@ describe("a bound hint's words name exactly the marks it draws", () => {
             ) {
               const res = game.hint?.(state, aux, ui);
               if (!res?.ok) break;
-              res.steps.forEach((step, i) => {
-                check(step, `${at} round ${round} step ${i}`);
-              });
+              // Each step over the board it is narrated for: the state after
+              // the steps before it.
               for (const [i, step] of res.steps.entries()) {
+                check(state, ui, step, `${at} round ${round} step ${i}`);
                 // `null` is a step already resolved: the midend skips it.
                 const live = game.refreshHintStep
                   ? game.refreshHintStep(step, state)
                   : step;
                 if (live === null) continue;
                 if (live !== step)
-                  check(live, `${at} round ${round} step ${i}, refreshed`);
+                  check(state, ui, live, `${at} round ${round} step ${i}, refreshed`);
                 state = game.executeMove(state, live.move);
               }
             }

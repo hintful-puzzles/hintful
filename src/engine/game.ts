@@ -14,7 +14,7 @@
  */
 
 import type { DifficultyContract } from "./difficulty.ts";
-import type { MarkRef, MarkRole, Narration } from "./hint-words.ts";
+import type { MarkRole, Narration } from "./hint-words.ts";
 import type { RandomState } from "./random/index.ts";
 import type {
   Color,
@@ -61,7 +61,8 @@ export interface HintStep<Move, Highlights = unknown> {
   explanation: string;
   /** The sentence with its references to the marks the step draws
    * (`hint-words.ts`). Every step of a game with {@link Game.hintMarks} has
-   * them, and `testing/hint-binding.ts` holds them to the highlights. */
+   * them, its renderer paints its marks from them (`stepMarks`), and
+   * `testing/hint-binding.ts` holds the rendered frame to them. */
   words?: Narration;
   highlights?: Highlights;
   /** True when this step is the continuation of the journey the
@@ -117,14 +118,13 @@ export function narratedStep<Move, Highlights>(
 /**
  * The marks a game's hint draws, as a section of its contract
  * (`hint-words.ts` has the roles). A game that declares it is **bound**: every
- * step carries `words`, and each mark a step draws is one its words name.
+ * step carries `words`, and its renderer paints the step's marks from them
+ * (`stepMarks`), so each mark on the board is one the words name.
  */
-export interface HintMarkLegend<Highlights> {
+export interface HintMarkLegend {
   /** What each role marks in this game, in the words the help's list of marks
-   * gives it: "the edges the step decides". Every role a step draws is here. */
+   * gives it: "the edges the step decides". Every role a step names is here. */
   readonly roles: Partial<Record<MarkRole, string>>;
-  /** The marks a step's highlights draw. */
-  drawn(highlights: Highlights): readonly MarkRef[];
 }
 
 /** One user preference a game exposes — the idiomatic-TS form of an
@@ -486,7 +486,7 @@ export interface Game<
   hint?(state: State, aux?: string, ui?: Ui): HintResult<Move, Highlights>;
   /** The marks this game's hint draws, and what each means here. Declaring it
    * binds every step's words to its marks ({@link HintMarkLegend}). */
-  hintMarks?: HintMarkLegend<Highlights>;
+  hintMarks?: HintMarkLegend;
   /** Classify a player move against the current hint step. The game
    * MAY adjust `step.move` in place on `"onTrack"` (e.g. shrink a
    * slide's remaining distance after partial manual progress) so a

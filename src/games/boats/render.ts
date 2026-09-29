@@ -49,8 +49,9 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
-import type { Color, Size } from "../../engine/types.ts";
+import type { Color, Point, Size } from "../../engine/types.ts";
 import type { BoatsHint } from "./index.ts";
 import type { BoatsMistake } from "./solver.ts";
 import {
@@ -451,18 +452,24 @@ function hintBits(
   w: number,
   h: number,
 ): Int32Array | null {
-  const hl = step?.highlights;
-  if (!hl) return null;
+  if (!step) return null;
+  const marks = stepMarks(step);
+  const on = (c: Point): boolean => c.x >= 0 && c.y >= 0 && c.x < w && c.y < h;
   const bits = new Int32Array(w * h);
-  for (const c of hl.evidence)
-    if (c.x >= 0 && c.y >= 0 && c.x < w && c.y < h) bits[c.y * w + c.x] |= HINT_EVID;
-  for (const c of hl.line)
-    if (c.x >= 0 && c.y >= 0 && c.x < w && c.y < h) bits[c.y * w + c.x] |= HINT_LINE;
+  for (const c of marks.of("outline", CELL))
+    if (on(c)) bits[c.y * w + c.x] |= HINT_EVID;
+  for (const c of marks.of("stripes", CELL))
+    if (on(c)) bits[c.y * w + c.x] |= HINT_LINE;
+  // A ringed square is drawn in the shape of what the step puts there.
+  const ship = new Set(
+    (step.highlights?.targets ?? []).filter((t) => t.ship).map((t) => t.y * w + t.x),
+  );
   // Targets win over evidence on the same cell — the action outranks its reason.
-  for (const t of hl.targets)
-    if (t.x >= 0 && t.y >= 0 && t.x < w && t.y < h)
-      bits[t.y * w + t.x] =
-        (bits[t.y * w + t.x] & ~HINT_EVID) | (t.ship ? HINT_SHIP : HINT_WATER);
+  for (const t of marks.of("ring", CELL))
+    if (on(t)) {
+      const i = t.y * w + t.x;
+      bits[i] = (bits[i] & ~HINT_EVID) | (ship.has(i) ? HINT_SHIP : HINT_WATER);
+    }
   return bits;
 }
 
@@ -523,7 +530,7 @@ export function redraw(
   // The hint's hatched line runs on through its number (column slots first,
   // then rows, as `borderClues` counts them), so the slot's hatch is part of
   // its key beside the validation status.
-  const line = flashTime === 0 ? (hint?.highlights?.line ?? []) : [];
+  const line = flashTime === 0 ? stepMarks(hint).of("stripes", CELL) : [];
   const hatchedSlot =
     line.length === 0
       ? -1

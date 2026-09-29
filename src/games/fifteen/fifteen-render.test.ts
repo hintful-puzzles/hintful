@@ -5,9 +5,11 @@
 // moving tile at an interpolated coordinate.
 import { describe, expect, it } from "vitest";
 import { raisedBevelWidth } from "../../engine/draw.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
+import { TILE } from "./hint-text.ts";
 import { executeMove, fifteenGame } from "./index.ts";
 import { type FifteenState, newState } from "./state.ts";
 
@@ -107,7 +109,7 @@ describe("the hint mark while the hinted slide animates", () => {
       const res = fifteenGame.hint?.(state);
       if (!res?.ok) continue;
       const step = res.steps[0];
-      const tile = (step.highlights as { tile: number }).tile;
+      const [tile] = stepMarks(step).of("ring", TILE);
       const after = executeMove(state, step.move);
       const from = state.tiles.indexOf(tile);
       const to = after.tiles.indexOf(tile);

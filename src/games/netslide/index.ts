@@ -31,13 +31,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
-import {
-  hint,
-  hintKeepTrack,
-  type NetslideHint,
-  netslideHintMarks,
-  parseAux,
-} from "./hint.ts";
+import { hint, hintKeepTrack, type NetslideHint, parseAux } from "./hint.ts";
 import { reconstructSolution } from "./reconstruct.ts";
 import {
   ANIM_TIME,
@@ -314,7 +308,6 @@ export const netslideGame: Game<
       stripes:
         "the source's row or column, when the hint says it never slides: a piece sitting in it can only be moved along the other direction.",
     },
-    drawn: netslideHintMarks,
   },
   hintKeepTrack,
 

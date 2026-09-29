@@ -21,8 +21,7 @@
 
 import { BORDER, type BorderEdit, DISABLED, DX, DY, FLIP } from "./border-grid.ts";
 import { type HintStep, type HintTrackVerdict, narratedStep } from "./game.ts";
-import { CELL, type MarkKind, type MarkRef, type Narration } from "./hint-words.ts";
-import type { Point } from "./types.ts";
+import type { MarkKind, Narration } from "./hint-words.ts";
 
 /** An edge, named on the square `(x, y)`'s `dir` side. */
 export interface BorderEdge {
@@ -46,49 +45,11 @@ export const EDGE: MarkKind<BorderEdge> = {
       : `${x},${y},${dir}`,
 };
 
-/**
- * A displayed step: the edge it sets (`x`, `y`, `dir`, `kind`), the firing's
- * still-to-do edges (`edges`, same color, since they share a fate), and the
- * squares the sentence cites. `hatch` is the one region the sentence is about,
- * striped; `cells` are outlined, for anything else it names (a clue, a second
- * region).
- */
-export interface BorderHint extends ForcedBorderEdge {
-  cells?: ReadonlyArray<Point>;
-  hatch?: ReadonlyArray<Point>;
-  edges?: ReadonlyArray<BorderEdge>;
-}
-
-/** The marks a border-grid step draws: its edges ringed, `cells` outlined,
- * `hatch` striped. The `drawn` half of a border-grid game's legend. */
-export function borderHintMarks(h: BorderHint): MarkRef[] {
-  const out: MarkRef[] = [
-    {
-      role: "ring",
-      kind: EDGE,
-      elements: [{ x: h.x, y: h.y, dir: h.dir }, ...(h.edges ?? [])],
-    },
-  ];
-  if (h.cells) out.push({ role: "outline", kind: CELL, elements: h.cells });
-  if (h.hatch) out.push({ role: "stripes", kind: CELL, elements: h.hatch });
-  return out as MarkRef[];
-}
-
-/** The cells of `role` the words name, in the order they first name them. */
-function cellsNamed(words: Narration, role: "outline" | "stripes"): Point[] | null {
-  const seen = new Set<string>();
-  const out: Point[] = [];
-  for (const r of words.refs) {
-    if (r.role !== role || r.kind.name !== CELL.name) continue;
-    for (const p of r.elements as readonly Point[]) {
-      const k = CELL.key(p);
-      if (seen.has(k)) continue;
-      seen.add(k);
-      out.push({ x: p.x, y: p.y });
-    }
-  }
-  return out.length > 0 ? out : null;
-}
+/** A displayed step's highlights: the edge it sets, which keep-track compares a
+ * player's edit against. Its marks are its words' (`hint-words.ts`'s
+ * `stepMarks`): the firing's edges still to do ringed, the squares it reasons
+ * from outlined, the region it is about striped. */
+export type BorderHint = ForcedBorderEdge;
 
 /**
  * One firing as one journey (docs/games/hints.md § "Group one firing into one
@@ -109,9 +70,6 @@ export function borderHintJourney<M>(
   return edges.map((e, leg) => {
     const { x, y, dir, kind } = e;
     const said = words(leg, edges.slice(leg));
-    const later = edges.slice(leg + 1);
-    const cells = cellsNamed(said, "outline");
-    const hatch = cellsNamed(said, "stripes");
     return narratedStep<M, BorderHint>({
       move: toMove([
         { x, y, flag: edgeFlag(dir, kind) },
@@ -119,17 +77,7 @@ export function borderHintJourney<M>(
       ]),
       words: said,
       ...(leg > 0 ? { continuesPrevious: true } : {}),
-      highlights: {
-        x,
-        y,
-        dir,
-        kind,
-        ...(cells ? { cells } : {}),
-        ...(hatch ? { hatch } : {}),
-        ...(later.length
-          ? { edges: later.map((s) => ({ x: s.x, y: s.y, dir: s.dir })) }
-          : {}),
-      },
+      highlights: { x, y, dir, kind },
     });
   });
 }

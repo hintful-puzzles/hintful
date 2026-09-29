@@ -8,6 +8,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { HATCH_OPACITY } from "../engine/hatch.ts";
+import type { Narration } from "../engine/hint-words.ts";
 import { Midend } from "../engine/index.ts";
 import { registeredGameIds } from "../engine/registry.ts";
 import { codeLinesMatching } from "../engine/testing/enrollment.ts";
@@ -101,21 +102,23 @@ describe("the hint's line hatch", () => {
 });
 
 describe("a step that names a line or region draws it, and only then", () => {
-  /** How much a step says to hatch: the shared `hatch` list, or a game's own
-   * `line`. Read off the highlights, so a game is in by having it. */
-  const named = (hl: unknown): number => {
-    if (!hl || typeof hl !== "object") return 0;
-    const h = hl as { hatch?: unknown[]; line?: unknown };
-    // Both are read: Tracks names a line by number and a block by its cells.
-    // A cell list names something when it has cells (Boats' is empty for a
-    // step naming none); a line by number, when it is present at all, not
-    // truthy (Pattern's first column is line 0).
-    const cells = Array.isArray(h.hatch) ? h.hatch.length : 0;
-    if (Array.isArray(h.line)) return cells + h.line.length;
-    return cells + (h.line === undefined || h.line === null ? 0 : 1);
+  /** How much a step's words stripe, over every kind (a cell, Tracks' line by
+   * number, Pattern's clue strip): the stripes role is what a hatch draws, so a
+   * game is in by naming one. */
+  const named = (step: { words?: Narration } | null): number =>
+    (step?.words?.refs ?? [])
+      .filter((r) => r.role === "stripes")
+      .reduce((n, r) => n + r.elements.length, 0);
+
+  /** Games whose stripes glyph is not a hatch, each with its reason. Asserted
+   * exact: every entry must reach a step that stripes something. */
+  const NOT_HATCHED: Readonly<Record<string, string>> = {
+    subsets:
+      "stripes the one cell a set still fits as the green spotlight frame the Where can this go? aid uses, so the hint and the aid show that fact alike",
   };
 
   it("draws a hatch exactly where a step names a line or region, over every hinting game", () => {
+    const ledgerSeen = new Set<string>();
     let naming = 0;
     let silent = 0;
     const gamesNaming = new Set<string>();
@@ -134,8 +137,10 @@ describe("a step that names a line or region draws it, and only then", () => {
           const frame = new RecordingDrawing(palette);
           midend.forceRedraw(frame);
           const drawn = opsOfKind(frame.ops, "hatch").length;
-          const cells = named(midend.activeHintStep()?.highlights);
-          if (cells > 0) {
+          const cells = named(midend.activeHintStep());
+          if (cells > 0 && id in NOT_HATCHED) {
+            ledgerSeen.add(id);
+          } else if (cells > 0) {
             expect(
               drawn,
               `${id}: a step names a line or region and draws no hatch`,
@@ -155,6 +160,7 @@ describe("a step that names a line or region draws it, and only then", () => {
     // their own hint tests pin their hatch.)
     expect(naming).toBeGreaterThan(0);
     expect(silent).toBeGreaterThan(0);
+    expect([...ledgerSeen].sort()).toEqual(Object.keys(NOT_HATCHED).sort());
     for (const id of ["magnets", "keen", "rome", "filling", "palisade", "crossing"])
       expect([...gamesNaming], id).toContain(id);
   });

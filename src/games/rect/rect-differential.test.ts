@@ -13,6 +13,12 @@
  *
  * The fixtures are a frozen recording from upstream's `auxiliary/rect-trace.c`
  * harness; neither it nor `rect.c` is in this repo.
+ *
+ * The generator deals only boards the hint's rungs finish (`rungsFinish`), and
+ * deals again where C would return one they do not, so a seed whose C board is
+ * one of those diverges from C there on purpose. The one fixture that was
+ * (10x10e0.5, the seed ending "10-e") is retired; its desc is pinned in
+ * `rect-hint.test.ts` as the board the gate turns away.
  */
 
 import { describe, expect, it } from "vitest";

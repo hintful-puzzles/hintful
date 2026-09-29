@@ -28,16 +28,13 @@ import {
   commonHintRefusal,
   DEDUCTION_EXHAUSTED,
 } from "../../engine/hint-refusal.ts";
-import type { MarkRef, Narration } from "../../engine/hint-words.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import {
-  CORNER,
   type CornerBound,
   type CornerThen,
-  DOT,
   EDGE,
-  FACE,
-  PAIR,
+  type Marked,
   say,
 } from "./hint-text.ts";
 import type { LoopyMove, LoopyOp } from "./index.ts";
@@ -63,27 +60,7 @@ import {
   type LoopyState,
 } from "./state.ts";
 
-export interface LoopyHint {
-  /** The edges the step sets. */
-  readonly targets: readonly number[];
-  /** The note the step places, which the renderer draws off the move: its corner
-   * (a dline), or its pair. */
-  readonly placedCorner: number | null;
-  readonly placedPair: LoopyPair | null;
-  /** The clues the sentence names or counts: outlined. */
-  readonly faces: readonly number[];
-  /** The dot the sentence names: a ring round it, the outline role. */
-  readonly dots: readonly number[];
-  /** Lines the sentence cites: the loop an edge would close, the known edge a pair
-   * relates this one to, or the edge two chained pairs share. */
-  readonly edges: readonly number[];
-  /** The corner notes the sentence reasons from, by dline. */
-  readonly corners: readonly number[];
-  /** The pair notes the sentence reasons from. */
-  readonly pairs: readonly LoopyPair[];
-}
-
-type Marks = Omit<LoopyHint, "targets">;
+type Marks = Omit<Marked, "targets">;
 
 /** One firing as the plan keeps it: the board just before it, and the facts it
  * rests on, deepest first. */
@@ -158,7 +135,7 @@ interface Planner {
   readonly state: LoopyState;
   readonly facts: readonly LoopyFact[];
   readonly notes: Notes;
-  readonly steps: HintStep<LoopyMove, LoopyHint>[];
+  readonly steps: HintStep<LoopyMove>[];
 }
 
 const NO_MARKS: Marks = {
@@ -172,7 +149,7 @@ const NO_MARKS: Marks = {
 };
 
 /** The words a step speaks, given the marks it draws. */
-type Words = (m: LoopyHint) => Narration;
+type Words = (m: Marked) => Narration;
 
 function push(
   pl: Planner,
@@ -181,33 +158,8 @@ function push(
   marks: Partial<Marks>,
   targets: readonly number[] = [],
 ): void {
-  const highlights: LoopyHint = { ...NO_MARKS, ...marks, targets };
-  const said = words(highlights);
-  pl.steps.push({ move, explanation: said.text, words: said, highlights });
-}
-
-/** What a step's highlights draw: the `drawn` half of Loopy's legend. A cited
- * note is drawn in the evidence color wherever it is on the board, which every
- * note a step cites is, the plan having placed it first. */
-export function loopyHintMarks(hl: LoopyHint): MarkRef[] {
-  return [
-    { role: "ring", kind: EDGE, elements: hl.targets },
-    {
-      role: "ring",
-      kind: CORNER,
-      elements: hl.placedCorner === null ? [] : [hl.placedCorner],
-    },
-    {
-      role: "ring",
-      kind: PAIR,
-      elements: hl.placedPair === null ? [] : [hl.placedPair],
-    },
-    { role: "outline", kind: FACE, elements: hl.faces },
-    { role: "outline", kind: DOT, elements: hl.dots },
-    { role: "outline", kind: EDGE, elements: hl.edges },
-    { role: "outline", kind: CORNER, elements: hl.corners },
-    { role: "outline", kind: PAIR, elements: hl.pairs },
-  ] as MarkRef[];
+  const said = words({ ...NO_MARKS, ...marks, targets });
+  pl.steps.push({ move, explanation: said.text, words: said });
 }
 
 function cornerOf(pl: Planner, id: number): CornerFact {
@@ -686,7 +638,7 @@ function planSteps(
   plan: readonly Planned[],
   facts: readonly LoopyFact[],
   tickOf: readonly number[],
-): HintStep<LoopyMove, LoopyHint>[] {
+): HintStep<LoopyMove>[] {
   const pl: Planner = { state, facts, notes: new Notes(state), steps: [] };
   const firstUse = new Map<number, number>();
   plan.forEach((p, i) => {
@@ -772,10 +724,7 @@ function planSteps(
   return pl.steps;
 }
 
-export function hint(
-  state: LoopyState,
-  mistakes: number,
-): HintResult<LoopyMove, LoopyHint> {
+export function hint(state: LoopyState, mistakes: number): HintResult<LoopyMove> {
   const refusal = commonHintRefusal(state.completed, mistakes);
   if (refusal) return refusal;
   const { plan, facts, tickOf, contradiction } = deduceLoopyPlan(state);
@@ -858,9 +807,7 @@ export function refreshHintStep<H>(
       const ops = move.ops.filter((o) => state.lines[o.edge] !== o.state);
       if (ops.length === move.ops.length) return step;
       if (ops.length === 0) return null;
-      const highlights = step.highlights as LoopyHint;
-      const targets = ops.map((o) => o.edge);
-      const kept = new Set(targets.map((e) => EDGE.key(e)));
+      const kept = new Set(ops.map((o) => EDGE.key(o.edge)));
       const words = step.words?.narrow(
         (role, kind, key) => role !== "ring" || kind !== EDGE.name || kept.has(key),
       );
@@ -868,7 +815,6 @@ export function refreshHintStep<H>(
         ...step,
         ...(words && { words, explanation: words.text }),
         move: { ...move, ops },
-        highlights: { ...highlights, targets } as H,
       };
     }
   }

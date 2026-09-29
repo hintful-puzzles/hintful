@@ -8,7 +8,6 @@ import type {
 } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { ALREADY_SOLVED, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
-import type { MarkRef } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -35,7 +34,7 @@ import {
   toroidalDist,
 } from "../../engine/slide-planner.ts";
 import type { Point } from "../../engine/types.ts";
-import { SQUARE, say, TILE } from "./hint-text.ts";
+import { say } from "./hint-text.ts";
 import {
   ANIM_TIME,
   colors,
@@ -730,16 +729,6 @@ export const sixteenGame: Game<
     roles: {
       ring: "what the step decides: the tile it is moving, filled in the hint's color, with the arrow to click drawn in the same color, and the square the move takes it to, outlined. When the tile is on a journey of two moves, one along a row and one along a column, both squares are marked: the nearer one, where this move lands it, with a dashed outline, and the other with a solid one.",
     },
-    drawn: (hl) =>
-      [
-        { role: "ring", kind: TILE, elements: [hl.tile] },
-        {
-          role: "ring",
-          kind: SQUARE,
-          elements:
-            hl.ultimatePos === null ? [hl.targetPos] : [hl.targetPos, hl.ultimatePos],
-        },
-      ] as MarkRef[],
   },
 
   hintKeepTrack(

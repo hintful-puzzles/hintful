@@ -42,9 +42,10 @@ import {
   type MarkCell,
   MarkOutlines,
 } from "../../engine/hint-mark.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import type { Color, Size } from "../../engine/types.ts";
-import type { TentsHighlights } from "./hint.ts";
+import { LINK, NUMBER } from "./hint-marks.ts";
 import {
   BLANK,
   canJoin,
@@ -518,7 +519,7 @@ export function redraw(
   ui: TentsUi,
   _animTime: number,
   flashTime: number,
-  hint?: HintStep<TentsMove, TentsHighlights>,
+  hint?: HintStep<TentsMove>,
   mistakes?: readonly TentsMistake[],
 ): void {
   const ts = ds.tileSize;
@@ -583,16 +584,13 @@ export function redraw(
   // The hint: a ring round each square it decides (a link's two squares as one
   // shape), an outline round the squares it reasons from, the line its sentence
   // names hatched, and the link it asks for in its own color.
-  const hl = hint?.highlights;
-  const cellsOf = (squares: readonly number[]): MarkCell[] =>
-    [...new Set(squares)]
-      .sort((a, b) => a - b)
-      .map((i) => ({ x: i % w, y: Math.floor(i / w) }));
-  const hintTargets = cellsOf(hl?.targets ?? []);
-  const area = cellsOf(hl?.area ?? []);
+  const marks = stepMarks(hint);
+  const cellsOf = (cells: readonly MarkCell[]): MarkCell[] =>
+    [...cells].sort((a, b) => a.y - b.y || a.x - b.x);
+  const hintTargets = cellsOf(marks.of("ring", CELL));
+  const area = cellsOf(marks.of("outline", CELL));
   const hintLinks = new Int8Array(w * h);
-  if (hl?.link) {
-    const { sq, d } = hl.link;
+  for (const { sq, d } of marks.of("ring", LINK)) {
     hintLinks[sq] = d;
     hintLinks[sq + DY(d) * w + DX(d)] = FLIP(d);
   }
@@ -603,9 +601,9 @@ export function redraw(
     joinTargets: (a, b) => hintLinks[a.y * w + a.x] === dirTo(b.x - a.x, b.y - a.y),
   };
   const outlines = new MarkOutlines(hintTargets, area, markStyle);
-  const line = hl?.line ?? null;
-  const onLine = (x: number, y: number): boolean =>
-    line !== null && (line < w ? x === line : y === line - w);
+  const striped = new Set(marks.of("stripes", CELL).map((p) => p.y * w + p.x));
+  const counted = new Set(marks.of("outline", NUMBER));
+  const onLine = (x: number, y: number): boolean => striped.has(y * w + x);
 
   // Draw the grid squares whose packed word changed.
   for (let y = 0; y < h; y++) {
@@ -638,7 +636,7 @@ export function redraw(
   // line's hatch runs on through the clue's slot.
   const numberSize = Math.floor(ts / 2);
   for (let k = 0; k < w + h; k++) {
-    const hatched = line === k;
+    const hatched = counted.has(k);
     const color = errors.num[k] ? COL_ERROR : hatched ? COL_HINT : COL_GRID;
     const key = errors.num[k] | (hatched ? 2 : 0);
     if (ds.numbersDrawn[k] === key) continue;

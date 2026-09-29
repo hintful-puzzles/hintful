@@ -47,11 +47,7 @@ import {
 } from "../../engine/pointer.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { newUntangleDesc } from "./generator.ts";
-import {
-  deduceUntangleHintPlan,
-  type UntangleHint,
-  untangleHintMarks,
-} from "./hint.ts";
+import { deduceUntangleHintPlan } from "./hint.ts";
 import { FLASH_TIME, redrawUntangle } from "./render.ts";
 import { closestOrientation, solvedLayout } from "./solution.ts";
 import {
@@ -139,9 +135,7 @@ export const untangleGame: Game<
   UntangleState,
   UntangleMove,
   UntangleUi,
-  UntangleDrawState,
-  unknown,
-  UntangleHint
+  UntangleDrawState
 > = {
   id: "untangle",
   preferredTileSize: PREFERRED_TILE_SIZE,
@@ -392,7 +386,6 @@ export const untangleGame: Game<
       outline:
         "the crossings the move clears, each with a ring round it, so you can count them.",
     },
-    drawn: untangleHintMarks,
   },
 
   // --- solve (the solved layout, in the symmetry closest to the board) -
@@ -492,16 +485,7 @@ export const untangleGame: Game<
     y: new Array<number>(s.n).fill(-1),
   }),
   redraw: (dr, ds, prev, s, _dir, ui, animTime, flashTime, hint) => {
-    redrawUntangle(
-      dr,
-      ds,
-      prev,
-      s,
-      ui,
-      animTime,
-      flashTime,
-      hint?.highlights as UntangleHint | undefined,
-    );
+    redrawUntangle(dr, ds, prev, s, ui, animTime, flashTime, hint);
   },
 };
 

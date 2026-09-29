@@ -27,7 +27,9 @@ import { drawRectCorners, drawRectOutline, glyphFont } from "../../engine/draw.t
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
-import type { Color, Size } from "../../engine/types.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import type { Color, Point, Size } from "../../engine/types.ts";
+import { CLUE } from "./hint-text.ts";
 import type { RangeHint } from "./index.ts";
 import { findErrors } from "./solver.ts";
 import {
@@ -255,14 +257,12 @@ export function redraw(
   // highlighted the same red as live rule violations.
   const mistakeSet = mistakes ? new Set(mistakes.map((m) => idx(m.r, m.c, w))) : null;
 
-  const hl = hint?.highlights;
-  const hintTarget = hl ? idx(hl.target.r, hl.target.c, w) : -1;
-  const hintAreaSet = hl ? new Set(hl.area.map((m) => idx(m.r, m.c, w))) : null;
-  const hintBlackSet = hl?.blackRefs
-    ? new Set(hl.blackRefs.map((m) => idx(m.r, m.c, w)))
-    : null;
-  const hintClue = hl?.clue ? idx(hl.clue.r, hl.clue.c, w) : -1;
-  const hintHatch = new Set((hl?.hatch ?? []).map((m) => idx(m.r, m.c, w)));
+  const marks = stepMarks(hint);
+  const at = (p: Point): number => idx(p.y, p.x, w);
+  const hintTarget = new Set(marks.of("ring", CELL).map(at));
+  const hintOutline = new Set(marks.of("outline", CELL).map(at));
+  const hintClue = new Set(marks.of("outline", CLUE).map(at));
+  const hintHatch = new Set(marks.of("stripes", CELL).map(at));
 
   for (let r = 0; r < h; r++) {
     for (let c = 0; c < w; c++) {
@@ -271,15 +271,16 @@ export function redraw(
       const error = errors[i];
       const mistake = mistakeSet?.has(i) ?? false;
       const cursor = ui.cursor.visible && r === ui.cursor.y && c === ui.cursor.x;
-      const hintKind: HintKind =
-        i === hintTarget
-          ? "target"
-          : hintBlackSet?.has(i)
+      // An outlined black square is a premise, which keeps its black and
+      // takes the doubled outline.
+      const hintKind: HintKind = hintTarget.has(i)
+        ? "target"
+        : hintOutline.has(i)
+          ? value === BLACK
             ? "blackRef"
-            : hintAreaSet?.has(i)
-              ? "area"
-              : "none";
-      const clueRef = i === hintClue;
+            : "area"
+          : "none";
+      const clueRef = hintClue.has(i);
       const hatched = hintHatch.has(i);
 
       let packed = (value + 2) | HINT_FLAG[hintKind];

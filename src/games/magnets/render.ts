@@ -35,8 +35,10 @@ import {
   type MarkCell,
   MarkOutlines,
 } from "../../engine/hint-mark.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import type { MagnetsHighlights } from "./hint.ts";
+import { CLUE, LINE, SQUARE } from "./hint-text.ts";
 import {
   COLUMN,
   clueIndex,
@@ -461,17 +463,21 @@ export function redraw(
   // A domino the hint decides, or reasons from, is one ring around its squares
   // in that role. The line the sentence counts is the hatch, so no outline has
   // to trace it.
-  const hintedClues = new Set(hint?.highlights?.clues);
-  const reasonClues = new Set(hint?.highlights?.reasonClues);
-  const line = hint?.highlights?.line ?? null;
+  // An outlined clue is the count read, in the action color, unless the step
+  // cites it as a reason.
+  const marks = stepMarks(hint);
+  const cited = new Set(hint?.highlights?.reasonClues);
+  const hintedClues = new Set<number>();
+  const reasonClues = new Set<number>();
+  for (const c of marks.of("outline", CLUE))
+    (cited.has(c) ? reasonClues : hintedClues).add(c);
+  const lines = marks.of("stripes", LINE);
   const onLine = (roworcol: number, num: number): boolean =>
-    line !== null && line.roworcol === roworcol && line.num === num;
+    lines.some((l) => l.roworcol === roworcol && l.num === num);
   const cellsOf = (squares: readonly number[]): MarkCell[] =>
-    [...new Set(squares)]
-      .sort((a, b) => a - b)
-      .map((i) => ({ x: i % w, y: Math.floor(i / w) }));
-  const hintTargets = cellsOf(hint?.highlights?.targets ?? []);
-  const area = cellsOf(hint?.highlights?.area ?? []);
+    [...squares].sort((a, b) => a - b).map((i) => ({ x: i % w, y: Math.floor(i / w) }));
+  const hintTargets = cellsOf(marks.of("ring", SQUARE));
+  const area = cellsOf(marks.of("outline", SQUARE));
   // Both roles join a square only to its own partner, so two dominoes side by
   // side stay two shapes rather than one that is not on the board.
   const partners = (a: MarkCell, b: MarkCell): boolean =>

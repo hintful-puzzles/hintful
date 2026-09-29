@@ -31,6 +31,7 @@ import { slantGrounded } from "../../engine/color/palette-games.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import {
   type PencilIndicatorCache,
   type PencilIndicatorStyle,
@@ -40,6 +41,7 @@ import {
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import type { SlantHint, SlantMark } from "./hint.ts";
+import { ALIKE, CLUE } from "./hint-marks.ts";
 import {
   ALIKE_DOWN,
   ALIKE_RIGHT,
@@ -583,22 +585,22 @@ export function redraw(
 
   // Hint overlay: target square(s) ringed, evidence outlined, anchor
   // double-ringed, the driving clue's digit recolored in the four tiles that
-  // draw it.
-  const hl = hint?.highlights;
-  if (hl) {
-    if (hl.target) todraw[ti(hl.target.x, hl.target.y)] |= HINT_TARGET;
-    if (hl.siblings) for (const s of hl.siblings) todraw[ti(s.x, s.y)] |= HINT_TARGET;
-    if (hl.area) for (const a of hl.area) todraw[ti(a.x, a.y)] |= HINT_EVID;
-    if (hl.ref) todraw[ti(hl.ref.x, hl.ref.y)] |= HINT_REF;
-    for (const { x: cx, y: cy } of hl.clues ?? []) {
-      todraw[cy * stride + cx] |= HINT_BR;
-      todraw[cy * stride + (cx + 1)] |= HINT_BL;
-      todraw[(cy + 1) * stride + cx] |= HINT_TR;
-      todraw[(cy + 1) * stride + (cx + 1)] |= HINT_TL;
-    }
-    for (const m of hl.marks ?? []) keyMark(marks, ti, m, MARK_CITED);
-    if (hl.mark) keyMark(marks, ti, hl.mark, MARK_PLACING);
+  // draw it. The anchor is an outlined square the words name; `ref` says
+  // which one takes the doubled ring.
+  const said = stepMarks(hint);
+  const ref = hint?.highlights?.ref;
+  for (const s of said.of("ring", CELL)) todraw[ti(s.x, s.y)] |= HINT_TARGET;
+  for (const a of said.of("outline", CELL))
+    todraw[ti(a.x, a.y)] |=
+      ref && a.x === ref.x && a.y === ref.y ? HINT_REF : HINT_EVID;
+  for (const { x: cx, y: cy } of said.of("outline", CLUE)) {
+    todraw[cy * stride + cx] |= HINT_BR;
+    todraw[cy * stride + (cx + 1)] |= HINT_BL;
+    todraw[(cy + 1) * stride + cx] |= HINT_TR;
+    todraw[(cy + 1) * stride + (cx + 1)] |= HINT_TL;
   }
+  for (const m of said.of("outline", ALIKE)) keyMark(marks, ti, m, MARK_CITED);
+  for (const m of said.of("ring", ALIKE)) keyMark(marks, ti, m, MARK_PLACING);
 
   // Draw the tiles whose packed word or marks changed.
   for (let y = -1; y <= h; y++) {

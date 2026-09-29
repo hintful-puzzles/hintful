@@ -24,7 +24,7 @@ import {
 } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { CELL, type MarkRef, type Narration } from "../../engine/hint-words.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -41,7 +41,7 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
-import { CLUE, type Marked, say } from "./hint-text.ts";
+import { type Marked, say } from "./hint-text.ts";
 import {
   border,
   colors,
@@ -232,26 +232,11 @@ function findMistakes(state: RangeState): readonly RangeMistake[] {
 
 // --- hint ------------------------------------------------------------------
 
-/** Highlight data for a Range hint step. `target` is the cell the
- * deduction forces (and the mark it forces). `area` is the deduction's
- * evidence to outline — the clue's line of sight (for `reach`, its other
- * arms), or the non-black cells a cut would isolate — so a beginner can
- * *see* the reasoning, not just the conclusion (the Palisade
- * region-highlight convention). `blackRefs` are black premise cells (an
- * adjacent black) that stay black and take a doubled outline instead. */
+/** Plan data for a Range hint step: the cell the deduction forces and the
+ * mark it forces, which keep-track compares a move against. The marks are the
+ * step's words'. */
 export interface RangeHint {
   target: { r: number; c: number; value: RangeCellValue };
-  area: Cell[];
-  /** The run a `reach` sentence names, hatched (docs/games/hints.md § "Hatch
-   * the line the sentence names"). */
-  hatch?: Cell[];
-  blackRefs?: Cell[];
-  /** The clue driving a line-of-sight deduction, its digit recolored
-   * `COL_HINT`. A clue sits *inside* its own shaded line of sight, and a
-   * board can put two clues of the same value in one such run (as `9x6` seed
-   * `range-a` does), so the value alone does not name it and the driving one
-   * is marked (Light Up's recolored digit, the same element-type legend). */
-  clue?: Cell;
 }
 
 /** A cell already known to be white: the player's white mark, or a clue
@@ -324,16 +309,9 @@ function nonBlackNeighbors(
 const pointOf = (cell: Cell): Point => ({ x: cell.c, y: cell.r });
 
 /** Narrate *why* the move is forced, per the deduction rule, naming the marks
- * `hl` draws. The words, and the tie each carries from the ringed cell to the
+ * `m`. The words, and the tie each carries from the ringed cell to the
  * evidence, are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(reason: HintReason, hl: RangeHint): Narration {
-  const m: Marked = {
-    target: pointOf(hl.target),
-    area: hl.area.map(pointOf),
-    blacks: (hl.blackRefs ?? []).map(pointOf),
-    run: (hl.hatch ?? []).map(pointOf),
-    clue: hl.clue ? pointOf(hl.clue) : null,
-  };
+function narrate(reason: HintReason, m: Marked): Narration {
   switch (reason.kind) {
     case "adjacency":
       return say.adjacency(m);
@@ -348,43 +326,41 @@ function narrate(reason: HintReason, hl: RangeHint): Narration {
   }
 }
 
-/** What a step's highlights draw: the `drawn` half of Range's legend. A black
- * premise is outlined as a cell, and the clue's recolored number as a clue. */
-function rangeHintMarks(hl: RangeHint): MarkRef[] {
-  return [
-    { role: "ring", kind: CELL, elements: [pointOf(hl.target)] },
-    {
-      role: "outline",
-      kind: CELL,
-      elements: [...hl.area, ...(hl.blackRefs ?? [])].map(pointOf),
-    },
-    { role: "outline", kind: CLUE, elements: hl.clue ? [pointOf(hl.clue)] : [] },
-    { role: "stripes", kind: CELL, elements: (hl.hatch ?? []).map(pointOf) },
-  ] as MarkRef[];
-}
-
-/** Build the highlight payload for a forced move: the area to outline and
- * any black premise cells to ring, derived from the deduction's reason.
- * `grid` is the solver's working grid with this move already applied, so the
- * target is never part of its own area: a black target cannot be in a line of
- * sight, and a `reach` target, which can, is taken out of it. */
-function buildHighlights(
+/** What a forced move's words mark: the area to outline (the clue's line of
+ * sight, for `reach` its other arms, or the non-black cells a cut would
+ * isolate), any black premise cell, the run and the clue, derived from the
+ * deduction's reason. `grid` is the solver's working grid with this move
+ * already applied, so the target is never part of its own area: a black
+ * target cannot be in a line of sight, and a `reach` target, which can, is
+ * taken out of it. */
+function markedOf(
   grid: Int8Array,
   w: number,
   h: number,
   reason: HintReason,
-  target: { r: number; c: number; value: RangeCellValue },
-): RangeHint {
+  target: Cell,
+): Marked {
+  const marked = (m: {
+    area?: Cell[];
+    blacks?: Cell[];
+    run?: Cell[];
+    clue?: Cell;
+  }): Marked => ({
+    target: pointOf(target),
+    area: (m.area ?? []).map(pointOf),
+    blacks: (m.blacks ?? []).map(pointOf),
+    run: (m.run ?? []).map(pointOf),
+    clue: m.clue ? pointOf(m.clue) : null,
+  });
   switch (reason.kind) {
     case "adjacency":
-      return { target, area: [], blackRefs: [reason.from] };
+      return marked({ blacks: [reason.from] });
     case "satisfied":
     case "overrun":
-      return {
-        target,
+      return marked({
         area: lineOfSight(grid, w, h, reason.clue.r, reason.clue.c),
         clue: reason.clue,
-      };
+      });
     case "reach": {
       // The run the narration names is the path from the clue to this target,
       // striped even where it is not yet white; what the clue already sees
@@ -397,10 +373,10 @@ function buildHighlights(
           !onRun.has(idx(cell.r, cell.c, w)) &&
           (cell.r !== target.r || cell.c !== target.c),
       );
-      return { target, area, hatch: run, clue: reason.clue };
+      return marked({ area, run, clue: reason.clue });
     }
     case "connect":
-      return { target, area: nonBlackNeighbors(grid, w, h, target.r, target.c) };
+      return marked({ area: nonBlackNeighbors(grid, w, h, target.r, target.c) });
   }
 }
 
@@ -412,13 +388,15 @@ function hint(state: RangeState): HintResult<RangeMove, RangeHint> {
   const steps: HintStep<RangeMove, RangeHint>[] = plan.map((m) => {
     const value = gridValueToCell(m.value);
     const target = { r: m.r, c: m.c, value };
-    const highlights = buildHighlights(m.grid, state.w, state.h, m.reason, target);
-    const words = narrate(m.reason, highlights);
+    const words = narrate(
+      m.reason,
+      markedOf(m.grid, state.w, state.h, m.reason, target),
+    );
     return {
       move: { sets: [{ r: m.r, c: m.c, value }] },
       explanation: words.text,
       words,
-      highlights,
+      highlights: { target },
     };
   });
   return { ok: true, steps };
@@ -475,7 +453,6 @@ export const rangeGame: Game<
       stripes:
         "the run a clue has to see along, from the clue as far as the ringed cell.",
     },
-    drawn: rangeHintMarks,
   },
   hintKeepTrack,
   findMistakes,

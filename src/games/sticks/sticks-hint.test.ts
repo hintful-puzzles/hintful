@@ -9,6 +9,7 @@
  * `engine/testing/hint-games.ts` and are deliberately not duplicated here.
  */
 import { describe, expect, it } from "vitest";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
@@ -153,10 +154,13 @@ describe("sticks hint — evidence counts out against the words", () => {
       const r = sticksGame.hint?.(board(seed).state);
       if (!r?.ok) throw new Error("expected a hint");
       for (const s of r.steps) {
-        const hl = s.highlights as { target: number; evidence: number[] };
-        expect(hl.evidence.length, s.explanation).toBeGreaterThan(0);
+        const marks = stepMarks(s);
+        const evidence = marks.of("outline", CELL).map((p) => `${p.x},${p.y}`);
+        expect(evidence.length, s.explanation).toBeGreaterThan(0);
         // A black clue's counted lines never include the one being ruled out.
-        if (/black/.test(s.explanation)) expect(hl.evidence).not.toContain(hl.target);
+        const [target] = marks.of("ring", CELL);
+        if (/black/.test(s.explanation))
+          expect(evidence).not.toContain(`${target.x},${target.y}`);
       }
     }
   });

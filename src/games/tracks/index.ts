@@ -12,14 +12,7 @@
 
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
-import type {
-  Game,
-  HintResult,
-  HintStep,
-  HintTrackVerdict,
-  SolveResult,
-  UiUpdate,
-} from "../../engine/game.ts";
+import type { Game, HintResult, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { commonHintRefusal } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
@@ -47,12 +40,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
-import {
-  type TracksHighlights,
-  tracksHint,
-  tracksHintMarks,
-  tracksKeepTrack,
-} from "./hint.ts";
+import { tracksHint, tracksKeepTrack } from "./hint.ts";
 import {
   copyAndApplyDrag,
   executeMove,
@@ -327,7 +315,7 @@ function findMistakes(state: TracksState): readonly Point[] {
  * available: the deduction runs from the player's own marks, so a wrong one
  * would have it deducing from a false premise.
  */
-function hint(state: TracksState): HintResult<TracksMove, TracksHighlights> {
+function hint(state: TracksState): HintResult<TracksMove> {
   const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
   if (refusal) return refusal;
   return tracksHint(state);
@@ -348,8 +336,7 @@ export const tracksGame: Game<
   TracksMove,
   TracksUi,
   TracksDrawState,
-  Point,
-  TracksHighlights
+  Point
 > = {
   id: "tracks",
 
@@ -382,14 +369,8 @@ export const tracksGame: Game<
       stripes:
         "the row or column the sentence calls “this row” or “this column”, striped through its clue, or the closed block a sentence about crossings is about.",
     },
-    drawn: tracksHintMarks,
   },
-  hintKeepTrack: (
-    m: TracksMove,
-    step: HintStep<TracksMove>,
-    state: TracksState,
-  ): HintTrackVerdict =>
-    tracksKeepTrack(m, step as HintStep<TracksMove, TracksHighlights>, state),
+  hintKeepTrack: tracksKeepTrack,
 
   textFormat,
 

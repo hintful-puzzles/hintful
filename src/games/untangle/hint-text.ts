@@ -31,10 +31,14 @@ export const SPOT: MarkKind<RationalPoint> = {
   key: (p) => `${p.x}/${p.d},${p.y}/${p.d}`,
 };
 
-/** A crossing, where it is drawn. */
-export const CROSSING: MarkKind<Point> = {
+/** A crossing of two lines, where it is drawn. `lines` names the pair, which
+ * is what tells two crossings apart: a line through another's end crosses
+ * both lines there, at one spot, and the sentence counts both. */
+export type Crossing = Point & { readonly lines: string };
+
+export const CROSSING: MarkKind<Crossing> = {
   name: "crossing",
-  key: (p) => `${p.x},${p.y}`,
+  key: (c) => c.lines,
 };
 
 /** What one step marks: the point it moves, where to, the crossings of that
@@ -42,7 +46,7 @@ export const CROSSING: MarkKind<Point> = {
 export interface UntangleMarks {
   vertex: number;
   to: RationalPoint;
-  cleared: readonly Point[];
+  cleared: readonly Crossing[];
   marked: readonly number[];
 }
 

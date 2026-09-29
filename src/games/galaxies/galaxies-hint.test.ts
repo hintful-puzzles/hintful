@@ -611,9 +611,7 @@ describe("following the plan", () => {
     if (!live) throw new Error("the step was left half made");
     expect(live.highlights?.targets).toHaveLength(2);
     expect(live.explanation).toMatch(/so both these cells must belong to/);
-    const legend = galaxiesGame.hintMarks;
-    if (!legend) throw new Error("galaxies declares no hintMarks");
-    expect(bindingDefects(live, legend)).toEqual([]);
+    expect(bindingDefects(galaxiesGame, s, galaxiesGame.newUi(s), live)).toEqual([]);
   });
 
   it("drops the plan when the player goes their own way", () => {

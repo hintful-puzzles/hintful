@@ -14,11 +14,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import {
-  anyEmptyLacksNotes,
-  candidateHint,
-  candidateHintMarks,
-} from "../../engine/candidate-hint.ts";
+import { anyEmptyLacksNotes, candidateHint } from "../../engine/candidate-hint.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import { winFlash } from "../../engine/flash.ts";
@@ -334,7 +330,6 @@ export const seismicGame: Game<
         "the number just placed, when a step crosses that number out of the cells it rules out.",
       stripes: "the area the step reasons from.",
     },
-    drawn: candidateHintMarks,
   },
   hintKeepTrack,
   refreshHintStep,

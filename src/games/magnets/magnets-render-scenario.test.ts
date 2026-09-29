@@ -8,6 +8,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   expectPieceRing,
@@ -21,6 +22,7 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import type { MagnetsHighlights } from "./hint.ts";
+import { CLUE, LINE, SQUARE } from "./hint-text.ts";
 import { magnetsGame } from "./index.ts";
 import {
   COL_HINT,
@@ -87,6 +89,12 @@ describe("magnets render scenarios", () => {
     );
   });
 
+  /** The clue digits a step outlines as the count it reads. */
+  const countedClues = (s: HintStep<MagnetsMove, MagnetsHighlights>) =>
+    stepMarks(s)
+      .of("outline", CLUE)
+      .filter((c) => !s.highlights?.reasonClues.includes(c));
+
   /** The first hint frame, over a few boards, whose step `want` picks. */
   function hintFrame(want: (s: HintStep<MagnetsMove, MagnetsHighlights>) => boolean) {
     for (let seed = 0; seed < 20; seed++) {
@@ -107,8 +115,8 @@ describe("magnets render scenarios", () => {
     const { recording } = hintFrame(
       (s) =>
         s.move.type === "set" &&
-        s.highlights?.targets.length === 1 &&
-        s.highlights.area.length > 0,
+        stepMarks(s).of("ring", SQUARE).length === 1 &&
+        stepMarks(s).of("outline", SQUARE).length > 0,
     );
     // Four thin sides, none solid: the square keeps its own content.
     expectRing(recording.ops, COL_HINT, 1);
@@ -123,19 +131,21 @@ describe("magnets render scenarios", () => {
       (s) =>
         s.move.type === "flag" &&
         s.move.mode === "notneutral" &&
-        s.highlights?.targets.length === 2 &&
-        s.highlights.clues.length > 0,
+        stepMarks(s).of("ring", SQUARE).length === 2 &&
+        countedClues(s).length > 0,
     );
     // One ring around both ends, not a ring per square.
     expectPieceRing(recording.ops, COL_HINT);
     const hinted = recording.ops.filter((o) => o.op === "text" && o.color === COL_HINT);
-    expect(hinted.length).toBe(step.highlights?.clues.length);
+    expect(hinted.length).toBe(countedClues(step).length);
     expect(recording.ops).toMatchSnapshot();
   });
 
   it("hatches the line a step counts, clue slots included, and nothing else", () => {
-    const { recording, step } = hintFrame((s) => s.highlights?.line != null);
-    const line = step.highlights?.line;
+    const { recording, step } = hintFrame(
+      (s) => stepMarks(s).of("stripes", LINE).length > 0,
+    );
+    const [line] = stepMarks(step).of("stripes", LINE);
     if (!line) throw new Error("the picked step names no line");
     const hatches = opsOfKind(recording.ops, "hatch");
     // One per square of the line, and one for each clue slot at its ends.

@@ -9,8 +9,9 @@
  */
 
 import { drawRectOutline, glyphFont } from "../../engine/draw.ts";
-import type { GameDrawing } from "../../engine/game.ts";
-import type { UntangleHint } from "./hint.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
+import { CROSSING, SPOT, VERTEX } from "./hint-text.ts";
 import {
   CIRCLE_RADIUS,
   DRAG_THRESHOLD,
@@ -18,6 +19,7 @@ import {
   packEdge,
   type RationalPoint,
   type UntangleDrawState,
+  type UntangleMove,
   type UntangleState,
   type UntangleUi,
 } from "./state.ts";
@@ -59,7 +61,7 @@ export function redrawUntangle(
   ui: UntangleUi,
   animTime: number,
   flashTime: number,
-  hint?: UntangleHint,
+  hint?: HintStep<UntangleMove>,
 ): void {
   const n = s.n;
   const ts = ds.tileSize;
@@ -85,11 +87,18 @@ export function redrawUntangle(
     ds.y[i] = y;
   }
 
-  // Hint marker pixels (or -1 when no hint is displayed). Folded into the
+  // The step's marks. The ringed point its move places is the one the line
+  // runs from; any other ringed point is one still to move.
+  const marks = stepMarks(hint);
+  const ringed = marks.of("ring", VERTEX);
+  const moved = hint?.move.points[0]?.i ?? -1;
+  const [spot] = marks.of("ring", SPOT);
+
+  // Hint marker pixels (or -1 when none is drawn). Folded into the
   // early-out so a manual hint, which moves no vertex, still repaints.
-  const hintVertex = hint ? hint.vertex : -1;
-  const hintTx = hint ? Math.trunc((hint.to.x * ts) / hint.to.d) : -1;
-  const hintTy = hint ? Math.trunc((hint.to.y * ts) / hint.to.d) : -1;
+  const hintVertex = ringed.includes(moved) ? moved : -1;
+  const hintTx = spot ? Math.trunc((spot.x * ts) / spot.d) : -1;
+  const hintTy = spot ? Math.trunc((spot.y * ts) / spot.d) : -1;
 
   // Early-out: nothing visible changed.
   if (
@@ -174,28 +183,33 @@ export function redrawUntangle(
   // a marker at the destination. The source is the vertex's *current*
   // drawn position (ds.x/y), so during an auto-hint slide the line shrinks
   // to nothing as the vertex arrives.
-  if (hint) {
-    // Ring each crossing the move removes, so the count the hint states is
-    // one the player can see. Unfilled, so the crossing stays visible inside.
-    for (const c of hint.cleared) {
-      const center = { x: Math.trunc(c.x * ts), y: Math.trunc(c.y * ts) };
-      dr.drawCircle(center, CROSSING_RING, -1, COL_HINT);
-      dr.drawCircle(center, CROSSING_RING + 1, -1, COL_HINT);
-    }
-    // On a journey, ring the marked points still to move after this one, so
-    // the count in the narration is one the player can see.
-    for (const v of hint.marked) {
-      const center = { x: ds.x[v], y: ds.y[v] };
-      dr.drawCircle(center, CROSSING_RING, -1, COL_HINT);
-      dr.drawCircle(center, CROSSING_RING + 1, -1, COL_HINT);
-    }
+  // Ring each crossing the move removes, so the count the hint states is
+  // one the player can see. Unfilled, so the crossing stays visible inside.
+  for (const c of marks.of("outline", CROSSING)) {
+    const center = { x: Math.trunc(c.x * ts), y: Math.trunc(c.y * ts) };
+    dr.drawCircle(center, CROSSING_RING, -1, COL_HINT);
+    dr.drawCircle(center, CROSSING_RING + 1, -1, COL_HINT);
+  }
+  // On a journey, ring the marked points still to move after this one, so
+  // the count in the narration is one the player can see.
+  for (const v of ringed) {
+    if (v === moved) continue;
+    const center = { x: ds.x[v], y: ds.y[v] };
+    dr.drawCircle(center, CROSSING_RING, -1, COL_HINT);
+    dr.drawCircle(center, CROSSING_RING + 1, -1, COL_HINT);
+  }
+  if (hintVertex >= 0 && spot) {
     dr.drawLine(
       { x: ds.x[hintVertex], y: ds.y[hintVertex] },
       { x: hintTx, y: hintTy },
       COL_HINT,
       2,
     );
+  }
+  if (spot) {
     dr.drawCircle({ x: hintTx, y: hintTy }, CIRCLE_RADIUS, COL_HINT, COL_OUTLINE);
+  }
+  if (hintVertex >= 0) {
     // The point the step moves wears the hint color too, so "this point" in
     // the narration names one of the two ends of the line.
     dr.drawCircle(

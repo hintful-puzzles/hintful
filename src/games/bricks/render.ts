@@ -27,7 +27,8 @@ import {
 import { drawRectCorners, drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
-import type { Color, Size } from "../../engine/types.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import type { Color, Point, Size } from "../../engine/types.ts";
 import type { BricksHint } from "./index.ts";
 import { bricksValidate } from "./solver.ts";
 import {
@@ -280,9 +281,10 @@ export function redraw(
   const s = w * h;
   const { ox, oy } = offsets(h, ts);
 
-  const hl = hint?.highlights;
-  const hintTarget = hl?.target ?? -1;
-  const hintEvid = hl ? new Set(hl.evidence) : null;
+  const marks = stepMarks(hint);
+  const indexOf = (p: Point): number => p.y * w + p.x;
+  const hintTargets = new Set(marks.of("ring", CELL).map(indexOf));
+  const hintEvid = new Set(marks.of("outline", CELL).map(indexOf));
 
   const flash = flashTime > 0 && ((flashTime / FLASH_FRAME) | 0) & 1;
 
@@ -317,8 +319,8 @@ export function redraw(
     if (flash && (n & COL_MASK) === F_SHADE) n = F_EMPTY;
     if (errorFlags) n |= errorFlags[i];
     if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y) n |= FE_CURSOR;
-    if (i === hintTarget) n |= HINT_TARGET;
-    else if (hintEvid?.has(i)) n |= HINT_EVID;
+    if (hintTargets.has(i)) n |= HINT_TARGET;
+    else if (hintEvid.has(i)) n |= HINT_EVID;
 
     if (ds.cache[i] === n) continue;
     ds.cache[i] = n;
@@ -351,9 +353,6 @@ export function redraw(
     dr.unclip();
   }
 
-  if (hintTarget >= 0) {
-    const x = hintTarget % w;
-    const y = (hintTarget / w) | 0;
+  for (const { x, y } of marks.of("ring", CELL))
     drawTargetRing(dr, ts, x * ts + ox + y * (ts >> 1), y * ts + oy);
-  }
 }

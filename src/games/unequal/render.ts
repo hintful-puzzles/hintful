@@ -32,6 +32,7 @@ import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import { cellHighlight, drawCellBackground } from "../../engine/note-taking-cell.ts";
 import {
   HINT_AREA,
@@ -577,7 +578,7 @@ export function redraw(
 
   // Pack both overlays per cell.
   const index = (x: number, y: number) => y * o + x;
-  ds.hint.pack(hint?.highlights ?? null, index, (m) => valueBit(m.n));
+  ds.hint.pack(stepMarks(hint), index, (m) => valueBit(m.n));
   ds.wrong.packCells(mistakes ?? null, index);
 
   const hchanged =

@@ -21,9 +21,10 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { FIX_MISTAKES_FIRST } from "../../engine/hint-refusal.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
-import { boardOf, type TentsHighlights, tentsKeepTrack, tentsPlan } from "./hint.ts";
+import { boardOf, tentsKeepTrack, tentsPlan } from "./hint.ts";
 import { say } from "./hint-text.ts";
 import { tentsGame } from "./index.ts";
 import { type TentsBoard, type TentsReason, tentsSolve } from "./solver.ts";
@@ -44,7 +45,7 @@ import {
   TREE,
 } from "./state.ts";
 
-type Step = HintStep<TentsMove, TentsHighlights>;
+type Step = HintStep<TentsMove>;
 
 const SHAPES: TentsParams[] = [
   { w: 8, h: 8, diff: DIFF_EASY },
@@ -334,7 +335,6 @@ describe("following a step by hand", () => {
   const copy = (s: Step): Step => ({
     ...s,
     move: structuredClone(s.move),
-    highlights: structuredClone(s.highlights),
   });
 
   /** The first step in the corpus deciding at least `n` grass squares. */
@@ -361,13 +361,11 @@ describe("following a step by hand", () => {
     const one: TentsMove = { type: "cells", cells: [first] };
     const before = step.explanation;
     expect(tentsKeepTrack(one, step, state)).toBe("onTrack");
-    expect(step.highlights?.targets).toHaveLength(rest.length);
+    expect(stepMarks(step).of("ring", CELL)).toHaveLength(rest.length);
     // Its words shrink with it, naming just the rings left.
-    const legend = tentsGame.hintMarks;
-    if (!legend) throw new Error("Tents declares its marks");
-    expect(bindingDefects(step, legend)).toEqual([]);
-    if (rest.length === 1) expect(step.explanation).not.toBe(before);
     const after = executeMove(state, one);
+    expect(bindingDefects(tentsGame, after, tentsGame.newUi(after), step)).toEqual([]);
+    if (rest.length === 1) expect(step.explanation).not.toBe(before);
     expect(tentsKeepTrack({ type: "cells", cells: rest }, step, after)).toBe(
       "completed",
     );

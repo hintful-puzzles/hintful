@@ -27,7 +27,6 @@ import {
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
-import { CELL, type MarkRef } from "../../engine/hint-words.ts";
 import { numberItem } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -42,7 +41,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point, ReferenceItem, ReferenceModel } from "../../engine/types.ts";
 import { newDominosaDesc } from "./generator.ts";
-import { SPOT, say } from "./hint-text.ts";
+import { say } from "./hint-text.ts";
 import {
   border,
   colors,
@@ -331,30 +330,15 @@ function findMistakes(state: DominosaState): readonly DominosaMistake[] {
 
 // --- hint ------------------------------------------------------------------
 
-/** Highlight payload for a dominosa hint step. `targets` are the cells to act
- * on (a placement's two cells, or a barrier's two cells) → `COL_HINT`;
- * `evidence` are the squares the deduction reasons over → `COL_HINT_CELL`;
- * `edge` (barrier only) is the `[a, b]` pair whose shared edge to recolor. */
+/** What a dominosa hint step's ringed spot asks for, which the words do not
+ * carry: a domino placed there (its two squares ringed as one shape), or a
+ * barrier between its two squares (each ringed, with the wall between them
+ * recolored). */
 export interface DominosaHint {
   kind: "place" | "barrier";
-  targets: number[];
-  evidence: number[];
-  edge?: [number, number];
-  /** The grid's width, which the squares above index. */
-  w: number;
 }
 
 const pointOf = (i: number, w: number): Point => ({ x: i % w, y: Math.floor(i / w) });
-
-/** What a step's highlights draw: the `drawn` half of Dominosa's legend. The
- * two targets are one spot, however the renderer joins them. */
-function dominosaHintMarks(hl: DominosaHint): MarkRef[] {
-  const [a, b] = hl.targets;
-  return [
-    { role: "ring", kind: SPOT, elements: [[a, b]] },
-    { role: "outline", kind: CELL, elements: hl.evidence.map((i) => pointOf(i, hl.w)) },
-  ] as MarkRef[];
-}
 
 const edgeKey = (a: number, b: number): string => (a < b ? `${a}-${b}` : `${b}-${a}`);
 
@@ -410,7 +394,7 @@ function hint(state: DominosaState): HintResult<DominosaMove, DominosaHint> {
         move: { type: "domino", d1: a, d2: b },
         explanation: words.text,
         words,
-        highlights: { kind: "place", targets: [a, b], evidence: firing.evidence, w },
+        highlights: { kind: "place" },
       });
     } else {
       const fresh = firing.barriers.filter(([a, b]) => !seenEdges.has(edgeKey(a, b)));
@@ -428,13 +412,7 @@ function hint(state: DominosaState): HintResult<DominosaMove, DominosaHint> {
           explanation: words.text,
           words,
           ...(idx > 0 ? { continuesPrevious: true } : {}),
-          highlights: {
-            kind: "barrier",
-            targets: [a, b],
-            evidence: firing.evidence,
-            edge: [a, b],
-            w,
-          },
+          highlights: { kind: "barrier" },
         });
       }
     }
@@ -685,7 +663,6 @@ export const dominosaGame: Game<
       outline:
         "the squares the reason rests on, such as a square with only one neighbor left to pair with, or the spots left for a domino.",
     },
-    drawn: dominosaHintMarks,
   },
   hintKeepTrack,
 

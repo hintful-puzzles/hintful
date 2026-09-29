@@ -31,7 +31,7 @@ import {
   DEDUCTION_EXHAUSTED,
   FIX_MISTAKES_FIRST,
 } from "../../engine/hint-refusal.ts";
-import { CELL, type MarkRef, type Narration } from "../../engine/hint-words.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -281,16 +281,17 @@ function findMistakes(state: ClustersState): readonly ClustersMistake[] {
 
 // --- hint ------------------------------------------------------------------
 
-/** Highlight roles of a Clusters hint step (the render legend — see the
- * COL_HINT block in render.ts). `target` is the forced cell, ringed; `danger`
- * is the tile the refuted coloring would break — the one element the narration
- * calls "outlined" — when that isn't the target itself; `chain` is a lookahead
- * firing's what-if walk, each cell marked with the color the hypothesis
- * would force it to. No other premise needs a highlight or a palette role:
- * every tile the three local rules read sits orthogonally adjacent to the
- * target or the danger tile, so it is already in view. */
+/** What a Clusters hint step's marks carry beyond the cells its words name
+ * (see the COL_HINT block in render.ts). `danger` is the tile the refuted
+ * coloring would break — the one element the narration calls "outlined" —
+ * when that isn't the target itself; `chain` is a lookahead firing's what-if
+ * walk, each cell marked with the color the hypothesis would force it to. The
+ * renderer paints either only where the words outline it, and reads it from
+ * here because a danger tile can also be a link of the chain, and the words
+ * name that square once. No other premise needs a highlight or a palette
+ * role: every tile the three local rules read sits orthogonally adjacent to
+ * the target or the danger tile, so it is already in view. */
 export interface ClustersHintHighlights {
-  target: Point;
   danger?: Point;
   /** `order` is the link's 1-based place in the chain, drawn as an ordinal
    * (`drawHintOrdinal`). Explicit rather than the array index because the
@@ -299,30 +300,22 @@ export interface ClustersHintHighlights {
   chain: (OrderedCell & { fill: ClustersFill })[];
 }
 
-/** Narrate the proof by contradiction, naming the cells `hl` marks. The words,
- * and how each ties "this cell" to the outlined tile, are
- * [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(d: ClustersDeduction, hl: ClustersHintHighlights): Narration {
-  const m: Marked = { target: hl.target, danger: hl.danger ?? null, chain: hl.chain };
+/** Narrate the proof by contradiction, ringing `target` and outlining the
+ * cells `hl` carries. The words, and how each ties "this cell" to the
+ * outlined tile, are [`hint-text.ts`](./hint-text.ts)'s. */
+function narrate(
+  d: ClustersDeduction,
+  target: Point,
+  hl: ClustersHintHighlights,
+): Narration {
+  const m: Marked = { target, danger: hl.danger ?? null, chain: hl.chain };
   return d.reason.kind === "chain" ? say.chain(d, m) : say.direct(d, m);
-}
-
-/** What a step's highlights draw: the `drawn` half of Clusters' legend. The
- * danger tile's double ring and the chain's numbered squares are both
- * evidence, told apart in the words by their nouns. */
-function clustersHintMarks(hl: ClustersHintHighlights): MarkRef[] {
-  return [
-    { role: "ring", kind: CELL, elements: [hl.target] },
-    { role: "outline", kind: CELL, elements: hl.danger ? [hl.danger] : [] },
-    { role: "outline", kind: CELL, elements: hl.chain.map(({ x, y }) => ({ x, y })) },
-  ] as MarkRef[];
 }
 
 function buildHighlights(d: ClustersDeduction, w: number): ClustersHintHighlights {
   const pt = (i: number): Point => ({ x: i % w, y: (i / w) | 0 });
   const at = d.reason.at;
   return {
-    target: pt(d.index),
     danger: at.cell !== d.index ? pt(at.cell) : undefined,
     chain:
       d.reason.kind === "chain"
@@ -349,7 +342,8 @@ function hint(state: ClustersState): HintResult<ClustersMove, ClustersHintHighli
   const steps: HintStep<ClustersMove, ClustersHintHighlights>[] = plan.deductions.map(
     (d) => {
       const highlights = buildHighlights(d, state.w);
-      const words = narrate(d, highlights);
+      const target = { x: d.index % state.w, y: (d.index / state.w) | 0 };
+      const words = narrate(d, target, highlights);
       return {
         move: { kind: "paint", cells: [{ index: d.index, fill: d.fill }] },
         explanation: words.text,
@@ -426,7 +420,6 @@ export const clustersGame: Game<
       outline:
         "the squares the step reasons from. A double orange ring is on the dot or square where the other color would break a rule. On Normal boards, numbered outlined squares, each holding a small square of red or blue, show what supposing the other color would force, in order, and to which color: they are only a supposition, and nothing is placed there.",
     },
-    drawn: clustersHintMarks,
   },
   hintKeepTrack,
   findMistakes,

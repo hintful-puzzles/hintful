@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { CLUE } from "./hint-text.ts";
 import { type RangeHint, rangeGame } from "./index.ts";
 import { deduceHintPlan, findErrors } from "./solver.ts";
 import {
@@ -81,14 +83,13 @@ describe("hint", () => {
       if (!res?.ok) throw new Error("expected a plan");
       for (const step of res.steps) {
         const hl = step.highlights as RangeHint;
-        const hasEvidence =
-          hl.area.length > 0 ||
-          (hl.hatch?.length ?? 0) > 0 ||
-          (hl.blackRefs?.length ?? 0) > 0;
-        expect(hasEvidence).toBe(true);
-        // Neither the area nor the run includes the target cell itself.
-        for (const cells of [hl.area, hl.hatch ?? []])
-          expect(cells.some((a) => a.r === hl.target.r && a.c === hl.target.c)).toBe(
+        const marks = stepMarks(step);
+        const outlined = marks.of("outline", CELL);
+        const run = marks.of("stripes", CELL);
+        expect(outlined.length + run.length).toBeGreaterThan(0);
+        // Neither the outline nor the run includes the target cell itself.
+        for (const cells of [outlined, run])
+          expect(cells.some((a) => a.y === hl.target.r && a.x === hl.target.c)).toBe(
             false,
           );
       }
@@ -127,11 +128,11 @@ describe("hint", () => {
           // is named this way rather than as "clue N" because a clue sits
           // inside its own shaded line of sight and that run can hold a
           // second clue of the same value — seen live on 9x6, two 13s.
-          const hl = step.highlights as RangeHint;
+          const clues = stepMarks(step).of("outline", CLUE);
           if (/\bthis \d+/i.test(step.explanation)) {
-            expect(hl.clue, `${step.explanation} — no clue is marked`).toBeDefined();
+            expect(clues.length, `${step.explanation} — no clue is marked`).toBe(1);
           } else {
-            expect(hl.clue).toBeUndefined();
+            expect(clues).toEqual([]);
           }
         }
         for (const step of res.steps) cur = rangeGame.executeMove(cur, step.move);

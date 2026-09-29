@@ -11,6 +11,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { SYMM_ROT4 } from "../../engine/symmetric-blacks.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
@@ -76,8 +77,9 @@ describe("Light Up hint render scenarios", () => {
         const h = hl(step);
         return (
           /must hold a bulb/.test(step.explanation ?? "") &&
-          (h?.area.length ?? 0) > 0 &&
-          h?.dark !== undefined
+          h?.dark !== undefined &&
+          // an outlined square beside the dark one: the corridor
+          stepMarks(step).of("outline", CELL).length > 1
         );
       },
     });

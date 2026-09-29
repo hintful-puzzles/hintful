@@ -8,9 +8,8 @@
  * the line's number.
  */
 
-import { CELL, type MarkKind, type MarkRef } from "../../engine/hint-words.ts";
+import type { MarkKind } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
-import type { TentsHighlights } from "./hint.ts";
 
 /** A link, from square `sq` toward direction `d`. */
 export type HintLink = { readonly sq: number; readonly d: number };
@@ -37,20 +36,4 @@ export function lineSquares(line: number, w: number, h: number): number[] {
   if (line < w) for (let y = 0; y < h; y++) out.push(y * w + line);
   else for (let x = 0; x < w; x++) out.push((line - w) * w + x);
   return out;
-}
-
-/** What a step's highlights draw: the `drawn` half of Tents' legend. */
-export function tentsHintMarks(hl: TentsHighlights): MarkRef[] {
-  const at = (i: number): Point => pointOf(i, hl.w);
-  return [
-    { role: "ring", kind: CELL, elements: hl.targets.map(at) },
-    { role: "ring", kind: LINK, elements: hl.link ? [hl.link] : [] },
-    { role: "outline", kind: CELL, elements: hl.area.map(at) },
-    { role: "outline", kind: NUMBER, elements: hl.line === null ? [] : [hl.line] },
-    {
-      role: "stripes",
-      kind: CELL,
-      elements: hl.line === null ? [] : lineSquares(hl.line, hl.w, hl.h).map(at),
-    },
-  ] as MarkRef[];
 }

@@ -22,6 +22,8 @@
 import type { RandomState } from "../../engine/random/index.ts";
 import { randomUpto } from "../../engine/random/index.ts";
 import type { Point, Rect } from "../../engine/types.ts";
+import { rungsFinish } from "./hint.ts";
+import { newState } from "./moves.ts";
 import { type NumberData, rectSolver, SOLVE_UNIQUE } from "./solver.ts";
 import { encodeNumbers, type RectParams } from "./state.ts";
 
@@ -325,6 +327,11 @@ export function newDesc(
       for (let x = 0; x < pw; x++)
         aux += grid[y * pw + x] !== grid[(y - 1) * pw + x] ? "1" : "0";
 
-    return { desc: encodeNumbers(numbers, pw * ph), aux };
+    const desc = encodeNumbers(numbers, pw * ph);
+    // A board the hint could not finish would leave a player it had helped
+    // stranded with a refusal that blames the board's difficulty, which this
+    // game has no tier to excuse. About one board in a hundred; deal again.
+    if (unique && !rungsFinish(newState(params, desc))) continue;
+    return { desc, aux };
   }
 }

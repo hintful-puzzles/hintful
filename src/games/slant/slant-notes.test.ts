@@ -6,6 +6,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { mark as markWords } from "../../engine/hint-words.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
@@ -22,6 +23,7 @@ import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import type { SlantHint, SlantMark } from "./hint.ts";
+import { ALIKE } from "./hint-marks.ts";
 import { slantGame } from "./index.ts";
 import { border, COL_ERROR, COL_HINT, COL_PENCIL } from "./render.ts";
 import { solveFromClues } from "./solver.ts";
@@ -490,7 +492,8 @@ describe("slant marks render", () => {
   });
 
   it("a hint step placing a mark draws it in the hint color", () => {
-    const step = { move: mark, explanation: "", highlights: { mark: mark } };
+    const words = markWords.the("ring", ALIKE, [{ x: 1, y: 1, dir: "right" }], "mark");
+    const step = { move: mark, explanation: words.text, words, highlights: { mark } };
     expect(barsAcross(frame(s, ui, step), COL_HINT)).toHaveLength(4);
   });
 

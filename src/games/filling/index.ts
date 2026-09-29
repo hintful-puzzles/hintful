@@ -20,7 +20,7 @@ import {
 } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
-import { CELL, type MarkRef, type Narration } from "../../engine/hint-words.ts";
+import { CELL, type Narration } from "../../engine/hint-words.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -199,21 +199,13 @@ function findMistakes(state: FillingState): readonly Point[] {
 
 // --- hint ------------------------------------------------------------------
 
-/** Highlight data for a Filling hint step. `cells` are the empty squares the
- * deduction forces (a single firing usually pins a group), ringed with no
- * digit drawn: the narration names the value ("the region of N", "a 1").
- * `value` is the forced number, read by `hintKeepTrack` and never drawn.
- * `hatch` is the region the sentence is about ("the striped region of N"), and
- * `area` the neighbors that pin a lonely or eliminated cell, outlined, so the
- * player sees the reasoning, not just the conclusion (docs/games/hints.md
- * § "Hatch the line the sentence names"). Cells are indices into a grid `w`
- * wide. */
+/** Plan data for a Filling hint step, read by `hintKeepTrack`. `cells` are the
+ * empty squares the deduction forces (a single firing usually pins a group),
+ * as grid indices, and `value` the forced number, never drawn: the narration
+ * names it ("the region of N", "a 1"). */
 export interface FillingHint {
   cells: number[];
   value: number;
-  area: number[];
-  hatch: number[];
-  w: number;
 }
 
 /** A growth or blocked step is about one region, which is its hatch. */
@@ -222,14 +214,25 @@ const namesRegion = (reason: FillingHintReason): boolean =>
 
 const pointOf = (i: number, w: number): Point => ({ x: i % w, y: (i / w) | 0 });
 
-/** Narrate *why* the squares are forced, per the technique that fired, naming
- * the cells `hl` marks. The words are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(reason: FillingHintReason, hl: FillingHint): Narration {
-  const at = (i: number): Point => pointOf(i, hl.w);
+/** Narrate *why* the squares are forced, per the technique that fired. The
+ * forced `cells` are ringed; `region` is the region the sentence is about
+ * ("the striped region of N"), and `evidence` the neighbors that pin a lonely
+ * or eliminated cell, outlined, so the player sees the reasoning, not just the
+ * conclusion (docs/games/hints.md § "Hatch the line the sentence names"). All
+ * are indices into a grid `w` wide. The words are
+ * [`hint-text.ts`](./hint-text.ts)'s. */
+function narrate(
+  reason: FillingHintReason,
+  w: number,
+  cells: readonly number[],
+  region: readonly number[],
+  evidence: readonly number[],
+): Narration {
+  const at = (i: number): Point => pointOf(i, w);
   const m: Marked = {
-    cells: hl.cells.map(at),
-    region: hl.hatch.map(at),
-    evidence: hl.area.map(at),
+    cells: cells.map(at),
+    region: region.map(at),
+    evidence: evidence.map(at),
   };
   switch (reason.kind) {
     case "growth":
@@ -243,16 +246,6 @@ function narrate(reason: FillingHintReason, hl: FillingHint): Narration {
   }
 }
 
-/** What a step's highlights draw: the `drawn` half of Filling's legend. */
-function fillingHintMarks(hl: FillingHint): MarkRef[] {
-  const at = (i: number): Point => pointOf(i, hl.w);
-  return [
-    { role: "ring", kind: CELL, elements: hl.cells.map(at) },
-    { role: "outline", kind: CELL, elements: hl.area.map(at) },
-    { role: "stripes", kind: CELL, elements: hl.hatch.map(at) },
-  ] as MarkRef[];
-}
-
 function hint(state: FillingState): HintResult<FillingMove, FillingHint> {
   const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
   if (refusal) return refusal;
@@ -260,10 +253,10 @@ function hint(state: FillingState): HintResult<FillingMove, FillingHint> {
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
   const w = state.w;
   const steps: HintStep<FillingMove, FillingHint>[] = plan.map((m) => {
-    const highlights: FillingHint = namesRegion(m.reason)
-      ? { cells: m.cells, value: m.value, area: [], hatch: m.area, w }
-      : { cells: m.cells, value: m.value, area: m.area, hatch: [], w };
-    const words = narrate(m.reason, highlights);
+    const highlights: FillingHint = { cells: m.cells, value: m.value };
+    const words = namesRegion(m.reason)
+      ? narrate(m.reason, w, m.cells, m.area, [])
+      : narrate(m.reason, w, m.cells, [], m.area);
     return {
       move: { type: "set", cells: m.cells, value: m.value },
       explanation: words.text,
@@ -300,7 +293,7 @@ function hintKeepTrack(
     step.highlights = { ...t, cells: left };
     step.move = { type: "set", cells: left, value: t.value };
     if (step.words) {
-      const kept = new Set(left.map((i) => CELL.key(pointOf(i, t.w))));
+      const kept = new Set(left.map((i) => CELL.key(pointOf(i, state.w))));
       step.words = step.words.narrow(
         (role, _kind, key) => role !== "ring" || kept.has(key),
       );
@@ -353,7 +346,6 @@ export const fillingGame: Game<
       stripes:
         "the region the sentence names: a group of equal numbers already on the board that is not yet as big as its number. The squares the step fills take that same number.",
     },
-    drawn: fillingHintMarks,
   },
   hintKeepTrack,
   findMistakes,

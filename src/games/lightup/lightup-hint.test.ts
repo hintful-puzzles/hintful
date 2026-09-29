@@ -9,6 +9,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { SYMM_ROT4 } from "../../engine/symmetric-blacks.ts";
 import { type LightupHint, lightupGame } from "./index.ts";
@@ -120,13 +121,9 @@ describe("narration", () => {
         // Visible evidence: an area, a ringed dark square, or a
         // recolored clue — except the self-lighting forcedLight corner
         // case, whose evidence is the board geometry itself.
-        const selfLit =
-          hl.kind === "light" && hl.area.length === 0 && !hl.dark && !hl.clue;
-        if (!selfLit) {
-          expect(
-            hl.area.length > 0 || hl.dark !== undefined || hl.clue !== undefined,
-          ).toBe(true);
-        }
+        const evidence = stepMarks(step).of("outline", CELL);
+        const selfLit = hl.kind === "light" && evidence.length === 0;
+        if (!selfLit) expect(evidence.length).toBeGreaterThan(0);
       }
     }
   });
@@ -186,8 +183,7 @@ describe("narration — a second mark on the board is named", () => {
         if (!hl) throw new Error("step without highlights");
         kinds.add(firings[i].reason.kind);
         checked++;
-        const secondMark =
-          hl.area.length > 0 || hl.dark !== undefined || hl.clue !== undefined;
+        const secondMark = stepMarks(step).of("outline", CELL).length > 0;
         if (!secondMark) continue;
         withMark++;
         if (!DEICTIC.test(step.explanation)) continue;

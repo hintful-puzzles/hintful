@@ -36,7 +36,7 @@
 
 import type { HintResult, HintStep } from "../../engine/game.ts";
 import { ALREADY_SOLVED, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
-import type { MarkRef, Narration } from "../../engine/hint-words.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import { ENDGAME_CROSSINGS, type Endgame, planEndgame } from "./endgame.ts";
 import {
@@ -48,7 +48,7 @@ import {
   toRational,
   units,
 } from "./geometry.ts";
-import { CROSSING, SPOT, say, type UntangleMarks, VERTEX } from "./hint-text.ts";
+import { type Crossing, say, type UntangleMarks } from "./hint-text.ts";
 import { closestOrientation, solvedLayout } from "./solution.ts";
 import {
   cross,
@@ -59,17 +59,6 @@ import {
   type UntangleMove,
   type UntangleState,
 } from "./state.ts";
-
-/** Highlight payload for a displayed step: the point to move, where to, and
- * where (model units) the crossings it removes sit now. `render.ts` reads the
- * point's current position from the live state. */
-export interface UntangleHint {
-  vertex: number;
-  to: RationalPoint;
-  cleared: Point[];
-  /** On a journey's leg, the other marked points still to move. */
-  marked: number[];
-}
 
 /** Spots tried per axis. Offset from the grid lines so a spot is not
  * collinear with points that sit on whole or half units. */
@@ -239,13 +228,14 @@ class Board {
   }
 
   /** Where `v`'s crossings that a move to `to` removes sit now. */
-  cleared(v: number, to: RationalPoint): Point[] {
+  cleared(v: number, to: RationalPoint): Crossing[] {
     const after = this.crossingsAt(v, to);
     return this.crossingsAt(v, this.pts[v])
       .filter(({ u, f }) => !after.some((a) => a.u === u && a.f === f))
-      .map(({ u, f }) =>
-        intersection(this.pu[v], this.pu[u], this.pu[f.a], this.pu[f.b]),
-      );
+      .map(({ u, f }) => ({
+        ...intersection(this.pu[v], this.pu[u], this.pu[f.a], this.pu[f.b]),
+        lines: `${v}-${u}x${f.a}-${f.b}`,
+      }));
   }
 }
 
@@ -403,7 +393,7 @@ interface Planned {
   /** The point's crossings before and after the move. */
   before: number;
   after: number;
-  cleared: Point[];
+  cleared: Crossing[];
 }
 
 function plan(board: Board, vertex: number, to: RationalPoint): Planned {
@@ -434,21 +424,10 @@ function narrate(p: Planned, next: Planned | null): Narration {
   return say.rearrange(m, p.before, p.after, opens);
 }
 
-/** What a step's highlights draw: the `drawn` half of Untangle's legend. The
- * point is drawn in the hint color with a line to its spot, and the crossings
- * it clears and the points still to move are ringed. */
-export function untangleHintMarks(hl: UntangleHint): MarkRef[] {
-  return [
-    { role: "ring", kind: VERTEX, elements: [hl.vertex, ...hl.marked] },
-    { role: "ring", kind: SPOT, elements: [hl.to] },
-    { role: "outline", kind: CROSSING, elements: hl.cleared },
-  ] as MarkRef[];
-}
-
 export function deduceUntangleHintPlan(
   state: UntangleState,
   aux?: string,
-): HintResult<UntangleMove, UntangleHint> {
+): HintResult<UntangleMove> {
   if (state.completed) return { ok: false, error: ALREADY_SOLVED };
 
   const board = new Board(state.n, state.w, state.edges, state.pts.slice());
@@ -498,14 +477,9 @@ export function deduceUntangleHintPlan(
 
   // `next` is now the move after the plan's last step, so that step is narrated
   // exactly as it would be at the head of the next request's plan.
-  const steps = planned.map((p, i): HintStep<UntangleMove, UntangleHint> => {
+  const steps = planned.map((p, i): HintStep<UntangleMove> => {
     const words = narrate(p, planned[i + 1] ?? next);
-    return {
-      move: placeMove(p.vertex, p.to),
-      explanation: words.text,
-      words,
-      highlights: { vertex: p.vertex, to: p.to, cleared: p.cleared, marked: [] },
-    };
+    return { move: placeMove(p.vertex, p.to), explanation: words.text, words };
   });
   return { ok: true, steps };
 }
@@ -513,28 +487,24 @@ export function deduceUntangleHintPlan(
 /** An endgame's moves as one journey: every leg is narrated by what it does to
  * its own point's crossings, counted exactly on the board as it then stands,
  * and marks the points still to move after it. */
-function journey(
-  board: Board,
-  { moves, finishes }: Endgame,
-): HintStep<UntangleMove, UntangleHint>[] {
+function journey(board: Board, { moves, finishes }: Endgame): HintStep<UntangleMove>[] {
   return moves.map(({ vertex, to }, i) => {
     const p = plan(board, vertex, to);
     board.move(vertex, to);
-    const highlights: UntangleHint = {
+    const m: UntangleMarks = {
       vertex,
       to,
       cleared: p.cleared,
-      marked: moves.slice(i + 1).map((m) => m.vertex),
+      marked: moves.slice(i + 1).map((mv) => mv.vertex),
     };
     const words =
       moves.length === 1
         ? narrate(p, null)
-        : say.journey(highlights, i, moves.length, finishes, p.before, p.after);
+        : say.journey(m, i, moves.length, finishes, p.before, p.after);
     return {
       move: placeMove(vertex, to),
       explanation: words.text,
       words,
-      highlights,
       ...(i > 0 ? { continuesPrevious: true } : {}),
     };
   });

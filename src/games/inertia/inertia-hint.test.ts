@@ -5,12 +5,14 @@
 
 import { describe, expect, it } from "vitest";
 import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
+import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newInertiaDesc } from "./generator.ts";
-import { hint, type InertiaHintHighlights } from "./hint.ts";
+import { hint } from "./hint.ts";
+import { GEM as GEM_MARK } from "./hint-text.ts";
 import { inertiaGame } from "./index.ts";
 import { COL_HINT, COL_HINT_GOAL } from "./render.ts";
 import {
@@ -25,6 +27,10 @@ import {
 const N = 0;
 const E = 2;
 const S = 4;
+
+/** The gem a step's words outline: the leg's goal. */
+const goalOf = (step: { words?: Narration }): number =>
+  stepMarks(step).of("outline", GEM_MARK)[0];
 
 /** A hand-built board. Rows are desc characters, so a test reads like the board
  * it describes. */
@@ -100,7 +106,7 @@ describe("inertia hint plan", () => {
 
       let legGoal: number | null = null;
       for (const step of res.steps) {
-        const goal = (step.highlights as InertiaHintHighlights).goal;
+        const goal = goalOf(step);
         // Within a leg the goal never budges: it is derived once, from the
         // plan, and carried. Re-deriving it per step from the ball's position
         // would make the banner flip-flop.
@@ -208,7 +214,7 @@ describe("inertia hint narration", () => {
     expect(step.explanation).toContain("Working on the outlined gem");
     expect(step.explanation).toContain("no slide from here reaches it");
     expect(step.explanation).toContain("one more slide sweeps it up");
-    expect((step.highlights as InertiaHintHighlights).goal).toBe(s.board.square(4, 2));
+    expect(goalOf(step)).toBe(s.board.square(4, 2));
   });
 
   it("never claims a gem is out of reach when one slide would sweep it up", () => {
@@ -226,7 +232,7 @@ describe("inertia hint narration", () => {
       if (!res.ok) throw new Error(`${seed}: ${res.error}`);
       for (const step of res.steps) {
         if (step.explanation.includes("no slide from here reaches it")) {
-          const goal = (step.highlights as InertiaHintHighlights).goal;
+          const goal = goalOf(step);
           const grabbable = legalDirections(s.board, s.px, s.py).some((dir) => {
             const path = slidePath(s.board, s.px, s.py, dir);
             return path.stopper !== "mine" && path.gems.includes(goal);
@@ -268,7 +274,7 @@ describe("inertia hint narration", () => {
           ).toBeDefined();
           const move = next.move as Extract<InertiaMove, { type: "move" }>;
           const after = inertiaGame.executeMove(s, step.move);
-          const goal = (step.highlights as InertiaHintHighlights).goal;
+          const goal = goalOf(step);
           expect(
             slidePath(after.board, after.px, after.py, move.dir).gems,
             `${seed}: promised one more slide, and the plan's next move didn't take it`,

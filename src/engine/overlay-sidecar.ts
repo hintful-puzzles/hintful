@@ -11,8 +11,8 @@
  * highlighted nothing because `ds.wrong` was missing from the diff key).
  *
  * Usage in a game's `redraw`, one instance per overlay:
- *   - pack once per frame — `ds.hint.pack(step?.highlights ?? null, index, markBits)`
- *     for the hint's highlight object, `ds.wrong.packCells(mistakes ?? null, index)`
+ *   - pack once per frame — `ds.hint.pack(stepMarks(step), index, markBits)`
+ *     for the marks the hint's words name, `ds.wrong.packCells(mistakes ?? null, index)`
  *     for the `findMistakes` cell list, or `clear()` + `add()` for a game whose
  *     overlay has its own topology (Galaxies' four wall bits per tile);
  *   - `ds.<overlay>.stale(i)` as one clause of the per-cell cache-miss test;
@@ -23,6 +23,7 @@
 import type { GameDrawing } from "./game.ts";
 import { hatchPeriod } from "./hatch.ts";
 import { outlineSides } from "./hint-mark.ts";
+import { CELL, NOTE, type Note, type StepMarks } from "./hint-words.ts";
 import type { Rect } from "./types.ts";
 
 /** Bit 0: the cell the deduction acts on (`COL_HINT`). */
@@ -53,18 +54,6 @@ interface Cell {
 export interface OrderedCell extends Cell {
   /** 1-based position in the chain. Omitted ⇒ ordinary evidence, no ordinal. */
   readonly order?: number;
-}
-
-/** The highlight shape `pack` consumes — structurally satisfied by every
- * candidate game's hint type (and by anything with cells and marks). */
-export interface PackableHighlights<Mark extends Cell> {
-  readonly area?: readonly OrderedCell[];
-  readonly targets?: readonly Cell[];
-  readonly marks?: readonly Mark[];
-  /** The cells of the line or region the step's sentence names, hatched
-   * (`engine/hatch.ts`; docs/games/hints.md § "Hatch the line the sentence
-   * names"). */
-  readonly hatch?: readonly Cell[];
 }
 
 export class OverlaySidecar {
@@ -142,19 +131,19 @@ export class OverlaySidecar {
     this.order[i] = k;
   }
 
-  /** Repack this frame's overlay from the displayed step's highlights (or
-   * clear it when no hint is displayed). `index` maps board coordinates to
-   * the game's cell indexing (stride, border ring, …); `markBits` encodes
-   * one mark's payload into the packed word. */
-  pack<Mark extends Cell>(
-    hl: PackableHighlights<Mark> | null,
+  /** Repack this frame's overlay from the marks the displayed step's words name
+   * (empty when no hint is displayed): ringed cells, ringed notes, outlined
+   * cells with their chain ordinals, striped cells. `index` maps board
+   * coordinates to the game's cell indexing (stride, border ring, …);
+   * `markBits` encodes one struck note into the cell's struck lane. */
+  pack(
+    marks: StepMarks,
     index: (x: number, y: number) => number,
-    markBits: (mark: Mark) => number,
+    markBits: (note: Note) => number,
   ): void {
     this.clear();
-    if (!hl) return;
-    const area = hl.area ?? [];
-    const inArea = new Set(area.map((a) => `${a.x},${a.y}`));
+    const area = marks.of("outline", CELL) as readonly OrderedCell[];
+    const inArea = new Set(area.map((a) => CELL.key(a)));
     const isEvidence = (x: number, y: number): boolean => inArea.has(`${x},${y}`);
     for (const a of area) {
       const i = index(a.x, a.y);
@@ -162,9 +151,14 @@ export class OverlaySidecar {
       this.outline[i] = outlineSides(a.x, a.y, isEvidence);
       if (a.order !== undefined) this.setOrder(i, a.order);
     }
-    for (const t of hl.targets ?? []) this.add(index(t.x, t.y), HINT_TARGET);
-    for (const m of hl.marks ?? []) this.struck[index(m.x, m.y)] |= markBits(m);
-    for (const c of hl.hatch ?? []) this.hatched[index(c.x, c.y)] = 1;
+    for (const t of marks.of("ring", CELL)) this.add(index(t.x, t.y), HINT_TARGET);
+    // A ringed note rings its cell with it (`NOTE.within`).
+    for (const m of marks.of("ring", NOTE)) {
+      const i = index(m.x, m.y);
+      this.add(i, HINT_TARGET);
+      this.struck[i] |= markBits(m);
+    }
+    for (const c of marks.of("stripes", CELL)) this.hatched[index(c.x, c.y)] = 1;
   }
 
   /** Repack this frame's overlay from a plain cell list — the `findMistakes`

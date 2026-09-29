@@ -4,6 +4,7 @@
  * See docs/games/hints.md.
  */
 import { describe, expect, it } from "vitest";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
@@ -96,8 +97,9 @@ describe("hint", () => {
       const res = fillingGame.hint?.(st);
       if (!res?.ok) throw new Error("expected a plan");
       for (const step of res.steps) {
-        const hl = step.highlights as FillingHint;
-        for (const c of hl.cells) expect(hl.area).not.toContain(c);
+        const marks = stepMarks(step);
+        for (const c of marks.of("ring", CELL))
+          expect(marks.of("outline", CELL)).not.toContainEqual(c);
       }
     }
   });
@@ -185,8 +187,7 @@ describe("filling hint render scenario", () => {
         id: `9x7#filling-render-${s}`,
         showHint: true,
       });
-      const hl = r.hint?.highlights as FillingHint | undefined;
-      if (hl && hl.hatch.length > 0) {
+      if (stepMarks(r.hint).of("stripes", CELL).length > 0) {
         result = r;
         break;
       }
@@ -194,15 +195,17 @@ describe("filling hint render scenario", () => {
     if (!result) throw new Error("no seed produced a region-naming first hint");
 
     const { recording } = result;
-    const hl = result.hint?.highlights as FillingHint;
-    expectRing(recording.ops, COL_HINT, hl.cells.length);
+    const marks = stepMarks(result.hint);
+    expectRing(recording.ops, COL_HINT, marks.of("ring", CELL).length);
     // "The striped region of N": every cell of it hatched, the digits drawn
     // over the stripes, and no outline, since the region is not a particular
     // cell the reason rests on.
     expect(result.hint?.explanation).toMatch(/^The striped region of \d+/);
-    expect(hl.area).toEqual([]);
+    expect(marks.of("outline", CELL)).toEqual([]);
     const hatches = opsOfKind(recording.ops, "hatch");
-    expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(hl.hatch.length);
+    expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(
+      marks.of("stripes", CELL).length,
+    );
     expect(markSides(recording.ops, COL_HINT_CELL)).toEqual([]);
     expect(recording.ops.some((o) => o.op === "text")).toBe(true); // clues
     expect(recording.ops).toMatchSnapshot();

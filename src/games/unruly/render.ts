@@ -26,7 +26,8 @@ import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
-import type { Color, Size } from "../../engine/types.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import type { Color, Point, Size } from "../../engine/types.ts";
 import { ONE, ZERO } from "./constants.ts";
 import type { UnrulyHint } from "./index.ts";
 import {
@@ -342,10 +343,11 @@ export function redraw(
       : null;
 
   // Displayed hint step: the forced target, the named line, premise rings.
-  const hl = hint?.highlights;
-  const hintTarget = hl ? hl.target.y * w2 + hl.target.x : -1;
-  const hintLineSet = hl ? new Set(hl.line) : null;
-  const hintRingSet = hl ? new Set(hl.outline) : null;
+  const marks = stepMarks(hint);
+  const at = (p: Point): number => p.y * w2 + p.x;
+  const hintTargets = new Set(marks.of("ring", CELL).map(at));
+  const hintLineSet = new Set(marks.of("stripes", CELL).map(at));
+  const hintRingSet = new Set(marks.of("outline", CELL).map(at));
 
   // A placement animates only when the engine is driving timed redraws
   // (animTime > 0) and we have a from-state to grow out of.
@@ -397,12 +399,12 @@ export function redraw(
         tile |= FF_CURSOR;
       if (mistakeSet?.has(i)) tile |= FF_MISTAKE;
       // Hint overlay: the target outranks a ring; the hatch runs under either.
-      if (i === hintTarget) {
+      if (hintTargets.has(i)) {
         tile |= FF_HINT_TARGET;
-      } else if (hintRingSet?.has(i)) {
+      } else if (hintRingSet.has(i)) {
         tile |= FF_HINT_RING;
       }
-      if (hintLineSet?.has(i)) tile |= FF_HINT_LINE;
+      if (hintLineSet.has(i)) tile |= FF_HINT_LINE;
 
       // An animating cell can't be captured by the packed key, so it is
       // redrawn every frame (cache forced stale, Flip's idiom) and grows the

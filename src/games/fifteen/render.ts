@@ -16,7 +16,9 @@ import {
 } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import { TILE } from "./hint-text.ts";
 import type { FifteenMove, FifteenParams, FifteenState, FifteenUi } from "./state.ts";
 
 // --- constants --------------------------------------------------------
@@ -32,14 +34,6 @@ const COL_TEXT = 1;
 const COL_HIGHLIGHT = 2;
 const COL_LOWLIGHT = 3;
 const COL_HINT = 4;
-
-// --- hint highlights --------------------------------------------------
-
-/** Highlight data for a Fifteen hint step: the tile that should slide
- * into the gap. The renderer fills that tile's cell with `COL_HINT`. */
-export interface FifteenHintHighlights {
-  tile: number;
-}
 
 // --- coordinate helpers -----------------------------------------------
 
@@ -153,7 +147,7 @@ export function redraw(
   _ui: FifteenUi,
   animTime: number,
   flashTime: number,
-  activeHint?: HintStep<FifteenMove, FifteenHintHighlights>,
+  activeHint?: HintStep<FifteenMove>,
 ): void {
   const ts = ds.tileSize;
   const { w, h, n } = state;
@@ -170,7 +164,7 @@ export function redraw(
     ds.started = true;
   }
 
-  const hintTile = activeHint?.highlights?.tile ?? null;
+  const hintTile = stepMarks(activeHint).of("ring", TILE)[0] ?? null;
 
   // Two passes so a whole sliding line animates cleanly: pass 0 blanks
   // the cells vacated by moving tiles, pass 1 draws the moving tiles

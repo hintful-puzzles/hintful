@@ -41,15 +41,9 @@
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { HintFrontier } from "../../engine/hint-frontier.ts";
-import { type MarkRef, Narration } from "../../engine/hint-words.ts";
+import { Narration } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import {
-  type Conclusion,
-  colorsOf,
-  REGION,
-  type RegionMark,
-  say,
-} from "./hint-text.ts";
+import { type Conclusion, colorsOf, type RegionMark, say } from "./hint-text.ts";
 import {
   bitcount,
   chainTo,
@@ -65,7 +59,7 @@ import type { MapMove, MapOp, MapState } from "./state.ts";
 const ALL = 0xf;
 
 /** A region the premise rests on, outlined; a chain's carry their position. */
-export type MapEvidence = RegionMark;
+type MapEvidence = RegionMark;
 
 /** One region's dots as a setup step leaves them. */
 interface RegionDots {
@@ -73,13 +67,11 @@ interface RegionDots {
   dots: number;
 }
 
-/** What a step marks and what it wants done, per region. */
+/** What a step acts on and what it wants done, per region. */
 export interface MapHint {
-  /** The region a deduction acts on, ringed; none for a setup step. A list
-   * because the frontier and the cross-game guards read every step's
-   * `targets`. */
+  /** The region a deduction acts on; none for a setup step. A list because
+   * the frontier and the cross-game guards read every step's `targets`. */
   targets: number[];
-  evidence: MapEvidence[];
   /** The end state: the target's color or exactly its dots, or for a setup
    * step (the Mark-all press) each region's dots. */
   want: SingleWant | { regions: RegionDots[] };
@@ -89,21 +81,6 @@ export interface MapHint {
 type SingleWant = { color: number } | { dots: number };
 
 export type MapHintStep = HintStep<MapMove, MapHint>;
-
-/** The marks a step draws, as `render.ts` paints them: each target ringed, and
- * each evidence region outlined, by its dashed line or its chain number. A ring
- * wins a region's band, so a ringed region is outlined only by its number. */
-export function mapHintMarks(h: MapHint): MarkRef[] {
-  const ringed = new Set(h.targets);
-  return [
-    { role: "ring", kind: REGION, elements: h.targets.map((region) => ({ region })) },
-    {
-      role: "outline",
-      kind: REGION,
-      elements: h.evidence.filter((e) => !ringed.has(e.region) || e.order),
-    },
-  ] as MarkRef[];
-}
 
 /** The working board: the player's colors and dots, advanced as the plan is
  * built. */
@@ -228,28 +205,12 @@ interface Firing {
   legs(w: Work): MapHintStep[];
 }
 
-/** The regions `words` outline, each once, with its chain number: a step's
- * evidence is what its sentence names (`engine/hint-words.ts`). */
-function outlinedBy(words: Narration): MapEvidence[] {
-  const out: MapEvidence[] = [];
-  const seen = new Set<number>();
-  for (const ref of words.refs) {
-    if (ref.role !== "outline" || ref.kind !== REGION) continue;
-    for (const e of ref.elements as readonly MapEvidence[]) {
-      if (seen.has(e.region)) continue;
-      seen.add(e.region);
-      out.push(e);
-    }
-  }
-  return out;
-}
-
 function step(w: Work, r: number, want: SingleWant, words: Narration): MapHintStep {
   const s: MapHintStep = {
     move: moveFor(r, w.pencil[r], want),
     explanation: words.text,
     words,
-    highlights: { targets: [r], evidence: outlinedBy(words), want },
+    highlights: { targets: [r], want },
   };
   apply(w, r, want);
   return s;
@@ -460,7 +421,7 @@ function setUp(w: Work, steps: MapHintStep[]): void {
       // Rings nothing: a clean strikes from nearly every blank region, and a
       // band around each ran together into one mark over the whole board
       // (browser check, 2026-09-25). The sentence names every blank region.
-      highlights: { targets: [], evidence: [], want: { regions: press.regions } },
+      highlights: { targets: [], want: { regions: press.regions } },
       continuesPrevious: !first,
     });
     for (const { region, dots } of press.regions) w.pencil[region] = dots;

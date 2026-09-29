@@ -14,7 +14,6 @@ import { assertNever } from "../../engine/assert-never.ts";
 import {
   type CandidateMoveAdapter,
   candidateHint,
-  candidateHintMarks,
   keepCandidateHintTrack,
   type Mark,
   refreshCandidateHintStep,
@@ -30,7 +29,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { CELL, type MarkRef } from "../../engine/hint-words.ts";
+import { CELL } from "../../engine/hint-words.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
 import {
   highlightIsOn,
@@ -62,7 +61,6 @@ import {
   deduceCrossingPlan,
   narrateCrossing,
 } from "./hint-solver.ts";
-import { LISTED } from "./hint-text.ts";
 import {
   type CrossingDrawState,
   type CrossingHint,
@@ -481,18 +479,6 @@ function buildSteps(state: CrossingState): HintStep<CrossingMove, CrossingHint>[
   });
 }
 
-/** What a step's highlights draw: the board's marks, and in the clue list the
- * number the step writes in (ringed) and the others that still fit
- * (outlined). The `drawn` half of Crossing's legend. */
-function crossingHintMarks(hl: CrossingHint): MarkRef[] {
-  const target = hl.numberTarget;
-  return [
-    ...candidateHintMarks(hl),
-    { role: "ring", kind: LISTED, elements: target === null ? [] : [target] },
-    { role: "outline", kind: LISTED, elements: hl.numbers.filter((l) => l !== target) },
-  ] as MarkRef[];
-}
-
 type NoteFiring = Extract<CrossingFiring, { technique: "noteDigits" | "noteStrike" }>;
 
 const isNote = (f: CrossingFiring): f is NoteFiring =>
@@ -651,7 +637,6 @@ export const crossingGame: Game<
       stripes:
         "the run the sentence names: “this across run”, “this down run”. When a step uses both runs through a square, both are striped.",
     },
-    drawn: crossingHintMarks,
   },
   hintKeepTrack,
   refreshHintStep,

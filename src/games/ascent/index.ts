@@ -19,12 +19,7 @@ import {
 } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newAscentDesc } from "./generator.ts";
-import {
-  type AscentHighlights,
-  ascentHint,
-  ascentHintMarks,
-  ascentKeepTrack,
-} from "./hint.ts";
+import { type AscentHighlights, ascentHint, ascentKeepTrack } from "./hint.ts";
 import { executeAscentMove } from "./moves.ts";
 import {
   type AscentDrawState,
@@ -399,7 +394,6 @@ export const ascentGame: Game<
       stripes:
         "the row, column or diagonal an arrow points along, or every square a run of missing numbers can reach.",
     },
-    drawn: ascentHintMarks,
   },
   hintKeepTrack: ascentKeepTrack,
   difficulty,

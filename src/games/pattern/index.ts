@@ -47,7 +47,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newPatternDesc } from "./generator.ts";
-import { cellAt, patternHintMarks } from "./hint-marks.ts";
+import { cellAt } from "./hint-marks.ts";
 import { type Marked, say } from "./hint-text.ts";
 import {
   colors,
@@ -62,7 +62,7 @@ import {
 import {
   deduceHintPlan,
   findMistakes,
-  type PatternHintReason,
+  type PatternHintMove,
   solveToString,
 } from "./solver.ts";
 import {
@@ -259,43 +259,38 @@ function interpretMove(
 
 // --- hint ------------------------------------------------------------------
 
-/** Highlight data for a Pattern hint step. `cells` are the forced target
- * squares (all one color — `value`), drawn as a `COL_HINT` highlight only,
- * never pre-filled (the narration says black vs white). `line` is the row /
- * column the sentence names: its squares and clue strip are hatched, and its
- * clue takes the action color. `blackRefs` / `whiteRefs` are the already-placed marks the
- * deduction leans on, outlined teal / violet so their own color stays visible
- * (the cross-game element-type legend). `clued` is whether the line has numbers
- * to recolor, and cells are indices into a grid `w` wide. */
+/** What a Pattern hint step decides. `cells` are the forced target squares
+ * (all one color — `value`), as indices into a grid `w` wide. */
 export interface PatternHint {
   cells: number[];
   value: GridVal;
-  line: number;
-  clued: boolean;
-  blackRefs: number[];
-  whiteRefs: number[];
   w: number;
 }
 
-/** Narrate *why* the cells are forced, naming the marks `hl` draws. The words
- * are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(reason: PatternHintReason, hl: PatternHint): Narration {
-  const at = (i: number) => cellAt(i, hl.w);
-  const m: Marked = {
-    cells: hl.cells.map(at),
-    refs: [...hl.blackRefs, ...hl.whiteRefs].map(at),
-    line: hl.line,
-    orient: hl.line < hl.w ? "column" : "row",
+/** Narrate *why* the cells are forced, naming the marks the renderer draws for
+ * them: the target cells ringed, never pre-filled (the narration says black vs
+ * white); the row or column hatched and its clue in the action color; and the
+ * already-placed marks the deduction leans on, outlined in their own color's
+ * reference color (the cross-game element-type legend). The words are
+ * [`hint-text.ts`](./hint-text.ts)'s. */
+function narrate(m: PatternHintMove, w: number): Narration {
+  const at = (i: number) => cellAt(i, w);
+  const marked: Marked = {
+    cells: m.cells.map(at),
+    refs: [...m.blackRefs, ...m.whiteRefs].map(at),
+    line: m.line,
+    orient: m.line < w ? "column" : "row",
   };
+  const { reason } = m;
   switch (reason.kind) {
     case "overlap":
-      return say.overlap(m, reason.run, reason.slack);
+      return say.overlap(marked, reason.run, reason.slack);
     case "unreachable":
-      return say.unreachable(m);
+      return say.unreachable(marked);
     case "lineEmpty":
-      return say.lineEmpty(m);
+      return say.lineEmpty(marked);
     case "intersection":
-      return say.intersection(m, reason.black);
+      return say.intersection(marked, reason.black);
   }
 }
 
@@ -306,23 +301,14 @@ function hint(state: PatternState): HintResult<PatternMove, PatternHint> {
   if (plan.length === 0) {
     return { ok: false, error: DEDUCTION_EXHAUSTED };
   }
-  const { w, clues } = state.common;
+  const { w } = state.common;
   const steps: HintStep<PatternMove, PatternHint>[] = plan.map((m) => {
-    const highlights: PatternHint = {
-      cells: m.cells,
-      value: m.value,
-      line: m.line,
-      clued: clues[m.line].length > 0,
-      blackRefs: m.blackRefs,
-      whiteRefs: m.whiteRefs,
-      w,
-    };
-    const words = narrate(m.reason, highlights);
+    const words = narrate(m, w);
     return {
       move: { type: "fillCells", value: m.value, cells: m.cells },
       explanation: words.text,
       words,
-      highlights,
+      highlights: { cells: m.cells, value: m.value, w },
     };
   });
   return { ok: true, steps };
@@ -437,7 +423,6 @@ export const patternGame: Game<
         "what the step reasons from: the numbers of its row or column, drawn in the hint color, and any squares already marked black or white that hold a run in place, outlined in a color of their own.",
       stripes: "the row or column the sentence names, running on through its numbers.",
     },
-    drawn: patternHintMarks,
   },
   hintKeepTrack,
   findMistakes,

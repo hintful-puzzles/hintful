@@ -20,7 +20,6 @@ import {
   type BorderHint,
   borderHintJourney,
   borderHintKeepTrack,
-  borderHintMarks,
   type ForcedBorderEdge,
 } from "../../engine/border-grid-hint.ts";
 import { winFlash } from "../../engine/flash.ts";
@@ -277,7 +276,6 @@ export const separateGame: Game<
         "a second region the step reasons from, or a lone square it names by its letter.",
       stripes: "the region the sentence is about.",
     },
-    drawn: borderHintMarks,
   },
   hintKeepTrack: (m, step, state) =>
     borderHintKeepTrack(

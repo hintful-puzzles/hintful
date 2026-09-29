@@ -8,19 +8,22 @@
 //     reviewable text diff (the spec's "render regression is a snapshot
 //     diff" scenario).
 import { describe, expect, it } from "vitest";
+import { EDGE } from "../../engine/border-grid-hint.ts";
+import type { HintStep } from "../../engine/game.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { palisadeGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
 import { newDesc } from "./solver.ts";
-import type { PalisadeHint } from "./state.ts";
 
 // The equivalentEdges frame: a sibling edge AND a hatched *region* (more than
 // one cell). numberExhausted journeys carry siblings too, but outline a single
 // clue cell, so the multi-cell region distinguishes the rule.
-const isEquivalentEdgesFrame = (hl?: PalisadeHint): boolean =>
-  (hl?.edges?.length ?? 0) > 0 && (hl?.hatch?.length ?? 0) > 1;
+const isEquivalentEdgesFrame = (step?: HintStep<unknown>): boolean =>
+  stepMarks(step).of("ring", EDGE).length > 1 &&
+  stepMarks(step).of("stripes", CELL).length > 1;
 
 /**
  * Deterministically find a board whose hint plan reaches an
@@ -39,8 +42,7 @@ function equivalentEdgesFrame() {
         game: palisadeGame,
         id,
         showHint: true,
-        hintUntil: (step) =>
-          isEquivalentEdgesFrame(step.highlights as PalisadeHint | undefined),
+        hintUntil: (step) => isEquivalentEdgesFrame(step),
       });
     } catch {
       return null;
@@ -51,10 +53,7 @@ function equivalentEdgesFrame() {
     for (let i = 0; i < 200; i++) {
       const id = `${preset}#eq-${i}`;
       const result = tryScenario(id);
-      if (
-        result &&
-        isEquivalentEdgesFrame(result.hint?.highlights as PalisadeHint | undefined)
-      ) {
+      if (result && isEquivalentEdgesFrame(result.hint)) {
         return { id, result };
       }
     }
@@ -76,9 +75,10 @@ describe("Palisade render scenarios", () => {
     // color) — at least two blue rects — over "the same region", hatched, one
     // hatch per cell of it, and outlined nowhere.
     expect(rectsOf(COL_HINT)).toBeGreaterThanOrEqual(2);
-    const hl = result.hint?.highlights as PalisadeHint | undefined;
     const hatches = opsOfKind(ops, "hatch");
-    expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(hl?.hatch?.length);
+    expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(
+      stepMarks(result.hint).of("stripes", CELL).length,
+    );
     expect(rectsOf(COL_HINT_CELL)).toBe(0);
 
     // Hatching the region does not erase the clues: digits are still drawn.
@@ -86,7 +86,7 @@ describe("Palisade render scenarios", () => {
 
     // The displayed step really is the equivalentEdges one (a sibling
     // edge, and a multi-cell hatched region).
-    expect(isEquivalentEdgesFrame(hl)).toBe(true);
+    expect(isEquivalentEdgesFrame(result.hint)).toBe(true);
   });
 
   it("matches the opener-frame snapshot", () => {

@@ -24,14 +24,14 @@
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { ALREADY_SOLVED, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
-import { CELL, type MarkRef, type Narration } from "../../engine/hint-words.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import {
   planSlides,
   type SlideMove,
   slidePieces,
   toroidalDist,
 } from "../../engine/slide-planner.ts";
-import { type Marked, SQUARE, say, TILE } from "./hint-text.ts";
+import { type Marked, say } from "./hint-text.ts";
 import { reconstructSolution } from "./reconstruct.ts";
 import { isComplete, type NetslideMove, type NetslideState } from "./state.ts";
 
@@ -668,17 +668,6 @@ function markedOf(hl: NetslideHint): Omit<Marked, "mask"> {
     destination: hl.destination,
     line: hl.line.map((i) => ({ x: i % hl.w, y: Math.floor(i / hl.w) })),
   };
-}
-
-/** What a step's highlights draw: the `drawn` half of Netslide's legend. The
- * tile's double ring and the arrow that slides it are one mark. */
-export function netslideHintMarks(hl: NetslideHint): MarkRef[] {
-  const m = markedOf(hl);
-  return [
-    { role: "ring", kind: TILE, elements: [m.tile] },
-    { role: "ring", kind: SQUARE, elements: [m.landing, m.destination] },
-    { role: "stripes", kind: CELL, elements: m.line },
-  ] as MarkRef[];
 }
 
 /** Is `cell` orthogonally adjacent to the source — the tile power flows from, whose

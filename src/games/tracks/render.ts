@@ -29,9 +29,11 @@ import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL, outlineSides } from "../../engine/hint-mark.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
-import type { TracksHighlights } from "./hint.ts";
+import { pieceOfOp } from "./hint.ts";
+import { LINE, PIECE, type Piece } from "./hint-text.ts";
 import { copyAndApplyDrag } from "./moves.ts";
 import {
   ALLDIR,
@@ -227,14 +229,19 @@ export function newDrawState(state: TracksState, tileSize: number): TracksDrawSt
 }
 
 /** The `H_*` word for every square, from the displayed step. */
-function hintFlags(
-  state: TracksState,
-  step?: HintStep<TracksMove, TracksHighlights>,
-): Int32Array {
+function hintFlags(state: TracksState, step?: HintStep<TracksMove>): Int32Array {
   const { w, h } = state;
   const out = new Int32Array(w * h);
-  const hl = step?.highlights;
-  if (!hl) return out;
+  const marks = stepMarks(step);
+  // What a decided square or side becomes is the step's move.
+  const track = new Map(
+    (step?.move.ops ?? []).map((o) => [PIECE.key(pieceOfOp(o)), o.track]),
+  );
+  const decided = (p: Piece): boolean => track.get(PIECE.key(p)) ?? true;
+  const isCell = (p: Piece): p is { x: number; y: number } =>
+    !("clue" in p) && p.dir === undefined;
+  const isSide = (p: Piece): p is { x: number; y: number; dir: number } =>
+    !("clue" in p) && p.dir !== undefined;
 
   const mark = (x: number, y: number, bits: number): void => {
     if (x >= 0 && x < w && y >= 0 && y < h) out[y * w + x] |= bits;
@@ -245,26 +252,29 @@ function hintFlags(
     mark(x + DX(dir), y + DY(dir), FLIP(dir) << shift);
   };
 
-  for (const t of hl.targets) mark(t.x, t.y, H_RING | (t.track ? 0 : H_EMPTY));
-  for (const e of hl.targetEdges) {
-    markEdge(e.x, e.y, e.dir, e.track ? H_TRACK_SHIFT : H_BLOCK_SHIFT);
+  const ringed = marks.of("ring", PIECE);
+  for (const t of ringed.filter(isCell))
+    mark(t.x, t.y, H_RING | (decided(t) ? 0 : H_EMPTY));
+  for (const e of ringed.filter(isSide)) {
+    markEdge(e.x, e.y, e.dir, decided(e) ? H_TRACK_SHIFT : H_BLOCK_SHIFT);
   }
-  for (const e of hl.areaEdges) markEdge(e.x, e.y, e.dir, H_CITED_SHIFT);
+  const outlined = marks.of("outline", PIECE);
+  for (const e of outlined.filter(isSide)) markEdge(e.x, e.y, e.dir, H_CITED_SHIFT);
 
   // One contour round a contiguous region, one ring per scattered cell: the
   // shared rule, so the picture never draws a boundary the deduction did not
   // reason across (`engine/hint-mark.ts`).
-  const inArea = new Set(hl.area.map((c) => c.y * w + c.x));
-  for (const c of hl.area) {
+  const area = outlined.filter(isCell);
+  const inArea = new Set(area.map((c) => c.y * w + c.x));
+  for (const c of area) {
     const sides = outlineSides(c.x, c.y, (ax, ay) => inArea.has(ay * w + ax));
     mark(c.x, c.y, sides << H_AREA_SHIFT);
   }
-  if (hl.line !== null) {
-    const { line } = hl;
+  for (const line of marks.of("stripes", LINE)) {
     if (line < w) for (let y = 0; y < h; y++) mark(line, y, H_LINE);
     else for (let x = 0; x < w; x++) mark(x, line - w, H_LINE);
   }
-  for (const c of hl.hatch) mark(c.x, c.y, H_LINE);
+  for (const c of marks.of("stripes", PIECE).filter(isCell)) mark(c.x, c.y, H_LINE);
   return out;
 }
 
@@ -734,9 +744,11 @@ export function redraw(
   const m = metrics(ds.tileSize);
   const { w, h } = state;
   let force = false;
-  const step = hint as HintStep<TracksMove, TracksHighlights> | undefined;
-  const hintMarks = hintFlags(state, step);
-  const hintedClues = new Set(step?.highlights?.clues ?? []);
+  const hintMarks = hintFlags(state, hint);
+  const marks = stepMarks(hint);
+  const hintedClues = new Set(
+    marks.of("outline", PIECE).flatMap((p) => ("clue" in p ? [p.clue] : [])),
+  );
 
   if (!ds.started) {
     drawLoopEnds(dr, m, state, COL_CLUE);
@@ -759,10 +771,10 @@ export function redraw(
   // the hint has to be part of *this* surface's cache key too, not only the
   // per-tile one.
   // The hatched line runs on through its clue, so that is in the key as well.
-  const hatchedLine = step?.highlights?.line ?? null;
+  const hatchedLines = new Set(marks.of("stripes", LINE));
   for (let i = 0; i < w + h; i++) {
     const key =
-      state.numErrors[i] | (hintedClues.has(i) ? 2 : 0) | (i === hatchedLine ? 4 : 0);
+      state.numErrors[i] | (hintedClues.has(i) ? 2 : 0) | (hatchedLines.has(i) ? 4 : 0);
     if (force || key !== ds.numErrors[i]) {
       ds.numErrors[i] = key;
       drawClue(

@@ -14,6 +14,7 @@ import { describe, expect, it } from "vitest";
 import { BORDER, DISABLED, DX, DY, FLIP } from "../../engine/border-grid.ts";
 import type { BorderHint } from "../../engine/border-grid-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
@@ -222,8 +223,8 @@ describe("separate hint frame", () => {
     // A frame that names two regions: the first two-region or region-and-letter
     // step on a fixed board, reached through the real midend.
     const namesTwo = (s: HintStep<unknown>): boolean => {
-      const hl = s.highlights as BorderHint | undefined;
-      return (hl?.hatch?.length ?? 0) > 0 && (hl?.cells?.length ?? 0) > 0;
+      const m = stepMarks(s);
+      return m.of("stripes", CELL).length > 0 && m.of("outline", CELL).length > 0;
     };
     const id = `5x5n5:${newSeparateDesc(PRESETS[1], randomNew("separate-hint-frame")).desc}`;
     const result = renderScenario({
@@ -232,13 +233,12 @@ describe("separate hint frame", () => {
       showHint: true,
       hintUntil: namesTwo,
     });
-    const hl = result.hint?.highlights as BorderHint;
     expect(namesTwo(result.hint as HintStep<unknown>)).toBe(true);
 
     const ops = result.recording.ops;
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(true);
     const hatched = new Set(opsOfKind(ops, "hatch").map((h) => `${h.x},${h.y}`));
-    expect(hatched.size).toBe(hl.hatch?.length);
+    expect(hatched.size).toBe(stepMarks(result.hint).of("stripes", CELL).length);
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(true);
     // The letters the deduction reads are still drawn over the marks.
     expect(ops.some((o) => o.op === "text")).toBe(true);

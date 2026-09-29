@@ -45,6 +45,7 @@ import {
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import type {
   SeparateMistake,
@@ -175,7 +176,7 @@ export function redraw(
   invalidateDanglingRegions(w, h, borders, blackDsf, validRoot);
 
   const mistakeMask = mistakeEdgeBits(w, h, mistakes);
-  const hintMask = hintTileBits(w, h, hint?.highlights);
+  const hintMask = hintTileBits(w, h, stepMarks(hint));
 
   for (let r = 0; r < h; r++) {
     for (let c = 0; c < w; c++) {

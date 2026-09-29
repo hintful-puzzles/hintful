@@ -7,10 +7,12 @@
  * asserts the center-dot grid it draws.
  */
 import { describe, expect, it } from "vitest";
+import { stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import type { PearlHint } from "./hint.ts";
+import { SQUARE } from "./hint-text.ts";
 import { pearlGame } from "./index.ts";
 import {
   COL_BLACK,
@@ -100,7 +102,7 @@ describe("Pearl render scenarios", () => {
         /black pearl must turn/.test(step.explanation),
     });
     const hl = hint?.highlights as PearlHint | undefined;
-    expect(hl?.area.length).toBe(1);
+    expect(stepMarks(hint).of("outline", SQUARE)).toHaveLength(1);
     // The pearl's whole arm, its own edge and the run-on past the next square,
     // and on out through the white pearl that run-on enters.
     expect(hint?.explanation).toMatch(

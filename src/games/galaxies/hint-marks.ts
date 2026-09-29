@@ -1,7 +1,8 @@
 /**
- * The marks Galaxies' hint draws, as the engine's roles (`hint-words.ts`), and
- * exactly as `render.ts`'s `packHint` paints them: a sentence can then name
- * only what is on the board.
+ * The marks Galaxies' hint draws, as the engine's roles (`hint-words.ts`).
+ * `render.ts`'s `packHint` paints what the words name, and `painted` keeps the
+ * words from naming a mark it would not show, so a sentence names only what
+ * is on the board.
  *
  * A step decides cells (the focus ringed twice, its partner once), walls and
  * the dot the cells go to, so all three are rings, told apart by their kind;
@@ -9,7 +10,7 @@
  * it names is striped. Coordinates are the state's half-grid ones.
  */
 
-import { CELL, type MarkKind, type MarkRef } from "../../engine/hint-words.ts";
+import type { MarkKind } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import type { GalaxiesHint } from "./hint.ts";
 
@@ -39,9 +40,10 @@ export interface Painted {
 }
 
 /**
- * The marks as `packHint` paints them. A cell carries one ring, the action's
- * over the evidence's, and a dot is not ringed where it sits on a cell the
- * action fills: there the ring would be the action color on itself.
+ * The marks the words may name, as `packHint` can show them. A cell carries
+ * one ring, the action's over the evidence's, and a dot is not ringed where it
+ * sits on a cell the action fills: there the ring would be the action color on
+ * itself.
  */
 export function painted(hl: GalaxiesHint): Painted {
   const { focus } = hl;
@@ -72,18 +74,4 @@ function tilesAround(d: Point): Point[] {
     for (let tx = Math.ceil((d.x - 2) / 2); tx <= d.x >> 1; tx++)
       out.push({ x: 2 * tx + 1, y: 2 * ty + 1 });
   return out;
-}
-
-/** What a step's highlights draw: the `drawn` half of Galaxies' legend. */
-export function galaxiesHintMarks(hl: GalaxiesHint): MarkRef[] {
-  const p = painted(hl);
-  return [
-    { role: "ring", kind: CELL, elements: p.focus ? [p.focus, ...p.others] : p.others },
-    { role: "ring", kind: WALL, elements: p.targetWalls },
-    { role: "ring", kind: DOT, elements: p.targetDot ? [p.targetDot] : [] },
-    { role: "outline", kind: CELL, elements: p.area },
-    { role: "outline", kind: WALL, elements: p.walls },
-    { role: "outline", kind: DOT, elements: p.refDots },
-    { role: "stripes", kind: CELL, elements: p.hatch },
-  ] as MarkRef[];
 }

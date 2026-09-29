@@ -45,6 +45,7 @@ import {
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import {
   bitcount,
@@ -141,7 +142,7 @@ export function redraw(
   const wh = w * h;
   const flash = Math.floor((flashTime * 5) / FLASH_TIME) % 2;
 
-  const hintMask = hintTileBits(w, h, hint?.highlights);
+  const hintMask = hintTileBits(w, h, stepMarks(hint));
 
   if (!ds.started) {
     drawBorderGridBackground(dr, ts, w, h, PALETTE);

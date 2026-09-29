@@ -19,8 +19,10 @@ import { netslideLowlight } from "../../engine/color/palette-games.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import type { NetslideHint } from "./hint.ts";
+import { SQUARE, TILE } from "./hint-text.ts";
 import {
   ACTIVE,
   anticlockwise,
@@ -328,7 +330,9 @@ function drawTile(
 function drawHintTargets(
   dr: GameDrawing,
   ds: NetslideDrawState,
-  marks: NetslideHint,
+  squares: readonly number[],
+  destination: number,
+  belongs: boolean,
 ): void {
   const ts = ds.tileSize;
   const b = border(ts);
@@ -341,8 +345,8 @@ function drawHintTargets(
     dr.drawUpdate({ x: bx, y: by, w: ts + TILE_BORDER, h: ts + TILE_BORDER });
   };
 
-  at(marks.destination, !marks.belongs);
-  if (marks.landing !== marks.destination) at(marks.landing, true);
+  if (squares.includes(destination)) at(destination, !belongs);
+  for (const cell of squares) if (cell !== destination) at(cell, true);
 }
 
 /** An outline just inside a tile's edge, solid or dashed. Inset past the tile
@@ -584,10 +588,16 @@ export function redraw(
     drawSlideArrows(dr, ds, state);
   }
 
-  const marks = hint?.highlights;
-  const hintLine = new Set(marks?.line ?? []);
-  const hintArrowX = marks?.arrowX ?? -2;
-  const hintArrowY = marks?.arrowY ?? -2;
+  // The marks are the words'; the plan says where the named tile goes next,
+  // which arrow slides it, and whether its destination is its home.
+  const plan = hint?.highlights;
+  const words = stepMarks(hint);
+  const [named] = words.of("ring", TILE);
+  const tiled = plan !== undefined && named !== undefined;
+  const squares = words.of("ring", SQUARE);
+  const hintLine = new Set(words.of("stripes", CELL).map((p) => p.y * ds.w + p.x));
+  const hintArrowX = tiled ? plan.arrowX : -2;
+  const hintArrowY = tiled ? plan.arrowY : -2;
 
   // The cursor and hint arrows: repaint the ones that were lit and the ones that
   // now are. The arrows sit in the gutter, which no tile repaint reaches, so
@@ -645,13 +655,13 @@ export function redraw(
   // Which cell of *this* board holds the tile the hint is placing. The midend
   // advances the plan when an animation *ends*, so while the hinted slide plays
   // the displayed step still indexes the board just left: the tile is at
-  // `marks.landing`, and marking it there makes the highlight travel with it
-  // (`marks.tile` would mark whatever slid into the vacated cell). Any other
-  // displayed step was computed against this board, so `marks.tile` is right.
+  // `plan.landing`, and marking it there makes the highlight travel with it
+  // (the named tile's cell would mark whatever slid into the vacated cell). Any
+  // other displayed step was computed against this board, so that cell is right.
   const animating = oldstate !== null && t < ANIM_TIME;
   const playingThisStep =
     animating && hint !== undefined && isMoveBeingAnimated(hint.move, state);
-  const hintTile = marks ? (playingThisStep ? marks.landing : marks.tile) : -1;
+  const hintTile = tiled ? (playingThisStep ? plan.landing : named) : -1;
 
   // A line in motion is drawn unpowered, so the powered highlight doesn't
   // appear to leap across it.
@@ -673,14 +683,12 @@ export function redraw(
       let c = state.tiles[i] | active[i];
 
       // The hint overlay goes into the cache word (see the HINT_* bits).
-      if (marks) {
-        if (i === hintTile) c |= HINT_TILE;
-        // `drawHintTargets` draws the outlines; their bits are keyed here so the
-        // tile under a stale outline repaints once the hint moves on.
-        if (i === marks.destination) c |= marks.belongs ? HINT_HOME : HINT_LANDING;
-        else if (i === marks.landing) c |= HINT_LANDING;
-        if (hintLine.has(i)) c |= HINT_LINE;
-      }
+      if (i === hintTile) c |= HINT_TILE;
+      // `drawHintTargets` draws the outlines; their bits are keyed here so the
+      // tile under a stale outline repaints once the hint moves on.
+      if (squares.includes(i))
+        c |= plan && i === plan.destination && plan.belongs ? HINT_HOME : HINT_LANDING;
+      if (hintLine.has(i)) c |= HINT_LINE;
 
       // The completion flash ripples outward: a tile at Chebyshev distance
       // `dist` from the center flashes on and off over frames dist … dist+3.
@@ -729,7 +737,7 @@ export function redraw(
   }
 
   // Last, so no sliding tile paints across them.
-  if (marks) drawHintTargets(dr, ds, marks);
+  if (plan) drawHintTargets(dr, ds, squares, plan.destination, plan.belongs);
 
   dr.unclip();
 }

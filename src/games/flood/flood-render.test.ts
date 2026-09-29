@@ -7,6 +7,7 @@ import type { HintStep } from "../../engine/game.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
+import { say } from "./hint-text.ts";
 import { floodGame } from "./index.ts";
 import { type FloodDrawState, redraw } from "./render.ts";
 import { type FloodMove, type FloodState, newState } from "./state.ts";
@@ -64,9 +65,11 @@ describe("Flood redraw", () => {
     const state = newState({ w: 3, h: 1, colors: 3, leniency: 0 }, "010,9");
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
+    const words = say.fill(1, [{ x: 1, y: 0 }]);
     const hint: HintStep<FloodMove> = {
       move: { type: "fill", color: 1 },
-      explanation: "Fill with yellow",
+      explanation: words.text,
+      words,
     };
     redraw(dr, ds, null, state, 1, UI, 0, 0, hint);
     // The shared recorder keeps a circle's fill AND outline separately, where

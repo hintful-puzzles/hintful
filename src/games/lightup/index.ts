@@ -23,7 +23,7 @@ import type {
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
-import { CELL, type MarkRef, type Narration } from "../../engine/hint-words.ts";
+import { CELL, type Narration } from "../../engine/hint-words.ts";
 import {
   dimensionParamConfig,
   numberItem,
@@ -271,23 +271,27 @@ function findMistakes(state: LightupState): readonly LightupMistake[] {
 // reasons over — a later "every other way to light this square is crossed
 // out" narration is then *visible*.
 
-/** Highlight payload for a Light Up hint step. `targets` get the blue
- * `COL_HINT` fill (highlight only — the narration says which mark to
- * place); `area` is the deduction's evidence, shaded light-blue when the
- * square is dark and ringed green when it is lit (the fill would hide the
- * "already lit" premise); `dark` is the unlit square the deduction is
- * about (violet ring); `clue` is the driving clue, whose digit recolors. */
+/** Plan data for a Light Up hint step. `kind` is the mark the step places on
+ * its `targets`, which `hintKeepTrack` and `refreshHintStep` read. `dark` is
+ * the unlit square the deduction is about (violet ring) and `clue` the driving
+ * clue, whose digit recolors: the words outline both alongside the rest of the
+ * evidence, and the renderer reads them here to tell the three glyphs apart. */
 export interface LightupHint {
   kind: "light" | "impossible";
   targets: Point[];
-  area: Point[];
   dark?: Point;
   clue?: Point;
 }
 
+/** A step's highlights, and its `area`: the deduction's evidence besides the
+ * dark square and the clue, shaded light-blue when the square is dark and
+ * ringed green when it is lit (the fill would hide the "already lit"
+ * premise). */
+type Marks = LightupHint & { area: Point[] };
+
 const sameCell = (a: Point, b: Point): boolean => a.x === b.x && a.y === b.y;
 
-function buildHighlights(f: LightupFiring): LightupHint {
+function buildHighlights(f: LightupFiring): Marks {
   const notTarget = (c: Point): boolean => !f.cells.some((t) => sameCell(t, c));
   switch (f.reason.kind) {
     case "forcedLight": {
@@ -336,7 +340,7 @@ function buildHighlights(f: LightupFiring): LightupHint {
  * player is looking at**, so a branch can tell whether a second mark is even
  * on the board before deciding how much to say. The words, and the deixis
  * ties they carry, are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(f: LightupFiring, hl: LightupHint): Narration {
+function narrate(f: LightupFiring, hl: Marks): Narration {
   const m: Marked = {
     targets: hl.targets,
     area: hl.area,
@@ -366,18 +370,6 @@ function narrate(f: LightupFiring, hl: LightupHint): Narration {
   }
 }
 
-/** What a step's highlights draw: the `drawn` half of Light Up's legend. The
- * evidence takes three glyphs (a recolored clue digit, the dark square's
- * double ring, the set's shade or ring), all of them the outline role. */
-function lightupHintMarks(hl: LightupHint): MarkRef[] {
-  return [
-    { role: "ring", kind: CELL, elements: hl.targets },
-    { role: "outline", kind: CELL, elements: hl.area },
-    { role: "outline", kind: CELL, elements: hl.dark ? [hl.dark] : [] },
-    { role: "outline", kind: CELL, elements: hl.clue ? [hl.clue] : [] },
-  ] as MarkRef[];
-}
-
 /** `step`'s words narrowed to the targets `left`, as its highlights are. */
 function narrowWords(
   step: HintStep<LightupMove, LightupHint>,
@@ -392,10 +384,11 @@ function narrowWords(
 }
 
 function buildStep(f: LightupFiring): HintStep<LightupMove, LightupHint> {
-  // One value, read by both the sentence and the frame — a narration can only
-  // be held to "say which mark you mean" if it is given the marks.
-  const highlights = buildHighlights(f);
-  const words = narrate(f, highlights);
+  // The sentence is given the marks, since a narration can only be held to
+  // "say which mark you mean" if it knows which marks there are.
+  const marks = buildHighlights(f);
+  const words = narrate(f, marks);
+  const { area: _, ...highlights } = marks;
   return {
     move: { ops: f.cells.map((c) => ({ kind: f.kind, x: c.x, y: c.y })) },
     explanation: words.text,
@@ -570,7 +563,6 @@ export const lightupGame: Game<
       outline:
         "what the step reasons from, told apart by the sentence's nouns and drawn three ways: “the outlined clue” has its number in the hint color; “the outlined dark square”, which still has to be lit, has a purple double ring; and the other squares the reason rests on, such as a clue's bulbs, are shaded when dark and have a green double ring when lit.",
     },
-    drawn: lightupHintMarks,
   },
   hintKeepTrack,
   refreshHintStep,

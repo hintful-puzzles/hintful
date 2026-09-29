@@ -28,7 +28,9 @@ import {
   type MarkCell,
   MarkOutlines,
 } from "../../engine/hint-mark.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import { SPOT } from "./hint-text.ts";
 import type { DominosaHint } from "./index.ts";
 import {
   boardSize,
@@ -350,11 +352,13 @@ export function redraw(
 
   // The hint's marks. A square can be both acted on and part of the evidence,
   // and it then carries both.
+  const marks = stepMarks(hint);
   const hl = hint?.highlights;
-  const hintEdge = hl?.edge ?? null;
   const cellAt = (i: number): MarkCell => ({ x: i % w, y: (i / w) | 0 });
-  const hintTargets = (hl?.targets ?? []).map(cellAt);
-  const hintEvidence = (hl?.evidence ?? []).map(cellAt);
+  const spots = marks.of("ring", SPOT);
+  const hintEdge = hl?.kind === "barrier" && spots.length > 0 ? spots[0] : null;
+  const hintTargets = spots.flatMap(([a, b]) => [cellAt(a), cellAt(b)]);
+  const hintEvidence = marks.of("outline", CELL);
   const markStyle: HintMarkStyle = {
     band: (x, y) => markBand(ds, x, y),
     targetColor: COL_HINT,

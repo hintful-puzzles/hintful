@@ -29,8 +29,8 @@
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { ALREADY_SOLVED, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
-import type { MarkRef, Narration } from "../../engine/hint-words.ts";
-import { ARROW, GEM, gemsPhrase, say } from "./hint-text.ts";
+import type { Narration } from "../../engine/hint-words.ts";
+import { gemsPhrase, say } from "./hint-text.ts";
 import { solveRoute, unreachableGems } from "./solver.ts";
 import {
   type InertiaMove,
@@ -41,18 +41,7 @@ import {
   slidePath,
 } from "./state.ts";
 
-/** What the board shows for the step being displayed. */
-export interface InertiaHintHighlights {
-  /** The gem the current leg is going for, as a square index. Inertia's gems
-   * are anonymous — there is no "tile 8" to name one by — so the narration says
-   * "the outlined gem" and the board carries the reference (docs/games/hints.md § "Name a square by its value").
-   */
-  readonly goal: number;
-  /** The direction to play, drawn as an arrow on the ball. */
-  readonly dir: number;
-}
-
-type Step = HintStep<InertiaMove, InertiaHintHighlights>;
+type Step = HintStep<InertiaMove>;
 
 // --- the claims we are allowed to make -------------------------------
 
@@ -144,14 +133,6 @@ function narrate(
   // slide from here can, and a promise it then breaks reads as a hint that has
   // lost the plot.
   return say.positioning(m, toGoal === 2);
-}
-
-/** What a step's highlights draw: the `drawn` half of Inertia's legend. */
-export function inertiaHintMarks(hl: InertiaHintHighlights): MarkRef[] {
-  return [
-    { role: "ring", kind: ARROW, elements: [hl.dir] },
-    { role: "outline", kind: GEM, elements: [hl.goal] },
-  ] as MarkRef[];
 }
 
 // --- planning: the nearest gem the ball can safely take ---------------
@@ -276,9 +257,7 @@ function firstLegOf(s: InertiaState, route: readonly number[]): number[] | null 
 
 // --- the plan --------------------------------------------------------
 
-export function hint(
-  state: InertiaState,
-): HintResult<InertiaMove, InertiaHintHighlights> {
+export function hint(state: InertiaState): HintResult<InertiaMove> {
   if (state.gems === 0) return { ok: false, error: ALREADY_SOLVED };
   if (state.dead) {
     return {
@@ -317,6 +296,8 @@ export function hint(
     if (leg === null) break;
 
     leg.dirs.forEach((dir, i) => {
+      // The goal is carried across every step of the leg, not re-derived
+      // from where the ball is standing.
       const words = narrate(
         leg.states[i],
         dir,
@@ -328,9 +309,6 @@ export function hint(
         move: { type: "move", dir },
         explanation: words.text,
         words,
-        // The goal is carried across every step of the leg, not re-derived
-        // from where the ball is standing.
-        highlights: { goal: leg.goal, dir },
       });
     });
 

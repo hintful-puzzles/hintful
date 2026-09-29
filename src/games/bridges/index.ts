@@ -49,12 +49,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newBridgesDesc } from "./generator.ts";
-import {
-  type BridgesHighlights,
-  bridgesHint,
-  bridgesHintMarks,
-  bridgesKeepTrack,
-} from "./hint.ts";
+import { type BridgesHighlights, bridgesHint, bridgesKeepTrack } from "./hint.ts";
 import {
   type BridgesDrawState,
   border,
@@ -614,7 +609,6 @@ export const bridgesGame: Game<
       outline:
         "what the step reasons from. The island the sentence is about (“this 5”) is recolored in the hint color. The islands it counts, and the bridges between them, are outlined in a second color: when a hint says “these 2 islands” or “the outlined group”, these are the ones it means.",
     },
-    drawn: bridgesHintMarks,
   },
   hintKeepTrack: (
     m: BridgesMove,

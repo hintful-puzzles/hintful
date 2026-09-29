@@ -26,6 +26,7 @@ import { drawThickRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import type { ClustersHintHighlights } from "./index.ts";
@@ -306,16 +307,18 @@ export function redraw(
 
   // The displayed hint step's overlay, repacked each frame (cleared when no
   // hint is on display, so a dropped hint repaints too).
+  const marks = stepMarks(hint);
   const hl = hint?.highlights as ClustersHintHighlights | undefined;
+  const outlined = new Set(marks.of("outline", CELL).map((p) => p.y * w + p.x));
   ds.hint.clear();
-  if (hl) {
-    ds.hint.add(hl.target.y * w + hl.target.x, HB_TARGET);
-    if (hl.danger) ds.hint.add(hl.danger.y * w + hl.danger.x, HB_DANGER);
-    for (const c of hl.chain) {
-      const i = c.y * w + c.x;
-      ds.hint.add(i, c.fill === F_COLOR_0 ? HB_CHAIN_0 : HB_CHAIN_1);
-      if (c.order !== undefined) ds.hint.setOrder(i, c.order);
-    }
+  for (const p of marks.of("ring", CELL)) ds.hint.add(p.y * w + p.x, HB_TARGET);
+  if (hl?.danger && outlined.has(hl.danger.y * w + hl.danger.x))
+    ds.hint.add(hl.danger.y * w + hl.danger.x, HB_DANGER);
+  for (const c of hl?.chain ?? []) {
+    const i = c.y * w + c.x;
+    if (!outlined.has(i)) continue;
+    ds.hint.add(i, c.fill === F_COLOR_0 ? HB_CHAIN_0 : HB_CHAIN_1);
+    if (c.order !== undefined) ds.hint.setOrder(i, c.order);
   }
 
   const targets: MarkCell[] = [];

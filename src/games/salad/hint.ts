@@ -39,7 +39,6 @@ import {
   type CandidatePlanPrefs,
   type Cell,
   candidateHint,
-  candidateHintMarks,
   emitObviousCleanStep,
   keepCandidateHintTrack,
   type Mark,
@@ -66,7 +65,7 @@ import {
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import type { MarkRef, Narration } from "../../engine/hint-words.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import type { LatinRepeatReason } from "../../engine/latin.ts";
 import {
   type ForcingLink,
@@ -300,19 +299,6 @@ function markerEvidence(words: Narration): {
   clues: number[];
 } {
   return { ...evidenceOf(words), clues: cluesNamed(words) };
-}
-
-/** The marks a Salad step draws: the candidate walk's, and the border clues it
- * lights as evidence. The ghosted entry in a ringed square is part of that
- * ring: it shows what the step decides there. */
-export function saladHintMarks(h: SaladHint): MarkRef[] {
-  // The populate opener is built by the engine (`populateStep`), which knows
-  // nothing of clues, so its highlights carry none.
-  const clues: readonly number[] = (h as Partial<SaladHint>).clues ?? [];
-  return [
-    ...candidateHintMarks(h),
-    { role: "outline", kind: CLUE, elements: clues } as MarkRef,
-  ];
 }
 
 // --- the plan walk ---------------------------------------------------------

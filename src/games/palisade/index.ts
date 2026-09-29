@@ -19,7 +19,6 @@ import {
 import {
   borderHintJourney,
   borderHintKeepTrack,
-  borderHintMarks,
   type ForcedBorderEdge,
 } from "../../engine/border-grid-hint.ts";
 import { winFlash } from "../../engine/flash.ts";
@@ -262,7 +261,6 @@ export const palisadeGame: Game<
       stripes:
         'the one region the sentence is about: "this region", or "the same region" two edges both border.',
     },
-    drawn: borderHintMarks,
   },
   hintKeepTrack: (m, step, state) =>
     borderHintKeepTrack(

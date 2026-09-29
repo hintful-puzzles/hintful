@@ -31,7 +31,7 @@ import {
   FIX_MISTAKES_FIRST,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
-import { CELL, type MarkRef, type Narration } from "../../engine/hint-words.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -306,27 +306,15 @@ function solve(orig: BricksState): SolveResult<BricksMove> {
 
 // --- hint (a second projection of the contradiction solver) -----------------
 
-/** Highlight data for a Bricks hint step: the forced cell (`target`, drawn
- * `COL_HINT`), the color it is forced to (`forced` — the narration says
- * which; the render never pre-places it), and the deduction's `evidence`
- * cells (outlined by an inset ring in `COL_HINT_CELL`). All are indices into
- * the padded grid, `w` wide. */
+/** Plan data for a Bricks hint step, read by `hintKeepTrack`: the forced cell
+ * (`target`, an index into the padded grid) and the color it is forced to
+ * (`forced` — the narration says which; the render never pre-places it). */
 export interface BricksHint {
   target: number;
   forced: CellColor;
-  evidence: number[];
-  w: number;
 }
 
 const pointOf = (i: number, w: number): Point => ({ x: i % w, y: Math.floor(i / w) });
-
-/** What a step's highlights draw: the `drawn` half of Bricks' legend. */
-function bricksHintMarks(hl: BricksHint): MarkRef[] {
-  return [
-    { role: "ring", kind: CELL, elements: [pointOf(hl.target, hl.w)] },
-    { role: "outline", kind: CELL, elements: hl.evidence.map((i) => pointOf(i, hl.w)) },
-  ] as MarkRef[];
-}
 
 /** The evidence cells a reason reasons over (padded indices). */
 function evidenceOf(reason: BricksReason): number[] {
@@ -351,12 +339,13 @@ function narrate(
   reason: BricksReason,
   forced: CellColor,
   state: BricksState,
-  hl: BricksHint,
+  targetIndex: number,
+  evidenceIndices: readonly number[],
 ): Narration {
   const clueVal = (i: number): number => state.grid[i] & NUM_MASK;
-  const at = (i: number): Point => pointOf(i, hl.w);
-  const target = at(hl.target);
-  const evidence = hl.evidence.map(at);
+  const at = (i: number): Point => pointOf(i, state.w);
+  const target = at(targetIndex);
+  const evidence = evidenceIndices.map(at);
   switch (reason.kind) {
     case "three":
       return say.three(target, evidence);
@@ -401,11 +390,9 @@ function hint(state: BricksState): HintResult<BricksMove, BricksHint> {
   const plan = deduceBricksPlan(grid, w, h);
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
   const steps: HintStep<BricksMove, BricksHint>[] = plan.map((m) => {
-    // One value, read by both the sentence and the frame, so the words name
-    // what the player can see outlined.
     const evidence = evidenceOf(m.reason).filter((c) => c !== m.index);
-    const highlights: BricksHint = { target: m.index, forced: m.to, evidence, w };
-    const words = narrate(m.reason, m.to, state, highlights);
+    const highlights: BricksHint = { target: m.index, forced: m.to };
+    const words = narrate(m.reason, m.to, state, m.index, evidence);
     return {
       move: { kind: "paint", cells: [{ index: m.index, to: m.to }] },
       explanation: words.text,
@@ -485,7 +472,6 @@ export const bricksGame: Game<
       outline:
         "what the step reasons from, as a smaller ring inside the cell: a number, the shaded bricks beside the cell, the cells beneath it or the brick above it.",
     },
-    drawn: bricksHintMarks,
   },
   hintKeepTrack,
   findMistakes,

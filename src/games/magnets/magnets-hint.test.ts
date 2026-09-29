@@ -6,7 +6,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
@@ -20,6 +20,8 @@ import {
 import {
   type Axis,
   type Cause,
+  CLUE,
+  LINE,
   type LineMarks,
   type OnlyEnd,
   type RuleOut,
@@ -49,6 +51,21 @@ const hint = (s: MagnetsState) => {
   if (!h) throw new Error("magnets declares no hint");
   return h(s);
 };
+
+/** What a step shows, as its words name it: an outlined clue is a reason when
+ * the step cites it as one, and the count read otherwise. */
+function picture(step: HintStep<MagnetsMove, MagnetsHighlights>) {
+  const m = stepMarks(step);
+  const cited = new Set(step.highlights?.reasonClues);
+  const clues = m.of("outline", CLUE);
+  return {
+    targets: [...m.of("ring", SQUARE)],
+    area: [...m.of("outline", SQUARE)],
+    clues: clues.filter((c) => !cited.has(c)),
+    reasonClues: clues.filter((c) => cited.has(c)),
+    line: m.of("stripes", LINE)[0] ?? null,
+  };
+}
 
 function boardsOf(
   seeds: number,
@@ -237,7 +254,7 @@ describe("magnets hint: following a leg", () => {
     if (!res.ok) throw new Error(res.error);
     let s = state;
     for (const step of res.steps as HintStep<MagnetsMove, MagnetsHighlights>[]) {
-      const targets = step.highlights?.targets ?? [];
+      const { targets } = picture(step);
       expect(targets.length).toBeGreaterThan(0);
       for (const t of targets)
         expect(s.flags[t] & 2, `square ${t} already placed`).toBe(0);
@@ -273,32 +290,30 @@ describe("a count premise shows why the rest of its line is ruled out", () => {
         "a + in either outlined tile would put one − too many in the column beside it, " +
         "so these 2 squares must be +s.",
     );
-    const h = first.highlights;
+    const h = picture(first);
     // "This column" is the hatched one, and it is the only line hatched.
-    expect(h?.line).toEqual({ roworcol: COLUMN, num: 2 });
+    expect(h.line).toEqual({ roworcol: COLUMN, num: 2 });
     // The outline is the two ruled-out dominoes, both halves each, and
     // nothing else: no square of column 1 beyond them.
-    expect([...(h?.area ?? [])].sort((a, b) => a - b)).toEqual(
+    expect([...h.area].sort((a, b) => a - b)).toEqual(
       [at(1, 1), at(2, 1), at(1, 2), at(2, 2)].sort((a, b) => a - b),
     );
     // Column 2's + clue is the count read; column 1's − clue the reason.
-    expect(h?.clues).toHaveLength(1);
-    expect(h?.reasonClues).toHaveLength(1);
+    expect(h.clues).toHaveLength(1);
+    expect(h.reasonClues).toHaveLength(1);
   });
 
   it("rings only the square that takes the pole, once the board forces it", () => {
     const [first, second, third] = steps();
     // The vertical domino's + goes at its bottom only because the second leg's
     // + lands beside its top, so neither earlier step rings it.
-    expect(first.highlights?.targets).toEqual([at(2, 0), at(2, 3)]);
-    expect(second.highlights?.targets).toEqual([at(2, 3)]);
-    expect(third.highlights?.targets).toEqual([at(2, 5)]);
+    expect(picture(first).targets).toEqual([at(2, 0), at(2, 3)]);
+    expect(picture(second).targets).toEqual([at(2, 3)]);
+    expect(picture(third).targets).toEqual([at(2, 5)]);
     expect(third.explanation).toContain(
       "A + at its far end would touch a +, so it must go here.",
     );
-    expect(third.highlights?.area).toEqual(
-      expect.arrayContaining([at(2, 4), at(2, 3)]),
-    );
+    expect(picture(third).area).toEqual(expect.arrayContaining([at(2, 4), at(2, 3)]));
   });
 
   it("names each pole's own reason when both are read through the partner", () => {
@@ -327,9 +342,9 @@ describe("a count premise shows why the rest of its line is ruled out", () => {
       "it touches a +, and a − there would exceed its column's clue",
     );
     // "Its column" is the only line named, so it is hatched, with its count.
-    expect(step.highlights?.line).toEqual({ roworcol: COLUMN, num: 1 });
-    expect(step.highlights?.clues).toHaveLength(1);
-    expect(step.highlights?.reasonClues).toEqual([]);
+    expect(picture(step).line).toEqual({ roworcol: COLUMN, num: 1 });
+    expect(picture(step).clues).toHaveLength(1);
+    expect(picture(step).reasonClues).toEqual([]);
   });
 
   it("counts from the board each leg finds, not the one the journey began on", () => {
@@ -599,8 +614,6 @@ describe("magnets hint sentences", () => {
         "2....,1222..,21...,....03,LRLRTTLRTBBLRBTLRLRBLRLRTLRLRB",
       ],
     ];
-    const legend = magnetsGame.hintMarks;
-    if (!legend) throw new Error("magnets declares no hintMarks");
     const boards = [
       ...CORPUS,
       ...pinned.map(([p, desc]) => ({ label: desc, state: newState(p, desc) })),
@@ -612,10 +625,12 @@ describe("magnets hint sentences", () => {
         if (!res.ok) break;
         for (const step of res.steps as HintStep<MagnetsMove, MagnetsHighlights>[]) {
           // Its words name exactly its marks, on every board this walks.
-          expect(bindingDefects(step, legend), `${label}: ${step.explanation}`).toEqual(
-            [],
-          );
-          const rings = step.highlights?.targets.length;
+          expect(
+            bindingDefects(magnetsGame, state, magnetsGame.newUi(state), step),
+            `${label}: ${step.explanation}`,
+          ).toEqual([]);
+          const h = picture(step);
+          const rings = h.targets.length;
           const many = /\bthese (\d+) squares\b/.exec(step.explanation);
           if (many) {
             said.many++;
@@ -630,12 +645,12 @@ describe("magnets hint sentences", () => {
             /tiles can .*, so these? (\d+ )?squares? must be/.test(step.explanation)
           ) {
             said.crossing++;
-            const line = step.highlights?.line;
+            const { line } = h;
             if (!line) throw new Error(`${label}: a count names no line`);
             const inLine = (i: number) =>
               (line.roworcol === COLUMN ? i % state.w : Math.floor(i / state.w)) ===
               line.num;
-            for (const t of step.highlights?.targets ?? []) {
+            for (const t of h.targets) {
               expect(inLine(state.common.dominoes[t]), `${label}: ${t}`).toBe(false);
             }
           }
@@ -648,7 +663,7 @@ describe("magnets hint sentences", () => {
           const named = /in (the|either|any) outlined tile/.exec(step.explanation);
           if (named) {
             said.tiles++;
-            const area = new Set(step.highlights?.area);
+            const area = new Set(h.area);
             const whole = new Set(
               [...area]
                 .filter(
@@ -663,7 +678,7 @@ describe("magnets hint sentences", () => {
             else expect(whole, msg).toBeGreaterThanOrEqual(3);
             // And every square the clause rules out is in one of them: no empty
             // square of the hatched line is outlined alone.
-            const line = step.highlights?.line;
+            const { line } = h;
             if (!line) throw new Error(`${label}: a count names no line`);
             const onLine = (i: number) =>
               (line.roworcol === COLUMN ? i % state.w : Math.floor(i / state.w)) ===
@@ -673,7 +688,7 @@ describe("magnets hint sentences", () => {
                 onLine(i) &&
                 !(state.flags[i] & GS_SET) &&
                 !area.has(state.common.dominoes[i]) &&
-                !step.highlights?.targets.includes(state.common.dominoes[i]),
+                !h.targets.includes(state.common.dominoes[i]),
             );
             expect(alone, msg).toEqual([]);
           }
@@ -704,24 +719,23 @@ describe("magnets hint sentences", () => {
         if (!res.ok) break;
         for (const step of res.steps as HintStep<MagnetsMove, MagnetsHighlights>[]) {
           steps++;
-          const h = step.highlights;
-          expect(h?.targets.length).toBeGreaterThan(0);
+          const h = picture(step);
+          expect(h.targets.length).toBeGreaterThan(0);
           // Every step shows its evidence: a hatched line, a clue, a touching
           // pole or a domino.
           const shown =
-            (h?.area.length ?? 0) +
-            (h?.clues.length ?? 0) +
-            (h?.reasonClues.length ?? 0) +
-            (h?.line ? 1 : 0);
+            h.area.length + h.clues.length + h.reasonClues.length + (h.line ? 1 : 0);
           expect(shown).toBeGreaterThan(0);
-          // A clue is the count read or a reason cited, never both.
-          for (const c of h?.reasonClues ?? []) expect(h?.clues).not.toContain(c);
+          // A clue cited as a reason is one the words name.
+          expect(h.reasonClues).toEqual(
+            expect.arrayContaining(step.highlights?.reasonClues ?? []),
+          );
           // No square is both what is decided and what it is decided from.
-          const targets = new Set(h?.targets);
-          expect(h?.area.filter((i) => targets.has(i))).toEqual([]);
+          const targets = new Set(h.targets);
+          expect(h.area.filter((i) => targets.has(i))).toEqual([]);
           // A sentence about "this row" or "this column" marks its clue.
           if (/^This (row|column)/.test(step.explanation)) {
-            lineSteps.push(h?.clues.length ?? 0);
+            lineSteps.push(h.clues.length);
           }
           state = executeMove(state, step.move);
         }

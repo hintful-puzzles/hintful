@@ -94,7 +94,7 @@ drawing. Three pack entry points, by the shape of what you have:
 
 | You have | Call | Exemplar |
 | --- | --- | --- |
-| A hint step's `highlights` (`area`/`targets`/`marks`) | `pack(step?.highlights, indexFn, markBitsFn)` | the candidate-family renders, e.g. [`towers/render.ts`](../../src/games/towers/render.ts) |
+| A hint step's marks (ringed cells and notes, outlined and striped cells) | `pack(stepMarks(step), indexFn, markBitsFn)` | the candidate-family renders, e.g. [`towers/render.ts`](../../src/games/towers/render.ts) |
 | A `findMistakes` cell list | `packCells(mistakes, indexFn)` | `towers/render.ts` `ds.wrong` |
 | An overlay with its own topology | `clear()` + `add(i, bits)` | [`galaxies/render.ts`](../../src/games/galaxies/render.ts) `ds.wrongEdges` — one wrong wall is a *shared* edge, so it lights a different bit in each of the two tiles it separates |
 

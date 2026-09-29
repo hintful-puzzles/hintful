@@ -36,6 +36,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as geometryFromCoord } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import {
   type CellHighlight,
   cellHighlight,
@@ -56,6 +57,7 @@ import {
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import type { AbcdHint } from "./hint.ts";
+import { CLUE } from "./hint-text.ts";
 import {
   type AbcdMove,
   type AbcdState,
@@ -492,15 +494,16 @@ export function redraw(
   const flash = flashTime > 0 ? Math.floor(flashTime / FLASH_FRAME) % 3 : -1;
   const index = (x: number, y: number): number => y * w + x;
   ds.wrong.packCells(mistakes ?? null, index);
-  ds.hint.pack(hint?.highlights ?? null, index, (m) => valueBit(m.n - 1));
+  const marks = stepMarks(hint);
+  ds.hint.pack(marks, index, (m) => valueBit(m.n - 1));
 
   // Clues (redraw only those whose look changed). The hint hatches the named
   // line on through its clue slots, and draws the count it reads in its color.
   const clueErr = computeClueErrors(state);
-  const read = hint?.highlights?.clue ?? -1;
+  const read = marks.of("outline", CLUE)[0] ?? -1;
   // The clue's line: `numbers` holds the row clues, then the column clues.
   const readLine = read < 0 ? -1 : Math.floor(read / n);
-  const lineHatched = read >= 0 && (hint?.highlights?.hatch?.length ?? 0) > 0;
+  const lineHatched = read >= 0 && marks.of("stripes", CELL).length > 0;
   for (const horizontal of [true, false]) {
     const amx = horizontal ? h : w;
     for (let a = 0; a < amx; a++) {

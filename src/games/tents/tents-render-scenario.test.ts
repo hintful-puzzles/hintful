@@ -7,10 +7,12 @@
  * `-u`).
  */
 import { describe, expect, it } from "vitest";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { type TentsHighlights, tentsPlan } from "./hint.ts";
+import { tentsPlan } from "./hint.ts";
+import { LINK, NUMBER } from "./hint-marks.ts";
 import { tentsGame } from "./index.ts";
 import { COL_ERROR, COL_GRID, COL_HINT, COL_MISTAKE, COL_TREELEAF } from "./render.ts";
 import { type TentsReason, tentsSolve } from "./solver.ts";
@@ -115,8 +117,7 @@ describe("tents render scenarios", () => {
 
   it("line-count frame: the line hatched, its clue in the action color, targets ringed", () => {
     const { recording, hint } = frame("lineCount");
-    const hl = hint?.highlights as TentsHighlights;
-    expect(hl.line).not.toBeNull();
+    expect(stepMarks(hint).of("outline", NUMBER)).toHaveLength(1);
     expect(hint?.explanation).toMatch(/^This (row|column) /);
     expect(recording.ops.some((o) => o.op === "hatch" && o.color === COL_HINT)).toBe(
       true,
@@ -132,17 +133,14 @@ describe("tents render scenarios", () => {
 
   it("line-neighbors frame: the counted line hatched, the squares beside it ringed", () => {
     const { recording, hint } = frame("lineNeighbors");
-    const hl = hint?.highlights as TentsHighlights;
+    const marks = stepMarks(hint);
     expect(hint?.explanation).toMatch(/^Wherever this (row|column)/);
-    expect(hl.line).not.toBeNull();
     // The ringed squares lie off the hatched line.
-    const w = 10;
-    const on = (i: number) =>
-      (hl.line as number) < w
-        ? i % w === hl.line
-        : Math.floor(i / w) === (hl.line as number) - w;
-    expect(hl.targets.length).toBeGreaterThan(0);
-    expect(hl.targets.every((i) => !on(i))).toBe(true);
+    const striped = new Set(marks.of("stripes", CELL).map((p) => `${p.x},${p.y}`));
+    const targets = marks.of("ring", CELL);
+    expect(striped.size).toBeGreaterThan(0);
+    expect(targets.length).toBeGreaterThan(0);
+    expect(targets.every((p) => !striped.has(`${p.x},${p.y}`))).toBe(true);
     expect(recording.ops.some((o) => o.op === "hatch" && o.color === COL_HINT)).toBe(
       true,
     );
@@ -151,10 +149,10 @@ describe("tents render scenarios", () => {
 
   it("link frame: the link the step asks for drawn in the action color", () => {
     const { recording, hint } = frame("tentLink");
-    const hl = hint?.highlights as TentsHighlights;
+    const marks = stepMarks(hint);
     expect(hint?.move).toMatchObject({ type: "link", on: true });
-    expect(hl.link).not.toBeNull();
-    expect(hl.targets).toHaveLength(2);
+    expect(marks.of("ring", LINK)).toHaveLength(1);
+    expect(marks.of("ring", CELL)).toHaveLength(2);
     // The link's two halves: thin, and in the hint's color.
     const bars = recording.ops.filter(
       (o) => o.op === "rect" && o.color === COL_HINT && Math.min(o.w, o.h) <= 3,

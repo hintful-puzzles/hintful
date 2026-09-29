@@ -40,6 +40,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
+import { type RectHint, rectHint, rectKeepTrack, rectRefreshStep } from "./hint.ts";
 import {
   executeMove,
   gridDrawRect,
@@ -354,7 +355,8 @@ export const rectGame: Game<
   RectMove,
   RectUi,
   RectDrawState,
-  RectMistake
+  RectMistake,
+  RectHint
 > = {
   id: "rect",
 
@@ -409,6 +411,19 @@ export const rectGame: Game<
 
   solve,
   findMistakes,
+
+  hint: (state) => rectHint(state, findMistakes(state).length),
+  hintMarks: {
+    roles: {
+      ring: "what the step draws: the rectangle it decides, or the one edge it makes a line.",
+      outline:
+        "what the step reasons from: a clue that blocks another rectangle, or a square only one clue can reach.",
+      stripes:
+        "the squares another clue covers wherever its rectangle goes, which no other rectangle can use.",
+    },
+  },
+  hintKeepTrack: rectKeepTrack,
+  refreshHintStep: rectRefreshStep,
 
   textFormat,
   statusbarText,

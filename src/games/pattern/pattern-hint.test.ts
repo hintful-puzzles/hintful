@@ -171,11 +171,8 @@ describe("pattern hint — color legend", () => {
   it("target / black-ref / white-ref roles are disjoint", () => {
     let read = 0;
     for (const seed of SEEDS) {
-      const res = doHint(freshBoard(seed));
-      if (!res.ok) continue;
-      for (const step of res.steps) {
+      for (const h of deduceHintPlan(freshBoard(seed))) {
         read++;
-        const h = step.highlights as PatternHint;
         const targets = new Set(h.cells);
         for (const b of h.blackRefs) expect(targets.has(b)).toBe(false);
         for (const w of h.whiteRefs) expect(targets.has(w)).toBe(false);
@@ -253,9 +250,10 @@ describe("pattern hint — keep track", () => {
     expect(patternGame.hintKeepTrack?.(partial, clone, state)).toBe("onTrack");
     expect((clone.highlights as PatternHint).cells).toEqual(h.cells.slice(1));
     // The shrunk step's words name only the cells left, and say so in its text.
-    const legend = patternGame.hintMarks;
-    if (!legend) throw new Error("pattern declares no hintMarks");
-    expect(bindingDefects(clone, legend)).toEqual([]);
+    const filled = patternGame.executeMove(state, partial);
+    expect(
+      bindingDefects(patternGame, filled, patternGame.newUi(filled), clone),
+    ).toEqual([]);
     if (h.cells.length === 2) expect(clone.explanation).toMatch(/\bthis cell\b/);
 
     // Filling all cells at once → completed.

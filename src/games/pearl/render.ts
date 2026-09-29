@@ -27,8 +27,10 @@ import {
 } from "../../engine/color/palette.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import type { PearlHint } from "./hint.ts";
+import { EDGE, SQUARE } from "./hint-text.ts";
 import { interpretUiDrag } from "./moves.ts";
 import {
   CW,
@@ -421,9 +423,12 @@ function hintFlags(
 ): Int32Array {
   const { w, h } = state;
   const out = new Int32Array(w * h);
-  const hl = step?.highlights;
-  if (!hl) return out;
-  for (const t of hl.targets) {
+  const marks = stepMarks(step);
+  // The words ring an edge; whether it asks for a line or a cross is the
+  // step's plan, read here only for the edges the words ring.
+  const ringed = new Set(marks.of("ring", EDGE).map(EDGE.key));
+  for (const t of step?.highlights?.targets ?? []) {
+    if (!ringed.has(EDGE.key(t))) continue;
     const shift = t.line ? H_LINE_SHIFT : H_CROSS_SHIFT;
     const far = t.sq + DY(t.dir) * w + DX(t.dir);
     out[t.sq] |= t.dir << shift;
@@ -431,8 +436,9 @@ function hintFlags(
   }
   // One contour round a contiguous region, one ring per scattered square
   // (`engine/hint-mark.ts`).
-  const inArea = new Set(hl.area);
-  for (const c of hl.area) {
+  const area = marks.of("outline", SQUARE);
+  const inArea = new Set(area);
+  for (const c of area) {
     const sides = outlineSides(
       c % w,
       Math.floor(c / w),

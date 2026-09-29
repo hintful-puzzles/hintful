@@ -2,6 +2,7 @@ import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { BLACK, TEN, TEN_NAMES } from "../../engine/color/colors.ts";
 import { drawRecessedBorder as drawBevel, drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { fill } from "./solver.ts";
 import {
@@ -238,7 +239,8 @@ export function redraw(
   const next = activeHint?.move;
   if (next?.type === "fill" && !state.completed) {
     hintColor = next.color;
-    for (const i of joinedBy(state, hintColor)) grid[i] = ncolors;
+    for (const p of stepMarks(activeHint).of("ring", CELL))
+      grid[p.y * w + p.x] = ncolors;
   }
 
   // Victory rainbow: superimpose the radiating color wave.

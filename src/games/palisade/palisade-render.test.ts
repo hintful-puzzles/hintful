@@ -4,7 +4,9 @@
 // overlay edge, the clue text, and the cursor outline.
 import { describe, expect, it } from "vitest";
 import { BORDER } from "../../engine/border-grid.ts";
+import { EDGE } from "../../engine/border-grid-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
+import { CELL, mark, phrase } from "../../engine/hint-words.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -115,23 +117,34 @@ describe("Palisade redraw", () => {
 
   it("paints every forced edge of the firing in COL_HINT, plus the shaded cells", () => {
     const state = makeState();
-    const hint: HintStep<PalisadeMove, PalisadeHint> = {
-      move: { type: "edges", edits: [] },
-      explanation: "test",
-      highlights: {
-        x: 1,
-        y: 1,
-        dir: 1,
-        kind: "nowall",
-        cells: [
-          { x: 1, y: 1 },
-          { x: 2, y: 1 },
-        ],
-        edges: [{ x: 1, y: 1, dir: 2 }],
-      },
+    const own = { x: 1, y: 1, dir: 1 };
+    const cells = [
+      { x: 1, y: 1 },
+      { x: 2, y: 1 },
+    ];
+    const stepRinging = (
+      edges: { x: number; y: number; dir: number }[],
+    ): HintStep<PalisadeMove, PalisadeHint> => {
+      const words = phrase`${mark.as("outline", CELL, cells, "cells")} ${mark.as("ring", EDGE, edges, "edges")}`;
+      return {
+        move: { type: "edges", edits: [] },
+        explanation: words.text,
+        words,
+        highlights: { ...own, kind: "nowall" },
+      };
     };
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(state), null, state, 0, freshUi(), 0, 0, hint);
+    redraw(
+      dr,
+      freshDs(state),
+      null,
+      state,
+      0,
+      freshUi(),
+      0,
+      0,
+      stepRinging([own, { x: 1, y: 1, dir: 2 }]),
+    );
     // The action edge AND its sibling both paint COL_HINT (they share a
     // fate, so they share a color); referenced cells get a COL_HINT_CELL
     // outline. Each edge paints on both of its cells, so a bare count cannot
@@ -139,10 +152,17 @@ describe("Palisade redraw", () => {
     const hintRects = (o: RecordingDrawing["ops"]) =>
       opsOfKind(o, "rect").filter((op) => op.color === COL_HINT).length;
     const alone = recordingDrawing();
-    redraw(alone.dr, freshDs(state), null, state, 0, freshUi(), 0, 0, {
-      ...hint,
-      highlights: { x: 1, y: 1, dir: 1, kind: "nowall" },
-    });
+    redraw(
+      alone.dr,
+      freshDs(state),
+      null,
+      state,
+      0,
+      freshUi(),
+      0,
+      0,
+      stepRinging([own]),
+    );
     expect(hintRects(alone.ops)).toBeGreaterThan(0);
     expect(hintRects(ops)).toBeGreaterThan(hintRects(alone.ops));
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(true);

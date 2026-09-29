@@ -21,9 +21,9 @@ import {
   CONTRADICTION_UNLOCALIZED,
   DEDUCTION_EXHAUSTED,
 } from "../../engine/hint-refusal.ts";
-import type { MarkRef, Narration } from "../../engine/hint-words.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import { PIECE, SPAN, say } from "./hint-text.ts";
+import { SPAN, say } from "./hint-text.ts";
 import {
   type BridgesFiring,
   type BridgesReason,
@@ -64,7 +64,7 @@ export interface BridgesTarget extends BridgesSpan {
 }
 
 /**
- * What one step marks, in four roles.
+ * What one step is about, in four roles; its words name the ones it marks.
  *
  * The split follows docs/games/hints.md § "The element-type color legend". The
  * two `COL_HINT` roles are `focus` and `targets`, and they are safe to share a
@@ -116,18 +116,6 @@ export function narrate(
     case "mustReachOut":
       return say.mustReachOut(clue, hl);
   }
-}
-
-/** What a step's highlights draw: the `drawn` half of Bridges' legend. The
- * recolored island and the cited islands and bridges are all evidence. */
-export function bridgesHintMarks(hl: BridgesHighlights): MarkRef[] {
-  const span = ({ x1, y1, x2, y2 }: BridgesSpan): BridgesSpan => ({ x1, y1, x2, y2 });
-  return [
-    { role: "ring", kind: SPAN, elements: hl.targets.map(span) },
-    { role: "outline", kind: PIECE, elements: hl.focus ? [hl.focus] : [] },
-    { role: "outline", kind: PIECE, elements: hl.islands },
-    { role: "outline", kind: PIECE, elements: hl.spans.map(span) },
-  ] as MarkRef[];
 }
 
 // --- highlights from a firing ---------------------------------------------

@@ -23,8 +23,10 @@ import {
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color } from "../../engine/types.ts";
 import type { BridgesHighlights } from "./hint.ts";
+import { PIECE, SPAN } from "./hint-text.ts";
 import type { BridgesSpan } from "./solver.ts";
 import {
   type BridgesMistake,
@@ -781,18 +783,23 @@ function buildMistakeMask(
  * border. Both marks are therefore the game's own shapes recolored
  * (docs/games/hints.md § "Echo the move's shape in the hint color").
  */
-function hintWords(s: BridgesState, hl?: BridgesHighlights): Int32Array {
+function hintWords(
+  s: BridgesState,
+  hint?: HintStep<BridgesMove, BridgesHighlights>,
+): Int32Array {
   const { w, h } = s;
   const out = new Int32Array(w * h);
-  if (!hl) return out;
+  const marks = stepMarks(hint);
+  const hl = hint?.highlights;
 
   // Islands: the focus wins over a citation, so "this 5" is never ambiguous
   // with "the outlined islands" (docs/games/hints.md § "Two marks on the
   // board, one 'this cell'").
-  for (const i of hl.islands) out[s.idx(i.x, i.y)] |= HI_CITED << H_I_ISLAND_SHIFT;
-  if (hl.focus) {
-    const c = s.idx(hl.focus.x, hl.focus.y);
-    out[c] = (out[c] & ~(HI_MASK << H_I_ISLAND_SHIFT)) | (HI_FOCUS << H_I_ISLAND_SHIFT);
+  const pieces = marks.of("outline", PIECE);
+  for (const i of pieces) {
+    if ("x1" in i) continue;
+    const focus = hl?.focus?.x === i.x && hl.focus.y === i.y;
+    out[s.idx(i.x, i.y)] |= (focus ? HI_FOCUS : HI_CITED) << H_I_ISLAND_SHIFT;
   }
 
   /** Set `bits` on every cell strictly between the span's two islands. */
@@ -806,9 +813,13 @@ function hintWords(s: BridgesState, hl?: BridgesHighlights): Int32Array {
       y += dy;
     }
   };
-  for (const sp of hl.spans) span(sp, HL_CITED);
+  for (const sp of pieces) if ("x1" in sp) span(sp, HL_CITED);
   // Targets after citations: a span the step decides is never merely cited.
-  for (const t of hl.targets) {
+  // What the step decides on a ringed span is the plan's.
+  const decides = new Map((hl?.targets ?? []).map((t) => [SPAN.key(t), t]));
+  for (const ringed of marks.of("ring", SPAN)) {
+    const t = decides.get(SPAN.key(ringed));
+    if (!t) continue;
     span(t, t.blocked ? HL_CROSS : t.bridges & HL_COUNTMASK);
     if (t.limit !== null) {
       const m = middleOf(t);
@@ -895,7 +906,7 @@ export function redrawBridges(
   const mistakeMask = buildMistakeMask(s, mistakes);
   const newgrid = ds.newgrid;
   newgrid.fill(0);
-  const newhint = hintWords(s, hint?.highlights);
+  const newhint = hintWords(s, hint);
 
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {

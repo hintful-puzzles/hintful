@@ -15,7 +15,6 @@ import {
   applyNoteMove,
   type CandidatePlanPrefs,
   candidateHint,
-  candidateHintMarks,
   keepCandidateHintTrack,
   type Mark,
   refreshCandidateHintStep,
@@ -600,7 +599,6 @@ export const towersGame: Game<
       stripes:
         "the line the sentence names: the row or column a clue sees along, through the clue slots at both its ends.",
     },
-    drawn: candidateHintMarks,
   },
   hintKeepTrack: (m, step, state) =>
     keepCandidateHintTrack(m, step, state.pencil, state.w),

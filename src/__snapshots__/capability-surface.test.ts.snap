@@ -1180,8 +1180,12 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "findMistakes",
       "flashLength",
+      "hint",
+      "hintKeepTrack",
+      "hintMarks",
       "paramConfig",
       "preferredTileSize",
+      "refreshHintStep",
       "solve",
       "statusbarText",
       "textFormat",

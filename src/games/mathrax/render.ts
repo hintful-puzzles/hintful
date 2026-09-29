@@ -38,6 +38,7 @@ import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import {
   type CellHighlight,
   cellHighlight,
@@ -441,7 +442,7 @@ export function redraw(
   const flash = flashTime > 0 ? Math.floor(flashTime / FLASH_FRAME) % 3 : -1;
   const index = (x: number, y: number): number => y * o + x;
   ds.wrong.packCells(mistakes ?? null, index);
-  ds.hint.pack(hint?.highlights ?? null, index, (m) => valueBit(m.n));
+  ds.hint.pack(stepMarks(hint), index, (m) => valueBit(m.n));
 
   for (let y = 0; y < o; y++) {
     for (let x = 0; x < o; x++) {

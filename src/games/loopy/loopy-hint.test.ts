@@ -13,6 +13,7 @@ import { describe, expect, it } from "vitest";
 import { Dsf } from "../../engine/dsf.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { FIX_MISTAKES_FIRST } from "../../engine/hint-refusal.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -23,11 +24,10 @@ import { dlineEnds } from "./dlines.ts";
 import {
   deduceLoopyPlan,
   hintKeepTrack,
-  type LoopyHint,
   refreshHintStep,
   sentenceExpires,
 } from "./hint.ts";
-import { type Marked, say } from "./hint-text.ts";
+import { CORNER, DOT, EDGE, FACE, type Marked, PAIR, say } from "./hint-text.ts";
 import { type LoopyMove, loopyGame } from "./index.ts";
 import {
   DIFF_EASY,
@@ -111,7 +111,20 @@ const stepsOf = (state: LoopyState): Step[] => {
   return res.steps;
 };
 
-const marksOf = (step: Step): LoopyHint => step.highlights as LoopyHint;
+/** The marks a step's words name, which are the marks it draws. */
+const marksOf = (step: Step): Marked => {
+  const m = stepMarks(step);
+  return {
+    targets: m.of("ring", EDGE),
+    placedCorner: m.of("ring", CORNER)[0] ?? null,
+    placedPair: m.of("ring", PAIR)[0] ?? null,
+    faces: m.of("outline", FACE),
+    dots: m.of("outline", DOT),
+    edges: m.of("outline", EDGE),
+    corners: m.of("outline", CORNER),
+    pairs: m.of("outline", PAIR),
+  };
+};
 
 /** The lines a move sets; a note move sets none. */
 const opsOf = (move: LoopyMove): readonly { edge: number; state: LineState }[] =>

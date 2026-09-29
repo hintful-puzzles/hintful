@@ -21,6 +21,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { leafPresets } from "../../engine/testing/hint-games.ts";
 import {
@@ -36,6 +37,7 @@ import {
   stepOf,
   whyNotEnd,
 } from "./hint.ts";
+import { PATH, SQUARE } from "./hint-text.ts";
 import { ascentGame } from "./index.ts";
 import { executeAscentMove } from "./moves.ts";
 import { type Placed, readBoard, squaresMeeting } from "./premises.ts";
@@ -56,6 +58,11 @@ import {
   newAscentState,
   stepDistance,
 } from "./state.ts";
+
+/** The squares a step's words outline. */
+const outlines = (step: { words?: Narration }): number[] => [
+  ...stepMarks(step).of("outline", SQUARE),
+];
 
 const custom = (
   w: number,
@@ -238,11 +245,12 @@ describe("every premise, restated from the board, singles out its square", () =>
       if (firing.reason.kind === "touch")
         for (const b of bounds) expect(b.d, board.label).toBe(1);
       // The step says what the premise rests on, and marks it.
-      const { explanation, highlights } = stepOf(firing);
+      const shown = stepOf(firing);
+      const { explanation, highlights } = shown;
       const at = `${board.label}: "${explanation}"`;
       for (const b of bounds) {
         expect(explanation, at).toContain(String(b.m + 1));
-        expect(highlights?.area, at).toContain(b.cell);
+        expect(outlines(shown), at).toContain(b.cell);
       }
       expect(
         explanation.match(/ on its (row|column|diagonal)\b/)?.[1] ?? null,
@@ -296,8 +304,9 @@ describe("every premise, restated from the board, singles out its square", () =>
       }
       if (why !== "placed")
         expect(reaches(before, other, cell), board.label).toBe(false);
-      const { explanation, highlights } = stepOf(firing);
-      expect(highlights?.area, explanation).toEqual(open);
+      const shown = stepOf(firing);
+      const { explanation } = shown;
+      expect(outlines(shown), explanation).toEqual(open);
       expect(explanation).toMatch(
         why === "placed" ? /placed/ : why === "reach" ? /can't reach/ : /arrow points/,
       );
@@ -319,7 +328,8 @@ describe("every premise, restated from the board, singles out its square", () =>
       const others = missing(before).filter((m) => m !== n && reaches(before, m, cell));
       if (!byRoute) expect(others, board.label).toEqual([]);
 
-      const { explanation, highlights } = stepOf(firing);
+      const shown = stepOf(firing);
+      const { explanation, highlights } = shown;
       const at = `${board.label}: "${explanation}"`;
       // "Only n can fill this square: <why no other run can>, and <counts>."
       if (explanation.startsWith(`Only ${n + 1} can fill`)) {
@@ -329,7 +339,7 @@ describe("every premise, restated from the board, singles out its square", () =>
         expect(highlights?.hatch, at).toEqual([]);
         const { w, mode } = before;
         const dist = (c: number) => stepDistance(cell, c, w, mode);
-        const outlined = new Set(highlights?.area);
+        const outlined = new Set(outlines(shown));
         // Each count, "d steps from m", is the square's distance from the
         // placed m and the gap from m to n, and m is outlined.
         const counts = [...explanation.matchAll(/(\d+) (?:steps )?from (\d+)/g)];
@@ -374,7 +384,7 @@ describe("every premise, restated from the board, singles out its square", () =>
           // A run of one number fails for a square it cannot touch both ends of.
           if (r.lo === r.hi) expect(explanation, at).toContain("doesn't touch");
           for (const e of [r.a, r.b])
-            if (e) expect(highlights?.area, at).toContain(e.cell);
+            if (e) expect(outlines(shown), at).toContain(e.cell);
         }
         continue;
       }
@@ -390,7 +400,7 @@ describe("every premise, restated from the board, singles out its square", () =>
       expect(highlights?.hatch, at).toEqual([...reach].sort((a, b) => a - b));
       expect(highlights?.hatch, at).toContain(cell);
       const ends = [lo - 1, hi + 1].filter((m) => m >= 0 && m <= before.last);
-      expect(highlights?.area, at).toEqual(ends.map((m) => before.grid.indexOf(m)));
+      expect(outlines(shown), at).toEqual(ends.map((m) => before.grid.indexOf(m)));
       for (const m of ends) expect(explanation, at).toContain(String(m + 1));
     }
     // Vacuity: every form was checked.
@@ -485,11 +495,14 @@ describe("every premise, restated from the board, singles out its square", () =>
           expect(fits, `${at} via ${r.join()}`).toBe(r.join() === chosen.join());
         }
       }
-      expect(stepOf(firing).highlights?.route.length, at).toBeGreaterThan(cells.length);
+      expect(stepMarks(stepOf(firing)).of("ring", PATH).length, at).toBeGreaterThan(
+        cells.length,
+      );
       // "With each number on its arrow's line": only when, counted here with
       // the arrows ignored, the run has another route; then the run's arrows
       // are outlined.
-      const { explanation, highlights } = stepOf(firing);
+      const shown = stepOf(firing);
+      const { explanation } = shown;
       const said = /arrow/.test(explanation);
       if (firing.reason.arrows || said) {
         withArrows++;
@@ -499,7 +512,7 @@ describe("every premise, restated from the board, singles out its square", () =>
         expect(listRoutes(before, run, must, 2, false).length, at).toBe(2);
         for (const m of run) {
           const a = arrowOf(before, m);
-          if (a >= 0) expect(highlights?.area, at).toContain(a);
+          if (a >= 0) expect(outlines(shown), at).toContain(a);
         }
       } else if (board.params.mode === MODE_EDGES && room === null)
         expect(listRoutes(before, run, must, 2, false).length, at).toBe(1);
@@ -518,7 +531,8 @@ describe("every premise, restated from the board, singles out its square", () =>
       expect(board.params.mode, board.label).toBe(MODE_EDGES);
       const { before, cell, n } = firing;
       const { premises } = firing.reason;
-      const { explanation, highlights } = stepOf(firing);
+      const shown = stepOf(firing);
+      const { explanation, highlights } = shown;
       const at = `${board.label}: "${explanation}"`;
       // Restated from the board: each premise's number is as far from `n` in
       // the sequence as it says, placed where it says, or missing with an arrow.
@@ -535,7 +549,7 @@ describe("every premise, restated from the board, singles out its square", () =>
             ? String(p.m + 1)
             : `${p.m + 1}'s ${shapeOf(before, p.arrow)}`,
         );
-        expect(highlights?.area, at).toContain(p.arrow ?? p.cell);
+        expect(outlines(shown), at).toContain(p.arrow ?? p.cell);
       }
       expect(
         premises.some((p) => p.arrow !== null),
@@ -569,7 +583,8 @@ describe("every premise, restated from the board, singles out its square", () =>
       if (firing.reason.kind !== "pointers") continue;
       const { before, cell, n } = firing;
       const { ruledOut, tier } = firing.reason;
-      const { explanation, highlights } = stepOf(firing);
+      const shown = stepOf(firing);
+      const { explanation } = shown;
       const at = `${board.label}: "${explanation}"`;
       // The rivals, found from the board: every missing number whose arrow
       // points at the square, or that has none.
@@ -593,7 +608,7 @@ describe("every premise, restated from the board, singles out its square", () =>
       const beside = [n - 1, n + 1].some((m) => before.grid.includes(m));
       expect(tier, at).toBe(beside ? 2 : 3);
       for (const a of ruledOut.map((o) => arrowOf(before, o.m)).filter((a) => a >= 0))
-        expect(highlights?.area, at).toContain(a);
+        expect(outlines(shown), at).toContain(a);
     }
     expect(ruled).toBeGreaterThan(20);
   });
@@ -602,7 +617,8 @@ describe("every premise, restated from the board, singles out its square", () =>
     const firings = byKind("routeBeside", "routeOnly");
     expect(firings.length).toBeGreaterThan(3);
     for (const { board, firing } of firings) {
-      const { explanation, highlights } = stepOf(firing);
+      const shown = stepOf(firing);
+      const { explanation, highlights } = shown;
       // A route reaches no square straight reach does not.
       for (const i of highlights?.hatch ?? [])
         expect(
@@ -771,7 +787,7 @@ describe("positions from the owner's playtest", () => {
     expect(step.explanation).toBe(
       "Only 70 can fill this square: no other run can reach it, and 3 steps from 67 and 2 from 72 rule out the rest.",
     );
-    expect(step.highlights?.area).toEqual([at(67), at(72)]);
+    expect(outlines(step)).toEqual([at(67), at(72)]);
     expect(step.highlights?.hatch).toEqual([]);
   });
 });

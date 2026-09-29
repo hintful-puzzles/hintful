@@ -54,23 +54,7 @@ import {
  */
 const PLAN_CAP = 24;
 
-/** What one step marks. */
-export interface TentsHighlights {
-  /** Squares the step decides, ringed: a link's tent and tree as one shape. */
-  targets: number[];
-  /** The link the step asks for, from square `sq` toward `d`. */
-  link: { sq: number; d: number } | null;
-  /** Squares the deduction reasons from, outlined. */
-  area: number[];
-  /** The row or column the sentence names, by clue index (columns first),
-   * hatched, its clue in the action color. */
-  line: number | null;
-  /** The grid's size, which the squares above index. */
-  w: number;
-  h: number;
-}
-
-type TentsStep = HintStep<TentsMove, TentsHighlights>;
+type TentsStep = HintStep<TentsMove>;
 
 /** The player's board as the solver's: their squares, and their links as the
  * links drawn. */
@@ -198,16 +182,14 @@ function room(squares: number[], open: number[]): number {
 
 // --- the steps ---------------------------------------------------------------
 
-/** One leg: set `cells` to `v`, saying `words`, marking `area`. */
+/** One leg: set `cells` to `v`, saying `words`. */
 function cellsLeg(
   state: TentsState,
   cells: number[],
   v: number,
   words: Narration,
-  area: number[],
-  line: number | null,
 ): TentsStep {
-  const { w, h } = state;
+  const { w } = state;
   return {
     move: {
       type: "cells",
@@ -215,7 +197,6 @@ function cellsLeg(
     },
     explanation: words.text,
     words,
-    highlights: { targets: cells, link: null, area, line, w, h },
   };
 }
 
@@ -225,15 +206,12 @@ function linkStep(
   sq: number,
   d: number,
   words: Narration,
-  targets: number[],
-  area: number[],
 ): TentsStep {
-  const { w, h } = state;
+  const { w } = state;
   return {
     move: { type: "link", x: sq % w, y: Math.floor(sq / w), d, on: true },
     explanation: words.text,
     words,
-    highlights: { targets, link: { sq, d }, area, line: null, w, h },
   };
 }
 
@@ -246,13 +224,8 @@ function stepsOf(state: TentsState, f: TentsFiring): TentsStep[] {
   const grass = f.cells.filter((c) => c.v === NONTENT).map((c) => c.i);
   const at = (i: number) => pointOf(i, w);
   const pts = (is: readonly number[]) => is.map(at);
-  const leg = (
-    cells: number[],
-    v: number,
-    words: Narration,
-    area: number[] = [],
-    line: number | null = null,
-  ) => cellsLeg(state, cells, v, words, area, line);
+  const leg = (cells: number[], v: number, words: Narration) =>
+    cellsLeg(state, cells, v, words);
 
   switch (reason.kind) {
     case "tentLink": {
@@ -266,7 +239,7 @@ function stepsOf(state: TentsState, f: TentsFiring): TentsStep[] {
         sq: tent,
         d,
       });
-      return [linkStep(state, tent, d, words, [tent, tree], area)];
+      return [linkStep(state, tent, d, words)];
     }
     case "treeLink": {
       const { tent, tree } = reason;
@@ -281,7 +254,7 @@ function stepsOf(state: TentsState, f: TentsFiring): TentsStep[] {
         taken.length,
         { sq: tent, d },
       );
-      return [linkStep(state, tent, d, words, [tent, tree], area)];
+      return [linkStep(state, tent, d, words)];
     }
     case "noTree":
       return [leg(grass, NONTENT, say.noTree(pts(grass)))];
@@ -291,39 +264,29 @@ function stepsOf(state: TentsState, f: TentsFiring): TentsStep[] {
         for (const j of neighbors(w, state.h, i))
           if (f.before.soln[j] === TREE) trees.add(j);
       const area = withPartners(state, f, [...trees]);
-      return [leg(grass, NONTENT, say.treesDone(pts(grass), pts(area)), area)];
+      return [leg(grass, NONTENT, say.treesDone(pts(grass), pts(area)))];
     }
     case "nextToTent":
-      return [
-        leg(grass, NONTENT, say.nextToTent(pts(grass), at(reason.tent)), [reason.tent]),
-      ];
+      return [leg(grass, NONTENT, say.nextToTent(pts(grass), at(reason.tent)))];
     case "treeSingle": {
       // One move places the tent and joins it: the link gesture's.
       const { tree, square } = reason;
       const taken = takenTents(state, f, tree);
       const d = dirBetween(w, square, tree);
       const words = say.treeSingle(at(square), at(tree), pts(taken), { sq: square, d });
-      return [linkStep(state, square, d, words, [square], [tree, ...taken])];
+      return [linkStep(state, square, d, words)];
     }
     case "treeDiagonal": {
       if (grass.length !== 1)
         throw new Error("tents hint: a corner rules out one square");
       const words = say.treeDiagonal(at(grass[0]), at(reason.tree), pts(reason.pair));
-      return [leg(grass, NONTENT, words, [reason.tree, ...reason.pair])];
+      return [leg(grass, NONTENT, words)];
     }
     case "lineCount":
       return lineSteps(state, f, reason.line, tents, grass);
     case "lineNeighbors": {
       const { counted, need } = lineOf(state, f, reason.line);
-      return [
-        leg(
-          grass,
-          NONTENT,
-          say.touchesBeside(counted, need, pts(grass)),
-          [],
-          reason.line,
-        ),
-      ];
+      return [leg(grass, NONTENT, say.touchesBeside(counted, need, pts(grass)))];
     }
   }
 }
@@ -348,7 +311,7 @@ function lineSteps(
   const { squares, open, need, counted } = lineOf(state, f, line);
   const pts = (is: readonly number[]) => is.map((i) => pointOf(i, state.w));
   const leg = (cells: number[], v: number, words: Narration) =>
-    cellsLeg(state, cells, v, words, [], line);
+    cellsLeg(state, cells, v, words);
 
   if (need === 0)
     return [
@@ -443,10 +406,8 @@ export function tentsKeepTrack(
       type: "cells",
       cells: left.map((t) => ({ x: t.key % w, y: Math.floor(t.key / w), v: t.want })),
     };
-    if (hintStep.highlights)
-      hintStep.highlights = { ...hintStep.highlights, targets: left.map((t) => t.key) };
-    // The words shrink with the rings: a sentence that counted the squares
-    // left counts the ones left now.
+    // The words shrink with the rings, which are read from them: a sentence
+    // that counted the squares left counts the ones left now.
     const kept = new Set(left.map((t) => `${t.key % w},${Math.floor(t.key / w)}`));
     if (hintStep.words) {
       hintStep.words = hintStep.words.narrow(

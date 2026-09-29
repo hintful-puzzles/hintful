@@ -48,8 +48,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newTentsDesc } from "./generator.ts";
-import { type TentsHighlights, tentsHint, tentsKeepTrack } from "./hint.ts";
-import { tentsHintMarks } from "./hint-marks.ts";
+import { tentsHint, tentsKeepTrack } from "./hint.ts";
 import {
   colors,
   computeSize,
@@ -393,8 +392,7 @@ export const tentsGame: Game<
   TentsMove,
   TentsUi,
   TentsDrawState,
-  TentsMistake,
-  TentsHighlights
+  TentsMistake
 > = {
   id: "tents",
 
@@ -427,7 +425,6 @@ export const tentsGame: Game<
         "what it reasons from: a tree, or a tent that already belongs to another tree, and the number of the row or column it counts with, which is shown in the hint's color.",
       stripes: 'the row or column the sentence calls "this row" or "this column".',
     },
-    drawn: tentsHintMarks,
   },
   hintKeepTrack: tentsKeepTrack,
 

@@ -2,10 +2,12 @@
  * Tier-1 + tier-2.5 tests for the dominosa explained hint.
  */
 import { describe, expect, it } from "vitest";
+import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { expectPieceRing } from "../../engine/testing/mark-shape.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newDominosaDesc } from "./generator.ts";
+import { SPOT } from "./hint-text.ts";
 import { type DominosaHint, dominosaGame } from "./index.ts";
 import { border, COL_HINT, PREFERRED_TILE_SIZE } from "./render.ts";
 import { solveNumbers } from "./solver.ts";
@@ -120,7 +122,7 @@ describe("dominosa hint — render", () => {
     // Every mark lies inside one of the step's two target squares.
     const ts = PREFERRED_TILE_SIZE;
     const w = p.n + 2;
-    const targets = (hint?.highlights as DominosaHint | undefined)?.targets ?? [];
+    const targets = stepMarks(hint).of("ring", SPOT).flat();
     expect(targets).toHaveLength(2);
     for (const r of hintRects) {
       const inside = targets.some((i) => {
@@ -148,11 +150,16 @@ describe("dominosa hint — render", () => {
         showHint: true,
         hintUntil: (s) => {
           const hl = s.highlights as DominosaHint | undefined;
-          return hl?.kind === "place" && hl.targets.some(onEdge);
+          return (
+            hl?.kind === "place" && stepMarks(s).of("ring", SPOT).flat().some(onEdge)
+          );
         },
       });
       const hl = hint?.highlights as DominosaHint | undefined;
-      if (!(hl?.kind === "place" && hl.targets.some(onEdge))) continue;
+      if (
+        !(hl?.kind === "place" && stepMarks(hint).of("ring", SPOT).flat().some(onEdge))
+      )
+        continue;
       expectPieceRing(recording.ops, COL_HINT);
       for (const r of recording.ops.flatMap((o) =>
         o.op === "rect" && o.color === COL_HINT ? [o] : [],

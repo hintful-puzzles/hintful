@@ -24,9 +24,11 @@
 
 import { describe, expect, it } from "vitest";
 import { ALREADY_SOLVED, FIX_MISTAKES_FIRST } from "../../engine/hint-refusal.ts";
+import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import { evident, narrate, type TracksHighlights } from "./hint.ts";
+import { evident, narrate, type TracksPicture } from "./hint.ts";
+import { PIECE } from "./hint-text.ts";
 import { tracksGame } from "./index.ts";
 import { uiCanFlipEdge, uiCanFlipSquare } from "./moves.ts";
 import {
@@ -65,6 +67,17 @@ const SHAPES: TracksParams[] = [
 ];
 const SEEDS = ["hint-a", "hint-b", "hint-c"];
 
+/** What a step's words outline: squares, sides and clues. */
+function outlinedBy(step: { words?: Narration }) {
+  const outlined = stepMarks(step).of("outline", PIECE);
+  const board = outlined.flatMap((p) => ("clue" in p ? [] : [p]));
+  return {
+    area: board.flatMap((p) => (p.dir === undefined ? [p] : [])),
+    areaEdges: board.flatMap((p) => (p.dir === undefined ? [] : [p])),
+    clues: outlined.flatMap((p) => ("clue" in p ? [p.clue] : [])),
+  };
+}
+
 /** Walk a board to solved by following the plan's first step, collecting every
  * step it ever showed. One walk covers far more firings than one plan does. */
 function walk(params: TracksParams, seed: string) {
@@ -74,7 +87,7 @@ function walk(params: TracksParams, seed: string) {
   const out: {
     move: TracksMove;
     explanation: string;
-    highlights?: TracksHighlights;
+    words?: Narration;
   }[] = [];
   for (let i = 0; i < 900; i++) {
     if (tracksGame.status(state) === "solved") break;
@@ -277,8 +290,8 @@ describe("the picture holds exactly the number the sentence states", () => {
       for (const seed of SEEDS) {
         const { steps } = walk(params, `count-${params.w}-${params.diff}-${seed}`);
         for (const { step, before } of steps) {
-          const hl = step.highlights;
-          if (!hl || hl.clues.length !== 1) continue;
+          const hl = outlinedBy(step);
+          if (hl.clues.length !== 1) continue;
           // "already has all N of the track squares its clue allows" — so the
           // outline must hold N cells, and each must actually carry track.
           const m = step.explanation.match(/already has all (\d+) of the track/);
@@ -312,10 +325,11 @@ describe("the picture holds exactly the number the sentence states", () => {
         const said = /with none marked yet/.test(step.explanation)
           ? 0
           : Number(step.explanation.match(/with (\d+) crossings? marked/)?.[1]);
-        expect(step.highlights?.areaEdges.length, step.explanation).toBe(said);
+        const hl = outlinedBy(step);
+        expect(hl.areaEdges.length, step.explanation).toBe(said);
         // The block is hatched, not outlined: the sentence is about it.
-        expect(step.highlights?.hatch.length).toBeGreaterThan(0);
-        expect(step.highlights?.area).toEqual([]);
+        expect(stepMarks(step).of("stripes", PIECE).length).toBeGreaterThan(0);
+        expect(hl.area).toEqual([]);
       }
     }
     expect(checked, "no parity step in the corpus").toBeGreaterThan(0);
@@ -450,7 +464,7 @@ describe("narration reads correctly at the degenerate extremes", () => {
   );
   const ev = { cells: [], edges: [], clues: [] };
   // No marks: the words are read apart from any picture.
-  const hl: TracksHighlights = {
+  const hl: TracksPicture = {
     targets: [],
     targetEdges: [],
     area: [],

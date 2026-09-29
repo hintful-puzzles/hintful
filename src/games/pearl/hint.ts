@@ -22,7 +22,7 @@ import {
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
-import { type MarkRef, type Narration, phrase } from "../../engine/hint-words.ts";
+import { type Narration, phrase } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import {
   type Axis,
@@ -31,7 +31,6 @@ import {
   type LeftOut,
   type Marked,
   type NoStraight,
-  SQUARE,
   say,
 } from "./hint-text.ts";
 import { executeMove } from "./moves.ts";
@@ -66,12 +65,10 @@ import {
  */
 const PLAN_CAP = 24;
 
-/** What one step marks. */
+/** What one step plans. */
 export interface PearlHint {
   /** Edges the step decides, and whether each must carry the line. */
   targets: PearlEdgeOp[];
-  /** Squares the deduction reasons from, outlined. */
-  area: number[];
 }
 
 /** A line a pearl's rule carries on from a line the step draws: through the
@@ -291,14 +288,6 @@ function premise(
   }
 }
 
-/** What a step's highlights draw: the `drawn` half of Pearl's legend. */
-export function pearlHintMarks(hl: PearlHint): MarkRef[] {
-  return [
-    { role: "ring", kind: EDGE, elements: hl.targets.map(edgeOf) },
-    { role: "outline", kind: SQUARE, elements: hl.area },
-  ] as MarkRef[];
-}
-
 // --- highlights -----------------------------------------------------------
 
 /** The squares a firing reasons from. */
@@ -400,7 +389,7 @@ export function pearlHint(
         move: moveOf(board, f.shown),
         explanation: words.text,
         words,
-        highlights: { targets: f.shown, area: areaOf(board, reason) },
+        highlights: { targets: f.shown },
       };
     }),
   };

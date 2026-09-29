@@ -17,6 +17,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { CONTRADICTION_UNLOCALIZED } from "../../engine/hint-refusal.ts";
+import { CELL, mark, phrase, stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -199,7 +200,9 @@ describe("hint", () => {
     res.steps.forEach((step, i) => {
       const d = plan.deductions[i];
       const hl = step.highlights as ClustersHintHighlights;
-      expect(hl.target).toEqual({ x: d.index % P.w, y: Math.floor(d.index / P.w) });
+      expect(stepMarks(step).of("ring", CELL)).toEqual([
+        { x: d.index % P.w, y: Math.floor(d.index / P.w) },
+      ]);
       const kind = d.reason.at.kind;
       if (d.reason.kind === "chain") {
         expect(step.explanation).toMatch(/^Suppose this cell were (red|blue):/);
@@ -440,7 +443,8 @@ describe("hint rendering (tier 2.5)", () => {
     const step = (chain: ClustersHintHighlights["chain"]) => ({
       move: { kind: "paint", cells: [] } satisfies ClustersMove,
       explanation: "",
-      highlights: { target: { x: 0, y: 0 }, chain } satisfies ClustersHintHighlights,
+      words: phrase`${mark.this("ring", CELL, [{ x: 0, y: 0 }], "cell")} and ${mark.the("outline", CELL, chain, "cell")}`,
+      highlights: { chain } satisfies ClustersHintHighlights,
     });
     const alone = step([{ x: 3, y: 3, fill: F_COLOR_0, order: 1 }]);
     const joined = step([

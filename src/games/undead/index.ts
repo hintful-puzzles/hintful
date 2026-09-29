@@ -27,7 +27,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { CELL, type MarkRef, Narration, NOTE } from "../../engine/hint-words.ts";
+import { CELL, Narration, NOTE } from "../../engine/hint-words.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import {
   noOpEntryResult,
@@ -444,16 +444,6 @@ function markedOf(hl: UndeadHint): Marked {
   };
 }
 
-/** What a step's highlights draw: the `drawn` half of Undead's legend. */
-function undeadHintMarks(hl: UndeadHint): MarkRef[] {
-  const m = markedOf(hl);
-  return [
-    { role: "ring", kind: CELL, elements: m.targets },
-    { role: "ring", kind: NOTE, elements: m.notes },
-    { role: "outline", kind: CELL, elements: m.area },
-  ] as MarkRef[];
-}
-
 /** A step, its words narrowed to the highlights a shrunk strike keeps. */
 function narrowedTo(
   step: HintStep<UndeadMove, UndeadHint>,
@@ -856,7 +846,6 @@ export const undeadGame: Game<
       outline:
         "the *sightline* the step reasons from, in a second color: the squares, mirrors included, that a line of sight passes through between the two numbers at its ends.",
     },
-    drawn: undeadHintMarks,
   },
   hintKeepTrack,
   refreshHintStep,

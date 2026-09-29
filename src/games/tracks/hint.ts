@@ -23,9 +23,9 @@ import {
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
-import type { MarkRef, Narration } from "../../engine/hint-words.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import { type Axis, LINE, type Marked, PIECE, type Piece, say } from "./hint-text.ts";
+import { type Axis, type Marked, PIECE, type Piece, say } from "./hint-text.ts";
 import { executeMove } from "./moves.ts";
 import { type TracksFiring, type TracksReason, tracksRecordingPass } from "./solver.ts";
 import {
@@ -62,7 +62,7 @@ import {
  */
 const PLAN_CAP = 24;
 
-// --- highlights -----------------------------------------------------------
+// --- the picture ----------------------------------------------------------
 
 /** One side of one square. */
 export interface TracksHintEdge {
@@ -72,7 +72,7 @@ export interface TracksHintEdge {
 }
 
 /**
- * What one step marks, in five roles.
+ * What one step's sentence names, in five roles.
  *
  * The split follows docs/games/hints.md § "The element-type color legend": the
  * squares and edges a step *decides* take the action color, the squares and
@@ -82,7 +82,7 @@ export interface TracksHintEdge {
  * fates differ: a firing that forces four edges forces all four the same way,
  * and they are all drawn identically (equivalent moves share a color).
  */
-export interface TracksHighlights {
+export interface TracksPicture {
   /** Squares this step decides. `track` is what it decides them to be. */
   targets: { x: number; y: number; track: boolean }[];
   /** Sides this step decides. */
@@ -144,9 +144,9 @@ function lineOf(b: Board, line: number) {
 export function narrate(
   b: Board,
   reason: TracksReason,
-  hl: TracksHighlights,
+  picture: TracksPicture,
 ): Narration {
-  const m = markedOf(hl);
+  const m = markedOf(picture);
   switch (reason.kind) {
     case "onlyOneSideLeft":
       return say.onlyOneSideLeft(reason.open, m);
@@ -189,8 +189,8 @@ export function narrate(
 const cellOf = ({ x, y }: { x: number; y: number }): Piece => ({ x, y });
 const sideOf = ({ x, y, dir }: TracksHintEdge): Piece => ({ x, y, dir });
 
-/** A step's highlights as the marks its words name. */
-function markedOf(hl: TracksHighlights): Marked {
+/** A step's picture as the marks its words name. */
+function markedOf(hl: TracksPicture): Marked {
   return {
     decided: [...hl.targets.map(cellOf), ...hl.targetEdges.map(sideOf)],
     emptied: hl.targets.filter((t) => !t.track).map(cellOf),
@@ -203,25 +203,17 @@ function markedOf(hl: TracksHighlights): Marked {
   };
 }
 
-/** What a step's highlights draw: the `drawn` half of Tracks' legend. The
- * named line is striped through its clue, which is one mark. */
-export function tracksHintMarks(hl: TracksHighlights): MarkRef[] {
-  const m = markedOf(hl);
-  return [
-    { role: "ring", kind: PIECE, elements: m.decided },
-    { role: "outline", kind: PIECE, elements: [...m.cells, ...m.sides, ...m.clues] },
-    { role: "stripes", kind: LINE, elements: m.line },
-    { role: "stripes", kind: PIECE, elements: m.block },
-  ] as MarkRef[];
-}
+/** A decided square or side as its words name it. */
+export const pieceOfOp = (o: TracksOp): Piece =>
+  o.kind === "square" ? { x: o.x, y: o.y } : { x: o.x, y: o.y, dir: o.dir ?? 0 };
 
-// --- highlights from a firing ---------------------------------------------
+// --- the picture from a firing --------------------------------------------
 
-function highlightsOf(
+function pictureOf(
   b: Board,
   reason: TracksReason,
   firing: TracksFiring,
-): TracksHighlights {
+): TracksPicture {
   const { w } = b;
   const { ev } = reason;
   const cells = ev.cells.map((i) => ({ x: i % w, y: Math.floor(i / w) }));
@@ -300,9 +292,7 @@ function showable(b: Board, f: TracksFiring): boolean {
  */
 export function tracksHint(
   state: TracksState,
-):
-  | { ok: true; steps: HintStep<TracksMove, TracksHighlights>[] }
-  | { ok: false; error: string } {
+): { ok: true; steps: HintStep<TracksMove>[] } | { ok: false; error: string } {
   const board = stateToBoard(state);
   const next = tracksRecordingPass(board, state.diff, stepBudget("tracks hint"));
   const { plan } = deduceHintPlan<Board, TracksFiring, string>({
@@ -331,14 +321,8 @@ export function tracksHint(
       // and that should reach Sentry rather than render a blank sentence.
       const { reason } = firing;
       if (!reason) throw new Error("tracks hint: a step with no premise was shown");
-      const highlights = highlightsOf(board, reason, firing);
-      const words = narrate(board, reason, highlights);
-      return {
-        move: { ops: firing.ops },
-        explanation: words.text,
-        words,
-        highlights,
-      };
+      const words = narrate(board, reason, pictureOf(board, reason, firing));
+      return { move: { ops: firing.ops }, explanation: words.text, words };
     }),
   };
 }
@@ -400,7 +384,7 @@ function flagChanges(before: Board, after: Board): Map<string, boolean> {
  */
 export function tracksKeepTrack(
   m: TracksMove,
-  step: HintStep<TracksMove, TracksHighlights>,
+  step: HintStep<TracksMove>,
   state: TracksState,
 ): HintTrackVerdict {
   if (m.solve) return "off";
@@ -416,23 +400,12 @@ export function tracksKeepTrack(
   if (verdict !== "onTrack") return verdict;
 
   step.move = { ops: left };
-  if (step.highlights) {
-    step.highlights = {
-      ...step.highlights,
-      targets: left
-        .filter((o) => o.kind === "square")
-        .map((o) => ({ x: o.x, y: o.y, track: o.track })),
-      targetEdges: left
-        .filter((o) => o.kind === "edge")
-        .map((o) => ({ x: o.x, y: o.y, dir: o.dir ?? 0, track: o.track })),
-    };
-    if (step.words) {
-      const kept = new Set(markedOf(step.highlights).decided.map((p) => PIECE.key(p)));
-      step.words = step.words.narrow(
-        (role, _kind, key) => role !== "ring" || kept.has(key),
-      );
-      step.explanation = step.words.text;
-    }
+  if (step.words) {
+    const kept = new Set(left.map((o) => PIECE.key(pieceOfOp(o))));
+    step.words = step.words.narrow(
+      (role, _kind, key) => role !== "ring" || kept.has(key),
+    );
+    step.explanation = step.words.text;
   }
   return "onTrack";
 }

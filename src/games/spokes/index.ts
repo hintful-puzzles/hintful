@@ -36,7 +36,7 @@ import {
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
-import type { MarkRef, Narration } from "../../engine/hint-words.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -54,7 +54,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newSpokesDesc } from "./generator.ts";
-import { HUB, type Marked, SPOKE, type Spoke, say } from "./hint-text.ts";
+import { type Marked, type Spoke, say } from "./hint-text.ts";
 import {
   colors,
   computeSize,
@@ -322,15 +322,16 @@ function findMistakes(state: SpokesState): readonly SpokesMistake[] {
 // --- hint (a second projection of the deductive solver) ---------------------
 
 /**
- * Highlight data for a Spokes hint leg. `spokes` are the spokes the firing
- * still forces from this leg on (the earlier legs', once followed, are real
- * lines or marks, and the renderer tints only a spoke that is still EMPTY); a
+ * What a Spokes hint leg is about; its marks are the ones its words name.
+ * `spokes` are the spokes the firing still forces from this leg on (the earlier
+ * legs', once followed, are real lines or marks, and the renderer tints only a
+ * spoke that is still EMPTY), each with what the step sets it to: a ringed
  * `SPOKE_LINE` spoke is drawn as a `COL_HINT` line ("draw this"), a
- * `SPOKE_MARKED` spoke as a `COL_HINT` dot at its rim ("rule this out"), so the
+ * `SPOKE_MARKED` one as a `COL_HINT` dot at its rim ("rule this out"), so the
  * picture never claims a different action than the words. `evidence` are the
- * hubs whose clue or lines are the argument, ringed `COL_HINT_CELL`. The whole
- * deduction stays visible while its legs are followed one at a time. `w` is
- * the grid width, which a spoke's canonical end is taken in.
+ * hubs whose clue or lines are the argument. The whole deduction stays visible
+ * while its legs are followed one at a time. `w` is the grid width, which a
+ * spoke's canonical end is taken in.
  */
 export interface SpokesHint {
   spokes: SpokesSpokeRef[];
@@ -368,15 +369,6 @@ function narrate(f: SpokesFiring, hl: SpokesHint): Narration {
 /** The short continuation narration for legs 2+ of a multi-spoke firing. */
 function continuation(f: SpokesFiring, hl: SpokesHint): Narration {
   return say.continuation(f.kind === "saturation", markedOf(hl));
-}
-
-/** What a leg's highlights draw: the `drawn` half of Spokes' legend. */
-function spokesHintMarks(hl: SpokesHint): MarkRef[] {
-  const m = markedOf(hl);
-  return [
-    { role: "ring", kind: SPOKE, elements: m.spokes },
-    { role: "outline", kind: HUB, elements: m.hubs },
-  ] as MarkRef[];
 }
 
 /** Flatten one firing into its journey of legs: leg 0 carries the full
@@ -518,7 +510,6 @@ export const spokesGame: Game<
       ring: "each spoke the step decides: a line in the hint color is one to draw, and a ring round a dot on a hub's rim is one to rule out by marking that dot as unused, as described above.",
       outline: "the hubs the step reasons from, with a halo in a second color.",
     },
-    drawn: spokesHintMarks,
   },
   hintKeepTrack,
   findMistakes,

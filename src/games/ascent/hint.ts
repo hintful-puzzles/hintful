@@ -32,7 +32,7 @@ import {
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import type { MarkRef, MarkRole, Narration } from "../../engine/hint-words.ts";
+import { type Narration, StepMarks } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { findLines, findPointers, type RuledOut } from "./hint-edges.ts";
 import {
@@ -43,7 +43,6 @@ import {
   GLANCE,
   type Near,
   type Others,
-  PATH,
   type Rival,
   type RunEnds,
   SQUARE,
@@ -92,20 +91,11 @@ import {
  */
 const PLAN_CAP = 24;
 
-/** What one step marks. */
+/** What one step stripes, as its words name it. */
 export interface AscentHighlights {
-  /** The squares the step fills, ringed: one, or a whole run. */
-  targets: number[];
-  /** The numbers and squares the reason rests on, outlined: a placed number
-   * the sentence names, the arrow it reads, a dead end's one way in, the
-   * squares a route may use. */
-  area: number[];
   /** The line an arrow points along, a run's reach, or the squares no other
-   * run reaches, when the sentence names them, striped. */
+   * run reaches, when the sentence names them. */
   hatch: number[];
-  /** A whole run's route, drawn as the game's own path line in the hint's
-   * color: its squares in order, from one placed end to the other. */
-  route: number[];
 }
 
 type AscentStep = HintStep<AscentMove, AscentHighlights>;
@@ -868,31 +858,15 @@ const nearOf = (state: AscentState, p: Premise): Near => ({
   line: p.arrow === null ? null : arrowed(state, p.arrow, true),
 });
 
-/** The squares a step's words name in `role`: what the step draws in it. */
-function named(words: Narration, role: MarkRole): number[] {
-  const out = new Set<number>();
-  for (const r of words.refs)
-    if (r.role === role && r.kind === SQUARE)
-      for (const e of r.elements) out.add(e as number);
-  return [...out];
-}
-
 /** The step a firing shows: its move, its sentence and its marks. */
 export function stepOf(f: AscentFiring): AscentStep {
   const { n, cell, before } = f;
   const at = cellsOf(f);
-  // The step draws what its words name: the outlines and stripes are read off
-  // the references, so no mark goes unnamed and no name goes undrawn.
-  const step = (words: Narration, route: number[] = []): AscentStep => ({
+  const step = (words: Narration): AscentStep => ({
     move: moveOf(f),
     explanation: words.text,
     words,
-    highlights: {
-      targets: at,
-      area: named(words, "outline"),
-      hatch: named(words, "stripes"),
-      route,
-    },
+    highlights: { hatch: [...StepMarks.of(words).of("stripes", SQUARE)] },
     ...(f.joins ? { continuesPrevious: true } : {}),
   });
   /** A run of `runOf`'s, as a sentence names it. */
@@ -930,7 +904,7 @@ export function stepOf(f: AscentFiring): AscentStep {
             : { kind: "plain" },
         arrows,
       );
-      return step(words, route);
+      return step(words);
     }
     case "touch":
     case "reach": {
@@ -1026,19 +1000,6 @@ export function stepOf(f: AscentFiring): AscentStep {
   }
 }
 
-/** What a step's highlights draw: the `drawn` half of Ascent's legend. A ring
- * wins a square over an outline, and the route is drawn through the squares
- * it rings. */
-export function ascentHintMarks(hl: AscentHighlights): MarkRef[] {
-  const targets = new Set(hl.targets);
-  return [
-    { role: "ring", kind: SQUARE, elements: hl.targets },
-    { role: "ring", kind: PATH, elements: hl.route },
-    { role: "outline", kind: SQUARE, elements: hl.area.filter((i) => !targets.has(i)) },
-    { role: "stripes", kind: SQUARE, elements: hl.hatch },
-  ] as MarkRef[];
-}
-
 // --- following the plan ------------------------------------------------------
 
 /** A step is followed by placing its numbers in their squares, by any gesture. */
@@ -1065,7 +1026,5 @@ export function ascentKeepTrack(
   const left = want.cells.filter((w) => !same(w, m));
   if (left.length === 0) return "completed";
   step.move = { kind: "places", cells: left };
-  const hl = (step.highlights ?? null) as AscentHighlights | null;
-  if (hl) step.highlights = { ...hl, targets: left.map((c) => c.cell) };
   return "onTrack";
 }

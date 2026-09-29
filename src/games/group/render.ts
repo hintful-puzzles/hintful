@@ -28,6 +28,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import {
   type CellHighlight,
   cellHighlight,
@@ -469,7 +470,7 @@ export function redraw(
 
   // Hint overlay, packed by grid cell so it follows an element through a reorder.
   ds.hint.pack(
-    hint?.highlights ?? null,
+    stepMarks(hint),
     (x, y) => y * w + x,
     (m) => valueBit(m.n),
   );

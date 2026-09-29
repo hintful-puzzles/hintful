@@ -21,6 +21,33 @@ press Enter again to draw it; use Space in place of Enter to clear the
 lines inside the area instead. Escape abandons a rectangle you have
 started.
 
+## Hints
+
+**Hint** explains the next rectangle rather than simply drawing it, and
+says why no other will do. It reads only what is on the board: the
+numbers and the lines you have drawn, so it carries on from wherever you
+are; if one of your lines is wrong, it asks you to fix the highlighted
+mistakes first.
+
+{{hint-marks}}
+
+A number's **fits** are the rectangles of its size that contain it, stay
+on the board, take in no other number and cross none of your lines. These
+are the ideas the hint teaches, from the plainest up:
+
+* **Only one fit.** When every other rectangle would run off the board,
+  take in another number or cross a line, the one left is the number's.
+* **Only one number can reach a square.** Every square belongs to some
+  rectangle, so when only one number has a fit covering a square, that
+  number's rectangle covers it, which may leave it one fit.
+* **Squares another number is sure to cover.** When every fit of one
+  number covers the same squares, no other number can use them.
+* **Leaving no room.** A fit that would leave another number nowhere to
+  go, or leave a square that no rectangle could cover, is ruled out.
+* **A line no rectangle can cross.** When no fit of any number covers
+  both squares beside an edge, those squares are in different rectangles,
+  so the edge must be a line.
+
 ## Rectangles parameters
 
 {{parameters}}

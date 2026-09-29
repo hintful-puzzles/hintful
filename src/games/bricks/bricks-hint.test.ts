@@ -8,6 +8,7 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { CONTRADICTION_UNLOCALIZED } from "../../engine/hint-refusal.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -16,6 +17,7 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
+import { say } from "./hint-text.ts";
 import { type BricksHint, bricksGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
 import {
@@ -163,7 +165,8 @@ describe("bricks hint — the full hint()", () => {
       expect(step.move).toMatchObject({ kind: "paint" });
       expect(hl(step).target).toBeGreaterThanOrEqual(0);
       // The target is never in its own evidence.
-      expect(hl(step).evidence).not.toContain(hl(step).target);
+      const [target] = stepMarks(step).of("ring", CELL);
+      expect(stepMarks(step).of("outline", CELL)).not.toContainEqual(target);
     }
   });
 
@@ -230,7 +233,7 @@ describe("bricks hint — a second mark on the board is named", () => {
         if (!r?.ok) continue;
         for (const step of r.steps) {
           checked++;
-          if (hl(step).evidence.length === 0) continue;
+          if (stepMarks(step).of("outline", CELL).length === 0) continue;
           withMark++;
           expect(
             TIE.test(step.explanation),
@@ -347,9 +350,9 @@ describe("bricks hint — rendering (tier 2.5)", () => {
     expectRing(ops, COL_HINT);
     // Evidence off-board (an edge wall) rings nothing; any other is drawn.
     const hasEvidence = ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL);
-    expect(
-      hasEvidence || (result.hint ? hl(result.hint).evidence.length : 0) === 0,
-    ).toBe(true);
+    expect(hasEvidence || stepMarks(result.hint).of("outline", CELL).length === 0).toBe(
+      true,
+    );
     expect(ops).toMatchSnapshot();
   });
 
@@ -373,7 +376,7 @@ describe("bricks hint — rendering (tier 2.5)", () => {
     if (!planned?.ok) throw new Error("the fixture has no hint");
     const step = {
       ...planned.steps[0],
-      highlights: { ...hl(planned.steps[0]), target, evidence: [] },
+      words: say.unsupported({ x: target % w, y: Math.floor(target / w) }, []),
     };
     const ts = bricksGame.preferredTileSize ?? 32;
     const size = bricksGame.computeSize(FIX_PARAMS, ts);

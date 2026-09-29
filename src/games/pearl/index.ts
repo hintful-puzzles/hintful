@@ -40,7 +40,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
-import { type PearlHint, pearlHint, pearlHintMarks, pearlKeepTrack } from "./hint.ts";
+import { type PearlHint, pearlHint, pearlKeepTrack } from "./hint.ts";
 import { executeMove, interpretUiDrag, updateUiDrag } from "./moves.ts";
 import {
   centeredCoord,
@@ -390,7 +390,6 @@ export const pearlGame: Game<
       outline:
         "the squares the step reasons from: the pearl or square it is about, the squares beside a pearl, or a stretch of loop drawn so far.",
     },
-    drawn: pearlHintMarks,
   },
   hintKeepTrack: pearlKeepTrack,
 

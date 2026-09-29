@@ -41,7 +41,7 @@ const lettersOf = (mask: number, n: number): string =>
 
 /** The marks a letter step draws: the letter it decides, the neighbor cell
  * and the tally sets it reasons from, and a hidden single's one home. */
-interface LegMarks {
+export interface LegMarks {
   slot: Slot;
   cells: readonly Point[];
   sets: readonly number[];

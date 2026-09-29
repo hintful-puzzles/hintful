@@ -91,18 +91,15 @@ export interface SticksMistake {
 }
 
 /**
- * Highlight data for a hint step: the forced square (`target`), the orientation
- * it is forced to (`to` — drawn as a `COL_HINT` bar, the game's own line shape
+ * Plan data for a hint step: the forced square (`target`), which keep-track
+ * compares a move against, and the orientation it is forced to (`to` — drawn
+ * as a `COL_HINT` bar in the square the words ring, the game's own line shape
  * in the hint color; a plain tint could not express an orientation, which is
- * the whole of the move), and the cells the argument reasons over (`evidence` —
- * white squares washed, black clues ringed).
+ * the whole of the move).
  */
 export interface SticksHint {
   target: number;
   to: Exclude<SticksLine, "none">;
-  evidence: number[];
-  /** The grid's width, which the cells above index. */
-  w: number;
 }
 
 // --- params -----------------------------------------------------------------

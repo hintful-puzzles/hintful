@@ -41,12 +41,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newInertiaDesc } from "./generator.ts";
-import {
-  hint,
-  hintKeepTrack,
-  type InertiaHintHighlights,
-  inertiaHintMarks,
-} from "./hint.ts";
+import { hint, hintKeepTrack } from "./hint.ts";
 import {
   animLength,
   BORDER,
@@ -277,8 +272,7 @@ export const inertiaGame: Game<
   InertiaMove,
   InertiaUi,
   InertiaDrawState,
-  unknown,
-  InertiaHintHighlights
+  unknown
 > = {
   id: "inertia",
 
@@ -345,7 +339,6 @@ export const inertiaGame: Game<
       outline:
         "the gem the hint is working on, circled in a second color: *the outlined gem*, in its words. It stays circled through every slide the hint spends working toward it.",
     },
-    drawn: inertiaHintMarks,
   },
   hintKeepTrack,
 

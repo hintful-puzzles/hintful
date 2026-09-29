@@ -21,16 +21,31 @@ import {
   DRAG_REMOVE,
   ERROR,
   GRID_MID,
+  HINT_ACTION,
+  HINT_EVIDENCE,
   highlightWash,
   INK,
 } from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
-import type { GameDrawing } from "../../engine/game.ts";
-import type { Color, Rect, Size } from "../../engine/types.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
+import {
+  drawMarkSides,
+  MARK_BOTTOM,
+  MARK_LEFT,
+  MARK_RIGHT,
+  MARK_TOP,
+  outlineSides,
+} from "../../engine/hint-mark.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import type { Color, Point, Rect, Size } from "../../engine/types.ts";
+import type { RectHint } from "./hint.ts";
+import { LINE, RECTANGLE } from "./hint-marks.ts";
 import { gridDrawRect, hrange, vrange } from "./moves.ts";
 import type {
   RectDrawState,
   RectMistake,
+  RectMove,
   RectParams,
   RectState,
   RectUi,
@@ -50,6 +65,8 @@ export const COL_DRAG = 5;
 export const COL_DRAGERASE = 6;
 export const COL_CURSOR = 7;
 export const COL_MISTAKE = 8; // appended past the C enum
+export const COL_HINT = 9;
+export const COL_HINT_CELL = 10;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
@@ -65,6 +82,8 @@ export function colors(defaultBackground: Color): Color[] {
   // mark (palette.ts, `CURSOR`).
   out[COL_CURSOR] = highlightWash(bg);
   out[COL_MISTAKE] = ERROR;
+  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT_CELL] = HINT_EVIDENCE;
   return out;
 }
 
@@ -75,6 +94,11 @@ const M_TOP = 1 << 18;
 const M_BOTTOM = 1 << 19;
 const M_LEFT = 1 << 20;
 const M_RIGHT = 1 << 21;
+/** The hint's marks on the cell: the sides of its ring (bits 22–25) and of its
+ * outline (26–29), in `hint-mark.ts`'s side bits, and whether it is striped. */
+const RING_SHIFT = 22;
+const OUTLINE_SHIFT = 26;
+const F_STRIPES = 1 << 30;
 
 const coord = (n: number, tile: number) => n * tile + BORDER;
 const colorOf = (k: number) =>
@@ -124,6 +148,13 @@ function drawTile(
         ? COL_CORRECT
         : COL_BACKGROUND,
   );
+  // The line or area the hint's sentence names, under the clue.
+  if (bgflags & F_STRIPES)
+    dr.drawHatch(
+      { x: cx + 1, y: cy + 1, w: tile - 1, h: tile - 1 },
+      COL_HINT,
+      hatchPeriod(tile),
+    );
 
   const num = state.grid[y * w + x];
   if (num) {
@@ -194,7 +225,61 @@ function drawTile(
   if (x + 1 < w && y + 1 < h && corners[(y + 1) * w + (x + 1)])
     rect(cx + tile - 1, cy + tile - 1, 2, 2, colorOf(corners[(y + 1) * w + (x + 1)]));
 
+  // The hint's outline and ring, just inside the cell's own lines so neither
+  // hides one. A rectangle's ring is the contour of its squares, each drawing
+  // the sides of its own that lie on the rectangle's edge.
+  // The outline sits inside the ring's band, so a square outlined within the
+  // ringed rectangle shows both whole.
+  const t = Math.max(2, Math.round(tile / 16));
+  const band = (inset: number) => ({
+    box: {
+      x: cx + inset,
+      y: cy + inset,
+      w: tile + 1 - 2 * inset,
+      h: tile + 1 - 2 * inset,
+    },
+    outer: 0,
+    inner: t,
+  });
+  drawMarkSides(dr, band(2 + t), (bgflags >> OUTLINE_SHIFT) & 15, COL_HINT_CELL);
+  drawMarkSides(dr, band(2), (bgflags >> RING_SHIFT) & 15, COL_HINT);
+
   dr.drawUpdate({ x: cx, y: cy, w: tile + 1, h: tile + 1 } satisfies Rect);
+}
+
+/** The displayed hint step's marks, as per-cell cache-word bits. */
+function hintTileBits(
+  w: number,
+  h: number,
+  hint?: HintStep<RectMove, RectHint>,
+): Int32Array {
+  const bits = new Int32Array(w * h);
+  const marks = stepMarks(hint);
+  const inside = (r: Rect) => (x: number, y: number) =>
+    x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h;
+  for (const r of marks.of("ring", RECTANGLE))
+    for (let y = r.y; y < r.y + r.h; y++)
+      for (let x = r.x; x < r.x + r.w; x++)
+        bits[y * w + x] |= outlineSides(x, y, inside(r)) << RING_SHIFT;
+  const ringSide = (x: number, y: number, side: number) => {
+    if (x >= 0 && y >= 0 && x < w && y < h) bits[y * w + x] |= side << RING_SHIFT;
+  };
+  for (const e of marks.of("ring", LINE)) {
+    if (e.edge === "v") {
+      ringSide(e.x - 1, e.y, MARK_RIGHT);
+      ringSide(e.x, e.y, MARK_LEFT);
+    } else {
+      ringSide(e.x, e.y - 1, MARK_BOTTOM);
+      ringSide(e.x, e.y, MARK_TOP);
+    }
+  }
+  const outlined = new Set(marks.of("outline", CELL).map((p: Point) => p.y * w + p.x));
+  const isOutlined = (x: number, y: number) =>
+    x >= 0 && y >= 0 && x < w && y < h && outlined.has(y * w + x);
+  for (const i of outlined)
+    bits[i] |= outlineSides(i % w, Math.floor(i / w), isOutlined) << OUTLINE_SHIFT;
+  for (const p of marks.of("stripes", CELL)) bits[p.y * w + p.x] |= F_STRIPES;
+  return bits;
 }
 
 export function redraw(
@@ -206,11 +291,12 @@ export function redraw(
   ui: RectUi,
   _animTime: number,
   flashTime: number,
-  _hint?: unknown,
+  hint?: HintStep<RectMove, RectHint>,
   mistakes?: readonly RectMistake[],
 ): void {
   const { w, h } = state;
   const tile = ds.tileSize;
+  const hintBits = hintTileBits(w, h, hint);
 
   // Apply the in-progress drag preview to scratch edge copies.
   let hedge = state.hedge;
@@ -308,6 +394,7 @@ export function redraw(
       if (wrongV[y * w + x]) mistake |= M_LEFT;
       if (x + 1 < w && wrongV[y * w + (x + 1)]) mistake |= M_RIGHT;
       c |= mistake;
+      c |= hintBits[y * w + x];
 
       if (ds.visible[y * w + x] !== c) {
         drawTile(dr, tile, state, x, y, hedge, vedge, corners, c, mistake);

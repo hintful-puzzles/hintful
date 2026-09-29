@@ -7,11 +7,13 @@
 import { describe, expect, it } from "vitest";
 import { HINT_EVIDENCE } from "../../engine/color/palette.ts";
 import { FIX_MISTAKES_FIRST } from "../../engine/hint-refusal.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import type { MapHint, MapHintStep } from "./hint.ts";
 import { hintKeepTrack, refreshHintStep } from "./hint.ts";
+import { REGION } from "./hint-text.ts";
 import { mapGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
 import { neighbors } from "./solver.ts";
@@ -38,6 +40,9 @@ const ARMS = {
   chainTrim: /^Region \d+ of the numbered chain has other dots/,
 } satisfies Record<string, RegExp>;
 type Arm = keyof typeof ARMS;
+
+/** The regions a step's words outline, with their chain numbers. */
+const evidenceOf = (step: MapHintStep) => stepMarks(step).of("outline", REGION);
 
 /**
  * The boards each arm fires on from a fresh board, pinned as the desc the rung
@@ -214,7 +219,7 @@ describe("map hint arms", () => {
     expect(armOf(first.explanation)).toEqual(["pairStrike"]);
     expect(first.highlights?.targets).toEqual([k]);
     const after = mapGame.executeMove(dotted, first.move);
-    const [a, b] = (first.highlights as MapHint).evidence.map((e) => e.region);
+    const [a, b] = evidenceOf(first).map((e) => e.region);
     // The dots that went are the pair's two colors, and nothing else.
     expect(dotted.pencil[k] & ~after.pencil[k]).toBe(left(dotted, a));
     expect(left(dotted, a)).toBe(left(dotted, b));
@@ -228,7 +233,7 @@ describe("map hint claims hold on the board they are spoken over", () => {
       walk(stateOf(id), plan(stateOf(id)), (s, step) => {
         const hl = step.highlights as MapHint;
         const [t] = hl.targets;
-        const ev = hl.evidence.map((e) => e.region);
+        const ev = evidenceOf(step).map((e) => e.region);
         const [arm] = armOf(step.explanation);
         expect(arm, step.explanation).toBeDefined();
         expect(s.coloring[t], "the target is blank").toBe(-1);
@@ -267,7 +272,7 @@ describe("map hint claims hold on the board they are spoken over", () => {
           // Numbered 1..m, each touching the next, each showing its two colors
           // as dots (the journey's earlier legs put them there), and this
           // region touching the first and the last.
-          expect(hl.evidence.map((e) => e.order)).toEqual(ev.map((_, i) => i + 1));
+          expect(evidenceOf(step).map((e) => e.order)).toEqual(ev.map((_, i) => i + 1));
           for (let i = 0; i + 1 < ev.length; i++)
             expect(adjacent(s, ev[i], ev[i + 1])).toBe(true);
           for (const e of ev) {
@@ -398,7 +403,7 @@ describe("map hint continuity", () => {
         // same, so those count as what it reads.
         const reads = [
           ...hl.targets,
-          ...hl.evidence.map((e) => e.region),
+          ...evidenceOf(step).map((e) => e.region),
           ...[...neighbors(graph, n, ngraph, hl.targets[0])].filter(
             (k) => s.coloring[k] >= 0,
           ),
@@ -460,7 +465,6 @@ describe("map hint rendering", () => {
       showHint: true,
       hintUntil: (step) => ARMS.chainMark.test(step.explanation),
     });
-    const hl = hint?.highlights as MapHint;
     const rgb = (c: readonly number[]) =>
       `rgb(${c.map((v) => Math.round(v * 255)).join(", ")})`;
     const numbers = new Set(
@@ -468,7 +472,11 @@ describe("map hint rendering", () => {
         o.op === "text" && o.rgb === rgb(HINT_EVIDENCE) ? [o.text] : [],
       ),
     );
-    expect([...numbers].sort()).toEqual(hl.evidence.map((e) => String(e.order)).sort());
+    expect([...numbers].sort()).toEqual(
+      evidenceOf(hint as MapHintStep)
+        .map((e) => String(e.order))
+        .sort(),
+    );
     const polys = (c: number) =>
       recording.ops.filter((o) => o.op === "polygon" && o.fill === c).length;
     expect(polys(COL_HINT)).toBeGreaterThan(0);

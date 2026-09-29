@@ -8,15 +8,17 @@
  */
 
 import { describe, expect, it } from "vitest";
+import type { HintStep } from "../../engine/game.ts";
 import { ALREADY_SOLVED, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { SLOW_TESTS_ENABLED } from "../../engine/testing/slow.ts";
 import { samePoint } from "./geometry.ts";
-import { deduceUntangleHintPlan, type UntangleHint } from "./hint.ts";
-import { say } from "./hint-text.ts";
+import { deduceUntangleHintPlan } from "./hint.ts";
+import { CROSSING, SPOT, say, type UntangleMarks, VERTEX } from "./hint-text.ts";
 import { untangleGame } from "./index.ts";
 import { closestOrientation, solvedLayout } from "./solution.ts";
-import { findCrossings, type UntangleState } from "./state.ts";
+import { findCrossings, type UntangleMove, type UntangleState } from "./state.ts";
 
 function generated(n: number, seed: string) {
   const { desc, aux } = untangleGame.newDesc({ n }, randomNew(seed));
@@ -65,7 +67,7 @@ function followHints(start: UntangleState, aux?: string) {
   // the head of the next request's plan; it is checked once that is known.
   let pending: {
     explanation: string;
-    marks: UntangleHint;
+    marks: UntangleMarks;
     before: number;
     after: number;
   } | null = null;
@@ -79,9 +81,19 @@ function followHints(start: UntangleState, aux?: string) {
     );
     pending = null;
   };
-  const marksOf = (st: { highlights?: UntangleHint }): UntangleHint => {
-    if (!st.highlights) throw new Error("a step with no highlights");
-    return st.highlights;
+  /** The step's marks as its sentence is built from them: the point its move
+   * places, where to, the crossings it outlines and the other ringed points. */
+  const marksOf = (st: HintStep<UntangleMove>): UntangleMarks => {
+    const marks = stepMarks(st);
+    const vertex = st.move.points[0].i;
+    const [to] = marks.of("ring", SPOT);
+    if (!to) throw new Error("a step with no spot");
+    return {
+      vertex,
+      to,
+      cleared: marks.of("outline", CROSSING),
+      marked: marks.of("ring", VERTEX).filter((v) => v !== vertex),
+    };
   };
   for (let asks = 0; asks < 60; asks++) {
     if (s.completed) {
@@ -90,7 +102,7 @@ function followHints(start: UntangleState, aux?: string) {
     }
     const res = deduceUntangleHintPlan(s, aux);
     if (!res.ok) throw new Error(`hint gave up on an unsolved board: ${res.error}`);
-    const legs = res.steps[0].highlights?.marked.length ?? 0;
+    const legs = marksOf(res.steps[0]).marked.length;
     if (legs > 0) {
       // A journey is the whole plan: every leg's count is the board's, the
       // marked points are the ones still to move, and it does what its first
@@ -126,8 +138,8 @@ function followHints(start: UntangleState, aux?: string) {
       }
       res.steps.forEach((st, i) => {
         const v = movers[i];
-        expect(st.highlights?.vertex).toBe(v);
-        expect(st.highlights?.marked).toEqual(movers.slice(i + 1));
+        expect(stepMarks(st).of("ring", VERTEX)).toContain(v);
+        expect(marksOf(st).marked).toEqual(movers.slice(i + 1));
         expect(st.continuesPrevious ?? false).toBe(i > 0);
         const before = lineCrossings(s, v);
         s = untangleGame.executeMove(s, st.move);
@@ -147,7 +159,7 @@ function followHints(start: UntangleState, aux?: string) {
     }
     for (const st of res.steps) {
       const v = st.move.points[0].i;
-      expect(st.highlights?.vertex).toBe(v);
+      expect(stepMarks(st).of("ring", VERTEX)).toEqual([v]);
       const before = lineCrossings(s, v);
       const next = untangleGame.executeMove(s, st.move);
       const after = lineCrossings(next, v);
@@ -156,7 +168,7 @@ function followHints(start: UntangleState, aux?: string) {
         clears++;
         expect(st.explanation).toBe(say.clear(marksOf(st), before, after).text);
         // A ring for at least every crossing the step takes away.
-        expect(st.highlights?.cleared.length).toBeGreaterThanOrEqual(before - after);
+        expect(marksOf(st).cleared.length).toBeGreaterThanOrEqual(before - after);
       } else {
         rebuilds++;
         pending = { explanation: st.explanation, marks: marksOf(st), before, after };

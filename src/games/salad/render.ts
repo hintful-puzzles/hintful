@@ -34,6 +34,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import {
   type CellHighlight,
   cellHighlight,
@@ -53,6 +54,7 @@ import {
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import type { SaladHint } from "./hint.ts";
+import { CLUE } from "./hint-text.ts";
 import type { SaladMistake } from "./solver.ts";
 import {
   borderScans,
@@ -536,21 +538,23 @@ export function redraw(
   ds.wrong.packCells(mistakes ?? null, (x, y) => y * o + x);
 
   // The hint overlay: the shared target/area/marks pack, plus the ghosted entry
-  // the step asks for. Both live in `ds.hint`, so both are part of the
-  // cache-miss test below (docs/games/rendering.md § "The tile cache and the diff key").
-  const hl = hint?.highlights;
+  // the step asks for in each ringed square. Both live in `ds.hint`, so both are
+  // part of the cache-miss test below (docs/games/rendering.md § "The tile cache
+  // and the diff key").
+  const marks = stepMarks(hint);
   ds.hint.pack(
-    hl ?? null,
+    marks,
     (x, y) => y * o + x,
     (m) => valueBit(m.n),
   );
-  if (hl?.ghost !== undefined) {
-    const code = ghostCode(hl.ghost);
-    for (const t of hl.targets) ds.hint.add(t.y * o + t.x, code);
+  const ghost = hint?.highlights?.ghost;
+  if (ghost !== undefined) {
+    const code = ghostCode(ghost);
+    for (const t of marks.of("ring", CELL)) ds.hint.add(t.y * o + t.x, code);
   }
   // A border clue that is the hint's premise lights up with its line of sight.
   for (let j = 0; j < o * 4; j++) ds.borderfs[j] &= ~FD_HINT;
-  for (const c of hl?.clues ?? []) ds.borderfs[c] |= FD_HINT;
+  for (const c of marks.of("outline", CLUE)) ds.borderfs[c] |= FD_HINT;
 
   for (let y = 0; y < o; y++) {
     for (let x = 0; x < o; x++) {

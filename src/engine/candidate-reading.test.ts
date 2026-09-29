@@ -16,6 +16,7 @@
 import { describe, expect, it } from "vitest";
 import type { CandidateReading } from "./candidate-hint.ts";
 import { permitsSearch } from "./difficulty.ts";
+import type { Narration } from "./hint-words.ts";
 import { randomNew } from "./random/index.ts";
 import { enrolledIn } from "./testing/enrollment.ts";
 import {
@@ -117,14 +118,19 @@ function effectOf(before: unknown, after: unknown): Effect {
  */
 function premiseOf(
   board: Board,
-  step: { highlights?: unknown },
+  step: { highlights?: unknown; words?: Narration },
   effect: Effect,
 ): readonly number[] {
   if (effect === "fill") return [];
   const strikes = effect === "strike";
   if (board.width === null) {
-    const h = step.highlights as { targets: number[]; evidence: { region: number }[] };
-    const outlined = h.evidence.map((e) => e.region);
+    const h = step.highlights as { targets: number[] };
+    // Map's outlined regions are its words' (`map/hint-text.ts`'s REGION).
+    const outlined = (step.words?.refs ?? [])
+      .filter((r) => r.role === "outline" && r.kind.name === "region")
+      .flatMap((r) =>
+        (r.elements as readonly { region: number }[]).map((e) => e.region),
+      );
     if (h.targets.some((r) => outlined.includes(r))) return strikes ? h.targets : [];
     return [...outlined, ...(strikes ? h.targets : [])];
   }

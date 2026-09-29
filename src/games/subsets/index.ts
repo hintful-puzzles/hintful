@@ -55,8 +55,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSubsetsDesc } from "./generator.ts";
-import { subsetsHintMarks } from "./hint-marks.ts";
-import { say } from "./hint-text.ts";
+import { type LegMarks, say } from "./hint-text.ts";
 import {
   colors,
   computeSize,
@@ -422,37 +421,10 @@ function solve(orig: SubsetsState): SolveResult<SubsetsMove> {
 
 // --- hint -------------------------------------------------------------------
 
-/** Highlight roles of a Subsets hint step (see the COL_HINT block in
- * render.ts). Every narration is *attention → deduction → action*, per slot:
- * - `target` — the cell being decided; its acted-on slot, `slot`, gets the
- *   bold `COL_HINT` frame (the *action* location), and a rule-out step, which
- *   decides no slot, frames the whole cell;
- * - `cells` — a neighbor cell the narration calls "the outlined cell"
- *   (the cell across a horseshoe), framed `COL_HINT_CELL`;
- * - `sets` — set-values the narration calls "the outlined set(s)", boxed
- *   in the tally band (a collapse's surviving candidates, or the placed set);
- * - `spotlight` — the cells a *hidden single*'s set can still go in (its one
- *   home), lit `COL_HINT_SPOT` — the same set→placement spotlight the
- *   player-facing reference aid draws;
- * - `rule` — the set-value a rule-out step rules out of `target`, boxed
- *   `COL_HINT` in the tally (the action), while `sets` box what the neighbor
- *   across the horseshoe can still hold (the premise). */
-export interface SubsetsHintHighlights {
-  target: Point;
-  slot: number | null;
-  cells: Point[];
-  sets: number[];
-  spotlight: Point[];
-  rule: number | null;
-}
-
 const pointOf = (i: number, w: number): Point => ({ x: i % w, y: Math.floor(i / w) });
 
 /** A rule-out step, read against `board`, the plan's board just before it. */
-function ruleOutStep(
-  board: SubsetsState,
-  mark: RuleOutMark,
-): HintStep<SubsetsMove, SubsetsHintHighlights> {
+function ruleOutStep(board: SubsetsState, mark: RuleOutMark): HintStep<SubsetsMove> {
   const target = pointOf(mark.pos, board.w);
   const via = pointOf(mark.why.via, board.w);
   // The set ruled out is the action, boxed as such even where the neighbor
@@ -463,23 +435,20 @@ function ruleOutStep(
     move: { kind: "rule", pos: mark.pos, value: mark.value, on: true },
     explanation: words.text,
     words,
-    highlights: {
-      target,
-      slot: null,
-      cells: [via],
-      sets,
-      spotlight: [],
-      rule: mark.value,
-    },
   };
 }
 
-function buildHighlights(
+/** What leg `k` of a firing marks, every narration being *attention →
+ * deduction → action*: the slot it decides (the action), a neighbor cell it
+ * reasons from, the sets it counts in the tally (a collapse's surviving
+ * candidates, or the placed set), and a hidden single's one home, spotlit as
+ * the player-facing reference aid spotlights it. */
+function legMarks(
   state: SubsetsState,
   d: SubsetsDeduction,
   exclusion: CollapseExclusion | null,
   k: number,
-): SubsetsHintHighlights {
+): LegMarks {
   const w = state.w;
   const pt = (i: number): Point => pointOf(i, w);
   const r = d.reason;
@@ -501,12 +470,10 @@ function buildHighlights(
   const spotlight =
     r.kind === "hiddenSingle" ? candidateCells(state, r.value).map(pt) : [];
   return {
-    target: pt(d.pos),
-    slot: d.sets[k].bit,
+    slot: { ...pt(d.pos), bit: d.sets[k].bit },
     cells: cells.map(pt),
     sets,
     spotlight,
-    rule: null,
   };
 }
 
@@ -525,8 +492,8 @@ const blockerCell = (ex: CollapseExclusion): number =>
 function stepsForFiring(
   board: SubsetsState,
   d: SubsetsDeduction,
-): HintStep<SubsetsMove, SubsetsHintHighlights>[] {
-  const steps: HintStep<SubsetsMove, SubsetsHintHighlights>[] = [];
+): HintStep<SubsetsMove>[] {
+  const steps: HintStep<SubsetsMove>[] = [];
   for (const mark of d.marks) {
     steps.push(ruleOutStep(board, mark));
     board.ruledOut[mark.pos] |= 1 << mark.value;
@@ -536,13 +503,7 @@ function stepsForFiring(
       ? pickExclusion(board, d.pos, d.reason.survivors)
       : null;
   d.sets.forEach((set, k) => {
-    const highlights = buildHighlights(board, d, exclusion, k);
-    const leg = say.leg(d, k, {
-      slot: { ...highlights.target, bit: set.bit },
-      cells: highlights.cells,
-      sets: highlights.sets,
-      spotlight: highlights.spotlight,
-    });
+    const leg = say.leg(d, k, legMarks(board, d, exclusion, k));
     const words =
       k === 0 && exclusion
         ? phrase`${leg}${say.exclusion(exclusion, board.n, pointOf(blockerCell(exclusion), board.w))}`
@@ -551,7 +512,6 @@ function stepsForFiring(
       move: { kind: "set", type: set.type, pos: d.pos, bit: set.bit },
       explanation: words.text,
       words,
-      highlights,
     });
   });
   for (const set of d.sets) {
@@ -564,7 +524,7 @@ function stepsForFiring(
   return steps.map((step, k) => (k > 0 ? { ...step, continuesPrevious: true } : step));
 }
 
-function hint(state: SubsetsState): HintResult<SubsetsMove, SubsetsHintHighlights> {
+function hint(state: SubsetsState): HintResult<SubsetsMove> {
   const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
   if (refusal) return refusal;
 
@@ -643,8 +603,7 @@ export const subsetsGame: Game<
   SubsetsMove,
   SubsetsUi,
   SubsetsDrawState,
-  SubsetsMistake,
-  SubsetsHintHighlights
+  SubsetsMistake
 > = {
   id: "subsets",
   // Touching the reference aid (tally / inspect icon / cursor) dismisses a
@@ -685,7 +644,6 @@ export const subsetsGame: Game<
       stripes:
         "the one cell a set still fits, in the spotlight color that *Where can this go?* uses, when the sentence says the set can go nowhere else.",
     },
-    drawn: subsetsHintMarks,
   },
   hintKeepTrack,
   findMistakes,

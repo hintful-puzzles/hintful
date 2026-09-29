@@ -6,13 +6,20 @@
  * targeted assertions survive a careless `-u`).
  */
 import { describe, expect, it } from "vitest";
+import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { CURSOR_RIGHT, CURSOR_SELECT2 } from "../../engine/pointer.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import type { TracksHighlights } from "./hint.ts";
+import { LINE, PIECE } from "./hint-text.ts";
 import { tracksGame } from "./index.ts";
 import { COL_CURSOR, COL_ERROR, COL_HINT, COL_HINT_CELL } from "./render.ts";
 import type { TracksMove, TracksParams } from "./state.ts";
+
+/** The clues a step's words outline. */
+const cluesOf = (step?: { words?: Narration }): number[] =>
+  stepMarks(step)
+    .of("outline", PIECE)
+    .flatMap((p) => ("clue" in p ? [p.clue] : []));
 
 const P: TracksParams = { w: 6, h: 6, diff: 0, singleOnes: true };
 const DESC = "f6pCkC,2,3,3,2,3,S3,3,S3,3,3,2,2";
@@ -35,10 +42,10 @@ describe("Tracks hint: the line a sentence names", () => {
         hintUntil: (step) => /^This (row|column)/.test(step.explanation),
       });
       if (!hint || !/^This (row|column)/.test(hint.explanation)) continue;
-      const hl = hint.highlights as TracksHighlights;
-      expect(hl.line).not.toBeNull();
+      const lines = stepMarks(hint).of("stripes", LINE);
+      expect(lines).toHaveLength(1);
       const isColumn = /^This column/.test(hint.explanation);
-      expect(hl.line !== null && hl.line < P.w).toBe(isColumn);
+      expect(lines[0] < P.w).toBe(isColumn);
       const hatches = opsOfKind(recording.ops, "hatch");
       // Every square of the line, and the clue slot at its end.
       expect(hatches).toHaveLength((isColumn ? P.h : P.w) + 1);
@@ -120,15 +127,13 @@ describe("Tracks render scenarios", () => {
       game: tracksGame,
       id: ID,
       showHint: true,
-      hintUntil: (s) =>
-        ((s as { highlights?: TracksHighlights }).highlights?.clues.length ?? 0) > 0,
+      hintUntil: (s) => cluesOf(s).length > 0,
     });
-    const clues = (hint as { highlights?: TracksHighlights } | undefined)?.highlights
-      ?.clues;
-    expect(clues?.length, "no step in the plan counts with a clue").toBeGreaterThan(0);
+    const clues = cluesOf(hint);
+    expect(clues.length, "no step in the plan counts with a clue").toBeGreaterThan(0);
     const hinted = recording.ops.filter((o) => o.op === "text" && o.color === COL_HINT);
     expect(hinted.length, "the cited clue's digit is not in the hint color").toBe(
-      clues?.length,
+      clues.length,
     );
   });
 

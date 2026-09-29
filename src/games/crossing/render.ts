@@ -60,6 +60,7 @@ import {
   type MarkBand,
   type MarkCell,
 } from "../../engine/hint-mark.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import {
   type CellHighlight,
   cellHighlight,
@@ -80,6 +81,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
+import { LISTED } from "./hint-text.ts";
 import type { CrossingMistake } from "./solver.ts";
 import {
   type CrossingMove,
@@ -859,13 +861,14 @@ export function redraw(
   }
 
   ds.wrong.packCells(mistakes ?? null, (x, y) => y * w + x);
+  const marks = stepMarks(hint);
   ds.hint.pack(
-    hint?.highlights ?? null,
+    marks,
     (x, y) => y * w + x,
     (m) => valueBit(m.n - 1),
   );
-  const hintNumbers = new Set(hint?.highlights?.numbers ?? []);
-  const hintNumberTarget = hint?.highlights?.numberTarget ?? null;
+  const hintNumbers = new Set(marks.of("outline", LISTED));
+  const hintNumberTarget = marks.of("ring", LISTED)[0] ?? null;
 
   // The held clue number, previewed in every run that can still take it, and —
   // when a cell is selected — the list dimmed to the numbers that still fit it.

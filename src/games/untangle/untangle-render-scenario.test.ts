@@ -12,6 +12,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, LEFT_DRAG } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -21,7 +22,8 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { newUntangleDesc } from "./generator.ts";
-import { deduceUntangleHintPlan, type UntangleHint } from "./hint.ts";
+import { deduceUntangleHintPlan } from "./hint.ts";
+import { CROSSING, SPOT, VERTEX } from "./hint-text.ts";
 import { untangleGame } from "./index.ts";
 import {
   COL_CROSSEDLINE,
@@ -106,7 +108,7 @@ describe("Untangle render scenarios", () => {
     });
 
     // The displayed step targets a vertex and a destination.
-    expect(hint?.highlights).toBeDefined();
+    expect(stepMarks(hint).of("ring", SPOT)).toHaveLength(1);
 
     // A COL_HINT line (the move suggestion) and a COL_HINT marker circle
     // at the destination.
@@ -118,7 +120,7 @@ describe("Untangle render scenarios", () => {
     );
 
     // Each crossing the step removes gets an unfilled two-stroke ring.
-    const cleared = (hint?.highlights as UntangleHint | undefined)?.cleared ?? [];
+    const cleared = stepMarks(hint).of("outline", CROSSING);
     expect(cleared.length).toBeGreaterThan(0);
     const rings = recording.ops.filter(
       (o) => o.op === "circle" && o.fill === -1 && o.outline === COL_HINT,
@@ -137,7 +139,7 @@ describe("Untangle render scenarios", () => {
     for (;;) {
       const res = deduceUntangleHintPlan(s, aux);
       if (!res.ok) throw new Error(res.error);
-      if ((res.steps[0].highlights?.marked.length ?? 0) > 0) break;
+      if (stepMarks(res.steps[0]).of("ring", VERTEX).length > 1) break;
       for (const st of res.steps) {
         moves.push(st.move);
         s = untangleGame.executeMove(s, st.move);
@@ -151,17 +153,19 @@ describe("Untangle render scenarios", () => {
       moves,
       showHint: true,
     });
-    const h = hint?.highlights as UntangleHint | undefined;
-    const marked = h?.marked ?? [];
+    const marks = stepMarks(hint);
+    const moved = hint?.move.points[0].i;
+    const marked = marks.of("ring", VERTEX).filter((v) => v !== moved);
     expect(marked.length).toBeGreaterThan(0);
-    expect(marked).not.toContain(h?.vertex);
 
     // A two-stroke ring on each marked point, centered on it, besides the
     // rings on the crossings the step removes.
     const rings = recording.ops.filter(
       (o) => o.op === "circle" && o.fill === -1 && o.outline === COL_HINT,
     );
-    expect(rings).toHaveLength(2 * (marked.length + (h?.cleared.length ?? 0)));
+    expect(rings).toHaveLength(
+      2 * (marked.length + marks.of("outline", CROSSING).length),
+    );
     const ts = untangleGame.preferredTileSize ?? 32;
     for (const v of marked) {
       const p = s.pts[v];

@@ -23,6 +23,7 @@ import {
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
+import { type StepMarks, stepMarks } from "../../engine/hint-words.ts";
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
@@ -30,7 +31,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
-import type { GuessHighlights } from "./hint.ts";
+import { COLOR, ROW, SLOT } from "./hint-text.ts";
 import {
   FEEDBACK_CORRECTCOLOR,
   FEEDBACK_CORRECTPLACE,
@@ -389,13 +390,15 @@ function answerRowRedraw(
   ds: GuessDrawState,
   s: GuessState,
   ui: GuessUi,
-  hl: GuessHighlights | null,
+  marks: StepMarks,
 ): void {
+  const colors = marks.of("ring", COLOR);
+  const slots = marks.of("outline", SLOT);
   for (let pos = 0; pos < ds.npegs; pos++) {
     let framed = 0;
-    for (const d of hl?.marked ?? []) if (d.pos === pos) framed |= 1 << d.color;
+    for (const d of colors) if (d.pos === pos) framed |= 1 << d.color;
     const cursor = ui.pencilMode && ui.cursor.visible && ui.cursor.x === pos;
-    const premise = hl?.slots.includes(pos) ?? false;
+    const premise = slots.includes(pos);
     const key = answerKey(s.ruledOut[pos], framed, cursor, premise, ui.showLabels);
     if (ds.answerCache[pos] === key) continue;
     ds.answerCache[pos] = key;
@@ -662,13 +665,13 @@ export function redraw(
   hint?: HintStep<GuessMove>,
 ): void {
   const newMove = s.nextGo !== ds.nextGo || !ds.started;
-  const hl = (hint?.highlights as GuessHighlights | undefined) ?? null;
+  const marks = stepMarks(hint);
 
   // A row the sentence reads is hatched, gaps included. When the set changes,
   // the old rows are painted out whole and every row redrawn, since the stripe
   // crosses the gaps between a row's pegs and its feedback, which neither of
   // them repaints.
-  const hintRows = (hl?.line ?? []).filter((gi) => gi < s.params.nguesses);
+  const hintRows = marks.of("stripes", ROW).filter((gi) => gi < s.params.nguesses);
   const hintRowsKey = hintRows.join(",");
   const forceRows = hintRowsKey !== ds.hintRowsShown;
   if (forceRows && ds.started) {
@@ -744,7 +747,7 @@ export function redraw(
     dr.drawUpdate(answerArea(ds));
     ds.answerCache.fill(-1);
   }
-  if (!s.solved) answerRowRedraw(dr, ds, s, ui, hl);
+  if (!s.solved) answerRowRedraw(dr, ds, s, ui, marks);
   else {
     guessRedraw(
       dr,

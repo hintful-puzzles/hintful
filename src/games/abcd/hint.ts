@@ -22,7 +22,6 @@ import {
   type CandidateHighlights,
   type CandidateMoveAdapter,
   type CandidatePlanPrefs,
-  candidateHintMarks,
   keepCandidateHintTrack,
   type Mark,
   type NoteEncoding,
@@ -36,10 +35,9 @@ import {
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { candidateConclusions } from "../../engine/hint-text.ts";
-import type { MarkRef } from "../../engine/hint-words.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { Point } from "../../engine/types.ts";
-import { CLUE, LETTERS, type LineMarks, type LineWord, say } from "./hint-text.ts";
+import { LETTERS, type LineMarks, type LineWord, say } from "./hint-text.ts";
 import { neighbors, runsForce } from "./solver.ts";
 import {
   type AbcdMove,
@@ -54,15 +52,6 @@ import {
 /** A candidate hint's highlights, and the clue whose count the step reads,
  * as its index in `numbers`. */
 export type AbcdHint = CandidateHighlights & { clue?: number };
-
-/** The marks a step draws: the candidate walk's, and the clue it reads, drawn
- * in the hint color as part of the evidence. */
-export function abcdHintMarks(h: AbcdHint): MarkRef[] {
-  const out = candidateHintMarks(h);
-  if (h.clue !== undefined)
-    out.push({ role: "outline", kind: CLUE, elements: [h.clue] } as MarkRef);
-  return out;
-}
 
 /** Why a letter is placed or ruled out. Letters are the walk's values `1..n`. */
 type AbcdReason =

@@ -26,6 +26,7 @@ import { drawRectCorners, drawRectOutline, glyphFont } from "../../engine/draw.t
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import type { SinglesHint } from "./index.ts";
 import {
@@ -254,18 +255,17 @@ export function redraw(
   const ts = ds.tileSize;
   const { w, h } = state;
 
-  // Index the displayed hint step's target/evidence cells.
-  const hl = hint?.highlights;
-  const hintTarget = new Set<number>();
+  // Index the displayed hint step's marks. The protected corner is one of the
+  // outlined cells, told apart by the step's `strand`.
+  const marks = stepMarks(hint);
+  const index = (c: Point): number => c.y * w + c.x;
+  const strand = new Set(hint?.highlights?.strand.map(index));
+  const hintTarget = new Set(marks.of("ring", CELL).map(index));
   const hintEvid = new Set<number>();
   const hintStrand = new Set<number>();
-  const hintLine = new Set<number>();
-  if (hl) {
-    for (const t of hl.targets) hintTarget.add(t.y * w + t.x);
-    for (const e of hl.evidence) hintEvid.add(e.y * w + e.x);
-    for (const s of hl.strand) hintStrand.add(s.y * w + s.x);
-    for (const c of hl.line) hintLine.add(c.y * w + c.x);
-  }
+  for (const i of marks.of("outline", CELL).map(index))
+    (strand.has(i) ? hintStrand : hintEvid).add(i);
+  const hintLine = new Set(marks.of("stripes", CELL).map(index));
   const mistakeSet = new Set(mistakes?.map((m) => m.y * w + m.x));
 
   if (!ds.started) {

@@ -19,7 +19,6 @@ import {
   adaptiveMarkAll,
   anyEmptyLacksNotes,
   candidateHint,
-  candidateHintMarks,
   type Mark,
   obviousCandidateMarks,
   regionReach,
@@ -654,7 +653,6 @@ export const romeGame: Game<
       stripes:
         'the area the sentence calls "its area" or "this area", or "the striped group": a goal and the squares already leading into it.',
     },
-    drawn: candidateHintMarks,
   },
   hintKeepTrack,
   refreshHintStep,

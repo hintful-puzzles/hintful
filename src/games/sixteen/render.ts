@@ -17,7 +17,9 @@ import {
 } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { SQUARE, TILE } from "./hint-text.ts";
 import type { SixteenMove, SixteenParams, SixteenState, SixteenUi } from "./state.ts";
 
 // --- constants --------------------------------------------------------
@@ -36,8 +38,8 @@ const COL_HINT = 4;
 
 // --- hint highlights --------------------------------------------------
 
-/** A hint step's marks: the tile to move, filled, and the cell the step lands
- * it in, outlined. */
+/** A hint step's plan data: the tile the step moves and where it lands, which
+ * the next step's journey and `hintKeepTrack` read. */
 export interface SixteenHintHighlights {
   /** The tile number being moved closer to its target. */
   tile: number;
@@ -156,14 +158,21 @@ export function redraw(
     curY = ui.cursor.y;
   }
 
-  // Hint arrow highlight.
+  // Hint marks: the tile to move, filled, and its target squares, outlined:
+  // this move's landing square, then the next move's when the journey has two
+  // legs.
+  const marks = stepMarks(activeHint);
+  const hintTile = marks.of("ring", TILE)[0] ?? null;
+  const [hintTarget = null, hintUltimate = null] = marks.of("ring", SQUARE);
+
+  // Hint arrow highlight: the click that moves the ringed tile, so it is drawn
+  // only with that tile.
   let hintArrowX: number | null = null;
   let hintArrowY: number | null = null;
-  if (activeHint?.move && activeHint.move.type === "slide") {
+  if (activeHint?.move.type === "slide" && hintTile !== null) {
     const m = activeHint.move;
-    const hl = activeHint.highlights;
-    if (hl) {
-      const tilePos = state.tiles.indexOf(hl.tile);
+    if (hintTarget !== null) {
+      const tilePos = state.tiles.indexOf(hintTile);
       if (tilePos >= 0) {
         // Deliberately point in-grid toward the target (not the shorter
         // toroidal wrap): the tile then visibly travels toward the target
@@ -171,7 +180,7 @@ export function redraw(
         // an extra move versus the solver's wrapping slide.
         if (m.axis === "row") {
           const curCol = tilePos % state.w;
-          const targetCol = hl.targetPos % state.w;
+          const targetCol = hintTarget % state.w;
           let d = m.delta;
           if (curCol < targetCol) {
             d = 1; // right
@@ -182,7 +191,7 @@ export function redraw(
           hintArrowY = m.index;
         } else {
           const curRow = Math.floor(tilePos / state.w);
-          const targetRow = Math.floor(hl.targetPos / state.w);
+          const targetRow = Math.floor(hintTarget / state.w);
           let d = m.delta;
           if (curRow < targetRow) {
             d = 1; // down
@@ -194,7 +203,7 @@ export function redraw(
         }
       }
     }
-    // Fallback if highlights or tile not found
+    // The move's own direction when no target is named or the tile is not found.
     if (hintArrowX === null || hintArrowY === null) {
       if (m.axis === "row") {
         hintArrowX = m.delta === -1 ? -1 : state.w;
@@ -226,11 +235,6 @@ export function redraw(
     drawArrowForCursor(dr, ts, ds, ds.curX, ds.curY, false);
   }
 
-  // Hint marks: fill the tile to move, outline its target cells.
-  const hl = activeHint?.highlights;
-  const hintTile = hl?.tile ?? null;
-  const hintTarget = hl?.targetPos ?? null;
-  const hintUltimate = hl?.ultimatePos ?? null;
   if (
     hintTile !== ds.hintTile ||
     hintTarget !== ds.hintTarget ||

@@ -41,6 +41,7 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
 import { drawHintOrdinal } from "../../engine/hint-ordinal.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import {
   type CellHighlight,
   cellHighlight,
@@ -589,7 +590,7 @@ export function redraw(
 
   // Pack both overlays per cell.
   const index = (x: number, y: number) => y * cr + x;
-  ds.hint.pack(hint?.highlights ?? null, index, (m) => valueBit(m.n));
+  ds.hint.pack(stepMarks(hint), index, (m) => valueBit(m.n));
   ds.wrong.packCells(mistakes ?? null, index);
 
   // Marks that moved are erased before the tile loop, not after it: inside a

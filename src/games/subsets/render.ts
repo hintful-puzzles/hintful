@@ -37,13 +37,14 @@ import {
 import { drawRectCorners, drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import {
   HINT_AREA,
   HINT_TARGET,
   OverlaySidecar,
 } from "../../engine/overlay-sidecar.ts";
-import type { Color, Size } from "../../engine/types.ts";
-import type { SubsetsHintHighlights } from "./index.ts";
+import type { Color, Point, Size } from "../../engine/types.ts";
+import { SLOT, TALLY_SET } from "./hint-marks.ts";
 import { candidateCells, candidateSets, subsetsValidate } from "./solver.ts";
 import {
   ADJTHAN,
@@ -199,7 +200,7 @@ export function redraw(
   ui: SubsetsUi,
   _animTime: number,
   flashTime: number,
-  hint?: HintStep<SubsetsMove, SubsetsHintHighlights>,
+  hint?: HintStep<SubsetsMove>,
   mistakes?: readonly SubsetsMistake[],
 ): void {
   const ts = ds.tileSize;
@@ -236,18 +237,27 @@ export function redraw(
   // highlighted tally sets — repacked each frame so a dropped hint repaints too.
   ds.hint.clear();
   ds.tallyLook.fill(0);
-  const hl = hint?.highlights;
   // The cell whose rule-outs the tally shows: the one a hint step is about,
   // else the one in focus.
   let tallyCell: number | null = null;
-  if (hl) {
-    const slot = hl.slot ?? -1;
-    tallyCell = hl.target.y * w + hl.target.x;
-    ds.hint.add(tallyCell, HINT_TARGET | ((slot + 1) << HINT_SLOT_SHIFT));
-    for (const e of hl.cells) ds.hint.add(e.y * w + e.x, HINT_AREA);
-    for (const c of hl.spotlight) ds.hint.add(c.y * w + c.x, HINT_SPOT);
-    for (const v of hl.sets) if (v >= 0 && v < w * h) ds.tallyLook[v] = TALLY_BOX_SET;
-    if (hl.rule !== null) ds.tallyLook[hl.rule] = TALLY_BOX_RULE;
+  if (hint) {
+    const marks = stepMarks(hint);
+    const at = (p: Point): number => p.y * w + p.x;
+    // A decided slot frames its letter; a rule-out, which decides no slot,
+    // frames the whole cell.
+    for (const s of marks.of("ring", SLOT)) {
+      tallyCell = at(s);
+      ds.hint.add(tallyCell, HINT_TARGET | ((s.bit + 1) << HINT_SLOT_SHIFT));
+    }
+    for (const c of marks.of("ring", CELL)) {
+      tallyCell = at(c);
+      ds.hint.add(tallyCell, HINT_TARGET);
+    }
+    for (const e of marks.of("outline", CELL)) ds.hint.add(at(e), HINT_AREA);
+    for (const c of marks.of("stripes", CELL)) ds.hint.add(at(c), HINT_SPOT);
+    for (const v of marks.of("outline", TALLY_SET))
+      if (v >= 0 && v < w * h) ds.tallyLook[v] = TALLY_BOX_SET;
+    for (const v of marks.of("ring", TALLY_SET)) ds.tallyLook[v] = TALLY_BOX_RULE;
   } else if (
     ui.highlightSet !== null &&
     ui.highlightSet >= 0 &&
@@ -373,7 +383,7 @@ export function redraw(
       // Clicking it (a touch-sized strip along the block's top edge, index.ts
       // `iconHit`) lights this cell's still-possible sets in the tally; it fills
       // green while this cell is focused. Player focus is suppressed while a
-      // hint is displayed, so `hl` gates the lit state.
+      // hint is displayed, so a displayed hint gates the lit state.
       const iconR = Math.max(3, Math.floor(ts * 0.16));
       const iconY = by - Math.floor(ts * 0.28);
       const icx = bx + Math.floor(ts * 0.22);

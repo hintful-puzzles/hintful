@@ -13,6 +13,7 @@ import {
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { itSlow } from "../../engine/testing/slow.ts";
+import { say } from "./hint-text.ts";
 import { executeMove, sixteenGame } from "./index.ts";
 import type { SixteenHintHighlights } from "./render.ts";
 import {
@@ -1058,6 +1059,28 @@ describe("Sixteen hint rendering", () => {
 });
 
 describe("Sixteen hint track and direction fixes", () => {
+  /** A step moving `tile` to `targetPos` by `move`, with the words that mark
+   * them, since the renderer paints the marks the words name. */
+  const slideStep = (
+    move: SixteenMove,
+    tile: number,
+    targetPos: number,
+  ): HintStep<SixteenMove, SixteenHintHighlights> => {
+    const words = say.step({
+      tile,
+      target: targetPos,
+      onward: null,
+      continues: false,
+      home: false,
+    });
+    return {
+      move,
+      explanation: words.text,
+      words,
+      highlights: { tile, targetPos, ultimatePos: null },
+    };
+  };
+
   it("always overrides arrow direction to point in-grid (avoiding wrapping arrow)", () => {
     // Case 1: tile 1 at col 0, target at col 2.
     // Recommended move was left (delta: -1), but in-grid direction is right (delta: 1).
@@ -1065,15 +1088,12 @@ describe("Sixteen hint track and direction fixes", () => {
     const ui1 = sixteenGame.newUi(s1);
     const ds1 = sixteenGame.newDrawState(s1, 32);
 
-    const activeHint1: HintStep<SixteenMove, SixteenHintHighlights> = {
-      move: { type: "slide", axis: "row", index: 0, delta: -1 },
-      explanation: "",
-      highlights: {
-        tile: 1,
-        targetPos: 2, // col 2, row 0
-        ultimatePos: null,
-      },
-    };
+    // Target col 2, row 0.
+    const activeHint1 = slideStep(
+      { type: "slide", axis: "row", index: 0, delta: -1 },
+      1,
+      2,
+    );
 
     const { dr: dr1 } = recordingDrawing();
     sixteenGame.redraw?.(dr1, ds1, null, s1, 1, ui1, 0, 0, activeHint1);
@@ -1096,15 +1116,12 @@ describe("Sixteen hint track and direction fixes", () => {
     const ui2 = sixteenGame.newUi(s2);
     const ds2 = sixteenGame.newDrawState(s2, 32);
 
-    const activeHint2: HintStep<SixteenMove, SixteenHintHighlights> = {
-      move: { type: "slide", axis: "row", index: 0, delta: 1 },
-      explanation: "",
-      highlights: {
-        tile: 1,
-        targetPos: 0, // col 0, row 0
-        ultimatePos: null,
-      },
-    };
+    // Target col 0, row 0.
+    const activeHint2 = slideStep(
+      { type: "slide", axis: "row", index: 0, delta: 1 },
+      1,
+      0,
+    );
 
     const { dr: dr2 } = recordingDrawing();
     sixteenGame.redraw?.(dr2, ds2, null, s2, 1, ui2, 0, 0, activeHint2);

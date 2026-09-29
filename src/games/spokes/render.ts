@@ -34,8 +34,10 @@ import {
 } from "../../engine/color/palette.ts";
 import { drawRectCorners } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
+import { HUB, SPOKE } from "./hint-text.ts";
 import type { SpokesHint } from "./index.ts";
 import { SpokesScratch, spokesFindIsolated, spokesSolverRecount } from "./solver.ts";
 import {
@@ -309,20 +311,26 @@ export function redraw(
   // Hint overlay: flag both ends of each forced spoke (so both cells repaint
   // and both halves of the COL_HINT line come out), and ring each evidence hub.
   ds.hint.clear();
-  const hl = hint?.highlights;
-  if (hl) {
-    for (const sp of hl.spokes) {
-      const bit = (d: number): number =>
-        sp.state === SPOKE_LINE ? 1 << d : hintMarkBit(d);
-      ds.hint.add(sp.index, bit(sp.dir));
-      const nx = (sp.index % w) + SPOKE_DIRS[sp.dir].dx;
-      const ny = ((sp.index / w) | 0) + SPOKE_DIRS[sp.dir].dy;
-      if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
-        ds.hint.add(ny * w + nx, bit(sp.dir ^ 4));
-      }
-    }
-    for (const e of hl.evidence) ds.hint.add(e, HINT_RING);
+  // A ringed spoke is drawn as what the step does to it, which the plan says.
+  const marks = stepMarks(hint);
+  const planned = hint?.highlights?.spokes ?? [];
+  for (const sp of marks.of("ring", SPOKE)) {
+    const nx = (sp.index % w) + SPOKE_DIRS[sp.dir].dx;
+    const ny = ((sp.index / w) | 0) + SPOKE_DIRS[sp.dir].dy;
+    const inside = nx >= 0 && nx < w && ny >= 0 && ny < h;
+    const far = ny * w + nx;
+    const set = planned.find(
+      (p) =>
+        (p.index === sp.index && p.dir === sp.dir) ||
+        (inside && p.index === far && p.dir === (sp.dir ^ 4)),
+    );
+    if (!set) continue;
+    const bit = (d: number): number =>
+      set.state === SPOKE_LINE ? 1 << d : hintMarkBit(d);
+    ds.hint.add(sp.index, bit(sp.dir));
+    if (inside) ds.hint.add(far, bit(sp.dir ^ 4));
   }
+  for (const e of marks.of("outline", HUB)) ds.hint.add(e, HINT_RING);
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {

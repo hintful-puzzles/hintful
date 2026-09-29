@@ -25,11 +25,12 @@
  */
 
 import { BORDER, DISABLED, DX, DY, margin, outOfBounds } from "./border-grid.ts";
-import type { BorderHint } from "./border-grid-hint.ts";
+import { EDGE } from "./border-grid-hint.ts";
 import type { Dsf } from "./dsf.ts";
 import type { GameDrawing } from "./game.ts";
 import { hatchPeriod } from "./hatch.ts";
 import { drawMarkSides, MARK_ALL } from "./hint-mark.ts";
+import { CELL, type StepMarks } from "./hint-words.ts";
 import type { GridCursor } from "./pointer.ts";
 import type { Rect, Size } from "./types.ts";
 
@@ -185,23 +186,22 @@ export function mistakeEdgeBits(
 }
 
 /**
- * The displayed hint step, as per-cell bits: its edge and the firing's other
- * edges on both squares each separates (they share a fate, so they share one
- * channel and one color), and the squares its sentence cites.
+ * The displayed hint step's marks, as per-cell bits: each ringed edge on both
+ * squares it separates (a firing's edges share a fate, so they share one channel
+ * and one color), the outlined squares and the striped region.
  */
-export function hintTileBits(w: number, h: number, hl?: BorderHint): Int32Array {
+export function hintTileBits(w: number, h: number, marks: StepMarks): Int32Array {
   const mask = new Int32Array(w * h);
-  if (!hl) return mask;
-  const markEdge = (ex: number, ey: number, edir: number): void => {
-    mask[ey * w + ex] |= EDGE_HINT(BORDER(edir));
-    const nx = ex + DX[edir];
-    const ny = ey + DY[edir];
-    if (!outOfBounds(nx, ny, w, h)) mask[ny * w + nx] |= EDGE_HINT(BORDER(edir ^ 2));
-  };
-  markEdge(hl.x, hl.y, hl.dir);
-  for (const e of hl.edges ?? []) markEdge(e.x, e.y, e.dir);
-  for (const cell of hl.cells ?? []) mask[cell.y * w + cell.x] |= F_HINT_CELL;
-  for (const cell of hl.hatch ?? []) mask[cell.y * w + cell.x] |= F_HINT_REGION;
+  for (const { x, y, dir } of marks.of("ring", EDGE)) {
+    mask[y * w + x] |= EDGE_HINT(BORDER(dir));
+    const nx = x + DX[dir];
+    const ny = y + DY[dir];
+    if (!outOfBounds(nx, ny, w, h)) mask[ny * w + nx] |= EDGE_HINT(BORDER(dir ^ 2));
+  }
+  for (const cell of marks.of("outline", CELL))
+    mask[cell.y * w + cell.x] |= F_HINT_CELL;
+  for (const cell of marks.of("stripes", CELL))
+    mask[cell.y * w + cell.x] |= F_HINT_REGION;
   return mask;
 }
 

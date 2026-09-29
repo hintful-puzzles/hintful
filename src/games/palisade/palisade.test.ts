@@ -9,7 +9,9 @@ import {
   FLIP,
   initBorders,
 } from "../../engine/border-grid.ts";
+import { EDGE } from "../../engine/border-grid-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
@@ -284,6 +286,16 @@ describe("palisade hint", () => {
   const P = { w: 5, h: 5, k: 5 };
   const hlOf = (step: HintStep<PalisadeMove>): PalisadeHint =>
     step.highlights as PalisadeHint;
+  /** What a step's words mark: the edges it rings beyond its own, the region
+   * it stripes, the squares it outlines. */
+  const marksOf = (step: HintStep<PalisadeMove>) => {
+    const m = stepMarks(step);
+    return {
+      siblings: m.of("ring", EDGE).length - 1,
+      hatch: m.of("stripes", CELL).length,
+      cells: m.of("outline", CELL).length,
+    };
+  };
   const physicalEdge = (
     h: { x: number; y: number; dir: number },
     w: number,
@@ -368,7 +380,7 @@ describe("palisade hint", () => {
     expect(firstCont).toBeGreaterThan(0);
     const start = steps[firstCont - 1];
     expect(start.continuesPrevious).toBeUndefined();
-    expect(hlOf(start).edges?.length ?? 0).toBeGreaterThan(0);
+    expect(marksOf(start).siblings).toBeGreaterThan(0);
     // The continuation's narration is the short form, naming the edges it
     // rings and pointing back at the evidence the first leg named.
     expect(steps[firstCont].explanation).toMatch(
@@ -385,7 +397,7 @@ describe("palisade hint", () => {
         (s, k) =>
           !s.continuesPrevious &&
           ss[k + 1]?.continuesPrevious === true &&
-          (hlOf(s).hatch?.length ?? 0) > 1,
+          marksOf(s).hatch > 1,
       ),
     );
     expect(steps).not.toBeNull();
@@ -394,14 +406,14 @@ describe("palisade hint", () => {
       (s, k) =>
         !s.continuesPrevious &&
         steps[k + 1]?.continuesPrevious === true &&
-        (hlOf(s).hatch?.length ?? 0) > 1,
+        marksOf(s).hatch > 1,
     );
     expect(opener).toBeDefined();
     if (!opener) return;
     expect(opener.explanation).toMatch(/share a fate/);
-    expect(hlOf(opener).edges?.length ?? 0).toBeGreaterThan(0);
-    expect(hlOf(opener).hatch?.length ?? 0).toBeGreaterThan(1);
-    expect(hlOf(opener).cells).toBeUndefined();
+    expect(marksOf(opener).siblings).toBeGreaterThan(0);
+    expect(marksOf(opener).hatch).toBeGreaterThan(1);
+    expect(marksOf(opener).cells).toBe(0);
   });
 
   it("does not re-hint an edge the player already marked no-wall", () => {

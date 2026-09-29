@@ -5,6 +5,7 @@
 
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import {
   drawRectOutline,
   type GameDrawing,
@@ -12,6 +13,7 @@ import {
 } from "../../engine/index.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import type { GalaxiesHint } from "./hint.ts";
+import { DOT, WALL } from "./hint-marks.ts";
 import type { GalaxiesMistake, GalaxiesMove, GalaxiesUi } from "./index.ts";
 import { legalDotsFor, okToAddAssocWithOpposite } from "./moves.ts";
 import {
@@ -218,10 +220,10 @@ function packHint(
   ds: GalaxiesDrawState,
   w: number,
   h: number,
-  hl?: GalaxiesHint,
+  step?: HintStep<GalaxiesMove, GalaxiesHint>,
 ): void {
   ds.hint.clear();
-  if (!hl) return;
+  const marks = stepMarks(step);
   const add = (tx: number, ty: number, bit: number) => {
     if (tx >= 0 && tx < w && ty >= 0 && ty < h) ds.hint.add(ty * w + tx, bit);
   };
@@ -248,20 +250,20 @@ function packHint(
       }
     }
   };
-  for (const a of hl.area) cell(a.x, a.y, HINT_AREA_CELL);
-  for (const a of hl.hatch) cell(a.x, a.y, HINT_REGION_CELL);
+  for (const a of marks.of("outline", CELL)) cell(a.x, a.y, HINT_AREA_CELL);
+  for (const a of marks.of("stripes", CELL)) cell(a.x, a.y, HINT_REGION_CELL);
   // With a focus, only that cell fills; the rest of the move's cells are its
   // partners and are outlined. Without one, the cells are equivalent and all
   // fill (quality-bar rule 3 — equivalent moves share a color).
-  const focus = hl.focus;
-  for (const t of hl.targets) {
+  const focus = step?.highlights?.focus ?? null;
+  for (const t of marks.of("ring", CELL)) {
     const same = focus !== null && t.x === focus.x && t.y === focus.y;
     cell(t.x, t.y, focus === null || same ? HINT_TARGET_CELL : HINT_PARTNER_CELL);
   }
-  for (const e of hl.walls) wall(e.x, e.y, HINT_REFWALL_SHIFT);
-  for (const e of hl.targetWalls) wall(e.x, e.y, HINT_WALL_SHIFT);
-  for (const d of hl.refDots) dot(d.x, d.y, HINT_DOT_REF);
-  if (hl.targetDot) dot(hl.targetDot.x, hl.targetDot.y, HINT_DOT_ACTION);
+  for (const e of marks.of("outline", WALL)) wall(e.x, e.y, HINT_REFWALL_SHIFT);
+  for (const e of marks.of("ring", WALL)) wall(e.x, e.y, HINT_WALL_SHIFT);
+  for (const d of marks.of("outline", DOT)) dot(d.x, d.y, HINT_DOT_REF);
+  for (const d of marks.of("ring", DOT)) dot(d.x, d.y, HINT_DOT_ACTION);
 }
 
 // --- rendering helpers ---------------------------------------------
@@ -686,7 +688,7 @@ export function redraw(
   const mistakeTiles = splitMistakeOverlay(ds, w, h, mistakes);
   // So does the hint's, which is what makes a hint appear on a frame where
   // nothing else changed (`hint-overlay.test.ts`).
-  packHint(ds, w, h, hint?.highlights);
+  packHint(ds, w, h, hint);
   const border = borderFor(tile);
   const edgeThickness = Math.max(tile >> 4, 2);
   const flashing = flashTime > 0 && ((flashTime / 0.15) | 0) % 2 === 0;

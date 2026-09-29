@@ -17,8 +17,7 @@
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { commonHintRefusal, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
-import type { MarkRef } from "../../engine/hint-words.ts";
-import { COLOR, type Reason, ROW, SLOT, say } from "./hint-text.ts";
+import { COLOR, type Reason, say } from "./hint-text.ts";
 import {
   FEEDBACK_CORRECTPLACE,
   type GuessMove,
@@ -613,14 +612,4 @@ export function guessRefreshHintStep(
     highlights: { ...hl, marked: live },
     ...(words ? { words, explanation: words.text } : {}),
   };
-}
-
-/** What a step's highlights draw: the `drawn` half of Guess's legend. Every
- * row a step reads is a scored one, so the renderer draws each. */
-export function guessHintMarks(hl: GuessHighlights): MarkRef[] {
-  return [
-    { role: "stripes", kind: ROW, elements: hl.line },
-    { role: "outline", kind: SLOT, elements: hl.slots },
-    { role: "ring", kind: COLOR, elements: hl.marked },
-  ] as MarkRef[];
 }

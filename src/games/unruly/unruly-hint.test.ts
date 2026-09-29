@@ -4,6 +4,7 @@
 // journey, and every step carries visible evidence. Plus `animLength` for the
 // placement animation.
 import { describe, expect, it } from "vitest";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { type Cell, EMPTY as E, ONE as O, ZERO as Z } from "./constants.ts";
@@ -153,15 +154,18 @@ describe("hint", () => {
       if (!res?.ok) throw new Error("expected a plan");
       for (const step of res.steps) {
         const hl = step.highlights as UnrulyHint;
-        expect(hl.line.length > 0 || hl.outline.length > 0).toBe(true);
+        const marks = stepMarks(step);
+        const line = marks.of("stripes", CELL);
+        expect(line.length > 0 || marks.of("outline", CELL).length > 0).toBe(true);
         // A hatched line is one whole row or column, through the target.
-        if (hl.line.length > 0) {
-          const ti = hl.target.y * st.w2 + hl.target.x;
-          expect(hl.line.includes(ti)).toBe(true);
-          const rows = new Set(hl.line.map((i) => Math.floor(i / st.w2)));
-          const cols = new Set(hl.line.map((i) => i % st.w2));
+        if (line.length > 0) {
+          expect(line.some((p) => p.x === hl.target.x && p.y === hl.target.y)).toBe(
+            true,
+          );
+          const rows = new Set(line.map((p) => p.y));
+          const cols = new Set(line.map((p) => p.x));
           expect(rows.size === 1 ? st.w2 : cols.size === 1 ? st.h2 : -1).toBe(
-            hl.line.length,
+            line.length,
           );
         }
       }

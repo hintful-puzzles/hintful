@@ -22,7 +22,9 @@ import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
-import type { Color, Size } from "../../engine/types.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
+import type { Color, Point, Size } from "../../engine/types.ts";
+import { CLUE, LINE } from "./hint-marks.ts";
 import type { PatternHint } from "./index.ts";
 import { lineHasError } from "./solver.ts";
 import {
@@ -113,7 +115,7 @@ export interface PatternDrawState {
   h: number;
   /** Per-cell packed display key; -1 forces a redraw. */
   visible: Int32Array;
-  /** Per-line last-drawn clue color; -1 forces a redraw. */
+  /** Per-line last-drawn clue color and hatch; -1 forces a redraw. */
   numColors: Int32Array;
 }
 
@@ -318,14 +320,15 @@ export function redraw(
       : null;
 
   // Hint overlay: forced targets, the reasoned line's cells (line of sight),
-  // and the cited marks to ring by their own color.
-  const hl = hint?.highlights;
-  const hintTargets = hl ? new Set(hl.cells) : null;
-  const hintBlackRefs = hl ? new Set(hl.blackRefs) : null;
-  const hintWhiteRefs = hl ? new Set(hl.whiteRefs) : null;
-  const hintLine = hl?.line ?? -1;
+  // and the cited marks, outlined by their own color.
+  const marks = stepMarks(hint);
+  const index = (c: Point): number => c.y * w + c.x;
+  const hintTargets = new Set(marks.of("ring", CELL).map(index));
+  const hintRefs = new Set(marks.of("outline", CELL).map(index));
+  const hintLines = marks.of("stripes", LINE);
+  const hintClues = new Set(marks.of("outline", CLUE));
   const inReasonedLine = (x: number, y: number): boolean =>
-    hintLine < 0 ? false : hintLine < w ? x === hintLine : y === hintLine - w;
+    hintLines.some((l) => (l < w ? x === l : y === l - w));
 
   if (!ds.started) {
     // The grid outline frame.
@@ -386,12 +389,10 @@ export function redraw(
       const cur = x === cx && y === cy;
       const mistake = mistakeSet?.has(i) ?? false;
       let hintBits = 0;
-      if (hl) {
-        if (hintTargets?.has(i)) hintBits = K_HINT_TARGET;
-        else if (hintBlackRefs?.has(i)) hintBits = K_HINT_BLACKREF;
-        else if (hintWhiteRefs?.has(i)) hintBits = K_HINT_WHITEREF;
-        if (inReasonedLine(x, y)) hintBits |= K_HINT_LINE;
-      }
+      if (hintTargets.has(i)) hintBits = K_HINT_TARGET;
+      else if (hintRefs.has(i))
+        hintBits = grid[i] === GRID_FULL ? K_HINT_BLACKREF : K_HINT_WHITEREF;
+      if (inReasonedLine(x, y)) hintBits |= K_HINT_LINE;
       const key = val | (cur ? K_CURSOR : 0) | (mistake ? K_MISTAKE : 0) | hintBits;
       if (ds.visible[i] !== key) {
         ds.visible[i] = key;
@@ -408,12 +409,15 @@ export function redraw(
       color = COL_CURSOR_GUIDE;
     }
     // The reasoned line's clue takes the action color and its strip the hatch,
-    // so the stripe runs from the count to the end of the line. The color alone
-    // keys the repaint, since the two change together.
-    if (i === hintLine) color = COL_HINT;
-    if (ds.numColors[i] !== color) {
-      ds.numColors[i] = color;
-      drawNumbers(dr, ds, state, i, color, i === hintLine);
+    // so the stripe runs from the count to the end of the line. A line with no
+    // clue has its strip hatched but no numbers to recolor, so the hatch keys
+    // the repaint beside the color.
+    if (hintClues.has(i)) color = COL_HINT;
+    const hatched = hintLines.includes(i);
+    const key = color * 2 + (hatched ? 1 : 0);
+    if (ds.numColors[i] !== key) {
+      ds.numColors[i] = key;
+      drawNumbers(dr, ds, state, i, color, hatched);
     }
   }
 }

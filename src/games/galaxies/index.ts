@@ -55,7 +55,6 @@ import {
   outstanding,
   stepSatisfied,
 } from "./hint.ts";
-import { galaxiesHintMarks } from "./hint-marks.ts";
 import { tell } from "./hint-text.ts";
 import {
   addAssocWithOpposite,
@@ -1031,7 +1030,6 @@ export const galaxiesGame: Game<
       stripes:
         "the galaxy, or the piece of one, the sentence names: how far a galaxy can still stretch, or the piece cut off from its dot.",
     },
-    drawn: galaxiesHintMarks,
   },
 
   /** The rings, not the gesture, and not the information either. Once the

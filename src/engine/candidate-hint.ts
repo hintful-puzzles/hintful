@@ -18,7 +18,7 @@ import { valueBit, valuesOneTo } from "./candidate-bits.ts";
 import type { DeductionRecord } from "./deduction-record.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "./game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
-import { CELL, type MarkRef, Narration, NOTE } from "./hint-words.ts";
+import { CELL, Narration, NOTE } from "./hint-words.ts";
 import type { CellRegion } from "./latin-hint.ts";
 import type { OrderedCell } from "./overlay-sidecar.ts";
 import type { Point } from "./types.ts";
@@ -154,22 +154,6 @@ export interface CandidateHighlights {
    * single rests on through a cell with no notes, which the walk adds.
    * Premise, not a mark: nothing draws it. */
   reads?: readonly Cell[];
-}
-
-/**
- * The marks a candidate step draws: its `targets` ringed and each struck note
- * ringed in its cell (`marks`), the `area` outlined, the `hatch` striped. The
- * `drawn` half of a candidate game's `hintMarks` legend; a game whose
- * highlights draw more adds its own.
- */
-export function candidateHintMarks(h: CandidateHighlights): MarkRef[] {
-  const out: MarkRef[] = [
-    { role: "ring", kind: CELL, elements: h.targets },
-    { role: "ring", kind: NOTE, elements: h.marks },
-    { role: "outline", kind: CELL, elements: h.area },
-  ] as MarkRef[];
-  if (h.hatch) out.push({ role: "stripes", kind: CELL, elements: h.hatch } as MarkRef);
-  return out;
 }
 
 /** A step's words with the struck notes that are gone taken out, and each

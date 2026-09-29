@@ -40,6 +40,7 @@ import { glyphFont, strokeScaledPolygon } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import type { Grid, GridDot, GridFace, GridType } from "../../engine/grid/index.ts";
 import { gridComputeSize, gridFindIncenter } from "../../engine/grid/index.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import {
   drawPencilGlyph,
   pencilIndicatorBox,
@@ -47,7 +48,7 @@ import {
 } from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import type { LoopyCursor } from "./cursor.ts";
-import type { LoopyHint } from "./hint.ts";
+import { CORNER, DOT, EDGE, FACE, PAIR } from "./hint-text.ts";
 import type { LoopyMove, LoopyNoteDrag } from "./index.ts";
 import { cornerArc, cursorCorner } from "./notes.ts";
 import { gridTypeOf, LOOPY_GRIDS, type LoopyParams } from "./params.ts";
@@ -464,7 +465,7 @@ function drawNotes(
   g: Grid,
   ts: number,
   s: LoopyState,
-  hint: HintStep<LoopyMove, LoopyHint> | null,
+  hint: HintStep<LoopyMove> | null,
   mistakes: readonly LoopyMistake[],
 ): { at: Point; text: string; color: number }[] {
   const wrongCorners = new Set<number>();
@@ -473,9 +474,9 @@ function drawNotes(
     if (m.kind === "corner") wrongCorners.add(m.dline);
     if (m.kind === "pair") wrongPairs.add(pairKey(m.a, m.b));
   }
-  const hl = hint?.highlights;
-  const citedCorners = new Set(hl?.corners ?? []);
-  const citedPairs = new Set((hl?.pairs ?? []).map((p) => pairKey(p.a, p.b)));
+  const marks = stepMarks(hint);
+  const citedCorners = new Set(marks.of("outline", CORNER));
+  const citedPairs = new Set(marks.of("outline", PAIR).map((p) => pairKey(p.a, p.b)));
 
   for (let dline = 0; dline < s.corners.length; dline++) {
     const bits = s.corners[dline];
@@ -497,12 +498,15 @@ function drawNotes(
     return drawPairConnector(dr, g, ts, p, color);
   });
 
+  // The note the step places is drawn off its move, where the words ring it.
   const move = hint?.move;
-  if (move?.kind === "corner")
+  if (move?.kind === "corner" && marks.of("ring", CORNER).includes(move.dline))
     drawCornerWedge(dr, g, ts, move.dline, move.bits, COL_HINT);
   if (move?.kind === "pair" && move.relation !== "none") {
     const pair = { a: move.a, b: move.b, opposite: move.relation === "opposite" };
-    labels.push(drawPairConnector(dr, g, ts, pair, COL_HINT));
+    const placed = new Set(marks.of("ring", PAIR).map((p) => PAIR.key(p)));
+    if (placed.has(PAIR.key(pair)))
+      labels.push(drawPairConnector(dr, g, ts, pair, COL_HINT));
   }
   return labels;
 }
@@ -516,14 +520,14 @@ export function redraw(
   ui: LoopyRenderUi,
   _animTime: number,
   flashTime: number,
-  hint?: HintStep<LoopyMove, LoopyHint>,
+  hint?: HintStep<LoopyMove>,
   mistakes?: readonly LoopyMistake[],
 ): void {
   const g = s.grid;
   const ts = ds.tileSize;
   const mistaken = new Uint8Array(g.numEdges);
   for (const m of mistakes ?? []) if (m.kind === "edge") mistaken[m.edge] = 1;
-  const hl = hint?.highlights;
+  const marks = stepMarks(hint);
 
   // Clue coloring. `clueError` and `clueSatisfied` are what the C diffs to
   // decide whether a face needs repainting; here they are simply the key that
@@ -596,21 +600,20 @@ export function redraw(
   // The hint's marks go under the edges and the clue digits, which stay legible on
   // top of them: a band under each edge it sets or cites, a ring under each dot it
   // names, and an outline inside each clue it counts.
-  if (hl) {
-    const thin = Math.max(2, Math.round(2 * lineThickness(ts)));
-    for (const i of hl.edges) {
-      const [a, b] = edgeEnds(g, ts, i);
-      dr.drawLine(a, b, COL_HINT_CELL, thin);
-    }
-    const ops = hint?.move.kind === "set" ? hint.move.ops : [];
-    const lineTo = new Map(ops.map((o) => [o.edge, o.state === LINE_YES]));
-    for (const i of hl.targets) {
-      const [a, b] = edgeEnds(g, ts, i);
-      drawTargetBand(dr, a, b, lineTo.get(i) ?? false, ts);
-    }
-    for (const f of hl.faces) drawFaceOutline(dr, g, ts, g.faces[f]);
-    for (const d of hl.dots) drawDotRing(dr, dotAt(g, ts, g.dots[d]), ts);
+  const thin = Math.max(2, Math.round(2 * lineThickness(ts)));
+  for (const i of marks.of("outline", EDGE)) {
+    const [a, b] = edgeEnds(g, ts, i);
+    dr.drawLine(a, b, COL_HINT_CELL, thin);
   }
+  const ops = hint?.move.kind === "set" ? hint.move.ops : [];
+  const lineTo = new Map(ops.map((o) => [o.edge, o.state === LINE_YES]));
+  for (const i of marks.of("ring", EDGE)) {
+    const [a, b] = edgeEnds(g, ts, i);
+    drawTargetBand(dr, a, b, lineTo.get(i) ?? false, ts);
+  }
+  for (const f of marks.of("outline", FACE)) drawFaceOutline(dr, g, ts, g.faces[f]);
+  for (const d of marks.of("outline", DOT))
+    drawDotRing(dr, dotAt(g, ts, g.dots[d]), ts);
 
   const labels = drawNotes(dr, g, ts, s, hint ?? null, mistakes ?? []);
 

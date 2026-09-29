@@ -374,6 +374,60 @@ export function pronoun<E>(kind: MarkKind<E>, elements: readonly E[]): string {
   return unitCount(kind, elements) > 1 ? "them" : "it";
 }
 
+/**
+ * The marks a step's words name, as its renderer reads them. A bound game's
+ * `redraw` takes every hint mark from here and from nowhere else, so a mark is
+ * painted exactly when the words name it (`testing/hint-binding.ts` holds the
+ * frame to that).
+ */
+export class StepMarks {
+  static readonly NONE = new StepMarks([]);
+  private readonly byPair = new Map<string, unknown[]>();
+
+  private constructor(private readonly refs: readonly MarkRef[]) {}
+
+  /** The marks `words` name; none when there are no words. */
+  static of(words?: Narration): StepMarks {
+    if (!words) return StepMarks.NONE;
+    let m = cache.get(words);
+    if (!m) {
+      m = new StepMarks(words.refs);
+      cache.set(words, m);
+    }
+    return m;
+  }
+
+  /** The elements of `kind` the words name in `role`, each once by the kind's
+   * key, in the order the words first name them, as they were named (an
+   * outlined cell keeps its chain ordinal). */
+  of<E>(role: MarkRole, kind: MarkKind<E>): readonly E[] {
+    const pair = `${role}|${kind.name}`;
+    let out = this.byPair.get(pair);
+    if (!out) {
+      out = [];
+      const seen = new Set<string>();
+      for (const r of this.refs) {
+        if (r.role !== role || r.kind.name !== kind.name) continue;
+        for (const e of r.elements as readonly E[]) {
+          const k = kind.key(e);
+          if (seen.has(k)) continue;
+          seen.add(k);
+          out.push(e);
+        }
+      }
+      this.byPair.set(pair, out);
+    }
+    return out as readonly E[];
+  }
+}
+
+const cache = new WeakMap<Narration, StepMarks>();
+
+/** The marks a displayed hint step's words name; none when no step is shown. */
+export function stepMarks(step?: { readonly words?: Narration } | null): StepMarks {
+  return StepMarks.of(step?.words);
+}
+
 /** Every element `refs` mark, as `role|kind|key`, with the element each one is
  * drawn inside ({@link MarkKind.within}) marked in the same role. */
 export function markKeys(refs: readonly MarkRef[]): Set<string> {

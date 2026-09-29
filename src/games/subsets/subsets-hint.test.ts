@@ -12,13 +12,15 @@
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { CONTRADICTION_UNLOCALIZED } from "../../engine/hint-refusal.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/index.ts";
 import { CURSOR_DOWN, LEFT_BUTTON, newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newSubsetsDesc } from "./generator.ts";
-import { type SubsetsHintHighlights, subsetsGame } from "./index.ts";
+import { SLOT, TALLY_SET } from "./hint-marks.ts";
+import { subsetsGame } from "./index.ts";
 import {
   COL_HINT,
   COL_HINT_CELL,
@@ -303,8 +305,8 @@ describe("hint", () => {
     if (!res?.ok) return;
     for (const step of res.steps) {
       expect(step.explanation.length).toBeGreaterThan(20);
-      const hl = step.highlights as SubsetsHintHighlights | undefined;
-      expect(hl?.target).toBeDefined();
+      const marks = stepMarks(step);
+      expect(marks.of("ring", SLOT).length + marks.of("ring", CELL).length).toBe(1);
       // Every leg is one slot or one rule-out with its own action; the lead leg
       // also names the highlighted thing it reasons from (attention → deduction
       // → action).
@@ -332,12 +334,11 @@ describe("hint", () => {
     const firstLen = deduceHintPlan(hit.state).deductions[0].sets.length;
     for (let k = 1; k < firstLen; k++) {
       expect(res.steps[k].continuesPrevious).toBe(true);
-      const hl = res.steps[k].highlights as SubsetsHintHighlights;
-      const lead = res.steps[0].highlights as SubsetsHintHighlights;
+      const [slot] = stepMarks(res.steps[k]).of("ring", SLOT);
+      const [leadSlot] = stepMarks(res.steps[0]).of("ring", SLOT);
       const move = res.steps[k].move;
-      expect(hl.target).toEqual(lead.target);
-      expect(hl.sets).toEqual(lead.sets);
-      expect(move.kind === "set" && hl.slot === move.bit).toBe(true);
+      expect({ x: slot.x, y: slot.y }).toEqual({ x: leadSlot.x, y: leadSlot.y });
+      expect(move.kind === "set" && slot.bit === move.bit).toBe(true);
     }
     expect(res.steps[0].continuesPrevious).toBeUndefined();
   });
@@ -448,18 +449,18 @@ describe("highlights", () => {
     const aHl = subsetsGame.hint?.(arrow.state);
     const cHl = subsetsGame.hint?.(collapse.state);
     if (aHl?.ok) {
-      const hl = aHl.steps[0].highlights as SubsetsHintHighlights;
-      expect(hl.cells.length).toBeGreaterThan(0);
-      expect(hl.sets.length).toBe(0);
-      expect(hl.spotlight.length).toBe(0);
+      const marks = stepMarks(aHl.steps[0]);
+      expect(marks.of("outline", CELL).length).toBeGreaterThan(0);
+      expect(marks.of("outline", TALLY_SET).length).toBe(0);
+      expect(marks.of("stripes", CELL).length).toBe(0);
     }
     if (cHl?.ok) {
-      const hl = cHl.steps[0].highlights as SubsetsHintHighlights;
-      expect(hl.sets.length).toBeGreaterThan(0);
+      const marks = stepMarks(cHl.steps[0]);
+      expect(marks.of("outline", TALLY_SET).length).toBeGreaterThan(0);
       // A collapse points at the surviving sets in the tally, plus at most one
       // grid cell — the excluded competitor's blocker.
-      expect(hl.cells.length).toBeLessThanOrEqual(1);
-      expect(hl.spotlight.length).toBe(0);
+      expect(marks.of("outline", CELL).length).toBeLessThanOrEqual(1);
+      expect(marks.of("stripes", CELL).length).toBe(0);
     }
   });
 
@@ -469,10 +470,11 @@ describe("highlights", () => {
     if (!hit) return;
     const res = subsetsGame.hint?.(hit.state);
     if (!res?.ok) return;
-    const hl = res.steps[0].highlights as SubsetsHintHighlights;
+    const marks = stepMarks(res.steps[0]);
+    const [slot] = marks.of("ring", SLOT);
     // The spotlight is the set's single home, which is the acted cell.
-    expect(hl.spotlight).toEqual([hl.target]);
-    expect(hl.sets.length).toBe(1);
+    expect(marks.of("stripes", CELL)).toEqual([{ x: slot.x, y: slot.y }]);
+    expect(marks.of("outline", TALLY_SET).length).toBe(1);
   });
 });
 
@@ -610,13 +612,12 @@ describe("collapse exclusion (#2 — why not X)", () => {
             expect(lead.explanation).toMatch(
               /For instance, .* (can't go here|already placed)/,
             );
-            const hl = lead.highlights as SubsetsHintHighlights;
             // The blocker cell is outlined so the clause has a referent, and
             // only on the leg that says the clause.
-            expect(hl.cells.length).toBeGreaterThan(0);
+            expect(stepMarks(lead).of("outline", CELL).length).toBeGreaterThan(0);
             const next = res.steps[d.marks.length + 1];
             if (next?.continuesPrevious)
-              expect((next.highlights as SubsetsHintHighlights).cells).toEqual([]);
+              expect(stepMarks(next).of("outline", CELL)).toEqual([]);
             found = true;
           }
           break;
@@ -685,12 +686,11 @@ describe("hint rendering (tier 2.5)", () => {
       showHint: true,
     });
     expect(result.hint).toBeDefined();
-    const hl = result.hint?.highlights as SubsetsHintHighlights;
     // A collapse boxes the surviving sets in the tally (COL_HINT_CELL), and may
     // also frame one blocker cell for the "why not X" clause. A box rather
     // than a tint: the label's own color carries the state (error red, used-up
     // gray), so a fill behind it competes with what has to be read.
-    expect(hl.sets.length).toBeGreaterThan(0);
+    expect(stepMarks(result.hint).of("outline", TALLY_SET).length).toBeGreaterThan(0);
     const ops = result.recording.ops;
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(true);
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(true);
@@ -716,8 +716,7 @@ describe("hint rendering (tier 2.5)", () => {
       showHint: true,
     });
     expect(result.hint).toBeDefined();
-    const hl = result.hint?.highlights as SubsetsHintHighlights;
-    expect(hl.spotlight.length).toBe(1);
+    expect(stepMarks(result.hint).of("stripes", CELL)).toHaveLength(1);
     const ops = result.recording.ops;
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT)).toBe(true);
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_SPOT)).toBe(true);

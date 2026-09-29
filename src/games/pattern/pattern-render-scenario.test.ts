@@ -5,12 +5,15 @@
  * stand beside the snapshot so a careless `vitest -u` cannot erase them.
  */
 import { describe, expect, it } from "vitest";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { cellAt, LINE } from "./hint-marks.ts";
 import { type PatternHint, patternGame } from "./index.ts";
 import { COL_GRID, COL_HINT, COL_HINT_BLACKREF } from "./render.ts";
+import { deduceHintPlan } from "./solver.ts";
 
 const P = { w: 10, h: 10 };
 
@@ -38,7 +41,7 @@ describe("Pattern hint render scenarios", () => {
     // The reasoned line is hatched, every square of it and its clue strip, in
     // one strip.
     const hatches = opsOfKind(recording.ops, "hatch");
-    const line = hl?.line ?? -1;
+    const [line] = stepMarks(hint).of("stripes", LINE);
     expect(hatches).toHaveLength((line < P.w ? P.h : P.w) + 1);
     for (const h of hatches) expect(h.color).toBe(COL_HINT);
     // One strip: every rect's center across the line within a pixel or two of
@@ -61,18 +64,22 @@ describe("Pattern hint render scenarios", () => {
   it("ringed-premise frame: a cited black mark rings COL_HINT_BLACKREF", () => {
     // Walk the plan to the first step that cites an already-placed black mark
     // (an overlap anchored by an earlier deduction), and assert the teal ring.
+    const id = boardId("pattern-hint-ring");
+    const plan = deduceHintPlan(patternGame.newState(P, id.slice(id.indexOf(":") + 1)));
+    const cited = plan.find((m) => m.blackRefs.length > 0);
+    if (!cited) throw new Error("no step cites a black mark");
     const { recording, hint } = renderScenario({
       game: patternGame,
-      id: boardId("pattern-hint-ring"),
+      id,
       showHint: true,
-      hintUntil: (step) => {
-        const hl = step.highlights as PatternHint | undefined;
-        return (hl?.blackRefs.length ?? 0) > 0;
-      },
+      hintUntil: (step) =>
+        (step.highlights as PatternHint).cells.join() === cited.cells.join(),
     });
 
-    const hl = hint?.highlights as PatternHint | undefined;
-    expect(hl?.blackRefs.length ?? 0).toBeGreaterThan(0);
+    expect((hint?.highlights as PatternHint).cells).toEqual(cited.cells);
+    expect(stepMarks(hint).of("outline", CELL)).toEqual(
+      expect.arrayContaining(cited.blackRefs.map((i) => cellAt(i, P.w))),
+    );
     // The cited black premise is ringed in the black-reference color.
     expect(
       recording.ops.some((o) => o.op === "rect" && o.color === COL_HINT_BLACKREF),

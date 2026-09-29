@@ -17,6 +17,7 @@ import {
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
+import { stepMarks } from "../../engine/hint-words.ts";
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
@@ -31,7 +32,7 @@ import {
   CURSOR_UP,
 } from "../../engine/pointer.ts";
 import type { Color, Size } from "../../engine/types.ts";
-import type { MapHint } from "./hint.ts";
+import { REGION } from "./hint-text.ts";
 import { BE, LE, type MapData, RE, TE } from "./map-data.ts";
 import {
   FLASH_ALL_TO_WHITE,
@@ -867,14 +868,14 @@ export function redraw(
   // The hint's marks, per region: its role and its place in a chain.
   const hintRole = new Uint8Array(n);
   const hintOrder = new Uint8Array(n);
-  const hl = hint?.highlights as MapHint | undefined;
-  if (hl) {
-    for (const e of hl.evidence) {
-      hintRole[e.region] = HINT_EVIDENCE_ROLE;
-      if (e.order) hintOrder[e.region] = e.order;
-    }
-    for (const r of hl.targets) hintRole[r] = HINT_TARGET;
+  // A ring wins a region's band, so a ringed region is outlined only by its
+  // number.
+  const marks = stepMarks(hint);
+  for (const e of marks.of("outline", REGION)) {
+    hintRole[e.region] = HINT_EVIDENCE_ROLE;
+    if (e.order) hintOrder[e.region] = e.order;
   }
+  for (const e of marks.of("ring", REGION)) hintRole[e.region] = HINT_TARGET;
   const chainShown = hintOrder.some((o) => o > 0);
 
   // The selected region, hidden while the completion flash plays, and in notes

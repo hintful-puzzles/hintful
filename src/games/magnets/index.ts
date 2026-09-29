@@ -35,12 +35,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newMagnetsDesc } from "./generator.ts";
-import {
-  type MagnetsHighlights,
-  magnetsHint,
-  magnetsHintMarks,
-  magnetsKeepTrack,
-} from "./hint.ts";
+import { type MagnetsHighlights, magnetsHint, magnetsKeepTrack } from "./hint.ts";
 import {
   colors,
   computeSize,
@@ -266,7 +261,6 @@ export const magnetsGame: Game<
       stripes:
         'the row or column the sentence calls "this row" or "this column", running on through its numbers.',
     },
-    drawn: magnetsHintMarks,
   },
   hintKeepTrack: magnetsKeepTrack,
   difficulty,

@@ -7,9 +7,9 @@
  * is ringed when the step places it and outlined when the step cites it.
  */
 
-import { CELL, type MarkKind, type MarkRef } from "../../engine/hint-words.ts";
+import type { MarkKind } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
-import type { SlantHint, SlantMark } from "./hint.ts";
+import type { SlantMark } from "./hint.ts";
 
 /** A clue, on the grid point it sits on. */
 export const CLUE: MarkKind<Point> = {
@@ -23,22 +23,3 @@ export const ALIKE: MarkKind<SlantMark> = {
   name: "alike",
   key: (m) => `${m.x},${m.y},${m.dir}`,
 };
-
-/** What a step's highlights draw: the `drawn` half of Slant's legend. */
-export function slantHintMarks(h: SlantHint): MarkRef[] {
-  return [
-    {
-      role: "ring",
-      kind: CELL,
-      elements: [...(h.target ? [h.target] : []), ...(h.siblings ?? [])],
-    },
-    { role: "ring", kind: ALIKE, elements: h.mark ? [h.mark] : [] },
-    {
-      role: "outline",
-      kind: CELL,
-      elements: [...(h.area ?? []), ...(h.ref ? [h.ref] : [])],
-    },
-    { role: "outline", kind: CLUE, elements: h.clues ?? [] },
-    { role: "outline", kind: ALIKE, elements: h.marks ?? [] },
-  ] as MarkRef[];
-}

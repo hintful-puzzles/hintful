@@ -27,6 +27,7 @@ import { drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import type { LightupHint, LightupMistake } from "./index.ts";
 import {
@@ -296,12 +297,21 @@ export function redraw(
       hintBits.set(i, (hintBits.get(i) ?? 0) | bit);
     }
   };
+  // The evidence is all outlined, in one of three glyphs: the dark square's
+  // double ring, the clue's recolored digit, or the rest of the set's shade
+  // or ring. The step's highlights say which outlined square is which.
+  const marks = stepMarks(hint);
   const hl = hint?.highlights;
-  if (hl) {
-    add(hl.targets, DF_HINT_TARGET);
-    add(hl.area, DF_HINT_AREA);
-    if (hl.dark) add([hl.dark], DF_HINT_DARKREF);
-    if (hl.clue) add([hl.clue], DF_HINT_CLUE);
+  add(marks.of("ring", CELL), DF_HINT_TARGET);
+  const is = (c: Point, p?: Point): boolean =>
+    p !== undefined && c.x === p.x && c.y === p.y;
+  for (const c of marks.of("outline", CELL)) {
+    const bit = is(c, hl?.dark)
+      ? DF_HINT_DARKREF
+      : is(c, hl?.clue)
+        ? DF_HINT_CLUE
+        : DF_HINT_AREA;
+    add([c], bit);
   }
 
   const flashing = flashTime > 0 && Math.floor((flashTime * 3) / FLASH_TIME) !== 1;
