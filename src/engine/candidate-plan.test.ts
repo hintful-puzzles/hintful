@@ -9,7 +9,8 @@ import {
 } from "./candidate-plan.ts";
 import type { DeductionRecord } from "./deduction-record.ts";
 import type { HintStep } from "./game.ts";
-import type { Conclusions } from "./hint-text.ts";
+import { type Conclusions, narrateLatinReason } from "./hint-text.ts";
+import { CELL, mark, Narration, phrase } from "./hint-words.ts";
 import { type RowColRegion, rowColRegions, type SingleReason } from "./latin-hint.ts";
 import type { Point } from "./types.ts";
 
@@ -45,12 +46,20 @@ const place = (x: number, y: number, n: number): DeductionRecord => ({
   group: 0,
 });
 
+/** `s`, outlining the reason's `near` cell (by a reference with no words of
+ * its own) when it has one: the walk reads a step's area off its words. */
+function near(s: string, r: Reason): Narration {
+  const cells = "near" in r && r.near ? [r.near] : [];
+  return cells.length > 0
+    ? phrase`${s}${mark.as("outline", CELL, cells, "")}`
+    : Narration.plain(s);
+}
+
 /** Walk a plan whose words name the reason, the cell and whether the leg
  * continues; `over` supplies the board and whatever else the case needs. */
 function walk(
   over: Partial<Plan> & Pick<Plan, "w" | "grid" | "pencil" | "steps">,
 ): void {
-  const area = (r: Reason): Point[] => ("near" in r && r.near ? [r.near] : []);
   runCandidatePlan<Move, CandidateHighlights, DeductionRecord, Reason, RowColRegion>({
     autoClean: false,
     label: "test plan",
@@ -58,12 +67,10 @@ function walk(
     regionsOf: (x, y) => rowColRegions(x, y, over.w),
     singleReason: (_n, why) => ({ kind: why.kind }),
     placeWords: (m, r, continues) => ({
-      explanation: `${r.kind} ${m.x},${m.y}${continues ? " (cont)" : ""}`,
-      area: area(r),
+      words: near(`${r.kind} ${m.x},${m.y}${continues ? " (cont)" : ""}`, r),
     }),
     strikeWords: (marks, r, continues) => ({
-      premise: `${r.kind} strike ${marks.length}${continues ? " (cont)" : ""}`,
-      area: area(r),
+      premise: near(`${r.kind} strike ${marks.length}${continues ? " (cont)" : ""}`, r),
     }),
     conclude,
     setUp: { done: () => true, step: () => false },
@@ -243,9 +250,11 @@ describe("runCandidatePlan", () => {
     });
     const notes = {
       populate: "populate",
-      cleanObvious: "clean",
+      cleanObvious: () => Narration.plain("clean"),
       note: (c: Point, values: number[], every: boolean) =>
-        `note ${c.x},${c.y} ${values.join("")}${every ? " every" : ""}`,
+        Narration.plain(
+          `note ${c.x},${c.y} ${values.join("")}${every ? " every" : ""}`,
+        ),
     };
     /** Walk a 3×3 board whose solver's one firing is `ops`. */
     function implicitWalk(grid: Uint8Array, ops: DeductionRecord[]): Step[] {
@@ -384,8 +393,7 @@ describe("runCandidatePlan", () => {
           return [elim(0, 0, 3)];
         },
         strikeWords: (marks, r) => ({
-          premise: `${r.kind} strike ${marks.length}`,
-          area: [],
+          premise: Narration.plain(`${r.kind} strike ${marks.length}`),
           where: "from the rest",
         }),
       });
@@ -412,9 +420,7 @@ describe("runCandidatePlan", () => {
           return [elim(0, 0, 3)];
         },
         strikeWords: (marks, r) => ({
-          premise: `${r.kind} strike ${marks.length}`,
-          area: [],
-          hatch: [{ x: 1, y: 0 }],
+          premise: phrase`${r.kind} strike ${marks.length}${mark.as("stripes", CELL, [{ x: 1, y: 0 }], "")}`,
           reads: [{ x: 1, y: 0 }],
         }),
       });
@@ -528,20 +534,25 @@ describe("runLatinCandidatePlan", () => {
       autoClean: false,
       label: "latin test plan",
       ...over,
-      placeWords: (m, r) => ({ explanation: `${r.kind} ${m.x},${m.y}`, area: [] }),
+      placeWords: (m, r) => ({
+        words:
+          r.kind === "hiddenSingle"
+            ? narrateLatinReason(r, m, 3)
+            : Narration.plain(`${r.kind} ${m.x},${m.y}`),
+      }),
       strikeWords: (marks, r) => ({
-        premise: `${r.kind} strike ${marks.length}`,
-        area: [],
+        premise: Narration.plain(`${r.kind} strike ${marks.length}`),
       }),
       notes: { noun: "number", placedVerb: "standing" },
     });
     return steps;
   }
 
-  it("classifies and hatches a hidden single with nothing from the game", () => {
+  it("classifies a hidden single, and stripes the line its sentence names", () => {
     // 1 is noted only at (0,0) in row 0, so placing it there is a hidden single
     // in that row — and (0,0) still shows a second candidate, so it is not a
-    // naked one. Nothing below names a row.
+    // naked one. Nothing below names a row: the shared sentence does, and the
+    // walk reads the stripes off it.
     const pencil = new Int32Array(9).fill(bits(2, 3));
     pencil[0] = bits(1, 2);
     const steps = latinWalk({
@@ -551,9 +562,9 @@ describe("runLatinCandidatePlan", () => {
         { kind: "place", x: 0, y: 0, n: 1, reason: { kind: "single" }, group: 0 },
       ],
     });
-    expect(steps[0].explanation).toBe("hiddenSingle 0,0");
-    // "In this row" is the hatch; nothing is outlined, since no particular
-    // cell is the reason.
+    expect(steps[0].explanation).toMatch(/^In this row, 1 can go in only this cell/);
+    // "In this row" is striped; nothing is outlined, since no particular cell
+    // is the reason.
     expect(steps[0].highlights?.hatch).toEqual([
       { x: 0, y: 0 },
       { x: 1, y: 0 },

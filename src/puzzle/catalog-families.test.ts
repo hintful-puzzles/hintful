@@ -41,17 +41,25 @@ describe("a family the code can vouch for agrees with the code", () => {
    * Latin squares, bounded from both sides by what a game's own code imports:
    *
    * - **below**: every game narrating with the shared Latin hint vocabulary
-   *   (`engine/latin-hint`) is a Latin square — its hints speak of rows and
-   *   columns holding each symbol once;
+   *   (`engine/latin-hint`, or the Latin sentences `engine/hint-text.ts`
+   *   shares) is a Latin square — its hints speak of rows and columns holding
+   *   each symbol once;
    * - **above**: every game tagged Latin squares uses the shared Latin engine
-   *   (`engine/latin` or `engine/latin-hint`) — a Latin square that built its
-   *   own solver from nothing would be a family member the shared work could
-   *   not reach, and that is worth hearing about.
+   *   (`engine/latin`, `engine/latin-hint` or those sentences) — a Latin square
+   *   that built its own solver from nothing would be a family member the
+   *   shared work could not reach, and that is worth hearing about.
+   *
+   * The scan reads each file as it compiles, so a type-only import is not a
+   * use: Solo's one runtime tie to the Latin helpers is the chain sentence,
+   * which numbers the chain itself.
    *
    * The two bounds are not equal and need not be: Ascent, Singles and Tents
    * borrow a Latin helper without being Latin squares.
    */
   const latin = puzzlesInFamily("latin");
+  const LATIN_SPEECH =
+    /engine\/latin-hint|\b(?:narrateLatinReason|latinPremise|forcingChainPremise)\(/;
+  const LATIN_RULES = /engine\/latin-hint|\b(?:latinPremise|forcingChainPremise)\(/;
 
   it("scans the games' sources at all", () => {
     expect(SCANNED_SOURCE_FILES).toBeGreaterThan(100);
@@ -59,10 +67,11 @@ describe("a family the code can vouch for agrees with the code", () => {
   });
 
   it("tags every game that speaks the Latin hint vocabulary as Latin squares", () => {
+    // The single-placement sentence (`narrateLatinReason`) is borrowed by games
+    // that are not Latin squares, as the helpers are; the arms that state a
+    // Latin rule are the strikes' and the chain's.
     const speakers = [
-      ...new Set(
-        codeLinesMatching([...puzzleIds], /engine\/latin-hint/).map((m) => m.id),
-      ),
+      ...new Set(codeLinesMatching([...puzzleIds], LATIN_RULES).map((m) => m.id)),
     ];
     // A known positive, so a scan that stopped seeing imports cannot pass.
     expect(speakers).toContain("solo");
@@ -70,6 +79,8 @@ describe("a family the code can vouch for agrees with the code", () => {
   });
 
   it("finds the shared Latin engine in every game tagged Latin squares", () => {
-    expect(membersNotMentioning([...latin], "engine/latin")).toEqual([]);
+    const silent = membersNotMentioning([...latin], "engine/latin");
+    const speakers = new Set(codeLinesMatching(silent, LATIN_SPEECH).map((m) => m.id));
+    expect(silent.filter((id) => !speakers.has(id))).toEqual([]);
   });
 });

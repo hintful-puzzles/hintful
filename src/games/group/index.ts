@@ -16,6 +16,7 @@ import {
   type CandidateMoveAdapter,
   type CandidatePlanPrefs,
   candidateHint,
+  candidateHintMarks,
   keepCandidateHintTrack,
   type Mark,
   refreshCandidateHintStep,
@@ -24,7 +25,6 @@ import {
   type Firing,
   type RungContext,
   runLatinCandidatePlan,
-  valuesOf,
 } from "../../engine/candidate-plan.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
@@ -43,19 +43,15 @@ import {
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, latinVerdict } from "../../engine/latin.ts";
-import {
-  genericLatinArea,
-  rowColRegions,
-  type SingleReason,
-} from "../../engine/latin-hint.ts";
+import { rowColRegions, type SingleReason } from "../../engine/latin-hint.ts";
 import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import { parseConfigInt } from "../../engine/params.ts";
 import {
   candidateReadingPref,
@@ -464,8 +460,17 @@ type NarratableReason = HintReason | SingleReason;
  * `narrateLatinReason` under {@link groupVocab}; only Group's own placing
  * techniques are chosen here. `identityFill`'s continuation legs are narrated
  * by `buildSteps`' `placeWords`. The words are [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(reason: NarratableReason, n: number, id: boolean): string {
+function narrate(
+  reason: NarratableReason,
+  m: Mark,
+  w: number,
+  id: boolean,
+  continues: boolean,
+): Narration {
   const ch = (v: number): string => toChar(v, id);
+  const at = { x: m.x, y: m.y };
+  // The premise cells are outlined by the words that name them: associativity's
+  // three known products, an identity fill's revealing product.
   switch (reason.kind) {
     case "associativity":
       return say.associativity({
@@ -476,24 +481,38 @@ function narrate(reason: NarratableReason, n: number, id: boolean): string {
         bc: ch(reason.bc),
         v: ch(reason.v),
         knownLeft: reason.knownLeft,
+        abCell: reason.abCell,
+        bcCell: reason.bcCell,
+        thirdCell: reason.thirdCell,
+        at,
       });
-    case "identityFill":
-      return say.identityFill(
-        ch(reason.a),
-        ch(reason.b),
-        reason.prod === reason.a,
-        ch(n),
-      );
+    case "identityFill": {
+      const via = { x: reason.viaX, y: reason.viaY };
+      return continues
+        ? say.identityFillNext(ch(m.n), via, at)
+        : say.identityFill(
+            ch(reason.a),
+            ch(reason.b),
+            reason.prod === reason.a,
+            ch(m.n),
+            via,
+            at,
+          );
+    }
     case "identityElim":
       throw new Error("an identity elimination strikes");
     default:
-      return narrateLatinReason(reason, n, groupVocab(id));
+      return narrateLatinReason(reason, m, w, groupVocab(id));
   }
 }
 
 /** Why a strike is forced, which the walk concludes with the move it makes.
- * `ns` is the struck values. */
-function premise(reason: NarratableReason, ns: number[], id: boolean): Premise {
+ * `marks` are the struck notes. */
+function premise(
+  reason: NarratableReason,
+  marks: readonly Mark[],
+  id: boolean,
+): Premise {
   const ch = (v: number): string => toChar(v, id);
   switch (reason.kind) {
     case "identityElim":
@@ -503,6 +522,7 @@ function premise(reason: NarratableReason, ns: number[], id: boolean): Premise {
           ch(reason.other),
           ch(reason.product),
           reason.left,
+          { x: reason.wx, y: reason.wy },
         ),
         struck: say.identityMarks,
       };
@@ -510,25 +530,7 @@ function premise(reason: NarratableReason, ns: number[], id: boolean): Premise {
     case "identityFill":
       throw new Error(`a ${reason.kind} deduction places`);
     default:
-      return latinPremise(reason, ns, groupVocab(id));
-  }
-}
-
-/** The premise cells a step shades `COL_HINT_CELL` as evidence: associativity's
- * three known products; an identity fill's / identity elimination's revealing
- * cell. The generic culls have no clean local area (the struck notes carry the
- * premise), and a hidden single's line is the row/column preset's, which shades
- * it over whatever this returns. */
-function reasonArea(reason: NarratableReason): OrderedCell[] {
-  switch (reason.kind) {
-    case "associativity":
-      return [reason.abCell, reason.bcCell, reason.thirdCell];
-    case "identityFill":
-      return [{ x: reason.viaX, y: reason.viaY }];
-    case "identityElim":
-      return [{ x: reason.wx, y: reason.wy }];
-    default:
-      return genericLatinArea(reason);
+      return latinPremise(reason, marks, groupVocab(id));
   }
 }
 
@@ -588,16 +590,9 @@ function buildSteps(
     label: "group hint plan",
     record: () => recordGroupDeductions(wGrid, w, maxdiff),
     placeWords: (m, reason, continues) => ({
-      explanation:
-        continues && reason.kind === "identityFill"
-          ? say.identityFillNext(toChar(m.n, id))
-          : narrate(reason, m.n, id),
-      area: reasonArea(reason),
+      words: narrate(reason, m, w, id, continues),
     }),
-    strikeWords: (marks, reason) => ({
-      ...premise(reason, valuesOf(marks), id),
-      area: reasonArea(reason),
-    }),
+    strikeWords: (marks, reason) => premise(reason, marks, id),
     notes: { noun: "element", placedVerb: "placed", value: (n) => toChar(n, id) },
     rungs: [leads],
     placement: placing,
@@ -685,7 +680,8 @@ export const groupGame: Game<
   GroupMove,
   GroupUi,
   GroupDrawState,
-  GroupMistake
+  GroupMistake,
+  GroupHint
 > = {
   id: "group",
   canMarkAll: true,
@@ -740,6 +736,15 @@ export const groupGame: Game<
   solve,
   difficulty,
   hint,
+  hintMarks: {
+    roles: {
+      ring: "the cell the step is about: the letter to enter there, or the pencil marks to cross out, which are shown with a line through them.",
+      outline:
+        "what the step reasons from: the three products an associativity step reads, the product that gives away (or rules out) the identity, a group of cells that between them already account for the letters being crossed out, the letter just placed, or the numbered cells of a chain.",
+      stripes: 'the row or column the sentence names: "in this row".',
+    },
+    drawn: candidateHintMarks,
+  },
   hintKeepTrack,
   refreshHintStep,
   findMistakes,

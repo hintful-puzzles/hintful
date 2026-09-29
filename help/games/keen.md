@@ -36,16 +36,7 @@ you would rather it left a cell unmarked until a step needs it, set
 with no marks then counts as holding every number not already in its
 row and column.
 
-* **A ringed cell** is the one the step is about: the number to enter
-  there, or the pencil marks to cross out, which are shown with a line
-  through them.
-* **A striped cage** is the one the sentence calls "this cage"; a
-  striped row or column is "this row" or "this column".
-* **Outlined cells** between them already account for the numbers being
-  crossed out.
-* **Numbered cells** are a chain of cells with two numbers left each,
-  read in order: the sentence says how the chain rules a number out of
-  the ringed cell.
+{{hint-marks}}
 
 A cage's clue is read out as what its cells must do: "sum to 9",
 "differ by 3", "multiply to 72", "have a ratio of 2". The cage steps

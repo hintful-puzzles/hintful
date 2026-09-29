@@ -299,23 +299,8 @@ export function singleReasonOf(n: number, why: SingleWhy<RowColRegion>): SingleR
   }
 }
 
-/** A hidden single as {@link singleReasonOf} states it. */
-export type HiddenSingleReason = Extract<SingleReason, { kind: "hiddenSingle" }>;
-
-/** Read a hidden single back off a game's own reason union, or `null` for any
- * other reason — what a *shared* consumer needs to act on the reason
- * {@link singleReasonOf} made without knowing the game's wider union. Sound for
- * the row/column family because a reason union that can hold a
- * {@link SingleReason} at all holds this arm with these fields; a game whose
- * `hiddenSingle` says something else (Solo names a block or a diagonal, not a
- * line) cannot take that reason in the first place. */
-export function hiddenSingleOf(reason: unknown): HiddenSingleReason | null {
-  const r = reason as { kind?: string };
-  return r.kind === "hiddenSingle" ? (r as HiddenSingleReason) : null;
-}
-
 /** The cells of a hidden single's line — the whole row (`line: "row"`, `index` =
- * its y) or column (`line: "col"`, `index` = its x) — to shade as evidence. */
+ * its y) or column (`line: "col"`, `index` = its x) — that its sentence stripes. */
 export function hiddenSingleLine(
   line: "row" | "col",
   index: number,
@@ -333,7 +318,7 @@ export function hiddenSingleLine(
  * `dup` reason may carry extra fields (`px`/`py`) — only `n` is read here. */
 export type GenericLatinReason =
   | SingleReason
-  | { kind: "dup"; n: number }
+  | { kind: "dup"; n: number; px: number; py: number }
   | { kind: "set"; cells: readonly Point[] }
   | { kind: "forcing"; chain: readonly ForcingLink[]; shares: "row" | "col" };
 
@@ -350,21 +335,4 @@ export function forcingChainArea(reason: {
   chain: readonly ForcingLink[];
 }): OrderedCell[] {
   return reason.chain.map((c, i) => ({ x: c.x, y: c.y, order: i + 1 }));
-}
-
-/**
- * What a generic Latin elimination outlines: a forcing chain's cells, numbered
- * ({@link forcingChainArea}), and the cells a set rests on, which account for
- * the struck values between them. Empty for any other reason, so a game's own
- * area function falls through to it for every arm it does not own.
- *
- * Outlining the set's cells is what lets its sentence say "these cells" and
- * be checked, and under the implicit reading it is what puts their notes on the
- * board before the strike reads them (`candidate-plan.ts`'s note legs).
- */
-export function genericLatinArea(reason: { kind: string }): OrderedCell[] {
-  const r = reason as GenericLatinReason;
-  if (r.kind === "forcing") return forcingChainArea(r);
-  if (r.kind === "set") return [...r.cells];
-  return [];
 }

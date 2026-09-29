@@ -67,18 +67,10 @@ step crosses one out or reasons from them. If you would rather it
 filled in every cell's marks first (the same as pressing 'M'), set
 **Hints pencil in** to **Every candidate first** in the preferences.
 
-* **A ringed cell** is the one the step is about: the letter to enter
-  there, or the pencil marks to cross out, which are shown with a line
-  through them.
-* **Outlined cells** are the ones the reason rests on: the three
-  products an associativity step reads, the cell that gives away (or
-  rules out) the identity, or a group of cells that between them already
-  account for the letters being crossed out.
-* **A striped row or column** is the line the sentence calls "this row"
-  or "this column".
-* **Numbered cells** are a chain of cells with two elements left each,
-  read in order: the sentence says how the chain rules a letter out of
-  the ringed cell.
+{{hint-marks}}
+
+A chain's numbered cells have two elements left each, read in order: the
+sentence says how the chain rules a letter out of the ringed cell.
 
 The hint writes products the way the grid shows them: *a·b* is the
 letter in row *a*, column *b*. The step that belongs to Group alone is

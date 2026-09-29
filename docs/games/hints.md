@@ -221,7 +221,21 @@ Where the machinery can, it derives the marks from the words, so a step cannot
 draw what its sentence does not name: the border grid's legs take their
 outlined and striped squares from their references. **A continuation leg names
 what it still shows**: "…and these edges can't be walls either, for clue 3"
-rings the edges left and points back at the evidence the first leg named.
+rings the edges left and points back at the evidence the first leg named. The
+candidate walk derives the same way: a step's `area` is what its words outline
+and its `hatch` what they stripe, and a strike's ending is a reference to the
+struck notes, so a refresh that finds some already gone rewrites "cross out 2
+and 4" as "cross out the 4".
+
+**Two marks of one role are told apart by their kind, not their color.** A
+Signpost step decides a link, whose two ends are different things: the arrow
+it leaves by and the square it arrives at. Two ringed squares would leave
+"this square" pointing at neither; an arrow drawn in the action color beside a
+ringed square lets the sentence say "this arrow" and "the ringed square" and
+mean one of each. So the arrow is a kind of its own (`signpost/hint-marks.ts`'s
+`ARROW`), and the game draws its ring. A kind is also how a note's ring counts
+as its cell's (`MarkKind.within`): "we must cross out the 4" names the ringed
+cell it strikes from.
 
 ### Necessity for deductions, imperative for moves
 
@@ -1874,13 +1888,14 @@ Crossing or Range run, Tracks' closed block. The sentence says "this cage" or
 runs through a square and hatches both, crossing at the ring. What stays
 outlined is a *piece* ("the outlined island", "this segment") and particular
 squares: a Seismic cull's placed number, Range's already-seen arms beside the
-striped run. Every mark then has one meaning:
+striped run. Every mark then has one meaning, and the three roles (ring,
+outline, stripes) are the engine's: § "Bind the words to the marks" has them,
+and `engine/hint-words.ts` holds their words. The two clue-digit recolorings
+below are not roles yet: a game still draws them itself, until the sweep
+binds the games that use them.
 
 | mark | means |
 |---|---|
-| ring, action color | what the step decides |
-| hatch | the line or region the sentence names |
-| outline, evidence color | the particular squares or pieces the reason rests on |
 | clue digit, action color | the count the sentence reads |
 | clue digit, evidence color | a line cited only as a reason |
 

@@ -15,8 +15,22 @@
  */
 
 import { EDGE, type ForcedBorderEdge } from "./border-grid-hint.ts";
-import { mark, type Narration, phrase } from "./hint-words.ts";
-import type { ForcingLink, GenericLatinReason } from "./latin-hint.ts";
+import {
+  CELL,
+  mark,
+  type Narration,
+  NOTE,
+  type Note,
+  phrase,
+  whole,
+} from "./hint-words.ts";
+import {
+  type ForcingLink,
+  forcingChainArea,
+  type GenericLatinReason,
+  hiddenSingleLine,
+} from "./latin-hint.ts";
+import type { Point } from "./types.ts";
 
 // --- lists and articles ------------------------------------------------------
 
@@ -118,11 +132,12 @@ export function cleanObviousText(
   placedVerb: string,
   regions: string,
   cell = "cell",
-): string {
+): (marks: readonly Note[]) => Narration {
   // Says nothing about the "fill all pencil marks" button doing this same
   // cleanup: help/features.md says so once (docs/games/hints.md § "Rules belong
-  // in the help").
-  return `Now clear the easy ones: cross out any ${noun} already ${placedVerb} in each ${cell}'s ${regions}.`;
+  // in the help"). The notes it names are the ringed ones it strikes.
+  return (marks) =>
+    phrase`Now clear the easy ones: cross out ${mark.as("ring", NOTE, marks, `any ${noun} already ${placedVerb} in each ${cell}'s ${regions}`)}.`;
 }
 
 /**
@@ -134,19 +149,25 @@ export function cleanObviousText(
  * nothing out yet, where "only" would list every value as if it were a finding.
  */
 export function noteText(
+  at: Point,
   values: readonly string[],
   every: boolean,
   vocab: { noun: string; placedVerb: string; regions: string; cell?: string },
-): string {
+): Narration {
   const { noun, placedVerb, regions } = vocab;
-  const cell = vocab.cell ?? "cell";
+  const here = thisCell(at, vocab.cell);
   // The noun is a word ("element"), not a letter name, so `indefinite` would
   // misread it ("an number").
   const a = /^[aeiou]/i.test(noun) ? "an" : "a";
   if (every)
-    return `Nothing in this ${cell}'s ${regions} rules out ${a} ${noun} yet, so pencil in every one.`;
+    return phrase`Nothing in ${here}'s ${regions} rules out ${a} ${noun} yet, so pencil in every one.`;
   const one = values.length === 1;
-  return `Only ${joinWith([...values])} ${one ? "isn't" : "aren't"} already ${placedVerb} in this ${cell}'s ${regions}, so pencil ${one ? "it" : "them"} in.`;
+  return phrase`Only ${joinWith([...values])} ${one ? "isn't" : "aren't"} already ${placedVerb} in ${here}'s ${regions}, so pencil ${one ? "it" : "them"} in.`;
+}
+
+/** "this cell": the ringed cell a step decides, in the game's word for it. */
+export function thisCell(at: Point, cell = "cell"): Narration {
+  return mark.this("ring", CELL, [at], cell);
 }
 
 // --- the candidate games' conclusions ---------------------------------------
@@ -172,7 +193,7 @@ export function noteText(
  * left, which the premise never has.
  */
 export interface Premise {
-  premise: string;
+  premise: Narration;
   where?: string;
   struck?: string;
   named?: boolean;
@@ -266,52 +287,61 @@ const NUMBER_VOCAB: LatinVocab = { noun: "number", value: (n) => String(n) };
  * and delegates only the generic ones here. */
 export function narrateLatinReason(
   reason: GenericLatinReason,
-  n: number,
+  at: Note,
+  w: number,
   vocab: LatinVocab = NUMBER_VOCAB,
-): string {
+): Narration {
   const { noun } = vocab;
   const v = vocab.value;
   const cell = vocab.cell ?? "cell";
+  const here = thisCell(at, cell);
   switch (reason.kind) {
     case "single":
-      return `Every other ${noun} has been ruled out in this ${cell}, so it can only be ${v(n)}.`;
+      return phrase`Every other ${noun} has been ruled out in ${here}, so it can only be ${v(at.n)}.`;
     case "regionsFull":
-      return `This ${cell}'s row and column already hold every other ${noun}, so it can only be ${v(n)}.`;
-    case "hiddenSingle":
-      return `In this ${reason.line === "row" ? "row" : "column"}, ${v(reason.n)} can go in only this ${cell}, since every other ${cell} in the ${reason.line === "row" ? "row" : "column"} rules it out, so it must be ${v(reason.n)}.`;
+      return phrase`${here.capitalized()}'s row and column already hold every other ${noun}, so it can only be ${v(at.n)}.`;
+    case "hiddenSingle": {
+      const name = reason.line === "row" ? "row" : "column";
+      const line = mark.this(
+        "stripes",
+        whole(CELL),
+        hiddenSingleLine(reason.line, reason.index, w),
+        name,
+      );
+      return phrase`In ${line}, ${v(reason.n)} can go in only ${here}, since every other ${cell} in the ${name} rules it out, so it must be ${v(reason.n)}.`;
+    }
     default:
       throw new Error(`a ${reason.kind} strikes, and is narrated by latinPremise`);
   }
 }
 
 /** The premise of a generic Latin strike (the placement cull, a set, a forcing
- * chain), shared as {@link narrateLatinReason} is. `ns` is the struck values. */
+ * chain), shared as {@link narrateLatinReason} is. `marks` are the struck
+ * notes. */
 export function latinPremise(
   reason: GenericLatinReason,
-  ns: number[],
+  marks: readonly Note[],
   vocab: LatinVocab = NUMBER_VOCAB,
 ): Premise {
   const v = vocab.value;
-  const cells = `${vocab.cell ?? "cell"}s`;
+  const cell = vocab.cell ?? "cell";
   switch (reason.kind) {
-    case "dup": {
-      const d = v(reason.n);
+    case "dup":
       return {
-        premise: `There's already ${indefinite(d)} ${d} in this row and column`,
-        where: `from the other ${cells} they pass through`,
+        premise: placedRulesOut(reason, v(reason.n)),
+        where: `from the other ${cell}s there`,
       };
-    }
     case "set":
       // One strike per cell can repeat a value, and the order is the solver's:
       // name each value once, smallest first.
       return {
-        premise: `The outlined ${cells} already account for ${joinWith(distinct(ns).map(v))} between them`,
+        premise: phrase`${mark.the("outline", CELL, reason.cells, cell).capitalized()} already account for ${joinWith(distinct(marks.map((m) => m.n)).map(v))} between them`,
       };
     case "forcing":
       return {
         premise: forcingChainPremise(
           reason,
-          ns[0],
+          marks[0],
           vocab,
           reason.shares === "row" ? "row" : "column",
         ),
@@ -319,6 +349,20 @@ export function latinPremise(
     default:
       throw new Error(`a ${reason.kind} places, and is narrated by narrateLatinReason`);
   }
+}
+
+/**
+ * A placement's cull, whose premise is the value just placed: outlined, since
+ * the ring that decided it has moved on to the notes it now strikes. `value` is
+ * the value as the game prints it, `regions` where it may not repeat.
+ */
+export function placedRulesOut(
+  placed: { px: number; py: number },
+  value: string,
+  regions = "row and column",
+): Narration {
+  const at = { x: placed.px, y: placed.py };
+  return phrase`${mark.as("outline", CELL, [at], `The ${value} just placed`)} can't repeat in its ${regions}`;
 }
 
 /**
@@ -368,17 +412,23 @@ export function latinPremise(
  */
 export function forcingChainPremise(
   reason: { chain: readonly ForcingLink[] },
-  struck: number,
+  struck: Note,
   vocab: LatinVocab,
   region: string,
-  /** How the last link lines up with this cell; a row/column game's chain
-   * always ends in line with it, Solo's can end in its block or diagonal. */
-  lastTie: string | null = null,
-): string {
+  /** How the last link lines up with this cell, given the words for it; a
+   * row/column game's chain always ends in line with it, Solo's can end in its
+   * block or diagonal. */
+  lastTie: ((here: Narration) => Narration) | null = null,
+): Narration {
   const v = vocab.value;
   const cell = vocab.cell ?? "cell";
-  const last = reason.chain.length;
+  const chain = forcingChainArea(reason);
+  const last = chain.length;
   const other = v(reason.chain[0].n);
-  const s = v(struck);
-  return `${cap(cell)} 1 is ${s} or ${other}, and every numbered ${cell} has just two ${vocab.noun}s left, so each forces the next. If ${cell} 1 is ${s}, this ${cell}'s ${region} already has it; if ${other}, ${cell} ${last} is driven to ${s}, ${lastTie ?? `in line with this ${cell}`}. Either way, ${s} is ruled out here`;
+  const s = v(struck.n);
+  const here = thisCell(struck, cell);
+  const link = (i: number, words: string): Narration =>
+    mark.as("outline", CELL, [chain[i - 1]], words);
+  const tie = lastTie ? lastTie(here) : phrase`in line with ${here}`;
+  return phrase`${link(1, `${cap(cell)} 1`)} is ${s} or ${other}, and ${mark.as("outline", CELL, chain, `every numbered ${cell}`)} has just two ${vocab.noun}s left, so each forces the next. If ${link(1, `${cell} 1`)} is ${s}, ${here}'s ${region} already has it; if ${other}, ${link(last, `${cell} ${last}`)} is driven to ${s}, ${tie}. Either way, ${s} is ruled out here`;
 }

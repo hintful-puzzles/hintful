@@ -15,7 +15,9 @@ import {
   applyNoteMove,
   type CandidatePlanPrefs,
   candidateHint,
+  candidateHintMarks,
   keepCandidateHintTrack,
+  type Mark,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
 import { runLatinCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
@@ -36,16 +38,16 @@ import {
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
-import { genericLatinArea, rowColRegions } from "../../engine/latin-hint.ts";
+import { rowColRegions } from "../../engine/latin-hint.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import { parseConfigInt } from "../../engine/params.ts";
 import {
   autoPencilPref,
@@ -311,42 +313,43 @@ function findMistakes(state: KeenState): readonly KeenMistake[] {
  * list. Cage deductions name the cage by its clue; the generic Latin arms read
  * identically to Unequal's, narrated once, shared. The words are
  * [`hint-text.ts`](./hint-text.ts)'s. */
-function premise(reason: HintReason, ns: number[]): Premise {
+function premise(reason: HintReason, marks: readonly Mark[]): Premise {
+  const ns = valuesOf(marks);
   switch (reason.kind) {
     case "cage":
-      return { premise: say.cage(reason.op, reason.value, ns), named: true };
+      return {
+        premise: say.cage(reason.cells, reason.op, reason.value, ns, marks[0]),
+        named: true,
+      };
     case "cageLine":
       return {
-        premise: say.cageLine(reason.op, reason.value, ns[0], reason.horizontal),
+        premise: say.cageLine(
+          reason.cells,
+          reason.op,
+          reason.value,
+          ns[0],
+          reason.horizontal,
+        ),
       };
     default:
-      return latinPremise(reason, ns);
+      return latinPremise(reason, marks);
   }
 }
 
 /** Why a placement is forced: always a generic single, since no cage deduction
  * places. */
-function narrate(reason: HintReason, n: number): string {
+function narrate(reason: HintReason, m: Mark, w: number): Narration {
   if (reason.kind === "cage" || reason.kind === "cageLine")
     throw new Error(`a ${reason.kind} deduction strikes`);
-  return narrateLatinReason(reason, n);
+  return narrateLatinReason(reason, m, w);
 }
 
-/** The deduction's marks: a cage deduction is about "this cage", so the cage is
- * the hatch (docs/games/hints.md § "Hatch the line the sentence names"); a
- * forcing chain outlines the cells it ran through, **numbered**, so the sentence
- * can cite them and the player can walk it, and a set the cells that account
- * for what it strikes. */
-function reasonMarks(reason: HintReason): {
-  area: OrderedCell[];
-  hatch?: Point[];
-  reads?: Point[];
-} {
-  // What the cage can still hold is what its cells can, so they are all read.
-  if (reason.kind === "cage" || reason.kind === "cageLine") {
-    return { area: [], hatch: reason.cells, reads: reason.cells };
-  }
-  return { area: genericLatinArea(reason) };
+/** What a cage deduction reads beyond the marks its words name: what the cage
+ * can still hold is what its cells can, so they are all read. */
+function reasonReads(reason: HintReason): { reads?: Point[] } {
+  return reason.kind === "cage" || reason.kind === "cageLine"
+    ? { reads: reason.cells }
+    : {};
 }
 
 /** Build the hint plan by walking a working copy of the board the way a person
@@ -369,15 +372,10 @@ function buildSteps(
     reading,
     label: "keen hint plan",
     record: () => recordKeenDeductions(w, state.clues, Uint8Array.from(wGrid), maxdiff),
-    placeWords: (m, reason) => ({
-      explanation: narrate(reason, m.n),
-      // A naked single's own collapsed candidates are the premise, so it needs
-      // no area; a hidden single's line is the preset's.
-      area: [],
-    }),
+    placeWords: (m, reason) => ({ words: narrate(reason, m, w) }),
     strikeWords: (marks, reason) => ({
-      ...premise(reason, valuesOf(marks)),
-      ...reasonMarks(reason),
+      ...premise(reason, marks),
+      ...reasonReads(reason),
     }),
     // A cage's narration is about "this cell", with the whole cage hatched on
     // every leg, so a firing is one leg per cell.
@@ -407,7 +405,8 @@ export const keenGame: Game<
   KeenMove,
   KeenUi,
   KeenDrawState,
-  KeenMistake
+  KeenMistake,
+  KeenHint
 > = {
   id: "keen",
   canMarkAll: true,
@@ -469,11 +468,21 @@ export const keenGame: Game<
   difficulty,
   hint: (state, _aux, ui) =>
     candidateHint(state, ui ?? newUi(state), findMistakes, buildSteps),
+  hintMarks: {
+    roles: {
+      ring: "the cell the step is about: the number to enter there, or the pencil marks to cross out, which are shown with a line through them.",
+      outline:
+        "what the step reasons from: cells that between them already account for the numbers being crossed out, the number just placed, or a chain of cells with two numbers left each, numbered in the order the sentence reads them.",
+      stripes:
+        'the cage, row or column the sentence names: "this cage", "this row" or "this column".',
+    },
+    drawn: candidateHintMarks,
+  },
   // The shared candidate-elimination keep-track and stale-step check;
   // `KeenHint` is structurally `CandidateHighlights`.
-  hintKeepTrack: (m, step: HintStep<KeenMove, KeenHint>, state) =>
+  hintKeepTrack: (m, step, state) =>
     keepCandidateHintTrack(m, step, state.pencil, state.params.w),
-  refreshHintStep: (step: HintStep<KeenMove, KeenHint>, state) =>
+  refreshHintStep: (step, state) =>
     refreshCandidateHintStep(step, state.grid, state.pencil, state.params.w),
   findMistakes,
   requestKeys: (p): KeyLabel[] => digitKeys(p.w),

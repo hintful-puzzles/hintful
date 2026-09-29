@@ -187,7 +187,7 @@ describe("unequal hint", () => {
   it("auto-pencil on folds away the trivial row/column eliminations a placement implies", () => {
     const { st } = gen(UNEQ, "hint-autopencil");
     const populated = unequalGame.executeMove(st, { type: "pencilAll" });
-    const dupRe = /from the other cells they pass through/;
+    const dupRe = /just placed can't repeat in its row and column/;
 
     const uiOn = newUi(populated);
     uiOn.autoPencil = true;

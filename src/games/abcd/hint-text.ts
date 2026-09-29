@@ -5,6 +5,11 @@
  *
  * The no-touch rule is the one thing the two modes say differently, so every
  * sentence that says where a letter keeps its twin out of takes `diag`.
+ *
+ * Every word pointing at the board is a reference to its mark
+ * (`engine/hint-words.ts`): "this cell" the ringed cell, "this row" the striped
+ * line, the letters and cells a step reasons from outlined, and the count it
+ * reads, drawn in the hint color, by the words that state it ("its one A").
  */
 
 import {
@@ -12,7 +17,19 @@ import {
   type LatinVocab,
   narrateLatinReason,
   populateText,
+  thisCell,
 } from "../../engine/hint-text.ts";
+import {
+  CELL,
+  type MarkKind,
+  mark,
+  type Narration,
+  NOTE,
+  type Note,
+  phrase,
+  whole,
+} from "../../engine/hint-words.ts";
+import type { Point } from "../../engine/types.ts";
 
 /** The letters as a hint prints them: candidate `n` is the `n`th letter. */
 export const LETTERS: LatinVocab = {
@@ -21,9 +38,15 @@ export const LETTERS: LatinVocab = {
 };
 const L = LETTERS.value;
 
-/** Where a letter keeps its twin out of, from a cell. */
-const around = (diag: boolean): string =>
-  diag ? "touching it, even at a corner" : "beside, above or below it";
+/** A line's clue for one letter, as its index in `numbers`: the count a step
+ * reads, drawn in the hint color. */
+export const CLUE: MarkKind<number> = { name: "clue", key: String };
+
+/** Where a letter keeps its twin out of, from `what`. */
+const around = (diag: boolean, what: Narration | string): Narration =>
+  diag
+    ? phrase`touching ${what}, even at a corner`
+    : phrase`beside, above or below ${what}`;
 
 /** "one A", "2 more As": what a line still needs of letter `n`, `more` when
  * some are already placed. */
@@ -32,47 +55,84 @@ const needs = (k: number, n: number, more: boolean): string =>
 
 export type LineWord = "row" | "column";
 
+/** A line a step names, and its clue for the letter the step reads. */
+export interface LineMarks {
+  word: LineWord;
+  cells: readonly Point[];
+  clue: number;
+}
+
+const thisLine = (line: LineMarks): Narration =>
+  mark.this("stripes", whole(CELL), line.cells, line.word).capitalized();
+
+/** Words stating the count a line's clue gives, bound to the clue. */
+const count = (line: LineMarks, words: string): Narration =>
+  mark.as("outline", CLUE, [line.clue], words);
+
 export const say = {
   populate: populateText("letter"),
 
-  clean: (diag: boolean): string =>
-    diag
-      ? "Now clear the easy ones: cross out any letter already in a cell touching the cell, even at a corner."
-      : "Now clear the easy ones: cross out any letter already beside, above or below the cell.",
+  clean:
+    (diag: boolean) =>
+    (marks: readonly Note[]): Narration =>
+      phrase`Now clear the easy ones: cross out ${mark.as(
+        "ring",
+        NOTE,
+        marks,
+        diag
+          ? "any letter already in a cell touching the cell, even at a corner"
+          : "any letter already beside, above or below the cell",
+      )}.`,
 
   /** A note-less cell's candidates, written because a deduction rests on them. */
-  note: (values: readonly number[], every: boolean, diag: boolean): string => {
-    if (every) return "No letter stands next to this cell yet, so pencil in every one.";
+  note: (
+    at: Point,
+    values: readonly number[],
+    every: boolean,
+    diag: boolean,
+  ): Narration => {
+    if (every)
+      return phrase`No letter stands next to ${thisCell(at)} yet, so pencil in every one.`;
     const one = values.length === 1;
-    return `Only ${joinWith(values.map(L))} ${one ? "isn't" : "aren't"} already ${around(diag)}, so pencil ${one ? "it" : "them"} in.`;
+    return phrase`Only ${joinWith(values.map(L))} ${one ? "isn't" : "aren't"} already ${around(diag, thisCell(at))}, so pencil ${one ? "it" : "them"} in.`;
   },
 
-  naked: (n: number): string => narrateLatinReason({ kind: "single" }, n, LETTERS),
+  naked: (at: Note, w: number): Narration =>
+    narrateLatinReason({ kind: "single" }, at, w, LETTERS),
 
   /** A note-less cell every other letter is ruled out of. */
-  regionsFull: (n: number, diag: boolean): string =>
-    `Every other letter is already ${around(diag)}, so it can only be ${L(n)}.`,
+  regionsFull: (at: Note, diag: boolean): Narration =>
+    phrase`Every other letter is already ${around(diag, thisCell(at))}, so it can only be ${L(at.n)}.`,
 
-  /** A placement's own strikes, as the leg after it. */
-  cull: (n: number, diag: boolean): string =>
-    `The ${L(n)} just placed rules out ${L(n)} in every cell ${around(diag)}`,
+  /** A placement's own strikes, as the leg after it, from the letter just
+   * placed at `placed`. */
+  cull: (placed: Point, n: number, diag: boolean): Narration =>
+    phrase`${mark.as("outline", CELL, [placed], `The ${L(n)} just placed`)} rules out ${L(n)} in every cell ${around(diag, "it")}`,
 
   /** What a cull strikes. */
   culled: (n: number): string => `those ${L(n)}s`,
 
   /**
    * A line whose clue for `n` is already met, or is 0. Worded as what the line
-   * holds, because the placed letters are outlined and its count is drawn in
-   * the hint color.
+   * holds: the placed letters are outlined, and the words that give the count
+   * name the clue, drawn in the hint color.
    */
-  satisfied: (line: LineWord, n: number, clue: number): string =>
-    clue === 0
-      ? `This ${line} must hold no ${L(n)}`
+  satisfied: (
+    line: LineMarks,
+    n: number,
+    clue: number,
+    placed: readonly Point[],
+  ): Narration => {
+    const letters = (words: string) => mark.as("outline", CELL, placed, words);
+    const l = L(n);
+    return clue === 0
+      ? phrase`${thisLine(line)} must hold ${count(line, `no ${l}`)}`
       : clue === 1
-        ? `This ${line} already holds its one ${L(n)}`
+        ? phrase`${thisLine(line)} already holds ${count(line, "its one")} ${letters(l)}`
         : clue === 2
-          ? `This ${line} already holds both its ${L(n)}s`
-          : `This ${line} already holds all ${clue} of its ${L(n)}s`,
+          ? phrase`${thisLine(line)} already holds ${count(line, "both its")} ${letters(`${l}s`)}`
+          : phrase`${thisLine(line)} already holds ${count(line, `all ${clue} of its`)} ${letters(`${l}s`)}`;
+  },
 
   /** What a satisfied line strikes: the rest of the line's `n` notes. */
   satisfiedStruck: (n: number, clue: number, targets: number): string =>
@@ -80,12 +140,19 @@ export const say = {
 
   /**
    * The runs technique when every cell that can still take `n` must: as many
-   * cells left as the line still needs. `more` is whether some are placed.
+   * cells left as the line still needs. `more` is whether some are placed;
+   * `open` the cells that can, outlined when there are several.
    */
-  onlyHomes: (line: LineWord, n: number, need: number, more: boolean): string =>
+  onlyHomes: (
+    line: LineMarks,
+    at: Note,
+    need: number,
+    more: boolean,
+    open: readonly Point[],
+  ): Narration =>
     need === 1
-      ? `This ${line} needs ${needs(1, n, more)} and no other cell in it can take one, so this cell must be ${L(n)}.`
-      : `This ${line} needs ${needs(need, n, more)} and only the outlined cells can take one, so this cell must be ${L(n)}.`,
+      ? phrase`${thisLine(line)} needs ${count(line, needs(1, at.n, more))} and no other cell in it can take one, so ${thisCell(at)} must be ${L(at.n)}.`
+      : phrase`${thisLine(line)} needs ${count(line, needs(need, at.n, more))} and only ${mark.the("outline", CELL, open, "cell")} can take one, so ${thisCell(at)} must be ${L(at.n)}.`,
 
   /**
    * The runs technique proper: the outlined cells, split into stretches by the
@@ -93,9 +160,17 @@ export const say = {
    * stretch of `L` cells fits `⌈L/2⌉`), and the line needs exactly that many. So
    * every stretch is packed full, and an odd one packs only one way.
    */
-  packed: (line: LineWord, n: number, need: number, more: boolean): string =>
-    `This ${line} needs ${needs(need, n, more)}, and the outlined cells fit only ${need} apart, so each stretch is full: this cell must be ${L(n)}.`,
+  packed: (
+    line: LineMarks,
+    at: Note,
+    need: number,
+    more: boolean,
+    open: readonly Point[],
+  ): Narration =>
+    phrase`${thisLine(line)} needs ${count(line, needs(need, at.n, more))}, and ${mark.the("outline", CELL, open, "cell")} fit only ${need} apart, so each stretch is full: ${thisCell(at)} must be ${L(at.n)}.`,
 
-  /** A later cell of the same firing. */
-  alsoForced: (n: number): string => `So this cell must be ${L(n)} too.`,
+  /** A later cell of the same firing: the line its first leg named is still
+   * striped, and the words point back to it. */
+  alsoForced: (line: LineMarks, at: Note): Narration =>
+    phrase`So ${thisCell(at)} must be ${L(at.n)} too, for ${mark.the("stripes", whole(CELL), line.cells, line.word, "the same")}.`,
 };

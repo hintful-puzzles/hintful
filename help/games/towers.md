@@ -47,17 +47,12 @@ a cell unmarked until a step needs it, set **Hints pencil in** to
 **Only as needed** in the preferences: a cell with no marks then counts
 as holding every height not already in its row and column.
 
-* **A ringed cell** is the one the step is about: the height to place
-  there, or the pencil marks to cross out, which are shown with a line
-  through them.
-* **An outlined clue** is the one the sentence names, by its number
-  ("clue 3"), and **the striped line** is the row or column it looks
-  along. Two outlined clues at either end of a line are a facing pair.
-* **Outlined cells** between them already account for the heights being
-  crossed out.
-* **Numbered cells** are a chain of cells with two heights left each,
-  read in order: the sentence says how the chain rules a height out of
-  the ringed cell.
+{{hint-marks}}
+
+A clue is named by its number ("clue 3"); two outlined clues at either
+end of a line are a facing pair. Numbered cells are a chain of cells with
+two heights left each, read in order: the sentence says how the chain
+rules a height out of the ringed cell.
 
 The hint speaks of *heights* and of what a clue *sees*, the towers
 visible from it. A few clue ideas are worth learning by name:

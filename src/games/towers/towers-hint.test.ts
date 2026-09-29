@@ -230,7 +230,7 @@ describe("towers hint", () => {
   it("auto-pencil on folds away the trivial row/column eliminations", () => {
     const { st } = gen(5, "easy", "hint-autopencil");
     const populated = towersGame.executeMove(st, { type: "pencilAll" });
-    const dupRe = /now sits in this row and column/;
+    const dupRe = /just placed can't repeat in its row and column/;
 
     const uiOn = newUi(populated);
     uiOn.autoPencil = true;

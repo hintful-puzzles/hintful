@@ -22,7 +22,9 @@
  * extremes").
  */
 
-import { joinOr } from "../../engine/hint-text.ts";
+import { joinOr, thisCell } from "../../engine/hint-text.ts";
+import { CELL, mark, type Narration, phrase } from "../../engine/hint-words.ts";
+import type { Point } from "../../engine/types.ts";
 import {
   CLUE_ADD,
   CLUE_DIV,
@@ -75,19 +77,23 @@ function pairClause(clue: number, list: string): string {
 }
 
 /** A clue deduction's premise; the walk concludes it with the move it makes
- * (`engine/hint-text.ts`'s `Premise`). */
+ * (`engine/hint-text.ts`'s `Premise`). A clue sits where four cells meet, so the
+ * board cannot mark the clue itself: its name is a reference to the cells it
+ * constrains, outlined, which meet at that one intersection. */
 export const say = {
-  /** An `E`/`O` clue rules the wrong parity out of all four cells around it. */
-  parity: (even: boolean): string =>
-    `The ${even ? "E" : "O"} clue means all four numbers around it are ${even ? "even" : "odd"}`,
+  /** An `E`/`O` clue rules the wrong parity out of all four cells around it,
+   * `cells`. */
+  parity: (even: boolean, cells: readonly Point[]): Narration =>
+    phrase`${mark.as("outline", CELL, cells, `The ${even ? "E" : "O"} clue`)} means all four numbers around it are ${even ? "even" : "odd"}`,
 
-  /** An arithmetic clue read against a diagonal partner that already shows
-   * `v` — the whole deduction is arithmetic the player can do in their head. */
-  paired: (clue: number, v: number): string =>
-    `The ${clueLabel(clue)} clue means this cell and the ${v} across it ${diagonalRule(clue)}`,
+  /** An arithmetic clue over the diagonal `pair` (the struck cell `at`, then
+   * its partner), read against a partner that already shows `v`: the whole
+   * deduction is arithmetic the player can do in their head. */
+  paired: (clue: number, pair: readonly Point[], at: Point, v: number): Narration =>
+    phrase`${mark.as("outline", CELL, pair, `The ${clueLabel(clue)} clue`)} means ${thisCell(at)} and the ${v} across it ${diagonalRule(clue)}`,
 
   /** The same clue read against a partner that is still open: nothing it could
    * hold pairs with the struck values. */
-  open: (clue: number, ns: number[]): string =>
-    `Nothing open across the ${clueLabel(clue)} clue ${pairClause(clue, joinOr(ns))}`,
+  open: (clue: number, pair: readonly Point[], ns: number[]): Narration =>
+    phrase`Nothing open across ${mark.as("outline", CELL, pair, `the ${clueLabel(clue)} clue`)} ${pairClause(clue, joinOr(ns))}`,
 };

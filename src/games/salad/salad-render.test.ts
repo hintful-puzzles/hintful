@@ -273,7 +273,7 @@ describe("salad hint frames", () => {
   it("crosses a struck candidate through, keeping the note itself legible", () => {
     // The Towers convention: the struck note keeps COL_PENCIL (so it still reads
     // as a real note) and gains a strikethrough in the same color.
-    const { recording } = hintFrame(NUMBERS_ID, /There's already a \d/);
+    const { recording } = hintFrame(NUMBERS_ID, /The \d just placed /);
     const notes = recording.ops.filter(
       (o) => o.op === "text" && o.color === COL_PENCIL,
     );

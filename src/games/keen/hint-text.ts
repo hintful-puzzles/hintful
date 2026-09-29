@@ -8,7 +8,9 @@
  * `narrate`); this file decides only how it reads.
  */
 
-import { indefinite, joinOr } from "../../engine/hint-text.ts";
+import { indefinite, joinOr, thisCell } from "../../engine/hint-text.ts";
+import { CELL, mark, type Narration, phrase, whole } from "../../engine/hint-words.ts";
+import type { Point } from "../../engine/types.ts";
 import { C_ADD, C_DIV, C_MUL, C_SUB } from "./state.ts";
 
 /** The cage's arithmetic goal as a verb phrase, read off its packed clue — the
@@ -30,16 +32,32 @@ function cageGoal(op: number, value: number): string {
   }
 }
 
+/** "this cage", striped over its cells. */
+const thisCage = (cage: readonly Point[]): Narration =>
+  mark.this("stripes", whole(CELL), cage, "cage");
+
 /** A cage deduction's premise; the walk concludes it with the move it makes
  * (`engine/hint-text.ts`'s `Premise`). */
 export const say = {
-  /** No way to fill the cage (operator `op`, target `value`) leaves room for
-   * `ns` in this cell. */
-  cage: (op: number, value: number, ns: number[]): string =>
-    `No way to make this cage ${cageGoal(op, value)} puts ${joinOr(ns)} in this cell`,
+  /** No way to fill `cage` (operator `op`, target `value`) leaves room for `ns`
+   * in the struck cell `at`. */
+  cage: (
+    cage: readonly Point[],
+    op: number,
+    value: number,
+    ns: number[],
+    at: Point,
+  ): Narration =>
+    phrase`No way to make ${thisCage(cage)} ${cageGoal(op, value)} puts ${joinOr(ns)} in ${thisCell(at)}`,
 
-  /** Every way to fill the cage places `n` in this row (`horizontal`) or
-   * column. */
-  cageLine: (op: number, value: number, n: number, horizontal: boolean): string =>
-    `This cage must ${cageGoal(op, value)}, and every way to fill it places ${indefinite(String(n))} ${n} in this ${horizontal ? "row" : "column"}`,
+  /** Every way to fill `cage` places `n` in the row (`horizontal`) or column
+   * the cage lies along. */
+  cageLine: (
+    cage: readonly Point[],
+    op: number,
+    value: number,
+    n: number,
+    horizontal: boolean,
+  ): Narration =>
+    phrase`${thisCage(cage).capitalized()} must ${cageGoal(op, value)}, and every way to fill it places ${indefinite(String(n))} ${n} in its ${horizontal ? "row" : "column"}`,
 };

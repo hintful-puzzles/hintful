@@ -15,6 +15,7 @@ import type { HintStep } from "../../engine/game.ts";
 import { FIX_MISTAKES_FIRST } from "../../engine/hint-refusal.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { groupGame } from "./index.ts";
+import type { GroupHint } from "./render.ts";
 import { type HintReason, recordGroupDeductions } from "./solver.ts";
 import {
   DIFF_EXTREME,
@@ -280,7 +281,8 @@ describe("group hint — keepTrack", () => {
   it("a pencil toggle clearing a strike mark tracks the plan", () => {
     // Reach a pencilStrike step on an identity-hidden Tricky board whose first
     // mark is live against the current board, then follow it with a toggle.
-    let found: { state: GroupState; step: HintStep<GroupMove> } | null = null;
+    let found: { state: GroupState; step: HintStep<GroupMove, GroupHint> } | null =
+      null;
     for (const seed of ["h1", "h2", "h3", "h4", "h5"]) {
       let s = board(HARD_HIDDEN, seed);
       for (let i = 0; i < 500 && groupGame.status(s) === "ongoing" && !found; i++) {

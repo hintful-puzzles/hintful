@@ -54,18 +54,10 @@ out or reasons from them. If you would rather it filled in every cell's
 marks first (the same as pressing 'M'), set **Hints pencil in** to
 **Every candidate first** in the preferences.
 
-* **A ringed cell** is the one the step is about: the number to enter
-  there, or the pencil marks to cross out, which are shown with a line
-  through them.
-* **Two outlined cells** either side of a sign or bar are the pair the
-  sentence reasons about: the ringed one, and "the cell across" it.
-  Elsewhere, outlined cells between them already account for the
-  numbers being crossed out.
-* **A striped row or column** is the line the sentence calls "this row"
-  or "this column".
-* **Numbered cells** are a chain of cells with two numbers left each,
-  read in order: the sentence says how the chain rules a number out of
-  the ringed cell.
+{{hint-marks}}
+
+A chain's numbered cells have two numbers left each, read in order: the
+sentence says how the chain rules a number out of the ringed cell.
 
 The hint calls every `<` sign a *greater-than sign*, and reasons from
 it both ways: the cell on its larger side can't hold anything as small

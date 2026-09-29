@@ -14,7 +14,11 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import { anyEmptyLacksNotes, candidateHint } from "../../engine/candidate-hint.ts";
+import {
+  anyEmptyLacksNotes,
+  candidateHint,
+  candidateHintMarks,
+} from "../../engine/candidate-hint.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import { winFlash } from "../../engine/flash.ts";
@@ -48,7 +52,12 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { maxGeneratedRegionSize, newSeismicDesc } from "./generator.ts";
-import { buildSteps, hintKeepTrack, refreshHintStep } from "./hint.ts";
+import {
+  buildSteps,
+  hintKeepTrack,
+  refreshHintStep,
+  type SeismicHint,
+} from "./hint.ts";
 import {
   colors,
   computeSize,
@@ -297,7 +306,8 @@ export const seismicGame: Game<
   SeismicMove,
   SeismicUi,
   SeismicDrawState,
-  SeismicMistake
+  SeismicMistake,
+  SeismicHint
 > = {
   id: "seismic",
   canMarkAll: true,
@@ -353,6 +363,15 @@ export const seismicGame: Game<
   findMistakes,
   hint: (state, _aux, ui) =>
     candidateHint(state, ui ?? newUi(state), findMistakes, buildSteps),
+  hintMarks: {
+    roles: {
+      ring: "the cell the step is about: the number to enter there, the marks to write, or the pencil marks to cross out, which are shown with a line through them.",
+      outline:
+        "the number just placed, when a step crosses that number out of the cells it rules out.",
+      stripes: "the area the step reasons from.",
+    },
+    drawn: candidateHintMarks,
+  },
   hintKeepTrack,
   refreshHintStep,
   // Sized to the regions the generator *makes*, not the nine the format admits:

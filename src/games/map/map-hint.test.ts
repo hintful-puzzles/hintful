@@ -34,8 +34,8 @@ const ARMS = {
   chainWalk: /^If region 1 isn't \w+, it's \w+, so region 2 is /,
   chainLongWalk: /^If region 1 isn't \w+, it's \w+, so each numbered region takes /,
   chainAlternates: /^Every numbered region has a \w+ dot\./,
-  chainDot: /^Region \d+ touches /,
-  chainTrim: /^Region \d+'s other dots/,
+  chainDot: /^Region \d+ of the numbered chain touches /,
+  chainTrim: /^Region \d+ of the numbered chain has other dots/,
 } satisfies Record<string, RegExp>;
 type Arm = keyof typeof ARMS;
 
@@ -238,10 +238,10 @@ describe("map hint claims hold on the board they are spoken over", () => {
           expect(ev).toEqual([]);
           expect(bits(left(s, t))).toBe(1);
         } else if (arm === "pairDot" || arm === "pairTrim") {
-          // One of the pair, ringed, dotted with exactly its two colors, the
-          // other outlined beside it.
-          expect(ev).toHaveLength(2);
-          expect(ev).toContain(t);
+          // One of the pair, ringed, dotted with exactly its two colors, and
+          // nothing outlined: the leg writes the pair's premise, and the other
+          // region's dots may not be on the board yet.
+          expect(ev).toEqual([]);
           expect(bits(left(s, t))).toBe(2);
           expect((hl.want as { dots: number }).dots).toBe(left(s, t));
           expect(s.pencil[t]).not.toBe(left(s, t));

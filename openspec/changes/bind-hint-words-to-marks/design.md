@@ -28,6 +28,15 @@ Its solver is one rule (a square's sole successor or sole predecessor), so the
 hint is cheap to state honestly, and every board the generator makes is
 solvable by it, so the hint never has to refuse on a fresh board.
 
+**What it pressed, as built.** The link did need a kind of its own, but not
+the one expected: a link is named by its two ends, and two ringed squares made
+"this square" point at neither. So the arrow the link leaves by is `ARROW`,
+drawn in the action color, and the square it reaches is a ringed `CELL`: one
+role, two kinds, and the sentence tells them apart by noun. The heterogeneous
+evidence is named by class ("the rest follow others or hold the wrong number"),
+and the one sentence naming all three classes is ledgered long. The diagonal
+line took stripes with no change: a hatch is laid per square.
+
 Mosaic was the runner-up. Every mark it needs (a ring on a cell, stripes over a
 3×3 block) already exists, so it would have tested the contract less.
 

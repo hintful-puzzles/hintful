@@ -40,17 +40,14 @@ import {
   type CandidateMoveAdapter,
   type CandidatePlanPrefs,
   keepCandidateHintTrack,
+  type Mark,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
-import {
-  type DupReason,
-  runCandidatePlan,
-  valuesOf,
-} from "../../engine/candidate-plan.ts";
+import { type DupReason, runCandidatePlan } from "../../engine/candidate-plan.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import type { Premise } from "../../engine/hint-text.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
-import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import type { Point } from "../../engine/types.ts";
 import { say } from "./hint-text.ts";
 import { type RomeHintOp, type RomeReason, recordRomeDeductions } from "./solver.ts";
@@ -119,72 +116,76 @@ type RomeHintReason =
 const cellsOf = (w: number, cells: readonly number[]): Point[] =>
   cells.map((i) => ({ x: i % w, y: (i / w) | 0 }));
 
-/** What a reason marks: the particular squares it rests on, outlined, and the
- * area or group its sentence is about ("its area", "the striped group"),
- * hatched (docs/games/hints.md § "Hatch the line the sentence names").
- * `areaOf` is the outlined area a square belongs to. */
-function marks(
-  reason: RomeHintReason | DupReason,
-  w: number,
-  areaOf: (x: number, y: number) => readonly number[],
-): { area: OrderedCell[]; hatch?: Point[] } {
+/** The sentence a placement speaks, at the placed square `m`. What it marks is
+ * what it names: the square ringed, and the area a hidden single reasons over
+ * striped (docs/games/hints.md § "Bind the words to the marks"). */
+function narrate(reason: RomeHintReason | DupReason, m: Mark, w: number): Narration {
   switch (reason.kind) {
     case "single":
+      return say.single(m, m.n);
     case "regionsFull":
-      return { area: [] };
+      return say.regionsFull(m, m.n);
     case "hiddenSingle":
-    case "onlyHome":
-      return { area: [], hatch: cellsOf(w, reason.region) };
-    case "dup":
-      return {
-        area: [{ x: reason.px, y: reason.py }],
-        hatch: cellsOf(w, areaOf(reason.px, reason.py)),
-      };
-    // The walk back to this square *is* the premise, and its order is the fact
-    // the marks would otherwise lose (docs/games/hints.md § "Number the chain").
-    case "loop":
-      return {
-        area: reason.path.map((i, k) => ({ x: i % w, y: (i / w) | 0, order: k + 1 })),
-      };
-    case "reach":
-      return { area: [], hatch: cellsOf(w, reason.group) };
-    case "opposite":
-      return { area: [{ x: reason.px, y: reason.py }] };
-    case "pair":
-      return { area: cellsOf(w, reason.pair), hatch: cellsOf(w, reason.region) };
-  }
-}
-
-/** The sentence a placement speaks. `n` is the arrow placed. */
-function narrate(reason: RomeHintReason | DupReason, n: number): string {
-  switch (reason.kind) {
-    case "single":
-      return say.single(n);
-    case "regionsFull":
-      return say.regionsFull(n);
-    case "hiddenSingle":
-      return say.hiddenSingle(reason.n);
+      return say.hiddenSingle(cellsOf(w, reason.region), m, reason.n);
     default:
       throw new Error(`a ${reason.kind} deduction strikes`);
   }
 }
 
-/** A strike's premise, which the walk concludes with the move it makes. `ns`
- * is the struck arrows. */
-function premise(reason: RomeHintReason | DupReason, ns: number[]): Premise {
+/** A strike's premise, which the walk concludes with the move it makes.
+ * `struck` is the struck arrows, all in one square except for a pair's.
+ * `areaOf` is the area a square belongs to. */
+function premise(
+  reason: RomeHintReason | DupReason,
+  struck: readonly Mark[],
+  w: number,
+  areaOf: (x: number, y: number) => readonly number[],
+): Premise {
+  const at = struck[0];
+  const n = at.n;
   switch (reason.kind) {
-    case "dup":
-      return { premise: say.dup(reason.n), where: say.dupWhere };
-    case "loop":
-      return { premise: say.loop(ns[0]) };
+    case "dup": {
+      const placed = { x: reason.px, y: reason.py };
+      const area = cellsOf(w, areaOf(reason.px, reason.py));
+      return { premise: say.dup(area, placed, reason.n), where: say.dupWhere };
+    }
+    // The walk back to this square *is* the premise, and its order is the fact
+    // the marks would otherwise lose (docs/games/hints.md § "Number the chain").
+    case "loop": {
+      const path = reason.path.map((i, k) => ({
+        x: i % w,
+        y: (i / w) | 0,
+        order: k + 1,
+      }));
+      return { premise: say.loop(path, n) };
+    }
     case "onlyHome":
-      return { premise: say.onlyHome([...reason.only]), struck: say.onlyHomeStruck };
+      return {
+        premise: say.onlyHome(cellsOf(w, reason.region), at, [...reason.only]),
+        struck: say.onlyHomeStruck,
+      };
     case "reach":
-      return { premise: say.reach(), struck: say.reachStruck };
+      return {
+        premise: say.reach(cellsOf(w, reason.group), at),
+        struck: say.reachStruck,
+      };
     case "opposite":
-      return { premise: say.opposite(ns[0], axisOf(ns[0])), named: true };
+      return {
+        premise: say.opposite(
+          { x: reason.px, y: reason.py },
+          cellsOf(w, areaOf(reason.px, reason.py)),
+          n,
+          axisOf(n),
+        ),
+        named: true,
+      };
     case "pair":
-      return { premise: say.pair([...reason.values]), where: say.pairWhere };
+      return {
+        premise: say.pair(cellsOf(w, reason.pair), cellsOf(w, reason.region), [
+          ...reason.values,
+        ]),
+        where: say.pairWhere,
+      };
     default:
       throw new Error(`a ${reason.kind} deduction places`);
   }
@@ -256,14 +257,8 @@ export function buildSteps(
           return { kind: "hiddenSingle", n, region: Array.from(why.region.cells) };
       }
     },
-    placeWords: (m, reason) => ({
-      explanation: narrate(reason, m.n),
-      ...marks(reason, w, areaOf),
-    }),
-    strikeWords: (struck, reason) => ({
-      ...premise(reason, valuesOf(struck)),
-      ...marks(reason, w, areaOf),
-    }),
+    placeWords: (m, reason) => ({ words: narrate(reason, m, w) }),
+    strikeWords: (struck, reason) => premise(reason, struck, w, areaOf),
     conclude: say.conclude,
     // Every deduction here is about one square, so a firing's strikes stay
     // together; only the `pair` rung reaches several, and its sentence speaks
@@ -272,7 +267,7 @@ export function buildSteps(
     notes: {
       populate: say.populate,
       cleanObvious: say.cleanObvious,
-      note: (_cell, values, every) => say.note(values, every),
+      note: (at, values, every) => say.note(at, values, every),
     },
   });
   return steps;

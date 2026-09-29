@@ -51,7 +51,13 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { ConfigValues, KeyLabel, Point } from "../../engine/types.ts";
 import { newAbcdDesc } from "./generator.ts";
-import { buildSteps, hintKeepTrack, refreshHintStep } from "./hint.ts";
+import {
+  type AbcdHint,
+  abcdHintMarks,
+  buildSteps,
+  hintKeepTrack,
+  refreshHintStep,
+} from "./hint.ts";
 import {
   type AbcdDrawState,
   colors,
@@ -326,7 +332,8 @@ export const abcdGame: Game<
   AbcdMove,
   AbcdUi,
   AbcdDrawState,
-  AbcdMistake
+  AbcdMistake,
+  AbcdHint
 > = {
   id: "abcd",
   // `textFormat` still declines a board whose clues could be two digits.
@@ -391,6 +398,15 @@ export const abcdGame: Game<
   findMistakes,
   hint: (state, _aux, ui) =>
     candidateHint(state, ui ?? newUi(state), findMistakes, buildSteps),
+  hintMarks: {
+    roles: {
+      ring: "the cell the step is about: the letter to enter there, or the pencil marks to cross out, which are shown with a line through them.",
+      outline:
+        'the particular cells the reason rests on: the letters a row already holds, the cells that can still take a letter, or the letter just placed. The number the sentence reads ("its one A", "needs 2 more Bs") is drawn in the hint color among the clues.',
+      stripes: 'the row or column the step reasons from: "this row", "this column".',
+    },
+    drawn: abcdHintMarks,
+  },
   hintKeepTrack,
   refreshHintStep,
   requestKeys,

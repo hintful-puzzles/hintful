@@ -11,6 +11,13 @@
  * then a, b, … past 9), so a 12×12 grid's hint names the "c" the player can
  * see rather than a "12" they cannot.
  *
+ * Every word that points at the board is a reference to the mark it points at
+ * (`engine/hint-words.ts`): the region a sentence is about ("this block", "this
+ * killer cage") is striped, the particular cells it reasons from are outlined,
+ * and "this cell" is the ringed cell the step decides. The walk reads the
+ * step's marks off these references, so `cells` is how a sentence finds a
+ * region's cells to stripe.
+ *
  * The deduction decides which sentence and with what values (`index.ts`'s
  * `narrate`); this file decides only how it reads.
  */
@@ -19,14 +26,17 @@ import {
   candidateConclusions,
   cleanObviousText,
   forcingChainPremise,
-  indefinite,
   joinOr,
   joinWith,
   type LatinVocab,
   noteText,
+  placedRulesOut,
   populateText,
+  thisCell,
 } from "../../engine/hint-text.ts";
+import { CELL, mark, type Narration, phrase, whole } from "../../engine/hint-words.ts";
 import type { ForcingLink } from "../../engine/latin-hint.ts";
+import type { Point } from "../../engine/types.ts";
 import { digitChar } from "./render.ts";
 import type { CageOrigin, SoloRegion } from "./solver.ts";
 
@@ -47,12 +57,24 @@ export function regionName(region: SoloRegion): string {
   }
 }
 
+/** A region's cells, for the sentence that stripes it. */
+export type RegionCells = (region: SoloRegion) => readonly Point[];
+
+/** "this row", "this block": the region the sentence is about, striped. */
+function thisRegion(region: SoloRegion, cells: RegionCells): Narration {
+  return mark.this("stripes", whole(CELL), cells(region), regionName(region));
+}
+
+/** "this killer cage", striped over the cage cells the deduction counts. */
+const thisCage = (cage: readonly Point[]): Narration =>
+  mark.this("stripes", whole(CELL), cage, "killer cage");
+
 /** How a chain's last link lines up with this cell, where it is not by row or
  * column (the shared sentence's own default). */
-function lastTie(region: SoloRegion): string | null {
-  if (region.kind === "block") return "in this cell's block";
+function lastTie(region: SoloRegion): ((here: Narration) => Narration) | null {
+  if (region.kind === "block") return (here) => phrase`in ${here}'s block`;
   if (region.kind === "diag0" || region.kind === "diag1")
-    return "on this cell's diagonal";
+    return (here) => phrase`on ${here}'s diagonal`;
   return null;
 }
 
@@ -70,59 +92,76 @@ export const say = {
   populate: populateText("number"),
 
   /** `regions` names every kind of region a digit may not repeat in. */
-  cleanObvious: (regions: string[]): string =>
+  cleanObvious: (regions: string[]) =>
     cleanObviousText("number", "placed", joinOr(regions)),
 
-  /** A note step under the implicit reading; `regions` names the kinds of
-   * region the cell lies in. */
-  note: (ns: number[], every: boolean, regions: string[]): string =>
-    noteText(ns.map(g), every, {
+  /** A note step under the implicit reading at `at`; `regions` names the
+   * kinds of region the cell lies in. */
+  note: (at: Point, ns: number[], every: boolean, regions: string[]): Narration =>
+    noteText(at, ns.map(g), every, {
       noun: "number",
       placedVerb: "placed",
       regions: joinOr(regions),
     }),
 
-  single: (n: number): string =>
-    `Every other number has been ruled out in this cell, so it can only be ${g(n)}.`,
+  single: (at: Point, n: number): Narration =>
+    phrase`Every other number has been ruled out in ${thisCell(at)}, so it can only be ${g(n)}.`,
 
   /** A single in a note-less cell; `regions` as for {@link say.note}. */
-  regionsFull: (n: number, regions: string[]): string =>
-    `This cell's ${joinWith(regions)} already hold every other number, so it can only be ${g(n)}.`,
+  regionsFull: (at: Point, n: number, regions: string[]): Narration =>
+    phrase`${thisCell(at).capitalized()}'s ${joinWith(regions)} already hold every other number, so it can only be ${g(n)}.`,
 
-  hiddenSingle: (region: SoloRegion, n: number): string => {
+  hiddenSingle: (
+    at: Point,
+    region: SoloRegion,
+    n: number,
+    cells: RegionCells,
+  ): Narration => {
     const r = regionName(region);
-    return `In this ${r}, ${g(n)} can go in only this cell, since every other cell in the ${r} rules it out, so it must be ${g(n)}.`;
+    return phrase`In ${thisRegion(region, cells)}, ${g(n)} can go in only ${thisCell(at)}, since every other cell in the ${r} rules it out, so it must be ${g(n)}.`;
   },
 
   // The strike arms below are premises, which the walk concludes with the move
   // it makes, in these words (`engine/hint-text.ts`'s `Premise`).
   conclude: candidateConclusions(SOLO_VOCAB),
 
-  /** `regions` names the kinds of region the placed cell lies in. */
-  dup: (n: number, regions: string[]): string =>
-    `${indefinite(g(n), true)} ${g(n)} is placed here and can't repeat in its ${joinOr(regions)}`,
+  /** The `n` just placed at `placed`; `regions` names the kinds of region it
+   * lies in. */
+  dup: (placed: Point, n: number, regions: string[]): Narration =>
+    placedRulesOut({ px: placed.x, py: placed.y }, g(n), joinOr(regions)),
 
   /** Where the placement's cull strikes from. */
   dupWhere: "from these cells",
 
-  /** Every cell of `confined` that can take `n` also lies in `target`. */
-  intersect: (confined: SoloRegion, target: SoloRegion, n: number): string =>
-    `In this ${regionName(confined)}, every cell that can still take ${g(n)} lies in this ${regionName(target)}`,
+  /** Every cell of `confined` that can take `n` also lies in one `target`. */
+  intersect: (
+    confined: SoloRegion,
+    target: SoloRegion,
+    n: number,
+    cells: RegionCells,
+  ): Narration =>
+    phrase`In ${thisRegion(confined, cells)}, every cell that can still take ${g(n)} lies in one ${regionName(target)}`,
 
-  /** Where an intersection strikes from: the rest of the target region. */
+  /** Where an intersection strikes from: the rest of the target region, the
+   * one the premise just named last. */
   intersectWhere: "from the rest of it",
 
-  /** A set of cells inside `region` accounts for `ns`; with no region, the set
-   * is a locked pattern across several lines.
+  /** The outlined `set` inside `region` accounts for `ns`; with no region, the
+   * set is a locked pattern across several lines.
    *
    * The region-less arm speaks of the cells the step outlines, because there is no
    * region to name and the lines it used to point at were never marked. What it
    * claims is what the firing checks: in the columns those cells sit in, the
    * digit fits nowhere else, so each of their rows is spoken for. */
-  set: (region: SoloRegion | null, ns: number[]): string =>
+  set: (
+    region: SoloRegion | null,
+    set: readonly Point[],
+    ns: number[],
+    cells: RegionCells,
+  ): Narration =>
     region
-      ? `Other cells in this ${regionName(region)} already account for ${all(ns)}`
-      : `Their columns fit ${all(ns)} only in the outlined cells, leaving no other ${all(ns)} in their rows`,
+      ? phrase`${mark.as("outline", CELL, set, "Other cells")} in ${thisRegion(region, cells)} already account for ${all(ns)}`
+      : phrase`Their columns fit ${all(ns)} only in ${mark.the("outline", CELL, set, "cell")}, leaving no other ${all(ns)} in their rows`,
 
   // The shared chain sentence, with Solo's own region vocabulary — its chain
   // hops through blocks and diagonals as well as lines, so both the region that
@@ -130,10 +169,10 @@ export const say = {
   // link are named rather than assumed.
   forcing: (
     reason: { chain: readonly ForcingLink[] },
-    struck: number,
+    struck: Point & { n: number },
     shares: SoloRegion,
     lastShares: SoloRegion,
-  ): string =>
+  ): Narration =>
     forcingChainPremise(
       reason,
       struck,
@@ -142,59 +181,91 @@ export const say = {
       lastTie(lastShares),
     ),
 
-  /** The one open cell of a {@link CageSum} must make its whole clue `n`. */
-  cageSingle: (origin: CageOrigin, n: number, total: number): string => {
+  /** The one open cell `at` of a {@link CageSum} over `open` must make its
+   * whole clue `n`. */
+  cageSingle: (
+    at: Point,
+    open: readonly Point[],
+    origin: CageOrigin,
+    n: number,
+    total: number,
+    cells: RegionCells,
+  ): Narration => {
+    const last = mark.as("ring", CELL, [at], "its last cell");
     switch (origin.kind) {
       case "cage":
         return origin.placed === 0
-          ? `This killer cage has only this cell, so it must be its total, ${g(n)}.`
-          : `This killer cage must total ${origin.total} and its other cells already make ${origin.placed}, so its last cell must be ${g(n)}.`;
+          ? phrase`${thisCage(open).capitalized()} has only ${thisCell(at)}, so it must be its total, ${g(n)}.`
+          : phrase`${thisCage(open).capitalized()} must total ${origin.total} and its other cells already make ${origin.placed}, so ${last} must be ${g(n)}.`;
       // The one sentence that states the region rule in full, the 45 and all:
       // the residual *is* the digit, so it says the number once, as the thing
       // left over, and has the room.
       case "region":
-        return `This ${regionName(origin.region)} must total ${total}; the cages and digits inside it account for all but ${g(n)}, so its one open cell must be ${g(n)}.`;
+        return phrase`${thisRegion(origin.region, cells).capitalized()} must total ${total}; the cages and digits inside it account for all but ${g(n)}, so ${mark.as("ring", CELL, [at], "its one open cell")} must be ${g(n)}.`;
       case "outside":
-        return `${outsideRest(origin)}, so its last cell must be ${g(n)}.`;
+        return phrase`${outsideRest(origin, cells)}, so ${last} must be ${g(n)}.`;
     }
   },
 
-  /** Even the extremes the other cells of a {@link CageSum} can reach leave no
-   * room for `ns`. */
-  cageMinMax: (origin: CageOrigin, clue: number, ns: number[]): string =>
+  /** Even the extremes the other cells of a {@link CageSum} over `open` can
+   * reach leave no room for `ns`. */
+  cageMinMax: (
+    open: readonly Point[],
+    origin: CageOrigin,
+    clue: number,
+    ns: number[],
+    cells: RegionCells,
+  ): Narration =>
     origin.kind === "cage" && origin.placed === 0
-      ? `This killer cage must total ${clue}, and its other cells leave no room for ${any(ns)}`
-      : `${cageSum(origin, clue)}; the others leave no room for ${any(ns)}`,
+      ? phrase`${thisCage(open).capitalized()} must total ${clue}, and its other cells leave no room for ${any(ns)}`
+      : phrase`${cageSum(open, origin, clue, cells)}; the others leave no room for ${any(ns)}`,
 
-  /** No way to make a {@link CageSum}'s clue uses `ns` in this cell. */
-  cageSums: (origin: CageOrigin, clue: number, ns: number[]): string =>
+  /** No way to make a {@link CageSum}'s clue over `open` uses `ns` in the struck
+   * cell `at`. */
+  cageSums: (
+    at: Point,
+    open: readonly Point[],
+    origin: CageOrigin,
+    clue: number,
+    ns: number[],
+    cells: RegionCells,
+  ): Narration =>
     origin.kind === "cage" && origin.placed === 0
-      ? `No way to make this killer cage total ${clue} uses ${any(ns)} in this cell`
-      : `${cageSum(origin, clue)}; no way to make that uses ${any(ns)} here`,
+      ? phrase`No way to make ${thisCage(open)} total ${clue} uses ${any(ns)} in ${thisCell(at)}`
+      : phrase`${cageSum(open, origin, clue, cells)}; no way to make that uses ${any(ns)} here`,
 };
 
-// The sums below lean on the picture: the region they name is hatched, the
+// The sums below lean on the picture: the region they name is striped, the
 // cells they leave a sum to are outlined, and a cage's clue and placed digits
 // are on the board, so the sentence gives only the sum those leave. "Whole"
 // cages are the ones the region rule takes out, not the one it leaves cells of.
 // A strike on a region's sum is still two premises, the sum and the rung, and
 // is listed long for it (`hint-quality.test.ts`'s `LONG_NARRATIONS`).
 
-/** The region rule, as far as the cage its leftover cells all lie in. */
-function outsideRest(origin: CageOrigin & { kind: "outside" }): string {
+/** The region rule, as far as the cage its leftover cells, `inside`, all lie
+ * in; they are outlined. */
+function outsideRest(
+  origin: CageOrigin & { kind: "outside" },
+  cells: RegionCells,
+): Narration {
   const r = regionName(origin.region);
-  return `This ${r}'s whole cages and digits leave ${origin.insideSum} for this killer cage's cells in the ${r}`;
+  return phrase`${thisRegion(origin.region, cells).capitalized()}'s whole cages and digits leave ${origin.insideSum} for ${mark.as("outline", CELL, origin.inside, `this killer cage's cells in the ${r}`)}`;
 }
 
-/** Why the cells of a {@link CageSum} must make `clue`, as a clause that ends
- * on that sum. */
-function cageSum(origin: CageOrigin, clue: number): string {
+/** Why the open cells `open` of a {@link CageSum} must make `clue`, as a clause
+ * that ends on that sum. */
+function cageSum(
+  open: readonly Point[],
+  origin: CageOrigin,
+  clue: number,
+  cells: RegionCells,
+): Narration {
   switch (origin.kind) {
     case "cage":
-      return `This killer cage's open cells make ${clue}`;
+      return phrase`${mark.as("stripes", whole(CELL), open, "This killer cage's open cells")} make ${clue}`;
     case "region":
-      return `This ${regionName(origin.region)}'s whole cages and digits leave ${clue} for the outlined cells`;
+      return phrase`${thisRegion(origin.region, cells).capitalized()}'s whole cages and digits leave ${clue} for ${mark.the("outline", CELL, open, "cell")}`;
     case "outside":
-      return `${outsideRest(origin)}, so ${clue} for the outlined ones`;
+      return phrase`${outsideRest(origin, cells)}, so ${clue} for ${mark.as("outline", CELL, open, "its other cells")}`;
   }
 }

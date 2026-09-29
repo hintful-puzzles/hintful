@@ -19,7 +19,9 @@ import {
   applyNoteMove,
   type CandidatePlanPrefs,
   candidateHint,
+  candidateHintMarks,
   keepCandidateHintTrack,
+  type Mark,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
 import { runLatinCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
@@ -41,14 +43,14 @@ import {
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
-import { genericLatinArea, rowColRegions } from "../../engine/latin-hint.ts";
+import { rowColRegions } from "../../engine/latin-hint.ts";
 import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import { parseConfigInt } from "../../engine/params.ts";
 import {
   autoPencilPref,
@@ -361,50 +363,38 @@ function findMistakes(state: MathraxState): readonly MathraxMistake[] {
  */
 function premise(
   reason: HintReason,
-  ns: number[],
-  target: Point,
+  marks: readonly Mark[],
   grid: ArrayLike<number>,
   o: number,
 ): Premise {
+  const target = { x: marks[0].x, y: marks[0].y };
   switch (reason.kind) {
     case "clue": {
+      // A clue's cells are what names it: an arithmetic clue constrains one
+      // diagonal pair, an `E`/`O` clue all four cells around it, and either set
+      // meets at exactly one intersection, so outlining them points at the clue
+      // without the board having any way to mark the intersection itself.
       const { clue, cx, cy } = reason;
       if (clueIsParity(clue))
-        return { premise: say.parity(clueType(clue) === CLUE_EVN) };
+        return { premise: say.parity(clueType(clue) === CLUE_EVN, clueCells(cx, cy)) };
       const across = clueOpposite(cx, cy, target);
+      const pair = [target, across];
       const v = grid[across.y * o + across.x];
       return v
-        ? { premise: say.paired(clue, v) }
-        : { premise: say.open(clue, ns), named: true };
+        ? { premise: say.paired(clue, pair, target, v) }
+        : { premise: say.open(clue, pair, valuesOf(marks)), named: true };
     }
     // The generic Latin arms (dup / set / forcing) read identically to Keen's
     // and Unequal's — narrated once, shared.
     default:
-      return latinPremise(reason, ns);
+      return latinPremise(reason, marks);
   }
 }
 
 /** Why a placement is forced: always a generic single, since no clue places. */
-function narrate(reason: HintReason, n: number): string {
+function narrate(reason: HintReason, m: Mark, o: number): Narration {
   if (reason.kind === "clue") throw new Error("a clue deduction strikes");
-  return narrateLatinReason(reason, n);
-}
-
-/** The deduction's evidence cells to shade `COL_HINT_CELL`. A clue's cells are
- * what names it: an arithmetic clue constrains one diagonal pair, an `E`/`O`
- * clue all four cells around it, and either set meets at exactly one
- * intersection — so the shading points at the clue without the board having any
- * way to mark the intersection itself. The generic Latin techniques have no
- * clean local area (the struck notes carry the premise). */
-function reasonArea(reason: HintReason, target: Point): OrderedCell[] {
-  switch (reason.kind) {
-    case "clue":
-      return clueIsParity(reason.clue)
-        ? clueCells(reason.cx, reason.cy)
-        : [target, clueOpposite(reason.cx, reason.cy, target)];
-    default:
-      return genericLatinArea(reason);
-  }
+  return narrateLatinReason(reason, m, o);
 }
 
 /** Build the hint plan by walking a working copy of the board the way a person
@@ -429,19 +419,8 @@ function buildSteps(
     reading,
     label: "mathrax hint plan",
     record: () => recordMathraxDeductions(o, state.clues, wGrid, maxdiff),
-    placeWords: (m, reason) => ({
-      explanation: narrate(reason, m.n),
-      // A naked single's own collapsed candidates are the premise, so it needs
-      // no area; a hidden single's line is the preset's.
-      area: [],
-    }),
-    strikeWords: (marks, reason) => {
-      const target = { x: marks[0].x, y: marks[0].y };
-      return {
-        ...premise(reason, valuesOf(marks), target, wGrid, o),
-        area: reasonArea(reason, target),
-      };
-    },
+    placeWords: (m, reason) => ({ words: narrate(reason, m, o) }),
+    strikeWords: (marks, reason) => premise(reason, marks, wGrid, o),
     notes: { noun: "number", placedVerb: "standing" },
   });
   return steps;
@@ -511,7 +490,8 @@ export const mathraxGame: Game<
   MathraxMove,
   MathraxUi,
   MathraxDrawState,
-  MathraxMistake
+  MathraxMistake,
+  MathraxHint
 > = {
   id: "mathrax",
   canMarkAll: true,
@@ -573,6 +553,15 @@ export const mathraxGame: Game<
   difficulty,
   findMistakes,
   hint,
+  hintMarks: {
+    roles: {
+      ring: "the cell the step decides, or whose pencil marks it crosses out. The numbers it strikes are crossed through in their own color.",
+      outline:
+        "what the step reasons from: the cells a clue constrains (the diagonal pair it sits between, or all four around an E or O), the number just placed, the cells of a set, or the numbered cells of a chain, in the order it runs.",
+      stripes: 'the row or column the sentence names: "in this row".',
+    },
+    drawn: candidateHintMarks,
+  },
   hintKeepTrack,
   refreshHintStep,
   requestKeys: (p) => digitKeys(p.o),

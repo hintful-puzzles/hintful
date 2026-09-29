@@ -15,7 +15,9 @@ import {
   applyNoteMove,
   type CandidatePlanPrefs,
   candidateHint,
+  candidateHintMarks,
   keepCandidateHintTrack,
+  type Mark,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
 import { runCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
@@ -33,15 +35,15 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import type { Premise } from "../../engine/hint-text.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
-import { forcingChainArea, type SingleWhy } from "../../engine/latin-hint.ts";
+import type { SingleWhy } from "../../engine/latin-hint.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import { parseConfigInt } from "../../engine/params.ts";
 import {
   autoPencilPref,
@@ -60,7 +62,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { ConfigValues, KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newSoloDesc } from "./generator.ts";
-import { regionName, say } from "./hint-text.ts";
+import { type RegionCells, regionName, say } from "./hint-text.ts";
 import {
   colors,
   computeSize,
@@ -463,122 +465,91 @@ function soloSingleReason(
 }
 
 /** Narrate *why* a placement is forced (docs/games/hints.md § "Writing the
- * narration"): indication, reasoning, necessity-voice conclusion. `n` is the
- * digit placed at `at`. */
-function narrate(reason: SoloReason, n: number, state: SoloState, at: Point): string {
+ * narration"): indication, reasoning, necessity-voice conclusion, the digit
+ * placed at `at`. The region a sentence names is striped by the words that name
+ * it, so the walk reads the step's marks off them. */
+function narrate(reason: SoloReason, at: Mark, state: SoloState): Narration {
+  const cells: RegionCells = (r) => regionCells(r, state);
   switch (reason.kind) {
     case "single":
-      return say.single(n);
+      return say.single(at, at.n);
     case "regionsFull":
-      return say.regionsFull(n, noRepeatRegionNames(state, at));
+      return say.regionsFull(at, at.n, noRepeatRegionNames(state, at));
     case "hiddenSingle":
-      return say.hiddenSingle(reason.region, reason.n);
+      return say.hiddenSingle(at, reason.region, reason.n, cells);
     case "cageSingle":
-      return say.cageSingle(reason.origin, n, (state.cr * (state.cr + 1)) / 2);
+      return say.cageSingle(
+        at,
+        reason.cells,
+        reason.origin,
+        at.n,
+        (state.cr * (state.cr + 1)) / 2,
+        cells,
+      );
     default:
       throw new Error(`a ${reason.kind} deduction strikes`);
   }
 }
 
 /** Why a strike is forced, which the walk concludes with the move it makes.
- * `ns` is the struck values. */
-function premise(reason: SoloReason, ns: number[], state: SoloState): Premise {
+ * `marks` are the struck notes. */
+function premise(
+  reason: SoloReason,
+  marks: readonly Mark[],
+  state: SoloState,
+): Premise {
+  const ns = valuesOf(marks);
+  const cells: RegionCells = (r) => regionCells(r, state);
   switch (reason.kind) {
-    case "dup":
+    case "dup": {
+      const placed = { x: reason.px, y: reason.py };
       return {
-        premise: say.dup(
-          reason.n,
-          noRepeatRegionNames(state, { x: reason.px, y: reason.py }),
-        ),
+        premise: say.dup(placed, reason.n, noRepeatRegionNames(state, placed)),
         where: say.dupWhere,
       };
+    }
     case "intersect":
       return {
-        premise: say.intersect(reason.confined, reason.target, reason.n),
+        premise: say.intersect(reason.confined, reason.target, reason.n, cells),
         where: say.intersectWhere,
       };
     case "set":
-      return { premise: say.set(reason.region ?? null, ns), named: true };
+      return {
+        premise: say.set(reason.region ?? null, reason.cells, ns, cells),
+        named: true,
+      };
     case "forcing":
-      return { premise: say.forcing(reason, ns[0], reason.shares, reason.lastShares) };
+      return {
+        premise: say.forcing(reason, marks[0], reason.shares, reason.lastShares),
+      };
     case "cageMinMax":
-      return { premise: say.cageMinMax(reason.origin, reason.clue, ns), named: true };
+      return {
+        premise: say.cageMinMax(reason.cells, reason.origin, reason.clue, ns, cells),
+        named: true,
+      };
     case "cageSums":
-      return { premise: say.cageSums(reason.origin, reason.clue, ns), named: true };
+      return {
+        premise: say.cageSums(
+          marks[0],
+          reason.cells,
+          reason.origin,
+          reason.clue,
+          ns,
+          cells,
+        ),
+        named: true,
+      };
     default:
       throw new Error(`a ${reason.kind} deduction places`);
   }
 }
 
-/** What a step marks: the cells it outlines `COL_HINT_CELL`, and the line it
- * hatches when its sentence names a row, column or diagonal as "this row"
- * (docs/games/hints.md § "Hatch the line the sentence names"). */
-interface SoloMarks {
-  area: OrderedCell[];
-  hatch?: Point[];
-  /** The cells whose candidates the step rests on beyond `area`. */
-  reads?: Point[];
-}
-
-/** A region the sentence names as its subject ("in this row", "this block"),
- * hatched whatever its shape. */
-function namedRegion(region: SoloRegion, state: SoloState): SoloMarks {
-  return { area: [], hatch: regionCells(region, state) };
-}
-
-/** The deduction's marks for a strike. */
-function reasonMarks(reason: SoloReason, state: SoloState): SoloMarks {
-  switch (reason.kind) {
-    case "intersect":
-      return namedRegion(reason.confined, state);
-    // The set's own cells are what the sentence points at, inside the region
-    // it names when it names one — see `say.set`.
-    case "set":
-      return reason.region
-        ? { area: reason.cells, hatch: regionCells(reason.region, state) }
-        : { area: reason.cells };
-    // What the sum leaves a cell depends on what the other cells can still be,
-    // so those are read too. A cage's open cells are the hatch, as "this
-    // killer cage"; a sum the region rule worked out hatches the region the
-    // sentence names and outlines the cells it calls highlighted.
-    case "cageMinMax":
-    case "cageSums":
-      return reason.origin.kind === "cage"
-        ? { area: [], hatch: reason.cells, reads: reason.cells }
-        : {
-            area: reason.cells,
-            hatch: regionCells(reason.origin.region, state),
-            reads: reason.cells,
-          };
-    // A forcing chain names the cells it ran through, **numbered**, so the
-    // narration can cite them and the player can walk it.
-    case "forcing":
-      return { area: forcingChainArea(reason) };
-    // A placement's cull shades the value that forces it.
-    case "dup":
-      return { area: [{ x: reason.px, y: reason.py }] };
-    default:
-      return { area: [] };
-  }
-}
-
-/** A placement's marks: a hidden single hatches the region it reasons over, as
- * does a killer single the region rule placed (the region whose total the
- * sentence counts down), outlining the cage's cells inside it when the cell
- * lies outside; a killer single in its own cage hatches the cell; a naked
- * single needs none. */
-function placementMarks(reason: SoloReason, state: SoloState): SoloMarks {
-  if (reason.kind === "hiddenSingle") return namedRegion(reason.region, state);
-  if (reason.kind !== "cageSingle") return { area: [] };
-  const { origin } = reason;
-  switch (origin.kind) {
-    case "cage":
-      return { area: [], hatch: reason.cells };
-    case "region":
-      return namedRegion(origin.region, state);
-    case "outside":
-      return { area: origin.inside, hatch: regionCells(origin.region, state) };
-  }
+/** What a killer strike reads beyond the marks its words name: what the sum
+ * leaves a cell depends on what the other cells can still be. */
+function reasonReads(reason: SoloReason): { reads?: Point[] } {
+  return reason.kind === "cageMinMax" || reason.kind === "cageSums"
+    ? { reads: reason.cells }
+    : {};
 }
 
 /** Build the hint plan by walking a working copy of the board the way a person
@@ -603,13 +574,10 @@ function buildSteps(
     record: () => recordSoloDeductions({ ...state, grid: wGrid }, maxdiff, maxkdiff),
     regionsOf: (x, y) => regionsOf(state, x, y),
     singleReason: soloSingleReason,
-    placeWords: (m, reason) => ({
-      explanation: narrate(reason, m.n, state, m),
-      ...placementMarks(reason, state),
-    }),
+    placeWords: (m, reason) => ({ words: narrate(reason, m, state) }),
     strikeWords: (marks, reason) => ({
-      ...premise(reason, valuesOf(marks), state),
-      ...reasonMarks(reason, state),
+      ...premise(reason, marks, state),
+      ...reasonReads(reason),
     }),
     conclude: say.conclude,
     // A digit confined to one region crosses that digit from several cells in
@@ -620,7 +588,7 @@ function buildSteps(
       populate: say.populate,
       cleanObvious: say.cleanObvious(noRepeatRegionNames(state)),
       note: (cell, values, every) =>
-        say.note(values, every, noRepeatRegionNames(state, cell)),
+        say.note(cell, values, every, noRepeatRegionNames(state, cell)),
     },
   });
   return steps;
@@ -676,7 +644,8 @@ export const soloGame: Game<
   SoloMove,
   SoloUi,
   SoloDrawState,
-  SoloMistake
+  SoloMistake,
+  SoloHint
 > = {
   id: "solo",
   canMarkAll: true,
@@ -793,6 +762,16 @@ export const soloGame: Game<
   solve,
   difficulty,
   hint,
+  hintMarks: {
+    roles: {
+      ring: "the cell the step is about: the number to enter there, or the pencil marks to cross out, which are shown with a line through them.",
+      outline:
+        "the cells the reason rests on: a number just placed, whose copies are being crossed out around it; the other cells of a block, row or column that between them already account for some numbers; the cells a killer sum is left to; or the numbered cells of a chain.",
+      stripes:
+        'the row, column, block, diagonal or killer cage the sentence names: "in this block", "this killer cage".',
+    },
+    drawn: candidateHintMarks,
+  },
   hintKeepTrack,
   refreshHintStep,
   findMistakes,

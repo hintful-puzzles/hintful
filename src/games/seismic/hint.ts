@@ -91,6 +91,11 @@ const cellOf = (b: { w: number }, i: number): Point => ({
   y: (i / b.w) | 0,
 });
 
+/** The cells `marks` lie in, each once. A starve strikes one number, so one
+ * note per cell. */
+const cellsOfMarks = (marks: readonly Point[]): Point[] =>
+  marks.map(({ x, y }) => ({ x, y }));
+
 /**
  * Would an `n` at `i` rule out an `n` at `j`? `placeNumber`'s rule, asked of one
  * pair: the same area, or the mode's keep-apart reach (`n` cells along a row or
@@ -258,7 +263,8 @@ export function buildSteps(
         ])
       : [];
 
-  const hatch = (area: readonly number[]): Point[] => area.map((j) => cellOf(state, j));
+  const cellsOf = (area: readonly number[]): Point[] =>
+    area.map((j) => cellOf(state, j));
   const steps: HintStep<SeismicMove, SeismicHint>[] = [];
   runCandidatePlan<
     SeismicMove,
@@ -288,15 +294,14 @@ export function buildSteps(
           : { kind: "regionsFull" },
     placeWords: (m, reason) => {
       // A whole-area cell is a 1 however the walk came to it.
-      if (dsf.size(m.y * w + m.x) === 1)
-        return { explanation: say.singleton, area: [], hatch: [{ x: m.x, y: m.y }] };
+      if (dsf.size(m.y * w + m.x) === 1) return { words: say.singleton(m) };
       switch (reason.kind) {
         case "single":
-          return { explanation: say.naked(m.n), area: [] };
+          return { words: say.naked(m, w) };
         case "regionsFull":
-          return { explanation: say.regionsFull(m.n, tectonic), area: [] };
+          return { words: say.regionsFull(m, m.n, tectonic) };
         case "hidden":
-          return { explanation: say.hidden(m.n), area: [], hatch: hatch(reason.area) };
+          return { words: say.hidden(cellsOf(reason.area), m, m.n) };
         default:
           throw new Error(`seismic: a ${reason.kind} places nothing`);
       }
@@ -305,19 +310,16 @@ export function buildSteps(
       switch (reason.kind) {
         case "dup":
           return {
-            premise: say.cull(reason.n, tectonic),
+            premise: say.cull({ x: reason.px, y: reason.py }, reason.n, tectonic),
             struck: say.culled(reason.n),
-            area: [{ x: reason.px, y: reason.py }],
           };
         case "starve": {
-          const targets = marks.length;
+          const targets = cellsOfMarks(marks);
           return {
-            premise: say.starve(reason.n, targets, tectonic),
-            struck: say.starved(reason.n, targets),
-            area: [],
-            hatch: hatch(reason.area),
+            premise: say.starve(cellsOf(reason.area), reason.n, targets, tectonic),
+            struck: say.starved(reason.n, targets.length),
             // The area's notes are where it can put its `n`: the premise.
-            reads: hatch(reason.area),
+            reads: cellsOf(reason.area),
           };
         }
         default:
@@ -328,7 +330,7 @@ export function buildSteps(
     notes: {
       populate: say.populate,
       cleanObvious: say.clean(tectonic),
-      note: (_cell, values, every) => say.note(values, every, tectonic),
+      note: (at, values, every) => say.note(at, values, every, tectonic),
     },
   });
   return steps;

@@ -149,16 +149,19 @@ function kindOf(step: Step, tectonic: boolean): Kind {
   const m = step.move;
   const text = step.explanation;
   if (text === say.populate) return "populate";
-  if (text === say.clean(tectonic)) return "clean";
+  // No sentence's words depend on which cells its references carry, only on
+  // how many, so each is rebuilt at the step's own cell to be compared.
+  if (text === say.clean(tectonic)([]).text) return "clean";
   if (isStarve(step)) return m.type === "pencilStrike" ? "starve" : "fold";
   if (m.type === "pencilAdd") return "note";
   if (m.type === "pencilStrike") {
-    if (text.startsWith(say.cull(m.marks[0].n, tectonic))) return "cull";
+    if (text.startsWith(say.cull(m.marks[0], m.marks[0].n, tectonic).text))
+      return "cull";
   } else if (m.type === "set") {
-    if (text === say.singleton) return "singleton";
-    if (text === say.naked(m.n)) return "naked";
-    if (text === say.regionsFull(m.n, tectonic)) return "regionsFull";
-    if (text === say.hidden(m.n)) return "hidden";
+    if (text === say.singleton(m).text) return "singleton";
+    if (text === say.naked(m, 9).text) return "naked";
+    if (text === say.regionsFull(m, m.n, tectonic).text) return "regionsFull";
+    if (text === say.hidden([], m, m.n).text) return "hidden";
   }
   throw new Error(`an unclassified step: "${text}"`);
 }
@@ -468,18 +471,22 @@ describe("the player's own board", () => {
     const [first, ...rest] = original.move.marks;
     const toggle: SeismicMove = { type: "set", ...first, pencil: true };
 
-    const followed: Step = structuredClone(original);
+    // A copy, not a clone: a step's words carry functions, and keep-track
+    // replaces the fields it changes rather than mutating them.
+    const copy = (): Step => ({ ...original });
+    const followed = copy();
     expect(hintKeepTrack(toggle, followed, state)).toBe("onTrack");
     expect(followed.move).toEqual({ type: "pencilStrike", marks: rest });
     expect(highlightsOf(followed).marks).toEqual(rest);
+    // The words shrink with the marks they name.
+    expect(followed.explanation).toBe(followed.words?.text);
 
     const after = seismicGame.executeMove(state, toggle);
-    expect(refreshHintStep(structuredClone(original), after)?.move).toEqual({
-      type: "pencilStrike",
-      marks: rest,
-    });
+    const refreshed = refreshHintStep(copy(), after);
+    expect(refreshed?.move).toEqual({ type: "pencilStrike", marks: rest });
+    expect(refreshed?.explanation).toBe(refreshed?.words?.text);
     // Toggling the same note again would put it back, which is not the hint.
-    expect(hintKeepTrack(toggle, structuredClone(original), after)).toBe("off");
+    expect(hintKeepTrack(toggle, copy(), after)).toBe("off");
   });
 
   it("completes a placement only with the number it names", () => {
@@ -495,37 +502,54 @@ describe("the player's own board", () => {
 // --- the sentences ----------------------------------------------------------
 
 describe("the sentences at their extremes", () => {
+  const at = { x: 0, y: 0 };
+  /** `count` distinct target cells. */
+  const targets = (count: number) =>
+    Array.from({ length: count }, (_, i) => ({ x: i, y: 1 }));
+
   it("counts one cell in the singular, and states each mode's own reach", () => {
-    expect(say.cull(1, false)).toContain("within 1 cell of it");
-    expect(say.cull(9, false)).toContain("within 9 cells of it");
-    expect(say.cull(3, true)).not.toContain("within");
-    expect(say.starve(1, 1, false)).toBe(
+    expect(say.cull(at, 1, false).text).toContain("within 1 cell of it");
+    expect(say.cull(at, 9, false).text).toContain("within 9 cells of it");
+    expect(say.cull(at, 3, true).text).not.toContain("within");
+    expect(say.starve([at], 1, targets(1), false).text).toBe(
       "The striped area can put its 1 only in line with this cell and within 1 cell of it",
     );
-    expect(say.starve(4, 3, true)).toBe(
+    expect(say.starve([at], 4, targets(3), true).text).toBe(
       "The striped area can put its 4 only in a cell touching each of these",
     );
-    expect(say.note([2], false, true)).toBe(
+    expect(say.note(at, [2], false, true).text).toBe(
       "Only 2 isn't already in this cell's area or in a cell touching it, so pencil it in.",
     );
   });
 
   it("fits at a glance for every number, count and mode, conclusions included", () => {
-    const all: string[] = [say.populate, say.singleton];
+    const all: string[] = [say.populate, say.singleton(at).text];
     // The longest ending the walk adds: a strike naming its notes, or on one
     // note-less cell, a fold keeping four values.
-    const ending = (n: number, targets: number): string =>
-      targets === 1
+    const ending = (n: number, count: number): string =>
+      count === 1
         ? ", so pencil in only 1, 2, 3 and 4."
-        : `, so we must cross out ${say.starved(n, targets)}.`;
+        : `, so we must cross out ${say.starved(n, count)}.`;
     for (const tectonic of [false, true]) {
-      all.push(say.clean(tectonic), say.note([1, 2, 3, 4], false, tectonic));
-      all.push(say.note([], true, tectonic));
+      all.push(
+        say.clean(tectonic)([]).text,
+        say.note(at, [1, 2, 3, 4], false, tectonic).text,
+      );
+      all.push(say.note(at, [], true, tectonic).text);
       for (let n = 1; n <= 9; n++) {
-        all.push(say.naked(n), say.hidden(n), say.regionsFull(n, tectonic));
-        all.push(`${say.cull(n, tectonic)}, so we must cross out ${say.culled(n)}.`);
-        for (const targets of [1, 2, 6])
-          all.push(`${say.starve(n, targets, tectonic)}${ending(n, targets)}`);
+        const m = { ...at, n };
+        all.push(
+          say.naked(m, 9).text,
+          say.hidden([at], at, n).text,
+          say.regionsFull(at, n, tectonic).text,
+        );
+        all.push(
+          `${say.cull(at, n, tectonic).text}, so we must cross out ${say.culled(n)}.`,
+        );
+        for (const count of [1, 2, 6])
+          all.push(
+            `${say.starve([at], n, targets(count), tectonic).text}${ending(n, count)}`,
+          );
       }
     }
     expect(all.filter((s) => s.length > 120)).toEqual([]);

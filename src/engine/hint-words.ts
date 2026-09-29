@@ -97,6 +97,10 @@ export interface MarkKind<E> {
   key(e: E): string;
   /** The unit a noun about these elements counts. Default: the element. */
   unit?(e: E): string;
+  /** The element of another kind this one is drawn inside, as that kind's name
+   * and key. A mark on this element marks that one with it, and naming this
+   * one names that one: a struck note's ring is its cell's. */
+  within?(e: E): { kind: string; key: string };
 }
 
 const pointKey = (p: Point): string => `${p.x},${p.y}`;
@@ -106,17 +110,20 @@ export const CELL: MarkKind<Point> = { name: "cell", key: pointKey };
 
 /** A candidate note: value `n` in the cell at `(x, y)`. A noun about notes
  * counts their cells. */
-export const NOTE: MarkKind<Point & { readonly n: number }> = {
+export type Note = Point & { readonly n: number };
+
+export const NOTE: MarkKind<Note> = {
   name: "note",
   key: (m) => `${m.x},${m.y}:${m.n}`,
   unit: pointKey,
+  within: (m) => ({ kind: "cell", key: pointKey(m) }),
 };
 
 /** `kind`'s elements taken together as one thing, so a noun about them is
  * singular: a cage, a row, a region is "this cage" over all its cells. Keys are
  * `kind`'s, so the marks compare equal to the cells drawn. */
 export function whole<E>(kind: MarkKind<E>): MarkKind<E> {
-  return { name: kind.name, key: (e) => kind.key(e), unit: () => "" };
+  return { ...kind, key: (e) => kind.key(e), unit: () => "" };
 }
 
 /** One mark a step draws: a role, over some elements of one kind. */
@@ -364,13 +371,15 @@ export function pronoun<E>(kind: MarkKind<E>, elements: readonly E[]): string {
   return unitCount(kind, elements) > 1 ? "them" : "it";
 }
 
-/** The key the validator and a narrowing compare a mark's elements by. */
+/** Every element `refs` mark, as `role|kind|key`, with the element each one is
+ * drawn inside ({@link MarkKind.within}) marked in the same role. */
 export function markKeys(refs: readonly MarkRef[]): Set<string> {
   const out = new Set<string>();
-  for (const r of refs) for (const e of r.elements) out.add(markKey(r, e));
+  for (const r of refs)
+    for (const e of r.elements) {
+      out.add(`${r.role}|${r.kind.name}|${r.kind.key(e)}`);
+      const w = r.kind.within?.(e);
+      if (w) out.add(`${r.role}|${w.kind}|${w.key}`);
+    }
   return out;
-}
-
-function markKey<E>(ref: MarkRef<E>, e: E): string {
-  return `${ref.role}|${ref.kind.name}|${ref.kind.key(e)}`;
 }

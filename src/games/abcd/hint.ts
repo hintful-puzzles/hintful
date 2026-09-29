@@ -22,6 +22,7 @@ import {
   type CandidateHighlights,
   type CandidateMoveAdapter,
   type CandidatePlanPrefs,
+  candidateHintMarks,
   keepCandidateHintTrack,
   type Mark,
   type NoteEncoding,
@@ -35,9 +36,10 @@ import {
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { candidateConclusions } from "../../engine/hint-text.ts";
+import type { MarkRef } from "../../engine/hint-words.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { Point } from "../../engine/types.ts";
-import { LETTERS, type LineWord, say } from "./hint-text.ts";
+import { CLUE, LETTERS, type LineMarks, type LineWord, say } from "./hint-text.ts";
 import { neighbors, runsForce } from "./solver.ts";
 import {
   type AbcdMove,
@@ -52,6 +54,15 @@ import {
 /** A candidate hint's highlights, and the clue whose count the step reads,
  * as its index in `numbers`. */
 export type AbcdHint = CandidateHighlights & { clue?: number };
+
+/** The marks a step draws: the candidate walk's, and the clue it reads, drawn
+ * in the hint color as part of the evidence. */
+export function abcdHintMarks(h: AbcdHint): MarkRef[] {
+  const out = candidateHintMarks(h);
+  if (h.clue !== undefined)
+    out.push({ role: "outline", kind: CLUE, elements: [h.clue] } as MarkRef);
+  return out;
+}
 
 /** Why a letter is placed or ruled out. Letters are the walk's values `1..n`. */
 type AbcdReason =
@@ -263,8 +274,11 @@ export function buildSteps(
         )
       : [];
 
-  const lineWords = (line: Line, n: number) => ({
-    hatch: line.cells.map(cellOf),
+  /** The line a step names, as its words mark it: striped, with its clue for
+   * `n` the count the words read. */
+  const marksOf = (line: Line, n: number): LineMarks => ({
+    word: line.word,
+    cells: line.cells.map(cellOf),
     clue: line.clueBase + n - 1,
   });
 
@@ -293,21 +307,21 @@ export function buildSteps(
     placeWords: (m, reason, continues) => {
       switch (reason.kind) {
         case "single":
-          return { explanation: say.naked(m.n), area: [] };
+          return { words: say.naked(m, w) };
         case "regionsFull":
-          return { explanation: say.regionsFull(m.n, diag), area: [] };
+          return { words: say.regionsFull(m, diag) };
         case "packed": {
           const { line, n, need, more, only, open } = reason;
-          const explanation = continues
-            ? say.alsoForced(n)
-            : only
-              ? say.onlyHomes(line.word, n, need, more)
-              : say.packed(line.word, n, need, more);
-          // A lone home needs no outline: the ring is the whole premise.
+          const lm = marksOf(line, n);
+          // A later leg points back at the line and reads no count; the first
+          // reads the clue, and a lone home needs no outline, since the ring
+          // is the whole premise.
+          if (continues) return { words: say.alsoForced(lm, m) };
           return {
-            explanation,
-            area: open.length > 1 ? open : [],
-            ...lineWords(line, n),
+            words: only
+              ? say.onlyHomes(lm, m, need, more, open)
+              : say.packed(lm, m, need, more, open),
+            clue: lm.clue,
           };
         }
         default:
@@ -318,18 +332,17 @@ export function buildSteps(
       switch (reason.kind) {
         case "dup":
           return {
-            premise: say.cull(reason.n, diag),
+            premise: say.cull({ x: reason.px, y: reason.py }, reason.n, diag),
             struck: say.culled(reason.n),
-            area: [{ x: reason.px, y: reason.py }],
           };
         case "satisfied": {
           const { line, n, clue } = reason;
+          const lm = marksOf(line, n);
           const placed = line.cells.filter((i) => grid[i] === n).map(cellOf);
           return {
-            premise: say.satisfied(line.word, n, clue),
+            premise: say.satisfied(lm, n, clue, placed),
             struck: say.satisfiedStruck(n, clue, marks.length),
-            area: placed,
-            ...lineWords(line, n),
+            clue: lm.clue,
           };
         }
         default:
@@ -340,7 +353,7 @@ export function buildSteps(
     notes: {
       populate: say.populate,
       cleanObvious: say.clean(diag),
-      note: (_cell, values, every) => say.note(values, every, diag),
+      note: (at, values, every) => say.note(at, values, every, diag),
     },
   });
   return steps;

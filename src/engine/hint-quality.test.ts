@@ -270,6 +270,14 @@ const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
       "contradiction whose links are values the player can check, and the " +
       "box-in step is the one a shorter sentence would drop.",
   },
+  {
+    games: ["signpost"],
+    match: /, are in its chain or hold the wrong number\.$/,
+    why:
+      "A link's rivals ruled out for all three of Signpost's reasons at once: the " +
+      "sentence names each reason some rival has, and a reason left out would " +
+      "leave a square on the board the player cannot account for.",
+  },
 ];
 
 /** The shared necessity vocabulary a deductive conclusion draws from.
@@ -557,11 +565,22 @@ describe("hint narration form, cross-game", () => {
  */
 const BOUND_GAMES = HINT_GAMES.filter(([, g]) => g.hintMarks !== undefined);
 
+/**
+ * Both readings of a note-less cell for a game whose `Ui` offers the choice
+ * (`candidateReading`), since the player may pick either and the implicit one
+ * folds strikes into placements; otherwise the game's own, `null`.
+ */
+function readingsOf(game: AnyGame, params: unknown): readonly (string | null)[] {
+  const { desc } = game.newDesc(params, randomNew("reading-probe"));
+  const ui = game.newUi(game.newState(params, desc)) as Record<string, unknown>;
+  return typeof ui["candidateReading"] === "string" ? ["implicit", "populate"] : [null];
+}
+
 describe("a bound hint's words name exactly the marks it draws", () => {
   it("has games to check", () => {
-    // Vacuity: Palisade and Separate were bound first; fewer means a
-    // declaration went missing.
-    expect(BOUND_GAMES.length).toBeGreaterThanOrEqual(2);
+    // Vacuity: the pilot bound Palisade, Separate, Signpost and the eleven
+    // games on the candidate walk; fewer means a declaration went missing.
+    expect(BOUND_GAMES.length).toBeGreaterThanOrEqual(14);
   });
 
   for (const [name, game] of BOUND_GAMES) {
@@ -576,29 +595,40 @@ describe("a bound hint's words name exactly the marks it draws", () => {
           defects.push(`${at}: "${step.explanation}": ${d}`);
       };
       for (const { title, params } of gatePresets(name, game))
-        for (const seed of FORM_SEEDS) {
-          const { desc, aux } = game.newDesc(
-            params,
-            randomNew(`${name}-${title}-${seed}`),
-          );
-          let state = game.newState(params, desc);
-          const ui = game.newUi(state);
-          for (let round = 0; round < 60 && game.status(state) === "ongoing"; round++) {
-            const res = game.hint?.(state, aux, ui);
-            if (!res?.ok) break;
-            res.steps.forEach((step, i) => {
-              check(step, `${title}/${seed} round ${round} step ${i}`);
-            });
-            for (const [i, step] of res.steps.entries()) {
-              const live = game.refreshHintStep?.(step, state) ?? step;
-              if (live === null) continue;
-              if (live !== step)
-                check(live, `${title}/${seed} round ${round} step ${i}, refreshed`);
-              state = game.executeMove(state, live.move);
+        for (const seed of FORM_SEEDS)
+          for (const reading of readingsOf(game, params)) {
+            const { desc, aux } = game.newDesc(
+              params,
+              randomNew(`${name}-${title}-${seed}`),
+            );
+            let state = game.newState(params, desc);
+            const ui = game.newUi(state);
+            if (reading)
+              (ui as { candidateReading: string }).candidateReading = reading;
+            const at = `${title}/${seed}${reading ? `/${reading}` : ""}`;
+            for (
+              let round = 0;
+              round < 60 && game.status(state) === "ongoing";
+              round++
+            ) {
+              const res = game.hint?.(state, aux, ui);
+              if (!res?.ok) break;
+              res.steps.forEach((step, i) => {
+                check(step, `${at} round ${round} step ${i}`);
+              });
+              for (const [i, step] of res.steps.entries()) {
+                // `null` is a step already resolved: the midend skips it.
+                const live = game.refreshHintStep
+                  ? game.refreshHintStep(step, state)
+                  : step;
+                if (live === null) continue;
+                if (live !== step)
+                  check(live, `${at} round ${round} step ${i}, refreshed`);
+                state = game.executeMove(state, live.move);
+              }
             }
+            if (defects.length > 0) break;
           }
-          if (defects.length > 0) break;
-        }
       expect(defects.slice(0, 20)).toEqual([]);
       expect(checked, `${name}: the walk checked no step`).toBeGreaterThan(0);
     });

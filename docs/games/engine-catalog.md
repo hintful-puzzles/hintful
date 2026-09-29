@@ -612,10 +612,9 @@ placement that is neither, which is a strike the plan skipped.
 `availablePlacements` lists the recorded placements a plan could take now (the
 singles the board shows, and the placements `candidate-hint.ts`'s
 `availableFirings` vouched for), and a single in a cell with no notes written is
-`regionsFull`. `genericLatinArea`
-is what a generic Latin elimination outlines (a forcing chain, numbered; a
-set's cells), for a game's own area function to fall through to. The
-sentences it classifies for are `hint-text.ts`'s.
+`regionsFull`. `forcingChainArea` numbers a chain's cells, which the shared
+chain sentence outlines. The sentences it classifies for are `hint-text.ts`'s,
+and what they outline is what the walk outlines.
 
 ### `hint-words.ts` — a hint's words bound to its marks
 

@@ -29,6 +29,32 @@
 
 import { FOUR_NAMES } from "../../engine/color/colors.ts";
 import { joinOr, joinWith } from "../../engine/hint-text.ts";
+import {
+  type MarkKind,
+  mark,
+  type Narration,
+  phrase,
+} from "../../engine/hint-words.ts";
+
+/** A region of the map, as a mark: its band, its dashed line or its chain
+ * number. `order` is a chain region's number, and not part of its identity. */
+export interface RegionMark {
+  region: number;
+  order?: number;
+}
+
+export const REGION: MarkKind<RegionMark> = {
+  name: "region",
+  key: (r) => String(r.region),
+};
+
+/** "this region": the one the step decides, ringed. */
+const thisRegion = (r: number): Narration =>
+  mark.this("ring", REGION, [{ region: r }], "region");
+
+/** "region k" of a chain, by the number drawn on it. */
+const numbered = (chain: readonly RegionMark[], k: number, words = `region ${k}`) =>
+  mark.as("outline", REGION, [chain[k - 1]], words);
 
 /** A color index as its word. */
 export const colorName = (c: number): string => FOUR_NAMES[c];
@@ -80,16 +106,16 @@ export const say = {
 
   /** A region whose neighbors show every color but one, and which has no dots
    * to consult. `others` is the three colors its neighbors show. */
-  touchesTheRest: (color: number, others: number): string =>
-    `This region touches ${joinWith(names(others))}, so it must be ${colorName(color)}.`,
+  touchesTheRest: (r: number, color: number, others: number): Narration =>
+    phrase`${thisRegion(r).capitalized()} touches ${joinWith(names(others))}, so it must be ${colorName(color)}.`,
 
   /** A region the player has dotted with one color only. */
-  lastDot: (color: number): string =>
-    `The only dot in this region is ${colorName(color)}, so it must be ${colorName(color)}.`,
+  lastDot: (r: number, color: number): Narration =>
+    phrase`The only dot in ${thisRegion(r)} is ${colorName(color)}, so it must be ${colorName(color)}.`,
 
   /** A region whose other dots are all colors a neighbor already has. */
-  deadDots: (color: number): string =>
-    `Its other dots match its neighbors' colors, so this region must be ${colorName(color)}.`,
+  deadDots: (r: number, color: number): Narration =>
+    phrase`Its other dots match its neighbors' colors, so ${thisRegion(r)} must be ${colorName(color)}.`,
 
   /**
    * Two touching regions down to the same two colors, which they must then use
@@ -100,8 +126,13 @@ export const say = {
    * either" does not follow from "both can only be red or teal" (the
    * `equivalentEdges` lesson, docs/games/hints.md § "Writing the narration").
    */
-  pair: (pair: number, c: Conclusion): string =>
-    `The outlined pair touch and can only be ${joinOr(names(pair))}, so they use both. This region touches both, so ${conclude(c, "it can't be either")}.`,
+  pair: (
+    r: number,
+    regions: readonly RegionMark[],
+    pair: number,
+    c: Conclusion,
+  ): Narration =>
+    phrase`${mark.as("outline", REGION, regions, "The outlined pair")} touch and can only be ${joinOr(names(pair))}, so they use both. ${thisRegion(r).capitalized()} touches both, so ${conclude(c, "it can't be either")}.`,
 
   /**
    * A forcing chain, as the case split it is, walked with its actual colors:
@@ -117,17 +148,26 @@ export const say = {
    * differ (docs/games/hints.md § "Candidate-elimination games": extract when
    * only the vocabulary differs, decline when an arm's shape does).
    */
-  chain: (color: number, forced: readonly number[], c: Conclusion): string => {
+  chain: (
+    r: number,
+    chain: readonly RegionMark[],
+    color: number,
+    forced: readonly number[],
+    c: Conclusion,
+  ): Narration => {
     const last = forced.length;
     const red = colorName(color);
+    const at = (k: number): Narration => numbered(chain, k);
     // Past a handful of links a listed walk is no longer a glance (and an
     // eight-region one ran to 270 characters), so a long chain states the rule
     // its dots follow and names only where it ends.
     const walk =
       last <= WALK_MAX
-        ? joinWith(forced.slice(1).map((f, i) => `region ${i + 2} is ${colorName(f)}`))
-        : `each numbered region takes the dot the one before it leaves, down to region ${last} being ${red}`;
-    return `If region 1 isn't ${red}, it's ${colorName(forced[0])}, so ${walk}. Either way region 1 or region ${last} is ${red}, and this region touches both, so ${conclude(c, `it can't be ${red}`)}.`;
+        ? joinNarrations(
+            forced.slice(1).map((f, i) => phrase`${at(i + 2)} is ${colorName(f)}`),
+          )
+        : phrase`${mark.as("outline", REGION, chain, "each numbered region")} takes the dot the one before it leaves, down to ${at(last)} being ${red}`;
+    return phrase`If ${at(1)} isn't ${red}, it's ${colorName(forced[0])}, so ${walk}. Either way ${at(1)} or ${at(last)} is ${red}, and ${thisRegion(r)} touches both, so ${conclude(c, `it can't be ${red}`)}.`;
   },
 
   /**
@@ -136,33 +176,69 @@ export const say = {
    * alternate down the chain (owner playtest, 2026-09-25). The chain always ends
    * on an even region in this shape, so "every other region" lands on `last`.
    */
-  chainAlternates: (color: number, last: number, c: Conclusion): string => {
+  chainAlternates: (
+    r: number,
+    chain: readonly RegionMark[],
+    color: number,
+    c: Conclusion,
+  ): Narration => {
     const red = colorName(color);
-    return `Every numbered region has a ${red} dot. If region 1 isn't ${red}, region 2 must be, and so on every other region to region ${last}. Either way region 1 or region ${last} is ${red}, and this region touches both, so ${conclude(c, `it can't be ${red}`)}.`;
+    const last = chain.length;
+    const at = (k: number): Narration => numbered(chain, k);
+    return phrase`${mark.as("outline", REGION, chain, "Every numbered region")} has a ${red} dot. If ${at(1)} isn't ${red}, ${at(2)} must be, and so on every other region to ${at(last)}. Either way ${at(1)} or ${at(last)} is ${red}, and ${thisRegion(r)} touches both, so ${conclude(c, `it can't be ${red}`)}.`;
   },
 
   /**
    * One of a pair's regions, dotted with its two colors before the pair is
    * stated, so "both can only be yellow or teal" is on the board. The region
-   * dotted is ringed, the pair's other region outlined beside it.
+   * dotted is ringed and nothing else is marked: the pair is what the leg is
+   * writing, not what it reasons from, and its other region's dots may not be
+   * on the board yet.
    */
-  pairDot: (touched: number, two: number): string =>
-    `Its neighbors show ${joinWith(names(touched))}, so this region can only be ${joinOr(names(two))}: dot those.`,
+  pairDot: (r: number, touched: number, two: number): Narration =>
+    phrase`Its neighbors show ${joinWith(names(touched))}, so ${thisRegion(r)} can only be ${joinOr(names(two))}: dot those.`,
 
   /** The same, for a pair's region whose dots include a color a neighbor
    * already shows. */
-  pairTrim: (two: number): string =>
-    `Its other dots match its neighbors' colors, so this region can only be ${joinOr(names(two))}.`,
+  pairTrim: (r: number, two: number): Narration =>
+    phrase`Its other dots match its neighbors' colors, so ${thisRegion(r)} can only be ${joinOr(names(two))}.`,
 
   /**
-   * A chain's region, dotted with its two colors before the chain is followed:
-   * its neighbors show the other two. `touched` and `two` are masks.
+   * A chain's region, the `k`th, dotted with its two colors before the chain is
+   * followed: its neighbors show the other two. `touched` and `two` are masks;
+   * `chain` is every region of it, numbered, this one included.
    */
-  chainDot: (k: number, touched: number, two: number): string =>
-    `Region ${k} touches ${joinWith(names(touched))}, so it can only be ${joinOr(names(two))}: dot those.`,
+  chainDot: (
+    r: number,
+    k: number,
+    chain: readonly RegionMark[],
+    touched: number,
+    two: number,
+  ): Narration =>
+    phrase`${regionK(r, k)} of ${theChain(chain)} touches ${joinWith(names(touched))}, so it can only be ${joinOr(names(two))}: dot those.`,
 
   /** The same, for a chain's region whose dots include colors a neighbor
    * already has. */
-  chainTrim: (k: number, two: number): string =>
-    `Region ${k}'s other dots match its neighbors' colors, so it can only be ${joinOr(names(two))}.`,
+  chainTrim: (
+    r: number,
+    k: number,
+    chain: readonly RegionMark[],
+    two: number,
+  ): Narration =>
+    phrase`${regionK(r, k)} of ${theChain(chain)} has other dots that match its neighbors' colors, so it can only be ${joinOr(names(two))}.`,
 } as const;
+
+/** "the numbered chain": every region of a chain, by the numbers on them. */
+const theChain = (chain: readonly RegionMark[]): Narration =>
+  mark.as("outline", REGION, chain, "the numbered chain");
+
+/** "Region k": a chain's region the step decides, named by its number. */
+const regionK = (r: number, k: number): Narration =>
+  mark.as("ring", REGION, [{ region: r }], `Region ${k}`);
+
+/** {@link joinWith} over narrations: "a, b and c". */
+function joinNarrations(parts: readonly Narration[]): Narration {
+  if (parts.length <= 1) return parts[0] ?? phrase``;
+  const init = parts.slice(0, -1).reduce((acc, p) => phrase`${acc}, ${p}`);
+  return phrase`${init} and ${parts[parts.length - 1]}`;
+}

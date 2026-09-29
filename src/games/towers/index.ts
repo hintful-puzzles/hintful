@@ -15,6 +15,7 @@ import {
   applyNoteMove,
   type CandidatePlanPrefs,
   candidateHint,
+  candidateHintMarks,
   keepCandidateHintTrack,
   type Mark,
   refreshCandidateHintStep,
@@ -32,16 +33,16 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import type { Premise } from "../../engine/hint-text.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
-import { genericLatinArea, rowColRegions } from "../../engine/latin-hint.ts";
+import { hiddenSingleLine, rowColRegions } from "../../engine/latin-hint.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import {
   autoPencilPref,
   candidateReadingPref,
@@ -66,7 +67,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newTowersDesc } from "./generator.ts";
-import { say } from "./hint-text.ts";
+import { type ClueSight, say } from "./hint-text.ts";
 import {
   colors,
   computeSize,
@@ -385,83 +386,77 @@ function findMistakes(state: TowersState): readonly TowersMistake[] {
  * `continues` (a journey continuation leg) gets a terser line that doesn't
  * restate the premise the journey's first leg already gave. The words are
  * [`hint-text.ts`](./hint-text.ts)'s. */
-function narrate(reason: HintReason, n: number, continues = false): string {
+function narrate(reason: HintReason, m: Mark, w: number, continues = false): Narration {
+  const n = m.n;
   switch (reason.kind) {
     case "fullLine":
-      return say.fullLine(reason.clueVal, n, continues);
+      return say.fullLine(sight(reason, w), n, m, continues);
     case "tallestNearest":
-      return say.tallestNearest(n);
+      return say.tallestNearest(sight(reason, w), n, m);
     case "facing":
-      return say.facing(n);
+      // A facing pair names two clues at opposite ends of the same line.
+      return say.facing(
+        [cluePos(reason.clue, w), cluePos(reason.clue2, w)],
+        sightLine(reason.clue, w),
+        n,
+        m,
+      );
     case "single":
-      return say.single(n);
+      return say.single(m, n);
     case "regionsFull":
-      return say.regionsFull(n);
+      return say.regionsFull(m, n);
     case "hiddenSingle":
-      return say.hiddenSingle(reason.line, n);
+      return say.hiddenSingle(
+        reason.line,
+        hiddenSingleLine(reason.line, reason.index, w),
+        m,
+        n,
+      );
     default:
       throw new Error(`a ${reason.kind} deduction strikes`);
   }
 }
 
-/** Why a strike of height `n` is forced, which the walk concludes with the move
- * it makes. */
-function premise(reason: HintReason, n: number): Premise {
+/** A clue technique's clue and the line it sees along, as its words name them:
+ * the clue outlined in its slot, the line striped through both clue slots. */
+function sight(reason: { clue: number; clueVal: number }, w: number): ClueSight {
+  return {
+    value: reason.clueVal,
+    at: cluePos(reason.clue, w),
+    line: sightLine(reason.clue, w),
+  };
+}
+
+/** Why a strike of the height in `marks` is forced, which the walk concludes
+ * with the move it makes. */
+function premise(reason: HintReason, marks: readonly Mark[], w: number): Premise {
+  const n = marks[0].n;
   switch (reason.kind) {
     case "lineFull":
-      return { premise: say.lineFull(reason.clueVal, n) };
+      return { premise: say.lineFull(sight(reason, w), n) };
     case "lowerBound":
-      return { premise: say.lowerBound(reason.clueVal, n) };
+      return { premise: say.lowerBound(sight(reason, w), n) };
     case "arrangement":
-      return { premise: say.arrangement(reason.clueVal, n) };
+      return { premise: say.arrangement(sight(reason, w), n) };
     case "dup":
-      return { premise: say.dup(reason.n), where: say.dupWhere };
+      return {
+        premise: say.dup({ x: reason.px, y: reason.py }, reason.n),
+        where: say.dupWhere,
+      };
     case "set":
-      return { premise: say.set(n) };
+      return { premise: say.set(reason.cells, n) };
     case "forcing":
-      return { premise: say.forcing(reason, n, reason.shares) };
+      return { premise: say.forcing(reason, marks[0], reason.shares) };
     default:
       throw new Error(`a ${reason.kind} deduction places`);
   }
 }
 
-/** The deduction's marks: a Towers clue technique outlines the driving clue
- * cell(s) and hatches the line of sight they reason along, through both clue
- * slots, so the player sees which clue and which line the sentence means; the
- * generic Latin techniques outline what `genericLatinArea` gives them. A hidden
- * single is not among them: the row/column preset hatches its line over
- * whatever this returns. */
-function reasonMarks(
-  reason: HintReason,
-  w: number,
-): {
-  area: OrderedCell[];
-  hatch?: { x: number; y: number }[];
-  reads?: { x: number; y: number }[];
-} {
-  switch (reason.kind) {
-    case "facing":
-      // A facing pair names two clues at opposite ends of the same line.
-      return {
-        area: [cluePos(reason.clue, w), cluePos(reason.clue2, w)],
-        hatch: sightLine(reason.clue, w),
-      };
-    case "fullLine":
-    case "tallestNearest":
-    case "lineFull":
-    case "lowerBound":
-      return { area: [cluePos(reason.clue, w)], hatch: sightLine(reason.clue, w) };
-    // Which arrangements the clue allows depends on what every cell of its line
-    // can still be, so the line is read as well as named.
-    case "arrangement":
-      return {
-        area: [cluePos(reason.clue, w)],
-        hatch: sightLine(reason.clue, w),
-        reads: lineCells(reason.clue, w),
-      };
-    default:
-      return { area: genericLatinArea(reason) };
-  }
+/** What an arrangement reads beyond the marks its words name: which
+ * arrangements the clue allows depends on what every cell of its line can
+ * still be. */
+function reasonReads(reason: HintReason, w: number): { reads?: Point[] } {
+  return reason.kind === "arrangement" ? { reads: lineCells(reason.clue, w) } : {};
 }
 
 /** A clue's line of sight with the clue slots at both its ends. */
@@ -539,13 +534,10 @@ function buildSteps(
     reading,
     label: "towers hint plan",
     record: () => recordTowersDeductions(w, state.clues, wGrid, maxdiff),
-    placeWords: (m, reason, continues) => ({
-      explanation: narrate(reason, m.n, continues),
-      ...reasonMarks(reason, w),
-    }),
+    placeWords: (m, reason, continues) => ({ words: narrate(reason, m, w, continues) }),
     strikeWords: (marks, reason) => ({
-      ...premise(reason, marks[0].n),
-      ...reasonMarks(reason, w),
+      ...premise(reason, marks, w),
+      ...reasonReads(reason, w),
     }),
     // The narration names one height ("a tower of height 5 can't go here"), so
     // a clue firing that rules out 4 and 5 along its line is one leg per height.
@@ -582,7 +574,8 @@ export const towersGame: Game<
   TowersMove,
   TowersUi,
   TowersDrawState,
-  TowersMistake
+  TowersMistake,
+  TowersHint
 > = {
   id: "towers",
   canMarkAll: true, // handles 'M' (pencilAll) in interpretMove
@@ -614,9 +607,19 @@ export const towersGame: Game<
   difficulty,
   hint: (state, _aux, ui) =>
     candidateHint(state, ui ?? newUi(state), findMistakes, buildSteps),
-  hintKeepTrack: (m, step: HintStep<TowersMove, TowersHint>, state) =>
+  hintMarks: {
+    roles: {
+      ring: "the cell the step decides, or whose pencil marks it crosses out. The heights it strikes are crossed through in their own color.",
+      outline:
+        "what the step reasons from: the clue it counts, in its slot beside the grid, the tower just placed, the cells of a set, or the numbered cells of a chain, in the order it runs.",
+      stripes:
+        "the line the sentence names: the row or column a clue sees along, through the clue slots at both its ends.",
+    },
+    drawn: candidateHintMarks,
+  },
+  hintKeepTrack: (m, step, state) =>
     keepCandidateHintTrack(m, step, state.pencil, state.w),
-  refreshHintStep: (step: HintStep<TowersMove, TowersHint>, state) =>
+  refreshHintStep: (step, state) =>
     refreshCandidateHintStep(step, state.grid, state.pencil, state.w),
   findMistakes,
   requestKeys: (p) => digitKeys(p.w),

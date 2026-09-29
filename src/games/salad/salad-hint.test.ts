@@ -129,7 +129,7 @@ describe("salad hint — the three signature techniques", () => {
     // The standing bar: no "just because" fallback (docs/games/solver-and-generator.md § "Guess-free generation"). Every
     // narration must match one of the arms the game knows how to say.
     const KNOWN =
-      /(sees [A-C1-9] first|empty squares?, so every other|so every other square in it must be empty|empty-square mark is the only one left|no (letter|number) can still go here|can't be empty: it must hold|cross out (?:their|its) empty-square marks?|ruled out in this square|can go in only this square|together, only|There's already|already accounts? for|Following a chain|Start by penciling|Now clear the easy ones)/;
+      /(sees [A-C1-9] first|empty squares?, so every other|so every other square in it must be empty|empty-square mark is the only one left|no (letter|number) can still go here|can't be empty: it must hold|cross out (?:their|its) empty-square marks?|ruled out in this square|can go in only this square|together, only|just placed |already accounts? for|Following a chain|Start by penciling|Now clear the easy ones)/;
     for (const p of [LETTERS, NUMBERS, { ...LETTERS, diff: DIFF_HARD }]) {
       for (const t of walk(p, "bar-1").texts) {
         expect(t, `unnamed technique: ${t}`).toMatch(KNOWN);
@@ -191,8 +191,11 @@ describe("salad hint — journeys and highlights", () => {
           for (const t of hl.targets) expect(inArea(t)).toBe(false);
           far++;
         } else {
-          // The near arm acts on the last square of the run it walks.
-          for (const t of hl.targets) expect(inArea(t)).toBe(true);
+          // The near arm outlines the squares it walks across, known empty; the
+          // square it decides is outlined too only when it is the whole premise,
+          // the one the clue sees straight away ("this square is nearest to it").
+          const whole = /nearest to it/.test(step.explanation);
+          for (const t of hl.targets) expect(inArea(t)).toBe(whole);
           near++;
         }
       }
@@ -230,13 +233,13 @@ describe("salad hint — narration arms", () => {
         tightenedBy: 0,
         circleAt: 7,
       },
-      [3],
+      [{ x: 4, y: 3, n: 3 }],
       s,
     );
-    expect(t.premise).toMatch(
+    expect(t.premise.text).toMatch(
       /outlined square furthest from it already holds a letter/,
     );
-    expect(t.premise).toMatch(/keeps the C somewhere in the outlined run/);
+    expect(t.premise.text).toMatch(/keeps the C somewhere in the outlined run/);
     // Past the blocking square, which the conclusion names.
     expect(t.where).toBe("past it");
   });
@@ -244,7 +247,13 @@ describe("salad hint — narration arms", () => {
   it("reads correctly where a line holds exactly one empty square", () => {
     // The degenerate extreme: `nums = order − 1`.
     const tight = { mode: GAMEMODE_NUMBERS, order: 4, nums: 3 };
-    expect(narrate({ kind: "countHolesDone", line: "row", index: 0 }, 0, tight)).toBe(
+    expect(
+      narrate(
+        { kind: "countHolesDone", line: "row", index: 0 },
+        { x: 1, y: 0, n: 0 },
+        tight,
+      ).text,
+    ).toBe(
       "This row already has its one empty square, so every other square in it must hold a number.",
     );
     expect(
@@ -258,9 +267,9 @@ describe("salad hint — narration arms", () => {
           tightenedBy: 1,
           circleAt: null,
         },
-        [1],
+        [{ x: 0, y: 3, n: 1 }],
         { mode: GAMEMODE_LETTERS, order: 4, nums: 3 },
-      ).premise,
+      ).premise.text,
     ).toMatch(
       /one of them is already marked later in the row, which keeps the A in the square nearest the clue$/,
     );
@@ -269,20 +278,23 @@ describe("salad hint — narration arms", () => {
   it("speaks each mode's own value vocabulary", () => {
     expect(symbolChar(GAMEMODE_LETTERS, 3)).toBe("C");
     expect(symbolChar(GAMEMODE_NUMBERS, 3)).toBe("3");
-    expect(narrate({ kind: "single" }, 1, s)).toBe(
+    const one = { x: 0, y: 0, n: 1 };
+    expect(narrate({ kind: "single" }, one, s).text).toBe(
       "Every other letter has been ruled out in this square, so it can only be A.",
     );
-    expect(narrate({ kind: "single" }, 1, { ...s, mode: GAMEMODE_NUMBERS })).toBe(
+    expect(
+      narrate({ kind: "single" }, one, { ...s, mode: GAMEMODE_NUMBERS }).text,
+    ).toBe(
       "Every other number has been ruled out in this square, so it can only be 1.",
     );
-    // The shared `dup` arm picks its article by the rendered value, so a letter
-    // value never reads as "a A".
-    expect(premise({ kind: "dup", n: 1, px: 0, py: 0 }, [1], s).premise).toMatch(
-      /There's already an A in this row and column/,
-    );
-    expect(premise({ kind: "dup", n: 2, px: 0, py: 0 }, [2], s).premise).toMatch(
-      /There's already a B in this row and column/,
-    );
+    // The shared `dup` arm names the placed value in the mode's own symbols.
+    const struck = (n: number) => [{ x: 2, y: 0, n }];
+    expect(
+      premise({ kind: "dup", n: 1, px: 0, py: 0 }, struck(1), s).premise.text,
+    ).toMatch(/^The A just placed /);
+    expect(
+      premise({ kind: "dup", n: 2, px: 0, py: 0 }, struck(2), s).premise.text,
+    ).toMatch(/^The B just placed /);
   });
 });
 

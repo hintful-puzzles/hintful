@@ -48,11 +48,10 @@ import {
   type Premise,
   populateText,
 } from "./hint-text.ts";
+import { CELL, mark, type Narration, NOTE, phrase } from "./hint-words.ts";
 import {
   availablePlacements,
   type CellRegion,
-  hiddenSingleLine,
-  hiddenSingleOf,
   type RowColRegion,
   rowColRegions,
   type SingleReason,
@@ -60,6 +59,7 @@ import {
   singleReasonOf,
   type WholeRegion,
 } from "./latin-hint.ts";
+import type { OrderedCell } from "./overlay-sidecar.ts";
 import { stepBudget } from "./step-budget.ts";
 import type { Point } from "./types.ts";
 
@@ -125,25 +125,47 @@ export type CandidateRung<M, H, R, Reason> = (
   ctx: RungContext<R, Firing<M, H, Reason>>,
 ) => readonly Firing<M, H, Reason>[];
 
-/** What a step says and shades. The walk adds the move, the `targets` (the
- * cells the move acts on) and the `marks`, so none of those can disagree with
- * the move.
+/** What a step says. The walk adds the move, the `targets` (the cells the move
+ * acts on) and the `marks`, so none of those can disagree with the move, and it
+ * reads the `area` and `hatch` off the words: the cells they outline, and the
+ * line or region they stripe (`hint-words.ts`). A step cannot draw evidence its
+ * sentence does not name.
  *
  * `reads` names the cells whose candidates the step rests on beyond the ones it
- * outlines: a cage deduction hatches its cage, since the sentence names the
+ * outlines: a cage deduction stripes its cage, since the sentence names the
  * cage, yet what it concludes depends on what every cell of it can still be.
  * The walk treats them as premise: the frontier continues from them, and under
  * the implicit reading their notes go on the board first. They ride on the
  * step's highlights (`CandidateHighlights.reads`) as data; nothing draws them. */
-export type StepWords<H> = Omit<H, "targets" | "marks"> & {
-  explanation: string;
+export type StepWords<H> = Omit<H, "targets" | "marks" | "area" | "hatch"> & {
+  words: Narration;
   reads?: readonly Point[];
 };
+
+/** The evidence a step's words name: the cells they outline, each once with its
+ * chain ordinal, and the cells they stripe. The walk's own steps take theirs
+ * from it, and so does a game's own `step` leg. */
+export function evidenceOf(words: Narration): { area: OrderedCell[]; hatch?: Point[] } {
+  const area: OrderedCell[] = [];
+  const hatch: Point[] = [];
+  const seen = new Set<string>();
+  for (const r of words.refs) {
+    if (r.kind.name !== CELL.name || r.role === "ring") continue;
+    const into = r.role === "outline" ? area : hatch;
+    for (const c of r.elements as readonly OrderedCell[]) {
+      const k = `${r.role}|${CELL.key(c)}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      into.push(c);
+    }
+  }
+  return hatch.length > 0 ? { area, hatch } : { area };
+}
 
 /** What a strike says and shades: its {@link Premise}, which the walk finishes
  * with the move the step makes (the plan's `conclude`), so a strike's ending is
  * never the game's to write. */
-export type StrikeWords<H> = Omit<StepWords<H>, "explanation"> & Premise;
+export type StrikeWords<H> = Omit<StepWords<H>, "words"> & Premise;
 
 /** The setup a candidate plan does before its every rung competes. */
 export interface PlanSetUp {
@@ -251,8 +273,9 @@ export interface CandidatePlan<
    * out yet). Omit only with {@link setUp}. */
   notes?: {
     populate: string;
-    cleanObvious: string;
-    note: (cell: Point, values: number[], every: boolean) => string;
+    /** Words over the notes the clean strikes, which it rings. */
+    cleanObvious: (marks: readonly Mark[]) => Narration;
+    note: (cell: Point, values: number[], every: boolean) => Narration;
   };
   /** A setup of the game's own, replacing the default. */
   setUp?: PlanSetUp;
@@ -382,9 +405,6 @@ export type LatinCandidatePlan<
  * - `singleReason` is {@link singleReasonOf}. Once `Reg` is a
  *   {@link RowColRegion} it is the only inhabitant of that signature, so the
  *   question has one answer rather than six games agreeing;
- * - a hidden single's line ({@link hiddenSingleLine}) is hatched, for the same
- *   reason. The game's `placeWords` still says *why*; the preset marks
- *   *where*, and the game's other placement arms are untouched;
  * - the setup sentences and the conclusions, from the game's `notes`
  *   vocabulary.
  *
@@ -413,7 +433,7 @@ export function runLatinCandidatePlan<
     notes: {
       populate: populateText(notes.noun, cell),
       cleanObvious: cleanObviousText(notes.noun, notes.placedVerb, vocab.regions, cell),
-      note: (_cell, values, every) => noteText(values.map(value), every, vocab),
+      note: (at, values, every) => noteText(at, values.map(value), every, vocab),
     },
     conclude: candidateConclusions({ value, cell }),
     regionsOf: (x, y) => rowColRegions(x, y, w),
@@ -427,19 +447,9 @@ export function runLatinCandidatePlan<
       Reason,
       RowColRegion
     >["singleReason"],
-    placeWords: (m, reason, continues) => {
-      const words = placeWords(m, reason, continues);
-      const hidden = hiddenSingleOf(reason);
-      if (!hidden) return words;
-      // The line the sentence names ("in this row") is hatched, not outlined:
-      // an outline marks particular cells. Asserted like the walk's other
-      // highlight constructions: `H` extends `CandidateHighlights`.
-      return {
-        ...words,
-        area: [],
-        hatch: hiddenSingleLine(hidden.line, hidden.index, w),
-      } as StepWords<H>;
-    },
+    // A hidden single's line ("in this row") is striped by the words that name
+    // it (`narrateLatinReason`), so the preset adds nothing to the placement.
+    placeWords,
   };
   runCandidatePlan(full);
 }
@@ -840,22 +850,20 @@ class CandidateWalk<
         this.strikeWords(leg.strike, leg.reason, continues),
       );
     const { x, y, n } = leg.place;
-    const { explanation, ...evidence } = this.plan.placeWords(
-      leg.place,
-      leg.reason,
-      continues,
-    );
+    const { words, ...rest } = this.plan.placeWords(leg.place, leg.reason, continues);
     const reads = [
-      ...(evidence.reads ?? []),
+      ...(rest.reads ?? []),
       ...(leg.reads ?? []),
       ...recordedReads(leg.reason),
     ];
     return {
       step: {
         move: this.place(x, y, n, this.plan.autoClean),
-        explanation,
+        explanation: words.text,
+        words,
         highlights: {
-          ...evidence,
+          ...rest,
+          ...evidenceOf(words),
           ...(reads.length > 0 ? { reads } : {}),
           targets: [{ x, y }],
           marks: [],
@@ -974,13 +982,7 @@ class CandidateWalk<
     const { plan } = this;
     const x = i % plan.w;
     const y = (i / plan.w) | 0;
-    const {
-      premise,
-      where: _where,
-      struck: _struck,
-      named: _named,
-      ...evidence
-    } = words;
+    const { premise, where: _where, struck: _struck, named: _named, ...rest } = words;
     let bits = this.shown[i];
     for (const m of marks) bits &= ~this.bit(m.n);
     // The view was taken before the firing, so a value an earlier fold placed
@@ -989,7 +991,17 @@ class CandidateWalk<
       if (fold.placed !== null && this.rulesOut(j, fold.placed, i))
         bits &= ~this.bit(fold.placed);
     const left = this.valuesIn(bits);
-    const highlights = { ...evidence, targets: [{ x, y }], marks: [] } as unknown as H;
+    // What the fold concludes is said of the ringed cell, so its conclusion
+    // names it: "so this cell must be 3".
+    const concluded = (ending: string): Narration =>
+      phrase`${premise}, so ${mark.as("ring", CELL, [{ x, y }], ending)}.`;
+    const highlightsOf = (said: Narration): H =>
+      ({
+        ...rest,
+        ...evidenceOf(said),
+        targets: [{ x, y }],
+        marks: [],
+      }) as unknown as H;
     // Unreachable while the recording is sound: a strike never takes the
     // solution's value, and a cell's implied notes always hold it.
     if (left.length === 0)
@@ -997,11 +1009,13 @@ class CandidateWalk<
     if (left.length === 1) {
       const n = left[0];
       folded.set(i, { bits: 0, placed: n });
+      const said = concluded(plan.conclude.place(n));
       return {
         step: {
           move: this.place(x, y, n, plan.autoClean),
-          explanation: `${premise}, so ${plan.conclude.place(n)}.`,
-          highlights,
+          explanation: said.text,
+          words: said,
+          highlights: highlightsOf(said),
         },
         apply: () => {
           this.placeOnBoard({ x, y, n });
@@ -1010,14 +1024,16 @@ class CandidateWalk<
       };
     }
     folded.set(i, { bits, placed: null });
+    const said = concluded(plan.conclude.keep(left));
     return {
       step: {
         move: addMove(
           left.map((n) => ({ x, y, n })),
           plan.moves,
         ),
-        explanation: `${premise}, so ${plan.conclude.keep(left)}.`,
-        highlights,
+        explanation: said.text,
+        words: said,
+        highlights: highlightsOf(said),
       },
       apply: () => {
         plan.pencil[i] = bits;
@@ -1044,10 +1060,12 @@ class CandidateWalk<
     // Unreachable: the implicit reading refuses a game's own setup, and the
     // default setup refuses a plan without `notes`.
     if (!plan.notes) throw new Error(`${plan.label}: a note leg needs notes`);
+    const words = plan.notes.note({ x, y }, values, bits === this.fillAll(i));
     return {
       step: {
         move: addMove(marks, plan.moves),
-        explanation: plan.notes.note({ x, y }, values, bits === this.fillAll(i)),
+        explanation: words.text,
+        words,
         highlights: { area: [], targets: [{ x, y }], marks: [] } as unknown as H,
       },
       apply: () => {
@@ -1072,16 +1090,23 @@ class CandidateWalk<
    * values it crosses out. */
   private strikeStep(struck: readonly Mark[], words: StrikeWords<H>): HintStep<M, H> {
     const marks = [...struck];
-    const { premise, where, struck: noun, named, ...evidence } = words;
-    const ending = this.plan.conclude.strike(valuesOf(marks), {
-      where,
-      struck: noun,
-      named,
-    });
+    const { premise, where, struck: noun, named, ...rest } = words;
+    // The ending names the ringed notes it strikes, and re-renders from them
+    // when a refresh finds some already gone.
+    const ending = mark.as("ring", NOTE, marks, (live) =>
+      this.plan.conclude.strike(valuesOf(live), { where, struck: noun, named }),
+    );
+    const said = phrase`${premise}, so ${ending}.`;
     return {
       move: this.strike(marks),
-      explanation: `${premise}, so ${ending}.`,
-      highlights: { ...evidence, targets: cellsOf(marks), marks } as unknown as H,
+      explanation: said.text,
+      words: said,
+      highlights: {
+        ...rest,
+        ...evidenceOf(said),
+        targets: cellsOf(marks),
+        marks,
+      } as unknown as H,
     };
   }
 

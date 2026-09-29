@@ -18,7 +18,7 @@ import {
 } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { type AbcdHint, hintKeepTrack, packedLines, refreshHintStep } from "./hint.ts";
-import { say } from "./hint-text.ts";
+import { type LineMarks, say } from "./hint-text.ts";
 import { abcdGame } from "./index.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
 import { newSolverBoard, runsForce, solveBoard } from "./solver.ts";
@@ -138,18 +138,26 @@ const isSatisfied = (text: string): boolean =>
 function kindOf(step: Step, diag: boolean): Kind {
   const m = step.move;
   const text = step.explanation;
+  const reach = diag ? "touching it, even at a corner" : "beside, above or below it";
   if (text === say.populate) return "populate";
-  if (text === say.clean(diag)) return "clean";
+  if (text.startsWith("Now clear the easy ones: ")) return "clean";
   if (m.type === "pencilAdd") return isSatisfied(text) ? "fold" : "note";
   if (m.type === "pencilStrike") {
-    if (text.startsWith(say.cull(m.marks[0].letter + 1, diag))) return "cull";
+    const l = String.fromCharCode(65 + m.marks[0].letter);
+    if (text.startsWith(`The ${l} just placed rules out ${l} in every cell ${reach}`))
+      return "cull";
     if (isSatisfied(text)) return "satisfied";
   } else if (m.type === "enter" && m.letter !== null) {
-    const n = m.letter + 1;
+    const l = String.fromCharCode(65 + m.letter);
     if (isSatisfied(text)) return "fold";
-    if (text === say.naked(n)) return "naked";
-    if (text === say.regionsFull(n, diag)) return "regionsFull";
-    if (text === say.alsoForced(n)) return "alsoForced";
+    if (
+      text ===
+      `Every other letter has been ruled out in this cell, so it can only be ${l}.`
+    )
+      return "naked";
+    if (text.startsWith("Every other letter is already ")) return "regionsFull";
+    if (text.startsWith(`So this cell must be ${l} too, for the same `))
+      return "alsoForced";
     if (text.includes("fit only")) return "packed";
     if (text.includes("can take one")) return "onlyHomes";
   }
@@ -300,16 +308,25 @@ describe("the player's own board", () => {
     const [first, ...rest] = original.move.marks;
     const toggle: AbcdMove = { type: "pencil", ...first };
 
-    const followed: Step = structuredClone(original);
+    // A step's words hold functions, so a copy clones only the data keep-track
+    // rewrites in place.
+    const copy = (s: Step): Step => ({
+      ...s,
+      move: structuredClone(s.move),
+      highlights: structuredClone(s.highlights),
+    });
+    const followed = copy(original);
     expect(hintKeepTrack(toggle, followed, state)).toBe("onTrack");
     expect(followed.move).toEqual({ type: "pencilStrike", marks: rest });
+    // Its words shrink with it.
+    expect(followed.explanation).toBe(followed.words?.text);
 
     const after = abcdGame.executeMove(state, toggle);
-    expect(refreshHintStep(structuredClone(original), after)?.move).toEqual({
+    expect(refreshHintStep(copy(original), after)?.move).toEqual({
       type: "pencilStrike",
       marks: rest,
     });
-    expect(hintKeepTrack(toggle, structuredClone(original), after)).toBe("off");
+    expect(hintKeepTrack(toggle, copy(original), after)).toBe("off");
   });
 
   it("completes a placement only with the letter it names", () => {
@@ -326,38 +343,64 @@ describe("the player's own board", () => {
 // --- the sentences ----------------------------------------------------------
 
 describe("the sentences at their extremes", () => {
+  const lineOf = (word: "row" | "column"): LineMarks => ({
+    word,
+    cells: [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+    ],
+    clue: 0,
+  });
+  const at = (n: number) => ({ x: 0, y: 0, n });
+  const two = [
+    { x: 0, y: 0 },
+    { x: 1, y: 0 },
+  ];
+
   it("counts in the singular and states each mode's own reach", () => {
-    expect(say.onlyHomes("row", 1, 1, false)).toBe(
+    expect(say.onlyHomes(lineOf("row"), at(1), 1, false, [at(1)]).text).toBe(
       "This row needs one A and no other cell in it can take one, so this cell must be A.",
     );
-    expect(say.onlyHomes("column", 2, 3, true)).toBe(
+    expect(say.onlyHomes(lineOf("column"), at(2), 3, true, two).text).toBe(
       "This column needs 3 more Bs and only the outlined cells can take one, so this cell must be B.",
     );
-    expect(say.packed("row", 3, 2, false)).toBe(
+    expect(say.packed(lineOf("row"), at(3), 2, false, two).text).toBe(
       "This row needs 2 Cs, and the outlined cells fit only 2 apart, so each stretch is full: this cell must be C.",
     );
-    expect(say.satisfied("row", 1, 0)).toBe("This row must hold no A");
-    expect(say.satisfied("column", 2, 1)).toBe("This column already holds its one B");
-    expect(say.cull(1, true)).toContain("even at a corner");
-    expect(say.cull(1, false)).toContain("beside, above or below");
+    expect(say.satisfied(lineOf("row"), 1, 0, []).text).toBe("This row must hold no A");
+    expect(say.satisfied(lineOf("column"), 2, 1, [at(2)]).text).toBe(
+      "This column already holds its one B",
+    );
+    expect(say.cull(at(1), 1, true).text).toContain("even at a corner");
+    expect(say.cull(at(1), 1, false).text).toContain("beside, above or below");
   });
 
   it("fits at a glance for every letter, count and line, conclusions included", () => {
     const all: string[] = [say.populate];
     const conclusion = ", so we must cross out the other Is in it.";
     for (const diag of [false, true]) {
-      all.push(say.clean(diag), say.note([1, 2, 3, 4], false, diag));
-      all.push(say.note([], true, diag));
+      all.push(
+        say.clean(diag)([at(1)]).text,
+        say.note(at(0), [1, 2, 3, 4], false, diag).text,
+      );
+      all.push(say.note(at(0), [], true, diag).text);
       for (let n = 1; n <= 9; n++) {
-        all.push(say.naked(n), say.regionsFull(n, diag), say.alsoForced(n));
-        all.push(`${say.cull(n, diag)}, so we must cross out ${say.culled(n)}.`);
-        for (const line of ["row", "column"] as const)
+        for (const word of ["row", "column"] as const)
+          all.push(
+            say.naked(at(n), 9).text,
+            say.regionsFull(at(n), diag).text,
+            say.alsoForced(lineOf(word), at(n)).text,
+          );
+        all.push(
+          `${say.cull(at(n), n, diag).text}, so we must cross out ${say.culled(n)}.`,
+        );
+        for (const word of ["row", "column"] as const)
           for (let k = 0; k <= 9; k++) {
-            all.push(`${say.satisfied(line, n, k)}${conclusion}`);
+            all.push(`${say.satisfied(lineOf(word), n, k, [at(n)]).text}${conclusion}`);
             if (k === 0) continue;
             for (const more of [false, true]) {
-              all.push(say.onlyHomes(line, n, k, more));
-              if (k > 1) all.push(say.packed(line, n, k, more));
+              all.push(say.onlyHomes(lineOf(word), at(n), k, more, two).text);
+              if (k > 1) all.push(say.packed(lineOf(word), at(n), k, more, two).text);
             }
           }
       }

@@ -39,6 +39,7 @@ import {
   type CandidatePlanPrefs,
   type Cell,
   candidateHint,
+  candidateHintMarks,
   emitObviousCleanStep,
   keepCandidateHintTrack,
   type Mark,
@@ -47,27 +48,33 @@ import {
   regionReach,
 } from "../../engine/candidate-hint.ts";
 import {
+  evidenceOf,
   type Firing,
   type Leg,
   populateThenClean,
   runLatinCandidatePlan,
 } from "../../engine/candidate-plan.ts";
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
-import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
+import {
+  type HintResult,
+  type HintStep,
+  type HintTrackVerdict,
+  narratedStep,
+} from "../../engine/game.ts";
 import {
   latinPremise,
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
+import type { MarkRef, Narration } from "../../engine/hint-words.ts";
 import type { LatinRepeatReason } from "../../engine/latin.ts";
 import {
   type ForcingLink,
-  genericLatinArea,
   hiddenSingleLine,
   type SingleReason,
 } from "../../engine/latin-hint.ts";
 import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
-import { saladVocab, say } from "./hint-text.ts";
+import { CLUE, saladVocab, say } from "./hint-text.ts";
 import { type BorderReason, findMistakes, recordSaladDeductions } from "./solver.ts";
 import {
   borderScanFor,
@@ -137,70 +144,118 @@ type SaladOp = DeductionRecord & { reason: SaladReason };
  */
 export function narrate(
   reason: SaladReason,
-  n: number,
+  at: Mark,
   state: { mode: number; order: number; nums: number },
-): string {
+): Narration {
   const { mode, order, nums } = state;
   const text = say(mode);
   switch (reason.kind) {
     case "countHolesDone":
-      return text.countHolesDone(reason.line, order - nums);
+      return text.countHolesDone(
+        reason.line,
+        hiddenSingleLine(reason.line, reason.index, order),
+        order - nums,
+        at,
+      );
     case "countLettersDone":
-      return text.countLettersDone(reason.line, reason.allPlaced, nums);
+      return text.countLettersDone(
+        reason.line,
+        hiddenSingleLine(reason.line, reason.index, order),
+        reason.allPlaced,
+        nums,
+        at,
+      );
     case "crossNaked":
-      return text.crossNaked;
+      return text.crossNaked(at);
     case "borderNear":
     case "borderFar":
     case "circleXNote":
     case "repeatFull":
       throw new Error(`a ${reason.kind} deduction strikes`);
     default:
-      return narrateLatinReason(reason, n, saladVocab(mode));
+      return narrateLatinReason(reason, at, order, saladVocab(mode));
   }
 }
 
+/** The squares of the line a border clue looks along, nearest first. */
+function clueLine(clue: number, o: number): Cell[] {
+  const s = borderScanFor(clue, o);
+  const cells: Cell[] = [];
+  for (let i = s.start, k = 0; k < o; k++, i += s.step)
+    cells.push({ x: i % o, y: (i / o) | 0 });
+  return cells;
+}
+
 /** Why a strike is forced, which the walk concludes with the move it makes.
- * `ns` is the struck candidates. */
+ * `marks` are the struck candidates. A border deduction outlines exactly the
+ * run of squares its argument is about, read off the shared
+ * {@link borderScanFor} rather than re-derived; its words name it. */
 export function premise(
   reason: SaladReason,
-  ns: number[],
+  marks: readonly Mark[],
   state: { mode: number; order: number; nums: number },
 ): Premise {
   const { mode, order } = state;
+  const o = order;
   const text = say(mode);
+  const at = marks[0];
   switch (reason.kind) {
-    case "borderNear":
+    case "borderNear": {
+      const line = clueLine(reason.clue, o);
+      const c = { side: clueSide(reason.clue, o).side, clue: reason.clue, line };
+      // The squares the "sees it first" argument walks over, known empty,
+      // before the one it decides.
       return {
-        premise: text.borderNear(
-          clueSide(reason.clue, order).side,
-          reason.clueVal,
-          reason.skipped,
-        ),
+        premise: text.borderNear(c, reason.clueVal, line.slice(0, reason.skipped), at),
       };
+    }
     case "borderFar": {
-      const { side, axis } = clueSide(reason.clue, order);
-      const blocked = reason.circleAt !== null;
+      const { side, axis } = clueSide(reason.clue, o);
+      const line = clueLine(reason.clue, o);
+      // The run the clue's own symbol is confined to: up to the blocking ball,
+      // else the counting bound.
+      const s = borderScanFor(reason.clue, o);
+      const run: Cell[] = [];
+      for (let i = s.start; i !== s.end; i += s.step) {
+        run.push({ x: i % o, y: (i / o) | 0 });
+        if (
+          reason.circleAt !== null ? i === reason.circleAt : run.length > reason.reach
+        )
+          break;
+      }
+      const blockedAt =
+        reason.circleAt === null
+          ? null
+          : { x: reason.circleAt % o, y: (reason.circleAt / o) | 0 };
       return {
-        premise: text.borderFar({
-          side,
-          axis,
-          clueVal: reason.clueVal,
-          blocked,
-          reach: reason.reach,
-          holes: reason.holes,
-          tightenedBy: reason.tightenedBy,
-        }),
-        where: text.borderFarWhere(blocked),
+        premise: text.borderFar(
+          { side, clue: reason.clue, line },
+          {
+            axis,
+            clueVal: reason.clueVal,
+            blockedAt,
+            reach: reason.reach,
+            holes: reason.holes,
+            tightenedBy: reason.tightenedBy,
+            run,
+          },
+        ),
+        where: text.borderFarWhere(blockedAt !== null),
       };
     }
     case "circleXNote":
       return {
-        premise: text.circleXNote(reason.count),
+        premise: text.circleXNote(cellsOf(marks)),
         struck: text.emptyMarks(reason.count),
       };
     case "repeatFull":
       return {
-        premise: text.repeatFull(reason.line, reason.times),
+        premise: text.repeatFull(
+          reason.line,
+          hiddenSingleLine(reason.line, reason.index, o),
+          reason.times,
+          at,
+        ),
         struck: text.emptyMarks(1),
       };
     case "countHolesDone":
@@ -208,64 +263,56 @@ export function premise(
     case "crossNaked":
       throw new Error(`a ${reason.kind} deduction marks a square`);
     default:
-      return latinPremise(reason, ns, saladVocab(mode));
+      return latinPremise(reason, marks, saladVocab(mode));
   }
 }
 
-/** The evidence to outline (`area`), the line to hatch (`hatch`, the row or
- * column the sentence names) and the border clues to light (`clues`) for a
- * reason (docs/games/hints.md § "Hatch the line the sentence names"). A border
- * deduction outlines exactly the run of squares its argument is about, read off
- * the shared {@link borderScanFor} rather than re-derived. */
-function reasonEvidence(
-  reason: SaladReason,
-  o: number,
-): { area: OrderedCell[]; hatch?: Cell[]; clues: number[] } {
-  const cellAt = (i: number): Cell => ({ x: i % o, y: (i / o) | 0 });
-  /** The whole line a border clue looks along. */
-  const clueLine = (clue: number): Cell[] => {
-    const s = borderScanFor(clue, o);
-    const cells: Cell[] = [];
-    for (let i = s.start, k = 0; k < o; k++, i += s.step) cells.push(cellAt(i));
-    return cells;
-  };
-  switch (reason.kind) {
-    case "borderNear": {
-      const s = borderScanFor(reason.clue, o);
-      // From the clue up to and including the first square that could hold
-      // anything — the squares the "sees it first" argument walks over.
-      const area: Cell[] = [];
-      let i = s.start;
-      for (let k = 0; k <= reason.skipped; k++, i += s.step) area.push(cellAt(i));
-      return { area, hatch: clueLine(reason.clue), clues: [reason.clue] };
+/** The squares `marks` are in, each once. */
+function cellsOf(marks: readonly Mark[]): Cell[] {
+  const seen = new Set<string>();
+  const out: Cell[] = [];
+  for (const m of marks) {
+    const k = `${m.x},${m.y}`;
+    if (!seen.has(k)) {
+      seen.add(k);
+      out.push({ x: m.x, y: m.y });
     }
-    case "borderFar": {
-      const s = borderScanFor(reason.clue, o);
-      // The run the clue's own symbol is confined to: up to the blocking ball,
-      // else the counting bound.
-      const area: Cell[] = [];
-      for (let i = s.start; i !== s.end; i += s.step) {
-        area.push(cellAt(i));
-        if (
-          reason.circleAt !== null ? i === reason.circleAt : area.length > reason.reach
-        )
-          break;
-      }
-      return { area, hatch: clueLine(reason.clue), clues: [reason.clue] };
-    }
-    // Not hidden singles — a finished count names its whole line the same way,
-    // so it hatches the same cells. (A hidden single's own line is the
-    // row/column preset's.)
-    case "countHolesDone":
-    case "countLettersDone":
-      return {
-        area: [],
-        hatch: hiddenSingleLine(reason.line, reason.index, o),
-        clues: [],
-      };
-    default:
-      return { area: genericLatinArea(reason), clues: [] };
   }
+  return out;
+}
+
+/** The border clues a step's words light: the `clues` a Salad highlight adds to
+ * the candidate walk's, read off the words as the walk reads `area` and
+ * `hatch`. */
+function cluesNamed(words: Narration): number[] {
+  const out = new Set<number>();
+  for (const r of words.refs)
+    if (r.kind.name === CLUE.name)
+      for (const c of r.elements as readonly number[]) out.add(c);
+  return [...out];
+}
+
+/** A marker step's evidence, read off its words as the walk reads its own
+ * steps', and the clues they light. */
+function markerEvidence(words: Narration): {
+  area: OrderedCell[];
+  hatch?: Cell[];
+  clues: number[];
+} {
+  return { ...evidenceOf(words), clues: cluesNamed(words) };
+}
+
+/** The marks a Salad step draws: the candidate walk's, and the border clues it
+ * lights as evidence. The ghosted entry in a ringed square is part of that
+ * ring: it shows what the step decides there. */
+export function saladHintMarks(h: SaladHint): MarkRef[] {
+  // The populate opener is built by the engine (`populateStep`), which knows
+  // nothing of clues, so its highlights carry none.
+  const clues: readonly number[] = (h as Partial<SaladHint>).clues ?? [];
+  return [
+    ...candidateHintMarks(h),
+    { role: "outline", kind: CLUE, elements: clues } as MarkRef,
+  ];
 }
 
 // --- the plan walk ---------------------------------------------------------
@@ -468,19 +515,26 @@ type SaladFiring = Firing<SaladMove, SaladHint, SaladReason>;
 function markerFiring(f: MarkerFiring, w: Working, state: SaladState): SaladFiring {
   const o = state.order;
   const nums = state.nums;
-  const ev = reasonEvidence(f.reason, o);
-  const legs: Leg<SaladMove, SaladHint, SaladReason>[] = f.cells.map((c) => ({
-    step: {
-      move: { type: "set", x: c.x, y: c.y, value: f.mark },
-      explanation: narrate(f.reason, 0, state),
-      highlights: { ...ev, targets: [c], marks: [], ghost: f.mark },
-    },
-    apply: () => {
-      const i = c.y * o + c.x;
-      w.holes[i] = f.mark === "cross" ? CROSS : CIRCLE;
-      if (f.mark === "cross") w.pencil[i] = 0;
-    },
-  }));
+  const legs: Leg<SaladMove, SaladHint, SaladReason>[] = f.cells.map((c) => {
+    const words = narrate(f.reason, { ...c, n: 0 }, state);
+    return {
+      step: narratedStep<SaladMove, SaladHint>({
+        move: { type: "set", x: c.x, y: c.y, value: f.mark },
+        words,
+        highlights: {
+          ...markerEvidence(words),
+          targets: [c],
+          marks: [],
+          ghost: f.mark,
+        },
+      }),
+      apply: () => {
+        const i = c.y * o + c.x;
+        w.holes[i] = f.mark === "cross" ? CROSS : CIRCLE;
+        if (f.mark === "cross") w.pencil[i] = 0;
+      },
+    };
+  });
   const tidy = f.mark === "circle" ? emptyNotesOn(w, f.cells, o, nums) : [];
   if (tidy.length > 0)
     legs.push({ strike: tidy, reason: { kind: "circleXNote", count: tidy.length } });
@@ -621,19 +675,16 @@ function buildSteps(
       holes = rec.holes;
       return (rec.ops as SaladOp[]).filter((op) => op.kind === "place" || op.n <= nums);
     },
-    placeWords: (m, reason) => ({
-      explanation: narrate(reason, m.n, state),
-      ...reasonEvidence(reason, o),
-      ghost: m.n,
-    }),
-    strikeWords: (marks, reason) => ({
-      ...premise(
-        reason,
-        marks.map((m) => m.n),
-        state,
-      ),
-      ...reasonEvidence(reason, o),
-    }),
+    // The walk reads the outline and the stripes off the words; the clues they
+    // light are Salad's, read the same way.
+    placeWords: (m, reason) => {
+      const words = narrate(reason, m, state);
+      return { words, clues: cluesNamed(words), ghost: m.n };
+    },
+    strikeWords: (marks, reason) => {
+      const p = premise(reason, marks, state);
+      return { ...p, clues: cluesNamed(p.premise) };
+    },
     // The far border arm names the clue's *symbol* and rules it out along a
     // run, so it is one multi-square leg; everything else names *this square*.
     strikeAxis: (op) =>

@@ -26,6 +26,7 @@ import {
 import type { HintStep } from "./game.ts";
 import { ALREADY_SOLVED, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { cleanObviousText, joinNums, populateText } from "./hint-text.ts";
+import { CELL, mark, Narration, NOTE, phrase } from "./hint-words.ts";
 import type { DeductionRecord } from "./latin.ts";
 import { rowColRegions } from "./latin-hint.ts";
 
@@ -188,6 +189,8 @@ describe("anyEmptyLacksNotes", () => {
 
 const rc = (w: number) => (x: number, y: number) => rowColRegions(x, y, w);
 const rr = (w: number) => regionReach(w, rc(w));
+/** The obvious clean's words, which carry no reference in these cases. */
+const easy = (): Narration => Narration.plain("clear the easy ones");
 
 describe("regionDuplicateMarks", () => {
   it("marks every empty cell of the value's regions that still notes it", () => {
@@ -721,6 +724,33 @@ describe("keepCandidateHintTrack", () => {
 });
 
 describe("refreshCandidateHintStep", () => {
+  it("rewrites a shrunk strike's words to the notes still struck", () => {
+    // The walk's strike ending is a reference to the struck notes whose words
+    // are a function of them, so a note gone since the plan was built leaves
+    // the sentence and the ring together.
+    const marks = [
+      { x: 0, y: 0, n: 1 },
+      { x: 0, y: 0, n: 2 },
+    ];
+    const words = phrase`${mark.this("ring", CELL, [{ x: 0, y: 0 }], "cell").capitalized()} loses them, so ${mark.as("ring", NOTE, marks, (ms) => `we must cross out ${joinNums(ms.map((m) => m.n))}`)}.`;
+    const s: HintStep<CandidateMove, CandidateHighlights> = {
+      move: { type: "pencilStrike", marks },
+      explanation: words.text,
+      words,
+      highlights: { area: [], targets: [{ x: 0, y: 0 }], marks },
+    };
+    expect(s.explanation).toBe("This cell loses them, so we must cross out 1 and 2.");
+    const live = refreshCandidateHintStep(
+      s,
+      Int8Array.from([0, 0, 0, 0]),
+      Int32Array.from([bits(2), 0, 0, 0]),
+      2,
+    );
+    expect(live?.explanation).toBe("This cell loses them, so we must cross out 2.");
+    expect(live?.words?.text).toBe(live?.explanation);
+    expect(live?.highlights?.marks).toEqual([{ x: 0, y: 0, n: 2 }]);
+  });
+
   it("keeps a note step to the notes still to write, and drops it once written", () => {
     const grid = Int8Array.from([0, 0, 0, 0]);
     const s = step(
@@ -931,9 +961,7 @@ describe("emitObviousCleanStep", () => {
 
   it("pushes one strike step and applies its marks to the working notes", () => {
     const { grid, pencil, steps } = openBoard();
-    expect(
-      emitObviousCleanStep(steps, grid, pencil, 2, rr(2), "clear the easy ones"),
-    ).toBe(true);
+    expect(emitObviousCleanStep(steps, grid, pencil, 2, rr(2), easy)).toBe(true);
     expect(steps).toHaveLength(1);
     expect(steps[0].move).toEqual({
       type: "pencilStrike",
@@ -953,20 +981,20 @@ describe("emitObviousCleanStep", () => {
     steps.push(
       populateStep<CandidateMove, CandidateHighlights>({ type: "pencilAll" }, "fill"),
     );
-    emitObviousCleanStep(steps, grid, pencil, 2, rr(2), "clear the easy ones");
+    emitObviousCleanStep(steps, grid, pencil, 2, rr(2), easy);
     expect(steps[1].continuesPrevious).toBe(true);
   });
 
   it("stands alone when the board was already populated", () => {
     const { grid, pencil, steps } = openBoard();
-    emitObviousCleanStep(steps, grid, pencil, 2, rr(2), "clear the easy ones");
+    emitObviousCleanStep(steps, grid, pencil, 2, rr(2), easy);
     expect(steps[0].continuesPrevious).toBe(false);
   });
 
   it("continues a populate fill and nothing else", () => {
     const { grid, pencil, steps } = openBoard();
     steps.push(step({ type: "set", x: 0, y: 0, n: 1, pencil: false }));
-    emitObviousCleanStep(steps, grid, pencil, 2, rr(2), "clear the easy ones");
+    emitObviousCleanStep(steps, grid, pencil, 2, rr(2), easy);
     expect(steps[1].continuesPrevious).toBe(false);
   });
 
@@ -974,9 +1002,7 @@ describe("emitObviousCleanStep", () => {
     const grid = Int8Array.from([1, 0, 0, 2]);
     const pencil = Int32Array.from([0, bits(2), bits(1), 0]);
     const steps: HintStep<CandidateMove, CandidateHighlights>[] = [];
-    expect(
-      emitObviousCleanStep(steps, grid, pencil, 2, rr(2), "clear the easy ones"),
-    ).toBe(false);
+    expect(emitObviousCleanStep(steps, grid, pencil, 2, rr(2), easy)).toBe(false);
     expect(steps).toEqual([]);
   });
 });
@@ -1066,7 +1092,7 @@ describe("a game's own move dialect", () => {
     const steps: HintStep<DialectMove, CandidateHighlights>[] = [
       populateStep<DialectMove, CandidateHighlights>({ kind: "fillAll" }, "fill"),
     ];
-    emitObviousCleanStep(steps, grid, pencil, 2, rr(2), "clear", {
+    emitObviousCleanStep(steps, grid, pencil, 2, rr(2), easy, {
       enc: { bit: bitFrom1 },
       adapter: dialect,
     });
@@ -1090,14 +1116,19 @@ describe("the shared setup narration", () => {
     expect(fill).toContain("into each empty square");
     expect(fill).not.toContain("cell");
 
-    const clean = cleanObviousText("letter", "standing", "row or column", "square");
+    const clean = cleanObviousText(
+      "letter",
+      "standing",
+      "row or column",
+      "square",
+    )([]).text;
     expect(clean).toContain("each square's");
     expect(clean).not.toContain("cell");
     expect(clean).toContain("already standing in each square's row or column");
 
     expect(populateText("number")).toContain("into each empty cell");
-    expect(cleanObviousText("number", "placed", "row, column or block")).toContain(
-      "each cell's row, column or block",
-    );
+    expect(
+      cleanObviousText("number", "placed", "row, column or block")([]).text,
+    ).toContain("each cell's row, column or block");
   });
 });

@@ -15,7 +15,9 @@
  * order, which runs 0-based digits and then letters once the order passes 9.
  */
 
-import { joinOr, joinWith, type LatinVocab } from "../../engine/hint-text.ts";
+import { joinOr, joinWith, type LatinVocab, thisCell } from "../../engine/hint-text.ts";
+import { CELL, mark, type Narration, phrase } from "../../engine/hint-words.ts";
+import type { Point } from "../../engine/types.ts";
 import { displayChar } from "./state.ts";
 
 /** Unequal's value vocabulary for the shared generic-Latin arms. */
@@ -27,33 +29,52 @@ export function unequalVocab(order: number): LatinVocab {
 const all = (ns: number[], order: number): string =>
   joinWith(ns.map((n) => displayChar(n, order)));
 
+/**
+ * The two cells a sign or bar deduction is about: the struck cell `at`, ringed,
+ * and the cell across the sign or bar, `other`. Both are outlined, and the
+ * words naming the sign or bar between them are that outline.
+ */
+export interface SignPair {
+  at: Point;
+  other: Point;
+}
+
+const sign = (p: SignPair, words: string): Narration =>
+  mark.as("outline", CELL, [p.at, p.other], words);
+const across = (p: SignPair, words: string): Narration =>
+  mark.as("outline", CELL, [p.other], words);
+const thisOne = (p: SignPair): Narration => mark.as("ring", CELL, [p.at], "this one");
+
 /** A sign or bar deduction's premise; the walk concludes it with the move it
  * makes (`engine/hint-text.ts`'s `Premise`). */
 export const say = {
-  /** This cell is the larger side of a sign whose other cell is at least
+  /** The struck cell is the larger side of a sign whose other cell is at least
    * `bound`. */
-  greater: (bound: number, order: number): string =>
+  greater: (p: SignPair, bound: number, order: number): Narration =>
     bound <= 1
-      ? "The larger side of a greater-than sign can't hold the smallest number"
-      : `The cell across this greater-than sign is at least ${displayChar(bound, order)}, and this one is larger`,
+      ? phrase`The larger side of ${sign(p, "a greater-than sign")} can't hold the smallest number`
+      : phrase`${across(p, "The cell across")} ${sign(p, "this greater-than sign")} is at least ${displayChar(bound, order)}, and ${thisOne(p)} is larger`,
 
-  /** This cell is the smaller side of a sign whose other cell is at most
+  /** The struck cell is the smaller side of a sign whose other cell is at most
    * `bound`, in a grid of `order`. */
-  lesser: (bound: number, order: number): string =>
+  lesser: (p: SignPair, bound: number, order: number): Narration =>
     bound >= order
-      ? "The smaller side of a greater-than sign can't hold the largest number"
-      : `The cell across this greater-than sign is at most ${displayChar(bound, order)}, and this one is smaller`,
+      ? phrase`The smaller side of ${sign(p, "a greater-than sign")} can't hold the largest number`
+      : phrase`${across(p, "The cell across")} ${sign(p, "this greater-than sign")} is at most ${displayChar(bound, order)}, and ${thisOne(p)} is smaller`,
 
-  /** A bar joins this cell to its neighbor holding `v` (`bar`), or none does. */
-  adjacent: (bar: boolean, v: number, order: number): string =>
-    bar
-      ? `A bar joins this cell to the ${displayChar(v, order)} beside it, and they must differ by exactly 1`
-      : `No bar joins this cell to the ${displayChar(v, order)} beside it, and they can't differ by 1`,
+  /** A bar joins the struck cell to its neighbor holding `v` (`bar`), or none
+   * does. */
+  adjacent: (p: SignPair, bar: boolean, v: number, order: number): Narration => {
+    const beside = across(p, `the ${displayChar(v, order)} beside it`);
+    return bar
+      ? phrase`${sign(p, "A bar")} joins ${thisCell(p.at)} to ${beside}, and they must differ by exactly 1`
+      : phrase`${sign(p, "No bar")} joins ${thisCell(p.at)} to ${beside}, and they can't differ by 1`;
+  },
 
   /** The same, against a neighbor that is still undecided: a struck value
    * fits none of the numbers still open there. */
-  adjacentSet: (bar: boolean, ns: number[], order: number): string =>
+  adjacentSet: (p: SignPair, bar: boolean, ns: number[], order: number): Narration =>
     bar
-      ? `A bar joins this cell to a neighbor with nothing open one away from ${joinOr(ns.map((n) => displayChar(n, order)))}`
-      : `No bar joins this cell to a neighbor whose every open number clashes with ${all(ns, order)}`,
+      ? phrase`${sign(p, "A bar")} joins ${thisCell(p.at)} to ${across(p, "a neighbor")} with nothing open one away from ${joinOr(ns.map((n) => displayChar(n, order)))}`
+      : phrase`${sign(p, "No bar")} joins ${thisCell(p.at)} to ${across(p, "a neighbor")} whose every open number clashes with ${all(ns, order)}`,
 };

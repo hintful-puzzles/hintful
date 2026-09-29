@@ -60,14 +60,7 @@ start from a fully dotted map, set **Hints pencil in** to **Every
 candidate first** in the preferences: it then begins by pressing **Fill
 all pencil marks** twice, just as you would.
 
-* **A thick band in the hint color** along a region's border marks the
-  region the step decides, the one it calls "this region".
-* **A thin dashed line in a second color**, set in from a region's
-  border, marks a region the step reasons from; "the outlined pair" are
-  the two regions drawn this way.
-* **Numbers in the second color**, where a region's number would go,
-  mark the regions of a chain, "region 1" to the last. While a chain is
-  shown, the map's own region numbers are hidden.
+{{hint-marks}}
 
 The hint names colors by their words, red, yellow, teal and violet, and
 a step ends by saying what to do: color the region, dot the colors it

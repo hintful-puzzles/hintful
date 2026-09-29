@@ -5,7 +5,14 @@
  */
 
 import { BLUE_BOLD, PURPLE } from "../../engine/color/colors.ts";
-import { ERROR, GRID_MID, HELD, INK } from "../../engine/color/palette.ts";
+import {
+  ERROR,
+  GRID_MID,
+  HELD,
+  HINT_ACTION,
+  HINT_EVIDENCE,
+  INK,
+} from "../../engine/color/palette.ts";
 import {
   SIGNPOST_NUMBER_SET_MID,
   SIGNPOST_ON_REGION_FAINT,
@@ -16,7 +23,10 @@ import {
 } from "../../engine/color/palette-games.ts";
 import { drawRectCorners, drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
+import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import type { Color, Point } from "../../engine/types.ts";
+import type { SignpostHint } from "./hint.ts";
 import { dragReleaseMove, executeMove } from "./moves.ts";
 import {
   FLAG_ERROR,
@@ -49,6 +59,10 @@ const COL_B0 = 12;
 const COL_M0 = COL_B0 + 1 * NBACKGROUNDS;
 const COL_D0 = COL_B0 + 2 * NBACKGROUNDS;
 const COL_X0 = COL_B0 + 3 * NBACKGROUNDS;
+/** The hint's ring and its arrow: what the step decides. */
+export const COL_HINT = COL_X0 + NBACKGROUNDS;
+/** The outline on a square the hint reasons from. */
+export const COL_HINT_CELL = COL_HINT + 1;
 
 /** The board's pixel origin (NARROW_BORDERS). Exported so `interpretMove` and
  * `computeSize` read the same number the painter does — one function, both
@@ -67,6 +81,14 @@ const F_IMMUTABLE = 0x008;
 const F_ARROW_POINT = 0x010;
 const F_ARROW_INPOINT = 0x020;
 const F_DIM = 0x040;
+/** The displayed hint links from this square's arrow. */
+const F_HINT_ARROW = 0x080;
+/** The displayed hint links into this square: ringed. */
+const F_HINT_RING = 0x100;
+/** This square is on the line the hint's sentence names: striped. */
+const F_HINT_LINE = 0x200;
+/** The hint reasons from this square: outlined. */
+const F_HINT_OUTLINE = 0x400;
 
 // --- palette ----------------------------------------------------------
 
@@ -80,7 +102,7 @@ export function buildPalette(
   highlight: Color,
   lowlight: Color,
 ): Color[] {
-  const ret: Color[] = new Array(COL_X0 + NBACKGROUNDS);
+  const ret: Color[] = new Array(COL_HINT_CELL + 1);
 
   ret[COL_BACKGROUND] = background;
   ret[COL_HIGHLIGHT] = highlight;
@@ -99,6 +121,8 @@ export function buildPalette(
   ret[COL_ERROR] = ERROR;
   ret[COL_DRAG_ORIGIN] = HELD;
   ret[COL_ARROW_BG_DIM] = signpostArrowDim(background);
+  ret[COL_HINT] = HINT_ACTION;
+  ret[COL_HINT_CELL] = HINT_EVIDENCE;
 
   for (let c = 0; c < NBACKGROUNDS; c++) {
     ret[COL_B0 + c] = SIGNPOST_REGION_BACKGROUNDS[c];
@@ -215,7 +239,8 @@ function tileRedraw(
   const setcol = empty ? COL_BACKGROUND : num2col(n, num);
 
   let arrowcol: number;
-  if (f & F_DRAG_SRC) arrowcol = COL_DRAG_ORIGIN;
+  if (f & F_HINT_ARROW) arrowcol = COL_HINT;
+  else if (f & F_DRAG_SRC) arrowcol = COL_DRAG_ORIGIN;
   else if (f & F_DIM) arrowcol = dim(setcol);
   else if (f & F_ARROW_POINT) arrowcol = mid(COL_ARROW, setcol);
   else arrowcol = COL_ARROW;
@@ -237,6 +262,9 @@ function tileRedraw(
 
   // Clear tile background.
   dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, f & F_DIM ? dimbg(setcol) : setcol);
+  // The line a hint's sentence names, under everything the square shows.
+  if (f & F_HINT_LINE)
+    dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
 
   // Large outward-pointing arrow (or star for the final immutable cell).
   const asz = Math.floor((7 * ts) / 32);
@@ -266,6 +294,18 @@ function tileRedraw(
       textcol,
       p,
     );
+  }
+
+  // The hint's ring and outline, on the square's own border. The squares tile
+  // exactly, so the band is inside the box and the square repaints it away
+  // when its flags change; the number starts `cb` in, clear of the band.
+  if (f & (F_HINT_RING | F_HINT_OUTLINE)) {
+    const band = {
+      box: { x: tx, y: ty, w: ts, h: ts },
+      outer: 0,
+      inner: Math.max(2, cb >> 1),
+    };
+    drawMarkSides(dr, band, MARK_ALL, f & F_HINT_RING ? COL_HINT : COL_HINT_CELL);
   }
 
   dr.drawUpdate({ x: tx, y: ty, w: ts, h: ts });
@@ -334,7 +374,7 @@ export function redrawSignpost(
   ui: SignpostUi,
   _animTime: number,
   flashTime: number,
-  _hint?: HintStep<SignpostMove>,
+  hint?: HintStep<SignpostMove, SignpostHint>,
   mistakes?: readonly SignpostMistake[],
 ): void {
   const ts = ds.tileSize;
@@ -379,6 +419,18 @@ export function redrawSignpost(
   }
 
   const mistakeSet = mistakes?.length ? new Set(mistakes.map((m) => m.index)) : null;
+  const hintFlags = new Map<number, number>();
+  const hl = hint?.highlights;
+  if (hl) {
+    const add = (p: Point, flag: number): void => {
+      const i = p.y * w + p.x;
+      hintFlags.set(i, (hintFlags.get(i) ?? 0) | flag);
+    };
+    for (const p of hl.line) add(p, F_HINT_LINE);
+    for (const p of hl.others) add(p, F_HINT_OUTLINE);
+    add(hl.arrow, F_HINT_ARROW);
+    add(hl.target, F_HINT_RING);
+  }
 
   for (let x = 0; x < state.w; x++) {
     for (let y = 0; y < state.h; y++) {
@@ -407,6 +459,7 @@ export function redrawSignpost(
         f |= F_ERROR;
       }
       if (renderState.flags[i] & FLAG_IMMUTABLE) f |= F_IMMUTABLE;
+      f |= hintFlags.get(i) ?? 0;
       if (renderState.next[i] !== -1) f |= F_ARROW_POINT;
       if (renderState.prev[i] !== -1) {
         f |= F_ARROW_INPOINT;

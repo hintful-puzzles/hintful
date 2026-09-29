@@ -190,7 +190,7 @@ describe("keen hint", () => {
     // Walk a few placements in so a `set` step (and its row/column cleanup) is in
     // range, then compare the dup-step counts.
     const { st } = gen(NORMAL, "autopencil");
-    const dupRe = /from the other cells they pass through/;
+    const dupRe = /just placed can't repeat in its row and column/;
     const uiOn = newUi(st);
     uiOn.autoPencil = true;
     const on = keenGame.hint?.(st, undefined, uiOn);

@@ -41,8 +41,15 @@
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { HintFrontier } from "../../engine/hint-frontier.ts";
+import { type MarkRef, Narration } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import { type Conclusion, colorsOf, say } from "./hint-text.ts";
+import {
+  type Conclusion,
+  colorsOf,
+  REGION,
+  type RegionMark,
+  say,
+} from "./hint-text.ts";
 import {
   bitcount,
   chainTo,
@@ -58,10 +65,7 @@ import type { MapMove, MapOp, MapState } from "./state.ts";
 const ALL = 0xf;
 
 /** A region the premise rests on, outlined; a chain's carry their position. */
-export interface MapEvidence {
-  region: number;
-  order?: number;
-}
+export type MapEvidence = RegionMark;
 
 /** One region's dots as a setup step leaves them. */
 interface RegionDots {
@@ -85,6 +89,21 @@ export interface MapHint {
 type SingleWant = { color: number } | { dots: number };
 
 export type MapHintStep = HintStep<MapMove, MapHint>;
+
+/** The marks a step draws, as `render.ts` paints them: each target ringed, and
+ * each evidence region outlined, by its dashed line or its chain number. A ring
+ * wins a region's band, so a ringed region is outlined only by its number. */
+export function mapHintMarks(h: MapHint): MarkRef[] {
+  const ringed = new Set(h.targets);
+  return [
+    { role: "ring", kind: REGION, elements: h.targets.map((region) => ({ region })) },
+    {
+      role: "outline",
+      kind: REGION,
+      elements: h.evidence.filter((e) => !ringed.has(e.region) || e.order),
+    },
+  ] as MarkRef[];
+}
 
 /** The working board: the player's colors and dots, advanced as the plan is
  * built. */
@@ -209,17 +228,28 @@ interface Firing {
   legs(w: Work): MapHintStep[];
 }
 
-function step(
-  w: Work,
-  r: number,
-  want: SingleWant,
-  explanation: string,
-  evidence: MapEvidence[],
-): MapHintStep {
+/** The regions `words` outline, each once, with its chain number: a step's
+ * evidence is what its sentence names (`engine/hint-words.ts`). */
+function outlinedBy(words: Narration): MapEvidence[] {
+  const out: MapEvidence[] = [];
+  const seen = new Set<number>();
+  for (const ref of words.refs) {
+    if (ref.role !== "outline" || ref.kind !== REGION) continue;
+    for (const e of ref.elements as readonly MapEvidence[]) {
+      if (seen.has(e.region)) continue;
+      seen.add(e.region);
+      out.push(e);
+    }
+  }
+  return out;
+}
+
+function step(w: Work, r: number, want: SingleWant, words: Narration): MapHintStep {
   const s: MapHintStep = {
     move: moveFor(r, w.pencil[r], want),
-    explanation,
-    highlights: { targets: [r], evidence, want },
+    explanation: words.text,
+    words,
+    highlights: { targets: [r], evidence: outlinedBy(words), want },
   };
   apply(w, r, want);
   return s;
@@ -231,14 +261,13 @@ function narrowLegs(
   w: Work,
   targets: readonly number[],
   struck: number,
-  speak: (c: Conclusion) => string,
-  evidence: MapEvidence[],
+  speak: (k: number, c: Conclusion) => Narration,
 ): MapHintStep[] {
   const out: MapHintStep[] = [];
   for (const k of targets) {
     if (w.coloring[k] >= 0 || !(colorsLeft(w, k) & struck)) continue;
     const c = narrowing(w, k, struck);
-    const s = step(w, k, wantOf(w, k, c), speak(c), evidence);
+    const s = step(w, k, wantOf(w, k, c), speak(k, c));
     if (out.length > 0) s.continuesPrevious = true;
     out.push(s);
   }
@@ -268,15 +297,15 @@ function singles(w: Work, b: MapBoard): Firing[] {
         others |= 1 << c;
       }
     }
-    const explanation =
+    const words =
       dots === 0
-        ? say.touchesTheRest(color, others)
+        ? say.touchesTheRest(r, color, others)
         : others === 0
-          ? say.lastDot(color)
-          : say.deadDots(color);
+          ? say.lastDot(r, color)
+          : say.deadDots(r, color);
     out.push({
       reads: [r, ...cited],
-      legs: (w) => [step(w, r, { color }, explanation, [])],
+      legs: (w) => [step(w, r, { color }, words)],
     });
   });
   return out;
@@ -295,11 +324,11 @@ function pairs(b: MapBoard): Firing[] {
     legs: (w) => {
       const pair = [{ region: a }, { region: b2 }];
       return journey([
-        ...premiseDots(w, [a, b2], pair, {
-          dot: (_i, touched, two) => say.pairDot(touched, two),
-          trim: (_i, two) => say.pairTrim(two),
+        ...premiseDots(w, [a, b2], {
+          dot: (_i, r, touched, two) => say.pairDot(r, touched, two),
+          trim: (_i, r, two) => say.pairTrim(r, two),
         }),
-        ...narrowLegs(w, ks, v, (c) => say.pair(v, c), pair),
+        ...narrowLegs(w, ks, v, (k, c) => say.pair(k, pair, v, c)),
       ]);
     },
   }));
@@ -330,18 +359,13 @@ function chains(b: MapBoard): Firing[] {
     reads: [...chain, ...ks],
     legs: (w) => {
       const numbered = chain.map((region, i) => ({ region, order: i + 1 }));
+      // A chain region being dotted is ringed, and keeps its number.
       return journey([
-        ...premiseDots(w, chain, numbered, {
-          dot: (i, touched, two) => say.chainDot(i + 1, touched, two),
-          trim: (i, two) => say.chainTrim(i + 1, two),
+        ...premiseDots(w, chain, {
+          dot: (i, r, touched, two) => say.chainDot(r, i + 1, numbered, touched, two),
+          trim: (i, r, two) => say.chainTrim(r, i + 1, numbered, two),
         }),
-        ...narrowLegs(
-          w,
-          ks,
-          1 << color,
-          chainSentence(w, chain, color, other),
-          numbered,
-        ),
+        ...narrowLegs(w, ks, 1 << color, chainSentence(w, numbered, color, other)),
       ]);
     },
   }));
@@ -356,27 +380,28 @@ function chains(b: MapBoard): Firing[] {
  */
 function chainSentence(
   w: Work,
-  chain: readonly number[],
+  chain: readonly MapEvidence[],
   color: number,
   other: number,
-): (c: Conclusion) => string {
-  if (chain.every((r) => colorsLeft(w, r) & (1 << color)))
-    return (c) => say.chainAlternates(color, chain.length, c);
+): (k: number, c: Conclusion) => Narration {
+  if (chain.every(({ region }) => colorsLeft(w, region) & (1 << color)))
+    return (k, c) => say.chainAlternates(k, chain, color, c);
   const forced = [other];
   for (let i = 1; i < chain.length; i++)
-    forced.push(colorsOf(colorsLeft(w, chain[i]) & ~(1 << forced[i - 1]))[0]);
+    forced.push(colorsOf(colorsLeft(w, chain[i].region) & ~(1 << forced[i - 1]))[0]);
   // The sentence says the walk ends on `color`; it is what `forcingChain` found,
   // so a walk that does not is a board the dots misdescribe.
   if (forced[forced.length - 1] !== color)
     throw new Error(`map hint: chain walk ends on ${forced.at(-1)}, not ${color}`);
-  return (c) => say.chain(color, forced, c);
+  return (k, c) => say.chain(k, chain, color, forced, c);
 }
 
 /** How a premise-dotting leg speaks: `i` is the region's place in the
- * premise's list, `touched` its neighbors' colors and `two` what they leave. */
+ * premise's list, `r` the region, `touched` its neighbors' colors and `two`
+ * what they leave. */
 interface DotWords {
-  dot(i: number, touched: number, two: number): string;
-  trim(i: number, two: number): string;
+  dot(i: number, r: number, touched: number, two: number): Narration;
+  trim(i: number, r: number, two: number): Narration;
 }
 
 /**
@@ -391,7 +416,6 @@ interface DotWords {
 function premiseDots(
   w: Work,
   regions: readonly number[],
-  evidence: MapEvidence[],
   words: DotWords,
 ): MapHintStep[] {
   const { graph, n, ngraph } = w.state.map;
@@ -402,9 +426,9 @@ function premiseDots(
     let touched = 0;
     for (const k of neighbors(graph, n, ngraph, r))
       if (w.coloring[k] >= 0) touched |= 1 << w.coloring[k];
-    const explanation =
-      w.pencil[r] === 0 ? words.dot(i, touched, two) : words.trim(i, two);
-    out.push(step(w, r, { dots: two }, explanation, evidence));
+    const said =
+      w.pencil[r] === 0 ? words.dot(i, r, touched, two) : words.trim(i, r, two);
+    out.push(step(w, r, { dots: two }, said));
   });
   return out;
 }
@@ -428,9 +452,11 @@ function setUp(w: Work, steps: MapHintStep[]): void {
     const press = markAll({ map: w.state.map, coloring: w.coloring, pencil: w.pencil });
     if (!press) return;
     const clean = press.kind === "clean";
+    const words = Narration.plain(clean ? say.cleanNeighbors : say.fillAll);
     steps.push({
       move: regionsMove(w.pencil, press.regions),
-      explanation: clean ? say.cleanNeighbors : say.fillAll,
+      explanation: words.text,
+      words,
       // Rings nothing: a clean strikes from nearly every blank region, and a
       // band around each ran together into one mark over the whole board
       // (browser check, 2026-09-25). The sentence names every blank region.
@@ -484,7 +510,7 @@ function wantedDots(hl: MapHint): readonly RegionDots[] | null {
  * to change. */
 export function hintKeepTrack(
   m: MapMove,
-  step: HintStep<MapMove>,
+  step: MapHintStep,
   state: MapState,
 ): HintTrackVerdict {
   const hl = step.highlights as MapHint;
@@ -518,9 +544,9 @@ export function hintKeepTrack(
  * or drop it once the board already shows what it wants. A step the board has
  * not moved under comes back as itself. */
 export function refreshHintStep(
-  step: HintStep<MapMove>,
+  step: MapHintStep,
   state: MapState,
-): HintStep<MapMove> | null {
+): MapHintStep | null {
   const hl = step.highlights as MapHint;
   const wanted = wantedDots(hl);
   if (!wanted) return state.coloring[hl.targets[0]] >= 0 ? null : step;

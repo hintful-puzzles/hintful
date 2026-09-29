@@ -15,7 +15,9 @@ import {
   applyNoteMove,
   type CandidatePlanPrefs,
   candidateHint,
+  candidateHintMarks,
   keepCandidateHintTrack,
+  type Mark,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
 import { runLatinCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
@@ -37,16 +39,16 @@ import {
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
-import { genericLatinArea, rowColRegions } from "../../engine/latin-hint.ts";
+import { rowColRegions } from "../../engine/latin-hint.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import { parseConfigInt } from "../../engine/params.ts";
 import {
   autoPencilPref,
@@ -377,26 +379,33 @@ function findMistakes(state: UnequalState): readonly UnequalMistake[] {
  * `ns` is the struck value list; `o` is the grid order. Two-mode aware. The
  * words, and how they read at the value extremes, are
  * [`hint-text.ts`](./hint-text.ts)'s. */
-function premise(reason: HintReason, ns: number[], o: number): Premise {
+function premise(reason: HintReason, marks: readonly Mark[], o: number): Premise {
+  const ns = valuesOf(marks);
+  // A clue deduction outlines the struck cell *and* the cell across the sign
+  // or bar that constrains it, so the player sees the pair.
+  const pair = (r: { ox: number; oy: number }) => ({
+    at: { x: marks[0].x, y: marks[0].y },
+    other: { x: r.ox, y: r.oy },
+  });
   switch (reason.kind) {
     case "greater":
-      return { premise: say.greater(reason.bound, o) };
+      return { premise: say.greater(pair(reason), reason.bound, o) };
     case "lesser":
-      return { premise: say.lesser(reason.bound, o) };
+      return { premise: say.lesser(pair(reason), reason.bound, o) };
     case "adjacent":
-      return { premise: say.adjacent(reason.bar, reason.v, o) };
+      return { premise: say.adjacent(pair(reason), reason.bar, reason.v, o) };
     case "adjacentSet":
-      return { premise: say.adjacentSet(reason.bar, ns, o), named: true };
+      return { premise: say.adjacentSet(pair(reason), reason.bar, ns, o), named: true };
     // The generic Latin arms (dup / set / forcing) read identically to Keen's
     // — narrated once, shared.
     default:
-      return latinPremise(reason, ns, unequalVocab(o));
+      return latinPremise(reason, marks, unequalVocab(o));
   }
 }
 
 /** Why a placement is forced: always a generic single, since no sign or bar
  * places. */
-function narrate(reason: HintReason, n: number, o: number): string {
+function narrate(reason: HintReason, m: Mark, o: number): Narration {
   switch (reason.kind) {
     case "greater":
     case "lesser":
@@ -404,23 +413,7 @@ function narrate(reason: HintReason, n: number, o: number): string {
     case "adjacentSet":
       throw new Error(`a ${reason.kind} deduction strikes`);
     default:
-      return narrateLatinReason(reason, n, unequalVocab(o));
-  }
-}
-
-/** The deduction's evidence cells to shade `COL_HINT_CELL`: a clue deduction
- * names the acted-on cell *and* the cell across the sign/bar that constrains it,
- * so the player sees the pair; the generic Latin techniques have no clean local
- * area (the struck notes carry the premise). */
-function reasonArea(reason: HintReason, target: Point): OrderedCell[] {
-  switch (reason.kind) {
-    case "greater":
-    case "lesser":
-    case "adjacent":
-    case "adjacentSet":
-      return [target, { x: reason.ox, y: reason.oy }];
-    default:
-      return genericLatinArea(reason);
+      return narrateLatinReason(reason, m, o, unequalVocab(o));
   }
 }
 
@@ -451,16 +444,8 @@ function buildSteps(
         Uint8Array.from(wGrid),
         maxdiff,
       ),
-    placeWords: (m, reason) => ({
-      explanation: narrate(reason, m.n, o),
-      // A naked single's own collapsed candidates are the premise, so it needs
-      // no area; a hidden single's line is the preset's.
-      area: [],
-    }),
-    strikeWords: (marks, reason) => ({
-      ...premise(reason, valuesOf(marks), o),
-      area: reasonArea(reason, { x: marks[0].x, y: marks[0].y }),
-    }),
+    placeWords: (m, reason) => ({ words: narrate(reason, m, o) }),
+    strikeWords: (marks, reason) => premise(reason, marks, o),
     // The narration names a cell's relationship to its neighbor, so a firing is
     // one leg per cell: a link's two ends, greater and lesser, are two legs.
     strikeAxis: (op) => op.y * o + op.x,
@@ -545,7 +530,8 @@ export const unequalGame: Game<
   UnequalMove,
   UnequalUi,
   UnequalDrawState,
-  UnequalMistake
+  UnequalMistake,
+  UnequalHint
 > = {
   id: "unequal",
   canMarkAll: true,
@@ -608,6 +594,15 @@ export const unequalGame: Game<
   solve,
   difficulty,
   hint,
+  hintMarks: {
+    roles: {
+      ring: "the cell the step is about: the number to enter there, or the pencil marks to cross out, which are shown with a line through them.",
+      outline:
+        'what the step reasons from: the two cells either side of a sign or bar (the ringed one, and "the cell across" it), the cells that already account for the numbers being crossed out, the number just placed, or the numbered cells of a chain.',
+      stripes: 'the row or column the sentence names: "in this row".',
+    },
+    drawn: candidateHintMarks,
+  },
   hintKeepTrack,
   refreshHintStep,
   findMistakes,

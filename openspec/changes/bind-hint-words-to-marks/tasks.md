@@ -16,20 +16,25 @@
       narrations and reads each leg's evidence off them; both games bound.
       Separate's "hatched" became "striped"; a continuation leg names the
       edges it rings and the evidence it points back to.
-- [ ] 2.2 The candidate walk: `StepWords`/`Premise` carry narrations; `area`
-      and `hatch` derived from them; refresh and keep-track narrow the words.
-      Every game on the walk bound.
-- [ ] 2.3 Signpost: an explained hint, bound from its first commit, with its
-      render marks, tier-2.5 tests and help section.
+- [x] 2.2 The candidate walk: `StepWords`/`Premise` carry narrations; `area`
+      and `hatch` derived from them (`evidenceOf`); refresh and keep-track
+      narrow the words. All eleven games on the walk bound, under both
+      readings. The cull after a placement outlines the value just placed
+      (`placedRulesOut`); the binding walk found Map's pair-dot legs claiming
+      a partner's dots not yet on the board, and they now mark only the region
+      they dot.
+- [x] 2.3 Signpost: an explained hint (follows, only next, only before),
+      bound from its first commit, with the arrow as a mark kind of its own,
+      tier-2.5 frame test (proved red with the arrow in ink) and help section.
 
 ## 3. Help and docs
 
 - [x] 3.1 `{{hint-marks}}` generated from the legend; `help-coverage.test.ts`
       holds placeholder and binding together.
-- [ ] 3.2 `docs/games/hints.md`: the mark table points at the roles; a section
-      on writing a bound narration (the section landed with 2.1; the table
-      follows the candidate walk).
-- [ ] 3.3 Spec delta for `ts-engine`; remove `skip_specs`.
-- [ ] 3.4 Scaffold the sweep over the remaining hinted games, batched by shared
-      machinery.
-- [ ] 3.5 Run the app: Palisade, a candidate game and Signpost hints on screen.
+- [x] 3.2 `docs/games/hints.md`: § "Bind the words to the marks"; the mark
+      table points at the roles.
+- [x] 3.3 Spec delta for `ts-engine`; `skip_specs` removed.
+- [x] 3.4 Scaffold the sweep: `bind-the-remaining-hints`, with the pilot's
+      open questions.
+- [x] 3.5 Run the app: Signpost's arrow, ring and stripes, and Keen's cull with
+      the placed number outlined, on screen in Chromium.

@@ -45,19 +45,11 @@ would rather it filled in every cell's marks first (the same as
 pressing 'M'), set **Hints pencil in** to **Every candidate first** in
 the preferences.
 
-* **A ringed cell** is the one the step is about: the number to enter
-  there, or the pencil marks to cross out, which are shown with a line
-  through them.
-* **A striped row, column, block, diagonal or killer cage** is the one
-  the sentence calls "this row", "this block", "this killer cage" and so
-  on.
-* **Outlined cells** are the ones the reason rests on: a number just
-  placed, whose copies are being crossed out around it; the other cells
-  of a block, row or column that between them already account for some
-  numbers; or the "outlined cells" a sentence mentions.
-* **Numbered cells** are a chain of cells with two numbers left each,
-  read in order: the sentence says how the chain rules a number out of
-  the ringed cell.
+{{hint-marks}}
+
+Numbered outlined cells are a chain of cells with two numbers left each,
+read in order: the sentence says how the chain rules a number out of the
+ringed cell.
 
 A few ideas are worth learning by name:
 

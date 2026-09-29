@@ -5,6 +5,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { candidateConclusions, latinPremise, narrateLatinReason } from "./hint-text.ts";
+import { markKeys, type Narration } from "./hint-words.ts";
 import {
   classifyPlacement,
   classifyPlacementInRegions,
@@ -196,55 +197,89 @@ describe("hiddenSingleLine", () => {
 });
 
 describe("narrateLatinReason and latinPremise (shared row/column-game narration)", () => {
-  it("narrates each generic placement arm with the shared wording", () => {
-    expect(narrateLatinReason({ kind: "single" }, 3)).toBe(
+  const keys = (n: Narration): string[] => [...markKeys(n.refs)].sort();
+
+  it("narrates each generic placement arm with the shared wording, bound to its marks", () => {
+    const single = narrateLatinReason({ kind: "single" }, { x: 1, y: 2, n: 3 }, 4);
+    expect(single.text).toBe(
       "Every other number has been ruled out in this cell, so it can only be 3.",
     );
-    expect(
-      narrateLatinReason({ kind: "hiddenSingle", n: 2, line: "col", index: 1 }, 2),
-    ).toBe(
+    expect(keys(single)).toEqual(["ring|cell|1,2"]);
+    const hidden = narrateLatinReason(
+      { kind: "hiddenSingle", n: 2, line: "col", index: 1 },
+      { x: 1, y: 0, n: 2 },
+      3,
+    );
+    expect(hidden.text).toBe(
       "In this column, 2 can go in only this cell, since every other cell in the column rules it out, so it must be 2.",
     );
-    expect(() => narrateLatinReason({ kind: "dup", n: 1 }, 1)).toThrow(/latinPremise/);
+    // "this column" stripes the whole column; "this cell" rings the one.
+    expect(keys(hidden)).toEqual([
+      "ring|cell|1,0",
+      "stripes|cell|1,0",
+      "stripes|cell|1,1",
+      "stripes|cell|1,2",
+    ]);
+    expect(() =>
+      narrateLatinReason({ kind: "dup", n: 1, px: 0, py: 0 }, { x: 0, y: 0, n: 1 }, 3),
+    ).toThrow(/latinPremise/);
   });
 
   it("gives each generic strike arm a premise the walk concludes", () => {
-    expect(latinPremise({ kind: "dup", n: 1 }, [1])).toEqual({
-      premise: "There's already a 1 in this row and column",
-      where: "from the other cells they pass through",
-    });
-    expect(latinPremise({ kind: "set", cells: [] }, [3, 2, 3])).toEqual({
-      premise: "The outlined cells already account for 2 and 3 between them",
-    });
+    const struck = (...ns: number[]) => ns.map((n) => ({ x: 2, y: 2, n }));
+    const dup = latinPremise({ kind: "dup", n: 1, px: 0, py: 2 }, struck(1));
+    expect(dup.premise.text).toBe(
+      "The 1 just placed can't repeat in its row and column",
+    );
+    // The value just placed is outlined: it is what the cull reasons from.
+    expect(keys(dup.premise)).toEqual(["outline|cell|0,2"]);
+    expect(dup.where).toBe("from the other cells there");
+    const set = latinPremise(
+      {
+        kind: "set",
+        cells: [
+          { x: 0, y: 0 },
+          { x: 1, y: 0 },
+        ],
+      },
+      struck(3, 2, 3),
+    );
+    expect(set.premise.text).toBe(
+      "The outlined cells already account for 2 and 3 between them",
+    );
     // A forcing chain concludes from *both* branches of the origin's two
     // candidates, so both are stated; the links between are numbered on the
     // board rather than recited.
-    expect(
-      latinPremise(
-        {
-          kind: "forcing",
-          chain: [
-            { x: 0, y: 0, n: 2 },
-            { x: 3, y: 0, n: 7 },
-            { x: 3, y: 4, n: 5 },
-          ],
-          shares: "row",
-        },
-        [5],
-      ).premise,
-    ).toBe(
+    const forcing = latinPremise(
+      {
+        kind: "forcing",
+        chain: [
+          { x: 0, y: 0, n: 2 },
+          { x: 3, y: 0, n: 7 },
+          { x: 3, y: 4, n: 5 },
+        ],
+        shares: "row",
+      },
+      [{ x: 1, y: 4, n: 5 }],
+    ).premise;
+    expect(forcing.text).toBe(
       "Cell 1 is 5 or 2, and every numbered cell has just two numbers left, so each forces the next. If cell 1 is 5, this cell's row already has it; if 2, cell 3 is driven to 5, in line with this cell. Either way, 5 is ruled out here",
     );
-    expect(() => latinPremise({ kind: "single" }, [3])).toThrow(/narrateLatinReason/);
-  });
-
-  it("ignores extra fields a dup reason may carry (only n is read)", () => {
-    // Real callers pass a LatinReason `dup` (which carries px/py) by reference,
-    // not as a literal — bind it so the assignment mirrors that, not an
-    // excess-property literal check.
-    const dupWithExtra = { kind: "dup" as const, n: 6, px: 0, py: 0 };
-    expect(latinPremise(dupWithExtra, [6]).premise).toBe(
-      "There's already a 6 in this row and column",
+    // Every numbered cell is outlined with its ordinal; "this cell" is the
+    // struck one, ringed.
+    expect(keys(forcing)).toEqual([
+      "outline|cell|0,0",
+      "outline|cell|3,0",
+      "outline|cell|3,4",
+      "ring|cell|1,4",
+    ]);
+    expect(
+      forcing.refs
+        .flatMap((r) => r.elements as { order?: number }[])
+        .map((c) => c.order),
+    ).toContain(3);
+    expect(() => latinPremise({ kind: "single" }, struck(3))).toThrow(
+      /narrateLatinReason/,
     );
   });
 

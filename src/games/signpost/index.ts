@@ -34,6 +34,8 @@ import {
 } from "../../engine/pointer.ts";
 import type { Color, GameStatus, Point, Size } from "../../engine/types.ts";
 import { newSignpostDesc } from "./generator.ts";
+import { type SignpostHint, signpostHint, signpostKeepTrack } from "./hint.ts";
+import { signpostHintMarks } from "./hint-marks.ts";
 import { dragReleaseMove, executeMove } from "./moves.ts";
 import { BORDER, buildPalette, FLASH_SPIN, redrawSignpost } from "./render.ts";
 import { solveState } from "./solver.ts";
@@ -364,7 +366,8 @@ export const signpostGame: Game<
   SignpostMove,
   SignpostUi,
   SignpostDrawState,
-  SignpostMistake
+  SignpostMistake,
+  SignpostHint
 > = {
   id: "signpost",
 
@@ -394,6 +397,18 @@ export const signpostGame: Game<
 
   solve,
   findMistakes,
+  hint: (state) => signpostHint(state, findMistakes(state).length),
+  hintMarks: {
+    roles: {
+      ring: "the link the step decides, at both ends: the arrow it leaves by is drawn in the hint color, and the square it arrives at is ringed.",
+      outline:
+        "the other squares whose arrows point at the ringed square, when the sentence says why none of them can lead into it.",
+      stripes:
+        "the squares an arrow points at, when the sentence says which of them can come next.",
+    },
+    drawn: signpostHintMarks,
+  },
+  hintKeepTrack: signpostKeepTrack,
 
   textFormat,
 

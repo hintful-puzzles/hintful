@@ -136,7 +136,8 @@ describe("narrow", () => {
     const narrowed = sentence.narrow((_r, _k, key) => key !== "0,0:2");
     expect(sentence.text).toBe("This cell loses them, so we must cross out 2 and 4.");
     expect(narrowed.text).toBe("This cell loses them, so we must cross out 4.");
-    expect(keysOf(narrowed.refs)).toEqual(["ring|note|0,0:4"]);
+    // Naming a note names the cell it is drawn in.
+    expect(keysOf(narrowed.refs)).toEqual(["ring|cell|0,0", "ring|note|0,0:4"]);
   });
 
   it("keeps an emptied reference's words and drops its mark", () => {

@@ -10,7 +10,6 @@ import { describe, expect, it } from "vitest";
 import { say as crossing } from "../games/crossing/hint-text.ts";
 import { say as dominosa } from "../games/dominosa/hint-text.ts";
 import { say as keen } from "../games/keen/hint-text.ts";
-import { say as solo } from "../games/solo/hint-text.ts";
 import { indefinite, noteText } from "./hint-text.ts";
 
 type SharedDigit = Parameters<typeof crossing.sharedDigit>[0];
@@ -32,13 +31,13 @@ describe("a number after an article gets the article it is pronounced with", () 
   });
 
   it("Keen's cage line", () => {
-    expect(keen.cageLine(0, 15, 8, true)).toContain("places an 8 in this row");
-    expect(keen.cageLine(0, 15, 3, false)).toContain("places a 3 in this column");
-  });
-
-  it("Solo's duplicate", () => {
-    expect(solo.dup(8, ["row"])).toMatch(/^An 8 is placed/);
-    expect(solo.dup(3, ["row"])).toMatch(/^A 3 is placed/);
+    const cage = [{ x: 0, y: 0 }];
+    expect(keen.cageLine(cage, 0, 15, 8, true).text).toContain(
+      "places an 8 in its row",
+    );
+    expect(keen.cageLine(cage, 0, 15, 3, false).text).toContain(
+      "places a 3 in its column",
+    );
   });
 
   it("Crossing's shared digit and single note strike", () => {
@@ -55,8 +54,13 @@ describe("a number after an article gets the article it is pronounced with", () 
   it("the shared note step, before a word rather than a value", () => {
     // Group's noun is "element": "rules out a element" shipped.
     const vocab = (noun: string) => ({ noun, placedVerb: "placed", regions: "row" });
-    expect(noteText([], true, vocab("element"))).toContain("rules out an element yet");
-    expect(noteText([], true, vocab("number"))).toContain("rules out a number yet");
+    const at = { x: 0, y: 0 };
+    expect(noteText(at, [], true, vocab("element")).text).toContain(
+      "rules out an element yet",
+    );
+    expect(noteText(at, [], true, vocab("number")).text).toContain(
+      "rules out a number yet",
+    );
   });
 
   it("Dominosa's duplicate dominoes", () => {

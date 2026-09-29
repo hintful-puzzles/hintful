@@ -349,7 +349,7 @@ describe("solo hint", () => {
 
   it("auto-pencil off teaches more cleanup steps than on", () => {
     const { st } = gen(ADV, "autopencil");
-    const dupRe = /is placed here and can't repeat/;
+    const dupRe = /just placed can't repeat/;
     const uiOn = soloGame.newUi(st);
     uiOn.autoPencil = true;
     const on = soloGame.hint?.(st, undefined, uiOn);
