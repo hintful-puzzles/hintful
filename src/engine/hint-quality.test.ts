@@ -43,6 +43,7 @@
 import { describe, expect, it } from "vitest";
 import { difficultyTiers } from "./difficulty.ts";
 import { randomNew } from "./random/index.ts";
+import { bindingDefects } from "./testing/hint-binding.ts";
 import {
   type AnyGame,
   declaresNoMarks,
@@ -542,6 +543,64 @@ describe("hint narration form, cross-game", () => {
             ).toBe(false);
           });
         }
+    });
+  }
+});
+
+/**
+ * A bound game's words name exactly the marks its steps draw
+ * (`testing/hint-binding.ts`), through the whole game rather than its opening
+ * plan: each plan is checked, played out, and recomputed until the board is
+ * finished or the hint refuses. Every stored step is also checked as
+ * `refreshHintStep` returns it after the moves before it, because a refresh
+ * that shrinks a step's marks has to shrink its words with them.
+ */
+const BOUND_GAMES = HINT_GAMES.filter(([, g]) => g.hintMarks !== undefined);
+
+describe("a bound hint's words name exactly the marks it draws", () => {
+  it("has games to check", () => {
+    // Vacuity: Palisade and Separate were bound first; fewer means a
+    // declaration went missing.
+    expect(BOUND_GAMES.length).toBeGreaterThanOrEqual(2);
+  });
+
+  for (const [name, game] of BOUND_GAMES) {
+    it(`${name}: every step, fresh and refreshed`, () => {
+      const legend = game.hintMarks;
+      if (!legend) throw new Error("filtered on hintMarks");
+      let checked = 0;
+      const defects: string[] = [];
+      const check = (step: Parameters<typeof bindingDefects>[0], at: string): void => {
+        checked++;
+        for (const d of bindingDefects(step, legend))
+          defects.push(`${at}: "${step.explanation}": ${d}`);
+      };
+      for (const { title, params } of gatePresets(name, game))
+        for (const seed of FORM_SEEDS) {
+          const { desc, aux } = game.newDesc(
+            params,
+            randomNew(`${name}-${title}-${seed}`),
+          );
+          let state = game.newState(params, desc);
+          const ui = game.newUi(state);
+          for (let round = 0; round < 60 && game.status(state) === "ongoing"; round++) {
+            const res = game.hint?.(state, aux, ui);
+            if (!res?.ok) break;
+            res.steps.forEach((step, i) => {
+              check(step, `${title}/${seed} round ${round} step ${i}`);
+            });
+            for (const [i, step] of res.steps.entries()) {
+              const live = game.refreshHintStep?.(step, state) ?? step;
+              if (live === null) continue;
+              if (live !== step)
+                check(live, `${title}/${seed} round ${round} step ${i}, refreshed`);
+              state = game.executeMove(state, live.move);
+            }
+          }
+          if (defects.length > 0) break;
+        }
+      expect(defects.slice(0, 20)).toEqual([]);
+      expect(checked, `${name}: the walk checked no step`).toBeGreaterThan(0);
     });
   }
 });

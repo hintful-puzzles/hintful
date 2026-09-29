@@ -14,6 +14,8 @@
  * nothing here decides anything.
  */
 
+import { EDGE, type ForcedBorderEdge } from "./border-grid-hint.ts";
+import { mark, type Narration, phrase } from "./hint-words.ts";
 import type { ForcingLink, GenericLatinReason } from "./latin-hint.ts";
 
 // --- lists and articles ------------------------------------------------------
@@ -78,13 +80,21 @@ export const HINT_SETTING_UP = "(setting up)";
 
 // --- the border-grid games' later legs ---------------------------------------
 
-/** A later leg of a firing that sets several edges (Palisade, Separate): short
- * and kind-specific, because the first leg gave the full reason and is still
- * on screen. */
-export function edgeContinuation(kind: "wall" | "nowall"): string {
-  return kind === "wall"
-    ? "…and this edge must be a wall too."
-    : "…and this edge can't be a wall either.";
+/**
+ * A later leg of a firing that sets several edges (Palisade, Separate): short
+ * and kind-specific, because the first leg gave the full reason. It still names
+ * what the leg shows: the edges it rings, `left`, and `basis`, the evidence the
+ * first leg reasoned from ("the same striped region", "clue 3").
+ */
+export function edgeContinuation(
+  left: readonly ForcedBorderEdge[],
+  basis: Narration,
+): Narration {
+  const edges = mark.this("ring", EDGE, left, "edge");
+  const many = left.length > 1;
+  return left[0].kind === "wall"
+    ? phrase`…and ${edges} must be ${many ? "walls" : "a wall"} too, for ${basis}.`
+    : phrase`…and ${edges} can't be ${many ? "walls" : "a wall"} either, for ${basis}.`;
 }
 
 // --- the candidate games' setup steps ---------------------------------------

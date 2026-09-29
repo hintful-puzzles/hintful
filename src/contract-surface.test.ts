@@ -68,13 +68,24 @@ import { registerAllGames } from "./games/index.ts";
 beforeAll(registerAllGames);
 
 /** Every source module, eagerly, as raw text — Vite resolves these at build. */
-const sources = Object.entries(
-  import.meta.glob("./**/*.ts", {
-    query: "?raw",
-    import: "default",
-    eager: true,
-  }) as Record<string, string>,
-).map(([p, text]) => [p.replace(/^\.\//, "src/"), text] as const);
+const sources = [
+  ...Object.entries(
+    import.meta.glob("./**/*.ts", {
+      query: "?raw",
+      import: "default",
+      eager: true,
+    }) as Record<string, string>,
+  ).map(([p, text]) => [p.replace(/^\.\//, "src/"), text] as const),
+  // The build ships what it reads too: the help pages' generated list of marks
+  // is `hintMarks` read by `vite-plugins/hint-marks.ts`.
+  ...Object.entries(
+    import.meta.glob("../vite-plugins/*.ts", {
+      query: "?raw",
+      import: "default",
+      eager: true,
+    }) as Record<string, string>,
+  ).map(([p, text]) => [p.replace(/^\.\.\//, ""), text] as const),
+];
 
 // --- what the contract offers ----------------------------------------------
 
@@ -190,7 +201,7 @@ function propertyReads(): {
     if (path.startsWith("src/games/") || path === "src/engine/game.ts") continue;
     scanned++;
     const isTest = /\.test\.ts$/.test(path);
-    const isApp = !isTest && !path.startsWith("src/engine/");
+    const isApp = !isTest && path.startsWith("src/") && !path.startsWith("src/engine/");
     if (isApp) appScanned++;
     const into = isTest ? test : production;
     const src = ts.createSourceFile(path, text, ts.ScriptTarget.ESNext, true);

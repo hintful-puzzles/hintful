@@ -150,9 +150,12 @@ journey one firing becomes (a leg per edge, each two-sided, the rest
 `continuesPrevious`), and the keep-track verdict on a click. A game hands in its
 forced edges, its sentence per leg and the squares it cites, and wraps the
 edits in its own `Move`, keeping the input layer's rule that no two games' save
-formats couple through the shared code. The later-leg sentence is
-`edgeContinuation` in `hint-text.ts`. Reach for it in any new border-grid game's
-hint; the deduction and the sentence stay the game's.
+formats couple through the shared code. A leg's outlined and striped squares
+are read off its words (`hint-words.ts`), `EDGE` keys an edge the same from
+either side, and `borderHintMarks` is the `drawn` half of a border-grid game's
+`hintMarks` legend. The later-leg sentence is `edgeContinuation` in
+`hint-text.ts`. Reach for it in any new border-grid game's hint; the deduction
+and the sentence stay the game's.
 
 Its header records **why a decline was reopened**, which is the part worth
 reading before reopening another: `border-grid.ts` declined sharing "a loop over
@@ -613,6 +616,21 @@ singles the board shows, and the placements `candidate-hint.ts`'s
 is what a generic Latin elimination outlines (a forcing chain, numbered; a
 set's cells), for a game's own area function to fall through to. The
 sentences it classifies for are `hint-text.ts`'s.
+
+### `hint-words.ts` — a hint's words bound to its marks
+
+The three mark roles (**ring**: what the step decides; **outline**: what it
+reasons from; **stripes**: the line or region the sentence names) with their
+engine-owned nouns and adjectives, the element kinds a mark is drawn on (`CELL`,
+`NOTE`, and a mechanic's own, such as `border-grid-hint.ts`'s `EDGE`), and the
+sentence builder: `phrase` composes a `Narration` from literal words and
+`mark.this` / `mark.the` / `mark.paren` / `mark.as` references, each carrying the
+elements of the mark it names. A literal saying "this", "these" or a role's
+adjective throws, so an unbound "the striped row" cannot be written. A step
+built from its words (`narratedStep` in `game.ts`) and a game declaring
+`hintMarks` is held to them by `testing/hint-binding.ts` in the hint-quality
+walk; `legendMarkdown` is the help's generated list of marks. See
+[`hints.md`](./hints.md) § "Bind the words to the marks".
 
 ### `hint-text.ts` — the sentences several games share
 

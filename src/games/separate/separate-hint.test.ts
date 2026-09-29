@@ -103,14 +103,16 @@ const corpus = PRESETS.flatMap((p) =>
 const ARMS = {
   "two-letters": /^These two [A-Z]s can't share a region/,
   "region-and-letter": /already holds an? [A-Z], so the outlined/,
-  "two-regions": /^The hatched and outlined regions both hold/,
+  "two-regions": /^The striped and outlined regions both hold/,
   "walled-apart-one": /so this edge between them must be a wall too/,
   "walled-apart-many": /so every other edge between them must be a wall too/,
   "only-way-letter": /is walled in on every side but one/,
   "only-way-region": /one square left to grow into/,
   "shared-letter-many": /: every edge between them must be a wall/,
-  "continue-wall": /^…and this edge must be a wall too\.$/,
-  "continue-open": /^…and this edge can't be a wall either\.$/,
+  "continue-wall":
+    /^…and (this edge|these edges) must be (a wall|walls) too, for the same /,
+  "continue-open":
+    /^…and (this edge|these edges) can't be (a wall|walls) either, for the same /,
 } as const satisfies Record<string, RegExp>;
 
 /** Arms this corpus does not reach, each with its reason; the pinned test
@@ -240,7 +242,7 @@ describe("separate hint frame", () => {
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(true);
     // The letters the deduction reads are still drawn over the marks.
     expect(ops.some((o) => o.op === "text")).toBe(true);
-    expect(result.hint?.explanation).toMatch(/hatched/);
+    expect(result.hint?.explanation).toMatch(/striped/);
     expect(result.hint?.explanation).toMatch(/outlined/);
     expect(ops).toMatchSnapshot();
   });

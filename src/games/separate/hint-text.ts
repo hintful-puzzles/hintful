@@ -4,56 +4,80 @@
  * The deduction decides which sentence and with what values (`index.ts`'s
  * `explain`); this file decides only how it reads. A later leg of a firing that
  * sets several edges speaks the border grid's shared continuation
- * (`edgeContinuation`), not a sentence of its own.
+ * (`edgeContinuation`), pointing back at the regions the first leg named.
  *
  * A region here is whatever the player's no-wall marks already join, so a
  * single square is a region too. When a sentence is about two regions it tells
- * them apart by their marks, one hatched and one outlined, because two
+ * them apart by their marks, one striped and one outlined, because two
  * outlined regions side by side read as one; a lone square is named by its
  * letter instead, since "region" for one letter reads as if the player had
- * missed something.
+ * missed something. Every such word is a reference to its mark
+ * (`engine/hint-words.ts`), and `edges` are the ringed edges the leg sets and
+ * those still to come.
  */
 
+import { EDGE, type ForcedBorderEdge } from "../../engine/border-grid-hint.ts";
 import { indefinite } from "../../engine/hint-text.ts";
+import { CELL, mark, type Narration, phrase, whole } from "../../engine/hint-words.ts";
+import type { Point } from "../../engine/types.ts";
+
+type Edges = readonly ForcedBorderEdge[];
+type Squares = readonly Point[];
 
 const letterName = (letter: number): string => String.fromCharCode(65 + letter);
 
+/** "the striped and outlined regions", each word a reference to its region. */
+function bothRegions(striped: Squares, outlined: Squares, det: string): Narration {
+  return phrase`${det} ${mark.as("stripes", whole(CELL), striped, "striped")} and ${mark.as("outline", whole(CELL), outlined, "outlined regions")}`;
+}
+
 export const say = {
-  /** Two touching regions both holding `letter`: `hatchedSize` and
-   * `outlinedSize` squares (the hatched one is never the lone square of a
-   * mixed pair). `multi` when more than one edge separates them. */
+  /** Two touching regions both holding `letter`: `striped` and `outlined`
+   * (the striped one is never the lone square of a mixed pair, and two lone
+   * squares are both outlined, with `striped` empty). `edges` separate them. */
   sharedLetter: (
     letter: number,
-    hatchedSize: number,
-    outlinedSize: number,
-    multi: boolean,
-  ): string => {
+    striped: Squares,
+    outlined: Squares,
+    edges: Edges,
+  ): Narration => {
     const l = letterName(letter);
     const a = indefinite(l);
-    const tail = multi
-      ? "every edge between them must be a wall"
-      : "the edge between them must be a wall";
-    if (hatchedSize === 1 && outlinedSize === 1)
-      return `These two ${l}s can't share a region, so ${tail}.`;
-    if (outlinedSize === 1)
-      return `The hatched region already holds ${a} ${l}, so the outlined ${l} can't join it: ${tail}.`;
-    return `The hatched and outlined regions both hold ${a} ${l}, so they can't join: ${tail}.`;
+    const tail =
+      edges.length > 1
+        ? phrase`${mark.as("ring", EDGE, edges, "every edge between them")} must be a wall`
+        : phrase`${mark.as("ring", EDGE, edges, "the edge between them")} must be a wall`;
+    if (striped.length === 0)
+      return phrase`${mark.as("outline", CELL, outlined, `These two ${l}s`)} can't share a region, so ${tail}.`;
+    const region = mark.the("stripes", whole(CELL), striped, "region").capitalized();
+    if (outlined.length === 1)
+      return phrase`${region} already holds ${a} ${l}, so ${mark.the("outline", CELL, outlined, l)} can't join it: ${tail}.`;
+    return phrase`${bothRegions(striped, outlined, "The")} both hold ${a} ${l}, so they can't join: ${tail}.`;
   },
 
-  /** Two regions a wall already separates, with `multi` edges between them
-   * still open. */
-  walledApart: (multi: boolean): string =>
-    multi
-      ? "A wall already separates the hatched and outlined regions, so every other edge between them must be a wall too."
-      : "A wall already separates the hatched and outlined regions, so this edge between them must be a wall too.",
+  /** The regions `striped` and `outlined`, which a wall already separates,
+   * with `edges` between them still open. */
+  walledApart: (striped: Squares, outlined: Squares, edges: Edges): Narration =>
+    edges.length > 1
+      ? phrase`A wall already separates ${bothRegions(striped, outlined, "the")}, so ${mark.as("ring", EDGE, edges, "every other edge between them")} must be a wall too.`
+      : phrase`A wall already separates ${bothRegions(striped, outlined, "the")}, so ${mark.as("ring", EDGE, edges, "this edge between them")} must be a wall too.`,
 
-  /** A region of `size` squares, short of `k`, with one square it can grow
+  /** The region `region`, short of `k` squares, with one square it can grow
    * into; `letter` names it when it is a lone square. */
-  onlyWay: (size: number, k: number, letter: number): string => {
-    if (size === 1) {
+  onlyWay: (region: Squares, k: number, letter: number, edges: Edges): Narration => {
+    const edge = mark.this("ring", EDGE, edges, "edge");
+    if (region.length === 1) {
       const l = letterName(letter);
-      return `This ${l} is walled in on every side but one, so this edge can't be a wall.`;
+      return phrase`${mark.as("stripes", whole(CELL), region, `This ${l}`)} is walled in on every side but one, so ${edge} can't be a wall.`;
     }
-    return `The hatched region has ${size} of its ${k} squares and one square left to grow into, so this edge can't be a wall.`;
+    return phrase`${mark.the("stripes", whole(CELL), region, "region").capitalized()} has ${region.length} of its ${k} squares and one square left to grow into, so ${edge} can't be a wall.`;
   },
+
+  /** What a later leg points back to: the regions its first leg named. */
+  basis: (striped: Squares, outlined: Squares, letter: number): Narration =>
+    striped.length === 0
+      ? mark.as("outline", CELL, outlined, `the same two ${letterName(letter)}s`)
+      : outlined.length === 0
+        ? mark.the("stripes", whole(CELL), striped, "region", "the same")
+        : bothRegions(striped, outlined, "the same"),
 };

@@ -25,17 +25,11 @@ the edges you have decided, your walls and your "no wall" marks, so it
 carries on from wherever you are, as long as none of them is wrong; if
 one is, it asks you to fix the highlighted mistakes first.
 
-* **Edges drawn in the hint color** are the ones the step decides. The
-  sentence says which way: "must be a wall" means click the edge, and
-  "can't be a wall" (or "clear them") means right-click it to mark it as
-  no wall. When one reason decides several edges at once, they are all
-  colored together, because they share one fate, and each drops back to
-  normal as you set it.
-* **Hatching** covers the one region the sentence is about: "this
-  region", or "the same region" two edges both border.
-* **An outline** inside a square marks what the step reasons from: the
-  clue it counts, the two clues either side of an edge, the four squares
-  meeting at "this corner", or the two regions a join would merge.
+{{hint-marks}}
+
+The sentence says which way a ringed edge goes: "must be a wall" means
+click the edge, and "can't be a wall" (or "clear them") means right-click
+it to mark it as no wall.
 
 A region, in the hint's words, is a group of squares your own "no wall"
 marks already join, so a single square counts as one too. The size it

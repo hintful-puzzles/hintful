@@ -19,6 +19,7 @@
 import ts from "typescript";
 import { beforeAll, describe, expect, it } from "vitest";
 import { difficultyTiers } from "./engine/difficulty.ts";
+import { HINT_MARKS_PLACEHOLDER } from "./engine/hint-words.ts";
 import { getTsGame, registeredGameIds } from "./engine/registry.ts";
 import { HINT_GAMES } from "./engine/testing/hint-games.ts";
 // Registers every ported game; `beforeAll` re-runs it in case a sibling file
@@ -69,12 +70,13 @@ describe("every game's page has the one skeleton", () => {
   // part of that is read off the game, never off a list: `hint()` decides the
   // Hints section and `paramConfig` decides what the parameters section names.
   //
-  // A hint's sentence names its marks ("the hatched and outlined regions", "the
+  // A hint's sentence names its marks ("the striped and outlined regions", "the
   // ringed dot"), and a player who was never told what they mean has to decode
-  // them on the spot, which is what the Hints section is for. The check on it
-  // is PRESENCE, NOT CONTENT: a heading proves a section exists and nothing
-  // about whether it teaches the marks. What it says is held to the game's own
-  // `hint-text.ts` by whoever writes either.
+  // them on the spot, which is what the Hints section is for. For a game whose
+  // hint declares `hintMarks`, the list of marks is generated from it (the
+  // placeholder check below). For the rest, the check is PRESENCE, NOT
+  // CONTENT: a heading proves a section exists and nothing about whether it
+  // teaches the marks.
   //
   // The parameters check is a content check, and a sound one, because it keys
   // on the labels the Custom dialog itself shows: a field the dialog offers
@@ -130,6 +132,16 @@ describe("every game's page has the one skeleton", () => {
     expect(have.at(-1), `the last section is "## ${params}"`).toBe(params);
     expect(have.filter((h) => h === params)).toHaveLength(1);
     if (hinted.has(id)) expect(where("Hints")).toBe(have.length - 2);
+  });
+
+  // A bound game's list of marks is generated from its legend
+  // (`vite-plugins/hint-marks.ts`), so its Hints section carries the
+  // placeholder the build fills, and no other page does. The build refuses both
+  // mismatches too; this says so before a ten-minute gate reaches `vite build`.
+  it.each(puzzleIds)("%s: carries the list-of-marks placeholder iff bound", (id) => {
+    const page = helpPages[`../help/games/${id}.md`] ?? "";
+    const bound = getTsGame(id)?.hintMarks !== undefined;
+    expect(page.includes(HINT_MARKS_PLACEHOLDER), `help/games/${id}.md`).toBe(bound);
   });
 
   it.each(puzzleIds)("%s: names every field its Custom dialog offers", (id) => {
@@ -355,6 +367,10 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
   supersededDesc: { kind: "internal", why: "how a save rebuilds a board that moved" },
   changedState: { kind: "internal", why: "a game's own bookkeeping across a move" },
   hintKeepTrack: { kind: "internal", why: "how a plan survives the player's own move" },
+  hintMarks: {
+    kind: "internal",
+    why: "the game page's list of marks, generated from it rather than told once",
+  },
   refreshHintStep: { kind: "internal", why: "re-validating a stored step" },
   uiUpdateClearsHint: { kind: "internal", why: "when a UI change invalidates a step" },
   preferredTileSize: { kind: "internal", why: "layout" },

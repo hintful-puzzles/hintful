@@ -362,8 +362,11 @@ describe("palisade hint", () => {
     const start = steps[firstCont - 1];
     expect(start.continuesPrevious).toBeUndefined();
     expect(hlOf(start).edges?.length ?? 0).toBeGreaterThan(0);
-    // The continuation's narration is the short "…and this edge…" form.
-    expect(steps[firstCont].explanation).toMatch(/^…and this edge/);
+    // The continuation's narration is the short form, naming the edges it
+    // rings and pointing back at the evidence the first leg named.
+    expect(steps[firstCont].explanation).toMatch(
+      /^…and (this edge|these edges) .*, for /,
+    );
   });
 
   it("equivalentEdges opens a journey stating the shared-fate coupling", () => {

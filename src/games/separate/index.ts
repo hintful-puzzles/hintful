@@ -18,9 +18,10 @@ import {
 } from "../../engine/border-grid.ts";
 import {
   type BorderHint,
-  type BorderHintEvidence,
   borderHintJourney,
   borderHintKeepTrack,
+  borderHintMarks,
+  type ForcedBorderEdge,
 } from "../../engine/border-grid-hint.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
@@ -36,6 +37,7 @@ import {
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import { edgeContinuation } from "../../engine/hint-text.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor, stripModifiers } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
@@ -145,43 +147,47 @@ function findMistakes(state: SeparateState): readonly SeparateMistake[] {
 function explain(
   f: SeparateFiring,
   letters: Uint8Array,
+  w: number,
   k: number,
   leg: number,
-): string {
-  if (leg > 0) return edgeContinuation(f.edges[leg].kind);
-  const multi = f.edges.length > 1;
+  left: readonly ForcedBorderEdge[],
+): Narration {
+  const at = (sqs: readonly number[]): Point[] =>
+    sqs.map((i) => ({ x: i % w, y: Math.floor(i / w) }));
+  const { striped, outlined } = evidence(f);
+  if (leg > 0) {
+    const letter = f.kind === "sharedLetter" ? f.letter : 0;
+    return edgeContinuation(left, say.basis(at(striped), at(outlined), letter));
+  }
   switch (f.kind) {
-    case "sharedLetter": {
-      const [hatched, outlined] = hatchedFirst(f.a, f.b);
-      return say.sharedLetter(f.letter, hatched.length, outlined.length, multi);
-    }
+    case "sharedLetter":
+      return say.sharedLetter(f.letter, at(striped), at(outlined), left);
     case "walledApart":
-      return say.walledApart(multi);
+      return say.walledApart(at(striped), at(outlined), left);
     case "onlyWay":
-      return say.onlyWay(f.region.length, k, letters[f.region[0]]);
+      return say.onlyWay(at(f.region), k, letters[f.region[0]], left);
   }
 }
 
-/** Which of a firing's two regions is hatched and which outlined: the first,
- * unless it is the lone square of a mixed pair, which the sentence names by
- * its letter and so wants outlined. */
-function hatchedFirst(a: number[], b: number[]): [number[], number[]] {
-  return a.length === 1 && b.length > 1 ? [b, a] : [a, b];
-}
-
-/** The squares a firing's sentence cites, as the border grid marks them. */
-function evidence(f: SeparateFiring): BorderHintEvidence {
+/**
+ * Which of a firing's regions the sentence stripes and which it outlines. Of
+ * two, the first is striped unless it is the lone square of a mixed pair, which
+ * the sentence names by its letter and so wants outlined; two lone squares are
+ * both just letters, and both outlined.
+ */
+function evidence(f: SeparateFiring): { striped: number[]; outlined: number[] } {
   switch (f.kind) {
     case "sharedLetter": {
-      // Two lone squares are both just letters: outline both.
-      if (f.a.length === 1 && f.b.length === 1) return { cells: [...f.a, ...f.b] };
-      const [hatch, cells] = hatchedFirst(f.a, f.b);
-      return { hatch, cells };
+      if (f.a.length === 1 && f.b.length === 1)
+        return { striped: [], outlined: [...f.a, ...f.b] };
+      return f.a.length === 1 && f.b.length > 1
+        ? { striped: f.b, outlined: f.a }
+        : { striped: f.a, outlined: f.b };
     }
     case "walledApart":
-      return { hatch: f.a, cells: f.b };
+      return { striped: f.a, outlined: f.b };
     case "onlyWay":
-      return { hatch: f.region };
+      return { striped: f.region, outlined: [] };
   }
 }
 
@@ -217,10 +223,8 @@ function hint(state: SeparateState): HintResult<SeparateMove, BorderHint> {
 
   const steps = plan.flatMap((f) =>
     borderHintJourney(
-      state.w,
       f.edges,
-      (leg) => explain(f, state.letters, state.k, leg),
-      evidence(f),
+      (leg, left) => explain(f, state.letters, state.w, state.k, leg, left),
       (edits): SeparateMove => ({ type: "edges", edits }),
     ),
   );
@@ -235,7 +239,8 @@ export const separateGame: Game<
   SeparateMove,
   SeparateUi,
   SeparateDrawState,
-  SeparateMistake
+  SeparateMistake,
+  BorderHint
 > = {
   id: "separate",
 
@@ -270,6 +275,15 @@ export const separateGame: Game<
 
   findMistakes,
   hint,
+  hintMarks: {
+    roles: {
+      ring: 'the edges the step decides, drawn in the hint color along the edge itself: a wall, or a mark saying "no wall here". When one reason decides several edges at once they are all marked together.',
+      outline:
+        "a second region the step reasons from, or a lone square it names by its letter.",
+      stripes: "the region the sentence is about.",
+    },
+    drawn: borderHintMarks,
+  },
   hintKeepTrack: (m, step, state) =>
     borderHintKeepTrack(
       m.type === "edges" ? m.edits : null,

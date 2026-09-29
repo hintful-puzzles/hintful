@@ -23,6 +23,7 @@ import {
   renderMarkdown,
   type Transform,
 } from "./vite-plugins/extra-pages.ts";
+import { withHintMarks } from "./vite-plugins/hint-marks.ts";
 import { precacheCoverage } from "./vite-plugins/precache-coverage.ts";
 
 /**
@@ -552,6 +553,7 @@ export default defineConfig(async ({ command, mode }) => {
             resolve: { url: "help/", path: "help/games/" },
             transforms: [
               (data) => ({ ...commonTemplateData, ...data }),
+              withHintMarks,
               renderMarkdown({
                 html: true, // allow HTML tags in markdown
                 linkify: true,

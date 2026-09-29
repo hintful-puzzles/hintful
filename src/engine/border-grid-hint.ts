@@ -13,36 +13,81 @@
  * reads letters in a region), and, as with the input, its own `Move`: the
  * journey is handed the edits and the game wraps them, so no two games' save
  * formats are coupled through here.
+ *
+ * **A leg's evidence comes from its words** (`hint-words.ts`): the squares the
+ * sentence outlines and the region it stripes are the references it makes, so
+ * the board cannot mark what the sentence does not name.
  */
 
 import { BORDER, type BorderEdit, DISABLED, DX, DY, FLIP } from "./border-grid.ts";
-import type { HintStep, HintTrackVerdict } from "./game.ts";
+import { type HintStep, type HintTrackVerdict, narratedStep } from "./game.ts";
+import { CELL, type MarkKind, type MarkRef, type Narration } from "./hint-words.ts";
 import type { Point } from "./types.ts";
 
-/** One edge a deduction sets, named on the square `(x, y)`'s `dir` side. */
-export interface ForcedBorderEdge {
+/** An edge, named on the square `(x, y)`'s `dir` side. */
+export interface BorderEdge {
   x: number;
   y: number;
   dir: number;
+}
+
+/** One edge a deduction sets. */
+export interface ForcedBorderEdge extends BorderEdge {
   kind: "wall" | "nowall";
 }
+
+/** The edges of the border grid, as marks: an edge named from either of its
+ * squares is the same edge. */
+export const EDGE: MarkKind<BorderEdge> = {
+  name: "edge",
+  key: ({ x, y, dir }) =>
+    DX[dir] < 0 || DY[dir] < 0
+      ? `${x + DX[dir]},${y + DY[dir]},${FLIP(dir)}`
+      : `${x},${y},${dir}`,
+};
 
 /**
  * A displayed step: the edge it sets (`x`, `y`, `dir`, `kind`), the firing's
  * still-to-do edges (`edges`, same color, since they share a fate), and the
- * squares the sentence cites. `hatch` is the one region the sentence is about;
- * `cells` are outlined, for anything else it names (a clue, a second region).
+ * squares the sentence cites. `hatch` is the one region the sentence is about,
+ * striped; `cells` are outlined, for anything else it names (a clue, a second
+ * region).
  */
 export interface BorderHint extends ForcedBorderEdge {
   cells?: ReadonlyArray<Point>;
   hatch?: ReadonlyArray<Point>;
-  edges?: ReadonlyArray<{ x: number; y: number; dir: number }>;
+  edges?: ReadonlyArray<BorderEdge>;
 }
 
-/** The squares a firing cites, as grid indices. */
-export interface BorderHintEvidence {
-  cells?: readonly number[];
-  hatch?: readonly number[];
+/** The marks a border-grid step draws: its edges ringed, `cells` outlined,
+ * `hatch` striped. The `drawn` half of a border-grid game's legend. */
+export function borderHintMarks(h: BorderHint): MarkRef[] {
+  const out: MarkRef[] = [
+    {
+      role: "ring",
+      kind: EDGE,
+      elements: [{ x: h.x, y: h.y, dir: h.dir }, ...(h.edges ?? [])],
+    },
+  ];
+  if (h.cells) out.push({ role: "outline", kind: CELL, elements: h.cells });
+  if (h.hatch) out.push({ role: "stripes", kind: CELL, elements: h.hatch });
+  return out as MarkRef[];
+}
+
+/** The cells of `role` the words name, in the order they first name them. */
+function cellsNamed(words: Narration, role: "outline" | "stripes"): Point[] | null {
+  const seen = new Set<string>();
+  const out: Point[] = [];
+  for (const r of words.refs) {
+    if (r.role !== role || r.kind.name !== CELL.name) continue;
+    for (const p of r.elements as readonly Point[]) {
+      const k = CELL.key(p);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push({ x: p.x, y: p.y });
+    }
+  }
+  return out.length > 0 ? out : null;
 }
 
 /**
@@ -50,29 +95,29 @@ export interface BorderHintEvidence {
  * step"): a leg per edge, each leg's move the two-sided edit that sets it,
  * wrapped by the game's `toMove`, and the legs after the first flagged
  * `continuesPrevious`. Each leg shows the edges still to come, so the whole set
- * is lit on the first leg and drops off as the legs complete. `explain(leg)` is
- * the game's sentence for that leg.
+ * is lit on the first leg and drops off as the legs complete.
+ *
+ * `words(leg, left)` is the game's sentence for that leg, where `left` is the
+ * edges it rings: its own and the ones still to come. The squares it outlines
+ * and the region it stripes are the leg's evidence.
  */
 export function borderHintJourney<M>(
-  w: number,
   edges: readonly ForcedBorderEdge[],
-  explain: (leg: number) => string,
-  evidence: BorderHintEvidence,
+  words: (leg: number, left: readonly ForcedBorderEdge[]) => Narration,
   toMove: (edits: BorderEdit[]) => M,
 ): HintStep<M, BorderHint>[] {
-  const toPoints = (sqs?: readonly number[]): Point[] | null =>
-    sqs ? sqs.map((i) => ({ x: i % w, y: Math.floor(i / w) })) : null;
-  const cells = toPoints(evidence.cells);
-  const hatch = toPoints(evidence.hatch);
   return edges.map((e, leg) => {
     const { x, y, dir, kind } = e;
+    const said = words(leg, edges.slice(leg));
     const later = edges.slice(leg + 1);
-    return {
+    const cells = cellsNamed(said, "outline");
+    const hatch = cellsNamed(said, "stripes");
+    return narratedStep<M, BorderHint>({
       move: toMove([
         { x, y, flag: edgeFlag(dir, kind) },
         { x: x + DX[dir], y: y + DY[dir], flag: edgeFlag(FLIP(dir), kind) },
       ]),
-      explanation: explain(leg),
+      words: said,
       ...(leg > 0 ? { continuesPrevious: true } : {}),
       highlights: {
         x,
@@ -85,7 +130,7 @@ export function borderHintJourney<M>(
           ? { edges: later.map((s) => ({ x: s.x, y: s.y, dir: s.dir })) }
           : {}),
       },
-    };
+    });
   });
 }
 
@@ -103,12 +148,13 @@ function edgeFlag(dir: number, kind: ForcedBorderEdge["kind"]): number {
  */
 export function borderHintKeepTrack(
   edits: readonly BorderEdit[] | null,
-  step: HintStep<unknown>,
+  step: HintStep<unknown, BorderHint>,
   w: number,
   borders: ArrayLike<number>,
 ): HintTrackVerdict {
   if (!edits) return "off";
-  const hl = step.highlights as BorderHint;
+  const hl = step.highlights;
+  if (!hl) return "off";
   const bit = edgeFlag(hl.dir, hl.kind);
   for (const e of edits) {
     if (e.x === hl.x && e.y === hl.y) {

@@ -185,6 +185,44 @@ are about prose. The arc every nontrivial hint follows:
 > → **reasoning** (why that pattern forces the move) → **conclusion** (the
 > action, in the necessity voice).
 
+### Bind the words to the marks
+
+**A sentence that points at the board is built from references to the marks it
+points at** ([`engine/hint-words.ts`](../../src/engine/hint-words.ts)), so the
+words and the marks cannot say different things. The roles are the engine's,
+and they mean the same thing in every game:
+
+| role | adjective | marks |
+|---|---|---|
+| ring | ringed | what the step decides |
+| outline | outlined | what the step reasons from |
+| stripes | striped | the line or region the sentence names |
+
+Write the sentence with `phrase` and a reference wherever it points:
+`mark.this("ring", CELL, [c], "cell")` for "this cell",
+`mark.the("outline", CELL, cells, "square")` for "the outlined squares",
+`mark.this("stripes", whole(CELL), cage, "cage")` for "this cage" (`whole` counts
+a region as one thing), `mark.as(role, kind, els, words)` for anything else that
+names a mark ("clue 3", "every remaining edge"), and `mark.paren` for "its bulbs
+(ringed)". A literal "this", "these" or mark adjective throws, and so does a
+reference whose words use another role's adjective. The words re-render from a
+reference's elements, which is how a refresh that shrinks a step's marks
+rewrites its sentence (`Narration.narrow`).
+
+**A game is bound when it declares `hintMarks`**: the roles its steps draw, in
+the words its help page's list of marks gives them, and `drawn(highlights)`, the
+marks a step's highlights paint. `testing/hint-binding.ts` then holds every step
+the hint-quality walk visits to its words: each mark named is drawn, each mark
+drawn is named, and each role drawn is in the legend. A bound game's page writes
+`{{hint-marks}}` where its list goes, and the help build fills it
+(`vite-plugins/hint-marks.ts`).
+
+Where the machinery can, it derives the marks from the words, so a step cannot
+draw what its sentence does not name: the border grid's legs take their
+outlined and striped squares from their references. **A continuation leg names
+what it still shows**: "…and these edges can't be walls either, for clue 3"
+rings the edges left and points back at the evidence the first leg named.
+
 ### Necessity for deductions, imperative for moves
 
 A hint exists to tell the player **the next action to take**, so the clause

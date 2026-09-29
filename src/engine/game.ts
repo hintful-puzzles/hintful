@@ -14,6 +14,7 @@
  */
 
 import type { DifficultyContract } from "./difficulty.ts";
+import type { MarkRef, MarkRole, Narration } from "./hint-words.ts";
 import type { RandomState } from "./random/index.ts";
 import type {
   Color,
@@ -56,7 +57,13 @@ export type SolveResult<Move> = { ok: true; move: Move } | { ok: false; error: s
  * narrates. */
 export interface HintStep<Move, Highlights = unknown> {
   move: Move;
+  /** The sentence, as the status bar shows it: `words.text` when the step has
+   * words. The only part of a step that crosses the worker boundary. */
   explanation: string;
+  /** The sentence with its references to the marks the step draws
+   * (`hint-words.ts`). Every step of a game with {@link Game.hintMarks} has
+   * them, and `testing/hint-binding.ts` holds them to the highlights. */
+  words?: Narration;
   highlights?: Highlights;
   /** True when this step is the continuation of the journey the
    * previous step previewed (e.g. the "then to column 5" leg of
@@ -98,6 +105,28 @@ export interface ActiveHint<Move, Highlights = unknown> {
  * - `"off"` — the move deviates from the plan; the midend drops it
  *   (the next hint request recomputes). */
 export type HintTrackVerdict = "completed" | "onTrack" | "off";
+
+/** A step built from its words: the explanation is theirs. */
+export function narratedStep<Move, Highlights>(
+  step: Omit<HintStep<Move, Highlights>, "explanation" | "words"> & {
+    words: Narration;
+  },
+): HintStep<Move, Highlights> {
+  return { ...step, explanation: step.words.text };
+}
+
+/**
+ * The marks a game's hint draws, as a section of its contract
+ * (`hint-words.ts` has the roles). A game that declares it is **bound**: every
+ * step carries `words`, and each mark a step draws is one its words name.
+ */
+export interface HintMarkLegend<Highlights> {
+  /** What each role marks in this game, in the words the help's list of marks
+   * gives it: "the edges the step decides". Every role a step draws is here. */
+  readonly roles: Partial<Record<MarkRole, string>>;
+  /** The marks a step's highlights draw. */
+  drawn(highlights: Highlights): readonly MarkRef[];
+}
 
 /** One user preference a game exposes — the idiomatic-TS form of an
  * upstream `get_prefs`/`set_prefs` config item. The value lives on the
@@ -215,6 +244,10 @@ export interface Game<
   Ui = unknown,
   DrawState = unknown,
   Mistake = unknown,
+  /** What a hint step shows on the board besides its move. Carried through
+   * every hint member and `redraw`, so a game's renderer and its legend see
+   * the type its `hint` builds. */
+  Highlights = unknown,
 > {
   /** Catalog puzzleId; the registry key. */
   readonly id: string;
@@ -414,14 +447,21 @@ export interface Game<
    * expressed (Towers' auto-pencil mode decides whether the hint teaches
    * the trivial row/column note eliminations or folds them into the
    * placement). Ignored by most games. */
-  hint?(state: State, aux?: string, ui?: Ui): HintResult<Move>;
+  hint?(state: State, aux?: string, ui?: Ui): HintResult<Move, Highlights>;
+  /** The marks this game's hint draws, and what each means here. Declaring it
+   * binds every step's words to its marks ({@link HintMarkLegend}). */
+  hintMarks?: HintMarkLegend<Highlights>;
   /** Classify a player move against the current hint step. The game
    * MAY adjust `step.move` in place on `"onTrack"` (e.g. shrink a
    * slide's remaining distance after partial manual progress) so a
    * later `executeHint` doesn't overshoot. `"completed"` obliges the
    * game to ensure the resulting state matches the plan's
    * expectation after this step — return `"off"` when in doubt. */
-  hintKeepTrack?(m: Move, step: HintStep<Move>, state: State): HintTrackVerdict;
+  hintKeepTrack?(
+    m: Move,
+    step: HintStep<Move, Highlights>,
+    state: State,
+  ): HintTrackVerdict;
 
   /** Re-validate a *stored* hint step against the current state right
    * before the midend (re-)displays it, so a kept plan can never show a
@@ -441,7 +481,10 @@ export interface Game<
    * shown as-is; implement it for any game whose moves can be partially
    * resolved by another move's side effects (the candidate-elimination
    * games). */
-  refreshHintStep?(step: HintStep<Move>, state: State): HintStep<Move> | null;
+  refreshHintStep?(
+    step: HintStep<Move, Highlights>,
+    state: State,
+  ): HintStep<Move, Highlights> | null;
 
   /** Does this `UI_UPDATE` dismiss the hint, as a real move that goes off-plan
    * does? Absent ⇒ never: a UI/cursor change leaves the hint on screen, which
@@ -467,7 +510,7 @@ export interface Game<
    * exactly when the player needs it (see `crossing/render.ts`).
    *
    * Called only while a plan is stored, with that plan's current step. Pure. */
-  uiUpdateClearsHint?(step: HintStep<Move>, state: State, ui: Ui): boolean;
+  uiUpdateClearsHint?(step: HintStep<Move, Highlights>, state: State, ui: Ui): boolean;
 
   /** Compute the cells of the current state that contradict the
    * puzzle's unique solution — the mistake-checking divergence from
@@ -575,7 +618,7 @@ export interface Game<
     ui: Ui,
     animTime: number,
     flashTime: number,
-    hint?: HintStep<Move>,
+    hint?: HintStep<Move, Highlights>,
     mistakes?: readonly Mistake[],
   ): void;
   animLength?(a: State, b: State, dir: number, ui: Ui): number;

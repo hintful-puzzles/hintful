@@ -19,6 +19,8 @@ import {
 import {
   borderHintJourney,
   borderHintKeepTrack,
+  borderHintMarks,
+  type ForcedBorderEdge,
 } from "../../engine/border-grid-hint.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
@@ -30,6 +32,7 @@ import {
 } from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { edgeContinuation } from "../../engine/hint-text.ts";
+import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor, stripModifiers } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
@@ -131,29 +134,49 @@ function explain(
   w: number,
   k: number,
   leg: number,
+  left: readonly ForcedBorderEdge[],
   groupSize: number,
-): string {
-  if (leg > 0) return edgeContinuation(fe.kind);
+): Narration {
   const c = clues[fe.y * w + fe.x];
+  const at = (i: number): Point => ({ x: i % w, y: Math.floor(i / w) });
+  const cells = (fe.cells ?? []).map(at);
+  const clue = { x: fe.x, y: fe.y };
+  if (leg > 0) {
+    const basis =
+      fe.rule === "numberExhausted"
+        ? say.basis.clue(clue, c)
+        : fe.rule === "notTooSmall" || fe.rule === "equivalentEdges"
+          ? say.basis.region(cells)
+          : say.basis.outlined(cells, BASIS_NOUN[fe.rule]);
+    return edgeContinuation(left, basis);
+  }
   const multi = groupSize > 1;
   switch (fe.rule) {
     case "cluesVersusRegionSize": {
       // The clue on the other side of the edge.
       const d = clues[(fe.y + DY[fe.dir]) * w + (fe.x + DX[fe.dir])];
-      return say.cluesVersusRegionSize(c, d, k);
+      return say.cluesVersusRegionSize(cells, c, d, k, left);
     }
     case "numberExhausted":
-      return say.numberExhausted(c, fe.kind, multi);
+      return say.numberExhausted(clue, c, left, multi);
     case "notTooBig":
-      return say.notTooBig(fe.cells?.length ?? null, k);
+      return say.notTooBig(cells, fe.cells?.length ?? null, k, left);
     case "notTooSmall":
-      return say.notTooSmall(fe.cells?.length ?? null, k);
+      return say.notTooSmall(cells, fe.cells?.length ?? null, k, left);
     case "noDanglingEdges":
-      return say.noDanglingEdges;
+      return say.noDanglingEdges(cells, left);
     case "equivalentEdges":
-      return say.equivalentEdges(c, fe.kind, multi);
+      return say.equivalentEdges(cells, c, left, multi);
   }
 }
+
+/** What a later leg calls the outlined squares its first leg named, for the
+ * rules whose evidence is outlined. */
+const BASIS_NOUN = {
+  cluesVersusRegionSize: "clue",
+  notTooBig: "region",
+  noDanglingEdges: ["corner", "corner"],
+} as const;
 
 /** Compute the next deductions as a hint plan, seeded from the player's
  * current borders and no-wall marks. Refuses on a solved board or one
@@ -176,18 +199,14 @@ function hint(state: PalisadeState): HintResult<PalisadeMove, PalisadeHint> {
     while (end < forced.length && forced[end].group === forced[g].group) end++;
     const group = forced.slice(g, end);
     const fe = group[0];
-    const cells = fe.cells ?? [];
     steps.push(
       ...borderHintJourney(
-        state.w,
         group,
-        (leg) => explain(fe, state.clues, state.w, state.k, leg, group.length),
-        // The one region a sentence is about is its hatch (docs/games/hints.md
+        // The one region a sentence is about is striped (docs/games/hints.md
         // § "Hatch the line the sentence names"); a clue, a corner or the two
-        // regions a join would merge stay outlined.
-        fe.rule === "notTooSmall" || fe.rule === "equivalentEdges"
-          ? { hatch: cells }
-          : { cells },
+        // regions a join would merge are outlined. The words say which.
+        (leg, left) =>
+          explain(fe, state.clues, state.w, state.k, leg, left, group.length),
         (edits): PalisadeMove => ({ type: "edges", edits }),
       ),
     );
@@ -204,7 +223,8 @@ export const palisadeGame: Game<
   PalisadeMove,
   PalisadeUi,
   PalisadeDrawState,
-  PalisadeMistake
+  PalisadeMistake,
+  PalisadeHint
 > = {
   id: "palisade",
 
@@ -239,6 +259,16 @@ export const palisadeGame: Game<
 
   findMistakes,
   hint,
+  hintMarks: {
+    roles: {
+      ring: "the edges the step decides, drawn in the hint color along the edge itself. When one reason decides several edges at once they are all marked together, because they share one fate, and each drops back to normal as you set it.",
+      outline:
+        'what the step reasons from, inside its squares: the clue it counts, the two clues either side of an edge, the four squares meeting at "this corner", or the two regions a join would merge.',
+      stripes:
+        'the one region the sentence is about: "this region", or "the same region" two edges both border.',
+    },
+    drawn: borderHintMarks,
+  },
   hintKeepTrack: (m, step, state) =>
     borderHintKeepTrack(
       m.type === "edges" ? m.edits : null,

@@ -24,15 +24,16 @@ letters it uses.
 
 ## Hints
 
-**Hint** explains the next step rather than simply making it. The edges it
-wants you to set are drawn in the hint color: a wall, or a mark saying "no
-wall here". A region, in a hint's sentence, is a group of squares your own "no
-wall" marks already join, so a single square counts as one too.
+**Hint** explains the next step rather than simply making it. A region, in a
+hint's sentence, is a group of squares your own "no wall" marks already join,
+so a single square counts as one too.
 
-When a hint talks about two regions, one is **hatched** and the other
-**outlined**, so you can tell them apart even where they touch: "the hatched
-and outlined regions both hold an A" means those two regions, and no others. A
-single square is named by its letter instead ("these two Ds").
+{{hint-marks}}
+
+When a hint talks about two regions, one is striped and the other outlined,
+so you can tell them apart even where they touch: "the striped and outlined
+regions both hold an A" means those two regions, and no others. A single
+square is named by its letter instead ("these two Ds").
 
 ## Separate parameters
 
