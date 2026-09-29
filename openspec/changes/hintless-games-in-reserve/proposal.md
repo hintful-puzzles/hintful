@@ -11,7 +11,9 @@ kept in reserve. Three open framework changes each name the one game that
 checks them best:
 
 - `sweep-target-verb-input`: Net. It was `derive-target-verb-input`'s, which
-  found Net not yet expressible in the model and passed it to the sweep.
+  found Net not yet expressible in the model and passed it to the sweep. The
+  sweep made Net a member, measured that locks alone cannot carry its hint,
+  and passed it to `add-net-notation` and `add-net-hint` (owner, 2026-09-30).
 - `own-the-player-facing-messages`: Pegs.
 - `draw-hint-marks-from-roles`: Rect.
 

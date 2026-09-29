@@ -33,7 +33,10 @@
 
 ## 5. Net's hint
 
-- [ ] 5.1 Hint spelled through the declared verbs; `hintMarks`; help § Hints.
+- [x] 5.1 Measured what a hint spelled through the declared verbs could
+      deduce from locks alone (design.md § "Net's hint"): too little. The
+      owner chose an edge notation; the hint moves to `add-net-notation` and
+      `add-net-hint`.
 
 ## 6. Close
 
@@ -41,5 +44,4 @@
 - [x] 6.2 Ran the app (2026-09-30): Net's help paragraph; Net's Space rotates
       clockwise and S locks; Magnets' cursor reaches a clue and Enter grays it;
       Loopy's walk-and-Enter traces a line.
-- [ ] 6.3 Archive, after Net's hint (`add-net-hint`) reports what it found
-      about the model.
+- [x] 6.3 Archive.

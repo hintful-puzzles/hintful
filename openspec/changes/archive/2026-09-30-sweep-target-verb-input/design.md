@@ -138,6 +138,35 @@ is serialized only after a committed move, which took the walk from 1.9 s to
 click lattice — every quarter-tile point, each click committing a move on a
 large grid.
 
+## Net's hint: what the model's first hint found
+
+The proposal pulled Net's hint in, spelled through the declared verbs: a step
+is a rotation the model's verbs make (`A`, `C` or `F`) and a lock (`S`), so a
+hint needs no move of its own. That part holds.
+
+What does not hold is the deduction. Measured 2026-09-30 with a lock-only
+engine (sides from walls and locked neighbors, loops and sealed-off groups
+among locked tiles, and one tile over: a side every surviving way of an
+unlocked neighbor agrees on), sound against the generator's solution on every
+step, over 30 boards per preset:
+
+| Preset | Finished |
+|---|---|
+| 5×5 | 25/30 |
+| 7×7 | 19/30 |
+| 9×9 | 6/30 |
+| 11×11, 11×13 | 5/30, 5/30 |
+| every wrapping preset | 0/30, not one step |
+
+Net's solver reasons over **edges** known from tiles still unlocked, and a Net
+player can record only a lock. By the hint bar's rule 6 that is a missing
+notation, not a weaker hint to ship, and the owner chose the notation
+(2026-09-30): an edge mark, "a wire crosses here" or "no wire crosses here",
+in a notes mode, which the hint places before it locks. That is
+`add-net-notation`, then `add-net-hint`, each its own change. It is a finding
+about Net, not about the model: the steps it will take are still the model's
+verbs plus notes.
+
 ## Behavior that changes for players
 
 - **Net:** Space rotates clockwise (was: lock). A click parks the hidden cursor
