@@ -36,6 +36,7 @@ const item = <K extends keyof P>(
     kw,
     name: kw,
     type,
+    doc: kw,
     choices: ["a", "b", "c"],
     get: (p: P) => p[key],
     set: () => {},

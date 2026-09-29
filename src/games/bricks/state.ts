@@ -18,7 +18,7 @@
  */
 
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
-import { tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
@@ -193,8 +193,8 @@ const PRESETS: BricksParams[] = [
  *   `Unreasonable` may ship one.
  * - Upstream's `Tricky` has **no name at all**, because it has no boards (see
  *   `MAX_GENERABLE_DIFF`). `DIFF_CHARS` still spells it, so a game ID or saved
- *   game carrying `dt` still loads, and generation refuses it *with its reason*
- *   in {@link validateParams}.
+ *   game carrying `dt` still loads, and generation refuses it: it is the
+ *   difficulty item's retired choice.
  */
 const DIFF_NAMES = tierNames(2, { search: true });
 
@@ -203,33 +203,29 @@ export function defaultParams(): BricksParams {
 }
 
 export function presets(): PresetMenu<BricksParams> {
-  return {
-    title: "Bricks",
-    submenu: PRESETS.map((p) => ({
-      title: `${p.w}x${p.h} ${DIFF_NAMES[p.diff]}`,
-      params: { ...p },
-    })),
-  };
+  return { title: "Bricks", submenu: PRESETS.map((p) => ({ params: { ...p } })) };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<BricksParams>[] = [
-  ...dimensionParamConfig<BricksParams>(),
-  {
-    kw: "difficulty",
-    name: "Difficulty",
-    type: "choices",
-    choices: [...DIFF_NAMES],
-    get: (p) => p.diff,
-    set: (p, v) => {
-      p.diff = v;
-    },
-  },
+  ...dimensionParamConfig<BricksParams>({
+    doc: "Size of the grid in squares.",
+    bounds: { min: 2 },
+  }),
+  // Upstream's third tier has no boards (see `MAX_GENERABLE_DIFF`): its own
+  // documentation admits Tricky "may generate a puzzle at Normal difficulty
+  // instead", and it always does. `DIFF_CHARS` still spells `t`, so it is
+  // retired rather than removed: an old game ID or saved game still loads,
+  // and only generating one is refused.
+  difficultyItem(DIFF_NAMES, "diff", {
+    retired: 1,
+    doc: "An Easy puzzle can always be finished a square at a time: pick a square, try a color, and one of the three rules breaks immediately. An Unreasonable one needs at least one square where seeing the contradiction means working out most of the rest of the board first. So the Hint button will take you as far as plain deduction goes and then stop, rather than asking you to follow reasoning it cannot show you.",
+  }),
 ];
 
 /** `WxH`, plus the generator-only difficulty letter. Upstream leaves the
  * difficulty out of range when the letter is absent or unrecognized, so
- * `validateParams` rejects the id rather than quietly playing another tier. */
+ * `paramsError` rejects the id rather than quietly playing another tier. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
   choice(paramConfig, "d", "difficulty", DIFF_CHARS, {
@@ -237,21 +233,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
     invalid: DIFFCOUNT + 1,
   }),
 ]);
-
-export function validateParams(p: BricksParams, full: boolean): string | null {
-  if (p.w < 2) return "Width must be at least 2";
-  if (p.h < 2) return "Height must be at least 2";
-  if (p.diff >= DIFFCOUNT) return "Unknown difficulty rating";
-  // Upstream's third tier has no boards (see `MAX_GENERABLE_DIFF`): its own
-  // documentation admits Tricky "may generate a puzzle at Normal difficulty
-  // instead", and it always does. `DIFF_NAMES` does not name it, but
-  // `DIFF_CHARS` still spells `t`, so an old game ID or saved game reaches
-  // here. Refused only for generation; loading works, as `full` is false there.
-  if (full && p.diff > MAX_GENERABLE_DIFF) {
-    return `Tricky has no puzzles distinct from ${DIFF_NAMES[MAX_GENERABLE_DIFF]}; use ${DIFF_NAMES.join(" or ")}`;
-  }
-  return null;
-}
 
 // --- desc codec (upstream validate_desc / new_game) -------------------------
 

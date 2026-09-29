@@ -92,13 +92,4 @@ they do for **Check & save**.
 
 ## Map parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid the map is drawn on, in squares; each must be at least 2.</dd>
-	<dt>Regions</dt>
-	<dd>How many regions the map is divided into: at least 5, and no more than the grid has squares.</dd>
-	<dt>Difficulty</dt>
-	<dd>Determine the difficulty of the generated puzzle. Higher difficulties require more complex reasoning (<a href="../features#difficulty">what the names mean</a>).</dd>
-</dl>
+{{parameters}}

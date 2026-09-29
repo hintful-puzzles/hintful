@@ -48,11 +48,4 @@ A few ideas are worth learning by name:
 
 ## Crossing parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares. Very large boards are refused, because a puzzle whose runs all read as distinct numbers becomes impossible to generate as the grid grows.</dd>
-	<dt>Symmetric walls</dt>
-	<dd>When enabled, all walls form a rotationally symmetric pattern.</dd>
-</dl>
+{{parameters}}

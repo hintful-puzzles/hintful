@@ -9,6 +9,8 @@
 
 import { describe, expect, it } from "vitest";
 import { Midend, UI_UPDATE } from "../../engine/index.ts";
+import { presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { decodeSave } from "../../engine/save.ts";
@@ -87,13 +89,21 @@ describe("params", () => {
     ).toEqual({
       n: 10,
     });
-    const presets = untangleGame.presets().submenu;
+    const presets = presetMenu(untangleGame).submenu;
     expect(presets?.map((p) => p.params?.n)).toEqual([6, 10, 15, 20, 25]);
+    expect(presets?.map((p) => p.title)).toEqual([
+      "6 points",
+      "10 points",
+      "15 points",
+      "20 points",
+      "25 points",
+    ]);
   });
   it("rejects too-few and unreasonably-large", () => {
-    expect(untangleGame.validateParams({ n: 3 }, true)).not.toBeNull();
-    expect(untangleGame.validateParams({ n: 100000 }, true)).not.toBeNull();
-    expect(untangleGame.validateParams({ n: 10 }, true)).toBeNull();
+    const error = (n: number) => paramsError(untangleGame, { n }, true);
+    expect(error(3)).toBe("Number of points must be at least 4");
+    expect(error(100000)).toBe("Number of points must be at most 2000");
+    expect(error(10)).toBeNull();
   });
 });
 

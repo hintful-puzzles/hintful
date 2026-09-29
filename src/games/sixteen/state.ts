@@ -1,5 +1,5 @@
-import type { ParamConfigItem } from "../../engine/game.ts";
-import { dimensionParamConfig, parseConfigInt } from "../../engine/params.ts";
+import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
+import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
@@ -63,16 +63,23 @@ export function defaultParams(): SixteenParams {
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<SixteenParams>[] = [
-  ...dimensionParamConfig<SixteenParams>(),
-  {
-    kw: "number-of-shuffling-moves",
-    name: "Number of shuffling moves",
-    type: "string",
-    get: (p) => String(p.movetarget),
-    set: (p, v) => {
-      p.movetarget = parseConfigInt(v);
+  ...dimensionParamConfig<SixteenParams>({
+    doc: "Size of the grid in squares.",
+    bounds: { min: 2 },
+  }),
+  numberItem<SixteenParams>(
+    "number-of-shuffling-moves",
+    "Number of shuffling moves",
+    "movetarget",
+    {
+      doc: "How the board is scrambled. At 0, the squares are dealt in a random order, which can take many moves to put right. Any other number starts from the finished board and makes that many random slides, so a small number gives a puzzle that is only a few moves from solved.",
+      bounds: { min: 0 },
+      label: {
+        slot: "tail",
+        words: (p) => (p.movetarget ? `${p.movetarget} shuffles` : null),
+      },
     },
-  },
+  ),
 ];
 
 /**
@@ -90,12 +97,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   }),
 ]);
 
-export function validateParams(p: SixteenParams, _full: boolean): string | null {
-  if (p.w < 2 || p.h < 2) return "Width and height must both be at least two";
-  if (p.movetarget < 0) return "Number of shuffling moves may not be negative";
-  return null;
-}
-
 // --- presets ----------------------------------------------------------
 
 const SIXTEEN_PRESETS: SixteenParams[] = [
@@ -106,13 +107,10 @@ const SIXTEEN_PRESETS: SixteenParams[] = [
   { w: 5, h: 5, movetarget: 0 },
 ];
 
-export function presets() {
+export function presets(): PresetMenu<SixteenParams> {
   return {
     title: "Type",
-    submenu: SIXTEEN_PRESETS.map((p) => ({
-      title: `${p.w}×${p.h}`,
-      params: p,
-    })),
+    submenu: SIXTEEN_PRESETS.map((p) => ({ params: p })),
   };
 }
 

@@ -18,7 +18,7 @@
 
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { c2nUpper, n2cUpper, UPPER_ALPHABET_SIZE } from "../../engine/desc-alphabet.ts";
-import { tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { findLoops } from "../../engine/findloop.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
@@ -271,30 +271,27 @@ export function defaultParams(): TracksParams {
 export function presets(): PresetMenu<TracksParams> {
   return {
     title: "Size",
-    submenu: PRESETS.map((p) => ({
-      title: `${p.w}x${p.h} ${DIFF_NAMES[p.diff]}`,
-      params: { ...p },
-    })),
+    submenu: PRESETS.map((p) => ({ params: { ...p } })),
   };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<TracksParams>[] = [
-  ...dimensionParamConfig<TracksParams>(),
-  {
-    kw: "difficulty",
-    name: "Difficulty",
-    type: "choices",
-    choices: [...DIFF_NAMES],
-    get: (p) => p.diff,
-    set: (p, v) => {
-      p.diff = v;
-    },
-  },
+  ...dimensionParamConfig<TracksParams>({
+    doc: "Size of the grid in squares.",
+    // Generating anything under 4x4 runs into trouble (upstream).
+    bounds: { min: 4 },
+  }),
+  difficultyItem(DIFF_NAMES, "diff"),
   {
     kw: "disallow-consecutive-1-clues",
     name: "Disallow consecutive 1 clues",
     type: "boolean",
+    doc: "Read the clues along the top from left to right and then down the right-hand side. With this on, no two clues next to each other in that run are both 1, and neither the first nor the last of them is a 1. Every clue is at least 1 either way.",
+    label: {
+      slot: "tail",
+      words: (p) => (p.singleOnes ? null : "allow adjacent 1’s"),
+    },
     get: (p) => p.singleOnes,
     set: (p, v) => {
       p.singleOnes = v;
@@ -315,8 +312,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 export function validateParams(p: TracksParams, _full: boolean): string | null {
-  // Generating anything under 4x4 runs into trouble (upstream).
-  if (p.w < 4 || p.h < 4) return "Width and height must both be at least four";
   if (p.w > Number.MAX_SAFE_INTEGER / p.h) {
     return "Width times height must not be unreasonably large";
   }

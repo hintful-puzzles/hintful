@@ -63,6 +63,7 @@
  */
 import { beforeAll, describe, expect, it } from "vitest";
 import { registerAllGames } from "../games/index.ts";
+import { tierOf } from "./difficulty.ts";
 import { Midend } from "./midend.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { capabilitySets } from "./testing/enrollment.ts";
@@ -111,13 +112,12 @@ const GAMES = mistakeGames();
  * dimension this class does not live in.
  */
 function dealtPresets(game: AnyGame): { title: string; params: unknown }[] {
-  const all = leafPresets(game.presets());
+  const all = leafPresets(game);
   if (SLOW_TESTS_ENABLED) return all;
-  const contract = game.difficulty as { tierOf(p: unknown): unknown } | undefined;
-  if (!contract) return all.slice(0, 1);
+  if (!game.difficulty) return all.slice(0, 1);
   const seen = new Set<unknown>();
   return all.filter((e: { params: unknown }) => {
-    const key = contract.tierOf(e.params);
+    const key = tierOf(game, e.params);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;

@@ -6,6 +6,8 @@
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
+import { presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
@@ -97,7 +99,9 @@ describe("bricks params", () => {
 
   it("rejects an unknown difficulty char", () => {
     const p = decodeParams("7x6dx");
-    expect(bricksGame.validateParams(p, true)).toMatch(/difficulty/i);
+    expect(paramsError(bricksGame, p, true)).toBe(
+      "Difficulty must be one of Easy, Unreasonable",
+    );
   });
 });
 
@@ -321,9 +325,11 @@ describe("bricks generator", () => {
 
     it("refuses to generate Tricky, for which no board exists", () => {
       const p: BricksParams = { w: 7, h: 6, diff: DIFF_TRICKY };
-      expect(bricksGame.validateParams(p, true)).toMatch(/Tricky/);
+      expect(paramsError(bricksGame, p, true)).toBe(
+        "Difficulty must be one of Easy, Unreasonable",
+      );
       // Loading an existing Tricky description still works.
-      expect(bricksGame.validateParams(p, false)).toBeNull();
+      expect(paramsError(bricksGame, p, false)).toBeNull();
       // And the generator refuses immediately rather than spinning its retry
       // budget on a tier that can never be satisfied.
       expect(() => newBricksDesc(p, randomNew("bricks-tricky"))).toThrow(
@@ -332,7 +338,7 @@ describe("bricks generator", () => {
     });
 
     it("offers only the difficulties it can generate", () => {
-      const titles = (bricksGame.presets().submenu ?? []).map((e) => e.title);
+      const titles = (presetMenu(bricksGame).submenu ?? []).map((e) => e.title);
       expect(titles).toEqual([
         "6x7 Easy",
         "6x7 Unreasonable",

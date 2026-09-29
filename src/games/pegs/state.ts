@@ -79,12 +79,7 @@ export function defaultParams(): PegsParams {
 export function presets() {
   return {
     title: "Type",
-    submenu: PEGS_PRESETS.map((p) => {
-      // Octagon comes in one size only, so its title names none.
-      const name = BOARD_TYPE_NAMES[p.type];
-      const title = p.type === TYPE_OCTAGON ? name : `${name} ${p.w}×${p.h}`;
-      return { title, params: p };
-    }),
+    submenu: PEGS_PRESETS.map((p) => ({ params: p })),
   };
 }
 
@@ -104,9 +99,6 @@ export function decodeParams(s: string): PegsParams {
 export function validateParams(p: PegsParams, full: boolean): string | null {
   if (full && (p.w <= 3 || p.h <= 3)) {
     return "Width and height must both be greater than three";
-  }
-  if (p.w < 1 || p.h < 1) {
-    return "Width and height must both be at least one";
   }
   if (p.w > 10000 / p.h) {
     return "Width times height must not be unreasonably large";

@@ -12,7 +12,7 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import { digitValue } from "../../engine/decimal.ts";
-import { tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { findLoops } from "../../engine/findloop.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
@@ -25,7 +25,6 @@ import type { GameStatus, Point } from "../../engine/types.ts";
 // --- difficulty (upstream's DIFFLIST: Easy, Hard; shown as tierNames(2)) ---
 export const DIFF_EASY = 0;
 export const DIFF_HARD = 1;
-const DIFF_COUNT = 2;
 const DIFF_NAMES: readonly string[] = tierNames(2);
 const DIFF_CHARS = "eh"; // ENCODE chars, indexed by difficulty
 
@@ -117,26 +116,18 @@ export function defaultParams(): SlantParams {
 export function presets(): PresetMenu<SlantParams> {
   return {
     title: "Size",
-    submenu: PRESETS.map((p) => ({
-      title: `${p.w}x${p.h} ${DIFF_NAMES[p.diff]}`,
-      params: { ...p },
-    })),
+    submenu: PRESETS.map((p) => ({ params: { ...p } })),
   };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<SlantParams>[] = [
-  ...dimensionParamConfig<SlantParams>(),
-  {
-    kw: "difficulty",
-    name: "Difficulty",
-    type: "choices",
-    choices: [...DIFF_NAMES],
-    get: (p) => p.diff,
-    set: (p, v) => {
-      p.diff = v;
-    },
-  },
+  ...dimensionParamConfig<SlantParams>({
+    doc: "Size of the grid in squares.",
+    // A grid of width or height 1 can't reach `DIFF_HARD`, so upstream forbids it.
+    bounds: { min: 2 },
+  }),
+  difficultyItem(DIFF_NAMES, "diff"),
 ];
 
 /** `WxH`, plus the generator-only difficulty letter. Upstream leniency: an
@@ -147,12 +138,9 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 export function validateParams(p: SlantParams, _full: boolean): string | null {
-  // A grid of width or height 1 can't reach `DIFF_HARD`, so upstream forbids it.
-  if (p.w < 2 || p.h < 2) return "Width and height must both be at least two";
   if (p.w > Number.MAX_SAFE_INTEGER / p.h) {
     return "Width times height must not be unreasonably large";
   }
-  if (p.diff < 0 || p.diff >= DIFF_COUNT) return "Unknown difficulty rating";
   return null;
 }
 

@@ -19,13 +19,4 @@ regular solids!
 
 ## Cube parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Type of solid</dt>
-	<dd>Which solid you roll: a <em>Tetrahedron</em>, a <em>Cube</em>, an <em>Octahedron</em> or an <em>Icosahedron</em>. The cube rolls on a grid of squares; the other three roll on a grid of triangles. There are always as many blue squares as the solid has faces.</dd>
-	<dt>Width / top</dt>
-	<dd>For the cube, the width of the grid in squares. For the other solids, the grid is a patch of triangles (six-sided, or a single large triangle when the other number is 0), and this sets the length of its top edge.</dd>
-	<dt>Height / bottom</dt>
-	<dd>For the cube, the height of the grid in squares. For the other solids, this sets the length of the patch's bottom edge. On a grid of squares both numbers must be at least 2; on a grid of triangles one of them may be 0, as long as the other is not. Either way the grid needs room for every blue square with a square to spare for the solid to start on.</dd>
-</dl>
+{{parameters}}

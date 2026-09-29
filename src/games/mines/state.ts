@@ -168,13 +168,8 @@ export function encodeParams(p: MinesParams, full: boolean): string {
 export function validateParams(p: MinesParams, full: boolean): string | null {
   if (full && p.unique && (p.w <= 2 || p.h <= 2))
     return "Width and height must both be greater than two";
-  if (p.w < 1 || p.h < 1) return "Width and height must both be at least one";
-  if (p.w > 32767 || p.h > 32767)
-    return "Neither width nor height may be unreasonably large";
   if (p.w > Math.floor((2 ** 28 - 1) / p.h))
     return "Width times height must not be unreasonably large";
-  if (p.n < 0) return "Mine count may not be negative";
-  if (p.n < 1) return "Number of mines must be greater than zero";
   if (p.n > p.w * p.h - 9) return "Too many mines for grid size";
   if (p.firstClickX >= p.w) return "First-click x coordinate must be inside the grid";
   if (p.firstClickY >= p.h) return "First-click y coordinate must be inside the grid";

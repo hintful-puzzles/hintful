@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, newCursor, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import type { Point } from "../../engine/types.ts";
@@ -12,10 +14,10 @@ import {
   idx,
   newState,
   type RangeMove,
+  type RangeParams,
   type RangeState,
   type RangeUi,
   validateDesc,
-  validateParams,
   WHITE,
 } from "./state.ts";
 
@@ -40,12 +42,17 @@ describe("params", () => {
   });
 
   it("rejects degenerate and non-positive sizes when full", () => {
-    expect(validateParams({ w: 2, h: 2 }, true)).not.toBeNull();
-    expect(validateParams({ w: 1, h: 2 }, true)).not.toBeNull();
-    expect(validateParams({ w: 0, h: 5 }, true)).not.toBeNull();
+    const error = (p: RangeParams, full: boolean) => paramsError(rangeGame, p, full);
+    expect(error({ w: 2, h: 2 }, true)).not.toBeNull();
+    expect(error({ w: 1, h: 2 }, true)).not.toBeNull();
+    expect(error({ w: 0, h: 5 }, true)).toBe("Width must be at least 1");
     // 2x2 is allowed when not generating a full puzzle.
-    expect(validateParams({ w: 2, h: 2 }, false)).toBeNull();
-    expect(validateParams({ w: 9, h: 6 }, true)).toBeNull();
+    expect(error({ w: 2, h: 2 }, false)).toBeNull();
+    expect(error({ w: 9, h: 6 }, true)).toBeNull();
+  });
+
+  it("titles a preset by its size alone", () => {
+    expect(presetMenu(rangeGame).submenu?.[0]?.title).toBe("6x9");
   });
 });
 

@@ -101,10 +101,6 @@ export function defaultParams(): GroupParams {
   return { w: 6, diff: DIFF_NORMAL, id: true };
 }
 
-export function presetName(p: GroupParams): string {
-  return `${p.w}x${p.w} ${DIFF_NAMES[p.diff]}${p.id ? "" : ", identity hidden"}`;
-}
-
 export function encodeParams(p: GroupParams, full: boolean): string {
   let s = String(p.w);
   if (full) s += `d${DIFF_CHARS[p.diff]}`;
@@ -140,8 +136,6 @@ export function decodeParams(s: string): GroupParams {
 }
 
 export function validateParams(p: GroupParams, _full: boolean): string | null {
-  if (p.w < 3 || p.w > 26) return "Grid size must be between 3 and 26";
-  if (p.diff >= DIFF_COUNT) return "Unknown difficulty rating";
   if (!p.id && p.diff === DIFF_TRIVIAL) {
     // Identityless puzzles always have two entirely-blank rows and columns, and
     // no Latin-square deduction can distinguish them — so an Easy (Latin-only)

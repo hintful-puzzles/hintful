@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Midend, UI_UPDATE } from "../../engine/index.ts";
 import { SHOW_TIMER_PREF } from "../../engine/midend.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -135,9 +136,9 @@ describe("Flip params", () => {
     const p: FlipParams = { w: 4, h: 6, matrixType: "random" };
     expect(flipGame.decodeParams(flipGame.encodeParams(p, true))).toEqual(p);
     expect(flipGame.encodeParams(p, false)).toBe("4x6");
-    expect(
-      flipGame.validateParams({ w: 0, h: 3, matrixType: "crosses" }, true),
-    ).toMatch(/greater than zero/);
+    expect(paramsError(flipGame, { w: 0, h: 3, matrixType: "crosses" }, true)).toBe(
+      "Width must be at least 1",
+    );
   });
 });
 

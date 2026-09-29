@@ -59,22 +59,16 @@ export type DifficultyVerdict = "solved" | "unsolved" | "impossible";
 export type CappedSolve = (cap: number) => DifficultyVerdict;
 
 /**
- * How to *operate* on a tiered game's tiers — read one off a params record, set
- * one, solve capped at one. Optional on `Game`: a game without tiers omits it.
+ * How to solve a tiered game capped at a tier, and which of its tiers are
+ * exceptions to the shared guards. Optional on `Game`: a game without tiers
+ * omits it.
  *
- * **The tier list itself is not here** — it is {@link difficultyTiers}, read
- * off the game's own custom-params form. The contract is operations; the
- * declaration is the menu.
+ * **The tier list, and how params hold a tier, are not here** — both are the
+ * game's difficulty item ({@link difficultyItem}), from which
+ * {@link difficultyTiers}, {@link tierOf} and {@link withTier} read. The
+ * contract is the solver; the declaration is the menu.
  */
 export interface DifficultyContract<Params> {
-  /** Which tier these params request, as an index into
-   * {@link difficultyTiers}. */
-  tierOf(p: Params): number;
-
-  /** The same params at a different tier. Pure — returns a new object and
-   * never mutates `p`, so a caller may probe every tier of one params object. */
-  withTier(p: Params, tier: number): Params;
-
   /** Run the game's solver over `desc` with its deduction ladder capped at
    * `cap`, from a *fresh* solver state. Freshness is load-bearing: a reused
    * scratch can carry state that weakens the solver (Ascent's retained
@@ -145,10 +139,6 @@ export interface DifficultyContract<Params> {
  *    shared runner is its *hint recorder*, whose two techniques both sit on
  *    tier 0 while the game offers three tiers. A ladder-derived list would be
  *    short for all of them.
- *
- * The prefix match, rather than `kw === "difficulty"`, because Loopy spells its
- * `kw` `diff`, and matching the prefix keeps a future `diff-level` enrolled
- * instead of silently unwatched.
  */
 export function difficultyTiers<Params>(game: {
   paramConfig?: readonly ParamConfigItem<Params>[];
@@ -161,15 +151,94 @@ export function difficultyTiers<Params>(game: {
  * difficulty choice.
  */
 export function tierNameOf<Params>(
-  game: {
-    paramConfig?: readonly ParamConfigItem<Params>[];
-    difficulty?: DifficultyContract<Params>;
-  },
+  game: { paramConfig?: readonly ParamConfigItem<Params>[] },
   params: Params,
 ): string | null {
-  const tiers = difficultyTiers(game);
-  if (tiers === null || !game.difficulty) return null;
-  return tiers[game.difficulty.tierOf(params)] ?? null;
+  const item = difficultyChoiceItem(game);
+  return item === null ? null : (item.choices[item.get(params)] ?? null);
+}
+
+/** Which tier these params request, as an index into {@link difficultyTiers}.
+ * A game with no difficulty item has none to request, so this throws. */
+export function tierOf<Params>(
+  game: { paramConfig?: readonly ParamConfigItem<Params>[] },
+  params: Params,
+): number {
+  return requireItem(game).get(params);
+}
+
+/** The same params at a different tier. Pure — a new object, `params` left
+ * alone — so a caller may probe every tier of one params object. */
+export function withTier<Params>(
+  game: { paramConfig?: readonly ParamConfigItem<Params>[] },
+  params: Params,
+  tier: number,
+): Params {
+  const copy = { ...params };
+  requireItem(game).set(copy, tier);
+  return copy;
+}
+
+function requireItem<Params>(game: {
+  paramConfig?: readonly ParamConfigItem<Params>[];
+}): Extract<ParamConfigItem<Params>, { type: "choices" }> {
+  const item = difficultyChoiceItem(game);
+  if (item === null) throw new Error("this game declares no difficulty item");
+  return item;
+}
+
+/** The params key holding a tier index directly. */
+type TierKey<P> = {
+  [K in keyof P]-?: P[K] extends number ? K : never;
+}[keyof P];
+
+/** How a game's params hold a tier: the key of an index field, or accessors for
+ * a game that stores a word or an enum there (Keen's `diff` is a letter). */
+export type TierField<P> =
+  | TierKey<P>
+  | { get(p: P): number; set(p: P, tier: number): void };
+
+const DIFFICULTY_KW = "difficulty";
+
+/** What the help says of every difficulty field, before a game's own words. */
+const DIFFICULTY_DOC =
+  'Determine the difficulty of the generated puzzle; see <a href="../features#difficulty">what the names mean</a>.';
+
+/**
+ * The Custom dialog's difficulty field, which every tiered game has and none
+ * writes out: `kw: "difficulty"`, labeled "Difficulty", offering `tiers`, and
+ * labeling a params set with the tier's name.
+ *
+ * It is also where the tier accessors come from ({@link tierOf},
+ * {@link withTier}), so the dialog, the codec, the labels and the cross-game
+ * guards all go through the one declaration. `doc` is the game's own sentence
+ * about its tiers, if it has one, after the standard one.
+ */
+export function difficultyItem<P>(
+  tiers: readonly string[],
+  field: TierField<P>,
+  opts: { doc?: string; retired?: number } = {},
+): ParamConfigItem<P> {
+  const access =
+    typeof field === "object"
+      ? field
+      : {
+          get: (p: P) => p[field] as number,
+          set: (p: P, tier: number) => {
+            (p as Record<TierKey<P>, number>)[field] = tier;
+          },
+        };
+  return {
+    kw: DIFFICULTY_KW,
+    name: "Difficulty",
+    type: "choices",
+    choices: [...tiers],
+    ...(opts.retired ? { retired: opts.retired } : {}),
+    doc: opts.doc ? `${DIFFICULTY_DOC} ${opts.doc}` : DIFFICULTY_DOC,
+    label: { slot: "tier" },
+    get: access.get,
+    set: access.set,
+  };
 }
 
 /**
@@ -181,30 +250,18 @@ export function tierNameOf<Params>(
  * hint that runs out of deduction on one of its boards is a defect.
  */
 export function permitsSearch<Params>(
-  game: {
-    paramConfig?: readonly ParamConfigItem<Params>[];
-    difficulty?: DifficultyContract<Params>;
-  },
+  game: { paramConfig?: readonly ParamConfigItem<Params>[] },
   params: Params,
 ): boolean {
   return tierNameOf(game, params) === SEARCH_TIER;
 }
 
-/**
- * The custom-params item {@link difficultyTiers} reads, whole — its `get` /
- * `set` included.
- *
- * Exported because the tier list alone cannot prove the finder found the
- * *difficulty* item, so the coupling is asserted against the contract's own
- * accessors instead: `item.set(p, i)` must be the same thing as
- * `withTier(p, i)`, for every tier. `difficulty-contract.test.ts` makes it.
- */
+/** The game's {@link difficultyItem}, whole, or `null` for a game without
+ * tiers. */
 export function difficultyChoiceItem<Params>(game: {
   paramConfig?: readonly ParamConfigItem<Params>[];
 }): Extract<ParamConfigItem<Params>, { type: "choices" }> | null {
-  const item = game.paramConfig?.find(
-    (i) => i.type === "choices" && /^diff/.test(i.kw),
-  );
+  const item = game.paramConfig?.find((i) => i.kw === DIFFICULTY_KW);
   return item?.type === "choices" ? item : null;
 }
 

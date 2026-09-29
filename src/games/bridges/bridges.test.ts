@@ -5,6 +5,7 @@
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   LEFT_BUTTON,
   LEFT_DRAG,
@@ -33,7 +34,6 @@ import {
   G_NOLINEH,
   newStateFromDesc,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 describe("bridges params codec", () => {
@@ -54,8 +54,10 @@ describe("bridges params codec", () => {
   });
 
   it("rejects a too-small grid", () => {
-    expect(validateParams({ ...BRIDGES_PRESETS[0], w: 2, h: 2 }, true)).not.toBeNull();
-    expect(validateParams(BRIDGES_PRESETS[0], true)).toBeNull();
+    expect(paramsError(bridgesGame, { ...BRIDGES_PRESETS[0], w: 2, h: 2 }, true)).toBe(
+      "Width must be at least 3",
+    );
+    expect(paramsError(bridgesGame, BRIDGES_PRESETS[0], true)).toBeNull();
   });
 });
 

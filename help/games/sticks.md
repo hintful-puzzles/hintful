@@ -47,14 +47,5 @@ a time as a single step.
 
 ## Sticks parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares, at least 2 each way.</dd>
-	<dt>%age of black squares</dt>
-	<dd>Rough percentage of black squares in the grid, from 5 to 100.</dd>
-	<dt>Symmetry</dt>
-	<dd>The pattern the black squares follow. <em>None</em> places them freely. <em>2-way mirror</em> makes the bottom half a mirror image of the top half, and <em>2-way rotational</em> makes the grid look the same turned upside down. <em>4-way mirror</em> mirrors top to bottom and left to right, and <em>4-way rotational</em> makes the grid look the same after a quarter turn, which needs a square grid.</dd>
-</dl>
+{{parameters}}
 

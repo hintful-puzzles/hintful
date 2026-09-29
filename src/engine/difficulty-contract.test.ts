@@ -25,13 +25,16 @@ import "../games/index.ts";
 import {
   cappedSolveFor,
   type DifficultyContract,
-  difficultyChoiceItem,
   difficultyTiers,
   lowestSolvingCap,
   tierNames,
+  tierOf,
+  withTier,
 } from "./difficulty.ts";
 import type { Game, PresetMenu } from "./game.ts";
 import { Midend } from "./midend.ts";
+import { presetMenu, type TitledPresetMenu } from "./param-label.ts";
+import { paramsError } from "./params.ts";
 import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { itOverWholeSweep, SLOW_TESTS_ENABLED, seedBudget } from "./testing/slow.ts";
@@ -90,11 +93,12 @@ function firstLeaf<P>(menu: PresetMenu<P>): P {
 
 /** Every leaf preset's params, in menu order (smallest first by convention). */
 function allLeaves<P>(menu: PresetMenu<P>): P[] {
-  return allLeafEntries(menu).map((e) => e.params);
+  if (menu.params !== undefined) return [menu.params];
+  return (menu.submenu ?? []).flatMap(allLeaves);
 }
 
 /** Every leaf preset with the title the menu shows for it. */
-function allLeafEntries<P>(menu: PresetMenu<P>): { title: string; params: P }[] {
+function allLeafEntries<P>(menu: TitledPresetMenu<P>): { title: string; params: P }[] {
   if (menu.params !== undefined) return [{ title: menu.title, params: menu.params }];
   return (menu.submenu ?? []).flatMap(allLeafEntries);
 }
@@ -110,8 +114,8 @@ function allLeafEntries<P>(menu: PresetMenu<P>): { title: string; params: P }[] 
  */
 function paramsForTier(t: TieredGame, tier: number): unknown | null {
   for (const leaf of allLeaves(t.game.presets())) {
-    const p = t.contract.withTier(leaf, tier);
-    if (t.game.validateParams(p, true) === null) return p;
+    const p = withTier(t.game, leaf, tier);
+    if (paramsError(t.game, p, true) === null) return p;
   }
   return null;
 }
@@ -211,8 +215,8 @@ for (const { id, game, contract, tiers } of tiered) {
       // reaches for a real tier word.
       const SCALE = new Set([...tierNames(5), "Unreasonable"]);
       const offenders: string[] = [];
-      for (const { title, params } of allLeafEntries(game.presets())) {
-        const own = tiers[contract.tierOf(params)];
+      for (const { title, params } of allLeafEntries(presetMenu(game))) {
+        const own = tiers[tierOf(game, params)];
         for (const word of SCALE) {
           if (word === own) continue;
           if (new RegExp(`\\b${word}\\b`).test(title)) {
@@ -223,32 +227,6 @@ for (const { id, game, contract, tiers } of tiered) {
       expect(offenders, `${id}: preset titles disagree with their tiers`).toEqual([]);
     });
 
-    it("reads its tiers off the same params field the contract writes", () => {
-      // The coupling between the form and the contract, made explicit.
-      // `difficultyTiers` finds the form item by a `kw` prefix; if
-      // it found some *other* `choices` item — a mode list, a symmetry list —
-      // every loop above would run over the wrong length and pass, having covered
-      // a different param. Two string arrays being equal never ruled that out.
-      // Asking the item to move the tier that `tierOf` reads does.
-      const item = difficultyChoiceItem(game);
-      expect(item, `${id}: no difficulty choice item`).not.toBeNull();
-      if (!item) return;
-      expect(item.choices, `${id}: the tier list is that item's choices`).toBe(tiers);
-      const base = firstLeaf(game.presets());
-      for (let tier = 0; tier < tiers.length; tier++) {
-        expect(
-          item.get(contract.withTier(base, tier)),
-          `${id}: withTier(${tier}) is invisible to the "${item.kw}" form item`,
-        ).toBe(tier);
-        const p = structuredClone(base);
-        item.set(p, tier);
-        expect(
-          contract.tierOf(p),
-          `${id}: setting "${item.kw}" to ${tier} is invisible to tierOf`,
-        ).toBe(tier);
-      }
-    });
-
     it("round-trips every declared tier through the params codec", () => {
       // Non-vacuous everywhere, unlike the check above: it proves each tier has a
       // distinct encoding, i.e. that a game which gained a rung also extended its
@@ -257,13 +235,13 @@ for (const { id, game, contract, tiers } of tiered) {
       const base = firstLeaf(game.presets());
       const seen = new Set<string>();
       for (let tier = 0; tier < tiers.length; tier++) {
-        const p = contract.withTier(base, tier);
-        expect(contract.tierOf(p), `${id}: withTier(${tier}) did not read back`).toBe(
+        const p = withTier(game, base, tier);
+        expect(tierOf(game, p), `${id}: withTier(${tier}) did not read back`).toBe(
           tier,
         );
         const encoded = game.encodeParams(p, true);
         expect(
-          contract.tierOf(game.decodeParams(encoded)),
+          tierOf(game, game.decodeParams(encoded)),
           `${id}: tier ${tier} does not survive "${encoded}"`,
         ).toBe(tier);
         expect(
@@ -277,8 +255,8 @@ for (const { id, game, contract, tiers } of tiered) {
     it("does not mutate the params it is given", () => {
       const base = firstLeaf(game.presets());
       const before = JSON.stringify(base);
-      for (let tier = 0; tier < tiers.length; tier++) contract.withTier(base, tier);
-      contract.tierOf(base);
+      for (let tier = 0; tier < tiers.length; tier++) withTier(game, base, tier);
+      tierOf(game, base);
       expect(JSON.stringify(base)).toBe(before);
     });
 
@@ -292,7 +270,7 @@ for (const { id, game, contract, tiers } of tiered) {
         const p = paramsForTier({ id, game, contract, tiers }, tier);
         if (p !== null) continue;
         const refusals = allLeaves(game.presets()).map((leaf) =>
-          game.validateParams(contract.withTier(leaf, tier), true),
+          paramsError(game, withTier(game, leaf, tier), true),
         );
         expect(
           refusals.every((r) => typeof r === "string" && r.length > 0),
@@ -418,15 +396,15 @@ for (const { id, game, contract, tiers } of tiered) {
       // declared tier** — tier is the axis the property is about, so a slice that
       // dropped to a single preset would stop measuring it — and the slow tier
       // walks every preset with more seeds.
-      const entries = allLeafEntries(game.presets()).filter(
-        (e) => typeof contract.tierOf(e.params) === "number",
+      const entries = allLeafEntries(presetMenu(game)).filter(
+        (e) => typeof tierOf(game, e.params) === "number",
       );
       const walked = SLOW_TESTS_ENABLED
         ? entries
         : entries.filter(
             (e, i) =>
               entries.findIndex(
-                (f) => contract.tierOf(f.params) === contract.tierOf(e.params),
+                (f) => tierOf(game, f.params) === tierOf(game, e.params),
               ) === i,
           );
       const seeds = seedBudget(1, 3);
@@ -434,7 +412,7 @@ for (const { id, game, contract, tiers } of tiered) {
       let sharedReloaded = false;
 
       for (const { title, params } of walked) {
-        const tier = contract.tierOf(params);
+        const tier = tierOf(game, params);
         // A tier the game declares non-unique promises the opposite of unique
         // solvability, so "the lowest cap that solves it" is not a thing it has —
         // the same declaration that exempts it from the sweep above, read here for
@@ -468,7 +446,7 @@ for (const { id, game, contract, tiers } of tiered) {
           const shortParams = game.encodeParams(params, false);
           if (
             !sharedReloaded &&
-            contract.tierOf(game.decodeParams(shortParams)) !== tier
+            tierOf(game, game.decodeParams(shortParams)) !== tier
           ) {
             sharedReloaded = true;
             sharedReloads++;
@@ -476,7 +454,7 @@ for (const { id, game, contract, tiers } of tiered) {
             const shared = `${shortParams}:${desc}`;
             expect(me.newGameFromId(shared), `${id}: ${shared}`).toBeNull();
             expect(
-              contract.tierOf(game.decodeParams(me.getParams())),
+              tierOf(game, game.decodeParams(me.getParams())),
               `${id}: "${title}" shared as ${shared} reloaded at the wrong tier`,
             ).toBe(tier);
           }

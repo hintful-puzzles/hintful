@@ -56,13 +56,4 @@ closed when it reasons.
 
 ## Pearl parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares, at least 5 each. The harder of the two difficulties needs one of them to be at least 6.</dd>
-	<dt>Difficulty</dt>
-	<dd>Determine the difficulty of the generated puzzle. Higher difficulties require more complex reasoning (<a href="../features#difficulty">what the names mean</a>).</dd>
-	<dt>Allow unsoluble</dt>
-	<dd>Skip checking the puzzle at all: every pearl the generated loop allows is kept, and nothing makes sure the puzzle has only one solution or can be solved by reasoning. Such a board may have more than one loop that fits, and the difficulty setting has no effect on it.</dd>
-</dl>
+{{parameters}}

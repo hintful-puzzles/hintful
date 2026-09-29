@@ -4,20 +4,23 @@
  * blank/duplicate rules.
  */
 import { describe, expect, it } from "vitest";
+import { describeParams } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { guessGame } from "./index.ts";
 import {
   decodeParams,
   defaultParams,
   encodeParams,
   FEEDBACK_CORRECTCOLOR,
   FEEDBACK_CORRECTPLACE,
+  type GuessParams,
   isMarkable,
   markPegs,
   newDesc,
   newState,
   status,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 describe("params", () => {
@@ -46,24 +49,40 @@ describe("params", () => {
   });
 
   it("validates", () => {
-    expect(validateParams(defaultParams(), true)).toBeNull();
-    expect(validateParams({ ...defaultParams(), ncolors: 1 }, true)).not.toBeNull();
-    expect(validateParams({ ...defaultParams(), npegs: 1 }, true)).not.toBeNull();
-    expect(validateParams({ ...defaultParams(), ncolors: 11 }, true)).not.toBeNull();
-    expect(validateParams({ ...defaultParams(), nguesses: 0 }, true)).not.toBeNull();
+    const error = (p: GuessParams) => paramsError(guessGame, p, true);
+    expect(error(defaultParams())).toBeNull();
+    expect(error({ ...defaultParams(), ncolors: 1 })).toBe("Colors must be at least 2");
+    expect(error({ ...defaultParams(), npegs: 1 })).toBe(
+      "Pegs per guess must be at least 2",
+    );
+    expect(error({ ...defaultParams(), ncolors: 11 })).toBe(
+      "Colors must be at most 10",
+    );
+    expect(error({ ...defaultParams(), nguesses: 0 })).toBe(
+      "Guesses must be at least 1",
+    );
     // no duplicates but fewer colors than pegs
     expect(
-      validateParams(
-        {
-          ncolors: 3,
-          npegs: 4,
-          nguesses: 10,
-          allowBlank: false,
-          allowMultiple: false,
-        },
-        true,
-      ),
-    ).not.toBeNull();
+      error({
+        ncolors: 3,
+        npegs: 4,
+        nguesses: 10,
+        allowBlank: false,
+        allowMultiple: false,
+      }),
+    ).toMatch(/as many colors as pegs/);
+  });
+
+  it("labels a custom game by its rows, colors, blanks and duplicates", () => {
+    const p = {
+      ncolors: 7,
+      npegs: 5,
+      nguesses: 9,
+      allowBlank: true,
+      allowMultiple: false,
+    };
+    expect(describeParams(guessGame, p)).toBe("5x9, 7 colors + blank, no duplicates");
+    expect(describeParams(guessGame, defaultParams())).toBe("4x10, 6 colors");
   });
 });
 

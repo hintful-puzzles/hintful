@@ -13,12 +13,7 @@ import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import {
-  SYMM_MAX,
-  SYMM_REF4,
-  SYMM_ROT2,
-  SYMM_ROT4,
-} from "../../engine/symmetric-blacks.ts";
+import { SYMM_REF4, SYMM_ROT2, SYMM_ROT4 } from "../../engine/symmetric-blacks.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 
 // --- cell flags (upstream values) -------------------------------------------
@@ -96,8 +91,7 @@ const PRESETS: LightupParams[] = [
 ];
 
 // Difficulty 2 requires guess-and-backtrack by construction (the generator
-// rejects boards solvable at the tier below), so it is named Unreasonable. The
-// game's only tier list: the preset titles and `paramConfig` both read it.
+// rejects boards solvable at the tier below), so it is named Unreasonable.
 export const DIFF_NAMES: readonly string[] = tierNames(3, { search: true });
 
 export function defaultParams(): LightupParams {
@@ -107,10 +101,7 @@ export function defaultParams(): LightupParams {
 export function presets(): PresetMenu<LightupParams> {
   return {
     title: "Light Up",
-    submenu: PRESETS.map((p) => ({
-      title: `${p.w}x${p.h} ${DIFF_NAMES[p.difficulty]}`,
-      params: { ...p },
-    })),
+    submenu: PRESETS.map((p) => ({ params: { ...p } })),
   };
 }
 
@@ -148,7 +139,6 @@ export function encodeParams(p: LightupParams, full: boolean): string {
 }
 
 export function validateParams(p: LightupParams, full: boolean): string | null {
-  if (p.w < 2 || p.h < 2) return "Width and height must be at least 2";
   if (p.w * p.h > 0x7fffffff)
     return "Width times height must not be unreasonably large";
   if (full) {
@@ -158,9 +148,6 @@ export function validateParams(p: LightupParams, full: boolean): string | null {
       return "4-fold symmetry is only available with square grids";
     if ((p.symm === SYMM_ROT4 || p.symm === SYMM_REF4) && p.w < 3 && p.h < 3)
       return "Width or height must be at least 3 for 4-way symmetry";
-    if (p.symm < 0 || p.symm >= SYMM_MAX) return "Unknown symmetry type";
-    if (p.difficulty < 0 || p.difficulty >= DIFF_NAMES.length)
-      return "Unknown difficulty level";
   }
   return null;
 }

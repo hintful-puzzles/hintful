@@ -11,6 +11,8 @@
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
+import { describeParams, presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, MOD_STYLUS, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
@@ -67,13 +69,11 @@ import {
   newUi,
   numBit,
   PRESETS,
-  presetName,
   type SeismicMove,
   type SeismicParams,
   type SeismicState,
   textFormat,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 interface Fixture {
@@ -138,7 +138,7 @@ describe("seismic params", () => {
   it("round-trips every preset through encode/decode", () => {
     for (const p of PRESETS) {
       expect(decodeParams(encodeParams(p, true))).toEqual(p);
-      expect(validateParams(p, true)).toBeNull();
+      expect(paramsError(seismicGame, p, true)).toBeNull();
     }
   });
 
@@ -165,15 +165,19 @@ describe("seismic params", () => {
   });
 
   it("rejects an unknown difficulty letter rather than defaulting it", () => {
-    expect(validateParams(decodeParams("6x6dq"), true)).toBe(
-      "Unknown difficulty rating",
+    expect(paramsError(seismicGame, decodeParams("6x6dq"), true)).toBe(
+      `Difficulty must be one of ${DIFF_NAMES.join(", ")}`,
     );
   });
 
   it("rejects boards below the minimum size", () => {
     expect(
-      validateParams({ w: 3, h: 6, diff: DIFF_EASY, mode: MODE_SEISMIC }, true),
-    ).toMatch(/at least 4/);
+      paramsError(
+        seismicGame,
+        { w: 3, h: 6, diff: DIFF_EASY, mode: MODE_SEISMIC },
+        true,
+      ),
+    ).toBe("Width must be at least 4");
   });
 
   it("bounds each mode by what limits that mode", () => {
@@ -186,23 +190,22 @@ describe("seismic params", () => {
     expect(MAX_CELLS_SEISMIC).toBe(8 * 8);
 
     // 10×10 — the size upstream's TODO names — is available in Tectonic...
-    expect(
-      validateParams({ w: 10, h: 10, diff: DIFF_EASY, mode: MODE_TECTONIC }, true),
-    ).toBeNull();
+    const valid = (p: SeismicParams) => paramsError(seismicGame, p, true);
+    expect(valid({ w: 10, h: 10, diff: DIFF_EASY, mode: MODE_TECTONIC })).toBeNull();
     // ...and refused in Seismic, with a reason naming the mode, rather than left
     // to churn for sixteen seconds and throw.
-    expect(
-      validateParams({ w: 10, h: 10, diff: DIFF_EASY, mode: MODE_SEISMIC }, true),
-    ).toMatch(/at most 64 in Seismic mode/);
+    expect(valid({ w: 10, h: 10, diff: DIFF_EASY, mode: MODE_SEISMIC })).toMatch(
+      /at most 64 in Seismic mode/,
+    );
     // Past Tectonic's own bound it is refused too.
-    expect(
-      validateParams({ w: 11, h: 11, diff: DIFF_EASY, mode: MODE_TECTONIC }, true),
-    ).toMatch(/at most 100 in Tectonic mode/);
+    expect(valid({ w: 11, h: 11, diff: DIFF_EASY, mode: MODE_TECTONIC })).toMatch(
+      /at most 100 in Tectonic mode/,
+    );
 
     // Every preset stays inside its mode's bound — and presets stop well short
     // of it, because a preset is a wait nobody chose (see the doc comment).
     for (const p of PRESETS) {
-      expect(validateParams(p, true)).toBeNull();
+      expect(valid(p)).toBeNull();
       expect(p.w * p.h).toBeLessThanOrEqual(8 * 8);
     }
   });
@@ -211,9 +214,10 @@ describe("seismic params", () => {
     // The tier word comes from `DIFF_NAMES` rather than being restated here: it
     // is the collection's, by position, and a literal would be a second copy to
     // rot. What this pins is the *shape* — mode, then size, then tier — which is
-    // what upstream's menu does and what the config-summary template reads.
-    expect(presetName(PRESETS[4])).toBe(`Seismic: 6x6 ${DIFF_NAMES[0]}`);
-    expect(presetName(PRESETS[3])).toBe(`Tectonic: 4x4 ${DIFF_NAMES[1]}`);
+    // what upstream's menu does.
+    const titles = presetMenu(seismicGame).submenu?.map((m) => m.title);
+    expect(titles?.[4]).toBe(`Seismic: 6x6 ${DIFF_NAMES[0]}`);
+    expect(titles?.[3]).toBe(`Tectonic: 4x4 ${DIFF_NAMES[1]}`);
   });
 
   it("round-trips the custom-params form", () => {
@@ -228,14 +232,15 @@ describe("seismic params", () => {
     }
   });
 
-  it("describes params with the keys the config-summary template reads", () => {
-    // augmentation.ts: "{game-mode}: {width}x{height} {difficulty}"
-    expect(seismicGame.describeParams?.(PRESETS[7])).toEqual({
-      width: "6",
-      height: "6",
-      difficulty: DIFF_NORMAL,
-      "game-mode": MODE_TECTONIC,
-    });
+  it("labels a custom board mode-first", () => {
+    expect(
+      describeParams(seismicGame, {
+        w: 5,
+        h: 7,
+        diff: DIFF_NORMAL,
+        mode: MODE_TECTONIC,
+      }),
+    ).toBe(`Tectonic: 5x7 ${DIFF_NAMES[1]}`);
   });
 });
 

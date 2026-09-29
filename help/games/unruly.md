@@ -52,13 +52,4 @@ them one at a time as a single step.
 
 ## Unruly parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares. Both must be even, and at least 6.</dd>
-	<dt>Difficulty</dt>
-	<dd>How hard the reasoning the puzzle needs may be (<a href="../features#difficulty">what the names mean</a>).</dd>
-	<dt>Unique rows and columns</dt>
-	<dd>Adds the rule that no two rows may be the same, and no two columns. There are only so many different rows of a given width, so this limits how tall the grid can be for its width, and the other way round: a grid 6 squares wide can be at most 14 high, and one 8 wide at most 34.</dd>
-</dl>
+{{parameters}}

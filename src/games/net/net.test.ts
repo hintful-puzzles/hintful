@@ -9,6 +9,8 @@
 
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { describeParams } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { CURSOR_RIGHT, MOD_CTRL, MOD_SHFT } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -29,7 +31,6 @@ import {
   newState,
   newUi,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 const WIRE_MASK = 0x0f;
@@ -60,15 +61,33 @@ describe("params codec", () => {
   });
 
   it("rejects a 1x1 grid and a degenerate wrapping-2 unique grid", () => {
-    expect(validateParams({ ...defaultParams(), w: 1, h: 1 }, true)).not.toBeNull();
     expect(
-      validateParams(
+      paramsError(netGame, { ...defaultParams(), w: 1, h: 1 }, true),
+    ).not.toBeNull();
+    expect(paramsError(netGame, { ...defaultParams(), w: 0, h: 5 }, true)).toBe(
+      "Width must be at least 1",
+    );
+    expect(
+      paramsError(
+        netGame,
         { w: 2, h: 5, wrapping: true, unique: true, barrierProbability: 0 },
         true,
       ),
     ).toMatch(/unique solution/);
     // A 1×n grid is allowed (only *both* dims ≤ 1 is rejected).
-    expect(validateParams({ ...defaultParams(), w: 1, h: 5 }, true)).toBeNull();
+    expect(paramsError(netGame, { ...defaultParams(), w: 1, h: 5 }, true)).toBeNull();
+  });
+
+  it("labels a custom grid with what differs from the presets", () => {
+    expect(
+      describeParams(netGame, {
+        w: 7,
+        h: 9,
+        wrapping: true,
+        unique: false,
+        barrierProbability: 0.25,
+      }),
+    ).toBe("7x9 wrapping, 25% barriers, ambiguous");
   });
 });
 

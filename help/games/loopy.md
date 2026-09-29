@@ -128,13 +128,4 @@ link at a time.
 
 ## Loopy parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the board, counted in the chosen tiling's own repeating units rather than in faces, so the same numbers make boards of quite different sizes on different tilings. Each tiling has a smallest size it allows: at least 3 by 3 for most (with one side at least 4 for Cairo), 2 by 2 for the four dodecagonal ones, 1 by 2 for Floret, 6 by 6 for Hats and Spectres, and a width of at least 4 for Penrose (kite/dart).</dd>
-	<dt>Grid type</dt>
-	<dd>The tiling the loop is drawn on. Squares, Triangular and Honeycomb (hexagons) are the familiar ones; Cairo is made of pentagons and Kites of kite shapes; Snub-Square, Great-Hexagonal, Octagonal, Floret, Dodecagonal, Great-Dodecagonal, Great-Great-Dodecagonal, Kagome and Compass-Dodecagonal each mix faces of more than one shape, or of an unusual one. Penrose (kite/dart), Penrose (rhombs), Hats and Spectres are aperiodic: their pattern never repeats.</dd>
-	<dt>Difficulty</dt>
-	<dd>Determine the difficulty of the generated puzzle (<a href="../features#difficulty">what the names mean</a>).</dd>
-</dl>
+{{parameters}}

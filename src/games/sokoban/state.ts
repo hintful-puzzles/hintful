@@ -82,20 +82,18 @@ export function defaultParams(): SokobanParams {
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<SokobanParams>[] =
-  dimensionParamConfig<SokobanParams>();
+  dimensionParamConfig<SokobanParams>({
+    doc: "Size of the grid in squares.",
+    bounds: { min: 4 },
+  });
 
 /** Upstream `decode_params`: `W` or `WxH`, square fallback on a bare number. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
 ]);
 
-export function validateParams(p: SokobanParams, _full: boolean): string | null {
-  if (p.w < 4 || p.h < 4) return "Width and height must both be at least 4";
-  return null;
-}
-
 export function presets(): PresetMenu<SokobanParams> {
-  const p = (w: number, h: number) => ({ title: `${w}x${h}`, params: { w, h } });
+  const p = (w: number, h: number) => ({ params: { w, h } });
   return { title: "Type", submenu: [p(10, 12), p(12, 16), p(16, 20)] };
 }
 

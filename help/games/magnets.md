@@ -57,13 +57,4 @@ A few ideas are worth learning by name:
 
 ## Magnets parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares, from 2 to 61 each. At least one of them must be 3 or more, or 5 or more for the harder of the two difficulties.</dd>
-	<dt>Difficulty</dt>
-	<dd>Determine the difficulty of the generated puzzle. Higher difficulties require more complex reasoning (<a href="../features#difficulty">what the names mean</a>).</dd>
-	<dt>Strip clues</dt>
-	<dd>Remove numbers from around the edge, one at a time, for as long as the puzzle still has only one solution at its difficulty. Some rows and columns then have no number for + or − at all.</dd>
-</dl>
+{{parameters}}

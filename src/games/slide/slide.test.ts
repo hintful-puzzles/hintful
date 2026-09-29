@@ -11,6 +11,8 @@
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
+import { describeParams } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -40,7 +42,6 @@ import {
   boardTextFormat,
   decodeParams,
   defaultParams,
-  describeParams,
   EMPTY,
   encodeDesc,
   encodeParams,
@@ -53,9 +54,10 @@ import {
   type SlideState,
   type SlideUi,
   validateDesc,
-  validateParams,
   WALL,
 } from "./state.ts";
+
+const valid = (p: SlideParams) => paramsError(slideGame, p, true);
 
 const P = (w: number, h: number, maxmoves: number): SlideParams => ({
   w,
@@ -179,34 +181,30 @@ describe("slide params", () => {
     expect(decodeParams("6u")).toEqual(P(6, 6, -1));
   });
 
-  it("rejects out-of-range params with upstream's messages", () => {
-    expect(validateParams(P(7, 6, 25), true)).toBeNull();
-    expect(validateParams(P(300, 6, -1), true)).toMatch(/at most 251/);
-    expect(validateParams(P(4, 6, -1), true)).toMatch(/at least 5/);
-    expect(validateParams(P(7, 3, -1), true)).toMatch(/at least 4/);
+  it("rejects out-of-range params", () => {
+    expect(valid(P(7, 6, 25))).toBeNull();
+    expect(valid(P(300, 6, -1))).toBe("Width must be at most 251");
+    expect(valid(P(4, 6, -1))).toBe("Width must be at least 5");
+    expect(valid(P(7, 3, -1))).toBe("Height must be at least 4");
   });
 
   it("rejects a board too large for the exhaustive solver", () => {
     // Not upstream's bound; see MAX_CELLS for the measurements behind it. It is
     // exactly the area of the largest upstream preset, so no preset is lost.
     expect(8 * 6).toBe(MAX_CELLS);
-    expect(validateParams(P(8, 6, -1), true)).toBeNull();
-    expect(validateParams(P(9, 6, -1), true)).toMatch(/at most 48/);
+    expect(valid(P(8, 6, -1))).toBeNull();
+    expect(valid(P(9, 6, -1))).toMatch(/at most 48/);
   });
 
   it("rejects a zero move limit, which nothing can satisfy", () => {
-    expect(validateParams(P(7, 6, 0), true)).toMatch(/at least 1/);
-    expect(validateParams(P(7, 6, 1), true)).toBeNull();
-    expect(validateParams(P(7, 6, -1), true)).toBeNull();
+    expect(valid(P(7, 6, 0))).toMatch(/at least 1/);
+    expect(valid(P(7, 6, 1))).toBeNull();
+    expect(valid(P(7, 6, -1))).toBeNull();
   });
 
-  it("describes params with the keys augmentation.ts substitutes", () => {
-    expect(describeParams(P(7, 6, 25))).toEqual({
-      width: "7",
-      height: "6",
-      "solution-length-limit": "25",
-    });
-    expect(describeParams(P(8, 6, -1))["solution-length-limit"]).toBe("-1");
+  it("labels params by size and move limit", () => {
+    expect(describeParams(slideGame, P(7, 6, 25))).toBe("7x6, max 25 moves");
+    expect(describeParams(slideGame, P(8, 6, -1))).toBe("8x6, no move limit");
   });
 
   it("round-trips the custom-params form, including a negative limit", () => {

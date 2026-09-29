@@ -51,7 +51,6 @@ import {
   status,
   textFormat,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 // --- move logic -------------------------------------------------------
@@ -264,7 +263,6 @@ export const fifteenGame: Game<
   presets,
   encodeParams,
   decodeParams,
-  validateParams,
   transposeParams: transposeDimensions(),
   paramConfig,
 

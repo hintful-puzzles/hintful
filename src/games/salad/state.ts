@@ -89,16 +89,11 @@ export function defaultParams(): SaladParams {
   return { ...PRESETS[0] };
 }
 
-/** The `A~C` / `1~3` symbol range a preset label and the status bar show. */
+/** The `A~C` / `1~3` symbol range a params label and the status bar show. */
 export function symbolRange(p: SaladParams): string {
   return p.mode === GAMEMODE_LETTERS
     ? `A~${String.fromCharCode(64 + p.nums)}`
     : `1~${p.nums}`;
-}
-
-export function presetLabel(p: SaladParams): string {
-  const kind = p.mode === GAMEMODE_LETTERS ? "Letters" : "Numbers";
-  return `${kind}: ${p.order}x${p.order} ${symbolRange(p)}`;
 }
 
 export function encodeParams(p: SaladParams, full: boolean): string {
@@ -144,11 +139,7 @@ export function decodeParams(s: string): SaladParams {
 }
 
 export function validateParams(p: SaladParams, _full: boolean): string | null {
-  if (p.nums < 2) return "Symbols must be at least 2.";
   if (p.nums >= p.order) return "Symbols must be lower than the size.";
-  if (p.order < 3) return "Size must be at least 3.";
-  if (p.nums > 9) return "Symbols must be no more than 9.";
-  if (p.diff >= DIFFCOUNT) return "Unknown difficulty rating";
   return null;
 }
 

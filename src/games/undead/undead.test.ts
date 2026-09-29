@@ -9,6 +9,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newUndeadDesc } from "./generator.ts";
@@ -34,7 +35,6 @@ import {
   type UndeadParams,
   type UndeadState,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 function gen(w: number, h: number, diff: Difficulty, seed: string) {
@@ -63,10 +63,11 @@ describe("undead params", () => {
   });
 
   it("rejects invalid params", () => {
-    expect(validateParams({ w: 2, h: 4, diff: "easy" }, true)).not.toBeNull();
-    expect(validateParams({ w: 4, h: 2, diff: "easy" }, true)).not.toBeNull();
-    expect(validateParams({ w: 8, h: 8, diff: "easy" }, true)).not.toBeNull(); // 8*8 > 54
-    expect(validateParams({ w: 5, h: 5, diff: "normal" }, true)).toBeNull();
+    const error = (p: UndeadParams) => paramsError(undeadGame, p, true);
+    expect(error({ w: 2, h: 4, diff: "easy" })).toBe("Width must be at least 3");
+    expect(error({ w: 4, h: 2, diff: "easy" })).toBe("Height must be at least 3");
+    expect(error({ w: 8, h: 8, diff: "easy" })).toBe("Grid is too big"); // 8*8 > 54
+    expect(error({ w: 5, h: 5, diff: "normal" })).toBeNull();
   });
 });
 

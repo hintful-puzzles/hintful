@@ -88,22 +88,4 @@ arguing.
 
 ## Guess parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Colors</dt>
-	<dd>How many colors the answer is chosen from, from 2 to 10.</dd>
-	<dt>Pegs per guess</dt>
-	<dd>How many pegs the hidden combination has, and so how many go in
-	each guess. At least 2.</dd>
-	<dt>Guesses</dt>
-	<dd>How many rows you have to find the answer in.</dd>
-	<dt>Allow blanks</dt>
-	<dd>When on, you may submit a guess with some pegs left empty, as long
-	as it has at least one color in it. The answer itself never has a
-	blank.</dd>
-	<dt>Allow duplicates</dt>
-	<dd>When on, a color may appear more than once in the answer, and in
-	your guesses. When off, every peg of the answer is a different color,
-	so there must be at least as many colors as pegs.</dd>
-</dl>
+{{parameters}}

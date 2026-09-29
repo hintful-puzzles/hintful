@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { type PegsMove, type PegsParams, pegsGame } from "./index.ts";
 
@@ -52,25 +54,27 @@ describe("Pegs params", () => {
   });
 
   it("validates cross board sizes", () => {
-    expect(G.validateParams({ w: 5, h: 7, type: 0 }, true)).toBeNull();
-    expect(G.validateParams({ w: 3, h: 3, type: 0 }, true)).toMatch(
-      /greater than three/,
-    );
-    expect(G.validateParams({ w: 6, h: 6, type: 0 }, true)).toMatch(/5, 7 or 9/);
+    expect(paramsError(G, { w: 5, h: 7, type: 0 }, true)).toBeNull();
+    expect(paramsError(G, { w: 3, h: 3, type: 0 }, true)).toMatch(/greater than three/);
+    expect(paramsError(G, { w: 6, h: 6, type: 0 }, true)).toMatch(/5, 7 or 9/);
     // The message once listed only one of each transposed pair it accepts.
-    expect(G.validateParams({ w: 9, h: 5, type: 0 }, true)).toBeNull();
+    expect(paramsError(G, { w: 9, h: 5, type: 0 }, true)).toBeNull();
   });
 
   it("validates octagon is 7x7 only", () => {
-    expect(G.validateParams({ w: 7, h: 7, type: 1 }, true)).toBeNull();
-    expect(G.validateParams({ w: 5, h: 7, type: 1 }, true)).toMatch(
+    expect(paramsError(G, { w: 7, h: 7, type: 1 }, true)).toBeNull();
+    expect(paramsError(G, { w: 5, h: 7, type: 1 }, true)).toMatch(
       /only supported at 7×7/,
     );
   });
 
   it("rejects zero/negative dimensions", () => {
-    expect(G.validateParams({ w: 0, h: 5, type: 0 }, false)).toMatch(/at least one/);
-    expect(G.validateParams({ w: 5, h: -1, type: 0 }, false)).toMatch(/at least one/);
+    expect(paramsError(G, { w: 0, h: 5, type: 0 }, false)).toBe(
+      "Width must be at least 1",
+    );
+    expect(paramsError(G, { w: 5, h: -1, type: 0 }, false)).toBe(
+      "Height must be at least 1",
+    );
   });
 });
 
@@ -284,7 +288,14 @@ describe("Pegs presets", () => {
   it("presets have valid params", () => {
     const menu = G.presets();
     for (const item of menu.submenu ?? []) {
-      expect(G.validateParams(item.params as PegsParams, true)).toBeNull();
+      expect(paramsError(G, item.params as PegsParams, true)).toBeNull();
     }
+  });
+
+  it("titles a preset by its size, then its board type", () => {
+    const titles = (presetMenu(G).submenu ?? []).map((m) => m.title);
+    expect(titles).toContain("5x7 Cross");
+    expect(titles).toContain("7x7 Octagon");
+    expect(titles).toContain("9x9 Random");
   });
 });

@@ -47,7 +47,7 @@ export const WALL = 252;
 /** Largest encodable back-link distance, and hence the theoretical maximum
  * board width (solver running time dictates a far smaller practical one). */
 export const MAXDIST = 251;
-const MAXWID = MAXDIST;
+export const MAXWID = MAXDIST;
 
 /** A back-link to the previous square of the same block, `v` squares earlier. */
 export function isDist(v: number): boolean {
@@ -81,16 +81,10 @@ const PRESETS: readonly SlideParams[] = [
   { w: 6, h: 8, maxmoves: -1 },
 ];
 
-/** Upstream `game_fetch_preset`'s label. */
-function presetTitle(p: SlideParams): string {
-  const limit = p.maxmoves >= 0 ? `, max ${p.maxmoves} moves` : ", no move limit";
-  return `${p.w}x${p.h}${limit}`;
-}
-
 export function presets(): PresetMenu<SlideParams> {
   return {
     title: "Slide",
-    submenu: PRESETS.map((p) => ({ title: presetTitle(p), params: { ...p } })),
+    submenu: PRESETS.map((p) => ({ params: { ...p } })),
   };
 }
 
@@ -152,11 +146,7 @@ export function decodeParams(s: string): SlideParams {
 export const MAX_CELLS = 48;
 
 export function validateParams(p: SlideParams, _full: boolean): string | null {
-  if (p.w > MAXWID) return `Width must be at most ${MAXWID}`;
-  if (p.w < 5) return "Width must be at least 5";
-  if (p.h < 4) return "Height must be at least 4";
-
-  // The rest are not upstream's checks. See MAX_CELLS for the measurements.
+  // Not upstream's checks. See MAX_CELLS for the measurements.
   if (p.w * p.h > MAX_CELLS)
     return `Width times height must be at most ${MAX_CELLS} (the solver runs out of memory beyond that)`;
 
@@ -167,16 +157,6 @@ export function validateParams(p: SlideParams, _full: boolean): string | null {
   if (p.maxmoves === 0) return "Solution length limit must be at least 1";
 
   return null;
-}
-
-export function describeParams(p: SlideParams): Record<string, string> {
-  // The keys `src/puzzle/augmentation.ts` substitutes into slide's
-  // `"{width}x{height}, {solution-length-limit}"` template (docs/games/mechanics.md § "Params").
-  return {
-    width: String(p.w),
-    height: String(p.h),
-    "solution-length-limit": String(p.maxmoves),
-  };
 }
 
 // --- state ------------------------------------------------------------

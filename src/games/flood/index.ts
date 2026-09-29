@@ -12,7 +12,7 @@ import { ALREADY_SOLVED, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.
 import { CELL, type MarkRef } from "../../engine/hint-words.ts";
 import {
   dimensionParamConfig,
-  parseConfigInt,
+  numberItem,
   transposeDimensions,
 } from "../../engine/params.ts";
 import {
@@ -48,6 +48,7 @@ import {
   type FloodParams,
   type FloodState,
   type FloodUi,
+  MAXCOLORS,
   newDesc,
   newState,
   presets,
@@ -248,30 +249,29 @@ export const floodGame: Game<
   validateParams,
   transposeParams: transposeDimensions(),
   paramConfig: [
-    ...dimensionParamConfig<FloodParams>(),
-    {
-      kw: "colors",
-      name: "Colors",
-      type: "string",
-      get: (p) => String(p.colors),
-      set: (p, v) => {
-        p.colors = parseConfigInt(v);
+    ...dimensionParamConfig<FloodParams>({
+      doc: "Size of the grid in squares. The grid must have at least two squares.",
+      bounds: { min: 1 },
+    }),
+    numberItem<FloodParams>("colors", "Colors", "colors", {
+      doc: "How many different colors the grid is filled with.",
+      bounds: { min: 3, max: MAXCOLORS },
+      label: { slot: "tail", words: (p) => `${p.colors} colors` },
+    }),
+    numberItem<FloodParams>(
+      "extra-moves-permitted",
+      "Extra moves permitted",
+      "leniency",
+      {
+        doc: "How much slack the move limit gives you. The game plays the board through itself when it deals it, and the limit is the number of fills it took plus this many. At 0 you have to match or beat the game's own count.",
+        bounds: { min: 0 },
+        label: {
+          slot: "tail",
+          words: (p) => (p.leniency > 0 ? `${p.leniency} extra moves` : null),
+        },
       },
-    },
-    {
-      kw: "extra-moves-permitted",
-      name: "Extra moves permitted",
-      type: "string",
-      get: (p) => String(p.leniency),
-      set: (p, v) => {
-        p.leniency = parseConfigInt(v);
-      },
-    },
+    ),
   ],
-  describeParams: (p) => ({
-    colors: String(p.colors),
-    "extra-moves-permitted": String(p.leniency),
-  }),
 
   newDesc,
   validateDesc,

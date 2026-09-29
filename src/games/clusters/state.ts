@@ -9,7 +9,7 @@
  * the given bytes stay clean for the desc encoder.
  */
 
-import { tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
@@ -107,28 +107,15 @@ export function defaultParams(): ClustersParams {
 }
 
 export function presets(): PresetMenu<ClustersParams> {
-  return {
-    title: "Clusters",
-    submenu: PRESETS.map((p) => ({
-      title: `${p.w}x${p.h} ${DIFF_NAMES[p.diff]}`,
-      params: { ...p },
-    })),
-  };
+  return { title: "Clusters", submenu: PRESETS.map((p) => ({ params: { ...p } })) };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<ClustersParams>[] = [
-  ...dimensionParamConfig<ClustersParams>(),
-  {
-    kw: "difficulty",
-    name: "Difficulty",
-    type: "choices",
-    choices: [...DIFF_NAMES],
-    get: (p) => p.diff,
-    set: (p, v) => {
-      p.diff = v;
-    },
-  },
+  ...dimensionParamConfig<ClustersParams>({ doc: "Size of the grid in squares." }),
+  difficultyItem(DIFF_NAMES, "diff", {
+    doc: "Both settings always have exactly one solution, and neither ever needs a guess.<p><em>Easy</em> puzzles can be finished a square at a time: for each empty square, one of the two colors breaks a rule outright, so the other one is forced.</p><p><em>Normal</em> puzzles need at least one step where that is not enough, and you must suppose a color, follow the squares it forces, and find the contradiction further along. Normal boards are guaranteed to need this at least once: a board an Easy player could finish is not offered as Normal.</p>",
+  }),
 ];
 
 /**
@@ -137,7 +124,7 @@ export const paramConfig: ParamConfigItem<ClustersParams>[] = [
  * `d<char>` selects the tier. A game ID from before the tiers existed has no
  * `d`, so it lands on the default — see `defaultParams`.
  *
- * An unrecognized char leaves the tier out of range so `validateParams`
+ * An unrecognized char leaves the tier out of range so `paramsError`
  * rejects it, rather than silently playing some other difficulty.
  */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
@@ -181,7 +168,6 @@ export function validateParams(p: ClustersParams, full: boolean): string | null 
   // 4x7, never produced a board in 10,000 attempts; `max(w,h) >= 3` is exactly
   // their complement.
   if (Math.max(p.w, p.h) < 3) return "Width or height must be at least three";
-  if (p.diff >= DIFFCOUNT) return "Unknown difficulty rating";
   // Generation only: a saved game or a game ID carrying its own description
   // still loads at any size, because `full` is false there.
   if (

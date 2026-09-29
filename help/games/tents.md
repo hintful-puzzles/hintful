@@ -73,11 +73,4 @@ A few ideas are worth learning by name:
 
 ## Tents parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares, at least 4 each way.</dd>
-	<dt>Difficulty</dt>
-	<dd>How hard the reasoning the puzzle needs may be (<a href="../features#difficulty">what the names mean</a>).</dd>
-</dl>
+{{parameters}}

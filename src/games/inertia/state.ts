@@ -66,14 +66,12 @@ export function decodeParams(s: string): InertiaParams {
 }
 
 export function validateParams(p: InertiaParams): string | null {
-  // Degenerate single-row/column grids are excluded: they could be generated
-  // but would be extremely boring, and are slow to hit at random.
-  if (p.w < 2 || p.h < 2) return "Width and height must both be at least two";
   if (!Number.isSafeInteger(p.w * p.h)) {
     return "Width times height must not be unreasonably large";
   }
   // The generator makes one gem per five squares and needs at least one; an
-  // area-five grid is already excluded by the rule above, so six is the floor.
+  // area-five grid is already excluded by the dimensions' bounds, so six is the
+  // floor.
   if (p.w * p.h < 6) return "Grid area must be at least six squares";
   return null;
 }

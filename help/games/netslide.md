@@ -45,21 +45,4 @@ slides of your own and ask again, or use *Show solution…*.
 
 ## Netslide parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares. Both must be at least 2.</dd>
-	<dt>Walls wrap around</dt>
-	<dd>When on, the network may run off one edge of the grid and come
-	back on the opposite edge, so the outside of the grid is no longer a
-	wall.</dd>
-	<dt>Barrier probability</dt>
-	<dd>A number from 0 to 1: the share of the places where the finished
-	network has no wire that get a barrier drawn across them. At 0 there
-	are no barriers inside the grid; at 1 every such place has one, which
-	gives away a lot about the solution.</dd>
-	<dt>Number of shuffling moves</dt>
-	<dd>How many random slides scramble the finished network. At 0, the
-	number is chosen from the size of the grid.</dd>
-</dl>
+{{parameters}}

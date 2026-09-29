@@ -37,11 +37,4 @@ square is named by its letter instead ("these two Ds").
 
 ## Separate parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares.</dd>
-	<dt>Letters</dt>
-	<dd>How many different letters the grid uses, which is also how many squares each region holds: from 2 to 26. It must divide the number of squares in the grid exactly, and be smaller than it.</dd>
-</dl>
+{{parameters}}

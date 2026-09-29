@@ -51,9 +51,4 @@ The ideas it teaches:
 
 ## Range parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares. At least one of them must be 3 or more, and together they can come to at most 128.</dd>
-</dl>
+{{parameters}}

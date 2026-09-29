@@ -75,8 +75,8 @@ export interface BoatsParams {
    * exactly {@link BoatsParams.fleet} entries long. */
   fleetData: number[];
   /** `DIFF_EASY` … `DIFF_HARD`; `DIFFCOUNT + 1` when a game ID named a
-   * difficulty letter this build doesn't know (rejected by `validateParams`,
-   * exactly as upstream). */
+   * difficulty letter this build doesn't know (rejected by `paramsError`, as
+   * upstream rejects it). */
   diff: number;
   /** "Remove numbers": hide some border clues to raise the difficulty. */
   strip: boolean;
@@ -136,10 +136,6 @@ export function presetParams(i: number): BoatsParams {
   return { ...p, fleetData: defaultFleet(p.fleet) };
 }
 
-export function presetTitle(p: BoatsParams): string {
-  return `${p.w}x${p.h}, size ${p.fleet} ${DIFF_NAMES[p.diff] ?? "?"}`;
-}
-
 export function defaultParams(): BoatsParams {
   return presetParams(DEFAULT_PRESET);
 }
@@ -163,7 +159,7 @@ export function encodeParams(p: BoatsParams, full: boolean): string {
 
 /**
  * Upstream `decode_params`, read leniently: an unknown difficulty letter sets
- * an out-of-range `diff` that {@link validateParams} then rejects, rather than
+ * an out-of-range `diff` that `paramsError` then rejects, rather than
  * throwing here. Fields the string doesn't mention keep their default-params
  * value, matching the C (which decodes onto a `dup_params` of the current
  * params) — except `fleet` and `strip`, which upstream resets unconditionally.

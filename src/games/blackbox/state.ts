@@ -151,13 +151,7 @@ export function ballsText(p: BlackboxParams): string {
 }
 
 export function presets() {
-  return {
-    title: "Black Box",
-    submenu: PRESETS.map((p) => ({
-      title: `${p.w}x${p.h}, ${ballsText(p)} balls`,
-      params: { ...p },
-    })),
-  };
+  return { title: "Black Box", submenu: PRESETS.map((p) => ({ params: { ...p } })) };
 }
 
 export function encodeParams(p: BlackboxParams, _full: boolean): string {
@@ -185,13 +179,9 @@ export function decodeParams(s: string): BlackboxParams {
 }
 
 export function validateParams(p: BlackboxParams, _full: boolean): string | null {
-  if (p.w < 2 || p.h < 2) return "Width and height must both be at least two";
-  if (p.w > 255 || p.h > 255)
-    return "Widths and heights greater than 255 are not supported";
-  if (p.minballs < 0) return "Negative number of balls";
-  if (p.minballs < 1) return "Number of balls must be at least one";
+  if (p.minballs < 1) return "No. of balls must be at least 1";
   if (p.minballs > p.maxballs)
-    return "Minimum number of balls may not be greater than maximum";
+    return "No. of balls may not have a minimum greater than its maximum";
   if (p.minballs >= p.w * p.h) return "Too many balls to fit in grid";
   return null;
 }

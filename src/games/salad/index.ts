@@ -19,7 +19,7 @@ import {
   obviousCandidateMarks,
   regionReach,
 } from "../../engine/candidate-hint.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
@@ -34,7 +34,7 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import { parseConfigInt } from "../../engine/params.ts";
+import { numberItem, squareSize } from "../../engine/params.ts";
 import {
   pencilKeepHighlightPref,
   stickyPencilPref,
@@ -49,7 +49,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { ConfigValues, GameStatus, KeyLabel, Point } from "../../engine/types.ts";
+import type { GameStatus, KeyLabel, Point } from "../../engine/types.ts";
 import { newSaladDesc } from "./generator.ts";
 import {
   hint,
@@ -89,7 +89,6 @@ import {
   newState,
   newUi,
   PRESETS,
-  presetLabel,
   type SaladEntry,
   type SaladMark,
   type SaladMove,
@@ -111,7 +110,7 @@ export type { SaladMistake } from "./solver.ts";
 function presets(): PresetMenu<SaladParams> {
   return {
     title: "Salad",
-    submenu: PRESETS.map((p) => ({ title: presetLabel(p), params: { ...p } })),
+    submenu: PRESETS.map((p) => ({ params: { ...p } })),
   };
 }
 
@@ -332,8 +331,6 @@ function solve(orig: SaladState): SolveResult<SaladMove> {
  * plain boolean — "did this come out a complete, valid board?" — and
  * `scratchBoard` seeds it with the clues only. */
 const difficulty: DifficultyContract<SaladParams> = {
-  tierOf: (p) => p.diff,
-  withTier: (p, tier) => ({ ...p, diff: tier }),
   solveAtCap: (p, desc, cap) =>
     saladSolve(scratchBoard(newState(p, desc)), cap) ? "solved" : "unsolved",
 };
@@ -362,48 +359,30 @@ export const saladGame: Game<
       name: "Game Mode",
       type: "choices",
       choices: ["ABC End View", "Number Ball"],
+      doc: "Switch between ABC End View and Number Ball mode.",
+      label: {
+        slot: "lead",
+        words: (p) => (p.mode === GAMEMODE_LETTERS ? "Letters" : "Numbers"),
+      },
       get: (p) => p.mode,
       set: (p, v) => {
         p.mode = v === GAMEMODE_NUMBERS ? GAMEMODE_NUMBERS : GAMEMODE_LETTERS;
       },
     },
-    {
-      kw: "size",
-      name: "Size (s*s)",
-      type: "string",
-      get: (p) => String(p.order),
-      set: (p, v) => {
-        p.order = parseConfigInt(v);
-      },
-    },
-    {
-      kw: "symbols",
-      name: "Symbols",
-      type: "string",
-      get: (p) => String(p.nums),
-      set: (p, v) => {
-        p.nums = parseConfigInt(v);
-      },
-    },
-    {
-      kw: "difficulty",
-      name: "Difficulty",
-      type: "choices",
-      choices: [...DIFF_NAMES],
-      get: (p) => p.diff,
-      set: (p, v) => {
-        p.diff = v;
-      },
-    },
+    numberItem<SaladParams>("size", "Size (s*s)", "order", {
+      doc: "Size of the grid in squares.",
+      bounds: { min: 3 },
+      label: { slot: "size", words: squareSize("order") },
+    }),
+    numberItem<SaladParams>("symbols", "Symbols", "nums", {
+      doc: "The amount of different symbols that appear in each row.",
+      bounds: { min: 2, max: 9 },
+      label: { slot: "kind", words: symbolRange },
+    }),
+    difficultyItem(DIFF_NAMES, "diff", {
+      doc: "A Normal puzzle always needs a technique the Easy level does not have, so the setting you choose is the difficulty you get. Normal Number Ball puzzles are rare, so one can take a few seconds to appear.",
+    }),
   ],
-  // Keys match the bespoke `salad` summary in augmentation.ts, which reads
-  // `game-mode`, `size`, `symbols` and `difficulty`.
-  describeParams: (p): ConfigValues => ({
-    "game-mode": p.mode,
-    size: String(p.order),
-    symbols: String(p.nums),
-    difficulty: p.diff,
-  }),
 
   newDesc: (p, rng) => newSaladDesc(p, rng),
   validateDesc,

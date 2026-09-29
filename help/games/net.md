@@ -30,24 +30,4 @@ unlocked square to a random rotation.
 
 ## Net parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares. At least one of them must be more
-	than 1.</dd>
-	<dt>Walls wrap around</dt>
-	<dd>When on, the network may run off one edge of the grid and come
-	back on the opposite edge, so the outside of the grid is no longer a
-	wall.</dd>
-	<dt>Barrier probability</dt>
-	<dd>A number from 0 to 1: the share of the places where the finished
-	network has no wire that get a barrier drawn across them. At 0 there
-	are no barriers inside the grid; at 1 every such place has one, which
-	gives away a lot about the solution.</dd>
-	<dt>Ensure unique solution</dt>
-	<dd>When on, the puzzle has exactly one solution. When off, it may
-	have several, and any of them counts. A wrapping grid 2 squares wide
-	or high can never have just one solution, so it needs this
-	off.</dd>
-</dl>
+{{parameters}}

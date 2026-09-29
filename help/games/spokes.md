@@ -52,12 +52,5 @@ undo if it breaks.
 
 ## Spokes parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares.</dd>
-	<dt>Difficulty</dt>
-	<dd>Determine the difficulty of the generated puzzle. Higher difficulties require more complex reasoning.</dd>
-</dl>
+{{parameters}}
 

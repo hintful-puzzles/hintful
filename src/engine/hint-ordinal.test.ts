@@ -34,7 +34,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { HINT_EVIDENCE } from "./color/palette.ts";
-import { difficultyTiers } from "./difficulty.ts";
+import { difficultyTiers, withTier } from "./difficulty.ts";
+import { paramsError } from "./params.ts";
 import { randomNew } from "./random/index.ts";
 import {
   type AnyGame,
@@ -147,13 +148,12 @@ function declaredOrder(highlights: unknown): number[] | null {
  */
 function chainBoards(id: string, game: AnyGame): { title: string; params: unknown }[] {
   const out = gatePresets(id, game);
-  const contract = game.difficulty;
   const tiers = difficultyTiers(game);
-  if (!contract || !tiers) return out;
+  if (!game.difficulty || !tiers) return out;
   const base = firstLeaf(game.presets());
   const seen = new Set(out.map((e) => JSON.stringify(e.params)));
   for (const [tier, tierName] of tiers.entries()) {
-    const params = contract.withTier(base, tier);
+    const params = withTier(game, base, tier);
     const key = JSON.stringify(params);
     if (seen.has(key)) continue;
     seen.add(key);
@@ -168,7 +168,7 @@ describe("an ordered hint chain carries its order to the canvas", () => {
   for (const [name, game] of HINT_GAMES) {
     it(`${name}: every numbered chain is 1..n, and every number is drawn`, () => {
       for (const { title, params } of chainBoards(name, game)) {
-        if (game.validateParams(params, true)) continue; // refused at this size
+        if (paramsError(game, params, true)) continue; // refused at this size
         for (const seed of SEEDS) {
           let board: { desc: string; aux?: string };
           try {

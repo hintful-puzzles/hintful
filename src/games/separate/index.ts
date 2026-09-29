@@ -42,7 +42,7 @@ import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor, stripModifiers } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import type { ConfigValues, Point } from "../../engine/types.ts";
+import type { Point } from "../../engine/types.ts";
 import { newSeparateDesc } from "./generator.ts";
 import { say } from "./hint-text.ts";
 import {
@@ -251,11 +251,6 @@ export const separateGame: Game<
   validateParams,
   transposeParams: transposeDimensions(),
   paramConfig,
-  describeParams: (p): ConfigValues => ({
-    width: String(p.w),
-    height: String(p.h),
-    letters: String(p.k),
-  }),
 
   newDesc: newSeparateDesc,
   validateDesc,

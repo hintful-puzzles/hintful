@@ -21,7 +21,7 @@ import {
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
 import { runCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
@@ -44,7 +44,7 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import { parseConfigInt } from "../../engine/params.ts";
+import { numberItem } from "../../engine/params.ts";
 import {
   autoPencilPref,
   candidateReadingPref,
@@ -60,7 +60,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { ConfigValues, KeyLabel, Point, Size } from "../../engine/types.ts";
+import type { KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newSoloDesc } from "./generator.ts";
 import { type RegionCells, regionName, say } from "./hint-text.ts";
 import {
@@ -102,6 +102,7 @@ import {
   encodeParams,
   newState,
   newUi,
+  ORDER_MAX,
   onDiag0,
   onDiag1,
   type SoloMistake,
@@ -118,10 +119,6 @@ import {
 
 /** Upstream's `game_presets`, with its non-`SLOW_SYSTEM` entries always shown. */
 function presets(): PresetMenu<SoloParams> {
-  // The title is derived from the params, so the menu names a tier exactly as
-  // the Custom dialog does. The shape is upstream's: size (or jigsaw), then the
-  // tier, then the X marker; a Killer preset is named for its mode, which is
-  // what distinguishes it from the plain preset at the same tier.
   const P = (
     c: number,
     r: number,
@@ -130,13 +127,9 @@ function presets(): PresetMenu<SoloParams> {
     kdiff: number,
     xtype: boolean,
     killer: boolean,
-  ): PresetMenu<SoloParams> => {
-    const size = r === 1 ? `${c} Jigsaw` : `${c}x${r}`;
-    const title = killer
-      ? `${size} Killer`
-      : `${size} ${DIFF_NAMES[diff]}${xtype ? " X" : ""}`;
-    return { title, params: { c, r, symm, diff, kdiff, xtype, killer } };
-  };
+  ): PresetMenu<SoloParams> => ({
+    params: { c, r, symm, diff, kdiff, xtype, killer },
+  });
   const K = DIFF_KMINMAX;
   const submenu = [
     P(2, 2, SYMM_ROT2, DIFF_BLOCK, K, false, false),
@@ -166,6 +159,18 @@ function presets(): PresetMenu<SoloParams> {
   ];
   return { title: "Solo", submenu };
 }
+
+/** The Custom dialog's symmetry choices, indexed by the `SYMM_*` constants. */
+const SYMMETRY_NAMES = [
+  "None",
+  "2-way rotation",
+  "4-way rotation",
+  "2-way mirror",
+  "2-way diagonal mirror",
+  "4-way mirror",
+  "4-way diagonal mirror",
+  "8-way mirror",
+] as const;
 
 function inGrid(cr: number, x: number, y: number): boolean {
   return x >= 0 && x < cr && y >= 0 && y < cr;
@@ -629,8 +634,6 @@ function refreshHintStep(
  * for declaring the tier list rather than counting constants. The killer cap is
  * left at its default: the tier being varied is the ordinary deduction ladder. */
 const difficulty: DifficultyContract<SoloParams> = {
-  tierOf: (p) => p.diff,
-  withTier: (p, tier) => ({ ...p, diff: tier }),
   solveAtCap: (p, desc, cap) => {
     const { diff } = solveSolo(givensOnly(newState(p, desc)), cap, DIFF_KINTERSECT);
     if (diff === DIFF_IMPOSSIBLE) return "impossible";
@@ -655,35 +658,30 @@ export const soloGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
-  // Keys match the custom `solo` describeConfig in augmentation.ts. Upstream's
-  // `custom_params` reads columns and rows, then folds jigsaw (`c *= r; r = 1`),
-  // so the `jigsaw` item MUST come after the column/row items: the midend
-  // applies `set`s in array order and jigsaw's setter reads the new `c`/`r`. A
-  // jigsaw board is stored `r === 1, c === order`; unchecking jigsaw leaves c/r
-  // as they are, as upstream does.
+  // Upstream's `custom_params` reads columns and rows, then folds jigsaw
+  // (`c *= r; r = 1`), so the `jigsaw` item MUST come after the column/row
+  // items: the midend applies `set`s in array order and jigsaw's setter reads
+  // the new `c`/`r`. A jigsaw board is stored `r === 1, c === order`;
+  // unchecking jigsaw leaves c/r as they are, as upstream does.
   paramConfig: [
-    {
-      kw: "columns-of-sub-blocks",
-      name: "Columns of sub-blocks",
-      type: "string",
-      get: (p) => String(p.c),
-      set: (p, v) => {
-        p.c = parseConfigInt(v);
+    numberItem<SoloParams>("columns-of-sub-blocks", "Columns of sub-blocks", "c", {
+      doc: "How many blocks the grid has across and down. Their product is the width and height of the grid, and the largest number in it: 3 and 3 make the usual 9×9 grid of 3×3 blocks, while 2 and 3 make a 6×6 grid of blocks 3 wide and 2 high. The grid can hold at most 31 numbers.",
+      bounds: { min: 2, max: ORDER_MAX },
+      label: {
+        slot: "size",
+        words: (p) => (p.r === 1 ? `${p.c * p.r} Jigsaw` : `${p.c}x${p.r}`),
       },
-    },
-    {
-      kw: "rows-of-sub-blocks",
-      name: "Rows of sub-blocks",
-      type: "string",
-      get: (p) => String(p.r),
-      set: (p, v) => {
-        p.r = parseConfigInt(v);
-      },
-    },
+    }),
+    numberItem<SoloParams>("rows-of-sub-blocks", "Rows of sub-blocks", "r", {
+      doc: { with: "columns-of-sub-blocks" },
+      bounds: { max: ORDER_MAX },
+    }),
     {
       kw: "x",
       name: '"X" (require every number in each main diagonal)',
       type: "boolean",
+      doc: "X mode: the two long diagonals must also hold every number once. The grid needs at least 4 numbers.",
+      label: { slot: "kind", words: (p) => (p.xtype ? "X" : null) },
       get: (p) => p.xtype,
       set: (p, v) => {
         p.xtype = v;
@@ -693,6 +691,7 @@ export const soloGame: Game<
       kw: "jigsaw",
       name: "Jigsaw (irregularly shaped sub-blocks)",
       type: "boolean",
+      doc: "Jigsaw mode: the grid keeps its size, but its blocks are random shapes rather than rectangles.",
       get: (p) => p.r === 1,
       set: (p, v) => {
         if (v) {
@@ -705,6 +704,8 @@ export const soloGame: Game<
       kw: "killer",
       name: "Killer (digit sums)",
       type: "boolean",
+      doc: "Killer mode: instead of given numbers, the grid is divided into cages, each labeled with the total its numbers must add up to, and a number may not repeat within a cage. Killer grids hold at most 9 numbers.",
+      label: { slot: "kind", words: (p) => (p.killer ? "Killer" : null) },
       get: (p) => p.killer,
       set: (p, v) => {
         p.killer = v;
@@ -714,41 +715,24 @@ export const soloGame: Game<
       kw: "symmetry",
       name: "Symmetry",
       type: "choices",
-      choices: [
-        "None",
-        "2-way rotation",
-        "4-way rotation",
-        "2-way mirror",
-        "2-way diagonal mirror",
-        "4-way mirror",
-        "4-way diagonal mirror",
-        "8-way mirror",
-      ],
+      choices: [...SYMMETRY_NAMES],
+      doc: "The symmetry of the pattern of given numbers: None, 2-way rotation, 4-way rotation, 2-way mirror, 2-way diagonal mirror, 4-way mirror, 4-way diagonal mirror or 8-way mirror. A rotation keeps the pattern the same when the grid is turned a half (2-way) or a quarter (4-way) turn; a mirror keeps it the same when reflected across the middle line, or the diagonal for a diagonal mirror, and the 4- and 8-way ones combine several of these. Killer puzzles have no given numbers, so it makes no difference there.",
+      label: {
+        slot: "tail",
+        words: (p) => {
+          if (p.symm === (p.killer ? SYMM_NONE : SYMM_ROT2)) return null;
+          return p.symm === SYMM_NONE
+            ? "no symmetry"
+            : (SYMMETRY_NAMES[p.symm] ?? null);
+        },
+      },
       get: (p) => p.symm,
       set: (p, v) => {
         p.symm = v;
       },
     },
-    {
-      kw: "difficulty",
-      name: "Difficulty",
-      type: "choices",
-      choices: [...DIFF_NAMES],
-      get: (p) => p.diff,
-      set: (p, v) => {
-        p.diff = v;
-      },
-    },
+    difficultyItem(DIFF_NAMES, "diff"),
   ],
-  describeParams: (p): ConfigValues => ({
-    "columns-of-sub-blocks": p.c,
-    "rows-of-sub-blocks": p.r,
-    jigsaw: p.r === 1,
-    killer: p.killer,
-    x: p.xtype,
-    difficulty: p.diff,
-    symmetry: p.symm,
-  }),
 
   newDesc: newSoloDesc,
   validateDesc,

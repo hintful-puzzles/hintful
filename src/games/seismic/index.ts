@@ -19,7 +19,7 @@ import {
   candidateHint,
   candidateHintMarks,
 } from "../../engine/candidate-hint.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
@@ -72,9 +72,7 @@ import { SOLVE_FAILED, STATUS_COMPLETE, solveGame, validateGame } from "./solver
 import {
   areaBits,
   cloneState,
-  DIFF_EASY,
   DIFF_NAMES,
-  DIFF_NORMAL,
   DIFFCOUNT,
   decodeParams,
   defaultParams,
@@ -87,7 +85,6 @@ import {
   newUi,
   numBit,
   PRESETS,
-  presetName,
   type SeismicMove,
   type SeismicParams,
   type SeismicState,
@@ -112,7 +109,7 @@ export interface SeismicMistake {
 function presets(): PresetMenu<SeismicParams> {
   return {
     title: "Seismic",
-    submenu: PRESETS.map((p) => ({ title: presetName(p), params: { ...p } })),
+    submenu: PRESETS.map((p) => ({ params: { ...p } })),
   };
 }
 
@@ -294,8 +291,6 @@ function findMistakes(state: SeismicState): readonly SeismicMistake[] {
  * solver completes was forced the whole way, so there is no separate ambiguity
  * verdict to consult. */
 const difficulty: DifficultyContract<SeismicParams> = {
-  tierOf: (p) => p.diff,
-  withTier: (p, tier) => ({ ...p, diff: tier }),
   solveAtCap: (p, desc, cap) =>
     solveGame(newState(p, desc), cap) === SOLVE_FAILED ? "unsolved" : "solved",
 };
@@ -320,34 +315,26 @@ export const seismicGame: Game<
 
   transposeParams: transposeDimensions(),
   paramConfig: [
-    ...dimensionParamConfig<SeismicParams>(),
-    {
-      kw: "difficulty",
-      name: "Difficulty",
-      type: "choices",
-      choices: [...DIFF_NAMES],
-      get: (p) => p.diff,
-      set: (p, v) => {
-        p.diff = v === DIFF_NORMAL ? DIFF_NORMAL : DIFF_EASY;
-      },
-    },
+    ...dimensionParamConfig<SeismicParams>({
+      doc: "Size of the grid in squares. The limit depends on the mode: Tectonic goes up to 100 squares, Seismic up to 64. Seismic's keep-apart rule gets harder to satisfy the larger the board, so past that size a puzzle may never be found at all. Large boards can take several seconds to generate, which is why the ready-made types in the ‘Type’ menu stop at 8×8.",
+      bounds: { min: 4 },
+    }),
+    difficultyItem(DIFF_NAMES, "diff", {
+      doc: "Higher difficulties require more complex reasoning.",
+    }),
     {
       kw: "game-mode",
       name: "Game mode",
       type: "choices",
       choices: [...MODE_NAMES],
+      doc: "Switch between Seismic and Tectonic mode.",
+      label: { slot: "lead" },
       get: (p) => p.mode,
       set: (p, v) => {
         p.mode = v === MODE_TECTONIC ? MODE_TECTONIC : MODE_SEISMIC;
       },
     },
   ],
-  describeParams: (p) => ({
-    width: String(p.w),
-    height: String(p.h),
-    difficulty: p.diff,
-    "game-mode": p.mode,
-  }),
 
   newDesc: (p, rng) => newSeismicDesc(p, rng),
   validateDesc,

@@ -77,13 +77,4 @@ full; the hint says so rather than guessing.
 
 ## Unequal parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Mode</dt>
-	<dd>Unequal, where the clues are <code>&lt;</code> signs, or Adjacent, where they are bars between consecutive numbers (both described above).</dd>
-	<dt>Size</dt>
-	<dd>Width and height of the grid, which is also the largest number in it: from 3 to 31. Above 9, the numbers are written 0 to 9 and then A, B, C and so on, so each still takes one character. Adjacent puzzles at Tricky or above need a size of at least 5.</dd>
-	<dt>Difficulty</dt>
-	<dd>Determine the difficulty of the generated puzzle (<a href="../features#difficulty">what the names mean</a>).</dd>
-</dl>
+{{parameters}}

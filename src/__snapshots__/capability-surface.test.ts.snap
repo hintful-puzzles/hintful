@@ -18,7 +18,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "animLength",
       "canMarkAll",
       "changedState",
-      "describeParams",
       "findMistakes",
       "flashLength",
       "hint",
@@ -32,6 +31,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "candidateReading",
@@ -72,7 +72,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "changedState",
       "decodeUi",
-      "describeParams",
       "difficulty",
       "encodeUi",
       "findMistakes",
@@ -86,6 +85,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "autoAdvanceRuns",
@@ -127,13 +127,13 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
-      "describeParams",
       "flashLength",
       "paramConfig",
       "preferredTileSize",
       "solve",
       "statusbarText",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -158,7 +158,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "boats",
     "members": [
       "animLength",
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -170,6 +169,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -187,7 +187,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "bricks",
     "members": [
       "animLength",
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -215,7 +214,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "bridges",
     "members": [
       "animLength",
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -228,6 +226,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "autoMark",
@@ -253,7 +252,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "clusters",
     "members": [
       "animLength",
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -265,6 +263,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -286,7 +285,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
-      "describeParams",
       "findMistakes",
       "flashLength",
       "hint",
@@ -301,6 +299,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "textFormat",
       "transposeParams",
       "uiUpdateClearsHint",
+      "validateParams",
     ],
     "ui": [
       "autoAdvance",
@@ -326,12 +325,12 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "cube",
     "members": [
       "animLength",
-      "describeParams",
       "flashLength",
       "ignoresSecondaryButton",
       "paramConfig",
       "preferredTileSize",
       "statusbarText",
+      "validateParams",
     ],
     "ui": [],
   },
@@ -346,7 +345,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "dominosa",
     "members": [
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -360,6 +358,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -419,6 +418,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -435,7 +435,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "flip",
     "members": [
       "animLength",
-      "describeParams",
       "flashLength",
       "ignoresSecondaryButton",
       "paramConfig",
@@ -444,6 +443,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "statusbarText",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -458,7 +458,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "flood",
     "members": [
       "animLength",
-      "describeParams",
       "flashLength",
       "hint",
       "hintKeepTrack",
@@ -470,6 +469,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "statusbarText",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -491,7 +491,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "galaxies",
     "members": [
       "animLength",
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -545,7 +544,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "animLength",
       "canMarkAll",
       "changedState",
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -559,6 +557,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "requestKeys",
       "solve",
       "textFormat",
+      "validateParams",
     ],
     "ui": [
       "candidateReading",
@@ -608,7 +607,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "changedState",
       "decodeUi",
-      "describeParams",
       "encodeUi",
       "hint",
       "hintKeepTrack",
@@ -619,6 +617,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "requestKeys",
       "solve",
       "statusbarText",
+      "validateParams",
     ],
     "ui": [
       "currPegs",
@@ -654,6 +653,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "statusbarText",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "aimDir",
@@ -682,7 +682,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "animLength",
       "canMarkAll",
       "changedState",
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -717,7 +716,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -731,6 +729,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -745,7 +744,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "loopy",
     "members": [
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -760,6 +758,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
+      "validateParams",
       "wantsStylusModifier",
     ],
     "ui": [
@@ -787,7 +786,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "magnets",
     "members": [
       "changedState",
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -799,6 +797,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -821,7 +820,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "map",
     "members": [
       "canMarkAll",
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -835,6 +833,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "requestKeys",
       "solve",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "candidateReading",
@@ -868,7 +867,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "canMarkAll",
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -881,6 +879,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "refreshHintStep",
       "requestKeys",
       "solve",
+      "validateParams",
     ],
     "ui": [
       "autoPencil",
@@ -906,7 +905,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "mines",
     "members": [
       "decodeUi",
-      "describeParams",
       "encodeUi",
       "flashLength",
       "paramConfig",
@@ -917,6 +915,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "textFormat",
       "timerHolds",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -936,7 +935,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "mosaic",
     "members": [
       "animLength",
-      "describeParams",
       "findMistakes",
       "flashLength",
       "paramConfig",
@@ -945,6 +943,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "statusbarText",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -965,7 +964,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "decodeUi",
-      "describeParams",
       "encodeUi",
       "flashLength",
       "paramConfig",
@@ -974,6 +972,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "statusbarText",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -1000,7 +999,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "netslide",
     "members": [
       "animLength",
-      "describeParams",
       "flashLength",
       "hint",
       "hintKeepTrack",
@@ -1010,6 +1008,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "statusbarText",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -1026,7 +1025,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "palisade",
     "members": [
       "animLength",
-      "describeParams",
       "findMistakes",
       "flashLength",
       "hint",
@@ -1038,6 +1036,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "statusbarText",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -1064,6 +1063,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
+      "validateParams",
       "wantsStylusModifier",
     ],
     "ui": [
@@ -1085,7 +1085,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "pearl",
     "members": [
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -1098,6 +1097,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "clickx",
@@ -1122,7 +1122,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "pegs",
     "members": [
       "changedState",
-      "describeParams",
       "deserializeMove",
       "flashLength",
       "ignoresSecondaryButton",
@@ -1131,6 +1130,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "serializeMove",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "curJumping",
@@ -1162,6 +1162,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -1177,7 +1178,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "rect",
     "members": [
-      "describeParams",
       "findMistakes",
       "flashLength",
       "paramConfig",
@@ -1186,6 +1186,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "statusbarText",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -1213,7 +1214,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "canMarkAll",
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -1263,7 +1263,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "canMarkAll",
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -1278,6 +1277,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "statusbarText",
       "textFormat",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -1300,12 +1300,12 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
-      "describeParams",
       "flashLength",
       "paramConfig",
       "preferredTileSize",
       "statusbarText",
       "textFormat",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -1327,7 +1327,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "canMarkAll",
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -1342,6 +1341,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "candidateReading",
@@ -1363,7 +1363,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "separate",
     "members": [
       "animLength",
-      "describeParams",
       "findMistakes",
       "flashLength",
       "hint",
@@ -1375,6 +1374,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "statusbarText",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -1400,7 +1400,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
-      "describeParams",
       "findMistakes",
       "flashLength",
       "hint",
@@ -1412,6 +1411,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -1436,7 +1436,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -1474,7 +1473,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "sixteen",
     "members": [
       "animLength",
-      "describeParams",
       "flashLength",
       "hint",
       "hintKeepTrack",
@@ -1502,7 +1500,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "slant",
     "members": [
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -1515,6 +1512,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -1533,13 +1531,13 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
-      "describeParams",
       "flashLength",
       "paramConfig",
       "preferredTileSize",
       "solve",
       "statusbarText",
       "textFormat",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -1585,7 +1583,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "canMarkAll",
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -1598,6 +1595,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "refreshHintStep",
       "requestKeys",
       "solve",
+      "validateParams",
     ],
     "ui": [
       "autoPencil",
@@ -1630,7 +1628,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "spokes",
     "members": [
       "animLength",
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -1662,7 +1659,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "sticks",
     "members": [
       "animLength",
-      "describeParams",
       "findMistakes",
       "flashLength",
       "hint",
@@ -1673,6 +1669,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -1711,6 +1708,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "uiUpdateClearsHint",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -1730,7 +1728,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "tents",
     "members": [
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -1742,6 +1739,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -1768,7 +1766,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "animLength",
       "canMarkAll",
       "changedState",
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -1808,7 +1805,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "tracks",
     "members": [
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -1820,6 +1816,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "clearing",
@@ -1843,7 +1840,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "twiddle",
     "members": [
       "animLength",
-      "describeParams",
       "flashLength",
       "paramConfig",
       "preferredTileSize",
@@ -1851,6 +1847,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "statusbarText",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -1888,7 +1885,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "animLength",
       "canMarkAll",
       "changedState",
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -1903,6 +1899,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "ascii",
@@ -1936,7 +1933,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "animLength",
       "canMarkAll",
       "changedState",
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -1950,6 +1946,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "requestKeys",
       "solve",
       "textFormat",
+      "validateParams",
     ],
     "ui": [
       "autoPencil",
@@ -1970,7 +1967,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "id": "unruly",
     "members": [
       "animLength",
-      "describeParams",
       "difficulty",
       "findMistakes",
       "flashLength",
@@ -1982,6 +1978,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "solve",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -2004,7 +2001,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "members": [
       "animLength",
       "changedState",
-      "describeParams",
       "flashLength",
       "hint",
       "hintMarks",

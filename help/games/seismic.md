@@ -31,14 +31,5 @@ Most steps are the plain rules at work: a cell with only one pencil mark left, o
 
 ## Seismic parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu. 
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares. The limit depends on the mode: Tectonic goes up to 100 squares, Seismic up to 64. Seismic's keep-apart rule gets harder to satisfy the larger the board, so past that size a puzzle may never be found at all. Large boards can take several seconds to generate, which is why the ready-made types in the ‘Type’ menu stop at 8×8.</dd>
-	<dt>Difficulty</dt>
-	<dd>Determine the difficulty of the generated puzzle. Higher difficulties require more complex reasoning.</dd>
-	<dt>Game mode</dt>
-	<dd>Switch between Seismic and Tectonic mode.</dd>
-</dl>
+{{parameters}}
 

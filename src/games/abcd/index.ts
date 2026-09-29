@@ -32,7 +32,7 @@ import {
 } from "../../engine/note-taking-cell.ts";
 import {
   dimensionParamConfig,
-  parseConfigInt,
+  numberItem,
   transposeDimensions,
 } from "../../engine/params.ts";
 import {
@@ -49,7 +49,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { ConfigValues, KeyLabel, Point } from "../../engine/types.ts";
+import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newAbcdDesc } from "./generator.ts";
 import {
   type AbcdHint,
@@ -97,16 +97,8 @@ export type AbcdMistake = Point & { kind: EntryMistakeKind };
 const KEY_M = 77;
 const KEY_m = 109;
 
-function presetTitle(p: AbcdParams): string {
-  const flavor = p.diag ? "No diagonals" : p.removenums ? "Hard" : "Easy";
-  return `${p.w}x${p.h}, ${p.n} letters ${flavor}`;
-}
-
 function presets(): PresetMenu<AbcdParams> {
-  return {
-    title: "ABCD",
-    submenu: abcdPresets.map((p) => ({ title: presetTitle(p), params: p })),
-  };
+  return { title: "ABCD", submenu: abcdPresets.map((p) => ({ params: p })) };
 }
 
 function inGrid(p: AbcdParams, x: number, y: number): boolean {
@@ -344,29 +336,27 @@ export const abcdGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
-  describeParams: (p): ConfigValues => ({
-    width: String(p.w),
-    height: String(p.h),
-    letters: String(p.n),
-    "remove-clues": p.removenums ? 1 : 0,
-    "allow-diagonal-touching": p.diag ? 0 : 1,
-  }),
   transposeParams: transposeDimensions(),
   paramConfig: [
-    ...dimensionParamConfig<AbcdParams>(),
-    {
-      kw: "letters",
-      name: "Letters",
-      type: "string",
-      get: (p) => String(p.n),
-      set: (p, v) => {
-        p.n = parseConfigInt(v);
-      },
-    },
+    // A width or height under 2 could break the solver.
+    ...dimensionParamConfig<AbcdParams>({
+      doc: "Size of the grid in squares (excluding the size of the numbers on the edge). How large a board can be depends on the number of letters, because each extra letter is another count every row and column has to satisfy: with three letters a board can reach about 130 squares, with four about 80, and from six letters up about 65. Long thin boards go much further, because a short row is almost settled by its own numbers, so anything up to about 160 squares is allowed when one side is under 6. Past those limits no puzzle with a single solution is likely to exist at all, so the game says so rather than searching for one.",
+      bounds: { min: 2 },
+    }),
+    numberItem<AbcdParams>("letters", "Letters", "n", {
+      doc: "The amount of different letters that can appear in the puzzle. Without diagonal touching there must be at least 5.",
+      // 2-letter puzzles are dull and even×even 2-letter grids have no unique
+      // solution. The ceiling avoids clashing with midend hotkeys and fits the
+      // keypad.
+      bounds: { min: 3, max: 9 },
+      label: { slot: "tail", words: (p) => `${p.n} letters` },
+    }),
     {
       kw: "remove-clues",
       name: "Remove clues",
       type: "boolean",
+      doc: "When enabled, the difficulty is increased by hiding certain number clues.",
+      label: { slot: "kind", words: (p) => (p.removenums ? "Hard" : "Easy") },
       get: (p) => p.removenums,
       set: (p, v) => {
         p.removenums = v;
@@ -377,6 +367,8 @@ export const abcdGame: Game<
       kw: "allow-diagonal-touching",
       name: "Allow diagonal touching",
       type: "boolean",
+      doc: "When disabled, letters cannot be diagonally adjacent (in addition to letters not being orthogonally adjacent). Counter-intuitively this <em>raises</em> the size limit described above rather than lowering it: the extra restriction gives you more to reason from, so larger boards still work out to a single solution.",
+      label: { slot: "tail", words: (p) => (p.diag ? "no diagonal" : null) },
       get: (p) => !p.diag,
       set: (p, v) => {
         p.diag = !v;

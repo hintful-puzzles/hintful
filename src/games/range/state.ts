@@ -91,13 +91,16 @@ export function defaultParams(): RangeParams {
 export function presets(): PresetMenu<RangeParams> {
   return {
     title: "Range",
-    submenu: PRESETS.map((p) => ({ title: `${p.w} x ${p.h}`, params: { ...p } })),
+    submenu: PRESETS.map((p) => ({ params: { ...p } })),
   };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<RangeParams>[] =
-  dimensionParamConfig<RangeParams>();
+  dimensionParamConfig<RangeParams>({
+    doc: "Size of the grid in squares. At least one of them must be 3 or more, and together they can come to at most 128.",
+    bounds: { min: 1 },
+  });
 
 /** `WxH`, with upstream's square fallback: a bare `W` is a W×W board. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
@@ -109,8 +112,6 @@ const SCHAR_MAX = 127;
 
 export function validateParams(p: RangeParams, full: boolean): string | null {
   const { w, h } = p;
-  if (w < 1) return "Width is less than 1";
-  if (h < 1) return "Height is less than 1";
   if (w > SCHAR_MAX - (h - 1)) return "Width plus height is too big";
   if (full && w <= 2 && h <= 2) return `Can't create ${w}x${h} puzzles`;
   return null;

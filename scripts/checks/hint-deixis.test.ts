@@ -79,6 +79,7 @@
  */
 import { writeFileSync } from "node:fs";
 import { expect, it } from "vitest";
+import { paramsError } from "../../src/engine/params.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
 import {
   gatePresets,
@@ -137,7 +138,7 @@ it("reports every hint step that points bare while a second mark is displayed", 
     // deictic is most likely to point at one of two marks of the same kind, was
     // outside the report it is a report about.
     for (const { title, params } of gatePresets(name, game)) {
-      if (game.validateParams(params, true)) continue; // refused at this size
+      if (paramsError(game, params, true)) continue; // refused at this size
       for (const seed of SEEDS) {
         let board: { desc: string; aux?: string };
         try {

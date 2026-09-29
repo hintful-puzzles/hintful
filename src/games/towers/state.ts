@@ -4,9 +4,9 @@ import {
   DEFAULT_CANDIDATE_READING,
 } from "../../engine/candidate-hint.ts";
 import { digitValue, isDigit, parseLeadingInt } from "../../engine/decimal.ts";
-import { tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
-import { parseConfigInt } from "../../engine/params.ts";
+import { numberItem, squareSize } from "../../engine/params.ts";
 import { choice, paramsCodec, size } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
@@ -44,9 +44,6 @@ export function diffToLevel(d: Difficulty): number {
 export function diffFromLevel(level: number): Difficulty {
   return DIFFS[level] ?? "easy";
 }
-export function diffName(d: Difficulty): string {
-  return DIFF_NAMES[diffToLevel(d)];
-}
 
 // --- params ----------------------------------------------------------------
 
@@ -62,25 +59,17 @@ export function defaultParams(): TowersParams {
 /** The "Custom type…" form, and the field list the codec below encodes. A
  * Towers board is square, so its size is one untagged leading integer. */
 export const paramConfig: ParamConfigItem<TowersParams>[] = [
-  {
-    kw: "grid-size",
-    name: "Grid size",
-    type: "string",
-    get: (p) => String(p.w),
-    set: (p, v) => {
-      p.w = parseConfigInt(v);
+  numberItem<TowersParams>("grid-size", "Grid size", "w", {
+    doc: "Width and height of the grid, which is also the height of the tallest tower.",
+    bounds: { min: 3, max: 9 },
+    label: { slot: "size", words: squareSize("w") },
+  }),
+  difficultyItem(DIFF_NAMES, {
+    get: (p: TowersParams) => diffToLevel(p.diff),
+    set: (p: TowersParams, tier: number) => {
+      p.diff = diffFromLevel(tier);
     },
-  },
-  {
-    kw: "difficulty",
-    name: "Difficulty",
-    type: "choices",
-    choices: [...DIFF_NAMES],
-    get: (p) => diffToLevel(p.diff),
-    set: (p, v) => {
-      p.diff = diffFromLevel(v);
-    },
-  },
+  }),
 ];
 
 /** The order, plus the generator-only difficulty letter. An unknown letter
@@ -89,11 +78,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   size(paramConfig, "grid-size"),
   choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
 ]);
-
-export function validateParams(p: TowersParams, _full: boolean): string | null {
-  if (p.w < 3 || p.w > 9) return "Grid size must be between 3 and 9";
-  return null;
-}
 
 // --- clue geometry (STARTSTEP / CLUEPOS / clue_index / is_clue) ------------
 

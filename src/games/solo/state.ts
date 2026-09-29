@@ -244,13 +244,11 @@ export function decodeParams(s: string): SoloParams {
   return ret;
 }
 
-const ORDER_MAX = 255;
+export const ORDER_MAX = 255;
 
-/** Faithful to `validate_params`. */
+/** Upstream's `validate_params`, less the single-field limits the Custom
+ * dialog's items state as bounds. */
 export function validateParams(p: SoloParams, _full: boolean): string | null {
-  if (p.c < 2) return "Both dimensions must be at least 2";
-  if (p.c > ORDER_MAX || p.r > ORDER_MAX)
-    return `Dimensions greater than ${ORDER_MAX} are not supported`;
   if (p.c * p.r > 31)
     return "Unable to support more than 31 distinct symbols in a puzzle";
   if (p.killer && p.c * p.r > 9)

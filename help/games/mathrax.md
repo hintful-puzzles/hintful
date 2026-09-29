@@ -39,24 +39,5 @@ If you've turned on the preference that removes a number from pencil marks in it
 
 ## Mathrax parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu. 
-
-<dl>
-	<dt>Size (s*s)</dt>
-	<dd>Size of the grid in squares.</dd>
-	<dt>Difficulty</dt>
-	<dd>Determine the difficulty of the generated puzzle. Higher difficulties require more complex reasoning, and a puzzle always needs the difficulty you chose — it will never be solvable by the techniques of the level below. At size 3 the grid is too small to tell some levels apart, so only Easy and Tricky are offered there.</dd>
-	<dt>Addition clues</dt>
-	<dd>Allows clues with the addition operation to appear.</dd>
-	<dt>Subtraction clues</dt>
-	<dd>Allows clues with the subtraction operation to appear. Note that clues with a difference of zero are covered by Equality clues instead.</dd>
-	<dt>Multiplication clues</dt>
-	<dd>Allows clues with the multiplication operation to appear.</dd>
-	<dt>Division clues</dt>
-	<dd>Allows clues with the division operation to appear. Note that clues with a ratio of one are covered by Equality clues instead.</dd>
-	<dt>Equality clues</dt>
-	<dd>Allows clues with equality signs to appear.</dd>
-	<dt>Even/odd clues</dt>
-	<dd>Allows Even clues and Odd clues to appear.</dd>
-</dl>
+{{parameters}}
 

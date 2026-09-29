@@ -58,11 +58,4 @@ same way, it puts the mark down first, as a step of its own that says why.
 
 ## Slant parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares, at least 2 each way.</dd>
-	<dt>Difficulty</dt>
-	<dd>How hard the reasoning the puzzle needs may be (<a href="../features#difficulty">what the names mean</a>).</dd>
-</dl>
+{{parameters}}

@@ -10,7 +10,7 @@
  */
 
 import { parseLeadingInt } from "../../engine/decimal.ts";
-import { tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { type GridType, gridValidateParams } from "../../engine/grid/index.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
@@ -161,7 +161,6 @@ export function decodeParams(s: string): LoopyParams {
 }
 
 export function validateParams(p: LoopyParams, _full: boolean): string | null {
-  if (p.type < 0 || p.type >= LOOPY_GRIDS.length) return "Illegal grid type";
   const { amin, omin, type } = LOOPY_GRIDS[p.type];
   if (p.w < amin || p.h < amin)
     return `Width and height for this grid type must both be at least ${amin}`;
@@ -181,29 +180,25 @@ export function validateParams(p: LoopyParams, _full: boolean): string | null {
 }
 
 export const paramConfig: ParamConfigItem<LoopyParams>[] = [
-  ...dimensionParamConfig<LoopyParams>(),
+  ...dimensionParamConfig<LoopyParams>({
+    doc: "Size of the board, counted in the chosen tiling's own repeating units rather than in faces, so the same numbers make boards of quite different sizes on different tilings. Each tiling has a smallest size it allows: at least 3 by 3 for most (with one side at least 4 for Cairo), 2 by 2 for the four dodecagonal ones, 1 by 2 for Floret, 6 by 6 for Hats and Spectres, and a width of at least 4 for Penrose (kite/dart).",
+  }),
   {
     kw: "type",
     name: "Grid type",
     type: "choices",
     choices: LOOPY_GRIDS.map((g) => g.title),
+    doc: "The tiling the loop is drawn on. Squares, Triangular and Honeycomb (hexagons) are the familiar ones; Cairo is made of pentagons and Kites of kite shapes; Snub-Square, Great-Hexagonal, Octagonal, Floret, Dodecagonal, Great-Dodecagonal, Great-Great-Dodecagonal, Kagome and Compass-Dodecagonal each mix faces of more than one shape, or of an unusual one. Penrose (kite/dart), Penrose (rhombs), Hats and Spectres are aperiodic: their pattern never repeats.",
+    label: { slot: "kind" },
     get: (p) => p.type,
     set: (p, v) => {
       p.type = v;
     },
   },
-  {
-    // `difficulty`, as the other tiered games spell it: the type header looks
-    // this item up by the key `describeParams` emits.
-    kw: "difficulty",
-    name: "Difficulty",
-    type: "choices",
-    choices: LOOPY_DIFFS.map((d) => d.title),
-    get: (p) => p.diff,
-    set: (p, v) => {
-      p.diff = v;
-    },
-  },
+  difficultyItem(
+    LOOPY_DIFFS.map((d) => d.title),
+    "diff",
+  ),
 ];
 
 const preset = (w: number, h: number, diff: number, type: number): LoopyParams => ({
@@ -244,11 +239,6 @@ const PRESETS_MORE: LoopyParams[] = [
   preset(10, 10, DIFF_HARD, 17), // Spectres
 ];
 
-/** Width first, as every other game's titles and the Custom dialog read. */
-function presetTitle(p: LoopyParams): string {
-  return `${p.w}x${p.h} ${LOOPY_GRIDS[p.type].title} - ${LOOPY_DIFFS[p.diff].title}`;
-}
-
 /** `Game.transposeParams`: a tiling that turns (`LOOPY_GRIDS`' `turns`) is dealt
  * either way round; any other keeps the shape it was chosen at. */
 export function transposeParams(p: LoopyParams): LoopyParams | null {
@@ -265,10 +255,10 @@ export function presets(): PresetMenu<LoopyParams> {
   return {
     title: "Loopy",
     submenu: [
-      ...PRESETS_TOP.map((p) => ({ title: presetTitle(p), params: p })),
+      ...PRESETS_TOP.map((p) => ({ params: p })),
       {
         title: "More...",
-        submenu: PRESETS_MORE.map((p) => ({ title: presetTitle(p), params: p })),
+        submenu: PRESETS_MORE.map((p) => ({ params: p })),
       },
     ],
   };

@@ -120,7 +120,7 @@ export function newBricksDesc(p: BricksParams, rs: RandomState): { desc: string 
   const spaces = p.w * p.h; // playable-cell count
   const grid = new Uint16Array(w * h);
 
-  // `validateParams` refuses this combination, so reaching it means a caller
+  // `paramsError` refuses this combination, so reaching it means a caller
   // bypassed it. Fail immediately rather than let the gate below reject every
   // candidate for ~100,000 attempts — a synchronous generator that cannot
   // succeed owns its thread outright (see `engine/retry-limit.ts`).

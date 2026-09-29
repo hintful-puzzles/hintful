@@ -87,7 +87,7 @@ describe("the hint-guard enrolled set is derived, and non-vacuous", () => {
  */
 describe("the per-commit preset slice is derived, and did not collapse", () => {
   const rows = HINT_GAMES.map(([id, game]) => {
-    const presets = leafPresets(game.presets());
+    const presets = leafPresets(game);
     return { id, game, presets, slice: axisSlice(game, presets) };
   });
 
@@ -216,13 +216,18 @@ const BUILDS_ITS_OWN_BOARDS: Record<string, string> = {
     "params record that any valid record exercises. Everything here that is " +
     "about boards already reads every leaf preset.",
   "src/engine/difficulty.test.ts":
-    "Exercises `withTier` against a hand-written contract rather than a game, " +
-    "the way `hint-games.test.ts` exercises the slicing rule against a " +
+    "Exercises `withTier` against a hand-written difficulty item rather than a " +
+    "game, the way `hint-games.test.ts` exercises the slicing rule against a " +
     "hand-written menu: there is no presets menu in it to read.",
+  "src/engine/params-declared.test.ts":
+    "Labels the default params at every tier and deals no board: what it " +
+    "checks is the words, which no board can change.",
 };
 
 describe("a cross-game sweep takes its boards from the slice", () => {
-  const OWN_BOARDS = /\bfirstLeaf\(|\.withTier\(/;
+  // `withTier` is the engine's since `declare-params-in-one-place`, called as a
+  // function; `\b` still matches the method spelling a copied guard might keep.
+  const OWN_BOARDS = /\bfirstLeaf\(|\bwithTier\(/;
 
   it("scanned the suite, and only the ledgered files build their own", () => {
     // Vacuity, first and for the usual reason: a glob that matched nothing

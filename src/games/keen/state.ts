@@ -48,9 +48,6 @@ export function diffFromLevel(level: number): Difficulty {
 function diffChar(d: Difficulty): string {
   return DIFF_CHARS[diffToLevel(d)];
 }
-export function diffName(d: Difficulty): string {
-  return DIFF_NAMES[diffToLevel(d)];
-}
 
 // --- clue packing (upstream C_* / CMASK) -----------------------------------
 // A clue is a single packed number: the top bits hold the operation, the rest
@@ -111,11 +108,6 @@ export function decodeParams(s: string): KeenParams {
   }
   if (s[i] === "m") p.multiplicationOnly = true;
   return p;
-}
-
-export function validateParams(p: KeenParams, _full: boolean): string | null {
-  if (p.w < 3 || p.w > 9) return "Grid size must be between 3 and 9";
-  return null;
 }
 
 // --- block-structure codec -------------------------------------------------

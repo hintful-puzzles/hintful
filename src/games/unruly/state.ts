@@ -15,7 +15,6 @@ import {
   DIFF_CHARS,
   DIFF_COUNT,
   DIFF_EASY,
-  DIFF_NAMES,
   DIFF_NORMAL,
   DIFF_TRIVIAL,
   ONE,
@@ -85,10 +84,7 @@ export function defaultParams(): UnrulyParams {
 export function presets(): PresetMenu<UnrulyParams> {
   return {
     title: "Size",
-    submenu: PRESETS.map((p) => ({
-      title: `${p.w2}x${p.h2} ${DIFF_NAMES[p.diff]}`,
-      params: { ...p },
-    })),
+    submenu: PRESETS.map((p) => ({ params: { ...p } })),
   };
 }
 
@@ -108,7 +104,7 @@ export function decodeParams(s: string): UnrulyParams {
     i++;
   }
   if (s[i] === "d") {
-    // A missing or unknown letter leaves a difficulty validateParams rejects.
+    // A missing or unknown letter leaves a difficulty `paramsError` rejects.
     const idx = i + 1 < s.length ? DIFF_CHARS.indexOf(s[i + 1]) : -1;
     ret.diff = idx >= 0 ? idx : DIFF_COUNT + 1;
   }
@@ -126,7 +122,6 @@ const A177790 = [
 
 export function validateParams(p: UnrulyParams, _full: boolean): string | null {
   if (p.w2 & 1 || p.h2 & 1) return "Width and height must both be even";
-  if (p.w2 < 6 || p.h2 < 6) return "Width and height must be at least 6";
   if (p.w2 > Number.MAX_SAFE_INTEGER / p.h2) {
     return "Width times height must not be unreasonably large";
   }
@@ -138,7 +133,6 @@ export function validateParams(p: UnrulyParams, _full: boolean): string | null {
       return "Puzzle is too long for unique-rows mode";
     }
   }
-  if (p.diff >= DIFF_COUNT) return "Unknown difficulty rating";
   return null;
 }
 

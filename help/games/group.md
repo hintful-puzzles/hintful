@@ -90,13 +90,4 @@ rather than guessing.
 
 ## Group parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Grid size</dt>
-	<dd>How many elements the group has, which is also the width and height of the grid: from 3 to 26.</dd>
-	<dt>Difficulty</dt>
-	<dd>Determine the difficulty of the generated puzzle (<a href="../features#difficulty">what the names mean</a>).</dd>
-	<dt>Show identity</dt>
-	<dd>When enabled, the identity is always <em>e</em>, and its row and column are filled in for you. When disabled, you have to work out which letter is the identity. Easy puzzles and 3×3 grids must show it.</dd>
-</dl>
+{{parameters}}

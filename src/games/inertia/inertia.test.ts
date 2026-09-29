@@ -6,6 +6,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -90,11 +91,12 @@ describe("inertia params and desc codec", () => {
   });
 
   it("rejects degenerate params", () => {
-    expect(inertiaGame.validateParams({ w: 1, h: 8 }, true)).not.toBeNull();
-    expect(inertiaGame.validateParams({ w: 8, h: 1 }, true)).not.toBeNull();
+    const error = (w: number, h: number) => paramsError(inertiaGame, { w, h }, true);
+    expect(error(1, 8)).toBe("Width must be at least 2");
+    expect(error(8, 1)).toBe("Height must be at least 2");
     // 2x2 has both dimensions >= 2 but an area below six.
-    expect(inertiaGame.validateParams({ w: 2, h: 2 }, true)).not.toBeNull();
-    expect(inertiaGame.validateParams({ w: 3, h: 2 }, true)).toBeNull();
+    expect(error(2, 2)).toMatch(/six squares/);
+    expect(error(3, 2)).toBeNull();
   });
 
   it("rejects malformed descs", () => {

@@ -12,7 +12,7 @@ import type { Game, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import {
   dimensionParamConfig,
-  parseConfigInt,
+  numberItem,
   transposeDimensions,
 } from "../../engine/params.ts";
 import {
@@ -28,7 +28,7 @@ import {
   showCursor,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { Color, ConfigValues, Point } from "../../engine/types.ts";
+import type { Color, Point } from "../../engine/types.ts";
 import {
   animLength,
   buildColors,
@@ -230,20 +230,23 @@ export const twiddleGame: Game<
   validateParams,
   transposeParams: transposeDimensions(),
   paramConfig: [
-    ...dimensionParamConfig<TwiddleParams>(),
-    {
-      kw: "rotating-block-size",
-      name: "Rotating block size",
-      type: "string",
-      get: (p) => String(p.n),
-      set: (p, v) => {
-        p.n = parseConfigInt(v);
+    ...dimensionParamConfig<TwiddleParams>({
+      doc: "Size of the grid in squares. Neither may be smaller than the rotating block.",
+    }),
+    numberItem<TwiddleParams>("rotating-block-size", "Rotating block size", "n", {
+      doc: "How many squares wide the block you turn is. A block of even size turns about the corner point at its center, and an odd one about its center square; that is where you click.",
+      bounds: { min: 2 },
+      label: {
+        slot: "tail",
+        words: (p) => (p.n === 2 ? null : `rotating ${p.n}x${p.n} blocks`),
       },
-    },
+    }),
     {
       kw: "one-number-per-row",
       name: "One number per row",
       type: "boolean",
+      doc: "Every square in a row carries the same number, the row's own, so the puzzle is solved when each row holds only its own number and it doesn't matter which of those squares goes where.",
+      label: { slot: "kind", words: (p) => (p.rowsonly ? "rows only" : null) },
       get: (p) => p.rowsonly,
       set: (p, v) => {
         p.rowsonly = v;
@@ -253,27 +256,27 @@ export const twiddleGame: Game<
       kw: "orientation-matters",
       name: "Orientation matters",
       type: "boolean",
+      doc: "The 'orientable' mode: each square turns with its block, and must also end up the right way round.",
+      label: { slot: "kind", words: (p) => (p.orientable ? "orientable" : null) },
       get: (p) => p.orientable,
       set: (p, v) => {
         p.orientable = v;
       },
     },
-    {
-      kw: "number-of-shuffling-moves",
-      name: "Number of shuffling moves",
-      type: "string",
-      get: (p) => String(p.movetarget),
-      set: (p, v) => {
-        p.movetarget = parseConfigInt(v);
+    numberItem<TwiddleParams>(
+      "number-of-shuffling-moves",
+      "Number of shuffling moves",
+      "movetarget",
+      {
+        doc: "How many random turns shuffle the grid. At 0 the game chooses a long shuffle; any other number shuffles exactly that many turns, and the status bar shows that number as your target beside the count of your moves.",
+        bounds: { min: 0 },
+        label: {
+          slot: "tail",
+          words: (p) => (p.movetarget === 0 ? null : `${p.movetarget} shuffles`),
+        },
       },
-    },
+    ),
   ],
-  describeParams: (p): ConfigValues => ({
-    "rotating-block-size": String(p.n),
-    "one-number-per-row": p.rowsonly,
-    "orientation-matters": p.orientable,
-    "number-of-shuffling-moves": String(p.movetarget),
-  }),
 
   newDesc,
   validateDesc,

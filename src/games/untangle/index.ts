@@ -26,11 +26,11 @@ import { ERROR, FLASH, HELD, INK } from "../../engine/color/palette.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
-  parseConfigInt,
   registerGame,
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/index.ts";
+import { numberItem } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -148,35 +148,22 @@ export const untangleGame: Game<
 
   // --- params --------------------------------------------------------
   defaultParams: () => ({ n: 10 }),
-  // Key matches the `untangle` config template in augmentation.ts
-  // ("{number-of-points} points"); `n` is not a w/h base param.
-  describeParams: (p) => ({ "number-of-points": p.n }),
   paramConfig: [
-    {
-      kw: "number-of-points",
-      name: "Number of points",
-      type: "string",
-      get: (p) => String(p.n),
-      set: (p, v) => {
-        p.n = parseConfigInt(v);
-      },
-    },
+    numberItem<UntangleParams>("number-of-points", "Number of points", "n", {
+      doc: "How many points the puzzle has. More points means more lines to untangle.",
+      bounds: { min: 4, max: MAX_POINTS },
+      label: { slot: "size", words: (p) => `${p.n} points` },
+    }),
   ],
   presets: () => ({
     title: "Untangle",
-    submenu: [6, 10, 15, 20, 25].map((n) => ({ title: `${n} points`, params: { n } })),
+    submenu: [6, 10, 15, 20, 25].map((n) => ({ params: { n } })),
   }),
   encodeParams: (p) => `${p.n}`,
   decodeParams: (s) => {
     const n = Number.parseInt(s, 10);
     if (!Number.isFinite(n)) throw new Error(`bad untangle params "${s}"`);
     return { n };
-  },
-  validateParams: (p) => {
-    if (!Number.isInteger(p.n) || p.n < 4)
-      return "Number of points must be at least four";
-    if (p.n > MAX_POINTS) return "Number of points must not be unreasonably large";
-    return null;
   },
 
   // --- generation ----------------------------------------------------

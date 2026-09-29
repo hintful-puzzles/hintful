@@ -252,8 +252,6 @@ function findMistakes(state: SlantState): readonly SlantMistake[] {
 }
 
 const difficulty: DifficultyContract<SlantParams> = {
-  tierOf: (p) => p.diff,
-  withTier: (p, tier) => ({ ...p, diff: tier }),
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
     const soln = new Int8Array(s.w * s.h);
@@ -281,11 +279,6 @@ export const slantGame: Game<
   validateParams,
   transposeParams: transposeDimensions(),
   paramConfig,
-  describeParams: (p) => ({
-    width: String(p.w),
-    height: String(p.h),
-    difficulty: p.diff,
-  }),
 
   newDesc,
   validateDesc,

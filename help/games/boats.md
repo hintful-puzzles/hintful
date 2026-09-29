@@ -39,18 +39,5 @@ A few ideas are worth learning by name:
 
 ## Boats parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu. 
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares.</dd>
-	<dt>Fleet size</dt>
-	<dd>The size of the largest possible boat.</dd>
-	<dt>Fleet configuration</dt>
-	<dd>Customize the fleet by entering a list of numbers. Each number indicates how many times a boat of a specific size appears. For example, the configuration <code>3,2,1</code> represents 3 boats of size 1, 2 boats of size 2, and 1 boat of size 3.</dd>
-	<dt>Difficulty</dt>
-	<dd>Determine the difficulty of the generated puzzle. Higher difficulties require more complex reasoning.</dd>
-	<dt>Remove numbers</dt>
-	<dd>When enabled, the difficulty is increased by hiding certain number clues.</dd>
-</dl>
+{{parameters}}
 

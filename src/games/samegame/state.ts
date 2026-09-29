@@ -87,10 +87,8 @@ export function decodeParams(s: string): SamegameParams {
 }
 
 export function validateParams(p: SamegameParams, _full: boolean): string | null {
-  if (p.w < 1 || p.h < 1) return "Width and height must both be positive";
   if (p.w > Number.MAX_SAFE_INTEGER / p.h)
     return "Width times height must not be unreasonably large";
-  if (p.ncols > 9) return "Maximum of 9 colors";
   if (p.soluble) {
     if (p.ncols < 3) return "Number of colors must be at least three";
     if (p.w * p.h <= 1) return "Grid area must be greater than 1";
@@ -100,19 +98,13 @@ export function validateParams(p: SamegameParams, _full: boolean): string | null
     if (p.w * p.h < p.ncols * 2)
       return "Too many colors makes given grid size impossible";
   }
-  if (p.scoresub < 1 || p.scoresub > 2) return "Scoring system not recognized";
   return null;
 }
 
 // --- presets ----------------------------------------------------------
 
 export function presets() {
-  const p = (
-    w: number,
-    h: number,
-    ncols: number,
-  ): { title: string; params: SamegameParams } => ({
-    title: `${w}x${h}, ${ncols} colors`,
+  const p = (w: number, h: number, ncols: number): { params: SamegameParams } => ({
     params: { w, h, ncols, scoresub: 2, soluble: true },
   });
   return {

@@ -8,6 +8,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
+import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, LEFT_DRAG } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -26,7 +27,6 @@ import {
   makeRegionDsf,
   newState,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 const PRESETS: FillingParams[] = [
@@ -55,9 +55,13 @@ describe("filling params", () => {
   });
 
   it("rejects degenerate params", () => {
-    expect(validateParams({ w: 0, h: 5 }, true)).not.toBeNull();
-    expect(validateParams({ w: 5, h: 0 }, true)).not.toBeNull();
-    expect(validateParams({ w: 9, h: 7 }, true)).toBeNull();
+    expect(paramsError(fillingGame, { w: 0, h: 5 }, true)).toBe(
+      "Width must be at least 1",
+    );
+    expect(paramsError(fillingGame, { w: 5, h: 0 }, true)).toBe(
+      "Height must be at least 1",
+    );
+    expect(paramsError(fillingGame, { w: 9, h: 7 }, true)).toBeNull();
   });
 });
 

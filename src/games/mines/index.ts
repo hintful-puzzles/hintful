@@ -50,7 +50,7 @@ import {
   randomStateEncode,
   randomUpto,
 } from "../../engine/random/index.ts";
-import type { Color, ConfigValues, GameStatus, Point } from "../../engine/types.ts";
+import type { Color, GameStatus, Point } from "../../engine/types.ts";
 import { minegen } from "./generator.ts";
 import {
   borderFor,
@@ -207,12 +207,12 @@ export const minesGame: Game<
     return {
       title: "Mines",
       submenu: [
-        { title: "9x9, 10 mines", params: mk(9, 9, 10) },
-        { title: "9x9, 35 mines", params: mk(9, 9, 35) },
-        { title: "16x16, 40 mines", params: mk(16, 16, 40) },
-        { title: "16x16, 99 mines", params: mk(16, 16, 99) },
-        { title: "16x30, 99 mines", params: mk(16, 30, 99) },
-        { title: "16x30, 170 mines", params: mk(16, 30, 170) },
+        { params: mk(9, 9, 10) },
+        { params: mk(9, 9, 35) },
+        { params: mk(16, 16, 40) },
+        { params: mk(16, 16, 99) },
+        { params: mk(16, 30, 99) },
+        { params: mk(16, 30, 170) },
       ],
     };
   },
@@ -220,14 +220,6 @@ export const minesGame: Game<
   decodeParams,
   validateParams,
 
-  describeParams(p: MinesParams): ConfigValues {
-    return {
-      width: String(p.w),
-      height: String(p.h),
-      mines: String(p.n),
-      "ensure-solubility": p.unique ? 1 : 0,
-    };
-  },
   transposeParams: (p) => ({
     ...p,
     w: p.h,
@@ -236,11 +228,18 @@ export const minesGame: Game<
     firstClickY: p.firstClickX,
   }),
   paramConfig: [
-    ...dimensionParamConfig<MinesParams>(),
+    ...dimensionParamConfig<MinesParams>({
+      doc: "Size of the grid in squares.",
+      // Upstream's `SHRT_MAX`.
+      bounds: { min: 1, max: 32767 },
+    }),
     {
       kw: "mines",
       name: "Mines",
       type: "string",
+      doc: "How many mines are hidden. Give a number, or a percentage such as <code>20%</code> of the grid's squares. There must be at least nine squares without a mine, because none is ever placed in or next to the first square you open.",
+      bounds: { min: 1 },
+      label: { slot: "tail", words: (p) => `${p.n} mines` },
       get: (p) => String(p.n),
       set: (p, v) => {
         // Percentage-of-area form (upstream `custom_params`, mines.c:271). The
@@ -253,6 +252,8 @@ export const minesGame: Game<
       kw: "ensure-solubility",
       name: "Ensure solubility",
       type: "boolean",
+      doc: "When this is on, the grid is laid out so that it can be solved by deduction from your first click onwards, without any guessing. It needs a grid more than 2 squares in each direction. When it is off, the mines are placed at random, and you may have to guess.",
+      label: { slot: "tail", words: (p) => (p.unique ? null : "risky") },
       get: (p) => p.unique,
       set: (p, v) => {
         p.unique = v;

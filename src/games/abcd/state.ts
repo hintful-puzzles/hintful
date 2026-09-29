@@ -150,16 +150,8 @@ const THIN_SIDE = 6;
 const MAX_THIN_AREA = 160;
 
 export function validateParams(p: AbcdParams, full: boolean): string | null {
-  // A width or height under 2 could break the solver.
-  if (p.w < 2) return "Width must be at least 2";
-  if (p.h < 2) return "Height must be at least 2";
-  // 2-letter puzzles are dull and even×even 2-letter grids have no unique
-  // solution; 1-letter multi-cell puzzles don't exist.
-  if (p.n < 3 && !p.diag) return "Letters must be at least 3";
   // Under 5 letters, diagonal mode can't avoid the no-touch rule in practice.
-  if (p.n < 5 && p.diag) return "Letters for Diagonal mode must be at least 5";
-  // Arbitrary ceiling that avoids clashing with midend hotkeys and fits the keypad.
-  if (p.n > 9) return "Letters must be no more than 9";
+  if (p.n < 5 && p.diag) return "Letters must be at least 5 without diagonal touching";
   // Generation only: a shared game ID or a saved game is handed over rather
   // than searched for, so a described board outside the bound still opens.
   if (full) {

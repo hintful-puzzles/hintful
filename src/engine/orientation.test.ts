@@ -20,6 +20,7 @@
 
 import { describe, expect, it } from "vitest";
 import type { PresetMenu } from "./game.ts";
+import { paramsError } from "./params.ts";
 import {
   type AnyGame,
   type AnyParams,
@@ -100,7 +101,7 @@ function boardsToTurn(game: AnyGame): AnyParams[] {
     for (const extra of [1, 2]) {
       const q = structuredClone(p);
       width.set(q, String(Number(width.get(q)) + extra));
-      if (game.validateParams(q, true) === null) {
+      if (paramsError(game, q, true) === null) {
         out.push(q);
         break;
       }
@@ -171,7 +172,7 @@ describe("turning a board on its side", () => {
         const t = game.transposeParams?.(p) ?? null;
         if (t === null) continue;
         turned++;
-        expect(`${id}:${game.validateParams(t, true)}`).toBe(`${id}:null`);
+        expect(`${id}:${paramsError(game, t, true)}`).toBe(`${id}:null`);
         const back = game.transposeParams?.(t) ?? null;
         expect(back === null ? null : game.encodeParams(back, true)).toBe(
           game.encodeParams(p, true),

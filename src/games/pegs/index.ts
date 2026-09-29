@@ -257,14 +257,18 @@ export const pegsGame: Game<PegsParams, PegsState, PegsMove, PegsUi, PegsDrawSta
       name: "Board type",
       type: "choices",
       choices: [...BOARD_TYPE_NAMES],
+      doc: "The shape of the board. Cross is the traditional plus-shaped board, full of pegs but for the center hole; each side may be 5, 7 or 9, but not both 5. Octagon has its corners cut off diagonally instead, and comes only in 7×7; its empty hole is placed away from the center, where the board could not be solved. Random makes a board of its own shape by playing a game backwards from a single peg, so it can always be solved.",
+      label: { slot: "kind" },
       get: (p) => p.type,
       set: (p, v) => {
         p.type = v;
       },
     },
-    ...dimensionParamConfig<PegsParams>(),
+    ...dimensionParamConfig<PegsParams>({
+      doc: "Size of the board in holes. A new board needs both to be more than 3.",
+      bounds: { min: 1 },
+    }),
   ],
-  describeParams: (p) => ({ "board-type": String(p.type) }),
 
   newDesc,
   validateDesc,

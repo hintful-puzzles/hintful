@@ -52,7 +52,7 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { ConfigValues, Point } from "../../engine/types.ts";
+import type { Point } from "../../engine/types.ts";
 import { newBricksDesc } from "./generator.ts";
 import { say } from "./hint-text.ts";
 import {
@@ -98,7 +98,6 @@ import {
   status,
   textFormat,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 // Numpad-flagged keys (the web frontend sets MOD_NUM_KEYPAD for the numpad).
@@ -440,8 +439,6 @@ function hintKeepTrack(
  * which a loaded `dt` game needs.
  */
 const difficulty: DifficultyContract<BricksParams> = {
-  tierOf: (p) => p.diff,
-  withTier: (p, tier) => ({ ...p, diff: tier }),
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
     const ret = solveGame(s.grid, s.w, s.h, cap, true, true);
@@ -468,13 +465,6 @@ export const bricksGame: Game<
   presets,
   encodeParams,
   decodeParams,
-  validateParams,
-
-  describeParams: (p): ConfigValues => ({
-    width: String(p.w),
-    height: String(p.h),
-    difficulty: p.diff,
-  }),
   paramConfig,
 
   newDesc: newBricksDesc,

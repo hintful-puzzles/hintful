@@ -30,7 +30,7 @@ import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusa
 import { CELL, type MarkRef, type Narration } from "../../engine/hint-words.ts";
 import {
   dimensionParamConfig,
-  parseConfigInt,
+  numberItem,
   transposeDimensions,
 } from "../../engine/params.ts";
 import {
@@ -56,8 +56,12 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { SYMMETRY_CHOICES } from "../../engine/symmetric-blacks.ts";
-import type { ConfigValues, Point } from "../../engine/types.ts";
+import {
+  SYMM_NONE,
+  SYMM_ROT2,
+  SYMMETRY_CHOICES,
+} from "../../engine/symmetric-blacks.ts";
+import type { Point } from "../../engine/types.ts";
 import { newSticksDesc } from "./generator.ts";
 import { type SticksMarks, say } from "./hint-text.ts";
 import {
@@ -527,30 +531,39 @@ export const sticksGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
-
-  describeParams: (p): ConfigValues => ({
-    width: String(p.w),
-    height: String(p.h),
-    "percentage-of-black-squares": String(p.blackpc),
-    symmetry: p.symm,
-  }),
   transposeParams: transposeDimensions(),
   paramConfig: [
-    ...dimensionParamConfig<SticksParams>(),
-    {
-      kw: "percentage-of-black-squares",
-      name: "%age of black squares",
-      type: "string",
-      get: (p) => String(p.blackpc),
-      set: (p, v) => {
-        p.blackpc = parseConfigInt(v);
+    ...dimensionParamConfig<SticksParams>({
+      doc: "Size of the grid in squares.",
+      bounds: { min: 2 },
+    }),
+    numberItem<SticksParams>(
+      "percentage-of-black-squares",
+      "%age of black squares",
+      "blackpc",
+      {
+        doc: "Rough percentage of black squares in the grid, from 5 to 100.",
+        label: {
+          slot: "tail",
+          words: (p) => (p.blackpc === 20 ? null : `${p.blackpc}% black squares`),
+        },
       },
-    },
+    ),
     {
       kw: "symmetry",
       name: "Symmetry",
       type: "choices",
       choices: SYMMETRY_CHOICES,
+      doc: "The pattern the black squares follow. <em>None</em> places them freely. <em>2-way mirror</em> makes the bottom half a mirror image of the top half, and <em>2-way rotational</em> makes the grid look the same turned upside down. <em>4-way mirror</em> mirrors top to bottom and left to right, and <em>4-way rotational</em> makes the grid look the same after a quarter turn, which needs a square grid.",
+      label: {
+        slot: "tail",
+        words: (p) =>
+          p.symm === SYMM_ROT2
+            ? null
+            : p.symm === SYMM_NONE
+              ? "no symmetry"
+              : SYMMETRY_CHOICES[p.symm],
+      },
       get: (p) => p.symm,
       set: (p, v) => {
         p.symm = v;

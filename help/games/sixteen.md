@@ -42,15 +42,4 @@ moves of your own and ask again, or use *Show solution…*.
 
 ## Sixteen parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares. Both must be at least 2.</dd>
-	<dt>Number of shuffling moves</dt>
-	<dd>How the board is scrambled. At 0, the squares are dealt in a
-	random order, which can take many moves to put right. Any other
-	number starts from the finished board and makes that many random
-	slides, so a small number gives a puzzle that is only a few moves from
-	solved.</dd>
-</dl>
+{{parameters}}

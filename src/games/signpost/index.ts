@@ -72,10 +72,6 @@ const SIGNPOST_PRESETS: SignpostParams[] = [
   { w: 7, h: 7, forceCornerStart: true },
 ];
 
-function presetName(p: SignpostParams): string {
-  return `${p.w}x${p.h}${p.forceCornerStart ? "" : ", free ends"}`;
-}
-
 // --- params ----------------------------------------------------------
 
 function defaultParams(): SignpostParams {
@@ -83,8 +79,6 @@ function defaultParams(): SignpostParams {
 }
 
 function validateParams(p: SignpostParams, full: boolean): string | null {
-  if (p.w < 1) return "Width must be at least one";
-  if (p.h < 1) return "Height must be at least one";
   if (p.w > 2147483647 / p.h) {
     return "Width times height must not be unreasonably large";
   }
@@ -93,11 +87,16 @@ function validateParams(p: SignpostParams, full: boolean): string | null {
 }
 
 const paramConfig: ParamConfigItem<SignpostParams>[] = [
-  ...dimensionParamConfig<SignpostParams>(),
+  ...dimensionParamConfig<SignpostParams>({
+    doc: "Size of the grid in squares. Either may be 1, but not both.",
+    bounds: { min: 1 },
+  }),
   {
     kw: "start-and-end-in-corners",
     name: "Start and end in corners",
     type: "boolean",
+    doc: "Make the sequence start in the top left corner and end in the bottom right one. Otherwise its first and last squares can be anywhere in the grid.",
+    label: { slot: "tail", words: (p) => (p.forceCornerStart ? null : "free ends") },
     get: (p) => p.forceCornerStart,
     set: (p, v) => {
       p.forceCornerStart = v;
@@ -375,7 +374,7 @@ export const signpostGame: Game<
   presets() {
     return {
       title: "Signpost",
-      submenu: SIGNPOST_PRESETS.map((p) => ({ title: presetName(p), params: p })),
+      submenu: SIGNPOST_PRESETS.map((p) => ({ params: p })),
     };
   },
   encodeParams,
@@ -383,7 +382,6 @@ export const signpostGame: Game<
   validateParams,
   transposeParams: transposeDimensions(),
   paramConfig,
-  describeParams: (p) => ({ "start-and-end-in-corners": p.forceCornerStart }),
 
   newDesc: newSignpostDesc,
   validateDesc,

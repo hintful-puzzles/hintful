@@ -3,6 +3,8 @@
  * generator solvability, solver, findMistakes, and a render smoke.
  */
 import { describe, expect, it } from "vitest";
+import { describeParams } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newSignpostDesc } from "./generator.ts";
@@ -41,11 +43,23 @@ describe("signpost params codec", () => {
 
   it("rejects a 1x1 full generation", () => {
     expect(
-      signpostGame.validateParams({ w: 1, h: 1, forceCornerStart: true }, true),
+      paramsError(signpostGame, { w: 1, h: 1, forceCornerStart: true }, true),
     ).not.toBeNull();
     expect(
-      signpostGame.validateParams({ w: 4, h: 4, forceCornerStart: true }, true),
+      paramsError(signpostGame, { w: 4, h: 4, forceCornerStart: true }, true),
     ).toBeNull();
+    expect(
+      paramsError(signpostGame, { w: 4, h: 0, forceCornerStart: true }, true),
+    ).toBe("Height must be at least 1");
+  });
+
+  it("labels free ends, and says nothing of corners", () => {
+    expect(describeParams(signpostGame, { w: 6, h: 4, forceCornerStart: false })).toBe(
+      "6x4, free ends",
+    );
+    expect(describeParams(signpostGame, { w: 6, h: 4, forceCornerStart: true })).toBe(
+      "6x4",
+    );
   });
 });
 

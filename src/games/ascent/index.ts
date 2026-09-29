@@ -3,7 +3,7 @@
  * unreleased `ascent.c` (© 2015 Lennard Sprong).
  */
 
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import type {
   Game,
   GamePref,
@@ -18,7 +18,6 @@ import {
   transposeDimensions,
 } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { ConfigValues } from "../../engine/types.ts";
 import { newAscentDesc } from "./generator.ts";
 import {
   type AscentHighlights,
@@ -116,17 +115,8 @@ const EDGES_PRESETS: AscentParams[] = [
   mk(5, 5, 3, MODE_EDGES, true, false),
 ];
 
-function presetTitle(p: AscentParams): string {
-  const tier = ASCENT_DIFFNAMES[p.diff];
-  if (p.mode === MODE_HEXAGON) return `Size ${p.w} Hexagon ${tier}`;
-  const shape =
-    p.mode === MODE_HONEYCOMB ? "Honeycomb " : p.mode === MODE_EDGES ? "Edges " : "";
-  return `${p.w}x${p.h} ${shape}${tier}`;
-}
-
 function presets(): PresetMenu<AscentParams> {
-  const entries = (ps: AscentParams[]) =>
-    ps.map((p) => ({ title: presetTitle(p), params: p }));
+  const entries = (ps: AscentParams[]) => ps.map((p) => ({ params: p }));
   return {
     title: "Ascent",
     submenu: [
@@ -190,41 +180,45 @@ function decodeParams(s: string): AscentParams {
 function validateParams(p: AscentParams, full: boolean): string | null {
   const { w, h } = p;
   if (w * h >= 1000) return "Puzzle is too large";
-  if (w < 2) return "Width must be at least 2";
-  if (h < 2) return "Height must be at least 2";
-  if (w > 50) return "Width must be no more than 50";
-  if (h > 50) return "Height must be no more than 50";
   if (p.mode === MODE_HEXAGON && (h & 1) === 0) return "Height must be an odd number";
   if (p.mode === MODE_HEXAGON && w <= Math.trunc(h / 2))
     return "Width is too low for hexagon grid";
   if (p.mode === MODE_EDGES && w === 2 && h === 2)
     return "Grid for Edges mode must be bigger than 2x2";
   if (full && p.mode === MODE_EDGES && p.diff < DIFF_NORMAL)
-    return "Difficulty level for Edges mode must be at least Normal";
+    return "Difficulty for Edges mode must be at least Normal";
   if (full && p.symmetrical && p.mode === MODE_EDGES)
     return "Symmetrical clues must be disabled for Edges mode";
   return null;
 }
 
-function describeParams(p: AscentParams): ConfigValues {
-  return {
-    width: p.w,
-    height: p.h,
-    "grid-type": p.mode,
-    difficulty: p.diff,
-    "always-show-start-and-end-points": p.removeends ? 0 : 1,
-    "symmetrical-clues": p.symmetrical ? 1 : 0,
-  };
-}
-
 const transposeSquareGrid = transposeDimensions<AscentParams>();
 
+/** The grid type's words in a label: Rectangle is the plain board. */
+const MODE_WORDS = ["(no diagonals)", null, "Hexagon", "Honeycomb", "Edges"];
+
 const paramConfig: ParamConfigItem<AscentParams>[] = [
-  ...dimensionParamConfig<AscentParams>(),
+  ...dimensionParamConfig<AscentParams>({
+    doc: "Size of the grid in squares.",
+    bounds: { min: 2, max: 50 },
+    size: (p) => (p.mode === MODE_HEXAGON ? `Size ${p.w}` : `${p.w}x${p.h}`),
+  }),
   {
     kw: "always-show-start-and-end-points",
     name: "Always show start and end points",
     type: "boolean",
+    doc: "When enabled, the first and last number are always given. Disable this option for an added challenge.",
+    label: {
+      slot: "tail",
+      // Every Edges preset hides its ends and every other one shows them, so
+      // only a departure from that is worth saying.
+      words: (p) =>
+        p.removeends === (p.mode === MODE_EDGES)
+          ? null
+          : p.removeends
+            ? "hidden ends"
+            : "shown ends",
+    },
     get: (p) => !p.removeends,
     set: (p, v) => {
       p.removeends = !v;
@@ -234,6 +228,8 @@ const paramConfig: ParamConfigItem<AscentParams>[] = [
     kw: "symmetrical-clues",
     name: "Symmetrical clues",
     type: "boolean",
+    doc: "When enabled, all given numbers form a symmetric pattern. This usually leads to easier puzzles.",
+    label: { slot: "tail", words: (p) => (p.symmetrical ? "symmetric" : null) },
     get: (p) => p.symmetrical,
     set: (p, v) => {
       p.symmetrical = v;
@@ -244,21 +240,16 @@ const paramConfig: ParamConfigItem<AscentParams>[] = [
     name: "Grid type",
     type: "choices",
     choices: ASCENT_MODENAMES,
+    doc: "Choose between 'Rectangle', 'Rectangle (no diagonals)', 'Hexagon', 'Honeycomb' and 'Edges' mode.",
+    label: { slot: "kind", words: (p) => MODE_WORDS[p.mode] ?? null },
     get: (p) => p.mode,
     set: (p, v) => {
       p.mode = v;
     },
   },
-  {
-    kw: "difficulty",
-    name: "Difficulty",
-    type: "choices",
-    choices: ASCENT_DIFFNAMES,
-    get: (p) => p.diff,
-    set: (p, v) => {
-      p.diff = v;
-    },
-  },
+  difficultyItem(ASCENT_DIFFNAMES, "diff", {
+    doc: "Edges mode needs at least Normal.",
+  }),
 ];
 
 /** Ascent's difficulty contract (`engine/difficulty.ts`). `ascentSolve` reports
@@ -267,8 +258,6 @@ const paramConfig: ParamConfigItem<AscentParams>[] = [
  * "impossible" verdict to map. **The scratch is fresh per call**, because its
  * `foundEndpoints` persists and permanently weakens the solver. */
 const difficulty: DifficultyContract<AscentParams> = {
-  tierOf: (p) => p.diff,
-  withTier: (p, tier) => ({ ...p, diff: tier }),
   solveAtCap: (p, desc, cap) => {
     const s = newAscentState(p, desc);
     const sc = new SolverScratch(s.w, s.h, s.mode, s.last);
@@ -381,7 +370,6 @@ export const ascentGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
-  describeParams,
   // A hexagonal grid turned on its side is a different tiling.
   transposeParams: (p) => (isHexagonal(p.mode) ? null : transposeSquareGrid(p)),
   paramConfig,

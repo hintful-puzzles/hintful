@@ -5,6 +5,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_RIGHT,
   cancelDrags,
@@ -41,7 +42,6 @@ import {
   type TentsState,
   TREE,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 function genBoard(
@@ -68,10 +68,11 @@ describe("tents params", () => {
   });
 
   it("rejects too-small grids and unknown difficulty", () => {
-    expect(validateParams({ w: 3, h: 8, diff: DIFF_EASY }, true)).not.toBeNull();
-    expect(validateParams({ w: 8, h: 3, diff: DIFF_EASY }, true)).not.toBeNull();
-    expect(validateParams({ w: 8, h: 8, diff: 5 }, true)).not.toBeNull();
-    expect(validateParams({ w: 8, h: 8, diff: DIFF_EASY }, true)).toBeNull();
+    const error = (p: TentsParams) => paramsError(tentsGame, p, true);
+    expect(error({ w: 3, h: 8, diff: DIFF_EASY })).toBe("Width must be at least 4");
+    expect(error({ w: 8, h: 3, diff: DIFF_EASY })).toBe("Height must be at least 4");
+    expect(error({ w: 8, h: 8, diff: 5 })).toMatch(/^Difficulty must be one of/);
+    expect(error({ w: 8, h: 8, diff: DIFF_EASY })).toBeNull();
   });
 });
 

@@ -1,4 +1,5 @@
 import { parseLeadingInt } from "../../engine/decimal.ts";
+import type { PresetMenu } from "../../engine/game.ts";
 import { parseDimensions } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
@@ -101,43 +102,37 @@ export function decodeParams(s: string): TwiddleParams {
 }
 
 export function validateParams(p: TwiddleParams, _full: boolean): string | null {
-  if (p.n < 2) return "Rotating block size must be at least two";
   if (p.w < p.n) return "Width must be at least the rotating block size";
   if (p.h < p.n) return "Height must be at least the rotating block size";
   if (p.w > Math.floor(0x7fffffff / p.h))
     return "Width times height must not be unreasonably large";
-  if (p.movetarget < 0) return "Number of shuffling moves may not be negative";
   return null;
 }
 
 // --- presets ----------------------------------------------------------
 
 function preset(
-  title: string,
   w: number,
   h: number,
   n: number,
   rowsonly: boolean,
   orientable: boolean,
 ) {
-  return {
-    title,
-    params: { w, h, n, rowsonly, orientable, movetarget: 0 },
-  };
+  return { params: { w, h, n, rowsonly, orientable, movetarget: 0 } };
 }
 
-export function presets() {
+export function presets(): PresetMenu<TwiddleParams> {
   return {
     title: "Type",
     submenu: [
-      preset("3×3 rows only", 3, 3, 2, true, false),
-      preset("3×3 normal", 3, 3, 2, false, false),
-      preset("3×3 orientable", 3, 3, 2, false, true),
-      preset("4×4 normal", 4, 4, 2, false, false),
-      preset("4×4 orientable", 4, 4, 2, false, true),
-      preset("4×4, rotating 3×3 blocks", 4, 4, 3, false, false),
-      preset("5×5, rotating 3×3 blocks", 5, 5, 3, false, false),
-      preset("6×6, rotating 4×4 blocks", 6, 6, 4, false, false),
+      preset(3, 3, 2, true, false),
+      preset(3, 3, 2, false, false),
+      preset(3, 3, 2, false, true),
+      preset(4, 4, 2, false, false),
+      preset(4, 4, 2, false, true),
+      preset(4, 4, 3, false, false),
+      preset(5, 5, 3, false, false),
+      preset(6, 6, 4, false, false),
     ],
   };
 }

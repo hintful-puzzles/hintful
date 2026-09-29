@@ -726,8 +726,6 @@ function findMistakes(state: LoopyState): readonly LoopyMistake[] {
  * only ever asks it about boards derived from a real loop — a probe has no such
  * guarantee, and a contradiction is a verdict here, not a porting bug. */
 const difficulty: DifficultyContract<LoopyParams> = {
-  tierOf: (p) => p.diff,
-  withTier: (p, tier) => ({ ...p, diff: tier }),
   solveAtCap: (p, desc, cap) => {
     const ss = solveGame(newState(p, desc), cap);
     if (ss.status === "mistake") return "impossible";
@@ -758,15 +756,6 @@ export const loopyGame: Game<
   validateParams,
   transposeParams,
   paramConfig,
-
-  // The names Loopy's type-summary formatter (`augmentation.ts`) reads, with
-  // choices as numeric indices: the formatter does the lookup.
-  describeParams: (p) => ({
-    width: p.w,
-    height: p.h,
-    "grid-type": p.type,
-    difficulty: p.diff,
-  }),
 
   newDesc,
   validateDesc,

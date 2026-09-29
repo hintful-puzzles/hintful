@@ -63,11 +63,4 @@ These are the ideas the hint teaches, from the plainest up:
 
 ## Palisade parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares.</dd>
-	<dt>Region size</dt>
-	<dd>How many squares each region holds. It must divide the number of squares in the grid exactly, and be smaller than it. A size of 2 is allowed only on a grid one square wide or high.</dd>
-</dl>
+{{parameters}}

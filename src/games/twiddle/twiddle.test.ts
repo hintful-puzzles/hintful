@@ -4,6 +4,8 @@
 // and text format.
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { describeParams, presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_LEFT,
   CURSOR_RIGHT,
@@ -92,23 +94,41 @@ describe("Twiddle params", () => {
     expect(decodeParams("4x4n2m15")).toMatchObject({ movetarget: 15 });
   });
 
-  it("validateParams rejects bad params", () => {
-    expect(twiddleGame.validateParams(params({ n: 1 }), true)).not.toBeNull();
-    expect(twiddleGame.validateParams(params({ w: 2, n: 3 }), true)).not.toBeNull();
-    expect(twiddleGame.validateParams(params({ h: 2, n: 3 }), true)).not.toBeNull();
-    expect(twiddleGame.validateParams(params({ movetarget: -1 }), true)).not.toBeNull();
-    expect(twiddleGame.validateParams(params(), true)).toBeNull();
+  it("rejects bad params", () => {
+    const error = (p: TwiddleParams) => paramsError(twiddleGame, p, true);
+    expect(error(params({ n: 1 }))).toBe("Rotating block size must be at least 2");
+    expect(error(params({ w: 2, n: 3 }))).not.toBeNull();
+    expect(error(params({ h: 2, n: 3 }))).not.toBeNull();
+    expect(error(params({ movetarget: -1 }))).toBe(
+      "Number of shuffling moves must be at least 0",
+    );
+    expect(error(params())).toBeNull();
   });
 });
 
 describe("Twiddle presets", () => {
   it("offers the eight upstream presets, all valid", () => {
-    const menu = twiddleGame.presets();
-    expect(menu.submenu).toHaveLength(8);
+    const menu = presetMenu(twiddleGame);
+    expect(menu.submenu?.map((item) => item.title)).toEqual([
+      "3x3 rows only",
+      "3x3",
+      "3x3 orientable",
+      "4x4",
+      "4x4 orientable",
+      "4x4, rotating 3x3 blocks",
+      "5x5, rotating 3x3 blocks",
+      "6x6, rotating 4x4 blocks",
+    ]);
     for (const item of menu.submenu ?? []) {
       expect(item.params).toBeDefined();
-      expect(twiddleGame.validateParams(item.params as TwiddleParams, true)).toBeNull();
+      expect(paramsError(twiddleGame, item.params as TwiddleParams, true)).toBeNull();
     }
+  });
+
+  it("labels a custom game's shuffle target", () => {
+    expect(describeParams(twiddleGame, params({ w: 5, h: 5, movetarget: 12 }))).toBe(
+      "5x5, 12 shuffles",
+    );
   });
 });
 

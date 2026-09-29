@@ -11,6 +11,8 @@
 
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
+import { describeParams } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { pencilIndicatorReach } from "../../engine/pencil-indicator.ts";
 import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -43,7 +45,6 @@ import {
   newUi,
   parseNumbers,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 const P = (
@@ -53,6 +54,8 @@ const P = (
   diag = false,
   removenums = false,
 ): AbcdParams => ({ w, h, n, diag, removenums });
+
+const refusal = (p: AbcdParams, full: boolean) => paramsError(abcdGame, p, full);
 
 const RENDER_ID = "5x5n4#abcd-render";
 
@@ -97,13 +100,24 @@ describe("abcd params codec", () => {
   });
 
   it("validates params in upstream order", () => {
-    expect(validateParams(P(1, 5, 4), true)).toMatch(/Width/);
-    expect(validateParams(P(5, 1, 4), true)).toMatch(/Height/);
-    expect(validateParams(P(5, 5, 2), true)).toMatch(/at least 3/);
-    expect(validateParams(P(5, 5, 4, true), true)).toMatch(/Diagonal/);
-    expect(validateParams(P(5, 5, 10), true)).toMatch(/no more than 9/);
-    expect(validateParams(P(5, 5, 4), true)).toBeNull();
-    expect(validateParams(P(5, 5, 5, true), true)).toBeNull();
+    expect(refusal(P(1, 5, 4), true)).toBe("Width must be at least 2");
+    expect(refusal(P(5, 1, 4), true)).toBe("Height must be at least 2");
+    expect(refusal(P(5, 5, 2), true)).toBe("Letters must be at least 3");
+    expect(refusal(P(5, 5, 4, true), true)).toBe(
+      "Letters must be at least 5 without diagonal touching",
+    );
+    expect(refusal(P(5, 5, 10), true)).toBe("Letters must be at most 9");
+    expect(refusal(P(5, 5, 4), true)).toBeNull();
+    expect(refusal(P(5, 5, 5, true), true)).toBeNull();
+  });
+
+  it("labels the clue setting as a kind and diagonal touching only when off", () => {
+    expect(describeParams(abcdGame, P(4, 4, 4, false, true))).toBe(
+      "4x4 Hard, 4 letters",
+    );
+    expect(describeParams(abcdGame, P(6, 6, 5, true))).toBe(
+      "6x6 Easy, 5 letters, no diagonal",
+    );
   });
 });
 
@@ -115,7 +129,7 @@ describe("abcd generable-size bound", () => {
     // The bound must never bar a board the game itself offers. Tightening it
     // without this test is how a preset silently stops working.
     for (const p of abcdPresets) {
-      expect(validateParams(p, true), `${p.w}x${p.h} n${p.n}`).toBeNull();
+      expect(refusal(p, true), `${p.w}x${p.h} n${p.n}`).toBeNull();
     }
   });
 
@@ -133,7 +147,7 @@ describe("abcd generable-size bound", () => {
     [P(3, 30, 4), "3x30 n4 — 199 ms"],
     [P(5, 30, 3), "5x30 n3 — 2.5 s"],
   ])("admits %s (%s)", (p) => {
-    expect(validateParams(p, true)).toBeNull();
+    expect(refusal(p, true)).toBeNull();
   });
 
   it.each([
@@ -151,14 +165,14 @@ describe("abcd generable-size bound", () => {
     [P(4, 100, 4), "0 accepts in 79,360"],
     [P(9, 20, 3), "0 accepts in 153,856"],
   ])("refuses %s (%s)", (p) => {
-    expect(validateParams(p, true)).toMatch(/no ABCD puzzle/);
+    expect(refusal(p, true)).toMatch(/no ABCD puzzle/);
   });
 
   it("refuses without running the generator, in well under a second", () => {
     // The refusal is a predicate, not a timeout: generating this configuration
     // would spend minutes of frozen worker and then throw.
     const t0 = performance.now();
-    expect(validateParams(P(10, 10, 4), true)).toMatch(/no ABCD puzzle/);
+    expect(refusal(P(10, 10, 4), true)).toMatch(/no ABCD puzzle/);
     expect(performance.now() - t0).toBeLessThan(100);
   });
 
@@ -170,7 +184,7 @@ describe("abcd generable-size bound", () => {
     const desc = "3,3,2,2,".repeat(20);
     const p = P(10, 10, 4);
     expect(validateDesc(p, desc)).toBeNull();
-    expect(validateParams(p, false)).toBeNull();
+    expect(refusal(p, false)).toBeNull();
 
     const m = new Midend(abcdGame);
     expect(m.newGameFromId(`10x10n4:${desc}`)).toBeNull();

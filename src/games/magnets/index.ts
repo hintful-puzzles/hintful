@@ -219,8 +219,6 @@ function hint(state: MagnetsState): HintResult<MagnetsMove, MagnetsHighlights> {
 }
 
 const difficulty: DifficultyContract<MagnetsParams> = {
-  tierOf: (p) => p.diff,
-  withTier: (p, tier) => ({ ...p, diff: tier }),
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
     const ret = new MagnetsSolver(s.w, s.h, s.common).solve(cap);
@@ -246,12 +244,6 @@ export const magnetsGame: Game<
   validateParams,
   transposeParams: transposeDimensions(),
   paramConfig,
-  describeParams: (p) => ({
-    width: String(p.w),
-    height: String(p.h),
-    difficulty: p.diff,
-    "strip-clues": p.stripclues,
-  }),
 
   newDesc: newMagnetsDesc,
   validateDesc,

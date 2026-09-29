@@ -6,6 +6,9 @@
  */
 import { describe, expect, it } from "vitest";
 import type { Dsf } from "../../engine/dsf.ts";
+import { describeParams, presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
+import { soloGame } from "./index.ts";
 import {
   blocksFromDsf,
   checkValid,
@@ -29,7 +32,6 @@ import {
   specToDsf,
   specToGrid,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 function paramsEqual(a: SoloParams, b: SoloParams): boolean {
@@ -127,12 +129,36 @@ describe("solo params codec", () => {
   });
 
   it("rejects out-of-range params", () => {
-    expect(validateParams({ ...defaultParams(), c: 1 }, true)).not.toBeNull();
-    expect(validateParams({ ...defaultParams(), c: 6, r: 6 }, true)).not.toBeNull(); // 36 > 31
-    expect(
-      validateParams({ ...defaultParams(), c: 4, r: 3, killer: true }, true),
-    ).not.toBeNull(); // killer 12 > 9
-    expect(validateParams(defaultParams(), true)).toBeNull();
+    const valid = (p: SoloParams) => paramsError(soloGame, p, true);
+    expect(valid({ ...defaultParams(), c: 1 })).toBe(
+      "Columns of sub-blocks must be at least 2",
+    );
+    expect(valid({ ...defaultParams(), c: 6, r: 6 })).not.toBeNull(); // 36 > 31
+    expect(valid({ ...defaultParams(), c: 4, r: 3, killer: true })).not.toBeNull(); // killer 12 > 9
+    expect(valid(defaultParams())).toBeNull();
+  });
+
+  it("titles presets by size, mode and tier", () => {
+    const titles = presetMenu(soloGame).submenu?.map((m) => m.title);
+    expect(titles).toContain("3x3 X Normal");
+    expect(titles).toContain("9 Jigsaw X Normal");
+    expect(titles).toContain("3x3 Killer Easy");
+  });
+
+  it("names symmetry only when it is not the mode's default", () => {
+    const p = defaultParams();
+    expect(describeParams(soloGame, { ...p, symm: SYMM_ROT2 })).not.toContain(",");
+    expect(describeParams(soloGame, { ...p, symm: SYMM_NONE })).toMatch(
+      /, no symmetry$/,
+    );
+    expect(describeParams(soloGame, { ...p, symm: SYMM_REF4D })).toMatch(
+      /, 4-way diagonal mirror$/,
+    );
+    const killer = { ...p, c: 3, r: 3, killer: true };
+    expect(describeParams(soloGame, { ...killer, symm: SYMM_NONE })).not.toContain(",");
+    expect(describeParams(soloGame, { ...killer, symm: SYMM_ROT2 })).toMatch(
+      /, 2-way rotation$/,
+    );
   });
 });
 

@@ -9,9 +9,12 @@
  * Render frames are in `rome-render.test.ts`.
  */
 import { describe, expect, it } from "vitest";
+import { difficultyTiers } from "../../engine/difficulty.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
 import { Midend } from "../../engine/midend.ts";
+import { presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -56,7 +59,6 @@ import {
   FM_RIGHT,
   FM_UP,
   KEYMODE_MOVE,
-  presets,
   type RomeMove,
   type RomeParams,
   type RomeState,
@@ -65,7 +67,6 @@ import {
   STATUS_COMPLETE,
   STATUS_INCOMPLETE,
   STATUS_INVALID,
-  validateParams,
 } from "./state.ts";
 
 const TS = PREFERRED_TILE_SIZE;
@@ -124,23 +125,23 @@ describe("params", () => {
   });
 
   it("leaves the difficulty out of range for an unknown letter", () => {
-    const p = decodeParams("6x6dq");
-    expect(validateParams(p, true)).toBe("Unknown difficulty level");
-    expect(validateParams(decodeParams("6x6d"), true)).toBe("Unknown difficulty level");
+    const unknown = `Difficulty must be one of ${difficultyTiers(romeGame)?.join(", ")}`;
+    expect(paramsError(romeGame, decodeParams("6x6dq"), true)).toBe(unknown);
+    expect(paramsError(romeGame, decodeParams("6x6d"), true)).toBe(unknown);
   });
 
   it("rejects boards below 3x3, in upstream's order", () => {
-    expect(validateParams({ w: 2, h: 5, diff: 0 }, true)).toBe(
+    expect(paramsError(romeGame, { w: 2, h: 5, diff: 0 }, true)).toBe(
       "Width must be at least 3",
     );
-    expect(validateParams({ w: 5, h: 2, diff: 0 }, true)).toBe(
+    expect(paramsError(romeGame, { w: 5, h: 2, diff: 0 }, true)).toBe(
       "Height must be at least 3",
     );
-    expect(validateParams({ w: 3, h: 3, diff: 0 }, true)).toBeNull();
+    expect(paramsError(romeGame, { w: 3, h: 3, diff: 0 }, true)).toBeNull();
   });
 
   it("ships the twelve presets with 6x6 Easy as the default", () => {
-    const menu = presets();
+    const menu = presetMenu(romeGame);
     expect(menu.submenu).toHaveLength(12);
     expect(menu.submenu?.[3].title).toBe("6x6 Easy");
     expect(defaultParams()).toEqual({ w: 6, h: 6, diff: DIFF_EASY });
@@ -289,7 +290,7 @@ describe("solver", () => {
 describe("generation", () => {
   it("produces a soluble board at exactly the requested difficulty, for every preset", () => {
     let swept = 0;
-    for (const entry of presets().submenu ?? []) {
+    for (const entry of presetMenu(romeGame).submenu ?? []) {
       const p = entry.params as RomeParams;
       // Only the small presets, so the sweep stays cheap; the differential
       // covers every preset against the C.

@@ -15,7 +15,11 @@ import {
   PAPER,
 } from "../../engine/color/palette.ts";
 import { galaxiesBlackRegion } from "../../engine/color/palette-games.ts";
-import { type DifficultyContract, tierNames } from "../../engine/difficulty.ts";
+import {
+  type DifficultyContract,
+  difficultyItem,
+  tierNames,
+} from "../../engine/difficulty.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import {
   type Game,
@@ -200,17 +204,6 @@ function encodeParams(p: GalaxiesParams, full: boolean): string {
   let out = `${p.w}x${p.h}`;
   if (full) out += `d${DIFFCHARS[p.diff] ?? "n"}`;
   return out;
-}
-
-function validateParams(p: GalaxiesParams): string | null {
-  if (p.w < 3 || p.h < 3) return "Width and height must both be at least 3";
-  if (p.w > 100 || p.h > 100) {
-    return "Width times height must not be unreasonably large";
-  }
-  if (p.diff !== GalaxiesDiff.Normal && p.diff !== GalaxiesDiff.Unreasonable) {
-    return `Difficulty must be ${GALAXIES_TIERS.join(" or ")}`;
-  }
-  return null;
 }
 
 // --- interaction helpers -------------------------------------------
@@ -931,8 +924,6 @@ function statusbarText(s: GalaxiesState, _ui: GalaxiesUi): string {
  * is cleared to its starting position first, so the player's own edges and
  * associations never enter the verdict. */
 const difficulty: DifficultyContract<GalaxiesParams> = {
-  tierOf: (p) => p.diff,
-  withTier: (p, tier) => ({ ...p, diff: tier as GalaxiesDiff }),
   solveAtCap: (p, desc, cap) => {
     const s = blankGame(p.w, p.h);
     const err = decodeGame(s, desc);
@@ -965,9 +956,6 @@ export const galaxiesGame: Game<
 
   presets() {
     const mk = (w: number, h: number, diff: GalaxiesDiff) => ({
-      // The tier word comes from the collection's scale, not from the
-      // `GalaxiesDiff` member name, which is a solver label.
-      title: `${w}x${h} ${GALAXIES_TIERS[diff === GalaxiesDiff.Normal ? 0 : 1]}`,
       params: { w, h, diff },
     });
     return {
@@ -985,22 +973,14 @@ export const galaxiesGame: Game<
 
   encodeParams,
   decodeParams,
-  validateParams,
   transposeParams: transposeDimensions(),
   paramConfig: [
-    ...dimensionParamConfig<GalaxiesParams>(),
-    {
-      kw: "difficulty",
-      name: "Difficulty",
-      type: "choices",
-      choices: [...GALAXIES_TIERS],
-      get: (p) => p.diff,
-      set: (p, v) => {
-        p.diff = v as GalaxiesDiff;
-      },
-    },
+    ...dimensionParamConfig<GalaxiesParams>({
+      doc: "Size of the grid in squares.",
+      bounds: { min: 3, max: 100 },
+    }),
+    difficultyItem(GALAXIES_TIERS, "diff"),
   ],
-  describeParams: (p) => ({ difficulty: String(p.diff) }),
 
   newDesc(p: GalaxiesParams, rng: RandomState) {
     return { desc: newGameDesc(p, rng) };

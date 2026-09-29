@@ -514,17 +514,17 @@ independently against the brute-force oracle. Two lessons that transfer:
 
 **A game with tiers declares
 [`Game.difficulty`](../../src/engine/difficulty.ts) — a
-`DifficultyContract`: `tierOf`/`withTier` accessors and a `solveAtCap` that runs
-its solver from a fresh state with the ladder capped.** Declaring it enrolls the
-game in the cross-game guards (`difficulty-contract.test.ts`) the moment the
-field exists; an untiered game omits it, exactly as a game without a solver omits
-`solve`. Read the module header of `difficulty.ts` for why it is accessor-shaped
-(eight games don't hold a numeric tier field at all) and why the verdict is the
-discriminated `"solved" | "unsolved" | "impossible"` rather than the solvers'
-private integers.
+`DifficultyContract`: a `solveAtCap` that runs its solver from a fresh state
+with the ladder capped.** Declaring it enrolls the game in the cross-game guards
+(`difficulty-contract.test.ts`) the moment the field exists; an untiered game
+omits it, exactly as a game without a solver omits `solve`. Read the module
+header of `difficulty.ts` for why the verdict is the discriminated
+`"solved" | "unsolved" | "impossible"` rather than the solvers' private
+integers.
 
-**The contract holds operations, not the tier list.** The names come from the
-game's difficulty `paramConfig` item (`difficultyTiers`) — see
+**The contract holds the solver, not the tier list.** The names, and how params
+hold a tier (`tierOf`/`withTier`), come from the game's difficulty item
+(`difficultyItem`) — see
 [mechanics](./mechanics.md) § "Difficulty is a declared contract".
 
 **Don't try to derive them from the technique ladder.** The framework fiction

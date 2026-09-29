@@ -18,7 +18,6 @@
 
 import { transfer } from "comlink";
 import type { EngineCore } from "../engine/midend.ts";
-import { getTsGame } from "../engine/registry.ts";
 import type {
   ChangeNotification,
   Color,
@@ -153,32 +152,8 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
   setCustomParams(values: ConfigValues): string | null {
     return this.engine.setCustomParams(values);
   }
-  decodeCustomParams(params: string): ConfigValues | string {
-    const game = getTsGame(this.puzzleId);
-    if (!game) {
-      return {};
-    }
-    try {
-      const p = game.decodeParams(params);
-      if (!p) {
-        return {};
-      }
-      // A generic width/height base from `w`/`h` params (most games), then
-      // the game's own type-summary mapping spread over it. A game whose
-      // params aren't `w`/`h` (e.g. Mosaic) supplies width/height from its
-      // own `describeParams`, replacing the empty base.
-      const rec = p as Record<string, unknown>;
-      const base: ConfigValues = {};
-      if (rec["w"] !== undefined) {
-        base["width"] = String(rec["w"]);
-      }
-      if (rec["h"] !== undefined) {
-        base["height"] = String(rec["h"]);
-      }
-      return { ...base, ...game.describeParams?.(p) };
-    } catch (e) {
-      return String(e);
-    }
+  describeParams(params: string): string {
+    return this.engine.describeParams(params);
   }
   encodeCustomParams(values: ConfigValues): CustomParamsEncoding {
     return this.engine.encodeCustomParams(values);

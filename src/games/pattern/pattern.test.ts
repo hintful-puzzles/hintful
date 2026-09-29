@@ -6,6 +6,7 @@
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   LEFT_BUTTON,
@@ -35,7 +36,6 @@ import {
   type PatternState,
   status,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 function genState(
@@ -67,9 +67,13 @@ describe("pattern params", () => {
   });
 
   it("rejects invalid params", () => {
-    expect(validateParams({ w: 0, h: 5 }, true)).not.toBeNull();
-    expect(validateParams({ w: 5, h: -1 }, true)).not.toBeNull();
-    expect(validateParams({ w: 10, h: 10 }, true)).toBeNull();
+    expect(paramsError(patternGame, { w: 0, h: 5 }, true)).toBe(
+      "Width must be at least 1",
+    );
+    expect(paramsError(patternGame, { w: 5, h: -1 }, true)).toBe(
+      "Height must be at least 1",
+    );
+    expect(paramsError(patternGame, { w: 10, h: 10 }, true)).toBeNull();
   });
 });
 

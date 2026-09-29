@@ -16,9 +16,4 @@ one step.
 
 ## Sokoban parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares, at least 4 each.</dd>
-</dl>
+{{parameters}}

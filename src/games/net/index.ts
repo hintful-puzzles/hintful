@@ -33,7 +33,7 @@ import {
 } from "../../engine/pointer.ts";
 import { randomUpto } from "../../engine/random/index.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { ConfigValues, GameStatus, Point } from "../../engine/types.ts";
+import type { GameStatus, Point } from "../../engine/types.ts";
 import {
   anticlockwise,
   clockwise,
@@ -91,9 +91,6 @@ const PRESETS: NetParams[] = [
   { w: 11, h: 11, wrapping: true, unique: true, barrierProbability: 0 },
   { w: 11, h: 13, wrapping: true, unique: true, barrierProbability: 0 },
 ];
-
-const presetTitle = (p: NetParams): string =>
-  `${p.w}x${p.h}${p.wrapping ? " wrapping" : ""}`;
 
 /* ----------------------------------------------------------------------
  * Moves.
@@ -366,29 +363,24 @@ export const netGame: Game<NetParams, NetState, NetMove, NetUi, NetDrawState> = 
   defaultParams,
   presets: () => ({
     title: "Net",
-    submenu: PRESETS.map((p) => ({ title: presetTitle(p), params: { ...p } })),
+    submenu: PRESETS.map((p) => ({ params: { ...p } })),
   }),
   encodeParams,
   decodeParams,
   validateParams,
 
-  describeParams: (p): ConfigValues => ({
-    width: String(p.w),
-    height: String(p.h),
-    "walls-wrap-around": p.wrapping,
-    "barrier-probability": p.barrierProbability,
-    // The template's `{…:, ambiguous|}` reads a numeric index: 0 = ", ambiguous"
-    // (non-unique), 1 = "" (unique).
-    "ensure-unique-solution": p.unique ? 1 : 0,
-  }),
-
   transposeParams: transposeDimensions(),
   paramConfig: [
-    ...dimensionParamConfig<NetParams>(),
+    ...dimensionParamConfig<NetParams>({
+      doc: "Size of the grid in squares. At least one of them must be more than 1.",
+      bounds: { min: 1 },
+    }),
     {
       kw: "walls-wrap-around",
       name: "Walls wrap around",
       type: "boolean",
+      doc: "When on, the network may run off one edge of the grid and come back on the opposite edge, so the outside of the grid is no longer a wall.",
+      label: { slot: "kind", words: (p) => (p.wrapping ? "wrapping" : null) },
       get: (p) => p.wrapping,
       set: (p, v) => {
         p.wrapping = v;
@@ -398,6 +390,15 @@ export const netGame: Game<NetParams, NetState, NetMove, NetUi, NetDrawState> = 
       kw: "barrier-probability",
       name: "Barrier probability",
       type: "string",
+      doc: "The share of the places where the finished network has no wire that get a barrier drawn across them. At 0 there are no barriers inside the grid; at 1 every such place has one, which gives away a lot about the solution.",
+      bounds: { min: 0, max: 1 },
+      label: {
+        slot: "tail",
+        words: (p) =>
+          p.barrierProbability > 0
+            ? `${Math.round(p.barrierProbability * 100)}% barriers`
+            : null,
+      },
       get: (p) => formatG(p.barrierProbability),
       set: (p, v) => {
         p.barrierProbability = Math.fround(atof(v));
@@ -407,6 +408,8 @@ export const netGame: Game<NetParams, NetState, NetMove, NetUi, NetDrawState> = 
       kw: "ensure-unique-solution",
       name: "Ensure unique solution",
       type: "boolean",
+      doc: "When on, the puzzle has exactly one solution. When off, it may have several, and any of them counts. A wrapping grid 2 squares wide or high can never have just one solution, so it needs this off.",
+      label: { slot: "tail", words: (p) => (p.unique ? null : "ambiguous") },
       get: (p) => p.unique,
       set: (p, v) => {
         p.unique = v;

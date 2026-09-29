@@ -45,11 +45,4 @@ These are the ideas the hint teaches, from the plainest up:
 
 ## Signpost parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares. Either may be 1, but not both.</dd>
-	<dt>Start and end in corners</dt>
-	<dd>Make the sequence start in the top left corner and end in the bottom right one. Otherwise its first and last squares can be anywhere in the grid.</dd>
-</dl>
+{{parameters}}

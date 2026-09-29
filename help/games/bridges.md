@@ -47,19 +47,4 @@ ask again.
 
 ## Bridges parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares; each must be at least 3.</dd>
-	<dt>Difficulty</dt>
-	<dd>Determine the difficulty of the generated puzzle; see <a href="../features#difficulty">what the names mean</a>. Tricky needs lines that can carry at least two bridges.</dd>
-	<dt>Allow loops</dt>
-	<dd>Whether the bridges may form a closed loop. When this is off, no solution contains one, and a board with a loop of bridges on it does not count as finished.</dd>
-	<dt>Max. bridges per direction</dt>
-	<dd>The most bridges that may join one pair of islands, from 1 to 4.</dd>
-	<dt>%age of island squares</dt>
-	<dd>Roughly what share of the grid's squares are islands. There are always at least three, and the generator may stop short of the target when it runs out of room.</dd>
-	<dt>Expansion factor (%age)</dt>
-	<dd>How often a new island is placed as far away as it can go, rather than at a random distance, when the generator grows the puzzle; higher values give longer bridges. With loops allowed, it is also how often a bridge joins an island that is already there, which is what makes loops.</dd>
-</dl>
+{{parameters}}

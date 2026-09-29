@@ -56,14 +56,7 @@ import {
 import type { RandomState } from "../../engine/random/index.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import type {
-  Color,
-  ConfigValues,
-  GameStatus,
-  KeyLabel,
-  Point,
-  Size,
-} from "../../engine/types.ts";
+import type { Color, GameStatus, KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newUndeadDesc } from "./generator.ts";
 import { type Marked, say } from "./hint-text.ts";
 import {
@@ -92,9 +85,6 @@ import {
   DIFF_EASY,
   decodeParams,
   defaultParams,
-  diffFromLevel,
-  diffName,
-  diffToLevel,
   encodeParams,
   grid2range,
   isSingleton,
@@ -146,10 +136,7 @@ const KEY_m = 109;
 function presets(): PresetMenu<UndeadParams> {
   return {
     title: "Undead",
-    submenu: PRESETS.map((p) => ({
-      title: `${p.w}x${p.h} ${diffName(p.diff)}`,
-      params: p,
-    })),
+    submenu: PRESETS.map((p) => ({ params: p })),
   };
 }
 
@@ -820,8 +807,6 @@ function flashLength(from: UndeadState, to: UndeadState): number {
  * difficulty guards, which grade through this contract rather than through the
  * generator. */
 const difficulty: DifficultyContract<UndeadParams> = {
-  tierOf: (p) => diffToLevel(p.diff),
-  withTier: (p, tier) => ({ ...p, diff: diffFromLevel(tier) }),
   solveAtCap: (p, desc, cap) => {
     const common = newState(p, desc).common;
     const start = new Uint8Array(common.numTotal).fill(MON_NONE);
@@ -851,12 +836,6 @@ export const undeadGame: Game<
   validateParams,
   transposeParams: transposeDimensions(),
   paramConfig,
-  // Keys match the `undead` config template in augmentation.ts.
-  describeParams: (p): ConfigValues => ({
-    width: String(p.w),
-    height: String(p.h),
-    difficulty: diffToLevel(p.diff),
-  }),
 
   newDesc: (p, rng: RandomState) => newUndeadDesc(p, rng),
   validateDesc,

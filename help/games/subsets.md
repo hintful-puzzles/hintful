@@ -43,6 +43,8 @@ The hint rules sets out too, when a deduction needs it, and says why. The usual 
 
 Every puzzle is played on a 4×4 grid over a four-letter universe. That is the one size where the sixteen possible sets exactly fill the sixteen cells — the bijection the puzzle is built on — so the board never changes size. The one thing you can choose is how hard the deductions have to work.
 
+{{parameters}}
+
 ### Difficulty
 
 *Easy* puzzles can be solved by reading the horseshoes forwards: a set placed on the closed end of a horseshoe tells you letters the open end must contain, and a letter ruled out of the open end is ruled out of the closed end too.

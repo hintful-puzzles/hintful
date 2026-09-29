@@ -60,10 +60,7 @@ const PRESETS: readonly MapParams[] = [
 export function presets(): PresetMenu<MapParams> {
   return {
     title: "Map",
-    submenu: PRESETS.map((p) => ({
-      title: `${p.w}x${p.h}, ${p.n} regions, ${DIFF_NAMES[p.diff]}`,
-      params: { ...p },
-    })),
+    submenu: PRESETS.map((p) => ({ params: { ...p } })),
   };
 }
 
@@ -116,10 +113,8 @@ export function decodeParams(s: string): MapParams {
 }
 
 export function validateParams(p: MapParams, _full: boolean): string | null {
-  if (p.w < 2 || p.h < 2) return "Width and height must be at least two";
   if (p.w > Math.floor(2147483647 / 2 / p.h))
     return "Width times height must not be unreasonably large";
-  if (p.n < 5) return "Must have at least five regions";
   if (p.n > p.w * p.h) return "Too many regions to fit in grid";
   return null;
 }

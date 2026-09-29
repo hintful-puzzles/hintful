@@ -13,7 +13,7 @@ import { assertNever } from "../../engine/assert-never.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { colorKeysZeroIsTen } from "../../engine/key-labels.ts";
-import { parseConfigInt } from "../../engine/params.ts";
+import { numberItem } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -56,6 +56,7 @@ import {
   type GuessState,
   type GuessUi,
   isMarkable,
+  MAXCOLORS,
   markPegs,
   newDesc,
   newState,
@@ -513,37 +514,29 @@ export const guessGame: Game<
   decodeParams,
   validateParams,
   paramConfig: [
-    {
-      kw: "colors",
-      name: "Colors",
-      type: "string",
-      get: (p) => String(p.ncolors),
-      set: (p, v) => {
-        p.ncolors = parseConfigInt(v);
+    numberItem<GuessParams>("colors", "Colors", "ncolors", {
+      doc: "How many colors the answer is chosen from.",
+      bounds: { min: 2, max: MAXCOLORS },
+      // A blank is one more thing a peg can be, so it is said with the colors.
+      label: {
+        slot: "tail",
+        words: (p) => `${p.ncolors} colors${p.allowBlank ? " + blank" : ""}`,
       },
-    },
-    {
-      kw: "pegs-per-guess",
-      name: "Pegs per guess",
-      type: "string",
-      get: (p) => String(p.npegs),
-      set: (p, v) => {
-        p.npegs = parseConfigInt(v);
-      },
-    },
-    {
-      kw: "guesses",
-      name: "Guesses",
-      type: "string",
-      get: (p) => String(p.nguesses),
-      set: (p, v) => {
-        p.nguesses = parseConfigInt(v);
-      },
-    },
+    }),
+    numberItem<GuessParams>("pegs-per-guess", "Pegs per guess", "npegs", {
+      doc: "How many pegs the hidden combination has, and so how many go in each guess.",
+      bounds: { min: 2 },
+      label: { slot: "size", words: (p) => `${p.npegs}x${p.nguesses}` },
+    }),
+    numberItem<GuessParams>("guesses", "Guesses", "nguesses", {
+      doc: "How many rows you have to find the answer in.",
+      bounds: { min: 1 },
+    }),
     {
       kw: "allow-blanks",
       name: "Allow blanks",
       type: "boolean",
+      doc: "When on, you may submit a guess with some pegs left empty, as long as it has at least one color in it. The answer itself never has a blank.",
       get: (p) => p.allowBlank,
       set: (p, v) => {
         p.allowBlank = v;
@@ -553,19 +546,14 @@ export const guessGame: Game<
       kw: "allow-duplicates",
       name: "Allow duplicates",
       type: "boolean",
+      doc: "When on, a color may appear more than once in the answer, and in your guesses. When off, every peg of the answer is a different color, so there must be at least as many colors as pegs.",
+      label: { slot: "tail", words: (p) => (p.allowMultiple ? null : "no duplicates") },
       get: (p) => p.allowMultiple,
       set: (p, v) => {
         p.allowMultiple = v;
       },
     },
   ],
-  describeParams: (p) => ({
-    colors: String(p.ncolors),
-    "pegs-per-guess": String(p.npegs),
-    guesses: String(p.nguesses),
-    "allow-blanks": p.allowBlank,
-    "allow-duplicates": p.allowMultiple,
-  }),
 
   newDesc,
   validateDesc,

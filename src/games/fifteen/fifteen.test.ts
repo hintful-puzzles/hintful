@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
+import { presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -21,11 +23,9 @@ import {
   newDesc,
   newState,
   parityP,
-  presets,
   status,
   textFormat,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 // --- helpers ----------------------------------------------------------
@@ -75,14 +75,20 @@ describe("Fifteen params", () => {
   });
 
   it("rejects dimensions below two", () => {
-    expect(validateParams({ w: 1, h: 4 }, true)).toBeTruthy();
-    expect(validateParams({ w: 4, h: 1 }, true)).toBeTruthy();
-    expect(validateParams({ w: 2, h: 2 }, true)).toBeNull();
+    expect(paramsError(fifteenGame, { w: 1, h: 4 }, true)).toBe(
+      "Width must be at least 2",
+    );
+    expect(paramsError(fifteenGame, { w: 4, h: 1 }, true)).toBe(
+      "Height must be at least 2",
+    );
+    expect(paramsError(fifteenGame, { w: 2, h: 2 }, true)).toBeNull();
   });
 
-  it("offers the 4×4 preset", () => {
-    const menu = presets();
-    expect(menu.submenu.map((s) => s.params)).toContainEqual({ w: 4, h: 4 });
+  it("offers the 4x4 preset", () => {
+    const menu = presetMenu(fifteenGame);
+    expect(menu.submenu?.map((s) => [s.title, s.params])).toEqual([
+      ["4x4", { w: 4, h: 4 }],
+    ]);
   });
 });
 

@@ -102,10 +102,7 @@ const PRESETS: ReadonlyArray<readonly [number, number]> = [
 export function presets(): PresetMenu<DominosaParams> {
   return {
     title: "Dominosa",
-    submenu: PRESETS.map(([n, diff]) => ({
-      title: `Order ${n}, ${DIFF_NAMES[diff]}`,
-      params: { n, diff, tall: true },
-    })),
+    submenu: PRESETS.map(([n, diff]) => ({ params: { n, diff, tall: true } })),
   };
 }
 
@@ -141,12 +138,10 @@ export function decodeParams(str: string): DominosaParams {
 }
 
 export function validateParams(p: DominosaParams, _full: boolean): string | null {
-  if (p.n < 1) return "Maximum face number must be at least one";
   // Mirror upstream's overflow guard against a huge grid.
   const INT_MAX = 0x7fffffff;
   if (p.n > INT_MAX - 2 || p.n + 2 > Math.floor(INT_MAX / (p.n + 1)))
-    return "Maximum face number must not be unreasonably large";
-  if (p.diff >= DIFFCOUNT) return "Unknown difficulty rating";
+    return "Maximum number on dominoes must not be unreasonably large";
   return null;
 }
 

@@ -365,11 +365,21 @@ export const rectGame: Game<
   validateParams,
   transposeParams: transposeDimensions(),
   paramConfig: [
-    ...dimensionParamConfig<RectParams>(),
+    ...dimensionParamConfig<RectParams>({
+      doc: "Size of the grid in squares.",
+      bounds: { min: 1 },
+    }),
     {
       kw: "expansion-factor",
       name: "Expansion factor",
       type: "string",
+      doc: "How much the board is stretched after it is built. The generator first divides a smaller grid into rectangles and then widens it to full size by stretching rows and columns at random, so a larger factor gives fewer, larger rectangles. 0 means no stretching.",
+      bounds: { min: 0 },
+      label: {
+        slot: "tail",
+        words: (p) =>
+          p.expandfactor ? `${Math.round(p.expandfactor * 100)}% expansion` : null,
+      },
       get: (p) => formatG(p.expandfactor),
       set: (p, v) => {
         p.expandfactor = Math.fround(atof(v));
@@ -379,18 +389,14 @@ export const rectGame: Game<
       kw: "ensure-unique-solution",
       name: "Ensure unique solution",
       type: "boolean",
+      doc: "When enabled, the numbers are placed so the puzzle has exactly one solution. When disabled, the puzzle may have several, and any division that satisfies the numbers counts.",
+      label: { slot: "tail", words: (p) => (p.unique ? null : "ambiguous") },
       get: (p) => p.unique,
       set: (p, v) => {
         p.unique = v;
       },
     },
   ],
-  describeParams: (p) => ({
-    width: String(p.w),
-    height: String(p.h),
-    "expansion-factor": p.expandfactor,
-    "ensure-unique-solution": p.unique,
-  }),
 
   newDesc,
   validateDesc,

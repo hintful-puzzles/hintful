@@ -133,7 +133,6 @@ const NOT_A_LIVE_CHANGE = {
   "find-4-position": "a Rome solver rung",
   "puzzle-type-menu": "a custom element the puzzle rail nests",
   "single-number-simple": "an Ascent ladder rung",
-  "type-of-solid": "a Cube params key, matching the `cube` augmentation template",
 };
 
 /**

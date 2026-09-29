@@ -11,6 +11,7 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -45,7 +46,6 @@ import {
   newState,
   newUi,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 function gen(p: KeenParams, seed: string) {
@@ -94,15 +94,14 @@ describe("keen params codec", () => {
   });
 
   it("rejects invalid params", () => {
-    expect(
-      validateParams({ w: 2, diff: "easy", multiplicationOnly: false }, true),
-    ).not.toBeNull();
-    expect(
-      validateParams({ w: 10, diff: "easy", multiplicationOnly: false }, true),
-    ).not.toBeNull();
-    expect(
-      validateParams({ w: 6, diff: "normal", multiplicationOnly: false }, true),
-    ).toBeNull();
+    const error = (p: KeenParams) => paramsError(keenGame, p, true);
+    expect(error({ w: 2, diff: "easy", multiplicationOnly: false })).toBe(
+      "Grid size must be at least 3",
+    );
+    expect(error({ w: 10, diff: "easy", multiplicationOnly: false })).toBe(
+      "Grid size must be at most 9",
+    );
+    expect(error({ w: 6, diff: "normal", multiplicationOnly: false })).toBeNull();
   });
 });
 

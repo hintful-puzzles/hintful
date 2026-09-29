@@ -99,10 +99,6 @@ export function defaultParams(): SeismicParams {
   return { ...PRESETS[DEFAULT_PRESET] };
 }
 
-export function presetName(p: SeismicParams): string {
-  return `${MODE_NAMES[p.mode]}: ${p.w}x${p.h} ${DIFF_NAMES[p.diff]}`;
-}
-
 export function encodeParams(p: SeismicParams, full: boolean): string {
   let s = `${p.w}x${p.h}`;
   if (p.mode === MODE_TECTONIC) s += "T";
@@ -202,11 +198,9 @@ function maxCells(mode: number): number {
 }
 
 export function validateParams(p: SeismicParams, _full: boolean): string | null {
-  if (p.w < 4 || p.h < 4) return "Width and height must be at least 4";
   const max = maxCells(p.mode);
   if (p.w * p.h > max)
     return `Width times height must be at most ${max} in ${MODE_NAMES[p.mode]} mode (the generator cannot reliably build a larger board)`;
-  if (p.diff >= DIFFCOUNT) return "Unknown difficulty rating";
   return null;
 }
 

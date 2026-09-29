@@ -25,7 +25,7 @@ export const STATE_ERROR = 8;
 /** Mask of the two mark bits; also the modulus of the toggle cycle. */
 export const STATE_MARK_MASK = STATE_BLANK | STATE_MARKED;
 
-const MAX_TILES = 10000;
+export const MAX_TILES = 10000;
 const DEFAULT_SIZE = 10;
 const DEFAULT_AGGRESSIVENESS = true;
 
@@ -101,7 +101,6 @@ export function presets(): PresetMenu<MosaicParams> {
   return {
     title: "Size",
     submenu: sizes.map((n) => ({
-      title: `Size: ${n}x${n}`,
       // 50×50 aggressive generation is too slow; upstream turns it off.
       params: { width: n, height: n, aggressive: n < 50 },
     })),
@@ -127,7 +126,6 @@ export function decodeParams(s: string): MosaicParams {
 }
 
 export function validateParams(p: MosaicParams, _full: boolean): string | null {
-  if (p.height < 3 || p.width < 3) return "Minimal size is 3x3";
   if (p.height > MAX_TILES / p.width) return `Maximum size is ${MAX_TILES} tiles`;
   return null;
 }

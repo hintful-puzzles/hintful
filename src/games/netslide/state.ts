@@ -135,11 +135,7 @@ export function decodeParams(s: string): NetslideParams {
 }
 
 export function validateParams(p: NetslideParams, _full: boolean): string | null {
-  if (p.w <= 1 || p.h <= 1) return "Width and height must both be greater than one";
   if (p.w * p.h > 1_000_000) return "Width times height must not be unreasonably large";
-  if (p.barrierProbability < 0) return "Barrier probability may not be negative";
-  if (p.barrierProbability > 1) return "Barrier probability may not be greater than 1";
-  if (p.movetarget < 0) return "Number of shuffling moves may not be negative";
   return null;
 }
 

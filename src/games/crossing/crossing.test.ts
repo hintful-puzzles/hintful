@@ -9,6 +9,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { describeParams } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
@@ -66,10 +68,10 @@ import {
   textFormat,
   validateBoard,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 const P5 = { w: 5, h: 5, sym: false };
+const check = (p: CrossingParams, full: boolean) => paramsError(crossingGame, p, full);
 const FIX = cReference.fixtures[0]; // 5x5, seed crossing-5x5-1
 const FIX_ID = `5x5:${FIX.desc}`;
 const TS = PREFERRED_TILE_SIZE;
@@ -143,30 +145,33 @@ describe("crossing params", () => {
   });
 
   it("requires both dimensions >= 2 and at least one >= 4", () => {
-    expect(validateParams(P5, true)).toBeNull();
-    expect(validateParams({ w: 4, h: 2, sym: false }, true)).toBeNull();
-    expect(validateParams({ w: 2, h: 4, sym: false }, true)).toBeNull();
-    expect(validateParams({ w: 3, h: 3, sym: false }, true)).toBe(
+    expect(check(P5, true)).toBeNull();
+    expect(check({ w: 4, h: 2, sym: false }, true)).toBeNull();
+    expect(check({ w: 2, h: 4, sym: false }, true)).toBeNull();
+    expect(check({ w: 3, h: 3, sym: false }, true)).toBe(
       "The width or height must be at least 4",
     );
-    expect(validateParams({ w: 1, h: 9, sym: false }, true)).toBe(
-      "Width must be at least 2",
+    expect(check({ w: 1, h: 9, sym: false }, true)).toBe("Width must be at least 2");
+    expect(check({ w: 9, h: 1, sym: false }, true)).toBe("Height must be at least 2");
+  });
+
+  it("labels symmetric walls after the size", () => {
+    expect(describeParams(crossingGame, { w: 9, h: 9, sym: true })).toBe(
+      "9x9 symmetric",
     );
-    expect(validateParams({ w: 9, h: 1, sym: false }, true)).toBe(
-      "Height must be at least 2",
-    );
+    expect(describeParams(crossingGame, P5)).toBe("5x5");
   });
 
   it("rejects a board too large to generate, but only when generating", () => {
     // Measured ceiling: every shape up to 225 squares generated 3/3, everything
     // from 240 up failed at least once, and 280+ never generated. Upstream has
     // no bound at all and simply retries for ever there.
-    expect(validateParams({ w: 15, h: 15, sym: false }, true)).toBeNull();
-    expect(validateParams({ w: 16, h: 16, sym: false }, true)).toBe(
+    expect(check({ w: 15, h: 15, sym: false }, true)).toBeNull();
+    expect(check({ w: 16, h: 16, sym: false }, true)).toBe(
       "Width times height must be at most 225; larger boards cannot be generated",
     );
     // A description that already exists stays playable at any size.
-    expect(validateParams({ w: 16, h: 16, sym: false }, false)).toBeNull();
+    expect(check({ w: 16, h: 16, sym: false }, false)).toBeNull();
   });
 });
 

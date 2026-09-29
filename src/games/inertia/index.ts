@@ -285,14 +285,19 @@ export const inertiaGame: Game<
   presets() {
     return {
       title: "Inertia",
-      submenu: PRESETS.map((p) => ({ title: `${p.w}x${p.h}`, params: { ...p } })),
+      submenu: PRESETS.map((p) => ({ params: { ...p } })),
     };
   },
   encodeParams,
   decodeParams,
   validateParams,
   transposeParams: transposeDimensions(),
-  paramConfig: dimensionParamConfig<InertiaParams>(),
+  paramConfig: dimensionParamConfig<InertiaParams>({
+    doc: "Size of the grid in squares. The grid must be at least six squares in all. About a fifth of the squares are walls, a fifth stop squares and a fifth mines, and there are as many gems as there are mines, placed only where the ball can collect them.",
+    // Degenerate single-row/column grids are excluded: they could be generated
+    // but would be extremely boring, and are slow to hit at random.
+    bounds: { min: 2 },
+  }),
 
   newDesc: newInertiaDesc,
   validateDesc,

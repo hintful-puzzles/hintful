@@ -33,11 +33,4 @@ to be sure the puzzle it hands you is still solvable.
 
 ## Slide parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the board in squares, counting its wall. The width must be at least 5 and the height at least 4, and the whole board can have at most 48 squares: past that, working out whether a board can be solved takes more memory than a browser has to give.</dd>
-	<dt>Solution length limit</dt>
-	<dd>The most moves the puzzle's shortest solution may take. The generator keeps joining blocks together only while the board can still be solved within this many moves, so a higher limit tends to give a harder puzzle. Enter a negative number for no limit at all.</dd>
-</dl>
+{{parameters}}

@@ -341,13 +341,21 @@ export const blackboxGame: Game<
   validateParams,
   transposeParams: transposeDimensions(),
   paramConfig: [
-    ...dimensionParamConfig<BlackboxParams>(),
+    ...dimensionParamConfig<BlackboxParams>({
+      doc: "Size of the box in squares.",
+      bounds: { min: 2, max: 255 },
+    }),
     {
       // Upstream's single "No. of balls" string, `N` or `N-M`. A garbled
       // field parses to 0, which validateParams rejects with its message.
       kw: "no-of-balls",
       name: "No. of balls",
       type: "string",
+      doc: "How many balls are hidden. Give a single number, or a range such as <code>3-6</code> for a number picked at random from that range, which you then have to find out as you play. There must be at least one ball, and fewer balls than squares.",
+      label: {
+        slot: "tail",
+        words: (p) => `${ballsText(p)} ${ballsText(p) === "1" ? "ball" : "balls"}`,
+      },
       get: ballsText,
       set: (p, v) => {
         const dash = v.indexOf("-");
@@ -360,7 +368,6 @@ export const blackboxGame: Game<
       },
     },
   ],
-  describeParams: (p) => ({ "no-of-balls": ballsText(p) }),
 
   newDesc,
   validateDesc,

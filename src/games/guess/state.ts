@@ -8,6 +8,7 @@
  */
 
 import { parseLeadingInt } from "../../engine/decimal.ts";
+import type { PresetMenu } from "../../engine/game.ts";
 import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/obfuscate.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
@@ -18,7 +19,7 @@ import type { GameStatus } from "../../engine/types.ts";
 export const FEEDBACK_CORRECTPLACE = 1;
 export const FEEDBACK_CORRECTCOLOR = 2;
 
-const MAXCOLORS = 10;
+export const MAXCOLORS = 10;
 
 // --- types ------------------------------------------------------------
 
@@ -140,7 +141,7 @@ export function defaultParams(): GuessParams {
   };
 }
 
-export function presets() {
+export function presets(): PresetMenu<GuessParams> {
   const standard = defaultParams();
   return {
     title: "Type",
@@ -180,9 +181,6 @@ export function decodeParams(s: string): GuessParams {
 }
 
 export function validateParams(p: GuessParams, _full: boolean): string | null {
-  if (p.ncolors < 2 || p.npegs < 2) return "Trivial solutions are uninteresting";
-  if (p.ncolors > MAXCOLORS) return "Too many colors";
-  if (p.nguesses < 1) return "Must have at least one guess";
   if (!p.allowMultiple && p.ncolors < p.npegs) {
     return "Disallowing multiple colors requires at least as many colors as pegs";
   }

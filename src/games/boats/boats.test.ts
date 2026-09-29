@@ -13,6 +13,7 @@
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/midend.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
@@ -27,8 +28,11 @@ import {
 import { randomNew } from "../../engine/random/index.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { fleetFits, newBoatsDesc, validateParams } from "./generator.ts";
+import { fleetFits, newBoatsDesc } from "./generator.ts";
 import { boatsGame } from "./index.ts";
+
+const refusal = (p: BoatsParams, full: boolean) => paramsError(boatsGame, p, full);
+
 import {
   type BoatsDrawState,
   COL_COLLISION_ERROR,
@@ -121,36 +125,41 @@ describe("boats params", () => {
     expect([p.w, p.h, p.fleet]).toEqual([7, 7, 2]);
   });
 
-  it("rejects an unknown difficulty letter only on a full validation", () => {
+  it("rejects an unknown difficulty letter, which only a full encoding carries", () => {
     const p = decodeParams("6x6f3dz,3,2,1");
-    expect(validateParams(p, true)).toBe("Unknown difficulty level");
-    // A `params:desc` id carries no difficulty, so it must not be rejected.
-    expect(validateParams(p, false)).toBeNull();
+    expect(refusal(p, true)).toBe(
+      "Difficulty must be one of Easy, Normal, Tricky, Hard",
+    );
+    // A `params:desc` id carries no difficulty, so it has none to get wrong.
+    expect(refusal(decodeParams("6x6f3,3,2,1"), false)).toBeNull();
   });
 
-  it("reports upstream's messages in upstream's order", () => {
-    expect(validateParams(params({ w: 100 }), true)).toBe("Width is too high");
-    expect(validateParams(params({ h: 100 }), true)).toBe("Height is too high");
-    expect(validateParams(params({ fleet: 0, fleetData: [] }), true)).toBe(
+  it("names the field a refusal is about", () => {
+    expect(refusal(params({ w: 100 }), true)).toBe("Width must be at most 99");
+    expect(refusal(params({ h: 100 }), true)).toBe("Height must be at most 99");
+    expect(refusal(params({ fleet: 0, fleetData: [] }), true)).toBe(
       "Fleet size must be at least 1",
     );
-    expect(validateParams(params({ w: 2, h: 2, fleet: 3 }), true)).toBe(
+    expect(refusal(params({ w: 10, h: 10, fleet: 10 }), true)).toBe(
+      "Fleet size must be at most 9",
+    );
+    expect(refusal(params({ w: 2, h: 2, fleet: 3 }), true)).toBe(
       "Fleet size must be smaller than the width and height",
     );
-    expect(validateParams(params({ fleet: 3, fleetData: [0, 0, 0] }), true)).toBe(
+    expect(refusal(params({ fleet: 3, fleetData: [0, 0, 0] }), true)).toBe(
       "Fleet must contain at least 1 boat",
     );
   });
 
   it("rejects a fleet that cannot physically fit, in either orientation", () => {
     // Measured against the C: the default 3,2,1 pyramid needs a 5x5.
-    expect(validateParams(params({ w: 5, h: 4 }), true)).toBe(
+    expect(refusal(params({ w: 5, h: 4 }), true)).toBe(
       "Fleet does not fit into the grid",
     );
-    expect(validateParams(params({ w: 4, h: 5 }), true)).toBe(
+    expect(refusal(params({ w: 4, h: 5 }), true)).toBe(
       "Fleet does not fit into the grid",
     );
-    expect(validateParams(params({ w: 5, h: 5 }), true)).toBeNull();
+    expect(refusal(params({ w: 5, h: 5 }), true)).toBeNull();
   });
 
   it("encodes and decodes a custom fleet, padding a short list with zeroes", () => {

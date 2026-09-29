@@ -3,6 +3,8 @@
  * Heavy generation/solve is seed-fixed, never clock-gated (docs/games/testing.md § "Seed-deterministic, never clock-gated").
  */
 import { describe, expect, it } from "vitest";
+import { describeParams } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -60,11 +62,17 @@ describe("dominosa params", () => {
 
   it("rejects n < 1", () => {
     expect(
-      dominosaGame.validateParams({ n: 0, diff: DIFF_BASIC, tall: false }, true),
-    ).not.toBeNull();
+      paramsError(dominosaGame, { n: 0, diff: DIFF_BASIC, tall: false }, true),
+    ).toBe("Maximum number on dominoes must be at least 1");
     expect(
-      dominosaGame.validateParams({ n: 6, diff: DIFF_BASIC, tall: false }, true),
+      paramsError(dominosaGame, { n: 6, diff: DIFF_BASIC, tall: false }, true),
     ).toBeNull();
+  });
+
+  it("labels a set by its order, then its tier", () => {
+    expect(describeParams(dominosaGame, { n: 3, diff: DIFF_TRIVIAL, tall: true })).toBe(
+      "Order 3 Easy",
+    );
   });
 });
 

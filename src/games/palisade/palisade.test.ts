@@ -10,6 +10,8 @@ import {
   initBorders,
 } from "../../engine/border-grid.ts";
 import type { HintStep } from "../../engine/game.ts";
+import { presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { palisadeGame } from "./index.ts";
@@ -26,7 +28,6 @@ import {
   type PalisadeParams,
   type PalisadeState,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 const PRESETS: PalisadeParams[] = [
@@ -48,11 +49,17 @@ describe("palisade params", () => {
   });
 
   it("validates the region-size constraints", () => {
-    expect(validateParams({ w: 5, h: 5, k: 5 }, true)).toBeNull();
-    expect(validateParams({ w: 5, h: 5, k: 7 }, true)).not.toBeNull(); // 7 ∤ 25
-    expect(validateParams({ w: 5, h: 5, k: 25 }, true)).not.toBeNull(); // k = wh
-    expect(validateParams({ w: 4, h: 4, k: 2 }, true)).not.toBeNull(); // k=2 corridor
-    expect(validateParams({ w: 1, h: 4, k: 2 }, true)).toBeNull(); // k=2 allowed on a strip
+    const error = (p: PalisadeParams) => paramsError(palisadeGame, p, true);
+    expect(error({ w: 5, h: 5, k: 5 })).toBeNull();
+    expect(error({ w: 5, h: 5, k: 0 })).toBe("Region size must be at least 1");
+    expect(error({ w: 5, h: 5, k: 7 })).not.toBeNull(); // 7 ∤ 25
+    expect(error({ w: 5, h: 5, k: 25 })).not.toBeNull(); // k = wh
+    expect(error({ w: 4, h: 4, k: 2 })).not.toBeNull(); // k=2 corridor
+    expect(error({ w: 1, h: 4, k: 2 })).toBeNull(); // k=2 allowed on a strip
+  });
+
+  it("titles its presets by size and region size", () => {
+    expect(presetMenu(palisadeGame).submenu?.[1]?.title).toBe("6x8, regions of size 6");
   });
 });
 

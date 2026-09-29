@@ -106,7 +106,6 @@ export function presets(): PresetMenu<RectParams> {
   return {
     title: "Rectangles",
     submenu: PRESET_SIZES.map((n) => ({
-      title: `${n}x${n}`,
       params: { w: n, h: n, expandfactor: 0, unique: true },
     })),
   };
@@ -143,10 +142,8 @@ export function decodeParams(s: string): RectParams {
 }
 
 export function validateParams(p: RectParams, _full: boolean): string | null {
-  if (p.w <= 0 || p.h <= 0) return "Width and height must both be greater than zero";
   if (p.w > 1_000_000 / p.h) return "Width times height must not be unreasonably large";
   if (p.w * p.h < 2) return "Grid area must be greater than one";
-  if (p.expandfactor < 0) return "Expansion factor may not be negative";
   return null;
 }
 

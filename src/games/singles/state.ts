@@ -1,5 +1,5 @@
 import { c2n, DESC_ALPHABET_SIZE, n2c } from "../../engine/desc-alphabet.ts";
-import { tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
@@ -32,9 +32,6 @@ export function diffToLevel(d: Difficulty): number {
 }
 export function diffFromLevel(level: number): Difficulty {
   return level === DIFF_TRICKY ? "tricky" : "easy";
-}
-export function diffName(d: Difficulty): string {
-  return DIFF_NAMES[diffToLevel(d)];
 }
 
 // Cell flag bits (upstream F_*).
@@ -85,30 +82,6 @@ export function defaultParams(): SinglesParams {
   return { w: 5, h: 5, diff: "easy" };
 }
 
-/** The "Custom type…" form, and the field list the codec below encodes. The
- * difficulty accessors convert to and from this game's string tier union, so
- * the codec never has to know how a tier is represented. */
-export const paramConfig: ParamConfigItem<SinglesParams>[] = [
-  ...dimensionParamConfig<SinglesParams>(),
-  {
-    kw: "difficulty",
-    name: "Difficulty",
-    type: "choices",
-    choices: [...DIFF_NAMES],
-    get: (p) => diffToLevel(p.diff),
-    set: (p, v) => {
-      p.diff = diffFromLevel(v);
-    },
-  },
-];
-
-/** `WxH`, plus the generator-only difficulty letter. An unknown letter leaves
- * the default tier. */
-export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
-  dims(paramConfig),
-  choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
-]);
-
 /**
  * The largest grid whose numbers the desc alphabet can write.
  *
@@ -120,11 +93,28 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
  */
 const MAX_DIM = DESC_ALPHABET_SIZE - 1;
 
-export function validateParams(p: SinglesParams, _full: boolean): string | null {
-  if (p.w < 2 || p.h < 2) return "Width and height must be at least two";
-  if (p.w > MAX_DIM || p.h > MAX_DIM) return "Puzzle is too large";
-  return null;
-}
+/** The "Custom type…" form, and the field list the codec below encodes. The
+ * difficulty accessors convert to and from this game's string tier union, so
+ * the codec never has to know how a tier is represented. */
+export const paramConfig: ParamConfigItem<SinglesParams>[] = [
+  ...dimensionParamConfig<SinglesParams>({
+    doc: "Size of the grid in squares.",
+    bounds: { min: 2, max: MAX_DIM },
+  }),
+  difficultyItem(DIFF_NAMES, {
+    get: (p: SinglesParams) => diffToLevel(p.diff),
+    set: (p: SinglesParams, tier: number) => {
+      p.diff = diffFromLevel(tier);
+    },
+  }),
+];
+
+/** `WxH`, plus the generator-only difficulty letter. An unknown letter leaves
+ * the default tier. */
+export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
+  dims(paramConfig),
+  choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
+]);
 
 // --- state construction ----------------------------------------------------
 

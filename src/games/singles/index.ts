@@ -18,6 +18,7 @@ import {
   type HintResult,
   type HintStep,
   type HintTrackVerdict,
+  type PresetMenu,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
@@ -68,9 +69,6 @@ import {
   DIFF_ANY,
   decodeParams,
   defaultParams,
-  diffFromLevel,
-  diffName,
-  diffToLevel,
   encodeParams,
   F_BLACK,
   F_CIRCLE,
@@ -84,7 +82,6 @@ import {
   status,
   textFormat,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 /** A cell whose mark contradicts the unique solution (Check & Save). */
@@ -92,17 +89,11 @@ export type SinglesMistake = Point;
 
 const PRESET_SIZES = [5, 6, 8, 10, 12];
 
-function presets(): {
-  title: string;
-  submenu: { title: string; params: SinglesParams }[];
-} {
-  const submenu: { title: string; params: SinglesParams }[] = [];
+function presets(): PresetMenu<SinglesParams> {
+  const submenu: PresetMenu<SinglesParams>[] = [];
   for (const d of PRESET_SIZES) {
     for (const diff of ["easy", "tricky"] as const) {
-      submenu.push({
-        title: `${d}x${d} ${diffName(diff)}`,
-        params: { w: d, h: d, diff },
-      });
+      submenu.push({ params: { w: d, h: d, diff } });
     }
   }
   return { title: "Singles", submenu };
@@ -511,8 +502,6 @@ function hintKeepTrack(
  * alone, so no player mark reaches the verdict. `sneaky` is off — that is a
  * generator-side pre-pass, not a tier. */
 const difficulty: DifficultyContract<SinglesParams> = {
-  tierOf: (p) => diffToLevel(p.diff),
-  withTier: (p, tier) => ({ ...p, diff: diffFromLevel(tier) }),
   solveAtCap: (p, desc, cap) =>
     solveSpecific(newState(p, desc), cap, false) > 0 ? "solved" : "unsolved",
 };
@@ -532,13 +521,8 @@ export const singlesGame: Game<
   presets,
   encodeParams,
   decodeParams,
-  validateParams,
   transposeParams: transposeDimensions(),
   paramConfig,
-  // Keys match the `singles` template in `puzzle/augmentation.ts`: width and
-  // height come from the worker adapter's w/h base, `difficulty` is the
-  // zero-based tier index.
-  describeParams: (p) => ({ difficulty: diffToLevel(p.diff) }),
 
   newDesc: newSinglesDesc,
   validateDesc,

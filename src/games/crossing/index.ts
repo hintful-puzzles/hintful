@@ -55,7 +55,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { ConfigValues, KeyLabel, Point } from "../../engine/types.ts";
+import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newCrossingDesc } from "./generator.ts";
 import {
   type CrossingFiring,
@@ -105,10 +105,7 @@ import {
 function presets(): PresetMenu<CrossingParams> {
   return {
     title: "Crossing",
-    submenu: crossingPresets.map((p) => ({
-      title: `${p.w}x${p.h}${p.sym ? " symmetric" : ""}`,
-      params: { ...p },
-    })),
+    submenu: crossingPresets.map((p) => ({ params: { ...p } })),
   };
 }
 
@@ -630,18 +627,18 @@ export const crossingGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
-  describeParams: (p): ConfigValues => ({
-    width: String(p.w),
-    height: String(p.h),
-    "symmetric-walls": p.sym ? 1 : 0,
-  }),
   transposeParams: transposeDimensions(),
   paramConfig: [
-    ...dimensionParamConfig<CrossingParams>(),
+    ...dimensionParamConfig<CrossingParams>({
+      doc: "Size of the grid in squares. Very large boards are refused, because a puzzle whose runs all read as distinct numbers becomes impossible to generate as the grid grows.",
+      bounds: { min: 2 },
+    }),
     {
       kw: "symmetric-walls",
       name: "Symmetric walls",
       type: "boolean",
+      doc: "When enabled, all walls form a rotationally symmetric pattern.",
+      label: { slot: "kind", words: (p) => (p.sym ? "symmetric" : null) },
       get: (p) => p.sym,
       set: (p, v) => {
         p.sym = v;

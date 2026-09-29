@@ -27,18 +27,4 @@ allows, so following the hint from the first move finishes in time.
 
 ## Flood parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares. The grid must have at least two
-	squares.</dd>
-	<dt>Colors</dt>
-	<dd>How many different colors the grid is filled with, from 3 to
-	10.</dd>
-	<dt>Extra moves permitted</dt>
-	<dd>How much slack the move limit gives you. The game plays the board
-	through itself when it deals it, and the limit is the number of fills
-	it took plus this many. At 0 you have to match or beat the game's own
-	count.</dd>
-</dl>
+{{parameters}}

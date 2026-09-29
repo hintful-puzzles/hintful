@@ -9,6 +9,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
+import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, LEFT_RELEASE, MIDDLE_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { decodeSave } from "../../engine/save.ts";
@@ -28,7 +29,6 @@ import {
   type MinesState,
   type MinesUi,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 const BG: [number, number, number] = [0.9, 0.9, 0.9];
@@ -90,18 +90,23 @@ describe("mines params", () => {
   });
 
   it("validates size and mine-count bounds", () => {
-    expect(validateParams(decodeParams("9x9n10"), true)).toBeNull();
-    expect(validateParams(decodeParams("5x5n3"), true)).toBeNull();
+    expect(paramsError(minesGame, decodeParams("9x9n10"), true)).toBeNull();
+    expect(paramsError(minesGame, decodeParams("5x5n3"), true)).toBeNull();
+    expect(paramsError(minesGame, decodeParams("5x5n0"), true)).toBe(
+      "Mines must be at least 1",
+    );
     // too many mines: n > wh - 9 (a 3x3 needs 9 clear around the first click).
     expect(
-      validateParams(
+      paramsError(
+        minesGame,
         { w: 3, h: 3, n: 5, unique: true, firstClickX: -1, firstClickY: -1 },
         true,
       ),
     ).toMatch(/Too many mines/);
     // unique requires > 2 in each dimension.
     expect(
-      validateParams(
+      paramsError(
+        minesGame,
         { w: 2, h: 9, n: 3, unique: true, firstClickX: -1, firstClickY: -1 },
         true,
       ),

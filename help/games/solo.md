@@ -74,19 +74,4 @@ full; the hint says so rather than guessing.
 
 ## Solo parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Columns of sub-blocks, Rows of sub-blocks</dt>
-	<dd>How many blocks the grid has across and down. Their product is the width and height of the grid, and the largest number in it: 3 and 3 make the usual 9×9 grid of 3×3 blocks, while 2 and 3 make a 6×6 grid of blocks 3 wide and 2 high. Each must be at least 2 (apart from Jigsaw, below), and the grid can hold at most 31 numbers.</dd>
-	<dt>"X" (require every number in each main diagonal)</dt>
-	<dd>X mode: the two long diagonals must also hold every number once. The grid needs at least 4 numbers.</dd>
-	<dt>Jigsaw (irregularly shaped sub-blocks)</dt>
-	<dd>Jigsaw mode: the grid keeps its size, but its blocks are random shapes rather than rectangles.</dd>
-	<dt>Killer (digit sums)</dt>
-	<dd>Killer mode: instead of given numbers, the grid is divided into cages, each labeled with the total its numbers must add up to, and a number may not repeat within a cage. Killer grids hold at most 9 numbers.</dd>
-	<dt>Symmetry</dt>
-	<dd>The symmetry of the pattern of given numbers: None, 2-way rotation, 4-way rotation, 2-way mirror, 2-way diagonal mirror, 4-way mirror, 4-way diagonal mirror or 8-way mirror. A rotation keeps the pattern the same when the grid is turned a half (2-way) or a quarter (4-way) turn; a mirror keeps it the same when reflected across the middle line, or the diagonal for a diagonal mirror, and the 4- and 8-way ones combine several of these. Killer puzzles have no given numbers, so it makes no difference there.</dd>
-	<dt>Difficulty</dt>
-	<dd>Determine the difficulty of the generated puzzle (<a href="../features#difficulty">what the names mean</a>).</dd>
-</dl>
+{{parameters}}

@@ -18,16 +18,4 @@ a right-click does.
 
 ## Mosaic parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares. Both must be at least 3, and the grid
-	may hold at most 10000 squares.</dd>
-	<dt>Aggressive generation</dt>
-	<dd>Every puzzle hides the clues the game never used while solving
-	it. When on, the game also tries taking away each clue that remains,
-	and keeps it away whenever the puzzle can still be solved without it,
-	so fewer numbers are shown, which usually makes the puzzle
-	harder.</dd>
-</dl>
+{{parameters}}

@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_RIGHT,
   CURSOR_SELECT,
@@ -46,11 +47,11 @@ import {
   F_VER,
   newState,
   type SticksMove,
+  type SticksParams,
   type SticksState,
   type SticksUi,
   textFormat,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 // The small frozen C fixture (4x4, ROT2) — a real, uniquely-solvable board.
@@ -165,20 +166,21 @@ describe("sticks params", () => {
   });
 
   it("validates bounds in upstream order", () => {
-    expect(validateParams({ w: 1, h: 5, blackpc: 20, symm: 0 }, true)).toBe(
-      "Width and height must be at least 2",
+    const error = (p: SticksParams, full = true) => paramsError(sticksGame, p, full);
+    expect(error({ w: 1, h: 5, blackpc: 20, symm: 0 })).toBe(
+      "Width must be at least 2",
     );
-    expect(validateParams({ w: 5, h: 5, blackpc: 4, symm: 0 }, true)).toBe(
-      "Percentage of black squares must be between 5% and 100%",
+    expect(error({ w: 5, h: 5, blackpc: 4, symm: 0 })).toBe(
+      "%age of black squares must be between 5% and 100%",
     );
-    expect(validateParams({ w: 5, h: 6, blackpc: 20, symm: 4 }, true)).toBe(
+    expect(error({ w: 5, h: 6, blackpc: 20, symm: 4 })).toBe(
       "4-fold symmetry is only available with square grids",
     );
-    expect(validateParams({ w: 5, h: 5, blackpc: 20, symm: 9 }, true)).toBe(
-      "Unknown symmetry type",
+    expect(error({ w: 5, h: 5, blackpc: 20, symm: 9 })).toMatch(
+      /^Symmetry must be one of/,
     );
-    // The short check ignores everything but dimensions.
-    expect(validateParams({ w: 5, h: 5, blackpc: 0, symm: 9 }, false)).toBeNull();
+    // The short check ignores the generation-only limits.
+    expect(error({ w: 5, h: 6, blackpc: 0, symm: 4 }, false)).toBeNull();
   });
 });
 

@@ -33,7 +33,7 @@ import type {
   NoteEncoding,
 } from "../../engine/candidate-hint.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
-import { tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
@@ -346,31 +346,22 @@ export function defaultParams(): RomeParams {
 export function presets(): PresetMenu<RomeParams> {
   return {
     title: "Rome",
-    submenu: PRESETS.map((p) => ({
-      title: `${p.w}x${p.h} ${DIFF_NAMES[p.diff]}`,
-      params: { ...p },
-    })),
+    submenu: PRESETS.map((p) => ({ params: { ...p } })),
   };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<RomeParams>[] = [
-  ...dimensionParamConfig<RomeParams>(),
-  {
-    kw: "difficulty",
-    name: "Difficulty",
-    type: "choices",
-    choices: [...DIFF_NAMES],
-    get: (p) => p.diff,
-    set: (p, v) => {
-      p.diff = v;
-    },
-  },
+  ...dimensionParamConfig<RomeParams>({
+    doc: "Size of the grid in squares.",
+    bounds: { min: 3 },
+  }),
+  difficultyItem(DIFF_NAMES, "diff"),
 ];
 
 /** `WxH`, plus the generator-only difficulty letter. Upstream: a `d` with an
  * absent or unrecognized char leaves the difficulty out of range, so
- * `validateParams` rejects it. */
+ * `paramsError` rejects it. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
   choice(paramConfig, "d", "difficulty", DIFF_CHARS, {
@@ -378,13 +369,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
     invalid: DIFFCOUNT + 1,
   }),
 ]);
-
-export function validateParams(p: RomeParams, _full: boolean): string | null {
-  if (p.w < 3) return "Width must be at least 3";
-  if (p.h < 3) return "Height must be at least 3";
-  if (p.diff >= DIFFCOUNT) return "Unknown difficulty level";
-  return null;
-}
 
 // --- board helpers ----------------------------------------------------------
 

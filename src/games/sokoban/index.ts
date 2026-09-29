@@ -47,7 +47,6 @@ import {
   TARGET,
   targetize,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 // --- input ------------------------------------------------------------
@@ -179,7 +178,6 @@ export const sokobanGame: Game<
   presets,
   encodeParams,
   decodeParams,
-  validateParams,
   transposeParams: transposeDimensions(),
   paramConfig,
 

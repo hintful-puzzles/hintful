@@ -23,11 +23,4 @@ To play with a keyboard, use the arrow keys to move the cursor, both inside the 
 
 ## Black Box parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the box in squares, from 2 to 255 each.</dd>
-	<dt>No. of balls</dt>
-	<dd>How many balls are hidden. Give a single number, or a range such as <code>3-6</code> for a number picked at random from that range, which you then have to find out as you play. There must be at least one ball, and fewer balls than squares.</dd>
-</dl>
+{{parameters}}

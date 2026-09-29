@@ -50,12 +50,4 @@ asks you to undo back to a position where it can.
 
 ## Inertia parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares. Both must be at least 2, and the grid
-	at least six squares in all. About a fifth of the squares are walls,
-	a fifth stop squares and a fifth mines, and there are as many gems
-	as there are mines, placed only where the ball can collect them.</dd>
-</dl>
+{{parameters}}

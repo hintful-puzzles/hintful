@@ -336,8 +336,6 @@ function hint(state: TracksState): HintResult<TracksMove, TracksHighlights> {
 /** Tracks' difficulty contract (`engine/difficulty.ts`); `stateToBoard` on the
  * initial state gives the clue-only board. */
 const difficulty: DifficultyContract<TracksParams> = {
-  tierOf: (p) => p.diff,
-  withTier: (p, tier) => ({ ...p, diff: tier }),
   solveAtCap: (p, desc, cap) => {
     const { ret } = tracksSolve(stateToBoard(newState(p, desc)), cap);
     return ret === 1 ? "solved" : ret < 0 ? "impossible" : "unsolved";
@@ -362,12 +360,6 @@ export const tracksGame: Game<
   validateParams,
   transposeParams: transposeDimensions(),
   paramConfig,
-  describeParams: (p) => ({
-    width: String(p.w),
-    height: String(p.h),
-    difficulty: p.diff,
-    "disallow-consecutive-1-clues": p.singleOnes,
-  }),
 
   newDesc,
   validateDesc,

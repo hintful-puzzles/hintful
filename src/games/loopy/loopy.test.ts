@@ -8,8 +8,9 @@
  * purpose, and the retry paths the C reaches by aborting or hanging.
  */
 import { describe, expect, it } from "vitest";
-import type { PresetMenu } from "../../engine/game.ts";
 import type { GridDot } from "../../engine/grid/index.ts";
+import { presetMenu, type TitledPresetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, MIDDLE_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { newDesc } from "./generator.ts";
@@ -115,8 +116,8 @@ describe("params", () => {
       /at least one .* at least 4/i,
     );
     expect(validateParams({ w: 3, h: 4, diff: 0, type: 4 }, true)).toBeNull();
-    expect(validateParams({ w: 99, h: 0, diff: 0, type: 99 }, true)).toBe(
-      "Illegal grid type",
+    expect(paramsError(loopyGame, { w: 99, h: 0, diff: 0, type: 99 }, true)).toMatch(
+      /^Grid type must be one of Squares, /,
     );
   });
 
@@ -646,16 +647,18 @@ describe("presets", () => {
     // Upstream printed height first; every other game here, and the dialog's
     // Width and Height fields, read width first.
     const leaves: { title: string; params: { w: number; h: number } }[] = [];
-    const walk = (m: PresetMenu<LoopyParams>): void => {
+    const walk = (m: TitledPresetMenu<LoopyParams>): void => {
       if (m.params) leaves.push({ title: m.title, params: m.params });
       for (const c of m.submenu ?? []) walk(c);
     };
-    walk(loopyGame.presets());
+    walk(presetMenu(loopyGame));
     expect(leaves.length).toBeGreaterThanOrEqual(20);
     const nonSquare = leaves.filter(({ params: p }) => p.w !== p.h);
     expect(nonSquare.length).toBeGreaterThan(0);
     for (const { title, params: p } of leaves)
       expect(title.startsWith(`${p.w}x${p.h} `)).toBe(true);
+    expect(leaves[0]?.title).toBe("7x7 Squares Easy");
+    expect(leaves.map((l) => l.title)).toContain("10x10 Penrose (rhombs) Hard");
   });
 });
 

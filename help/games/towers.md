@@ -75,11 +75,4 @@ grid is full; the hint says so rather than guessing.
 
 ## Towers parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Grid size</dt>
-	<dd>Width and height of the grid, which is also the height of the tallest tower: from 3 to 9.</dd>
-	<dt>Difficulty</dt>
-	<dd>Determine the difficulty of the generated puzzle (<a href="../features#difficulty">what the names mean</a>).</dd>
-</dl>
+{{parameters}}

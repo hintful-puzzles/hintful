@@ -39,11 +39,4 @@ On an Unreasonable board the hint may stop and say that nothing further follows 
 
 ## Dominosa parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Maximum number on dominoes</dt>
-	<dd>The highest number that appears on a domino. The set runs from 0–0 up to this number doubled, one of each, so a maximum of <em>n</em> gives a grid <em>n</em>+1 squares wide and <em>n</em>+2 tall. It must be at least 1.</dd>
-	<dt>Difficulty</dt>
-	<dd>Determine the difficulty of the generated puzzle; see <a href="../features#difficulty">what the names mean</a>. Ambiguous is this game's own extra setting: the board is not checked for a unique solution, so it may have several, and any tiling that uses every domino once counts as solved. On the smallest sets (a maximum of 1 or 2) the harder settings are capped at what that set can support.</dd>
-</dl>
+{{parameters}}

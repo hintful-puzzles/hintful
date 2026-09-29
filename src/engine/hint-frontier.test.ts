@@ -290,7 +290,7 @@ describe("hint plans continue from their previous step where they can", () => {
         if (!game) throw new Error(`${id} is not a hint game`);
         let jumps = 0;
         let avoidable = 0;
-        for (const p of leafPresets(game.presets())) {
+        for (const p of leafPresets(game)) {
           for (let s = 0; s < 2; s++) {
             const { desc } = game.newDesc(
               p.params,

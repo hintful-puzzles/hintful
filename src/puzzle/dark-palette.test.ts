@@ -60,7 +60,7 @@ function schemes(id: PuzzleId): { light: OKLCH[]; dark: OKLCH[] } {
 /** Every `paletteSwaps` pair in the collection, with its game. */
 const PAIRS: [PuzzleId, number, number][] = Object.entries(puzzleAugmentations).flatMap(
   ([id, aug]) =>
-    (aug.darkMode?.paletteSwaps ?? []).map(
+    (aug?.darkMode?.paletteSwaps ?? []).map(
       ([a, b]) => [id as PuzzleId, a, b] as [PuzzleId, number, number],
     ),
 );

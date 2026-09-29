@@ -101,10 +101,7 @@ export function defaultParams(): PearlParams {
 export function presets(): PresetMenu<PearlParams> {
   return {
     title: "Pearl",
-    submenu: PEARL_PRESETS.map((p) => ({
-      title: `${p.w}x${p.h} ${DIFF_NAMES[p.difficulty]}`,
-      params: { ...p },
-    })),
+    submenu: PEARL_PRESETS.map((p) => ({ params: { ...p } })),
   };
 }
 
@@ -127,11 +124,8 @@ export function encodeParams(p: PearlParams, full: boolean): string {
 }
 
 export function validateParams(p: PearlParams, _full: boolean): string | null {
-  if (p.w < 5) return "Width must be at least five";
-  if (p.h < 5) return "Height must be at least five";
   if (p.w > Math.floor(0x7fffffff / p.h))
     return "Width times height must not be unreasonably large";
-  if (p.difficulty < 0 || p.difficulty >= DIFF_COUNT) return "Unknown difficulty level";
   if (p.difficulty >= DIFF_TRICKY && p.w + p.h < 11)
     return `Width or height must be at least six for ${DIFF_NAMES[DIFF_TRICKY]}`;
   return null;

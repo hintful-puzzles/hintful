@@ -8,7 +8,7 @@
  * right-click cycles the other way; number keys place directly.
  */
 
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
@@ -332,8 +332,6 @@ function animLength(oldState: UnrulyState, newState_: UnrulyState): number {
  * the highest rung that fired, not a verdict, so solvability is read the way
  * the generator reads it, through the shared `solvableAt`. */
 const difficulty: DifficultyContract<UnrulyParams> = {
-  tierOf: (p) => p.diff,
-  withTier: (p, tier) => ({ ...p, diff: tier }),
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
     return solvableAt(s, s.grid, cap) ? "solved" : "unsolved";
@@ -360,33 +358,24 @@ export const unrulyGame: Game<
   paramConfig: [
     // Upstream's `w2`/`h2` are the *full* grid extent, not halves, so the
     // fields are mapped rather than the game renamed.
-    ...dimensionParamConfig<UnrulyParams>({ w: "w2", h: "h2" }),
-    {
-      kw: "difficulty",
-      name: "Difficulty",
-      type: "choices",
-      choices: [...DIFF_NAMES],
-      get: (p) => p.diff,
-      set: (p, v) => {
-        p.diff = v;
-      },
-    },
+    ...dimensionParamConfig<UnrulyParams>({
+      fields: { w: "w2", h: "h2" },
+      doc: "Size of the grid in squares. Both must be even.",
+      bounds: { min: 6 },
+    }),
+    difficultyItem(DIFF_NAMES, "diff"),
     {
       kw: "unique-rows-and-columns",
       name: "Unique rows and columns",
       type: "boolean",
+      doc: "Adds the rule that no two rows may be the same, and no two columns. There are only so many different rows of a given width, so this limits how tall the grid can be for its width, and the other way round: a grid 6 squares wide can be at most 14 high, and one 8 wide at most 34.",
+      label: { slot: "tail", words: (p) => (p.unique ? "unique" : null) },
       get: (p) => p.unique,
       set: (p, v) => {
         p.unique = v;
       },
     },
   ],
-  describeParams: (p) => ({
-    width: String(p.w2),
-    height: String(p.h2),
-    difficulty: p.diff,
-    "unique-rows-and-columns": p.unique,
-  }),
 
   newDesc,
   validateDesc,

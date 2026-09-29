@@ -24,7 +24,7 @@ import {
   outOfBounds,
 } from "../../engine/border-grid.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
-import { dimensionParamConfig, parseConfigInt } from "../../engine/params.ts";
+import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import type { GameStatus } from "../../engine/types.ts";
@@ -83,25 +83,21 @@ export function defaultParams(): SeparateParams {
 export function presets(): PresetMenu<SeparateParams> {
   return {
     title: "Size",
-    submenu: PRESETS.map((p) => ({
-      title: `${p.w} x ${p.h}, ${p.k} letters`,
-      params: { ...p },
-    })),
+    submenu: PRESETS.map((p) => ({ params: { ...p } })),
   };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<SeparateParams>[] = [
-  ...dimensionParamConfig<SeparateParams>(),
-  {
-    kw: "letters",
-    name: "Letters",
-    type: "string",
-    get: (p) => String(p.k),
-    set: (p, v) => {
-      p.k = parseConfigInt(v);
-    },
-  },
+  ...dimensionParamConfig<SeparateParams>({
+    doc: "Size of the grid in squares.",
+    bounds: { min: 1 },
+  }),
+  numberItem<SeparateParams>("letters", "Letters", "k", {
+    doc: "How many different letters the grid uses, which is also how many squares each region holds. It must divide the number of squares in the grid exactly, and a new puzzle needs from 2 to 26 of them, fewer than the number of squares.",
+    bounds: { min: 1 },
+    label: { slot: "tail", words: (p) => `${p.k} letters` },
+  }),
 ];
 
 /** Upstream: `w = h = k = atoi(s)`, then optional `x<h>` and `n<k>` — so the
@@ -117,9 +113,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 export function validateParams(p: SeparateParams, full: boolean): string | null {
   const { w, h, k } = p;
-  if (w < 1) return "Width must be at least one";
-  if (h < 1) return "Height must be at least one";
-  if (k < 1) return "Number of letters must be at least one";
   if (w > 0x7fffffff / h) return "Width times height must not be unreasonably large";
   const wh = w * h;
   if (wh % k) return "Number of letters must divide the grid area";

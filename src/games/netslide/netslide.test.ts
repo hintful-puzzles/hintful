@@ -13,6 +13,8 @@
 
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
+import { describeParams, presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_RIGHT,
   CURSOR_SELECT,
@@ -57,7 +59,6 @@ import {
   slideRow,
   U,
   validateDesc,
-  validateParams,
   wireCount,
 } from "./state.ts";
 
@@ -116,16 +117,34 @@ describe("netslide params", () => {
   });
 
   it("rejects degenerate params", () => {
-    expect(validateParams({ ...EASY_5x5, w: 1 }, true)).not.toBeNull();
-    expect(validateParams({ ...EASY_5x5, h: 1 }, true)).not.toBeNull();
+    const error = (p: NetslideParams) => paramsError(netslideGame, p, true);
+    expect(error({ ...EASY_5x5, w: 1 })).toBe("Width must be at least 2");
+    expect(error({ ...EASY_5x5, h: 1 })).toBe("Height must be at least 2");
+    expect(error({ ...EASY_5x5, barrierProbability: -0.1 })).toBe(
+      "Barrier probability must be at least 0",
+    );
+    expect(error({ ...EASY_5x5, barrierProbability: 1.5 })).toBe(
+      "Barrier probability must be at most 1",
+    );
+    expect(error({ ...EASY_5x5, movetarget: -1 })).toBe(
+      "Number of shuffling moves must be at least 0",
+    );
+    expect(error({ ...EASY_5x5, w: 1001, h: 1000 })).toMatch(/unreasonably large/);
+    expect(error(EASY_5x5)).toBeNull();
+  });
+
+  it("names its presets, and labels a custom grid by its fields", () => {
+    const titles = (presetMenu(netslideGame).submenu ?? []).map((m) => m.title);
+    expect(titles.slice(0, 3)).toEqual(["3x3 easy", "3x3 medium", "3x3 hard"]);
     expect(
-      validateParams({ ...EASY_5x5, barrierProbability: -0.1 }, true),
-    ).not.toBeNull();
-    expect(
-      validateParams({ ...EASY_5x5, barrierProbability: 1.5 }, true),
-    ).not.toBeNull();
-    expect(validateParams({ ...EASY_5x5, movetarget: -1 }, true)).not.toBeNull();
-    expect(validateParams(EASY_5x5, true)).toBeNull();
+      describeParams(netslideGame, {
+        w: 4,
+        h: 5,
+        wrapping: true,
+        barrierProbability: 0.5,
+        movetarget: 12,
+      }),
+    ).toBe("4x5 wrapping, 50% barriers, 12 shuffles");
   });
 });
 

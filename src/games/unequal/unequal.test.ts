@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
+import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -29,7 +30,6 @@ import {
   type UnequalParams,
   type UnequalState,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 function gen(
@@ -66,19 +66,19 @@ describe("unequal params", () => {
     expect(decodeParams("5adk")).toEqual(a);
   });
 
-  it("rejects invalid params", () => {
+  it("rejects invalid params, naming the dialog's Size field", () => {
     expect(
-      validateParams({ order: 2, mode: "unequal", diff: "easy" }, true),
-    ).not.toBeNull();
+      paramsError(unequalGame, { order: 2, mode: "unequal", diff: "easy" }, true),
+    ).toBe("Size must be at least 3");
     expect(
-      validateParams({ order: 33, mode: "unequal", diff: "easy" }, true),
-    ).not.toBeNull();
+      paramsError(unequalGame, { order: 33, mode: "unequal", diff: "easy" }, true),
+    ).toBe("Size must be at most 31");
     // Adjacent below order 5 at Tricky+ is invalid.
     expect(
-      validateParams({ order: 4, mode: "adjacent", diff: "tricky" }, true),
-    ).not.toBeNull();
+      paramsError(unequalGame, { order: 4, mode: "adjacent", diff: "tricky" }, true),
+    ).toBe("Size must be at least 5 for Adjacent puzzles of this difficulty.");
     expect(
-      validateParams({ order: 5, mode: "adjacent", diff: "tricky" }, true),
+      paramsError(unequalGame, { order: 5, mode: "adjacent", diff: "tricky" }, true),
     ).toBeNull();
   });
 });

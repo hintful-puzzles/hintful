@@ -48,18 +48,5 @@ A *step* is one move to a neighboring square, so two numbers can be no more step
 
 ## Ascent parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu. 
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares.</dd>
-	<dt>Always show start and end points</dt>
-	<dd>When enabled, the first and last number are always given. Disable this option for an added challenge.</dd>
-	<dt>Symmetrical clues</dt>
-	<dd>When enabled, all given numbers form a symmetric pattern. This usually leads to easier puzzles.</dd>
-	<dt>Grid type</dt>
-	<dd>Choose between 'Rectangle', 'Rectangle (no diagonals)', 'Hexagon', 'Honeycomb' and 'Edges' mode.</dd>
-	<dt>Difficulty</dt>
-	<dd>Determine the difficulty of the generated puzzle. Higher difficulties require more complex reasoning, and a puzzle always needs the difficulty you chose — it will never be solvable by the techniques of the level below.</dd>
-</dl>
+{{parameters}}
 

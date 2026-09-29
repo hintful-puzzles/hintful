@@ -7,6 +7,7 @@
 
 import { describe, expect, it } from "vitest";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE } from "../../engine/latin.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { newGameDesc } from "./generator.ts";
@@ -27,7 +28,6 @@ import {
   newUi,
   PRESETS,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 const P = (w: number, diff: number, id: boolean): GroupParams => ({ w, diff, id });
@@ -86,12 +86,11 @@ describe("params codec", () => {
   });
 
   it("rejects the two impossible identity-hidden combinations", () => {
-    expect(validateParams(P(3, DIFF_NORMAL, false), true)).toMatch(/3x3/);
-    expect(validateParams(P(6, 0, false), true)).toBe(
-      "Easy puzzles must have an identity",
-    );
-    expect(validateParams(P(6, DIFF_NORMAL, false), true)).toBeNull();
-    expect(validateParams(P(2, DIFF_NORMAL, true), true)).toMatch(/between 3 and 26/);
+    const error = (p: GroupParams) => paramsError(groupGame, p, true);
+    expect(error(P(3, DIFF_NORMAL, false))).toMatch(/3x3/);
+    expect(error(P(6, 0, false))).toBe("Easy puzzles must have an identity");
+    expect(error(P(6, DIFF_NORMAL, false))).toBeNull();
+    expect(error(P(2, DIFF_NORMAL, true))).toBe("Grid size must be at least 3");
   });
 });
 

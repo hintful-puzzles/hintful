@@ -11,6 +11,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
+import { describeParams, presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_RIGHT,
   CURSOR_SELECT,
@@ -40,7 +42,6 @@ import {
   newState,
   newUi,
   PRESETS,
-  presetLabel,
   type SaladMove,
   type SaladParams,
   type SaladState,
@@ -49,7 +50,6 @@ import {
   symbolChar,
   textFormat,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 /** A 4×4 ABC End View board and a 5×5 Number Ball board, both taken from the
@@ -100,32 +100,33 @@ describe("salad params codec", () => {
     ).toBe("8n5Bdx");
   });
 
-  it("labels presets the way upstream does", () => {
-    expect(presetLabel(PRESETS[0])).toBe("Letters: 4x4 A~C");
-    expect(presetLabel(PRESETS[2])).toBe("Numbers: 5x5 1~3");
+  it("labels presets by mode, size, symbol range and tier", () => {
+    const titles = presetMenu(saladGame).submenu?.map((m) => m.title);
+    expect(titles?.[0]).toBe("Letters: 4x4 A~C Easy");
+    expect(titles?.[2]).toBe("Numbers: 5x5 1~3 Easy");
   });
 
-  it("validates in upstream's order, with upstream's messages", () => {
+  it("refuses symbol counts the size cannot hold", () => {
     const base = { order: 5, nums: 3, mode: GAMEMODE_LETTERS, diff: DIFF_EASY };
-    expect(validateParams(base, true)).toBeNull();
-    expect(validateParams({ ...base, nums: 1 }, true)).toBe(
-      "Symbols must be at least 2.",
+    expect(paramsError(saladGame, base, true)).toBeNull();
+    expect(paramsError(saladGame, { ...base, nums: 1 }, true)).toBe(
+      "Symbols must be at least 2",
     );
-    expect(validateParams({ ...base, nums: 5 }, true)).toBe(
+    expect(paramsError(saladGame, { ...base, nums: 5 }, true)).toBe(
       "Symbols must be lower than the size.",
     );
-    expect(validateParams({ ...base, order: 3, nums: 2 }, true)).toBeNull();
-    expect(validateParams({ order: 2, nums: 2, mode: 0, diff: 0 }, true)).toBe(
-      "Symbols must be lower than the size.",
+    expect(paramsError(saladGame, { ...base, order: 3, nums: 2 }, true)).toBeNull();
+    expect(paramsError(saladGame, { order: 2, nums: 2, mode: 0, diff: 0 }, true)).toBe(
+      "Size (s*s) must be at least 3",
     );
-    expect(validateParams({ order: 11, nums: 10, mode: 0, diff: 0 }, true)).toBe(
-      "Symbols must be no more than 9.",
-    );
+    expect(
+      paramsError(saladGame, { order: 11, nums: 10, mode: 0, diff: 0 }, true),
+    ).toBe("Symbols must be at most 9");
   });
 
   it("parks an unknown difficulty letter out of range so validation rejects it", () => {
-    expect(validateParams(decodeParams("5n3Ldq"), true)).toBe(
-      "Unknown difficulty rating",
+    expect(paramsError(saladGame, decodeParams("5n3Ldq"), true)).toBe(
+      "Difficulty must be one of Easy, Normal",
     );
   });
 });
@@ -235,7 +236,7 @@ describe("salad generator", () => {
   for (const preset of PRESETS) {
     for (const diff of [DIFF_EASY, DIFF_HARD]) {
       const p = { ...preset, diff };
-      it(`generates a solvable ${presetLabel(p)} at difficulty ${diff}`, () => {
+      it(`generates a solvable ${describeParams(saladGame, p)}`, () => {
         const { desc } = newSaladDesc(
           p,
           randomNew(`salad-gen-${p.order}-${p.nums}-${p.mode}-${diff}`),
@@ -252,7 +253,7 @@ describe("salad generator", () => {
   // freshly generated boards, fall to the Easy solver.
   for (const preset of PRESETS) {
     const p = { ...preset, diff: DIFF_HARD };
-    it(`generates a Normal ${presetLabel(p)} that Easy cannot solve`, () => {
+    it(`generates a ${describeParams(saladGame, p)} that Easy cannot solve`, () => {
       const { desc } = newSaladDesc(
         p,
         randomNew(`salad-tier-${p.order}-${p.nums}-${p.mode}`),
@@ -741,13 +742,10 @@ describe("salad presentation hooks", () => {
     expect(lines[3][0]).toBe("A"); // the left clue of row 1
   });
 
-  it("describes its params with the keys augmentation.ts reads", () => {
-    expect(saladGame.describeParams?.(NUMBERS.p)).toEqual({
-      "game-mode": GAMEMODE_NUMBERS,
-      size: "5",
-      symbols: "3",
-      difficulty: DIFF_EASY,
-    });
+  it("labels a custom game's params", () => {
+    expect(describeParams(saladGame, { ...NUMBERS.p, diff: DIFF_HARD })).toBe(
+      "Numbers: 5x5 1~3 Normal",
+    );
   });
 });
 

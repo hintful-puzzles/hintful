@@ -12,7 +12,7 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
-import { tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { matching } from "../../engine/latin.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
@@ -126,26 +126,18 @@ export function defaultParams(): TentsParams {
 export function presets(): PresetMenu<TentsParams> {
   return {
     title: "Size",
-    submenu: PRESETS.map((p) => ({
-      title: `${p.w}x${p.h} ${DIFF_NAMES[p.diff]}`,
-      params: { ...p },
-    })),
+    submenu: PRESETS.map((p) => ({ params: { ...p } })),
   };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<TentsParams>[] = [
-  ...dimensionParamConfig<TentsParams>(),
-  {
-    kw: "difficulty",
-    name: "Difficulty",
-    type: "choices",
-    choices: [...DIFF_NAMES],
-    get: (p) => p.diff,
-    set: (p, v) => {
-      p.diff = v;
-    },
-  },
+  ...dimensionParamConfig<TentsParams>({
+    doc: "Size of the grid in squares.",
+    // Generating anything under 4x4 runs into trouble of one kind or another.
+    bounds: { min: 4 },
+  }),
+  difficultyItem(DIFF_NAMES, "diff"),
 ];
 
 /** `WxH`, plus the generator-only difficulty letter. An unrecognized letter
@@ -156,12 +148,9 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 export function validateParams(p: TentsParams, _full: boolean): string | null {
-  // Generating anything under 4x4 runs into trouble of one kind or another.
-  if (p.w < 4 || p.h < 4) return "Width and height must both be at least four";
   if (p.w > Number.MAX_SAFE_INTEGER / p.h) {
     return "Width times height must not be unreasonably large";
   }
-  if (p.diff < 0 || p.diff >= DIFF_COUNT) return "Unknown difficulty rating";
   return null;
 }
 

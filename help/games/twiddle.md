@@ -27,17 +27,4 @@ has one.
 
 ## Twiddle parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares. Neither may be smaller than the rotating block.</dd>
-	<dt>Rotating block size</dt>
-	<dd>How many squares wide the block you turn is, at least 2. A block of even size turns about the corner point at its center, and an odd one about its center square; that is where you click.</dd>
-	<dt>One number per row</dt>
-	<dd>Every square in a row carries the same number, the row's own, so the puzzle is solved when each row holds only its own number and it doesn't matter which of those squares goes where.</dd>
-	<dt>Orientation matters</dt>
-	<dd>The 'orientable' mode: each square turns with its block, and must also end up the right way round.</dd>
-	<dt>Number of shuffling moves</dt>
-	<dd>How many random turns shuffle the grid. At 0 the game chooses a long shuffle; any other number shuffles exactly that many turns, and the status bar shows that number as your target beside the count of your moves.</dd>
-</dl>
+{{parameters}}

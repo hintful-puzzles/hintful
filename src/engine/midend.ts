@@ -20,17 +20,20 @@ import {
   lowestSolvingCap,
   permitsSearch,
   tierNameOf,
+  tierOf,
+  withTier,
 } from "./difficulty.ts";
 import {
   type ActiveHint,
   type Game,
   type GameDrawing,
   type HintStep,
-  type PresetMenu,
   UI_UPDATE,
 } from "./game.ts";
 import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { pencilModeKey, takesNotes } from "./key-labels.ts";
+import { describeParams, presetMenu, type TitledPresetMenu } from "./param-label.ts";
+import { paramsError } from "./params.ts";
 import { cancelDrags, MOD_STYLUS, PENCIL_MODE_BUTTON } from "./pointer.ts";
 import { randomNew } from "./random/index.ts";
 import { decodeSave, encodeSave, type SaveEnvelope } from "./save.ts";
@@ -117,6 +120,9 @@ export interface EngineCore {
    * The type menu reads it to name a turned board after the preset it was
    * dealt from. */
   turnParams(params: string): string | null;
+  /** The label of an encoded params set (`param-label.ts`): the type header
+   * of a board that matches no preset. Throws when `params` does not decode. */
+  describeParams(params: string): string;
   getPresets(): PresetMenuEntry[];
   /** The game's **custom-params** form as the app's config-dialog
    * shapes, built from its declarative `paramConfig`. An empty item set
@@ -376,7 +382,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // must not refuse it — otherwise an id shared before the bound existed
     // stops loading. Upstream midend.c:1956 passes exactly `desc == NULL`.
     const generating = id[sep] === "#";
-    const pErr = this.game.validateParams(params, generating);
+    const pErr = paramsError(this.game, params, generating);
     if (pErr) return pErr;
 
     if (generating) {
@@ -430,13 +436,13 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     const tiers = difficultyTiers(this.game)?.length ?? 0;
     const solve = cappedSolveFor(contract, params, desc);
     const sharedAs = (tier: number) =>
-      this.game.encodeParams(contract.withTier(params, tier), false);
+      this.game.encodeParams(withTier(this.game, params, tier), false);
     const ambiguous = Array.from({ length: tiers }, (_, t) => t).filter(
       (t) => sharedAs(t) === paramsStr,
     );
     let floor = 0;
     if (ambiguous.length < 2) {
-      const stated = contract.tierOf(params);
+      const stated = tierOf(this.game, params);
       if (permitsSearch(this.game, params)) return params;
       if (contract.nonUniqueTiers?.includes(stated)) return params;
       if (solve(stated) === "solved") return params;
@@ -446,7 +452,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       (cap) => (cap < floor ? "unsolved" : solve(cap)),
       tiers,
     );
-    return tier === null ? params : contract.withTier(params, tier);
+    return tier === null ? params : withTier(this.game, params, tier);
   }
 
   private startFrom(params: Params, desc: string, aux?: string): void {
@@ -1129,15 +1135,19 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     } catch (e) {
       return `Invalid parameters: ${(e as Error).message}`;
     }
-    const err = this.game.validateParams(decoded, true);
+    const err = paramsError(this.game, decoded, true);
     if (err) return err;
     this.params = decoded;
     this.emitParamsChange();
     return null;
   }
 
+  describeParams(params: string): string {
+    return describeParams(this.game, this.game.decodeParams(params));
+  }
+
   getPresets(): PresetMenuEntry[] {
-    const walk = (menu: PresetMenu<Params>): PresetMenuEntry => {
+    const walk = (menu: TitledPresetMenu<Params>): PresetMenuEntry => {
       if (menu.submenu) {
         return { title: menu.title, params: "", submenu: menu.submenu.map(walk) };
       }
@@ -1146,7 +1156,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         params: menu.params ? this.game.encodeParams(menu.params, true) : "",
       };
     };
-    const root = walk(this.game.presets());
+    const root = walk(presetMenu(this.game));
     return root.submenu ?? [root];
   }
 
@@ -1216,7 +1226,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   setCustomParams(values: ConfigValues): string | null {
     if (!this.game.paramConfig?.length) return null;
     const draft = this.paramsFromCustomValues(values);
-    const err = this.game.validateParams(draft, true);
+    const err = paramsError(this.game, draft, true);
     if (err) return err;
     this.params = draft;
     this.emitParamsChange();
@@ -1228,7 +1238,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       return { ok: true, params: this.game.encodeParams(this.params, true) };
     }
     const draft = this.paramsFromCustomValues(values);
-    const error = this.game.validateParams(draft, true);
+    const error = paramsError(this.game, draft, true);
     if (error) return { ok: false, error };
     return { ok: true, params: this.game.encodeParams(draft, true) };
   }

@@ -15,7 +15,7 @@
  */
 
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import type { Game, HintResult, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
@@ -29,7 +29,7 @@ import {
 } from "../../engine/note-taking-cell.ts";
 import {
   dimensionParamConfig,
-  parseConfigInt,
+  numberItem,
   transposeDimensions,
 } from "../../engine/params.ts";
 import {
@@ -472,8 +472,6 @@ function flashLength(
  * works from is `clueColoring`, the givens alone, so the player's own colors
  * never enter the verdict. */
 const difficulty: DifficultyContract<MapParams> = {
-  tierOf: (p) => p.diff,
-  withTier: (p, tier) => ({ ...p, diff: tier }),
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
     const ret = mapSolver(s.map.graph, p.n, s.map.ngraph, clueColoring(s), cap);
@@ -501,33 +499,17 @@ export const mapGame: Game<
   validateParams,
   transposeParams: transposeDimensions(),
   paramConfig: [
-    ...dimensionParamConfig<MapParams>(),
-    {
-      kw: "regions",
-      name: "Regions",
-      type: "string",
-      get: (p) => String(p.n),
-      set: (p, v) => {
-        p.n = parseConfigInt(v);
-      },
-    },
-    {
-      kw: "difficulty",
-      name: "Difficulty",
-      type: "choices",
-      choices: [...DIFF_NAMES],
-      get: (p) => p.diff,
-      set: (p, v) => {
-        p.diff = v;
-      },
-    },
+    ...dimensionParamConfig<MapParams>({
+      doc: "Size of the grid the map is drawn on, in squares.",
+      bounds: { min: 2 },
+    }),
+    numberItem<MapParams>("regions", "Regions", "n", {
+      doc: "How many regions the map is divided into, which can be no more than the grid has squares.",
+      bounds: { min: 5 },
+      label: { slot: "tail", words: (p) => `${p.n} regions` },
+    }),
+    difficultyItem(DIFF_NAMES, "diff"),
   ],
-  describeParams: (p) => ({
-    width: String(p.w),
-    height: String(p.h),
-    regions: String(p.n),
-    difficulty: p.diff,
-  }),
 
   newDesc: newMapDesc,
   validateDesc,

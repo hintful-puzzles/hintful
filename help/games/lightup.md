@@ -31,15 +31,4 @@ On an Unreasonable board the hint may stop and say that nothing further follows 
 
 ## Light Up parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares; each must be at least 2.</dd>
-	<dt>%age of black squares</dt>
-	<dd>Roughly what share of the grid is black squares, from 5 to 100. If no good puzzle turns up with that many, the generator adds more, 5% at a time, up to 90%.</dd>
-	<dt>Symmetry</dt>
-	<dd>How the black squares are arranged: <em>None</em>, <em>2-way mirror</em> (the bottom half reflects the top), <em>2-way rotational</em> (the same after a half turn), <em>4-way mirror</em> (reflected both left to right and top to bottom) or <em>4-way rotational</em> (the same after a quarter turn). 4-way rotational needs a square grid, and both 4-way settings need a grid at least 3 squares across in one direction. Only the black squares follow the symmetry; the numbers in them need not.</dd>
-	<dt>Difficulty</dt>
-	<dd>Determine the difficulty of the generated puzzle; see <a href="../features#difficulty">what the names mean</a>.</dd>
-</dl>
+{{parameters}}

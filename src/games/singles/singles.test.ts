@@ -10,6 +10,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
+import { describeParams } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newSinglesDesc } from "./generator.ts";
@@ -28,7 +30,6 @@ import {
   newState,
   type SinglesParams,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 describe("singles params codec", () => {
@@ -44,9 +45,20 @@ describe("singles params codec", () => {
     expect(decodeParams("6")).toEqual({ w: 6, h: 6, diff: "easy" });
   });
 
-  it("rejects too-small params", () => {
-    expect(validateParams({ w: 1, h: 5, diff: "easy" }, true)).not.toBeNull();
-    expect(validateParams({ w: 5, h: 5, diff: "easy" }, true)).toBeNull();
+  it("rejects params outside the grid's range", () => {
+    expect(paramsError(singlesGame, { w: 1, h: 5, diff: "easy" }, true)).toBe(
+      "Width must be at least 2",
+    );
+    expect(paramsError(singlesGame, { w: 5, h: 62, diff: "easy" }, true)).toBe(
+      "Height must be at most 61",
+    );
+    expect(paramsError(singlesGame, { w: 5, h: 5, diff: "easy" }, true)).toBeNull();
+  });
+
+  it("labels its params by size and tier", () => {
+    expect(describeParams(singlesGame, { w: 5, h: 7, diff: "tricky" })).toBe(
+      "5x7 Normal",
+    );
   });
 });
 

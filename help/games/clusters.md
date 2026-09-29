@@ -27,18 +27,7 @@ If a square you colored breaks a rule, the hint asks you to fix the highlighted 
 
 ## Clusters parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares.</dd>
-	<dt>Difficulty</dt>
-	<dd>
-		<p>Controls how deeply you have to reason. Both settings always have exactly one solution, and neither ever needs a guess.</p>
-		<p><em>Easy</em> puzzles can be finished a square at a time: for each empty square, one of the two colors breaks a rule outright, so the other one is forced.</p>
-		<p><em>Normal</em> puzzles need at least one step where that is not enough, and you must suppose a color, follow the squares it forces, and find the contradiction further along. Normal boards are guaranteed to need this at least once — a board an Easy player could finish is not offered as Normal.</p>
-	</dd>
-</dl>
+{{parameters}}
 
 Normal needs a board with room for the deeper reasoning, so it is not offered on very small grids.
 

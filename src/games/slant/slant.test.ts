@@ -6,6 +6,7 @@
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_LEFT,
   CURSOR_RIGHT,
@@ -43,7 +44,6 @@ import {
   type SlantUi,
   textFormat,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 const FIXTURE = (
@@ -112,9 +112,13 @@ describe("slant params", () => {
   });
 
   it("rejects invalid params", () => {
-    expect(validateParams({ w: 1, h: 5, diff: 0 }, true)).not.toBeNull();
-    expect(validateParams({ w: 5, h: 1, diff: 0 }, true)).not.toBeNull();
-    expect(validateParams({ w: 2, h: 2, diff: 0 }, true)).toBeNull();
+    expect(paramsError(slantGame, { w: 1, h: 5, diff: 0 }, true)).toBe(
+      "Width must be at least 2",
+    );
+    expect(paramsError(slantGame, { w: 5, h: 1, diff: 0 }, true)).toBe(
+      "Height must be at least 2",
+    );
+    expect(paramsError(slantGame, { w: 2, h: 2, diff: 0 }, true)).toBeNull();
   });
 });
 

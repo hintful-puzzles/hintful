@@ -15,7 +15,7 @@ import {
   DESC_ALPHABET_SIZE,
   n2c as descChar,
 } from "../../engine/desc-alphabet.ts";
-import { tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
@@ -142,30 +142,26 @@ export function defaultParams(): MagnetsParams {
 export function presets(): PresetMenu<MagnetsParams> {
   return {
     title: "Size",
-    submenu: PRESETS.map((p) => ({
-      title: `${p.w}x${p.h} ${DIFF_NAMES[p.diff]}${p.stripclues ? ", strip clues" : ""}`,
-      params: { ...p },
-    })),
+    submenu: PRESETS.map((p) => ({ params: { ...p } })),
   };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<MagnetsParams>[] = [
-  ...dimensionParamConfig<MagnetsParams>(),
-  {
-    kw: "difficulty",
-    name: "Difficulty",
-    type: "choices",
-    choices: [...DIFF_NAMES],
-    get: (p) => p.diff,
-    set: (p, v) => {
-      p.diff = v;
-    },
-  },
+  ...dimensionParamConfig<MagnetsParams>({
+    doc: "Size of the grid in squares. At least one of them must be 3 or more, or 5 or more for the harder of the two difficulties.",
+    // A row clue counts up to `w` magnets and a column clue up to `h`, each
+    // written as one desc-alphabet character. Upstream bounds neither, so a
+    // 62-wide board wrote a desc its own `validateDesc` rejected.
+    bounds: { min: 2, max: DESC_ALPHABET_SIZE - 1 },
+  }),
+  difficultyItem(DIFF_NAMES, "diff"),
   {
     kw: "strip-clues",
     name: "Strip clues",
     type: "boolean",
+    doc: "Remove numbers from around the edge, one at a time, for as long as the puzzle still has only one solution at its difficulty. Some rows and columns then have no number for + or − at all.",
+    label: { slot: "tail", words: (p) => (p.stripclues ? "strip clues" : null) },
     get: (p) => p.stripclues,
     set: (p, v) => {
       p.stripclues = v;
@@ -182,24 +178,12 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 export function validateParams(p: MagnetsParams, _full: boolean): string | null {
-  if (p.w < 2) return "Width must be at least two";
-  if (p.h < 2) return "Height must be at least two";
-  if (p.w > Number.MAX_SAFE_INTEGER / p.h) {
-    return "Width times height must not be unreasonably large";
-  }
-  // A row clue counts up to `w` magnets and a column clue up to `h`, each
-  // written as one desc-alphabet character. Upstream bounds neither, so a
-  // 62-wide board wrote a desc its own `validateDesc` rejected.
-  if (p.w >= DESC_ALPHABET_SIZE || p.h >= DESC_ALPHABET_SIZE) {
-    return "Puzzle is too large";
-  }
   if (p.diff >= DIFF_TRICKY) {
     if (p.w < 5 && p.h < 5)
       return `Either width or height must be at least five for ${DIFF_NAMES[DIFF_TRICKY]}`;
   } else {
     if (p.w < 3 && p.h < 3) return "Either width or height must be at least three";
   }
-  if (p.diff < 0 || p.diff >= DIFF_COUNT) return "Unknown difficulty level";
   return null;
 }
 

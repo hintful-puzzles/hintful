@@ -15,7 +15,7 @@ import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import { parseDimensions } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import { SYMM_MAX, SYMM_ROT2, SYMM_ROT4 } from "../../engine/symmetric-blacks.ts";
+import { SYMM_ROT2, SYMM_ROT4 } from "../../engine/symmetric-blacks.ts";
 import type { GameStatus } from "../../engine/types.ts";
 
 // --- cell flag bits (upstream values) ---------------------------------------
@@ -113,7 +113,7 @@ export function defaultParams(): SticksParams {
 export function presets(): PresetMenu<SticksParams> {
   return {
     title: "Sticks",
-    submenu: PRESETS.map((p) => ({ title: `${p.w}x${p.h}`, params: { ...p } })),
+    submenu: PRESETS.map((p) => ({ params: { ...p } })),
   };
 }
 
@@ -140,13 +140,11 @@ export function decodeParams(s: string): SticksParams {
 }
 
 export function validateParams(p: SticksParams, full: boolean): string | null {
-  if (p.w < 2 || p.h < 2) return "Width and height must be at least 2";
   if (full) {
     if (p.blackpc < 5 || p.blackpc > 100)
-      return "Percentage of black squares must be between 5% and 100%";
+      return "%age of black squares must be between 5% and 100%";
     if (p.w !== p.h && p.symm === SYMM_ROT4)
       return "4-fold symmetry is only available with square grids";
-    if (p.symm < 0 || p.symm >= SYMM_MAX) return "Unknown symmetry type";
   }
   return null;
 }

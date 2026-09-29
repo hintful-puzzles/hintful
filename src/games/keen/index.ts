@@ -22,7 +22,7 @@ import {
 } from "../../engine/candidate-hint.ts";
 import { runLatinCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
 import { digitValue } from "../../engine/decimal.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
@@ -48,7 +48,7 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import { parseConfigInt } from "../../engine/params.ts";
+import { numberItem, squareSize } from "../../engine/params.ts";
 import {
   autoPencilPref,
   candidateReadingPref,
@@ -64,7 +64,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { ConfigValues, KeyLabel, Point } from "../../engine/types.ts";
+import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newKeenDesc } from "./generator.ts";
 import { say } from "./hint-text.ts";
 import {
@@ -95,7 +95,6 @@ import {
   decodeParams,
   defaultParams,
   diffFromLevel,
-  diffName,
   diffToLevel,
   encodeParams,
   type KeenMove,
@@ -106,7 +105,6 @@ import {
   newUi,
   status,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 /** A player marking that contradicts the unique solution:
@@ -132,14 +130,10 @@ const PRESETS: KeenParams[] = [
   { w: 9, diff: "normal", multiplicationOnly: false },
 ];
 
-function presetTitle(p: KeenParams): string {
-  return `${p.w}x${p.w} ${diffName(p.diff)}${p.multiplicationOnly ? ", multiplication only" : ""}`;
-}
-
 function presets(): PresetMenu<KeenParams> {
   return {
     title: "Keen",
-    submenu: PRESETS.map((p) => ({ title: presetTitle(p), params: p })),
+    submenu: PRESETS.map((p) => ({ params: p })),
   };
 }
 
@@ -390,8 +384,6 @@ function buildSteps(
  * `latin.ts`'s sentinels — so `latinVerdict` reads it. Keen has no givens: the
  * solution comes from the cage clues alone. */
 const difficulty: DifficultyContract<KeenParams> = {
-  tierOf: (p) => diffToLevel(p.diff),
-  withTier: (p, tier) => ({ ...p, diff: diffFromLevel(tier) }),
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
     const w = s.params.w;
@@ -415,44 +407,34 @@ export const keenGame: Game<
   presets,
   encodeParams,
   decodeParams,
-  validateParams,
-  // Keys/shape match the `keen` config template in augmentation.ts
-  // ("{grid-size}x{grid-size} {difficulty:...}{multiplication-only:|, …}").
   paramConfig: [
-    {
-      kw: "grid-size",
-      name: "Grid size",
-      type: "string",
-      get: (p) => String(p.w),
-      set: (p, v) => {
-        p.w = parseConfigInt(v);
+    numberItem<KeenParams>("grid-size", "Grid size", "w", {
+      doc: "Width and height of the grid, which is also the largest number in it.",
+      // One digit per cell.
+      bounds: { min: 3, max: 9 },
+      label: { slot: "size", words: squareSize("w") },
+    }),
+    difficultyItem(DIFF_NAMES, {
+      get: (p: KeenParams) => diffToLevel(p.diff),
+      set: (p: KeenParams, tier: number) => {
+        p.diff = diffFromLevel(tier);
       },
-    },
-    {
-      kw: "difficulty",
-      name: "Difficulty",
-      type: "choices",
-      choices: [...DIFF_NAMES],
-      get: (p) => diffToLevel(p.diff),
-      set: (p, v) => {
-        p.diff = diffFromLevel(v);
-      },
-    },
+    }),
     {
       kw: "multiplication-only",
       name: "Multiplication only",
       type: "boolean",
+      doc: "When enabled, every cage's clue is a product: no sums, differences or ratios.",
+      label: {
+        slot: "tail",
+        words: (p) => (p.multiplicationOnly ? "multiplication only" : null),
+      },
       get: (p) => p.multiplicationOnly,
       set: (p, v) => {
         p.multiplicationOnly = v;
       },
     },
   ],
-  describeParams: (p): ConfigValues => ({
-    "grid-size": String(p.w),
-    difficulty: diffToLevel(p.diff),
-    "multiplication-only": p.multiplicationOnly ? 1 : 0,
-  }),
 
   newDesc: newKeenDesc,
   validateDesc,

@@ -9,6 +9,7 @@
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
@@ -58,7 +59,6 @@ import {
   type SubsetsUi,
   textFormat,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 const PARAMS = { w: 4, h: 4, n: 4, diff: DIFF_EASY };
@@ -152,8 +152,8 @@ describe("subsets params", () => {
   });
 
   it("rejects an unrecognized difficulty char rather than silently downgrading", () => {
-    expect(validateParams(decodeParams("4x4n4dz"), true)).toBe(
-      "Unknown difficulty rating",
+    expect(paramsError(subsetsGame, decodeParams("4x4n4dz"), true)).toBe(
+      `Difficulty must be one of ${DIFF_NAMES.join(", ")}`,
     );
   });
 
@@ -163,13 +163,13 @@ describe("subsets params", () => {
   });
 
   it("accepts only 4x4 n=4, with the upstream message", () => {
-    expect(validateParams(PARAMS, true)).toBeNull();
+    expect(paramsError(subsetsGame, PARAMS, true)).toBeNull();
     for (const bad of [
       { w: 5, h: 4, n: 4, diff: DIFF_EASY },
       { w: 4, h: 5, n: 4, diff: DIFF_EASY },
       { w: 4, h: 4, n: 3, diff: DIFF_EASY },
     ]) {
-      expect(validateParams(bad, true)).toBe(
+      expect(paramsError(subsetsGame, bad, true)).toBe(
         "Currently only 4x4 puzzles are supported",
       );
     }

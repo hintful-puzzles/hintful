@@ -59,8 +59,8 @@ export interface Marked {
 
 const plural = (n: number, one: string, many: string): string => (n === 1 ? one : many);
 
-/** Bridge counts as words: a limit is at most `MAX_BRIDGES - 1`, and the count
- * one past it at most `MAX_BRIDGES`. */
+/** Bridge counts as words: a limit is at most one less than the most bridges
+ * the Custom dialog offers, and the count one past it at most that many. */
 const WORDS = ["none", "one", "two", "three", "four"];
 
 /** "This 5", the island the sentence is about. */

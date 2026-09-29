@@ -17,7 +17,7 @@ import {
   atof,
   dimensionParamConfig,
   formatG,
-  parseConfigInt,
+  numberItem,
   transposeDimensions,
 } from "../../engine/params.ts";
 import {
@@ -29,7 +29,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { ConfigValues, GameStatus, Point } from "../../engine/types.ts";
+import type { GameStatus, Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import {
   hint,
@@ -233,21 +233,18 @@ export const netslideGame: Game<
   decodeParams,
   validateParams,
 
-  describeParams: (p): ConfigValues => ({
-    width: String(p.w),
-    height: String(p.h),
-    "walls-wrap-around": p.wrapping,
-    "barrier-probability": p.barrierProbability,
-    "number-of-shuffling-moves": p.movetarget,
-  }),
-
   transposeParams: transposeDimensions(),
   paramConfig: [
-    ...dimensionParamConfig<NetslideParams>(),
+    ...dimensionParamConfig<NetslideParams>({
+      doc: "Size of the grid in squares.",
+      bounds: { min: 2 },
+    }),
     {
       kw: "walls-wrap-around",
       name: "Walls wrap around",
       type: "boolean",
+      doc: "When on, the network may run off one edge of the grid and come back on the opposite edge, so the outside of the grid is no longer a wall.",
+      label: { slot: "kind", words: (p) => (p.wrapping ? "wrapping" : null) },
       get: (p) => p.wrapping,
       set: (p, v) => {
         p.wrapping = v;
@@ -257,6 +254,15 @@ export const netslideGame: Game<
       kw: "barrier-probability",
       name: "Barrier probability",
       type: "string",
+      doc: "The share of the places where the finished network has no wire that get a barrier drawn across them. At 0 there are no barriers inside the grid; at 1 every such place has one, which gives away a lot about the solution.",
+      bounds: { min: 0, max: 1 },
+      label: {
+        slot: "tail",
+        words: (p) =>
+          p.barrierProbability > 0
+            ? `${Math.round(p.barrierProbability * 100)}% barriers`
+            : null,
+      },
       get: (p) => formatG(p.barrierProbability),
       // The C stores this as a `float`, and the board depends on the exact
       // value, so round to single precision here rather than at generation.
@@ -264,15 +270,19 @@ export const netslideGame: Game<
         p.barrierProbability = Math.fround(atof(v));
       },
     },
-    {
-      kw: "number-of-shuffling-moves",
-      name: "Number of shuffling moves",
-      type: "string",
-      get: (p) => String(p.movetarget),
-      set: (p, v) => {
-        p.movetarget = parseConfigInt(v);
+    numberItem<NetslideParams>(
+      "number-of-shuffling-moves",
+      "Number of shuffling moves",
+      "movetarget",
+      {
+        doc: "How many random slides scramble the finished network. At 0, the number is chosen from the size of the grid.",
+        bounds: { min: 0 },
+        label: {
+          slot: "tail",
+          words: (p) => (p.movetarget ? `${p.movetarget} shuffles` : null),
+        },
       },
-    },
+    ),
   ],
 
   newDesc,

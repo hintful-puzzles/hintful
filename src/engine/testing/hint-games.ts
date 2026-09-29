@@ -16,6 +16,7 @@
  */
 import "../../games/index.ts";
 import type { ParamConfigItem, PresetMenu } from "../game.ts";
+import { presetMenu, type TitledPresetMenu } from "../param-label.ts";
 import { getTsGame, registeredGameIds } from "../registry.ts";
 import { type AnyGame, membersNotMentioning } from "./enrollment.ts";
 import { SLOW_TESTS_ENABLED } from "./slow.ts";
@@ -132,9 +133,15 @@ export function firstLeaf<P>(menu: PresetMenu<P>): P {
  * its own; keys invented here have twice turned out to name one axis of several
  * and to drop the rest in silence.
  */
-export function leafPresets<P>(menu: PresetMenu<P>): { title: string; params: P }[] {
-  if (menu.params !== undefined) return [{ title: menu.title, params: menu.params }];
-  return (menu.submenu ?? []).flatMap(leafPresets);
+export function leafPresets<P>(game: {
+  paramConfig?: readonly ParamConfigItem<P>[];
+  presets(): PresetMenu<P>;
+}): { title: string; params: P }[] {
+  const walk = (menu: TitledPresetMenu<P>): { title: string; params: P }[] =>
+    menu.params !== undefined
+      ? [{ title: menu.title, params: menu.params }]
+      : (menu.submenu ?? []).flatMap(walk);
+  return walk(presetMenu(game));
 }
 
 /** What a `paramConfig` item reads off a params record: the three types the
@@ -341,7 +348,7 @@ export function gatePresets(
   id: string,
   game: AnyGame,
 ): { title: string; params: unknown }[] {
-  const all = leafPresets(game.presets());
+  const all = leafPresets(game);
   if (SLOW_TESTS_ENABLED) return all;
   return axisSlice(game, all, { scalarEnds: !SEARCH_PLANNING_GAMES.includes(id) });
 }

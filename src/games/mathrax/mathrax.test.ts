@@ -7,6 +7,8 @@
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
+import { describeParams, presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { pencilIndicatorReach } from "../../engine/pencil-indicator.ts";
 import {
   CURSOR_DOWN,
@@ -161,45 +163,32 @@ describe("mathrax params", () => {
   });
 
   it("rejects out-of-range sizes, unknown difficulties and an empty clue set", () => {
-    expect(mathraxGame.validateParams(decodeParams("2dn"), true)).toMatch(/at least 3/);
-    expect(mathraxGame.validateParams(decodeParams("10dn"), true)).toMatch(
-      /no more than 9/,
+    const error = (p: MathraxParams, full = true) => paramsError(mathraxGame, p, full);
+    expect(error(decodeParams("2dn"))).toBe("Size must be at least 3");
+    expect(error(decodeParams("10dn"))).toBe("Size must be at most 9");
+    expect(error(decodeParams("6dq"))).toBe(
+      "Difficulty must be one of Easy, Normal, Tricky, Unreasonable",
     );
-    expect(mathraxGame.validateParams(decodeParams("6dq"), true)).toMatch(
-      /difficulty/i,
+    expect(error({ o: 6, diff: "normal", options: 0 })).toMatch(
+      /at least one clue type/i,
     );
-    expect(
-      mathraxGame.validateParams({ o: 6, diff: "normal", options: 0 }, true),
-    ).toMatch(/at least one clue type/i);
     // ...but an empty clue set is only a *full* (generation) constraint.
-    expect(
-      mathraxGame.validateParams({ o: 6, diff: "normal", options: 0 }, false),
-    ).toBeNull();
+    expect(error({ o: 6, diff: "normal", options: 0 }, false)).toBeNull();
   });
 
   it("exposes every preset through the menu", () => {
-    const submenu = mathraxGame.presets().submenu ?? [];
+    const submenu = presetMenu(mathraxGame).submenu ?? [];
     expect(submenu).toHaveLength(9);
     expect(submenu[0]).toMatchObject({ title: "5x5 Easy" });
     expect(submenu[8]).toMatchObject({ title: "9x9 Normal" });
   });
 
-  it("describes params with the keys augmentation.ts's summary reads", () => {
-    const values = mathraxGame.describeParams?.({
-      o: 7,
-      diff: "tricky",
-      options: OPTION_ADD,
-    });
-    expect(values).toEqual({
-      size: "7",
-      difficulty: 2,
-      "addition-clues": 1,
-      "subtraction-clues": 0,
-      "multiplication-clues": 0,
-      "division-clues": 0,
-      "equality-clues": 0,
-      "even-odd-clues": 0,
-    });
+  it("labels a custom clue set by the shorter of what is on and off", () => {
+    const label = (options: number) =>
+      describeParams(mathraxGame, { o: 7, diff: "tricky", options });
+    expect(label(OPTIONSMASK)).toBe("7x7 Tricky");
+    expect(label(OPTION_ADD)).toBe("7x7 Tricky, only addition");
+    expect(label(OPTIONSMASK & ~OPTION_ODD)).toBe("7x7 Tricky, no even-odd");
   });
 });
 

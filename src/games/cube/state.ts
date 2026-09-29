@@ -52,16 +52,35 @@ export function defaultParams(): CubeParams {
   return { solid: SolidType.Cube, d1: 4, d2: 4 };
 }
 
+/** Each solid's preset grid, `[d1, d2]`, indexed by `SolidType`. */
+const PRESET_SIZES: readonly (readonly [number, number])[] = [
+  [1, 2],
+  [4, 4],
+  [2, 2],
+  [3, 3],
+];
+
+/** The preset of `solid`: its own grid. */
+function presetOf(solid: SolidType): CubeParams {
+  const [d1, d2] = PRESET_SIZES[solid];
+  return { solid, d1, d2 };
+}
+
+/** Whether `p` rolls its solid on the grid that solid's preset uses, which a
+ * label then need not state. */
+export function hasPresetSize(p: CubeParams): boolean {
+  const size = PRESET_SIZES[p.solid];
+  return size !== undefined && size[0] === p.d1 && size[1] === p.d2;
+}
+
 export function presets() {
-  return {
-    title: "Type",
-    submenu: [
-      { title: "Cube", params: { solid: SolidType.Cube, d1: 4, d2: 4 } },
-      { title: "Tetrahedron", params: { solid: SolidType.Tetrahedron, d1: 1, d2: 2 } },
-      { title: "Octahedron", params: { solid: SolidType.Octahedron, d1: 2, d2: 2 } },
-      { title: "Icosahedron", params: { solid: SolidType.Icosahedron, d1: 3, d2: 3 } },
-    ],
-  };
+  const solids = [
+    SolidType.Cube,
+    SolidType.Tetrahedron,
+    SolidType.Octahedron,
+    SolidType.Icosahedron,
+  ];
+  return { title: "Type", submenu: solids.map((s) => ({ params: presetOf(s) })) };
 }
 
 const SOLID_LETTERS = "tcoi";
@@ -82,9 +101,6 @@ export function decodeParams(s: string): CubeParams {
 }
 
 export function validateParams(p: CubeParams, _full: boolean): string | null {
-  if (p.solid < 0 || p.solid >= SOLIDS.length) return "Unrecognized solid type";
-  if (p.d1 < 0 || p.d2 < 0) return "Grid dimensions may not be negative";
-
   const solid = SOLIDS[p.solid];
   if (solid.order === 4) {
     if (p.d1 <= 1 || p.d2 <= 1) return "Both grid dimensions must be greater than one";

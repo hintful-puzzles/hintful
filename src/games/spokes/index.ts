@@ -18,7 +18,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
@@ -52,7 +52,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { ConfigValues, GameStatus, Point } from "../../engine/types.ts";
+import type { GameStatus, Point } from "../../engine/types.ts";
 import { newSpokesDesc } from "./generator.ts";
 import { HUB, type Marked, SPOKE, type Spoke, say } from "./hint-text.ts";
 import {
@@ -78,11 +78,9 @@ import {
   crossingSpoke,
   DIFF_NAMES,
   DIFFCOUNT,
-  DIFFS,
   decodeParams,
   defaultParams,
   diffFromLevel,
-  diffName,
   diffToLevel,
   encodeParams,
   getSpoke,
@@ -105,7 +103,6 @@ import {
   syncDiagonalBlock,
   textFormat,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 // --- presets ----------------------------------------------------------------
@@ -113,10 +110,7 @@ import {
 function presets(): PresetMenu<SpokesParams> {
   return {
     title: "Spokes",
-    submenu: PRESETS.map((p) => ({
-      title: `${p.w}x${p.h} ${diffName(p.diff)}`,
-      params: { ...p },
-    })),
+    submenu: PRESETS.map((p) => ({ params: { ...p } })),
   };
 }
 
@@ -471,8 +465,6 @@ function canonicalEdge(
  * `"valid"` (fully and uniquely solved — what the generator gates on),
  * `"incomplete"` or `"invalid"`, run on a fresh board from the clues alone. */
 const difficulty: DifficultyContract<SpokesParams> = {
-  tierOf: (p) => diffToLevel(p.diff),
-  withTier: (p, tier) => ({ ...p, diff: DIFFS[tier] }),
   solveAtCap: (p, desc, cap) => {
     const ret = spokesSolve(newState(p, desc), null, cap);
     return ret === "valid" ? "solved" : ret === "invalid" ? "impossible" : "unsolved";
@@ -494,27 +486,20 @@ export const spokesGame: Game<
   presets,
   encodeParams,
   decodeParams,
-  validateParams,
 
   transposeParams: transposeDimensions(),
   paramConfig: [
-    ...dimensionParamConfig<SpokesParams>(),
-    {
-      kw: "difficulty",
-      name: "Difficulty",
-      type: "choices",
-      choices: [...DIFF_NAMES],
-      get: (p) => diffToLevel(p.diff),
-      set: (p, v) => {
-        p.diff = diffFromLevel(v);
+    ...dimensionParamConfig<SpokesParams>({
+      doc: "Size of the grid in squares.",
+      bounds: { min: 2 },
+    }),
+    difficultyItem(DIFF_NAMES, {
+      get: (p: SpokesParams) => diffToLevel(p.diff),
+      set: (p: SpokesParams, tier: number) => {
+        p.diff = diffFromLevel(tier);
       },
-    },
+    }),
   ],
-  describeParams: (p): ConfigValues => ({
-    width: String(p.w),
-    height: String(p.h),
-    difficulty: diffToLevel(p.diff),
-  }),
 
   newDesc: newSpokesDesc,
   validateDesc,

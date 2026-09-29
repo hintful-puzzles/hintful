@@ -247,29 +247,50 @@ turned board with width and height exchanged, on non-square boards it builds
 through the game's own width item; a game that draws something along one side
 only records it in `UNEVEN_FRAME`.
 
-### The type-menu summary
+### Params are declared once, on `paramConfig`
 
-**A game whose params aren't plain `w`/`h` must make `describeParams` emit the
-exact keys its `augmentation.ts` template reads — or the header shows the
-literal `{field}` text.** The config-summary formatter substitutes `{field}` →
-`String(values[field])` and `{field:A|B|C}` → the option at the *numeric*
-index; a missing key is left verbatim. Keys are the C config-name slug
-(`"Grid size"` → `grid-size`), choice values are zero-based indices, never
-label strings. The worker adapter's generic `{ width, height }` base covers
-only `w`/`h` games; square-grid and oddly-named-param games (Towers, Keen,
-Solo, Unequal) supply their own. A permanent guard exists —
-[`augmentation.test.ts`](../../src/puzzle/augmentation.test.ts) fails on any
-unsubstituted `{field}` for any registered game.
+**Every fact about a params field lives on its `paramConfig` item**, and the
+engine builds everything else from it: the Custom dialog, the preset titles and
+the type header of a custom board
+([`engine/param-label.ts`](../../src/engine/param-label.ts)), the bounds check
+(`paramsError` in [`engine/params.ts`](../../src/engine/params.ts)), the help's
+Parameters section ([`engine/param-help.ts`](../../src/engine/param-help.ts),
+expanded from the page's `{{parameters}}` by `vite-plugins/parameters.ts`), the
+tier accessors and the codec. Each item carries:
+
+- **`doc`** — what the field means, HTML inside the help's `<dd>`. It is
+  required, and a choices field's doc names every word choice (Unequal's
+  Adjacent went unexplained when it lived on the page instead). `{ with: kw }`
+  documents an item together with the one before it; `dimensionParamConfig`
+  does that for Height.
+- **`bounds`** on a numeric text field — `{ min?, max? }`, checked before the
+  game's own `validateParams` with a message naming the field by its dialog
+  label, and stated by the help. **Only an unconditional range belongs here.** A
+  limit that depends on another field, or that holds only when generating
+  (`full`), stays in `validateParams`: moving a generation-only bound into
+  `bounds` would refuse a shared `:desc` id that loads today. A choice outside
+  its list is refused by the engine for every choices field.
+- **`label`** — which slot of the params label the field's words fill. A label
+  reads `[lead: ]size[ kind…][ tier][, tail…]`: "Seismic: 7x7 Easy", "10x10
+  Normal, strip clues". The slot order is the collection's; the words are the
+  game's, and `words` returning `null` leaves a default unsaid. A checkbox must
+  give words; a choices field says its choice's name by default.
+
+**Presets are params, not titles.** A leaf is `{ params }` and its title is its
+label, so the menu and the header of the same board cannot disagree. A leaf
+keeps a `title` only when upstream gave it a name no field says (Guess's
+"Standard", Flood's allowance names); `params-declared.test.ts` refuses a name
+that merely repeats the label, and two presets with one label. **Read titles
+through `presetMenu(game)`**, never `game.presets()`, which leaves them unset.
 
 ### The Custom dialog
 
 **The editable "Custom type…" form is `Game.paramConfig` — declarative, like
 `prefs` but over `Params`.** An ordered `ParamConfigItem<Params>[]`; the midend
 builds the app's form from it and parses a submission back onto a **copy** of
-the params, validated by the game's own `validateParams`, so the dialog rejects
-exactly what a game ID would. It is independent of `describeParams` (the menu
-label). A game that omits it ships a blank Custom dialog — wire it or your
-game has no custom sizes. **This is now asserted rather than advised**
+the params, validated by `paramsError`, so the dialog rejects exactly what a
+game ID would. A game that omits it ships a blank Custom dialog — wire it or
+your game has no custom sizes. **This is now asserted rather than advised**
 ([`custom-params.test.ts`](../../src/engine/custom-params.test.ts)): every
 registered game must declare a non-empty `paramConfig`. Sokoban shipped without
 one from its port until `audit-vestigial-contract-surface`, and nothing
@@ -278,17 +299,19 @@ had none and the menu entry was gated on a flag the midend answered `true`
 unconditionally. Conventions that keep it correct:
 
 - **Keys match the C config slug**, so the form is stable across eras; `get`
-  mirrors `describeParams` (index for a choice, string for a numeric field),
-  `set` is its inverse.
+  returns an index for a choice and a string for a text field, and `set` is its
+  inverse.
 - **Numeric `set` goes through `parseConfigInt`, never `Number.parseInt`** —
-  atoi semantics turn garbage into 0, which `validateParams` rejects with its
-  message; `NaN` slips every bound check.
+  atoi semantics turn garbage into 0, which the bounds reject; `NaN` slips a
+  hand-written bound check. `numberItem` is that shape for a plain integer
+  field.
 - **Never hand-write the width/height pair.** Every two-dimension game calls
-  `dimensionParamConfig()` ([`engine/params.ts`](../../src/engine/params.ts));
-  a game that spells its fields differently passes the field map
-  (`{ w: "w2", h: "h2" }`) rather than being renamed to fit — a game contorted
-  to satisfy a shared contract is the failure the refactoring guardrails exist
-  to prevent. Square games supply a single size item instead.
+  `dimensionParamConfig({ doc, bounds })`
+  ([`engine/params.ts`](../../src/engine/params.ts)); a game that spells its
+  fields differently passes the field map (`fields: { w: "w2", h: "h2" }`)
+  rather than being renamed to fit — a game contorted to satisfy a shared
+  contract is the failure the refactoring guardrails exist to prevent. A square
+  game declares one `numberItem` labeled with `squareSize(field)`.
 - **Cross-field folds run in array order** — the midend applies each `set` in
   sequence, so Solo's jigsaw fold (`c *= r; r = 1`) comes after its column/row
   items.
@@ -308,15 +331,19 @@ Exemplars: [`pattern/index.ts`](../../src/games/pattern/index.ts) (pure w/h),
 
 ### Difficulty is a declared contract
 
-**A tiered game declares `Game.difficulty`
-([`engine/difficulty.ts`](../../src/engine/difficulty.ts)): a `tierOf`/`withTier`
-accessor pair and a capped solve.** The point is that properties *about* tiers —
-above all cap-monotonicity, whose absence silently broke Check & Save on every
-Boats Easy board — are asserted for all tiered games at once by
+**A tiered game declares its difficulty item and `Game.difficulty`
+([`engine/difficulty.ts`](../../src/engine/difficulty.ts)).** The item is
+`difficultyItem(TIERS, "diff")` in its `paramConfig` — or, for a game storing a
+word or an enum, `difficultyItem(TIERS, { get, set })` — and nobody writes
+`kw: "difficulty"` by hand. The engine's `tierOf(game, p)` and
+`withTier(game, p, tier)` read and move a tier through that item, because eight
+games type their difficulty as a string union or enum and no cross-game caller
+can write `{ ...p, diff: cap }`. The contract is only the capped solve and its
+declared exceptions. The point is that properties *about* tiers — above all
+cap-monotonicity, whose absence silently broke Check & Save on every Boats Easy
+board — are asserted for all tiered games at once by
 `difficulty-contract.test.ts`; declaring the contract enrolls the game in those
-guards automatically. The accessors exist because eight games type their
-difficulty as a string union or enum, so no cross-game caller can write
-`{ ...p, diff: cap }`.
+guards automatically.
 
 **You do not write the tier names — you call `tierNames(n)`.** The collection has
 one scale, **Easy · Normal · Tricky · Hard · Extreme**, and a game takes the
@@ -344,11 +371,8 @@ convention they routinely differ: Unruly's `DIFF_TRIVIAL` is its first tier, so 
 player sees "Easy". Read `tierNames`, not the identifier.
 
 **Where the list comes from at runtime**: `difficultyTiers(game)` reads the
-game's difficulty `paramConfig` item, so the names still have exactly one
-definition per game. That item's `kw` must start with `diff`, and its `get`/`set`
-must address the same field `tierOf`/`withTier` do; the guard checks exactly
-that, because a finder that latched onto a mode or symmetry menu would otherwise
-iterate the wrong list and pass. Never derive tier names from the technique
+game's difficulty item, so the names have exactly one definition per game. Never
+derive tier names from the technique
 ladder, which declares tier *numbers* and is built inside a solve
 ([solver & generator](./solver-and-generator.md) § "The difficulty contract").
 What a tier *means*, and the grading that enforces it, is

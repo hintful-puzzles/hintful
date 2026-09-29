@@ -27,10 +27,4 @@ that it frees a move removing some.
 
 ## Untangle parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Number of points</dt>
-	<dd>How many points the puzzle has, from 4 to 2000. More points means
-	more lines to untangle.</dd>
-</dl>
+{{parameters}}

@@ -39,6 +39,7 @@ import {
   defaultParams,
   encodeParams,
   executeMove,
+  MAX_TILES,
   type MosaicMistake,
   type MosaicMove,
   type MosaicParams,
@@ -211,22 +212,30 @@ export const mosaicGame: Game<
   validateParams,
   transposeParams: transposeDimensions<MosaicParams>({ w: "width", h: "height" }),
   paramConfig: [
-    ...dimensionParamConfig<MosaicParams>({ w: "width", h: "height" }),
+    ...dimensionParamConfig<MosaicParams>({
+      fields: { w: "width", h: "height" },
+      doc: `Size of the grid in squares. The grid may hold at most ${MAX_TILES} squares.`,
+      bounds: { min: 3 },
+    }),
     {
       kw: "aggressive-generation",
       name: "Aggressive generation",
       type: "boolean",
+      doc: "Every puzzle hides the clues the game never used while solving it. When on, the game also tries taking away each clue that remains, and keeps it away whenever the puzzle can still be solved without it, so fewer numbers are shown, which usually makes the puzzle harder.",
+      label: {
+        slot: "tail",
+        // Upstream recommends it off above about 30x30, and its presets follow.
+        words: (p) =>
+          p.aggressive === p.width * p.height < 30 * 30
+            ? null
+            : `${p.aggressive ? "slower" : "faster"} generation`,
+      },
       get: (p) => p.aggressive,
       set: (p, v) => {
         p.aggressive = v;
       },
     },
   ],
-  describeParams: (p) => ({
-    width: String(p.width),
-    height: String(p.height),
-    "aggressive-generation": p.aggressive,
-  }),
 
   newDesc,
   validateDesc,

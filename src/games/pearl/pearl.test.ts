@@ -4,6 +4,8 @@
  * edge-based `findMistakes` overlay.
  */
 import { describe, expect, it } from "vitest";
+import { describeParams } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { newDesc } from "./generator.ts";
 import { type PearlMistake, pearlGame } from "./index.ts";
@@ -13,6 +15,7 @@ import {
   D,
   DIFF_COUNT,
   DIFF_EASY,
+  DIFF_NAMES,
   DIFF_TRICKY,
   decodeParams,
   encodeClues,
@@ -26,7 +29,6 @@ import {
   R,
   U,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 const EASY_6 = { w: 6, h: 6, difficulty: DIFF_EASY, nosolve: false };
@@ -61,19 +63,24 @@ describe("pearl params", () => {
   });
 
   it("rejects too-small boards and small Normal boards", () => {
-    expect(
-      validateParams({ w: 4, h: 6, difficulty: DIFF_EASY, nosolve: false }, true),
-    ).not.toBeNull();
-    expect(
-      validateParams({ w: 6, h: 4, difficulty: DIFF_EASY, nosolve: false }, true),
-    ).not.toBeNull();
+    const error = (p: PearlParams) => paramsError(pearlGame, p, true);
+    expect(error({ w: 4, h: 6, difficulty: DIFF_EASY, nosolve: false })).toBe(
+      "Width must be at least 5",
+    );
+    expect(error({ w: 6, h: 4, difficulty: DIFF_EASY, nosolve: false })).toBe(
+      "Height must be at least 5",
+    );
     // w + h < 11 at Normal is rejected.
     expect(
-      validateParams({ w: 5, h: 5, difficulty: DIFF_TRICKY, nosolve: false }, true),
+      error({ w: 5, h: 5, difficulty: DIFF_TRICKY, nosolve: false }),
     ).not.toBeNull();
+    expect(error({ w: 6, h: 6, difficulty: DIFF_TRICKY, nosolve: false })).toBeNull();
+  });
+
+  it("labels an unsoluble board ambiguous", () => {
     expect(
-      validateParams({ w: 6, h: 6, difficulty: DIFF_TRICKY, nosolve: false }, true),
-    ).toBeNull();
+      describeParams(pearlGame, { w: 8, h: 8, difficulty: DIFF_TRICKY, nosolve: true }),
+    ).toBe(`8x8 ${DIFF_NAMES[DIFF_TRICKY]}, ambiguous`);
   });
 });
 

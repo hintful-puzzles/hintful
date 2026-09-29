@@ -10,7 +10,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import type {
   Game,
@@ -28,7 +28,7 @@ import {
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import { CELL, type MarkRef } from "../../engine/hint-words.ts";
-import { parseConfigInt } from "../../engine/params.ts";
+import { numberItem } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -624,8 +624,6 @@ function selectReference(ui: DominosaUi, key: string | null): boolean {
  * cross-game guard at what the tier actually promises. */
 const difficulty: DifficultyContract<DominosaParams> = {
   nonUniqueTiers: [DIFF_AMBIGUOUS],
-  tierOf: (p) => p.diff,
-  withTier: (p, tier) => ({ ...p, diff: tier }),
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
     const { result } = solveNumbers(p, s.numbers, cap);
@@ -651,30 +649,20 @@ export const dominosaGame: Game<
   validateParams,
   transposeParams: (p) => ({ ...p, tall: !p.tall }),
   paramConfig: [
-    {
-      kw: "maximum-number-on-dominoes",
-      name: "Maximum number on dominoes",
-      type: "string",
-      get: (p) => String(p.n),
-      set: (p, v) => {
-        p.n = parseConfigInt(v);
+    numberItem<DominosaParams>(
+      "maximum-number-on-dominoes",
+      "Maximum number on dominoes",
+      "n",
+      {
+        doc: "The highest number that appears on a domino. The set runs from 0–0 up to this number doubled, one of each, so a maximum of <em>n</em> gives a grid <em>n</em>+1 squares wide and <em>n</em>+2 tall.",
+        bounds: { min: 1 },
+        label: { slot: "size", words: (p) => `Order ${p.n}` },
       },
-    },
-    {
-      kw: "difficulty",
-      name: "Difficulty",
-      type: "choices",
-      choices: [...DIFF_NAMES],
-      get: (p) => p.diff,
-      set: (p, v) => {
-        p.diff = v;
-      },
-    },
+    ),
+    difficultyItem(DIFF_NAMES, "diff", {
+      doc: "Ambiguous is this game's own extra setting: the board is not checked for a unique solution, so it may have several, and any tiling that uses every domino once counts as solved. On the smallest sets (a maximum of 1 or 2) the harder settings are capped at what that set can support.",
+    }),
   ],
-  describeParams: (p) => ({
-    "maximum-number-on-dominoes": String(p.n),
-    difficulty: p.diff,
-  }),
 
   newDesc: newDominosaDesc,
   validateDesc,

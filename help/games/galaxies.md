@@ -68,11 +68,4 @@ for **Check & save**.
 
 ## Galaxies parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares, from 3 to 100 each.</dd>
-	<dt>Difficulty</dt>
-	<dd>Determine the difficulty of the generated puzzle; see <a href="../features#difficulty">what the names mean</a>.</dd>
-</dl>
+{{parameters}}

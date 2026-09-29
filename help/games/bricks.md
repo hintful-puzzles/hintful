@@ -31,12 +31,5 @@ If a cell is wrong in a way that breaks a rule, the hint asks you to fix the hig
 
 ## Bricks parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares.</dd>
-	<dt>Difficulty</dt>
-	<dd>Determine the difficulty of the generated puzzle. An Easy puzzle can always be finished a square at a time: pick a square, try a color, and one of the three rules breaks immediately. An Unreasonable one needs at least one square where seeing the contradiction means working out most of the rest of the board first — so the Hint button will take you as far as plain deduction goes and then stop, rather than asking you to follow reasoning it cannot show you. (That is <a href="../features#difficulty">what the name promises</a>, throughout the collection.)</dd>
-</dl>
+{{parameters}}
 

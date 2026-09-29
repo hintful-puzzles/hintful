@@ -454,10 +454,11 @@ answers itself.
 
 ### `difficulty.ts` — the cross-game difficulty contract
 
-`DifficultyContract`: what a tiered game's tiers are, `tierOf`/`withTier`
-accessors (eight games don't hold a number in their params at all), and a
-discriminated solve-at-cap verdict. Declaring it enrolls the game in the shared
-guards (`difficulty-contract.test.ts`) — above all **cap-monotonicity**, which
+`difficultyItem`: the Custom dialog's difficulty field, which a tiered game
+declares instead of writing one, and which `tierOf`/`withTier`/`tierNameOf` read
+(eight games don't hold a number in their params at all). `DifficultyContract`:
+a discriminated solve-at-cap verdict and the declared exceptions to the tier
+guards. Declaring it enrolls the game in the shared guards (`difficulty-contract.test.ts`) — above all **cap-monotonicity**, which
 Boats shipped without, silently breaking Check & Save on every Easy board.
 Details: [`mechanics.md`](./mechanics.md) (declaring) and
 [`solver-and-generator.md`](./solver-and-generator.md) (grading).
@@ -874,8 +875,26 @@ that `indexOf("x")` mis-sliced on a bare `"4"`; built on `decimal.ts`'s
 `parseLeadingInt`, which lived here until the desc codecs turned out to be
 half its callers), `atof` and `formatG`
 (C's `%g` — a full-precision float param reads back as a *different* number
-and the game ID stops naming its board), and the declarative
-`dimensionParamConfig`/`parseConfigInt` helpers behind `Game.paramConfig`.
+and the game ID stops naming its board), the declarative
+`dimensionParamConfig`/`numberItem`/`squareSize`/`parseConfigInt` helpers
+behind `Game.paramConfig`, and **`paramsError`**, the one validity check: every
+item's `bounds` and choice list, then the game's optional `validateParams`.
+Call it wherever you would have asked `game.validateParams`.
+
+### `param-label.ts` — the one label of a params set
+
+`describeParams(game, p)` composes a label from the items' `label` slots
+(`[lead: ]size[ kind…][ tier][, tail…]`), and `presetMenu(game)` titles every
+unnamed preset with it. The preset menu, the type header of a custom board and
+every test that reads a title go through here, so the menu and the header
+cannot name one board two ways. Declaring: [`mechanics.md`](./mechanics.md)
+§ "Params are declared once, on `paramConfig`".
+
+### `param-help.ts` — the generated Parameters section
+
+`parametersMarkdown(config)` renders a game's help Parameters list from its
+items' `doc`s and `bounds`, Width and Height as one entry; the help build
+(`vite-plugins/parameters.ts`) puts it where a page writes `{{parameters}}`.
 
 ### `key-labels.ts` — on-screen keypad builders
 

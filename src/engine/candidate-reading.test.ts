@@ -38,7 +38,7 @@ const gameOf = (id: string): AnyGame => {
 
 /** Every mode and tier, each on the smallest board offering it. */
 const presetsOf = (game: AnyGame) =>
-  axisSlice(game, leafPresets(game.presets()), { scalarEnds: false });
+  axisSlice(game, leafPresets(game), { scalarEnds: false });
 
 const uiFor = (game: AnyGame, state: unknown, reading: CandidateReading) => ({
   ...(game.newUi(state) as object),

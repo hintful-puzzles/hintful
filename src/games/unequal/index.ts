@@ -10,6 +10,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { MAX_CANDIDATE_VALUE } from "../../engine/candidate-bits.ts";
 import {
   adaptiveMarkAllMove,
   applyNoteMove,
@@ -21,7 +22,7 @@ import {
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
 import { runLatinCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
@@ -49,7 +50,7 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import { parseConfigInt } from "../../engine/params.ts";
+import { numberItem, squareSize } from "../../engine/params.ts";
 import {
   autoPencilPref,
   candidateReadingPref,
@@ -70,7 +71,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { ConfigValues, KeyLabel, Point } from "../../engine/types.ts";
+import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newUnequalDesc } from "./generator.ts";
 import { say, unequalVocab } from "./hint-text.ts";
 import {
@@ -105,7 +106,6 @@ import {
   decodeParams,
   defaultParams,
   diffFromLevel,
-  diffName,
   diffToLevel,
   encodeParams,
   F_ADJ_DOWN,
@@ -142,10 +142,7 @@ export interface UnequalMistake {
 function presets(): PresetMenu<UnequalParams> {
   return {
     title: "Unequal",
-    submenu: PRESETS.map((p) => ({
-      title: `${p.mode === "adjacent" ? "Adjacent" : "Unequal"}: ${p.order}x${p.order} ${diffName(p.diff)}`,
-      params: p,
-    })),
+    submenu: PRESETS.map((p) => ({ params: p })),
   };
 }
 
@@ -514,8 +511,6 @@ function unequalKeys(order: number): KeyLabel[] {
  * one of `latin.ts`'s sentinels — so `latinVerdict` reads it. Seeded from the
  * immutable givens; `mode` and the clue flags come from the desc. */
 const difficulty: DifficultyContract<UnequalParams> = {
-  tierOf: (p) => diffToLevel(p.diff),
-  withTier: (p, tier) => ({ ...p, diff: diffFromLevel(tier) }),
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
     return latinVerdict(
@@ -547,39 +542,26 @@ export const unequalGame: Game<
       name: "Mode",
       type: "choices",
       choices: ["Unequal", "Adjacent"],
+      doc: "Unequal, where the clues are <code>&lt;</code> signs, or Adjacent, where they are bars between consecutive numbers (both described above).",
+      label: { slot: "lead" },
       get: (p) => (p.mode === "adjacent" ? 1 : 0),
       set: (p, v) => {
         p.mode = v === 1 ? "adjacent" : "unequal";
       },
     },
-    {
-      kw: "size",
-      name: "Size",
-      type: "string",
-      get: (p) => String(p.order),
-      set: (p, v) => {
-        p.order = parseConfigInt(v);
+    numberItem<UnequalParams>("size", "Size", "order", {
+      doc: "Width and height of the grid, which is also the largest number in it. Above 9, the numbers are written 0 to 9 and then A, B, C and so on, so each still takes one character. Adjacent puzzles at Tricky or above need a size of at least 5.",
+      // One more would not fit a candidate mask (`engine/candidate-bits.ts`).
+      bounds: { min: 3, max: MAX_CANDIDATE_VALUE },
+      label: { slot: "size", words: squareSize("order") },
+    }),
+    difficultyItem(DIFF_NAMES, {
+      get: (p: UnequalParams) => diffToLevel(p.diff),
+      set: (p: UnequalParams, tier: number) => {
+        p.diff = diffFromLevel(tier);
       },
-    },
-    {
-      kw: "difficulty",
-      name: "Difficulty",
-      type: "choices",
-      // The one list, not a second spelling of it — a hand-copied tier list is
-      // how a rename ships a menu and a dialog that disagree.
-      choices: [...DIFF_NAMES],
-      get: (p) => diffToLevel(p.diff),
-      set: (p, v) => {
-        p.diff = diffFromLevel(v);
-      },
-    },
+    }),
   ],
-  // Keys match the `unequal` config template in `puzzle/augmentation.ts`.
-  describeParams: (p): ConfigValues => ({
-    mode: p.mode === "adjacent" ? 1 : 0,
-    size: String(p.order),
-    difficulty: diffToLevel(p.diff),
-  }),
 
   newDesc: newUnequalDesc,
   validateDesc,

@@ -68,7 +68,7 @@ const custom = (
 
 /** Every preset, and at each tier the options no preset carries. */
 const SHAPES: AscentParams[] = [
-  ...leafPresets(ascentGame.presets()).map((p) => p.params),
+  ...leafPresets(ascentGame).map((p) => p.params),
   ...[0, 1, 2, 3].flatMap((d) => [
     custom(6, 6, d, MODE_ORTHOGONAL, false),
     custom(7, 7, d, MODE_RECT, true),

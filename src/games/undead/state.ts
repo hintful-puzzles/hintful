@@ -1,5 +1,5 @@
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
-import { tierNames } from "../../engine/difficulty.ts";
+import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
@@ -46,9 +46,6 @@ export function diffToLevel(d: Difficulty): number {
 }
 export function diffFromLevel(level: number): Difficulty {
   return DIFFS[level] ?? "normal";
-}
-export function diffName(d: Difficulty): string {
-  return DIFF_NAMES[diffToLevel(d)];
 }
 
 // --- cell states (upstream CELL_* enum) ------------------------------------
@@ -109,19 +106,16 @@ export function defaultParams(): UndeadParams {
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<UndeadParams>[] = [
-  ...dimensionParamConfig<UndeadParams>(),
-  {
-    kw: "difficulty",
-    name: "Difficulty",
-    type: "choices",
-    // The one list, not a second spelling of it — a hand-copied tier list is
-    // how a rename ships a menu and a dialog that disagree.
-    choices: [...DIFF_NAMES],
-    get: (p) => diffToLevel(p.diff),
-    set: (p, v) => {
-      p.diff = diffFromLevel(v);
+  ...dimensionParamConfig<UndeadParams>({
+    doc: "Size of the grid in squares, at most 54 squares in all.",
+    bounds: { min: 3 },
+  }),
+  difficultyItem(DIFF_NAMES, {
+    get: (p: UndeadParams) => diffToLevel(p.diff),
+    set: (p: UndeadParams, tier: number) => {
+      p.diff = diffFromLevel(tier);
     },
-  },
+  }),
 ];
 
 /** `WxH`, plus the generator-only difficulty letter. An unknown letter leaves
@@ -132,8 +126,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 export function validateParams(p: UndeadParams, _full: boolean): string | null {
-  if (p.w < 3) return "Width must be at least 3";
-  if (p.h < 3) return "Height must be at least 3";
   if (p.w > Math.floor(54 / p.h)) return "Grid is too big";
   return null;
 }

@@ -24,7 +24,6 @@ import {
   uninstallWorkerErrorReceivers,
 } from "../utils/errors.ts";
 import { nextAnimationFrame } from "../utils/timing.ts";
-import { type ChoiceNames, puzzleAugmentations } from "./augmentation.ts";
 import { puzzleDataMap } from "./catalog.ts";
 import { sameTimer } from "./timer.ts";
 import type { RemoteWorkerPuzzle, RemoteWorkerPuzzleFactory } from "./worker.ts";
@@ -788,20 +787,11 @@ export class Puzzle {
     if (preset) {
       return preset.title;
     }
-
-    const augmentation = puzzleAugmentations[this.puzzleId];
-    if (augmentation?.describeConfig) {
-      const config = await this.decodeCustomParams(params);
-      if (typeof config === "string") {
-        return `ERROR: '${params}': ${config}`;
-      }
-      // The declared option names, from the same `ConfigDescription` the
-      // "Custom type…" dialog is built from — so the header and the dialog
-      // beside it name a tier from one source instead of two.
-      return augmentation.describeConfig(config, await this.getChoiceNames());
+    try {
+      return await this.workerPuzzle.describeParams(params);
+    } catch (e) {
+      return `ERROR: '${params}': ${String(e)}`;
     }
-
-    return "Custom type";
   }
 
   public async getPresets(flat = false): Promise<PresetMenuEntry[]> {
@@ -821,29 +811,6 @@ export class Puzzle {
 
   public async setCustomParams(values: ConfigValues): Promise<string | null> {
     return this.workerPuzzle.setCustomParams(values);
-  }
-
-  public async decodeCustomParams(params: string): Promise<ConfigValues | string> {
-    return this.workerPuzzle.decodeCustomParams(params);
-  }
-
-  /**
-   * Each `choices` field's declared option names, keyed by field id — read off
-   * the custom-params `ConfigDescription`, which the midend builds from the
-   * game's own `paramConfig`.
-   *
-   * It is what lets the type header name a difficulty tier without a second,
-   * hand-typed copy of the tier list.
-   */
-  private async getChoiceNames(): Promise<ChoiceNames> {
-    const config = await this.workerPuzzle.getCustomParamsConfig();
-    const names: ChoiceNames = {};
-    for (const [id, item] of Object.entries(config.items)) {
-      if (item.type === "choices") {
-        names[id] = item.choicenames;
-      }
-    }
-    return names;
   }
 
   public async encodeCustomParams(values: ConfigValues): Promise<CustomParamsEncoding> {

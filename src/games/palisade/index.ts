@@ -36,7 +36,7 @@ import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor, stripModifiers } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { ConfigValues, Point } from "../../engine/types.ts";
+import type { Point } from "../../engine/types.ts";
 import { say } from "./hint-text.ts";
 import {
   colors,
@@ -235,11 +235,6 @@ export const palisadeGame: Game<
   validateParams,
   transposeParams: transposeDimensions(),
   paramConfig,
-  describeParams: (p): ConfigValues => ({
-    width: String(p.w),
-    height: String(p.h),
-    "region-size": String(p.k),
-  }),
 
   newDesc,
   validateDesc,

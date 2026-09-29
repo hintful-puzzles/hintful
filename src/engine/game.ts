@@ -18,7 +18,6 @@ import type { MarkRef, MarkRole, Narration } from "./hint-words.ts";
 import type { RandomState } from "./random/index.ts";
 import type {
   Color,
-  ConfigValues,
   DrawTextOptions,
   GameStatus,
   KeyLabel,
@@ -158,9 +157,9 @@ export type GamePref<Ui> =
 /** One configurable field of a game's **custom params** — the params
  * analog of `GamePref`, describing the "Custom type…" dialog. The
  * engine builds the app's `ConfigDescription` from this list and parses
- * a submitted `ConfigValues` back through it; validity is decided by the
- * game's own `validateParams`, so the custom dialog rejects exactly the
- * params the game-ID path would. `get`/`set` read/write one field of a
+ * a submitted `ConfigValues` back through it; validity is decided by
+ * `paramsError`, so the custom dialog rejects exactly the params the game-ID
+ * path would. `get`/`set` read/write one field of a
  * `Params` object — the midend always applies `set` to a *copy* of the
  * live params, so a mid-edit or rejected submission never mutates the
  * running game. Discriminated by `type`:
@@ -170,34 +169,77 @@ export type GamePref<Ui> =
  * - `"boolean"` ↔ a checkbox;
  * - `"choices"` ↔ the selected zero-based index into `choices` (a
  *   select/radio group).
- * `kw` is the stable config key the app form uses; `name` the label. */
+ * `kw` is the stable config key the app form uses; `name` the label.
+ *
+ * The same item is also what the help's Parameters section is generated from
+ * (`doc`, `bounds`), what the engine checks before the game's own
+ * `validateParams` (`bounds`, and a choice inside its list), and what a params
+ * label is composed from (`label`, `engine/param-label.ts`). */
 export type ParamConfigItem<Params> =
-  | {
-      kw: string;
-      name: string;
+  | (ParamItemCommon<Params> & {
       type: "string";
+      /** The range a numeric field must fall in. The engine refuses a value
+       * outside it with a message naming the field, and the help states it. A
+       * bound that depends on another field stays in `validateParams`. */
+      bounds?: ParamBounds;
       get(p: Params): string;
       set(p: Params, value: string): void;
-    }
-  | {
-      kw: string;
-      name: string;
+    })
+  | (ParamItemCommon<Params> & {
       type: "boolean";
+      /** A checkbox has no words of its own to show, so a label says them. */
+      label?: ParamLabel<Params> & { words(p: Params): string | null };
       get(p: Params): boolean;
       set(p: Params, value: boolean): void;
-    }
-  | {
-      kw: string;
-      name: string;
+    })
+  | (ParamItemCommon<Params> & {
       type: "choices";
       choices: string[];
+      /** How many indices past `choices` an old game ID or save may still
+       * carry: accepted when loading a board, refused when generating one, and
+       * never offered. Bricks' retired Tricky tier (`dt`) is the case. */
+      retired?: number;
       get(p: Params): number;
       set(p: Params, value: number): void;
-    };
+    });
+
+interface ParamItemCommon<Params> {
+  kw: string;
+  name: string;
+  /** What the field means, as the help's Parameters section says it (HTML
+   * inside a `<dd>`). `{ with: kw }` documents it together with the item
+   * before it, which must be `kw`: Width and Height are one entry. */
+  doc: string | { with: string };
+  /** Where this field's words go when a params set is labeled, if anywhere. */
+  label?: ParamLabel<Params>;
+}
+
+/** Inclusive limits on a numeric field. */
+export interface ParamBounds {
+  min?: number;
+  max?: number;
+}
+
+/**
+ * Where a field's words go in a params label, which reads
+ * `[lead: ]size[ kind…][ tier][, tail…]` — "Seismic: 7x7 Easy",
+ * "10x10 Normal, strip clues". The slot is the engine's convention; the words
+ * are the game's.
+ */
+export interface ParamLabel<Params> {
+  slot: "lead" | "size" | "kind" | "tier" | "tail";
+  /** The words, or `null` to leave the field out: a default the player need
+   * not be told. Absent, a choices field says its choice's name and a text
+   * field its value. */
+  words?(p: Params): string | null;
+}
 
 /** A node in the preset/difficulty menu tree. */
 export interface PresetMenu<Params> {
-  title: string;
+  /** A submenu's title, or a leaf's name. A leaf without one is labeled from
+   * its params (`presetMenu`); a name is only for a preset upstream named,
+   * such as Guess's "Standard". */
+  title?: string;
   /** Leaf preset, or a submenu. Exactly one is set. */
   params?: Params;
   submenu?: PresetMenu<Params>[];
@@ -307,8 +349,12 @@ export interface Game<
   presets(): PresetMenu<Params>;
   encodeParams(p: Params, full: boolean): string;
   decodeParams(s: string): Params;
-  /** `null` when valid, else a human-readable reason. */
-  validateParams(p: Params, full: boolean): string | null;
+  /** `null` when valid, else a human-readable reason. Only what the
+   * `paramConfig` items cannot state — a limit that depends on another field,
+   * or one that holds only when generating — because the engine checks every
+   * item's `bounds` and choice list first (`paramsError`), and that check is
+   * what the app and the tests call. Absent when the items say it all. */
+  validateParams?(p: Params, full: boolean): string | null;
   /** The same board turned on its side: `p` with width and height exchanged,
    * or `null` when these params cannot be turned. Having it is what lets a
    * new game be dealt whichever way round fits the screen better (the midend's
@@ -317,16 +363,6 @@ export interface Game<
    * direction. `orientation.test.ts` holds every implementation to its
    * `computeSize` exchanging width and height. */
   transposeParams?(p: Params): Params | null;
-
-  /** Map this game's params to the type-summary `ConfigValues` the app's
-   * `describeConfig` formatter (`src/puzzle/augmentation.ts`) renders for a
-   * custom (non-preset) game. The worker adapter supplies a generic
-   * `{ width, height }` base from `w`/`h` params and spreads this result over
-   * it, so a game whose params are exactly `w`/`h` may omit this hook.
-   * Boolean values MUST be real booleans and choice values numeric indices
-   * (never their string renderings) — the formatter coerces via
-   * `Number(value)`, which NaNs out a `"true"`/`"false"` string. */
-  describeParams?(p: Params): ConfigValues;
 
   newDesc(p: Params, rng: RandomState): { desc: string; aux?: string };
   /** `null` when valid, else why `desc` is rejected for `p`. */
@@ -561,26 +597,24 @@ export interface Game<
    * `configure`/`custom_params` path), declarative like `prefs`: an
    * ordered list of field descriptors the midend turns into the app's
    * "Custom type…" dialog and parses back onto a copy of `Params`,
-   * validated by this game's own `validateParams`. A plain width/height
-   * game declares `paramConfig: dimensionParamConfig()`. Absent ⇒ an empty
-   * custom dialog, which `custom-params.test.ts` refuses for every game.
+   * validated by `paramsError`. A plain width/height game declares
+   * `paramConfig: dimensionParamConfig({ doc })`. Absent ⇒ an empty custom
+   * dialog, which `custom-params.test.ts` refuses for every game.
    *
-   * **It is the field list two other things are derived from**, so what it
-   * declares reaches further than the dialog: `difficultyTiers` reads a
-   * game's tier names off its difficulty item, and `params-codec.ts` builds
-   * `encodeParams`/`decodeParams` from segments that name these `kw`s and
-   * reuse these accessors. Adding a field here is therefore not only a
-   * dialog change. Independent of the type-summary `describeParams` hook,
-   * which renders the menu label rather than the form. */
+   * **It is the field list everything about params is derived from**, so what
+   * it declares reaches further than the dialog: the tier names and accessors
+   * (`difficulty.ts`), the codec (`params-codec.ts`), the preset titles and
+   * the custom header (`param-label.ts`), the bounds check (`paramsError`)
+   * and the help's Parameters section. */
   paramConfig?: ParamConfigItem<Params>[];
 
-  /** How to read and set a difficulty tier on a params object, and how to run
-   * this game's solver capped at one. Declared by a game with difficulty tiers,
-   * absent otherwise, as a game without a solver omits `solve`.
+  /** How to run this game's solver capped at a tier. Declared by a game with
+   * difficulty tiers, absent otherwise, as a game without a solver omits
+   * `solve`.
    *
-   * **What the tiers are is not here**: the names come off this game's own
-   * difficulty `paramConfig` item (`difficultyTiers`), so a tiered game declares
-   * its tier list exactly once, where a player picks from it.
+   * **What the tiers are, and how params hold one, is not here**: both come
+   * off the game's difficulty item (`difficultyItem`), so a tiered game
+   * declares its tier list exactly once, where a player picks from it.
    *
    * It exists so that a property *about* tiers can be asserted for every tiered
    * game at once, above all cap-monotonicity, without which Check & Save

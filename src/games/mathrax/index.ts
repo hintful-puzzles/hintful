@@ -25,7 +25,7 @@ import {
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
 import { runLatinCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
@@ -33,6 +33,7 @@ import {
   type HintResult,
   type HintStep,
   type HintTrackVerdict,
+  type ParamConfigItem,
   type PresetMenu,
   type SolveResult,
   UI_UPDATE,
@@ -51,7 +52,7 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import { parseConfigInt } from "../../engine/params.ts";
+import { numberItem, squareSize } from "../../engine/params.ts";
 import {
   autoPencilPref,
   candidateReadingPref,
@@ -103,7 +104,7 @@ import {
   decodeParams,
   defaultParams,
   diffFromLevel,
-  diffName,
+  diffLevel,
   diffToLevel,
   encodeParams,
   F_IMMUTABLE,
@@ -153,10 +154,7 @@ const PRESETS: MathraxParams[] = [
 function presets(): PresetMenu<MathraxParams> {
   return {
     title: "Mathrax",
-    submenu: PRESETS.map((p) => ({
-      title: `${p.o}x${p.o} ${diffName(p.diff)}`,
-      params: p,
-    })),
+    submenu: PRESETS.map((p) => ({ params: p })),
   };
 }
 
@@ -456,17 +454,68 @@ function refreshHintStep(
 
 // --- the game --------------------------------------------------------------
 
-/** The six clue-type checkboxes, in the Custom dialog's (and the description
- * summary's) order. The `kw`s are upstream's config-name slugs, which
- * `augmentation.ts`'s Mathrax summary reads. */
-const CLUE_OPTIONS: ReadonlyArray<{ kw: string; name: string; bit: number }> = [
-  { kw: "addition-clues", name: "Addition clues", bit: OPTION_ADD },
-  { kw: "subtraction-clues", name: "Subtraction clues", bit: OPTION_SUB },
-  { kw: "multiplication-clues", name: "Multiplication clues", bit: OPTION_MUL },
-  { kw: "division-clues", name: "Division clues", bit: OPTION_DIV },
-  { kw: "equality-clues", name: "Equality clues", bit: OPTION_EQL },
-  { kw: "even-odd-clues", name: "Even/odd clues", bit: OPTION_ODD },
+/** The six clue-type checkboxes, in the Custom dialog's order. The `kw`s are
+ * upstream's config-name slugs; `word` is how a params label names the type. */
+const CLUE_OPTIONS: ReadonlyArray<{
+  kw: string;
+  name: string;
+  word: string;
+  bit: number;
+  doc: string;
+}> = [
+  {
+    kw: "addition-clues",
+    name: "Addition clues",
+    word: "addition",
+    bit: OPTION_ADD,
+    doc: "Allows clues with the addition operation to appear.",
+  },
+  {
+    kw: "subtraction-clues",
+    name: "Subtraction clues",
+    word: "subtraction",
+    bit: OPTION_SUB,
+    doc: "Allows clues with the subtraction operation to appear. Note that clues with a difference of zero are covered by Equality clues instead.",
+  },
+  {
+    kw: "multiplication-clues",
+    name: "Multiplication clues",
+    word: "multiplication",
+    bit: OPTION_MUL,
+    doc: "Allows clues with the multiplication operation to appear.",
+  },
+  {
+    kw: "division-clues",
+    name: "Division clues",
+    word: "division",
+    bit: OPTION_DIV,
+    doc: "Allows clues with the division operation to appear. Note that clues with a ratio of one are covered by Equality clues instead.",
+  },
+  {
+    kw: "equality-clues",
+    name: "Equality clues",
+    word: "equality",
+    bit: OPTION_EQL,
+    doc: "Allows clues with equality signs to appear.",
+  },
+  {
+    kw: "even-odd-clues",
+    name: "Even/odd clues",
+    word: "even-odd",
+    bit: OPTION_ODD,
+    doc: "Allows Even clues and Odd clues to appear.",
+  },
 ];
+
+/** The clue types a label names: nothing when all are on, and otherwise
+ * whichever of the enabled and disabled lists is shorter. The six checkboxes
+ * are said as one phrase, so the first of them carries it. */
+function clueWords(p: MathraxParams): string | null {
+  const on = CLUE_OPTIONS.filter(({ bit }) => p.options & bit).map((c) => c.word);
+  const off = CLUE_OPTIONS.filter(({ bit }) => !(p.options & bit)).map((c) => c.word);
+  if (off.length === 0) return null;
+  return on.length <= off.length ? `only ${on.join("/")}` : `no ${off.join("/")}`;
+}
 
 /** Mathrax's difficulty contract (`engine/difficulty.ts`). `mathraxSolve` has
  * its own four-way return (`SOLVE_IMPOSSIBLE` / `SOLVE_STUCK` / `SOLVE_UNIQUE` /
@@ -474,8 +523,6 @@ const CLUE_OPTIONS: ReadonlyArray<{ kw: string; name: string; bit: number }> = [
  * on, so it is read here and not by `latinVerdict`. The solve starts from the
  * board's givens: a blank grid would make every board unsolvable at every cap. */
 const difficulty: DifficultyContract<MathraxParams> = {
-  tierOf: (p) => diffToLevel(p.diff),
-  withTier: (p, tier) => ({ ...p, diff: diffFromLevel(tier) }),
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
     const ret = mathraxSolve(p.o, givens(s), s.clues, cap);
@@ -503,42 +550,38 @@ export const mathraxGame: Game<
   validateParams,
 
   paramConfig: [
-    {
-      kw: "size",
-      name: "Size",
-      type: "string",
-      get: (p) => String(p.o),
-      set: (p, v) => {
-        p.o = parseConfigInt(v);
+    numberItem<MathraxParams>("size", "Size", "o", {
+      doc: "Size of the grid in squares.",
+      // One digit per cell.
+      bounds: { min: 3, max: 9 },
+      label: { slot: "size", words: squareSize("o") },
+    }),
+    difficultyItem(
+      DIFF_NAMES,
+      {
+        get: (p: MathraxParams) => diffLevel(p.diff),
+        set: (p: MathraxParams, tier: number) => {
+          p.diff = diffFromLevel(tier);
+        },
       },
-    },
-    {
-      kw: "difficulty",
-      name: "Difficulty",
-      type: "choices",
-      choices: [...DIFF_NAMES],
-      get: (p) => diffToLevel(p.diff),
-      set: (p, v) => {
-        p.diff = diffFromLevel(v);
+      {
+        doc: "A puzzle always needs the difficulty you chose; it will never be solvable by the techniques of the level below. At size 3 the grid is too small to tell some levels apart, so only Easy and Tricky are offered there.",
       },
-    },
-    ...CLUE_OPTIONS.map(({ kw, name, bit }) => ({
-      kw,
-      name,
-      type: "boolean" as const,
-      get: (p: MathraxParams) => (p.options & bit) !== 0,
-      set: (p: MathraxParams, v: boolean) => {
-        p.options = v ? p.options | bit : p.options & ~bit;
-      },
-    })),
-  ],
-  describeParams: (p) => ({
-    size: String(p.o),
-    difficulty: diffToLevel(p.diff),
-    ...Object.fromEntries(
-      CLUE_OPTIONS.map(({ kw, bit }) => [kw, p.options & bit ? 1 : 0]),
     ),
-  }),
+    ...CLUE_OPTIONS.map(
+      ({ kw, name, bit, doc }, i): ParamConfigItem<MathraxParams> => ({
+        kw,
+        name,
+        type: "boolean",
+        doc,
+        ...(i === 0 ? { label: { slot: "tail", words: clueWords } } : {}),
+        get: (p) => (p.options & bit) !== 0,
+        set: (p, v) => {
+          p.options = v ? p.options | bit : p.options & ~bit;
+        },
+      }),
+    ),
+  ],
 
   newDesc: (p, rng) => newMathraxDesc(p, rng),
   validateDesc,

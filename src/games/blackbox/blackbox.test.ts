@@ -11,10 +11,13 @@
 
 import { describe, expect, it } from "vitest";
 import { bin2hex, obfuscateBitmap } from "../../engine/obfuscate.ts";
+import { describeParams } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { blackboxGame } from "./index.ts";
 import {
   BALL_CORRECT,
+  type BlackboxParams,
   type BlackboxState,
   type BlackboxUi,
   decodeParams,
@@ -27,7 +30,6 @@ import {
   newDesc,
   newState,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 /** Build a state with balls at 0-indexed arena coords `[x, y]`. */
@@ -258,19 +260,28 @@ describe("Black Box — params", () => {
   });
 
   it("rejects invalid params", () => {
-    expect(
-      validateParams({ w: 1, h: 5, minballs: 1, maxballs: 1 }, true),
-    ).not.toBeNull();
-    expect(
-      validateParams({ w: 5, h: 5, minballs: 0, maxballs: 1 }, true),
-    ).not.toBeNull();
-    expect(
-      validateParams({ w: 5, h: 5, minballs: 4, maxballs: 2 }, true),
-    ).not.toBeNull();
-    expect(
-      validateParams({ w: 3, h: 3, minballs: 9, maxballs: 9 }, true),
-    ).not.toBeNull();
-    expect(validateParams({ w: 8, h: 8, minballs: 5, maxballs: 5 }, true)).toBeNull();
+    const refusal = (p: BlackboxParams) => paramsError(blackboxGame, p, true);
+    expect(refusal({ w: 1, h: 5, minballs: 1, maxballs: 1 })).toBe(
+      "Width must be at least 2",
+    );
+    expect(refusal({ w: 5, h: 256, minballs: 1, maxballs: 1 })).toBe(
+      "Height must be at most 255",
+    );
+    expect(refusal({ w: 5, h: 5, minballs: 0, maxballs: 1 })).toBe(
+      "No. of balls must be at least 1",
+    );
+    expect(refusal({ w: 5, h: 5, minballs: 4, maxballs: 2 })).not.toBeNull();
+    expect(refusal({ w: 3, h: 3, minballs: 9, maxballs: 9 })).not.toBeNull();
+    expect(refusal({ w: 8, h: 8, minballs: 5, maxballs: 5 })).toBeNull();
+  });
+
+  it("labels a ball count, singular or a range", () => {
+    expect(describeParams(blackboxGame, { w: 5, h: 5, minballs: 1, maxballs: 1 })).toBe(
+      "5x5, 1 ball",
+    );
+    expect(describeParams(blackboxGame, { w: 8, h: 8, minballs: 3, maxballs: 6 })).toBe(
+      "8x8, 3-6 balls",
+    );
   });
 });
 

@@ -21,7 +21,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
@@ -627,8 +627,6 @@ function flashLength(
  * the board from its desc — never from a live state — because
  * `subsetsSolveGame` resets and mutates what it is given. */
 const difficulty: DifficultyContract<SubsetsParams> = {
-  tierOf: (p) => p.diff,
-  withTier: (p, tier) => ({ ...p, diff: tier }),
   solveAtCap: (p, desc, cap) => {
     const result = subsetsSolveGame(newState(p, desc), cap);
     return result === "complete"
@@ -665,18 +663,7 @@ export const subsetsGame: Game<
   // Upstream has no configure dialog: 4×4 over four letters is the only legal
   // board. The tier is the one axis this game *can* vary, so it is the whole
   // dialog.
-  paramConfig: [
-    {
-      kw: "difficulty",
-      name: "Difficulty",
-      type: "choices",
-      choices: [...DIFF_NAMES],
-      get: (p) => p.diff,
-      set: (p, v) => {
-        p.diff = v;
-      },
-    },
-  ],
+  paramConfig: [difficultyItem(DIFF_NAMES, "diff")],
 
   newDesc: newSubsetsDesc,
   validateDesc,

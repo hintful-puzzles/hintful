@@ -84,7 +84,7 @@ export const DIFFCOUNT = 3;
  * at — an Easy pass capped at `ACTION_LIMIT` deductions. */
 export const DIFF_LIMITED = DIFF_EASY - 1;
 
-export const DIFFS: readonly SpokesDiff[] = ["easy", "tricky", "hard"];
+const DIFFS: readonly SpokesDiff[] = ["easy", "tricky", "hard"];
 // The top tier is `Unreasonable` where upstream says `Hard`: its look-ahead has
 // no bound on the sub-solve, which is a search (see `solver.ts`). The key
 // `"hard"` and the character `h` are upstream's, so game IDs and saves agree.
@@ -96,9 +96,6 @@ export function diffToLevel(d: SpokesDiff): number {
 }
 export function diffFromLevel(level: number): SpokesDiff {
   return DIFFS[level] ?? "easy";
-}
-export function diffName(d: SpokesDiff): string {
-  return DIFF_NAMES[diffToLevel(d)];
 }
 
 // --- params -----------------------------------------------------------------
@@ -146,20 +143,13 @@ export function decodeParams(s: string): SpokesParams {
   if (s[i] === "d") {
     i++;
     // An unrecognized or missing letter leaves the difficulty invalid, for
-    // `validateParams` to reject. Upstream never checks it, so `6x6dz` would
+    // `paramsError` to reject. Upstream never checks it, so `6x6dz` would
     // index its `spokes_diffchars` out of bounds.
     const idx = i < s.length ? DIFF_CHARS.indexOf(s[i]) : -1;
     p.diff = idx >= 0 ? diffFromLevel(idx) : ("invalid" as SpokesDiff);
     if (i < s.length) i++;
   }
   return p;
-}
-
-export function validateParams(p: SpokesParams, _full: boolean): string | null {
-  if (p.w < 2) return "Width must be at least 2";
-  if (p.h < 2) return "Height must be at least 2";
-  if (DIFFS.indexOf(p.diff) < 0) return "Unknown difficulty rating";
-  return null;
 }
 
 // --- boards -----------------------------------------------------------------

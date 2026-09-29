@@ -15,11 +15,4 @@ varied puzzles.
 
 ## Flip parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares.</dd>
-	<dt>Shape type</dt>
-	<dd>Which squares a click flips. With <em>Crosses</em>, every square flips itself and the squares directly above, below and to either side. With <em>Random</em>, every square flips itself and its own random selection of the eight squares around it, as its diagram shows.</dd>
-</dl>
+{{parameters}}

@@ -7,6 +7,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { BORDER, BORDER_D, BORDER_L, BORDER_R } from "../../engine/border-grid.ts";
+import { describeParams } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newSeparateDesc } from "./generator.ts";
@@ -23,7 +25,6 @@ import {
   type SeparateMove,
   type SeparateParams,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 const P5: SeparateParams = { w: 5, h: 5, k: 5 };
@@ -41,11 +42,16 @@ describe("separate params", () => {
   });
 
   it("rejects invalid params", () => {
-    expect(validateParams({ w: 0, h: 5, k: 5 }, true)).not.toBeNull();
-    expect(validateParams({ w: 5, h: 5, k: 3 }, true)).not.toBeNull(); // 3 ∤ 25
-    expect(validateParams({ w: 5, h: 5, k: 25 }, true)).not.toBeNull(); // whole grid
-    expect(validateParams({ w: 5, h: 5, k: 1 }, true)).not.toBeNull();
-    expect(validateParams({ w: 6, h: 6, k: 4 }, true)).toBeNull();
+    const valid = (p: SeparateParams) => paramsError(separateGame, p, true);
+    expect(valid({ w: 0, h: 5, k: 5 })).toBe("Width must be at least 1");
+    expect(valid({ w: 5, h: 5, k: 3 })).not.toBeNull(); // 3 ∤ 25
+    expect(valid({ w: 5, h: 5, k: 25 })).not.toBeNull(); // whole grid
+    expect(valid({ w: 5, h: 5, k: 1 })).not.toBeNull();
+    expect(valid({ w: 6, h: 6, k: 4 })).toBeNull();
+  });
+
+  it("labels its params by size and letters", () => {
+    expect(describeParams(separateGame, { w: 6, h: 4, k: 4 })).toBe("6x4, 4 letters");
   });
 });
 

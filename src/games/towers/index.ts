@@ -99,8 +99,6 @@ import {
   DIFF_UNREASONABLE,
   decodeParams,
   defaultParams,
-  diffFromLevel,
-  diffName,
   diffToLevel,
   encodeParams,
   isClue,
@@ -115,7 +113,6 @@ import {
   type TowersUi,
   textFormat,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 /** A player marking that contradicts the unique solution:
@@ -142,10 +139,7 @@ const PRESETS: TowersParams[] = [
 function presets(): PresetMenu<TowersParams> {
   return {
     title: "Towers",
-    submenu: PRESETS.map((p) => ({
-      title: `${p.w}x${p.w} ${diffName(p.diff)}`,
-      params: p,
-    })),
+    submenu: PRESETS.map((p) => ({ params: p })),
   };
 }
 
@@ -560,8 +554,6 @@ function buildSteps(
  * `latin.ts`'s sentinels — so `latinVerdict` reads it. The solver is seeded from
  * the immutable givens, never the player's grid. */
 const difficulty: DifficultyContract<TowersParams> = {
-  tierOf: (p) => diffToLevel(p.diff),
-  withTier: (p, tier) => ({ ...p, diff: diffFromLevel(tier) }),
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
     return latinVerdict(solveTowers(s.w, s.clues, Uint8Array.from(s.immutable), cap));
@@ -584,14 +576,7 @@ export const towersGame: Game<
   presets,
   encodeParams,
   decodeParams,
-  validateParams,
   paramConfig,
-  // Keys match the `towers` config template in augmentation.ts: `grid-size` is
-  // the value, `difficulty` the zero-based label index.
-  describeParams: (p) => ({
-    "grid-size": String(p.w),
-    difficulty: diffToLevel(p.diff),
-  }),
 
   newDesc: newTowersDesc,
   validateDesc,

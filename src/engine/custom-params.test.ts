@@ -26,6 +26,7 @@ const paramConfig: ParamConfigItem<TParams>[] = [
     kw: "width",
     name: "Width",
     type: "string",
+    doc: "How wide.",
     get: (p) => String(p.w),
     set: (p, v) => {
       p.w = Number.parseInt(v || "0", 10);
@@ -35,6 +36,7 @@ const paramConfig: ParamConfigItem<TParams>[] = [
     kw: "flag",
     name: "Flag",
     type: "boolean",
+    doc: "A flag.",
     get: (p) => p.flag,
     set: (p, v) => {
       p.flag = v;
@@ -45,6 +47,7 @@ const paramConfig: ParamConfigItem<TParams>[] = [
     name: "Mode",
     type: "choices",
     choices: ["Alpha", "Beta", "Gamma"],
+    doc: "Alpha, Beta or Gamma.",
     get: (p) => p.mode,
     set: (p, v) => {
       p.mode = v;

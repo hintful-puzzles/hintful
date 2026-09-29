@@ -24,15 +24,4 @@ go of it on a second press.
 
 ## Same Game parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares.</dd>
-	<dt>No. of colors</dt>
-	<dd>How many different colors the squares come in: at most 9, and at least 3 when Ensure solubility is on. Fewer colors make bigger groups.</dd>
-	<dt>Scoring system</dt>
-	<dd>How many points removing a group of <em>n</em> squares scores: (n-1)² or (n-2)². Under (n-2)², the default, a group of two scores nothing, so it pays even more to save up large groups.</dd>
-	<dt>Ensure solubility</dt>
-	<dd>When enabled, the grid is built by playing the game backwards, so it can always be cleared completely. When disabled, the colors are scattered at random and there is no guarantee.</dd>
-</dl>
+{{parameters}}

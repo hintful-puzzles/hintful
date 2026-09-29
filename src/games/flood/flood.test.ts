@@ -3,6 +3,8 @@
 // semantics and immutability, win/lose status, and input mapping.
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { describeParams, presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { CURSOR_RIGHT, CURSOR_SELECT, LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { executeMove, floodGame } from "./index.ts";
@@ -18,7 +20,6 @@ import {
   status,
   textFormat,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 function gen(p: FloodParams, seed = "flood-test"): FloodState {
@@ -50,28 +51,34 @@ describe("Flood params", () => {
   });
 
   it("validateParams rejects bad params", () => {
-    expect(validateParams({ w: 1, h: 1, colors: 6, leniency: 0 }, true)).toMatch(
-      /two squares/,
+    const error = (p: FloodParams) => paramsError(floodGame, p, true);
+    expect(error({ w: 1, h: 1, colors: 6, leniency: 0 })).toMatch(/two squares/);
+    expect(error({ w: 4, h: 4, colors: 2, leniency: 0 })).toBe(
+      "Colors must be at least 3",
     );
-    expect(validateParams({ w: 4, h: 4, colors: 2, leniency: 0 }, true)).toMatch(
-      /between 3 and 10/,
+    expect(error({ w: 4, h: 4, colors: 11, leniency: 0 })).toBe(
+      "Colors must be at most 10",
     );
-    expect(validateParams({ w: 4, h: 4, colors: 11, leniency: 0 }, true)).toMatch(
-      /between 3 and 10/,
+    expect(error({ w: 4, h: 4, colors: 6, leniency: -1 })).toBe(
+      "Extra moves permitted must be at least 0",
     );
-    expect(validateParams({ w: 4, h: 4, colors: 6, leniency: -1 }, true)).toMatch(
-      /non-negative/,
-    );
-    expect(validateParams(defaultParams(), true)).toBeNull();
+    expect(error(defaultParams())).toBeNull();
   });
 
   it("offers the seven upstream presets", () => {
-    const menu = floodGame.presets();
+    const menu = presetMenu(floodGame);
     expect(menu.submenu).toHaveLength(7);
     expect(menu.submenu?.[0]).toEqual({
       title: "12x12 Easy",
       params: { w: 12, h: 12, colors: 6, leniency: 5 },
     });
+    expect(menu.submenu?.[5]?.title).toBe("12x12, 3 colors");
+  });
+
+  it("labels a custom game by its colors and extra moves", () => {
+    expect(describeParams(floodGame, { w: 10, h: 8, colors: 5, leniency: 3 })).toBe(
+      "10x8, 5 colors, 3 extra moves",
+    );
   });
 });
 

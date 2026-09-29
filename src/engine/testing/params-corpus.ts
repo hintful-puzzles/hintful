@@ -32,7 +32,7 @@
 
 import "../../games/index.ts";
 import { difficultyChoiceItem } from "../difficulty.ts";
-import type { PresetMenu } from "../game.ts";
+import { presetMenu, type TitledPresetMenu } from "../param-label.ts";
 import { getTsGame, registeredGameIds } from "../registry.ts";
 import type { AnyGame } from "./enrollment.ts";
 
@@ -64,7 +64,10 @@ export const PARAMS_GAMES: [string, AnyGame][] = registeredGameIds()
 export const REGISTERED_GAME_COUNT = registeredGameIds().length;
 
 /** Walk a preset menu to its leaves, labeling each by its title path. */
-function presetCases(menu: PresetMenu<AnyParams>, path: string[] = []): ParamsCase[] {
+function presetCases(
+  menu: TitledPresetMenu<AnyParams>,
+  path: string[] = [],
+): ParamsCase[] {
   const here = [...path, menu.title].filter((t) => t.length > 0);
   if (menu.params !== undefined) {
     return [{ label: `preset:${here.join("/")}`, params: { ...menu.params } }];
@@ -115,7 +118,9 @@ export function paramsCorpus(game: AnyGame): ParamsCase[] {
   const base = game.defaultParams() as AnyParams;
   const cases: ParamsCase[] = [{ label: "default", params: { ...base } }];
 
-  cases.push(...presetCases(game.presets() as PresetMenu<AnyParams>));
+  cases.push(
+    ...presetCases(presetMenu(game as AnyGame) as TitledPresetMenu<AnyParams>),
+  );
 
   // The fields the difficulty item writes, found by *asking the item* rather
   // than by matching a field name: a tier is not always an index (Spokes stores

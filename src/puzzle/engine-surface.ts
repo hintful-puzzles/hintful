@@ -75,12 +75,13 @@ export interface PuzzleEngineSurface {
   getParams(): string;
   setParams(params: string): string | null;
   turnParams(params: string): string | null;
+  /** The label of an encoded params set; throws when it does not decode. */
+  describeParams(params: string): string;
   getPresets(): PresetMenuEntry[];
 
   getCustomParamsConfig(): ConfigDescription;
   getCustomParams(): ConfigValues;
   setCustomParams(values: ConfigValues): string | null;
-  decodeCustomParams(params: string): ConfigValues | string;
   encodeCustomParams(values: ConfigValues): CustomParamsEncoding;
 
   getPreferencesConfig(): ConfigDescription;

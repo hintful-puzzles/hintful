@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { mkhighlightBackground } from "./color/color-mkhighlight.ts";
 import { token } from "./color/color-token.ts";
+import { difficultyItem } from "./difficulty.ts";
 import { type FakeDrawState, fakeGame } from "./fake-game.ts";
 import type { Game } from "./game.ts";
 import { UI_UPDATE } from "./game.ts";
@@ -813,23 +814,8 @@ describe("Midend: deduction runs out only on an Unreasonable tier", () => {
     >;
     const g: typeof tiered = {
       ...tiered,
-      paramConfig: [
-        {
-          kw: "diff",
-          name: "Difficulty",
-          type: "choices",
-          choices: ["Easy", "Unreasonable"],
-          get: (p) => p.diff,
-          set: (p, v) => {
-            p.diff = v;
-          },
-        },
-      ],
-      difficulty: {
-        tierOf: (p) => p.diff,
-        withTier: (p, diff) => ({ ...p, diff }),
-        solveAtCap: () => "unsolved",
-      },
+      paramConfig: [difficultyItem<TieredParams>(["Easy", "Unreasonable"], "diff")],
+      difficulty: { solveAtCap: () => "unsolved" },
       hint: () => ({ ok: false, error: DEDUCTION_EXHAUSTED }),
     };
     return g as unknown as typeof fakeGame;
@@ -877,21 +863,8 @@ describe("Midend: a board carries the tier it needs", () => {
     >;
     const g: typeof tiered = {
       ...tiered,
-      paramConfig: [
-        {
-          kw: "diff",
-          name: "Difficulty",
-          type: "choices",
-          choices: ["Easy", "Normal", "Hard"],
-          get: (p) => p.diff,
-          set: (p, v) => {
-            p.diff = v;
-          },
-        },
-      ],
+      paramConfig: [difficultyItem<TieredParams>(["Easy", "Normal", "Hard"], "diff")],
       difficulty: {
-        tierOf: (p) => p.diff,
-        withTier: (p, diff) => ({ ...p, diff }),
         solveAtCap: (_p, desc, cap) =>
           cap >= Number(desc.split("-")[1]) ? "solved" : "unsolved",
       },

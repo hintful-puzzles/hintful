@@ -34,10 +34,4 @@ hint plans again from there.
 
 ## Fifteen parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares. Both must be at least 2. Every board
-	dealt can be solved, whatever its size.</dd>
-</dl>
+{{parameters}}

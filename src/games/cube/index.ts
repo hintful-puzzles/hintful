@@ -12,7 +12,7 @@
 
 import { rejectMove } from "../../engine/assert-never.ts";
 import type { Game, UiUpdate } from "../../engine/game.ts";
-import { parseConfigInt } from "../../engine/params.ts";
+import { numberItem } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -51,6 +51,7 @@ import {
   decodeParams,
   defaultParams,
   encodeParams,
+  hasPresetSize,
   newState,
   presets,
   validateDesc,
@@ -321,37 +322,26 @@ export const cubeGame: Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawSta
       name: "Type of solid",
       type: "choices",
       choices: ["Tetrahedron", "Cube", "Octahedron", "Icosahedron"],
+      doc: "Which solid you roll: a <em>Tetrahedron</em>, a <em>Cube</em>, an <em>Octahedron</em> or an <em>Icosahedron</em>. The cube rolls on a grid of squares; the other three roll on a grid of triangles. There are always as many blue squares as the solid has faces.",
+      label: { slot: "kind" },
       get: (p) => p.solid,
       set: (p, v) => {
         p.solid = v;
       },
     },
-    {
-      kw: "width-top",
-      name: "Width / top",
-      type: "string",
-      get: (p) => String(p.d1),
-      set: (p, v) => {
-        p.d1 = parseConfigInt(v);
+    numberItem<CubeParams>("width-top", "Width / top", "d1", {
+      doc: "For the cube, the width of the grid in squares. For the other solids, the grid is a patch of triangles (six-sided, or a single large triangle when the other number is 0), and this sets the length of its top edge.",
+      bounds: { min: 0 },
+      label: {
+        slot: "size",
+        words: (p) => (hasPresetSize(p) ? null : `${p.d1}x${p.d2}`),
       },
-    },
-    {
-      kw: "height-bottom",
-      name: "Height / bottom",
-      type: "string",
-      get: (p) => String(p.d2),
-      set: (p, v) => {
-        p.d2 = parseConfigInt(v);
-      },
-    },
+    }),
+    numberItem<CubeParams>("height-bottom", "Height / bottom", "d2", {
+      doc: "For the cube, the height of the grid in squares. For the other solids, this sets the length of the patch's bottom edge. On a grid of squares both numbers must be at least 2; on a grid of triangles one of them may be 0, as long as the other is not. Either way the grid needs room for every blue square with a square to spare for the solid to start on.",
+      bounds: { min: 0 },
+    }),
   ],
-  // Keys match the `cube` template in augmentation.ts; `type-of-solid` is the
-  // zero-based SolidType index.
-  describeParams: (p) => ({
-    "type-of-solid": p.solid,
-    "width-top": p.d1,
-    "height-bottom": p.d2,
-  }),
 
   newDesc,
   validateDesc,

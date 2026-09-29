@@ -12,6 +12,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
+import { paramsError } from "../../engine/params.ts";
 import { CURSOR_DOWN, CURSOR_RIGHT, LEFT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
@@ -40,7 +41,6 @@ import {
   status,
   TARGET,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 type SokobanMidend = Midend<
@@ -109,9 +109,13 @@ describe("Sokoban params", () => {
   });
 
   it("rejects boards below 4x4", () => {
-    expect(validateParams({ w: 3, h: 10 }, true)).toMatch(/at least 4/);
-    expect(validateParams({ w: 10, h: 3 }, true)).toMatch(/at least 4/);
-    expect(validateParams({ w: 4, h: 4 }, true)).toBeNull();
+    expect(paramsError(sokobanGame, { w: 3, h: 10 }, true)).toBe(
+      "Width must be at least 4",
+    );
+    expect(paramsError(sokobanGame, { w: 10, h: 3 }, true)).toBe(
+      "Height must be at least 4",
+    );
+    expect(paramsError(sokobanGame, { w: 4, h: 4 }, true)).toBeNull();
   });
 });
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { difficultyTiers } from "../../engine/difficulty.ts";
 import { UI_UPDATE } from "../../engine/index.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   LEFT_BUTTON,
@@ -140,10 +141,10 @@ describe("Galaxies game flow", () => {
     expect(galaxiesGame.decodeParams(galaxiesGame.encodeParams(p, true))).toEqual(p);
   });
 
-  it("validateParams rejects too-small boards", () => {
+  it("refuses too-small boards", () => {
     expect(
-      galaxiesGame.validateParams({ w: 2, h: 2, diff: GalaxiesDiff.Normal }, true),
-    ).toContain("at least 3");
+      paramsError(galaxiesGame, { w: 2, h: 2, diff: GalaxiesDiff.Normal }, true),
+    ).toBe("Width must be at least 3");
   });
 
   it("names a tier in the status bar and the refusal with the menu's words", () => {
@@ -157,8 +158,8 @@ describe("Galaxies game flow", () => {
     expect(galaxiesGame.statusbarText?.(s, galaxiesGame.newUi(s))).toBe(
       `Difficulty ${tiers[0]}.`,
     );
-    expect(galaxiesGame.validateParams({ ...p, diff: 7 as GalaxiesDiff }, true)).toBe(
-      `Difficulty must be ${tiers[0]} or ${tiers[1]}`,
+    expect(paramsError(galaxiesGame, { ...p, diff: 7 as GalaxiesDiff }, true)).toBe(
+      `Difficulty must be one of ${tiers[0]}, ${tiers[1]}`,
     );
   });
 

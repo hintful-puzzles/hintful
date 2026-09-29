@@ -27,7 +27,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
@@ -66,7 +66,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { ConfigValues, GameStatus, Point } from "../../engine/types.ts";
+import type { GameStatus, Point } from "../../engine/types.ts";
 import { newBoatsDesc, validateParams } from "./generator.ts";
 import { type BoatsFiring, type BoatsSquare, deduceBoatsPlan } from "./hint-solver.ts";
 import { type BoatsMarks, say } from "./hint-text.ts";
@@ -103,7 +103,6 @@ import {
   newUi,
   PRESETS,
   presetParams,
-  presetTitle,
   SHIP_VAGUE,
   STATUS_COMPLETE,
   textFormat,
@@ -115,10 +114,7 @@ import { adjustShips, validateFullState } from "./validate.ts";
 function presets(): PresetMenu<BoatsParams> {
   return {
     title: "Boats",
-    submenu: PRESETS.map((_, i) => {
-      const p = presetParams(i);
-      return { title: presetTitle(p), params: p };
-    }),
+    submenu: PRESETS.map((_, i) => ({ params: presetParams(i) })),
   };
 }
 
@@ -554,8 +550,6 @@ function fleetConfigString(p: BoatsParams): string {
  */
 const difficulty: DifficultyContract<BoatsParams> = {
   nonMonotone: true,
-  tierOf: (p) => p.diff,
-  withTier: (p, tier) => ({ ...p, diff: tier }),
   solveAtCap: (p, desc, cap) => {
     const result = solveBoats(boardOf(newState(p, desc)), cap);
     return result.kind === "solved"
@@ -584,22 +578,19 @@ export const boatsGame: Game<
   decodeParams,
   validateParams,
 
-  describeParams: (p): ConfigValues => ({
-    width: String(p.w),
-    height: String(p.h),
-    "fleet-size": String(p.fleet),
-    difficulty: p.diff,
-    "remove-numbers": p.strip ? 1 : 0,
-    "fleet-configuration": fleetConfigString(p),
-  }),
-
   transposeParams: transposeDimensions(),
   paramConfig: [
-    ...dimensionParamConfig<BoatsParams>(),
+    ...dimensionParamConfig<BoatsParams>({
+      doc: "Size of the grid in squares.",
+      bounds: { min: 2, max: 99 },
+    }),
     {
       kw: "fleet-size",
       name: "Fleet size",
       type: "string",
+      doc: "The size of the largest possible boat. It cannot be larger than both the width and the height.",
+      bounds: { min: 1, max: 9 },
+      label: { slot: "tail", words: (p) => `size ${p.fleet}` },
       get: (p) => String(p.fleet),
       set: (p, v) => {
         p.fleet = parseConfigInt(v);
@@ -612,25 +603,23 @@ export const boatsGame: Game<
       kw: "fleet-configuration",
       name: "Fleet configuration",
       type: "string",
+      doc: "Customize the fleet by entering a list of numbers. Each number indicates how many times a boat of a specific size appears. For example, the configuration <code>3,2,1</code> represents 3 boats of size 1, 2 boats of size 2, and 1 boat of size 3.",
+      label: {
+        slot: "tail",
+        words: (p) => (fleetConfigString(p) ? `fleet ${fleetConfigString(p)}` : null),
+      },
       get: fleetConfigString,
       set: (p, v) => {
         p.fleetData = v === "" ? defaultFleet(p.fleet) : decodeFleet(v, p.fleet);
       },
     },
-    {
-      kw: "difficulty",
-      name: "Difficulty",
-      type: "choices",
-      choices: [...DIFF_NAMES],
-      get: (p) => p.diff,
-      set: (p, v) => {
-        p.diff = v;
-      },
-    },
+    difficultyItem(DIFF_NAMES, "diff"),
     {
       kw: "remove-numbers",
       name: "Remove numbers",
       type: "boolean",
+      doc: "When enabled, the difficulty is increased by hiding certain number clues.",
+      label: { slot: "tail", words: (p) => (p.strip ? "hidden clues" : null) },
       get: (p) => p.strip,
       set: (p, v) => {
         p.strip = v;

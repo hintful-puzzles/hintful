@@ -1,10 +1,7 @@
 import { describe, expect, it } from "vitest";
-import {
-  DIFF_EASY,
-  clueChar as magnetsClueChar,
-  validateParams as magnetsValidateParams,
-} from "../games/magnets/state.ts";
-import { validateParams as singlesValidateParams } from "../games/singles/state.ts";
+import { magnetsGame } from "../games/magnets/index.ts";
+import { DIFF_EASY, clueChar as magnetsClueChar } from "../games/magnets/state.ts";
+import { singlesGame } from "../games/singles/index.ts";
 import {
   c2n,
   c2nUpper,
@@ -13,6 +10,7 @@ import {
   n2cUpper,
   UPPER_ALPHABET_SIZE,
 } from "./desc-alphabet.ts";
+import { paramsError } from "./params.ts";
 
 describe("the desc digit alphabet", () => {
   it("round-trips every value it covers", () => {
@@ -63,10 +61,14 @@ describe("the desc digit alphabet", () => {
     };
 
     const singlesMax = largest((n) =>
-      singlesValidateParams({ w: n, h: n, diff: "easy" }, true),
+      paramsError(singlesGame, { w: n, h: n, diff: "easy" }, true),
     );
     const magnetsMax = largest((n) =>
-      magnetsValidateParams({ w: n, h: n, diff: DIFF_EASY, stripclues: false }, true),
+      paramsError(
+        magnetsGame,
+        { w: n, h: n, diff: DIFF_EASY, stripclues: false },
+        true,
+      ),
     );
 
     expect(singlesMax).toBeGreaterThan(10); // vacuity: a real board, not 2×2

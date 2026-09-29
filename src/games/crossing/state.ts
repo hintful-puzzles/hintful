@@ -88,15 +88,13 @@ export function decodeParams(s: string): CrossingParams {
  */
 const MAX_AREA = 225;
 
-/** Upstream `validate_params`, in its exact order: both dimensions ≥ 2, and at
- * least one of them ≥ 4 (a 3×3 board has no room for crossing runs) — plus the
- * generable-size ceiling upstream lacks (see {@link MAX_AREA}). The ceiling
+/** What upstream's `validate_params` checks beyond each dimension's own bound:
+ * at least one of them ≥ 4 (a 3×3 board has no room for crossing runs) — plus
+ * the generable-size ceiling upstream lacks (see {@link MAX_AREA}). The ceiling
  * applies only to a `full` validation, i.e. when a board is about to be
  * *generated*; a description that already exists stays playable at any size. */
 export function validateParams(p: CrossingParams, full: boolean): string | null {
   if (p.w < 4 && p.h < 4) return "The width or height must be at least 4";
-  if (p.w < 2) return "Width must be at least 2";
-  if (p.h < 2) return "Height must be at least 2";
   if (full && p.w * p.h > MAX_AREA)
     return `Width times height must be at most ${MAX_AREA}; larger boards cannot be generated`;
   return null;

@@ -188,7 +188,7 @@ export function decodeParams(s: string): SubsetsParams {
     pos = r.next;
   }
   // An ID with no `d` keeps the default tier (see `defaultParams`); an
-  // unrecognized char lands out of range so `validateParams` rejects it rather
+  // unrecognized char lands out of range so `paramsError` rejects it rather
   // than silently playing some other difficulty.
   if (s[pos] === "d" && pos + 1 < s.length) {
     const idx = DIFF_CHARS.indexOf(s[pos + 1]);
@@ -200,7 +200,6 @@ export function decodeParams(s: string): SubsetsParams {
 export function validateParams(p: SubsetsParams, _full: boolean): string | null {
   if (p.w !== 4 || p.h !== 4 || p.n !== 4)
     return "Currently only 4x4 puzzles are supported";
-  if (p.diff < 0 || p.diff >= DIFFCOUNT) return "Unknown difficulty rating";
   return null;
 }
 

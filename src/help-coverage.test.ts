@@ -20,6 +20,7 @@ import ts from "typescript";
 import { beforeAll, describe, expect, it } from "vitest";
 import { difficultyTiers } from "./engine/difficulty.ts";
 import { HINT_MARKS_PLACEHOLDER } from "./engine/hint-words.ts";
+import { PARAMETERS_PLACEHOLDER } from "./engine/param-help.ts";
 import { getTsGame, registeredGameIds } from "./engine/registry.ts";
 import { HINT_GAMES } from "./engine/testing/hint-games.ts";
 // Registers every ported game; `beforeAll` re-runs it in case a sibling file
@@ -78,13 +79,10 @@ describe("every game's page has the one skeleton", () => {
   // CONTENT: a heading proves a section exists and nothing about whether it
   // teaches the marks.
   //
-  // The parameters check is a content check, and a sound one, because it keys
-  // on the labels the Custom dialog itself shows: a field the dialog offers
-  // that the page never names is exactly the gap AGENTS.md § "Documentation"
-  // found in Unequal's Adjacent mode. A choice is held too when it is a word
-  // rather than a value ("Adjacent", not "5%"). Tier names are the exception,
-  // derived from the difficulty item the game already declares: they mean the
-  // same in every game and `features.md` says what, once.
+  // The parameters section is generated from `paramConfig`
+  // (`vite-plugins/parameters.ts`), so a page owes only the placeholder;
+  // `engine/params-declared.test.ts` holds each field's doc to naming its
+  // modes, which is where Unequal's Adjacent went unexplained.
   const hinted = new Set(HINT_GAMES.map(([id]) => id));
 
   function sections(page: string): string[] {
@@ -99,23 +97,8 @@ describe("every game's page has the one skeleton", () => {
     return next < 0 ? rest : rest.slice(0, next);
   }
 
-  /** What a page's parameters section must name, read off the dialog. */
-  function namesOwed(id: string): string[] {
-    const game = getTsGame(id);
-    if (!game) throw new Error(`${id} is not registered`);
-    const tiers = difficultyTiers(game);
-    const owed: string[] = [];
-    for (const item of game.paramConfig ?? []) {
-      owed.push(item.name);
-      if (item.type === "choices" && item.choices !== tiers)
-        owed.push(...item.choices.filter((c) => /[a-z]/i.test(c)));
-    }
-    return owed;
-  }
-
-  it("is not vacuous — the registry offered hinted games and dialog fields", () => {
+  it("is not vacuous — the registry offered hinted games", () => {
     expect(hinted.size).toBeGreaterThan(30);
-    expect(puzzleIds.flatMap(namesOwed).length).toBeGreaterThan(150);
   });
 
   it.each(puzzleIds)("%s: has its sections, in order", (id) => {
@@ -144,15 +127,16 @@ describe("every game's page has the one skeleton", () => {
     expect(page.includes(HINT_MARKS_PLACEHOLDER), `help/games/${id}.md`).toBe(bound);
   });
 
-  it.each(puzzleIds)("%s: names every field its Custom dialog offers", (id) => {
+  // The build refuses a page without it too; this says so before a ten-minute
+  // gate reaches `vite build`.
+  it.each(puzzleIds)("%s: its parameters section carries the generated list", (id) => {
     const name = puzzleDataMap[id].name;
     const section = parametersSection(
       helpPages[`../help/games/${id}.md`] ?? "",
       `${name} parameters`,
-    ).toLowerCase();
-    const missing = namesOwed(id).filter((n) => !section.includes(n.toLowerCase()));
-    expect(missing, `help/games/${id}.md § "${name} parameters" never names`).toEqual(
-      [],
+    );
+    expect(section.split(PARAMETERS_PLACEHOLDER), `help/games/${id}.md`).toHaveLength(
+      2,
     );
   });
 });
@@ -356,7 +340,10 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
   solve: { kind: "upstream", why: "Solve is upstream's, with upstream's meaning" },
   prefs: { kind: "upstream", why: "per-game preferences" },
   paramConfig: { kind: "upstream", why: "the Custom type dialog" },
-  describeParams: { kind: "upstream", why: "the type menu's label for a params set" },
+  validateParams: {
+    kind: "upstream",
+    why: "the Custom dialog's refusal, beside the ranges the Parameters section states",
+  },
   statusbarText: { kind: "upstream", why: "the status line" },
 
   // --- no player-visible surface of their own ---

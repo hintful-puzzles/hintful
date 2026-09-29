@@ -26,7 +26,7 @@ import {
   type RungContext,
   runLatinCandidatePlan,
 } from "../../engine/candidate-plan.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import {
   type Game,
@@ -52,7 +52,7 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import { parseConfigInt } from "../../engine/params.ts";
+import { numberItem, squareSize } from "../../engine/params.ts";
 import {
   candidateReadingPref,
   pencilKeepHighlightPref,
@@ -68,7 +68,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { ConfigValues, KeyLabel, Point, Size } from "../../engine/types.ts";
+import type { KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newGameDesc } from "./generator.ts";
 import { groupVocab, say } from "./hint-text.ts";
 import {
@@ -108,7 +108,6 @@ import {
   newState,
   newUi,
   PRESETS,
-  presetName,
   status,
   textFormat,
   toChar,
@@ -119,7 +118,7 @@ import {
 function presets(): PresetMenu<GroupParams> {
   return {
     title: "Group",
-    submenu: PRESETS.map((p) => ({ title: presetName(p), params: { ...p } })),
+    submenu: PRESETS.map((p) => ({ params: { ...p } })),
   };
 }
 
@@ -655,19 +654,10 @@ function refreshHintStep(
   );
 }
 
-// --- config / params summary -----------------------------------------------
-
-function describeParams(p: GroupParams): ConfigValues {
-  // Keys match the `group` template in `puzzle/augmentation.ts`.
-  return { "grid-size": String(p.w), difficulty: p.diff, "show-identity": p.id };
-}
-
 /** Group's difficulty contract (`engine/difficulty.ts`). `solveGroup` follows
  * the shared latin-family return convention — the difficulty reached, or one of
  * `latin.ts`'s sentinels — so `latinVerdict` reads it. */
 const difficulty: DifficultyContract<GroupParams> = {
-  tierOf: (p) => p.diff,
-  withTier: (p, tier) => ({ ...p, diff: tier }),
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
     return latinVerdict(solveGroup(s.grid.slice(), s.w, cap));
@@ -692,36 +682,25 @@ export const groupGame: Game<
   decodeParams,
   validateParams,
   paramConfig: [
-    {
-      kw: "size",
-      name: "Grid size",
-      type: "string",
-      get: (p) => String(p.w),
-      set: (p, v) => {
-        p.w = parseConfigInt(v);
-      },
-    },
-    {
-      kw: "difficulty",
-      name: "Difficulty",
-      type: "choices",
-      choices: [...DIFF_NAMES],
-      get: (p) => p.diff,
-      set: (p, v) => {
-        p.diff = v;
-      },
-    },
+    numberItem<GroupParams>("size", "Grid size", "w", {
+      doc: "How many elements the group has, which is also the width and height of the grid.",
+      // One letter per element.
+      bounds: { min: 3, max: 26 },
+      label: { slot: "size", words: squareSize("w") },
+    }),
+    difficultyItem(DIFF_NAMES, "diff"),
     {
       kw: "show-identity",
       name: "Show identity",
       type: "boolean",
+      doc: "When enabled, the identity is always <em>e</em>, and its row and column are filled in for you. When disabled, you have to work out which letter is the identity. Easy puzzles and 3×3 grids must show it.",
+      label: { slot: "tail", words: (p) => (p.id ? null : "identity hidden") },
       get: (p) => p.id,
       set: (p, v) => {
         p.id = v;
       },
     },
   ],
-  describeParams,
 
   newDesc: newGameDesc,
   validateDesc,

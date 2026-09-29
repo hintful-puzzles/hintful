@@ -37,7 +37,6 @@ import {
   type BoatsParams,
   blankBoard,
   DIFF_EASY,
-  DIFFCOUNT,
   EMPTY,
   encodeDesc,
   isShip,
@@ -154,27 +153,17 @@ export function fleetFits(p: BoatsParams): boolean {
 }
 
 /**
- * Upstream `validate_params`, check for check in upstream's order (the order
- * decides which message a doubly-invalid parameter set reports). Lives here
- * rather than with the other param code because the last check, the fleet fit,
- * *is* the generator.
+ * What upstream's `validate_params` checks beyond the fields' own bounds, which
+ * `paramsError` checks first. Lives here rather than with the other param code
+ * because the last check, the fleet fit, *is* the generator.
  */
-export function validateParams(p: BoatsParams, full: boolean): string | null {
+export function validateParams(p: BoatsParams, _full: boolean): string | null {
   const { w, h, fleet } = p;
 
-  if (full && p.diff >= DIFFCOUNT) return "Unknown difficulty level";
-  if (w > 99) return "Width is too high";
-  if (h > 99) return "Height is too high";
-  if (fleet < 1) return "Fleet size must be at least 1";
   if (fleet > w && fleet > h)
     return "Fleet size must be smaller than the width and height";
-  if (fleet > 9) return "Fleet size must be no more than 9";
-
   if (!p.fleetData.slice(0, fleet).some((n) => n !== 0))
     return "Fleet must contain at least 1 boat";
-
-  if (w < 2) return "Width must be at least 2";
-  if (h < 2) return "Height must be at least 2";
   if (!fleetFits(p)) return "Fleet does not fit into the grid";
   return null;
 }

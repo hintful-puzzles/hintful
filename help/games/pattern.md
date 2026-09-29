@@ -42,9 +42,4 @@ A few ideas are worth learning by name:
 
 ## Pattern parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares.</dd>
-</dl>
+{{parameters}}

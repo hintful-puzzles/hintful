@@ -23,12 +23,10 @@ export const G_NOLINEH = 0x0040;
 export const G_WARN = 0x0080;
 export const G_SWEEP = 0x1000;
 
-const MAX_BRIDGES = 4;
-
 export interface BridgesParams {
   w: number;
   h: number;
-  /** Max bridges per direction (1..MAX_BRIDGES). */
+  /** Max bridges per direction, one of the Custom dialog's choices (1..4). */
   maxb: number;
   /** Percentage of grid squares that are islands (generation). */
   islands: number;
@@ -135,10 +133,8 @@ export function encodeParams(p: BridgesParams, full: boolean): string {
 }
 
 export function validateParams(p: BridgesParams, full: boolean): string | null {
-  if (p.w < 3 || p.h < 3) return "Width and height must be at least 3";
   if (p.w > Math.floor(0x7fffffff / p.h))
     return "Width times height must not be unreasonably large";
-  if (p.maxb < 1 || p.maxb > MAX_BRIDGES) return "Too many bridges.";
   if (full) {
     if (p.islands <= 0 || p.islands > 30)
       return "%age of island squares must be between 1% and 30%";

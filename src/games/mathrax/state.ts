@@ -48,11 +48,13 @@ export function diffToLevel(d: MathraxDiff): number {
 export function diffFromLevel(level: number): MathraxDiff {
   return DIFFS[level] ?? "easy";
 }
+/** The tier index of `d`, or -1 for a letter `decodeParams` did not know: the
+ * difficulty item reads this, so its choice check refuses that letter. */
+export function diffLevel(d: MathraxDiff): number {
+  return DIFFS.indexOf(d);
+}
 function diffChar(d: MathraxDiff): string {
   return DIFF_CHARS[diffToLevel(d)];
-}
-export function diffName(d: MathraxDiff): string {
-  return DIFF_NAMES[diffToLevel(d)];
 }
 
 // --- clues -----------------------------------------------------------------
@@ -205,7 +207,8 @@ export function decodeParams(s: string): MathraxParams {
   if (s[i] === "d") {
     i++;
     // An unrecognized (or missing) letter leaves the difficulty invalid, which
-    // `validateParams` then rejects — faithful to `decode_params`.
+    // the difficulty item then refuses (`diffLevel`) — faithful to
+    // `decode_params`.
     const idx = i < s.length ? DIFF_CHARS.indexOf(s[i]) : -1;
     p.diff = idx >= 0 ? diffFromLevel(idx) : ("invalid" as MathraxDiff);
     if (i < s.length) i++;
@@ -223,9 +226,6 @@ export function decodeParams(s: string): MathraxParams {
 }
 
 export function validateParams(p: MathraxParams, full: boolean): string | null {
-  if (p.o < 3) return "Size must be at least 3";
-  if (p.o > 9) return "Size must be no more than 9";
-  if (DIFFS.indexOf(p.diff) < 0) return "Unknown difficulty rating";
   if (full && !p.options) return "At least one clue type must be enabled";
   // A 3x3 grid has only four intersections, and two of its four tiers have
   // nothing to grade with: over 3,000 candidate boards each, none needed Normal

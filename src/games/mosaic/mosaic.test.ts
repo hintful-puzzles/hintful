@@ -3,6 +3,8 @@
 // counting, status / status bar, text format, and input mapping.
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { describeParams, presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_RIGHT,
   CURSOR_SELECT,
@@ -30,7 +32,6 @@ import {
   statusbarText,
   textFormat,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 // 3×3 all-black image: every clue saturates its clipped neighborhood
@@ -87,15 +88,28 @@ describe("Mosaic params", () => {
 
   it("validates size bounds", () => {
     expect(
-      validateParams({ width: 2, height: 3, aggressive: true }, true),
-    ).toBeTruthy();
-    expect(validateParams({ width: 3, height: 3, aggressive: true }, true)).toBeNull();
+      paramsError(mosaicGame, { width: 2, height: 3, aggressive: true }, true),
+    ).toBe("Width must be at least 3");
     expect(
-      validateParams({ width: 101, height: 100, aggressive: true }, true),
-    ).toBeTruthy();
-    expect(
-      validateParams({ width: 100, height: 100, aggressive: true }, true),
+      paramsError(mosaicGame, { width: 3, height: 3, aggressive: true }, true),
     ).toBeNull();
+    expect(
+      paramsError(mosaicGame, { width: 101, height: 100, aggressive: true }, true),
+    ).toBeTruthy();
+    expect(
+      paramsError(mosaicGame, { width: 100, height: 100, aggressive: true }, true),
+    ).toBeNull();
+  });
+
+  it("names the generation mode only where it is not the size's default", () => {
+    const titles = (presetMenu(mosaicGame).submenu ?? []).map((m) => m.title);
+    expect(titles).toEqual(["3x3", "5x5", "10x10", "15x15", "25x25", "50x50"]);
+    expect(
+      describeParams(mosaicGame, { width: 50, height: 50, aggressive: true }),
+    ).toBe("50x50, slower generation");
+    expect(describeParams(mosaicGame, { width: 5, height: 5, aggressive: false })).toBe(
+      "5x5, faster generation",
+    );
   });
 });
 

@@ -6,6 +6,8 @@
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/midend.ts";
+import { presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   LEFT_BUTTON,
@@ -32,6 +34,7 @@ import {
 import {
   type ClustersFill,
   type ClustersMove,
+  type ClustersParams,
   type ClustersState,
   type ClustersUi,
   COLMASK,
@@ -48,8 +51,9 @@ import {
   newState,
   textFormat,
   validateDesc,
-  validateParams,
 } from "./state.ts";
+
+const check = (p: ClustersParams, full: boolean) => paramsError(clustersGame, p, full);
 
 const TS = 32;
 const BORDER = Math.floor(TS / 10);
@@ -114,45 +118,45 @@ describe("params", () => {
     expect(decodeParams("9x7")).toEqual({ w: 9, h: 7, diff: DIFF_EASY });
     expect(decodeParams("8")).toEqual({ w: 8, h: 8, diff: DIFF_EASY });
     // An unrecognized letter must not silently play some other difficulty.
-    expect(validateParams(decodeParams("9x7dq"), true)).toBe(
-      "Unknown difficulty rating",
+    expect(check(decodeParams("9x7dq"), true)).toBe(
+      `Difficulty must be one of ${DIFF_NAMES.join(", ")}`,
     );
   });
 
   it("rejects too-large then too-small (upstream order)", () => {
     const easy = (w: number, h: number) => ({ w, h, diff: DIFF_EASY });
-    expect(validateParams(easy(100, 100), true)).toBe("Puzzle is too large");
-    expect(validateParams(easy(1, 1), true)).toBe("Puzzle is too small");
-    expect(validateParams(easy(7, 7), true)).toBeNull();
+    expect(check(easy(100, 100), true)).toBe("Puzzle is too large");
+    expect(check(easy(1, 1), true)).toBe("Puzzle is too small");
+    expect(check(easy(7, 7), true)).toBeNull();
   });
 
   it("rejects the two shapes that have no puzzle at any difficulty", () => {
     // 1x2 and 2x2 pass upstream's area check and generate nothing.
     const easy = (w: number, h: number) => ({ w, h, diff: DIFF_EASY });
     const tooThin = "Width or height must be at least three";
-    expect(validateParams(easy(1, 2), true)).toBe(tooThin);
-    expect(validateParams(easy(2, 1), true)).toBe(tooThin);
-    expect(validateParams(easy(2, 2), true)).toBe(tooThin);
+    expect(check(easy(1, 2), true)).toBe(tooThin);
+    expect(check(easy(2, 1), true)).toBe(tooThin);
+    expect(check(easy(2, 2), true)).toBe(tooThin);
     // Their immediate neighbors do have puzzles and must stay playable.
-    expect(validateParams(easy(1, 3), true)).toBeNull();
-    expect(validateParams(easy(2, 3), true)).toBeNull();
+    expect(check(easy(1, 3), true)).toBeNull();
+    expect(check(easy(2, 3), true)).toBeNull();
   });
 
   it("refuses Normal below the size where it binds — for generation only", () => {
     const refusal = "Normal needs a board of at least 12 squares, at least two wide";
     const tricky = (w: number, h: number) => ({ w, h, diff: DIFF_TRICKY });
-    expect(validateParams(tricky(2, 5), true)).toBe(refusal); // 10 squares
-    expect(validateParams(tricky(3, 3), true)).toBe(refusal); // 9 squares
+    expect(check(tricky(2, 5), true)).toBe(refusal); // 10 squares
+    expect(check(tricky(3, 3), true)).toBe(refusal); // 9 squares
     // A one-wide strip never binds however long it is: a cell there has at most
     // two neighbors, so there is no chain for the lookahead to follow.
-    expect(validateParams(tricky(1, 20), true)).toBe(refusal);
+    expect(check(tricky(1, 20), true)).toBe(refusal);
     // A saved game or a game ID carrying its own description still loads.
-    expect(validateParams(tricky(3, 3), false)).toBeNull();
+    expect(check(tricky(3, 3), false)).toBeNull();
     // The measured boundary, in both of its shapes.
-    expect(validateParams(tricky(2, 6), true)).toBeNull();
-    expect(validateParams(tricky(3, 4), true)).toBeNull();
+    expect(check(tricky(2, 6), true)).toBeNull();
+    expect(check(tricky(3, 4), true)).toBeNull();
     // …and a refused size is fine at Easy.
-    expect(validateParams({ w: 3, h: 3, diff: DIFF_EASY }, true)).toBeNull();
+    expect(check({ w: 3, h: 3, diff: DIFF_EASY }, true)).toBeNull();
   });
 });
 
@@ -182,12 +186,12 @@ describe("difficulty tiers", () => {
   });
 
   it("every preset generates a board at exactly the tier it names", () => {
-    const menu = clustersGame.presets().submenu ?? [];
+    const menu = presetMenu(clustersGame).submenu ?? [];
     expect(menu.length).toBe(8);
     for (const entry of menu) {
       const p = entry.params;
       if (!p) throw new Error("preset menu entry without params");
-      expect(validateParams(p, true)).toBeNull();
+      expect(check(p, true)).toBeNull();
       // Read the game's own tier list rather than restating the words: the
       // property is "the preset title carries the tier it generates at", and a
       // literal here would just be a second copy of the tier names to rot.

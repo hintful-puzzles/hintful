@@ -52,7 +52,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { ConfigValues, Point } from "../../engine/types.ts";
+import type { Point } from "../../engine/types.ts";
 import { newClustersDesc } from "./generator.ts";
 import { type Marked, say } from "./hint-text.ts";
 import {
@@ -381,8 +381,6 @@ function hintKeepTrack(
  * `solverRecurse`), which is why `solvableAtExactlyTier` asks the cheap rung
  * first — the deeper solve resumes from that same fixpoint. */
 const difficulty: DifficultyContract<ClustersParams> = {
-  tierOf: (p) => p.diff,
-  withTier: (p, tier) => ({ ...p, diff: tier }),
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
     const grid = s.grid.slice();
@@ -407,12 +405,6 @@ export const clustersGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
-
-  describeParams: (p): ConfigValues => ({
-    width: String(p.w),
-    height: String(p.h),
-    difficulty: p.diff,
-  }),
   transposeParams: transposeDimensions(),
   paramConfig,
 

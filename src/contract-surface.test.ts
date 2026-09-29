@@ -52,9 +52,10 @@
  * destination.
  *
  * The price is a false pass when an unrelated type has a field of the same
- * name, and it is real: `config["difficulty"]` in `augmentation.ts` is a
- * `ConfigValues` lookup with nothing to do with `Game.difficulty`, and counting
- * it made `difficulty` read as production-consumed — which is why the
+ * name, and it was real: the type header's retired formatters looked up
+ * `config["difficulty"]` in a `ConfigValues` record with nothing to do with
+ * `Game.difficulty`, and counting it made `difficulty` read as
+ * production-consumed — which is why the
  * element-access branch is not here. So the errors run one way: this can pass a
  * member that only looks consumed, never fail one that is genuinely read.
  */

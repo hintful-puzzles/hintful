@@ -49,25 +49,20 @@ export function defaultParams(): FifteenParams {
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<FifteenParams>[] =
-  dimensionParamConfig<FifteenParams>();
+  dimensionParamConfig<FifteenParams>({
+    doc: "Size of the grid in squares. Every board dealt can be solved, whatever its size.",
+    bounds: { min: 2 },
+  });
 
 /** `WxH`, with upstream's square fallback: a bare `W` is a W×W board. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
 ]);
 
-export function validateParams(p: FifteenParams, _full: boolean): string | null {
-  if (p.w < 2 || p.h < 2) return "Width and height must both be at least two";
-  return null;
-}
-
 // --- presets ----------------------------------------------------------
 
 export function presets() {
-  return {
-    title: "Type",
-    submenu: [{ title: "4×4", params: { w: 4, h: 4 } }],
-  };
+  return { title: "Type", submenu: [{ params: { w: 4, h: 4 } }] };
 }
 
 // --- completion / parity ----------------------------------------------

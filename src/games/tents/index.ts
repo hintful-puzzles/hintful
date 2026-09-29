@@ -381,8 +381,6 @@ function badLinks(state: TentsState, soln: Int8Array): number[] {
 
 /** Tents' difficulty contract (`engine/difficulty.ts`). */
 const difficulty: DifficultyContract<TentsParams> = {
-  tierOf: (p) => p.diff,
-  withTier: (p, tier) => ({ ...p, diff: tier }),
   solveAtCap: (p, desc, cap) => {
     const { ret } = solveFromClues(newState(p, desc), cap);
     return ret === 1 ? "solved" : ret === 0 ? "impossible" : "unsolved";
@@ -407,11 +405,6 @@ export const tentsGame: Game<
   validateParams,
   transposeParams: transposeDimensions(),
   paramConfig,
-  describeParams: (p) => ({
-    width: String(p.w),
-    height: String(p.h),
-    difficulty: p.diff,
-  }),
 
   newDesc: newTentsDesc,
   validateDesc,

@@ -12,7 +12,7 @@
  */
 
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import type {
   HintResult,
@@ -26,7 +26,7 @@ import { changedCells, trackTargets } from "../../engine/hint-track.ts";
 import { CELL, type MarkRef, type Narration } from "../../engine/hint-words.ts";
 import {
   dimensionParamConfig,
-  parseConfigInt,
+  numberItem,
   transposeDimensions,
 } from "../../engine/params.ts";
 import {
@@ -40,8 +40,13 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { SYMMETRY_CHOICES } from "../../engine/symmetric-blacks.ts";
-import type { ConfigValues, Point } from "../../engine/types.ts";
+import {
+  SYMM_NONE,
+  SYMM_ROT2,
+  SYMM_ROT4,
+  SYMMETRY_CHOICES,
+} from "../../engine/symmetric-blacks.ts";
+import type { Point } from "../../engine/types.ts";
 import { newLightupDesc, puzzleIsGood } from "./generator.ts";
 import { type Marked, say } from "./hint-text.ts";
 import {
@@ -479,8 +484,6 @@ function refreshHintStep(
  * already this predicate, spelled for the generator; it hands the cap to the
  * solver as a flag set (`flagsFromDifficulty`), not as a number. */
 const difficulty: DifficultyContract<LightupParams> = {
-  tierOf: (p) => p.difficulty,
-  withTier: (p, tier) => ({ ...p, difficulty: tier }),
   solveAtCap: (p, desc, cap) =>
     puzzleIsGood(newState(p, desc), cap) ? "solved" : "unsolved",
 };
@@ -502,45 +505,48 @@ export const lightupGame: Game<
   decodeParams,
   validateParams,
 
-  describeParams: (p): ConfigValues => ({
-    width: String(p.w),
-    height: String(p.h),
-    "percentage-of-black-squares": String(p.blackpc),
-    symmetry: p.symm,
-    difficulty: p.difficulty,
-  }),
   transposeParams: transposeDimensions(),
   paramConfig: [
-    ...dimensionParamConfig<LightupParams>(),
-    {
-      kw: "percentage-of-black-squares",
-      name: "%age of black squares",
-      type: "string",
-      get: (p) => String(p.blackpc),
-      set: (p, v) => {
-        p.blackpc = parseConfigInt(v);
+    ...dimensionParamConfig<LightupParams>({
+      doc: "Size of the grid in squares.",
+      bounds: { min: 2 },
+    }),
+    numberItem<LightupParams>(
+      "percentage-of-black-squares",
+      "%age of black squares",
+      "blackpc",
+      {
+        doc: "Roughly what share of the grid is black squares, from 5 to 100. If no good puzzle turns up with that many, the generator adds more, 5% at a time, up to 90%.",
+        label: {
+          slot: "tail",
+          words: (p) => (p.blackpc === 20 ? null : `${p.blackpc}% black squares`),
+        },
       },
-    },
+    ),
     {
       kw: "symmetry",
       name: "Symmetry",
       type: "choices",
       choices: SYMMETRY_CHOICES,
+      doc: "How the black squares are arranged: <em>None</em>, <em>2-way mirror</em> (the bottom half reflects the top), <em>2-way rotational</em> (the same after a half turn), <em>4-way mirror</em> (reflected both left to right and top to bottom) or <em>4-way rotational</em> (the same after a quarter turn). 4-way rotational needs a square grid, and both 4-way settings need a grid at least 3 squares across in one direction. Only the black squares follow the symmetry; the numbers in them need not.",
+      label: {
+        slot: "tail",
+        // The presets' own: 4-way rotational on the small square board, 2-way
+        // on the rest.
+        words: (p) => {
+          const usual = p.w === p.h && p.w * p.h < 50 ? SYMM_ROT4 : SYMM_ROT2;
+          if (p.symm === usual) return null;
+          return p.symm === SYMM_NONE
+            ? "no symmetry"
+            : (SYMMETRY_CHOICES[p.symm] ?? null);
+        },
+      },
       get: (p) => p.symm,
       set: (p, v) => {
         p.symm = v;
       },
     },
-    {
-      kw: "difficulty",
-      name: "Difficulty",
-      type: "choices",
-      choices: [...DIFF_NAMES],
-      get: (p) => p.difficulty,
-      set: (p, v) => {
-        p.difficulty = v;
-      },
-    },
+    difficultyItem(DIFF_NAMES, "difficulty"),
   ],
 
   newDesc: newLightupDesc,

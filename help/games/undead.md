@@ -66,11 +66,4 @@ undo if it breaks.
 
 ## Undead parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares: at least 3 each way, and at most 54 squares in all.</dd>
-	<dt>Difficulty</dt>
-	<dd>How hard the reasoning the puzzle needs may be (<a href="../features#difficulty">what the names mean</a>).</dd>
-</dl>
+{{parameters}}

@@ -23,13 +23,4 @@ started.
 
 ## Rectangles parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares.</dd>
-	<dt>Expansion factor</dt>
-	<dd>How much the board is stretched after it is built. The generator first divides a smaller grid into rectangles and then widens it to full size by stretching rows and columns at random, so a larger factor gives fewer, larger rectangles. 0 means no stretching.</dd>
-	<dt>Ensure unique solution</dt>
-	<dd>When enabled, the numbers are placed so the puzzle has exactly one solution. When disabled, the puzzle may have several, and any division that satisfies the numbers counts.</dd>
-</dl>
+{{parameters}}

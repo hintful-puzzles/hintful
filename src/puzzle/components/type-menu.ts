@@ -142,8 +142,8 @@ export class PuzzleTypeMenu extends SignalWatcher(LitElement) {
   }
 
   /** The parameter description as chips. Split on commas, which is how
-   * `augmentation.ts`'s `describeConfig` formatters join the parts — "7x7,
-   * Easy" is two facts, and two facts read better as two chips than as one
+   * `engine/param-label.ts` joins a label's qualifiers — "7x7 Normal, strip
+   * clues" is two facts, and two facts read better as two chips than as one
    * sentence with a comma in it. A game with nothing to say yet gets a single
    * "Type…" chip, so the control is never an empty target. */
   private renderChips() {

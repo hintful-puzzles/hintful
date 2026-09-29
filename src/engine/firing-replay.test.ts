@@ -347,7 +347,7 @@ describe("a recorded firing follows from the premise its steps name", () => {
         const game = gameOf(id);
         const audits: PremiseAudit[] = [];
         const boards = [
-          ...leafPresets(game.presets()).map((p) => ({
+          ...leafPresets(game).map((p) => ({
             params: p.params,
             desc: descOf(id, game, p),
           })),

@@ -12,7 +12,7 @@ import { assertNever } from "../../engine/assert-never.ts";
 import type { BorderHint } from "../../engine/border-grid-hint.ts";
 import { digitValue } from "../../engine/decimal.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
-import { dimensionParamConfig, parseConfigInt } from "../../engine/params.ts";
+import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
@@ -106,25 +106,21 @@ export function defaultParams(): PalisadeParams {
 export function presets(): PresetMenu<PalisadeParams> {
   return {
     title: "Size",
-    submenu: PRESETS.map((p) => ({
-      title: `${p.w} x ${p.h}, regions of size ${p.k}`,
-      params: { ...p },
-    })),
+    submenu: PRESETS.map((p) => ({ params: { ...p } })),
   };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<PalisadeParams>[] = [
-  ...dimensionParamConfig<PalisadeParams>(),
-  {
-    kw: "region-size",
-    name: "Region size",
-    type: "string",
-    get: (p) => String(p.k),
-    set: (p, v) => {
-      p.k = parseConfigInt(v);
-    },
-  },
+  ...dimensionParamConfig<PalisadeParams>({
+    doc: "Size of the grid in squares.",
+    bounds: { min: 1 },
+  }),
+  numberItem<PalisadeParams>("region-size", "Region size", "k", {
+    doc: "How many squares each region holds. It must divide the number of squares in the grid exactly, and be smaller than it. A size of 2 is allowed only on a grid one square wide or high.",
+    bounds: { min: 1 },
+    label: { slot: "tail", words: (p) => `regions of size ${p.k}` },
+  }),
 ];
 
 /** Upstream: `w = h = k = atoi(s)`, then optional `x<h>` and `n<k>` — so the
@@ -140,9 +136,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 export function validateParams(p: PalisadeParams, full: boolean): string | null {
   const { w, h, k } = p;
-  if (k < 1) return "Region size must be at least one";
-  if (w < 1) return "Width must be at least one";
-  if (h < 1) return "Height must be at least one";
   if (w > 0x7fffffff / h) return "Width times height must not be unreasonably large";
   const wh = w * h;
   if (wh % k) return "Region size must divide grid area";

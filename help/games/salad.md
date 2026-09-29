@@ -37,16 +37,5 @@ The hint speaks of *squares*, and a clue *sees* the first letter along its line.
 
 ## Salad parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu. 
-
-<dl>
-	<dt>Game mode</dt>
-	<dd>Switch between ABC End View and Number Ball mode.</dd>
-	<dt>Size (s*s)</dt>
-	<dd>Size of the grid in squares.</dd>
-	<dt>Symbols</dt>
-	<dd>The amount of different symbols that appear in each row.</dd>
-	<dt>Difficulty</dt>
-	<dd>Determine the difficulty of the generated puzzle. A Normal puzzle always needs a technique the Easy level does not have, so the setting you choose is the difficulty you get. Normal Number Ball puzzles are rare, so one can take a few seconds to appear.</dd>
-</dl>
+{{parameters}}
 

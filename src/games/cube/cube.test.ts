@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { describeParams, presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -20,7 +22,6 @@ import {
   encodeParams,
   newState,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 const PRESETS: CubeParams[] = [
@@ -73,15 +74,23 @@ describe("cube params", () => {
   });
 
   it("validates presets and rejects degenerate params", () => {
-    for (const p of PRESETS) expect(validateParams(p, true)).toBeNull();
+    for (const p of PRESETS) expect(paramsError(cubeGame, p, true)).toBeNull();
     // A 1x1 square grid is too small for the cube.
     expect(
-      validateParams({ solid: SolidType.Cube, d1: 1, d2: 1 }, true),
+      paramsError(cubeGame, { solid: SolidType.Cube, d1: 1, d2: 1 }, true),
     ).not.toBeNull();
     // Negative dimensions.
-    expect(
-      validateParams({ solid: SolidType.Cube, d1: -1, d2: 4 }, true),
-    ).not.toBeNull();
+    expect(paramsError(cubeGame, { solid: SolidType.Cube, d1: -1, d2: 4 }, true)).toBe(
+      "Width / top must be at least 0",
+    );
+  });
+
+  it("names the solid alone at its preset grid, and the grid otherwise", () => {
+    const titles = (presetMenu(cubeGame).submenu ?? []).map((e) => e.title);
+    expect(titles).toEqual(["Cube", "Tetrahedron", "Octahedron", "Icosahedron"]);
+    expect(describeParams(cubeGame, { solid: SolidType.Cube, d1: 5, d2: 5 })).toBe(
+      "5x5 Cube",
+    );
   });
 
   it("default params are the cube preset", () => {

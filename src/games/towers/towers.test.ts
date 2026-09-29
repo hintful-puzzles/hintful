@@ -10,6 +10,7 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
+import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -43,7 +44,6 @@ import {
   type TowersParams,
   type TowersState,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 function gen(w: number, diff: TowersParams["diff"], seed: string) {
@@ -71,9 +71,10 @@ describe("towers params codec", () => {
   });
 
   it("rejects out-of-range sizes", () => {
-    expect(validateParams({ w: 2, diff: "easy" }, true)).not.toBeNull();
-    expect(validateParams({ w: 10, diff: "easy" }, true)).not.toBeNull();
-    expect(validateParams({ w: 5, diff: "easy" }, true)).toBeNull();
+    const error = (p: TowersParams) => paramsError(towersGame, p, true);
+    expect(error({ w: 2, diff: "easy" })).toBe("Grid size must be at least 3");
+    expect(error({ w: 10, diff: "easy" })).toBe("Grid size must be at most 9");
+    expect(error({ w: 5, diff: "easy" })).toBeNull();
   });
 });
 

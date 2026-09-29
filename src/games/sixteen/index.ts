@@ -65,7 +65,6 @@ import {
   status,
   textFormat,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 // --- move logic -------------------------------------------------------
@@ -712,12 +711,8 @@ export const sixteenGame: Game<
   presets,
   encodeParams,
   decodeParams,
-  validateParams,
   transposeParams: transposeDimensions(),
   paramConfig,
-  describeParams: (p) => ({
-    "number-of-shuffling-moves": String(p.movetarget),
-  }),
 
   newDesc,
   validateDesc,

@@ -44,13 +44,4 @@ solution; the offending squares light up instead, exactly as they do for
 
 ## Tracks parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares, at least 4 each way.</dd>
-	<dt>Difficulty</dt>
-	<dd>How hard the reasoning the puzzle needs may be (<a href="../features#difficulty">what the names mean</a>).</dd>
-	<dt>Disallow consecutive 1 clues</dt>
-	<dd>Read the clues along the top from left to right and then down the right-hand side. With this on, no two clues next to each other in that run are both 1, and neither the first nor the last of them is a 1. Every clue is at least 1 either way.</dd>
-</dl>
+{{parameters}}

@@ -12,9 +12,14 @@ import {
   cappedSolveFor,
   type DifficultyContract,
   type DifficultyVerdict,
+  difficultyItem,
+  difficultyTiers,
   lowestSolvingCap,
   solvableAtExactlyTier,
+  tierNameOf,
   tierNames,
+  tierOf,
+  withTier,
 } from "./difficulty.ts";
 import { type FakeParams, fakeGame } from "./fake-game.ts";
 
@@ -97,33 +102,34 @@ describe("lowestSolvingCap", () => {
   });
 });
 
-describe("the contract over the fake game", () => {
-  // The fake `Game` has no difficulty of its own, which is the point: a
-  // contract can be laid over any params type, and these assertions are about
-  // the contract's own rules (purity, index round-tripping) rather than about
+describe("the difficulty item over the fake game", () => {
+  // The fake `Game` has no difficulty of its own, which is the point: the item
+  // can be laid over any params type, and these assertions are about the
+  // accessors derived from it (purity, index round-tripping) rather than about
   // any real game's tier semantics.
-  // The tier *names* are not the contract's to hold — they come off the game's
-  // custom-params form (`difficultyTiers`), which the fake game has none of.
-  // Only their count matters to the assertions below.
-  const TIERS = 3;
+  const tiered = { paramConfig: [difficultyItem<FakeParams>(tierNames(3), "target")] };
   const contract: DifficultyContract<FakeParams> = {
-    tierOf: (p) => Math.min(p.target, TIERS - 1),
-    withTier: (p, tier) => ({ ...p, target: tier }),
     solveAtCap: (_p, desc, cap) => (cap >= desc.length ? "solved" : "unsolved"),
   };
 
   it("round-trips every declared tier through withTier/tierOf", () => {
     const p = fakeGame.defaultParams();
-    for (let tier = 0; tier < TIERS; tier++) {
-      expect(contract.tierOf(contract.withTier(p, tier))).toBe(tier);
+    for (let tier = 0; tier < 3; tier++) {
+      expect(tierOf(tiered, withTier(tiered, p, tier))).toBe(tier);
     }
   });
 
   it("withTier is pure — the source params are never mutated", () => {
     const p = fakeGame.defaultParams();
     const before = { ...p };
-    contract.withTier(p, 2);
+    withTier(tiered, p, 2);
     expect(p).toEqual(before);
+  });
+
+  it("names the tier and labels a params set with it", () => {
+    const p = withTier(tiered, fakeGame.defaultParams(), 2);
+    expect(tierNameOf(tiered, p)).toBe("Tricky");
+    expect(difficultyTiers(tiered)).toEqual(["Easy", "Normal", "Tricky"]);
   });
 
   it("cappedSolveFor binds one board and leaves the cap free", () => {

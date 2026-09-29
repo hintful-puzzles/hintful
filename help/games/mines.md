@@ -32,13 +32,4 @@ To play with a keyboard, use the arrow keys to move the cursor. Press Enter to o
 
 ## Mines parameters
 
-These parameters are available from the ‘Custom type…’ option on the ‘Type’ menu.
-
-<dl>
-	<dt>Width, Height</dt>
-	<dd>Size of the grid in squares.</dd>
-	<dt>Mines</dt>
-	<dd>How many mines are hidden. Give a number, or a percentage such as <code>20%</code> of the grid's squares. There must be at least one, and at least nine squares without a mine, because none is ever placed in or next to the first square you open.</dd>
-	<dt>Ensure solubility</dt>
-	<dd>When this is on, the grid is laid out so that it can be solved by deduction from your first click onwards, without any guessing. It needs a grid more than 2 squares in each direction. When it is off, the mines are placed at random, and you may have to guess.</dd>
-</dl>
+{{parameters}}

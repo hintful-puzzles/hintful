@@ -4,6 +4,8 @@
  * completion, `findMistakes`, and the mistake render overlay.
  */
 import { describe, expect, it } from "vitest";
+import { describeParams, presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_UP,
   LEFT_BUTTON,
@@ -27,7 +29,6 @@ import {
   type RectParams,
   type RectState,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 const P = (over: Partial<RectParams> = {}): RectParams => ({
@@ -80,10 +81,18 @@ describe("rect params codec", () => {
   });
 
   it("rejects invalid params", () => {
-    expect(validateParams(P({ w: 1, h: 1 }), true)).not.toBeNull(); // area < 2
-    expect(validateParams(P({ w: 0, h: 5 }), true)).not.toBeNull();
-    expect(validateParams(P({ expandfactor: -1 }), true)).not.toBeNull();
-    expect(validateParams(P(), true)).toBeNull();
+    const error = (p: RectParams) => paramsError(rectGame, p, true);
+    expect(error(P({ w: 1, h: 1 }))).not.toBeNull(); // area < 2
+    expect(error(P({ w: 0, h: 5 }))).toBe("Width must be at least 1");
+    expect(error(P({ expandfactor: -1 }))).toBe("Expansion factor must be at least 0");
+    expect(error(P())).toBeNull();
+  });
+
+  it("labels a custom grid with its expansion and ambiguity", () => {
+    expect(
+      describeParams(rectGame, P({ w: 9, h: 7, expandfactor: 0.5, unique: false })),
+    ).toBe("9x7, 50% expansion, ambiguous");
+    expect(presetMenu(rectGame).submenu?.[0]?.title).toBe("7x7");
   });
 });
 

@@ -219,9 +219,9 @@ export const MODULES = [
       {
         within: "Midend.newGameFromId",
         why: "a game ID whose params fail validation is accepted",
-        find: "    const pErr = this.game.validateParams(params, generating);\n    if (pErr) return pErr;",
+        find: "    const pErr = paramsError(this.game, params, generating);\n    if (pErr) return pErr;",
         replace:
-          "    const pErr = this.game.validateParams(params, generating);\n    void pErr;",
+          "    const pErr = paramsError(this.game, params, generating);\n    void pErr;",
       },
       {
         // `bound-abcd-generable-sizes` D4: this argument was a literal `true`,

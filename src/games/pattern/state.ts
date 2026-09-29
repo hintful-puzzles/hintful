@@ -117,13 +117,16 @@ export function defaultParams(): PatternParams {
 export function presets(): PresetMenu<PatternParams> {
   return {
     title: "Pattern",
-    submenu: PRESETS.map((p) => ({ title: `${p.w}x${p.h}`, params: { ...p } })),
+    submenu: PRESETS.map((p) => ({ params: { ...p } })),
   };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<PatternParams>[] =
-  dimensionParamConfig<PatternParams>();
+  dimensionParamConfig<PatternParams>({
+    doc: "Size of the grid in squares.",
+    bounds: { min: 1 },
+  });
 
 /** `WxH`, with upstream's square fallback: a bare `W` is a W×W board. */
 export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
@@ -131,7 +134,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 export function validateParams(p: PatternParams, _full: boolean): string | null {
-  if (p.w <= 0 || p.h <= 0) return "Width and height must both be at least one";
   if (p.w > Number.MAX_SAFE_INTEGER / p.h) {
     return "Width times height must not be unreasonably large";
   }

@@ -109,7 +109,7 @@ describe("solo solve", () => {
   // `params#seed` id), and a misread payload still sets `completed`, so only a
   // generated board shows whether the solved grid is actually valid.
   it("solve fills a valid grid on a *generated* board, where aux is present", () => {
-    for (const preset of leafPresets(soloGame.presets())) {
+    for (const preset of leafPresets(soloGame)) {
       const me = new Midend(soloGame);
       const id = `${soloGame.encodeParams(preset.params, true)}#solve-aux`;
       expect(me.newGameFromId(id), `${preset.title}: could not deal ${id}`).toBeNull();

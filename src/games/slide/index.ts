@@ -29,7 +29,7 @@ import type {
 } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
-import { dimensionParamConfig, parseConfigInt } from "../../engine/params.ts";
+import { numberItem, parseConfigInt } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -64,11 +64,11 @@ import {
   cancelGrab,
   decodeParams,
   defaultParams,
-  describeParams,
   encodeParams,
   isBlock,
   isDist,
   MAINANCHOR,
+  MAXWID,
   newState,
   newUi,
   presets,
@@ -307,12 +307,27 @@ function solve(_orig: SlideState, curr: SlideState): SolveResult<SlideMove> {
 
 // --- params form ------------------------------------------------------
 
+/** Width and height are built one by one rather than from
+ * `dimensionParamConfig` because their bounds differ. */
 const paramConfig: ParamConfigItem<SlideParams>[] = [
-  ...dimensionParamConfig<SlideParams>(),
+  numberItem<SlideParams>("width", "Width", "w", {
+    doc: "Size of the board in squares, counting its wall. The whole board can have at most 48 squares: past that, working out whether a board can be solved takes more memory than a browser has to give.",
+    bounds: { min: 5, max: MAXWID },
+    label: { slot: "size", words: (p) => `${p.w}x${p.h}` },
+  }),
+  numberItem<SlideParams>("height", "Height", "h", {
+    doc: { with: "width" },
+    bounds: { min: 4 },
+  }),
   {
     kw: "solution-length-limit",
     name: "Solution length limit",
     type: "string",
+    doc: "The most moves the puzzle's shortest solution may take. The generator keeps joining blocks together only while the board can still be solved within this many moves, so a higher limit tends to give a harder puzzle. Enter a negative number for no limit at all.",
+    label: {
+      slot: "tail",
+      words: (p) => (p.maxmoves < 0 ? "no move limit" : `max ${p.maxmoves} moves`),
+    },
     get: (p) => String(p.maxmoves),
     set: (p, v) => {
       // `atoi`, as upstream's `custom_params` reads it: a blank field is 0,
@@ -338,7 +353,6 @@ export const slideGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
-  describeParams,
   paramConfig,
 
   newDesc: newSlideDesc,

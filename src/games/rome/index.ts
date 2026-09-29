@@ -65,7 +65,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { ConfigValues, KeyLabel, Point } from "../../engine/types.ts";
+import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newRomeDesc } from "./generator.ts";
 import {
   buildSteps,
@@ -124,7 +124,6 @@ import {
   STATUS_COMPLETE,
   STATUS_INVALID,
   status,
-  validateParams,
 } from "./state.ts";
 
 /**
@@ -603,8 +602,6 @@ function flashLength(
 /** Rome's difficulty contract (`engine/difficulty.ts`), judged from
  * {@link boardFromClues} so the verdict is about the puzzle alone. */
 const difficulty: DifficultyContract<RomeParams> = {
-  tierOf: (p) => p.diff,
-  withTier: (p, tier) => ({ ...p, diff: tier }),
   solveAtCap: (p, desc, cap) => {
     const ret = romeSolve(boardFromClues(newState(p, desc)), cap);
     if (ret === STATUS_COMPLETE) return "solved";
@@ -628,13 +625,6 @@ export const romeGame: Game<
   presets,
   encodeParams,
   decodeParams,
-  validateParams,
-
-  describeParams: (p): ConfigValues => ({
-    width: String(p.w),
-    height: String(p.h),
-    difficulty: p.diff,
-  }),
   transposeParams: transposeDimensions(),
   paramConfig,
 

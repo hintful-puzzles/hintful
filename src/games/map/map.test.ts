@@ -9,6 +9,8 @@ import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
+import { presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   LEFT_BUTTON,
   LEFT_RELEASE,
@@ -150,11 +152,14 @@ describe("map params codec", () => {
   });
 
   it("rejects out-of-range params", () => {
-    expect(
-      mapGame.validateParams({ w: 20, h: 15, n: 4, diff: 0 }, true),
-    ).not.toBeNull();
-    expect(mapGame.validateParams({ w: 3, h: 3, n: 30, diff: 0 }, true)).not.toBeNull();
-    expect(mapGame.validateParams(defaultParams(), true)).toBeNull();
+    const error = (p: MapParams) => paramsError(mapGame, p, true);
+    expect(error({ w: 20, h: 15, n: 4, diff: 0 })).toBe("Regions must be at least 5");
+    expect(error({ w: 3, h: 3, n: 30, diff: 0 })).toMatch(/Too many regions/);
+    expect(error(defaultParams())).toBeNull();
+  });
+
+  it("titles a preset with its tier after the size", () => {
+    expect(presetMenu(mapGame).submenu?.[0]?.title).toBe("15x20 Easy, 30 regions");
   });
 });
 

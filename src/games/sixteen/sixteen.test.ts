@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { raisedBevelWidth } from "../../engine/draw.ts";
 import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
 import type { HintStep } from "../../engine/index.ts";
+import { describeParams, presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   opsOfKind,
@@ -27,7 +29,6 @@ import {
   status,
   textFormat,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 // --- helpers ----------------------------------------------------------
@@ -87,14 +88,27 @@ describe("Sixteen params", () => {
   });
 
   it("validates minimum dimensions", () => {
-    expect(validateParams({ w: 1, h: 3, movetarget: 0 }, true)).toBeTruthy();
-    expect(validateParams({ w: 3, h: 1, movetarget: 0 }, true)).toBeTruthy();
-    expect(validateParams({ w: 2, h: 2, movetarget: 0 }, true)).toBeNull();
+    expect(paramsError(sixteenGame, { w: 1, h: 3, movetarget: 0 }, true)).toBe(
+      "Width must be at least 2",
+    );
+    expect(paramsError(sixteenGame, { w: 3, h: 1, movetarget: 0 }, true)).toBe(
+      "Height must be at least 2",
+    );
+    expect(paramsError(sixteenGame, { w: 2, h: 2, movetarget: 0 }, true)).toBeNull();
   });
 
   it("validates movetarget >= 0", () => {
-    expect(validateParams({ w: 3, h: 3, movetarget: -1 }, true)).toBeTruthy();
-    expect(validateParams({ w: 3, h: 3, movetarget: 0 }, true)).toBeNull();
+    expect(paramsError(sixteenGame, { w: 3, h: 3, movetarget: -1 }, true)).toBe(
+      "Number of shuffling moves must be at least 0",
+    );
+    expect(paramsError(sixteenGame, { w: 3, h: 3, movetarget: 0 }, true)).toBeNull();
+  });
+
+  it("labels its params by size, and a shuffle count when there is one", () => {
+    expect(describeParams(sixteenGame, { w: 4, h: 5, movetarget: 0 })).toBe("4x5");
+    expect(describeParams(sixteenGame, { w: 4, h: 5, movetarget: 30 })).toBe(
+      "4x5, 30 shuffles",
+    );
   });
 });
 
@@ -111,9 +125,19 @@ describe("Sixteen presets", () => {
     for (const entry of menu.submenu ?? []) {
       expect(entry.params).toBeDefined();
       if (entry.params) {
-        expect(validateParams(entry.params, true)).toBeNull();
+        expect(paramsError(sixteenGame, entry.params, true)).toBeNull();
       }
     }
+  });
+
+  it("titles presets by their size", () => {
+    expect(presetMenu(sixteenGame).submenu?.map((m) => m.title)).toEqual([
+      "3x3",
+      "3x4",
+      "4x4",
+      "4x5",
+      "5x5",
+    ]);
   });
 });
 

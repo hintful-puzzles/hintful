@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { describeParams } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { BACKSPACE, CURSOR_LEFT, CURSOR_RIGHT, DELETE } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
@@ -31,7 +33,6 @@ import {
   type UnrulyParams,
   type UnrulyState,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 function params(w2: number, h2: number, diff: number, unique = false): UnrulyParams {
@@ -73,11 +74,12 @@ describe("params", () => {
   });
 
   it("rejects invalid params", () => {
-    expect(validateParams(params(7, 8, DIFF_EASY), true)).toMatch(/even/);
-    expect(validateParams(params(4, 8, DIFF_EASY), true)).toMatch(/at least 6/);
-    expect(validateParams(params(8, 8, 99), true)).toMatch(/difficulty/i);
+    const error = (p: UnrulyParams) => paramsError(unrulyGame, p, true);
+    expect(error(params(7, 8, DIFF_EASY))).toMatch(/even/);
+    expect(error(params(4, 8, DIFF_EASY))).toBe("Width must be at least 6");
+    expect(error(params(8, 8, 99))).toMatch(/^Difficulty must be one of/);
     // 6-wide unique: at most A177790[3] = 14 distinct rows, so h2 = 16 is too tall.
-    expect(validateParams(params(6, 16, DIFF_EASY, true), true)).toMatch(/too tall/);
+    expect(error(params(6, 16, DIFF_EASY, true))).toMatch(/too tall/);
   });
 
   it("accepts the offered presets", () => {
@@ -85,8 +87,14 @@ describe("params", () => {
     for (const entry of menu.submenu ?? []) {
       const p = entry.params;
       expect(p).toBeDefined();
-      if (p) expect(validateParams(p, true)).toBeNull();
+      if (p) expect(paramsError(unrulyGame, p, true)).toBeNull();
     }
+  });
+
+  it("labels a unique-rows game as such", () => {
+    expect(describeParams(unrulyGame, params(8, 8, DIFF_EASY, true))).toMatch(
+      /^8x8 \S+, unique$/,
+    );
   });
 });
 

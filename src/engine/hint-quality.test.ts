@@ -41,7 +41,8 @@
  * this change's spec explicitly forbids.
  */
 import { describe, expect, it } from "vitest";
-import { difficultyTiers } from "./difficulty.ts";
+import { difficultyTiers, withTier } from "./difficulty.ts";
+import { paramsError } from "./params.ts";
 import { randomNew } from "./random/index.ts";
 import { bindingDefects } from "./testing/hint-binding.ts";
 import {
@@ -692,7 +693,7 @@ function untieredCases(
   id: string,
   game: AnyGame,
 ): { label: string; params: unknown }[] {
-  const all = leafPresets(game.presets()).map((e) => ({
+  const all = leafPresets(game).map((e) => ({
     label: `preset "${e.title}"`,
     params: e.params as unknown,
   }));
@@ -721,7 +722,7 @@ describe("no hint leaves a chain for the player to carry, at any tier", () => {
       }));
       let checked = 0;
       for (const { label, params } of cases) {
-        if (game.validateParams(params, true)) continue; // refused at this size
+        if (paramsError(game, params, true)) continue; // refused at this size
         for (const seed of SEEDS) {
           let board: { desc: string; aux?: string };
           try {
@@ -882,7 +883,7 @@ function lintCases(
   if (contract && tiers) {
     const base = firstLeaf(game.presets());
     for (const [tier, tierName] of tiers.entries()) {
-      add(`tier ${tier} ("${tierName}")`, contract.withTier(base, tier), SEEDS);
+      add(`tier ${tier} ("${tierName}")`, withTier(game, base, tier), SEEDS);
     }
     // Through `untieredCases`, so a search-planning game's sliced preset list
     // is sliced here too rather than quietly handing this rule the one board
@@ -892,7 +893,7 @@ function lintCases(
     if (last && top >= 0)
       add(
         "last preset at the hardest teachable tier",
-        contract.withTier(last.params, top),
+        withTier(game, last.params, top),
         SEEDS,
       );
   }
@@ -924,7 +925,7 @@ describe("hint narration stays readable at a glance", () => {
   for (const [name, game] of HINT_GAMES) {
     it(`${name}: every step within ${NARRATION_LIMIT} characters, or ledgered`, () => {
       for (const { label, params, seeds } of lintCases(name, game)) {
-        if (game.validateParams(params, true)) continue;
+        if (paramsError(game, params, true)) continue;
         for (const seed of seeds) {
           let board: { desc: string; aux?: string };
           try {

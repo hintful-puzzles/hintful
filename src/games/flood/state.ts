@@ -1,5 +1,6 @@
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { c2nUpper } from "../../engine/desc-alphabet.ts";
+import type { PresetMenu } from "../../engine/game.ts";
 import { parseDimensions } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
@@ -14,7 +15,7 @@ export const FILLY = 0;
 
 /** Upper limit on colors, from the count of distinct RGB values
  * upstream defines (`MAXCOLORS`). */
-const MAXCOLORS = 10;
+export const MAXCOLORS = 10;
 
 // --- types ------------------------------------------------------------
 
@@ -90,33 +91,31 @@ export function decodeParams(s: string): FloodParams {
 
 export function validateParams(p: FloodParams, _full: boolean): string | null {
   if (p.w * p.h < 2) return "Grid must contain at least two squares";
-  if (p.w < 1 || p.h < 1) return "Width and height must be at least one";
-  if (p.colors < 3 || p.colors > MAXCOLORS)
-    return `Must have between 3 and ${MAXCOLORS} colors`;
-  if (p.leniency < 0) return "Leniency must be non-negative";
   return null;
 }
 
 // --- presets ----------------------------------------------------------
 
-export function presets() {
-  const p = (
-    w: number,
-    h: number,
-    colors: number,
-    leniency: number,
-    title: string,
-  ) => ({ title, params: { w, h, colors, leniency } });
+export function presets(): PresetMenu<FloodParams> {
+  const p = (w: number, h: number, colors: number, leniency: number) => ({
+    params: { w, h, colors, leniency },
+  });
+  // Upstream's Easy/Medium/Hard are extra-move allowances, not tiers, so no
+  // field says them.
+  const named = (title: string, w: number, h: number, leniency: number) => ({
+    title,
+    ...p(w, h, 6, leniency),
+  });
   return {
     title: "Type",
     submenu: [
-      p(12, 12, 6, 5, "12x12 Easy"),
-      p(12, 12, 6, 2, "12x12 Medium"),
-      p(12, 12, 6, 0, "12x12 Hard"),
-      p(16, 16, 6, 2, "16x16 Medium"),
-      p(16, 16, 6, 0, "16x16 Hard"),
-      p(12, 12, 3, 0, "12x12, 3 colors"),
-      p(12, 12, 4, 0, "12x12, 4 colors"),
+      named("12x12 Easy", 12, 12, 5),
+      named("12x12 Medium", 12, 12, 2),
+      named("12x12 Hard", 12, 12, 0),
+      named("16x16 Medium", 16, 16, 2),
+      named("16x16 Hard", 16, 16, 0),
+      p(12, 12, 3, 0),
+      p(12, 12, 4, 0),
     ],
   };
 }

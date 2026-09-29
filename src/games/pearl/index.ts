@@ -11,7 +11,7 @@
  */
 
 import { c2nUpper } from "../../engine/desc-alphabet.ts";
-import type { DifficultyContract } from "../../engine/difficulty.ts";
+import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import type { Game, GamePref, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
@@ -344,8 +344,6 @@ const prefs: GamePref<PearlUi>[] = [
 
 /** `pearlSolve` returns 0 inconsistent, 1 unique, 2 ambiguous. */
 const difficulty: DifficultyContract<PearlParams> = {
-  tierOf: (p) => p.difficulty,
-  withTier: (p, tier) => ({ ...p, difficulty: tier }),
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
     const ret = pearlSolve(p.w, p.h, s.clues, new Uint8Array(p.w * p.h), cap, false);
@@ -371,33 +369,23 @@ export const pearlGame: Game<
   validateParams,
   transposeParams: transposeDimensions(),
   paramConfig: [
-    ...dimensionParamConfig<PearlParams>(),
-    {
-      kw: "difficulty",
-      name: "Difficulty",
-      type: "choices",
-      choices: [...DIFF_NAMES],
-      get: (p) => p.difficulty,
-      set: (p, v) => {
-        p.difficulty = v;
-      },
-    },
+    ...dimensionParamConfig<PearlParams>({
+      doc: "Size of the grid in squares. The harder of the two difficulties needs one of them to be at least 6.",
+      bounds: { min: 5 },
+    }),
+    difficultyItem(DIFF_NAMES, "difficulty"),
     {
       kw: "allow-unsoluble",
       name: "Allow unsoluble",
       type: "boolean",
+      doc: "Skip checking the puzzle at all: every pearl the generated loop allows is kept, and nothing makes sure the puzzle has only one solution or can be solved by reasoning. Such a board may have more than one loop that fits, and the difficulty setting has no effect on it.",
+      label: { slot: "tail", words: (p) => (p.nosolve ? "ambiguous" : null) },
       get: (p) => p.nosolve,
       set: (p, v) => {
         p.nosolve = v;
       },
     },
   ],
-  describeParams: (p) => ({
-    width: String(p.w),
-    height: String(p.h),
-    difficulty: p.difficulty,
-    "allow-unsoluble": p.nosolve ? 1 : 0,
-  }),
 
   newDesc,
   validateDesc,

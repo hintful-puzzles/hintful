@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { ParamConfigItem } from "./game.ts";
-import { atof, dimensionParamConfig, formatG, parseDimensions } from "./params.ts";
+import {
+  atof,
+  dimensionParamConfig,
+  formatG,
+  paramsError,
+  parseDimensions,
+} from "./params.ts";
 
 describe("parseDimensions", () => {
   it("parses a rectangular WxH prefix", () => {
@@ -103,16 +109,27 @@ describe("dimensionParamConfig", () => {
     return { width, height };
   }
 
+  const doc = "Size of the grid in squares.";
+
   it("emits Width then Height as text fields, on the C-compatible keywords", () => {
-    const cfg = dimensionParamConfig<Plain>();
+    const cfg = dimensionParamConfig<Plain>({ doc });
     expect(cfg.map((i) => [i.kw, i.name, i.type])).toEqual([
       ["width", "Width", "string"],
       ["height", "Height", "string"],
     ]);
   });
 
+  it("documents the pair once, and labels it WxH", () => {
+    const [width, height] = dimensionParamConfig<Plain>({ doc });
+    expect(width.doc).toBe(doc);
+    expect(height.doc).toEqual({ with: "width" });
+    expect(width.label?.slot).toBe("size");
+    expect(width.label?.words?.({ w: 7, h: 9 })).toBe("7x9");
+    expect(height.label).toBeUndefined();
+  });
+
   it("reads and writes w/h by default", () => {
-    const { width, height } = items(dimensionParamConfig<Plain>());
+    const { width, height } = items(dimensionParamConfig<Plain>({ doc }));
     const p: Plain = { w: 4, h: 6 };
     expect([width.get(p), height.get(p)]).toEqual(["4", "6"]);
     width.set(p, "11");
@@ -120,10 +137,10 @@ describe("dimensionParamConfig", () => {
     expect(p).toEqual({ w: 11, h: 9 });
   });
 
-  it("parses with atoi semantics, leaving the game's validateParams to object", () => {
+  it("parses with atoi semantics, leaving the bounds to object", () => {
     // Empty/garbage must become 0 — not NaN, which slips past every < / >
     // bound check a game's validateParams performs.
-    const { width } = items(dimensionParamConfig<Plain>());
+    const { width } = items(dimensionParamConfig<Plain>({ doc }));
     const p: Plain = { w: 4, h: 6 };
     width.set(p, "");
     expect(p.w).toBe(0);
@@ -137,12 +154,80 @@ describe("dimensionParamConfig", () => {
     // Mosaic (`width`/`height`) and Unruly (`w2`/`h2`) keep their own field
     // names; the helper is widened rather than the games renamed.
     const { width, height } = items(
-      dimensionParamConfig<Renamed>({ w: "width", h: "height" }),
+      dimensionParamConfig<Renamed>({ fields: { w: "width", h: "height" }, doc }),
     );
     const p: Renamed = { width: 3, height: 3, other: "untouched" };
     width.set(p, "20");
     height.set(p, "15");
     expect(p).toEqual({ width: 20, height: 15, other: "untouched" });
     expect([width.get(p), height.get(p)]).toEqual(["20", "15"]);
+  });
+});
+
+describe("paramsError", () => {
+  interface P {
+    w: number;
+    h: number;
+    mode: number;
+  }
+  const game = {
+    paramConfig: [
+      ...dimensionParamConfig<P>({ doc: "Size.", bounds: { min: 3, max: 10 } }),
+      {
+        kw: "mode",
+        name: "Mode",
+        type: "choices" as const,
+        choices: ["A", "B"],
+        doc: "A or B.",
+        get: (p: P) => p.mode,
+        set: (p: P, v: number) => {
+          p.mode = v;
+        },
+      },
+    ],
+    validateParams: (p: P) => (p.w * p.h > 50 ? "Too many squares" : null),
+  };
+
+  it("accepts params inside every bound", () => {
+    expect(paramsError(game, { w: 3, h: 10, mode: 1 }, true)).toBeNull();
+  });
+
+  it("names the field whose bound a value breaks, by its dialog label", () => {
+    expect(paramsError(game, { w: 2, h: 5, mode: 0 }, true)).toBe(
+      "Width must be at least 3",
+    );
+    expect(paramsError(game, { w: 5, h: 11, mode: 0 }, true)).toBe(
+      "Height must be at most 10",
+    );
+  });
+
+  it("refuses a value that is not a number at all", () => {
+    expect(paramsError(game, { w: Number.NaN, h: 5, mode: 0 }, true)).toBe(
+      "Width must be at least 3",
+    );
+  });
+
+  it("refuses a choice outside its list", () => {
+    expect(paramsError(game, { w: 5, h: 5, mode: 2 }, true)).toBe(
+      "Mode must be one of A, B",
+    );
+  });
+
+  it("loads a retired choice but will not generate one", () => {
+    const retiring = {
+      paramConfig: game.paramConfig.map((i) =>
+        i.kw === "mode" ? { ...i, retired: 1 } : i,
+      ),
+    };
+    expect(paramsError(retiring, { w: 5, h: 5, mode: 2 }, false)).toBeNull();
+    expect(paramsError(retiring, { w: 5, h: 5, mode: 2 }, true)).toBe(
+      "Mode must be one of A, B",
+    );
+    expect(paramsError(retiring, { w: 5, h: 5, mode: 3 }, false)).not.toBeNull();
+  });
+
+  it("asks the game only once the items are satisfied", () => {
+    expect(paramsError(game, { w: 6, h: 9, mode: 0 }, true)).toBe("Too many squares");
+    expect(paramsError({ paramConfig: [] }, {}, true)).toBeNull();
   });
 });

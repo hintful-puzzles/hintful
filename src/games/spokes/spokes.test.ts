@@ -12,6 +12,8 @@
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/midend.ts";
+import { describeParams, presetMenu } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_RIGHT,
   CURSOR_SELECT,
@@ -70,7 +72,6 @@ import {
   spokesPlace,
   textFormat,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 // A frozen 4×4 Easy board (the first fixture of the C differential), so every
@@ -146,19 +147,20 @@ describe("spokes params", () => {
   });
 
   it("rejects boards below 2x2 and an unknown difficulty letter", () => {
-    expect(validateParams({ w: 1, h: 4, diff: "easy" }, true)).toMatch(/Width/);
-    expect(validateParams({ w: 4, h: 1, diff: "easy" }, true)).toMatch(/Height/);
+    const error = (p: SpokesParams) => paramsError(spokesGame, p, true);
+    expect(error({ w: 1, h: 4, diff: "easy" })).toBe("Width must be at least 2");
+    expect(error({ w: 4, h: 1, diff: "easy" })).toBe("Height must be at least 2");
     // Upstream never checks this and would index its difficulty table out of
     // bounds; the port rejects it instead.
-    expect(validateParams(decodeParams("4x4dz"), true)).toMatch(/difficulty/);
-    expect(validateParams({ w: 2, h: 2, diff: "hard" }, true)).toBeNull();
+    expect(error(decodeParams("4x4dz"))).toMatch(/^Difficulty must be one of/);
+    expect(error({ w: 2, h: 2, diff: "hard" })).toBeNull();
   });
 
   // The top tier reads `Unreasonable` where upstream says `Hard`, but keeps the
   // `"hard"` key and the `h` character, so a game ID still names the same board
   // (the round-trip test above asserts it).
   it("offers the six upstream presets, defaulting to 6x6 Easy", () => {
-    const menu = spokesGame.presets();
+    const menu = presetMenu(spokesGame);
     // Every size crossed with every tier, in that order — asserted as the
     // *shape* rather than as six literal strings, because the tier words are the
     // collection's and come from `DIFF_NAMES`: a literal list here would be a
@@ -169,12 +171,10 @@ describe("spokes params", () => {
     expect(spokesGame.defaultParams()).toEqual({ w: 6, h: 6, diff: "easy" });
   });
 
-  it("describes params with the keys the config summary template reads", () => {
-    expect(spokesGame.describeParams?.({ w: 6, h: 4, diff: "tricky" })).toEqual({
-      width: "6",
-      height: "4",
-      difficulty: 1,
-    });
+  it("labels custom params as the presets are labeled", () => {
+    expect(describeParams(spokesGame, { w: 6, h: 4, diff: "tricky" })).toBe(
+      `6x4 ${DIFF_NAMES[1]}`,
+    );
   });
 });
 

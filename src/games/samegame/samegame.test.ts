@@ -2,6 +2,8 @@
 // gravity/completion, the two-click selection, and move execution.
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { describeParams } from "../../engine/param-label.ts";
+import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -20,7 +22,6 @@ import {
   snuggle,
   status,
   validateDesc,
-  validateParams,
 } from "./state.ts";
 
 const TS = 32; // matches PREFERRED_TILE_SIZE; border = 16.
@@ -78,21 +79,40 @@ describe("Same Game params", () => {
   });
 
   it("validates the soluble and random branches", () => {
-    expect(
-      validateParams({ w: 5, h: 5, ncols: 3, scoresub: 2, soluble: true }, true),
-    ).toBeNull();
+    const valid = (p: SamegameParams) => paramsError(samegameGame, p, true);
+    expect(valid({ w: 5, h: 5, ncols: 3, scoresub: 2, soluble: true })).toBeNull();
     // soluble needs ≥ 3 colors.
-    expect(
-      validateParams({ w: 5, h: 5, ncols: 2, scoresub: 2, soluble: true }, true),
-    ).not.toBeNull();
+    expect(valid({ w: 5, h: 5, ncols: 2, scoresub: 2, soluble: true })).not.toBeNull();
     // random needs area ≥ 2·ncols.
-    expect(
-      validateParams({ w: 2, h: 2, ncols: 3, scoresub: 2, soluble: false }, true),
-    ).not.toBeNull();
+    expect(valid({ w: 2, h: 2, ncols: 3, scoresub: 2, soluble: false })).not.toBeNull();
     // scoring system must be 1 or 2.
+    expect(valid({ w: 5, h: 5, ncols: 3, scoresub: 3, soluble: true })).toBe(
+      "Scoring system must be one of (n-1)², (n-2)²",
+    );
+    expect(valid({ w: 5, h: 5, ncols: 10, scoresub: 2, soluble: true })).toBe(
+      "No. of colors must be at most 9",
+    );
+  });
+
+  it("names only what departs from the defaults", () => {
     expect(
-      validateParams({ w: 5, h: 5, ncols: 3, scoresub: 3, soluble: true }, true),
-    ).not.toBeNull();
+      describeParams(samegameGame, {
+        w: 5,
+        h: 5,
+        ncols: 3,
+        scoresub: 2,
+        soluble: true,
+      }),
+    ).toBe("5x5, 3 colors");
+    expect(
+      describeParams(samegameGame, {
+        w: 5,
+        h: 5,
+        ncols: 3,
+        scoresub: 1,
+        soluble: false,
+      }),
+    ).toBe("5x5, 3 colors, alt. scoring, ambiguous");
   });
 });
 

@@ -1,5 +1,6 @@
 /** Tier-1 behavioral tests for the Magnets port. */
 import { describe, expect, it } from "vitest";
+import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { newMagnetsDesc } from "./generator.ts";
 import { magnetsGame } from "./index.ts";
@@ -38,8 +39,14 @@ describe("magnets params", () => {
   });
 
   it("rejects a 4x4 Normal board (needs a side >= 5)", () => {
-    expect(magnetsGame.validateParams(P(4, 4, DIFF_TRICKY), true)).not.toBeNull();
-    expect(magnetsGame.validateParams(P(5, 4, DIFF_TRICKY), true)).toBeNull();
+    expect(paramsError(magnetsGame, P(4, 4, DIFF_TRICKY), true)).not.toBeNull();
+    expect(paramsError(magnetsGame, P(5, 4, DIFF_TRICKY), true)).toBeNull();
+  });
+
+  it("bounds each side by what one clue character can count", () => {
+    expect(paramsError(magnetsGame, P(1, 6), true)).toBe("Width must be at least 2");
+    expect(paramsError(magnetsGame, P(6, 62), true)).toBe("Height must be at most 61");
+    expect(paramsError(magnetsGame, P(61, 6), true)).toBeNull();
   });
 
   it("all presets validate", () => {
@@ -53,7 +60,7 @@ describe("magnets params", () => {
       );
     };
     for (const p of walk(magnetsGame.presets())) {
-      expect(magnetsGame.validateParams(p, true)).toBeNull();
+      expect(paramsError(magnetsGame, p, true)).toBeNull();
     }
   });
 });
