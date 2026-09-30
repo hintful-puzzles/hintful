@@ -195,14 +195,13 @@ export default defineConfig({
     //    restores it in `afterAll`, and every file that reads the full registry
     //    re-ensures it in `beforeAll`;
     //  - **vitest's own per-worker module registry, which `vi.mock` writes
-    //    into.** This comment used to claim the registry was the only one. It
-    //    is not, and the omission cost a rejected commit: two files mocked
-    //    `store/saved-games.ts` with different factories, and whenever they
-    //    landed in one worker the loser silently got the winner's spies — four
-    //    assertions failing as "expected to be called once, got 0 times" on a
-    //    tree that had gated clean minutes earlier.
-    //    `src/no-duplicate-module-mocks.test.ts` now holds one mocking file per
-    //    module, which is what makes the claim above true rather than hopeful.
+    //    into.** A mock reaches only the modules evaluated after it, so it
+    //    missed whatever an earlier file in the worker had already loaded: two
+    //    files mocking one module got each other's spies, and a file mocking
+    //    the dialogs under `puzzle-screen.ts` lost them to any earlier file
+    //    importing the screen, on trees that had gated clean minutes earlier.
+    //    `src/no-module-mocks.test.ts` keeps `vi.mock` out of the suite; tests
+    //    spy on the real export, which every importer reads at call time.
     //
     // Verified: full suite green 3× under file-order shuffle
     // (`sequence.shuffle.files`) with isolation off. Note what that did *not*

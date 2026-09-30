@@ -1,7 +1,8 @@
 # localize-puzzle-screen-check-save-hang
 
-**Status: scaffolded, not started (2026-09-30).** Found while gating
-`afford-every-hint-action`, which changes nothing the failing tests reach.
+Found while gating `afford-every-hint-action`, which changes nothing the
+failing tests reach. What was found and done is `design.md`; the proposal below
+is as scaffolded.
 
 ## Why
 

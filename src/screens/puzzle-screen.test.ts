@@ -11,58 +11,57 @@
 // transitive Dexie users in puzzle-screen's import graph (e.g. `settings.ts`)
 // open cleanly instead of throwing under happy-dom.
 //
-// ONE FILE ON PURPOSE. Under `isolate: false` the module registry is shared per
-// worker, so two files mocking **the same module** race: whichever loads first
-// wins and the other silently gets someone else's spies, which is a green commit
-// rejected for where its files happened to be scheduled. Keeping every test that
-// mocks `store/saved-games.ts` and `dialogs/alert-dialog.ts` here is what avoids
-// the collision; `no-duplicate-module-mocks.test.ts` is what stops the next one.
+// NO `vi.mock` HERE, ON PURPOSE. Under `isolate: false` a worker keeps its
+// module graph from file to file, and a `vi.mock` reaches only the modules
+// evaluated after it. `help-command-links.test.ts` and
+// `puzzle-command-homes.test.ts` import this screen unmocked, so whenever either
+// ran first in the worker, `puzzle-screen.ts` and `quick-save-actions.ts` were
+// already bound to the real dialogs: eight tests failed, and one waited for a
+// player to dismiss a real modal. A spy on the real module's export is read at
+// call time by every importer however early it loaded, and `restoreAllMocks`
+// hands the real function back to the next file in the worker.
+// `no-module-mocks.test.ts` keeps `vi.mock` out of the suite.
 import "../test-setup/indexeddb.ts";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  type MockInstance,
+  vi,
+} from "vitest";
+import * as alertDialog from "../dialogs/alert-dialog.ts";
+import * as toast from "../dialogs/toast.ts";
+import { savedGames } from "../store/saved-games.ts";
 
-interface AlertOptions {
-  label?: string;
-  type?: string;
-  message?: unknown;
-}
+let showAlert: MockInstance<typeof alertDialog.showAlert>;
+let showToast: MockInstance<typeof toast.showToast>;
+let announce: MockInstance<typeof toast.announce>;
+let quickSave: MockInstance<typeof savedGames.quickSave>;
+let findMostRecentAutoSave: MockInstance<typeof savedGames.findMostRecentAutoSave>;
+let restoreAutoSavedGame: MockInstance<typeof savedGames.restoreAutoSavedGame>;
+let autoSaveGame: MockInstance<typeof savedGames.autoSaveGame>;
 
-// vi.mock factories are hoisted; share the spies via vi.hoisted.
-const {
-  showAlert,
-  showToast,
-  announce,
-  quickSave,
-  quickLoad,
-  hasQuickSave,
-  makeAutoSaveFilename,
-  findMostRecentAutoSave,
-  restoreAutoSavedGame,
-  autoSavedPuzzles,
-} = vi.hoisted(() => ({
-  showAlert: vi.fn(async (_options: AlertOptions) => undefined),
-  showToast: vi.fn((_options: AlertOptions) => undefined),
-  announce: vi.fn((_message: string) => undefined),
-  quickSave: vi.fn(async () => undefined),
-  quickLoad: vi.fn(async () => ({ found: true as boolean, error: undefined })),
-  hasQuickSave: vi.fn(() => true),
-  makeAutoSaveFilename: vi.fn(() => "autosave-1"),
-  findMostRecentAutoSave: vi.fn(async (_id: string) => null as string | null),
-  restoreAutoSavedGame: vi.fn(async () => false),
-  autoSavedPuzzles: new Set<string>(),
-}));
-vi.mock("../dialogs/alert-dialog.ts", () => ({ showAlert }));
-vi.mock("../dialogs/toast.ts", () => ({ showToast, announce }));
-vi.mock("../store/saved-games.ts", () => ({
-  savedGames: {
-    quickSave,
-    quickLoad,
-    hasQuickSave,
-    makeAutoSaveFilename,
-    findMostRecentAutoSave,
-    restoreAutoSavedGame,
-    autoSavedPuzzles,
-  },
-}));
+beforeEach(() => {
+  showAlert = vi.spyOn(alertDialog, "showAlert").mockResolvedValue(undefined);
+  showToast = vi.spyOn(toast, "showToast").mockReturnValue(undefined);
+  announce = vi.spyOn(toast, "announce").mockReturnValue(undefined);
+  quickSave = vi.spyOn(savedGames, "quickSave").mockResolvedValue(undefined);
+  vi.spyOn(savedGames, "quickLoad").mockResolvedValue({ found: true });
+  vi.spyOn(savedGames, "hasQuickSave").mockReturnValue(true);
+  vi.spyOn(savedGames, "makeAutoSaveFilename").mockReturnValue("autosave-1");
+  findMostRecentAutoSave = vi
+    .spyOn(savedGames, "findMostRecentAutoSave")
+    .mockResolvedValue(null);
+  restoreAutoSavedGame = vi
+    .spyOn(savedGames, "restoreAutoSavedGame")
+    .mockResolvedValue(false);
+  autoSaveGame = vi.spyOn(savedGames, "autoSaveGame").mockResolvedValue(undefined);
+});
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 // The settings store is deliberately NOT mocked: the board-choice tests assert
 // that a remembered board survives a reload, and a mocked store would assert
@@ -128,18 +127,6 @@ function stubBoard(screen: PuzzleScreen) {
 }
 
 describe("puzzle-screen: Check-&-Save command", () => {
-  beforeEach(() => {
-    showAlert.mockClear();
-    showToast.mockClear();
-    announce.mockClear();
-    quickSave.mockClear();
-    quickLoad.mockClear();
-    hasQuickSave.mockClear();
-  });
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   it("saves a clean board (0 mistakes) and confirms on the button, not in a popup", async () => {
     vi.useFakeTimers();
     try {
@@ -214,10 +201,6 @@ describe("puzzle-screen: Check-&-Save command", () => {
 });
 
 describe("puzzle-screen: Check without saving", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   /**
    * **The case this command exists for.** The quick-save slot is one per
    * puzzle, so the combined Check & save overwrites it. A player who saved
@@ -392,6 +375,9 @@ function makeLoadPuzzle(opts: { rejectId?: (id: string) => string | null } = {})
     // params, difficulty included).
     currentGameId: "",
     restoreGameId: "",
+    // A board freshly dealt: the screen autosaves only once a move is made.
+    totalMoves: 0,
+    isSolved: false,
     setPreferences: vi.fn(async () => undefined),
     setParams: vi.fn(async (_params: string) => null),
     // The flattened form, a submenu's heading before its members, as
@@ -447,17 +433,13 @@ async function load(
 }
 
 describe("which board a puzzle page opens with", () => {
-  // Scoped to this describe, not the file: the command tests above neither read
-  // the settings store nor these spies, and a top-level hook would make each of
-  // them pay for a fake-indexeddb round trip.
+  // Scoped to this describe, not the file: the command tests above never read
+  // the settings store, and a top-level hook would make each of them pay for a
+  // fake-indexeddb round trip.
   beforeEach(async () => {
     await settings.loaded;
     await settings.setLastGameId("abcd", null);
     await settings.setParams("abcd", null);
-    showAlert.mockClear();
-    autoSavedPuzzles.clear();
-    findMostRecentAutoSave.mockResolvedValue(null);
-    restoreAutoSavedGame.mockResolvedValue(false);
   });
 
   it("re-deals the board it last showed, when no move was ever made", async () => {
@@ -501,14 +483,10 @@ describe("which board a puzzle page opens with", () => {
     // assertion has something to be wrong about.
     expect(puzzle.currentGameId).not.toBe(puzzle.restoreGameId);
     expect(await settings.getLastGameId("abcd")).not.toBe(puzzle.currentGameId);
-  });
-
-  it("writes no autosave for it, so the home-screen badge stays honest", async () => {
-    // The reason this is a settings key and not a `SaveType.Auto` row: the home
-    // screen badges "game in progress" off `savedGames.autoSavedPuzzles`.
-    const puzzle = makeLoadPuzzle();
-    await load(puzzle);
-    expect(autoSavedPuzzles.has("abcd")).toBe(false);
+    // And no autosave for a board nobody has moved on, which is why the board
+    // is a settings key and not a `SaveType.Auto` row: the home screen badges
+    // "game in progress" off the autosaves.
+    expect(autoSaveGame).not.toHaveBeenCalled();
   });
 
   it("prefers an autosave, so a started game is restored rather than re-dealt", async () => {

@@ -37,6 +37,16 @@ only.** The tiers are codified in the
   build under vitest, so anything gated on `isServer` behaves as on a server
   even in `happy-dom`. Each module's header says what fails without it.
 
+**Stand in for a module with a spy, never a mock.** The suite runs with
+`isolate: false`, so a worker's module graph outlives each file, and `vi.mock`
+misses any importer an earlier file already loaded — which file ran first is
+the sequencer's choice, not yours. Spy on the real export in a `beforeEach`
+(`vi.spyOn(toast, "showToast")` after `import * as toast from …`, or
+`vi.spyOn(savedGames, "quickSave")` on a shared object) and restore in
+`afterEach`; the importer reads the export at call time, whenever it loaded.
+`src/no-module-mocks.test.ts` refuses `vi.mock`, `vi.doMock` and `vi.hoisted`;
+`src/screens/puzzle-screen.test.ts` is the exemplar.
+
 **A test that needs a specific board should find it deterministically, not by
 scanning further.** The idiom for reaching a specific deduction or board state
 without knowing its desc is a fixed-seed scan — loop ids, keep the first whose

@@ -32,13 +32,9 @@ import "../test-setup/indexeddb.ts";
 import { render, type TemplateResult } from "lit";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// The real `saved-games` store, deliberately, against `fake-indexeddb`.
-// `puzzle-screen.test.ts` already mocks that module, and under `isolate: false`
-// two files mocking one module race — whichever loads first wins and the other
-// silently gets someone else's spies (`no-duplicate-module-mocks.test.ts` is
-// what caught this on the first full run). Nothing here needs a saved game
-// anyway: `Back to last save` renders either way, disabled when there is none,
-// and a disabled row still has the `data-command` this file reads.
+// The real `saved-games` store, against `fake-indexeddb`. Nothing here needs a
+// saved game: `Back to last save` renders either way, disabled when there is
+// none, and a disabled row still has the `data-command` this file reads.
 
 import { PuzzleRail } from "../puzzle/components/rail.ts";
 import { PuzzleScreen } from "./puzzle-screen.ts";

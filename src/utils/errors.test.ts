@@ -15,13 +15,20 @@
  * event Vite fires, does the app reload rather than accuse itself, and does it
  * stop reloading if reloading is not helping?
  */
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-
-const reportError = vi.hoisted(() => vi.fn());
-vi.mock("../dialogs/crash-dialog.ts", () => ({ reportError }));
-
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  type MockInstance,
+  vi,
+} from "vitest";
+import * as crashDialog from "../dialogs/crash-dialog.ts";
 import { installErrorHandlers, StaleBuildError } from "./errors.ts";
 
+let reportError: MockInstance<typeof crashDialog.reportError>;
 /** The event Vite dispatches when a preloaded chunk fails to load. */
 function firePreloadError(message = "Failed to fetch dynamically imported module") {
   const event = new Event("vite:preloadError", { cancelable: true });
@@ -43,7 +50,7 @@ describe("a stale chunk after a deploy recovers by reloading", () => {
   });
 
   beforeEach(() => {
-    reportError.mockClear();
+    reportError = vi.spyOn(crashDialog, "reportError").mockResolvedValue(undefined);
     sessionStorage.clear();
     reload = vi.fn<() => void>();
     // happy-dom's `location` is not configurable wholesale; replacing just the
