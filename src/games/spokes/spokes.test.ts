@@ -433,7 +433,7 @@ describe("spokes input", () => {
     const state = newState(FIX, FIX_DESC);
     const ui = newUi();
     ui.cursor.visible = true;
-    expect(press(state, ui, CURSOR_SELECT, hub(0, 0))).toBe(UI_UPDATE);
+    expect(press(state, ui, CURSOR_SELECT, hub(0, 0))).toBeNull();
   });
 });
 

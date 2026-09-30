@@ -15,6 +15,7 @@ import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/midend.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
+  BACKSPACE,
   CURSOR_DOWN,
   CURSOR_RIGHT,
   CURSOR_SELECT,
@@ -468,12 +469,15 @@ describe("boats input", () => {
   it("rejects a no-op move rather than pushing a history entry", () => {
     const state = blankState();
     const ui = newUi();
-    // Clearing an already-empty square changes nothing.
+    // Clearing an already-empty line changes nothing.
     ui.dragFrom = "-";
     ui.dragTo = "-";
     ui.dragOk = true;
-    Object.assign(ui.drag, { live: true, sx: 0, sy: 0, ex: 0, ey: 0 });
-    expect(press(state, ui, 0, 0, LEFT_RELEASE)).toBe(UI_UPDATE);
+    Object.assign(ui.drag, { live: true, sx: 0, sy: 0, ex: 1, ey: 0 });
+    expect(press(state, ui, 1, 0, LEFT_RELEASE)).toBe(UI_UPDATE);
+    // So does erasing an empty square from the keyboard.
+    ui.cursor.visible = true;
+    expect(press(state, ui, 0, 0, BACKSPACE)).toBeNull();
   });
 
   it("places with the keyboard cursor and fills a line with Ctrl+arrow", () => {

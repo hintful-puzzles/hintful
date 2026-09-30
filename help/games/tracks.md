@@ -7,22 +7,14 @@ clues to the top and right of the grid. There are only straight and
 
 ## Controls
 
-Left-click on an edge between two squares to add a track segment between
-the two squares. Right-click on an edge to add a cross on the edge,
-indicating no track is possible there.
+A click near the middle of a square addresses the square, and a click
+near one of its sides addresses the edge there.
 
-Left-click in a square to add a color indicator showing that you know the
-square must contain a track, even if you don't know which edges it crosses
-yet. Right-click in a square to add a cross indicating it contains no
-track segment.
+{{controls}}
 
 Left- or right-drag between squares to lay a straight line of is-track or
 is-not-track indicators, useful for filling in rows or columns to match the
 clue.
-
-With the keyboard, the arrow keys move a cursor over the squares and the
-edges between them. Enter does what a left-click does to the square or
-edge under the cursor, and Space what a right-click does.
 
 ## Hints
 

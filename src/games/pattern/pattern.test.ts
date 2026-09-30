@@ -278,7 +278,10 @@ describe("pattern drag-paint skips placed marks", () => {
       );
     };
     expect(drag(3)).toMatchObject({ type: "fill", onlyBlank: true, w: 4 });
-    expect(drag(0)).toMatchObject({ type: "fill", onlyBlank: false, w: 1 });
+    // A drag that never left its square is a click, whose move overwrites.
+    const one = drag(0);
+    expect(one).toMatchObject({ type: "fill", w: 1 });
+    expect(one).not.toMatchObject({ onlyBlank: true });
   });
 
   // The tests above reach `interpretMove` only at the release, with the drag's

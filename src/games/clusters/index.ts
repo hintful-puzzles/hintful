@@ -24,7 +24,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { coord, fromCoord } from "../../engine/geometry.ts";
+import { coord } from "../../engine/geometry.ts";
 import { click, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   ALREADY_SOLVED,
@@ -36,12 +36,8 @@ import type { Narration } from "../../engine/hint-words.ts";
 import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
-  digitOf,
   gridCursorMove,
   isCursorMove,
-  isEraseKey,
   isMouseDown,
   isMouseDrag,
   isMouseRelease,
@@ -53,6 +49,14 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  digitKey,
+  ERASE_KEYS,
+  interpretTargetVerbs,
+  squareGrid,
+  type TargetVerb,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newClustersDesc } from "./generator.ts";
 import { type Marked, say } from "./hint-text.ts";
@@ -106,7 +110,7 @@ export interface ClustersMistake {
 }
 
 function newUi(_state: ClustersState): ClustersUi {
-  return { cursor: newCursor(), dragType: -1, drag: [] };
+  return { cursor: newCursor(), dragType: -1, dragButton: -1, drag: [] };
 }
 
 /** One step of a click's color cycle: empty, then `first`, then the other
@@ -115,6 +119,61 @@ function cycleFill(old: number, first: ClustersFill): ClustersFill {
   if (old === 0) return first;
   return old & first ? opposite(first) : 0;
 }
+
+/** A verb that paints the square `fill(old)`, or means nothing on a given or
+ * where the square would stay as it is — upstream's "don't put no-ops on the
+ * undo chain". */
+const paintWith =
+  (fill: (old: number) => ClustersFill) =>
+  (s: ClustersState, { x, y }: Point): ClustersMove | null => {
+    const index = y * s.w + x;
+    const old = s.grid[index];
+    const to = fill(old);
+    if (old & F_SINGLE || to === old) return null;
+    return { kind: "paint", cells: [{ index, fill: to }] };
+  };
+
+type ClustersVerb = TargetVerb<ClustersState, ClustersUi, Point, ClustersMove>;
+const blueVerb: ClustersVerb = {
+  does: "color it blue (click again for red, and again to clear it)",
+  apply: paintWith((old) => cycleFill(old, F_COLOR_1)),
+};
+const redVerb: ClustersVerb = {
+  does: "color it red (again for blue, and again to clear it)",
+  apply: paintWith((old) => cycleFill(old, F_COLOR_0)),
+};
+
+const targetVerbs: TargetVerbs<
+  ClustersState,
+  ClustersUi,
+  ClustersDrawState,
+  Point,
+  ClustersMove
+> = {
+  geometry: squareGrid({ size: (s) => s, border: (ts) => border(ts) }),
+  primary: blueVerb,
+  secondary: redVerb,
+  keyOnly: [
+    {
+      does: "color it blue",
+      keys: [digitKey(1)],
+      apply: paintWith(() => F_COLOR_1),
+      pointer: { kind: "cycle", button: "primary" },
+    },
+    {
+      does: "color it red",
+      keys: [digitKey(0), digitKey(2)],
+      apply: paintWith(() => F_COLOR_0),
+      pointer: { kind: "cycle", button: "secondary" },
+    },
+    {
+      does: "clear it",
+      keys: ERASE_KEYS,
+      apply: paintWith(() => 0),
+      pointer: { kind: "cycle", button: "primary" },
+    },
+  ],
+};
 
 function interpretMove(
   state: ClustersState,
@@ -127,31 +186,64 @@ function interpretMove(
   const shift = (rawButton & MOD_SHFT) !== 0;
   const control = (rawButton & MOD_CTRL) !== 0;
   const button = stripModifiers(rawButton);
-  const ts = ds.tileSize;
-  const b = border(ts);
-
-  let hx = ui.cursor.x;
-  let hy = ui.cursor.y;
 
   if (isMouseDown(button)) {
     ui.dragType = -1;
+    ui.dragButton = -1;
     ui.drag = [];
   }
 
+  // --- the press and the drag: the square under the pointer ---
   if (isMouseDown(button) || isMouseDrag(button)) {
-    const gx = fromCoord(p.x, ts, b);
-    const gy = fromCoord(p.y, ts, b);
-    if (p.x >= b && gx < w && p.y >= b && gy < h) {
-      hx = gx;
-      hy = gy;
-      ui.cursor.visible = false;
-    } else {
-      return null;
+    const at = targetVerbs.geometry.pointerTarget(state, ds, p, ui);
+    if (at === null) return null;
+    targetVerbs.geometry.parkCursor(ui, at);
+    ui.cursor.visible = false;
+    const i = at.y * w + at.x;
+
+    // A press picks the drag's color by cycling the pressed square.
+    if (isMouseDown(button)) {
+      const old = grid[i];
+      if (button === LEFT_BUTTON) ui.dragType = cycleFill(old, F_COLOR_1);
+      else if (button === RIGHT_BUTTON) ui.dragType = cycleFill(old, F_COLOR_0);
+      else ui.dragType = 0;
+      ui.dragButton = button;
+      if (ui.dragType || old) ui.drag.push(i);
+      return UI_UPDATE;
     }
+
+    // A drag accretes squares onto the drag set.
+    if (ui.dragType === -1) return null;
+    if ((grid[i] & COLMASK) === ui.dragType || ui.drag.includes(i)) return null;
+    ui.drag.push(i);
+    return UI_UPDATE;
   }
 
-  // --- keyboard cursor movement (paints with Shift/Ctrl held) ---
-  if (isCursorMove(button)) {
+  // --- the release: commit the drag as one paint move ---
+  if (isMouseRelease(button) && ui.drag.length > 0) {
+    const drag = ui.drag;
+    const pressed = ui.dragButton;
+    ui.drag = [];
+    ui.dragButton = -1;
+    // A press that never left its square is a click: its button's verb.
+    const verb =
+      pressed === LEFT_BUTTON ? blueVerb : pressed === RIGHT_BUTTON ? redVerb : null;
+    if (verb && drag.length === 1) {
+      const at = { x: drag[0] % w, y: Math.floor(drag[0] / w) };
+      return verb.apply(state, at, ui) ?? UI_UPDATE;
+    }
+    // The press that started the drag picked its fill.
+    const fill = ui.dragType as ClustersFill;
+    const cells = drag
+      .filter((i) => !(grid[i] & F_SINGLE)) // never overwrite a given
+      .map((index) => ({ index, fill }));
+    if (cells.length > 0) return { kind: "paint", cells };
+    return UI_UPDATE;
+  }
+
+  // --- Shift/Ctrl with an arrow paints the squares the cursor leaves and
+  // enters, where a bare arrow only moves it ---
+  if (isCursorMove(button) && (shift || control)) {
     const ox = ui.cursor.x;
     const oy = ui.cursor.y;
     const moved = gridCursorMove(button, ui.cursor.x, ui.cursor.y, w, h);
@@ -161,81 +253,24 @@ function interpretMove(
     }
     ui.cursor.visible = true;
 
-    if (shift || control) {
-      // Shift = red ('A'), Ctrl = blue ('B'), Shift+Ctrl = clear ('C').
-      const fill: ClustersFill = shift && control ? 0 : control ? F_COLOR_1 : F_COLOR_0;
-      const i1 = oy * w + ox;
-      const i2 = ui.cursor.y * w + ui.cursor.x;
-      // Skip a given, and any cell already in the target state (no-op).
-      const inert = (i: number): boolean =>
-        !!(grid[i] & F_SINGLE) ||
-        (fill === F_COLOR_0 && !!(grid[i] & F_COLOR_0)) ||
-        (fill === F_COLOR_1 && !!(grid[i] & F_COLOR_1)) ||
-        (fill === 0 && grid[i] === 0);
-      const cells: { index: number; fill: ClustersFill }[] = [];
-      if (!inert(i1)) cells.push({ index: i1, fill });
-      if (i1 !== i2 && !inert(i2)) cells.push({ index: i2, fill });
-      if (cells.length > 0) return { kind: "paint", cells };
-    }
-    return UI_UPDATE;
-  }
-
-  // --- mouse press: pick a drag color by cycling the pressed cell ---
-  if (isMouseDown(button)) {
-    const i = hy * w + hx;
-    const old = grid[i];
-    if (button === LEFT_BUTTON) ui.dragType = cycleFill(old, F_COLOR_1);
-    else if (button === RIGHT_BUTTON) ui.dragType = cycleFill(old, F_COLOR_0);
-    else ui.dragType = 0;
-    if (ui.dragType || old) ui.drag.push(i);
-    return UI_UPDATE;
-  }
-
-  // --- mouse drag: accrete cells onto the drag set ---
-  if (isMouseDrag(button) && ui.dragType !== -1) {
-    const i = hy * w + hx;
-    if ((grid[i] & COLMASK) === ui.dragType || ui.drag.includes(i)) return null;
-    ui.drag.push(i);
-    return UI_UPDATE;
-  }
-
-  // --- mouse release: commit the drag as one paint move ---
-  if (isMouseRelease(button) && ui.drag.length > 0) {
-    // The press that started the drag picked its fill.
-    const fill = ui.dragType as ClustersFill;
-    const cells = ui.drag
-      .filter((i) => !(grid[i] & F_SINGLE)) // never overwrite a given
-      .map((index) => ({ index, fill }));
-    ui.drag = [];
+    // Shift = red ('A'), Ctrl = blue ('B'), Shift+Ctrl = clear ('C').
+    const fill: ClustersFill = shift && control ? 0 : control ? F_COLOR_1 : F_COLOR_0;
+    const i1 = oy * w + ox;
+    const i2 = ui.cursor.y * w + ui.cursor.x;
+    // Skip a given, and any cell already in the target state (no-op).
+    const inert = (i: number): boolean =>
+      !!(grid[i] & F_SINGLE) ||
+      (fill === F_COLOR_0 && !!(grid[i] & F_COLOR_0)) ||
+      (fill === F_COLOR_1 && !!(grid[i] & F_COLOR_1)) ||
+      (fill === 0 && grid[i] === 0);
+    const cells: { index: number; fill: ClustersFill }[] = [];
+    if (!inert(i1)) cells.push({ index: i1, fill });
+    if (i1 !== i2 && !inert(i2)) cells.push({ index: i2, fill });
     if (cells.length > 0) return { kind: "paint", cells };
     return UI_UPDATE;
   }
 
-  // --- keyboard place-one at the cursor ---
-  const digit = digitOf(button);
-  if (
-    ui.cursor.visible &&
-    (button === CURSOR_SELECT ||
-      button === CURSOR_SELECT2 ||
-      isEraseKey(button) ||
-      (digit !== null && digit <= 2))
-  ) {
-    const i = hy * w + hx;
-    const old = grid[i];
-    if (old & F_SINGLE) return null; // given
-    let fill: ClustersFill;
-    if (digit === 0 || digit === 2) fill = F_COLOR_0;
-    else if (digit === 1) fill = F_COLOR_1;
-    else if (button === CURSOR_SELECT2) fill = cycleFill(old, F_COLOR_0);
-    else if (button === CURSOR_SELECT) fill = cycleFill(old, F_COLOR_1);
-    else fill = 0; // an erase key
-
-    // Upstream: "don't put no-ops on the undo chain".
-    if (fill === old) return null;
-    return { kind: "paint", cells: [{ index: i, fill }] };
-  }
-
-  return null;
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
 }
 
 function executeMove(state: ClustersState, move: ClustersMove): ClustersState {
@@ -429,6 +464,7 @@ export const clustersGame: Game<
   newState,
   newUi,
 
+  targetVerbs,
   interpretMove,
   executeMove,
   status,

@@ -24,6 +24,13 @@ export const GRID_FULL = 1;
 export const GRID_UNKNOWN = 2;
 export type GridVal = typeof GRID_EMPTY | typeof GRID_FULL | typeof GRID_UNKNOWN;
 
+/** What a click makes of a square: gray to black to white to gray. The drag
+ * paints what its first square's click made, and the declared verb is the
+ * same click, so the two cannot disagree. */
+export const clickBlack = (v: number): GridVal => ((v + 2) % 3) as GridVal;
+/** What a right-click makes of a square: gray to white to black to gray. */
+export const clickWhite = (v: number): GridVal => ((v + 1) % 3) as GridVal;
+
 // --- types ---------------------------------------------------------------
 
 export interface PatternParams {

@@ -6,8 +6,8 @@
  *
  * Left-drag lays track along a straight run; right-drag lays "no track". A
  * click near a cell center toggles the square; near an edge toggles that
- * edge. A half-grid keyboard cursor toggles squares (center) and edges
- * (borders); select2 does the no-track variant.
+ * edge. The keyboard cursor walks a half-grid that addresses the same squares
+ * and edges, so the declared verbs serve both.
  */
 
 import type { DifficultyContract } from "../../engine/difficulty.ts";
@@ -21,11 +21,8 @@ import {
   CURSOR_DOWN,
   CURSOR_LEFT,
   CURSOR_RIGHT,
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
   CURSOR_UP,
   endDrag,
-  isCursorMove,
   isMouseDown,
   isMouseDrag,
   isMouseRelease,
@@ -39,6 +36,12 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  interpretTargetVerbs,
+  type TargetGeometry,
+  type TargetVerb,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import { tracksHint, tracksKeepTrack } from "./hint.ts";
@@ -147,6 +150,140 @@ function updateUiDrag(state: TracksState, ui: TracksUi, gx: number, gy: number):
   }
 }
 
+/** What a half-grid position addresses: a square (both coordinates odd), the
+ * edge on a square's left or top (one even), or nothing — a corner, or an edge
+ * on the grid's rim, which no track can cross. */
+type Spot =
+  | { readonly kind: "square"; readonly x: number; readonly y: number }
+  | {
+      readonly kind: "edge";
+      readonly x: number;
+      readonly y: number;
+      readonly dir: number;
+    };
+
+function spotAt(state: TracksState, t: Point): Spot | null {
+  const { w, h } = state;
+  const xOdd = t.x % 2 === 1;
+  const yOdd = t.y % 2 === 1;
+  if (xOdd && yOdd) {
+    const x = (t.x - 1) / 2;
+    const y = (t.y - 1) / 2;
+    return inGrid(state, x, y) ? { kind: "square", x, y } : null;
+  }
+  if (!xOdd && yOdd) {
+    const x = t.x / 2;
+    const y = (t.y - 1) / 2;
+    return x > 0 && x < w && y >= 0 && y < h ? { kind: "edge", x, y, dir: L } : null;
+  }
+  if (xOdd && !yOdd) {
+    const x = (t.x - 1) / 2;
+    const y = t.y / 2;
+    return y > 0 && y < h && x >= 0 && x < w ? { kind: "edge", x, y, dir: U } : null;
+  }
+  return null;
+}
+
+/** A verb flipping the track (or, with `notrack`, the no-track cross) of the
+ * square or edge at `t`, where the board allows it. */
+const flipAt =
+  (notrack: boolean) =>
+  (state: TracksState, t: Point): TracksMove | null => {
+    const spot = spotAt(state, t);
+    if (!spot) return null;
+    const board = stateToBoard(state);
+    if (spot.kind === "square")
+      return uiCanFlipSquare(board, spot.x, spot.y, notrack)
+        ? squareFlipMove(board, spot.x, spot.y, notrack)
+        : null;
+    return uiCanFlipEdge(board, spot.x, spot.y, spot.dir, notrack)
+      ? edgeFlipMove(board, spot.x, spot.y, spot.dir, notrack)
+      : null;
+  };
+
+type TracksVerb = TargetVerb<TracksState, TracksUi, Point, TracksMove>;
+const trackVerb: TracksVerb = {
+  does:
+    "lay track there: on an edge, a segment joining the two squares; in a square, " +
+    "a mark that it holds track, even before you know which edges it crosses. " +
+    "Click it again to take the track away",
+  apply: flipAt(false),
+};
+const noTrackVerb: TracksVerb = {
+  does: "cross it out, as holding no track, or take the cross away again",
+  apply: flipAt(true),
+};
+
+/** Squares and the edges between them, on the cursor's half-grid: a square
+ * at odd coordinates, an edge where one is even. A press near a square's
+ * middle addresses the square, and elsewhere the edge on the side it is
+ * nearest. */
+const geometry: TargetGeometry<TracksState, TracksUi, TracksDrawState, Point> = {
+  noun: "square or edge",
+  pointerTarget(state, ds, p) {
+    const m = metrics(ds.tileSize);
+    const gx = gridCoord(p.x, m);
+    const gy = gridCoord(p.y, m);
+    if (!inGrid(state, gx, gy)) return null;
+    const cx = centeredCoord(gx, m);
+    const cy = centeredCoord(gy, m);
+    if (Math.max(Math.abs(p.x - cx), Math.abs(p.y - cy)) < m.tile / 4)
+      return { x: 2 * gx + 1, y: 2 * gy + 1 };
+    const dir =
+      Math.abs(p.x - cx) < Math.abs(p.y - cy) ? (p.y < cy ? U : D) : p.x < cx ? L : R;
+    const t = { x: 2 * gx + 1 + DX(dir), y: 2 * gy + 1 + DY(dir) };
+    return spotAt(state, t) ? t : null;
+  },
+  pointAt(state, ds, t) {
+    const m = metrics(ds.tileSize);
+    const spot = spotAt(state, t);
+    const dir = spot?.kind === "edge" ? spot.dir : 0;
+    const reach = Math.floor((3 * m.tile) / 8);
+    const x = spot ? spot.x : 0;
+    const y = spot ? spot.y : 0;
+    return {
+      x: centeredCoord(x, m) + reach * DX(dir),
+      y: centeredCoord(y, m) + reach * DY(dir),
+    };
+  },
+  cursorTarget: (state, ui) =>
+    spotAt(state, ui.cursor) ? { x: ui.cursor.x, y: ui.cursor.y } : null,
+  parkCursor(ui, t) {
+    ui.cursor.x = t.x;
+    ui.cursor.y = t.y;
+  },
+  moveCursor(state, ui, button) {
+    const dx = button === CURSOR_LEFT ? -1 : button === CURSOR_RIGHT ? 1 : 0;
+    const dy = button === CURSOR_DOWN ? 1 : button === CURSOR_UP ? -1 : 0;
+    const before = `${ui.cursor.x},${ui.cursor.y},${ui.cursor.visible}`;
+    showCursor(ui.cursor);
+    ui.cursor.x += dx;
+    ui.cursor.y += dy;
+    if (ui.cursor.x % 2 === 0 && ui.cursor.y % 2 === 0) {
+      // Skip square corners: only centers and edges are selectable.
+      ui.cursor.x += dx;
+      ui.cursor.y += dy;
+    }
+    ui.cursor.x = Math.min(Math.max(ui.cursor.x, 1), 2 * state.w - 1);
+    ui.cursor.y = Math.min(Math.max(ui.cursor.y, 1), 2 * state.h - 1);
+    return `${ui.cursor.x},${ui.cursor.y},${ui.cursor.visible}` !== before;
+  },
+};
+
+const targetVerbs: TargetVerbs<
+  TracksState,
+  TracksUi,
+  TracksDrawState,
+  Point,
+  TracksMove
+> = { geometry, primary: trackVerb, secondary: noTrackVerb };
+
+/** The square a pixel falls in along one axis, `-1` in the top/left border
+ * (the clues sit a whole tile in, hence the `- 1`). */
+function gridCoord(px: number, m: ReturnType<typeof metrics>): number {
+  return px < m.border ? -1 : Math.floor((px - m.border) / m.tile) - 1;
+}
+
 function interpretMove(
   state: TracksState,
   ui: TracksUi,
@@ -155,13 +292,11 @@ function interpretMove(
   rawButton: number,
 ): TracksMove | null | UiUpdate {
   const button = stripModifiers(rawButton);
-  const { w, h } = state;
+  const { w } = state;
   const m = metrics(ds.tileSize);
-  const fromCoord = (px: number) =>
-    px < m.border ? -1 : Math.floor((px - m.border) / m.tile) - 1;
   const board = stateToBoard(state);
-  const gx = fromCoord(p.x);
-  const gy = fromCoord(p.y);
+  const gx = gridCoord(p.x, m);
+  const gy = gridCoord(p.y, m);
 
   if (isMouseDown(button)) {
     ui.cursor.visible = false;
@@ -180,6 +315,8 @@ function interpretMove(
     ui.clickx = p.x;
     ui.clicky = p.y;
     startDrag(ui.drag, gx, gy);
+    const aimed = geometry.pointerTarget(state, ds, p, ui);
+    if (aimed) geometry.parkCursor(ui, aimed);
     return UI_UPDATE;
   }
 
@@ -209,65 +346,18 @@ function interpretMove(
     }
     ui.painting = false;
     endDrag(ui.drag);
-    const px = ui.clickx;
-    const py = ui.clicky;
-    const cx = centeredCoord(gx, m);
-    const cy = centeredCoord(gy, m);
-    if (!inGrid(state, gx, gy) || fromCoord(px) !== gx || fromCoord(py) !== gy) {
+    // A release in the square it pressed is a click there, on what the press
+    // aimed at: its button's verb.
+    const pressed = { x: ui.clickx, y: ui.clicky };
+    if (gridCoord(pressed.x, m) !== gx || gridCoord(pressed.y, m) !== gy)
       return UI_UPDATE;
-    }
-    const notrack = button === RIGHT_RELEASE;
-    if (Math.max(Math.abs(px - cx), Math.abs(py - cy)) < m.tile / 4) {
-      if (uiCanFlipSquare(board, gx, gy, notrack))
-        return squareFlipMove(board, gx, gy, notrack);
-      return UI_UPDATE;
-    }
-    const direction =
-      Math.abs(px - cx) < Math.abs(py - cy) ? (py < cy ? U : D) : px < cx ? L : R;
-    if (uiCanFlipEdge(board, gx, gy, direction, notrack)) {
-      return edgeFlipMove(board, gx, gy, direction, notrack);
-    }
-    return UI_UPDATE;
+    const target = geometry.pointerTarget(state, ds, pressed, ui);
+    if (!target) return UI_UPDATE;
+    const verb = button === RIGHT_RELEASE ? noTrackVerb : trackVerb;
+    return verb.apply(state, target, ui) ?? UI_UPDATE;
   }
 
-  if (isCursorMove(button)) {
-    const dx = button === CURSOR_LEFT ? -1 : button === CURSOR_RIGHT ? 1 : 0;
-    const dy = button === CURSOR_DOWN ? 1 : button === CURSOR_UP ? -1 : 0;
-    // Reveal *and* move in one press, as every other game does. The traversal
-    // itself stays Tracks': half-grid coordinates, skipping square corners.
-    showCursor(ui.cursor);
-    ui.cursor.x += dx;
-    ui.cursor.y += dy;
-    if (ui.cursor.x % 2 === 0 && ui.cursor.y % 2 === 0) {
-      // Skip square corners: only centers and edges are selectable.
-      ui.cursor.x += dx;
-      ui.cursor.y += dy;
-    }
-    ui.cursor.x = Math.min(Math.max(ui.cursor.x, 1), 2 * w - 1);
-    ui.cursor.y = Math.min(Math.max(ui.cursor.y, 1), 2 * h - 1);
-    return UI_UPDATE;
-  }
-
-  if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
-    if (!ui.cursor.visible) {
-      ui.cursor.visible = true;
-      return UI_UPDATE;
-    }
-    if (ui.cursor.x % 2 === 0 && ui.cursor.y % 2 === 0) return UI_UPDATE; // corner
-    const cgx = Math.floor(ui.cursor.x / 2);
-    const cgy = Math.floor(ui.cursor.y / 2);
-    const direction = ui.cursor.x % 2 === 0 ? L : ui.cursor.y % 2 === 0 ? U : 0;
-    const notrack = button === CURSOR_SELECT2;
-    if (direction && uiCanFlipEdge(board, cgx, cgy, direction, notrack)) {
-      return edgeFlipMove(board, cgx, cgy, direction, notrack);
-    }
-    if (!direction && uiCanFlipSquare(board, cgx, cgy, notrack)) {
-      return squareFlipMove(board, cgx, cgy, notrack);
-    }
-    return UI_UPDATE;
-  }
-
-  return null;
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
 }
 
 function solve(
@@ -356,6 +446,7 @@ export const tracksGame: Game<
   newState,
   newUi,
 
+  targetVerbs,
   interpretMove,
   executeMove,
   status,

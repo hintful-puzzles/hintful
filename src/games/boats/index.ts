@@ -10,9 +10,9 @@
  * **Input is a line-fill drag.** A left-click cycles a square empty → boat →
  * water → empty; a right-click toggles water; and a press-and-drag fills a run
  * along whichever axis the pointer moved further, previewing as it goes and
- * committing on release. A keyboard cursor with Enter (boat) and Space (water)
- * does the same one square at a time, and Ctrl/Shift with an arrow fills a line
- * as the cursor moves.
+ * committing on release; a drag that never leaves its square releases as its
+ * button's declared verb, which Enter and Space apply at the keyboard cursor.
+ * Ctrl/Shift with an arrow fills a line as the cursor moves.
  *
  * Unresolved segments are the interesting part of the model: the player only
  * ever says "there is *something* here", and `adjustShips` turns that into the
@@ -48,12 +48,9 @@ import {
   transposeDimensions,
 } from "../../engine/params.ts";
 import {
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
   endDrag,
   gridCursorMove,
   isCursorMove,
-  isEraseKey,
   isMouseDown,
   isMouseDrag,
   isMouseRelease,
@@ -66,11 +63,19 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  ERASE_KEYS,
+  interpretTargetVerbs,
+  squareGrid,
+  type TargetVerb,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newBoatsDesc, validateParams } from "./generator.ts";
 import { type BoatsFiring, type BoatsSquare, deduceBoatsPlan } from "./hint-solver.ts";
 import { type BoatsMarks, say } from "./hint-text.ts";
 import {
+  BORDER,
   type BoatsDrawState,
   cellCenter,
   colors,
@@ -121,10 +126,78 @@ function presets(): PresetMenu<BoatsParams> {
 
 // --- input -----------------------------------------------------------------
 
-/** Left-click cycles empty → boat → water → empty. */
-function leftCycle(from: BoatsFill): BoatsFill {
-  return from === "B" ? "W" : from === "-" ? "B" : "-";
+/**
+ * The fill a press of `button` on a square holding `fill` picks, which its
+ * drag applies along the line: the left button cycles empty → boat → water →
+ * empty, and the right toggles water. The drag preview and the declared verbs
+ * both read it, so a click's release makes what its press showed.
+ */
+function clickFill(
+  button: number,
+  fill: BoatsFill,
+): { from: BoatsFillFrom; to: BoatsFill } {
+  if (button !== LEFT_BUTTON) return { from: fill, to: fill === "-" ? "W" : "-" };
+  const to = fill === "B" ? "W" : fill === "-" ? "B" : "-";
+  // Clearing to water applies to the whole dragged line regardless of what
+  // each square currently holds.
+  return { from: to === "W" ? "*" : fill, to };
 }
+
+/** A verb filling the one square `{ x, y }`, or `null` where it changes
+ * nothing (a given square, or one already holding `to`). */
+const fillSquare =
+  (pick: (fill: BoatsFill) => { from: BoatsFillFrom; to: BoatsFill }) =>
+  (s: BoatsState, { x, y }: Point): BoatsMove | null => {
+    const { from, to } = pick(fillOf(s.grid[y * s.params.w + x]));
+    return fillChangesAnything(s, x, y, x, y, from, to)
+      ? { kind: "fill", x0: x, y0: y, x1: x, y1: y, from, to }
+      : null;
+  };
+
+type BoatsVerb = TargetVerb<BoatsState, BoatsUi, Point, BoatsMove>;
+const boatVerb: BoatsVerb = {
+  does: "cycle it from empty to a boat segment, then water, then empty again",
+  apply: fillSquare((fill) => clickFill(LEFT_BUTTON, fill)),
+};
+const waterVerb: BoatsVerb = {
+  does: "place water, to say no boat can go there, or empty it if it is filled",
+  apply: fillSquare((fill) => clickFill(RIGHT_BUTTON, fill)),
+};
+
+/** A square index along an axis of `n`, with the number beside the last
+ * square addressing that square. */
+const reachNumbers = (i: number, n: number) => (i === n ? n - 1 : i);
+
+const squares = squareGrid<BoatsState, BoatsDrawState>({
+  size: (s) => s.params,
+  border: () => BORDER,
+});
+
+const targetVerbs: TargetVerbs<BoatsState, BoatsUi, BoatsDrawState, Point, BoatsMove> =
+  {
+    geometry: {
+      ...squares,
+      // Players usually want to fill a whole line, so a press on the numbers
+      // along the far edges reaches the square beside them (upstream does the
+      // same).
+      pointerTarget(s, ds, p) {
+        const { w, h } = s.params;
+        const x = reachNumbers(fromCoord(p.x, ds.tileSize), w);
+        const y = reachNumbers(fromCoord(p.y, ds.tileSize), h);
+        return x >= 0 && y >= 0 && x < w && y < h ? { x, y } : null;
+      },
+    },
+    primary: boatVerb,
+    secondary: waterVerb,
+    keyOnly: [
+      {
+        does: "empty it",
+        keys: ERASE_KEYS,
+        apply: fillSquare((fill) => ({ from: fill, to: "-" })),
+        pointer: { kind: "cycle", button: "primary" },
+      },
+    ],
+  };
 
 function interpretMove(
   state: BoatsState,
@@ -137,32 +210,22 @@ function interpretMove(
   const ts = ds.tileSize;
   const button = stripModifiers(rawButton);
 
-  let gx = fromCoord(point.x, ts);
-  let gy = fromCoord(point.y, ts);
-  // Players usually want to fill a whole line, so the click target on the far
-  // edges reaches into the number row/column (upstream does the same).
-  if (gx === w) gx = w - 1;
-  if (gy === h) gy = h - 1;
-
-  if (isMouseDown(button) && gx >= 0 && gy >= 0 && gx < w && gy < h) {
-    let from: BoatsFillFrom = fillOf(state.grid[gy * w + gx]);
-    let to: BoatsFill = "-";
-
-    if (button === LEFT_BUTTON) {
-      to = leftCycle(from);
-      // Clearing to water applies to the whole dragged line regardless of
-      // what each square currently holds.
-      if (to === "W") from = "*";
-    }
-    if (button === RIGHT_BUTTON) to = from === "-" ? "W" : "-";
-
+  if (isMouseDown(button)) {
+    const at = targetVerbs.geometry.pointerTarget(state, ds, point, ui);
+    if (at === null) return null;
+    const { from, to } = clickFill(button, fillOf(state.grid[at.y * w + at.x]));
     ui.dragFrom = from;
     ui.dragTo = to;
+    ui.dragButton = button;
     ui.dragOk = true;
-    startDrag(ui.drag, gx, gy);
+    startDrag(ui.drag, at.x, at.y);
+    targetVerbs.geometry.parkCursor(ui, at);
     ui.cursor.visible = false;
     return UI_UPDATE;
   }
+
+  let gx = reachNumbers(fromCoord(point.x, ts), w);
+  let gy = reachNumbers(fromCoord(point.y, ts), h);
 
   if ((isMouseDrag(button) || isMouseRelease(button)) && ui.drag.live) {
     if (gx < 0 || gy < 0 || gx >= w || gy >= h) {
@@ -191,14 +254,22 @@ function interpretMove(
       // the branch was entered on `dragTo !== ""`, which the release left set,
       // so a stray drag event arriving after one could re-arm the fill.
       endDrag(ui.drag);
+      if (!commit) return UI_UPDATE;
 
-      if (commit && fillChangesAnything(state, x0, y0, x1, y1, from, to))
+      // A drag that never left its square is a click: its button's verb.
+      if (x0 === x1 && y0 === y1) {
+        const verb = ui.dragButton === LEFT_BUTTON ? boatVerb : waterVerb;
+        return verb.apply(state, { x: x0, y: y0 }, ui) ?? UI_UPDATE;
+      }
+      if (fillChangesAnything(state, x0, y0, x1, y1, from, to))
         return { kind: "fill", x0, y0, x1, y1, from, to };
     }
     return UI_UPDATE;
   }
 
-  if (isCursorMove(button)) {
+  // Ctrl or Shift with an arrow fills the line the cursor moves along: Boats'
+  // own stroke, where a bare arrow only moves the cursor.
+  if (isCursorMove(button) && rawButton & (MOD_CTRL | MOD_SHFT)) {
     const fromX = ui.cursor.x;
     const fromY = ui.cursor.y;
     const moved = gridCursorMove(button, ui.cursor.x, ui.cursor.y, w, h);
@@ -208,39 +279,21 @@ function interpretMove(
     }
     ui.cursor.visible = true;
 
-    // Hold Ctrl (boats), Shift (water) or both (clear) to fill as you move.
-    if (rawButton & (MOD_CTRL | MOD_SHFT)) {
-      const to: BoatsFill =
-        rawButton & MOD_CTRL ? (rawButton & MOD_SHFT ? "-" : "B") : "W";
-      const from: BoatsFillFrom = to === "-" ? "*" : "-";
-      const x0 = Math.min(fromX, ui.cursor.x);
-      const x1 = Math.max(fromX, ui.cursor.x);
-      const y0 = Math.min(fromY, ui.cursor.y);
-      const y1 = Math.max(fromY, ui.cursor.y);
+    // Ctrl fills boats, Shift water, and both clear.
+    const to: BoatsFill =
+      rawButton & MOD_CTRL ? (rawButton & MOD_SHFT ? "-" : "B") : "W";
+    const from: BoatsFillFrom = to === "-" ? "*" : "-";
+    const x0 = Math.min(fromX, ui.cursor.x);
+    const x1 = Math.max(fromX, ui.cursor.x);
+    const y0 = Math.min(fromY, ui.cursor.y);
+    const y1 = Math.max(fromY, ui.cursor.y);
 
-      if (fillChangesAnything(state, x0, y0, x1, y1, from, to))
-        return { kind: "fill", x0, y0, x1, y1, from, to };
-    }
-
+    if (fillChangesAnything(state, x0, y0, x1, y1, from, to))
+      return { kind: "fill", x0, y0, x1, y1, from, to };
     return UI_UPDATE;
   }
 
-  if (
-    ui.cursor.visible &&
-    (button === CURSOR_SELECT || button === CURSOR_SELECT2 || isEraseKey(button))
-  ) {
-    const x = ui.cursor.x;
-    const y = ui.cursor.y;
-    const from = fillOf(state.grid[y * w + x]);
-    let to: BoatsFill = "-";
-    if (button === CURSOR_SELECT && from === "-") to = "B";
-    if (button === CURSOR_SELECT2 && from === "-") to = "W";
-
-    if (fillChangesAnything(state, x, y, x, y, from, to))
-      return { kind: "fill", x0: x, y0: y, x1: x, y1: y, from, to };
-  }
-
-  return null;
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, point, rawButton);
 }
 
 // --- moves -----------------------------------------------------------------
@@ -647,6 +700,7 @@ export const boatsGame: Game<
   newState,
   newUi,
 
+  targetVerbs,
   interpretMove,
   executeMove,
   status,

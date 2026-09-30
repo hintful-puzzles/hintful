@@ -11,11 +11,11 @@ This genre was invented by [Nikoli](https://www.nikoli.co.jp/) under the name *T
 
 ## Controls
 
-Left-click to shade a cell. Right-click to unshade a cell. You can also click and drag to place multiple squares.
+{{controls}}
 
-To play with a keyboard, use the arrow keys to move the cursor. Press Enter to shade a square, and press Space to unshade a square.
+Drag across several cells to give them all the color the first one took.
 
-You can also use the numpad (keys 1, 3, 7, 9) to move the cursor diagonally.
+You can also use the numpad (keys 1, 3, 7, 9) to move the cursor diagonally. Hold Ctrl while moving the cursor to shade the cells it leaves and enters, Shift to unshade them, or both to empty them.
 
 ## Hints
 

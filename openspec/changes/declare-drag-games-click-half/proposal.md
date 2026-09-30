@@ -1,6 +1,7 @@
 # declare-drag-games-click-half
 
-**Status: scaffolded, not started (2026-09-30).** Follows
+**Status: done (2026-09-30); the falsifier fired on none of the nine
+(`design.md`).** Follows
 `sweep-target-verb-input`, whose `design.md` § "Mines, Black Box, Loopy: the
 release question, answered" is the finding this starts from.
 

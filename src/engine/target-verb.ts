@@ -28,8 +28,10 @@
 import { UI_UPDATE, type UiUpdate } from "./game.ts";
 import { click, key, type PointerAction } from "./hint-gesture.ts";
 import {
+  BACKSPACE,
   CURSOR_SELECT,
   CURSOR_SELECT2,
+  DELETE,
   type GridCursor,
   isCursorMove,
   LEFT_BUTTON,
@@ -47,6 +49,27 @@ export interface VerbKey {
   readonly codes: readonly number[];
   readonly name: string;
 }
+
+/** A letter's key, `"T"`, reached in either case. */
+export function letterKey(letter: string): VerbKey {
+  const upper = letter.toUpperCase();
+  return {
+    codes: [upper.charCodeAt(0), upper.toLowerCase().charCodeAt(0)],
+    name: upper,
+  };
+}
+
+/** A digit's key, on the main row or the numpad: the model strips the numpad's
+ * modifier before it matches a key, as `digitOf` does. */
+export function digitKey(digit: number): VerbKey {
+  return { codes: [String(digit).charCodeAt(0)], name: String(digit) };
+}
+
+/** The keys that empty a target. */
+export const ERASE_KEYS: readonly VerbKey[] = [
+  { codes: [BACKSPACE], name: "Backspace" },
+  { codes: [DELETE], name: "Delete" },
+];
 
 /** One thing a button does to a target. */
 export interface TargetVerb<State, Ui, Target, Move> {

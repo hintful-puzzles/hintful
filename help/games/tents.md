@@ -11,16 +11,12 @@ Place tents in the empty squares in such a way that:
 
 ## Controls
 
-Click in a square to place or remove a tent. Right-click to mark a
-square as grass (not a tent). Right-click and drag along a row or
-column to mark many squares at once as grass.
+{{controls}}
 
-With the keyboard, the arrow keys move a cursor around the grid. On an
-empty square, Enter places a tent and Space marks grass; on a square
-that is already filled, either key empties it. T, N and B
-set the square to a tent, grass or empty outright. Hold Shift while
-moving the cursor to mark the empty squares it passes over as grass, or
-Ctrl to turn tents it passes over into grass as well.
+Right-click and drag along a row or column to mark many squares at once
+as grass. Hold Shift while moving the cursor to mark the empty squares
+it passes over as grass, or Ctrl to turn tents it passes over into grass
+as well.
 
 Warning '!' marks appear to indicate adjacent tents. Numbers round
 the edge of the grid light up red to indicate they do not match the

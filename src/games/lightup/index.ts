@@ -40,6 +40,7 @@ import {
 } from "../../engine/symmetric-blacks.ts";
 import {
   interpretTargetVerbs,
+  letterKey,
   squareGrid,
   type TargetVerbs,
   verbGesture,
@@ -99,9 +100,6 @@ export interface LightupMistake {
   kind: "light" | "mark";
 }
 
-const KEY_I_LOWER = "i".charCodeAt(0);
-const KEY_I_UPPER = "I".charCodeAt(0);
-
 function newUi(_state: LightupState): LightupUi {
   return { cursor: newCursor(), drawBlobsWhenLit: true };
 }
@@ -136,7 +134,7 @@ const targetVerbs: TargetVerbs<
   primary: { does: "place or remove a light", apply: toggle("light") },
   secondary: {
     does: "place or remove a dot, marking a square you think holds no light",
-    keys: [{ codes: [KEY_I_LOWER, KEY_I_UPPER], name: "I" }],
+    keys: [letterKey("I")],
     apply: toggle("impossible"),
   },
 };

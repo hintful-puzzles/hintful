@@ -450,8 +450,23 @@ Two things follow from declaring:
 dotted square", Range's three-state cycle and Singles' "either button clears"
 are each a line in the verb's `apply`; the model has no switch for any of them.
 
-**What the model is not for.** A drag game's keyboard is a design (below), and
-its drag arm is an arm of its own; a game can still declare the click half. A
+**Keys are declared with the model's spellings.** `letterKey("T")` is a letter
+in either case, `digitKey(1)` a digit on the main row or the numpad, and
+`ERASE_KEYS` is Backspace and Delete; a game writes character codes only for a
+key that is none of these (and `decimal.test.ts` refuses a digit's).
+
+**A drag game declares its click half.** Its press, drag and release stay an arm
+of its own, and a click reaches it as the release of a drag that never left its
+target — so that release calls the declared verb, exactly as Mines' release
+calls `openAt`. The press parks the cursor (`geometry.parkCursor`, then hides
+it), as the model's press would. Where a drag preview shows what the release
+will do, the preview and the verb read one function (Tents' `clickTent` and
+`clickGrass`), so the square a press shows is the one its release makes. Keys
+the drag has no button for — Tents' T, N and B — are `keyOnly` verbs on a
+`cycle` route. Exemplar: Tents.
+
+**What the model is not for.** A drag game's drag is an arm of its own, and its
+keyboard form of a drag (Tents' Shift-arrows, its `L`) is a design (below). A
 game whose keyboard walks something other than the targets is not expressible —
 measure it with `boardsReached` (`testing/input-probe.ts`) before bending the
 model to it.

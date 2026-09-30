@@ -34,12 +34,8 @@ import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_LEFT,
   CURSOR_RIGHT,
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
-  digitOf,
   gridCursorMove,
   isCursorMove,
-  isEraseKey,
   isMouseDown,
   isMouseDrag,
   isMouseRelease,
@@ -53,6 +49,14 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  digitKey,
+  ERASE_KEYS,
+  interpretTargetVerbs,
+  squareGrid,
+  type TargetVerb,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSticksDesc } from "./generator.ts";
 import { type SticksMarks, say } from "./hint-text.ts";
@@ -116,10 +120,68 @@ const lineBits = (line: SticksLine): number =>
 const bitsLine = (bits: number): SticksLine =>
   bits & F_HOR ? "hor" : bits & F_VER ? "ver" : "none";
 
-// Sticks carries the accreting-drag paint model, so a press, every intermediate
-// drag position and the release are three different things this has to say about
-// one gesture — on top of the keyboard cursor and the two line orientations.
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: see above
+/** One step of a click's cycle: empty, then a `first` line, then the other
+ * line, then empty again. */
+const cycleLine = (old: number, first: number): number =>
+  old === 0 ? first : old & first ? first ^ (F_HOR | F_VER) : 0;
+
+/** A verb that sets the square to `to(old)`, or means nothing on a black
+ * square or where the square would stay as it is — upstream's "don't put
+ * no-ops on the undo chain". */
+const setLine =
+  (to: (old: number) => number) =>
+  (s: SticksState, { x, y }: Point): SticksMove | null => {
+    const index = y * s.w + x;
+    const old = s.grid[index];
+    const bits = to(old);
+    if (old & F_BLOCK || bits === old) return null;
+    return { kind: "set", changes: [{ index, line: bitsLine(bits) }] };
+  };
+
+type SticksVerb = TargetVerb<SticksState, SticksUi, Point, SticksMove>;
+const verticalVerb: SticksVerb = {
+  does:
+    "place a vertical line in it (click again to turn it horizontal, and again " +
+    "to clear it)",
+  apply: setLine((old) => cycleLine(old, F_VER)),
+};
+const horizontalVerb: SticksVerb = {
+  does: "place a horizontal line in it (again to turn it vertical, and again to clear it)",
+  apply: setLine((old) => cycleLine(old, F_HOR)),
+};
+
+const targetVerbs: TargetVerbs<
+  SticksState,
+  SticksUi,
+  SticksDrawState,
+  Point,
+  SticksMove
+> = {
+  geometry: squareGrid({ size: (s) => s, border: (ts) => border(ts) }),
+  primary: verticalVerb,
+  secondary: horizontalVerb,
+  keyOnly: [
+    {
+      does: "place a vertical line in it",
+      keys: [digitKey(1)],
+      apply: setLine(() => F_VER),
+      pointer: { kind: "cycle", button: "primary" },
+    },
+    {
+      does: "place a horizontal line in it",
+      keys: [digitKey(0), digitKey(2)],
+      apply: setLine(() => F_HOR),
+      pointer: { kind: "cycle", button: "secondary" },
+    },
+    {
+      does: "clear it",
+      keys: ERASE_KEYS,
+      apply: setLine(() => 0),
+      pointer: { kind: "cycle", button: "primary" },
+    },
+  ],
+};
+
 function interpretMove(
   state: SticksState,
   ui: SticksUi,
@@ -132,22 +194,19 @@ function interpretMove(
   const control = (rawButton & MOD_CTRL) !== 0;
   const button = stripModifiers(rawButton);
   const ts = ds.tileSize;
-  const b = border(ts);
-  // C's FROMCOORD is truncating integer division, so a pointer slightly
-  // inside the border still maps to row/column 0 — keep trunc, not floor.
-  const fromC = (v: number): number => Math.trunc((v - b) / ts);
-  /** The cell under pixel (px, py), or -1 off the grid. */
+  /** The cell under pixel (px, py), or -1 off the grid: the same catchment a
+   * click's verb addresses. */
   const cellAt = (px: number, py: number): number => {
-    const hx = fromC(px);
-    const hy = fromC(py);
-    return hx >= 0 && hx < w && hy >= 0 && hy < h ? hy * w + hx : -1;
+    const at = targetVerbs.geometry.pointerTarget(state, ds, { x: px, y: py }, ui);
+    return at === null ? -1 : at.y * w + at.x;
   };
   const dragDelta = ts * 0.4;
 
   if (isMouseDown(button) || isMouseDrag(button)) ui.cursor.visible = false;
 
-  // --- keyboard cursor movement (draws across two cells with Shift/Ctrl) ---
-  if (isCursorMove(button)) {
+  // --- Shift/Ctrl with an arrow draws across the two cells it joins, where a
+  // bare arrow only moves the cursor ---
+  if (isCursorMove(button) && (shift || control)) {
     const ox = ui.cursor.x;
     const oy = ui.cursor.y;
     const moved = gridCursorMove(button, ui.cursor.x, ui.cursor.y, w, h);
@@ -157,35 +216,35 @@ function interpretMove(
     }
     ui.cursor.visible = true;
 
-    if (shift || control) {
-      const horizontalArrow = button === CURSOR_LEFT || button === CURSOR_RIGHT;
-      const line: SticksLine =
-        shift && control
-          ? "none"
-          : control
-            ? horizontalArrow
-              ? "hor"
-              : "ver"
-            : horizontalArrow
-              ? "ver"
-              : "hor";
-      const i1 = oy * w + ox;
-      const i2 = ui.cursor.y * w + ui.cursor.x;
-      const inert = (i: number): boolean =>
-        !!(grid[i] & F_BLOCK) ||
-        (line === "hor" && !!(grid[i] & F_HOR)) ||
-        (line === "ver" && !!(grid[i] & F_VER)) ||
-        (line === "none" && !grid[i]);
-      const changes: { index: number; line: SticksLine }[] = [];
-      if (!inert(i1)) changes.push({ index: i1, line });
-      if (i1 !== i2 && !inert(i2)) changes.push({ index: i2, line });
-      if (changes.length > 0) return { kind: "set", changes };
-    }
+    const horizontalArrow = button === CURSOR_LEFT || button === CURSOR_RIGHT;
+    const line: SticksLine =
+      shift && control
+        ? "none"
+        : control
+          ? horizontalArrow
+            ? "hor"
+            : "ver"
+          : horizontalArrow
+            ? "ver"
+            : "hor";
+    const i1 = oy * w + ox;
+    const i2 = ui.cursor.y * w + ui.cursor.x;
+    const inert = (i: number): boolean =>
+      !!(grid[i] & F_BLOCK) ||
+      (line === "hor" && !!(grid[i] & F_HOR)) ||
+      (line === "ver" && !!(grid[i] & F_VER)) ||
+      (line === "none" && !grid[i]);
+    const changes: { index: number; line: SticksLine }[] = [];
+    if (!inert(i1)) changes.push({ index: i1, line });
+    if (i1 !== i2 && !inert(i2)) changes.push({ index: i2, line });
+    if (changes.length > 0) return { kind: "set", changes };
     return UI_UPDATE;
   }
 
   // --- begin a normal drag -------------------------------------------------
   if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
+    const at = targetVerbs.geometry.pointerTarget(state, ds, p, ui);
+    if (at !== null) targetVerbs.geometry.parkCursor(ui, at);
     ui.minX = ui.maxX = p.x;
     ui.minY = ui.maxY = p.y;
     ui.drag = [];
@@ -233,11 +292,8 @@ function interpretMove(
 
   // --- perform a clearing drag (one that started along a matching line) ----
   if (isMouseDrag(button) && ui.dragType === "clear") {
-    const hx = fromC(p.x);
-    const hy = fromC(p.y);
-    if (hx < 0 || hx >= w || hy < 0 || hy >= h) return null; // C: UB read
-    const i = hy * w + hx;
-    if (!(grid[i] & (F_HOR | F_VER))) return null;
+    const i = cellAt(p.x, p.y);
+    if (i === -1 || !(grid[i] & (F_HOR | F_VER))) return null;
     if (ui.drag.includes(i)) return null;
     ui.drag.push(i);
     ui.dragMove.push(0);
@@ -245,24 +301,23 @@ function interpretMove(
   }
 
   if (isMouseRelease(button)) {
-    // --- a click (release without a qualifying drag) cycles the cell -------
+    // --- a release without a qualifying drag is a click: its button's verb --
     if (ui.dragType === "start") {
+      ui.dragType = "none";
       const i = cellAt((ui.minX + ui.maxX) / 2, (ui.minY + ui.maxY) / 2);
-      if (i === -1) {
-        ui.dragType = "none";
-        return UI_UPDATE;
-      }
-      const old = grid[i];
-      let value = 0;
-      if (button === LEFT_RELEASE) value = old === 0 ? F_VER : old & F_VER ? F_HOR : 0;
-      if (button === RIGHT_RELEASE) value = old === 0 ? F_HOR : old & F_HOR ? F_VER : 0;
-      ui.drag = [i];
-      ui.dragMove = [value];
+      const verb =
+        button === LEFT_RELEASE
+          ? verticalVerb
+          : button === RIGHT_RELEASE
+            ? horizontalVerb
+            : null;
+      if (i === -1 || verb === null) return UI_UPDATE;
+      return verb.apply(state, { x: i % w, y: Math.floor(i / w) }, ui) ?? UI_UPDATE;
     }
 
     ui.dragType = "none";
 
-    // --- confirm clicks and drags as one batched move ----------------------
+    // --- confirm a drag as one batched move --------------------------------
     if (ui.drag.length > 0) {
       const changes: { index: number; line: SticksLine }[] = [];
       for (let d = 0; d < ui.drag.length; d++) {
@@ -278,34 +333,7 @@ function interpretMove(
     return null;
   }
 
-  // --- keyboard place-one at the cursor ------------------------------------
-  const digit = digitOf(button);
-  if (
-    ui.cursor.visible &&
-    (button === CURSOR_SELECT ||
-      button === CURSOR_SELECT2 ||
-      isEraseKey(button) ||
-      digit === 0 ||
-      digit === 1 ||
-      digit === 2)
-  ) {
-    const i = ui.cursor.y * w + ui.cursor.x;
-    if (grid[i] & F_BLOCK) return null;
-    const old = grid[i];
-    let line: SticksLine = "none";
-    if (digit === 0 || digit === 2) line = "hor";
-    else if (digit === 1) line = "ver";
-    else if (button === CURSOR_SELECT2)
-      line = old === 0 ? "hor" : old & F_HOR ? "ver" : "none";
-    else if (button === CURSOR_SELECT)
-      line = old === 0 ? "ver" : old & F_VER ? "hor" : "none";
-
-    // Don't put no-ops on the undo chain (upstream comment).
-    if (old === lineBits(line)) return null;
-    return { kind: "set", changes: [{ index: i, line }] };
-  }
-
-  return null;
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
 }
 
 function executeMove(state: SticksState, move: SticksMove): SticksState {
@@ -472,11 +500,9 @@ function hintGesture(
   const ts = ds.tileSize;
   const mid = (v: number): number => coord(v, ts, border(ts)) + (ts >> 1);
   return m.changes.map(({ index, line }) => {
-    const old = grid[index];
-    const primary = old === 0 ? F_VER : old & F_VER ? F_HOR : 0;
     return click(
       { x: mid(index % w), y: mid((index / w) | 0) },
-      primary === lineBits(line) ? "primary" : "secondary",
+      cycleLine(grid[index], F_VER) === lineBits(line) ? "primary" : "secondary",
     );
   });
 }
@@ -505,6 +531,7 @@ export const sticksGame: Game<
   newState,
   newUi,
 
+  targetVerbs,
   interpretMove,
   executeMove,
   status,

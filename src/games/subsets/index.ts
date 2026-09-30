@@ -40,11 +40,9 @@ import {
 } from "../../engine/hint-refusal.ts";
 import { phrase } from "../../engine/hint-words.ts";
 import {
-  BACKSPACE,
   CURSOR_SELECT,
   CURSOR_SELECT2,
   cursorDelta,
-  DELETE,
   isEraseKey,
   LEFT_BUTTON,
   newCursor,
@@ -52,6 +50,7 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
+  ERASE_KEYS,
   interpretTargetVerbs,
   type TargetGeometry,
   type TargetVerbs,
@@ -395,10 +394,7 @@ const targetVerbs: TargetVerbs<
   keyOnly: [
     {
       does: "leave the number under the cursor undecided",
-      keys: [
-        { codes: [BACKSPACE], name: "Backspace" },
-        { codes: [DELETE], name: "Delete" },
-      ],
+      keys: ERASE_KEYS,
       apply: setSlot(() => "unknown"),
       pointer: { kind: "cycle", button: "primary" },
     },

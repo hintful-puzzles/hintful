@@ -9,9 +9,9 @@ This puzzle type was invented by Inaba Naoki under the name *クラスター*, o
 
 ## Controls
 
-Left-click to place blue squares. Right-click to place red squares. You can also click and drag to place multiple squares.
+{{controls}}
 
-To play with a keyboard, use the arrow keys to move the cursor. Press Enter to place a blue square, and press Space to place a red square.
+Drag from a square to paint every square you pass over the color the press gave the first one. Hold Shift while moving the cursor to paint the squares it passes over red, Ctrl to paint them blue, or both to clear them.
 
 ## Hints
 

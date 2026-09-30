@@ -172,8 +172,9 @@ target, cursor to target, how the arrows move) and a verb per button, each a
 function returning its own `Move`; `interpretTargetVerbs` owns the parking,
 the reveal-first select, Enter and Space, and `controlsMarkdown` writes the
 help's Controls paragraph from the same declaration. `squareGrid` is the common
-geometry. Reach for it in any game whose buttons each do one thing to what they
-land on; `target-verb.test.ts` holds a declaring game's keys to its buttons.
+geometry, and `letterKey`, `digitKey` and `ERASE_KEYS` the common keys. Reach for it in any
+game whose buttons each do one thing to what they land on, a drag game's click
+half included; `target-verb.test.ts` holds a declaring game's keys to its buttons.
 How to adopt it is [`input.md`](./input.md) § "Targets and verbs".
 
 ### `note-taking-cell.ts` — the shared highlight-and-type mechanic

@@ -50,7 +50,6 @@ import {
   type PointerAction,
 } from "../../engine/hint-gesture.ts";
 import {
-  BACKSPACE,
   CURSOR_SELECT,
   CURSOR_SELECT2,
   DELETE,
@@ -68,6 +67,7 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
+  ERASE_KEYS,
   interpretTargetVerbs,
   type TargetGeometry,
   type TargetVerbs,
@@ -571,10 +571,7 @@ const targetVerbs: TargetVerbs<
   keyOnly: [
     {
       does: "return the edge under the cursor to undecided",
-      keys: [
-        { codes: [BACKSPACE], name: "Backspace" },
-        { codes: [DELETE], name: "Delete" },
-      ],
+      keys: ERASE_KEYS,
       apply: lineVerb(DELETE),
       pointer: { kind: "cycle", button: "primary" },
     },

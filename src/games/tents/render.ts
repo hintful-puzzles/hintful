@@ -49,6 +49,8 @@ import { LINK, NUMBER } from "./hint-marks.ts";
 import {
   BLANK,
   canJoin,
+  clickGrass,
+  clickTent,
   D,
   DX,
   DY,
@@ -325,12 +327,12 @@ export function dragXform(
         ? TENT
         : v;
     if (x !== sx || y !== sy) return v;
-    return v === BLANK ? TENT : BLANK;
+    return clickTent(v);
   }
   // The right button: a click toggles a non-tent, a drag paints blanks.
   if (x < Math.min(sx, ex) || x > Math.max(sx, ex)) return v;
   if (y < Math.min(sy, ey) || y > Math.max(sy, ey)) return v;
-  if (sx === ex && sy === ey) return v === BLANK ? NONTENT : BLANK;
+  if (sx === ex && sy === ey) return clickGrass(v);
   return v === BLANK ? NONTENT : v;
 }
 

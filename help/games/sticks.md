@@ -19,11 +19,9 @@ More information: https://www.janko.at/Raetsel/Tateboo-Yokoboo/index.htm
 
 ## Controls
 
-To place a line, drag the mouse horizontally or vertically inside a cell.
+{{controls}}
 
-To place a line without dragging the mouse, left-click to place a vertical line and right-click to place a horizontal line.
-
-To play with a keyboard, use the arrow keys to move the cursor. Press Enter to place a vertical line, and press Space to place a horizontal line.
+You can also drag horizontally or vertically across the squares to draw a line that way through each of them; a drag that starts along a line already there clears the lines it passes over instead. Hold Shift or Ctrl while moving the cursor to draw a line through the square it leaves and the square it enters (Shift across the way it moves, Ctrl along it), or both to clear them.
 
 ## Hints
 

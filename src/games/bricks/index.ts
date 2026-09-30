@@ -6,8 +6,9 @@
  *
  * Input: left-click/drag cycles a cell shade→unshade→empty (right-click the
  * reverse) and paints the whole drag with the first cell's target color; a
- * hex-aware keyboard cursor moves with the arrow/numpad keys (up/down alternate
- * orthogonal and diagonal steps across the shear) and places colors with
+ * drag of one cell releases as its button's declared verb. A hex-aware
+ * keyboard cursor moves with the arrow/numpad keys (up/down alternate
+ * orthogonal and diagonal steps across the shear) and applies the verbs with
  * Enter/Space/0/1/2/Backspace. Rule violations show live while dragging;
  * Check & Save (`findMistakes`) hard-blocks on any current violation.
  */
@@ -37,15 +38,12 @@ import {
   CURSOR_DOWN,
   CURSOR_LEFT,
   CURSOR_RIGHT,
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
   CURSOR_UP,
-  digitOf,
-  isEraseKey,
   isMouseDown,
   isMouseDrag,
   isMouseRelease,
   LEFT_BUTTON,
+  LEFT_RELEASE,
   MOD_CTRL,
   MOD_NUM_KEYPAD,
   MOD_SHFT,
@@ -53,6 +51,14 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  digitKey,
+  ERASE_KEYS,
+  interpretTargetVerbs,
+  type TargetGeometry,
+  type TargetVerb,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newBricksDesc } from "./generator.ts";
 import { say } from "./hint-text.ts";
@@ -117,6 +123,157 @@ function newUi(state: BricksState): BricksUi {
   };
 }
 
+/** The color a press of `button` on a cell of color `old` paints: the left
+ * button cycles empty → shaded → unshaded → empty, and the right the other way
+ * round. The drag paints every cell it passes with the color its first cell
+ * took, and a click is a drag of one cell, so both read this. */
+function cycleColor(button: number, old: number): number {
+  if (button === LEFT_BUTTON)
+    return old === F_UNSHADE ? F_EMPTY : old === F_SHADE ? F_UNSHADE : F_SHADE;
+  return old === F_UNSHADE ? F_SHADE : old === F_SHADE ? F_EMPTY : F_UNSHADE;
+}
+
+/** A verb painting the cell `{ x, y }` with `to(old)`, or `null` on a clue or
+ * where the cell already holds it. */
+const paintCell =
+  (to: (old: number) => number) =>
+  (s: BricksState, { x, y }: Point): BricksMove | null => {
+    const index = y * s.w + x;
+    const old = s.grid[index] & COL_MASK;
+    if (!old) return null;
+    const bits = to(old);
+    return bits === old
+      ? null
+      : { kind: "paint", cells: [{ index, to: bitsColor(bits) }] };
+  };
+
+/** The cursor step a key makes on the hex grid, or `null` for a key that
+ * does not move it. Numpad 8/2/4/6 move orthogonally; up and down across the
+ * shear alternate orthogonal and diagonal steps, and numpad 7/3 are straight
+ * up and down, 1/9 the other diagonals. */
+function hexStep(
+  cursorY: number,
+  h: number,
+  key: number,
+): { dx: number; dy: number } | null {
+  let button = key;
+  if (button === NK(56)) button = CURSOR_UP;
+  else if (button === NK(50)) button = CURSOR_DOWN;
+  else if (button === NK(52)) button = CURSOR_LEFT;
+  else if (button === NK(54)) button = CURSOR_RIGHT;
+
+  if (button === CURSOR_UP && cursorY > 0 && (cursorY & 1) === 0) button = NK(57);
+  else if (button === CURSOR_DOWN && cursorY < h - 1 && cursorY & 1) button = NK(49);
+  else if (button === NK(55)) button = CURSOR_UP;
+  else if (button === NK(51)) button = CURSOR_DOWN;
+
+  if (button === CURSOR_UP) return { dx: 0, dy: -1 };
+  if (button === CURSOR_DOWN) return { dx: 0, dy: 1 };
+  if (button === CURSOR_LEFT) return { dx: -1, dy: 0 };
+  if (button === CURSOR_RIGHT) return { dx: 1, dy: 0 };
+  if (button === NK(49)) return { dx: -1, dy: 1 };
+  if (button === NK(57)) return { dx: 1, dy: -1 };
+  return null;
+}
+
+/** Move the cursor by `step`, clamped into the hexagon, and show it; `true`
+ * when anything changed. */
+function moveHexCursor(
+  state: BricksState,
+  ui: BricksUi,
+  step: { dx: number; dy: number },
+): boolean {
+  const { w, h } = state;
+  const { x: x0, y: y0, visible } = ui.cursor;
+  ui.cursor.visible = true;
+  let x = Math.max(0, Math.min(x0 + step.dx, w - 1));
+  const y = Math.max(0, Math.min(y0 + step.dy, h - 1));
+  const extra = (h | y) & 1 ? 0 : 1;
+  x = Math.min(x, w - ((y / 2) | 0) - 1);
+  x = Math.max(x, (((h - y) / 2) | 0) - extra);
+  ui.cursor.x = x;
+  ui.cursor.y = y;
+  return !visible || x !== x0 || y !== y0;
+}
+
+const inHex = (s: BricksState, x: number, y: number) =>
+  x >= 0 && x < s.w && y >= 0 && y < s.h && (s.grid[y * s.w + x] & F_BOUND) === 0;
+
+const geometry: TargetGeometry<BricksState, BricksUi, BricksDrawState, Point> = {
+  noun: "cell",
+  // Undo the shear, then floor to a cell.
+  pointerTarget(s, ds, p) {
+    const ts = ds.tileSize;
+    const { ox, oy } = offsets(s.h, ts);
+    const py = p.y - oy;
+    const y = py < 0 ? -1 : (py / ts) | 0;
+    const px = p.x - ox - y * (ts >> 1);
+    const x = px < 0 ? -1 : (px / ts) | 0;
+    return inHex(s, x, y) ? { x, y } : null;
+  },
+  pointAt(s, ds, t) {
+    const ts = ds.tileSize;
+    const o = tileOrigin(t.x, t.y, s.h, ts);
+    return { x: o.x + (ts >> 1), y: o.y + (ts >> 1) };
+  },
+  cursorTarget(s, ui) {
+    const { x, y } = ui.cursor;
+    return inHex(s, x, y) ? { x, y } : null;
+  },
+  parkCursor(ui, t) {
+    ui.cursor.x = t.x;
+    ui.cursor.y = t.y;
+  },
+  moveCursor(s, ui, button) {
+    const step = hexStep(ui.cursor.y, s.h, button);
+    return step !== null && moveHexCursor(s, ui, step);
+  },
+};
+
+type BricksVerb = TargetVerb<BricksState, BricksUi, Point, BricksMove>;
+const shadeVerb: BricksVerb = {
+  does: "cycle it from empty to shaded, then unshaded, then empty again",
+  apply: paintCell((old) => cycleColor(LEFT_BUTTON, old)),
+};
+const unshadeVerb: BricksVerb = {
+  does: "cycle it the other way, from empty to unshaded, then shaded",
+  apply: paintCell((old) => cycleColor(RIGHT_BUTTON, old)),
+};
+
+const targetVerbs: TargetVerbs<
+  BricksState,
+  BricksUi,
+  BricksDrawState,
+  Point,
+  BricksMove
+> = {
+  geometry,
+  primary: shadeVerb,
+  secondary: unshadeVerb,
+  // A numpad digit that moves the cursor (all but 0 and 5) is taken by the
+  // move arm first, so only the main row's digits and those two reach here.
+  keyOnly: [
+    {
+      does: "shade it",
+      keys: [digitKey(1)],
+      apply: paintCell(() => F_SHADE),
+      pointer: { kind: "cycle", button: "primary" },
+    },
+    {
+      does: "unshade it",
+      keys: [digitKey(0), digitKey(2)],
+      apply: paintCell(() => F_UNSHADE),
+      pointer: { kind: "cycle", button: "primary" },
+    },
+    {
+      does: "empty it",
+      keys: ERASE_KEYS,
+      apply: paintCell(() => F_EMPTY),
+      pointer: { kind: "cycle", button: "primary" },
+    },
+  ],
+};
+
 function interpretMove(
   state: BricksState,
   ui: BricksUi,
@@ -124,113 +281,46 @@ function interpretMove(
   pt: Point,
   rawButton: number,
 ): BricksMove | null | UiUpdate {
-  const { w, h, grid } = state;
+  const { w, grid } = state;
   const shift = (rawButton & MOD_SHFT) !== 0;
   const control = (rawButton & MOD_CTRL) !== 0;
   // Strip only Shift/Ctrl — MOD_NUM_KEYPAD is load-bearing for the diagonals.
-  let button = rawButton & ~(MOD_SHFT | MOD_CTRL);
-  const ts = ds.tileSize;
+  const button = rawButton & ~(MOD_SHFT | MOD_CTRL);
 
-  // Numpad 8/2/4/6 are the orthogonal cursor moves.
-  if (button === NK(56)) button = CURSOR_UP;
-  else if (button === NK(50)) button = CURSOR_DOWN;
-  else if (button === NK(52)) button = CURSOR_LEFT;
-  else if (button === NK(54)) button = CURSOR_RIGHT;
-
-  // Moving up/down across the shear alternates orthogonal and diagonal;
-  // numpad 7/3 become straight up/down.
-  if (button === CURSOR_UP && ui.cursor.y > 0 && (ui.cursor.y & 1) === 0)
-    button = NK(57);
-  else if (button === CURSOR_DOWN && ui.cursor.y < h - 1 && ui.cursor.y & 1)
-    button = NK(49);
-  else if (button === NK(55)) button = CURSOR_UP;
-  else if (button === NK(51)) button = CURSOR_DOWN;
-
-  let dx = 0;
-  let dy = 0;
-  if (button === CURSOR_UP) dy = -1;
-  else if (button === CURSOR_DOWN) dy = 1;
-  else if (button === CURSOR_LEFT) dx = -1;
-  else if (button === CURSOR_RIGHT) dx = 1;
-  else if (button === NK(49)) {
-    dx = -1;
-    dy = 1;
-  } else if (button === NK(57)) {
-    dx = 1;
-    dy = -1;
-  }
-
-  if (dx || dy) {
-    const hx = ui.cursor.x;
-    const hy = ui.cursor.y;
-    ui.cursor.visible = true;
-    ui.cursor.x = Math.max(0, Math.min(ui.cursor.x + dx, w - 1));
-    ui.cursor.y = Math.max(0, Math.min(ui.cursor.y + dy, h - 1));
-
-    // Clamp into the hexagon's row bounds.
-    const extra = (h | ui.cursor.y) & 1 ? 0 : 1;
-    ui.cursor.x = Math.min(ui.cursor.x, w - ((ui.cursor.y / 2) | 0) - 1);
-    ui.cursor.x = Math.max(ui.cursor.x, (((h - ui.cursor.y) / 2) | 0) - extra);
-
+  // The numpad's moves, and Shift or Ctrl with a move, which paints the cells
+  // the cursor leaves and enters: Bricks' own keys. A bare arrow is the
+  // model's, through the geometry.
+  const step = hexStep(ui.cursor.y, state.h, button);
+  if (step && (shift || control || button & MOD_NUM_KEYPAD)) {
+    const i1 = ui.cursor.y * w + ui.cursor.x;
+    const changed = moveHexCursor(state, ui, step);
     if (shift || control) {
       const to = shift && control ? "empty" : control ? "shade" : "unshade";
-      const i1 = hy * w + hx;
       const i2 = ui.cursor.y * w + ui.cursor.x;
-      const isNoop = (i: number): boolean => {
-        const c = grid[i] & COL_MASK;
-        return (
-          (to === "shade" && c === F_SHADE) ||
-          (to === "unshade" && c === F_UNSHADE) ||
-          (to === "empty" && c === F_EMPTY)
-        );
-      };
-      const cells: { index: number; to: typeof to }[] = [];
-      if (!isNoop(i1)) cells.push({ index: i1, to });
-      if (i1 !== i2 && !isNoop(i2)) cells.push({ index: i2, to });
+      const bits = colorBits(to);
+      const cells: { index: number; to: CellColor }[] = [];
+      for (const index of i1 === i2 ? [i1] : [i1, i2])
+        if ((grid[index] & COL_MASK) !== bits) cells.push({ index, to });
       if (cells.length > 0) return { kind: "paint", cells };
     }
-    return UI_UPDATE;
-  }
-
-  // --- pointer: undo the shear, then floor to a cell -----------------------
-  const { ox, oy } = offsets(h, ts);
-  const py = pt.y - oy;
-  const gy = py < 0 ? -1 : (py / ts) | 0;
-  const px = pt.x - ox - gy * (ts >> 1);
-  const gx = px < 0 ? -1 : (px / ts) | 0;
-
-  let hx = ui.cursor.x;
-  let hy = ui.cursor.y;
-
-  if (isMouseDown(button)) {
-    ui.dragType = 0;
-    ui.drag = [];
-  }
-
-  if (isMouseDown(button) || isMouseDrag(button)) {
-    if (gx >= 0 && gx < w && gy >= 0 && gy < h) {
-      hx = gx;
-      hy = gy;
-      ui.cursor.visible = false;
-    } else {
-      return null;
-    }
+    return changed ? UI_UPDATE : null;
   }
 
   if (isMouseDown(button)) {
-    const i = hy * w + hx;
-    const old = grid[i] & COL_MASK;
-    if (button === LEFT_BUTTON)
-      ui.dragType = old === F_UNSHADE ? F_EMPTY : old === F_SHADE ? F_UNSHADE : F_SHADE;
-    else if (button === RIGHT_BUTTON)
-      ui.dragType = old === F_UNSHADE ? F_SHADE : old === F_SHADE ? F_EMPTY : F_UNSHADE;
-    else ui.dragType = F_EMPTY;
+    const at = geometry.pointerTarget(state, ds, pt, ui);
+    if (at === null) return null;
+    const i = at.y * w + at.x;
+    ui.dragType = cycleColor(button, grid[i] & COL_MASK);
     ui.drag = [i];
+    geometry.parkCursor(ui, at);
+    ui.cursor.visible = false;
     return UI_UPDATE;
   }
 
   if (isMouseDrag(button) && ui.dragType) {
-    const i = hy * w + hx;
+    const at = geometry.pointerTarget(state, ds, pt, ui);
+    if (at === null) return null;
+    const i = at.y * w + at.x;
     if (grid[i] === ui.dragType) return null;
     if (ui.drag.includes(i)) return null;
     ui.drag.push(i);
@@ -238,43 +328,23 @@ function interpretMove(
   }
 
   if (isMouseRelease(button) && ui.drag.length > 0) {
+    const drag = ui.drag;
     const to = bitsColor(ui.dragType);
-    const cells = ui.drag
+    ui.drag = [];
+    // A drag that never left its cell is a click: its button's verb.
+    if (drag.length === 1) {
+      const verb = button === LEFT_RELEASE ? shadeVerb : unshadeVerb;
+      const at = { x: drag[0] % w, y: (drag[0] / w) | 0 };
+      return verb.apply(state, at, ui) ?? UI_UPDATE;
+    }
+    const cells = drag
       .filter((i) => (grid[i] & COL_MASK) !== 0)
       .map((index) => ({ index, to }));
-    ui.drag = [];
     if (cells.length > 0) return { kind: "paint", cells };
     return UI_UPDATE;
   }
 
-  // --- keyboard place-one at the cursor ------------------------------------
-  // Numpad 1–4 and 6–9 were spent on movement above; any other digit key,
-  // numpad or not, reads as its digit here.
-  const digit = digitOf(button);
-  if (
-    ui.cursor.visible &&
-    (button === CURSOR_SELECT ||
-      button === CURSOR_SELECT2 ||
-      isEraseKey(button) ||
-      (digit !== null && digit <= 2))
-  ) {
-    const i = ui.cursor.y * w + ui.cursor.x;
-    const old = grid[i] & COL_MASK;
-    if (!old) return null; // a clue or bound cell — nothing to set
-
-    let to: CellColor = "empty";
-    if (digit === 0 || digit === 2) to = "unshade";
-    else if (digit === 1) to = "shade";
-    else if (button === CURSOR_SELECT)
-      to = old === F_EMPTY ? "shade" : old === F_SHADE ? "unshade" : "empty";
-    else if (button === CURSOR_SELECT2)
-      to = old === F_EMPTY ? "unshade" : old === F_UNSHADE ? "shade" : "empty";
-
-    if (old === colorBits(to)) return null; // keep no-ops off the undo chain
-    return { kind: "paint", cells: [{ index: i, to }] };
-  }
-
-  return null;
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, pt, rawButton);
 }
 
 function executeMove(state: BricksState, move: BricksMove): BricksState {
@@ -485,6 +555,7 @@ export const bricksGame: Game<
   newState,
   newUi,
 
+  targetVerbs,
   interpretMove,
   executeMove,
   status,

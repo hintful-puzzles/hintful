@@ -6,18 +6,13 @@ runs of black squares.
 
 ## Controls
 
-Click a square to turn it black, then white, then back to gray
-(meaning undecided); right-click it (on a touch screen, a long press)
-to go the other way round, white first. Drag along a row or column to
-give every gray square on it what the first square turned into. A drag
-whose first square turns back to gray erases instead, and it erases a
-whole rectangle, not just a row or column.
+{{controls}}
 
-The keyboard can also be used. The arrow keys move a cursor. Enter
-turns the square under it black, then white, then back to gray; Space
-goes the other way round, white first. Hold Ctrl while moving to paint
-black squares as you go, Shift to paint white ones, and both to return
-them to gray.
+Drag along a row or column to give every gray square on it what the
+first square turned into. A drag whose first square turns back to gray
+erases instead, and it erases a whole rectangle, not just a row or
+column. Hold Ctrl while moving the cursor to paint black squares as you
+go, Shift to paint white ones, and both to return them to gray.
 
 ## Hints
 

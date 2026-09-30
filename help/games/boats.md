@@ -14,11 +14,11 @@ More information: https://www.janko.at/Raetsel/Battleships/index.htm
 
 ## Controls
 
-Left-click to place a boat segment in the grid. Unknown boat segments are represented by a small rectangle, and will automatically change into the correct shape when the surrounding cells are filled in.
+{{controls}}
 
-Right-click to place water, to indicate that a boat cannot be placed here.
+Unknown boat segments are represented by a small rectangle, and will automatically change into the correct shape when the surrounding cells are filled in.
 
-To play with a keyboard, use the arrow keys to move the cursor. Press Enter to place a boat segment, and press Space to place water.
+Drag along a row or column to fill every square it passes over the way the first one changed. Hold Ctrl while moving the cursor to place boat segments on the empty squares it passes over, Shift to place water, or both to empty them.
 
 ## Hints
 

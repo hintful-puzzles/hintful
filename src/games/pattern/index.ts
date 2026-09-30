@@ -22,16 +22,14 @@ import { trackTargets } from "../../engine/hint-track.ts";
 import { CELL, type Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
   endDrag,
-  gridCursorMove,
   isCursorMove,
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
   MOD_CTRL,
   MOD_SHFT,
+  moveCursor,
   moveDrag,
   newCursor,
   newDrag,
@@ -42,6 +40,12 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  interpretTargetVerbs,
+  type TargetGeometry,
+  type TargetVerb,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newPatternDesc } from "./generator.ts";
 import { cellAt } from "./hint-marks.ts";
@@ -64,6 +68,8 @@ import {
   solveToString,
 } from "./solver.ts";
 import {
+  clickBlack,
+  clickWhite,
   decodeParams,
   defaultParams,
   encodeParams,
@@ -85,6 +91,60 @@ import {
   validateDesc,
   validateParams,
 } from "./state.ts";
+
+/** A verb that turns a square the player may change into `to(v)`. */
+const setSquare =
+  (to: (v: number) => GridVal) =>
+  (s: PatternState, { x, y }: Point): PatternMove | null => {
+    const i = y * s.common.w + x;
+    if (s.common.immutable[i]) return null;
+    return { type: "fill", value: to(s.grid[i]), x, y, w: 1, h: 1 };
+  };
+
+type PatternVerb = TargetVerb<PatternState, PatternUi, Point, PatternMove>;
+const blackVerb: PatternVerb = {
+  does: "turn it black, then white, then back to gray (meaning undecided)",
+  apply: setSquare(clickBlack),
+};
+const whiteVerb: PatternVerb = {
+  does: "go the other way round, white first",
+  apply: setSquare(clickWhite),
+};
+
+/** The grid of squares, whose origin clears the clue block: its row clues are
+ * as wide as the grid is tall needs, and its column clues as tall as it is
+ * wide needs, so the two insets differ and each axis has its own. */
+const geometry: TargetGeometry<PatternState, PatternUi, PatternDrawState, Point> = {
+  noun: "square",
+  pointerTarget(s, ds, p) {
+    const { w, h } = s.common;
+    const x = fromCoord(ds.tileSize, w, p.x);
+    const y = fromCoord(ds.tileSize, h, p.y);
+    return x >= 0 && x < w && y >= 0 && y < h ? { x, y } : null;
+  },
+  pointAt(s, ds, t) {
+    const ts = ds.tileSize;
+    const half = ts >> 1;
+    return {
+      x: toCoord(ts, s.common.w, t.x) + half,
+      y: toCoord(ts, s.common.h, t.y) + half,
+    };
+  },
+  cursorTarget: (_s, ui) => ({ x: ui.cursor.x, y: ui.cursor.y }),
+  parkCursor(ui, t) {
+    ui.cursor.x = t.x;
+    ui.cursor.y = t.y;
+  },
+  moveCursor: (s, ui, button) => moveCursor(ui.cursor, button, s.common.w, s.common.h),
+};
+
+const targetVerbs: TargetVerbs<
+  PatternState,
+  PatternUi,
+  PatternDrawState,
+  Point,
+  PatternMove
+> = { geometry, primary: blackVerb, secondary: whiteVerb };
 
 function newUi(_state: PatternState): PatternUi {
   return {
@@ -128,13 +188,14 @@ function interpretMove(
     if (button === LEFT_BUTTON) {
       ui.dragButton = LEFT_DRAG;
       ui.releaseButton = LEFT_RELEASE;
-      ui.state = ((curr + 2) % 3) as GridVal; // UNKNOWN→FULL→EMPTY→UNKNOWN
+      ui.state = clickBlack(curr);
     } else {
       ui.dragButton = RIGHT_DRAG;
       ui.releaseButton = RIGHT_RELEASE;
-      ui.state = ((curr + 1) % 3) as GridVal; // UNKNOWN→EMPTY→FULL→UNKNOWN
+      ui.state = clickWhite(curr);
     }
     startDrag(ui.drag, x, y);
+    geometry.parkCursor(ui, { x, y });
     ui.cursor.visible = false;
     return UI_UPDATE;
   }
@@ -158,11 +219,15 @@ function interpretMove(
     const x2 = Math.max(sx, ex);
     const y1 = Math.min(sy, ey);
     const y2 = Math.max(sy, ey);
-    // A multi-cell paint drag (not a single click, not a clear) only fills
-    // blank cells, so dragging across the board never rewrites a mark the
-    // player already placed.
-    const multiCell = x2 > x1 || y2 > y1;
-    const onlyBlank = multiCell && ui.state !== GRID_UNKNOWN;
+    // A drag that never left its square is a click: its button's verb.
+    if (x1 === x2 && y1 === y2) {
+      endDrag(ui.drag);
+      const verb = button === LEFT_RELEASE ? blackVerb : whiteVerb;
+      return verb.apply(state, { x: sx, y: sy }, ui) ?? UI_UPDATE;
+    }
+    // A paint drag (not a clear) only fills blank cells, so dragging across
+    // the board never rewrites a mark the player already placed.
+    const onlyBlank = ui.state !== GRID_UNKNOWN;
     let moveNeeded = false;
     for (let yy = y1; yy <= y2 && !moveNeeded; yy++) {
       for (let xx = x1; xx <= x2; xx++) {
@@ -190,19 +255,12 @@ function interpretMove(
     return UI_UPDATE;
   }
 
-  // --- keyboard cursor movement (paints while Ctrl/Shift held) ---
-  if (isCursorMove(button)) {
+  // --- Ctrl/Shift with an arrow paints as the cursor moves: Pattern's own
+  // stroke, where a bare arrow only moves the cursor ---
+  if (isCursorMove(button) && (control || shift)) {
     const ox = ui.cursor.x;
     const oy = ui.cursor.y;
-    const wasVisible = ui.cursor.visible;
-    const moved = gridCursorMove(button, ui.cursor.x, ui.cursor.y, w, h);
-    if (moved) {
-      ui.cursor.x = moved.x;
-      ui.cursor.y = moved.y;
-    }
-    ui.cursor.visible = true;
-    const ret = moved || !wasVisible ? UI_UPDATE : null;
-    if (!control && !shift) return ret;
+    const ret = moveCursor(ui.cursor, button, w, h) ? UI_UPDATE : null;
 
     const newstate: GridVal = control ? (shift ? GRID_UNKNOWN : GRID_FULL) : GRID_EMPTY;
     if (
@@ -221,36 +279,7 @@ function interpretMove(
     };
   }
 
-  // --- cursor select: cycle the current cell ---
-  if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
-    if (!ui.cursor.visible) {
-      ui.cursor.visible = true;
-      return UI_UPDATE;
-    }
-    const curr = grid[ui.cursor.y * w + ui.cursor.x];
-    const newstate: GridVal =
-      button === CURSOR_SELECT2
-        ? curr === GRID_UNKNOWN
-          ? GRID_EMPTY
-          : curr === GRID_EMPTY
-            ? GRID_FULL
-            : GRID_UNKNOWN
-        : curr === GRID_UNKNOWN
-          ? GRID_FULL
-          : curr === GRID_FULL
-            ? GRID_EMPTY
-            : GRID_UNKNOWN;
-    return {
-      type: "fill",
-      value: newstate,
-      x: ui.cursor.x,
-      y: ui.cursor.y,
-      w: 1,
-      h: 1,
-    };
-  }
-
-  return null;
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
 }
 
 // --- hint ------------------------------------------------------------------
@@ -352,7 +381,7 @@ function hintGesture(
   const { w, h } = state.common;
   const half = ts >> 1;
   return m.cells.map((i) => {
-    const leftTakesIt = (state.grid[i] + 2) % 3 === m.value;
+    const leftTakesIt = clickBlack(state.grid[i]) === m.value;
     return click(
       { x: toCoord(ts, w, i % w) + half, y: toCoord(ts, h, (i / w) | 0) + half },
       leftTakesIt ? "primary" : "secondary",
@@ -418,6 +447,7 @@ export const patternGame: Game<
   newState,
   newUi,
 
+  targetVerbs,
   interpretMove,
   executeMove,
   status,

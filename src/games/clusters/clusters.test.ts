@@ -71,7 +71,7 @@ function makeState(w: number, h: number, grid: number[]): ClustersState {
 }
 
 function newUi(): ClustersUi {
-  return { cursor: newCursor(), dragType: -1, drag: [] };
+  return { cursor: newCursor(), dragType: -1, dragButton: -1, drag: [] };
 }
 
 /** Simulate a full mouse click (press then release) and return the committed

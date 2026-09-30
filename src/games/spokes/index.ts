@@ -4,10 +4,10 @@
  * so that every hub carries exactly its number of lines, no two diagonals
  * cross, and all the hubs end up in one connected group.
  *
- * Controls: drag from a hub towards a neighbor to toggle the line between
- * them; drag with the right button to toggle a "ruled out" mark. The keyboard
- * cursor lives on a half-grid — arrow keys step between a hub and each of its
- * eight spoke positions, Enter draws a line and Space places a mark.
+ * Controls: the targets are the spoke dots on each hub's rim, addressed on
+ * the keyboard cursor's half-grid. A click aims at the dot its press points
+ * toward, and a drag from a hub aims at the dot toward where it lets go; each
+ * toggles the line (left) or a "ruled out" mark (right).
  *
  * Fork addition: `findMistakes` re-solves from the clues and flags every line
  * the unique solution forbids (and every mark it needs a line at), so Check &
@@ -40,19 +40,22 @@ import {
 import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
-  gridCursorMove,
-  isCursorMove,
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
+  moveCursor,
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  interpretTargetVerbs,
+  type TargetGeometry,
+  type TargetVerb,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newSpokesDesc } from "./generator.ts";
 import { type Marked, type Spoke, say } from "./hint-text.ts";
@@ -91,7 +94,6 @@ import {
   SPOKE_HIDDEN,
   SPOKE_LINE,
   SPOKE_MARKED,
-  type SpokesDrag,
   type SpokesMistake,
   type SpokesMove,
   type SpokesParams,
@@ -122,6 +124,126 @@ function dragDirection(dx: number, dy: number): number {
   return Math.trunc(angle + 16) & 7;
 }
 
+/** The dot a point on hub `(hx, hy)`'s tile aims at: the half-grid position
+ * of the spoke toward the neighbor it points to, or `null` in the hub's dead
+ * zone or toward no neighbor. A click aims from where it lands and a drag from
+ * where it has got to, so both read this. */
+function aimedSpoke(
+  state: SpokesState,
+  ts: number,
+  hx: number,
+  hy: number,
+  p: Point,
+): Point | null {
+  const dx = p.x - toCoord(hx, ts);
+  const dy = p.y - toCoord(hy, ts);
+  // A point that hasn't left the hub yet points nowhere in particular.
+  if (dx * dx + dy * dy < (ts * ts) / 22) return null;
+  const d = SPOKE_DIRS[dragDirection(dx, dy)];
+  const nx = hx + d.dx;
+  const ny = hy + d.dy;
+  if (nx < 0 || nx >= state.w || ny < 0 || ny >= state.h) return null;
+  return { x: 3 * hx + d.dx, y: 3 * hy + d.dy };
+}
+
+/** The hub a half-grid position belongs to and the offset of its dot, which
+ * is `(0, 0)` on the hub's own center. The half-grid puts a hub on every third
+ * sub-cell and its eight spoke dots on the ones between. */
+function onHalfGrid(t: Point): { hx: number; hy: number; ox: number; oy: number } {
+  return {
+    hx: ((t.x + 1) / 3) | 0,
+    hy: ((t.y + 1) / 3) | 0,
+    ox: ((t.x + 1) % 3) - 1,
+    oy: ((t.y + 1) % 3) - 1,
+  };
+}
+
+/** A verb on the spoke whose dot is at `t`: an empty spoke becomes `mark`, and
+ * anything else is cleared. */
+const toggleSpoke =
+  (mark: number) =>
+  (state: SpokesState, t: Point): SpokesMove | null => {
+    const { w } = state;
+    const { hx, hy, ox, oy } = onHalfGrid(t);
+    if (ox === 0 && oy === 0) return null;
+    const from = hy * w + hx;
+    const to = from + oy * w + ox;
+    const start = Math.min(from, to);
+    const end = Math.max(from, to);
+    const sx = start % w;
+    const sy = (start / w) | 0;
+
+    for (let dir = 0; dir < 4; dir++) {
+      if ((sy + SPOKE_DIRS[dir].dy) * w + sx + SPOKE_DIRS[dir].dx !== end) continue;
+      const old = getSpoke(state.spokes[start], dir);
+      if (old === SPOKE_HIDDEN) return null;
+
+      // A diagonal whose crossing partner is already a line is auto-ruled-out
+      // and inert — the game placed that mark, so the player can't toggle it
+      // (and can't draw a crossing line). Erasing the *line* clears it.
+      const cross = crossingSpoke(state, start, dir);
+      if (cross && getSpoke(state.spokes[cross.i], cross.d) === SPOKE_LINE) return null;
+
+      const next = old !== SPOKE_EMPTY ? SPOKE_EMPTY : mark;
+      return { kind: "set", index: start, dir, state: next };
+    }
+    return null;
+  };
+
+type SpokesVerb = TargetVerb<SpokesState, SpokesUi, Point, SpokesMove>;
+const lineVerb: SpokesVerb = {
+  does:
+    "draw a line from its hub to the hub it points at, or clear it if it " +
+    "already holds a line or a mark",
+  apply: toggleSpoke(SPOKE_LINE),
+};
+const markVerb: SpokesVerb = {
+  does: "mark it as unused, or clear it if it already holds a line or a mark",
+  apply: toggleSpoke(SPOKE_MARKED),
+};
+
+/** The spoke dots, addressed on the cursor's half-grid. A press addresses the
+ * dot its hub's tile aims it at; the cursor rests on a dot, or on a hub's
+ * center, which addresses none. */
+const geometry: TargetGeometry<SpokesState, SpokesUi, SpokesDrawState, Point> = {
+  noun: "dot",
+  pointerTarget(state, ds, p) {
+    const ts = ds.tileSize;
+    const hx = fromCoord(p.x, ts, 0);
+    const hy = fromCoord(p.y, ts, 0);
+    if (hx < 0 || hx >= state.w || hy < 0 || hy >= state.h) return null;
+    return aimedSpoke(state, ts, hx, hy, p);
+  },
+  pointAt(_state, ds, t) {
+    // Past the dead zone and short of the tile's edge, along the dot's line.
+    const ts = ds.tileSize;
+    const { hx, hy, ox, oy } = onHalfGrid(t);
+    const r = (0.35 * ts) / Math.hypot(ox, oy);
+    return {
+      x: Math.round(toCoord(hx, ts) + r * ox),
+      y: Math.round(toCoord(hy, ts) + r * oy),
+    };
+  },
+  cursorTarget(_state, ui) {
+    const { ox, oy } = onHalfGrid(ui.cursor);
+    return ox === 0 && oy === 0 ? null : { x: ui.cursor.x, y: ui.cursor.y };
+  },
+  parkCursor(ui, t) {
+    ui.cursor.x = t.x;
+    ui.cursor.y = t.y;
+  },
+  moveCursor: (state, ui, button) =>
+    moveCursor(ui.cursor, button, state.w * 3 - 2, state.h * 3 - 2),
+};
+
+const targetVerbs: TargetVerbs<
+  SpokesState,
+  SpokesUi,
+  SpokesDrawState,
+  Point,
+  SpokesMove
+> = { geometry, primary: lineVerb, secondary: markVerb };
+
 function interpretMove(
   state: SpokesState,
   ui: SpokesUi,
@@ -133,16 +255,13 @@ function interpretMove(
   const ts = ds.tileSize;
   const button = stripModifiers(rawButton);
 
-  let from = -1;
-  let to = -1;
-  let drag: SpokesDrag = "none";
-
   if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
     const x = fromCoord(p.x, ts, 0);
     const y = fromCoord(p.y, ts, 0);
     if (x < 0 || x >= w || y < 0 || y >= h) return null;
     ui.dragStart = y * w + x;
     ui.drag = button === LEFT_BUTTON ? "left" : "right";
+    geometry.parkCursor(ui, aimedSpoke(state, ts, x, y, p) ?? { x: 3 * x, y: 3 * y });
     ui.cursor.visible = false;
   }
 
@@ -153,93 +272,34 @@ function interpretMove(
     button === RIGHT_DRAG
   ) {
     if (ui.dragStart === -1) return null;
-
     const sx = ui.dragStart % w;
     const sy = (ui.dragStart / w) | 0;
-    const dx = p.x - toCoord(sx, ts);
-    const dy = p.y - toCoord(sy, ts);
-    const dir = dragDirection(dx, dy);
-    const nx = sx + SPOKE_DIRS[dir].dx;
-    const ny = sy + SPOKE_DIRS[dir].dy;
-
-    // A drag that hasn't left the hub yet points nowhere in particular.
-    const deadZone = dx * dx + dy * dy < (ts * ts) / 22;
-    ui.dragEnd = nx < 0 || nx >= w || ny < 0 || ny >= h || deadZone ? -1 : ny * w + nx;
+    const aimed = aimedSpoke(state, ts, sx, sy, p);
+    ui.dragEnd = aimed
+      ? ui.dragStart + (aimed.y - 3 * sy) * w + (aimed.x - 3 * sx)
+      : -1;
     return UI_UPDATE;
   }
 
+  // A release, dragged or not, applies its button's verb to the spoke it was
+  // aiming at when it let go.
   if (button === LEFT_RELEASE || button === RIGHT_RELEASE) {
-    from = ui.dragStart;
-    to = ui.dragEnd;
-    drag = ui.drag;
+    const from = ui.dragStart;
+    const to = ui.dragEnd;
+    const verb = ui.drag === "left" ? lineVerb : markVerb;
+    const pressed = ui.drag !== "none";
     ui.dragStart = -1;
     ui.dragEnd = -1;
     ui.drag = "none";
-  }
-
-  if (ui.cursor.visible && (button === CURSOR_SELECT || button === CURSOR_SELECT2)) {
-    // The half-grid puts a hub on every third sub-cell and its eight spoke
-    // pickers on the ones between, so the cursor already names both ends.
-    const cx = ((ui.cursor.x + 1) / 3) | 0;
-    const cy = ((ui.cursor.y + 1) / 3) | 0;
-    from = cy * w + cx;
-    to = from + ((((ui.cursor.y + 1) % 3) - 1) * w + (((ui.cursor.x + 1) % 3) - 1));
-    drag = button === CURSOR_SELECT ? "left" : "right";
-  }
-
-  if (drag !== "none") {
+    if (!pressed) return null;
     if (from === -1 || to === -1) return UI_UPDATE;
-
-    const start = Math.min(from, to);
-    const end = Math.max(from, to);
-    const sx = start % w;
-    const sy = (start / w) | 0;
-
-    for (let dir = 0; dir < 4; dir++) {
-      if ((sy + SPOKE_DIRS[dir].dy) * w + sx + SPOKE_DIRS[dir].dx !== end) continue;
-
-      const old = getSpoke(state.spokes[start], dir);
-      if (old === SPOKE_HIDDEN) continue;
-
-      // A diagonal whose crossing partner is already a line is auto-ruled-out
-      // and inert — the game placed that mark, so the player can't toggle it
-      // (and can't draw a crossing line). Erasing the *line* clears it.
-      const cross = crossingSpoke(state, start, dir);
-      if (cross && getSpoke(state.spokes[cross.i], cross.d) === SPOKE_LINE) {
-        return UI_UPDATE;
-      }
-
-      // An empty spoke takes the button's state; anything else is cleared.
-      const next =
-        old !== SPOKE_EMPTY ? SPOKE_EMPTY : drag === "left" ? SPOKE_LINE : SPOKE_MARKED;
-      return { kind: "set", index: start, dir, state: next };
-    }
-
-    // Nothing to toggle (the two hubs aren't adjacent, or the spoke can't
-    // exist): a local no-op, so no history entry.
-    return UI_UPDATE;
+    const fx = from % w;
+    const fy = (from / w) | 0;
+    const dot = { x: 3 * fx + ((to % w) - fx), y: 3 * fy + (((to / w) | 0) - fy) };
+    return verb.apply(state, dot, ui) ?? UI_UPDATE;
   }
 
-  if (isCursorMove(button)) {
-    const moved = gridCursorMove(
-      button,
-      ui.cursor.x,
-      ui.cursor.y,
-      w * 3 - 2,
-      h * 3 - 2,
-    );
-    if (moved) {
-      ui.cursor.x = moved.x;
-      ui.cursor.y = moved.y;
-    }
-    if (!ui.cursor.visible) {
-      ui.cursor.visible = true;
-      return UI_UPDATE;
-    }
-    return moved ? UI_UPDATE : null;
-  }
-
-  return null;
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
 }
 
 // --- moves ------------------------------------------------------------------
@@ -522,6 +582,7 @@ export const spokesGame: Game<
     },
   ],
 
+  targetVerbs,
   interpretMove,
   executeMove,
   status: (s): GameStatus => (s.completed ? "solved" : "ongoing"),

@@ -12,9 +12,11 @@ The inventor of this puzzle type is unknown.
 
 ## Controls
 
-To draw a line, left-click and drag from one hub to another. You can mark a dot as unused by dragging between hubs with the right mouse button.
+Each hub has a dot on its rim toward every hub it can join.
 
-You can also use the keyboard. Use the arrow keys to move the cursor on top of a dot, then press Enter to draw a line or Space to mark it.
+{{controls}}
+
+You can also drag from one hub to another: with the left button to draw the line between them, or with the right button to mark it as unused.
 
 Because a diagonal line visibly blocks the other diagonal of the same square, drawing one rules its crossing out for you, and erasing the line takes that mark away again. While the line stands, the crossing can't be toggled by hand.
 

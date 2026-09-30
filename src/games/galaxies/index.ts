@@ -40,6 +40,7 @@ import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
   cursorDelta,
+  isCursorMove,
   isMouseDrag,
   isMouseRelease,
   LEFT_BUTTON,
@@ -48,6 +49,11 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import type { RandomState } from "../../engine/random/index.ts";
+import {
+  interpretTargetVerbs,
+  type TargetGeometry,
+  type TargetVerbs,
+} from "../../engine/target-verb.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { newGameDesc } from "./generator.ts";
 import {
@@ -251,6 +257,70 @@ function scoord(c: number, tileSize: number, border: number): number {
 function snapToTile(p: number, tileSize: number, border: number): number {
   return 2 * Math.floor((p - border + tileSize) / tileSize) - 1;
 }
+
+// --- the click half: edges as targets ---------------------------------
+
+/**
+ * A click draws or removes the line on the grid edge nearest the press, so a
+ * target is an interior edge, in grid coordinates. The cursor walks the whole
+ * half-grid, and rests on a target only on an edge: on a dot, a square or a
+ * corner, Enter starts the keyboard's drag instead, an arm of Galaxies' own.
+ */
+const edgeGeometry: TargetGeometry<
+  GalaxiesState,
+  GalaxiesUi,
+  GalaxiesDrawState,
+  Point
+> = {
+  noun: "grid edge",
+  pointerTarget(s, ds, p) {
+    const border = borderFor(ds.tileSize);
+    const e = coordRoundToEdge(p.x, p.y, ds.tileSize, border);
+    return inInterior(s, e.x, e.y) ? e : null;
+  },
+  pointAt(_s, ds, e) {
+    const border = borderFor(ds.tileSize);
+    return { x: scoord(e.x, ds.tileSize, border), y: scoord(e.y, ds.tileSize, border) };
+  },
+  cursorTarget(s, ui) {
+    const { x, y } = ui.cursor;
+    return spaceTypeAt(x, y) === SpaceType.Edge && inInterior(s, x, y)
+      ? { x, y }
+      : null;
+  },
+  parkCursor(ui, e) {
+    ui.cursor.x = e.x;
+    ui.cursor.y = e.y;
+  },
+  moveCursor(s, ui, button) {
+    const delta = cursorDelta(button);
+    if (!delta) return false;
+    const nx = Math.max(1, Math.min(s.sx - 2, ui.cursor.x + delta.dx));
+    const ny = Math.max(1, Math.min(s.sy - 2, ui.cursor.y + delta.dy));
+    const changed = nx !== ui.cursor.x || ny !== ui.cursor.y || !ui.cursor.visible;
+    ui.cursor.x = nx;
+    ui.cursor.y = ny;
+    ui.cursor.visible = true;
+    return changed;
+  },
+};
+
+const targetVerbs: TargetVerbs<
+  GalaxiesState,
+  GalaxiesUi,
+  GalaxiesDrawState,
+  Point,
+  GalaxiesMove
+> = {
+  geometry: edgeGeometry,
+  primary: {
+    does: "add or remove a line",
+    apply: (s, e) =>
+      edgePlacementLegal(s, e.x, e.y)
+        ? { ops: [{ kind: "edge", x: e.x, y: e.y }], solving: false }
+        : null,
+  },
+};
 
 // --- move logic -----------------------------------------------------
 
@@ -578,21 +648,20 @@ function interpretMove(
     // the board. Measuring against the press pixel covers it without a
     // special case.
     if (button !== LEFT_RELEASE || !pending || traveled(ui, x, y)) return null;
-    const e = coordRoundToEdge(ui.pressX, ui.pressY, tile, border);
-    if (!inInterior(s, e.x, e.y)) return null;
-    if (!edgePlacementLegal(s, e.x, e.y)) return null;
-    return { ops: [{ kind: "edge", x: e.x, y: e.y }], solving: false };
+    // The click: the declared verb on the edge the press addressed, which is
+    // where the keyboard carries on from.
+    const e = edgeGeometry.pointerTarget(s, ds, { x: ui.pressX, y: ui.pressY }, ui);
+    if (e === null) return null;
+    edgeGeometry.parkCursor(ui, e);
+    return targetVerbs.primary.apply(s, e, ui);
   }
 
-  const cursorMove = cursorDelta(button);
-  if (cursorMove) {
-    const nx = Math.max(1, Math.min(s.sx - 2, ui.cursor.x + cursorMove.dx));
-    const ny = Math.max(1, Math.min(s.sy - 2, ui.cursor.y + cursorMove.dy));
-    const changed = nx !== ui.cursor.x || ny !== ui.cursor.y || !ui.cursor.visible;
-    ui.cursor.x = nx;
-    ui.cursor.y = ny;
-    ui.cursor.visible = true;
-    if (ui.dragging && ui.dragToDot) {
+  // While a keyboard or pointer drag is open, the arrows steer its free end.
+  if (ui.dragging && isCursorMove(button)) {
+    const changed = edgeGeometry.moveCursor(s, ui, button);
+    const nx = ui.cursor.x;
+    const ny = ui.cursor.y;
+    if (ui.dragToDot) {
       // The cursor is picking the *dot*: take it when it lands on a legal
       // one, drop the pick when it moves off (the preview then shows
       // nothing, exactly as with the pointer out of reach).
@@ -602,18 +671,21 @@ function interpretMove(
         okToAddAssocWithOpposite(s, ui.targetX, ui.targetY, nx, ny);
       ui.dotx = onDot ? nx : -1;
       ui.doty = onDot ? ny : -1;
-    } else if (ui.dragging) {
+    } else {
       ui.targetX = ui.cursor.x;
       ui.targetY = ui.cursor.y;
     }
     return changed ? UI_UPDATE : null;
   }
 
-  if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
-    if (!ui.cursor.visible) {
-      ui.cursor.visible = true;
-      return UI_UPDATE;
-    }
+  // Enter or Space off an edge, or with a drag open, is the keyboard's drag:
+  // it picks up a dot or an arrow, starts the reverse drag from a square, or
+  // finishes the drag it started. On an edge it is the click's verb.
+  if (
+    (button === CURSOR_SELECT || button === CURSOR_SELECT2) &&
+    ui.cursor.visible &&
+    (ui.dragging || edgeGeometry.cursorTarget(s, ui) === null)
+  ) {
     const cx = ui.cursor.x;
     const cy = ui.cursor.y;
     if (ui.dragging) {
@@ -633,9 +705,6 @@ function interpretMove(
       enterDrag(ui, false, cell, { x: s.dotx[ci], y: s.doty[ci] }, cell);
       return UI_UPDATE;
     }
-    if (spaceTypeAt(cx, cy) === SpaceType.Edge && edgePlacementLegal(s, cx, cy)) {
-      return { ops: [{ kind: "edge", x: cx, y: cy }], solving: false };
-    }
     // A plain tile: start the reverse drag, so the keyboard reaches the
     // cell→dot gesture the pointer has (the input-parity bar). The cursor
     // keys then pick the dot and a second select commits.
@@ -643,9 +712,10 @@ function interpretMove(
       enterDrag(ui, true, cell, NO_DOT, cell);
       return UI_UPDATE;
     }
+    return null;
   }
 
-  return null;
+  return interpretTargetVerbs(targetVerbs, s, ui, ds, p, button);
 }
 
 function dropDrag(
@@ -1055,6 +1125,7 @@ export const galaxiesGame: Game<
   },
 
   newDrawState,
+  targetVerbs,
   interpretMove,
   executeMove,
 

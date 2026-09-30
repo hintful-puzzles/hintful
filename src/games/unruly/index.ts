@@ -20,15 +20,10 @@ import type {
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
-import {
-  BACKSPACE,
-  DELETE,
-  digitOf,
-  newCursor,
-  stripModifiers,
-} from "../../engine/pointer.ts";
+import { digitOf, newCursor, stripModifiers } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
+  ERASE_KEYS,
   interpretTargetVerbs,
   squareGrid,
   type TargetVerbs,
@@ -113,7 +108,7 @@ const targetVerbs: TargetVerbs<
   keyOnly: [
     {
       does: "empty the square under the cursor",
-      keys: [{ codes: [BACKSPACE, DELETE], name: "Backspace or Delete" }],
+      keys: ERASE_KEYS,
       apply: place(EMPTY),
       pointer: { kind: "cycle", button: "primary" },
     },

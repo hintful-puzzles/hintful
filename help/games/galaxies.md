@@ -10,7 +10,7 @@ all of these requirements will be automatically highlighted.
 
 ## Controls
 
-Click on a grid edge to add or remove a line.
+{{controls}}
 
 Drag from a dot into a grid square to place an arrow there pointing
 back at the dot, to indicate that you think that square must belong
@@ -28,9 +28,9 @@ ring the dots it could belong to** in Preferences — the gesture keeps
 working, without the rings.
 
 Either mouse button will do, and on a touchscreen an ordinary finger
-drag works. The keyboard can do all of it too: move the cursor with
-the arrow keys, and press Enter or Space to place a line, to pick up
-an arrow, or to start and finish a drag.
+drag works. The keyboard can drag too: on a dot, an arrow or an empty
+square, Enter or Space starts the drag, the arrow keys steer it, and
+Enter or Space again finishes it.
 
 ## Hints
 

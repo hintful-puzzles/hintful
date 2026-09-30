@@ -41,6 +41,7 @@ import { type RandomState, randomNew, randomUpto } from "../../engine/random/ind
 import { registerGame } from "../../engine/registry.ts";
 import {
   interpretTargetVerbs,
+  letterKey,
   routeGesture,
   type TargetGeometry,
   type TargetVerbs,
@@ -290,19 +291,19 @@ const targetVerbs: TargetVerbs<NetState, NetUi, NetDrawState, Point, NetMove> = 
   geometry,
   primary: {
     does: "rotate it anticlockwise",
-    keys: [{ codes: [0x61, 0x41], name: "A" }],
+    keys: [letterKey("A")],
     apply: rotate("A"),
   },
   secondary: {
     does: "rotate it clockwise",
-    keys: [{ codes: [0x64, 0x44], name: "D" }],
+    keys: [letterKey("D")],
     apply: rotate("C"),
   },
   // The hint takes these two by position (`verbMove`).
   keyOnly: [
     {
       does: "rotate the square under the cursor half a turn",
-      keys: [{ codes: [0x66, 0x46], name: "F" }],
+      keys: [letterKey("F")],
       apply: rotate("F"),
       pointer: { kind: "repeat", button: "primary", times: 2 },
     },
@@ -310,7 +311,7 @@ const targetVerbs: TargetVerbs<NetState, NetUi, NetDrawState, Point, NetMove> = 
       does:
         "lock the square under the cursor once you think it is correct, so you " +
         "don't rotate it by accident, or unlock it again",
-      keys: [{ codes: [0x73, 0x53], name: "S" }],
+      keys: [letterKey("S")],
       apply: lockMove,
       pointer: { kind: "notes", button: "primary", where: "the middle of the square" },
     },

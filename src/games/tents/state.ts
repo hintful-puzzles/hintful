@@ -27,6 +27,14 @@ export const TENT = 2;
 export const NONTENT = 3;
 export const MAGIC = 4;
 
+/** What a click makes of a square that is not a tree: a tent on an empty one,
+ * and empty of anything else. The drag preview and the declared verb both
+ * read it, so the square a press shows is the one its release makes. */
+export const clickTent = (v: number): number => (v === BLANK ? TENT : BLANK);
+/** What a right-click makes of a square that is not a tree: grass on an empty
+ * one, and empty of anything else. */
+export const clickGrass = (v: number): number => (v === BLANK ? NONTENT : BLANK);
+
 // --- difficulty (constants named for upstream's tiers; players see DIFF_NAMES)
 export const DIFF_EASY = 0;
 export const DIFF_TRICKY = 1;

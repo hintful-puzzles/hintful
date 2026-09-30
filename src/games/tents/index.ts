@@ -26,11 +26,8 @@ import { commonHintRefusal } from "../../engine/hint-refusal.ts";
 import { matching } from "../../engine/latin.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
   cursorDelta,
   endDrag,
-  hideCursor,
   isCursorMove,
   isMouseDrag,
   isMouseRelease,
@@ -42,11 +39,17 @@ import {
   newCursor,
   newDrag,
   RIGHT_BUTTON,
-  showCursor,
   startDrag,
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  interpretTargetVerbs,
+  squareGrid,
+  type TargetVerb,
+  type TargetVerbs,
+  type VerbKey,
+} from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newTentsDesc } from "./generator.ts";
 import { tentsHint, tentsKeepTrack } from "./hint.ts";
@@ -68,6 +71,8 @@ import { tentsSolve } from "./solver.ts";
 import {
   BLANK,
   canJoin,
+  clickGrass,
+  clickTent,
   DIFF_COUNT,
   DX,
   DY,
@@ -94,15 +99,62 @@ import {
   validateParams,
 } from "./state.ts";
 
-// Keyboard letter codes (both cases, tolerant of frontend casing).
-const KEY_T = "T".charCodeAt(0);
-const KEY_t = "t".charCodeAt(0);
-const KEY_N = "N".charCodeAt(0);
-const KEY_n = "n".charCodeAt(0);
-const KEY_B = "B".charCodeAt(0);
-const KEY_b = "b".charCodeAt(0);
 const KEY_L = "L".charCodeAt(0);
 const KEY_l = "l".charCodeAt(0);
+
+/** A letter's key, in both cases. */
+const letter = (c: string): VerbKey => ({
+  codes: [c.charCodeAt(0), c.toLowerCase().charCodeAt(0)],
+  name: c,
+});
+
+/** A verb that turns a square other than a tree into `to(v)`, or means nothing
+ * where it would leave the square as it is. */
+const setSquare =
+  (to: (v: number) => number) =>
+  (s: TentsState, { x, y }: Point): TentsMove | null => {
+    const v = s.grid[y * s.w + x];
+    const rep = to(v);
+    if (v === TREE || rep === v) return null;
+    return { type: "cells", cells: [{ x, y, v: rep }] };
+  };
+
+type TentsVerb = TargetVerb<TentsState, TentsUi, Point, TentsMove>;
+const tentVerb: TentsVerb = {
+  does: "place a tent there, or empty it if it is already filled",
+  apply: setSquare(clickTent),
+};
+const grassVerb: TentsVerb = {
+  does: "mark it as grass (not a tent), or empty it if it is already filled",
+  apply: setSquare(clickGrass),
+};
+
+const targetVerbs: TargetVerbs<TentsState, TentsUi, TentsDrawState, Point, TentsMove> =
+  {
+    geometry: squareGrid({ size: (s) => s, border: () => TLBORDER }),
+    primary: tentVerb,
+    secondary: grassVerb,
+    keyOnly: [
+      {
+        does: "put a tent on it",
+        keys: [letter("T")],
+        apply: setSquare(() => TENT),
+        pointer: { kind: "cycle", button: "primary" },
+      },
+      {
+        does: "mark it as grass",
+        keys: [letter("N")],
+        apply: setSquare(() => NONTENT),
+        pointer: { kind: "cycle", button: "secondary" },
+      },
+      {
+        does: "empty it",
+        keys: [letter("B")],
+        apply: setSquare(() => BLANK),
+        pointer: { kind: "cycle", button: "primary" },
+      },
+    ],
+  };
 
 function newUi(_state: TentsState): TentsUi {
   return {
@@ -136,7 +188,8 @@ function interpretMove(
     startDrag(ui.drag, x, y);
     ui.dragOk = true;
     ui.linkArmed = false;
-    hideCursor(ui.cursor);
+    targetVerbs.geometry.parkCursor(ui, { x, y });
+    ui.cursor.visible = false;
     return UI_UPDATE;
   }
 
@@ -170,22 +223,27 @@ function interpretMove(
       return UI_UPDATE;
     }
     const link = dragLink(ui, state);
-    const xmin = Math.min(ui.drag.sx, ui.drag.ex);
-    const xmax = Math.max(ui.drag.sx, ui.drag.ex);
-    const ymin = Math.min(ui.drag.sy, ui.drag.ey);
-    const ymax = Math.max(ui.drag.sy, ui.drag.ey);
+    const { sx, sy, ex, ey } = ui.drag;
+    const left = ui.dragButton === LEFT_BUTTON;
+    // A right drag along a line paints its empty squares as grass, as its
+    // preview showed.
     const cells: { x: number; y: number; v: number }[] = [];
-    for (let yy = ymin; yy <= ymax; yy++) {
-      for (let xx = xmin; xx <= xmax; xx++) {
-        const v = dragXform(ui, state, xx, yy);
-        if (grid[yy * w + xx] !== v) cells.push({ x: xx, y: yy, v });
-      }
-    }
+    if (!left)
+      for (let yy = Math.min(sy, ey); yy <= Math.max(sy, ey); yy++)
+        for (let xx = Math.min(sx, ex); xx <= Math.max(sx, ex); xx++) {
+          const v = dragXform(ui, state, xx, yy);
+          if (grid[yy * w + xx] !== v) cells.push({ x: xx, y: yy, v });
+        }
     ui.dragButton = -1;
     endDrag(ui.drag);
     if (link) return link;
-    if (cells.length === 0) return UI_UPDATE;
-    return { type: "cells", cells };
+    // A left drag acts as a click where it started, and a right drag that never
+    // left its square is a right-click: each is its button's verb.
+    if (left || (sx === ex && sy === ey)) {
+      const verb = left ? tentVerb : grassVerb;
+      return verb.apply(state, { x: sx, y: sy }, ui) ?? UI_UPDATE;
+    }
+    return cells.length === 0 ? UI_UPDATE : { type: "cells", cells };
   }
 
   // `L` arms a link from the cursor's tent, tree or open square, and the next
@@ -219,44 +277,24 @@ function interpretMove(
     return UI_UPDATE;
   }
 
-  if (isCursorMove(button)) {
-    // The shared helper carries the cursor; painting the cells it passed over
-    // is Tents' own verb, so it reads the index either side of the move.
+  // Shift or Ctrl with an arrow paints the squares the cursor leaves and enters
+  // as grass: Tents' own stroke, where a bare arrow only moves the cursor.
+  if (isCursorMove(button) && (shift || control)) {
     const idx0 = ui.cursor.x + w * ui.cursor.y;
     const changed = moveCursor(ui.cursor, button, w, h);
-    if (shift || control) {
-      const idx1 = ui.cursor.x + w * ui.cursor.y;
-      const cells: { x: number; y: number; v: number }[] = [];
-      const idxs = idx0 !== idx1 ? [idx0, idx1] : [idx0];
-      for (const i of idxs) {
-        if (grid[i] === BLANK || (control && grid[i] === TENT)) {
-          cells.push({ x: i % w, y: Math.floor(i / w), v: NONTENT });
-        }
+    const idx1 = ui.cursor.x + w * ui.cursor.y;
+    const cells: { x: number; y: number; v: number }[] = [];
+    const idxs = idx0 !== idx1 ? [idx0, idx1] : [idx0];
+    for (const i of idxs) {
+      if (grid[i] === BLANK || (control && grid[i] === TENT)) {
+        cells.push({ x: i % w, y: Math.floor(i / w), v: NONTENT });
       }
-      if (cells.length) return { type: "cells", cells };
     }
+    if (cells.length) return { type: "cells", cells };
     return changed ? UI_UPDATE : null;
   }
 
-  if (ui.cursor.visible) {
-    const v = grid[ui.cursor.y * w + ui.cursor.x];
-    let rep: number | null = null;
-    if (v !== TREE) {
-      if (button === CURSOR_SELECT) rep = v === BLANK ? TENT : BLANK;
-      else if (button === CURSOR_SELECT2) rep = v === BLANK ? NONTENT : BLANK;
-      else if (button === KEY_T || button === KEY_t) rep = TENT;
-      else if (button === KEY_N || button === KEY_n) rep = NONTENT;
-      else if (button === KEY_B || button === KEY_b) rep = BLANK;
-    }
-    if (rep !== null) {
-      return { type: "cells", cells: [{ x: ui.cursor.x, y: ui.cursor.y, v: rep }] };
-    }
-  } else if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
-    showCursor(ui.cursor);
-    return UI_UPDATE;
-  }
-
-  return null;
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
 }
 
 /** Solve from the trees and edge numbers alone, never the player's marks.
@@ -411,6 +449,7 @@ export const tentsGame: Game<
   newState,
   newUi,
 
+  targetVerbs,
   interpretMove,
   executeMove,
   status,
