@@ -18,13 +18,19 @@ import {
 } from "../../engine/border-grid.ts";
 import {
   type BorderHint,
-  borderHintGesture,
   borderHintJourney,
   borderHintKeepTrack,
+  borderStepEdge,
   type ForcedBorderEdge,
 } from "../../engine/border-grid-hint.ts";
 import { winFlash } from "../../engine/flash.ts";
-import type { Game, HintResult, UiUpdate } from "../../engine/game.ts";
+import type {
+  Game,
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+  UiUpdate,
+} from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
   commonHintRefusal,
@@ -37,7 +43,7 @@ import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
-import { interpretTargetVerbs } from "../../engine/target-verb.ts";
+import { interpretTargetVerbs, verbClicks } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSeparateDesc } from "./generator.ts";
 import { say } from "./hint-text.ts";
@@ -226,6 +232,19 @@ function hint(state: SeparateState): HintResult<SeparateMove, BorderHint> {
   return { ok: true, steps };
 }
 
+function hintKeepTrack(
+  m: SeparateMove,
+  step: HintStep<SeparateMove, BorderHint>,
+  state: SeparateState,
+): HintTrackVerdict {
+  return borderHintKeepTrack(
+    m.type === "edges" ? m.edits : null,
+    step,
+    state.w,
+    state.borders,
+  );
+}
+
 // --- Game object -----------------------------------------------------------
 
 export const separateGame: Game<
@@ -274,16 +293,12 @@ export const separateGame: Game<
       stripes: "the region the sentence is about.",
     },
   },
-  hintKeepTrack: (m, step, state) =>
-    borderHintKeepTrack(
-      m.type === "edges" ? m.edits : null,
-      step,
-      state.w,
-      state.borders,
-    ),
-  hintGesture: (s, ui, ds, m) => {
+  hintKeepTrack,
+  hintGesture: (s, ui, ds, m, step) => {
     if (m.type !== "edges") throw new Error("separate: a hint only sets edges");
-    return borderHintGesture(targetVerbs, s, ds, ui, m.edits);
+    return verbClicks(targetVerbs, { executeMove, hintKeepTrack }, s, ui, ds, step, [
+      borderStepEdge(m.edits),
+    ]);
   },
 
   textFormat,

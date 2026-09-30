@@ -7,14 +7,29 @@ itself.
 
 ## Controls
 
-Left-click in an empty square to turn it black, or right-click to turn
-it white. Click again in an already-filled square to cycle it between
-black and white and empty. You can left- or right-drag to set multiple
-squares at once.
+{{controls}}
 
-On the keyboard, the arrow keys move a cursor around the grid. Enter
-cycles the square under it the way a left-click does, and Space the way
-a right-click does.
+Drag along a row or column to give every empty square you pass over
+the color the first square took.
+
+## Hints
+
+**Hint** explains the next step rather than simply making it. It
+reasons only from the numbers and the squares you have already made
+black or white, so it carries on from wherever you are, as long as none
+of them is wrong; if one is, it asks you to fix the highlighted
+mistakes first. A number's *squares*, in its words, are its block: the
+number's own square and the eight around it, fewer at the edge of the
+grid.
+
+{{hint-marks}}
+
+Every step is one of two ideas:
+
+* **A number that has all its black squares** makes the rest of its
+  block white.
+* **A number with only as many squares left that are not white as it
+  needs** makes all of those black.
 
 ## Mosaic parameters
 

@@ -955,6 +955,20 @@ pointer cannot make fails every walk of the plan
 
 Writing one:
 
+- **A game that declares `targetVerbs` names its step's targets and no more.**
+  `verbClicks(targetVerbs, { executeMove, hintKeepTrack }, state, ui, ds, step,
+  targets)` clicks each target once, with the first button whose verb makes a
+  move `hintKeepTrack` keeps on the step. That is the midend's own judge, so the
+  gesture cannot disagree with it, and the point is the geometry's `pointAt`,
+  which `target-verb.test.ts` holds to the press. So the gesture never says
+  which button makes which value: Pattern once re-ran its click transform to
+  choose, Bricks spelled three cases, and all such copies are gone. It is
+  one click per target because the midend refuses a move off the step, so a
+  target reached only by cycling through a value the step does not want cannot
+  be played at all; a step that presses a target several times over values
+  the step accepts (Loopy's notes), or drags, keeps its own gesture. The
+  gesture receives the step as its fifth argument for this. Exemplars: Pattern,
+  Mosaic.
 - **Aim at the middle of what the move changes**, computed from `ds.tileSize`
   and the game's own pixel mapping, the inverse of what `interpretMove` reads.
   Use the same helper the renderer uses to place the square or edge, so the two
@@ -967,9 +981,9 @@ Writing one:
 - **A mode is part of the gesture.** A step in notes mode presses the Marks key
   (`PENCIL_MODE_BUTTON`), plays the notes, and presses it again if the mode was
   off, so the player's mode is as they left it. A keypad digit follows the tap
-  that selects its cell. The shared shapes do this for you: `verbGesture` and
-  `routeGesture` for target-verb games, `borderHintGesture` for border grids,
-  `candidateGesture` (with `markAllNow`, so a strike the mark-all control makes
+  that selects its cell. The shared shapes do this for you: `verbClicks`,
+  `verbGesture` and `routeGesture` for target-verb games (border grids included,
+  whose step names its edge with `borderStepEdge`), `candidateGesture` (with `markAllNow`, so a strike the mark-all control makes
   whole is one press of it) for candidate games.
 - **A gesture that depends on the `Ui` asks the game.** Where the right taps
   depend on a selection or a held piece (Crossing, Group, Ascent), rehearse

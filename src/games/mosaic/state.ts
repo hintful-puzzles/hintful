@@ -72,7 +72,10 @@ export type MosaicMove =
       srcY: number;
       paintState: number;
     }
-  | { type: "solve"; solution: string };
+  | { type: "solve"; solution: string }
+  /** A hint step's squares, all given `mark` (black or white). The pointer
+   * makes it one square at a time, with toggles. */
+  | { type: "fill"; cells: number[]; mark: number };
 
 export interface MosaicUi {
   /** Drag anchor + the mark a click decided to paint (upstream
@@ -302,6 +305,12 @@ export function executeMove(state: MosaicState, move: MosaicMove): MosaicState {
         cells[pos] = move.paintState;
         updateBoardStateAround(state, cells, x, y);
       }
+    }
+  } else if (move.type === "fill") {
+    for (const pos of move.cells) {
+      if (pos < 0 || pos >= size) throw new Error("Fill out of bounds");
+      cells[pos] = move.mark;
+      updateBoardStateAround(state, cells, pos % width, Math.floor(pos / width));
     }
   } else {
     return assertNever(move, "mosaic: executeMove");

@@ -457,9 +457,10 @@ key that is none of these (and `decimal.test.ts` refuses a digit's).
 
 **A drag game declares its click half.** Its press, drag and release stay an arm
 of its own, and a click reaches it as the release of a drag that never left its
-target — so that release calls the declared verb, exactly as Mines' release
-calls `openAt`. The press parks the cursor (`geometry.parkCursor`, then hides
-it), as the model's press would. Where a drag preview shows what the release
+target — so that release applies `buttonVerb(targetVerbs, button)`, the verb
+the released button declares, as Mines' release calls `openAt`. The press
+calls `pressTarget(targetVerbs, ui, target)`, the model's own press: the cursor
+parks there, hidden. Where a drag preview shows what the release
 will do, the preview and the verb read one function (Tents' `clickTent` and
 `clickGrass`), so the square a press shows is the one its release makes. Keys
 the drag has no button for — Tents' T, N and B — are `keyOnly` verbs on a

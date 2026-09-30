@@ -24,8 +24,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { coord } from "../../engine/geometry.ts";
-import { click, type PointerAction } from "../../engine/hint-gesture.ts";
+import type { PointerAction } from "../../engine/hint-gesture.ts";
 import {
   ALREADY_SOLVED,
   CONTRADICTION_UNLOCALIZED,
@@ -50,12 +49,15 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
+  buttonVerb,
   digitKey,
   ERASE_KEYS,
   interpretTargetVerbs,
+  pressTarget,
   squareGrid,
   type TargetVerb,
   type TargetVerbs,
+  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newClustersDesc } from "./generator.ts";
@@ -110,7 +112,7 @@ export interface ClustersMistake {
 }
 
 function newUi(_state: ClustersState): ClustersUi {
-  return { cursor: newCursor(), dragType: -1, dragButton: -1, drag: [] };
+  return { cursor: newCursor(), dragType: -1, drag: [] };
 }
 
 /** One step of a click's color cycle: empty, then `first`, then the other
@@ -189,7 +191,6 @@ function interpretMove(
 
   if (isMouseDown(button)) {
     ui.dragType = -1;
-    ui.dragButton = -1;
     ui.drag = [];
   }
 
@@ -197,8 +198,7 @@ function interpretMove(
   if (isMouseDown(button) || isMouseDrag(button)) {
     const at = targetVerbs.geometry.pointerTarget(state, ds, p, ui);
     if (at === null) return null;
-    targetVerbs.geometry.parkCursor(ui, at);
-    ui.cursor.visible = false;
+    pressTarget(targetVerbs, ui, at);
     const i = at.y * w + at.x;
 
     // A press picks the drag's color by cycling the pressed square.
@@ -207,7 +207,6 @@ function interpretMove(
       if (button === LEFT_BUTTON) ui.dragType = cycleFill(old, F_COLOR_1);
       else if (button === RIGHT_BUTTON) ui.dragType = cycleFill(old, F_COLOR_0);
       else ui.dragType = 0;
-      ui.dragButton = button;
       if (ui.dragType || old) ui.drag.push(i);
       return UI_UPDATE;
     }
@@ -222,12 +221,9 @@ function interpretMove(
   // --- the release: commit the drag as one paint move ---
   if (isMouseRelease(button) && ui.drag.length > 0) {
     const drag = ui.drag;
-    const pressed = ui.dragButton;
     ui.drag = [];
-    ui.dragButton = -1;
     // A press that never left its square is a click: its button's verb.
-    const verb =
-      pressed === LEFT_BUTTON ? blueVerb : pressed === RIGHT_BUTTON ? redVerb : null;
+    const verb = buttonVerb(targetVerbs, button);
     if (verb && drag.length === 1) {
       const at = { x: drag[0] % w, y: Math.floor(drag[0] / w) };
       return verb.apply(state, at, ui) ?? UI_UPDATE;
@@ -406,24 +402,25 @@ function hintKeepTrack(
   return got.index === want.index && got.fill === want.fill ? "completed" : "off";
 }
 
-/** One tap per cell, with whichever button's cycle takes the cell to the
- * hinted color in one press. */
+/** A tap on each cell the step colors. */
 function hintGesture(
   state: ClustersState,
-  _ui: ClustersUi,
+  ui: ClustersUi,
   ds: ClustersDrawState,
   move: ClustersMove,
+  step: HintStep<ClustersMove>,
 ): readonly PointerAction[] {
   if (move.kind !== "paint") return [];
-  const { w, grid } = state;
-  const ts = ds.tileSize;
-  const b = border(ts);
-  const mid = (v: number): number => coord(v, ts, b) + (ts >> 1);
-  return move.cells.map(({ index, fill }) =>
-    click(
-      { x: mid(index % w), y: mid((index / w) | 0) },
-      cycleFill(grid[index], F_COLOR_1) === fill ? "primary" : "secondary",
-    ),
+  const { w } = state;
+  const cells = move.cells.map(({ index }) => ({ x: index % w, y: (index / w) | 0 }));
+  return verbClicks(
+    targetVerbs,
+    { executeMove, hintKeepTrack },
+    state,
+    ui,
+    ds,
+    step,
+    cells,
   );
 }
 

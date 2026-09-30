@@ -1,6 +1,7 @@
 # derive-verb-gestures-from-the-declaration
 
-**Status: scaffolded, not started (2026-09-30).** Follows
+**Status: done (2026-09-30); `design.md` records what the conversions
+found.** Follows
 `declare-drag-games-click-half`.
 
 ## Why

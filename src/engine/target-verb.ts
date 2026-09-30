@@ -25,7 +25,12 @@
  * left-click reaches, and Space exactly those of its declared pointer verb.
  */
 
-import { UI_UPDATE, type UiUpdate } from "./game.ts";
+import {
+  type HintStep,
+  type HintTrackVerdict,
+  UI_UPDATE,
+  type UiUpdate,
+} from "./game.ts";
 import { click, key, type PointerAction } from "./hint-gesture.ts";
 import {
   BACKSPACE,
@@ -34,10 +39,13 @@ import {
   DELETE,
   type GridCursor,
   isCursorMove,
+  isMouseDown,
   LEFT_BUTTON,
+  LEFT_RELEASE,
   moveCursor,
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
+  RIGHT_RELEASE,
   stripModifiers,
 } from "./pointer.ts";
 import type { Point, Size } from "./types.ts";
@@ -214,11 +222,27 @@ export function squareGrid<
 
 type Verbs<S, U, D, T, M> = TargetVerbs<S, U, D, T, M>;
 
-/** The verb a pointer button applies. */
-function pointerVerb<S, U, D, T, M>(v: Verbs<S, U, D, T, M>, button: number) {
-  if (button === LEFT_BUTTON) return v.primary;
-  if (button === RIGHT_BUTTON) return v.secondary ?? null;
+/** The verb a pointer button applies, named by its press or its release: what
+ * a game's own release arm applies when a drag never left its target. */
+export function buttonVerb<S, U, D, T, M>(
+  v: Verbs<S, U, D, T, M>,
+  button: number,
+): TargetVerb<S, U, T, M> | null {
+  if (button === LEFT_BUTTON || button === LEFT_RELEASE) return v.primary;
+  if (button === RIGHT_BUTTON || button === RIGHT_RELEASE) return v.secondary ?? null;
   return null;
+}
+
+/** The model's press, for a game whose own arm takes the press (a drag game):
+ * the cursor parks on the pressed target, hidden, so the keyboard carries on
+ * from there. */
+export function pressTarget<S, U extends TargetVerbUi, D, T, M>(
+  v: Verbs<S, U, D, T, M>,
+  ui: U,
+  target: T,
+): void {
+  v.geometry.parkCursor(ui, target);
+  ui.cursor.visible = false;
 }
 
 /** The verb a key applies at the cursor. */
@@ -246,15 +270,14 @@ export function interpretTargetVerbs<S, U extends TargetVerbUi, D, T, M>(
   const button = stripModifiers(rawButton);
   const { geometry } = verbs;
 
-  const pressed = pointerVerb(verbs, button);
+  const pressed = isMouseDown(button) ? buttonVerb(verbs, button) : null;
   if (pressed) {
     const target = geometry.pointerTarget(state, ds, p, ui);
     if (target === null) return null;
     // Parking a hidden cursor changes nothing on screen, so only hiding a
     // shown one makes a press that applies nothing worth a repaint.
     const wasShown = ui.cursor.visible;
-    geometry.parkCursor(ui, target);
-    ui.cursor.visible = false;
+    pressTarget(verbs, ui, target);
     return pressed.apply(state, target, ui) ?? (wasShown ? UI_UPDATE : null);
   }
 
@@ -292,6 +315,71 @@ export function verbGesture<S, U, D, T, M>(
   for (const t of targets) {
     const at = verbs.geometry.pointAt(state, ds, t, ui);
     for (let i = 0; i < times; i++) out.push(click(at, button));
+  }
+  return out;
+}
+
+/**
+ * The clicks that make a hint step's move, one at each of `targets` in turn:
+ * on each, the first button (left, then right) whose verb makes a move the
+ * game's `hintKeepTrack` keeps on the step. That is the judge the midend plays
+ * the gesture against, so the gesture completes the step or the hint walk
+ * says why; and the moves are the verbs', so it cannot ask a button for what
+ * the button does not do. A click judged to complete the step ends the
+ * gesture.
+ *
+ * One click a target, because the midend refuses any move off the step, so a
+ * target a button reaches only by cycling through a value the step does not
+ * want cannot be played at all; a gesture that presses a target several times
+ * over values the step accepts (Loopy's notes) is the game's own.
+ *
+ * The step is judged on a copy, since `hintKeepTrack` may shrink it, and the
+ * verbs see a copy of the `Ui`, since a verb may keep a tally there. A target no button reaches is a
+ * defect in the game's hint, and throws.
+ */
+export function verbClicks<S, U, D, T, M, H>(
+  verbs: Verbs<S, U, D, T, M>,
+  rules: {
+    readonly executeMove: (state: S, move: M) => S;
+    readonly hintKeepTrack: (
+      move: M,
+      step: HintStep<M, H>,
+      state: S,
+    ) => HintTrackVerdict;
+  },
+  state: S,
+  ui: U,
+  ds: D,
+  step: HintStep<M, H>,
+  targets: readonly T[],
+): PointerAction[] {
+  // A copy of the step, carried from click to click as the midend's is: each
+  // kept move may shrink its move and its highlights. A button is tried on a
+  // copy of that, so only the kept move's shrinking carries.
+  let judged: HintStep<M, H> = { ...step, move: structuredClone(step.move) };
+  const scratch = structuredClone(ui);
+  const out: PointerAction[] = [];
+  let board = state;
+  /** The first button whose verb on `target` the step keeps, with the step
+   * as that click leaves it; `null` when neither does. */
+  const kept = (target: T) => {
+    for (const button of ["primary", "secondary"] as const) {
+      const move = verbs[button]?.apply(board, target, scratch) ?? null;
+      if (move === null || move === UI_UPDATE) continue;
+      const trial = { ...judged, move: structuredClone(judged.move) };
+      const verdict = rules.hintKeepTrack(move, trial, board);
+      if (verdict !== "off") return { button, move, trial, verdict };
+    }
+    return null;
+  };
+  for (const target of targets) {
+    const found = kept(target);
+    if (found === null)
+      throw new Error(`no button's verb keeps the step on ${JSON.stringify(target)}`);
+    judged = found.trial;
+    board = rules.executeMove(board, found.move);
+    out.push(click(verbs.geometry.pointAt(state, ds, target, ui), found.button));
+    if (found.verdict === "completed") return out;
   }
   return out;
 }

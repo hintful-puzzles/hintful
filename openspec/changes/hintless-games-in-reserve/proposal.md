@@ -17,7 +17,8 @@ checks them best:
   which wrote it.
 - `own-the-player-facing-messages`: Pegs.
 - `draw-hint-marks-from-roles`: Rect.
-- `derive-verb-gestures-from-the-declaration`: Mosaic (claimed 2026-09-30).
+- `derive-verb-gestures-from-the-declaration`: Mosaic, which it wrote
+  (2026-09-30).
 
 `declare-params-in-one-place` and `derive-the-draft-label` pull in none.
 

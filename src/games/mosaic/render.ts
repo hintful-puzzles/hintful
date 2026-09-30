@@ -6,12 +6,28 @@
  */
 
 import { BLACK, TEAL_BOLD, TEAL_WASH, WHITE } from "../../engine/color/colors.ts";
-import { CURSOR, clueDoneColor, ERROR } from "../../engine/color/palette.ts";
+import {
+  CURSOR,
+  clueDoneColor,
+  ERROR,
+  HINT_ACTION,
+  HINT_EVIDENCE,
+} from "../../engine/color/palette.ts";
 import { glyphFont } from "../../engine/draw.ts";
-import type { GameDrawing } from "../../engine/game.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import {
+  drawMarkSides,
+  MARK_ALL,
+  type MarkBand,
+  MarkOutlines,
+} from "../../engine/hint-mark.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Size } from "../../engine/types.ts";
+import type { MosaicHint } from "./hint.ts";
+import { BLOCK, blockOf } from "./hint-marks.ts";
 import {
   type MosaicMistake,
+  type MosaicMove,
   type MosaicParams,
   type MosaicState,
   type MosaicUi,
@@ -34,6 +50,8 @@ export const COL_BLANK = 4;
 export const COL_TEXT_SOLVED = 5;
 export const COL_ERROR = 6;
 export const COL_CURSOR = 7;
+export const COL_HINT = 8;
+export const COL_HINT_EVIDENCE = 9;
 const COL_TEXT_DARK = COL_MARKED;
 const COL_TEXT_LIGHT = COL_BLANK;
 
@@ -47,6 +65,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_TEXT_SOLVED] = clueDoneColor(defaultBackground);
   out[COL_ERROR] = ERROR;
   out[COL_CURSOR] = CURSOR;
+  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
   return out;
 }
 
@@ -72,6 +92,9 @@ const DRAWFLAG_CURSOR_UL = 0x800;
 const DRAWFLAG_MARGIN_R = 0x1000;
 const DRAWFLAG_MARGIN_D = 0x2000;
 const DRAWFLAG_MISTAKE = 0x4000;
+/** A hint mark's sides (`MarkOutlines.packed`) sit above every flag, so the
+ * cache repaints a square whose mark moved. */
+const HINT_SIDES_SHIFT = 16;
 
 export interface MosaicDrawState {
   tileSize: number;
@@ -160,6 +183,17 @@ function drawCell(
         String(clueVal),
       );
     }
+
+    // The hint's marks lie inside the square, over its edge, so its own
+    // repaint undoes them: the block's outline, then the ring on top of it.
+    const sides = cell >>> HINT_SIDES_SHIFT;
+    const band: MarkBand = {
+      box: { x: startX, y: startY, w: ts - 1, h: ts - 1 },
+      outer: 0,
+      inner: Math.max(2, ts >> 4),
+    };
+    drawMarkSides(dr, band, (sides >> 4) & MARK_ALL, COL_HINT_EVIDENCE);
+    drawMarkSides(dr, band, sides & MARK_ALL, COL_HINT);
   }
 
   dr.unclip();
@@ -177,11 +211,17 @@ export function redraw(
   ui: MosaicUi,
   _animTime: number,
   flashTime: number,
-  _hint?: unknown,
+  hint?: HintStep<MosaicMove, MosaicHint>,
   mistakes?: readonly MosaicMistake[],
 ): void {
   const ts = ds.tileSize;
   const { width, height, board, cells } = state;
+
+  const marks = stepMarks(hint);
+  const evidence = marks
+    .of("outline", BLOCK)
+    .flatMap((clue) => blockOf(clue, width, height));
+  const outlines = new MarkOutlines(marks.of("ring", CELL), evidence, {});
 
   // The flash inverts marked/blank during its first and last thirds.
   const flashing =
@@ -203,6 +243,7 @@ export function redraw(
         if (ui.cursor.x === x - 1 && ui.cursor.y === y - 1) cell |= DRAWFLAG_CURSOR_UL;
       }
       if (inBounds && mistakeSet.has(y * width + x)) cell |= DRAWFLAG_MISTAKE;
+      if (inBounds) cell |= outlines.packed(x, y) << HINT_SIDES_SHIFT;
 
       const clueVal = inBounds ? board.clues[y * width + x] : -1;
 

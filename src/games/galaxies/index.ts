@@ -20,7 +20,7 @@ import {
   difficultyItem,
   tierNames,
 } from "../../engine/difficulty.ts";
-import { click, drag, type PointerAction } from "../../engine/hint-gesture.ts";
+import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import {
   type Game,
@@ -50,9 +50,12 @@ import {
 } from "../../engine/pointer.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import {
+  buttonVerb,
   interpretTargetVerbs,
+  pressTarget,
   type TargetGeometry,
   type TargetVerbs,
+  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { newGameDesc } from "./generator.ts";
@@ -652,8 +655,8 @@ function interpretMove(
     // where the keyboard carries on from.
     const e = edgeGeometry.pointerTarget(s, ds, { x: ui.pressX, y: ui.pressY }, ui);
     if (e === null) return null;
-    edgeGeometry.parkCursor(ui, e);
-    return targetVerbs.primary.apply(s, e, ui);
+    pressTarget(targetVerbs, ui, e);
+    return buttonVerb(targetVerbs, button)?.apply(s, e, ui) ?? null;
   }
 
   // While a keyboard or pointer drag is open, the arrows steer its free end.
@@ -758,9 +761,10 @@ function dropDrag(
  */
 function hintGesture(
   s: GalaxiesState,
-  _ui: GalaxiesUi,
+  ui: GalaxiesUi,
   ds: GalaxiesDrawState,
   m: GalaxiesMove,
+  step: HintStep<GalaxiesMove, GalaxiesHint>,
 ): readonly PointerAction[] {
   const tile = ds.tileSize;
   const border = borderFor(tile);
@@ -768,12 +772,16 @@ function hintGesture(
     x: scoord(c.x, tile, border),
     y: scoord(c.y, tile, border),
   });
-  const out: PointerAction[] = [];
+  // An edge is the click's verb; an arrow is the drag from its dot, which is
+  // Galaxies' own.
+  const edges = m.ops.flatMap((op) =>
+    op.kind === "edge" ? [{ x: op.x, y: op.y }] : [],
+  );
+  const out: PointerAction[] =
+    edges.length === 0
+      ? []
+      : verbClicks(targetVerbs, { executeMove, hintKeepTrack }, s, ui, ds, step, edges);
   for (const op of m.ops) {
-    if (op.kind === "edge") {
-      out.push(click(at(op)));
-      continue;
-    }
     if (op.kind !== "assoc") continue;
     const dot = { x: op.ax, y: op.ay };
     const covered = new Set<number>();

@@ -16,7 +16,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { click, type PointerAction } from "../../engine/hint-gesture.ts";
+import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
 import { CELL, type Narration } from "../../engine/hint-words.ts";
@@ -41,10 +41,13 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
+  buttonVerb,
   interpretTargetVerbs,
+  pressTarget,
   type TargetGeometry,
   type TargetVerb,
   type TargetVerbs,
+  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newPatternDesc } from "./generator.ts";
@@ -195,8 +198,7 @@ function interpretMove(
       ui.state = clickWhite(curr);
     }
     startDrag(ui.drag, x, y);
-    geometry.parkCursor(ui, { x, y });
-    ui.cursor.visible = false;
+    pressTarget(targetVerbs, ui, { x, y });
     return UI_UPDATE;
   }
 
@@ -222,8 +224,9 @@ function interpretMove(
     // A drag that never left its square is a click: its button's verb.
     if (x1 === x2 && y1 === y2) {
       endDrag(ui.drag);
-      const verb = button === LEFT_RELEASE ? blackVerb : whiteVerb;
-      return verb.apply(state, { x: sx, y: sy }, ui) ?? UI_UPDATE;
+      return (
+        buttonVerb(targetVerbs, button)?.apply(state, { x: sx, y: sy }, ui) ?? UI_UPDATE
+      );
     }
     // A paint drag (not a clear) only fills blank cells, so dragging across
     // the board never rewrites a mark the player already placed.
@@ -367,26 +370,27 @@ function cellsChangedBy(m: PatternMove, state: PatternState): Map<number, GridVa
   return out;
 }
 
-/** One tap per cell, with whichever button's cycle takes the cell to the
- * hinted value in one press: a tap overwrites, where a drag would paint only
- * blank squares. */
+/** A tap on each of the step's cells: a tap overwrites, where a drag would
+ * paint only blank squares. */
 function hintGesture(
   state: PatternState,
-  _ui: PatternUi,
+  ui: PatternUi,
   ds: PatternDrawState,
   m: PatternMove,
+  step: HintStep<PatternMove, PatternHint>,
 ): readonly PointerAction[] {
   if (m.type !== "fillCells") return [];
-  const ts = ds.tileSize;
-  const { w, h } = state.common;
-  const half = ts >> 1;
-  return m.cells.map((i) => {
-    const leftTakesIt = clickBlack(state.grid[i]) === m.value;
-    return click(
-      { x: toCoord(ts, w, i % w) + half, y: toCoord(ts, h, (i / w) | 0) + half },
-      leftTakesIt ? "primary" : "secondary",
-    );
-  });
+  const { w } = state.common;
+  const cells = m.cells.map((i) => ({ x: i % w, y: (i / w) | 0 }));
+  return verbClicks(
+    targetVerbs,
+    { executeMove, hintKeepTrack },
+    state,
+    ui,
+    ds,
+    step,
+    cells,
+  );
 }
 
 /** Classify a player move against a (possibly multi-cell) hint step: it must

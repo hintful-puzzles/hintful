@@ -86,9 +86,6 @@ export interface ClustersUi {
    * renderer and committed as one `paint` move on release. Ephemeral — never in
    * persisted state. */
   dragType: number;
-  /** The button that pressed, `-1` for none: its release, if the drag painted
-   * only the pressed square, is that button's click. */
-  dragButton: number;
   drag: number[];
 }
 

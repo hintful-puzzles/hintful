@@ -36,6 +36,7 @@ import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type GamePref,
+  type HintStep,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
@@ -71,6 +72,7 @@ import {
   interpretTargetVerbs,
   type TargetGeometry,
   type TargetVerbs,
+  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import {
@@ -590,8 +592,9 @@ function moveCursorAlong(cursor: LoopyCursor, from: GridDot, e: GridEdge): void 
 
 /**
  * The pointer's way to a hint step's move. A line step is a click per edge it
- * sets, played forward so an edge an earlier click's rule-outs already settled
- * is not clicked back again. A corner is taps inside its angle and a pair is
+ * still has to set, each with the button `verbClicks` finds the step keeps; a
+ * click whose rule-outs settle the rest completes the step and ends it. A
+ * corner is taps inside its angle and a pair is
  * drags from one edge to the other, each cycling the note one state, as few as
  * reach it by either button; both are notes mode's, which is turned on for them
  * and off for lines, and put back after.
@@ -601,20 +604,25 @@ function hintGesture(
   ui: LoopyUi,
   ds: LoopyDrawState,
   m: LoopyMove,
+  step: HintStep<LoopyMove>,
 ): PointerAction[] {
   const notes = m.kind === "corner" || m.kind === "pair";
   const out: PointerAction[] = [];
   if (m.kind === "set") {
-    let board = s;
-    for (const op of m.ops) {
-      if (board.lines[op.edge] === op.state) continue;
-      const button = op.state === LINE_YES ? LEFT_BUTTON : RIGHT_BUTTON;
-      const e = s.grid.edges[op.edge];
-      const made = setEdge(board, ui, e, button);
-      if (made !== null) board = executeMove(board, made);
-      const at = geometry.pointAt(s, ds, e, ui);
-      out.push(click(at, button === LEFT_BUTTON ? "primary" : "secondary"));
-    }
+    const edges = m.ops
+      .filter((op) => s.lines[op.edge] !== op.state)
+      .map((op) => s.grid.edges[op.edge]);
+    out.push(
+      ...verbClicks(
+        targetVerbs,
+        { executeMove, hintKeepTrack },
+        s,
+        ui,
+        ds,
+        step,
+        edges,
+      ),
+    );
   } else if (m.kind === "corner") {
     const at = cornerPoint(s, ds, m.dline);
     // Exactly the step's note: the state holding both bits also holds the one

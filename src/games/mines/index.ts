@@ -44,6 +44,7 @@ import {
 } from "../../engine/random/index.ts";
 import {
   interpretTargetVerbs,
+  pressTarget,
   squareGrid,
   type TargetVerbs,
 } from "../../engine/target-verb.ts";
@@ -389,8 +390,7 @@ export const minesGame: Game<
       ui.hx = cx;
       ui.hy = cy;
       ui.hradius = ui.validradius === 1 && chordReady(s, cx, cy) ? 1 : 0;
-      targetVerbs.geometry.parkCursor(ui, { x: cx, y: cy });
-      ui.cursor.visible = false;
+      pressTarget(targetVerbs, ui, { x: cx, y: cy });
       return UI_UPDATE;
     }
 

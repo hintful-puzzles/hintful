@@ -39,7 +39,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { click, drag, type PointerAction } from "../../engine/hint-gesture.ts";
+import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import {
@@ -64,11 +64,14 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
+  buttonVerb,
   ERASE_KEYS,
   interpretTargetVerbs,
+  pressTarget,
   squareGrid,
   type TargetVerb,
   type TargetVerbs,
+  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newBoatsDesc, validateParams } from "./generator.ts";
@@ -216,11 +219,9 @@ function interpretMove(
     const { from, to } = clickFill(button, fillOf(state.grid[at.y * w + at.x]));
     ui.dragFrom = from;
     ui.dragTo = to;
-    ui.dragButton = button;
     ui.dragOk = true;
     startDrag(ui.drag, at.x, at.y);
-    targetVerbs.geometry.parkCursor(ui, at);
-    ui.cursor.visible = false;
+    pressTarget(targetVerbs, ui, at);
     return UI_UPDATE;
   }
 
@@ -257,10 +258,11 @@ function interpretMove(
       if (!commit) return UI_UPDATE;
 
       // A drag that never left its square is a click: its button's verb.
-      if (x0 === x1 && y0 === y1) {
-        const verb = ui.dragButton === LEFT_BUTTON ? boatVerb : waterVerb;
-        return verb.apply(state, { x: x0, y: y0 }, ui) ?? UI_UPDATE;
-      }
+      if (x0 === x1 && y0 === y1)
+        return (
+          buttonVerb(targetVerbs, button)?.apply(state, { x: x0, y: y0 }, ui) ??
+          UI_UPDATE
+        );
       if (fillChangesAnything(state, x0, y0, x1, y1, from, to))
         return { kind: "fill", x0, y0, x1, y1, from, to };
     }
@@ -561,15 +563,17 @@ function hintKeepTrack(
 }
 
 /**
- * A leg is one line drag from the first of its still-empty squares to the
- * last. A press on an empty square fills with `from: "-"` (left a boat, right
+ * A leg of one still-empty square is a click, found from the verbs. A longer
+ * leg is one line drag from the first of its still-empty squares to the last:
+ * a press on an empty square fills with `from: "-"` (left a boat, right
  * water), so the squares already decided between them are left alone.
  */
 function hintGesture(
   state: BoatsState,
-  _ui: BoatsUi,
+  ui: BoatsUi,
   ds: BoatsDrawState,
   move: BoatsMove,
+  step: HintStep<BoatsMove, BoatsHint>,
 ): readonly PointerAction[] {
   if (move.kind !== "fill") return [];
   const { w } = state.params;
@@ -579,11 +583,19 @@ function hintGesture(
     for (let x = move.x0; x <= move.x1; x++)
       if (fillOf(state.grid[y * w + x]) === "-") empty.push({ x, y });
   if (empty.length === 0) return [];
+  if (empty.length === 1)
+    return verbClicks(
+      targetVerbs,
+      { executeMove, hintKeepTrack },
+      state,
+      ui,
+      ds,
+      step,
+      empty,
+    );
   const at = (c: Point): Point => ({ x: cellCenter(c.x, ts), y: cellCenter(c.y, ts) });
   const button = move.to === "B" ? "primary" : "secondary";
-  const first = at(empty[0]);
-  const last = at(empty[empty.length - 1]);
-  return empty.length === 1 ? [click(first, button)] : [drag(first, last, { button })];
+  return [drag(at(empty[0]), at(empty[empty.length - 1]), { button })];
 }
 
 function flashLength(from: BoatsState, to: BoatsState): number {

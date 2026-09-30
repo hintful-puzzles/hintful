@@ -17,20 +17,26 @@ import {
   DY,
 } from "../../engine/border-grid.ts";
 import {
-  borderHintGesture,
   borderHintJourney,
   borderHintKeepTrack,
+  borderStepEdge,
   type ForcedBorderEdge,
 } from "../../engine/border-grid-hint.ts";
 import { winFlash } from "../../engine/flash.ts";
-import type { Game, HintResult, HintStep, UiUpdate } from "../../engine/game.ts";
+import type {
+  Game,
+  HintResult,
+  HintStep,
+  HintTrackVerdict,
+  UiUpdate,
+} from "../../engine/game.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { edgeContinuation } from "../../engine/hint-text.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { interpretTargetVerbs } from "../../engine/target-verb.ts";
+import { interpretTargetVerbs, verbClicks } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { say } from "./hint-text.ts";
 import {
@@ -211,6 +217,19 @@ function hint(state: PalisadeState): HintResult<PalisadeMove, PalisadeHint> {
 
 // --- Game object -----------------------------------------------------------
 
+function hintKeepTrack(
+  m: PalisadeMove,
+  step: HintStep<PalisadeMove, PalisadeHint>,
+  state: PalisadeState,
+): HintTrackVerdict {
+  return borderHintKeepTrack(
+    m.type === "edges" ? m.edits : null,
+    step,
+    state.w,
+    state.borders,
+  );
+}
+
 export const palisadeGame: Game<
   PalisadeParams,
   PalisadeState,
@@ -258,16 +277,12 @@ export const palisadeGame: Game<
         'the one region the sentence is about: "this region", or "the same region" two edges both border.',
     },
   },
-  hintKeepTrack: (m, step, state) =>
-    borderHintKeepTrack(
-      m.type === "edges" ? m.edits : null,
-      step,
-      state.w,
-      state.borders,
-    ),
-  hintGesture: (s, ui, ds, m) => {
+  hintKeepTrack,
+  hintGesture: (s, ui, ds, m, step) => {
     if (m.type !== "edges") throw new Error("palisade: a hint only sets edges");
-    return borderHintGesture(targetVerbs, s, ds, ui, m.edits);
+    return verbClicks(targetVerbs, { executeMove, hintKeepTrack }, s, ui, ds, step, [
+      borderStepEdge(m.edits),
+    ]);
   },
 
   textFormat,

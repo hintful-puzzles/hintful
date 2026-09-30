@@ -19,7 +19,7 @@
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
-import { LEFT_BUTTON, newCursor, newDrag } from "../../engine/pointer.ts";
+import { newCursor, newDrag } from "../../engine/pointer.ts";
 
 // --- difficulty ------------------------------------------------------------
 
@@ -313,9 +313,6 @@ export interface BoatsUi {
    * becomes `dragTo`. Meaningless while `drag.live` is false. */
   dragFrom: BoatsFillFrom | "";
   dragTo: BoatsFill | "";
-  /** The button that pressed, so a drag that never leaves its square releases
-   * as that button's click. */
-  dragButton: number;
   /** Whether the pointer is over a valid cell **right now**. Not liveness: a
    * line drag can leave the grid and come back, and a release while this is
    * false commits nothing. Tents is the only other game that needs it. */
@@ -328,7 +325,6 @@ export function newUi(): BoatsUi {
     drag: newDrag(),
     dragFrom: "",
     dragTo: "",
-    dragButton: LEFT_BUTTON,
     dragOk: false,
   };
 }

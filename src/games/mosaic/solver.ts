@@ -337,12 +337,20 @@ export function encodeSolution(solCells: Uint8Array): string {
   return out;
 }
 
+/** The board's solution, solved once per board: every state of a game shares
+ * its frozen board, and the hint asks for mistakes after every move. */
+const solutions = new WeakMap<MosaicBoard, Uint8Array | null>();
+function solutionOf(board: MosaicBoard): Uint8Array | null {
+  if (!solutions.has(board)) solutions.set(board, solveGameActual(board));
+  return solutions.get(board) ?? null;
+}
+
 /** Every determined cell whose mark contradicts the deduced solution.
  * Generated boards are deduction-solvable hence unique, so the solver's
  * answer is the answer; if deduction stalls (a foreign desc), there is
  * nothing to check against and no mistake is reported. */
 export function findMistakes(state: MosaicState): MosaicMistake[] {
-  const solCells = solveGameActual(state.board);
+  const solCells = solutionOf(state.board);
   if (!solCells) return [];
   const { width, cells } = state;
   const mistakes: MosaicMistake[] = [];

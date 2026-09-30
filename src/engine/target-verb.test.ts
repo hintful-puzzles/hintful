@@ -13,7 +13,7 @@
 
 import { beforeAll, describe, expect, it } from "vitest";
 import { registerAllGames } from "../games/index.ts";
-import { UI_UPDATE } from "./game.ts";
+import { type HintStep, type HintTrackVerdict, UI_UPDATE } from "./game.ts";
 import {
   CURSOR_RIGHT,
   CURSOR_SELECT,
@@ -33,6 +33,7 @@ import {
   squareGrid,
   type TargetVerbs,
   type TargetVerbUi,
+  verbClicks,
 } from "./target-verb.ts";
 import {
   type AnyGame,
@@ -167,6 +168,81 @@ describe("the model", () => {
         "grid. Enter does what a click does to the square under it, and Space (or D) " +
         "what a right-click does.",
     );
+  });
+});
+
+describe("verbClicks: a hint step's clicks, found by its keep-track", () => {
+  // A board of marks, a move that sets some, and a step that wants a set of
+  // them, as a click game's hint would: keep-track keeps a move whose marks
+  // are all wanted, shrinks the step by them, and completes it when none are
+  // left.
+  type S = { w: number; h: number; marks: Record<string, string> };
+  type M = { set: [string, string][] };
+  type U = { cursor: ReturnType<typeof newCursor>; tally: number };
+  const ds = { tileSize: 10 };
+  const key = (t: Point) => `${t.x},${t.y}`;
+  const setTo = (mark: string) => (_s: S, t: Point, ui: U) => {
+    ui.tally++;
+    return { set: [[key(t), mark]] as [string, string][] };
+  };
+  const verbs: TargetVerbs<S, U, typeof ds, Point, M> = {
+    geometry: squareGrid({ size: (s) => s, border: () => 5 }),
+    primary: { does: "fill it", apply: setTo("fill") },
+    secondary: { does: "dot it", apply: setTo("dot") },
+  };
+  const rules = {
+    executeMove: (s: S, m: M): S => ({
+      ...s,
+      marks: { ...s.marks, ...Object.fromEntries(m.set) },
+    }),
+    hintKeepTrack: (m: M, step: HintStep<M>): HintTrackVerdict => {
+      const wanted = new Map(step.move.set);
+      if (!m.set.every(([k, v]) => wanted.get(k) === v)) return "off";
+      step.move.set = step.move.set.filter(([k]) => !m.set.some(([j]) => j === k));
+      return step.move.set.length === 0 ? "completed" : "onTrack";
+    },
+  };
+  const state: S = { w: 3, h: 2, marks: {} };
+  const stepOf = (set: [string, string][]): HintStep<M> => ({
+    move: { set },
+    explanation: "",
+  });
+
+  it("clicks each target with the button whose verb the step keeps", () => {
+    const step = stepOf([
+      ["0,0", "dot"],
+      ["2,1", "fill"],
+    ]);
+    const ui = { cursor: newCursor(), tally: 0 };
+    const gesture = verbClicks(verbs, rules, state, ui, ds, step, [
+      { x: 0, y: 0 },
+      { x: 2, y: 1 },
+    ]);
+    expect(gesture).toEqual([
+      { kind: "click", button: "secondary", at: { x: 10, y: 10 } },
+      { kind: "click", button: "primary", at: { x: 30, y: 20 } },
+    ]);
+    // Neither the step the midend will judge nor the player's Ui was touched.
+    expect(step.move.set).toHaveLength(2);
+    expect(ui.tally).toBe(0);
+  });
+
+  it("stops at the click that completes the step", () => {
+    const step = stepOf([["1,0", "fill"]]);
+    const ui = { cursor: newCursor(), tally: 0 };
+    const gesture = verbClicks(verbs, rules, state, ui, ds, step, [
+      { x: 1, y: 0 },
+      { x: 2, y: 0 },
+    ]);
+    expect(gesture).toHaveLength(1);
+  });
+
+  it("throws on a target no button's verb keeps on the step", () => {
+    const step = stepOf([["1,0", "cross"]]);
+    const ui = { cursor: newCursor(), tally: 0 };
+    expect(() =>
+      verbClicks(verbs, rules, state, ui, ds, step, [{ x: 1, y: 0 }]),
+    ).toThrow(/no button's verb keeps the step/);
   });
 });
 

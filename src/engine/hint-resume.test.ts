@@ -52,9 +52,13 @@ function solveByHints(
 ): number {
   const { desc, aux } = game.newDesc(params, randomNew(seed));
   let state = game.newState(params, desc);
-  // Generous cap: far above any honest plan length, so only a genuine
-  // loop/non-convergence trips it.
-  const cap = 800;
+  // Generous cap, so only a genuine loop or non-convergence trips it: twice
+  // the length the game's own first plan claims, and never below 800 for a
+  // hint that plans one step at a time. A fixed 800 was not far above every
+  // honest plan: a 50×50 Mosaic plan is some 1,350 steps (measured
+  // 2026-09-30).
+  const first = game.hint?.(state, aux);
+  const cap = Math.max(800, 2 * (first?.ok ? first.steps.length : 0));
   for (let moves = 0; moves < cap; moves++) {
     if (game.status(state) === "solved") return moves;
     const res = game.hint?.(state, aux);

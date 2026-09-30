@@ -1006,7 +1006,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     if (!this.game.hintGesture) {
       throw new Error(`${this.game.id}: has a hint but no hintGesture`);
     }
-    const gesture = this.game.hintGesture(this.state, this.ui, ds, step.move);
+    const gesture = this.game.hintGesture(this.state, this.ui, ds, step.move, step);
     const fail = (why: string): never => {
       throw new Error(
         `${this.game.id}: the hint's gesture ${why} ` +

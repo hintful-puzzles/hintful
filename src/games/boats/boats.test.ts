@@ -25,6 +25,8 @@ import {
   LEFT_RELEASE,
   MOD_CTRL,
   RIGHT_BUTTON,
+  RIGHT_DRAG,
+  RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -378,7 +380,7 @@ describe("boats input", () => {
     press(state, ui, 1, 1, RIGHT_BUTTON);
     state = boatsGame.executeMove(
       state,
-      press(state, ui, 1, 1, LEFT_RELEASE) as BoatsMove,
+      press(state, ui, 1, 1, RIGHT_RELEASE) as BoatsMove,
     );
     expect(state.grid[1 * 6 + 1]).toBe(WATER);
   });
@@ -387,8 +389,8 @@ describe("boats input", () => {
     let state = blankState();
     const ui = newUi();
     press(state, ui, 1, 3, RIGHT_BUTTON);
-    press(state, ui, 3, 3, LEFT_DRAG);
-    const move = press(state, ui, 4, 3, LEFT_RELEASE) as BoatsMove;
+    press(state, ui, 3, 3, RIGHT_DRAG);
+    const move = press(state, ui, 4, 3, RIGHT_RELEASE) as BoatsMove;
     expect(move).toMatchObject({ kind: "fill", x0: 1, x1: 4, y0: 3, y1: 3, to: "W" });
 
     state = boatsGame.executeMove(state, move);

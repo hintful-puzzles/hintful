@@ -21,7 +21,7 @@ import { winFlash } from "../../engine/flash.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
-import { click, drag, type PointerAction } from "../../engine/hint-gesture.ts";
+import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
 import { commonHintRefusal } from "../../engine/hint-refusal.ts";
 import { matching } from "../../engine/latin.ts";
 import { transposeDimensions } from "../../engine/params.ts";
@@ -44,11 +44,14 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
+  buttonVerb,
   interpretTargetVerbs,
+  pressTarget,
   squareGrid,
   type TargetVerb,
   type TargetVerbs,
   type VerbKey,
+  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newTentsDesc } from "./generator.ts";
@@ -188,8 +191,7 @@ function interpretMove(
     startDrag(ui.drag, x, y);
     ui.dragOk = true;
     ui.linkArmed = false;
-    targetVerbs.geometry.parkCursor(ui, { x, y });
-    ui.cursor.visible = false;
+    pressTarget(targetVerbs, ui, { x, y });
     return UI_UPDATE;
   }
 
@@ -224,7 +226,8 @@ function interpretMove(
     }
     const link = dragLink(ui, state);
     const { sx, sy, ex, ey } = ui.drag;
-    const left = ui.dragButton === LEFT_BUTTON;
+    const dragButton = ui.dragButton;
+    const left = dragButton === LEFT_BUTTON;
     // A right drag along a line paints its empty squares as grass, as its
     // preview showed.
     const cells: { x: number; y: number; v: number }[] = [];
@@ -239,10 +242,11 @@ function interpretMove(
     if (link) return link;
     // A left drag acts as a click where it started, and a right drag that never
     // left its square is a right-click: each is its button's verb.
-    if (left || (sx === ex && sy === ey)) {
-      const verb = left ? tentVerb : grassVerb;
-      return verb.apply(state, { x: sx, y: sy }, ui) ?? UI_UPDATE;
-    }
+    if (left || (sx === ex && sy === ey))
+      return (
+        buttonVerb(targetVerbs, dragButton)?.apply(state, { x: sx, y: sy }, ui) ??
+        UI_UPDATE
+      );
     return cells.length === 0 ? UI_UPDATE : { type: "cells", cells };
   }
 
@@ -468,21 +472,26 @@ export const tentsGame: Game<
     },
   },
   hintKeepTrack: tentsKeepTrack,
-  hintGesture(_state, _ui, ds, m): readonly PointerAction[] {
-    const ts = ds.tileSize;
-    const at = (x: number, y: number) => ({
-      x: cellCenter(x, ts),
-      y: cellCenter(y, ts),
-    });
+  hintGesture(state, ui, ds, m, step): readonly PointerAction[] {
     switch (m.type) {
-      // A tap places a tent on an open square and a long press grasses it.
       case "cells":
-        return m.cells.map((c) =>
-          click(at(c.x, c.y), c.v === NONTENT ? "secondary" : "primary"),
+        return verbClicks(
+          targetVerbs,
+          { executeMove, hintKeepTrack: tentsKeepTrack },
+          state,
+          ui,
+          ds,
+          step,
+          m.cells.map(({ x, y }) => ({ x, y })),
         );
       // The link drag, from the square to its tree.
-      case "link":
+      case "link": {
+        const at = (x: number, y: number) => ({
+          x: cellCenter(x, ds.tileSize),
+          y: cellCenter(y, ds.tileSize),
+        });
         return [drag(at(m.x, m.y), at(m.x + DX(m.d), m.y + DY(m.d)))];
+      }
       default:
         return [];
     }

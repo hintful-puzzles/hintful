@@ -14,7 +14,6 @@ import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import type { Game, HintResult, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
-import { click } from "../../engine/hint-gesture.ts";
 import { commonHintRefusal } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -30,17 +29,19 @@ import {
   newCursor,
   newDrag,
   RIGHT_BUTTON,
-  RIGHT_RELEASE,
   showCursor,
   startDrag,
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
+  buttonVerb,
   interpretTargetVerbs,
+  pressTarget,
   type TargetGeometry,
   type TargetVerb,
   type TargetVerbs,
+  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
@@ -316,7 +317,7 @@ function interpretMove(
     ui.clicky = p.y;
     startDrag(ui.drag, gx, gy);
     const aimed = geometry.pointerTarget(state, ds, p, ui);
-    if (aimed) geometry.parkCursor(ui, aimed);
+    if (aimed) pressTarget(targetVerbs, ui, aimed);
     return UI_UPDATE;
   }
 
@@ -353,8 +354,7 @@ function interpretMove(
       return UI_UPDATE;
     const target = geometry.pointerTarget(state, ds, pressed, ui);
     if (!target) return UI_UPDATE;
-    const verb = button === RIGHT_RELEASE ? noTrackVerb : trackVerb;
-    return verb.apply(state, target, ui) ?? UI_UPDATE;
+    return buttonVerb(targetVerbs, button)?.apply(state, target, ui) ?? UI_UPDATE;
   }
 
   return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
@@ -465,19 +465,21 @@ export const tracksGame: Game<
     },
   },
   hintKeepTrack: tracksKeepTrack,
-  // One click per op: in the middle of the square for the square itself, or
-  // toward the side for an edge. A tap lays track and a long press rules it out.
-  hintGesture(_state, _ui, ds, m) {
-    const mt = metrics(ds.tileSize);
-    const reach = Math.floor((3 * mt.tile) / 8);
-    return m.ops.map((op) => {
+  // One click per op, on its square or edge of the half-grid.
+  hintGesture(state, ui, ds, m, step) {
+    const targets = m.ops.map((op) => {
       const dir = op.kind === "edge" ? (op.dir ?? 0) : 0;
-      const at = {
-        x: centeredCoord(op.x, mt) + reach * DX(dir),
-        y: centeredCoord(op.y, mt) + reach * DY(dir),
-      };
-      return click(at, op.track ? "primary" : "secondary");
+      return { x: 2 * op.x + 1 + DX(dir), y: 2 * op.y + 1 + DY(dir) };
     });
+    return verbClicks(
+      targetVerbs,
+      { executeMove, hintKeepTrack: tracksKeepTrack },
+      state,
+      ui,
+      ds,
+      step,
+      targets,
+    );
   },
 
   textFormat,

@@ -31,7 +31,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
-import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
+import type { PointerAction } from "../../engine/hint-gesture.ts";
 import {
   commonHintRefusal,
   DEDUCTION_EXHAUSTED,
@@ -51,10 +51,13 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
+  buttonVerb,
   interpretTargetVerbs,
+  pressTarget,
   type TargetGeometry,
   type TargetVerb,
   type TargetVerbs,
+  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newSpokesDesc } from "./generator.ts";
@@ -261,8 +264,11 @@ function interpretMove(
     if (x < 0 || x >= w || y < 0 || y >= h) return null;
     ui.dragStart = y * w + x;
     ui.drag = button === LEFT_BUTTON ? "left" : "right";
-    geometry.parkCursor(ui, aimedSpoke(state, ts, x, y, p) ?? { x: 3 * x, y: 3 * y });
-    ui.cursor.visible = false;
+    pressTarget(
+      targetVerbs,
+      ui,
+      aimedSpoke(state, ts, x, y, p) ?? { x: 3 * x, y: 3 * y },
+    );
   }
 
   if (
@@ -286,7 +292,7 @@ function interpretMove(
   if (button === LEFT_RELEASE || button === RIGHT_RELEASE) {
     const from = ui.dragStart;
     const to = ui.dragEnd;
-    const verb = ui.drag === "left" ? lineVerb : markVerb;
+    const verb = buttonVerb(targetVerbs, button);
     const pressed = ui.drag !== "none";
     ui.dragStart = -1;
     ui.dragEnd = -1;
@@ -296,7 +302,7 @@ function interpretMove(
     const fx = from % w;
     const fy = (from / w) | 0;
     const dot = { x: 3 * fx + ((to % w) - fx), y: 3 * fy + (((to / w) | 0) - fy) };
-    return verb.apply(state, dot, ui) ?? UI_UPDATE;
+    return verb?.apply(state, dot, ui) ?? UI_UPDATE;
   }
 
   return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
@@ -485,27 +491,21 @@ function hintKeepTrack(
   return sameEdge(m, target, state.w) && m.state === target.state ? "completed" : "off";
 }
 
-/** A drag from the spoke's hub to the hub at its other end: the primary button
- * draws it, the secondary rules it out. */
+/** A click on the spoke's dot, beside the hub the move names it from. */
 function hintGesture(
   state: SpokesState,
-  _ui: SpokesUi,
+  ui: SpokesUi,
   ds: SpokesDrawState,
   m: SpokesMove,
+  step: HintStep<SpokesMove, SpokesHint>,
 ): readonly PointerAction[] {
   if (m.kind !== "set") return [];
-  const ts = ds.tileSize;
   const { w } = state;
-  const x = m.index % w;
-  const y = (m.index / w) | 0;
   const d = SPOKE_DIRS[m.dir];
-  return [
-    drag(
-      { x: toCoord(x, ts), y: toCoord(y, ts) },
-      { x: toCoord(x + d.dx, ts), y: toCoord(y + d.dy, ts) },
-      { button: m.state === SPOKE_LINE ? "primary" : "secondary" },
-    ),
-  ];
+  const dot = { x: 3 * (m.index % w) + d.dx, y: 3 * ((m.index / w) | 0) + d.dy };
+  return verbClicks(targetVerbs, { executeMove, hintKeepTrack }, state, ui, ds, step, [
+    dot,
+  ]);
 }
 
 /** Do two `set` moves name the same edge? A spoke has two ends; a move may cite

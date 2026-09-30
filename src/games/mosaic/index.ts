@@ -6,13 +6,10 @@
  * mark across a straight run.
  */
 
-import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
+import type { Game, UiUpdate } from "../../engine/game.ts";
 import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
 import {
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
   cursorDelta,
-  gridCursorMove,
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
@@ -23,7 +20,14 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  interpretTargetVerbs,
+  squareGrid,
+  type TargetVerbs,
+  verbClicks,
+} from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
+import { type MosaicHint, mosaicHint, mosaicKeepTrack } from "./hint.ts";
 import {
   colors,
   computeSize,
@@ -72,6 +76,33 @@ function newUi(_state: MosaicState): MosaicUi {
   };
 }
 
+/** A verb that cycles the square one way: `double` is the right button's
+ * way round, two steps forward in a cycle of three. */
+const toggle =
+  (double: boolean) =>
+  (_s: MosaicState, { x, y }: Point): MosaicMove => ({ type: "toggle", x, y, double });
+
+const targetVerbs: TargetVerbs<
+  MosaicState,
+  MosaicUi,
+  MosaicDrawState,
+  Point,
+  MosaicMove
+> = {
+  geometry: squareGrid({
+    size: (s) => ({ w: s.width, h: s.height }),
+    border: (ts) => Math.floor(ts / 2),
+  }),
+  primary: {
+    does: "turn it black, then white, then empty again",
+    apply: toggle(false),
+  },
+  secondary: {
+    does: "turn it white, then black, then empty again",
+    apply: toggle(true),
+  },
+};
+
 function interpretMove(
   state: MosaicState,
   ui: MosaicUi,
@@ -81,10 +112,9 @@ function interpretMove(
 ): MosaicMove | null | UiUpdate {
   const raw = stripModifiers(button);
   const { width, height } = state;
-  const d = cursorDelta(raw);
 
   // After completion, only cursor browsing is accepted (upstream freeze).
-  if (state.notCompletedClues === 0 && !d) return null;
+  if (state.notCompletedClues === 0 && !cursorDelta(raw)) return null;
 
   const ts = ds.tileSize;
   const m = Math.floor(ts / 2);
@@ -97,7 +127,6 @@ function interpretMove(
   if (isMouseEvent(raw) && (offsetX < 0 || offsetY < 0)) return null;
 
   if (raw === LEFT_BUTTON || raw === RIGHT_BUTTON) {
-    ui.cursor.visible = false;
     if (!inBounds) {
       ui.lastX = -1;
       ui.lastY = -1;
@@ -109,7 +138,7 @@ function interpretMove(
     ui.lastState = (cur + (raw === RIGHT_BUTTON ? 2 : 1)) % STATE_MARK_MASK;
     ui.lastX = gameX;
     ui.lastY = gameY;
-    return { type: "toggle", x: gameX, y: gameY, double: raw === RIGHT_BUTTON };
+    return interpretTargetVerbs(targetVerbs, state, ui, ds, p, raw);
   }
 
   const isDrag = raw === LEFT_DRAG || raw === RIGHT_DRAG;
@@ -151,32 +180,7 @@ function interpretMove(
     return changed ? move : null;
   }
 
-  if (d) {
-    const moved = gridCursorMove(raw, ui.cursor.x, ui.cursor.y, width, height);
-    if (moved) {
-      ui.cursor.x = moved.x;
-      ui.cursor.y = moved.y;
-    }
-    ui.cursor.visible = true;
-    return UI_UPDATE;
-  }
-
-  if (raw === CURSOR_SELECT || raw === CURSOR_SELECT2) {
-    if (!ui.cursor.visible) {
-      ui.cursor.x = 0;
-      ui.cursor.y = 0;
-      ui.cursor.visible = true;
-      return UI_UPDATE;
-    }
-    return {
-      type: "toggle",
-      x: ui.cursor.x,
-      y: ui.cursor.y,
-      double: raw === CURSOR_SELECT2,
-    };
-  }
-
-  return null;
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, raw);
 }
 
 // --- flash --------------------------------------------------------------
@@ -201,7 +205,8 @@ export const mosaicGame: Game<
   MosaicMove,
   MosaicUi,
   MosaicDrawState,
-  MosaicMistake
+  MosaicMistake,
+  MosaicHint
 > = {
   id: "mosaic",
 
@@ -242,6 +247,7 @@ export const mosaicGame: Game<
   newState,
   newUi,
 
+  targetVerbs,
   interpretMove,
   executeMove,
   status,
@@ -253,6 +259,30 @@ export const mosaicGame: Game<
   },
 
   findMistakes,
+
+  hint: mosaicHint,
+  hintKeepTrack: mosaicKeepTrack,
+  // A tap on each of the step's squares: a tap cycles a filled square too,
+  // where a drag would paint only empty ones.
+  hintGesture: (state, ui, ds, m, step) =>
+    m.type === "fill"
+      ? verbClicks(
+          targetVerbs,
+          { executeMove, hintKeepTrack: mosaicKeepTrack },
+          state,
+          ui,
+          ds,
+          step,
+          m.cells.map((i) => ({ x: i % state.width, y: Math.floor(i / state.width) })),
+        )
+      : [],
+  hintMarks: {
+    roles: {
+      ring: "the squares the step decides; the sentence says whether they must be black or white.",
+      outline:
+        "the number the step reasons from and its block: the number's own square and the eight around it.",
+    },
+  },
 
   textFormat,
   statusbarText,

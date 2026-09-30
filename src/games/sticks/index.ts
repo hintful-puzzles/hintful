@@ -26,8 +26,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { coord } from "../../engine/geometry.ts";
-import { click, type PointerAction } from "../../engine/hint-gesture.ts";
+import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
@@ -40,22 +39,23 @@ import {
   isMouseDrag,
   isMouseRelease,
   LEFT_BUTTON,
-  LEFT_RELEASE,
   MOD_CTRL,
   MOD_SHFT,
   newCursor,
   RIGHT_BUTTON,
-  RIGHT_RELEASE,
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
+  buttonVerb,
   digitKey,
   ERASE_KEYS,
   interpretTargetVerbs,
+  pressTarget,
   squareGrid,
   type TargetVerb,
   type TargetVerbs,
+  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSticksDesc } from "./generator.ts";
@@ -244,7 +244,7 @@ function interpretMove(
   // --- begin a normal drag -------------------------------------------------
   if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
     const at = targetVerbs.geometry.pointerTarget(state, ds, p, ui);
-    if (at !== null) targetVerbs.geometry.parkCursor(ui, at);
+    if (at !== null) pressTarget(targetVerbs, ui, at);
     ui.minX = ui.maxX = p.x;
     ui.minY = ui.maxY = p.y;
     ui.drag = [];
@@ -305,12 +305,7 @@ function interpretMove(
     if (ui.dragType === "start") {
       ui.dragType = "none";
       const i = cellAt((ui.minX + ui.maxX) / 2, (ui.minY + ui.maxY) / 2);
-      const verb =
-        button === LEFT_RELEASE
-          ? verticalVerb
-          : button === RIGHT_RELEASE
-            ? horizontalVerb
-            : null;
+      const verb = buttonVerb(targetVerbs, button);
       if (i === -1 || verb === null) return UI_UPDATE;
       return verb.apply(state, { x: i % w, y: Math.floor(i / w) }, ui) ?? UI_UPDATE;
     }
@@ -486,25 +481,26 @@ function hintKeepTrack(
   return "off";
 }
 
-/** One tap per square, with whichever button's cycle takes the square to the
- * hinted stick in one press (the primary button's runs blank, vertical,
- * horizontal). */
+/** A tap on each square the step sets. */
 function hintGesture(
   state: SticksState,
-  _ui: SticksUi,
+  ui: SticksUi,
   ds: SticksDrawState,
   m: SticksMove,
+  step: HintStep<SticksMove, SticksHint>,
 ): readonly PointerAction[] {
   if (m.kind !== "set") return [];
-  const { w, grid } = state;
-  const ts = ds.tileSize;
-  const mid = (v: number): number => coord(v, ts, border(ts)) + (ts >> 1);
-  return m.changes.map(({ index, line }) => {
-    return click(
-      { x: mid(index % w), y: mid((index / w) | 0) },
-      cycleLine(grid[index], F_VER) === lineBits(line) ? "primary" : "secondary",
-    );
-  });
+  const { w } = state;
+  const squares = m.changes.map(({ index }) => ({ x: index % w, y: (index / w) | 0 }));
+  return verbClicks(
+    targetVerbs,
+    { executeMove, hintKeepTrack },
+    state,
+    ui,
+    ds,
+    step,
+    squares,
+  );
 }
 
 export const sticksGame: Game<

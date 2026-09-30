@@ -29,9 +29,7 @@ import {
   FLIP,
 } from "./border-grid.ts";
 import { type HintStep, type HintTrackVerdict, narratedStep } from "./game.ts";
-import type { PointerAction } from "./hint-gesture.ts";
 import type { MarkKind, Narration } from "./hint-words.ts";
-import { type TargetVerbs, verbGesture } from "./target-verb.ts";
 
 /** An edge, named on the square `(x, y)`'s `dir` side. */
 export interface BorderEdge {
@@ -56,29 +54,15 @@ export const EDGE: MarkKind<BorderEdge> = {
 };
 
 /**
- * How the pointer makes a leg's edits (`Game.hintGesture`): a click on the edge,
- * the left button for a wall and the right for "no wall". A leg's first edit is
- * on the square the edge is named from, with the one bit it sets: a wall, or
- * not-a-wall four bits up.
+ * The edge a leg's edits set, which is what its click aims at
+ * (`Game.hintGesture`, through `verbClicks`, which picks the button). A leg's
+ * first edit is on the square the edge is named from, with the one bit it
+ * sets: a wall, or not-a-wall four bits up.
  */
-export function borderHintGesture<S, U, D, M>(
-  verbs: TargetVerbs<S, U, D, BorderEdge, M>,
-  state: S,
-  ds: D,
-  ui: U,
-  edits: readonly BorderEdit[],
-): PointerAction[] {
+export function borderStepEdge(edits: readonly BorderEdit[]): BorderEdge {
   const [{ x, y, flag }] = edits;
   const wall = (flag & BORDER_MASK) !== 0;
-  const dir = 31 - Math.clz32(wall ? flag : flag >> 4);
-  return verbGesture(
-    verbs,
-    state,
-    ds,
-    ui,
-    [{ x, y, dir }],
-    wall ? "primary" : "secondary",
-  );
+  return { x, y, dir: 31 - Math.clz32(wall ? flag : flag >> 4) };
 }
 
 /** A displayed step's highlights: the edge it sets, which keep-track compares a

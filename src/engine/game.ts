@@ -482,12 +482,14 @@ export interface Game<
    * hint step by sending this through {@link interpretMove}, never by applying
    * `move`, and the moves it makes must complete the step by
    * {@link hintKeepTrack}; so a hint cannot ask for a move the pointer does not
-   * make. Every game with a `hint` has one. */
+   * make. Every game with a `hint` has one. `step` is the whole step, for a
+   * gesture found by asking `hintKeepTrack` (`verbClicks`). */
   hintGesture?(
     state: State,
     ui: Ui,
     ds: DrawState,
     move: Move,
+    step: HintStep<Move, Highlights>,
   ): readonly PointerAction[];
   /** The marks this game's hint draws, and what each means here. Declaring it
    * binds every step's words to its marks ({@link HintMarkLegend}). */

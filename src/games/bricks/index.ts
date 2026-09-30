@@ -25,7 +25,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { click, type PointerAction } from "../../engine/hint-gesture.ts";
+import type { PointerAction } from "../../engine/hint-gesture.ts";
 import {
   ALREADY_SOLVED,
   CONTRADICTION_UNLOCALIZED,
@@ -43,7 +43,6 @@ import {
   isMouseDrag,
   isMouseRelease,
   LEFT_BUTTON,
-  LEFT_RELEASE,
   MOD_CTRL,
   MOD_NUM_KEYPAD,
   MOD_SHFT,
@@ -52,12 +51,15 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
+  buttonVerb,
   digitKey,
   ERASE_KEYS,
   interpretTargetVerbs,
+  pressTarget,
   type TargetGeometry,
   type TargetVerb,
   type TargetVerbs,
+  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newBricksDesc } from "./generator.ts";
@@ -312,8 +314,7 @@ function interpretMove(
     const i = at.y * w + at.x;
     ui.dragType = cycleColor(button, grid[i] & COL_MASK);
     ui.drag = [i];
-    geometry.parkCursor(ui, at);
-    ui.cursor.visible = false;
+    pressTarget(targetVerbs, ui, at);
     return UI_UPDATE;
   }
 
@@ -333,9 +334,8 @@ function interpretMove(
     ui.drag = [];
     // A drag that never left its cell is a click: its button's verb.
     if (drag.length === 1) {
-      const verb = button === LEFT_RELEASE ? shadeVerb : unshadeVerb;
       const at = { x: drag[0] % w, y: (drag[0] / w) | 0 };
-      return verb.apply(state, at, ui) ?? UI_UPDATE;
+      return buttonVerb(targetVerbs, button)?.apply(state, at, ui) ?? UI_UPDATE;
     }
     const cells = drag
       .filter((i) => (grid[i] & COL_MASK) !== 0)
@@ -488,28 +488,28 @@ function hintKeepTrack(
   return cell?.to === hl.forced ? "completed" : "off";
 }
 
-/** One tap per cell, with whichever button's cycle takes the cell from what it
- * holds to the color asked for in one press. */
+/** A tap on each cell the step paints. */
 function hintGesture(
   state: BricksState,
-  _ui: BricksUi,
+  ui: BricksUi,
   ds: BricksDrawState,
   move: BricksMove,
+  step: HintStep<BricksMove, BricksHint>,
 ): readonly PointerAction[] {
   if (move.kind !== "paint") return [];
-  const ts = ds.tileSize;
-  return move.cells.map(({ index, to }) => {
-    const old = state.grid[index] & COL_MASK;
-    const left =
-      (old === F_EMPTY && to === "shade") ||
-      (old === F_SHADE && to === "unshade") ||
-      (old === F_UNSHADE && to === "empty");
-    const o = tileOrigin(index % state.w, (index / state.w) | 0, state.h, ts);
-    return click(
-      { x: o.x + (ts >> 1), y: o.y + (ts >> 1) },
-      left ? "primary" : "secondary",
-    );
-  });
+  const cells = move.cells.map(({ index }) => ({
+    x: index % state.w,
+    y: (index / state.w) | 0,
+  }));
+  return verbClicks(
+    targetVerbs,
+    { executeMove, hintKeepTrack },
+    state,
+    ui,
+    ds,
+    step,
+    cells,
+  );
 }
 
 /** Bricks' difficulty contract. `solveGame` returns `"complete"` exactly when
