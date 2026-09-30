@@ -6,6 +6,7 @@ import type {
   HintTrackVerdict,
   UiUpdate,
 } from "../../engine/game.ts";
+import { click } from "../../engine/hint-gesture.ts";
 import { ALREADY_SOLVED, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
@@ -24,6 +25,7 @@ import type { Point } from "../../engine/types.ts";
 import { say } from "./hint-text.ts";
 import {
   ANIM_TIME,
+  cellCenter,
   colors,
   computeSize,
   type FifteenDrawState,
@@ -282,6 +284,10 @@ export const fifteenGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture: (_s, _ui, ds, m) =>
+    m.type === "move"
+      ? [click({ x: cellCenter(m.x, ds.tileSize), y: cellCenter(m.y, ds.tileSize) })]
+      : [],
 
   textFormat,
   statusbarText,

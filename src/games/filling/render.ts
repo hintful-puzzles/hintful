@@ -96,7 +96,7 @@ const HINT_AREA = 0x80000; // one of the hint's evidence cells
 const HINT_LINE = 0x100000; // in the region the sentence names (hatched)
 
 // --- geometry (upstream BORDER = TILE_SIZE/2, BORDER_WIDTH = max(TS/32,1)) -
-const border = (ts: number) => Math.floor(ts / 2);
+export const border = (ts: number) => Math.floor(ts / 2);
 const borderWidth = (ts: number) => Math.max(Math.floor(ts / 32), 1);
 const coord = (n: number, ts: number) => border(ts) + n * ts;
 

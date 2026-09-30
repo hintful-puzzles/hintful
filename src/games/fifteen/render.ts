@@ -49,6 +49,11 @@ export function fromCoord(pixel: number, ts: number): number {
   return fromCoordE(pixel, ts, border(ts));
 }
 
+/** The middle of cell `pos` along one axis, where a press addresses it. */
+export function cellCenter(pos: number, ts: number): number {
+  return coord(pos, ts) + Math.floor(ts / 2);
+}
+
 // --- drawing ----------------------------------------------------------
 
 export interface FifteenDrawState {

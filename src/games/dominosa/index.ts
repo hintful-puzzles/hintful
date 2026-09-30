@@ -41,6 +41,7 @@ import {
   interpretTargetVerbs,
   type TargetGeometry,
   type TargetVerbs,
+  verbGesture,
 } from "../../engine/target-verb.ts";
 import type { Point, ReferenceItem, ReferenceModel } from "../../engine/types.ts";
 import { newDominosaDesc } from "./generator.ts";
@@ -197,6 +198,16 @@ const geometry: TargetGeometry<DominosaState, DominosaUi, DominosaDrawState, Pai
     if (Math.abs(dy) > Math.abs(dx) && dy < 0 && ty > 0) return pairAt(w, x, y - 1);
     if (Math.abs(dy) > Math.abs(dx) && dy > 0 && ty + 1 < h) return pairAt(w, x, y + 1);
     return null; // precisely on a diagonal
+  },
+  pointAt(_s, ds, { x, y }) {
+    // The middle of the edge the two squares share: a press there lies in the
+    // second square, nearest its side facing the first.
+    const ts = ds.tileSize;
+    const at = (v: number) => v * ts + border(ts);
+    const half = Math.floor(ts / 2);
+    return x & 1
+      ? { x: at((x + 1) / 2), y: at(y / 2) + half }
+      : { x: at(x / 2) + half, y: at((y + 1) / 2) };
   },
   cursorTarget: (s, ui) => pairAt(s.w, ui.cursor.x, ui.cursor.y),
   parkCursor(ui, pair) {
@@ -702,6 +713,19 @@ export const dominosaGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture: (s, ui, ds, m) => {
+    if (m.type === "solve") throw new Error("dominosa: a hint never solves");
+    const { d1, d2 } = m;
+    const across = d2 === d1 + 1;
+    const pair = pairAt(
+      s.w,
+      2 * (d1 % s.w) + (across ? 1 : 0),
+      2 * Math.floor(d1 / s.w) + (across ? 0 : 1),
+    );
+    if (pair === null) throw new Error(`dominosa: no pair for ${JSON.stringify(m)}`);
+    const button = m.type === "domino" ? "primary" : "secondary";
+    return verbGesture(targetVerbs, s, ds, ui, [pair], button);
+  },
 
   textFormat,
 

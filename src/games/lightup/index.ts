@@ -42,6 +42,7 @@ import {
   interpretTargetVerbs,
   squareGrid,
   type TargetVerbs,
+  verbGesture,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newLightupDesc, puzzleIsGood } from "./generator.ts";
@@ -537,6 +538,15 @@ export const lightupGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture: (s, ui, ds, m) =>
+    verbGesture(
+      targetVerbs,
+      s,
+      ds,
+      ui,
+      m.ops,
+      m.ops[0]?.kind === "light" ? "primary" : "secondary",
+    ),
   refreshHintStep,
 
   textFormat,

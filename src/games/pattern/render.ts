@@ -86,7 +86,7 @@ const gutter = (ts: number): number => Math.floor(ts / 2);
 const tlborder = (d: number): number => Math.floor(d / 5) + 2;
 
 /** Pixel origin of cell coordinate `n` along a dimension of size `d`. */
-function toCoord(ts: number, d: number, n: number): number {
+export function toCoord(ts: number, d: number, n: number): number {
   return border(ts) + gutter(ts) + ts * (tlborder(d) + n);
 }
 

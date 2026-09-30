@@ -8011,45 +8011,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "outlineRgb": "rgb(14, 88, 91)",
     "points": [
       [
-        187,
-        221,
-      ],
-      [
-        186,
-        222,
-      ],
-      [
-        185,
-        222,
-      ],
-      [
-        186,
-        221,
-      ],
-    ],
-  },
-  {
-    "fill": 11,
-    "fillRgb": "rgb(14, 88, 91)",
-    "op": "polygon",
-    "outline": 11,
-    "outlineRgb": "rgb(14, 88, 91)",
-    "points": [
-      [
-        192,
-        216,
-      ],
-      [
-        189,
-        219,
-      ],
-      [
-        189,
+        193,
         218,
       ],
       [
         191,
-        216,
+        220,
+      ],
+      [
+        190,
+        220,
+      ],
+      [
+        192,
+        217,
       ],
     ],
   },
@@ -8061,20 +8036,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "outlineRgb": "rgb(14, 88, 91)",
     "points": [
       [
-        197,
-        212,
-      ],
-      [
-        194,
-        214,
-      ],
-      [
-        194,
+        198,
         213,
       ],
       [
         196,
-        211,
+        215,
+      ],
+      [
+        195,
+        215,
+      ],
+      [
+        197,
+        212,
       ],
     ],
   },
@@ -8087,19 +8062,44 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "points": [
       [
         202,
-        207,
-      ],
-      [
-        199,
-        209,
-      ],
-      [
-        198,
         208,
       ],
       [
+        202,
+        209,
+      ],
+      [
         201,
-        206,
+        210,
+      ],
+      [
+        200,
+        210,
+      ],
+    ],
+  },
+  {
+    "fill": 9,
+    "fillRgb": "rgb(33, 167, 73)",
+    "op": "polygon",
+    "outline": 9,
+    "outlineRgb": "rgb(33, 167, 73)",
+    "points": [
+      [
+        202,
+        202,
+      ],
+      [
+        202,
+        205,
+      ],
+      [
+        185,
+        222,
+      ],
+      [
+        182,
+        222,
       ],
     ],
   },
@@ -8161,19 +8161,19 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "points": [
       [
         207,
-        205,
+        207,
       ],
       [
         203,
-        205,
+        207,
       ],
       [
         203,
-        204,
+        206,
       ],
       [
         207,
-        204,
+        206,
       ],
     ],
   },
@@ -8186,69 +8186,19 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "points": [
       [
         214,
-        205,
-      ],
-      [
-        210,
-        205,
-      ],
-      [
-        210,
-        204,
-      ],
-      [
-        214,
-        204,
-      ],
-    ],
-  },
-  {
-    "fill": 11,
-    "fillRgb": "rgb(14, 88, 91)",
-    "op": "polygon",
-    "outline": 11,
-    "outlineRgb": "rgb(14, 88, 91)",
-    "points": [
-      [
-        220,
-        205,
-      ],
-      [
-        217,
-        205,
-      ],
-      [
-        217,
-        204,
-      ],
-      [
-        220,
-        204,
-      ],
-    ],
-  },
-  {
-    "fill": 11,
-    "fillRgb": "rgb(14, 88, 91)",
-    "op": "polygon",
-    "outline": 11,
-    "outlineRgb": "rgb(14, 88, 91)",
-    "points": [
-      [
-        220,
-        204,
-      ],
-      [
-        220,
         207,
       ],
       [
-        219,
+        210,
         207,
       ],
       [
-        219,
-        204,
+        210,
+        206,
+      ],
+      [
+        214,
+        206,
       ],
     ],
   },
@@ -8260,19 +8210,69 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "outlineRgb": "rgb(14, 88, 91)",
     "points": [
       [
-        220,
+        218,
+        207,
+      ],
+      [
+        217,
+        207,
+      ],
+      [
+        217,
+        206,
+      ],
+      [
+        218,
+        206,
+      ],
+    ],
+  },
+  {
+    "fill": 11,
+    "fillRgb": "rgb(14, 88, 91)",
+    "op": "polygon",
+    "outline": 11,
+    "outlineRgb": "rgb(14, 88, 91)",
+    "points": [
+      [
+        218,
+        206,
+      ],
+      [
+        218,
+        207,
+      ],
+      [
+        217,
+        207,
+      ],
+      [
+        217,
+        206,
+      ],
+    ],
+  },
+  {
+    "fill": 11,
+    "fillRgb": "rgb(14, 88, 91)",
+    "op": "polygon",
+    "outline": 11,
+    "outlineRgb": "rgb(14, 88, 91)",
+    "points": [
+      [
+        218,
         210,
       ],
       [
-        220,
+        218,
         214,
       ],
       [
-        219,
+        217,
         214,
       ],
       [
-        219,
+        217,
         210,
       ],
     ],
@@ -8285,20 +8285,70 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "outlineRgb": "rgb(14, 88, 91)",
     "points": [
       [
-        220,
+        218,
         217,
       ],
       [
-        220,
+        218,
         221,
       ],
       [
-        219,
+        217,
         221,
       ],
       [
-        219,
         217,
+        217,
+      ],
+    ],
+  },
+  {
+    "fill": 9,
+    "fillRgb": "rgb(33, 167, 73)",
+    "op": "polygon",
+    "outline": 9,
+    "outlineRgb": "rgb(33, 167, 73)",
+    "points": [
+      [
+        202,
+        202,
+      ],
+      [
+        222,
+        202,
+      ],
+      [
+        222,
+        204,
+      ],
+      [
+        202,
+        204,
+      ],
+    ],
+  },
+  {
+    "fill": 9,
+    "fillRgb": "rgb(33, 167, 73)",
+    "op": "polygon",
+    "outline": 9,
+    "outlineRgb": "rgb(33, 167, 73)",
+    "points": [
+      [
+        220,
+        202,
+      ],
+      [
+        222,
+        202,
+      ],
+      [
+        222,
+        222,
+      ],
+      [
+        220,
+        222,
       ],
     ],
   },
@@ -9022,42 +9072,21 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "outlineRgb": "rgb(14, 88, 91)",
     "points": [
       [
-        202,
-        239,
-      ],
-      [
-        202,
-        239,
-      ],
-      [
-        202,
-        239,
-      ],
-    ],
-  },
-  {
-    "fill": 11,
-    "fillRgb": "rgb(14, 88, 91)",
-    "op": "polygon",
-    "outline": 11,
-    "outlineRgb": "rgb(14, 88, 91)",
-    "points": [
-      [
-        197,
-        233,
-      ],
-      [
-        200,
-        236,
-      ],
-      [
         199,
-        236,
+        232,
       ],
       [
-        197,
+        201,
         234,
       ],
+      [
+        201,
+        235,
+      ],
+      [
+        198,
+        232,
+      ],
     ],
   },
   {
@@ -9067,21 +9096,21 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "outline": 11,
     "outlineRgb": "rgb(14, 88, 91)",
     "points": [
-      [
-        192,
-        228,
-      ],
-      [
-        195,
-        231,
-      ],
       [
         194,
-        231,
+        227,
       ],
       [
-        192,
+        196,
         229,
+      ],
+      [
+        196,
+        230,
+      ],
+      [
+        193,
+        228,
       ],
     ],
   },
@@ -9092,21 +9121,50 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "outline": 11,
     "outlineRgb": "rgb(14, 88, 91)",
     "points": [
+      [
+        189,
+        222,
+      ],
+      [
+        189,
+        222,
+      ],
+      [
+        191,
+        224,
+      ],
+      [
+        191,
+        225,
+      ],
       [
         188,
         223,
       ],
+    ],
+  },
+  {
+    "fill": 9,
+    "fillRgb": "rgb(33, 167, 73)",
+    "op": "polygon",
+    "outline": 9,
+    "outlineRgb": "rgb(33, 167, 73)",
+    "points": [
       [
-        190,
-        226,
+        182,
+        222,
       ],
       [
-        189,
-        226,
+        185,
+        222,
       ],
       [
-        187,
-        224,
+        202,
+        239,
+      ],
+      [
+        202,
+        242,
       ],
     ],
   },
@@ -9271,94 +9329,144 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "points": [
       [
         222,
-        239,
+        237,
       ],
+      [
+        222,
+        238,
+      ],
+      [
+        221,
+        238,
+      ],
+      [
+        221,
+        237,
+      ],
+    ],
+  },
+  {
+    "fill": 11,
+    "fillRgb": "rgb(14, 88, 91)",
+    "op": "polygon",
+    "outline": 11,
+    "outlineRgb": "rgb(14, 88, 91)",
+    "points": [
+      [
+        217,
+        238,
+      ],
+      [
+        214,
+        238,
+      ],
+      [
+        214,
+        237,
+      ],
+      [
+        217,
+        237,
+      ],
+    ],
+  },
+  {
+    "fill": 11,
+    "fillRgb": "rgb(14, 88, 91)",
+    "op": "polygon",
+    "outline": 11,
+    "outlineRgb": "rgb(14, 88, 91)",
+    "points": [
+      [
+        210,
+        238,
+      ],
+      [
+        207,
+        238,
+      ],
+      [
+        207,
+        237,
+      ],
+      [
+        210,
+        237,
+      ],
+    ],
+  },
+  {
+    "fill": 11,
+    "fillRgb": "rgb(14, 88, 91)",
+    "op": "polygon",
+    "outline": 11,
+    "outlineRgb": "rgb(14, 88, 91)",
+    "points": [
+      [
+        203,
+        238,
+      ],
+      [
+        202,
+        238,
+      ],
+      [
+        202,
+        237,
+      ],
+      [
+        203,
+        237,
+      ],
+    ],
+  },
+  {
+    "fill": 9,
+    "fillRgb": "rgb(33, 167, 73)",
+    "op": "polygon",
+    "outline": 9,
+    "outlineRgb": "rgb(33, 167, 73)",
+    "points": [
       [
         222,
         240,
       ],
       [
-        221,
-        240,
+        222,
+        242,
       ],
       [
-        221,
-        239,
-      ],
-    ],
-  },
-  {
-    "fill": 11,
-    "fillRgb": "rgb(14, 88, 91)",
-    "op": "polygon",
-    "outline": 11,
-    "outlineRgb": "rgb(14, 88, 91)",
-    "points": [
-      [
-        217,
-        240,
-      ],
-      [
-        214,
-        240,
-      ],
-      [
-        214,
-        239,
-      ],
-      [
-        217,
-        239,
-      ],
-    ],
-  },
-  {
-    "fill": 11,
-    "fillRgb": "rgb(14, 88, 91)",
-    "op": "polygon",
-    "outline": 11,
-    "outlineRgb": "rgb(14, 88, 91)",
-    "points": [
-      [
-        210,
-        240,
-      ],
-      [
-        207,
-        240,
-      ],
-      [
-        207,
-        239,
-      ],
-      [
-        210,
-        239,
-      ],
-    ],
-  },
-  {
-    "fill": 11,
-    "fillRgb": "rgb(14, 88, 91)",
-    "op": "polygon",
-    "outline": 11,
-    "outlineRgb": "rgb(14, 88, 91)",
-    "points": [
-      [
-        203,
-        240,
+        202,
+        242,
       ],
       [
         202,
         240,
       ],
+    ],
+  },
+  {
+    "fill": 9,
+    "fillRgb": "rgb(33, 167, 73)",
+    "op": "polygon",
+    "outline": 9,
+    "outlineRgb": "rgb(33, 167, 73)",
+    "points": [
       [
-        202,
-        239,
+        220,
+        222,
       ],
       [
-        203,
-        239,
+        222,
+        222,
+      ],
+      [
+        222,
+        224,
+      ],
+      [
+        220,
+        224,
       ],
     ],
   },
@@ -9422,19 +9530,19 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "points": [
       [
         228,
-        225,
+        227,
       ],
       [
         224,
-        225,
+        227,
       ],
       [
         224,
-        224,
+        226,
       ],
       [
         228,
-        224,
+        226,
       ],
     ],
   },
@@ -9447,19 +9555,19 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "points": [
       [
         235,
-        225,
+        227,
       ],
       [
         231,
-        225,
+        227,
       ],
       [
         231,
-        224,
+        226,
       ],
       [
         235,
-        224,
+        226,
       ],
     ],
   },
@@ -9471,45 +9579,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "outlineRgb": "rgb(14, 88, 91)",
     "points": [
       [
-        240,
-        225,
+        238,
+        226,
       ],
       [
         238,
-        225,
-      ],
-      [
-        238,
-        224,
-      ],
-      [
-        240,
-        224,
-      ],
-    ],
-  },
-  {
-    "fill": 11,
-    "fillRgb": "rgb(14, 88, 91)",
-    "op": "polygon",
-    "outline": 11,
-    "outlineRgb": "rgb(14, 88, 91)",
-    "points": [
-      [
-        240,
-        224,
-      ],
-      [
-        240,
         228,
       ],
       [
-        239,
+        237,
         228,
       ],
       [
-        239,
-        224,
+        237,
+        226,
       ],
     ],
   },
@@ -9521,19 +9604,19 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "outlineRgb": "rgb(14, 88, 91)",
     "points": [
       [
-        240,
+        238,
         231,
       ],
       [
-        240,
+        238,
         235,
       ],
       [
-        239,
+        237,
         235,
       ],
       [
-        239,
+        237,
         231,
       ],
     ],
@@ -9546,45 +9629,20 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "outlineRgb": "rgb(14, 88, 91)",
     "points": [
       [
-        240,
         238,
-      ],
-      [
-        240,
-        240,
-      ],
-      [
-        239,
-        240,
-      ],
-      [
-        239,
         238,
-      ],
-    ],
-  },
-  {
-    "fill": 11,
-    "fillRgb": "rgb(14, 88, 91)",
-    "op": "polygon",
-    "outline": 11,
-    "outlineRgb": "rgb(14, 88, 91)",
-    "points": [
-      [
-        238,
-        240,
       ],
       [
         235,
-        240,
+        238,
       ],
       [
         235,
-        239,
+        237,
       ],
       [
         238,
-        239,
+        237,
       ],
     ],
   },
@@ -9597,19 +9655,19 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "points": [
       [
         231,
-        240,
+        238,
       ],
       [
         228,
-        240,
+        238,
       ],
       [
         228,
-        239,
+        237,
       ],
       [
         231,
-        239,
+        237,
       ],
     ],
   },
@@ -9622,19 +9680,94 @@ exports[`map hint rendering > a chain's regions carry their numbers, and the tar
     "points": [
       [
         224,
+        238,
+      ],
+      [
+        222,
+        238,
+      ],
+      [
+        222,
+        237,
+      ],
+      [
+        224,
+        237,
+      ],
+    ],
+  },
+  {
+    "fill": 9,
+    "fillRgb": "rgb(33, 167, 73)",
+    "op": "polygon",
+    "outline": 9,
+    "outlineRgb": "rgb(33, 167, 73)",
+    "points": [
+      [
+        222,
+        222,
+      ],
+      [
+        242,
+        222,
+      ],
+      [
+        242,
+        224,
+      ],
+      [
+        222,
+        224,
+      ],
+    ],
+  },
+  {
+    "fill": 9,
+    "fillRgb": "rgb(33, 167, 73)",
+    "op": "polygon",
+    "outline": 9,
+    "outlineRgb": "rgb(33, 167, 73)",
+    "points": [
+      [
         240,
+        222,
+      ],
+      [
+        242,
+        222,
+      ],
+      [
+        242,
+        242,
+      ],
+      [
+        240,
+        242,
+      ],
+    ],
+  },
+  {
+    "fill": 9,
+    "fillRgb": "rgb(33, 167, 73)",
+    "op": "polygon",
+    "outline": 9,
+    "outlineRgb": "rgb(33, 167, 73)",
+    "points": [
+      [
+        242,
+        240,
+      ],
+      [
+        242,
+        242,
+      ],
+      [
+        222,
+        242,
       ],
       [
         222,
         240,
-      ],
-      [
-        222,
-        239,
-      ],
-      [
-        224,
-        239,
       ],
     ],
   },

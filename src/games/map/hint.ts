@@ -521,7 +521,7 @@ export function refreshHintStep(
   return { ...step, move, highlights: { ...hl, want: { regions: left } } };
 }
 
-function sameOps(a: readonly MapOp[], b: readonly MapOp[]): boolean {
+export function sameOps(a: readonly MapOp[], b: readonly MapOp[]): boolean {
   return (
     a.length === b.length &&
     a.every((op, i) => JSON.stringify(op) === JSON.stringify(b[i]))

@@ -14,6 +14,7 @@ import {
   adaptiveMarkAllMove,
   applyNoteMove,
   type CandidatePlanPrefs,
+  candidateGesture,
   candidateHint,
   keepCandidateHintTrack,
   type Mark,
@@ -32,13 +33,14 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { markAllNow } from "../../engine/hint-gesture.ts";
 import {
   latinPremise,
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
 import type { Narration } from "../../engine/hint-words.ts";
-import { digitKeys } from "../../engine/key-labels.ts";
+import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
 import { rowColRegions } from "../../engine/latin-hint.ts";
 import {
@@ -70,6 +72,7 @@ import { say } from "./hint-text.ts";
 import {
   colors,
   computeSize,
+  coord,
   FLASH_TIME,
   fromCoord,
   type KeenDrawState,
@@ -464,6 +467,18 @@ export const keenGame: Game<
   // `KeenHint` is structurally `CandidateHighlights`.
   hintKeepTrack: (m, step, state) =>
     keepCandidateHintTrack(m, step, state.pencil, state.params.w),
+  hintGesture: (s, ui, ds, m) => {
+    const ts = ds.tileSize;
+    const mid = (v: number) => coord(v, ts) + ((ts / 2) | 0);
+    return candidateGesture(
+      m,
+      ui,
+      (x, y) => ({ x: mid(x), y: mid(y) }),
+      digitKeyCode,
+      undefined,
+      markAllNow(interpretMove, s, ui, ds),
+    );
+  },
   refreshHintStep: (step, state) =>
     refreshCandidateHintStep(step, state.grid, state.pencil, state.params.w),
   findMistakes,

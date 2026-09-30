@@ -61,6 +61,12 @@ export function fromCoord(pixel: number, ts: number): number {
   return fromCoordE(pixel, ts, ts);
 }
 
+/** The middle of cell `pos` along one axis (`-1` and the size are the gutter
+ * arrows), where a press addresses it. */
+export function cellCenter(pos: number, ts: number): number {
+  return coord(pos, ts) + Math.floor(ts / 2);
+}
+
 // --- drawing ----------------------------------------------------------
 
 export interface SixteenDrawState {

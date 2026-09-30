@@ -31,7 +31,7 @@ import {
   CURSOR_RIGHT,
   CURSOR_UP,
 } from "../../engine/pointer.ts";
-import type { Color, Size } from "../../engine/types.ts";
+import type { Color, Point, Size } from "../../engine/types.ts";
 import { REGION } from "./hint-text.ts";
 import { BE, LE, type MapData, RE, TE } from "./map-data.ts";
 import {
@@ -248,6 +248,39 @@ export function regionFromUiCursor(map: MapData, ui: MapUi): number {
     epsilonX(ui.curLastmove),
     epsilonY(ui.curLastmove),
   );
+}
+
+/**
+ * A pixel a press on region `r` lands in: the middle of a cell wholly in `r`
+ * when it has one, else the middle of one of its triangles. Each candidate is
+ * checked through {@link regionFromCoords}, so it is the pointer's own answer.
+ */
+export function pointInRegion(map: MapData, ts: number, r: number): Point {
+  const half = Math.floor(ts / 2);
+  const d = Math.floor(ts / 4);
+  const offsets: readonly (readonly [number, number])[] = [
+    [0, 0],
+    [0, d],
+    [-d, 0],
+    [d, 0],
+    [0, -d],
+  ];
+  for (const [ox, oy] of offsets) {
+    for (let y = 0; y < map.h; y++) {
+      for (let x = 0; x < map.w; x++) {
+        const p = { x: coord(x, ts) + half + ox, y: coord(y, ts) + half + oy };
+        if (ox === 0 && oy === 0) {
+          const whole = offsets.every(
+            ([ex, ey]) => regionFromCoords(map, ts, p.x + ex, p.y + ey) === r,
+          );
+          if (whole) return p;
+        } else if (regionFromCoords(map, ts, p.x, p.y) === r) {
+          return p;
+        }
+      }
+    }
+  }
+  throw new Error(`map: region ${r} has no pixel`);
 }
 
 // --- draw state ------------------------------------------------------

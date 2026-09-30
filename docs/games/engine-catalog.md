@@ -548,6 +548,15 @@ the move; a game whose elements are edges, links or flags writes its own diff.
 Take the population with `npm run refs -- src/engine/hint-track.ts trackTargets`.
 See [`hints.md`](./hints.md) § "Group one firing into one step".
 
+### `hint-gesture.ts` — how the pointer makes a hint step
+
+`PointerAction` and its builders `click`, `drag` and `key`: what a game's
+`hintGesture` returns for a step's move. The midend plays a hint step by
+sending the gesture through `interpretMove` and judging what it made with
+`hintKeepTrack`, never by applying the step's move, so every hinted game writes
+one. A `key` must be one the game's keypad offers, the Marks key, or mark-all
+(`MARK_ALL_CODE`). See [`hints.md`](./hints.md) § "Every step is a gesture".
+
 ### `candidate-hint.ts` — candidate-elimination plan plumbing
 
 The pure helpers for pencil-notes games: the naked singles, the recorded

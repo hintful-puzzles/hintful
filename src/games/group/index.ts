@@ -15,6 +15,7 @@ import {
   applyNoteMove,
   type CandidateMoveAdapter,
   type CandidatePlanPrefs,
+  candidateGesture,
   candidateHint,
   keepCandidateHintTrack,
   type Mark,
@@ -37,6 +38,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { click, markAllNow, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   latinPremise,
   narrateLatinReason,
@@ -67,6 +69,8 @@ import {
   isMouseDown,
   isMouseDrag,
   isMouseRelease,
+  LEFT_BUTTON,
+  LEFT_RELEASE,
   MOD_SHFT,
   stripModifiers,
 } from "../../engine/pointer.ts";
@@ -78,6 +82,7 @@ import { groupVocab, say } from "./hint-text.ts";
 import {
   colors,
   computeSize,
+  coord,
   flashLength,
   fromCoord,
   type GroupDrawState,
@@ -680,6 +685,35 @@ function hintKeepTrack(
   return keepCandidateHintTrack(m, step, state.pencil, state.w, groupCandidateMoves);
 }
 
+/** How the pointer makes a hint step's move. A cell's element is shown at the
+ * display position `sequence` gives it, so the gesture aims through that. */
+function hintGesture(
+  state: GroupState,
+  ui: GroupUi,
+  ds: GroupDrawState,
+  move: GroupMove,
+): PointerAction[] {
+  const ts = ds.tileSize;
+  const mid = (el: number) => coord(state.sequence.indexOf(el), ts) + ((ts / 2) | 0);
+  const at = (x: number, y: number): Point => ({ x: mid(x), y: mid(y) });
+  const code = (n: number) => toChar(n, state.id).charCodeAt(0);
+  const markAll = markAllNow(interpretMove, state, ui, ds);
+  if (!ui.cursor.visible || ui.odn === 1 || move.type === "pencilAll") {
+    return candidateGesture(move, ui, at, code, groupCandidateMoves, markAll);
+  }
+  // A diagonal run is selected, so a key would fill all of it: a tap on the
+  // highlight ends the run, and what it leaves is read off the game's own
+  // answer to that tap.
+  const tap = at(ui.cursor.x, ui.cursor.y);
+  const after = structuredClone(ui);
+  interpretMove(state, after, ds, tap, LEFT_BUTTON);
+  interpretMove(state, after, ds, tap, LEFT_RELEASE);
+  return [
+    click(tap),
+    ...candidateGesture(move, after, at, code, groupCandidateMoves, markAll),
+  ];
+}
+
 /** Re-validate a stored hint step against the current board before it is
  * (re-)displayed (the engine's "never show a stale step" guarantee). */
 function refreshHintStep(
@@ -766,6 +800,7 @@ export const groupGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture,
   refreshHintStep,
   findMistakes,
   requestKeys,

@@ -269,7 +269,7 @@ const sameSpan = (a: BridgesSpan, b: BridgesSpan): boolean =>
   (a.x1 === b.x2 && a.y1 === b.y2 && a.x2 === b.x1 && a.y2 === b.y1);
 
 /** How many bridges run along this span right now. */
-function spanBridges(state: BridgesState, span: BridgesSpan): number {
+export function spanBridges(state: BridgesState, span: BridgesSpan): number {
   const dx = Math.sign(span.x2 - span.x1);
   const dy = Math.sign(span.y2 - span.y1);
   return state.gridCount(span.x1 + dx, span.y1 + dy, dx ? G_LINEH : G_LINEV);
@@ -281,7 +281,11 @@ function spanBridges(state: BridgesState, span: BridgesSpan): number {
  * two ops (lift the limit, then cross), so a move is judged by the limit it
  * leaves rather than by the ops that leave it.
  */
-function limitAfter(state: BridgesState, span: BridgesSpan, m: BridgesMove): number {
+export function limitAfter(
+  state: BridgesState,
+  span: BridgesSpan,
+  m: BridgesMove,
+): number {
   const dx = Math.sign(span.x2 - span.x1);
   const dy = Math.sign(span.y2 - span.y1);
   const x = span.x1 + dx;
@@ -296,7 +300,7 @@ function limitAfter(state: BridgesState, span: BridgesSpan, m: BridgesMove): num
 }
 
 /** The limit a step asks for: none for a cross. */
-const wantedLimit = (want: BridgesOp): number => (want.op === "C" ? want.n : 0);
+export const wantedLimit = (want: BridgesOp): number => (want.op === "C" ? want.n : 0);
 
 /**
  * Classify a player move against the displayed step.
@@ -315,6 +319,9 @@ export function bridgesKeepTrack(
 ): "completed" | "onTrack" | "off" {
   const wanted = step.move.ops;
   if (m.ops.length === 0) return "off";
+  // An island's done-mark is the player's own note and changes no span the
+  // step decides; taking one off is how a drag from that island starts.
+  if (m.ops.every((op) => op.op === "M")) return "onTrack";
 
   for (const op of m.ops) {
     if (op.op === "L") {

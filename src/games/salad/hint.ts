@@ -38,6 +38,7 @@ import {
   type CandidateMoveAdapter,
   type CandidatePlanPrefs,
   type Cell,
+  candidateGesture,
   candidateHint,
   emitObviousCleanStep,
   keepCandidateHintTrack,
@@ -60,6 +61,7 @@ import {
   type HintTrackVerdict,
   narratedStep,
 } from "../../engine/game.ts";
+import type { PointerAction } from "../../engine/hint-gesture.ts";
 import {
   latinPremise,
   narrateLatinReason,
@@ -72,7 +74,9 @@ import {
   hiddenSingleLine,
   type SingleReason,
 } from "../../engine/latin-hint.ts";
+import { noteEntryGesture } from "../../engine/note-taking-cell.ts";
 import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
+import type { Point } from "../../engine/types.ts";
 import { CLUE, saladVocab, say } from "./hint-text.ts";
 import { type BorderReason, findMistakes, recordSaladDeductions } from "./solver.ts";
 import {
@@ -80,6 +84,8 @@ import {
   CIRCLE,
   CROSS,
   clueSide,
+  KEY_CIRCLE,
+  KEY_CROSS,
   latinholesCheck,
   needsPencilFill,
   type SaladBoard,
@@ -454,8 +460,9 @@ function assertEveryMarkerExplained(
  * onto `set`/`pencil`/`markAll`/`pencilStrike`; the **marker** entries are a
  * fourth shape the canonical set has no room for, so they are read as `null`
  * here (⇒ off-plan) and handled by {@link hintKeepTrack} /
- * {@link refreshHintStep} before they delegate. */
-const saladCandidateMoves: CandidateMoveAdapter<SaladMove> = {
+ * {@link refreshHintStep} before they delegate. `nums` places the "might be
+ * empty" note, which the walk reads as candidate `nums + 1`. */
+const saladCandidateMoves = (nums: number): CandidateMoveAdapter<SaladMove> => ({
   read: (m) => {
     // Both fills read as the canonical populate: the plan asks for the additive
     // `pencilAll`, and a legacy move log's resetting `markAll` did at least as
@@ -471,16 +478,16 @@ const saladCandidateMoves: CandidateMoveAdapter<SaladMove> = {
         pencil: m.type === "pencil",
       };
     }
-    // A penciled X mark is a note strike on the collapsed hole candidate.
+    // A penciled X toggles the "might be empty" note, as `executeMove` does.
     if (m.type === "pencil" && m.value === "cross") {
-      return { type: "set", x: m.x, y: m.y, n: -1, pencil: true };
+      return { type: "set", x: m.x, y: m.y, n: nums + 1, pencil: true };
     }
     return null;
   },
   strike: (marks) => ({ type: "pencilStrike", marks }),
   place: (x, y, n) => ({ type: "set", x, y, value: n }),
   bit: (n) => 1 << (n - 1),
-};
+});
 
 /** True when `move` writes one of Salad's two emptiness markers as a real entry
  * — the move shape the canonical `CandidateMove` set has no member for. */
@@ -630,7 +637,7 @@ function buildSteps(
         o,
         regionReach(o, regionsOf),
         text.cleanObvious,
-        { enc, adapter: saladCandidateMoves },
+        { enc, adapter: saladCandidateMoves(nums) },
       )
     )
       return false;
@@ -647,7 +654,7 @@ function buildSteps(
     grid: w.grid,
     pencil: w.pencil,
     enc,
-    moves: saladCandidateMoves,
+    moves: saladCandidateMoves(nums),
     autoClean,
     label: "salad hint plan",
     cap: o * o * (nums + 4) + 8,
@@ -733,7 +740,41 @@ export function hintKeepTrack(
     step,
     state.pencil,
     state.order,
-    saladCandidateMoves,
+    saladCandidateMoves(state.nums),
+  );
+}
+
+/** How the pointer makes a step's `move`, with `at` the middle of a cell and
+ * `code` the keypad key typing symbol `n`: a marker is its X or O key in ink,
+ * and the "might be empty" note is X in pencil mode. `markAll` is what the
+ * mark-all control makes now. */
+export function hintGesture(
+  state: SaladState,
+  ui: SaladUi,
+  at: (x: number, y: number) => Point,
+  code: (n: number) => number,
+  move: SaladMove,
+  markAll: unknown,
+): PointerAction[] {
+  const marker = markerMove(move);
+  if (marker) {
+    return noteEntryGesture(ui, at, [
+      {
+        x: marker.x,
+        y: marker.y,
+        code: marker.mark === "cross" ? KEY_CROSS : KEY_CIRCLE,
+        pencil: false,
+      },
+    ]);
+  }
+  const nums = state.nums;
+  return candidateGesture(
+    move,
+    ui,
+    at,
+    (n) => (n === nums + 1 ? KEY_CROSS : code(n)),
+    saladCandidateMoves(nums),
+    markAll,
   );
 }
 
@@ -755,6 +796,6 @@ export function refreshHintStep(
     state.grid,
     state.pencil,
     state.order,
-    saladCandidateMoves,
+    saladCandidateMoves(state.nums),
   );
 }

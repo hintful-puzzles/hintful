@@ -144,6 +144,8 @@ const HINT_LINK_SHIFT = 9;
 export const TLBORDER = 1;
 const brBorder = (ts: number) => ts + 2;
 const coord = (n: number, ts: number) => n * ts + TLBORDER;
+/** The middle of square `n` along one axis, where a press addresses it. */
+export const cellCenter = (n: number, ts: number) => coord(n, ts) + Math.floor(ts / 2);
 
 export function computeSize(p: TentsParams, ts: number): Size {
   return {

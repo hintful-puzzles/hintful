@@ -13,11 +13,10 @@ import { ALREADY_SOLVED, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.
 import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { SLOW_TESTS_ENABLED } from "../../engine/testing/slow.ts";
-import { samePoint } from "./geometry.ts";
-import { deduceUntangleHintPlan } from "./hint.ts";
+import { deduceUntangleHintPlan, solvedPlaces } from "./hint.ts";
 import { CROSSING, SPOT, say, type UntangleMarks, VERTEX } from "./hint-text.ts";
 import { untangleGame } from "./index.ts";
-import { closestOrientation, solvedLayout } from "./solution.ts";
+import { withinReach } from "./landing.ts";
 import { findCrossings, type UntangleMove, type UntangleState } from "./state.ts";
 
 function generated(n: number, seed: string) {
@@ -76,9 +75,12 @@ function followHints(start: UntangleState, aux?: string) {
     const added = pending.after - pending.before;
     const opens =
       nextGain !== null && nextGain > 0 && nextGain >= added ? nextGain : null;
-    expect(pending.explanation).toBe(
+    // The step's plan searched for that move not knowing where the drop would
+    // land, so a move it could not vouch for at every landing is not named.
+    expect([
       say.rearrange(pending.marks, pending.before, pending.after, opens).text,
-    );
+      say.rearrange(pending.marks, pending.before, pending.after, null).text,
+    ]).toContain(pending.explanation);
     pending = null;
   };
   /** The step's marks as its sentence is built from them: the point its move
@@ -129,10 +131,12 @@ function followHints(start: UntangleState, aux?: string) {
       // Points on their place in the solved layout are what keep a hint
       // recomputed after any step from cycling: a journey starts elsewhere,
       // and one that leaves crossings behind moves none of them.
-      const layout = solvedLayout(s.n, s.w, s.edges, aux);
-      if (layout !== null) {
-        const targets = closestOrientation(layout, s.pts, s.w);
-        const placed = (v: number) => samePoint(s.pts[v], targets[v]);
+      const targets = solvedPlaces(s, aux);
+      if (targets !== null) {
+        const placed = (v: number) => {
+          const place = targets[v];
+          return place !== null && withinReach(s.pts[v], place);
+        };
         expect(placed(movers[0])).toBe(false);
         if (!finishes) expect(movers.filter(placed)).toEqual([]);
       }

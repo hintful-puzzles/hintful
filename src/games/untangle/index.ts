@@ -24,6 +24,7 @@ import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { BLUE, BLUE_WASH, ORANGE, PURPLE } from "../../engine/color/colors.ts";
 import { ERROR, FLASH, HELD, INK } from "../../engine/color/palette.ts";
 import { winFlash } from "../../engine/flash.ts";
+import { drag } from "../../engine/hint-gesture.ts";
 import {
   type Game,
   registerGame,
@@ -47,7 +48,7 @@ import {
 } from "../../engine/pointer.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { newUntangleDesc } from "./generator.ts";
-import { deduceUntangleHintPlan } from "./hint.ts";
+import { deduceUntangleHintPlan, untangleKeepTrack } from "./hint.ts";
 import { FLASH_TIME, redrawUntangle } from "./render.ts";
 import { closestOrientation, solvedLayout } from "./solution.ts";
 import {
@@ -57,9 +58,9 @@ import {
   decodeGame,
   findCrossings,
   makeCircle,
-  PLAY_MARGIN,
   PREFERRED_TILE_SIZE,
   placeMove,
+  pointerDrop,
   type UntangleDrawState,
   type UntangleMove,
   type UntangleParams,
@@ -77,6 +78,15 @@ const TAB = 9;
  * and keeps the O(E²) crossing scan responsive. */
 const MAX_POINTS = 2000;
 
+/** The pixel vertex `i` is grabbed at. */
+function vertexPixel(s: UntangleState, i: number, tileSize: number): Point {
+  const p = s.pts[i];
+  return {
+    x: Math.trunc((p.x * tileSize) / p.d),
+    y: Math.trunc((p.y * tileSize) / p.d),
+  };
+}
+
 /** Nearest vertex within `DRAG_THRESHOLD` pixels of `(x,y)`, or -1
  * (upstream `point_under_mouse`). */
 function pointUnderMouse(
@@ -88,10 +98,9 @@ function pointUnderMouse(
   let best = -1;
   let bestd = 0;
   for (let i = 0; i < s.n; i++) {
-    const px = Math.trunc((s.pts[i].x * tileSize) / s.pts[i].d);
-    const py = Math.trunc((s.pts[i].y * tileSize) / s.pts[i].d);
-    const dx = px - x;
-    const dy = py - y;
+    const at = vertexPixel(s, i, tileSize);
+    const dx = at.x - x;
+    const dy = at.y - y;
     const d = dx * dx + dy * dy;
     if (best === -1 || bestd > d) {
       best = i;
@@ -111,22 +120,16 @@ function placeDraggedPoint(
   x: number,
   y: number,
 ): void {
-  // Clamp the drag target so the vertex blob stays inside the play-area
-  // border: a drag past the edge pins the vertex there and a drop commits
-  // there (upstream cancels a drag dropped off the board). Then round:
-  // pointer coords can arrive fractional (devicePixelRatio scaling), and the
-  // exact-integer `cross` requires integers. This is the single boundary
-  // where pixels enter the model.
-  const size = s.w * tileSize;
-  x = Math.round(Math.max(PLAY_MARGIN, Math.min(size - PLAY_MARGIN, x)));
-  y = Math.round(Math.max(PLAY_MARGIN, Math.min(size - PLAY_MARGIN, y)));
+  // Upstream cancels a drag dropped off the board; here it commits where the
+  // clamp pins it.
+  const dropped = pointerDrop(s.w, tileSize, x, y);
   if (ui.snapToGrid) {
     const d = s.n - 1;
-    const gx = Math.trunc((d * x) / (s.w * tileSize));
-    const gy = Math.trunc((d * y) / (s.w * tileSize));
+    const gx = Math.trunc((d * dropped.x) / (s.w * tileSize));
+    const gy = Math.trunc((d * dropped.y) / (s.w * tileSize));
     ui.newPoint = { x: (gx * 2 + 1) * s.w, y: (gy * 2 + 1) * s.w, d: d * 2 };
   } else {
-    ui.newPoint = { x, y, d: tileSize };
+    ui.newPoint = dropped;
   }
 }
 
@@ -385,7 +388,7 @@ export const untangleGame: Game<
   },
 
   // --- hint (the move that clears the most crossings; see hint.ts) ---
-  hint: (s, aux) => deduceUntangleHintPlan(s, aux),
+  hint: (s, aux, ui) => deduceUntangleHintPlan(s, aux, ui?.snapToGrid ?? false),
   hintMarks: {
     roles: {
       ring: "the move the step decides: the point to move, drawn in the hint's color, with a line in the same color running to the spot to drop it on, which is also drawn as a point. When only a few crossings are left, the hint may move several points together so that none of their lines crosses anything; the other points it will move next are ringed too (*the marked points*, in its words), and it moves them one at a time.",
@@ -393,6 +396,15 @@ export const untangleGame: Game<
         "the crossings the move clears, each with a ring round it, so you can count them.",
     },
   },
+  hintKeepTrack: untangleKeepTrack,
+  // Grab the point and drop it on the spot the hint marks.
+  hintGesture: (s, _ui, ds, m) =>
+    m.points.map(({ i, x, y, d }) =>
+      drag(vertexPixel(s, i, ds.tileSize), {
+        x: (x * ds.tileSize) / d,
+        y: (y * ds.tileSize) / d,
+      }),
+    ),
 
   // --- solve (the solved layout, in the symmetry closest to the board) -
   solve: (_orig, curr, aux) => {

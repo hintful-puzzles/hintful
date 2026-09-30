@@ -22,6 +22,7 @@ import {
   interpretTargetVerbs,
   type TargetGeometry,
   type TargetVerbs,
+  verbGesture,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newMagnetsDesc } from "./generator.ts";
@@ -94,6 +95,11 @@ const geometry: TargetGeometry<MagnetsState, MagnetsUi, MagnetsDrawState, Point>
     const x = fromCoordE(p.x, ts, origin(ts));
     const y = fromCoordE(p.y, ts, origin(ts));
     return onBoard(s, x, y) ? { x, y } : null;
+  },
+  pointAt(_s, ds, t) {
+    const ts = ds.tileSize;
+    const mid = (v: number) => origin(ts) + v * ts + Math.floor(ts / 2);
+    return { x: mid(t.x), y: mid(t.y) };
   },
   cursorTarget: (s, ui) =>
     onBoard(s, ui.cursor.x, ui.cursor.y) ? { x: ui.cursor.x, y: ui.cursor.y } : null,
@@ -280,6 +286,22 @@ export const magnetsGame: Game<
     },
   },
   hintKeepTrack: magnetsKeepTrack,
+  hintGesture: (s, ui, ds, m) => {
+    if (m.type !== "set" && m.type !== "flag") {
+      throw new Error(`magnets: a hint never asks for ${m.type}`);
+    }
+    const tile = (i: number) => ({ x: i % s.w, y: Math.floor(i / s.w) });
+    if (m.type === "set") {
+      // A left click puts the + in the end it lands on, so a − goes in by
+      // clicking the other end.
+      const end = m.which === POSITIVE ? m.idx : s.common.dominoes[m.idx];
+      return verbGesture(targetVerbs, s, ds, ui, [tile(end)]);
+    }
+    // The right button cycles empty, neutral, `?`.
+    const neutral = s.grid[m.idx] === NEUTRAL && (s.flags[m.idx] & GS_SET) !== 0;
+    const presses = m.mode === "neutral" || neutral ? 1 : 2;
+    return verbGesture(targetVerbs, s, ds, ui, [tile(m.idx)], "secondary", presses);
+  },
   difficulty,
 
   textFormat,

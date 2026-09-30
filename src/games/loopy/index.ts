@@ -43,6 +43,13 @@ import {
 import type { Grid, GridDot, GridEdge } from "../../engine/grid/index.ts";
 import { gridNearestEdge } from "../../engine/grid/index.ts";
 import {
+  click,
+  drag,
+  type GestureButton,
+  key,
+  type PointerAction,
+} from "../../engine/hint-gesture.ts";
+import {
   BACKSPACE,
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -76,7 +83,13 @@ import {
 import { dlineEnds } from "./dlines.ts";
 import { newDesc } from "./generator.ts";
 import { hint, hintKeepTrack, refreshHintStep } from "./hint.ts";
-import { cornerAt, cursorCorner, nextCornerNote, nextPairNote } from "./notes.ts";
+import {
+  cornerArc,
+  cornerAt,
+  cursorCorner,
+  nextCornerNote,
+  nextPairNote,
+} from "./notes.ts";
 import {
   DIFF_MAX,
   decodeParams,
@@ -97,9 +110,14 @@ import {
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
+  toScreen,
 } from "./render.ts";
 import { solveGame, uniqueSolution } from "./solver.ts";
 import {
+  AF_ADAPTIVE,
+  AF_FIXED,
+  AF_OFF,
+  autofollowEdges,
   checkCompletion,
   cloneState,
   forcedRuleOuts,
@@ -135,11 +153,6 @@ export type LoopyMove =
   | { kind: "pair"; a: number; b: number; relation: PairRelation };
 
 export type PairRelation = "none" | "match" | "opposite";
-
-/** How much an edge click drags its neighbors along with it. */
-export const AF_OFF = 0;
-export const AF_FIXED = 1;
-export const AF_ADAPTIVE = 2;
 
 export interface LoopyUi {
   /** Draw excluded (NO) lines very faintly rather than invisibly. */
@@ -274,64 +287,6 @@ export function nextLineState(button: number, old: number): LineState | null {
     default:
       return null;
   }
-}
-
-/**
- * Extend a click along any run of edges whose continuation is forced, so a
- * player tracing a corridor does not have to click every segment of it.
- *
- * Walks outwards from both ends of the clicked edge. At each dot, an edge is a
- * *candidate* continuation unless the preference excludes it: under
- * {@link AF_FIXED} every other edge at the dot counts (so the walk follows the
- * grid's own shape only), while under {@link AF_ADAPTIVE} edges the player has
- * already marked NO are skipped, so the walk also follows the corridor the
- * player has carved — except when the click itself is a NO, where excluding
- * NO edges would be self-defeating. The walk continues only while exactly one
- * candidate exists and it currently matches the clicked edge's old state.
- *
- * Returning on coming full circle replaces upstream's `goto autofollow_done`,
- * which breaks only the inner loop, so its second end retraces the same edges.
- * Ops are absolute sets, so the board is the same either way.
- */
-export function autofollowEdges(
-  state: LoopyState,
-  ui: Pick<LoopyUi, "autofollow">,
-  clicked: GridEdge,
-): Set<number> {
-  const edges = new Set<number>([clicked.index]);
-  const clickedState = state.lines[clicked.index];
-
-  for (const start of [clicked.dot1, clicked.dot2]) {
-    let dot: GridDot = start;
-    let eThis: GridEdge = clicked;
-
-    for (;;) {
-      let eNext: GridEdge | null = null;
-      let nFound = 0;
-      for (let j = 0; j < dot.order; j++) {
-        const candidate = dot.edges[j];
-        if (candidate === eThis) continue;
-        if (
-          ui.autofollow === AF_FIXED ||
-          clickedState === LINE_NO ||
-          state.lines[candidate.index] !== LINE_NO
-        ) {
-          eNext = candidate;
-          nFound++;
-        }
-      }
-
-      if (nFound !== 1 || eNext === null) break;
-      if (state.lines[eNext.index] !== clickedState) break;
-      // Came all the way round a loop back to where we started.
-      if (eNext === clicked) return edges;
-
-      dot = eNext.dot1 !== dot ? eNext.dot1 : eNext.dot2;
-      eThis = eNext;
-      edges.add(eThis.index);
-    }
-  }
-  return edges;
 }
 
 /**
@@ -562,6 +517,15 @@ function interpretMove(
 const geometry: TargetGeometry<LoopyState, LoopyUi, LoopyDrawState, GridEdge> = {
   noun: "edge",
   pointerTarget: (s, ds, p) => edgeAt(s.grid, ds.tileSize, p),
+  pointAt(s, ds, e) {
+    const [x, y] = toScreen(
+      s.grid,
+      ds.tileSize,
+      (e.dot1.x + e.dot2.x) / 2,
+      (e.dot1.y + e.dot2.y) / 2,
+    );
+    return { x, y };
+  },
   cursorTarget: (s, ui) => (ui.cursor.edge < 0 ? null : s.grid.edges[ui.cursor.edge]),
   parkCursor(ui, e) {
     const { cursor } = ui;
@@ -625,6 +589,118 @@ function moveCursorAlong(cursor: LoopyCursor, from: GridDot, e: GridEdge): void 
   cursor.edge = e.index;
   cursor.arrow = 0;
   cursor.visible = true;
+}
+
+/**
+ * The pointer's way to a hint step's move. A line step is a click per edge it
+ * sets, played forward so an edge an earlier click's rule-outs already settled
+ * is not clicked back again. A corner is taps inside its angle and a pair is
+ * drags from one edge to the other, each cycling the note one state, as few as
+ * reach it by either button; both are notes mode's, which is turned on for them
+ * and off for lines, and put back after.
+ */
+function hintGesture(
+  s: LoopyState,
+  ui: LoopyUi,
+  ds: LoopyDrawState,
+  m: LoopyMove,
+): PointerAction[] {
+  const notes = m.kind === "corner" || m.kind === "pair";
+  const out: PointerAction[] = [];
+  if (m.kind === "set") {
+    let board = s;
+    for (const op of m.ops) {
+      if (board.lines[op.edge] === op.state) continue;
+      const button = op.state === LINE_YES ? LEFT_BUTTON : RIGHT_BUTTON;
+      const e = s.grid.edges[op.edge];
+      const made = setEdge(board, ui, e, button);
+      if (made !== null) board = executeMove(board, made);
+      const at = geometry.pointAt(s, ds, e, ui);
+      out.push(click(at, button === LEFT_BUTTON ? "primary" : "secondary"));
+    }
+  } else if (m.kind === "corner") {
+    const at = cornerPoint(s, ds, m.dline);
+    // Exactly the step's note: the state holding both bits also holds the one
+    // asked for, but claims a second thing the step did not deduce, so a way
+    // round that passes through it is not taken.
+    const [presses, button] = fewestPresses(
+      s.corners[m.dline],
+      nextCornerNote,
+      (bits) => bits === m.bits,
+      (bits) => (bits & m.bits) === m.bits,
+    );
+    for (let i = 0; i < presses; i++) out.push(click(at, button));
+  } else if (m.kind === "pair") {
+    const from = geometry.pointAt(s, ds, s.grid.edges[m.a], ui);
+    const to = geometry.pointAt(s, ds, s.grid.edges[m.b], ui);
+    // Half a tile from the press makes it a drag, even one that comes back.
+    const near = Math.hypot(to.x - from.x, to.y - from.y) <= ds.tileSize / 2 + 1;
+    const through = near ? [{ x: from.x + ds.tileSize, y: from.y }] : [];
+    const [presses, button] = fewestPresses(
+      pairRelation(s, m.a, m.b),
+      nextPairNote,
+      (relation) => relation === m.relation,
+    );
+    for (let i = 0; i < presses; i++) out.push(drag(from, to, { button, through }));
+  } else {
+    throw new Error("loopy: a hint never solves");
+  }
+  if (notes === ui.pencilMode) return out;
+  return [key(PENCIL_MODE_BUTTON), ...out, key(PENCIL_MODE_BUTTON)];
+}
+
+/** How many presses of which button first take a note from `start` to a state
+ * `reached` accepts, each press stepping it by `next`. A way round that first
+ * passes a state `stops` accepts is abandoned there: keep-track would call the
+ * step done at it. */
+function fewestPresses<T>(
+  start: T,
+  next: (note: T, button: number) => T | null,
+  reached: (note: T) => boolean,
+  stops: (note: T) => boolean = reached,
+): [number, GestureButton] {
+  const walk = (button: number): number | null => {
+    let note: T | null = start;
+    for (let k = 1; k <= 4; k++) {
+      note = next(note, button);
+      if (note === null) return null;
+      if (reached(note)) return k;
+      if (stops(note)) return null;
+    }
+    return null;
+  };
+  const left = walk(LEFT_BUTTON);
+  const right = walk(RIGHT_BUTTON);
+  if (left !== null && (right === null || left <= right)) return [left, "primary"];
+  if (right !== null) return [right, "secondary"];
+  throw new Error("loopy: no run of presses reaches the note");
+}
+
+/** A point a tap notes corner `dline` from: along the middle of its angle, a
+ * little way out from its dot. */
+function cornerPoint(s: LoopyState, ds: LoopyDrawState, dline: number): Point {
+  const g = s.grid;
+  const { dot, from, sweep } = cornerArc(g, dline);
+  const shortest = Math.min(
+    ...dot.edges.map((e) => {
+      const far = e.dot1 === dot ? e.dot2 : e.dot1;
+      return Math.hypot(far.x - dot.x, far.y - dot.y);
+    }),
+  );
+  const mid = from + sweep / 2;
+  // The screen rounds to whole pixels, which turns a point near the dot; the
+  // first distance whose rounded point still falls in the corner is taken.
+  for (const r of [0.3, 0.2, 0.4, 0.15]) {
+    const [x, y] = toScreen(
+      g,
+      ds.tileSize,
+      dot.x + r * shortest * Math.cos(mid),
+      dot.y + r * shortest * Math.sin(mid),
+    );
+    const back = gridPoint(g, ds.tileSize, { x, y });
+    if (cornerAt(g, back.x, back.y) === dline) return { x, y };
+  }
+  throw new Error(`loopy: no point taps corner ${dline}`);
 }
 
 function executeMove(state: LoopyState, move: LoopyMove): LoopyState {
@@ -801,6 +877,7 @@ export const loopyGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture,
   refreshHintStep,
   textFormat,
   prefs,

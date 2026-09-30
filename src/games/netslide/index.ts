@@ -13,6 +13,7 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import type { Game, SolveResult } from "../../engine/game.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
+import { click } from "../../engine/hint-gesture.ts";
 import {
   atof,
   dimensionParamConfig,
@@ -31,7 +32,7 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
-import { hint, hintKeepTrack, type NetslideHint, parseAux } from "./hint.ts";
+import { arrowFor, hint, hintKeepTrack, type NetslideHint, parseAux } from "./hint.ts";
 import { reconstructSolution } from "./reconstruct.ts";
 import {
   ANIM_TIME,
@@ -141,6 +142,18 @@ function executeMove(s: NetslideState, m: NetslideMove): NetslideState {
  * line it is on. (As upstream, `CURSOR_SELECT2` does *not* reverse — only the
  * real right mouse button does.)
  */
+/** The cell a press lands in along one axis, the gutters being `-1` and the
+ * size. The `+2 … −2` shuffle keeps the division positive so it truncates the
+ * way C's does. */
+function cellAt(pixel: number, ts: number): number {
+  return Math.floor((pixel - (border(ts) + 1) + 2 * ts) / ts) - 2;
+}
+
+/** The middle of cell `c` along one axis, as {@link cellAt} reads it. */
+function cellCenter(c: number, ts: number): number {
+  return border(ts) + 1 + c * ts + Math.floor(ts / 2);
+}
+
 function interpretMove(
   s: NetslideState,
   ui: NetslideUi,
@@ -171,11 +184,8 @@ function interpretMove(
   let cy: number;
 
   if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
-    // The gutter cells are indices −1 and w (resp. h); the `+2 … −2` shuffle
-    // keeps the division positive so it truncates the way C's does.
-    const b = border(ts);
-    cx = Math.floor((p.x - (b + 1) + 2 * ts) / ts) - 2;
-    cy = Math.floor((p.y - (b + 1) + 2 * ts) / ts) - 2;
+    cx = cellAt(p.x, ts);
+    cy = cellAt(p.y, ts);
     ui.cursor.visible = false;
   } else if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
     if (!ui.cursor.visible) {
@@ -314,6 +324,12 @@ export const netslideGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture(s, _ui, ds, m) {
+    if (m.type !== "slide") return [];
+    const { arrowX, arrowY } = arrowFor(s, m);
+    const ts = ds.tileSize;
+    return [click({ x: cellCenter(arrowX, ts), y: cellCenter(arrowY, ts) })];
+  },
 
   statusbarText: (s) => {
     const active = computeActive(s, -1, -1).filter((a) => a !== 0).length;

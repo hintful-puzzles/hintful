@@ -254,6 +254,69 @@ function dotOrder(s: LoopyState, dot: number, lineType: number): number {
   return n;
 }
 
+/** How much an edge click drags its neighbors along with it. */
+export const AF_OFF = 0;
+export const AF_FIXED = 1;
+export const AF_ADAPTIVE = 2;
+
+/**
+ * Extend a click along any run of edges whose continuation is forced, so a
+ * player tracing a corridor does not have to click every segment of it.
+ *
+ * Walks outwards from both ends of the clicked edge. At each dot, an edge is a
+ * *candidate* continuation unless the preference excludes it: under
+ * {@link AF_FIXED} every other edge at the dot counts (so the walk follows the
+ * grid's own shape only), while under {@link AF_ADAPTIVE} edges the player has
+ * already marked NO are skipped, so the walk also follows the corridor the
+ * player has carved — except when the click itself is a NO, where excluding
+ * NO edges would be self-defeating. The walk continues only while exactly one
+ * candidate exists and it currently matches the clicked edge's old state.
+ *
+ * Returning on coming full circle replaces upstream's `goto autofollow_done`,
+ * which breaks only the inner loop, so its second end retraces the same edges.
+ * Ops are absolute sets, so the board is the same either way.
+ */
+export function autofollowEdges(
+  state: LoopyState,
+  ui: { readonly autofollow: number },
+  clicked: GridEdge,
+): Set<number> {
+  const edges = new Set<number>([clicked.index]);
+  const clickedState = state.lines[clicked.index];
+
+  for (const start of [clicked.dot1, clicked.dot2]) {
+    let dot: GridDot = start;
+    let eThis: GridEdge = clicked;
+
+    for (;;) {
+      let eNext: GridEdge | null = null;
+      let nFound = 0;
+      for (let j = 0; j < dot.order; j++) {
+        const candidate = dot.edges[j];
+        if (candidate === eThis) continue;
+        if (
+          ui.autofollow === AF_FIXED ||
+          clickedState === LINE_NO ||
+          state.lines[candidate.index] !== LINE_NO
+        ) {
+          eNext = candidate;
+          nFound++;
+        }
+      }
+
+      if (nFound !== 1 || eNext === null) break;
+      if (state.lines[eNext.index] !== clickedState) break;
+      // Came all the way round a loop back to where we started.
+      if (eNext === clicked) return edges;
+
+      dot = eNext.dot1 !== dot ? eNext.dot1 : eNext.dot2;
+      eThis = eNext;
+      edges.add(eThis.index);
+    }
+  }
+  return edges;
+}
+
 /**
  * The edges a move's newly drawn lines settle by counting alone: the rest of a dot
  * that now carries its two lines, and the rest of a face whose clue is now met

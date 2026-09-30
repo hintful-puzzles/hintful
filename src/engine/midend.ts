@@ -30,11 +30,21 @@ import {
   type HintStep,
   UI_UPDATE,
 } from "./game.ts";
+import { MARK_ALL_CODE } from "./hint-gesture.ts";
 import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { pencilModeKey, takesNotes } from "./key-labels.ts";
 import { describeParams, presetMenu, type TitledPresetMenu } from "./param-label.ts";
 import { paramsError } from "./params.ts";
-import { cancelDrags, PENCIL_MODE_BUTTON } from "./pointer.ts";
+import {
+  cancelDrags,
+  LEFT_BUTTON,
+  LEFT_DRAG,
+  LEFT_RELEASE,
+  PENCIL_MODE_BUTTON,
+  RIGHT_BUTTON,
+  RIGHT_DRAG,
+  RIGHT_RELEASE,
+} from "./pointer.ts";
 import { randomNew } from "./random/index.ts";
 import { decodeSave, encodeSave, type SaveEnvelope } from "./save.ts";
 import type {
@@ -974,13 +984,97 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // (`hideAfter` true, the Hint-button stepper) the plan is hidden so
     // the player gets one applied hint per press and asks again for more.
     this.hintDisplayed = true;
-    this.advanceHintOnAnimationEnd = true;
-    this.hideHintAfterStep = hideAfter;
-    this.pendingHintAnim = true;
-    // A game with no move animation settles synchronously inside
-    // `afterTransition` (the timer's settle path never runs for it).
-    this.applyMove(step.move);
+    this.playHintGesture(step, hideAfter);
     return null;
+  }
+
+  /**
+   * Play `step` as the player would: its gesture ({@link Game.hintGesture}) is
+   * sent through `interpretMove` as the frontend sends a tap, a drag or an
+   * on-screen key, and each move that makes is judged by `hintKeepTrack`.
+   * Moves on the way are committed as the player's own; the one that completes
+   * the step is played in slow motion, and the plan advances when it settles (a
+   * game with no move animation settles synchronously inside `afterTransition`).
+   *
+   * A gesture that makes a move off the step, presses a key the player has no
+   * control for, or ends without completing the step is a defect in the game's
+   * hint, and throws: the step asked for something the pointer does not do.
+   */
+  private playHintGesture(step: HintStep<Move>, hideAfter: boolean): void {
+    const ds = this.drawState;
+    if (ds === null) throw new Error(`${this.game.id}: a hint played with no board`);
+    if (!this.game.hintGesture) {
+      throw new Error(`${this.game.id}: has a hint but no hintGesture`);
+    }
+    const gesture = this.game.hintGesture(this.state, this.ui, ds, step.move);
+    const fail = (why: string): never => {
+      throw new Error(
+        `${this.game.id}: the hint's gesture ${why} ` +
+          `(step "${step.explanation}", gesture ${JSON.stringify(gesture)}, ` +
+          `${this.game.encodeParams(this.boardParams, true)}:${this.desc})`,
+      );
+    };
+    if (gesture.length === 0) fail("is empty");
+
+    const onScreen = new Set(this.requestKeys().map((k) => k.button));
+    if (this.game.canMarkAll) onScreen.add(MARK_ALL_CODE);
+    let completed = false;
+    let repaint = false;
+
+    /** Send one input; `false` when the game declined it. */
+    const send = (p: Point, button: number): boolean => {
+      const made = this.game.interpretMove(this.state, this.ui, ds, p, button);
+      if (made === null) return false;
+      if (made === UI_UPDATE) {
+        repaint = true;
+        return true;
+      }
+      if (completed) fail(`makes a move after completing its step`);
+      const verdict = this.game.hintKeepTrack?.(made, step, this.state) ?? "off";
+      if (verdict === "off") fail(`makes a move off its step: ${JSON.stringify(made)}`);
+      const next = this.game.executeMove(this.state, made);
+      if (verdict === "completed") {
+        completed = true;
+        this.advanceHintOnAnimationEnd = true;
+        this.hideHintAfterStep = hideAfter;
+        this.pendingHintAnim = true;
+      }
+      this.commitMove(next, made);
+      repaint = false;
+      return true;
+    };
+
+    for (const action of gesture) {
+      if (action.kind === "key") {
+        if (!onScreen.has(action.code)) {
+          fail(`presses key ${action.code}, which no on-screen control sends`);
+        }
+        send({ x: 0, y: 0 }, action.code);
+        continue;
+      }
+      const [press, dragged, release] =
+        action.button === "primary"
+          ? [LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE]
+          : [RIGHT_BUTTON, RIGHT_DRAG, RIGHT_RELEASE];
+      const from = action.kind === "click" ? action.at : action.from;
+      // The frontend tracks a press only when the game took it; a declined one
+      // gets its release at once, where it was pressed, and no drag.
+      if (!send(from, press)) {
+        send(from, release);
+        continue;
+      }
+      if (action.kind === "drag") {
+        for (const p of action.through ?? []) send(p, dragged);
+        send(action.to, dragged);
+        send(action.to, release);
+      } else {
+        send(from, release);
+      }
+    }
+    if (!completed) fail("does not complete its step");
+    // A release that only tidied the `Ui` after the move landed still has to
+    // be seen; an animating move repaints every frame anyway.
+    if (repaint && !this.animating) this.requestRedraw();
   }
 
   currentAnimationMs(): number {

@@ -61,6 +61,10 @@ export const CROSS = 88;
 /** `LATINH_CIRCLE`: this square definitely holds a symbol. Upstream's `'O'`. */
 export const CIRCLE = 79;
 
+/** The keypad keys that write each marker. */
+export const KEY_CROSS = "X".charCodeAt(0);
+export const KEY_CIRCLE = "O".charCodeAt(0);
+
 // --- params ----------------------------------------------------------------
 
 export interface SaladParams {

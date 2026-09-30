@@ -228,7 +228,12 @@ export function colors(defaultBackground: Color): Color[] {
  * pixel-center convention wants, and keep lines concentric with the dots they
  * join. Please don't "restore" the truncation.
  */
-function toScreen(g: Grid, tileSize: number, gx: number, gy: number): [number, number] {
+export function toScreen(
+  g: Grid,
+  tileSize: number,
+  gx: number,
+  gy: number,
+): [number, number] {
   const b = border(tileSize);
   return [
     Math.round(((gx - g.lowestX) * tileSize) / g.tileSize) + b,

@@ -22,6 +22,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { coord, fromCoord } from "../../engine/geometry.ts";
+import { drag } from "../../engine/hint-gesture.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
@@ -345,6 +346,14 @@ export const inertiaGame: Game<
     },
   },
   hintKeepTrack,
+  // The swipe: hold the ball and drag it out along the arrow the hint draws.
+  hintGesture(s, _ui, ds, m) {
+    if (m.type !== "move") return [];
+    const ts = ds.tileSize;
+    const mid = (v: number) => coord(v, ts, BORDER) + Math.floor(ts / 2);
+    const ball = { x: mid(s.px), y: mid(s.py) };
+    return [drag(ball, { x: mid(s.px + DX[m.dir]), y: mid(s.py + DY[m.dir]) })];
+  },
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

@@ -7,6 +7,7 @@ import type {
   UiUpdate,
 } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { click, type PointerAction } from "../../engine/hint-gesture.ts";
 import { ALREADY_SOLVED, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -37,6 +38,7 @@ import type { Point } from "../../engine/types.ts";
 import { say } from "./hint-text.ts";
 import {
   ANIM_TIME,
+  cellCenter,
   colors,
   computeSize,
   FLASH_FRAME,
@@ -733,6 +735,19 @@ export const sixteenGame: Game<
     roles: {
       ring: "what the step decides: the tile it is moving, filled in the hint's color, with the arrow to click drawn in the same color, and the square the move takes it to, outlined. When the tile is on a journey of two moves, one along a row and one along a column, both squares are marked: the nearer one, where this move lands it, with a dashed outline, and the other with a solid one.",
     },
+  },
+
+  // One click per square on the gutter arrow the hint marks: a click slides
+  // the line by one, and the step's delta is the in-grid run toward its target.
+  hintGesture(state, _ui, ds, m): readonly PointerAction[] {
+    if (m.type !== "slide") return [];
+    const ts = ds.tileSize;
+    const ahead = m.delta > 0;
+    const at =
+      m.axis === "row"
+        ? { x: cellCenter(ahead ? state.w : -1, ts), y: cellCenter(m.index, ts) }
+        : { x: cellCenter(m.index, ts), y: cellCenter(ahead ? state.h : -1, ts) };
+    return Array.from({ length: Math.abs(m.delta) }, () => click(at));
   },
 
   hintKeepTrack(

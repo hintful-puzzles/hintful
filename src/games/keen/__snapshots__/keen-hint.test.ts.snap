@@ -4712,10 +4712,10 @@ exports[`keen hint render > a hidden-single placement hatches the whole line and
     "y": 28,
   },
   {
-    "color": 0,
+    "color": 3,
     "h": 45,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(164, 164, 164)",
     "w": 46,
     "x": 171,
     "y": 28,

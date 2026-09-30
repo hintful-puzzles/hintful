@@ -26,6 +26,7 @@
  */
 
 import { UI_UPDATE, type UiUpdate } from "./game.ts";
+import { click, key, type PointerAction } from "./hint-gesture.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
@@ -33,6 +34,7 @@ import {
   isCursorMove,
   LEFT_BUTTON,
   moveCursor,
+  PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
   stripModifiers,
 } from "./pointer.ts";
@@ -74,6 +76,10 @@ export interface TargetGeometry<State, Ui, DrawState, Target> {
   /** The target a press at `p` addresses, or `null` for none. `ui` is there for
    * a view the player can scroll: Net's wrapping grid, drawn from an origin. */
   pointerTarget(state: State, ds: DrawState, p: Point, ui: Ui): Target | null;
+  /** A point a press addresses `target` from: its inverse, which a hint's
+   * gesture aims at (`verbGesture`). The middle of it, so it reads as the
+   * place a player would tap. */
+  pointAt(state: State, ds: DrawState, target: Target, ui: Ui): Point;
   /** The target the cursor addresses, or `null` where it rests on none. */
   cursorTarget(state: State, ui: Ui): Target | null;
   /** Put the cursor on `target`, without showing it. */
@@ -163,6 +169,11 @@ export function squareGrid<
       const y = Math.floor((p.y - b) / ds.tileSize);
       return inGrid(s, x, y) ? { x, y } : null;
     },
+    pointAt(s, ds, t) {
+      const b = options.border(ds.tileSize, s);
+      const half = Math.floor(ds.tileSize / 2);
+      return { x: b + t.x * ds.tileSize + half, y: b + t.y * ds.tileSize + half };
+    },
     cursorTarget(s, ui) {
       const { x, y } = ui.cursor;
       return inGrid(s, x, y) ? { x, y } : null;
@@ -237,6 +248,63 @@ export function interpretTargetVerbs<S, U extends TargetVerbUi, D, T, M>(
     return target === null ? null : keyed.apply(state, target, ui);
   }
   return null;
+}
+
+/**
+ * The gesture that applies a button's verb at each of `targets`, `times`
+ * presses apiece: what a hint step of a target-verb game asks the pointer for
+ * (`Game.hintGesture`). A key-only verb's step asks for its route instead
+ * ({@link routeGesture}).
+ */
+export function verbGesture<S, U, D, T, M>(
+  verbs: Verbs<S, U, D, T, M>,
+  state: S,
+  ds: D,
+  ui: U,
+  targets: readonly T[],
+  button: VerbButton = "primary",
+  times = 1,
+): PointerAction[] {
+  const out: PointerAction[] = [];
+  for (const t of targets) {
+    const at = verbs.geometry.pointAt(state, ds, t, ui);
+    for (let i = 0; i < times; i++) out.push(click(at, button));
+  }
+  return out;
+}
+
+/**
+ * The pointer's route to a key-only verb's move at each of `targets`, as its
+ * declaration says it (`repeat` or `notes`). A `cycle` route has no fixed
+ * press count, so a game whose hint asks for one says how many presses reach
+ * the result, with {@link verbGesture}. `notes` turns notes mode on first and
+ * off after, through the Marks key, unless `notesOn` says it is on already;
+ * `where` places the press on the target, where the route's `where` asks.
+ */
+export function routeGesture<S, U, D, T, M>(
+  verbs: Verbs<S, U, D, T, M>,
+  verb: KeyOnlyVerb<S, U, T, M>,
+  state: S,
+  ds: D,
+  ui: U,
+  targets: readonly T[],
+  options: { notesOn?: boolean; where?: (at: Point) => Point } = {},
+): PointerAction[] {
+  const route = verb.pointer;
+  switch (route.kind) {
+    case "repeat":
+      return verbGesture(verbs, state, ds, ui, targets, route.button, route.times);
+    case "cycle":
+      throw new Error(`a cycle route has no fixed press count (${verb.does})`);
+    case "notes": {
+      const place = options.where ?? ((at: Point) => at);
+      const presses = targets.map((t) =>
+        click(place(verbs.geometry.pointAt(state, ds, t, ui)), route.button),
+      );
+      if (options.notesOn) return presses;
+      return [key(PENCIL_MODE_BUTTON), ...presses, key(PENCIL_MODE_BUTTON)];
+    }
+  }
 }
 
 /** The end of a key-only verb's sentence, saying the pointer's route. */

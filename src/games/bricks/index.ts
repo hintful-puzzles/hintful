@@ -24,6 +24,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { click, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   ALREADY_SOLVED,
   CONTRADICTION_UNLOCALIZED,
@@ -64,6 +65,7 @@ import {
   offsets,
   PREFERRED_TILE_SIZE,
   redraw,
+  tileOrigin,
 } from "./render.ts";
 import {
   type BricksReason,
@@ -416,6 +418,30 @@ function hintKeepTrack(
   return cell?.to === hl.forced ? "completed" : "off";
 }
 
+/** One tap per cell, with whichever button's cycle takes the cell from what it
+ * holds to the color asked for in one press. */
+function hintGesture(
+  state: BricksState,
+  _ui: BricksUi,
+  ds: BricksDrawState,
+  move: BricksMove,
+): readonly PointerAction[] {
+  if (move.kind !== "paint") return [];
+  const ts = ds.tileSize;
+  return move.cells.map(({ index, to }) => {
+    const old = state.grid[index] & COL_MASK;
+    const left =
+      (old === F_EMPTY && to === "shade") ||
+      (old === F_SHADE && to === "unshade") ||
+      (old === F_UNSHADE && to === "empty");
+    const o = tileOrigin(index % state.w, (index / state.w) | 0, state.h, ts);
+    return click(
+      { x: o.x + (ts >> 1), y: o.y + (ts >> 1) },
+      left ? "primary" : "secondary",
+    );
+  });
+}
+
 /** Bricks' difficulty contract. `solveGame` returns `"complete"` exactly when
  * the deduction alone solves the board, and `clear` blanks the grid first, so
  * the verdict is about the puzzle rather than any marks already on it.
@@ -478,6 +504,7 @@ export const bricksGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture,
   findMistakes,
   textFormat,
 

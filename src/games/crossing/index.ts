@@ -29,8 +29,9 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
 import { CELL } from "../../engine/hint-words.ts";
-import { digitKeys } from "../../engine/key-labels.ts";
+import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import {
   highlightIsOn,
   pressNoteTakingCell,
@@ -51,6 +52,8 @@ import {
   isCursorMove,
   isEraseKey,
   LEFT_BUTTON,
+  LEFT_RELEASE,
+  PENCIL_MODE_BUTTON,
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
@@ -68,10 +71,12 @@ import {
   computeSize,
   FLASH_TIME,
   fromCoord,
+  layoutNumbers,
   newDrawState,
   numberAtPoint,
   PREFERRED_TILE_SIZE,
   redraw,
+  tileOrigin,
 } from "./render.ts";
 import { type CrossingMistake, findMistakes, solveCrossing } from "./solver.ts";
 import {
@@ -598,6 +603,81 @@ function refreshHintStep(
   );
 }
 
+/** The digits a hint step writes, square by square: a whole number goes into
+ * its run's empty squares one digit at a time, which `hintKeepTrack` follows. */
+function hintEntries(
+  state: CrossingState,
+  move: CrossingMove,
+): { x: number; y: number; digit: number; pencil: boolean }[] {
+  const { puzzle } = state;
+  switch (move.kind) {
+    case "place": {
+      const num = puzzle.numbers[move.number];
+      return puzzle.runs[move.run].cells.flatMap((i, k) =>
+        state.grid[i] === 0
+          ? [{ ...cellAt(puzzle, i), digit: num[k], pencil: false }]
+          : [],
+      );
+    }
+    case "set":
+      if (move.digit === null) break;
+      return [{ x: move.x, y: move.y, digit: move.digit, pencil: false }];
+    case "pencilAdd":
+    case "pencilStrike":
+      return [...move.marks]
+        .sort((a, b) => a.y - b.y || a.x - b.x || a.n - b.n)
+        .map((k) => ({ x: k.x, y: k.y, digit: k.n, pencil: true }));
+  }
+  throw new Error(`crossing: no hint gesture for ${JSON.stringify(move)}`);
+}
+
+/**
+ * How the pointer makes a hint step's move: tap each square and type its digit,
+ * in ink or as a note. Crossing's selection has rules of its own on top of the
+ * note-taking cell's — a digit advances it along the run, a repeat tap at a
+ * crossing turns it, a held clue drops into the run a tap lands on — so the
+ * gesture is found by playing each tap and key through `interpretMove` on a
+ * copy of the `Ui`, tapping only where the selection is not already.
+ */
+function hintGesture(
+  state: CrossingState,
+  ui: CrossingUi,
+  ds: CrossingDrawState,
+  move: CrossingMove,
+): PointerAction[] {
+  const ts = ds.tileSize;
+  const half = (ts / 2) | 0;
+  const { puzzle } = state;
+  const sim = structuredClone(ui);
+  const out: PointerAction[] = [];
+  const tap = (p: Point): void => {
+    out.push(click(p));
+    interpretMove(state, sim, ds, p, LEFT_BUTTON);
+    interpretMove(state, sim, ds, p, LEFT_RELEASE);
+  };
+  const press = (code: number): void => {
+    out.push(key(code));
+    interpretMove(state, sim, ds, { x: 0, y: 0 }, code);
+  };
+  if (sim.heldNumber !== null) {
+    // Put the held clue back first, where a tap on it cannot place it.
+    if (sim.cursor.visible && !sim.pencilMode) press(PENCIL_MODE_BUTTON);
+    const b = layoutNumbers(ts, puzzle.w, puzzle.h, puzzle.numbers).slots[
+      sim.heldNumber
+    ].hit;
+    tap({ x: b.x + ((b.w / 2) | 0), y: b.y + ((b.h / 2) | 0) });
+  }
+  for (const e of hintEntries(state, move)) {
+    if (!highlightIsOn(sim, e.x, e.y)) {
+      tap({ x: tileOrigin(e.x, ts) + half, y: tileOrigin(e.y, ts) + half });
+    }
+    if (sim.pencilMode !== e.pencil) press(PENCIL_MODE_BUTTON);
+    press(digitKeyCode(e.digit));
+  }
+  if (sim.pencilMode !== ui.pencilMode) press(PENCIL_MODE_BUTTON);
+  return out;
+}
+
 export const crossingGame: Game<
   CrossingParams,
   CrossingState,
@@ -639,6 +719,7 @@ export const crossingGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture,
   refreshHintStep,
   /**
    * Selecting a square, moving the cursor or picking a clue up puts a displayed

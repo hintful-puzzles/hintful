@@ -24,7 +24,8 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { fromCoord } from "../../engine/geometry.ts";
+import { coord, fromCoord } from "../../engine/geometry.ts";
+import { click, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   ALREADY_SOLVED,
   CONTRADICTION_UNLOCALIZED,
@@ -370,6 +371,27 @@ function hintKeepTrack(
   return got.index === want.index && got.fill === want.fill ? "completed" : "off";
 }
 
+/** One tap per cell, with whichever button's cycle takes the cell to the
+ * hinted color in one press. */
+function hintGesture(
+  state: ClustersState,
+  _ui: ClustersUi,
+  ds: ClustersDrawState,
+  move: ClustersMove,
+): readonly PointerAction[] {
+  if (move.kind !== "paint") return [];
+  const { w, grid } = state;
+  const ts = ds.tileSize;
+  const b = border(ts);
+  const mid = (v: number): number => coord(v, ts, b) + (ts >> 1);
+  return move.cells.map(({ index, fill }) =>
+    click(
+      { x: mid(index % w), y: mid((index / w) | 0) },
+      cycleFill(grid[index], F_COLOR_1) === fill ? "primary" : "secondary",
+    ),
+  );
+}
+
 /** Clusters' difficulty contract (`engine/difficulty.ts`). The two tiers are
  * nested rungs of one fixpoint (`maxdiff` 0 is `solverTry` alone, ≥ 1 adds
  * `solverRecurse`), which is why `solvableAtExactlyTier` asks the cheap rung
@@ -422,6 +444,7 @@ export const clustersGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture,
   findMistakes,
   textFormat,
 

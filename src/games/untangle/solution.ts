@@ -228,8 +228,7 @@ export function closestOrientation(
   let best: RationalPoint[] = [];
   let bestPlaced = -1;
   let bestDist = Infinity;
-  for (let k = 0; k < 8; k++) {
-    const t = orientLayout(layout, w, k);
+  for (const t of orientations(layout, w)) {
     let placed = 0;
     let dist = 0;
     for (let v = 0; v < pts.length; v++) {
@@ -245,6 +244,14 @@ export function closestOrientation(
     }
   }
   return best;
+}
+
+/** `layout` under each of the eight symmetries of the `w`-square. */
+export function orientations(
+  layout: readonly RationalPoint[],
+  w: number,
+): RationalPoint[][] {
+  return Array.from({ length: 8 }, (_, k) => orientLayout(layout, w, k));
 }
 
 /** `layout` under dihedral symmetry `k` of the `w`-square — exact, since each

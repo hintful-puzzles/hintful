@@ -99,6 +99,13 @@ export function offsets(h: number, ts: number): { ox: number; oy: number } {
   return { ox: (1 - Math.ceil(h / 2)) * ts, oy: 0 };
 }
 
+/** Top-left pixel of padded cell (x, y): each row shifts half a tile right of
+ * the one above. */
+export function tileOrigin(x: number, y: number, h: number, ts: number): Point {
+  const { ox, oy } = offsets(h, ts);
+  return { x: x * ts + ox + y * (ts >> 1), y: y * ts + oy };
+}
+
 // --- draw state -------------------------------------------------------------
 
 export interface BricksDrawState {
@@ -279,7 +286,6 @@ export function redraw(
   const ts = ds.tileSize;
   const { w, h, grid } = state;
   const s = w * h;
-  const { ox, oy } = offsets(h, ts);
 
   const marks = stepMarks(hint);
   const indexOf = (p: Point): number => p.y * w + p.x;
@@ -333,8 +339,7 @@ export function redraw(
     // that carries its flag, so a piece goes when that square repaints. A
     // square with no neighbor beside it owns the ground there as well, where a
     // diamond on the board's side edge lands.
-    const tx = x * ts + ox + y * (ts >> 1);
-    const ty = y * ts + oy;
+    const { x: tx, y: ty } = tileOrigin(x, y, h, ts);
     let clipX = tx;
     let clipW = ts + 1;
     if (x === 0 || shown[i - 1] & F_BOUND) {
@@ -353,6 +358,8 @@ export function redraw(
     dr.unclip();
   }
 
-  for (const { x, y } of marks.of("ring", CELL))
-    drawTargetRing(dr, ts, x * ts + ox + y * (ts >> 1), y * ts + oy);
+  for (const { x, y } of marks.of("ring", CELL)) {
+    const o = tileOrigin(x, y, h, ts);
+    drawTargetRing(dr, ts, o.x, o.y);
+  }
 }

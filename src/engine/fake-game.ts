@@ -14,6 +14,7 @@
  */
 
 import type { Game } from "./game.ts";
+import { click } from "./hint-gesture.ts";
 import { LEFT_BUTTON, RIGHT_BUTTON } from "./pointer.ts";
 import { randomUpto } from "./random/index.ts";
 
@@ -99,6 +100,8 @@ export const fakeGame: Game<FakeParams, FakeState, FakeMove, null, FakeDrawState
   // exactly one shape), so it completes the current step; anything
   // else deviates.
   hintKeepTrack: (m) => (m === "inc" ? "completed" : "off"),
+  // A left click is `inc`, the only move a plan asks for.
+  hintGesture: () => [click({ x: 0, y: 0 })],
   textFormat: (s) => `count=${s.count}`,
   statusbarText: (s) => `count ${s.count}/${s.target}`,
 

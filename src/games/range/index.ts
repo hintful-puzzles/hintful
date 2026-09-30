@@ -37,6 +37,7 @@ import {
   interpretTargetVerbs,
   squareGrid,
   type TargetVerbs,
+  verbGesture,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { type Marked, say } from "./hint-text.ts";
@@ -440,6 +441,21 @@ export const rangeGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture: (s, ui, ds, m) => {
+    const [{ r, c, value }] = m.sets;
+    // The cycle has three states, so a left click reaches one of the other two
+    // and a right click the other.
+    const back = cycle(s.grid[idx(r, c, s.w)], false) === value;
+    const target = { x: c, y: r };
+    return verbGesture(
+      targetVerbs,
+      s,
+      ds,
+      ui,
+      [target],
+      back ? "primary" : "secondary",
+    );
+  },
   findMistakes,
 
   textFormat,

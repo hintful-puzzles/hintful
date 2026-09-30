@@ -314,7 +314,10 @@ function toNetslideMove(m: SlideMove): Slide {
 
 /** The border arrow that performs this slide (a ring cell just outside the
  * grid), so the renderer can light up the one the player should press. */
-function arrowFor(s: NetslideState, m: Slide): { arrowX: number; arrowY: number } {
+export function arrowFor(
+  s: NetslideState,
+  m: Slide,
+): { arrowX: number; arrowY: number } {
   if (m.axis === "row") {
     // A row slides left off the *left* gutter's arrow, right off the right's.
     return { arrowX: m.dir === 1 ? -1 : s.w, arrowY: m.index };

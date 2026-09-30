@@ -194,6 +194,13 @@ export function borderGridGeometry<
   return {
     noun: "edge",
     pointerTarget: (s, ds, p) => pointerEdge(s, p.x, p.y, ds.tileSize),
+    pointAt(_s, ds, e) {
+      // Inside cell (x, y), most of the way to the edge: its nearest side.
+      const ts = ds.tileSize;
+      const toward = (v: number, d: number) =>
+        margin(ts) + v * ts + Math.floor(((1 + 0.7 * d) * ts) / 2);
+      return { x: toward(e.x, DX[e.dir]), y: toward(e.y, DY[e.dir]) };
+    },
     cursorTarget(_s, ui) {
       const { x, y } = ui.cursor;
       if (x % 2 === y % 2) return null;

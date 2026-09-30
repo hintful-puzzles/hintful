@@ -18,6 +18,7 @@ import {
 } from "../../engine/border-grid.ts";
 import {
   type BorderHint,
+  borderHintGesture,
   borderHintJourney,
   borderHintKeepTrack,
   type ForcedBorderEdge,
@@ -280,6 +281,10 @@ export const separateGame: Game<
       state.w,
       state.borders,
     ),
+  hintGesture: (s, ui, ds, m) => {
+    if (m.type !== "edges") throw new Error("separate: a hint only sets edges");
+    return borderHintGesture(targetVerbs, s, ds, ui, m.edits);
+  },
 
   textFormat,
   statusbarText: (s) => `${s.k} letters per region`,

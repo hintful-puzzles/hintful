@@ -16,6 +16,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { click, type PointerAction } from "../../engine/hint-gesture.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
 import { CELL, type Narration } from "../../engine/hint-words.ts";
@@ -54,6 +55,7 @@ import {
   type PatternDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
+  toCoord,
 } from "./render.ts";
 import {
   deduceHintPlan,
@@ -336,6 +338,28 @@ function cellsChangedBy(m: PatternMove, state: PatternState): Map<number, GridVa
   return out;
 }
 
+/** One tap per cell, with whichever button's cycle takes the cell to the
+ * hinted value in one press: a tap overwrites, where a drag would paint only
+ * blank squares. */
+function hintGesture(
+  state: PatternState,
+  _ui: PatternUi,
+  ds: PatternDrawState,
+  m: PatternMove,
+): readonly PointerAction[] {
+  if (m.type !== "fillCells") return [];
+  const ts = ds.tileSize;
+  const { w, h } = state.common;
+  const half = ts >> 1;
+  return m.cells.map((i) => {
+    const leftTakesIt = (state.grid[i] + 2) % 3 === m.value;
+    return click(
+      { x: toCoord(ts, w, i % w) + half, y: toCoord(ts, h, (i / w) | 0) + half },
+      leftTakesIt ? "primary" : "secondary",
+    );
+  });
+}
+
 /** Classify a player move against a (possibly multi-cell) hint step: it must
  * set the hinted value into a subset of the step's cells and touch nothing
  * else. Filling all completes it; filling some keeps it on track (the step
@@ -415,6 +439,7 @@ export const patternGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture,
   findMistakes,
   textFormat,
 

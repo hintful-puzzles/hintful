@@ -64,12 +64,17 @@ export function hasPencilArray(state: unknown): boolean {
  */
 export function digitKeys(n: number): KeyLabel[] {
   const keys: KeyLabel[] = [];
-  for (let i = 0; i < n; i++) {
-    const button = i < 9 ? "1".charCodeAt(0) + i : "a".charCodeAt(0) + (i - 9);
+  for (let v = 1; v <= n; v++) {
+    const button = digitKeyCode(v);
     keys.push({ button, label: String.fromCharCode(button) });
   }
   keys.push(clearKey);
   return keys;
+}
+
+/** The {@link digitKeys} key that types value `v` (1-based). */
+export function digitKeyCode(v: number): number {
+  return v <= 9 ? "1".charCodeAt(0) + (v - 1) : "a".charCodeAt(0) + (v - 10);
 }
 
 /**

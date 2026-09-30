@@ -19,9 +19,19 @@
  * the board cannot mark what the sentence does not name.
  */
 
-import { BORDER, type BorderEdit, DISABLED, DX, DY, FLIP } from "./border-grid.ts";
+import {
+  BORDER,
+  BORDER_MASK,
+  type BorderEdit,
+  DISABLED,
+  DX,
+  DY,
+  FLIP,
+} from "./border-grid.ts";
 import { type HintStep, type HintTrackVerdict, narratedStep } from "./game.ts";
+import type { PointerAction } from "./hint-gesture.ts";
 import type { MarkKind, Narration } from "./hint-words.ts";
+import { type TargetVerbs, verbGesture } from "./target-verb.ts";
 
 /** An edge, named on the square `(x, y)`'s `dir` side. */
 export interface BorderEdge {
@@ -44,6 +54,32 @@ export const EDGE: MarkKind<BorderEdge> = {
       ? `${x + DX[dir]},${y + DY[dir]},${FLIP(dir)}`
       : `${x},${y},${dir}`,
 };
+
+/**
+ * How the pointer makes a leg's edits (`Game.hintGesture`): a click on the edge,
+ * the left button for a wall and the right for "no wall". A leg's first edit is
+ * on the square the edge is named from, with the one bit it sets: a wall, or
+ * not-a-wall four bits up.
+ */
+export function borderHintGesture<S, U, D, M>(
+  verbs: TargetVerbs<S, U, D, BorderEdge, M>,
+  state: S,
+  ds: D,
+  ui: U,
+  edits: readonly BorderEdit[],
+): PointerAction[] {
+  const [{ x, y, flag }] = edits;
+  const wall = (flag & BORDER_MASK) !== 0;
+  const dir = 31 - Math.clz32(wall ? flag : flag >> 4);
+  return verbGesture(
+    verbs,
+    state,
+    ds,
+    ui,
+    [{ x, y, dir }],
+    wall ? "primary" : "secondary",
+  );
+}
 
 /** A displayed step's highlights: the edge it sets, which keep-track compares a
  * player's edit against. Its marks are its words' (`hint-words.ts`'s

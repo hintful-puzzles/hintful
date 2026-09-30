@@ -938,6 +938,50 @@ The `Game` hooks and the `Midend` lifecycle are in
   asked for. The mechanism is generic; a game just emits grouped steps.
 - **`refreshHintStep(step, state)`** — validate-at-display (§ "Stale plans
   and refreshHintStep").
+- **`hintGesture(state, ui, ds, move)`** — how the pointer makes the step's
+  move (§ "Every step is a gesture"). Required of every hinted game.
+
+### Every step is a gesture
+
+A hint teaches the player to make its move, so the move must be one the
+pointer makes on its own: a tap, a long press, a drag, or an on-screen key.
+The midend enforces it by never applying a step's move. `executeHint` asks
+the game's `hintGesture` for the step's gesture (`hint-gesture.ts`), sends it
+through `interpretMove` as the frontend sends a real tap, and hands each move
+that makes to `hintKeepTrack`. A move off the step, a key no on-screen control
+sends, or a gesture that ends before the step completes throws, so a step the
+pointer cannot make fails every walk of the plan
+(`hint-gesture.test.ts`), which is how Net's lock hint would have been caught.
+
+Writing one:
+
+- **Aim at the middle of what the move changes**, computed from `ds.tileSize`
+  and the game's own pixel mapping, the inverse of what `interpretMove` reads.
+  Use the same helper the renderer uses to place the square or edge, so the two
+  cannot drift apart.
+- **A step the pointer makes in several moves is several actions.** A pencil
+  strike of three candidates is three taps; Net's half turn is two quarter
+  turns. `hintKeepTrack` must call the earlier moves `"onTrack"` and the last
+  `"completed"`, which is what a player following the step by hand needs from it
+  anyway.
+- **A mode is part of the gesture.** A step in notes mode presses the Marks key
+  (`PENCIL_MODE_BUTTON`), plays the notes, and presses it again if the mode was
+  off, so the player's mode is as they left it. A keypad digit follows the tap
+  that selects its cell. The shared shapes do this for you: `verbGesture` and
+  `routeGesture` for target-verb games, `borderHintGesture` for border grids,
+  `candidateGesture` (with `markAllNow`, so a strike the mark-all control makes
+  whole is one press of it) for candidate games.
+- **A gesture that depends on the `Ui` asks the game.** Where the right taps
+  depend on a selection or a held piece (Crossing, Group, Ascent), rehearse
+  them on a `structuredClone` of the `Ui` through the game's own
+  `interpretMove`, rather than restating its rules.
+- **A point on a continuous board must be one a pixel can reach.** The pointer
+  lands on a pixel, so a hint that names a position (Untangle) proposes only
+  spots where its words hold for every landing inside the half-pixel box, at
+  any tile size the game can be drawn at; see `untangle/landing.ts`.
+- **The keyboard is not a gesture.** Its route to every move is held by the
+  target-verb model's keys-equal-buttons guard (`target-verb.test.ts`), and a
+  game outside the model owes the same by its own tests.
 
 ### The shared plan loop: deduceHintPlan
 

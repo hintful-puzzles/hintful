@@ -142,6 +142,24 @@ export const PLAY_BORDER_INSET = 2;
 /** The clamp margin for a vertex center: blob fully inside the border. */
 export const PLAY_MARGIN = PLAY_BORDER_INSET + CIRCLE_RADIUS;
 
+/** Where a drop at pixel `(x, y)` puts a point, on a `w`-square board drawn at
+ * `tileSize` with snapping off. Clamped so the vertex blob stays inside the
+ * play-area border (a drop past the edge pins the vertex there), then rounded:
+ * pointer coords can arrive fractional (devicePixelRatio scaling), and the
+ * exact-integer `cross` requires integers. This is the single boundary where
+ * pixels enter the model. */
+export function pointerDrop(
+  w: number,
+  tileSize: number,
+  x: number,
+  y: number,
+): RationalPoint {
+  const size = w * tileSize;
+  const clamp = (v: number) =>
+    Math.round(Math.max(PLAY_MARGIN, Math.min(size - PLAY_MARGIN, v)));
+  return { x: clamp(x), y: clamp(y), d: tileSize };
+}
+
 /** `COORDLIMIT(n)` — the grid is big enough that `n` points occupy about
  * `1/POINTDENSITY` of it. */
 export function coordLimit(n: number): number {

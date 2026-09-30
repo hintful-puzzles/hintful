@@ -21,6 +21,7 @@ import { winFlash } from "../../engine/flash.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
+import { click, drag, type PointerAction } from "../../engine/hint-gesture.ts";
 import { commonHintRefusal } from "../../engine/hint-refusal.ts";
 import { matching } from "../../engine/latin.ts";
 import { transposeDimensions } from "../../engine/params.ts";
@@ -50,6 +51,7 @@ import type { Point } from "../../engine/types.ts";
 import { newTentsDesc } from "./generator.ts";
 import { tentsHint, tentsKeepTrack } from "./hint.ts";
 import {
+  cellCenter,
   colors,
   computeSize,
   dirTo,
@@ -427,6 +429,25 @@ export const tentsGame: Game<
     },
   },
   hintKeepTrack: tentsKeepTrack,
+  hintGesture(_state, _ui, ds, m): readonly PointerAction[] {
+    const ts = ds.tileSize;
+    const at = (x: number, y: number) => ({
+      x: cellCenter(x, ts),
+      y: cellCenter(y, ts),
+    });
+    switch (m.type) {
+      // A tap places a tent on an open square and a long press grasses it.
+      case "cells":
+        return m.cells.map((c) =>
+          click(at(c.x, c.y), c.v === NONTENT ? "secondary" : "primary"),
+        );
+      // The link drag, from the square to its tree.
+      case "link":
+        return [drag(at(m.x, m.y), at(m.x + DX(m.d), m.y + DY(m.d)))];
+      default:
+        return [];
+    }
+  },
 
   textFormat,
 

@@ -11,14 +11,18 @@ import type {
   PresetMenu,
   SolveResult,
 } from "../../engine/game.ts";
+import { UI_UPDATE } from "../../engine/game.ts";
+import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { commonHintRefusal } from "../../engine/hint-refusal.ts";
-import { numberKeys } from "../../engine/key-labels.ts";
+import { clearKey, numberKeys } from "../../engine/key-labels.ts";
 import {
   dimensionParamConfig,
   parseDimensions,
   transposeDimensions,
 } from "../../engine/params.ts";
+import { LEFT_BUTTON, LEFT_RELEASE } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import type { Point } from "../../engine/types.ts";
 import { newAscentDesc } from "./generator.ts";
 import { type AscentHighlights, ascentHint, ascentKeepTrack } from "./hint.ts";
 import { executeAscentMove } from "./moves.ts";
@@ -26,6 +30,7 @@ import {
   type AscentDrawState,
   ascentColors,
   ascentComputeSize,
+  cellCenter,
   FLASH_FRAME,
   FLASH_SIZE,
   newAscentDrawState,
@@ -41,11 +46,13 @@ import {
   type AscentMove,
   type AscentParams,
   type AscentState,
+  CELL_NONE,
   checkCompletion,
   DIFF_NORMAL,
   DIFFCOUNT,
   fromNumberEdge,
   isHexagonal,
+  isNear,
   isNumberEdge,
   MODE_EDGES,
   MODE_HEXAGON,
@@ -66,6 +73,119 @@ import {
   interpretAscentMove,
   newAscentUi,
 } from "./ui.ts";
+
+// --- the hint's gesture ----------------------------------------------
+
+/** What a run of taps and keypad keys makes, played through Ascent's own input
+ * on copies of the board and the `Ui`: a tap is a left press and its release at
+ * one point, and a key arrives at (0, 0), as the midend delivers them. */
+function rehearse(
+  state: AscentState,
+  ui: AscentUi,
+  ds: AscentDrawState,
+  actions: readonly Tap[],
+): { state: AscentState; ui: AscentUi; moves: AscentMove[] } {
+  let s = state;
+  const u = structuredClone(ui);
+  const moves: AscentMove[] = [];
+  const send = (p: Point, button: number) => {
+    const made = interpretAscentMove(s, u, ds, p, button);
+    if (made === null || made === UI_UPDATE) return;
+    const next = executeAscentMove(s, made);
+    changedState(u, s, next);
+    s = next;
+    moves.push(made);
+  };
+  for (const a of actions) {
+    if (a.kind === "key") {
+      send({ x: 0, y: 0 }, a.code);
+    } else {
+      send(a.at, LEFT_BUTTON);
+      send(a.at, LEFT_RELEASE);
+    }
+  }
+  return { state: s, ui: u, moves };
+}
+
+type Tap = Extract<PointerAction, { kind: "key" } | { kind: "click" }>;
+
+/**
+ * Each number the step places, the way a player writes it: tap its square,
+ * type it on the keypad, and tap the square again to commit it.
+ *
+ * Ascent's taps also carry a selection. A tap next to the selected number
+ * places the number it offers, and a second tap on the selected square
+ * deselects it, so the taps a number needs depend on the live `Ui`. Each
+ * candidate is rehearsed on copies through the game's own input, and the
+ * first whose only move is that number is the one the hint asks for.
+ */
+function hintGesture(
+  state: AscentState,
+  ui: AscentUi,
+  ds: AscentDrawState,
+  m: AscentMove,
+): readonly PointerAction[] {
+  const goals = m.kind === "place" ? [m] : m.kind === "places" ? m.cells : [];
+  const out: Tap[] = [];
+  let s = state;
+  let u = ui;
+  const tapAt = (cell: number): Tap => {
+    const c = cellCenter(cell, s.w, s.mode, ds.tileSize, ds.offsetX, ds.offsetY);
+    return {
+      kind: "click",
+      button: "primary",
+      at: { x: Math.round(c.cx), y: Math.round(c.cy) },
+    };
+  };
+  const keyFor = (code: number): Tap => ({ kind: "key", code });
+  for (const goal of goals) {
+    // A number half typed elsewhere would be committed by the first tap, so
+    // rub it out a digit at a time.
+    const digitsTyped = u.typingCell === CELL_NONE ? 0 : String(u.typingNumber).length;
+    const erase = Array.from({ length: digitsTyped }, () => keyFor(clearKey.button));
+    const tap = tapAt(goal.cell);
+    const typed = [...String(goal.n + 1)].map((d) => keyFor(d.charCodeAt(0)));
+    const deselect = u.held >= 0 ? [tapAt(u.held)] : [];
+    // Selecting a number away from the square moves the selection off it,
+    // where a second tap on the selected number would cycle what it placed.
+    const away = s.grid.findIndex(
+      (n, i) =>
+        n >= 0 &&
+        i !== u.held &&
+        i !== u.tapCycle?.cell &&
+        !isNear(i, goal.cell, s.w, s.mode),
+    );
+    const candidates = [
+      [tap],
+      [tap, ...typed, tap],
+      [...deselect, tap, ...typed, tap],
+      [...deselect, ...deselect, tap, ...typed, tap],
+      ...(away >= 0 ? [[tapAt(away), tap, ...typed, tap]] : []),
+    ];
+    let found = false;
+    for (const candidate of candidates) {
+      const actions = [...erase, ...candidate];
+      const r = rehearse(s, u, ds, actions);
+      const [made, ...more] = r.moves;
+      if (
+        more.length > 0 ||
+        made?.kind !== "place" ||
+        made.cell !== goal.cell ||
+        made.n !== goal.n
+      ) {
+        continue;
+      }
+      out.push(...actions);
+      s = r.state;
+      u = r.ui;
+      found = true;
+      break;
+    }
+    // Nothing here writes the number: the midend reports the step unplayable.
+    if (!found) return [];
+  }
+  return out;
+}
 
 // --- presets -------------------------------------------------------
 
@@ -400,6 +520,7 @@ export const ascentGame: Game<
     },
   },
   hintKeepTrack: ascentKeepTrack,
+  hintGesture,
   difficulty,
   textFormat,
 

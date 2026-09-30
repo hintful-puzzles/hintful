@@ -15,6 +15,7 @@ import {
   adaptiveMarkAllMove,
   applyNoteMove,
   type CandidatePlanPrefs,
+  candidateGesture,
   candidateHint,
   keepCandidateHintTrack,
   type Mark,
@@ -34,6 +35,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { markAllNow } from "../../engine/hint-gesture.ts";
 import {
   latinPremise,
   narrateLatinReason,
@@ -586,6 +588,21 @@ export const unequalGame: Game<
     },
   },
   hintKeepTrack,
+  // The middle of a cell, clear of the gaps a press there would read as a
+  // clue's spent flag.
+  hintGesture: (s, ui, ds, m) => {
+    const ts = ds.tileSize;
+    const mid = (v: number) => coord(v, ts) + ((ts / 2) | 0);
+    const keys = unequalKeys(s.order);
+    return candidateGesture(
+      m,
+      ui,
+      (x, y) => ({ x: mid(x), y: mid(y) }),
+      (n) => keys[n - 1].button,
+      undefined,
+      markAllNow(interpretMove, s, ui, ds),
+    );
+  },
   refreshHintStep,
   findMistakes,
   requestKeys: (p): KeyLabel[] => unequalKeys(p.order),

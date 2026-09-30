@@ -14,6 +14,7 @@ import {
   adaptiveMarkAllMove,
   applyNoteMove,
   type CandidatePlanPrefs,
+  candidateGesture,
   candidateHint,
   keepCandidateHintTrack,
   type Mark,
@@ -31,9 +32,10 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { markAllNow } from "../../engine/hint-gesture.ts";
 import type { Premise } from "../../engine/hint-text.ts";
 import type { Narration } from "../../engine/hint-words.ts";
-import { digitKeys } from "../../engine/key-labels.ts";
+import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import { latinVerdict } from "../../engine/latin.ts";
 import { hiddenSingleLine, rowColRegions } from "../../engine/latin-hint.ts";
 import {
@@ -604,6 +606,20 @@ export const towersGame: Game<
   },
   hintKeepTrack: (m, step, state) =>
     keepCandidateHintTrack(m, step, state.pencil, state.w),
+  // A cell's middle is its own in 3D too: a neighbor's tower leans at most an
+  // eighth of a tile (`x3d`) sideways into it.
+  hintGesture: (s, ui, ds, m) => {
+    const ts = ds.tileSize;
+    const mid = (v: number) => coord(v, ts) + ((ts / 2) | 0);
+    return candidateGesture(
+      m,
+      ui,
+      (x, y) => ({ x: mid(x), y: mid(y) }),
+      digitKeyCode,
+      undefined,
+      markAllNow(interpretMove, s, ui, ds),
+    );
+  },
   refreshHintStep: (step, state) =>
     refreshCandidateHintStep(step, state.grid, state.pencil, state.w),
   findMistakes,

@@ -124,7 +124,8 @@ export function colors(defaultBackground: Color): Color[] {
 // --- geometry --------------------------------------------------------------
 
 const outerCoord = (v: number, ts: number): number => v * ts + pencilIndicatorReach(ts);
-const innerCoord = (v: number, ts: number, n: number): number =>
+/** Pixel origin of grid column or row `v`, past the `n` tiles of clues. */
+export const innerCoord = (v: number, ts: number, n: number): number =>
   (v + n) * ts + pencilIndicatorReach(ts);
 
 /** Pixel → grid cell along one axis (returns an out-of-range index off-grid).

@@ -24,6 +24,7 @@ import {
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
 } from "./pointer.ts";
+import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import {
   controlsMarkdown,
@@ -166,6 +167,52 @@ describe("the model", () => {
         "grid. Enter does what a click does to the square under it, and Space (or D) " +
         "what a right-click does.",
     );
+  });
+});
+
+describe("a geometry's pointAt is a point that addresses its target", () => {
+  // A hint's gesture aims at `pointAt` (`verbGesture`), so a point that pressed
+  // a neighbor would play a step on the wrong square. Every target a press can
+  // reach, found by sweeping the board, must come back from its own point.
+  it.each(
+    registeredGameIds().filter((id) => getTsGame(id)?.targetVerbs),
+  )("%s", (id) => {
+    const game = getTsGame(id) as unknown as AnyGame;
+    const geometry = game.targetVerbs?.geometry;
+    if (!geometry) throw new Error(`${id} declares no verbs`);
+    const params = game.defaultParams();
+    const state = game.newState(params, game.newDesc(params, randomNew(id)).desc);
+    const ui = game.newUi(state);
+    // The midend's own fallback for a game that names no tile size.
+    const tileSize = game.preferredTileSize ?? 32;
+    const ds = game.newDrawState(state, tileSize);
+    const size = game.computeSize(params, tileSize);
+    // A target is a plain record, or an object of the game's own that the
+    // geometry hands out by identity (Loopy's edges).
+    const keyOf = (t: unknown): unknown => {
+      try {
+        return JSON.stringify(t);
+      } catch {
+        return t;
+      }
+    };
+    const targets = new Map<unknown, { t: unknown; from: Point }>();
+    const step = Math.max(1, Math.floor(tileSize / 8));
+    for (let x = 0; x < size.w; x += step)
+      for (let y = 0; y < size.h; y += step) {
+        const t = geometry.pointerTarget(state, ds, { x, y }, ui);
+        if (t !== null && !targets.has(keyOf(t)))
+          targets.set(keyOf(t), { t, from: { x, y } });
+      }
+    expect(targets.size, "a press reaches no target").toBeGreaterThan(1);
+    for (const [k, { t, from }] of targets) {
+      const at = geometry.pointAt(state, ds, t, ui);
+      const back = geometry.pointerTarget(state, ds, at, ui);
+      expect(
+        back !== null && keyOf(back) === k,
+        `the target pressed at (${from.x}, ${from.y}) has pointAt (${at.x}, ${at.y}), which presses another`,
+      ).toBe(true);
+    }
   });
 });
 

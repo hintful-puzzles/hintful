@@ -18,10 +18,12 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { coord, fromCoord } from "../../engine/geometry.ts";
+import { drag, key, type PointerAction } from "../../engine/hint-gesture.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
 import { CELL, type Narration } from "../../engine/hint-words.ts";
-import { digitKeys } from "../../engine/key-labels.ts";
+import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -41,6 +43,7 @@ import type { KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newFillingDesc } from "./generator.ts";
 import { type Marked, say } from "./hint-text.ts";
 import {
+  border,
   colors,
   computeSize,
   type FillingDrawState,
@@ -99,8 +102,8 @@ function interpretMove(
   const button = stripModifiers(rawButton);
   const { w, h, clues, board } = state;
   const ts = ds.tileSize;
-  const tx = Math.floor((p.x - Math.floor(ts / 2)) / ts);
-  const ty = Math.floor((p.y - Math.floor(ts / 2)) / ts);
+  const tx = fromCoord(p.x, ts, border(ts));
+  const ty = fromCoord(p.y, ts, border(ts));
 
   if (button === LEFT_BUTTON || button === LEFT_DRAG) {
     if (button === LEFT_BUTTON) ui.sel = null;
@@ -267,6 +270,26 @@ function hint(state: FillingState): HintResult<FillingMove, FillingHint> {
   return { ok: true, steps };
 }
 
+/** Select the step's squares with one drag that visits only them, then type
+ * the number: a press starts a fresh selection, and a drag adds just the
+ * squares it passes over. */
+function hintGesture(
+  state: FillingState,
+  _ui: FillingUi,
+  ds: FillingDrawState,
+  move: FillingMove,
+): readonly PointerAction[] {
+  if (move.type !== "set" || move.cells.length === 0) return [];
+  const ts = ds.tileSize;
+  const mid = (v: number): number => coord(v, ts, border(ts)) + (ts >> 1);
+  const [first, ...rest] = move.cells.map((i) => ({
+    x: mid(i % state.w),
+    y: mid((i / state.w) | 0),
+  }));
+  const last = rest.pop() ?? first;
+  return [drag(first, last, { through: rest }), key(digitKeyCode(move.value))];
+}
+
 /** Classify a player move by what it did to the board
  * (`engine/hint-track.ts`); a multi-square step shrinks in place so a later
  * auto-hint fills only the rest. */
@@ -348,6 +371,7 @@ export const fillingGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture,
   findMistakes,
   // Upstream's keypad is a fixed 1..9 (region sizes never exceed 9).
   requestKeys: (): KeyLabel[] => digitKeys(9),

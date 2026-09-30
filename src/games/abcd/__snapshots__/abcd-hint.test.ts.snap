@@ -2256,10 +2256,10 @@ exports[`the frames a hint draws > hatches the runs line, outlines its stretches
     ],
   },
   {
-    "color": 1,
+    "color": 11,
     "h": 35,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(164, 164, 164)",
     "w": 35,
     "x": 205,
     "y": 312,

@@ -15,6 +15,7 @@ import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import type { Game, GamePref, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { click, type PointerAction } from "../../engine/hint-gesture.ts";
 import { commonHintRefusal } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -276,6 +277,30 @@ function interpretMove(
   return null;
 }
 
+/** One tap per edge, inside one of its squares, off center toward that edge:
+ * the primary button draws the line, the secondary the cross. A step's ops
+ * come in pairs, one for each square either side of the edge. */
+function hintGesture(
+  _state: PearlState,
+  _ui: PearlUi,
+  ds: PearlDrawState,
+  move: PearlMove,
+): readonly PointerAction[] {
+  const m = metrics(ds.tileSize);
+  const off = ((3 * m.tile) / 8) | 0;
+  const out: PointerAction[] = [];
+  for (let i = 0; i < move.ops.length; i += 2) {
+    const op = move.ops[i];
+    if (op.kind !== "line" && op.kind !== "mark") continue;
+    const at = {
+      x: centeredCoord(op.x, m) + DX(op.l) * off,
+      y: centeredCoord(op.y, m) + DY(op.l) * off,
+    };
+    out.push(click(at, op.kind === "line" ? "primary" : "secondary"));
+  }
+  return out;
+}
+
 function solve(
   orig: PearlState,
   curr: PearlState,
@@ -388,6 +413,7 @@ export const pearlGame: Game<
     },
   },
   hintKeepTrack: pearlKeepTrack,
+  hintGesture,
 
   textFormat,
 

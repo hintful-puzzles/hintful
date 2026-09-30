@@ -7,6 +7,7 @@ import {
   type CandidateMove,
   type CandidateMoveAdapter,
   type CandidatePlanPrefs,
+  candidateGesture,
   candidateHint,
   DEFAULT_CANDIDATE_READING,
   emitObviousCleanStep,
@@ -24,11 +25,13 @@ import {
   regionReach,
 } from "./candidate-hint.ts";
 import type { HintStep } from "./game.ts";
+import { click, MARK_ALL_CODE, key as press } from "./hint-gesture.ts";
 import { ALREADY_SOLVED, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { cleanObviousText, joinNums, populateText } from "./hint-text.ts";
 import { CELL, mark, Narration, NOTE, phrase } from "./hint-words.ts";
 import type { DeductionRecord } from "./latin.ts";
 import { rowColRegions } from "./latin-hint.ts";
+import { PENCIL_MODE_BUTTON } from "./pointer.ts";
 
 /** Build a working board from a `grid` (0 = empty) and a matching `pencil`
  * candidate-bitmask array. */
@@ -644,6 +647,31 @@ describe("keepCandidateHintTrack", () => {
     ).toBe("completed");
   });
 
+  it("completes a strike step made whole, as the mark-all control makes it", () => {
+    const marks = [
+      { x: 0, y: 0, n: 1 },
+      { x: 1, y: 0, n: 2 },
+    ];
+    const s = step({ type: "pencilStrike", marks: [...marks] });
+    expect(
+      keepCandidateHintTrack(
+        { type: "pencilStrike", marks: [...marks].reverse() },
+        s,
+        pencil,
+        2,
+      ),
+    ).toBe("completed");
+    // A whole strike that names other notes is a different move.
+    expect(
+      keepCandidateHintTrack(
+        { type: "pencilStrike", marks: [marks[0]] },
+        step({ type: "pencilStrike", marks: [...marks] }),
+        pencil,
+        2,
+      ),
+    ).toBe("off");
+  });
+
   it("treats a toggle on a candidate the step never named as off-plan", () => {
     // Striking some unrelated note is not "following the hint partially": the
     // step must be dropped, and it must not quietly shrink as though the player
@@ -1104,6 +1132,41 @@ describe("a game's own move dialect", () => {
         { x: 0, y: 1, n: 1 },
       ],
     });
+  });
+});
+
+describe("candidateGesture", () => {
+  const ui = {
+    cursor: { x: 0, y: 0, visible: false },
+    pencilMode: false,
+    cursorFromKeyboard: false,
+    pencilSticky: true,
+  };
+  const at = (x: number, y: number) => ({ x: x * 10 + 5, y: y * 10 + 5 });
+  const code = (n: number) => 48 + n;
+  const marks = [
+    { x: 1, y: 0, n: 2 },
+    { x: 0, y: 0, n: 1 },
+  ];
+  const strike: CandidateMove = { type: "pencilStrike", marks };
+
+  it("presses mark-all when that control makes the step whole", () => {
+    const same = { type: "pencilStrike", marks: [...marks].reverse() };
+    expect(candidateGesture(strike, ui, at, code, undefined, same)).toEqual([
+      press(MARK_ALL_CODE),
+    ]);
+  });
+
+  it("otherwise taps each note in reading order, in notes mode, and leaves the mode", () => {
+    const other = { type: "pencilStrike", marks: [marks[0]] };
+    expect(candidateGesture(strike, ui, at, code, undefined, other)).toEqual([
+      click(at(0, 0)),
+      press(PENCIL_MODE_BUTTON),
+      press(code(1)),
+      click(at(1, 0)),
+      press(code(2)),
+      press(PENCIL_MODE_BUTTON),
+    ]);
   });
 });
 

@@ -9,9 +9,11 @@
  * is ported exactly. A drag or click that changes nothing produces no move.
  */
 
+import { assertNever } from "../../engine/assert-never.ts";
 import { winFlash } from "../../engine/flash.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { click, drag, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   atof,
   dimensionParamConfig,
@@ -280,6 +282,38 @@ function interpretMove(
   return null;
 }
 
+/**
+ * A line is a click on the middle of its edge. A rectangle is a drag from its
+ * top-left corner to its bottom-right one: corner to corner addresses a single
+ * square too, where a drag between two centers would be a click on one.
+ */
+function hintGesture(
+  _state: RectState,
+  _ui: RectUi,
+  ds: RectDrawState,
+  m: RectMove,
+): readonly PointerAction[] {
+  const tile = ds.tileSize;
+  const at = (x: number, y: number): Point => ({
+    x: BORDER + x * tile,
+    y: BORDER + y * tile,
+  });
+  switch (m.type) {
+    case "edge":
+      return [click(m.edge === "h" ? at(m.x + 0.5, m.y) : at(m.x, m.y + 0.5))];
+    case "rect":
+      return [
+        drag(at(m.x, m.y), at(m.x + m.w, m.y + m.h), {
+          button: m.erasing ? "secondary" : "primary",
+        }),
+      ];
+    case "solve":
+      return [];
+    default:
+      return assertNever(m, "rect hint gesture");
+  }
+}
+
 /** Parse a generator `aux` (`"S" + vbits + hbits`) into a solve move. */
 function auxToMove(w: number, h: number, aux: string): RectMove {
   const vlen = (w - 1) * h;
@@ -423,6 +457,7 @@ export const rectGame: Game<
     },
   },
   hintKeepTrack: rectKeepTrack,
+  hintGesture,
   refreshHintStep: rectRefreshStep,
 
   textFormat,

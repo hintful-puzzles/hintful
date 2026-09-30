@@ -32,6 +32,13 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import {
+  drag,
+  type GestureButton,
+  key,
+  MARK_ALL_CODE,
+  type PointerAction,
+} from "../../engine/hint-gesture.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import {
   dragEnteredNoteTakingCell,
@@ -447,6 +454,45 @@ function interpretMove(
   return null;
 }
 
+/**
+ * How the pointer makes a hint step's move: Mark-all for the fill, and for an
+ * arrow a drag from its square onto the neighbor it points at, which enters it
+ * whatever is selected. A mark is the same drag with the secondary button,
+ * which notes in any mode; an arrow needs Marks mode off.
+ */
+function hintGesture(
+  _state: RomeState,
+  ui: RomeUi,
+  ds: RomeDrawState,
+  move: RomeMove,
+): PointerAction[] {
+  const cm = romeCandidateMoves.read(move);
+  if (cm === null) throw new Error(`rome: no hint gesture for ${move.kind}`);
+  if (cm.type === "pencilAll") return [key(MARK_ALL_CODE)];
+  const ts = ds.tileSize;
+  const mid = (v: number) => origin(ts) + v * ts + ((ts / 2) | 0);
+  const arrow = (x: number, y: number, n: number, button: GestureButton) => {
+    const d = dirBit(n);
+    const dx = d === FM_LEFT ? -1 : d === FM_RIGHT ? 1 : 0;
+    const dy = d === FM_UP ? -1 : d === FM_DOWN ? 1 : 0;
+    return drag(
+      { x: mid(x), y: mid(y) },
+      { x: mid(x + dx), y: mid(y + dy) },
+      { button },
+    );
+  };
+  if (cm.type === "set") {
+    if (cm.pencil) return [arrow(cm.x, cm.y, cm.n, "secondary")];
+    const place = arrow(cm.x, cm.y, cm.n, "primary");
+    return ui.pencilMode
+      ? [key(PENCIL_MODE_BUTTON), place, key(PENCIL_MODE_BUTTON)]
+      : [place];
+  }
+  return [...cm.marks]
+    .sort((a, b) => a.y - b.y || a.x - b.x || a.n - b.n)
+    .map((k) => arrow(k.x, k.y, k.n, "secondary"));
+}
+
 // --- moves ------------------------------------------------------------------
 
 function executeMove(state: RomeState, move: RomeMove): RomeState {
@@ -655,6 +701,7 @@ export const romeGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture,
   refreshHintStep,
 
   // Upstream's two highlight preferences, with its own keywords and defaults,

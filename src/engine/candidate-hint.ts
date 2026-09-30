@@ -17,9 +17,11 @@
 import { valueBit, valuesOneTo } from "./candidate-bits.ts";
 import type { DeductionRecord } from "./deduction-record.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "./game.ts";
+import { key, MARK_ALL_CODE, type PointerAction } from "./hint-gesture.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { CELL, Narration, NOTE } from "./hint-words.ts";
 import type { CellRegion } from "./latin-hint.ts";
+import { type NoteTakingUi, noteEntryGesture } from "./note-taking-cell.ts";
 import type { OrderedCell } from "./overlay-sidecar.ts";
 import type { Point } from "./types.ts";
 
@@ -793,6 +795,56 @@ function adapterOf<M>(adapter?: CandidateMoveAdapter<M>): CandidateMoveAdapter<M
   return adapter ?? (typeKeyedCandidateMoves as unknown as CandidateMoveAdapter<M>);
 }
 
+/**
+ * How the pointer makes a candidate step's move (`Game.hintGesture`): the
+ * mark-all control for a fill-all, and otherwise the note-taking cell's taps
+ * and keys (`noteEntryGesture`), one key per value or note, notes cell by cell
+ * in reading order. `at` is the middle of a cell in pixels and `code` the
+ * keypad key that types value `n`.
+ *
+ * `markAll`, for a game with the mark-all control, is the move that control
+ * makes on this board right now: a strike it makes whole (the obvious-clean
+ * step) is one press of it, as a player would clear them, rather than a tap per
+ * note.
+ */
+export function candidateGesture<M>(
+  move: M,
+  ui: NoteTakingUi,
+  at: (x: number, y: number) => Point,
+  code: (n: number) => number,
+  adapter?: CandidateMoveAdapter<M>,
+  markAll?: unknown,
+): PointerAction[] {
+  const dialect = adapterOf(adapter);
+  const cm = dialect.read(move);
+  if (cm === null) throw new Error(`no candidate gesture for ${JSON.stringify(move)}`);
+  if (cm.type === "pencilAll") return [key(MARK_ALL_CODE)];
+  if (cm.type === "pencilStrike" && markAll !== undefined && markAll !== null) {
+    const made = typeof markAll === "object" ? dialect.read(markAll as M) : null;
+    if (made?.type === "pencilStrike" && sameMarks(made.marks, cm.marks))
+      return [key(MARK_ALL_CODE)];
+  }
+  if (cm.type === "set") {
+    return noteEntryGesture(ui, at, [
+      { x: cm.x, y: cm.y, code: code(cm.n), pencil: cm.pencil },
+    ]);
+  }
+  const marks = [...cm.marks].sort((a, b) => a.y - b.y || a.x - b.x || a.n - b.n);
+  return noteEntryGesture(
+    ui,
+    at,
+    marks.map((k) => ({ x: k.x, y: k.y, code: code(k.n), pencil: true })),
+  );
+}
+
+/** Do two lists name the same notes, in any order? */
+function sameMarks(a: readonly Mark[], b: readonly Mark[]): boolean {
+  if (a.length !== b.length) return false;
+  const key = (k: Mark) => `${k.x},${k.y},${k.n}`;
+  const inB = new Set(b.map(key));
+  return a.every((k) => inB.has(key(k)));
+}
+
 /** The note-writing move in a game's own dialect. */
 export function addMove<M>(marks: Mark[], adapter?: CandidateMoveAdapter<M>): M {
   return adapter?.add?.(marks) ?? ({ type: "pencilAdd", marks } as unknown as M);
@@ -883,6 +935,9 @@ export function keepCandidateHintTrack<M, H extends CandidateHighlights>(
       : "off";
   }
   if (sm.type === "pencilStrike" || sm.type === "pencilAdd") {
+    // The whole step at once: the obvious-clean strike is what the mark-all
+    // control's second press makes.
+    if (pm.type === sm.type) return sameMarks(pm.marks, sm.marks) ? "completed" : "off";
     // The player strikes or writes a candidate with a pencil toggle
     // (`set { pencil }`), one at a time.
     if (pm.type !== "set" || !pm.pencil) return "off";

@@ -18,6 +18,7 @@ import { winFlash } from "../../engine/flash.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
+import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   BACKSPACE,
@@ -39,6 +40,7 @@ import {
   interpretTargetVerbs,
   squareGrid,
   type TargetVerbs,
+  verbGesture,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
@@ -333,6 +335,40 @@ export const slantGame: Game<
     },
   },
   hintKeepTrack: slantHintKeepTrack,
+  hintGesture: (s, ui, ds, m): PointerAction[] => {
+    if (m.type === "set") {
+      // Each button cycles the three states its own way round, so one of them
+      // reaches the step's line in one press, whichever way the buttons are
+      // swapped.
+      const at = { x: m.x, y: m.y };
+      const left = targetVerbs.primary.apply(s, at, ui);
+      const reaches =
+        typeof left === "object" && left?.type === "set" && left.v === m.v;
+      const press = verbGesture(
+        targetVerbs,
+        s,
+        ds,
+        ui,
+        [at],
+        reaches ? "primary" : "secondary",
+      );
+      // In notes mode the same press marks a side instead.
+      if (!ui.pencilMode) return press;
+      return [key(PENCIL_MODE_BUTTON), ...press, key(PENCIL_MODE_BUTTON)];
+    }
+    if (m.type !== "alike") throw new Error("slant: a hint never solves");
+    // A notes-mode tap marks the side of its square it lands nearest: here,
+    // the one facing the square below or to the right.
+    const ts = ds.tileSize;
+    const b = border(ts);
+    const [fx, fy] = m.dir === "right" ? [0.9, 0.5] : [0.5, 0.9];
+    const tap = click({
+      x: b + Math.floor((m.x + fx) * ts),
+      y: b + Math.floor((m.y + fy) * ts),
+    });
+    if (ui.pencilMode) return [tap];
+    return [key(PENCIL_MODE_BUTTON), tap, key(PENCIL_MODE_BUTTON)];
+  },
 
   textFormat,
 

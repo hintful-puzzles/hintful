@@ -189,7 +189,7 @@ const pad = (ts: number): number => Math.max(0, pencilIndicatorReach(ts) - ts);
 
 /** Where cell `v` starts along either axis, past the one-tile clue ring;
  * `v = -1` and `v = order` are the ring's own tiles. */
-const cellOrigin = (v: number, ts: number): number => (v + 1) * ts + pad(ts);
+export const cellOrigin = (v: number, ts: number): number => (v + 1) * ts + pad(ts);
 
 export function computeSize(p: { order: number }, ts: number): Size {
   const s = (p.order + 2) * ts + 2 * pad(ts);

@@ -18,6 +18,7 @@ import {
   interpretTargetVerbs,
   squareGrid,
   type TargetVerbs,
+  verbGesture,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { say } from "./hint-text.ts";
@@ -259,6 +260,16 @@ export const floodGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture: (s, ui, ds, m) => {
+    if (m.type !== "fill") throw new Error("flood: a hint only fills");
+    // One of the squares the step dots, which the fill it names would join;
+    // any square of that color makes the same fill.
+    const joined = joinedBy(s, m.color);
+    const i = joined.length > 0 ? joined[0] : s.grid.indexOf(m.color);
+    if (i < 0) throw new Error(`flood: no square shows color ${m.color}`);
+    const at = { x: i % s.w, y: Math.floor(i / s.w) };
+    return verbGesture(targetVerbs, s, ds, ui, [at]);
+  },
 
   textFormat,
   statusbarText,

@@ -24,6 +24,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { markAllNow } from "../../engine/hint-gesture.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import {
   pressNoteTakingCell,
@@ -47,13 +48,20 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newAbcdDesc } from "./generator.ts";
-import { type AbcdHint, buildSteps, hintKeepTrack, refreshHintStep } from "./hint.ts";
+import {
+  type AbcdHint,
+  buildSteps,
+  hintGesture,
+  hintKeepTrack,
+  refreshHintStep,
+} from "./hint.ts";
 import {
   type AbcdDrawState,
   colors,
   computeSize,
   FLASH_TIME,
   fromCoord,
+  innerCoord,
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
@@ -353,6 +361,18 @@ export const abcdGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture: (s, ui, ds, m) => {
+    const ts = ds.tileSize;
+    const mid = (v: number) => innerCoord(v, ts, s.params.n) + ((ts / 2) | 0);
+    const keys = requestKeys(s.params);
+    return hintGesture(
+      ui,
+      (x, y) => ({ x: mid(x), y: mid(y) }),
+      (n) => keys[n - 1].button,
+      m,
+      markAllNow(interpretMove, s, ui, ds),
+    );
+  },
   refreshHintStep,
   requestKeys,
   textFormat,

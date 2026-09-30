@@ -26,6 +26,8 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { coord } from "../../engine/geometry.ts";
+import { click, type PointerAction } from "../../engine/hint-gesture.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
@@ -456,6 +458,29 @@ function hintKeepTrack(
   return "off";
 }
 
+/** One tap per square, with whichever button's cycle takes the square to the
+ * hinted stick in one press (the primary button's runs blank, vertical,
+ * horizontal). */
+function hintGesture(
+  state: SticksState,
+  _ui: SticksUi,
+  ds: SticksDrawState,
+  m: SticksMove,
+): readonly PointerAction[] {
+  if (m.kind !== "set") return [];
+  const { w, grid } = state;
+  const ts = ds.tileSize;
+  const mid = (v: number): number => coord(v, ts, border(ts)) + (ts >> 1);
+  return m.changes.map(({ index, line }) => {
+    const old = grid[index];
+    const primary = old === 0 ? F_VER : old & F_VER ? F_HOR : 0;
+    return click(
+      { x: mid(index % w), y: mid((index / w) | 0) },
+      primary === lineBits(line) ? "primary" : "secondary",
+    );
+  });
+}
+
 export const sticksGame: Game<
   SticksParams,
   SticksState,
@@ -495,6 +520,7 @@ export const sticksGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture,
   textFormat,
 
   colors,

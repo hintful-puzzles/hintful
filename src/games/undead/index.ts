@@ -26,11 +26,13 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { key, MARK_ALL_CODE, type PointerAction } from "../../engine/hint-gesture.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { CELL, Narration, NOTE } from "../../engine/hint-words.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import {
   noOpEntryResult,
+  noteEntryGesture,
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
@@ -777,6 +779,43 @@ function refreshHintStep(
   return step;
 }
 
+/** The keypad key that places or notes `monster`. */
+const monsterKey = (monster: number): number =>
+  monster === MON_GHOST ? KEY_G : monster === MON_VAMPIRE ? KEY_V : KEY_Z;
+
+/** How the pointer makes a hint step's move: Mark-all for the fill, and
+ * otherwise the note-taking cell's taps and monster keys. Aimed at the middle
+ * of the interior square `interpretMove` reads a press as. */
+function hintGesture(
+  state: UndeadState,
+  ui: UndeadUi,
+  ds: UndeadDrawState,
+  move: UndeadMove,
+): PointerAction[] {
+  if (move.type === "markAll") return [key(MARK_ALL_CODE)];
+  const ts = ds.tileSize;
+  const b = border(ts);
+  const half = (ts / 2) | 0;
+  const at = (x: number, y: number): Point => ({
+    x: b + 1 + x * ts + half,
+    y: b + 2 + (y + 1) * ts + half,
+  });
+  const xyOf = monsterCellXY(state.common);
+  if (move.type === "set") {
+    const { x, y } = xyOf[move.cell];
+    return noteEntryGesture(ui, at, [
+      { x, y, code: monsterKey(move.monster), pencil: false },
+    ]);
+  }
+  if (move.type === "pencilStrike") {
+    const entries = move.marks
+      .map((k) => ({ ...xyOf[k.cell], code: monsterKey(k.monster), pencil: true }))
+      .sort((a, b) => a.y - b.y || a.x - b.x || a.code - b.code);
+    return noteEntryGesture(ui, at, entries);
+  }
+  throw new Error(`undead: no hint gesture for ${move.type}`);
+}
+
 function flashLength(from: UndeadState, to: UndeadState): number {
   return winFlash(from, to, FLASH_TIME);
 }
@@ -848,6 +887,7 @@ export const undeadGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture,
   refreshHintStep,
   findMistakes,
   // Upstream's four explicit keys: the three monsters plus clear.

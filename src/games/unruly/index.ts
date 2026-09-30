@@ -32,6 +32,7 @@ import {
   interpretTargetVerbs,
   squareGrid,
   type TargetVerbs,
+  verbGesture,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { type Cell, EMPTY, ONE, ZERO } from "./constants.ts";
@@ -329,6 +330,16 @@ export const unrulyGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture: (s, ui, ds, m) => {
+    if (m.type !== "place") throw new Error("unruly: a hint only places");
+    const at = { x: m.x, y: m.y };
+    // Each button walks the three states one way round, so one of them reaches
+    // any other state in one press.
+    const left = targetVerbs.primary.apply(s, at, ui);
+    const reaches =
+      typeof left === "object" && left?.type === "place" && left.value === m.value;
+    return verbGesture(targetVerbs, s, ds, ui, [at], reaches ? "primary" : "secondary");
+  },
   findMistakes,
 
   textFormat,

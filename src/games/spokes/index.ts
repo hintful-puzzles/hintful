@@ -31,6 +31,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
+import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   commonHintRefusal,
   DEDUCTION_EXHAUSTED,
@@ -424,6 +425,29 @@ function hintKeepTrack(
   return sameEdge(m, target, state.w) && m.state === target.state ? "completed" : "off";
 }
 
+/** A drag from the spoke's hub to the hub at its other end: the primary button
+ * draws it, the secondary rules it out. */
+function hintGesture(
+  state: SpokesState,
+  _ui: SpokesUi,
+  ds: SpokesDrawState,
+  m: SpokesMove,
+): readonly PointerAction[] {
+  if (m.kind !== "set") return [];
+  const ts = ds.tileSize;
+  const { w } = state;
+  const x = m.index % w;
+  const y = (m.index / w) | 0;
+  const d = SPOKE_DIRS[m.dir];
+  return [
+    drag(
+      { x: toCoord(x, ts), y: toCoord(y, ts) },
+      { x: toCoord(x + d.dx, ts), y: toCoord(y + d.dy, ts) },
+      { button: m.state === SPOKE_LINE ? "primary" : "secondary" },
+    ),
+  ];
+}
+
 /** Do two `set` moves name the same edge? A spoke has two ends; a move may cite
  * either, so compare in the canonical `dir < 4` form. */
 function sameEdge(
@@ -512,6 +536,7 @@ export const spokesGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture,
   findMistakes,
   textFormat,
 

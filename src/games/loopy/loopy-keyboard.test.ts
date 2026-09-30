@@ -54,7 +54,7 @@ import {
 } from "./cursor.ts";
 import { newDesc } from "./generator.ts";
 import { buildLoopyGrid } from "./grid-build.ts";
-import { AF_FIXED, type LoopyMove, type LoopyUi, loopyGame } from "./index.ts";
+import { type LoopyMove, type LoopyUi, loopyGame } from "./index.ts";
 import {
   DIFF_EASY,
   DIFF_MAX,
@@ -71,7 +71,14 @@ import {
   PREFERRED_TILE_SIZE,
 } from "./render.ts";
 import { solveGame } from "./solver.ts";
-import { LINE_NO, LINE_UNKNOWN, LINE_YES, type LoopyState, newState } from "./state.ts";
+import {
+  AF_FIXED,
+  LINE_NO,
+  LINE_UNKNOWN,
+  LINE_YES,
+  type LoopyState,
+  newState,
+} from "./state.ts";
 
 const ARROWS = [CURSOR_UP, CURSOR_RIGHT, CURSOR_DOWN, CURSOR_LEFT] as const;
 const ESCAPE = 27;

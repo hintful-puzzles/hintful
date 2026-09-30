@@ -39,6 +39,7 @@
  */
 
 import { type GameDrawing, UI_UPDATE, type UiUpdate } from "./game.ts";
+import { click, key, type PointerAction } from "./hint-gesture.ts";
 import {
   CURSOR_SELECT,
   type GridCursor,
@@ -48,7 +49,7 @@ import {
   RIGHT_BUTTON,
   RIGHT_RELEASE,
 } from "./pointer.ts";
-import type { Rect } from "./types.ts";
+import type { Point, Rect } from "./types.ts";
 
 /**
  * The three `Ui` fields the mechanic owns. A game's `Ui` structurally satisfies
@@ -355,6 +356,57 @@ export function releaseHighlightAfterEntry(ui: NoteTakingUi): void {
   if (ui.cursorFromKeyboard) return;
   if (ui.pencilMode && (ui.pencilKeepHighlight ?? true)) return;
   ui.cursor.visible = false;
+}
+
+// --- what a hint asks the pointer to do -------------------------------------
+
+/** One symbol a hint step enters: `code` is the on-screen key that types it
+ * into cell `(x, y)`, as a value or, with `pencil`, as a note. */
+export interface NoteEntry {
+  readonly x: number;
+  readonly y: number;
+  readonly code: number;
+  readonly pencil: boolean;
+}
+
+/**
+ * The taps and keys that make `entries` from the `Ui` as it is, by this
+ * mechanic's own rules: tap a cell the highlight is not already on (a repeat
+ * tap would put it away), press the Marks key whenever the mode is wrong for
+ * the next entry, and press the symbol's key; then leave the mode as the
+ * player had it. `at` is the middle of a cell in pixels. A value entry puts a
+ * tapped highlight away and a note keeps it ({@link releaseHighlightAfterEntry}),
+ * so notes in one cell share a tap.
+ */
+export function noteEntryGesture(
+  ui: NoteTakingUi,
+  at: (x: number, y: number) => Point,
+  entries: readonly NoteEntry[],
+): PointerAction[] {
+  const sticky = ui.pencilSticky ?? false;
+  const keep = ui.pencilKeepHighlight ?? true;
+  let mode = ui.pencilMode;
+  let fromKeyboard = ui.cursorFromKeyboard;
+  let on: { x: number; y: number } | null = ui.cursor.visible
+    ? { x: ui.cursor.x, y: ui.cursor.y }
+    : null;
+  const out: PointerAction[] = [];
+  for (const e of entries) {
+    if (on === null || on.x !== e.x || on.y !== e.y) {
+      out.push(click(at(e.x, e.y)));
+      if (!sticky) mode = false;
+      on = { x: e.x, y: e.y };
+      fromKeyboard = false;
+    }
+    if (mode !== e.pencil) {
+      out.push(key(PENCIL_MODE_BUTTON));
+      mode = e.pencil;
+    }
+    out.push(key(e.code));
+    if (!fromKeyboard && !(mode && keep)) on = null;
+  }
+  if (mode !== ui.pencilMode) out.push(key(PENCIL_MODE_BUTTON));
+  return out;
 }
 
 // --- the picture ------------------------------------------------------------

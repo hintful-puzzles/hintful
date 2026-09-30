@@ -369,6 +369,7 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
   supersededDesc: { kind: "internal", why: "how a save rebuilds a board that moved" },
   changedState: { kind: "internal", why: "a game's own bookkeeping across a move" },
   hintKeepTrack: { kind: "internal", why: "how a plan survives the player's own move" },
+  hintGesture: { kind: "internal", why: "how auto-hint plays a step with the pointer" },
   hintMarks: {
     kind: "internal",
     why: "the game page's list of marks, generated from it rather than told once",

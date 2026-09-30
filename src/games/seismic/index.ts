@@ -25,6 +25,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { markAllNow } from "../../engine/hint-gesture.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
 import {
   pressNoteTakingCell,
@@ -50,6 +51,7 @@ import type { Point } from "../../engine/types.ts";
 import { maxGeneratedRegionSize, newSeismicDesc } from "./generator.ts";
 import {
   buildSteps,
+  hintGesture,
   hintKeepTrack,
   refreshHintStep,
   type SeismicHint,
@@ -60,6 +62,7 @@ import {
   FLASH_TIME,
   fromCoord,
   newDrawState,
+  origin,
   PREFERRED_TILE_SIZE,
   redraw,
   type SeismicDrawState,
@@ -332,6 +335,16 @@ export const seismicGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture: (s, ui, ds, m) => {
+    const ts = ds.tileSize;
+    const mid = (v: number) => origin(ts) + v * ts + ((ts / 2) | 0);
+    return hintGesture(
+      ui,
+      (x, y) => ({ x: mid(x), y: mid(y) }),
+      m,
+      markAllNow(interpretMove, s, ui, ds),
+    );
+  },
   refreshHintStep,
   // Sized to the regions the generator *makes*, not the nine the format admits:
   // entry is capped at the cell's region size, so a digit no region can hold is

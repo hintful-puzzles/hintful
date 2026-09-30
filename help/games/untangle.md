@@ -25,6 +25,10 @@ point toward an untangled layout anyway, telling you what that does to
 the point's crossings — which may go up for now — and, when it does,
 that it frees a move removing some.
 
+The hint picks only spots where its counts hold however your drop lands
+on the marked spot, and with **Snap points to a grid** on, only grid
+points.
+
 ## Untangle parameters
 
 {{parameters}}

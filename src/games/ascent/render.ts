@@ -212,7 +212,7 @@ export function ascentComputeSize(
 }
 
 /** Center of cell `i` in pixel space, branching on grid mode. */
-function cellCenter(
+export function cellCenter(
   i: number,
   w: number,
   mode: number,

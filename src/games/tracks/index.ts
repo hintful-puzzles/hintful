@@ -14,6 +14,7 @@ import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import type { Game, HintResult, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { click } from "../../engine/hint-gesture.ts";
 import { commonHintRefusal } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -64,6 +65,8 @@ import {
   type Board,
   D,
   DIFF_COUNT,
+  DX,
+  DY,
   decodeParams,
   defaultParams,
   E_NOTRACK,
@@ -371,6 +374,20 @@ export const tracksGame: Game<
     },
   },
   hintKeepTrack: tracksKeepTrack,
+  // One click per op: in the middle of the square for the square itself, or
+  // toward the side for an edge. A tap lays track and a long press rules it out.
+  hintGesture(_state, _ui, ds, m) {
+    const mt = metrics(ds.tileSize);
+    const reach = Math.floor((3 * mt.tile) / 8);
+    return m.ops.map((op) => {
+      const dir = op.kind === "edge" ? (op.dir ?? 0) : 0;
+      const at = {
+        x: centeredCoord(op.x, mt) + reach * DX(dir),
+        y: centeredCoord(op.y, mt) + reach * DY(dir),
+      };
+      return click(at, op.track ? "primary" : "secondary");
+    });
+  },
 
   textFormat,
 

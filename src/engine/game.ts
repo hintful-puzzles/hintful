@@ -15,6 +15,7 @@
  */
 
 import type { DifficultyContract } from "./difficulty.ts";
+import type { PointerAction } from "./hint-gesture.ts";
 import type { MarkRole, Narration } from "./hint-words.ts";
 import type { RandomState } from "./random/index.ts";
 import type { NotApplicableReasons } from "./sections.ts";
@@ -475,6 +476,19 @@ export interface Game<
    * the trivial row/column note eliminations or folds them into the
    * placement). Ignored by most games. */
   hint?(state: State, aux?: string, ui?: Ui): HintResult<Move, Highlights>;
+  /** How the pointer makes `move`, the move of the hint step on display, from
+   * `state` with `ui` as it is and the board drawn at `ds`: the taps, drags and
+   * on-screen keys a player would use (`hint-gesture.ts`). The midend plays a
+   * hint step by sending this through {@link interpretMove}, never by applying
+   * `move`, and the moves it makes must complete the step by
+   * {@link hintKeepTrack}; so a hint cannot ask for a move the pointer does not
+   * make. Every game with a `hint` has one. */
+  hintGesture?(
+    state: State,
+    ui: Ui,
+    ds: DrawState,
+    move: Move,
+  ): readonly PointerAction[];
   /** The marks this game's hint draws, and what each means here. Declaring it
    * binds every step's words to its marks ({@link HintMarkLegend}). */
   hintMarks?: HintMarkLegend;

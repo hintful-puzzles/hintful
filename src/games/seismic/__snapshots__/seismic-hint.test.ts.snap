@@ -353,10 +353,10 @@ exports[`the frames a hint draws > rings each struck cell, hatches the starved a
     "y": 28,
   },
   {
-    "color": 0,
+    "color": 12,
     "h": 38,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(164, 164, 164)",
     "w": 37,
     "x": 228,
     "y": 29,

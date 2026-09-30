@@ -19,6 +19,7 @@ import {
   COL_BORDER,
   COL_HINT,
   COL_HINT_CELL,
+  COL_LOWLIGHT,
   COL_MIDLIGHT,
 } from "./render.ts";
 import {
@@ -128,9 +129,15 @@ describe("ascent hint frames", () => {
     // A ring is one stroke per side of the cell, and no fill: four for a square.
     expect(strokes(ops, COL_HINT)).toHaveLength(4);
     expect(strokes(ops, COL_HINT_CELL)).toHaveLength(4 * 2);
-    // Highlight, never perform: the number the step places is not drawn.
+    // Highlight, never perform: the number the step places is not drawn as a
+    // placed number. The previous step was played by its taps, so the square
+    // may show the selection's gray offer of it, as it would to the player.
     const n = hint?.move.kind === "place" ? hint.move.n : -1;
-    expect(ops.some((o) => o.op === "text" && o.text === String(n + 1))).toBe(false);
+    expect(
+      ops.some(
+        (o) => o.op === "text" && o.text === String(n + 1) && o.color !== COL_LOWLIGHT,
+      ),
+    ).toBe(false);
     expect(ops).toMatchSnapshot();
   });
 

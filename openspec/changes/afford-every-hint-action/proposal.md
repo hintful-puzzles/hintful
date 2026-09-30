@@ -1,6 +1,7 @@
 # afford-every-hint-action
 
-**Status: scaffolded, not started (2026-09-30).** Owner-requested. The last of
+**Status: implemented (2026-09-30); `design.md` D1 says where the gesture ended
+up living and why.** Owner-requested. The last of
 three parts: `one-pointer-for-mouse-and-touch` removed the middle button, the
 key-held clicks and the stylus bit, and `audit-input-affordances` measures what
 each input reaches. This part makes the rule structural for hints.

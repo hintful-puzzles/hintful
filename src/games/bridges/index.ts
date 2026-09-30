@@ -20,6 +20,12 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
+import {
+  click,
+  drag,
+  type GestureButton,
+  type PointerAction,
+} from "../../engine/hint-gesture.ts";
 import { commonHintRefusal } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -49,7 +55,14 @@ import {
 import { registerGame } from "../../engine/registry.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newBridgesDesc } from "./generator.ts";
-import { type BridgesHighlights, bridgesHint, bridgesKeepTrack } from "./hint.ts";
+import {
+  type BridgesHighlights,
+  bridgesHint,
+  bridgesKeepTrack,
+  limitAfter,
+  spanBridges,
+  wantedLimit,
+} from "./hint.ts";
 import {
   type BridgesDrawState,
   border,
@@ -461,6 +474,55 @@ function executeMove(s: BridgesState, m: BridgesMove): BridgesState {
   return ret;
 }
 
+/**
+ * One drag along a span per bridge it still needs, and one secondary drag per
+ * stop its limit must be lowered by. A drag starts from an unmarked end, since
+ * a marked island takes no drag.
+ */
+function hintGesture(
+  s: BridgesState,
+  _ui: BridgesUi,
+  ds: BridgesDrawState,
+  m: BridgesMove,
+): readonly PointerAction[] {
+  const ts = ds.tileSize;
+  const b = border(ts);
+  const half = Math.trunc(ts / 2);
+  const at = (x: number, y: number): Point => ({
+    x: toCoord(x, ts, b) + half,
+    y: toCoord(y, ts, b) + half,
+  });
+  const out: PointerAction[] = [];
+  let cur = s;
+  const along = (span: BridgesSpan, button: GestureButton): PointerAction => {
+    const { x1, y1, x2, y2 } = span;
+    if (!(cur.gridAt(x1, y1) & G_MARK)) return drag(at(x1, y1), at(x2, y2), { button });
+    if (!(cur.gridAt(x2, y2) & G_MARK)) return drag(at(x2, y2), at(x1, y1), { button });
+    // Both ends marked done by the player: a tap takes one mark off, as the
+    // player would before adding to it.
+    out.push(click(at(x1, y1)));
+    cur = executeMove(cur, { ops: [{ op: "M", x: x1, y: y1 }] });
+    return drag(at(x1, y1), at(x2, y2), { button });
+  };
+  for (const op of m.ops) {
+    if (op.op === "L") {
+      for (let n = spanBridges(cur, op); n < op.n; n++) {
+        out.push(along(op, "primary"));
+        cur = executeMove(cur, { ops: [{ ...op, n: n + 1 }] });
+      }
+    } else if (op.op === "N" || op.op === "C") {
+      for (let i = 0; i <= s.maxb + 1; i++) {
+        if (limitAfter(cur, op, { ops: [] }) === wantedLimit(op)) break;
+        const lowered = lowerLimit(cur, { x1: op.x1, y1: op.y1, x2: op.x2, y2: op.y2 });
+        if (!lowered) break;
+        out.push(along(op, "secondary"));
+        cur = executeMove(cur, { ops: lowered });
+      }
+    }
+  }
+  return out;
+}
+
 // --- solve (bridges.c game_state_diff over a from-scratch solution) ---
 
 function stateDiff(src: BridgesState, dest: BridgesState): BridgesOp[] {
@@ -616,6 +678,7 @@ export const bridgesGame: Game<
     state: BridgesState,
   ): HintTrackVerdict =>
     bridgesKeepTrack(m, step as HintStep<BridgesMove, BridgesHighlights>, state),
+  hintGesture,
 
   redraw(
     dr,

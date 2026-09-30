@@ -33,6 +33,7 @@ import {
   interpretTargetVerbs,
   squareGrid,
   type TargetVerbs,
+  verbGesture,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSinglesDesc } from "./generator.ts";
@@ -506,6 +507,17 @@ export const singlesGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture: (s, ui, ds, m) =>
+    m.sets.flatMap((t) =>
+      verbGesture(
+        targetVerbs,
+        s,
+        ds,
+        ui,
+        [t],
+        t.value === "black" ? "primary" : "secondary",
+      ),
+    ),
   findMistakes,
 
   textFormat,

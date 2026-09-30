@@ -19,11 +19,15 @@ import { type DifficultyContract, difficultyItem } from "../../engine/difficulty
 import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import type { Game, HintResult, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { key, MARK_ALL_CODE, type PointerAction } from "../../engine/hint-gesture.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
-import { colorKeys } from "../../engine/key-labels.ts";
+import { colorKeys, digitKeyCode } from "../../engine/key-labels.ts";
 import {
   dragEnteredNoteTakingCell,
+  type NoteEntry,
+  type NoteTakingUi,
   noOpEntryResult,
+  noteEntryGesture,
   releaseHighlightAfterEntry,
   tapNoteTakingCell,
 } from "../../engine/note-taking-cell.ts";
@@ -63,6 +67,7 @@ import {
   markAll,
   refreshHintStep,
   regionsMove,
+  sameOps,
 } from "./hint.ts";
 import { newMapData, validateDesc } from "./map-data.ts";
 import {
@@ -74,6 +79,7 @@ import {
   type MapDrawState,
   newDrawState,
   placeCursorAtCoords,
+  pointInRegion,
   redraw,
   regionFromCoords,
   regionFromUiCursor,
@@ -173,6 +179,39 @@ function drop(
  */
 function requestKeys(): KeyLabel[] {
   return colorKeys(FOUR, COL_0);
+}
+
+/**
+ * How the pointer makes a hint step's move: Mark-all when the step is its
+ * press, and otherwise a tap on each region and its color key, in ink or as a
+ * dot. Map's selection is a region, so the note-taking cell's rules are asked
+ * of regions: the `Ui`'s cursor is read as the region it names.
+ */
+function hintGesture(
+  state: MapState,
+  ui: MapUi,
+  ds: MapDrawState,
+  move: MapMove,
+): PointerAction[] {
+  const press = markAll(state);
+  if (press !== null && sameOps(regionsMove(state.pencil, press.regions).ops, move.ops))
+    return [key(MARK_ALL_CODE)];
+  const selected = ui.cursor.visible ? regionFromUiCursor(state.map, ui) : -1;
+  const byRegion: NoteTakingUi = {
+    ...ui,
+    cursor: { ...ui.cursor, x: selected, y: 0, visible: selected >= 0 },
+  };
+  const entries = move.ops.map((op): NoteEntry => {
+    if (op.op === "pencil")
+      return { x: op.region, y: 0, code: digitKeyCode(op.bit + 1), pencil: true };
+    if (op.color === null) throw new Error("map: a hint never clears a region");
+    return { x: op.region, y: 0, code: digitKeyCode(op.color + 1), pencil: false };
+  });
+  return noteEntryGesture(
+    byRegion,
+    (r) => pointInRegion(state.map, ds.tileSize, r),
+    entries,
+  );
 }
 
 /**
@@ -531,6 +570,7 @@ export const mapGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture,
   refreshHintStep,
   requestKeys,
 

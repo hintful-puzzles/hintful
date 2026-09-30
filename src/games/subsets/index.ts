@@ -32,6 +32,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { click, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   CONTRADICTION_UNLOCALIZED,
   commonHintRefusal,
@@ -54,6 +55,7 @@ import {
   interpretTargetVerbs,
   type TargetGeometry,
   type TargetVerbs,
+  verbGesture,
 } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSubsetsDesc } from "./generator.ts";
@@ -158,6 +160,23 @@ function tallyHit(p: Point, w: number, h: number, ts: number): number | null {
     }
   }
   return null;
+}
+
+/** A point inside cell `pos`'s inspect icon: {@link iconHit}'s inverse. */
+function iconPoint(pos: number, w: number, ts: number): Point {
+  const bx = ((pos % w) * (CELL_WIDTH + 1) + 0.5) * ts;
+  const by = (Math.floor(pos / w) * (CELL_HEIGHT + 1) + 0.5) * ts;
+  return { x: Math.floor(bx + ts * 0.35), y: Math.floor(by - ts * 0.3) };
+}
+
+/** The middle of tally entry `value`: {@link tallyHit}'s inverse. */
+function tallyPoint(value: number, h: number, ts: number): Point {
+  const x = Math.floor(value / h);
+  const y = value % h;
+  return {
+    x: x * (CELL_WIDTH + 1) * ts + Math.floor(CELL_WIDTH * ts * 0.75),
+    y: Math.floor(y * 0.75 * ts) + (h + 2) * CELL_HEIGHT * ts,
+  };
 }
 
 type SlotType = "known" | "unknown" | "cleared";
@@ -297,6 +316,11 @@ const geometry: TargetGeometry<SubsetsState, SubsetsUi, SubsetsDrawState, Slot> 
     const gx = Math.floor((p.x - Math.floor(ts / 2)) / ts);
     const gy = Math.floor((p.y - Math.floor(ts / 2)) / ts);
     return slotAt(s, gx, gy);
+  },
+  pointAt(_s, ds, slot) {
+    const ts = ds.tileSize;
+    const half = Math.floor(ts / 2);
+    return { x: half + slot.gx * ts + half, y: half + slot.gy * ts + half };
   },
   cursorTarget: (s, ui) =>
     ui.tallyCursor === null ? slotAt(s, ui.cursor.x, ui.cursor.y) : null,
@@ -609,6 +633,51 @@ function hintKeepTrack(
   return "off";
 }
 
+/** A letter is a press on its slot, by whichever button's cycle reaches the
+ * step's type in one press. A rule-out is a press on the tally entry with the
+ * cell in focus, which its inspect icon gives it; the focus the player had is
+ * put back after. */
+function hintGesture(
+  s: SubsetsState,
+  ui: SubsetsUi,
+  ds: SubsetsDrawState,
+  m: SubsetsMove,
+): PointerAction[] {
+  const ts = ds.tileSize;
+  if (m.kind === "set") {
+    const cellx = m.pos % s.w;
+    const celly = Math.floor(m.pos / s.w);
+    const slot = slotAt(
+      s,
+      cellx * (CELL_WIDTH + 1) + (m.bit % CELL_WIDTH),
+      celly * (CELL_HEIGHT + 1) + Math.floor(m.bit / CELL_WIDTH),
+    );
+    if (slot === null) throw new Error(`subsets: no slot for ${JSON.stringify(m)}`);
+    const left = targetVerbs.primary.apply(s, slot, ui);
+    const reaches =
+      typeof left === "object" && left?.kind === "set" && left.type === m.type;
+    return verbGesture(
+      targetVerbs,
+      s,
+      ds,
+      ui,
+      [slot],
+      reaches ? "primary" : "secondary",
+    );
+  }
+  if (m.kind !== "rule") throw new Error("subsets: a hint never solves");
+  const before = ui.highlightCell;
+  const out: PointerAction[] = [];
+  if (before !== m.pos) out.push(click(iconPoint(m.pos, s.w, ts)));
+  out.push(click(tallyPoint(m.value, s.h, ts)));
+  if (before === m.pos) return out;
+  // The icon of the cell in focus before, or this one's again to clear it; a
+  // tally set in the spotlight comes back with a press on it.
+  out.push(click(iconPoint(before ?? m.pos, s.w, ts)));
+  if (ui.highlightSet !== null) out.push(click(tallyPoint(ui.highlightSet, s.h, ts)));
+  return out;
+}
+
 function flashLength(
   from: SubsetsState,
   to: SubsetsState,
@@ -644,10 +713,9 @@ export const subsetsGame: Game<
   id: "subsets",
   // Touching the reference aid (tally / inspect icon / cursor) dismisses a
   // displayed hint, so the aid isn't suppressed by a still-active hint overlay.
-  // Unconditional: Subsets' hint marks no square the player types into, so
-  // there is no follow-by-hand flow to keep the explanation up for (contrast
-  // Crossing, which answers per step).
-  uiUpdateClearsHint: () => true,
+  // Except on a rule-out step: following it by hand starts with the inspect
+  // icon, which puts its cell in focus for the tally press that makes it.
+  uiUpdateClearsHint: (step) => step.move.kind !== "rule",
 
   defaultParams,
   presets,
@@ -687,6 +755,7 @@ export const subsetsGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture,
   findMistakes,
   textFormat,
 

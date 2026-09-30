@@ -61,6 +61,10 @@ have to remember they exist; you do have to know what they will tell you.
 - [`emittable-keys.test.ts`](../../src/engine/emittable-keys.test.ts) — the
   source scan for a key that can never fire (§ "The numeric keypad never
   arrives").
+- [`hint-gesture.test.ts`](../../src/engine/hint-gesture.test.ts) — every hint
+  step is played through your `interpretMove` by the gesture your
+  `hintGesture` gives for it, so a hint can only ask for what the pointer does
+  ([`hints.md`](./hints.md) § "Every step is a gesture").
 
 **What no sweep can tell you** is whether the resulting gesture is *usable* —
 hit targets big enough for a fingertip, a cursor a player can see, a panel
@@ -1220,6 +1224,9 @@ and Undead.
       `{{controls}}` (§ "Targets and verbs").
 - [ ] Every action reachable with the two buttons alone, clicks and drags, with
       no key held (§ "One pointer, two buttons").
+- [ ] A hinted game's `hintGesture` aims with the same pixel helpers the
+      renderer places things with, and a target-verb geometry's `pointAt`
+      inverts its `pointerTarget` (`hints.md` § "Every step is a gesture").
 - [ ] No binding on `MOD_NUM_KEYPAD | …` or a bare character literal without
       checking what `puzzleKeyMap` delivers; bare digits accepted where the
       keypad was a route to an input.

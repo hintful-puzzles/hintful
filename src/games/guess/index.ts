@@ -12,6 +12,7 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
+import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
 import { colorKeysZeroIsTen } from "../../engine/key-labels.ts";
 import { numberItem } from "../../engine/params.ts";
 import {
@@ -36,10 +37,12 @@ import {
 } from "./hint.ts";
 import {
   answerSlotAt,
+  answerSlotPoint,
   COL_1,
   colors,
   computeSize,
   type GuessDrawState,
+  guessSlotPoint,
   newDrawState,
   PREFERRED_TILE_SIZE,
   pegOff,
@@ -589,6 +592,25 @@ export const guessGame: Game<
   },
   hintKeepTrack: guessHintKeepTrack,
   refreshHintStep: guessRefreshHintStep,
+  // A tap selects a slot, and the row it is in decides whether a color key
+  // enters a peg or rules the color out of the answer.
+  hintGesture(state, ui, ds, m): readonly PointerAction[] {
+    const keys = requestKeys(state.params);
+    const colorKey = (color: number) => key(keys[color - 1].button);
+    if (m.type === "mark") {
+      return m.marks.flatMap((mark) => [
+        click(answerSlotPoint(ds, mark.pos)),
+        colorKey(mark.color),
+      ]);
+    }
+    if (m.type !== "guess") return [];
+    const typed = m.pegs.flatMap((color, pos) =>
+      ui.currPegs[pos] === color
+        ? []
+        : [click(guessSlotPoint(ds, state.nextGo, pos)), colorKey(color)],
+    );
+    return [...typed, key(SUBMIT_BUTTON)];
+  },
 
   colors,
   preferredTileSize: PREFERRED_TILE_SIZE,

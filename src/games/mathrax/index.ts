@@ -18,6 +18,7 @@ import {
   adaptiveMarkAllMove,
   applyNoteMove,
   type CandidatePlanPrefs,
+  candidateGesture,
   candidateHint,
   keepCandidateHintTrack,
   type Mark,
@@ -38,13 +39,14 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { markAllNow } from "../../engine/hint-gesture.ts";
 import {
   latinPremise,
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
 import type { Narration } from "../../engine/hint-words.ts";
-import { digitKeys } from "../../engine/key-labels.ts";
+import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import { rowColRegions } from "../../engine/latin-hint.ts";
 import {
   pressNoteTakingCell,
@@ -79,6 +81,7 @@ import {
   type MathraxDrawState,
   type MathraxHint,
   newDrawState,
+  origin,
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
@@ -606,6 +609,18 @@ export const mathraxGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture: (s, ui, ds, m) => {
+    const ts = ds.tileSize;
+    const mid = (v: number) => origin(ts) + v * ts + ((ts / 2) | 0);
+    return candidateGesture(
+      m,
+      ui,
+      (x, y) => ({ x: mid(x), y: mid(y) }),
+      digitKeyCode,
+      undefined,
+      markAllNow(interpretMove, s, ui, ds),
+    );
+  },
   refreshHintStep,
   requestKeys: (p) => digitKeys(p.o),
 

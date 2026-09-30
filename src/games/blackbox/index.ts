@@ -132,6 +132,11 @@ const geometry: TargetGeometry<BlackboxState, BlackboxUi, BlackboxDrawState, Poi
     const t = { x: fromDraw(p.x, ds.tileSize), y: fromDraw(p.y, ds.tileSize) };
     return onTarget(s, t) ? t : null;
   },
+  pointAt(_s, ds, t) {
+    const ts = ds.tileSize;
+    const mid = (v: number) => borderFor(ts) + v * ts + Math.floor(ts / 2);
+    return { x: mid(t.x), y: mid(t.y) };
+  },
   cursorTarget: (s, ui) =>
     onTarget(s, ui.cursor) ? { x: ui.cursor.x, y: ui.cursor.y } : null,
   parkCursor(ui, t) {

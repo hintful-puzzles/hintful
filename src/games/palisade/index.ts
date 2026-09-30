@@ -17,6 +17,7 @@ import {
   DY,
 } from "../../engine/border-grid.ts";
 import {
+  borderHintGesture,
   borderHintJourney,
   borderHintKeepTrack,
   type ForcedBorderEdge,
@@ -264,6 +265,10 @@ export const palisadeGame: Game<
       state.w,
       state.borders,
     ),
+  hintGesture: (s, ui, ds, m) => {
+    if (m.type !== "edges") throw new Error("palisade: a hint only sets edges");
+    return borderHintGesture(targetVerbs, s, ds, ui, m.edits);
+  },
 
   textFormat,
   statusbarText: (s) => `Region size: ${s.k}`,

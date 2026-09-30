@@ -22,6 +22,7 @@ import {
   type CandidateHighlights,
   type CandidateMoveAdapter,
   type CandidatePlanPrefs,
+  candidateGesture,
   keepCandidateHintTrack,
   type Mark,
   type NoteEncoding,
@@ -34,8 +35,10 @@ import {
 } from "../../engine/candidate-plan.ts";
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
+import type { PointerAction } from "../../engine/hint-gesture.ts";
 import { candidateConclusions } from "../../engine/hint-text.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
+import type { NoteTakingUi } from "../../engine/note-taking-cell.ts";
 import type { Point } from "../../engine/types.ts";
 import { LETTERS, type LineMarks, type LineWord, say } from "./hint-text.ts";
 import { neighbors, runsForce } from "./solver.ts";
@@ -360,6 +363,19 @@ export function hintKeepTrack(
     state.params.w,
     abcdCandidateMoves,
   );
+}
+
+/** How the pointer makes a step's `move`, with `at` the middle of a cell,
+ * `code` the keypad key that types walk value `n` (letter `n - 1`) and
+ * `markAll` what the mark-all control makes now. */
+export function hintGesture(
+  ui: NoteTakingUi,
+  at: (x: number, y: number) => Point,
+  code: (n: number) => number,
+  move: AbcdMove,
+  markAll: unknown,
+): PointerAction[] {
+  return candidateGesture(move, ui, at, code, abcdCandidateMoves, markAll);
 }
 
 export function refreshHintStep(

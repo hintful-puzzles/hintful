@@ -14,6 +14,7 @@ import {
   adaptiveMarkAllMove,
   applyNoteMove,
   type CandidatePlanPrefs,
+  candidateGesture,
   candidateHint,
   keepCandidateHintTrack,
   type Mark,
@@ -33,9 +34,10 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { markAllNow } from "../../engine/hint-gesture.ts";
 import type { Premise } from "../../engine/hint-text.ts";
 import type { Narration } from "../../engine/hint-words.ts";
-import { digitKeys } from "../../engine/key-labels.ts";
+import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import type { SingleWhy } from "../../engine/latin-hint.ts";
 import {
   noOpEntryResult,
@@ -64,6 +66,7 @@ import type { KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newSoloDesc } from "./generator.ts";
 import { type RegionCells, regionName, say } from "./hint-text.ts";
 import {
+  border,
   colors,
   computeSize,
   FLASH_TIME,
@@ -757,6 +760,18 @@ export const soloGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture: (s, ui, ds, m) => {
+    const ts = ds.tileSize;
+    const mid = (v: number) => border(ts) + v * ts + ((ts / 2) | 0);
+    return candidateGesture(
+      m,
+      ui,
+      (x, y) => ({ x: mid(x), y: mid(y) }),
+      digitKeyCode,
+      undefined,
+      markAllNow(interpretMove, s, ui, ds),
+    );
+  },
   refreshHintStep,
   findMistakes,
   requestKeys: (p): KeyLabel[] => digitKeys(p.c * p.r),

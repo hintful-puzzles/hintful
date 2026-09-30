@@ -15,15 +15,7 @@ import { DELETE, LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { newDesc } from "./generator.ts";
 import { buildLoopyGrid } from "./grid-build.ts";
-import {
-  AF_ADAPTIVE,
-  AF_FIXED,
-  AF_OFF,
-  autofollowEdges,
-  type LoopyMove,
-  loopyGame,
-  nextLineState,
-} from "./index.ts";
+import { type LoopyMove, loopyGame, nextLineState } from "./index.ts";
 import {
   DIFF_EASY,
   DIFF_HARD,
@@ -38,6 +30,10 @@ import {
 } from "./params.ts";
 import { _internals, checkCaches, SolverState, solveGame } from "./solver.ts";
 import {
+  AF_ADAPTIVE,
+  AF_FIXED,
+  AF_OFF,
+  autofollowEdges,
   decodeClues,
   encodeClues,
   forcedRuleOuts,

@@ -5340,10 +5340,10 @@ exports[`mathrax hint render > an even/odd clue outlines the block of four it co
     "y": 147,
   },
   {
-    "color": 0,
+    "color": 10,
     "h": 40,
     "op": "rect",
-    "rgb": "rgb(211, 211, 211)",
+    "rgb": "rgb(164, 164, 164)",
     "w": 40,
     "x": 107,
     "y": 147,

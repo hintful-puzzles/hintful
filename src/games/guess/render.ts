@@ -297,6 +297,21 @@ export function answerSlotAt(ds: GuessDrawState, x: number, y: number): number {
   return pos >= 0 && pos < ds.npegs ? pos : -1;
 }
 
+/** The middle of answer slot `pos`, where a tap selects it. */
+export function answerSlotPoint(ds: GuessDrawState, pos: number): Point {
+  const half = Math.floor(pegOff(ds) / 2);
+  return {
+    x: SOLN_OX(ds) + pos * pegOff(ds) + half,
+    y: SOLN_OY(ds) + Math.floor(ds.answerh / 2),
+  };
+}
+
+/** The middle of peg `pos` of guess row `row`, where a tap selects it. */
+export function guessSlotPoint(ds: GuessDrawState, row: number, pos: number): Point {
+  const half = Math.floor(pegOff(ds) / 2);
+  return { x: guessX(ds, pos) + half, y: guessY(ds, row) + half };
+}
+
 const ANSWER_FRAME_SHIFT = 11;
 const ANSWER_CURSOR = 1 << 22;
 const ANSWER_PREMISE = 1 << 23;

@@ -14,6 +14,7 @@ import { Dsf } from "../../engine/dsf.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { FIX_MISTAKES_FIRST } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
+import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -42,6 +43,9 @@ import type { CornerWhy, LoopyReason, RelationWhy } from "./record.ts";
 import { COL_HINT, COL_HINT_CELL, COL_MISTAKE, PREFERRED_TILE_SIZE } from "./render.ts";
 import { uniqueSolution } from "./solver.ts";
 import {
+  AF_ADAPTIVE,
+  AF_FIXED,
+  autofollowEdges,
   forcedRuleOuts,
   LINE_NO,
   LINE_UNKNOWN,
@@ -219,10 +223,25 @@ describe("Loopy hint: soundness on every tiling", () => {
             ).not.toBe("off");
 
             // An exclusion the step does not force is still a divergence. Any edge
-            // the aid did not name will do; the board has far more than it settles.
+            // the aids would not add will do; the board has far more than they
+            // settle. Auto-follow's corridor is forced by the step's edges, and
+            // so are the exclusions its lines settle.
+            const corridor = new Map(ops);
+            for (const [edge, to] of ops)
+              for (const autofollow of [AF_FIXED, AF_ADAPTIVE])
+                for (const e of autofollowEdges(
+                  state,
+                  { autofollow },
+                  state.grid.edges[edge],
+                ))
+                  if (!corridor.has(e)) corridor.set(e, to);
+            const settled = new Set(forcedRuleOuts(state, corridor));
             const alien = [...state.lines.keys()].find(
               (e) =>
-                state.lines[e] === LINE_UNKNOWN && !ops.has(e) && !extra.includes(e),
+                state.lines[e] === LINE_UNKNOWN &&
+                !corridor.has(e) &&
+                !extra.includes(e) &&
+                !settled.has(e),
             );
             if (alien !== undefined) {
               expect(
@@ -243,6 +262,35 @@ describe("Loopy hint: soundness on every tiling", () => {
       }
     }
     expect(exercised, "no step in the corpus forced an exclusion").toBeGreaterThan(50);
+  });
+
+  it("plays every step with auto-follow on, the corridor it adds taken as the step", () => {
+    // A click with auto-follow on draws the forced corridor beyond the step's
+    // edge in the same move; a hint played by its gesture makes exactly that move,
+    // so a keep-track that called it off would stop the plan with a throw.
+    let corridors = 0;
+    const spy: typeof loopyGame = {
+      ...loopyGame,
+      interpretMove: (...args) => {
+        const m = loopyGame.interpretMove(...args);
+        if (typeof m === "object" && m?.kind === "set") {
+          if (m.ops.filter((o) => o.state === LINE_YES).length > 1) corridors++;
+        }
+        return m;
+      },
+    };
+    const params = loopyGame.encodeParams(loopyGame.defaultParams(), true);
+    for (const autofollow of [1, 2]) {
+      for (const seed of ["af-a", "af-b", "af-c"]) {
+        const midend = new Midend(spy);
+        expect(midend.newGameFromId(`${params}#${seed}`)).toBeNull();
+        midend.setPreferences({ "auto-follow": autofollow });
+        let played = 0;
+        while (played < 1000 && midend.executeHint() === null) played++;
+        expect(played, `${seed}: no step played`).toBeGreaterThan(0);
+      }
+    }
+    expect(corridors, "auto-follow never drew a corridor").toBeGreaterThan(0);
   });
 
   it("an Easy or Normal square board needs no pair, and an Easy one no note at all", () => {

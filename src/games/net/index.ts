@@ -11,6 +11,7 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import type { Game, GamePref, SolveResult } from "../../engine/game.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
+import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   atof,
   dimensionParamConfig,
@@ -40,8 +41,10 @@ import { type RandomState, randomNew, randomUpto } from "../../engine/random/ind
 import { registerGame } from "../../engine/registry.ts";
 import {
   interpretTargetVerbs,
+  routeGesture,
   type TargetGeometry,
   type TargetVerbs,
+  verbGesture,
 } from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import {
@@ -219,6 +222,29 @@ function pressedTile(s: NetState, ds: NetDrawState, p: Point, ui: NetUi) {
   };
 }
 
+/** The inverse of {@link pressedTile}: the point `fx`, `fy` of the way across
+ * tile `t`'s face (the tile less its gutter), wherever the origin has scrolled
+ * it to. */
+function tilePoint(
+  s: NetState,
+  ds: NetDrawState,
+  ui: NetUi,
+  t: Point,
+  fx: number,
+  fy: number,
+): Point {
+  const ts = ds.tileSize;
+  const lt = lineThick(ts);
+  const face = ts - lt;
+  const start = boardMargin(ts) + lt;
+  const col = (t.x - ui.orgX + s.w) % s.w;
+  const row = (t.y - ui.orgY + s.h) % s.h;
+  return {
+    x: start + col * ts + Math.min(face - 1, Math.floor(fx * face)),
+    y: start + row * ts + Math.min(face - 1, Math.floor(fy * face)),
+  };
+}
+
 /**
  * A target is a tile, named in the state's own coordinates. On screen the grid
  * is drawn scrolled by the origin, so a press is shifted by it; the cursor
@@ -231,6 +257,7 @@ const geometry: TargetGeometry<NetState, NetUi, NetDrawState, Point> = {
     const t = pressedTile(s, ds, p, ui);
     return t === null || t.onGutter ? null : { x: t.x, y: t.y };
   },
+  pointAt: (s, ds, t, ui) => tilePoint(s, ds, ui, t, 0.5, 0.5),
   cursorTarget: (_s, ui) => ({ x: ui.cursor.x, y: ui.cursor.y }),
   parkCursor(ui, t) {
     ui.cursor.x = t.x;
@@ -405,6 +432,52 @@ function placeSource(
   ui.cy = ui.cursor.y;
   ui.placingSource = false;
   return UI_UPDATE;
+}
+
+/**
+ * The pointer's way to a hint step's move: a turn is a tap or a long press on
+ * the tile (a half turn two taps), a lock a notes-mode tap in its middle, and a
+ * note a notes-mode tap by its side. Notes mode is switched for the step and
+ * back after, and so is Source mode, which would take the tap for itself.
+ */
+function hintGesture(
+  s: NetState,
+  ui: NetUi,
+  ds: NetDrawState,
+  m: NetMove,
+): PointerAction[] {
+  const [halfTurn, lock] = targetVerbs.keyOnly ?? [];
+  let out: PointerAction[];
+  if (m.type === "rotate") {
+    const at = [{ x: m.x, y: m.y }];
+    out =
+      m.op === "F"
+        ? routeGesture(targetVerbs, halfTurn, s, ds, ui, at)
+        : verbGesture(
+            targetVerbs,
+            s,
+            ds,
+            ui,
+            at,
+            m.op === "A" ? "primary" : "secondary",
+          );
+    if (ui.pencilMode) out = [key(PENCIL_MODE_BUTTON), ...out, key(PENCIL_MODE_BUTTON)];
+  } else if (m.type === "lock") {
+    const at = [{ x: m.x, y: m.y }];
+    out = routeGesture(targetVerbs, lock, s, ds, ui, at, { notesOn: ui.pencilMode });
+  } else if (m.type === "note") {
+    const [fx, fy] = m.dir === R ? [0.9, 0.5] : [0.5, 0.9];
+    const tap = click(
+      tilePoint(s, ds, ui, m, fx, fy),
+      m.note === NOTE_WIRE ? "primary" : "secondary",
+    );
+    out = ui.pencilMode
+      ? [tap]
+      : [key(PENCIL_MODE_BUTTON), tap, key(PENCIL_MODE_BUTTON)];
+  } else {
+    throw new Error(`net: a hint never asks for ${m.type}`);
+  }
+  return ui.placingSource ? [key(KEY_SOURCE), ...out, key(KEY_SOURCE)] : out;
 }
 
 /** A drag begun in the margin of a wrapping grid scrolls it by whole squares,
@@ -716,6 +789,7 @@ export const netGame: Game<
     },
   },
   hintKeepTrack: netHintKeepTrack,
+  hintGesture,
 
   prefs,
   encodeUi,

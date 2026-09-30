@@ -28,6 +28,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { markAllNow } from "../../engine/hint-gesture.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import {
   pressNoteTakingCell,
@@ -50,8 +51,15 @@ import { registerGame } from "../../engine/registry.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
 import type { GameStatus, KeyLabel, Point } from "../../engine/types.ts";
 import { newSaladDesc } from "./generator.ts";
-import { hint, hintKeepTrack, refreshHintStep, type SaladHint } from "./hint.ts";
 import {
+  hint,
+  hintGesture,
+  hintKeepTrack,
+  refreshHintStep,
+  type SaladHint,
+} from "./hint.ts";
+import {
+  cellOrigin,
   colors,
   computeSize,
   FLASH_TIME,
@@ -75,6 +83,8 @@ import {
   defaultParams,
   encodeParams,
   isComplete,
+  KEY_CIRCLE,
+  KEY_CROSS,
   needsPencilFill,
   newState,
   newUi,
@@ -357,6 +367,18 @@ export const saladGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture: (s, ui, ds, m) => {
+    const ts = ds.tileSize;
+    const mid = (v: number) => cellOrigin(v, ts) + ((ts / 2) | 0);
+    return hintGesture(
+      s,
+      ui,
+      (x, y) => ({ x: mid(x), y: mid(y) }),
+      (n) => symbolChar(s.mode, n).charCodeAt(0),
+      m,
+      markAllNow(interpretMove, s, ui, ds),
+    );
+  },
   refreshHintStep,
   findMistakes,
   requestKeys: (p): KeyLabel[] => {
@@ -366,8 +388,8 @@ export const saladGame: Game<
       const label = symbolChar(p.mode, i + 1);
       keys.push({ button: label.charCodeAt(0), label });
     }
-    keys.push({ button: 88, label: "X" });
-    keys.push({ button: 79, label: "O" });
+    keys.push({ button: KEY_CROSS, label: "X" });
+    keys.push({ button: KEY_CIRCLE, label: "O" });
     keys.push(clearKey);
     return keys;
   },

@@ -633,6 +633,20 @@ describe("refusing", () => {
     });
   });
 
+  it("keeps a step displayed through an island's done-mark being toggled", () => {
+    // A drag cannot start from a marked island, so a hint's gesture takes the
+    // mark off first; that tap must not drop the plan.
+    const res = bridgesGame.hint?.(start, undefined, ui);
+    if (!res?.ok) throw new Error("no hint on the opening board");
+    const first = start.islands[0];
+    const verdict = bridgesGame.hintKeepTrack?.(
+      { ops: [{ op: "M", x: first.x, y: first.y }] },
+      res.steps[0],
+      start,
+    );
+    expect(verdict).toBe("onTrack");
+  });
+
   it("refuses an annotation `findMistakes` cannot see, and says so honestly", () => {
     // Marking an island complete before it is locks bridges it still needs. No
     // entry is wrong, so there is nothing to highlight and `FIX_MISTAKES_FIRST`

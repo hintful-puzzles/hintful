@@ -39,6 +39,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
+import { click, drag, type PointerAction } from "../../engine/hint-gesture.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import {
@@ -71,6 +72,7 @@ import { type BoatsFiring, type BoatsSquare, deduceBoatsPlan } from "./hint-solv
 import { type BoatsMarks, say } from "./hint-text.ts";
 import {
   type BoatsDrawState,
+  cellCenter,
   colors,
   computeSize,
   FLASH_TIME,
@@ -505,6 +507,32 @@ function hintKeepTrack(
   return done > 0 ? "onTrack" : "off";
 }
 
+/**
+ * A leg is one line drag from the first of its still-empty squares to the
+ * last. A press on an empty square fills with `from: "-"` (left a boat, right
+ * water), so the squares already decided between them are left alone.
+ */
+function hintGesture(
+  state: BoatsState,
+  _ui: BoatsUi,
+  ds: BoatsDrawState,
+  move: BoatsMove,
+): readonly PointerAction[] {
+  if (move.kind !== "fill") return [];
+  const { w } = state.params;
+  const ts = ds.tileSize;
+  const empty: Point[] = [];
+  for (let y = move.y0; y <= move.y1; y++)
+    for (let x = move.x0; x <= move.x1; x++)
+      if (fillOf(state.grid[y * w + x]) === "-") empty.push({ x, y });
+  if (empty.length === 0) return [];
+  const at = (c: Point): Point => ({ x: cellCenter(c.x, ts), y: cellCenter(c.y, ts) });
+  const button = move.to === "B" ? "primary" : "secondary";
+  const first = at(empty[0]);
+  const last = at(empty[empty.length - 1]);
+  return empty.length === 1 ? [click(first, button)] : [drag(first, last, { button })];
+}
+
 function flashLength(from: BoatsState, to: BoatsState): number {
   return winFlash(from, to, FLASH_TIME);
 }
@@ -637,6 +665,7 @@ export const boatsGame: Game<
     },
   },
   hintKeepTrack,
+  hintGesture,
   textFormat,
 
   colors,

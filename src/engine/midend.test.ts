@@ -5,9 +5,10 @@ import { difficultyItem } from "./difficulty.ts";
 import { type FakeDrawState, fakeGame } from "./fake-game.ts";
 import type { Game } from "./game.ts";
 import { UI_UPDATE } from "./game.ts";
+import { click, drag, key } from "./hint-gesture.ts";
 import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { Midend, SHOW_TIMER_PREF } from "./midend.ts";
-import { LEFT_BUTTON, RIGHT_BUTTON } from "./pointer.ts";
+import { LEFT_BUTTON, LEFT_RELEASE, RIGHT_BUTTON } from "./pointer.ts";
 import { decodeSave, encodeSave } from "./save.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
@@ -1420,6 +1421,88 @@ describe("Midend executeHint plays the stored plan", () => {
     h.m.executeHint(); // must play step 2, not step 1 again
     expect(c.hintCalls()).toBe(1);
     expect(h.m.formatAsText()).toBe("count=2");
+  });
+});
+
+describe("Midend executeHint plays a step's gesture, never its move", () => {
+  it("sends a click to interpretMove as a press and its release", () => {
+    const buttons: number[] = [];
+    const h = harness({
+      ...fakeGame,
+      interpretMove: (s, ui, ds, p, button) => {
+        buttons.push(button);
+        return fakeGame.interpretMove(s, ui, ds, p, button);
+      },
+    });
+    h.m.newGame();
+    expect(h.m.executeHint()).toBeNull();
+    expect(buttons).toEqual([LEFT_BUTTON, LEFT_RELEASE]);
+    expect(h.m.formatAsText()).toBe("count=1");
+  });
+
+  it("releases a declined press where it was pressed, as the frontend does", () => {
+    // Guess acts only on the release of a press it declines.
+    const buttons: number[] = [];
+    const h = harness({
+      ...fakeGame,
+      interpretMove: (_s, _ui, _ds, _p, button) => {
+        buttons.push(button);
+        return button === LEFT_RELEASE ? "inc" : null;
+      },
+      hintGesture: () => [drag({ x: 0, y: 0 }, { x: 5, y: 0 })],
+    });
+    h.m.newGame();
+    expect(h.m.executeHint()).toBeNull();
+    expect(buttons).toEqual([LEFT_BUTTON, LEFT_RELEASE]);
+    expect(h.m.formatAsText()).toBe("count=1");
+  });
+
+  it("plays a step the pointer makes in several moves, completing on the last", () => {
+    // One step jumps to the target; the pointer gets there one `inc` at a time,
+    // as Net's half turn is two quarter turns.
+    const h = harness({
+      ...fakeGame,
+      hint: () => ({ ok: true, steps: [{ move: "solve", explanation: "Finish" }] }),
+      hintKeepTrack: (m, _step, s) =>
+        m !== "inc" ? "off" : s.count + 1 >= s.target ? "completed" : "onTrack",
+      hintGesture: (s) =>
+        Array.from({ length: s.target - s.count }, () => click({ x: 0, y: 0 })),
+    });
+    h.m.newGame(); // target 3
+    expect(h.m.executeHint()).toBeNull();
+    expect(h.m.formatAsText()).toBe("count=3");
+    expect(h.state()?.status).toBe("solved");
+  });
+
+  it("refuses a gesture that makes a move off its step", () => {
+    const h = harness({
+      ...fakeGame,
+      hintGesture: () => [click({ x: 0, y: 0 }, "secondary")],
+    });
+    h.m.newGame();
+    expect(() => h.m.executeHint()).toThrow(/makes a move off its step: "dec"/);
+  });
+
+  it("refuses a key that no on-screen control sends", () => {
+    const h = harness({ ...fakeGame, hintGesture: () => [key(65)] });
+    h.m.newGame();
+    expect(() => h.m.executeHint()).toThrow(/presses key 65, which no on-screen/);
+  });
+
+  it("refuses a gesture that ends without completing its step", () => {
+    const h = harness({
+      ...fakeGame,
+      requestKeys: () => [{ button: 65, label: "A" }],
+      hintGesture: () => [key(65)],
+    });
+    h.m.newGame();
+    expect(() => h.m.executeHint()).toThrow(/does not complete its step/);
+  });
+
+  it("refuses to play a hint with no gesture", () => {
+    const h = harness({ ...fakeGame, hintGesture: undefined });
+    h.m.newGame();
+    expect(() => h.m.executeHint()).toThrow(/has a hint but no hintGesture/);
   });
 });
 

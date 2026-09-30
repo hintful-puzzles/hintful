@@ -20,6 +20,7 @@ import {
   difficultyItem,
   tierNames,
 } from "../../engine/difficulty.ts";
+import { click, drag, type PointerAction } from "../../engine/hint-gesture.ts";
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import {
   type Game,
@@ -679,6 +680,50 @@ function dropDrag(
   return { ops, solving: false };
 }
 
+/**
+ * A wall is a click on its midpoint. An arrow is a drag from its dot to the
+ * square, which brings the square's partner across the dot along; a dot's own
+ * squares (two for a dot on a wall, four on a corner) take one drag per pair of
+ * partners still to point at it.
+ */
+function hintGesture(
+  s: GalaxiesState,
+  _ui: GalaxiesUi,
+  ds: GalaxiesDrawState,
+  m: GalaxiesMove,
+): readonly PointerAction[] {
+  const tile = ds.tileSize;
+  const border = borderFor(tile);
+  const at = (c: Point): Point => ({
+    x: scoord(c.x, tile, border),
+    y: scoord(c.y, tile, border),
+  });
+  const out: PointerAction[] = [];
+  for (const op of m.ops) {
+    if (op.kind === "edge") {
+      out.push(click(at(op)));
+      continue;
+    }
+    if (op.kind !== "assoc") continue;
+    const dot = { x: op.ax, y: op.ay };
+    const covered = new Set<number>();
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const t = { x: op.x + dx, y: op.y + dy };
+        if (!inGrid(s, t.x, t.y) || spaceTypeAt(t.x, t.y) !== SpaceType.Tile) continue;
+        const ti = idx(s, t.x, t.y);
+        if (covered.has(ti) || s.flags[ti] & F_DOT) continue;
+        if (s.flags[ti] & F_TILE_ASSOC && s.dotx[ti] === dot.x && s.doty[ti] === dot.y)
+          continue;
+        covered.add(ti);
+        covered.add(idx(s, 2 * dot.x - t.x, 2 * dot.y - t.y));
+        out.push(drag(at(dot), at(t)));
+      }
+    }
+  }
+  return out;
+}
+
 // --- solve --------------------------------------------------------
 
 /** The solved board reached from `start`, or null if the solver cannot settle
@@ -1021,6 +1066,7 @@ export const galaxiesGame: Game<
   findMistakes,
   hint,
   hintKeepTrack,
+  hintGesture,
   refreshHintStep,
   hintMarks: {
     roles: {

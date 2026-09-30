@@ -161,6 +161,11 @@ export function fromCoord(pixel: number, ts: number): number {
   return fromCoordE(pixel, ts, BORDER);
 }
 
+/** The pixel at the middle of cell `pos` along one axis: `fromCoord`'s inverse. */
+export function cellCenter(pos: number, ts: number): number {
+  return BORDER + pos * ts + (ts >> 1);
+}
+
 /** One boat's slot in the fleet display. */
 export interface FleetSlot {
   /** Zero-based size index — this boat is `size + 1` segments long. */

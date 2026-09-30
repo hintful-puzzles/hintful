@@ -52,10 +52,14 @@ import {
   type SolverState,
 } from "./solver.ts";
 import {
+  AF_ADAPTIVE,
+  AF_FIXED,
+  autofollowEdges,
   forcedRuleOuts,
   LINE_NO,
   LINE_UNKNOWN,
   LINE_YES,
+  type LineState,
   type LoopyPair,
   type LoopyState,
 } from "./state.ts";
@@ -769,11 +773,29 @@ export function hintKeepTrack(
       // exclusion the step does not force is still a divergence and still drops the
       // plan. Without this, 27.8% of Loopy's own `set` steps verdicted "off" when
       // followed with the aid on (measured over three 7x7 Tricky plans).
+      // Auto-follow extends a click only through dots where the line has one
+      // way on, so the corridor it adds is forced by the step's own edges and is
+      // tolerated the same way, under either setting.
+      let followed: Map<number, LineState> | null = null;
+      const corridor = (): Map<number, LineState> => {
+        if (followed) return followed;
+        followed = new Map(lines);
+        for (const [edge, to] of lines)
+          for (const autofollow of [AF_FIXED, AF_ADAPTIVE])
+            for (const e of autofollowEdges(
+              state,
+              { autofollow },
+              state.grid.edges[edge],
+            ))
+              if (!followed.has(e)) followed.set(e, to);
+        return followed;
+      };
       let forced: Set<number> | null = null;
       for (const op of m.ops) {
         if (lines.get(op.edge) === op.state) continue;
+        if (corridor().get(op.edge) === op.state) continue;
         if (op.state !== LINE_NO) return "off";
-        forced ??= new Set(forcedRuleOuts(state, lines));
+        forced ??= new Set(forcedRuleOuts(state, corridor()));
         if (!forced.has(op.edge)) return "off";
       }
       const moved = new Map(m.ops.map((o) => [o.edge, o.state]));

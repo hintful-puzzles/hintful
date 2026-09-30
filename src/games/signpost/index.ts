@@ -8,6 +8,7 @@
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { winFlash } from "../../engine/flash.ts";
 import type { GamePref } from "../../engine/game.ts";
+import { drag } from "../../engine/hint-gesture.ts";
 import {
   fromCoord as fromCoordE,
   type Game,
@@ -405,6 +406,14 @@ export const signpostGame: Game<
     },
   },
   hintKeepTrack: signpostKeepTrack,
+  hintGesture(_s, _ui, ds, m) {
+    if (m.type !== "link") return [];
+    const ts = ds.tileSize;
+    const mid = (v: number) => coord(v, ts) + Math.floor(ts / 2);
+    return [
+      drag({ x: mid(m.fromX), y: mid(m.fromY) }, { x: mid(m.toX), y: mid(m.toY) }),
+    ];
+  },
 
   textFormat,
 
