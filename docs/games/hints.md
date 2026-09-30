@@ -2757,6 +2757,16 @@ hold. Its generator keeps only boards the hint's engine finishes
 (`finishes`), which is the one-engine-two-projections shape of
 `solver-and-generator.md` § "Guess-free generation", applied without a tier.
 
+**Lead with the hypothetical, and say why it fails.** Net's first cut said
+"this straight would seal off the striped squares pointing right and left", and
+the owner could not read it: the turning dangled onto the striped squares, a
+straight "pointing" is not how anyone describes one, the square across a
+wrapping edge looked unrelated, and "seal off" held only for a reason the
+sentence never gave. What reads: "Lying across, this straight would join the
+striped dead ends, which have no other wire, closing all three off from the
+rest." And when several hypotheticals share one sentence, check that every
+count and verb is true of **each** of them, not of their union.
+
 **A game whose input is the target-verb model spells its hint's moves through
 the declared verbs** (`docs/games/input.md` § "Targets and verbs"): Net's
 turn is whichever of its rotation verbs reaches the wiring, and its lock is

@@ -49,8 +49,36 @@ only boards the engine finishes (D4).
   whose turnings a note reads, are outlined; a loop's route or a sealed group is
   striped. The help's piece names (dead end, straight, corner, T) are the
   sentences'.
-- Two templates carry two premises and run to 157 characters; they are
-  ledgered in `hint-quality.test.ts`'s `LONG_NARRATIONS` with that reason.
+- Two templates carry two premises; they are ledgered in
+  `hint-quality.test.ts`'s `LONG_NARRATIONS` with that reason.
+
+## D3a. What the owner's playtest changed (2026-09-30)
+
+"This straight would seal off the striped squares pointing right and left" was
+unreadable, for four separate reasons, each fixed:
+
+- **The modifier dangled**: "pointing right and left" after "the striped
+  squares" read as describing them. The turning now leads: "Lying across, this
+  straight would …".
+- **A straight doesn't point**: it lies across or stands upright, and a lock
+  that keeps one says "must stay upright".
+- **The reason was missing**: "seal off" follows only once you know the dead
+  ends have no other wire. When dead ends close the group, the sentence names
+  them, says so, and counts what is cut off: "would join the striped dead ends,
+  which have no other wire, closing all three off from the rest".
+- **The wrap was invisible**: a striped neighbor across a wrapping edge looked
+  unrelated. It is marked "(one across the wrapped edge)".
+
+Fixing it found a false claim: with **several** ruled-out turnings, the stripes
+are the union of their groups, so "closing all four off" was true of no single
+turning. Several turnings now say "some of the striped squares", and the
+dead-end count is only ever given for one turning. The clearer sentences are
+longer, up to about 230 characters for a fit plus a dead-end seal on a wrapping
+board.
+
+Playtest also found that a touch player cannot lock a square at all, which a
+hint asking for a lock cannot survive; that, and removing the middle button
+and every mouse+key combination, is `afford-every-hint-action`.
 
 ## D4. Generation
 

@@ -26,3 +26,5 @@
 - [x] 4.3 `net` delta: the hint; generation keeps hint-finishable boards.
 - [x] 4.4 Ran the app: a turn-and-lock journey through two presses of Hint;
       note and loop frames rendered and read.
+- [x] 4.5 Owner playtest (2026-09-30): the seal-off wording rewritten (design.md
+      D3a); accepted. The touch lock gap goes to `afford-every-hint-action`.

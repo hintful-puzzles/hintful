@@ -291,12 +291,15 @@ const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
   {
     games: ["net"],
     match:
-      / would (?:close a loop through|seal off|close a loop through or seal off) the striped /,
+      / would (?:close a loop through|seal off|close a loop through or seal off|join) (?:some of )?the striped /,
     why:
       "A turning ruled out because it would close a loop or seal a group off is " +
       "a second premise beside the notes and locks the others clash with, and " +
       "names the turning it rules out by its wires; a sentence citing only one " +
-      "of the two would leave a way of turning the tile unaccounted for.",
+      "of the two would leave a way of turning the tile unaccounted for. When " +
+      "dead ends are what seal the group, the sentence says so (they have no " +
+      "other wire) and counts what is cut off, because the owner found the bare " +
+      "'seal off' unreadable in playtest (2026-09-30).",
   },
 ];
 

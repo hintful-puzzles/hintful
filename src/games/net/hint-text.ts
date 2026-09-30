@@ -71,10 +71,33 @@ export interface Premises {
   readonly loop: boolean;
   readonly seal: boolean;
   readonly striped: readonly Point[];
+  /** Whether every striped square is a dead end, which is what closes a group
+   * off: a dead end has no other wire to lead out with. */
+  readonly deadEnds: boolean;
+  /** Whether a striped square is the tile's neighbor only across the edge of
+   * a wrapping grid, which nothing on screen shows. */
+  readonly acrossEdge: boolean;
   /** How the turnings that loop or seal point, when there is one of them:
    * its wires, or `null` for several. */
   readonly only: number | null;
 }
+
+/** How a tile lies when turned to `wires`: a straight lies across or stands
+ * upright, and anything else points somewhere. */
+function lying(wires: number): string {
+  if (wires === (R | L)) return "lying across";
+  if (wires === (U | D)) return "standing upright";
+  return `pointing ${dirWords(wires)}`;
+}
+
+/** How a tile that keeps its turning stays: "upright", "as it is". */
+function staying(wires: number): string {
+  if (wires === (R | L)) return "across";
+  if (wires === (U | D)) return "upright";
+  return "as it is";
+}
+
+const NUMBER = ["", "one", "two", "three", "four", "five", "six", "seven", "eight"];
 
 function joined(parts: readonly (string | Narration)[]): Narration {
   const pieces: (string | Narration)[] = [];
@@ -117,24 +140,67 @@ export interface Which {
   readonly fitting: string;
 }
 
-/** "must fit the wall, and would close a loop through … pointing down". */
-function premise(p: Premises, which: Which): Narration {
-  const fit = fitted(p);
-  if (!p.loop && !p.seal) return fit ? phrase`must fit ${fit}` : phrase``;
-  const striped = mark.the("stripes", CELL, p.striped, "square");
+/** What a turning that loops or seals would do: "would close a loop through
+ * the striped squares", or, when dead ends are what close the group, "would
+ * join the striped dead ends, which have no other wire, closing all three off
+ * from the rest". */
+function trapped(p: Premises): Narration {
+  const wraps = p.acrossEdge
+    ? p.striped.length > 1
+      ? " (one across the wrapped edge)"
+      : " (across the wrapped edge)"
+    : "";
+  // Several turnings each close off a group of their own, so the stripes are
+  // their union and no one count or "join them" is true of every turning.
+  if (p.only === null) {
+    const verb =
+      p.loop && p.seal
+        ? "close a loop through or seal off"
+        : p.loop
+          ? "close a loop through"
+          : "seal off";
+    const some = (els: readonly Point[]) =>
+      els.length > 1 ? "some of the striped squares" : "the striped square";
+    return phrase`would ${verb} ${mark.as("stripes", CELL, p.striped, some)}${wraps}`;
+  }
+  if (p.seal && !p.loop && p.deadEnds) {
+    const n = p.striped.length;
+    const all = n + 1;
+    const closing = all === 2 ? "the two" : `all ${NUMBER[all] ?? String(all)}`;
+    return phrase`would join ${mark.the("stripes", CELL, p.striped, "dead end")}${wraps}, which ${n > 1 ? "have" : "has"} no other wire, closing ${closing} off from the rest`;
+  }
   const verb =
     p.loop && p.seal
       ? "close a loop through or seal off"
       : p.loop
         ? "close a loop through"
         : "seal off";
-  if (p.only !== null) {
-    const trap = phrase`would ${verb} ${striped} pointing ${dirWords(p.only)}`;
-    return fit ? phrase`must fit ${fit}, and ${trap}` : trap;
+  return phrase`would ${verb} ${mark.the("stripes", CELL, p.striped, "square")}${wraps}`;
+}
+
+/**
+ * A whole premise and conclusion about `subject`. The turning that loops or
+ * seals comes first ("Lying across, this straight would …"), so it cannot be
+ * read as describing the striped squares after it.
+ */
+function sentence(
+  subject: Narration,
+  p: Premises,
+  which: Which,
+  conclusion: Narration,
+): Narration {
+  const fit = fitted(p);
+  if (!p.loop && !p.seal)
+    return phrase`${subject.capitalized()} must fit ${fit ?? ""}, ${conclusion}`;
+  const trap = trapped(p);
+  if (fit === null) {
+    const lead = p.only !== null ? lying(p.only) : `pointing ${which.pointing}`;
+    const Lead = lead.charAt(0).toUpperCase() + lead.slice(1);
+    return phrase`${Lead}, ${subject} ${trap}, ${conclusion}`;
   }
-  return fit
-    ? phrase`must fit ${fit}, and ${which.fitting} would ${verb} ${striped}`
-    : phrase`would ${verb} ${striped} pointing ${which.pointing}`;
+  return p.only !== null
+    ? phrase`${subject.capitalized()} must fit ${fit}, and, ${lying(p.only)}, it ${trap}, ${conclusion}`
+    : phrase`${subject.capitalized()} must fit ${fit}, and ${which.fitting} ${trap}, ${conclusion}`;
 }
 
 const OTHER_WAYS: Which = {
@@ -145,11 +211,21 @@ const OTHER_WAYS: Which = {
 export const say = {
   /** The first leg of a lock the tile must turn for. */
   turn: (tile: Point, wires: number, p: Premises): Narration =>
-    phrase`${mark.this("ring", CELL, [tile], pieceName(wires)).capitalized()} ${premise(p, OTHER_WAYS)}, so only one way fits: turn it.`,
+    sentence(
+      mark.this("ring", CELL, [tile], pieceName(wires)),
+      p,
+      OTHER_WAYS,
+      phrase`so only one way fits: turn it.`,
+    ),
 
   /** A lock whose tile already shows its one way. */
   lock: (tile: Point, wires: number, p: Premises): Narration =>
-    phrase`${mark.this("ring", CELL, [tile], pieceName(wires)).capitalized()} ${premise(p, OTHER_WAYS)}, so it must stay as it is: lock it.`,
+    sentence(
+      mark.this("ring", CELL, [tile], pieceName(wires)),
+      p,
+      OTHER_WAYS,
+      phrase`so it must stay ${staying(wires)}: lock it.`,
+    ),
 
   /** The lock after the turn. */
   thenLock: (tile: Point, wires: number): Narration =>
@@ -164,11 +240,21 @@ export const say = {
     facing: number,
     p: Premises,
   ): Narration => {
-    const subject = mark.the("outline", CELL, [tile], pieceName(wires)).capitalized();
+    const subject = mark.the("outline", CELL, [tile], pieceName(wires));
     const where = mark.this("ring", SIDE, [side], "side");
     const d = dirWords(facing);
     return side.note === NOTE_WIRE
-      ? phrase`${subject} ${premise(p, { pointing: `any way but ${d}`, fitting: `any way that fits but ${d}` })}, so it must point ${d}: note a wire across ${where}.`
-      : phrase`${subject} ${premise(p, { pointing: d, fitting: `any way that fits and points ${d}` })}, so it can never point ${d}: note no wire across ${where}.`;
+      ? sentence(
+          subject,
+          p,
+          { pointing: `any way but ${d}`, fitting: `any way that fits but ${d}` },
+          phrase`so it must point ${d}: note a wire across ${where}.`,
+        )
+      : sentence(
+          subject,
+          p,
+          { pointing: d, fitting: `any way that fits and points ${d}` },
+          phrase`so it can never point ${d}: note no wire across ${where}.`,
+        );
   },
 };

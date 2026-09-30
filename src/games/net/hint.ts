@@ -14,7 +14,18 @@ import type {
 import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import type { TargetVerbs } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
-import { anticlockwise, clockwise, D, opposite, R } from "../../engine/wires.ts";
+import {
+  anticlockwise,
+  clockwise,
+  D,
+  dirX,
+  dirY,
+  L,
+  opposite,
+  R,
+  U,
+  wireCount,
+} from "../../engine/wires.ts";
 import { Facts, nextStep, record, type Step } from "./deduce.ts";
 import { type Premises, type SideMark, say } from "./hint-text.ts";
 import { findMistakes } from "./mistakes.ts";
@@ -80,6 +91,17 @@ function premisesOf(f: Facts, step: Step): Premises {
       for (const t of why.group) stripe(t);
     }
   }
+  // A striped neighbor reached by stepping off one edge and on at the other.
+  const x = step.at % f.w;
+  const y = Math.floor(step.at / f.w);
+  const acrossEdge =
+    f.s.wrapping &&
+    [R, U, L, D].some((d) => {
+      const nx = x + dirX(d);
+      const ny = y + dirY(d);
+      const off = nx < 0 || ny < 0 || nx >= f.w || ny >= f.h;
+      return off && striped.has(f.neighbor(step.at, d));
+    });
   return {
     walls: walls.size,
     notes: [...notes.values()],
@@ -87,6 +109,9 @@ function premisesOf(f: Facts, step: Step): Premises {
     loop,
     seal,
     striped: [...striped.values()],
+    deadEnds:
+      striped.size > 0 && [...striped.keys()].every((t) => wireCount(f.wires[t]) === 1),
+    acrossEdge,
     only: trapping.length === 1 ? trapping[0] : null,
   };
 }
