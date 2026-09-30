@@ -17,12 +17,13 @@ checks them best:
   which wrote it.
 - `own-the-player-facing-messages`: Pegs.
 - `draw-hint-marks-from-roles`: Rect.
+- `derive-verb-gestures-from-the-declaration`: Mosaic (claimed 2026-09-30).
 
 `declare-params-in-one-place` and `derive-the-draft-label` pull in none.
 
 ## The reserve
 
-Every other hintless game: Black Box, Cube, Flip, Mines, Mosaic, Same Game,
+Every other hintless game: Black Box, Cube, Flip, Mines, Same Game,
 Slide, Sokoban and Twiddle. No phase claims them. A game leaves the reserve
 when a framework change (open or yet to be proposed) turns out to press on it
 harder than its named game does, or when the decision point below says so.
