@@ -1333,46 +1333,6 @@ next one.
   specs and updates the fiction so no file claims unshipped behavior in the
   present tense
 
-### Requirement: A module is mocked by at most one test file
-
-No module SHALL be passed to `vi.mock` from more than one test file, and a check
-SHALL assert it across the test tree.
-
-The suite runs with `isolate: false`, so the module registry `vi.mock` writes
-into is shared per worker. Two files mocking the same module with different
-factories therefore race: whichever loads first wins, and the other silently
-receives spies it never created — assertions that stop observing anything rather
-than failing loudly. `puzzle-screen.test.ts` and `puzzle-screen-load.test.ts`
-both mocked `store/saved-games.ts` and `dialogs/alert-dialog.ts`, and whenever
-the pair landed in one worker four assertions failed as "expected to be called
-once, got 0 times" — rejecting a tree that had gated clean minutes earlier, for
-no reason but where its files were scheduled.
-
-The rule is deliberately stricter than the hazard, since two files with
-identical factories would be safe: "identical" is not a property a check can
-hold true over time, and one mocking file per module is cheap to keep. Two files
-wanting the same mock is evidence they exercise the same seam and should be one
-file.
-
-The check SHALL resolve relative specifiers against the importing file, so two
-files reaching one module by different paths still count as a collision, and
-SHALL assert how many test files it scanned and that it found any `vi.mock` at
-all, so a mis-rooted glob or a regex that stopped matching cannot report a clean
-suite.
-
-#### Scenario: Two test files mocking one module are reported
-
-- **WHEN** two test files pass the same module to `vi.mock`
-- **THEN** the check fails, naming the module and both files
-
-#### Scenario: Localizing a suspected cross-file leak
-
-- **WHEN** a test fails only in a full run and passes alone
-- **THEN** the suspected files are forced into one worker
-  (`VITEST_MAX_WORKERS=1 vitest run <a> <b>`) rather than re-run under file-order
-  shuffle, which rarely co-locates a specific pair and passed twice against this
-  defect
-
 ### Requirement: Agent-facing documentation is one AGENTS.md and no tool generates a second
 
 The repository SHALL keep agent-facing documentation (strategic context,
@@ -2082,3 +2042,49 @@ games' pages did not link what their tier names mean.
 - **WHEN** a game adds a `paramConfig` field
 - **THEN** its page lists the field with no edit to the page, and the field's
   `doc` is what the page says of it
+
+### Requirement: No test file mocks a module
+
+No test file SHALL call `vi.mock`, `vi.doMock` or `vi.hoisted`, and a check
+SHALL assert it across the test tree; a test SHALL stand in for a module's
+behavior by spying on the real export (`vi.spyOn` on the module namespace or on
+the shared object it exports) and restoring it after each test.
+
+The suite runs with `isolate: false`, so each worker keeps one module graph from
+file to file. `vi.mock` changes what the module registry hands to imports
+evaluated after it and does not reach a module the graph already holds, so a
+mocked test depends on no earlier file in its worker having loaded anything
+between the test and the mocked module, which no file can arrange. That failed
+twice: two files mocking `store/saved-games.ts` got each other's spies, and
+`puzzle-screen.test.ts` lost its dialog mocks to either file that imports
+`screens/puzzle-screen.ts` unmocked, failing eight tests and leaving one waiting
+on a real modal until the suite's hour-long timeout. Vitest compiles an import
+into a property read on the exporting module's namespace at call time, so a spy
+reaches every importer however early it loaded, and restoring it gives the next
+file in the worker the real function back.
+
+The check SHALL assert how many test files it scanned, that it scanned the
+`vite-plugins/` tests as well as `src/`, and that its pattern matches known
+mock calls and not a spy, so a mis-rooted glob or a pattern that stopped
+matching cannot report a clean suite.
+
+#### Scenario: A test file that mocks a module is reported
+
+- **WHEN** any test file calls `vi.mock`, `vi.doMock` or `vi.hoisted`
+- **THEN** the check fails, naming the file
+
+#### Scenario: A spied test passes in either file order
+
+- **WHEN** a test file that spies on a module's export shares a worker with a
+  file that imported that module's importers first
+- **THEN** its spies observe the calls, and the next file in the worker calls
+  the real function
+
+#### Scenario: Localizing a suspected cross-file leak
+
+- **WHEN** a test fails only in a full run and passes alone
+- **THEN** the suspected files are forced into one worker
+  (`VITEST_MAX_WORKERS=1 vitest run <a> <b>`) and run in both orders, with
+  `--sequence.shuffle.files` under recorded seeds, because one worker still runs
+  its files in the order the sequencer picks and a pair run once can pass by
+  scheduling the victim first
