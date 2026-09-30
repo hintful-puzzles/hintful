@@ -172,9 +172,10 @@ guard for Ascent and returns the four bare-letter shortcuts to its players. It
 does **not** make the `ignoresSecondaryButton` biconditional sensitive for
 Ascent — `RIGHT_BUTTON` is a pointer button, so it still reaches the tail, and
 deleting Ascent's entire right-button arm leaves that guard green. Ascent's flag
-is correct nonetheless, verified by reading the two arms rather than by probing:
-a right-click cycles a two-candidate cell and a middle-click clears, so Ascent
-has a genuine secondary meaning and correctly does not declare the flag.
+is correct nonetheless, verified by reading the arm rather than by probing: a
+right-click cycles a two-candidate cell and otherwise clears a number or the line
+through a cell, so Ascent has a genuine secondary meaning and correctly does not
+declare the flag.
 
 #### Scenario: A key that is not a pointer button is declined
 

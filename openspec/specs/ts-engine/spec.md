@@ -1285,45 +1285,6 @@ it.
 - **WHEN** a reference item is spotlighted and the player presses Escape (panel open or closed)
 - **THEN** the spotlight is cleared — and if the panel is open its item is deselected and it stays open
 
-### Requirement: The midend hides the stylus modifier from games that do not want it
-
-The midend SHALL strip `MOD_STYLUS` from the button before calling
-`Game.interpretMove`, unless the game sets `wantsStylusModifier`. A press, drag
-or release from a finger or a pen therefore reaches an ordinary game as the plain
-button code, and a game that tests `button === LEFT_BUTTON` works on touch
-without having to strip anything.
-
-This is a deliberate divergence from upstream, where `midend.c` hands the bit to
-`interpret_move` and each game is expected to strip it. That contract is a
-footgun: comparing the raw button is the obvious thing to write, it reads
-correctly, and it fails silently — and only on a device no test suite exercises.
-It caught nine of this collection's first thirty-two ports (Flip, Galaxies, Pegs,
-Blackbox, Dominosa, Guess, Signpost, Untangle, Inertia), each of which shipped
-completely deaf to touch. Inverting the default makes the dangerous case the one a
-game has to ask for.
-
-A game whose touch behavior genuinely differs SHALL set `wantsStylusModifier`
-and handle the bit itself. **Pattern and Loopy** are those games: neither has a
-right button available to a finger, so a touch press cycles a cell (Pattern) or
-an edge (Loopy) through its states rather than simply filling it.
-
-*This requirement previously said "Pattern is the only such game". It was true
-when written and stopped being true when Loopy landed — nothing failed, because
-**a count in a spec is a fact that goes stale silently**. Prefer naming the
-members to counting them, and where a count is unavoidable, give it a guard.*
-
-#### Scenario: A touch press plays the game
-
-- **WHEN** a press arrives with `MOD_STYLUS` set, for a game that has not set
-  `wantsStylusModifier`
-- **THEN** the game interprets it exactly as it interprets the same press from a
-  mouse
-
-#### Scenario: A game may still ask for the stylus bit
-
-- **WHEN** a game sets `wantsStylusModifier` and a touch press arrives
-- **THEN** `interpretMove` receives the button with `MOD_STYLUS` still set
-
 ### Requirement: Touch equivalence is guarded for every registered game
 
 The test suite SHALL assert, for **every** game in the runtime registry, that a
@@ -2317,42 +2278,6 @@ examined, so that it cannot shrink in silence.
 - **THEN** the hint's marks are inset inside the cell instead, so that neither
   mark can be read as one of those objects
 
-### Requirement: Touch equivalence is guarded at gesture level, not only at press level
-
-The collection-wide touch guard SHALL cover **gestures, not only a single
-press**. A press alone is not what play consists of, and it is not what the
-frontend's traps break: a finger that stays within 8 px for 350 ms is delivered
-as `RIGHT_BUTTON` (`detectSecondaryButton`), which kills a press-and-drag gesture
-precisely when the player pauses to aim — while leaving the press itself working,
-so a press-only guard passes.
-
-The sweep SHALL therefore exercise press → drag → release sequences for every
-registered game, and SHALL fail rather than pass vacuously when no gesture probe
-reaches a live target, on the same terms as the existing press sweep.
-
-The sweep SHALL be **frontend-faithful**: it sends the drag and release only when
-the press was consumed, because `view-interactive.ts` installs `pointerTracking`
-only `if (consumed)`. A sweep that sent the drag regardless would score a game
-whose press returns `null` — the shipped Galaxies left-drag defect, where every
-drag frame was silently dropped — as healthy.
-
-A game that sets `wantsStylusModifier` SHALL NOT be skipped by the guard, but
-SHALL be asserted against the touch behavior it declares — excluding those games
-makes the two with bespoke touch handling the two that nothing checks.
-
-#### Scenario: A drag gesture is equivalent from a finger
-
-- **WHEN** a press, drag and release sequence is delivered from touch to a game
-  that handles drags
-- **THEN** the resulting board state matches the same sequence delivered from a
-  mouse
-
-#### Scenario: A game that asks for the stylus bit is still covered
-
-- **WHEN** the collection-wide input guards run
-- **THEN** a game setting `wantsStylusModifier` is not simply skipped, but is
-  asserted against the touch behavior it declares
-
 ### Requirement: A game with no secondary meaning is not given a synthetic one
 
 A game in which the secondary button means **nothing observable** SHALL declare
@@ -3248,42 +3173,6 @@ reads.
 - **WHEN** a guard's exemption ledger names a game the derivation no longer
   places in the exempt set
 - **THEN** the guard fails, naming the stale entry
-
-### Requirement: A boolean capability declaration is held to the behavior it claims
-
-The `Game` interface MAY carry a boolean capability flag **only** where a
-production consumer needs the answer synchronously and cannot observe it. Every
-such flag SHALL be asserted equal to a derivation of the fact it declares, so a
-flag that is forgotten, left behind by a changed game, or simply wrong fails a
-test rather than going unnoticed.
-
-The three flags the contract carries SHALL be held as follows:
-
-- `ignoresSecondaryButton` SHALL be set if and only if the game consumes no
-  `RIGHT_BUTTON` press anywhere on its board.
-- `canMarkAll` SHALL be set if and only if the game's `interpretMove` returns a
-  move for an `M` press.
-- `wantsStylusModifier` SHALL be set if and only if the game's own code reads
-  `MOD_STYLUS`.
-
-A flag whose effect is to **disable** a guard SHALL carry such a check, because
-nothing else observes it when it lies.
-
-A source scan standing in for one of these derivations SHALL read the game's
-code with comments removed: a mention in prose is not a use.
-
-#### Scenario: A flag declared without the behavior fails
-
-- **WHEN** a game sets `wantsStylusModifier` but its code never reads
-  `MOD_STYLUS`
-- **THEN** the touch guard fails, reporting that the game is exempt from the
-  touch-parity sweep for nothing
-
-#### Scenario: A game documenting the absence of a behavior is not convicted
-
-- **WHEN** a game's source mentions `MOD_STYLUS` only in a comment explaining
-  that it deliberately has no stylus branch
-- **THEN** the guard does not treat that mention as a read
 
 ### Requirement: The engine catalog names every shared helper there is
 
@@ -7600,3 +7489,48 @@ A cross-game guard SHALL hold the declaration to the behavior: for every declari
 
 - **WHEN** a declaring game has a verb reached only by keys
 - **THEN** each of its keys reaches some board from a primed position, or the guard fails
+
+### Requirement: A game reads one pointer with two buttons
+The frontend SHALL deliver a pointer to a game as a left button and a right button only, the same from a mouse, a finger and a pen: a click or a tap is `LEFT_BUTTON`, a right-click or a long press is `RIGHT_BUTTON`, and a drag from either is that button's drag and release. Nothing a game receives SHALL say which device pressed. A player moves between a mouse and a finger without learning a game twice, and a player who has only one of them reaches everything the other does.
+
+So three things upstream offered SHALL NOT exist in the engine's vocabulary:
+
+- **The middle button.** The engine SHALL NOT export middle-button codes, and the frontend SHALL drop a middle-button press. Many touchpads cannot send one and a finger has nothing like it.
+- **A key held with a press.** The frontend SHALL send a pointer press, drag and release with no modifier bits, and SHALL NOT turn a press into another button because a key is held (upstream's Shift-click as middle and Ctrl-click as the other button). Modifiers on keys — Shift+arrow, Ctrl+arrow — are keyboard gestures and are unaffected.
+- **A stylus bit.** No bit SHALL mark a press as a finger's or a pen's, and `Game` SHALL carry no flag asking for one. A game therefore cannot give touch a control scheme of its own, and cannot compare a raw button that a finger's press would fail to match — the defect that once left nine ports deaf to touch.
+
+Every action a game offers SHALL be reachable with the two buttons alone, by clicks and drags, as well as from the keyboard. Where a game has more actions than buttons, the extra one goes into a mode the player turns on or onto the on-screen keypad; a clear or a reset that a button cycle already passes through needs no control of its own, and MAY keep a key as a keyboard convenience.
+
+`view-interactive.test.ts` SHALL assert this at the frontend, on the codes a game receives.
+
+#### Scenario: A tap sends what a click sends
+- **WHEN** the board is pressed and released by a mouse, a finger or a pen
+- **THEN** the game receives `LEFT_BUTTON` and `LEFT_RELEASE` in each case, with no other bits
+
+#### Scenario: A held key changes nothing
+- **WHEN** a left or right press is made with Shift, Ctrl or Command held
+- **THEN** the game receives exactly what it receives for the same press with no key held
+
+#### Scenario: The middle button does nothing
+- **WHEN** the middle mouse button is pressed on the board
+- **THEN** the game receives nothing
+
+### Requirement: A boolean capability flag is held to the behavior it claims
+The `Game` interface MAY carry a boolean capability flag **only** where a production consumer needs the answer synchronously and cannot observe it. Every such flag SHALL be asserted equal to a derivation of the fact it declares, so a flag that is forgotten, left behind by a changed game, or simply wrong fails a test rather than going unnoticed.
+
+The flags the contract carries SHALL be held as follows:
+
+- `ignoresSecondaryButton` SHALL be set if and only if the game consumes no `RIGHT_BUTTON` press anywhere on its board.
+- `canMarkAll` SHALL be set if and only if the game's `interpretMove` returns a move for an `M` press.
+
+A flag whose effect is to **disable** a guard or a frontend behavior SHALL carry such a check, because nothing else observes it when it lies.
+
+A source scan standing in for a derivation SHALL read the game's code with comments removed: a mention in prose is not a use.
+
+#### Scenario: A flag declared against the behavior fails
+- **WHEN** a game sets `ignoresSecondaryButton` but a right-button press changes its board somewhere
+- **THEN** `input-parity.test.ts` fails, naming the game
+
+#### Scenario: A flag the behavior calls for but the game omits fails
+- **WHEN** a game's `interpretMove` answers an `M` press with a move but the game does not set `canMarkAll`
+- **THEN** `mark-all.test.ts` fails, naming the game

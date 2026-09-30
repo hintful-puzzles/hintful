@@ -120,7 +120,7 @@ counts-valid plus run-valid after the placement (a solve move marks the state
 cheated and completed). Left-button / select on a non-immutable cell SHALL cycle
 empty → one → zero → empty; right-button / select2 SHALL cycle
 empty → zero → one → empty; the `1` key SHALL place one, `0`/`2` zero, and
-backspace / middle-button clear; an immutable cell SHALL be inert. A keyboard
+Backspace clear; an immutable cell SHALL be inert. A keyboard
 cursor SHALL move within the grid. A click or key that would not change the
 target cell SHALL produce no history move.
 

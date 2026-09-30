@@ -86,10 +86,9 @@ contradict each other.
 Subsets SHALL be played by toggling individual letter slots within each cell. A
 left-click or select SHALL cycle a slot unknown → known → cleared → unknown, a
 right-click or secondary select SHALL cycle unknown → cleared → known → unknown,
-and a middle-click or backspace SHALL reset a slot to unknown; a given (immutable)
-slot SHALL NOT change. A keyboard cursor SHALL navigate slots, skipping the gaps
-between cell blocks. A move SHALL be modeled as a discriminated union, not a move
-string.
+and Backspace SHALL reset a slot to unknown; a given (immutable) slot SHALL NOT
+change. A keyboard cursor SHALL navigate slots, skipping the gaps between cell
+blocks. A move SHALL be modeled as a discriminated union, not a move string.
 
 The game SHALL flag mistakes for Check & Save: a set-value placed in more than one
 cell, any edge whose horseshoe (or missing-horseshoe disjointness) relation is

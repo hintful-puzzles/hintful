@@ -25,9 +25,6 @@ Per-grid-type **minimum** sizes (both dimensions at least `amin`; at least one
 dimension at least `omin`) SHALL be enforced by Loopy, not by the geometry
 layer, which deliberately implements only maximum-size guards.
 
-Loopy SHALL declare that it uses the stylus modifier, because its input handling
-genuinely distinguishes stylus from mouse (see the input requirement).
-
 #### Scenario: Every grid type produces a playable board
 
 - **WHEN** a new game is generated for any of the 18 grid types at a legal size
@@ -116,13 +113,12 @@ leave a small residue that no tie-break reaches, and walk plus aim SHALL reach
 every edge of that one, with the residue pinned so it cannot grow.
 
 Outside notes mode, Enter and Space SHALL be the left and right pointer buttons on
-the chosen edge, and the erase key the middle one; the keyboard has all three and
-needs no three-state cycle, which remains a touch affordance. In notes mode they
-note corners and pairs instead, as "Loopy notes corners and pairs" describes. A
-select SHALL NOT move the cursor — it is already at the far end of the edge it
-walked — so a loop is traced with one arrow and one Enter per edge, and walking back
-over a drawn edge and pressing Enter again undraws it. A pointer press SHALL hide
-the cursor; Escape SHALL hide it too.
+the chosen edge, and the erase key SHALL clear it. In notes mode they note corners
+and pairs instead, as "Loopy notes corners and pairs" describes. A select SHALL NOT
+move the cursor — it is already at the far end of the edge it walked — so a loop is
+traced with one arrow and one Enter per edge, and walking back over a drawn edge and
+pressing Enter again undraws it. A pointer press SHALL hide the cursor; Escape SHALL
+hide it too.
 
 The keyboard SHALL reach an edge through the same code path a click uses, so that
 the auto-follow preference — which extends a click along a forced path of edges —
@@ -179,17 +175,16 @@ it; `loopy-keyboard.test.ts` guards it instead.
 
 ### Requirement: Loopy pointer and keyboard input, and rendering
 
-Loopy SHALL be played with mouse, stylus, touch or keyboard. A pointer reaches
-an edge by nearest-edge hit testing; the keyboard reaches one through the
-cursor described in "Loopy is playable from the keyboard alone"; both then set
-it through the same code. A click SHALL set an edge to an absolute state rather
-than toggling relative to an unknown one, so that replaying a move is
-idempotent.
+Loopy SHALL be played with mouse, touch or keyboard. A pointer reaches an edge by
+nearest-edge hit testing; the keyboard reaches one through the cursor described in
+"Loopy is playable from the keyboard alone"; both then set it through the same
+code. A click SHALL set an edge to an absolute state rather than toggling relative
+to an unknown one, so that replaying a move is idempotent.
 
-Outside notes mode, with a mouse, each button SHALL cycle between its own line state
-and unknown. With a stylus, each button SHALL cycle through all three states, so that
-a single tap can reach every state without a second button. In notes mode a press
-notes corners and pairs instead, as "Loopy notes corners and pairs" describes.
+Outside notes mode, the left button (a tap) SHALL set an undecided edge to a line
+and the right button (a long press) to a cross, and either SHALL return a decided
+edge to unknown; a finger and a mouse behave the same. In notes mode a press notes
+corners and pairs instead, as "Loopy notes corners and pairs" describes.
 
 Loopy SHALL provide an auto-follow preference (off / grid-only / grid-and-state)
 which extends a click along a forced path of edges, and a preference for drawing
@@ -210,7 +205,8 @@ recomputed when it changes.
 #### Scenario: A keyboard select sets the chosen edge
 
 - **WHEN** Enter, Space or the erase key is pressed with an edge chosen
-- **THEN** that edge changes exactly as a left, right or middle click on it would
+- **THEN** that edge changes exactly as a left or right click on it would, and the
+  erase key returns it to unknown
 
 #### Scenario: Completing a single loop wins
 
@@ -391,8 +387,8 @@ angles is meant read off the face the corner belongs to. A drag from one edge to
 another SHALL cycle their pair, whatever button class the drag and release arrive as,
 and a release off the board SHALL note nothing. The left button SHALL cycle a corner
 through none, at least one, at most one and exactly one, and a pair through none,
-match and opposites; the right button, and a held finger, the other way; the middle
-button SHALL clear.
+match and opposites; the right button, and a held finger, the other way. Each cycle
+passes through none, so the pointer clears a note by cycling it.
 
 From the keyboard in notes mode, Enter SHALL cycle the corner that follows the chosen
 edge in the cursor dot's edge order, outlined in the cursor color while the mode is
