@@ -35,9 +35,6 @@ import {
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
-  MIDDLE_BUTTON,
-  MIDDLE_DRAG,
-  MIDDLE_RELEASE,
   newCursor,
 } from "../../engine/pointer.ts";
 import {
@@ -194,16 +191,23 @@ function openAt(s: MinesState, { x, y }: Point, ui: MinesUi): MinesMove | null {
   return { type: "ops", ops: [{ op: "O", x, y }] };
 }
 
+/** Whether `{ x, y }` is a number with exactly its count of flags around it,
+ * the only square a chord acts on. */
+function chordReady(s: MinesState, x: number, y: number): boolean {
+  const v = s.grid[y * s.w + x];
+  if (v <= 0) return false;
+  const flags = around(s.w, s.h, x, y).filter((q) => s.grid[q.y * s.w + q.x] === FLAG);
+  return flags.length === v;
+}
+
 /** Chord the number at `{ x, y }` (upstream `goto uncover`, mines.c:2682): if
  * its flags match its count, open every covered neighbor (`C`) — unless one of
  * them is really a mine (a misplaced flag), in which case reveal *only* those
  * mines and count a death. */
 function chordAt(s: MinesState, { x, y }: Point, ui: MinesUi): MinesMove | null {
   const { w, h } = s;
-  if (s.grid[y * w + x] <= 0) return null;
+  if (!chordReady(s, x, y)) return null;
   const near = around(w, h, x, y);
-  const flags = near.filter((q) => s.grid[q.y * w + q.x] === FLAG).length;
-  if (flags !== s.grid[y * w + x]) return null;
   const ops: MineOp[] = near
     .filter((q) => s.grid[q.y * w + q.x] !== FLAG && s.layout.mines?.[q.y * w + q.x])
     .map((q) => ({ op: "O", x: q.x, y: q.y }));
@@ -232,12 +236,6 @@ const targetVerbs: TargetVerbs<MinesState, MinesUi, MinesDrawState, Point, Mines
           ? null
           : { type: "ops", ops: [{ op: "F", x, y }] };
       },
-    },
-    middle: {
-      does:
-        "open only the squares around it, never the square itself; while you " +
-        "hold the button down it shows the squares it would open",
-      apply: chordAt,
     },
   };
 
@@ -375,36 +373,28 @@ export const minesGame: Game<
     const cx = fromCoord(p.x, tileSize, border);
     const cy = fromCoord(p.y, tileSize, border);
 
-    // The left and middle buttons depress on the press and act on the release,
-    // through the same verbs Enter and the right button reach via the model.
-    if (
-      button === LEFT_BUTTON ||
-      button === LEFT_DRAG ||
-      button === MIDDLE_BUTTON ||
-      button === MIDDLE_DRAG
-    ) {
+    // The left button depresses on the press and acts on the release, through
+    // the same verbs Enter reaches via the model.
+    if (button === LEFT_BUTTON || button === LEFT_DRAG) {
       if (cx < 0 || cx >= w || cy < 0 || cy >= h) return null;
       // A press moves the highlight, whose *radius* previews a chord: 1 lights
-      // the 3×3 around a number, 0 only the pressed cell. A plain LEFT press on
-      // a number shows no preview: pressed cells render like opened ones, so on
-      // an unsatisfied number it flashed a false "uncover" that reverted on
-      // release. Upstream shows none for a left-click either; the deliberate
-      // chord gesture (middle button / Shift+left) keeps the 3×3 preview.
+      // the 3×3 around a number, 0 only the pressed cell. Pressed cells render
+      // like opened ones, so the 3×3 shows only where the release will chord —
+      // a number with all its flags — and never flashes a false "uncover" that
+      // reverts on release.
       const onNumber = s.grid[cy * w + cx] >= 0;
-      const isMiddle = button === MIDDLE_BUTTON || button === MIDDLE_DRAG;
-      ui.hx = cx;
-      ui.hy = cy;
-      ui.hradius = isMiddle && onNumber ? 1 : 0;
       // validradius records chord-vs-open intent, preview or no preview: the
       // release chords a number (1) and opens a covered square (0).
       if (button === LEFT_BUTTON) ui.validradius = onNumber ? 1 : 0;
-      else if (button === MIDDLE_BUTTON) ui.validradius = 1;
+      ui.hx = cx;
+      ui.hy = cy;
+      ui.hradius = ui.validradius === 1 && chordReady(s, cx, cy) ? 1 : 0;
       targetVerbs.geometry.parkCursor(ui, { x: cx, y: cy });
       ui.cursor.visible = false;
       return UI_UPDATE;
     }
 
-    if (button === LEFT_RELEASE || button === MIDDLE_RELEASE) {
+    if (button === LEFT_RELEASE) {
       ui.hx = ui.hy = -1;
       ui.hradius = 0;
       // Past this point we have adjusted the ui, so never return null.

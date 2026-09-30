@@ -19,7 +19,7 @@ import ts from "typescript";
  * documenting its absence.
  *
  * Stripping beats a narrower marker, because narrowing the key is the error:
- * `& MOD_STYLUS` misses a game that writes the test across two lines. Key on the
+ * `& MOD_SHFT` misses a game that writes the test across two lines. Key on the
  * name, take the superset, and remove the one context in which a name is not a
  * use. `transpileModule` is the cheap way to drop comments without mangling a
  * string that contains `//`; at ~5 ms per file a whole-collection scan pays

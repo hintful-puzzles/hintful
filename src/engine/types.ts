@@ -193,15 +193,13 @@ export type ChangeNotification =
 export type GameStatus = NotifyGameStateChange["status"];
 
 export enum PuzzleButton {
+  // The middle button's codes (0x0201, 0x0204, 0x0207) are left unused.
   LEFT_BUTTON = 0x0200,
-  MIDDLE_BUTTON,
-  RIGHT_BUTTON,
+  RIGHT_BUTTON = 0x0202,
   LEFT_DRAG,
-  MIDDLE_DRAG,
-  RIGHT_DRAG,
+  RIGHT_DRAG = 0x0205,
   LEFT_RELEASE,
-  MIDDLE_RELEASE,
-  RIGHT_RELEASE,
+  RIGHT_RELEASE = 0x0208,
   CURSOR_UP,
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -220,11 +218,10 @@ export enum PuzzleButton {
   /* Not upstream's: toggles a game's pencil mode (pointer.ts). */
   PENCIL_MODE,
 
-  MOD_STYLUS = 0x0800,
   MOD_CTRL = 0x1000,
   MOD_SHFT = 0x2000,
   MOD_NUM_KEYPAD = 0x4000,
-  MOD_MASK = 0x7800 /* mask for all modifiers */,
+  MOD_MASK = 0x7000 /* mask for all modifiers */,
 }
 
 /**

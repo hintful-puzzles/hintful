@@ -23,7 +23,6 @@ import {
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
-  MOD_STYLUS,
   RIGHT_BUTTON,
   RIGHT_DRAG,
   RIGHT_RELEASE,
@@ -643,11 +642,11 @@ describe("slide input", () => {
     // RIGHT_BUTTON, which is exactly "press, pause to aim, then drag" — the
     // gesture Slide is entirely built from (docs/games/input.md § "A touch hold arrives as the right button").
     const { s, ui } = scenario();
-    expect(pointer(s, ui, at(3, 1), RIGHT_BUTTON | MOD_STYLUS)).toBe(UI_UPDATE);
+    expect(pointer(s, ui, at(3, 1), RIGHT_BUTTON)).toBe(UI_UPDATE);
     expect(ui.grabbed).toBe(true);
-    pointer(s, ui, at(4, 3), RIGHT_DRAG | MOD_STYLUS);
+    pointer(s, ui, at(4, 3), RIGHT_DRAG);
     expect(ui.grabCurrpos).toBe(idx(4, 3));
-    expect(pointer(s, ui, at(4, 3), RIGHT_RELEASE | MOD_STYLUS)).toEqual({
+    expect(pointer(s, ui, at(4, 3), RIGHT_RELEASE)).toEqual({
       kind: "move",
       from: idx(3, 1),
       to: idx(4, 3),
@@ -886,7 +885,7 @@ describe("slide keyboard control", () => {
   it("passes cursor and cancel keys through untouched by the right→left fold", () => {
     const { s, ui } = scenario();
     // A touch gesture is in flight — the state that installs the fold.
-    pointer(s, ui, at(3, 1), RIGHT_BUTTON | MOD_STYLUS);
+    pointer(s, ui, at(3, 1), RIGHT_BUTTON);
     expect(ui.grabbed).toBe(true);
 
     // The keyboard still does exactly what it does with no gesture in flight.

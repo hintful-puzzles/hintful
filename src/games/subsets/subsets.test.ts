@@ -16,7 +16,6 @@ import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
   LEFT_BUTTON,
-  MIDDLE_BUTTON,
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -357,7 +356,7 @@ describe("subsets input", () => {
     expect(m3).toEqual({ kind: "set", type: "unknown", pos: i, bit: 0 });
   });
 
-  it("right-click cycles the other way; middle resets to unknown", () => {
+  it("right-click cycles the other way, back round to unknown", () => {
     let state = newState(PARAMS, FIX.desc);
     const i = state.immutable.indexOf(0);
     const c = slotCenter(i % 4, Math.floor(i / 4), 1, 1);
@@ -371,7 +370,7 @@ describe("subsets input", () => {
     expect(m2).toEqual({ kind: "set", type: "known", pos: i, bit: 3 });
     state = subsetsGame.executeMove(state, m2 as SubsetsMove);
 
-    const m3 = press(state, ui, MIDDLE_BUTTON, c.x, c.y);
+    const m3 = press(state, ui, RIGHT_BUTTON, c.x, c.y);
     expect(m3).toEqual({ kind: "set", type: "unknown", pos: i, bit: 3 });
   });
 

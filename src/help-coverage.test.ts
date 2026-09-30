@@ -366,10 +366,6 @@ const CAPABILITY_COVERAGE: Record<string, Coverage> = {
   statusbarText: { kind: "upstream", why: "the status line" },
 
   // --- no player-visible surface of their own ---
-  wantsStylusModifier: {
-    kind: "internal",
-    why: "how a press is read, not a control; the effect is the game's own",
-  },
   supersededDesc: { kind: "internal", why: "how a save rebuilds a board that moved" },
   changedState: { kind: "internal", why: "a game's own bookkeeping across a move" },
   hintKeepTrack: { kind: "internal", why: "how a plan survives the player's own move" },

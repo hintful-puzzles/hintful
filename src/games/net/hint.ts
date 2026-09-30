@@ -131,14 +131,15 @@ function verbMove(
   at: Point,
   ui: NetUi,
 ): NetMove {
+  const [halfTurn, lock] = verbs.keyOnly ?? [];
   const verb =
     op === "A"
       ? verbs.primary
       : op === "C"
         ? verbs.secondary
         : op === "L"
-          ? verbs.middle
-          : verbs.keyOnly?.[0];
+          ? lock
+          : halfTurn;
   const m: NetMove | UiUpdate | null = verb?.apply(s, at, ui) ?? null;
   if (m === null || typeof m !== "object")
     throw new Error(`net hint: the ${op} verb makes no move at ${at.x},${at.y}`);

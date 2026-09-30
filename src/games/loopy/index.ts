@@ -12,8 +12,8 @@
  * or aims at one without moving (Shift+arrow) — `cursor.ts`. Both then go
  * through {@link setEdge}, so a keyboard selection *is* the click on that edge,
  * autofollow included, rather than a second input model beside it. Left / Enter
- * cycles an edge towards YES, right / Space towards NO, middle / Backspace
- * clears. Loopy genuinely reads `MOD_STYLUS` — see {@link nextLineState}.
+ * toggles an edge's YES, right / Space its NO, and Backspace clears it — see
+ * {@link nextLineState}.
  *
  * **Notes mode** (`ui.pencilMode`, toggled by the collection's Marks key, which
  * the app's P shortcut also sends) turns the same inputs onto the player's corner
@@ -54,9 +54,7 @@ import {
   isMouseDrag,
   isMouseRelease,
   LEFT_BUTTON,
-  MIDDLE_BUTTON,
   MOD_SHFT,
-  MOD_STYLUS,
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
   stripModifiers,
@@ -261,31 +259,18 @@ const prefs: GamePref<LoopyUi>[] = [
  * What clicking `button` does to an edge currently in state `old`, or `null`
  * when the button does nothing here.
  *
- * With a mouse each button is a **2-state toggle** between its own state and
- * UNKNOWN: left flips YES on and off, right flips NO on and off, middle always
- * clears. With a **stylus** there is no right button to reach the other state
- * with, so each button becomes a **3-cycle** and a single tap can reach every
- * state — left goes `UNKNOWN → YES → NO → UNKNOWN`, right goes
- * `UNKNOWN → NO → YES → UNKNOWN`. Those are the two deliberate `switch`
- * fallthroughs in upstream's `interpret_move`, which read as a bug to anyone
- * not thinking of stylus mode.
+ * Each button sets its own state on an undecided edge and clears a decided
+ * one: left (a tap) sets YES, right (a long press) sets NO, and an erase key
+ * always clears. A finger reaches both states as a mouse does,
+ * so upstream's stylus 3-cycles are not kept.
  */
-export function nextLineState(
-  button: number,
-  old: number,
-  stylus: boolean,
-): LineState | null {
+export function nextLineState(button: number, old: number): LineState | null {
+  if (isEraseKey(button)) return LINE_UNKNOWN;
   switch (button) {
     case LEFT_BUTTON:
-      if (old === LINE_UNKNOWN) return LINE_YES;
-      if (old === LINE_YES) return stylus ? LINE_NO : LINE_UNKNOWN;
-      return LINE_UNKNOWN; // old === LINE_NO
-    case MIDDLE_BUTTON:
-      return LINE_UNKNOWN;
+      return old === LINE_UNKNOWN ? LINE_YES : LINE_UNKNOWN;
     case RIGHT_BUTTON:
-      if (old === LINE_UNKNOWN) return LINE_NO;
-      if (old === LINE_NO) return stylus ? LINE_YES : LINE_UNKNOWN;
-      return LINE_UNKNOWN; // old === LINE_YES
+      return old === LINE_UNKNOWN ? LINE_NO : LINE_UNKNOWN;
     default:
       return null;
   }
@@ -362,9 +347,8 @@ function setEdge(
   ui: LoopyUi,
   e: GridEdge,
   button: number,
-  stylus: boolean,
 ): LoopyMove | null {
-  const newLine = nextLineState(button, state.lines[e.index], stylus);
+  const newLine = nextLineState(button, state.lines[e.index]);
   if (newLine === null) return null;
 
   const edges =
@@ -397,14 +381,12 @@ function edgeAt(g: Grid, tileSize: number, p: Point): GridEdge | null {
   return gridNearestEdge(g, gx, gy);
 }
 
-/** The pointer button a select key stands for: Enter is the left button, Space
- * the right, Backspace/Delete the middle. The keyboard has all three, so it
- * mirrors the mouse directly; the stylus's three-state cycle is a *touch*
- * affordance, for a finger with no second button. */
+/** The pointer button a select key stands for: Enter is the left button and
+ * Space the right. An erase key stands for itself. */
 function buttonForKey(button: number): number | null {
   if (button === CURSOR_SELECT) return LEFT_BUTTON;
   if (button === CURSOR_SELECT2) return RIGHT_BUTTON;
-  if (isEraseKey(button)) return MIDDLE_BUTTON;
+  if (isEraseKey(button)) return button;
   return null;
 }
 
@@ -499,7 +481,6 @@ function interpretMove(
   rawButton: number,
 ): LoopyMove | null | UiUpdate {
   const g = state.grid;
-  const stylus = (rawButton & MOD_STYLUS) !== 0;
   const shift = (rawButton & MOD_SHFT) !== 0;
   const button = stripModifiers(rawButton);
   const cursor = ui.cursor;
@@ -520,17 +501,6 @@ function interpretMove(
     ui.pin = -1;
     ui.noteDrag = { start: p, at: p, from: e?.index ?? -1, button, dragged: false };
     return UI_UPDATE;
-  }
-
-  if (isMouseDown(button) && stylus) {
-    // A finger has one button, so each tap cycles through all three states
-    // rather than the two a mouse button toggles between.
-    const hadCursor = cursor.visible;
-    cursor.visible = false;
-    const e = edgeAt(g, ds.tileSize, p);
-    if (e === null) return hadCursor ? UI_UPDATE : null;
-    geometry.parkCursor(ui, e);
-    return setEdge(state, ui, e, button, true) ?? (hadCursor ? UI_UPDATE : null);
   }
 
   if (isMouseDrag(button) || isMouseRelease(button)) {
@@ -568,7 +538,7 @@ function interpretMove(
     return noteByKey(state, ui, asButton) ?? (revealed ? UI_UPDATE : null);
   }
 
-  // Escape; the erase keys are the middle verb's, below.
+  // Escape; the erase keys are the clearing verb's, below.
   if (isCancelKey(button) && !isEraseKey(button)) {
     if (ui.pin >= 0) {
       ui.pin = -1;
@@ -612,7 +582,7 @@ const geometry: TargetGeometry<LoopyState, LoopyUi, LoopyDrawState, GridEdge> = 
 };
 
 const lineVerb = (button: number) => (s: LoopyState, e: GridEdge, ui: LoopyUi) =>
-  setEdge(s, ui, e, button, false);
+  setEdge(s, ui, e, button);
 
 const targetVerbs: TargetVerbs<
   LoopyState,
@@ -634,14 +604,16 @@ const targetVerbs: TargetVerbs<
       "return it to undecided",
     apply: lineVerb(RIGHT_BUTTON),
   },
-  middle: {
-    does: "return it to undecided",
-    keys: [
-      { codes: [BACKSPACE], name: "Backspace" },
-      { codes: [DELETE], name: "Delete" },
-    ],
-    apply: lineVerb(MIDDLE_BUTTON),
-  },
+  keyOnly: [
+    {
+      does: "return the edge under the cursor to undecided",
+      keys: [
+        { codes: [BACKSPACE], name: "Backspace" },
+        { codes: [DELETE], name: "Delete" },
+      ],
+      apply: lineVerb(DELETE),
+    },
+  ],
 };
 
 /** Carry the cursor over `e` to its far dot, keeping `e` chosen (it is incident
@@ -796,8 +768,6 @@ export const loopyGame: Game<
   // True in the sense the interface means it — Loopy *has* a text format — but
   // it only covers the square tiling, so `textFormat` returns `undefined` for
   // the other seventeen (upstream's `game_can_format_as_text_now(params)`).
-  // Loopy genuinely reads the stylus bit; see `nextLineState`.
-  wantsStylusModifier: true,
 
   defaultParams,
   presets,

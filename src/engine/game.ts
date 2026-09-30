@@ -323,23 +323,6 @@ export interface Game<
    * so an inverted `REQUIRE_RBUTTON` would suppress a promotion Tracks handles.
    */
   readonly ignoresSecondaryButton?: boolean;
-  /**
-   * The game wants to know that a press came from a finger or a pen, and will
-   * handle the `MOD_STYLUS` bit itself. Defaults to false, and **should stay
-   * false unless the game genuinely gives touch its own behavior**: the midend
-   * strips `MOD_STYLUS` before `interpretMove` for every other game, so that a
-   * plain `button === LEFT_BUTTON` test cannot silently ignore every touch.
-   *
-   * A deliberate divergence from upstream, where `midend.c` hands the bit to
-   * `interpret_move` and each game must remember to strip it. Comparing the raw
-   * button is the obvious thing to write, and it fails only on a device the
-   * test suite never uses, so ports written that way shipped deaf to touch.
-   * Inverting the default makes the dangerous case the one you have to ask
-   * for. Pattern asks (it cycles a cell's state on touch, having no right
-   * button to cycle with), and so does Loopy (its stylus mode cycles line
-   * states through a dedicated 3-cycle).
-   */
-  readonly wantsStylusModifier?: boolean;
 
   /** The on-screen keypad this game wants (upstream `game_request_keys`): the
    * `{ button, label }` keys, digits/letters plus a clear key or a game's

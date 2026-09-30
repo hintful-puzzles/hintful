@@ -247,9 +247,15 @@ const rotate =
   (s: NetState, { x, y }: Point) =>
     rotateMove(s, op, x, y);
 
-// (No stylus branch: the midend strips MOD_STYLUS, so a touch tap rotates
-// anticlockwise and a long press clockwise — docs/games/input.md § "Touch is
-// stripped for you".)
+/** How far into a tile, as a fraction of its side, a notes-mode tap must land
+ * to lock the tile rather than note its nearest side: the middle third. */
+const LOCK_ZONE = 1 / 3;
+
+/** Lock or unlock a square. Its pointer route is notes mode's: a tap in the
+ * middle of the square (`noteInput`). */
+const lockMove = (_s: NetState, { x, y }: Point): NetMove => ({ type: "lock", x, y });
+
+// A tap rotates anticlockwise and a long press clockwise, as the two buttons do.
 const targetVerbs: TargetVerbs<NetState, NetUi, NetDrawState, Point, NetMove> = {
   geometry,
   primary: {
@@ -262,18 +268,19 @@ const targetVerbs: TargetVerbs<NetState, NetUi, NetDrawState, Point, NetMove> = 
     keys: [{ codes: [0x64, 0x44], name: "D" }],
     apply: rotate("C"),
   },
-  middle: {
-    does:
-      "lock it once you think it is correct, so you don't rotate it by accident, " +
-      "or unlock it again",
-    keys: [{ codes: [0x73, 0x53], name: "S" }],
-    apply: (_s, { x, y }) => ({ type: "lock", x, y }),
-  },
+  // The hint takes these two by position (`verbMove`).
   keyOnly: [
     {
       does: "rotate the square under the cursor half a turn",
       keys: [{ codes: [0x66, 0x46], name: "F" }],
       apply: rotate("F"),
+    },
+    {
+      does:
+        "lock the square under the cursor once you think it is correct, so you " +
+        "don't rotate it by accident, or unlock it again",
+      keys: [{ codes: [0x73, 0x53], name: "S" }],
+      apply: lockMove,
     },
   ],
 };
@@ -313,6 +320,10 @@ function directionTo(s: NetState, a: Point, b: Point): number | null {
  * tile it lands nearest (the left button a wire across it, the right button
  * none), and from the keyboard a select picks a tile, and a select on a
  * neighbor then notes the side between them (Enter a wire, Space none).
+ *
+ * A tap in the middle third of a tile, nearer none of its sides, locks or
+ * unlocks it with either button. A lock is the player's other mark, and
+ * outside notes mode both buttons rotate, so this is where a finger reaches it.
  */
 function noteInput(
   s: NetState,
@@ -328,6 +339,7 @@ function noteInput(
     ui.cursor.visible = false;
     ui.pin = null;
     const nearest = [t.fx, 1 - t.fx, t.fy, 1 - t.fy];
+    if (!t.onGutter && Math.min(...nearest) >= LOCK_ZONE) return lockMove(s, t);
     const dir = [L, R, U, D][nearest.indexOf(Math.min(...nearest))];
     const note = button === LEFT_BUTTON ? NOTE_WIRE : NOTE_NONE;
     return toggleNote(s, t.x, t.y, dir, note) ?? (hid ? UI_UPDATE : null);

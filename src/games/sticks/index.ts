@@ -7,8 +7,8 @@
  * Input is the upstream drag machine: press then drag along an axis to draw
  * that orientation across the cells passed (starting on a matching line
  * turns the drag into a clearing drag); a plain left click cycles
- * blank→vertical→horizontal→blank and a right click cycles the other way;
- * middle-drag clears; a keyboard cursor places lines with Enter/Space/
+ * blank→vertical→horizontal→blank and a right click cycles the other way; a
+ * keyboard cursor places lines with Enter/Space/
  * 0/1/2/backspace and draws across two cells with Shift/Ctrl+arrows.
  * Violated clue numbers red live (upstream behavior); Check & Save
  * additionally flags lines contradicting the unique solution
@@ -43,7 +43,6 @@ import {
   isMouseRelease,
   LEFT_BUTTON,
   LEFT_RELEASE,
-  MIDDLE_BUTTON,
   MOD_CTRL,
   MOD_SHFT,
   newCursor,
@@ -230,25 +229,7 @@ function interpretMove(
     return UI_UPDATE;
   }
 
-  // --- begin a clearing drag (middle button) -------------------------------
-  if (button === MIDDLE_BUTTON) {
-    const hx = fromC(p.x);
-    const hy = fromC(p.y);
-    ui.drag = [];
-    ui.dragMove = [];
-    ui.dragType = "clear";
-    // C reads the grid unchecked here (out of bounds is UB); bounds-check.
-    if (hx >= 0 && hx < w && hy >= 0 && hy < h) {
-      const i = hy * w + hx;
-      if (grid[i] & (F_HOR | F_VER)) {
-        ui.drag.push(i);
-        ui.dragMove.push(0);
-      }
-    }
-    return UI_UPDATE;
-  }
-
-  // --- perform a clearing drag ---------------------------------------------
+  // --- perform a clearing drag (one that started along a matching line) ----
   if (isMouseDrag(button) && ui.dragType === "clear") {
     const hx = fromC(p.x);
     const hy = fromC(p.y);

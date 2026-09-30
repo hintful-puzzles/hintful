@@ -301,8 +301,8 @@ export function dragLink(
 
 /** Apply an in-progress drag's effect to cell `(x, y)`, for the live preview,
  * the error feedback and the move a release makes. `dragButton` is the left or
- * the right button. Upstream's stylus branches are absent: the pointer model
- * delivers no `MOD_STYLUS`. */
+ * the right button. Upstream's stylus branches are absent: a tap reaches the
+ * game as the left button and a long press as the right. */
 export function dragXform(
   ui: TentsUi,
   state: Pick<TentsState, "w" | "grid" | "links">,

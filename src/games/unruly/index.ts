@@ -109,11 +109,13 @@ const targetVerbs: TargetVerbs<
     does: "turn it white",
     apply: place((c) => (c === EMPTY ? ZERO : c === ZERO ? ONE : EMPTY)),
   },
-  middle: {
-    does: "empty it",
-    keys: [{ codes: [BACKSPACE, DELETE], name: "Backspace or Delete" }],
-    apply: place(EMPTY),
-  },
+  keyOnly: [
+    {
+      does: "empty the square under the cursor",
+      keys: [{ codes: [BACKSPACE, DELETE], name: "Backspace or Delete" }],
+      apply: place(EMPTY),
+    },
+  ],
 };
 
 function interpretMove(

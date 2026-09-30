@@ -7,14 +7,14 @@ import type { Point } from "./types.ts";
 
 // --- button codes (matching PuzzleButton values) -------------------
 
+// Two buttons and no middle one: a finger has a tap and a long press, and a
+// mouse the two buttons, so these are all a game can ask of both. Upstream's
+// middle-button codes (0x0201, 0x0204, 0x0207) are left unused, not reused.
 export const LEFT_BUTTON = 0x0200;
-export const MIDDLE_BUTTON = 0x0201;
 export const RIGHT_BUTTON = 0x0202;
 export const LEFT_DRAG = 0x0203;
-export const MIDDLE_DRAG = 0x0204;
 export const RIGHT_DRAG = 0x0205;
 export const LEFT_RELEASE = 0x0206;
-export const MIDDLE_RELEASE = 0x0207;
 export const RIGHT_RELEASE = 0x0208;
 export const CURSOR_UP = 0x0209;
 export const CURSOR_DOWN = 0x020a;
@@ -30,23 +30,21 @@ export const PENCIL_MODE_BUTTON = 0x0216;
 
 // --- mouse button class predicates (upstream IS_MOUSE_* macros) ----
 
-// LEFT/MIDDLE/RIGHT are contiguous within each of the down/drag/release
-// triples, so upstream's `IS_MOUSE_*` macros are range checks on an already
-// modifier-stripped button.
+// Each takes an already modifier-stripped button.
 
-/** True for `LEFT_BUTTON` / `MIDDLE_BUTTON` / `RIGHT_BUTTON` (a press). */
+/** True for `LEFT_BUTTON` / `RIGHT_BUTTON` (a press). */
 export function isMouseDown(button: number): boolean {
-  return button >= LEFT_BUTTON && button <= RIGHT_BUTTON;
+  return button === LEFT_BUTTON || button === RIGHT_BUTTON;
 }
 
-/** True for `LEFT_DRAG` / `MIDDLE_DRAG` / `RIGHT_DRAG`. */
+/** True for `LEFT_DRAG` / `RIGHT_DRAG`. */
 export function isMouseDrag(button: number): boolean {
-  return button >= LEFT_DRAG && button <= RIGHT_DRAG;
+  return button === LEFT_DRAG || button === RIGHT_DRAG;
 }
 
-/** True for `LEFT_RELEASE` / `MIDDLE_RELEASE` / `RIGHT_RELEASE`. */
+/** True for `LEFT_RELEASE` / `RIGHT_RELEASE`. */
 export function isMouseRelease(button: number): boolean {
-  return button >= LEFT_RELEASE && button <= RIGHT_RELEASE;
+  return button === LEFT_RELEASE || button === RIGHT_RELEASE;
 }
 
 // --- the erase and cancel keys -------------------------------------
@@ -119,16 +117,14 @@ export function digitOf(button: number): number | null {
 
 // --- keyboard modifier masks (upstream puzzles.h) ------------------
 
-/** Set by the frontend on a press/drag/release that came from a finger or a
- * pen. The midend strips it before `interpretMove` unless the game sets
- * `wantsStylusModifier` — see `Game.wantsStylusModifier` for why the default is
- * inverted from upstream's. */
-export const MOD_STYLUS = 0x0800;
+// These arrive on keys only. A pointer press carries none, and nothing marks
+// one as a finger's: a game sees a tap exactly as it sees a click. Upstream's
+// `MOD_STYLUS` (0x0800) is left unused, not reused.
 export const MOD_CTRL = 0x1000;
 export const MOD_SHFT = 0x2000;
 export const MOD_NUM_KEYPAD = 0x4000;
 /** All modifier bits — `button & ~MOD_MASK` recovers the base button. */
-export const MOD_MASK = 0x7800;
+export const MOD_MASK = 0x7000;
 
 /** Strip every keyboard modifier bit, returning the base button code. */
 export function stripModifiers(button: number): number {

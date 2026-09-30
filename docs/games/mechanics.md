@@ -595,7 +595,6 @@ read off a method:
 | --- | --- | --- |
 | `canMarkAll` | game handles the `M`/`m` key; shell shows the button | see "Pencil marks" |
 | `ignoresSecondaryButton` | the secondary button means nothing in this game | a touch hold then stays a left press — [input](./input.md) § "A touch hold arrives as the right button" |
-| `wantsStylusModifier` | game handles `MOD_STYLUS` itself | **keep false** unless touch has its own behavior; the midend strips the bit for everyone else — [input](./input.md) § "Touch is stripped for you" |
 
 **A param-dependent capability the static flag can't express: widen the
 return, don't add a hook.** Loopy's text format works on the square lattice

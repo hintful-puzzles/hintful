@@ -684,11 +684,10 @@ is the `ts-engine` spec, "A shared mechanic is joined by having it".
    solver" half of `NO_FLAG` and three `OPENS_ITS_OWN_REFUSAL` entries went.
 4. **Where the game must declare a flag because production needs the answer
    synchronously, hold the flag to the behavior.** The `Game` contract carries
-   exactly three boolean declarations, and each is now asserted equal to a
-   derivation rather than trusted: `ignoresSecondaryButton` iff the game
-   consumes `RIGHT_BUTTON` (`input-parity.test.ts`), `canMarkAll` iff its
-   `interpretMove` answers `M` (`mark-all.test.ts`), `wantsStylusModifier` iff
-   its code reads `MOD_STYLUS` (`touch-input.test.ts`). A flag that only turns a
+   boolean declarations, and each is asserted equal to a derivation rather
+   than trusted: `ignoresSecondaryButton` iff the game consumes `RIGHT_BUTTON`
+   (`input-parity.test.ts`), `canMarkAll` iff its `interpretMove` answers `M`
+   (`mark-all.test.ts`). A flag that only turns a
    guard *off* is the one that most needs this — nothing else notices when it
    lies.
 5. **Scan code, not text.** `membersNotMentioning` strips comments first,

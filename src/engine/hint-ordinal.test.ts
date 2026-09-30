@@ -237,7 +237,7 @@ describe("an ordered hint chain carries its order to the canvas", () => {
   // The "how many did I actually look at?" guard. Without it, a change that
   // stopped every game numbering its chains would leave this file green with
   // zero assertions run — the silent-shrink shape the probe's test-file floor
-  // and `touch-input.test.ts`'s registry count both exist to catch.
+  // exists to catch.
   it("the set of games that number a chain has not shrunk", () => {
     for (const name of [...ORDERING_GAMES].filter(inSweep)) {
       expect(sawOrdinals.has(name), `${name} no longer numbers its forcing chain`).toBe(

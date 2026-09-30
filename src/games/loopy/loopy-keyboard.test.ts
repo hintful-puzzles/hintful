@@ -35,7 +35,6 @@ import {
   CURSOR_SELECT2,
   CURSOR_UP,
   LEFT_BUTTON,
-  MIDDLE_BUTTON,
   MOD_SHFT,
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
@@ -291,7 +290,7 @@ describe("keyboard and pointer are the same move (the Slide rule)", () => {
     });
   }
 
-  it("Enter, Space and Backspace are the left, right and middle buttons", () => {
+  it("Enter and Space are the left and right buttons, and Backspace clears as they do", () => {
     const byKey = board();
     press(byKey.s, byKey.ui, byKey.ds, CURSOR_RIGHT);
     const e = byKey.s.grid.edges[byKey.ui.cursor.edge];
@@ -301,7 +300,8 @@ describe("keyboard and pointer are the same move (the Slide rule)", () => {
       [CURSOR_SELECT, LEFT_BUTTON, LINE_YES],
       [CURSOR_SELECT, LEFT_BUTTON, LINE_UNKNOWN],
       [CURSOR_SELECT2, RIGHT_BUTTON, LINE_NO],
-      [BACKSPACE, MIDDLE_BUTTON, LINE_UNKNOWN],
+      // On a NO edge, the right button clears it too.
+      [BACKSPACE, RIGHT_BUTTON, LINE_UNKNOWN],
       [CURSOR_SELECT2, RIGHT_BUTTON, LINE_NO],
       [CURSOR_SELECT2, RIGHT_BUTTON, LINE_UNKNOWN],
     ] as const) {

@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
 import type { GridDot } from "../../engine/grid/index.ts";
 import { presetMenu, type TitledPresetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
-import { LEFT_BUTTON, MIDDLE_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
+import { DELETE, LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { newDesc } from "./generator.ts";
 import { buildLoopyGrid } from "./grid-build.ts";
@@ -175,30 +175,21 @@ describe("line states", () => {
 });
 
 describe("input", () => {
-  it("toggles two ways with a mouse and cycles three ways with a stylus", () => {
-    // With a mouse each button toggles between its own state and UNKNOWN. With
-    // a stylus there is no second button, so each becomes a 3-cycle — which is
-    // what upstream's two deliberate switch fallthroughs implement.
-    expect(nextLineState(LEFT_BUTTON, LINE_UNKNOWN, false)).toBe(LINE_YES);
-    expect(nextLineState(LEFT_BUTTON, LINE_YES, false)).toBe(LINE_UNKNOWN);
-    expect(nextLineState(LEFT_BUTTON, LINE_NO, false)).toBe(LINE_UNKNOWN);
+  it("sets a button's own state on an undecided edge and clears a decided one", () => {
+    // The same for a finger as for a mouse: a tap is the left button and a long
+    // press the right, so neither needs upstream's stylus 3-cycles.
+    expect(nextLineState(LEFT_BUTTON, LINE_UNKNOWN)).toBe(LINE_YES);
+    expect(nextLineState(LEFT_BUTTON, LINE_YES)).toBe(LINE_UNKNOWN);
+    expect(nextLineState(LEFT_BUTTON, LINE_NO)).toBe(LINE_UNKNOWN);
 
-    expect(nextLineState(LEFT_BUTTON, LINE_UNKNOWN, true)).toBe(LINE_YES);
-    expect(nextLineState(LEFT_BUTTON, LINE_YES, true)).toBe(LINE_NO);
-    expect(nextLineState(LEFT_BUTTON, LINE_NO, true)).toBe(LINE_UNKNOWN);
-
-    expect(nextLineState(RIGHT_BUTTON, LINE_UNKNOWN, false)).toBe(LINE_NO);
-    expect(nextLineState(RIGHT_BUTTON, LINE_NO, false)).toBe(LINE_UNKNOWN);
-    expect(nextLineState(RIGHT_BUTTON, LINE_YES, false)).toBe(LINE_UNKNOWN);
-
-    expect(nextLineState(RIGHT_BUTTON, LINE_UNKNOWN, true)).toBe(LINE_NO);
-    expect(nextLineState(RIGHT_BUTTON, LINE_NO, true)).toBe(LINE_YES);
-    expect(nextLineState(RIGHT_BUTTON, LINE_YES, true)).toBe(LINE_UNKNOWN);
+    expect(nextLineState(RIGHT_BUTTON, LINE_UNKNOWN)).toBe(LINE_NO);
+    expect(nextLineState(RIGHT_BUTTON, LINE_NO)).toBe(LINE_UNKNOWN);
+    expect(nextLineState(RIGHT_BUTTON, LINE_YES)).toBe(LINE_UNKNOWN);
 
     for (const old of [LINE_YES, LINE_UNKNOWN, LINE_NO]) {
-      expect(nextLineState(MIDDLE_BUTTON, old, false)).toBe(LINE_UNKNOWN);
+      expect(nextLineState(DELETE, old)).toBe(LINE_UNKNOWN);
     }
-    expect(nextLineState(0x9999, LINE_UNKNOWN, false)).toBeNull();
+    expect(nextLineState(0x9999, LINE_UNKNOWN)).toBeNull();
   });
 
   it("applies moves as absolute sets, so re-applying one is a no-op", () => {
@@ -666,9 +657,6 @@ describe("game registration", () => {
   it("declares the capabilities the app keys off", () => {
     expect(loopyGame.id).toBe("loopy");
     expect(loopyGame.solve).toBeDefined();
-    // Loopy genuinely reads MOD_STYLUS (a tap must reach all three states), so
-    // it opts out of the midend's strip-the-bit default.
-    expect(loopyGame.wantsStylusModifier).toBe(true);
     expect(loopyGame.statusbarText).toBeUndefined();
   });
 

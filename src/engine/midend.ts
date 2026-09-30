@@ -34,7 +34,7 @@ import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { pencilModeKey, takesNotes } from "./key-labels.ts";
 import { describeParams, presetMenu, type TitledPresetMenu } from "./param-label.ts";
 import { paramsError } from "./params.ts";
-import { cancelDrags, MOD_STYLUS, PENCIL_MODE_BUTTON } from "./pointer.ts";
+import { cancelDrags, PENCIL_MODE_BUTTON } from "./pointer.ts";
 import { randomNew } from "./random/index.ts";
 import { decodeSave, encodeSave, type SaveEnvelope } from "./save.ts";
 import type {
@@ -579,17 +579,13 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // send input before a game exists; this is what makes `interpretMove`'s
     // non-null `ds` true rather than merely usually-true.
     if (this.drawState === null) return false;
-    // A finger or pen press arrives with MOD_STYLUS set. Strip it unless the
-    // game asked to see it: a game that forgets to strip it silently ignores
-    // every touch (see `Game.wantsStylusModifier`).
-    const b = this.game.wantsStylusModifier ? button : button & ~MOD_STYLUS;
 
     const move = this.game.interpretMove(
       this.state,
       this.ui,
       this.drawState,
       { x, y },
-      b,
+      button,
     );
     if (move === null) return false;
     if (move === UI_UPDATE) {

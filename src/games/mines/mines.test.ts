@@ -10,7 +10,7 @@
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
-import { LEFT_BUTTON, LEFT_RELEASE, MIDDLE_BUTTON } from "../../engine/pointer.ts";
+import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { decodeSave } from "../../engine/save.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
@@ -344,9 +344,9 @@ describe("mines supersede + midend", () => {
       x: x * 20 + border + 10,
       y: y * 20 + border + 10,
     });
-    // Middle-button press (chord) on the '1' at (1,1), then release.
-    minesGame.interpretMove(s, ui, ds, at(1, 1), 0x0201); // MIDDLE_BUTTON
-    const move = minesGame.interpretMove(s, ui, ds, at(1, 1), 0x0207); // MIDDLE_RELEASE
+    // A click (chord) on the '1' at (1,1): press, then release.
+    minesGame.interpretMove(s, ui, ds, at(1, 1), LEFT_BUTTON);
+    const move = minesGame.interpretMove(s, ui, ds, at(1, 1), LEFT_RELEASE);
     expect(move).toEqual({ type: "ops", ops: [{ op: "O", x: 0, y: 0 }] });
     expect(ui.deaths).toBe(1);
     // Executing it kills the player and exposes only that mine.
@@ -447,20 +447,31 @@ describe("mines chord preview", () => {
     return { s, ui, ds, at };
   }
 
-  it("a LEFT press over a number shows NO 3x3 chord preview but still records chord intent", () => {
+  it("a LEFT press over a number with all its flags previews the 3x3 chord", () => {
     const { s, ui, ds, at } = board();
     minesGame.interpretMove(s, ui, ds as never, at(1, 1), LEFT_BUTTON);
-    // No preview flash (a false "uncover"): hradius 0, not 1.
-    expect(ui.hradius).toBe(0);
-    // …but the release still chords a number.
+    expect(ui.hradius).toBe(1);
     expect(ui.validradius).toBe(1);
   });
 
-  it("a MIDDLE press over a number keeps the deliberate 3x3 chord preview", () => {
+  it("a LEFT press over a number still short of flags shows NO preview but records chord intent", () => {
     const { s, ui, ds, at } = board();
-    minesGame.interpretMove(s, ui, ds as never, at(1, 1), MIDDLE_BUTTON);
-    expect(ui.hradius).toBe(1);
+    const unflagged: MinesState = {
+      ...s,
+      grid: s.grid.map((v) => (v === -1 ? COVERED : v)),
+    };
+    minesGame.interpretMove(unflagged, ui, ds as never, at(1, 1), LEFT_BUTTON);
+    // No preview flash (a false "uncover" that the release would revert).
+    expect(ui.hradius).toBe(0);
     expect(ui.validradius).toBe(1);
+  });
+
+  it("a press that opens shows no chord preview when dragged onto a ready number", () => {
+    const { s, ui, ds, at } = board();
+    minesGame.interpretMove(s, ui, ds as never, at(2, 2), LEFT_BUTTON);
+    minesGame.interpretMove(s, ui, ds as never, at(1, 1), LEFT_DRAG);
+    // The release would open, not chord, so the 3x3 would be a false promise.
+    expect(ui.hradius).toBe(0);
   });
 
   it("a LEFT press over a covered cell keeps its single-cell open highlight", () => {

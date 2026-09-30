@@ -6,12 +6,12 @@ runs of black squares.
 
 ## Controls
 
-Left-click in a square to mark it black; right-click (or hold Ctrl
-while left-clicking) to mark it white. Click and drag along a row or
-column to mark multiple squares black or white at once. Middle-click
-(or hold Shift while left-clicking) to return a square to gray
-(meaning undecided): dragging like that can erase a whole rectangle,
-not just a row or column.
+Click a square to turn it black, then white, then back to gray
+(meaning undecided); right-click it (on a touch screen, a long press)
+to go the other way round, white first. Drag along a row or column to
+give every gray square on it what the first square turned into. A drag
+whose first square turns back to gray erases instead, and it erases a
+whole rectangle, not just a row or column.
 
 The keyboard can also be used. The arrow keys move a cursor. Enter
 turns the square under it black, then white, then back to gray; Space

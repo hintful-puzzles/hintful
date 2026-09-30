@@ -47,7 +47,7 @@ import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
 } from "./note-taking-cell.ts";
-import { LEFT_BUTTON, MIDDLE_BUTTON, newCursor, RIGHT_BUTTON } from "./pointer.ts";
+import { LEFT_BUTTON, LEFT_RELEASE, newCursor, RIGHT_BUTTON } from "./pointer.ts";
 import {
   builtGames,
   enrolledIn,
@@ -171,7 +171,7 @@ describe("the right press is a pencil select, or the sticky mode toggle", () => 
 describe("a button the mechanic does not own is left alone", () => {
   it("returns null — falsy, so the common caller cannot misfire — and touches nothing", () => {
     const u = ui({ cursor: newCursor(1, 2, true) });
-    expect(pressNoteTakingCell(u, MIDDLE_BUTTON, 9, 9, OPEN)).toBeNull();
+    expect(pressNoteTakingCell(u, LEFT_RELEASE, 9, 9, OPEN)).toBeNull();
     expect(u).toEqual(ui({ cursor: newCursor(1, 2, true) }));
   });
 });

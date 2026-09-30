@@ -20,13 +20,13 @@ There are three ways to enter a number:
 
 3. In Edges mode, click and drag from an edge number, then release in an empty grid cell in the same row, column or diagonal.
 
-To remove numbers, right-click or right-drag a number. Middle-click clears too.
+To remove numbers, right-click or right-drag a number (on a touch screen, a long press, or hold and then drag).
 
 It's also possible to draw a path while the numbers inside the path are still unknown. Left-click and drag across cells to draw a line, starting from an empty cell (a drag starting from a number places numbers instead). Right-click or right-drag to clear the line going through a cell.
 
 If a path has only a single number, the endpoints will display one or two smaller numbers, which represent the numbers which are valid for this cell.
 
-Where a cell has exactly two candidate numbers like that, right-clicking (on a touch screen, a long press) cycles through them instead of clearing — empty, then the lower number, then the higher, then empty again — so an either-or square can be tried both ways without typing. Middle-click still clears it outright.
+Where a cell has exactly two candidate numbers like that, right-clicking (on a touch screen, a long press) cycles through them instead of clearing — empty, then the lower number, then the higher, then empty again — so an either-or square can be tried both ways without typing.
 
 ## Hints
 

@@ -22,9 +22,8 @@ keypad off in the
 Many puzzles use both mouse buttons. When a puzzle’s help says “right-click”
 and you are playing by touch, you have four ways to do it:
 
-* **Tap again.** In many puzzles, tapping cycles a square: the first tap does
-  what a left-click does, the second what a right-click does, and a third (in
-  puzzles that have a neutral state) clears it.
+* **Tap again.** In many puzzles a click cycles a square through all of its
+  states, so tapping again reaches what a right-click would, and then clears it.
 
 * **Long press.** Holding a finger down counts as a right-click. To right-drag,
   keep holding and move.
@@ -51,11 +50,14 @@ off** — Cube, Fifteen, Filling, Flip, Flood, Pegs and Sokoban. There, holding
 your finger still simply presses; you can rest a finger on a peg while you decide
 where to jump it, and the drag still works when you move.
 
-## Right-dragging with a mouse {#right-drag}
+## A mouse and a finger play the same way {#one-pointer}
 
-Browsers don’t let a page see a drag made with the right mouse button, so where
-a puzzle’s help says “right-drag”, hold <kbd>Ctrl</kbd> and drag with the left
-button instead. A plain right-click works as usual.
+Every puzzle uses two buttons and nothing else: a click or a tap is the left
+button, and a right-click or a long press is the right. Dragging works with
+either. So a puzzle plays the same whether you use a mouse, a trackpad or a
+touch screen, and nothing needs the middle button or a key held down while you
+click. Where a puzzle has more to do than two buttons can hold, there is a mode
+you turn on or a key on the on-screen keypad for it.
 
 ## Hints {#hints}
 

@@ -4,17 +4,15 @@
  * the real registry and a real `Midend` so a game is covered the day it is
  * registered.
  *
- * [`touch-input.test.ts`](./touch-input.test.ts) already proves that a single
- * touch *press* does what a mouse press does. That is not what play consists
- * of, and it is not what this frontend's traps break. The guards here cover
- * what a press-level sweep cannot see:
+ * A finger reaches a game as the mouse's own two buttons, with nothing marking
+ * it as a finger's, so a touch gesture and a mouse gesture are the same input
+ * by construction; `view-interactive.test.ts` holds the frontend to that. What
+ * the frontend's touch handling can still break is guarded here:
  *
  *  0. **The instrument itself.** A game that answers *every* button makes the
  *     guards below unanswerable about itself while passing them. That one runs
  *     first, and it is the reason the rest can be believed.
- *  1. **A gesture, not a press.** Press → drag → release from a finger must
- *     leave the same board as from a mouse.
- *  2. **The long press.** `detectSecondaryButton` promotes a finger that stays
+ *  1. **The long press.** `detectSecondaryButton` promotes a finger that stays
  *     within 8 px for 350 ms to `RIGHT_BUTTON` — and "press, pause to aim, then
  *     drag" *is* a press that stays put. A game with no secondary meaning
  *     therefore drops the whole gesture, only on touch, and only for the player
@@ -22,7 +20,7 @@
  *     off, and this asserts the **biconditional**, so the flag can neither be
  *     forgotten by a new game nor left behind by a game that grows a secondary
  *     meaning.
- *  3. **The keyboard exists at all**, and every key the on-screen panel offers
+ *  2. **The keyboard exists at all**, and every key the on-screen panel offers
  *     reaches the game. The second is the reverse direction, and it is the one
  *     that separates "the wiring is connected" from "the input is reachable".
  *
@@ -80,10 +78,8 @@ import {
   isMouseDrag,
   isMouseRelease,
   LEFT_BUTTON,
-  LEFT_DRAG,
   LEFT_RELEASE,
   MOD_MASK,
-  MOD_STYLUS,
 } from "./pointer.ts";
 import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
@@ -116,8 +112,6 @@ const NO_KEYBOARD: Record<string, string> = {
   // (`add-loopy-keyboard-control`: the cursor is a dot, an arrow picks one of
   // its edges). A game added here must record its reason in its own spec too.
 };
-
-const LEFT: [number, number, number] = [LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE];
 
 /**
  * Panel keys known to be inert, each an entry that is a **finding under
@@ -240,89 +234,6 @@ describe("a game does not claim a button it did not act on", () => {
     expect(claimants.sort()).toEqual(
       Object.keys(CLAIMS_UNACTIONABLE).filter(inSweep).sort(),
     );
-  });
-});
-
-describe("a gesture from a finger does what the same gesture from a mouse does", () => {
-  let sweptGames = 0;
-  let sweptGestures = 0;
-
-  for (const id of REGISTERED) {
-    const game = getTsGame(id) as AnyGame | undefined;
-    if (!game) continue;
-
-    it(`${id}: press, drag and release are equivalent on touch`, () => {
-      const { tileSize, size, m, reset } = board(game, id);
-
-      /**
-       * The frontend's own state machine: press; only if the press was
-       * consumed does the drag follow; an unconsumed press gets its release
-       * immediately, which is what `handlePointerDown`'s `else` branch does.
-       *
-       * `acted` is *any* of the three being consumed, not the press alone.
-       * Declining the press is a legitimate whole input model — Guess acts on
-       * the release precisely so that a gesture lands where it started — and
-       * reading the press's answer as "was there anything to compare" made
-       * every such game invisible here while the sweep reported health. It was
-       * also the wrong question: what this guards is whether the *gesture*
-       * does the same thing from a finger.
-       */
-      const gesture = (
-        p: { x: number; y: number },
-        q: { x: number; y: number },
-        [down, drag, up]: [number, number, number],
-        mod = 0,
-      ) => {
-        reset();
-        if (!m.processInput(p.x, p.y, down | mod)) {
-          const acted = m.processInput(p.x, p.y, up | mod);
-          return { acted, fp: fingerprint(m) };
-        }
-        m.processInput(q.x, q.y, drag | mod);
-        m.processInput(q.x, q.y, up | mod);
-        // The press was consumed, so the gesture acted whatever the rest did.
-        return { acted: true, fp: fingerprint(m) };
-      };
-
-      let live = 0;
-      for (const p of probePoints(size)) {
-        for (const q of [
-          { x: p.x + tileSize, y: p.y },
-          { x: p.x, y: p.y + tileSize },
-          { x: p.x + 2 * tileSize, y: p.y + 2 * tileSize },
-        ]) {
-          if (q.x >= size.w || q.y >= size.h) continue;
-          const mouse = gesture(p, q, LEFT);
-          if (!mouse.acted) continue;
-          live++;
-          // A game that asked for the stylus bit is NOT skipped — excluding
-          // the two games with bespoke touch handling would make them the two
-          // nothing checks. It is asserted against what it declares: the bit
-          // is visible to it, so its gesture may legitimately differ from the
-          // mouse's, and what must hold is that the gesture still does
-          // something rather than falling through a raw-button comparison.
-          const touch = gesture(p, q, LEFT, MOD_STYLUS);
-          if (game.wantsStylusModifier) expect(touch.acted).toBe(true);
-          else expect(touch).toEqual(mouse);
-        }
-      }
-
-      // Guard the guard: a game whose every probe fell on dead space would
-      // pass the comparison above over nothing at all.
-      expect(live, `${id}: no live pointer gesture found to compare`).toBeGreaterThan(
-        0,
-      );
-      sweptGames++;
-      sweptGestures += live;
-    });
-  }
-
-  it("swept every registered game, and found gestures in each", () => {
-    expect(sweptGames).toBe(REGISTERED.filter(inSweep).length);
-  });
-
-  itOverWholeSweep("found more gestures than a broken probe could", () => {
-    expect(sweptGestures).toBeGreaterThan(1000);
   });
 });
 

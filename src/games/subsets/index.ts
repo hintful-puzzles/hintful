@@ -9,7 +9,7 @@
  *
  * Input targets one letter slot of a cell: left-click / Enter cycles it
  * unknown → present → absent, right-click / Space cycles the other way, and
- * middle-click / Backspace resets it to unknown; a keyboard cursor walks the
+ * Backspace resets it to unknown; a keyboard cursor walks the
  * slots, skipping the gaps between cell blocks. The tally band below the grid
  * is the reference aid, and with a cell in focus it is also where a set is
  * ruled out of that cell; the keyboard cursor walks down into it.
@@ -368,14 +368,16 @@ const targetVerbs: TargetVerbs<
       t === "unknown" ? "cleared" : t === "cleared" ? "known" : "unknown",
     ),
   },
-  middle: {
-    does: "leave it undecided",
-    keys: [
-      { codes: [BACKSPACE], name: "Backspace" },
-      { codes: [DELETE], name: "Delete" },
-    ],
-    apply: setSlot(() => "unknown"),
-  },
+  keyOnly: [
+    {
+      does: "leave the number under the cursor undecided",
+      keys: [
+        { codes: [BACKSPACE], name: "Backspace" },
+        { codes: [DELETE], name: "Delete" },
+      ],
+      apply: setSlot(() => "unknown"),
+    },
+  ],
 };
 
 function executeMove(state: SubsetsState, move: SubsetsMove): SubsetsState {

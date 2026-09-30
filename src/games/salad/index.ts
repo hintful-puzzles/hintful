@@ -8,8 +8,8 @@
  * Left-click selects a square for a real entry, right-click for a pencil mark
  * (a sticky mode by default — see `SaladUi.pencilSticky`); a symbol key enters
  * it, `X`/`O` mark a square as definitely-empty / definitely-filled, and
- * Backspace clears. Middle-click cycles a square through circle → cross →
- * blank. Rule violations highlight live as you play; Check & Save additionally
+ * Backspace clears; the on-screen keypad carries `X`, `O` and a clear key, so
+ * a pointer alone reaches every entry. Rule violations highlight live as you play; Check & Save additionally
  * flags every marking that contradicts the unique solution.
  */
 
@@ -44,7 +44,6 @@ import {
   gridCursorMove,
   isCursorMove,
   isEraseKey,
-  MIDDLE_BUTTON,
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
@@ -153,18 +152,6 @@ function interpretMove(
       }) !== null
     ) {
       return UI_UPDATE;
-    }
-
-    // Middle-click cycles a blank square: blank → ball → cross → blank.
-    if (button === MIDDLE_BUTTON && state.gridclues[i] === 0) {
-      let value: SaladEntry | null = null;
-      if (state.holes[i] === 0) value = "circle";
-      else if (state.holes[i] === CIRCLE && state.grid[i] === 0) value = "cross";
-      else if (state.holes[i] === CROSS) value = "clear";
-      if (value !== null) {
-        ui.cursor.visible = false;
-        return { type: "set", x: gx, y: gy, value };
-      }
     }
   }
 

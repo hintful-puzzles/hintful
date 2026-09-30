@@ -11,13 +11,13 @@
  */
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
+import { clearKey } from "../../engine/key-labels.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_RIGHT,
   CURSOR_SELECT,
   LEFT_BUTTON,
-  MIDDLE_BUTTON,
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -577,41 +577,27 @@ describe("salad input", () => {
     expect(ui.pencilMode).toBe(true);
   });
 
-  it("middle-click cycles a blank square: ball, cross, blank", () => {
+  it("a pointer alone places a ball, a cross and a blank: a click, then a panel key", () => {
     const s0 = newState(LETTERS.p, LETTERS.desc);
     const ui = newUi(s0);
-    const first = saladGame.interpretMove(
-      s0,
-      ui,
-      preferredDrawState(saladGame, s0),
-      at(2, 1),
-      MIDDLE_BUTTON,
-    );
-    expect(first).toEqual({ type: "set", x: 2, y: 1, value: "circle" });
-    const s1 = saladGame.executeMove(s0, first as SaladMove);
-    const second = saladGame.interpretMove(
-      s1,
-      ui,
-      preferredDrawState(saladGame, s1),
-      at(2, 1),
-      MIDDLE_BUTTON,
-    );
-    expect(second).toEqual({ type: "set", x: 2, y: 1, value: "cross" });
-    const s2 = saladGame.executeMove(s1, second as SaladMove);
-    expect(
-      saladGame.interpretMove(
-        s2,
-        ui,
-        preferredDrawState(saladGame, s2),
-        at(2, 1),
-        MIDDLE_BUTTON,
-      ),
-    ).toEqual({
-      type: "set",
-      x: 2,
-      y: 1,
-      value: "clear",
-    });
+    const ds = preferredDrawState(saladGame, s0);
+    const panel = saladGame.requestKeys?.(LETTERS.p) ?? [];
+    const key = (label: string) => {
+      const k = panel.find((l) => l.label === label);
+      if (!k) throw new Error(`no ${label} key on the panel`);
+      return k.button;
+    };
+    saladGame.interpretMove(s0, ui, ds, at(2, 1), LEFT_BUTTON);
+    for (const [label, value] of [
+      ["O", "circle"],
+      ["X", "cross"],
+      [clearKey.label, "clear"],
+    ] as const) {
+      const move = saladGame.interpretMove(s0, ui, ds, at(0, 0), key(label));
+      expect(move).toEqual({ type: "set", x: 2, y: 1, value });
+      // An entry by pointer drops the highlight; select the square again.
+      saladGame.interpretMove(s0, ui, ds, at(2, 1), LEFT_BUTTON);
+    }
   });
 
   it("the keyboard cursor moves and Enter flips ink/pencil", () => {

@@ -29,8 +29,6 @@ import {
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
-  MIDDLE_BUTTON,
-  MIDDLE_DRAG,
   MOD_NUM_KEYPAD,
   newCursor,
   RIGHT_BUTTON,
@@ -669,13 +667,7 @@ function mouseClick(
     return rightDragArm();
   }
 
-  if (button === MIDDLE_BUTTON) {
-    /* Middle-click always clears (a two-option-free way to erase). */
-    if (n === NUMBER_EMPTY || state.immutable[i]) uiClear(ui);
-    return rightDragArm();
-  }
-
-  if (button === MIDDLE_DRAG || button === RIGHT_DRAG) return rightDragArm();
+  if (button === RIGHT_DRAG) return rightDragArm();
 
   return null;
 }

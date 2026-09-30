@@ -24,9 +24,9 @@ about that pipeline shape everything below:
   `LEFT_BUTTON`…`CURSOR_SELECT2` codes, the `isMouseDown` / `isMouseDrag` /
   `isMouseRelease` range predicates (upstream's `IS_MOUSE_*`; 27 ports each
   rewrote the three-constant chain before they were extracted), the `MOD_*`
-  masks and `stripModifiers`. Never redeclare `const MOD_MASK = 0x7800`.
-- **The midend strips `MOD_STYLUS` before your game sees the button** — see
-  § "Touch is stripped for you".
+  masks and `stripModifiers`. Never redeclare `const MOD_MASK`.
+- **There are two buttons, and a tap is a click** — see § "One pointer, two
+  buttons".
 - **Keyboard characters arrive as bare char codes** through the view's
   `puzzleKeyMap`, with consequences upstream never had — see § "The numeric
   keypad never arrives".
@@ -45,12 +45,10 @@ a test.
 real `Midend`, so your game is covered the day it is registered.** You do not
 have to remember they exist; you do have to know what they will tell you.
 
-- [`touch-input.test.ts`](../../src/engine/touch-input.test.ts) — a touch
-  **press** does exactly what the same mouse press does, comparing the press's
-  *effect* on the board. If it fails, your `interpretMove` is comparing a raw
-  button somewhere.
-- [`input-parity.test.ts`](../../src/engine/input-parity.test.ts) — the same
-  equivalence for a whole **press → drag → release gesture**; the
+- [`view-interactive.test.ts`](../../src/puzzle/components/view-interactive.test.ts)
+  — a finger and a mouse send a game the same codes, and a held key or the
+  middle button changes nothing (§ "One pointer, two buttons").
+- [`input-parity.test.ts`](../../src/engine/input-parity.test.ts) — the
   `ignoresSecondaryButton` biconditional (§ "A touch hold arrives as the right
   button"); **keyboard reachability**, which asks not only whether a cursor key
   is consumed but whether any keyboard-only sequence *commits a move*;
@@ -185,29 +183,39 @@ Two things generalize past keys here, and both cost this project real defects:
   emittable set is computed **per game** — 8 reaches Abcd, which offers it, and
   reaches Unruly not at all.
 
-## Touch is stripped for you
+## One pointer, two buttons
 
-**Compare the plain button; touch just works.** The view ORs `MOD_STYLUS`
-(0x0800) into every press, drag and release whose `pointerType` is `touch` or
-`pen`. Upstream hands that bit straight to each game and expects it to
-remember to strip it — a footgun that fired nine times here (`button ===
-LEFT_BUTTON` simply never matches `LEFT_BUTTON | MOD_STYLUS`; it reads
-correctly, fails silently, and fails only on a device the suite never uses).
-So the contract is deliberately inverted from upstream
-(`fix-touch-input-stylus-modifier`): **the midend strips `MOD_STYLUS` before
-`interpretMove`**, and a game that genuinely gives touch its own behavior
-opts in with `Game.wantsStylusModifier` — see its doc comment in
-[`engine/game.ts`](../../src/engine/game.ts) for the full rationale. Pattern
-and Loopy are the games that ask (each cycles a cell's or an edge's state on a
-tap, having no right button to cycle with). Note what happened to the previous
-sentence here, because it is a shape worth recognizing: the `ts-engine` spec said
-"Pattern is the only such game", and that quietly became false the day Loopy
-landed. **A count is a fact that goes stale silently** — name the members
-instead.
+**A game has a left button and a right button, and nothing tells it which
+device pressed them.** A tap is `LEFT_BUTTON`, a long press is `RIGHT_BUTTON`
+(§ "A touch hold arrives as the right button"), and a drag from either is that
+button's drag. A player moves between a mouse and a finger without learning a
+game twice, and a player who has only one of them can reach everything (owner,
+2026-09-30; `one-pointer-for-mouse-and-touch`).
 
-**Tell:** writing `button & 0x0800` by hand — you want the flag instead. The
-collection-wide guard (§ "The input-parity bar") catches a raw-button
-comparison the day the game registers.
+So three things upstream had are **not in the vocabulary at all**, rather than
+discouraged:
+
+- **The middle button.** `MIDDLE_BUTTON` and its drag and release are not
+  exported; the view drops a middle press. Many touchpads cannot send one, and a
+  finger has nothing like it.
+- **A key held with a press.** The view sends a press with no modifier bits.
+  Upstream's frontend turned Shift-click into the middle button and Ctrl-click
+  into the other button, which only a player with a hand on each device can use.
+  Modifiers on *keys* (Shift+arrow, Ctrl+arrow) are keyboard gestures and stay.
+- **`MOD_STYLUS`.** Upstream marked a finger's press so a game could give touch
+  its own behavior, and Loopy and Pattern did: a tap cycled three states where a
+  click toggled two. With a long press as the second button that is not needed,
+  and it only meant a second control scheme for one game. The same bit, left in
+  and stripped by the midend, once let nine ports ship deaf to touch
+  (`fix-touch-input-stylus-modifier`); absent, there is nothing to compare wrongly.
+
+**What this asks of a game**: every action it has must be reachable with the
+two buttons, clicks and drags, and not only from the keyboard. Where a third
+action has no button to spare, it goes into a mode the player turns on (Net's
+lock is a tap in the middle of a square in notes mode), or onto the on-screen
+keypad (Salad's `X` and `O`). A clear or reset rarely needs a control of its
+own: a button cycle that passes through empty already reaches it (Loopy,
+Subsets, Unruly keep Backspace as a keyboard convenience, a `keyOnly` verb).
 
 ## A touch hold arrives as the right button
 
@@ -364,12 +372,14 @@ with input is an arm of its own, tried first**: Unruly's digits, Range's
 dotting Shift-arrows, Singles' click outside the grid, Twiddle's corner keys
 and Net's Ctrl- and Shift-arrows each sit above the one-line hand-off in their
 `interpretMove`. Exemplars: Light Up (verbs only), Unruly (verbs plus a digit
-arm and a middle verb with keys), Net (a geometry of its own and all four verb
-slots).
+arm and an erase key), Net (a geometry of its own and all three verb slots).
 
-The slots are `primary` (left, Enter), `secondary` (right, Space), `middle`
-(middle or Shift-click, keys only through its `keys`) and `keyOnly` — verbs no
-button applies, such as Net's half turn on F. **Space is always the right
+The slots are `primary` (left, Enter), `secondary` (right, Space) and
+`keyOnly` — verbs no button applies, such as Net's half turn on F. A key-only
+verb still owes the pointer a route to what it does: a cycle of the buttons
+(an erase key), a sequence of them (the half turn is two quarter turns), or an
+arm of the game's own (Net's lock, in notes mode) — § "One pointer, two
+buttons". **Space is always the right
 button's verb.** Net once put its lock on Space; no puzzle explains that, so
 Net's lock moved to its own key (S) and Space rotates clockwise like the
 right button. A game that wants a different key for a verb gives the verb
@@ -606,10 +616,8 @@ generalized:
   index and an arrow press chooses rather than moves. `cursor-vocabulary.test.ts`
   finds cursors by the grid-cell *shape* and so does not see it; the game's own
   test guards it. Do not fake an `(x, y)` to satisfy the guard.
-- **Two select keys mirror two buttons; there is no stylus cycle on a keyboard.**
-  Enter is the left button, Space the right, the erase key the middle. The
-  three-state cycle exists because a finger has no second button; a keyboard
-  has three, so it does not need one. Route all of them through the *same*
+- **Two select keys mirror two buttons.** Enter is the left button, Space the
+  right, and the erase key clears. Route all of them through the *same*
   function the pointer arm calls (`setEdge`), so autofollow applies identically.
 - **Travel is free once arrows walk.** With the walk model there is no
   separate travel key and no auto-advance: walking marks nothing until Enter,
@@ -1191,8 +1199,8 @@ and Undead.
 - [ ] A game whose input is targets and verbs declares `targetVerbs` and hands
       its buttons to `interpretTargetVerbs`, and its help page writes
       `{{controls}}` (§ "Targets and verbs").
-- [ ] No comparison against a raw button that could carry `MOD_STYLUS` (the
-      registry sweep will tell you).
+- [ ] Every action reachable with the two buttons alone, clicks and drags, with
+      no key held (§ "One pointer, two buttons").
 - [ ] No binding on `MOD_NUM_KEYPAD | …` or a bare character literal without
       checking what `puzzleKeyMap` delivers; bare digits accepted where the
       keypad was a route to an input.

@@ -2,7 +2,7 @@
  * The target-verb input model: the player aims at a target — a square, an
  * edge, a gutter cell — and each button applies a verb there. The left button
  * and Enter at the cursor apply one verb, the right button and Space another,
- * and the middle button a third where the game has one.
+ * and further verbs are reached by their own keys.
  *
  * WHAT LIVES HERE is what the games that play this way had each written for
  * themselves and could not legitimately answer differently: that a press parks
@@ -32,7 +32,6 @@ import {
   type GridCursor,
   isCursorMove,
   LEFT_BUTTON,
-  MIDDLE_BUTTON,
   moveCursor,
   RIGHT_BUTTON,
   stripModifiers,
@@ -91,11 +90,10 @@ export interface TargetVerbs<State, Ui, DrawState, Target, Move> {
   /** The right button, and Space at the cursor. A game without one takes
    * Space as a second Enter. */
   readonly secondary?: TargetVerb<State, Ui, Target, Move>;
-  /** The middle button. No select key reaches it; a game binds it a key
-   * through `keys`. */
-  readonly middle?: TargetVerb<State, Ui, Target, Move>;
   /** Verbs no button applies, reached only by their `keys` at the cursor: Net's
-   * half turn. */
+   * half turn, or an erase key whose result the buttons reach by cycling. A
+   * pointer route to what one does, where the buttons have none, is the game's
+   * own arm (Net's lock, in Marks mode). */
   readonly keyOnly?: readonly KeyOnlyVerb<State, Ui, Target, Move>[];
 }
 
@@ -162,7 +160,6 @@ type Verbs<S, U, D, T, M> = TargetVerbs<S, U, D, T, M>;
 function pointerVerb<S, U, D, T, M>(v: Verbs<S, U, D, T, M>, button: number) {
   if (button === LEFT_BUTTON) return v.primary;
   if (button === RIGHT_BUTTON) return v.secondary ?? null;
-  if (button === MIDDLE_BUTTON) return v.middle ?? null;
   return null;
 }
 
@@ -170,7 +167,7 @@ function pointerVerb<S, U, D, T, M>(v: Verbs<S, U, D, T, M>, button: number) {
 function keyVerb<S, U, D, T, M>(v: Verbs<S, U, D, T, M>, button: number) {
   if (button === CURSOR_SELECT) return v.primary;
   if (button === CURSOR_SELECT2) return v.secondary ?? v.primary;
-  for (const verb of [v.primary, v.secondary, v.middle, ...(v.keyOnly ?? [])])
+  for (const verb of [v.primary, v.secondary, ...(v.keyOnly ?? [])])
     if (verb?.keys?.some((k) => k.codes.includes(button))) return verb;
   return null;
 }
@@ -237,28 +234,19 @@ export function controlsMarkdown<S, U, D, T, M>(verbs: Verbs<S, U, D, T, M>): st
     pointer.push(
       `Right-click it (on a touch screen, a long press) to ${verbs.secondary.does}.`,
     );
-  // The frontend sends a Shift-click as the middle button, for a mouse or
-  // trackpad without one (`view-interactive.ts`).
-  if (verbs.middle)
-    pointer.push(`Middle-click it (or Shift-click it) to ${verbs.middle.does}.`);
 
   const keyboard = verbs.secondary
     ? `${keyNames("Enter", verbs.primary)} does what a click does to the ${noun} ` +
       `under it, and ${keyNames("Space", verbs.secondary)} what a right-click does.`
     : `${keyNames("Enter or Space", verbs.primary)} does what a click does to the ` +
       `${noun} under it.`;
-  const middleKeys = verbs.middle?.keys ?? [];
-  const middle =
-    middleKeys.length === 0
-      ? ""
-      : ` ${middleKeys.map((k) => k.name).join(" or ")} does what a middle-click does.`;
   const keyOnly = (verbs.keyOnly ?? [])
     .map((v) => ` Press ${v.keys.map((k) => k.name).join(" or ")} to ${v.does}.`)
     .join("");
   return (
     `${pointer.join(" ")}\n\n` +
     `With the keyboard, the arrow keys move a cursor around the grid. ` +
-    `${keyboard}${middle}${keyOnly}`
+    `${keyboard}${keyOnly}`
   );
 }
 

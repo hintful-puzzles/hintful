@@ -57,7 +57,6 @@ import {
   isMouseDrag,
   isMouseRelease,
   LEFT_BUTTON,
-  MIDDLE_BUTTON,
   MOD_CTRL,
   MOD_SHFT,
   moveDrag,
@@ -154,7 +153,6 @@ function interpretMove(
       if (to === "W") from = "*";
     }
     if (button === RIGHT_BUTTON) to = from === "-" ? "W" : "-";
-    if (button === MIDDLE_BUTTON) from = "*";
 
     ui.dragFrom = from;
     ui.dragTo = to;

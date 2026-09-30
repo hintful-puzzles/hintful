@@ -1,10 +1,10 @@
 /**
  * Pattern (Nonograms) — native TS port of `pattern.c`. Reconstruct a
  * black/white picture from the run-length clues listed beside every row and
- * column. Left-drag paints black (FULL), right-drag paints white/empty
- * (EMPTY), middle-drag clears to undecided (UNKNOWN); a stylus press cycles a
- * cell's value. The keyboard cursor paints with Ctrl/Shift held and the
- * select keys cycle a cell.
+ * column. A press cycles a cell's value — left towards black (FULL), right
+ * towards white (EMPTY) — exactly as Enter and Space do at the cursor, and a
+ * drag paints the pressed cell's new value along a line. The keyboard cursor
+ * paints with Ctrl/Shift held.
  */
 
 import { winFlash } from "../../engine/flash.ts";
@@ -29,12 +29,8 @@ import {
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
-  MIDDLE_BUTTON,
-  MIDDLE_DRAG,
-  MIDDLE_RELEASE,
   MOD_CTRL,
   MOD_SHFT,
-  MOD_STYLUS,
   moveDrag,
   newCursor,
   newDrag,
@@ -107,7 +103,6 @@ function interpretMove(
 ): PatternMove | null | UiUpdate {
   const control = (rawButton & MOD_CTRL) !== 0;
   const shift = (rawButton & MOD_SHFT) !== 0;
-  const stylus = (rawButton & MOD_STYLUS) !== 0;
   const button = stripModifiers(rawButton);
   const ts = ds.tileSize;
   const { w, h } = state.common;
@@ -122,28 +117,27 @@ function interpretMove(
     x < w &&
     y >= 0 &&
     y < h &&
-    (button === LEFT_BUTTON || button === RIGHT_BUTTON || button === MIDDLE_BUTTON)
+    (button === LEFT_BUTTON || button === RIGHT_BUTTON)
   ) {
+    // A press cycles the square it lands on, as Enter and Space do at the
+    // cursor, and a drag paints that square's new state along the line: so a
+    // drag from a white square returns the line to gray.
     const curr = grid[y * w + x];
     if (button === LEFT_BUTTON) {
       ui.dragButton = LEFT_DRAG;
       ui.releaseButton = LEFT_RELEASE;
-      ui.state = stylus ? (((curr + 2) % 3) as GridVal) : GRID_FULL; // FULL→EMPTY→UNKNOWN
-    } else if (button === RIGHT_BUTTON) {
+      ui.state = ((curr + 2) % 3) as GridVal; // UNKNOWN→FULL→EMPTY→UNKNOWN
+    } else {
       ui.dragButton = RIGHT_DRAG;
       ui.releaseButton = RIGHT_RELEASE;
-      ui.state = stylus ? (((curr + 1) % 3) as GridVal) : GRID_EMPTY; // EMPTY→FULL→UNKNOWN
-    } else {
-      ui.dragButton = MIDDLE_DRAG;
-      ui.releaseButton = MIDDLE_RELEASE;
-      ui.state = GRID_UNKNOWN;
+      ui.state = ((curr + 1) % 3) as GridVal; // UNKNOWN→EMPTY→FULL→UNKNOWN
     }
     startDrag(ui.drag, x, y);
     ui.cursor.visible = false;
     return UI_UPDATE;
   }
 
-  // --- drag: snap to a single line (except a middle/UNKNOWN area-clear) ---
+  // --- drag: snap to a single line (except a clear, which erases a rectangle) ---
   if (ui.drag.live && button === ui.dragButton) {
     if (ui.state !== GRID_UNKNOWN) {
       if (Math.abs(x - ui.drag.sx) > Math.abs(y - ui.drag.sy)) y = ui.drag.sy;
@@ -386,10 +380,6 @@ export const patternGame: Game<
   PatternHint
 > = {
   id: "pattern",
-  // Pattern wants the raw MOD_STYLUS bit: with no right button to hand, a touch
-  // press cycles the cell through its three states instead of just filling it.
-  // `touch-input.test.ts` holds this declaration to an actual read.
-  wantsStylusModifier: true,
 
   defaultParams,
   presets,

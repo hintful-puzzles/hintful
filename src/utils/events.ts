@@ -11,18 +11,13 @@ export enum DOMMouseButton {
   Secondary = 2,
 }
 
-/**
- * Swap the Main and Secondary buttons (but leave Auxiliary alone).
- */
-export function swapButtons(button: DOMMouseButton): DOMMouseButton {
-  switch (button) {
-    case DOMMouseButton.Main:
-      return DOMMouseButton.Secondary;
-    case DOMMouseButton.Secondary:
-      return DOMMouseButton.Main;
-    default:
-      return button; // no change
-  }
+/** Swap the Main and Secondary buttons. */
+export function swapButtons(
+  button: DOMMouseButton.Main | DOMMouseButton.Secondary,
+): DOMMouseButton.Main | DOMMouseButton.Secondary {
+  return button === DOMMouseButton.Main
+    ? DOMMouseButton.Secondary
+    : DOMMouseButton.Main;
 }
 
 /**

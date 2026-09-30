@@ -13,7 +13,7 @@
  */
 
 import type { Grid, GridDot, GridFace } from "../../engine/grid/index.ts";
-import { LEFT_BUTTON, MIDDLE_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
+import { isEraseKey, LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import type { LoopyCursor } from "./cursor.ts";
 import { dlineEnds, dlineIndexFromDot, dlineIndexFromFace } from "./dlines.ts";
 import type { PairRelation } from "./index.ts";
@@ -135,15 +135,14 @@ export function cursorCorner(g: Grid, cursor: LoopyCursor): number | null {
 }
 
 /** A corner note's next state: the left button cycles none, at least one line, at
- * most one, exactly one; the right button the other way; the middle clears. */
+ * most one, exactly one; the right button the other way; an erase key clears. */
 export function nextCornerNote(bits: number, button: number): number | null {
+  if (isEraseKey(button)) return 0;
   switch (button) {
     case LEFT_BUTTON:
       return (bits + 1) % 4;
     case RIGHT_BUTTON:
       return (bits + 3) % 4;
-    case MIDDLE_BUTTON:
-      return 0;
     default:
       return null;
   }
@@ -152,19 +151,18 @@ export function nextCornerNote(bits: number, button: number): number | null {
 const RELATIONS: readonly PairRelation[] = ["none", "match", "opposite"];
 
 /** A pair note's next state: the left button cycles none, match, opposites; the
- * right button the other way; the middle clears. */
+ * right button the other way; an erase key clears. */
 export function nextPairNote(
   relation: PairRelation,
   button: number,
 ): PairRelation | null {
+  if (isEraseKey(button)) return "none";
   const i = RELATIONS.indexOf(relation);
   switch (button) {
     case LEFT_BUTTON:
       return RELATIONS[(i + 1) % 3];
     case RIGHT_BUTTON:
       return RELATIONS[(i + 2) % 3];
-    case MIDDLE_BUTTON:
-      return "none";
     default:
       return null;
   }

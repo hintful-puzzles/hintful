@@ -13,7 +13,7 @@ import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
-import { LEFT_BUTTON, MOD_STYLUS, RIGHT_BUTTON } from "../../engine/pointer.ts";
+import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -660,30 +660,6 @@ describe("seismic input", () => {
       n: 1,
       pencil: false,
     });
-  });
-
-  it("responds to a touch press exactly as to a mouse press", () => {
-    // The midend strips MOD_STYLUS before interpretMove (docs/games/input.md § "Touch is stripped for you"); this
-    // would still catch a raw-button comparison.
-    const state = stateOf(SMALL);
-    const cell = firstFreeCell(state);
-    const mouse = newUi(state);
-    const touch = newUi(state);
-    seismicGame.interpretMove(
-      state,
-      mouse,
-      preferredDrawState(seismicGame, state),
-      pixel(cell.x, cell.y),
-      LEFT_BUTTON,
-    );
-    seismicGame.interpretMove(
-      state,
-      touch,
-      preferredDrawState(seismicGame, state),
-      pixel(cell.x, cell.y),
-      LEFT_BUTTON | MOD_STYLUS,
-    );
-    expect(touch).toEqual(mouse);
   });
 
   it("refuses a number larger than the cell's region", () => {

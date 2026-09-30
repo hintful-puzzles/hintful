@@ -355,11 +355,11 @@ export function probePoints(size: Size): Point[] {
  * **Codes no game can act on.**
  *
  * The obvious choice — Unicode's private-use area, `0xE000`+ — is **wrong
- * here**: button codes are not Unicode. `MOD_MASK` is `0x7800`, so `0xE000`
+ * here**: button codes are not Unicode. `MOD_MASK` is `0x7000`, so `0xE000`
  * decodes as `MOD_NUM_KEYPAD | MOD_SHFT | 0x8000` and carries two live modifier
  * bits (Sixteen reads the keypad bit and rightly answers it). `0x0300`–`0x0302`
- * sit in the gap above `CURSOR_SELECT2` and below `MOD_STYLUS`; `0x10000` sits
- * above every modifier.
+ * sit in the gap above `CURSOR_SELECT2` and below every modifier bit; `0x10000`
+ * sits above them all.
  *
  * Every reason these are safe is asserted from the vocabulary in
  * `input-parity.test.ts`, never taken on trust from this comment.

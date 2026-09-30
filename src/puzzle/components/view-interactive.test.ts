@@ -328,6 +328,71 @@ describe("Escape delivery", () => {
   });
 });
 
+/**
+ * A game reads the same two buttons from a mouse and a finger, with nothing
+ * telling it which pressed them, and no key held with a press changes them
+ * (`one-pointer-for-mouse-and-touch`). That is what makes "touch alone" follow
+ * from "mouse alone", so it is asserted here, on the codes a game receives, and
+ * nowhere below.
+ */
+describe("one pointer, two buttons", () => {
+  function sent(overrides: Record<string, unknown>) {
+    const received: number[] = [];
+    const puzzle = {
+      processMouse: vi.fn(async (_l: { x: number; y: number }, button: number) => {
+        received.push(button);
+        return true;
+      }),
+    };
+    const view = makeView();
+    // The long-press and two-finger detectors are `touch.test.ts`'s; here a
+    // touch press is delivered at once, as a tap.
+    view.longPress = false;
+    view.twoFingerTap = false;
+    Object.defineProperty(view, "puzzle", { value: puzzle, writable: true });
+    Object.defineProperty(view, "canvas", {
+      value: {
+        getBoundingClientRect: () => ({ left: 0, top: 0 }),
+        setPointerCapture: vi.fn(),
+        hasPointerCapture: () => false,
+        releasePointerCapture: vi.fn(),
+      },
+      writable: true,
+    });
+    const host = view as unknown as PointerHost;
+    return (async () => {
+      await host.handlePointerDown(pointerEvent("pointerdown", overrides));
+      await host.handlePointerUp(pointerEvent("pointerup", overrides));
+      return received;
+    })();
+  }
+
+  const LEFT = [PuzzleButton.LEFT_BUTTON, PuzzleButton.LEFT_RELEASE];
+  const RIGHT = [PuzzleButton.RIGHT_BUTTON, PuzzleButton.RIGHT_RELEASE];
+  const RIGHT_PRESS = { button: 2, buttons: 2 };
+
+  it("a finger's or a pen's tap sends exactly what a click sends", async () => {
+    expect(await sent({})).toEqual(LEFT);
+    expect(await sent({ pointerType: "touch" })).toEqual(LEFT);
+    expect(await sent({ pointerType: "pen" })).toEqual(LEFT);
+  });
+
+  it("a right-click sends the right button", async () => {
+    expect(await sent(RIGHT_PRESS)).toEqual(RIGHT);
+  });
+
+  it("a key held with a press changes nothing", async () => {
+    for (const held of [{ shiftKey: true }, { ctrlKey: true }, { metaKey: true }]) {
+      expect(await sent(held)).toEqual(LEFT);
+      expect(await sent({ ...RIGHT_PRESS, ...held })).toEqual(RIGHT);
+    }
+  });
+
+  it("the middle button sends nothing", async () => {
+    expect(await sent({ button: 1, buttons: 4 })).toEqual([]);
+  });
+});
+
 describe("pointer coordinates", () => {
   // Both terms of the canvas-relative subtraction are fractional in general: a
   // pointer reports a sub-pixel position, and a centered canvas routinely lands

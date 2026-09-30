@@ -20,7 +20,6 @@ import {
   CURSOR_SELECT2,
   LEFT_BUTTON,
   LEFT_RELEASE,
-  MIDDLE_BUTTON,
   newCursor,
   RIGHT_BUTTON,
 } from "./pointer.ts";
@@ -80,7 +79,6 @@ describe("the model", () => {
   it("a press off the grid, or a button with no verb, is not the model's", () => {
     const ui = { cursor: newCursor(0, 0, true) };
     expect(run(ui, LEFT_BUTTON, { x: 2, y: 2 })).toBeNull();
-    expect(run(ui, MIDDLE_BUTTON, { x: 16, y: 16 })).toBeNull();
     expect(run(ui, LEFT_RELEASE, { x: 16, y: 16 })).toBeNull();
     expect(ui.cursor.visible).toBe(true);
   });
@@ -112,11 +110,6 @@ describe("the model", () => {
   it("a key-only verb applies at the cursor, and the paragraph says so", () => {
     const more = {
       ...verbs,
-      middle: {
-        does: "star it",
-        keys: [{ codes: [0x73], name: "S" }],
-        apply: at("star"),
-      },
       keyOnly: [
         {
           does: "flip the square",
@@ -130,11 +123,8 @@ describe("the model", () => {
       verb: "flip",
       at: { x: 1, y: 0 },
     });
-    expect(controlsMarkdown(more)).toContain(
-      "Middle-click it (or Shift-click it) to star it.",
-    );
-    expect(controlsMarkdown(more)).toContain(
-      "S does what a middle-click does. Press F to flip the square.",
+    expect(controlsMarkdown(more)).toMatch(
+      /what a right-click does\. Press F to flip the square\.$/,
     );
   });
 
@@ -207,13 +197,11 @@ describe("a game's declared verbs are what its buttons and keys do", () => {
     const slots = [
       [verbs.primary, LEFT_BUTTON],
       [verbs.secondary, RIGHT_BUTTON],
-      [verbs.middle, MIDDLE_BUTTON],
     ] as const;
     for (const [verb, button] of slots) {
       if (!verb) continue;
       // Only a verb with keys has anything to compare, and the comparison is
-      // vacuous over no boards. (Mines' chord needs flags placed first, which
-      // one priming click never does, and it has no key.)
+      // vacuous over no boards.
       if (!verb.keys?.length) continue;
       const clicks = primed.click(button);
       expect(clicks.size, `${verb.does}: no board`).toBeGreaterThan(0);

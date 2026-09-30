@@ -26,8 +26,6 @@ import {
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
-  MIDDLE_BUTTON,
-  MIDDLE_RELEASE,
   MOD_CTRL,
   MOD_SHFT,
   moveCursor,
@@ -155,10 +153,8 @@ function interpretMove(
   const control = rawButton & MOD_CTRL;
   const button = stripModifiers(rawButton);
 
-  const isMouseDown =
-    button === LEFT_BUTTON || button === MIDDLE_BUTTON || button === RIGHT_BUTTON;
-  const isMouseRelease =
-    button === LEFT_RELEASE || button === MIDDLE_RELEASE || button === RIGHT_RELEASE;
+  const isMouseDown = button === LEFT_BUTTON || button === RIGHT_BUTTON;
+  const isMouseRelease = button === LEFT_RELEASE || button === RIGHT_RELEASE;
 
   if (isMouseDown) {
     ui.cursor.visible = false;

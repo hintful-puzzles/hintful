@@ -15,9 +15,6 @@ import {
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
-  MIDDLE_BUTTON,
-  MIDDLE_DRAG,
-  MIDDLE_RELEASE,
   MOD_CTRL,
   MOD_MASK,
   MOD_NUM_KEYPAD,
@@ -30,21 +27,27 @@ import {
 
 describe("mouse button class predicates", () => {
   it("classifies each triple and rejects the others", () => {
-    for (const b of [LEFT_BUTTON, MIDDLE_BUTTON, RIGHT_BUTTON]) {
+    for (const b of [LEFT_BUTTON, RIGHT_BUTTON]) {
       expect(isMouseDown(b)).toBe(true);
       expect(isMouseDrag(b)).toBe(false);
       expect(isMouseRelease(b)).toBe(false);
     }
-    for (const b of [LEFT_DRAG, MIDDLE_DRAG, RIGHT_DRAG]) {
+    for (const b of [LEFT_DRAG, RIGHT_DRAG]) {
       expect(isMouseDrag(b)).toBe(true);
       expect(isMouseDown(b)).toBe(false);
     }
-    for (const b of [LEFT_RELEASE, MIDDLE_RELEASE, RIGHT_RELEASE]) {
+    for (const b of [LEFT_RELEASE, RIGHT_RELEASE]) {
       expect(isMouseRelease(b)).toBe(true);
       expect(isMouseDrag(b)).toBe(false);
     }
     expect(isMouseDown(CURSOR_SELECT)).toBe(false);
     expect(isMouseRelease(CURSOR_SELECT)).toBe(false);
+  });
+
+  it("classifies upstream's unused middle-button codes as nothing", () => {
+    for (const b of [0x0201, 0x0204, 0x0207]) {
+      expect(isMouseDown(b) || isMouseDrag(b) || isMouseRelease(b)).toBe(false);
+    }
   });
 });
 
@@ -65,11 +68,7 @@ describe("cursorDelta", () => {
 
 describe("stripModifiers", () => {
   it("clears every modifier bit, preserving the base button", () => {
-    // MOD_MASK (0x7800) covers the three named modifiers plus upstream's
-    // reserved 0x0800 bit, so it is a superset of their OR.
-    expect(MOD_MASK & (MOD_CTRL | MOD_SHFT | MOD_NUM_KEYPAD)).toBe(
-      MOD_CTRL | MOD_SHFT | MOD_NUM_KEYPAD,
-    );
+    expect(MOD_MASK).toBe(MOD_CTRL | MOD_SHFT | MOD_NUM_KEYPAD);
     expect(stripModifiers(CURSOR_UP | MOD_CTRL)).toBe(CURSOR_UP);
     expect(stripModifiers(CURSOR_LEFT | MOD_SHFT | MOD_NUM_KEYPAD)).toBe(CURSOR_LEFT);
     expect(stripModifiers(LEFT_BUTTON)).toBe(LEFT_BUTTON);

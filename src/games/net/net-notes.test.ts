@@ -124,6 +124,26 @@ describe("notes mode", () => {
     });
   });
 
+  it("a tap in a tile's middle third locks it, with either button, and a tap outside it notes", () => {
+    const { state, ui } = fresh();
+    const lock = { type: "lock", x: 2, y: 1 };
+    for (const button of [LEFT_BUTTON, RIGHT_BUTTON]) {
+      expect(
+        netGame.interpretMove(state, ui, ds(), at(2, 1, 0.5, 0.5), button),
+      ).toEqual(lock);
+      expect(
+        netGame.interpretMove(state, ui, ds(), at(2, 1, 0.36, 0.64), button),
+      ).toEqual(lock);
+    }
+    // Just outside the middle third, the nearest side is noted as before.
+    expect(
+      netGame.interpretMove(state, ui, ds(), at(2, 1, 0.3, 0.5), LEFT_BUTTON),
+    ).toMatchObject({ type: "note", x: 1, y: 1, dir: R });
+    // And the lock it makes is the move `S` makes at the cursor.
+    const locked = netGame.executeMove(state, lock as NetMove);
+    expect(locked.tiles[1 * state.w + 2] & LOCKED).toBe(LOCKED);
+  });
+
   it("a wall takes no note", () => {
     const { state, ui } = fresh();
     expect(

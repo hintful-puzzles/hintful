@@ -186,8 +186,8 @@ member is excused — one entry per member, with the derivation asserting the
 ledger is exactly right. That is why `NO_KEYBOARD`, `INERT_PANEL_KEYS` and
 `NO_CONSUMER` can be **empty and still assert something**. And where production
 needs a boolean synchronously and cannot run the probe, the flag stays — held
-equal to a derivation, so it cannot lie (`canMarkAll`, `ignoresSecondaryButton`
-and `wantsStylusModifier`, each checked against the behavior it declares).
+equal to a derivation, so it cannot lie (`canMarkAll` and
+`ignoresSecondaryButton`, each checked against the behavior it declares).
 The followable form is [`docs/games/testing.md`](docs/games/testing.md) § "How a
 cross-game guard finds its population".
 

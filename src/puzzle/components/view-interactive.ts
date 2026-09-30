@@ -267,18 +267,13 @@ export class PuzzleViewInteractive extends PuzzleView {
   //
 
   private static domToPuzzleButtons: Record<
-    DOMMouseButton,
+    DOMMouseButton.Main | DOMMouseButton.Secondary,
     {
       press: PuzzleButton;
       drag: PuzzleButton;
       release: PuzzleButton;
     }
   > = {
-    [DOMMouseButton.Auxiliary]: {
-      press: PuzzleButton.MIDDLE_BUTTON,
-      drag: PuzzleButton.MIDDLE_DRAG,
-      release: PuzzleButton.MIDDLE_RELEASE,
-    },
     [DOMMouseButton.Secondary]: {
       press: PuzzleButton.RIGHT_BUTTON,
       drag: PuzzleButton.RIGHT_DRAG,
@@ -294,7 +289,6 @@ export class PuzzleViewInteractive extends PuzzleView {
   private static buttonToButtons: Record<number, number> = {
     // MouseEvent.button number -> MouseEvent.buttons bit mask
     0: 1, // main (left) button
-    1: 4, // auxiliary (middle) button
     2: 2, // secondary (right) button
   } as const;
 
@@ -346,6 +340,11 @@ export class PuzzleViewInteractive extends PuzzleView {
     if (!this.puzzle || !this.canvas) {
       return;
     }
+    if (event.button === DOMMouseButton.Auxiliary) {
+      // No puzzle has a middle button: many touchpads cannot send one, and a
+      // finger has nothing like it.
+      return;
+    }
     if (!event.isPrimary) {
       // Ignore multiple simultaneous touches (or pens).
       // (detectSecondaryButton() handles those on its own.)
@@ -367,17 +366,12 @@ export class PuzzleViewInteractive extends PuzzleView {
     const location = this.getPuzzleLocation(event);
     const pointerId = event.pointerId;
 
-    let button: DOMMouseButton =
-      event.button >= DOMMouseButton.Main && event.button <= DOMMouseButton.Secondary
-        ? event.button
+    // Two buttons, whatever the pointer, and no key held with a press changes
+    // either: a puzzle reads the same gestures from a mouse and a finger.
+    let button: DOMMouseButton.Main | DOMMouseButton.Secondary =
+      event.button === DOMMouseButton.Secondary
+        ? DOMMouseButton.Secondary
         : DOMMouseButton.Main; // Treat extra buttons as main
-
-    // Handle Ctrl and Shift like upstream's emcclib.js, where they remap physical buttons.
-    if (hasCtrlKey(event)) {
-      button = swapButtons(button);
-    } else if (event.shiftKey) {
-      button = DOMMouseButton.Auxiliary;
-    }
     if (this.swapMouseButtons) {
       button = swapButtons(button);
     }
@@ -403,12 +397,7 @@ export class PuzzleViewInteractive extends PuzzleView {
       this.secondaryButtonFeedback();
     }
 
-    let { press, drag, release } = PuzzleViewInteractive.domToPuzzleButtons[button];
-    if (event.pointerType === "touch" || event.pointerType === "pen") {
-      press |= PuzzleButton.MOD_STYLUS;
-      drag |= PuzzleButton.MOD_STYLUS;
-      release |= PuzzleButton.MOD_STYLUS;
-    }
+    const { press, drag, release } = PuzzleViewInteractive.domToPuzzleButtons[button];
 
     // Releases arriving during this await are parked on `inFlight` rather than
     // dropped, and replayed below once `pointerTracking` exists.

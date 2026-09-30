@@ -1,0 +1,5 @@
+# No delta yet: the requirements are written when the change is implemented,
+# against the code as it then stands. Remove skip_specs in the same edit.
+schema: spec-driven
+created: 2026-09-30
+skip_specs: true
