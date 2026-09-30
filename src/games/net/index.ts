@@ -20,10 +20,17 @@ import {
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
+  CURSOR_SELECT,
+  CURSOR_SELECT2,
   CURSOR_UP,
+  isCancelKey,
   isCursorMove,
+  isEraseKey,
+  LEFT_BUTTON,
   MOD_CTRL,
   MOD_SHFT,
+  PENCIL_MODE_BUTTON,
+  RIGHT_BUTTON,
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
@@ -38,6 +45,7 @@ import {
   anticlockwise,
   clockwise,
   D,
+  DIRECTIONS,
   L,
   offset,
   opposite,
@@ -45,7 +53,9 @@ import {
   U,
 } from "../../engine/wires.ts";
 import { newDesc } from "./generator.ts";
+import { findMistakes, type NetMistake } from "./mistakes.ts";
 import {
+  boardMargin,
   colors,
   computeSize,
   FLASH_FRAME,
@@ -69,8 +79,13 @@ import {
   type NetParams,
   type NetState,
   type NetUi,
+  NOTE_NONE,
+  NOTE_UNKNOWN,
+  NOTE_WIRE,
   newState,
   newUi,
+  type SideNote,
+  sideIndex,
   validateDesc,
   validateParams,
 } from "./state.ts";
@@ -114,6 +129,14 @@ function applyOp(tiles: Uint8Array, w: number, o: NetOp): void {
 const ROTATE_DIR = { A: 1, C: -1, F: 2 } as const;
 
 function executeMove(s: NetState, m: NetMove): NetState {
+  if (m.type === "note") {
+    // A note is the player's, not the network's: it changes no tile, so it
+    // neither animates nor can complete the board.
+    if (m.dir !== R && m.dir !== D) throw new Error(`net: note names side ${m.dir}`);
+    const sides = new Uint8Array(s.sides);
+    sides[sideIndex(s, m.x, m.y, m.dir)] = m.note;
+    return { ...s, sides, lastRotateDir: 0 };
+  }
   const tiles = new Uint8Array(s.tiles);
   let lastRotateX = 0;
   let lastRotateY = 0;
@@ -170,6 +193,29 @@ function arrowDir(button: number): number {
 }
 
 /**
+ * The tile a press lands in, in the state's coordinates (the grid is drawn
+ * scrolled by the origin), with where in the tile it landed as fractions
+ * `fx`, `fy` of the way across, and whether it is on the gutter along the
+ * tile's right or bottom edge. `null` off the grid.
+ */
+function pressedTile(s: NetState, ds: NetDrawState, p: Point, ui: NetUi) {
+  const ts = ds.tileSize;
+  const lt = lineThick(ts);
+  const px = Math.floor(p.x) - boardMargin(ts) - lt;
+  const py = Math.floor(p.y) - boardMargin(ts) - lt;
+  const tx = Math.floor(px / ts);
+  const ty = Math.floor(py / ts);
+  if (px < 0 || py < 0 || tx >= s.w || ty >= s.h) return null;
+  return {
+    x: (tx + ui.orgX) % s.w,
+    y: (ty + ui.orgY) % s.h,
+    fx: (px % ts) / ts,
+    fy: (py % ts) / ts,
+    onGutter: px % ts >= ts - lt || py % ts >= ts - lt,
+  };
+}
+
+/**
  * A target is a tile, named in the state's own coordinates. On screen the grid
  * is drawn scrolled by the origin, so a press is shifted by it; the cursor
  * already lives in state coordinates. A press on the gutter between tiles hits
@@ -178,15 +224,8 @@ function arrowDir(button: number): number {
 const geometry: TargetGeometry<NetState, NetUi, NetDrawState, Point> = {
   noun: "square",
   pointerTarget(s, ds, p, ui) {
-    const ts = ds.tileSize;
-    const lt = lineThick(ts);
-    const px = Math.floor(p.x) - lt;
-    const py = Math.floor(p.y) - lt;
-    const tx = Math.floor(px / ts);
-    const ty = Math.floor(py / ts);
-    if (px < 0 || py < 0 || tx >= s.w || ty >= s.h) return null;
-    if (px % ts >= ts - lt || py % ts >= ts - lt) return null;
-    return { x: (tx + ui.orgX) % s.w, y: (ty + ui.orgY) % s.h };
+    const t = pressedTile(s, ds, p, ui);
+    return t === null || t.onGutter ? null : { x: t.x, y: t.y };
   },
   cursorTarget: (_s, ui) => ({ x: ui.cursor.x, y: ui.cursor.y }),
   parkCursor(ui, t) {
@@ -238,6 +277,77 @@ const targetVerbs: TargetVerbs<NetState, NetUi, NetDrawState, Point, NetMove> = 
   ],
 };
 
+/**
+ * Toggle `note` on side `dir` of tile `(x, y)`: on where the side holds any
+ * other note or none, off where it holds this one. A wall already says no wire
+ * crosses, so a side with one takes no note.
+ */
+function toggleNote(
+  s: NetState,
+  x: number,
+  y: number,
+  dir: number,
+  note: SideNote,
+): NetMove | null {
+  if (s.barriers[y * s.w + x] & dir) return null;
+  const now = s.sides[sideIndex(s, x, y, dir)];
+  const set: SideNote = now === note ? NOTE_UNKNOWN : note;
+  if (dir === R || dir === D) return { type: "note", x, y, dir, note: set };
+  const o = offset(x, y, dir, s.w, s.h);
+  return { type: "note", x: o.x, y: o.y, dir: opposite(dir), note: set };
+}
+
+/** The direction from tile `a` to its neighbor `b`, wrapping, or `null` when
+ * they are not neighbors. */
+function directionTo(s: NetState, a: Point, b: Point): number | null {
+  for (const d of DIRECTIONS) {
+    const o = offset(a.x, a.y, d, s.w, s.h);
+    if (o.x === b.x && o.y === b.y && (o.x !== a.x || o.y !== a.y)) return d;
+  }
+  return null;
+}
+
+/**
+ * Notes mode's presses and selects, as Slant's: a tap notes the side of the
+ * tile it lands nearest (the left button a wire across it, the right button
+ * none), and from the keyboard a select picks a tile, and a select on a
+ * neighbor then notes the side between them (Enter a wire, Space none).
+ */
+function noteInput(
+  s: NetState,
+  ui: NetUi,
+  ds: NetDrawState,
+  p: Point,
+  button: number,
+): NetMove | null | UiUpdate {
+  if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
+    const t = pressedTile(s, ds, p, ui);
+    if (t === null) return null;
+    const hid = ui.cursor.visible;
+    ui.cursor.visible = false;
+    ui.pin = null;
+    const nearest = [t.fx, 1 - t.fx, t.fy, 1 - t.fy];
+    const dir = [L, R, U, D][nearest.indexOf(Math.min(...nearest))];
+    const note = button === LEFT_BUTTON ? NOTE_WIRE : NOTE_NONE;
+    return toggleNote(s, t.x, t.y, dir, note) ?? (hid ? UI_UPDATE : null);
+  }
+  // A select: the first on a hidden cursor only shows it.
+  if (!ui.cursor.visible) {
+    ui.cursor.visible = true;
+    return UI_UPDATE;
+  }
+  const here = { x: ui.cursor.x, y: ui.cursor.y };
+  const pin = ui.pin;
+  const dir = pin === null ? null : directionTo(s, pin, here);
+  if (pin === null || dir === null) {
+    ui.pin = pin !== null && pin.x === here.x && pin.y === here.y ? null : here;
+    return UI_UPDATE;
+  }
+  ui.pin = null;
+  const note = button === CURSOR_SELECT ? NOTE_WIRE : NOTE_NONE;
+  return toggleNote(s, pin.x, pin.y, dir, note) ?? UI_UPDATE;
+}
+
 function interpretMove(
   s: NetState,
   ui: NetUi,
@@ -246,6 +356,25 @@ function interpretMove(
   rawButton: number,
 ): NetMove | null | UiUpdate {
   const button = stripModifiers(rawButton);
+
+  if (button === PENCIL_MODE_BUTTON) {
+    ui.pencilMode = !ui.pencilMode;
+    ui.pin = null;
+    return UI_UPDATE;
+  }
+  if (
+    ui.pencilMode &&
+    (button === LEFT_BUTTON ||
+      button === RIGHT_BUTTON ||
+      button === CURSOR_SELECT ||
+      button === CURSOR_SELECT2)
+  )
+    return noteInput(s, ui, ds, p, button);
+  // Escape lets go of a picked tile; the erase keys are not a cancel here.
+  if (isCancelKey(button) && !isEraseKey(button) && ui.pin !== null) {
+    ui.pin = null;
+    return UI_UPDATE;
+  }
 
   // Shift moves the origin, Ctrl the source, both together moves both. All are
   // UI-only; a bare arrow is the model's.
@@ -391,7 +520,14 @@ function statusbarText(s: NetState, ui: NetUi): string {
  * The Game.
  */
 
-export const netGame: Game<NetParams, NetState, NetMove, NetUi, NetDrawState> = {
+export const netGame: Game<
+  NetParams,
+  NetState,
+  NetMove,
+  NetUi,
+  NetDrawState,
+  NetMistake
+> = {
   id: "net",
 
   defaultParams,
@@ -463,6 +599,7 @@ export const netGame: Game<NetParams, NetState, NetMove, NetUi, NetDrawState> = 
   status: (s): GameStatus => (s.completed ? "solved" : "ongoing"),
 
   solve,
+  findMistakes,
 
   prefs,
   encodeUi,

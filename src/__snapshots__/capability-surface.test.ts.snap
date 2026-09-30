@@ -975,6 +975,10 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "h",
+      "notesShown",
+      "notesToDraw",
+      "pencilModeShown",
+      "started",
       "tileSize",
       "toDraw",
       "visible",
@@ -985,6 +989,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "animLength",
       "decodeUi",
       "encodeUi",
+      "findMistakes",
       "flashLength",
       "paramConfig",
       "preferredTileSize",
@@ -1001,6 +1006,8 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "cy",
       "orgX",
       "orgY",
+      "pencilMode",
+      "pin",
       "unlockedLoops",
     ],
   },

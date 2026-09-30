@@ -1127,7 +1127,14 @@ Normative: the on-screen-keys requirement in
   the glyph grows its canvas for it with `pencilIndicatorCanvas` — on **every**
   side, so the board stays centered — then routes every drawing site through an
   `origin(ts)` and shifts `fromCoord` by the same margin. Rome (a two-pixel
-  border) and Map (none) both did. Budget for this when giving a drag game a
+  border), Map and Net (none) all did; Net's canvas also needed its margin
+  painted once, since its tiles never covered anything outside the board.
+- **A note on the side two squares share has one gesture set: Slant's.** A tap
+  marks the side of the square it lands nearest; from the keyboard a select
+  picks a square and a select on a neighbor marks the side between them, with
+  Escape to let go. Net's notes follow it (Enter a wire, Space none, as its
+  buttons), rather than a half-cell cursor that would give one board two
+  cursors. Budget for this when giving a drag game a
   notes mode: it is a handful of lines where the geometry already funnels
   through one helper, and a sweep of the renderer where it does not.
 - **Match upstream's keypad exactly — including its quirks.** Unequal is the

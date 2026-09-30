@@ -12,9 +12,24 @@
  */
 
 import { BLUE, RED, TEAL } from "../../engine/color/colors.ts";
-import { CURSOR, ERROR, GRID_MID, INK } from "../../engine/color/palette.ts";
+import {
+  CURSOR,
+  ERROR,
+  GRID_MID,
+  INK,
+  PENCIL_BODY,
+  pencilColor,
+} from "../../engine/color/palette.ts";
 import { netLocked } from "../../engine/color/palette-games.ts";
 import type { GameDrawing } from "../../engine/game.ts";
+import {
+  type PencilIndicatorCache,
+  type PencilIndicatorStyle,
+  pencilIndicatorBox,
+  pencilIndicatorCanvas,
+  pencilIndicatorReach,
+  repaintPencilIndicator,
+} from "../../engine/pencil-indicator.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import {
   anticlockwise,
@@ -30,7 +45,16 @@ import {
   U,
 } from "../../engine/wires.ts";
 import { computeLoops, ERR_SHIFT } from "./loops.ts";
-import { ACTIVE, computeActive, LOCKED, type NetState, type NetUi } from "./state.ts";
+import type { NetMistake } from "./mistakes.ts";
+import {
+  ACTIVE,
+  computeActive,
+  LOCKED,
+  type NetState,
+  type NetUi,
+  NOTE_WIRE,
+  sideIndex,
+} from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
 export const ROTATE_TIME = 0.13;
@@ -50,6 +74,16 @@ export const COL_ERR = 7;
  * the locked tint, or the board on a locked tile — a tint of the board either
  * way, which is the one thing a cursor must not be. */
 export const COL_CURSOR = 8;
+/** The player's side notes and the tile a keyboard note starts from. */
+export const COL_PENCIL = 9;
+/** The notes-mode indicator's pencil. */
+export const COL_PENCIL_BODY = 10;
+
+const INDICATOR: PencilIndicatorStyle = {
+  background: COL_BACKGROUND,
+  body: COL_PENCIL_BODY,
+  ink: COL_WIRE,
+};
 
 export function colors(defaultBackground: Color): Color[] {
   const out: Color[] = [];
@@ -62,6 +96,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_BORDER] = GRID_MID;
   out[COL_LOCKED] = netLocked(defaultBackground);
   out[COL_CURSOR] = CURSOR;
+  out[COL_PENCIL] = pencilColor(defaultBackground);
+  out[COL_PENCIL_BODY] = PENCIL_BODY;
   return out;
 }
 
@@ -77,7 +113,16 @@ const TILE_LOCKED = 1 << 28;
 
 export const lineThick = (ts: number): number => Math.floor((ts + 47) / 48);
 
-export interface NetDrawState {
+// A tile's notes word: per side (in `R U L D` order) two bits of note, then a
+// bit for the keyboard note's starting tile.
+const NOTES_PER_SIDE = 2;
+const NOTE_PIN = 1 << 8;
+/** Check & Save's overlay: a side note the solution contradicts, one bit per
+ * side, then a lock it contradicts. */
+const MISTAKE_SIDE_SHIFT = 9;
+const MISTAKE_TILE = 1 << 13;
+
+export interface NetDrawState extends PencilIndicatorCache {
   tileSize: number;
   w: number;
   h: number;
@@ -86,6 +131,12 @@ export interface NetDrawState {
   visible: Int32Array;
   /** Per-frame scratch for the target cache word. */
   toDraw: Int32Array;
+  /** The notes drawn on each cell, beside its cache word: the notes are the
+   * player's and would not fit in the word. −1 = "repaint". */
+  notesShown: Int32Array;
+  notesToDraw: Int32Array;
+  /** Whether the margin has been painted: nothing else paints it. */
+  started: boolean;
 }
 
 export function newDrawState(s: NetState, tileSize: number): NetDrawState {
@@ -96,14 +147,24 @@ export function newDrawState(s: NetState, tileSize: number): NetDrawState {
     h: s.h,
     visible: new Int32Array(cells).fill(-1),
     toDraw: new Int32Array(cells),
+    notesShown: new Int32Array(cells).fill(-1),
+    notesToDraw: new Int32Array(cells),
+    started: false,
+    pencilModeShown: null,
   };
 }
 
-/** The board and its closing grid line, with no margin (upstream's
- * `NARROW_BORDERS`). */
+/** The margin around the board: room for the notes-mode pencil at the
+ * top-right, kept on every side so the board stays centered. */
+export const boardMargin = (tileSize: number): number => pencilIndicatorReach(tileSize);
+
+/** The board and its closing grid line, inside {@link boardMargin}. */
 export function computeSize(p: { w: number; h: number }, tileSize: number): Size {
   const lt = lineThick(tileSize);
-  return { w: tileSize * p.w + lt, h: tileSize * p.h + lt };
+  return pencilIndicatorCanvas(
+    { w: tileSize * p.w + lt, h: tileSize * p.h + lt },
+    tileSize,
+  );
 }
 
 /** Index of cell `(x, y)` in the `(w+2)×(h+2)` cache arrays. */
@@ -173,6 +234,7 @@ function drawTile(
   x: number,
   y: number,
   tile: number,
+  notes: number,
   angle: number,
 ): void {
   const ts = ds.tileSize;
@@ -181,8 +243,9 @@ function drawTile(
   const borderTl = lt - borderBr;
   const barrierOutline = Math.floor((lt + 1) / 2);
 
-  const tx = ts * x + borderBr;
-  const ty = ts * y + borderBr;
+  const m = boardMargin(ts);
+  const tx = m + ts * x + borderBr;
+  const ty = m + ts * y + borderBr;
 
   // Clip to the tile boundary, tightened when drawing just outside the grid.
   let clipx = tx;
@@ -234,6 +297,30 @@ function drawTile(
         h: ts - 2 * insetOuter,
       },
       COL_CURSOR,
+    );
+    dr.drawRect(
+      {
+        x: tx + insetInner,
+        y: ty + insetInner,
+        w: ts - 2 * insetInner,
+        h: ts - 2 * insetInner,
+      },
+      bg,
+    );
+  }
+
+  // The tile a keyboard note starts from: a pencil ring inside the cursor's.
+  if (notes & NOTE_PIN) {
+    const insetOuter = Math.floor(ts / 8) + 2 * lt;
+    const insetInner = insetOuter + lt;
+    dr.drawRect(
+      {
+        x: tx + insetOuter,
+        y: ty + insetOuter,
+        w: ts - 2 * insetOuter,
+        h: ts - 2 * insetOuter,
+      },
+      COL_PENCIL,
     );
     dr.drawRect(
       {
@@ -337,6 +424,45 @@ function drawTile(
     }
   }
 
+  // The player's side notes, over the wires: a pencil stub across the side
+  // for "a wire crosses here", a pencil × on it for "none does" — two shapes,
+  // since a stub across one side and a bar along another would both be a
+  // short line. The mark straddles the side, so each tile draws the half
+  // inside its own clip.
+  for (let d = 1, dsh = 0; d < 16; d *= 2, dsh++) {
+    const note = (notes >> (dsh * NOTES_PER_SIDE)) & 3;
+    if (note === 0) continue;
+    const col = notes & (1 << (MISTAKE_SIDE_SHIFT + dsh)) ? COL_ERR : COL_PENCIL;
+    const bx = dirX(d) > 0 ? tx + ts : dirX(d) < 0 ? tx : cx;
+    const by = dirY(d) > 0 ? ty + ts : dirY(d) < 0 ? ty : cy;
+    if (note === NOTE_WIRE) {
+      const reach = Math.floor(ts * 0.22);
+      const half = 2 * lt;
+      const [hx, hy] = dirX(d) !== 0 ? [reach, half] : [half, reach];
+      dr.drawRect({ x: bx - hx, y: by - hy, w: 2 * hx + 1, h: 2 * hy + 1 }, col);
+    } else {
+      const r = Math.floor(ts * 0.12);
+      dr.drawLine({ x: bx - r, y: by - r }, { x: bx + r, y: by + r }, col, 2 * lt);
+      dr.drawLine({ x: bx - r, y: by + r }, { x: bx + r, y: by - r }, col, 2 * lt);
+    }
+  }
+
+  // A lock the solution contradicts: a red ring just inside the tile.
+  if (notes & MISTAKE_TILE) {
+    const inset = lt;
+    const width = Math.max(2, lt * 2);
+    const box = {
+      x: tx + inset,
+      y: ty + inset,
+      w: ts - 2 * inset - lt,
+      h: ts - 2 * inset - lt,
+    };
+    dr.drawRect({ ...box, h: width }, COL_ERR);
+    dr.drawRect({ ...box, y: box.y + box.h - width, h: width }, COL_ERR);
+    dr.drawRect({ ...box, w: width }, COL_ERR);
+    dr.drawRect({ ...box, x: box.x + box.w - width, w: width }, COL_ERR);
+  }
+
   // Barriers along grid edges (outline pass then red pass).
   for (let pass = 0; pass < 2; pass++) {
     let btl = borderTl;
@@ -380,8 +506,22 @@ export function redraw(
   ui: NetUi,
   animTime: number,
   flashTime: number,
+  _hint?: unknown,
+  mistakes?: readonly NetMistake[],
 ): void {
   let state = current;
+
+  // Check & Save's findings, per tile and side: a side's on both its tiles.
+  const wrong = new Set<string>();
+  for (const m of mistakes ?? []) {
+    if (m.kind === "tile") {
+      wrong.add(`${m.y * current.w + m.x}`);
+      continue;
+    }
+    const o = offset(m.x, m.y, m.dir, current.w, current.h);
+    wrong.add(`${m.y * current.w + m.x}:${m.dir}`);
+    wrong.add(`${o.y * current.w + o.x}:${opposite(m.dir)}`);
+  }
 
   // Rotation animation: draw the *old* state and spin the rotating tile.
   let tx = -1;
@@ -403,6 +543,15 @@ export function redraw(
 
   const td = ds.toDraw;
   td.fill(0);
+  const nd = ds.notesToDraw;
+  nd.fill(0);
+
+  const canvas = computeSize(state, ds.tileSize);
+  if (!ds.started) {
+    dr.drawRect({ x: 0, y: 0, w: canvas.w, h: canvas.h }, COL_BACKGROUND);
+    dr.drawUpdate({ x: 0, y: 0, w: canvas.w, h: canvas.h });
+    ds.started = true;
+  }
 
   for (let dy = 0; dy < h; dy++) {
     const gy = (dy + ui.orgY) % h;
@@ -454,6 +603,16 @@ export function redraw(
         td[here] |= TILE_KEYBOARD_CURSOR;
       }
 
+      let notes = 0;
+      const gi = gy * w + gx;
+      for (let d = 1, dsh = 0; d < 16; d *= 2, dsh++) {
+        notes |= state.sides[sideIndex(state, gx, gy, d)] << (dsh * NOTES_PER_SIDE);
+        if (wrong.has(`${gi}:${d}`)) notes |= 1 << (MISTAKE_SIDE_SHIFT + dsh);
+      }
+      if (wrong.has(`${gi}`)) notes |= MISTAKE_TILE;
+      if (ui.pencilMode && ui.pin?.x === gx && ui.pin.y === gy) notes |= NOTE_PIN;
+      nd[here] = notes;
+
       if (gx === tx && gy === ty) td[here] |= TILE_ROTATING;
 
       if (gx === ui.cx && gy === ui.cy) {
@@ -487,10 +646,23 @@ export function redraw(
       const i = cell(ds, dx, dy);
       const prevWord = ds.visible[i];
       const curr = td[i];
-      if (prevWord !== curr || (prevWord | curr) & TILE_ROTATING) {
-        drawTile(dr, ds, dx, dy, curr, angle);
+      if (
+        prevWord !== curr ||
+        (prevWord | curr) & TILE_ROTATING ||
+        ds.notesShown[i] !== nd[i]
+      ) {
+        drawTile(dr, ds, dx, dy, curr, nd[i], angle);
         ds.visible[i] = curr;
+        ds.notesShown[i] = nd[i];
       }
     }
   }
+
+  repaintPencilIndicator(
+    dr,
+    ds,
+    ui.pencilMode,
+    pencilIndicatorBox(canvas, ds.tileSize),
+    INDICATOR,
+  );
 }

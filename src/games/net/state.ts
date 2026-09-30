@@ -4,11 +4,13 @@ import { parseLeadingInt } from "../../engine/decimal.ts";
 import { atof, formatG } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
+import type { Point } from "../../engine/types.ts";
 import {
   addBorderBarriers,
   computeActive as computeActiveWires,
   D,
   L,
+  offset,
   parseWireDesc,
   R,
   U,
@@ -123,7 +125,35 @@ export type NetMove =
   | { type: "jumble"; ops: NetOp[] }
   /** Solve: transform the current grid into the solution. No animation, and
    * sets `cheated`. */
-  | { type: "solve"; ops: NetOp[] };
+  | { type: "solve"; ops: NetOp[] }
+  /** Set the note on one side, named from the tile left of it (`dir` = `R`)
+   * or above it (`D`): an absolute set, so re-applying it changes nothing. */
+  | { type: "note"; x: number; y: number; dir: number; note: SideNote };
+
+/** A player's note on the side two tiles share. */
+export type SideNote = typeof NOTE_UNKNOWN | typeof NOTE_WIRE | typeof NOTE_NONE;
+export const NOTE_UNKNOWN = 0;
+/** A wire crosses this side. */
+export const NOTE_WIRE = 1;
+/** No wire crosses this side. */
+export const NOTE_NONE = 2;
+
+/**
+ * Where the note on side `dir` of tile `(x, y)` lives in {@link NetState.sides}:
+ * a side is kept once, under the tile left of it or above it, so the same side
+ * named from either tile is one entry. On a wrapping grid the side off the
+ * right edge is the one left of column 0.
+ */
+export function sideIndex(
+  s: { w: number; h: number },
+  x: number,
+  y: number,
+  dir: number,
+): number {
+  if (dir === R || dir === D) return (y * s.w + x) * 2 + (dir === R ? 0 : 1);
+  const o = offset(x, y, dir, s.w, s.h);
+  return (o.y * s.w + o.x) * 2 + (dir === L ? 0 : 1);
+}
 
 /* ----------------------------------------------------------------------
  * State.
@@ -146,6 +176,9 @@ export interface NetState {
    * populated typed array cannot be frozen, so the `readonly` type is the
    * guarantee). */
   readonly barriers: Uint8Array;
+  /** The player's side notes, two per tile ({@link sideIndex}), each a
+   * {@link SideNote}. A note move copies it; nothing else does. */
+  readonly sides: Uint8Array;
 
   readonly completed: boolean;
   readonly cheated: boolean;
@@ -189,6 +222,7 @@ export function newState(p: NetParams, desc: string): NetState {
     wrapping,
     tiles,
     barriers,
+    sides: new Uint8Array(w * h * 2),
     completed: false,
     cheated: false,
     lastRotateX: 0,
@@ -234,6 +268,11 @@ export interface NetUi {
   cursor: GridCursor;
   /** Highlight loops that involve unlocked squares (the one preference). */
   unlockedLoops: boolean;
+  /** Notes mode: a tap or a select notes a side instead of turning a tile. */
+  pencilMode: boolean;
+  /** The tile a keyboard note starts from, in notes mode: the next select on
+   * a neighbor notes the side between them. */
+  pin: Point | null;
 }
 
 export function newUi(s: NetState): NetUi {
@@ -246,5 +285,7 @@ export function newUi(s: NetState): NetUi {
     cy,
     cursor: newCursor(cx, cy),
     unlockedLoops: true,
+    pencilMode: false,
+    pin: null,
   };
 }
