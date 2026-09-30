@@ -1,7 +1,5 @@
 # add-net-hint
 
-**Status: scaffolded (2026-09-30), after `add-net-notation`.**
-
 ## Why
 
 Net is hintless, so it is a draft. It was the game `sweep-target-verb-input`

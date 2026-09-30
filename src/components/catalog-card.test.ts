@@ -33,8 +33,12 @@ describe("the draft label", () => {
       const missing = game === null ? [] : draftSections(game);
       expect(`${id}: ${drafts[id] ?? []}`).toBe(`${id}: ${missing}`);
     }
-    // Known positive and negative, so equality over two empty maps cannot pass.
-    expect(drafts["net"]).toContain("Hints");
+    // A positive and a known negative, so equality over two empty maps cannot
+    // pass. The positive is any draft still without a hint rather than a game
+    // named here, which would stop being one the day it gains its hint.
+    expect(Object.values(drafts).some((missing) => missing.includes("Hints"))).toBe(
+      true,
+    );
     expect(drafts["palisade"]).toBeUndefined();
   });
 

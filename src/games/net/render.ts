@@ -16,12 +16,16 @@ import {
   CURSOR,
   ERROR,
   GRID_MID,
+  HINT_ACTION,
+  HINT_EVIDENCE,
   INK,
   PENCIL_BODY,
   pencilColor,
 } from "../../engine/color/palette.ts";
 import { netLocked } from "../../engine/color/palette-games.ts";
-import type { GameDrawing } from "../../engine/game.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import {
   type PencilIndicatorCache,
   type PencilIndicatorStyle,
@@ -44,12 +48,15 @@ import {
   R,
   U,
 } from "../../engine/wires.ts";
+import type { NetHint } from "./hint.ts";
+import { SIDE } from "./hint-text.ts";
 import { computeLoops, ERR_SHIFT } from "./loops.ts";
 import type { NetMistake } from "./mistakes.ts";
 import {
   ACTIVE,
   computeActive,
   LOCKED,
+  type NetMove,
   type NetState,
   type NetUi,
   NOTE_WIRE,
@@ -78,6 +85,10 @@ export const COL_CURSOR = 8;
 export const COL_PENCIL = 9;
 /** The notes-mode indicator's pencil. */
 export const COL_PENCIL_BODY = 10;
+/** A hint's ring and stripes: what the step decides, and where. */
+export const COL_HINT = 11;
+/** A hint's outlines: what the step reasons from. */
+export const COL_HINT_CELL = 12;
 
 const INDICATOR: PencilIndicatorStyle = {
   background: COL_BACKGROUND,
@@ -98,6 +109,8 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_CURSOR] = CURSOR;
   out[COL_PENCIL] = pencilColor(defaultBackground);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
+  out[COL_HINT] = HINT_ACTION;
+  out[COL_HINT_CELL] = HINT_EVIDENCE;
   return out;
 }
 
@@ -121,6 +134,14 @@ const NOTE_PIN = 1 << 8;
  * side, then a lock it contradicts. */
 const MISTAKE_SIDE_SHIFT = 9;
 const MISTAKE_TILE = 1 << 13;
+/** A displayed hint's marks (`stepMarks`): the tile ringed, outlined or
+ * striped; per side, the note a ring places (two bits); per side, a cited
+ * note. */
+const HINT_RING_TILE = 1 << 14;
+const HINT_OUTLINE_TILE = 1 << 15;
+const HINT_STRIPES = 1 << 16;
+const HINT_RING_SIDE_SHIFT = 17;
+const HINT_OUTLINE_SIDE_SHIFT = 25;
 
 export interface NetDrawState extends PencilIndicatorCache {
   tileSize: number;
@@ -285,6 +306,11 @@ function drawTile(
       );
   }
 
+  // The tiles a hint's loop runs through, or its turning would seal off:
+  // hatched under the wires, which stay readable over it.
+  if (notes & HINT_STRIPES)
+    dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, COL_HINT, hatchPeriod(ts));
+
   // Keyboard cursor: an inset ring.
   if (tile & TILE_KEYBOARD_CURSOR) {
     const insetOuter = Math.floor(ts / 8);
@@ -429,10 +455,7 @@ function drawTile(
   // since a stub across one side and a bar along another would both be a
   // short line. The mark straddles the side, so each tile draws the half
   // inside its own clip.
-  for (let d = 1, dsh = 0; d < 16; d *= 2, dsh++) {
-    const note = (notes >> (dsh * NOTES_PER_SIDE)) & 3;
-    if (note === 0) continue;
-    const col = notes & (1 << (MISTAKE_SIDE_SHIFT + dsh)) ? COL_ERR : COL_PENCIL;
+  const drawNote = (d: number, note: number, col: number) => {
     const bx = dirX(d) > 0 ? tx + ts : dirX(d) < 0 ? tx : cx;
     const by = dirY(d) > 0 ? ty + ts : dirY(d) < 0 ? ty : cy;
     if (note === NOTE_WIRE) {
@@ -445,10 +468,36 @@ function drawTile(
       dr.drawLine({ x: bx - r, y: by - r }, { x: bx + r, y: by + r }, col, 2 * lt);
       dr.drawLine({ x: bx - r, y: by + r }, { x: bx + r, y: by - r }, col, 2 * lt);
     }
+  };
+  for (let d = 1, dsh = 0; d < 16; d *= 2, dsh++) {
+    // The note a hint places, in the action color and the shape it will have.
+    const placing = (notes >> (HINT_RING_SIDE_SHIFT + 2 * dsh)) & 3;
+    if (placing) {
+      drawNote(d, placing, COL_HINT);
+      continue;
+    }
+    const note = (notes >> (dsh * NOTES_PER_SIDE)) & 3;
+    if (note === 0) continue;
+    const col =
+      notes & (1 << (MISTAKE_SIDE_SHIFT + dsh))
+        ? COL_ERR
+        : notes & (1 << (HINT_OUTLINE_SIDE_SHIFT + dsh))
+          ? COL_HINT_CELL
+          : COL_PENCIL;
+    drawNote(d, note, col);
   }
 
-  // A lock the solution contradicts: a red ring just inside the tile.
-  if (notes & MISTAKE_TILE) {
+  // A ring just inside the tile: a lock the solution contradicts, the tile a
+  // hint turns and locks, or one the hint reasons from.
+  const ring =
+    notes & MISTAKE_TILE
+      ? COL_ERR
+      : notes & HINT_RING_TILE
+        ? COL_HINT
+        : notes & HINT_OUTLINE_TILE
+          ? COL_HINT_CELL
+          : -1;
+  if (ring >= 0) {
     const inset = lt;
     const width = Math.max(2, lt * 2);
     const box = {
@@ -457,10 +506,10 @@ function drawTile(
       w: ts - 2 * inset - lt,
       h: ts - 2 * inset - lt,
     };
-    dr.drawRect({ ...box, h: width }, COL_ERR);
-    dr.drawRect({ ...box, y: box.y + box.h - width, h: width }, COL_ERR);
-    dr.drawRect({ ...box, w: width }, COL_ERR);
-    dr.drawRect({ ...box, x: box.x + box.w - width, w: width }, COL_ERR);
+    dr.drawRect({ ...box, h: width }, ring);
+    dr.drawRect({ ...box, y: box.y + box.h - width, h: width }, ring);
+    dr.drawRect({ ...box, w: width }, ring);
+    dr.drawRect({ ...box, x: box.x + box.w - width, w: width }, ring);
   }
 
   // Barriers along grid edges (outline pass then red pass).
@@ -506,10 +555,26 @@ export function redraw(
   ui: NetUi,
   animTime: number,
   flashTime: number,
-  _hint?: unknown,
+  hint?: HintStep<NetMove, NetHint>,
   mistakes?: readonly NetMistake[],
 ): void {
   let state = current;
+
+  // The displayed hint's marks, from its words and nowhere else.
+  const marks = stepMarks(hint);
+  const tileKey = (p: Point) => p.y * current.w + p.x;
+  const ringTiles = new Set(marks.of("ring", CELL).map(tileKey));
+  const outlineTiles = new Set(marks.of("outline", CELL).map(tileKey));
+  const stripedTiles = new Set(marks.of("stripes", CELL).map(tileKey));
+  const ringSides = new Map(marks.of("ring", SIDE).map((s) => [SIDE.key(s), s.note]));
+  const outlineSides = new Set(marks.of("outline", SIDE).map((s) => SIDE.key(s)));
+  /** Side `d` of tile `(x, y)` as the marks key it: from the tile left of it
+   * or above it. */
+  const sideKey = (x: number, y: number, d: number) => {
+    if (d === R || d === D) return SIDE.key({ x, y, dir: d, note: 0 });
+    const o = offset(x, y, d, current.w, current.h);
+    return SIDE.key({ x: o.x, y: o.y, dir: opposite(d), note: 0 });
+  };
 
   // Check & Save's findings, per tile and side: a side's on both its tiles.
   const wrong = new Set<string>();
@@ -608,8 +673,14 @@ export function redraw(
       for (let d = 1, dsh = 0; d < 16; d *= 2, dsh++) {
         notes |= state.sides[sideIndex(state, gx, gy, d)] << (dsh * NOTES_PER_SIDE);
         if (wrong.has(`${gi}:${d}`)) notes |= 1 << (MISTAKE_SIDE_SHIFT + dsh);
+        const side = sideKey(gx, gy, d);
+        notes |= (ringSides.get(side) ?? 0) << (HINT_RING_SIDE_SHIFT + 2 * dsh);
+        if (outlineSides.has(side)) notes |= 1 << (HINT_OUTLINE_SIDE_SHIFT + dsh);
       }
       if (wrong.has(`${gi}`)) notes |= MISTAKE_TILE;
+      if (ringTiles.has(gi)) notes |= HINT_RING_TILE;
+      if (outlineTiles.has(gi)) notes |= HINT_OUTLINE_TILE;
+      if (stripedTiles.has(gi)) notes |= HINT_STRIPES;
       if (ui.pencilMode && ui.pin?.x === gx && ui.pin.y === gy) notes |= NOTE_PIN;
       nd[here] = notes;
 

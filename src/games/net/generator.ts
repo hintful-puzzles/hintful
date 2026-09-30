@@ -13,6 +13,12 @@
  *      and require at least one mismatched non-wrapping edge (so the start isn't
  *      accidentally already solved).
  *   5. Choose barrier locations from the candidates.
+ *   6. If `unique`, keep the board only if the hint's engine (`deduce.ts`)
+ *      finishes it from the opening position, and otherwise start again with
+ *      the RNG where it is. Upstream's solver settles boards the hint cannot
+ *      teach (some wrapping ones, whose reasoning runs through bounds on how
+ *      many tiles lie behind a side), and a board the hint cannot finish is one
+ *      its player could be left stuck on (`add-net-hint`'s design).
  *
  * Barriers are chosen *after* the shuffle so that raising the barrier rate on a
  * fixed seed extends the previous barrier set rather than replacing it.
@@ -37,9 +43,10 @@ import {
   U,
   type Xyd,
 } from "../../engine/wires.ts";
+import { finishes } from "./deduce.ts";
 import { computeLoops } from "./loops.ts";
 import { netSolver, SOLVER_UNIQUE } from "./solver.ts";
-import { LOCKED, type NetParams } from "./state.ts";
+import { LOCKED, type NetParams, newState } from "./state.ts";
 
 /**
  * Consecutive loop-fixing rounds that may fail to reduce the loop-square count
@@ -55,6 +62,15 @@ import { LOCKED, type NetParams } from "./state.ts";
 const MAX_STALLED_ROUNDS = 100;
 
 export function newDesc(p: NetParams, rs: RandomState): { desc: string; aux: string } {
+  const attempt = retryLimit("net: a board the hint can finish");
+  for (;;) {
+    attempt();
+    const board = generate(p, rs);
+    if (!p.unique || finishes(newState(p, board.desc))) return board;
+  }
+}
+
+function generate(p: NetParams, rs: RandomState): { desc: string; aux: string } {
   const { w, h } = p;
   const wh = w * h;
   const cx = Math.floor(w / 2);

@@ -288,6 +288,16 @@ const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
       "sentence names each reason some rival has, and a reason left out would " +
       "leave a square on the board the player cannot account for.",
   },
+  {
+    games: ["net"],
+    match:
+      / would (?:close a loop through|seal off|close a loop through or seal off) the striped /,
+    why:
+      "A turning ruled out because it would close a loop or seal a group off is " +
+      "a second premise beside the notes and locks the others clash with, and " +
+      "names the turning it rules out by its wires; a sentence citing only one " +
+      "of the two would leave a way of turning the tile unaccounted for.",
+  },
 ];
 
 /** The shared necessity vocabulary a deductive conclusion draws from.

@@ -2737,6 +2737,32 @@ reusable part. In [`games/ascent/`](../../src/games/ascent/):
   where it shows arrows. A census of the regular modes found no step there
   that the line reading would improve.
 
+### Measure what the recordable facts reach first (Net)
+
+**Before designing a notation, run the engine on the facts the player can
+already record, and measure how far it gets.** Net's players can record a lock
+and nothing else; an engine reasoning from locks and walls alone finished 25 of
+30 5×5 boards, 5 of 30 at 11×11, and never took a first step on a wrapping grid
+(`add-net-hint`'s design). Adding the one fact the solver derives beyond a lock
+— what crosses the side between two tiles — finished every bounded board and
+most wrapping ones. That table is what made the notation a decision for the
+owner rather than a guess, and it named the notation's size: one kind of note,
+because the engine rederives each tile's surviving turnings from the sides
+every step, so a narrowed set is never a fact a step leans on unsaid.
+
+**Where the recorded facts still fall short, the generator can close the gap
+instead of the notation.** Net's remaining wrapping boards need a bound on how
+many tiles lie behind a side, propagated tile to tile — a chain no note can
+hold. Its generator keeps only boards the hint's engine finishes
+(`finishes`), which is the one-engine-two-projections shape of
+`solver-and-generator.md` § "Guess-free generation", applied without a tier.
+
+**A game whose input is the target-verb model spells its hint's moves through
+the declared verbs** (`docs/games/input.md` § "Targets and verbs"): Net's
+turn is whichever of its rotation verbs reaches the wiring, and its lock is
+the lock verb's move. The hint then needs no move of its own, and a step
+cannot ask for something the controls do not do.
+
 ### Place the notes a fixpoint rests on (Crossing)
 
 When the notation already exists and only the plan skips it, the fix is in the

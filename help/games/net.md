@@ -39,6 +39,37 @@ lets go of the first square. A side with a wall on it needs no note.
 A note or a lock that turns out to be wrong shows in red when you check the
 board.
 
+## Hints
+
+**Hint** explains the next step rather than simply making it. It reasons
+only from your locks, your notes and the walls: a square you have turned
+but not locked counts as unknown, however it is turned. So lock a square
+once you are sure of it, and the hint carries on from there. If a lock or a
+note is wrong, it asks you to fix the highlighted mistakes first.
+
+Each step either **notes a side** or **turns a square and locks it**. The
+hint calls a square with one wire a **dead end**, two in a line a
+**straight**, two at a right angle a **corner**, and three a **T**; a
+**note** is one of your side notes, and a **lock** a locked square.
+
+{{hint-marks}}
+
+The ideas it teaches:
+
+* **Fit the sides you know.** A square can only turn to ways that carry a
+  wire across every side noted as crossed, none across a wall or a side
+  noted as empty, and match each locked square beside it. When only one way
+  is left, lock it; when every way left agrees about a side, note it.
+* **No loops.** A way of turning that would join two squares the known wires
+  already join would close a loop.
+* **Nothing sealed off.** A way of turning that would close a group of
+  squares off, with no wire left to lead anywhere else, cannot be right
+  unless the group is the whole grid: two dead ends facing each other are
+  the smallest case.
+
+When a square has to turn before it can be locked, the hint turns it and
+then locks it, as one step.
+
 ## Net parameters
 
 {{parameters}}

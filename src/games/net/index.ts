@@ -53,6 +53,7 @@ import {
   U,
 } from "../../engine/wires.ts";
 import { newDesc } from "./generator.ts";
+import { type NetHint, netHint, netHintKeepTrack } from "./hint.ts";
 import { findMistakes, type NetMistake } from "./mistakes.ts";
 import {
   boardMargin,
@@ -526,7 +527,8 @@ export const netGame: Game<
   NetMove,
   NetUi,
   NetDrawState,
-  NetMistake
+  NetMistake,
+  NetHint
 > = {
   id: "net",
 
@@ -600,6 +602,17 @@ export const netGame: Game<
 
   solve,
   findMistakes,
+  hint: (s, _aux, ui) => netHint(s, targetVerbs, ui ?? newUi(s)),
+  hintMarks: {
+    roles: {
+      ring: "what the step decides: the square to turn and lock, or the side to note, drawn as the note the step places.",
+      outline:
+        "what the step reasons from: the notes and locks a way of turning would contradict, or the square whose every way of turning agrees about the ringed side.",
+      stripes:
+        "the squares a way of turning would close a loop through, or seal off from the rest.",
+    },
+  },
+  hintKeepTrack: netHintKeepTrack,
 
   prefs,
   encodeUi,
