@@ -143,6 +143,10 @@ const CLAIMS_UNACTIONABLE: Record<string, string> = {};
  * loses its keypad fails, and a game that gains one must say why.
  */
 const KEYPAD_WITHOUT_PENCIL: Record<string, string> = {
+  ascent:
+    "A tap places the number after or before a highlighted one, beside it; any " +
+    "other number, in any empty square, is typed, and the hint places numbers no " +
+    "chain of taps reaches, so on touch the keypad is the only way to write one.",
   filling:
     "A number is placed only by typing it into a selected square; no pointer " +
     "gesture writes one, so on touch the keypad is the only way to fill a square.",
@@ -150,6 +154,10 @@ const KEYPAD_WITHOUT_PENCIL: Record<string, string> = {
     "A color is entered only by pressing its key: a tap chooses which peg the " +
     "next color goes into, never the color. Its notes rule colors out of the " +
     "answer row rather than living in a per-cell pencil array.",
+  net:
+    "Moving the square the network is lit from and jumbling the unlocked squares " +
+    "are keys on the keyboard (Ctrl+arrow, J); the Source and Jumble keys are the " +
+    "pointer's only way to either.",
 };
 
 describe("a game does not claim a button it did not act on", () => {

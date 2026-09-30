@@ -90,17 +90,41 @@ export interface TargetVerbs<State, Ui, DrawState, Target, Move> {
   /** The right button, and Space at the cursor. A game without one takes
    * Space as a second Enter. */
   readonly secondary?: TargetVerb<State, Ui, Target, Move>;
-  /** Verbs no button applies, reached only by their `keys` at the cursor: Net's
-   * half turn, or an erase key whose result the buttons reach by cycling. A
-   * pointer route to what one does, where the buttons have none, is the game's
-   * own arm (Net's lock, in Marks mode). */
+  /** Verbs no button applies directly, each with its keys and the pointer's
+   * route to the same move: Net's half turn, or an erase key whose result the
+   * buttons reach by cycling. */
   readonly keyOnly?: readonly KeyOnlyVerb<State, Ui, Target, Move>[];
 }
 
-/** A verb with no button, so its keys are the only way to it. */
+/** A button, by the verb slot it applies. */
+type VerbButton = "primary" | "secondary";
+
+/**
+ * How a pointer reaches what a key-only verb does, since every action is
+ * reachable by the pointer alone as well as the keyboard (`ts-engine`, "A game
+ * reads one pointer with two buttons"). A verb without one does not typecheck.
+ *
+ * - `repeat`: the button pressed on the target `times` times (a half turn is
+ *   two quarter turns).
+ * - `cycle`: the button's cycle passes through the verb's result, so pressing
+ *   it until the target shows that result makes the same move (an erase key).
+ * - `notes`: in notes mode, the button pressed on the target — at `where` on
+ *   it, when the game reads where the press lands (Net's lock is the middle of
+ *   the square; its sides take notes).
+ *
+ * The Controls paragraph says each route, and `target-verb.test.ts` holds it to
+ * what the key does.
+ */
+type PointerRoute =
+  | { readonly kind: "repeat"; readonly button: VerbButton; readonly times: number }
+  | { readonly kind: "cycle"; readonly button: VerbButton }
+  | { readonly kind: "notes"; readonly button: VerbButton; readonly where?: string };
+
+/** A verb no button applies directly: its keys, and the pointer's route. */
 export interface KeyOnlyVerb<State, Ui, Target, Move>
   extends TargetVerb<State, Ui, Target, Move> {
   readonly keys: readonly VerbKey[];
+  readonly pointer: PointerRoute;
 }
 
 /** The `Ui` this model reads: only whether the cursor shows. Where the cursor
@@ -215,6 +239,19 @@ export function interpretTargetVerbs<S, U extends TargetVerbUi, D, T, M>(
   return null;
 }
 
+/** The end of a key-only verb's sentence, saying the pointer's route. */
+function routeWords(route: PointerRoute): string {
+  const click = route.button === "primary" ? "click" : "right-click";
+  switch (route.kind) {
+    case "repeat":
+      return `, or ${click} it ${route.times === 2 ? "twice" : `${route.times} times`}`;
+    case "cycle":
+      return `; ${click}ing it round gets there too`;
+    case "notes":
+      return `, or, in notes mode, ${click} ${route.where ?? "it"}`;
+  }
+}
+
 /** "Enter", "Space (or I)": a select key and the verb's own keys. */
 function keyNames(select: string, verb: { readonly keys?: readonly VerbKey[] }) {
   const own = (verb.keys ?? []).map((k) => k.name);
@@ -241,7 +278,11 @@ export function controlsMarkdown<S, U, D, T, M>(verbs: Verbs<S, U, D, T, M>): st
     : `${keyNames("Enter or Space", verbs.primary)} does what a click does to the ` +
       `${noun} under it.`;
   const keyOnly = (verbs.keyOnly ?? [])
-    .map((v) => ` Press ${v.keys.map((k) => k.name).join(" or ")} to ${v.does}.`)
+    .map(
+      (v) =>
+        ` Press ${v.keys.map((k) => k.name).join(" or ")} to ${v.does}` +
+        `${routeWords(v.pointer)}.`,
+    )
     .join("");
   return (
     `${pointer.join(" ")}\n\n` +

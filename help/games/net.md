@@ -14,8 +14,10 @@ and come back on the opposite edge!
 
 {{controls}}
 
-Ctrl and an arrow key moves which square the network is lit from, and
-on a wrapping grid Shift and an arrow key scrolls the whole grid. J
+To move which square the network is lit from, press the **Source** key
+on the keypad and then tap the square, or press Ctrl and an arrow key.
+On a wrapping grid, drag in the margin around the grid, or press Shift
+and an arrow key, to scroll the whole grid. The **Jumble** key, or J,
 jumbles every unlocked square to a random rotation.
 
 ## Notes

@@ -12,6 +12,7 @@ import type {
   SolveResult,
 } from "../../engine/game.ts";
 import { commonHintRefusal } from "../../engine/hint-refusal.ts";
+import { numberKeys } from "../../engine/key-labels.ts";
 import {
   dimensionParamConfig,
   parseDimensions,
@@ -379,6 +380,9 @@ export const ascentGame: Game<
   decodeUi: decodeAscentUi,
   interpretMove: interpretAscentMove,
   executeMove: executeAscentMove,
+  // A number can be written into any empty square only by typing it, and the
+  // hint places numbers no chain of taps reaches; on touch this is the way.
+  requestKeys: numberKeys,
 
   solve,
   findMistakes,

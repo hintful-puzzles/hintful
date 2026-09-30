@@ -22,9 +22,6 @@ many other types of tiling!
 Resting the mouse pointer on a line highlights every line joined to it, so you
 can see at a glance which pieces of the loop are already one piece.
 
-On a touch screen, tapping an edge cycles it through all three states,
-so you never need a second button.
-
 When you draw a line, the app also rules out the edges that plain counting
 has already settled for you: the other edges at a dot that now has its two
 lines, and the other edges of a clue that now has as many lines as it asks

@@ -8,11 +8,18 @@
 import { describe, expect, it } from "vitest";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE } from "../../engine/latin.ts";
 import { paramsError } from "../../engine/params.ts";
+import {
+  CURSOR_RIGHT,
+  LEFT_BUTTON,
+  LEFT_DRAG,
+  LEFT_RELEASE,
+  MOD_SHFT,
+} from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { newGameDesc } from "./generator.ts";
 import { groupGame } from "./index.ts";
-import { colors, newDrawState, redraw } from "./render.ts";
+import { colors, coord, newDrawState, PREFERRED_TILE_SIZE, redraw } from "./render.ts";
 import { solveGroup } from "./solver.ts";
 import {
   cloneState,
@@ -31,6 +38,16 @@ import {
 } from "./state.ts";
 
 const P = (w: number, diff: number, id: boolean): GroupParams => ({ w, diff, id });
+
+/** A `Ui` whose cursor shows on the square at display position `pos` in both
+ * directions. */
+function newUiAt(s: GroupState, pos: number) {
+  const ui = newUi(s);
+  ui.cursor.x = s.sequence[pos];
+  ui.cursor.y = s.sequence[pos];
+  ui.cursor.visible = true;
+  return ui;
+}
 
 /**
  * The optional `Game` hooks Group implements, narrowed once. Asserting them
@@ -205,6 +222,42 @@ describe("moves and completion", () => {
     expect(on.dividers[2]).toBe(3);
     const off = groupGame.executeMove(on, { type: "divider", i: 2, j: 3 });
     expect(off.dividers[2]).toBe(-1);
+  });
+
+  it("the keyboard reorders and divides as dragging and clicking headings do", () => {
+    const p = P(6, DIFF_NORMAL, true);
+    const { state } = freshGame(p);
+    const ds = newDrawState(state, PREFERRED_TILE_SIZE);
+    const ts = ds.tileSize;
+    const send = (ui: ReturnType<typeof newUi>, x: number, y: number, b: number) =>
+      groupGame.interpretMove(state, ui, ds, { x, y }, b);
+
+    // Keyboard: an arrow shows the cursor on column 1, Shift+Right moves that
+    // column's element one place right.
+    const keyed = newUi(state);
+    send(keyed, 0, 0, CURSOR_RIGHT);
+    expect(send(keyed, 0, 0, CURSOR_RIGHT | MOD_SHFT)).toEqual({
+      type: "reorder",
+      num: state.sequence[1],
+      pos: 2,
+    });
+    // Pointer: the same column's heading dragged one column right.
+    const dragged = newUi(state);
+    const heading = coord(-1, ts) + ts / 2;
+    send(dragged, coord(1, ts) + ts / 2, heading, LEFT_BUTTON);
+    send(dragged, coord(2, ts) + ts / 2, heading, LEFT_DRAG);
+    expect(send(dragged, coord(2, ts) + ts / 2, heading, LEFT_RELEASE)).toEqual(
+      send(newUiAt(state, 1), 0, 0, CURSOR_RIGHT | MOD_SHFT),
+    );
+
+    // `|` after column 1 against a click on the line between headings 1 and 2.
+    const clicked = newUi(state);
+    send(clicked, coord(2, ts), heading, LEFT_BUTTON);
+    expect(send(clicked, coord(2, ts), heading, LEFT_RELEASE)).toEqual(
+      send(newUiAt(state, 1), 0, 0, 0x7c),
+    );
+    // `-` below the last row has no line to toggle.
+    expect(send(newUiAt(state, p.w - 1), 0, 0, 0x2d)).toBeNull();
   });
 
   it("rejects setting an immutable cell to a different value", () => {

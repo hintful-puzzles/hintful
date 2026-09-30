@@ -273,6 +273,13 @@ export interface NetUi {
   /** The tile a keyboard note starts from, in notes mode: the next select on
    * a neighbor notes the side between them. */
   pin: Point | null;
+  /** Set by the Source key: the next press on a square, or select at the
+   * cursor, lights the network from there. The pointer's route to what
+   * Ctrl+arrow does. */
+  placingSource: boolean;
+  /** A drag in the margin of a wrapping grid, scrolling it as Shift+arrow
+   * does: where it started, and the origin then. */
+  scroll: { x: number; y: number; orgX: number; orgY: number } | null;
 }
 
 export function newUi(s: NetState): NetUi {
@@ -287,5 +294,7 @@ export function newUi(s: NetState): NetUi {
     unlockedLoops: true,
     pencilMode: false,
     pin: null,
+    placingSource: false,
+    scroll: null,
   };
 }

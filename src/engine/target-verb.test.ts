@@ -21,12 +21,14 @@ import {
   LEFT_BUTTON,
   LEFT_RELEASE,
   newCursor,
+  PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
 } from "./pointer.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import {
   controlsMarkdown,
   interpretTargetVerbs,
+  type KeyOnlyVerb,
   squareGrid,
   type TargetVerbs,
   type TargetVerbUi,
@@ -40,6 +42,10 @@ import {
 import type { Point } from "./types.ts";
 
 beforeAll(registerAllGames);
+
+/** Presses a cycle route is followed for: longer than any verb's cycle, so a
+ * result the cycle passes through is met before the presses run out. */
+const CYCLE_PRESSES = 6;
 
 describe("the model", () => {
   type S = { w: number; h: number; clue: Point };
@@ -115,6 +121,7 @@ describe("the model", () => {
           does: "flip the square",
           keys: [{ codes: [0x66], name: "F" }],
           apply: at("flip"),
+          pointer: { kind: "repeat", button: "primary", times: 2 } as const,
         },
       ],
     };
@@ -124,7 +131,31 @@ describe("the model", () => {
       at: { x: 1, y: 0 },
     });
     expect(controlsMarkdown(more)).toMatch(
-      /what a right-click does\. Press F to flip the square\.$/,
+      /what a right-click does\. Press F to flip the square, or click it twice\.$/,
+    );
+  });
+
+  it("the paragraph says each kind of pointer route", () => {
+    const say = (pointer: KeyOnlyVerb<S, TargetVerbUi, Point, M>["pointer"]) =>
+      controlsMarkdown({
+        ...verbs,
+        keyOnly: [
+          {
+            does: "clear it",
+            keys: [{ codes: [0x7f], name: "Delete" }],
+            apply: at("clear"),
+            pointer,
+          },
+        ],
+      });
+    expect(say({ kind: "cycle", button: "secondary" })).toMatch(
+      /Press Delete to clear it; right-clicking it round gets there too\.$/,
+    );
+    expect(say({ kind: "notes", button: "primary", where: "its middle" })).toMatch(
+      /Press Delete to clear it, or, in notes mode, click its middle\.$/,
+    );
+    expect(say({ kind: "repeat", button: "secondary", times: 3 })).toMatch(
+      /Press Delete to clear it, or right-click it 3 times\.$/,
     );
   });
 
@@ -209,11 +240,39 @@ describe("a game's declared verbs are what its buttons and keys do", () => {
         for (const code of k.codes)
           expect(primed.key(code), `${k.name} against its button`).toEqual(clicks);
     }
-    // A key-only verb has no button to agree with; the paragraph still says
-    // the key does something, so it must.
-    for (const verb of verbs.keyOnly ?? [])
+    // A key-only verb has no button of its own, so its declared pointer route
+    // is what it must agree with, and the paragraph says both. Boards are
+    // compared as the player sees them: a half turn and two quarter turns leave
+    // one picture, whatever the state records about the last turn.
+    if (!verbs.keyOnly?.length) return;
+    const sighted = boardsReached(game, id, primeWithAClick(), onTarget, {
+      bySight: true,
+    });
+    for (const verb of verbs.keyOnly) {
+      const byKey = new Set<string>();
       for (const k of verb.keys)
         for (const code of k.codes)
-          expect(primed.key(code).size, `${k.name}: no board`).toBeGreaterThan(0);
+          for (const board of sighted.key(code)) byKey.add(board);
+      expect(byKey.size, `${verb.does}: its keys reach no board`).toBeGreaterThan(0);
+      const route = verb.pointer;
+      const button = route.button === "primary" ? LEFT_BUTTON : RIGHT_BUTTON;
+      if (route.kind === "repeat") {
+        const byPointer = sighted.presses(Array(route.times).fill(button));
+        expect(byKey, `${verb.does}: against ${route.times} presses`).toEqual(
+          byPointer,
+        );
+        continue;
+      }
+      const byPointer =
+        route.kind === "cycle"
+          ? sighted.presses(Array(CYCLE_PRESSES).fill(button), { every: true })
+          : sighted.presses([button], { before: [PENCIL_MODE_BUTTON] });
+      const unreached = [...byKey].filter((board) => !byPointer.has(board));
+      expect(
+        unreached.length,
+        `${verb.does}: ${unreached.length} of ${byKey.size} boards its keys reach ` +
+          `are not on its ${route.kind} route`,
+      ).toBe(0);
+    }
   });
 });

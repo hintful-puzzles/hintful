@@ -57,13 +57,17 @@ import {
   pencilKeepHighlightPref,
 } from "../../engine/pencil-prefs.ts";
 import {
+  CURSOR_LEFT,
+  CURSOR_RIGHT,
   CURSOR_SELECT2,
+  CURSOR_UP,
   gridCursorMove,
   isCursorMove,
   isEraseKey,
   isMouseDown,
   isMouseDrag,
   isMouseRelease,
+  MOD_SHFT,
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
@@ -133,6 +137,11 @@ function requestKeys(p: GroupParams): KeyLabel[] {
 }
 
 // --- input (interpret_move) ------------------------------------------------
+
+/** `|`: toggle the line after the cursor's column. */
+const KEY_BAR = 0x7c;
+/** `-`: toggle the line below the cursor's row. */
+const KEY_MINUS = 0x2d;
 
 function interpretMove(
   state: GroupState,
@@ -228,6 +237,38 @@ function interpretMove(
       ui.odn = 1;
     }
     return UI_UPDATE;
+  }
+
+  // The keyboard's routes to dragging a heading and clicking between two:
+  // Shift+arrow moves the cursor's column (left, right) or row (up, down) one
+  // place along the order, and the cursor goes with it, since it holds the
+  // element; `|` toggles the line after the cursor's column and `-` the line
+  // below its row. Rows and columns share one order, so either axis moves both.
+  if (isCursorMove(button) && buttonRaw & MOD_SHFT) {
+    // An arrow that is an action only shows a hidden cursor first.
+    if (!ui.cursor.visible) {
+      ui.cursor.visible = true;
+      ui.cursorFromKeyboard = true;
+      return UI_UPDATE;
+    }
+    const alongColumns = button === CURSOR_LEFT || button === CURSOR_RIGHT;
+    const num = alongColumns ? ui.cursor.x : ui.cursor.y;
+    const pos =
+      state.sequence.indexOf(num) +
+      (button === CURSOR_LEFT || button === CURSOR_UP ? -1 : 1);
+    if (pos < 0 || pos >= w) return null;
+    return { type: "reorder", num, pos };
+  }
+  if ((button === KEY_BAR || button === KEY_MINUS) && ui.cursor.visible) {
+    const after = state.sequence.indexOf(
+      button === KEY_BAR ? ui.cursor.x : ui.cursor.y,
+    );
+    if (after + 1 >= w) return null;
+    return {
+      type: "divider",
+      i: state.sequence[after],
+      j: state.sequence[after + 1],
+    };
   }
 
   if (isCursorMove(button)) {

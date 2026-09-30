@@ -114,6 +114,7 @@ const targetVerbs: TargetVerbs<
       does: "empty the square under the cursor",
       keys: [{ codes: [BACKSPACE, DELETE], name: "Backspace or Delete" }],
       apply: place(EMPTY),
+      pointer: { kind: "cycle", button: "primary" },
     },
   ],
 };

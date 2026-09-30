@@ -15,6 +15,7 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { type AnyGame, probeBoard } from "../../engine/testing/input-probe.ts";
 import {
   type DrawOp,
   RecordingDrawing,
@@ -34,6 +35,7 @@ import {
 import {
   type AscentMove,
   type AscentParams,
+  type AscentState,
   checkCompletion,
   DIFFCOUNT,
   encodeGridDesc,
@@ -655,5 +657,50 @@ describe("ascent treats the last number like any other", () => {
     expect(p.sc.marks[square * p.s + p.last]).toBe(1);
     solverPlace(p.sc, square, others[0]);
     expect(p.sc.marks[square * p.s + p.last]).toBe(0);
+  });
+});
+
+describe("ascent without a keyboard", () => {
+  it("a tap and the keypad write any missing number into any empty square", () => {
+    const b = probeBoard(ascentGame as unknown as AnyGame, "ascent");
+    const state = b.live().state as AscentState;
+    expect(state.mode).not.toBe(MODE_HEXAGON);
+    const ds = ascentGame.newDrawState(state, b.tileSize);
+    const ts = b.tileSize;
+    const centerOf = (k: number) => ({
+      x: ds.offsetX + ((k % state.w) + 0.5) * ts,
+      y: ds.offsetY + (Math.trunc(k / state.w) + 0.5) * ts,
+    });
+    const tap = (k: number) => {
+      const { x, y } = centerOf(k);
+      b.m.processInput(x, y, LEFT_BUTTON);
+      b.m.processInput(x, y, LEFT_RELEASE);
+    };
+    const keys = ascentGame.requestKeys?.(b.params as AscentParams) ?? [];
+    const key = (label: string) => {
+      const k = keys.find((e) => e.label === label);
+      if (!k) throw new Error(`no ${label} key`);
+      b.m.processInput(0, 0, k.button);
+    };
+
+    // A number missing from the board, above nine so it takes two keys, and an
+    // empty square nowhere near its neighbors in the sequence.
+    const n = state.grid.length;
+    const missing = Array.from({ length: n }, (_, v) => v).find(
+      (v) => v >= 9 && !state.grid.includes(v),
+    );
+    const square = state.grid.findIndex(
+      (v, k) => v === NUMBER_EMPTY && !state.immutable[k],
+    );
+    const clue = state.grid.findIndex((_, k) => state.immutable[k] !== 0);
+    if (missing === undefined || square < 0 || clue < 0) throw new Error("no case");
+
+    tap(square);
+    for (const digit of String(missing + 1)) key(digit);
+    // A typo rubbed out with Clear, as Backspace would.
+    key("5");
+    key("Clear");
+    tap(clue);
+    expect((b.live().state as AscentState).grid[square]).toBe(missing);
   });
 });

@@ -612,6 +612,7 @@ const targetVerbs: TargetVerbs<
         { codes: [DELETE], name: "Delete" },
       ],
       apply: lineVerb(DELETE),
+      pointer: { kind: "cycle", button: "primary" },
     },
   ],
 };

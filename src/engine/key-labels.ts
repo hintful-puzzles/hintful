@@ -73,6 +73,21 @@ export function digitKeys(n: number): KeyLabel[] {
 }
 
 /**
+ * A keypad for typing a number of any length: `1`–`9`, then `0`, then the
+ * clear key, which rubs out the last digit typed. For a game whose entries are
+ * numbers past nine (Ascent), where {@link digitKeys} offers one key per value.
+ */
+export function numberKeys(): KeyLabel[] {
+  const keys: KeyLabel[] = [];
+  for (const n of [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]) {
+    const button = String(n).charCodeAt(0);
+    keys.push({ button, label: String(n) });
+  }
+  keys.push(clearKey);
+  return keys;
+}
+
+/**
  * {@link digitKeys} where each key **enters a color**: key `i` carries palette
  * index `firstColor + i`, and the panel paints the key in it.
  *

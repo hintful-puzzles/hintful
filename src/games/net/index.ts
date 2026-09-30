@@ -26,6 +26,9 @@ import {
   isCancelKey,
   isCursorMove,
   isEraseKey,
+  isMouseDown,
+  isMouseDrag,
+  isMouseRelease,
   LEFT_BUTTON,
   MOD_CTRL,
   MOD_SHFT,
@@ -251,8 +254,8 @@ const rotate =
  * to lock the tile rather than note its nearest side: the middle third. */
 const LOCK_ZONE = 1 / 3;
 
-/** Lock or unlock a square. Its pointer route is notes mode's: a tap in the
- * middle of the square (`noteInput`). */
+/** Lock or unlock a square. The press that locks in notes mode is
+ * `noteInput`'s. */
 const lockMove = (_s: NetState, { x, y }: Point): NetMove => ({ type: "lock", x, y });
 
 // A tap rotates anticlockwise and a long press clockwise, as the two buttons do.
@@ -274,6 +277,7 @@ const targetVerbs: TargetVerbs<NetState, NetUi, NetDrawState, Point, NetMove> = 
       does: "rotate the square under the cursor half a turn",
       keys: [{ codes: [0x66, 0x46], name: "F" }],
       apply: rotate("F"),
+      pointer: { kind: "repeat", button: "primary", times: 2 },
     },
     {
       does:
@@ -281,6 +285,7 @@ const targetVerbs: TargetVerbs<NetState, NetUi, NetDrawState, Point, NetMove> = 
         "don't rotate it by accident, or unlock it again",
       keys: [{ codes: [0x73, 0x53], name: "S" }],
       apply: lockMove,
+      pointer: { kind: "notes", button: "primary", where: "the middle of the square" },
     },
   ],
 };
@@ -361,6 +366,71 @@ function noteInput(
   return toggleNote(s, pin.x, pin.y, dir, note) ?? UI_UPDATE;
 }
 
+/** The Source key, on the keypad as well as the keyboard. */
+const KEY_SOURCE = 0x63;
+const KEY_SOURCE_UPPER = 0x43;
+/** J: jumble every unlocked square. */
+const KEY_JUMBLE = 0x6a;
+const KEY_JUMBLE_UPPER = 0x4a;
+
+/**
+ * In Source mode, light the network from the square pressed, or from the
+ * cursor on a select, and leave the mode; Escape leaves it without moving.
+ * `null` for anything else, which the rest of `interpretMove` handles.
+ */
+function placeSource(
+  s: NetState,
+  ui: NetUi,
+  ds: NetDrawState,
+  p: Point,
+  button: number,
+): UiUpdate | null {
+  if (isCancelKey(button) && !isEraseKey(button)) {
+    ui.placingSource = false;
+    return UI_UPDATE;
+  }
+  if (isMouseDown(button)) {
+    const t = pressedTile(s, ds, p, ui);
+    if (t === null) return null;
+    ui.cursor.x = t.x;
+    ui.cursor.y = t.y;
+    ui.cursor.visible = false;
+  } else if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
+    if (!ui.cursor.visible) {
+      ui.cursor.visible = true;
+      return UI_UPDATE;
+    }
+  } else return null;
+  ui.cx = ui.cursor.x;
+  ui.cy = ui.cursor.y;
+  ui.placingSource = false;
+  return UI_UPDATE;
+}
+
+/** A drag begun in the margin of a wrapping grid scrolls it by whole squares,
+ * the grid following the pointer, as Shift+arrow scrolls it from the keyboard.
+ * The release ends it. */
+function scrollDrag(
+  s: NetState,
+  ui: NetUi,
+  ds: NetDrawState,
+  p: Point,
+  button: number,
+): UiUpdate | null {
+  const from = ui.scroll;
+  if (from === null) return null;
+  const ts = ds.tileSize;
+  const wrap = (v: number, n: number) => ((v % n) + n) % n;
+  const orgX = wrap(from.orgX - Math.round((p.x - from.x) / ts), s.w);
+  const orgY = wrap(from.orgY - Math.round((p.y - from.y) / ts), s.h);
+  const released = isMouseRelease(button);
+  if (released) ui.scroll = null;
+  if (orgX === ui.orgX && orgY === ui.orgY) return released ? UI_UPDATE : null;
+  ui.orgX = orgX;
+  ui.orgY = orgY;
+  return UI_UPDATE;
+}
+
 function interpretMove(
   s: NetState,
   ui: NetUi,
@@ -373,6 +443,21 @@ function interpretMove(
   if (button === PENCIL_MODE_BUTTON) {
     ui.pencilMode = !ui.pencilMode;
     ui.pin = null;
+    return UI_UPDATE;
+  }
+  if (button === KEY_SOURCE || button === KEY_SOURCE_UPPER) {
+    ui.placingSource = !ui.placingSource;
+    ui.pin = null;
+    return UI_UPDATE;
+  }
+  if (ui.placingSource) {
+    const placed = placeSource(s, ui, ds, p, button);
+    if (placed !== null) return placed;
+  }
+  if (ui.scroll !== null && (isMouseDrag(button) || isMouseRelease(button)))
+    return scrollDrag(s, ui, ds, p, button);
+  if (s.wrapping && isMouseDown(button) && pressedTile(s, ds, p, ui) === null) {
+    ui.scroll = { x: p.x, y: p.y, orgX: ui.orgX, orgY: ui.orgY };
     return UI_UPDATE;
   }
   if (
@@ -409,7 +494,7 @@ function interpretMove(
     return UI_UPDATE;
   }
 
-  if (button === 0x6a || button === 0x4a) {
+  if (button === KEY_JUMBLE || button === KEY_JUMBLE_UPPER) {
     // j: rotate every unlocked tile a random amount, expanded into an explicit
     // op list so replay is deterministic.
     jumbleRs ??= randomNew(crypto.getRandomValues(new Uint8Array(16)));
@@ -511,7 +596,8 @@ function decodeUi(ui: NetUi, encoded: string): void {
 function statusbarText(s: NetState, ui: NetUi): string {
   const complete = s.cheated || s.completed;
   let text = "";
-  if (s.cheated) text = "Auto-solved. ";
+  if (ui.placingSource) text = "Tap a square to light the network from it. ";
+  else if (s.cheated) text = "Auto-solved. ";
   else if (s.completed) text = "COMPLETED! ";
 
   // Omit the counter when the source tile is empty (it would always read 1).
@@ -609,6 +695,11 @@ export const netGame: Game<
   targetVerbs,
   interpretMove,
   executeMove,
+  // The pointer's routes to Ctrl+arrow and J; the midend adds Marks.
+  requestKeys: () => [
+    { label: "Source", button: KEY_SOURCE },
+    { label: "Jumble", button: KEY_JUMBLE },
+  ],
 
   status: (s): GameStatus => (s.completed ? "solved" : "ongoing"),
 

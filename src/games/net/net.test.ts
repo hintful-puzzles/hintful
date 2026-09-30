@@ -11,12 +11,22 @@ import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
-import { CURSOR_RIGHT, MOD_CTRL, MOD_SHFT } from "../../engine/pointer.ts";
+import {
+  CURSOR_LEFT,
+  CURSOR_RIGHT,
+  ESCAPE,
+  LEFT_BUTTON,
+  LEFT_DRAG,
+  LEFT_RELEASE,
+  MOD_CTRL,
+  MOD_SHFT,
+} from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { newDesc } from "./generator.ts";
 import { netGame } from "./index.ts";
 import { computeLoops } from "./loops.ts";
+import { boardMargin, lineThick } from "./render.ts";
 import { netSolver, SOLVER_UNIQUE } from "./solver.ts";
 import {
   ACTIVE,
@@ -354,5 +364,84 @@ describe("moves", () => {
       ),
     ).toBeNull();
     expect(ui.orgX).toBe(org0);
+  });
+
+  /** The middle of tile `(x, y)` on screen, as a press lands on it. */
+  const tileCenter = (ts: number, x: number, y: number) => ({
+    x: boardMargin(ts) + lineThick(ts) + (x + 0.5) * ts,
+    y: boardMargin(ts) + lineThick(ts) + (y + 0.5) * ts,
+  });
+
+  it("the Source key, then a press on a square, lights the network from it", () => {
+    const s = base();
+    const ui = newUi(s);
+    const ds = preferredDrawState(netGame, s);
+    const press = (p: { x: number; y: number }, b: number) =>
+      netGame.interpretMove(s, ui, ds, p, b);
+    expect(press({ x: 0, y: 0 }, 0x63)).toBe(UI_UPDATE);
+    expect(netGame.statusbarText?.(s, ui)).toMatch(/^Tap a square to light/);
+    expect(press(tileCenter(ds.tileSize, 0, 4), LEFT_BUTTON)).toBe(UI_UPDATE);
+    expect([ui.cx, ui.cy, ui.placingSource]).toEqual([0, 4, false]);
+    // The press made no move, and the release after it makes none either.
+    expect(press(tileCenter(ds.tileSize, 0, 4), LEFT_RELEASE)).toBeNull();
+    expect(netGame.statusbarText?.(s, ui)).not.toMatch(/^Tap a square/);
+  });
+
+  it("Escape leaves Source mode without moving the source", () => {
+    const s = base();
+    const ui = newUi(s);
+    const ds = preferredDrawState(netGame, s);
+    const [cx, cy] = [ui.cx, ui.cy];
+    netGame.interpretMove(s, ui, ds, { x: 0, y: 0 }, 0x63);
+    expect(netGame.interpretMove(s, ui, ds, { x: 0, y: 0 }, ESCAPE)).toBe(UI_UPDATE);
+    expect([ui.cx, ui.cy, ui.placingSource]).toEqual([cx, cy, false]);
+  });
+
+  it("the keypad offers Source and Jumble, and Jumble jumbles", () => {
+    const s = base();
+    const keys = netGame.requestKeys?.(netGame.defaultParams()) ?? [];
+    expect(keys.map((k) => k.label)).toEqual(["Source", "Jumble"]);
+    const jumble = keys[1].button;
+    const move = netGame.interpretMove(
+      s,
+      newUi(s),
+      preferredDrawState(netGame, s),
+      { x: 0, y: 0 },
+      jumble,
+    );
+    expect(move).toMatchObject({ type: "jumble" });
+  });
+
+  it("a drag in a wrapping grid's margin scrolls it as Shift+arrow does", () => {
+    const pw: NetParams = { ...p, wrapping: true };
+    const { state } = generate(pw, "scroll-seed");
+    const ds = preferredDrawState(netGame, state);
+    const ts = ds.tileSize;
+    const ui = newUi(state);
+    const at = { x: 2, y: 2 };
+    const two = { x: at.x + 2 * ts, y: at.y };
+    expect(netGame.interpretMove(state, ui, ds, at, LEFT_BUTTON)).toBe(UI_UPDATE);
+    expect(netGame.interpretMove(state, ui, ds, two, LEFT_DRAG)).toBe(UI_UPDATE);
+    expect(netGame.interpretMove(state, ui, ds, two, LEFT_RELEASE)).toBe(UI_UPDATE);
+    expect([ui.orgX, ui.scroll]).toEqual([3, null]);
+
+    // Two Shift+Left presses from the start reach the same origin.
+    const keyed = newUi(state);
+    for (let i = 0; i < 2; i++)
+      netGame.interpretMove(state, keyed, ds, { x: 0, y: 0 }, CURSOR_LEFT | MOD_SHFT);
+    expect(keyed.orgX).toBe(ui.orgX);
+  });
+
+  it("a press in a bounded grid's margin starts no scroll", () => {
+    const s = base();
+    const ui = newUi(s);
+    netGame.interpretMove(
+      s,
+      ui,
+      preferredDrawState(netGame, s),
+      { x: 2, y: 2 },
+      LEFT_BUTTON,
+    );
+    expect(ui.scroll).toBeNull();
   });
 });

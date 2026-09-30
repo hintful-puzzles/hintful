@@ -59,6 +59,15 @@ export interface ProbeBoard {
   readonly live: () => { readonly state: unknown; readonly ui: unknown };
   /** {@link board}'s digest of any state this board has held, memoized. */
   readonly digestOf: (state: unknown) => string;
+  /**
+   * What the player sees of the state the midend holds: its frame, painted
+   * with a fresh `Ui` and draw state so neither a cursor nor an animation tells
+   * two boards apart. Two moves that leave the same picture are one move to a
+   * player whatever bookkeeping the state keeps: Net records which way its last
+   * turn went, so a half turn and two quarter turns differ in the state and not
+   * on screen.
+   */
+  readonly seen: () => string;
 }
 
 export interface ProbeOptions {
@@ -150,6 +159,29 @@ export function probeBoard(
     return d;
   };
   const stateDigest = () => digestOf(current);
+  // By digest, not by identity: a board replayed from the deal is built afresh.
+  const frames = new Map<string, string>();
+  const palette = m.getColorPalette(DEFAULT_BACKGROUND);
+  const frameNow = () => {
+    const d = stateDigest();
+    let frame = frames.get(d);
+    if (frame === undefined) {
+      const dr = new RecordingDrawing(palette);
+      game.redraw(
+        dr,
+        game.newDrawState(current, tileSize),
+        null,
+        current,
+        1,
+        game.newUi(current),
+        0,
+        0,
+      );
+      frame = JSON.stringify(dr.ops);
+      frames.set(d, frame);
+    }
+    return frame;
+  };
   return {
     params,
     tileSize,
@@ -162,6 +194,7 @@ export function probeBoard(
     where: () => `${digest(liveUi)}|${stateDigest()}`,
     live: () => ({ state: current, ui: liveUi }),
     digestOf,
+    seen: frameNow,
   };
 }
 
@@ -186,6 +219,14 @@ export interface BoardsReached {
   /** Each distinct board a press-and-release of `button` left, across every
    * probe point. A press that changed no board adds nothing. */
   readonly click: (button: number) => ReadonlySet<string>;
+  /** Each distinct board left by pressing and releasing `buttons` in turn at
+   * one probe point, after pressing the keys `before` — the Marks key, for a
+   * route in notes mode. `every` keeps the board after each press as well as
+   * the last, which is what a cycle passes through. */
+  readonly presses: (
+    buttons: readonly number[],
+    options?: { readonly before?: readonly number[]; readonly every?: boolean },
+  ) => ReadonlySet<string>;
   /** Each distinct board `code` left, pressed at every cursor position the
    * arrows reach. */
   readonly key: (code: number) => ReadonlySet<string>;
@@ -217,9 +258,13 @@ export function boardsReached(
   id: string,
   prime: (b: ProbeBoard) => void = () => {},
   keyAt: (state: unknown, ui: unknown) => boolean = () => true,
+  options: { readonly bySight?: boolean } = {},
 ): BoardsReached {
   const b = probeBoard(game, id);
   const { m, size, tileSize } = b;
+  // A board by its state, or with `bySight` by its frame (`ProbeBoard.seen`),
+  // where two moves are compared by what they leave on screen.
+  const boardOf = options.bySight ? b.seen : b.board;
   // A board changes only through a committed move, so while the move count
   // stands where the deal left it, the board is the deal's: serialized once
   // here rather than once per attempt, which for Loopy's grid is most of the
@@ -231,8 +276,8 @@ export function boardsReached(
     startMoves = b.moves();
   };
   start();
-  const startBoard = b.board();
-  const boardNow = () => (b.moves() === startMoves ? startBoard : b.board());
+  const startBoard = boardOf();
+  const boardNow = () => (b.moves() === startMoves ? startBoard : boardOf());
   const pointArgs: Point[] = [];
   const step = Math.max(2, Math.floor(tileSize / 4));
   for (let x = 1; x < size.w; x += step)
@@ -244,6 +289,25 @@ export function boardsReached(
       start();
       m.processInput(p.x, p.y, button);
       m.processInput(p.x, p.y, button + (LEFT_RELEASE - LEFT_BUTTON));
+      const after = boardNow();
+      if (after !== startBoard) out.add(after);
+    }
+    return out;
+  };
+
+  const presses: BoardsReached["presses"] = (buttons, options = {}) => {
+    const out = new Set<string>();
+    for (const p of pointArgs) {
+      start();
+      for (const k of options.before ?? []) m.processInput(0, 0, k);
+      for (const button of buttons) {
+        m.processInput(p.x, p.y, button);
+        m.processInput(p.x, p.y, button + (LEFT_RELEASE - LEFT_BUTTON));
+        if (options.every) {
+          const now = boardNow();
+          if (now !== startBoard) out.add(now);
+        }
+      }
       const after = boardNow();
       if (after !== startBoard) out.add(after);
     }
@@ -286,15 +350,21 @@ export function boardsReached(
     for (const path of keyPaths) {
       replay(path);
       const moves = b.moves();
-      const before = b.live().state;
+      const before = boardNow();
       m.processInput(0, 0, code);
       if (b.moves() === moves) continue;
-      const after = b.board();
-      if (after !== b.digestOf(before)) out.add(after);
+      const after = boardOf();
+      if (after !== before) out.add(after);
     }
     return out;
   };
-  return { click, key, cursorPositions: paths.length, keyPositions: keyPaths.length };
+  return {
+    click,
+    presses,
+    key,
+    cursorPositions: paths.length,
+    keyPositions: keyPaths.length,
+  };
 }
 
 /** Past this many cursor positions the walk stops; a guard reading the walk

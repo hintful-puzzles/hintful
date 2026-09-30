@@ -376,6 +376,7 @@ const targetVerbs: TargetVerbs<
         { codes: [DELETE], name: "Delete" },
       ],
       apply: setSlot(() => "unknown"),
+      pointer: { kind: "cycle", button: "primary" },
     },
   ],
 };

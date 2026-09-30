@@ -54,6 +54,12 @@ marks, and Backspace or Space to clear a square. Press Shift+M to fill
 every empty square with all possible pencil marks (a lowercase 'm' is a
 letter like any other, on grids large enough to use it).
 
+From the keyboard, Shift and Left or Right moves the selected square's
+column one place along the order, and Shift and Up or Down moves its row;
+the rows and columns stay in sync either way. Press | to add or remove
+the thick line after the selected column, and - for the line below the
+selected row.
+
 ## Hints
 
 **Hint** explains the next step rather than simply making it. It works

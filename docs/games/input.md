@@ -210,12 +210,26 @@ discouraged:
   (`fix-touch-input-stylus-modifier`); absent, there is nothing to compare wrongly.
 
 **What this asks of a game**: every action it has must be reachable with the
-two buttons, clicks and drags, and not only from the keyboard. Where a third
-action has no button to spare, it goes into a mode the player turns on (Net's
-lock is a tap in the middle of a square in notes mode), or onto the on-screen
-keypad (Salad's `X` and `O`). A clear or reset rarely needs a control of its
-own: a button cycle that passes through empty already reaches it (Loopy,
-Subsets, Unruly keep Backspace as a keyboard convenience, a `keyOnly` verb).
+two buttons, clicks and drags, and not only from the keyboard — and every
+action must be reachable from the keyboard, not only the pointer. Where a
+third action has no button to spare, it goes into a mode the player turns on
+(Net's lock is a tap in the middle of a square in notes mode; Net's Source key
+arms a tap that moves where the network is lit from), or onto the on-screen
+keypad (Salad's `X` and `O`, Net's Jumble, Ascent's digits). A clear or reset
+rarely needs a control of its own: a button cycle that passes through empty
+already reaches it (Loopy, Subsets, Unruly keep Backspace as a keyboard
+convenience, a `keyOnly` verb whose route is `cycle`). A pointer gesture with
+no key gets one the same way: Group's heading drag is Shift+arrow, and its
+click between headings is `|` or `-`.
+
+**Where it is guaranteed, and where it is not.** Inside the target-verb model
+the rule is structural: a `keyOnly` verb without a `pointer` route is a type
+error, and its route is tested. An arm of the game's own — anything
+`interpretMove` handles before `interpretTargetVerbs` — is outside it, and
+nothing checks that arm's keys and gestures against each other. So put an
+action in the model whenever it fits; an arm is where a gap can hide, and
+the audit that found Net's source key, Ascent's typed numbers and Group's
+headings (`audit-input-affordances`) found every one of them in an arm.
 
 ## A touch hold arrives as the right button
 
@@ -375,11 +389,16 @@ and Net's Ctrl- and Shift-arrows each sit above the one-line hand-off in their
 arm and an erase key), Net (a geometry of its own and all three verb slots).
 
 The slots are `primary` (left, Enter), `secondary` (right, Space) and
-`keyOnly` — verbs no button applies, such as Net's half turn on F. A key-only
-verb still owes the pointer a route to what it does: a cycle of the buttons
-(an erase key), a sequence of them (the half turn is two quarter turns), or an
-arm of the game's own (Net's lock, in notes mode) — § "One pointer, two
-buttons". **Space is always the right
+`keyOnly` — verbs no button applies directly, such as Net's half turn on F.
+**A key-only verb declares the pointer's route to what it does, and does not
+typecheck without one** (`pointer: PointerRoute`, § "One pointer, two
+buttons"): `repeat` a button (the half turn is two quarter turns), `cycle` a
+button whose cycle passes through the result (an erase key), or press a
+button in `notes` mode (Net's lock, in the middle of the square). The
+Controls paragraph says the route, and `target-verb.test.ts` holds it to what
+the key does, comparing the boards as the player sees them (`boardsReached`
+with `bySight`), since a half turn and two quarter turns leave one picture
+but different bookkeeping. **Space is always the right
 button's verb.** Net once put its lock on Space; no puzzle explains that, so
 Net's lock moved to its own key (S) and Space rotates clockwise like the
 right button. A game that wants a different key for a verb gives the verb

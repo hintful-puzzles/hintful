@@ -140,11 +140,13 @@ const targetVerbs: TargetVerbs<SlantState, SlantUi, SlantDrawState, Point, Slant
         does: "draw a `\\` in the square under the cursor",
         keys: [{ codes: [KEY_BACKSLASH], name: "`\\`" }],
         apply: setTo(-1),
+        pointer: { kind: "cycle", button: "primary" },
       },
       {
         does: "draw a `/` in it",
         keys: [{ codes: [KEY_SLASH], name: "`/`" }],
         apply: setTo(1),
+        pointer: { kind: "cycle", button: "primary" },
       },
       {
         does: "empty it",
@@ -153,6 +155,7 @@ const targetVerbs: TargetVerbs<SlantState, SlantUi, SlantDrawState, Point, Slant
           { codes: [DELETE], name: "Delete" },
         ],
         apply: setTo(0),
+        pointer: { kind: "cycle", button: "primary" },
       },
     ],
   };
