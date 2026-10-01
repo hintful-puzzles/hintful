@@ -205,10 +205,10 @@ element it references: the action edge, the firing's other not-yet-acted edges
 as sibling edges, and the referenced cells (a clue pair, the clue cell, or the
 region the deduction reasons about).
 
-`hint()` SHALL refuse — returning `{ ok: false }` with a readable reason —
-when the board is already solved, or when `findMistakes(state)` reports any
-mistake, so a hint is never derived from a wrong wall or mark. When the clue set
-is not uniquely solvable (so no deduction is found) it SHALL likewise return an
+A hint SHALL be refused with a readable reason when the board is already solved,
+or when `findMistakes(state)` reports any mistake, by the midend before it asks
+the game, so a hint is never derived from a wrong wall or mark. When the clue set
+is not uniquely solvable (so no deduction is found) `hint()` SHALL return an
 error rather than a plan.
 
 `hintKeepTrack(move, step, state)` SHALL return `"completed"` when the player's
@@ -257,9 +257,10 @@ generator paths are unchanged).
 
 #### Scenario: Hint refuses on a mistaken or solved board
 
-- **WHEN** `hint()` is called on a board carrying a wall the unique solution
+- **WHEN** a hint is requested on a board carrying a wall the unique solution
   lacks, or on an already-solved board
-- **THEN** it returns `{ ok: false }` with a human-readable error and no plan
+- **THEN** the midend refuses it with a human-readable error before calling
+  `hint()`, and no plan is shown
 
 #### Scenario: Following the hinted edit advances the plan
 

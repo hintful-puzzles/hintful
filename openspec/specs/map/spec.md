@@ -233,10 +233,11 @@ in, not a replacement.
 
 ### Requirement: Map explains the next deduction
 
-`hint(state)` SHALL refuse through `commonHintRefusal` when the board is solved
-or `findMistakes` reports a mistake, SHALL refuse with `DEDUCTION_EXHAUSTED` when
-nothing follows, which only an Unreasonable board allows, and otherwise SHALL
-return the forced steps from the player's own board as an ordered plan.
+A hint SHALL be refused when the board is solved or `findMistakes` reports a
+mistake, by the midend before it asks the game; `hint(state)` SHALL refuse with
+`DEDUCTION_EXHAUSTED` when nothing follows, which only an Unreasonable board
+allows, and otherwise SHALL return the forced steps from the player's own board
+as an ordered plan.
 
 A blank region's colors SHALL be read as its dots, or all four colors when it
 has none, less every color a neighbor shows. That is sound because

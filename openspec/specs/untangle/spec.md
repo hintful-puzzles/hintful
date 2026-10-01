@@ -187,10 +187,11 @@ crossings as one journey") or, when no journey is found, one of two kinds:
 
 A vertex exactly on its place in the solved layout SHALL NOT be moved by either
 kind of step, nor by a journey's first leg. Following hints from any position of
-a planar board SHALL therefore end solved, recomputing after every step. `hint`
-SHALL refuse with the collection's already-solved wording on a solved board, and
-with its no-move-worth-making wording on a non-planar board once no single move
-removes a crossing.
+a planar board SHALL therefore end solved, recomputing after every step. A hint
+on a solved board SHALL be refused with the collection's already-solved wording,
+by the midend before it asks the game, and `hint` SHALL refuse with its
+no-move-worth-making wording on a non-planar board once no single move removes a
+crossing.
 
 Each step SHALL carry a highlight naming the vertex, its destination, where the
 crossings the move removes sit, and, on a journey's leg, the marked vertices
@@ -215,8 +216,9 @@ SHALL animate the vertex sliding to its destination.
 
 #### Scenario: Hint refuses on a solved board
 
-- **WHEN** `hint` is called on a board with no crossings
-- **THEN** it returns `{ ok: false }` with the collection's already-solved message
+- **WHEN** a hint is requested on a board with no crossings
+- **THEN** the midend refuses it with the collection's already-solved message,
+  without asking the game's `hint`
 
 #### Scenario: Displayed hint is rendered
 

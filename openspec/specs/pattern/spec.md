@@ -191,9 +191,10 @@ the retired *"only one arrangement fits"* wording); being the per-line solver's
 own fixpoint restricted to one line, that rung always exists for a generated
 board, so the plan completes without any un-narrated step.
 
-`hint` SHALL refuse with an error string when the board is already solved or when
-`findMistakes` reports mistakes (the refusal lighting the mistake overlay and the
-banner). `hintKeepTrack` SHALL return `"completed"` when the player fills the
+A hint SHALL be refused with an error string when the board is already solved or
+when `findMistakes` reports mistakes, by the midend before it asks the game (the
+refusal lighting the mistake overlay and the banner). `hintKeepTrack` SHALL
+return `"completed"` when the player fills the
 last forced cell of the displayed step with the correct value, `"onTrack"`
 (shrinking the step to the remaining cells) on partial progress, and `"off"`
 otherwise.
@@ -220,9 +221,9 @@ otherwise.
 
 #### Scenario: A hint refuses on a wrong board
 
-- **WHEN** `hint` is called while `findMistakes` reports at least one mistake
-- **THEN** it returns `{ ok: false }` with a message and the mistaken cells are
-  highlighted
+- **WHEN** a hint is requested while `findMistakes` reports at least one mistake
+- **THEN** the midend refuses it with a message before calling `hint`, and the
+  mistaken cells are highlighted
 
 ### Requirement: Pattern hint color legend
 

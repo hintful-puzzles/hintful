@@ -445,12 +445,12 @@ color, and the hint SHALL refuse while one stands.
 
 ### Requirement: Loopy explains the next deduction from notes the player can make
 
-`hint(state)` SHALL refuse through `commonHintRefusal` when the board is solved or
-`findMistakes` reports a mistake, and otherwise return the lines the solver can
-decide from the player's own board as an ordered plan, each step narrating why its
-move is forced from premises the sentence itself states. Because the mistake check
-vouches for every mark, the plan SHALL take the player's lines, ruled-out edges and
-notes as facts.
+A hint SHALL be refused when the board is solved or `findMistakes` reports a
+mistake, by the midend before it asks the game, and `hint(state)` SHALL otherwise
+return the lines the solver can decide from the player's own board as an ordered
+plan, each step narrating why its move is forced from premises the sentence
+itself states. Because the mistake check vouches for every mark, the plan SHALL
+take the player's lines, ruled-out edges and notes as facts.
 
 The plan SHALL be the solver's own rungs, run with a recorder that names the
 premise behind each change and returns at the first premise that changed a line,

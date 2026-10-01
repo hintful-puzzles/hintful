@@ -197,9 +197,9 @@ deduction *firing* that forces several cells (the identity fill) SHALL be one
 journey (continuation legs flagged `continuesPrevious`), and equivalent
 placements of one firing SHALL share the target hint color.
 
-The hint SHALL refuse (`{ ok: false, error }`) when the board is solved or when
-`findMistakes` is non-empty, and refusal SHALL light the mistake overlay through
-the engine's refusal→`findMistakes` coupling. The deduction SHALL be capped below
+A hint SHALL be refused when the board is solved or when `findMistakes` is
+non-empty, by the midend before it asks the game, and the mistakes refusal SHALL
+light the mistake overlay. The deduction SHALL be capped below
 recursion (a guess is not a teachable step); when no forced move exists below
 recursion the hint SHALL refuse honestly rather than invent one.
 

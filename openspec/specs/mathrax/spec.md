@@ -220,10 +220,11 @@ silently pass anything played on it.
 
 ### Requirement: Mathrax explains the next deduction
 
-`hint(state, aux, ui)` SHALL refuse through `commonHintRefusal` when the board is
-solved or `findMistakes` reports a mistake, and otherwise return the forced steps
-from the player's own board as an ordered plan, each step narrating why its move
-is forced from premises the sentence itself states. The plan SHALL be built by
+A hint SHALL be refused when the board is solved or `findMistakes` reports a
+mistake, by the midend before it asks the game, and `hint(state, aux, ui)` SHALL
+otherwise return the forced steps from the player's own board as an ordered plan,
+each step narrating why its move is forced from premises the sentence itself
+states. The plan SHALL be built by
 the shared candidate-elimination walk over Mathrax's row and column regions, so
 it fills notes with the additive `pencilAll` before a deduction first needs them,
 clears in one setup step what the digits already placed rule out, and offers

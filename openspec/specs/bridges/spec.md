@@ -131,10 +131,11 @@ is met and reverts when a bridge is removed.
 
 ### Requirement: Bridges explains the next deduction
 
-`hint(state)` SHALL refuse through `commonHintRefusal` when the board is solved
-or `findMistakes` reports a wrong span, and otherwise return the forced
-deductions from the player's own marks as an ordered plan, each step narrating
-**why** its moves are forced from premises the sentence itself states.
+A hint SHALL be refused when the board is solved or `findMistakes` reports a
+wrong span, by the midend before it asks the game, and `hint(state)` SHALL
+otherwise return the forced deductions from the player's own marks as an
+ordered plan, each step narrating **why** its moves are forced from premises the
+sentence itself states.
 
 The plan SHALL be produced by the *same three* `DeductionTechnique` objects
 `solveFromScratch` runs, stepped one firing at a time through `singleFirings`,

@@ -137,15 +137,16 @@ quality bar):
   `continuesPrevious` journey, and a barrier the player has already drawn SHALL
   be skipped for display while still advancing the deduction.
 
-`hint()` SHALL refuse (`{ ok: false, error }`, lighting the `findMistakes`
-overlay) when the board is already solved, contains a mistake, or is an
-Ambiguous (not uniquely solvable) board with no forced deduction to teach. The
+A hint SHALL be refused when the board is already solved or contains a mistake
+(lighting the `findMistakes` overlay), by the midend before it asks the game, and
+`hint()` SHALL refuse (`{ ok: false, error }`) on an Ambiguous (not uniquely
+solvable) board with no forced deduction to teach. The
 recorder SHALL be gated so the generator's `runSolver` path is unchanged.
 
 #### Scenario: A hint refuses on a solved board
 
-- **WHEN** `hint` is called on a completed board
-- **THEN** it returns `{ ok: false }` with a non-empty message
+- **WHEN** a hint is requested on a completed board
+- **THEN** the midend refuses it with a non-empty message before calling `hint`
 
 #### Scenario: A placement hint names the forced domino and explains why
 

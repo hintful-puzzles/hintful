@@ -142,10 +142,11 @@ key so a mistake highlights even on a tile that did not otherwise change.
 
 ### Requirement: Tracks explains the next deduction
 
-`hint(state)` SHALL refuse through `commonHintRefusal` when the board is solved
-or `findMistakes` reports any mark, and otherwise return the forced deductions
-from the player's current marks as an ordered plan, each step narrating **why**
-its moves are forced from premises the sentence itself states.
+A hint SHALL be refused when the board is solved or `findMistakes` reports any
+mark, by the midend before it asks the game, and `hint(state)` SHALL otherwise
+return the forced deductions from the player's current marks as an ordered plan,
+each step narrating **why** its moves are forced from premises the sentence
+itself states.
 
 The plan SHALL be produced by the *same* eight `DeductionTechnique` objects
 `tracksSolve` runs, through one `runDeductionFixpoint` call, with a recorder

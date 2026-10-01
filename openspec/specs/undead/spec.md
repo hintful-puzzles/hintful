@@ -240,9 +240,9 @@ failure mode passes quietly. The two lower tiers are unaffected: a freshly
 computed plan still solves them from empty, and following hints one move at a
 time still reaches a solved board.
 
-The hint SHALL refuse with `{ ok: false, error }` when the board is already solved or
-when `findMistakes` reports any contradiction (lighting the mistake overlay through
-the existing refusal coupling). The narration SHALL teach the sighting rule —
+A hint SHALL be refused when the board is already solved or when `findMistakes`
+reports any contradiction, by the midend before it asks the game (lighting the
+mistake overlay for the contradiction). The narration SHALL teach the sighting rule —
 vampires counted before the beam first reflects, ghosts only after it has bounced,
 zombies anywhere along it — and SHALL read correctly at the degenerate clue values
 (a count of zero up to the line's full monster count). Conclusions SHALL use the
@@ -318,8 +318,8 @@ so a hint refused for mistakes highlights those cells for free.
 
 - **WHEN** a hint is requested on an already-solved board, or on a board where
   `findMistakes` reports a contradiction
-- **THEN** the hint returns `{ ok: false, error }` and (for the mistake case) the
-  mistake overlay highlights the offending cells
+- **THEN** the midend refuses the hint before asking the game, and (for the
+  mistake case) the mistake overlay highlights the offending cells
 
 ### Requirement: Undead provides on-screen key labels
 

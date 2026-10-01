@@ -582,31 +582,6 @@ no-status-bar game is inert.
 - **THEN** the midend emits the hint explanation while the hint is displayed
 - **AND** the explanation is cleared (emitted empty) once a move hides the hint
 
-### Requirement: A refused hint surfaces the board's mistakes
-
-The `Midend` SHALL invoke `findMistakes()` whenever a hint is refused (the
-game's `hint()` returns an unsuccessful result), so the offending cells are
-surfaced in the same overlay Check & Save uses. A hint is typically refused
-precisely because the board has mistakes ("fix the highlighted mistakes
-first"), and the refusal message alone highlights nothing; routing the refusal
-through `findMistakes()` makes that promise literally true. A refusal with no
-mistakes (already solved, nothing deducible) finds zero and highlights nothing;
-a game without a `findMistakes` hook is unaffected. This applies to every
-refusal path — the manual Hint request and Auto-Hint both flow through the
-single plan-computation chokepoint.
-
-#### Scenario: Asking for a hint on a board with a mistake highlights it
-
-- **WHEN** the board has a mistake and the game's `hint()` refuses
-- **THEN** the midend computes and displays the mistake overlay (the same one
-  Check & Save populates) so the offending cells render in the mistake color
-- **AND** the refusal message is still returned to the caller
-
-#### Scenario: A refusal unrelated to mistakes highlights nothing
-
-- **WHEN** a hint is refused on a board with no mistakes (e.g. already solved)
-- **THEN** the mistake overlay stays empty and no cell is highlighted
-
 ### Requirement: The engine provides shared keyboard modifier-mask constants
 
 The engine SHALL provide the keyboard modifier-mask constants `MOD_MASK`
@@ -2745,67 +2720,6 @@ a vocabulary sweep.
 - **WHEN** a game is recorded as lacking one of the two flags but in fact has it
 - **THEN** the guard fails, so the exemption list cannot outlive its reason
 
-### Requirement: A hint refusal is worded once for the whole collection
-
-A refusal returned by `Game.hint` SHALL come from the collection's single set of
-refusal messages, and a game SHALL NOT spell one of those messages itself. The
-set SHALL distinguish, at minimum: the board is finished; the board contradicts
-its clues **and the offending cells will be highlighted**; the board is
-inconsistent but **no individual entry can be shown to be wrong**; deduction has
-run out; and — for a game that teaches no technique — that no move would help.
-
-This is required because the help teaches "there is a mistake on the board" and
-"deduction has run out" as a *pair* whose responses are opposite, and a player
-cannot learn a pair whose members are worded differently in each puzzle.
-
-The choice between the two mistake refusals SHALL be made by **whether a
-highlight will actually appear**. A message promising highlighted cells SHALL be
-emitted only where the game has established that its `findMistakes` returns some;
-where a game's `findMistakes` is a rule validator that cannot see a
-wrong-but-legal entry, the refusal SHALL be the one that asks the player to undo
-rather than one that points at a highlight that never comes.
-
-A game MAY word a refusal differently where naming *its own* dead end is the
-substance of the hint — a game with no deduction to offer has nothing else to
-give — and such an exception SHALL be recorded with its reason where the
-guarantee is enforced, rather than left as an unexplained difference.
-
-Conformance SHALL be asserted by scanning for the refusal's **shape** rather
-than for the name of the function returning it. A scan keyed on a function named
-`hint` misses a game whose hint is named for the game, and did: it reported a
-census of the whole collection with one game absent from every figure.
-
-#### Scenario: Two games refuse for the same reason
-
-- **WHEN** two games decline to hint because no further move can be deduced
-- **THEN** the player reads the same sentence in both
-
-#### Scenario: A new phrasing cannot arrive unnoticed
-
-- **WHEN** a game returns a refusal message that is neither one of the shared
-  messages nor a recorded exception
-- **THEN** the conformance check fails
-
-#### Scenario: A copy of a shared message is not a substitute for it
-
-- **WHEN** a game spells out the text of a shared refusal instead of using it
-- **THEN** the conformance check fails, because a copy drifts the first time the
-  wording is improved
-
-#### Scenario: A refusal promises a highlight only when there will be one
-
-- **WHEN** a game refuses because the board contradicts its clues
-- **THEN** it uses the message naming highlighted cells only if its
-  `findMistakes` reports some for that board
-- **AND** otherwise uses the message that asks the player to undo instead
-
-#### Scenario: A game whose dead end is its own
-
-- **WHEN** a game's refusal names a situation particular to it, and saying so is
-  what the hint has to offer
-- **THEN** that wording is permitted, and the reason is recorded alongside the
-  check that would otherwise reject it
-
 ### Requirement: Every game's board sits at one tone
 
 The engine SHALL hand a game's `colors()` a background already shifted off pure
@@ -3930,65 +3844,6 @@ game.
 
 - **WHEN** a hint refuses on a board dealt at a tier that does not permit search
 - **THEN** the walk fails — the defect is the refusal, not the wording
-
-### Requirement: A deductive hint SHALL open with the shared refusal pair
-
-A game whose `hint()` refuses a finished board with `ALREADY_SOLVED` and a
-mistaken board with `FIX_MISTAKES_FIRST` SHALL reach both through
-`commonHintRefusal` rather than writing the pair itself.
-
-Two rules live in that opening and are invisible at each hand-written copy. The
-refusals SHALL be asked **in order** — a finished board is not a wrong board, and
-asking the second first reports a mistake on a board the player has completed.
-And `FIX_MISTAKES_FIRST` **promises a highlight**, so it SHALL be emitted only
-where the game has already established there is something to highlight, never
-speculatively. In the helper both are structural; in fifteen copies each was a
-chance to get one wrong silently, and nothing would have said so.
-
-`commonHintRefusal` took **booleans rather than a state** for a reason that still
-holds: `completed` lives under a different name in several games, `findMistakes`
-is each game's own, and a helper taking the `Game` could not be called from
-inside the very `hint` that object is being built from.
-
-**Two escapes, and both are answers about the puzzle.** A game whose board can be
-inconsistent *without any single entry being provably wrong* owes
-`CONTRADICTION_UNLOCALIZED` instead of `FIX_MISTAKES_FIRST`, because the promised
-highlight would never appear; it writes the explicit form and says why at the
-site. A game with no mistake concept at all owes only the first refusal, and one
-line is already the whole of it.
-
-**The helper SHALL NOT grow a parameter for the second message.** A parameter
-that exists so two games can pass a different constant converts a convention into
-a configuration language, which is what a first-class override exists *instead*
-of (`AGENTS.md` § "Convention over configuration": the override is the explicit
-form plus a stated reason, not a knob).
-
-**Enrollment SHALL be derived and the declines SHALL be a ledger.** The guard
-finds the games that emit both constants by reading their source and requires
-them to reach both through the helper; the games that legitimately do not are
-listed *in the guard*, one entry per game with its reason, and the derivation
-asserts the ledger is exactly right. A skip list nothing derives rots the way
-every enrollment roster in this repo has.
-
-#### Scenario: A game hand-writes the pair
-
-- **WHEN** a game returns `ALREADY_SOLVED` for a finished board and
-  `FIX_MISTAKES_FIRST` for a mistaken one without calling `commonHintRefusal`
-- **THEN** the guard fails, naming the game
-
-#### Scenario: A game owes a different second refusal
-
-- **WHEN** a game's board can be inconsistent with no entry provably wrong
-- **THEN** it emits `CONTRADICTION_UNLOCALIZED`, writes the reason at the site,
-  and appears in the guard's ledger — which the derivation checks is exactly the
-  set that did not adopt
-
-#### Scenario: A new hinting game arrives
-
-- **WHEN** a game gains a `hint()` that refuses on both a finished and a mistaken
-  board
-- **THEN** it is required to use the helper from that commit, with no line added
-  anywhere to enroll it
 
 ### Requirement: Sliding-permutation games share one slide planner whose exact search always runs
 
@@ -7702,3 +7557,101 @@ not for a constant's name.
 
 - **WHEN** a finished board's status bar has nothing else to say
 - **THEN** it reads the completion words with no trailing space
+
+### Requirement: The midend SHALL refuse a hint on a finished or wrong board before asking the game
+
+Before it asks a game's `hint` for a plan, the `Midend` SHALL refuse with
+`ALREADY_SOLVED` when the board's status is solved, and then with
+`FIX_MISTAKES_FIRST` when the game's `findMistakes` reports anything, putting
+what it reports on the same overlay Check & Save uses. A game's `hint` is
+therefore only ever asked about an unfinished board on which its `findMistakes`
+finds nothing, and does not write either refusal.
+
+The refusals SHALL be asked **in order**, because a finished board is not a
+wrong board. And `FIX_MISTAKES_FIRST` **promises a highlight**, which only the
+code that draws the overlay can keep, so no game says it: it is not a
+`HintRefusal`. Forty-two of the forty-eight hinted games wrote this opening, or
+called a helper to write it, until the midend took it over; each copy was a
+chance to get the order or the promise wrong silently.
+
+The midend SHALL NOT refuse on a lost status, because a lost board is not always
+over: Flood plays on past its move limit and its hint still leads home. A game
+whose finished board its status does not call solved (Fifteen, Sixteen and
+Netslide count a board solved from the move that sorts it, so a game ID typed
+already sorted is finished at move 0) refuses that board itself.
+
+Because the walk in `hint-resume.test.ts` asks `hint` directly, it SHALL also
+ask `findMistakes` at every position it reaches, as the midend does, and fail if
+it reports anything: that is what holds a game's `findMistakes` to a sound board
+and a hint to never leading the player into a mistake.
+
+#### Scenario: Asking for a hint on a finished board
+
+- **WHEN** a hint is requested, or played, on a board whose status is solved
+- **THEN** the midend returns `ALREADY_SOLVED` and the game's `hint` is not asked
+
+#### Scenario: Asking for a hint on a board with a mistake highlights it
+
+- **WHEN** a hint is requested on an unfinished board for which the game's
+  `findMistakes` reports a mistake
+- **THEN** the midend returns `FIX_MISTAKES_FIRST`, the game's `hint` is not
+  asked, and the next redraw shows the mistake overlay Check & Save populates
+
+#### Scenario: A refusal unrelated to mistakes highlights nothing
+
+- **WHEN** the game's `hint` refuses on a board with no mistakes
+- **THEN** the mistake overlay stays empty and no cell is highlighted
+
+#### Scenario: A hint walk meets a mistake
+
+- **WHEN** following a game's hints reaches a position its `findMistakes` flags
+- **THEN** the walk fails, naming the seed and the move
+
+### Requirement: A hint refusal SHALL be one of the collection's own
+
+`HintResult`'s error SHALL be a `HintRefusal`: the union of the literal types of
+the collection's refusal constants, plus a sentence made by
+`puzzleHintRefusal`, the one named escape. A game SHALL NOT be able to return a
+sentence it typed. The set SHALL distinguish, at minimum: the board is finished;
+the board is inconsistent but **no individual entry can be shown to be wrong**;
+deduction has run out; a bounded search is past its reach; for a game that
+teaches no technique, no move would help; and the game is over.
+
+This is required because the help teaches "there is a mistake on the board" and
+"deduction has run out" as a *pair* whose responses are opposite, and a player
+cannot learn a pair whose members are worded differently in each puzzle.
+
+The escape is for a dead end only one puzzle has, where naming it is the
+substance of the hint (Inertia's dead ball, and the gems its ball can no longer
+reach). A sentence two games pass through it is a situation the collection has,
+and SHALL become a kind; the conformance check SHALL find the escape's calls by
+their shape, read a template's words with each substitution as a hole, and fail
+a call whose sentence it cannot read.
+
+#### Scenario: Two games refuse for the same reason
+
+- **WHEN** two games decline to hint because no further move can be deduced
+- **THEN** the player reads the same sentence in both
+
+#### Scenario: A new phrasing cannot arrive unnoticed
+
+- **WHEN** a game's `hint` returns a sentence that is neither a refusal constant
+  nor made by `puzzleHintRefusal`
+- **THEN** the typecheck fails
+
+#### Scenario: A game's own dead end shared by a second game
+
+- **WHEN** two games pass the same sentence to `puzzleHintRefusal`
+- **THEN** the conformance check fails, asking for a kind
+
+#### Scenario: A kind spelled out through the escape
+
+- **WHEN** a game passes a refusal constant's text to `puzzleHintRefusal`
+- **THEN** the conformance check fails
+
+#### Scenario: A board inconsistent with nothing to highlight
+
+- **WHEN** a board `findMistakes` passes is still inconsistent, with no entry
+  provably wrong
+- **THEN** the game's `hint` refuses with the message that asks the player to
+  undo, not with one pointing at a highlight

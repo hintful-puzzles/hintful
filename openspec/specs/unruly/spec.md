@@ -199,9 +199,10 @@ outline, separate from the live three-in-a-row / count error overlays.
 The `unruly` game SHALL implement `hint(state)` returning a plan-carrying,
 narrated hint that explains *why* each move is forced (the fork's hint quality
 bar), and `hintKeepTrack` so the plan auto-advances as the player follows it.
-The hint SHALL refuse (a `{ ok: false }` result) when the board is already
-solved or when `findMistakes(state)` is non-empty, since a deduction seeded from
-contradictory marks would mislead. Otherwise it SHALL deduce, from the player's
+A hint SHALL be refused when the board is already solved or when
+`findMistakes(state)` is non-empty, by the midend before it asks the game, since
+a deduction seeded from contradictory marks would mislead. Otherwise `hint(state)`
+SHALL deduce, from the player's
 current marks, the ordered sequence of forced cells (run to fixpoint at the
 solver's full strength) and return one narrated `HintStep` per forced cell. Each
 step's narration SHALL state the deduction technique that forces the cell — two
@@ -259,9 +260,9 @@ uniform hint-step duration, so auto-hint reads as continuous fills.
 
 #### Scenario: Hint refuses on a solved or mistaken board
 
-- **WHEN** `hint` is called on a solved board, or on a board where the player has
-  marked a cell contradicting the unique solution
-- **THEN** it returns `{ ok: false }` with an explanatory error
+- **WHEN** a hint is requested on a solved board, or on a board where the player
+  has marked a cell contradicting the unique solution
+- **THEN** the midend refuses it with an explanatory error before calling `hint`
 
 #### Scenario: Following the hint advances the plan
 

@@ -252,10 +252,10 @@ codec.
 
 ### Requirement: Seismic explains the next deduction
 
-`hint(state)` SHALL refuse through `commonHintRefusal` when the board is solved or
-`findMistakes` reports a mistake, and otherwise return the forced steps from the
-player's own board as an ordered plan, each step narrating why its move is forced
-from premises the sentence itself states.
+A hint SHALL be refused when the board is solved or `findMistakes` reports a
+mistake, by the midend before it asks the game, and `hint(state)` SHALL otherwise
+return the forced steps from the player's own board as an ordered plan, each step
+narrating why its move is forced from premises the sentence itself states.
 
 The plan SHALL be walked by the shared candidate walk (`runCandidatePlan`), with
 Seismic's keep-apart rule as the walk's `reach`: an `n` rules `n` out of its own
