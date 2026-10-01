@@ -44,7 +44,7 @@ export const hatsInMetatile = /* @__PURE__ */ new Int8Array([4, 1, 2, 2]);
 export const nchildren = /* @__PURE__ */ new Int8Array([13, 7, 11, 11]);
 
 /** `children[type][i]` — the type of the i'th child of a metatile. */
-export const children: readonly Int8Array[] = /* @__PURE__ */ [
+export const children: readonly Int8Array[] = [
   new Int8Array([0, 0, 0, 1, 2, 2, 2, 3, 3, 3, 3, 3, 3]),
   new Int8Array([0, 2, 2, 2, 3, 3, 3]),
   new Int8Array([0, 0, 2, 2, 2, 3, 3, 3, 3, 3, 3]),

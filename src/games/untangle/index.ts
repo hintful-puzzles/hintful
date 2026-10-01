@@ -23,6 +23,7 @@ import { rejectMove } from "../../engine/assert-never.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { BLUE, BLUE_WASH, ORANGE, PURPLE } from "../../engine/color/colors.ts";
 import { ERROR, FLASH, HELD, INK } from "../../engine/color/palette.ts";
+import { parseLeadingInt } from "../../engine/decimal.ts";
 import { winFlash } from "../../engine/flash.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import {
@@ -159,11 +160,9 @@ export const untangleGame: Game<
     submenu: [6, 10, 15, 20, 25].map((n) => ({ params: { n } })),
   }),
   encodeParams: (p) => `${p.n}`,
-  decodeParams: (s) => {
-    const n = Number.parseInt(s, 10);
-    if (!Number.isFinite(n)) throw new Error(`bad untangle params "${s}"`);
-    return { n };
-  },
+  // Lenient, as every game's is: a string with no number reads as 0, and the
+  // bounds refuse it in the dialog's words rather than a thrown message's.
+  decodeParams: (s) => ({ n: parseLeadingInt(s, 0).value }),
 
   // --- generation ----------------------------------------------------
   newDesc: newUntangleDesc,
