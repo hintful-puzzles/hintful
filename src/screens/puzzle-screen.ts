@@ -949,7 +949,17 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
       const error = await puzzle.newGameFromId(this.gameId);
       if (!error) {
         hasGame = true;
-        this.autoSaveFilename = savedGames.makeAutoSaveFilename();
+        // A link to the board already in progress here resumes it: a player
+        // reopening their own shared link, or tapping it twice, expects their
+        // moves. Matched on the dealt board's id, since the link may carry a
+        // seed where the autosave records the desc.
+        const resumable =
+          puzzle.currentGameId &&
+          (await savedGames.findAutoSaveOfGame(puzzle.puzzleId, puzzle.currentGameId));
+        this.autoSaveFilename =
+          resumable && (await savedGames.restoreAutoSavedGame(puzzle, resumable))
+            ? resumable
+            : savedGames.makeAutoSaveFilename();
       } else {
         void showAlert({
           label: `Ignoring invalid id in URL`,

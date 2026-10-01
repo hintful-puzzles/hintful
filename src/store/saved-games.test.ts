@@ -111,6 +111,30 @@ describe("saved-games: an autosave this build cannot replay", () => {
   });
 });
 
+describe("saved-games: the autosave a link to its board resumes", () => {
+  beforeEach(async () => {
+    await resetDb();
+  });
+  afterEach(async () => {
+    await resetDb();
+  });
+
+  it("finds the latest autosave playing that board, and none for another", async () => {
+    const board = (gameId: string) =>
+      Object.assign(fakePuzzle("pegs", "board"), { currentGameId: gameId });
+    await savedGames.autoSaveGame(board("7x7:A"), "autosave-1");
+    await new Promise((r) => setTimeout(r, 2));
+    await savedGames.autoSaveGame(board("7x7:B"), "autosave-2");
+    await new Promise((r) => setTimeout(r, 2));
+    await savedGames.autoSaveGame(board("7x7:A"), "autosave-3");
+
+    expect(await savedGames.findAutoSaveOfGame("pegs", "7x7:A")).toBe("autosave-3");
+    expect(await savedGames.findAutoSaveOfGame("pegs", "7x7:B")).toBe("autosave-2");
+    expect(await savedGames.findAutoSaveOfGame("pegs", "7x7:C")).toBeNull();
+    expect(await savedGames.findAutoSaveOfGame("solo", "7x7:A")).toBeNull();
+  });
+});
+
 describe("saved-games: quick-save slot (fake-indexeddb)", () => {
   beforeEach(async () => {
     await resetDb();

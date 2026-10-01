@@ -383,7 +383,8 @@ To discard every game in progress, open the
 
 * **This specific game**: a link to the game you are playing, as it was dealt.
   It doesn’t carry your progress; for that,
-  [export a save file](#saved-games) or copy as text.
+  [export a save file](#saved-games) or copy as text. Opening a link to a
+  board you are already playing on this device picks up where you left off.
 
 * **This puzzle type**: a link to the current ::puzzle-type:: type, meaning the
   size, difficulty and any other options. Opening it deals a new random game

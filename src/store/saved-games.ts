@@ -153,6 +153,23 @@ class SavedGames {
     return record?.filename ?? null;
   }
 
+  /**
+   * The filename of the most recent autosave of `puzzleId` playing the board
+   * `gameId` (a `params:desc` id, as {@link Puzzle.currentGameId} gives), if
+   * any: the progress a link to that board should resume.
+   */
+  async findAutoSaveOfGame(puzzleId: PuzzleId, gameId: string): Promise<string | null> {
+    const records = await db.savedGames
+      .where("[saveType+puzzleId+timestamp]")
+      .between(
+        [SaveType.Auto, puzzleId, TIMESTAMP_MIN],
+        [SaveType.Auto, puzzleId, TIMESTAMP_MAX],
+      )
+      .reverse()
+      .toArray();
+    return records.find((record) => record.gameId === gameId)?.filename ?? null;
+  }
+
   makeAutoSaveFilename(): string {
     // This could be a uuid or some random chars to avoid possible duplication,
     // but a timestamp is probably sufficient for now.

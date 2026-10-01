@@ -69,7 +69,10 @@ export class EnterGameIDDialog extends SignalWatcher(LitElement) {
             ${asSentence(this.error)}
           </wa-callout>
         `
-      : this.puzzle?.totalMoves && !this.otherPuzzle
+      : this.puzzle?.totalMoves &&
+          !this.otherPuzzle &&
+          this.gameid !== this.puzzle.currentGameId &&
+          this.gameid !== this.puzzle.randomSeed
         ? html`
           <wa-callout variant="warning">
             <wa-icon slot="icon" name="warning"></wa-icon>
@@ -155,6 +158,15 @@ export class EnterGameIDDialog extends SignalWatcher(LitElement) {
       window.location.assign(
         puzzlePageUrl({ puzzleId: this.otherPuzzle, puzzleGameId: this.gameid }),
       );
+      return;
+    }
+    if (
+      this.gameid &&
+      (this.gameid === this.puzzle?.currentGameId ||
+        this.gameid === this.puzzle?.randomSeed)
+    ) {
+      // The link is to the board already being played: keep the moves.
+      this.open = false;
       return;
     }
     if (this.puzzle && this.gameid) {
