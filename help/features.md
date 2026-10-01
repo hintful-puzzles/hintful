@@ -393,11 +393,14 @@ To discard every game in progress, open the
   post or a message. Use a fixed-width font (“format as code”). Not every
   puzzle can do this, and some of the renderings take a little imagination.
 
-* **Game ID** and **random seed**: for use with other apps that play the same
-  collection. Simon Tatham’s manual explains the format under
-  [*Specifying games with the game ID*][sgt-gameid]. To open an ID or seed you
-  were given, use <command-link command="enter-gameid">*Enter game ID*</command-link>
-  in *More…*.
+* **Game ID** and **random seed**: the game itself, without the link around
+  it. Simon Tatham’s manual explains the format under
+  [*Specifying games with the game ID*][sgt-gameid].
+
+To open a game someone sent you, open its link, or paste the link into
+<command-link command="enter-gameid">*Open a shared game*</command-link> in
+*More…*, which is the way in from the installed app. A game ID works there
+too.
 
 For puzzles that exist on Simon Tatham’s website, the share dialog also links
 the same game there, which is handy for comparing behavior when something

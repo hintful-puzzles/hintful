@@ -6,6 +6,7 @@ import { customElement, state } from "lit/decorators.js";
 import { puzzleContext } from "../puzzle/contexts.ts";
 import type { Puzzle } from "../puzzle/puzzle.ts";
 import { cssWATweaks } from "../utils/css.ts";
+import { readGameLink } from "./game-link.ts";
 
 // Register components
 import "@awesome.me/webawesome/dist/components/button/button.js";
@@ -13,35 +14,6 @@ import "@awesome.me/webawesome/dist/components/callout/callout.js";
 import "@awesome.me/webawesome/dist/components/dialog/dialog.js";
 import "@awesome.me/webawesome/dist/components/icon/icon.js";
 import "@awesome.me/webawesome/dist/components/input/input.js";
-
-/**
- * If href is a permalink to puzzleId at SGT's website,
- * return the game id or random seed from its hash.
- */
-function extractSGTGameID(href: string | URL, puzzleId: string): string | null {
-  // https://www.chiark.greenend.org.uk/~sgtatham/puzzles/js/solo.html#3x3db%23529619113385357
-  let url: URL;
-  try {
-    url = href instanceof URL ? href : new URL(href);
-  } catch {
-    return null;
-  }
-
-  if (
-    url.hostname === "www.chiark.greenend.org.uk" &&
-    url.pathname === `/~sgtatham/puzzles/js/${puzzleId}.html` &&
-    url.hash
-  ) {
-    let hash = url.hash.replace(/^#/, "");
-    if (/%[0-9a-e]{2}/i.test(hash)) {
-      hash = decodeURIComponent(hash);
-    }
-    if (hash) {
-      return hash;
-    }
-  }
-  return null;
-}
 
 /** The refusal as a sentence: a description error already is one, while a
  * params refusal ("Width must be at least 3") ends without its full stop. */
@@ -61,6 +33,9 @@ export class EnterGameIDDialog extends SignalWatcher(LitElement) {
   @state()
   private error?: string;
 
+  /** Why the pasted link has no game ID for this puzzle, shown on OK. */
+  private linkError?: string;
+
   @query("wa-dialog", true)
   protected dialog?: HTMLElementTagNameMap["wa-dialog"];
 
@@ -75,6 +50,7 @@ export class EnterGameIDDialog extends SignalWatcher(LitElement) {
 
   reset() {
     this.gameid = undefined;
+    this.linkError = undefined;
     this.error = undefined;
   }
 
@@ -84,8 +60,7 @@ export class EnterGameIDDialog extends SignalWatcher(LitElement) {
       ? html`
           <wa-callout variant="danger">
             <wa-icon slot="icon" name="error"></wa-icon>
-            <strong>Unable to use that id</strong>&hairsp;&mdash;&hairsp;are you 
-            sure it’s for ${puzzleName}?<br>
+            <strong>That game won’t open.</strong>
             ${asSentence(this.error)}
           </wa-callout>
         `
@@ -100,8 +75,8 @@ export class EnterGameIDDialog extends SignalWatcher(LitElement) {
 
     return html`
       <wa-dialog>
-        <div slot="label">Load game by ID</div>
-        
+        <div slot="label">Open a shared game</div>
+
         <wa-input
             autofocus
             .value=${this.gameid}
@@ -110,10 +85,10 @@ export class EnterGameIDDialog extends SignalWatcher(LitElement) {
             @keydown=${this.handleInputKeydown}
         >
           <div slot="label">
-            Enter a game ID or random seed for ${puzzleName}
+            Paste the link to a game of ${puzzleName}
           </div>
           <div slot="hint">
-            Copied from any compatible portable puzzle collection app
+            The link someone sent you, from Share › This specific game
           </div>
         </wa-input>
         
@@ -136,9 +111,11 @@ export class EnterGameIDDialog extends SignalWatcher(LitElement) {
   private handleInputChange(event: UIEvent) {
     const input = event.target as HTMLElementTagNameMap["wa-input"];
     const value = input.value?.trim() ?? "";
-    const gameid = extractSGTGameID(value, this.puzzle?.puzzleId ?? "unknown") ?? value;
+    const link = readGameLink(value, this.puzzle?.puzzleId ?? "unknown");
+    const gameid = link && "gameId" in link ? link.gameId : value;
     if (gameid !== this.gameid) {
       this.gameid = gameid;
+      this.linkError = link && "error" in link ? link.error : undefined;
       this.error = undefined;
     }
   }
@@ -158,6 +135,10 @@ export class EnterGameIDDialog extends SignalWatcher(LitElement) {
   }
 
   private async handleOKClick() {
+    if (this.linkError) {
+      this.error = this.linkError;
+      return;
+    }
     if (this.puzzle && this.gameid) {
       const error = await this.puzzle.newGameFromId(this.gameid);
       if (error) {

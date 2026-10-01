@@ -328,7 +328,7 @@ export class PuzzleRail extends SignalWatcher(LitElement) {
       "divider",
       { command: "save-game", icon: "save-game", label: "Save game" },
       { command: "load-game", icon: "load-game", label: "Load game" },
-      { command: "enter-gameid", icon: "gameid", label: "Enter game ID" },
+      { command: "enter-gameid", icon: "gameid", label: "Open a shared game" },
       "divider",
       { command: "settings", icon: "settings", label: "Preferences" },
       { command: "about", icon: "info", label: "About" },
