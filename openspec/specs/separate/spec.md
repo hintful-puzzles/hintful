@@ -44,7 +44,7 @@ The desc SHALL be the `w·h` letters in row-major order, each an uppercase lette
 `new_game_desc` emits. `validateDesc` SHALL reject a desc of the wrong length or
 containing a character outside `A .. A+k-1`. `newState` SHALL parse the desc into
 the immutable letters array and an all-unknown wall state (only the grid rim
-walls set), `completed` and `cheated` both false.
+walls set).
 
 #### Scenario: A description round-trips
 

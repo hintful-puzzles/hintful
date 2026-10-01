@@ -111,13 +111,14 @@ be a no-op. A click on a greater-than sign or adjacency bar in the gap between t
 cells, or a shift/ctrl-cursor toward a neighboring clue, SHALL toggle that clue's
 struck-through ("spent") state. Immutable (given) cells SHALL reject entry. The
 `M`/`m` key SHALL fill every empty cell with all candidate pencil marks.
-`executeMove` SHALL apply the move purely, returning a new state, and SHALL set
-`completed` when the filled grid satisfies every row/column and clue constraint.
+`executeMove` SHALL apply the move purely, returning a new state, and the board
+SHALL be reported solved exactly while the filled grid satisfies every
+row/column and clue constraint.
 
 #### Scenario: Entering the last correct number completes the board
 
 - **WHEN** the player enters the final number that completes a correct grid
-- **THEN** `executeMove` returns a state with `completed = true`
+- **THEN** `status` reports the state `executeMove` returns as solved
 
 #### Scenario: Entry into an immutable cell is rejected
 

@@ -48,11 +48,10 @@ A `SamegameMove` SHALL be `{ type: "remove"; tiles: number[] }` carrying the gri
 indices to clear. `executeMove` SHALL be pure: it SHALL range-check each index,
 set those tiles empty, add `max(0, n − scoresub)²` to the score (where `n` is the
 number of removed tiles), let remaining tiles fall to the bottom of their
-columns, shuffle non-empty columns to the left, and recompute `complete` (the
-grid is empty) and `impossible` (no two orthogonally-adjacent tiles share a
-color). `status` SHALL return `"solved"` when `complete` and otherwise
-`"ongoing"` — a no-moves-left (`impossible`) position is NOT `"lost"` (it is
-rescuable by Undo).
+columns, shuffle non-empty columns to the left, and recompute `impossible` (no
+two orthogonally-adjacent tiles share a color). `status` SHALL return `"solved"`
+when the grid is empty and otherwise `"ongoing"` — a no-moves-left
+(`impossible`) position is NOT `"lost"` (it is rescuable by Undo).
 
 #### Scenario: Removing a group scores and compacts
 
@@ -65,7 +64,7 @@ rescuable by Undo).
 #### Scenario: Clearing the last tiles wins
 
 - **WHEN** a `remove` move empties the final non-empty tiles
-- **THEN** the new state is `complete` and `status()` returns `"solved"`
+- **THEN** the new state's grid is empty and `status()` returns `"solved"`
 
 #### Scenario: A stuck board is impossible but not lost
 

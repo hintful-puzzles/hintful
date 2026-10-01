@@ -89,13 +89,13 @@ mode), and backspace/space/0 SHALL clear it; entering a value a cell already
 holds SHALL be a no-op. A click or shift/ctrl-cursor onto an outside clue SHALL
 toggle that clue's struck-through ("done") state. Immutable (given) cells SHALL
 reject entry. `executeMove` SHALL apply the move purely, returning a new state,
-and SHALL set `completed` when the filled grid violates no clue or Latin
-constraint.
+and the board SHALL be reported solved exactly while the filled grid violates no
+clue or Latin constraint.
 
 #### Scenario: Entering the last correct tower completes the board
 
 - **WHEN** the player enters the final tower that completes a correct grid
-- **THEN** `executeMove` returns a state with `completed = true`
+- **THEN** `status` reports the state `executeMove` returns as solved
 
 #### Scenario: Entry into an immutable cell is rejected
 

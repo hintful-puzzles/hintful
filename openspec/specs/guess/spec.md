@@ -64,9 +64,12 @@ holds (`{ type: "guess", pegs, holds }`) or a solve (`{ type: "solve" }`).
 `[allowBlank ? 0 : 1, ncolors]`, then mark the row with Knuth's feedback —
 `nc_place` exact-position matches (black) and `nc_colour = Σ_color min(#guess,
 #solution) − nc_place` color-only matches (white) — and store that feedback on
-the row. The game SHALL set `solved = +1` (win) when every peg is in the correct
-place, else advance to the next row, setting `solved = -1` (lose, revealing the
-solution) when the rows are exhausted. A solve SHALL set `solved = -1`.
+the row, then advance to the next row unless every peg is in the correct place.
+The game SHALL be won when the last submitted row has every peg in the correct
+place, and lost, with the solution revealed, when the rows are exhausted
+without a win or when Solve reveals the solution. Won and lost SHALL be judged
+from the rows and the revealed answer on the board, never from a separate
+record of the outcome.
 
 #### Scenario: A correct guess wins
 

@@ -1,6 +1,6 @@
 # derive-completion-from-the-position
 
-**Status: in progress (2026-10-01).** Follows
+**Status: done (2026-10-01).** Follows
 `own-the-hint-refusals`, whose falsifier found three games whose status could
 not see their own finished board. Read that change's `design.md` § "Task 0"
 first.

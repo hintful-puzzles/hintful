@@ -54,32 +54,6 @@ the game, with all squares initially blank.
   clue count not matching `(w+1) × (h+1)`
 - **THEN** it returns a non-null error string
 
-### Requirement: Slant computes live errors and completion as upstream
-
-`executeMove` SHALL recompute error state exactly as upstream
-`check_completion`: every diagonal lying on a loop edge (per the shared
-findloop helper over the vertex graph) is a loop error; every clue vertex
-whose degree exceeds its clue or whose maximum achievable degree is below
-its clue is a vertex error; every diagonal in the border-connected vertex
-component is grounded. The board is complete when no errors exist and no
-square is blank; the completed flag SHALL latch.
-
-#### Scenario: A closed loop is flagged
-
-- **WHEN** diagonals are placed forming a closed loop
-- **THEN** each diagonal on the loop carries the loop-error flag
-
-#### Scenario: An over-committed clue is flagged
-
-- **WHEN** a vertex clue `1` has two incident diagonals
-- **THEN** that vertex carries the vertex-error flag
-
-#### Scenario: Completion latches
-
-- **WHEN** the last blank square is filled consistently with all clues and
-  no loop exists
-- **THEN** the state reports completed
-
 ### Requirement: Slant input maps clicks, cursor and direct keys
 
 `interpretMove` SHALL cycle a square blank→`\`→`/`→blank on left-click and
@@ -319,3 +293,32 @@ short bars across the middle of the shared side in the pencil color.
 
 - **WHEN** a move log holding only diagonals is replayed
 - **THEN** it produces the same board, with no marks
+
+### Requirement: Slant computes live errors as upstream and judges completion from the board
+
+`executeMove` SHALL recompute error state exactly as upstream
+`check_completion`: every diagonal lying on a loop edge (per the shared
+findloop helper over the vertex graph) is a loop error; every clue vertex
+whose degree exceeds its clue or whose maximum achievable degree is below
+its clue is a vertex error; every diagonal in the border-connected vertex
+component is grounded. The board SHALL be reported solved exactly while no
+errors exist and no square is blank, judged from the board however it was
+reached.
+
+#### Scenario: A closed loop is flagged
+
+- **WHEN** diagonals are placed forming a closed loop
+- **THEN** each diagonal on the loop carries the loop-error flag
+
+#### Scenario: An over-committed clue is flagged
+
+- **WHEN** a vertex clue `1` has two incident diagonals
+- **THEN** that vertex carries the vertex-error flag
+
+#### Scenario: Completion follows the board
+
+- **WHEN** the last blank square is filled consistently with all clues and
+  no loop exists
+- **THEN** `status` reports the board solved
+- **AND** a later move that leaves a square blank or makes an error reports it
+  unsolved again

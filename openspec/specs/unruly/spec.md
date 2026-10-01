@@ -50,7 +50,7 @@ and `z`/`Z` advance 25 cells without placing a clue; the encoded positions SHALL
 sum to exactly `w2·h2 + 1`. `validateDesc` SHALL reject any other character and
 any desc whose decoded length differs from `w2·h2 + 1`. `newState` SHALL parse
 the desc into the grid with clue cells holding their color and marked
-immutable, every other cell empty, `completed` and `cheated` both false.
+immutable, and every other cell empty.
 
 #### Scenario: A description round-trips
 
@@ -114,10 +114,10 @@ grid as a move, or an error when the board has no solution or a contradiction.
 ### Requirement: Unruly marks cells via three-state cycling moves
 
 An `UnrulyMove` SHALL place a color or empty at a cell (upstream's `P{c},{x},{y}`)
-or apply a full solution grid (upstream's `S`). `executeMove` SHALL be pure,
-reject an out-of-bounds or immutable-cell target, and recompute `completed` as
-counts-valid plus run-valid after the placement (a solve move marks the state
-cheated and completed). Left-button / select on a non-immutable cell SHALL cycle
+or apply a full solution grid (upstream's `S`). `executeMove` SHALL be pure and
+reject an out-of-bounds or immutable-cell target; the board SHALL be reported
+solved exactly while it is counts-valid plus run-valid, judged from the board however it was reached. Left-button / select on a
+non-immutable cell SHALL cycle
 empty → one → zero → empty; right-button / select2 SHALL cycle
 empty → zero → one → empty; the `1` key SHALL place one, `0`/`2` zero, and
 Backspace clear; an immutable cell SHALL be inert. A keyboard
@@ -140,8 +140,7 @@ target cell SHALL produce no history move.
 #### Scenario: Completing the board is detected
 
 - **WHEN** a move fills the final cell of a valid solution
-- **THEN** `completed` becomes true, `status` returns `"solved"`, and a flash
-  plays
+- **THEN** `status` returns `"solved"`, and a flash plays
 
 ### Requirement: Unruly renders the grid with live error highlighting and a completion flash
 
@@ -164,9 +163,10 @@ black/white highlight and lowlight from the shared `mkhighlightSpecific` helper.
 
 #### Scenario: The completion flash plays once
 
-- **WHEN** a move transitions the board from unsolved to solved without cheating
-- **THEN** `flashLength` returns a positive duration and `redraw` inverts the
-  filled tiles during the flash
+- **WHEN** a player move transitions the board from unsolved to solved (not the
+  Solve command)
+- **THEN** a flash of positive duration plays and `redraw` inverts the filled
+  tiles during it
 
 ### Requirement: Unruly checks player marks against the unique solution
 

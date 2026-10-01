@@ -45,10 +45,11 @@ bounds, produces nothing); cursor keys SHALL slide the adjacent tile into the
 gap immediately using the default arrow semantics (the pressed arrow moves a
 tile in that direction). `executeMove` SHALL be pure (returning a new state):
 a slide shifts every tile on the line between the old and new gap one cell
-toward the old gap, incrementing the move count once per shifted tile and
-recording completion when the solved arrangement is first reached; a solve
-SHALL replace the grid with the solved permutation, set `cheated`, and
-suppress the completion flash.
+toward the old gap, incrementing the move count once per shifted tile; a solve
+SHALL replace the grid with the solved permutation and count as one move. The
+state SHALL keep no record of completion or of the solver: the board is solved
+exactly while its tiles are in order, and the engine records that Solve was
+used and suppresses the completion flash for the Solve command.
 
 #### Scenario: A slide shifts a line of tiles into the gap
 
@@ -67,8 +68,8 @@ suppress the completion flash.
 #### Scenario: Solve snaps to the solved board
 
 - **WHEN** the solve move executes
-- **THEN** the new state is the solved permutation with `cheated` set, and
-  the completion flash is suppressed on the following redraw
+- **THEN** the new state is the solved permutation with the move count one
+  higher, and the completion flash is suppressed on the following redraw
 
 ### Requirement: Fifteen offers a greedy full-solution hint plan
 
@@ -131,8 +132,9 @@ changed, is animating, or the flash background changed. A slide SHALL animate
 in two passes — cells vacated by moving tiles blanked first, then each moving
 tile drawn interpolated one cell from its old position toward the gap over the
 animation duration. A genuine completion (not a solve) SHALL flash the
-background for two frames. The status bar SHALL show the move count, a
-`COMPLETED!` prefix when solved, or `Moves since auto-solve` after a solve.
+background for two frames. The status bar SHALL show the move count, which
+never freezes or resets, after the engine's completion words (`COMPLETED!`
+when solved, `Auto-solved.` or `Auto-solver used.` once Solve was used).
 
 #### Scenario: First draw emits the border and numbered tiles
 

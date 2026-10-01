@@ -254,9 +254,9 @@ promise the plan then breaks reads as a hint that has lost the plot.
 ### Requirement: A hint is a nudge; only Solve is a commitment
 
 `hint` SHALL NOT mark the game as solved-with-help and SHALL NOT install a route
-into the game state. Solve's existing behavior — installing a route, setting
-`cheated`, and reporting "Auto-solver used." in the status bar for the remainder of
-the game — SHALL be unchanged.
+into the game state. Solve's existing behavior — installing a route, the engine
+recording that the solver was used, and reporting "Auto-solver used." in the
+status bar for the remainder of the game — SHALL be unchanged.
 
 This separation is the reason the hint exists: the game already offers a
 step-by-step aid through Solve, but only at the price of recording the game as

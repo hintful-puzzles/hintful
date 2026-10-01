@@ -62,11 +62,12 @@ its clue or whose tents-plus-blanks fall below its clue marks that edge
 number red; and, via two connected-component passes over the bipartite
 tent/tree adjacency (a `dsf`), a tent in a component with fewer trees than
 tents, or a tree in a component with more trees than tents-or-blanks, is
-highlighted red. `executeMove` SHALL mark the board complete exactly as
-upstream `execute_move`: the tent count equals the tree count, every edge
+highlighted red. The board SHALL be reported complete exactly as upstream
+`execute_move` judges it: the tent count equals the tree count, every edge
 number is met, no two tents are adjacent, and the trees and tents admit a
-perfect adjacency matching (bipartite `matching`). The completed flag SHALL
-latch and SHALL suppress the win flash after Solve.
+perfect adjacency matching (bipartite `matching`). Completion SHALL be judged
+from the board however it was reached, and the win flash SHALL NOT play for the
+Solve command.
 
 #### Scenario: Adjacent tents are flagged
 

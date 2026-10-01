@@ -114,9 +114,11 @@ that old saves and pre-pivot shared IDs are expendable). Saving and
 restoring SHALL round-trip: a restored game SHALL have the same state
 and history as the saved game.
 
-The envelope SHALL spell the solver-was-used flag as every game's state spells
-it (see "One completion vocabulary across games"), so that one word means one
-thing from a game's state through to the saved bytes.
+The envelope SHALL carry the midend's record that the solver was used, as
+`cheated`, and SHALL NOT carry whether the board was solved, which the restored
+position says ("A game's status is judged from the board alone"). A key an older
+envelope carries that the current shape does not read, such as `timerStopped`,
+SHALL be ignored rather than rejected.
 
 **A version bump SHALL come with an upgrade, not a rejection**, whenever the
 older shape carries the same facts: the decoder SHALL lift an older envelope to
@@ -969,21 +971,6 @@ its own `findMistakes` and `buildSteps`; routing through it SHALL be behavior-pr
 - **THEN** a completed board, a board with mistakes, and a stuck board each refuse with the
   same message as before, a solvable board returns the same plan, and the game's hint suite
   passes with no change
-
-### Requirement: A shared win-flash helper
-
-The engine SHALL provide a shared `winFlash(from, to, flashTime)` helper returning
-`flashTime` exactly when a move transitions the board from unsolved to solved without a
-cheat (`!from.completed && to.completed && !from.cheated && !to.cheated`) and `0`
-otherwise, reading the common `completed` / `cheated` state fields structurally. A game
-whose `flashLength` is this canonical shape SHALL delegate to it; a game with bespoke flash
-timing keeps its own. Delegation SHALL be behavior-preserving.
-
-#### Scenario: A fresh solve flashes; other transitions do not
-
-- **WHEN** a move solves a previously-unsolved board with no cheat used
-- **THEN** `winFlash` returns the flash duration; for an already-solved board, a non-solving
-  move, or a cheated solve it returns `0`, matching the per-game `flashLength` it replaced
 
 ### Requirement: Candidate-elimination hints clean obvious candidates at populate
 
@@ -2649,76 +2636,6 @@ hand-written twelfth copy does not exist.
 - **WHEN** a game's `newUi` returns the mechanic's `Ui` fields
 - **AND** its sources never call the shared press arm
 - **THEN** the build fails, naming that game
-
-### Requirement: One completion vocabulary across games
-
-Every game's state SHALL express "the player has solved this" and "a solver was
-used" under the same two names, so that the engine can derive from them rather
-than sniffing each game's spelling.
-
-The convention SHALL be: flash once when a **player move** brings the board into
-a solved state. What is suppressed is the Solve *command* — the move on which
-"a solver was used" flips false→true — and **not** a board that has ever been
-cheated. A player who uses Solve, unmakes some of it, and finishes by hand has
-won; the record that they used the solver survives in the status bar and in the
-midend's solved-with-help status, which is where it belongs.
-
-Whether a game can reach that case is the game's own business: it requires
-"solved" to be **recomputed** on each move rather than latched once. A game that
-latches it simply never presents the case, and the shared helper SHALL behave
-for it exactly as the stricter condition did.
-
-Any game whose win celebration is that convention SHALL use the shared helper
-rather than restating the condition. A game MAY keep its own celebration hook, but only
-for a genuine difference: more than one flashing outcome, a duration that is not
-the shared one, a condition that is not "became solved", or a completion that is
-not a flag at all. **A differently spelled flag SHALL NOT be a reason to keep
-one**, because it is not a difference a player can see. The engine SHALL keep
-the surviving exceptions listed with their reasons, so the list cannot grow
-without someone stating one.
-
-A game whose state genuinely lacks one of the two — because it has no solver, or
-computes completion rather than storing it — SHALL have that absence recorded
-**per field**, and the record SHALL be checked against the games: an exemption
-for a field the game actually has SHALL fail, so the list cannot decay into a
-blanket that hides a later removal.
-
-The engine's own save envelope is **not** governed by this requirement. Its
-solver-was-used key is a persisted wire name, so changing it breaks saved games;
-that is a player-visible compatibility decision and belongs to the owner, not to
-a vocabulary sweep.
-
-#### Scenario: The convention is not restated
-
-- **WHEN** a game's win flash is the collection's convention
-- **THEN** it calls the shared helper, and contains no hand-written copy of the
-  transition condition
-
-#### Scenario: A manual completion after a Solve still celebrates
-
-- **WHEN** a player uses Solve, unmakes part of it, and completes the board by
-  hand, in a game that recomputes rather than latches "solved"
-- **THEN** the flash plays, and the solver-was-used record is unaffected
-
-#### Scenario: The Solve command itself does not celebrate
-
-- **WHEN** the Solve command completes the board
-- **THEN** no flash plays
-
-#### Scenario: A genuine celebration keeps its own hook
-
-- **WHEN** a game flashes on more than one outcome, or for a different duration
-- **THEN** it keeps its own hook, and records which of those reasons applies
-
-#### Scenario: A re-spelled flag fails the build
-
-- **WHEN** a game declares one of the retired spellings on its state
-- **THEN** the guard fails, naming the file and line
-
-#### Scenario: A stale exemption fails the build
-
-- **WHEN** a game is recorded as lacking one of the two flags but in fact has it
-- **THEN** the guard fails, so the exemption list cannot outlive its reason
 
 ### Requirement: Every game's board sits at one tone
 
@@ -6729,44 +6646,6 @@ square's repaint on the sides drawn around it rather than on its role alone.
 - **THEN** each target square is ringed on all four sides and a contiguous
   evidence region is one contour
 
-### Requirement: Every game has a solve timer, and the engine decides when it runs
-
-The midend SHALL offer a `show-timer` boolean preference ("Show timer") in every game, beside
-the game's own `prefs`, on by default; no game declares anything to have it. While it is on, the midend SHALL
-count elapsed time only while the player is solving: after the first move of the board, while
-the status is `ongoing`, while the game's optional `timerHolds(state)` is not true, and while
-the frontend has not paused it (`setTimerPaused`, which the app sets while the page is hidden).
-Once the board has been solved, with or without help, its time SHALL be final: undoing the
-solve SHALL NOT restart the timer, and a save SHALL carry that fact. A new board SHALL reset
-the time. The midend SHALL report the timer as a `timer-change` notification carrying either
-`null` (the timer is off) or the whole seconds elapsed and whether help was taken on the board
-(a hint shown, or the solver used), sent only when that readout changes.
-
-#### Scenario: A game that does not ask for a timer offers one
-
-- **WHEN** a game with no `prefs` of its own, and nothing about a clock, is started
-- **THEN** its preferences include `show-timer`, on, and the timer reports zero seconds
-
-#### Scenario: The timer counts from the first move
-
-- **WHEN** the timer is on and a new board is dealt
-- **THEN** it does not count until the player's first move, and counts during play after it
-
-#### Scenario: A solve is final
-
-- **WHEN** a timed board is solved and the player undoes the solving move
-- **THEN** the timer does not count again, including after a save and a restore
-
-#### Scenario: A hidden page does not count
-
-- **WHEN** the frontend pauses the timer and later resumes it
-- **THEN** no time is counted in between, and counting continues from where it stopped
-
-#### Scenario: A helped time says so
-
-- **WHEN** a hint is shown on a timed board
-- **THEN** the timer's readout reports the board as assisted, until a new board is dealt
-
 ### Requirement: Solve, the status bar and text export follow from the game's methods
 
 The `Midend` SHALL derive `canSolve` from the presence of `Game.solve` and
@@ -7542,14 +7421,15 @@ throwing.
 A status bar that says the board is finished, or that the solver was used, SHALL
 take those words from the engine's one helper, which distinguishes four states:
 neither; finished by the player; finished by the solver; and helped by the
-solver but no longer finished. A game SHALL NOT write the words itself, and this
+solver but no longer finished. The midend SHALL prefix them to whatever the
+game's `statusbarText` returns, from the board's status now and its own record
+that the solver was used. A game SHALL NOT write the words itself, and this
 SHALL be asserted by scanning the strings games write for what the words say,
 not for a constant's name.
 
 #### Scenario: A helped board the player has moved off
 
-- **WHEN** a player uses Solve and then moves the board off its solution, in a
-  game that recomputes "finished"
+- **WHEN** a player uses Solve and then moves the board off its solution
 - **THEN** the status bar says the solver was used, not that the board is
   solved
 
@@ -7575,10 +7455,9 @@ called a helper to write it, until the midend took it over; each copy was a
 chance to get the order or the promise wrong silently.
 
 The midend SHALL NOT refuse on a lost status, because a lost board is not always
-over: Flood plays on past its move limit and its hint still leads home. A game
-whose finished board its status does not call solved (Fifteen, Sixteen and
-Netslide count a board solved from the move that sorts it, so a game ID typed
-already sorted is finished at move 0) refuses that board itself.
+over: Flood plays on past its move limit and its hint still leads home. Because
+a status is judged from the board alone, every finished board's status is
+solved, so `ALREADY_SOLVED` is the midend's alone and not a `HintRefusal`.
 
 Because the walk in `hint-resume.test.ts` asks `hint` directly, it SHALL also
 ask `findMistakes` at every position it reaches, as the midend does, and fail if
@@ -7612,8 +7491,8 @@ and a hint to never leading the player into a mistake.
 `HintResult`'s error SHALL be a `HintRefusal`: the union of the literal types of
 the collection's refusal constants, plus a sentence made by
 `puzzleHintRefusal`, the one named escape. A game SHALL NOT be able to return a
-sentence it typed. The set SHALL distinguish, at minimum: the board is finished;
-the board is inconsistent but **no individual entry can be shown to be wrong**;
+sentence it typed. The set SHALL distinguish, at minimum: the board is
+inconsistent but **no individual entry can be shown to be wrong**;
 deduction has run out; a bounded search is past its reach; for a game that
 teaches no technique, no move would help; and the game is over.
 
@@ -7655,3 +7534,115 @@ a call whose sentence it cannot read.
   provably wrong
 - **THEN** the game's `hint` refuses with the message that asks the player to
   undo, not with one pointing at a highlight
+
+### Requirement: A game's status is judged from the board alone
+
+A game's `status(state)` SHALL report won, lost or ongoing from the position in
+`state` alone, never from how it was reached, and SHALL NOT write into the
+state. No game's state SHALL record that the board was solved, or that the
+solver was used: the midend owns that history and derives it from the positions
+it holds. A fact the board shows (a revealed arena, a revealed answer, a dead
+ball, a killed cell) is part of the position, and `status` MAY read it.
+
+So a board typed in already solved SHALL be solved at move 0, a Solve move SHALL
+complete the board because the board it leaves is solved, and a solved board the
+player breaks SHALL read ongoing again (owner, 2026-10-01: one rule for every
+consumer, with no record of an earlier solve).
+
+#### Scenario: A board typed in already solved
+
+- **WHEN** a game ID describes a board that is already solved
+- **THEN** its status is solved at move 0, and the hint refuses it as already
+  solved
+
+#### Scenario: A broken solved board
+
+- **WHEN** the player makes a move that takes a solved board off its solution
+- **THEN** the status is ongoing, and a board with a mistake on it is never
+  reported solved
+
+#### Scenario: A record of completion on the state fails the build
+
+- **WHEN** a game's state carries a field recording that the board was solved
+  or that the solver was used
+- **THEN** the cross-game guard fails, naming the game and the field
+
+### Requirement: The engine derives a board's history from its position
+
+The midend SHALL ask a game's `status` once per position and SHALL derive from
+its own history everything about how the board got there: whether the solver
+was used on this board (reported as solved-with-help on a solved board), when
+the win flash plays, and the status bar's completion words. The win flash SHALL
+play on a forward move, other than the Solve command, that leaves the board
+solved when it was not, for the duration the game's `solvedFlash` gives; a
+game's `flashLength` SHALL be only for a flash the status does not show, and a
+nonzero answer from it SHALL replace the win flash.
+
+#### Scenario: The Solve command does not celebrate
+
+- **WHEN** the Solve command completes the board
+- **THEN** no flash plays, and the status is solved-with-help
+
+#### Scenario: A hand solve after a Solve celebrates
+
+- **WHEN** a player uses Solve, moves off the solution and completes the board
+  by hand
+- **THEN** the flash plays, and the status is still solved-with-help
+
+#### Scenario: A broken solved board solved again celebrates again
+
+- **WHEN** a player breaks a solved board and solves it again by hand
+- **THEN** the flash plays again; undoing the break does not flash
+
+#### Scenario: An expensive status is asked once per position
+
+- **WHEN** the midend reads the status of a position many times (every timer
+  tick, every refusal)
+- **THEN** the game's `status` was called once for that position
+
+### Requirement: Every game has a solve timer, and it runs while the board is undecided
+
+The midend SHALL offer a `show-timer` boolean preference ("Show timer") in every
+game, beside the game's own `prefs`, on by default; no game declares anything to
+have it. While it is on, the midend SHALL count elapsed time only while the
+player is solving: after the first move of the board, while the board's status
+is `ongoing`, while the game's optional `timerHolds(state)` is not true, and
+while the frontend has not paused it (`setTimerPaused`, which the app sets while
+the page is hidden). Being decided is a fact about the board on display: a
+solved board the player breaks, or undoes out of, SHALL count again (owner,
+2026-10-01: a peek at the solution and then solving it oneself is a use of the
+app the clock follows). A new board SHALL reset the time. The midend SHALL
+report the timer as a `timer-change` notification carrying either `null` (the
+timer is off) or the whole seconds elapsed and whether help was taken on the
+board (a hint shown, or the solver used), sent only when that readout changes.
+
+#### Scenario: A game that does not ask for a timer offers one
+
+- **WHEN** a game with no `prefs` of its own, and nothing about a clock, is started
+- **THEN** its preferences include `show-timer`, on, and the timer reports zero seconds
+
+#### Scenario: The timer counts from the first move
+
+- **WHEN** the timer is on and a new board is dealt
+- **THEN** it does not count until the player's first move, and counts during play after it
+
+#### Scenario: A solve stops the clock while the board stays solved
+
+- **WHEN** a timed board is solved
+- **THEN** the timer stops, and counts again once the board is broken or the
+  solve is undone
+
+#### Scenario: A peek at the solution stays assisted
+
+- **WHEN** a player uses Solve on a timed board and undoes it
+- **THEN** the timer counts again, and its readout reports the board as assisted
+
+#### Scenario: A hidden page does not count
+
+- **WHEN** the frontend pauses the timer and later resumes it
+- **THEN** no time is counted in between, and counting continues from where it stopped
+
+#### Scenario: A helped time says so
+
+- **WHEN** a hint is shown on a timed board
+- **THEN** the timer's readout reports the board as assisted, until a new board is dealt

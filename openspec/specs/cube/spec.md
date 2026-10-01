@@ -40,8 +40,10 @@ on a square grid; up to eight, including diagonals, on triangular and
 hexagonal grids). `executeMove` SHALL be pure (returning a new state),
 computing the destination square and the solid's new resting face from the
 current orientation key-points, and exchanging paint between the destination
-square and the face that lands on it. Rolling onto the last required blue
-square SHALL transition the state to completed (recording the move count).
+square and the face that lands on it, except that a solid with every face
+painted SHALL roll without exchanging paint. The game SHALL be reported solved
+exactly while every face of the solid is painted, and the move count SHALL
+keep counting every roll.
 
 #### Scenario: Rolling tips the solid onto a new face
 

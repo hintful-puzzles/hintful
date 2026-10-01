@@ -45,8 +45,7 @@ it so such descs round-trip. `validateDesc` SHALL reject a clue that is
 non-positive or grossly excessive, a line whose clues cannot fit in its length,
 too few or too many line specifications, and any unrecognized character in
 either section. `newState` SHALL parse the desc into the immutable clue arrays
-and an all-`Unknown` grid (with any immutable suffix applied), `completed` and
-`cheated` both false.
+and an all-`Unknown` grid (with any immutable suffix applied).
 
 #### Scenario: A description round-trips
 

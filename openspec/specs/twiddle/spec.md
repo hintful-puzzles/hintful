@@ -58,10 +58,12 @@ and `CURSOR_SELECT`/`CURSOR_SELECT2` SHALL rotate the cursor's block `dir +1`/`�
 `a`/`b`/`c`/`d` (and shifted `A`/`B`/`C`/`D` for the reverse direction) and the
 parity-gated numpad rotations SHALL also produce rotations. `executeMove` SHALL
 be pure (returning a new state): a rotation turns the `n×n` block 90° in `dir`
-(advancing tile orientations when `orientable`), increments the move count, and
-records completion when the solved arrangement is first reached; a solve SHALL
-replace the grid with the solved arrangement, clear orientations, set
-`cheated`, and suppress the completion flash.
+(advancing tile orientations when `orientable`) and increments the move count;
+a solve SHALL replace the grid with the solved arrangement, clear orientations,
+and count as one move. The state SHALL keep no record of completion or of the
+solver: the board is solved exactly while it is in the solved arrangement, and
+the engine records that Solve was used and suppresses the completion flash for
+the Solve command.
 
 #### Scenario: A rotation turns the block and is reversible
 
@@ -87,7 +89,8 @@ replace the grid with the solved arrangement, clear orientations, set
 
 - **WHEN** the solve move executes
 - **THEN** the new state is the solved arrangement with cleared orientations and
-  `cheated` set, and the completion flash is suppressed on the following redraw
+  the move count one higher, and the completion flash is suppressed on the
+  following redraw
 
 ### Requirement: Twiddle renders tiles, cursor, rotation animation, and flash
 
@@ -101,9 +104,10 @@ proportional to `sqrt(n−1)`, with the four bevel edges of each turning tile
 recolored through the rotation; tiles outside the block draw normally. A
 genuine completion (not a solve) SHALL flash the background. When the cursor is
 visible its `n×n` region SHALL be outlined with cursor-colored bevel edges. The
-status bar SHALL show the move count (with a `COMPLETED!` prefix when solved and
-the `(target K)` suffix when a move target is set), or `Moves since auto-solve`
-after a solve.
+status bar SHALL show the move count, which never freezes or resets (with the
+`(target K)` suffix when a move target is set), after the engine's completion
+words (`COMPLETED!` when solved, `Auto-solved.` or `Auto-solver used.` once
+Solve was used).
 
 #### Scenario: First draw emits the border and numbered tiles
 

@@ -45,8 +45,7 @@ as an explicit separator where two clues or a clue and a run would otherwise
 merge, exactly as upstream. `validateDesc` SHALL reject any other character,
 any clue outside `1 .. w + h - 1`, and any desc whose decoded cell count
 differs from `w * h`. `newState` SHALL parse the desc into the grid with clue
-cells holding their value and every other cell `EMPTY`, `cheated` and
-`completed` both false.
+cells holding their value and every other cell `EMPTY`.
 
 #### Scenario: A description round-trips
 
@@ -107,10 +106,9 @@ cell-sets, or an error when the board contains a contradiction.
 ### Requirement: Range marks cells via three-state cycling moves
 
 A `RangeMove` SHALL be a list of cell-sets (each painting a cell black, white,
-or empty) plus an optional solve flag (upstream's `S`, marking the state
-cheated and completed). `executeMove` SHALL be pure, throw on an out-of-bounds
-or clue-cell target, and — unless the solve flag is set — recompute `completed`
-as the absence of errors after applying the sets. Left-button / select on a
+or empty) plus an optional solve flag (upstream's `S`). `executeMove` SHALL be
+pure and throw on an out-of-bounds or clue-cell target; the board SHALL be
+reported solved exactly while `findErrors` finds no error on it, judged from the board however it was reached. Left-button / select on a
 non-clue cell SHALL cycle empty → black → white → empty; right-button /
 select2 SHALL cycle empty → white → black → empty; a clue cell SHALL be
 inert. A keyboard cursor SHALL move within the grid, and shift + a cursor
@@ -137,8 +135,8 @@ where the two conventions meet, and therefore the one place it is worth saying.
 #### Scenario: Completing the board is detected
 
 - **WHEN** a move paints the final black square of the unique solution
-- **THEN** `findErrors` reports no error, `completed` becomes true, `status`
-  returns `"solved"`, and a flash plays
+- **THEN** `findErrors` reports no error, `status` returns `"solved"`, and a
+  flash plays
 
 ### Requirement: Range highlights errors live and checks mistakes against the solution
 

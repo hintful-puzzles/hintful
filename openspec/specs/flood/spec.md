@@ -41,9 +41,10 @@ solve (`{ type: "solve" }`). `interpretMove` SHALL produce a fill only when the
 clicked / cursor-selected cell's color differs from the current corner color
 and the game is not complete; cursor keys SHALL move the cursor (clamped).
 `executeMove` SHALL be pure: a fill floods the corner region to the chosen
-color, increments the move count, and sets `complete` when the whole grid is
-one color; a solve SHALL run the solver, apply its fills to reach the solved
-grid, and set `cheated`.
+color and increments the move count; a solve SHALL run the solver and apply its
+fills to reach the solved grid. The state SHALL keep no record of completion or
+of the solver: the grid is complete exactly when it is one color, and the
+engine records that Solve was used.
 
 #### Scenario: A fill floods the corner region
 
@@ -59,8 +60,8 @@ grid, and set `cheated`.
 #### Scenario: Solve snaps to a completed grid
 
 - **WHEN** the solve move executes
-- **THEN** the grid becomes a single color, `complete` is set, and `cheated`
-  is set
+- **THEN** the grid becomes a single color and the game reports itself solved
+  with help
 
 ### Requirement: Flood reports win and lose status
 

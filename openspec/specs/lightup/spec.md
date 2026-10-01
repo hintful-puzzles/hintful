@@ -74,8 +74,9 @@ marked square (and a right-click on a bulb) is rejected without a history
 entry. Keyboard: arrow cursor movement (revealing the cursor), select/Enter
 toggles a bulb, select2/`i` toggles a mark, with the same rejection rules.
 Completion SHALL hide the cursor. Bulb and mark are mutually exclusive in
-`executeMove`, which SHALL recompute lit counts and set `completed` when the
-grid is correct (all lit, no overlap, all clues exact).
+`executeMove`, which SHALL recompute lit counts; the board SHALL be reported
+solved exactly while the grid is correct (all lit, no overlap, all clues
+exact).
 
 #### Scenario: Left-click places and toggles a bulb
 
@@ -93,7 +94,8 @@ grid is correct (all lit, no overlap, all clues exact).
 
 - **WHEN** a move leaves every open square lit, no bulb lit by another, and
   every clue exactly satisfied
-- **THEN** the state reports `completed` and the solve-completion flash plays
+- **THEN** `status` reports the board solved and the solve-completion flash
+  plays
 
 ### Requirement: Light Up ships findMistakes
 
