@@ -219,6 +219,15 @@ What is gone is a *running* build to interrogate, so there is no oracle to
 re-baseline a fixture against. **A deliberate divergence therefore retires or
 re-founds its fixture rather than re-recording it.**
 
+**Game IDs from upstream and its forks keep loading where that is easy** (owner,
+2026-10-01). It is best-effort, not a promise: a desc upstream's generator
+writes is accepted, and `src/engine/upstream-descs.test.ts` loads every desc in
+the frozen C fixtures to hold that. Spellings upstream merely tolerated (a hand-typed
+uppercase hex digit, a skipped stray character) are not kept, and a change that
+would make a game refuse what upstream's generator writes is a compatibility
+break, so it is the owner's call. The Share dialog's links to the same game on
+Simon Tatham's site follow from the same decision.
+
 **The upstream MIT notices stay intact** — an obligation independent of tracking
 policy. They are `licenses/sgt-puzzles-LICENSE` and
 `licenses/puzzles-unreleased-LICENSE`, and the About dialog `?raw`-imports both,
@@ -440,7 +449,7 @@ Four things keep the rule from becoming an excuse:
 
 **Browser checks: Chrome only, via the `playwright-cli` skill** (owner directive, 2026-07-28). For this phase of the project, verifying in Chromium is sufficient evidence — do **not** treat "WebKit/Firefox untested" as an open gap, and do not spend a session downloading extra browser engines to close it. Cross-engine coverage is not where this phase's risk lives (the work is a C→TS port of game logic and rendering, checked far more cheaply at tiers 1–2.5), and a second engine costs ~10 min and hundreds of MB for evidence that isn't wanted yet. Drive the browser through the **`playwright-cli` skill** rather than a standalone `playwright` install — the standalone package drifts out of version sync with the cached browser builds, which is exactly how one such download got triggered. Revisit only if the fork starts targeting Safari/Firefox as a shipping constraint.
 
-Bit-identical RNG (`random.ts`, already ported) is retained so *future* shared game IDs reproduce across builds. Old C-format saves and pre-pivot shared IDs are expendable by decision.
+Bit-identical RNG (`random.ts`, already ported) is retained so *future* shared game IDs reproduce across builds. Old C-format saves are expendable by decision; game IDs from upstream load on a best-effort basis (§ "Upstream policy").
 
 ## Hint quality bar (exemplar: Palisade)
 

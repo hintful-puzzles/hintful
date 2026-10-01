@@ -399,8 +399,9 @@ To discard every game in progress, open the
 
 To open a game someone sent you, open its link, or paste the link into
 <command-link command="enter-gameid">*Open a shared game*</command-link> in
-*More…*, which is the way in from the installed app. A game ID works there
-too.
+*More…*, which is the way in from the installed app. Any puzzle’s link works
+from any puzzle, and so does a link to the same game on Simon Tatham’s
+website; a bare game ID opens a game of the puzzle you are on.
 
 For puzzles that exist on Simon Tatham’s website, the share dialog also links
 the same game there, which is handy for comparing behavior when something

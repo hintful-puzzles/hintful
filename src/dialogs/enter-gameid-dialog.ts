@@ -5,6 +5,7 @@ import { query } from "lit/decorators/query.js";
 import { customElement, state } from "lit/decorators.js";
 import { puzzleContext } from "../puzzle/contexts.ts";
 import type { Puzzle } from "../puzzle/puzzle.ts";
+import { puzzlePageUrl } from "../routing.ts";
 import { cssWATweaks } from "../utils/css.ts";
 import { readGameLink } from "./game-link.ts";
 
@@ -33,8 +34,12 @@ export class EnterGameIDDialog extends SignalWatcher(LitElement) {
   @state()
   private error?: string;
 
-  /** Why the pasted link has no game ID for this puzzle, shown on OK. */
+  /** Why the pasted link opens no game, shown on OK. */
   private linkError?: string;
+
+  /** The puzzle a pasted link is for, when it is not this one: OK goes there. */
+  @state()
+  private otherPuzzle?: string;
 
   @query("wa-dialog", true)
   protected dialog?: HTMLElementTagNameMap["wa-dialog"];
@@ -51,11 +56,11 @@ export class EnterGameIDDialog extends SignalWatcher(LitElement) {
   reset() {
     this.gameid = undefined;
     this.linkError = undefined;
+    this.otherPuzzle = undefined;
     this.error = undefined;
   }
 
   protected override render() {
-    const puzzleName = this.puzzle?.displayName ?? "Unknown puzzle";
     const callout = this.error
       ? html`
           <wa-callout variant="danger">
@@ -64,7 +69,7 @@ export class EnterGameIDDialog extends SignalWatcher(LitElement) {
             ${asSentence(this.error)}
           </wa-callout>
         `
-      : this.puzzle?.totalMoves
+      : this.puzzle?.totalMoves && !this.otherPuzzle
         ? html`
           <wa-callout variant="warning">
             <wa-icon slot="icon" name="warning"></wa-icon>
@@ -85,7 +90,7 @@ export class EnterGameIDDialog extends SignalWatcher(LitElement) {
             @keydown=${this.handleInputKeydown}
         >
           <div slot="label">
-            Paste the link to a game of ${puzzleName}
+            Paste the link to a game
           </div>
           <div slot="hint">
             The link someone sent you, from Share › This specific game
@@ -111,11 +116,16 @@ export class EnterGameIDDialog extends SignalWatcher(LitElement) {
   private handleInputChange(event: UIEvent) {
     const input = event.target as HTMLElementTagNameMap["wa-input"];
     const value = input.value?.trim() ?? "";
-    const link = readGameLink(value, this.puzzle?.puzzleId ?? "unknown");
-    const gameid = link && "gameId" in link ? link.gameId : value;
+    const link = readGameLink(value);
+    const game = link && "gameId" in link ? link : null;
+    const gameid = game ? game.gameId : value;
     if (gameid !== this.gameid) {
       this.gameid = gameid;
       this.linkError = link && "error" in link ? link.error : undefined;
+      this.otherPuzzle =
+        game?.puzzleId && game.puzzleId !== this.puzzle?.puzzleId
+          ? game.puzzleId
+          : undefined;
       this.error = undefined;
     }
   }
@@ -137,6 +147,14 @@ export class EnterGameIDDialog extends SignalWatcher(LitElement) {
   private async handleOKClick() {
     if (this.linkError) {
       this.error = this.linkError;
+      return;
+    }
+    if (this.otherPuzzle && this.gameid) {
+      // The game in progress here stays saved; the puzzle's page reports an ID
+      // it cannot load and falls back to its own board.
+      window.location.assign(
+        puzzlePageUrl({ puzzleId: this.otherPuzzle, puzzleGameId: this.gameid }),
+      );
       return;
     }
     if (this.puzzle && this.gameid) {
