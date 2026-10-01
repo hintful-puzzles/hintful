@@ -5,7 +5,6 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import { completionStatus } from "../../engine/completion-status.ts";
 import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_TOO_LONG,
@@ -60,9 +59,6 @@ export interface MosaicState {
   readonly board: MosaicBoard;
   /** Per-cell mark + overlay flags (STATE_*). Cloned per move. */
   readonly cells: Uint8Array;
-  readonly cheated: boolean;
-  /** Shown clues not yet flagged SOLVED; 0 means the board is complete. */
-  readonly notCompletedClues: number;
 }
 
 /** `paint` sets the still-unmarked cells of `paintRun(x, y, srcX, srcY)`
@@ -168,17 +164,13 @@ export function validateDesc(p: MosaicParams, desc: string): DescError | null {
 export function newState(p: MosaicParams, desc: string): MosaicState {
   const size = p.width * p.height;
   const clues = new Int8Array(size).fill(-1);
-  let notCompletedClues = 0;
   let loc = 0;
   for (const tok of scanRunLength(desc)) {
     if ("blanks" in tok) {
       loc += tok.blanks; // hidden cells; already -1
     } else {
       const clue = digitValue(tok.value);
-      if (clue !== null) {
-        clues[loc] = clue;
-        notCompletedClues++;
-      }
+      if (clue !== null) clues[loc] = clue;
       loc++; // one cell per character; `validateDesc` rejects a non-digit
     }
   }
@@ -192,8 +184,6 @@ export function newState(p: MosaicParams, desc: string): MosaicState {
     height: p.height,
     board,
     cells: new Uint8Array(size),
-    cheated: false,
-    notCompletedClues,
   };
 }
 
@@ -251,11 +241,19 @@ function updateBoardStateAround(
   }
 }
 
-/** Shown clues not yet flagged SOLVED (upstream's per-move recount). */
-function countNotCompletedClues(board: MosaicBoard, cells: Uint8Array): number {
+/** Shown clues not yet satisfied with every neighbor decided, read off the
+ * marks rather than the SOLVED overlay, so it says what the board shows
+ * however the board was reached. 0 means the board is complete. */
+export function cluesLeft(state: MosaicState): number {
+  const { width, height, board, cells } = state;
   let left = 0;
-  for (let i = 0; i < board.clues.length; i++) {
-    if (board.clues[i] >= 0 && (cells[i] & STATE_SOLVED) === 0) left++;
+  for (let pos = 0; pos < board.clues.length; pos++) {
+    const clue = board.clues[pos];
+    if (clue < 0) continue;
+    const x = pos % width;
+    const y = Math.floor(pos / width);
+    const { marked, blank, total } = countAround(width, height, cells, x, y);
+    if (clue !== marked || total - marked - blank !== 0) left++;
   }
   return left;
 }
@@ -291,7 +289,7 @@ export function executeMove(state: MosaicState, move: MosaicMove): MosaicState {
       }
     }
     if (loc < size) throw new Error("Bad solve bitmap");
-    return { ...state, cells, cheated: true, notCompletedClues: 0 };
+    return { ...state, cells };
   }
 
   const inBounds = (x: number, y: number) =>
@@ -324,22 +322,18 @@ export function executeMove(state: MosaicState, move: MosaicMove): MosaicState {
     return assertNever(move, "mosaic: executeMove");
   }
 
-  return {
-    ...state,
-    cells,
-    notCompletedClues: countNotCompletedClues(state.board, cells),
-  };
+  return { ...state, cells };
 }
 
 // --- status / text ----------------------------------------------------------
 
 export function status(state: MosaicState): GameStatus {
-  return state.notCompletedClues === 0 ? "solved" : "ongoing";
+  return cluesLeft(state) === 0 ? "solved" : "ongoing";
 }
 
 export function statusbarText(state: MosaicState, _ui: MosaicUi): string {
-  const left = state.notCompletedClues;
-  return completionStatus(left === 0, state.cheated, left ? `Clues left: ${left}` : "");
+  const left = cluesLeft(state);
+  return left ? `Clues left: ${left}` : "";
 }
 
 export function textFormat(state: MosaicState): string {

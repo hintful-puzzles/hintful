@@ -17,6 +17,7 @@ import {
   startPointCheck,
 } from "./solver.ts";
 import {
+  cluesLeft,
   executeMove,
   newState,
   STATE_BLANK,
@@ -164,7 +165,7 @@ describe("generator", () => {
       const state = newState(p, desc);
       expect(solveGameActual(state.board), `solvable for ${n}/${seed}`).not.toBeNull();
       // Some clue must survive minimization.
-      expect(state.notCompletedClues).toBeGreaterThan(0);
+      expect(cluesLeft(state)).toBeGreaterThan(0);
     }
   });
 

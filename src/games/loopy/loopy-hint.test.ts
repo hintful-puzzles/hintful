@@ -174,7 +174,9 @@ describe("Loopy hint: soundness on every tiling", () => {
         if (step.move.kind !== "set") notes++;
         state = loopyGame.executeMove(state, step.move);
       }
-      expect(state.completed, `${b.name}: the plan stopped short`).toBe(true);
+      expect(loopyGame.status(state), `${b.name}: the plan stopped short`).toBe(
+        "solved",
+      );
       expect(loopyGame.findMistakes?.(state), b.name).toEqual([]);
       tilings.add(b.name.split("/")[0]);
     }

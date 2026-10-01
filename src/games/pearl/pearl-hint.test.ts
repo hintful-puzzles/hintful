@@ -73,7 +73,7 @@ function walk(start: PearlState): {
 } {
   let state = start;
   const seen: { step: Step; before: PearlState }[] = [];
-  for (let i = 0; i < 1000 && !state.completed; i++) {
+  for (let i = 0; i < 1000 && pearlGame.status(state) !== "solved"; i++) {
     const step = hintSteps(state)[0];
     seen.push({ step, before: state });
     state = executeMove(state, step.move);
@@ -90,7 +90,9 @@ describe("following the hint finishes every board, one sound step at a time", ()
       const sol = new Uint8Array(p.w * p.h);
       expect(pearlSolve(p.w, p.h, start.clues, sol, DIFF_COUNT, false)).toBe(1);
       const { seen, end } = walk(start);
-      expect(end.completed, "following the hint did not finish the board").toBe(true);
+      expect(pearlGame.status(end), "following the hint did not finish the board").toBe(
+        "solved",
+      );
       expect(seen.length).toBeGreaterThan(10);
       for (const { step } of seen) {
         const targets = step.highlights?.targets ?? [];

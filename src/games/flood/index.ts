@@ -1,5 +1,4 @@
 import { assertNever } from "../../engine/assert-never.ts";
-import { completionStatus } from "../../engine/completion-status.ts";
 import type {
   Game,
   HintResult,
@@ -63,16 +62,15 @@ function applyFills(state: FloodState, fills: readonly number[]): FloodState {
   const queue = new Int32Array(state.w * state.h);
   for (const c of fills) fill(state.w, state.h, grid, FILLX, FILLY, c, queue);
   const moves = state.moves + fills.length;
-  return { ...state, grid, moves, completed: completed(grid) };
+  return { ...state, grid, moves };
 }
 
 export function executeMove(state: FloodState, move: FloodMove): FloodState {
   if (move.type === "solve") {
     // Snap to solved: the hint plan is the step-by-step experience, so Solve
     // just completes the board.
-    if (state.completed) throw new Error("Puzzle is already solved");
-    const fills = solveMoves(state.w, state.h, state.grid, state.colors);
-    return { ...applyFills(state, fills), cheated: true };
+    if (completed(state.grid)) throw new Error("Puzzle is already solved");
+    return applyFills(state, solveMoves(state.w, state.h, state.grid, state.colors));
   }
   if (move.type !== "fill") return assertNever(move, "flood: executeMove");
 
@@ -81,7 +79,7 @@ export function executeMove(state: FloodState, move: FloodMove): FloodState {
     move.color < 0 ||
     move.color >= state.colors ||
     move.color === corner ||
-    state.completed
+    completed(state.grid)
   ) {
     throw new Error(`Illegal flood fill with color ${move.color}`);
   }
@@ -125,9 +123,7 @@ function interpretMove(
 /** Upstream's status line: the outcome, then the move count. */
 function statusbarText(state: FloodState, _ui: FloodUi): string {
   const count = `${state.moves} / ${state.movelimit} moves`;
-  const s = status(state);
-  if (s === "lost") return `FAILED! ${count}`;
-  return completionStatus(s === "solved", state.cheated, count);
+  return status(state) === "lost" ? `FAILED! ${count}` : count;
 }
 
 // --- hint -------------------------------------------------------------
@@ -137,7 +133,7 @@ function statusbarText(state: FloodState, _ui: FloodUi): string {
  * populated through an auto-hint run. */
 function hint(state: FloodState): HintResult<FloodMove> {
   // Flooded past the move limit: the status is lost, and no fill is legal.
-  if (state.completed) return { ok: false, error: GAME_OVER };
+  if (completed(state.grid)) return { ok: false, error: GAME_OVER };
   const moves = solveMoves(state.w, state.h, state.grid, state.colors);
   if (moves.length === 0) return { ok: false, error: NO_MOVE_WORTH_MAKING };
   // Each step's dots are read off the board it is shown on: the one the
@@ -169,21 +165,23 @@ function hintKeepTrack(
 
 // --- flash ------------------------------------------------------------
 
-/** Upstream's `game_flash_length`: leaving the ongoing state flashes the
- * victory rainbow on a win or the defeat blink on a loss. An auto-solve
- * jumps straight to "Auto-solved" with no flash. */
+/** The defeat blink, on the move that runs out of moves. A win's rainbow is
+ * {@link solvedFlash}, played when the engine says the board became solved. */
 function flashLength(
   oldState: FloodState,
   newState: FloodState,
   dir: number,
   _ui: FloodUi,
 ): number {
-  if (dir !== 1 || newState.cheated) return 0;
-  const now = status(newState);
-  if (status(oldState) !== "ongoing" || now === "ongoing") return 0;
-  if (now === "lost") return DEFEAT_FLASH_FRAME * 3;
-  const frames = newState.w + newState.h + newState.colors - 2;
-  return VICTORY_FLASH_FRAME * frames;
+  if (dir !== 1) return 0;
+  return status(oldState) === "ongoing" && status(newState) === "lost"
+    ? DEFEAT_FLASH_FRAME * 3
+    : 0;
+}
+
+/** The victory rainbow sweeps the board, so it lasts longer on a bigger one. */
+function solvedFlash(s: FloodState, _ui: FloodUi): number {
+  return VICTORY_FLASH_FRAME * (s.w + s.h + s.colors - 2);
 }
 
 // --- Game object ------------------------------------------------------
@@ -278,6 +276,7 @@ export const floodGame: Game<
 
   animLength: () => 0,
   flashLength,
+  solvedFlash,
 };
 
 registerGame(floodGame);

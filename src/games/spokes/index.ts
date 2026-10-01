@@ -19,7 +19,6 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type HintResult,
@@ -319,12 +318,6 @@ function executeMove(state: SpokesState, move: SpokesMove): SpokesState {
         spokesPlace(next, index, dir, s);
       }
     }
-    if (spokesValidate(next) === "valid") {
-      next.completed = true;
-      // Only a solver fill that actually completed the grid counts as a cheat
-      // (and so suppresses the win flash) — upstream's own rule.
-      next.cheated = true;
-    }
     return next;
   }
   if (move.kind !== "set") return assertNever(move, "spokes: executeMove");
@@ -334,7 +327,6 @@ function executeMove(state: SpokesState, move: SpokesMove): SpokesState {
     spokesPlace(next, move.index, move.dir, move.state);
     syncDiagonalBlock(next, move.index, move.dir, old, move.state);
   }
-  if (spokesValidate(next) === "valid") next.completed = true;
   return next;
 }
 
@@ -579,7 +571,7 @@ export const spokesGame: Game<
   targetVerbs,
   interpretMove,
   executeMove,
-  status: (s): GameStatus => (s.completed ? "solved" : "ongoing"),
+  status: (s): GameStatus => (spokesValidate(s) === "valid" ? "solved" : "ongoing"),
 
   solve,
   difficulty,
@@ -602,7 +594,7 @@ export const spokesGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength: (from, to) => winFlash(from, to, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(spokesGame);

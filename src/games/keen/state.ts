@@ -266,8 +266,6 @@ export interface KeenState {
   grid: Int8Array;
   /** `w²` pencil-mark bitmaps (bit `1<<n` = mark `n`); cloned per move. */
   pencil: Int32Array;
-  completed: boolean;
-  cheated: boolean;
 }
 
 export function cloneState(s: KeenState): KeenState {
@@ -276,8 +274,6 @@ export function cloneState(s: KeenState): KeenState {
     clues: s.clues, // immutable, shared
     grid: s.grid.slice(),
     pencil: s.pencil.slice(),
-    completed: s.completed,
-    cheated: s.cheated,
   };
 }
 
@@ -343,8 +339,6 @@ export function newState(p: KeenParams, desc: string): KeenState {
     clues: { w, dsf, minimal, clues },
     grid: new Int8Array(a),
     pencil: new Int32Array(a),
-    completed: false,
-    cheated: false,
   };
 }
 
@@ -429,7 +423,7 @@ export function checkErrors(state: KeenState, errors?: Int32Array): boolean {
 // --- status ----------------------------------------------------------------
 
 export function status(s: KeenState): "solved" | "ongoing" {
-  return s.completed ? "solved" : "ongoing";
+  return checkErrors(s) ? "ongoing" : "solved";
 }
 
 // --- moves -----------------------------------------------------------------

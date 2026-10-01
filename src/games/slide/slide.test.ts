@@ -274,7 +274,6 @@ describe("slide desc codec", () => {
 
   it("starts a desc whose main block already sits on the target as complete", () => {
     const s = fixtureState(1, 1, 0);
-    expect(s.completed).toBe(0);
     expect(slideGame.status(s)).toBe("solved");
   });
 
@@ -545,16 +544,16 @@ describe("slide move counting", () => {
     expect(s.lastmovedPos).toBe(-1);
   });
 
-  it("records completion at the move count, and keeps it", () => {
+  it("is solved exactly while the main block sits on the target", () => {
     let s = fixtureState();
-    expect(s.completed).toBe(-1);
+    expect(slideGame.status(s)).toBe("ongoing");
     s = executeMove(s, { kind: "move", from: singleton, to: idx(4, 1) });
     s = executeMove(s, { kind: "move", from: idx(1, 1), to: idx(2, 1) });
-    expect(s.completed).toBe(2);
+    expect(s.movecount).toBe(2);
     expect(slideGame.status(s)).toBe("solved");
-    // Sliding the main block away again keeps the recorded completion.
+    // Sliding the main block away again un-solves the board.
     s = executeMove(s, { kind: "move", from: idx(2, 1), to: idx(1, 1) });
-    expect(s.completed).toBe(2);
+    expect(slideGame.status(s)).toBe("ongoing");
   });
 
   it("refuses an illegal move rather than corrupting the board", () => {
@@ -946,15 +945,14 @@ describe("slide solve", () => {
 
     expect(m.solve()).toBeNull();
     // Slide's Solve deliberately does not fill the board in: it arms a route,
-    // exactly as Inertia's does. So the board is untouched but marked cheated.
+    // exactly as Inertia's does. So the board is untouched, and the midend
+    // records that the solver was used.
     expect(stateOf(m).soln).toHaveLength(minmoves);
-    expect(stateOf(m).cheated).toBe(true);
     expect(status()).toBe("ongoing");
 
     // Space arrives as CURSOR_SELECT2 in this frontend, never as ' ' — the key
     // upstream binds. Walking the route with it must finish the puzzle.
     for (let i = 0; i < minmoves; i++) m.processInput(0, 0, CURSOR_SELECT2);
-    expect(stateOf(m).completed).toBeGreaterThanOrEqual(0);
     expect(status()).toBe("solved-with-help");
     // The route is dropped once it has been walked to the end.
     expect(stateOf(m).soln).toBeNull();
@@ -972,7 +970,7 @@ describe("slide solve", () => {
     const steps = stateOf(me).soln?.length ?? 0;
     expect(steps).toBeGreaterThan(0);
     for (let i = 0; i < steps; i++) me.processInput(0, 0, CURSOR_SELECT2);
-    expect(stateOf(me).completed).toBeGreaterThanOrEqual(0);
+    expect(slideGame.status(stateOf(me))).toBe("solved");
   });
 
   it("drops the route when the player strays from it", () => {
@@ -1014,14 +1012,9 @@ describe("slide statusbar", () => {
     const s = fixtureState();
     const ui = newUi(s);
     expect(slideGame.statusbarText?.(s, ui)).toBe("Moves: 0 (min 2)");
-
-    const solved = { ...s, completed: 4, movecount: 4 };
-    expect(slideGame.statusbarText?.(solved, ui)).toBe("COMPLETED! Moves: 4 (min 2)");
-    expect(slideGame.statusbarText?.({ ...solved, cheated: true }, ui)).toBe(
-      "Auto-solved. Moves: 4 (min 2)",
-    );
-    expect(slideGame.statusbarText?.({ ...s, cheated: true }, ui)).toBe(
-      "Auto-solver used. Moves: 0 (min 2)",
+    // The count is the board's own; the completion words are the engine's.
+    expect(slideGame.statusbarText?.({ ...s, movecount: 4 }, ui)).toBe(
+      "Moves: 4 (min 2)",
     );
     // A desc that carried no minmoves shows none.
     expect(slideGame.statusbarText?.({ ...s, minmoves: -1 }, ui)).toBe("Moves: 0");
@@ -1046,7 +1039,6 @@ describe("slide save round-trip", () => {
     expect(after.movecount).toBe(before.movecount);
     expect(after.lastmoved).toBe(before.lastmoved);
     expect(after.lastmovedPos).toBe(before.lastmovedPos);
-    expect(after.cheated).toBe(true);
     expect(after.soln?.length).toBe(before.soln?.length);
     expect(after.solnIndex).toBe(before.solnIndex);
     expect(me2.formatAsText()).toBe(me.formatAsText());
@@ -1071,11 +1063,11 @@ describe("slide capabilities", () => {
 
   it("does not animate a slide, but flashes on completion", () => {
     const ongoing = fixtureState();
-    const done = { ...ongoing, completed: 2 };
+    let done = executeMove(ongoing, { kind: "move", from: idx(3, 1), to: idx(4, 1) });
+    done = executeMove(done, { kind: "move", from: idx(1, 1), to: idx(2, 1) });
+    expect(slideGame.status(done)).toBe("solved");
     const ui = newUi(ongoing);
     expect(slideGame.animLength?.(ongoing, done, 1, ui)).toBe(0);
-    expect(slideGame.flashLength?.(ongoing, done, 1, ui)).toBeGreaterThan(0);
-    expect(slideGame.flashLength?.(ongoing, ongoing, 1, ui)).toBe(0);
-    expect(slideGame.flashLength?.(done, done, 1, ui)).toBe(0);
+    expect(slideGame.solvedFlash?.(done, ui)).toBeGreaterThan(0);
   });
 });

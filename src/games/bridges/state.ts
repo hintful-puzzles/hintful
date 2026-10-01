@@ -325,9 +325,6 @@ export class BridgesState {
   /** cell index -> island index, or -1. */
   gridi: Int32Array;
 
-  completed = false;
-  solved = false;
-
   private constructor(params: BridgesParams, share?: BridgesState) {
     this.w = params.w;
     this.h = params.h;
@@ -346,8 +343,6 @@ export class BridgesState {
       this.maxh = share.maxh.slice();
       this.islands = share.islands;
       this.gridi = share.gridi;
-      this.completed = share.completed;
-      this.solved = share.solved;
     } else {
       this.grid = new Uint16Array(wh);
       this.lines = new Uint8Array(wh);

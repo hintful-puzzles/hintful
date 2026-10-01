@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mkhighlightBackground } from "./color/color-mkhighlight.ts";
 import { token } from "./color/color-token.ts";
+import { AUTO_SOLVED, AUTO_SOLVER_USED, COMPLETED } from "./completion-status.ts";
 import { difficultyItem } from "./difficulty.ts";
 import { type FakeDrawState, fakeGame } from "./fake-game.ts";
 import type { Game } from "./game.ts";
@@ -233,6 +234,21 @@ describe("Midend completion: the status is the position's, the history is the en
     inc(h);
     expect(h.state()?.status).toBe("solved-with-help");
     expect(flashed()).toBe(true);
+  });
+
+  it("opens the status bar with the completion words, read off the board now", () => {
+    const h = harness();
+    h.m.newGame();
+    const bar = () => h.sent("status-bar-change").statusBarText;
+    expect(bar()).toBe("count 0/3");
+    for (let i = 0; i < 3; i++) inc(h);
+    expect(bar()).toBe(`${COMPLETED} count 3/3`);
+    dec(h);
+    expect(bar()).toBe("count 2/3");
+    expect(h.m.solve()).toBeNull();
+    expect(bar()).toBe(`${AUTO_SOLVED} count 3/3`);
+    dec(h);
+    expect(bar()).toBe(`${AUTO_SOLVER_USED} count 2/3`);
   });
 
   it("asks the game for a position's status once, however often it is read", () => {

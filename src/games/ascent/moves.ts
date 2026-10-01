@@ -14,7 +14,6 @@ import {
   type AscentState,
   CELL_MULTIPLE,
   CELL_NONE,
-  checkCompletion,
   cloneAscentState,
   countSegments,
   FLAG_COMPLETE,
@@ -177,9 +176,6 @@ export function executeAscentMove(state: AscentState, move: AscentMove): AscentS
         if (n >= 0) ret.grid[i] = n;
         else if (!ret.immutable[i]) ret.grid[i] = NUMBER_EMPTY;
       }
-      /* Upstream's 'S' arm never sets `cheated`, so its win flash fires on a
-       * solver fill; this follows the collection convention instead (docs/games/solver-and-generator.md § "Solve and the generator's aux"). */
-      ret.cheated = true;
       break;
     }
     default:
@@ -195,8 +191,6 @@ export function executeAscentMove(state: AscentState, move: AscentMove): AscentS
 
     if (!ret.path.some((bits) => bits & ~FLAG_COMPLETE)) ret.path = null;
   }
-
-  if (checkCompletion(ret.grid, w, h, ret.mode)) ret.completed = true;
 
   return ret;
 }

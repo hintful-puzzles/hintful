@@ -233,8 +233,6 @@ export interface DominosaState {
   grid: Int32Array;
   /** Barrier-edge bits (`EDGE_*`) per square. */
   edges: Int32Array;
-  completed: boolean;
-  cheated: boolean;
 }
 
 export function newState(p: DominosaParams, desc: string): DominosaState {
@@ -252,8 +250,6 @@ export function newState(p: DominosaParams, desc: string): DominosaState {
     numbers,
     grid,
     edges: new Int32Array(wh),
-    completed: false,
-    cheated: false,
   };
 }
 
@@ -262,8 +258,12 @@ export function cloneState(s: DominosaState): DominosaState {
   return { ...s, grid: s.grid.slice(), edges: s.edges.slice() };
 }
 
+/** Solved once every domino of the set has been placed. */
 export function status(s: DominosaState): "solved" | "ongoing" {
-  return s.completed ? "solved" : "ongoing";
+  const used = new Set<number>();
+  for (let i = 0; i < s.w * s.h; i++)
+    if (s.grid[i] > i) used.add(DINDEX(s.numbers[i], s.numbers[s.grid[i]]));
+  return used.size === DCOUNT(s.params.n) ? "solved" : "ongoing";
 }
 
 // --- move / ui / mistake types ----------------------------------------------

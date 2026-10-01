@@ -19,6 +19,8 @@ import { untangleGame } from "./index.ts";
 import { withinReach } from "./landing.ts";
 import { findCrossings, type UntangleMove, type UntangleState } from "./state.ts";
 
+const isSolved = (s: UntangleState): boolean => untangleGame.status(s) === "solved";
+
 function generated(n: number, seed: string) {
   const { desc, aux } = untangleGame.newDesc({ n }, randomNew(seed));
   return { state: untangleGame.newState({ n }, desc), aux };
@@ -98,7 +100,7 @@ function followHints(start: UntangleState, aux?: string) {
     };
   };
   for (let asks = 0; asks < 60; asks++) {
-    if (s.completed) {
+    if (isSolved(s)) {
       settle(null);
       return { s, clears, rebuilds, journeys, finishing, moves };
     }
@@ -156,7 +158,7 @@ function followHints(start: UntangleState, aux?: string) {
         // What keeps a hint recomputed after any step from cycling.
         if (i === 0) expect(after).toBeLessThan(before);
       });
-      if (finishes) expect(s.completed).toBe(true);
+      if (finishes) expect(isSolved(s)).toBe(true);
       for (const v of movers) expect(lineCrossings(s, v)).toBe(0);
       expect(count(s)).toBeLessThan(crossingsBefore);
       continue;
@@ -203,7 +205,7 @@ describe("Untangle hint", () => {
           [scattered(state, `snapped-${n}-${i}`, 1), aux],
         ] as const) {
           const out = followHints(start, withAux);
-          expect(out.s.completed).toBe(true);
+          expect(isSolved(out.s)).toBe(true);
           rebuilds += out.rebuilds;
           journeys += out.journeys;
           finishing += out.finishing;
@@ -231,7 +233,7 @@ describe("Untangle hint", () => {
     const start = untangleGame.newState({ n: 20 }, desc);
     let steps = 0;
     let s = start;
-    while (!s.completed && steps < 200) {
+    while (!isSolved(s) && steps < 200) {
       const res = deduceUntangleHintPlan(s);
       if (!res.ok) throw new Error(res.error);
       for (const st of res.steps) {
@@ -240,11 +242,11 @@ describe("Untangle hint", () => {
         steps++;
       }
     }
-    expect(s.completed).toBe(true);
+    expect(isSolved(s)).toBe(true);
     // ...and the full checks, counts included, hold on it too. Before the
     // endgame journeys, following hints took 35 moves here.
     const out = followHints(start);
-    expect(out.s.completed).toBe(true);
+    expect(isSolved(out.s)).toBe(true);
     expect(out.moves).toBeLessThanOrEqual(24);
   });
 
@@ -262,7 +264,7 @@ describe("Untangle hint", () => {
       "P7:3,13/2;P8:1,5/2;P9:5,11/2;P10:9,1/2;P11:7,5/2;P12:3,3/2;P13:13,9/2;" +
       "P14:3,9/2;P15:1,1/2;P16:11,11/2;P17:7,7/2;P18:9,7/2;P19:11,13/2";
     const out = followHints(untangleGame.newState({ n: 20 }, desc), aux);
-    expect(out.s.completed).toBe(true);
+    expect(isSolved(out.s)).toBe(true);
     expect(out.finishing).toBe(1);
     expect(out.moves).toBeLessThanOrEqual(22);
   });
@@ -299,7 +301,7 @@ describe("Untangle hint", () => {
       solving: false,
     });
     const out = followHints(start, aux);
-    expect(out.s.completed).toBe(true);
+    expect(isSolved(out.s)).toBe(true);
     expect(out.journeys - out.finishing).toBeGreaterThan(0);
   });
 

@@ -14,6 +14,7 @@
 
 import { resolvePalette } from "./color/color-mkhighlight.ts";
 import { darkValue } from "./color/color-token.ts";
+import { completionStatus } from "./completion-status.ts";
 import {
   cappedSolveFor,
   difficultyTiers,
@@ -1831,7 +1832,16 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // hint-capable game always emits, letting its explanation appear and
     // clear; only a game with neither is skipped.
     if (!this.game.statusbarText && !this.game.hint) return;
-    const text = this.game.statusbarText?.(this.state, this.ui) ?? "";
+    // The completion words are the engine's, read off the two facts it holds
+    // (the board's status and whether the solver was used), so they are the
+    // same words in every game that has a status bar.
+    const text = this.game.statusbarText
+      ? completionStatus(
+          this.statusOf(this.state) === "solved",
+          this.cheated,
+          this.game.statusbarText(this.state, this.ui),
+        )
+      : "";
     this.emit({
       type: "status-bar-change",
       statusBarText: text,

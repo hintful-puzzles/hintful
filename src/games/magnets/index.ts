@@ -5,7 +5,6 @@
  */
 
 import type { DifficultyContract } from "../../engine/difficulty.ts";
-import { winFlash } from "../../engine/flash.ts";
 import type { Game, HintStep, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
@@ -44,6 +43,7 @@ import {
   GS_NOTNEUTRAL,
   GS_SET,
   isClue,
+  isSolved,
   type MagnetsMistake,
   type MagnetsMove,
   type MagnetsParams,
@@ -70,7 +70,7 @@ function changedState(
   oldState: MagnetsState | null,
   newState_: MagnetsState,
 ): void {
-  if (oldState && !oldState.completed && newState_.completed) ui.cursor.visible = false;
+  if (oldState && !isSolved(oldState) && isSolved(newState_)) ui.cursor.visible = false;
 }
 
 /** Whether `(x, y)`, in the clue ring's coordinates, is a tile or a clue. */
@@ -308,7 +308,7 @@ export const magnetsGame: Game<
       hintStep as HintStep<MagnetsMove, MagnetsHighlights> | undefined,
     ),
 
-  flashLength: (from, to) => winFlash(from, to, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(magnetsGame);

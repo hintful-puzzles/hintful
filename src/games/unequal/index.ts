@@ -24,7 +24,6 @@ import {
 import { runLatinCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type HintResult,
@@ -101,7 +100,6 @@ import {
   ADJTHAN,
   adjToSpent,
   charValue,
-  checkComplete,
   cloneState,
   DIFF_EXTREME,
   DIFF_NAMES,
@@ -292,7 +290,6 @@ function executeMove(state: UnequalState, move: UnequalMove): UnequalState {
             if (k !== move.y) next.pencil[k * o + move.x] &= bit;
           }
         }
-        if (!next.completed && checkComplete(next) > 0) next.completed = true;
       }
       return next;
     }
@@ -310,8 +307,6 @@ function executeMove(state: UnequalState, move: UnequalMove): UnequalState {
         next.grid[i] = move.grid[i];
         next.pencil[i] = 0;
       }
-      next.completed = true;
-      next.cheated = true;
       return next;
     }
     default:
@@ -480,15 +475,6 @@ function refreshHintStep(
   return refreshCandidateHintStep(step, state.grid, state.pencil, state.order);
 }
 
-function flashLength(
-  from: UnequalState,
-  to: UnequalState,
-  _dir: number,
-  _ui: UnequalUi,
-): number {
-  return winFlash(from, to, FLASH_TIME);
-}
-
 /**
  * The on-screen keypad, faithful to upstream `game_request_keys`. Unlike the
  * shared `digitKeys`, Unequal switches to a `'0'`-based keypad for order ≥ 10
@@ -623,7 +609,7 @@ export const unequalGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength,
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(unequalGame);

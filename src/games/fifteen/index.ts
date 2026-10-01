@@ -1,5 +1,4 @@
 import { assertNever } from "../../engine/assert-never.ts";
-import { completionStatus } from "../../engine/completion-status.ts";
 import type {
   Game,
   HintResult,
@@ -8,7 +7,7 @@ import type {
   UiUpdate,
 } from "../../engine/game.ts";
 import { click } from "../../engine/hint-gesture.ts";
-import { ALREADY_SOLVED, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
+import { NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -45,7 +44,6 @@ import {
   type FifteenParams,
   type FifteenState,
   type FifteenUi,
-  isCompletedTiles,
   newDesc,
   newState,
   paramConfig,
@@ -63,16 +61,9 @@ export function executeMove(state: FifteenState, move: FifteenMove): FifteenStat
   if (move.type === "solve") {
     const tiles = new Int32Array(n);
     for (let i = 0; i < n; i++) tiles[i] = (i + 1) % n;
-    // As upstream, Solve resets to a clean solved board to practice from:
-    // movecount and completed both snap to 1 ("Moves since auto-solve: 0").
-    return {
-      ...state,
-      tiles,
-      gapPos: n - 1,
-      cheated: true,
-      completed: 1,
-      moveCount: 1,
-    };
+    // Solve counts as one move; that the solver was used is the engine's to
+    // say, so the count does not restart here as upstream's did.
+    return { ...state, tiles, gapPos: n - 1, moveCount: state.moveCount + 1 };
   }
   if (move.type !== "move") return assertNever(move, "fifteen: executeMove");
 
@@ -96,10 +87,7 @@ export function executeMove(state: FifteenState, move: FifteenMove): FifteenStat
     moveCount++;
   }
 
-  let completed = state.completed;
-  if (!completed && isCompletedTiles(tiles, n)) completed = moveCount;
-
-  return { ...state, tiles, gapPos: newGap, moveCount, completed };
+  return { ...state, tiles, gapPos: newGap, moveCount };
 }
 
 // --- UI / input -------------------------------------------------------
@@ -148,11 +136,7 @@ function interpretMove(
 // --- status bar -------------------------------------------------------
 
 function statusbarText(state: FifteenState, _ui: FifteenUi): string {
-  if (state.cheated) {
-    return `Moves since auto-solve: ${state.moveCount - state.completed}`;
-  }
-  const moves = state.completed || state.moveCount;
-  return completionStatus(state.completed > 0, false, `Moves: ${moves}`);
+  return `Moves: ${state.moveCount}`;
 }
 
 // --- hint -------------------------------------------------------------
@@ -203,10 +187,6 @@ function narrateFifteenStep(
  * solver is cheap, and the plan is recomputed only when the player
  * deviates (see `hintKeepTrack`). */
 function hint(state: FifteenState): HintResult<FifteenMove> {
-  if (isCompletedTiles(state.tiles, state.n)) {
-    return { ok: false, error: ALREADY_SOLVED };
-  }
-
   const steps: HintStep<FifteenMove>[] = [];
   let board = state;
   // The goal is the running maximum of the solver's `target` until it is
@@ -299,11 +279,7 @@ export const fifteenGame: Game<
   redraw,
 
   animLength: () => ANIM_TIME,
-  // Not `winFlash`: Fifteen's `completed` is the move count it was solved at,
-  // frozen so the status bar stops counting, not a flag. Sixteen, Twiddle and
-  // Slide hold the same shape for the same reason.
-  flashLength: (a, b) =>
-    !a.completed && b.completed && !a.cheated && !b.cheated ? 2 * FLASH_FRAME : 0,
+  solvedFlash: () => 2 * FLASH_FRAME,
 };
 
 registerGame(fifteenGame);

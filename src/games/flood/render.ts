@@ -4,7 +4,7 @@ import { drawRecessedBorder as drawBevel, drawRectOutline } from "../../engine/d
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Size } from "../../engine/types.ts";
-import { fill } from "./solver.ts";
+import { completed, fill } from "./solver.ts";
 import {
   FILLX,
   FILLY,
@@ -12,6 +12,7 @@ import {
   type FloodParams,
   type FloodState,
   type FloodUi,
+  status,
 } from "./state.ts";
 
 // --- tile-size-derived metrics ----------------------------------------
@@ -220,12 +221,12 @@ export function redraw(
     ds.started = true;
   }
 
-  // Flash type follows the terminal status: a completed board flashes
-  // the victory rainbow, a lost board the defeat blink.
+  // Flash type follows the terminal status: a won board flashes the victory
+  // rainbow, a lost board the defeat blink.
   let flashframe = -1;
   let victory = false;
   if (flashTime > 0) {
-    victory = state.completed;
+    victory = status(state) === "solved";
     const frame = victory ? VICTORY_FLASH_FRAME : DEFEAT_FLASH_FRAME;
     flashframe = Math.floor(flashTime / frame);
   }
@@ -237,7 +238,7 @@ export function redraw(
   // region (upstream's SOLNNEXT) with the out-of-range sentinel `ncolors`.
   let hintColor = 0;
   const next = activeHint?.move;
-  if (next?.type === "fill" && !state.completed) {
+  if (next?.type === "fill" && !completed(state.grid)) {
     hintColor = next.color;
     for (const p of stepMarks(activeHint).of("ring", CELL))
       grid[p.y * w + p.x] = ncolors;

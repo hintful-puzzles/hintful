@@ -78,8 +78,6 @@ export interface LoopyState {
   /** The YES edges form exactly one loop and nothing else. Varies the
    * semantics of clue highlighting at display time — see `render.ts`. */
   exactlyOneLoop: boolean;
-  completed: boolean;
-  cheated: boolean;
 }
 
 /**
@@ -246,8 +244,6 @@ export function newState(p: LoopyParams, desc: string): LoopyState {
     corners: new Uint8Array(2 * grid.numEdges),
     pairs: [],
     exactlyOneLoop: false,
-    completed: false,
-    cheated: false,
   };
 }
 
@@ -574,8 +570,17 @@ export function checkCompletion(state: LoopyState): boolean {
   // clues are highlighted at display time, and the puzzle is complete if the
   // clues agree.
   state.exactlyOneLoop = nloop === 1 && npath === 0 && nsilly === 0;
+  return isSolved(state);
+}
+
+/**
+ * Whether the board is solved: the drawn lines are exactly one loop and every
+ * clue is met. Pure: it reads `exactlyOneLoop`, which every line move refreshes
+ * through {@link checkCompletion} and nothing else moves.
+ */
+export function isSolved(state: LoopyState): boolean {
   if (!state.exactlyOneLoop) return false;
-  for (let i = 0; i < g.numFaces; i++) {
+  for (let i = 0; i < state.grid.numFaces; i++) {
     const c = state.clues[i];
     if (c >= 0 && faceOrder(state, i, LINE_YES) !== c) return false;
   }

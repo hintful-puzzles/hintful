@@ -316,8 +316,6 @@ describe("sticks solver", () => {
       h: 1,
       grid,
       numbers,
-      completed: false,
-      cheated: false,
     };
     expect(findLiveErrors(state)).toEqual([1]);
   });
@@ -462,13 +460,10 @@ describe("sticks completion and solve (through a real Midend)", () => {
     const last = changes.pop();
     if (!last) throw new Error("fixture has no white cells");
     state = sticksGame.executeMove(state, { kind: "set", changes });
-    expect(state.completed).toBe(false);
+    expect(sticksGame.status(state)).toBe("ongoing");
     const done = sticksGame.executeMove(state, { kind: "set", changes: [last] });
-    expect(done.completed).toBe(true);
-    expect(done.cheated).toBe(false);
-    // The non-cheated completion transition arms the flash.
-    expect(sticksGame.flashLength?.(state, done, 1, newUi())).toBeGreaterThan(0);
     expect(sticksGame.status(done)).toBe("solved");
+    expect(sticksGame.solvedFlash?.(done, newUi())).toBeGreaterThan(0);
   });
 
   it("Solve through the midend completes the board (solved-with-help)", () => {
@@ -495,7 +490,7 @@ describe("sticks completion and solve (through a real Midend)", () => {
     expect(me2.formatAsText()).toBe(me.formatAsText());
   });
 
-  it("completed is monotonic (matches upstream: never reset)", () => {
+  it("is solved exactly while the board is complete", () => {
     const solution = fixtureSolution();
     let state = newState(FIX_PARAMS, FIX.desc);
     const all = [];
@@ -507,12 +502,12 @@ describe("sticks completion and solve (through a real Midend)", () => {
       });
     }
     state = sticksGame.executeMove(state, { kind: "set", changes: all });
-    expect(state.completed).toBe(true);
+    expect(sticksGame.status(state)).toBe("solved");
     const broken = sticksGame.executeMove(state, {
       kind: "set",
       changes: [{ index: all[0].index, line: "none" }],
     });
-    expect(broken.completed).toBe(true);
+    expect(sticksGame.status(broken)).toBe("ongoing");
   });
 });
 

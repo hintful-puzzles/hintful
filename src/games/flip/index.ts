@@ -5,7 +5,6 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import { completionStatus } from "../../engine/completion-status.ts";
 import {
   DESC_MALFORMED,
   DESC_TOO_LONG,
@@ -208,8 +207,6 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
       matrix,
       grid,
       moves: 0,
-      completed: false,
-      cheated: false,
       hintsActive: false,
     };
   },
@@ -235,7 +232,7 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
     if (move.kind === "solve") {
       const grid = from.grid.slice();
       for (let i = 0; i < wh; i++) grid[i] = (grid[i] & ~2) | (move.mask[i] ? 2 : 0);
-      return { ...from, grid, hintsActive: true, cheated: true };
+      return { ...from, grid, hintsActive: true };
     }
     if (move.kind !== "flip") return assertNever(move, "flip: executeMove");
 
@@ -244,7 +241,6 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
       throw new Error(`Flip: move out of range (${x},${y})`);
     }
     const grid = from.grid.slice();
-    const moves = from.completed ? from.moves : from.moves + 1;
     const i = y * w + x;
     let done = true;
     for (let j = 0; j < wh; j++) {
@@ -255,14 +251,14 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
     return {
       ...from,
       grid,
-      moves,
-      completed: done || from.completed,
+      moves: from.moves + 1,
       hintsActive: done ? false : from.hintsActive,
     };
   },
 
+  /** Every light is off. */
   status(s) {
-    return s.completed ? "solved" : "ongoing";
+    return s.grid.every((v) => (v & 1) === 0) ? "solved" : "ongoing";
   },
 
   notApplicable: {
@@ -390,21 +386,15 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
   },
 
   statusbarText(s): string {
-    return completionStatus(s.completed, s.cheated, `Moves: ${s.moves}`);
+    return `Moves: ${s.moves}`;
   },
 
   animLength() {
     return ANIM_TIME;
   },
 
-  flashLength(oldState, newState) {
-    if (!oldState.completed && newState.completed) {
-      return (
-        FLASH_FRAME *
-        (Math.max(((newState.w + 1) / 2) | 0, ((newState.h + 1) / 2) | 0) + 1)
-      );
-    }
-    return 0;
+  solvedFlash(s) {
+    return FLASH_FRAME * (Math.max(((s.w + 1) / 2) | 0, ((s.h + 1) / 2) | 0) + 1);
   },
 };
 

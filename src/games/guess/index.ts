@@ -62,6 +62,7 @@ import {
   markPegs,
   newDesc,
   newState,
+  outcome,
   presets,
   status,
   validateDesc,
@@ -93,12 +94,13 @@ function newUi(state: GuessState): GuessUi {
  * away the half-composed guess the player was marking against.
  */
 function changedState(ui: GuessUi, prev: GuessState | null, next: GuessState): void {
-  if (prev && prev.nextGo === next.nextGo && prev.solved === next.solved) return;
+  const over = outcome(next) !== 0;
+  if (prev && prev.nextGo === next.nextGo && (outcome(prev) !== 0) === over) return;
 
   const { npegs } = next.params;
   const lastRow = next.nextGo > 0 ? next.guesses[next.nextGo - 1] : null;
   for (let i = 0; i < npegs; i++) {
-    ui.holds[i] = !next.solved && next.holds[i];
+    ui.holds[i] = !over && next.holds[i];
     ui.currPegs[i] = ui.holds[i] && lastRow ? lastRow.pegs[i] : 0;
   }
   ui.markable = isMarkable(next.params, ui.currPegs);
@@ -248,7 +250,7 @@ function interpretMove(
     ui.showLabels = !ui.showLabels;
     return UI_UPDATE;
   }
-  if (from.solved) return null;
+  if (outcome(from) !== 0) return null;
 
   const off = pegOff(ds);
   const { x, y } = p;
@@ -390,7 +392,7 @@ function interpretMove(
 // --- moves ------------------------------------------------------------
 
 function executeMove(s: GuessState, m: GuessMove): GuessState {
-  if (m.type === "solve") return { ...cloneState(s), solved: -1 };
+  if (m.type === "solve") return { ...cloneState(s), revealed: true };
   if (m.type === "mark") {
     const { npegs, ncolors } = s.params;
     const ret = cloneState(s);
@@ -404,9 +406,9 @@ function executeMove(s: GuessState, m: GuessMove): GuessState {
     return ret;
   }
   if (m.type !== "guess") return assertNever(m, "guess: executeMove");
-  if (s.solved) throw new Error("No guesses allowed once the game is over");
+  if (outcome(s) !== 0) throw new Error("No guesses allowed once the game is over");
 
-  const { npegs, ncolors, nguesses, allowBlank } = s.params;
+  const { npegs, ncolors, allowBlank } = s.params;
   const minColor = allowBlank ? 0 : 1;
   for (const v of m.pegs) {
     if (v < minColor || v > ncolors) throw new Error(`Illegal guess peg ${v}`);
@@ -419,10 +421,10 @@ function executeMove(s: GuessState, m: GuessMove): GuessState {
   row.feedback = feedback;
 
   const holds = m.holds.slice();
-  if (ncPlace === npegs) return { ...ret, holds, solved: 1 };
-  // Running out of rows loses, and reveals the answer.
-  const nextGo = s.nextGo + 1;
-  return { ...ret, holds, nextGo, solved: nextGo >= nguesses ? -1 : 0 };
+  // A win keeps the winning row at `nextGo`, which is how `outcome` reads it;
+  // running out of rows loses, and reveals the answer.
+  if (ncPlace === npegs) return { ...ret, holds };
+  return { ...ret, holds, nextGo: s.nextGo + 1 };
 }
 
 // --- the Ui that outlives a save --------------------------------------
@@ -480,11 +482,12 @@ function hasRepeat(pegs: readonly number[]): boolean {
  */
 function statusbarText(s: GuessState, ui: GuessUi): string {
   const { nguesses } = s.params;
-  if (s.solved > 0) {
+  const over = outcome(s);
+  if (over > 0) {
     const used = s.nextGo + 1;
     return `Solved in ${used} ${used === 1 ? "guess" : "guesses"}.`;
   }
-  if (s.solved < 0) {
+  if (over < 0) {
     return s.nextGo >= nguesses
       ? "Out of guesses: the answer is revealed."
       : "The answer is revealed.";

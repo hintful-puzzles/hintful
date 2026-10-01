@@ -104,7 +104,17 @@ describe("Galaxies game flow", () => {
     if (!result?.ok) return;
     const next = galaxiesGame.executeMove(init, result.move);
     expect(galaxiesGame.status(next)).toBe("solved");
-    expect(next.cheated).toBe(true);
+  });
+
+  // The verdict was once cached by writing it into the state the status bar was
+  // handed; a status bar must not change the board it describes.
+  it("names the difficulty without writing into the state", () => {
+    const p: GalaxiesParams = { w: 5, h: 5, diff: GalaxiesDiff.Normal };
+    const s = galaxiesGame.newState(p, galaxiesGame.newDesc(p, randomNew("sb")).desc);
+    const before = JSON.stringify({ ...s, flags: [...s.flags] });
+    const text = galaxiesGame.statusbarText?.(s, galaxiesGame.newUi(s));
+    expect(text).toMatch(/^Difficulty \w+\.$/);
+    expect(JSON.stringify({ ...s, flags: [...s.flags] })).toBe(before);
   });
 
   it("validateDesc rejects an unparseable desc", () => {

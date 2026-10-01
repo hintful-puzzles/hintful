@@ -182,7 +182,7 @@ describe("Flood win / lose status", () => {
 });
 
 describe("Flood solve", () => {
-  it("snaps to a completed, cheated board", () => {
+  it("snaps to a completed board", () => {
     const p = defaultParams();
     const state = gen(p, "solve-seed");
     const result = floodGame.solve?.(state, state);
@@ -190,7 +190,7 @@ describe("Flood solve", () => {
     if (!result?.ok) return;
     const solved = executeMove(state, result.move);
     expect(completed(solved.grid)).toBe(true);
-    expect(solved.cheated).toBe(true);
+    expect(status(solved)).toBe("solved");
     expect(solved.moves).toBeGreaterThan(0);
   });
 });

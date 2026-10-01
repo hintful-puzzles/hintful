@@ -98,3 +98,52 @@ Inertia's death is a ball on a mine, so it is a position too. The shape stands.
   Mines' identical death holds it.
 - **Sixteen's Solve keeps the move count**, where Fifteen, Netslide and Twiddle
   reset it to 1.
+
+All five are fixed by the migration: Loopy, Rome, Bridges, Seismic, Magnets,
+Mathrax, Tracks and Undead ask a side-effect-free form of a check that marks
+errors; Mosaic counts its clues from the board; Galaxies caches its difficulty
+outside the state; Inertia and Same Game declare `timerHolds`; Sixteen is now
+the rule rather than the exception.
+
+## Decisions taken in the migration
+
+**The engine says the completion words.** The midend prefixes `COMPLETED!`,
+`Auto-solved.` or `Auto-solver used.` to whatever `statusbarText` returns, from
+the board's status now and its own `cheated`. It has to: "the solver was used"
+is no longer in any state, so no game could say it. Salad, Separate, Palisade
+and Galaxies, whose bars never said the words, now do.
+
+**Solve is one move, and no count restarts or freezes.** Fifteen, Netslide and
+Twiddle reset their count to 1 on Solve so the bar could say "Moves since
+auto-solve"; Fifteen, Sixteen, Twiddle, Netslide, Slide, Cube and Flip froze it
+at the solve. Both were how a latched game kept its count honest. Under "solved
+now" the count is the state's own, and the engine's "Auto-solved." /
+"Auto-solver used." says what "since auto-solve" said. The phrase goes.
+
+**Black Box drops "CORRECT!"** and Mines its own solved branch, so the engine's
+`COMPLETED!` is not said twice. Guess keeps "Solved in N guesses.", which says
+more than the engine's word does, so a win reads "COMPLETED! Solved in N
+guesses."
+
+**`flashLength` keeps the outcomes the status does not show**: Flood's defeat,
+Same Game's stuck board, the deaths in Inertia and Mines, and Black Box's reveal
+(which flashes on Solve too, as upstream). One consequence is that Solve on a
+Flood board already past its limit now plays the defeat blink, where the old
+cheat flag suppressed it; the board is lost, and the blink says so.
+
+**A stuck Same Game board and a dead Inertia ball hold the clock**, as a Mines
+death does: nobody is playing a board whose only move is undo.
+
+**Dominosa's hover clear moved to `changedState`**, on the transition into
+solved, which is where ABCD, Light Up, Magnets, Signpost and Singles already
+reacted to one; a side effect in a duration hook was the shape to retire.
+
+**The guard asks the one thing a latch cannot do.** Its first cut asked "a
+board with a mistake on it is not solved", which is false: Loopy's and Net's
+`findMistakes` flag a wrong *note*, and a wrong note does not unsolve a board.
+The kept form walks the game's own input (clicks, keys, drags) from the solved
+board until a position is not solved; a game whose input cannot get there is a
+ledger entry with its reason, and the name-keyed structural half covers those.
+A planted latch in Keen and a planted `completed` on Fifteen each turned it red.
+The Marks key is left out of the walk, because it turns every later key into a
+note: with it, Undead's walk never placed a monster.

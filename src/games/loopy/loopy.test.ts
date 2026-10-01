@@ -76,8 +76,6 @@ function blankState(w = 4, h = 4, type = 0): LoopyState {
     corners: new Uint8Array(2 * grid.numEdges),
     pairs: [],
     exactlyOneLoop: false,
-    completed: false,
-    cheated: false,
   };
 }
 
@@ -413,7 +411,7 @@ describe("completion and error highlighting", () => {
     const looped = closeSmallestLoop(s);
     expect(looped.exactlyOneLoop).toBe(true);
     // No clues at all, so a single closed loop satisfies everything.
-    expect(looped.completed).toBe(true);
+    expect(loopyGame.status(looped)).toBe("solved");
     expect([...looped.lineErrors]).toEqual(new Array(s.grid.numEdges).fill(0));
   });
 
@@ -423,7 +421,7 @@ describe("completion and error highlighting", () => {
     s.clues[8] = 3;
     const looped = closeSmallestLoop(s);
     expect(looped.exactlyOneLoop).toBe(true);
-    expect(looped.completed).toBe(false);
+    expect(loopyGame.status(looped)).toBe("ongoing");
   });
 
   it("highlights every YES edge at a vertex of degree 3", () => {
@@ -438,7 +436,7 @@ describe("completion and error highlighting", () => {
     });
     for (const j of [0, 1, 2]) expect(next.lineErrors[dot.edges[j].index]).toBe(1);
     expect(next.exactlyOneLoop).toBe(false);
-    expect(next.completed).toBe(false);
+    expect(loopyGame.status(next)).toBe("ongoing");
   });
 
   it("leaves the largest component alone and reddens the rest", () => {
@@ -480,16 +478,17 @@ describe("completion and error highlighting", () => {
     expect(one.exactlyOneLoop).toBe(true);
   });
 
-  it("keeps `solved` sticky across an undo, as upstream does", () => {
+  // Upstream latched the win; here the status is the board's, so a loop the
+  // player reopens is not solved (`derive-completion-from-the-position`).
+  it("un-solves a solved board the player reopens", () => {
     const s = blankState();
     const looped = closeSmallestLoop(s);
-    expect(looped.completed).toBe(true);
-    // Reopening the loop does not un-win the game: `solved` is only ever set.
+    expect(loopyGame.status(looped)).toBe("solved");
     const reopened = loopyGame.executeMove(looped, {
       kind: "set",
       ops: [{ edge: s.grid.faces[0].edges[0]?.index ?? 0, state: LINE_UNKNOWN }],
     });
-    expect(reopened.completed).toBe(true);
+    expect(loopyGame.status(reopened)).toBe("ongoing");
     expect(reopened.exactlyOneLoop).toBe(false);
   });
 });
@@ -548,8 +547,7 @@ describe("solver", () => {
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
     const solved = loopyGame.executeMove(s, result.move);
-    expect(solved.completed).toBe(true);
-    expect(solved.cheated).toBe(true);
+    expect(loopyGame.status(solved)).toBe("solved");
     // Solve leaves nothing undecided.
     expect([...solved.lines].every((l) => l !== LINE_UNKNOWN)).toBe(true);
   });

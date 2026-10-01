@@ -59,8 +59,6 @@ export interface LightupState {
   /** Clue value for numbered blacks; times-lit count for open squares. */
   lights: Int16Array;
   flags: Uint8Array;
-  completed: boolean;
-  cheated: boolean;
 }
 
 /** One toggle, exactly upstream's `L`/`I` move atoms (both are toggles;
@@ -309,8 +307,6 @@ export function emptyState(p: LightupParams): LightupState {
     nlights: 0,
     lights: new Int16Array(p.w * p.h),
     flags: new Uint8Array(p.w * p.h),
-    completed: false,
-    cheated: false,
   };
 }
 
@@ -319,7 +315,7 @@ export function cloneState(s: LightupState): LightupState {
 }
 
 export function status(s: LightupState): GameStatus {
-  return s.completed ? "solved" : "ongoing";
+  return gridCorrect(s) ? "solved" : "ongoing";
 }
 
 // --- desc codec ---------------------------------------------------------------------------

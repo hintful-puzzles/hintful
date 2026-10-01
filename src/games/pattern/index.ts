@@ -7,7 +7,6 @@
  * paints with Ctrl/Shift held.
  */
 
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type HintResult,
@@ -483,7 +482,7 @@ export const patternGame: Game<
   newDrawState,
   redraw,
 
-  flashLength: (a, b) => winFlash(a, b, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(patternGame);

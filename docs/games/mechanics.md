@@ -567,22 +567,35 @@ the game.
 
 ## Status
 
-`status(state)` reports won/ongoing/lost. **Solve must complete the game**:
-the solve move's `executeMove` arm runs the completion check (so the game
-reports solved-with-help) and sets `cheated` (so the win flash doesn't fire on
-a solver fill). Where upstream forgot that bookkeeping, fix it — that class of
-quirk is missing bookkeeping, not behavior (owner directive, 2026-07-21;
-exemplar divergence comment in
-[`subsets/index.ts`](../../src/games/subsets/index.ts)). The solver side of
-Solve is [solver & generator](./solver-and-generator.md) § "Solve and the generator's aux".
+`status(state)` reports won/ongoing/lost **of the board alone, never of how it
+was reached** (`ts-engine` § "A game's status is judged from the board alone").
+It is the game's existing completion check, called on the state; it must not
+write into the state, so a check that marks errors as it goes is split into the
+marking the move does and a pure predicate `status` asks. **Store no
+`completed` or `cheated`**: the midend asks `status` once per position, and
+derives the rest from the history it owns. That is why a game ID typed in
+already solved is solved at move 0, why a Solve move needs no special case (the
+board it leaves is solved, so its status says so), and why a solved board the
+player breaks reads ongoing again everywhere: the status bar, the hint, the
+end-of-game dialog and the clock (owner, 2026-10-01).
+
+Keep in the state only what the board *shows*: Black Box's reveal, Guess's
+revealed answer, a dead ball or a killed Mines cell are positions, and status
+reads them. A count the status bar shows (moves, guesses) is the state's own
+and does not freeze at a solve. `changedState` reacting to "became solved"
+asks `status` of the old and new state.
+
+The solver side of Solve is [solver & generator](./solver-and-generator.md)
+§ "Solve and the generator's aux".
 
 **What a player reads is the engine's.** A refused Solve returns a
-`SolveFailure` ([`solve-failure.ts`](../../src/engine/solve-failure.ts)), and a
-status bar that says the board is finished or was solved for the player opens
-with `completionStatus(completed, cheated, rest)`
-([`completion-status.ts`](../../src/engine/completion-status.ts)). Neither
-leaves you a word to choose; the engine catalog's entries for them say which
-failure a solver's verdict entitles it to.
+`SolveFailure` ([`solve-failure.ts`](../../src/engine/solve-failure.ts)), and
+the status bar's completion words (`COMPLETED!`, `Auto-solved.`,
+`Auto-solver used.`) are prefixed by the midend to whatever `statusbarText`
+returns ([`completion-status.ts`](../../src/engine/completion-status.ts)), so
+`statusbarText` returns only the game's own phrase. Neither leaves you a word
+to choose; the engine catalog's entries for them say which failure a solver's
+verdict entitles it to.
 
 ## Capability flags
 
@@ -646,8 +659,7 @@ notApplicable: {
 - **Implemented and excused at once is refused** wherever a section state is
   read, the production build included.
 - **A guard that would excuse a game for lacking a section reads the reason**
-  (`sectionState`) instead of keeping a ledger: `orientation.test.ts` and
-  `completion-vocabulary.test.ts` (no `solve`, no `cheated` owed) do.
+  (`sectionState`) instead of keeping a ledger: `orientation.test.ts` does.
 
 `difficulty`, `textFormat` and the affordances (`hover`, `reference`, `prefs`,
 the keypad) are not sections: nothing tells a puzzle that has no such thing

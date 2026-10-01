@@ -64,8 +64,6 @@ export interface SlantState {
   /** Per-square: this diagonal is connected to the border (BORDER_EDGE) —
    * not an error; the fade-grounded pref renders it dimmed. */
   readonly grounded: Uint8Array;
-  readonly completed: boolean;
-  readonly cheated: boolean;
 }
 
 /** Which neighbor a same-slant mark joins a square to. */
@@ -209,8 +207,6 @@ export function newState(p: SlantParams, desc: string): SlantState {
     loopErrors: new Uint8Array(w * h),
     vertexErrors: new Uint8Array((w + 1) * (h + 1)),
     grounded: new Uint8Array(w * h),
-    completed: false,
-    cheated: false,
   };
 }
 
@@ -335,7 +331,6 @@ export function executeMove(state: SlantState, move: SlantMove): SlantState {
     return { ...state, alike };
   }
   const soln = Int8Array.from(state.soln);
-  let cheated = state.cheated;
 
   if (move.type === "solve") {
     if (move.grid.length !== w * h) throw new Error("Bad solve grid");
@@ -344,7 +339,6 @@ export function executeMove(state: SlantState, move: SlantMove): SlantState {
       if (c !== "\\" && c !== "/") throw new Error("Bad solve grid");
       soln[i] = c === "\\" ? -1 : 1;
     }
-    cheated = true;
   } else if (move.type === "set") {
     const { x, y, v } = move;
     if (x < 0 || x >= w || y < 0 || y >= h) throw new Error("Move out of bounds");
@@ -353,8 +347,6 @@ export function executeMove(state: SlantState, move: SlantMove): SlantState {
     return assertNever(move, "slant: executeMove");
   }
 
-  // The completion check also recomputes the error overlays. `completed`
-  // latches, as upstream.
   const errors = computeErrors(w, h, state.clues, soln);
   return {
     ...state,
@@ -362,15 +354,14 @@ export function executeMove(state: SlantState, move: SlantMove): SlantState {
     loopErrors: errors.loopErrors,
     vertexErrors: errors.vertexErrors,
     grounded: errors.grounded,
-    completed: errors.complete || state.completed,
-    cheated,
   };
 }
 
 // --- status / text -------------------------------------------------------
 
 export function status(state: SlantState): GameStatus {
-  return state.completed ? "solved" : "ongoing";
+  const { w, h, clues, soln } = state;
+  return computeErrors(w, h, clues, soln).complete ? "solved" : "ongoing";
 }
 
 export function textFormat(state: SlantState): string {

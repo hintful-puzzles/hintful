@@ -22,9 +22,9 @@
  *    has actually checked — see `narrate`.
  *
  * And the hint is a *nudge*, which is its whole reason for existing: Solve hands
- * out a route too, but sets `cheated`, so the status bar reads "Auto-solver
- * used." for the rest of the game. Nothing here installs a route or touches that
- * flag.
+ * out a route too, and the midend records that the solver was used, so the
+ * status bar reads "Auto-solver used." for the rest of the game. Nothing here
+ * installs a route.
  */
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";

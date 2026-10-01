@@ -55,11 +55,11 @@ describe("signpost hint from the player's own positions", () => {
         const plan = hintOf(fresh);
         for (const step of plan)
           reached.set(arm(step), (reached.get(arm(step)) ?? 0) + 1);
-        expect(play(fresh, plan).completed).toBe(true);
+        expect(signpostGame.status(play(fresh, plan))).toBe("solved");
 
         // Halfway through, the plan from there finishes too.
         const half = play(fresh, plan.slice(0, plan.length >> 1));
-        expect(play(half, hintOf(half)).completed).toBe(true);
+        expect(signpostGame.status(play(half, hintOf(half)))).toBe("solved");
       });
     }
 

@@ -347,8 +347,7 @@ describe("salad moves", () => {
       });
     }
     me.playMoves(moves);
-    expect(stateOf(me).completed).toBe(true);
-    expect(stateOf(me).cheated).toBe(false); // a genuine (non-cheated) solve
+    expect(saladGame.status(stateOf(me))).toBe("solved");
   });
 
   it("Solve completes the board and reports solved-with-help", () => {
@@ -356,15 +355,8 @@ describe("salad moves", () => {
     const me = h.midend;
     expect(me.newGameFromId(LETTERS_ID)).toBeNull();
     expect(me.solve()).toBeNull();
-    const st = (me as unknown as { state: SaladState }).state;
-    expect(st.completed).toBe(true);
-    expect(st.cheated).toBe(true);
     const status = h.last("game-state-change");
     expect(status?.status).toBe("solved-with-help");
-    // A solver fill must not fire the win flash.
-    expect(saladGame.flashLength?.(stateOf(play(LETTERS_ID)), st, 1, newUi(st))).toBe(
-      0,
-    );
   });
 
   it("survives a save/load round-trip mid-solve", () => {

@@ -178,7 +178,7 @@ export function executeMove(state: SlideState, move: SlideMove): SlideState {
         ? { from: state.lastmovedPos, to: step.to }
         : step,
     );
-    return { ...state, soln, solnIndex: 0, cheated: true };
+    return { ...state, soln, solnIndex: 0 };
   }
   if (move.kind !== "move") return assertNever(move, "slide: executeMove");
 
@@ -188,7 +188,7 @@ export function executeMove(state: SlideState, move: SlideMove): SlideState {
   if (!movePiece(w, state.h, state.board, board, state.forcefield, from, to))
     throw new Error("slide: illegal move");
 
-  let { lastmoved, lastmovedPos, movecount, soln, solnIndex, completed } = state;
+  let { lastmoved, lastmovedPos, movecount, soln, solnIndex } = state;
 
   if (from === lastmoved) {
     if (to === lastmovedPos) {
@@ -218,9 +218,6 @@ export function executeMove(state: SlideState, move: SlideMove): SlideState {
     }
   }
 
-  if (board[to] === MAINANCHOR && to === state.ty * w + state.tx && completed < 0)
-    completed = movecount;
-
   return {
     ...state,
     board,
@@ -229,6 +226,5 @@ export function executeMove(state: SlideState, move: SlideMove): SlideState {
     movecount,
     soln,
     solnIndex,
-    completed,
   };
 }

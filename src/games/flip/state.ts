@@ -25,8 +25,6 @@ export interface FlipState {
   /** wh cells; bit 0 = lit ("wrong"), bit 1 = solver-hint marker. */
   readonly grid: Uint8Array;
   readonly moves: number;
-  readonly completed: boolean;
-  readonly cheated: boolean;
   readonly hintsActive: boolean;
 }
 

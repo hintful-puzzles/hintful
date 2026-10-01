@@ -42,6 +42,7 @@ import {
   markPegs,
   newDesc,
   newState,
+  outcome,
 } from "./state.ts";
 
 const ZERO = { x: 0, y: 0 };
@@ -137,10 +138,10 @@ describe("every mark the rules prove holds for every answer the rows allow", () 
         const answer = space[randomUpto(rs, space.length)];
         let state = withAnswer(p, answer);
         const rows = 1 + randomUpto(rs, 4);
-        for (let r = 0; r < rows && state.solved === 0; r++) {
+        for (let r = 0; r < rows && outcome(state) === 0; r++) {
           state = play(state, randomGuess(p, rs));
         }
-        if (state.solved !== 0) continue;
+        if (outcome(state) !== 0) continue;
         const { out, fired: reasons } = provenRuleOuts(state);
         for (const r of reasons) fired.set(r.kind, (fired.get(r.kind) ?? 0) + 1);
         const allowed = space.filter((a) => fits(state, a));
@@ -179,10 +180,10 @@ describe("the probe's sentence quotes counts that are true", () => {
     for (let game = 0; game < 40; game++) {
       let state = withAnswer(p, space[randomUpto(rs, space.length)]);
       const rows = randomUpto(rs, 3);
-      for (let r = 0; r < rows && state.solved === 0; r++) {
+      for (let r = 0; r < rows && outcome(state) === 0; r++) {
         state = play(state, randomGuess(p, rs));
       }
-      if (state.solved !== 0) continue;
+      if (outcome(state) !== 0) continue;
       const res = guessHint(state);
       if (!res.ok) throw new Error(res.error);
       const probe = res.steps.at(-1)?.move as Extract<GuessMove, { type: "guess" }>;
@@ -215,8 +216,8 @@ describe("the probe's sentence quotes counts that are true", () => {
 function rowsByHints(p: GuessParams, answer: number[]): number {
   let state = withAnswer(p, answer);
   for (let steps = 0; steps < 200; steps++) {
-    if (state.solved > 0) return state.nextGo + 1;
-    if (state.solved < 0) return Number.POSITIVE_INFINITY;
+    if (outcome(state) > 0) return state.nextGo + 1;
+    if (outcome(state) < 0) return Number.POSITIVE_INFINITY;
     const res = guessHint(state);
     if (!res.ok) throw new Error(res.error);
     state = guessGame.executeMove(state, res.steps[0].move);

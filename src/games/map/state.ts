@@ -130,11 +130,10 @@ export type MapOp =
 
 /**
  * A player move: a list of region ops (a single drag-drop can change both a
- * color and pencil bits), optionally flagged as a solve.
+ * color and pencil bits).
  */
 export interface MapMove {
   ops: MapOp[];
-  solve?: boolean;
 }
 
 // --- ui --------------------------------------------------------------
@@ -218,8 +217,6 @@ export interface MapState {
   readonly coloring: Int32Array;
   /** Per-region pencil-mark bitmask (only meaningful when blank). Length `n`. */
   readonly pencil: Int32Array;
-  readonly completed: boolean;
-  readonly cheated: boolean;
 }
 
 export function cloneState(s: MapState): MapState {

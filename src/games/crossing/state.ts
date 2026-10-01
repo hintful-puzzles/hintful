@@ -464,8 +464,6 @@ export interface CrossingState {
   grid: Uint8Array;
   /** `w·h` pencil-mark bitmasks (bit `n-1` = digit `n`); cloned per move. */
   pencil: Int32Array;
-  completed: boolean;
-  cheated: boolean;
 }
 
 export function newState(p: CrossingParams, desc: string): CrossingState {
@@ -475,8 +473,6 @@ export function newState(p: CrossingParams, desc: string): CrossingState {
     puzzle: makePuzzle(p.w, p.h, walls, numbers),
     grid: new Uint8Array(p.w * p.h),
     pencil: new Int32Array(p.w * p.h),
-    completed: false,
-    cheated: false,
   };
 }
 
@@ -486,13 +482,11 @@ export function cloneState(s: CrossingState): CrossingState {
     puzzle: s.puzzle,
     grid: s.grid.slice(),
     pencil: s.pencil.slice(),
-    completed: s.completed,
-    cheated: s.cheated,
   };
 }
 
 export function status(s: CrossingState): "solved" | "ongoing" {
-  return s.completed ? "solved" : "ongoing";
+  return validateBoard(s.puzzle, s.grid).status === "valid" ? "solved" : "ongoing";
 }
 
 // --- board validity --------------------------------------------------------

@@ -16,7 +16,6 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type HintResult,
@@ -58,7 +57,7 @@ import {
   type TargetVerbs,
   verbClicks,
 } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
+import type { GameStatus, Point } from "../../engine/types.ts";
 import { newSticksDesc } from "./generator.ts";
 import { type SticksMarks, say } from "./hint-text.ts";
 import {
@@ -96,7 +95,6 @@ import {
   type SticksParams,
   type SticksState,
   type SticksUi,
-  status,
   textFormat,
   validateDesc,
   validateParams,
@@ -347,12 +345,13 @@ function executeMove(state: SticksState, move: SticksMove): SticksState {
   } else {
     return assertNever(move, "sticks: executeMove");
   }
-  if (sticksValidate(next.grid, next.numbers, next.w, next.h) === "complete")
-    next.completed = true;
-  // Upstream: `if (cheated) ret->cheated = ret->completed;` — a solve marks
-  // the game cheated only when it actually completed the board.
-  if (move.kind === "solve") next.cheated = next.completed;
   return next;
+}
+
+function status(s: SticksState): GameStatus {
+  return sticksValidate(s.grid, s.numbers, s.w, s.h) === "complete"
+    ? "solved"
+    : "ongoing";
 }
 
 function solve(orig: SticksState): SolveResult<SticksMove> {
@@ -549,7 +548,7 @@ export const sticksGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength: (from, to) => winFlash(from, to, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(sticksGame);

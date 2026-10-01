@@ -21,7 +21,6 @@ import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import type { GameStatus } from "../../engine/types.ts";
 
 // --- cells -----------------------------------------------------------------
 
@@ -50,15 +49,14 @@ export interface RangeState {
   h: number;
   /** Clue (> 0) / BLACK / WHITE / EMPTY per cell, row-major. */
   grid: Int8Array;
-  cheated: boolean;
-  completed: boolean;
 }
 
 export type RangeCellValue = "black" | "white" | "empty";
 
 /** A move is a list of cell-sets plus an optional solve flag (upstream's
- * `S` prefix, which marks the state cheated + solved). Covers a single
- * click, the shift-cursor double-dot, and the whole Solve sequence. */
+ * `S` prefix), which labels the Solve command's move for the hint tracker.
+ * Covers a single click, the shift-cursor double-dot, and the whole Solve
+ * sequence. */
 export interface RangeMove {
   solve?: boolean;
   sets: { r: number; c: number; value: RangeCellValue }[];
@@ -185,15 +183,11 @@ export function newState(p: RangeParams, desc: string): RangeState {
     if (blanks) i += blanks.charCodeAt(0) - A + 1;
     else if (clue) grid[i++] = Number(clue);
   }
-  return { w: p.w, h: p.h, grid, cheated: false, completed: false };
+  return { w: p.w, h: p.h, grid };
 }
 
 export function cloneState(s: RangeState): RangeState {
   return { ...s, grid: s.grid.slice() };
-}
-
-export function status(s: RangeState): GameStatus {
-  return s.completed ? "solved" : "ongoing";
 }
 
 // --- text format -----------------------------------------------------------

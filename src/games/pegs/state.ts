@@ -43,7 +43,6 @@ export interface PegsParams {
 export interface PegsState {
   w: number;
   h: number;
-  completed: boolean;
   /** Flat Uint8Array grid: GRID_HOLE | GRID_PEG | GRID_OBST. */
   grid: Uint8Array;
 }
@@ -153,7 +152,7 @@ export function newState(p: PegsParams, desc: string): PegsState {
   for (let i = 0; i < desc.length; i++) {
     grid[i] = desc[i] === "P" ? GRID_PEG : desc[i] === "H" ? GRID_HOLE : GRID_OBST;
   }
-  return { w: p.w, h: p.h, completed: false, grid };
+  return { w: p.w, h: p.h, grid };
 }
 
 export function newUi(state: PegsState): PegsUi {
@@ -172,8 +171,13 @@ export function newUi(state: PegsState): PegsUi {
 }
 // --- status ----------------------------------------------------------
 
+/** Won when exactly one peg remains. */
 export function status(s: PegsState): GameStatus {
-  return s.completed ? "solved" : "ongoing";
+  let pegs = 0;
+  for (const v of s.grid) {
+    if (v === GRID_PEG) pegs++;
+  }
+  return pegs === 1 ? "solved" : "ongoing";
 }
 
 // --- text format -----------------------------------------------------

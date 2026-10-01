@@ -53,8 +53,6 @@ export interface RectState {
   readonly vedge: Uint8Array;
   /** Horizontal edges (top of each cell), `w*h`, value 0/1. */
   readonly hedge: Uint8Array;
-  readonly completed: boolean;
-  readonly cheated: boolean;
   /** Per-cell correctness overlay (1 = part of a valid rectangle), `w*h`.
    * Recomputed after every move; drives the gray fill + completion. */
   readonly correct: Uint8Array;

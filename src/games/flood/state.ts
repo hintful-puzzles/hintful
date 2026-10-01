@@ -44,9 +44,6 @@ export interface FloodState {
   readonly grid: Uint8Array;
   readonly moves: number;
   readonly movelimit: number;
-  readonly completed: boolean;
-  /** Set when the auto-solver was used (drives the status-bar prefix). */
-  readonly cheated: boolean;
 }
 
 /** A fill picks a color for the corner region; a solve snaps to the
@@ -168,8 +165,6 @@ export function newState(p: FloodParams, desc: string): FloodState {
     grid,
     moves: 0,
     movelimit,
-    completed: false,
-    cheated: false,
   };
 }
 
@@ -178,7 +173,7 @@ export function newState(p: FloodParams, desc: string): FloodState {
 /** Upstream's `game_status`: completing within the limit wins; reaching the
  * limit otherwise loses, even if a later fill completes the grid. */
 export function status(state: FloodState): GameStatus {
-  if (state.completed && state.moves <= state.movelimit) return "solved";
+  if (completed(state.grid) && state.moves <= state.movelimit) return "solved";
   if (state.moves >= state.movelimit) return "lost";
   return "ongoing";
 }

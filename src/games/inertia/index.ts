@@ -15,7 +15,6 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import { completionStatus } from "../../engine/completion-status.ts";
 import {
   type Game,
   type SolveResult,
@@ -54,6 +53,7 @@ import {
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
+  solvedFlash,
 } from "./render.ts";
 import { solveRoute } from "./solver.ts";
 import {
@@ -106,7 +106,7 @@ function executeMove(s: InertiaState, m: InertiaMove): InertiaState {
     // route to follow, so the new state can share the old board (only `slide`
     // ever writes to a board, and it clones first).
     if (m.route.length === 0) throw new Error("inertia: empty route");
-    return { ...s, cheated: true, route: Object.freeze([...m.route]), routePos: 0 };
+    return { ...s, route: Object.freeze([...m.route]), routePos: 0 };
   }
   if (m.type !== "move") return assertNever(m, "inertia: executeMove");
 
@@ -252,9 +252,7 @@ function interpretMove(
 // --- status bar ------------------------------------------------------
 
 function statusbarText(s: InertiaState, ui: InertiaUi): string {
-  let status = s.dead
-    ? "DEAD!"
-    : completionStatus(s.gems === 0, s.cheated, s.gems ? `Gems: ${s.gems}` : "");
+  let status = s.dead ? "DEAD!" : s.gems ? `Gems: ${s.gems}` : "";
   if (ui.deaths) status += `   Deaths: ${ui.deaths}`;
   return status;
 }
@@ -328,7 +326,8 @@ export const inertiaGame: Game<
   textFormat,
   statusbarText,
 
-  // A nudge, not Solve: it installs no route and never sets `cheated`.
+  // A nudge, not Solve: it installs no route, and the midend does not count it
+  // as using the solver.
   hint,
   hintMarks: {
     roles: {
@@ -354,6 +353,10 @@ export const inertiaGame: Game<
   redraw,
   animLength,
   flashLength,
+  solvedFlash,
+  // A death is not a loss (the player undoes and plays on), yet nobody is
+  // playing a dead ball, so the timer holds on it.
+  timerHolds: (s: InertiaState): boolean => s.dead,
 };
 
 registerGame(inertiaGame);

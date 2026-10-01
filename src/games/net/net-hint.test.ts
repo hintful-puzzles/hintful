@@ -61,7 +61,7 @@ describe("the plan", () => {
           expect(s.tiles[m.y * p.w + m.x] & 0xf).toBe(solution[m.y * p.w + m.x] & 0xf);
       }
       expect(s.tiles.every((t) => t & LOCKED)).toBe(true);
-      expect(s.completed).toBe(true);
+      expect(netGame.status(s)).toBe("solved");
     });
   }
 });

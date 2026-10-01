@@ -118,8 +118,6 @@ function newState(p: MapParams, desc: string): MapState {
     map,
     coloring,
     pencil: new Int32Array(p.n),
-    completed: false,
-    cheated: false,
   };
 }
 
@@ -397,14 +395,11 @@ function executeMove(s: MapState, m: MapMove): MapState {
       return assertNever(op, "map: executeMove");
     }
   }
-  // A solve move completes the board like any other (upstream checks after
-  // both), so Show solution leaves a board the status calls solved.
-  const done = ret.completed || isComplete(ret);
-  return { ...ret, completed: done, cheated: ret.cheated || m.solve === true };
+  return ret;
 }
 
 function status(s: MapState): GameStatus {
-  return s.completed ? "solved" : "ongoing";
+  return isComplete(s) ? "solved" : "ongoing";
 }
 
 // --- solve / mistakes ------------------------------------------------
@@ -434,7 +429,7 @@ function solveToMove(curr: MapState, solution: Int32Array): SolveResult<MapMove>
   for (let i = 0; i < n; i++)
     if (solution[i] >= 0 && solution[i] !== curr.coloring[i])
       ops.push({ op: "color", region: i, color: solution[i] });
-  return { ok: true, move: { ops, solve: true } };
+  return { ok: true, move: { ops } };
 }
 
 function solve(orig: MapState, curr: MapState, aux?: string): SolveResult<MapMove> {
@@ -492,15 +487,9 @@ function hint(
 
 // --- flash -----------------------------------------------------------
 
-function flashLength(
-  oldState: MapState,
-  newState_: MapState,
-  _dir: number,
-  ui: MapUi,
-): number {
-  return !oldState.completed && newState_.completed && !newState_.cheated
-    ? flashLengthFromUi(ui)
-    : 0;
+/** The win flash runs as long as the player's chosen flash style takes. */
+function solvedFlash(_s: MapState, ui: MapUi): number {
+  return flashLengthFromUi(ui);
 }
 
 // --- register --------------------------------------------------------
@@ -614,7 +603,7 @@ export const mapGame: Game<
   newDrawState,
   redraw,
 
-  flashLength,
+  solvedFlash,
 };
 
 registerGame(mapGame);

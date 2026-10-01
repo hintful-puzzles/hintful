@@ -175,8 +175,6 @@ export interface AscentState {
   /** Per-cell path segment bitmask (`1<<dir` | `FLAG_COMPLETE`), or
    * `null` when the player has drawn no path. */
   path: Int16Array | null;
-  completed: boolean;
-  cheated: boolean;
 }
 
 /** One user gesture, as a single move fragment (upstream's `P`/`L`/`D`/
@@ -381,6 +379,11 @@ export function updatePathHints(
   }
 }
 
+/** The board is solved: {@link checkCompletion} of its numbers. */
+export function isSolved(s: AscentState): boolean {
+  return checkCompletion(s.grid, s.w, s.h, s.mode);
+}
+
 /** True if the whole grid forms a single 1..last path (upstream
  * `check_completion`) and every arrow clue is satisfied. */
 export function checkCompletion(
@@ -575,8 +578,6 @@ export function newAscentState(params: AscentParams, desc: string): AscentState 
     grid,
     immutable,
     path: null,
-    completed: false,
-    cheated: false,
   };
 }
 

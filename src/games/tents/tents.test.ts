@@ -125,8 +125,7 @@ describe("tents completion (executeMove)", () => {
     const tents: number[] = [];
     for (let i = 0; i < p.w * p.h; i++) if (soln[i] === TENT) tents.push(i);
     const done = executeMove(state, { type: "solve", tents });
-    expect(done.completed).toBe(true);
-    expect(done.cheated).toBe(true);
+    expect(tentsGame.status(done)).toBe("solved");
   });
 
   it("an all-non-tent board is not complete", () => {
@@ -138,7 +137,7 @@ describe("tents completion (executeMove)", () => {
         .filter((i) => state.grid[i] !== TREE)
         .map((i) => ({ x: i % p.w, y: Math.floor(i / p.w), v: NONTENT })),
     });
-    expect(cleared.completed).toBe(false);
+    expect(tentsGame.status(cleared)).toBe("ongoing");
   });
 });
 
@@ -149,7 +148,7 @@ describe("tents solve()", () => {
     const res = tentsGame.solve?.(state, state, aux);
     expect(res?.ok).toBe(true);
     if (res?.ok) {
-      expect(executeMove(state, res.move).completed).toBe(true);
+      expect(tentsGame.status(executeMove(state, res.move))).toBe("solved");
       if (res.move.type === "solve") {
         const set = new Set(res.move.tents);
         for (let i = 0; i < p.w * p.h; i++) expect(set.has(i)).toBe(soln[i] === TENT);
@@ -162,7 +161,7 @@ describe("tents solve()", () => {
     const { state } = genBoard(p, "solve-1");
     const res = tentsGame.solve?.(state, state);
     expect(res?.ok).toBe(true);
-    if (res?.ok) expect(executeMove(state, res.move).completed).toBe(true);
+    if (res?.ok) expect(tentsGame.status(executeMove(state, res.move))).toBe("solved");
   });
 });
 

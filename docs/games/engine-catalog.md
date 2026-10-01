@@ -1057,34 +1057,18 @@ can also mean nothing was watching, which is what
 failed exactly one test across eight games). Break the helper deliberately and
 see what goes red before believing a clean run.
 
-### `flash.ts` — the win-celebration convention
-
-`winFlash(from, to, flashTime)`: flash exactly once on a fresh, un-cheated
-unsolved→solved transition. Every game's state spells the flags `completed` and
-`cheated`, so this reads them as a contract. **Only a genuinely different
-celebration keeps its own `flashLength`** — more than one flashing outcome, a
-non-`FLASH_TIME` duration, a condition that is not "became solved", or a
-`completed` that is not a flag (the four move-count games). A
-*differently-named flag* is not one of those, and cannot be: `flash.ts` lists
-every survivor with its reason, and `completion-vocabulary.test.ts` fails the
-build for a re-spelling — in the **engine** as well as the games, because the
-save envelope's flag is part of the same vocabulary.
-
-**What is suppressed is the Solve *command*, not a cheated *board*.** A player
-who uses Solve, unmakes part of it and finishes by hand has won, and gets the
-celebration. Reaching that case needs `completed` recomputed each move rather
-than latched; almost every game latches it, so for them this is exactly the
-older, stricter behavior. Palisade and Separate recompute — the rule came from
-Palisade, which had it right first.
-
 ### `completion-status.ts` — the status bar's completion words
 
-`completionStatus(completed, cheated, rest)`: `COMPLETED!`, `Auto-solved.` or
+`completionStatus(solved, cheated, rest)`: `COMPLETED!`, `Auto-solved.` or
 `Auto-solver used.` (helped, then moved off the solution), then `rest` after a
-space, and nothing at all on an unhelped unfinished board. Pass booleans, since
-"finished" is a flag, a move count or a counter depending on the game. An
-outcome that is not completion ("DEAD!", "FAILED!") is the game's own.
+space, and nothing at all on an unhelped unfinished board. **The midend calls
+it, not a game**: it prefixes the words to whatever `statusbarText` returns,
+from the board's status now and its own record that the solver was used. An
+outcome that is not completion ("DEAD!", "FAILED!") is the game's own phrase.
 `completion-status.test.ts` fails any game string that says the words.
+
+The win flash has no helper any more: its trigger is the midend's and a game
+supplies `solvedFlash` (`rendering.md` § "Animation and flash").
 
 ### `pencil-indicator.ts` — the pencil-mode indicator
 

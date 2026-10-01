@@ -124,8 +124,7 @@ export type NetMove =
   /** Jumble: rotate every unlocked tile a random amount, expanded to an
    * explicit op list so replay is deterministic. No animation. */
   | { type: "jumble"; ops: NetOp[] }
-  /** Solve: transform the current grid into the solution. No animation, and
-   * sets `cheated`. */
+  /** Solve: transform the current grid into the solution. No animation. */
   | { type: "solve"; ops: NetOp[] }
   /** Set the note on one side, named from the tile left of it (`dir` = `R`)
    * or above it (`D`): an absolute set, so re-applying it changes nothing. */
@@ -181,9 +180,6 @@ export interface NetState {
    * {@link SideNote}. A note move copies it; nothing else does. */
   readonly sides: Uint8Array;
 
-  readonly completed: boolean;
-  readonly cheated: boolean;
-
   /** The tile last rotated and which way, for the rotation animation. `dir` is
    * 0 (no animation — a lock, jumble or solve), +1 (`A`), −1 (`C`) or +2 (`F`).
    */
@@ -224,8 +220,6 @@ export function newState(p: NetParams, desc: string): NetState {
     tiles,
     barriers,
     sides: new Uint8Array(w * h * 2),
-    completed: false,
-    cheated: false,
     lastRotateX: 0,
     lastRotateY: 0,
     lastRotateDir: 0,

@@ -224,7 +224,6 @@ describe("map executeMove", () => {
     for (let i = 0; i < p.n; i++)
       if (!state.map.immutable[i]) ops.push({ op: "color", region: i, color: sol[i] });
     const done = mapGame.executeMove(state, { ops });
-    expect(done.completed).toBe(true);
     expect(mapGame.status(done)).toBe("solved");
   });
 
@@ -235,7 +234,7 @@ describe("map executeMove", () => {
     const s = mapGame.executeMove(state, {
       ops: [{ op: "color", region: blank, color: sol[blank] }],
     });
-    expect(s.completed).toBe(false);
+    expect(mapGame.status(s)).toBe("ongoing");
   });
 });
 
@@ -371,7 +370,7 @@ describe("map solve + findMistakes", () => {
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     const done = mapGame.executeMove(state, res.move);
-    expect(done.cheated).toBe(true);
+    expect(mapGame.status(done)).toBe("solved");
     for (let i = 0; i < p.n; i++) expect(done.coloring[i]).toBe(sol[i]);
   });
 

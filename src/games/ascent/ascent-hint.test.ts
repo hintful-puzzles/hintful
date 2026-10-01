@@ -149,7 +149,7 @@ function walk(): NonNullable<typeof WALK> {
   const unfinished: string[] = [];
   for (const board of boards()) {
     let state = board.state;
-    for (let asks = 0; asks < 300 && !state.completed; asks++) {
+    for (let asks = 0; asks < 300 && ascentGame.status(state) !== "solved"; asks++) {
       const plan = ascentPlan(state);
       if (plan.length === 0) break;
       for (const firing of plan) {
@@ -162,7 +162,7 @@ function walk(): NonNullable<typeof WALK> {
           );
       }
     }
-    (state.completed ? finished : unfinished).push(board.label);
+    (ascentGame.status(state) === "solved" ? finished : unfinished).push(board.label);
   }
   WALK = { seen, finished, unfinished };
   return WALK;

@@ -207,8 +207,6 @@ export interface GroupState {
   /** `w`; `dividers[i]` = the element that must be immediately right of `i` for
    * a divider to show there, or -1 for none. Cloned per move. */
   dividers: Int32Array;
-  completed: boolean;
-  cheated: boolean;
 }
 
 export function cloneState(s: GroupState): GroupState {
@@ -221,8 +219,6 @@ export function cloneState(s: GroupState): GroupState {
     immutable: s.immutable, // shared
     sequence: s.sequence.slice(),
     dividers: s.dividers.slice(),
-    completed: s.completed,
-    cheated: s.cheated,
   };
 }
 
@@ -391,8 +387,6 @@ export function newState(p: GroupParams, desc: string): GroupState {
     immutable,
     sequence,
     dividers,
-    completed: false,
-    cheated: false,
   };
 }
 
@@ -502,8 +496,10 @@ export function moveInSequence(
 
 // --- status / text ---------------------------------------------------------
 
+/** Solved when the table is complete and a group: an empty cell fails the
+ * Latin check, so `checkErrors` finding nothing means both. */
 export function status(s: GroupState): GameStatus {
-  return s.completed ? "solved" : "ongoing";
+  return checkErrors(s) ? "ongoing" : "solved";
 }
 
 /** ASCII grid of display chars (`.` for blank), matching `game_text_format`. */

@@ -370,8 +370,6 @@ export interface SpokesState extends SpokesBoard {
   /** Clues; never mutated after `newState`, so clones share the one array. */
   readonly numbers: Int8Array;
   spokes: Uint16Array;
-  completed: boolean;
-  cheated: boolean;
 }
 
 /**
@@ -429,7 +427,7 @@ export function newState(p: SpokesParams, desc: string): SpokesState {
     }
   }
 
-  return { ...b, params: p, completed: false, cheated: false };
+  return { ...b, params: p };
 }
 
 /** A new state sharing the (immutable) clues and copying the spokes. */

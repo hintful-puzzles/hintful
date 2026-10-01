@@ -534,10 +534,8 @@ describe("netslide solve and save", () => {
     const { me, statusBar } = driven("5x5b1#solve-seed");
     expect(statusBar()).toContain("Active:");
     expect(me.solve()).toBeNull();
-    // Upstream reports moves-since-auto-solve rather than a completion once the
-    // solver has been used.
-    expect(statusBar()).toContain("Moves since auto-solve:");
-    expect(statusBar()).toContain("Active: 25/25");
+    // The engine says the solver finished it; the Solve move counts as a move.
+    expect(statusBar()).toMatch(/^Auto-solved\. Moves: 1 Active: 25\/25$/);
   });
 
   it("solves a game built from a descriptive id, which carries no aux", () => {
@@ -634,16 +632,15 @@ describe("netslide rendering", () => {
     expect(tileOrigins(settled).has(b + 5 * ts)).toBe(false);
   });
 
-  it("celebrates a real completion, but not one the solver handed over", () => {
+  it("judges the board solved from its tiles, and flashes for long enough to sweep it", () => {
     const { desc, aux } = newDesc(EASY_5x5, randomNew("flash"));
     const s = newState(EASY_5x5, desc);
     const ui = newUi(s);
+    expect(netslideGame.status(s)).toBe("ongoing");
 
-    const wonByPlaying = { ...s, tiles: hexGrid(aux), completed: 9, moveCount: 9 };
-    expect(netslideGame.flashLength?.(s, wonByPlaying, 1, ui)).toBeGreaterThan(0);
-
-    const wonBySolving = { ...wonByPlaying, cheated: true };
-    expect(netslideGame.flashLength?.(s, wonBySolving, 1, ui)).toBe(0);
+    const won = { ...s, tiles: hexGrid(aux), moveCount: 9 };
+    expect(netslideGame.status(won)).toBe("solved");
+    expect(netslideGame.solvedFlash?.(won, ui)).toBeGreaterThan(0);
   });
 
   it("paints the flash outward from the center, a ring at a time", () => {

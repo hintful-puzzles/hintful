@@ -88,8 +88,6 @@ export interface MinesState {
   h: number;
   n: number;
   dead: boolean;
-  completed: boolean;
-  cheated: boolean;
   /** Shared by reference across every clone. */
   layout: MineLayout;
   /** Where the first click landed, as this state knows it (see `openSquare`
@@ -324,6 +322,17 @@ export function decodeDesc(p: MinesParams, desc: string): DecodedDesc {
   if (masked || desc[i] === "u") i++;
   layout.mines = decodeLayoutBitmap(desc.slice(i), p.w * p.h, masked);
   return { layout, openXY };
+}
+
+/** Won: the layout exists, the player is alive, and every square still
+ * covered (flagged or not) is a mine, so every safe square is open. */
+export function isWon(s: MinesState): boolean {
+  const mines = s.layout.mines;
+  if (!mines || s.dead) return false;
+  for (let i = 0; i < s.w * s.h; i++) {
+    if (s.grid[i] < 0 && !mines[i]) return false;
+  }
+  return true;
 }
 
 /** The next move's state: its own `grid`, the same shared `layout`. */

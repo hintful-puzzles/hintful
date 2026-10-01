@@ -179,8 +179,7 @@ describe("towers moves", () => {
         pencil: false,
       });
     }
-    expect(cur.completed).toBe(false);
-    const before = cur;
+    expect(towersGame.status(cur)).toBe("ongoing");
     const last = empties[empties.length - 1];
     cur = towersGame.executeMove(cur, {
       type: "set",
@@ -189,8 +188,8 @@ describe("towers moves", () => {
       n: sol[last],
       pencil: false,
     });
-    expect(cur.completed).toBe(true);
-    expect(towersGame.flashLength?.(before, cur, 1, newUi(cur))).toBeGreaterThan(0);
+    expect(towersGame.status(cur)).toBe("solved");
+    expect(towersGame.solvedFlash?.(cur, newUi(cur))).toBeGreaterThan(0);
   });
 
   it("pencil marks toggle and pencilAll fills empties", () => {
@@ -365,7 +364,6 @@ describe("towers Solve via Midend", () => {
     expect(me.newGameFromId("6dh#towers-solve")).toBeNull();
     expect(me.solve()).toBeNull();
     const solved = (me as unknown as { state: TowersState }).state;
-    expect(solved.completed).toBe(true);
     expect(towersGame.status(solved)).toBe("solved");
   });
 

@@ -97,7 +97,7 @@ function stateFromRows(rows: string[]): SokobanState {
       }
     }
   }
-  return { w, h, grid, px, py, completed: false };
+  return { w, h, grid, px, py };
 }
 
 const move = (dx: number, dy: number): SokobanMove => ({ type: "move", dx, dy });
@@ -199,8 +199,15 @@ describe("Sokoban executeMove", () => {
     expect(after.py).toBe(1);
     expect(after.grid[1 * 5 + 2]).toBe(SPACE); // barrel gone from here
     expect(after.grid[1 * 5 + 3]).toBe(BARRELTARGET); // now filled
-    expect(after.completed).toBe(true);
+    expect(status(s)).toBe("ongoing");
     expect(status(after)).toBe("solved");
+  });
+
+  it("is solved only while the barrel sits on its target", () => {
+    // The barrel starts on its target; pushing it off un-solves the level.
+    const s = stateFromRows(["wwwwww", "wufssw", "wssssw", "wwwwww"]);
+    expect(status(s)).toBe("solved");
+    expect(status(executeMove(s, move(1, 0)))).toBe("ongoing");
   });
 
   it("fills an ordinary pit — the barrel is consumed and the pit becomes space", () => {
@@ -225,7 +232,7 @@ describe("Sokoban executeMove", () => {
     const after = executeMove(s, move(1, 0));
     expect(after.grid[1 * 7 + 3]).toBe(BARRELTARGET); // filled the target
     expect(after.grid[1 * 7 + 5]).toBe(BARREL); // spare still free
-    expect(after.completed).toBe(true);
+    expect(status(after)).toBe("solved");
   });
 
   it("throws on an illegal move reaching executeMove", () => {

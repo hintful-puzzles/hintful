@@ -90,7 +90,6 @@ import {
   solveKeen,
 } from "./solver.ts";
 import {
-  checkErrors,
   cloneState,
   DIFF_EXTREME,
   DIFF_NAMES,
@@ -232,7 +231,6 @@ function executeMove(state: KeenState, move: KeenMove): KeenState {
             if (k !== move.y) next.pencil[k * w + move.x] &= bit;
           }
         }
-        if (!next.completed && !checkErrors(next)) next.completed = true;
       }
       return next;
     }
@@ -246,8 +244,6 @@ function executeMove(state: KeenState, move: KeenMove): KeenState {
         next.grid[i] = move.grid[i];
         next.pencil[i] = 0;
       }
-      next.completed = true;
-      next.cheated = true;
       return next;
     }
     default:

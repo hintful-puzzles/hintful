@@ -11,7 +11,6 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import { completionStatus } from "../../engine/completion-status.ts";
 import type { Game, SolveResult } from "../../engine/game.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { click } from "../../engine/hint-gesture.ts";
@@ -103,9 +102,7 @@ function executeMove(s: NetslideState, m: NetslideMove): NetslideState {
     return {
       ...s,
       tiles: Uint8Array.from(m.tiles),
-      cheated: true,
-      completed: 1,
-      moveCount: 1,
+      moveCount: s.moveCount + 1,
       // Upstream leaves the previous move's line here, so Solve animates a
       // phantom slide of the finished grid; clearing it lets Solve simply show
       // the answer.
@@ -123,12 +120,10 @@ function executeMove(s: NetslideState, m: NetslideMove): NetslideState {
   if (m.axis === "col") slideCol(s.w, s.h, tiles, m.dir, m.index);
   else slideRow(s.w, tiles, m.dir, m.index);
 
-  const moveCount = s.moveCount + 1;
   return {
     ...s,
     tiles,
-    moveCount,
-    completed: s.completed || (isComplete(s, tiles) ? moveCount : 0),
+    moveCount: s.moveCount + 1,
     lastMoveRow: m.axis === "col" ? -1 : m.index,
     lastMoveCol: m.axis === "col" ? m.index : -1,
     lastMoveDir: m.dir,
@@ -299,8 +294,7 @@ export const netslideGame: Game<
   interpretMove,
   executeMove,
 
-  // The midend upgrades this to "solved-with-help" when Solve was used.
-  status: (s): GameStatus => (s.completed ? "solved" : "ongoing"),
+  status: (s): GameStatus => (isComplete(s) ? "solved" : "ongoing"),
   notApplicable: {
     findMistakes:
       "Every arrangement of the tiles is a step on the way to the answer, so no move can be wrong, only longer.",
@@ -335,13 +329,7 @@ export const netslideGame: Game<
 
   statusbarText: (s) => {
     const active = computeActive(s, -1, -1).filter((a) => a !== 0).length;
-    let text = s.cheated
-      ? `Moves since auto-solve: ${s.moveCount - s.completed}`
-      : completionStatus(
-          s.completed > 0,
-          false,
-          `Moves: ${s.completed || s.moveCount}`,
-        );
+    let text = `Moves: ${s.moveCount}`;
     if (s.movetarget) text += ` (target ${s.movetarget})`;
     return `${text} Active: ${active}/${s.w * s.h}`;
   },
@@ -354,8 +342,7 @@ export const netslideGame: Game<
 
   animLength: () => ANIM_TIME,
 
-  flashLength: (a, b) => {
-    if (a.completed || !b.completed || a.cheated || b.cheated) return 0;
+  solvedFlash: (b) => {
     // The flash ripples outward from the center, so it must run long enough to
     // reach the furthest corner and then finish that tile's four frames.
     const reach = Math.max(b.cx + 1, b.cy + 1, b.w - b.cx, b.h - b.cy);

@@ -101,8 +101,6 @@ export interface MagnetsState {
   readonly flags: Int32Array;
   /** `2·(w+h)` clue-gray toggles, cloned per move. */
   readonly countsDone: Uint8Array;
-  readonly completed: boolean;
-  readonly cheated: boolean;
 }
 
 export type MagnetsMove =
@@ -327,8 +325,6 @@ export function newState(p: MagnetsParams, desc: string): MagnetsState {
     grid: r.grid,
     flags: r.flags,
     countsDone: new Uint8Array(2 * (w + h)),
-    completed: false,
-    cheated: false,
   };
 }
 
@@ -492,7 +488,6 @@ export function executeMove(state: MagnetsState, move: MagnetsMove): MagnetsStat
   const { w, wh, grid, flags, common } = next;
   const { dominoes } = common;
 
-  let cheated = next.cheated;
   switch (move.type) {
     case "set":
     case "flag": {
@@ -531,7 +526,6 @@ export function executeMove(state: MagnetsState, move: MagnetsMove): MagnetsStat
       break;
     }
     case "solve": {
-      cheated = true;
       for (let i = 0; i < wh; i++) {
         if (dominoes[i] === i) continue;
         grid[i] = move.solution[i];
@@ -544,12 +538,19 @@ export function executeMove(state: MagnetsState, move: MagnetsMove): MagnetsStat
       return assertNever(move, "magnets: executeMove");
   }
 
-  const complete = checkCompletion(next) === 1;
-  return { ...next, cheated, completed: next.completed || complete };
+  // Refreshes the live GS_ERROR marks the redraw reads.
+  checkCompletion(next);
+  return next;
+}
+
+/** Solved: every domino set, every clue met, no like poles touching. Checked
+ * on a copy of the flags, which `checkCompletion` writes its error marks to. */
+export function isSolved(state: MagnetsState): boolean {
+  return checkCompletion({ ...state, flags: state.flags.slice() }) === 1;
 }
 
 export function status(state: MagnetsState): GameStatus {
-  return state.completed ? "solved" : "ongoing";
+  return isSolved(state) ? "solved" : "ongoing";
 }
 
 // --- text format (upstream game_text_format) ------------------------------

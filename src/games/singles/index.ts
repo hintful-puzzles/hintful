@@ -12,7 +12,6 @@
 
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type HintResult,
@@ -60,6 +59,7 @@ import {
   OP_BLACK,
   type SinglesReason,
   solveSpecific,
+  status,
 } from "./solver.ts";
 import {
   type CellValue,
@@ -77,7 +77,6 @@ import {
   type SinglesParams,
   type SinglesState,
   type SinglesUi,
-  status,
   textFormat,
   validateDesc,
 } from "./state.ts";
@@ -106,7 +105,9 @@ function changedState(
   oldState: SinglesState | null,
   newSt: SinglesState,
 ): void {
-  if (oldState && !oldState.completed && newSt.completed) ui.cursor.visible = false;
+  if (oldState && status(oldState) !== "solved" && status(newSt) === "solved") {
+    ui.cursor.visible = false;
+  }
 }
 
 /** Black out or circle square `{ x, y }`; either clears a square that is
@@ -174,8 +175,7 @@ function executeMove(state: SinglesState, move: SinglesMove): SinglesState {
     else if (value === "circle") next.flags[i] |= F_CIRCLE;
     else if (value !== "empty") assertNever(value, `singles: executeMove (${x},${y})`);
   }
-  if (move.solve) next.cheated = true;
-  if (checkComplete(next, CC_MARK_ERRORS)) next.completed = true;
+  checkComplete(next, CC_MARK_ERRORS);
   return next;
 }
 
@@ -542,7 +542,7 @@ export const singlesGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength: (from, to) => winFlash(from, to, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(singlesGame);

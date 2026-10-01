@@ -23,7 +23,6 @@ import {
 } from "../../engine/color/palette.ts";
 import { groupDiagonal } from "../../engine/color/palette-games.ts";
 import { glyphFont } from "../../engine/draw.ts";
-import { winFlash } from "../../engine/flash.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
@@ -590,6 +589,6 @@ export function redraw(
   repaintPencilIndicator(dr, ds, ui.pencilMode, PENCIL_BOX(w, ts), PENCIL_STYLE);
 }
 
-export function flashLength(a: GroupState, b: GroupState): number {
-  return winFlash(a, b, FLASH_TIME);
+export function solvedFlash(): number {
+  return FLASH_TIME;
 }

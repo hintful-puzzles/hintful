@@ -252,7 +252,6 @@ describe("moves", () => {
         value,
       });
     }
-    expect(cur.completed).toBe(true);
     expect(status(cur)).toBe("solved");
     expect(isSolvedGrid(cur)).toBe(true);
   });
@@ -289,15 +288,13 @@ describe("moves", () => {
     expect(mistakes.some((m) => m.x === x && m.y === y)).toBe(true);
   });
 
-  it("a solve move fills and marks the board cheated+completed", () => {
+  it("a solve move fills the board, which is then solved", () => {
     const rng = randomNew("unruly-solvemove-seed");
     const { desc } = newDesc(p, rng);
     const state = newState(p, desc);
     const sol = solveToString(state);
     if (!sol) throw new Error("expected solvable board");
     const done = executeMove(state, { type: "solve", grid: sol });
-    expect(done.completed).toBe(true);
-    expect(done.cheated).toBe(true);
     expect(status(done)).toBe("solved");
   });
 });

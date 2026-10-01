@@ -676,8 +676,6 @@ describe("moves", () => {
         dir: dir as 4 | 8 | 16 | 32,
       });
     }
-    expect(st.completed).toBe(true);
-    expect(st.cheated).toBe(false);
     expect(romeGame.status(st)).toBe<GameStatus>("solved");
   });
 });
@@ -785,10 +783,6 @@ describe("midend integration", () => {
     expect(status()).toBe("ongoing");
     expect(m.solve()).toBeNull();
     expect(status()).toBe("solved-with-help");
-    // A solver fill completes the board but never celebrates.
-    const after = stateOf(m);
-    expect(after.completed).toBe(true);
-    expect(after.cheated).toBe(true);
   });
 
   it("round-trips a save, pencil marks included", () => {

@@ -48,7 +48,10 @@ describe("pattern hint — plan correctness", () => {
       expect(res.ok, `${seed}: expected a plan from the empty board`).toBe(true);
       if (!res.ok) continue;
       for (const step of res.steps) state = patternGame.executeMove(state, step.move);
-      expect(state.completed, `${seed}: plan did not complete the board`).toBe(true);
+      expect(
+        patternGame.status(state),
+        `${seed}: plan did not complete the board`,
+      ).toBe("solved");
     }
   });
 

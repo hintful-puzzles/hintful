@@ -200,8 +200,6 @@ export interface InertiaState {
    * slide animation). */
   readonly distanceMoved: number;
   readonly dead: boolean;
-  /** The auto-solver has been used on this game. */
-  readonly cheated: boolean;
   /** The installed route, as a direction sequence, or null. Frozen and shared
    * by reference across clones — nothing ever mutates it. */
   readonly route: readonly number[] | null;
@@ -342,7 +340,6 @@ export function newState(p: InertiaParams, desc: string): InertiaState {
     gems,
     distanceMoved: 0,
     dead: false,
-    cheated: false,
     route: null,
     routePos: 0,
   };

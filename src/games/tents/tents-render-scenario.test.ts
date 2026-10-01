@@ -95,7 +95,7 @@ describe("tents render scenarios", () => {
       const { id, state: start } = board(p, `trs-${kind}-${s}`);
       let state = start;
       const moves: TentsMove[] = [];
-      for (let asks = 0; asks < 100 && !state.completed; asks++) {
+      for (let asks = 0; asks < 100 && tentsGame.status(state) !== "solved"; asks++) {
         const { plan } = tentsPlan(state);
         if (plan.length === 0) break;
         for (const { firing, steps } of plan) {

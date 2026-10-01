@@ -51,6 +51,7 @@ import {
   isNear,
   isNumberEdge,
   isObstacle,
+  isSolved,
   MODE_HEXAGON,
   MODE_HONEYCOMB,
   movementForMode,
@@ -287,8 +288,8 @@ export function changedState(
   if (ui.held >= 0 && ui.select >= 0 && newState.grid[ui.held] === NUMBER_EMPTY) {
     uiBacktrack(ui, newState);
   }
-  const oldCompleted = oldState ? oldState.completed : false;
-  if (!oldCompleted && newState.completed) {
+  const oldCompleted = oldState ? isSolved(oldState) : false;
+  if (!oldCompleted && isSolved(newState)) {
     uiClear(ui);
   } else {
     if (ui.held >= 0) ui.select = newState.grid[ui.held];

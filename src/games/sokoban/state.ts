@@ -114,7 +114,6 @@ export interface SokobanState {
   readonly grid: Uint8Array;
   readonly px: number;
   readonly py: number;
-  readonly completed: boolean;
 }
 
 /** Sokoban has no persistent UI state (upstream `new_ui` returns NULL). */
@@ -176,7 +175,7 @@ export function newState(p: SokobanParams, desc: string): SokobanState {
   }
   if (cells.length !== p.w * p.h) throw new Error("sokoban: desc area mismatch");
   if (px === -1) throw new Error("sokoban: no player in desc");
-  return { w: p.w, h: p.h, grid: Uint8Array.from(cells), px, py, completed: false };
+  return { w: p.w, h: p.h, grid: Uint8Array.from(cells), px, py };
 }
 
 // --- move classification ----------------------------------------------
@@ -225,6 +224,18 @@ export function moveType(state: SokobanState, dx: number, dy: number): MoveKind 
 
 // --- status -----------------------------------------------------------
 
+/**
+ * Solved when the board cannot become any *more* complete: either no barrel is
+ * off a target, or there is nowhere left to put one (no free target, no pit,
+ * no deep pit). This handles spare barrels and levels with pits correctly.
+ */
 export function status(s: SokobanState): GameStatus {
-  return s.completed ? "solved" : "ongoing";
+  let freeBarrels = false;
+  let freeTargets = false;
+  for (const v of s.grid) {
+    if (isBarrel(v) && !isOnTarget(v)) freeBarrels = true;
+    if (v === DEEP_PIT || v === PIT || (!isBarrel(v) && isOnTarget(v)))
+      freeTargets = true;
+  }
+  return !freeBarrels || !freeTargets ? "solved" : "ongoing";
 }

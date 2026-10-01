@@ -52,7 +52,7 @@ describe("plan completeness", () => {
         let state = freshState(params, `${seed}-${name}`);
         const steps = planSteps(state);
         for (const step of steps) state = lightupGame.executeMove(state, step.move);
-        expect(state.completed).toBe(true);
+        expect(lightupGame.status(state)).toBe("solved");
       }
     });
   }
@@ -255,7 +255,7 @@ describe("refusals", () => {
       if (!res) throw new Error("no hint()");
       if (!res.ok) {
         expect(res.error).toMatch(/trial and error/);
-        expect(state.completed).toBe(false);
+        expect(lightupGame.status(state)).toBe("ongoing");
         return;
       }
       state = lightupGame.executeMove(state, res.steps[0].move);
@@ -276,7 +276,7 @@ describe("hintKeepTrack", () => {
           return { state, step };
         }
         state = lightupGame.executeMove(state, step.move);
-        if (state.completed) break;
+        if (lightupGame.status(state) === "solved") break;
       }
     }
     throw new Error("no multi-cell step found in scanned seeds");

@@ -634,58 +634,45 @@ input is reachable in play. Exemplar:
 
 ## Animation and flash
 
-**The contract:** `animLength(a, b, dir, ui)` and `flashLength(a, b, dir,
-ui)` return durations; the midend runs the timer and calls `redraw` with
+**The contract:** `animLength(a, b, dir, ui)` and the flash hooks return
+durations; the midend runs the timer and calls `redraw` with
 `animTime`/`flashTime`; the game interpolates. A non-animated transition
 paints once; animation frames — including the first — are driven by the
 timer (`ts-engine` § "The midend repaints on every transition, rebuilds the
 draw state for a new tile size, and lays the ground under a fresh one").
 
-**Most win flashes are one shared line.**
-[`flash.ts`](../../src/engine/flash.ts) (`winFlash`) encodes the convention
-— flash exactly `flashTime` when a **player move** brings the board into a
-solved state. Every game's state spells the two flags `completed` and `cheated`
-(`ts-engine` § "One completion vocabulary across games"), so `winFlash` reads
-them as a contract, and **a differently-spelled flag is not a reason to write
-your own `flashLength`** — it is not a difference a player can see.
-
-**What is suppressed is the Solve *command*, not a cheated *board*.** Solve is
-exactly the move where `cheated` flips false→true. A player who uses Solve,
-unmarks some cells and then finishes by hand has won, and gets the celebration;
-the cheat record lives in the status bar and the midend's "solved with help".
-That rule came from Palisade, which had it right first and reported the bug;
-`winFlash` adopted it rather than the reverse.
-
-Reaching that case needs `completed` **recomputed** each move rather than
-latched once. Almost every game latches it today, so for them this behaves
-exactly as the older, stricter condition did; Palisade and Separate recompute.
-Un-latching the rest changes `status()`, and with it the end-of-game dialog and
-the clock, so it is per-game work rather than a sweep.
-
-Call it:
+**When the win flash plays is the engine's; how long is the game's.** The
+midend flashes on a forward move, other than the Solve command, that leaves the
+board's status solved when it was not (`ts-engine` § "The engine derives a
+board's history from its position"). The game supplies only the duration:
 
 ```ts
-flashLength: (a, b) => winFlash(a, b, FLASH_TIME),
+solvedFlash: () => FLASH_TIME,
 ```
 
-A **genuinely bespoke flash condition** does keep its own `flashLength`, and
-`flash.ts` lists every survivor with its reason so the list cannot quietly grow.
-The four shapes that qualify:
+A duration that sweeps the board (Ascent, Net, Netslide, Flood, Flip) computes
+it from the solved state `solvedFlash` is handed; one that is a preference
+(Map) reads the `Ui`. Durations differ because each game's redraw paces its own
+flash frames, which is a fact about that game's look.
 
-- **more than one flashing outcome** — Samegame (won *and* stuck), Flood (won
-  *and* lost), Inertia (died *and* collected the last gem), Blackbox (a reveal,
-  which is not a win);
-- **a duration that is not the shared one** — Ascent, Net and Netslide scale
-  theirs by the board so the animation sweeps it;
-- **a condition that is not "became solved"** — Mosaic reads its own clue
-  counters, Map takes its duration off the `Ui`, Pegs and Sokoban have no cheat
-  flag to test;
-- **`completed` is not a flag** — Fifteen, Sixteen, Twiddle and Slide hold the
-  move count they were solved at, frozen so the status bar stops counting.
+**What is suppressed is the Solve *command*, not a cheated *board*.** A player
+who uses Solve, unmakes part of it and then finishes by hand has won, and gets
+the celebration; the record that the solver was used is the midend's, in the
+status bar and "solved with help". That rule came from Palisade, which had it
+right first. And because the status is the board's *now*, a solved board the
+player breaks and solves again flashes again; undoing a break does not.
 
-Dominosa is the near-miss worth knowing: its *condition* is the convention, so
-it calls `winFlash` and then does its one extra thing (clearing the hovered-pair
-highlight) with the answer, rather than restating the condition to get there.
+**`flashLength(a, b, dir, ui)` is for a flash the status does not show**: a
+death (Inertia, Mines), a board with no move left (Same Game), a loss (Flood)
+or a reveal that flashes on Solve too (Black Box). The midend asks it first on
+every transition and a nonzero answer replaces the win flash, so it returns 0
+for a win. Where the redraw picks the flash's kind from a `Ui` field that
+`flashLength` sets, a win must still select the win kind.
+
+Dominosa's flash used to clear its hovered-pair highlight as a side effect;
+that belongs to `changedState` on the transition into solved, which is where a
+game reacts to a status change (ABCD, Light Up, Magnets, Signpost and Singles
+hide their cursor there).
 
 **Flash isolation is a midend concern the games inherited the hard way**:
 Flip's solve celebration once fired on every animated move because the midend

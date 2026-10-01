@@ -27,7 +27,6 @@ import {
 import { runLatinCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type HintResult,
@@ -126,7 +125,6 @@ import {
   OPTION_ODD,
   OPTION_SUB,
   OPTIONSMASK,
-  STATUS_COMPLETE,
   status,
   validateDesc,
   validateParams,
@@ -272,11 +270,9 @@ function executeMove(state: MathraxState, move: MathraxMove): MathraxState {
           }
         }
       }
-      // Upstream recomputes the live error flags (and the completion test) after
-      // *both* a real entry and a pencil change.
-      if (mathraxValidate(o, next.grid, next.clues, next.flags) === STATUS_COMPLETE) {
-        next.completed = true;
-      }
+      // Upstream recomputes the live error flags after *both* a real entry and
+      // a pencil change.
+      mathraxValidate(o, next.grid, next.clues, next.flags);
       return next;
     }
     case "pencilAll":
@@ -291,9 +287,7 @@ function executeMove(state: MathraxState, move: MathraxMove): MathraxState {
           next.pencil[i] = 0;
         }
       }
-      next.completed =
-        mathraxValidate(o, next.grid, next.clues, next.flags) === STATUS_COMPLETE;
-      next.cheated = next.completed;
+      mathraxValidate(o, next.grid, next.clues, next.flags);
       return next;
     }
     default:
@@ -641,7 +635,7 @@ export const mathraxGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength: (from, to) => winFlash(from, to, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(mathraxGame);

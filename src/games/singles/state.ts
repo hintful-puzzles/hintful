@@ -59,8 +59,6 @@ export interface SinglesState {
   n: number;
   /** max(w, h) — the number alphabet size. */
   o: number;
-  completed: boolean;
-  cheated: boolean;
   impossible: boolean;
   /** Immutable per-cell numbers, shared by reference across states. */
   nums: Int8Array;
@@ -130,8 +128,6 @@ export function makeState(w: number, h: number, nums: Int8Array): SinglesState {
     h,
     n: w * h,
     o: Math.max(w, h),
-    completed: false,
-    cheated: false,
     impossible: false,
     nums,
     flags: new Uint8Array(w * h),
@@ -175,10 +171,6 @@ export function encodeDesc(s: SinglesState): string {
   let out = "";
   for (let i = 0; i < s.n; i++) out += n2c(s.nums[i]);
   return out;
-}
-
-export function status(s: SinglesState): "solved" | "ongoing" {
-  return s.completed ? "solved" : "ongoing";
 }
 
 // --- text format (upstream game_text_format) -------------------------------

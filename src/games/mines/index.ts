@@ -21,7 +21,6 @@ import {
 } from "../../engine/color/colors.ts";
 import { ERROR, ERROR_WASH, INK, PAPER } from "../../engine/color/palette.ts";
 import { minesLowlight, minesUnclearedFace } from "../../engine/color/palette-games.ts";
-import { completionStatus } from "../../engine/completion-status.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import {
   type Game,
@@ -94,6 +93,7 @@ import {
   encodeParams,
   encodeUi,
   FLAG,
+  isWon,
   KILLED,
   MINE,
   type MineOp,
@@ -177,9 +177,9 @@ function openSquare(state: MinesState, x: number, y: number): void {
     if (grid[i] < 0) ncovered++;
     if (mines[i]) nmines++;
   }
+  // A win flags the mines left covered, as upstream does.
   if (ncovered === nmines) {
     for (let i = 0; i < w * h; i++) if (grid[i] < 0) grid[i] = FLAG;
-    state.completed = true;
   }
 }
 
@@ -336,8 +336,6 @@ export const minesGame: Game<
       h: p.h,
       n: p.n,
       dead: false,
-      completed: false,
-      cheated: false,
       layout,
       clickedAt: null,
       grid: new Int8Array(p.w * p.h).fill(COVERED),
@@ -369,7 +367,7 @@ export const minesGame: Game<
     button: number,
   ): MinesMove | null | UiUpdate {
     const { w, h } = s;
-    if (s.dead || s.completed) return null; // no further moves permitted
+    if (s.dead || isWon(s)) return null; // no further moves permitted
 
     const tileSize = ds.tileSize;
     const border = borderFor(tileSize);
@@ -429,9 +427,8 @@ export const minesGame: Game<
               : around(w, h, x, y).filter((q) => mines[q.y * w + q.x]).length;
           }
         }
-        // The board is finished, and `cheated` makes it "solved-with-help".
-        // Upstream never set this, so its Solve left the game "ongoing".
-        ret.completed = true;
+        // The board is now won, which the midend reports as solved-with-help.
+        // Upstream's Solve left the game "ongoing".
       } else {
         // A full corrections grid, standard-Minesweeper style (mines.c:2788).
         for (let i = 0; i < w * h; i++) {
@@ -442,7 +439,6 @@ export const minesGame: Game<
           }
         }
       }
-      ret.cheated = true;
       return ret;
     }
     if (m.type !== "ops") return assertNever(m, "mines: executeMove");
@@ -494,7 +490,7 @@ export const minesGame: Game<
     // Death is NOT a loss (the player will undo); only a genuine win is
     // reported, and the midend upgrades it to "solved-with-help" if the Solve
     // button was used (mines.c game_status:3322).
-    return s.completed ? "solved" : "ongoing";
+    return isWon(s) ? "solved" : "ongoing";
   },
 
   notApplicable: {
@@ -520,12 +516,11 @@ export const minesGame: Game<
     }
     if (!s.layout.mines) mines = s.layout.n;
 
-    let sb: string;
+    // A win's words are the engine's.
+    let sb = "";
     if (s.dead) {
       sb = "DEAD!";
-    } else if (s.completed) {
-      sb = completionStatus(true, s.cheated);
-    } else {
+    } else if (!isWon(s)) {
       sb = `Marked: ${markers} / ${mines}`;
       const safeClosed = closed - mines;
       if (safeClosed > 0 && safeClosed <= 9) {
@@ -535,7 +530,7 @@ export const minesGame: Game<
             : ` (${safeClosed} safe squares remain)`;
       }
     }
-    if (ui.deaths) sb += `  Deaths: ${ui.deaths}`;
+    if (ui.deaths) sb = sb ? `${sb}  Deaths: ${ui.deaths}` : `Deaths: ${ui.deaths}`;
     return sb;
   },
 
@@ -558,19 +553,18 @@ export const minesGame: Game<
     return out;
   },
 
+  /** The death flash: a death is not a status, so the engine cannot see it. */
   flashLength(a: MinesState, b: MinesState, dir: number, ui: MinesUi): number {
-    if (a.cheated || b.cheated) return 0;
-    if (dir > 0 && !a.dead && !a.completed) {
-      if (b.dead) {
-        ui.flashIsDeath = true;
-        return 3 * FLASH_FRAME;
-      }
-      if (b.completed) {
-        ui.flashIsDeath = false;
-        return 2 * FLASH_FRAME;
-      }
+    if (dir > 0 && !a.dead && b.dead) {
+      ui.flashIsDeath = true;
+      return 3 * FLASH_FRAME;
     }
     return 0;
+  },
+
+  solvedFlash(_s: MinesState, ui: MinesUi): number {
+    ui.flashIsDeath = false;
+    return 2 * FLASH_FRAME;
   },
 
   colors(defaultBackground: Color): Color[] {

@@ -88,7 +88,7 @@ describe("hint", () => {
       expect(step.explanation.length).toBeGreaterThan(0);
       cur = fillingGame.executeMove(cur, step.move);
     }
-    expect(cur.completed).toBe(true);
+    expect(fillingGame.status(cur)).toBe("solved");
   });
 
   it("never shades a target cell in its own area", () => {

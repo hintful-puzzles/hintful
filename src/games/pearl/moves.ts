@@ -9,6 +9,7 @@
  */
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
 import { Dsf } from "../../engine/dsf.ts";
+import type { GameStatus } from "../../engine/types.ts";
 import { pearlSolve } from "./solver.ts";
 import {
   BLANK,
@@ -178,7 +179,7 @@ function checkCompletion(state: PearlState): CompletionResult {
   const { w, h, lines, clues } = state;
   const errors = new Uint8Array(w * h);
   let hadError = false;
-  let completed = state.completed;
+  let completed = false;
 
   const error = (x: number, y: number, e: number): void => {
     hadError = true;
@@ -312,13 +313,11 @@ export function executeMove(state: PearlState, move: PearlMove): PearlState {
   const { w, h } = state;
   const lines = state.lines.slice();
   const marks = state.marks.slice();
-  let cheated = state.cheated;
 
   for (const op of move.ops) {
-    if (op.kind === "solve") {
-      cheated = true;
-      continue;
-    }
+    // Labels the Solve command's move; that the solver was used is the
+    // midend's record, so the label changes nothing on the board.
+    if (op.kind === "solve") continue;
     if (op.kind === "hint") {
       pearlSolve(w, h, state.clues, lines, DIFF_COUNT, true);
       for (let n = 0; n < w * h; n++) marks[n] &= ~lines[n];
@@ -341,8 +340,14 @@ export function executeMove(state: PearlState, move: PearlMove): PearlState {
     if (lines[idx] & l && marks[idx] & l) throw new Error("pearl: line over mark");
   }
 
-  const next = { ...state, lines, marks, cheated };
+  const next = { ...state, lines, marks };
   const check = checkCompletion(next);
   if (!check.valid) throw new Error("pearl: invalid move");
-  return { ...next, completed: check.completed, errors: check.errors };
+  return { ...next, errors: check.errors };
+}
+
+/** Solved: one loop, through every clue, contradicting none. */
+export function status(state: PearlState): GameStatus {
+  const check = checkCompletion(state);
+  return check.valid && check.completed ? "solved" : "ongoing";
 }

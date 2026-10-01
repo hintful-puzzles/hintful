@@ -22,7 +22,6 @@ import {
   borderStepEdge,
   type ForcedBorderEdge,
 } from "../../engine/border-grid-hint.ts";
-import { winFlash } from "../../engine/flash.ts";
 import type {
   Game,
   HintResult,
@@ -296,7 +295,7 @@ export const palisadeGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength: (a, b) => winFlash(a, b, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(palisadeGame);

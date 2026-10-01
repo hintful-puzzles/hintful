@@ -18,7 +18,6 @@ import {
   type Mark,
   refreshCandidateHintStep,
 } from "../../engine/candidate-hint.ts";
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type HintResult,
@@ -102,7 +101,6 @@ import {
   snapDirection,
   status,
   textFormat,
-  validateBoard,
   validateDesc,
   validateParams,
 } from "./state.ts";
@@ -291,9 +289,6 @@ function executeMove(state: CrossingState, move: CrossingMove): CrossingState {
     for (let i = 0; i < w * h; i++) {
       if (!walls[i]) next.grid[i] = move.grid[i];
     }
-    next.completed = validateBoard(next.puzzle, next.grid).status === "valid";
-    // Solved with help: the win flash must not fire (docs/games/solver-and-generator.md § "Solve and the generator's aux").
-    next.cheated = true;
     return next;
   }
 
@@ -303,7 +298,6 @@ function executeMove(state: CrossingState, move: CrossingMove): CrossingState {
     if (!run || num === undefined || num.length !== run.cells.length)
       throw new Error("crossing: cannot place that number in that run");
     for (let k = 0; k < run.cells.length; k++) next.grid[run.cells[k]] = num[k];
-    if (validateBoard(next.puzzle, next.grid).status === "valid") next.completed = true;
     return next;
   }
 
@@ -337,8 +331,6 @@ function executeMove(state: CrossingState, move: CrossingMove): CrossingState {
   } else {
     next.pencil[i] = move.digit === null ? 0 : next.pencil[i] ^ (1 << (move.digit - 1));
   }
-
-  if (validateBoard(next.puzzle, next.grid).status === "valid") next.completed = true;
   return next;
 }
 
@@ -787,7 +779,7 @@ export const crossingGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength: (from, to) => winFlash(from, to, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(crossingGame);

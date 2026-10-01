@@ -312,6 +312,23 @@ describe("dominosa reference aid", () => {
     expect(move).toMatchObject({ type: "domino", d1: 0, d2: 1 });
   });
 
+  it("drops the spotlight when the board becomes solved, and not otherwise", () => {
+    const p = { n: 4, diff: DIFF_TRIVIAL, tall: false };
+    const { desc } = newDominosaDesc(p, randomNew("ref-solved"));
+    const state = newState(p, desc);
+    const ui = dominosaGame.newUi(state);
+    const r = dominosaGame.solve?.(state, state);
+    if (!r?.ok) throw new Error("solve failed");
+    const solved = dominosaGame.executeMove(state, r.move);
+    expect(dominosaGame.status(solved)).toBe("solved");
+
+    dominosaGame.selectReference?.(ui, "1-3");
+    dominosaGame.changedState?.(ui, null, state);
+    expect(ui.highlightPair).not.toBeNull();
+    dominosaGame.changedState?.(ui, state, solved);
+    expect(ui.highlightPair).toBeNull();
+  });
+
   it("selectReference sets/clears the Ui spotlight and reference() echoes it", () => {
     const p = { n: 5, diff: DIFF_TRIVIAL, tall: false };
     const { desc } = newDominosaDesc(p, randomNew("ref-select"));

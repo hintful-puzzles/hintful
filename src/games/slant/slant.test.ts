@@ -155,7 +155,7 @@ describe("slant errors and completion", () => {
     let s = newState(P22, "i");
     s = applyAll(s, [set(0, 0, 1), set(1, 0, -1), set(0, 1, -1), set(1, 1, 1)]);
     expect(Array.from(s.loopErrors)).toEqual([1, 1, 1, 1]);
-    expect(s.completed).toBe(false); // full but erroneous
+    expect(slantGame.status(s)).toBe("ongoing"); // full but erroneous
   });
 
   it("flags an over-committed clue vertex", () => {
@@ -179,7 +179,7 @@ describe("slant errors and completion", () => {
     expect(s.grounded[0]).toBe(1);
   });
 
-  it("completes (and latches) on the unique solution", () => {
+  it("is solved exactly while the board holds the unique solution", () => {
     const p = { w: FIXTURE.w, h: FIXTURE.h, diff: FIXTURE.diff };
     let s = newState(p, FIXTURE.desc);
     const moves: SlantMove[] = [];
@@ -187,11 +187,10 @@ describe("slant errors and completion", () => {
       moves.push(set(i % p.w, Math.floor(i / p.w), FIXTURE.aux[i] === "\\" ? -1 : 1));
     }
     s = applyAll(s, moves);
-    expect(s.completed).toBe(true);
-    expect(s.cheated).toBe(false);
-    // Clearing a square afterwards keeps the latched flag.
+    expect(slantGame.status(s)).toBe("solved");
+    // Clearing a square afterwards un-solves it.
     s = executeMove(s, set(0, 0, 0));
-    expect(s.completed).toBe(true);
+    expect(slantGame.status(s)).toBe("ongoing");
   });
 
   it("computeErrors reports complete only when full and clean", () => {
@@ -290,10 +289,7 @@ describe("slant solve + findMistakes", () => {
     expect(r?.ok).toBe(true);
     if (r?.ok) {
       const done = executeMove(s, r.move);
-      expect(done.completed).toBe(true);
-      expect(done.cheated).toBe(true);
-      // cheated suppresses the win flash.
-      expect(slantGame.flashLength?.(s, done, 1, ui())).toBe(0);
+      expect(slantGame.status(done)).toBe("solved");
     }
   });
 
@@ -319,7 +315,9 @@ describe("slant solve + findMistakes", () => {
     }
     const prev = applyAll(s, moves.slice(0, -1));
     const done = executeMove(prev, moves[moves.length - 1]);
-    expect(slantGame.flashLength?.(prev, done, 1, ui())).toBeGreaterThan(0);
+    expect(slantGame.status(prev)).toBe("ongoing");
+    expect(slantGame.status(done)).toBe("solved");
+    expect(slantGame.solvedFlash?.(done, ui())).toBeGreaterThan(0);
   });
 });
 

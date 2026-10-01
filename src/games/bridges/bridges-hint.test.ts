@@ -372,7 +372,9 @@ describe("what the plan shows, and what it keeps to itself", () => {
         // Every hidden firing is a mark, and `map_check` does not read marks —
         // so hiding them cannot cost the player the win (`engine/hint-plan.ts`:
         // never hide a change the win condition needs).
-        expect(player.completed, `${label} ${seed} did not finish`).toBe(true);
+        expect(bridgesGame.status(player), `${label} ${seed} did not finish`).toBe(
+          "solved",
+        );
       }
     }
   });
@@ -546,13 +548,13 @@ describe("a board shared without its difficulty", () => {
     let state = newStateFromDesc(params, shared.slice(shared.indexOf(":") + 1));
     const ui = bridgesGame.newUi(state);
     let moves = 0;
-    while (!state.completed && moves < 200) {
+    while (bridgesGame.status(state) !== "solved" && moves < 200) {
       const r = bridgesGame.hint?.(state, undefined, ui);
       if (!r?.ok) throw new Error(`move ${moves}: ${r?.error}`);
       state = bridgesGame.executeMove(state, r.steps[0].move);
       moves++;
     }
-    expect(state.completed).toBe(true);
+    expect(bridgesGame.status(state)).toBe("solved");
   });
 
   it("pinned Easy by a build that mislabeled it, reopens at Normal and hints to solved", () => {

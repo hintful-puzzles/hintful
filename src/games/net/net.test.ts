@@ -279,8 +279,7 @@ describe("moves", () => {
     if (!result?.ok) return;
     const solved = netGame.executeMove(state, result.move);
     expect(isComplete(solved)).toBe(true);
-    expect(solved.completed).toBe(true);
-    expect(solved.cheated).toBe(true);
+    expect(netGame.status(solved)).toBe("solved");
     expect(Array.from(solved.tiles).every((t) => t & LOCKED)).toBe(true);
   });
 
@@ -295,18 +294,15 @@ describe("moves", () => {
 
   it("win fires exactly when every non-empty tile is powered", () => {
     const { aux, state } = generate(p, "win-seed");
-    expect(state.completed).toBe(false);
+    expect(netGame.status(state)).toBe("ongoing");
     const solved = {
       ...state,
       tiles: Uint8Array.from(aux, (c) => Number.parseInt(c, 16)),
     };
-    // An empty batch re-checks completion on the tiles it is handed.
-    expect(netGame.executeMove(solved, { type: "jumble", ops: [] }).completed).toBe(
-      true,
-    );
+    expect(netGame.status(solved)).toBe("solved");
     // A quarter turn of any tile in the solved tree breaks one of its edges.
     const turned = netGame.executeMove(solved, { type: "rotate", op: "A", x: 0, y: 0 });
-    expect(turned.completed).toBe(false);
+    expect(netGame.status(turned)).toBe("ongoing");
   });
 
   it("moving the source marks its own tile active", () => {

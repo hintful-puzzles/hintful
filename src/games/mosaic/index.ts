@@ -115,7 +115,7 @@ function interpretMove(
   const { width, height } = state;
 
   // After completion, only cursor browsing is accepted (upstream freeze).
-  if (state.notCompletedClues === 0 && !cursorDelta(raw)) return null;
+  if (status(state) === "solved" && !cursorDelta(raw)) return null;
 
   const ts = ds.tileSize;
   const m = Math.floor(ts / 2);
@@ -182,20 +182,6 @@ function interpretMove(
   }
 
   return interpretTargetVerbs(targetVerbs, state, ui, ds, p, raw);
-}
-
-// --- flash --------------------------------------------------------------
-
-function flashLength(
-  prev: MosaicState,
-  next: MosaicState,
-  _dir: number,
-  _ui: MosaicUi,
-): number {
-  if (!prev.cheated && prev.notCompletedClues > 0 && next.notCompletedClues === 0) {
-    return FLASH_TIME;
-  }
-  return 0;
 }
 
 // --- Game object -----------------------------------------------------------
@@ -295,7 +281,7 @@ export const mosaicGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength,
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(mosaicGame);

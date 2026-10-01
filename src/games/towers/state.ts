@@ -155,8 +155,6 @@ export interface TowersState {
   pencil: Int32Array;
   /** `4w` clue struck-through flags; cloned per move. */
   cluesDone: Uint8Array;
-  completed: boolean;
-  cheated: boolean;
 }
 
 export function cloneState(s: TowersState): TowersState {
@@ -168,8 +166,6 @@ export function cloneState(s: TowersState): TowersState {
     grid: s.grid.slice(),
     pencil: s.pencil.slice(),
     cluesDone: s.cluesDone.slice(),
-    completed: s.completed,
-    cheated: s.cheated,
   };
 }
 
@@ -332,8 +328,6 @@ export function newState(p: TowersParams, desc: string): TowersState {
     grid,
     pencil: new Int32Array(a),
     cluesDone: new Uint8Array(4 * w),
-    completed: false,
-    cheated: false,
   };
 }
 
@@ -425,7 +419,7 @@ export function checkErrors(state: TowersState, errors?: Uint8Array): boolean {
 // --- status / text ---------------------------------------------------------
 
 export function status(s: TowersState): "solved" | "ongoing" {
-  return s.completed ? "solved" : "ongoing";
+  return checkErrors(s) ? "ongoing" : "solved";
 }
 
 /** ASCII grid with the four clue rims, matching `game_text_format`. */

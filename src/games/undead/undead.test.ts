@@ -184,8 +184,10 @@ describe("undead executeMove", () => {
     for (let i = 0; i < placements.length; i++) {
       s = undeadGame.executeMove(s, { type: "set", cell: i, monster: placements[i] });
     }
-    expect(s.completed).toBe(true);
     expect(undeadGame.status(s)).toBe("solved");
+    // Breaking it un-solves it.
+    const broken = undeadGame.executeMove(s, { type: "set", cell: 0, monster: 0 });
+    expect(undeadGame.status(broken)).toBe("ongoing");
   });
 
   it("reddens the count when a monster type is over-placed", () => {
@@ -202,23 +204,21 @@ describe("undead executeMove", () => {
 // --- live flash ------------------------------------------------------------
 
 describe("undead flash", () => {
-  it("flashes on a genuine solve but not a cheated one", () => {
+  it("the last correct placement solves the board, and the win has a flash", () => {
     const { state, aux } = gen(4, 4, "normal", "flash");
     const placements = auxToGuess(aux);
     let s = state;
     for (let i = 0; i < placements.length - 1; i++) {
       s = undeadGame.executeMove(s, { type: "set", cell: i, monster: placements[i] });
     }
-    const before = s;
+    expect(undeadGame.status(s)).toBe("ongoing");
     const after = undeadGame.executeMove(s, {
       type: "set",
       cell: placements.length - 1,
       monster: placements[placements.length - 1],
     });
-    expect(undeadGame.flashLength?.(before, after, 1, newUi(state))).toBeGreaterThan(0);
-
-    const cheated = undeadGame.executeMove(state, { type: "solve", placements });
-    expect(undeadGame.flashLength?.(state, cheated, 1, newUi(state))).toBe(0);
+    expect(undeadGame.status(after)).toBe("solved");
+    expect(undeadGame.solvedFlash?.(after, newUi(state))).toBeGreaterThan(0);
   });
 });
 

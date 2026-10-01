@@ -18,6 +18,7 @@ import {
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { permParity } from "../../engine/shuffle.ts";
+import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { executeMove, fifteenGame } from "./index.ts";
 import {
@@ -183,14 +184,23 @@ describe("Fifteen slide moves", () => {
     expect(Array.from(solved.tiles)).toEqual(before);
   });
 
-  it("records completion when the solved arrangement is reached", () => {
+  it("is solved exactly while the tiles are in order", () => {
     const near = nearSolved4x4(); // one slide from solved
-    expect(near.completed).toBe(0);
+    expect(status(near)).toBe("ongoing");
     // Slide tile 15 back left: the gap returns home to (3,3).
     const back = executeMove(near, { type: "move", x: 3, y: 3 });
-    expect(isCompletedTiles(back.tiles, back.n)).toBe(true);
-    expect(back.completed).toBe(back.moveCount);
     expect(status(back)).toBe("solved");
+    // Breaking the solved board un-solves it.
+    expect(status(executeMove(back, { type: "move", x: 0, y: 3 }))).toBe("ongoing");
+  });
+
+  // The case `derive-completion-from-the-position` exists for: a game ID typed
+  // in already sorted read "ongoing" at move 0 while the flag waited for a move.
+  it("calls a game ID typed in already sorted solved at move 0", () => {
+    const { midend: m, last } = driveMidend(fifteenGame);
+    expect(m.newGameFromId("4x4:1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0")).toBeNull();
+    expect(last("game-state-change")?.status).toBe("solved");
+    expect(m.hint()).toBe(ALREADY_SOLVED);
   });
 
   it("rejects an illegal (diagonal) move", () => {
@@ -202,7 +212,7 @@ describe("Fifteen slide moves", () => {
 // --- solve ------------------------------------------------------------
 
 describe("Fifteen solve", () => {
-  it("snaps to the solved board and sets cheated", () => {
+  it("snaps to the solved board, counting as one move", () => {
     const rng = randomNew("solve-test");
     const state = newState({ w: 4, h: 4 }, newDesc({ w: 4, h: 4 }, rng).desc);
     const result = fifteenGame.solve?.(state, state);
@@ -210,16 +220,10 @@ describe("Fifteen solve", () => {
     if (!result?.ok) throw new Error("expected solve");
     const solved = executeMove(state, result.move);
     expect(isCompletedTiles(solved.tiles, solved.n)).toBe(true);
-    expect(solved.cheated).toBe(true);
     expect(solved.gapPos).toBe(solved.n - 1);
-  });
-
-  it("suppresses the completion flash after a solve", () => {
-    const rng = randomNew("solve-flash");
-    const state = newState({ w: 4, h: 4 }, newDesc({ w: 4, h: 4 }, rng).desc);
-    const solved = executeMove(state, { type: "solve" });
-    expect(fifteenGame.flashLength?.(state, solved, 1, { invertCursor: false })).toBe(
-      0,
+    expect(solved.moveCount).toBe(state.moveCount + 1);
+    expect(fifteenGame.statusbarText?.(solved, { invertCursor: false })).toBe(
+      "Moves: 1",
     );
   });
 });
@@ -437,13 +441,6 @@ describe("Fifteen hint", () => {
     }
     // Vacuity guard: the loop above asserts nothing if no step says "closer".
     expect(closerSteps).toBeGreaterThan(0);
-  });
-
-  it("reports no plan on an already-solved board", () => {
-    expect(fifteenGame.hint?.(solvedState(4, 4))).toEqual({
-      ok: false,
-      error: ALREADY_SOLVED,
-    });
   });
 
   it("hintKeepTrack completes the step on the hinted move and drops it otherwise", () => {

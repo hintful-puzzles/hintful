@@ -36,12 +36,6 @@ export interface TwiddleState {
   /** Tile orientations 0..3 (only meaningful when `orientable`); 0 is
    * upright. Advanced by `(orient + dir) & 3` on each rotation. */
   readonly orient: Uint8Array;
-  /** `0` while ongoing; otherwise the move count at which the puzzle was
-   * first completed. */
-  readonly completed: number;
-  /** Set by Solve; suppresses the completion flash and switches the
-   * status bar to "Moves since auto-solve". */
-  readonly cheated: boolean;
   readonly moveCount: number;
   readonly movetarget: number;
   /** Top-left corner + direction of the last rotation, for animation
@@ -288,8 +282,6 @@ export function newState(p: TwiddleParams, desc: string): TwiddleState {
     orientable: p.orientable,
     numbers,
     orient,
-    completed: 0,
-    cheated: false,
     moveCount: 0,
     movetarget: p.movetarget,
     lastX: -1,
@@ -299,7 +291,8 @@ export function newState(p: TwiddleParams, desc: string): TwiddleState {
 }
 
 export function status(state: TwiddleState): "solved" | "ongoing" {
-  return state.completed > 0 ? "solved" : "ongoing";
+  const { numbers, orient, w, h, orientable } = state;
+  return isComplete(numbers, orient, w * h, orientable) ? "solved" : "ongoing";
 }
 
 // --- text format ------------------------------------------------------

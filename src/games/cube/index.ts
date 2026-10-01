@@ -11,7 +11,6 @@
  */
 
 import { rejectMove } from "../../engine/assert-never.ts";
-import { completionStatus } from "../../engine/completion-status.ts";
 import type { Game, UiUpdate } from "../../engine/game.ts";
 import { numberItem } from "../../engine/params.ts";
 import {
@@ -153,15 +152,13 @@ export function executeMove(from: CubeState, move: CubeMove): CubeState {
   }
 
   const blue = new Uint8Array(from.blue);
-  let completed = from.completed;
   const movecount = from.movecount + 1;
 
   // Swap paint between the resting face and the landed-on square, unless
   // already complete (a finished solid may roll freely as a small reward).
-  if (!completed) {
+  if (!allFacesPainted(from)) {
     const lf = lowestFace(solid);
     [faceColors[lf], blue[dest]] = [blue[dest], faceColors[lf]];
-    if (faceColors.every((c) => c)) completed = movecount;
   }
 
   // Resting key points for the static (non-animated) display.
@@ -173,7 +170,6 @@ export function executeMove(from: CubeState, move: CubeMove): CubeState {
     current: dest,
     faceColors,
     blue,
-    completed,
     movecount,
     dpkey: [restKeys[0], restKeys[1]],
     dgkey: [0, 1],
@@ -295,12 +291,16 @@ function directionFromClick(
 // --- status bar -------------------------------------------------------
 
 function statusbarText(state: CubeState): string {
-  const moves = state.completed || state.movecount;
-  return completionStatus(state.completed > 0, false, `Moves: ${moves}`);
+  return `Moves: ${state.movecount}`;
+}
+
+/** Every face of the solid carries paint. */
+function allFacesPainted(state: CubeState): boolean {
+  return state.faceColors.every((c) => c);
 }
 
 function status(state: CubeState): GameStatus {
-  return state.completed > 0 ? "solved" : "ongoing";
+  return allFacesPainted(state) ? "solved" : "ongoing";
 }
 
 // --- Game object ------------------------------------------------------

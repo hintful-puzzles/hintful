@@ -144,7 +144,7 @@ describe("Pegs desc and state", () => {
     const state = G.newState(p, "PPH");
     expect(state.w).toBe(3);
     expect(state.h).toBe(1);
-    expect(state.completed).toBe(false);
+    expect(G.status(state)).toBe("ongoing");
     expect(state.grid[0]).toBe(1); // GRID_PEG
     expect(state.grid[1]).toBe(1); // GRID_PEG
     expect(state.grid[2]).toBe(0); // GRID_HOLE
@@ -167,7 +167,6 @@ describe("Pegs moves", () => {
     const state = G.newState(p, "PPH");
     const move: PegsMove = { type: "jump", sx: 0, sy: 0, tx: 2, ty: 0 };
     const next = G.executeMove(state, move);
-    expect(next.completed).toBe(true);
     expect(G.status(next)).toBe("solved");
   });
 
@@ -176,7 +175,6 @@ describe("Pegs moves", () => {
     const state = G.newState(p, "PPPPH");
     const move: PegsMove = { type: "jump", sx: 2, sy: 0, tx: 4, ty: 0 };
     const next = G.executeMove(state, move);
-    expect(next.completed).toBe(false);
     expect(G.status(next)).toBe("ongoing");
   });
 

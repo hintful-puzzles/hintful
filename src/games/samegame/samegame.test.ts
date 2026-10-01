@@ -226,10 +226,11 @@ describe("Same Game selection + execution", () => {
     const ui = freshUi(s);
     click(s, ui, 0, 0); // select the pair
     const next = executeMove(s, click(s, ui, 0, 0) as SamegameMove);
-    expect(next.completed).toBe(true);
     expect(status(next)).toBe("solved");
-    // A stuck board is "ongoing", never "lost".
+    // A stuck board is "ongoing", never "lost", and holds the timer.
     expect(status({ ...s, impossible: true })).toBe("ongoing");
+    expect(samegameGame.timerHolds?.({ ...s, impossible: true })).toBe(true);
+    expect(samegameGame.timerHolds?.(s)).toBe(false);
   });
 
   it("statusbarText narrates score, selection, and terminal states", () => {
@@ -239,8 +240,11 @@ describe("Same Game selection + execution", () => {
     click(s, ui, 0, 1); // select 3, scoresub 2
     expect(samegameGame.statusbarText?.(s, ui)).toBe("Score: 0  Selected: 3 (1)");
     expect(
-      samegameGame.statusbarText?.({ ...s, completed: true, score: 7 }, freshUi(s)),
-    ).toBe("COMPLETED! Score: 7");
+      samegameGame.statusbarText?.(
+        { ...s, tiles: s.tiles.map(() => 0), impossible: true, score: 7 },
+        freshUi(s),
+      ),
+    ).toBe("Score: 7");
     expect(
       samegameGame.statusbarText?.({ ...s, impossible: true, score: 4 }, freshUi(s)),
     ).toBe("Cannot move! Score: 4");

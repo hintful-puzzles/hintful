@@ -179,7 +179,6 @@ describe("the hint's idea of where a tile belongs", () => {
     const nudged = netslideGame.executeMove(finished, nudge);
     const fresh: NetslideState = {
       ...nudged,
-      completed: 0,
       lastMoveRow: -1,
       lastMoveCol: -1,
       lastMoveDir: 0,
@@ -196,15 +195,11 @@ describe("the hint's idea of where a tile belongs", () => {
 });
 
 describe("netslide hint", () => {
-  it("refuses a finished board", () => {
-    const { state, aux } = board(EASY_3X3, "solved-1");
-    const solve = netslideGame.solve?.(state, state, aux);
-    if (!solve?.ok) throw new Error("solve refused");
-    const finished = netslideGame.executeMove(state, solve.move);
-
-    const res = hintOf(finished, aux);
-    expect(res.ok).toBe(false);
-    if (!res.ok) expect(res.error).toBe(ALREADY_SOLVED);
+  it("is refused on a finished board, by the engine", () => {
+    const me = new Midend(netslideGame);
+    me.newGame();
+    expect(me.solve()).toBeNull();
+    expect(me.hint()).toBe(ALREADY_SOLVED);
   });
 
   it("works on a board with no `aux` at all, like Solve does", () => {

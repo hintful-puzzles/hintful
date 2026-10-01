@@ -11,7 +11,6 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
-import { winFlash } from "../../engine/flash.ts";
 import type {
   Game,
   HintResult,
@@ -262,21 +261,12 @@ function clearEdgesAround(edges: Int32Array, d: number, w: number): void {
   edges[d] = 0;
 }
 
-function checkCompletion(s: DominosaState): void {
-  if (s.completed) return;
-  const used = new Set<number>();
-  for (let i = 0; i < s.w * s.h; i++)
-    if (s.grid[i] > i) used.add(DINDEX(s.numbers[i], s.numbers[s.grid[i]]));
-  if (used.size === DCOUNT(s.params.n)) s.completed = true;
-}
-
 function executeMove(state: DominosaState, m: DominosaMove): DominosaState {
   const ret = cloneState(state);
   const { w, h } = ret;
   const wh = w * h;
 
   if (m.type === "solve") {
-    ret.cheated = true;
     for (let i = 0; i < wh; i++) {
       ret.grid[i] = i;
       ret.edges[i] = 0;
@@ -320,8 +310,6 @@ function executeMove(state: DominosaState, m: DominosaMove): DominosaState {
   } else {
     return assertNever(m, "dominosa: executeMove");
   }
-
-  checkCompletion(ret);
   return ret;
 }
 
@@ -555,21 +543,18 @@ function textFormat(state: DominosaState): string {
   return board.join("");
 }
 
-function flashLength(
-  oldState: DominosaState,
-  newState_: DominosaState,
-  _dir: number,
+/** A board that becomes solved drops the hovered-pair highlight, so the
+ * finished board (and its celebration) is not drawn under it. */
+function changedState(
   ui: DominosaUi,
-): number {
-  const flash = winFlash(oldState, newState_, FLASH_TIME);
-  // Dominosa's only difference from the convention: the win clears the
-  // hovered-pair highlight, so the celebration is not drawn under it.
-  if (flash) {
-    ui.highlight1 = -1;
-    ui.highlight2 = -1;
-    ui.highlightPair = null;
-  }
-  return flash;
+  oldState: DominosaState | null,
+  newState: DominosaState,
+): void {
+  if (oldState === null || status(oldState) === "solved") return;
+  if (status(newState) !== "solved") return;
+  ui.highlight1 = -1;
+  ui.highlight2 = -1;
+  ui.highlightPair = null;
 }
 
 // --- reference aid ----------------------------------------------------------
@@ -731,7 +716,8 @@ export const dominosaGame: Game<
   newDrawState,
   redraw,
 
-  flashLength,
+  changedState,
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(dominosaGame);

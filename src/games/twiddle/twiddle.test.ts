@@ -220,7 +220,7 @@ describe("Twiddle moves", () => {
     expect(s1.moveCount).toBe(1);
     // dir -1 at (0,0) reverses the scramble → solved.
     expect(Array.from(s1.numbers)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
-    expect(s1.completed).toBe(1);
+    expect(twiddleGame.status(s0)).toBe("ongoing");
     expect(twiddleGame.status(s1)).toBe("solved");
   });
 
@@ -244,7 +244,7 @@ describe("Twiddle moves", () => {
     expect(isComplete(s.numbers, s.orient, 9, false)).toBe(true);
   });
 
-  it("solve snaps to ascending, clears orientation, sets cheated", () => {
+  it("solve snaps to ascending, clears orientation, and counts as a move", () => {
     const p = params({ orientable: true });
     const s = stateFromNumbers(
       p,
@@ -254,19 +254,16 @@ describe("Twiddle moves", () => {
     const solved = twiddleGame.executeMove(s, { type: "solve" });
     expect(Array.from(solved.numbers)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
     expect(Array.from(solved.orient)).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0]);
-    expect(solved.cheated).toBe(true);
-    expect(solved.completed).toBe(1);
-    // No completion flash after a solve.
-    expect(twiddleGame.flashLength?.(s, solved, 1, twiddleGame.newUi(s))).toBe(0);
+    expect(twiddleGame.status(solved)).toBe("solved");
+    expect(solved.moveCount).toBe(s.moveCount + 1);
   });
 
   it("flashes on a genuine completion", () => {
     const p = params();
     const s0 = stateFromNumbers(p, [2, 5, 3, 1, 4, 6, 7, 8, 9]);
     const s1 = twiddleGame.executeMove(s0, { type: "rotate", x: 0, y: 0, dir: -1 });
-    expect(twiddleGame.flashLength?.(s0, s1, 1, twiddleGame.newUi(s0))).toBeGreaterThan(
-      0,
-    );
+    expect(twiddleGame.status(s1)).toBe("solved");
+    expect(twiddleGame.solvedFlash?.(s1, twiddleGame.newUi(s0))).toBeGreaterThan(0);
   });
 });
 

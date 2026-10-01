@@ -45,7 +45,6 @@ import type { CellRegion } from "../../engine/latin-hint.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import type { GameStatus } from "../../engine/types.ts";
 
 // --- cell bit-field (upstream values, verbatim) -----------------------------
 
@@ -256,10 +255,7 @@ export interface RomeBoard {
   readonly pencil: Int32Array;
 }
 
-export interface RomeState extends RomeBoard {
-  completed: boolean;
-  cheated: boolean;
-}
+export type RomeState = RomeBoard;
 
 /**
  * A move is a *place* (set or clear an arrow), a *pencil* (toggle one mark, or
@@ -391,8 +387,6 @@ export function newBoard(w: number, h: number): RomeState {
     regions: new Dsf(s),
     grid: new Int32Array(s),
     pencil: new Int32Array(s),
-    completed: false,
-    cheated: false,
   };
 }
 
@@ -408,8 +402,6 @@ export function cloneState(s: RomeState): RomeState {
     regions: s.regions,
     grid: s.grid.slice(),
     pencil: s.pencil.slice(),
-    completed: s.completed,
-    cheated: s.cheated,
   };
 }
 
@@ -425,10 +417,6 @@ export function boardFromClues(s: RomeState): RomeState {
   );
   // Share the region layout: `romeSolve` never merges it.
   return { ...newBoard(s.w, s.h), regions: s.regions, grid };
-}
-
-export function status(s: RomeState): GameStatus {
-  return s.completed ? "solved" : "ongoing";
 }
 
 // --- desc codec (byte-match surface) ----------------------------------------

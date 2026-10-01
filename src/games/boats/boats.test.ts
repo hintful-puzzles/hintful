@@ -584,12 +584,12 @@ describe("boats moves", () => {
         });
       }
 
-    expect(played.completed).toBe(true);
+    expect(boatsGame.status(played)).toBe("solved");
     // ...and there really are undecided squares left on the board.
     expect(Array.from(played.grid).some((c) => c === EMPTY)).toBe(true);
   });
 
-  it("completes and flashes when the fleet is found", () => {
+  it("completes when the fleet is found", () => {
     const p = params({ w: 8, h: 8, fleet: 4, fleetData: defaultFleet(4) });
     const state = generated(p, "boats-complete-1");
     const solved = solveToGrid(state);
@@ -600,28 +600,24 @@ describe("boats moves", () => {
       kind: "solve",
       grid: Array.from(solved.grid),
     });
-    expect(done.completed).toBe(true);
+    expect(boatsGame.status(state)).toBe("ongoing");
     expect(boatsGame.status(done)).toBe("solved");
-    // Solved with help, so no celebration flash.
-    expect(boatsGame.flashLength?.(state, done, 1, newUi())).toBe(0);
   });
 });
 
 // --- Solve, through a real midend ------------------------------------------
 
 describe("boats solve", () => {
-  it("completes the game through the midend and reports solved-with-help", () => {
+  it("completes the game through the midend", () => {
     const p = presetParams(0);
     const { desc } = newBoatsDesc(p, randomNew("boats-midend-solve"));
     const midend = new Midend(boatsGame);
     expect(midend.newGameFromId(`${encodeParams(p, true)}:${desc}`)).toBeNull();
 
     expect(midend.solve()).toBeNull();
-    // Solve must actually finish the game and mark it solved-with-help, not
-    // merely fill some squares in (docs/games/solver-and-generator.md § "Solve
-    // and the generator's aux").
-    expect(stateOf(midend).completed).toBe(true);
-    expect(stateOf(midend).cheated).toBe(true);
+    // Solve must actually finish the game, not merely fill some squares in
+    // (docs/games/solver-and-generator.md § "Solve and the generator's aux").
+    expect(boatsGame.status(stateOf(midend))).toBe("solved");
   });
 
   it("round-trips a played game through a save", () => {
@@ -762,8 +758,8 @@ describe("boats rendering", () => {
   });
 
   it("hides the boats on the flashing half of the completion flash", () => {
-    // Complete a board by hand (not via Solve, which sets `cheated` and so
-    // suppresses the flash), then step the clock into the flash.
+    // Complete a board by hand (the Solve command does not flash), then step
+    // the clock into the flash.
     const p = presetParams(0);
     const { desc } = newBoatsDesc(p, randomNew("boats-flash-1"));
     const state = newState(p, desc);
@@ -799,10 +795,9 @@ describe("boats rendering", () => {
     // flash armed.
     for (const move of moves) {
       midend.playMoves([move]);
-      if (stateOf(midend).completed) break;
+      if (boatsGame.status(stateOf(midend)) === "solved") break;
     }
-    expect(stateOf(midend).completed).toBe(true);
-    expect(stateOf(midend).cheated).toBe(false);
+    expect(boatsGame.status(stateOf(midend))).toBe("solved");
 
     // Walk the flash in half-frame steps and count the boats drawn on each.
     // The guarantee that matters is that it *alternates* — upstream draws no

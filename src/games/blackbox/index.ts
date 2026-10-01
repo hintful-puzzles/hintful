@@ -299,8 +299,11 @@ function executeMove(from: BlackboxState, m: BlackboxMove): BlackboxState {
 function statusbarText(state: BlackboxState, ui: BlackboxUi): string {
   let buf: string;
   if (state.reveal) {
-    if (status(state) === "solved") buf = "CORRECT!";
-    else buf = `${state.nwrong} wrong and ${state.nmissed} missed balls.`;
+    // A correct reveal is a win, which the engine's own words announce.
+    buf =
+      status(state) === "solved"
+        ? ""
+        : `${state.nwrong} wrong and ${state.nmissed} missed balls.`;
   } else if (state.justwrong) {
     buf = "Wrong! Guess again.";
   } else if (state.nguesses > state.maxballs) {

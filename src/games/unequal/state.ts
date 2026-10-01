@@ -212,8 +212,6 @@ export interface UnequalState {
   pencil: Int32Array;
   /** `order²` struck-clue ("spent") flags (`F_SPENT_*`); cloned per move. */
   spent: Int32Array;
-  completed: boolean;
-  cheated: boolean;
 }
 
 export function cloneState(s: UnequalState): UnequalState {
@@ -226,8 +224,6 @@ export function cloneState(s: UnequalState): UnequalState {
     grid: s.grid.slice(),
     pencil: s.pencil.slice(),
     spent: s.spent.slice(),
-    completed: s.completed,
-    cheated: s.cheated,
   };
 }
 
@@ -376,8 +372,6 @@ export function newState(p: UnequalParams, desc: string): UnequalState {
     grid: nums.slice(),
     pencil: new Int32Array(a),
     spent: new Int32Array(a),
-    completed: false,
-    cheated: false,
   };
 }
 
@@ -443,7 +437,7 @@ export function checkComplete(state: UnequalState, errFlags?: Int32Array): numbe
 // --- status / text ---------------------------------------------------------
 
 export function status(s: UnequalState): "solved" | "ongoing" {
-  return s.completed ? "solved" : "ongoing";
+  return checkComplete(s) > 0 ? "solved" : "ongoing";
 }
 
 /** ASCII grid with inter-cell clue glyphs, matching `game_text_format`. */

@@ -857,15 +857,12 @@ describe("seismic moves", () => {
     // Every cell is filled in, so Solve really finished the job.
     expect(me.formatAsText()).not.toContain(".");
 
-    // A solver fill must not fire the win flash.
     const state = stateOf(SMALL);
     const solved = seismicGame.executeMove(state, {
       type: "solve",
       grid: Array.from(solutionOf(SMALL)),
     });
-    expect(solved.completed).toBe(true);
-    expect(solved.cheated).toBe(true);
-    expect(seismicGame.flashLength?.(state, solved, 1, newUi(state))).toBe(0);
+    expect(seismicGame.status(solved)).toBe("solved");
   });
 
   it("flashes when the player finishes it themselves", () => {
@@ -882,10 +879,8 @@ describe("seismic moves", () => {
         pencil: false,
       });
     }
-    expect(cur.completed).toBe(true);
-    expect(cur.cheated).toBe(false);
     expect(seismicGame.status(cur)).toBe("solved");
-    expect(seismicGame.flashLength?.(state, cur, 1, newUi(state))).toBeGreaterThan(0);
+    expect(seismicGame.solvedFlash?.(cur, newUi(state))).toBeGreaterThan(0);
   });
 
   it("renders the board as text with the region walls drawn", () => {

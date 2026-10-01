@@ -32,8 +32,6 @@ function craft(rows: Cell[][], unique = false): UnrulyState {
     unique,
     grid,
     immutable: new Uint8Array(w2 * h2),
-    completed: false,
-    cheated: false,
   };
 }
 

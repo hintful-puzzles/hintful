@@ -23,7 +23,6 @@ import {
   borderStepEdge,
   type ForcedBorderEdge,
 } from "../../engine/border-grid-hint.ts";
-import { winFlash } from "../../engine/flash.ts";
 import type {
   Game,
   HintResult,
@@ -106,17 +105,6 @@ function interpretMove(
   rawButton: number,
 ): SeparateMove | null | UiUpdate {
   return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
-}
-
-// --- flash -----------------------------------------------------------------
-
-function flashLength(
-  oldState: SeparateState,
-  newState_: SeparateState,
-  _dir: number,
-  _ui: SeparateUi,
-): number {
-  return winFlash(oldState, newState_, FLASH_TIME);
 }
 
 // --- mistakes --------------------------------------------------------------
@@ -308,7 +296,7 @@ export const separateGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength,
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(separateGame);

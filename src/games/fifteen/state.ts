@@ -29,12 +29,6 @@ export interface FifteenState {
   readonly tiles: Int32Array;
   /** Flat index of the gap (the cell holding value `0`). */
   readonly gapPos: number;
-  /** `0` while ongoing; otherwise the move count at which the puzzle was
-   * first completed. */
-  readonly completed: number;
-  /** Set by Solve; suppresses the completion flash and switches the
-   * status bar to "Moves since auto-solve". */
-  readonly cheated: boolean;
   readonly moveCount: number;
 }
 
@@ -125,14 +119,12 @@ export function newState(p: FifteenParams, desc: string): FifteenState {
     n,
     tiles,
     gapPos: tiles.indexOf(0),
-    completed: 0,
-    cheated: false,
     moveCount: 0,
   };
 }
 
 export function status(state: FifteenState): "solved" | "ongoing" {
-  return state.completed > 0 ? "solved" : "ongoing";
+  return isCompletedTiles(state.tiles, state.n) ? "solved" : "ongoing";
 }
 
 // --- text format ------------------------------------------------------

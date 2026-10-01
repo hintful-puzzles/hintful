@@ -16,7 +16,6 @@ import {
   entryMistakes,
   gridCell,
 } from "../../engine/entry-mistakes.ts";
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type PresetMenu,
@@ -229,7 +228,6 @@ function executeMove(state: AbcdState, move: AbcdMove): AbcdState {
         return next;
       }
       next.grid[i] = move.letter + 1;
-      if (!next.completed && isCompleted(next)) next.completed = true;
       return next;
     }
     case "pencil": {
@@ -255,8 +253,6 @@ function executeMove(state: AbcdState, move: AbcdMove): AbcdState {
     }
     case "solve": {
       for (let i = 0; i < w * p.h; i++) next.grid[i] = move.grid[i] + 1;
-      next.completed = true;
-      next.cheated = true;
       return next;
     }
     default:
@@ -275,7 +271,7 @@ function changedState(ui: AbcdUi, oldSt: AbcdState | null, newSt: AbcdState): vo
   ) {
     ui.cursor.visible = false;
   }
-  if (oldSt && !oldSt.completed && newSt.completed) ui.cursor.visible = false;
+  if (oldSt && !isCompleted(oldSt) && isCompleted(newSt)) ui.cursor.visible = false;
 }
 
 function solve(orig: AbcdState): SolveResult<AbcdMove> {
@@ -388,7 +384,7 @@ export const abcdGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength: (from, to) => winFlash(from, to, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(abcdGame);

@@ -31,7 +31,6 @@ import {
   defaultParams,
   detargetize,
   encodeParams,
-  isBarrel,
   isOnTarget,
   moveType,
   newState,
@@ -141,23 +140,7 @@ export function executeMove(state: SokobanState, move: SokobanMove): SokobanStat
     else if (beyond !== DEEP_PIT) grid[to] = b;
   }
 
-  // Completion: the board cannot become any *more* complete. That is, either
-  // there are no barrels off targets, or there is no way to place any that
-  // remain (no free target, no pit, no deep pit anywhere). This handles spare
-  // barrels and levels with pits correctly.
-  let completed = state.completed;
-  if (!completed) {
-    let freeBarrels = false;
-    let freeTargets = false;
-    for (const v of grid) {
-      if (isBarrel(v) && !isOnTarget(v)) freeBarrels = true;
-      if (v === DEEP_PIT || v === PIT || (!isBarrel(v) && isOnTarget(v)))
-        freeTargets = true;
-    }
-    completed = !freeBarrels || !freeTargets;
-  }
-
-  return { w, h, grid, px: nx, py: ny, completed };
+  return { w, h, grid, px: nx, py: ny };
 }
 
 // --- Game object ------------------------------------------------------
@@ -201,8 +184,7 @@ export const sokobanGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength: (oldState, newState) =>
-    !oldState.completed && newState.completed ? FLASH_LENGTH : 0,
+  solvedFlash: () => FLASH_LENGTH,
 };
 
 registerGame(sokobanGame);

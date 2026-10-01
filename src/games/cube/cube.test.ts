@@ -197,7 +197,7 @@ describe("cube rolling", () => {
     const rem = area % 4;
     const tail = rem ? "0123456789ABCDEF"[((1 << rem) - 1) << (4 - rem)] : "";
     const start = newState(p, `${fullHexDigits}${tail},0`); // all squares blue
-    expect(start.completed).toBe(0);
+    expect(cubeGame.status(start)).toBe("ongoing");
 
     const key = (s: CubeState): string => {
       let fm = 0;
@@ -220,7 +220,7 @@ describe("cube rolling", () => {
           } catch {
             continue;
           }
-          if (cand.completed > 0) {
+          if (cubeGame.status(cand) === "solved") {
             won = cand;
             break;
           }
@@ -236,7 +236,6 @@ describe("cube rolling", () => {
     }
 
     expect(won).not.toBeNull();
-    expect(won?.completed).toBeGreaterThan(0);
     // At a win every face is blue; paint is conserved at the board's
     // initial total (all `area` squares were blue, more than the six
     // faces, so leftover blue squares remain — upstream lets the solved
@@ -244,6 +243,17 @@ describe("cube rolling", () => {
     if (won) {
       for (const f of won.faceColors) expect(f).toBe(1);
       expect(totalBlue(won)).toBe(totalBlue(start));
+      // A finished solid rolls freely: no paint moves, and it stays solved.
+      let rolled: CubeState | null = null;
+      for (const dir of ["L", "R", "U", "D"] as const) {
+        try {
+          rolled = executeMove(won, { dir });
+          break;
+        } catch {}
+      }
+      if (rolled === null) throw new Error("the won solid cannot roll");
+      expect(Array.from(rolled.blue)).toEqual(Array.from(won.blue));
+      expect(cubeGame.status(rolled)).toBe("solved");
     }
   });
 });
@@ -264,7 +274,8 @@ describe("cube Game wiring", () => {
     const { desc } = newDesc(p, rng);
     const state = newState(p, desc);
     expect(cubeGame.status(state)).toBe("ongoing");
-    expect(cubeGame.status({ ...state, completed: 7 })).toBe("solved");
+    const painted = new Int32Array(state.faceColors.length).fill(1);
+    expect(cubeGame.status({ ...state, faceColors: painted })).toBe("solved");
   });
 
   it("reports a directions mask for square grids with no diagonals", () => {

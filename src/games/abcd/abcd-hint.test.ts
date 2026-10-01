@@ -205,7 +205,7 @@ describe.each(READINGS)("the corpus, under the %s reading", (reading) => {
         seen.add(kindOf(step, params.diag));
         state = abcdGame.executeMove(state, step.move);
       }
-      expect(state.completed, `${label} stalled`).toBe(true);
+      expect(abcdGame.status(state), `${label} stalled`).toBe("solved");
       steps += plan.length;
     }
     expect(steps, "the census walked almost nothing").toBeGreaterThan(1000);
@@ -223,7 +223,7 @@ describe("the runs finder", () => {
     let points = 0;
     for (const { label, params, state: start } of boards()) {
       let state = start;
-      for (let move = 0; move < 400 && !state.completed; move++) {
+      for (let move = 0; move < 400 && abcdGame.status(state) !== "solved"; move++) {
         const plan = planOf(label, state, "populate");
         const head = plan[0];
         if (head.move.type === "enter" && kindOf(head, params.diag) === "packed") {

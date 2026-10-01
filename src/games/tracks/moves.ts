@@ -161,12 +161,7 @@ export function executeMove(state: TracksState, move: TracksMove): TracksState {
       else sEClear(b, op.x, op.y, dir, f);
     }
   }
-  const completed = checkCompletion(b, true);
-  return {
-    ...state,
-    sflags: b.sflags,
-    numErrors: b.numErrors,
-    completed,
-    cheated: state.cheated || isSolve,
-  };
+  // For its marks: the error flags and the win flash's ripple order.
+  checkCompletion(b, true);
+  return { ...state, sflags: b.sflags, numErrors: b.numErrors };
 }

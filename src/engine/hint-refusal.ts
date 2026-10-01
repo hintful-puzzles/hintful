@@ -17,7 +17,7 @@
  * {@link FIX_MISTAKES_FIRST}, with the mistakes highlighted, for a board on
  * which the game's `findMistakes` finds some. So a `hint` is only ever asked
  * about an unfinished board with nothing wrong on it that the game can see, and
- * {@link FIX_MISTAKES_FIRST} is not a refusal a game can give at all.
+ * neither is a refusal a game can give at all.
  *
  * **What a game may still differ on.** The bar is whether we can say what a game
  * would legitimately want to do differently, and there are five real answers:
@@ -36,10 +36,9 @@ import type { NO_SOLUTION_FROM_HERE, SOLUTION_UNKNOWN } from "./solve-failure.ts
 /**
  * The board is finished. Nothing to hint.
  *
- * The midend says this itself for a board whose status is solved. A game says
- * it only where its board can be finished while its status is not: Fifteen,
- * Sixteen and Netslide count a board solved from the move that sorts it, so a
- * game ID typed already sorted is finished at move 0 with its status ongoing.
+ * Only the midend says this, for a board whose status is solved. A game's
+ * status is judged from the board alone, so every finished board's status says
+ * solved, and the sentence is not a {@link HintRefusal} a game can give.
  */
 export const ALREADY_SOLVED = "This board is already solved.";
 
@@ -166,7 +165,6 @@ export function puzzleHintRefusal(sentence: string): PuzzleHintRefusal {
  * came without its solution.
  */
 export type HintRefusal =
-  | typeof ALREADY_SOLVED
   | typeof CONTRADICTION_UNLOCALIZED
   | typeof DEDUCTION_EXHAUSTED
   | typeof NO_MOVE_WORTH_MAKING

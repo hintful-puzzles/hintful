@@ -569,8 +569,6 @@ export interface SoloState {
   pencil: Int32Array;
   /** `area` flags: true where the cell is a given (immutable). Shared. */
   immutable: Uint8Array;
-  completed: boolean;
-  cheated: boolean;
 }
 
 export function cloneState(s: SoloState): SoloState {
@@ -655,8 +653,6 @@ export function newState(p: SoloParams, desc: string): SoloState {
     grid,
     pencil: new Int32Array(area),
     immutable,
-    completed: false,
-    cheated: false,
   };
 }
 
@@ -713,7 +709,9 @@ export function checkValid(
 }
 
 export function status(s: SoloState): "solved" | "ongoing" {
-  return s.completed ? "solved" : "ongoing";
+  return checkValid(s.cr, s.blocks, s.killerData, s.xtype, s.grid)
+    ? "solved"
+    : "ongoing";
 }
 
 // --- moves -----------------------------------------------------------------

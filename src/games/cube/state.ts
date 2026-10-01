@@ -47,8 +47,6 @@ export interface CubeState {
   readonly dpkey: KeyPair;
   readonly previous: number;
   readonly angle: number;
-  /** 0 = ongoing; else the move count at which the puzzle was solved. */
-  readonly completed: number;
   readonly movecount: number;
 }
 
@@ -203,7 +201,6 @@ export function newState(p: CubeParams, desc: string): CubeState {
     dpkey: restKeys,
     previous: current,
     angle: 0,
-    completed: 0,
     movecount: 0,
   };
 }

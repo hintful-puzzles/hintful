@@ -260,7 +260,7 @@ describe("bricks completion and solve (through a real Midend)", () => {
     expect(text).not.toContain("."); // no cell left empty
   });
 
-  it("manually filling the solution sets completed and arms a flash", () => {
+  it("manually filling the solution completes the board, which has a flash", () => {
     const st = newState(FIX_PARAMS, FIX.desc);
     const grid = st.grid.slice();
     solveGame(grid, st.w, st.h, 2, true, true);
@@ -270,11 +270,9 @@ describe("bricks completion and solve (through a real Midend)", () => {
       cells.push({ index: i, to: bitsColor(grid[i]) });
     }
     const done = bricksGame.executeMove(st, { kind: "paint", cells });
-    expect(done.completed).toBe(true);
-    expect(done.cheated).toBe(false);
-    expect(bricksGame.flashLength?.(st, done, 1, bricksGame.newUi(st))).toBeGreaterThan(
-      0,
-    );
+    expect(bricksGame.status(st)).toBe("ongoing");
+    expect(bricksGame.status(done)).toBe("solved");
+    expect(bricksGame.solvedFlash?.(done, bricksGame.newUi(st))).toBeGreaterThan(0);
   });
 
   it("saveGame -> loadGame restores an equivalent game", () => {

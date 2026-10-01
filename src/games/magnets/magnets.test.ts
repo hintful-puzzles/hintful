@@ -178,7 +178,7 @@ describe("magnets moves + findMistakes", () => {
     expect(solveRes?.ok).toBe(true);
     if (solveRes?.ok) {
       s = magnetsGame.executeMove(s, solveRes.move);
-      expect(s.completed).toBe(true);
+      expect(magnetsGame.status(s)).toBe("solved");
     }
   });
 });

@@ -16,7 +16,7 @@
 import { DESC_MALFORMED } from "./desc-error.ts";
 import type { Game } from "./game.ts";
 import { click } from "./hint-gesture.ts";
-import { ALREADY_SOLVED } from "./hint-refusal.ts";
+import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { LEFT_BUTTON, RIGHT_BUTTON } from "./pointer.ts";
 import { randomUpto } from "./random/index.ts";
 
@@ -88,11 +88,10 @@ export const fakeGame: Game<FakeParams, FakeState, FakeMove, null, FakeDrawState
   // The hint plan is the full remaining path to the target, one `inc`
   // per step, each narrated for the count it applies to — the
   // smallest game exercising the midend's plan store/advance/drop.
-  // Never asked about a solved board (the midend refuses that itself), so the
-  // refusal is only what the type needs.
+  // Never asked about a solved board: the midend refuses that itself.
   hint: (s) =>
     s.count >= s.target
-      ? { ok: false, error: ALREADY_SOLVED }
+      ? { ok: false, error: DEDUCTION_EXHAUSTED }
       : {
           ok: true,
           steps: Array.from({ length: s.target - s.count }, (_, i) => ({

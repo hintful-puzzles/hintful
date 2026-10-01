@@ -1,5 +1,4 @@
 import { assertNever } from "../../engine/assert-never.ts";
-import { completionStatus } from "../../engine/completion-status.ts";
 import type {
   Game,
   HintResult,
@@ -9,7 +8,7 @@ import type {
 } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { click, type PointerAction } from "../../engine/hint-gesture.ts";
-import { ALREADY_SOLVED, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
+import { SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -55,7 +54,6 @@ import {
   decodeParams,
   defaultParams,
   encodeParams,
-  isCompleted,
   newDesc,
   newState,
   paramConfig,
@@ -75,13 +73,7 @@ export function executeMove(state: SixteenState, move: SixteenMove): SixteenStat
   if (move.type === "solve") {
     const tiles = new Int32Array(state.n);
     for (let i = 0; i < state.n; i++) tiles[i] = i + 1;
-    return {
-      ...state,
-      tiles,
-      cheated: true,
-      completed: state.moveCount + 1,
-      moveCount: state.moveCount + 1,
-    };
+    return { ...state, tiles, moveCount: state.moveCount + 1 };
   }
   if (move.type !== "slide") return assertNever(move, "sixteen: executeMove");
 
@@ -100,16 +92,13 @@ export function executeMove(state: SixteenState, move: SixteenMove): SixteenStat
     }
   }
 
-  const next: SixteenState = {
+  return {
     ...state,
     tiles,
     moveCount: state.moveCount + 1,
     lastMovementSense: delta,
     lastMove: move,
   };
-  if (!state.completed && isCompleted(next))
-    return { ...next, completed: next.moveCount };
-  return next;
 }
 
 // --- UI ---------------------------------------------------------------
@@ -358,13 +347,9 @@ function interpretMove(
 // --- status bar -------------------------------------------------------
 
 function statusbarText(state: SixteenState, _ui: SixteenUi): string {
-  if (state.cheated) {
-    return `Moves since auto-solve: ${state.moveCount - state.completed}`;
-  }
-  const moves = state.completed || state.moveCount;
-  let s = `Moves: ${moves}`;
+  let s = `Moves: ${state.moveCount}`;
   if (state.moveTarget) s += ` (target ${state.moveTarget})`;
-  return completionStatus(state.completed > 0, false, s);
+  return s;
 }
 
 // --- hint heuristic ----------------------------------------------------
@@ -417,12 +402,6 @@ function toSixteenMove(m: SlideMove): SixteenMove {
 
 function hint(state: SixteenState): HintResult<SixteenMove, SixteenHintHighlights> {
   const { w, h, n, tiles } = state;
-
-  let outOfPlace = 0;
-  for (let i = 0; i < n; i++) {
-    if (tiles[i] !== i + 1) outOfPlace++;
-  }
-  if (outOfPlace === 0) return { ok: false, error: ALREADY_SOLVED };
 
   // Every legal move: a slide of any line by any distance. A slide by any
   // distance is a *single* move — the same granularity as a player's drag and
@@ -803,10 +782,7 @@ export const sixteenGame: Game<
     }
     return ANIM_TIME;
   },
-  // Not `winFlash`: `completed` here is the move count, not a flag — see
-  // Fifteen's note.
-  flashLength: (a, b) =>
-    !a.completed && b.completed && !a.cheated && !b.cheated ? 2 * FLASH_FRAME : 0,
+  solvedFlash: () => 2 * FLASH_FRAME,
 };
 
 registerGame(sixteenGame);

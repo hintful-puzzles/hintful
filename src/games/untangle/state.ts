@@ -5,8 +5,8 @@
  *  - `edges` (the `a < b` vertex-index pairs) are frozen when the game starts
  *    and shared by reference across every state.
  *  - `pts` (positions) are the only thing `executeMove` changes.
- *  - `crosses[]` (per-edge) + `completed` are **derived**, recomputed by
- *    `findCrossings` on every transition.
+ *  - `crosses[]` (per-edge) is **derived**, recomputed by `findCrossings` on
+ *    every transition; the board is solved exactly when none is set.
  *
  * Coordinates are **rational**: a `RationalPoint {x,y,d}` means `x/d,
  * y/d`. Fractions are load-bearing — they let the crossing test run in
@@ -65,11 +65,6 @@ export interface UntangleState {
   readonly edgeSet: ReadonlySet<number>;
   /** Derived: `crosses[i]` is true iff edge `i` crosses another edge. */
   crosses: readonly boolean[];
-  /** Derived: no two edges cross. */
-  completed: boolean;
-  /** Sticky once the player has used Solve (suppresses the win flash,
-   * matching upstream `cheated`). */
-  cheated: boolean;
   /** True only for the transition produced by a Solve move (selects the
    * longer solve animation, matching upstream `just_solved`). */
   justSolved: boolean;

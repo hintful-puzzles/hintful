@@ -637,6 +637,13 @@ function checkRowcol(
   return nerr;
 }
 
+/** Solved when the board breaks no rule, an unmarked cell counting as white
+ * (as upstream completes it). Asked without `CC_MARK_ERRORS`, so the board is
+ * only read. */
+export function status(s: SinglesState): "solved" | "ongoing" {
+  return checkComplete(s, 0) ? "solved" : "ongoing";
+}
+
 /** Returns true when the board has no errors. In MUST_FILL mode an
  * undecided cell counts as an error (solver completeness). */
 export function checkComplete(s: SinglesState, flags: number): boolean {

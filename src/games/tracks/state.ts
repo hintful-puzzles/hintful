@@ -102,8 +102,6 @@ export interface TracksState {
   readonly numbers: TracksNumbers;
   /** Per-clue error flag (length w + h), recomputed each move. */
   readonly numErrors: Uint8Array;
-  readonly completed: boolean;
-  readonly cheated: boolean;
 }
 
 /** One flag change: set/clear a track/no-track flag on a square or one of its
@@ -444,13 +442,13 @@ export function newState(p: TracksParams, desc: string): TracksState {
     sflags: b.sflags,
     numbers: { numbers: b.numbers, rowS: b.rowS, colS: b.colS },
     numErrors: b.numErrors,
-    completed: false,
-    cheated: false,
   };
 }
 
+/** The marking check, on a copy: only the marking pass asks whether the
+ * track is one connected path from entrance to exit. */
 export function status(s: TracksState): GameStatus {
-  return s.completed ? "solved" : "ongoing";
+  return checkCompletion(stateToBoard(s), true) ? "solved" : "ongoing";
 }
 
 // --- completion flash labeling (upstream set_flash_data) ------------------

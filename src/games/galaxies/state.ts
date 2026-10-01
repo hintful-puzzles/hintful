@@ -59,11 +59,6 @@ export interface GalaxiesState {
   readonly nassoc: Int16Array;
   /** Dot positions, derived from `flags`; only the generator rewrites it. */
   dots: Point[];
-  completed: boolean;
-  cheated: boolean;
-  /** The statusbar's difficulty verdict, constant for a dot layout; `-1`
-   * until first computed. */
-  cachedDiff: number;
 }
 
 export function idx(s: { sx: number }, x: number, y: number): number {
@@ -109,9 +104,6 @@ export function blankGame(w: number, h: number): GalaxiesState {
     doty: new Int16Array(n),
     nassoc: new Int16Array(n),
     dots: [],
-    completed: false,
-    cheated: false,
-    cachedDiff: -1,
   };
 }
 
@@ -127,9 +119,6 @@ export function cloneState(s: GalaxiesState): GalaxiesState {
     doty: new Int16Array(s.doty),
     nassoc: new Int16Array(s.nassoc),
     dots: s.dots.slice(),
-    completed: s.completed,
-    cheated: s.cheated,
-    cachedDiff: s.cachedDiff,
   };
 }
 

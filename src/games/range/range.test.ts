@@ -29,7 +29,7 @@ function cellPoint(r: number, c: number): Point {
 }
 
 function makeState(w: number, h: number, grid: number[]): RangeState {
-  return { w, h, grid: Int8Array.from(grid), cheated: false, completed: false };
+  return { w, h, grid: Int8Array.from(grid) };
 }
 
 const ds = { tileSize: TS } as never;
@@ -119,19 +119,21 @@ describe("executeMove", () => {
     ).toThrow();
   });
 
-  it("detects completion via the error-free rule and flashes", () => {
+  it("detects completion via the error-free rule, from the position alone", () => {
     // 1x3: clue 3 in the middle means both ends are white and visible.
     // A single white run of 3 satisfies the clue; no blacks needed.
     const st = makeState(3, 1, [0, 3, 0]);
-    expect(rangeGame.status(st)).toBe("ongoing");
     // The board as dealt already has the clue's run satisfied (empties
-    // count as white), so it is solved immediately on any confirming move.
+    // count as white), so it is solved before any move.
+    expect(rangeGame.status(st)).toBe("solved");
     const after = rangeGame.executeMove(st, { sets: [{ r: 0, c: 0, value: "white" }] });
-    expect(after.completed).toBe(true);
     expect(rangeGame.status(after)).toBe("solved");
-    expect(
-      rangeGame.flashLength?.(st, after, 1, { cursor: newCursor() }),
-    ).toBeGreaterThan(0);
+    expect(rangeGame.solvedFlash?.(after, { cursor: newCursor() })).toBeGreaterThan(0);
+    // Blacking an end hides the clue's run: no longer solved.
+    const broken = rangeGame.executeMove(after, {
+      sets: [{ r: 0, c: 2, value: "black" }],
+    });
+    expect(rangeGame.status(broken)).toBe("ongoing");
   });
 });
 
@@ -143,7 +145,6 @@ describe("solve + findMistakes", () => {
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     const solved = rangeGame.executeMove(st, res.move);
-    expect(solved.cheated).toBe(true);
     // every non-clue cell is now decided
     for (const v of solved.grid) expect(v).not.toBe(EMPTY);
     expect(rangeGame.status(solved)).toBe("solved");

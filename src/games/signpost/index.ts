@@ -7,7 +7,6 @@
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import type { DescError } from "../../engine/desc-error.ts";
-import { winFlash } from "../../engine/flash.ts";
 import type { GamePref } from "../../engine/game.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
@@ -154,7 +153,7 @@ function changedState(
   oldState: SignpostState | null,
   next: SignpostState,
 ): void {
-  if (oldState && !oldState.completed && next.completed) {
+  if (oldState && status(oldState) !== "solved" && status(next) === "solved") {
     ui.cursor.visible = false;
     ui.dragging = false;
   }
@@ -280,7 +279,7 @@ function findMistakes(state: SignpostState): readonly SignpostMistake[] {
 // --- status / text ---------------------------------------------------
 
 function status(s: SignpostState): GameStatus {
-  return s.completed ? "solved" : "ongoing";
+  return checkCompletion(s, false) ? "solved" : "ongoing";
 }
 
 const DIR_STRINGS = ["N ", "NE", "E ", "SE", "S ", "SW", "W ", "NW"] as const;
@@ -360,10 +359,6 @@ function newDrawState(s: SignpostState, tileSize: number): SignpostDrawState {
   };
 }
 
-function flashLength(a: SignpostState, b: SignpostState): number {
-  return winFlash(a, b, FLASH_SPIN);
-}
-
 // --- register --------------------------------------------------------
 
 export const signpostGame: Game<
@@ -431,7 +426,7 @@ export const signpostGame: Game<
   computeSize,
   newDrawState,
   redraw: redrawSignpost,
-  flashLength,
+  solvedFlash: () => FLASH_SPIN,
   animLength: () => 0,
 };
 

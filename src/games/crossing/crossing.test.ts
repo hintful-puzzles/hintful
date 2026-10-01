@@ -1052,33 +1052,21 @@ describe("crossing moves and completion", () => {
     m.playMoves(moves);
     expect(status()).toBe("solved");
 
-    // …and the same transition arms the celebration flash (no help was taken).
+    // …it is the last move that solves it, and the game has a flash for it.
     const penultimate = moves
       .slice(0, -1)
       .reduce((s2, mv) => crossingGame.executeMove(s2, mv), newState(P5, FIX.desc));
     const final = crossingGame.executeMove(penultimate, moves[moves.length - 1]);
-    expect(penultimate.completed).toBe(false);
-    expect(final).toMatchObject({ completed: true, cheated: false });
-    expect(
-      crossingGame.flashLength?.(penultimate, final, 1, newUi()) ?? 0,
-    ).toBeGreaterThan(0);
+    expect(crossingGame.status(penultimate)).toBe("ongoing");
+    expect(crossingGame.status(final)).toBe("solved");
+    expect(crossingGame.solvedFlash?.(final, newUi()) ?? 0).toBeGreaterThan(0);
   });
 
-  it("Solve completes the game with help (no flash)", () => {
+  it("Solve completes the game with help", () => {
     const { m, status } = harness();
     expect(m.newGameFromId(FIX_ID)).toBeNull();
     expect(m.solve()).toBeNull();
     expect(status()).toBe("solved-with-help");
-    // `cheated` is set, so the celebration flash must not fire (docs/games/solver-and-generator.md § "Solve and the generator's aux").
-    const start = newState(P5, FIX.desc);
-    const solveResult = crossingGame.solve?.(start, start);
-    expect(solveResult?.ok).toBe(true);
-    if (solveResult?.ok) {
-      const solved = crossingGame.executeMove(start, solveResult.move);
-      expect(solved.completed).toBe(true);
-      expect(solved.cheated).toBe(true);
-      expect(crossingGame.flashLength?.(start, solved, 1, newUi()) ?? 0).toBe(0);
-    }
   });
 
   it("clearing a digit un-fills the cell without un-completing", () => {

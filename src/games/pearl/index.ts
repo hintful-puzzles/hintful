@@ -12,7 +12,6 @@
 
 import { c2nUpper } from "../../engine/desc-alphabet.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
-import { winFlash } from "../../engine/flash.ts";
 import type { Game, GamePref, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { click, type PointerAction } from "../../engine/hint-gesture.ts";
@@ -40,7 +39,7 @@ import { registerGame } from "../../engine/registry.ts";
 import type { Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import { type PearlHint, pearlHint, pearlKeepTrack } from "./hint.ts";
-import { executeMove, interpretUiDrag, updateUiDrag } from "./moves.ts";
+import { executeMove, interpretUiDrag, status, updateUiDrag } from "./moves.ts";
 import {
   centeredCoord,
   colors,
@@ -75,7 +74,6 @@ import {
   paramConfig,
   presets,
   R,
-  status,
   textFormat,
   U,
   validateDesc,
@@ -426,7 +424,7 @@ export const pearlGame: Game<
   newDrawState,
   redraw,
 
-  flashLength: (oldState, newState) => winFlash(oldState, newState, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(pearlGame);

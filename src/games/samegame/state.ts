@@ -38,9 +38,9 @@ export interface SamegameState {
   /** Color per cell in row-major order; `0` is empty, `1..ncols` a color. */
   readonly tiles: readonly number[];
   readonly score: number;
-  readonly completed: boolean;
-  /** No two orthogonally-adjacent tiles share a color (no move remains).
-   * NOT a loss: upstream leaves it rescuable by Undo. */
+  /** No two orthogonally-adjacent tiles share a color (no move remains),
+   * which an empty grid also is. Read off the tiles by `executeMove`. NOT a
+   * loss: upstream leaves it rescuable by Undo. */
   readonly impossible: boolean;
 }
 
@@ -454,8 +454,7 @@ export function newState(p: SamegameParams, desc: string): SamegameState {
     scoresub: p.scoresub,
     tiles,
     score: 0,
-    completed: false,
-    impossible: false,
+    impossible: check(tiles, p.w, p.h).impossible,
   };
 }
 
@@ -523,11 +522,21 @@ export function check(
 
 // --- status / text ----------------------------------------------------
 
-/** Upstream `game_status`: solved when complete; otherwise ongoing. A
- * no-moves-left (`impossible`) position is NOT a loss — it is rescuable by
- * Undo, so this never returns `"lost"`. */
+/** Whether every tile has been cleared. */
+export function isCleared(state: SamegameState): boolean {
+  return state.tiles.every((c) => c === 0);
+}
+
+/** Whether the board has tiles left and no move to clear them: stuck. */
+export function isStuck(state: SamegameState): boolean {
+  return state.impossible && !isCleared(state);
+}
+
+/** Upstream `game_status`: solved when cleared; otherwise ongoing. A stuck
+ * board is NOT a loss — it is rescuable by Undo, so this never returns
+ * `"lost"`. */
 export function status(state: SamegameState): GameStatus {
-  return state.completed ? "solved" : "ongoing";
+  return isCleared(state) ? "solved" : "ongoing";
 }
 
 /** One digit per tile, a space for an empty cell. Upstream also spells

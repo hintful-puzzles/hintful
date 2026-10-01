@@ -22,6 +22,7 @@ import {
 } from "../../engine/pointer.ts";
 import { mosaicGame } from "./index.ts";
 import {
+  cluesLeft,
   decodeParams,
   encodeBoard,
   encodeParams,
@@ -123,7 +124,7 @@ describe("Mosaic desc codec", () => {
     const state = newState({ width: 3, height: 3, aggressive: true }, "4b69c4");
     // 4, [2 hidden], 6, 9, [3 hidden], 4 — scan order.
     expect(Array.from(state.board.clues)).toEqual([4, -1, -1, 6, 9, -1, -1, -1, 4]);
-    expect(state.notCompletedClues).toBe(4);
+    expect(cluesLeft(state)).toBe(4);
   });
 
   it("round-trips through encodeBoard", () => {
@@ -201,13 +202,13 @@ describe("Mosaic moves", () => {
 
   it("flags a satisfied clue SOLVED and counts completion", () => {
     let s = newState(P3, ALL_BLACK_DESC);
-    expect(s.notCompletedClues).toBe(9);
+    expect(cluesLeft(s)).toBe(9);
     for (let y = 0; y < 3; y++) {
       for (let x = 0; x < 3; x++) {
         s = executeMove(s, { type: "toggle", x, y, double: false });
       }
     }
-    expect(s.notCompletedClues).toBe(0);
+    expect(cluesLeft(s)).toBe(0);
     expect(s.cells[4] & STATE_SOLVED).toBeTruthy();
     expect(status(s)).toBe("solved");
   });
@@ -234,13 +235,14 @@ describe("Mosaic moves", () => {
     const s = newState(P3, ALL_BLACK_DESC);
     // 9 cells all marked: 0xff 0x80.
     const solved = executeMove(s, { type: "solve", solution: "ff80" });
-    expect(solved.cheated).toBe(true);
-    expect(solved.notCompletedClues).toBe(0);
+    expect(cluesLeft(solved)).toBe(0);
+    expect(status(solved)).toBe("solved");
     for (let i = 0; i < 9; i++) {
       expect(solved.cells[i] & 3).toBe(STATE_MARKED);
       expect(solved.cells[i] & STATE_SOLVED).toBeTruthy();
     }
-    expect(statusbarText(solved, freshUi())).toBe("Auto-solved.");
+    // The completion words are the engine's.
+    expect(statusbarText(solved, freshUi())).toBe("");
   });
 
   it("rejects a truncated solve bitmap", () => {
@@ -250,7 +252,7 @@ describe("Mosaic moves", () => {
 });
 
 describe("Mosaic status / text", () => {
-  it("reports the live clue count then COMPLETED!", () => {
+  it("reports the live clue count, then nothing of its own", () => {
     let s = newState(P3, ALL_BLACK_DESC);
     expect(statusbarText(s, freshUi())).toBe("Clues left: 9");
     for (let y = 0; y < 3; y++) {
@@ -258,7 +260,8 @@ describe("Mosaic status / text", () => {
         s = executeMove(s, { type: "toggle", x, y, double: false });
       }
     }
-    expect(statusbarText(s, freshUi())).toBe("COMPLETED!");
+    expect(statusbarText(s, freshUi())).toBe("");
+    expect(status(s)).toBe("solved");
   });
 
   it("formats the clue grid as text", () => {
@@ -386,7 +389,7 @@ describe("Mosaic input mapping", () => {
         s = executeMove(s, { type: "toggle", x, y, double: false });
       }
     }
-    expect(s.notCompletedClues).toBe(0);
+    expect(cluesLeft(s)).toBe(0);
     expect(mosaicGame.interpretMove(s, ui, ds, at(0, 0), LEFT_BUTTON)).toBeNull();
     expect(mosaicGame.interpretMove(s, ui, ds, { x: 0, y: 0 }, CURSOR_RIGHT)).toBe(
       UI_UPDATE,

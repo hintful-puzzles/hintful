@@ -139,7 +139,7 @@ describe("separate solve", () => {
     expect(result?.ok).toBe(true);
     if (!result?.ok) return;
     const solved = executeMove(s0, result.move);
-    expect(solved.completed).toBe(true);
+    expect(separateGame.status(solved)).toBe("solved");
   });
 });
 

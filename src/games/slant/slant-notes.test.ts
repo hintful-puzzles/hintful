@@ -242,7 +242,7 @@ function walkPlan(s: SlantState): { marks: number; steps: number } {
     }
     st = executeMove(st, move);
   }
-  expect(st.completed).toBe(true);
+  expect(slantGame.status(st)).toBe("solved");
   return { marks, steps: res.steps.length };
 
   /** The clues a mark's sentence names are where it says they are. */

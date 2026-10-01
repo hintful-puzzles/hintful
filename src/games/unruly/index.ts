@@ -9,7 +9,6 @@
  */
 
 import type { DifficultyContract } from "../../engine/difficulty.ts";
-import { winFlash } from "../../engine/flash.ts";
 import type {
   Game,
   HintResult,
@@ -131,15 +130,6 @@ function interpretMove(
   if (digit !== null && digit <= 2 && ui.cursor.visible)
     return place(digit === 1 ? ONE : ZERO)(state, ui.cursor);
   return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
-}
-
-function flashLength(
-  oldState: UnrulyState,
-  newState_: UnrulyState,
-  _dir: number,
-  _ui: UnrulyUi,
-): number {
-  return winFlash(oldState, newState_, FLASH_TIME);
 }
 
 // --- hint -----------------------------------------------------------------
@@ -347,7 +337,7 @@ export const unrulyGame: Game<
   redraw,
 
   animLength,
-  flashLength,
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(unrulyGame);

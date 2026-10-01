@@ -17,7 +17,6 @@ import { assertNever } from "../../engine/assert-never.ts";
 import { anyEmptyLacksNotes, candidateHint } from "../../engine/candidate-hint.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type PresetMenu,
@@ -204,9 +203,9 @@ function executeMove(state: SeismicState, move: SeismicMove): SeismicState {
       } else {
         next.grid[i] = move.n;
       }
-      // `validateGame` also refreshes the live error flags, which upstream does
-      // after a pencil change too.
-      if (validateGame(next) === STATUS_COMPLETE) next.completed = true;
+      // Refresh the live error flags, which upstream does after a pencil
+      // change too.
+      validateGame(next);
       return next;
     }
     case "pencilAll": {
@@ -238,8 +237,7 @@ function executeMove(state: SeismicState, move: SeismicMove): SeismicState {
       for (let i = 0; i < w * h; i++) {
         if (!(next.flags[i] & FM_FIXED)) next.grid[i] = move.grid[i];
       }
-      next.completed = validateGame(next) === STATUS_COMPLETE;
-      next.cheated = next.completed;
+      validateGame(next);
       return next;
     }
     default:
@@ -320,7 +318,12 @@ export const seismicGame: Game<
 
   interpretMove,
   executeMove,
-  status: (state) => (state.completed ? "solved" : "ongoing"),
+  // `validateGame` writes the error flags of the board it is given, so it
+  // judges a copy of them.
+  status: (state) =>
+    validateGame({ ...state, flags: state.flags.slice() }) === STATUS_COMPLETE
+      ? "solved"
+      : "ongoing",
 
   solve,
   difficulty,
@@ -365,7 +368,7 @@ export const seismicGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength: (from, to) => winFlash(from, to, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(seismicGame);

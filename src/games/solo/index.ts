@@ -23,7 +23,6 @@ import {
 import { runCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type HintResult,
@@ -86,7 +85,6 @@ import {
   solveSolo,
 } from "./solver.ts";
 import {
-  checkValid,
   cloneState,
   DIFF_AMBIGUOUS,
   DIFF_BLOCK,
@@ -281,7 +279,6 @@ function executeMove(state: SoloState, move: SoloMove): SoloState {
         next.grid[i] = move.n;
         next.pencil[i] = 0;
         if (move.autoElim && move.n > 0) autoEliminate(next, move.x, move.y, move.n);
-        if (!next.completed && isComplete(next)) next.completed = true;
       }
       return next;
     }
@@ -295,8 +292,6 @@ function executeMove(state: SoloState, move: SoloMove): SoloState {
         next.grid[i] = move.grid[i];
         next.pencil[i] = 0;
       }
-      next.completed = true;
-      next.cheated = true;
       return next;
     }
     default:
@@ -305,10 +300,6 @@ function executeMove(state: SoloState, move: SoloMove): SoloState {
 }
 
 /** `check_valid` over the working grid (every region complete, cages sum). */
-function isComplete(state: SoloState): boolean {
-  return checkValid(state.cr, state.blocks, state.killerData, state.xtype, state.grid);
-}
-
 function solve(orig: SoloState, _curr: SoloState, aux?: string): SolveResult<SoloMove> {
   const cr = orig.cr;
   if (aux) {
@@ -794,7 +785,7 @@ export const soloGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength: (from, to) => winFlash(from, to, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(soloGame);

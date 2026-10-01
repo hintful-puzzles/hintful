@@ -200,25 +200,21 @@ describe("lightup board mechanics", () => {
     const p = { ...EASY_PARAMS, w: 2, h: 2 };
     const empty = newState(p, "d"); // 2x2, all open
     let s = lightupGame.executeMove(empty, light(0, 0));
-    expect(s.completed).toBe(false);
+    expect(lightupGame.status(s)).toBe("ongoing");
     s = lightupGame.executeMove(s, light(1, 1));
-    expect(s.completed).toBe(true);
     // Diagonal bulbs don't light each other: no overlap.
     expect(lightupGame.status(s)).toBe("solved");
   });
 
-  it("flashes on a genuine win, not on Solve", () => {
+  it("has a win flash, and a broken win is not solved", () => {
     const p = { ...EASY_PARAMS, w: 2, h: 2 };
     const empty = newState(p, "d");
     const mid = lightupGame.executeMove(empty, light(0, 0));
     const won = lightupGame.executeMove(mid, light(1, 1));
     const u = lightupGame.newUi(empty);
-    expect(lightupGame.flashLength?.(mid, won, 1, u)).toBeGreaterThan(0);
-    const cheated = lightupGame.executeMove(mid, {
-      solve: true,
-      ops: [{ kind: "light", x: 1, y: 1 }],
-    });
-    expect(lightupGame.flashLength?.(mid, cheated, 1, u)).toBe(0);
+    expect(lightupGame.solvedFlash?.(won, u)).toBeGreaterThan(0);
+    const broken = lightupGame.executeMove(won, light(1, 1));
+    expect(lightupGame.status(broken)).toBe("ongoing");
   });
 });
 
@@ -393,8 +389,7 @@ describe("lightup solve", () => {
     expect(me.newGameFromId(EASY_ID)).toBeNull();
     expect(me.solve()).toBeNull();
     const st = (me as unknown as { state: LightupState }).state;
-    expect(st.completed).toBe(true);
-    expect(st.cheated).toBe(true);
+    expect(lightupGame.status(st)).toBe("solved");
   });
 
   it("solve() recovers from a wrong mid-game position", () => {
@@ -416,7 +411,7 @@ describe("lightup solve", () => {
     const res = lightupGame.solve?.(orig, curr);
     if (!res?.ok) throw new Error("solve failed");
     const solved = lightupGame.executeMove(curr, res.move);
-    expect(solved.completed).toBe(true);
+    expect(lightupGame.status(solved)).toBe("solved");
   });
 });
 

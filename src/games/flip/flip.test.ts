@@ -78,7 +78,6 @@ describe("Flip generation", () => {
           });
         }
       });
-      expect(s.completed).toBe(true);
       expect(flipGame.status(s)).toBe("solved");
     });
   }
@@ -107,8 +106,6 @@ describe("Flip solver", () => {
       matrix: new Uint8Array(wh * wh),
       grid: Uint8Array.from([1, 0, 0, 0]),
       moves: 0,
-      completed: false,
-      cheated: false,
       hintsActive: false,
     };
     const result = solveFlip(state, state);
@@ -211,8 +208,6 @@ describe("Flip interpretMove", () => {
       matrix: new Uint8Array(wh * wh), // all zero ⇒ nothing toggles
       grid: new Uint8Array(wh),
       moves: 0,
-      completed: false,
-      cheated: false,
       hintsActive: false,
     };
     expect(
@@ -261,11 +256,10 @@ describe("Flip executeMove is pure and toggles the matrix row", () => {
     expect(next.moves).toBe(from.moves + 1);
   });
 
-  it("a solve move marks the hint bit per the mask and sets cheated", () => {
+  it("a solve move marks the hint bit per the mask", () => {
     const from = flipGame.newState(p, desc);
     const mask = [1, 0, 1, 0, 0, 0, 0, 0, 1];
     const next = flipGame.executeMove(from, { kind: "solve", mask });
-    expect(next.cheated).toBe(true);
     expect(next.hintsActive).toBe(true);
     mask.forEach((bit, i) => {
       expect((next.grid[i] >> 1) & 1).toBe(bit);
@@ -395,7 +389,7 @@ describe("Flip flash-overlay isolation (regression: wave through every cell)", (
     const border = tile >> 1;
     expect(me.processInput(border + 1, border + 1, 0x0200)).toBe(true);
     const state = me as unknown as { history: FlipState[]; pos: number };
-    expect(state.history[state.pos].completed).toBe(false);
+    expect(flipGame.status(state.history[state.pos])).toBe("ongoing");
 
     // Drive the animation timer through its whole 0.25s; flashTime and
     // flashLength must stay 0 on every tick.
@@ -437,7 +431,7 @@ describe("Flip flash-overlay isolation (regression: wave through every cell)", (
       pos: number;
     };
     // Play all but the last hinted cell; flashLength stays 0
-    // because each move keeps `completed=false`.
+    // because each move leaves a light on.
     for (let i = 0; i < cells.length - 1; i++) {
       me.processInput(
         cells[i].x * tile + border + 1,
@@ -447,14 +441,14 @@ describe("Flip flash-overlay isolation (regression: wave through every cell)", (
       // Drain the timer between clicks so the next setupAnimation
       // starts from a settled state.
       for (let t = 0; t < 20; t++) me.timer(0.02);
-      expect(internals.history[internals.pos].completed).toBe(false);
+      expect(flipGame.status(internals.history[internals.pos])).toBe("ongoing");
       expect(internals.flashLength).toBe(0);
     }
 
     // Final click solves the puzzle ⇒ flashLength must be positive.
     const last = cells[cells.length - 1];
     me.processInput(last.x * tile + border + 1, last.y * tile + border + 1, 0x0200);
-    expect(internals.history[internals.pos].completed).toBe(true);
+    expect(flipGame.status(internals.history[internals.pos])).toBe("solved");
     expect(internals.flashLength).toBeGreaterThan(0);
   });
 });

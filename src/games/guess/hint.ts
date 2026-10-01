@@ -23,6 +23,7 @@ import {
   type GuessMove,
   type GuessParams,
   type GuessState,
+  outcome,
   type SlotMark,
 } from "./state.ts";
 
@@ -508,7 +509,7 @@ export function guessHint(
   ui?: { holds: boolean[] },
 ): HintResult<GuessMove, GuessHighlights> {
   // Out of guesses, or the answer shown by Solve: the status is lost.
-  if (state.solved < 0) return { ok: false, error: GAME_OVER };
+  if (outcome(state) < 0) return { ok: false, error: GAME_OVER };
   const p = state.params;
   const rows = scoredRows(state);
   const out = new Int32Array(p.npegs);

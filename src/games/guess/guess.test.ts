@@ -29,6 +29,7 @@ import {
   type GuessUi,
   newDesc,
   newState,
+  outcome,
   status,
 } from "./state.ts";
 
@@ -68,7 +69,7 @@ describe("executeMove", () => {
   it("a correct guess wins", () => {
     const { state } = freshGame();
     const next = guessGame.executeMove(state, submit(state.solution.slice()));
-    expect(next.solved).toBe(1);
+    expect(outcome(next)).toBe(1);
     expect(status(next)).toBe("solved");
     // The winning row is stored at nextGo (unchanged) with all-place feedback.
     expect(next.guesses[next.nextGo].feedback.every((f) => f === 1)).toBe(true);
@@ -86,7 +87,7 @@ describe("executeMove", () => {
     const wrong = state.solution.slice();
     wrong[0] = (wrong[0] % state.params.ncolors) + 1; // perturb one peg
     const next = guessGame.executeMove(state, submit(wrong));
-    expect(next.solved).toBe(0);
+    expect(outcome(next)).toBe(0);
     expect(next.nextGo).toBe(1);
     expect(next.guesses[0].pegs).toEqual(wrong);
   });
@@ -97,7 +98,7 @@ describe("executeMove", () => {
     const wrong = state.solution.slice();
     wrong[0] = (wrong[0] % params.ncolors) + 1;
     const next = guessGame.executeMove(state, submit(wrong));
-    expect(next.solved).toBe(-1);
+    expect(outcome(next)).toBe(-1);
     expect(status(next)).toBe("lost");
   });
 
@@ -107,7 +108,7 @@ describe("executeMove", () => {
     expect(res?.ok).toBe(true);
     if (res?.ok) {
       const next = guessGame.executeMove(state, res.move);
-      expect(next.solved).toBe(-1);
+      expect(next.revealed).toBe(true);
       expect(status(next)).toBe("lost");
     }
   });
@@ -501,7 +502,7 @@ describe("guess next-empty entry", () => {
     );
     expect(move).toMatchObject({ type: "guess" });
     const next = guessGame.executeMove(state, move as GuessMove);
-    expect(next.solved).toBe(0);
+    expect(outcome(next)).toBe(0);
     guessGame.changedState?.(ui, state, next);
     expect(ui.currPegs).toEqual([1, 0, 3, 0]);
     // The player has been pressing keys, so the cursor is on screen — which is

@@ -43,7 +43,6 @@ import {
   type ClustersState,
   type ClustersUi,
   COLMASK,
-  cloneState,
   DIFF_EASY,
   DIFF_NAMES,
   DIFF_TRICKY,
@@ -72,7 +71,7 @@ function cellPoint(r: number, c: number): Point {
 }
 
 function makeState(w: number, h: number, grid: number[]): ClustersState {
-  return { w, h, grid: Uint8Array.from(grid), completed: false, cheated: false };
+  return { w, h, grid: Uint8Array.from(grid) };
 }
 
 function newUi(): ClustersUi {
@@ -333,7 +332,7 @@ describe("interpretMove", () => {
 });
 
 describe("executeMove + completion", () => {
-  it("marks completed on the last correct fill and flashes only then", () => {
+  it("is solved from the last correct fill, and has a flash", () => {
     // 2x2, no givens: fill all red → COMPLETE.
     let st = makeState(2, 2, [0, 0, 0, 0]);
     const paint = (i: number, fill: ClustersFill): ClustersMove => ({
@@ -341,11 +340,10 @@ describe("executeMove + completion", () => {
       cells: [{ index: i, fill }],
     });
     for (const i of [0, 1, 2]) st = clustersGame.executeMove(st, paint(i, F_COLOR_0));
-    expect(st.completed).toBe(false);
-    const before = cloneState(st);
+    expect(clustersGame.status(st)).toBe("ongoing");
     st = clustersGame.executeMove(st, paint(3, F_COLOR_0));
-    expect(st.completed).toBe(true);
-    expect(clustersGame.flashLength?.(before, st, 1, newUi())).toBeGreaterThan(0);
+    expect(clustersGame.status(st)).toBe("solved");
+    expect(clustersGame.solvedFlash?.(st, newUi())).toBeGreaterThan(0);
   });
 });
 

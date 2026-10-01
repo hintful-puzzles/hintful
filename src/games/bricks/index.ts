@@ -15,7 +15,6 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type HintResult,
@@ -60,7 +59,7 @@ import {
   type TargetVerbs,
   verbClicks,
 } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
+import type { GameStatus, Point } from "../../engine/types.ts";
 import { newBricksDesc } from "./generator.ts";
 import { say } from "./hint-text.ts";
 import {
@@ -104,7 +103,6 @@ import {
   newState,
   paramConfig,
   presets,
-  status,
   textFormat,
   validateDesc,
 } from "./state.ts";
@@ -354,7 +352,6 @@ function executeMove(state: BricksState, move: BricksMove): BricksState {
       if (!(state.grid[i] & COL_MASK)) continue;
       next.grid[i] = colorBits(move.grid[i]);
     }
-    next.cheated = true;
   } else if (move.kind === "paint") {
     for (const { index, to } of move.cells) {
       if (state.grid[index] & COL_MASK) next.grid[index] = colorBits(to);
@@ -362,8 +359,11 @@ function executeMove(state: BricksState, move: BricksMove): BricksState {
   } else {
     return assertNever(move, "bricks: executeMove");
   }
-  if (bricksValidate(next.grid, w, h, false) === "complete") next.completed = true;
   return next;
+}
+
+function status(s: BricksState): GameStatus {
+  return bricksValidate(s.grid, s.w, s.h, false) === "complete" ? "solved" : "ongoing";
 }
 
 function solve(orig: BricksState): SolveResult<BricksMove> {
@@ -580,7 +580,7 @@ export const bricksGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength: (from, to) => winFlash(from, to, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(bricksGame);

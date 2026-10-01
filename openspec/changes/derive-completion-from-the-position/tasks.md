@@ -16,18 +16,20 @@
 
 ## 2. Games migrate
 
-- [ ] 2.1 One game end to end first (Fifteen: its sorted start is the case the
+- [x] 2.1 One game end to end first (Fifteen: its sorted start is the case the
       shape exists for), then the rest: `status` from the board; `completed`,
       `cheated`, solve-move special cases and flash conditions removed.
-- [ ] 2.2 A guard derives the migrated population from the state types and
-      holds `status` to the position (a rebuilt state of the same position
-      answers the same); prove it fails on a planted latch.
+- [x] 2.2 A guard holds `status` to the position: from a solved board the
+      game's own input reaches an unsolved one, and no state carries a
+      completion record (`position-status.test.ts`, replacing
+      `completion-vocabulary.test.ts`); proved red on a planted latch in Keen
+      and a planted field in Fifteen.
 
 ## 3. The words and the contract
 
-- [ ] 3.1 The status bar's completion words become the engine's;
-      `ALREADY_SOLVED` leaves `HintRefusal`.
+- [x] 3.1 The status bar's completion words become the engine's;
+      `ALREADY_SOLVED` leaves `HintRefusal`; `flash.ts` is deleted.
 - [ ] 3.2 Mines' hint (proposal § "Hints to pull in").
-- [ ] 3.3 Spec deltas: replace "One completion vocabulary across games";
+- [x] 3.3 Spec deltas: replace "One completion vocabulary across games";
       `docs/games/mechanics.md`, `rendering.md` (the flash) and the engine
       catalog's `flash.ts` and `completion-status.ts` entries.

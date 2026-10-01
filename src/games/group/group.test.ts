@@ -56,9 +56,9 @@ function newUiAt(s: GroupState, pos: number) {
  * ever dropped): if one goes missing, this fails immediately and says which.
  * None of the three reads `this`, so calling them unbound is safe.
  */
-const { solve, flashLength, findMistakes } = groupGame;
-if (!solve || !flashLength || !findMistakes) {
-  throw new Error("group: expected the solve / flashLength / findMistakes hooks");
+const { solve, solvedFlash, findMistakes } = groupGame;
+if (!solve || !solvedFlash || !findMistakes) {
+  throw new Error("group: expected the solve / solvedFlash / findMistakes hooks");
 }
 
 /** A completed grid is a valid group table iff Latin + associative. */
@@ -161,24 +161,28 @@ describe("moves and completion", () => {
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     const done = groupGame.executeMove(state, res.move);
-    expect(done.completed).toBe(true);
-    expect(done.cheated).toBe(true); // solved via the button
     expect(isValidGroupTable(done.grid, p.w)).toBe(true);
     expect(groupGame.status(done)).toBe("solved");
   });
 
-  it("the completion flash fires on a genuine (non-cheated) completion", () => {
+  it("placing the last cell solves the board, which has a flash", () => {
     const p = P(6, DIFF_NORMAL, true);
     const { state, aux } = freshGame(p);
     const res = solve(state, state, aux);
     if (!res.ok) throw new Error("unsolvable");
     const solved = groupGame.executeMove(state, res.move);
+    // The solved table with one non-given cell taken back out.
+    const last = solved.immutable.indexOf(0);
     const before = cloneState(solved);
-    before.completed = false;
-    before.cheated = false;
-    const after = cloneState(solved);
-    after.cheated = false; // as if the player placed the last cell themselves
-    expect(flashLength(before, after, +1, newUi(state))).toBeGreaterThan(0);
+    before.grid[last] = 0;
+    expect(groupGame.status(before)).toBe("ongoing");
+    const after = groupGame.executeMove(before, {
+      type: "set",
+      n: solved.grid[last],
+      cells: [{ x: last % p.w, y: Math.floor(last / p.w) }],
+    });
+    expect(groupGame.status(after)).toBe("solved");
+    expect(solvedFlash(after, newUi(state))).toBeGreaterThan(0);
   });
 
   it("a multifill set writes every listed cell", () => {

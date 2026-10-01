@@ -45,8 +45,6 @@ export interface FillingState {
   readonly clues: Uint8Array;
   /** Mutable player grid (0 = empty), cloned per move. */
   readonly board: Uint8Array;
-  readonly completed: boolean;
-  readonly cheated: boolean;
 }
 
 /** A `set` writes one value into every listed cell (upstream `"i,..._v"`);
@@ -138,8 +136,6 @@ export function newState(p: FillingParams, desc: string): FillingState {
     h: p.h,
     clues,
     board: Uint8Array.from(clues),
-    completed: false,
-    cheated: false,
   };
 }
 
@@ -198,7 +194,7 @@ export function executeMove(state: FillingState, move: FillingMove): FillingStat
       if (v === null) throw new Error("Bad solve board");
       board[i] = v;
     }
-    return { ...state, board, completed: true, cheated: true };
+    return { ...state, board };
   }
   if (move.type !== "set") return assertNever(move, "filling: executeMove");
 
@@ -209,16 +205,13 @@ export function executeMove(state: FillingState, move: FillingMove): FillingStat
     if (c < 0 || c >= sz) throw new Error("Move cell out of bounds");
     next.board[c] = value;
   }
-  if (!next.completed && isComplete(next.board, w, h)) {
-    return { ...next, completed: true };
-  }
   return next;
 }
 
 // --- status / text -------------------------------------------------------
 
 export function status(state: FillingState): GameStatus {
-  return state.completed ? "solved" : "ongoing";
+  return isComplete(state.board, state.w, state.h) ? "solved" : "ongoing";
 }
 
 /** Bordered ASCII grid (upstream `board_to_string`). */

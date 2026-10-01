@@ -434,7 +434,7 @@ function executeMove(s: BridgesState, m: BridgesMove): BridgesState {
   const ret = s.clone();
   for (const op of m.ops) {
     if (op.op === "S") {
-      ret.solved = true;
+      // The solver's marker: what follows is its answer, played as bridges.
     } else if (op.op === "L" || op.op === "N" || op.op === "C") {
       if (!ret.inGrid(op.x1, op.y1) || !ret.inGrid(op.x2, op.y2))
         throw new Error(`bridges executeMove: ${op.op} endpoint off-grid`);
@@ -469,7 +469,8 @@ function executeMove(s: BridgesState, m: BridgesMove): BridgesState {
     }
   }
   ret.mapUpdatePossibles();
-  if (runMapCheck(ret)) ret.completed = true;
+  // Run for the group warnings it leaves on the grid.
+  runMapCheck(ret);
   return ret;
 }
 
@@ -640,7 +641,8 @@ export const bridgesGame: Game<
   executeMove,
 
   status(s: BridgesState): GameStatus {
-    return s.completed ? "solved" : "ongoing";
+    // On a copy: the check rewrites the grid's warning flags as it groups.
+    return runMapCheck(s.clone()) ? "solved" : "ongoing";
   },
 
   solve,
@@ -693,9 +695,7 @@ export const bridgesGame: Game<
     );
   },
   animLength: () => 0,
-  flashLength(a: BridgesState, b: BridgesState): number {
-    return !a.completed && b.completed && !a.solved && !b.solved ? FLASH_TIME : 0;
-  },
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(bridgesGame);

@@ -57,7 +57,7 @@ const POPULATE: CandidatePlanPrefs = { autoClean: false, reading: "populate" };
 function gen(p: RomeParams, seed: string): { desc: string; st: RomeState } {
   const { desc } = newRomeDesc(p, randomNew(seed));
   const { board } = readDesc(p, desc);
-  return { desc, st: { ...board, completed: false, cheated: false } };
+  return { desc, st: board };
 }
 
 const kindOf = (reason: unknown): string => (reason as RomeReason).kind;

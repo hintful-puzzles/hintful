@@ -18,6 +18,7 @@ import {
   COL_LOCKED,
   COL_POWERED,
   COL_WIRE,
+  FLASH_FRAME,
 } from "./render.ts";
 import { type NetMove, type NetParams, newState, newUi } from "./state.ts";
 
@@ -93,10 +94,13 @@ describe("net render", () => {
     );
   });
 
-  it("Solve is not celebrated with a flash", () => {
+  // When the flash plays (not on Solve) is the engine's, tested in
+  // `midend.test.ts`; how long it runs is Net's, sweeping the whole board.
+  it("the win flash lasts long enough to sweep the board", () => {
     const { state, solveMove } = board(P5, "render-noflash");
     const solved = netGame.executeMove(state, solveMove);
-    // cheated suppresses the completion flash.
-    expect(netGame.flashLength?.(state, solved, 1, newUi(solved))).toBe(0);
+    expect(netGame.solvedFlash?.(solved, newUi(solved))).toBeCloseTo(
+      FLASH_FRAME * (Math.max(solved.w, solved.h) + 4),
+    );
   });
 });

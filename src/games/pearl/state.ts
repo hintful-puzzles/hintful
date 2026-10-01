@@ -17,7 +17,6 @@ import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
-import type { GameStatus } from "../../engine/types.ts";
 
 // --- clue kinds (upstream NOCLUE / CORNER=black / STRAIGHT=white) ----------
 export const NOCLUE = 0;
@@ -195,8 +194,6 @@ export interface PearlState {
   readonly marks: Uint8Array;
   /** Error flags per cell (R|U|L|D bits | ERROR_CLUE). */
   readonly errors: Uint8Array;
-  readonly completed: boolean;
-  readonly cheated: boolean;
 }
 
 export function newState(p: PearlParams, desc: string): PearlState {
@@ -216,18 +213,12 @@ export function newState(p: PearlParams, desc: string): PearlState {
     lines: new Uint8Array(sz),
     marks: new Uint8Array(sz),
     errors: new Uint8Array(sz),
-    completed: false,
-    cheated: false,
   };
 }
 
 /** True iff `(x, y)` is on the grid (upstream `INGRID`). */
 export function inGrid(s: { w: number; h: number }, x: number, y: number): boolean {
   return x >= 0 && x < s.w && y >= 0 && y < s.h;
-}
-
-export function status(s: PearlState): GameStatus {
-  return s.completed ? "solved" : "ongoing";
 }
 
 // --- moves -----------------------------------------------------------------

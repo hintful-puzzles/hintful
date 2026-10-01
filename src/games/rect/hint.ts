@@ -30,7 +30,7 @@ import { stepBudget } from "../../engine/step-budget.ts";
 import type { Rect } from "../../engine/types.ts";
 import type { RectEdge } from "./hint-marks.ts";
 import { say } from "./hint-text.ts";
-import { executeMove, hrange, vrange } from "./moves.ts";
+import { executeMove, hrange, isSolved, vrange } from "./moves.ts";
 import type { RectMove, RectState } from "./state.ts";
 
 export type RectFiring =
@@ -231,9 +231,9 @@ export function nextFiring(s: RectState): RectFiring | null {
  * do, so the hint never runs out on a board it dealt. */
 export function rungsFinish(s: RectState): boolean {
   let t = s;
-  for (let f = nextFiring(t); f && !t.completed; f = nextFiring(t))
+  for (let f = nextFiring(t); f && !isSolved(t); f = nextFiring(t))
     t = executeMove(t, moveOf(f));
-  return t.completed;
+  return isSolved(t);
 }
 
 /** The move a firing makes. */
@@ -255,7 +255,7 @@ export function rectHint(state: RectState): HintResult<RectMove, RectHint> {
   const steps: HintStep<RectMove, RectHint>[] = [];
   deduceHintPlan({
     board,
-    status: (b) => b.s.completed,
+    status: (b) => isSolved(b.s),
     incomplete: false,
     next: (b) => nextFiring(b.s),
     apply: (b, f) => {

@@ -185,22 +185,17 @@ describe("pearl input + executeMove", () => {
         y: (i / state.w) | 0,
       });
     const done = executeMove(state, { ops });
-    expect(done.completed).toBe(true);
-    // flashLength fires for a fresh completion, not one reached via Solve.
-    const flash = pearlGame.flashLength?.(state, done, 0, pearlGame.newUi(state));
-    expect(flash).toBeGreaterThan(0);
+    expect(pearlGame.status(done)).toBe("solved");
+    expect(pearlGame.solvedFlash?.(done, pearlGame.newUi(state))).toBeGreaterThan(0);
   });
 
-  it("Solve fills in the unique solution and marks used-solve", () => {
+  it("Solve fills in the unique solution", () => {
     const state = generate(EASY_6, "solve");
     const res = pearlGame.solve?.(state, state);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
     const done = executeMove(state, res.move);
-    expect(done.completed).toBe(true);
-    expect(done.cheated).toBe(true);
-    // No celebration flash after Solve.
-    expect(pearlGame.flashLength?.(state, done, 0, pearlGame.newUi(state))).toBe(0);
+    expect(pearlGame.status(done)).toBe("solved");
   });
 
   it("a saved autosolve move still replays in place", () => {
@@ -208,7 +203,7 @@ describe("pearl input + executeMove", () => {
     const done = executeMove(state, { ops: [{ kind: "hint" }] });
     const sol = solutionLines(state);
     expect(Array.from(done.lines)).toEqual(Array.from(sol));
-    expect(done.completed).toBe(true);
+    expect(pearlGame.status(done)).toBe("solved");
   });
 });
 

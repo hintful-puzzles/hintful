@@ -52,8 +52,6 @@ export interface UnrulyState {
   /** 1 where the cell is a fixed clue; shared by reference across a
    * game's states (upstream's refcounted `common->immutable`). */
   readonly immutable: Uint8Array;
-  readonly completed: boolean;
-  readonly cheated: boolean;
 }
 
 /** A `place` sets one non-immutable cell (upstream `P{c},{x},{y}`); a
@@ -199,8 +197,6 @@ export function newState(p: UnrulyParams, desc: string): UnrulyState {
     unique: p.unique,
     grid,
     immutable,
-    completed: false,
-    cheated: false,
   };
 }
 
@@ -237,7 +233,7 @@ export function executeMove(state: UnrulyState, move: UnrulyMove): UnrulyState {
       if (c !== "0" && c !== "1") throw new Error("Bad solve grid");
       grid[i] = c === "1" ? ONE : ZERO;
     }
-    return { ...state, grid, completed: true, cheated: true };
+    return { ...state, grid };
   }
   if (move.type !== "place") return assertNever(move, "unruly: executeMove");
 
@@ -248,14 +244,13 @@ export function executeMove(state: UnrulyState, move: UnrulyMove): UnrulyState {
 
   const next = { ...state, grid: Uint8Array.from(state.grid) };
   next.grid[i] = value;
-  if (!next.completed && isComplete(next)) return { ...next, completed: true };
   return next;
 }
 
 // --- status / text -------------------------------------------------------
 
 export function status(state: UnrulyState): GameStatus {
-  return state.completed ? "solved" : "ongoing";
+  return isComplete(state) ? "solved" : "ongoing";
 }
 
 export function textFormat(state: UnrulyState): string {

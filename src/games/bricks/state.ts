@@ -29,7 +29,6 @@ import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import type { GameStatus } from "../../engine/types.ts";
 
 // --- cell bit-field (upstream values) ---------------------------------------
 
@@ -88,8 +87,6 @@ export interface BricksState {
   pw: number;
   /** Packed cell field, row-major over the padded array. */
   grid: Uint16Array;
-  completed: boolean;
-  cheated: boolean;
 }
 
 /** A cell's play color — upstream `A`/`B`/`C`. */
@@ -307,7 +304,7 @@ export function newState(p: BricksParams, desc: string): BricksState {
     dp++;
   }
 
-  return { w, h, pw: p.w, grid, completed: false, cheated: false };
+  return { w, h, pw: p.w, grid };
 }
 
 /**
@@ -351,10 +348,6 @@ export function encodeDesc(grid: Uint16Array, w: number, h: number): string {
 
 export function cloneState(s: BricksState): BricksState {
   return { ...s, grid: s.grid.slice() };
-}
-
-export function status(s: BricksState): GameStatus {
-  return s.completed ? "solved" : "ongoing";
 }
 
 // --- text format (upstream game_text_format) --------------------------------

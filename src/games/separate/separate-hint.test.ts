@@ -73,17 +73,19 @@ function partialBoard(
   return st;
 }
 
+const isSolved = (s: SeparateState): boolean => separateGame.status(s) === "solved";
+
 /** Every step's sentence, walking to solved one recomputed hint at a time. */
 function walk(start: SeparateState): { spoken: string[]; solved: boolean } {
   const spoken: string[] = [];
   let st = start;
-  for (let guard = 0; guard < 400 && !st.completed; guard++) {
+  for (let guard = 0; guard < 400 && !isSolved(st); guard++) {
     const r = hintOf(st);
     if (!r.ok) return { spoken, solved: false };
     for (const s of r.steps) spoken.push(s.explanation);
     st = executeMove(st, r.steps[0].move);
   }
-  return { spoken, solved: st.completed };
+  return { spoken, solved: isSolved(st) };
 }
 
 /** The corpus: per preset, two boards, each walked from fresh and from four
@@ -131,7 +133,7 @@ describe("separate hint from the player's own positions", () => {
   for (const { label, starts } of corpus) {
     it(`${label}: finishes from fresh and from correct partial boards`, () => {
       for (const [n, start] of starts.entries()) {
-        if (start.completed) continue;
+        if (isSolved(start)) continue;
         const { spoken, solved } = walk(start);
         walked++;
         expect(solved, `${label} start ${n}: the hint stopped short`).toBe(true);

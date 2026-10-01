@@ -44,6 +44,8 @@ import {
 
 type Step = HintStep<SeismicMove, SeismicHint>;
 
+const isSolved = (s: SeismicState): boolean => seismicGame.status(s) === "solved";
+
 /** Both modes at both tiers, plus a board wider than tall and one taller than
  * wide: the shared note helpers once scanned a square of the width. */
 const SHAPES: SeismicParams[] = [
@@ -194,7 +196,7 @@ describe.each(READINGS)("the corpus, under the %s reading", (reading) => {
         seen.add(kindOf(step, params.mode === MODE_TECTONIC));
         state = seismicGame.executeMove(state, step.move);
       }
-      expect(state.completed, `${label} stalled`).toBe(true);
+      expect(isSolved(state), `${label} stalled`).toBe(true);
       steps += planOf(label, start, reading).length;
     }
     expect(steps, "the census walked almost nothing").toBeGreaterThan(500);
@@ -242,7 +244,7 @@ describe("the starved-area finder", () => {
     for (const { label, params, state: start } of boards()) {
       if (params.diff === DIFF_EASY) continue;
       let state = start;
-      for (let move = 0; move < 500 && !state.completed; move++) {
+      for (let move = 0; move < 500 && !isSolved(state); move++) {
         const plan = planOf(label, state, "populate");
         if (isStarve(plan[0])) {
           points++;
@@ -264,7 +266,7 @@ describe("the starved-area finder", () => {
         }
         state = seismicGame.executeMove(state, plan[0].move);
       }
-      expect(state.completed, `${label} never finished`).toBe(true);
+      expect(isSolved(state), `${label} never finished`).toBe(true);
     }
     expect(points, "no trial point was checked").toBeGreaterThan(20);
   });
@@ -394,7 +396,7 @@ describe.each(
         }
         state = seismicGame.executeMove(state, m);
       }
-      expect(state.completed, `${label}: following the plan finishes the board`).toBe(
+      expect(isSolved(state), `${label}: following the plan finishes the board`).toBe(
         true,
       );
     }
@@ -450,9 +452,9 @@ describe("the player's own board", () => {
       let s = state;
       const first = planOf(label, s, reading);
       expect(first.some((step) => step.move.type === "pencilAll")).toBe(false);
-      for (let move = 0; move < 500 && !s.completed; move++)
+      for (let move = 0; move < 500 && !isSolved(s); move++)
         s = seismicGame.executeMove(s, planOf(label, s, reading)[0].move);
-      expect(s.completed, reading).toBe(true);
+      expect(isSolved(s), reading).toBe(true);
     }
   });
 

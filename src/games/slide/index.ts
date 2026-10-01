@@ -274,7 +274,7 @@ function moveSlideCursor(
  * step at a time with Space/Enter. Solve deliberately does **not** fill the
  * board in: the route *is* the feature, as in Inertia
  * (docs/games/input.md § "The board keeps the keyboard after a control"). It
- * sets `cheated` and leaves the position alone.
+ * leaves the position alone.
  *
  * Divergence: upstream solves the *initial* board, though its own comment says
  * "from the current position" and its `execute_move` adjusts the route for a
@@ -388,8 +388,7 @@ export const slideGame: Game<
   // `game_anim_length` is 0, and the live feedback is the block following the
   // pointer.
   animLength: () => 0,
-  flashLength: (a: SlideState, b: SlideState): number =>
-    a.completed < 0 && b.completed >= 0 ? FLASH_TIME : 0,
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(slideGame);

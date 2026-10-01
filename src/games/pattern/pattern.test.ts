@@ -166,7 +166,7 @@ describe("pattern moves and completion", () => {
     expect(filled.grid[0]).toBe(GRID_UNKNOWN);
   });
 
-  it("completes (un-cheated) when fills reproduce the solution", () => {
+  it("completes when fills reproduce the solution", () => {
     const { state } = genState({ w: 5, h: 5 }, "complete-seed");
     const solution = solveState(state);
     expect(solution).not.toBeNull();
@@ -174,11 +174,9 @@ describe("pattern moves and completion", () => {
     const solved = applySolution(state, solution);
     expect(isComplete(solved)).toBe(true);
     expect(status(solved)).toBe("solved");
-    expect(solved.completed).toBe(true);
-    expect(solved.cheated).toBe(false);
   });
 
-  it("a solve move marks the board solved-with-help", () => {
+  it("a solve move solves the board", () => {
     const { state } = genState({ w: 5, h: 5 }, "solve-seed");
     const sol = solveState(state);
     expect(sol).not.toBeNull();
@@ -187,8 +185,7 @@ describe("pattern moves and completion", () => {
     for (let i = 0; i < sol.length; i++) grid += sol[i] === GRID_FULL ? "1" : "0";
     const move: PatternMove = { type: "solve", grid };
     const after = executeMove(state, move);
-    expect(after.completed).toBe(true);
-    expect(after.cheated).toBe(true);
+    expect(status(after)).toBe("solved");
   });
 
   it("cursor select reveals the cursor, then cycles a cell", () => {

@@ -206,13 +206,7 @@ function executeMove(s: PegsState, m: PegsMove): PegsState {
   grid[sy * w + sx] = GRID_HOLE;
   grid[((sy + ty) / 2) * w + (sx + tx) / 2] = GRID_HOLE;
   grid[ty * w + tx] = GRID_PEG;
-
-  // Won when exactly one peg remains.
-  let pegs = 0;
-  for (const v of grid) {
-    if (v === GRID_PEG) pegs++;
-  }
-  return { w, h, completed: s.completed || pegs === 1, grid };
+  return { w, h, grid };
 }
 // --- changedState ----------------------------------------------------
 
@@ -227,13 +221,6 @@ function executeMove(s: PegsState, m: PegsMove): PegsState {
 function changedState(ui: PegsUi, _old: PegsState | null, _next: PegsState): void {
   ui.dragging = false;
   ui.curJumping = false;
-}
-
-// --- animation / flash -----------------------------------------------
-
-function flashLength(a: PegsState, b: PegsState): number {
-  if (!a.completed && b.completed) return 2 * FLASH_FRAME;
-  return 0;
 }
 
 // --- register --------------------------------------------------------
@@ -293,7 +280,7 @@ export const pegsGame: Game<PegsParams, PegsState, PegsMove, PegsUi, PegsDrawSta
   computeSize,
   newDrawState,
   redraw,
-  flashLength,
+  solvedFlash: () => 2 * FLASH_FRAME,
 };
 
 registerGame(pegsGame);

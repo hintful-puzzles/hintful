@@ -255,8 +255,6 @@ export interface AbcdState {
   /** `(w+h)·n` immutable edge clues (`NO_NUMBER` for hidden); shared by
    * reference across every clone (never mutated after `newState`). */
   readonly numbers: Int32Array;
-  completed: boolean;
-  cheated: boolean;
 }
 
 export function newState(p: AbcdParams, desc: string): AbcdState {
@@ -266,8 +264,6 @@ export function newState(p: AbcdParams, desc: string): AbcdState {
     grid: new Int8Array(a),
     pencil: new Int32Array(a), // pencil marks start empty
     numbers: parseNumbers(p, desc),
-    completed: false,
-    cheated: false,
   };
 }
 
@@ -277,8 +273,6 @@ export function cloneState(s: AbcdState): AbcdState {
     grid: s.grid.slice(),
     pencil: s.pencil.slice(),
     numbers: s.numbers, // immutable, shared
-    completed: s.completed,
-    cheated: s.cheated,
   };
 }
 
@@ -423,7 +417,7 @@ export function newUi(_state: AbcdState): AbcdUi {
 }
 
 export function status(s: AbcdState): "solved" | "ongoing" {
-  return s.completed ? "solved" : "ongoing";
+  return isCompleted(s) ? "solved" : "ongoing";
 }
 
 /**

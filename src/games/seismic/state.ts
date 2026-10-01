@@ -227,8 +227,6 @@ export interface SeismicBoard {
 
 export interface SeismicState extends SeismicBoard {
   readonly params: SeismicParams;
-  completed: boolean;
-  cheated: boolean;
 }
 
 export function blankBoard(w: number, h: number, mode: number): SeismicBoard {
@@ -255,8 +253,6 @@ export function cloneState(s: SeismicState): SeismicState {
     flags: s.flags.slice(),
     pencil: s.pencil.slice(),
     params: s.params,
-    completed: s.completed,
-    cheated: s.cheated,
   };
 }
 
@@ -511,7 +507,7 @@ export function validateDesc(p: SeismicParams, desc: string): DescError | null {
 
 export function newState(p: SeismicParams, desc: string): SeismicState {
   const { board } = readDesc(p, desc);
-  return { ...board, params: p, completed: false, cheated: false };
+  return { ...board, params: p };
 }
 
 // --- text rendering --------------------------------------------------------

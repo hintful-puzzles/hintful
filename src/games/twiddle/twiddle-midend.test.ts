@@ -52,6 +52,6 @@ describe("Twiddle midend lifecycle", () => {
 
   it("solve snaps to the solved board and reports auto-solve", () => {
     expect(h.m.solve()).toBeNull();
-    expect(h.status()?.statusBarText).toContain("Moves since auto-solve");
+    expect(h.status()?.statusBarText).toMatch(/^Auto-solved\. Moves: 1/);
   });
 });

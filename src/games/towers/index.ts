@@ -23,7 +23,6 @@ import {
 import { runLatinCandidatePlan } from "../../engine/candidate-plan.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type HintStep,
@@ -94,7 +93,6 @@ import {
   solveTowers,
 } from "./solver.ts";
 import {
-  checkErrors,
   cloneState,
   clueIndex,
   cluePos,
@@ -295,7 +293,6 @@ function executeMove(state: TowersState, move: TowersMove): TowersState {
             if (k !== move.y) next.pencil[k * w + move.x] &= bit;
           }
         }
-        if (!next.completed && !checkErrors(next)) next.completed = true;
       }
       return next;
     }
@@ -313,8 +310,6 @@ function executeMove(state: TowersState, move: TowersMove): TowersState {
         next.grid[i] = move.grid[i];
         next.pencil[i] = 0;
       }
-      next.completed = true;
-      next.cheated = true;
       return next;
     }
     default:
@@ -650,7 +645,7 @@ export const towersGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength: (from, to) => winFlash(from, to, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(towersGame);

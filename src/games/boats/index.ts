@@ -28,7 +28,6 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type HintResult,
@@ -323,18 +322,10 @@ function executeMove(state: BoatsState, move: BoatsMove): BoatsState {
     return assertNever(move, "boats: executeMove");
   }
 
-  // Resolve every segment's shape from its neighbors, then see whether that
-  // finished the puzzle.
+  // Resolve every segment's shape from its neighbors.
   adjustShips(b);
-  const completed = validateFullState(b) === STATUS_COMPLETE;
 
-  return {
-    ...state,
-    grid,
-    completed,
-    // A solve that did not actually finish the grid is not cheating.
-    cheated: move.kind === "solve" ? completed : state.cheated,
-  };
+  return { ...state, grid };
 }
 
 function solve(orig: BoatsState): SolveResult<BoatsMove> {
@@ -344,7 +335,9 @@ function solve(orig: BoatsState): SolveResult<BoatsMove> {
 }
 
 function status(s: BoatsState): GameStatus {
-  return s.completed ? "solved" : "ongoing";
+  const b = boardOf(s);
+  adjustShips(b);
+  return validateFullState(b) === STATUS_COMPLETE ? "solved" : "ongoing";
 }
 
 // --- hint (a second projection of the deduction engine) ---------------------
@@ -596,10 +589,6 @@ function hintGesture(
   return [drag(at(empty[0]), at(empty[empty.length - 1]), { button })];
 }
 
-function flashLength(from: BoatsState, to: BoatsState): number {
-  return winFlash(from, to, FLASH_TIME);
-}
-
 // --- params UI -------------------------------------------------------------
 
 /** The fleet configuration as the Custom dialog and the type-menu summary show
@@ -739,7 +728,7 @@ export const boatsGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength,
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(boatsGame);

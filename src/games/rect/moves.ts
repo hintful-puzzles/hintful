@@ -156,7 +156,7 @@ export function newState(params: RectParams, desc: string): RectState {
   const vedge = new Uint8Array(area);
   const hedge = new Uint8Array(area);
   const correct = getCorrect(w, h, grid, hedge, vedge);
-  return { w, h, grid, vedge, hedge, completed: false, cheated: false, correct };
+  return { w, h, grid, vedge, hedge, correct };
 }
 
 export function cloneRectState(s: RectState): RectState {
@@ -169,18 +169,15 @@ export function cloneRectState(s: RectState): RectState {
 }
 
 /** Pure move execution: returns a NEW state (upstream `execute_move`). Every
- * move type recomputes `correct` and sets `completed` monotonically once the
- * whole board is correct — including the solve path, so `status()` reports the
- * win and the midend upgrades it to "solved-with-help". */
+ * move type, the solve path included, recomputes `correct`, which is what
+ * `isSolved` reads. */
 export function executeMove(from: RectState, move: RectMove): RectState {
   const { w, h } = from;
   const next = cloneRectState(from);
   const hedge = next.hedge;
   const vedge = next.vedge;
-  let cheated = from.cheated;
 
   if (move.type === "solve") {
-    cheated = true;
     // Row-major bit runs over the meaningful edges; a short run leaves the
     // remaining edges clear.
     let i = 0;
@@ -211,12 +208,16 @@ export function executeMove(from: RectState, move: RectMove): RectState {
   }
 
   const correct = getCorrect(w, h, next.grid, hedge, vedge);
-  const completed = from.completed || !correct.includes(0);
-  return { ...next, correct, completed, cheated };
+  return { ...next, correct };
+}
+
+/** Solved: every cell lies in a valid rectangle. */
+export function isSolved(s: RectState): boolean {
+  return !s.correct.includes(0);
 }
 
 export function status(s: RectState): GameStatus {
-  return s.completed ? "solved" : "ongoing";
+  return isSolved(s) ? "solved" : "ongoing";
 }
 
 export function textFormat(state: RectState): string {

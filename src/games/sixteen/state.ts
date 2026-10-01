@@ -29,9 +29,6 @@ export interface SixteenState {
   readonly n: number;
   /** Tile numbers 1..n, row-major, with no gap; tile `t` is home in cell `t - 1`. */
   readonly tiles: Int32Array;
-  /** 0 = ongoing; >0 = move count at which the puzzle was completed */
-  readonly completed: number;
-  readonly cheated: boolean;
   readonly moveCount: number;
   readonly moveTarget: number;
   /** The last slide's delta, which picks the animation's direction */
@@ -153,8 +150,6 @@ export function newState(p: SixteenParams, desc: string): SixteenState {
     h: p.h,
     n,
     tiles,
-    completed: 0,
-    cheated: false,
     moveCount: 0,
     moveTarget: p.movetarget,
     lastMovementSense: 0,
@@ -171,7 +166,7 @@ export function isCompleted(state: SixteenState): boolean {
 }
 
 export function status(state: SixteenState): "solved" | "ongoing" {
-  return state.completed > 0 ? "solved" : "ongoing";
+  return isCompleted(state) ? "solved" : "ongoing";
 }
 /* No `serializeMove`/`deserializeMove`: `SixteenMove` is plain JSON, so saves
  * take the save codec's default identity path. Adding a codec now would change

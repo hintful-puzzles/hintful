@@ -435,23 +435,22 @@ describe("subsets input", () => {
 });
 
 describe("subsets executeMove and completion", () => {
-  it("completing the board sets completed and arms the flash", () => {
+  it("completing the board solves it, and the win has a flash", () => {
     const moves = solutionMoves();
     const last = moves.pop();
     if (!last) throw new Error("fixture has no blank cells");
     let state = newState(PARAMS, FIX.desc);
     for (const m of moves) state = subsetsGame.executeMove(state, m);
-    expect(state.completed).toBe(false);
+    expect(subsetsGame.status(state)).toBe("ongoing");
     const done = subsetsGame.executeMove(state, last);
-    expect(done.completed).toBe(true);
     expect(subsetsGame.status(done)).toBe("solved");
-    expect(subsetsGame.flashLength?.(state, done, 1, newUi())).toBeGreaterThan(0);
+    expect(subsetsGame.solvedFlash?.(done, newUi())).toBeGreaterThan(0);
   });
 
-  it("completed is monotonic (matches upstream: never reset)", () => {
+  it("a solved board the player breaks is no longer solved", () => {
     let state = newState(PARAMS, FIX.desc);
     for (const m of solutionMoves()) state = subsetsGame.executeMove(state, m);
-    expect(state.completed).toBe(true);
+    expect(subsetsGame.status(state)).toBe("solved");
     const i = state.immutable.indexOf(0);
     const broken = subsetsGame.executeMove(state, {
       kind: "set",
@@ -459,7 +458,7 @@ describe("subsets executeMove and completion", () => {
       pos: i,
       bit: 0,
     });
-    expect(broken.completed).toBe(true);
+    expect(subsetsGame.status(broken)).toBe("ongoing");
   });
 
   it("rejects an illegal move", () => {
@@ -480,28 +479,16 @@ describe("subsets executeMove and completion", () => {
 });
 
 describe("subsets solve (through a real Midend)", () => {
-  it("Solve completes the board as solved-with-help, without the flash", () => {
+  it("Solve completes the board as solved-with-help", () => {
     const { m, status } = harness();
     expect(m.newGameFromId(FIX_ID)).toBeNull();
-    const before = newState(PARAMS, FIX.desc);
     expect(m.solve()).toBeNull();
-    // The board is fully decided and the game completes — a deliberate
-    // divergence from upstream, whose 'S' move skips the completion check
-    // and leaves the game "ongoing" for ever (collection convention wins;
-    // docs/games/solver-and-generator.md § "Solve and the generator's aux").
+    // The board is fully decided, so its status is solved: upstream's 'S'
+    // move skipped the completion check and left the game "ongoing" for ever.
     const text = m.formatAsText();
     expect(typeof text).toBe("string");
     expect(text).not.toContain("?");
     expect(status()).toBe("solved-with-help");
-    // The solve move marks the state cheated, so the win flash stays off.
-    const solved = subsetsGame.executeMove(before, {
-      kind: "solve",
-      known: Array.from(fixtureSolution().known),
-      mask: Array.from(fixtureSolution().mask),
-    });
-    expect(solved.completed).toBe(true);
-    expect(solved.cheated).toBe(true);
-    expect(subsetsGame.flashLength?.(before, solved, 1, newUi())).toBe(0);
   });
 
   it("saveGame -> loadGame restores an equivalent game", () => {

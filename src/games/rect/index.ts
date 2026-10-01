@@ -10,8 +10,6 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import { completionStatus } from "../../engine/completion-status.ts";
-import { winFlash } from "../../engine/flash.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { click, drag, type PointerAction } from "../../engine/hint-gesture.ts";
@@ -374,12 +372,12 @@ function findMistakes(state: RectState): readonly RectMistake[] {
   return out;
 }
 
-function statusbarText(s: RectState, ui: RectUi): string {
-  const words = completionStatus(s.completed, s.cheated);
+/** The size of the rectangle being dragged, while one is. */
+function statusbarText(_s: RectState, ui: RectUi): string {
   if (ui.dragged && ui.x1 >= 0 && ui.y1 >= 0 && ui.x2 >= 0 && ui.y2 >= 0) {
-    return `${ui.x2 - ui.x1}x${ui.y2 - ui.y1} ${words}`.trimEnd();
+    return `${ui.x2 - ui.x1}x${ui.y2 - ui.y1}`;
   }
-  return words;
+  return "";
 }
 
 export const rectGame: Game<
@@ -468,7 +466,7 @@ export const rectGame: Game<
   newDrawState,
   redraw,
 
-  flashLength: (from, to) => winFlash(from, to, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(rectGame);

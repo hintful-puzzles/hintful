@@ -8,7 +8,6 @@
  * non-clue cell.
  */
 
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type HintResult,
@@ -385,7 +384,7 @@ export const fillingGame: Game<
   newDrawState,
   redraw: redrawFilling,
 
-  flashLength: (from, to) => winFlash(from, to, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(fillingGame);

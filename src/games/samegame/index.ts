@@ -1,5 +1,4 @@
 import { rejectMove } from "../../engine/assert-never.ts";
-import { completionStatus } from "../../engine/completion-status.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import {
@@ -28,6 +27,8 @@ import {
   decodeParams,
   defaultParams,
   encodeParams,
+  isCleared,
+  isStuck,
   newDesc,
   newState,
   npoints,
@@ -174,15 +175,14 @@ export function executeMove(state: SamegameState, move: SamegameMove): SamegameS
   }
   const score = state.score + npoints(state.scoresub, move.tiles.length);
   snuggle(tiles, w, h); // shift blanks down and to the left
-  const { complete, impossible } = check(tiles, w, h);
-  return { ...state, tiles, score, completed: complete, impossible };
+  return { ...state, tiles, score, impossible: check(tiles, w, h).impossible };
 }
 
 // --- status bar -------------------------------------------------------
 
 function statusbarText(state: SamegameState, ui: SamegameUi): string {
   const score = `Score: ${state.score}`;
-  if (state.completed) return completionStatus(true, false, score);
+  if (isCleared(state)) return score;
   if (state.impossible) return `Cannot move! ${score}`;
   if (ui.nselected)
     return `${score}  Selected: ${ui.nselected} (${npoints(state.scoresub, ui.nselected)})`;
@@ -191,18 +191,15 @@ function statusbarText(state: SamegameState, ui: SamegameUi): string {
 
 // --- flash ------------------------------------------------------------
 
+/** A board that gets stuck flashes as a win does, though the status does not
+ * show it; the win's own flash is {@link samegameGame.solvedFlash}. */
 function flashLength(
   oldState: SamegameState,
   newState: SamegameState,
   _dir: number,
   _ui: SamegameUi,
 ): number {
-  if (
-    (!oldState.completed && newState.completed) ||
-    (!oldState.impossible && newState.impossible)
-  )
-    return 2 * FLASH_FRAME;
-  return 0;
+  return !isStuck(oldState) && isStuck(newState) ? 2 * FLASH_FRAME : 0;
 }
 
 // --- Game object ------------------------------------------------------
@@ -250,6 +247,10 @@ export const samegameGame: Game<
 
   animLength: () => 0,
   flashLength,
+  solvedFlash: () => 2 * FLASH_FRAME,
+  // A stuck board is not a loss (the player undoes and plays on), yet nobody
+  // is playing it, so the timer holds on it.
+  timerHolds: isStuck,
 };
 
 registerGame(samegameGame);

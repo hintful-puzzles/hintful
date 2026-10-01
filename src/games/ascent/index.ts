@@ -53,6 +53,7 @@ import {
   isHexagonal,
   isNear,
   isNumberEdge,
+  isSolved,
   MODE_EDGES,
   MODE_HEXAGON,
   MODE_HONEYCOMB,
@@ -460,10 +461,9 @@ function textFormat(state: AscentState): string | null {
 
 // --- flash ---------------------------------------------------------
 
-function flashLength(a: AscentState, b: AscentState): number {
-  if (!a.completed && b.completed && !a.cheated && !b.cheated)
-    return FLASH_FRAME * (b.w * b.h + FLASH_SIZE);
-  return 0;
+/** The flash sweeps every cell, so it runs as long as the board is big. */
+function solvedFlash(s: AscentState): number {
+  return FLASH_FRAME * (s.w * s.h + FLASH_SIZE);
 }
 
 // --- Game object ---------------------------------------------------
@@ -523,13 +523,13 @@ export const ascentGame: Game<
   difficulty,
   textFormat,
 
-  status: (s) => (s.completed ? "solved" : "ongoing"),
+  status: (s) => (isSolved(s) ? "solved" : "ongoing"),
 
   colors: ascentColors,
   computeSize: (p, tileSize) => ascentComputeSize(p.w, p.h, p.mode, tileSize),
   newDrawState: newAscentDrawState,
   redraw: redrawAscent,
-  flashLength,
+  solvedFlash,
 };
 
 registerGame(ascentGame);

@@ -184,9 +184,6 @@ export interface NetslideState {
    * populated typed array, so the `readonly` type is the guarantee). */
   readonly barriers: Uint8Array;
 
-  /** Move count at which the game was completed; 0 while unsolved. */
-  readonly completed: number;
-  readonly cheated: boolean;
   readonly moveCount: number;
 
   /** The line last slid, for the slide animation: at most one of these is a
@@ -252,8 +249,6 @@ export function newState(p: NetslideParams, desc: string): NetslideState {
     movetarget: p.movetarget,
     tiles,
     barriers,
-    completed: 0,
-    cheated: false,
     moveCount: 0,
     lastMoveRow: -1,
     lastMoveCol: -1,

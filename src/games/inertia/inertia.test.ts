@@ -161,6 +161,9 @@ describe("inertia sliding", () => {
     expect(s1.dead).toBe(true);
     expect([s1.px, s1.py]).toEqual([2, 0]);
     expect(inertiaGame.status(s1)).toBe("ongoing"); // dying is not losing
+    // …but nobody is playing a dead ball, so the clock holds.
+    expect(inertiaGame.timerHolds?.(s1)).toBe(true);
+    expect(inertiaGame.timerHolds?.(newState(params, desc))).toBe(false);
   });
 
   it("collects a gem it dies just past", () => {
@@ -484,7 +487,6 @@ describe("inertia route aid", () => {
     expect([s1.px, s1.py]).toEqual([s0.px, s0.py]); // the ball has not moved
     expect(s1.gems).toBe(s0.gems); // no gems collected
     expect(inertiaGame.status(s1)).toBe("ongoing"); // and it is not finished
-    expect(s1.cheated).toBe(true);
     expect(s1.route).not.toBeNull();
     expect(s1.routePos).toBe(0);
   });

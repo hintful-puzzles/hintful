@@ -36,6 +36,7 @@ import {
   executeMove,
   GS_NOTNEUTRAL,
   GS_SET,
+  isSolved,
   type MagnetsMove,
   type MagnetsParams,
   type MagnetsState,
@@ -103,7 +104,7 @@ describe("magnets hint", () => {
     let steps = 0;
     for (const { label, state: start } of CORPUS) {
       let state = start;
-      for (let asks = 0; !state.completed; asks++) {
+      for (let asks = 0; !isSolved(state); asks++) {
         expect(asks, `${label}: the plan never finished`).toBeLessThan(200);
         const res = hint(state);
         expect(res.ok, `${label}: ${res.ok ? "" : res.error}`).toBe(true);
@@ -619,7 +620,7 @@ describe("magnets hint sentences", () => {
     ];
     for (const { label, state: start } of boards) {
       let state = start;
-      for (let asks = 0; !state.completed && asks < 200; asks++) {
+      for (let asks = 0; !isSolved(state) && asks < 200; asks++) {
         const res = hint(state);
         if (!res.ok) break;
         for (const step of res.steps as HintStep<MagnetsMove, MagnetsHighlights>[]) {
@@ -712,7 +713,7 @@ describe("magnets hint sentences", () => {
       b.label.includes(`d${DIFF_TRICKY}`),
     )) {
       let state = start;
-      for (let asks = 0; !state.completed && asks < 200; asks++) {
+      for (let asks = 0; !isSolved(state) && asks < 200; asks++) {
         const res = hint(state);
         expect(res.ok, label).toBe(true);
         if (!res.ok) break;

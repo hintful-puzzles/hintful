@@ -193,8 +193,6 @@ export interface SaladState extends SaladBoard {
   /** `order²` pencil-mark bitmaps: bit `n−1` = symbol `n`, bit `nums` = the
    * "might be empty" X mark. */
   readonly pencil: Int32Array;
-  completed: boolean;
-  cheated: boolean;
 }
 
 export function cloneState(s: SaladState): SaladState {
@@ -208,8 +206,6 @@ export function cloneState(s: SaladState): SaladState {
     grid: s.grid.slice(),
     holes: s.holes.slice(),
     pencil: s.pencil.slice(),
-    completed: s.completed,
-    cheated: s.cheated,
   };
 }
 
@@ -479,8 +475,6 @@ export function newState(p: SaladParams, desc: string): SaladState {
     diff: p.diff,
     ...r.value,
     pencil: new Int32Array(p.order * p.order),
-    completed: false,
-    cheated: false,
   };
 }
 

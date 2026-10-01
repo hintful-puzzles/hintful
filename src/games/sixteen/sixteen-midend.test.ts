@@ -53,9 +53,11 @@ describe("Sixteen midend integration — lifecycle", () => {
 
   it("newGameFromId creates a game from a known id", () => {
     const h = harness();
-    const err = h.m.newGameFromId("3x3:1,2,3,4,5,6,7,8,9");
-    expect(err).toBeNull();
+    expect(h.m.newGameFromId("3x3:3,1,2,4,5,6,7,8,9")).toBeNull();
     expect(h.state()?.status).toBe("ongoing");
+    // A game ID typed in already sorted is solved before any move.
+    expect(h.m.newGameFromId("3x3:1,2,3,4,5,6,7,8,9")).toBeNull();
+    expect(h.state()?.status).toBe("solved");
   });
 });
 

@@ -261,8 +261,6 @@ export interface MathraxState {
   /** `(o−1)²` packed clues at the interior intersections. Immutable after load,
    * shared by reference across cloned states. */
   clues: Int32Array;
-  completed: boolean;
-  cheated: boolean;
 }
 
 export function cloneState(s: MathraxState): MathraxState {
@@ -272,13 +270,15 @@ export function cloneState(s: MathraxState): MathraxState {
     flags: s.flags.slice(),
     pencil: s.pencil.slice(),
     clues: s.clues, // immutable, shared
-    completed: s.completed,
-    cheated: s.cheated,
   };
 }
 
+/** Validated on a copy of the flags, which `mathraxValidate` rewrites. */
 export function status(s: MathraxState): "solved" | "ongoing" {
-  return s.completed ? "solved" : "ongoing";
+  const { o } = s.params;
+  return mathraxValidate(o, s.grid, s.clues, s.flags.slice()) === STATUS_COMPLETE
+    ? "solved"
+    : "ongoing";
 }
 
 // --- desc codec ------------------------------------------------------------
@@ -423,8 +423,6 @@ export function newState(p: MathraxParams, desc: string): MathraxState {
     flags: r.value.flags,
     pencil: new Int32Array(p.o * p.o),
     clues: r.value.clues,
-    completed: false,
-    cheated: false,
   };
 }
 

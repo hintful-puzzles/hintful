@@ -48,7 +48,7 @@ function renderState(
 const noCursor: RangeUi = { cursor: newCursor() };
 
 function makeState(w: number, h: number, grid: number[]): RangeState {
-  return { w, h, grid: Int8Array.from(grid), cheated: false, completed: false };
+  return { w, h, grid: Int8Array.from(grid) };
 }
 
 describe("hint color legend", () => {

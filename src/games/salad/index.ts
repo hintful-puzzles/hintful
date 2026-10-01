@@ -20,7 +20,6 @@ import {
   regionReach,
 } from "../../engine/candidate-hint.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type PresetMenu,
@@ -244,8 +243,6 @@ function executeMove(state: SaladState, move: SaladMove): SaladState {
           next.holes[i] = CROSS;
         }
       }
-      next.completed = true;
-      next.cheated = true;
       return next;
     }
     case "markAll":
@@ -300,8 +297,6 @@ function executeMove(state: SaladState, move: SaladMove): SaladState {
           next.holes[i] = CIRCLE;
         }
       }
-
-      if (isComplete(next)) next.completed = true;
       return next;
     }
     default:
@@ -352,7 +347,7 @@ export const saladGame: Game<
 
   interpretMove,
   executeMove,
-  status: (s): GameStatus => (s.completed ? "solved" : "ongoing"),
+  status: (s): GameStatus => (isComplete(s) ? "solved" : "ongoing"),
   notApplicable: { transposeParams: SQUARE_GRID },
 
   solve,
@@ -406,7 +401,7 @@ export const saladGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength: (from, to) => winFlash(from, to, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(saladGame);

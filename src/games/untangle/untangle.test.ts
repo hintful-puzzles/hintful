@@ -134,7 +134,7 @@ describe("generation invariants", () => {
 
         // The initial circle layout has at least one crossing (never
         // starts solved).
-        expect(untangleGame.newState({ n }, desc).completed).toBe(false);
+        expect(untangleGame.status(untangleGame.newState({ n }, desc))).toBe("ongoing");
       }
     });
   }
@@ -310,7 +310,9 @@ describe("moves and solve", () => {
       const init = untangleGame.newState({ n }, desc);
       const res = untangleGame.solve?.(init, init, undefined);
       if (!res?.ok) throw new Error(`Solve refused n=${n}`);
-      expect(untangleGame.executeMove(init, res.move).completed).toBe(true);
+      expect(untangleGame.status(untangleGame.executeMove(init, res.move))).toBe(
+        "solved",
+      );
     }
   });
 

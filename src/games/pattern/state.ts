@@ -7,7 +7,7 @@
  * `GRID_FULL` (black) or `GRID_EMPTY` (white/background). The immutable
  * clue arrays live on a frozen `common` object shared by reference across
  * a game's states (upstream's refcounted `game_state_common`); only the
- * `grid` plus `completed`/`cheated` clone per move.
+ * `grid` clones per move.
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
@@ -67,8 +67,6 @@ export interface PatternState {
   readonly common: PatternCommon;
   /** Per-cell value (GRID_*), cloned per move. */
   readonly grid: Uint8Array;
-  readonly completed: boolean;
-  readonly cheated: boolean;
 }
 
 /** A `fill` sets a rectangle of non-immutable cells to one value (upstream
@@ -271,7 +269,7 @@ export function newState(p: PatternParams, desc: string): PatternState {
 
   const fontLarge = chooseFontLarge(w, clues);
   const common: PatternCommon = { w, h, clues, immutable, fontLarge };
-  return { common, grid, completed: false, cheated: false };
+  return { common, grid };
 }
 
 /** Upstream's font-size heuristic: switch to the small font if any column
@@ -352,7 +350,7 @@ export function executeMove(state: PatternState, move: PatternMove): PatternStat
       if (c !== "0" && c !== "1") throw new Error("Bad solve grid");
       grid[i] = c === "1" ? GRID_FULL : GRID_EMPTY;
     }
-    return { ...state, grid, completed: true, cheated: true };
+    return { ...state, grid };
   }
 
   const grid = Uint8Array.from(state.grid);
@@ -380,14 +378,13 @@ export function executeMove(state: PatternState, move: PatternMove): PatternStat
   } else {
     return assertNever(move, "pattern: executeMove");
   }
-  const next = { ...state, grid };
-  return !next.completed && isComplete(next) ? { ...next, completed: true } : next;
+  return { ...state, grid };
 }
 
 // --- status / text -------------------------------------------------------
 
 export function status(state: PatternState): GameStatus {
-  return state.completed ? "solved" : "ongoing";
+  return isComplete(state) ? "solved" : "ongoing";
 }
 
 /** A compact ASCII rendering: clue gutters plus the marked grid. */

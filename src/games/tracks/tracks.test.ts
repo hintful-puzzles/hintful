@@ -156,7 +156,9 @@ describe("tracks findMistakes + solve", () => {
     const st = newState(SMALL.p, SMALL.desc);
     const result = tracksGame.solve?.(st, st);
     expect(result?.ok).toBe(true);
-    if (result?.ok) expect(executeMove(st, result.move).completed).toBe(true);
+    if (result?.ok) {
+      expect(tracksGame.status(executeMove(st, result.move))).toBe("solved");
+    }
   });
 
   it("findMistakes returns [] on an untouched board", () => {

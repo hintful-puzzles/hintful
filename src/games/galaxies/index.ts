@@ -15,7 +15,6 @@ import {
   PAPER,
 } from "../../engine/color/palette.ts";
 import { galaxiesBlackRegion } from "../../engine/color/palette-games.ts";
-import { completionStatus } from "../../engine/completion-status.ts";
 import type { DescError } from "../../engine/desc-error.ts";
 import {
   type DifficultyContract,
@@ -400,8 +399,6 @@ function executeMove(s: GalaxiesState, move: GalaxiesMove): GalaxiesState {
 
   const next = cloneState(s);
   for (const op of move.ops) applyOp(next, op, move.solving);
-  if (move.solving) next.cheated = true;
-  if (checkComplete(next, false).complete) next.completed = true;
   return next;
 }
 
@@ -1027,15 +1024,20 @@ const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   choice(paramConfig, "d", "difficulty", "nu", { full: true }),
 ]);
 
+/** The last board's difficulty verdict, keyed by its dot layout: the verdict
+ * depends only on the dots, and a solve per status-bar update would be paid
+ * on every move. One entry, because one board is played at a time. */
+let lastDiff: { key: string; diff: number } | null = null;
+
 function statusbarText(s: GalaxiesState, _ui: GalaxiesUi): string {
-  // Solved once, on first ask, and kept: the verdict depends only on the dots.
-  if (s.cachedDiff === -1) {
+  const key = `${s.w}x${s.h}:${s.dots.map((d) => `${d.x},${d.y}`).join(";")}`;
+  if (lastDiff === null || lastDiff.key !== key) {
     const probe = cloneState(s);
     clearForSolve(probe);
-    s.cachedDiff = solverState(probe, GalaxiesDiff.Unreasonable);
+    lastDiff = { key, diff: solverState(probe, GalaxiesDiff.Unreasonable) };
   }
-  const diffWord = DIFF_NAMES[s.cachedDiff] ?? "Unknown";
-  return completionStatus(s.completed, s.cheated, `Difficulty ${diffWord}.`);
+  const diffWord = DIFF_NAMES[lastDiff.diff] ?? "Unknown";
+  return `Difficulty ${diffWord}.`;
 }
 
 // --- the Game object -----------------------------------------------
@@ -1136,7 +1138,7 @@ export const galaxiesGame: Game<
   executeMove,
 
   status(s): "ongoing" | "solved" {
-    return s.completed ? "solved" : "ongoing";
+    return checkComplete(s, false).complete ? "solved" : "ongoing";
   },
 
   solve: solveGalaxies,
@@ -1223,12 +1225,7 @@ export const galaxiesGame: Game<
   animLength() {
     return 0;
   },
-  flashLength(oldState, newState): number {
-    if (!oldState.completed && newState.completed && !newState.cheated) {
-      return 3 * FLASH_TIME;
-    }
-    return 0;
-  },
+  solvedFlash: () => 3 * FLASH_TIME,
 };
 
 registerGame(galaxiesGame);

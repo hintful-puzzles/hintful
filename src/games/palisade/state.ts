@@ -73,8 +73,6 @@ export interface PalisadeState {
   clues: Int8Array;
   /** length w·h, the `borderflag` byte per cell. */
   borders: Uint8Array;
-  completed: boolean;
-  cheated: boolean;
 }
 
 export type PalisadeMove =
@@ -231,22 +229,18 @@ export function newState(p: PalisadeParams, desc: string): PalisadeState {
     k,
     clues,
     borders: initBorders(w, h),
-    completed: k === wh,
-    cheated: false,
   };
 }
 
 // --- move execution -------------------------------------------------------
 
 export function executeMove(state: PalisadeState, move: PalisadeMove): PalisadeState {
-  const { w, h, k } = state;
+  const { w, h } = state;
   const ret = { ...state, borders: state.borders.slice() };
 
   if (move.type === "solve") {
     if (move.borders.length !== w * h) throw new Error("palisade: bad solve move");
     ret.borders = Uint8Array.from(move.borders);
-    ret.cheated = true;
-    ret.completed = true;
     return ret;
   }
   if (move.type !== "edges") return assertNever(move, "palisade: executeMove");
@@ -260,17 +254,12 @@ export function executeMove(state: PalisadeState, move: PalisadeMove): PalisadeS
     }
     ret.borders[y * w + x] ^= flag;
   }
-
-  // Recomputed every move rather than latched as upstream does: breaking a
-  // solved board reverts it to unsolved, so a later re-completion is a real
-  // transition the win flash fires on, even after a Solve. `cheated` stays
-  // sticky: it is the permanent "you peeked" record the status bar reads.
-  ret.completed = isSolved(w, h, k, ret.clues, ret.borders);
   return ret;
 }
 
 export function status(state: PalisadeState): GameStatus {
-  return state.completed ? "solved" : "ongoing";
+  const { w, h, k, clues, borders } = state;
+  return isSolved(w, h, k, clues, borders) ? "solved" : "ongoing";
 }
 
 // --- text format ----------------------------------------------------------

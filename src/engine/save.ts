@@ -32,9 +32,9 @@ export interface SaveEnvelope {
   timerElapsed: number;
   /** Present once a hint was shown on this board. */
   hinted?: boolean;
-  /** Whether the solver was used (drives "solved-with-help"). Spelled as every
-   * game's state spells it (`ts-engine`, "One completion vocabulary across
-   * games"); `v: 1` saves called it `usedSolve` and are upgraded on read. */
+  /** Whether the solver was used on this board (drives "solved-with-help"):
+   * the midend's record, since no game's state keeps one. `v: 1` saves called
+   * it `usedSolve` and are upgraded on read. */
   cheated: boolean;
   /** Serialized `Ui` state that must survive a save but cannot be rebuilt by
    * replaying the move log (upstream `encode_ui`; Mines' death counter).

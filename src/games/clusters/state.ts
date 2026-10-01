@@ -20,7 +20,6 @@ import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import type { GameStatus } from "../../engine/types.ts";
 
 // --- difficulty -------------------------------------------------------------
 
@@ -69,8 +68,6 @@ export interface ClustersState {
   h: number;
   /** Flag byte per cell, row-major. */
   grid: Uint8Array;
-  completed: boolean;
-  cheated: boolean;
 }
 
 /**
@@ -259,15 +256,11 @@ export function newState(p: ClustersParams, desc: string): ClustersState {
     }
     // validateDesc has already rejected any other character.
   }
-  return { w, h, grid, completed: false, cheated: false };
+  return { w, h, grid };
 }
 
 export function cloneState(s: ClustersState): ClustersState {
   return { ...s, grid: s.grid.slice() };
-}
-
-export function status(s: ClustersState): GameStatus {
-  return s.completed ? "solved" : "ongoing";
 }
 
 // --- text format (upstream game_text_format) -------------------------------

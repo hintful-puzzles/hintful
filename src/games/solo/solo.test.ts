@@ -99,7 +99,7 @@ describe("solo solve", () => {
     expect(me.newGameFromId(idOf(STD))).toBeNull();
     expect(me.solve()).toBeNull();
     const s = getState(me);
-    expect(s.completed).toBe(true);
+    expect(soloGame.status(s)).toBe("solved");
     expect(checkValid(s.cr, s.blocks, s.killerData, s.xtype, s.grid)).toBe(true);
   });
 
@@ -139,7 +139,7 @@ describe("solo moves", () => {
         { type: "set", x: i % s0.cr, y: (i / s0.cr) | 0, n: soln[i], pencil: false },
       ]);
     }
-    expect(getState(me).completed).toBe(true);
+    expect(soloGame.status(getState(me))).toBe("solved");
   });
 
   it("pencilAll fills every empty cell's notes; a real placement clears them", () => {

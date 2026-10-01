@@ -39,6 +39,7 @@ import {
   type GuessParams,
   type GuessState,
   type GuessUi,
+  outcome,
   type PegRow,
 } from "./state.ts";
 
@@ -705,10 +706,11 @@ export function redraw(
     );
   }
 
+  const solved = outcome(s);
   // Past guesses + their hints (reverse order so the circular cursor on
   // the active row isn't overdrawn by the row above).
   for (let i = s.params.nguesses - 1; i >= 0; i--) {
-    if (i < s.nextGo || s.solved) {
+    if (i < s.nextGo || solved) {
       const hatched = hatchedRow.has(i);
       guessRedraw(dr, ds, i, s.guesses[i], null, -1, forceRows, ui.showLabels, hatched);
       hintRedraw(
@@ -726,7 +728,7 @@ export function redraw(
       hintRedraw(dr, ds, i, null, forceRows, false, false);
     }
   }
-  if (!s.solved) {
+  if (!solved) {
     // The active (incomplete) row, drawn from the game_ui. In notes mode the
     // cursor is in the answer row instead, where the next mark goes.
     const cursorHere = ui.cursor.visible && !ui.pencilMode;
@@ -754,15 +756,15 @@ export function redraw(
 
   // The "current move" / "able to mark" marker beside the active row.
   if (newMove) currmoveRedraw(dr, ds, ds.nextGo, COL_BACKGROUND);
-  if (!s.solved) currmoveRedraw(dr, ds, s.nextGo, COL_HOLD);
+  if (!solved) currmoveRedraw(dr, ds, s.nextGo, COL_HOLD);
 
   // The solution box (or its reveal).
-  if ((s.solved === 0) !== (ds.solved === 0) || !ds.started) {
+  if ((solved === 0) !== (ds.solved === 0) || !ds.started) {
     dr.drawRect(answerArea(ds), COL_BACKGROUND);
     dr.drawUpdate(answerArea(ds));
     ds.answerCache.fill(-1);
   }
-  if (!s.solved) answerRowRedraw(dr, ds, s, ui, marks);
+  if (!solved) answerRowRedraw(dr, ds, s, ui, marks);
   else {
     guessRedraw(
       dr,
@@ -783,7 +785,7 @@ export function redraw(
     PENCIL_STYLE,
   );
 
-  ds.solved = s.solved;
+  ds.solved = solved;
   ds.nextGo = s.nextGo;
   ds.started = true;
 }

@@ -8,7 +8,6 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
-import { completionStatus } from "../../engine/completion-status.ts";
 import type { Game, UiUpdate } from "../../engine/game.ts";
 import {
   dimensionParamConfig,
@@ -39,7 +38,6 @@ import {
   defaultParams,
   doRotate,
   encodeParams,
-  isComplete,
   newDesc,
   newState,
   presets,
@@ -160,15 +158,13 @@ function fixedBlockKey(state: TwiddleState, rawButton: number): TwiddleMove | nu
 
 export function executeMove(from: TwiddleState, move: TwiddleMove): TwiddleState {
   if (move.type === "solve") {
-    // Sort the numbers and clear the orientations. Upstream sets both
-    // completed and movecount to 1 on auto-solve.
+    // Sort the numbers and clear the orientations. Solve counts as one move;
+    // that the solver was used is the engine's to say.
     return {
       ...from,
       numbers: Int32Array.from(from.numbers).sort(),
       orient: new Uint8Array(from.numbers.length),
-      cheated: true,
-      completed: 1,
-      moveCount: 1,
+      moveCount: from.moveCount + 1,
     };
   }
   if (move.type !== "rotate") return assertNever(move, "twiddle: executeMove");
@@ -182,18 +178,11 @@ export function executeMove(from: TwiddleState, move: TwiddleMove): TwiddleState
   const orient = Uint8Array.from(from.orient);
   doRotate(numbers, orient, w, n, from.orientable, move.x, move.y, move.dir);
 
-  const moveCount = from.moveCount + 1;
-  let completed = from.completed;
-  if (!completed && isComplete(numbers, orient, w * h, from.orientable)) {
-    completed = moveCount;
-  }
-
   return {
     ...from,
     numbers,
     orient,
-    moveCount,
-    completed,
+    moveCount: from.moveCount + 1,
     lastX: move.x,
     lastY: move.y,
     lastR: move.dir,
@@ -203,13 +192,9 @@ export function executeMove(from: TwiddleState, move: TwiddleMove): TwiddleState
 // --- status bar -------------------------------------------------------
 
 function statusbarText(state: TwiddleState, _ui: TwiddleUi): string {
-  if (state.cheated) {
-    return `Moves since auto-solve: ${state.moveCount - state.completed}`;
-  }
-  const moves = state.completed || state.moveCount;
-  let s = `Moves: ${moves}`;
+  let s = `Moves: ${state.moveCount}`;
   if (state.movetarget) s += ` (target ${state.movetarget})`;
-  return completionStatus(state.completed > 0, false, s);
+  return s;
 }
 
 // --- colors ----------------------------------------------------------
@@ -311,10 +296,7 @@ export const twiddleGame: Game<
   redraw,
 
   animLength: (_a, b) => animLength(b.n),
-  // Not `winFlash`: `completed` here is the move count, not a flag — see
-  // Fifteen's note.
-  flashLength: (a, b) =>
-    !a.completed && b.completed && !a.cheated && !b.cheated ? 2 * FLASH_FRAME : 0,
+  solvedFlash: () => 2 * FLASH_FRAME,
 };
 
 registerGame(twiddleGame);

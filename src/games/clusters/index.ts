@@ -14,7 +14,6 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type HintResult,
@@ -58,7 +57,7 @@ import {
   type TargetVerbs,
   verbClicks,
 } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
+import type { GameStatus, Point } from "../../engine/types.ts";
 import { newClustersDesc } from "./generator.ts";
 import { type Marked, say } from "./hint-text.ts";
 import {
@@ -98,7 +97,6 @@ import {
   opposite,
   paramConfig,
   presets,
-  status,
   textFormat,
   validateDesc,
   validateParams,
@@ -276,7 +274,6 @@ function executeMove(state: ClustersState, move: ClustersMove): ClustersState {
       if (grid[i] & F_SINGLE) continue; // keep givens
       grid[i] = move.fills[i];
     }
-    next.cheated = true;
   } else if (move.kind === "paint") {
     for (const { index, fill } of move.cells) {
       if (grid[index] & F_SINGLE) continue; // never overwrite a given
@@ -285,8 +282,11 @@ function executeMove(state: ClustersState, move: ClustersMove): ClustersState {
   } else {
     return assertNever(move, "clusters: executeMove");
   }
-  if (clustersStatus(grid, next.w, next.h) === COMPLETE) next.completed = true;
   return next;
+}
+
+function status(s: ClustersState): GameStatus {
+  return clustersStatus(s.grid, s.w, s.h) === COMPLETE ? "solved" : "ongoing";
 }
 
 function solve(orig: ClustersState): SolveResult<ClustersMove> {
@@ -484,7 +484,7 @@ export const clustersGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength: (from, to) => winFlash(from, to, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(clustersGame);

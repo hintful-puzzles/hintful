@@ -28,7 +28,6 @@
  * `solver.ts` feasible, and what the generator's block-merge phase rewrites.
  */
 
-import { completionStatus } from "../../engine/completion-status.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_MALFORMED,
@@ -198,17 +197,15 @@ export interface SlideState {
   readonly lastmoved: number;
   readonly lastmovedPos: number;
   readonly movecount: number;
-  /** `-1` while unfinished; otherwise the move count at completion. */
-  readonly completed: number;
-  readonly cheated: boolean;
   /** A Solve path the player can step through, and how far along it they are.
    * Dropped as soon as the player strays from it or finishes it. */
   readonly soln: readonly SlideStep[] | null;
   readonly solnIndex: number;
 }
 
+/** The main block's anchor sits on the target. */
 export function status(s: SlideState): GameStatus {
-  return s.completed >= 0 ? "solved" : "ongoing";
+  return s.board[s.ty * s.w + s.tx] === MAINANCHOR ? "solved" : "ongoing";
 }
 
 // --- UI (ephemeral; never serialized) ---------------------------------
@@ -488,9 +485,6 @@ export function newState(p: SlideParams, desc: string): SlideState {
     lastmoved: -1,
     lastmovedPos: -1,
     movecount: 0,
-    // A desc whose main block already sits on the target starts complete.
-    completed: board[ty * w + tx] === MAINANCHOR ? 0 : -1,
-    cheated: false,
     soln: null,
     solnIndex: -1,
   };
@@ -579,7 +573,6 @@ export function textFormat(s: SlideState): string {
 
 /** Upstream's status-bar line (`game_redraw`'s tail). */
 export function statusbarText(s: SlideState): string {
-  const moves = s.completed >= 0 ? s.completed : s.movecount;
   const min = s.minmoves >= 0 ? ` (min ${s.minmoves})` : "";
-  return completionStatus(s.completed >= 0, s.cheated, `Moves: ${moves}${min}`);
+  return `Moves: ${s.movecount}${min}`;
 }

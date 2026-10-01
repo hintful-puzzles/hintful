@@ -57,14 +57,14 @@ export function executeMove(s: SignpostState, move: SignpostMove): SignpostState
       for (let i = 0; i < ret.n; i++) {
         if (ret.next[i] !== -1) ret.prev[ret.next[i]] = i;
       }
-      ret.cheated = true;
       break;
     default:
       return assertNever(move, "signpost: executeMove");
   }
 
   updateNumbers(ret);
-  if (checkCompletion(ret, true)) ret.completed = true;
+  // Marks the errors (and links consecutive numbers) on the new board.
+  checkCompletion(ret, true);
   return ret;
 }
 

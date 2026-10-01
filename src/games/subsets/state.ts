@@ -30,7 +30,6 @@ import {
 import { tierNames } from "../../engine/difficulty.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import type { GameStatus } from "../../engine/types.ts";
 
 // --- difficulty --------------------------------------------------------------
 
@@ -108,10 +107,6 @@ export interface SubsetsState {
   /** Set-values the player has ruled out, per cell: bit `v` is set-value `v`.
    * Sixteen bits hold every set at the one legal size (`2^4`). */
   ruledOut: Uint16Array;
-  completed: boolean;
-  /** Set by the solve move, with `completed` (see `executeMove`'s solve arm);
-   * upstream declares this field but never sets it. */
-  cheated: boolean;
 }
 
 /**
@@ -224,8 +219,6 @@ export function blankState(p: SubsetsParams): SubsetsState {
     known: new Uint16Array(s),
     mask: new Uint16Array(s).fill(ALL_BITS(p.n)),
     ruledOut: new Uint16Array(s),
-    completed: false,
-    cheated: false,
   };
 }
 
@@ -238,10 +231,6 @@ export function cloneState(s: SubsetsState): SubsetsState {
     mask: s.mask.slice(),
     ruledOut: s.ruledOut.slice(),
   };
-}
-
-export function status(s: SubsetsState): GameStatus {
-  return s.completed ? "solved" : "ongoing";
 }
 
 // --- desc codec (byte-match surface) ----------------------------------------

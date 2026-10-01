@@ -69,7 +69,7 @@ describe("hint", () => {
       cur = rangeGame.executeMove(cur, step.move);
     }
     expect(findErrors(cur.grid, cur.w, cur.h)).toBe(false);
-    expect(cur.completed).toBe(true);
+    expect(rangeGame.status(cur)).toBe("solved");
   });
 
   it("gives every step visible evidence (an area or a black to outline)", () => {

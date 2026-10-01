@@ -58,7 +58,7 @@ describe("slant hint", () => {
       for (let seed = 0; seed < 8; seed++) {
         const s = freshState(w, h, diff, `plan-${w}.${h}.${diff}.${seed}`);
         const solved = applyPlan(s);
-        expect(solved.completed).toBe(true);
+        expect(slantGame.status(solved)).toBe("solved");
 
         // Mid-solve: apply half the plan, re-request, finish.
         const res = slantGame.hint?.(s);
@@ -67,7 +67,7 @@ describe("slant hint", () => {
         const half = Math.floor(res.steps.length / 2);
         for (let i = 0; i < half; i++) mid = executeMove(mid, res.steps[i].move);
         const solved2 = applyPlan(mid);
-        expect(solved2.completed).toBe(true);
+        expect(slantGame.status(solved2)).toBe("solved");
       }
     }
   });

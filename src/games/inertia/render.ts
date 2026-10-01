@@ -450,6 +450,7 @@ export function animLength(
   return ui.animLength;
 }
 
+/** The death flash: a death is not a status, so the engine cannot see it. */
 export function flashLength(
   a: InertiaState,
   b: InertiaState,
@@ -460,9 +461,11 @@ export function flashLength(
     ui.flashType = FLASH_DEAD;
     return FLASH_LENGTH;
   }
-  if (a.gems && !b.gems) {
-    ui.flashType = FLASH_WIN;
-    return FLASH_LENGTH;
-  }
   return 0;
+}
+
+/** The win flash, played when the engine says the last gem was collected. */
+export function solvedFlash(_s: InertiaState, ui: InertiaUi): number {
+  ui.flashType = FLASH_WIN;
+  return FLASH_LENGTH;
 }

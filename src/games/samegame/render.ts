@@ -233,12 +233,13 @@ export function redraw(
         state.tiles[i + w + 1] === col
       )
         tile |= TILE_JOINDIAG;
-      // Hide the keyboard cursor on a finished (complete/impossible) board.
+      // Hide the keyboard cursor on a finished board: cleared or stuck, which
+      // `impossible` both says.
       if (
         ui.cursor.visible &&
         ui.cursor.x === x &&
         ui.cursor.y === y &&
-        !(state.completed || state.impossible)
+        !state.impossible
       )
         tile |= TILE_HASSEL;
 

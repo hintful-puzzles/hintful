@@ -22,7 +22,6 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type HintResult,
@@ -56,7 +55,7 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
+import type { GameStatus, Point } from "../../engine/types.ts";
 import { newSubsetsDesc } from "./generator.ts";
 import { type LegMarks, say } from "./hint-text.ts";
 import {
@@ -97,7 +96,6 @@ import {
   type SubsetsParams,
   type SubsetsState,
   type SubsetsUi,
-  status,
   textFormat,
   validateDesc,
   validateParams,
@@ -408,14 +406,6 @@ function executeMove(state: SubsetsState, move: SubsetsMove): SubsetsState {
       next.known[i] = move.known[i];
       next.mask[i] = move.mask[i];
     }
-    // Deliberate divergence, per docs/games/solver-and-generator.md
-    // § "Solve and the generator's aux": upstream's 'S' branch skips the
-    // completion check and never sets `cheated`, leaving a solved board
-    // "ongoing" for ever. The collection's solve move completes the game
-    // (solved-with-help) and marks it cheated so the win flash doesn't fire.
-    // Not byte-match surface: the desc differential never runs executeMove.
-    if (subsetsValidate(next) === "complete") next.completed = true;
-    next.cheated = next.completed;
     return next;
   }
   if (move.kind === "rule") {
@@ -457,8 +447,12 @@ function executeMove(state: SubsetsState, move: SubsetsMove): SubsetsState {
       return assertNever(move.type, "subsets: executeMove set");
   }
 
-  if (subsetsValidate(next) === "complete") next.completed = true;
   return next;
+}
+
+/** Solved exactly while every cell is decided and every relation holds. */
+function status(s: SubsetsState): GameStatus {
+  return subsetsValidate(s) === "complete" ? "solved" : "ongoing";
 }
 
 function solve(orig: SubsetsState): SolveResult<SubsetsMove> {
@@ -671,15 +665,6 @@ function hintGesture(
   return out;
 }
 
-function flashLength(
-  from: SubsetsState,
-  to: SubsetsState,
-  _dir: number,
-  _ui: SubsetsUi,
-): number {
-  return winFlash(from, to, FLASH_TIME);
-}
-
 /** The cross-game difficulty contract: declaring it enrolls Subsets in the
  * shared cap-monotonicity and tier-reachability guards. `solveAtCap` rebuilds
  * the board from its desc — never from a live state — because
@@ -759,7 +744,7 @@ export const subsetsGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength,
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(subsetsGame);

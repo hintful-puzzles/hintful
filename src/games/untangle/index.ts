@@ -24,7 +24,6 @@ import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { BLUE, BLUE_WASH, ORANGE, PURPLE } from "../../engine/color/colors.ts";
 import { ERROR, FLASH, HELD, INK } from "../../engine/color/palette.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
-import { winFlash } from "../../engine/flash.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import {
   type Game,
@@ -176,18 +175,8 @@ export const untangleGame: Game<
     const w = coordLimit(n);
     const { edges, edgeSet } = buildEdges(decodeGame(desc, n), n);
     const pts = makeCircle(n, w);
-    const { crosses, completed } = findCrossings(pts, edges);
-    return {
-      n,
-      w,
-      pts,
-      edges,
-      edgeSet,
-      crosses,
-      completed,
-      cheated: false,
-      justSolved: false,
-    };
+    const { crosses } = findCrossings(pts, edges);
+    return { n, w, pts, edges, edgeSet, crosses, justSolved: false };
   },
 
   newUi: () => ({
@@ -349,7 +338,6 @@ export const untangleGame: Game<
 
     // The topology is shared; only the positions are copied.
     const ns: UntangleState = { ...s, pts: s.pts.slice(), justSolved: m.solving };
-    if (m.solving) ns.cheated = true;
     for (const p of m.points) {
       // `RationalPoint`'s integer invariant is enforced here, where every
       // move (drag, solve, replay, load) becomes state: a fraction slipping
@@ -370,13 +358,11 @@ export const untangleGame: Game<
       }
       ns.pts[p.i] = { x: p.x, y: p.y, d: p.d };
     }
-    const { crosses, completed } = findCrossings(ns.pts, ns.edges);
-    ns.crosses = crosses;
-    ns.completed = completed;
+    ns.crosses = findCrossings(ns.pts, ns.edges).crosses;
     return ns;
   },
 
-  status: (s) => (s.completed ? "solved" : "ongoing"),
+  status: (s) => (s.crosses.includes(true) ? "ongoing" : "solved"),
   notApplicable: {
     findMistakes:
       "Any arrangement of the points with no lines crossing wins, so there is no single answer to check a move against.",
@@ -425,7 +411,7 @@ export const untangleGame: Game<
     ui.animLength = len;
     return len;
   },
-  flashLength: (a, b) => winFlash(a, b, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 
   // --- preferences ---------------------------------------------------
   prefs: [

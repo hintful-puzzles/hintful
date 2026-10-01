@@ -13,7 +13,6 @@
 
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
-import { winFlash } from "../../engine/flash.ts";
 import type {
   Game,
   HintResult,
@@ -112,7 +111,7 @@ function changedState(
   _old: LightupState | null,
   next: LightupState,
 ): void {
-  if (next.completed) ui.cursor.visible = false;
+  if (gridCorrect(next)) ui.cursor.visible = false;
 }
 
 /** A bulb or a dot on square `{ x, y }`: toggled, except that each refuses a
@@ -179,8 +178,6 @@ function executeMove(state: LightupState, move: LightupMove): LightupState {
       assertNever(op.kind, `lightup: executeMove op at (${op.x},${op.y})`);
     }
   }
-  if (move.solve) next.cheated = true;
-  if (gridCorrect(next)) next.completed = true;
   return next;
 }
 
@@ -569,7 +566,7 @@ export const lightupGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength: (from, to) => winFlash(from, to, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(lightupGame);

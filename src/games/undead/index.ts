@@ -15,7 +15,6 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { entryMistakes } from "../../engine/entry-mistakes.ts";
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type HintResult,
@@ -318,14 +317,12 @@ function executeMove(state: UndeadState, move: UndeadMove): UndeadState {
       break;
     case "solve":
       for (let i = 0; i < common.numTotal; i++) next.guess[i] = move.placements[i];
-      next.completed = true;
-      next.cheated = true;
       break;
     default:
       return assertNever(move, "undead: executeMove");
   }
 
-  if (recomputeErrors(next)) next.completed = true;
+  recomputeErrors(next);
   return next;
 }
 
@@ -814,10 +811,6 @@ function hintGesture(
   throw new Error(`undead: no hint gesture for ${move.type}`);
 }
 
-function flashLength(from: UndeadState, to: UndeadState): number {
-  return winFlash(from, to, FLASH_TIME);
-}
-
 /** Undead's difficulty contract (`engine/difficulty.ts`).
  *
  * **Its cap is a technique rung, not a difficulty number**: this fork grades by
@@ -929,7 +922,7 @@ export const undeadGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength,
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(undeadGame);

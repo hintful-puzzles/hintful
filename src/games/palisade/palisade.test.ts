@@ -33,7 +33,6 @@ import {
   type PalisadeHint,
   type PalisadeMove,
   type PalisadeParams,
-  type PalisadeState,
   validateDesc,
 } from "./state.ts";
 
@@ -147,15 +146,13 @@ describe("palisade moves", () => {
     ).toThrow();
   });
 
-  it("a solve move completes and marks cheated", () => {
+  it("a solve move completes the board", () => {
     const p = { w: 5, h: 5, k: 5 };
     const s0 = newState(p, newDesc(p, randomNew("palisade-solvemove")).desc);
     const res = palisadeGame.solve?.(s0, s0);
     expect(res?.ok).toBe(true);
     if (res?.ok) {
       const solved = palisadeGame.executeMove(s0, res.move);
-      expect(solved.completed).toBe(true);
-      expect(solved.cheated).toBe(true);
       expect(palisadeGame.status(solved)).toBe("solved");
     }
   });
@@ -221,50 +218,25 @@ describe("palisade findMistakes", () => {
   });
 });
 
-describe("palisade win flash", () => {
-  const base = (over: Partial<PalisadeState>): PalisadeState => ({
-    w: 5,
-    h: 5,
-    k: 5,
-    clues: new Int8Array(25).fill(-1),
-    borders: new Uint8Array(25),
-    completed: false,
-    cheated: false,
-    ...over,
-  });
-  const flash = (oldOver: Partial<PalisadeState>, newOver: Partial<PalisadeState>) =>
-    palisadeGame.flashLength?.(base(oldOver), base(newOver), 0, {
-      cursor: newCursor(1, 1),
-    });
-
-  it("fires on a fresh manual completion", () => {
-    expect(flash({ completed: false }, { completed: true })).toBeGreaterThan(0);
+// When the flash plays is the engine's (`midend.test.ts`); Palisade supplies
+// its duration and a status that is the board's.
+describe("palisade completion", () => {
+  it("has a win flash", () => {
+    const p = { w: 5, h: 5, k: 5 };
+    const s0 = newState(p, newDesc(p, randomNew("palisade-flash")).desc);
+    expect(palisadeGame.solvedFlash?.(s0, { cursor: newCursor(1, 1) })).toBeGreaterThan(
+      0,
+    );
   });
 
-  it("does not fire on the Solve command (cheated flips this move)", () => {
-    expect(
-      flash({ completed: false, cheated: false }, { completed: true, cheated: true }),
-    ).toBe(0);
-  });
-
-  it("fires again on a manual re-completion after a prior Solve", () => {
-    // cheated already true from the earlier Solve; this move completes by hand.
-    expect(
-      flash({ completed: false, cheated: true }, { completed: true, cheated: true }),
-    ).toBeGreaterThan(0);
-  });
-
-  it("does not fire when a move breaks a solved board", () => {
-    expect(flash({ completed: true }, { completed: false })).toBe(0);
-  });
-
-  it("un-sticks completed: breaking a solved board reverts to unsolved", () => {
+  it("breaking a solved board reverts it to unsolved", () => {
     const p = { w: 5, h: 5, k: 5 };
     const s0 = newState(p, newDesc(p, randomNew("palisade-unstick")).desc);
     const sol = solveToBorders(p, s0.clues);
     if (!sol) throw new Error("the generated board did not solve");
-    const solved = { ...s0, borders: sol.slice(), completed: true, cheated: true };
-    // Remove an interior wall → no longer a valid division → completed false.
+    const solved = { ...s0, borders: sol.slice() };
+    expect(palisadeGame.status(solved)).toBe("solved");
+    // Remove an interior wall → no longer a valid division.
     let broke = false;
     for (let y = 0; y < p.h && !broke; y++) {
       for (let x = 0; x + 1 < p.w && !broke; x++) {
@@ -277,8 +249,7 @@ describe("palisade win flash", () => {
               { x: x + 1, y, flag: BORDER(3) },
             ],
           });
-          expect(next.completed).toBe(false); // un-stuck
-          expect(next.cheated).toBe(true); // cheat record preserved
+          expect(palisadeGame.status(next)).toBe("ongoing");
           broke = true;
         }
       }
@@ -320,7 +291,7 @@ describe("palisade hint", () => {
 
     let s = s0;
     for (const step of r.steps) s = palisadeGame.executeMove(s, step.move);
-    expect(s.completed).toBe(true);
+    expect(palisadeGame.status(s)).toBe("solved");
   });
 
   it("records de-duplicated interior edges (rim-seeded)", () => {

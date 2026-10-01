@@ -258,8 +258,6 @@ export interface BoatsState {
   /** Shared by reference across every state of a game — never written. */
   readonly borderClues: Int32Array;
   readonly grid: Int8Array;
-  readonly completed: boolean;
-  readonly cheated: boolean;
 }
 
 /** A mutable working copy of `s` for the solver / a move application. */
@@ -438,8 +436,6 @@ export function newState(p: BoatsParams, desc: string): BoatsState {
     gridClues,
     borderClues,
     grid,
-    completed: false,
-    cheated: false,
   };
 }
 

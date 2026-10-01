@@ -134,7 +134,7 @@ describe("ascent generator determinism", () => {
 });
 
 describe("ascent solve + completion", () => {
-  it("Solve marks the board completed and cheated (no win flash)", () => {
+  it("Solve completes the board", () => {
     const p = mk(5, 5, 1, MODE_RECT);
     const { desc } = newAscentDesc(p, randomNew("solve-seed"));
     const state = newAscentState(p, desc);
@@ -142,10 +142,8 @@ describe("ascent solve + completion", () => {
     expect(res?.ok).toBe(true);
     if (!res?.ok) throw new Error("solve failed");
     const solved = ascentGame.executeMove(state, res.move);
-    expect(solved.completed).toBe(true);
-    expect(solved.cheated).toBe(true);
+    expect(ascentGame.status(state)).toBe("ongoing");
     expect(ascentGame.status(solved)).toBe("solved");
-    expect(ascentGame.flashLength?.(state, solved, 1, ascentGame.newUi(state))).toBe(0);
   });
 
   it("Solve completes through a real Midend and save round-trips", () => {
@@ -314,8 +312,6 @@ function scratch() {
     grid,
     immutable: new Uint8Array(sTot),
     path: null,
-    completed: false,
-    cheated: false,
   };
   const ui = ascentGame.newUi(state);
   const ds = ascentGame.newDrawState(state, ascentGame.preferredTileSize ?? 48);

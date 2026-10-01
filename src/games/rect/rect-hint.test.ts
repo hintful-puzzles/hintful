@@ -18,7 +18,7 @@ import {
   rungsFinish,
 } from "./hint.ts";
 import { rectGame } from "./index.ts";
-import { executeMove, newState } from "./moves.ts";
+import { executeMove, isSolved, newState } from "./moves.ts";
 import { COL_HINT, COL_HINT_CELL } from "./render.ts";
 import type { RectMove, RectParams, RectState } from "./state.ts";
 
@@ -33,7 +33,7 @@ const P7 = params(7, 7);
 /** The first firing of `kind` on the plan from the board `desc` sets up. */
 function firstOf(p: RectParams, desc: string, kind: RectFiring["kind"]) {
   let s = newState(p, desc);
-  for (let k = 0; k < 500 && !s.completed; k++) {
+  for (let k = 0; k < 500 && !isSolved(s); k++) {
     const f = nextFiring(s);
     if (!f) break;
     if (f.kind === kind) return { s, f };
@@ -109,7 +109,7 @@ describe("rect hint plan", () => {
         const res = rectHint(s);
         if (!res.ok) throw new Error(`${n}x${n}:${desc}: ${res.error}`);
         for (const step of res.steps) s = executeMove(s, step.move);
-        expect(s.completed, `${n}x${n}:${desc}`).toBe(true);
+        expect(isSolved(s), `${n}x${n}:${desc}`).toBe(true);
         boards++;
       }
     expect(boards).toBe(8);

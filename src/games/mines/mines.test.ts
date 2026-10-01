@@ -298,8 +298,6 @@ describe("mines supersede + midend", () => {
       h: 3,
       n: 1,
       dead: false,
-      completed: false,
-      cheated: false,
       layout,
       clickedAt: { x: 1, y: 1 },
       grid,
@@ -333,8 +331,6 @@ describe("mines supersede + midend", () => {
       h: 3,
       n: 1,
       dead: false,
-      completed: false,
-      cheated: false,
       layout,
       clickedAt: { x: 1, y: 1 },
       grid,
@@ -363,13 +359,10 @@ describe("mines supersede + midend", () => {
     const p = decodeParams("3x3n1");
     const s = minesGame.newState(p, "1,1,u800"); // opens (1,1); wins on this tiny board
     // Rebuild an explicitly-ongoing board so Solve fills the whole grid.
-    const alive: MinesState = {
-      ...s,
-      completed: false,
-      grid: new Int8Array(9).fill(COVERED),
-    };
+    const alive: MinesState = { ...s, grid: new Int8Array(9).fill(COVERED) };
+    expect(minesGame.status(alive)).toBe("ongoing");
     const solved = minesGame.executeMove(alive, { type: "solve" });
-    expect(solved.cheated).toBe(true);
+    expect(minesGame.status(solved)).toBe("solved");
     expect(solved.grid[0]).toBe(-1); // the mine, flagged
     // every non-mine square carries its neighbor count
     expect(Array.from(solved.grid)).toEqual([-1, 1, 0, 1, 1, 0, 0, 0, 0]);
@@ -386,14 +379,13 @@ describe("mines supersede + midend", () => {
       h: 3,
       n: 1,
       dead: true,
-      completed: false,
-      cheated: false,
       layout,
       clickedAt: { x: 2, y: 2 },
       grid,
     };
     const solved = minesGame.executeMove(dead, { type: "solve" });
-    expect(solved.cheated).toBe(true);
+    // Corrections are not a win: the player is still dead.
+    expect(minesGame.status(solved)).toBe("ongoing");
     expect(solved.grid[0]).toBe(64); // the real mine, revealed
     expect(solved.grid[1]).toBe(66); // the wrong flag, crossed out
   });
@@ -433,8 +425,6 @@ describe("mines chord preview", () => {
       h: 3,
       n: 1,
       dead: false,
-      completed: false,
-      cheated: false,
       layout,
       clickedAt: { x: 1, y: 1 },
       grid,

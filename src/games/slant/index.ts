@@ -14,7 +14,6 @@
  */
 
 import type { DifficultyContract } from "../../engine/difficulty.ts";
-import { winFlash } from "../../engine/flash.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
@@ -395,7 +394,7 @@ export const slantGame: Game<
   newDrawState,
   redraw,
 
-  flashLength: (a, b) => winFlash(a, b, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(slantGame);

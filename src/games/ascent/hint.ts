@@ -78,6 +78,7 @@ import {
   fromNumberEdge,
   isEdgeValid,
   isNumberEdge,
+  isSolved,
   MODE_EDGES,
   movementForMode,
   NUMBER_EMPTY,
@@ -397,7 +398,7 @@ export function ascentPlan(start: AscentState): AscentFiring[] {
     // A step that spilled past its own square ends the plan: the numbers a
     // player's line filled in are theirs to vouch for, so the next hint reads
     // them afresh, after the mistake check has seen them.
-    status: (b) => (b.state.completed || b.spilled ? "done" : "open"),
+    status: (b) => (b.spilled || isSolved(b.state) ? "done" : "open"),
     incomplete: "open",
     next: () => {
       const queued = following.shift();
@@ -421,7 +422,7 @@ export function ascentPlan(start: AscentState): AscentFiring[] {
   });
   // The cap never ends a plan partway through a run it is following.
   for (const f of following) {
-    if (board.spilled || board.state.completed) break;
+    if (board.spilled || isSolved(board.state)) break;
     const firing = { ...f, before: board.state, joins: true };
     plan.push(firing);
     const after = executeAscentMove(board.state, placeOf(firing));

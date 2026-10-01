@@ -86,7 +86,7 @@ describe("Flood redraw", () => {
     );
     // A one-color desc decodes to `colors: 1`; a real win keeps the colors
     // the board started with, and those are what the rainbow cycles through.
-    const state: FloodState = { ...base, colors: 6, completed: true, moves: 3 };
+    const state: FloodState = { ...base, colors: 6, moves: 3 };
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
     // 0.12 / VICTORY_FLASH_FRAME (0.03) floors to frame 3, so cells within

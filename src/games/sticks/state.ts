@@ -28,7 +28,6 @@ import {
   SYMM_ROT4,
   SYMMETRY_CHOICES,
 } from "../../engine/symmetric-blacks.ts";
-import type { GameStatus } from "../../engine/types.ts";
 
 // --- cell flag bits (upstream values) ---------------------------------------
 
@@ -54,8 +53,6 @@ export interface SticksState {
   grid: Uint8Array;
   /** Clue number per cell, `-1` for none — fixed puzzle data. */
   numbers: Int16Array;
-  completed: boolean;
-  cheated: boolean;
 }
 
 /** What a single cell edit sets the cell to. */
@@ -256,7 +253,7 @@ export function newState(p: SticksParams, desc: string): SticksState {
     // '_' (and anything else validateDesc would have rejected) is inert.
     i++;
   }
-  return { w, h, grid, numbers, completed: false, cheated: false };
+  return { w, h, grid, numbers };
 }
 
 /**
@@ -295,10 +292,6 @@ export function encodeDesc(
 
 export function cloneState(s: SticksState): SticksState {
   return { ...s, grid: s.grid.slice(), numbers: s.numbers.slice() };
-}
-
-export function status(s: SticksState): GameStatus {
-  return s.completed ? "solved" : "ongoing";
 }
 
 // --- text format (upstream game_text_format) --------------------------------

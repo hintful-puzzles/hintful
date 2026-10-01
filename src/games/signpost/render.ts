@@ -70,7 +70,7 @@ export const COL_HINT_CELL = COL_HINT + 1;
  * `computeSize` read the same number the painter does — one function, both
  * callers ([`docs/games/mechanics.md`](../../../docs/games/mechanics.md)). */
 export const BORDER = 1;
-/** Win-flash duration, shared with `flashLength` for the same reason. */
+/** Win-flash duration, shared with `solvedFlash` for the same reason. */
 export const FLASH_SPIN = 0.7;
 const TWO_PI = 2 * Math.PI;
 

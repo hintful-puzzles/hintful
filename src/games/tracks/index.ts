@@ -11,7 +11,6 @@
  */
 
 import type { DifficultyContract } from "../../engine/difficulty.ts";
-import { winFlash } from "../../engine/flash.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
@@ -475,7 +474,7 @@ export const tracksGame: Game<
   newDrawState,
   redraw,
 
-  flashLength: (oldState, newState) => winFlash(oldState, newState, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(tracksGame);

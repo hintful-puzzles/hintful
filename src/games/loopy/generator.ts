@@ -129,8 +129,6 @@ export function newDesc(p: LoopyParams, rng: RandomState): { desc: string } {
       corners: new Uint8Array(2 * grid.numEdges),
       pairs: [],
       exactlyOneLoop: false,
-      completed: false,
-      cheated: false,
     };
 
     try {

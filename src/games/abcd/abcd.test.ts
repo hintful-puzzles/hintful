@@ -378,12 +378,11 @@ describe("abcd moves through a Midend", () => {
     expect(noted(after, 1, 0, 0)).toBe(false);
   });
 
-  it("Solve completes the board and reports solved-with-help", () => {
+  it("Solve completes the board", () => {
     const me = new Midend(abcdGame);
     expect(me.newGameFromId(RENDER_ID)).toBeNull();
     expect(me.solve()).toBeNull();
-    expect(stateOf(me).completed).toBe(true);
-    expect(stateOf(me).cheated).toBe(true);
+    expect(abcdGame.status(stateOf(me))).toBe("solved");
   });
 
   it("filling in the unique solution completes the board", () => {
@@ -396,9 +395,9 @@ describe("abcd moves through a Midend", () => {
     for (let y = 0; y < h; y++)
       for (let x = 0; x < w; x++)
         moves.push({ type: "enter", x, y, letter: sol[y * w + x] - 1 });
+    expect(abcdGame.status(stateOf(me))).toBe("ongoing");
     me.playMoves(moves);
-    expect(stateOf(me).completed).toBe(true);
-    expect(stateOf(me).cheated).toBe(false); // a genuine (non-cheated) solve
+    expect(abcdGame.status(stateOf(me))).toBe("solved");
   });
 });
 
@@ -614,8 +613,8 @@ describe("abcd render", () => {
           y,
           letter: sol[y * w + x] - 1,
         });
-    expect(s.completed).toBe(true);
-    const flash = abcdGame.flashLength?.(st, s, 1, newUi(s)) ?? 0;
+    expect(abcdGame.status(s)).toBe("solved");
+    const flash = abcdGame.solvedFlash?.(s, newUi(s)) ?? 0;
     expect(flash).toBeGreaterThan(0);
     // A flashing frame paints highlight/lowlight stripe backgrounds.
     const palette = abcdGame.colors([0.9, 0.9, 0.9]);

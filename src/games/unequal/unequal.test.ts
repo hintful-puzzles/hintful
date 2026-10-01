@@ -222,9 +222,9 @@ describe("unequal moves", () => {
         n: soln[i],
         pencil: false,
       });
-      if (k < empties.length - 1) expect(cur.completed).toBe(false);
+      if (k < empties.length - 1) expect(unequalGame.status(cur)).toBe("ongoing");
     });
-    expect(cur.completed).toBe(true);
+    expect(unequalGame.status(cur)).toBe("solved");
     expect(checkComplete(cur)).toBe(1);
   });
 });
@@ -267,7 +267,6 @@ describe("unequal Solve via Midend", () => {
     expect(me.newGameFromId("5dk#unequal-solve")).toBeNull();
     expect(me.solve()).toBeNull();
     const solved = (me as unknown as { state: UnequalState }).state;
-    expect(solved.completed).toBe(true);
     expect(unequalGame.status(solved)).toBe("solved");
   });
 

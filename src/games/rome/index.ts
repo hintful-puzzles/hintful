@@ -25,7 +25,6 @@ import {
 } from "../../engine/candidate-hint.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { type EntryMistakeKind, entryMistakes } from "../../engine/entry-mistakes.ts";
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type SolveResult,
@@ -72,7 +71,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import type { KeyLabel, Point } from "../../engine/types.ts";
+import type { GameStatus, KeyLabel, Point } from "../../engine/types.ts";
 import { newRomeDesc } from "./generator.ts";
 import {
   buildSteps,
@@ -130,7 +129,6 @@ import {
   romeRegions,
   STATUS_COMPLETE,
   STATUS_INVALID,
-  status,
 } from "./state.ts";
 
 /**
@@ -505,8 +503,8 @@ function executeMove(state: RomeState, move: RomeMove): RomeState {
       if (grid[i] & FM_FIXED) continue;
       grid[i] = move.arrows[i] ?? EMPTY;
     }
-    next.completed = validateGame(next, true) === STATUS_COMPLETE;
-    next.cheated = next.completed;
+    // Run for the error and goal-path bits it leaves on the grid.
+    validateGame(next, true);
     return next;
   }
   // ## THE ADDITIVE RULE, stated once
@@ -554,8 +552,14 @@ function executeMove(state: RomeState, move: RomeMove): RomeState {
     pencil[i] =
       move.dir === null ? EMPTY : (pencil[i] ^ move.dir) & legalDirs(x, y, w, h);
 
-  if (validateGame(next, true) === STATUS_COMPLETE) next.completed = true;
+  // Run for the error and goal-path bits it leaves on the grid.
+  validateGame(next, true);
   return next;
+}
+
+function status(s: RomeState): GameStatus {
+  // On a copy: the check rewrites the grid's error bits as it goes.
+  return validateGame(cloneState(s), true) === STATUS_COMPLETE ? "solved" : "ongoing";
 }
 
 /**
@@ -632,15 +636,6 @@ function findMistakes(state: RomeState): readonly RomeMistake[] {
   }
 
   return out;
-}
-
-function flashLength(
-  from: RomeState,
-  to: RomeState,
-  _dir: number,
-  _ui: RomeUi,
-): number {
-  return winFlash(from, to, FLASH_TIME);
 }
 
 // --- the game ---------------------------------------------------------------
@@ -737,7 +732,7 @@ export const romeGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength,
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(romeGame);

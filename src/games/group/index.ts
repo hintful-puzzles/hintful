@@ -84,13 +84,13 @@ import {
   colors,
   computeSize,
   coord,
-  flashLength,
   fromCoord,
   type GroupDrawState,
   type GroupHint,
   newDrawState,
   PREFERRED_TILE_SIZE,
   redraw,
+  solvedFlash,
 } from "./render.ts";
 import {
   type HintOp,
@@ -99,7 +99,6 @@ import {
   solveGroup,
 } from "./solver.ts";
 import {
-  checkErrors,
   cloneState,
   DIFF_EXTREME,
   DIFF_NAMES,
@@ -354,8 +353,6 @@ function executeMove(from: GroupState, move: GroupMove): GroupState {
   switch (move.type) {
     case "solve": {
       const ret = cloneState(from);
-      ret.completed = true;
-      ret.cheated = true;
       ret.grid.set(move.grid);
       ret.pencil.fill(0);
       return ret;
@@ -376,7 +373,6 @@ function executeMove(from: GroupState, move: GroupMove): GroupState {
           ret.pencil[idx] = 0;
         }
       }
-      if (!ret.completed && !checkErrors(ret)) ret.completed = true;
       return ret;
     }
     case "reorder": {
@@ -814,7 +810,7 @@ export const groupGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength,
+  solvedFlash,
 };
 
 registerGame(groupGame);

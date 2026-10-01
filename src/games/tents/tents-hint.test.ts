@@ -70,7 +70,7 @@ function walk(
   each: (f: ReturnType<typeof tentsPlan>["plan"][number], state: TentsState) => void,
 ): TentsState {
   let state = start;
-  for (let asks = 0; asks < 200 && !state.completed; asks++) {
+  for (let asks = 0; asks < 200 && tentsGame.status(state) !== "solved"; asks++) {
     const { impossible, plan } = tentsPlan(state);
     expect(impossible).toBe(false);
     expect(plan.length, "the hint ran dry").toBeGreaterThan(0);
@@ -95,7 +95,9 @@ describe("following the hint finishes every board, one true step at a time", () 
           expect(tentsGame.findMistakes?.(state), step.explanation).toEqual([]);
         }
       });
-      expect(end.completed, "following the hint did not finish the board").toBe(true);
+      expect(tentsGame.status(end), "following the hint did not finish the board").toBe(
+        "solved",
+      );
       expect(steps).toBeGreaterThan(10);
     });
   }

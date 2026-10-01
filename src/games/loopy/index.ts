@@ -32,7 +32,6 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type GamePref,
@@ -123,6 +122,7 @@ import {
   checkCompletion,
   cloneState,
   forcedRuleOuts,
+  isSolved,
   LINE_NO,
   LINE_UNKNOWN,
   LINE_YES,
@@ -765,10 +765,8 @@ function executeLines(
     }
     next.lines[op.edge] = op.state;
   }
-  if (move.kind === "solve") next.cheated = true;
-  // `solved` is sticky, as upstream: it is only ever set, never cleared, so
-  // undoing past the winning move leaves the game recorded as having been won.
-  if (checkCompletion(next)) next.completed = true;
+  // Refreshes the error highlight and the one-loop fact `isSolved` reads.
+  checkCompletion(next);
   return next;
 }
 
@@ -868,8 +866,7 @@ export const loopyGame: Game<
   interpretMove,
   executeMove,
   hover,
-  // The midend upgrades this to "solved-with-help" itself when Solve was used.
-  status: (s) => (s.completed ? "solved" : "ongoing"),
+  status: (s) => (isSolved(s) ? "solved" : "ongoing"),
   solve,
   difficulty,
   findMistakes,
@@ -892,7 +889,7 @@ export const loopyGame: Game<
   computeSize,
   newDrawState,
   redraw,
-  flashLength: (a, b) => winFlash(a, b, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(loopyGame);

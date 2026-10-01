@@ -23,7 +23,7 @@
  */
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { ALREADY_SOLVED, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
+import { SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import {
   planSlides,
@@ -336,8 +336,6 @@ export function hint(
 ): HintResult<NetslideMove, NetslideHint> {
   const { w, h } = s;
   const n = w * h;
-
-  if (isComplete(s)) return { ok: false, error: ALREADY_SOLVED };
 
   // The finished grid to aim at: the generator's, when the game came with one,
   // and otherwise recovered from the board itself (a game arriving as a shared

@@ -669,38 +669,23 @@ describe("mathrax moves", () => {
     m.playMoves(moves);
     expect(status()).toBe("solved");
 
-    // A player-completed board celebrates; a solved-with-help one must not.
-    const before = mathraxGame.executeMove(newState(FIX_PARAMS, FIX.desc), moves[0]);
-    const solved = moves
-      .slice(1)
-      .reduce((s, mv) => mathraxGame.executeMove(s, mv), before);
-    expect(solved.completed).toBe(true);
-    expect(solved.cheated).toBe(false);
-    expect(
-      mathraxGame.flashLength?.(
-        moves
-          .slice(0, -1)
-          .reduce(
-            (s, mv) => mathraxGame.executeMove(s, mv),
-            newState(FIX_PARAMS, FIX.desc),
-          ),
-        solved,
-        1,
-        newUi(solved),
-      ),
-    ).toBeGreaterThan(0);
+    // A player-completed board celebrates: the game supplies a win flash.
+    const solved = moves.reduce(
+      (s, mv) => mathraxGame.executeMove(s, mv),
+      newState(FIX_PARAMS, FIX.desc),
+    );
+    expect(mathraxGame.status(solved)).toBe("solved");
+    expect(mathraxGame.solvedFlash?.(solved, newUi(solved))).toBeGreaterThan(0);
   });
 
-  it("Solve fills the board, reports solved-with-help and does not flash", () => {
+  it("Solve fills the board and reports solved-with-help", () => {
     const { m, status } = harness();
     expect(m.newGameFromId(FIX_ID)).toBeNull();
     expect(m.solve()).toBeNull();
     expect(status()).toBe("solved-with-help");
 
     const st = (m as unknown as { state: MathraxState }).state;
-    expect(st.cheated).toBe(true);
     expect([...st.grid].every((d) => d > 0)).toBe(true);
-    expect(mathraxGame.flashLength?.(st, st, 1, newUi(st))).toBe(0);
   });
 
   it("saveGame -> loadGame restores an equivalent game", () => {

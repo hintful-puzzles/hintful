@@ -81,8 +81,6 @@ export interface TentsState {
    * is joined to, or `N`. Only a tent and an orthogonally adjacent tree are
    * ever joined, and always both ways. The win condition never reads it. */
   readonly links: Int8Array;
-  readonly completed: boolean;
-  readonly cheated: boolean;
 }
 
 /** A `cells` batch is the C `B`/`T`/`N` compound (one gesture's edits);
@@ -260,7 +258,7 @@ export function decodeDesc(
 export function newState(p: TentsParams, desc: string): TentsState {
   const { grid, numbers } = decodeDesc(p, desc);
   const links = new Int8Array(p.w * p.h).fill(N);
-  return { w: p.w, h: p.h, numbers, grid, links, completed: false, cheated: false };
+  return { w: p.w, h: p.h, numbers, grid, links };
 }
 
 // --- completion check (upstream execute_move tail) ------------------------
@@ -332,10 +330,8 @@ export function executeMove(state: TentsState, move: TentsMove): TentsState {
   const { w, h } = state;
   const grid = Int8Array.from(state.grid);
   const links = Int8Array.from(state.links);
-  let cheated = state.cheated;
 
   if (move.type === "solve") {
-    cheated = true;
     for (let i = 0; i < w * h; i++) if (grid[i] !== TREE) grid[i] = NONTENT;
     for (const idx of move.tents) {
       if (idx < 0 || idx >= w * h || grid[idx] === TREE)
@@ -375,8 +371,7 @@ export function executeMove(state: TentsState, move: TentsMove): TentsState {
     return assertNever(move, "tents: executeMove");
   }
 
-  const completed = state.completed || checkCompletion(w, h, grid, state.numbers);
-  return { ...state, grid, links, completed, cheated };
+  return { ...state, grid, links };
 }
 
 const inGrid = (w: number, h: number, x: number, y: number): boolean =>
@@ -408,7 +403,8 @@ export function partnerOf(w: number, links: Int8Array, i: number): number {
 // --- status / text -------------------------------------------------------
 
 export function status(state: TentsState): GameStatus {
-  return state.completed ? "solved" : "ongoing";
+  const { w, h, grid, numbers } = state;
+  return checkCompletion(w, h, grid, numbers) ? "solved" : "ongoing";
 }
 
 /** Upstream `game_text_format`: a box-drawn grid with `//\` tents, `T` trees,

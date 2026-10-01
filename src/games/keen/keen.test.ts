@@ -262,7 +262,6 @@ describe("keen moves", () => {
         n: sol[i],
         pencil: false,
       });
-    expect(cur.completed).toBe(false);
     const before = cur;
     cur = keenGame.executeMove(cur, {
       type: "set",
@@ -271,20 +270,25 @@ describe("keen moves", () => {
       n: sol[15],
       pencil: false,
     });
-    expect(cur.completed).toBe(true);
-    expect(cur.cheated).toBe(false);
     expect(keenGame.status(before)).toBe("ongoing");
     expect(keenGame.status(cur)).toBe("solved");
     expect(keenGame.solvedFlash?.(cur, newUi(st))).toBeGreaterThan(0);
   });
 
-  it("Solve completes the board but marks it cheated", () => {
+  it("Solve completes the board, and breaking it un-solves it", () => {
     const st = newState(P4, D4);
     const r = keenGame.solve?.(st, st);
     if (!r?.ok) throw new Error("solve failed");
     const done = keenGame.executeMove(st, r.move);
-    expect(done.completed).toBe(true);
-    expect(done.cheated).toBe(true);
+    expect(keenGame.status(done)).toBe("solved");
+    const broken = keenGame.executeMove(done, {
+      type: "set",
+      x: 0,
+      y: 0,
+      n: 0,
+      pencil: false,
+    });
+    expect(keenGame.status(broken)).toBe("ongoing");
   });
 });
 
@@ -333,7 +337,6 @@ describe("keen Solve via Midend", () => {
     expect(me.newGameFromId("6dn#keen-solve")).toBeNull();
     expect(me.solve()).toBeNull();
     const solved = (me as unknown as { state: KeenState }).state;
-    expect(solved.completed).toBe(true);
     expect(keenGame.status(solved)).toBe("solved");
   });
 

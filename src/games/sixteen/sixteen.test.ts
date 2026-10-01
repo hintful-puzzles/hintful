@@ -8,7 +8,6 @@ import {
   descBadCharacter,
 } from "../../engine/desc-error.ts";
 import { raisedBevelWidth } from "../../engine/draw.ts";
-import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
 import type { HintStep } from "../../engine/index.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -51,8 +50,6 @@ function solvedState(w: number, h: number): SixteenState {
     h,
     n,
     tiles,
-    completed: 0,
-    cheated: false,
     moveCount: 0,
     moveTarget: 0,
     lastMovementSense: 0,
@@ -187,7 +184,8 @@ describe("Sixteen desc and state", () => {
     expect(s.tiles).toEqual(new Int32Array([1, 2, 3, 4, 5, 6, 7, 8, 9]));
     expect(s.w).toBe(3);
     expect(s.h).toBe(3);
-    expect(s.completed).toBe(0);
+    // Typed in already sorted, it is solved before any move.
+    expect(status(s)).toBe("solved");
   });
 });
 
@@ -207,10 +205,12 @@ describe("Sixteen completion", () => {
     expect(isCompleted(unsolved)).toBe(false);
   });
 
-  it("status returns solved/ongoing", () => {
+  it("status returns solved/ongoing from the tiles", () => {
     const s = solvedState(3, 3);
-    expect(status(s)).toBe("ongoing");
-    expect(status({ ...s, completed: 5 })).toBe("solved");
+    expect(status(s)).toBe("solved");
+    const tiles = new Int32Array(s.tiles);
+    [tiles[0], tiles[1]] = [tiles[1], tiles[0]];
+    expect(status({ ...s, tiles })).toBe("ongoing");
   });
 });
 
@@ -310,8 +310,8 @@ describe("Sixteen move execution", () => {
     const move: SixteenMove = { type: "solve" };
     const result = executeMove(s, move);
     expect(Array.from(result.tiles)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
-    expect(result.cheated).toBe(true);
-    expect(result.completed).toBeGreaterThan(0);
+    expect(status(result)).toBe("solved");
+    expect(result.moveCount).toBe(s.moveCount + 1);
   });
 
   it("increments moveCount", () => {
@@ -326,7 +326,7 @@ describe("Sixteen move execution", () => {
     const move: SixteenMove = { type: "slide", axis: "row", index: 0, delta: 1 };
     const result = executeMove(s, move);
     expect(Array.from(result.tiles)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9]);
-    expect(result.completed).toBeGreaterThan(0);
+    expect(status(result)).toBe("solved");
   });
 
   it("does not mutate the original state", () => {
@@ -351,13 +351,6 @@ describe("Sixteen colors", () => {
 // --- hint heuristic -------------------------------------------------------
 
 describe("Sixteen hint", () => {
-  it("returns an error for a solved state", () => {
-    const s = solvedState(4, 4);
-    const result = sixteenGame.hint?.(s);
-    expect(result?.ok).toBe(false);
-    if (result && !result.ok) expect(result.error).toBe(ALREADY_SOLVED);
-  });
-
   it("returns a non-empty plan of slide moves for an unsolved state", () => {
     const rng = randomNew("hint-test");
     const { desc } = newDesc(defaultParams(), rng);
@@ -464,13 +457,13 @@ describe("Sixteen hint", () => {
       ...solvedState(4, 4),
       tiles: new Int32Array([3, 4, 1, 8, 5, 6, 2, 7, 9, 10, 11, 12, 13, 14, 15, 16]),
     };
-    for (let round = 0; round < 10 && s.completed === 0; round++) {
+    for (let round = 0; round < 10 && !isCompleted(s); round++) {
       const result = sixteenGame.hint?.(s);
       expect(result?.ok).toBe(true);
       if (!result?.ok) return;
       for (const step of result.steps) s = executeMove(s, step.move);
     }
-    expect(s.completed).toBeGreaterThan(0);
+    expect(isCompleted(s)).toBe(true);
   });
 
   it("prioritizes the lowest-numbered out-of-place tile", () => {
@@ -502,7 +495,7 @@ describe("Sixteen hint", () => {
         const p = { w, h, movetarget: 0 };
         const { desc } = newDesc(p, randomNew(seed));
         let s = newState(p, desc);
-        for (let round = 0; round < 150 && s.completed === 0; round++) {
+        for (let round = 0; round < 150 && !isCompleted(s); round++) {
           const result = sixteenGame.hint?.(s);
           if (!result?.ok) break;
           for (const step of result.steps) {
@@ -524,7 +517,7 @@ describe("Sixteen hint", () => {
             expect(s.tiles.indexOf(hl.tile)).toBe(hl.targetPos);
           }
         }
-        expect(s.completed).toBeGreaterThan(0);
+        expect(isCompleted(s)).toBe(true);
       }
     }
   });
@@ -548,7 +541,7 @@ describe("Sixteen hint", () => {
     // reaches the solved board is proof it ran and succeeded — which is the
     // thing worth asserting, and it needs no flag to say so.
     for (const step of result.steps) s = executeMove(s, step.move);
-    expect(s.completed).toBeGreaterThan(0);
+    expect(isCompleted(s)).toBe(true);
     // The exact bidirectional search over ~1.5M states is slow; the assertions
     // above are the guarantee, never the clock. Ceiling: vitest.config.ts.
   });
@@ -636,10 +629,9 @@ describe("Sixteen hint", () => {
         ).toBeGreaterThan(8);
         let board = state;
         for (const step of result.steps) board = executeMove(board, step.move);
-        expect(
-          board.completed,
-          `${label}: the plan does not finish the board`,
-        ).toBeGreaterThan(0);
+        expect(isCompleted(board), `${label}: the plan does not finish the board`).toBe(
+          true,
+        );
       }
     },
   );
@@ -688,16 +680,16 @@ describe("Sixteen hint", () => {
       let state = newState({ w: 5, h: 5, movetarget: 0 }, desc);
       let moves = 0;
       for (; moves < maxMoves; moves++) {
-        if (state.completed > 0) break;
+        if (isCompleted(state)) break;
         const res = sixteenGame.hint?.(state);
         expect(res?.ok, `${label}: the hint gave up after ${moves} moves`).toBe(true);
         if (!res?.ok) return;
         state = executeMove(state, res.steps[0].move);
       }
       expect(
-        state.completed,
+        isCompleted(state),
         `${label}: following recomputed hints did not finish in ${maxMoves} moves`,
-      ).toBeGreaterThan(0);
+      ).toBe(true);
     }
   });
 
@@ -719,7 +711,7 @@ describe("Sixteen hint", () => {
     let previous: number | null = null;
     let first = 0;
     let steps = 0;
-    while (s.completed === 0) {
+    while (!isCompleted(s)) {
       const result = sixteenGame.hint?.(s);
       expect(result?.ok, `stalled after ${steps} moves`).toBe(true);
       if (!result?.ok) return;
@@ -874,13 +866,13 @@ describe("Sixteen hint", () => {
 
     let rounds = 0;
     const maxRounds = 50;
-    while (s.completed === 0 && rounds < maxRounds) {
+    while (!isCompleted(s) && rounds < maxRounds) {
       const result = sixteenGame.hint?.(s);
       if (!result?.ok) break;
       for (const step of result.steps) s = executeMove(s, step.move);
       rounds++;
     }
-    expect(s.completed).toBeGreaterThan(0);
+    expect(isCompleted(s)).toBe(true);
   });
 
   it("can solve a 4x4 puzzle using sequential hints", () => {
@@ -891,14 +883,14 @@ describe("Sixteen hint", () => {
 
     let rounds = 0;
     const maxRounds = 100;
-    while (s.completed === 0 && rounds < maxRounds) {
+    while (!isCompleted(s) && rounds < maxRounds) {
       const result = sixteenGame.hint?.(s);
       expect(result?.ok, `round ${rounds}, board ${s.tiles.join(",")}`).toBe(true);
       if (!result?.ok) break;
       for (const step of result.steps) s = executeMove(s, step.move);
       rounds++;
     }
-    expect(s.completed).toBeGreaterThan(0);
+    expect(isCompleted(s)).toBe(true);
   });
 
   describe("backtracking and oscillation prevention", () => {
@@ -918,7 +910,7 @@ describe("Sixteen hint", () => {
         expect(hint?.ok).toBe(true);
         if (!hint?.ok) continue;
         expect(hint.steps, `slide by ${delta}`).toHaveLength(1);
-        expect(executeMove(s1, hint.steps[0].move).completed).toBeGreaterThan(0);
+        expect(isCompleted(executeMove(s1, hint.steps[0].move))).toBe(true);
       }
     });
   });

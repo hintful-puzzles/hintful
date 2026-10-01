@@ -457,10 +457,8 @@ describe("spokes completion and solve (through a real Midend)", () => {
 
     let cur = state;
     for (const move of moves) cur = spokesGame.executeMove(cur, move);
-    expect(cur.completed).toBe(true);
-    expect(cur.cheated).toBe(false);
     expect(spokesGame.status(cur)).toBe("solved");
-    expect(spokesGame.flashLength?.(state, cur, 1, newUi())).toBeGreaterThan(0);
+    expect(spokesGame.solvedFlash?.(cur, newUi())).toBeGreaterThan(0);
   });
 
   it("round-trips a save with progress on it", () => {

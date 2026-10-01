@@ -55,8 +55,6 @@ export interface SeparateState {
   letters: Uint8Array;
   /** length w·h, the `borderflag` byte per cell. */
   borders: Uint8Array;
-  completed: boolean;
-  cheated: boolean;
 }
 
 export type SeparateMove =
@@ -208,22 +206,18 @@ export function newState(p: SeparateParams, desc: string): SeparateState {
     k,
     letters,
     borders: initBorders(w, h),
-    completed: false,
-    cheated: false,
   };
 }
 
 // --- move execution -------------------------------------------------------
 
 export function executeMove(state: SeparateState, move: SeparateMove): SeparateState {
-  const { w, h, k } = state;
+  const { w, h } = state;
   const ret: SeparateState = { ...state, borders: state.borders.slice() };
 
   if (move.type === "solve") {
     if (move.borders.length !== w * h) throw new Error("separate: bad solve move");
     ret.borders = Uint8Array.from(move.borders);
-    ret.cheated = true;
-    ret.completed = true;
     return ret;
   }
   if (move.type !== "edges") return assertNever(move, "separate: executeMove");
@@ -237,16 +231,12 @@ export function executeMove(state: SeparateState, move: SeparateMove): SeparateS
     }
     ret.borders[y * w + x] ^= flag;
   }
-
-  // Recompute completion every move (Palisade's deliberate divergence): breaking
-  // a solved board reverts to unsolved, so a later re-completion is a real
-  // transition the win flash can fire on. `cheated` stays sticky.
-  ret.completed = isSolved(w, h, k, ret.letters, ret.borders);
   return ret;
 }
 
 export function status(state: SeparateState): GameStatus {
-  return state.completed ? "solved" : "ongoing";
+  const { w, h, k, letters, borders } = state;
+  return isSolved(w, h, k, letters, borders) ? "solved" : "ongoing";
 }
 
 // --- text format ----------------------------------------------------------

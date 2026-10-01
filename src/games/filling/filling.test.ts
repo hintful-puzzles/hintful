@@ -128,7 +128,8 @@ describe("filling completion", () => {
   it("marks the state solved when the last cell completes it", () => {
     const st = newState({ w: 3, h: 1 }, "1a2");
     const done = executeMove(st, { type: "set", cells: [1], value: 2 });
-    expect(done.completed).toBe(true);
+    expect(fillingGame.status(st)).toBe("ongoing");
+    expect(fillingGame.status(done)).toBe("solved");
     expect([...done.board]).toEqual([1, 2, 2]);
   });
 });

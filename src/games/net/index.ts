@@ -9,7 +9,6 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import { completionStatus } from "../../engine/completion-status.ts";
 import type { Game, GamePref, SolveResult } from "../../engine/game.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
@@ -174,16 +173,7 @@ function executeMove(s: NetState, m: NetMove): NetState {
       return assertNever(m, "net: executeMove");
   }
 
-  const next: NetState = {
-    ...s,
-    tiles,
-    cheated: s.cheated || m.type === "solve",
-    lastRotateX,
-    lastRotateY,
-    lastRotateDir,
-  };
-  // `completed` is monotonic (upstream only ever sets it true).
-  return s.completed ? next : { ...next, completed: isComplete(next) };
+  return { ...s, tiles, lastRotateX, lastRotateY, lastRotateDir };
 }
 
 /** Rotate the tile at `(x, y)`, or nothing: a locked tile does not turn. */
@@ -670,7 +660,7 @@ function decodeUi(ui: NetUi, encoded: string): void {
  */
 
 function statusbarText(s: NetState, ui: NetUi): string {
-  const complete = s.cheated || s.completed;
+  const complete = isComplete(s);
   let counter = "";
   // Omit the counter when the source tile is empty (it would always read 1).
   if (s.tiles[ui.cy * s.w + ui.cx] & 0xf) {
@@ -687,7 +677,7 @@ function statusbarText(s: NetState, ui: NetUi): string {
   if (ui.placingSource) {
     return `Tap a square to light the network from it. ${counter}`.trimEnd();
   }
-  return completionStatus(s.completed, s.cheated, counter);
+  return counter;
 }
 
 /* ----------------------------------------------------------------------
@@ -776,7 +766,7 @@ export const netGame: Game<
     { label: "Jumble", button: KEY_JUMBLE },
   ],
 
-  status: (s): GameStatus => (s.completed ? "solved" : "ongoing"),
+  status: (s): GameStatus => (isComplete(s) ? "solved" : "ongoing"),
 
   solve,
   findMistakes,
@@ -807,11 +797,8 @@ export const netGame: Game<
 
   animLength: (a, b, dir) => ((dir === -1 ? a : b).lastRotateDir ? ROTATE_TIME : 0),
 
-  flashLength: (a, b) => {
-    // Flash on completion, unless it was auto-solved.
-    if (a.completed || !b.completed || a.cheated || b.cheated) return 0;
-    return FLASH_FRAME * (Math.max(b.w, b.h) + 4);
-  },
+  // The flash sweeps the board, so it lasts as long as the board is wide.
+  solvedFlash: (s) => FLASH_FRAME * (Math.max(s.w, s.h) + 4),
 };
 
 registerGame(netGame);

@@ -12,7 +12,6 @@
  */
 
 import { rejectMove } from "../../engine/assert-never.ts";
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type HintResult,
@@ -40,7 +39,7 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/target-verb.ts";
-import type { Point } from "../../engine/types.ts";
+import type { GameStatus, Point } from "../../engine/types.ts";
 import { type Marked, say } from "./hint-text.ts";
 import {
   border,
@@ -82,7 +81,6 @@ import {
   type RangeParams,
   type RangeState,
   type RangeUi,
-  status,
   textFormat,
   validateDesc,
   validateParams,
@@ -169,13 +167,12 @@ function executeMove(state: RangeState, move: RangeMove): RangeState {
     if (next.grid[cell] > 0) throw new Error("Range move targets a clue cell");
     next.grid[cell] = cellValueToGrid(value);
   }
-  if (move.solve) {
-    next.cheated = true;
-    next.completed = true;
-  } else if (!next.completed) {
-    next.completed = !findErrors(next.grid, next.w, next.h);
-  }
   return next;
+}
+
+/** Solved: every cell decided and every rule met. */
+function status(s: RangeState): GameStatus {
+  return findErrors(s.grid, s.w, s.h) ? "ongoing" : "solved";
 }
 
 /** Strip the player's marks, leaving the initial clue grid. */
@@ -465,7 +462,7 @@ export const rangeGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength: (from, to) => winFlash(from, to, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(rangeGame);
