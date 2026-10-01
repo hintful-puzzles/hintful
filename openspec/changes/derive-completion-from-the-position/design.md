@@ -147,3 +147,64 @@ ledger entry with its reason, and the name-keyed structural half covers those.
 A planted latch in Keen and a planted `completed` on Fifteen each turned it red.
 The Marks key is left out of the walk, because it turns every later key into a
 note: with it, Undead's walk never placed a monster.
+
+## Mines' hint
+
+Pulled in from `hintless-games-in-reserve` (proposal § "Hints to pull in").
+Files: `mines/deduce.ts` (the rungs), `mines/hint.ts` (the plan, keep-track and
+refresh), `mines/hint-text.ts` (every sentence), `mines/render.ts` (the marks).
+
+**The premise is the opened numbers, never a flag.** Mines has no
+`findMistakes` (it would give the mines away), so the midend never refuses
+over a wrong flag, and a hint that built on flags would teach from a guess. A
+flag counts once a deduction proves a mine under it. A flag on a square a
+deduction proves safe gets a step of its own, "…so the flag on the ringed
+square must come off", with the open as the journey's next leg; the help
+page's Hints section says the same. Every mine a sentence cites was proved,
+and flagged by an earlier step of the plan if the player had not flagged it.
+
+**The ladder, measured against the certifier.** Mines has no tiers, so
+`hint-resume.test.ts` accepts no refusal on any preset, and the board is only
+promised solvable by upstream's set solver (`minesolve`), which chains derived
+sets without limit. Measured by following the ladder from a center first click
+on 980 boards (300 each of 9×9 with 10 and with 35 mines, 200 of 16×16 with 40,
+80 each of 16×16 and 16×30 with 99, 20 of 16×30 with 170), rung by rung:
+
+| Ladder | Boards where it stalled while `minesolve` finished |
+|---|---|
+| one number; two numbers, wing case only | 8/60, 22/60, 24/60, 17/20, 17/20 (first 60 or 20 seeds) |
+| + the subset case of two numbers | 5/60, 8/60, 9/60, 2/20, 5/20 |
+| + counting the mines left over disjoint numbers | 8 in 720 (all but one needed a region; one a count over more than 12 numbers) |
+| + a number nested in another (regions), against numbers, regions and in counts | 0 in 980 |
+
+Every firing that used a region used one level of nesting, so a region is never
+nested in another. A region against another region was needed by one board
+(9×9 with 35 mines, seed `m264` of the measurement), so it is allowed, with the
+second region named in words rather than a second set of stripes. A count adds
+at most 5 members from at most 40 candidates: no board needed more than 5, and
+the cap is what keeps a stuck board dealt without "Ensure solubility" (where
+the hint refuses with `DEDUCTION_EXHAUSTED`) from searching every subset; its
+worst single call measured 0.9 s, once, before refusing.
+
+How often each rung fired across the 980 boards, of about 63,700 firings: one
+number 95.2%, two numbers 4.4%, a count of the mines left 0.4%, a region 15
+times in all.
+
+**What it says before the board exists.** The generator lays no mine in the
+first square opened or beside it (`minegen`), so the first step opens the
+center and says so. After an undo back to the start the layout survives, and
+its first square is drawn with a cross: the step opens that one.
+
+**A dead board** (status ongoing, `timerHolds`) refuses through
+`puzzleHintRefusal` in Mines' words ("You opened a mine. Undo that move to
+carry on from just before it."), since no collection kind names a death.
+
+**Length.** Two-number and nested sentences run past 120 characters, because
+both numbers, their needs and the shared squares are each a premise; three
+`LONG_NARRATIONS` entries say so. The region prefix and a count of several
+numbers have no entry, because the narration walk never reaches them over 120.
+
+**The marks.** A ring on the border for what the step decides, an outline for
+the numbers and proven mines it reasons from, and stripes under the glyph for
+the one set of squares it treats as a whole. They are packed into the tile
+cache's key, so a hint appearing or clearing repaints exactly its tiles.

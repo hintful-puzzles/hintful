@@ -29,7 +29,8 @@
 
 - [x] 3.1 The status bar's completion words become the engine's;
       `ALREADY_SOLVED` leaves `HintRefusal`; `flash.ts` is deleted.
-- [ ] 3.2 Mines' hint (proposal § "Hints to pull in").
+- [x] 3.2 Mines' hint (proposal § "Hints to pull in"; design.md § "Mines'
+      hint").
 - [x] 3.3 Spec deltas: replace "One completion vocabulary across games";
       `docs/games/mechanics.md`, `rendering.md` (the flash) and the engine
       catalog's `flash.ts` and `completion-status.ts` entries.

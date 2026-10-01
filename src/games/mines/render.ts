@@ -18,15 +18,20 @@ import {
   glyphFont,
   raisedBevelWidth,
 } from "../../engine/draw.ts";
-import type { GameDrawing } from "../../engine/game.ts";
+import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord } from "../../engine/geometry.ts";
+import { hatchPeriod } from "../../engine/hatch.ts";
+import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
+import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
+import type { MinesHint } from "./hint.ts";
 import {
   around,
   COVERED,
   FLAG,
   KILLED,
   MINE,
+  type MinesMove,
   type MinesState,
   type MinesUi,
   QUERY,
@@ -54,7 +59,11 @@ export const COL_HIGHLIGHT = 16;
 export const COL_LOWLIGHT = 17;
 export const COL_WRONGNUMBER = 18;
 export const COL_CURSOR = 19;
-export const NCOLORS = 20;
+/** What a hint step decides: the ring on its border. */
+export const COL_HINT = 20;
+/** What a hint step reasons from: the outline on its border. */
+export const COL_HINT_EVIDENCE = 21;
+export const NCOLORS = 22;
 
 export const PREFERRED_TILE_SIZE = 20;
 export const FLASH_FRAME = 0.13;
@@ -73,8 +82,9 @@ export interface MinesDrawState {
   h: number;
   tileSize: number;
   started: boolean;
-  /** Per-tile cache of the last-drawn value `v` (-99 = never drawn). */
-  grid: Int8Array;
+  /** Per-tile cache of the last-drawn value `v` with the tile's hint marks
+   * packed above it ({@link packTile}; -1 = never drawn). */
+  grid: Int32Array;
   /** Last-drawn flash background color index (-1 = undecided). */
   bg: number;
   /** Last-drawn cursor cell (-1,-1 = none), for the cursor-moved repaint. */
@@ -88,7 +98,7 @@ export function newDrawState(s: MinesState, tileSize: number): MinesDrawState {
     h: s.h,
     tileSize,
     started: false,
-    grid: new Int8Array(s.w * s.h).fill(-99),
+    grid: new Int32Array(s.w * s.h).fill(-1),
     bg: -1,
     curX: -1,
     curY: -1,
@@ -124,6 +134,46 @@ function poly(flat: number[], count: number): Point[] {
   return pts;
 }
 
+/** A tile's part in the displayed hint. */
+const MARK_RING = 1;
+const MARK_OUTLINE = 2;
+const MARK_STRIPES = 4;
+
+/** The draw cache's key: the tile's value `v` (which reaches 66, and -24 when
+ * pressed) with its hint marks above it. */
+function packTile(v: number, marks: number): number {
+  return (v + 128) | (marks << 8);
+}
+
+/** Stripes across the tile's face, under its glyph. */
+function drawStripes(
+  dr: GameDrawing,
+  ts: number,
+  x: number,
+  y: number,
+  marks: number,
+): void {
+  if (marks & MARK_STRIPES)
+    dr.drawHatch(
+      { x: x + 1, y: y + 1, w: ts - 2, h: ts - 2 },
+      COL_HINT,
+      hatchPeriod(ts),
+    );
+}
+
+/** A ring or an outline on the tile's border, over everything it draws. */
+function drawBand(
+  dr: GameDrawing,
+  ts: number,
+  x: number,
+  y: number,
+  marks: number,
+): void {
+  const band = { box: { x, y, w: ts, h: ts }, outer: 0, inner: Math.max(2, ts >> 3) };
+  if (marks & MARK_RING) drawMarkSides(dr, band, MARK_ALL, COL_HINT);
+  else if (marks & MARK_OUTLINE) drawMarkSides(dr, band, MARK_ALL, COL_HINT_EVIDENCE);
+}
+
 function drawTile(
   dr: GameDrawing,
   ts: number,
@@ -131,6 +181,7 @@ function drawTile(
   y: number,
   v: number,
   bg: number,
+  marks: number,
 ): void {
   const hw = raisedBevelWidth(ts);
   if (v < 0) {
@@ -151,6 +202,7 @@ function drawTile(
       );
       dr.drawRect({ x: x + hw, y: y + hw, w: ts - 2 * hw, h: ts - 2 * hw }, bg);
     }
+    drawStripes(dr, ts, x, y, marks);
 
     if (v === FLAG) {
       setcoord(coords, 0, x, y, ts, 0.6, 0.35);
@@ -192,6 +244,7 @@ function drawTile(
     );
     dr.drawLine({ x, y }, { x: x + ts - 1, y }, COL_LOWLIGHT, 1);
     dr.drawLine({ x, y }, { x, y: y + ts - 1 }, COL_LOWLIGHT, 1);
+    drawStripes(dr, ts, x, y, marks);
 
     if (v > 0 && v <= 8) {
       dr.drawText(
@@ -253,6 +306,7 @@ function drawTile(
     }
   }
 
+  drawBand(dr, ts, x, y, marks);
   dr.drawUpdate({ x, y, w: ts, h: ts });
 }
 
@@ -267,10 +321,19 @@ export function redraw(
   ui: MinesUi,
   _animTime: number,
   flashTime: number,
+  hint?: HintStep<MinesMove, MinesHint>,
 ): void {
   const ts = ds.tileSize;
   const border = borderFor(ts);
   const cx0 = (x: number) => coord(x, ts, border);
+
+  // Every hint mark comes from the step's words, and from nowhere else.
+  const words = stepMarks(hint);
+  const keys = (role: "ring" | "outline" | "stripes"): Set<string> =>
+    new Set(words.of(role, CELL).map((p) => `${p.x},${p.y}`));
+  const ring = keys("ring");
+  const outline = keys("outline");
+  const stripes = keys("stripes");
 
   let bg: number;
   if (flashTime) {
@@ -327,7 +390,13 @@ export function redraw(
         cmoved &&
         ((x === cursorX && y === cursorY) || (x === ds.curX && y === ds.curY));
 
-      if (ds.grid[y * ds.w + x] !== v || bg !== ds.bg || cc) {
+      const key = `${x},${y}`;
+      const marks =
+        (ring.has(key) ? MARK_RING : 0) |
+        (outline.has(key) ? MARK_OUTLINE : 0) |
+        (stripes.has(key) ? MARK_STRIPES : 0);
+      const packed = packTile(v, marks);
+      if (ds.grid[y * ds.w + x] !== packed || bg !== ds.bg || cc) {
         drawTile(
           dr,
           ts,
@@ -335,8 +404,9 @@ export function redraw(
           cx0(y),
           v,
           x === cursorX && y === cursorY ? COL_CURSOR : bg,
+          marks,
         );
-        ds.grid[y * ds.w + x] = v;
+        ds.grid[y * ds.w + x] = packed;
       }
     }
   }

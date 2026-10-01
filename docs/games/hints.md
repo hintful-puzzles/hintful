@@ -2904,6 +2904,30 @@ The recorder + driver shape that made it clean and resume-safe:
 The recorder is **gated** (`this.recording`), so `runSolver` — the generator's
 path — is byte-identical and the differential is unaffected by construction.
 
+### A mark nothing can check is a claim, not a premise (Mines)
+
+Most hinted games let the midend refuse on a wrong mark (`findMistakes`), so a
+hint may build on the player's marks. Mines cannot: checking a flag would give
+the mines away, so it has no `findMistakes`, and a flag is the player's guess.
+So the hint **deduces from the opened numbers alone**. A flag counts only once a
+deduction proves a mine under it; a flag on a square a deduction proves safe is
+a conflict the step names ("…so the flag on the ringed square must come off"),
+with the open as the journey's next leg. Every mine a sentence cites is then one
+the plan proved, and flagged in an earlier step if the player had not.
+Exemplar: [`mines/hint.ts`](../../src/games/mines/hint.ts), and the wrong-flag
+test in `mines-hint.test.ts`.
+
+**Measure the ladder against the generator's certifier before trusting it.**
+A game without tiers cannot refuse on a board its generator promised solvable,
+and `hint-resume.test.ts` holds it to that. Mines' generator certifies with
+upstream's set solver, which chains derived regions without limit, so the
+narrated ladder was run beside it over 980 boards and widened rung by rung
+until it never stalled where the certifier finished. The two measures that
+moved it were not the obvious ones: a pair rule missing its subset case stalled
+on 8 of 60 boards at 9×9 with 10 mines, and a region could not be paired with
+another region, which one board in 980 needed. Record the sample in the change's design, since
+a ladder short of the certifier is a defect the walk will only find by luck.
+
 ### A solver's silent bookkeeping is the player's work (Separate)
 
 **A fact a solver's data structure carries for free can be a move the player

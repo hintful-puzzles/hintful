@@ -301,6 +301,40 @@ const LONG_NARRATIONS: { games: string[]; match: RegExp; why: string }[] = [
       "other wire) and counts what is cut off, because the owner found the bare " +
       "'seal off' unreadable in playtest (2026-09-30).",
   },
+  {
+    games: ["mines"],
+    match: / allows? at most \d+ in the (?:striped )?squares/,
+    why:
+      "Two numbers that share squares: one needs more than the other allows in " +
+      "the shared squares. The sentence has to name both numbers, what each " +
+      "needs and the shared squares, or the conclusion does not follow; two " +
+      "numbers of one value add where each sits.",
+  },
+  {
+    games: ["mines"],
+    match: /, and at most \d+ can be among /,
+    why:
+      "One number's squares all lie inside another's, which needs more than " +
+      "they can hold: both numbers and the inner one's squares are premises, " +
+      "and the count is the reason, so none of the three can go.",
+  },
+  {
+    games: ["mines"],
+    match: /(?: all touch .* too| are all among the striped squares), and both need /,
+    why:
+      "One number's squares all lie inside another's and both need the same: " +
+      "the containment and the equal need are the two halves of the reason, " +
+      "and two numbers of one value add where each sits.",
+  },
+  {
+    games: ["mines"],
+    match: / still needs \d+ mines? and has just \d+ unopened squares? left around it/,
+    why:
+      "A number that already touches some of its mines needs the rest in its " +
+      "last unopened squares; 'still' is what tells the player the flagged " +
+      "mines around it are counted, and two numbers of one value add where " +
+      "each sits.",
+  },
 ];
 
 /** The shared necessity vocabulary a deductive conclusion draws from.

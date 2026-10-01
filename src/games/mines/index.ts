@@ -19,8 +19,16 @@ import {
   RED_BOLD,
   TEAL,
 } from "../../engine/color/colors.ts";
-import { ERROR, ERROR_WASH, INK, PAPER } from "../../engine/color/palette.ts";
+import {
+  ERROR,
+  ERROR_WASH,
+  HINT_ACTION,
+  HINT_EVIDENCE,
+  INK,
+  PAPER,
+} from "../../engine/color/palette.ts";
 import { minesLowlight, minesUnclearedFace } from "../../engine/color/palette-games.ts";
+import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import {
   type Game,
@@ -48,9 +56,16 @@ import {
   pressTarget,
   squareGrid,
   type TargetVerbs,
+  verbClicks,
 } from "../../engine/target-verb.ts";
 import type { Color, GameStatus, Point } from "../../engine/types.ts";
 import { minegen } from "./generator.ts";
+import {
+  type MinesHint,
+  minesHint,
+  minesHintKeepTrack,
+  minesRefreshHintStep,
+} from "./hint.ts";
 import {
   borderFor,
   COL_1,
@@ -69,6 +84,8 @@ import {
   COL_FLAG,
   COL_FLAGBASE,
   COL_HIGHLIGHT,
+  COL_HINT,
+  COL_HINT_EVIDENCE,
   COL_LOWLIGHT,
   COL_MINE,
   COL_QUERY,
@@ -242,6 +259,16 @@ const targetVerbs: TargetVerbs<MinesState, MinesUi, MinesDrawState, Point, Mines
     },
   };
 
+// --- hint ----------------------------------------------------------------
+
+function keepTrack(
+  m: MinesMove,
+  step: HintStep<MinesMove, MinesHint>,
+  s: MinesState,
+): HintTrackVerdict {
+  return minesHintKeepTrack(m, step, s, minesGame.executeMove);
+}
+
 // --- Game object -------------------------------------------------------
 
 const mk = (w: number, h: number, n: number): MinesParams => ({
@@ -256,7 +283,9 @@ export const minesGame: Game<
   MinesState,
   MinesMove,
   MinesUi,
-  MinesDrawState
+  MinesDrawState,
+  unknown,
+  MinesHint
 > = {
   id: "mines",
   preferredTileSize: PREFERRED_TILE_SIZE,
@@ -598,11 +627,36 @@ export const minesGame: Game<
     // Pink: it has to read on a cleared square and an uncleared one alike, and
     // the board's own grays and the count digits have the rest spoken for.
     ret[COL_CURSOR] = PINK;
+    ret[COL_HINT] = HINT_ACTION;
+    ret[COL_HINT_EVIDENCE] = HINT_EVIDENCE;
     return ret;
   },
   computeSize,
   newDrawState,
   redraw,
+
+  hint: (s) => minesHint(s, minesGame.executeMove),
+  hintMarks: {
+    roles: {
+      ring: "each square the step decides: it must be a mine, it must be safe, or its flag must come off, as the sentence says.",
+      outline:
+        "what the step reasons from: the numbers it counts, and the mines one of them already touches.",
+      stripes:
+        "one set of squares the reasoning treats as a whole: the squares two numbers share, a number's squares beyond another's, or the squares a count of the mines left covers.",
+    },
+  },
+  hintKeepTrack: keepTrack,
+  hintGesture: (s, ui, ds, _m, step) =>
+    verbClicks(
+      targetVerbs,
+      { executeMove: minesGame.executeMove, hintKeepTrack: keepTrack },
+      s,
+      ui,
+      ds,
+      step,
+      step.highlights?.targets ?? [],
+    ),
+  refreshHintStep: minesRefreshHintStep,
 };
 
 registerGame(minesGame);
