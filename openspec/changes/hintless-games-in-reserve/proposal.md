@@ -21,13 +21,15 @@ checks them best:
 - `draw-hint-marks-from-roles`: Rect.
 - `derive-verb-gestures-from-the-declaration`: Mosaic, which it wrote
   (2026-09-30).
+- `derive-completion-from-the-position`: Mines (2026-10-01), for its won and
+  lost outcomes and a board laid out by its first move.
 
 `declare-params-in-one-place` and `derive-the-draft-label` pull in none.
 
 ## The reserve
 
-Every other hintless game: Black Box, Cube, Flip, Mines, Same Game,
-Slide, Sokoban and Twiddle. No phase claims them. A game leaves the reserve
+Every other hintless game: Black Box, Cube, Flip, Same Game, Slide, Sokoban
+and Twiddle. No phase claims them. A game leaves the reserve
 when a framework change (open or yet to be proposed) turns out to press on it
 harder than its named game does, or when the decision point below says so.
 Rect has left: `draw-hint-marks-from-roles` wrote its hint (archived
