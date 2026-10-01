@@ -273,17 +273,18 @@ describe("keen moves", () => {
     });
     expect(cur.completed).toBe(true);
     expect(cur.cheated).toBe(false);
-    expect(keenGame.flashLength?.(before, cur, 1, newUi(st))).toBeGreaterThan(0);
+    expect(keenGame.status(before)).toBe("ongoing");
+    expect(keenGame.status(cur)).toBe("solved");
+    expect(keenGame.solvedFlash?.(cur, newUi(st))).toBeGreaterThan(0);
   });
 
-  it("Solve completes the board but marks it cheated (no flash)", () => {
+  it("Solve completes the board but marks it cheated", () => {
     const st = newState(P4, D4);
     const r = keenGame.solve?.(st, st);
     if (!r?.ok) throw new Error("solve failed");
     const done = keenGame.executeMove(st, r.move);
     expect(done.completed).toBe(true);
     expect(done.cheated).toBe(true);
-    expect(keenGame.flashLength?.(st, done, 1, newUi(st))).toBe(0);
   });
 });
 

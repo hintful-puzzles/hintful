@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mkhighlightBackground } from "./color/color-mkhighlight.ts";
 import { token } from "./color/color-token.ts";
 import { difficultyItem } from "./difficulty.ts";
@@ -173,6 +173,78 @@ describe("Midend repaints on every transition (regression: TS games rendered no 
     h.m.setPreferences({ [SHOW_TIMER_PREF]: false });
     h.m.processInput(0, 0, LEFT_BUTTON);
     expect(h.timerActive()).toBe(false);
+  });
+});
+
+describe("Midend completion: the status is the position's, the history is the engine's", () => {
+  /** The fake game with a win flash, and the tick switched to animation only,
+   * so `timerActive` says whether a flash was armed. */
+  function flashing() {
+    const h = harness({ ...fakeGame, solvedFlash: () => 0.5 });
+    h.m.newGame();
+    h.m.setPreferences({ [SHOW_TIMER_PREF]: false });
+    const flashed = (): boolean => {
+      const armed = h.timerActive();
+      h.m.timer(1); // let any flash run out
+      return armed;
+    };
+    return { h, flashed };
+  }
+  const inc = (h: ReturnType<typeof harness>) => h.m.processInput(0, 0, LEFT_BUTTON);
+  const dec = (h: ReturnType<typeof harness>) => h.m.processInput(0, 0, RIGHT_BUTTON);
+
+  it("flashes on the move that solves the board, and on no other", () => {
+    const { h, flashed } = flashing();
+    inc(h);
+    expect(flashed()).toBe(false);
+    inc(h);
+    inc(h);
+    expect(flashed()).toBe(true);
+    h.m.undo();
+    expect(flashed()).toBe(false);
+    h.m.redo();
+    expect(flashed()).toBe(true);
+  });
+
+  it("flashes again when a broken solved board is solved again", () => {
+    const { h, flashed } = flashing();
+    for (let i = 0; i < 3; i++) inc(h);
+    flashed();
+    dec(h);
+    expect(h.state()?.status).toBe("ongoing");
+    expect(flashed()).toBe(false);
+    // Undoing the break restores the solved board without celebrating it.
+    h.m.undo();
+    expect(h.state()?.status).toBe("solved");
+    expect(flashed()).toBe(false);
+    dec(h);
+    inc(h);
+    expect(h.state()?.status).toBe("solved");
+    expect(flashed()).toBe(true);
+  });
+
+  it("does not celebrate the Solve command, but does a hand solve after it", () => {
+    const { h, flashed } = flashing();
+    expect(h.m.solve()).toBeNull();
+    expect(h.state()?.status).toBe("solved-with-help");
+    expect(flashed()).toBe(false);
+    dec(h);
+    expect(h.state()?.status).toBe("ongoing");
+    inc(h);
+    expect(h.state()?.status).toBe("solved-with-help");
+    expect(flashed()).toBe(true);
+  });
+
+  it("asks the game for a position's status once, however often it is read", () => {
+    const status = vi.fn(fakeGame.status);
+    const h = harness({ ...fakeGame, status });
+    h.m.newGame();
+    inc(h);
+    for (let i = 0; i < 20; i++) h.m.timer(0.1);
+    h.m.undo();
+    h.m.redo();
+    // Two positions, each asked about once.
+    expect(status).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -554,26 +626,43 @@ describe("Midend timer", () => {
     expect(readout(h)?.seconds).toBe(12);
   });
 
-  it("stops for good at a solve, even after undoing it, and across a save", () => {
+  // Owner, 2026-10-01: a peek at the solution and then solving it oneself is a
+  // use of Hintful the clock follows, so being solved stops it only while the
+  // board stays solved.
+  it("stops while the board is solved and runs again once it is not", () => {
     const h = harness();
     h.m.newGame();
     for (let i = 0; i < 3; i++) inc(h);
     expect(h.state()?.status).toBe("solved");
     expect(h.timerActive()).toBe(false);
-    h.m.undo();
-    expect(h.state()?.status).toBe("ongoing");
     h.m.timer(30);
-    expect(h.timerActive()).toBe(false);
     expect(readout(h)?.seconds).toBe(0);
 
-    // Undone and played differently, the history no longer passes through
-    // the solve, so only the save's own flag can say the time is final.
+    h.m.undo();
+    expect(h.state()?.status).toBe("ongoing");
+    expect(h.timerActive()).toBe(true);
+    h.m.timer(7);
+    expect(readout(h)?.seconds).toBe(7);
+
+    // The peek: Solve, undo it, carry on. The time stays assisted.
+    expect(h.m.solve()).toBeNull();
+    expect(h.timerActive()).toBe(false);
+    h.m.undo();
+    expect(h.timerActive()).toBe(true);
+    expect(readout(h)).toEqual({ seconds: 7, assisted: true });
+  });
+
+  it("ignores the stopped-clock key an older save carries", () => {
+    const h = harness();
+    h.m.newGame();
     dec(h);
     const env = decodeSave(h.m.saveGame());
-    expect(env.timerStopped).toBe(true);
+    expect("timerStopped" in env).toBe(false);
     const b = harness();
-    expect(b.m.loadGame(h.m.saveGame())).toBeNull();
-    expect(b.timerActive()).toBe(false);
+    expect(
+      b.m.loadGame(encodeSave({ ...env, timerStopped: true } as typeof env)),
+    ).toBeNull();
+    expect(b.timerActive()).toBe(true);
   });
 
   it("says a time was helped once a hint is shown, and a new game resets both", () => {

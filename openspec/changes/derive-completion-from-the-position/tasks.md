@@ -1,17 +1,18 @@
 ## 0. Measure and decide
 
-- [ ] 0.1 Re-take the four populations (proposal § "Task 0") by shape, and
-      check the falsifier.
-- [ ] 0.2 Ask the owner the open decision (proposal § "Decision for the
-      owner"), with the census's count of games whose behavior it changes.
+- [x] 0.1 Re-take the four populations (proposal § "Task 0") by shape, and
+      check the falsifier (design.md § "Task 0": it does not fire).
+- [x] 0.2 Ask the owner the open decision, with the census's count of games
+      whose behavior it changes (proposal § "Decided": solved now, everywhere,
+      the timer included).
 
 ## 1. The engine derives the history
 
-- [ ] 1.1 The midend caches `status` per history entry and derives the latch,
-      the first-solved move and the solver-used move; refusals, the timer and
-      the end-of-game dialog read them (`midend.test.ts`).
-- [ ] 1.2 The win flash's trigger is the engine's; a game supplies a duration,
-      and a flash per outcome where it has more than one.
+- [x] 1.1 The midend caches `status` per position; refusals, the timer and the
+      end-of-game dialog read the board's status now, and the timer latch
+      (`timerStopped`, in the midend and the save) is gone (`midend.test.ts`).
+- [x] 1.2 The win flash's trigger is the engine's (`solvedFlash` for the
+      duration); `flashLength` stays for flashes the status does not show.
 
 ## 2. Games migrate
 

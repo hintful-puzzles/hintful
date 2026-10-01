@@ -76,7 +76,7 @@ export class PuzzleRail extends SignalWatcher(LitElement) {
   referenceOpen = false;
 
   private get solved(): boolean {
-    return this.puzzle?.status === "solved";
+    return this.puzzle?.isSolved === true;
   }
 
   protected override render() {

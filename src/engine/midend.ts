@@ -284,10 +284,13 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   private showTimer = true;
   /** The frontend has paused the timer (the page is hidden). */
   private timerPaused = false;
-  /** This board has been solved, so its time is final: an undo after the win
-   * does not start the clock again. Saved, since the history cannot always
-   * show it (a solve undone and played differently leaves no solved state). */
-  private timerStopped = false;
+  /** `game.status` of each state the midend has asked about, so a game whose
+   * check walks the whole board pays for it once per position rather than on
+   * every timer tick. Keyed by the state itself, which is immutable, so no
+   * history edit can leave an entry describing a different board. */
+  private readonly statuses = new WeakMap<object, GameStatus>();
+  /** The next transition is the Solve command's, which does not celebrate. */
+  private pendingSolve = false;
   /** A hint has been shown on this board. With `cheated`, what makes a time
    * read as assisted; saved alongside it. */
   private hinted = false;
@@ -491,7 +494,6 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.clearHint();
     this.clearMistakes();
     this.timerElapsed = 0;
-    this.timerStopped = false;
     this.hinted = false;
     this.clearAnimation();
     this.emitIdChange();
@@ -755,12 +757,17 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     if (!this.game.solve) {
       return "This game does not support solving";
     }
-    if (this.game.status(this.state) === "solved") return ALREADY_SOLVED;
+    if (this.statusOf(this.state) === "solved") return ALREADY_SOLVED;
     const result = this.game.solve(this.history[0], this.state, this.aux);
     if (!result.ok) return result.error;
     this.clearHint();
     this.cheated = true;
-    this.applyMove(result.move);
+    this.pendingSolve = true;
+    try {
+      this.applyMove(result.move);
+    } finally {
+      this.pendingSolve = false;
+    }
     return null;
   }
 
@@ -874,7 +881,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // The two refusals every game would otherwise owe, asked in this order
     // because a finished board is not a wrong one. The second promises a
     // highlight, so it is said only once the mistakes are on the overlay.
-    if (this.game.status(this.state) === "solved") return ALREADY_SOLVED;
+    if (this.statusOf(this.state) === "solved") return ALREADY_SOLVED;
     const mistakes = this.game.findMistakes?.(this.state) ?? [];
     if (mistakes.length > 0) {
       this.activeMistakes = mistakes;
@@ -932,7 +939,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         this.hintDisplayed = false;
       }
     }
-    if (this.activeHint && this.game.status(this.state) === "solved") {
+    if (this.activeHint && this.statusOf(this.state) === "solved") {
       this.clearHint();
     }
     if (this.displayedHintStep !== before) this.emitStatusBar();
@@ -1115,12 +1122,16 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   // --- animation (mirrors midend.c) --------------------------------
 
   /** Arm animation/flash for a state transition. The game decides the
-   * durations via `animLength`/`flashLength`; absent ⇒ 0 ⇒ no
-   * animation (the transition just paints its final state). */
+   * durations via `animLength`, `flashLength` and `solvedFlash`; absent ⇒ 0
+   * ⇒ no animation (the transition just paints its final state). */
   private setupAnimation(prev: State, next: State, dir: number): void {
     this.animDir = dir;
     const a = this.game.animLength?.(prev, next, dir, this.ui) ?? 0;
-    const f = this.game.flashLength?.(prev, next, dir, this.ui) ?? 0;
+    const f =
+      this.game.flashLength?.(prev, next, dir, this.ui) ||
+      (this.becameSolved(prev, next, dir)
+        ? (this.game.solvedFlash?.(next, this.ui) ?? 0)
+        : 0);
     // A hint move stretches the game's base animation to the uniform
     // `HINT_ANIM_S`; `animScale` (= stretched / base) is what `redraw`
     // divides `animTime` by so the game, which only knows its own base
@@ -1162,12 +1173,38 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
 
   // --- status ------------------------------------------------------
 
-  /** Game-reported status, upgraded to solved-with-help if the solver
-   * was used (mirrors midend.c). */
+  /** The game's verdict on a position, asked once per state. */
+  private statusOf(s: State): GameStatus {
+    if (typeof s !== "object" || s === null) return this.game.status(s);
+    let status = this.statuses.get(s);
+    if (status === undefined) {
+      status = this.game.status(s);
+      this.statuses.set(s, status);
+    }
+    return status;
+  }
+
+  /** Game-reported status of the board on display, upgraded to
+   * solved-with-help if the solver was used (mirrors midend.c). It is the
+   * board's status *now*: a solved board the player breaks reads ongoing
+   * again, everywhere (`derive-completion-from-the-position`). */
   private currentStatus(): GameStatus {
-    const s = this.game.status(this.state);
+    const s = this.statusOf(this.state);
     if (s === "solved" && this.cheated) return "solved-with-help";
     return s;
+  }
+
+  /** The win celebration's trigger, the same in every game: a forward move,
+   * other than the Solve command, that leaves the board solved when it was
+   * not. Solve is suppressed as a command, not as a record: a player who uses
+   * it, unmakes some of it and finishes by hand has won, and that flashes. */
+  private becameSolved(prev: State, next: State, dir: number): boolean {
+    return (
+      dir > 0 &&
+      !this.pendingSolve &&
+      this.statusOf(prev) !== "solved" &&
+      this.statusOf(next) === "solved"
+    );
   }
 
   // --- params / presets -------------------------------------------
@@ -1517,7 +1554,6 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       moves: this.moveLog.map(serMove),
       pos: this.pos,
       timerElapsed: this.timerElapsed,
-      ...(this.timerStopped ? { timerStopped: true } : {}),
       ...(this.hinted ? { hinted: true } : {}),
       cheated: this.cheated,
       ...(this.game.encodeUi ? { ui: this.game.encodeUi(this.ui) } : {}),
@@ -1577,9 +1613,6 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.pos = Math.min(env.pos, this.history.length - 1);
     this.cheated = env.cheated;
     this.timerElapsed = env.timerElapsed;
-    // OR, not assign: the replay above already stopped the clock if the kept
-    // history passes through a solve.
-    this.timerStopped ||= env.timerStopped === true;
     this.hinted = env.hinted === true;
     // Restore Ui state the move log cannot reconstruct (Mines' death counter /
     // completion flag), after the replay above — replay goes through
@@ -1598,16 +1631,17 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   /**
    * Whether the solve timer is counting. One rule for every game: it runs
    * while the player is solving — shown, from their first move, until the
-   * board is decided — and not while the page is hidden. A loss, or a board
-   * the game says holds the timer (a Mines death), pauses it only while the
-   * board stays that way, since an undo plays on; a solve ends it for good
-   * ({@link timerStopped}).
+   * board is decided — and not while the page is hidden. Being decided is a
+   * fact about the board on display, so a solve, a loss or a board the game
+   * says holds the timer (a Mines death) pauses it only while the board stays
+   * that way. A solved board the player breaks or undoes out of runs the clock
+   * again (owner, 2026-10-01: a peek at the solution, then solving it oneself,
+   * is a use of Hintful the clock should follow).
    */
   private timerRunning(): boolean {
     return (
       this.showTimer &&
       !this.timerPaused &&
-      !this.timerStopped &&
       this.moveLog.length > 0 &&
       this.currentStatus() === "ongoing" &&
       !(this.game.timerHolds?.(this.state) ?? false)
@@ -1623,8 +1657,6 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * or an animation/flash is in progress (the worker adapter drives a rAF
    * loop that calls `timer()` while this is true). */
   private syncTimer(): void {
-    const status = this.history.length > 0 ? this.currentStatus() : "ongoing";
-    if (status === "solved" || status === "solved-with-help") this.timerStopped = true;
     const want = this.timerRunning() || this.animating;
     if (want !== this.timerWanted) {
       this.timerWanted = want;

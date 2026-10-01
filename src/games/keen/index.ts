@@ -24,7 +24,6 @@ import { runLatinCandidatePlan, valuesOf } from "../../engine/candidate-plan.ts"
 import { digitValue } from "../../engine/decimal.ts";
 import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
-import { winFlash } from "../../engine/flash.ts";
 import {
   type Game,
   type HintStep,
@@ -498,7 +497,7 @@ export const keenGame: Game<
   redraw,
 
   animLength: () => 0,
-  flashLength: (from, to) => winFlash(from, to, FLASH_TIME),
+  solvedFlash: () => FLASH_TIME,
 };
 
 registerGame(keenGame);

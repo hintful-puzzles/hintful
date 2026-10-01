@@ -440,6 +440,12 @@ export interface Game<
   /** Pure: returns a NEW state. Throws if the move is illegal. */
   executeMove(s: State, m: Move): State;
 
+  /** Whether this position is won, lost or neither, judged from the board
+   * alone and never from how it was reached: a board typed in already solved
+   * is solved at move 0, and a solved board the player breaks is ongoing. The
+   * midend asks once per position and derives the rest from its history
+   * (whether the solver was used, when to flash, when the clock runs). Never
+   * "solved-with-help", which is the midend's. */
   status(s: State): GameStatus;
 
   /** Solve from `orig` (the initial state) given `curr`. Having it is what
@@ -677,6 +683,13 @@ export interface Game<
     mistakes?: readonly Mistake[],
   ): void;
   animLength?(a: State, b: State, dir: number, ui: Ui): number;
+  /** How long this game's win flash runs on the solved board `s`. When it
+   * plays is the engine's: on a forward move, other than the Solve command,
+   * that leaves the board solved when it was not. */
+  solvedFlash?(s: State, ui: Ui): number;
+  /** A flash for an outcome the status does not show (a Mines death, a Same
+   * Game board with no move left), or one the engine's rule does not cover.
+   * Asked first on every transition; a nonzero answer replaces `solvedFlash`. */
   flashLength?(a: State, b: State, dir: number, ui: Ui): number;
   /** A board nobody can play on that `status` still calls "ongoing", because
    * the player is expected to undo out of it (a Mines death). The solve timer

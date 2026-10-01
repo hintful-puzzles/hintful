@@ -30,10 +30,6 @@ export interface SaveEnvelope {
   pos: number;
   /** Accumulated timer seconds. */
   timerElapsed: number;
-  /** Present once the board was solved, so its time is final even where the
-   * saved history no longer passes through the solve. Absent in saves written
-   * before the timer was the engine's. */
-  timerStopped?: boolean;
   /** Present once a hint was shown on this board. */
   hinted?: boolean;
   /** Whether the solver was used (drives "solved-with-help"). Spelled as every
@@ -88,7 +84,6 @@ function isSaveEnvelope(value: unknown): value is SaveEnvelope {
     Array.isArray(v["moves"]) &&
     typeof v["pos"] === "number" &&
     typeof v["timerElapsed"] === "number" &&
-    (v["timerStopped"] === undefined || typeof v["timerStopped"] === "boolean") &&
     (v["hinted"] === undefined || typeof v["hinted"] === "boolean") &&
     typeof v["cheated"] === "boolean" &&
     (v["ui"] === undefined || typeof v["ui"] === "string")

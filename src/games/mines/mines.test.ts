@@ -499,7 +499,7 @@ describe("mines chord preview", () => {
 describe("mines timer", () => {
   // Mines keeps upstream's clock through the engine's rule alone: the first
   // click is the first move, and a win is a solve.
-  it("starts at the first click and stays stopped after a win", () => {
+  it("starts at the first click, stops on a win, and resumes when the win is undone", () => {
     const { midend: m, last, timerActive: ticking } = driveMidend(minesGame);
     expect(m.newGameFromId(seedId("9x9n10", "timer"))).toBeNull();
     const seconds = () => last("timer-change")?.timer?.seconds;
@@ -517,10 +517,11 @@ describe("mines timer", () => {
     m.timer(5);
     expect(seconds()).toBe(7);
     expect(ticking()).toBe(false);
+    // A peek at the solution, undone, puts the player back on the clock.
     m.undo();
+    expect(ticking()).toBe(true);
     m.timer(5);
-    expect(seconds()).toBe(7);
-    expect(ticking()).toBe(false);
+    expect(seconds()).toBe(12);
   });
 });
 

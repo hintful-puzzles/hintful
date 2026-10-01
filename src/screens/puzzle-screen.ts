@@ -286,7 +286,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
                   class="phone-action hint"
                   type="button"
                   data-command="hint"
-                  ?disabled=${puzzle.status === "solved"}
+                  ?disabled=${puzzle.isSolved}
               >
                 <wa-icon name="hint"></wa-icon>
                 <span>${
@@ -308,7 +308,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
                 "mark-all",
                 "mark-all",
                 puzzle.hasPencilMarks ? "Update marks" : "Fill marks",
-                puzzle.status === "solved",
+                puzzle.isSolved,
               )
             : nothing
         }

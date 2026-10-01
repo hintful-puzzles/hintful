@@ -1,6 +1,6 @@
 # derive-completion-from-the-position
 
-**Status: scaffolded, not started (2026-10-01).** Follows
+**Status: in progress (2026-10-01).** Follows
 `own-the-hint-refusals`, whose falsifier found three games whose status could
 not see their own finished board. Read that change's `design.md` § "Task 0"
 first.
@@ -56,10 +56,10 @@ machinery but deleting the copy.
   complete. No game stores `completed` or `cheated`.
 - The **midend** evaluates `status` once per history entry (cached beside it,
   so an expensive check costs what the per-move flag costs today) and derives
-  everything else from the history it already owns: the latch, the move the
-  board was first solved at, whether the solver was used and on which move, the
-  win flash's trigger, and the status bar's completion words
-  (`completionStatus`, today called by each game).
+  everything else from the history it already owns: whether the solver was
+  used, the win flash's trigger, and the status bar's completion words
+  (`completionStatus`, today called by each game). The decision below made the
+  latch and the first-solved move unnecessary.
 - Every consumer reads the engine's derivation: the hint's and Solve's
   refusals, the end-of-game dialog, the timer, the flash, the status bar.
 
@@ -78,22 +78,32 @@ engine can already see); and a new game writes one predicate where it now
 writes a flag, a latch, a solve-move special case, a flash condition and a
 status prefix.
 
-## Decision for the owner (before implementing)
+## Decided: one rule, "solved now" (owner, 2026-10-01)
 
 **What does a board show once the player breaks a solved position?** The
-engine can hold two facts, *solved now* (the predicate) and *first solved at
-move k* (the history), and each consumer picks. The recommendation:
+scaffold recommended a split: refusals and the status bar would read "solved
+now", while the timer, the dialog and the flash would read "first solved". The
+owner rejected any split (*"Definitely no split; I want this to be fully
+consistent"*) and chose **solved now, everywhere**:
 
-- the hint's and Solve's refusals read **solved now**, so "already solved" is
-  never said of a board that visibly is not;
-- the timer, the end-of-game dialog and the flash read **first solved**, so a
-  board is celebrated and timed once, as today;
-- the status bar's `COMPLETED!` reads **solved now** (the alternative, latched,
-  is upstream's).
+- the status the midend reports is the game's verdict on the board on display,
+  upgraded to solved-with-help when the solver has been used on this board;
+- the hint's and Solve's refusals, the status bar's completion words, the Hint
+  and Mark-all buttons and the end-of-game dialog all read it;
+- the win flash plays on every forward move that makes the board solved,
+  except the Solve command itself;
+- **the timer runs whenever the board is not solved**, so it resumes on a
+  broken board. Owner: *"sometimes a person might want to take a sneak peek at
+  the solved board (it is cheating, but we condone cheating in Hintful, as a
+  learning mechanism), and then go back and try to arrive at the solution
+  themselves, so we should resume the timer."* The time still reads as
+  assisted, because the midend's solver-used record survives the undo.
 
-Undo before move k un-solves it either way, as today. This changes what the
-latching games show after a solved board is broken, which is why it is asked
-rather than decided.
+This changes the 43 games that latch today (design.md § "Task 0"): a broken
+solved board stops saying COMPLETED!, offers Hint and Solve again, and runs the
+clock. The midend's `timerStopped` latch goes, and with it the save envelope's
+`timerStopped` key. An old save that carries the key still loads, and the key
+is ignored.
 
 ## Task 0
 

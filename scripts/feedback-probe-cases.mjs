@@ -214,7 +214,7 @@ export const MODULES = [
       {
         within: "Midend.computeHintPlan",
         why: "a finished board is handed to the game's hint instead of refused",
-        find: '    if (this.game.status(this.state) === "solved") return ALREADY_SOLVED;\n    const mistakes',
+        find: '    if (this.statusOf(this.state) === "solved") return ALREADY_SOLVED;\n    const mistakes',
         replace: "    const mistakes",
       },
       {

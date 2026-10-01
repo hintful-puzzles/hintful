@@ -717,7 +717,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "changedState",
       "difficulty",
       "findMistakes",
-      "flashLength",
       "hint",
       "hintGesture",
       "hintKeepTrack",
@@ -729,6 +728,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "refreshHintStep",
       "requestKeys",
       "solve",
+      "solvedFlash",
     ],
     "ui": [
       "autoPencil",
