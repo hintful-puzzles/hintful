@@ -14,6 +14,14 @@
 
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_CONTRADICTORY,
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+} from "../../engine/desc-error.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import {
   digitOf,
@@ -289,45 +297,45 @@ export function newUi(_state: UnequalState): UnequalUi {
 
 // --- desc codec ------------------------------------------------------------
 
-/** Parse the per-cell desc into `(numbers, flags)`, or throw with a reason. */
+/** Parse the per-cell desc into `(numbers, flags)`, or say why it cannot be. */
 function parseDesc(
   order: number,
   desc: string,
-): { nums: Int8Array; flags: Int32Array } {
+): { ok: true; nums: Int8Array; flags: Int32Array } | { ok: false; error: DescError } {
   const a = order * order;
   const nums = new Int8Array(a);
   const flags = new Int32Array(a);
   let i = 0; // cell index
   let p = 0; // string index
+  const fail = (error: DescError) => ({ ok: false, error }) as const;
 
   while (p < desc.length) {
     while (p < desc.length && desc[p] >= "a" && desc[p] <= "z") {
       i += desc.charCodeAt(p) - 97 + 1;
       p++;
     }
-    if (i >= a) throw new Error("Too much data to fill grid");
-    if (p >= desc.length || !isDigit(desc[p]))
-      throw new Error("Expecting number in game description");
+    if (i >= a) return fail(DESC_TOO_LONG);
+    if (p >= desc.length || !isDigit(desc[p])) return fail(DESC_MALFORMED);
     const num = parseLeadingInt(desc, p);
     p = num.next;
     const n = num.value;
-    if (n < 0 || n > order) throw new Error("Out-of-range number in game description");
+    if (n < 0 || n > order) return fail(DESC_OUT_OF_RANGE);
     nums[i] = n;
 
     // The direction letters, in `ADJTHAN` order.
     while (p < desc.length && "URDL".includes(desc[p]))
       flags[i] |= ADJTHAN["URDL".indexOf(desc[p++])].f;
     i++;
-    if (i < a && desc[p] !== ",") throw new Error("Missing separator");
+    if (i < a && desc[p] !== ",") return fail(DESC_MALFORMED);
     if (desc[p] === ",") p++;
   }
-  if (i < a) throw new Error("Not enough data to fill grid");
-  return { nums, flags };
+  if (i < a) return fail(DESC_TOO_SHORT);
+  return { ok: true, nums, flags };
 }
 
 /** Cross-check the adjacency flags: a flag must not point off the grid, and the
  * reciprocal-flag rule depends on mode. */
-function checkFlags(order: number, mode: Mode, flags: Int32Array): string | null {
+function checkFlags(order: number, mode: Mode, flags: Int32Array): DescError | null {
   const o = order;
   for (let y = 0; y < o; y++) {
     for (let x = 0; x < o; x++) {
@@ -335,11 +343,10 @@ function checkFlags(order: number, mode: Mode, flags: Int32Array): string | null
         if (flags[y * o + x] & ADJTHAN[n].f) {
           const nx = x + ADJTHAN[n].dx;
           const ny = y + ADJTHAN[n].dy;
-          if (nx < 0 || ny < 0 || nx >= o || ny >= o) return "Flags go off grid";
+          if (nx < 0 || ny < 0 || nx >= o || ny >= o) return DESC_OUT_OF_RANGE;
           // A bar is flagged from both ends; a sign from its greater end only.
           const reciprocal = (flags[ny * o + nx] & ADJTHAN[n].fo) !== 0;
-          if (reciprocal !== (mode === "adjacent"))
-            return "Flags contradicting each other";
+          if (reciprocal !== (mode === "adjacent")) return DESC_CONTRADICTORY;
         }
       }
     }
@@ -347,20 +354,18 @@ function checkFlags(order: number, mode: Mode, flags: Int32Array): string | null
   return null;
 }
 
-export function validateDesc(p: UnequalParams, desc: string): string | null {
-  let parsed: { nums: Int8Array; flags: Int32Array };
-  try {
-    parsed = parseDesc(p.order, desc);
-  } catch (e) {
-    return e instanceof Error ? e.message : String(e);
-  }
+export function validateDesc(p: UnequalParams, desc: string): DescError | null {
+  const parsed = parseDesc(p.order, desc);
+  if (!parsed.ok) return parsed.error;
   return checkFlags(p.order, p.mode, parsed.flags);
 }
 
 export function newState(p: UnequalParams, desc: string): UnequalState {
   const o = p.order;
   const a = o * o;
-  const { nums, flags } = parseDesc(o, desc);
+  const parsed = parseDesc(o, desc);
+  if (!parsed.ok) throw new Error(`unequal: invalid desc: ${parsed.error}`);
+  const { nums, flags } = parsed;
 
   return {
     order: o,

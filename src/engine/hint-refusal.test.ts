@@ -13,12 +13,17 @@
  * under `src/games/` and collects every `{ ok: false, error: <string literal> }`
  * wherever it appears.
  *
- * That is deliberately a **superset**: `SolveResult` has the same shape, so
- * Solve's own errors and the description parsers' are caught too. Rather than
- * narrow the scan back down — which is how the first cut went wrong — every
- * literal is classified below. A message that is neither an approved refusal
- * nor a listed exception fails, so a new phrasing cannot arrive unnoticed and
- * nothing hides behind a function's name.
+ * That is deliberately a **superset**: `SolveResult` and the description
+ * parsers' results have the same shape, so they are read too, although their
+ * types (`solve-failure.ts`, `desc-error.ts`) now admit no literal of a game's
+ * own. Rather than narrow the scan back down — which is how the first cut went
+ * wrong — every message is classified below. A message that is neither an
+ * approved refusal nor a listed exception fails, so a new phrasing cannot arrive
+ * unnoticed and nothing hides behind a function's name.
+ *
+ * **Both branches of a conditional, and a template's words, are messages too.**
+ * The scan once read only a bare literal, so `error: impossible ? "…" : "…"`
+ * carried two unapproved Solve failures past it in two games.
  */
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
@@ -31,6 +36,7 @@ import {
   PUZZLE_NOT_REASONABLE,
   SEARCH_OUT_OF_REACH,
 } from "./hint-refusal.ts";
+import { NO_SOLUTION_FROM_HERE, SOLUTION_UNKNOWN } from "./solve-failure.ts";
 
 /** Every non-test source file in the games tree, as raw text. Read through Vite
  * so this file stays in the browser-shaped type world, which means an unmatched
@@ -52,7 +58,9 @@ const gameSources = {
   }),
 };
 
-/** The approved refusals. A game emitting one of these needs no exception. */
+/** The approved refusals. A game emitting one of these needs no exception. The
+ * two Solve failures are here because a hint meets the same fact: a position
+ * nothing finishes from, and a game ID that came without its solution. */
 const APPROVED = new Set([
   ALREADY_SOLVED,
   CONTRADICTION_UNLOCALIZED,
@@ -61,69 +69,28 @@ const APPROVED = new Set([
   NO_MOVE_WORTH_MAKING,
   PUZZLE_NOT_REASONABLE,
   SEARCH_OUT_OF_REACH,
+  NO_SOLUTION_FROM_HERE,
+  SOLUTION_UNKNOWN,
 ]);
 
+/** A template's words, with each substitution written `${…}`. Built from its
+ * parts so it reads as the text it is, not as a template missing its backticks. */
+const HOLE = `$${"{…}"}`;
+
 /**
- * Every other `{ ok: false, error }` literal in the games tree, with why it is
- * not one of the approved refusals.
- *
- * Two kinds live here, and the distinction is the point of keeping one list:
- * a message on a path a **hint** can reach needs a reason why this game should
- * differ, while a message only `solve` or a **description parser** can reach is
- * not a refusal at all and is recorded so the scan stays a superset.
+ * Every other `{ ok: false, error }` message in the games tree, with why this
+ * game's hint should say something the others do not. A message only `solve`
+ * or a description parser could reach would be here too, but their types
+ * leave no game a sentence of its own to write.
  */
 const EXCEPTIONS: Record<string, string> = {
-  // --- a hint refusal that should differ, and why -------------------------
   "The ball is dead: no move can be played from here. Undo to bring it back.":
     "Inertia: not 'deduction ran out' but a board state with no legal move at " +
     "all. Naming the actual situation is the whole of the hint's value here.",
-
-  // --- not hint refusals: Solve, and the description parsers --------------
-  "Unable to find a solution from this starting point":
-    "Inertia's solver constant, shared with `solve`. Rewording it here would " +
-    "reword Solve's failure too, which is a different message to a different ask.",
-  "Solution not known for this puzzle": "Solve, on a game ID carrying no aux.",
-  "No solution exists for this puzzle": "Solve.",
-  "No solution exists for this puzzle.": "Solve.",
-  "No solution exists for this position": "Solve.",
-  "Multiple solutions exist for this puzzle": "Solve.",
-  "Unable to solve puzzle.": "Solve.",
-  "Unable to solve this puzzle.": "Solve.",
-  "Unable to find a solution": "Solve.",
-  "Unable to find a solution to this puzzle": "Solve.",
-  "Unable to find a solution to this puzzle.": "Solve.",
-  "Unable to find a solution for this puzzle": "Solve.",
-  "Unable to find a unique solution for this puzzle": "Solve.",
-  "Solver could not find a unique solution.": "Solve.",
-  "Solver could not solve this puzzle.": "Solve.",
-  "Solver could not find a solution": "Solve.",
-  "Solving algorithm cannot complete this puzzle": "Solve.",
-  "Sorry, I can't solve this puzzle": "Solve.",
-  "Sorry, I couldn't find a solution": "Solve.",
-  "Puzzle is not solvable by the deductive solver.": "Solve.",
-  "Puzzle is invalid.": "Solve.",
-  "Puzzle is impossible.": "Solve.",
-  "Puzzle is inconsistent": "Solve.",
-  "Puzzle is unsolvable": "Solve.",
-  "Puzzle is already solved": "Solve.",
-  "This puzzle instance contains a contradiction": "Solve.",
-  "Game is already solved": "Solve.",
-  "Game has not been started yet": "Solve, before Mines' first click.",
-  "Could not solve this board": "Solve.",
-  "No solution found": "Solve.",
-  "No solution found.": "Solve.",
-  "Description is too short.": "Description parser.",
-  "Grid description is too long.": "Description parser.",
-  "Grid description contains invalid characters.": "Description parser.",
-  "Grid clue is out of range.": "Description parser.",
-  "Clue description is too long.": "Description parser.",
-  "Clue description is too short.": "Description parser.",
-  "Invalid clue in description.": "Description parser.",
-  "Number is too high in clue description.": "Description parser.",
-  "Border clue is out of range.": "Description parser.",
-  "Border description contains invalid characters.": "Description parser.",
-  "Border description is too long.": "Description parser.",
-  "invalid char in aux": "Aux parser.",
+  [`The ball can no longer reach ${HOLE}. Undo to a position where it can.`]:
+    "Inertia: the one thing its hint can prove, naming the gems it proved it " +
+    "about. A position nothing finishes from would be NO_SOLUTION_FROM_HERE, " +
+    "but this says which gems, which is what the player needs to undo far enough.",
 };
 
 interface Found {
@@ -131,7 +98,22 @@ interface Found {
   file: string;
 }
 
-/** Every `{ ok: false, error: "…" }` in a file, wherever it sits. */
+/** The messages an `error:` initializer can evaluate to: a literal, a template's
+ * words, and each branch of a conditional. An identifier yields nothing, since
+ * it names a constant this file already classifies. */
+function messagesOf(e: ts.Expression, sf: ts.SourceFile): string[] {
+  if (ts.isParenthesizedExpression(e)) return messagesOf(e.expression, sf);
+  if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) return [e.text];
+  if (ts.isTemplateExpression(e)) {
+    return [e.head.text + e.templateSpans.map((s) => HOLE + s.literal.text).join("")];
+  }
+  if (ts.isConditionalExpression(e)) {
+    return [...messagesOf(e.whenTrue, sf), ...messagesOf(e.whenFalse, sf)];
+  }
+  return [];
+}
+
+/** Every `{ ok: false, error: … }` in a file, wherever it sits. */
 function refusalsIn(file: string, text: string, out: Found[]): void {
   const sf = ts.createSourceFile(file, text, ts.ScriptTarget.ESNext, true);
   const visit = (n: ts.Node): void => {
@@ -144,12 +126,9 @@ function refusalsIn(file: string, text: string, out: Found[]): void {
         if (name === "ok") ok = p.initializer;
         if (name === "error") error = p.initializer;
       }
-      if (
-        ok?.kind === ts.SyntaxKind.FalseKeyword &&
-        error !== null &&
-        (ts.isStringLiteral(error) || ts.isNoSubstitutionTemplateLiteral(error))
-      ) {
-        out.push({ message: error.text, file });
+      if (ok?.kind === ts.SyntaxKind.FalseKeyword && error !== null) {
+        sitesSeen++;
+        for (const message of messagesOf(error, sf)) out.push({ message, file });
       }
     }
     ts.forEachChild(n, visit);
@@ -159,6 +138,10 @@ function refusalsIn(file: string, text: string, out: Found[]): void {
 
 const found: Found[] = [];
 let filesScanned = 0;
+/** Every `{ ok: false, error }` the scan reached, whatever its error is. Nearly
+ * all of them name a constant, so this, not `found`, is what shows the scan
+ * read the refusal paths at all. */
+let sitesSeen = 0;
 for (const [path, text] of Object.entries(gameSources)) {
   if (path.endsWith(".test.ts")) continue;
   filesScanned++;
@@ -166,11 +149,14 @@ for (const [path, text] of Object.entries(gameSources)) {
 }
 
 describe("a hint refusal says the same thing in every game", () => {
-  it("is not vacuous — the games tree was read and literals were found", () => {
+  it("is not vacuous — the games tree was read and refusals were found", () => {
     // An unmatched glob yields `{}`, and every assertion below would then pass
     // over nothing and report health.
     expect(filesScanned).toBeGreaterThan(150);
-    expect(found.length).toBeGreaterThan(10);
+    expect(sitesSeen).toBeGreaterThan(100);
+    // And the message reader reaches past a bare literal: the exceptions are a
+    // literal and a template, and both must be read.
+    expect(found.length).toBeGreaterThanOrEqual(Object.keys(EXCEPTIONS).length);
   });
 
   it("emits no message that is neither approved nor a listed exception", () => {

@@ -18,6 +18,12 @@
  */
 
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+} from "../../engine/desc-error.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
@@ -247,7 +253,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
  * shifted. The branch is dropped rather than mirrored into {@link newState},
  * because the encoder never writes an uppercase letter.
  */
-export function validateDesc(p: BricksParams, desc: string): string | null {
+export function validateDesc(p: BricksParams, desc: string): DescError | null {
   const s = p.w * p.h;
   let i = 0;
   let pos = 0;
@@ -255,7 +261,7 @@ export function validateDesc(p: BricksParams, desc: string): string | null {
     const c = desc[i];
     if (isDigit(c)) {
       const n = parseLeadingInt(desc, i);
-      if (n.value > 7) return "Number is out of range";
+      if (n.value > 7) return DESC_OUT_OF_RANGE;
       i = n.next;
       pos++;
       continue;
@@ -263,8 +269,8 @@ export function validateDesc(p: BricksParams, desc: string): string | null {
     if (c >= "a" && c <= "z") pos += c.charCodeAt(0) - 97 + 1;
     i++;
   }
-  if (pos < s) return "Not enough spaces";
-  if (pos > s) return "Too many spaces";
+  if (pos < s) return DESC_TOO_SHORT;
+  if (pos > s) return DESC_TOO_LONG;
   return null;
 }
 

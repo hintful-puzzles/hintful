@@ -12,10 +12,17 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { matching } from "../../engine/latin.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
+import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import type { GameStatus } from "../../engine/types.ts";
@@ -157,7 +164,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 export function validateParams(p: TentsParams, _full: boolean): string | null {
   if (p.w > Number.MAX_SAFE_INTEGER / p.h) {
-    return "Width times height must not be unreasonably large";
+    return AREA_TOO_LARGE;
   }
   return null;
 }
@@ -194,7 +201,7 @@ export function encodeDesc(
   return out;
 }
 
-export function validateDesc(p: TentsParams, desc: string): string | null {
+export function validateDesc(p: TentsParams, desc: string): DescError | null {
   const { w, h } = p;
   let area = 0;
   let i = 0;
@@ -204,18 +211,18 @@ export function validateDesc(p: TentsParams, desc: string): string | null {
     else if (ch >= "a" && ch < "z") area += ch.charCodeAt(0) - 97 + 2;
     else if (ch === "z") area += 25;
     else if (ch === "!" || ch === "-") {
-      if (area === 0 || area > w * h) return "Tent or non-tent placed off the grid";
-    } else return "Invalid character in grid specification";
+      if (area === 0 || area > w * h) return DESC_OUT_OF_RANGE;
+    } else return descBadCharacter(ch);
   }
-  if (area < w * h + 1) return "Not enough data to fill grid";
-  if (area > w * h + 1) return "Too much data to fill grid";
+  if (area < w * h + 1) return DESC_TOO_SHORT;
+  if (area > w * h + 1) return DESC_TOO_LONG;
 
   for (let k = 0; k < w + h; k++) {
-    if (i >= desc.length) return "Not enough numbers given after grid specification";
-    if (desc[i] !== ",") return "Invalid character in number list";
+    if (i >= desc.length) return DESC_TOO_SHORT;
+    if (desc[i] !== ",") return descBadCharacter(desc[i]);
     i = parseLeadingInt(desc, i + 1).next;
   }
-  if (i < desc.length) return "Unexpected additional data at end of game description";
+  if (i < desc.length) return DESC_TOO_LONG;
   return null;
 }
 

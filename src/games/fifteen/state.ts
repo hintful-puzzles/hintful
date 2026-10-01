@@ -1,3 +1,12 @@
+import {
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_REPEATED,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
@@ -87,17 +96,19 @@ export function parityP(w: number, h: number, gap: number): number {
 
 // --- desc / state -----------------------------------------------------
 
-export function validateDesc(p: FifteenParams, desc: string): string | null {
+export function validateDesc(p: FifteenParams, desc: string): DescError | null {
   const area = p.w * p.h;
   const parts = desc.split(",");
-  if (parts.length < area) return "Not enough numbers in string";
-  if (parts.length > area) return "Excess junk at end of string";
+  if (parts.length < area) return DESC_TOO_SHORT;
+  if (parts.length > area) return DESC_TOO_LONG;
   const used = new Set<number>();
   for (const part of parts) {
-    if (!/^\d+$/.test(part)) return "Expected a number";
+    const notDigit = /\D/.exec(part);
+    if (notDigit) return descBadCharacter(notDigit[0]);
+    if (part === "") return DESC_MALFORMED;
     const n = Number.parseInt(part, 10);
-    if (n < 0 || n >= area) return "Number out of range";
-    if (used.has(n)) return "Number used twice";
+    if (n < 0 || n >= area) return DESC_OUT_OF_RANGE;
+    if (used.has(n)) return DESC_REPEATED;
     used.add(n);
   }
   return null;

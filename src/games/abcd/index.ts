@@ -46,6 +46,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newAbcdDesc } from "./generator.ts";
 import {
@@ -279,10 +280,8 @@ function changedState(ui: AbcdUi, oldSt: AbcdState | null, newSt: AbcdState): vo
 
 function solve(orig: AbcdState): SolveResult<AbcdMove> {
   const res = solveAbcd(orig.params, orig.numbers);
-  if (res.status === "contradiction")
-    return { ok: false, error: "No solution exists for this puzzle." };
-  if (res.status === "ambiguous")
-    return { ok: false, error: "Solver could not find a unique solution." };
+  if (res.status === "contradiction") return { ok: false, error: NO_SOLUTION };
+  if (res.status === "ambiguous") return { ok: false, error: MULTIPLE_SOLUTIONS };
   // The move carries letter indices, as the saves that replay it always have.
   return {
     ok: true,

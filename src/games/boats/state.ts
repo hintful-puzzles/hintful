@@ -17,6 +17,12 @@
  */
 
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import { newCursor, newDrag } from "../../engine/pointer.ts";
@@ -445,7 +451,7 @@ export function newState(p: BoatsParams, desc: string): BoatsState {
  * Only an overlong grid, a wrong border-clue count, or an unknown character
  * is an error.
  */
-export function validateDesc(p: BoatsParams, desc: string): string | null {
+export function validateDesc(p: BoatsParams, desc: string): DescError | null {
   const { w, h } = p;
   let clues = 0;
   let cells = 0;
@@ -463,7 +469,7 @@ export function validateDesc(p: BoatsParams, desc: string): string | null {
       cells += c.charCodeAt(0) - 97 + 1;
       i++;
     } else if (c >= "A" && c <= "Z") {
-      if (CLUE_CHARS[c] === undefined) return "Description contains invalid characters";
+      if (CLUE_CHARS[c] === undefined) return descBadCharacter(c);
       cells++;
       i++;
     } else {
@@ -471,9 +477,8 @@ export function validateDesc(p: BoatsParams, desc: string): string | null {
     }
   }
 
-  if (clues < w + h) return "Not enough border clues";
-  if (clues > w + h) return "Too many border clues";
-  if (cells > w * h) return "Too many grid clues";
+  if (clues < w + h) return DESC_TOO_SHORT;
+  if (clues > w + h || cells > w * h) return DESC_TOO_LONG;
   return null;
 }
 

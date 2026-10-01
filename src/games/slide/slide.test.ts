@@ -9,7 +9,16 @@
  * and the deliberate divergences from the C.
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/index.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -28,6 +37,7 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import type { GameStatus } from "../../engine/types.ts";
@@ -272,24 +282,25 @@ describe("slide desc codec", () => {
   it("rejects every malformed desc upstream rejects", () => {
     // Board data for a 5x4 (20-cell) board, so the counts below are readable.
     const p = P(5, 4, -1);
-    const cases: [string, RegExp][] = [
+    const cases: [string, DescError][] = [
       // The letter branch's count overruns the board...
-      ["w5a16,3,1", /Too much data/],
+      ["w5a16,3,1", DESC_TOO_LONG],
       // ...and so does one more cell after a full board.
-      ["w5ma14a,3,1", /Too much data/],
-      ["w5ma14", /No target coordinates/],
-      ["w5a15,3,1", /No main piece/],
-      ["w5m2a13,3,1", /More than one main/],
-      ["w5ma13,3,1", /Not enough data/], // 19 cells
-      ["w5mz13,3,1", /Invalid character/],
-      ["w5md,3,1", /Expected a number after 'd'/],
-      ["w5md9a12,3,1", /Out-of-range number after 'd'/], // dist 9 > i 6
-      ["w5maed1a11,3,1", /Invalid back-reference/], // links to an EMPTY square
-      ["w5maf", /Expected another character after 'f'/],
+      ["w5ma14a,3,1", DESC_TOO_LONG],
+      ["w5ma14", DESC_TOO_SHORT], // no target coordinates
+      ["w5ma14,x", DESC_MALFORMED],
+      ["w5ma13,3,1", DESC_TOO_SHORT], // 19 cells
+      ["w5mz13,3,1", descBadCharacter("z")],
+      ["w5md,3,1", DESC_MALFORMED], // no number after 'd'
+      ["w5md9a12,3,1", DESC_OUT_OF_RANGE], // dist 9 > i 6
+      ["w5maed1a11,3,1", DESC_MALFORMED], // links back to an EMPTY square
+      ["w5maf", DESC_MALFORMED], // nothing after 'f'
     ];
-    for (const [desc, pattern] of cases) {
-      expect(validateDesc(p, desc) ?? "", desc).toMatch(pattern);
+    for (const [desc, expected] of cases) {
+      expect(validateDesc(p, desc), desc).toBe(expected);
     }
+    expect(validateDesc(p, "w5a15,3,1")).toMatch(/no main piece/);
+    expect(validateDesc(p, "w5m2a13,3,1")).toMatch(/more than one main piece/);
   });
 
   it("accepts a desc with the target coordinates but no minmoves", () => {
@@ -984,7 +995,7 @@ describe("slide solve", () => {
     const s = fixtureState(1, 1, 0);
     expect(slideGame.solve?.(s, s)).toEqual({
       ok: false,
-      error: "Puzzle is already solved",
+      error: ALREADY_SOLVED,
     });
   });
 
@@ -996,7 +1007,7 @@ describe("slide solve", () => {
     );
     expect(slideGame.solve?.(s, s)).toEqual({
       ok: false,
-      error: "Unable to find a solution to this puzzle",
+      error: NO_SOLUTION,
     });
   });
 });

@@ -35,6 +35,14 @@
  * by √φ.
  */
 
+import {
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+  puzzleDescError,
+} from "../../desc-error.ts";
 import { nTimesRootK } from "../../n-times-root-k.ts";
 import type { RandomState } from "../../random/index.ts";
 import { type Grid, makeConsistent } from "../grid-core.ts";
@@ -87,14 +95,14 @@ function apiSizePenrose(
  * carrying a legacy description therefore does not load, and says so rather
  * than failing with the generic, misleading "expected digit" error.
  */
-const LEGACY_DESC_ERROR =
-  "This is a legacy Penrose grid description ('G...'), which is no longer " +
-  "supported. Please generate a new grid.";
+const LEGACY_DESC_ERROR = puzzleDescError(
+  "This game ID uses an old Penrose tiling format that is no longer supported.",
+);
 
 /** A parsed description, or the error that stopped it being one. */
 type ParseResult =
   | { readonly ok: true; readonly params: PenrosePatchParams }
-  | { readonly ok: false; readonly error: string };
+  | { readonly ok: false; readonly error: DescError };
 
 /**
  * Parse `[orientation digit][start-vertex digit][tile letters]`, e.g.
@@ -105,17 +113,19 @@ type ParseResult =
  * reaching the same error: it fails on its missing second character.
  */
 function parseDesc(desc: string, which: PenroseWhich): ParseResult {
-  if (desc.length === 0) return { ok: false, error: "empty grid description" };
+  if (desc.length === 0) return { ok: false, error: DESC_TOO_SHORT };
 
   const orientationChar = desc[0];
   if (!(orientationChar >= "0" && orientationChar <= "9")) {
-    return { ok: false, error: "expected digit at start of grid description" };
+    return { ok: false, error: descBadCharacter(orientationChar) };
   }
   const startVertexChar = desc[1];
+  if (startVertexChar === undefined) return { ok: false, error: DESC_TOO_SHORT };
   if (!(startVertexChar >= "0" && startVertexChar < "3")) {
+    const isDigit = startVertexChar >= "0" && startVertexChar <= "9";
     return {
       ok: false,
-      error: "expected digit as second char of grid description",
+      error: isDigit ? DESC_OUT_OF_RANGE : descBadCharacter(startVertexChar),
     };
   }
 
@@ -123,7 +133,7 @@ function parseDesc(desc: string, which: PenroseWhich): ParseResult {
   for (let i = 2; i < desc.length; i++) {
     const c = desc[i];
     if (!penroseValidLetter(c, which)) {
-      return { ok: false, error: "expected tile letter in grid description" };
+      return { ok: false, error: descBadCharacter(c) };
     }
     coords.push(c);
   }
@@ -156,8 +166,8 @@ export function penroseValidateDesc(
   _width: number,
   _height: number,
   desc: string | null,
-): string | null {
-  if (desc === null) return "Missing grid description string.";
+): DescError | null {
+  if (desc === null) return DESC_MALFORMED;
   if (desc[0] === "G") return LEGACY_DESC_ERROR;
 
   const parsed = parseDesc(desc, which);

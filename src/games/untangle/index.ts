@@ -46,6 +46,7 @@ import {
   MOD_SHFT,
   stripModifiers,
 } from "../../engine/pointer.ts";
+import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { newUntangleDesc } from "./generator.ts";
 import { deduceUntangleHintPlan, untangleKeepTrack } from "./hint.ts";
@@ -59,6 +60,7 @@ import {
   findCrossings,
   makeCircle,
   PREFERRED_TILE_SIZE,
+  parseEdges,
   placeMove,
   pointerDrop,
   type UntangleDrawState,
@@ -166,12 +168,8 @@ export const untangleGame: Game<
   // --- generation ----------------------------------------------------
   newDesc: newUntangleDesc,
   validateDesc: (p, desc) => {
-    try {
-      decodeGame(desc, p.n);
-    } catch (e) {
-      return (e as Error).message;
-    }
-    return null;
+    const parsed = parseEdges(desc, p.n);
+    return parsed.ok ? null : parsed.error;
   },
 
   newState: (p, desc) => {
@@ -409,8 +407,8 @@ export const untangleGame: Game<
   // --- solve (the solved layout, in the symmetry closest to the board) -
   solve: (_orig, curr, aux) => {
     const layout = solvedLayout(curr.n, curr.w, curr.edges, aux);
-    if (layout === null)
-      return { ok: false, error: "No solution exists for this puzzle" };
+    // `null` only from the planarity test, which is a proof.
+    if (layout === null) return { ok: false, error: NO_SOLUTION };
     const points = closestOrientation(layout, curr.pts, curr.w).map((p, i) => ({
       i,
       ...p,

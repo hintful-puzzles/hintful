@@ -24,6 +24,12 @@
  */
 
 import { digitValue } from "../../engine/decimal.ts";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
@@ -348,11 +354,12 @@ export function clearBoard(b: SpokesBoard): void {
  * run-length — the generator only ever emits digits, and a flat grid keeps the
  * byte-match differential a plain string compare.
  */
-export function validateDesc(p: SpokesParams, desc: string): string | null {
+export function validateDesc(p: SpokesParams, desc: string): DescError | null {
   const n = p.w * p.h;
-  if (/[^0-8X]/.test(desc.slice(0, n))) return "Invalid character in description";
-  if (desc.length < n) return "Description too short";
-  if (desc.length > n) return "Description too long";
+  const bad = /[^0-8X]/.exec(desc.slice(0, n));
+  if (bad) return descBadCharacter(bad[0]);
+  if (desc.length < n) return DESC_TOO_SHORT;
+  if (desc.length > n) return DESC_TOO_LONG;
   return null;
 }
 

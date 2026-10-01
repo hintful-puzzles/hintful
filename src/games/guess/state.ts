@@ -8,6 +8,13 @@
  */
 
 import { parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/obfuscate.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -265,12 +272,15 @@ export function newDesc(p: GuessParams, rng: RandomState): { desc: string } {
   return { desc: bin2hex(bmp) };
 }
 
-export function validateDesc(p: GuessParams, desc: string): string | null {
-  if (desc.length !== p.npegs * 2) return "Game description is wrong length";
+export function validateDesc(p: GuessParams, desc: string): DescError | null {
+  const bad = /[^0-9a-fA-F]/.exec(desc);
+  if (bad !== null) return descBadCharacter(bad[0]);
+  if (desc.length < p.npegs * 2) return DESC_TOO_SHORT;
+  if (desc.length > p.npegs * 2) return DESC_TOO_LONG;
   const bmp = hex2bin(desc, p.npegs);
   obfuscateBitmap(bmp, p.npegs * 8, true);
   for (let i = 0; i < p.npegs; i++) {
-    if (bmp[i] < 1 || bmp[i] > p.ncolors) return "Game description is corrupted";
+    if (bmp[i] < 1 || bmp[i] > p.ncolors) return DESC_OUT_OF_RANGE;
   }
   return null;
 }

@@ -14,11 +14,13 @@
  * the puzzle's reason in `notApplicable`.
  */
 
+import type { DescError } from "./desc-error.ts";
 import type { DifficultyContract } from "./difficulty.ts";
 import type { PointerAction } from "./hint-gesture.ts";
 import type { MarkRole, Narration } from "./hint-words.ts";
 import type { RandomState } from "./random/index.ts";
 import type { NotApplicableReasons } from "./sections.ts";
+import type { SolveFailure } from "./solve-failure.ts";
 import type { TargetVerbs } from "./target-verb.ts";
 import type {
   Color,
@@ -50,8 +52,11 @@ export interface SupersededDesc {
 }
 
 /** Result of a solver attempt — discriminated so a string `Move`
- * cannot be mistaken for an error message. */
-export type SolveResult<Move> = { ok: true; move: Move } | { ok: false; error: string };
+ * cannot be mistaken for an error message. The error is one of the
+ * collection's own ({@link SolveFailure}), never a game's sentence. */
+export type SolveResult<Move> =
+  | { ok: true; move: Move }
+  | { ok: false; error: SolveFailure };
 
 /** One step of a hint plan: a move plus a human-readable explanation
  * and optional visual highlights, narrated for the state the step
@@ -352,8 +357,9 @@ export interface Game<
   transposeParams?(p: Params): Params | null;
 
   newDesc(p: Params, rng: RandomState): { desc: string; aux?: string };
-  /** `null` when valid, else why `desc` is rejected for `p`. */
-  validateDesc(p: Params, desc: string): string | null;
+  /** `null` when valid, else why `desc` is rejected for `p`, in the
+   * collection's words (`desc-error.ts`). */
+  validateDesc(p: Params, desc: string): DescError | null;
   newState(p: Params, desc: string): State;
   newUi(state: State): Ui;
 

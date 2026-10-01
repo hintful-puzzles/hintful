@@ -36,6 +36,13 @@ function fnv1a(s: string): string {
   return h.toString(16).padStart(8, "0");
 }
 
+import {
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../desc-error.ts";
 import { randomNew } from "../../random/index.ts";
 import { gridNew, gridNewDesc, gridValidateDesc } from "../index.ts";
 import {
@@ -224,22 +231,22 @@ describe("descriptions", () => {
   });
 
   it("rejects malformed descriptions", () => {
-    const cases: [string | null, string][] = [
-      [null, "Missing grid description string."],
-      ["", "empty grid description"],
+    const cases: [string | null, DescError][] = [
+      [null, DESC_MALFORMED],
+      ["", DESC_TOO_SHORT],
       // One character: upstream computes strlen-2 first and underflows size_t.
-      ["5", "grid description too short"],
-      ["!03Y", "expected digit or A,B at start of grid description"],
-      ["C03Y", "expected digit or A,B at start of grid description"],
-      ["0x3Y", "expected digit in grid description"],
-      ["0003047Z", "invalid final hexagon type"],
-      ["0003047", "invalid final hexagon type"],
+      ["5", DESC_TOO_SHORT],
+      ["!03Y", descBadCharacter("!")],
+      ["C03Y", descBadCharacter("C")],
+      ["0x3Y", descBadCharacter("x")],
+      ["0003047Z", descBadCharacter("Z")],
+      ["0003047", descBadCharacter("7")],
       // Two characters parse fine but describe no coordinates at all.
-      ["0Y", "expected at least one numeric coordinate"],
+      ["0Y", DESC_TOO_SHORT],
       // G holds two spectres, so index 0 is legal at level 0 and 5 is not.
-      ["05G", "coordinate out of range"],
+      ["05G", DESC_OUT_OF_RANGE],
       // Level 1+ indexes a subhex: G has only seven, so 7 is out of range.
-      ["0079G", "coordinate out of range"],
+      ["0079G", DESC_OUT_OF_RANGE],
     ];
     for (const [desc, message] of cases) {
       expect({ desc, error: spectresValidateDesc(6, 6, desc) }).toEqual({
@@ -252,7 +259,7 @@ describe("descriptions", () => {
   it("accepts a bare two-level desc at the boundary of each hex", () => {
     // G is the only hex with two spectres, so "01G" is legal and "01D" is not.
     expect(spectresValidateDesc(6, 6, "01G")).toBeNull();
-    expect(spectresValidateDesc(6, 6, "01D")).toBe("coordinate out of range");
+    expect(spectresValidateDesc(6, 6, "01D")).toBe(DESC_OUT_OF_RANGE);
   });
 
   it("refuses to build from a description that never validated", () => {
@@ -273,10 +280,10 @@ describe("descriptions", () => {
 
   it("validates paramsInvalid independently of the string layer", () => {
     expect(spectreParamsInvalid({ orientation: 0, coords: [], finalHex: "G" })).toBe(
-      "expected at least one numeric coordinate",
+      DESC_TOO_SHORT,
     );
     expect(spectreParamsInvalid({ orientation: 0, coords: [0], finalHex: "?" })).toBe(
-      "invalid final hexagon type",
+      descBadCharacter("?"),
     );
     expect(
       spectreParamsInvalid({

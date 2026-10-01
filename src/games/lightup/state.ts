@@ -10,8 +10,16 @@
  */
 
 import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import type { PresetMenu } from "../../engine/game.ts";
+import { AREA_TOO_LARGE } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { SYMM_REF4, SYMM_ROT2, SYMM_ROT4 } from "../../engine/symmetric-blacks.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
@@ -139,8 +147,7 @@ export function encodeParams(p: LightupParams, full: boolean): string {
 }
 
 export function validateParams(p: LightupParams, full: boolean): string | null {
-  if (p.w * p.h > 0x7fffffff)
-    return "Width times height must not be unreasonably large";
+  if (p.w * p.h > 0x7fffffff) return AREA_TOO_LARGE;
   if (full) {
     if (p.blackpc < 5 || p.blackpc > 100)
       return "Percentage of black squares must be between 5% and 100%";
@@ -348,20 +355,22 @@ export function encodeDesc(state: LightupState): string {
   return desc;
 }
 
-export function validateDesc(p: LightupParams, desc: string): string | null {
+export function validateDesc(p: LightupParams, desc: string): DescError | null {
   let j = 0;
   for (let i = 0; i < p.w * p.h; i++) {
     const c = desc[j++];
-    if (c === undefined) return "Game description shorter than expected";
+    if (c === undefined) return DESC_TOO_SHORT;
     // A numbered black square counts the lights around it, so `0`–`4`.
     const clue = digitValue(c);
     if (c >= "a" && c <= "z") {
       i += c.charCodeAt(0) - A; // and the loop's i++ adds another one
-    } else if (c !== "B" && (clue === null || clue > 4)) {
-      return "Game description contained unexpected character";
+    } else if (clue !== null && clue > 4) {
+      return DESC_OUT_OF_RANGE;
+    } else if (c !== "B" && clue === null) {
+      return descBadCharacter(c);
     }
   }
-  if (j < desc.length) return "Game description longer than expected";
+  if (j < desc.length) return DESC_TOO_LONG;
   return null;
 }
 

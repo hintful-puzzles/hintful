@@ -14,6 +14,7 @@ import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { decodeSave } from "../../engine/save.ts";
+import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { untangleGame } from "./index.ts";
 import {
@@ -320,7 +321,7 @@ describe("moves and solve", () => {
     );
     expect(untangleGame.solve?.(init, init, undefined)).toEqual({
       ok: false,
-      error: "No solution exists for this puzzle",
+      error: NO_SOLUTION,
     });
   });
 

@@ -4,6 +4,14 @@ import {
   DEFAULT_CANDIDATE_READING,
 } from "../../engine/candidate-hint.ts";
 import { digitValue, isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { numberItem, squareSize } from "../../engine/params.ts";
@@ -234,23 +242,23 @@ export function newUi(_state: TowersState): TowersUi {
 
 // --- desc codec ------------------------------------------------------------
 
-export function validateDesc(p: TowersParams, desc: string): string | null {
+export function validateDesc(p: TowersParams, desc: string): DescError | null {
   const w = p.w;
   const a = w * w;
   let i = 0; // string index
   for (let c = 0; c < 4 * w; c++) {
-    if (i >= desc.length) return "Too few clues for grid size";
+    if (i >= desc.length) return DESC_TOO_SHORT;
     if (c > 0) {
-      if (desc[i] !== "/") return "Expected slashes between clues";
+      if (desc[i] !== "/") return DESC_MALFORMED;
       i++;
     }
     if (i < desc.length && isDigit(desc[i])) {
       const { value: clue, next } = parseLeadingInt(desc, i);
       i = next;
-      if (clue <= 0 || clue > w) return "Clue number out of range";
+      if (clue <= 0 || clue > w) return DESC_OUT_OF_RANGE;
     }
   }
-  if (desc[i] === "/") return "Too many clues for grid size";
+  if (desc[i] === "/") return DESC_TOO_LONG;
 
   if (desc[i] === ",") {
     let squares = 0;
@@ -265,17 +273,17 @@ export function validateDesc(p: TowersParams, desc: string): string | null {
       } else if (digit !== null && digit >= 1) {
         const { value: val, next } = parseLeadingInt(desc, i - 1);
         i = next;
-        if (val < 1 || val > w) return "Out-of-range number in grid description";
+        if (val < 1 || val > w) return DESC_OUT_OF_RANGE;
         squares++;
       } else {
-        return "Invalid character in game description";
+        return descBadCharacter(ch);
       }
     }
-    if (squares < a) return "Not enough data to fill grid";
-    if (squares > a) return "Too much data to fit in grid";
+    if (squares < a) return DESC_TOO_SHORT;
+    if (squares > a) return DESC_TOO_LONG;
   }
 
-  if (i < desc.length) return "Rubbish at end of game description";
+  if (i < desc.length) return DESC_TOO_LONG;
   return null;
 }
 

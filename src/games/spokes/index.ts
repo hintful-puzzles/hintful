@@ -353,7 +353,7 @@ function solveFromClues(state: SpokesState) {
 
 function solve(orig: SpokesState): SolveResult<SpokesMove> {
   const solved = solveFromClues(orig);
-  if (!solved) return { ok: false, error: "No solution exists for this puzzle" };
+  if (!solved) return { ok: false, error: PUZZLE_NOT_REASONABLE };
 
   const spokes: SpokesSpokeRef[] = [];
   for (let i = 0; i < solved.w * solved.h; i++) {

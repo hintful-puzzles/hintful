@@ -12,6 +12,13 @@
  */
 
 import { parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+} from "../../engine/desc-error.ts";
 import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/obfuscate.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
@@ -222,16 +229,18 @@ function descBytes(desc: string): Uint8Array {
   return bmp;
 }
 
-export function validateDesc(p: BlackboxParams, desc: string): string | null {
+export function validateDesc(p: BlackboxParams, desc: string): DescError | null {
   const dlen = desc.length;
   const nballs = (dlen / 2 - 2) / 2;
-  if (dlen < 4 || dlen % 4 || nballs < p.minballs || nballs > p.maxballs)
-    return "Game description is wrong length";
+  // Four hex digits per ball, so a length off that step reads as a cut copy.
+  if (dlen < 4 || dlen % 4 || nballs < p.minballs) return DESC_TOO_SHORT;
+  if (nballs > p.maxballs) return DESC_TOO_LONG;
 
+  // The obfuscated bytes restate the board size, so any damage shows here.
   const bmp = descBytes(desc);
-  if (bmp[0] !== p.w || bmp[1] !== p.h) return "Game description is corrupted";
+  if (bmp[0] !== p.w || bmp[1] !== p.h) return DESC_MALFORMED;
   for (let i = 2; i < bmp.length; i += 2) {
-    if (bmp[i] >= p.w || bmp[i + 1] >= p.h) return "Game description is corrupted";
+    if (bmp[i] >= p.w || bmp[i + 1] >= p.h) return DESC_OUT_OF_RANGE;
   }
   return null;
 }

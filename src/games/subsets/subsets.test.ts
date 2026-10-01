@@ -7,6 +7,13 @@
  * format, and tier-2.5 render scenarios with snapshots.
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_CONTRADICTORY,
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+} from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -193,25 +200,19 @@ describe("subsets desc codec", () => {
     expect(encodeDesc(played)).toBe(FIX.desc);
   });
 
-  it("rejects each malformed desc with the upstream message", () => {
+  it("rejects each malformed desc with the kind of its upstream check", () => {
     const blanks = (k: number): string =>
       Array.from({ length: k }, () => "_").join(",");
-    expect(validateDesc(PARAMS, `${blanks(17)}`)).toBe("Too much data to fill grid");
-    expect(validateDesc(PARAMS, `16,${blanks(15)}`)).toBe(
-      "Out-of-range number in game description",
-    );
-    expect(validateDesc(PARAMS, `x,${blanks(15)}`)).toBe(
-      "Expecting number in game description",
-    );
-    expect(validateDesc(PARAMS, "1 2")).toBe("Missing separator");
+    expect(validateDesc(PARAMS, `${blanks(17)}`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(PARAMS, `16,${blanks(15)}`)).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(PARAMS, `x,${blanks(15)}`)).toBe(DESC_MALFORMED);
+    expect(validateDesc(PARAMS, "1 2")).toBe(DESC_MALFORMED);
     // "Not enough data" needs a trailing comma — otherwise the missing
     // separator is detected first (upstream quirk, reproduced).
-    expect(validateDesc(PARAMS, "1")).toBe("Missing separator");
-    expect(validateDesc(PARAMS, "1,2,")).toBe("Not enough data to fill grid");
-    expect(validateDesc(PARAMS, `0U,${blanks(15)}`)).toBe("Flags go off grid");
-    expect(validateDesc(PARAMS, `0R,1L,${blanks(14)}`)).toBe(
-      "Flags contradicting each other",
-    );
+    expect(validateDesc(PARAMS, "1")).toBe(DESC_MALFORMED);
+    expect(validateDesc(PARAMS, "1,2,")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(PARAMS, `0U,${blanks(15)}`)).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(PARAMS, `0R,1L,${blanks(14)}`)).toBe(DESC_CONTRADICTORY);
   });
 });
 

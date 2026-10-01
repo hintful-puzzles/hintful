@@ -19,6 +19,12 @@
 
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { digitValue, isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+  puzzleDescError,
+} from "../../engine/desc-error.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
@@ -397,17 +403,17 @@ export function encodeDesc(board: SeismicBoard): string {
   return `${encodeWalls(walls, ws)},${encodeClues(grid, w * h)}`;
 }
 
-/** Decode a description into a fresh board, reporting whether the wall list
- * parsed rather than throwing (`validateDesc` turns that into a message). */
+/** Decode a description into a fresh board, reporting why the wall list did
+ * not parse rather than throwing. */
 function readDesc(
   p: SeismicParams,
   desc: string,
-): { board: SeismicBoard; wallsValid: boolean } {
+): { board: SeismicBoard; wallsError: DescError | null } {
   const { w, h } = p;
   const ws = borderCount(w, h);
   const board = blankBoard(w, h, p.mode);
   const walls = new Uint8Array(ws);
-  let wallsValid = true;
+  let wallsError: DescError | null = null;
 
   let at = 0;
   let erun = 0;
@@ -428,7 +434,7 @@ function readDesc(
         erun = 26;
         at++;
       } else {
-        wallsValid = false;
+        wallsError = c === undefined ? DESC_TOO_SHORT : descBadCharacter(c);
       }
     }
     if (erun > 0) {
@@ -479,19 +485,26 @@ function readDesc(
     }
   }
 
-  return { board, wallsValid };
+  return { board, wallsError };
 }
 
-export function validateDesc(p: SeismicParams, desc: string): string | null {
-  const { board, wallsValid } = readDesc(p, desc);
-  if (!wallsValid) return "Region description contains invalid characters";
+export const REGION_TOO_LARGE = puzzleDescError(
+  "This game ID has a region of more than nine squares, too many to number with single digits.",
+);
+export const CLUE_TOO_LARGE = puzzleDescError(
+  "This game ID gives a clue larger than the number of squares in its region.",
+);
+
+export function validateDesc(p: SeismicParams, desc: string): DescError | null {
+  const { board, wallsError } = readDesc(p, desc);
+  if (wallsError) return wallsError;
 
   // The last offending cell decides the message, as upstream.
-  let error: string | null = null;
+  let error: DescError | null = null;
   for (let i = 0; i < p.w * p.h; i++) {
     const size = board.dsf.size(i);
-    if (size > 9) error = "A region is too large";
-    if (board.grid[i] > size) error = "A clue is too large";
+    if (size > 9) error = REGION_TOO_LARGE;
+    if (board.grid[i] > size) error = CLUE_TOO_LARGE;
   }
   return error;
 }

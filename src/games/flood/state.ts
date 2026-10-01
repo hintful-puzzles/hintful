@@ -1,5 +1,12 @@
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { c2nUpper } from "../../engine/desc-alphabet.ts";
+import {
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import { parseDimensions } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -122,20 +129,21 @@ export function presets(): PresetMenu<FloodParams> {
 
 // --- desc -------------------------------------------------------------
 
-export function validateDesc(p: FloodParams, desc: string): string | null {
+export function validateDesc(p: FloodParams, desc: string): DescError | null {
   const wh = p.w * p.h;
   for (let i = 0; i < wh; i++) {
     const ch = desc[i];
-    if (ch === undefined) return "Not enough data in grid description";
+    if (ch === undefined) return DESC_TOO_SHORT;
     // Upstream's `validate_desc` reads `A`-`Z` as 10-35, so a letter is out
     // of range rather than a bad character.
     const c = c2nUpper(ch);
-    if (c === null) return "Bad character in grid description";
-    if (c >= MAXCOLORS) return "Color out of range in grid description";
+    if (c === null) return descBadCharacter(ch);
+    if (c >= MAXCOLORS) return DESC_OUT_OF_RANGE;
   }
-  if (desc[wh] !== ",") return "Expected ',' after grid description";
-  if (!/^\d*$/.test(desc.slice(wh + 1)))
-    return "Badly formatted move limit after grid description";
+  if (desc[wh] === undefined) return DESC_TOO_SHORT;
+  if (desc[wh] !== ",") return DESC_MALFORMED;
+  const bad = /\D/.exec(desc.slice(wh + 1));
+  if (bad !== null) return descBadCharacter(bad[0]);
   return null;
 }
 

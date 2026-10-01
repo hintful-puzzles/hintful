@@ -16,7 +16,7 @@ import { winFlash } from "../../engine/flash.ts";
 import type { Game, GamePref, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { click, type PointerAction } from "../../engine/hint-gesture.ts";
-import { commonHintRefusal } from "../../engine/hint-refusal.ts";
+import { commonHintRefusal, PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -312,15 +312,17 @@ function solve(
 
   if (aux) {
     for (let i = 0; i < sz; i++) {
-      // A nibble of direction bits: `0`–`9`, then `A`–`F`.
+      // A nibble of direction bits: `0`–`9`, then `A`–`F`. `aux` is written by
+      // `newDesc` in this process and never saved, so a bad nibble is a broken
+      // encoder rather than a bad input.
       const v = i < aux.length ? c2nUpper(aux[i]) : null;
-      if (v === null || v > 15) return { ok: false, error: "invalid char in aux" };
+      if (v === null || v > 15) throw new Error(`pearl: aux has no nibble at ${i}`);
       solvedLines[i] = v;
     }
   } else if (pearlSolve(w, curr.h, curr.clues, solvedLines, DIFF_COUNT, false) < 1) {
     // Upstream retries from the original state, but the two share their clues,
     // so the retry could only repeat this verdict.
-    return { ok: false, error: "Unable to find a solution" };
+    return { ok: false, error: PUZZLE_NOT_REASONABLE };
   }
 
   const ops: PearlOp[] = [{ kind: "solve" }];

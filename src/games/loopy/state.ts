@@ -6,6 +6,13 @@
  * over it: a clue per face, a line state per edge, and an error flag per edge.
  */
 import { c2nUpper, n2cUpper } from "../../engine/desc-alphabet.ts";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+  puzzleDescError,
+} from "../../engine/desc-error.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type {
   Grid,
@@ -189,7 +196,7 @@ function faceCountFor(
 
 /** Validate a full game description (`[<gridDesc>_]<clueDesc>`) against params.
  * Returns `null` when acceptable, else why it is rejected. */
-export function validateDesc(p: LoopyParams, desc: string): string | null {
+export function validateDesc(p: LoopyParams, desc: string): DescError | null {
   const type = gridTypeOf(p);
   const { gridDesc, clueDesc } = splitDesc(desc);
 
@@ -197,7 +204,11 @@ export function validateDesc(p: LoopyParams, desc: string): string | null {
   if (gridErr) return gridErr;
 
   const numFaces = faceCountFor(type, p.w, p.h, gridDesc);
-  if (numFaces === null) return "Grid description describes an empty grid";
+  if (numFaces === null) {
+    return puzzleDescError(
+      "This game ID describes a patch of tiling with no faces left in it.",
+    );
+  }
 
   // Upstream's run test is a bare `c >= 'a'`, which reads `{`, `~` and every
   // non-ASCII character as a run of 27 or more — lengths its own encoder can
@@ -210,12 +221,12 @@ export function validateDesc(p: LoopyParams, desc: string): string | null {
     } else if (c2nUpper(tok.value) !== null) {
       count++;
     } else {
-      return "Unknown character in description";
+      return descBadCharacter(tok.value);
     }
   }
 
-  if (count < numFaces) return "Description too short for board size";
-  if (count > numFaces) return "Description too long for board size";
+  if (count < numFaces) return DESC_TOO_SHORT;
+  if (count > numFaces) return DESC_TOO_LONG;
   return null;
 }
 

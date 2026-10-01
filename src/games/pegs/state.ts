@@ -4,7 +4,14 @@
  */
 
 import { rejectMove } from "../../engine/assert-never.ts";
-import { parseDimensions } from "../../engine/params.ts";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+  puzzleDescError,
+} from "../../engine/desc-error.ts";
+import { AREA_TOO_LARGE, parseDimensions } from "../../engine/params.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import type { GameStatus } from "../../engine/types.ts";
 
@@ -101,7 +108,7 @@ export function validateParams(p: PegsParams, full: boolean): string | null {
     return "Width and height must both be greater than three";
   }
   if (p.w > 10000 / p.h) {
-    return "Width times height must not be unreasonably large";
+    return AREA_TOO_LARGE;
   }
   if (full && p.type === TYPE_CROSS) {
     const side = (n: number) => n === 5 || n === 7 || n === 9;
@@ -116,21 +123,26 @@ export function validateParams(p: PegsParams, full: boolean): string | null {
 }
 // --- validateDesc ----------------------------------------------------
 
-export function validateDesc(p: PegsParams, desc: string): string | null {
+export function validateDesc(p: PegsParams, desc: string): DescError | null {
   const len = p.w * p.h;
-  if (desc.length !== len) return "Game description is wrong length";
+  if (desc.length < len) return DESC_TOO_SHORT;
+  if (desc.length > len) return DESC_TOO_LONG;
   let nPeg = 0;
   let nHole = 0;
   for (let i = 0; i < len; i++) {
     const ch = desc[i];
-    if (ch !== "P" && ch !== "H" && ch !== "O") {
-      return "Invalid character in game description";
-    }
+    if (ch !== "P" && ch !== "H" && ch !== "O") return descBadCharacter(ch);
     if (ch === "P") nPeg++;
     if (ch === "H") nHole++;
   }
-  if (nPeg < 2) return "Too few pegs in game description";
-  if (nHole < 1) return "Too few holes in game description";
+  if (nPeg < 2) {
+    return puzzleDescError(
+      "This game ID has fewer than two pegs, so no peg could ever jump.",
+    );
+  }
+  if (nHole < 1) {
+    return puzzleDescError("This game ID has no empty hole for a peg to jump into.");
+  }
   return null;
 }
 

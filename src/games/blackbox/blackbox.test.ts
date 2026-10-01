@@ -10,6 +10,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { DESC_OUT_OF_RANGE, DESC_TOO_SHORT } from "../../engine/desc-error.ts";
 import { bin2hex, obfuscateBitmap } from "../../engine/obfuscate.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -230,7 +231,7 @@ describe("Black Box — desc codec", () => {
 
   it("rejects a description of the wrong length", () => {
     const p = defaultParams();
-    expect(validateDesc(p, "abc")).not.toBeNull();
+    expect(validateDesc(p, "abc")).toBe(DESC_TOO_SHORT);
   });
 
   it("rejects a description whose balls fall outside the arena", () => {
@@ -238,7 +239,7 @@ describe("Black Box — desc codec", () => {
     const p = { w: 2, h: 2, minballs: 1, maxballs: 1 };
     for (const bmp of [Uint8Array.of(2, 2, 2, 0), Uint8Array.of(2, 2, 0, 2)]) {
       obfuscateBitmap(bmp, bmp.length * 8, false);
-      expect(validateDesc(p, bin2hex(bmp))).toBe("Game description is corrupted");
+      expect(validateDesc(p, bin2hex(bmp))).toBe(DESC_OUT_OF_RANGE);
     }
   });
 });

@@ -46,6 +46,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   buttonVerb,
   digitKey,
@@ -357,7 +358,7 @@ function executeMove(state: SticksState, move: SticksMove): SticksState {
 function solve(orig: SticksState): SolveResult<SticksMove> {
   const grid = orig.grid.slice();
   const result = sticksSolveGame(grid, orig.numbers, orig.w, orig.h);
-  if (result === "invalid") return { ok: false, error: "Puzzle is invalid." };
+  if (result === "invalid") return { ok: false, error: NO_SOLUTION };
   // An unfinished solve still emits the partial deduction (upstream).
   return { ok: true, move: { kind: "solve", grid: Array.from(grid, bitsLine) } };
 }

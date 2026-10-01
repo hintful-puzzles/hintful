@@ -9,6 +9,12 @@
  * the given bytes stay clean for the desc encoder.
  */
 
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
@@ -220,17 +226,17 @@ export function encodeDesc(grid: Uint8Array, w: number, h: number): string {
   return out;
 }
 
-export function validateDesc(p: ClustersParams, desc: string): string | null {
+export function validateDesc(p: ClustersParams, desc: string): DescError | null {
   const s = p.w * p.h;
   let pos = 0;
   for (const ch of desc) {
     if (ch >= "a" && ch < "z") pos += 1 + (ch.charCodeAt(0) - CODE_a);
     else if (ch >= "A" && ch < "Z") pos += 1 + (ch.charCodeAt(0) - CODE_A);
     else if (ch === "z" || ch === "Z") pos += 25;
-    else return "Description contains invalid characters";
+    else return descBadCharacter(ch);
   }
-  if (pos < s + 1) return "Description too short";
-  if (pos > s + 1) return "Description too long";
+  if (pos < s + 1) return DESC_TOO_SHORT;
+  if (pos > s + 1) return DESC_TOO_LONG;
   return null;
 }
 

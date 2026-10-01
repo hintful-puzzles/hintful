@@ -3,6 +3,11 @@
 // semantics (rotation + orientation + completion), solve, input mapping,
 // and text format.
 import { describe, expect, it } from "vitest";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -164,10 +169,16 @@ describe("Twiddle generation", () => {
 
   it("validateDesc rejects malformed descs", () => {
     const p = params({ w: 3, h: 3 });
-    expect(twiddleGame.validateDesc(p, "1,2,3,4,5,6,7,8")).not.toBeNull(); // too few
-    expect(twiddleGame.validateDesc(p, "1,2,3,4,5,6,7,8,9,10")).not.toBeNull(); // excess
+    expect(twiddleGame.validateDesc(p, "1,2,3,4,5,6,7,8")).toBe(DESC_TOO_SHORT);
+    expect(twiddleGame.validateDesc(p, "1,2,3,4,5,6,7,8,9,10")).toBe(DESC_TOO_LONG);
+    expect(twiddleGame.validateDesc(p, "1,2;3,4,5,6,7,8,9")).toBe(
+      descBadCharacter(";"),
+    );
     const po = params({ w: 3, h: 3, orientable: true });
-    expect(twiddleGame.validateDesc(po, "1,2,3,4,5,6,7,8,9")).not.toBeNull(); // needs letters
+    // Orientable mode needs a letter after each number.
+    expect(twiddleGame.validateDesc(po, "1,2,3,4,5,6,7,8,9")).toBe(
+      descBadCharacter(","),
+    );
   });
 });
 

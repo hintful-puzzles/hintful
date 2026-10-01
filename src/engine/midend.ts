@@ -31,7 +31,7 @@ import {
   UI_UPDATE,
 } from "./game.ts";
 import { MARK_ALL_CODE } from "./hint-gesture.ts";
-import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
+import { ALREADY_SOLVED, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { pencilModeKey, takesNotes } from "./key-labels.ts";
 import { describeParams, presetMenu, type TitledPresetMenu } from "./param-label.ts";
 import { paramsError } from "./params.ts";
@@ -751,6 +751,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     if (!this.game.solve) {
       return "This game does not support solving";
     }
+    if (this.game.status(this.state) === "solved") return ALREADY_SOLVED;
     const result = this.game.solve(this.history[0], this.state, this.aux);
     if (!result.ok) return result.error;
     this.clearHint();

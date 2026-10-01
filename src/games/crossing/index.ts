@@ -30,6 +30,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { CELL } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
 import {
@@ -362,8 +363,7 @@ function solve(orig: CrossingState): SolveResult<CrossingMove> {
   const result = solveCrossing(orig.puzzle);
   // Upstream fills whatever it deduced and leaves the rest blank; reporting the
   // failure is both more honest and the collection's convention.
-  if (result.status !== "valid")
-    return { ok: false, error: "Solver could not find a unique solution." };
+  if (result.status !== "valid") return { ok: false, error: PUZZLE_NOT_REASONABLE };
   return { ok: true, move: { kind: "solve", grid: Array.from(result.grid) } };
 }
 

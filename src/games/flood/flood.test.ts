@@ -2,6 +2,11 @@
 // generation (completable + par = solver + leniency), fill/solve move
 // semantics and immutability, win/lose status, and input mapping.
 import { describe, expect, it } from "vitest";
+import {
+  DESC_MALFORMED,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -95,11 +100,12 @@ describe("Flood desc", () => {
 
   it("validateDesc rejects malformed descriptions", () => {
     const p: FloodParams = { w: 2, h: 2, colors: 3, leniency: 0 };
-    expect(validateDesc(p, "012")).toMatch(/Not enough/); // 3 of 4 cells, no comma
-    expect(validateDesc(p, "012!")).toMatch(/Bad character/);
-    expect(validateDesc(p, "0123")).toMatch(/Expected ','/);
+    expect(validateDesc(p, "012")).toBe(DESC_TOO_SHORT); // 3 of 4 cells, no comma
+    expect(validateDesc(p, "012!")).toBe(descBadCharacter("!"));
+    expect(validateDesc(p, "0120")).toBe(DESC_TOO_SHORT); // grid, then nothing
+    expect(validateDesc(p, "01201")).toBe(DESC_MALFORMED); // no ',' after the grid
     expect(validateDesc(p, "0120,5")).toBeNull();
-    expect(validateDesc(p, "0120,5x")).toMatch(/Badly formatted/);
+    expect(validateDesc(p, "0120,5x")).toBe(descBadCharacter("x"));
   });
 });
 
@@ -174,12 +180,6 @@ describe("Flood solve", () => {
     expect(completed(solved.grid)).toBe(true);
     expect(solved.cheated).toBe(true);
     expect(solved.moves).toBeGreaterThan(0);
-  });
-
-  it("refuses to solve an already-complete board", () => {
-    const p: FloodParams = { w: 2, h: 1, colors: 3, leniency: 0 };
-    const state = executeMove(newState(p, "01,5"), { type: "fill", color: 1 });
-    expect(floodGame.solve?.(state, state).ok).toBe(false);
   });
 });
 

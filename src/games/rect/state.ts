@@ -13,8 +13,14 @@
  */
 
 import { digitValue, isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import type { PresetMenu } from "../../engine/game.ts";
-import { atof, formatG } from "../../engine/params.ts";
+import { AREA_TOO_LARGE, atof, formatG } from "../../engine/params.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 
 export interface RectParams {
@@ -142,7 +148,7 @@ export function decodeParams(s: string): RectParams {
 }
 
 export function validateParams(p: RectParams, _full: boolean): string | null {
-  if (p.w > 1_000_000 / p.h) return "Width times height must not be unreasonably large";
+  if (p.w > 1_000_000 / p.h) return AREA_TOO_LARGE;
   if (p.w * p.h < 2) return "Grid area must be greater than one";
   return null;
 }
@@ -179,7 +185,7 @@ export function encodeNumbers(numbers: ArrayLike<number>, area: number): string 
   return out;
 }
 
-export function validateDesc(p: RectParams, desc: string): string | null {
+export function validateDesc(p: RectParams, desc: string): DescError | null {
   const area = p.w * p.h;
   let squares = 0;
   let i = 0;
@@ -192,11 +198,11 @@ export function validateDesc(p: RectParams, desc: string): string | null {
       squares++;
       i = parseLeadingInt(desc, i).next;
     } else if (c !== "_") {
-      return "Invalid character in game description";
+      return descBadCharacter(c);
     }
   }
-  if (squares < area) return "Not enough data to fill grid";
-  if (squares > area) return "Too much data to fit in grid";
+  if (squares < area) return DESC_TOO_SHORT;
+  if (squares > area) return DESC_TOO_LONG;
   return null;
 }
 

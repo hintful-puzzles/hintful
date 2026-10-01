@@ -10,6 +10,12 @@
  */
 
 import { describe, expect, it } from "vitest";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -203,11 +209,11 @@ describe("abcd desc codec", () => {
 
   it("rejects wrong clue counts, invalid characters and out-of-range clues", () => {
     const p = P(3, 3, 3); // (3+3)*3 = 18 clues expected
-    expect(validateDesc(p, "1,".repeat(17))).toMatch(/not enough/);
-    expect(validateDesc(p, "1,".repeat(19))).toMatch(/too many/);
-    expect(validateDesc(p, `${"1,".repeat(17)}Z,`)).toMatch(/Invalid character/);
+    expect(validateDesc(p, "1,".repeat(17))).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, "1,".repeat(19))).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, `${"1,".repeat(17)}Z,`)).toBe(descBadCharacter("Z"));
     // A row clue may not exceed 1 + w/2 = 2 for w=3.
-    expect(validateDesc(p, `9,${"1,".repeat(17)}`)).toMatch(/invalid number/);
+    expect(validateDesc(p, `9,${"1,".repeat(17)}`)).toBe(DESC_OUT_OF_RANGE);
   });
 });
 

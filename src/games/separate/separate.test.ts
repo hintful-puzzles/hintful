@@ -7,6 +7,11 @@
  */
 import { describe, expect, it } from "vitest";
 import { BORDER, BORDER_D, BORDER_L, BORDER_R } from "../../engine/border-grid.ts";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -65,8 +70,9 @@ describe("separate desc codec", () => {
   });
 
   it("rejects a malformed desc", () => {
-    expect(validateDesc(P5, "ABCDE")).not.toBeNull(); // wrong length
-    expect(validateDesc(P5, "F".repeat(25))).not.toBeNull(); // F is outside k=5
+    expect(validateDesc(P5, "ABCDE")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(P5, "A".repeat(26))).toBe(DESC_TOO_LONG);
+    expect(validateDesc(P5, "F".repeat(25))).toBe(descBadCharacter("F")); // F is outside k=5
     const { desc } = newSeparateDesc(P5, randomNew("sep-valid"));
     expect(validateDesc(P5, desc)).toBeNull();
   });

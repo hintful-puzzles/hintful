@@ -278,7 +278,7 @@ export const separateGame: Game<
 
   solve(orig, _curr) {
     const sol = solveToBorders(paramsOf(orig), orig.letters);
-    if (!sol) return { ok: false, error: "Sorry, I can't solve this puzzle" };
+    if (!sol) return { ok: false, error: PUZZLE_NOT_REASONABLE };
     const full = Array.from(sol, (b) => (b & BORDER_MASK) | DISABLED(~b & BORDER_MASK));
     return { ok: true, move: { type: "solve", borders: full } };
   },

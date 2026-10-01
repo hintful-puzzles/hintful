@@ -9,6 +9,11 @@
  * mistake overlay, each with targeted op assertions plus a snapshot.
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -122,13 +127,15 @@ describe("keen desc codec", () => {
   });
 
   it("rejects malformed descs", () => {
-    expect(validateDesc(P4, "!!!,a1")).not.toBeNull(); // bad block structure
-    expect(validateDesc(P4, D4.replace(",d2s1a9m4d2m6s2", ",a9"))).not.toBeNull(); // too few clues
+    expect(validateDesc(P4, "!!!,a1")).toBe(descBadCharacter("!"));
+    expect(validateDesc(P4, D4.replace(",d2s1a9m4d2m6s2", ",a9"))).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(P4, `${D4}a1`)).toBe(DESC_TOO_LONG);
     // A subtraction clue on a non-domino cage: take a desc whose first cage is
-    // large and tag it 's'.
-    expect(
-      validateDesc({ w: 3, diff: "easy", multiplicationOnly: false }, "z3,s9"),
-    ).not.toBeNull();
+    // large and tag it 's'. On a 3x3 board 'l' merges all twelve edges, so the
+    // whole board is one cage of nine.
+    const p3: KeenParams = { w: 3, diff: "easy", multiplicationOnly: false };
+    expect(validateDesc(p3, "l,a9")).toBeNull();
+    expect(validateDesc(p3, "l,s9")).toMatch(/^This game ID .*subtraction.*\.$/);
   });
 });
 

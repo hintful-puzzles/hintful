@@ -1,7 +1,8 @@
 /** Types, bit vocabulary, params and pure state helpers for Net. */
 
 import { parseLeadingInt } from "../../engine/decimal.ts";
-import { atof, formatG } from "../../engine/params.ts";
+import type { DescError } from "../../engine/desc-error.ts";
+import { AREA_TOO_LARGE, atof, formatG } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import type { Point } from "../../engine/types.ts";
@@ -98,7 +99,7 @@ export function decodeParams(s: string): NetParams {
 export function validateParams(p: NetParams, full: boolean): string | null {
   if (p.w <= 1 && p.h <= 1)
     return "At least one of width and height must be greater than one";
-  if (p.w * p.h > 1_000_000) return "Width times height must not be unreasonably large";
+  if (p.w * p.h > 1_000_000) return AREA_TOO_LARGE;
   // A wrapping grid with a dimension of 2 provably cannot have a unique
   // solution (net.c carries the 40-line proof); reject it up front.
   if (full && p.unique && p.wrapping && (p.w === 2 || p.h === 2))
@@ -191,7 +192,7 @@ export interface NetState {
   readonly lastRotateDir: number;
 }
 
-export function validateDesc(p: NetParams, desc: string): string | null {
+export function validateDesc(p: NetParams, desc: string): DescError | null {
   return validateWireDesc(p.w, p.h, desc);
 }
 

@@ -9,6 +9,11 @@
  * Render frames are in `rome-render.test.ts`.
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_CONTRADICTORY,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { difficultyTiers } from "../../engine/difficulty.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
@@ -36,7 +41,14 @@ import type { GameStatus, Point } from "../../engine/types.ts";
 import { newRomeDesc } from "./generator.ts";
 import { romeGame } from "./index.ts";
 import { origin, PREFERRED_TILE_SIZE } from "./render.ts";
-import { romeSolve, validateDesc, validateGame } from "./solver.ts";
+import {
+  ARROWS_ALREADY_SOLVED,
+  GOAL_NOT_ALONE,
+  REGION_TOO_LARGE,
+  romeSolve,
+  validateDesc,
+  validateGame,
+} from "./solver.ts";
 import {
   DIFF_EASY,
   DIFF_NORMAL,
@@ -174,25 +186,24 @@ describe("desc codec", () => {
     // the clues from what follows — reproduced here, hence the odd-looking
     // "!i" rather than "!!,i" (whose garbage clues would report the *clue*
     // error instead, exactly as the C does).
-    expect(validateDesc(p, "!i")).toBe(
-      "Region description contains invalid characters",
-    );
-    expect(validateDesc(p, `${ALL_WALLS_3},QQQQQQQQQ`)).toBe(
-      "Clues contain invalid characters",
-    );
+    expect(validateDesc(p, "!i")).toBe(descBadCharacter("!"));
+    expect(validateDesc(p, `${ALL_WALLS_3},QQQQQQQQQ`)).toBe(descBadCharacter("Q"));
+    expect(validateDesc(p, `${ALL_WALLS_3},c`)).toBe(DESC_TOO_SHORT);
     // Five squares in one region: 'd' merges 4 horizontal edges in a row...
     // simplest oversized region is the whole top row plus one below it.
-    expect(validateDesc({ w: 5, h: 3, diff: 0 }, "d18,o")).toBe(
-      "A region is too large",
-    );
+    expect(validateDesc({ w: 5, h: 3, diff: 0 }, "d18,o")).toBe(REGION_TOO_LARGE);
     // A goal must sit alone: merge squares 0 and 1, then put the goal at 0.
-    expect(validateDesc(p, "a11,Xh")).toBe("A goal is not placed in an area of 1 cell");
+    expect(validateDesc(p, "a11,Xh")).toBe(GOAL_NOT_ALONE);
   });
 
   it("rejects a description that is already finished or already broken", () => {
     const p: RomeParams = { w: 3, h: 3, diff: DIFF_EASY };
     // An arrow on the right column pointing right leaves the grid.
-    expect(validateDesc(p, `${ALL_WALLS_3},bRf`)).toBe("Puzzle contains errors");
+    expect(validateDesc(p, `${ALL_WALLS_3},bRf`)).toBe(DESC_CONTRADICTORY);
+    // Two walled-off goals: every square already reaches one.
+    expect(validateDesc({ w: 2, h: 1, diff: DIFF_EASY }, "1,XX")).toBe(
+      ARROWS_ALREADY_SOLVED,
+    );
   });
 });
 

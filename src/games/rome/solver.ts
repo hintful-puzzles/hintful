@@ -47,6 +47,11 @@ import {
   runDeductionFixpoint,
 } from "../../engine/deduction-fixpoint.ts";
 import type { DeductionRecord } from "../../engine/deduction-record.ts";
+import {
+  DESC_CONTRADICTORY,
+  type DescError,
+  puzzleDescError,
+} from "../../engine/desc-error.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import {
   auditingPremises,
@@ -228,6 +233,16 @@ function markLoops(board: RomeBoard): void {
 
 // --- desc validation --------------------------------------------------------
 
+export const ARROWS_ALREADY_SOLVED = puzzleDescError(
+  "This game ID's arrows already lead every square to a goal, leaving nothing to solve.",
+);
+export const REGION_TOO_LARGE = puzzleDescError(
+  "This game ID has a region of more than four squares, which four different arrows can't fill.",
+);
+export const GOAL_NOT_ALONE = puzzleDescError(
+  "This game ID puts a goal in a region of more than one square.",
+);
+
 /**
  * Upstream `validate_desc`: decode, reject a description that is already
  * finished or already broken, then reject a region larger than the four
@@ -235,18 +250,18 @@ function markLoops(board: RomeBoard): void {
  * last offending square decides which). Lives here rather than beside the
  * codec because its central assertion is a validity verdict.
  */
-export function validateDesc(p: RomeParams, desc: string): string | null {
+export function validateDesc(p: RomeParams, desc: string): DescError | null {
   const { board, error } = readDesc(p, desc);
   if (error) return error;
-  if (validateGame(board, true) !== STATUS_INCOMPLETE) return "Puzzle contains errors";
+  const status = validateGame(board, true);
+  if (status === STATUS_COMPLETE) return ARROWS_ALREADY_SOLVED;
+  if (status !== STATUS_INCOMPLETE) return DESC_CONTRADICTORY;
 
-  let result: string | null = null;
+  let result: DescError | null = null;
   for (let i = 0; i < p.w * p.h; i++) {
     const size = board.regions.size(i);
-    if (size > 4) result = "A region is too large";
-    if (board.grid[i] & FM_GOAL && size > 1) {
-      result = "A goal is not placed in an area of 1 cell";
-    }
+    if (size > 4) result = REGION_TOO_LARGE;
+    if (board.grid[i] & FM_GOAL && size > 1) result = GOAL_NOT_ALONE;
   }
   return result;
 }

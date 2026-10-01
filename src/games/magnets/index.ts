@@ -14,10 +14,11 @@ import type {
   UiUpdate,
 } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
-import { commonHintRefusal } from "../../engine/hint-refusal.ts";
+import { commonHintRefusal, PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { gridCursorMove, newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   interpretTargetVerbs,
   type TargetGeometry,
@@ -201,7 +202,7 @@ function solve(
   }
   return {
     ok: false,
-    error: ret < 0 ? "Puzzle is impossible." : "Unable to solve puzzle.",
+    error: ret < 0 ? NO_SOLUTION : PUZZLE_NOT_REASONABLE,
   };
 }
 

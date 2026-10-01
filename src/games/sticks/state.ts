@@ -12,6 +12,12 @@
  */
 
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
@@ -202,7 +208,7 @@ const CODE_a = "a".charCodeAt(0);
  * `B<digits>` pair shares one cell), a digit run is an inline clue on the
  * current cell, and `_` is an inert separator.
  */
-export function validateDesc(p: SticksParams, desc: string): string | null {
+export function validateDesc(p: SticksParams, desc: string): DescError | null {
   const s = p.w * p.h;
   let pos = 0;
   let i = 0;
@@ -217,12 +223,12 @@ export function validateDesc(p: SticksParams, desc: string): string | null {
       pos++;
       continue;
     } else if (c !== "_") {
-      return "Description contains invalid characters";
+      return descBadCharacter(c);
     }
     i++;
   }
-  if (pos < s) return "Description is too short";
-  if (pos > s) return "Description is too long";
+  if (pos < s) return DESC_TOO_SHORT;
+  if (pos > s) return DESC_TOO_LONG;
   return null;
 }
 

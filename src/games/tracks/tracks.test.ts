@@ -88,13 +88,13 @@ describe("tracks desc codec", () => {
 
   it("rejects malformed descs", () => {
     // A clue flag with the wrong bit-count (a single direction is 1 bit).
-    expect(
-      tracksGame.validateDesc(SMALL.p, "1zc,1,1,1,1,1,S1,1,S1,1,1,1,1"),
-    ).not.toBeNull();
+    expect(tracksGame.validateDesc(SMALL.p, "1zc,1,1,1,1,1,S1,1,S1,1,1,1,1")).toMatch(
+      /doesn't join exactly two/,
+    );
     // Missing entrance/exit markers.
-    expect(
-      tracksGame.validateDesc(SMALL.p, "f6pCkC,2,3,3,2,3,3,3,3,3,3,2,2"),
-    ).not.toBeNull();
+    expect(tracksGame.validateDesc(SMALL.p, "f6pCkC,2,3,3,2,3,3,3,3,3,3,2,2")).toMatch(
+      /one entrance and one exit/,
+    );
   });
 });
 

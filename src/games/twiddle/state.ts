@@ -1,6 +1,12 @@
 import { parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import type { PresetMenu } from "../../engine/game.ts";
-import { parseDimensions } from "../../engine/params.ts";
+import { AREA_TOO_LARGE, parseDimensions } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 
@@ -104,8 +110,7 @@ export function decodeParams(s: string): TwiddleParams {
 export function validateParams(p: TwiddleParams, _full: boolean): string | null {
   if (p.w < p.n) return "Width must be at least the rotating block size";
   if (p.h < p.n) return "Height must be at least the rotating block size";
-  if (p.w > Math.floor(0x7fffffff / p.h))
-    return "Width times height must not be unreasonably large";
+  if (p.w > Math.floor(0x7fffffff / p.h)) return AREA_TOO_LARGE;
   return null;
 }
 
@@ -231,20 +236,23 @@ function encodeDesc(
   return s;
 }
 
-export function validateDesc(p: TwiddleParams, desc: string): string | null {
+export function validateDesc(p: TwiddleParams, desc: string): DescError | null {
   const wh = p.w * p.h;
+  // Where a number, letter or comma belongs: the ID ended, or has something
+  // else there.
+  const missing = (at: number): DescError =>
+    at >= desc.length ? DESC_TOO_SHORT : descBadCharacter(desc[at]);
   let i = 0;
   for (let cell = 0; cell < wh; cell++) {
     const run = parseLeadingInt(desc, i);
-    if (run.next === i) return "Not enough numbers in string";
+    if (run.next === i) return missing(i);
     i = run.next;
     if (p.orientable) {
-      if (!ORIENT_LETTERS.includes(desc[i]))
-        return "Expected orientation letter after number";
+      if (!ORIENT_LETTERS.includes(desc[i])) return missing(i);
     } else if (cell < wh - 1) {
-      if (desc[i] !== ",") return "Expected comma after number";
+      if (desc[i] !== ",") return missing(i);
     } else if (i < desc.length) {
-      return "Excess junk at end of string";
+      return DESC_TOO_LONG;
     }
     if (i < desc.length) i++; // eat separator / orientation letter
   }

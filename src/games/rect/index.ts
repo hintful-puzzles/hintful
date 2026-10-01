@@ -10,6 +10,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { completionStatus } from "../../engine/completion-status.ts";
 import { winFlash } from "../../engine/flash.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
@@ -374,13 +375,11 @@ function findMistakes(state: RectState): readonly RectMistake[] {
 }
 
 function statusbarText(s: RectState, ui: RectUi): string {
-  let text = "";
+  const words = completionStatus(s.completed, s.cheated);
   if (ui.dragged && ui.x1 >= 0 && ui.y1 >= 0 && ui.x2 >= 0 && ui.y2 >= 0) {
-    text = `${ui.x2 - ui.x1}x${ui.y2 - ui.y1} `;
+    return `${ui.x2 - ui.x1}x${ui.y2 - ui.y1} ${words}`.trimEnd();
   }
-  if (s.cheated) text += "Auto-solved.";
-  else if (s.completed) text += "COMPLETED!";
-  return text;
+  return words;
 }
 
 export const rectGame: Game<

@@ -21,6 +21,15 @@
 
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+  puzzleDescError,
+} from "../../engine/desc-error.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -371,7 +380,7 @@ function validateGridDesc(
   start: number,
   range: number,
   area: number,
-): { error: string | null; next: number } {
+): { error: DescError | null; next: number } {
   let i = start;
   let squares = 0;
   while (i < desc.length && desc[i] !== ",") {
@@ -386,15 +395,14 @@ function validateGridDesc(
       const n = parseLeadingInt(desc, i);
       const val = n.value;
       i = n.next;
-      if (val < 1 || val > range)
-        return { error: "Out-of-range number in game description", next: i };
+      if (val < 1 || val > range) return { error: DESC_OUT_OF_RANGE, next: i };
       squares++;
     } else {
-      return { error: "Invalid character in game description", next: i };
+      return { error: descBadCharacter(ch), next: i };
     }
   }
-  if (squares < area) return { error: "Not enough data to fill grid", next: i };
-  if (squares > area) return { error: "Too much data to fit in grid", next: i };
+  if (squares < area) return { error: DESC_TOO_SHORT, next: i };
+  if (squares > area) return { error: DESC_TOO_LONG, next: i };
   return { error: null, next: i };
 }
 
@@ -453,7 +461,7 @@ export function specToDsf(
   desc: string,
   start: number,
   cr: number,
-): { dsf: Dsf | null; error: string | null; next: number } {
+): { dsf: Dsf | null; error: DescError | null; next: number } {
   const area = cr * cr;
   const dsf = new Dsf(area);
   const A = "a".charCodeAt(0);
@@ -465,31 +473,25 @@ export function specToDsf(
     let c: number;
     if (ch === "_") c = 0;
     else if (ch >= "a" && ch <= "z") c = ch.charCodeAt(0) - A + 1;
-    else return { dsf: null, error: "Invalid character in game description", next: i };
+    else return { dsf: null, error: descBadCharacter(ch), next: i };
     i++;
 
     const adv = c !== 26; // 'z' has no following edge: the quirk above
     while (c-- > 0) {
-      if (pos >= limit)
-        return {
-          dsf: null,
-          error: "Too much data in block structure specification",
-          next: i,
-        };
+      if (pos >= limit) return { dsf: null, error: DESC_TOO_LONG, next: i };
       const [p0, p1] = edgeCells(pos, cr);
       dsf.merge(p0, p1);
       pos++;
     }
     if (adv) pos++;
   }
-  if (pos !== limit + 1)
-    return {
-      dsf: null,
-      error: "Not enough data in block structure specification",
-      next: i,
-    };
+  if (pos !== limit + 1) return { dsf: null, error: DESC_TOO_SHORT, next: i };
   return { dsf, error: null, next: i };
 }
+
+const WRONG_REGIONS = puzzleDescError(
+  "This game ID divides its board into the wrong number or sizes of blocks or cages.",
+);
 
 /**
  * Validate a block-structure spec (faithful to `validate_block_desc`): build the
@@ -504,9 +506,9 @@ function validateBlockDesc(
   maxNr: number,
   minSize: number,
   maxSize: number,
-): { error: string | null; next: number } {
+): { error: DescError | null; next: number } {
   const { dsf, error, next } = specToDsf(desc, start, cr);
-  if (error || !dsf) return { error: error ?? "Invalid block structure", next };
+  if (error || !dsf) return { error: error ?? DESC_MALFORMED, next };
   const area = cr * cr;
   // Count regions and sizes.
   const sizeByRoot = new Map<number, number>();
@@ -515,11 +517,9 @@ function validateBlockDesc(
     sizeByRoot.set(root, (sizeByRoot.get(root) ?? 0) + 1);
   }
   const nr = sizeByRoot.size;
-  if (nr < minNr || nr > maxNr)
-    return { error: "Wrong number of regions in block structure", next };
+  if (nr < minNr || nr > maxNr) return { error: WRONG_REGIONS, next };
   for (const sz of sizeByRoot.values())
-    if (sz < minSize || sz > maxSize)
-      return { error: "Region of wrong size in block structure", next };
+    if (sz < minSize || sz > maxSize) return { error: WRONG_REGIONS, next };
   return { error: null, next };
 }
 
@@ -580,7 +580,7 @@ export function cloneState(s: SoloState): SoloState {
 // --- desc codec (assembly) -------------------------------------------------
 
 /** Faithful to `validate_desc`. */
-export function validateDesc(p: SoloParams, desc: string): string | null {
+export function validateDesc(p: SoloParams, desc: string): DescError | null {
   const cr = p.c * p.r;
   const area = cr * cr;
 
@@ -589,25 +589,25 @@ export function validateDesc(p: SoloParams, desc: string): string | null {
   let i = r.next;
 
   if (p.r === 1) {
-    if (desc[i] !== ",") return "Expected jigsaw block structure in game description";
+    if (desc[i] !== ",") return DESC_MALFORMED;
     i++;
     const b = validateBlockDesc(desc, i, cr, cr, cr, cr, cr);
     if (b.error) return b.error;
     i = b.next;
   }
   if (p.killer) {
-    if (desc[i] !== ",") return "Expected killer block structure in game description";
+    if (desc[i] !== ",") return DESC_MALFORMED;
     i++;
     const b = validateBlockDesc(desc, i, cr, cr, area, 2, cr);
     if (b.error) return b.error;
     i = b.next;
-    if (desc[i] !== ",") return "Expected killer clue grid in game description";
+    if (desc[i] !== ",") return DESC_MALFORMED;
     i++;
     r = validateGridDesc(desc, i, cr * area, area);
     if (r.error) return r.error;
     i = r.next;
   }
-  if (i < desc.length) return "Unexpected data at end of game description";
+  if (i < desc.length) return DESC_TOO_LONG;
   return null;
 }
 

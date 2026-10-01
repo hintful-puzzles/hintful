@@ -21,6 +21,13 @@
 
 import type { NoteEncoding } from "../../engine/candidate-hint.ts";
 import { digitValue } from "../../engine/decimal.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { type RowColRegion, rowColRegions } from "../../engine/latin-hint.ts";
@@ -396,7 +403,7 @@ function descSymbol(ch: string): number {
 function loadGame(
   p: SaladParams,
   desc: string,
-): { ok: true; value: Decoded } | { ok: false; error: string } {
+): { ok: true; value: Decoded } | { ok: false; error: DescError } {
   const o = p.order;
   const nums = p.nums;
   const o2 = o * o;
@@ -414,19 +421,18 @@ function loadGame(
     while (i < desc.length && desc[i] !== ",") {
       const ch = desc[i++];
       const c = ch.charCodeAt(0);
-      if (pos >= ox4) return { ok: false, error: "Border description is too long." };
+      if (pos >= ox4) return { ok: false, error: DESC_TOO_LONG };
       if (c >= 97 && c <= 122) {
         pos += c - 96;
         continue;
       }
       const d = descSymbol(ch);
-      if (!d)
-        return { ok: false, error: "Border description contains invalid characters." };
-      if (d > nums) return { ok: false, error: "Border clue is out of range." };
+      if (!d) return { ok: false, error: descBadCharacter(ch) };
+      if (d > nums) return { ok: false, error: DESC_OUT_OF_RANGE };
       borderclues[pos++] = d;
     }
 
-    if (pos < ox4) return { ok: false, error: "Description is too short." };
+    if (pos < ox4) return { ok: false, error: DESC_TOO_SHORT };
     if (desc[i] === ",") i++;
   }
 
@@ -434,7 +440,7 @@ function loadGame(
   while (i < desc.length) {
     const ch = desc[i++];
     const c = ch.charCodeAt(0);
-    if (pos >= o2) return { ok: false, error: "Grid description is too long." };
+    if (pos >= o2) return { ok: false, error: DESC_TOO_LONG };
     if (c >= 97 && c <= 122) {
       pos += c - 96;
     } else if (c === CIRCLE || c === CROSS) {
@@ -442,9 +448,8 @@ function loadGame(
       holes[pos++] = c;
     } else {
       const d = descSymbol(ch);
-      if (!d)
-        return { ok: false, error: "Grid description contains invalid characters." };
-      if (d > nums) return { ok: false, error: "Grid clue is out of range." };
+      if (!d) return { ok: false, error: descBadCharacter(ch) };
+      if (d > nums) return { ok: false, error: DESC_OUT_OF_RANGE };
       gridclues[pos] = d;
       grid[pos] = d;
       holes[pos++] = CIRCLE;
@@ -454,12 +459,12 @@ function loadGame(
   // Upstream accepts an *empty* grid section (`pos > 0 &&`): a letters puzzle
   // whose clues all sit on the border still writes a run of blanks, but a
   // zero-length section is legal too.
-  if (pos > 0 && pos < o2) return { ok: false, error: "Description is too short." };
+  if (pos > 0 && pos < o2) return { ok: false, error: DESC_TOO_SHORT };
 
   return { ok: true, value: { borderclues, gridclues, grid, holes } };
 }
 
-export function validateDesc(p: SaladParams, desc: string): string | null {
+export function validateDesc(p: SaladParams, desc: string): DescError | null {
   const r = loadGame(p, desc);
   return r.ok ? null : r.error;
 }

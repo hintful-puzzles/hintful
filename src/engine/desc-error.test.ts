@@ -1,0 +1,146 @@
+/*
+ * A game's own description error is about that game.
+ *
+ * `DescError`'s type already keeps a game from returning a sentence it typed:
+ * the only ways to make one are `desc-error.ts`'s kinds and
+ * `puzzleDescError`. What the type cannot see is a kind written out as a
+ * game's own sentence, and that is the defect this change found about 150
+ * times. So this reads every `puzzleDescError(<sentence>)` in the tree and
+ * holds each sentence to what the escape is for:
+ *
+ *  - **used by one game only.** Two games giving the same reason is a situation
+ *    the collection has, which is what a kind is. No roster says which reasons
+ *    are genuine; the sharing does.
+ *  - **not a kind's words**, and in the kinds' voice: one sentence about "this
+ *    game ID", ending in a full stop.
+ *  - **not the exactly-one situation**, which `descNeedsOne` words, since two
+ *    games wording it differently is still one situation.
+ *
+ * ON THE INSTRUMENT: keyed on the call's shape wherever it appears, including
+ * the engine (the grid tilings reach a player through Loopy), and a call whose
+ * argument is not a plain literal fails, since the sentence could not be read.
+ */
+import ts from "typescript";
+import { describe, expect, it } from "vitest";
+import {
+  DESC_CONTRADICTORY,
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_REPEATED,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+} from "./desc-error.ts";
+
+const sources = {
+  ...import.meta.glob<string>("../games/**/*.ts", {
+    query: "?raw",
+    import: "default",
+    eager: true,
+  }),
+  ...import.meta.glob<string>("./**/*.ts", {
+    query: "?raw",
+    import: "default",
+    eager: true,
+  }),
+};
+
+const KINDS = new Set<string>([
+  DESC_CONTRADICTORY,
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_REPEATED,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+]);
+
+interface Call {
+  /** The sentence, or `null` when the argument is not a literal. */
+  sentence: string | null;
+  owner: string;
+  where: string;
+}
+
+/** `src/games/<id>/…` belongs to `<id>`; anything else to the engine. */
+function ownerOf(path: string): string {
+  return /\.\.\/games\/([^/]+)\//.exec(path)?.[1] ?? "engine";
+}
+
+const calls: Call[] = [];
+let filesScanned = 0;
+for (const [path, text] of Object.entries(sources)) {
+  if (path.endsWith(".test.ts") || path.endsWith("/desc-error.ts")) continue;
+  filesScanned++;
+  const sf = ts.createSourceFile(path, text, ts.ScriptTarget.ESNext, true);
+  const visit = (n: ts.Node): void => {
+    if (
+      ts.isCallExpression(n) &&
+      ts.isIdentifier(n.expression) &&
+      n.expression.text === "puzzleDescError"
+    ) {
+      const arg = n.arguments[0];
+      const line = sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
+      calls.push({
+        sentence:
+          arg && (ts.isStringLiteral(arg) || ts.isNoSubstitutionTemplateLiteral(arg))
+            ? arg.text
+            : null,
+        owner: ownerOf(path),
+        where: `${path}:${line}`,
+      });
+    }
+    ts.forEachChild(n, visit);
+  };
+  visit(sf);
+}
+
+describe("a game's own description error", () => {
+  it("is not vacuous — the tree was read and sentences were found", () => {
+    // An unmatched glob yields `{}`, and every assertion below would then pass
+    // over nothing.
+    expect(filesScanned).toBeGreaterThan(300);
+    expect(calls.length).toBeGreaterThan(10);
+  });
+
+  it("is a literal sentence the scan can read", () => {
+    const unread = calls.filter((c) => c.sentence === null).map((c) => c.where);
+    expect(unread, "pass puzzleDescError a string literal").toEqual([]);
+  });
+
+  it("belongs to one game: a reason two games give is a kind", () => {
+    const owners = new Map<string, Set<string>>();
+    for (const c of calls) {
+      if (c.sentence === null) continue;
+      const set = owners.get(c.sentence) ?? new Set<string>();
+      set.add(c.owner);
+      owners.set(c.sentence, set);
+    }
+    const shared = [...owners]
+      .filter(([, games]) => games.size > 1)
+      .map(([s, games]) => `${JSON.stringify(s)}: ${[...games].sort().join(", ")}`);
+    expect(shared, "add a kind to desc-error.ts for these").toEqual([]);
+  });
+
+  it("is not a kind spelled out, and speaks in the kinds' voice", () => {
+    const off = calls.flatMap(({ sentence, where }) =>
+      sentence !== null &&
+      (KINDS.has(sentence) ||
+        !/^(This|The) .*game ID/.test(sentence) ||
+        !sentence.endsWith("."))
+        ? [`${where}: ${JSON.stringify(sentence)}`]
+        : [],
+    );
+    expect(off).toEqual([]);
+  });
+
+  it("does not word the exactly-one situation itself", () => {
+    // Exact matching is blind to this one: Inertia, Sokoban and Slide each
+    // wrote "has no X" / "has more than one X" with a different noun, so no two
+    // sentences were equal and the check above passed all three.
+    const own = calls.flatMap(({ sentence, where }) =>
+      // "has more than one", not "more than one": Rome's goal in "a region of
+      // more than one square" is a size, and the looser key convicted it.
+      sentence !== null && /has more than one /.test(sentence) ? [where] : [],
+    );
+    expect(own, "use descNeedsOne(noun, found)").toEqual([]);
+  });
+});

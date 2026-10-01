@@ -33,6 +33,11 @@ import type {
   NoteEncoding,
 } from "../../engine/candidate-hint.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
@@ -456,7 +461,7 @@ const CLUE_BITS: Readonly<Record<string, number>> = {
 export function readDesc(
   p: RomeParams,
   desc: string,
-): { board: RomeState; error: string | null } {
+): { board: RomeState; error: DescError | null } {
   const { w, h } = p;
   const s = w * h;
   const hs = (w - 1) * h;
@@ -464,7 +469,7 @@ export function readDesc(
   const board = newBoard(w, h);
   const { grid, regions } = board;
   const walls = new Uint8Array(ws);
-  let error: string | null = null;
+  let error: DescError | null = null;
 
   let pos = 0;
   let erun = 0;
@@ -484,7 +489,7 @@ export function readDesc(
         erun = 26;
         pos++;
       } else {
-        error = "Region description contains invalid characters";
+        error = ch === "" ? DESC_TOO_SHORT : descBadCharacter(ch);
       }
     }
     if (erun > 0) {
@@ -518,7 +523,7 @@ export function readDesc(
       const clue: number | null = CLUE_BITS[c] ?? null;
       if (c >= "a" && c <= "z") erun = c.charCodeAt(0) - CODE_a + 1;
       else if (clue !== null) grid[i] = clue | FM_FIXED;
-      else error = "Clues contain invalid characters";
+      else error = c === "" ? DESC_TOO_SHORT : descBadCharacter(c);
     }
     if (erun > 0) erun--; // an empty square
   }

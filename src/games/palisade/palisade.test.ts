@@ -10,6 +10,11 @@ import {
   initBorders,
 } from "../../engine/border-grid.ts";
 import { EDGE } from "../../engine/border-grid-hint.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { presetMenu } from "../../engine/param-label.ts";
@@ -76,9 +81,9 @@ describe("palisade desc codec", () => {
 
   it("rejects malformed descs", () => {
     const p = { w: 5, h: 5, k: 5 };
-    expect(validateDesc(p, "5")).not.toBeNull(); // clue > 4
-    expect(validateDesc(p, "?")).not.toBeNull();
-    expect(validateDesc(p, "z".repeat(2))).not.toBeNull(); // 52 > 25 squares
+    expect(validateDesc(p, "5")).toBe(DESC_OUT_OF_RANGE); // clue > 4
+    expect(validateDesc(p, "?")).toBe(descBadCharacter("?"));
+    expect(validateDesc(p, "z".repeat(2))).toBe(DESC_TOO_LONG); // 52 > 25 squares
   });
 });
 

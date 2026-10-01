@@ -1,4 +1,5 @@
 import { rejectMove } from "../../engine/assert-never.ts";
+import { completionStatus } from "../../engine/completion-status.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import {
@@ -181,7 +182,7 @@ export function executeMove(state: SamegameState, move: SamegameMove): SamegameS
 
 function statusbarText(state: SamegameState, ui: SamegameUi): string {
   const score = `Score: ${state.score}`;
-  if (state.completed) return `COMPLETE! ${score}`;
+  if (state.completed) return completionStatus(true, false, score);
   if (state.impossible) return `Cannot move! ${score}`;
   if (ui.nselected)
     return `${score}  Selected: ${ui.nselected} (${npoints(state.scoresub, ui.nselected)})`;

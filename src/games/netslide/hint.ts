@@ -31,6 +31,7 @@ import {
   slidePieces,
   toroidalDist,
 } from "../../engine/slide-planner.ts";
+import { SOLUTION_UNKNOWN } from "../../engine/solve-failure.ts";
 import { type Marked, say } from "./hint-text.ts";
 import { reconstructSolution } from "./reconstruct.ts";
 import { isComplete, type NetslideMove, type NetslideState } from "./state.ts";
@@ -343,7 +344,7 @@ export function hint(
   // link or a bookmark carries no `aux`, and that is an ordinary way to play).
   const target = parseAux(aux ?? null, n) ?? reconstructSolution(s);
   if (!target) {
-    return { ok: false, error: "Solution not known for this puzzle" };
+    return { ok: false, error: SOLUTION_UNKNOWN };
   }
 
   // The search plays on the board the player sees — the wire masks. Tiles that

@@ -22,7 +22,11 @@ import type {
   SolveResult,
   UiUpdate,
 } from "../../engine/game.ts";
-import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import {
+  commonHintRefusal,
+  DEDUCTION_EXHAUSTED,
+  PUZZLE_NOT_REASONABLE,
+} from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
 import { CELL, type Narration } from "../../engine/hint-words.ts";
 import {
@@ -193,7 +197,7 @@ function solve(orig: LightupState, curr: LightupState): SolveResult<LightupMove>
     // ... then from the clean puzzle.
     solved = cloneState(orig);
     if (dosolve(solved, sflags) <= 0) {
-      return { ok: false, error: "Unable to find a solution to this puzzle." };
+      return { ok: false, error: PUZZLE_NOT_REASONABLE };
     }
   }
 

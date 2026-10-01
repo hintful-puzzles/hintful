@@ -9,6 +9,13 @@
  */
 
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 
@@ -507,28 +514,26 @@ export function generateDesc(s: SignpostState): string {
   return ret;
 }
 
-/** Parse a desc into a fresh state (upstream `unpick_desc`). Returns an
- * error string on failure. */
+/** Parse a desc into a fresh state (upstream `unpick_desc`), or say why it
+ * cannot be parsed. */
 export function unpickDesc(
   params: SignpostParams,
   desc: string,
-): { state: SignpostState } | { error: string } {
+): { state: SignpostState } | { error: DescError } {
   const s = blankState(params);
   let num = 0;
   let i = 0;
   let at = 0;
   while (at < desc.length) {
-    if (i >= s.n) return { error: "Game description longer than expected" };
+    if (i >= s.n) return { error: DESC_TOO_LONG };
     if (isDigit(desc[at])) {
       const r = parseLeadingInt(desc, at);
-      if (r.value > s.n) return { error: "Number too large" };
+      if (r.value > s.n) return { error: DESC_OUT_OF_RANGE };
       num = r.value;
       at = r.next;
     } else {
       const d = desc.charCodeAt(at) - 97; // 'a'
-      if (d < 0 || d >= DIR_MAX) {
-        return { error: "Game description contains unexpected characters" };
-      }
+      if (d < 0 || d >= DIR_MAX) return { error: descBadCharacter(desc[at]) };
       s.nums[i] = num;
       s.flags[i] = num ? FLAG_IMMUTABLE : 0;
       num = 0;
@@ -537,6 +542,6 @@ export function unpickDesc(
       at++;
     }
   }
-  if (i < s.n) return { error: "Game description shorter than expected" };
+  if (i < s.n) return { error: DESC_TOO_SHORT };
   return { state: s };
 }

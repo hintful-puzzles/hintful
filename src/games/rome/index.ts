@@ -39,6 +39,7 @@ import {
   MARK_ALL_CODE,
   type PointerAction,
 } from "../../engine/hint-gesture.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import {
   dragEnteredNoteTakingCell,
@@ -569,7 +570,7 @@ function solutionGrid(state: RomeState): Int32Array | null {
 
 function solve(orig: RomeState): SolveResult<RomeMove> {
   const solution = solutionGrid(orig);
-  if (!solution) return { ok: false, error: "Unable to solve this puzzle." };
+  if (!solution) return { ok: false, error: PUZZLE_NOT_REASONABLE };
   const arrows: (RomeDir | null)[] = Array.from(solution, (c) => {
     const arrow = c & FM_ARROWMASK;
     return arrow === 0 ? null : (arrow as RomeDir);

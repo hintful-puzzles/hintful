@@ -15,7 +15,9 @@ checks them best:
   sweep made Net a member, measured that locks alone cannot carry its hint,
   and passed it to `add-net-notation` and `add-net-hint` (owner, 2026-09-30),
   which wrote it.
-- `own-the-player-facing-messages`: Pegs.
+- `own-the-player-facing-messages`: Pegs. The change found the kinds already
+  say what a Pegs hint must refuse with, and passed the hint to
+  `add-pegs-hint` (2026-09-30).
 - `draw-hint-marks-from-roles`: Rect.
 - `derive-verb-gestures-from-the-declaration`: Mosaic, which it wrote
   (2026-09-30).

@@ -6,6 +6,11 @@
  * typed arrays so a clone per move is cheap; a space's type and position follow
  * from its index.
  */
+import {
+  DESC_TOO_LONG,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { Point } from "../../engine/types.ts";
 
@@ -282,7 +287,7 @@ export function encodeGame(s: GalaxiesState): string {
 }
 
 /** Place the dots `desc` describes on `s`: an error message, or null. */
-export function decodeGame(s: GalaxiesState, desc: string): string | null {
+export function decodeGame(s: GalaxiesState, desc: string): DescError | null {
   const innerW = s.sx - 2;
   let i = 0;
   for (let p = 0; p < desc.length; p++) {
@@ -298,11 +303,11 @@ export function decodeGame(s: GalaxiesState, desc: string): string | null {
       i += n - 65;
       black = F_DOT_BLACK;
     } else {
-      return "Invalid characters in game description";
+      return descBadCharacter(desc[p]);
     }
     const y = ((i / innerW) | 0) + 1;
     const x = (i % innerW) + 1;
-    if (!inInterior(s, x, y)) return "Too much data to fit in grid";
+    if (!inInterior(s, x, y)) return DESC_TOO_LONG;
     addDot(s, x, y);
     s.flags[idx(s, x, y)] |= black;
     i++;

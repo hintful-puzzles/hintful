@@ -17,7 +17,11 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
-import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import {
+  commonHintRefusal,
+  DEDUCTION_EXHAUSTED,
+  PUZZLE_NOT_REASONABLE,
+} from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
 import { CELL, type Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
@@ -458,8 +462,7 @@ export const patternGame: Game<
 
   solve(orig) {
     const grid = solveToString(orig);
-    if (!grid)
-      return { ok: false, error: "Solving algorithm cannot complete this puzzle" };
+    if (!grid) return { ok: false, error: PUZZLE_NOT_REASONABLE };
     return { ok: true, move: { type: "solve", grid } };
   },
 

@@ -3,6 +3,7 @@ import { Midend, UI_UPDATE } from "../../engine/index.ts";
 import { SHOW_TIMER_PREF } from "../../engine/midend.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -112,7 +113,7 @@ describe("Flip solver", () => {
     };
     const result = solveFlip(state, state);
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error).toMatch(/No solution/);
+    if (!result.ok) expect(result.error).toBe(NO_SOLUTION);
   });
 });
 

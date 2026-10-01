@@ -20,7 +20,11 @@ import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import type { Game, HintResult, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { key, MARK_ALL_CODE, type PointerAction } from "../../engine/hint-gesture.ts";
-import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import {
+  commonHintRefusal,
+  DEDUCTION_EXHAUSTED,
+  PUZZLE_NOT_REASONABLE,
+} from "../../engine/hint-refusal.ts";
 import { colorKeys, digitKeyCode } from "../../engine/key-labels.ts";
 import {
   dragEnteredNoteTakingCell,
@@ -58,6 +62,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { GameStatus, KeyLabel, Point } from "../../engine/types.ts";
 import { newMapDesc } from "./generator.ts";
 import {
@@ -442,10 +447,7 @@ function solve(orig: MapState, curr: MapState, aux?: string): SolveResult<MapMov
   if (ret !== SOLVER_UNIQUE) {
     return {
       ok: false,
-      error:
-        ret === SOLVER_IMPOSSIBLE
-          ? "Puzzle is inconsistent"
-          : "Unable to find a unique solution for this puzzle",
+      error: ret === SOLVER_IMPOSSIBLE ? NO_SOLUTION : PUZZLE_NOT_REASONABLE,
     };
   }
   return solveToMove(curr, coloring);

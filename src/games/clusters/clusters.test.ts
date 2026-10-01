@@ -5,6 +5,11 @@
  * render frame. clusters-differential.test.ts decodes the frozen C boards.
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/midend.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -229,9 +234,9 @@ describe("desc codec", () => {
   it("rejects too-short / too-long / invalid descs", () => {
     const p = { w: 3, h: 3, diff: DIFF_EASY }; // s = 9, positions must sum to 10
     expect(validateDesc(p, "j")).toBeNull(); // 'j' = skip 10 = s+1
-    expect(validateDesc(p, "i")).toBe("Description too short"); // skip 9
-    expect(validateDesc(p, "k")).toBe("Description too long"); // skip 11
-    expect(validateDesc(p, "2")).toBe("Description contains invalid characters");
+    expect(validateDesc(p, "i")).toBe(DESC_TOO_SHORT); // skip 9
+    expect(validateDesc(p, "k")).toBe(DESC_TOO_LONG); // skip 11
+    expect(validateDesc(p, "2")).toBe(descBadCharacter("2"));
   });
 });
 

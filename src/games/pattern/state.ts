@@ -12,8 +12,16 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+  puzzleDescError,
+} from "../../engine/desc-error.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
+import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import type { GameStatus } from "../../engine/types.ts";
@@ -142,7 +150,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 export function validateParams(p: PatternParams, _full: boolean): string | null {
   if (p.w > Number.MAX_SAFE_INTEGER / p.h) {
-    return "Width times height must not be unreasonably large";
+    return AREA_TOO_LARGE;
   }
   return null;
 }
@@ -154,7 +162,7 @@ export function validateParams(p: PatternParams, _full: boolean): string | null 
 // (run-length alphabet): only upstream's picture generator produces one, never
 // this one, but it is parsed so such IDs round-trip.
 
-export function validateDesc(p: PatternParams, desc: string): string | null {
+export function validateDesc(p: PatternParams, desc: string): DescError | null {
   const nlines = p.w + p.h;
   let pos = 0; // index into desc
   for (let i = 0; i < nlines; i++) {
@@ -165,13 +173,21 @@ export function validateDesc(p: PatternParams, desc: string): string | null {
       do {
         const { value: n, next } = parseLeadingInt(desc, pos);
         pos = next;
-        if (n <= 0) return "all clues must be positive";
-        if (n > 0x7fffffff - 1) return "at least one clue is grossly excessive";
+        if (n <= 0) {
+          return puzzleDescError(
+            "This game ID has a clue of 0, but every clue in this puzzle is a run of at least one square.",
+          );
+        }
+        if (n > 0x7fffffff - 1) return DESC_OUT_OF_RANGE;
         rowspace -= n + 1;
         if (rowspace < 0) {
           return i < p.w
-            ? "at least one column contains more numbers than will fit"
-            : "at least one row contains more numbers than will fit";
+            ? puzzleDescError(
+                "This game ID has a column whose clues need more squares than the column has.",
+              )
+            : puzzleDescError(
+                "This game ID has a row whose clues need more squares than the row has.",
+              );
         }
         sep = desc[pos] ?? "\0";
         pos++; // consume the separator (the `do…while (desc[pos++] === '.')`)
@@ -182,11 +198,11 @@ export function validateDesc(p: PatternParams, desc: string): string | null {
 
     const last = desc[pos - 1] ?? "\0";
     if (last === "/") {
-      if (i + 1 === nlines) return "too many row/column specifications";
+      if (i + 1 === nlines) return DESC_TOO_LONG;
     } else if (last === "\0" || last === ",") {
-      if (i + 1 < nlines) return "too few row/column specifications";
+      if (i + 1 < nlines) return DESC_TOO_SHORT;
     } else {
-      return "unrecognized character in game specification";
+      return descBadCharacter(last);
     }
   }
 
@@ -195,18 +211,18 @@ export function validateDesc(p: PatternParams, desc: string): string | null {
     let i = 0;
     while (i < p.w * p.h) {
       const c = desc[pos++];
-      if (c === undefined) return "too little data in clue-squares section";
+      if (c === undefined) return DESC_TOO_SHORT;
       const lower = c.toLowerCase();
       if (lower >= "a" && lower <= "z") {
         const len = lower.charCodeAt(0) - 97;
         i += len;
         if (len < 25 && i < p.w * p.h) i++;
-        if (i > p.w * p.h) return "too much data in clue-squares section";
+        if (i > p.w * p.h) return DESC_TOO_LONG;
       } else {
-        return "unrecognized character in clue-squares section";
+        return descBadCharacter(c);
       }
     }
-    if (pos < desc.length) return "too much data in clue-squares section";
+    if (pos < desc.length) return DESC_TOO_LONG;
   }
 
   return null;

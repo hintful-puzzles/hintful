@@ -8,6 +8,7 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
+import { completionStatus } from "../../engine/completion-status.ts";
 import type { Game, UiUpdate } from "../../engine/game.ts";
 import {
   dimensionParamConfig,
@@ -205,11 +206,10 @@ function statusbarText(state: TwiddleState, _ui: TwiddleUi): string {
   if (state.cheated) {
     return `Moves since auto-solve: ${state.moveCount - state.completed}`;
   }
-  const prefix = state.completed ? "COMPLETED! " : "";
   const moves = state.completed || state.moveCount;
-  let s = `${prefix}Moves: ${moves}`;
+  let s = `Moves: ${moves}`;
   if (state.movetarget) s += ` (target ${state.movetarget})`;
-  return s;
+  return completionStatus(state.completed > 0, false, s);
 }
 
 // --- colors ----------------------------------------------------------

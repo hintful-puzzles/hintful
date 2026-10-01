@@ -6,9 +6,11 @@
  */
 
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
+import type { DescError } from "../../engine/desc-error.ts";
 import { winFlash } from "../../engine/flash.ts";
 import type { GamePref } from "../../engine/game.ts";
 import { drag } from "../../engine/hint-gesture.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import {
   fromCoord as fromCoordE,
   type Game,
@@ -18,7 +20,11 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/index.ts";
-import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
+import {
+  AREA_TOO_LARGE,
+  dimensionParamConfig,
+  transposeDimensions,
+} from "../../engine/params.ts";
 import { dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import {
   CURSOR_SELECT,
@@ -33,6 +39,7 @@ import {
   RIGHT_DRAG,
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
+import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { Color, GameStatus, Point, Size } from "../../engine/types.ts";
 import { newSignpostDesc } from "./generator.ts";
 import { type SignpostHint, signpostHint, signpostKeepTrack } from "./hint.ts";
@@ -80,7 +87,7 @@ function defaultParams(): SignpostParams {
 
 function validateParams(p: SignpostParams, full: boolean): string | null {
   if (p.w > 2147483647 / p.h) {
-    return "Width times height must not be unreasonably large";
+    return AREA_TOO_LARGE;
   }
   if (full && p.w === 1 && p.h === 1) return "Width and height cannot both be one";
   return null;
@@ -113,7 +120,7 @@ const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 // --- desc / state ----------------------------------------------------
 
-function validateDesc(p: SignpostParams, desc: string): string | null {
+function validateDesc(p: SignpostParams, desc: string): DescError | null {
   const r = unpickDesc(p, desc);
   return "error" in r ? r.error : null;
 }
@@ -250,8 +257,8 @@ function solve(orig: SignpostState, curr: SignpostState): SolveResult<SignpostMo
   }
   const fromOrig = cloneState(orig);
   const r = solveState(fromOrig);
-  if (r < 0) return { ok: false, error: "Puzzle is impossible." };
-  if (r === 0) return { ok: false, error: "Unable to solve puzzle." };
+  if (r < 0) return { ok: false, error: NO_SOLUTION };
+  if (r === 0) return { ok: false, error: PUZZLE_NOT_REASONABLE };
   return { ok: true, move: { type: "solve", next: Array.from(fromOrig.next) } };
 }
 

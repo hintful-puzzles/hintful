@@ -11,6 +11,11 @@
  */
 
 import { describe, expect, it } from "vitest";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/midend.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -213,12 +218,10 @@ describe("boats desc codec", () => {
   it("accepts a short description but rejects an overlong grid", () => {
     const p = params();
     expect(validateDesc(p, "1,1,1,1,1,1,1,1,1,1,1,1,")).toBeNull();
-    expect(validateDesc(p, "1,1,1,1,1,1,1,1,1,1,1,1,zz")).toBe("Too many grid clues");
-    expect(validateDesc(p, "1,1,1,1,1,1,1,1,1,1,1,")).toBe("Not enough border clues");
-    expect(validateDesc(p, "1,1,1,1,1,1,1,1,1,1,1,1,1,")).toBe("Too many border clues");
-    expect(validateDesc(p, "1,1,1,1,1,1,1,1,1,1,1,1,Q")).toBe(
-      "Description contains invalid characters",
-    );
+    expect(validateDesc(p, "1,1,1,1,1,1,1,1,1,1,1,1,zz")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, "1,1,1,1,1,1,1,1,1,1,1,")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, "1,1,1,1,1,1,1,1,1,1,1,1,1,")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, "1,1,1,1,1,1,1,1,1,1,1,1,Q")).toBe(descBadCharacter("Q"));
   });
 
   it("decodes hidden border numbers", () => {

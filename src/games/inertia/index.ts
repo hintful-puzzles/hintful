@@ -15,6 +15,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { completionStatus } from "../../engine/completion-status.ts";
 import {
   type Game,
   type SolveResult,
@@ -251,16 +252,9 @@ function interpretMove(
 // --- status bar ------------------------------------------------------
 
 function statusbarText(s: InertiaState, ui: InertiaUi): string {
-  let status: string;
-  if (s.dead) {
-    status = "DEAD!";
-  } else if (s.gems) {
-    status = `${s.cheated ? "Auto-solver used. " : ""}Gems: ${s.gems}`;
-  } else if (s.cheated) {
-    status = "Auto-solved.";
-  } else {
-    status = "COMPLETED!";
-  }
+  let status = s.dead
+    ? "DEAD!"
+    : completionStatus(s.gems === 0, s.cheated, s.gems ? `Gems: ${s.gems}` : "");
   if (ui.deaths) status += `   Deaths: ${ui.deaths}`;
   return status;
 }
@@ -328,8 +322,6 @@ export const inertiaGame: Game<
   solve(_orig: InertiaState, curr: InertiaState): SolveResult<InertiaMove> {
     const result = solveRoute(curr);
     if (!result.ok) return { ok: false, error: result.error };
-    if (result.route.length === 0)
-      return { ok: false, error: "Game is already solved" };
     return { ok: true, move: { type: "route", route: result.route } };
   },
 

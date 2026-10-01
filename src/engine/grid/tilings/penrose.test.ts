@@ -9,6 +9,13 @@
  */
 
 import { describe, expect, it } from "vitest";
+import {
+  DESC_CONTRADICTORY,
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../desc-error.ts";
 import { randomNew } from "../../random/index.ts";
 import { GridTrimmedAwayError } from "../grid-trim.ts";
 import { PENROSE_LETTERS, transition, transitionIn } from "./penrose.ts";
@@ -169,41 +176,36 @@ describe("penrose descriptions", () => {
         // the generic "expected digit" error would be survivable but
         // misleading.
         const legacy = "G3,4,5";
-        expect(penroseValidateDesc(which, 6, 6, legacy)).toMatch(/legacy/i);
-        expect(() => gridNewPenrose(which, 6, 6, legacy)).toThrow(/legacy/i);
+        expect(penroseValidateDesc(which, 6, 6, legacy)).toMatch(/old Penrose/);
+        expect(() => gridNewPenrose(which, 6, 6, legacy)).toThrow(/old Penrose/);
       });
     });
   }
 
   it("requires a description at all", () => {
-    expect(penroseValidateDesc("p2", 6, 6, null)).toBe(
-      "Missing grid description string.",
-    );
-    expect(penroseValidateDesc("p2", 6, 6, "")).toBe("empty grid description");
+    expect(penroseValidateDesc("p2", 6, 6, null)).toBe(DESC_MALFORMED);
+    expect(penroseValidateDesc("p2", 6, 6, "")).toBe(DESC_TOO_SHORT);
   });
 
   it("rejects a description too short to carry its own header", () => {
     // Upstream computes `strlen(desc) - 2` before checking the length, which
     // underflows `size_t` on a one-character desc. Checking the header first
-    // reaches the same message without the underflow.
-    expect(penroseValidateDesc("p2", 6, 6, "5")).toMatch(/second char/);
-    expect(penroseValidateDesc("p2", 6, 6, "A")).toMatch(/expected digit at start/);
-    expect(penroseValidateDesc("p2", 6, 6, "53")).toMatch(/second char/);
-    expect(penroseValidateDesc("p2", 6, 6, "50")).toBe(
-      "expected at least one coordinate",
-    );
+    // rejects it without the underflow.
+    expect(penroseValidateDesc("p2", 6, 6, "5")).toBe(DESC_TOO_SHORT);
+    expect(penroseValidateDesc("p2", 6, 6, "A")).toBe(descBadCharacter("A"));
+    expect(penroseValidateDesc("p2", 6, 6, "53")).toBe(DESC_OUT_OF_RANGE);
+    expect(penroseValidateDesc("p2", 6, 6, "5x")).toBe(descBadCharacter("x"));
+    expect(penroseValidateDesc("p2", 6, 6, "50")).toBe(DESC_TOO_SHORT);
   });
 
   it("rejects letters from the other tiling", () => {
-    expect(penroseValidateDesc("p2", 6, 6, "50CXY")).toMatch(/expected tile letter/);
-    expect(penroseValidateDesc("p3", 6, 6, "50ABU")).toMatch(/expected tile letter/);
+    expect(penroseValidateDesc("p2", 6, 6, "50CXY")).toBe(descBadCharacter("C"));
+    expect(penroseValidateDesc("p3", 6, 6, "50ABU")).toBe(descBadCharacter("A"));
   });
 
   it("rejects a pair of letters that cannot nest", () => {
     // A may sit inside A, B or V — never inside U.
-    expect(penroseValidateDesc("p2", 6, 6, "50AU")).toBe(
-      "invalid pair of consecutive coordinates",
-    );
+    expect(penroseValidateDesc("p2", 6, 6, "50AU")).toBe(DESC_CONTRADICTORY);
     expect(penroseValidateDesc("p2", 6, 6, "50AB")).toBeNull();
   });
 

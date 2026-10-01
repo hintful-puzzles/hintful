@@ -20,6 +20,13 @@
 
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import type { Point } from "../../engine/types.ts";
@@ -332,8 +339,8 @@ interface LoadResult {
 }
 
 /**
- * Decode `desc` into the given/clue arrays, or return the upstream failure
- * message. The exact inverse of {@link encodeDesc}, and a faithful port of
+ * Decode `desc` into the given/clue arrays, or return why it was rejected. The
+ * exact inverse of {@link encodeDesc}, and a faithful port of
  * `load_game` — including its two quirks: a run may push the position past the
  * end without complaint (the bound is only checked before the *next* character),
  * and a character in the clue part that is neither `a`..`z` nor `A`..`Z` is
@@ -342,7 +349,7 @@ interface LoadResult {
 export function loadGame(
   p: MathraxParams,
   desc: string,
-): { ok: true; value: LoadResult } | { ok: false; error: string } {
+): { ok: true; value: LoadResult } | { ok: false; error: DescError } {
   const o = p.o;
   const s = o * o;
   const co = o - 1;
@@ -357,54 +364,52 @@ export function loadGame(
   while (i < desc.length && desc[i] !== ",") {
     const c = desc[i++];
     let d = 0;
-    if (pos >= s) return { ok: false, error: "Grid description is too long." };
+    if (pos >= s) return { ok: false, error: DESC_TOO_LONG };
 
     const digit = digitValue(c);
     if (c >= "a" && c <= "z") pos += c.charCodeAt(0) - 97 + 1;
     // `0` is not a clue here: the grid holds `1..order`.
     else if (digit !== null && digit >= 1) d = digit;
-    else return { ok: false, error: "Grid description contains invalid characters." };
+    else return { ok: false, error: descBadCharacter(c) };
 
     if (d > 0 && d <= o) {
       flags[pos] |= F_IMMUTABLE;
       grid[pos] = d;
       pos++;
     } else if (d > o) {
-      return { ok: false, error: "Grid clue is out of range." };
+      return { ok: false, error: DESC_OUT_OF_RANGE };
     }
   }
 
-  if (pos > 0 && pos < s) return { ok: false, error: "Description is too short." };
+  if (pos > 0 && pos < s) return { ok: false, error: DESC_TOO_SHORT };
 
   if (desc[i] === ",") {
     i++;
     pos = 0;
     while (i < desc.length) {
-      if (pos >= cs) return { ok: false, error: "Clue description is too long." };
+      if (pos >= cs) return { ok: false, error: DESC_TOO_LONG };
       const c = desc[i++];
 
       if (c >= "a" && c <= "z") pos += c.charCodeAt(0) - 97 + 1;
       if (c >= "A" && c <= "Z") {
         const type = CLUE_LETTERS.indexOf(c);
-        if (type < 0) return { ok: false, error: "Invalid clue in description." };
+        if (type < 0) return { ok: false, error: descBadCharacter(c) };
         const r = parseLeadingInt(desc, i);
         i = r.next;
         const value = r.value;
-        if (value > 99)
-          return { ok: false, error: "Number is too high in clue description." };
+        if (value > 99) return { ok: false, error: DESC_OUT_OF_RANGE };
         clues[pos++] = type | setClueNum(value);
       }
       // Anything else is silently skipped, exactly as upstream.
     }
 
-    if (pos > 0 && pos < cs)
-      return { ok: false, error: "Clue description is too short." };
+    if (pos > 0 && pos < cs) return { ok: false, error: DESC_TOO_SHORT };
   }
 
   return { ok: true, value: { grid, flags, clues } };
 }
 
-export function validateDesc(p: MathraxParams, desc: string): string | null {
+export function validateDesc(p: MathraxParams, desc: string): DescError | null {
   const r = loadGame(p, desc);
   return r.ok ? null : r.error;
 }

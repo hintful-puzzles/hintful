@@ -16,6 +16,11 @@
  * it, because it cannot turn.
  */
 
+import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
+import {
+  NO_SOLUTION_FROM_HERE,
+  type SolveFailure,
+} from "../../engine/solve-failure.ts";
 import {
   BLANK,
   type Board,
@@ -28,8 +33,6 @@ import {
   STOP,
   WALL,
 } from "./state.ts";
-
-const UNSOLVABLE = "Unable to find a solution from this starting point";
 
 // --- what the ball can do --------------------------------------------
 
@@ -316,7 +319,9 @@ class MoveGraph {
 
 // --- the route solver -------------------------------------------------
 
-export type RouteResult = { ok: true; route: number[] } | { ok: false; error: string };
+export type RouteResult =
+  | { ok: true; route: number[] }
+  | { ok: false; error: SolveFailure };
 
 /**
  * A route from the ball's current position that collects every remaining gem,
@@ -344,7 +349,7 @@ export type RouteResult = { ok: true; route: number[] } | { ok: false; error: st
 export function solveRoute(state: InertiaState): RouteResult {
   const { board } = state;
   const gems = board.gemSquares();
-  if (gems.length === 0) return { ok: false, error: "Game is already solved" };
+  if (gems.length === 0) return { ok: false, error: ALREADY_SOLVED };
 
   const graph = new MoveGraph(board, state.px, state.py);
   let best: number[] | null = null;
@@ -366,7 +371,7 @@ export function solveRoute(state: InertiaState): RouteResult {
     if (!best || route.length < best.length) best = route;
   }
 
-  return best ? { ok: true, route: best } : { ok: false, error: UNSOLVABLE };
+  return best ? { ok: true, route: best } : { ok: false, error: NO_SOLUTION_FROM_HERE };
 }
 
 /**

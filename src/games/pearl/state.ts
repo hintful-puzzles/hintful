@@ -5,9 +5,15 @@
  * `clues` grid is shared frozen (upstream's ref-counted `shared_state`).
  */
 
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
+import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
@@ -139,8 +145,7 @@ export const { encodeParams, decodeParams } = paramsCodec(
 );
 
 export function validateParams(p: PearlParams, _full: boolean): string | null {
-  if (p.w > Math.floor(0x7fffffff / p.h))
-    return "Width times height must not be unreasonably large";
+  if (p.w > Math.floor(0x7fffffff / p.h)) return AREA_TOO_LARGE;
   if (p.difficulty >= DIFF_TRICKY && p.w + p.h < 11)
     return `Width or height must be at least six for ${DIFF_NAMES[DIFF_TRICKY]}`;
   return null;
@@ -165,16 +170,16 @@ export function encodeClues(clues: Uint8Array, sz: number): string {
   );
 }
 
-export function validateDesc(p: PearlParams, desc: string): string | null {
+export function validateDesc(p: PearlParams, desc: string): DescError | null {
   const total = p.w * p.h;
   let sizeSoFar = 0;
   for (const tok of scanRunLength(desc)) {
     if ("blanks" in tok) sizeSoFar += tok.blanks;
     else if (tok.value === "B" || tok.value === "W") sizeSoFar++;
-    else return "unrecognized character in string";
+    else return descBadCharacter(tok.value);
   }
-  if (sizeSoFar > total) return "string too long";
-  if (sizeSoFar < total) return "string too short";
+  if (sizeSoFar > total) return DESC_TOO_LONG;
+  if (sizeSoFar < total) return DESC_TOO_SHORT;
   return null;
 }
 

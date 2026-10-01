@@ -8,6 +8,7 @@
  * and the change id is a citation the gate can resolve.
  */
 import { describe, expect, it } from "vitest";
+import { DESC_TOO_LONG, DESC_TOO_SHORT } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/pointer.ts";
@@ -151,7 +152,8 @@ describe("mines desc", () => {
 
   it("rejects a wrong-length desc", () => {
     const p = decodeParams("9x9n10");
-    expect(validateDesc(p, "4,4,mtooshort")).toMatch(/wrong length/);
+    expect(validateDesc(p, "4,4,mtooshort")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, `4,4,m${"0".repeat(22)}`)).toBe(DESC_TOO_LONG);
   });
 });
 

@@ -2,6 +2,11 @@
 // paint semantics, solve bitmap), clue SOLVED/ERROR flagging, completion
 // counting, status / status bar, text format, and input mapping.
 import { describe, expect, it } from "vitest";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -139,8 +144,9 @@ describe("Mosaic desc codec", () => {
   });
 
   it("rejects malformed descs", () => {
-    expect(validateDesc(P3, "46469646!")).toBeTruthy(); // bad char
-    expect(validateDesc(P3, "4646")).toBeTruthy(); // too short
+    expect(validateDesc(P3, "46469646!")).toBe(descBadCharacter("!"));
+    expect(validateDesc(P3, "4646")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(P3, "4646964640")).toBe(DESC_TOO_LONG);
     expect(validateDesc(P3, ALL_BLACK_DESC)).toBeNull();
   });
 });
@@ -234,7 +240,7 @@ describe("Mosaic moves", () => {
       expect(solved.cells[i] & 3).toBe(STATE_MARKED);
       expect(solved.cells[i] & STATE_SOLVED).toBeTruthy();
     }
-    expect(statusbarText(solved, freshUi())).toBe("Auto solved");
+    expect(statusbarText(solved, freshUi())).toBe("Auto-solved.");
   });
 
   it("rejects a truncated solve bitmap", () => {

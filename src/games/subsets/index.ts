@@ -49,6 +49,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   ERASE_KEYS,
   interpretTargetVerbs,
@@ -463,7 +464,7 @@ function executeMove(state: SubsetsState, move: SubsetsMove): SubsetsState {
 
 function solve(orig: SubsetsState): SolveResult<SubsetsMove> {
   const { solved, result } = solveCopy(orig);
-  if (result === "invalid") return { ok: false, error: "Puzzle is invalid." };
+  if (result === "invalid") return { ok: false, error: NO_SOLUTION };
   // An unfinished solve still emits the partial deduction (upstream).
   return {
     ok: true,

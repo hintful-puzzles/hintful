@@ -6,6 +6,12 @@
  * `grid_validate_desc_spectres`, `grid_spectres_callback`, `grid_new_spectres`).
  */
 
+import {
+  DESC_MALFORMED,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../desc-error.ts";
 import { nTimesRootK } from "../../n-times-root-k.ts";
 import type { RandomState } from "../../random/index.ts";
 import { type Grid, makeConsistent } from "../grid-core.ts";
@@ -38,18 +44,17 @@ const ORIENTATION_CHARS = "0123456789AB";
  * The length is checked up front, where upstream's `strlen(desc) - 2`
  * underflows `size_t` on a one-character desc and reads off the end of the
  * string. A two-character desc still *parses* (with zero coordinates) and is
- * rejected a step later by the range check, with upstream's own message.
+ * rejected a step later by the range check.
  */
-function descToParams(desc: string): SpectrePatchParams | string {
-  if (desc.length === 0) return "empty grid description";
-  if (desc.length < 2) return "grid description too short";
+function descToParams(desc: string): SpectrePatchParams | DescError {
+  if (desc.length < 2) return DESC_TOO_SHORT;
 
   const orientation = ORIENTATION_CHARS.indexOf(desc[0]);
-  if (orientation < 0) return "expected digit or A,B at start of grid description";
+  if (orientation < 0) return descBadCharacter(desc[0]);
 
   const coords: number[] = [];
   for (const c of desc.slice(1, -1)) {
-    if (c < "0" || c > "9") return "expected digit in grid description";
+    if (c < "0" || c > "9") return descBadCharacter(c);
     coords.push(Number(c));
   }
 
@@ -91,14 +96,14 @@ export function spectresValidateDesc(
   _width: number,
   _height: number,
   desc: string | null,
-): string | null {
-  if (desc === null) return "Missing grid description string.";
+): DescError | null {
+  if (desc === null) return DESC_MALFORMED;
 
   const parsed = descToParams(desc);
   if (typeof parsed === "string") return parsed;
   // Check the letter before `spectreParamsInvalid` walks the hierarchy with it,
   // rather than relying on that function happening to check it first.
-  if (!spectreValidHexLetter(parsed.finalHex)) return "invalid final hexagon type";
+  if (!spectreValidHexLetter(parsed.finalHex)) return descBadCharacter(parsed.finalHex);
   return spectreParamsInvalid(parsed);
 }
 

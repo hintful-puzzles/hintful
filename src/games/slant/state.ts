@@ -12,11 +12,18 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import { digitValue } from "../../engine/decimal.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { findLoops } from "../../engine/findloop.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
+import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
@@ -139,7 +146,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 export function validateParams(p: SlantParams, _full: boolean): string | null {
   if (p.w > Number.MAX_SAFE_INTEGER / p.h) {
-    return "Width times height must not be unreasonably large";
+    return AREA_TOO_LARGE;
   }
   return null;
 }
@@ -149,7 +156,7 @@ export function validateParams(p: SlantParams, _full: boolean): string | null {
 // clue, a letter a–z skips a run of 1–26 clueless vertices (chunks of 'z'
 // for longer runs).
 
-export function validateDesc(p: SlantParams, desc: string): string | null {
+export function validateDesc(p: SlantParams, desc: string): DescError | null {
   const area = (p.w + 1) * (p.h + 1);
   let squares = 0;
   for (const tok of scanRunLength(desc)) {
@@ -159,11 +166,12 @@ export function validateDesc(p: SlantParams, desc: string): string | null {
     }
     // A clue is how many of the four cells around a vertex hold a line.
     const clue = digitValue(tok.value);
-    if (clue === null || clue > 4) return "Invalid character in game description";
+    if (clue === null) return descBadCharacter(tok.value);
+    if (clue > 4) return DESC_OUT_OF_RANGE;
     squares++;
   }
-  if (squares < area) return "Not enough data to fill grid";
-  if (squares > area) return "Too much data to fit in grid";
+  if (squares < area) return DESC_TOO_SHORT;
+  if (squares > area) return DESC_TOO_LONG;
   return null;
 }
 

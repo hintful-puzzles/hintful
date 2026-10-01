@@ -2,6 +2,7 @@ import { computed, type Signal, signal } from "@lit-labs/signals";
 import * as Sentry from "@sentry/browser";
 import { proxy, releaseProxy, transfer, wrap } from "comlink";
 import { assertNever } from "../engine/assert-never.ts";
+import { ALREADY_SOLVED } from "../engine/hint-refusal.ts";
 import type {
   ChangeNotification,
   Color,
@@ -642,7 +643,7 @@ export class Puzzle {
     // pausing should show, not resume applying.
     this.disarmHintApply();
     if (this.isSolved) {
-      this.setHelpMessage("Already solved!", true);
+      this.setHelpMessage(ALREADY_SOLVED, true);
       return;
     }
     this.setHelpMessage("");

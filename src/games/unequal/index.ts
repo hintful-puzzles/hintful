@@ -73,6 +73,7 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
+import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newUnequalDesc } from "./generator.ts";
 import { say, unequalVocab } from "./hint-text.ts";
@@ -347,10 +348,8 @@ function solve(
   }
   const soln = Uint8Array.from(orig.immutable);
   const ret = solveUnequal(o, orig.mode, orig.clueFlags, soln, DIFF_RECURSIVE);
-  if (ret === DIFF_IMPOSSIBLE)
-    return { ok: false, error: "No solution exists for this puzzle" };
-  if (ret === DIFF_AMBIGUOUS)
-    return { ok: false, error: "Multiple solutions exist for this puzzle" };
+  if (ret === DIFF_IMPOSSIBLE) return { ok: false, error: NO_SOLUTION };
+  if (ret === DIFF_AMBIGUOUS) return { ok: false, error: MULTIPLE_SOLUTIONS };
   return { ok: true, move: { type: "solve", grid: Array.from(soln) } };
 }
 

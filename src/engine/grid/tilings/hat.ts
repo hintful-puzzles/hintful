@@ -27,6 +27,12 @@
  * Both tables are generated data — see `hat-tables.ts`.
  */
 
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../desc-error.ts";
 import { type RandomState, randomUpto } from "../../random/index.ts";
 import { MAX_REGENERATE, retryLimit } from "../../retry-limit.ts";
 import {
@@ -839,25 +845,21 @@ export function hatTilingRandomize(
 }
 
 /** Validate patch params. Returns an error message, or null if acceptable. */
-export function hatTilingParamsInvalid(hp: HatPatchParams): string | null {
+export function hatTilingParamsInvalid(hp: HatPatchParams): DescError | null {
   const { coords } = hp;
-  if (coords.length < 3) return "Grid parameters require at least three coordinates";
+  if (coords.length < 3) return DESC_TOO_SHORT;
   if (metatileCharToType(hp.finalMetatile) < 0) {
-    return "Grid parameters contain an invalid final metatile";
+    return descBadCharacter(hp.finalMetatile);
   }
-  if (coords[0] >= HAT_KITES) return "Grid parameters contain an invalid kite index";
+  if (coords[0] >= HAT_KITES) return DESC_OUT_OF_RANGE;
 
   let metatile = metatileCharToType(hp.finalMetatile);
   for (let i = coords.length - 1; i > 1; i--) {
-    if (coords[i] >= nchildren[metatile]) {
-      return "Grid parameters contain an invalid metatile index";
-    }
+    if (coords[i] >= nchildren[metatile]) return DESC_OUT_OF_RANGE;
     metatile = children[metatile][coords[i]];
   }
 
-  if (coords[1] >= hatsInMetatile[metatile]) {
-    return "Grid parameters contain an invalid hat index";
-  }
+  if (coords[1] >= hatsInMetatile[metatile]) return DESC_OUT_OF_RANGE;
   return null;
 }
 

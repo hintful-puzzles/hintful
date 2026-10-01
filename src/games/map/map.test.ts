@@ -6,6 +6,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { DESC_TOO_LONG, descBadCharacter } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
@@ -174,11 +175,11 @@ describe("map desc validation", () => {
   });
 
   it("rejects a desc with the wrong clue count", () => {
-    expect(validateDesc(p, `${desc}0`)).not.toBeNull();
+    expect(validateDesc(p, `${desc}0`)).toBe(DESC_TOO_LONG);
   });
 
   it("rejects an unexpected character", () => {
-    expect(validateDesc(p, desc.replace(",", ",!"))).not.toBeNull();
+    expect(validateDesc(p, desc.replace(",", ",!"))).toBe(descBadCharacter("!"));
   });
 });
 

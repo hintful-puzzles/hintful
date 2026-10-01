@@ -44,6 +44,12 @@
  * Each is explained where it lives.
  */
 
+import {
+  DESC_CONTRADICTORY,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../desc-error.ts";
 import { type RandomState, randomNew, randomUpto } from "../../random/index.ts";
 
 // ---------------------------------------------------------------------------
@@ -932,14 +938,16 @@ export function penroseTilingGenerate(
 export function penroseTilingParamsInvalid(
   params: PenrosePatchParams,
   which: PenroseWhich,
-): string | null {
-  if (params.coords.length === 0) return "expected at least one coordinate";
+): DescError | null {
+  if (params.coords.length === 0) return DESC_TOO_SHORT;
 
   for (let i = 0; i < params.coords.length; i++) {
     const c = params.coords[i];
-    if (!penroseValidLetter(c, which)) return "invalid coordinate letter";
+    if (!penroseValidLetter(c, which)) return descBadCharacter(c);
+    // Each letter names a tile inside the one after it; a pair that cannot nest
+    // is two readable coordinates that disagree.
     if (i > 0 && !penroseValidParent(c, params.coords[i - 1])) {
-      return "invalid pair of consecutive coordinates";
+      return DESC_CONTRADICTORY;
     }
   }
   return null;

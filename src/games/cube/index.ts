@@ -11,6 +11,7 @@
  */
 
 import { rejectMove } from "../../engine/assert-never.ts";
+import { completionStatus } from "../../engine/completion-status.ts";
 import type { Game, UiUpdate } from "../../engine/game.ts";
 import { numberItem } from "../../engine/params.ts";
 import {
@@ -294,9 +295,8 @@ function directionFromClick(
 // --- status bar -------------------------------------------------------
 
 function statusbarText(state: CubeState): string {
-  const prefix = state.completed ? "COMPLETED! " : "";
   const moves = state.completed || state.movecount;
-  return `${prefix}Moves: ${moves}`;
+  return completionStatus(state.completed > 0, false, `Moves: ${moves}`);
 }
 
 function status(state: CubeState): GameStatus {

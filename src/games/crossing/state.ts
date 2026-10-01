@@ -16,6 +16,14 @@
  */
 
 import { digitValue, isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_REPEATED,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, flag, paramsCodec } from "../../engine/params-codec.ts";
@@ -292,11 +300,14 @@ export function nextInRun(
  */
 export const MAX_NUMBER_LENGTH = 9;
 
-/** The verdicts upstream's `crossing_read_desc` can return. */
+/** What {@link readDesc} found wrong with a desc, if anything. Upstream's
+ * `crossing_read_desc` folds the first three into two, reporting a character
+ * it cannot read as "too long". */
 export type DescVerdict =
   | "valid"
-  | "invalid-wall"
+  | "too-short"
   | "too-long"
+  | "bad-character"
   | "duplicate"
   | "number";
 
@@ -337,7 +348,9 @@ export function readDesc(
         wallRun = c.charCodeAt(0) - 96; // 'a' = 1 … 'z' = 26
         at++;
       } else {
-        verdict = "invalid-wall";
+        // The wall section ran out before the board did, if the cursor sits
+        // on the ','; anything else is judged below.
+        verdict = "too-short";
       }
     }
     if (wallRun > 0) {
@@ -348,9 +361,19 @@ export function readDesc(
     }
   }
 
-  // More cell data than the board holds (this also swallows the unparseable
-  // character above, which leaves the cursor parked).
-  if (desc[at] !== ",") return { walls, numbers: [], verdict: "too-long" };
+  // The cursor stops short of the ',' on more cell data than the board holds,
+  // on a character no run starts with, or at the end of a desc with no
+  // number section.
+  if (desc[at] !== ",") {
+    const c = desc[at];
+    const stop: DescVerdict =
+      c === undefined
+        ? "too-short"
+        : isDigit(c) || (c >= "a" && c <= "z")
+          ? "too-long"
+          : "bad-character";
+    return { walls, numbers: [], verdict: stop };
+  }
   at++;
 
   const numbers: CrossingNumber[] = [];
@@ -380,16 +403,19 @@ export function readDesc(
   return { walls, numbers, verdict };
 }
 
-export function validateDesc(p: CrossingParams, desc: string): string | null {
+export function validateDesc(p: CrossingParams, desc: string): DescError | null {
   switch (readDesc(p, desc).verdict) {
-    case "invalid-wall":
-      return "Block description contains invalid character";
+    case "too-short":
+      return DESC_TOO_SHORT;
     case "too-long":
-      return "Block description is too long";
+      return DESC_TOO_LONG;
+    case "bad-character":
+      // Every character before the one the cursor stopped on started a run.
+      return descBadCharacter(/[^0-9a-z]/.exec(desc)?.[0]);
     case "duplicate":
-      return "Duplicate numbers are not supported";
+      return DESC_REPEATED;
     case "number":
-      return "One of the numbers is too long";
+      return DESC_OUT_OF_RANGE;
     default:
       return null;
   }

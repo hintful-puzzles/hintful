@@ -23,6 +23,7 @@
  *    is an error.
  */
 
+import { DESC_MALFORMED, type DescError } from "../desc-error.ts";
 import type { RandomState } from "../random/index.ts";
 import type { GridType } from "./grid-tilings.ts";
 import { hatsNewDesc, hatsValidateDesc } from "./tilings/hat-grid.ts";
@@ -67,7 +68,7 @@ export function gridValidateDesc(
   width: number,
   height: number,
   desc: string | null,
-): string | null {
+): DescError | null {
   switch (type) {
     case "triangular":
       return gridValidateDescTriangular(desc);
@@ -80,10 +81,7 @@ export function gridValidateDesc(
     case "spectres":
       return spectresValidateDesc(width, height, desc);
     default:
-      if (desc !== null) {
-        return "Grid description strings not used with this grid type";
-      }
-      return null;
+      return desc !== null ? DESC_MALFORMED : null;
   }
 }
 
@@ -94,9 +92,9 @@ export function gridValidateDesc(
  * which trims them). Anything else is rejected. Mirrors
  * `grid_validate_desc_triangular`.
  */
-function gridValidateDescTriangular(desc: string | null): string | null {
+function gridValidateDescTriangular(desc: string | null): DescError | null {
   if (desc === null || desc === "0") return null;
-  return "Unrecognized grid description.";
+  return DESC_MALFORMED;
 }
 
 /**

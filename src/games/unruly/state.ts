@@ -6,9 +6,15 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { difficultyItem } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
+import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import type { GameStatus } from "../../engine/types.ts";
@@ -137,7 +143,7 @@ const A177790 = [
 export function validateParams(p: UnrulyParams, _full: boolean): string | null {
   if (p.w2 & 1 || p.h2 & 1) return "Width and height must both be even";
   if (p.w2 > Number.MAX_SAFE_INTEGER / p.h2) {
-    return "Width times height must not be unreasonably large";
+    return AREA_TOO_LARGE;
   }
   if (p.unique) {
     if (p.w2 < 2 * A177790.length && p.h2 > A177790[p.w2 / 2]) {
@@ -155,17 +161,17 @@ export function validateParams(p: UnrulyParams, _full: boolean): string | null {
 // ZERO clue, uppercase the same placing a ONE, `z`/`Z` advance 25 with no
 // clue. The advanced positions sum to exactly `w2·h2 + 1`.
 
-export function validateDesc(p: UnrulyParams, desc: string): string | null {
+export function validateDesc(p: UnrulyParams, desc: string): DescError | null {
   const s = p.w2 * p.h2;
   let pos = 0;
   for (const ch of desc) {
     if (ch >= "a" && ch < "z") pos += 1 + (ch.charCodeAt(0) - 97);
     else if (ch >= "A" && ch < "Z") pos += 1 + (ch.charCodeAt(0) - 65);
     else if (ch === "z" || ch === "Z") pos += 25;
-    else return "Description contains invalid characters";
+    else return descBadCharacter(ch);
   }
-  if (pos < s + 1) return "Description too short";
-  if (pos > s + 1) return "Description too long";
+  if (pos < s + 1) return DESC_TOO_SHORT;
+  if (pos > s + 1) return DESC_TOO_LONG;
   return null;
 }
 

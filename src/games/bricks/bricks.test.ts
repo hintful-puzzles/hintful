@@ -4,6 +4,11 @@
  * completion/solve through a real `Midend`, findMistakes, and the render frames.
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+} from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { presetMenu } from "../../engine/param-label.ts";
@@ -128,9 +133,9 @@ describe("bricks desc codec", () => {
   });
 
   it("rejects a clue out of range and a wrong cell count", () => {
-    expect(validateDesc(FIX_PARAMS, "8a")).toMatch(/out of range/i);
-    expect(validateDesc(FIX_PARAMS, "a")).toMatch(/Not enough/i);
-    expect(validateDesc({ w: 2, h: 2, diff: 0 }, "zzzz")).toMatch(/Too many/i);
+    expect(validateDesc(FIX_PARAMS, "8a")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(FIX_PARAMS, "a")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc({ w: 2, h: 2, diff: 0 }, "zzzz")).toBe(DESC_TOO_LONG);
   });
 });
 

@@ -45,6 +45,6 @@ describe("Same Game midend lifecycle", () => {
     h.m.processInput(at(0, 0).x, at(0, 0).y, LEFT_BUTTON); // select the pair
     h.m.processInput(at(0, 0).x, at(0, 0).y, LEFT_BUTTON); // remove → empty board
     expect(h.status()).toBe("solved");
-    expect(h.statusBar()).toContain("COMPLETE!");
+    expect(h.statusBar()).toContain("COMPLETED!");
   });
 });

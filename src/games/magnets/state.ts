@@ -15,6 +15,14 @@ import {
   DESC_ALPHABET_SIZE,
   n2c as descChar,
 } from "../../engine/desc-alphabet.ts";
+import {
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+  puzzleDescError,
+} from "../../engine/desc-error.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
@@ -192,31 +200,29 @@ export function validateParams(p: MagnetsParams, _full: boolean): string | null 
 // rows each ended by a comma, then w·h domino chars L/R/T/B/*).
 
 /** Parse one count row of `n` chars into `array[i·3 + off]`. Returns the next
- * read index, or a problem string. */
+ * read index, or why the desc was rejected. */
 function readRow(
   desc: string,
   pos: number,
   n: number,
   array: Int32Array,
   off: number,
-): { pos: number } | { error: string } {
+): { pos: number } | { error: DescError } {
   for (let i = 0; i < n; i++) {
     const c = desc[pos++];
-    if (c === undefined) return { error: "Game description too short" };
+    if (c === undefined) return { error: DESC_TOO_SHORT };
     let num: number;
     if (c === ".") num = -1;
     else {
       const value = c2n(c);
-      if (value === null) {
-        return { error: "Game description contained unexpected characters" };
-      }
+      if (value === null) return { error: descBadCharacter(c) };
       num = value;
     }
     array[i * 3 + off] = num;
   }
-  if (desc[pos++] !== ",") {
-    return { error: "Game description contained unexpected characters" };
-  }
+  const sep = desc[pos++];
+  if (sep === undefined) return { error: DESC_TOO_SHORT };
+  if (sep !== ",") return { error: DESC_MALFORMED };
   return { pos };
 }
 
@@ -229,8 +235,8 @@ interface Parsed {
 }
 
 /** Parse a desc into the frozen layout + counts and a fresh grid/flags (with
- * singletons pre-set neutral). Returns a problem string on failure. */
-function parseDesc(p: MagnetsParams, desc: string): Parsed | { error: string } {
+ * singletons pre-set neutral). Returns why the desc was rejected on failure. */
+function parseDesc(p: MagnetsParams, desc: string): Parsed | { error: DescError } {
   const { w, h } = p;
   const wh = w * h;
   const colcount = new Int32Array(w * 3);
@@ -252,15 +258,15 @@ function parseDesc(p: MagnetsParams, desc: string): Parsed | { error: string } {
   }
 
   // Derive neutral counts (== length − pos − neg); a −1 pos/neg ⇒ unknown (−1).
-  for (const [n, counts, length, name] of [
-    [w, colcount, h, "Column"],
-    [h, rowcount, w, "Row"],
+  for (const [n, counts, length] of [
+    [w, colcount, h],
+    [h, rowcount, w],
   ] as const) {
     for (let i = 0; i < n; i++) {
       const pos = counts[i * 3 + POSITIVE];
       const neg = counts[i * 3 + NEGATIVE];
       if (pos >= 0 && neg >= 0 && pos + neg > length) {
-        return { error: `${name} counts inconsistent` };
+        return { error: DESC_OUT_OF_RANGE };
       }
       counts[i * 3 + NEUTRAL] = pos < 0 || neg < 0 ? -1 : length - pos - neg;
     }
@@ -276,12 +282,7 @@ function parseDesc(p: MagnetsParams, desc: string): Parsed | { error: string } {
     else if (c === "B") dominoes[idx] = idx - w;
     else if (c === "*") dominoes[idx] = idx;
     else {
-      return {
-        error:
-          c === undefined
-            ? "Game description too short"
-            : "Game description contained unexpected characters",
-      };
+      return { error: c === undefined ? DESC_TOO_SHORT : descBadCharacter(c) };
     }
   }
 
@@ -294,7 +295,11 @@ function parseDesc(p: MagnetsParams, desc: string): Parsed | { error: string } {
       (other % w !== idx % w && Math.floor(other / w) !== Math.floor(idx / w)) ||
       dominoes[other] !== idx
     ) {
-      return { error: "Domino descriptions inconsistent" };
+      return {
+        error: puzzleDescError(
+          "This game ID has a domino whose two halves don't point at each other.",
+        ),
+      };
     }
     if (other === idx) {
       grid[idx] = NEUTRAL;
@@ -305,7 +310,7 @@ function parseDesc(p: MagnetsParams, desc: string): Parsed | { error: string } {
   return { dominoes, rowcount, colcount, grid, flags };
 }
 
-export function validateDesc(p: MagnetsParams, desc: string): string | null {
+export function validateDesc(p: MagnetsParams, desc: string): DescError | null {
   const r = parseDesc(p, desc);
   return "error" in r ? r.error : null;
 }

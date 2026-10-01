@@ -4,6 +4,12 @@
  * slant-differential.test.ts).
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -130,9 +136,10 @@ describe("slant desc codec", () => {
   });
 
   it("rejects malformed descs", () => {
-    expect(validateDesc(P22, "5h")).not.toBeNull(); // bad clue digit
-    expect(validateDesc(P22, "h")).not.toBeNull(); // too short (8 < 9)
-    expect(validateDesc(P22, "j")).not.toBeNull(); // too long (10 > 9)
+    expect(validateDesc(P22, "5h")).toBe(DESC_OUT_OF_RANGE); // no vertex touches 5 cells
+    expect(validateDesc(P22, "!h")).toBe(descBadCharacter("!"));
+    expect(validateDesc(P22, "h")).toBe(DESC_TOO_SHORT); // 8 < 9
+    expect(validateDesc(P22, "j")).toBe(DESC_TOO_LONG); // 10 > 9
     expect(validateDesc(P22, "i")).toBeNull(); // exactly 9 clueless vertices
   });
 

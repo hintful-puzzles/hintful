@@ -9,6 +9,14 @@
  */
 
 import { digitValue } from "../../engine/decimal.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+  puzzleDescError,
+} from "../../engine/desc-error.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
@@ -55,7 +63,7 @@ function edgeCells(w: number, h: number, i: number): [number, number] {
 interface ParsedEdges {
   map: Int32Array;
   next: number;
-  error: string | null;
+  error: DescError | null;
 }
 
 /**
@@ -87,7 +95,7 @@ function parseEdgeList(
   while (p < desc.length && desc[p] !== ",") {
     const ch = desc[p];
     if (ch < "a" || ch > "z") {
-      return { map, next: p, error: "Unexpected character in edge list" };
+      return { map, next: p, error: descBadCharacter(ch) };
     }
     let k = ch === "z" ? 25 : ch.charCodeAt(0) - 97 + 1;
     while (k-- > 0) {
@@ -95,7 +103,7 @@ function parseEdgeList(
         pos++;
         continue;
       }
-      if (pos >= nedges) return { map, next: p, error: "Too much data in edge list" };
+      if (pos >= nedges) return { map, next: p, error: DESC_TOO_LONG };
       if (!state) {
         const [a, b] = edgeCells(w, h, pos);
         dsf.merge(a, b);
@@ -106,7 +114,7 @@ function parseEdgeList(
     p++;
   }
 
-  if (pos < nedges) return { map, next: p, error: "Too little data in edge list" };
+  if (pos < nedges) return { map, next: p, error: DESC_TOO_SHORT };
 
   // Number the regions.
   let np = 0;
@@ -116,20 +124,24 @@ function parseEdgeList(
     map[i] = map[canon];
   }
   if (np !== n) {
-    return { map, next: p, error: "Edge list defines the wrong number of regions" };
+    const error = puzzleDescError(
+      "This game ID's borders divide the map into a different number of regions than it asks for.",
+    );
+    return { map, next: p, error };
   }
 
   return { map, next: p, error: null };
 }
 
 /** Upstream `validate_desc`. */
-export function validateDesc(params: MapParams, desc: string): string | null {
+export function validateDesc(params: MapParams, desc: string): DescError | null {
   const { w, h, n } = params;
   const parsed = parseEdgeList(w, h, n, desc, 0);
   if (parsed.error) return parsed.error;
 
   let p = parsed.next;
-  if (desc[p] !== ",") return "Expected comma before clue list";
+  // The edge list stops only at a comma or the end of the desc.
+  if (desc[p] !== ",") return DESC_TOO_SHORT;
   p++;
 
   let area = 0;
@@ -140,11 +152,12 @@ export function validateDesc(params: MapParams, desc: string): string | null {
     }
     // A clue is one of the four map colors.
     const color = digitValue(tok.value);
-    if (color === null || color > 3) return "Unexpected character in clue list";
+    if (color === null) return descBadCharacter(tok.value);
+    if (color > 3) return DESC_OUT_OF_RANGE;
     area++;
   }
-  if (area < n) return "Too little data in clue list";
-  if (area > n) return "Too much data in clue list";
+  if (area < n) return DESC_TOO_SHORT;
+  if (area > n) return DESC_TOO_LONG;
   return null;
 }
 

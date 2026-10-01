@@ -29,6 +29,7 @@ import type {
 } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
+import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
 import { numberItem, parseConfigInt } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -46,6 +47,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { Point } from "../../engine/types.ts";
 import { newSlideDesc } from "./generator.ts";
 import { computeReachable, executeMove, nearestReachable } from "./moves.ts";
@@ -285,11 +287,11 @@ function moveSlideCursor(
  * rule 3). We solve `curr`.
  */
 function solve(_orig: SlideState, curr: SlideState): SolveResult<SlideMove> {
-  // Upstream's `nmoves == 0` guard never fires: `solve_board` tests the goal
-  // only on boards it generates, never on the one it starts from, so it is
-  // tested here instead.
+  // A typed desc can start with the main piece already home, which the status
+  // does not call solved; `solve_board` tests the goal only on boards it
+  // generates, so it would report no path rather than no need for one.
   if (curr.board[curr.ty * curr.w + curr.tx] === MAINANCHOR)
-    return { ok: false, error: "Puzzle is already solved" };
+    return { ok: false, error: ALREADY_SOLVED };
 
   const { path } = solveBoard(
     curr.w,
@@ -301,7 +303,9 @@ function solve(_orig: SlideState, curr: SlideState): SolveResult<SlideMove> {
     -1,
     true,
   );
-  if (!path) return { ok: false, error: "Unable to find a solution to this puzzle" };
+  // The search is exhaustive and every slide can be undone, so no path from
+  // here means none from the start either.
+  if (!path) return { ok: false, error: NO_SOLUTION };
   return { ok: true, move: { kind: "solve", moves: path } };
 }
 

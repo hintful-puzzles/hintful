@@ -344,8 +344,7 @@ function solve(
   }
 
   const { result, pairs } = solveNumbers(params, numbers, DIFFCOUNT);
-  if (result !== 1)
-    return { ok: false, error: "Unable to find a unique solution for this puzzle" };
+  if (result !== 1) return { ok: false, error: PUZZLE_NOT_REASONABLE };
   return { ok: true, move: { type: "solve", dominoes: pairs } };
 }
 

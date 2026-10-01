@@ -28,7 +28,17 @@
  * `solver.ts` feasible, and what the generator's block-merge phase rewrites.
  */
 
+import { completionStatus } from "../../engine/completion-status.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+  descNeedsOne,
+} from "../../engine/desc-error.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import { parseDimensions } from "../../engine/params.ts";
@@ -359,7 +369,7 @@ function scanTargetCoords(s: string): number[] {
 }
 
 /** Upstream `validate_desc`. */
-export function validateDesc(p: SlideParams, desc: string): string | null {
+export function validateDesc(p: SlideParams, desc: string): DescError | null {
   const wh = p.w * p.h;
   // Whether each square is the latest square so far of its block — the only
   // square a later `d` may link back to.
@@ -369,31 +379,29 @@ export function validateDesc(p: SlideParams, desc: string): string | null {
   let k = 0;
 
   while (k < desc.length && desc[k] !== ",") {
-    if (i >= wh) return "Too much data in game description";
+    if (i >= wh) return DESC_TOO_LONG;
     if (desc[k] === "f" || desc[k] === "F") {
       k++;
-      if (k >= desc.length)
-        return "Expected another character after 'f' in game description";
+      if (k >= desc.length) return DESC_MALFORMED;
     }
 
     if (desc[k] === "d" || desc[k] === "D") {
       k++;
-      if (k >= desc.length || !isDigit(desc[k]))
-        return "Expected a number after 'd' in game description";
+      if (k >= desc.length || !isDigit(desc[k])) return DESC_MALFORMED;
       const { value: dist, next } = parseLeadingInt(desc, k);
       k = next;
 
-      if (dist <= 0 || dist > i)
-        return "Out-of-range number after 'd' in game description";
-      if (!active[i - dist]) return "Invalid back-reference in game description";
+      if (dist <= 0 || dist > i) return DESC_OUT_OF_RANGE;
+      if (!active[i - dist]) return DESC_MALFORMED;
 
       active[i - dist] = 0;
       active[i] = 1;
       i++;
     } else {
-      const cell = CELL_OF_LETTER[desc[k].toLowerCase()];
+      const ch = desc[k];
+      const cell = CELL_OF_LETTER[ch.toLowerCase()];
       k++;
-      if (cell === undefined) return "Invalid character in game description";
+      if (cell === undefined) return descBadCharacter(ch);
 
       let count = 1;
       if (k < desc.length && isDigit(desc[k])) {
@@ -401,22 +409,19 @@ export function validateDesc(p: SlideParams, desc: string): string | null {
         count = parsed.value;
         k = parsed.next;
       }
-      if (i + count > wh) return "Too much data in game description";
+      if (i + count > wh) return DESC_TOO_LONG;
       active.fill(isAnchor(cell) ? 1 : 0, i, i + count);
       if (cell === MAINANCHOR) mains += count;
       i += count;
     }
   }
 
-  if (mains !== 1)
-    return mains === 0
-      ? "No main piece specified in game description"
-      : "More than one main piece specified in game description";
-  if (i < wh) return "Not enough data in game description";
+  if (mains !== 1) return descNeedsOne("main piece", mains);
+  if (i < wh) return DESC_TOO_SHORT;
 
   // minmoves is optional.
   if (scanTargetCoords(desc.slice(k)).length < 2)
-    return "No target coordinates specified";
+    return k === desc.length ? DESC_TOO_SHORT : DESC_MALFORMED;
 
   return null;
 }
@@ -574,15 +579,7 @@ export function textFormat(s: SlideState): string {
 
 /** Upstream's status-bar line (`game_redraw`'s tail). */
 export function statusbarText(s: SlideState): string {
-  const prefix =
-    s.completed >= 0
-      ? s.cheated
-        ? "Auto-solved. "
-        : "COMPLETED! "
-      : s.cheated
-        ? "Auto-solver used. "
-        : "";
   const moves = s.completed >= 0 ? s.completed : s.movecount;
   const min = s.minmoves >= 0 ? ` (min ${s.minmoves})` : "";
-  return `${prefix}Moves: ${moves}${min}`;
+  return completionStatus(s.completed >= 0, s.cheated, `Moves: ${moves}${min}`);
 }

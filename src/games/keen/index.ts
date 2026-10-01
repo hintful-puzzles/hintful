@@ -66,6 +66,7 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
+import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { KeyLabel, Point } from "../../engine/types.ts";
 import { newKeenDesc } from "./generator.ts";
 import { say } from "./hint-text.ts";
@@ -275,17 +276,15 @@ function solve(orig: KeenState, _curr: KeenState, aux?: string): SolveResult<Kee
       // `aux` is written by `newDesc` in this process and never read from a
       // save, so a non-digit here is a broken encoder rather than a bad input.
       const digit = digitValue(aux[i + 1]);
-      if (digit === null) return { ok: false, error: "invalid char in aux" };
+      if (digit === null) throw new Error(`keen: aux has ${aux[i + 1]} at ${i + 1}`);
       grid[i] = digit;
     }
     return { ok: true, move: { type: "solve", grid } };
   }
   const soln = new Uint8Array(w * w);
   const ret = solveKeen(w, orig.clues, soln, DIFF_UNREASONABLE);
-  if (ret === DIFF_IMPOSSIBLE)
-    return { ok: false, error: "No solution exists for this puzzle" };
-  if (ret === DIFF_AMBIGUOUS)
-    return { ok: false, error: "Multiple solutions exist for this puzzle" };
+  if (ret === DIFF_IMPOSSIBLE) return { ok: false, error: NO_SOLUTION };
+  if (ret === DIFF_AMBIGUOUS) return { ok: false, error: MULTIPLE_SOLUTIONS };
   return { ok: true, move: { type: "solve", grid: Array.from(soln) } };
 }
 

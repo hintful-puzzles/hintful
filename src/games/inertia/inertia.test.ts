@@ -5,7 +5,13 @@
  * tally) plus tier 2.5 render scenarios (docs/games/testing.md § "The test tiers").
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
@@ -102,12 +108,17 @@ describe("inertia params and desc codec", () => {
   it("rejects malformed descs", () => {
     const p = { w: 3, h: 2 };
     expect(validateDesc(p, "sSgbbb")).toBeNull();
-    expect(validateDesc(p, "sSgbb")).not.toBeNull(); // too short
-    expect(validateDesc(p, "sSgbbbb")).not.toBeNull(); // too long
-    expect(validateDesc(p, "sSgbbz")).not.toBeNull(); // bad character
-    expect(validateDesc(p, "ssgbbb")).not.toBeNull(); // no start
-    expect(validateDesc(p, "sSSbbb")).not.toBeNull(); // two starts
-    expect(validateDesc(p, "sSbbbb")).not.toBeNull(); // no gems
+    expect(validateDesc(p, "sSgbb")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, "sSgbbbb")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, "sSgbbz")).toBe(descBadCharacter("z"));
+    // The three rules of the puzzle itself: one start, at least one gem.
+    const noStart = validateDesc(p, "ssgbbb");
+    const twoStarts = validateDesc(p, "sSSbbb");
+    const noGems = validateDesc(p, "sSbbbb");
+    expect(new Set([noStart, twoStarts, noGems]).size).toBe(3);
+    for (const e of [noStart, twoStarts, noGems]) {
+      expect(e).toMatch(/^This game ID .*\.$/);
+    }
   });
 
   it("puts the ball on the start square, and treats that square as a stop", () => {
@@ -568,7 +579,7 @@ describe("inertia route aid", () => {
     expect(done.gems).toBe(0);
     expect(inertiaGame.solve?.(done, done)).toEqual({
       ok: false,
-      error: "Game is already solved",
+      error: ALREADY_SOLVED,
     });
   });
 });

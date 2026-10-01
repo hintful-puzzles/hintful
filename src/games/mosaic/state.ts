@@ -5,7 +5,14 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { completionStatus } from "../../engine/completion-status.ts";
 import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import { parseDimensions } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -146,14 +153,15 @@ export function encodeBoard(board: MosaicBoard): string {
   );
 }
 
-export function validateDesc(p: MosaicParams, desc: string): string | null {
+export function validateDesc(p: MosaicParams, desc: string): DescError | null {
   let length = 0;
   for (const tok of scanRunLength(desc)) {
     if ("blanks" in tok) length += tok.blanks;
     else if (digitValue(tok.value) !== null) length++;
-    else return "Invalid character in game description";
+    else return descBadCharacter(tok.value);
   }
-  if (length !== p.width * p.height) return "Desc size mismatch";
+  if (length < p.width * p.height) return DESC_TOO_SHORT;
+  if (length > p.width * p.height) return DESC_TOO_LONG;
   return null;
 }
 
@@ -330,10 +338,8 @@ export function status(state: MosaicState): GameStatus {
 }
 
 export function statusbarText(state: MosaicState, _ui: MosaicUi): string {
-  if (state.notCompletedClues === 0) {
-    return state.cheated ? "Auto solved" : "COMPLETED!";
-  }
-  return `Clues left: ${state.notCompletedClues}`;
+  const left = state.notCompletedClues;
+  return completionStatus(left === 0, state.cheated, left ? `Clues left: ${left}` : "");
 }
 
 export function textFormat(state: MosaicState): string {

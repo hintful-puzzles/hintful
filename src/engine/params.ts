@@ -194,6 +194,13 @@ export function squareSize<P>(field: PlainNumberKey<P>): (p: P) => string {
 }
 
 /**
+ * A `validateParams` refusal for a board whose area would overflow what the
+ * game's arrays or arithmetic can hold. Where the ceiling sits is each game's
+ * own; the words are the same in every game that has one.
+ */
+export const AREA_TOO_LARGE = "Width times height must not be unreasonably large";
+
+/**
  * Why these params cannot be played, or `null` — the one validity check the
  * midend and every test go through.
  *

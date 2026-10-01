@@ -9,6 +9,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { completionStatus } from "../../engine/completion-status.ts";
 import type { Game, GamePref, SolveResult } from "../../engine/game.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
@@ -39,6 +40,7 @@ import {
 } from "../../engine/pointer.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   interpretTargetVerbs,
   letterKey,
@@ -601,7 +603,7 @@ function solve(_orig: NetState, curr: NetState, aux?: string): SolveResult<NetMo
     // The solver leaves every determined tile at its orientation | LOCKED.
     target.set(curr.tiles);
     if (netSolver(w, h, target, curr.barriers, curr.wrapping) === SOLVER_INCONSISTENT) {
-      return { ok: false, error: "No solution exists for this puzzle" };
+      return { ok: false, error: NO_SOLUTION };
     }
   }
 
@@ -669,11 +671,7 @@ function decodeUi(ui: NetUi, encoded: string): void {
 
 function statusbarText(s: NetState, ui: NetUi): string {
   const complete = s.cheated || s.completed;
-  let text = "";
-  if (ui.placingSource) text = "Tap a square to light the network from it. ";
-  else if (s.cheated) text = "Auto-solved. ";
-  else if (s.completed) text = "COMPLETED! ";
-
+  let counter = "";
   // Omit the counter when the source tile is empty (it would always read 1).
   if (s.tiles[ui.cy * s.w + ui.cx] & 0xf) {
     const active = computeActive(s, ui.cx, ui.cy);
@@ -683,10 +681,13 @@ function statusbarText(s: NetState, ui: NetUi): string {
       if (active[i]) powered++;
       if (s.tiles[i] & 0xf) wired++;
     }
-    if (!complete || powered < wired) text += `Active: ${powered}/${wired}`;
+    if (!complete || powered < wired) counter = `Active: ${powered}/${wired}`;
   }
 
-  return text;
+  if (ui.placingSource) {
+    return `Tap a square to light the network from it. ${counter}`.trimEnd();
+  }
+  return completionStatus(s.completed, s.cheated, counter);
 }
 
 /* ----------------------------------------------------------------------

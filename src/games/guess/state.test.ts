@@ -4,6 +4,11 @@
  * blank/duplicate rules.
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -120,9 +125,10 @@ describe("desc", () => {
 
   it("rejects malformed descs", () => {
     const p = defaultParams();
-    expect(validateDesc(p, "abc")).not.toBeNull(); // wrong length
-    // wrong length but well-formed hex still rejected
-    expect(validateDesc(p, "ab")).not.toBeNull();
+    const len = p.npegs * 2;
+    expect(validateDesc(p, "ab")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, "a".repeat(len + 1))).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, `${"a".repeat(len - 1)}g`)).toBe(descBadCharacter("g"));
   });
 });
 

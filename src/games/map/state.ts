@@ -16,6 +16,7 @@ import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
 import type { PresetMenu } from "../../engine/game.ts";
+import { AREA_TOO_LARGE } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import type { MapData } from "./map-data.ts";
@@ -113,8 +114,7 @@ export function decodeParams(s: string): MapParams {
 }
 
 export function validateParams(p: MapParams, _full: boolean): string | null {
-  if (p.w > Math.floor(2147483647 / 2 / p.h))
-    return "Width times height must not be unreasonably large";
+  if (p.w > Math.floor(2147483647 / 2 / p.h)) return AREA_TOO_LARGE;
   if (p.n > p.w * p.h) return "Too many regions to fit in grid";
   return null;
 }

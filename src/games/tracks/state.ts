@@ -18,11 +18,18 @@
 
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import { c2nUpper, n2cUpper, UPPER_ALPHABET_SIZE } from "../../engine/desc-alphabet.ts";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+  puzzleDescError,
+} from "../../engine/desc-error.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { findLoops } from "../../engine/findloop.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
+import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import type { GameStatus } from "../../engine/types.ts";
@@ -313,7 +320,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 export function validateParams(p: TracksParams, _full: boolean): string | null {
   if (p.w > Number.MAX_SAFE_INTEGER / p.h) {
-    return "Width times height must not be unreasonably large";
+    return AREA_TOO_LARGE;
   }
   return null;
 }
@@ -323,7 +330,7 @@ export function validateParams(p: TracksParams, _full: boolean): string | null {
 // char per clue square (its two E_TRACK direction flags). Then a
 // `,`-separated `S?<n>` list of the w column clues and h row clues.
 
-export function validateDesc(p: TracksParams, desc: string): string | null {
+export function validateDesc(p: TracksParams, desc: string): DescError | null {
   const { w, h } = p;
   let i = 0;
   let pos = 0;
@@ -336,17 +343,19 @@ export function validateDesc(p: TracksParams, desc: string): string | null {
     let f = 0;
     if (ch >= "a" && ch <= "z") i += ch.charCodeAt(0) - 97;
     else if (nibble !== null && nibble <= 15) f = nibble;
-    else return "Game description contained unexpected characters";
+    else return descBadCharacter(ch);
 
-    if (f !== 0 && NBITS[f] !== 2) return "Clue did not provide 2 direction flags";
+    if (f !== 0 && NBITS[f] !== 2)
+      return puzzleDescError(
+        "This game ID has a clue square whose track doesn't join exactly two of its sides.",
+      );
     i++;
     pos++;
     if (i === w * h) break;
   }
   for (let n = 0; n < w + h; n++) {
-    if (desc[pos] === undefined)
-      return "Not enough numbers given after grid specification";
-    if (desc[pos] !== ",") return "Invalid character in number list";
+    if (desc[pos] === undefined) return DESC_TOO_SHORT;
+    if (desc[pos] !== ",") return descBadCharacter(desc[pos]);
     pos++;
     if (desc[pos] === "S") {
       if (n < w) outCount++;
@@ -356,9 +365,10 @@ export function validateDesc(p: TracksParams, desc: string): string | null {
     pos = parseLeadingInt(desc, pos).next;
   }
   if (inCount !== 1 || outCount !== 1)
-    return "Puzzle must have one entrance and one exit";
-  if (pos < desc.length)
-    return "Unexpected additional character at end of game description";
+    return puzzleDescError(
+      "This game ID needs exactly one entrance and one exit for its track.",
+    );
+  if (pos < desc.length) return DESC_TOO_LONG;
   return null;
 }
 

@@ -18,6 +18,12 @@
  * hard-coding one.
  */
 
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "./desc-error.ts";
 import type { RandomState } from "./random/index.ts";
 import { randomUpto } from "./random/index.ts";
 import { SortedMultiset } from "./sorted-multiset.ts";
@@ -267,17 +273,16 @@ export function placeBarriers(
  * border sides are skipped entirely unless the game wraps.
  */
 
-export function validateWireDesc(w: number, h: number, desc: string): string | null {
+export function validateWireDesc(w: number, h: number, desc: string): DescError | null {
   let i = 0;
   for (let n = 0; n < w * h; n++) {
     const c = desc[i];
-    if (c === undefined) return "Game description shorter than expected";
-    if (!/[0-9a-fA-F]/.test(c))
-      return "Game description contained unexpected character";
+    if (c === undefined) return DESC_TOO_SHORT;
+    if (!/[0-9a-fA-F]/.test(c)) return descBadCharacter(c);
     i++;
     while (desc[i] === "h" || desc[i] === "v") i++;
   }
-  if (i < desc.length) return "Game description longer than expected";
+  if (i < desc.length) return DESC_TOO_LONG;
   return null;
 }
 

@@ -1,5 +1,11 @@
 /** Cube parameters, state, and the game-description codec. */
 
+import {
+  DESC_MALFORMED,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { parseDimensions } from "../../engine/params.ts";
 import { enumGridSquares, type GridSquare, gridArea } from "./grid.ts";
 import { alignPolyKeys, SOLIDS, SolidType } from "./solids.ts";
@@ -149,15 +155,19 @@ export function squareClass(sq: GridSquare, nclasses: number): number {
 
 const HEX = "0123456789ABCDEF";
 
-export function validateDesc(p: CubeParams, desc: string): string | null {
+export function validateDesc(p: CubeParams, desc: string): DescError | null {
   const area = gridArea(p.d1, p.d2, SOLIDS[p.solid].order);
   const hexlen = Math.floor((area + 3) / 4);
   const hex = desc.slice(0, hexlen);
-  if (hex.length < hexlen || !/^[0-9A-Fa-f]*$/.test(hex))
-    return "Not enough hex digits at start of string";
-  if (desc[hexlen] !== ",") return "Expected ',' after hex digits";
-  if (!/^[0-9]+$/.test(desc.slice(hexlen + 1)))
-    return "Expected decimal integer after ','";
+  const notHex = /[^0-9A-Fa-f]/.exec(hex);
+  // A ',' inside the mask's span means the mask ended early.
+  if (notHex && notHex[0] !== ",") return descBadCharacter(notHex[0]);
+  if (notHex || desc.length <= hexlen) return DESC_TOO_SHORT;
+  if (desc[hexlen] !== ",") return DESC_MALFORMED;
+  const start = desc.slice(hexlen + 1);
+  if (start === "") return DESC_TOO_SHORT;
+  const notDigit = /\D/.exec(start);
+  if (notDigit) return descBadCharacter(notDigit[0]);
   return null;
 }
 

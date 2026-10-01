@@ -11,6 +11,13 @@
  */
 
 import { parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+  descNeedsOne,
+} from "../../engine/desc-error.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
@@ -137,19 +144,18 @@ function* runs(desc: string): Generator<{ ch: number; n: number }> {
 /** The characters a desc may use besides the player and the barrels. */
 const TERRAIN = new Set([INITIAL, SPACE, WALL, TARGET, PIT, DEEP_PIT]);
 
-export function validateDesc(p: SokobanParams, desc: string): string | null {
+export function validateDesc(p: SokobanParams, desc: string): DescError | null {
   let area = 0;
   let nplayers = 0;
   for (const { ch, n } of runs(desc)) {
     area += n;
     if (isPlayer(ch)) nplayers += n;
     else if (!TERRAIN.has(ch) && !isBarrel(ch))
-      return "Invalid character in game description";
+      return descBadCharacter(String.fromCharCode(ch));
   }
-  if (area > p.w * p.h) return "Too much data in game description";
-  if (area < p.w * p.h) return "Too little data in game description";
-  if (nplayers < 1) return "No starting player position specified";
-  if (nplayers > 1) return "More than one starting player position specified";
+  if (area > p.w * p.h) return DESC_TOO_LONG;
+  if (area < p.w * p.h) return DESC_TOO_SHORT;
+  if (nplayers !== 1) return descNeedsOne("starting square for the player", nplayers);
   return null;
 }
 

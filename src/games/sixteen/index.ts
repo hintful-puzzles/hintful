@@ -1,4 +1,5 @@
 import { assertNever } from "../../engine/assert-never.ts";
+import { completionStatus } from "../../engine/completion-status.ts";
 import type {
   Game,
   HintResult,
@@ -360,11 +361,10 @@ function statusbarText(state: SixteenState, _ui: SixteenUi): string {
   if (state.cheated) {
     return `Moves since auto-solve: ${state.moveCount - state.completed}`;
   }
-  const prefix = state.completed ? "COMPLETED! " : "";
   const moves = state.completed || state.moveCount;
-  let s = `${prefix}Moves: ${moves}`;
+  let s = `Moves: ${moves}`;
   if (state.moveTarget) s += ` (target ${state.moveTarget})`;
-  return s;
+  return completionStatus(state.completed > 0, false, s);
 }
 
 // --- hint heuristic ----------------------------------------------------

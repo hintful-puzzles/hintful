@@ -50,6 +50,7 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   buttonVerb,
   digitKey,
@@ -372,7 +373,7 @@ function solve(orig: BricksState): SolveResult<BricksMove> {
   const grid = orig.grid.slice();
   solveGame(grid, w, h, DIFF_TRICKY, true, true);
   if (bricksValidate(grid, w, h, false) === "invalid")
-    return { ok: false, error: "Puzzle is invalid." };
+    return { ok: false, error: NO_SOLUTION };
   return { ok: true, move: { kind: "solve", grid: Array.from(grid, bitsColor) } };
 }
 

@@ -3,6 +3,7 @@
  * Heavy generation/solve is seed-fixed, never clock-gated (docs/games/testing.md § "Seed-deterministic, never clock-gated").
  */
 import { describe, expect, it } from "vitest";
+import { puzzleDescError } from "../../engine/desc-error.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
@@ -89,9 +90,11 @@ describe("dominosa desc codec", () => {
 
   it("rejects a wrong number balance", () => {
     // A 3×2 grid (n=1): needs each of {0,1} exactly 3 times. Give all 0s.
-    expect(
-      validateDesc({ n: 1, diff: DIFF_TRIVIAL, tall: false }, "000000"),
-    ).not.toBeNull();
+    expect(validateDesc({ n: 1, diff: DIFF_TRIVIAL, tall: false }, "000000")).toBe(
+      puzzleDescError(
+        "This game ID's numbers can't be the halves of one full set of dominoes.",
+      ),
+    );
   });
 });
 

@@ -33,6 +33,8 @@
  */
 
 import { Dsf } from "../../engine/dsf.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
+import { NO_SOLUTION, type SolveFailure } from "../../engine/solve-failure.ts";
 import type { Point } from "../../engine/types.ts";
 import {
   type BoatsBoard,
@@ -1021,12 +1023,11 @@ function solveAtAnyTier(b: BoatsBoard): BoatsSolveResult {
  */
 export function solveToGrid(
   state: BoatsState,
-): { ok: true; grid: Int8Array } | { ok: false; error: string } {
+): { ok: true; grid: Int8Array } | { ok: false; error: SolveFailure } {
   const b = boardOf(state);
   const result = solveAtAnyTier(b);
-  if (result.kind === "invalid") return { ok: false, error: "Puzzle is invalid." };
-  if (result.kind === "stuck")
-    return { ok: false, error: "Solver could not solve this puzzle." };
+  if (result.kind === "invalid") return { ok: false, error: NO_SOLUTION };
+  if (result.kind === "stuck") return { ok: false, error: PUZZLE_NOT_REASONABLE };
 
   for (let i = 0; i < b.grid.length; i++) if (b.grid[i] === EMPTY) b.grid[i] = WATER;
   return { ok: true, grid: b.grid };

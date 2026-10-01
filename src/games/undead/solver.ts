@@ -14,6 +14,8 @@
  */
 
 import { runDeductionFixpoint } from "../../engine/deduction-fixpoint.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
+import { NO_SOLUTION, type SolveFailure } from "../../engine/solve-failure.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import {
   isSingleton,
@@ -186,7 +188,7 @@ export function gradeUndead(
 
 export type SolutionResult =
   | { ok: true; guess: Uint8Array }
-  | { ok: false; error: string };
+  | { ok: false; error: SolveFailure };
 
 /**
  * The unique solution of a board, for `solve` and `findMistakes` (upstream
@@ -197,9 +199,9 @@ export function findUndeadSolution(state: UndeadState): SolutionResult {
   const fixed = state.common.fixed;
   const start = state.guess.map((g, i) => (fixed[i] ? g : MON_NONE));
   const grade = gradeUndead(state.common, start, true);
-  if (grade.inconsistent) return { ok: false, error: "Puzzle is inconsistent" };
+  if (grade.inconsistent) return { ok: false, error: NO_SOLUTION };
   if (!grade.iterativeSolved && !grade.bruteforceSolved) {
-    return { ok: false, error: "Puzzle is unsolvable" };
+    return { ok: false, error: PUZZLE_NOT_REASONABLE };
   }
   return { ok: true, guess: grade.guess };
 }

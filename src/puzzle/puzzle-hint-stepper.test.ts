@@ -6,6 +6,7 @@
 // orchestration directly against a stub worker — the logic lives entirely in
 // Puzzle, no midend/worker needed.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { NOT_STARTED } from "../engine/solve-failure.ts";
 import type { PuzzleStaticAttributes } from "../engine/types.ts";
 import { HINT_PENDING_MESSAGE, HINT_PENDING_MS, Puzzle } from "./puzzle.ts";
 import type { RemoteWorkerPuzzle } from "./worker.ts";
@@ -131,10 +132,10 @@ describe("Hint button stepper", () => {
 describe("Solve answers in the same banner (show-a-refused-solve)", () => {
   it("shows a refusal", async () => {
     const { puzzle } = makePuzzle({
-      solve: vi.fn(async () => "Game has not been started yet"),
+      solve: vi.fn(async () => NOT_STARTED),
     });
-    expect(await puzzle.solve()).toBe("Game has not been started yet");
-    expect(puzzle.helpMessage).toBe("Game has not been started yet");
+    expect(await puzzle.solve()).toBe(NOT_STARTED);
+    expect(puzzle.helpMessage).toBe(NOT_STARTED);
   });
 
   it("shows nothing when the solve lands", async () => {

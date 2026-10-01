@@ -1,4 +1,5 @@
 import { assertNever } from "../../engine/assert-never.ts";
+import { completionStatus } from "../../engine/completion-status.ts";
 import type {
   Game,
   HintResult,
@@ -124,14 +125,9 @@ function interpretMove(
 /** Upstream's status line: the outcome, then the move count. */
 function statusbarText(state: FloodState, _ui: FloodUi): string {
   const count = `${state.moves} / ${state.movelimit} moves`;
-  switch (status(state)) {
-    case "solved":
-      return `${state.cheated ? "Auto-solved." : "COMPLETED!"} ${count}`;
-    case "lost":
-      return `FAILED! ${count}`;
-    default:
-      return state.cheated ? `Auto-solver used. ${count}` : count;
-  }
+  const s = status(state);
+  if (s === "lost") return `FAILED! ${count}`;
+  return completionStatus(s === "solved", state.cheated, count);
 }
 
 // --- hint -------------------------------------------------------------
@@ -248,8 +244,7 @@ export const floodGame: Game<
       "Any sequence of floods that fills the grid within the move limit wins, so there is no single answer to check a move against.",
   },
 
-  solve(_orig, curr) {
-    if (curr.completed) return { ok: false, error: "Puzzle is already solved" };
+  solve() {
     return { ok: true, move: { type: "solve" as const } };
   },
 

@@ -4,6 +4,11 @@
  * edge-based `findMistakes` overlay.
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -95,9 +100,9 @@ describe("pearl desc codec", () => {
   });
 
   it("rejects a desc that under- or over-fills the grid", () => {
-    expect(validateDesc(EASY_6, "a")).not.toBeNull(); // too short
-    expect(validateDesc(EASY_6, "z".repeat(10))).not.toBeNull(); // too long
-    expect(validateDesc(EASY_6, "Q")).not.toBeNull(); // bad char
+    expect(validateDesc(EASY_6, "a")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(EASY_6, "z".repeat(10))).toBe(DESC_TOO_LONG);
+    expect(validateDesc(EASY_6, "Q")).toBe(descBadCharacter("Q"));
   });
 });
 

@@ -18,6 +18,13 @@ import {
   DEFAULT_CANDIDATE_READING,
 } from "../../engine/candidate-hint.ts";
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+  puzzleDescError,
+} from "../../engine/desc-error.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -194,7 +201,7 @@ function parseBlockStructure(
   desc: string,
   w: number,
   dsf: Dsf,
-): { error: string | null; next: number } {
+): { error: DescError | null; next: number } {
   let i = 0;
   let pos = 0;
   let repc = 0;
@@ -217,26 +224,23 @@ function parseBlockStructure(
         repn = count.value - 1;
       }
     } else {
-      return { error: "Invalid character in game description", next: i };
+      return { error: descBadCharacter(desc[i]), next: i };
     }
 
     const adv = c !== 25; // 'z' is the special "no following edge" case.
 
     while (c-- > 0) {
-      if (pos >= total)
-        return { error: "Too much data in block structure specification", next: i };
+      if (pos >= total) return { error: DESC_TOO_LONG, next: i };
       dsf.merge(...edgeCells(pos, w));
       pos++;
     }
     if (adv) {
       pos++;
-      if (pos > total + 1)
-        return { error: "Too much data in block structure specification", next: i };
+      if (pos > total + 1) return { error: DESC_TOO_LONG, next: i };
     }
   }
 
-  if (pos !== total + 1)
-    return { error: "Not enough data in block structure specification", next: i };
+  if (pos !== total + 1) return { error: DESC_TOO_SHORT, next: i };
   return { error: null, next: i };
 }
 
@@ -288,26 +292,30 @@ export const LETTER_OF_OP: Record<number, string> = {
 };
 const OP_OF_LETTER: Record<string, number> = { a: C_ADD, m: C_MUL, s: C_SUB, d: C_DIV };
 
-export function validateDesc(p: KeenParams, desc: string): string | null {
+export function validateDesc(p: KeenParams, desc: string): DescError | null {
   const w = p.w;
   const a = w * w;
   const dsf = new Dsf(a);
   const { error, next } = parseBlockStructure(desc, w, dsf);
   if (error) return error;
-  if (desc[next] !== ",") return "Expected ',' after block structure description";
+  // The block structure ends only at a comma or at the end of the desc.
+  if (desc[next] !== ",") return DESC_TOO_SHORT;
 
   let i = next + 1;
   const minimal = buildMinimal(dsf, a);
   for (let cell = 0; cell < a; cell++) {
     if (minimal[cell] !== cell) continue;
-    if (i >= desc.length) return "Too few clues for block structure";
+    if (i >= desc.length) return DESC_TOO_SHORT;
     const op = OP_OF_LETTER[desc[i]];
-    if (op === undefined) return "Unrecognized clue type";
-    if ((op === C_SUB || op === C_DIV) && dsf.size(cell) !== 2)
-      return "Subtraction and division blocks must have area 2";
+    if (op === undefined) return descBadCharacter(desc[i]);
+    if ((op === C_SUB || op === C_DIV) && dsf.size(cell) !== 2) {
+      return puzzleDescError(
+        "This game ID gives a subtraction or division clue to a block that isn't two cells.",
+      );
+    }
     i = parseLeadingInt(desc, i + 1).next;
   }
-  if (i < desc.length) return "Too many clues for block structure";
+  if (i < desc.length) return DESC_TOO_LONG;
   return null;
 }
 

@@ -240,7 +240,7 @@ describe("Same Game selection + execution", () => {
     expect(samegameGame.statusbarText?.(s, ui)).toBe("Score: 0  Selected: 3 (1)");
     expect(
       samegameGame.statusbarText?.({ ...s, completed: true, score: 7 }, freshUi(s)),
-    ).toBe("COMPLETE! Score: 7");
+    ).toBe("COMPLETED! Score: 7");
     expect(
       samegameGame.statusbarText?.({ ...s, impossible: true, score: 4 }, freshUi(s)),
     ).toBe("Cannot move! Score: 4");

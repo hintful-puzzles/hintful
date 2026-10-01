@@ -747,6 +747,19 @@ works if the wording is shared. Three differences are real and named there
 (`CONTRADICTION_UNLOCALIZED`, `NO_MOVE_WORTH_MAKING`, a game-shaped dead end);
 everything else is spelling, and `hint-refusal.test.ts` holds it to the list.
 
+### `solve-failure.ts` — what Solve says when it will not solve
+
+`SolveResult`'s error is `SolveFailure`, the union of this module's constants'
+literal types, so a `solve` cannot return a sentence of its own. Pick by what
+the solver **established**: `NO_SOLUTION` and `MULTIPLE_SOLUTIONS` only from a
+verdict that proves them, and `PUZZLE_NOT_REASONABLE` (from `hint-refusal.ts`)
+wherever a failed search could mean either, since it is true in both cases.
+`NO_SOLUTION_FROM_HERE` is for a game whose moves can lose, and a hint refusing
+on the same fact says the same constant. Don't check for a finished board: the
+midend refuses Solve with `ALREADY_SOLVED` before asking, unless the game's
+status would not call the board solved (Slide's typed desc with the piece
+already home).
+
 ## Input
 
 ### `pointer.ts` — button codes and cursor helpers
@@ -868,6 +881,23 @@ any of them — so a game's own codec is named for what it does: Unequal's
 display-and-input pair is `displayChar`/`charValue` (it takes the puzzle's
 `order`, shifts above order 9 and maps 0 to a space), Magnets' sentinel-aware
 wrapper is `clueChar`.
+
+### `desc-error.ts` — why a game ID will not load
+
+`validateDesc` returns a `DescError`, a branded string only this module makes:
+`DESC_TOO_SHORT`, `DESC_TOO_LONG`, `DESC_OUT_OF_RANGE`, `DESC_REPEATED`,
+`DESC_CONTRADICTORY`, `DESC_MALFORMED`, `descBadCharacter(ch)` (pass the
+character when the parser has it), and `descNeedsOne(noun, found)` for a board
+that must have exactly one of something (a starting square, a main piece). A helper on the desc path returns
+`DescError | null` too, so the brand reaches the message where it is written.
+The scanners above report what they read and never word a refusal; their
+callers pick the kind.
+
+**`puzzleDescError(sentence)` is for the puzzle's own rules**, not the
+description's shape: Inertia's two starting squares, Keen's two-cell
+operations. One sentence about "this game ID". `desc-error.test.ts` fails a
+sentence two games pass, because then it is a kind the module is missing: add
+it here rather than rewording one of the two.
 
 ### `decimal.ts` — decimal digits in a game ID
 
@@ -1041,6 +1071,15 @@ celebration. Reaching that case needs `completed` recomputed each move rather
 than latched; almost every game latches it, so for them this is exactly the
 older, stricter behavior. Palisade and Separate recompute — the rule came from
 Palisade, which had it right first.
+
+### `completion-status.ts` — the status bar's completion words
+
+`completionStatus(completed, cheated, rest)`: `COMPLETED!`, `Auto-solved.` or
+`Auto-solver used.` (helped, then moved off the solution), then `rest` after a
+space, and nothing at all on an unhelped unfinished board. Pass booleans, since
+"finished" is a flag, a move count or a counter depending on the game. An
+outcome that is not completion ("DEAD!", "FAILED!") is the game's own.
+`completion-status.test.ts` fails any game string that says the words.
 
 ### `pencil-indicator.ts` — the pencil-mode indicator
 

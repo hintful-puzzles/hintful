@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DESC_TOO_SHORT, descBadCharacter } from "../../engine/desc-error.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { BACKSPACE, CURSOR_LEFT, CURSOR_RIGHT, DELETE } from "../../engine/pointer.ts";
@@ -111,8 +112,8 @@ describe("desc codec", () => {
 
   it("rejects malformed descs", () => {
     const p = params(8, 8, DIFF_EASY);
-    expect(validateDesc(p, "!!!")).toMatch(/invalid/i);
-    expect(validateDesc(p, "a")).toMatch(/short/i);
+    expect(validateDesc(p, "!!!")).toBe(descBadCharacter("!"));
+    expect(validateDesc(p, "a")).toBe(DESC_TOO_SHORT);
   });
 
   it("parses clues as immutable cells of the right color", () => {

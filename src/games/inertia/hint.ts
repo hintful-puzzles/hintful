@@ -30,6 +30,7 @@
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { ALREADY_SOLVED, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
+import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
 import { gemsPhrase, say } from "./hint-text.ts";
 import { solveRoute, unreachableGems } from "./solver.ts";
 import {
@@ -281,7 +282,7 @@ export function hint(state: InertiaState): HintResult<InertiaMove> {
   // Not the plan — the *check* that one exists, and the fallback's witness if
   // the greedy legs all turn out to strand the ball.
   if (!solveRoute(state).ok) {
-    return { ok: false, error: "Unable to find a solution from this starting point" };
+    return { ok: false, error: NO_SOLUTION_FROM_HERE };
   }
 
   const steps: Step[] = [];

@@ -10,9 +10,16 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import { digitValue } from "../../engine/decimal.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
+import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
@@ -85,7 +92,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 export function validateParams(p: FillingParams, _full: boolean): string | null {
   if (p.w > Number.MAX_SAFE_INTEGER / p.h) {
-    return "Width times height must not be unreasonably large";
+    return AREA_TOO_LARGE;
   }
   return null;
 }
@@ -94,7 +101,7 @@ export function validateParams(p: FillingParams, _full: boolean): string | null 
 // Run-length: a lowercase letter 'a'..'z' advances past a run of 1..26 empty
 // cells; a digit places a clue of that value. The decoded area is exactly w·h.
 
-export function validateDesc(p: FillingParams, desc: string): string | null {
+export function validateDesc(p: FillingParams, desc: string): DescError | null {
   const sz = p.w * p.h;
   // Upstream `validate_desc`'s bound on a clue; generated clues never exceed 9.
   const m = Math.max(p.w, p.h, 3);
@@ -104,16 +111,15 @@ export function validateDesc(p: FillingParams, desc: string): string | null {
       area += tok.blanks;
     } else {
       const v = digitValue(tok.value);
-      if (v === null || v > m) {
-        return `Invalid character '${tok.value}' in game description`;
-      }
+      if (v === null) return descBadCharacter(tok.value);
+      if (v > m) return DESC_OUT_OF_RANGE;
       area += 1;
     }
     // Inside the loop, so an overlong desc is reported as such even when a
     // later character is also invalid.
-    if (area > sz) return "Too much data to fit in grid";
+    if (area > sz) return DESC_TOO_LONG;
   }
-  return area < sz ? "Not enough data to fill grid" : null;
+  return area < sz ? DESC_TOO_SHORT : null;
 }
 
 export function newState(p: FillingParams, desc: string): FillingState {

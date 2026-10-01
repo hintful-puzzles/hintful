@@ -6,7 +6,7 @@ import { type FakeDrawState, fakeGame } from "./fake-game.ts";
 import type { Game } from "./game.ts";
 import { UI_UPDATE } from "./game.ts";
 import { click, drag, key } from "./hint-gesture.ts";
-import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
+import { ALREADY_SOLVED, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { Midend, SHOW_TIMER_PREF } from "./midend.ts";
 import { LEFT_BUTTON, LEFT_RELEASE, RIGHT_BUTTON } from "./pointer.ts";
 import { decodeSave, encodeSave } from "./save.ts";
@@ -259,6 +259,25 @@ describe("Midend status + solve", () => {
     expect(h.state()?.status).toBe("solved-with-help");
   });
 
+  it("refuses Solve on a finished board itself, without asking the game", () => {
+    // Otherwise a game with no check of its own applies its solve move to the
+    // player's own win and relabels it as solved with help.
+    let asked = 0;
+    const h = harness({
+      ...fakeGame,
+      solve: () => {
+        asked++;
+        return { ok: true, move: "solve" };
+      },
+    });
+    h.m.newGame();
+    for (let i = 0; i < 3; i++) h.m.processInput(0, 0, LEFT_BUTTON);
+    expect(h.state()?.status).toBe("solved");
+    expect(h.m.solve()).toBe(ALREADY_SOLVED);
+    expect(asked).toBe(0);
+    expect(h.state()?.status).toBe("solved");
+  });
+
   // The refusals a player can actually read. `canSolve`/`canHint` are the flags
   // the app hides the buttons behind, but the midend must still answer
   // correctly when something calls through anyway — a keyboard shortcut, a
@@ -320,7 +339,7 @@ describe("Midend params + presets", () => {
   // player reads.
   it.each([
     ["nope", /Invalid game ID/, "no separator at all"],
-    ["t2:bad!", /bad desc/, "a description the game rejects"],
+    ["t2:bad!", /isn't laid out/, "a description the game rejects"],
     ["zzz:g3-1", /Invalid parameters/, "params the game cannot decode"],
     ["t0:g0-1", /target must be positive/, "params that decode but do not validate"],
   ])("newGameFromId(%s) refuses %s", (id, expected) => {

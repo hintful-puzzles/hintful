@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DESC_MALFORMED } from "../desc-error.ts";
 import { randomNew } from "../random/index.ts";
 import { gridNewDesc, gridValidateDesc } from "./grid-desc.ts";
 import { PERIODIC_GRID_TYPES } from "./grid-tilings.ts";
@@ -39,14 +40,14 @@ describe("gridValidateDesc", () => {
 
   it("rejects any other triangular description", () => {
     for (const desc of ["1", "", "00", "x"]) {
-      expect(gridValidateDesc("triangular", 5, 5, desc)).not.toBeNull();
+      expect(gridValidateDesc("triangular", 5, 5, desc)).toBe(DESC_MALFORMED);
     }
   });
 
   it("rejects a description supplied to a tiling that takes none", () => {
     for (const type of DESCLESS) {
       expect(gridValidateDesc(type, 5, 5, null)).toBeNull();
-      expect(gridValidateDesc(type, 5, 5, "0")).not.toBeNull();
+      expect(gridValidateDesc(type, 5, 5, "0")).toBe(DESC_MALFORMED);
     }
   });
 

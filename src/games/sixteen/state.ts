@@ -1,3 +1,12 @@
+import {
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_REPEATED,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
@@ -116,15 +125,19 @@ export function presets(): PresetMenu<SixteenParams> {
 
 // --- desc / state -----------------------------------------------------
 
-export function validateDesc(p: SixteenParams, desc: string): string | null {
+export function validateDesc(p: SixteenParams, desc: string): DescError | null {
   const area = p.w * p.h;
   const parts = desc.split(",");
-  if (parts.length !== area) return "Not enough numbers in string";
+  if (parts.length < area) return DESC_TOO_SHORT;
+  if (parts.length > area) return DESC_TOO_LONG;
   const used = new Set<number>();
   for (const part of parts) {
+    const bad = /[^0-9]/.exec(part);
+    if (bad) return descBadCharacter(bad[0]);
+    if (part === "") return DESC_MALFORMED;
     const n = Number(part);
-    if (!Number.isInteger(n) || n < 1 || n > area) return "Number out of range";
-    if (used.has(n)) return "Number used twice";
+    if (n < 1 || n > area) return DESC_OUT_OF_RANGE;
+    if (used.has(n)) return DESC_REPEATED;
     used.add(n);
   }
   return null;

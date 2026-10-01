@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DESC_TOO_LONG, descBadCharacter } from "../../engine/desc-error.ts";
 import {
   blankGame,
   checkComplete,
@@ -81,12 +82,12 @@ describe("Galaxies desc encode/decode", () => {
     // a 3x3 grid the inner subcell area is 5x5 = 25 cells, so the
     // second token lands beyond the grid.
     const err = decodeGame(s, "zb");
-    expect(err).toContain("Too much data");
+    expect(err).toBe(DESC_TOO_LONG);
   });
 
   it("rejects invalid characters", () => {
     const s = blankGame(3, 3);
-    expect(decodeGame(s, "1")).toContain("Invalid characters");
+    expect(decodeGame(s, "1")).toBe(descBadCharacter("1"));
   });
 });
 

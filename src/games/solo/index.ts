@@ -62,6 +62,7 @@ import {
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { SQUARE_GRID } from "../../engine/sections.ts";
+import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../../engine/solve-failure.ts";
 import type { KeyLabel, Point, Size } from "../../engine/types.ts";
 import { newSoloDesc } from "./generator.ts";
 import { type RegionCells, regionName, say } from "./hint-text.ts";
@@ -322,10 +323,8 @@ function solve(orig: SoloState, _curr: SoloState, aux?: string): SolveResult<Sol
       return { ok: true, move: { type: "solve", grid } };
   }
   const { diff, grid } = solveSolo(givensOnly(orig), DIFF_RECURSIVE, DIFF_KINTERSECT);
-  if (diff === DIFF_IMPOSSIBLE)
-    return { ok: false, error: "No solution exists for this puzzle" };
-  if (diff === DIFF_AMBIGUOUS)
-    return { ok: false, error: "Multiple solutions exist for this puzzle" };
+  if (diff === DIFF_IMPOSSIBLE) return { ok: false, error: NO_SOLUTION };
+  if (diff === DIFF_AMBIGUOUS) return { ok: false, error: MULTIPLE_SOLUTIONS };
   return { ok: true, move: { type: "solve", grid: Array.from(grid) } };
 }
 

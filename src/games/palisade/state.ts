@@ -11,8 +11,18 @@
 import { assertNever } from "../../engine/assert-never.ts";
 import type { BorderHint } from "../../engine/border-grid-hint.ts";
 import { digitValue } from "../../engine/decimal.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
-import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
+import {
+  AREA_TOO_LARGE,
+  dimensionParamConfig,
+  numberItem,
+} from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
@@ -136,7 +146,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 export function validateParams(p: PalisadeParams, full: boolean): string | null {
   const { w, h, k } = p;
-  if (w > 0x7fffffff / h) return "Width times height must not be unreasonably large";
+  if (w > 0x7fffffff / h) return AREA_TOO_LARGE;
   const wh = w * h;
   if (wh % k) return "Region size must divide grid area";
   if (!full) return null;
@@ -184,7 +194,7 @@ export function encodeDesc(clues: Int8Array, wh: number): string {
   return encodeRunLength(wh, (i) => (clues[i] === EMPTY ? null : String(clues[i])));
 }
 
-export function validateDesc(p: PalisadeParams, desc: string): string | null {
+export function validateDesc(p: PalisadeParams, desc: string): DescError | null {
   const wh = p.w * p.h;
   let squares = 0;
   for (const tok of scanRunLength(desc)) {
@@ -192,12 +202,12 @@ export function validateDesc(p: PalisadeParams, desc: string): string | null {
       squares += tok.blanks;
     } else {
       const clue = digitValue(tok.value);
-      if (clue === null) return `Invalid character in data: '${tok.value}'`;
-      if (clue > 4) return `Invalid (too large) number: '${tok.value}'`;
+      if (clue === null) return descBadCharacter(tok.value);
+      if (clue > 4) return DESC_OUT_OF_RANGE;
       squares++;
     }
   }
-  if (squares > wh) return "Data describes too many squares";
+  if (squares > wh) return DESC_TOO_LONG;
   return null;
 }
 

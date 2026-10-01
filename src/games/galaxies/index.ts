@@ -15,13 +15,19 @@ import {
   PAPER,
 } from "../../engine/color/palette.ts";
 import { galaxiesBlackRegion } from "../../engine/color/palette-games.ts";
+import { completionStatus } from "../../engine/completion-status.ts";
+import type { DescError } from "../../engine/desc-error.ts";
 import {
   type DifficultyContract,
   difficultyItem,
   tierNames,
 } from "../../engine/difficulty.ts";
 import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
-import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import {
+  commonHintRefusal,
+  DEDUCTION_EXHAUSTED,
+  PUZZLE_NOT_REASONABLE,
+} from "../../engine/hint-refusal.ts";
 import {
   type Game,
   type HintResult,
@@ -819,7 +825,7 @@ function solveGalaxies(
 ): SolveResult<GalaxiesMove> {
   // From the player's position first, then from the start.
   const solved = solveFrom(curr, false) ?? solveFrom(orig, true);
-  if (!solved) return { ok: false, error: "Solver could not find a solution" };
+  if (!solved) return { ok: false, error: PUZZLE_NOT_REASONABLE };
   // The solution is walls only, as upstream's is: every arrow the player set
   // is removed.
   const ops: GalaxiesOp[] = [];
@@ -1032,12 +1038,7 @@ function statusbarText(s: GalaxiesState, _ui: GalaxiesUi): string {
     s.cachedDiff = solverState(probe, GalaxiesDiff.Unreasonable);
   }
   const diffWord = DIFF_NAMES[s.cachedDiff] ?? "Unknown";
-  if (s.completed) {
-    return s.cheated
-      ? `Auto-solved. Difficulty ${diffWord}.`
-      : `COMPLETED! Difficulty ${diffWord}.`;
-  }
-  return `Difficulty ${diffWord}.`;
+  return completionStatus(s.completed, s.cheated, `Difficulty ${diffWord}.`);
 }
 
 // --- the Game object -----------------------------------------------
@@ -1102,7 +1103,7 @@ export const galaxiesGame: Game<
     return { desc: newGameDesc(p, rng) };
   },
 
-  validateDesc(p, desc): string | null {
+  validateDesc(p, desc): DescError | null {
     return decodeGame(blankGame(p.w, p.h), desc);
   },
 

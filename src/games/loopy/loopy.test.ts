@@ -8,6 +8,11 @@
  * purpose, and the retry paths the C reaches by aborting or hanging.
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import type { GridDot } from "../../engine/grid/index.ts";
 import { presetMenu, type TitledPresetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -152,10 +157,10 @@ describe("clue description codec", () => {
 
   it("validates length against the real face count", () => {
     const p = squareParams(4, 4); // 16 faces
-    expect(validateDesc(p, "a")).toMatch(/too short/); // one empty face, 16 needed
-    expect(validateDesc(p, "z")).toMatch(/too long/); // a run of 26
+    expect(validateDesc(p, "a")).toBe(DESC_TOO_SHORT); // one empty face, 16 needed
+    expect(validateDesc(p, "z")).toBe(DESC_TOO_LONG); // a run of 26
     expect(validateDesc(p, "p")).toBeNull(); // 'p' is a run of 16
-    expect(validateDesc(p, "!!!")).toMatch(/Unknown character/);
+    expect(validateDesc(p, "!!!")).toBe(descBadCharacter("!"));
   });
 });
 

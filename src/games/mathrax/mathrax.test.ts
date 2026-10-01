@@ -5,6 +5,12 @@
  * (including notes), the keypad, and the render frames.
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
@@ -222,13 +228,13 @@ describe("mathrax desc codec", () => {
 
   it("rejects the descriptions upstream rejects", () => {
     const p: MathraxParams = { o: 3, diff: "easy", options: OPTIONSMASK };
-    expect(validateDesc(p, "1231231231,c")).toMatch(/too long/i);
-    expect(validateDesc(p, "12345678,d")).toMatch(/out of range/i); // 8 > o
-    expect(validateDesc(p, "12?,d")).toMatch(/invalid characters/i);
-    expect(validateDesc(p, "12,d")).toMatch(/too short/i);
-    expect(validateDesc(p, "i,A100")).toMatch(/too high/i);
-    expect(validateDesc(p, "i,A1")).toMatch(/too short/i);
-    expect(validateDesc(p, "i,dA1")).toMatch(/too long/i);
+    expect(validateDesc(p, "1231231231,c")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, "12345678,d")).toBe(DESC_OUT_OF_RANGE); // 8 > o
+    expect(validateDesc(p, "12?,d")).toBe(descBadCharacter("?"));
+    expect(validateDesc(p, "12,d")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, "i,A100")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, "i,A1")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, "i,dA1")).toBe(DESC_TOO_LONG);
   });
 });
 

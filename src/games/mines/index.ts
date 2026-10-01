@@ -21,6 +21,7 @@ import {
 } from "../../engine/color/colors.ts";
 import { ERROR, ERROR_WASH, INK, PAPER } from "../../engine/color/palette.ts";
 import { minesLowlight, minesUnclearedFace } from "../../engine/color/palette-games.ts";
+import { completionStatus } from "../../engine/completion-status.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import {
   type Game,
@@ -42,6 +43,7 @@ import {
   randomStateEncode,
   randomUpto,
 } from "../../engine/random/index.ts";
+import { NOT_STARTED } from "../../engine/solve-failure.ts";
 import {
   interpretTargetVerbs,
   pressTarget,
@@ -484,8 +486,7 @@ export const minesGame: Game<
   },
 
   solve(_orig: MinesState, curr: MinesState): SolveResult<MinesMove> {
-    if (!curr.layout.mines)
-      return { ok: false, error: "Game has not been started yet" };
+    if (!curr.layout.mines) return { ok: false, error: NOT_STARTED };
     return { ok: true, move: { type: "solve" } };
   },
 
@@ -523,7 +524,7 @@ export const minesGame: Game<
     if (s.dead) {
       sb = "DEAD!";
     } else if (s.completed) {
-      sb = s.cheated ? "Auto-solved." : "COMPLETED!";
+      sb = completionStatus(true, s.cheated);
     } else {
       sb = `Marked: ${markers} / ${mines}`;
       const safeClosed = closed - mines;

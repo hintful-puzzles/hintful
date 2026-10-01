@@ -8,6 +8,12 @@
  * are stable ground truth here.
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { Midend, UI_UPDATE } from "../../engine/index.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -149,10 +155,10 @@ describe("lightup desc codec", () => {
 
   it("rejects malformed descs", () => {
     const p = EASY_PARAMS;
-    expect(validateDesc(p, "!")).not.toBeNull();
-    expect(validateDesc(p, "a")).not.toBeNull(); // far too short
-    expect(validateDesc(p, `${EASY.desc}a`)).not.toBeNull(); // too long
-    expect(validateDesc(p, "5")).not.toBeNull(); // clue out of range 0-4
+    expect(validateDesc(p, "!")).toBe(descBadCharacter("!"));
+    expect(validateDesc(p, "a")).toBe(DESC_TOO_SHORT); // far too short
+    expect(validateDesc(p, `${EASY.desc}a`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, "5")).toBe(DESC_OUT_OF_RANGE); // clue out of range 0-4
   });
 });
 

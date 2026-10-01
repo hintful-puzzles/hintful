@@ -7,8 +7,16 @@
  * reference (where upstream refcounts its `struct soln`).
  */
 
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+  descNeedsOne,
+  puzzleDescError,
+} from "../../engine/desc-error.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
+import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
 
 // --- cells -----------------------------------------------------------
@@ -73,7 +81,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 export function validateParams(p: InertiaParams): string | null {
   if (!Number.isSafeInteger(p.w * p.h)) {
-    return "Width times height must not be unreasonably large";
+    return AREA_TOO_LARGE;
   }
   // The generator makes one gem per five squares and needs at least one; an
   // area-five grid is already excluded by the dimensions' bounds, so six is the
@@ -282,26 +290,25 @@ export function legalDirections(board: Board, px: number, py: number): number[] 
 
 // --- desc codec ------------------------------------------------------
 
-export function validateDesc(p: InertiaParams, desc: string): string | null {
+export function validateDesc(p: InertiaParams, desc: string): DescError | null {
   const wh = p.w * p.h;
   let starts = 0;
   let gems = 0;
 
   for (let i = 0; i < wh; i++) {
-    if (i >= desc.length) return "Not enough data to fill grid";
+    if (i >= desc.length) return DESC_TOO_SHORT;
     const c = desc[i];
     if (c === START_CHAR) {
       starts++;
     } else if (charToCell(c) === null) {
-      return "Unrecognized character in game description";
+      return descBadCharacter(c);
     } else if (c === CELL_CHARS[GEM]) {
       gems++;
     }
   }
-  if (desc.length > wh) return "Too much data to fill grid";
-  if (starts < 1) return "No starting square specified";
-  if (starts > 1) return "More than one starting square specified";
-  if (gems < 1) return "No gems specified";
+  if (desc.length > wh) return DESC_TOO_LONG;
+  if (starts !== 1) return descNeedsOne("starting square", starts);
+  if (gems < 1) return puzzleDescError("This game ID has no gems to collect.");
 
   return null;
 }

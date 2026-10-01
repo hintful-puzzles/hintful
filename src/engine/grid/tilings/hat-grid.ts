@@ -9,6 +9,13 @@
  * then one metatile letter — e.g. `"0,3,0,0,6,F"`.
  */
 
+import {
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../desc-error.ts";
 import type { RandomState } from "../../random/index.ts";
 import { type Grid, makeConsistent } from "../grid-core.ts";
 import {
@@ -29,7 +36,7 @@ import {
 /** Result of parsing a desc: the params, or the reason it is not one. */
 type ParseResult =
   | { readonly params: HatPatchParams; readonly error?: undefined }
-  | { readonly params?: undefined; readonly error: string };
+  | { readonly params?: undefined; readonly error: DescError };
 
 /**
  * Parse a desc into patch params. Shared by validation and construction, so
@@ -48,17 +55,17 @@ function descToHatParams(desc: string): ParseResult {
   while (isDigit(p)) {
     const start = p;
     while (isDigit(p)) p++;
-    if (desc[p] !== ",") return { error: "expected ',' in grid description" };
+    if (desc[p] === undefined) return { error: DESC_TOO_SHORT };
+    if (desc[p] !== ",") return { error: DESC_MALFORMED };
     // Upstream allows at most two digits.
-    if (p - start > 2) return { error: "too-large coordinate in grid description" };
+    if (p - start > 2) return { error: DESC_OUT_OF_RANGE };
     coords.push(Number(desc.slice(start, p)));
     p++; /* eat the comma */
   }
 
-  const letter = desc[p] ?? "";
-  if (metatileCharToType(letter) < 0) {
-    return { error: "invalid character in grid description" };
-  }
+  const letter = desc[p];
+  if (letter === undefined) return { error: DESC_TOO_SHORT };
+  if (metatileCharToType(letter) < 0) return { error: descBadCharacter(letter) };
 
   return { params: { coords, finalMetatile: letter } };
 }
@@ -81,8 +88,8 @@ export function hatsValidateDesc(
   _width: number,
   _height: number,
   desc: string | null,
-): string | null {
-  if (desc === null) return "Missing grid description string.";
+): DescError | null {
+  if (desc === null) return DESC_MALFORMED;
   const parsed = descToHatParams(desc);
   if (parsed.error !== undefined) return parsed.error;
   return hatTilingParamsInvalid(parsed.params);

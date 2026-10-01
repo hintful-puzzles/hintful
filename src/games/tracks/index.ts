@@ -14,7 +14,7 @@ import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
 import type { Game, HintResult, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
-import { commonHintRefusal } from "../../engine/hint-refusal.ts";
+import { commonHintRefusal, PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
@@ -372,8 +372,7 @@ function solve(
     solved = stateToBoard(orig);
     r = tracksSolve(solved, DIFF_COUNT);
   }
-  if (r.ret < 1)
-    return { ok: false, error: "Unable to find a solution for this puzzle" };
+  if (r.ret < 1) return { ok: false, error: PUZZLE_NOT_REASONABLE };
   return { ok: true, move: moveDiff(before, solved, true) };
 }
 

@@ -40,6 +40,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { markAllNow } from "../../engine/hint-gesture.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import {
   latinPremise,
   narrateLatinReason,
@@ -332,7 +333,7 @@ function solveFromGivens(
 
 function solve(orig: MathraxState): SolveResult<MathraxMove> {
   const soln = solveFromGivens(orig, false);
-  if (!soln) return { ok: false, error: "No solution exists for this puzzle" };
+  if (!soln) return { ok: false, error: PUZZLE_NOT_REASONABLE };
   return { ok: true, move: { type: "solve", grid: Array.from(soln) } };
 }
 

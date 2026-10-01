@@ -29,6 +29,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { markAllNow } from "../../engine/hint-gesture.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import {
   pressNoteTakingCell,
@@ -310,7 +311,7 @@ function executeMove(state: SaladState, move: SaladMove): SaladState {
 
 function solve(orig: SaladState): SolveResult<SaladMove> {
   const cells = saladSolution(orig);
-  if (!cells) return { ok: false, error: "No solution found." };
+  if (!cells) return { ok: false, error: PUZZLE_NOT_REASONABLE };
   return { ok: true, move: { type: "solve", cells } };
 }
 

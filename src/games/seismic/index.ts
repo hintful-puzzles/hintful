@@ -26,6 +26,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { markAllNow } from "../../engine/hint-gesture.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { digitKeys } from "../../engine/key-labels.ts";
 import {
   pressNoteTakingCell,
@@ -267,7 +268,7 @@ function solveFromGivens(state: SeismicState): Uint8Array | null {
 
 function solve(orig: SeismicState): SolveResult<SeismicMove> {
   const soln = solveFromGivens(orig);
-  if (!soln) return { ok: false, error: "No solution exists for this puzzle" };
+  if (!soln) return { ok: false, error: PUZZLE_NOT_REASONABLE };
   return { ok: true, move: { type: "solve", grid: Array.from(soln) } };
 }
 

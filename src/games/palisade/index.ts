@@ -30,7 +30,11 @@ import type {
   HintTrackVerdict,
   UiUpdate,
 } from "../../engine/game.ts";
-import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import {
+  commonHintRefusal,
+  DEDUCTION_EXHAUSTED,
+  PUZZLE_NOT_REASONABLE,
+} from "../../engine/hint-refusal.ts";
 import { edgeContinuation } from "../../engine/hint-text.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
@@ -261,7 +265,7 @@ export const palisadeGame: Game<
 
   solve(orig, _curr) {
     const sol = solveToBorders(paramsOf(orig), orig.clues);
-    if (!sol) return { ok: false, error: "Sorry, I can't solve this puzzle" };
+    if (!sol) return { ok: false, error: PUZZLE_NOT_REASONABLE };
     const full = Array.from(sol, (b) => (b & BORDER_MASK) | DISABLED(~b & BORDER_MASK));
     return { ok: true, move: { type: "solve", borders: full } };
   },

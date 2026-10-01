@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { descBadCharacter } from "../../engine/desc-error.ts";
 import { difficultyTiers } from "../../engine/difficulty.ts";
 import { UI_UPDATE } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -108,7 +109,7 @@ describe("Galaxies game flow", () => {
 
   it("validateDesc rejects an unparseable desc", () => {
     const p: GalaxiesParams = { w: 3, h: 3, diff: GalaxiesDiff.Normal };
-    expect(galaxiesGame.validateDesc(p, "1")).toContain("Invalid characters");
+    expect(galaxiesGame.validateDesc(p, "1")).toBe(descBadCharacter("1"));
   });
 
   it("decodeParams accepts upstream-lenient forms", () => {

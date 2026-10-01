@@ -5,6 +5,14 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { completionStatus } from "../../engine/completion-status.ts";
+import {
+  DESC_MALFORMED,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import {
   dimensionParamConfig,
   type Game,
@@ -13,10 +21,11 @@ import {
   type SolveResult,
   type UiUpdate,
 } from "../../engine/index.ts";
-import { transposeDimensions } from "../../engine/params.ts";
+import { AREA_TOO_LARGE, transposeDimensions } from "../../engine/params.ts";
 import { dims, letters, paramsCodec } from "../../engine/params-codec.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { randomUpto } from "../../engine/random/index.ts";
+import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   interpretTargetVerbs,
   squareGrid,
@@ -132,7 +141,7 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
 
   validateParams(p): string | null {
     if (p.w > (INT_MAX - 3) / p.h) {
-      return "Width times height must not be unreasonably large";
+      return AREA_TOO_LARGE;
     }
     const wh = p.w * p.h;
     if (wh > (INT_MAX - 3) / wh) {
@@ -166,20 +175,22 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
     return { desc: `${encodeBitmap(matrix, wh * wh)},${encodeBitmap(grid, wh)}` };
   },
 
-  validateDesc(p, desc): string | null {
+  validateDesc(p, desc): DescError | null {
     const wh = p.w * p.h;
     const mlen = (wh * wh + 3) >> 2;
     const glen = (wh + 3) >> 2;
-    const isHex = (s: string) => /^[0-9a-fA-F]*$/.test(s);
-    if (desc.length < mlen || !isHex(desc.slice(0, mlen))) {
-      return "Matrix description is wrong length";
-    }
-    if (desc[mlen] !== ",") return "Expected comma after matrix description";
+    const nonHex = (s: string) => /[^0-9a-fA-F]/.exec(s)?.[0] ?? null;
+    const m = desc.slice(0, mlen);
+    const mBad = nonHex(m);
+    if (mBad !== null) return descBadCharacter(mBad);
+    if (m.length < mlen) return DESC_TOO_SHORT;
+    if (desc[mlen] === undefined) return DESC_TOO_SHORT;
+    if (desc[mlen] !== ",") return DESC_MALFORMED;
     const g = desc.slice(mlen + 1);
-    if (g.length < glen || !isHex(g.slice(0, glen))) {
-      return "Grid description is wrong length";
-    }
-    if (g.length !== glen) return "Unexpected data after grid description";
+    const gBad = nonHex(g.slice(0, glen));
+    if (gBad !== null) return descBadCharacter(gBad);
+    if (g.length < glen) return DESC_TOO_SHORT;
+    if (g.length !== glen) return DESC_TOO_LONG;
     return null;
   },
 
@@ -292,7 +303,7 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
         // Remaining equations are 0 = const; any 1 means insoluble.
         for (let r = rowsDone; r < wh; r++) {
           if (eq[r * stride + wh]) {
-            return { ok: false, error: "No solution exists for this position" };
+            return { ok: false, error: NO_SOLUTION };
           }
         }
         break;
@@ -379,14 +390,7 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
   },
 
   statusbarText(s): string {
-    const prefix = s.completed
-      ? s.cheated
-        ? "Auto-solved. "
-        : "COMPLETED! "
-      : s.cheated
-        ? "Auto-solver used. "
-        : "";
-    return `${prefix}Moves: ${s.moves}`;
+    return completionStatus(s.completed, s.cheated, `Moves: ${s.moves}`);
   },
 
   animLength() {

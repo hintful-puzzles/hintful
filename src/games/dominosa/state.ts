@@ -13,6 +13,15 @@
  */
 
 import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+  puzzleDescError,
+} from "../../engine/desc-error.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -153,16 +162,16 @@ function parseNumbers(
   n: number,
   wh: number,
   desc: string,
-): { numbers: Int32Array | null; error: string | null } {
+): { numbers: Int32Array | null; error: DescError | null } {
   const numbers = new Int32Array(wh);
   let p = 0;
-  let error: string | null = null;
-  const fail = (msg: string) => {
+  let error: DescError | null = null;
+  const fail = (msg: DescError) => {
     if (!error) error = msg;
   };
   for (let i = 0; i < wh; i++) {
     if (p >= desc.length) {
-      fail("Game description is too short");
+      fail(DESC_TOO_SHORT);
       break;
     }
     let j: number;
@@ -177,20 +186,20 @@ function parseNumbers(
       const k = parseLeadingInt(desc, p);
       j = k.next > p ? k.value : -1;
       p = k.next;
-      if (desc[p] !== "]") fail("Missing ']' in game description");
+      if (desc[p] !== "]") fail(DESC_MALFORMED);
       else p++;
     } else {
       j = -1;
-      fail("Invalid syntax in game description");
+      fail(descBadCharacter(c));
     }
-    if (j < 0 || j > n) fail("Number out of range in game description");
+    if (j < 0 || j > n) fail(DESC_OUT_OF_RANGE);
     numbers[i] = j;
   }
-  if (p < desc.length) fail("Game description is too long");
+  if (p < desc.length) fail(DESC_TOO_LONG);
   return { numbers: error ? null : numbers, error };
 }
 
-export function validateDesc(p: DominosaParams, desc: string): string | null {
+export function validateDesc(p: DominosaParams, desc: string): DescError | null {
   const n = p.n;
   const { w, h } = boardSize(p);
   const wh = w * h;
@@ -200,7 +209,10 @@ export function validateDesc(p: DominosaParams, desc: string): string | null {
   const occ = new Int32Array(n + 1);
   for (let i = 0; i < wh; i++) occ[numbers[i]]++;
   for (let i = 0; i <= n; i++)
-    if (occ[i] !== n + 2) return "Incorrect number balance in game description";
+    if (occ[i] !== n + 2)
+      return puzzleDescError(
+        "This game ID's numbers can't be the halves of one full set of dominoes.",
+      );
   return null;
 }
 

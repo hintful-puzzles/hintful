@@ -1,5 +1,6 @@
 /** Tier-1 behavioral tests for the Magnets port. */
 import { describe, expect, it } from "vitest";
+import { DESC_TOO_SHORT } from "../../engine/desc-error.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { newMagnetsDesc } from "./generator.ts";
@@ -82,8 +83,10 @@ describe("magnets desc codec", () => {
 
   it("rejects inconsistent dominoes and short descs", () => {
     const p = P(3, 3, DIFF_EASY);
-    expect(magnetsGame.validateDesc(p, "...,...,...,...,LLLLLLLLL")).not.toBeNull();
-    expect(magnetsGame.validateDesc(p, "...")).not.toBeNull();
+    expect(magnetsGame.validateDesc(p, "...,...,...,...,LLLLLLLLL")).toMatch(
+      /two halves/,
+    );
+    expect(magnetsGame.validateDesc(p, "...")).toBe(DESC_TOO_SHORT);
   });
 });
 

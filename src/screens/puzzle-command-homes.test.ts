@@ -36,6 +36,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // saved game: `Back to last save` renders either way, disabled when there is
 // none, and a disabled row still has the `data-command` this file reads.
 
+import { NOT_STARTED } from "../engine/solve-failure.ts";
 import { PuzzleRail } from "../puzzle/components/rail.ts";
 import { PuzzleScreen } from "./puzzle-screen.ts";
 
@@ -288,12 +289,12 @@ describe("every puzzle command has exactly one home in the rail", () => {
       document.body.replaceChildren();
       const rail = await mountRail(
         "rail",
-        fullyCapablePuzzle({ canHint, helpMessage: "Game has not been started yet" }),
+        fullyCapablePuzzle({ canHint, helpMessage: NOT_STARTED }),
       );
       const banners = [
         ...(rail.shadowRoot?.querySelectorAll('[part="hint-explanation"]') ?? []),
       ].map((el) => el.textContent?.trim());
-      expect(banners, `canHint: ${canHint}`).toEqual(["Game has not been started yet"]);
+      expect(banners, `canHint: ${canHint}`).toEqual([NOT_STARTED]);
     }
   });
 

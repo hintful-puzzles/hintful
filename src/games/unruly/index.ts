@@ -17,7 +17,11 @@ import type {
   HintTrackVerdict,
   UiUpdate,
 } from "../../engine/game.ts";
-import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import {
+  commonHintRefusal,
+  DEDUCTION_EXHAUSTED,
+  PUZZLE_NOT_REASONABLE,
+} from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { digitOf, newCursor, stripModifiers } from "../../engine/pointer.ts";
@@ -311,7 +315,7 @@ export const unrulyGame: Game<
 
   solve(orig) {
     const grid = solveToString(orig);
-    if (!grid) return { ok: false, error: "No solution found" };
+    if (!grid) return { ok: false, error: PUZZLE_NOT_REASONABLE };
     return { ok: true, move: { type: "solve", grid } };
   },
 

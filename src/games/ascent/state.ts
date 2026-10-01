@@ -4,6 +4,12 @@
  * (© 2015 Lennard Sprong). The five grid modes share one square grid and differ
  * only in their movement table, so nothing here knows any other geometry.
  */
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+} from "../../engine/desc-error.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 
 // --- number sentinels (upstream `NUMBER_*`) ------------------------
@@ -475,7 +481,10 @@ const DESC_TOKEN = /(\d+)|([a-z])|([A-Z])/g;
 const runLength = (c: string) => c.toLowerCase().charCodeAt(0) - "a".charCodeAt(0) + 1;
 
 /** `null` when valid, else the rejection reason (upstream `validate_desc`). */
-export function validateAscentDesc(params: AscentParams, desc: string): string | null {
+export function validateAscentDesc(
+  params: AscentParams,
+  desc: string,
+): DescError | null {
   const { w, h } = ascentGridSize(params);
   const s = w * h;
   let last = 0;
@@ -489,9 +498,9 @@ export function validateAscentDesc(params: AscentParams, desc: string): string |
     }
   }
 
-  if (last > s) return "Number is too high";
-  if (i < s) return "Not enough spaces";
-  if (i > s) return "Too many spaces";
+  if (last > s) return DESC_OUT_OF_RANGE;
+  if (i < s) return DESC_TOO_SHORT;
+  if (i > s) return DESC_TOO_LONG;
   return null;
 }
 

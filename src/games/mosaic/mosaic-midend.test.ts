@@ -91,7 +91,7 @@ describe("Mosaic midend lifecycle", () => {
     const h = harness();
     expect(h.m.newGameFromId(GAME_ID)).toBeNull();
     expect(h.m.solve()).toBeNull();
-    expect(h.statusBar()).toBe("Auto solved");
+    expect(h.statusBar()).toBe("Auto-solved.");
     expect(h.status()).toBe("solved-with-help");
   });
 

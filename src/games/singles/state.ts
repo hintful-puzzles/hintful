@@ -1,4 +1,10 @@
 import { c2n, DESC_ALPHABET_SIZE, n2c } from "../../engine/desc-alphabet.ts";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
@@ -139,15 +145,14 @@ export function cloneState(s: SinglesState): SinglesState {
 
 // --- desc codec ------------------------------------------------------------
 
-export function validateDesc(p: SinglesParams, desc: string): string | null {
+export function validateDesc(p: SinglesParams, desc: string): DescError | null {
   const n = p.w * p.h;
   const o = Math.max(p.w, p.h);
-  if (desc.length !== n) return "Game description is wrong length";
+  if (desc.length < n) return DESC_TOO_SHORT;
+  if (desc.length > n) return DESC_TOO_LONG;
   for (let i = 0; i < n; i++) {
     const num = c2n(desc[i]);
-    if (num === null || num <= 0 || num > o) {
-      return "Game description contains unexpected characters";
-    }
+    if (num === null || num <= 0 || num > o) return descBadCharacter(desc[i]);
   }
   return null;
 }

@@ -26,7 +26,7 @@ import {
   type GestureButton,
   type PointerAction,
 } from "../../engine/hint-gesture.ts";
-import { commonHintRefusal } from "../../engine/hint-refusal.ts";
+import { commonHintRefusal, PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
@@ -558,7 +558,7 @@ function stateDiff(src: BridgesState, dest: BridgesState): BridgesOp[] {
 function solve(orig: BridgesState, curr: BridgesState): SolveResult<BridgesMove> {
   const solved = orig.workingCopy();
   if (solveFromScratch(solved, 10) === 0) {
-    return { ok: false, error: "Puzzle is not solvable by the deductive solver." };
+    return { ok: false, error: PUZZLE_NOT_REASONABLE };
   }
   return { ok: true, move: { ops: stateDiff(curr, solved) } };
 }

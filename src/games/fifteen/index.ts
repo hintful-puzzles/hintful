@@ -1,4 +1,5 @@
 import { assertNever } from "../../engine/assert-never.ts";
+import { completionStatus } from "../../engine/completion-status.ts";
 import type {
   Game,
   HintResult,
@@ -150,9 +151,8 @@ function statusbarText(state: FifteenState, _ui: FifteenUi): string {
   if (state.cheated) {
     return `Moves since auto-solve: ${state.moveCount - state.completed}`;
   }
-  const prefix = state.completed ? "COMPLETED! " : "";
   const moves = state.completed || state.moveCount;
-  return `${prefix}Moves: ${moves}`;
+  return completionStatus(state.completed > 0, false, `Moves: ${moves}`);
 }
 
 // --- hint -------------------------------------------------------------

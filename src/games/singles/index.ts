@@ -23,7 +23,11 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import {
+  commonHintRefusal,
+  DEDUCTION_EXHAUSTED,
+  PUZZLE_NOT_REASONABLE,
+} from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
 import { CELL, type Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
@@ -203,7 +207,7 @@ function solve(orig: SinglesState, curr: SinglesState): SolveResult<SinglesMove>
   if (solveSpecific(solved, DIFF_ANY, false) > 0) {
     return { ok: true, move: diffMove(curr, solved) };
   }
-  return { ok: false, error: "Unable to solve puzzle." };
+  return { ok: false, error: PUZZLE_NOT_REASONABLE };
 }
 
 function findMistakes(state: SinglesState): readonly SinglesMistake[] {

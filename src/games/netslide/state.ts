@@ -9,7 +9,8 @@
  */
 
 import { parseLeadingInt } from "../../engine/decimal.ts";
-import { atof, formatG } from "../../engine/params.ts";
+import type { DescError } from "../../engine/desc-error.ts";
+import { AREA_TOO_LARGE, atof, formatG } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -135,7 +136,7 @@ export function decodeParams(s: string): NetslideParams {
 }
 
 export function validateParams(p: NetslideParams, _full: boolean): string | null {
-  if (p.w * p.h > 1_000_000) return "Width times height must not be unreasonably large";
+  if (p.w * p.h > 1_000_000) return AREA_TOO_LARGE;
   return null;
 }
 
@@ -225,7 +226,7 @@ export function slideCol(
  * Desc codec + state construction.
  */
 
-export function validateDesc(p: NetslideParams, desc: string): string | null {
+export function validateDesc(p: NetslideParams, desc: string): DescError | null {
   return validateWireDesc(p.w, p.h, desc);
 }
 

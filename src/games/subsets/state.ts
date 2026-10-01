@@ -19,6 +19,14 @@
  */
 
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_CONTRADICTORY,
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+} from "../../engine/desc-error.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -242,19 +250,19 @@ export function status(s: SubsetsState): GameStatus {
  * Load a desc into a blank state (upstream `attempt_load_game`): one token
  * per cell in row-major order, comma-separated — a decimal set number for a
  * given or `_` for a blank, then any of `U`/`R`/`D`/`L` arrow markers — with
- * upstream's exact error messages, including the post-load whole-grid arrow
- * checks (off-grid and mutually contradicting flags).
+ * upstream's checks, including the post-load whole-grid arrow checks (off-grid
+ * and mutually contradicting flags).
  */
-function attemptLoadGame(state: SubsetsState, desc: string): string | null {
+function attemptLoadGame(state: SubsetsState, desc: string): DescError | null {
   const { w, h, n } = state;
   let i = 0;
   let p = 0;
   while (p < desc.length) {
-    if (i >= w * h) return "Too much data to fill grid";
+    if (i >= w * h) return DESC_TOO_LONG;
 
     if (isDigit(desc[p])) {
       const { value: num, next } = parseLeadingInt(desc, p);
-      if (num > ALL_BITS(n)) return "Out-of-range number in game description";
+      if (num > ALL_BITS(n)) return DESC_OUT_OF_RANGE;
       state.known[i] = num;
       state.mask[i] = num;
       state.immutable[i] = ALL_BITS(n);
@@ -262,7 +270,7 @@ function attemptLoadGame(state: SubsetsState, desc: string): string | null {
     } else if (desc[p] === "_") {
       p++;
     } else {
-      return "Expecting number in game description";
+      return DESC_MALFORMED;
     }
 
     for (;;) {
@@ -272,10 +280,10 @@ function attemptLoadGame(state: SubsetsState, desc: string): string | null {
       p++;
     }
     i++;
-    if (i < w * h && desc[p] !== ",") return "Missing separator";
+    if (i < w * h && desc[p] !== ",") return DESC_MALFORMED;
     if (desc[p] === ",") p++;
   }
-  if (i < w * h) return "Not enough data to fill grid";
+  if (i < w * h) return DESC_TOO_SHORT;
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -283,9 +291,8 @@ function attemptLoadGame(state: SubsetsState, desc: string): string | null {
         if (!(state.clues[y * w + x] & ADJTHAN[d].f)) continue;
         const nx = x + ADJTHAN[d].dx;
         const ny = y + ADJTHAN[d].dy;
-        if (nx < 0 || ny < 0 || nx >= w || ny >= h) return "Flags go off grid";
-        if (state.clues[ny * w + nx] & ADJTHAN[d].fo)
-          return "Flags contradicting each other";
+        if (nx < 0 || ny < 0 || nx >= w || ny >= h) return DESC_OUT_OF_RANGE;
+        if (state.clues[ny * w + nx] & ADJTHAN[d].fo) return DESC_CONTRADICTORY;
       }
     }
   }
@@ -293,7 +300,7 @@ function attemptLoadGame(state: SubsetsState, desc: string): string | null {
   return null;
 }
 
-export function validateDesc(p: SubsetsParams, desc: string): string | null {
+export function validateDesc(p: SubsetsParams, desc: string): DescError | null {
   return attemptLoadGame(blankState(p), desc);
 }
 

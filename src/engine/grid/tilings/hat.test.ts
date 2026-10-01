@@ -10,6 +10,12 @@
  */
 
 import { describe, expect, it } from "vitest";
+import {
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../desc-error.ts";
 import { randomNew } from "../../random/index.ts";
 import { metatileCharToType } from "./hat.ts";
 import { gridNewHats, hatsNewDesc, hatsValidateDesc } from "./hat-grid.ts";
@@ -123,20 +129,22 @@ describe("hat desc round-trip", () => {
 
 describe("hat desc validation", () => {
   it("rejects a missing desc", () => {
-    expect(hatsValidateDesc(6, 6, null)).toBe("Missing grid description string.");
+    expect(hatsValidateDesc(6, 6, null)).toBe(DESC_MALFORMED);
   });
 
   it.each([
-    ["", "invalid character in grid description"],
-    ["X", "invalid character in grid description"],
-    ["0", "expected ',' in grid description"],
-    ["0,3,0", "expected ',' in grid description"],
-    ["0,3,0,0,6,Z", "invalid character in grid description"],
-    ["000,3,0,0,6,F", "too-large coordinate in grid description"],
-    ["0,3,F", "Grid parameters require at least three coordinates"],
-    ["9,3,0,0,6,F", "Grid parameters contain an invalid kite index"],
-    ["0,3,0,0,12,F", "Grid parameters contain an invalid metatile index"],
-    ["0,4,0,0,6,F", "Grid parameters contain an invalid hat index"],
+    ["", DESC_TOO_SHORT],
+    ["X", descBadCharacter("X")],
+    ["0", DESC_TOO_SHORT],
+    ["0,3,0", DESC_TOO_SHORT],
+    ["0;3,0,0,6,F", DESC_MALFORMED],
+    ["0,3,0,0,6,Z", descBadCharacter("Z")],
+    ["000,3,0,0,6,F", DESC_OUT_OF_RANGE],
+    ["0,3,F", DESC_TOO_SHORT],
+    // an invalid kite, metatile and hat index
+    ["9,3,0,0,6,F", DESC_OUT_OF_RANGE],
+    ["0,3,0,0,12,F", DESC_OUT_OF_RANGE],
+    ["0,4,0,0,6,F", DESC_OUT_OF_RANGE],
   ])("rejects %o", (desc, error) => {
     expect(hatsValidateDesc(6, 6, desc)).toBe(error);
   });

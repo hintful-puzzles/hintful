@@ -1,4 +1,11 @@
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+  puzzleDescError,
+} from "../../engine/desc-error.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
@@ -520,20 +527,24 @@ export function newState(params: UndeadParams, desc: string): UndeadState {
   return state;
 }
 
-export function validateDesc(p: UndeadParams, desc: string): string | null {
+export function validateDesc(p: UndeadParams, desc: string): DescError | null {
   const w = p.w;
   const h = p.h;
   const wh = w * h;
   let pos = 0;
+  // Where a count or its comma belongs: the ID ended, or has something else
+  // there.
+  const missing = (at: number): DescError =>
+    at >= desc.length ? DESC_TOO_SHORT : descBadCharacter(desc[at]);
 
   // Three leading counts.
   let monsterCount = 0;
   for (let i = 0; i < 3; i++) {
-    if (pos >= desc.length || !isDigit(desc[pos])) return "Faulty game description";
+    if (pos >= desc.length || !isDigit(desc[pos])) return missing(pos);
     const { value, next } = parseLeadingInt(desc, pos);
     monsterCount += value;
     pos = next;
-    if (desc[pos] !== ",") return "Invalid character in number list";
+    if (desc[pos] !== ",") return missing(pos);
     pos++;
   }
 
@@ -552,21 +563,24 @@ export function validateDesc(p: UndeadParams, desc: string): string | null {
     } else if (c === "L" || c === "R") {
       area++;
     } else {
-      return "Invalid character in grid specification";
+      return descBadCharacter(c);
     }
     pos++;
   }
-  if (area < wh) return "Not enough data to fill grid";
-  if (area > wh) return "Too much data to fill grid";
-  if (monsters !== monsterCount) return "Monster numbers do not match grid spaces";
+  if (area < wh) return DESC_TOO_SHORT;
+  if (area > wh) return DESC_TOO_LONG;
+  if (monsters !== monsterCount)
+    return puzzleDescError(
+      "This game ID's monster counts don't add up to the number of empty squares.",
+    );
 
   // Sightings.
   for (let i = 0; i < 2 * (w + h); i++) {
-    if (pos >= desc.length) return "Not enough numbers given after grid specification";
-    if (desc[pos] !== ",") return "Invalid character in number list";
+    if (pos >= desc.length) return DESC_TOO_SHORT;
+    if (desc[pos] !== ",") return descBadCharacter(desc[pos]);
     pos = parseLeadingInt(desc, pos + 1).next;
   }
-  if (pos < desc.length) return "Unexpected additional data at end of game description";
+  if (pos < desc.length) return DESC_TOO_LONG;
   return null;
 }
 

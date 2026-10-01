@@ -11,6 +11,11 @@
  * differential never touches (execute/win/pits).
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import { CURSOR_DOWN, CURSOR_RIGHT, LEFT_BUTTON } from "../../engine/pointer.ts";
@@ -139,14 +144,14 @@ describe("Sokoban desc codec", () => {
   it("validateDesc accepts a well-formed level and rejects malformed ones", () => {
     expect(validateDesc(p5, desc)).toBeNull();
     // Too little / too much data.
-    expect(validateDesc(p5, "w6ubtw2s3w2s3w5")).toMatch(/Too little/);
-    expect(validateDesc(p5, "w6ubtw2s3w2s3w7")).toMatch(/Too much/);
+    expect(validateDesc(p5, "w6ubtw2s3w2s3w5")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p5, "w6ubtw2s3w2s3w7")).toBe(DESC_TOO_LONG);
     // No player.
-    expect(validateDesc(p5, "w6sbtw2s3w2s3w6")).toMatch(/No starting player/);
+    expect(validateDesc(p5, "w6sbtw2s3w2s3w6")).toMatch(/no starting square/);
     // Two players.
-    expect(validateDesc(p5, "w6ubuw2s4w2s2w6")).toMatch(/More than one/);
+    expect(validateDesc(p5, "w6ubuw2s4w2s2w6")).toMatch(/more than one starting/);
     // Invalid character.
-    expect(validateDesc(p5, "w6ubtw2s3w2s3z6")).toMatch(/Invalid character/);
+    expect(validateDesc(p5, "w6ubtw2s3w2s3z6")).toBe(descBadCharacter("z"));
   });
 
   it("validateDesc accepts pits, deep pits and labeled barrels (hand IDs)", () => {

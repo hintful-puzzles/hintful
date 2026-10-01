@@ -23,6 +23,13 @@
 import { valuesOneTo } from "../../engine/candidate-bits.ts";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -329,7 +336,7 @@ function specToGrid(desc: string, grid: Uint8Array, area: number): void {
 
 /** Validate a grid desc without building the grid (`validate_grid_desc`):
  * distinguishes "not enough data" from "too much". `range` = `w`, `area` = `w²`. */
-function validateGridDesc(desc: string, range: number, area: number): string | null {
+function validateGridDesc(desc: string, range: number, area: number): DescError | null {
   let squares = 0;
   let p = 0;
   while (p < desc.length && desc[p] !== ",") {
@@ -344,18 +351,18 @@ function validateGridDesc(desc: string, range: number, area: number): string | n
       const num = parseLeadingInt(desc, p);
       p = num.next;
       const val = num.value;
-      if (val < 1 || val > range) return "Out-of-range number in game description";
+      if (val < 1 || val > range) return DESC_OUT_OF_RANGE;
       squares++;
     } else {
-      return "Invalid character in game description";
+      return descBadCharacter(ch);
     }
   }
-  if (squares < area) return "Not enough data to fill grid";
-  if (squares > area) return "Too much data to fit in grid";
+  if (squares < area) return DESC_TOO_SHORT;
+  if (squares > area) return DESC_TOO_LONG;
   return null;
 }
 
-export function validateDesc(p: GroupParams, desc: string): string | null {
+export function validateDesc(p: GroupParams, desc: string): DescError | null {
   return validateGridDesc(desc, p.w, p.w * p.w);
 }
 

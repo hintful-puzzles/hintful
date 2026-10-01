@@ -33,6 +33,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   interpretTargetVerbs,
   squareGrid,
@@ -188,8 +189,7 @@ function clueGrid(state: RangeState): Int8Array {
 
 function solve(orig: RangeState, _curr: RangeState): SolveResult<RangeMove> {
   const solution = fullSolve(clueGrid(orig), orig.w, orig.h);
-  if (!solution)
-    return { ok: false, error: "This puzzle instance contains a contradiction" };
+  if (!solution) return { ok: false, error: NO_SOLUTION };
   const sets: RangeMove["sets"] = [];
   for (let r = 0; r < orig.h; r++) {
     for (let c = 0; c < orig.w; c++) {

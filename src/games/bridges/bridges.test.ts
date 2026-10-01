@@ -3,6 +3,7 @@
  * generator/solver differential is `bridges-differential.test.ts`.
  */
 import { describe, expect, it } from "vitest";
+import { DESC_TOO_LONG, puzzleDescError } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -78,8 +79,14 @@ describe("bridges desc codec", () => {
 
   it("validateDesc accepts a good desc and rejects overruns / lone islands", () => {
     expect(validateDesc(p3, desc)).toBeNull();
-    expect(validateDesc(p3, "zzz")).not.toBeNull();
-    expect(validateDesc(p3, "1i")).not.toBeNull();
+    expect(validateDesc(p3, "zzz")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p3, "1i")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p3, "1h")).toBe(
+      puzzleDescError("This game ID has fewer than two islands."),
+    );
+    expect(validateDesc(p3, "11g")).toBe(
+      puzzleDescError("This game ID places two islands next to each other."),
+    );
   });
 });
 

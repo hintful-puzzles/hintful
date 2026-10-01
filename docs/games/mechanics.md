@@ -385,7 +385,13 @@ What a tier *means*, and the grading that enforces it, is
 `newDesc(p, rng)` generates a board (see
 [solver & generator](./solver-and-generator.md)); `validateDesc` rejects a
 malformed desc with a reason (it guards the game-ID surface — descs arrive
-from URLs); `newState` builds state 0 from a validated desc. The desc codec is
+from URLs); `newState` builds state 0 from a validated desc. **The reason is
+the engine's words, not yours**: `validateDesc` returns a `DescError`, and the
+only ways to make one are
+[`desc-error.ts`](../../src/engine/desc-error.ts)'s kinds and its
+`puzzleDescError` escape for a rule of your puzzle's own (engine catalog §
+"`desc-error.ts` — why a game ID will not load"). Return, never throw: a
+malformed ID is a player's typo, not a bug. The desc codec is
 frozen into shared ids, same as params. State is **immutable**: `executeMove`
 returns a new state and `cloneState` is cheap by construction (parallel typed
 arrays clone well; see Galaxies'
@@ -569,6 +575,14 @@ quirk is missing bookkeeping, not behavior (owner directive, 2026-07-21;
 exemplar divergence comment in
 [`subsets/index.ts`](../../src/games/subsets/index.ts)). The solver side of
 Solve is [solver & generator](./solver-and-generator.md) § "Solve and the generator's aux".
+
+**What a player reads is the engine's.** A refused Solve returns a
+`SolveFailure` ([`solve-failure.ts`](../../src/engine/solve-failure.ts)), and a
+status bar that says the board is finished or was solved for the player opens
+with `completionStatus(completed, cheated, rest)`
+([`completion-status.ts`](../../src/engine/completion-status.ts)). Neither
+leaves you a word to choose; the engine catalog's entries for them say which
+failure a solver's verdict entitles it to.
 
 ## Capability flags
 

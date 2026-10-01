@@ -5,6 +5,11 @@
  * lifecycle + save round-trip, and tier-2.5 render scenarios with snapshots.
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -148,11 +153,9 @@ describe("sticks desc codec", () => {
 
   it("validateDesc rejects wrong lengths and unknown characters", () => {
     expect(validateDesc(FIX_PARAMS, FIX.desc)).toBeNull();
-    expect(validateDesc(FIX_PARAMS, `${FIX.desc}a`)).toBe("Description is too long");
-    expect(validateDesc(FIX_PARAMS, "a1a")).toBe("Description is too short");
-    expect(validateDesc(FIX_PARAMS, "a!b")).toBe(
-      "Description contains invalid characters",
-    );
+    expect(validateDesc(FIX_PARAMS, `${FIX.desc}a`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(FIX_PARAMS, "a1a")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(FIX_PARAMS, "a!b")).toBe(descBadCharacter("!"));
   });
 });
 

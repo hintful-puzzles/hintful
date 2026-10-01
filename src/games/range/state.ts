@@ -10,6 +10,13 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
@@ -149,7 +156,7 @@ export function encodeDesc(area: number, grid: Int8Array | number[]): string {
   return desc;
 }
 
-export function validateDesc(p: RangeParams, desc: string): string | null {
+export function validateDesc(p: RangeParams, desc: string): DescError | null {
   const n = p.w * p.h;
   const maxClue = p.w + p.h - 1;
   let squares = 0;
@@ -158,14 +165,14 @@ export function validateDesc(p: RangeParams, desc: string): string | null {
     if (blanks) {
       squares += blanks.charCodeAt(0) - A + 1;
     } else if (clue) {
-      if (Number(clue) > maxClue) return "Out-of-range number in game description";
+      if (Number(clue) > maxClue) return DESC_OUT_OF_RANGE;
       squares++;
     } else if (token !== "_") {
-      return "Invalid character in game description";
+      return descBadCharacter(token);
     }
   }
-  if (squares < n) return "Not enough data to fill grid";
-  if (squares > n) return "Too much data to fit in grid";
+  if (squares < n) return DESC_TOO_SHORT;
+  if (squares > n) return DESC_TOO_LONG;
   return null;
 }
 

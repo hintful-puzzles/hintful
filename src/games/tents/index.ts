@@ -22,7 +22,7 @@ import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
-import { commonHintRefusal } from "../../engine/hint-refusal.ts";
+import { commonHintRefusal, PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { matching } from "../../engine/latin.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -43,6 +43,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   buttonVerb,
   interpretTargetVerbs,
@@ -327,10 +328,7 @@ function solve(
   if (ret !== 1) {
     return {
       ok: false,
-      error:
-        ret === 0
-          ? "This puzzle is not self-consistent"
-          : "Unable to find a unique solution for this puzzle",
+      error: ret === 0 ? NO_SOLUTION : PUZZLE_NOT_REASONABLE,
     };
   }
   const tents: number[] = [];

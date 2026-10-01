@@ -11,6 +11,7 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { completionStatus } from "../../engine/completion-status.ts";
 import type { Game, SolveResult } from "../../engine/game.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
 import { click } from "../../engine/hint-gesture.ts";
@@ -30,6 +31,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { SOLUTION_UNKNOWN } from "../../engine/solve-failure.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import { arrowFor, hint, hintKeepTrack, type NetslideHint, parseAux } from "./hint.ts";
@@ -311,7 +313,7 @@ export const netslideGame: Game<
   // player can actually be looking at.
   solve: (_orig, curr, aux): SolveResult<NetslideMove> => {
     const tiles = parseAux(aux ?? null, curr.w * curr.h) ?? reconstructSolution(curr);
-    if (!tiles) return { ok: false, error: "Solution not known for this puzzle" };
+    if (!tiles) return { ok: false, error: SOLUTION_UNKNOWN };
     return { ok: true, move: { type: "solve", tiles: Array.from(tiles) } };
   },
 
@@ -335,7 +337,11 @@ export const netslideGame: Game<
     const active = computeActive(s, -1, -1).filter((a) => a !== 0).length;
     let text = s.cheated
       ? `Moves since auto-solve: ${s.moveCount - s.completed}`
-      : `${s.completed ? "COMPLETED! " : ""}Moves: ${s.completed || s.moveCount}`;
+      : completionStatus(
+          s.completed > 0,
+          false,
+          `Moves: ${s.completed || s.moveCount}`,
+        );
     if (s.movetarget) text += ` (target ${s.movetarget})`;
     return `${text} Active: ${active}/${s.w * s.h}`;
   },

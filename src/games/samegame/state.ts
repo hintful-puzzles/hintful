@@ -1,6 +1,18 @@
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
-import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
+import {
+  AREA_TOO_LARGE,
+  dimensionParamConfig,
+  numberItem,
+} from "../../engine/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
@@ -117,8 +129,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 export function validateParams(p: SamegameParams, _full: boolean): string | null {
-  if (p.w > Number.MAX_SAFE_INTEGER / p.h)
-    return "Width times height must not be unreasonably large";
+  if (p.w > Number.MAX_SAFE_INTEGER / p.h) return AREA_TOO_LARGE;
   if (p.soluble) {
     if (p.ncols < 3) return "Number of colors must be at least three";
     if (p.w * p.h <= 1) return "Grid area must be greater than 1";
@@ -408,16 +419,19 @@ export function newDesc(p: SamegameParams, rng: RandomState): { desc: string } {
   return { desc: tiles.join(",") };
 }
 
-export function validateDesc(p: SamegameParams, desc: string): string | null {
+export function validateDesc(p: SamegameParams, desc: string): DescError | null {
   const area = p.w * p.h;
   let i = 0;
   for (let cell = 0; cell < area; cell++) {
-    if (i >= desc.length || !isDigit(desc[i])) return "Not enough numbers in string";
+    if (i >= desc.length) return DESC_TOO_SHORT;
+    if (!isDigit(desc[i])) return descBadCharacter(desc[i]);
     const { value: num, next } = parseLeadingInt(desc, i);
     i = next;
-    if (cell < area - 1 && desc[i] !== ",") return "Expected comma after number";
-    if (cell === area - 1 && i < desc.length) return "Excess junk at end of string";
-    if (num < 0 || num > p.ncols) return "Color out of range";
+    if (cell < area - 1 && desc[i] !== ",") {
+      return i >= desc.length ? DESC_TOO_SHORT : DESC_MALFORMED;
+    }
+    if (cell === area - 1 && i < desc.length) return DESC_TOO_LONG;
+    if (num < 0 || num > p.ncols) return DESC_OUT_OF_RANGE;
     if (desc[i] === ",") i++;
   }
   return null;

@@ -1,4 +1,12 @@
 import { describe, expect, it } from "vitest";
+import {
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_REPEATED,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { raisedBevelWidth } from "../../engine/draw.ts";
 import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
 import type { HintStep } from "../../engine/index.ts";
@@ -152,17 +160,25 @@ describe("Sixteen desc and state", () => {
 
   it("rejects desc with wrong number of entries", () => {
     const p = { w: 3, h: 3, movetarget: 0 };
-    expect(validateDesc(p, "1,2,3,4,5,6,7,8")).toBeTruthy();
+    expect(validateDesc(p, "1,2,3,4,5,6,7,8")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, "1,2,3,4,5,6,7,8,9,10")).toBe(DESC_TOO_LONG);
   });
 
   it("rejects desc with duplicate numbers", () => {
     const p = { w: 3, h: 3, movetarget: 0 };
-    expect(validateDesc(p, "1,2,3,4,5,6,7,8,8")).toBeTruthy();
+    expect(validateDesc(p, "1,2,3,4,5,6,7,8,8")).toBe(DESC_REPEATED);
   });
 
   it("rejects desc with out-of-range numbers", () => {
     const p = { w: 3, h: 3, movetarget: 0 };
-    expect(validateDesc(p, "1,2,3,4,5,6,7,8,10")).toBeTruthy();
+    expect(validateDesc(p, "1,2,3,4,5,6,7,8,10")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, "0,2,3,4,5,6,7,8,9")).toBe(DESC_OUT_OF_RANGE);
+  });
+
+  it("rejects desc with a non-digit or an empty entry", () => {
+    const p = { w: 3, h: 3, movetarget: 0 };
+    expect(validateDesc(p, "1,2,3,4,5,6,7,8,x")).toBe(descBadCharacter("x"));
+    expect(validateDesc(p, "1,2,3,4,5,6,7,8,")).toBe(DESC_MALFORMED);
   });
 
   it("newState parses desc correctly", () => {

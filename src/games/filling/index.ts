@@ -20,7 +20,11 @@ import {
 } from "../../engine/game.ts";
 import { coord, fromCoord } from "../../engine/geometry.ts";
 import { drag, key, type PointerAction } from "../../engine/hint-gesture.ts";
-import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import {
+  commonHintRefusal,
+  DEDUCTION_EXHAUSTED,
+  PUZZLE_NOT_REASONABLE,
+} from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
 import { CELL, type Narration } from "../../engine/hint-words.ts";
 import { digitKeyCode, digitKeys } from "../../engine/key-labels.ts";
@@ -181,7 +185,7 @@ function interpretMove(
 function solve(orig: FillingState): SolveResult<FillingMove> {
   const { w, h, clues } = orig;
   const { solved, board } = solveFilling(clues, w, h);
-  if (!solved) return { ok: false, error: "Sorry, I couldn't find a solution" };
+  if (!solved) return { ok: false, error: PUZZLE_NOT_REASONABLE };
   return { ok: true, move: { type: "solve", board: board.join("") } };
 }
 

@@ -4,6 +4,7 @@
  * Tier 2.5 — a render scenario through a real Midend with a snapshot.
  */
 import { describe, expect, it } from "vitest";
+import { DESC_TOO_SHORT, descBadCharacter } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -88,11 +89,11 @@ describe("pattern desc codec", () => {
     const { desc } = genState({ w: 10, h: 10 }, "pattern-desc-1");
     expect(validateDesc({ w: 10, h: 10 }, desc)).toBeNull();
     // Too few line specifications.
-    expect(validateDesc({ w: 5, h: 5 }, "1/2/3")).not.toBeNull();
+    expect(validateDesc({ w: 5, h: 5 }, "1/2/3")).toBe(DESC_TOO_SHORT);
     // Unrecognized character.
-    expect(validateDesc({ w: 2, h: 2 }, "1/2/!/1")).not.toBeNull();
+    expect(validateDesc({ w: 2, h: 2 }, "1/2/!/1")).toBe(descBadCharacter("!"));
     // A clue that cannot fit its line.
-    expect(validateDesc({ w: 3, h: 3 }, "9/1/1/1/1/1")).not.toBeNull();
+    expect(validateDesc({ w: 3, h: 3 }, "9/1/1/1/1/1")).toMatch(/a column whose clues/);
   });
 });
 

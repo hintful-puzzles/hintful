@@ -17,6 +17,13 @@ import {
   type CandidateReading,
   DEFAULT_CANDIDATE_READING,
 } from "../../engine/candidate-hint.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";
@@ -208,7 +215,7 @@ export function validateParams(p: AbcdParams, full: boolean): string | null {
  * each number must fit its axis (a row clue `≤ 1 + w/2`, a column clue
  * `≤ 1 + h/2`).
  */
-export function validateDesc(p: AbcdParams, desc: string): string | null {
+export function validateDesc(p: AbcdParams, desc: string): DescError | null {
   const { w, h, n } = p;
   let i = 0; // clue index
   // Each token is a digit run or one other non-comma character.
@@ -216,15 +223,14 @@ export function validateDesc(p: AbcdParams, desc: string): string | null {
     if (/^\d/.test(token)) {
       // A clue which can't possibly fit its line is rejected; `i < h·n` is a row.
       const max = 1 + (((i < h * n ? w : h) / 2) | 0);
-      if (Number.parseInt(token, 10) > max)
-        return "Description contains invalid number clue.";
+      if (Number.parseInt(token, 10) > max) return DESC_OUT_OF_RANGE;
     } else if (token !== "-") {
-      return "Invalid character in description.";
+      return descBadCharacter(token);
     }
     i++;
   }
-  if (i < (w + h) * n) return "Description contains not enough clues.";
-  if (i > (w + h) * n) return "Description contains too many clues.";
+  if (i < (w + h) * n) return DESC_TOO_SHORT;
+  if (i > (w + h) * n) return DESC_TOO_LONG;
   return null;
 }
 

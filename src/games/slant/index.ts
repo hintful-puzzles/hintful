@@ -19,6 +19,7 @@ import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import { click, key, type PointerAction } from "../../engine/hint-gesture.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -34,6 +35,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   ERASE_KEYS,
   interpretTargetVerbs,
@@ -245,10 +247,7 @@ function solve(
   if ("error" in result) {
     return {
       ok: false,
-      error:
-        result.error === "impossible"
-          ? "This puzzle is not self-consistent"
-          : "Unable to find a unique solution for this puzzle",
+      error: result.error === "impossible" ? NO_SOLUTION : PUZZLE_NOT_REASONABLE,
     };
   }
   const grid = Array.from(result.soln, (s) => (s < 0 ? "\\" : "/")).join("");

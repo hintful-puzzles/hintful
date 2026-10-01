@@ -10,6 +10,11 @@
  */
 
 import { describe, expect, it } from "vitest";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/midend.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
@@ -188,17 +193,13 @@ describe("spokes description codec", () => {
   });
 
   it("distinguishes too short from too long", () => {
-    expect(validateDesc(FIX, FIX_DESC.slice(0, 10))).toBe("Description too short");
-    expect(validateDesc(FIX, `${FIX_DESC}1`)).toBe("Description too long");
+    expect(validateDesc(FIX, FIX_DESC.slice(0, 10))).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(FIX, `${FIX_DESC}1`)).toBe(DESC_TOO_LONG);
   });
 
   it("rejects a character that is neither a clue digit nor a hole", () => {
-    expect(validateDesc(FIX, `9${FIX_DESC.slice(1)}`)).toBe(
-      "Invalid character in description",
-    );
-    expect(validateDesc(FIX, `z${FIX_DESC.slice(1)}`)).toBe(
-      "Invalid character in description",
-    );
+    expect(validateDesc(FIX, `9${FIX_DESC.slice(1)}`)).toBe(descBadCharacter("9"));
+    expect(validateDesc(FIX, `z${FIX_DESC.slice(1)}`)).toBe(descBadCharacter("z"));
   });
 
   it("carves a wider hole for 'X' than for '0'", () => {

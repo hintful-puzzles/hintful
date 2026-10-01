@@ -9,6 +9,7 @@
  * every test runs against a real upstream puzzle without generating one.
  */
 import { describe, expect, it } from "vitest";
+import { descBadCharacter } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
@@ -49,6 +50,7 @@ import {
 import {
   areaBits,
   borderCount,
+  CLUE_TOO_LARGE,
   cloneState,
   DIFF_EASY,
   DIFF_NAMES,
@@ -69,6 +71,7 @@ import {
   newUi,
   numBit,
   PRESETS,
+  REGION_TOO_LARGE,
   type SeismicMove,
   type SeismicParams,
   type SeismicState,
@@ -342,13 +345,11 @@ describe("seismic description codec", () => {
 
   it("reports upstream's three rejection reasons", () => {
     const p = paramsOf(SMALL);
-    expect(validateDesc(p, "!!!,d4c1f3")).toMatch(/invalid characters/);
+    expect(validateDesc(p, "!!!,d4c1f3")).toBe(descBadCharacter("!"));
     // No walls at all: one region of 16 cells, far larger than 9.
-    expect(validateDesc(p, "zz,p")).toMatch(/region is too large/);
+    expect(validateDesc(p, "zz,p")).toBe(REGION_TOO_LARGE);
     // A clue bigger than the region that holds it.
-    expect(validateDesc(p, `${SMALL.desc.split(",")[0]},9o`)).toMatch(
-      /clue is too large/,
-    );
+    expect(validateDesc(p, `${SMALL.desc.split(",")[0]},9o`)).toBe(CLUE_TOO_LARGE);
   });
 });
 

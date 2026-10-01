@@ -48,6 +48,7 @@ import {
   stripModifiers,
 } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { NO_SOLUTION } from "../../engine/solve-failure.ts";
 import {
   buttonVerb,
   digitKey,
@@ -298,7 +299,7 @@ function solve(orig: ClustersState): SolveResult<ClustersMove> {
   // only the time it takes to find nothing left to do.
   solveGame(grid, orig.w, orig.h, 1);
   if (clustersStatus(grid, orig.w, orig.h) === INVALID) {
-    return { ok: false, error: "Puzzle is invalid." };
+    return { ok: false, error: NO_SOLUTION };
   }
   const fills: ClustersFill[] = Array.from(
     grid,

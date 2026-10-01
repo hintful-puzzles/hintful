@@ -5,9 +5,16 @@
  * dsfs) is not part of the state; the solver builds its own dsf on demand.
  */
 import { c2nUpper, n2cUpper } from "../../engine/desc-alphabet.ts";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+  puzzleDescError,
+} from "../../engine/desc-error.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
+import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
@@ -216,8 +223,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 export function validateParams(p: BridgesParams, full: boolean): string | null {
-  if (p.w > Math.floor(0x7fffffff / p.h))
-    return "Width times height must not be unreasonably large";
+  if (p.w > Math.floor(0x7fffffff / p.h)) return AREA_TOO_LARGE;
   if (full) {
     if (p.islands <= 0 || p.islands > 30)
       return "%age of island squares must be between 1% and 30%";
@@ -724,7 +730,7 @@ export function encodeGame(state: BridgesState): string {
  * touch orthogonally are caught during the scan. That walk over cells is what
  * the token loop feeds; only the character arithmetic is shared.
  */
-export function validateDesc(params: BridgesParams, desc: string): string | null {
+export function validateDesc(params: BridgesParams, desc: string): DescError | null {
   const w = params.w;
   const wh = params.w * params.h;
   const lastRow = new Array<boolean>(w).fill(false);
@@ -733,7 +739,7 @@ export function validateDesc(params: BridgesParams, desc: string): string | null
   for (const tok of scanRunLength(desc)) {
     // A token past the last cell is data the grid has no room for, whether or
     // not it is a character this game accepts.
-    if (i >= wh) return "Game description longer than expected";
+    if (i >= wh) return DESC_TOO_LONG;
     if ("blanks" in tok) {
       for (let j = 0; j < tok.blanks; j++) lastRow[(i + j) % w] = false;
       i += tok.blanks;
@@ -742,18 +748,18 @@ export function validateDesc(params: BridgesParams, desc: string): string | null
     // An island holds 1..16 bridges: `1`–`9`, then `A`–`G`.
     const count = c2nUpper(tok.value);
     if (count === null || count < 1 || count > 16) {
-      return "Game description contains unexpected character";
+      return descBadCharacter(tok.value);
     }
     nislands++;
     if ((i % w > 0 && lastRow[(i % w) - 1]) || lastRow[i % w]) {
-      return "Game description contains joined islands";
+      return puzzleDescError("This game ID places two islands next to each other.");
     }
     lastRow[i % w] = true;
     i++;
   }
-  if (i < wh) return "Game description shorter than expected";
-  if (i > wh) return "Game description longer than expected";
-  if (nislands < 2) return "Game description has too few islands";
+  if (i < wh) return DESC_TOO_SHORT;
+  if (i > wh) return DESC_TOO_LONG;
+  if (nislands < 2) return puzzleDescError("This game ID has fewer than two islands.");
   return null;
 }
 

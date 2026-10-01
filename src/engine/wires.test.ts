@@ -15,6 +15,7 @@
  * particular values a refactor would have to chase.
  */
 import { describe, expect, it } from "vitest";
+import { DESC_TOO_LONG, DESC_TOO_SHORT, descBadCharacter } from "./desc-error.ts";
 import { randomNew } from "./random/index.ts";
 import {
   addBorderBarriers,
@@ -155,11 +156,11 @@ describe("the description codec", () => {
     expect(validateWireDesc(2, 2, "1234")).toBeNull();
     expect(validateWireDesc(2, 2, "12h34")).toBeNull(); // barriers are optional suffixes
     expect(validateWireDesc(2, 2, "1v2h3v4h")).toBeNull();
-    expect(validateWireDesc(2, 2, "123")).toMatch(/shorter/);
-    expect(validateWireDesc(2, 2, "12345")).toMatch(/longer/);
-    expect(validateWireDesc(2, 2, "12z4")).toMatch(/unexpected character/);
+    expect(validateWireDesc(2, 2, "123")).toBe(DESC_TOO_SHORT);
+    expect(validateWireDesc(2, 2, "12345")).toBe(DESC_TOO_LONG);
+    expect(validateWireDesc(2, 2, "12z4")).toBe(descBadCharacter("z"));
     // A barrier letter where a tile is expected is a character, not a suffix.
-    expect(validateWireDesc(2, 2, "12h3")).toMatch(/shorter/);
+    expect(validateWireDesc(2, 2, "12h3")).toBe(DESC_TOO_SHORT);
   });
 
   it("reads tiles row-major as hex", () => {

@@ -32,6 +32,12 @@
  * `spectre-grid.ts`. The lookup tables are generated; see `spectre-tables.ts`.
  */
 
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_SHORT,
+  type DescError,
+  descBadCharacter,
+} from "../../desc-error.ts";
 import { type RandomState, randomNew, randomUpto } from "../../random/index.ts";
 import { retryLimit } from "../../retry-limit.ts";
 import {
@@ -566,16 +572,16 @@ export interface SpectrePatchParams {
  * range depends on the type of the level above it, which in turn depends on
  * that level's own index.
  */
-export function spectreParamsInvalid(params: SpectrePatchParams): string | null {
-  if (params.coords.length === 0) return "expected at least one numeric coordinate";
-  if (!spectreValidHexLetter(params.finalHex)) return "invalid final hexagon type";
+export function spectreParamsInvalid(params: SpectrePatchParams): DescError | null {
+  if (params.coords.length === 0) return DESC_TOO_SHORT;
+  if (!spectreValidHexLetter(params.finalHex)) return descBadCharacter(params.finalHex);
 
   let h = hexFromLetter(params.finalHex);
   for (let i = params.coords.length - 1; i >= 0; i--) {
     // Level 0 addresses a spectre inside a hexagon; every level above addresses
     // a hexagon inside a hexagon, and those have different counts.
     const limit = i === 0 ? numSpectres(h) : numSubhexes(h);
-    if (params.coords[i] >= limit) return "coordinate out of range";
+    if (params.coords[i] >= limit) return DESC_OUT_OF_RANGE;
     if (i > 0) h = HEX_DATA[h].subhexes[params.coords[i]];
   }
 

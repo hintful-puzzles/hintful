@@ -7,6 +7,7 @@
  */
 
 import type { Game, UiUpdate } from "../../engine/game.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
 import {
   cursorDelta,
@@ -254,7 +255,7 @@ export const mosaicGame: Game<
 
   solve(orig, _curr) {
     const sol = solveGameActual(orig.board);
-    if (!sol) return { ok: false, error: "Could not solve this board" };
+    if (!sol) return { ok: false, error: PUZZLE_NOT_REASONABLE };
     return { ok: true, move: { type: "solve", solution: encodeSolution(sol) } };
   },
 

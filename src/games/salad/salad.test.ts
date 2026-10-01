@@ -10,6 +10,12 @@
  * The frozen C boards are decoded and graded in `salad-differential.test.ts`.
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
@@ -169,22 +175,16 @@ describe("salad description codec", () => {
     ).toBe(LETTERS.desc);
   });
 
-  it("reports each upstream rejection message", () => {
+  it("rejects each way a description can be wrong", () => {
     const p = LETTERS.p;
-    expect(validateDesc(p, "CaCbAfBaAaA,p")).toBe("Border description is too long.");
-    expect(validateDesc(p, "C!aCbAfBaAa,p")).toBe(
-      "Border description contains invalid characters.",
-    );
-    expect(validateDesc(p, "IaCbAfBaAa,p")).toBe("Border clue is out of range.");
-    expect(validateDesc(p, "CaCbAfBa,p")).toBe("Description is too short.");
-    expect(validateDesc(NUMBERS.p, "d1cO32b3aXa1d2bX")).toBe(
-      "Grid description is too long.",
-    );
-    expect(validateDesc(NUMBERS.p, "d1cO32b3aXa1d2!")).toBe(
-      "Grid description contains invalid characters.",
-    );
-    expect(validateDesc(NUMBERS.p, "d9")).toBe("Grid clue is out of range.");
-    expect(validateDesc(NUMBERS.p, "d1cO32b3aXa1d")).toBe("Description is too short.");
+    expect(validateDesc(p, "CaCbAfBaAaA,p")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, "C!aCbAfBaAa,p")).toBe(descBadCharacter("!"));
+    expect(validateDesc(p, "IaCbAfBaAa,p")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, "CaCbAfBa,p")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(NUMBERS.p, "d1cO32b3aXa1d2bX")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(NUMBERS.p, "d1cO32b3aXa1d2!")).toBe(descBadCharacter("!"));
+    expect(validateDesc(NUMBERS.p, "d9")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(NUMBERS.p, "d1cO32b3aXa1d")).toBe(DESC_TOO_SHORT);
     expect(validateDesc(LETTERS.p, LETTERS.desc)).toBeNull();
     expect(validateDesc(NUMBERS.p, NUMBERS.desc)).toBeNull();
   });

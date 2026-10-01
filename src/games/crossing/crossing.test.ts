@@ -8,6 +8,13 @@
  * format, and tier-2.5 render scenarios with snapshots.
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_REPEATED,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -201,22 +208,19 @@ describe("crossing desc codec", () => {
     expect(numbers).toEqual(sorted);
   });
 
-  it("reports upstream's verdicts", () => {
+  it("reports what is wrong with a desc", () => {
     expect(validateDesc(P5, FIX.desc)).toBeNull();
-    // '!' is not a wall character; the cursor parks and the ',' check fires.
-    expect(validateDesc(P5, "a2!3a2a2a2a6a1,12,59")).toBe(
-      "Block description is too long",
-    );
+    // '!' is not a wall character; the cursor parks on it short of the ','.
+    expect(validateDesc(P5, "a2!3a2a2a2a6a1,12,59")).toBe(descBadCharacter("!"));
     // More cell data than 25 cells hold.
-    expect(validateDesc(P5, "25a,12,59")).toBe("Block description is too long");
+    expect(validateDesc(P5, "25a,12,59")).toBe(DESC_TOO_LONG);
+    // The wall section ends before the board does, or there is no ','.
+    expect(validateDesc(P5, "a2,12")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(P5, "25")).toBe(DESC_TOO_SHORT);
     // The same number twice.
-    expect(validateDesc(P5, "a2a3a2a2a2a6a1,12,12")).toBe(
-      "Duplicate numbers are not supported",
-    );
+    expect(validateDesc(P5, "a2a3a2a2a2a6a1,12,12")).toBe(DESC_REPEATED);
     // A number longer than the format's nine digits.
-    expect(validateDesc(P5, "a2a3a2a2a2a6a1,1234567890")).toBe(
-      "One of the numbers is too long",
-    );
+    expect(validateDesc(P5, "a2a3a2a2a2a6a1,1234567890")).toBe(DESC_OUT_OF_RANGE);
   });
 
   it("is as lenient as upstream: single digits are dropped, short descs pass", () => {

@@ -12,6 +12,11 @@
  */
 
 import { describe, expect, it } from "vitest";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -188,11 +193,9 @@ describe("netslide desc", () => {
   it("rejects a short, a long, and a corrupt desc", () => {
     const p: NetslideParams = { ...EASY_5x5, w: 2, h: 2 };
     expect(validateDesc(p, "1234")).toBeNull();
-    expect(validateDesc(p, "123")).toBe("Game description shorter than expected");
-    expect(validateDesc(p, "12345")).toBe("Game description longer than expected");
-    expect(validateDesc(p, "12z4")).toBe(
-      "Game description contained unexpected character",
-    );
+    expect(validateDesc(p, "123")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, "12345")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, "12z4")).toBe(descBadCharacter("z"));
   });
 });
 

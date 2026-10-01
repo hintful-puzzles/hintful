@@ -7,6 +7,12 @@
  * docs/games/testing.md § "The test tiers".
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, LEFT_DRAG } from "../../engine/pointer.ts";
@@ -74,13 +80,14 @@ describe("filling desc codec", () => {
   });
 
   it("rejects a desc whose area does not fill the grid", () => {
-    expect(validateDesc({ w: 3, h: 1 }, "11")).not.toBeNull(); // too short
-    expect(validateDesc({ w: 3, h: 1 }, "1111")).not.toBeNull(); // too long
+    expect(validateDesc({ w: 3, h: 1 }, "11")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc({ w: 3, h: 1 }, "1111")).toBe(DESC_TOO_LONG);
     expect(validateDesc({ w: 3, h: 1 }, "1a2")).toBeNull();
   });
 
-  it("rejects invalid characters", () => {
-    expect(validateDesc({ w: 3, h: 1 }, "1@2")).not.toBeNull();
+  it("rejects invalid characters and clues too large for the board", () => {
+    expect(validateDesc({ w: 3, h: 1 }, "1@2")).toBe(descBadCharacter("@"));
+    expect(validateDesc({ w: 3, h: 1 }, "14a")).toBe(DESC_OUT_OF_RANGE);
   });
 });
 

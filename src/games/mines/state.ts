@@ -13,7 +13,16 @@
  */
 
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import {
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  type DescError,
+  puzzleDescError,
+} from "../../engine/desc-error.ts";
 import { obfuscateBitmap } from "../../engine/obfuscate.ts";
+import { AREA_TOO_LARGE } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomStateDecode } from "../../engine/random/index.ts";
 import type { Point } from "../../engine/types.ts";
@@ -168,8 +177,7 @@ export function encodeParams(p: MinesParams, full: boolean): string {
 export function validateParams(p: MinesParams, full: boolean): string | null {
   if (full && p.unique && (p.w <= 2 || p.h <= 2))
     return "Width and height must both be greater than two";
-  if (p.w > Math.floor((2 ** 28 - 1) / p.h))
-    return "Width times height must not be unreasonably large";
+  if (p.w > Math.floor((2 ** 28 - 1) / p.h)) return AREA_TOO_LARGE;
   if (p.n > p.w * p.h - 9) return "Too many mines for grid size";
   if (p.firstClickX >= p.w) return "First-click x coordinate must be inside the grid";
   if (p.firstClickY >= p.h) return "First-click y coordinate must be inside the grid";
@@ -213,39 +221,58 @@ function decodeLayoutBitmap(hex: string, wh: number, masked: boolean): Int8Array
 
 // --- desc validation (mines.c validate_desc:2081) ----------------------
 
-export function validateDesc(p: MinesParams, desc: string): string | null {
+/** Why `desc[i]` cannot stand where `ok` says what belongs: the desc ran out,
+ * or something else is there. */
+function misplaced(
+  desc: string,
+  i: number,
+  ok: (c: string) => boolean,
+): DescError | null {
+  if (i >= desc.length) return DESC_TOO_SHORT;
+  return ok(desc[i]) ? null : DESC_MALFORMED;
+}
+
+const isComma = (c: string) => c === ",";
+
+export function validateDesc(p: MinesParams, desc: string): DescError | null {
   const wh = p.w * p.h;
   let i = 0;
   if (desc[0] === "r") {
-    if (desc.length < 2 || !isDigit(desc[1]))
-      return "No initial mine count in game description";
+    const count = misplaced(desc, 1, isDigit);
+    if (count) return count;
     const n = parseLeadingInt(desc, 1);
     i = n.next;
-    if (n.value > wh - 9) return "Too many mines for grid size";
-    if (desc[i] !== ",") return "No ',' after initial x-coordinate in game description";
-    if (desc[i + 1] !== "u" && desc[i + 1] !== "a")
-      return "No uniqueness specifier in game description";
-    if (desc[i + 2] !== ",")
-      return "No ',' after uniqueness specifier in game description";
+    if (n.value > wh - 9) {
+      return puzzleDescError(
+        "This game ID has more mines than its board can hold around a safe first click.",
+      );
+    }
     // rest (the encoded RNG state) is ignored
-    return null;
+    return (
+      misplaced(desc, i, isComma) ??
+      misplaced(desc, i + 1, (c) => c === "u" || c === "a") ??
+      misplaced(desc, i + 2, isComma)
+    );
   }
   // Public/private desc: optional `x,y,` prefix, optional `m`/`u`, then hex.
   if (desc.length > 0 && isDigit(desc[0])) {
     const x = parseLeadingInt(desc, 0);
     i = x.next;
-    if (x.value >= p.w) return "Initial x-coordinate was out of range";
-    if (desc[i] !== ",") return "No ',' after initial x-coordinate in game description";
-    if (i + 1 >= desc.length || !isDigit(desc[i + 1]))
-      return "No initial y-coordinate in game description";
+    if (x.value >= p.w) return DESC_OUT_OF_RANGE;
+    const beforeY = misplaced(desc, i, isComma) ?? misplaced(desc, i + 1, isDigit);
+    if (beforeY) return beforeY;
     const y = parseLeadingInt(desc, i + 1);
     i = y.next;
-    if (y.value >= p.h) return "Initial y-coordinate was out of range";
-    if (desc[i] !== ",") return "No ',' after initial y-coordinate in game description";
+    if (y.value >= p.h) return DESC_OUT_OF_RANGE;
+    const afterY = misplaced(desc, i, isComma);
+    if (afterY) return afterY;
     i++;
   }
   if (desc[i] === "m" || desc[i] === "u") i++;
-  if (desc.length - i !== (wh + 3) >> 2) return "Game description is wrong length";
+  const length = desc.length - i;
+  const want = (wh + 3) >> 2;
+  if (length < want) return DESC_TOO_SHORT;
+  if (length > want) return DESC_TOO_LONG;
   return null;
 }
 
