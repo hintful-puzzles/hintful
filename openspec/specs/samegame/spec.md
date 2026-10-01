@@ -86,8 +86,8 @@ select nothing. A keyboard cursor SHALL move with the cursor keys and act at the
 cursor on select. `changedState` SHALL clear the selection on every real
 transition. `statusbarText` SHALL show `"Score: N"`, extended to `"...  Selected:
 K (P)"` while a region of `K` tiles worth `P = max(0, K − scoresub)²` points is
-selected, `"COMPLETE! Score: N"` when complete, and `"Cannot move! Score: N"`
-when impossible.
+selected, the engine's completion words followed by `"Score: N"` when complete
+(`"COMPLETED! Score: N"`), and `"Cannot move! Score: N"` when impossible.
 
 #### Scenario: First click selects, second click removes
 

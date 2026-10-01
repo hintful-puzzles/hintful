@@ -125,7 +125,7 @@ cursor with select/select2 SHALL mirror the click behaviors.
 
 The Solve command SHALL run the deductive solver on the clue board and apply
 the full solution (cells flagged solved, `cheated` set, status bar reading
-`Auto solved`), failing with an error when deduction cannot complete the
+`Auto-solved.`), failing with an error when deduction cannot complete the
 board. `findMistakes` SHALL return every cell the player has determined
 whose mark contradicts the deduced solution, rendered as an error-colored
 outline overlay, and SHALL return no mistakes when deduction stalls or the
@@ -140,7 +140,7 @@ separate flag.
 
 - **WHEN** the Solve command runs on a generated board
 - **THEN** every cell is determined, `status` returns `"solved"`, and the
-  status bar reads `Auto solved`
+  status bar reads `Auto-solved.`
 
 #### Scenario: findMistakes flags a wrong mark
 
