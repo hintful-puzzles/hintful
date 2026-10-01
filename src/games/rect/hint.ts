@@ -25,7 +25,7 @@ import { assertNever } from "../../engine/assert-never.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { narratedStep } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
-import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import type { Rect } from "../../engine/types.ts";
 import type { RectEdge } from "./hint-marks.ts";
@@ -248,15 +248,9 @@ function stepOf(s: RectState, f: RectFiring): HintStep<RectMove, RectHint> {
 
 /**
  * The plan from the player's lines to the end, a step per rectangle or line.
- * Refuses on a finished board and one with a wrong line; stops where the rungs
- * run out.
+ * Stops where the rungs run out.
  */
-export function rectHint(
-  state: RectState,
-  mistakes: number,
-): HintResult<RectMove, RectHint> {
-  const refusal = commonHintRefusal(state.completed, mistakes);
-  if (refusal) return refusal;
+export function rectHint(state: RectState): HintResult<RectMove, RectHint> {
   const board = { s: state };
   const steps: HintStep<RectMove, RectHint>[] = [];
   deduceHintPlan({

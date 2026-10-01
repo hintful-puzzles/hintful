@@ -283,15 +283,13 @@ describe("towers hint", () => {
     expect(res.steps[0].explanation).toMatch(/can only be|must be/);
   });
 
-  it("refuses on a solved board and on a board with mistakes", () => {
+  it("counts a solved board as finished and flags a wrong tower, the boards the midend refuses", () => {
     const { st } = gen(5, "easy", "hint-refuse");
     const r = towersGame.solve?.(st, st);
     if (!r?.ok) throw new Error("solve failed");
     const solved = towersGame.executeMove(st, r.move);
-    expect(towersGame.hint?.(solved).ok).toBe(false);
+    expect(towersGame.status(solved)).toBe("solved");
 
-    // A wrong tower → refusal coupled to the mistake overlay (tested via the
-    // engine elsewhere); here we just assert the refusal.
     const w = st.w;
     const empty = [...st.immutable].indexOf(0);
     const sol = (r.move as { type: "solve"; grid: number[] }).grid;
@@ -303,8 +301,7 @@ describe("towers hint", () => {
       n: wrong,
       pencil: false,
     });
-    const res = towersGame.hint?.(bad);
-    expect(res?.ok).toBe(false);
+    expect(towersGame.findMistakes?.(bad).length ?? 0).toBeGreaterThan(0);
   });
 });
 

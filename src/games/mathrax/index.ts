@@ -433,7 +433,7 @@ function hint(
   _aux?: string,
   ui?: MathraxUi,
 ): HintResult<MathraxMove, MathraxHint> {
-  return candidateHint(state, ui ?? newUi(state), findMistakes, buildSteps);
+  return candidateHint(state, ui ?? newUi(state), buildSteps);
 }
 
 /** Classify a player move against the displayed hint step (shared

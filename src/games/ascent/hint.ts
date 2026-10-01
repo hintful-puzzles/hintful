@@ -31,7 +31,7 @@ import {
 } from "../../engine/deduction-fixpoint.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
-import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { DEDUCTION_EXHAUSTED, type HintRefusal } from "../../engine/hint-refusal.ts";
 import { type Narration, StepMarks } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { findLines, findPointers, type RuledOut } from "./hint-edges.ts";
@@ -548,7 +548,7 @@ function leavesRoom(
 
 export function ascentHint(
   state: AscentState,
-): { ok: true; steps: AscentStep[] } | { ok: false; error: string } {
+): { ok: true; steps: AscentStep[] } | { ok: false; error: HintRefusal } {
   const plan = ascentPlan(state);
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
   return { ok: true, steps: plan.map(stepOf) };

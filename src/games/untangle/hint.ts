@@ -35,7 +35,7 @@
  */
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { ALREADY_SOLVED, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
+import { NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import { ENDGAME_CROSSINGS, type Endgame, planEndgame } from "./endgame.ts";
@@ -720,8 +720,6 @@ export function deduceUntangleHintPlan(
   aux?: string,
   snap = false,
 ): HintResult<UntangleMove> {
-  if (state.completed) return { ok: false, error: ALREADY_SOLVED };
-
   const board = new Board(state.n, state.w, state.edges, state.pts.slice());
   board.snap = snap;
   const layout = solvedLayout(state.n, state.w, state.edges, aux);

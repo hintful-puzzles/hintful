@@ -19,7 +19,6 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { ALREADY_SOLVED, FIX_MISTAKES_FIRST } from "../../engine/hint-refusal.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { boardOf, type PearlHint, pearlKeepTrack } from "./hint.ts";
@@ -287,14 +286,14 @@ describe("following one step at a time", () => {
   });
 });
 
-describe("the two refusals every deductive hint owes", () => {
-  it("declines on a solved board", () => {
+describe("the boards the midend refuses a hint on", () => {
+  it("counts the walked-out board as solved", () => {
     const { seen, end } = walk(deal(SHAPES[0], "refuse"));
     expect(seen.length).toBeGreaterThan(0);
-    expect(pearlGame.hint?.(end)).toEqual({ ok: false, error: ALREADY_SOLVED });
+    expect(pearlGame.status(end)).toBe("solved");
   });
 
-  it("declines while a cross rules out an edge the loop uses", () => {
+  it("flags a cross that rules out an edge the loop uses", () => {
     const state = deal(SHAPES[0], "refuse");
     const sol = new Uint8Array(state.w * state.h);
     expect(pearlSolve(state.w, state.h, state.clues, sol, DIFF_COUNT, false)).toBe(1);
@@ -309,6 +308,5 @@ describe("the two refusals every deductive hint owes", () => {
     });
     const mistakes = pearlGame.findMistakes?.(wrong) as readonly PearlMistake[];
     expect(mistakes).toContainEqual({ x, y, dir: 1, cross: true });
-    expect(pearlGame.hint?.(wrong)).toEqual({ ok: false, error: FIX_MISTAKES_FIRST });
   });
 });

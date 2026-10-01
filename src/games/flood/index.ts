@@ -7,7 +7,7 @@ import type {
   HintTrackVerdict,
   UiUpdate,
 } from "../../engine/game.ts";
-import { ALREADY_SOLVED, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
+import { GAME_OVER, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
 import {
   dimensionParamConfig,
   numberItem,
@@ -136,7 +136,8 @@ function statusbarText(state: FloodState, _ui: FloodUi): string {
  * Returning the full plan rather than one step keeps the hint banner
  * populated through an auto-hint run. */
 function hint(state: FloodState): HintResult<FloodMove> {
-  if (state.completed) return { ok: false, error: ALREADY_SOLVED };
+  // Flooded past the move limit: the status is lost, and no fill is legal.
+  if (state.completed) return { ok: false, error: GAME_OVER };
   const moves = solveMoves(state.w, state.h, state.grid, state.colors);
   if (moves.length === 0) return { ok: false, error: NO_MOVE_WORTH_MAKING };
   // Each step's dots are read off the board it is shown on: the one the

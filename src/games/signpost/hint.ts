@@ -23,7 +23,6 @@ import {
 } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
-  commonHintRefusal,
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
@@ -186,15 +185,11 @@ function solvable(state: SignpostState): boolean {
 
 /**
  * The plan from the player's own links to the end, a step per link. Refuses
- * on a solved board, one with a wrong link, and one the solver cannot finish
- * from its clues (a board entered by hand).
+ * on a board the solver cannot finish from its clues (a board entered by hand).
  */
 export function signpostHint(
   state: SignpostState,
-  mistakes: number,
 ): HintResult<SignpostMove, SignpostHint> {
-  const refusal = commonHintRefusal(state.completed, mistakes);
-  if (refusal) return refusal;
   if (!solvable(state)) return { ok: false, error: PUZZLE_NOT_REASONABLE };
   const board = cloneState(state);
   const { plan } = deduceHintPlan({

@@ -19,6 +19,7 @@ import type { HintStep } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
   DEDUCTION_EXHAUSTED,
+  type HintRefusal,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
@@ -353,7 +354,7 @@ export function pearlHint(
   state: PearlState,
 ):
   | { ok: true; steps: HintStep<PearlMove, PearlHint>[] }
-  | { ok: false; error: string } {
+  | { ok: false; error: HintRefusal } {
   const board = boardOf(state);
   const pass = pearlRecordingPass(board, stepBudget("pearl hint"));
   const { plan } = deduceHintPlan<PearlBoard, ShownFiring, string>({

@@ -539,12 +539,12 @@ describe("solo hint", () => {
     expect(checked, "no locked-pattern firing reached").toBeGreaterThan(0);
   });
 
-  it("refuses on a solved board and on a board with mistakes", () => {
+  it("counts a solved board as finished and flags a wrong digit, the boards the midend refuses", () => {
     const { st } = gen(BASIC, "refuse");
     const r = soloGame.solve?.(st, st);
     if (!r?.ok) throw new Error("solve failed");
     const solved = soloGame.executeMove(st, r.move);
-    expect(soloGame.hint?.(solved)?.ok).toBe(false);
+    expect(soloGame.status(solved)).toBe("solved");
 
     const cr = st.cr;
     const sol = (r.move as { type: "solve"; grid: number[] }).grid;
@@ -565,7 +565,7 @@ describe("solo hint", () => {
       n: wrong,
       pencil: false,
     });
-    expect(soloGame.hint?.(bad)?.ok).toBe(false);
+    expect(soloGame.findMistakes?.(bad).length ?? 0).toBeGreaterThan(0);
   });
 });
 

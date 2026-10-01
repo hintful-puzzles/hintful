@@ -306,11 +306,11 @@ describe("mathrax hint", () => {
     expect(off.steps.length).toBeGreaterThan(on.steps.length);
   });
 
-  it("refuses on a solved board and on a board with mistakes", () => {
+  it("counts a solved board as finished and flags a wrong entry, the boards the midend refuses", () => {
     const { st } = gen(NORMAL, "hint-refuse");
     const r = mathraxGame.solve?.(st, st);
     if (!r?.ok || r.move.type !== "solve") throw new Error("solve failed");
-    expect(mathraxGame.hint?.(mathraxGame.executeMove(st, r.move)).ok).toBe(false);
+    expect(mathraxGame.status(mathraxGame.executeMove(st, r.move))).toBe("solved");
 
     const o = st.params.o;
     const empty = [...st.flags].findIndex((f) => !(f & F_IMMUTABLE));
@@ -322,7 +322,7 @@ describe("mathrax hint", () => {
       n: wrong,
       pencil: false,
     });
-    expect(mathraxGame.hint?.(bad).ok).toBe(false);
+    expect(mathraxGame.findMistakes?.(bad).length ?? 0).toBeGreaterThan(0);
   });
 });
 

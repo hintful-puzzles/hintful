@@ -27,15 +27,13 @@ function freshState(n: number, diff: number, seed: string): DominosaState {
 }
 
 describe("dominosa hint — refusal", () => {
-  it("refuses on a solved board", () => {
+  it("counts a solved board as finished, so the midend refuses it", () => {
     const state = freshState(4, DIFF_TRIVIAL, "hint-solved");
     const { pairs } = solveNumbers(state.params, state.numbers, DIFFCOUNT);
     let s = state;
     for (const [a, b] of pairs)
       s = dominosaGame.executeMove(s, { type: "domino", d1: a, d2: b });
     expect(dominosaGame.status(s)).toBe("solved");
-    const res = dominosaGame.hint?.(s);
-    expect(res?.ok).toBe(false);
   });
 
   it("refuses on an Ambiguous (non-unique) board", () => {
@@ -51,7 +49,7 @@ describe("dominosa hint — refusal", () => {
     expect(res?.ok).toBe(false);
   });
 
-  it("refuses when the board has a mistake", () => {
+  it("flags a domino the solution lacks, so the midend refuses it", () => {
     const state = freshState(4, DIFF_TRIVIAL, "hint-mistake");
     const { pairs } = solveNumbers(state.params, state.numbers, DIFFCOUNT);
     const solutionSet = new Set(pairs.map(([a, b]) => a * 1000 + b));
@@ -65,9 +63,7 @@ describe("dominosa hint — refusal", () => {
       }
     const [a, b] = wrong as [number, number];
     const bad = dominosaGame.executeMove(state, { type: "domino", d1: a, d2: b });
-    const res = dominosaGame.hint?.(bad);
-    expect(res?.ok).toBe(false);
-    expect(res && !res.ok && res.error).toMatch(/mistake/i);
+    expect(dominosaGame.findMistakes?.(bad).length ?? 0).toBeGreaterThan(0);
   });
 });
 

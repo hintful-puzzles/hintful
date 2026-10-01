@@ -16,7 +16,7 @@ import { winFlash } from "../../engine/flash.ts";
 import type { Game, GamePref, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { click, type PointerAction } from "../../engine/hint-gesture.ts";
-import { commonHintRefusal, PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -405,8 +405,7 @@ export const pearlGame: Game<
   solve,
   difficulty,
   findMistakes,
-  hint: (state) =>
-    commonHintRefusal(state.completed, findMistakes(state).length) ?? pearlHint(state),
+  hint: pearlHint,
   hintMarks: {
     roles: {
       ring: "the edges the step decides: a blue line from a square's center to its edge means the loop must go through that edge, and a blue cross on an edge means it can't. The sentence calls one “this edge”, or names the pearl or square whose edges they are.",

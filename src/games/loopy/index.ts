@@ -873,7 +873,7 @@ export const loopyGame: Game<
   solve,
   difficulty,
   findMistakes,
-  hint: (state) => hint(state, findMistakes(state).length),
+  hint,
   hintMarks: {
     roles: {
       ring: "what the step decides, in blue: a band along an edge it sets, solid when it must be a line and broken when it can't be one, or a note it places, called “this corner” or “these two edges”.",

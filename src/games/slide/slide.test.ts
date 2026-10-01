@@ -18,7 +18,6 @@ import {
   descBadCharacter,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
-import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/index.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -987,16 +986,12 @@ describe("slide solve", () => {
     expect(stateOf(me).soln).toBeNull();
   });
 
-  it("reports an already-solved board rather than a pointless route", () => {
-    // Upstream's own `nmoves == 0` guard is unreachable, because `solve_board`
-    // only ever tests the goal on a *newly generated* board and so never
-    // answers 0 — on a finished board it happily reports the one irrelevant
-    // move that leaves the main block where it is. We test the start board.
-    const s = fixtureState(1, 1, 0);
-    expect(slideGame.solve?.(s, s)).toEqual({
-      ok: false,
-      error: ALREADY_SOLVED,
-    });
+  it("calls a board that starts with the main block home solved", () => {
+    // So the midend refuses Solve on it as `ALREADY_SOLVED`. Asked anyway,
+    // `solve_board` tests the goal only on a *newly generated* board, and on a
+    // finished one reports the one irrelevant move that leaves the main block
+    // where it is.
+    expect(slideGame.status(fixtureState(1, 1, 0))).toBe("solved");
   });
 
   it("reports an insoluble board", () => {

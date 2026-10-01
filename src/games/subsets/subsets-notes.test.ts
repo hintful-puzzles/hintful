@@ -196,7 +196,7 @@ describe("the reference aid repaints on a warm draw state", () => {
 });
 
 describe("subsets rule-out mistakes", () => {
-  it("ruling out the solution's set is a mistake, and the hint refuses", () => {
+  it("ruling out the solution's set is a mistake, and ruling out another is not", () => {
     const s = gen(DIFF_EASY, "notes-mistake");
     const { solved } = solveCopy(s);
     const cell = firstUndecided(s);
@@ -209,7 +209,6 @@ describe("subsets rule-out mistakes", () => {
     expect(findMistakes(wrong)).toEqual([
       { kind: "ruled", pos: cell, value: solved.known[cell] },
     ]);
-    expect(subsetsGame.hint?.(wrong)).toMatchObject({ ok: false });
 
     const other = (solved.known[cell] + 1) % 16;
     const right = subsetsGame.executeMove(s, {

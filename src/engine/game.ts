@@ -17,6 +17,7 @@
 import type { DescError } from "./desc-error.ts";
 import type { DifficultyContract } from "./difficulty.ts";
 import type { PointerAction } from "./hint-gesture.ts";
+import type { HintRefusal } from "./hint-refusal.ts";
 import type { MarkRole, Narration } from "./hint-words.ts";
 import type { RandomState } from "./random/index.ts";
 import type { NotApplicableReasons } from "./sections.ts";
@@ -89,10 +90,14 @@ export interface HintStep<Move, Highlights = unknown> {
  * the midend stores the plan as the active hint, displays one step
  * at a time, and advances as steps complete. Returning the full plan
  * (rather than one move per request) avoids replan drift between
- * steps and pays any expensive search once. */
+ * steps and pays any expensive search once.
+ *
+ * The midend asks only about an unfinished board on which `findMistakes`
+ * finds nothing, and refuses the rest itself; a game's error is the
+ * collection's own ({@link HintRefusal}). */
 export type HintResult<Move, Highlights = unknown> =
   | { ok: true; steps: HintStep<Move, Highlights>[] }
-  | { ok: false; error: string };
+  | { ok: false; error: HintRefusal };
 
 /** The hint plan currently being followed. Stored in the midend (not
  * in game state, never persisted); `steps[index]` is the step being
@@ -480,7 +485,10 @@ export interface Game<
    * preference that changes how moves behave or how the hint should be
    * expressed (Towers' auto-pencil mode decides whether the hint teaches
    * the trivial row/column note eliminations or folds them into the
-   * placement). Ignored by most games. */
+   * placement). Ignored by most games.
+   *
+   * Never asked about a board whose status is solved, or on which
+   * `findMistakes` finds anything: the midend refuses those itself. */
   hint?(state: State, aux?: string, ui?: Ui): HintResult<Move, Highlights>;
   /** How the pointer makes `move`, the move of the hint step on display, from
    * `state` with `ui` as it is and the board drawn at `ds`: the taps, drags and

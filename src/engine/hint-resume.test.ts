@@ -61,6 +61,16 @@ function solveByHints(
   const cap = Math.max(800, 2 * (first?.ok ? first.steps.length : 0));
   for (let moves = 0; moves < cap; moves++) {
     if (game.status(state) === "solved") return moves;
+    // The midend's own question before every hint. A board the hints led to
+    // has nothing wrong on it, so a mistake here is a hint leading the player
+    // astray or a `findMistakes` flagging a sound board, and the midend would
+    // refuse the next hint either way.
+    const wrong = game.findMistakes?.(state).length ?? 0;
+    if (wrong > 0) {
+      throw new Error(
+        `${seed}: findMistakes reports ${wrong} after ${moves} hinted moves`,
+      );
+    }
     const res = game.hint?.(state, aux);
     if (!res) throw new Error(`${seed}: game has no hint() method`);
     if (!res.ok) {
@@ -282,7 +292,7 @@ describe("a kept hint plan never contains a step that does nothing", () => {
           const { desc, aux } = game.newDesc(params, randomNew(`noop-${at}`));
           let state = game.newState(params, desc);
           const res = game.hint?.(state, aux);
-          if (!res?.ok) continue; // refusal (e.g. already solved) — nothing to check
+          if (!res?.ok) continue; // a refusal has no steps to check
           res.steps.forEach((step, i) => {
             const after = game.executeMove(state, step.move);
             expect(

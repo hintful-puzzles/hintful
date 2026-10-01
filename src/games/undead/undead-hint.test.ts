@@ -204,18 +204,16 @@ describe("undead hint plan", () => {
   });
 });
 
-describe("undead hint refusal", () => {
-  it("refuses on a solved board", () => {
+describe("undead boards the midend refuses a hint on", () => {
+  it("counts a solved board as finished", () => {
     const st = gen({ w: 4, h: 4, diff: "easy" }, "refuse-solved");
     const r = undeadGame.solve?.(st, st);
     if (!r?.ok) throw new Error("solve failed");
     const solved = undeadGame.executeMove(st, r.move);
     expect(undeadGame.status(solved)).toBe("solved");
-    const h = undeadGame.hint?.(solved);
-    expect(h?.ok).toBe(false);
   });
 
-  it("refuses on a board with a mistake (and the mistake is flagged)", () => {
+  it("flags a wrong monster as a mistake", () => {
     const st = gen({ w: 4, h: 4, diff: "easy" }, "refuse-wrong");
     const r = undeadGame.solve?.(st, st);
     if (!r?.ok || r.move.type !== "solve") throw new Error("solve failed");
@@ -232,9 +230,7 @@ describe("undead hint refusal", () => {
     const bits = [MON_GHOST, MON_VAMPIRE, MON_ZOMBIE];
     const wrong = bits.find((b) => b !== sol[cell]) as number;
     const dirty = undeadGame.executeMove(st, { type: "set", cell, monster: wrong });
-    expect(undeadGame.findMistakes?.(dirty).length).toBeGreaterThan(0);
-    const h = undeadGame.hint?.(dirty);
-    expect(h?.ok).toBe(false);
+    expect(undeadGame.findMistakes?.(dirty).length ?? 0).toBeGreaterThan(0);
   });
 });
 

@@ -20,6 +20,7 @@ import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
   DEDUCTION_EXHAUSTED,
+  type HintRefusal,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
@@ -292,7 +293,7 @@ function showable(b: Board, f: TracksFiring): boolean {
  */
 export function tracksHint(
   state: TracksState,
-): { ok: true; steps: HintStep<TracksMove>[] } | { ok: false; error: string } {
+): { ok: true; steps: HintStep<TracksMove>[] } | { ok: false; error: HintRefusal } {
   const board = stateToBoard(state);
   const next = tracksRecordingPass(board, state.diff, stepBudget("tracks hint"));
   const { plan } = deduceHintPlan<Board, TracksFiring, string>({

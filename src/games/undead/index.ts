@@ -27,7 +27,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { key, MARK_ALL_CODE, type PointerAction } from "../../engine/hint-gesture.ts";
-import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { CELL, Narration, NOTE } from "../../engine/hint-words.ts";
 import { clearKey } from "../../engine/key-labels.ts";
 import {
@@ -679,8 +679,6 @@ function hint(
   _aux?: string,
   _ui?: UndeadUi,
 ): HintResult<UndeadMove, UndeadHint> {
-  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-  if (refusal) return refusal;
   // Undead has no trivial (non-teachable) elimination to fold away, so it takes
   // no auto-pencil pref and ignores `ui`.
   const steps = buildSteps(state);

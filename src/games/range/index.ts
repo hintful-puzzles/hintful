@@ -22,7 +22,7 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -366,8 +366,6 @@ function markedOf(
 }
 
 function hint(state: RangeState): HintResult<RangeMove, RangeHint> {
-  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-  if (refusal) return refusal;
   const plan = deduceHintPlan(state.grid, state.w, state.h);
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
   const steps: HintStep<RangeMove, RangeHint>[] = plan.map((m) => {

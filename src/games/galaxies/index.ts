@@ -24,7 +24,6 @@ import {
 } from "../../engine/difficulty.ts";
 import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
-  commonHintRefusal,
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
@@ -913,8 +912,6 @@ function findMistakes(s: GalaxiesState): readonly GalaxiesMistake[] {
  * player is looking at, not about the deduction.
  */
 function hint(s: GalaxiesState): HintResult<GalaxiesMove, GalaxiesHint> {
-  const refusal = commonHintRefusal(s.completed, findMistakes(s).length);
-  if (refusal) return refusal;
   const steps = galaxiesHintSteps(s);
   if (steps.length === 0) {
     // On an Unreasonable board this is the expected end of the road: what

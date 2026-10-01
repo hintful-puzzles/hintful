@@ -173,7 +173,7 @@ describe("magnets hint", () => {
     throw new Error("no board in the corpus opens with a `?`");
   });
 
-  it("calls a `?` on a neutral domino a mistake, and refuses to hint past it", () => {
+  it("calls a `?` on a neutral domino a mistake, so the midend refuses to hint past it", () => {
     // A neutral square that is half of a domino, not a lone blank square.
     const found = CORPUS.flatMap(({ state, aux }) =>
       [...aux].flatMap((c, idx) =>
@@ -188,7 +188,6 @@ describe("magnets hint", () => {
       x: idx % w,
       y: Math.floor(idx / w),
     });
-    expect(hint(wrong).ok).toBe(false);
   });
 });
 

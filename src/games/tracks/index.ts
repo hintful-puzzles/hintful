@@ -12,9 +12,9 @@
 
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
-import type { Game, HintResult, SolveResult, UiUpdate } from "../../engine/game.ts";
+import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
-import { commonHintRefusal, PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
@@ -399,20 +399,6 @@ function findMistakes(state: TracksState): readonly Point[] {
   return out;
 }
 
-/**
- * The explained hint: refuse the two refusals every deductive hint owes, then
- * hand over to the recording projection ([`hint.ts`](./hint.ts)).
- *
- * `findMistakes` is what makes the plan trustworthy rather than merely
- * available: the deduction runs from the player's own marks, so a wrong one
- * would have it deducing from a false premise.
- */
-function hint(state: TracksState): HintResult<TracksMove> {
-  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-  if (refusal) return refusal;
-  return tracksHint(state);
-}
-
 /** Tracks' difficulty contract (`engine/difficulty.ts`); `stateToBoard` on the
  * initial state gives the clue-only board. */
 const difficulty: DifficultyContract<TracksParams> = {
@@ -453,7 +439,7 @@ export const tracksGame: Game<
   solve,
   difficulty,
   findMistakes,
-  hint,
+  hint: tracksHint,
   hintMarks: {
     roles: {
       ring: "what the step decides, in the hint color: a ring round a square means that square is settled (with a cross in it as well, it must be empty; a ring on its own means it must carry track, though not yet which way); a short pair of rail ends poking through a side means the track must cross that side, and a cross on a side means it must not.",

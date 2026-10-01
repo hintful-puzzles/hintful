@@ -218,18 +218,15 @@ describe("narration — a second mark on the board is named", () => {
 });
 
 describe("refusals", () => {
-  it("refuses on a solved board", () => {
+  it("counts a board the plan finishes as solved, so the midend refuses it", () => {
     let state = freshState(EASY, "lh-solved");
     for (const step of planSteps(state)) {
       state = lightupGame.executeMove(state, step.move);
     }
-    expect(state.completed).toBe(true);
-    const res = lightupGame.hint?.(state);
-    expect(res?.ok).toBe(false);
-    if (res && !res.ok) expect(res.error).toMatch(/already solved/);
+    expect(lightupGame.status(state)).toBe("solved");
   });
 
-  it("refuses on a board with mistakes", () => {
+  it("flags a wrongly placed bulb, so the midend refuses it", () => {
     const state = freshState(EASY, "lh-wrong");
     const solution = solveUnique(state);
     if (!solution) throw new Error("board not uniquely solvable?");
@@ -247,9 +244,7 @@ describe("refusals", () => {
       }
     }
     if (!placed) throw new Error("no wrong square found");
-    const res = lightupGame.hint?.(placed);
-    expect(res?.ok).toBe(false);
-    if (res && !res.ok) expect(res.error).toMatch(/mistakes/);
+    expect(lightupGame.findMistakes?.(placed).length ?? 0).toBeGreaterThan(0);
   });
 
   it("an Unreasonable board gets the deductive prefix, then an honest refusal", () => {

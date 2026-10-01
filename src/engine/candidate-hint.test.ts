@@ -26,7 +26,7 @@ import {
 } from "./candidate-hint.ts";
 import type { HintStep } from "./game.ts";
 import { click, MARK_ALL_CODE, key as press } from "./hint-gesture.ts";
-import { ALREADY_SOLVED, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
+import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { cleanObviousText, joinNums, populateText } from "./hint-text.ts";
 import { CELL, mark, Narration, NOTE, phrase } from "./hint-words.ts";
 import type { DeductionRecord } from "./latin.ts";
@@ -54,32 +54,10 @@ describe("candidateHint (shared hint entry)", () => {
     },
   ];
 
-  it("refuses a solved board", () => {
-    const r = candidateHint<St, CandidateMove, CandidateHighlights>(
-      { completed: true },
-      null,
-      () => [],
-      () => oneStep,
-    );
-    expect(r).toEqual({ ok: false, error: ALREADY_SOLVED });
-  });
-
-  it("refuses a board with mistakes, pointing at the overlay", () => {
-    const r = candidateHint<St, CandidateMove, CandidateHighlights>(
-      { completed: false },
-      null,
-      () => [{ wrong: true }],
-      () => oneStep,
-    );
-    expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error).toMatch(/Fix the highlighted mistakes first/);
-  });
-
   it("refuses when no further move can be deduced", () => {
     const r = candidateHint<St, CandidateMove, CandidateHighlights>(
       { completed: false },
       null,
-      () => [],
       () => [],
     );
     expect(r).toEqual({
@@ -94,7 +72,6 @@ describe("candidateHint (shared hint entry)", () => {
     const r = candidateHint<St, CandidateMove, CandidateHighlights>(
       { completed: false },
       null,
-      () => [],
       () => oneStep,
     );
     expect(r).toEqual({ ok: true, steps: oneStep });
@@ -109,13 +86,11 @@ describe("candidateHint (shared hint entry)", () => {
     candidateHint<St, CandidateMove, CandidateHighlights>(
       { completed: false },
       null,
-      () => [],
       build,
     );
     candidateHint<St, CandidateMove, CandidateHighlights>(
       { completed: false },
       { autoPencil: true, candidateReading: "populate" },
-      () => [],
       build,
     );
     expect(seen).toEqual([

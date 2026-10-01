@@ -201,17 +201,17 @@ describe("pattern hint — color legend", () => {
   });
 });
 
-describe("pattern hint — refusal", () => {
-  it("refuses on an already-solved board", () => {
+describe("pattern hint — boards the midend refuses", () => {
+  it("counts a solved board as finished", () => {
     const state = freshBoard("ph-a");
     const sr = doSolve(state);
     expect(sr.ok).toBe(true);
     if (!sr.ok) return;
     const done = patternGame.executeMove(state, sr.move);
-    expect(doHint(done).ok).toBe(false);
+    expect(patternGame.status(done)).toBe("solved");
   });
 
-  it("refuses on a board with a mistake, and flags it", () => {
+  it("flags a cell set against the solution", () => {
     const state = freshBoard("ph-b");
     const solution = solveState(state);
     if (!solution) throw new Error("expected solvable");
@@ -223,8 +223,6 @@ describe("pattern hint — refusal", () => {
     };
     const bad = patternGame.executeMove(state, wrong);
     expect((patternGame.findMistakes?.(bad) ?? []).length).toBeGreaterThan(0);
-    const res = doHint(bad);
-    expect(res.ok).toBe(false);
   });
 });
 

@@ -15,7 +15,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
-import { ALREADY_SOLVED, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, newCursor } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -496,18 +496,17 @@ describe("crossing hint — every premise is on the board", () => {
 });
 
 describe("crossing hint — refusals", () => {
-  it("refuses a solved board", () => {
+  it("counts a solved board as finished, so the midend refuses it", () => {
     const state = board(crossingPresets[0], "hint-refuse-solved");
     const answer = solveCrossing(state.puzzle);
     const solved = crossingGame.executeMove(state, {
       kind: "solve",
       grid: Array.from(answer.grid),
     });
-    const res = crossingGame.hint?.(solved);
-    expect(res).toEqual({ ok: false, error: ALREADY_SOLVED });
+    expect(crossingGame.status(solved)).toBe("solved");
   });
 
-  it("refuses a board carrying a wrong entry, pointing at the overlay", () => {
+  it("flags a wrong entry, so the midend refuses it", () => {
     const state = board(crossingPresets[0], "hint-refuse-wrong");
     const answer = solveCrossing(state.puzzle);
     const i = state.puzzle.walls.findIndex((wall) => !wall);
@@ -517,14 +516,10 @@ describe("crossing hint — refusals", () => {
       y: Math.floor(i / state.puzzle.w),
       digit: answer.grid[i] === 9 ? 8 : 9,
     });
-    const res = crossingGame.hint?.(wrong);
-    expect(res?.ok).toBe(false);
-    if (res?.ok) return;
-    expect(res?.error).toMatch(/^Fix the highlighted mistakes first/);
-    expect(crossingGame.findMistakes?.(wrong).length).toBeGreaterThan(0);
+    expect(crossingGame.findMistakes?.(wrong).length ?? 0).toBeGreaterThan(0);
   });
 
-  it("refuses a note that rules out the answer, rather than reasoning from it", () => {
+  it("flags a note that rules out the answer, so the hint never reasons from it", () => {
     // The scenario the spec calls out: a pencil note is a first-class marking,
     // so a note excluding the solution's digit is a mistake, not a position to
     // deduce from.
@@ -541,10 +536,6 @@ describe("crossing hint — refusals", () => {
       digit: other,
     });
     expect(crossingGame.findMistakes?.(noted)).toEqual([{ x, y, kind: "note" }]);
-    const res = crossingGame.hint?.(noted);
-    expect(res?.ok).toBe(false);
-    if (res?.ok) return;
-    expect(res?.error).toMatch(/^Fix the highlighted mistakes first/);
   });
 
   it("refuses a position nothing can be deduced from", () => {

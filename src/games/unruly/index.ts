@@ -18,7 +18,6 @@ import type {
   UiUpdate,
 } from "../../engine/game.ts";
 import {
-  commonHintRefusal,
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
@@ -226,8 +225,6 @@ function markedOf(reason: HintReason, target: Point, state: UnrulyState): Marked
 }
 
 function hint(state: UnrulyState): HintResult<UnrulyMove, UnrulyHint> {
-  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-  if (refusal) return refusal;
   const plan = deduceHintPlan(state);
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
   const steps: HintStep<UnrulyMove, UnrulyHint>[] = plan.map((m) => {

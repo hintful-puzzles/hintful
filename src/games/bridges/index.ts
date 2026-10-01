@@ -11,7 +11,6 @@ import type { DifficultyContract } from "../../engine/difficulty.ts";
 import {
   type Game,
   type GamePref,
-  type HintResult,
   type HintStep,
   type HintTrackVerdict,
   type PresetMenu,
@@ -26,7 +25,7 @@ import {
   type GestureButton,
   type PointerAction,
 } from "../../engine/hint-gesture.ts";
-import { commonHintRefusal, PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
@@ -598,16 +597,6 @@ function findMistakes(state: BridgesState): readonly BridgesMistake[] {
   return out;
 }
 
-/**
- * The explained hint: refuse the two refusals every deductive hint owes, then
- * hand over to the recording projection ([`hint.ts`](./hint.ts)).
- */
-function hint(state: BridgesState): HintResult<BridgesMove, BridgesHighlights> {
-  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-  if (refusal) return refusal;
-  return bridgesHint(state);
-}
-
 /** Bridges' difficulty contract (`engine/difficulty.ts`). `solveFromScratch`
  * clears the board first and returns 1 for fully solved, 0 otherwise, with no
  * contradiction signal to report. */
@@ -664,7 +653,7 @@ export const bridgesGame: Game<
   colors,
   computeSize,
   newDrawState,
-  hint,
+  hint: bridgesHint,
   hintMarks: {
     roles: {
       ring: "what the step decides along a line, in the hint color. Bridges drawn in the hint color are the ones to add; a line that already carries a bridge keeps it in the board's own ink, so you can see how many the hint is asking you to add. A pair of small crosses means no bridge may ever run there, and a ≤1 means at most one may: the same marks you draw yourself with the right mouse button, and later hints count on them being there. The sentence points at these by direction: “this way”.",

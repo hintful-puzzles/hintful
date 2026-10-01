@@ -437,16 +437,14 @@ describe("palisade hint", () => {
     expect(r2.steps.some((s) => physicalEdge(hlOf(s), P.w) === target)).toBe(false);
   });
 
-  it("refuses on an already-solved board", () => {
+  it("counts a solved board as finished, so the midend refuses it", () => {
     const s0 = newState(P, newDesc(P, randomNew("palisade-hint-solved")).desc);
-    const sol = solveToBorders(P, s0.clues);
-    if (!sol) throw new Error("the generated board did not solve");
-    const solved: PalisadeState = { ...s0, borders: sol.slice(), completed: true };
-    const r = palisadeGame.hint?.(solved);
-    expect(r?.ok).toBe(false);
+    const r = palisadeGame.solve?.(s0, s0);
+    if (!r?.ok) throw new Error("the generated board did not solve");
+    expect(palisadeGame.status(palisadeGame.executeMove(s0, r.move))).toBe("solved");
   });
 
-  it("refuses when the board carries a wall the solution lacks", () => {
+  it("flags a wall the solution lacks, so the midend refuses it", () => {
     const s0 = newState(P, newDesc(P, randomNew("palisade-hint-bad")).desc);
     const sol = solveToBorders(P, s0.clues);
     if (!sol) throw new Error("the generated board did not solve");
@@ -458,8 +456,8 @@ describe("palisade hint", () => {
           const bad = s0.borders.slice();
           bad[i] |= BORDER(1);
           bad[i + 1] |= BORDER(3);
-          const r = palisadeGame.hint?.({ ...s0, borders: bad });
-          expect(r?.ok).toBe(false);
+          const wrong = { ...s0, borders: bad };
+          expect(palisadeGame.findMistakes?.(wrong).length ?? 0).toBeGreaterThan(0);
           return;
         }
       }

@@ -29,7 +29,6 @@ import type {
 } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
-import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
 import { numberItem, parseConfigInt } from "../../engine/params.ts";
 import {
   CURSOR_SELECT,
@@ -69,7 +68,6 @@ import {
   encodeParams,
   isBlock,
   isDist,
-  MAINANCHOR,
   MAXWID,
   newState,
   newUi,
@@ -287,12 +285,6 @@ function moveSlideCursor(
  * rule 3). We solve `curr`.
  */
 function solve(_orig: SlideState, curr: SlideState): SolveResult<SlideMove> {
-  // A typed desc can start with the main piece already home, which the status
-  // does not call solved; `solve_board` tests the goal only on boards it
-  // generates, so it would report no path rather than no need for one.
-  if (curr.board[curr.ty * curr.w + curr.tx] === MAINANCHOR)
-    return { ok: false, error: ALREADY_SOLVED };
-
   const { path } = solveBoard(
     curr.w,
     curr.h,

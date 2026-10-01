@@ -299,18 +299,15 @@ describe("salad hint — narration arms", () => {
 });
 
 describe("salad hint — refusals and resumption", () => {
-  it("refuses on a solved board", () => {
+  it("counts a solved board as finished, so the midend refuses it", () => {
     const state = board(LETTERS, "r1");
     const res = saladGame.solve?.(state, state);
     expect(res?.ok).toBe(true);
     if (!res?.ok) return;
-    const solved = saladGame.executeMove(state, res.move);
-    const hinted = saladGame.hint?.(solved);
-    expect(hinted?.ok).toBe(false);
-    expect(hinted?.ok === false && hinted.error).toMatch(/already solved/);
+    expect(saladGame.status(saladGame.executeMove(state, res.move))).toBe("solved");
   });
 
-  it("refuses while the board holds a mistake, pointing at the overlay", () => {
+  it("flags a symbol the solution contradicts, so the midend refuses it", () => {
     const state = board(LETTERS, "r2");
     const soln = saladSolution(state);
     expect(soln).not.toBeNull();
@@ -330,10 +327,9 @@ describe("salad hint — refusals and resumption", () => {
       }
     }
     expect(wrong).not.toBeNull();
-    const res = saladGame.hint?.(wrong as SaladState);
-    expect(res?.ok).toBe(false);
-    expect(res?.ok === false && res.error).toMatch(/highlighted mistakes/);
-    expect(saladGame.findMistakes?.(wrong as SaladState).length).toBeGreaterThan(0);
+    expect(saladGame.findMistakes?.(wrong as SaladState).length ?? 0).toBeGreaterThan(
+      0,
+    );
   });
 
   it("resumes from a partly-followed plan without repeating or stalling", () => {

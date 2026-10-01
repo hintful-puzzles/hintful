@@ -8,33 +8,46 @@
  * the same situation says the same thing in every game, since a player moves
  * between games freely.
  *
- * **Every builder of a `hint()` imports from here, including the shared ones**
- * (`candidate-hint.ts` is the whole `hint()` of the candidate games), and
- * `hint-refusal.test.ts` reads the engine's hint builders as well as
- * `src/games/`, because a refusal lives wherever a `hint()` is built.
+ * **`HintResult`'s error is a {@link HintRefusal}**, so a game cannot return a
+ * sentence of its own by accident: it says one of the kinds below, or passes a
+ * sentence through {@link puzzleHintRefusal}, the one named escape.
+ *
+ * **The midend opens every hint with two refusals of its own**, before it asks
+ * the game: {@link ALREADY_SOLVED} for a board whose status is solved, then
+ * {@link FIX_MISTAKES_FIRST}, with the mistakes highlighted, for a board on
+ * which the game's `findMistakes` finds some. So a `hint` is only ever asked
+ * about an unfinished board with nothing wrong on it that the game can see, and
+ * {@link FIX_MISTAKES_FIRST} is not a refusal a game can give at all.
  *
  * **What a game may still differ on.** The bar is whether we can say what a game
- * would legitimately want to do differently, and there are four real answers:
+ * would legitimately want to do differently, and there are five real answers:
  * a game whose board can be *inconsistent without any single cell being
- * provably wrong* needs {@link CONTRADICTION_UNLOCALIZED}, because
- * {@link FIX_MISTAKES_FIRST} promises a highlight that will not appear; a
- * **non-deductive** game must not say "deduced" at all
+ * provably wrong* needs {@link CONTRADICTION_UNLOCALIZED}, because no highlight
+ * will appear; a **non-deductive** game must not say "deduced" at all
  * ({@link NO_MOVE_WORTH_MAKING}); a game whose hint is a bounded **search** has
  * a reach rather than a deduction, and past it can only say so
- * ({@link SEARCH_OUT_OF_REACH}); and a game with a genuinely game-shaped dead
- * end says so in its own words (Inertia's dead ball). Everything else is
- * spelling, and `hint-refusal.test.ts` holds it to this list.
+ * ({@link SEARCH_OUT_OF_REACH}); a game that can be lost says so
+ * ({@link GAME_OVER}); and a game with a genuinely game-shaped dead end says so
+ * in its own words, through {@link puzzleHintRefusal} (Inertia's dead ball).
  */
 
-/** The board is finished. Nothing to hint. */
+import type { NO_SOLUTION_FROM_HERE, SOLUTION_UNKNOWN } from "./solve-failure.ts";
+
+/**
+ * The board is finished. Nothing to hint.
+ *
+ * The midend says this itself for a board whose status is solved. A game says
+ * it only where its board can be finished while its status is not: Fifteen,
+ * Sixteen and Netslide count a board solved from the move that sorts it, so a
+ * game ID typed already sorted is finished at move 0 with its status ongoing.
+ */
 export const ALREADY_SOLVED = "This board is already solved.";
 
 /**
  * Something on the board contradicts the solution, and the offending cells
- * **are about to be highlighted** — the midend runs `findMistakes` on every
- * refusal path, so this message keeps its own promise only where the game has
- * already established there is something to find. Emit it under a
- * `findMistakes(state).length > 0` guard, never speculatively.
+ * **are about to be highlighted**. Only the midend says it, and only after the
+ * game's `findMistakes` has found something to highlight, which is the promise
+ * the sentence makes. It is therefore not a {@link HintRefusal}.
  */
 export const FIX_MISTAKES_FIRST =
   "Fix the highlighted mistakes first; a hint can't deduce from a wrong board.";
@@ -121,26 +134,45 @@ export const SEARCH_OUT_OF_REACH =
 export const PUZZLE_NOT_REASONABLE = "This puzzle's solution can't be determined.";
 
 /**
- * The two refusals every deductive game owes before it starts reasoning, in the
- * order they must be asked: a finished board first, then a wrong one.
- *
- * Games pass the two facts rather than the state, because `completed` lives
- * under a different name in several games and `findMistakes` is each game's own
- * — and a helper that took the `Game` could not be called from inside the very
- * `hint` that object is being built from.
- *
- * Returns `null` when neither applies, so the call site reads as a guard:
- *
- * ```ts
- * const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
- * if (refusal) return refusal;
- * ```
+ * The game has been lost and takes no more moves: Guess's answer is revealed,
+ * Flood's board is flooded past its move limit. The status says lost, which the
+ * midend does not refuse on, because a lost board is not always over: Flood
+ * plays on past its limit, and its hint still leads home.
  */
-export function commonHintRefusal(
-  completed: boolean,
-  mistakeCount: number,
-): { ok: false; error: string } | null {
-  if (completed) return { ok: false, error: ALREADY_SOLVED };
-  if (mistakeCount > 0) return { ok: false, error: FIX_MISTAKES_FIRST };
-  return null;
+export const GAME_OVER = "This game is over. Undo to play on, or start a new one.";
+
+declare const puzzleHintRefusalBrand: unique symbol;
+
+/** A refusal in a game's own words, made only by {@link puzzleHintRefusal}. */
+type PuzzleHintRefusal = string & { readonly [puzzleHintRefusalBrand]: true };
+
+/**
+ * A dead end only this puzzle has, in its words, where naming it is the whole
+ * of what the hint can give: Inertia's dead ball, and the gems its ball can no
+ * longer reach.
+ *
+ * `hint-refusal.test.ts` reads every call and fails a sentence two games pass,
+ * since a situation two games share is a kind, and a sentence that spells out a
+ * kind.
+ */
+export function puzzleHintRefusal(sentence: string): PuzzleHintRefusal {
+  return sentence as PuzzleHintRefusal;
 }
+
+/**
+ * Every reason a game's `hint` can give for not hinting. Two are Solve's
+ * ({@link NO_SOLUTION_FROM_HERE}, {@link SOLUTION_UNKNOWN}), because a hint
+ * meets the same facts: a position nothing finishes from, and a game ID that
+ * came without its solution.
+ */
+export type HintRefusal =
+  | typeof ALREADY_SOLVED
+  | typeof CONTRADICTION_UNLOCALIZED
+  | typeof DEDUCTION_EXHAUSTED
+  | typeof NO_MOVE_WORTH_MAKING
+  | typeof SEARCH_OUT_OF_REACH
+  | typeof PUZZLE_NOT_REASONABLE
+  | typeof GAME_OVER
+  | typeof NO_SOLUTION_FROM_HERE
+  | typeof SOLUTION_UNKNOWN
+  | PuzzleHintRefusal;

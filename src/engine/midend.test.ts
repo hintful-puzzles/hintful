@@ -6,7 +6,12 @@ import { type FakeDrawState, fakeGame } from "./fake-game.ts";
 import type { Game } from "./game.ts";
 import { UI_UPDATE } from "./game.ts";
 import { click, drag, key } from "./hint-gesture.ts";
-import { ALREADY_SOLVED, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
+import {
+  ALREADY_SOLVED,
+  DEDUCTION_EXHAUSTED,
+  FIX_MISTAKES_FIRST,
+  NO_MOVE_WORTH_MAKING,
+} from "./hint-refusal.ts";
 import { Midend, SHOW_TIMER_PREF } from "./midend.ts";
 import { LEFT_BUTTON, LEFT_RELEASE, RIGHT_BUTTON } from "./pointer.ts";
 import { decodeSave, encodeSave } from "./save.ts";
@@ -972,7 +977,7 @@ describe("Midend hint plan lifecycle", () => {
 
   it("hint() on a solved game returns an error", () => {
     h.m.solve(); // jumps to solved
-    expect(h.m.hint()).toBe("Already solved");
+    expect(h.m.hint()).toBe(ALREADY_SOLVED);
   });
 
   it("completing a step manually hides the hint; the next hint() shows the advanced step (no recompute)", () => {
@@ -1004,7 +1009,8 @@ describe("Midend hint plan lifecycle", () => {
       ...c.game,
       hint: (s: Parameters<NonNullable<typeof fakeGame.hint>>[0]) => {
         const base = c.game.hint?.(s);
-        if (!base?.ok) return base ?? { ok: false as const, error: "no hint" };
+        if (!base?.ok)
+          return base ?? { ok: false as const, error: NO_MOVE_WORTH_MAKING };
         return {
           ok: true as const,
           steps: base.steps.map((step, i) =>
@@ -1252,7 +1258,9 @@ function strikeGame(opts: {
           });
         }
       }
-      return steps.length ? { ok: true, steps } : { ok: false, error: "done" };
+      return steps.length
+        ? { ok: true, steps }
+        : { ok: false, error: NO_MOVE_WORTH_MAKING };
     },
     hintKeepTrack: (m, step) =>
       m.type === "strike" && step.move.type === "strike" && m.i === step.move.i
@@ -1345,7 +1353,7 @@ describe("Midend re-validates a kept plan (a displayed step is never stale)", ()
     // Side effects covered 1; strike 2 solves the board. Re-asking
     // recomputes fresh — and refuses on a solved board.
     m.playMoves([{ type: "strike", i: 2 }]);
-    expect(m.hint()).toBe("done");
+    expect(m.hint()).toBe(ALREADY_SOLVED);
     expect(strikeInternals(m).activeHint).toBeNull();
   });
 });
@@ -1421,11 +1429,11 @@ describe("Midend executeHint plays the stored plan", () => {
     expect(c.hintCalls()).toBe(2);
   });
 
-  it("hint errors pass through (solved board)", () => {
+  it("refuses on a solved board", () => {
     h = harness();
     h.m.newGame();
     h.m.solve();
-    expect(h.m.executeHint()).toBe("Already solved");
+    expect(h.m.executeHint()).toBe(ALREADY_SOLVED);
   });
 
   it("does not replay a step whose animation has not settled yet", () => {
@@ -1575,17 +1583,18 @@ describe("Midend mistake overlay (findMistakes lifecycle)", () => {
     expect(h.m.findMistakes()).toBe(0);
   });
 
-  it("a refused hint surfaces the mistake overlay (the refusal's promise)", () => {
-    // A hint refused because the board has a mistake must light up the same
-    // overlay Check & Save uses, so "fix the highlighted mistakes" is true.
-    const refusingHintGame: typeof fakeGame = {
+  it("refuses a hint on a board with mistakes itself, and highlights them", () => {
+    // "Fix the highlighted mistakes first" promises a highlight, so the midend
+    // says it only with the mistakes on the overlay Check & Save uses, and
+    // never asks the game to deduce from a wrong board.
+    let asked = 0;
+    const h = harness({
       ...mistakeGame,
-      hint: (s) =>
-        s.count === 1
-          ? { ok: false, error: "Fix the highlighted mistakes first." }
-          : { ok: true, steps: [] },
-    };
-    const h = harness(refusingHintGame);
+      hint: (s) => {
+        asked++;
+        return fakeGame.hint?.(s) ?? { ok: false, error: NO_MOVE_WORTH_MAKING };
+      },
+    });
     h.m.newGame();
     // Move to count 1 → the board now has a mistake, and no overlay yet.
     h.m.processInput(0, 0, LEFT_BUTTON);
@@ -1593,25 +1602,37 @@ describe("Midend mistake overlay (findMistakes lifecycle)", () => {
     h.m.redraw(before.dr);
     expect(sawSentinel(before.ops)).toBe(false);
 
-    // Ask for a hint: it refuses and returns the message...
-    expect(h.m.hint()).toBe("Fix the highlighted mistakes first.");
-    // ...and the refusal lit up the overlay: the next redraw shows it.
+    expect(h.m.hint()).toBe(FIX_MISTAKES_FIRST);
+    expect(asked).toBe(0);
     const after = recordingDrawing();
     h.m.redraw(after.dr);
     expect(sawSentinel(after.ops)).toBe(true);
   });
 
-  it("a refused hint with no mistakes highlights nothing", () => {
-    // A refusal unrelated to mistakes (e.g. already solved) must not invent
-    // an overlay: findMistakes finds zero and nothing lights up.
-    const refusingHintGame: typeof fakeGame = {
+  it("refuses a hint on a finished board itself, without asking the game", () => {
+    let asked = 0;
+    const h = harness({
+      ...fakeGame,
+      hint: (s) => {
+        asked++;
+        return fakeGame.hint?.(s) ?? { ok: false, error: NO_MOVE_WORTH_MAKING };
+      },
+    });
+    h.m.newGame();
+    for (let i = 0; i < 3; i++) h.m.processInput(0, 0, LEFT_BUTTON);
+    expect(h.state()?.status).toBe("solved");
+    expect(h.m.hint()).toBe(ALREADY_SOLVED);
+    expect(h.m.executeHint()).toBe(ALREADY_SOLVED);
+    expect(asked).toBe(0);
+  });
+
+  it("a game's own refusal on a sound board highlights nothing", () => {
+    const h = harness({
       ...mistakeGame,
-      // count 0 ⇒ no mistakes; refuse anyway (as if "already solved").
-      hint: () => ({ ok: false, error: "This board is already solved." }),
-    };
-    const h = harness(refusingHintGame);
+      hint: () => ({ ok: false, error: NO_MOVE_WORTH_MAKING }),
+    });
     h.m.newGame(); // count 0 ⇒ findMistakes returns []
-    expect(h.m.hint()).toBe("This board is already solved.");
+    expect(h.m.hint()).toBe(NO_MOVE_WORTH_MAKING);
     const after = recordingDrawing();
     h.m.redraw(after.dr);
     expect(sawSentinel(after.ops)).toBe(false);

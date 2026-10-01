@@ -24,6 +24,7 @@ import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
   DEDUCTION_EXHAUSTED,
+  type HintRefusal,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
@@ -763,13 +764,12 @@ const allSet = (s: MagnetsSolver): boolean => {
   return true;
 };
 
-/** Deduce the plan from the player's board. The refusals every deductive hint
- * owes come first, in `index.ts`. */
+/** Deduce the plan from the player's board. */
 export function magnetsHint(
   state: MagnetsState,
 ):
   | { ok: true; steps: HintStep<MagnetsMove, MagnetsHighlights>[] }
-  | { ok: false; error: string } {
+  | { ok: false; error: HintRefusal } {
   const solver = seedSolver(state);
   if (!solver) return { ok: false, error: PUZZLE_NOT_REASONABLE };
   const pass = recordingPass(solver, stepBudget("magnets hint"));

@@ -501,7 +501,7 @@ function sameNoteDeduction(a: CrossingFiring, b: CrossingFiring): boolean {
 }
 
 function hint(state: CrossingState): HintResult<CrossingMove, CrossingHint> {
-  return candidateHint(state, null, findMistakes, buildSteps);
+  return candidateHint(state, null, buildSteps);
 }
 
 /**

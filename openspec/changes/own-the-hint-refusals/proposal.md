@@ -1,6 +1,8 @@
 # own-the-hint-refusals
 
-**Status: scaffolded, not started (2026-10-01).** Follows
+**Status: implemented (2026-10-01); `design.md` records the census, the
+falsifier's three firings, and why the midend took both halves of the opening
+rather than only the first.** Follows
 `own-the-player-facing-messages`, which typed Solve's failures and the
 description errors and left the hint's refusals as the one player-facing
 message still guarded by a sweep. Read that change's `design.md` § "The shape:

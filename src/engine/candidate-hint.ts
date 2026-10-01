@@ -18,7 +18,7 @@ import { valueBit, valuesOneTo } from "./candidate-bits.ts";
 import type { DeductionRecord } from "./deduction-record.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "./game.ts";
 import { key, MARK_ALL_CODE, type PointerAction } from "./hint-gesture.ts";
-import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
+import { DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
 import { CELL, Narration, NOTE } from "./hint-words.ts";
 import type { CellRegion } from "./latin-hint.ts";
 import { type NoteTakingUi, noteEntryGesture } from "./note-taking-cell.ts";
@@ -209,26 +209,21 @@ export interface CandidatePlanPrefs {
   reading: CandidateReading;
 }
 
-/** The shared `hint()` entry every candidate-elimination game uses: refuse on a
- * solved board, refuse (pointing at the mistake overlay) on a wrong board, build
- * the plan, refuse when it is empty, else return it. The only per-game inputs are
- * the game's own `findMistakes` and `buildSteps` (the latter owns the walk that
- * genuinely differs); the three refusals come from `hint-refusal.ts`, the
- * collection's one statement of what a refusal says.
+/** The shared `hint()` entry every candidate-elimination game uses: build the
+ * plan with the player's preferences, refuse when it is empty, else return it.
+ * The per-game input is `buildSteps`, which owns the walk that genuinely
+ * differs.
  *
  * `autoPencil` defaults **off**: with no `ui` (tests/harness) the hint teaches the
  * trivial row/column/region eliminations as explicit strikes rather than folding
  * them into placements (matches the games' default-auto-pencil-off preference).
  * The reading defaults to {@link DEFAULT_CANDIDATE_READING}.
  */
-export function candidateHint<State extends { completed: boolean }, Move, Hint>(
+export function candidateHint<State, Move, Hint>(
   state: State,
   ui: { autoPencil?: boolean; candidateReading?: CandidateReading } | null,
-  findMistakes: (state: State) => readonly unknown[],
   buildSteps: (state: State, prefs: CandidatePlanPrefs) => HintStep<Move, Hint>[],
 ): HintResult<Move, Hint> {
-  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-  if (refusal) return refusal;
   const steps = buildSteps(state, {
     autoClean: ui?.autoPencil ?? false,
     reading: ui?.candidateReading ?? DEFAULT_CANDIDATE_READING,

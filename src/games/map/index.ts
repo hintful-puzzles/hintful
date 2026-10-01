@@ -21,7 +21,6 @@ import type { Game, HintResult, SolveResult, UiUpdate } from "../../engine/game.
 import { UI_UPDATE } from "../../engine/game.ts";
 import { key, MARK_ALL_CODE, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
-  commonHintRefusal,
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
@@ -398,10 +397,10 @@ function executeMove(s: MapState, m: MapMove): MapState {
       return assertNever(op, "map: executeMove");
     }
   }
-  if (m.solve) return { ...ret, cheated: true };
-
-  if (!ret.completed && isComplete(ret)) return { ...ret, completed: true };
-  return ret;
+  // A solve move completes the board like any other (upstream checks after
+  // both), so Show solution leaves a board the status calls solved.
+  const done = ret.completed || isComplete(ret);
+  return { ...ret, completed: done, cheated: ret.cheated || m.solve === true };
 }
 
 function status(s: MapState): GameStatus {
@@ -483,8 +482,6 @@ function hint(
   _aux?: string,
   ui?: MapUi,
 ): HintResult<MapMove, MapHint> {
-  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-  if (refusal) return refusal;
   const steps = buildSteps(state, (ui ?? newUi(state)).candidateReading);
   // Map's three rungs finish every board of the three tiers below Unreasonable
   // (`difficulty-contract.test.ts` holds each board to its tier), so an empty

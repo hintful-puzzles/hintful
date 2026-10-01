@@ -8,6 +8,7 @@ import {
   descBadCharacter,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { GAME_OVER } from "../../engine/hint-refusal.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { CURSOR_RIGHT, CURSOR_SELECT, LEFT_BUTTON } from "../../engine/pointer.ts";
@@ -166,6 +167,17 @@ describe("Flood win / lose status", () => {
     // grid is now 1,1,2 — not complete, and moves(1) >= limit(1).
     expect(completed(next.grid)).toBe(false);
     expect(status(next)).toBe("lost");
+  });
+
+  it("calls a board flooded past the limit over, where no fill is left", () => {
+    const p: FloodParams = { w: 3, h: 1, colors: 3, leniency: 0 };
+    const lost = executeMove(newState(p, "012,1"), { type: "fill", color: 1 });
+    // Lost but unflooded, the board still takes fills, so the hint still plays.
+    expect(floodGame.hint?.(lost)?.ok).toBe(true);
+    const over = executeMove(lost, { type: "fill", color: 2 });
+    expect(completed(over.grid)).toBe(true);
+    expect(status(over)).toBe("lost");
+    expect(floodGame.hint?.(over)).toEqual({ ok: false, error: GAME_OVER });
   });
 });
 

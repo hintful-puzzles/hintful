@@ -447,19 +447,17 @@ describe("boats hint — one deduction is one hint", () => {
 });
 
 describe("boats hint — refusals", () => {
-  it("refuses a solved board", () => {
+  it("counts a solved board as finished, so the midend refuses it", () => {
     const state = board(0, "refuse-solved");
     const solved = boatsGame.solve?.(state, state);
     expect(solved?.ok).toBe(true);
     if (!solved?.ok) return;
-    const r = hintOf(play(state, solved.move));
-    expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error).toMatch(/already solved/i);
+    expect(boatsGame.status(play(state, solved.move))).toBe("solved");
   });
 
-  it("refuses a board carrying a wrong-but-rule-legal placement", () => {
-    // The whole point of basing the refusal on a re-solve: this square breaks
-    // no rule yet, so a live rule check would happily let the hint reason on.
+  it("flags a wrong-but-rule-legal placement, so the midend refuses it", () => {
+    // The whole point of basing the mistake check on a re-solve: this square
+    // breaks no rule yet, so a live rule check would let the hint reason on.
     const state = board(0, "refuse-wrong");
     const truth = solveToGrid(state);
     expect(truth.ok).toBe(true);
@@ -484,11 +482,7 @@ describe("boats hint — refusals", () => {
     expect(wrong).not.toBeNull();
     if (!wrong) return;
 
-    const r = hintOf(wrong);
-    expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error).toMatch(/mistake/i);
-    // …and the offending square is what the overlay will highlight.
-    expect(boatsGame.findMistakes?.(wrong).length).toBeGreaterThan(0);
+    expect(boatsGame.findMistakes?.(wrong).length ?? 0).toBeGreaterThan(0);
   });
 
   it("refuses when no deduction is available", () => {

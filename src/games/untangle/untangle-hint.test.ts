@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
-import { ALREADY_SOLVED, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
+import { NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { SLOW_TESTS_ENABLED } from "../../engine/testing/slow.ts";
@@ -317,16 +317,12 @@ describe("Untangle hint", () => {
     }
   });
 
-  it("refuses a solved board with the collection's wording", () => {
+  it("counts a solved board as finished, so the midend refuses it", () => {
     const { state, aux } = generated(10, "hint-solved");
     const res = untangleGame.solve?.(state, state, aux);
     if (!res?.ok) throw new Error("Solve failed");
     const solved = untangleGame.executeMove(state, res.move);
-    expect(solved.completed).toBe(true);
-    expect(deduceUntangleHintPlan(solved)).toEqual({
-      ok: false,
-      error: ALREADY_SOLVED,
-    });
+    expect(untangleGame.status(solved)).toBe("solved");
   });
 
   it("on a graph that cannot be untangled, stops when no move helps", () => {

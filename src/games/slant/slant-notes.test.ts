@@ -213,7 +213,6 @@ describe("slant marks as state", () => {
     expect(slantGame.findMistakes?.(good)).toEqual([]);
     const bad = executeMove(good, { type: "alike", ...wrong, on: true });
     expect(slantGame.findMistakes?.(bad)).toEqual([wrong]);
-    expect(slantGame.hint?.(bad).ok).toBe(false);
   });
 });
 

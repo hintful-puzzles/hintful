@@ -129,7 +129,7 @@ describe("refusal and marks", () => {
     barrierProbability: 0,
   };
 
-  it("refuses while a note is wrong", () => {
+  it("flags a wrong note, so the midend refuses a hint", () => {
     const { state, solution } = board(P, "net-refuse");
     const crosses = (solution[12] & 1) !== 0;
     const lie = netGame.executeMove(state, {
@@ -140,7 +140,7 @@ describe("refusal and marks", () => {
       note: crosses ? 2 : 1,
     });
     expect(lie.sides[sideIndex(lie, 2, 2, 1)]).not.toBe(0);
-    expect(netGame.hint?.(lie, undefined, newUi(lie))?.ok).toBe(false);
+    expect(netGame.findMistakes?.(lie).length ?? 0).toBeGreaterThan(0);
   });
 
   it("rings the square a step turns and locks, in the hint color", () => {

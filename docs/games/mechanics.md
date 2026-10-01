@@ -646,9 +646,8 @@ notApplicable: {
 - **Implemented and excused at once is refused** wherever a section state is
   read, the production build included.
 - **A guard that would excuse a game for lacking a section reads the reason**
-  (`sectionState`) instead of keeping a ledger: `orientation.test.ts`,
-  `completion-vocabulary.test.ts` (no `solve`, no `cheated` owed) and
-  `hint-refusal-opening.test.ts` do.
+  (`sectionState`) instead of keeping a ledger: `orientation.test.ts` and
+  `completion-vocabulary.test.ts` (no `solve`, no `cheated` owed) do.
 
 `difficulty`, `textFormat` and the affordances (`hover`, `reference`, `prefs`,
 the keypad) are not sections: nothing tells a puzzle that has no such thing

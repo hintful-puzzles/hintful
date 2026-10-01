@@ -12,7 +12,6 @@
 import { describe, expect, it } from "vitest";
 import { Dsf } from "../../engine/dsf.ts";
 import type { HintStep } from "../../engine/game.ts";
-import { FIX_MISTAKES_FIRST } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -849,7 +848,7 @@ describe("Loopy mistakes", () => {
     return { move: { kind: "set", ops: [{ edge, state: line }] }, edge };
   };
 
-  it("reports a line the loop does not use, and refuses the hint", () => {
+  it("reports a line the loop does not use, and draws it red", () => {
     const b = corpus()[0];
     const { move, edge } = wrongMark(b, LINE_YES);
     const solution = uniqueSolution(b.state) ?? new Uint8Array();
@@ -859,7 +858,6 @@ describe("Loopy mistakes", () => {
       ops: [{ edge: right, state: LINE_YES }],
     });
     expect(loopyGame.findMistakes?.(state)).toEqual([{ kind: "edge", edge }]);
-    expect(loopyGame.hint?.(state)).toEqual({ ok: false, error: FIX_MISTAKES_FIRST });
 
     const frame = renderScenario({
       game: loopyGame,
@@ -889,7 +887,7 @@ describe("Loopy mistakes", () => {
     expect(red).toHaveLength(2);
   });
 
-  it("reports a corner note or a pair note the solution breaks, draws it red, and refuses the hint", () => {
+  it("reports a corner note or a pair note the solution breaks, and draws it red", () => {
     const b = corpus()[0];
     const solution = uniqueSolution(b.state);
     if (solution === null) throw new Error("no solution");
@@ -914,7 +912,6 @@ describe("Loopy mistakes", () => {
       { kind: "corner", dline },
       { kind: "pair", a: Math.min(a, other), b: Math.max(a, other) },
     ]);
-    expect(loopyGame.hint?.(state)).toEqual({ ok: false, error: FIX_MISTAKES_FIRST });
 
     const frame = renderScenario({
       game: loopyGame,

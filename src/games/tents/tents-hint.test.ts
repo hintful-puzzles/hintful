@@ -20,7 +20,6 @@
 
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
-import { FIX_MISTAKES_FIRST } from "../../engine/hint-refusal.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
@@ -264,18 +263,14 @@ describe("the player's links", () => {
     throw new Error("no tent beside two trees in the corpus");
   }
 
-  it("flags a link no pairing of the solution holds, and the hint waits for it", () => {
+  it("flags a link no pairing of the solution holds, so the midend refuses a hint", () => {
     const { placed, x, y, wrong, right } = forkedTent();
     const linked = executeMove(placed, { type: "link", x, y, d: wrong, on: true });
-    const mistakes = tentsGame.findMistakes?.(linked) ?? [];
-    // Whether this one link is wrong depends on the rest of the pairing: it is
-    // wrong exactly when the mistake check says so, and then the hint refuses.
-    if (mistakes.some((m) => m.kind === "link")) {
-      expect(tentsGame.hint?.(linked)).toEqual({
-        ok: false,
-        error: FIX_MISTAKES_FIRST,
-      });
-    }
+    // Whether a link like this is wrong depends on the rest of the pairing; on
+    // the corpus's first forked tent, no pairing holds it.
+    expect(
+      (tentsGame.findMistakes?.(linked) ?? []).some((m) => m.kind === "link"),
+    ).toBe(true);
     const good = executeMove(placed, { type: "link", x, y, d: right, on: true });
     expect(tentsGame.findMistakes?.(good)).toEqual([]);
   });

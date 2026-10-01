@@ -23,7 +23,6 @@ import type {
   UiUpdate,
 } from "../../engine/game.ts";
 import {
-  commonHintRefusal,
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
@@ -372,8 +371,6 @@ function buildStep(f: LightupFiring): HintStep<LightupMove, LightupHint> {
 }
 
 function hint(state: LightupState): HintResult<LightupMove, LightupHint> {
-  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-  if (refusal) return refusal;
   const plan = deduceHintPlan(state);
   // Only reachable on an Unreasonable board (Easy/Normal boards are
   // deduction-complete by generation): refuse honestly at the guess point.

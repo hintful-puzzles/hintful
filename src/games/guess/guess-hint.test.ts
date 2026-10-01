@@ -11,6 +11,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/game.ts";
+import { GAME_OVER } from "../../engine/hint-refusal.ts";
 import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
 import {
   CURSOR_SELECT,
@@ -328,9 +329,13 @@ describe("the plan", () => {
     expect(guessHintKeepTrack(elsewhere, step, state)).toBe("off");
   });
 
-  it("refuses once the game is over", () => {
+  it("counts a won game as solved, and refuses a lost one as over", () => {
     const state = withAnswer(p, [3, 4, 6, 1]);
-    expect(guessHint(play(state, [3, 4, 6, 1])).ok).toBe(false);
+    expect(guessGame.status(play(state, [3, 4, 6, 1]))).toBe("solved");
+    let lost = state;
+    for (let row = 0; row < p.nguesses; row++) lost = play(lost, [1, 1, 1, 1]);
+    expect(guessGame.status(lost)).toBe("lost");
+    expect(guessHint(lost)).toEqual({ ok: false, error: GAME_OVER });
   });
 });
 

@@ -18,7 +18,6 @@ import {
 } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import {
-  commonHintRefusal,
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
@@ -327,8 +326,6 @@ function narrate(m: PatternHintMove, w: number): Narration {
 }
 
 function hint(state: PatternState): HintResult<PatternMove, PatternHint> {
-  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-  if (refusal) return refusal;
   const plan = deduceHintPlan(state);
   if (plan.length === 0) {
     return { ok: false, error: DEDUCTION_EXHAUSTED };

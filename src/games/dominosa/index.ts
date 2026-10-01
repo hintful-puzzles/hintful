@@ -23,7 +23,6 @@ import type {
 import { UI_UPDATE } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import {
-  commonHintRefusal,
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
@@ -389,8 +388,6 @@ const pointOf = (i: number, w: number): Point => ({ x: i % w, y: Math.floor(i / 
 const edgeKey = (a: number, b: number): string => (a < b ? `${a}-${b}` : `${b}-${a}`);
 
 function hint(state: DominosaState): HintResult<DominosaMove, DominosaHint> {
-  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-  if (refusal) return refusal;
   const { w, numbers, grid, edges, params } = state;
   const n = params.n;
   const wh = numbers.length;

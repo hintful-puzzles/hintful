@@ -23,7 +23,6 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { ALREADY_SOLVED, FIX_MISTAKES_FIRST } from "../../engine/hint-refusal.ts";
 import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
@@ -635,20 +634,20 @@ describe("following one step at a time", () => {
   });
 });
 
-describe("the two refusals every deductive hint owes", () => {
+describe("the boards the midend refuses a hint on", () => {
   const params = SHAPES[0];
 
-  it("declines on a solved board", () => {
+  it("counts a solved board as finished", () => {
     const { desc } = tracksGame.newDesc(params, randomNew("refuse-solved"));
     const fresh = tracksGame.newState(params, desc);
     const solved = tracksGame.solve?.(fresh, fresh);
     expect(solved?.ok).toBe(true);
     if (!solved?.ok) return;
     const done = tracksGame.executeMove(fresh, solved.move);
-    expect(tracksGame.hint?.(done)).toEqual({ ok: false, error: ALREADY_SOLVED });
+    expect(tracksGame.status(done)).toBe("solved");
   });
 
-  it("declines while a mark contradicts the solution", () => {
+  it("flags a mark that contradicts the solution", () => {
     const { desc } = tracksGame.newDesc(params, randomNew("refuse-wrong"));
     const fresh = tracksGame.newState(params, desc);
     // Find a square the unique solution leaves empty and claim it carries track.
@@ -666,6 +665,6 @@ describe("the two refusals every deductive hint owes", () => {
     expect(wrong).not.toBeNull();
     if (!wrong) return;
     const bad = tracksGame.executeMove(fresh, wrong);
-    expect(tracksGame.hint?.(bad)).toEqual({ ok: false, error: FIX_MISTAKES_FIRST });
+    expect(tracksGame.findMistakes?.(bad).length ?? 0).toBeGreaterThan(0);
   });
 });

@@ -20,6 +20,7 @@ import type { HintStep, HintTrackVerdict } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
   DEDUCTION_EXHAUSTED,
+  type HintRefusal,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import { trackTargets } from "../../engine/hint-track.ts";
@@ -72,7 +73,7 @@ export function boardOf(state: TentsState): TentsBoard {
  */
 export function tentsHint(
   state: TentsState,
-): { ok: true; steps: TentsStep[] } | { ok: false; error: string } {
+): { ok: true; steps: TentsStep[] } | { ok: false; error: HintRefusal } {
   const { impossible, plan } = tentsPlan(state);
   // `findMistakes` vouches for every tent, grass square and link, so a
   // contradiction here would mean the deduction is unsound: say so honestly.

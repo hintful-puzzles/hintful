@@ -24,7 +24,6 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import {
-  commonHintRefusal,
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
@@ -392,8 +391,6 @@ function groupRecords(records: HintRecord[]): HintRecord[][] {
 }
 
 function hint(state: SinglesState): HintResult<SinglesMove, SinglesHint> {
-  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-  if (refusal) return refusal;
   const records = deduceHintPlan(state);
   if (records.length === 0) {
     return { ok: false, error: DEDUCTION_EXHAUSTED };

@@ -28,7 +28,7 @@
  */
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { ALREADY_SOLVED, NO_MOVE_WORTH_MAKING } from "../../engine/hint-refusal.ts";
+import { NO_MOVE_WORTH_MAKING, puzzleHintRefusal } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
 import { gemsPhrase, say } from "./hint-text.ts";
@@ -259,12 +259,12 @@ function firstLegOf(s: InertiaState, route: readonly number[]): number[] | null 
 // --- the plan --------------------------------------------------------
 
 export function hint(state: InertiaState): HintResult<InertiaMove> {
-  if (state.gems === 0) return { ok: false, error: ALREADY_SOLVED };
   if (state.dead) {
     return {
       ok: false,
-      error:
+      error: puzzleHintRefusal(
         "The ball is dead: no move can be played from here. Undo to bring it back.",
+      ),
     };
   }
 
@@ -275,7 +275,9 @@ export function hint(state: InertiaState): HintResult<InertiaMove> {
   if (stranded.length > 0) {
     return {
       ok: false,
-      error: `The ball can no longer reach ${gemsPhrase(stranded.length)}. Undo to a position where it can.`,
+      error: puzzleHintRefusal(
+        `The ball can no longer reach ${gemsPhrase(stranded.length)}. Undo to a position where it can.`,
+      ),
     };
   }
 

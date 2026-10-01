@@ -33,7 +33,6 @@ import {
 import { fromCoord } from "../../engine/geometry.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import {
-  commonHintRefusal,
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
@@ -460,11 +459,6 @@ function stepsOfFiring(f: SpokesFiring, w: number): HintStep<SpokesMove, SpokesH
 }
 
 function hint(state: SpokesState): HintResult<SpokesMove, SpokesHint> {
-  // A hint off a contradictory board would present a "forced" move that only
-  // follows from the player's own error, so refuse and light up the offenders
-  // (Check & Save paints the same overlay).
-  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-  if (refusal) return refusal;
   if (!solveFromClues(state)) {
     return { ok: false, error: PUZZLE_NOT_REASONABLE };
   }

@@ -13,7 +13,6 @@ import type {
 } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
-import { commonHintRefusal } from "../../engine/hint-refusal.ts";
 import { clearKey, numberKeys } from "../../engine/key-labels.ts";
 import {
   dimensionParamConfig,
@@ -507,9 +506,9 @@ export const ascentGame: Game<
   solve,
   findMistakes,
   // `findMistakes` compares every entered number with the unique solution, so
-  // a board it passes is one the hint may deduce from.
-  hint: (state) =>
-    commonHintRefusal(state.completed, findMistakes(state).length) ?? ascentHint(state),
+  // a board it passes, the only kind the midend asks about, is one the hint may
+  // deduce from.
+  hint: ascentHint,
   hintMarks: {
     roles: {
       ring: "the square the step fills. When the step fills a whole run at once, a line in the hint's color runs along its only route from one end to the other.",

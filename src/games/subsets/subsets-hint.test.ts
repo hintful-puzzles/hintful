@@ -343,17 +343,16 @@ describe("hint", () => {
     expect(res.steps[0].continuesPrevious).toBeUndefined();
   });
 
-  it("refuses on a solved board", () => {
+  it("counts a solved board as finished, so the midend refuses it", () => {
     const state = gen("refuse-solved");
-    const { solved } = solveCopy(state);
-    solved.completed = true;
-    const res = subsetsGame.hint?.(solved);
-    expect(res?.ok).toBe(false);
-    if (res?.ok !== false) return;
-    expect(res.error).toContain("already solved");
+    const solved = subsetsGame.solve?.(state, state);
+    if (!solved?.ok) throw new Error("solve refused");
+    expect(subsetsGame.status(subsetsGame.executeMove(state, solved.move))).toBe(
+      "solved",
+    );
   });
 
-  it("refuses on a rule-violating board, pointing at Check & Save", () => {
+  it("flags a rule-violating board, so the midend refuses it", () => {
     // Place one set-value into two decided cells: a duplicate findMistakes flags.
     const state = gen("refuse-dup");
     const { solved } = solveCopy(state);
@@ -367,10 +366,6 @@ describe("hint", () => {
     dup.known[blanks[1]] = solved.known[blanks[1]];
     dup.mask[blanks[1]] = solved.mask[blanks[1]];
     expect(findMistakes(dup).length).toBeGreaterThan(0);
-    const res = subsetsGame.hint?.(dup);
-    expect(res?.ok).toBe(false);
-    if (res?.ok !== false) return;
-    expect(res.error).toContain("mistakes");
   });
 
   it("refuses honestly on a wrong-but-locally-clean mark", () => {

@@ -104,17 +104,16 @@ describe("hint", () => {
     }
   });
 
-  it("refuses on a solved board", () => {
+  it("counts the board its plan finishes as solved, so the midend refuses it", () => {
     const st = fromSeed("9x7", "filling-hint-solved");
     const res0 = fillingGame.hint?.(st);
     if (!res0?.ok) throw new Error("expected a plan");
     let cur = st;
     for (const step of res0.steps) cur = fillingGame.executeMove(cur, step.move);
-    expect(cur.completed).toBe(true);
-    expect(fillingGame.hint?.(cur)?.ok).toBe(false);
+    expect(fillingGame.status(cur)).toBe("solved");
   });
 
-  it("refuses when the board has a mistake", () => {
+  it("flags a wrong value, so the midend refuses it", () => {
     const st = fromSeed("9x7", "filling-hint-mistake");
     const solution = solveFilling(st.clues, st.w, st.h).board;
     let target = -1;
@@ -127,7 +126,7 @@ describe("hint", () => {
     expect(target).toBeGreaterThanOrEqual(0);
     const wrong = solution[target] === 1 ? 2 : 1;
     const dirty = executeMove(st, { type: "set", cells: [target], value: wrong });
-    expect(fillingGame.hint?.(dirty)?.ok).toBe(false);
+    expect(fillingGame.findMistakes?.(dirty).length ?? 0).toBeGreaterThan(0);
   });
 });
 

@@ -172,16 +172,16 @@ describe("hint", () => {
     }
   });
 
-  it("refuses on a solved board", () => {
+  it("counts the board its plan finishes as solved, so the midend refuses it", () => {
     const st = fromSeed(P, "unruly-hint-solved");
     const res0 = unrulyGame.hint?.(st);
     if (!res0?.ok) throw new Error("expected a plan");
     let cur = st;
     for (const step of res0.steps) cur = unrulyGame.executeMove(cur, step.move);
-    expect(unrulyGame.hint?.(cur)?.ok).toBe(false);
+    expect(unrulyGame.status(cur)).toBe("solved");
   });
 
-  it("refuses when the board has a mistake", () => {
+  it("flags the opposite of the hint's first move, so the midend refuses it", () => {
     const st = fromSeed(P, "unruly-hint-mistake");
     // The hint's own first move is correct; play the opposite → a mistake.
     const res = unrulyGame.hint?.(st);
@@ -194,7 +194,7 @@ describe("hint", () => {
       y: t.y,
       value: wrong,
     });
-    expect(unrulyGame.hint?.(bad)?.ok).toBe(false);
+    expect(unrulyGame.findMistakes?.(bad).length ?? 0).toBeGreaterThan(0);
   });
 });
 

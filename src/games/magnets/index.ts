@@ -6,15 +6,9 @@
 
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { winFlash } from "../../engine/flash.ts";
-import type {
-  Game,
-  HintResult,
-  HintStep,
-  SolveResult,
-  UiUpdate,
-} from "../../engine/game.ts";
+import type { Game, HintStep, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
-import { commonHintRefusal, PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import { gridCursorMove, newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
@@ -228,14 +222,6 @@ function findMistakes(state: MagnetsState): readonly MagnetsMistake[] {
   return out;
 }
 
-/** The explained hint: the two refusals every deductive hint owes, then the
- * recording projection ([`hint.ts`](./hint.ts)). */
-function hint(state: MagnetsState): HintResult<MagnetsMove, MagnetsHighlights> {
-  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-  if (refusal) return refusal;
-  return magnetsHint(state);
-}
-
 const difficulty: DifficultyContract<MagnetsParams> = {
   solveAtCap: (p, desc, cap) => {
     const s = newState(p, desc);
@@ -276,7 +262,7 @@ export const magnetsGame: Game<
 
   solve,
   findMistakes,
-  hint,
+  hint: magnetsHint,
   hintMarks: {
     roles: {
       ring: "what the step decides: one end of a magnet, or a whole tile to make neutral or to mark ?.",

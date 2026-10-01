@@ -592,8 +592,7 @@ export const towersGame: Game<
 
   solve,
   difficulty,
-  hint: (state, _aux, ui) =>
-    candidateHint(state, ui ?? newUi(state), findMistakes, buildSteps),
+  hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
   hintMarks: {
     roles: {
       ring: "the cell the step decides, or whose pencil marks it crosses out. The heights it strikes are crossed through in their own color.",

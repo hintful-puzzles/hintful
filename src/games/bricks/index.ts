@@ -27,10 +27,8 @@ import {
 } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import {
-  ALREADY_SOLVED,
   CONTRADICTION_UNLOCALIZED,
   DEDUCTION_EXHAUSTED,
-  FIX_MISTAKES_FIRST,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
@@ -436,15 +434,10 @@ function narrate(
 }
 
 function hint(state: BricksState): HintResult<BricksMove, BricksHint> {
-  // Deliberately not `commonHintRefusal`: Bricks owes a second wrong-board
-  // refusal the shared pair cannot express. Its `findMistakes` is a rule
-  // validator, blind to a mark that is wrong but breaks no rule, so the re-solve
-  // below answers that case with `CONTRADICTION_UNLOCALIZED`, which asks the
-  // player to undo rather than promising a highlight that will never appear.
-  // The helper takes no parameter for the second message on purpose: a knob for
-  // two games would turn a convention into a configuration language.
-  if (state.completed) return { ok: false, error: ALREADY_SOLVED };
-  if (findMistakes(state).length > 0) return { ok: false, error: FIX_MISTAKES_FIRST };
+  // `findMistakes` is a rule validator, blind to a mark that is wrong but breaks
+  // no rule, so a board it passes can still be doomed. The re-solve below
+  // answers that case with `CONTRADICTION_UNLOCALIZED`, which asks the player to
+  // undo rather than promising a highlight that will never appear.
   const { w, h, grid } = state;
 
   // Check the marks against the unique solution rather than deduce onward from

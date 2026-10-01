@@ -445,7 +445,7 @@ export const rectGame: Game<
   solve,
   findMistakes,
 
-  hint: (state) => rectHint(state, findMistakes(state).length),
+  hint: rectHint,
   hintMarks: {
     roles: {
       ring: "what the step draws: the rectangle it decides, or the one edge it makes a line.",

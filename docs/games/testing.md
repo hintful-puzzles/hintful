@@ -691,7 +691,8 @@ is the `ts-engine` spec, "A shared mechanic is joined by having it".
    it is the game's `notApplicable` reason, which its help page prints, and the
    guard reads it with `sectionState` ([mechanics](./mechanics.md) § "Contract
    sections, and what makes a draft"). That is where `NOT_TURNED`, the "no
-   solver" half of `NO_FLAG` and three `OPENS_ITS_OWN_REFUSAL` entries went.
+   solver" half of `NO_FLAG` and three entries of a refusal-opening ledger went
+   (the ledger itself went when the midend took the opening over).
 4. **Where the game must declare a flag because production needs the answer
    synchronously, hold the flag to the behavior.** The `Game` contract carries
    boolean declarations, and each is asserted equal to a derivation rather

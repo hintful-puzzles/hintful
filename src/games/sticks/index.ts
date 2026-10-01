@@ -27,7 +27,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
-import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -432,11 +432,6 @@ function narrate(
 const pointOf = (i: number, w: number): Point => ({ x: i % w, y: Math.floor(i / w) });
 
 function hint(state: SticksState): HintResult<SticksMove, SticksHint> {
-  // A wrong line makes every deduction from here worthless, so refuse and let
-  // the midend light the offenders through findMistakes.
-  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-  if (refusal) return refusal;
-
   const plan = deduceSticksPlan(state);
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
 

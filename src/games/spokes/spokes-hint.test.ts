@@ -314,30 +314,18 @@ describe("a saturated hub is one multi-leg journey, one color", () => {
   });
 });
 
-// --- refusals ---------------------------------------------------------------
+// --- boards the midend refuses a hint on ------------------------------------
 
-describe("refusals", () => {
-  it("refuses a solved board", () => {
-    const found = findFiring(EASY, "saturation");
-    expect(found).not.toBeNull();
-    if (!found) return;
-    // Solve fully by following the plan.
-    const board = cloneBoard(found.state);
-    for (let guard = 0; guard < 600; guard++) {
-      const plan = deduceSpokesPlan(board);
-      if (plan.length === 0) break;
-      for (const f of plan) applyForced(board, f.forced);
-    }
-    let state = cloneState(found.state);
-    state.spokes.set(board.spokes);
-    state = cloneState(state);
-    state.completed = true;
-    const res = spokesGame.hint?.(state);
-    expect(res?.ok).toBe(false);
-    if (res && !res.ok) expect(res.error).toMatch(/already solved/);
+describe("boards the midend refuses a hint on", () => {
+  it("counts a solved board as finished", () => {
+    const { desc } = newSpokesDesc(EASY, randomNew("refuse-solved"));
+    const base = newState(EASY, desc);
+    const solved = spokesGame.solve?.(base, base);
+    if (!solved?.ok) throw new Error("solve refused");
+    expect(spokesGame.status(spokesGame.executeMove(base, solved.move))).toBe("solved");
   });
 
-  it("refuses a board carrying a solution-forbidden line, with the mistake banner", () => {
+  it("flags a solution-forbidden line as a mistake", () => {
     const { desc } = newSpokesDesc(EASY, randomNew("refuse-wrong"));
     const base = newState(EASY, desc);
     const solution = solutionOf(base);
@@ -356,10 +344,6 @@ describe("refusals", () => {
       }
     }
     expect(placed).toBe(true);
-    const res = spokesGame.hint?.(base);
-    expect(res?.ok).toBe(false);
-    if (res && !res.ok) expect(res.error).toMatch(/highlighted mistakes/);
-    // And the offenders are actually flagged.
     expect(spokesGame.findMistakes?.(base)?.length ?? 0).toBeGreaterThan(0);
   });
 });

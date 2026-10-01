@@ -262,7 +262,7 @@ function firstBoard(pred: (b: Board) => boolean): Board {
 }
 
 describe("the player's own board", () => {
-  it("refuses on a note that has crossed out its cell's answer", () => {
+  it("flags a note that has crossed out its cell's answer, so the midend refuses it", () => {
     const { label, state: start } = firstBoard((b) => b.params.removenums);
     const solved = abcdGame.solve?.(start, start);
     if (!solved?.ok || solved.move.type !== "solve")
@@ -272,7 +272,6 @@ describe("the player's own board", () => {
     expect(abcdGame.findMistakes?.(state)).toEqual([]);
     state = abcdGame.executeMove(state, { type: "pencil", x: 0, y: 0, letter: answer });
     expect(abcdGame.findMistakes?.(state)).toEqual([{ x: 0, y: 0, kind: "note" }]);
-    expect(abcdGame.hint?.(state, undefined)?.ok).toBe(false);
   });
 
   it("clears the obvious notes on a board the player filled into without notes", () => {

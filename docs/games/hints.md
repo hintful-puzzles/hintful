@@ -658,10 +658,10 @@ no words would have no text file.
   function of the mode, returning its sentences in letters or numbers.
 - **Wording comments move with the wording.** Why a sentence says "no way
   across it" belongs beside it; why the arm fires stays with `narrate`.
-- **Refusals are not hint text in this sense.** They are held to one list by
-  `engine/hint-refusal.ts` and its test, which reads every
-  `{ ok: false, error: <literal> }` in the tree; moving one into `say` would
-  quietly take it out of that guard.
+- **Refusals are not hint text in this sense.** They are `HintRefusal`s,
+  worded once in `engine/hint-refusal.ts`, and a game's own dead end goes
+  through `puzzleHintRefusal`, whose test reads the call; wrapping one in a
+  `say` entry would hide its sentence from that test.
 - **Moving a sentence is not rewording it.** `extract-hint-strings` moved the
   collection's text with a census of every step spoken across every tier
   (16,059 steps across 31 games, byte-identical before and after) and a diff
@@ -1274,54 +1274,52 @@ clue's line").
 
 ## Refusal wording comes from one module
 
-**Never write a refusal message.** Import it from
-[`src/engine/hint-refusal.ts`](../../src/engine/hint-refusal.ts):
-`ALREADY_SOLVED`, `FIX_MISTAKES_FIRST`, `DEDUCTION_EXHAUSTED`,
-`CONTRADICTION_UNLOCALIZED`, `NO_MOVE_WORTH_MAKING`, `SEARCH_OUT_OF_REACH` and
-friends.
+**A refusal is a type, not a string.** `HintResult`'s error is a `HintRefusal`
+([`src/engine/hint-refusal.ts`](../../src/engine/hint-refusal.ts)): one of
+`DEDUCTION_EXHAUSTED`, `CONTRADICTION_UNLOCALIZED`, `NO_MOVE_WORTH_MAKING`,
+`SEARCH_OUT_OF_REACH`, `GAME_OVER`, `PUZZLE_NOT_REASONABLE` and friends, so a
+sentence you type yourself does not compile.
 
-**And never write the *opening* either.** The two refusals every deductive hint
-owes are `commonHintRefusal(completed, mistakeCount)`:
+**And you do not write the *opening* at all: the midend refuses before it
+asks.** A board whose status is solved gets `ALREADY_SOLVED`; then a board on
+which your `findMistakes` finds anything gets `FIX_MISTAKES_FIRST`, with the
+mistakes on the overlay. So `hint()` is only ever asked about an unfinished
+board with nothing wrong on it that `findMistakes` can see, and it starts
+reasoning on its first line. Two rules live in that opening and were invisible
+at each of the forty-two copies games once wrote: the refusals are asked **in
+order**, because a finished board is not a wrong board, and `FIX_MISTAKES_FIRST`
+**promises a highlight**, which only the midend can keep, because it is what
+draws it. That is why `FIX_MISTAKES_FIRST` is not a `HintRefusal`.
 
-```ts
-const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-if (refusal) return refusal;
-```
+**What a game still answers for itself is about the puzzle:**
 
-Two rules live in those two lines and are invisible at each hand-written copy —
-which is why they are the helper's and not yours. The refusals are asked **in
-order**, because a finished board is not a wrong board; and
-`FIX_MISTAKES_FIRST` **promises a highlight**, so it may fire only where the
-game has established there is something to light up. Fifteen games wrote the
-pair out by hand and `commonHintRefusal` had **no callers at all** until
-`adopt-the-shared-refusal-opening`; `hint-refusal.test.ts` now derives the
-non-adopters and holds them to a ledger.
+- **A board `findMistakes` passes that is still doomed.** Bricks, Clusters,
+  Subsets and Loopy check further and say `CONTRADICTION_UNLOCALIZED` when the
+  board is inconsistent with no entry provably wrong.
+- **A finished board its status does not call finished.** Fifteen, Sixteen and
+  Netslide count a board solved from the move that sorts it, so a game ID typed
+  already sorted is finished at move 0 while the status says ongoing; each
+  checks its tiles and says `ALREADY_SOLVED`. A game whose status covers every
+  finished board (most of them) writes nothing.
+- **A lost board.** The midend does not refuse on `"lost"`, because a lost board
+  is not always over: Flood plays on past its move limit and its hint still
+  leads home. Guess's revealed answer and Flood's board flooded past the limit
+  take no more moves, and say `GAME_OVER`.
+- **A dead end only this puzzle has**, in its own words, through
+  `puzzleHintRefusal(sentence)`. Inertia's dead ball and the gems it can no
+  longer reach are the case: naming the specific dead end *is* the hint's
+  value. `hint-refusal.test.ts` reads every call and fails a sentence two games
+  pass, since a situation two games share is a kind, and a sentence that spells
+  out a kind. Untangle once had such a refusal, telling the player to move a
+  tangled vertex themselves, the one thing the hint existed to do for them; it
+  was replaced by a hint that never runs out on a solvable board.
 
-**Two things a game may still answer for itself**, both about the puzzle:
-*which* second refusal it owes — Bricks and Clusters choose
-`CONTRADICTION_UNLOCALIZED` when the board is inconsistent with no entry
-provably wrong — and *whether it owes one at all*, for a game with no mistake
-concept (Flood, Fifteen, Sixteen: a solved check is the whole opening). Write
-the explicit form and say why at the site. **The helper does not grow a
-parameter for the second message**; a knob added so two games can pass a
-different constant turns a convention into a configuration language.
-
-**"Never" includes the shared builders**, and that is not a hypothetical:
-`candidate-hint.ts` builds the whole `hint()` of eleven candidate games and held
-literal copies of three of these constants, while its own doc comment described
-them as shared "so a wording tweak lands in one place instead of drifting". It
-was one place — just not the same one place as everybody else's
-(`refuse-honestly-at-every-tier`).
-
-`hint-refusal.test.ts` enforces it in both directions — a new phrasing fails,
-and so does an inlined copy of an approved one. It reads `src/games/**` **and
-the engine's hint builders**, because a refusal lives wherever a `hint()` is
-built and eleven of them are not built under `games/`. A game that genuinely
-should read differently adds itself to that test's `EXCEPTIONS` with the reason;
-Inertia qualifies, because naming its specific dead end *is* the hint's value.
-Untangle once did too, with a refusal telling the player to move a tangled
-vertex themselves — the one thing the hint existed to do for them. It was
-replaced by a hint that never runs out on a solvable board.
+**The shared builders are no exception**, and that is not a hypothetical:
+`candidate-hint.ts` builds the whole `hint()` of eleven candidate games and once
+held literal copies of three refusal constants, while its own doc comment
+described them as shared "so a wording tweak lands in one place instead of
+drifting" (`refuse-honestly-at-every-tier`). The type now reaches it like any
+game.
 
 **There is one message for running out of deduction, not two.** It used to be a
 bare `NO_DEDUCTION_LEFT` and a `…_TRIAL_AND_ERROR` variant, and the distinction
@@ -1365,28 +1363,26 @@ slide planner out of their own source and accepts this refusal from exactly
 those, with a per-member ledger saying why each has a reach. A deductive game
 emitting it fails, and so does a searching game emitting anything else.
 
-**Pick the mistake message by whether anything will actually be highlighted.**
-`FIX_MISTAKES_FIRST` promises a highlight, so emit it only under a
-`findMistakes(state).length > 0` guard. Where the board is inconsistent but no
-single entry is provably wrong — or where the game's `findMistakes` is a *rule
-validator* that cannot see a wrong-but-legal entry — the honest message is
-`CONTRADICTION_UNLOCALIZED`, which asks the player to undo rather than pointing
-at a highlight that never comes.
-
-**Which of the two you need is decided by your own `findMistakes`, so read it
-rather than copying a neighbor.** A game whose `findMistakes` re-solves the
-clues and compares already catches a wrong-but-legal entry, and needs no second
-check; a rule validator does not, and its `hint` must make that check itself
-before deducing onward from a doomed board. Every game that needs the second
-check has one — verified by reading all of them, not by grepping for a name,
-which got the answer wrong twice (see AGENTS.md, "A scan that keys on a name").
+**Whether your hint needs a second wrong-board check is decided by your own
+`findMistakes`, so read it rather than copying a neighbor.** A game whose
+`findMistakes` re-solves the clues and compares already catches a
+wrong-but-legal entry, so the midend never hands its hint a doomed board. A
+*rule validator* does not, and its `hint` must make that check itself before
+deducing onward, answering with `CONTRADICTION_UNLOCALIZED`, which asks the
+player to undo rather than pointing at a highlight that never comes. Every game
+that needs the second check has one, verified by reading all of them, not by
+grepping for a name, which got the answer wrong twice (see AGENTS.md, "A scan
+that keys on a name").
 
 ## Refusal couples to the mistake overlay
 
 A hint refused because the board is wrong lights up the same overlay **Check &
-Save** uses — `Midend.computeHintPlan` calls `findMistakes()` on refusal. So a
-game with both `hint` and `findMistakes` gets "fix the highlighted mistakes
-first" *with the cells actually highlighted* for free.
+Save** uses: `Midend.computeHintPlan` asks `findMistakes` before it asks the
+hint, puts what it finds on the overlay, and says "fix the highlighted mistakes
+first" *with the cells actually highlighted*. A game with both `hint` and
+`findMistakes` gets this without a line of its own, and its `findMistakes` is
+therefore a precondition of its hint: `hint-resume.test.ts`'s walk asks it at
+every position the hints reach, and fails if it ever flags one.
 
 The refusal message reaches the player via the banner on **both** paths —
 manual Hint and Auto-Hint route the returned string into the transient banner

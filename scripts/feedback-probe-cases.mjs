@@ -203,6 +203,21 @@ export const MODULES = [
     module: "src/engine/midend.ts",
     cases: [
       {
+        // Moved here from `candidate-hint.ts` by `own-the-hint-refusals`, with
+        // the refusal it plants a defect in: every game's hint reasons from a
+        // board it knows is wrong.
+        within: "Midend.computeHintPlan",
+        why: "a hint deduces from a board with known mistakes instead of refusing",
+        find: "    if (mistakes.length > 0) {",
+        replace: "    if (false) {",
+      },
+      {
+        within: "Midend.computeHintPlan",
+        why: "a finished board is handed to the game's hint instead of refused",
+        find: '    if (this.game.status(this.state) === "solved") return ALREADY_SOLVED;\n    const mistakes',
+        replace: "    const mistakes",
+      },
+      {
         within: "Midend.newGameFromId",
         why: "an undecodable params string in a game ID is accepted silently",
         find: "      params = this.game.decodeParams(paramsStr);\n    } catch (e) {\n      return `Invalid parameters: ${(e as Error).message}`;",
@@ -777,18 +792,6 @@ export const MODULES = [
     // invisible to a render snapshot, which records whatever the game emits.
     module: "src/engine/candidate-hint.ts",
     cases: [
-      {
-        within: "candidateHint",
-        why: "a hint deduces from a board with known mistakes instead of refusing",
-        // Re-anchored by `refuse-honestly-at-every-tier`: this module used to
-        // write the refusal pair out itself and now calls `commonHintRefusal`,
-        // so the mistake count is what to neuter. Same planted defect — the
-        // candidate family's hint reasons from a board it knows is wrong —
-        // asked of the same module, which is what keeps the measurement
-        // comparable across the move.
-        find: "  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);",
-        replace: "  const refusal = commonHintRefusal(state.completed, 0);",
-      },
       {
         within: "candidateHint",
         why: "with no ui the plan folds the trivial eliminations away instead of teaching them",

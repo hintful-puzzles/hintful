@@ -11,15 +11,13 @@
  * checked at all.
  *
  * WHY THIS IS SMALLER THAN IT LOOKS, stated because the marginal population is
- * the whole argument for the runtime. **Twenty-one of the thirty-nine already
- * have the fresh-board half indirectly**: their `hint()` consumes
- * `findMistakes` (through `candidateHint` or `commonHintRefusal`), so a
- * `findMistakes` that flagged a clean board would refuse the hint with
- * `FIX_MISTAKES_FIRST`, and `hint-resume.test.ts`'s walk — which requires the
- * hint to reach a solved board — would fail. The eighteen that are left have no
- * such coverage and **fifteen of them are hintless**, so nothing anywhere has
- * ever asked their `findMistakes` a question it could get wrong. The
- * solved-board half is uncovered for all thirty-nine: a hint walk stops at
+ * the whole argument for the runtime. **Every hinted game already has the
+ * fresh-board half**: `hint-resume.test.ts`'s walk asks `findMistakes` at every
+ * position it reaches, the first of them the fresh board, as the midend does
+ * before every hint. When this was written, twenty-one of the thirty-nine had
+ * that coverage and **fifteen of the eighteen without it were hintless**, so
+ * nothing anywhere had ever asked their `findMistakes` a question it could get
+ * wrong. The solved-board half is uncovered for every game: a hint walk stops at
  * solved and never asks what `findMistakes` says once it arrives.
  *
  * WHAT IT CATCHES that no cheaper test would, and the repo has paid it once:

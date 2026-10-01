@@ -30,7 +30,6 @@ import {
 import {
   type BricksMove,
   type BricksParams,
-  type BricksState,
   COL_MASK,
   colorBits,
   DIFF_EASY,
@@ -259,17 +258,14 @@ describe("bricks hint — a second mark on the board is named", () => {
 });
 
 describe("bricks hint — refusals", () => {
-  it("refuses a solved board", () => {
+  it("counts a solved board as finished, so the midend refuses it", () => {
     const st = newState(FIX_PARAMS, FIX.desc);
-    const g = st.grid.slice();
-    solveGame(g, st.w, st.h, DIFF_TRICKY, true, true);
-    const solved: BricksState = { ...st, grid: g, completed: true };
-    const r = bricksGame.hint?.(solved);
-    expect(r?.ok).toBe(false);
-    if (r?.ok === false) expect(r.error).toMatch(/already solved/i);
+    const solved = bricksGame.solve?.(st, st);
+    if (!solved?.ok) throw new Error("solve refused");
+    expect(bricksGame.status(bricksGame.executeMove(st, solved.move))).toBe("solved");
   });
 
-  it("refuses a board with a rule violation", () => {
+  it("flags a rule violation, so the midend refuses it", () => {
     const st = newState(FIX_PARAMS, FIX.desc);
     // Force three shaded in a row somewhere.
     let run = -1;
@@ -286,9 +282,6 @@ describe("bricks hint — refusals", () => {
     }
     const g = st.grid.slice();
     g[run] = g[run + 1] = g[run + 2] = F_SHADE;
-    const r = bricksGame.hint?.({ ...st, grid: g });
-    expect(r?.ok).toBe(false);
-    if (r?.ok === false) expect(r.error).toMatch(/mistake/i);
     expect(findMistakes({ ...st, grid: g }).length).toBeGreaterThan(0);
   });
 

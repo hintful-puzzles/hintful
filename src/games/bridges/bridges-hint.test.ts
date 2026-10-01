@@ -11,11 +11,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
-import {
-  ALREADY_SOLVED,
-  CONTRADICTION_UNLOCALIZED,
-  FIX_MISTAKES_FIRST,
-} from "../../engine/hint-refusal.ts";
+import { CONTRADICTION_UNLOCALIZED } from "../../engine/hint-refusal.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { decodeSave, encodeSave } from "../../engine/save.ts";
@@ -593,18 +589,15 @@ describe("refusing", () => {
   const start = makeBoard(params, "bh-a");
   const ui = bridgesGame.newUi(start);
 
-  it("refuses a solved board with the collection's wording", () => {
+  it("counts a solved board as finished, so the midend refuses it", () => {
     const solved = bridgesGame.solve?.(start, start);
     expect(solved?.ok).toBe(true);
     if (!solved?.ok) return;
     const done = bridgesGame.executeMove(start, solved.move);
-    expect(bridgesGame.hint?.(done, undefined, ui)).toEqual({
-      ok: false,
-      error: ALREADY_SOLVED,
-    });
+    expect(bridgesGame.status(done)).toBe("solved");
   });
 
-  it("refuses a board with a wrong bridge on it", () => {
+  it("flags a wrong bridge, so the midend refuses it", () => {
     const is = [...start.islands]
       .sort((a, b) => a.count - b.count)
       .find((i) => i.points.filter((p) => p.off > 0).length > 1);
@@ -626,11 +619,7 @@ describe("refusing", () => {
         ],
       });
     }
-    expect(bridgesGame.findMistakes?.(wrong).length).toBeGreaterThan(0);
-    expect(bridgesGame.hint?.(wrong, undefined, ui)).toEqual({
-      ok: false,
-      error: FIX_MISTAKES_FIRST,
-    });
+    expect(bridgesGame.findMistakes?.(wrong).length ?? 0).toBeGreaterThan(0);
   });
 
   it("keeps a step displayed through an island's done-mark being toggled", () => {

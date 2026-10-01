@@ -486,17 +486,15 @@ describe("the picture carries the argument", () => {
 });
 
 describe("refusals", () => {
-  it("refuses on a solved board", () => {
+  it("counts a solved board as finished, so the midend refuses it", () => {
     let s = board(NORMAL_7, "refuse-solved");
     const res = galaxiesGame.solve?.(s, s);
     expect(res?.ok).toBe(true);
     if (res?.ok) s = galaxiesGame.executeMove(s, res.move);
     expect(galaxiesGame.status(s)).toBe("solved");
-    const hint = galaxiesGame.hint?.(s);
-    expect(hint?.ok).toBe(false);
   });
 
-  it("refuses on a board with a wrong association, and the mistake overlay has it", () => {
+  it("flags a wrong association, so the midend refuses it", () => {
     const s = board(NORMAL_7, "refuse-wrong");
     const sol = solution(s);
     // Find a tile and a dot the solution does *not* pair, and pair them.
@@ -522,10 +520,6 @@ describe("refusals", () => {
     if (!wrong) return;
     const dirty = galaxiesGame.executeMove(s, wrong);
     expect(galaxiesGame.findMistakes?.(dirty).length ?? 0).toBeGreaterThan(0);
-    const res = galaxiesGame.hint?.(dirty);
-    expect(res?.ok).toBe(false);
-    if (res && !res.ok)
-      expect(res.error).toMatch(/^Fix the highlighted mistakes first/);
   });
 });
 

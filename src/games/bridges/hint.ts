@@ -20,6 +20,7 @@ import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
   CONTRADICTION_UNLOCALIZED,
   DEDUCTION_EXHAUSTED,
+  type HintRefusal,
 } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
@@ -212,7 +213,7 @@ export function bridgesHint(
   state: BridgesState,
 ):
   | { ok: true; steps: HintStep<BridgesMove, BridgesHighlights>[] }
-  | { ok: false; error: string } {
+  | { ok: false; error: HintRefusal } {
   const work = state.workingCopy();
   const pass = bridgesRecordingPass(
     work,

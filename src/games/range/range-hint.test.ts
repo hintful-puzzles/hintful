@@ -151,17 +151,16 @@ describe("hint", () => {
     ]);
   });
 
-  it("refuses on a solved board", () => {
+  it("counts the board its plan finishes as solved, so the midend refuses it", () => {
     const st = fromSeed("9x6", "range-hint-solved");
     const res0 = rangeGame.hint?.(st);
     if (!res0?.ok) throw new Error("expected a plan");
     let cur = st;
     for (const step of res0.steps) cur = rangeGame.executeMove(cur, step.move);
-    const res = rangeGame.hint?.(cur);
-    expect(res?.ok).toBe(false);
+    expect(rangeGame.status(cur)).toBe("solved");
   });
 
-  it("refuses when the board has a mistake", () => {
+  it("flags a cell dotted against the solution, so the midend refuses it", () => {
     const st = fromSeed("9x6", "range-hint-mistake");
     const solution = rangeGame.solve?.(st, st);
     if (!solution?.ok) throw new Error("expected solvable");
@@ -171,7 +170,7 @@ describe("hint", () => {
     const c = blackCell % st.w;
     // Dot a solution-black cell white on the fresh board → a mistake.
     const wrong = rangeGame.executeMove(st, { sets: [{ r, c, value: "white" }] });
-    expect(rangeGame.hint?.(wrong)?.ok).toBe(false);
+    expect(rangeGame.findMistakes?.(wrong).length ?? 0).toBeGreaterThan(0);
   });
 });
 

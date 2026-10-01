@@ -31,7 +31,11 @@ import {
   UI_UPDATE,
 } from "./game.ts";
 import { MARK_ALL_CODE } from "./hint-gesture.ts";
-import { ALREADY_SOLVED, DEDUCTION_EXHAUSTED } from "./hint-refusal.ts";
+import {
+  ALREADY_SOLVED,
+  DEDUCTION_EXHAUSTED,
+  FIX_MISTAKES_FIRST,
+} from "./hint-refusal.ts";
 import { pencilModeKey, takesNotes } from "./key-labels.ts";
 import { describeParams, presetMenu, type TitledPresetMenu } from "./param-label.ts";
 import { paramsError } from "./params.ts";
@@ -867,6 +871,16 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     if (!this.game.hint) {
       return "This game does not support hints";
     }
+    // The two refusals every game would otherwise owe, asked in this order
+    // because a finished board is not a wrong one. The second promises a
+    // highlight, so it is said only once the mistakes are on the overlay.
+    if (this.game.status(this.state) === "solved") return ALREADY_SOLVED;
+    const mistakes = this.game.findMistakes?.(this.state) ?? [];
+    if (mistakes.length > 0) {
+      this.activeMistakes = mistakes;
+      this.requestRedraw();
+      return FIX_MISTAKES_FIRST;
+    }
     const result = this.game.hint(this.state, this.aux, this.ui);
     if (!result.ok && result.error === DEDUCTION_EXHAUSTED) {
       // The refusal tells the player the tier allows positions that need trial
@@ -885,16 +899,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         );
       }
     }
-    if (!result.ok) {
-      // Keep the refusal's promise. A hint is typically refused because the
-      // board has mistakes ("fix the highlighted mistakes first") — but the
-      // message alone highlights nothing. Surface them in the same overlay
-      // Check & Save uses, so the offending cells actually light up. Refusals
-      // with no mistakes (already solved, nothing deducible) find zero and
-      // highlight nothing; a game without `findMistakes` is a no-op.
-      this.findMistakes();
-      return result.error;
-    }
+    if (!result.ok) return result.error;
     if (result.steps.length === 0) return "Game returned an empty hint plan";
     this.activeHint = { steps: result.steps, index: 0 };
     this.advanceHintOnAnimationEnd = false;

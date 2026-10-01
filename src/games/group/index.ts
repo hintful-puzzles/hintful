@@ -649,7 +649,7 @@ function hint(
   _aux?: string,
   ui?: GroupUi,
 ): HintResult<GroupMove, GroupHint> {
-  return candidateHint(state, ui ?? newUi(state), findMistakes, buildSteps);
+  return candidateHint(state, ui ?? newUi(state), buildSteps);
 }
 
 /**

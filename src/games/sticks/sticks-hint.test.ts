@@ -293,7 +293,7 @@ describe("sticks hint — lifecycle", () => {
     }
   });
 
-  it("refuses on a wrong board, with the mistake highlighted", () => {
+  it("flags a wrong square, so the midend refuses a hint", () => {
     const { state } = board(1);
     const plan = deduceSticksPlan(state).flat();
     const wrong = plan[0];
@@ -301,17 +301,14 @@ describe("sticks hint — lifecycle", () => {
       kind: "set",
       changes: [{ index: wrong.index, line: wrong.to === "hor" ? "ver" : "hor" }],
     });
-    const r = sticksGame.hint?.(bad);
-    expect(r?.ok).toBe(false);
-    if (r?.ok === false) expect(r.error).toMatch(/mistakes/);
-    // The refusal is only useful because findMistakes lights the square.
     expect(sticksGame.findMistakes?.(bad)).toContainEqual({ index: wrong.index });
   });
 
-  it("refuses a solved board", () => {
+  it("counts a solved board as finished, so the midend refuses it", () => {
     const { state } = board(1);
-    const r = sticksGame.hint?.({ ...state, completed: true });
-    expect(r?.ok).toBe(false);
+    const r = sticksGame.solve?.(state, state);
+    if (!r?.ok) throw new Error("solve refused");
+    expect(sticksGame.status(sticksGame.executeMove(state, r.move))).toBe("solved");
   });
 
   it("follows a step only when the hinted square gets the hinted orientation", () => {

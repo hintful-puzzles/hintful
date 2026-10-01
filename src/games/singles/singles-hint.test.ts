@@ -247,16 +247,16 @@ describe("hint", () => {
     expect(cornerStep?.explanation).not.toContain("two corner squares");
   });
 
-  it("refuses on a solved board", () => {
+  it("counts the board its plan finishes as solved, so the midend refuses it", () => {
     const s = fromSeed({ w: 6, h: 6, diff: "tricky" }, "hint-solved");
     const res0 = singlesGame.hint?.(s);
     if (!res0?.ok) throw new Error("expected a plan");
     let cur = s;
     for (const step of res0.steps) cur = singlesGame.executeMove(cur, step.move);
-    expect(singlesGame.hint?.(cur)?.ok).toBe(false);
+    expect(singlesGame.status(cur)).toBe("solved");
   });
 
-  it("refuses when the board has a mistake", () => {
+  it("flags a solution-black cell circled, so the midend refuses it", () => {
     const p: SinglesParams = { w: 6, h: 6, diff: "tricky" };
     const s = fromSeed(p, "hint-mistake");
     const sol = makeState(p.w, p.h, s.nums);
@@ -266,7 +266,7 @@ describe("hint", () => {
     const wrong = singlesGame.executeMove(s, {
       sets: [{ x: blackIdx % p.w, y: (blackIdx / p.w) | 0, value: "circle" }],
     });
-    expect(singlesGame.hint?.(wrong)?.ok).toBe(false);
+    expect(singlesGame.findMistakes?.(wrong).length ?? 0).toBeGreaterThan(0);
   });
 });
 

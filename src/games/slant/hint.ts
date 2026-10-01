@@ -10,7 +10,7 @@
 
 import { Dsf } from "../../engine/dsf.ts";
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import { type Beyond, type ClueSources, say } from "./hint-text.ts";
@@ -674,12 +674,7 @@ function narrate(
  * where the solver found it; either way it and the firing it is placed
  * beside make one journey.
  */
-export function slantHint(
-  state: SlantState,
-  mistakes: number,
-): HintResult<SlantMove, SlantHint> {
-  const refusal = commonHintRefusal(state.completed, mistakes);
-  if (refusal) return refusal;
+export function slantHint(state: SlantState): HintResult<SlantMove, SlantHint> {
   const { w, h } = state;
   const { firings, trace } = deduceHintPlan(w, h, state.clues, state.soln, state.alike);
   if (firings.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };

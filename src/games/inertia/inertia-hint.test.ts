@@ -4,7 +4,6 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { ALREADY_SOLVED } from "../../engine/hint-refusal.ts";
 import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -377,10 +376,10 @@ describe("inertia hint is a nudge; only Solve is a commitment", () => {
     expect(res.error).toMatch(/undo/i);
   });
 
-  it("refuses when the board is solved", () => {
+  it("counts the last gem collected as finished, so the midend refuses a hint", () => {
     const s = play(stateOf(["Sgs"]), E);
     expect(s.gems).toBe(0);
-    expect(hint(s)).toEqual({ ok: false, error: ALREADY_SOLVED });
+    expect(inertiaGame.status(s)).toBe("solved");
   });
 });
 

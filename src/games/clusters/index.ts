@@ -26,10 +26,8 @@ import {
 } from "../../engine/game.ts";
 import type { PointerAction } from "../../engine/hint-gesture.ts";
 import {
-  ALREADY_SOLVED,
   CONTRADICTION_UNLOCALIZED,
   DEDUCTION_EXHAUSTED,
-  FIX_MISTAKES_FIRST,
 } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
@@ -358,12 +356,9 @@ function buildHighlights(d: ClustersDeduction, w: number): ClustersHintHighlight
 }
 
 function hint(state: ClustersState): HintResult<ClustersMove, ClustersHintHighlights> {
-  // Deliberately not `commonHintRefusal`: like Bricks, Clusters can reach a board
-  // that is inconsistent without any one cell being provably wrong, and answers
-  // that with `CONTRADICTION_UNLOCALIZED` below, so its wrong-board arm chooses
-  // between two messages rather than the helper's single one.
-  if (state.completed) return { ok: false, error: ALREADY_SOLVED };
-  if (findMistakes(state).length > 0) return { ok: false, error: FIX_MISTAKES_FIRST };
+  // A board `findMistakes` passes can still be inconsistent without any one cell
+  // being provably wrong, and that is answered with `CONTRADICTION_UNLOCALIZED`
+  // below.
   const plan = deduceHintPlan(state.grid, state.w, state.h);
   // COMPLETE certifies the position (the error rules are monotone, so a wrong
   // tile can never extend to a zero-error grid); anything else means some

@@ -83,14 +83,14 @@ describe("rect hint rungs", () => {
       const hit = firstOf(p, desc, kind);
       expect(hit, `${kind} never fires on ${desc}`).not.toBeNull();
       if (!hit) return;
-      const res = rectHint(hit.s, 0);
+      const res = rectHint(hit.s);
       if (!res.ok) throw new Error(res.error);
       expect(res.steps[0].explanation).toMatch(words);
     });
 
   it("a 1 is its own rectangle", () => {
     const p = params(2, 1);
-    const res = rectHint(newState(p, "1_1"), 0);
+    const res = rectHint(newState(p, "1_1"));
     if (!res.ok) throw new Error(res.error);
     expect(res.steps[0].explanation).toBe(
       "A 1 needs no other square, so this square is its whole rectangle.",
@@ -106,7 +106,7 @@ describe("rect hint plan", () => {
         const p = params(n, n);
         const { desc } = newDesc(p, randomNew(`rect-hint-plan-${n}-${seed}`));
         let s: RectState = newState(p, desc);
-        const res = rectHint(s, 0);
+        const res = rectHint(s);
         if (!res.ok) throw new Error(`${n}x${n}:${desc}: ${res.error}`);
         for (const step of res.steps) s = executeMove(s, step.move);
         expect(s.completed, `${n}x${n}:${desc}`).toBe(true);
@@ -124,17 +124,11 @@ describe("rect hint plan", () => {
     );
     expect(rungsFinish(newState(P7, "2j8_4b2b4a4d3b6j6b6b2b2"))).toBe(true);
   });
-
-  it("refuses on a wrong line", () => {
-    const s = newState(P7, "2j8_4b2b4a4d3b6j6b6b2b2");
-    const res = rectHint(s, 1);
-    expect(res.ok).toBe(false);
-  });
 });
 
 describe("rect hint keep-track", () => {
   const s = newState(P7, "2j8_4b2b4a4d3b6j6b6b2b2");
-  const res = rectHint(s, 0);
+  const res = rectHint(s);
   if (!res.ok) throw new Error(res.error);
   const step = res.steps.find((t) => t.move.type === "rect" && t.move.w * t.move.h > 1);
   if (!step || step.move.type !== "rect") throw new Error("no rectangle step");

@@ -235,12 +235,12 @@ describe("unequal hint", () => {
     expect(checked).toBeGreaterThan(0);
   });
 
-  it("refuses on a solved board and on a board with mistakes", () => {
+  it("counts a solved board as finished and flags a wrong entry, the boards the midend refuses", () => {
     const { st } = gen(UNEQ, "hint-refuse");
     const r = unequalGame.solve?.(st, st);
     if (!r?.ok) throw new Error("solve failed");
     const solved = unequalGame.executeMove(st, r.move);
-    expect(unequalGame.hint?.(solved).ok).toBe(false);
+    expect(unequalGame.status(solved)).toBe("solved");
 
     const o = st.order;
     const empty = [...st.immutable].indexOf(0);
@@ -253,7 +253,7 @@ describe("unequal hint", () => {
       n: wrong,
       pencil: false,
     });
-    expect(unequalGame.hint?.(bad).ok).toBe(false);
+    expect(unequalGame.findMistakes?.(bad).length ?? 0).toBeGreaterThan(0);
   });
 });
 

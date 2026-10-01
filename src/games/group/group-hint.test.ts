@@ -12,7 +12,6 @@
 
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
-import { FIX_MISTAKES_FIRST } from "../../engine/hint-refusal.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { groupGame } from "./index.ts";
 import type { GroupHint } from "./render.ts";
@@ -181,18 +180,17 @@ describe("group hint — placements on a note-free board", () => {
   });
 });
 
-describe("group hint — refusals", () => {
-  it("refuses on a solved board", () => {
+describe("group hint — boards the midend refuses", () => {
+  it("counts a solved board as finished, so the midend refuses it", () => {
     const orig = board(NORMAL, "refuse-solved");
     const sr = groupGame.solve?.(orig, orig, undefined);
     expect(sr?.ok).toBe(true);
     if (!sr?.ok) return;
     const solved = groupGame.executeMove(orig, sr.move);
-    const res = groupGame.hint?.(solved, undefined);
-    expect(res?.ok).toBe(false);
+    expect(groupGame.status(solved)).toBe("solved");
   });
 
-  it("refuses on a board with a mistake (and findMistakes flags it)", () => {
+  it("flags a wrong entry, so the midend refuses it", () => {
     const orig = board(NORMAL, "refuse-mistake");
     const sr = groupGame.solve?.(orig, orig, undefined);
     if (!sr?.ok || sr.move.type !== "solve") throw new Error("solve() failed");
@@ -213,11 +211,9 @@ describe("group hint — refusals", () => {
       n: wrong,
     });
     expect(groupGame.findMistakes?.(bad).length ?? 0).toBeGreaterThan(0);
-    const res = groupGame.hint?.(bad, undefined);
-    expect(res?.ok).toBe(false);
   });
 
-  it("refuses on marks that have crossed out a cell's answer, and flags them", () => {
+  it("flags marks that have crossed out a cell's answer, so the midend refuses them", () => {
     const orig = board(NORMAL, "refuse-note-mistake");
     const sr = groupGame.solve?.(orig, orig, undefined);
     if (!sr?.ok || sr.move.type !== "solve") throw new Error("solve() failed");
@@ -244,8 +240,6 @@ describe("group hint — refusals", () => {
       marks: [{ x, y, n: wrong }],
     });
     expect(groupGame.findMistakes?.(bad)).toEqual([{ x, y, kind: "note" }]);
-    const res = groupGame.hint?.(bad, undefined);
-    expect(res).toEqual({ ok: false, error: FIX_MISTAKES_FIRST });
   });
 });
 

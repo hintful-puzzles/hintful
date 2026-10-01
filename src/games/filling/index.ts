@@ -21,7 +21,6 @@ import {
 import { coord, fromCoord } from "../../engine/geometry.ts";
 import { drag, key, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
-  commonHintRefusal,
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
@@ -254,8 +253,6 @@ function narrate(
 }
 
 function hint(state: FillingState): HintResult<FillingMove, FillingHint> {
-  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-  if (refusal) return refusal;
   const plan = deduceHintPlan(state.board, state.w, state.h);
   if (plan.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
   const w = state.w;

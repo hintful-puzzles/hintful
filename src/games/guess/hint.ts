@@ -16,7 +16,7 @@
  */
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { commonHintRefusal, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
+import { GAME_OVER, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
 import { COLOR, type Reason, say } from "./hint-text.ts";
 import {
   FEEDBACK_CORRECTPLACE,
@@ -507,8 +507,8 @@ export function guessHint(
   state: GuessState,
   ui?: { holds: boolean[] },
 ): HintResult<GuessMove, GuessHighlights> {
-  const refusal = commonHintRefusal(state.solved !== 0, 0);
-  if (refusal) return refusal;
+  // Out of guesses, or the answer shown by Solve: the status is lost.
+  if (state.solved < 0) return { ok: false, error: GAME_OVER };
   const p = state.params;
   const rows = scoredRows(state);
   const out = new Int32Array(p.npegs);

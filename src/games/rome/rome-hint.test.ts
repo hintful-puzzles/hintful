@@ -307,7 +307,7 @@ describe("rome hint plan", () => {
     expect(st.pencil[2 * st.w] & FM_LEFT).toBe(0);
   });
 
-  it("refuses on a solved board and on a board with a wrong mark", () => {
+  it("counts a solved board as finished and flags a wrong mark, the boards the midend refuses", () => {
     const { st } = gen(NORMAL, "refuse-0");
     const solution = boardFromClues(st);
     romeSolve(solution, DIFFCOUNT);
@@ -317,10 +317,10 @@ describe("rome hint plan", () => {
         (c & FM_ARROWMASK) === 0 ? null : ((c & FM_ARROWMASK) as 4 | 8 | 16 | 32),
       ),
     });
-    expect(romeGame.hint?.(solved)?.ok).toBe(false);
+    expect(romeGame.status(solved)).toBe("solved");
 
-    // A square whose marks have crossed out its answer is a mistake, so the
-    // hint declines rather than deducing from notes it cannot trust.
+    // A square whose marks have crossed out its answer is a mistake, so no
+    // hint deduces from notes it cannot trust.
     const target = solution.grid.findIndex(
       (c, i) => st.grid[i] === EMPTY && (c & FM_ARROWMASK) !== 0,
     );
@@ -337,7 +337,6 @@ describe("rome hint plan", () => {
       dir: wrong as 4 | 8 | 16 | 32,
     });
     expect(romeGame.findMistakes?.(noted).some((m) => m.kind === "note")).toBe(true);
-    expect(romeGame.hint?.(noted)?.ok).toBe(false);
   });
 });
 

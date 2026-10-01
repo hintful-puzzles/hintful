@@ -33,7 +33,6 @@ import type {
 } from "../../engine/game.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
-  commonHintRefusal,
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
@@ -199,8 +198,6 @@ function evidence(f: SeparateFiring): { striped: number[]; outlined: number[] } 
  * whose marks nothing can vouch for.
  */
 function hint(state: SeparateState): HintResult<SeparateMove, BorderHint> {
-  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-  if (refusal) return refusal;
   const p = paramsOf(state);
   if (!solveToBorders(p, state.letters))
     return { ok: false, error: PUZZLE_NOT_REASONABLE };

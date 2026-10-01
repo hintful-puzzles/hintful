@@ -11,7 +11,7 @@ import type {
   HintTrackVerdict,
   UiUpdate,
 } from "../../engine/game.ts";
-import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import type { TargetVerbs } from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import {
@@ -28,7 +28,6 @@ import {
 } from "../../engine/wires.ts";
 import { Facts, nextStep, record, type Step } from "./deduce.ts";
 import { type Premises, type SideMark, say } from "./hint-text.ts";
-import { findMistakes } from "./mistakes.ts";
 import type { NetDrawState } from "./render.ts";
 import {
   LOCKED,
@@ -151,9 +150,6 @@ export function netHint(
   verbs: Verbs,
   ui: NetUi,
 ): HintResult<NetMove, NetHint> {
-  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-  if (refusal) return refusal;
-
   const f = new Facts(state);
   let s = state;
   const steps: HintStep<NetMove, NetHint>[] = [];

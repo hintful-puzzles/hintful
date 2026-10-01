@@ -238,19 +238,16 @@ describe("hint", () => {
     });
   });
 
-  it("refuses on a solved board", () => {
+  it("counts a solved board as finished, so the midend refuses it", () => {
     const state = generate("plan-a");
-    const plan = deduceHintPlan(state.grid, state.w, state.h);
-    const grid = state.grid.slice();
-    for (const d of plan.deductions) grid[d.index] = d.fill;
-    const solved: ClustersState = { ...state, grid, completed: true };
-    const res = clustersGame.hint?.(solved);
-    expect(res?.ok).toBe(false);
-    if (res?.ok !== false) return;
-    expect(res.error).toContain("already solved");
+    const solved = clustersGame.solve?.(state, state);
+    if (!solved?.ok) throw new Error("solve refused");
+    expect(clustersGame.status(clustersGame.executeMove(state, solved.move))).toBe(
+      "solved",
+    );
   });
 
-  it("refuses on a rule-violating board, pointing at Check & Save's overlay", () => {
+  it("flags a rule-violating board, so the midend refuses it", () => {
     // Painting the refuted color of a *direct* firing trips the rule
     // immediately, so findMistakes flags it.
     const hit = findDeduction((d) => d.reason.kind === "direct");
@@ -259,10 +256,9 @@ describe("hint", () => {
     // The firing's board, with the refuted move made for real.
     const grid = hit.grid.slice();
     grid[hit.d.index] = hit.d.refuted;
-    const res = clustersGame.hint?.({ ...hit.state, grid });
-    expect(res?.ok).toBe(false);
-    if (res?.ok !== false) return;
-    expect(res.error).toContain("mistakes");
+    expect(
+      clustersGame.findMistakes?.({ ...hit.state, grid }).length ?? 0,
+    ).toBeGreaterThan(0);
   });
 
   it("refuses honestly on a wrong-but-locally-clean board", () => {

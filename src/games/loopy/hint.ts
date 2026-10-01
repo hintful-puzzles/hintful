@@ -25,7 +25,6 @@ import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.t
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
 import {
   CONTRADICTION_UNLOCALIZED,
-  commonHintRefusal,
   DEDUCTION_EXHAUSTED,
 } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
@@ -728,9 +727,7 @@ function planSteps(
   return pl.steps;
 }
 
-export function hint(state: LoopyState, mistakes: number): HintResult<LoopyMove> {
-  const refusal = commonHintRefusal(state.completed, mistakes);
-  if (refusal) return refusal;
+export function hint(state: LoopyState): HintResult<LoopyMove> {
   const { plan, facts, tickOf, contradiction } = deduceLoopyPlan(state);
   if (plan.length === 0) {
     return {

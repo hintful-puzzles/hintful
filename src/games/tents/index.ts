@@ -22,7 +22,7 @@ import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
-import { commonHintRefusal, PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
+import { PUZZLE_NOT_REASONABLE } from "../../engine/hint-refusal.ts";
 import { matching } from "../../engine/latin.ts";
 import { transposeDimensions } from "../../engine/params.ts";
 import {
@@ -459,8 +459,7 @@ export const tentsGame: Game<
   solve,
   difficulty,
   findMistakes,
-  hint: (state) =>
-    commonHintRefusal(state.completed, findMistakes(state).length) ?? tentsHint(state),
+  hint: tentsHint,
   hintMarks: {
     roles: {
       ring: "the squares the step decides. When it asks for a link, the tent and the tree are ringed as one shape, and the link is drawn between them in the hint color.",

@@ -35,7 +35,6 @@ import {
 import { click, type PointerAction } from "../../engine/hint-gesture.ts";
 import {
   CONTRADICTION_UNLOCALIZED,
-  commonHintRefusal,
   DEDUCTION_EXHAUSTED,
 } from "../../engine/hint-refusal.ts";
 import { phrase } from "../../engine/hint-words.ts";
@@ -582,9 +581,6 @@ function stepsForFiring(
 }
 
 function hint(state: SubsetsState): HintResult<SubsetsMove> {
-  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-  if (refusal) return refusal;
-
   // A mark can be wrong without yet breaking a local rule (a letter the unique
   // solution excludes). The solution is derivable from the givens, so compare
   // and refuse honestly rather than hint on into a doomed position.

@@ -1,5 +1,5 @@
 /**
- * Slant hint — tier-1 behavioral tests: refusal coupling,
+ * Slant hint — tier-1 behavioral tests: the boards the midend refuses,
  * plan completeness, narration quality (indication-first, necessity voice),
  * visible evidence, and keep-track.
  */
@@ -34,15 +34,12 @@ function applyPlan(state: SlantState): SlantState {
 }
 
 describe("slant hint", () => {
-  test("refuses on a solved board with the overlay-coupling message", () => {
+  test("counts the board its plan finishes as solved, so the midend refuses it", () => {
     const s = freshState(5, 5, DIFF_EASY, "solved-1");
-    const solved = applyPlan(s);
-    expect(solved.completed).toBe(true);
-    const res = slantGame.hint?.(solved);
-    expect(res?.ok).toBe(false);
+    expect(slantGame.status(applyPlan(s))).toBe("solved");
   });
 
-  test("refuses on a mistaken board (couples to findMistakes)", () => {
+  test("flags a wrong slash, so the midend refuses it", () => {
     const s = freshState(8, 8, DIFF_HARD, "mistake-1");
     const sol = solveFromClues(s.w, s.h, s.clues);
     if ("error" in sol) throw new Error("unsolvable");
@@ -50,8 +47,6 @@ describe("slant hint", () => {
     const wrongV = (sol.soln[0] === 1 ? -1 : 1) as 1 | -1;
     const dirty = executeMove(s, { type: "set", x: 0, y: 0, v: wrongV });
     expect(slantGame.findMistakes?.(dirty)?.length ?? 0).toBeGreaterThan(0);
-    const res = slantGame.hint?.(dirty);
-    expect(res?.ok).toBe(false);
   });
 
   test("plan solves every generated board, from empty and mid-solve", () => {

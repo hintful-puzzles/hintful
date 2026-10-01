@@ -606,7 +606,7 @@ function hint(
   _aux?: string,
   ui?: SoloUi,
 ): HintResult<SoloMove, SoloHint> {
-  return candidateHint(state, ui ?? newUi(state), findMistakes, buildSteps);
+  return candidateHint(state, ui ?? newUi(state), buildSteps);
 }
 
 /** Classify a player move against the displayed hint step (shared

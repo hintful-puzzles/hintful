@@ -451,8 +451,7 @@ export const keenGame: Game<
 
   solve,
   difficulty,
-  hint: (state, _aux, ui) =>
-    candidateHint(state, ui ?? newUi(state), findMistakes, buildSteps),
+  hint: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),
   hintMarks: {
     roles: {
       ring: "the cell the step is about: the number to enter there, or the pencil marks to cross out, which are shown with a line through them.",

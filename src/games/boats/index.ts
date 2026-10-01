@@ -40,7 +40,7 @@ import {
   type UiUpdate,
 } from "../../engine/game.ts";
 import { drag, type PointerAction } from "../../engine/hint-gesture.ts";
-import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import {
   dimensionParamConfig,
@@ -493,13 +493,11 @@ function stepsFor(
 }
 
 function hint(state: BoatsState): HintResult<BoatsMove, BoatsHint> {
-  // `findMistakes` is a re-solve, so this also catches the placement that breaks
-  // no rule *yet* but appears in no solution — deducing onward from a doomed
-  // board would produce confident nonsense (docs/games/hints.md § "Refusal
-  // couples to the mistake overlay").
-  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-  if (refusal) return refusal;
-
+  // The midend asks only about a board `findMistakes` passes, and that is a
+  // re-solve, so a placement that breaks no rule *yet* but appears in no
+  // solution never reaches this: deducing onward from a doomed board would
+  // produce confident nonsense (docs/games/hints.md § "Refusal couples to the
+  // mistake overlay").
   const plan = deduceBoatsPlan(state);
   const steps = plan.firings.flatMap((f) =>
     stepsFor(f, state.params.w, state.params.h),

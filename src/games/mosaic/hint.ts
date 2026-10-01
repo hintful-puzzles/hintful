@@ -13,12 +13,11 @@ import {
   type HintTrackVerdict,
   narratedStep,
 } from "../../engine/game.ts";
-import { commonHintRefusal, DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
+import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/hint-track.ts";
 import type { Narration } from "../../engine/hint-words.ts";
 import { blockOf } from "./hint-marks.ts";
 import { say } from "./hint-text.ts";
-import { findMistakes } from "./solver.ts";
 import {
   executeMove,
   type MosaicMove,
@@ -27,7 +26,6 @@ import {
   STATE_MARK_MASK,
   STATE_MARKED,
   STATE_UNMARKED,
-  status,
 } from "./state.ts";
 
 /** What a step decides: `cells` (indices into a grid `w` wide), all `mark`. */
@@ -79,11 +77,6 @@ function firingAt(
 }
 
 export function mosaicHint(state: MosaicState): HintResult<MosaicMove, MosaicHint> {
-  const refusal = commonHintRefusal(
-    status(state) === "solved",
-    findMistakes(state).length,
-  );
-  if (refusal) return refusal;
   // The whole plan, on a copy of the board's colors: the numbers in reading
   // order, and after each firing the numbers whose blocks it filled, since
   // only those can newly decide anything.

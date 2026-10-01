@@ -740,12 +740,18 @@ the existing `OverlaySidecar` diff.
 
 ### `hint-refusal.ts` — what a hint says when it will not give one
 
-The approved refusal messages, so the same situation says the same thing in
-every game — `help/features.md` teaches "there is a mistake on the board" and
-"deduction has run out" as a pair calling for opposite responses, which only
-works if the wording is shared. Three differences are real and named there
-(`CONTRADICTION_UNLOCALIZED`, `NO_MOVE_WORTH_MAKING`, a game-shaped dead end);
-everything else is spelling, and `hint-refusal.test.ts` holds it to the list.
+The refusal messages, so the same situation says the same thing in every game:
+`help/features.md` teaches "there is a mistake on the board" and "deduction has
+run out" as a pair calling for opposite responses, which only works if the
+wording is shared. `HintResult`'s error is `HintRefusal`, the union of these
+constants' literal types plus `puzzleHintRefusal(sentence)`, the one escape for
+a dead end only one puzzle has (Inertia's dead ball); `hint-refusal.test.ts`
+fails a sentence two games pass through it. Don't refuse a finished board or a
+wrong one: the midend says `ALREADY_SOLVED` and `FIX_MISTAKES_FIRST` before it
+asks, so `FIX_MISTAKES_FIRST` is not a `HintRefusal` at all. A game says
+`ALREADY_SOLVED` only where its status would not call a finished board solved
+(Fifteen's, Sixteen's and Netslide's sorted board at move 0), and `GAME_OVER`
+on a lost board that takes no more moves.
 
 ### `solve-failure.ts` — what Solve says when it will not solve
 
@@ -756,9 +762,8 @@ verdict that proves them, and `PUZZLE_NOT_REASONABLE` (from `hint-refusal.ts`)
 wherever a failed search could mean either, since it is true in both cases.
 `NO_SOLUTION_FROM_HERE` is for a game whose moves can lose, and a hint refusing
 on the same fact says the same constant. Don't check for a finished board: the
-midend refuses Solve with `ALREADY_SOLVED` before asking, unless the game's
-status would not call the board solved (Slide's typed desc with the piece
-already home).
+midend refuses Solve with `ALREADY_SOLVED` before asking, and a game checks only
+where its status would not call a finished board solved.
 
 ## Input
 

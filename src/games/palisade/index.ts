@@ -31,7 +31,6 @@ import type {
   UiUpdate,
 } from "../../engine/game.ts";
 import {
-  commonHintRefusal,
   DEDUCTION_EXHAUSTED,
   PUZZLE_NOT_REASONABLE,
 } from "../../engine/hint-refusal.ts";
@@ -189,8 +188,6 @@ const BASIS_NOUN = {
  * sweep) form one multi-leg journey; distinct firings stay separate
  * hints. */
 function hint(state: PalisadeState): HintResult<PalisadeMove, PalisadeHint> {
-  const refusal = commonHintRefusal(state.completed, findMistakes(state).length);
-  if (refusal) return refusal;
   const forced = deduceForcedEdges(paramsOf(state), state.clues, state.borders);
   if (forced.length === 0) return { ok: false, error: DEDUCTION_EXHAUSTED };
 

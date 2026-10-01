@@ -6,7 +6,6 @@
 
 import { describe, expect, it } from "vitest";
 import { HINT_EVIDENCE } from "../../engine/color/palette.ts";
-import { FIX_MISTAKES_FIRST } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -444,7 +443,7 @@ describe("map hint bookkeeping", () => {
     expect(refreshHintStep(step, rest)).toBeNull();
   });
 
-  it("a dot set without a region's answer is a mistake, and the hint refuses", () => {
+  it("a dot set without a region's answer is a mistake", () => {
     const start = stateOf(PINNED.touches as string);
     const solved = walk(start, plan(start), () => {});
     const r = [...start.coloring.keys()].find((i) => start.coloring[i] < 0) as number;
@@ -453,7 +452,6 @@ describe("map hint bookkeeping", () => {
       ops: [{ op: "pencil", region: r, bit: wrong }],
     });
     expect(mapGame.findMistakes?.(s)).toEqual([{ region: r, kind: "note" }]);
-    expect(mapGame.hint?.(s)).toEqual({ ok: false, error: FIX_MISTAKES_FIRST });
   });
 });
 

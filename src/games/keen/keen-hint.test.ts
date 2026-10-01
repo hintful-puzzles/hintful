@@ -245,12 +245,12 @@ describe("keen hint", () => {
     expect(checked).toBeGreaterThan(0);
   });
 
-  it("refuses on a solved board and on a board with mistakes", () => {
+  it("counts a solved board as finished and flags a wrong entry, the boards the midend refuses", () => {
     const { st } = gen(NORMAL, "refuse");
     const r = keenGame.solve?.(st, st);
     if (!r?.ok) throw new Error("solve failed");
     const solved = keenGame.executeMove(st, r.move);
-    expect(keenGame.hint?.(solved)?.ok).toBe(false);
+    expect(keenGame.status(solved)).toBe("solved");
 
     const w = st.params.w;
     const sol = (r.move as { type: "solve"; grid: number[] }).grid;
@@ -262,7 +262,7 @@ describe("keen hint", () => {
       n: wrong,
       pencil: false,
     });
-    expect(keenGame.hint?.(bad)?.ok).toBe(false);
+    expect(keenGame.findMistakes?.(bad).length ?? 0).toBeGreaterThan(0);
   });
 });
 

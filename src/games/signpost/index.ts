@@ -402,7 +402,7 @@ export const signpostGame: Game<
 
   solve,
   findMistakes,
-  hint: (state) => signpostHint(state, findMistakes(state).length),
+  hint: signpostHint,
   hintMarks: {
     roles: {
       ring: "the link the step decides, at both ends: the arrow it leaves by is drawn in the hint color, and the square it arrives at is ringed.",

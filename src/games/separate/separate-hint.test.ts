@@ -199,7 +199,7 @@ describe("separate hint mechanics", () => {
     expect(separateGame.hintKeepTrack?.(click(other), step, fresh)).toBe("off");
   });
 
-  it("refuses on a board carrying a wrong edge", () => {
+  it("flags a wrong edge, so the midend refuses a hint", () => {
     const sol = solveToBorders(p, fresh.letters) as Uint8Array;
     // Wall off the first interior edge the solution leaves open.
     const i = [...Array(p.w * p.h).keys()].find(
@@ -214,7 +214,7 @@ describe("separate hint mechanics", () => {
         { x: x + 1, y, flag: BORDER(3) },
       ],
     });
-    expect(hintOf(wrong).ok).toBe(false);
+    expect(separateGame.findMistakes?.(wrong).length ?? 0).toBeGreaterThan(0);
   });
 });
 

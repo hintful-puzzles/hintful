@@ -78,7 +78,7 @@ import { noteEntryGesture } from "../../engine/note-taking-cell.ts";
 import type { OrderedCell } from "../../engine/overlay-sidecar.ts";
 import type { Point } from "../../engine/types.ts";
 import { CLUE, saladVocab, say } from "./hint-text.ts";
-import { type BorderReason, findMistakes, recordSaladDeductions } from "./solver.ts";
+import { type BorderReason, recordSaladDeductions } from "./solver.ts";
 import {
   borderScanFor,
   CIRCLE,
@@ -717,7 +717,7 @@ export function hint(
 ): HintResult<SaladMove, SaladHint> {
   // No `autoPencil` preference to honor: Salad has no auto-elimination on
   // placement, so the plan always teaches the row/column note cull explicitly.
-  return candidateHint(state, null, findMistakes, buildSteps);
+  return candidateHint(state, null, buildSteps);
 }
 
 /** Classify a player move against the displayed step. Salad's two emptiness
