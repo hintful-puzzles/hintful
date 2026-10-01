@@ -23,7 +23,7 @@
 import { describe, expect, it } from "vitest";
 import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { leafPresets } from "../../engine/testing/hint-games.ts";
+import { leafPresets } from "../../engine/testing/presets.ts";
 import {
   type AscentFiring,
   ascentKeepTrack,

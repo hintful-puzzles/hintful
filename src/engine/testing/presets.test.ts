@@ -14,7 +14,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { ParamConfigItem } from "../game.ts";
-import { axisSlice, presetAxes } from "./hint-games.ts";
+import { axisSlice, presetAxes } from "./presets.ts";
 
 interface P {
   size: number;

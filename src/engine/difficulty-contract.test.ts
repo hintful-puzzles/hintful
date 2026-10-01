@@ -31,12 +31,12 @@ import {
   tierOf,
   withTier,
 } from "./difficulty.ts";
-import type { Game, PresetMenu } from "./game.ts";
+import type { Game } from "./game.ts";
 import { Midend } from "./midend.ts";
-import { presetMenu, type TitledPresetMenu } from "./param-label.ts";
 import { paramsError } from "./params.ts";
 import { randomNew } from "./random/index.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
+import { firstLeaf, leafPresets } from "./testing/presets.ts";
 import { itOverWholeSweep, SLOW_TESTS_ENABLED, seedBudget } from "./testing/slow.ts";
 
 // biome-ignore lint/suspicious/noExplicitAny: a deliberately game-agnostic probe.
@@ -69,39 +69,19 @@ for (const { id, game } of registered) {
   if (tiers && contract) tiered.push({ id, game, contract, tiers });
 }
 
-/** First leaf preset's params — a small, valid board (`hint-games.ts` uses the
- * same convention).
- *
- * **This one stays narrow on purpose**, where
+/* **`firstLeaf` stays narrow on purpose here**, where
  * `slice-the-first-leaf-hint-guards-by-axis` widened eleven of its siblings to
  * `gatePresets`. The three cases below that read it — the form/contract
  * coupling, the codec round-trip and the no-mutation rule — generate no board
  * at all: they ask whether `withTier` writes a field `tierOf` and the codec can
  * read back, which is arithmetic on a params record, and any valid record
- * exercises it. Everything here that *is* about boards already reads
- * `allLeaves`. The distinction is rule 6's, from the other side: a synthesized
- * params record is the wrong input when the question is what a board carries,
- * and the right one when the question is what the contract does to a record. */
-function firstLeaf<P>(menu: PresetMenu<P>): P {
-  if (menu.params !== undefined) return menu.params;
-  for (const sub of menu.submenu ?? []) {
-    const p = firstLeaf(sub);
-    if (p !== undefined) return p;
-  }
-  throw new Error("no leaf preset");
-}
+ * exercises it. Everything here that *is* about boards reads every leaf. The
+ * distinction is rule 6's, from the other side: a synthesized params record is
+ * the wrong input when the question is what a board carries, and the right one
+ * when the question is what the contract does to a record. */
 
 /** Every leaf preset's params, in menu order (smallest first by convention). */
-function allLeaves<P>(menu: PresetMenu<P>): P[] {
-  if (menu.params !== undefined) return [menu.params];
-  return (menu.submenu ?? []).flatMap(allLeaves);
-}
-
-/** Every leaf preset with the title the menu shows for it. */
-function allLeafEntries<P>(menu: TitledPresetMenu<P>): { title: string; params: P }[] {
-  if (menu.params !== undefined) return [{ title: menu.title, params: menu.params }];
-  return (menu.submenu ?? []).flatMap(allLeafEntries);
-}
+const allLeaves = (game: AnyGame): unknown[] => leafPresets(game).map((e) => e.params);
 
 /**
  * The cheapest preset that is *valid* at `tier`, or `null` when no preset is.
@@ -113,7 +93,7 @@ function allLeafEntries<P>(menu: TitledPresetMenu<P>): { title: string; params: 
  * is genuinely ungenerable.
  */
 function paramsForTier(t: TieredGame, tier: number): unknown | null {
-  for (const leaf of allLeaves(t.game.presets())) {
+  for (const leaf of allLeaves(t.game)) {
     const p = withTier(t.game, leaf, tier);
     if (paramsError(t.game, p, true) === null) return p;
   }
@@ -215,7 +195,7 @@ for (const { id, game, contract, tiers } of tiered) {
       // reaches for a real tier word.
       const SCALE = new Set([...tierNames(5), "Unreasonable"]);
       const offenders: string[] = [];
-      for (const { title, params } of allLeafEntries(presetMenu(game))) {
+      for (const { title, params } of leafPresets(game)) {
         const own = tiers[tierOf(game, params)];
         for (const word of SCALE) {
           if (word === own) continue;
@@ -269,7 +249,7 @@ for (const { id, game, contract, tiers } of tiered) {
       for (let tier = 0; tier < tiers.length; tier++) {
         const p = paramsForTier({ id, game, contract, tiers }, tier);
         if (p !== null) continue;
-        const refusals = allLeaves(game.presets()).map((leaf) =>
+        const refusals = allLeaves(game).map((leaf) =>
           paramsError(game, withTier(game, leaf, tier), true),
         );
         expect(
@@ -396,7 +376,7 @@ for (const { id, game, contract, tiers } of tiered) {
       // declared tier** — tier is the axis the property is about, so a slice that
       // dropped to a single preset would stop measuring it — and the slow tier
       // walks every preset with more seeds.
-      const entries = allLeafEntries(presetMenu(game)).filter(
+      const entries = leafPresets(game).filter(
         (e) => typeof tierOf(game, e.params) === "number",
       );
       const walked = SLOW_TESTS_ENABLED

@@ -27,13 +27,9 @@
  * thing standing between an empty derivation and a clean commit.
  */
 import { describe, expect, it } from "vitest";
-import {
-  axisSlice,
-  HINT_GAMES,
-  leafPresets,
-  presetAxes,
-  REGISTERED_GAME_COUNT,
-} from "./testing/hint-games.ts";
+import { REGISTERED_GAME_COUNT } from "./testing/enrollment.ts";
+import { HINT_GAMES } from "./testing/hint-games.ts";
+import { axisSlice, leafPresets, presetAxes } from "./testing/presets.ts";
 import { SCANNED_TEST_FILES, testCodeLinesMatching } from "./testing/test-source.ts";
 
 describe("the hint-guard enrolled set is derived, and non-vacuous", () => {

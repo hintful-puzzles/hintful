@@ -12,7 +12,7 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
-import { leafPresets } from "../../engine/testing/hint-games.ts";
+import { leafPresets } from "../../engine/testing/presets.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,

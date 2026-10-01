@@ -37,12 +37,8 @@ import { HINT_EVIDENCE } from "./color/palette.ts";
 import { difficultyTiers, withTier } from "./difficulty.ts";
 import { paramsError } from "./params.ts";
 import { randomNew } from "./random/index.ts";
-import {
-  type AnyGame,
-  firstLeaf,
-  gatePresets,
-  HINT_GAMES,
-} from "./testing/hint-games.ts";
+import { type AnyGame, gatePresets, HINT_GAMES } from "./testing/hint-games.ts";
+import { firstLeaf } from "./testing/presets.ts";
 import { DEFAULT_BACKGROUND, renderScenario } from "./testing/render-scenario.ts";
 import { inSweep } from "./testing/slow.ts";
 import type { Color } from "./types.ts";

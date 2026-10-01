@@ -7,8 +7,9 @@ import type { CandidateReading } from "./candidate-hint.ts";
 import { type FrontierCandidate, gridKey, HintFrontier } from "./hint-frontier.ts";
 import { randomNew } from "./random/index.ts";
 import { enrolledIn, membersNotMentioning } from "./testing/enrollment.ts";
-import { HINT_GAMES, leafPresets } from "./testing/hint-games.ts";
+import { HINT_GAMES } from "./testing/hint-games.ts";
 import { planContinuity } from "./testing/plan-continuity.ts";
+import { leafPresets } from "./testing/presets.ts";
 import type { Point } from "./types.ts";
 
 type Step = { highlights: { targets: Point[] } };

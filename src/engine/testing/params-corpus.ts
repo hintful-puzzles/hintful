@@ -1,6 +1,6 @@
 /**
- * A params corpus for every registered game — **derived from the registry and
- * from each game's own declarations, never authored**.
+ * A params corpus for a game — **derived from the game's own declarations,
+ * never authored**.
  *
  * It holds each game's encoded params byte-stable: params appear in shared game
  * IDs, so an encoding is a promise to players (`ts-migration` spec, "Encoded
@@ -30,10 +30,8 @@
  * Dev/test-only; never imported by production code.
  */
 
-import "../../games/index.ts";
 import { difficultyChoiceItem } from "../difficulty.ts";
 import { presetMenu, type TitledPresetMenu } from "../param-label.ts";
-import { getTsGame, registeredGameIds } from "../registry.ts";
 import type { AnyGame } from "./enrollment.ts";
 
 export type { AnyGame };
@@ -47,21 +45,6 @@ export interface ParamsCase {
   readonly label: string;
   readonly params: AnyParams;
 }
-
-/**
- * Every registered game, by puzzle id, sorted so the sweeps iterate in a
- * stable order. The side-effect import above is what populates the registry.
- */
-export const PARAMS_GAMES: [string, AnyGame][] = registeredGameIds()
-  .sort()
-  .map((id): [string, AnyGame] => [id, getTsGame(id) as AnyGame]);
-
-/**
- * How many games the registry offered — the **vacuity guard** every derived
- * sweep in this repo owes. An unpopulated registry would leave every
- * downstream assertion passing over nothing and reporting health.
- */
-export const REGISTERED_GAME_COUNT = registeredGameIds().length;
 
 /** Walk a preset menu to its leaves, labeling each by its title path. */
 function presetCases(

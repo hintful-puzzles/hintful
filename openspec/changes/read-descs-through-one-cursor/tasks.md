@@ -11,6 +11,10 @@
       unchanged.
 - [ ] 1.3 The engine catalog entry, and `docs/games/mechanics.md` §
       "Descriptions and state".
+- [ ] 1.4 One result type for a parse in `desc-error.ts`, and each ported
+      game's `validateDesc` and `newState` reading through one parse. The
+      validator lenience listed in the proposal goes with it: re-run the
+      identical-state measurement and list what is left.
 
 ## 1'. If it does not
 

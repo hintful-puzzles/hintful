@@ -49,6 +49,28 @@ export interface BuiltGame {
   readonly drawState: Record<string, unknown>;
 }
 
+/**
+ * Every registered game, by puzzle id, sorted so a sweep iterates in a stable
+ * order and a failure names the same game first every run. The side-effect
+ * import above is what populates the registry.
+ */
+export const REGISTERED_GAMES: readonly [string, AnyGame][] = registeredGameIds()
+  .sort()
+  .map((id): [string, AnyGame] => {
+    const game = getTsGame(id) as AnyGame | undefined;
+    if (!game) throw new Error(`${id} is registered but has no game object`);
+    return [id, game];
+  });
+
+/**
+ * How many games the registry offered — the **vacuity guard** every derived
+ * sweep owes. A sweep over an empty population passes while checking nothing,
+ * so an import cycle leaving the registry unpopulated, or a renamed accessor,
+ * would turn every guard green. Floor this, not only a filtered result, which
+ * can look healthy while the set it was drawn from is short.
+ */
+export const REGISTERED_GAME_COUNT = REGISTERED_GAMES.length;
+
 let built: BuiltGame[] | null = null;
 
 /**
@@ -58,22 +80,18 @@ let built: BuiltGame[] | null = null;
  */
 export function builtGames(): BuiltGame[] {
   if (built) return built;
-  built = registeredGameIds()
-    .sort()
-    .map((id): BuiltGame => {
-      const game = getTsGame(id) as AnyGame | undefined;
-      if (!game) throw new Error(`${id} is registered but has no game object`);
-      const params = game.defaultParams();
-      const desc = game.newDesc(params, randomNew(`enrollment-${id}`)).desc;
-      const state = game.newState(params, desc);
-      return {
-        id,
-        game,
-        state,
-        ui: game.newUi(state) as Record<string, unknown>,
-        drawState: preferredDrawState(game, state) as Record<string, unknown>,
-      };
-    });
+  built = REGISTERED_GAMES.map(([id, game]): BuiltGame => {
+    const params = game.defaultParams();
+    const desc = game.newDesc(params, randomNew(`enrollment-${id}`)).desc;
+    const state = game.newState(params, desc);
+    return {
+      id,
+      game,
+      state,
+      ui: game.newUi(state) as Record<string, unknown>,
+      drawState: preferredDrawState(game, state) as Record<string, unknown>,
+    };
+  });
   return built;
 }
 

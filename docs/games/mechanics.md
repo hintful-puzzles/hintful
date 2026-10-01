@@ -406,7 +406,19 @@ out-of-range write**, so nothing throws. Bricks shipped exactly that — its
 validator counted `A`–`Z` as blank runs while its parser ignored them, ported
 faithfully from an upstream that has the same split. When you write or change a
 codec, **read the two loops side by side and check they accept the same
-characters**, because no tier will tell you.
+characters**, because no tier will reliably tell you.
+
+[`desc-error-games.test.ts`](../../src/engine/desc-error-games.test.ts) tells
+you when it can. It breaks each game's real descs by one edit
+([`testing/desc-mutants.ts`](../../src/engine/testing/desc-mutants.ts)) and
+loads every one `validateDesc` accepts the way the Enter Game ID dialog does,
+so a parser that **throws** on what the validator let through fails it. Only
+that: a parser that skips what it does not recognize builds a wrong board
+without a sound. When it was written, with every validator replaced by one
+accepting everything, the boards of 21 games threw on some mutant and 36 built
+and drew every one, the empty desc included. If your game is in the second
+group, the test cannot see your two loops disagree. One parser that both
+`validateDesc` and `newState` call can't disagree with itself.
 
 Where the desc is the shared run-length grammar — a value character, or a
 letter standing for a run of blanks — write neither loop: use

@@ -13,7 +13,8 @@ import {
 } from "./firing-replay.ts";
 import { randomNew } from "./random/index.ts";
 import { enrolledIn, membersNotMentioning } from "./testing/enrollment.ts";
-import { type AnyGame, HINT_GAMES, leafPresets } from "./testing/hint-games.ts";
+import { type AnyGame, HINT_GAMES } from "./testing/hint-games.ts";
+import { leafPresets } from "./testing/presets.ts";
 
 // --- the instrument ----------------------------------------------------------
 

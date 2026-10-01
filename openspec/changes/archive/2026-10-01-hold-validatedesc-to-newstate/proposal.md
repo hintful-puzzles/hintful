@@ -1,6 +1,9 @@
 # hold-validatedesc-to-newstate
 
-**Status: scaffolded, not started (2026-10-01).**
+**Status: done (2026-10-01).** Task 0 found no disagreement that throws, and
+found that throwing is all a test of this shape can see for 21 games of 57;
+`tasks.md` has the numbers, and `read-descs-through-one-cursor` carries the
+structural answer.
 
 ## Why
 

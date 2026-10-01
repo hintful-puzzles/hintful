@@ -788,8 +788,14 @@ so the slice **replaces** a `tiers.map(withTier(base))` loop rather than
 multiplying with it, and the board it walks a tier on is one the player can pick
 from the menu.
 
-`axisSlice` and `leafPresets` are underneath it and are the right call only when
-a sweep is about the slicing rule itself.
+`axisSlice` and `leafPresets` are underneath it
+([`testing/presets.ts`](../../src/engine/testing/presets.ts), which reads no
+registry), and are the right call in two cases: a sweep about the slicing rule
+itself, and a sweep that wants a board only for its **desc**.
+[`desc-error-games.test.ts`](../../src/engine/desc-error-games.test.ts) is the
+second: it takes every mode on its smallest board (`scalarEnds: false`), because
+a large board adds no grammar its mutants do not already write, and generating
+one cost Slide 30 s.
 
 **Calling it is the whole of the enrollment, and that is the lesson.** Every
 cross-game sweep but one used to decide this population for itself and all of

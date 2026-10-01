@@ -27,20 +27,16 @@
  */
 
 import { describe, expect, it } from "vitest";
-import {
-  PARAMS_GAMES,
-  paramsCorpus,
-  REGISTERED_GAME_COUNT,
-} from "./testing/params-corpus.ts";
+import { REGISTERED_GAME_COUNT, REGISTERED_GAMES } from "./testing/enrollment.ts";
+import { paramsCorpus } from "./testing/params-corpus.ts";
 
 /** Every game's corpus, computed once. */
-const CORPUS = PARAMS_GAMES.map(
+const CORPUS = REGISTERED_GAMES.map(
   ([id, game]) => [id, game, paramsCorpus(game)] as const,
 );
 
 describe("params corpus", () => {
   it("covers every registered game", () => {
-    expect(PARAMS_GAMES.length).toBe(REGISTERED_GAME_COUNT);
     expect(REGISTERED_GAME_COUNT).toBeGreaterThanOrEqual(57);
   });
 

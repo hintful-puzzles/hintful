@@ -22,12 +22,8 @@ import { describe, expect, it } from "vitest";
 import type { PresetMenu } from "./game.ts";
 import { paramsError } from "./params.ts";
 import { SQUARE_GRID, sectionState } from "./sections.ts";
-import {
-  type AnyGame,
-  type AnyParams,
-  PARAMS_GAMES,
-  REGISTERED_GAME_COUNT,
-} from "./testing/params-corpus.ts";
+import { REGISTERED_GAME_COUNT, REGISTERED_GAMES } from "./testing/enrollment.ts";
+import type { AnyGame, AnyParams } from "./testing/params-corpus.ts";
 import type { Size } from "./types.ts";
 
 /** Within this of square a board gains nothing from being turned. */
@@ -111,15 +107,14 @@ function hasWidthAndHeight(game: AnyGame): boolean {
 
 describe("portrait by default", () => {
   it("looks at every game and a menu's worth of boards", () => {
-    expect(PARAMS_GAMES.length).toBe(REGISTERED_GAME_COUNT);
     expect(REGISTERED_GAME_COUNT).toBeGreaterThanOrEqual(57);
-    const boards = PARAMS_GAMES.reduce((n, [, g]) => n + menuParams(g).length, 0);
+    const boards = REGISTERED_GAMES.reduce((n, [, g]) => n + menuParams(g).length, 0);
     expect(boards).toBeGreaterThanOrEqual(400);
   });
 
   it("draws no default or preset wider than tall, outside the ledger", () => {
     const wide: string[] = [];
-    for (const [id, game] of PARAMS_GAMES) {
+    for (const [id, game] of REGISTERED_GAMES) {
       for (const p of menuParams(game)) {
         const { w, h } = drawn(game, p);
         if (w > h * SQUARE_TOLERANCE) wide.push(`${id}:${game.encodeParams(p, false)}`);
@@ -133,7 +128,7 @@ describe("portrait by default", () => {
 });
 
 describe("turning a board on its side", () => {
-  const TURNING = PARAMS_GAMES.filter(([, g]) => g.transposeParams !== undefined);
+  const TURNING = REGISTERED_GAMES.filter(([, g]) => g.transposeParams !== undefined);
 
   it("has a population, and a known positive in it", () => {
     expect(TURNING.map(([id]) => id)).toContain("magnets");
@@ -143,7 +138,7 @@ describe("turning a board on its side", () => {
   it("is offered by every game with a width and a height, or excused", () => {
     // A game that forgets to turn is a draft, and the catalog says so; what
     // fails here is a reason that is not the puzzle's.
-    const excused = PARAMS_GAMES.filter(
+    const excused = REGISTERED_GAMES.filter(
       ([, g]) => sectionState(g, "transposeParams").kind === "notApplicable",
     );
     // Known positive: gravity is the reason a width and a height do not turn.

@@ -19,12 +19,8 @@ import { permitsSearch } from "./difficulty.ts";
 import type { Narration } from "./hint-words.ts";
 import { randomNew } from "./random/index.ts";
 import { enrolledIn } from "./testing/enrollment.ts";
-import {
-  type AnyGame,
-  axisSlice,
-  HINT_GAMES,
-  leafPresets,
-} from "./testing/hint-games.ts";
+import { type AnyGame, HINT_GAMES } from "./testing/hint-games.ts";
+import { axisSlice, leafPresets } from "./testing/presets.ts";
 import { itOverWholeSweep } from "./testing/slow.ts";
 
 const READINGS: readonly CandidateReading[] = ["implicit", "populate"];

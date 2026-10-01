@@ -65,7 +65,7 @@ import { tierOf } from "./difficulty.ts";
 import { Midend } from "./midend.ts";
 import { getTsGame, registeredGameIds } from "./registry.ts";
 import { capabilitySets } from "./testing/enrollment.ts";
-import { leafPresets } from "./testing/hint-games.ts";
+import { leafPresets } from "./testing/presets.ts";
 import { SLOW_TESTS_ENABLED } from "./testing/slow.ts";
 
 beforeAll(registerAllGames);

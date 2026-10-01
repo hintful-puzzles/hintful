@@ -48,12 +48,11 @@ import { bindingDefects } from "./testing/hint-binding.ts";
 import {
   type AnyGame,
   declaresNoMarks,
-  firstLeaf,
   gatePresets,
   HINT_GAMES,
-  leafPresets,
   SEARCH_PLANNING_GAMES,
 } from "./testing/hint-games.ts";
+import { firstLeaf, leafPresets } from "./testing/presets.ts";
 import { PRECOMMIT_HOOK_RUN, SLOW_TESTS_ENABLED } from "./testing/slow.ts";
 
 const SEEDS = ["hq-a", "hq-b", "hq-c"];
