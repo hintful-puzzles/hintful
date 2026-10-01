@@ -48,5 +48,10 @@
       `docs/games/mechanics.md` says where a game's messages come from.
 - [x] 5.3 Scaffold `add-pegs-hint` with the design pass the proposal asked for,
       and take Pegs out of `hintless-games-in-reserve`.
-- [ ] 5.4 Run the app: a malformed game ID in the Enter Game ID dialog, and
-      Solve on a finished board.
+- [x] 5.4 Run the app: malformed Inertia IDs in the Enter Game ID dialog (too
+      short, a bad character, two starting squares, too long), Solve on a
+      fresh Mines board, and Mosaic's status after Show solution. The dialog
+      wrapped the reason as "(Error: ….)", which doubled the full stop on
+      the new sentences; it now shows the sentence, adding a full stop only
+      to a params refusal that lacks one. Its label read "Enter a Inertia
+      game ID"; it now names the puzzle after the noun.
