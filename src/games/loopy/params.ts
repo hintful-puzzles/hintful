@@ -129,9 +129,9 @@ export function defaultParams(): LoopyParams {
 export function validateParams(p: LoopyParams, _full: boolean): string | null {
   const { amin, omin, type } = LOOPY_GRIDS[p.type];
   if (p.w < amin || p.h < amin)
-    return `Width and height for this grid type must both be at least ${amin}`;
+    return `Width and height for this grid type must both be at least ${amin}.`;
   if (p.w < omin && p.h < omin)
-    return `At least one of width and height for this grid type must be at least ${omin}`;
+    return `At least one of width and height for this grid type must be at least ${omin}.`;
   // A deliberate divergence: upstream accepts these params and then *aborts*
   // during generation. A Penrose kite/dart patch of width 3 comes out empty for
   // every seed and every height — 0 successes in 200 descriptions for each of
@@ -141,7 +141,7 @@ export function validateParams(p: LoopyParams, _full: boolean): string | null {
   // of failing on "New game". A width bound, not an `amin` bump: 4x3 and wider
   // generate fine.
   if (type === "penrose_p2_kite" && p.w < 4)
-    return "Width for Penrose (kite/dart) must be at least 4";
+    return "Width for Penrose (kite/dart) must be at least 4.";
   return gridValidateParams(type, p.w, p.h);
 }
 

@@ -220,14 +220,14 @@ export const MODULES = [
       {
         within: "Midend.newGameFromId",
         why: "an undecodable params string in a game ID is accepted silently",
-        find: "      params = this.game.decodeParams(paramsStr);\n    } catch (e) {\n      return `Invalid parameters: ${(e as Error).message}`;",
+        find: '      params = this.game.decodeParams(paramsStr);\n    } catch {\n      return "This game ID starts with parameters this puzzle can\'t read.";',
         replace:
           "      params = this.game.decodeParams(paramsStr);\n    } catch {\n      return undefined;",
       },
       {
         within: "Midend.setParams",
         why: "an undecodable params string from the Custom dialog is accepted silently",
-        find: "      decoded = this.game.decodeParams(params);\n    } catch (e) {\n      return `Invalid parameters: ${(e as Error).message}`;",
+        find: "      decoded = this.game.decodeParams(params);\n    } catch (e) {\n      return `These parameters can't be read (${(e as Error).message}).`;",
         replace:
           "      decoded = this.game.decodeParams(params);\n    } catch {\n      return undefined;",
       },

@@ -57,7 +57,7 @@ describe("palisade params", () => {
   it("validates the region-size constraints", () => {
     const error = (p: PalisadeParams) => paramsError(palisadeGame, p, true);
     expect(error({ w: 5, h: 5, k: 5 })).toBeNull();
-    expect(error({ w: 5, h: 5, k: 0 })).toBe("Region size must be at least 1");
+    expect(error({ w: 5, h: 5, k: 0 })).toBe("Region size must be at least 1.");
     expect(error({ w: 5, h: 5, k: 7 })).not.toBeNull(); // 7 ∤ 25
     expect(error({ w: 5, h: 5, k: 25 })).not.toBeNull(); // k = wh
     expect(error({ w: 4, h: 4, k: 2 })).not.toBeNull(); // k=2 corridor

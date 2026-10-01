@@ -210,7 +210,7 @@ function maxCells(mode: number): number {
 export function validateParams(p: SeismicParams, _full: boolean): string | null {
   const max = maxCells(p.mode);
   if (p.w * p.h > max)
-    return `Width times height must be at most ${max} in ${MODE_NAMES[p.mode]} mode (the generator cannot reliably build a larger board)`;
+    return `Width times height must be at most ${max} in ${MODE_NAMES[p.mode]} mode; the generator cannot reliably build a larger board.`;
   return null;
 }
 

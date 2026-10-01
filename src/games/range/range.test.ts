@@ -45,7 +45,7 @@ describe("params", () => {
     const error = (p: RangeParams, full: boolean) => paramsError(rangeGame, p, full);
     expect(error({ w: 2, h: 2 }, true)).not.toBeNull();
     expect(error({ w: 1, h: 2 }, true)).not.toBeNull();
-    expect(error({ w: 0, h: 5 }, true)).toBe("Width must be at least 1");
+    expect(error({ w: 0, h: 5 }, true)).toBe("Width must be at least 1.");
     // 2x2 is allowed when not generating a full puzzle.
     expect(error({ w: 2, h: 2 }, false)).toBeNull();
     expect(error({ w: 9, h: 6 }, true)).toBeNull();

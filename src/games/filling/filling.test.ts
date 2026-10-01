@@ -62,10 +62,10 @@ describe("filling params", () => {
 
   it("rejects degenerate params", () => {
     expect(paramsError(fillingGame, { w: 0, h: 5 }, true)).toBe(
-      "Width must be at least 1",
+      "Width must be at least 1.",
     );
     expect(paramsError(fillingGame, { w: 5, h: 0 }, true)).toBe(
-      "Height must be at least 1",
+      "Height must be at least 1.",
     );
     expect(paramsError(fillingGame, { w: 9, h: 7 }, true)).toBeNull();
   });

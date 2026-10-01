@@ -81,7 +81,7 @@ describe("params", () => {
   it("rejects invalid params", () => {
     const error = (p: UnrulyParams) => paramsError(unrulyGame, p, true);
     expect(error(params(7, 8, DIFF_EASY))).toMatch(/even/);
-    expect(error(params(4, 8, DIFF_EASY))).toBe("Width must be at least 6");
+    expect(error(params(4, 8, DIFF_EASY))).toBe("Width must be at least 6.");
     expect(error(params(8, 8, 99))).toMatch(/^Difficulty must be one of/);
     // 6-wide unique: at most A177790[3] = 14 distinct rows, so h2 = 16 is too tall.
     expect(error(params(6, 16, DIFF_EASY, true))).toMatch(/too tall/);

@@ -88,10 +88,10 @@ describe("Same Game params", () => {
     expect(valid({ w: 2, h: 2, ncols: 3, scoresub: 2, soluble: false })).not.toBeNull();
     // scoring system must be 1 or 2.
     expect(valid({ w: 5, h: 5, ncols: 3, scoresub: 3, soluble: true })).toBe(
-      "Scoring system must be one of (n-1)², (n-2)²",
+      "Scoring system must be one of (n-1)², (n-2)².",
     );
     expect(valid({ w: 5, h: 5, ncols: 10, scoresub: 2, soluble: true })).toBe(
-      "No. of colors must be at most 9",
+      "No. of colors must be at most 9.",
     );
   });
 

@@ -105,13 +105,13 @@ describe("abcd params codec", () => {
   });
 
   it("validates params in upstream order", () => {
-    expect(refusal(P(1, 5, 4), true)).toBe("Width must be at least 2");
-    expect(refusal(P(5, 1, 4), true)).toBe("Height must be at least 2");
-    expect(refusal(P(5, 5, 2), true)).toBe("Letters must be at least 3");
+    expect(refusal(P(1, 5, 4), true)).toBe("Width must be at least 2.");
+    expect(refusal(P(5, 1, 4), true)).toBe("Height must be at least 2.");
+    expect(refusal(P(5, 5, 2), true)).toBe("Letters must be at least 3.");
     expect(refusal(P(5, 5, 4, true), true)).toBe(
-      "Letters must be at least 5 without diagonal touching",
+      "Letters must be at least 5 when diagonal touching is not allowed.",
     );
-    expect(refusal(P(5, 5, 10), true)).toBe("Letters must be at most 9");
+    expect(refusal(P(5, 5, 10), true)).toBe("Letters must be at most 9.");
     expect(refusal(P(5, 5, 4), true)).toBeNull();
     expect(refusal(P(5, 5, 5, true), true)).toBeNull();
   });

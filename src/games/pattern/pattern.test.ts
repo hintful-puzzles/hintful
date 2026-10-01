@@ -74,10 +74,10 @@ describe("pattern params", () => {
 
   it("rejects invalid params", () => {
     expect(paramsError(patternGame, { w: 0, h: 5 }, true)).toBe(
-      "Width must be at least 1",
+      "Width must be at least 1.",
     );
     expect(paramsError(patternGame, { w: 5, h: -1 }, true)).toBe(
-      "Height must be at least 1",
+      "Height must be at least 1.",
     );
     expect(paramsError(patternGame, { w: 10, h: 10 }, true)).toBeNull();
   });

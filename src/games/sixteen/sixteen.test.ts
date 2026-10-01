@@ -94,17 +94,17 @@ describe("Sixteen params", () => {
 
   it("validates minimum dimensions", () => {
     expect(paramsError(sixteenGame, { w: 1, h: 3, movetarget: 0 }, true)).toBe(
-      "Width must be at least 2",
+      "Width must be at least 2.",
     );
     expect(paramsError(sixteenGame, { w: 3, h: 1, movetarget: 0 }, true)).toBe(
-      "Height must be at least 2",
+      "Height must be at least 2.",
     );
     expect(paramsError(sixteenGame, { w: 2, h: 2, movetarget: 0 }, true)).toBeNull();
   });
 
   it("validates movetarget >= 0", () => {
     expect(paramsError(sixteenGame, { w: 3, h: 3, movetarget: -1 }, true)).toBe(
-      "Number of shuffling moves must be at least 0",
+      "Number of shuffling moves must be at least 0.",
     );
     expect(paramsError(sixteenGame, { w: 3, h: 3, movetarget: 0 }, true)).toBeNull();
   });

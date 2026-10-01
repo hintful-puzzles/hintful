@@ -95,7 +95,7 @@ describe("Mosaic params", () => {
   it("validates size bounds", () => {
     expect(
       paramsError(mosaicGame, { width: 2, height: 3, aggressive: true }, true),
-    ).toBe("Width must be at least 3");
+    ).toBe("Width must be at least 3.");
     expect(
       paramsError(mosaicGame, { width: 3, height: 3, aggressive: true }, true),
     ).toBeNull();

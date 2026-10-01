@@ -272,6 +272,11 @@ tier accessors and the codec. Each item carries:
   (`full`), stays in `validateParams`: moving a generation-only bound into
   `bounds` would refuse a shared `:desc` id that loads today. A choice outside
   its list is refused by the engine for every choices field.
+- **A `validateParams` refusal is one sentence with its full stop**, saying
+  what to change in the dialog's own words ("Width times height must be at
+  most 54.", not "Grid is too big"). Both dialogs show it as it comes, and
+  `params-refusal.test.ts` reads every string a `validateParams` can return,
+  through constants (`AREA_TOO_LARGE`) and helper calls.
 - **`label`** — which slot of the params label the field's words fill. A label
   reads `[lead: ]size[ kind…][ tier][, tail…]`: "Seismic: 7x7 Easy", "10x10
   Normal, strip clues". The slot order is the collection's; the words are the

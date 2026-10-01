@@ -395,7 +395,7 @@ export function gridValidateParams(
   width: number,
   height: number,
 ): string | null {
-  if (width <= 0 || height <= 0) return "Width and height must both be positive";
+  if (width <= 0 || height <= 0) return "Width and height must both be positive.";
 
   const bound = OBJECT_BOUND[type];
 
@@ -411,18 +411,18 @@ export function gridValidateParams(
   // the kind of drift the differential cannot see, so match the C.
   if (bound.extentUnit !== undefined) {
     if (width > INT_MAX / bound.extentUnit || height > INT_MAX / bound.extentUnit) {
-      return "Grid size must not be unreasonably large";
+      return "Grid size must not be unreasonably large.";
     }
   } else {
     const { xExtent, yExtent } = gridSizeFor(type, width, height);
     if (xExtent > INT_MAX || yExtent > INT_MAX) {
-      return "Grid size must not be unreasonably large";
+      return "Grid size must not be unreasonably large.";
     }
   }
 
   const cells = bound.corners ? (width + 1) * (height + 1) : width * height;
   if (cells > INT_MAX / bound.multiplier) {
-    return "Grid size must not be unreasonably large";
+    return "Grid size must not be unreasonably large.";
   }
 
   return null;

@@ -161,7 +161,7 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
     }
     const wh = p.w * p.h;
     if (wh > (INT_MAX - 3) / wh) {
-      return "Width times height is too large";
+      return "Width times height is too large.";
     }
     return null;
   },

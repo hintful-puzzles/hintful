@@ -53,10 +53,10 @@ describe("singles params codec", () => {
 
   it("rejects params outside the grid's range", () => {
     expect(paramsError(singlesGame, { w: 1, h: 5, diff: "easy" }, true)).toBe(
-      "Width must be at least 2",
+      "Width must be at least 2.",
     );
     expect(paramsError(singlesGame, { w: 5, h: 62, diff: "easy" }, true)).toBe(
-      "Height must be at most 61",
+      "Height must be at most 61.",
     );
     expect(paramsError(singlesGame, { w: 5, h: 5, diff: "easy" }, true)).toBeNull();
   });

@@ -59,15 +59,17 @@ describe("params", () => {
   it("validates", () => {
     const error = (p: GuessParams) => paramsError(guessGame, p, true);
     expect(error(defaultParams())).toBeNull();
-    expect(error({ ...defaultParams(), ncolors: 1 })).toBe("Colors must be at least 2");
+    expect(error({ ...defaultParams(), ncolors: 1 })).toBe(
+      "Colors must be at least 2.",
+    );
     expect(error({ ...defaultParams(), npegs: 1 })).toBe(
-      "Pegs per guess must be at least 2",
+      "Pegs per guess must be at least 2.",
     );
     expect(error({ ...defaultParams(), ncolors: 11 })).toBe(
-      "Colors must be at most 10",
+      "Colors must be at most 10.",
     );
     expect(error({ ...defaultParams(), nguesses: 0 })).toBe(
-      "Guesses must be at least 1",
+      "Guesses must be at least 1.",
     );
     // no duplicates but fewer colors than pegs
     expect(

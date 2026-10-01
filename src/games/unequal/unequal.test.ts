@@ -75,10 +75,10 @@ describe("unequal params", () => {
   it("rejects invalid params, naming the dialog's Size field", () => {
     expect(
       paramsError(unequalGame, { order: 2, mode: "unequal", diff: "easy" }, true),
-    ).toBe("Size must be at least 3");
+    ).toBe("Size must be at least 3.");
     expect(
       paramsError(unequalGame, { order: 33, mode: "unequal", diff: "easy" }, true),
-    ).toBe("Size must be at most 31");
+    ).toBe("Size must be at most 31.");
     // Adjacent below order 5 at Tricky+ is invalid.
     expect(
       paramsError(unequalGame, { order: 4, mode: "adjacent", diff: "tricky" }, true),

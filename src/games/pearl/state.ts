@@ -150,7 +150,7 @@ export const { encodeParams, decodeParams } = paramsCodec(
 export function validateParams(p: PearlParams, _full: boolean): string | null {
   if (p.w > Math.floor(0x7fffffff / p.h)) return AREA_TOO_LARGE;
   if (p.difficulty >= DIFF_TRICKY && p.w + p.h < 11)
-    return `Width or height must be at least six for ${DIFF_NAMES[DIFF_TRICKY]}`;
+    return `Width plus height must be at least 11 for ${DIFF_NAMES[DIFF_TRICKY]}.`;
   return null;
 }
 

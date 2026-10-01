@@ -302,13 +302,13 @@ describe("Black Box — params", () => {
   it("rejects invalid params", () => {
     const refusal = (p: BlackboxParams) => paramsError(blackboxGame, p, true);
     expect(refusal({ w: 1, h: 5, minballs: 1, maxballs: 1 })).toBe(
-      "Width must be at least 2",
+      "Width must be at least 2.",
     );
     expect(refusal({ w: 5, h: 256, minballs: 1, maxballs: 1 })).toBe(
-      "Height must be at most 255",
+      "Height must be at most 255.",
     );
     expect(refusal({ w: 5, h: 5, minballs: 0, maxballs: 1 })).toBe(
-      "No. of balls must be at least 1",
+      "No. of balls must be at least 1.",
     );
     expect(refusal({ w: 5, h: 5, minballs: 4, maxballs: 2 })).not.toBeNull();
     expect(refusal({ w: 3, h: 3, minballs: 9, maxballs: 9 })).not.toBeNull();

@@ -164,15 +164,15 @@ const MIN_TRICKY_AREA = 12;
 
 export function validateParams(p: ClustersParams, full: boolean): string | null {
   // Upstream order: too-large before too-small.
-  if (p.w * p.h >= 10000) return "Puzzle is too large";
-  if (p.w * p.h < 2) return "Puzzle is too small";
+  if (p.w * p.h >= 10000) return "Width times height must be less than 10000.";
+  if (p.w * p.h < 2) return "Width times height must be at least 2.";
   // 1x2 and 2x2 pass upstream's area check and have no puzzle whatever the
   // difficulty: every coloring of them either leaves a cell touching none of
   // its own color (which the generator flips away) or reduces to clues that
   // prune to nothing. Measured — those two shapes, alone among every shape up to
   // 4x7, never produced a board in 10,000 attempts; `max(w,h) >= 3` is exactly
   // their complement.
-  if (Math.max(p.w, p.h) < 3) return "Width or height must be at least three";
+  if (Math.max(p.w, p.h) < 3) return "Width or height must be at least three.";
   // Generation only: a saved game or a game ID carrying its own description
   // still loads at any size, because `full` is false there.
   if (
@@ -180,7 +180,7 @@ export function validateParams(p: ClustersParams, full: boolean): string | null 
     p.diff > DIFF_EASY &&
     (Math.min(p.w, p.h) < 2 || p.w * p.h < MIN_TRICKY_AREA)
   ) {
-    return `${DIFF_NAMES[DIFF_TRICKY]} needs a board of at least 12 squares, at least two wide`;
+    return `${DIFF_NAMES[DIFF_TRICKY]} needs a board of at least 12 squares, at least two wide.`;
   }
   return null;
 }

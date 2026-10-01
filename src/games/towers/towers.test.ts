@@ -72,8 +72,8 @@ describe("towers params codec", () => {
 
   it("rejects out-of-range sizes", () => {
     const error = (p: TowersParams) => paramsError(towersGame, p, true);
-    expect(error({ w: 2, diff: "easy" })).toBe("Grid size must be at least 3");
-    expect(error({ w: 10, diff: "easy" })).toBe("Grid size must be at most 9");
+    expect(error({ w: 2, diff: "easy" })).toBe("Grid size must be at least 3.");
+    expect(error({ w: 10, diff: "easy" })).toBe("Grid size must be at most 9.");
     expect(error({ w: 5, diff: "easy" })).toBeNull();
   });
 });

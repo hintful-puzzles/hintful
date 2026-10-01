@@ -116,23 +116,23 @@ describe("salad params codec", () => {
     const base = { order: 5, nums: 3, mode: GAMEMODE_LETTERS, diff: DIFF_EASY };
     expect(paramsError(saladGame, base, true)).toBeNull();
     expect(paramsError(saladGame, { ...base, nums: 1 }, true)).toBe(
-      "Symbols must be at least 2",
+      "Symbols must be at least 2.",
     );
     expect(paramsError(saladGame, { ...base, nums: 5 }, true)).toBe(
       "Symbols must be lower than the size.",
     );
     expect(paramsError(saladGame, { ...base, order: 3, nums: 2 }, true)).toBeNull();
     expect(paramsError(saladGame, { order: 2, nums: 2, mode: 0, diff: 0 }, true)).toBe(
-      "Size (s*s) must be at least 3",
+      "Size (s*s) must be at least 3.",
     );
     expect(
       paramsError(saladGame, { order: 11, nums: 10, mode: 0, diff: 0 }, true),
-    ).toBe("Symbols must be at most 9");
+    ).toBe("Symbols must be at most 9.");
   });
 
   it("parks an unknown difficulty letter out of range so validation rejects it", () => {
     expect(paramsError(saladGame, decodeParams("5n3Ldq"), true)).toBe(
-      "Difficulty must be one of Easy, Normal",
+      "Difficulty must be one of Easy, Normal.",
     );
   });
 });

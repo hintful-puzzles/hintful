@@ -108,10 +108,10 @@ export function decodeParams(s: string): CubeParams {
 export function validateParams(p: CubeParams, _full: boolean): string | null {
   const solid = SOLIDS[p.solid];
   if (solid.order === 4) {
-    if (p.d1 <= 1 || p.d2 <= 1) return "Both grid dimensions must be greater than one";
+    if (p.d1 <= 1 || p.d2 <= 1) return "Both grid dimensions must be greater than one.";
   } else {
     if (p.d1 <= 0 && p.d2 <= 0)
-      return "At least one grid dimension must be greater than zero";
+      return "At least one grid dimension must be greater than zero.";
   }
 
   // Enough squares in each equivalence class to host that class's faces?
@@ -123,11 +123,11 @@ export function validateParams(p: CubeParams, _full: boolean): string | null {
   const facesPerClass = solid.nfaces / nclasses;
   for (let i = 0; i < nclasses; i++) {
     if (counts[i] < facesPerClass)
-      return "Not enough grid space to place all blue faces";
+      return "The grid is too small to place all the blue faces.";
   }
 
   if (gridArea(p.d1, p.d2, solid.order) < solid.nfaces + 1)
-    return "Not enough space to place the solid on an empty square";
+    return "The grid is too small to place the solid on an empty square.";
 
   return null;
 }

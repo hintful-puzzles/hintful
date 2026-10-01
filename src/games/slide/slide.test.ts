@@ -191,9 +191,9 @@ describe("slide params", () => {
 
   it("rejects out-of-range params", () => {
     expect(valid(P(7, 6, 25))).toBeNull();
-    expect(valid(P(300, 6, -1))).toBe("Width must be at most 251");
-    expect(valid(P(4, 6, -1))).toBe("Width must be at least 5");
-    expect(valid(P(7, 3, -1))).toBe("Height must be at least 4");
+    expect(valid(P(300, 6, -1))).toBe("Width must be at most 251.");
+    expect(valid(P(4, 6, -1))).toBe("Width must be at least 5.");
+    expect(valid(P(7, 3, -1))).toBe("Height must be at least 4.");
   });
 
   it("rejects a board too large for the exhaustive solver", () => {

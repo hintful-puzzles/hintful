@@ -148,7 +148,7 @@ export function decodeParams(s: string): RectParams {
 
 export function validateParams(p: RectParams, _full: boolean): string | null {
   if (p.w > 1_000_000 / p.h) return AREA_TOO_LARGE;
-  if (p.w * p.h < 2) return "Grid area must be greater than one";
+  if (p.w * p.h < 2) return "Grid area must be greater than one.";
   return null;
 }
 

@@ -123,21 +123,23 @@ describe("params", () => {
     expect(decodeParams("8")).toEqual({ w: 8, h: 8, diff: DIFF_EASY });
     // An unrecognized letter must not silently play some other difficulty.
     expect(check(decodeParams("9x7dq"), true)).toBe(
-      `Difficulty must be one of ${DIFF_NAMES.join(", ")}`,
+      `Difficulty must be one of ${DIFF_NAMES.join(", ")}.`,
     );
   });
 
   it("rejects too-large then too-small (upstream order)", () => {
     const easy = (w: number, h: number) => ({ w, h, diff: DIFF_EASY });
-    expect(check(easy(100, 100), true)).toBe("Puzzle is too large");
-    expect(check(easy(1, 1), true)).toBe("Puzzle is too small");
+    expect(check(easy(100, 100), true)).toBe(
+      "Width times height must be less than 10000.",
+    );
+    expect(check(easy(1, 1), true)).toBe("Width times height must be at least 2.");
     expect(check(easy(7, 7), true)).toBeNull();
   });
 
   it("rejects the two shapes that have no puzzle at any difficulty", () => {
     // 1x2 and 2x2 pass upstream's area check and generate nothing.
     const easy = (w: number, h: number) => ({ w, h, diff: DIFF_EASY });
-    const tooThin = "Width or height must be at least three";
+    const tooThin = "Width or height must be at least three.";
     expect(check(easy(1, 2), true)).toBe(tooThin);
     expect(check(easy(2, 1), true)).toBe(tooThin);
     expect(check(easy(2, 2), true)).toBe(tooThin);
@@ -147,7 +149,7 @@ describe("params", () => {
   });
 
   it("refuses Normal below the size where it binds — for generation only", () => {
-    const refusal = "Normal needs a board of at least 12 squares, at least two wide";
+    const refusal = "Normal needs a board of at least 12 squares, at least two wide.";
     const tricky = (w: number, h: number) => ({ w, h, diff: DIFF_TRICKY });
     expect(check(tricky(2, 5), true)).toBe(refusal); // 10 squares
     expect(check(tricky(3, 3), true)).toBe(refusal); // 9 squares

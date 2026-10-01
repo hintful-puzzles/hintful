@@ -75,7 +75,7 @@ describe("params codec", () => {
       paramsError(netGame, { ...defaultParams(), w: 1, h: 1 }, true),
     ).not.toBeNull();
     expect(paramsError(netGame, { ...defaultParams(), w: 0, h: 5 }, true)).toBe(
-      "Width must be at least 1",
+      "Width must be at least 1.",
     );
     expect(
       paramsError(

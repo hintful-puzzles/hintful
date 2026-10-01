@@ -123,16 +123,16 @@ describe("netslide params", () => {
 
   it("rejects degenerate params", () => {
     const error = (p: NetslideParams) => paramsError(netslideGame, p, true);
-    expect(error({ ...EASY_5x5, w: 1 })).toBe("Width must be at least 2");
-    expect(error({ ...EASY_5x5, h: 1 })).toBe("Height must be at least 2");
+    expect(error({ ...EASY_5x5, w: 1 })).toBe("Width must be at least 2.");
+    expect(error({ ...EASY_5x5, h: 1 })).toBe("Height must be at least 2.");
     expect(error({ ...EASY_5x5, barrierProbability: -0.1 })).toBe(
-      "Barrier probability must be at least 0",
+      "Barrier probability must be at least 0.",
     );
     expect(error({ ...EASY_5x5, barrierProbability: 1.5 })).toBe(
-      "Barrier probability must be at most 1",
+      "Barrier probability must be at most 1.",
     );
     expect(error({ ...EASY_5x5, movetarget: -1 })).toBe(
-      "Number of shuffling moves must be at least 0",
+      "Number of shuffling moves must be at least 0.",
     );
     expect(error({ ...EASY_5x5, w: 1001, h: 1000 })).toMatch(/unreasonably large/);
     expect(error(EASY_5x5)).toBeNull();

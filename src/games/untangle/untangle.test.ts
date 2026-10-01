@@ -103,8 +103,8 @@ describe("params", () => {
   });
   it("rejects too-few and unreasonably-large", () => {
     const error = (n: number) => paramsError(untangleGame, { n }, true);
-    expect(error(3)).toBe("Number of points must be at least 4");
-    expect(error(100000)).toBe("Number of points must be at most 2000");
+    expect(error(3)).toBe("Number of points must be at least 4.");
+    expect(error(100000)).toBe("Number of points must be at most 2000.");
     expect(error(10)).toBeNull();
   });
 });

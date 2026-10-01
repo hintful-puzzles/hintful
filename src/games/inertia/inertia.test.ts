@@ -98,8 +98,8 @@ describe("inertia params and desc codec", () => {
 
   it("rejects degenerate params", () => {
     const error = (w: number, h: number) => paramsError(inertiaGame, { w, h }, true);
-    expect(error(1, 8)).toBe("Width must be at least 2");
-    expect(error(8, 1)).toBe("Height must be at least 2");
+    expect(error(1, 8)).toBe("Width must be at least 2.");
+    expect(error(8, 1)).toBe("Height must be at least 2.");
     // 2x2 has both dimensions >= 2 but an area below six.
     expect(error(2, 2)).toMatch(/six squares/);
     expect(error(3, 2)).toBeNull();

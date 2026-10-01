@@ -115,7 +115,7 @@ export function decodeParams(s: string): MapParams {
 
 export function validateParams(p: MapParams, _full: boolean): string | null {
   if (p.w > Math.floor(2147483647 / 2 / p.h)) return AREA_TOO_LARGE;
-  if (p.n > p.w * p.h) return "Too many regions to fit in grid";
+  if (p.n > p.w * p.h) return "There must be no more regions than squares.";
   return null;
 }
 

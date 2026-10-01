@@ -56,7 +56,7 @@ describe("bridges params codec", () => {
 
   it("rejects a too-small grid", () => {
     expect(paramsError(bridgesGame, { ...BRIDGES_PRESETS[0], w: 2, h: 2 }, true)).toBe(
-      "Width must be at least 3",
+      "Width must be at least 3.",
     );
     expect(paramsError(bridgesGame, BRIDGES_PRESETS[0], true)).toBeNull();
   });

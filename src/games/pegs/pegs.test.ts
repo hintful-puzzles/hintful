@@ -75,10 +75,10 @@ describe("Pegs params", () => {
 
   it("rejects zero/negative dimensions", () => {
     expect(paramsError(G, { w: 0, h: 5, type: 0 }, false)).toBe(
-      "Width must be at least 1",
+      "Width must be at least 1.",
     );
     expect(paramsError(G, { w: 5, h: -1, type: 0 }, false)).toBe(
-      "Height must be at least 1",
+      "Height must be at least 1.",
     );
   });
 });

@@ -129,13 +129,13 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 export function validateParams(p: SamegameParams, _full: boolean): string | null {
   if (p.w > Number.MAX_SAFE_INTEGER / p.h) return AREA_TOO_LARGE;
   if (p.soluble) {
-    if (p.ncols < 3) return "Number of colors must be at least three";
-    if (p.w * p.h <= 1) return "Grid area must be greater than 1";
+    if (p.ncols < 3) return "Number of colors must be at least three.";
+    if (p.w * p.h <= 1) return "Grid area must be greater than one.";
   } else {
-    if (p.ncols < 2) return "Number of colors must be at least two";
+    if (p.ncols < 2) return "Number of colors must be at least two.";
     // Need at least two of each color for theoretical solubility.
     if (p.w * p.h < p.ncols * 2)
-      return "Too many colors makes given grid size impossible";
+      return "The grid must have at least two squares for each color.";
   }
   return null;
 }

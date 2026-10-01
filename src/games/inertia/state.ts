@@ -87,7 +87,7 @@ export function validateParams(p: InertiaParams): string | null {
   // The generator makes one gem per five squares and needs at least one; an
   // area-five grid is already excluded by the dimensions' bounds, so six is the
   // floor.
-  if (p.w * p.h < 6) return "Grid area must be at least six squares";
+  if (p.w * p.h < 6) return "Grid area must be at least six squares.";
   return null;
 }
 

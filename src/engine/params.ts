@@ -198,7 +198,7 @@ export function squareSize<P>(field: PlainNumberKey<P>): (p: P) => string {
  * game's arrays or arithmetic can hold. Where the ceiling sits is each game's
  * own; the words are the same in every game that has one.
  */
-export const AREA_TOO_LARGE = "Width times height must not be unreasonably large";
+export const AREA_TOO_LARGE = "Width times height must not be unreasonably large.";
 
 /**
  * Why these params cannot be played, or `null` — the one validity check the
@@ -209,6 +209,11 @@ export const AREA_TOO_LARGE = "Width times height must not be unreasonably large
  * `validateParams`, for what depends on more than one field. The messages here
  * name the field by the label the Custom dialog shows it with, so a refusal
  * always says which box to change.
+ *
+ * Every refusal is a sentence with its full stop, the generated ones here and
+ * every one a `validateParams` returns, because the Custom dialog and the
+ * Enter Game ID dialog both show it as it comes. `params-refusal.test.ts`
+ * reads the game's half.
  */
 export function paramsError<P>(
   game: {
@@ -231,15 +236,15 @@ function itemError<P>(item: ParamConfigItem<P>, p: P, full: boolean): string | n
     // Negated so that a value that is not a number at all fails both.
     const value = Number(item.get(p));
     if (min !== undefined && !(value >= min))
-      return `${item.name} must be at least ${min}`;
+      return `${item.name} must be at least ${min}.`;
     if (max !== undefined && !(value <= max))
-      return `${item.name} must be at most ${max}`;
+      return `${item.name} must be at most ${max}.`;
   }
   if (item.type === "choices") {
     const index = item.get(p);
     const accepted = item.choices.length + (full ? 0 : (item.retired ?? 0));
     if (!(Number.isInteger(index) && index >= 0 && index < accepted))
-      return `${item.name} must be one of ${item.choices.join(", ")}`;
+      return `${item.name} must be one of ${item.choices.join(", ")}.`;
   }
   return null;
 }

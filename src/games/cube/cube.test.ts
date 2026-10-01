@@ -87,7 +87,7 @@ describe("cube params", () => {
     ).not.toBeNull();
     // Negative dimensions.
     expect(paramsError(cubeGame, { solid: SolidType.Cube, d1: -1, d2: 4 }, true)).toBe(
-      "Width / top must be at least 0",
+      "Width / top must be at least 0.",
     );
   });
 

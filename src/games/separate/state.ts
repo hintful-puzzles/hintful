@@ -124,11 +124,11 @@ export function validateParams(p: SeparateParams, full: boolean): string | null 
   const { w, h, k } = p;
   if (w > 0x7fffffff / h) return AREA_TOO_LARGE;
   const wh = w * h;
-  if (wh % k) return "Number of letters must divide the grid area";
+  if (wh % k) return "Number of letters must divide the grid area.";
   if (!full) return null;
-  if (k > 26) return "Number of letters must be at most 26";
-  if (k === wh) return "Number of letters must be less than the grid area";
-  if (k === 1) return "Number of letters must be at least two";
+  if (k > 26) return "Number of letters must be at most 26.";
+  if (k === wh) return "Number of letters must be less than the grid area.";
+  if (k === 1) return "Number of letters must be at least two.";
   return null;
 }
 

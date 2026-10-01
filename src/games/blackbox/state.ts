@@ -191,10 +191,10 @@ export function decodeParams(s: string): BlackboxParams {
 }
 
 export function validateParams(p: BlackboxParams, _full: boolean): string | null {
-  if (p.minballs < 1) return "No. of balls must be at least 1";
+  if (p.minballs < 1) return "No. of balls must be at least 1.";
   if (p.minballs > p.maxballs)
-    return "No. of balls may not have a minimum greater than its maximum";
-  if (p.minballs >= p.w * p.h) return "Too many balls to fit in grid";
+    return "No. of balls may not have a minimum greater than its maximum.";
+  if (p.minballs >= p.w * p.h) return "There must be fewer balls than squares.";
   return null;
 }
 

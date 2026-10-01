@@ -70,10 +70,10 @@ describe("pearl params", () => {
   it("rejects too-small boards and small Normal boards", () => {
     const error = (p: PearlParams) => paramsError(pearlGame, p, true);
     expect(error({ w: 4, h: 6, difficulty: DIFF_EASY, nosolve: false })).toBe(
-      "Width must be at least 5",
+      "Width must be at least 5.",
     );
     expect(error({ w: 6, h: 4, difficulty: DIFF_EASY, nosolve: false })).toBe(
-      "Height must be at least 5",
+      "Height must be at least 5.",
     );
     // w + h < 11 at Normal is rejected.
     expect(

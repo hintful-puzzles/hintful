@@ -105,9 +105,9 @@ describe("params codec", () => {
   it("rejects the two impossible identity-hidden combinations", () => {
     const error = (p: GroupParams) => paramsError(groupGame, p, true);
     expect(error(P(3, DIFF_NORMAL, false))).toMatch(/3x3/);
-    expect(error(P(6, 0, false))).toBe("Easy puzzles must have an identity");
+    expect(error(P(6, 0, false))).toBe("Easy puzzles must have an identity.");
     expect(error(P(6, DIFF_NORMAL, false))).toBeNull();
-    expect(error(P(2, DIFF_NORMAL, true))).toBe("Grid size must be at least 3");
+    expect(error(P(2, DIFF_NORMAL, true))).toBe("Grid size must be at least 3.");
   });
 });
 

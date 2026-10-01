@@ -57,7 +57,7 @@ describe("signpost params codec", () => {
     ).toBeNull();
     expect(
       paramsError(signpostGame, { w: 4, h: 0, forceCornerStart: true }, true),
-    ).toBe("Height must be at least 1");
+    ).toBe("Height must be at least 1.");
   });
 
   it("labels free ends, and says nothing of corners", () => {

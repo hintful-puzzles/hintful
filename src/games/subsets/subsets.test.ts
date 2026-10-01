@@ -160,7 +160,7 @@ describe("subsets params", () => {
 
   it("rejects an unrecognized difficulty char rather than silently downgrading", () => {
     expect(paramsError(subsetsGame, decodeParams("4x4n4dz"), true)).toBe(
-      `Difficulty must be one of ${DIFF_NAMES.join(", ")}`,
+      `Difficulty must be one of ${DIFF_NAMES.join(", ")}.`,
     );
   });
 
@@ -177,7 +177,7 @@ describe("subsets params", () => {
       { w: 4, h: 4, n: 3, diff: DIFF_EASY },
     ]) {
       expect(paramsError(subsetsGame, bad, true)).toBe(
-        "Currently only 4x4 puzzles are supported",
+        "Currently only 4x4 puzzles are supported.",
       );
     }
   });

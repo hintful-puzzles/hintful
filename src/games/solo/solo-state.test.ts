@@ -134,7 +134,7 @@ describe("solo params codec", () => {
   it("rejects out-of-range params", () => {
     const valid = (p: SoloParams) => paramsError(soloGame, p, true);
     expect(valid({ ...defaultParams(), c: 1 })).toBe(
-      "Columns of sub-blocks must be at least 2",
+      "Columns of sub-blocks must be at least 2.",
     );
     expect(valid({ ...defaultParams(), c: 6, r: 6 })).not.toBeNull(); // 36 > 31
     expect(valid({ ...defaultParams(), c: 4, r: 3, killer: true })).not.toBeNull(); // killer 12 > 9

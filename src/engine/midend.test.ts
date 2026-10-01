@@ -412,8 +412,8 @@ describe("Midend params + presets", () => {
     const m = new Midend(fakeGame);
     expect(m.setParams("t5")).toBeNull();
     expect(m.getParams()).toBe("t5");
-    expect(m.setParams("garbage")).toMatch(/Invalid parameters/);
-    expect(m.setParams("t0")).toBe("target must be positive");
+    expect(m.setParams("garbage")).toMatch(/can't be read/);
+    expect(m.setParams("t0")).toBe("Target must be positive.");
   });
 
   it("newGameFromId rebuilds from a descriptive id", () => {
@@ -431,10 +431,10 @@ describe("Midend params + presets", () => {
   // link hits (right shape, impossible values), and each returns a string the
   // player reads.
   it.each([
-    ["nope", /Invalid game ID/, "no separator at all"],
+    ["nope", /isn't laid out/, "no separator at all"],
     ["t2:bad!", /isn't laid out/, "a description the game rejects"],
-    ["zzz:g3-1", /Invalid parameters/, "params the game cannot decode"],
-    ["t0:g0-1", /target must be positive/, "params that decode but do not validate"],
+    ["zzz:g3-1", /parameters this puzzle can't read/, "params the game cannot decode"],
+    ["t0:g0-1", /Target must be positive/, "params that decode but do not validate"],
   ])("newGameFromId(%s) refuses %s", (id, expected) => {
     const h = harness();
     h.m.newGame();

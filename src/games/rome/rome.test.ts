@@ -141,17 +141,17 @@ describe("params", () => {
   });
 
   it("leaves the difficulty out of range for an unknown letter", () => {
-    const unknown = `Difficulty must be one of ${difficultyTiers(romeGame)?.join(", ")}`;
+    const unknown = `Difficulty must be one of ${difficultyTiers(romeGame)?.join(", ")}.`;
     expect(paramsError(romeGame, decodeParams("6x6dq"), true)).toBe(unknown);
     expect(paramsError(romeGame, decodeParams("6x6d"), true)).toBe(unknown);
   });
 
   it("rejects boards below 3x3, in upstream's order", () => {
     expect(paramsError(romeGame, { w: 2, h: 5, diff: 0 }, true)).toBe(
-      "Width must be at least 3",
+      "Width must be at least 3.",
     );
     expect(paramsError(romeGame, { w: 5, h: 2, diff: 0 }, true)).toBe(
-      "Height must be at least 3",
+      "Height must be at least 3.",
     );
     expect(paramsError(romeGame, { w: 3, h: 3, diff: 0 }, true)).toBeNull();
   });

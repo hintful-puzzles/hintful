@@ -192,7 +192,7 @@ export function decodeParams(s: string): GuessParams {
 
 export function validateParams(p: GuessParams, _full: boolean): string | null {
   if (!p.allowMultiple && p.ncolors < p.npegs) {
-    return "Disallowing multiple colors requires at least as many colors as pegs";
+    return "Disallowing multiple colors requires at least as many colors as pegs.";
   }
   return null;
 }

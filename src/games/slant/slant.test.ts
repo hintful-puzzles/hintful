@@ -119,10 +119,10 @@ describe("slant params", () => {
 
   it("rejects invalid params", () => {
     expect(paramsError(slantGame, { w: 1, h: 5, diff: 0 }, true)).toBe(
-      "Width must be at least 2",
+      "Width must be at least 2.",
     );
     expect(paramsError(slantGame, { w: 5, h: 1, diff: 0 }, true)).toBe(
-      "Height must be at least 2",
+      "Height must be at least 2.",
     );
     expect(paramsError(slantGame, { w: 2, h: 2, diff: 0 }, true)).toBeNull();
   });

@@ -159,8 +159,10 @@ describe("map params codec", () => {
 
   it("rejects out-of-range params", () => {
     const error = (p: MapParams) => paramsError(mapGame, p, true);
-    expect(error({ w: 20, h: 15, n: 4, diff: 0 })).toBe("Regions must be at least 5");
-    expect(error({ w: 3, h: 3, n: 30, diff: 0 })).toMatch(/Too many regions/);
+    expect(error({ w: 20, h: 15, n: 4, diff: 0 })).toBe("Regions must be at least 5.");
+    expect(error({ w: 3, h: 3, n: 30, diff: 0 })).toBe(
+      "There must be no more regions than squares.",
+    );
     expect(error(defaultParams())).toBeNull();
   });
 

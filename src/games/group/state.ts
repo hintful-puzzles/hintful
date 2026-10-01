@@ -148,13 +148,13 @@ export function validateParams(p: GroupParams, _full: boolean): string | null {
     // Identityless puzzles always have two entirely-blank rows and columns, and
     // no Latin-square deduction can distinguish them — so an Easy (Latin-only)
     // puzzle can't hide its identity.
-    return `${DIFF_NAMES[DIFF_TRIVIAL]} puzzles must have an identity`;
+    return `${DIFF_NAMES[DIFF_TRIVIAL]} puzzles must have an identity.`;
   }
   if (!p.id && p.w === 3) {
     // 3x3 puzzles can never be harder than Easy (every 3x3 Latin square is
     // already a valid group table, so group deductions rule nothing out), and —
     // as above — Easy puzzles can't lack an identity.
-    return "3x3 puzzles must have an identity";
+    return "3x3 puzzles must have an identity.";
   }
   return null;
 }

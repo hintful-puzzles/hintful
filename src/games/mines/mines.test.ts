@@ -99,7 +99,7 @@ describe("mines params", () => {
     expect(paramsError(minesGame, decodeParams("9x9n10"), true)).toBeNull();
     expect(paramsError(minesGame, decodeParams("5x5n3"), true)).toBeNull();
     expect(paramsError(minesGame, decodeParams("5x5n0"), true)).toBe(
-      "Mines must be at least 1",
+      "Mines must be at least 1.",
     );
     // too many mines: n > wh - 9 (a 3x3 needs 9 clear around the first click).
     expect(
@@ -108,7 +108,7 @@ describe("mines params", () => {
         { w: 3, h: 3, n: 5, unique: true, firstClickX: -1, firstClickY: -1 },
         true,
       ),
-    ).toMatch(/Too many mines/);
+    ).toBe("There must be at least 9 more squares than mines.");
     // unique requires > 2 in each dimension.
     expect(
       paramsError(

@@ -88,7 +88,7 @@ function validateParams(p: SignpostParams, full: boolean): string | null {
   if (p.w > 2147483647 / p.h) {
     return AREA_TOO_LARGE;
   }
-  if (full && p.w === 1 && p.h === 1) return "Width and height cannot both be one";
+  if (full && p.w === 1 && p.h === 1) return "Width and height cannot both be one.";
   return null;
 }
 

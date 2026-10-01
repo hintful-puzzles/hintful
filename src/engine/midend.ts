@@ -15,6 +15,7 @@
 import { resolvePalette } from "./color/color-mkhighlight.ts";
 import { darkValue } from "./color/color-token.ts";
 import { completionStatus } from "./completion-status.ts";
+import { DESC_MALFORMED } from "./desc-error.ts";
 import {
   cappedSolveFor,
   difficultyTiers,
@@ -385,14 +386,14 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   newGameFromId(id: string): string | null {
     // `<params>:<desc>` (descriptive) or `<params>#<seed>` (random).
     const sep = id.search(/[:#]/);
-    if (sep < 0) return "Invalid game ID (no ':' or '#')";
+    if (sep < 0) return DESC_MALFORMED;
     const paramsStr = id.slice(0, sep);
     const rest = id.slice(sep + 1);
     let params: Params;
     try {
       params = this.game.decodeParams(paramsStr);
-    } catch (e) {
-      return `Invalid parameters: ${(e as Error).message}`;
+    } catch {
+      return "This game ID starts with parameters this puzzle can't read.";
     }
     // `full` means "these params are about to generate a board". A `#seed` id
     // regenerates and so is bound by whatever generation cannot do; a `:desc`
@@ -1267,7 +1268,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     try {
       decoded = this.game.decodeParams(params);
     } catch (e) {
-      return `Invalid parameters: ${(e as Error).message}`;
+      return `These parameters can't be read (${(e as Error).message}).`;
     }
     const err = paramsError(this.game, decoded, true);
     if (err) return err;

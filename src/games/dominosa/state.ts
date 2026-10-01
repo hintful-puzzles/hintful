@@ -151,7 +151,7 @@ export function validateParams(p: DominosaParams, _full: boolean): string | null
   // Mirror upstream's overflow guard against a huge grid.
   const INT_MAX = 0x7fffffff;
   if (p.n > INT_MAX - 2 || p.n + 2 > Math.floor(INT_MAX / (p.n + 1)))
-    return "Maximum number on dominoes must not be unreasonably large";
+    return "Maximum number on dominoes must not be unreasonably large.";
   return null;
 }
 

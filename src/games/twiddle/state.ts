@@ -104,8 +104,8 @@ export function decodeParams(s: string): TwiddleParams {
 }
 
 export function validateParams(p: TwiddleParams, _full: boolean): string | null {
-  if (p.w < p.n) return "Width must be at least the rotating block size";
-  if (p.h < p.n) return "Height must be at least the rotating block size";
+  if (p.w < p.n) return "Width must be at least the rotating block size.";
+  if (p.h < p.n) return "Height must be at least the rotating block size.";
   if (p.w > Math.floor(0x7fffffff / p.h)) return AREA_TOO_LARGE;
   return null;
 }

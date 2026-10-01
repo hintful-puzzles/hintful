@@ -124,9 +124,9 @@ const MAX_AREA = 225;
  * applies only to a `full` validation, i.e. when a board is about to be
  * *generated*; a description that already exists stays playable at any size. */
 export function validateParams(p: CrossingParams, full: boolean): string | null {
-  if (p.w < 4 && p.h < 4) return "The width or height must be at least 4";
+  if (p.w < 4 && p.h < 4) return "Width or height must be at least 4.";
   if (full && p.w * p.h > MAX_AREA)
-    return `Width times height must be at most ${MAX_AREA}; larger boards cannot be generated`;
+    return `Width times height must be at most ${MAX_AREA}; larger boards cannot be generated.`;
   return null;
 }
 

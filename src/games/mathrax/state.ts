@@ -236,7 +236,7 @@ export function decodeParams(s: string): MathraxParams {
 }
 
 export function validateParams(p: MathraxParams, full: boolean): string | null {
-  if (full && !p.options) return "At least one clue type must be enabled";
+  if (full && !p.options) return "At least one clue type must be enabled.";
   // A 3x3 grid has only four intersections, and two of its four tiers have
   // nothing to grade with: over 3,000 candidate boards each, none needed Normal
   // (Easy always sufficed) and none needed the top tier (Tricky always did).
@@ -244,7 +244,7 @@ export function validateParams(p: MathraxParams, full: boolean): string | null {
   // silently yields another; a saved game or game ID still loads, because `full`
   // is false there. The message uses the menu's tier names.
   if (full && p.o === 3 && (p.diff === "normal" || p.diff === "recursive")) {
-    return `Size 3 has no ${DIFF_NAMES[DIFF_NORMAL]} or ${DIFF_NAMES[DIFF_RECURSIVE]} puzzles; use ${DIFF_NAMES[DIFF_EASY]} or ${DIFF_NAMES[DIFF_TRICKY]}`;
+    return `Size 3 has no ${DIFF_NAMES[DIFF_NORMAL]} or ${DIFF_NAMES[DIFF_RECURSIVE]} puzzles; use ${DIFF_NAMES[DIFF_EASY]} or ${DIFF_NAMES[DIFF_TRICKY]}.`;
   }
   return null;
 }

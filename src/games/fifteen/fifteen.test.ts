@@ -84,10 +84,10 @@ describe("Fifteen params", () => {
 
   it("rejects dimensions below two", () => {
     expect(paramsError(fifteenGame, { w: 1, h: 4 }, true)).toBe(
-      "Width must be at least 2",
+      "Width must be at least 2.",
     );
     expect(paramsError(fifteenGame, { w: 4, h: 1 }, true)).toBe(
-      "Height must be at least 2",
+      "Height must be at least 2.",
     );
     expect(paramsError(fifteenGame, { w: 2, h: 2 }, true)).toBeNull();
   });

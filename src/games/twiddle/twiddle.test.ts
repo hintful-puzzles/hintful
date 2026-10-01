@@ -103,11 +103,11 @@ describe("Twiddle params", () => {
 
   it("rejects bad params", () => {
     const error = (p: TwiddleParams) => paramsError(twiddleGame, p, true);
-    expect(error(params({ n: 1 }))).toBe("Rotating block size must be at least 2");
+    expect(error(params({ n: 1 }))).toBe("Rotating block size must be at least 2.");
     expect(error(params({ w: 2, n: 3 }))).not.toBeNull();
     expect(error(params({ h: 2, n: 3 }))).not.toBeNull();
     expect(error(params({ movetarget: -1 }))).toBe(
-      "Number of shuffling moves must be at least 0",
+      "Number of shuffling moves must be at least 0.",
     );
     expect(error(params())).toBeNull();
   });

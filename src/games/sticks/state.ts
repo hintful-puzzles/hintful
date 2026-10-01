@@ -189,9 +189,9 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 export function validateParams(p: SticksParams, full: boolean): string | null {
   if (full) {
     if (p.blackpc < 5 || p.blackpc > 100)
-      return "%age of black squares must be between 5% and 100%";
+      return "%age of black squares must be between 5% and 100%.";
     if (p.w !== p.h && p.symm === SYMM_ROT4)
-      return "4-fold symmetry is only available with square grids";
+      return "4-fold symmetry is only available with square grids.";
   }
   return null;
 }

@@ -204,7 +204,7 @@ export function decodeParams(s: string): SubsetsParams {
 
 export function validateParams(p: SubsetsParams, _full: boolean): string | null {
   if (p.w !== 4 || p.h !== 4 || p.n !== 4)
-    return "Currently only 4x4 puzzles are supported";
+    return "Currently only 4x4 puzzles are supported.";
   return null;
 }
 

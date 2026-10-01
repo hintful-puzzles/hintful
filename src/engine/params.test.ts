@@ -194,22 +194,22 @@ describe("paramsError", () => {
 
   it("names the field whose bound a value breaks, by its dialog label", () => {
     expect(paramsError(game, { w: 2, h: 5, mode: 0 }, true)).toBe(
-      "Width must be at least 3",
+      "Width must be at least 3.",
     );
     expect(paramsError(game, { w: 5, h: 11, mode: 0 }, true)).toBe(
-      "Height must be at most 10",
+      "Height must be at most 10.",
     );
   });
 
   it("refuses a value that is not a number at all", () => {
     expect(paramsError(game, { w: Number.NaN, h: 5, mode: 0 }, true)).toBe(
-      "Width must be at least 3",
+      "Width must be at least 3.",
     );
   });
 
   it("refuses a choice outside its list", () => {
     expect(paramsError(game, { w: 5, h: 5, mode: 2 }, true)).toBe(
-      "Mode must be one of A, B",
+      "Mode must be one of A, B.",
     );
   });
 
@@ -221,7 +221,7 @@ describe("paramsError", () => {
     };
     expect(paramsError(retiring, { w: 5, h: 5, mode: 2 }, false)).toBeNull();
     expect(paramsError(retiring, { w: 5, h: 5, mode: 2 }, true)).toBe(
-      "Mode must be one of A, B",
+      "Mode must be one of A, B.",
     );
     expect(paramsError(retiring, { w: 5, h: 5, mode: 3 }, false)).not.toBeNull();
   });

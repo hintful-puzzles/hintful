@@ -181,11 +181,11 @@ export function encodeParams(p: MinesParams, full: boolean): string {
 /** Upstream's `validate_params` (mines.c:279). */
 export function validateParams(p: MinesParams, full: boolean): string | null {
   if (full && p.unique && (p.w <= 2 || p.h <= 2))
-    return "Width and height must both be greater than two";
+    return "Width and height must both be greater than two.";
   if (p.w > Math.floor((2 ** 28 - 1) / p.h)) return AREA_TOO_LARGE;
-  if (p.n > p.w * p.h - 9) return "Too many mines for grid size";
-  if (p.firstClickX >= p.w) return "First-click x coordinate must be inside the grid";
-  if (p.firstClickY >= p.h) return "First-click y coordinate must be inside the grid";
+  if (p.n > p.w * p.h - 9) return "There must be at least 9 more squares than mines.";
+  if (p.firstClickX >= p.w) return "First-click x coordinate must be inside the grid.";
+  if (p.firstClickY >= p.h) return "First-click y coordinate must be inside the grid.";
   return null;
 }
 

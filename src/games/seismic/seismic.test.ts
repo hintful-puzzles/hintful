@@ -174,7 +174,7 @@ describe("seismic params", () => {
 
   it("rejects an unknown difficulty letter rather than defaulting it", () => {
     expect(paramsError(seismicGame, decodeParams("6x6dq"), true)).toBe(
-      `Difficulty must be one of ${DIFF_NAMES.join(", ")}`,
+      `Difficulty must be one of ${DIFF_NAMES.join(", ")}.`,
     );
   });
 
@@ -185,7 +185,7 @@ describe("seismic params", () => {
         { w: 3, h: 6, diff: DIFF_EASY, mode: MODE_SEISMIC },
         true,
       ),
-    ).toBe("Width must be at least 4");
+    ).toBe("Width must be at least 4.");
   });
 
   it("bounds each mode by what limits that mode", () => {

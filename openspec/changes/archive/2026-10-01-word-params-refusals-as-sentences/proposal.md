@@ -1,6 +1,6 @@
 # word-params-refusals-as-sentences
 
-**Status: scaffolded, not started (2026-10-01).**
+**Status: implemented and archived (2026-10-01).**
 
 ## Why
 

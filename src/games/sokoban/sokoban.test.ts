@@ -116,10 +116,10 @@ describe("Sokoban params", () => {
 
   it("rejects boards below 4x4", () => {
     expect(paramsError(sokobanGame, { w: 3, h: 10 }, true)).toBe(
-      "Width must be at least 4",
+      "Width must be at least 4.",
     );
     expect(paramsError(sokobanGame, { w: 10, h: 3 }, true)).toBe(
-      "Height must be at least 4",
+      "Height must be at least 4.",
     );
     expect(paramsError(sokobanGame, { w: 4, h: 4 }, true)).toBeNull();
   });

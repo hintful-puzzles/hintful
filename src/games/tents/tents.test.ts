@@ -74,8 +74,8 @@ describe("tents params", () => {
 
   it("rejects too-small grids and unknown difficulty", () => {
     const error = (p: TentsParams) => paramsError(tentsGame, p, true);
-    expect(error({ w: 3, h: 8, diff: DIFF_EASY })).toBe("Width must be at least 4");
-    expect(error({ w: 8, h: 3, diff: DIFF_EASY })).toBe("Height must be at least 4");
+    expect(error({ w: 3, h: 8, diff: DIFF_EASY })).toBe("Width must be at least 4.");
+    expect(error({ w: 8, h: 3, diff: DIFF_EASY })).toBe("Height must be at least 4.");
     expect(error({ w: 8, h: 8, diff: 5 })).toMatch(/^Difficulty must be one of/);
     expect(error({ w: 8, h: 8, diff: DIFF_EASY })).toBeNull();
   });

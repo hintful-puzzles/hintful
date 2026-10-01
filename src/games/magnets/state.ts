@@ -187,9 +187,9 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 export function validateParams(p: MagnetsParams, _full: boolean): string | null {
   if (p.diff >= DIFF_TRICKY) {
     if (p.w < 5 && p.h < 5)
-      return `Either width or height must be at least five for ${DIFF_NAMES[DIFF_TRICKY]}`;
+      return `Either width or height must be at least five for ${DIFF_NAMES[DIFF_TRICKY]}.`;
   } else {
-    if (p.w < 3 && p.h < 3) return "Either width or height must be at least three";
+    if (p.w < 3 && p.h < 3) return "Either width or height must be at least three.";
   }
   return null;
 }

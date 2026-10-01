@@ -141,16 +141,16 @@ const A177790 = [
 ];
 
 export function validateParams(p: UnrulyParams, _full: boolean): string | null {
-  if (p.w2 & 1 || p.h2 & 1) return "Width and height must both be even";
+  if (p.w2 & 1 || p.h2 & 1) return "Width and height must both be even.";
   if (p.w2 > Number.MAX_SAFE_INTEGER / p.h2) {
     return AREA_TOO_LARGE;
   }
   if (p.unique) {
     if (p.w2 < 2 * A177790.length && p.h2 > A177790[p.w2 / 2]) {
-      return "Puzzle is too tall for unique-rows mode";
+      return "Puzzle is too tall for unique-rows mode.";
     }
     if (p.h2 < 2 * A177790.length && p.w2 > A177790[p.h2 / 2]) {
-      return "Puzzle is too long for unique-rows mode";
+      return "Puzzle is too long for unique-rows mode.";
     }
   }
   return null;

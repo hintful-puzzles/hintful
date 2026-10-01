@@ -118,8 +118,9 @@ const SCHAR_MAX = 127;
 
 export function validateParams(p: RangeParams, full: boolean): string | null {
   const { w, h } = p;
-  if (w > SCHAR_MAX - (h - 1)) return "Width plus height is too big";
-  if (full && w <= 2 && h <= 2) return `Can't create ${w}x${h} puzzles`;
+  if (w > SCHAR_MAX - (h - 1))
+    return `Width plus height must be at most ${SCHAR_MAX + 1}.`;
+  if (full && w <= 2 && h <= 2) return "Width or height must be at least 3.";
   return null;
 }
 

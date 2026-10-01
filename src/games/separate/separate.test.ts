@@ -48,7 +48,7 @@ describe("separate params", () => {
 
   it("rejects invalid params", () => {
     const valid = (p: SeparateParams) => paramsError(separateGame, p, true);
-    expect(valid({ w: 0, h: 5, k: 5 })).toBe("Width must be at least 1");
+    expect(valid({ w: 0, h: 5, k: 5 })).toBe("Width must be at least 1.");
     expect(valid({ w: 5, h: 5, k: 3 })).not.toBeNull(); // 3 ∤ 25
     expect(valid({ w: 5, h: 5, k: 25 })).not.toBeNull(); // whole grid
     expect(valid({ w: 5, h: 5, k: 1 })).not.toBeNull();

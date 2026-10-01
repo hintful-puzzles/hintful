@@ -150,7 +150,7 @@ describe("Galaxies game flow", () => {
   it("refuses too-small boards", () => {
     expect(
       paramsError(galaxiesGame, { w: 2, h: 2, diff: GalaxiesDiff.Normal }, true),
-    ).toBe("Width must be at least 3");
+    ).toBe("Width must be at least 3.");
   });
 
   it("names a tier in the status bar and the refusal with the menu's words", () => {
@@ -165,7 +165,7 @@ describe("Galaxies game flow", () => {
       `Difficulty ${tiers[0]}.`,
     );
     expect(paramsError(galaxiesGame, { ...p, diff: 7 as GalaxiesDiff }, true)).toBe(
-      `Difficulty must be one of ${tiers[0]}, ${tiers[1]}`,
+      `Difficulty must be one of ${tiers[0]}, ${tiers[1]}.`,
     );
   });
 

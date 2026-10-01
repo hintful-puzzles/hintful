@@ -169,10 +169,10 @@ describe("mathrax params", () => {
 
   it("rejects out-of-range sizes, unknown difficulties and an empty clue set", () => {
     const error = (p: MathraxParams, full = true) => paramsError(mathraxGame, p, full);
-    expect(error(decodeParams("2dn"))).toBe("Size must be at least 3");
-    expect(error(decodeParams("10dn"))).toBe("Size must be at most 9");
+    expect(error(decodeParams("2dn"))).toBe("Size must be at least 3.");
+    expect(error(decodeParams("10dn"))).toBe("Size must be at most 9.");
     expect(error(decodeParams("6dq"))).toBe(
-      "Difficulty must be one of Easy, Normal, Tricky, Unreasonable",
+      "Difficulty must be one of Easy, Normal, Tricky, Unreasonable.",
     );
     expect(error({ o: 6, diff: "normal", options: 0 })).toMatch(
       /at least one clue type/i,

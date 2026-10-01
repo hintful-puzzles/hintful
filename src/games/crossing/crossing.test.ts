@@ -157,10 +157,10 @@ describe("crossing params", () => {
     expect(check({ w: 4, h: 2, sym: false }, true)).toBeNull();
     expect(check({ w: 2, h: 4, sym: false }, true)).toBeNull();
     expect(check({ w: 3, h: 3, sym: false }, true)).toBe(
-      "The width or height must be at least 4",
+      "Width or height must be at least 4.",
     );
-    expect(check({ w: 1, h: 9, sym: false }, true)).toBe("Width must be at least 2");
-    expect(check({ w: 9, h: 1, sym: false }, true)).toBe("Height must be at least 2");
+    expect(check({ w: 1, h: 9, sym: false }, true)).toBe("Width must be at least 2.");
+    expect(check({ w: 9, h: 1, sym: false }, true)).toBe("Height must be at least 2.");
   });
 
   it("labels symmetric walls after the size", () => {
@@ -176,7 +176,7 @@ describe("crossing params", () => {
     // no bound at all and simply retries for ever there.
     expect(check({ w: 15, h: 15, sym: false }, true)).toBeNull();
     expect(check({ w: 16, h: 16, sym: false }, true)).toBe(
-      "Width times height must be at most 225; larger boards cannot be generated",
+      "Width times height must be at most 225; larger boards cannot be generated.",
     );
     // A description that already exists stays playable at any size.
     expect(check({ w: 16, h: 16, sym: false }, false)).toBeNull();

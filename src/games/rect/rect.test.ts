@@ -83,8 +83,8 @@ describe("rect params codec", () => {
   it("rejects invalid params", () => {
     const error = (p: RectParams) => paramsError(rectGame, p, true);
     expect(error(P({ w: 1, h: 1 }))).not.toBeNull(); // area < 2
-    expect(error(P({ w: 0, h: 5 }))).toBe("Width must be at least 1");
-    expect(error(P({ expandfactor: -1 }))).toBe("Expansion factor must be at least 0");
+    expect(error(P({ w: 0, h: 5 }))).toBe("Width must be at least 1.");
+    expect(error(P({ expandfactor: -1 }))).toBe("Expansion factor must be at least 0.");
     expect(error(P())).toBeNull();
   });
 

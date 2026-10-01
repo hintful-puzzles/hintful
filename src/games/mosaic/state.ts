@@ -136,7 +136,8 @@ export function decodeParams(s: string): MosaicParams {
 }
 
 export function validateParams(p: MosaicParams, _full: boolean): string | null {
-  if (p.height > MAX_TILES / p.width) return `Maximum size is ${MAX_TILES} tiles`;
+  if (p.height > MAX_TILES / p.width)
+    return `Width times height must be at most ${MAX_TILES}.`;
   return null;
 }
 

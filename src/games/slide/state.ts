@@ -158,13 +158,13 @@ export const MAX_CELLS = 48;
 export function validateParams(p: SlideParams, _full: boolean): string | null {
   // Not upstream's checks. See MAX_CELLS for the measurements.
   if (p.w * p.h > MAX_CELLS)
-    return `Width times height must be at most ${MAX_CELLS} (the solver runs out of memory beyond that)`;
+    return `Width times height must be at most ${MAX_CELLS}; the solver runs out of memory beyond that.`;
 
   // A limit of 0 asks for a puzzle solvable in no moves at all, i.e. one that
   // starts finished. Nothing satisfies it, so the generator would strip the
   // board bare and then fail; upstream asserts. Reject it where the Custom
   // dialog can say why. Any negative value means "no limit".
-  if (p.maxmoves === 0) return "Solution length limit must be at least 1";
+  if (p.maxmoves === 0) return "Solution length limit must be at least 1.";
 
   return null;
 }

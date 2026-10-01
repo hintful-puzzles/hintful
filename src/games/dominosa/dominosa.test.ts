@@ -70,7 +70,7 @@ describe("dominosa params", () => {
   it("rejects n < 1", () => {
     expect(
       paramsError(dominosaGame, { n: 0, diff: DIFF_BASIC, tall: false }, true),
-    ).toBe("Maximum number on dominoes must be at least 1");
+    ).toBe("Maximum number on dominoes must be at least 1.");
     expect(
       paramsError(dominosaGame, { n: 6, diff: DIFF_BASIC, tall: false }, true),
     ).toBeNull();

@@ -189,7 +189,8 @@ const MAX_THIN_AREA = 160;
 
 export function validateParams(p: AbcdParams, full: boolean): string | null {
   // Under 5 letters, diagonal mode can't avoid the no-touch rule in practice.
-  if (p.n < 5 && p.diag) return "Letters must be at least 5 without diagonal touching";
+  if (p.n < 5 && p.diag)
+    return "Letters must be at least 5 when diagonal touching is not allowed.";
   // Generation only: a shared game ID or a saved game is handed over rather
   // than searched for, so a described board outside the bound still opens.
   if (full) {
@@ -200,8 +201,8 @@ export function validateParams(p: AbcdParams, full: boolean): string | null {
       : (MAX_GENERABLE_AREA.get(p.n * 2 + (p.diag ? 1 : 0)) ?? 0);
     if (area > max) {
       return thin
-        ? `A board this long has no ABCD puzzle to find; keep the area under ${max} squares`
-        : `${p.n} letters have no ABCD puzzle on a board this big; keep the area under ${max} squares, or use fewer letters`;
+        ? `A board this long has no ABCD puzzle to find; keep the area under ${max} squares.`
+        : `${p.n} letters have no ABCD puzzle on a board this big; keep the area under ${max} squares, or use fewer letters.`;
     }
   }
   return null;

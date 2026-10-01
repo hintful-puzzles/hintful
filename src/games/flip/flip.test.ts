@@ -161,7 +161,7 @@ describe("Flip params", () => {
     expect(flipGame.decodeParams(flipGame.encodeParams(p, true))).toEqual(p);
     expect(flipGame.encodeParams(p, false)).toBe("4x6");
     expect(paramsError(flipGame, { w: 0, h: 3, matrixType: "crosses" }, true)).toBe(
-      "Width must be at least 1",
+      "Width must be at least 1.",
     );
   });
 });

@@ -102,10 +102,10 @@ describe("keen params codec", () => {
   it("rejects invalid params", () => {
     const error = (p: KeenParams) => paramsError(keenGame, p, true);
     expect(error({ w: 2, diff: "easy", multiplicationOnly: false })).toBe(
-      "Grid size must be at least 3",
+      "Grid size must be at least 3.",
     );
     expect(error({ w: 10, diff: "easy", multiplicationOnly: false })).toBe(
-      "Grid size must be at most 9",
+      "Grid size must be at most 9.",
     );
     expect(error({ w: 6, diff: "normal", multiplicationOnly: false })).toBeNull();
   });

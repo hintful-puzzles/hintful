@@ -105,7 +105,7 @@ export function decodeParams(s: string): PegsParams {
 
 export function validateParams(p: PegsParams, full: boolean): string | null {
   if (full && (p.w <= 3 || p.h <= 3)) {
-    return "Width and height must both be greater than three";
+    return "Width and height must both be greater than three.";
   }
   if (p.w > 10000 / p.h) {
     return AREA_TOO_LARGE;
@@ -113,11 +113,11 @@ export function validateParams(p: PegsParams, full: boolean): string | null {
   if (full && p.type === TYPE_CROSS) {
     const side = (n: number) => n === 5 || n === 7 || n === 9;
     if (!side(p.w) || !side(p.h) || (p.w === 5 && p.h === 5)) {
-      return "This board type needs each side to be 5, 7 or 9, and not both 5";
+      return "This board type needs each side to be 5, 7 or 9, and not both 5.";
     }
   }
   if (full && p.type === TYPE_OCTAGON && (p.w !== 7 || p.h !== 7)) {
-    return "This board type is only supported at 7×7";
+    return "This board type is only supported at 7×7.";
   }
   return null;
 }

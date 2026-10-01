@@ -154,8 +154,8 @@ describe("spokes params", () => {
 
   it("rejects boards below 2x2 and an unknown difficulty letter", () => {
     const error = (p: SpokesParams) => paramsError(spokesGame, p, true);
-    expect(error({ w: 1, h: 4, diff: "easy" })).toBe("Width must be at least 2");
-    expect(error({ w: 4, h: 1, diff: "easy" })).toBe("Height must be at least 2");
+    expect(error({ w: 1, h: 4, diff: "easy" })).toBe("Width must be at least 2.");
+    expect(error({ w: 4, h: 1, diff: "easy" })).toBe("Height must be at least 2.");
     // Upstream never checks this and would index its difficulty table out of
     // bounds; the port rejects it instead.
     expect(error(decodeParams("4x4dz"))).toMatch(/^Difficulty must be one of/);

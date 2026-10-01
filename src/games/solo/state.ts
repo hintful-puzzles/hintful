@@ -258,11 +258,11 @@ export const ORDER_MAX = 255;
 /** Upstream's `validate_params`, less the single-field limits the Custom
  * dialog's items state as bounds. */
 export function validateParams(p: SoloParams, _full: boolean): string | null {
-  if (p.c * p.r > 31)
-    return "Unable to support more than 31 distinct symbols in a puzzle";
+  if (p.c * p.r > 31) return "Columns times rows of sub-blocks must be at most 31.";
   if (p.killer && p.c * p.r > 9)
-    return "Killer puzzle dimensions must be smaller than 10";
-  if (p.xtype && p.c * p.r < 4) return "X-type puzzle dimensions must be larger than 3";
+    return "Killer puzzle dimensions must be smaller than 10.";
+  if (p.xtype && p.c * p.r < 4)
+    return "X-type puzzle dimensions must be larger than 3.";
   return null;
 }
 

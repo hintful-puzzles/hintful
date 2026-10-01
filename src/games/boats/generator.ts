@@ -161,10 +161,10 @@ export function validateParams(p: BoatsParams, _full: boolean): string | null {
   const { w, h, fleet } = p;
 
   if (fleet > w && fleet > h)
-    return "Fleet size must be smaller than the width and height";
+    return "Fleet size must be smaller than the width and height.";
   if (!p.fleetData.slice(0, fleet).some((n) => n !== 0))
-    return "Fleet must contain at least 1 boat";
-  if (!fleetFits(p)) return "Fleet does not fit into the grid";
+    return "Fleet must contain at least 1 boat.";
+  if (!fleetFits(p)) return "The fleet does not fit into the grid.";
   return null;
 }
 

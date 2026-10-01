@@ -106,7 +106,7 @@ describe("bricks params", () => {
   it("rejects an unknown difficulty char", () => {
     const p = decodeParams("7x6dx");
     expect(paramsError(bricksGame, p, true)).toBe(
-      "Difficulty must be one of Easy, Unreasonable",
+      "Difficulty must be one of Easy, Unreasonable.",
     );
   });
 });
@@ -345,7 +345,7 @@ describe("bricks generator", () => {
     it("refuses to generate Tricky, for which no board exists", () => {
       const p: BricksParams = { w: 7, h: 6, diff: DIFF_TRICKY };
       expect(paramsError(bricksGame, p, true)).toBe(
-        "Difficulty must be one of Easy, Unreasonable",
+        "Difficulty must be one of Easy, Unreasonable.",
       );
       // Loading an existing Tricky description still works.
       expect(paramsError(bricksGame, p, false)).toBeNull();

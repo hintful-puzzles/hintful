@@ -61,13 +61,13 @@ describe("Flood params", () => {
     const error = (p: FloodParams) => paramsError(floodGame, p, true);
     expect(error({ w: 1, h: 1, colors: 6, leniency: 0 })).toMatch(/two squares/);
     expect(error({ w: 4, h: 4, colors: 2, leniency: 0 })).toBe(
-      "Colors must be at least 3",
+      "Colors must be at least 3.",
     );
     expect(error({ w: 4, h: 4, colors: 11, leniency: 0 })).toBe(
-      "Colors must be at most 10",
+      "Colors must be at most 10.",
     );
     expect(error({ w: 4, h: 4, colors: 6, leniency: -1 })).toBe(
-      "Extra moves permitted must be at least 0",
+      "Extra moves permitted must be at least 0.",
     );
     expect(error(defaultParams())).toBeNull();
   });

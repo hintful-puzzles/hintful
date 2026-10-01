@@ -70,9 +70,12 @@ describe("undead params", () => {
 
   it("rejects invalid params", () => {
     const error = (p: UndeadParams) => paramsError(undeadGame, p, true);
-    expect(error({ w: 2, h: 4, diff: "easy" })).toBe("Width must be at least 3");
-    expect(error({ w: 4, h: 2, diff: "easy" })).toBe("Height must be at least 3");
-    expect(error({ w: 8, h: 8, diff: "easy" })).toBe("Grid is too big"); // 8*8 > 54
+    expect(error({ w: 2, h: 4, diff: "easy" })).toBe("Width must be at least 3.");
+    expect(error({ w: 4, h: 2, diff: "easy" })).toBe("Height must be at least 3.");
+    expect(error({ w: 8, h: 8, diff: "easy" })).toBe(
+      "Width times height must be at most 54.",
+    );
+    expect(error({ w: 9, h: 6, diff: "easy" })).toBeNull();
     expect(error({ w: 5, h: 5, diff: "normal" })).toBeNull();
   });
 });

@@ -116,7 +116,7 @@ describe("lightup params", () => {
   it("rejects invalid params", () => {
     const base = { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT4, difficulty: 0 };
     const error = (p: typeof base) => paramsError(lightupGame, p, true);
-    expect(error({ ...base, w: 1 })).toBe("Width must be at least 2");
+    expect(error({ ...base, w: 1 })).toBe("Width must be at least 2.");
     expect(error({ ...base, blackpc: 4 })).not.toBeNull();
     expect(error({ ...base, blackpc: 101 })).not.toBeNull();
     expect(error({ ...base, w: 8 })).not.toBeNull(); // ROT4 non-square

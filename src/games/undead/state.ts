@@ -134,7 +134,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 export function validateParams(p: UndeadParams, _full: boolean): string | null {
-  if (p.w > Math.floor(54 / p.h)) return "Grid is too big";
+  if (p.w > Math.floor(54 / p.h)) return "Width times height must be at most 54.";
   return null;
 }
 

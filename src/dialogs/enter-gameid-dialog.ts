@@ -16,12 +16,6 @@ import "@awesome.me/webawesome/dist/components/dialog/dialog.js";
 import "@awesome.me/webawesome/dist/components/icon/icon.js";
 import "@awesome.me/webawesome/dist/components/input/input.js";
 
-/** The refusal as a sentence: a description error already is one, while a
- * params refusal ("Width must be at least 3") ends without its full stop. */
-function asSentence(error: string): string {
-  return /[.!?]$/.test(error) ? error : `${error}.`;
-}
-
 @customElement("enter-gameid-dialog")
 export class EnterGameIDDialog extends SignalWatcher(LitElement) {
   @consume({ context: puzzleContext, subscribe: true })
@@ -66,7 +60,7 @@ export class EnterGameIDDialog extends SignalWatcher(LitElement) {
           <wa-callout variant="danger">
             <wa-icon slot="icon" name="error"></wa-icon>
             <strong>That game won’t open.</strong>
-            ${asSentence(this.error)}
+            ${this.error}
           </wa-callout>
         `
       : this.puzzle?.totalMoves &&

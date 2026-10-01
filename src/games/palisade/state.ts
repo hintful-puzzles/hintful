@@ -150,11 +150,11 @@ export function validateParams(p: PalisadeParams, full: boolean): string | null 
   const { w, h, k } = p;
   if (w > 0x7fffffff / h) return AREA_TOO_LARGE;
   const wh = w * h;
-  if (wh % k) return "Region size must divide grid area";
+  if (wh % k) return "Region size must divide grid area.";
   if (!full) return null;
-  if (k === wh) return "Region size must be less than the grid area";
+  if (k === wh) return "Region size must be less than the grid area.";
   if (k === 2 && w !== 1 && h !== 1)
-    return "Region size can't be two unless width or height is one";
+    return "Region size can't be two unless width or height is one.";
   return null;
 }
 

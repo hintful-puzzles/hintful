@@ -295,16 +295,16 @@ function decodeParams(s: string): AscentParams {
 
 function validateParams(p: AscentParams, full: boolean): string | null {
   const { w, h } = p;
-  if (w * h >= 1000) return "Puzzle is too large";
-  if (p.mode === MODE_HEXAGON && (h & 1) === 0) return "Height must be an odd number";
+  if (w * h >= 1000) return "Width times height must be less than 1000.";
+  if (p.mode === MODE_HEXAGON && (h & 1) === 0) return "Height must be an odd number.";
   if (p.mode === MODE_HEXAGON && w <= Math.trunc(h / 2))
-    return "Width is too low for hexagon grid";
+    return "Width must be more than half the height for a hexagon grid.";
   if (p.mode === MODE_EDGES && w === 2 && h === 2)
-    return "Grid for Edges mode must be bigger than 2x2";
+    return "Edges mode needs a grid bigger than 2x2.";
   if (full && p.mode === MODE_EDGES && p.diff < DIFF_NORMAL)
-    return "Difficulty for Edges mode must be at least Normal";
+    return "Difficulty for Edges mode must be at least Normal.";
   if (full && p.symmetrical && p.mode === MODE_EDGES)
-    return "Symmetrical clues must be disabled for Edges mode";
+    return "Symmetrical clues must be disabled for Edges mode.";
   return null;
 }
 

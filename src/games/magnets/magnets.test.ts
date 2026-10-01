@@ -50,8 +50,8 @@ describe("magnets params", () => {
   });
 
   it("bounds each side by what one clue character can count", () => {
-    expect(paramsError(magnetsGame, P(1, 6), true)).toBe("Width must be at least 2");
-    expect(paramsError(magnetsGame, P(6, 62), true)).toBe("Height must be at most 61");
+    expect(paramsError(magnetsGame, P(1, 6), true)).toBe("Width must be at least 2.");
+    expect(paramsError(magnetsGame, P(6, 62), true)).toBe("Height must be at most 61.");
     expect(paramsError(magnetsGame, P(61, 6), true)).toBeNull();
   });
 

@@ -62,7 +62,7 @@ export const fakeGame: Game<FakeParams, FakeState, FakeMove, null, FakeDrawState
     if (!m) throw new Error(`bad params "${s}"`);
     return { target: Number(m[1]) };
   },
-  validateParams: (p) => (p.target > 0 ? null : "target must be positive"),
+  validateParams: (p) => (p.target > 0 ? null : "Target must be positive."),
 
   newDesc: (p, rng) => {
     // Exercise the retained bit-identical RNG; desc is deterministic

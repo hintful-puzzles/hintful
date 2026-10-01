@@ -94,7 +94,7 @@ export function decodeParams(s: string): FloodParams {
 }
 
 export function validateParams(p: FloodParams, _full: boolean): string | null {
-  if (p.w * p.h < 2) return "Grid must contain at least two squares";
+  if (p.w * p.h < 2) return "Grid must contain at least two squares.";
   return null;
 }
 

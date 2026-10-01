@@ -192,13 +192,13 @@ describe("sticks params", () => {
   it("validates bounds in upstream order", () => {
     const error = (p: SticksParams, full = true) => paramsError(sticksGame, p, full);
     expect(error({ w: 1, h: 5, blackpc: 20, symm: 0 })).toBe(
-      "Width must be at least 2",
+      "Width must be at least 2.",
     );
     expect(error({ w: 5, h: 5, blackpc: 4, symm: 0 })).toBe(
-      "%age of black squares must be between 5% and 100%",
+      "%age of black squares must be between 5% and 100%.",
     );
     expect(error({ w: 5, h: 6, blackpc: 20, symm: 4 })).toBe(
-      "4-fold symmetry is only available with square grids",
+      "4-fold symmetry is only available with square grids.",
     );
     expect(error({ w: 5, h: 5, blackpc: 20, symm: 9 })).toMatch(
       /^Symmetry must be one of/,

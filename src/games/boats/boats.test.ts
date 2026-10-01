@@ -137,36 +137,36 @@ describe("boats params", () => {
   it("rejects an unknown difficulty letter, which only a full encoding carries", () => {
     const p = decodeParams("6x6f3dz,3,2,1");
     expect(refusal(p, true)).toBe(
-      "Difficulty must be one of Easy, Normal, Tricky, Hard",
+      "Difficulty must be one of Easy, Normal, Tricky, Hard.",
     );
     // A `params:desc` id carries no difficulty, so it has none to get wrong.
     expect(refusal(decodeParams("6x6f3,3,2,1"), false)).toBeNull();
   });
 
   it("names the field a refusal is about", () => {
-    expect(refusal(params({ w: 100 }), true)).toBe("Width must be at most 99");
-    expect(refusal(params({ h: 100 }), true)).toBe("Height must be at most 99");
+    expect(refusal(params({ w: 100 }), true)).toBe("Width must be at most 99.");
+    expect(refusal(params({ h: 100 }), true)).toBe("Height must be at most 99.");
     expect(refusal(params({ fleet: 0, fleetData: [] }), true)).toBe(
-      "Fleet size must be at least 1",
+      "Fleet size must be at least 1.",
     );
     expect(refusal(params({ w: 10, h: 10, fleet: 10 }), true)).toBe(
-      "Fleet size must be at most 9",
+      "Fleet size must be at most 9.",
     );
     expect(refusal(params({ w: 2, h: 2, fleet: 3 }), true)).toBe(
-      "Fleet size must be smaller than the width and height",
+      "Fleet size must be smaller than the width and height.",
     );
     expect(refusal(params({ fleet: 3, fleetData: [0, 0, 0] }), true)).toBe(
-      "Fleet must contain at least 1 boat",
+      "Fleet must contain at least 1 boat.",
     );
   });
 
   it("rejects a fleet that cannot physically fit, in either orientation", () => {
     // Measured against the C: the default 3,2,1 pyramid needs a 5x5.
     expect(refusal(params({ w: 5, h: 4 }), true)).toBe(
-      "Fleet does not fit into the grid",
+      "The fleet does not fit into the grid.",
     );
     expect(refusal(params({ w: 4, h: 5 }), true)).toBe(
-      "Fleet does not fit into the grid",
+      "The fleet does not fit into the grid.",
     );
     expect(refusal(params({ w: 5, h: 5 }), true)).toBeNull();
   });
