@@ -17,8 +17,12 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   type DescError,
+  type DescParse,
   descBadCharacter,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { findLoops } from "../../engine/findloop.ts";
@@ -154,35 +158,36 @@ export function validateParams(p: SlantParams, _full: boolean): string | null {
 // clue, a letter a–z skips a run of 1–26 clueless vertices (chunks of 'z'
 // for longer runs).
 
-export function validateDesc(p: SlantParams, desc: string): DescError | null {
+/** The vertex clues (−1 = no clue). */
+function parseDesc(p: SlantParams, desc: string): DescParse<Int8Array> {
   const area = (p.w + 1) * (p.h + 1);
-  let squares = 0;
-  for (const tok of scanRunLength(desc)) {
-    if ("blanks" in tok) {
-      squares += tok.blanks;
-      continue;
+  return readDesc(desc, (r) => {
+    const clues = new Int8Array(area).fill(-1);
+    let squares = 0;
+    for (const tok of scanRunLength(r.rest())) {
+      if ("blanks" in tok) {
+        squares += tok.blanks;
+        continue;
+      }
+      // A clue is how many of the four cells around a vertex hold a line.
+      const clue = digitValue(tok.value);
+      if (clue === null) return r.fail(descBadCharacter(tok.value));
+      if (clue > 4) r.fail(DESC_OUT_OF_RANGE);
+      clues[squares++] = clue;
     }
-    // A clue is how many of the four cells around a vertex hold a line.
-    const clue = digitValue(tok.value);
-    if (clue === null) return descBadCharacter(tok.value);
-    if (clue > 4) return DESC_OUT_OF_RANGE;
-    squares++;
-  }
-  if (squares < area) return DESC_TOO_SHORT;
-  if (squares > area) return DESC_TOO_LONG;
-  return null;
+    if (squares < area) r.fail(DESC_TOO_SHORT);
+    if (squares > area) r.fail(DESC_TOO_LONG);
+    return clues;
+  });
 }
 
-/** Parse a desc into the shared vertex-clue array (−1 = no clue). */
+export function validateDesc(p: SlantParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
+}
+
+/** Parse a valid desc into the shared vertex-clue array (−1 = no clue). */
 export function decodeClues(p: SlantParams, desc: string): Int8Array {
-  const clues = new Int8Array((p.w + 1) * (p.h + 1)).fill(-1);
-  let pos = 0;
-  for (const tok of scanRunLength(desc)) {
-    if ("blanks" in tok) pos += tok.blanks;
-    // `validateDesc` rejects a non-digit; `-1` is this array's own "no clue".
-    else clues[pos++] = digitValue(tok.value) ?? -1;
-  }
-  return clues;
+  return descValue(parseDesc(p, desc));
 }
 
 /** Encode a vertex-clue array as the upstream run-length desc. The trailing run

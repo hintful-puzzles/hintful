@@ -15,7 +15,13 @@
  * particular values a refactor would have to chase.
  */
 import { describe, expect, it } from "vitest";
-import { DESC_TOO_LONG, DESC_TOO_SHORT, descBadCharacter } from "./desc-error.ts";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+  descValue,
+  descVerdict,
+} from "./desc-error.ts";
 import { randomNew } from "./random/index.ts";
 import {
   addBorderBarriers,
@@ -35,7 +41,6 @@ import {
   R,
   rot,
   U,
-  validateWireDesc,
   wireCount,
   type Xyd,
   xydCmp,
@@ -152,25 +157,39 @@ describe("xydCmp", () => {
 });
 
 describe("the description codec", () => {
+  const verdict = (w: number, h: number, wrapping: boolean, desc: string) =>
+    descVerdict(parseWireDesc(w, h, wrapping, desc));
+
   it("accepts a well-formed desc and names each way it can be malformed", () => {
-    expect(validateWireDesc(2, 2, "1234")).toBeNull();
-    expect(validateWireDesc(2, 2, "12h34")).toBeNull(); // barriers are optional suffixes
-    expect(validateWireDesc(2, 2, "1v2h3v4h")).toBeNull();
-    expect(validateWireDesc(2, 2, "123")).toBe(DESC_TOO_SHORT);
-    expect(validateWireDesc(2, 2, "12345")).toBe(DESC_TOO_LONG);
-    expect(validateWireDesc(2, 2, "12z4")).toBe(descBadCharacter("z"));
-    // A barrier letter where a tile is expected is a character, not a suffix.
-    expect(validateWireDesc(2, 2, "12h3")).toBe(DESC_TOO_SHORT);
+    expect(verdict(2, 2, false, "1234")).toBeNull();
+    expect(verdict(2, 2, false, "12h34")).toBeNull(); // barriers are optional suffixes
+    expect(verdict(2, 2, true, "1v2h3v4h")).toBeNull();
+    expect(verdict(2, 2, true, "1vh234")).toBeNull();
+    expect(verdict(2, 2, false, "123")).toBe(DESC_TOO_SHORT);
+    expect(verdict(2, 2, false, "12345")).toBe(DESC_TOO_LONG);
+    expect(verdict(2, 2, false, "12z4")).toBe(descBadCharacter("z"));
+    expect(verdict(2, 2, false, "12h3")).toBe(DESC_TOO_SHORT);
+  });
+
+  it("refuses what the encoder never writes", () => {
+    expect(verdict(2, 2, false, "12A4")).toBe(descBadCharacter("A"));
+    // At most one of each marker, `v` before `h`.
+    expect(verdict(2, 2, false, "1vv234")).toBe(descBadCharacter("v"));
+    expect(verdict(2, 2, false, "1hv234")).toBe(descBadCharacter("v"));
+    // A non-wrapping grid's border is implied, so no tile names it.
+    expect(verdict(2, 2, false, "12v34")).toBe(descBadCharacter("v"));
+    expect(verdict(2, 2, false, "123h4")).toBe(descBadCharacter("h"));
+    expect(verdict(2, 2, false, "1234h")).toBe(DESC_TOO_LONG);
   });
 
   it("reads tiles row-major as hex", () => {
-    const { tiles } = parseWireDesc(3, 2, "12345a");
+    const { tiles } = descValue(parseWireDesc(3, 2, false, "12345a"));
     expect([...tiles]).toEqual([1, 2, 3, 4, 5, 10]);
   });
 
   it("records a barrier on both sides of the wall it names", () => {
     // `v` is a wall to the right of its tile, `h` a wall below it.
-    const { barriers } = parseWireDesc(2, 2, "1v234");
+    const { barriers } = descValue(parseWireDesc(2, 2, false, "1v234"));
     expect(barriers[0] & R).toBeTruthy();
     expect(barriers[1] & L).toBeTruthy(); // its neighbor sees the same wall
     expect(barriers[0] & D).toBeFalsy();
@@ -188,8 +207,7 @@ describe("the description codec", () => {
     barriers[1 * w + 1] |= U;
 
     const desc = encodeWireDesc(tiles, barriers, w, h, false);
-    expect(validateWireDesc(w, h, desc)).toBeNull();
-    const back = parseWireDesc(w, h, desc);
+    const back = descValue(parseWireDesc(w, h, false, desc));
     expect([...back.tiles]).toEqual([...tiles]);
     expect([...back.barriers]).toEqual([...barriers]);
   });

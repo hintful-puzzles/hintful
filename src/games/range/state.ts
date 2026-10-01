@@ -11,12 +11,13 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import {
-  DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
@@ -126,11 +127,6 @@ export function validateParams(p: RangeParams, full: boolean): string | null {
 
 const A = "a".charCodeAt(0);
 
-/** One desc token: a letter is a run of that many blanks (`a` = 1 … `z` =
- * 26), a digit run is one clue, and any other single character is `_` (which
- * separates two adjacent clues) or garbage. */
-const DESC_TOKEN = /([a-z])|([1-9]\d*)|./gs;
-
 /** Encode a clue grid (clue cells > 0, blanks 0) into upstream's run-length
  * desc, as `newdesc_encode_game_description` writes it. */
 export function encodeDesc(area: number, grid: Int8Array | number[]): string {
@@ -154,36 +150,42 @@ export function encodeDesc(area: number, grid: Int8Array | number[]): string {
   return desc;
 }
 
-export function validateDesc(p: RangeParams, desc: string): DescError | null {
+/** Whether `c` is a run letter: `a`–`z` for 1–26 blanks. */
+function isRunLetter(c: string): boolean {
+  return c >= "a" && c <= "z";
+}
+
+/** Read the clue grid {@link encodeDesc} writes: clues `1..w+h-1`, run
+ * letters, and a `_` exactly between two adjacent clues. */
+function parseDesc(p: RangeParams, desc: string): DescParse<Int8Array> {
   const n = p.w * p.h;
   const maxClue = p.w + p.h - 1;
-  let squares = 0;
-  for (const [token, blanks, clue] of desc.matchAll(DESC_TOKEN)) {
-    if (token === ",") break;
-    if (blanks) {
-      squares += blanks.charCodeAt(0) - A + 1;
-    } else if (clue) {
-      if (Number(clue) > maxClue) return DESC_OUT_OF_RANGE;
-      squares++;
-    } else if (token !== "_") {
-      return descBadCharacter(token);
+  return readDesc(desc, (r) => {
+    const grid = new Int8Array(n); // all EMPTY (0)
+    let i = 0;
+    let afterClue = false;
+    while (i < n) {
+      if (r.peekIs(isRunLetter)) {
+        i += r.char().charCodeAt(0) - A + 1;
+        if (i > n) r.fail(DESC_TOO_LONG);
+        afterClue = false;
+      } else {
+        if (afterClue) r.expect("_");
+        grid[i++] = r.int(1, maxClue);
+        afterClue = true;
+      }
     }
-  }
-  if (squares < n) return DESC_TOO_SHORT;
-  if (squares > n) return DESC_TOO_LONG;
-  return null;
+    r.end();
+    return grid;
+  });
+}
+
+export function validateDesc(p: RangeParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: RangeParams, desc: string): RangeState {
-  const n = p.w * p.h;
-  const grid = new Int8Array(n); // all EMPTY (0)
-  let i = 0;
-  for (const [, blanks, clue] of desc.matchAll(DESC_TOKEN)) {
-    if (i >= n) break;
-    if (blanks) i += blanks.charCodeAt(0) - A + 1;
-    else if (clue) grid[i++] = Number(clue);
-  }
-  return { w: p.w, h: p.h, grid };
+  return { w: p.w, h: p.h, grid: descValue(parseDesc(p, desc)) };
 }
 
 export function cloneState(s: RangeState): RangeState {

@@ -6,12 +6,12 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import {
-  DESC_MALFORMED,
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import {
   dimensionParamConfig,
   type Game,
@@ -44,13 +44,13 @@ import {
   redraw,
 } from "./render.ts";
 import {
-  decodeBitmap,
   encodeBitmap,
   type FlipMove,
   type FlipParams,
   type FlipState,
   type FlipUi,
   type MatrixType,
+  readBitmap,
 } from "./state.ts";
 
 export type { FlipMove, FlipParams, FlipState, FlipUi };
@@ -106,6 +106,23 @@ const targetVerbs: TargetVerbs<FlipState, FlipUi, FlipDrawState, Point, FlipMove
   geometry: squareGrid({ size: (s) => s, border }),
   primary: { does: "flip it and some of its neighbors", apply: flipAt },
 };
+
+// --- desc -----------------------------------------------------------
+
+/** The toggle matrix, then the starting lights: two hex bitmaps, comma-separated. */
+function parseDesc(
+  p: FlipParams,
+  desc: string,
+): DescParse<{ matrix: Uint8Array; grid: Uint8Array }> {
+  const wh = p.w * p.h;
+  return readDesc(desc, (r) => {
+    const matrix = readBitmap(r, wh * wh);
+    r.expect(",");
+    const grid = readBitmap(r, wh);
+    r.end();
+    return { matrix, grid };
+  });
+}
 
 // --- the Game -------------------------------------------------------
 
@@ -175,35 +192,14 @@ export const flipGame: Game<FlipParams, FlipState, FlipMove, FlipUi, FlipDrawSta
   },
 
   validateDesc(p, desc): DescError | null {
-    const wh = p.w * p.h;
-    const mlen = (wh * wh + 3) >> 2;
-    const glen = (wh + 3) >> 2;
-    const nonHex = (s: string) => /[^0-9a-fA-F]/.exec(s)?.[0] ?? null;
-    const m = desc.slice(0, mlen);
-    const mBad = nonHex(m);
-    if (mBad !== null) return descBadCharacter(mBad);
-    if (m.length < mlen) return DESC_TOO_SHORT;
-    if (desc[mlen] === undefined) return DESC_TOO_SHORT;
-    if (desc[mlen] !== ",") return DESC_MALFORMED;
-    const g = desc.slice(mlen + 1);
-    const gBad = nonHex(g.slice(0, glen));
-    if (gBad !== null) return descBadCharacter(gBad);
-    if (g.length < glen) return DESC_TOO_SHORT;
-    if (g.length !== glen) return DESC_TOO_LONG;
-    return null;
+    return descVerdict(parseDesc(p, desc));
   },
 
   newState(p, desc): FlipState {
-    const { w, h } = p;
-    const wh = w * h;
-    const mlen = (wh * wh + 3) >> 2;
-    const matrix = new Uint8Array(wh * wh);
-    const grid = new Uint8Array(wh);
-    decodeBitmap(matrix, wh * wh, desc);
-    decodeBitmap(grid, wh, desc.slice(mlen + 1));
+    const { matrix, grid } = descValue(parseDesc(p, desc));
     return {
-      w,
-      h,
+      w: p.w,
+      h: p.h,
       matrix,
       grid,
       moves: 0,

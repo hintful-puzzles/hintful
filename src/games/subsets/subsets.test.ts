@@ -9,10 +9,11 @@
 import { describe, expect, it } from "vitest";
 import {
   DESC_CONTRADICTORY,
-  DESC_MALFORMED,
   DESC_OUT_OF_RANGE,
+  DESC_REPEATED,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
+  descBadCharacter,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
@@ -200,19 +201,23 @@ describe("subsets desc codec", () => {
     expect(encodeDesc(played)).toBe(FIX.desc);
   });
 
-  it("rejects each malformed desc with the kind of its upstream check", () => {
+  it("rejects each malformed desc with the kind of what went wrong", () => {
     const blanks = (k: number): string =>
       Array.from({ length: k }, () => "_").join(",");
     expect(validateDesc(PARAMS, `${blanks(17)}`)).toBe(DESC_TOO_LONG);
     expect(validateDesc(PARAMS, `16,${blanks(15)}`)).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(PARAMS, `x,${blanks(15)}`)).toBe(DESC_MALFORMED);
-    expect(validateDesc(PARAMS, "1 2")).toBe(DESC_MALFORMED);
-    // "Not enough data" needs a trailing comma — otherwise the missing
-    // separator is detected first (upstream quirk, reproduced).
-    expect(validateDesc(PARAMS, "1")).toBe(DESC_MALFORMED);
+    expect(validateDesc(PARAMS, `x,${blanks(15)}`)).toBe(descBadCharacter("x"));
+    expect(validateDesc(PARAMS, "1 2")).toBe(descBadCharacter(" "));
+    expect(validateDesc(PARAMS, "1")).toBe(DESC_TOO_SHORT);
     expect(validateDesc(PARAMS, "1,2,")).toBe(DESC_TOO_SHORT);
     expect(validateDesc(PARAMS, `0U,${blanks(15)}`)).toBe(DESC_OUT_OF_RANGE);
     expect(validateDesc(PARAMS, `0R,1L,${blanks(14)}`)).toBe(DESC_CONTRADICTORY);
+    // Forms the encoder never writes: a trailing comma, an arrow twice or out
+    // of order, and a set given twice.
+    expect(validateDesc(PARAMS, `${blanks(16)},`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(PARAMS, `_DD,${blanks(15)}`)).toBe(descBadCharacter("D"));
+    expect(validateDesc(PARAMS, `_DR,${blanks(15)}`)).toBe(descBadCharacter("R"));
+    expect(validateDesc(PARAMS, `3,3,${blanks(14)}`)).toBe(DESC_REPEATED);
   });
 });
 
@@ -228,9 +233,13 @@ describe("subsets solver", () => {
   });
 
   it("reports invalid for a board with duplicated givens", () => {
-    // All sixteen cells given, value 0 twice, value 15 missing.
-    const tokens = Array.from({ length: 16 }, (_, i) => (i === 15 ? "0" : String(i)));
+    // All sixteen cells given, value 0 twice, value 15 missing. No desc says
+    // that, so the last given is planted on the state.
+    const tokens = Array.from({ length: 16 }, (_, i) => (i === 15 ? "_" : String(i)));
     const state = newState(PARAMS, tokens.join(","));
+    state.known[15] = 0;
+    state.mask[15] = 0;
+    state.immutable[15] = 15;
     expect(subsetsSolveGame(state, DIFF_EASY)).toBe("invalid");
   });
 

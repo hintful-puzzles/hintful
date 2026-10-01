@@ -18,11 +18,12 @@
  * harness that captured it are gone (see `engine/testing/differential.ts`).
  */
 import { expect } from "vitest";
+import { descValue } from "../../engine/desc-error.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/rome-c-reference.json" with { type: "json" };
 import { newRomeDesc } from "./generator.ts";
-import { romeSolve, validateDesc } from "./solver.ts";
-import { DIFFCOUNT, type RomeParams, readDesc, STATUS_COMPLETE } from "./state.ts";
+import { parseDesc, romeSolve, validateDesc } from "./solver.ts";
+import { DIFFCOUNT, type RomeParams, STATUS_COMPLETE } from "./state.ts";
 
 interface Fixture {
   w: number;
@@ -42,7 +43,7 @@ const data = cReference as { fixtures: Fixture[] };
 /** Lowest tier at which the TS solver finishes the board. */
 function grade(p: RomeParams, desc: string): number {
   for (let d = 0; d < DIFFCOUNT; d++) {
-    const { board } = readDesc(p, desc);
+    const board = descValue(parseDesc(p, desc));
     if (romeSolve(board, d) === STATUS_COMPLETE) return d;
   }
   return -1;

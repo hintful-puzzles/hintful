@@ -18,15 +18,17 @@
  * about whole sets that no letter mark can say (`add-subsets-notation`).
  */
 
-import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import { parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_CONTRADICTORY,
-  DESC_MALFORMED,
   DESC_OUT_OF_RANGE,
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
+  DESC_REPEATED,
   type DescError,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -236,69 +238,53 @@ export function cloneState(s: SubsetsState): SubsetsState {
 // --- desc codec (byte-match surface) ----------------------------------------
 
 /**
- * Load a desc into a blank state (upstream `attempt_load_game`): one token
- * per cell in row-major order, comma-separated — a decimal set number for a
- * given or `_` for a blank, then any of `U`/`R`/`D`/`L` arrow markers — with
- * upstream's checks, including the post-load whole-grid arrow checks (off-grid
- * and mutually contradicting flags).
+ * What {@link encodeDesc} writes: one token per cell in row-major order,
+ * comma-separated — a set number for a given or `_` for a blank, then its
+ * arrow letters, each at most once and in {@link ADJTHAN}'s order — with
+ * upstream's whole-grid arrow checks (off-grid and mutually contradicting
+ * flags). Each set fills one cell, so no given repeats.
  */
-function attemptLoadGame(state: SubsetsState, desc: string): DescError | null {
-  const { w, h, n } = state;
-  let i = 0;
-  let p = 0;
-  while (p < desc.length) {
-    if (i >= w * h) return DESC_TOO_LONG;
-
-    if (isDigit(desc[p])) {
-      const { value: num, next } = parseLeadingInt(desc, p);
-      if (num > ALL_BITS(n)) return DESC_OUT_OF_RANGE;
-      state.known[i] = num;
-      state.mask[i] = num;
-      state.immutable[i] = ALL_BITS(n);
-      p = next;
-    } else if (desc[p] === "_") {
-      p++;
-    } else {
-      return DESC_MALFORMED;
+function parseDesc(p: SubsetsParams, desc: string): DescParse<SubsetsState> {
+  return readDesc(desc, (r) => {
+    const state = blankState(p);
+    const { w, h, n } = state;
+    const given = new Set<number>();
+    for (let i = 0; i < w * h; i++) {
+      if (i > 0) r.expect(",");
+      if (!r.accept("_")) {
+        const num = r.int(0, ALL_BITS(n));
+        if (given.has(num)) r.fail(DESC_REPEATED);
+        given.add(num);
+        state.known[i] = num;
+        state.mask[i] = num;
+        state.immutable[i] = ALL_BITS(n);
+      }
+      for (const dir of ADJTHAN) if (r.accept(dir.enc)) state.clues[i] |= dir.f;
     }
+    r.end();
 
-    for (;;) {
-      const dir = ADJTHAN.find((a) => a.enc === desc[p]);
-      if (!dir) break;
-      state.clues[i] |= dir.f;
-      p++;
-    }
-    i++;
-    if (i < w * h && desc[p] !== ",") return DESC_MALFORMED;
-    if (desc[p] === ",") p++;
-  }
-  if (i < w * h) return DESC_TOO_SHORT;
-
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      for (let d = 0; d < 4; d++) {
-        if (!(state.clues[y * w + x] & ADJTHAN[d].f)) continue;
-        const nx = x + ADJTHAN[d].dx;
-        const ny = y + ADJTHAN[d].dy;
-        if (nx < 0 || ny < 0 || nx >= w || ny >= h) return DESC_OUT_OF_RANGE;
-        if (state.clues[ny * w + nx] & ADJTHAN[d].fo) return DESC_CONTRADICTORY;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        for (const dir of ADJTHAN) {
+          if (!(state.clues[y * w + x] & dir.f)) continue;
+          const nx = x + dir.dx;
+          const ny = y + dir.dy;
+          if (nx < 0 || ny < 0 || nx >= w || ny >= h) r.fail(DESC_OUT_OF_RANGE);
+          if (state.clues[ny * w + nx] & dir.fo) r.fail(DESC_CONTRADICTORY);
+        }
       }
     }
-  }
-
-  return null;
+    return state;
+  });
 }
 
 export function validateDesc(p: SubsetsParams, desc: string): DescError | null {
-  return attemptLoadGame(blankState(p), desc);
+  return descVerdict(parseDesc(p, desc));
 }
 
 /** Decode a validated desc into a fresh state (upstream `new_game`). */
 export function newState(p: SubsetsParams, desc: string): SubsetsState {
-  const state = blankState(p);
-  const err = attemptLoadGame(state, desc);
-  if (err) throw new Error(`subsets: invalid desc: ${err}`);
-  return state;
+  return descValue(parseDesc(p, desc));
 }
 
 /**

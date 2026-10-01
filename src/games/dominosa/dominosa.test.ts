@@ -3,7 +3,13 @@
  * Heavy generation/solve is seed-fixed, never clock-gated (docs/games/testing.md § "Seed-deterministic, never clock-gated").
  */
 import { describe, expect, it } from "vitest";
-import { puzzleDescError } from "../../engine/desc-error.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+  puzzleDescError,
+} from "../../engine/desc-error.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
@@ -95,6 +101,23 @@ describe("dominosa desc codec", () => {
         "This game ID's numbers can't be the halves of one full set of dominoes.",
       ),
     );
+  });
+
+  it("reads a number the way the encoder writes it, and nothing else", () => {
+    // A 3×2 grid (n=1): three 0s and three 1s.
+    const p = { n: 1, diff: DIFF_TRIVIAL, tall: false };
+    expect(validateDesc(p, "000111")).toBeNull();
+    expect(validateDesc(p, "000[1]11")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, "00011x")).toBe(descBadCharacter("x"));
+    expect(validateDesc(p, "000112")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, "0001111")).toBe(DESC_TOO_LONG);
+    // n=10: 10 is bracketed, and the bracket must close.
+    const q = { n: 10, diff: DIFF_TRIVIAL, tall: false };
+    expect(validateDesc(q, "[10")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(q, "[10)")).toBe(descBadCharacter(")"));
+    expect(validateDesc(q, "[]")).toBe(descBadCharacter("]"));
+    expect(validateDesc(q, "[11]")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(q, "[5]")).toBe(DESC_OUT_OF_RANGE);
   });
 });
 

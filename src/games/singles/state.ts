@@ -1,10 +1,12 @@
 import { c2n, DESC_ALPHABET_SIZE, n2c } from "../../engine/desc-alphabet.ts";
 import {
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
+  DESC_OUT_OF_RANGE,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
@@ -141,30 +143,28 @@ export function cloneState(s: SinglesState): SinglesState {
 
 // --- desc codec ------------------------------------------------------------
 
-export function validateDesc(p: SinglesParams, desc: string): DescError | null {
+/** One number per cell in reading order, each one desc-alphabet character. */
+function parseDesc(p: SinglesParams, desc: string): DescParse<Int8Array> {
   const n = p.w * p.h;
   const o = Math.max(p.w, p.h);
-  if (desc.length < n) return DESC_TOO_SHORT;
-  if (desc.length > n) return DESC_TOO_LONG;
-  for (let i = 0; i < n; i++) {
-    const num = c2n(desc[i]);
-    if (num === null || num <= 0 || num > o) return descBadCharacter(desc[i]);
-  }
-  return null;
+  return readDesc(desc, (r) => {
+    const nums = new Int8Array(n);
+    for (let i = 0; i < n; i++) {
+      const num = c2n(r.char((c) => c2n(c) !== null)) ?? 0;
+      if (num < 1 || num > o) r.fail(DESC_OUT_OF_RANGE);
+      nums[i] = num;
+    }
+    r.end();
+    return nums;
+  });
+}
+
+export function validateDesc(p: SinglesParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: SinglesParams, desc: string): SinglesState {
-  const n = p.w * p.h;
-  const nums = new Int8Array(n);
-  for (let i = 0; i < n; i++) {
-    // Every Singles cell holds a number, so there is no absent value to write:
-    // a character `validateDesc` would have rejected is refused here too.
-    const num = c2n(desc[i]);
-    if (num === null)
-      throw new Error("Game description contains unexpected characters");
-    nums[i] = num;
-  }
-  return makeState(p.w, p.h, nums);
+  return makeState(p.w, p.h, descValue(parseDesc(p, desc)));
 }
 
 export function encodeDesc(s: SinglesState): string {

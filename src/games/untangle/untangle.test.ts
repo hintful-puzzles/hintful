@@ -8,6 +8,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { DESC_REPEATED, DESC_TOO_SHORT, descValue } from "../../engine/desc-error.ts";
 import { Midend, UI_UPDATE } from "../../engine/index.ts";
 import { presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -19,9 +20,9 @@ import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { untangleGame } from "./index.ts";
 import {
   cross,
-  decodeGame,
   findCrossings,
   parseAux,
+  parseDesc,
   type RationalPoint,
   type UntangleMove,
 } from "./state.ts";
@@ -108,6 +109,17 @@ describe("params", () => {
   });
 });
 
+describe("desc", () => {
+  it("refuses a repeated edge and a board with no edges", () => {
+    const p = { n: 4 };
+    expect(untangleGame.validateDesc(p, "0-1,1-2,2-3")).toBeNull();
+    expect(untangleGame.validateDesc(p, "0-1,1-2,0-1")).toBe(DESC_REPEATED);
+    expect(untangleGame.validateDesc(p, "0-1,1-2,1-0")).toBe(DESC_REPEATED);
+    expect(untangleGame.validateDesc(p, "")).toBe(DESC_TOO_SHORT);
+    expect(untangleGame.validateDesc(p, "0-1,")).toBe(DESC_TOO_SHORT);
+  });
+});
+
 describe("generation invariants", () => {
   for (const n of [6, 10, 15, 20]) {
     it(`n=${n}: planar solution, degree ≤ 4, starts tangled`, () => {
@@ -117,7 +129,7 @@ describe("generation invariants", () => {
           randomNew(`gen-${n}-${seed}`),
         );
         expect(aux).toBeDefined();
-        const edges = decodeGame(desc, n);
+        const edges = descValue(parseDesc({ n }, desc));
 
         // Degree cap: every vertex has at most MAXDEGREE = 4 edges.
         const degree = new Array<number>(n).fill(0);

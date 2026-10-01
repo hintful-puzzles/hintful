@@ -9,13 +9,19 @@
  * every test runs against a real upstream puzzle without generating one.
  */
 import { describe, expect, it } from "vitest";
-import { descBadCharacter } from "../../engine/desc-error.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
+import { Dsf } from "../../engine/dsf.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/pointer.ts";
-import { randomNew, randomUpto } from "../../engine/random/index.ts";
+import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import {
@@ -23,6 +29,7 @@ import {
   RecordingDrawing,
 } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { encodeRegionWalls } from "../../engine/wall-runs.ts";
 import cReference from "./__fixtures__/seismic-c-reference.json" with { type: "json" };
 import { maxGeneratedRegionSize, maxRegionSize, newSeismicDesc } from "./generator.ts";
 import { seismicGame } from "./index.ts";
@@ -49,7 +56,6 @@ import {
 } from "./solver.ts";
 import {
   areaBits,
-  borderCount,
   CLUE_TOO_LARGE,
   cloneState,
   DIFF_EASY,
@@ -58,7 +64,6 @@ import {
   decodeParams,
   encodeDesc,
   encodeParams,
-  encodeWalls,
   FM_ERRORDIST,
   FM_ERRORDUP,
   FM_FIXED,
@@ -249,46 +254,6 @@ describe("seismic params", () => {
 
 // --- description codec -----------------------------------------------------
 
-/** A decoder written strictly to the C's reading rules, so the encoder is
- * checked against upstream's grammar rather than against itself. */
-function decodeWallsAsC(s: string, ws: number): number[] {
-  const walls: number[] = [];
-  let at = 0;
-  let erun = 0;
-  let wrun = 0;
-  for (let i = 0; i < ws; i++) {
-    if (erun === 0 && wrun === 0) {
-      const c = s[at];
-      if (c >= "0" && c <= "9") {
-        let j = at;
-        while (j < s.length && s[j] >= "0" && s[j] <= "9") j++;
-        wrun = Number.parseInt(s.slice(at, j), 10);
-        at = j;
-      } else if (c >= "a" && c <= "y") {
-        // A letter is a gap run *and* the wall that ends it.
-        erun = c.charCodeAt(0) - 0x61 + 1;
-        wrun = 1;
-        at++;
-      } else if (c === "z") {
-        erun = 26;
-        at++;
-      } else {
-        throw new Error(`invalid wall character ${JSON.stringify(c)} in "${s}"`);
-      }
-    }
-    if (erun > 0) {
-      walls.push(0);
-      erun--;
-    } else if (wrun > 0) {
-      walls.push(1);
-      wrun--;
-    } else {
-      walls.push(0);
-    }
-  }
-  return walls;
-}
-
 describe("seismic description codec", () => {
   it("re-encodes every C description to itself", () => {
     for (const f of FIXTURES) {
@@ -297,59 +262,31 @@ describe("seismic description codec", () => {
     }
   });
 
-  it("emits exactly the C's characters for ordinary short runs", () => {
-    // 'a' = one gap then a wall; a digit run is that many walls.
-    expect(encodeWalls([0, 1, 1, 0, 0, 1], 6)).toBe("a1b");
-    expect(encodeWalls([1, 1, 1], 3)).toBe("3");
-    expect(encodeWalls([0, 0, 0], 3)).toBe("c");
-    expect(encodeWalls([0, 1, 0, 1], 4)).toBe("aa");
-  });
-
-  it("round-trips gap runs of 26 and more, which the C's own writer loses", () => {
-    // Upstream writes a gap run as a bare `'a' + run - 1`, so a run of exactly
-    // 26 becomes 'z' — which its own reader takes as "26 gaps and NO wall",
-    // dropping one — and a longer run leaves the alphabet entirely. This port
-    // chunks in 'z' units instead (state.ts, `encodeWalls`).
-    for (const walls of [
-      [...Array(26).fill(0), 1, 1, 0, 0],
-      [...Array(27).fill(0), 1],
-      [...Array(30).fill(0), 1, 0],
-      [...Array(52).fill(0), 1],
-      Array(26).fill(0),
-      Array(60).fill(0),
-    ]) {
-      const encoded = encodeWalls(walls, walls.length);
-      expect(
-        [...encoded].every((c) => c >= "a" && c <= "z") || /\d/.test(encoded),
-      ).toBe(true);
-      expect(decodeWallsAsC(encoded, walls.length)).toEqual(walls);
-    }
-  });
-
-  it("round-trips random wall patterns", () => {
-    const rng = randomNew("wall-codec");
-    for (let k = 0; k < 300; k++) {
-      const n = 4 + randomUpto(rng, 80);
-      // A biased coin, so both long gap runs and long wall runs occur.
-      const wallOdds = 1 + randomUpto(rng, 9);
-      const walls: number[] = [];
-      for (let i = 0; i < n; i++) walls.push(randomUpto(rng, 10) < wallOdds ? 1 : 0);
-      expect(decodeWallsAsC(encodeWalls(walls, n), n)).toEqual(walls);
-    }
-  });
-
-  it("counts border positions as horizontal-then-vertical", () => {
-    expect(borderCount(4, 4)).toBe(3 * 4 + 4 * 3);
-    expect(borderCount(7, 4)).toBe(6 * 4 + 7 * 3);
-  });
-
   it("reports upstream's three rejection reasons", () => {
     const p = paramsOf(SMALL);
     expect(validateDesc(p, "!!!,d4c1f3")).toBe(descBadCharacter("!"));
-    // No walls at all: one region of 16 cells, far larger than 9.
-    expect(validateDesc(p, "zz,p")).toBe(REGION_TOO_LARGE);
+    // No walls at all: one region of 16 cells, far larger than 9. The 24
+    // borders are one letter's gaps, its wall falling off the end.
+    expect(validateDesc(p, "x,p")).toBe(REGION_TOO_LARGE);
     // A clue bigger than the region that holds it.
     expect(validateDesc(p, `${SMALL.desc.split(",")[0]},9o`)).toBe(CLUE_TOO_LARGE);
+  });
+
+  it("refuses a clue grid that is not exactly what the encoder writes", () => {
+    const p = paramsOf(SMALL);
+    const walls = SMALL.desc.split(",")[0];
+    expect(validateDesc(p, `${walls},p`)).toBeNull();
+    // Cut short, a run past the sixteen cells, and anything after them.
+    expect(validateDesc(p, `${walls},o`)).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, `${walls}`)).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, `${walls},q`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, `${walls},p,`)).toBe(DESC_TOO_LONG);
+    // A zero, and a character that is neither a run nor a digit.
+    expect(validateDesc(p, `${walls},0o`)).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, `${walls},!o`)).toBe(descBadCharacter("!"));
+    // A wall list that runs past the 24 borders.
+    expect(validateDesc(p, "zz,p")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, "25,p")).toBe(DESC_OUT_OF_RANGE);
   });
 });
 
@@ -1100,16 +1037,10 @@ describe("seismic rendering", () => {
     // is hand-built through the same codec the generator writes.
     const p: SeismicParams = { w: 4, h: 4, diff: DIFF_EASY, mode: MODE_SEISMIC };
     // Cells 0..8 in one nine-cell region, 9..15 in the rest.
-    const walls = new Uint8Array(borderCount(4, 4));
-    const region = (i: number) => (i <= 8 ? 0 : 1);
-    let at = 0;
-    for (let y = 0; y < 4; y++)
-      for (let x = 0; x < 3; x++)
-        walls[at++] = region(y * 4 + x) === region(y * 4 + x + 1) ? 0 : 1;
-    for (let y = 0; y < 3; y++)
-      for (let x = 0; x < 4; x++)
-        walls[at++] = region(y * 4 + x) === region((y + 1) * 4 + x) ? 0 : 1;
-    const desc = `${encodeWalls(walls, walls.length)},p`;
+    const regions = new Dsf(16);
+    for (let i = 1; i <= 8; i++) regions.merge(0, i);
+    for (let i = 10; i < 16; i++) regions.merge(9, i);
+    const desc = `${encodeRegionWalls(regions, 4, 4)},p`;
     expect(validateDesc(p, desc)).toBeNull();
     expect(newState(p, desc).dsf.size(0)).toBe(9);
 

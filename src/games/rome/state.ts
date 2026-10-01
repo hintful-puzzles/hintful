@@ -32,12 +32,8 @@ import type {
   Mark,
   NoteEncoding,
 } from "../../engine/candidate-hint.ts";
-import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
-import {
-  DESC_TOO_SHORT,
-  type DescError,
-  descBadCharacter,
-} from "../../engine/desc-error.ts";
+import { DESC_TOO_LONG } from "../../engine/desc-error.ts";
+import type { DescReader } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
@@ -45,6 +41,11 @@ import type { CellRegion } from "../../engine/latin-hint.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
+import {
+  encodeRegionWalls,
+  gapLetters,
+  readRegionWalls,
+} from "../../engine/wall-runs.ts";
 
 // --- cell bit-field (upstream values, verbatim) -----------------------------
 
@@ -373,12 +374,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 // --- board helpers ----------------------------------------------------------
 
-/** Number of inter-cell edges: `(w-1)*h` horizontal, then `w*(h-1)` vertical —
- * the order the desc's wall list uses. */
-function wallCount(w: number, h: number): number {
-  return (w - 1) * h + w * (h - 1);
-}
-
 export function newBoard(w: number, h: number): RomeState {
   const s = w * h;
   return {
@@ -419,7 +414,7 @@ export function boardFromClues(s: RomeState): RomeState {
   return { ...newBoard(s.w, s.h), regions: s.regions, grid };
 }
 
-// --- desc codec (byte-match surface) ----------------------------------------
+// --- desc codec -------------------------------------------------------------
 
 const CODE_a = "a".charCodeAt(0);
 
@@ -432,103 +427,42 @@ const CLUE_BITS: Readonly<Record<string, number>> = {
   X: FM_GOAL,
 };
 
+function isClueChar(c: string): boolean {
+  return (c >= "a" && c <= "z") || c in CLUE_BITS;
+}
+
 /**
- * Decode a description into a board — upstream `rome_read_desc`, the inverse
- * of {@link encodeDesc}.
- *
- * Part 1 is a run-length list over the `(w-1)*h + w*(h-1)` inter-cell edges: a
- * decimal number is a run of that many walls; a letter `a`–`y` is a run of
- * 1–25 non-walls *followed by one wall*; `z` is 26 non-walls with no trailing
- * wall. Part 2, after the `,`, run-length encodes the clue grid: a letter is a
- * run of empty squares, and `U`/`D`/`L`/`R`/`X` are fixed arrows and goals.
- *
- * Returns the codec's own rejection message alongside the board, for
- * {@link validateDesc}. Invalid input is decoded as far as it goes rather than
- * throwing, exactly as the C does.
+ * Read a description's board — upstream `rome_read_desc`, the inverse of
+ * {@link encodeDesc}: the region layout as a wall list (`wall-runs.ts`), a
+ * `,`, then the clue grid, where a letter is a run of empty squares (`a` = 1,
+ * `z` = 26) and `U`/`D`/`L`/`R`/`X` are fixed arrows and goals. The clue grid
+ * covers the board exactly.
  */
-export function readDesc(
-  p: RomeParams,
-  desc: string,
-): { board: RomeState; error: DescError | null } {
+export function readBoard(r: DescReader, p: RomeParams): RomeState {
   const { w, h } = p;
   const s = w * h;
-  const hs = (w - 1) * h;
-  const ws = wallCount(w, h);
   const board = newBoard(w, h);
-  const { grid, regions } = board;
-  const walls = new Uint8Array(ws);
-  let error: DescError | null = null;
-
-  let pos = 0;
-  let erun = 0;
-  let wrun = 0;
-  for (let i = 0; i < ws; i++) {
-    if (erun === 0 && wrun === 0) {
-      const ch = desc[pos] ?? "";
-      if (isDigit(ch)) {
-        const r = parseLeadingInt(desc, pos);
-        wrun = r.value;
-        pos = r.next;
-      } else if (ch >= "a" && ch <= "y") {
-        erun = ch.charCodeAt(0) - CODE_a + 1;
-        wrun = 1;
-        pos++;
-      } else if (ch === "z") {
-        erun = 26;
-        pos++;
-      } else {
-        error = ch === "" ? DESC_TOO_SHORT : descBadCharacter(ch);
-      }
+  readRegionWalls(r, board.regions, w, h);
+  r.expect(",");
+  for (let i = 0; i < s; ) {
+    const c = r.char(isClueChar);
+    const clue: number | null = CLUE_BITS[c] ?? null;
+    if (clue !== null) {
+      board.grid[i++] = clue | FM_FIXED;
+      continue;
     }
-    if (erun > 0) {
-      walls[i] = 0;
-      erun--;
-    } else if (wrun > 0) {
-      walls[i] = 1;
-      wrun--;
-    }
+    const run = c.charCodeAt(0) - CODE_a + 1;
+    if (run > s - i) r.fail(DESC_TOO_LONG);
+    i += run;
   }
-
-  // Merge horizontally, then vertically — the same order the encoder walks,
-  // which is also what fixes the union-by-size roots the solver's naked-pairs
-  // rule reads as an element (see solver.ts).
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w - 1; x++) {
-      if (!walls[y * (w - 1) + x]) regions.merge(y * w + x, y * w + x + 1);
-    }
-  }
-  for (let y = 0; y < h - 1; y++) {
-    for (let x = 0; x < w; x++) {
-      if (!walls[hs + y * w + x]) regions.merge(y * w + x, (y + 1) * w + x);
-    }
-  }
-
-  pos++; // the ',' separator
-  erun = 0;
-  for (let i = 0; i < s; i++) {
-    if (erun === 0) {
-      const c = desc[pos++] ?? "";
-      const clue: number | null = CLUE_BITS[c] ?? null;
-      if (c >= "a" && c <= "z") erun = c.charCodeAt(0) - CODE_a + 1;
-      else if (clue !== null) grid[i] = clue | FM_FIXED;
-      else error = c === "" ? DESC_TOO_SHORT : descBadCharacter(c);
-    }
-    if (erun > 0) erun--; // an empty square
-  }
-
-  return { board, error };
+  return board;
 }
 
 /**
  * Encode a finished board as a description — upstream's `new_game_desc` tail,
- * the inverse of {@link readDesc}.
- *
- * One upstream asymmetry is kept deliberately: a run of exactly 26 non-walls
- * encodes as `z` *and consumes the wall that follows it*, whereas the reader
- * takes `z` as 26 non-walls with **no** trailing wall (and a longer run leaves
- * the alphabet entirely). The two disagree only above 25 consecutive
- * non-walls. Reproduce both sides verbatim rather than "completing" either
- * (docs/games/testing.md § "Byte-match: fidelity where there is a right answer").
+ * the inverse of {@link readBoard}. A run of 26 or more empty squares is
+ * written as `z`s and a remainder, which is how the reader takes it; upstream
+ * wrote a single letter past `z`.
  */
 export function encodeDesc(
   w: number,
@@ -536,54 +470,17 @@ export function encodeDesc(
   regions: Dsf,
   grid: Int32Array,
 ): string {
-  const ws = wallCount(w, h);
-  const walls = new Uint8Array(ws);
-  let n = 0;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w - 1; x++) {
-      walls[n++] = regions.equivalent(y * w + x, y * w + x + 1) ? 0 : 1;
-    }
-  }
-  for (let y = 0; y < h - 1; y++) {
-    for (let x = 0; x < w; x++) {
-      walls[n++] = regions.equivalent(y * w + x, (y + 1) * w + x) ? 0 : 1;
-    }
-  }
-
-  let out = "";
+  let out = `${encodeRegionWalls(regions, w, h)},`;
   let erun = 0;
-  let wrun = 0;
-  for (let i = 0; i < ws; i++) {
-    if (!walls[i] && wrun > 0) {
-      out += String(wrun);
-      wrun = 0;
-      erun = 0;
-    } else if (walls[i] && erun > 0) {
-      out += String.fromCharCode(CODE_a + erun - 1);
-      erun = 0;
-      // The letter already accounts for this wall, so back the counter off by
-      // one and let the increment below bring it to zero (upstream's trick).
-      wrun = -1;
-    }
-    if (!walls[i]) erun++;
-    else wrun++;
-  }
-  if (wrun > 0) out += String(wrun);
-  if (erun > 0) out += String.fromCharCode(CODE_a + erun - 1);
-
-  out += ",";
-
-  erun = 0;
   for (let i = 0; i < w * h; i++) {
     const c = grid[i];
-    if (erun > 0 && c !== EMPTY) {
-      out += String.fromCharCode(CODE_a + erun - 1);
-      erun = 0;
+    if (c === EMPTY) {
+      erun++;
+      continue;
     }
+    out += gapLetters(erun);
+    erun = 0;
     for (const [ch, bit] of Object.entries(CLUE_BITS)) if (c & bit) out += ch;
-    if (c === EMPTY) erun++;
   }
-  if (erun > 0) out += String.fromCharCode(CODE_a + erun - 1);
-
-  return out;
+  return out + gapLetters(erun);
 }

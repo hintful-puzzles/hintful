@@ -4,6 +4,12 @@
  * a render-scenario snapshot in tents-render-scenario.test.ts.
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
@@ -29,7 +35,6 @@ import {
   checkCompletion,
   DIFF_EASY,
   DIFF_TRICKY,
-  decodeDesc,
   encodeDesc,
   encodeParams,
   executeMove,
@@ -81,7 +86,7 @@ describe("tents desc codec", () => {
     const p = { w: 8, h: 8, diff: DIFF_EASY };
     const { desc } = newTentsDesc(p, randomNew("codec-0"));
     expect(validateDesc(p, desc)).toBeNull();
-    const { grid, numbers } = decodeDesc(p, desc);
+    const { grid, numbers } = newState(p, desc);
     expect(encodeDesc(p.w, p.h, grid, numbers)).toBe(desc);
   });
 
@@ -90,6 +95,20 @@ describe("tents desc codec", () => {
     expect(validateDesc(p, "Q,0,0,0,0,0,0,0,0")).not.toBeNull(); // bad char
     expect(validateDesc(p, "_,0,0,0,0,0,0,0,0")).not.toBeNull(); // too little grid data
     expect(validateDesc(p, "zzza")).not.toBeNull(); // missing numbers
+  });
+
+  it("reads exactly what the encoder writes", () => {
+    const p = { w: 4, h: 4, diff: DIFF_EASY };
+    const zeros = ",0,0,0,0,0,0,0,0";
+    expect(validateDesc(p, `p${zeros}`)).toBeNull();
+    // Upstream's pre-placed tent, which the encoder never writes.
+    expect(validateDesc(p, `o_!${zeros}`)).toBe(descBadCharacter("!"));
+    expect(validateDesc(p, "p,0,0,,0,0,0,0,0")).toBe(descBadCharacter(","));
+    expect(validateDesc(p, "p,0,5,0,0,0,0,0,0")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, `q${zeros}`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, `z${zeros}`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, `p${zeros}x`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, "p,0,0")).toBe(DESC_TOO_SHORT);
   });
 });
 

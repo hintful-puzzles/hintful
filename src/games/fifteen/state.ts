@@ -1,12 +1,11 @@
 import {
-  DESC_MALFORMED,
-  DESC_OUT_OF_RANGE,
   DESC_REPEATED,
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
@@ -90,29 +89,30 @@ export function parityP(w: number, h: number, gap: number): number {
 
 // --- desc / state -----------------------------------------------------
 
+/** The tiles in reading order, `0` the gap, comma-separated. */
+function parseDesc(p: FifteenParams, desc: string): DescParse<Int32Array> {
+  const n = p.w * p.h;
+  return readDesc(desc, (r) => {
+    const tiles = new Int32Array(n);
+    const used = new Set<number>();
+    for (let i = 0; i < n; i++) {
+      if (i > 0) r.expect(",");
+      tiles[i] = r.int(0, n - 1);
+      if (used.has(tiles[i])) r.fail(DESC_REPEATED);
+      used.add(tiles[i]);
+    }
+    r.end();
+    return tiles;
+  });
+}
+
 export function validateDesc(p: FifteenParams, desc: string): DescError | null {
-  const area = p.w * p.h;
-  const parts = desc.split(",");
-  if (parts.length < area) return DESC_TOO_SHORT;
-  if (parts.length > area) return DESC_TOO_LONG;
-  const used = new Set<number>();
-  for (const part of parts) {
-    const notDigit = /\D/.exec(part);
-    if (notDigit) return descBadCharacter(notDigit[0]);
-    if (part === "") return DESC_MALFORMED;
-    const n = Number.parseInt(part, 10);
-    if (n < 0 || n >= area) return DESC_OUT_OF_RANGE;
-    if (used.has(n)) return DESC_REPEATED;
-    used.add(n);
-  }
-  return null;
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: FifteenParams, desc: string): FifteenState {
   const n = p.w * p.h;
-  const tiles = new Int32Array(n);
-  const parts = desc.split(",");
-  for (let i = 0; i < n; i++) tiles[i] = Number.parseInt(parts[i], 10);
+  const tiles = descValue(parseDesc(p, desc));
   return {
     w: p.w,
     h: p.h,

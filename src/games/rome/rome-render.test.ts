@@ -5,6 +5,8 @@
  * on `Ui` state a scenario cannot set (an in-flight drag, the keyboard mode).
  */
 import { describe, expect, it } from "vitest";
+import { descValue } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { Midend } from "../../engine/midend.ts";
 import { pencilIndicatorReach } from "../../engine/pencil-indicator.ts";
 import { newCursor } from "../../engine/pointer.ts";
@@ -51,7 +53,7 @@ import {
   type RomeParams,
   type RomeState,
   type RomeUi,
-  readDesc,
+  readBoard,
   STATUS_COMPLETE,
   STATUS_INCOMPLETE,
 } from "./state.ts";
@@ -62,7 +64,7 @@ const PALETTE = romeGame.colors([0.827, 0.827, 0.827]);
 const RENDER_ID = "6x6de#rome-render";
 
 function board(w: number, h: number, desc: string): RomeState {
-  const { board: b } = readDesc({ w, h, diff: DIFF_EASY }, desc);
+  const b = descValue(readDesc(desc, (r) => readBoard(r, { w, h, diff: DIFF_EASY })));
   validateGame(b, true);
   return b;
 }
@@ -126,7 +128,7 @@ describe("region outlines", () => {
     // Nothing draws a grid line: each square's rect is inset, and what shows
     // through the COL_BORDER flood is the outline. So a square whose right
     // neighbor shares its region draws *wider* than one whose doesn't.
-    const merged = topLeftTile("a11,i"); // squares 0 and 1 share a region
+    const merged = topLeftTile("a10,i"); // squares 0 and 1 share a region
     const separate = topLeftTile(`${ALL_WALLS_3},i`); // every square alone
     expect(merged.w).toBeGreaterThan(separate.w);
     // Vertically both are boundaries, so the heights agree.
@@ -178,7 +180,7 @@ describe("board contents", () => {
     // player adds a second one at 1. Upstream's color precedence puts
     // `FM_FIXED` ahead of `FE_DOUBLE`, so a clue never turns red however
     // wrong the region becomes — only the arrow the player can actually fix.
-    const state = romeGame.executeMove(board(3, 3, "a11,Dh"), {
+    const state = romeGame.executeMove(board(3, 3, "a10,Dh"), {
       kind: "place",
       x: 1,
       y: 0,

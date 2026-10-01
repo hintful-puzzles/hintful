@@ -8,6 +8,7 @@ import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
+  descBadCharacter,
 } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
@@ -136,6 +137,21 @@ describe("bricks desc codec", () => {
     expect(validateDesc(FIX_PARAMS, "8a")).toBe(DESC_OUT_OF_RANGE);
     expect(validateDesc(FIX_PARAMS, "a")).toBe(DESC_TOO_SHORT);
     expect(validateDesc({ w: 2, h: 2, diff: 0 }, "zzzz")).toBe(DESC_TOO_LONG);
+  });
+
+  it("refuses what encodeDesc never writes", () => {
+    const p: BricksParams = { w: 2, h: 2, diff: 0 };
+    expect(validateDesc(p, "1_0b")).toBeNull();
+    expect(Array.from(newState(p, "1_0b").grid.slice(0, 2))).toEqual([1, 0]);
+    // Characters the encoder never writes, anywhere.
+    expect(validateDesc(p, "1_0Ab")).toBe(descBadCharacter("A"));
+    expect(validateDesc(p, "^1_0b")).toBe(descBadCharacter("^"));
+    // A `_` anywhere but between two adjacent clues.
+    expect(validateDesc(p, "_1_0b")).toBe(descBadCharacter("_"));
+    expect(validateDesc(p, "1a_0a")).toBe(descBadCharacter("_"));
+    expect(validateDesc(p, "1_0b_")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, "1_0b,x")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, "10b")).toBe(DESC_OUT_OF_RANGE);
   });
 });
 

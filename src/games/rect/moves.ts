@@ -6,13 +6,9 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
+import { descValue } from "../../engine/desc-error.ts";
 import type { GameStatus } from "../../engine/types.ts";
-import {
-  decodeNumbers,
-  type RectMove,
-  type RectParams,
-  type RectState,
-} from "./state.ts";
+import { parseDesc, type RectMove, type RectParams, type RectState } from "./state.ts";
 
 /* Upstream's `HRANGE` / `VRANGE`: an hedge is meaningful only for
  * `y ∈ [1, h-1]`, a vedge only for `x ∈ [1, w-1]`. */
@@ -152,7 +148,7 @@ export function gridDrawRect(
 export function newState(params: RectParams, desc: string): RectState {
   const { w, h } = params;
   const area = w * h;
-  const grid = decodeNumbers(desc, area);
+  const grid = descValue(parseDesc(params, desc));
   const vedge = new Uint8Array(area);
   const hedge = new Uint8Array(area);
   const correct = getCorrect(w, h, grid, hedge, vedge);

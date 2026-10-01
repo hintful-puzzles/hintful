@@ -18,12 +18,11 @@
  */
 
 import {
-  DESC_MALFORMED,
-  DESC_OUT_OF_RANGE,
-  type DescError,
-  descBadCharacter,
+  DESC_REPEATED,
+  type DescParse,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 
 /**
  * A point as the rational `(x/d, y/d)`. **Invariant: `x`, `y`, `d` are
@@ -300,47 +299,35 @@ export function buildEdges(
 }
 
 /**
- * Parse Untangle's edges-only desc — a comma-separated list of
- * dash-separated zero-based vertex pairs (`min-max,...`) — into a sorted,
- * deduplicated edge list, or say why it cannot be. Mirrors `new_game`'s desc
- * walk.
+ * Untangle's edges-only desc — a comma-separated list of dash-separated
+ * zero-based vertex pairs — as a sorted edge list. The generator writes each
+ * pair `min-max` in sorted order; a pair written the other way round, or out of
+ * order, names the same edge and is read as it.
  */
-export function parseEdges(
-  desc: string,
-  n: number,
-): { ok: true; edges: Edge[] } | { ok: false; error: DescError } {
-  const seen = new Set<number>();
-  const edges: Edge[] = [];
-  if (desc.length === 0) return { ok: true, edges };
-  for (const part of desc.split(",")) {
-    const m = /^(\d+)-(\d+)$/.exec(part);
-    if (!m) {
-      const bad = /[^\d-]/.exec(part);
-      return { ok: false, error: bad ? descBadCharacter(bad[0]) : DESC_MALFORMED };
-    }
-    const a = Number(m[1]);
-    const b = Number(m[2]);
-    if (a >= n || b >= n) return { ok: false, error: DESC_OUT_OF_RANGE };
-    if (a === b) return { ok: false, error: SELF_EDGE };
-    const key = packEdge(a, b, n);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    edges.push({ a: Math.min(a, b), b: Math.max(a, b) });
-  }
-  edges.sort((p, q) => p.a - q.a || p.b - q.b);
-  return { ok: true, edges };
+export function parseDesc(p: UntangleParams, desc: string): DescParse<Edge[]> {
+  const { n } = p;
+  return readDesc(desc, (r) => {
+    const seen = new Set<number>();
+    const edges: Edge[] = [];
+    do {
+      const a = r.int(0, n - 1);
+      r.expect("-");
+      const b = r.int(0, n - 1);
+      if (a === b) r.fail(SELF_EDGE);
+      const key = packEdge(a, b, n);
+      if (seen.has(key)) r.fail(DESC_REPEATED);
+      seen.add(key);
+      edges.push({ a: Math.min(a, b), b: Math.max(a, b) });
+    } while (r.accept(","));
+    r.end();
+    edges.sort((e, f) => e.a - f.a || e.b - f.b);
+    return edges;
+  });
 }
 
 const SELF_EDGE = puzzleDescError(
   "This game ID has a line that joins a point to itself.",
 );
-
-/** {@link parseEdges} for a desc already validated. */
-export function decodeGame(desc: string, n: number): Edge[] {
-  const parsed = parseEdges(desc, n);
-  if (!parsed.ok) throw new Error(`untangle: invalid desc: ${parsed.error}`);
-  return parsed.edges;
-}
 
 /** Parse the generator's `aux` solved layout (`S` then `P<i>:x,y/d`
  * per vertex, `;`-separated) into rational points, or `null` if it is

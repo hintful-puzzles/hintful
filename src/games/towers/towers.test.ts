@@ -158,6 +158,39 @@ describe("towers generator", () => {
   }
 });
 
+describe("towers desc parsing", () => {
+  const p: TowersParams = { w: 3, diff: "easy" };
+  // Twelve clues, then givens 1 and 2 adjacent, six blanks, then 3.
+  const clues = "1//3/2//////1//2";
+
+  it("reads the clues and givens it was given", () => {
+    const desc = `${clues},1_2f3`;
+    expect(validateDesc(p, desc)).toBeNull();
+    const st = newState(p, desc);
+    expect(Array.from(st.clues)).toEqual([1, 0, 3, 2, 0, 0, 0, 0, 0, 1, 0, 2]);
+    expect(Array.from(st.immutable)).toEqual([1, 2, 0, 0, 0, 0, 0, 0, 3]);
+    expect(Array.from(st.grid)).toEqual([1, 2, 0, 0, 0, 0, 0, 0, 3]);
+    expect(validateDesc(p, clues)).toBeNull();
+  });
+
+  it("refuses what the generator never writes", () => {
+    expect(validateDesc(p, "1//3/2//////1/")).toMatch(/too short/);
+    expect(validateDesc(p, `${clues}/`)).toMatch(/too long/);
+    expect(validateDesc(p, `${clues},1_2f`)).toMatch(/too short/);
+    expect(validateDesc(p, `${clues},1_2h`)).toMatch(/too long/);
+    expect(validateDesc(p, `${clues},1_2f3x`)).toMatch(/too long/);
+    // A wrong character among the clues is named.
+    expect(validateDesc(p, "1x/3/2//////1//2")).toMatch(/"x"/);
+    // After the clues, a character other than `,`.
+    expect(validateDesc(p, `${clues}!`)).toMatch(/too long/);
+    // A `_` anywhere but between two given numbers.
+    expect(validateDesc(p, `${clues},_1_2f3`)).toMatch(/"_"/);
+    expect(validateDesc(p, `${clues},1_2f_3`)).toMatch(/"_"/);
+    expect(validateDesc(p, `${clues},12f3`)).toMatch(/out of range/);
+    expect(validateDesc(p, `4${clues}`)).toMatch(/out of range/);
+  });
+});
+
 // --- tier 1: moves + completion --------------------------------------------
 
 describe("towers moves", () => {

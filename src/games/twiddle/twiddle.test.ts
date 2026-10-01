@@ -4,6 +4,8 @@
 // and text format.
 import { describe, expect, it } from "vitest";
 import {
+  DESC_OUT_OF_RANGE,
+  DESC_REPEATED,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
@@ -179,6 +181,19 @@ describe("Twiddle generation", () => {
     expect(twiddleGame.validateDesc(po, "1,2,3,4,5,6,7,8,9")).toBe(
       descBadCharacter(","),
     );
+    expect(twiddleGame.validateDesc(po, "1u2u3u4u5u6u7u8u9ux")).toBe(DESC_TOO_LONG);
+    expect(twiddleGame.validateDesc(po, "1u2u3u4u5u6u7u8u9")).toBe(DESC_TOO_SHORT);
+  });
+
+  it("validateDesc refuses numbers no shuffle of the solved board has", () => {
+    const p = params({ w: 3, h: 3 });
+    expect(twiddleGame.validateDesc(p, "1,2,3,4,5,6,7,8,10")).toBe(DESC_OUT_OF_RANGE);
+    expect(twiddleGame.validateDesc(p, "0,2,3,4,5,6,7,8,9")).toBe(DESC_OUT_OF_RANGE);
+    expect(twiddleGame.validateDesc(p, "1,2,3,4,5,6,7,8,8")).toBe(DESC_REPEATED);
+    const pr = params({ w: 3, h: 3, rowsonly: true });
+    expect(twiddleGame.validateDesc(pr, "2,1,1,3,2,2,1,3,3")).toBeNull();
+    expect(twiddleGame.validateDesc(pr, "1,1,1,1,2,2,3,3,3")).toBe(DESC_REPEATED);
+    expect(twiddleGame.validateDesc(pr, "1,1,1,2,2,2,3,3,4")).toBe(DESC_OUT_OF_RANGE);
   });
 });
 

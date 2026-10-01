@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { DESC_TOO_SHORT, descBadCharacter } from "../../engine/desc-error.ts";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { BACKSPACE, CURSOR_LEFT, CURSOR_RIGHT, DELETE } from "../../engine/pointer.ts";
@@ -116,6 +120,22 @@ describe("desc codec", () => {
     expect(validateDesc(p, "a")).toBe(DESC_TOO_SHORT);
   });
 
+  it("reads only the run letters its encoder writes", () => {
+    // A 6x6 board with no clues: 36 empties, written as a 25-run and 11 more.
+    const p = params(6, 6, DIFF_TRIVIAL);
+    expect(encodeGrid(new Uint8Array(36), 36)).toBe("zl");
+    expect(validateDesc(p, "zl")).toBeNull();
+    // A `z` run takes the case of the clue that ends it.
+    expect(validateDesc(p, "Zl")).toBe(descBadCharacter("l"));
+    expect(validateDesc(p, "zL")).toBe(descBadCharacter("L"));
+    // The letter landing past the grid stands for a ZERO, so it is lowercase.
+    expect(validateDesc(p, "ZL")).toBe(descBadCharacter("L"));
+    // A run overshooting the grid says more than the board holds.
+    expect(validateDesc(p, "zm")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, "zk")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, "zla")).toBe(DESC_TOO_LONG);
+  });
+
   it("parses clues as immutable cells of the right color", () => {
     // Hand-place a ONE at index 0 and a ZERO at index 1, then round-trip.
     const p = params(6, 6, DIFF_TRIVIAL);
@@ -226,8 +246,9 @@ describe("moves", () => {
   });
 
   it("rejects placing on an immutable cell", () => {
-    const desc = `A${String.fromCharCode(97 + (s - 1))}`;
-    const state = newState(p, desc);
+    const grid = new Uint8Array(s);
+    grid[0] = ONE;
+    const state = newState(p, encodeGrid(grid, s));
     expect(state.immutable[0]).toBe(1);
     expect(() =>
       executeMove(state, { type: "place", x: 0, y: 0, value: ZERO }),

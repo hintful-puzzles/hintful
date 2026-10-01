@@ -18,6 +18,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { CandidatePlanPrefs } from "../../engine/candidate-hint.ts";
+import { descValue } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
@@ -30,7 +31,12 @@ import { newRomeDesc } from "./generator.ts";
 import { buildSteps } from "./hint.ts";
 import { romeGame } from "./index.ts";
 import { COL_ARROW_PENCIL, COL_HINT, COL_HINT_CELL } from "./render.ts";
-import { type RomeReason, recordRomeDeductions, romeSolve } from "./solver.ts";
+import {
+  parseDesc,
+  type RomeReason,
+  recordRomeDeductions,
+  romeSolve,
+} from "./solver.ts";
 import {
   boardFromClues,
   DIFF_NORMAL,
@@ -45,7 +51,6 @@ import {
   type RomeMove,
   type RomeParams,
   type RomeState,
-  readDesc,
 } from "./state.ts";
 
 const NORMAL: RomeParams = { w: 6, h: 6, diff: DIFF_NORMAL };
@@ -56,8 +61,7 @@ const POPULATE: CandidatePlanPrefs = { autoClean: false, reading: "populate" };
 
 function gen(p: RomeParams, seed: string): { desc: string; st: RomeState } {
   const { desc } = newRomeDesc(p, randomNew(seed));
-  const { board } = readDesc(p, desc);
-  return { desc, st: board };
+  return { desc, st: descValue(parseDesc(p, desc)) };
 }
 
 const kindOf = (reason: unknown): string => (reason as RomeReason).kind;
@@ -251,7 +255,7 @@ describe("rome hint plan", () => {
   it("names both arrows of a naked pair, not only the ones still live", () => {
     const params: RomeParams = { w: 6, h: 6, diff: DIFF_TRICKY };
     const desc = "1a1aa2a4b1a1ab2a1a4c3aaa1a2aa,aLDRDgRaXUDcLcRUaURg";
-    const { board } = readDesc(params, desc);
+    const board = descValue(parseDesc(params, desc));
     const ops = recordRomeDeductions(boardFromClues(board), DIFFCOUNT);
     const pair = ops.find((o) => kindOf(o.reason) === "pair");
     expect(pair, "the pinned board no longer fires naked-pairs").toBeDefined();

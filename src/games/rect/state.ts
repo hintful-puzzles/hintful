@@ -12,13 +12,14 @@
  * transient drag preview, but those never live in state.
  */
 
-import { digitValue, isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, atof, formatG } from "../../engine/params.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
@@ -183,42 +184,38 @@ export function encodeNumbers(numbers: ArrayLike<number>, area: number): string 
   return out;
 }
 
-export function validateDesc(p: RectParams, desc: string): DescError | null {
-  const area = p.w * p.h;
-  let squares = 0;
-  let i = 0;
-  while (i < desc.length) {
-    const c = desc[i++];
-    const digit = digitValue(c);
-    if (c >= "a" && c <= "z") {
-      squares += c.charCodeAt(0) - CODE_A + 1;
-    } else if (digit !== null && digit >= 1) {
-      squares++;
-      i = parseLeadingInt(desc, i).next;
-    } else if (c !== "_") {
-      return descBadCharacter(c);
-    }
-  }
-  if (squares < area) return DESC_TOO_SHORT;
-  if (squares > area) return DESC_TOO_LONG;
-  return null;
+/** Whether `c` is a run letter: `a`–`z` for 1–26 empty squares. */
+function isRunLetter(c: string): boolean {
+  return c >= "a" && c <= "z";
 }
 
-/** Parse a desc into the row-major numbers array (0 = empty). */
-export function decodeNumbers(desc: string, area: number): Int32Array {
-  const grid = new Int32Array(area);
-  let idx = 0;
-  let i = 0;
-  while (i < desc.length) {
-    const c = desc[i++];
-    const digit = digitValue(c);
-    if (c >= "a" && c <= "z") {
-      idx += c.charCodeAt(0) - CODE_A + 1; // the grid starts zeroed
-    } else if (digit !== null && digit >= 1) {
-      const n = parseLeadingInt(desc, i - 1);
-      grid[idx++] = n.value;
-      i = n.next;
+/**
+ * Read the numbers {@link encodeNumbers} writes, row-major with `0` for an
+ * empty square: numbers, run letters, and a `_` exactly between two adjacent
+ * numbers. A number is a rectangle's area, so it lies in `1..w*h`.
+ */
+export function parseDesc(p: RectParams, desc: string): DescParse<Int32Array> {
+  const area = p.w * p.h;
+  return readDesc(desc, (r) => {
+    const grid = new Int32Array(area);
+    let i = 0;
+    let afterNumber = false;
+    while (i < area) {
+      if (r.peekIs(isRunLetter)) {
+        i += r.char().charCodeAt(0) - CODE_A + 1;
+        if (i > area) r.fail(DESC_TOO_LONG);
+        afterNumber = false;
+      } else {
+        if (afterNumber) r.expect("_");
+        grid[i++] = r.int(1, area);
+        afterNumber = true;
+      }
     }
-  }
-  return grid;
+    r.end();
+    return grid;
+  });
+}
+
+export function validateDesc(p: RectParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
 }

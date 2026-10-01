@@ -89,7 +89,7 @@ describe("Mines hint: the start of a board", () => {
   it("refuses on a board whose last move opened a mine, telling the player to undo", () => {
     const s1 = minesGame.executeMove(fresh(9, 9, 10, "dead"), open(4, 4));
     const mines = s1.layout.mines as Int8Array;
-    const i = mines.findIndex((m) => m === 1);
+    const i = mines.indexOf(1);
     const dead = minesGame.executeMove(s1, open(i % 9, Math.floor(i / 9)));
     expect(dead.dead).toBe(true);
     expect(minesGame.hint?.(dead)).toEqual({ ok: false, error: DEAD_BOARD });

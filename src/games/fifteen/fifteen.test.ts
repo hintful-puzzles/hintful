@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  DESC_MALFORMED,
   DESC_OUT_OF_RANGE,
   DESC_REPEATED,
   DESC_TOO_LONG,
@@ -158,7 +157,8 @@ describe("Fifteen desc codec", () => {
     expect(validateDesc(p, "0,1,2,9")).toBe(DESC_OUT_OF_RANGE);
     expect(validateDesc(p, "0,1,1,2")).toBe(DESC_REPEATED);
     expect(validateDesc(p, "0,1,x,2")).toBe(descBadCharacter("x"));
-    expect(validateDesc(p, "0,1,,2")).toBe(DESC_MALFORMED);
+    expect(validateDesc(p, "0,1,,2")).toBe(descBadCharacter(","));
+    expect(validateDesc(p, "0,1,2,")).toBe(DESC_TOO_SHORT);
     expect(validateDesc(p, "0,1,2,3")).toBeNull(); // valid
   });
 });

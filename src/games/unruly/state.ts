@@ -7,12 +7,14 @@
 
 import { assertNever } from "../../engine/assert-never.ts";
 import {
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem } from "../../engine/difficulty.ts";
+import { readDotRuns, writeDotRuns } from "../../engine/dot-runs.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
@@ -155,42 +157,31 @@ export function validateParams(p: UnrulyParams, _full: boolean): string | null {
 }
 
 // --- desc codec ----------------------------------------------------------
-// Run-length: a lowercase letter advances past a run of empties and places a
-// ZERO clue, uppercase the same placing a ONE, `z`/`Z` advance 25 with no
-// clue. The advanced positions sum to exactly `w2·h2 + 1`.
+// The givens as `engine/dot-runs.ts` writes dots: a ZERO is lowercase, a ONE
+// uppercase.
+
+function parseDesc(
+  p: UnrulyParams,
+  desc: string,
+): DescParse<{ grid: Uint8Array; immutable: Uint8Array }> {
+  const s = p.w2 * p.h2;
+  return readDesc(desc, (r) => {
+    const grid = new Uint8Array(s); // all EMPTY
+    const immutable = new Uint8Array(s);
+    readDotRuns(r, s, (i, kind) => {
+      grid[i] = kind === 1 ? ONE : ZERO;
+      immutable[i] = 1;
+    });
+    return { grid, immutable };
+  });
+}
 
 export function validateDesc(p: UnrulyParams, desc: string): DescError | null {
-  const s = p.w2 * p.h2;
-  let pos = 0;
-  for (const ch of desc) {
-    if (ch >= "a" && ch < "z") pos += 1 + (ch.charCodeAt(0) - 97);
-    else if (ch >= "A" && ch < "Z") pos += 1 + (ch.charCodeAt(0) - 65);
-    else if (ch === "z" || ch === "Z") pos += 25;
-    else return descBadCharacter(ch);
-  }
-  if (pos < s + 1) return DESC_TOO_SHORT;
-  if (pos > s + 1) return DESC_TOO_LONG;
-  return null;
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: UnrulyParams, desc: string): UnrulyState {
-  const s = p.w2 * p.h2;
-  const grid = new Uint8Array(s); // all EMPTY
-  const immutable = new Uint8Array(s);
-  let pos = 0;
-  for (const ch of desc) {
-    const zero = ch >= "a" && ch < "z";
-    if (zero || (ch >= "A" && ch < "Z")) {
-      pos += ch.charCodeAt(0) - (zero ? 97 : 65);
-      if (pos < s) {
-        grid[pos] = zero ? ZERO : ONE;
-        immutable[pos] = 1;
-      }
-      pos++;
-    } else {
-      pos += 25; // `z` / `Z`
-    }
-  }
+  const { grid, immutable } = descValue(parseDesc(p, desc));
   return {
     w2: p.w2,
     h2: p.h2,
@@ -200,23 +191,9 @@ export function newState(p: UnrulyParams, desc: string): UnrulyState {
   };
 }
 
-/** Encode a filled-or-partial grid as the run-length desc above. The end of
- * the grid closes the last run as a ZERO would, which is the `+ 1`. */
+/** Encode a filled-or-partial grid as the desc above. */
 export function encodeGrid(grid: Uint8Array, s: number): string {
-  let out = "";
-  let run = 0;
-  for (let i = 0; i <= s; i++) {
-    const v = i === s ? ZERO : grid[i];
-    if (v !== ZERO && v !== ONE) {
-      run++;
-      continue;
-    }
-    const base = v === ONE ? 65 : 97; // "A" / "a"; base + 25 is "Z" / "z"
-    for (; run > 24; run -= 25) out += String.fromCharCode(base + 25);
-    out += String.fromCharCode(base + run);
-    run = 0;
-  }
-  return out;
+  return writeDotRuns(s, (i) => (grid[i] === ONE ? 1 : grid[i] === ZERO ? 0 : null));
 }
 
 // --- moves ---------------------------------------------------------------

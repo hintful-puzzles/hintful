@@ -19,10 +19,12 @@
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import { newCursor, newDrag } from "../../engine/pointer.ts";
@@ -389,93 +391,56 @@ const CLUE_LETTERS = new Map<number, string>(
  */
 const MAX_RUN = 26;
 
-/**
- * Upstream `new_game`: the description is the `w + h` comma-terminated border
- * numbers (a decimal count, or `-` for a hidden one) followed by the grid as a
- * run-length string. Every character outside those alphabets — the commas —
- * is skipped, exactly as the C.
- */
-export function newState(p: BoatsParams, desc: string): BoatsState {
-  const { w, h } = p;
-  const gridClues = new Int8Array(w * h);
-  const borderClues = new Int32Array(w + h);
-  const grid = new Int8Array(w * h);
+const isRunLetter = (c: string): boolean => c >= "a" && c <= "z";
+const isGridChar = (c: string): boolean =>
+  isRunLetter(c) || Object.hasOwn(CLUE_CHARS, c);
 
-  let clue = 0;
-  let cell = 0;
-  let i = 0;
-  while (i < desc.length) {
-    const c = desc[i];
-    if (isDigit(c)) {
-      const parsed = parseLeadingInt(desc, i);
-      if (clue < w + h) borderClues[clue] = parsed.value;
-      clue++;
-      i = parsed.next;
-    } else if (c === "-") {
-      if (clue < w + h) borderClues[clue] = NO_CLUE;
-      clue++;
-      i++;
-    } else if (c >= "a" && c <= "z") {
-      cell += c.charCodeAt(0) - 97 + 1;
-      i++;
-    } else if (c >= "A" && c <= "Z") {
+/**
+ * Upstream `new_game`: the `w + h` comma-terminated border numbers (a decimal
+ * count, or `-` for a hidden one), then the grid as a run-length string. The
+ * grid may stop short: the encoder drops a trailing run of clue-less squares
+ * (see {@link encodeDesc}), and those squares are empty anyway.
+ */
+function parseDesc(p: BoatsParams, desc: string): DescParse<BoatsState> {
+  const { w, h } = p;
+  const wh = w * h;
+  return readDesc(desc, (r) => {
+    const gridClues = new Int8Array(wh);
+    const borderClues = new Int32Array(w + h);
+    const grid = new Int8Array(wh);
+
+    // A column holds at most h ship squares and a row at most w.
+    for (let i = 0; i < w + h; i++) {
+      borderClues[i] = r.accept("-") ? NO_CLUE : r.int(0, i < w ? h : w);
+      r.expect(",");
+    }
+    if (r.peekIs((c) => isDigit(c) || c === "-")) r.fail(DESC_TOO_LONG);
+
+    let cell = 0;
+    while (!r.done) {
+      const c = r.char(isGridChar);
+      if (isRunLetter(c)) {
+        cell += c.charCodeAt(0) - 97 + 1;
+        if (cell > wh) r.fail(DESC_TOO_LONG);
+        continue;
+      }
+      if (cell >= wh) r.fail(DESC_TOO_LONG);
       const value = CLUE_CHARS[c];
-      if (value === undefined) throw new Error(`bad boats desc character ${c}`);
-      if (cell >= w * h) throw new Error("boats desc has too many grid clues");
       gridClues[cell] = value;
       grid[cell] = isShip(value) ? SHIP_VAGUE : WATER;
       cell++;
-      i++;
-    } else {
-      i++;
     }
-  }
 
-  return {
-    params: cloneParams(p),
-    gridClues,
-    borderClues,
-    grid,
-  };
+    return { params: cloneParams(p), gridClues, borderClues, grid };
+  });
 }
 
-/**
- * Upstream `validate_desc`. Note it deliberately does **not** reject a
- * description with *too few* grid cells: upstream's encoder never flushes a
- * trailing run of clue-less cells, so a board whose last cells carry no clue
- * (the common case, and every all-empty board) legitimately encodes short.
- * Only an overlong grid, a wrong border-clue count, or an unknown character
- * is an error.
- */
+export function newState(p: BoatsParams, desc: string): BoatsState {
+  return descValue(parseDesc(p, desc));
+}
+
 export function validateDesc(p: BoatsParams, desc: string): DescError | null {
-  const { w, h } = p;
-  let clues = 0;
-  let cells = 0;
-  let i = 0;
-
-  while (i < desc.length) {
-    const c = desc[i];
-    if (isDigit(c)) {
-      clues++;
-      i = parseLeadingInt(desc, i).next;
-    } else if (c === "-") {
-      clues++;
-      i++;
-    } else if (c >= "a" && c <= "z") {
-      cells += c.charCodeAt(0) - 97 + 1;
-      i++;
-    } else if (c >= "A" && c <= "Z") {
-      if (CLUE_CHARS[c] === undefined) return descBadCharacter(c);
-      cells++;
-      i++;
-    } else {
-      i++;
-    }
-  }
-
-  if (clues < w + h) return DESC_TOO_SHORT;
-  if (clues > w + h || cells > w * h) return DESC_TOO_LONG;
-  return null;
+  return descVerdict(parseDesc(p, desc));
 }
 
 /**

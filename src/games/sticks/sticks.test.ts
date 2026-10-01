@@ -6,6 +6,7 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
@@ -156,6 +157,26 @@ describe("sticks desc codec", () => {
     expect(validateDesc(FIX_PARAMS, `${FIX.desc}a`)).toBe(DESC_TOO_LONG);
     expect(validateDesc(FIX_PARAMS, "a1a")).toBe(DESC_TOO_SHORT);
     expect(validateDesc(FIX_PARAMS, "a!b")).toBe(descBadCharacter("!"));
+  });
+
+  it("validateDesc refuses what encodeDesc never writes", () => {
+    const p = { w: 4, h: 1, blackpc: 20, symm: SYMM_NONE };
+    expect(validateDesc(p, "B2_1_3a")).toBeNull();
+    expect(validateDesc(p, "B0c")).toBeNull();
+    // A black cell's clue counts at most four lines; a stick is at most as
+    // long as the board.
+    expect(validateDesc(p, "B5_1_3a")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, "B2_1_5a")).toBe(DESC_OUT_OF_RANGE);
+    // Large enough to wrap a 16-bit cell to a different clue.
+    expect(validateDesc(p, "B2_1_65539a")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, "B2_0_3a")).toBe(DESC_OUT_OF_RANGE);
+    // A `_` anywhere but before a white clue following a written cell.
+    expect(validateDesc(p, "_B2_1_3a")).toBe(descBadCharacter("_"));
+    expect(validateDesc(p, "B2_1a_3")).toBe(descBadCharacter("_"));
+    expect(validateDesc(p, "B2_1_B")).toBe(descBadCharacter("B"));
+    expect(validateDesc(p, "_1c")).toBe(descBadCharacter("_"));
+    expect(validateDesc(p, "1_23a")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, "B2_1_3a,")).toBe(DESC_TOO_LONG);
   });
 });
 

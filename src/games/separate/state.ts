@@ -24,11 +24,12 @@ import {
   outOfBounds,
 } from "../../engine/border-grid.ts";
 import {
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import {
   AREA_TOO_LARGE,
@@ -182,24 +183,27 @@ export function encodeDesc(letters: Uint8Array, wh: number): string {
   return out;
 }
 
-export function validateDesc(p: SeparateParams, desc: string): DescError | null {
+function parseDesc(p: SeparateParams, desc: string): DescParse<Uint8Array> {
   const wh = p.w * p.h;
-  if (desc.length < wh) return DESC_TOO_SHORT;
-  if (desc.length > wh) return DESC_TOO_LONG;
-  for (const ch of desc) {
-    const v = ch.charCodeAt(0) - A;
-    if (v < 0 || v >= p.k) return descBadCharacter(ch);
-  }
-  return null;
+  const isLetter = (c: string) => {
+    const v = c.charCodeAt(0) - A;
+    return v >= 0 && v < p.k;
+  };
+  return readDesc(desc, (r) => {
+    const letters = new Uint8Array(wh);
+    for (let i = 0; i < wh; i++) letters[i] = r.char(isLetter).charCodeAt(0) - A;
+    r.end();
+    return letters;
+  });
+}
+
+export function validateDesc(p: SeparateParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: SeparateParams, desc: string): SeparateState {
   const { w, h, k } = p;
-  const wh = w * h;
-  const letters = new Uint8Array(wh);
-  for (let i = 0; i < wh && i < desc.length; i++) {
-    letters[i] = desc.charCodeAt(i) - A;
-  }
+  const letters = descValue(parseDesc(p, desc));
   return {
     w,
     h,

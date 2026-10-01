@@ -10,12 +10,14 @@
  */
 
 import {
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
+import { readDotRuns, writeDotRuns } from "../../engine/dot-runs.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
@@ -185,78 +187,35 @@ export function validateParams(p: ClustersParams, full: boolean): string | null 
 
 // --- desc codec (upstream new_game_desc/new_game) ---------------------------
 
-const CODE_a = "a".charCodeAt(0);
-const CODE_A = "A".charCodeAt(0);
-
-/**
- * Run-length encode the *given dot clues* of a finished grid, in the same
- * format as upstream `new_game_desc`'s encode loop: walk positions `0..s` (inclusive
- * — the trailing `+1` terminator), tracking a run of non-given cells; at each
- * red dot emit `a+run` (chaining `z`=skip-25 for runs > 24), at each blue dot
- * `A+run` (chaining `Z`), and at the terminator flush the final run as a
- * lowercase char. Lowercase = red, uppercase = blue (the color asymmetry to
- * preserve). Only `F_COLOR_x|F_SINGLE` cells are dots.
- */
+/** The given dots of a grid as `engine/dot-runs.ts` writes them: red
+ * lowercase, blue uppercase. Only `F_COLOR_x|F_SINGLE` cells are dots. */
 export function encodeDesc(grid: Uint8Array, w: number, h: number): string {
-  const s = w * h;
-  let out = "";
-  let run = 0;
-  for (let i = 0; i <= s; i++) {
-    if (i === s || grid[i] === (F_COLOR_0 | F_SINGLE)) {
-      while (run > 24) {
-        out += "z";
-        run -= 25;
-      }
-      out += String.fromCharCode(CODE_a + run);
-      run = 0;
-    } else if (grid[i] === (F_COLOR_1 | F_SINGLE)) {
-      while (run > 24) {
-        out += "Z";
-        run -= 25;
-      }
-      out += String.fromCharCode(CODE_A + run);
-      run = 0;
-    } else {
-      run++;
-    }
-  }
-  return out;
+  return writeDotRuns(w * h, (i) =>
+    grid[i] === (F_COLOR_1 | F_SINGLE)
+      ? 1
+      : grid[i] === (F_COLOR_0 | F_SINGLE)
+        ? 0
+        : null,
+  );
+}
+
+function parseDesc(p: ClustersParams, desc: string): DescParse<Uint8Array> {
+  const s = p.w * p.h;
+  return readDesc(desc, (r) => {
+    const grid = new Uint8Array(s);
+    readDotRuns(r, s, (i, kind) => {
+      grid[i] = (kind === 1 ? F_COLOR_1 : F_COLOR_0) | F_SINGLE;
+    });
+    return grid;
+  });
 }
 
 export function validateDesc(p: ClustersParams, desc: string): DescError | null {
-  const s = p.w * p.h;
-  let pos = 0;
-  for (const ch of desc) {
-    if (ch >= "a" && ch < "z") pos += 1 + (ch.charCodeAt(0) - CODE_a);
-    else if (ch >= "A" && ch < "Z") pos += 1 + (ch.charCodeAt(0) - CODE_A);
-    else if (ch === "z" || ch === "Z") pos += 25;
-    else return descBadCharacter(ch);
-  }
-  if (pos < s + 1) return DESC_TOO_SHORT;
-  if (pos > s + 1) return DESC_TOO_LONG;
-  return null;
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: ClustersParams, desc: string): ClustersState {
-  const { w, h } = p;
-  const s = w * h;
-  const grid = new Uint8Array(s);
-  let pos = 0;
-  for (const ch of desc) {
-    if (ch >= "a" && ch < "z") {
-      pos += ch.charCodeAt(0) - CODE_a;
-      if (pos < s) grid[pos] = F_COLOR_0 | F_SINGLE;
-      pos++;
-    } else if (ch >= "A" && ch < "Z") {
-      pos += ch.charCodeAt(0) - CODE_A;
-      if (pos < s) grid[pos] = F_COLOR_1 | F_SINGLE;
-      pos++;
-    } else if (ch === "z" || ch === "Z") {
-      pos += 25;
-    }
-    // validateDesc has already rejected any other character.
-  }
-  return { w, h, grid };
+  return { w: p.w, h: p.h, grid: descValue(parseDesc(p, desc)) };
 }
 
 export function cloneState(s: ClustersState): ClustersState {

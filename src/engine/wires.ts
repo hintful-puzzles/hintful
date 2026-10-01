@@ -18,12 +18,8 @@
  * hard-coding one.
  */
 
-import {
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
-  type DescError,
-  descBadCharacter,
-} from "./desc-error.ts";
+import type { DescParse } from "./desc-error.ts";
+import { readDesc } from "./desc-reader.ts";
 import type { RandomState } from "./random/index.ts";
 import { randomUpto } from "./random/index.ts";
 import { SortedMultiset } from "./sorted-multiset.ts";
@@ -267,54 +263,45 @@ export function placeBarriers(
 /* ----------------------------------------------------------------------
  * The hex description codec.
  *
- * Each tile is a hex digit of its wire mask, optionally followed by `v` (a
- * barrier to its right) and/or `h` (a barrier below it). Only the right/down
- * side of each tile is recorded — the other two are its neighbors' — and the
- * border sides are skipped entirely unless the game wraps.
+ * Each tile is a lowercase hex digit of its wire mask, optionally followed by
+ * `v` (a barrier to its right) and then `h` (a barrier below it). Only the
+ * right/down side of each tile is recorded — the other two are its
+ * neighbors' — and the border sides are skipped entirely unless the game wraps.
  */
 
-export function validateWireDesc(w: number, h: number, desc: string): DescError | null {
-  let i = 0;
-  for (let n = 0; n < w * h; n++) {
-    const c = desc[i];
-    if (c === undefined) return DESC_TOO_SHORT;
-    if (!/[0-9a-fA-F]/.test(c)) return descBadCharacter(c);
-    i++;
-    while (desc[i] === "h" || desc[i] === "v") i++;
-  }
-  if (i < desc.length) return DESC_TOO_LONG;
-  return null;
-}
+const HEX = "0123456789abcdef";
 
 /**
- * Parse a desc into a fresh wire grid and the barriers it names. Both are the
- * bare wire bits (`0x0F`) — no border fence, no corner-join flags; those are
- * each game's business, added by {@link addBorderBarriers} and the renderers.
+ * Parse a desc into a fresh wire grid and the barriers it names, accepting
+ * exactly what {@link encodeWireDesc} writes for the same `wrapping`. Both are
+ * the bare wire bits (`0x0F`) — no border fence, no corner-join flags; those
+ * are each game's business, added by {@link addBorderBarriers} and the
+ * renderers.
  */
 export function parseWireDesc(
   w: number,
   h: number,
+  wrapping: boolean,
   desc: string,
-): { tiles: Uint8Array; barriers: Uint8Array } {
-  const tiles = new Uint8Array(w * h);
-  const barriers = new Uint8Array(w * h);
-
-  let i = 0;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      tiles[y * w + x] = Number.parseInt(desc[i], 16);
-      i++;
-      while (desc[i] === "h" || desc[i] === "v") {
-        const d1 = desc[i] === "v" ? R : D;
-        const n = offset(x, y, d1, w, h);
-        barriers[y * w + x] |= d1;
-        barriers[n.y * w + n.x] |= opposite(d1);
-        i++;
+): DescParse<{ tiles: Uint8Array; barriers: Uint8Array }> {
+  return readDesc(desc, (r) => {
+    const tiles = new Uint8Array(w * h);
+    const barriers = new Uint8Array(w * h);
+    const barrier = (x: number, y: number, d1: number) => {
+      const n = offset(x, y, d1, w, h);
+      barriers[y * w + x] |= d1;
+      barriers[n.y * w + n.x] |= opposite(d1);
+    };
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        tiles[y * w + x] = HEX.indexOf(r.char((c) => HEX.includes(c)));
+        if ((wrapping || x < w - 1) && r.accept("v")) barrier(x, y, R);
+        if ((wrapping || y < h - 1) && r.accept("h")) barrier(x, y, D);
       }
     }
-  }
-
-  return { tiles, barriers };
+    r.end();
+    return { tiles, barriers };
+  });
 }
 
 /** Fence a non-wrapping grid in with a wall all the way round. */
@@ -337,7 +324,6 @@ export function encodeWireDesc(
   h: number,
   wrapping: boolean,
 ): string {
-  const HEX = "0123456789abcdef";
   let desc = "";
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {

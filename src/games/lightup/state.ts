@@ -15,12 +15,17 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   type DescError,
+  type DescParse,
   descBadCharacter,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import { AREA_TOO_LARGE } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
+import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import { SYMM_REF4, SYMM_ROT2, SYMM_ROT4 } from "../../engine/symmetric-blacks.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 
@@ -320,77 +325,59 @@ export function status(s: LightupState): GameStatus {
 
 // --- desc codec ---------------------------------------------------------------------------
 
-const A = "a".charCodeAt(0);
-
 /** Encode the black/numbered layout as upstream: row-major, `B` for an
  * unnumbered black, `0`–`4` for a numbered black, runs of open squares
- * compressed as `a`–`z`. */
+ * compressed as `a`–`z`. The trailing run is kept, because
+ * {@link validateDesc} wants exactly `w × h` cells. */
 export function encodeDesc(state: LightupState): string {
   const { w, h, flags, lights } = state;
-  let desc = "";
-  let run = 0;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = idx(x, y, w);
-      if (flags[i] & F_BLACK) {
-        if (run) {
-          desc += String.fromCharCode(A - 1 + run);
-          run = 0;
-        }
-        desc += flags[i] & F_NUMBERED ? String(lights[i]) : "B";
-      } else {
-        if (run === 26) {
-          desc += String.fromCharCode(A - 1 + run);
-          run = 0;
-        }
-        run++;
+  return encodeRunLength(
+    w * h,
+    (i) => {
+      if (!(flags[i] & F_BLACK)) return null;
+      return flags[i] & F_NUMBERED ? String(lights[i]) : "B";
+    },
+    { keepTrailingBlanks: true },
+  );
+}
+
+/** The board the desc lays out: its black squares and their clues. */
+function parseDesc(p: LightupParams, desc: string): DescParse<LightupState> {
+  const wh = p.w * p.h;
+  return readDesc(desc, (r) => {
+    const state = emptyState(p);
+    let i = 0;
+    for (const tok of scanRunLength(r.rest())) {
+      // A token past the last cell is data the grid has no room for, whether or
+      // not it is a character this game accepts.
+      if (i >= wh) r.fail(DESC_TOO_LONG);
+      if ("blanks" in tok) {
+        i += tok.blanks;
+        continue;
       }
+      if (tok.value === "B") {
+        state.flags[i++] |= F_BLACK;
+        continue;
+      }
+      // A numbered black square counts the lights around it, so `0`–`4`.
+      const clue = digitValue(tok.value);
+      if (clue === null) return r.fail(descBadCharacter(tok.value));
+      if (clue > 4) r.fail(DESC_OUT_OF_RANGE);
+      state.flags[i] |= F_NUMBERED | F_BLACK;
+      state.lights[i++] = clue;
     }
-  }
-  if (run) desc += String.fromCharCode(A - 1 + run);
-  return desc;
+    if (i < wh) r.fail(DESC_TOO_SHORT);
+    if (i > wh) r.fail(DESC_TOO_LONG);
+    return state;
+  });
 }
 
 export function validateDesc(p: LightupParams, desc: string): DescError | null {
-  let j = 0;
-  for (let i = 0; i < p.w * p.h; i++) {
-    const c = desc[j++];
-    if (c === undefined) return DESC_TOO_SHORT;
-    // A numbered black square counts the lights around it, so `0`–`4`.
-    const clue = digitValue(c);
-    if (c >= "a" && c <= "z") {
-      i += c.charCodeAt(0) - A; // and the loop's i++ adds another one
-    } else if (clue !== null && clue > 4) {
-      return DESC_OUT_OF_RANGE;
-    } else if (c !== "B" && clue === null) {
-      return descBadCharacter(c);
-    }
-  }
-  if (j < desc.length) return DESC_TOO_LONG;
-  return null;
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: LightupParams, desc: string): LightupState {
-  const state = emptyState(p);
-  let run = 0; // open squares still owed by a run letter
-  let j = 0;
-  for (let i = 0; i < p.w * p.h; i++) {
-    if (run > 0) {
-      run--;
-      continue;
-    }
-    const c = desc[j++] ?? "S";
-    const clue = digitValue(c);
-    if (c >= "a" && c <= "z") {
-      run = c.charCodeAt(0) - A; // this square is the run's first
-    } else if (clue !== null && clue <= 4) {
-      state.flags[i] |= F_NUMBERED | F_BLACK;
-      state.lights[i] = clue;
-    } else if (c === "B") {
-      state.flags[i] |= F_BLACK;
-    }
-  }
-  return state;
+  return descValue(parseDesc(p, desc));
 }
 
 // --- text format -----------------------------------------------------------------------------

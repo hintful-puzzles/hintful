@@ -180,13 +180,31 @@ describe("salad description codec", () => {
     expect(validateDesc(p, "CaCbAfBaAaA,p")).toBe(DESC_TOO_LONG);
     expect(validateDesc(p, "C!aCbAfBaAa,p")).toBe(descBadCharacter("!"));
     expect(validateDesc(p, "IaCbAfBaAa,p")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, "CaCbAfBa,p")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, "CaCbAfBa,p")).toBe(descBadCharacter(","));
+    expect(validateDesc(p, "CaCbAfBa")).toBe(DESC_TOO_SHORT);
     expect(validateDesc(NUMBERS.p, "d1cO32b3aXa1d2bX")).toBe(DESC_TOO_LONG);
     expect(validateDesc(NUMBERS.p, "d1cO32b3aXa1d2!")).toBe(descBadCharacter("!"));
     expect(validateDesc(NUMBERS.p, "d9")).toBe(DESC_OUT_OF_RANGE);
     expect(validateDesc(NUMBERS.p, "d1cO32b3aXa1d")).toBe(DESC_TOO_SHORT);
     expect(validateDesc(LETTERS.p, LETTERS.desc)).toBeNull();
     expect(validateDesc(NUMBERS.p, NUMBERS.desc)).toBeNull();
+  });
+
+  it("refuses what the encoder never writes", () => {
+    const p = LETTERS.p;
+    // A blank run past the border's sixteen clues, or past the grid.
+    expect(validateDesc(p, "CaCbAfBaAb,p")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, "CaCbAfBaAa,q")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(NUMBERS.p, "d1cO32b3aXa1d2c")).toBe(DESC_TOO_LONG);
+    // An empty grid section: the encoder always writes its blanks.
+    expect(validateDesc(p, "CaCbAfBaAa,")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(NUMBERS.p, "")).toBe(DESC_TOO_SHORT);
+    // A digit for a letter, a letter for a digit, and a ball in ABC End View.
+    expect(validateDesc(p, "3aCbAfBaAa,p")).toBe(descBadCharacter("3"));
+    expect(validateDesc(NUMBERS.p, "dAcO32b3aXa1d2b")).toBe(descBadCharacter("A"));
+    expect(validateDesc(p, "CaCbAfBaAa,Oo")).toBe(descBadCharacter("O"));
+    // The separator replaced.
+    expect(validateDesc(p, "CaCbAfBaAa;p")).toBe(descBadCharacter(";"));
   });
 });
 

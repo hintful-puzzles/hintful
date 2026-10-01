@@ -11,9 +11,13 @@
 import { describe, expect, it } from "vitest";
 import {
   DESC_CONTRADICTORY,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  descValue,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyTiers } from "../../engine/difficulty.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
@@ -75,7 +79,7 @@ import {
   type RomeParams,
   type RomeState,
   type RomeUi,
-  readDesc,
+  readBoard,
   STATUS_COMPLETE,
   STATUS_INCOMPLETE,
   STATUS_INVALID,
@@ -114,7 +118,7 @@ function stateOf(
 /** Decode a hand-written description, with the display-path error flags
  * computed exactly as `newState` does. */
 function board(w: number, h: number, desc: string): RomeState {
-  const { board: b } = readDesc({ w, h, diff: DIFF_EASY }, desc);
+  const b = descValue(readDesc(desc, (r) => readBoard(r, { w, h, diff: DIFF_EASY })));
   validateGame(b, true);
   return b;
 }
@@ -171,29 +175,52 @@ describe("desc codec", () => {
   });
 
   it("decodes a letter run as N non-walls followed by one wall", () => {
-    // "a11" = 1 non-wall, then that letter's own wall, then 11 more walls:
+    // "a10" = 1 non-wall, then that letter's own wall, then 10 more walls:
     // exactly one merged pair (squares 0 and 1) in a 3x3.
-    const st = board(3, 3, "a11,i");
+    const st = board(3, 3, "a10,i");
     expect(st.regions.equivalent(0, 1)).toBe(true);
     expect(st.regions.size(0)).toBe(2);
     expect(st.regions.size(2)).toBe(1);
   });
 
+  it("round-trips runs of 26 and more, which upstream wrote past `z`", () => {
+    // 9x4 in four-square columns: the 27 borders between rows are one run of
+    // non-walls, and the clue grid is one run of 36 empty squares.
+    const w = 9;
+    const h = 4;
+    const regions = board(w, h, "32za,zj").regions;
+    for (let x = 0; x < w; x++) expect(regions.size(x)).toBe(4);
+    const desc = encodeDesc(w, h, regions, new Int32Array(w * h));
+    expect(desc).toBe("32za,zj");
+    const back = board(w, h, desc);
+    for (let i = 0; i < w * h; i++) expect(back.regions.size(i)).toBe(4);
+  });
+
   it("rejects invalid characters, oversized regions and misplaced goals", () => {
     const p: RomeParams = { w: 3, h: 3, diff: DIFF_EASY };
-    // A bad wall character stalls the wall parse without consuming anything,
-    // so upstream then skips exactly that one character as the ',' and reads
-    // the clues from what follows — reproduced here, hence the odd-looking
-    // "!i" rather than "!!,i" (whose garbage clues would report the *clue*
-    // error instead, exactly as the C does).
-    expect(validateDesc(p, "!i")).toBe(descBadCharacter("!"));
+    expect(validateDesc(p, "!,i")).toBe(descBadCharacter("!"));
     expect(validateDesc(p, `${ALL_WALLS_3},QQQQQQQQQ`)).toBe(descBadCharacter("Q"));
     expect(validateDesc(p, `${ALL_WALLS_3},c`)).toBe(DESC_TOO_SHORT);
-    // Five squares in one region: 'd' merges 4 horizontal edges in a row...
-    // simplest oversized region is the whole top row plus one below it.
-    expect(validateDesc({ w: 5, h: 3, diff: 0 }, "d18,o")).toBe(REGION_TOO_LARGE);
+    // Five squares in one region: 'd' merges the whole top row of a 5x3.
+    expect(validateDesc({ w: 5, h: 3, diff: 0 }, "d17,o")).toBe(REGION_TOO_LARGE);
     // A goal must sit alone: merge squares 0 and 1, then put the goal at 0.
-    expect(validateDesc(p, "a11,Xh")).toBe(GOAL_NOT_ALONE);
+    expect(validateDesc(p, "a10,Xh")).toBe(GOAL_NOT_ALONE);
+  });
+
+  it("refuses a desc that is not exactly what the encoder writes", () => {
+    const p: RomeParams = { w: 3, h: 3, diff: DIFF_EASY };
+    // A wall run past the twelve borders, or a letter's gaps past them.
+    expect(validateDesc(p, "a11,i")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, "m,i")).toBe(DESC_TOO_LONG);
+    // An empty wall run.
+    expect(validateDesc(p, "0a10,i")).toBe(DESC_OUT_OF_RANGE);
+    // The separator replaced, or missing.
+    expect(validateDesc(p, `${ALL_WALLS_3};i`)).toBe(descBadCharacter(";"));
+    expect(validateDesc(p, `${ALL_WALLS_3}i`)).toBe(descBadCharacter("i"));
+    // A clue run past the nine squares, and anything after the board.
+    expect(validateDesc(p, `${ALL_WALLS_3},j`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, `${ALL_WALLS_3},i,`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, `${ALL_WALLS_3},i`)).toBeNull();
   });
 
   it("rejects a description that is already finished or already broken", () => {
@@ -229,7 +256,7 @@ describe("validity check", () => {
 
   it("flags both squares when one region repeats an arrow", () => {
     // Squares 0 and 1 share a region and both point down.
-    const st = board(3, 3, "a11,DDg");
+    const st = board(3, 3, "a10,DDg");
     expect(validateGame(st, true)).toBe(STATUS_INVALID);
     expect(st.grid[0] & FE_DOUBLE).toBeTruthy();
     expect(st.grid[1] & FE_DOUBLE).toBeTruthy();
@@ -684,7 +711,7 @@ describe("moves", () => {
 
 describe("findMistakes", () => {
   it("flags the rule violations the board already shows live", () => {
-    const dup = board(3, 3, "a11,DDg");
+    const dup = board(3, 3, "a10,DDg");
     expect(romeGame.findMistakes?.(dup)).toEqual([
       { index: 0, kind: "double" },
       { index: 1, kind: "double" },

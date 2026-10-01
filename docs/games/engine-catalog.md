@@ -844,12 +844,40 @@ fuzzed against the code it replaced, 4,000 trials biased toward long runs.
 round trip, because Palisade, the first game converted, has no frozen
 differential; the other seven adopters have one and all seven are byte-clean.
 
-The adopter roster is derived from who imports the module and swept by
-[`run-length-desc.test.ts`](../../src/run-length-desc.test.ts), which also
-asserts the invariant the two hand-written scans existed to uphold: **a desc
-`validateDesc` accepts is one `newState` can build a board from.** Read that
-file's doc comment before relying on it — its two halves are worth different
-amounts, and it says which.
+Each adopter reads its desc in one parse (§ "`desc-reader.ts` — the cursor a
+desc parser drives"), so `validateDesc` and `newState` cannot disagree about
+it. What can still go wrong is the encoder and the parser disagreeing about
+`keepTrailingBlanks`, and
+[`desc-error-games.test.ts`](../../src/engine/desc-error-games.test.ts) loads
+every desc a game's generator writes: flipping that option in Slant's encoder
+turns it red.
+
+### `wall-runs.ts` — a region layout as a run-length wall list
+
+`encodeRegionWalls(regions, w, h)` / `readRegionWalls(r, regions, w, h)` write
+and read the `⟨walls⟩` half of a `⟨walls⟩,⟨clues⟩` desc: every border between
+adjacent cells, rows then columns, as decimal runs of walls and letters for a
+run of gaps *plus the wall that ends it* (`z` is 26 gaps and no wall). The
+reader is a `DescReader` call, so it composes with the clue half the game reads
+itself, and it refuses a run past the last border. Rome and Seismic. Reach for
+it for any desc that ships a region partition as walls; a desc that lists its
+regions some other way has a different grammar.
+`gapLetters(n)` is the letter run both clue halves share. Upstream's writer put
+a run of 26+ gaps past `z`; this one chunks, byte-identical for every run of 25
+or fewer.
+
+### `dot-runs.ts` — blanks and dots of two kinds
+
+`writeDotRuns(s, kindAt)` and `readDotRuns(r, s, place)`: one letter per dot,
+its offset from `a`/`A` the blanks before it and its case the dot's kind, `z`/`Z`
+chunks of 25 in the case of the dot that ends the run, and a lowercase letter
+closing the board. Unruly's givens and Clusters' dots are this grammar letter
+for letter, and each carried a copy of both halves. It is **not**
+`run-length.ts`'s grammar — a letter is a run *and* a value, a chunk is 25 —
+and Galaxies' letters, which look similar, write every chunk as a lowercase
+`z` whatever dot follows and end at the last dot with no closing letter, so
+Galaxies does not use it. The reader takes the
+`DescReader`, so it sits inside a game's one parse.
 
 ### `desc-alphabet.ts` — one character per small number
 
@@ -903,6 +931,36 @@ description's shape: Inertia's two starting squares, Keen's two-cell
 operations. One sentence about "this game ID". `desc-error.test.ts` fails a
 sentence two games pass, because then it is a kind the module is missing: add
 it here rather than rewording one of the two.
+
+**A desc is read once**: write one `parseDesc(p, desc): DescParse<T>`, and let
+`validateDesc` return `descVerdict(parseDesc(…))` and `newState` build from
+`descValue(parseDesc(…))`. A check that needs the parsed board belongs inside
+that parse, so the verdict and the value cannot come from different readings.
+
+### `desc-reader.ts` — the cursor a desc parser drives
+
+`readDesc(desc, (r) => …)` runs a parser and returns its `DescParse`. The
+`DescReader` it hands you reads forward: `peek()`, `peekIs(ok)`, `accept(s)`,
+`expect(s)`, `char(ok?)`, `int(lo, hi)`, `rest()`, `end()`, `fail(error)`. Each
+read that cannot be made fails with the right kind on its own — the desc
+**ended** is `DESC_TOO_SHORT`, **something else is there** is
+`descBadCharacter(thatChar)`, leftover text at `end()` is `DESC_TOO_LONG`, a
+number outside `[lo, hi]` is `DESC_OUT_OF_RANGE` — so a parser never writes
+`i >= desc.length ? … : …` again. Exemplar: `games/fifteen/state.ts`.
+
+**`int` has no unbounded form, on purpose.** An unbounded number reaches a
+typed array and wraps, and two games read a different board from the one their
+validator accepted that way. Pass the bound the board implies; where there
+genuinely is none, pass a generous one and say why.
+
+**It does not own a grammar.** Run letters, alphabets and separators are the
+game's (the run-length header says why the letter alphabet does not
+generalize); a grammar of one character per token, or a fixed-width or
+obfuscated blob, gains nothing from it and still reads once through
+`DescParse`. It fits exactly where the token iterator `run-length.ts` rejected
+did not: a grammar that hands control back to the caller between tokens —
+Keen's repeat counts, Solo's sections, Rome's walls — is a loop the caller
+drives, and the cursor is that loop's position.
 
 ### `decimal.ts` — decimal digits in a game ID
 

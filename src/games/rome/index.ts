@@ -23,6 +23,7 @@ import {
   obviousCandidateMarks,
   regionReach,
 } from "../../engine/candidate-hint.ts";
+import { descValue } from "../../engine/desc-error.ts";
 import type { DifficultyContract } from "../../engine/difficulty.ts";
 import { type EntryMistakeKind, entryMistakes } from "../../engine/entry-mistakes.ts";
 import {
@@ -90,7 +91,7 @@ import {
   type RomeDrawState,
   redraw,
 } from "./render.ts";
-import { romeSolve, validateDesc, validateGame } from "./solver.ts";
+import { parseDesc, romeSolve, validateDesc, validateGame } from "./solver.ts";
 import {
   boardFromClues,
   cloneState,
@@ -124,7 +125,6 @@ import {
   type RomeParams,
   type RomeState,
   type RomeUi,
-  readDesc,
   romeNotes,
   romeRegions,
   STATUS_COMPLETE,
@@ -145,9 +145,7 @@ export interface RomeMistake {
 // --- setup ------------------------------------------------------------------
 
 function newState(p: RomeParams, desc: string): RomeState {
-  const { board } = readDesc(p, desc);
-  validateGame(board, true);
-  return board;
+  return descValue(parseDesc(p, desc));
 }
 
 function newUi(_state: RomeState): RomeUi {

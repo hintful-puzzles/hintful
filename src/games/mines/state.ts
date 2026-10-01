@@ -14,17 +14,24 @@
 
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import {
-  DESC_MALFORMED,
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   type DescError,
+  type DescParse,
+  descValue,
+  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
+import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { obfuscateBitmap } from "../../engine/obfuscate.ts";
 import { AREA_TOO_LARGE } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
-import { type RandomState, randomStateDecode } from "../../engine/random/index.ts";
+import {
+  type RandomState,
+  randomStateDecode,
+  randomStateEncode,
+} from "../../engine/random/index.ts";
 import type { Point } from "../../engine/types.ts";
 
 // --- grid value encoding (upstream `signed char *grid`) ----------------
@@ -184,6 +191,9 @@ export function validateParams(p: MinesParams, full: boolean): string | null {
 
 // --- mine-bitmap ⇄ hex codec (mines.c describe_layout / new_game) -------
 
+const HEX = "0123456789abcdef";
+const isHex = (c: string) => HEX.includes(c);
+
 /** Encode a mine bitmap as the obfuscated nibble string that follows the `m`
  * in a public/private desc (upstream `describe_layout`, mines.c:1981, with
  * `obfuscate = true`). Emits exactly `(wh+3)/4` nibbles. */
@@ -196,19 +206,19 @@ export function encodeLayoutHex(mines: Int8Array, wh: number): string {
   for (let i = 0; i < nnib; i++) {
     let v = bmp[i >> 1];
     if ((i & 1) === 0) v >>= 4;
-    out += "0123456789abcdef"[v & 0xf];
+    out += HEX[v & 0xf];
   }
   return out;
 }
 
-/** Decode the `(wh+3)/4`-nibble hex tail of a public/private desc back into a
- * mine bitmap (upstream `new_game`, mines.c:2336). `masked` de-obfuscates. */
-function decodeLayoutBitmap(hex: string, wh: number, masked: boolean): Int8Array {
+/** Read the `(wh+3)/4`-nibble hex layout exactly as {@link encodeLayoutHex}
+ * writes it (upstream `new_game`, mines.c:2336): lowercase, the last nibble's
+ * bits past `wh` clear. `masked` de-obfuscates. */
+function readLayout(r: DescReader, wh: number, masked: boolean): Int8Array {
   const bmp = new Uint8Array((wh + 7) >> 3);
-  const nnib = (wh + 3) >> 2;
-  for (let i = 0; i < nnib; i++) {
-    // Either case is accepted, and anything that is not hex reads as 0.
-    const v = Number.parseInt(hex[i], 16) || 0;
+  for (let i = 0; i * 4 < wh; i++) {
+    const padding = (1 << (4 - Math.min(4, wh - i * 4))) - 1;
+    const v = HEX.indexOf(r.char((c) => isHex(c) && (HEX.indexOf(c) & padding) === 0));
     bmp[i >> 1] |= v << (4 * (1 - (i & 1)));
   }
   if (masked) obfuscateBitmap(bmp, wh, true);
@@ -217,64 +227,22 @@ function decodeLayoutBitmap(hex: string, wh: number, masked: boolean): Int8Array
   return mines;
 }
 
-// --- desc validation (mines.c validate_desc:2081) ----------------------
-
-/** Why `desc[i]` cannot stand where `ok` says what belongs: the desc ran out,
- * or something else is there. */
-function misplaced(
-  desc: string,
-  i: number,
-  ok: (c: string) => boolean,
-): DescError | null {
-  if (i >= desc.length) return DESC_TOO_SHORT;
-  return ok(desc[i]) ? null : DESC_MALFORMED;
+/** Read the rest of the desc as an RNG state written by `randomStateEncode`,
+ * which is the only text that round-trips through it. */
+function readRandomState(r: DescReader): RandomState {
+  const start = r.pos;
+  while (!r.done) r.char(isHex);
+  const text = r.desc.slice(start);
+  const rs = randomStateDecode(text);
+  const canonical = randomStateEncode(rs);
+  if (text.length < canonical.length) r.fail(DESC_TOO_SHORT);
+  if (text.length > canonical.length) r.fail(DESC_TOO_LONG);
+  // Same length and all hex, so only the read position can differ.
+  if (text !== canonical) r.fail(DESC_OUT_OF_RANGE);
+  return rs;
 }
 
-const isComma = (c: string) => c === ",";
-
-export function validateDesc(p: MinesParams, desc: string): DescError | null {
-  const wh = p.w * p.h;
-  let i = 0;
-  if (desc[0] === "r") {
-    const count = misplaced(desc, 1, isDigit);
-    if (count) return count;
-    const n = parseLeadingInt(desc, 1);
-    i = n.next;
-    if (n.value > wh - 9) {
-      return puzzleDescError(
-        "This game ID has more mines than its board can hold around a safe first click.",
-      );
-    }
-    // rest (the encoded RNG state) is ignored
-    return (
-      misplaced(desc, i, isComma) ??
-      misplaced(desc, i + 1, (c) => c === "u" || c === "a") ??
-      misplaced(desc, i + 2, isComma)
-    );
-  }
-  // Public/private desc: optional `x,y,` prefix, optional `m`/`u`, then hex.
-  if (desc.length > 0 && isDigit(desc[0])) {
-    const x = parseLeadingInt(desc, 0);
-    i = x.next;
-    if (x.value >= p.w) return DESC_OUT_OF_RANGE;
-    const beforeY = misplaced(desc, i, isComma) ?? misplaced(desc, i + 1, isDigit);
-    if (beforeY) return beforeY;
-    const y = parseLeadingInt(desc, i + 1);
-    i = y.next;
-    if (y.value >= p.h) return DESC_OUT_OF_RANGE;
-    const afterY = misplaced(desc, i, isComma);
-    if (afterY) return afterY;
-    i++;
-  }
-  if (desc[i] === "m" || desc[i] === "u") i++;
-  const length = desc.length - i;
-  const want = (wh + 3) >> 2;
-  if (length < want) return DESC_TOO_SHORT;
-  if (length > want) return DESC_TOO_LONG;
-  return null;
-}
-
-// --- initial state construction (mines.c new_game:2264) ----------------
+// --- desc (mines.c validate_desc:2081, new_game:2264) -------------------
 
 /** The parsed shape of a desc: the shared layout box, plus the first click
  * to open (a public desc bakes one in). */
@@ -283,45 +251,60 @@ export interface DecodedDesc {
   openXY: Point | null;
 }
 
+/**
+ * Three forms: the preliminary `r<n>,<u|a>,<rng>` that `newDesc` writes, whose
+ * layout waits for the first click; and the public `x,y,m<hex>` and private
+ * `m<hex>` that `supersededDesc` writes once it exists. `u` in place of `m` is
+ * upstream's unobfuscated layout, kept for IDs typed by hand.
+ */
+function parseDesc(p: MinesParams, desc: string): DescParse<DecodedDesc> {
+  const wh = p.w * p.h;
+  return readDesc(desc, (r) => {
+    const layout: MineLayout = {
+      mines: null,
+      n: p.n,
+      unique: p.unique,
+      rs: null,
+      startx: -1,
+      starty: -1,
+    };
+    if (r.accept("r")) {
+      // The real bound is the puzzle's own rule, which has its own sentence.
+      layout.n = r.int(0, Number.MAX_SAFE_INTEGER);
+      if (layout.n > wh - 9) {
+        r.fail(
+          puzzleDescError(
+            "This game ID has more mines than its board can hold around a safe first click.",
+          ),
+        );
+      }
+      r.expect(",");
+      layout.unique = r.char((c) => c === "u" || c === "a") === "u";
+      r.expect(",");
+      layout.rs = readRandomState(r);
+      return { layout, openXY: null };
+    }
+    let openXY: Point | null = null;
+    if (r.peekIs(isDigit)) {
+      const x = r.int(0, p.w - 1);
+      r.expect(",");
+      const y = r.int(0, p.h - 1);
+      r.expect(",");
+      openXY = { x, y };
+    }
+    const masked = r.char((c) => c === "m" || c === "u") === "m";
+    layout.mines = readLayout(r, wh, masked);
+    r.end();
+    return { layout, openXY };
+  });
+}
+
+export function validateDesc(p: MinesParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
+}
+
 export function decodeDesc(p: MinesParams, desc: string): DecodedDesc {
-  const layout: MineLayout = {
-    mines: null,
-    n: p.n,
-    unique: p.unique,
-    rs: null,
-    startx: -1,
-    starty: -1,
-  };
-
-  let i: number;
-  if (desc[0] === "r") {
-    const n = parseLeadingInt(desc, 1);
-    layout.n = n.value;
-    i = n.next;
-    if (desc[i]) i++; // eat comma
-    layout.unique = desc[i] !== "a";
-    i++;
-    if (desc[i]) i++; // eat comma
-    layout.rs = randomStateDecode(desc.slice(i));
-    return { layout, openXY: null };
-  }
-
-  // Public/private desc: optional x,y prefix, optional m/u, then hex.
-  i = 0;
-  let openXY: Point | null = null;
-  if (desc.length > 0 && isDigit(desc[0])) {
-    const x = parseLeadingInt(desc, 0);
-    i = x.next;
-    if (desc[i]) i++;
-    const y = parseLeadingInt(desc, i);
-    i = y.next;
-    if (desc[i]) i++;
-    openXY = { x: x.value, y: y.value };
-  }
-  const masked = desc[i] === "m";
-  if (masked || desc[i] === "u") i++;
-  layout.mines = decodeLayoutBitmap(desc.slice(i), p.w * p.h, masked);
-  return { layout, openXY };
+  return descValue(parseDesc(p, desc));
 }
 
 /** Won: the layout exists, the player is alive, and every square still

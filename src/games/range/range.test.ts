@@ -76,6 +76,22 @@ describe("desc codec", () => {
     expect(validateDesc(p, "2!2")).not.toBeNull(); // invalid char
     expect(validateDesc(p, "99i")).not.toBeNull(); // clue > w+h-1 (=5)
   });
+
+  it("refuses what encodeDesc never writes", () => {
+    const p = { w: 3, h: 3 };
+    expect(validateDesc(p, "2c5d")).toBeNull();
+    // Text after the grid, including after a comma.
+    expect(validateDesc(p, "2c5d,x")).toMatch(/too long/);
+    // A `_` anywhere but between two adjacent clues.
+    expect(validateDesc(p, "_2c5d")).toMatch(/"_"/);
+    expect(validateDesc(p, "2_c5d")).toMatch(/"c"/);
+    expect(validateDesc(p, "2c_5d")).toMatch(/"_"/);
+    expect(validateDesc(p, "2_5g")).toBeNull();
+    expect(validateDesc(p, "25g")).toMatch(/out of range/);
+    expect(validateDesc(p, "0h")).toMatch(/out of range/);
+    // A run overshooting the grid partway through.
+    expect(validateDesc(p, "j2")).toMatch(/too long/);
+  });
 });
 
 describe("interpretMove cycling", () => {

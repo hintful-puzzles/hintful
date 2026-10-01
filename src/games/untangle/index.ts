@@ -24,6 +24,7 @@ import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { BLUE, BLUE_WASH, ORANGE, PURPLE } from "../../engine/color/colors.ts";
 import { ERROR, FLASH, HELD, INK } from "../../engine/color/palette.ts";
 import { parseLeadingInt } from "../../engine/decimal.ts";
+import { descValue, descVerdict } from "../../engine/desc-error.ts";
 import { drag } from "../../engine/hint-gesture.ts";
 import {
   type Game,
@@ -56,11 +57,10 @@ import {
   buildEdges,
   coordLimit,
   DRAG_THRESHOLD,
-  decodeGame,
   findCrossings,
   makeCircle,
   PREFERRED_TILE_SIZE,
-  parseEdges,
+  parseDesc,
   placeMove,
   pointerDrop,
   type UntangleDrawState,
@@ -165,15 +165,12 @@ export const untangleGame: Game<
 
   // --- generation ----------------------------------------------------
   newDesc: newUntangleDesc,
-  validateDesc: (p, desc) => {
-    const parsed = parseEdges(desc, p.n);
-    return parsed.ok ? null : parsed.error;
-  },
+  validateDesc: (p, desc) => descVerdict(parseDesc(p, desc)),
 
   newState: (p, desc) => {
     const n = p.n;
     const w = coordLimit(n);
-    const { edges, edgeSet } = buildEdges(decodeGame(desc, n), n);
+    const { edges, edgeSet } = buildEdges(descValue(parseDesc(p, desc)), n);
     const pts = makeCircle(n, w);
     const { crosses } = findCrossings(pts, edges);
     return { n, w, pts, edges, edgeSet, crosses, justSolved: false };

@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { descValue } from "../../engine/desc-error.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { newUntangleDesc } from "./generator.ts";
 import { planarLayout } from "./planar.ts";
-import { decodeGame, type Edge, findCrossings } from "./state.ts";
+import { type Edge, findCrossings, parseDesc } from "./state.ts";
 
 function crossingFree(n: number, edges: readonly Edge[]): void {
   const pos = planarLayout(n, edges);
@@ -18,7 +19,7 @@ function crossingFree(n: number, edges: readonly Edge[]): void {
 }
 
 function generatedEdges(n: number, seed: string): Edge[] {
-  return decodeGame(newUntangleDesc({ n }, randomNew(seed)).desc, n);
+  return descValue(parseDesc({ n }, newUntangleDesc({ n }, randomNew(seed)).desc));
 }
 
 describe("planarLayout", () => {

@@ -9,6 +9,12 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
+import {
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
@@ -95,6 +101,20 @@ describe("tracks desc codec", () => {
     expect(tracksGame.validateDesc(SMALL.p, "f6pCkC,2,3,3,2,3,3,3,3,3,3,2,2")).toMatch(
       /one entrance and one exit/,
     );
+  });
+
+  it("reads exactly what the encoder writes", () => {
+    const v = (desc: string) => tracksGame.validateDesc(SMALL.p, desc);
+    const clues = ",2,3,3,2,3,S3,3,S3,3,3,2,2";
+    // A `0` nibble is a clue square with no track, which the encoder never writes.
+    expect(v(`f0pCkC${clues}`)).toMatch(/doesn't join exactly two/);
+    expect(v(`f6pCkG${clues}`)).toBe(descBadCharacter("G"));
+    expect(v(`f6pCm${clues}`)).toBe(DESC_TOO_LONG);
+    expect(v("f6pCkC,2,,3,2,3,S3,3,S3,3,3,2,2")).toBe(descBadCharacter(","));
+    expect(v("f6pCkC,2,7,3,2,3,S3,3,S3,3,3,2,2")).toBe(DESC_OUT_OF_RANGE);
+    expect(v("f6pCkC,S2,3,3,2,3,S3,3,S3,3,3,2,2")).toMatch(/one entrance and one exit/);
+    expect(v(`f6pCkC${clues},`)).toBe(DESC_TOO_LONG);
+    expect(v("f6pCkC,2,3")).toBe(DESC_TOO_SHORT);
   });
 });
 

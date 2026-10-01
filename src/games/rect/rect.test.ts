@@ -114,6 +114,22 @@ describe("rect desc codec", () => {
     expect(validateDesc(p, "j")).not.toBeNull(); // 10 > 9
     expect(validateDesc(p, "!")).not.toBeNull(); // bad char
   });
+
+  it("refuses what encodeNumbers never writes", () => {
+    const p = P({ w: 3, h: 3 });
+    expect(validateDesc(p, "3_6g")).toBeNull();
+    // A number no rectangle on the board can have, including one large
+    // enough to wrap a 32-bit cell to a different number.
+    expect(validateDesc(p, "10h")).toMatch(/out of range/);
+    expect(validateDesc(p, "4294967299h")).toMatch(/out of range/);
+    expect(validateDesc(p, "0h")).toMatch(/out of range/);
+    // A `_` anywhere but between two adjacent numbers.
+    expect(validateDesc(p, "_3_6g")).toMatch(/"_"/);
+    expect(validateDesc(p, "3_6g_")).toMatch(/too long/);
+    expect(validateDesc(p, "3a_5f")).toMatch(/"_"/);
+    expect(validateDesc(p, "3_6g,")).toMatch(/too long/);
+    expect(validateDesc(p, "3_6f")).toMatch(/too short/);
+  });
 });
 
 describe("rect input → moves", () => {

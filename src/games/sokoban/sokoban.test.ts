@@ -12,6 +12,7 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
@@ -152,6 +153,16 @@ describe("Sokoban desc codec", () => {
     expect(validateDesc(p5, "w6ubuw2s4w2s2w6")).toMatch(/more than one starting/);
     // Invalid character.
     expect(validateDesc(p5, "w6ubtw2s3w2s3z6")).toBe(descBadCharacter("z"));
+    // A player run of zero squares is not a player, and is not written.
+    expect(validateDesc(p5, "w6u0sbtw2s3w2s3w6")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p5, "w6ubtw2s3w2s3w1w5")).toBe(DESC_OUT_OF_RANGE);
+    // Two players in one run.
+    expect(validateDesc(p5, "w6u2tw2s3w2s3w6")).toMatch(/more than one starting/);
+    // Text after a full board.
+    expect(validateDesc(p5, `${desc}w`)).toBe(DESC_TOO_LONG);
+    // The generator's untouched square and a control character are not ID letters.
+    expect(validateDesc(p5, "w6ubti2s3w2s3w6")).toBe(descBadCharacter("i"));
+    expect(validateDesc(p5, "w6u\u0001tw2s3w2s3w6")).toBe(descBadCharacter("\u0001"));
   });
 
   it("validateDesc accepts pits, deep pits and labeled barrels (hand IDs)", () => {

@@ -6,7 +6,12 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { DESC_TOO_LONG, descBadCharacter } from "../../engine/desc-error.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
@@ -180,6 +185,22 @@ describe("map desc validation", () => {
 
   it("rejects an unexpected character", () => {
     expect(validateDesc(p, desc.replace(",", ",!"))).toBe(descBadCharacter("!"));
+  });
+
+  it("rejects an edge list cut short, overlong or without its comma", () => {
+    const [edges, clues] = desc.split(",");
+    expect(validateDesc(p, `${edges.slice(0, -1)},${clues}`)).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, `${edges}a,${clues}`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, `${edges};${clues}`)).toBe(descBadCharacter(";"));
+    expect(validateDesc(p, edges)).toBe(DESC_TOO_SHORT);
+  });
+
+  it("rejects a clue run past the last region, or a color past 3", () => {
+    const edges = desc.split(",")[0];
+    expect(validateDesc(p, `${edges},l`)).toBeNull();
+    expect(validateDesc(p, `${edges},m`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, `${edges},k`)).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, `${edges},4k`)).toBe(DESC_OUT_OF_RANGE);
   });
 });
 

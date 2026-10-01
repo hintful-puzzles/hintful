@@ -11,15 +11,16 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import { isDigit } from "../../engine/decimal.ts";
 import {
-  DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
@@ -160,116 +161,78 @@ export function validateParams(p: PatternParams, _full: boolean): string | null 
 // (run-length alphabet): only upstream's picture generator produces one, never
 // this one, but it is parsed so such IDs round-trip.
 
-export function validateDesc(p: PatternParams, desc: string): DescError | null {
-  const nlines = p.w + p.h;
-  let pos = 0; // index into desc
-  for (let i = 0; i < nlines; i++) {
-    let rowspace = (i < p.w ? p.h : p.w) + 1;
-    if (pos < desc.length && isDigit(desc[pos])) {
-      // A run of `.`-separated integers, terminated by `/`, `,` or EOF.
-      let sep: string;
-      do {
-        const { value: n, next } = parseLeadingInt(desc, pos);
-        pos = next;
-        if (n <= 0) {
-          return puzzleDescError(
-            "This game ID has a clue of 0, but every clue in this puzzle is a run of at least one square.",
-          );
-        }
-        if (n > 0x7fffffff - 1) return DESC_OUT_OF_RANGE;
-        rowspace -= n + 1;
-        if (rowspace < 0) {
-          return i < p.w
-            ? puzzleDescError(
-                "This game ID has a column whose clues need more squares than the column has.",
-              )
-            : puzzleDescError(
-                "This game ID has a row whose clues need more squares than the row has.",
-              );
-        }
-        sep = desc[pos] ?? "\0";
-        pos++; // consume the separator (the `do…while (desc[pos++] === '.')`)
-      } while (sep === ".");
-    } else {
-      pos++; // expect a slash immediately
+const isLower = (c: string): boolean => c >= "a" && c <= "z";
+const isUpper = (c: string): boolean => c >= "A" && c <= "Z";
+const isSquareLetter = (c: string): boolean => isLower(c) || isUpper(c);
+
+function parseDesc(p: PatternParams, desc: string): DescParse<PatternState> {
+  const { w, h } = p;
+  const wh = w * h;
+  return readDesc(desc, (r) => {
+    const clues: number[][] = [];
+    for (let i = 0; i < w + h; i++) {
+      if (i > 0) r.expect("/");
+      const len = i < w ? h : w;
+      const line: number[] = [];
+      let rowspace = len + 1;
+      if (r.peekIs(isDigit)) {
+        do {
+          const n = r.int(0, len);
+          if (n === 0)
+            r.fail(
+              puzzleDescError(
+                "This game ID has a clue of 0, but every clue in this puzzle is a run of at least one square.",
+              ),
+            );
+          rowspace -= n + 1;
+          if (rowspace < 0)
+            r.fail(
+              i < w
+                ? puzzleDescError(
+                    "This game ID has a column whose clues need more squares than the column has.",
+                  )
+                : puzzleDescError(
+                    "This game ID has a row whose clues need more squares than the row has.",
+                  ),
+            );
+          line.push(n);
+        } while (r.accept("."));
+      }
+      clues.push(line);
     }
 
-    const last = desc[pos - 1] ?? "\0";
-    if (last === "/") {
-      if (i + 1 === nlines) return DESC_TOO_LONG;
-    } else if (last === "\0" || last === ",") {
-      if (i + 1 < nlines) return DESC_TOO_SHORT;
-    } else {
-      return descBadCharacter(last);
-    }
-  }
-
-  if ((desc[pos - 1] ?? "\0") === ",") {
-    // Optional clue-squares section.
-    let i = 0;
-    while (i < p.w * p.h) {
-      const c = desc[pos++];
-      if (c === undefined) return DESC_TOO_SHORT;
-      const lower = c.toLowerCase();
-      if (lower >= "a" && lower <= "z") {
-        const len = lower.charCodeAt(0) - 97;
+    const immutable = new Uint8Array(wh);
+    const grid = new Uint8Array(wh).fill(GRID_UNKNOWN);
+    if (r.accept(",")) {
+      // A letter skips its index in squares, then (below `z`) places a clue
+      // square, black if uppercase; one landing on the end is the tail.
+      let i = 0;
+      while (i < wh) {
+        const c = r.char(isSquareLetter);
+        const len = c.toLowerCase().charCodeAt(0) - 97;
         i += len;
-        if (len < 25 && i < p.w * p.h) i++;
-        if (i > p.w * p.h) return DESC_TOO_LONG;
-      } else {
-        return descBadCharacter(c);
+        if (i > wh) r.fail(DESC_TOO_LONG);
+        if (len < 25 && i < wh) {
+          grid[i] = isUpper(c) ? GRID_FULL : GRID_EMPTY;
+          immutable[i] = 1;
+          i++;
+        }
       }
     }
-    if (pos < desc.length) return DESC_TOO_LONG;
-  }
+    r.end();
 
-  return null;
+    const fontLarge = chooseFontLarge(w, clues);
+    const common: PatternCommon = { w, h, clues, immutable, fontLarge };
+    return { common, grid };
+  });
+}
+
+export function validateDesc(p: PatternParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: PatternParams, desc: string): PatternState {
-  const { w, h } = p;
-  const nlines = w + h;
-  const clues: number[][] = [];
-  const immutable = new Uint8Array(w * h);
-  const grid = new Uint8Array(w * h).fill(GRID_UNKNOWN);
-
-  let pos = 0;
-  for (let i = 0; i < nlines; i++) {
-    const line: number[] = [];
-    if (pos < desc.length && isDigit(desc[pos])) {
-      let sep: string;
-      do {
-        const { value, next } = parseLeadingInt(desc, pos);
-        pos = next;
-        line.push(value);
-        sep = desc[pos] ?? "\0";
-        pos++;
-      } while (sep === ".");
-    } else {
-      pos++; // slash
-    }
-    clues.push(line);
-  }
-
-  if ((desc[pos - 1] ?? "\0") === ",") {
-    let i = 0;
-    while (i < w * h) {
-      const c = desc[pos++];
-      if (c === undefined) break;
-      const full = c >= "A" && c <= "Z";
-      const len = c.toLowerCase().charCodeAt(0) - 97;
-      i += len;
-      if (len < 25 && i < w * h) {
-        grid[i] = full ? GRID_FULL : GRID_EMPTY;
-        immutable[i] = 1;
-        i++;
-      }
-    }
-  }
-
-  const fontLarge = chooseFontLarge(w, clues);
-  const common: PatternCommon = { w, h, clues, immutable, fontLarge };
-  return { common, grid };
+  return descValue(parseDesc(p, desc));
 }
 
 /** Upstream's font-size heuristic: switch to the small font if any column

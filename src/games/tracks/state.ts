@@ -16,15 +16,17 @@
  * onto the adjacent cell, so the two never disagree.
  */
 
-import { parseLeadingInt } from "../../engine/decimal.ts";
 import { c2nUpper, n2cUpper, UPPER_ALPHABET_SIZE } from "../../engine/desc-alphabet.ts";
 import {
   DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
+  type DescParse,
   descBadCharacter,
+  descValue,
+  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { findLoops } from "../../engine/findloop.ts";
@@ -324,86 +326,68 @@ export function validateParams(p: TracksParams, _full: boolean): string | null {
 }
 
 // --- desc codec -----------------------------------------------------------
-// Grid: run-length `a`–`z` gaps (each letter advances the count) + one hex
-// char per clue square (its two E_TRACK direction flags). Then a
+// Grid: run-length `a`–`z` gaps of 1–26 squares + one hex char per clue
+// square (its two E_TRACK direction flags). Then a
 // `,`-separated `S?<n>` list of the w column clues and h row clues.
 
-export function validateDesc(p: TracksParams, desc: string): DescError | null {
-  const { w, h } = p;
-  let i = 0;
-  let pos = 0;
-  let inCount = 0;
-  let outCount = 0;
-  while (pos < desc.length) {
-    const ch = desc[pos];
-    // A clue square is a nibble of direction flags: `0`–`9`, then `A`–`F`.
-    const nibble = c2nUpper(ch);
-    let f = 0;
-    if (ch >= "a" && ch <= "z") i += ch.charCodeAt(0) - 97;
-    else if (nibble !== null && nibble <= 15) f = nibble;
-    else return descBadCharacter(ch);
+const isRunLetter = (c: string): boolean => c >= "a" && c <= "z";
 
-    if (f !== 0 && NBITS[f] !== 2)
-      return puzzleDescError(
-        "This game ID has a clue square whose track doesn't join exactly two of its sides.",
-      );
-    i++;
-    pos++;
-    if (i === w * h) break;
-  }
-  for (let n = 0; n < w + h; n++) {
-    if (desc[pos] === undefined) return DESC_TOO_SHORT;
-    if (desc[pos] !== ",") return descBadCharacter(desc[pos]);
-    pos++;
-    if (desc[pos] === "S") {
-      if (n < w) outCount++;
-      else inCount++;
-      pos++;
-    }
-    pos = parseLeadingInt(desc, pos).next;
-  }
-  if (inCount !== 1 || outCount !== 1)
-    return puzzleDescError(
-      "This game ID needs exactly one entrance and one exit for its track.",
-    );
-  if (pos < desc.length) return DESC_TOO_LONG;
-  return null;
+/** The direction flags a clue square's character stands for, `0`–`F`. */
+function clueNibble(c: string): number | null {
+  const nibble = c2nUpper(c);
+  return nibble !== null && nibble < 16 ? nibble : null;
 }
 
-/** Parse a desc into a fresh board (clue squares + edges + numbers/stations). */
-export function decodeDesc(p: TracksParams, desc: string): Board {
-  const { w, h } = p;
-  const b = blankBoard(w, h);
-  let i = 0;
-  let pos = 0;
-  while (pos < desc.length) {
-    const ch = desc[pos];
-    const nibble = c2nUpper(ch);
-    let f = 0;
-    if (ch >= "a" && ch <= "z") i += ch.charCodeAt(0) - 97;
-    else if (nibble !== null && nibble <= 15) f = nibble;
+const ONE_ENTRANCE_AND_EXIT = puzzleDescError(
+  "This game ID needs exactly one entrance and one exit for its track.",
+);
 
-    if (f !== 0) {
+function parseDesc(p: TracksParams, desc: string): DescParse<Board> {
+  const { w, h } = p;
+  const area = w * h;
+  return readDesc(desc, (r) => {
+    const b = blankBoard(w, h);
+    let i = 0;
+    while (i < area) {
+      if (r.peekIs(isRunLetter)) {
+        i += r.char().charCodeAt(0) - 96;
+        if (i > area) r.fail(DESC_TOO_LONG);
+        continue;
+      }
+      const c = r.char();
+      const f = clueNibble(c) ?? r.fail(descBadCharacter(c));
+      if (NBITS[f] !== 2)
+        r.fail(
+          puzzleDescError(
+            "This game ID has a clue square whose track doesn't join exactly two of its sides.",
+          ),
+        );
       b.sflags[i] |= S_TRACK | S_CLUE;
       for (const d of DIRS) if (f & d) sESet(b, i % w, Math.floor(i / w), d, E_TRACK);
+      i++;
     }
-    i++;
-    pos++;
-    if (i === w * h) break;
-  }
-  for (let n = 0; n < w + h; n++) {
-    // desc[pos] === ',' (validated)
-    pos++;
-    if (desc[pos] === "S") {
-      if (n < w) b.colS = n;
-      else b.rowS = n - w;
-      pos++;
+    for (let n = 0; n < w + h; n++) {
+      r.expect(",");
+      if (r.accept("S")) {
+        if (n < w) {
+          if (b.colS !== -1) r.fail(ONE_ENTRANCE_AND_EXIT);
+          b.colS = n;
+        } else {
+          if (b.rowS !== -1) r.fail(ONE_ENTRANCE_AND_EXIT);
+          b.rowS = n - w;
+        }
+      }
+      // A column's count is of its h squares, a row's of its w.
+      b.numbers[n] = r.int(0, n < w ? h : w);
     }
-    const count = parseLeadingInt(desc, pos);
-    pos = count.next;
-    b.numbers[n] = count.value;
-  }
-  return b;
+    r.end();
+    if (b.colS === -1 || b.rowS === -1) r.fail(ONE_ENTRANCE_AND_EXIT);
+    return b;
+  });
+}
+
+export function validateDesc(p: TracksParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
 }
 
 /** Encode a board's clue squares + numbers as the upstream desc. */
@@ -433,7 +417,7 @@ export function encodeDesc(b: Board): string {
 }
 
 export function newState(p: TracksParams, desc: string): TracksState {
-  const b = decodeDesc(p, desc);
+  const b = descValue(parseDesc(p, desc));
   return {
     w: p.w,
     h: p.h,

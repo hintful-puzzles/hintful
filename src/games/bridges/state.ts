@@ -9,9 +9,13 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   type DescError,
+  type DescParse,
   descBadCharacter,
+  descValue,
+  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
@@ -723,59 +727,58 @@ export function encodeGame(state: BridgesState): string {
  * Bridges reads the desc *and* the grid at once: `lastRow` remembers, per
  * column, whether the cell one row up held an island, so two islands that would
  * touch orthogonally are caught during the scan. That walk over cells is what
- * the token loop feeds; only the character arithmetic is shared.
+ * the token loop feeds; only the character arithmetic is shared. The value is
+ * each island's cell and bridge count, in reading order.
  */
-export function validateDesc(params: BridgesParams, desc: string): DescError | null {
+function parseDesc(
+  params: BridgesParams,
+  desc: string,
+): DescParse<{ i: number; count: number }[]> {
   const w = params.w;
   const wh = params.w * params.h;
-  const lastRow = new Array<boolean>(w).fill(false);
-  let nislands = 0;
-  let i = 0;
-  for (const tok of scanRunLength(desc)) {
-    // A token past the last cell is data the grid has no room for, whether or
-    // not it is a character this game accepts.
-    if (i >= wh) return DESC_TOO_LONG;
-    if ("blanks" in tok) {
-      for (let j = 0; j < tok.blanks; j++) lastRow[(i + j) % w] = false;
-      i += tok.blanks;
-      continue;
+  return readDesc(desc, (r) => {
+    const lastRow = new Array<boolean>(w).fill(false);
+    const islands: { i: number; count: number }[] = [];
+    let i = 0;
+    for (const tok of scanRunLength(r.rest())) {
+      // A token past the last cell is data the grid has no room for, whether or
+      // not it is a character this game accepts.
+      if (i >= wh) r.fail(DESC_TOO_LONG);
+      if ("blanks" in tok) {
+        for (let j = 0; j < tok.blanks; j++) lastRow[(i + j) % w] = false;
+        i += tok.blanks;
+        continue;
+      }
+      // An island holds 1..16 bridges: `1`–`9`, then `A`–`G`.
+      const count = c2nUpper(tok.value);
+      if (count === null || count < 1 || count > 16) {
+        return r.fail(descBadCharacter(tok.value));
+      }
+      if ((i % w > 0 && lastRow[(i % w) - 1]) || lastRow[i % w]) {
+        r.fail(puzzleDescError("This game ID places two islands next to each other."));
+      }
+      lastRow[i % w] = true;
+      islands.push({ i, count });
+      i++;
     }
-    // An island holds 1..16 bridges: `1`–`9`, then `A`–`G`.
-    const count = c2nUpper(tok.value);
-    if (count === null || count < 1 || count > 16) {
-      return descBadCharacter(tok.value);
-    }
-    nislands++;
-    if ((i % w > 0 && lastRow[(i % w) - 1]) || lastRow[i % w]) {
-      return puzzleDescError("This game ID places two islands next to each other.");
-    }
-    lastRow[i % w] = true;
-    i++;
-  }
-  if (i < wh) return DESC_TOO_SHORT;
-  if (i > wh) return DESC_TOO_LONG;
-  if (nislands < 2) return puzzleDescError("This game ID has fewer than two islands.");
-  return null;
+    if (i < wh) r.fail(DESC_TOO_SHORT);
+    if (i > wh) r.fail(DESC_TOO_LONG);
+    if (islands.length < 2)
+      r.fail(puzzleDescError("This game ID has fewer than two islands."));
+    return islands;
+  });
+}
+
+export function validateDesc(params: BridgesParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(params, desc));
 }
 
 /** Build a fresh state from a desc (C new_game_sub). */
 export function newStateFromDesc(params: BridgesParams, desc: string): BridgesState {
   const state = BridgesState.empty(params);
   const { w } = params;
-  const wh = w * params.h;
-  let i = 0;
-  for (const tok of scanRunLength(desc)) {
-    if (i >= wh) break;
-    // A blank run is a run of empty squares, which `empty()` already left so.
-    if ("blanks" in tok) {
-      i += tok.blanks;
-      continue;
-    }
-    const count = c2nUpper(tok.value);
-    // Anything else was rejected by validateDesc.
-    if (count !== null && count >= 1 && count <= 16)
-      state.islandAdd(i % w, Math.floor(i / w), count);
-    i++;
+  for (const { i, count } of descValue(parseDesc(params, desc))) {
+    state.islandAdd(i % w, Math.floor(i / w), count);
   }
   state.mapFindOrthogonal();
   state.mapUpdatePossibles();

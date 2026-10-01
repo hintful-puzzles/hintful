@@ -24,10 +24,13 @@ import { digitValue } from "../../engine/decimal.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
+  type DescParse,
   descBadCharacter,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { type RowColRegion, rowColRegions } from "../../engine/latin-hint.ts";
@@ -381,99 +384,111 @@ interface Decoded {
   holes: Uint8Array;
 }
 
-/** The symbol a desc character names: `'1'..'9'` or `'A'..'I'` as `1..9`, else 0. */
-function descSymbol(ch: string): number {
-  const digit = digitValue(ch);
-  if (digit !== null && digit >= 1) return digit;
-  const c = ch.charCodeAt(0);
-  if (c >= 65 && c <= 73) return c - 64;
-  return 0;
+/** `a`..`z`: a run of 1..26 blanks. */
+function isRunLetter(c: string): boolean {
+  return c >= "a" && c <= "z";
+}
+
+/** `A`..`I` as symbols `1..9`; the alphabet {@link letterChar} writes. */
+function letterSymbol(c: string): number | null {
+  const v = c.charCodeAt(0) - 64;
+  return v >= 1 && v <= 9 ? v : null;
+}
+
+/** A Number Ball grid's characters: a digit symbol, or a cross or ball. */
+function numbersGridValue(c: string): number | null {
+  if (c === "X") return CROSS;
+  if (c === "O") return CIRCLE;
+  const d = digitValue(c);
+  return d !== null && d >= 1 ? d : null;
+}
+
+/** An ABC End View grid's characters: a letter symbol, or a cross. Its writer
+ * never places a ball. */
+function lettersGridValue(c: string): number | null {
+  return c === "X" ? CROSS : letterSymbol(c);
 }
 
 /**
- * Upstream `load_game`: decode `desc` into the four fixed arrays, or report the
- * failure message `validate_desc` surfaces. A letters description is
- * `<border>,<grid>`; a numbers description is `<grid>` alone. In both, `'a'..'z'`
- * is a run of 1..26 blank entries.
+ * Read one `serialize`d section of exactly `count` entries: `a`..`z` is a run
+ * of blanks, and any other character must be one `value` maps to a symbol in
+ * `1..nums` or a marker.
  */
-function loadGame(
-  p: SaladParams,
-  desc: string,
-): { ok: true; value: Decoded } | { ok: false; error: DescError } {
-  const o = p.order;
-  const nums = p.nums;
-  const o2 = o * o;
-  const ox4 = o * 4;
+function readSection(
+  r: DescReader,
+  count: number,
+  nums: number,
+  value: (c: string) => number | null,
+): Uint8Array {
+  const out = new Uint8Array(count);
+  for (let pos = 0; pos < count; ) {
+    const c = r.char();
+    const run = isRunLetter(c) ? c.charCodeAt(0) - 96 : 0;
+    if (run) {
+      if (run > count - pos) r.fail(DESC_TOO_LONG);
+      pos += run;
+      continue;
+    }
+    const v = value(c);
+    if (v === null) r.fail(descBadCharacter(c));
+    if (v > nums && v !== CROSS && v !== CIRCLE) r.fail(DESC_OUT_OF_RANGE);
+    out[pos++] = v;
+  }
+  return out;
+}
 
-  const borderclues = new Uint8Array(ox4);
-  const gridclues = new Uint8Array(o2);
-  const grid = new Uint8Array(o2);
-  const holes = new Uint8Array(o2);
-
-  let i = 0;
-  let pos = 0;
-
-  if (p.mode === GAMEMODE_LETTERS) {
-    while (i < desc.length && desc[i] !== ",") {
-      const ch = desc[i++];
-      const c = ch.charCodeAt(0);
-      if (pos >= ox4) return { ok: false, error: DESC_TOO_LONG };
-      if (c >= 97 && c <= 122) {
-        pos += c - 96;
-        continue;
+/**
+ * Upstream `load_game`, reading exactly what {@link serialize} writes. An ABC
+ * End View description is `<border>,<grid>`, in letters; a Number Ball one is
+ * `<grid>` alone, in digits, crosses and balls. Each section covers its
+ * entries exactly.
+ */
+function parseDesc(p: SaladParams, desc: string): DescParse<Decoded> {
+  const o2 = p.order * p.order;
+  const abc = p.mode === GAMEMODE_LETTERS;
+  return readDesc(desc, (r) => {
+    let borderclues: Uint8Array = new Uint8Array(p.order * 4);
+    if (abc) {
+      borderclues = readSection(r, borderclues.length, p.nums, letterSymbol);
+      // Another entry where the `,` belongs is a border with one too many.
+      if (r.peekIs((c) => isRunLetter(c) || letterSymbol(c) !== null)) {
+        r.fail(DESC_TOO_LONG);
       }
-      const d = descSymbol(ch);
-      if (!d) return { ok: false, error: descBadCharacter(ch) };
-      if (d > nums) return { ok: false, error: DESC_OUT_OF_RANGE };
-      borderclues[pos++] = d;
+      r.expect(",");
     }
+    const gridclues = readSection(
+      r,
+      o2,
+      p.nums,
+      abc ? lettersGridValue : numbersGridValue,
+    );
+    r.end();
 
-    if (pos < ox4) return { ok: false, error: DESC_TOO_SHORT };
-    if (desc[i] === ",") i++;
-  }
-
-  pos = 0;
-  while (i < desc.length) {
-    const ch = desc[i++];
-    const c = ch.charCodeAt(0);
-    if (pos >= o2) return { ok: false, error: DESC_TOO_LONG };
-    if (c >= 97 && c <= 122) {
-      pos += c - 96;
-    } else if (c === CIRCLE || c === CROSS) {
-      gridclues[pos] = c;
-      holes[pos++] = c;
-    } else {
-      const d = descSymbol(ch);
-      if (!d) return { ok: false, error: descBadCharacter(ch) };
-      if (d > nums) return { ok: false, error: DESC_OUT_OF_RANGE };
-      gridclues[pos] = d;
-      grid[pos] = d;
-      holes[pos++] = CIRCLE;
+    const grid = new Uint8Array(o2);
+    const holes = new Uint8Array(o2);
+    for (let i = 0; i < o2; i++) {
+      const v = gridclues[i];
+      if (v === CROSS || v === CIRCLE) holes[i] = v;
+      else if (v) {
+        grid[i] = v;
+        holes[i] = CIRCLE;
+      }
     }
-  }
-
-  // Upstream accepts an *empty* grid section (`pos > 0 &&`): a letters puzzle
-  // whose clues all sit on the border still writes a run of blanks, but a
-  // zero-length section is legal too.
-  if (pos > 0 && pos < o2) return { ok: false, error: DESC_TOO_SHORT };
-
-  return { ok: true, value: { borderclues, gridclues, grid, holes } };
+    return { borderclues, gridclues, grid, holes };
+  });
 }
 
 export function validateDesc(p: SaladParams, desc: string): DescError | null {
-  const r = loadGame(p, desc);
-  return r.ok ? null : r.error;
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: SaladParams, desc: string): SaladState {
-  const r = loadGame(p, desc);
-  if (!r.ok) throw new Error(`salad: ${r.error}`);
   return {
     order: p.order,
     nums: p.nums,
     mode: p.mode,
     diff: p.diff,
-    ...r.value,
+    ...descValue(parseDesc(p, desc)),
     pencil: new Int32Array(p.order * p.order),
   };
 }

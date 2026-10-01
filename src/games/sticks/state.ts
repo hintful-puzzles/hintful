@@ -11,13 +11,15 @@
  * and the cursor is drawn from the `Ui`.
  */
 
-import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import { isDigit } from "../../engine/decimal.ts";
 import {
   DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
@@ -198,62 +200,58 @@ export function validateParams(p: SticksParams, full: boolean): string | null {
 
 const CODE_a = "a".charCodeAt(0);
 
-/**
- * Validate the run-length desc, faithful to upstream `validate_desc`'s
- * position count: lowercase letters advance by `(c - 'a') + 1` (`z` = 26),
- * `B` is a black cell (advancing only when no clue digit follows — a
- * `B<digits>` pair shares one cell), a digit run is an inline clue on the
- * current cell, and `_` is an inert separator.
- */
-export function validateDesc(p: SticksParams, desc: string): DescError | null {
-  const s = p.w * p.h;
-  let pos = 0;
-  let i = 0;
-  while (i < desc.length) {
-    const c = desc[i];
-    if (c >= "a" && c <= "z") {
-      pos += c.charCodeAt(0) - CODE_a + 1;
-    } else if (c === "B") {
-      if (!(i + 1 < desc.length && isDigit(desc[i + 1]))) pos++;
-    } else if (isDigit(c)) {
-      i = parseLeadingInt(desc, i).next;
-      pos++;
-      continue;
-    } else if (c !== "_") {
-      return descBadCharacter(c);
-    }
-    i++;
-  }
-  if (pos < s) return DESC_TOO_SHORT;
-  if (pos > s) return DESC_TOO_LONG;
-  return null;
+/** Whether `c` is a run letter: `a`–`z` for 1–26 plain white cells. */
+function isRunLetter(c: string): boolean {
+  return c >= "a" && c <= "z";
 }
 
-/** Decode a validated desc into a fresh state (upstream `new_game`). */
-export function newState(p: SticksParams, desc: string): SticksState {
+/**
+ * Read the desc {@link encodeDesc} writes: run letters for plain white cells,
+ * `B` for a black cell with its optional clue (`0..4`, the lines that can meet
+ * it) straight after, and a white cell's clue (a stick length, `1..max(w,h)`)
+ * preceded by `_` exactly when the cell before it was written too.
+ */
+function parseDesc(
+  p: SticksParams,
+  desc: string,
+): DescParse<{ grid: Uint8Array; numbers: Int16Array }> {
   const { w, h } = p;
-  const grid = new Uint8Array(w * h);
-  const numbers = new Int16Array(w * h).fill(-1);
-  let pos = 0;
-  let i = 0;
-  while (i < desc.length) {
-    const c = desc[i];
-    if (c >= "a" && c <= "z") {
-      pos += c.charCodeAt(0) - CODE_a + 1;
-    } else if (c === "B") {
-      grid[pos] = F_BLOCK;
-      if (!(i + 1 < desc.length && isDigit(desc[i + 1]))) pos++;
-    } else if (isDigit(c)) {
-      const n = parseLeadingInt(desc, i);
-      numbers[pos] = n.value;
+  const s = w * h;
+  return readDesc(desc, (r) => {
+    const grid = new Uint8Array(s);
+    const numbers = new Int16Array(s).fill(-1);
+    let pos = 0;
+    let afterCell = false;
+    while (pos < s) {
+      if (r.peekIs(isRunLetter)) {
+        pos += r.char().charCodeAt(0) - CODE_a + 1;
+        if (pos > s) r.fail(DESC_TOO_LONG);
+        afterCell = false;
+        continue;
+      }
+      if (r.accept("B")) {
+        grid[pos] = F_BLOCK;
+        if (r.peekIs(isDigit)) numbers[pos] = r.int(0, 4);
+      } else {
+        if (afterCell) r.expect("_");
+        numbers[pos] = r.int(1, Math.max(w, h));
+      }
       pos++;
-      i = n.next;
-      continue;
+      afterCell = true;
     }
-    // '_' (and anything else validateDesc would have rejected) is inert.
-    i++;
-  }
-  return { w, h, grid, numbers };
+    r.end();
+    return { grid, numbers };
+  });
+}
+
+export function validateDesc(p: SticksParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
+}
+
+/** Build a fresh state from a desc (upstream `new_game`). */
+export function newState(p: SticksParams, desc: string): SticksState {
+  const { grid, numbers } = descValue(parseDesc(p, desc));
+  return { w: p.w, h: p.h, grid, numbers };
 }
 
 /**

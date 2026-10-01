@@ -193,8 +193,8 @@ describe("Pegs moves", () => {
   });
 
   it("throws on invalid move (no peg in middle)", () => {
-    const p = { w: 3, h: 1, type: 0 };
-    const state = G.newState(p, "PHH");
+    const p = { w: 4, h: 1, type: 0 };
+    const state = G.newState(p, "PHHP");
     const move: PegsMove = { type: "jump", sx: 0, sy: 0, tx: 2, ty: 0 };
     expect(() => G.executeMove(state, move)).toThrow();
   });
@@ -231,10 +231,10 @@ describe("Pegs text format", () => {
   });
 
   it("formats obstacles as spaces", () => {
-    const p = { w: 3, h: 1, type: 0 };
-    const state = G.newState(p, "OPO");
+    const p = { w: 5, h: 1, type: 0 };
+    const state = G.newState(p, "OPPHO");
     const text = G.textFormat?.(state);
-    expect(text).toBe(" * ");
+    expect(text).toBe(" **- ");
   });
 });
 

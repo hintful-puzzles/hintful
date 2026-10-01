@@ -8,13 +8,14 @@
  */
 
 import {
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
   descNeedsOne,
+  descValue,
+  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
@@ -288,49 +289,44 @@ export function legalDirections(board: Board, px: number, py: number): number[] 
 
 // --- desc codec ------------------------------------------------------
 
-export function validateDesc(p: InertiaParams, desc: string): DescError | null {
-  const wh = p.w * p.h;
-  let starts = 0;
-  let gems = 0;
-
-  for (let i = 0; i < wh; i++) {
-    if (i >= desc.length) return DESC_TOO_SHORT;
-    const c = desc[i];
-    if (c === START_CHAR) {
-      starts++;
-    } else if (charToCell(c) === null) {
-      return descBadCharacter(c);
-    } else if (c === CELL_CHARS[GEM]) {
-      gems++;
+/** One character per cell, exactly one of them the start. */
+function parseDesc(
+  p: InertiaParams,
+  desc: string,
+): DescParse<{ board: Board; start: number; gems: number }> {
+  return readDesc(desc, (r) => {
+    const board = Board.blank(p.w, p.h);
+    let start = -1;
+    let starts = 0;
+    let gems = 0;
+    for (let i = 0; i < board.area; i++) {
+      const c = r.char((ch) => ch === START_CHAR || charToCell(ch) !== null);
+      if (c === START_CHAR) {
+        // The start square is a stop square with the ball standing on it.
+        board.cells[i] = STOP;
+        start = i;
+        starts++;
+      } else {
+        const cell = charToCell(c) as Cell;
+        board.cells[i] = cell;
+        if (cell === GEM) gems++;
+      }
     }
-  }
-  if (desc.length > wh) return DESC_TOO_LONG;
-  if (starts !== 1) return descNeedsOne("starting square", starts);
-  if (gems < 1) return puzzleDescError("This game ID has no gems to collect.");
+    r.end();
+    if (starts !== 1) r.fail(descNeedsOne("starting square", starts));
+    if (gems < 1) r.fail(puzzleDescError("This game ID has no gems to collect."));
+    return { board, start, gems };
+  });
+}
 
-  return null;
+export function validateDesc(p: InertiaParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: InertiaParams, desc: string): InertiaState {
-  const board = Board.blank(p.w, p.h);
-  let px = -1;
-  let py = -1;
-  let gems = 0;
-
-  for (let i = 0; i < board.area; i++) {
-    const c = desc[i];
-    if (c === START_CHAR) {
-      // The start square is a stop square with the ball standing on it.
-      board.cells[i] = STOP;
-      px = board.x(i);
-      py = board.y(i);
-    } else {
-      const cell = charToCell(c);
-      if (cell === null) throw new Error(`bad desc character ${c}`);
-      board.cells[i] = cell;
-      if (cell === GEM) gems++;
-    }
-  }
+  const { board, start, gems } = descValue(parseDesc(p, desc));
+  const px = board.x(start);
+  const py = board.y(start);
 
   return {
     params: p,

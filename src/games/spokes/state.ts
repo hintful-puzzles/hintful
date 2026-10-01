@@ -23,13 +23,15 @@
  *   the `readonly` type is the whole guarantee).
  */
 
-import { digitValue } from "../../engine/decimal.ts";
+import { digitValue, isDigit } from "../../engine/decimal.ts";
 import {
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
+  DESC_OUT_OF_RANGE,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
@@ -352,15 +354,27 @@ export function clearBoard(b: SpokesBoard): void {
  * A description is exactly `w*h` characters in row-major order: a clue digit
  * `'0'`–`'8'`, or `'X'` for a hand-authored hole. Deliberately *not*
  * run-length — the generator only ever emits digits, and a flat grid keeps the
- * byte-match differential a plain string compare.
+ * byte-match differential a plain string compare. The clues come back with an
+ * `'X'` as `-1`.
  */
-export function validateDesc(p: SpokesParams, desc: string): DescError | null {
+function parseDesc(p: SpokesParams, desc: string): DescParse<Int8Array> {
   const n = p.w * p.h;
-  const bad = /[^0-8X]/.exec(desc.slice(0, n));
-  if (bad) return descBadCharacter(bad[0]);
-  if (desc.length < n) return DESC_TOO_SHORT;
-  if (desc.length > n) return DESC_TOO_LONG;
-  return null;
+  return readDesc(desc, (r) => {
+    const numbers = new Int8Array(n);
+    for (let i = 0; i < n; i++) {
+      const c = r.char((c) => c === "X" || isDigit(c));
+      // A hub joins at most eight spokes.
+      const clue = c === "X" ? -1 : (digitValue(c) ?? 0);
+      if (clue > 8) r.fail(DESC_OUT_OF_RANGE);
+      numbers[i] = clue;
+    }
+    r.end();
+    return numbers;
+  });
+}
+
+export function validateDesc(p: SpokesParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
 }
 
 // --- game state -------------------------------------------------------------
@@ -384,12 +398,7 @@ export interface SpokesState extends SpokesBoard {
 export function newState(p: SpokesParams, desc: string): SpokesState {
   const { w, h } = p;
   const b = blankBoard(w, h);
-
-  for (let i = 0; i < w * h; i++) {
-    // A hub joins at most eight spokes; anything else (`X`, or nothing) is -1.
-    const n = i < desc.length ? digitValue(desc[i]) : null;
-    b.numbers[i] = n !== null && n <= 8 ? n : -1;
-  }
+  b.numbers.set(descValue(parseDesc(p, desc)));
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {

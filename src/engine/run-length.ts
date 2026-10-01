@@ -3,11 +3,9 @@
  * run of blanks.** `a` = 1 blank … `z` = 26, and a run longer than 26 is
  * written as repeated `z`s.
  *
- * A game with this desc reads it twice — in `validateDesc` to count the squares
- * and in `newState` to fill them — and this is the one scanner both use. The
- * bytes it parses are frozen, so it reproduces them exactly rather than
- * improving on them. `src/run-length-desc.test.ts` derives who uses it from who
- * imports this module.
+ * A game with this desc reads it once, with this scanner inside its one parse
+ * (`desc-reader.ts`'s `readDesc`). The bytes it parses are frozen, so it
+ * reproduces them exactly rather than improving on them.
  *
  * Map is here for **half** its desc: its clue list is this grammar, its edge
  * list is not. One desc, two run-length codings — see the comment at the
@@ -26,7 +24,9 @@
  * whose boundary the caller has to control. That is a different grammar, not a
  * harder version of this one; bending it through a token iterator would mean
  * handing the caller an index back and re-entering the scan, which is longer
- * than the loop it replaces.
+ * than the loop it replaces. Those games read through `desc-reader.ts`'s
+ * cursor instead, which is that loop with the index kept for them
+ * (`read-descs-through-one-cursor`).
  *
  * **And the alphabet under the grammar does not generalize either**, which is
  * the extraction that survives the objection above and should not be

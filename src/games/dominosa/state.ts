@@ -14,14 +14,15 @@
 
 import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
 import {
-  DESC_MALFORMED,
   DESC_OUT_OF_RANGE,
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
+  type DescParse,
   descBadCharacter,
+  descValue,
+  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
+import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -156,64 +157,45 @@ export function validateParams(p: DominosaParams, _full: boolean): string | null
 
 // --- desc codec -------------------------------------------------------------
 
-/** Parse the row-major clue string into `wh` numbers. Shared by `newState`
- * and `validateDesc`; returns the numbers plus a per-character diagnostic. */
-function parseNumbers(
-  n: number,
-  wh: number,
-  desc: string,
-): { numbers: Int32Array | null; error: DescError | null } {
-  const numbers = new Int32Array(wh);
-  let p = 0;
-  let error: DescError | null = null;
-  const fail = (msg: DescError) => {
-    if (!error) error = msg;
-  };
-  for (let i = 0; i < wh; i++) {
-    if (p >= desc.length) {
-      fail(DESC_TOO_SHORT);
-      break;
+/**
+ * The row-major clue numbers, a number under 10 as its digit and a larger one
+ * in brackets, as {@link encodeNumbers} writes them. They must be the halves of
+ * one full set of dominoes: every number `0..n` exactly `n+2` times.
+ */
+function parseDesc(p: DominosaParams, desc: string): DescParse<Int32Array> {
+  const { n } = p;
+  const { w, h } = boardSize(p);
+  // `r` is annotated so that `r.fail` narrows `digit`.
+  return readDesc(desc, (r: DescReader) => {
+    const numbers = new Int32Array(w * h);
+    const occ = new Int32Array(n + 1);
+    for (let i = 0; i < numbers.length; i++) {
+      let j: number;
+      if (r.accept("[")) {
+        j = r.int(10, n);
+        r.expect("]");
+      } else {
+        const c = r.char();
+        const digit = digitValue(c);
+        if (digit === null) r.fail(descBadCharacter(c));
+        if (digit > n) r.fail(DESC_OUT_OF_RANGE);
+        j = digit;
+      }
+      numbers[i] = j;
+      occ[j]++;
     }
-    let j: number;
-    const c = desc[p];
-    const digit = digitValue(c);
-    if (digit !== null) {
-      j = digit;
-      p++;
-    } else if (c === "[") {
-      p++;
-      // `[]` with no digits inside is a number out of range, not zero.
-      const k = parseLeadingInt(desc, p);
-      j = k.next > p ? k.value : -1;
-      p = k.next;
-      if (desc[p] !== "]") fail(DESC_MALFORMED);
-      else p++;
-    } else {
-      j = -1;
-      fail(descBadCharacter(c));
-    }
-    if (j < 0 || j > n) fail(DESC_OUT_OF_RANGE);
-    numbers[i] = j;
-  }
-  if (p < desc.length) fail(DESC_TOO_LONG);
-  return { numbers: error ? null : numbers, error };
+    r.end();
+    if (occ.some((k) => k !== n + 2)) r.fail(UNBALANCED);
+    return numbers;
+  });
 }
 
+const UNBALANCED = puzzleDescError(
+  "This game ID's numbers can't be the halves of one full set of dominoes.",
+);
+
 export function validateDesc(p: DominosaParams, desc: string): DescError | null {
-  const n = p.n;
-  const { w, h } = boardSize(p);
-  const wh = w * h;
-  const { numbers, error } = parseNumbers(n, wh, desc);
-  if (!numbers) return error;
-  // Number-balance check: every number 0..n must occur exactly n+2 times.
-  const occ = new Int32Array(n + 1);
-  for (let i = 0; i < wh; i++) occ[numbers[i]]++;
-  for (let i = 0; i <= n; i++)
-    if (occ[i] !== n + 2)
-      return puzzleDescError(
-        "This game ID's numbers can't be the halves of one full set of dominoes.",
-      );
-  return null;
+  return descVerdict(parseDesc(p, desc));
 }
 
 /** Encode a numbers grid back to the desc string (bracket-escaping ≥10). */
@@ -236,11 +218,9 @@ export interface DominosaState {
 }
 
 export function newState(p: DominosaParams, desc: string): DominosaState {
-  const n = p.n;
   const { w, h } = boardSize(p);
   const wh = w * h;
-  const { numbers, error } = parseNumbers(n, wh, desc);
-  if (!numbers) throw new Error(`dominosa: bad desc: ${error}`);
+  const numbers = descValue(parseDesc(p, desc));
   const grid = new Int32Array(wh);
   for (let i = 0; i < wh; i++) grid[i] = i;
   return {

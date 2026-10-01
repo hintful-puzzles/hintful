@@ -3,15 +3,15 @@ import {
   type CandidateReading,
   DEFAULT_CANDIDATE_READING,
 } from "../../engine/candidate-hint.ts";
-import { digitValue, isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import { isDigit } from "../../engine/decimal.ts";
 import {
-  DESC_MALFORMED,
-  DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { numberItem, squareSize } from "../../engine/params.ts";
@@ -238,95 +238,65 @@ export function newUi(_state: TowersState): TowersUi {
 
 // --- desc codec ------------------------------------------------------------
 
-export function validateDesc(p: TowersParams, desc: string): DescError | null {
+/** Whether `c` is a run letter: `a`–`z` for 1–26 blanks. */
+function isRunLetter(c: string): boolean {
+  return c >= "a" && c <= "z";
+}
+
+interface TowersDesc {
+  clues: Int32Array;
+  givens: Int8Array;
+}
+
+/**
+ * Read the desc the generator's `encodeDesc` writes: `4w` edge clues (each
+ * `1..w` or empty) joined by `/`, then optionally `,` and the given heights as
+ * numbers `1..w`, run letters, and a `_` exactly between two adjacent numbers.
+ */
+function parseDesc(p: TowersParams, desc: string): DescParse<TowersDesc> {
   const w = p.w;
   const a = w * w;
-  let i = 0; // string index
-  for (let c = 0; c < 4 * w; c++) {
-    if (i >= desc.length) return DESC_TOO_SHORT;
-    if (c > 0) {
-      if (desc[i] !== "/") return DESC_MALFORMED;
-      i++;
+  return readDesc(desc, (r) => {
+    const clues = new Int32Array(4 * w);
+    const givens = new Int8Array(a);
+    for (let c = 0; c < 4 * w; c++) {
+      if (c > 0) r.expect("/");
+      if (r.peekIs(isDigit)) clues[c] = r.int(1, w);
     }
-    if (i < desc.length && isDigit(desc[i])) {
-      const { value: clue, next } = parseLeadingInt(desc, i);
-      i = next;
-      if (clue <= 0 || clue > w) return DESC_OUT_OF_RANGE;
-    }
-  }
-  if (desc[i] === "/") return DESC_TOO_LONG;
-
-  if (desc[i] === ",") {
-    let squares = 0;
-    i++;
-    while (i < desc.length) {
-      const ch = desc[i++];
-      const digit = digitValue(ch);
-      if (ch >= "a" && ch <= "z") {
-        squares += ch.charCodeAt(0) - 97 + 1;
-      } else if (ch === "_") {
-        // separator, no cell
-      } else if (digit !== null && digit >= 1) {
-        const { value: val, next } = parseLeadingInt(desc, i - 1);
-        i = next;
-        if (val < 1 || val > w) return DESC_OUT_OF_RANGE;
-        squares++;
-      } else {
-        return descBadCharacter(ch);
+    if (r.accept(",")) {
+      let i = 0;
+      let afterNumber = false;
+      while (i < a) {
+        if (r.peekIs(isRunLetter)) {
+          i += r.char().charCodeAt(0) - 96;
+          if (i > a) r.fail(DESC_TOO_LONG);
+          afterNumber = false;
+        } else {
+          if (afterNumber) r.expect("_");
+          givens[i++] = r.int(1, w);
+          afterNumber = true;
+        }
       }
     }
-    if (squares < a) return DESC_TOO_SHORT;
-    if (squares > a) return DESC_TOO_LONG;
-  }
+    r.end();
+    return { clues, givens };
+  });
+}
 
-  if (i < desc.length) return DESC_TOO_LONG;
-  return null;
+export function validateDesc(p: TowersParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: TowersParams, desc: string): TowersState {
   const w = p.w;
-  const a = w * w;
-  const clues = new Int32Array(4 * w);
-  const immutable = new Int8Array(a);
-  const grid = new Int8Array(a);
-
-  let i = 0;
-  for (let c = 0; c < 4 * w; c++) {
-    if (c > 0) i++; // skip '/'
-    if (i < desc.length && isDigit(desc[i])) {
-      const { value, next } = parseLeadingInt(desc, i);
-      clues[c] = value;
-      i = next;
-    }
-  }
-
-  if (desc[i] === ",") {
-    let pos = 0;
-    i++;
-    while (i < desc.length) {
-      const ch = desc[i++];
-      const digit = digitValue(ch);
-      if (ch >= "a" && ch <= "z") {
-        pos += ch.charCodeAt(0) - 97 + 1;
-      } else if (ch === "_") {
-        // separator
-      } else if (digit !== null && digit >= 1) {
-        const { value: val, next } = parseLeadingInt(desc, i - 1);
-        i = next;
-        grid[pos] = val;
-        immutable[pos] = val;
-        pos++;
-      }
-    }
-  }
-
+  const { clues, givens } = descValue(parseDesc(p, desc));
   return {
     w,
     diff: p.diff,
     clues,
-    immutable,
-    grid,
-    pencil: new Int32Array(a),
+    immutable: givens,
+    grid: givens.slice(),
+    pencil: new Int32Array(w * w),
     cluesDone: new Uint8Array(4 * w),
   };
 }

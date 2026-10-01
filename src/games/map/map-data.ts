@@ -14,12 +14,16 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   type DescError,
+  type DescParse,
   descBadCharacter,
+  descValue,
+  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
+import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
+import { encodeRunLength } from "../../engine/run-length.ts";
 import { shuffle } from "../../engine/shuffle.ts";
 import { gengraph, graphEdgeIndex } from "./graph.ts";
 import type { MapParams } from "./state.ts";
@@ -60,111 +64,110 @@ function edgeCells(w: number, h: number, i: number): [number, number] {
   return [y * w + x, y * w + x + 1];
 }
 
-interface ParsedEdges {
-  map: Int32Array;
-  next: number;
-  error: DescError | null;
+function isRunLetter(c: string): boolean {
+  return c >= "a" && c <= "z";
 }
 
+const REGION_COUNT_WRONG = puzzleDescError(
+  "This game ID's borders divide the map into a different number of regions than it asks for.",
+);
+
 /**
- * Decode the edge-list part of a desc (upstream `parse_edge_list`): walk the
- * run-length runs of edge/non-edge, building a union-find over the non-edges,
- * then number the regions in scan order. Returns the region-per-cell grid
- * (`wh` entries), the index just past the edge list, and an error (or null).
+ * Read the edge list (upstream `parse_edge_list`): runs of same-valued edges in
+ * {@link edgeCells} order, starting with a notional non-edge before the first.
+ * A letter `a`..`y` is a run of 1..25 that then flips between non-edge and edge;
+ * `z` is a run of 25 that does not flip. The runs cover the edges exactly. The
+ * non-edges join cells into regions, numbered in scan order, and there must be
+ * `n` of them.
  *
  * The region numbering is independent of which element the union-find picks as
  * a class root — a region's number is fixed at its minimum-index cell in scan
  * order — so the shared `Dsf` is byte-match safe here (docs/games/solver-and-generator.md § "Solver-gated generation").
  */
-function parseEdgeList(
-  w: number,
-  h: number,
-  n: number,
-  desc: string,
-  start: number,
-): ParsedEdges {
+function readEdgeList(r: DescReader, w: number, h: number, n: number): Int32Array {
   const wh = w * h;
   const nedges = w * (h - 1) + (w - 1) * h;
-  const map = new Int32Array(wh).fill(-1);
   const dsf = new Dsf(wh);
 
   let pos = -1;
-  let state = false;
-  let p = start;
-
-  while (p < desc.length && desc[p] !== ",") {
-    const ch = desc[p];
-    if (ch < "a" || ch > "z") {
-      return { map, next: p, error: descBadCharacter(ch) };
-    }
-    let k = ch === "z" ? 25 : ch.charCodeAt(0) - 97 + 1;
-    while (k-- > 0) {
-      if (pos < 0) {
-        pos++;
-        continue;
-      }
-      if (pos >= nedges) return { map, next: p, error: DESC_TOO_LONG };
-      if (!state) {
-        const [a, b] = edgeCells(w, h, pos);
+  let edge = false;
+  while (pos < nedges) {
+    if (r.peek() === ",") r.fail(DESC_TOO_SHORT);
+    const c = r.char(isRunLetter);
+    const k = c === "z" ? 25 : c.charCodeAt(0) - 96;
+    if (pos + k > nedges) r.fail(DESC_TOO_LONG);
+    if (!edge) {
+      for (let i = Math.max(pos, 0); i < pos + k; i++) {
+        const [a, b] = edgeCells(w, h, i);
         dsf.merge(a, b);
       }
-      pos++;
     }
-    if (ch !== "z") state = !state;
-    p++;
+    pos += k;
+    if (c !== "z") edge = !edge;
   }
 
-  if (pos < nedges) return { map, next: p, error: DESC_TOO_SHORT };
-
-  // Number the regions.
+  const map = new Int32Array(wh).fill(-1);
   let np = 0;
   for (let i = 0; i < wh; i++) {
     const canon = dsf.canonify(i);
     if (map[canon] < 0) map[canon] = np++;
     map[i] = map[canon];
   }
-  if (np !== n) {
-    const error = puzzleDescError(
-      "This game ID's borders divide the map into a different number of regions than it asks for.",
-    );
-    return { map, next: p, error };
-  }
+  if (np !== n) r.fail(REGION_COUNT_WRONG);
+  return map;
+}
 
-  return { map, next: p, error: null };
+interface ParsedDesc {
+  /** The region of each cell. */
+  regions: Int32Array;
+  /** Each region's clue color, `-1` where it has none. */
+  coloring: Int32Array;
+  /** `1` for each region the desc colors. */
+  immutable: Uint8Array;
+}
+
+/**
+ * Read a desc: the edge list, a `,`, then the clue list in the shared
+ * run-length grammar over the regions — a color `0`..`3`, or a letter for a run
+ * of uncolored regions — covering all `n` exactly.
+ */
+function parseDesc(params: MapParams, desc: string): DescParse<ParsedDesc> {
+  const { w, h, n } = params;
+  return readDesc(desc, (r: DescReader) => {
+    const regions = readEdgeList(r, w, h, n);
+    // Another letter where the `,` belongs is an edge list with too many edges.
+    if (r.peekIs(isRunLetter)) r.fail(DESC_TOO_LONG);
+    r.expect(",");
+
+    const coloring = new Int32Array(n).fill(-1);
+    const immutable = new Uint8Array(n);
+    for (let pos = 0; pos < n; ) {
+      const c = r.char();
+      if (isRunLetter(c)) {
+        const run = c.charCodeAt(0) - 96;
+        if (run > n - pos) r.fail(DESC_TOO_LONG);
+        pos += run;
+        continue;
+      }
+      const color = digitValue(c);
+      if (color === null) r.fail(descBadCharacter(c));
+      if (color > 3) r.fail(DESC_OUT_OF_RANGE);
+      coloring[pos] = color;
+      immutable[pos++] = 1;
+    }
+    r.end();
+    return { regions, coloring, immutable };
+  });
 }
 
 /** Upstream `validate_desc`. */
 export function validateDesc(params: MapParams, desc: string): DescError | null {
-  const { w, h, n } = params;
-  const parsed = parseEdgeList(w, h, n, desc, 0);
-  if (parsed.error) return parsed.error;
-
-  let p = parsed.next;
-  // The edge list stops only at a comma or the end of the desc.
-  if (desc[p] !== ",") return DESC_TOO_SHORT;
-  p++;
-
-  let area = 0;
-  for (const tok of scanRunLength(desc.slice(p))) {
-    if ("blanks" in tok) {
-      area += tok.blanks;
-      continue;
-    }
-    // A clue is one of the four map colors.
-    const color = digitValue(tok.value);
-    if (color === null) return descBadCharacter(tok.value);
-    if (color > 3) return DESC_OUT_OF_RANGE;
-    area++;
-  }
-  if (area < n) return DESC_TOO_SHORT;
-  if (area > n) return DESC_TOO_LONG;
-  return null;
+  return descVerdict(parseDesc(params, desc));
 }
 
 /**
  * Build the full immutable {@link MapData} plus the initial clue coloring from
- * a desc (upstream `new_game`, geometry half). Assumes the desc has already
- * validated.
+ * a desc (upstream `new_game`, geometry half).
  */
 export function newMapData(
   params: MapParams,
@@ -172,29 +175,13 @@ export function newMapData(
 ): { map: MapData; coloring: Int32Array } {
   const { w, h, n } = params;
   const wh = w * h;
+  const { regions, coloring, immutable } = descValue(parseDesc(params, desc));
 
-  const parsed = parseEdgeList(w, h, n, desc, 0);
   // One plane per quadrant, each starting as the parsed grid.
   const map = new Int32Array(4 * wh);
-  for (let q = 0; q < 4; q++) map.set(parsed.map, q * wh);
+  for (let q = 0; q < 4; q++) map.set(regions, q * wh);
 
-  // Parse the clue list.
-  const coloring = new Int32Array(n).fill(-1);
-  const immutable = new Uint8Array(n);
-  let pos = 0;
-  for (const tok of scanRunLength(desc.slice(parsed.next + 1))) {
-    // A blank run just advances past regions already holding -1.
-    if ("blanks" in tok) {
-      pos += tok.blanks;
-      continue;
-    }
-    // `validateDesc` rejects a non-digit; `-1` is this array's own "uncolored".
-    coloring[pos] = digitValue(tok.value) ?? -1;
-    immutable[pos] = 1;
-    pos++;
-  }
-
-  const { graph, ngraph } = gengraph(w, h, n, parsed.map);
+  const { graph, ngraph } = gengraph(w, h, n, regions);
 
   // Smooth jagged outlines via diagonally-divided squares, using an RNG seeded
   // from the desc itself (so the geometry is deterministic per game ID).

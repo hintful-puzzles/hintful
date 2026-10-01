@@ -9,6 +9,7 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  DESC_CONTRADICTORY,
   DESC_OUT_OF_RANGE,
   DESC_REPEATED,
   DESC_TOO_LONG,
@@ -67,11 +68,11 @@ import {
   decodeParams,
   encodeDesc,
   encodeParams,
+  makePuzzle,
   newState,
   numberAvailableTo,
   numberFitsRun,
   placedRuns,
-  readDesc,
   textFormat,
   validateBoard,
   validateDesc,
@@ -184,13 +185,13 @@ describe("crossing params", () => {
 
 describe("crossing desc codec", () => {
   it("decodes a fixture desc and re-encodes it identically", () => {
-    const { walls, numbers } = readDesc(P5, FIX.desc);
+    const { walls, numbers } = newState(P5, FIX.desc).puzzle;
     expect(encodeDesc(5, 5, walls, numbers)).toBe(FIX.desc);
   });
 
   it("reads letters as wall runs and decimals as open runs", () => {
     // "a2a3a2a2a2a6a1" — wall, 2 open, wall, 3 open, …
-    const { walls } = readDesc(P5, FIX.desc);
+    const { walls } = newState(P5, FIX.desc).puzzle;
     expect(walls[0]).toBe(1);
     expect(walls[1]).toBe(0);
     expect(walls[2]).toBe(0);
@@ -199,7 +200,7 @@ describe("crossing desc codec", () => {
   });
 
   it("stores the numbers sorted by (length, lexicographic)", () => {
-    const { numbers } = readDesc(P5, FIX.desc);
+    const { numbers } = newState(P5, FIX.desc).puzzle;
     const sorted = [...numbers].sort((a, b) =>
       a.length !== b.length
         ? a.length - b.length
@@ -215,18 +216,53 @@ describe("crossing desc codec", () => {
     // More cell data than 25 cells hold.
     expect(validateDesc(P5, "25a,12,59")).toBe(DESC_TOO_LONG);
     // The wall section ends before the board does, or there is no ','.
-    expect(validateDesc(P5, "a2,12")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(P5, "a2,12")).toBe(descBadCharacter(","));
     expect(validateDesc(P5, "25")).toBe(DESC_TOO_SHORT);
     // The same number twice.
     expect(validateDesc(P5, "a2a3a2a2a2a6a1,12,12")).toBe(DESC_REPEATED);
     // A number longer than the format's nine digits.
-    expect(validateDesc(P5, "a2a3a2a2a2a6a1,1234567890")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(P5, "a2a3a2a2a2a6a1,1234567891")).toBe(DESC_OUT_OF_RANGE);
   });
 
-  it("is as lenient as upstream: single digits are dropped, short descs pass", () => {
-    // Upstream's own TODO list names the checks it omits.
-    expect(readDesc(P5, "a2a3a2a2a2a6a1,7,12").numbers).toEqual([[1, 2]]);
-    expect(validateDesc(P5, "25,12")).toBeNull();
+  it("reads exactly what the encoder writes", () => {
+    const walls = "a2a3a2a2a2a6a1";
+    const v = (desc: string) => validateDesc(P5, desc);
+    // No run is one cell long, so no number is one digit.
+    expect(v(`${walls},7,12`)).toBe(DESC_OUT_OF_RANGE);
+    expect(v(`${walls},10,12`)).toBe(descBadCharacter("0"));
+    expect(v(`${walls},12,,59`)).toBe(descBadCharacter(","));
+    expect(v(`${walls},12,59,`)).toBe(DESC_TOO_SHORT);
+    expect(v(`${walls},12;59`)).toBe(DESC_TOO_LONG);
+    // An open run of no cells, and a final run past the board.
+    expect(v(`a0a3a2a2a2a6a1,${FIX.desc.split(",").slice(1).join(",")}`)).toBe(
+      DESC_OUT_OF_RANGE,
+    );
+    expect(v(`a2a3a2a2a2a6a2,${FIX.desc.split(",").slice(1).join(",")}`)).toBe(
+      DESC_TOO_LONG,
+    );
+    expect(v(`a2a3a2a2a2a6c,${FIX.desc.split(",").slice(1).join(",")}`)).toBe(
+      DESC_TOO_LONG,
+    );
+    // Numbers that do not fit the board's runs: one too few, and every square
+    // open where the board's runs are all five long.
+    expect(v(FIX.desc.replace(",53971", ""))).toBe(DESC_CONTRADICTORY);
+    expect(v("25,12")).toBe(DESC_CONTRADICTORY);
+  });
+
+  it("splits a wall run longer than `z` into letters the parser reads back", () => {
+    const params = { w: 30, h: 1, sym: false };
+    const walls = new Uint8Array(30);
+    walls.fill(1, 0, 27);
+    const desc = encodeDesc(30, 1, walls, [[1, 2, 3]]);
+    expect(desc).toBe("za3,123");
+    expect(validateDesc(params, desc)).toBeNull();
+    expect(newState(params, desc).puzzle.walls).toEqual(walls);
+    // 52 walls is exactly two letters, with nothing left over.
+    const wide = { w: 54, h: 1, sym: false };
+    const wideWalls = new Uint8Array(54);
+    wideWalls.fill(1, 0, 52);
+    expect(encodeDesc(54, 1, wideWalls, [[1, 2]])).toBe("zz2,12");
+    expect(newState(wide, "zz2,12").puzzle.walls).toEqual(wideWalls);
   });
 });
 
@@ -264,9 +300,14 @@ describe("crossing solver", () => {
 
   it("reports progress on a board its techniques cannot finish", () => {
     // A single 2-cell run with two candidate numbers sharing no digit position
-    // is genuinely ambiguous, so the solver stops without a contradiction.
-    const state = newState({ w: 4, h: 2, sym: false }, "2a1a1a2,12,34");
-    expect(solveCrossing(state.puzzle).status).toBe("progress");
+    // is genuinely ambiguous, so the solver stops without a contradiction. No
+    // desc says this — it lists a number per run — so the puzzle is built.
+    const walls = Uint8Array.of(0, 0, 1, 1, 1, 1, 1, 1);
+    const puzzle = makePuzzle(4, 2, walls, [
+      [1, 2],
+      [3, 4],
+    ]);
+    expect(solveCrossing(puzzle).status).toBe("progress");
   });
 
   it("reports invalid when a full run matches no listed number", () => {
@@ -334,7 +375,7 @@ describe("crossing generator", () => {
   it("grows symmetric walls 180°-rotationally", () => {
     const params = { w: 6, h: 4, sym: true };
     const { desc } = newCrossingDesc(params, randomNew("sym-shape"));
-    const { walls } = readDesc(params, desc);
+    const { walls } = newState(params, desc).puzzle;
     const size = 24;
     let open = 0;
     for (let i = 0; i < size; i++) {

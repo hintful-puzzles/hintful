@@ -28,12 +28,13 @@ function recordingDrawing(): { dr: RecordingDrawing; ops: RecordingDrawing["ops"
 
 const TS = 32;
 const params = defaultParams();
+const ANY_DESC = newDesc(params, randomNew("render-any")).desc;
 
 function freshDs(): GuessDrawState {
-  return guessGame.newDrawState(newState(params, "01020304"), TS) as GuessDrawState;
+  return guessGame.newDrawState(newState(params, ANY_DESC), TS) as GuessDrawState;
 }
 
-function freshUi(state = newState(params, "01020304")): GuessUi {
+function freshUi(state = newState(params, ANY_DESC)): GuessUi {
   const ui = guessGame.newUi(state);
   guessGame.changedState?.(ui, null, state);
   return ui;
@@ -62,7 +63,7 @@ describe("Guess redraw", () => {
   });
 
   it("draws the hold bar on a held active slot", () => {
-    const s = newState(params, "01020304");
+    const s = newState(params, ANY_DESC);
     const ds = freshDs();
     const ui = freshUi(s);
     ui.holds[0] = true;

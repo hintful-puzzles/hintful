@@ -6,11 +6,8 @@
  * typed arrays so a clone per move is cheap; a space's type and position follow
  * from its index.
  */
-import {
-  DESC_TOO_LONG,
-  type DescError,
-  descBadCharacter,
-} from "../../engine/desc-error.ts";
+import { DESC_TOO_LONG, type DescParse } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { Point } from "../../engine/types.ts";
 
@@ -275,33 +272,42 @@ export function encodeGame(s: GalaxiesState): string {
   return out.join("");
 }
 
-/** Place the dots `desc` describes on `s`: an error message, or null. */
-export function decodeGame(s: GalaxiesState, desc: string): DescError | null {
+const isWhiteDot = (c: string) => c >= "a" && c <= "y";
+const isBlackDot = (c: string) => c >= "A" && c <= "Y";
+
+/**
+ * The board {@link encodeGame} describes. A `z` is always followed by more of
+ * the desc, since the encoder drops the empties after the last dot rather than
+ * writing them, and every board it writes has a dot.
+ */
+export function parseDesc(
+  p: { w: number; h: number },
+  desc: string,
+): DescParse<GalaxiesState> {
+  const s = blankGame(p.w, p.h);
   const innerW = s.sx - 2;
-  let i = 0;
-  for (let p = 0; p < desc.length; p++) {
-    const n = desc.charCodeAt(p);
-    if (n === 122 /* z */) {
-      i += 25;
-      continue;
-    }
-    let black = 0;
-    if (n >= 97 /* a */ && n <= 121 /* y */) {
-      i += n - 97;
-    } else if (n >= 65 /* A */ && n <= 89 /* Y */) {
-      i += n - 65;
-      black = F_DOT_BLACK;
-    } else {
-      return descBadCharacter(desc[p]);
-    }
-    const y = ((i / innerW) | 0) + 1;
-    const x = (i % innerW) + 1;
-    if (!inInterior(s, x, y)) return DESC_TOO_LONG;
-    addDot(s, x, y);
-    s.flags[idx(s, x, y)] |= black;
-    i++;
-  }
-  return null;
+  const area = innerW * (s.sy - 2);
+  return readDesc(desc, (r) => {
+    const isToken = (c: string) => c === "z" || isWhiteDot(c) || isBlackDot(c);
+    let i = 0;
+    do {
+      let c = r.char(isToken);
+      while (c === "z") {
+        i += 25;
+        if (i >= area) r.fail(DESC_TOO_LONG);
+        c = r.char(isToken);
+      }
+      i += c.charCodeAt(0) - (isBlackDot(c) ? 65 : 97);
+      if (i >= area) r.fail(DESC_TOO_LONG);
+      const x = (i % innerW) + 1;
+      const y = Math.floor(i / innerW) + 1;
+      addDot(s, x, y);
+      if (isBlackDot(c)) s.flags[idx(s, x, y)] |= F_DOT_BLACK;
+      i++;
+    } while (!r.done);
+    s.dots = rebuildDots(s);
+    return s;
+  });
 }
 
 // --- check_complete -------------------------------------------------

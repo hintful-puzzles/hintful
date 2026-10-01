@@ -10,6 +10,7 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
@@ -128,8 +129,17 @@ describe("keen desc codec", () => {
 
   it("rejects malformed descs", () => {
     expect(validateDesc(P4, "!!!,a1")).toBe(descBadCharacter("!"));
-    expect(validateDesc(P4, D4.replace(",d2s1a9m4d2m6s2", ",a9"))).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(P4, D4.replace(",d2s1a9m4d2m6s2", ",a3"))).toBe(DESC_TOO_SHORT);
     expect(validateDesc(P4, `${D4}a1`)).toBe(DESC_TOO_LONG);
+    // An operation needs its number.
+    expect(validateDesc(P4, D4.replace(",d2", ",d"))).toBe(descBadCharacter("s"));
+    // A repeat count the encoder never writes: two repeats are spelled "aa".
+    expect(validateDesc(P4, D4.replace("aa_", "a2_"))).toBe(DESC_OUT_OF_RANGE);
+    // A block structure cut short by the comma.
+    expect(validateDesc(P4, "aa_a,d2s1a9m4d2m6s2")).toBe(descBadCharacter(","));
+    // Two different digits of 1..4 differ by at most 3 and divide to at least 2.
+    expect(validateDesc(P4, D4.replace("s1", "s4"))).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(P4, D4.replace(",d2", ",d1"))).toBe(DESC_OUT_OF_RANGE);
     // A subtraction clue on a non-domino cage: take a desc whose first cage is
     // large and tag it 's'. On a 3x3 board 'l' merges all twelve edges, so the
     // whole board is one cage of nine.

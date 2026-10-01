@@ -1,4 +1,10 @@
 import { describe, expect, it } from "vitest";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import {
@@ -95,6 +101,26 @@ describe("cube params", () => {
 
   it("default params are the cube preset", () => {
     expect(defaultParams()).toEqual({ solid: SolidType.Cube, d1: 4, d2: 4 });
+  });
+});
+
+describe("cube desc", () => {
+  // A 3x1 square grid: one hex digit whose lowest bit is padding.
+  const p: CubeParams = { solid: SolidType.Cube, d1: 3, d2: 1 };
+
+  it("reads what the encoder writes", () => {
+    expect(validateDesc(p, "A,1")).toBeNull();
+    expect(validateDesc(p, "0,2")).toBeNull();
+  });
+
+  it("refuses a start square off the grid, lowercase hex, set padding bits and junk", () => {
+    expect(validateDesc(p, "A,3")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, "a,1")).toBe(descBadCharacter("a"));
+    expect(validateDesc(p, "B,1")).toBe(descBadCharacter("B"));
+    expect(validateDesc(p, "AA,1")).toBe(descBadCharacter("A"));
+    expect(validateDesc(p, "A,1x")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, "A,")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, "A")).toBe(DESC_TOO_SHORT);
   });
 });
 

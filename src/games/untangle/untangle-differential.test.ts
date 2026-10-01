@@ -18,15 +18,16 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { descValue } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { expectDescMatches } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/untangle-c-reference.json" with { type: "json" };
 import { newUntangleDesc } from "./generator.ts";
 import {
   coordLimit,
-  decodeGame,
   findCrossings,
   makeCircle,
+  parseDesc,
   type UntangleParams,
 } from "./state.ts";
 
@@ -46,7 +47,7 @@ describe("untangle differential (frozen C reference)", () => {
 
     it(`n=${f.n} seed=${f.seed}: board is planar (degree ≤ 4) and starts tangled`, () => {
       const { desc } = newUntangleDesc(params, randomNew(f.seed));
-      const edges = decodeGame(desc, f.n);
+      const edges = descValue(parseDesc({ n: f.n }, desc));
       const degree = new Array<number>(f.n).fill(0);
       for (const e of edges) {
         degree[e.a]++;

@@ -23,10 +23,11 @@
  * `puzzles/auxiliary/galaxies-trace.c` prior to its deletion commit.
  */
 import { describe, expect, it } from "vitest";
+import { descValue, descVerdict } from "../../engine/desc-error.ts";
 import cReference from "./__fixtures__/galaxies-c-reference.json" with { type: "json" };
 import { GalaxiesDiff } from "./index.ts";
 import { clearForSolve, solverState } from "./solver.ts";
-import { blankGame, decodeGame, rebuildDots } from "./state.ts";
+import { parseDesc } from "./state.ts";
 
 interface Fixture {
   w: number;
@@ -50,10 +51,9 @@ function diffChar(d: GalaxiesDiff): string {
 describe("Galaxies differential (frozen C reference)", () => {
   for (const f of data.fixtures) {
     it(`${f.w}x${f.h}/${f.diff} seed=${f.seed}: TS solver matches C`, () => {
-      const s = blankGame(f.w, f.h);
-      const err = decodeGame(s, f.desc);
-      expect(err).toBeNull();
-      s.dots = rebuildDots(s);
+      const parse = parseDesc(f, f.desc);
+      expect(descVerdict(parse)).toBeNull();
+      const s = descValue(parse);
 
       // Run the TS solver from a clean state at UNREASONABLE.
       clearForSolve(s);

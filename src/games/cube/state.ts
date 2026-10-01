@@ -1,11 +1,12 @@
 /** Cube parameters, state, and the game-description codec. */
 
 import {
-  DESC_MALFORMED,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { parseDimensions } from "../../engine/params.ts";
 import { enumGridSquares, type GridSquare, gridArea } from "./grid.ts";
 import { alignPolyKeys, SOLIDS, SolidType } from "./solids.ts";
@@ -153,35 +154,38 @@ export function squareClass(sq: GridSquare, nclasses: number): number {
 
 const HEX = "0123456789ABCDEF";
 
-export function validateDesc(p: CubeParams, desc: string): DescError | null {
+/** The mask exactly as {@link encodeDesc} writes it: uppercase, and the unused
+ * low bits of the last digit clear. */
+function parseDesc(
+  p: CubeParams,
+  desc: string,
+): DescParse<{ blue: Uint8Array; start: number }> {
   const area = gridArea(p.d1, p.d2, SOLIDS[p.solid].order);
-  const hexlen = Math.floor((area + 3) / 4);
-  const hex = desc.slice(0, hexlen);
-  const notHex = /[^0-9A-Fa-f]/.exec(hex);
-  // A ',' inside the mask's span means the mask ended early.
-  if (notHex && notHex[0] !== ",") return descBadCharacter(notHex[0]);
-  if (notHex || desc.length <= hexlen) return DESC_TOO_SHORT;
-  if (desc[hexlen] !== ",") return DESC_MALFORMED;
-  const start = desc.slice(hexlen + 1);
-  if (start === "") return DESC_TOO_SHORT;
-  const notDigit = /\D/.exec(start);
-  if (notDigit) return descBadCharacter(notDigit[0]);
-  return null;
+  return readDesc(desc, (r) => {
+    const blue = new Uint8Array(area);
+    for (let i = 0; i < area; i += 4) {
+      const used = Math.min(4, area - i);
+      const padding = (1 << (4 - used)) - 1;
+      const v = HEX.indexOf(
+        r.char((c) => HEX.includes(c) && (HEX.indexOf(c) & padding) === 0),
+      );
+      for (let k = 0; k < used; k++) blue[i + k] = v & (8 >> k) ? 1 : 0;
+    }
+    r.expect(",");
+    const start = r.int(0, area - 1);
+    r.end();
+    return { blue, start };
+  });
 }
 
-/** `desc` has passed `validateDesc` (or came from `newDesc`). */
+export function validateDesc(p: CubeParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
+}
+
 export function newState(p: CubeParams, desc: string): CubeState {
+  const { blue, start: current } = descValue(parseDesc(p, desc));
   const solid = SOLIDS[p.solid];
   const grid = enumGridSquares(p.solid, p.d1, p.d2);
-  const nsquares = grid.length;
-
-  const blue = new Uint8Array(nsquares);
-  for (let i = 0; i < nsquares; i++)
-    blue[i] = (Number.parseInt(desc[i >> 2], 16) >> (3 - (i & 3))) & 1;
-
-  // validateDesc does not bound the start square; out of range means square 0.
-  let current = Number.parseInt(desc.slice(desc.indexOf(",") + 1), 10);
-  if (current >= nsquares) current = 0;
 
   // Seat the solid on its start square to get the resting key points.
   const pkey = alignPolyKeys(solid, grid[current]);

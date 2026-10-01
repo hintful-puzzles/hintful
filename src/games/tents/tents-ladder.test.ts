@@ -15,7 +15,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newTentsDesc } from "./generator.ts";
 import { tentsSolve } from "./solver.ts";
-import { DIFF_EASY, DIFF_TRICKY, decodeDesc, type TentsParams, TREE } from "./state.ts";
+import { DIFF_EASY, DIFF_TRICKY, newState, type TentsParams, TREE } from "./state.ts";
 
 const SHAPES: TentsParams[] = [
   { w: 8, h: 8, diff: DIFF_EASY },
@@ -38,7 +38,7 @@ const cases = SHAPES.flatMap((p) =>
   SEEDS.map((seed) => {
     const label = `${p.w}x${p.h} d${p.diff} ${seed}`;
     const { desc } = newTentsDesc(p, randomNew(`tents-ladder-${label}`));
-    const { grid, numbers } = decodeDesc(p, desc);
+    const { grid, numbers } = newState(p, desc);
     const puzzle = Int8Array.from(grid, (v) => (v === TREE ? TREE : 0));
     return { label, board: (): Board => ({ p, puzzle, numbers }) };
   }),

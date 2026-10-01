@@ -1,12 +1,11 @@
 import {
-  DESC_MALFORMED,
-  DESC_OUT_OF_RANGE,
   DESC_REPEATED,
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
@@ -122,29 +121,30 @@ export function presets(): PresetMenu<SixteenParams> {
 
 // --- desc / state -----------------------------------------------------
 
+/** The tiles in reading order, `1..n`, comma-separated. */
+function parseDesc(p: SixteenParams, desc: string): DescParse<Int32Array> {
+  const n = p.w * p.h;
+  return readDesc(desc, (r) => {
+    const tiles = new Int32Array(n);
+    const used = new Set<number>();
+    for (let i = 0; i < n; i++) {
+      if (i > 0) r.expect(",");
+      tiles[i] = r.int(1, n);
+      if (used.has(tiles[i])) r.fail(DESC_REPEATED);
+      used.add(tiles[i]);
+    }
+    r.end();
+    return tiles;
+  });
+}
+
 export function validateDesc(p: SixteenParams, desc: string): DescError | null {
-  const area = p.w * p.h;
-  const parts = desc.split(",");
-  if (parts.length < area) return DESC_TOO_SHORT;
-  if (parts.length > area) return DESC_TOO_LONG;
-  const used = new Set<number>();
-  for (const part of parts) {
-    const bad = /[^0-9]/.exec(part);
-    if (bad) return descBadCharacter(bad[0]);
-    if (part === "") return DESC_MALFORMED;
-    const n = Number(part);
-    if (n < 1 || n > area) return DESC_OUT_OF_RANGE;
-    if (used.has(n)) return DESC_REPEATED;
-    used.add(n);
-  }
-  return null;
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: SixteenParams, desc: string): SixteenState {
   const n = p.w * p.h;
-  const tiles = new Int32Array(n);
-  const parts = desc.split(",");
-  for (let i = 0; i < n; i++) tiles[i] = Number(parts[i]);
+  const tiles = descValue(parseDesc(p, desc));
   return {
     w: p.w,
     h: p.h,

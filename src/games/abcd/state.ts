@@ -18,12 +18,12 @@ import {
   DEFAULT_CANDIDATE_READING,
 } from "../../engine/candidate-hint.ts";
 import {
-  DESC_OUT_OF_RANGE,
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";
@@ -210,37 +210,27 @@ export function validateParams(p: AbcdParams, full: boolean): string | null {
 // --- desc codec ------------------------------------------------------------
 
 /**
- * Validate a description: `(w+h)·n` clue numbers in `numbers`-array order,
- * comma-separated, a bare `-` for a hidden clue. As upstream's `validate_desc`,
- * each number must fit its axis (a row clue `≤ 1 + w/2`, a column clue
- * `≤ 1 + h/2`).
+ * The `(w+h)·n` clue numbers in `numbers`-array order, each followed by a comma,
+ * a bare `-` for a hidden clue. As upstream's `validate_desc`, each number must
+ * fit its axis (a row clue `≤ 1 + w/2`, a column clue `≤ 1 + h/2`).
  */
-export function validateDesc(p: AbcdParams, desc: string): DescError | null {
+function parseDesc(p: AbcdParams, desc: string): DescParse<Int32Array> {
   const { w, h, n } = p;
-  let i = 0; // clue index
-  // Each token is a digit run or one other non-comma character.
-  for (const [token] of desc.matchAll(/\d+|[^,]/g)) {
-    if (/^\d/.test(token)) {
+  return readDesc(desc, (r) => {
+    const numbers = new Int32Array((w + h) * n);
+    for (let i = 0; i < numbers.length; i++) {
       // A clue which can't possibly fit its line is rejected; `i < h·n` is a row.
       const max = 1 + (((i < h * n ? w : h) / 2) | 0);
-      if (Number.parseInt(token, 10) > max) return DESC_OUT_OF_RANGE;
-    } else if (token !== "-") {
-      return descBadCharacter(token);
+      numbers[i] = r.accept("-") ? NO_NUMBER : r.int(0, max);
+      r.expect(",");
     }
-    i++;
-  }
-  if (i < (w + h) * n) return DESC_TOO_SHORT;
-  if (i > (w + h) * n) return DESC_TOO_LONG;
-  return null;
+    r.end();
+    return numbers;
+  });
 }
 
-/** Parse a description into the `numbers` array (`NO_NUMBER` for `-`). */
-export function parseNumbers(p: AbcdParams, desc: string): Int32Array {
-  const numbers = new Int32Array((p.w + p.h) * p.n);
-  let i = 0;
-  for (const [token] of desc.matchAll(/\d+|-/g))
-    numbers[i++] = token === "-" ? NO_NUMBER : Number.parseInt(token, 10);
-  return numbers;
+export function validateDesc(p: AbcdParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
 }
 
 // --- state -----------------------------------------------------------------
@@ -263,7 +253,7 @@ export function newState(p: AbcdParams, desc: string): AbcdState {
     params: p,
     grid: new Int8Array(a),
     pencil: new Int32Array(a), // pencil marks start empty
-    numbers: parseNumbers(p, desc),
+    numbers: descValue(parseDesc(p, desc)),
   };
 }
 

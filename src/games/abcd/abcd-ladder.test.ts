@@ -19,7 +19,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newAbcdDesc } from "./generator.ts";
 import { newSolverBoard, type SolverBoard, solveBoard } from "./solver.ts";
-import { type AbcdParams, parseNumbers } from "./state.ts";
+import { type AbcdParams, newState } from "./state.ts";
 
 /** Every preset shape, plus diagonal mode and a thin board: hidden clues are
  * what make the runs technique work for its living, and diagonal mode rules
@@ -46,7 +46,7 @@ const cases = SHAPES.flatMap((params) =>
   SEEDS.map((seed) => {
     const label = `${params.w}x${params.h} n${params.n}${params.diag ? " diag" : ""}${params.removenums ? " hidden" : ""} ${seed}`;
     const { desc } = newAbcdDesc(params, randomNew(`abcd-ladder-${label}`));
-    const numbers = parseNumbers(params, desc);
+    const { numbers } = newState(params, desc);
     return {
       label,
       board: (): Board => ({ b: newSolverBoard(params, numbers), numbers }),

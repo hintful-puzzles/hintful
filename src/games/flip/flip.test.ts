@@ -1,4 +1,9 @@
 import { describe, expect, it } from "vitest";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { Midend, UI_UPDATE } from "../../engine/index.ts";
 import { SHOW_TIMER_PREF } from "../../engine/midend.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -81,6 +86,27 @@ describe("Flip generation", () => {
       expect(flipGame.status(s)).toBe("solved");
     });
   }
+});
+
+describe("Flip desc", () => {
+  // 1x2: a 4-bit matrix (one digit) and a 2-bit grid (one digit, low two bits
+  // padding).
+  const p: FlipParams = { w: 1, h: 2, matrixType: "crosses" };
+
+  it("reads what the encoder writes", () => {
+    expect(flipGame.validateDesc(p, "9,c")).toBeNull();
+    const s = flipGame.newState(p, "9,c");
+    expect([...s.matrix]).toEqual([1, 0, 0, 1]);
+    expect([...s.grid]).toEqual([1, 1]);
+  });
+
+  it("refuses uppercase hex, set padding bits and an overlong bitmap", () => {
+    expect(flipGame.validateDesc(p, "9,C")).toBe(descBadCharacter("C"));
+    expect(flipGame.validateDesc(p, "9,d")).toBe(descBadCharacter("d"));
+    expect(flipGame.validateDesc(p, "99,c")).toBe(descBadCharacter("9"));
+    expect(flipGame.validateDesc(p, "9,cc")).toBe(DESC_TOO_LONG);
+    expect(flipGame.validateDesc(p, "9")).toBe(DESC_TOO_SHORT);
+  });
 });
 
 describe("Flip button codes", () => {

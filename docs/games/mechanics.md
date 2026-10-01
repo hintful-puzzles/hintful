@@ -397,38 +397,44 @@ returns a new state and `cloneState` is cheap by construction (parallel typed
 arrays clone well; see Galaxies'
 [`state.ts`](../../src/games/galaxies/state.ts)).
 
-### The two scans have to agree, and nothing makes them
+### Read a desc once
 
-`validateDesc` and `newState` read the same grammar twice, and a game can have
-them disagree about a character without any test noticing: the accepted desc
-builds a board with its clues shifted, and **a typed array swallows the
-out-of-range write**, so nothing throws. Bricks shipped exactly that — its
-validator counted `A`–`Z` as blank runs while its parser ignored them, ported
-faithfully from an upstream that has the same split. When you write or change a
-codec, **read the two loops side by side and check they accept the same
-characters**, because no tier will reliably tell you.
+Write **one** parser, `parseDesc(p, desc): DescParse<T>`, and have
+`validateDesc` return `descVerdict(parseDesc(p, desc))` while `newState` builds
+from `descValue(parseDesc(p, desc))` (`engine/desc-error.ts`). Put every check
+that needs the parsed board — a count, a region, a rule of your puzzle — inside
+that parse. Exemplar: [`fifteen/state.ts`](../../src/games/fifteen/state.ts).
 
-[`desc-error-games.test.ts`](../../src/engine/desc-error-games.test.ts) tells
-you when it can. It breaks each game's real descs by one edit
-([`testing/desc-mutants.ts`](../../src/engine/testing/desc-mutants.ts)) and
-loads every one `validateDesc` accepts the way the Enter Game ID dialog does,
-so a parser that **throws** on what the validator let through fails it. Only
-that: a parser that skips what it does not recognize builds a wrong board
-without a sound. When it was written, with every validator replaced by one
-accepting everything, the boards of 21 games threw on some mutant and 36 built
-and drew every one, the empty desc included. If your game is in the second
-group, the test cannot see your two loops disagree. One parser that both
-`validateDesc` and `newState` call can't disagree with itself.
+The reason is that two loops disagree in silence. A validator and a parser that
+each read the grammar can differ about a character without any test noticing:
+the accepted desc builds a board with its clues shifted, and **a typed array
+swallows the out-of-range write**, so nothing throws. Bricks shipped exactly
+that, its validator counting `A`–`Z` as blank runs its parser ignored; Rect's
+and Sticks' unbounded clues wrapped in their arrays, so the parser read a
+different board from the one the validator accepted. When every game was read
+for `read-descs-through-one-cursor`, about half the collection's validators
+accepted something their parser skipped.
+
+**Read with the cursor** ([`engine/desc-reader.ts`](../../src/engine/desc-reader.ts),
+engine catalog § "`desc-reader.ts` — the cursor a desc parser drives") unless
+your grammar is one character per token. It decides *too short* against *bad
+character* for you, and its `int` takes bounds, so a stray or oversized value
+is refused rather than stored. **Accept what your encoder writes and refuse
+what your grammar has no place for**: a parser that skips a character it does
+not recognize is a second spelling of every board, and a player's typo loads.
+
+[`desc-error-games.test.ts`](../../src/engine/desc-error-games.test.ts) checks
+what it can from outside: every desc your generator writes must load, and
+every one-edit near miss ([`testing/desc-mutants.ts`](../../src/engine/testing/desc-mutants.ts))
+your validator accepts must build and draw. It sees a disagreement only where
+the parser throws, which is why the single parse, not the test, is the guard.
 
 Where the desc is the shared run-length grammar — a value character, or a
-letter standing for a run of blanks — write neither loop: use
-[`engine/run-length.ts`](../../src/engine/run-length.ts). Eight games do.
+letter standing for a run of blanks — use
+[`engine/run-length.ts`](../../src/engine/run-length.ts) inside that one parse.
 `keepTrailingBlanks` is the one real decision it hands back and it is not a
 style knob: it decides whether the desc ends with the run reaching the last
-cell, and your own `validateDesc` depends on the answer.
-[`run-length-desc.test.ts`](../../src/run-length-desc.test.ts) derives the
-adopters from who imports the module and sweeps them; read its doc comment for
-which half of it has teeth before relying on it.
+cell, and your own parser depends on the answer.
 
 **A letter-run is not enough to make it that grammar.** What decides is the
 *other* token: Bricks' is a multi-digit clue with `_` separators over a padded
@@ -469,9 +475,8 @@ explicitly beside your bound rather than trusting the bound to catch it (the
 spelling is § "Absence is `null`"). A
 write into a typed array names *that array's* absent constant — Filling's
 `?? EMPTY`, Slant's `?? -1` — because a borrowed `-1` in a `Uint8Array` is
-`255`. Where the write is safe only because `validateDesc` screened the
-character, say so at the write (§ "The two scans have to agree, and nothing
-makes them"); an array with no absent value, where every cell holds a number,
+`255`. Inside one parse (§ "Read a desc once") the character is screened where
+it is read, so a write never relies on another loop having checked it; an array with no absent value, where every cell holds a number,
 throws instead. The reason is scale: a `-1` inside the return type passed every
 `>= 0` test by a coincidence of ordering and would have failed silently under
 `!== 0`, and a fact every new author must be told loses to one the compiler

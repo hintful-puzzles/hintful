@@ -81,6 +81,23 @@ export function descNeedsOne(noun: string, found: number): DescError {
   );
 }
 
+/** A description read once: what it says, or why it will not load. */
+export type DescParse<T> = { ok: true; value: T } | { ok: false; error: DescError };
+
+/** `validateDesc`'s answer from a parse: `null` when it loaded. */
+export function descVerdict(parse: DescParse<unknown>): DescError | null {
+  return parse.ok ? null : parse.error;
+}
+
+/**
+ * `newState`'s value from a parse. The midend validates a desc before building
+ * from it, so a failure here is a bug in the caller, not a player's typo.
+ */
+export function descValue<T>(parse: DescParse<T>): T {
+  if (!parse.ok) throw new Error(`newState given an invalid desc: ${parse.error}`);
+  return parse.value;
+}
+
 /**
  * A reason that is about this puzzle's own rules rather than about the shape of
  * the description: a Keen block whose operation needs two cells, more mines than

@@ -11,14 +11,14 @@
  */
 
 import { assertNever } from "../../engine/assert-never.ts";
-import { parseLeadingInt } from "../../engine/decimal.ts";
 import {
-  DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { matching } from "../../engine/latin.ts";
@@ -171,8 +171,9 @@ export function validateParams(p: TentsParams, _full: boolean): string | null {
 // Grid part: a run-length code over the cells reading only tree positions —
 // `_` a tree with no preceding blanks, `a`–`y` 1–25 blanks then a tree, `z` a
 // run of 25 blanks, terminated by a tree-past-the-end marker. Then the `w + h`
-// edge numbers each preceded by a comma. `!`/`-` (pre-placed tent/non-tent)
-// are accepted on decode for completeness but our generator never emits them.
+// edge numbers each preceded by a comma. Upstream's decoder also reads `!`/`-`
+// (a pre-placed tent/non-tent), which no encoder here writes, so they are
+// refused.
 
 /** Encode a tree grid + numbers as the upstream desc (byte-faithful). */
 export function encodeDesc(
@@ -199,64 +200,47 @@ export function encodeDesc(
   return out;
 }
 
-export function validateDesc(p: TentsParams, desc: string): DescError | null {
-  const { w, h } = p;
-  let area = 0;
-  let i = 0;
-  for (; i < desc.length && desc[i] !== ","; i++) {
-    const ch = desc[i];
-    if (ch === "_") area++;
-    else if (ch >= "a" && ch < "z") area += ch.charCodeAt(0) - 97 + 2;
-    else if (ch === "z") area += 25;
-    else if (ch === "!" || ch === "-") {
-      if (area === 0 || area > w * h) return DESC_OUT_OF_RANGE;
-    } else return descBadCharacter(ch);
-  }
-  if (area < w * h + 1) return DESC_TOO_SHORT;
-  if (area > w * h + 1) return DESC_TOO_LONG;
+const isRunChar = (c: string): boolean => c === "_" || (c >= "a" && c <= "z");
 
-  for (let k = 0; k < w + h; k++) {
-    if (i >= desc.length) return DESC_TOO_SHORT;
-    if (desc[i] !== ",") return descBadCharacter(desc[i]);
-    i = parseLeadingInt(desc, i + 1).next;
-  }
-  if (i < desc.length) return DESC_TOO_LONG;
-  return null;
-}
-
-/** Parse a validated desc into a fresh tree grid + numbers array. */
-export function decodeDesc(
+function parseDesc(
   p: TentsParams,
   desc: string,
-): { grid: Int8Array; numbers: Int32Array } {
+): DescParse<{ grid: Int8Array; numbers: Int32Array }> {
   const { w, h } = p;
-  const grid = new Int8Array(w * h);
-  let pos = 0;
-  for (let i = 0; i < desc.length && desc[i] !== ","; i++) {
-    const ch = desc[i];
-    let run: number;
-    let type = TREE;
-    if (ch === "_") run = 0;
-    else if (ch >= "a" && ch < "z") run = ch.charCodeAt(0) - 96;
-    else if (ch === "z") {
-      run = 25;
-      type = BLANK;
-    } else {
-      // '!' or '-' — set the previous square (run = -1)
-      run = -1;
-      type = ch === "!" ? TENT : NONTENT;
+  const area = w * h;
+  return readDesc(desc, (r) => {
+    const grid = new Int8Array(area);
+    let pos = 0;
+    for (;;) {
+      const ch = r.char(isRunChar);
+      if (ch === "z") {
+        // The encoder writes `z` only with blanks still to follow it.
+        pos += 25;
+        if (pos >= area) r.fail(DESC_TOO_LONG);
+        continue;
+      }
+      pos += ch === "_" ? 0 : ch.charCodeAt(0) - 96;
+      if (pos > area) r.fail(DESC_TOO_LONG);
+      if (pos === area) break; // the tree-past-the-end marker
+      grid[pos++] = TREE;
     }
-    pos += run;
-    if (pos === w * h) break; // terminal tree-past-the-end
-    if (type !== BLANK) grid[pos++] = type;
-  }
-  // The grid part holds no comma, so the numbers are everything after the first.
-  const numbers = Int32Array.from(desc.slice(desc.indexOf(",") + 1).split(","), Number);
-  return { grid, numbers };
+    const numbers = new Int32Array(w + h);
+    // A column holds at most h tents and a row at most w.
+    for (let i = 0; i < w + h; i++) {
+      r.expect(",");
+      numbers[i] = r.int(0, i < w ? h : w);
+    }
+    r.end();
+    return { grid, numbers };
+  });
+}
+
+export function validateDesc(p: TentsParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: TentsParams, desc: string): TentsState {
-  const { grid, numbers } = decodeDesc(p, desc);
+  const { grid, numbers } = descValue(parseDesc(p, desc));
   const links = new Int8Array(p.w * p.h).fill(N);
   return { w: p.w, h: p.h, numbers, grid, links };
 }

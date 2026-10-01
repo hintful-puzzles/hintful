@@ -237,6 +237,19 @@ describe("desc codec", () => {
     expect(validateDesc(p, "k")).toBe(DESC_TOO_LONG); // skip 11
     expect(validateDesc(p, "2")).toBe(descBadCharacter("2"));
   });
+
+  it("reads only the run letters encodeDesc writes", () => {
+    const p = { w: 6, h: 6, diff: DIFF_EASY };
+    expect(validateDesc(p, "zff")).toBeNull();
+    // A `z` run takes the case of the dot that ends it.
+    expect(validateDesc(p, "Zff")).toBe(descBadCharacter("f"));
+    expect(validateDesc(p, "zFf")).toBe(descBadCharacter("F"));
+    expect(validateDesc(p, "ZFf")).toBeNull();
+    // The terminator is lowercase, and lands exactly past the grid.
+    expect(validateDesc(p, "zfF")).toBe(descBadCharacter("F"));
+    expect(validateDesc(p, "zfg")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, "zffa")).toBe(DESC_TOO_LONG);
+  });
 });
 
 describe("solver classification", () => {

@@ -9,6 +9,12 @@
  * lives in `singles-differential.test.ts`.
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -78,7 +84,15 @@ describe("singles desc codec", () => {
 
   it("rejects a wrong-length desc", () => {
     const p: SinglesParams = { w: 5, h: 5, diff: "easy" };
-    expect(validateDesc(p, "123")).not.toBeNull();
+    expect(validateDesc(p, "123")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, "1".repeat(26))).toBe(DESC_TOO_LONG);
+  });
+
+  it("tells a number too big for the board from a character that is no number", () => {
+    const p: SinglesParams = { w: 5, h: 5, diff: "easy" };
+    expect(validateDesc(p, `6${"1".repeat(24)}`)).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, `0${"1".repeat(24)}`)).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, `!${"1".repeat(24)}`)).toBe(descBadCharacter("!"));
   });
 });
 

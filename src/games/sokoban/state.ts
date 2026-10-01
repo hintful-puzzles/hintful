@@ -10,14 +10,16 @@
  * Sokoban's reason to exist.
  */
 
-import { parseLeadingInt } from "../../engine/decimal.ts";
+import { isDigit } from "../../engine/decimal.ts";
 import {
   DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
   descNeedsOne,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, paramsCodec } from "../../engine/params-codec.ts";
@@ -129,53 +131,51 @@ export type SokobanMove = { type: "move"; dx: number; dy: number };
 
 // --- desc codec -------------------------------------------------------
 
-/** The runs of a desc: each character, then an optional decimal repeat count. */
-function* runs(desc: string): Generator<{ ch: number; n: number }> {
-  for (let i = 0; i < desc.length; ) {
-    const ch = desc.charCodeAt(i++);
-    const { value, next } = parseLeadingInt(desc, i);
-    const n = next > i ? value : 1;
-    i = next;
-    yield { ch, n };
-  }
-}
+/**
+ * The letters a desc may use: the terrain, the player, and the barrels,
+ * including a hand-typed level's capital-letter labeled ones. The generation-only
+ * `INITIAL` square and a labeled barrel's on-target control character have no
+ * place in an ID.
+ */
+const DESC_LETTERS = /^[swptdbfuvA-Z]$/;
 
-/** The characters a desc may use besides the player and the barrels. */
-const TERRAIN = new Set([INITIAL, SPACE, WALL, TARGET, PIT, DEEP_PIT]);
+/**
+ * Runs of a cell letter and a repeat count of at least 2 (a single cell is
+ * written bare), filling the board, with exactly one player. The player's cell
+ * is stored as the SPACE or TARGET beneath it, as upstream's `new_game` does.
+ */
+function parseDesc(p: SokobanParams, desc: string): DescParse<SokobanState> {
+  const area = p.w * p.h;
+  return readDesc(desc, (r) => {
+    const grid = new Uint8Array(area);
+    let players = 0;
+    let at = -1;
+    let i = 0;
+    while (i < area) {
+      const ch = r.char((ch) => DESC_LETTERS.test(ch)).charCodeAt(0);
+      const n = r.peekIs(isDigit) ? r.int(2, area) : 1;
+      if (i + n > area) r.fail(DESC_TOO_LONG);
+      let cell = ch;
+      if (isPlayer(ch)) {
+        players += n;
+        at = i;
+        cell = ch === PLAYERTARGET ? TARGET : SPACE;
+      }
+      grid.fill(cell, i, i + n);
+      i += n;
+    }
+    r.end();
+    if (players !== 1) r.fail(descNeedsOne("starting square for the player", players));
+    return { w: p.w, h: p.h, grid, px: at % p.w, py: Math.floor(at / p.w) };
+  });
+}
 
 export function validateDesc(p: SokobanParams, desc: string): DescError | null {
-  let area = 0;
-  let nplayers = 0;
-  for (const { ch, n } of runs(desc)) {
-    area += n;
-    if (isPlayer(ch)) nplayers += n;
-    else if (!TERRAIN.has(ch) && !isBarrel(ch))
-      return descBadCharacter(String.fromCharCode(ch));
-  }
-  if (area > p.w * p.h) return DESC_TOO_LONG;
-  if (area < p.w * p.h) return DESC_TOO_SHORT;
-  if (nplayers !== 1) return descNeedsOne("starting square for the player", nplayers);
-  return null;
+  return descVerdict(parseDesc(p, desc));
 }
 
-/** Build a board from a desc (upstream `new_game`), storing the player's cell
- * as the SPACE or TARGET beneath it. */
 export function newState(p: SokobanParams, desc: string): SokobanState {
-  const cells: number[] = [];
-  let px = -1;
-  let py = -1;
-  for (const { ch, n } of runs(desc)) {
-    let cell = ch;
-    if (isPlayer(ch)) {
-      px = cells.length % p.w;
-      py = Math.floor(cells.length / p.w);
-      cell = ch === PLAYERTARGET ? TARGET : SPACE;
-    }
-    for (let k = 0; k < n; k++) cells.push(cell);
-  }
-  if (cells.length !== p.w * p.h) throw new Error("sokoban: desc area mismatch");
-  if (px === -1) throw new Error("sokoban: no player in desc");
-  return { w: p.w, h: p.h, grid: Uint8Array.from(cells), px, py };
+  return descValue(parseDesc(p, desc));
 }
 
 // --- move classification ----------------------------------------------

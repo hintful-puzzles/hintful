@@ -3,17 +3,12 @@
  * fires, at all three caps. The harness and the argument for it are
  * `engine/testing/ladder-census.ts`; this file is the declaration.
  */
+import { descValue } from "../../engine/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newRomeDesc } from "./generator.ts";
-import { romeSolve } from "./solver.ts";
-import {
-  DIFF_EASY,
-  DIFF_NORMAL,
-  DIFF_TRICKY,
-  type RomeParams,
-  readDesc,
-} from "./state.ts";
+import { parseDesc, romeSolve } from "./solver.ts";
+import { DIFF_EASY, DIFF_NORMAL, DIFF_TRICKY, type RomeParams } from "./state.ts";
 
 const SHAPES: RomeParams[] = [
   { w: 4, h: 4, diff: DIFF_EASY },
@@ -60,12 +55,12 @@ const cases = [
     SEEDS.map((seed) => {
       const label = `${params.w}x${params.h} diff=${params.diff} ${seed}`;
       const { desc } = newRomeDesc(params, randomNew(`rome-ladder-${label}`));
-      return { label, board: () => readDesc(params, desc).board };
+      return { label, board: () => descValue(parseDesc(params, desc)) };
     }),
   ),
   ...PAIR_BOARDS.map(({ label, params, desc }) => ({
     label,
-    board: () => readDesc(params, desc).board,
+    board: () => descValue(parseDesc(params, desc)),
   })),
 ];
 

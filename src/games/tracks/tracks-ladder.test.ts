@@ -18,7 +18,8 @@ import {
   DIFF_EASY,
   DIFF_HARD,
   DIFF_TRICKY,
-  decodeDesc,
+  newState,
+  stateToBoard,
   type TracksParams,
 } from "./state.ts";
 
@@ -38,7 +39,7 @@ const cases = SHAPES.flatMap((params) =>
     const label = `${params.w}x${params.h} diff=${params.diff} ${seed}`;
     // Generated once per case, decoded fresh per solve.
     const { desc } = newDesc(params, randomNew(`tracks-ladder-${label}`));
-    return { label, board: () => decodeDesc(params, desc) };
+    return { label, board: () => stateToBoard(newState(params, desc)) };
   }),
 );
 

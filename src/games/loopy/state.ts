@@ -8,11 +8,14 @@
 import { c2nUpper, n2cUpper } from "../../engine/desc-alphabet.ts";
 import {
   DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
+  type DescParse,
   descBadCharacter,
+  descValue,
+  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
+import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type {
   Grid,
@@ -26,7 +29,7 @@ import {
   gridNew,
   gridValidateDesc,
 } from "../../engine/grid/index.ts";
-import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
+import { encodeRunLength } from "../../engine/run-length.ts";
 import { gridTypeOf, type LoopyParams } from "./params.ts";
 
 /**
@@ -117,15 +120,6 @@ export function cloneState(s: LoopyState): LoopyState {
 
 const GRID_DESC_SEP = "_";
 
-/** Split an optional grid description off the front of a game description.
- * Mirrors `extract_grid_desc`: the separator is the **first** underscore, and
- * its absence means the tiling takes no description. */
-function splitDesc(desc: string): { gridDesc: string | null; clueDesc: string } {
-  const sep = desc.indexOf(GRID_DESC_SEP);
-  if (sep < 0) return { gridDesc: null, clueDesc: desc };
-  return { gridDesc: desc.slice(0, sep), clueDesc: desc.slice(sep + 1) };
-}
-
 /**
  * Encode a state's clues as a description. Runs of clueless faces become a
  * single letter `a`–`z` (1–26 empties); clued faces become their digit
@@ -140,21 +134,26 @@ export function encodeClues(clues: Int8Array, numFaces: number): string {
   });
 }
 
-/** Decode a clue description into a per-face clue array. Mirrors the decoding
- * loop in `new_game`; assumes the description has already been validated. */
-export function decodeClues(clueDesc: string, numFaces: number): Int8Array {
+/**
+ * Read the clue part of a description into a per-face clue array: exactly
+ * `numFaces` entries, each a clue character or a letter `a`–`z` for a run of
+ * clueless faces. Upstream's run test is a bare `c >= 'a'`, which reads `{`,
+ * `~` and every non-ASCII character as a run of 27 or more — lengths its own
+ * encoder can never write — so this reads the grammar it documents instead.
+ */
+export function readClues(r: DescReader, numFaces: number): Int8Array {
   const clues = new Int8Array(numFaces).fill(NO_CLUE);
-  let i = 0;
-  for (const tok of scanRunLength(clueDesc)) {
-    if (i >= numFaces) break;
-    // A blank run just advances past faces already holding NO_CLUE.
-    if ("blanks" in tok) {
-      i += tok.blanks;
+  for (let i = 0; i < numFaces; ) {
+    const c = r.char();
+    if (c >= "a" && c <= "z") {
+      const run = c.charCodeAt(0) - 96;
+      if (run > numFaces - i) r.fail(DESC_TOO_LONG);
+      i += run;
       continue;
     }
-    const clue = c2nUpper(tok.value);
-    if (clue !== null) clues[i] = clue;
-    i++;
+    const clue = c2nUpper(c);
+    if (clue === null) r.fail(descBadCharacter(c));
+    clues[i++] = clue;
   }
   return clues;
 }
@@ -192,45 +191,46 @@ function faceCountFor(
   return count;
 }
 
-/** Validate a full game description (`[<gridDesc>_]<clueDesc>`) against params.
- * Returns `null` when acceptable, else why it is rejected. */
-export function validateDesc(p: LoopyParams, desc: string): DescError | null {
+const TRIMMED_AWAY = puzzleDescError(
+  "This game ID describes a patch of tiling with no faces left in it.",
+);
+
+/**
+ * Read a full game description, `[<gridDesc>_]<clueDesc>`. As upstream's
+ * `extract_grid_desc`, the grid description runs to the **first** underscore,
+ * and its absence means the tiling takes none; reading it is the grid module's
+ * business. The clues are read against the face count it gives.
+ */
+function parseDesc(
+  p: LoopyParams,
+  desc: string,
+): DescParse<{ gridDesc: string | null; clues: Int8Array }> {
   const type = gridTypeOf(p);
-  const { gridDesc, clueDesc } = splitDesc(desc);
-
-  const gridErr = gridValidateDesc(type, p.w, p.h, gridDesc);
-  if (gridErr) return gridErr;
-
-  const numFaces = faceCountFor(type, p.w, p.h, gridDesc);
-  if (numFaces === null) {
-    return puzzleDescError(
-      "This game ID describes a patch of tiling with no faces left in it.",
-    );
-  }
-
-  // Upstream's run test is a bare `c >= 'a'`, which reads `{`, `~` and every
-  // non-ASCII character as a run of 27 or more — lengths its own encoder can
-  // never write. Reading the grammar it documents (`a`–`z`) instead rejects
-  // those, and costs nothing: no generated description contains one.
-  let count = 0;
-  for (const tok of scanRunLength(clueDesc)) {
-    if ("blanks" in tok) {
-      count += tok.blanks;
-    } else if (c2nUpper(tok.value) !== null) {
-      count++;
-    } else {
-      return descBadCharacter(tok.value);
+  return readDesc(desc, (r: DescReader) => {
+    let gridDesc: string | null = null;
+    if (desc.includes(GRID_DESC_SEP)) {
+      gridDesc = "";
+      while (!r.accept(GRID_DESC_SEP)) gridDesc += r.char();
     }
-  }
-
-  if (count < numFaces) return DESC_TOO_SHORT;
-  if (count > numFaces) return DESC_TOO_LONG;
-  return null;
+    const gridErr = gridValidateDesc(type, p.w, p.h, gridDesc);
+    if (gridErr) r.fail(gridErr);
+    const numFaces = faceCountFor(type, p.w, p.h, gridDesc);
+    if (numFaces === null) r.fail(TRIMMED_AWAY);
+    const clues = readClues(r, numFaces);
+    r.end();
+    return { gridDesc, clues };
+  });
 }
 
-/** Build the initial state for a description. Assumes it has been validated. */
+/** Validate a full game description against params. Returns `null` when
+ * acceptable, else why it is rejected. */
+export function validateDesc(p: LoopyParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
+}
+
+/** Build the initial state for a description. */
 export function newState(p: LoopyParams, desc: string): LoopyState {
-  const { gridDesc, clueDesc } = splitDesc(desc);
+  const { gridDesc, clues } = descValue(parseDesc(p, desc));
   const grid = gridNew(gridTypeOf(p), p.w, p.h, gridDesc);
   return {
     grid,
@@ -238,7 +238,7 @@ export function newState(p: LoopyParams, desc: string): LoopyState {
     gridType: p.type,
     w: p.w,
     h: p.h,
-    clues: decodeClues(clueDesc, grid.numFaces),
+    clues,
     lines: new Uint8Array(grid.numEdges).fill(LINE_UNKNOWN),
     lineErrors: new Uint8Array(grid.numEdges),
     corners: new Uint8Array(2 * grid.numEdges),

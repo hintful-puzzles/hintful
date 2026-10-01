@@ -15,10 +15,15 @@ import { parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_MALFORMED,
   DESC_OUT_OF_RANGE,
+  DESC_REPEATED,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   type DescError,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/obfuscate.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
@@ -222,31 +227,47 @@ export function newDesc(p: BlackboxParams, rng: RandomState): { desc: string } {
   return { desc: bin2hex(bmp) };
 }
 
-/** A desc's de-obfuscated `[w, h, x0, y0, …]` bytes. */
-function descBytes(desc: string): Uint8Array {
-  const bmp = hex2bin(desc, desc.length / 2);
-  obfuscateBitmap(bmp, bmp.length * 8, true);
-  return bmp;
+const isHex = (c: string) => "0123456789abcdef".includes(c);
+
+/**
+ * The de-obfuscated `[w, h, x0, y0, …]` bytes, in lowercase hex. The
+ * obfuscation runs over the whole bitmap, so its length is known only once
+ * every character is read: four hex digits per ball after a four-digit header.
+ */
+function parseDesc(p: BlackboxParams, desc: string): DescParse<Uint8Array> {
+  return readDesc(desc, (r) => {
+    let hex = "";
+    while (!r.done) hex += r.char(isHex);
+    const balls = Math.floor(hex.length / 4) - 1;
+    // A part-ball reads as a copy cut short, unless the whole balls before it
+    // already reach the most the board has.
+    const most = hex.length % 4 === 0 ? p.maxballs : p.maxballs - 1;
+    if (balls > most) r.fail(DESC_TOO_LONG);
+    if (balls < p.minballs || hex.length % 4 !== 0) r.fail(DESC_TOO_SHORT);
+
+    const bmp = hex2bin(hex, hex.length / 2);
+    obfuscateBitmap(bmp, bmp.length * 8, true);
+    // The obfuscated bytes restate the board size, so any damage shows here.
+    if (bmp[0] !== p.w || bmp[1] !== p.h) r.fail(DESC_MALFORMED);
+    const taken = new Set<number>();
+    for (let i = 2; i < bmp.length; i += 2) {
+      if (bmp[i] >= p.w || bmp[i + 1] >= p.h) r.fail(DESC_OUT_OF_RANGE);
+      // Two balls on one cell would be one ball the count says is two, and
+      // the board could never be won.
+      const cell = bmp[i + 1] * p.w + bmp[i];
+      if (taken.has(cell)) r.fail(DESC_REPEATED);
+      taken.add(cell);
+    }
+    return bmp;
+  });
 }
 
 export function validateDesc(p: BlackboxParams, desc: string): DescError | null {
-  const dlen = desc.length;
-  const nballs = (dlen / 2 - 2) / 2;
-  // Four hex digits per ball, so a length off that step reads as a cut copy.
-  if (dlen < 4 || dlen % 4 || nballs < p.minballs) return DESC_TOO_SHORT;
-  if (nballs > p.maxballs) return DESC_TOO_LONG;
-
-  // The obfuscated bytes restate the board size, so any damage shows here.
-  const bmp = descBytes(desc);
-  if (bmp[0] !== p.w || bmp[1] !== p.h) return DESC_MALFORMED;
-  for (let i = 2; i < bmp.length; i += 2) {
-    if (bmp[i] >= p.w || bmp[i + 1] >= p.h) return DESC_OUT_OF_RANGE;
-  }
-  return null;
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: BlackboxParams, desc: string): BlackboxState {
-  const bmp = descBytes(desc);
+  const bmp = descValue(parseDesc(p, desc));
   const w = bmp[0];
   const h = bmp[1];
   const nlasers = 2 * (w + h);

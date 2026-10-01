@@ -15,7 +15,7 @@ import {
   PAPER,
 } from "../../engine/color/palette.ts";
 import { galaxiesBlackRegion } from "../../engine/color/palette-games.ts";
-import type { DescError } from "../../engine/desc-error.ts";
+import { type DescError, descValue, descVerdict } from "../../engine/desc-error.ts";
 import {
   type DifficultyContract,
   difficultyItem,
@@ -100,10 +100,8 @@ import {
 import { clearForSolve, GalaxiesDiff, solverState } from "./solver.ts";
 import {
   addAssoc,
-  blankGame,
   checkComplete,
   cloneState,
-  decodeGame,
   F_DOT,
   F_DOT_BLACK,
   F_DOT_HOLD,
@@ -114,6 +112,7 @@ import {
   inGrid,
   inInterior,
   isVerticalEdge,
+  parseDesc,
   rebuildDots,
   removeAssoc,
   SpaceType,
@@ -1049,10 +1048,7 @@ function statusbarText(s: GalaxiesState, _ui: GalaxiesUi): string {
  * associations never enter the verdict. */
 const difficulty: DifficultyContract<GalaxiesParams> = {
   solveAtCap: (p, desc, cap) => {
-    const s = blankGame(p.w, p.h);
-    const err = decodeGame(s, desc);
-    if (err) throw new Error(`Galaxies: ${err}`);
-    s.dots = rebuildDots(s);
+    const s = descValue(parseDesc(p, desc));
     clearForSolve(s);
     const ret = solverState(s, cap as GalaxiesDiff);
     if (ret === GalaxiesDiff.Impossible) return "impossible";
@@ -1103,15 +1099,11 @@ export const galaxiesGame: Game<
   },
 
   validateDesc(p, desc): DescError | null {
-    return decodeGame(blankGame(p.w, p.h), desc);
+    return descVerdict(parseDesc(p, desc));
   },
 
   newState(p, desc): GalaxiesState {
-    const s = blankGame(p.w, p.h);
-    const err = decodeGame(s, desc);
-    if (err) throw new Error(`Galaxies: ${err}`);
-    s.dots = rebuildDots(s);
-    return s;
+    return descValue(parseDesc(p, desc));
   },
 
   newUi(_state): GalaxiesUi {

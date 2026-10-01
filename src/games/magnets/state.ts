@@ -16,13 +16,14 @@ import {
   n2c as descChar,
 } from "../../engine/desc-alphabet.ts";
 import {
-  DESC_MALFORMED,
   DESC_OUT_OF_RANGE,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
@@ -197,32 +198,9 @@ export function validateParams(p: MagnetsParams, _full: boolean): string | null 
 // Desc = COL+ , ROW+ , COL- , ROW- , DOMINOES  (four `.`/digit/letter count
 // rows each ended by a comma, then w·h domino chars L/R/T/B/*).
 
-/** Parse one count row of `n` chars into `array[i·3 + off]`. Returns the next
- * read index, or why the desc was rejected. */
-function readRow(
-  desc: string,
-  pos: number,
-  n: number,
-  array: Int32Array,
-  off: number,
-): { pos: number } | { error: DescError } {
-  for (let i = 0; i < n; i++) {
-    const c = desc[pos++];
-    if (c === undefined) return { error: DESC_TOO_SHORT };
-    let num: number;
-    if (c === ".") num = -1;
-    else {
-      const value = c2n(c);
-      if (value === null) return { error: descBadCharacter(c) };
-      num = value;
-    }
-    array[i * 3 + off] = num;
-  }
-  const sep = desc[pos++];
-  if (sep === undefined) return { error: DESC_TOO_SHORT };
-  if (sep !== ",") return { error: DESC_MALFORMED };
-  return { pos };
-}
+/** The domino letters: a cell's other half lies right of it (`L`, it is the
+ * left end), left, below, above, or nowhere (`*`, a singleton). */
+const DOMINO_CHARS = "LRTB*";
 
 interface Parsed {
   dominoes: Int32Array;
@@ -233,89 +211,84 @@ interface Parsed {
 }
 
 /** Parse a desc into the frozen layout + counts and a fresh grid/flags (with
- * singletons pre-set neutral). Returns why the desc was rejected on failure. */
-function parseDesc(p: MagnetsParams, desc: string): Parsed | { error: DescError } {
+ * singletons pre-set neutral). */
+function parseDesc(p: MagnetsParams, desc: string): DescParse<Parsed> {
   const { w, h } = p;
   const wh = w * h;
-  const colcount = new Int32Array(w * 3);
-  const rowcount = new Int32Array(h * 3);
-  const dominoes = new Int32Array(wh);
-  const grid = new Int8Array(wh);
-  const flags = new Int32Array(wh);
+  return readDesc(desc, (r) => {
+    const colcount = new Int32Array(w * 3);
+    const rowcount = new Int32Array(h * 3);
+    const dominoes = new Int32Array(wh);
+    const grid = new Int8Array(wh);
+    const flags = new Int32Array(wh);
 
-  let pos = 0;
-  for (const [n, array, off] of [
-    [w, colcount, POSITIVE],
-    [h, rowcount, POSITIVE],
-    [w, colcount, NEGATIVE],
-    [h, rowcount, NEGATIVE],
-  ] as const) {
-    const r = readRow(desc, pos, n, array, off);
-    if ("error" in r) return r;
-    pos = r.pos;
-  }
-
-  // Derive neutral counts (== length − pos − neg); a −1 pos/neg ⇒ unknown (−1).
-  for (const [n, counts, length] of [
-    [w, colcount, h],
-    [h, rowcount, w],
-  ] as const) {
-    for (let i = 0; i < n; i++) {
-      const pos = counts[i * 3 + POSITIVE];
-      const neg = counts[i * 3 + NEGATIVE];
-      if (pos >= 0 && neg >= 0 && pos + neg > length) {
-        return { error: DESC_OUT_OF_RANGE };
+    // A column's clue counts cells of a column (h of them), a row's of a row.
+    for (const [n, array, off, length] of [
+      [w, colcount, POSITIVE, h],
+      [h, rowcount, POSITIVE, w],
+      [w, colcount, NEGATIVE, h],
+      [h, rowcount, NEGATIVE, w],
+    ] as const) {
+      for (let i = 0; i < n; i++) {
+        const c = r.char((ch) => ch === "." || c2n(ch) !== null);
+        const num = c === "." ? -1 : (c2n(c) as number);
+        if (num > length) r.fail(DESC_OUT_OF_RANGE);
+        array[i * 3 + off] = num;
       }
-      counts[i * 3 + NEUTRAL] = pos < 0 || neg < 0 ? -1 : length - pos - neg;
+      r.expect(",");
     }
-  }
 
-  // Domino orientations.
-  for (let idx = 0; idx < wh; idx++) {
-    let c = desc[pos++];
-    while (c === ",") c = desc[pos++]; // spacer, ignore
-    if (c === "L") dominoes[idx] = idx + 1;
-    else if (c === "R") dominoes[idx] = idx - 1;
-    else if (c === "T") dominoes[idx] = idx + w;
-    else if (c === "B") dominoes[idx] = idx - w;
-    else if (c === "*") dominoes[idx] = idx;
-    else {
-      return { error: c === undefined ? DESC_TOO_SHORT : descBadCharacter(c) };
+    // Derive neutral counts (== length − pos − neg); a −1 pos/neg ⇒ unknown (−1).
+    for (const [n, counts, length] of [
+      [w, colcount, h],
+      [h, rowcount, w],
+    ] as const) {
+      for (let i = 0; i < n; i++) {
+        const pos = counts[i * 3 + POSITIVE];
+        const neg = counts[i * 3 + NEGATIVE];
+        if (pos >= 0 && neg >= 0 && pos + neg > length) r.fail(DESC_OUT_OF_RANGE);
+        counts[i * 3 + NEUTRAL] = pos < 0 || neg < 0 ? -1 : length - pos - neg;
+      }
     }
-  }
 
-  // Consistency: each end points back, and to an orthogonal neighbor.
-  for (let idx = 0; idx < wh; idx++) {
-    const other = dominoes[idx];
-    if (
-      other < 0 ||
-      other >= wh ||
-      (other % w !== idx % w && Math.floor(other / w) !== Math.floor(idx / w)) ||
-      dominoes[other] !== idx
-    ) {
-      return {
-        error: puzzleDescError(
-          "This game ID has a domino whose two halves don't point at each other.",
-        ),
-      };
+    const step = [1, -1, w, -w, 0];
+    for (let idx = 0; idx < wh; idx++) {
+      const c = r.char((ch) => DOMINO_CHARS.includes(ch));
+      dominoes[idx] = idx + step[DOMINO_CHARS.indexOf(c)];
     }
-    if (other === idx) {
-      grid[idx] = NEUTRAL;
-      flags[idx] |= GS_SET;
-    }
-  }
+    r.end();
 
-  return { dominoes, rowcount, colcount, grid, flags };
+    // Consistency: each end points back, and to an orthogonal neighbor.
+    for (let idx = 0; idx < wh; idx++) {
+      const other = dominoes[idx];
+      if (
+        other < 0 ||
+        other >= wh ||
+        (other % w !== idx % w && Math.floor(other / w) !== Math.floor(idx / w)) ||
+        dominoes[other] !== idx
+      ) {
+        r.fail(
+          puzzleDescError(
+            "This game ID has a domino whose two halves don't point at each other.",
+          ),
+        );
+      }
+      if (other === idx) {
+        grid[idx] = NEUTRAL;
+        flags[idx] |= GS_SET;
+      }
+    }
+
+    return { dominoes, rowcount, colcount, grid, flags };
+  });
 }
 
 export function validateDesc(p: MagnetsParams, desc: string): DescError | null {
-  const r = parseDesc(p, desc);
-  return "error" in r ? r.error : null;
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: MagnetsParams, desc: string): MagnetsState {
-  const r = parseDesc(p, desc);
-  if ("error" in r) throw new Error(`magnets newState: ${r.error}`);
+  const r = descValue(parseDesc(p, desc));
   const { w, h } = p;
   return {
     w,

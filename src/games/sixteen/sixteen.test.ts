@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  DESC_MALFORMED,
   DESC_OUT_OF_RANGE,
   DESC_REPEATED,
   DESC_TOO_LONG,
@@ -175,7 +174,13 @@ describe("Sixteen desc and state", () => {
   it("rejects desc with a non-digit or an empty entry", () => {
     const p = { w: 3, h: 3, movetarget: 0 };
     expect(validateDesc(p, "1,2,3,4,5,6,7,8,x")).toBe(descBadCharacter("x"));
-    expect(validateDesc(p, "1,2,3,4,5,6,7,8,")).toBe(DESC_MALFORMED);
+    expect(validateDesc(p, "1,2,3,4,5,6,7,8,")).toBe(DESC_TOO_SHORT);
+  });
+
+  it("names a wrong separator rather than miscounting the entries", () => {
+    const p = { w: 3, h: 3, movetarget: 0 };
+    expect(validateDesc(p, "1;2,3,4,5,6,7,8,9")).toBe(descBadCharacter(";"));
+    expect(validateDesc(p, "1,2,,3,4,5,6,7,8,9")).toBe(descBadCharacter(","));
   });
 
   it("newState parses desc correctly", () => {

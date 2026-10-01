@@ -11,6 +11,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
@@ -198,8 +199,9 @@ describe("spokes description codec", () => {
   });
 
   it("rejects a character that is neither a clue digit nor a hole", () => {
-    expect(validateDesc(FIX, `9${FIX_DESC.slice(1)}`)).toBe(descBadCharacter("9"));
+    expect(validateDesc(FIX, `9${FIX_DESC.slice(1)}`)).toBe(DESC_OUT_OF_RANGE);
     expect(validateDesc(FIX, `z${FIX_DESC.slice(1)}`)).toBe(descBadCharacter("z"));
+    expect(validateDesc(FIX, `x${FIX_DESC.slice(1)}`)).toBe(descBadCharacter("x"));
   });
 
   it("carves a wider hole for 'X' than for '0'", () => {

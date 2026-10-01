@@ -1,11 +1,12 @@
-import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
@@ -441,141 +442,101 @@ export function newUi(_state: UndeadState): UndeadUi {
 
 // --- desc codec ------------------------------------------------------------
 
-/** Populate a fresh `common` from `desc` (upstream `new_game`), returning the
- * decoded state. Throws on a malformed desc (callers that need a soft error use
- * {@link validateDesc} first). */
-export function newState(params: UndeadParams, desc: string): UndeadState {
-  const common = newCommon(params);
-  const { w, h } = common;
-  const stride = w + 2;
+/** A given monster's letter: its cell value and its placed monster. */
+const GIVEN_MONSTERS = new Map<string, readonly [number, number]>([
+  ["G", [CELL_GHOST, MON_GHOST]],
+  ["V", [CELL_VAMPIRE, MON_VAMPIRE]],
+  ["Z", [CELL_ZOMBIE, MON_ZOMBIE]],
+]);
 
-  let pos = 0;
-  const readInt = (): number => {
-    const r = parseLeadingInt(desc, pos);
-    pos = r.next;
-    return r.value;
-  };
-  const expectComma = (): void => {
-    if (desc[pos] !== ",") throw new Error("Faulty game description");
-    pos++;
-  };
+const isGridChar = (c: string): boolean =>
+  (c >= "a" && c <= "z") || c === "L" || c === "R" || GIVEN_MONSTERS.has(c);
 
-  common.numGhosts = readInt();
-  expectComma();
-  common.numVampires = readInt();
-  expectComma();
-  common.numZombies = readInt();
-  expectComma();
-  common.numTotal = common.numGhosts + common.numVampires + common.numZombies;
+/**
+ * The three monster totals, the grid in reading order — `a`–`z` a run of 1–26
+ * empty monster squares, `L`/`R` a mirror, `G`/`V`/`Z` a monster given in
+ * place (upstream's grammar; the generator never writes one) — and the
+ * `2(w + h)` sightings round the edge (upstream `new_game`).
+ */
+function parseDesc(params: UndeadParams, desc: string): DescParse<UndeadState> {
+  return readDesc(desc, (r) => {
+    const common = newCommon(params);
+    const { w, h } = common;
+    const wh = w * h;
+    const stride = w + 2;
 
-  const state = blankState(common);
-  common.fixed = new Uint8Array(common.numTotal);
+    common.numGhosts = r.int(0, wh);
+    r.expect(",");
+    common.numVampires = r.int(0, wh);
+    r.expect(",");
+    common.numZombies = r.int(0, wh);
+    r.expect(",");
+    common.numTotal = common.numGhosts + common.numVampires + common.numZombies;
 
-  // Grid run-length walk: `n` numbers the interior cells in reading order,
-  // `count` the monster cells.
-  let count = 0;
-  let n = 0;
-  const nextCell = (): number => {
-    const g = num2grid(n++, w);
-    return g.x + g.y * stride;
-  };
-  for (; pos < desc.length && desc[pos] !== ","; pos++) {
-    const c = desc[pos];
-    if (c === "L" || c === "R") {
-      const cell = nextCell();
-      common.grid[cell] = c === "L" ? CELL_MIRROR_L : CELL_MIRROR_R;
-      common.xinfo[cell] = -1;
-    } else if (c === "G" || c === "V" || c === "Z") {
-      const cell = nextCell();
-      common.grid[cell] =
-        c === "G" ? CELL_GHOST : c === "V" ? CELL_VAMPIRE : CELL_ZOMBIE;
-      common.xinfo[cell] = count;
-      state.guess[count] = c === "G" ? MON_GHOST : c === "V" ? MON_VAMPIRE : MON_ZOMBIE;
-      common.fixed[count++] = 1;
-    } else {
-      // A run of empty monster cells, `a` = 1.
-      for (let run = c.charCodeAt(0) - 96; run > 0; run--) {
-        common.xinfo[nextCell()] = count++;
+    const state = blankState(common);
+    common.fixed = new Uint8Array(common.numTotal);
+
+    // `n` numbers the interior cells in reading order, `count` the monster cells.
+    let count = 0;
+    let n = 0;
+    const nextCell = (): number => {
+      const g = num2grid(n++, w);
+      return g.x + g.y * stride;
+    };
+    while (n < wh) {
+      const c = r.char(isGridChar);
+      const given = GIVEN_MONSTERS.get(c);
+      if (c === "L" || c === "R") {
+        const cell = nextCell();
+        common.grid[cell] = c === "L" ? CELL_MIRROR_L : CELL_MIRROR_R;
+        common.xinfo[cell] = -1;
+      } else if (given) {
+        const [cellValue, monster] = given;
+        const cell = nextCell();
+        common.grid[cell] = cellValue;
+        common.xinfo[cell] = count;
+        state.guess[count] = monster;
+        common.fixed[count++] = 1;
+      } else {
+        const run = c.charCodeAt(0) - 96;
+        if (n + run > wh) r.fail(DESC_TOO_LONG);
+        for (let k = 0; k < run; k++) common.xinfo[nextCell()] = count++;
       }
     }
-  }
-  pos++; // skip the comma after the grid
+    if (count !== common.numTotal)
+      r.fail(
+        puzzleDescError(
+          "This game ID's monster counts don't add up to the number of empty squares.",
+        ),
+      );
 
-  // Sightings into the border cells.
-  for (let i = 0; i < 2 * (w + h); i++) {
-    const sights = readInt();
-    if (desc[pos] === ",") pos++; // upstream advances unconditionally; tolerate end
-    const gg = range2grid(i, w, h);
-    common.grid[gg.x + gg.y * stride] = sights;
-    common.xinfo[gg.x + gg.y * stride] = -2;
-  }
+    // A sighting path crosses each square at most twice, once along each axis.
+    for (let i = 0; i < 2 * (w + h); i++) {
+      r.expect(",");
+      const gg = range2grid(i, w, h);
+      common.grid[gg.x + gg.y * stride] = r.int(0, 2 * wh);
+      common.xinfo[gg.x + gg.y * stride] = -2;
+    }
+    r.end();
 
-  // The four corners don't matter; zero them.
-  for (const cell of [0, w + 1, w + 1 + (h + 1) * stride, (h + 1) * stride]) {
-    common.grid[cell] = 0;
-    common.xinfo[cell] = -2;
-  }
+    // The four corners don't matter; zero them.
+    for (const cell of [0, w + 1, w + 1 + (h + 1) * stride, (h + 1) * stride]) {
+      common.grid[cell] = 0;
+      common.xinfo[cell] = -2;
+    }
 
-  makePaths(common);
-  sortPaths(common);
-  return state;
+    makePaths(common);
+    sortPaths(common);
+    return state;
+  });
+}
+
+export function newState(params: UndeadParams, desc: string): UndeadState {
+  return descValue(parseDesc(params, desc));
 }
 
 export function validateDesc(p: UndeadParams, desc: string): DescError | null {
-  const w = p.w;
-  const h = p.h;
-  const wh = w * h;
-  let pos = 0;
-  // Where a count or its comma belongs: the ID ended, or has something else
-  // there.
-  const missing = (at: number): DescError =>
-    at >= desc.length ? DESC_TOO_SHORT : descBadCharacter(desc[at]);
-
-  // Three leading counts.
-  let monsterCount = 0;
-  for (let i = 0; i < 3; i++) {
-    if (pos >= desc.length || !isDigit(desc[pos])) return missing(pos);
-    const { value, next } = parseLeadingInt(desc, pos);
-    monsterCount += value;
-    pos = next;
-    if (desc[pos] !== ",") return missing(pos);
-    pos++;
-  }
-
-  // Grid.
-  let area = 0;
-  let monsters = 0;
-  while (pos < desc.length && desc[pos] !== ",") {
-    const c = desc[pos];
-    if (c >= "a" && c <= "z") {
-      const run = c.charCodeAt(0) - "a".charCodeAt(0) + 1;
-      area += run;
-      monsters += run;
-    } else if (c === "G" || c === "V" || c === "Z") {
-      area++;
-      monsters++;
-    } else if (c === "L" || c === "R") {
-      area++;
-    } else {
-      return descBadCharacter(c);
-    }
-    pos++;
-  }
-  if (area < wh) return DESC_TOO_SHORT;
-  if (area > wh) return DESC_TOO_LONG;
-  if (monsters !== monsterCount)
-    return puzzleDescError(
-      "This game ID's monster counts don't add up to the number of empty squares.",
-    );
-
-  // Sightings.
-  for (let i = 0; i < 2 * (w + h); i++) {
-    if (pos >= desc.length) return DESC_TOO_SHORT;
-    if (desc[pos] !== ",") return descBadCharacter(desc[pos]);
-    pos = parseLeadingInt(desc, pos + 1).next;
-  }
-  if (pos < desc.length) return DESC_TOO_LONG;
-  return null;
+  return descVerdict(parseDesc(p, desc));
 }
 
 // --- live error recomputation (check_numbers_draw + check_path_solution) ----

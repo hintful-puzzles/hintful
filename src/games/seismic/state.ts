@@ -18,13 +18,17 @@
  */
 
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
-import { digitValue, isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import { digitValue, isDigit } from "../../engine/decimal.ts";
 import {
-  DESC_TOO_SHORT,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
@@ -32,6 +36,11 @@ import { dimensionParamConfig } from "../../engine/params.ts";
 import { choice, dims, letters, paramsCodec } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
+import {
+  encodeRegionWalls,
+  gapLetters,
+  readRegionWalls,
+} from "../../engine/wall-runs.ts";
 
 // --- difficulty ------------------------------------------------------------
 
@@ -308,53 +317,6 @@ export function newUi(_state: SeismicState): SeismicUi {
 
 // --- description codec -----------------------------------------------------
 
-/** Number of border positions a `w × h` grid has: every horizontal border
- * (between two cells in a row) first, then every vertical one. */
-export function borderCount(w: number, h: number): number {
-  return (w - 1) * h + w * (h - 1);
-}
-
-/**
- * Encode the border list as upstream's alternating run-length scheme: a decimal
- * count for a run of walls, and a letter for a run of non-walls **plus the one
- * wall that ends it** (`'a'` = one gap then a wall, …).
- *
- * *One deliberate divergence, confined to the range where the C's own reader
- * cannot invert its writer.* Upstream emits a bare `'a' + erun - 1` for any gap
- * run, which at `erun === 26` produces `'z'` — a character its decoder reads as
- * "26 gaps and **no** following wall", losing a wall — and past 26 produces
- * characters outside `'a'..'z'` that the decoder rejects outright. Gap runs of
- * 26+ therefore have no defined behavior upstream
- * (docs/games/solver-and-generator.md § "Divergence and what it costs" rule 1),
- * so this chunks them into `'z'` units (26 gaps, no wall — exactly what the
- * reader already means by `'z'`) and lets the residue, or the following wall
- * run, carry the wall. Output is character-for-character identical to the C for
- * every run of ≤ 25, which is every run a generated puzzle has produced.
- */
-export function encodeWalls(walls: ArrayLike<number>, ws: number): string {
-  let out = "";
-  let erun = 0;
-  let wrun = 0;
-  for (let i = 0; i < ws; i++) {
-    if (!walls[i]) {
-      if (wrun > 0) out += String(wrun);
-      wrun = 0;
-      erun++;
-    } else if (erun > 0) {
-      out += gapLetters(erun);
-      // A closing letter already speaks for this wall; a bare run of 'z's does not.
-      wrun = erun % 26 === 0 ? 1 : 0;
-      erun = 0;
-    } else {
-      wrun++;
-    }
-  }
-  if (wrun > 0) out += String(wrun);
-  // A trailing gap run has no wall after it; the letter's implied wall falls off
-  // the end of the border list, exactly as upstream.
-  return out + gapLetters(erun);
-}
-
 /** Encode the clue grid: letter runs for empty cells, the digit itself for a
  * given. */
 function encodeClues(grid: ArrayLike<number>, s: number): string {
@@ -371,117 +333,14 @@ function encodeClues(grid: ArrayLike<number>, s: number): string {
   return out + gapLetters(erun);
 }
 
-/** A run of `n` gaps as letters: a `'z'` per 26, then one letter for the rest
- * (`'a'` = 1). */
-function gapLetters(n: number): string {
-  const rest = n % 26;
-  return "z".repeat((n - rest) / 26) + (rest ? String.fromCharCode(0x60 + rest) : "");
-}
-
 /** The wall list plus the clue grid — upstream's `⟨walls⟩,⟨clues⟩` description. */
 export function encodeDesc(board: SeismicBoard): string {
   const { w, h, dsf, grid } = board;
-  const ws = borderCount(w, h);
-  const walls = new Uint8Array(ws);
-
-  let i = 0;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w - 1; x++) {
-      walls[i++] = dsf.equivalent(y * w + x, y * w + x + 1) ? 0 : 1;
-    }
-  }
-  for (let y = 0; y < h - 1; y++) {
-    for (let x = 0; x < w; x++) {
-      walls[i++] = dsf.equivalent(y * w + x, (y + 1) * w + x) ? 0 : 1;
-    }
-  }
-
-  return `${encodeWalls(walls, ws)},${encodeClues(grid, w * h)}`;
+  return `${encodeRegionWalls(dsf, w, h)},${encodeClues(grid, w * h)}`;
 }
 
-/** Decode a description into a fresh board, reporting why the wall list did
- * not parse rather than throwing. */
-function readDesc(
-  p: SeismicParams,
-  desc: string,
-): { board: SeismicBoard; wallsError: DescError | null } {
-  const { w, h } = p;
-  const ws = borderCount(w, h);
-  const board = blankBoard(w, h, p.mode);
-  const walls = new Uint8Array(ws);
-  let wallsError: DescError | null = null;
-
-  let at = 0;
-  let erun = 0;
-  let wrun = 0;
-  for (let i = 0; i < ws; i++) {
-    if (erun === 0 && wrun === 0) {
-      const c = desc[at];
-      if (c !== undefined && isDigit(c)) {
-        const r = parseLeadingInt(desc, at);
-        wrun = r.value;
-        at = r.next;
-      } else if (c !== undefined && c >= "a" && c <= "y") {
-        // A letter is a gap run *and* the wall that ends it.
-        erun = c.charCodeAt(0) - 0x61 + 1;
-        wrun = 1;
-        at++;
-      } else if (c === "z") {
-        erun = 26;
-        at++;
-      } else {
-        wallsError = c === undefined ? DESC_TOO_SHORT : descBadCharacter(c);
-      }
-    }
-    if (erun > 0) {
-      walls[i] = 0;
-      erun--;
-    } else if (wrun > 0) {
-      walls[i] = 1;
-      wrun--;
-    }
-  }
-
-  const hs = (w - 1) * h;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w - 1; x++) {
-      if (!walls[y * (w - 1) + x]) board.dsf.merge(y * w + x, y * w + x + 1);
-    }
-  }
-  for (let y = 0; y < h - 1; y++) {
-    for (let x = 0; x < w; x++) {
-      if (!walls[hs + y * w + x]) board.dsf.merge(y * w + x, (y + 1) * w + x);
-    }
-  }
-  // Compress every path now, while the partition is being built. Every state of
-  // a game shares this one `Dsf`, and `canonify` shortens the paths it walks, so
-  // an uncompressed partition is rewritten by whatever reads it first: a hint,
-  // a redraw, a mistake check. Compressed once, every later read is a read, which
-  // is what `hint-resume.test.ts`'s "hint() leaves the state unchanged" holds.
-  for (let i = 0; i < w * h; i++) board.dsf.canonify(i);
-
-  // Skip the ',' separator (upstream advances unconditionally, so a truncated
-  // description simply reads the clue grid as all-empty).
-  at++;
-  erun = 0;
-  for (let i = 0; i < w * h; i++) {
-    let c = "";
-    if (erun === 0 && at < desc.length) {
-      c = desc[at++];
-      if (c >= "a" && c <= "z") erun = c.charCodeAt(0) - 0x61 + 1;
-    }
-    if (erun > 0) {
-      c = "";
-      erun--;
-    }
-    const clue = digitValue(c);
-    if (clue !== null && clue >= 1) {
-      board.grid[i] = clue;
-      board.flags[i] = FM_FIXED;
-    }
-  }
-
-  return { board, wallsError };
+function isClueChar(c: string): boolean {
+  return (c >= "a" && c <= "z") || isDigit(c);
 }
 
 export const REGION_TOO_LARGE = puzzleDescError(
@@ -491,23 +350,60 @@ export const CLUE_TOO_LARGE = puzzleDescError(
   "This game ID gives a clue larger than the number of squares in its region.",
 );
 
-export function validateDesc(p: SeismicParams, desc: string): DescError | null {
-  const { board, wallsError } = readDesc(p, desc);
-  if (wallsError) return wallsError;
+/**
+ * Read a description: the region layout (`wall-runs.ts`), a `,`, then the clue
+ * grid exactly covering the board, where a letter is a run of empty cells
+ * (`a` = 1, `z` = 26) and a digit `1`–`9` is a given.
+ */
+function parseDesc(p: SeismicParams, desc: string): DescParse<SeismicBoard> {
+  const { w, h } = p;
+  const s = w * h;
+  return readDesc(desc, (r) => {
+    const board = blankBoard(w, h, p.mode);
+    readRegionWalls(r, board.dsf, w, h);
+    // Compress every path now, while the partition is being built. Every state
+    // of a game shares this one `Dsf`, and `canonify` shortens the paths it
+    // walks, so an uncompressed partition is rewritten by whatever reads it
+    // first: a hint, a redraw, a mistake check. Compressed once, every later
+    // read is a read, which is what `hint-resume.test.ts`'s "hint() leaves the
+    // state unchanged" holds.
+    for (let i = 0; i < s; i++) board.dsf.canonify(i);
 
-  // The last offending cell decides the message, as upstream.
-  let error: DescError | null = null;
-  for (let i = 0; i < p.w * p.h; i++) {
-    const size = board.dsf.size(i);
-    if (size > 9) error = REGION_TOO_LARGE;
-    if (board.grid[i] > size) error = CLUE_TOO_LARGE;
-  }
-  return error;
+    r.expect(",");
+    for (let i = 0; i < s; ) {
+      const c = r.char(isClueChar);
+      const clue = digitValue(c);
+      if (clue === null) {
+        const run = c.charCodeAt(0) - "a".charCodeAt(0) + 1;
+        if (run > s - i) r.fail(DESC_TOO_LONG);
+        i += run;
+        continue;
+      }
+      if (clue === 0) r.fail(DESC_OUT_OF_RANGE);
+      board.grid[i] = clue;
+      board.flags[i] = FM_FIXED;
+      i++;
+    }
+    r.end();
+
+    // The last offending cell decides the message, as upstream.
+    let error: DescError | null = null;
+    for (let i = 0; i < s; i++) {
+      const size = board.dsf.size(i);
+      if (size > 9) error = REGION_TOO_LARGE;
+      if (board.grid[i] > size) error = CLUE_TOO_LARGE;
+    }
+    if (error) r.fail(error);
+    return board;
+  });
+}
+
+export function validateDesc(p: SeismicParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: SeismicParams, desc: string): SeismicState {
-  const { board } = readDesc(p, desc);
-  return { ...board, params: p };
+  return { ...descValue(parseDesc(p, desc)), params: p };
 }
 
 // --- text rendering --------------------------------------------------------

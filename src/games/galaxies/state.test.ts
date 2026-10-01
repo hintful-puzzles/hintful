@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { DESC_TOO_LONG, descBadCharacter } from "../../engine/desc-error.ts";
+import {
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+  descValue,
+  descVerdict,
+} from "../../engine/desc-error.ts";
 import {
   blankGame,
   checkComplete,
   cloneState,
-  decodeGame,
   encodeGame,
   F_DOT,
   F_DOT_BLACK,
@@ -12,6 +17,7 @@ import {
   idx,
   inInterior,
   isVerticalEdge,
+  parseDesc,
   rebuildDots,
   SpaceType,
   spaceTypeAt,
@@ -64,10 +70,9 @@ describe("Galaxies desc encode/decode", () => {
     s.dots = rebuildDots(s);
     const desc = encodeGame(s);
 
-    const decoded = blankGame(5, 5);
-    const err = decodeGame(decoded, desc);
-    expect(err).toBeNull();
-    decoded.dots = rebuildDots(decoded);
+    const parse = parseDesc({ w: 5, h: 5 }, desc);
+    expect(descVerdict(parse)).toBeNull();
+    const decoded = descValue(parse);
     expect(decoded.dots).toEqual([
       { x: 3, y: 3 },
       { x: 5, y: 5 },
@@ -76,18 +81,30 @@ describe("Galaxies desc encode/decode", () => {
     expect(decoded.flags[idx(decoded, 3, 3)] & F_DOT_BLACK).toBeFalsy();
   });
 
+  const verdict = (w: number, h: number, desc: string) =>
+    descVerdict(parseDesc({ w, h }, desc));
+
   it("rejects out-of-grid desc", () => {
-    const s = blankGame(3, 3);
     // 'z' = 25 spaces (no dot), then 'b' = 1 space + white dot. On
     // a 3x3 grid the inner subcell area is 5x5 = 25 cells, so the
     // second token lands beyond the grid.
-    const err = decodeGame(s, "zb");
-    expect(err).toBe(DESC_TOO_LONG);
+    expect(verdict(3, 3, "zb")).toBe(DESC_TOO_LONG);
+    // 'y' is the last space of the 25.
+    expect(verdict(3, 3, "y")).toBeNull();
+    expect(verdict(3, 3, "ya")).toBe(DESC_TOO_LONG);
   });
 
   it("rejects invalid characters", () => {
-    const s = blankGame(3, 3);
-    expect(decodeGame(s, "1")).toBe(descBadCharacter("1"));
+    expect(verdict(3, 3, "1")).toBe(descBadCharacter("1"));
+    // `Z` is no token: a run of empties is `z` whatever the dot after it.
+    expect(verdict(7, 7, "ZA")).toBe(descBadCharacter("Z"));
+  });
+
+  it("rejects a desc with no dot, or ending in a run of empties", () => {
+    // The encoder drops the empties after the last dot, and a board has a dot.
+    expect(verdict(3, 3, "")).toBe(DESC_TOO_SHORT);
+    expect(verdict(7, 7, "az")).toBe(DESC_TOO_SHORT);
+    expect(verdict(7, 7, "az".padEnd(8, "z"))).toBe(DESC_TOO_LONG);
   });
 });
 

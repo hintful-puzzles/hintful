@@ -1,6 +1,7 @@
 // Tier-1 logic tests for the Same Game port: params, scoring, desc,
 // gravity/completion, the two-click selection, and move execution.
 import { describe, expect, it } from "vitest";
+import { DESC_OUT_OF_RANGE } from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -134,6 +135,11 @@ describe("Same Game desc", () => {
     // Wrong count / out-of-range color are rejected.
     expect(validateDesc(p, "1,2")).not.toBeNull();
     expect(validateDesc(p, "1,2,9")).not.toBeNull();
+  });
+
+  it("refuses an empty cell, which no generated board has", () => {
+    const p: SamegameParams = { w: 3, h: 1, ncols: 3, scoresub: 2, soluble: true };
+    expect(validateDesc(p, "1,0,3")).toBe(DESC_OUT_OF_RANGE);
   });
 
   it("a generated soluble board validates and decodes", () => {

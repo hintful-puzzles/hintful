@@ -160,6 +160,13 @@ describe("lightup desc codec", () => {
     expect(validateDesc(p, `${EASY.desc}a`)).toBe(DESC_TOO_LONG);
     expect(validateDesc(p, "5")).toBe(DESC_OUT_OF_RANGE); // clue out of range 0-4
   });
+
+  it("refuses a final run that overshoots the grid", () => {
+    const p = { ...EASY_PARAMS, w: 2, h: 2 };
+    expect(validateDesc(p, "Bc")).toBeNull();
+    expect(validateDesc(p, "Bd")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, "e")).toBe(DESC_TOO_LONG);
+  });
 });
 
 describe("lightup board mechanics", () => {

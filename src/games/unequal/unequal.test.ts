@@ -3,6 +3,12 @@
  */
 
 import { describe, expect, it } from "vitest";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
@@ -99,9 +105,18 @@ describe("unequal desc codec", () => {
 
   it("rejects malformed descriptions", () => {
     const p: UnequalParams = { order: 4, mode: "unequal", diff: "easy" };
-    expect(validateDesc(p, "0,0,0")).not.toBeNull(); // too few cells
+    const zeros = "0,".repeat(15);
+    expect(validateDesc(p, "0,0,0")).toBe(DESC_TOO_SHORT); // too few cells
     // A flag pointing off the grid (top-left cell with an UP clue).
-    expect(validateDesc(p, "0U,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,")).not.toBeNull();
+    expect(validateDesc(p, `0U,${zeros}`)).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, `5,${zeros}`)).toBe(DESC_OUT_OF_RANGE);
+    // Forms the generator never writes: a cell without its comma, a letter
+    // twice or out of order, a skip letter, text after the board.
+    expect(validateDesc(p, `0,${zeros.slice(0, -1)}`)).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, `0DD,${zeros}`)).toBe(descBadCharacter("D"));
+    expect(validateDesc(p, `0LR,${zeros}`)).toBe(descBadCharacter("R"));
+    expect(validateDesc(p, `a${zeros}`)).toBe(descBadCharacter("a"));
+    expect(validateDesc(p, `0,${zeros},`)).toBe(DESC_TOO_LONG);
   });
 });
 

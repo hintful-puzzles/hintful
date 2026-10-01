@@ -1,12 +1,12 @@
-import { parseLeadingInt } from "../../engine/decimal.ts";
-import { c2nUpper } from "../../engine/desc-alphabet.ts";
+import { digitValue, isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import {
-  DESC_MALFORMED,
   DESC_OUT_OF_RANGE,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import { parseDimensions } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -126,38 +126,36 @@ export function presets(): PresetMenu<FloodParams> {
 
 // --- desc -------------------------------------------------------------
 
-export function validateDesc(p: FloodParams, desc: string): DescError | null {
+/** One color digit per cell, a comma, then the move limit. */
+function parseDesc(
+  p: FloodParams,
+  desc: string,
+): DescParse<{ grid: Uint8Array; movelimit: number }> {
   const wh = p.w * p.h;
-  for (let i = 0; i < wh; i++) {
-    const ch = desc[i];
-    if (ch === undefined) return DESC_TOO_SHORT;
-    // Upstream's `validate_desc` reads `A`-`Z` as 10-35, so a letter is out
-    // of range rather than a bad character.
-    const c = c2nUpper(ch);
-    if (c === null) return descBadCharacter(ch);
-    if (c >= MAXCOLORS) return DESC_OUT_OF_RANGE;
-  }
-  if (desc[wh] === undefined) return DESC_TOO_SHORT;
-  if (desc[wh] !== ",") return DESC_MALFORMED;
-  const bad = /\D/.exec(desc.slice(wh + 1));
-  if (bad !== null) return descBadCharacter(bad[0]);
-  return null;
+  return readDesc(desc, (r) => {
+    const grid = new Uint8Array(wh);
+    for (let i = 0; i < wh; i++) {
+      const c = digitValue(r.char(isDigit)) as number;
+      if (c >= p.colors) r.fail(DESC_OUT_OF_RANGE);
+      grid[i] = c;
+    }
+    r.expect(",");
+    // The limit is the solver's count plus the leniency, which no param
+    // bounds; this bound only keeps it an exact integer.
+    const movelimit = r.int(0, Number.MAX_SAFE_INTEGER);
+    r.end();
+    return { grid, movelimit };
+  });
+}
+
+export function validateDesc(p: FloodParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: FloodParams, desc: string): FloodState {
-  const wh = p.w * p.h;
-  const grid = new Uint8Array(wh);
+  const { grid, movelimit } = descValue(parseDesc(p, desc));
   let colors = 0;
-  for (let i = 0; i < wh; i++) {
-    // Every Flood cell holds a color, so there is no absent value to write: a
-    // character `validateDesc` would have rejected is refused here too.
-    const c = c2nUpper(desc[i]);
-    if (c === null) throw new Error("Bad character in grid description");
-    grid[i] = c;
-    if (c >= colors) colors = c + 1;
-  }
-  // desc[wh] is ',' — the move limit follows.
-  const movelimit = Number.parseInt(desc.slice(wh + 1), 10) || 0;
+  for (const c of grid) if (c >= colors) colors = c + 1;
   return {
     w: p.w,
     h: p.h,

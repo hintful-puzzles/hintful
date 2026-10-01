@@ -5,10 +5,13 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  DESC_OUT_OF_RANGE,
+  DESC_REPEATED,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
 } from "../../engine/desc-error.ts";
+import { bin2hex, obfuscateBitmap } from "../../engine/obfuscate.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -129,6 +132,32 @@ describe("desc", () => {
     expect(validateDesc(p, "ab")).toBe(DESC_TOO_SHORT);
     expect(validateDesc(p, "a".repeat(len + 1))).toBe(DESC_TOO_LONG);
     expect(validateDesc(p, `${"a".repeat(len - 1)}g`)).toBe(descBadCharacter("g"));
+  });
+
+  /** The desc newDesc would write for `colors`. */
+  const encode = (colors: number[]) => {
+    const bmp = Uint8Array.from(colors);
+    obfuscateBitmap(bmp, colors.length * 8, false);
+    return bin2hex(bmp);
+  };
+
+  it("reads only the lowercase hex its encoder writes", () => {
+    const p = { ...defaultParams(), allowMultiple: true };
+    const desc = encode([1, 2, 3, 4]);
+    expect(validateDesc(p, desc)).toBeNull();
+    const upper = desc.toUpperCase();
+    const at = [...upper].findIndex((c) => c !== c.toLowerCase());
+    expect(at).toBeGreaterThanOrEqual(0);
+    expect(validateDesc(p, upper)).toBe(descBadCharacter(upper[at]));
+    expect(validateDesc(p, encode([1, 2, 3, p.ncolors + 1]))).toBe(DESC_OUT_OF_RANGE);
+  });
+
+  it("refuses a repeated color where no guess may repeat one", () => {
+    const desc = encode([1, 2, 2, 4]);
+    expect(validateDesc({ ...defaultParams(), allowMultiple: true }, desc)).toBeNull();
+    expect(validateDesc({ ...defaultParams(), allowMultiple: false }, desc)).toBe(
+      DESC_REPEATED,
+    );
   });
 });
 

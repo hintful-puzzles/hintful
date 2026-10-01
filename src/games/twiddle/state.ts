@@ -1,10 +1,12 @@
 import { parseLeadingInt } from "../../engine/decimal.ts";
 import {
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
+  DESC_REPEATED,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, parseDimensions } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -230,51 +232,42 @@ function encodeDesc(
   return s;
 }
 
-export function validateDesc(p: TwiddleParams, desc: string): DescError | null {
+/**
+ * Each tile's number, then its orientation letter when orientation matters and
+ * a comma between tiles when it does not. The numbers are a shuffle of the
+ * solved board's: `1..wh` once each, or with `rowsonly` each row's number once
+ * per column.
+ */
+function parseDesc(
+  p: TwiddleParams,
+  desc: string,
+): DescParse<{ numbers: Int32Array; orient: Uint8Array }> {
   const wh = p.w * p.h;
-  // Where a number, letter or comma belongs: the ID ended, or has something
-  // else there.
-  const missing = (at: number): DescError =>
-    at >= desc.length ? DESC_TOO_SHORT : descBadCharacter(desc[at]);
-  let i = 0;
-  for (let cell = 0; cell < wh; cell++) {
-    const run = parseLeadingInt(desc, i);
-    if (run.next === i) return missing(i);
-    i = run.next;
-    if (p.orientable) {
-      if (!ORIENT_LETTERS.includes(desc[i])) return missing(i);
-    } else if (cell < wh - 1) {
-      if (desc[i] !== ",") return missing(i);
-    } else if (i < desc.length) {
-      return DESC_TOO_LONG;
+  const top = p.rowsonly ? p.h : wh;
+  const copies = p.rowsonly ? p.w : 1;
+  return readDesc(desc, (r) => {
+    const numbers = new Int32Array(wh);
+    const orient = new Uint8Array(wh);
+    const seen = new Int32Array(top + 1);
+    for (let i = 0; i < wh; i++) {
+      if (i > 0 && !p.orientable) r.expect(",");
+      numbers[i] = r.int(1, top);
+      if (++seen[numbers[i]] > copies) r.fail(DESC_REPEATED);
+      if (p.orientable) {
+        orient[i] = ORIENT_LETTERS.indexOf(r.char((c) => ORIENT_LETTERS.includes(c)));
+      }
     }
-    if (i < desc.length) i++; // eat separator / orientation letter
-  }
-  return null;
+    r.end();
+    return { numbers, orient };
+  });
 }
 
-function parseDesc(
-  desc: string,
-  wh: number,
-  orientable: boolean,
-): { numbers: Int32Array; orient: Uint8Array } {
-  const numbers = new Int32Array(wh);
-  const orient = new Uint8Array(wh);
-  let i = 0;
-  for (let cell = 0; cell < wh; cell++) {
-    const run = parseLeadingInt(desc, i);
-    numbers[cell] = run.value;
-    i = run.next;
-    if (i < desc.length) {
-      if (orientable) orient[cell] = Math.max(0, ORIENT_LETTERS.indexOf(desc[i]));
-      i++; // consume orientation letter or comma
-    }
-  }
-  return { numbers, orient };
+export function validateDesc(p: TwiddleParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: TwiddleParams, desc: string): TwiddleState {
-  const { numbers, orient } = parseDesc(desc, p.w * p.h, p.orientable);
+  const { numbers, orient } = descValue(parseDesc(p, desc));
   return {
     w: p.w,
     h: p.h,

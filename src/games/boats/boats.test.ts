@@ -12,6 +12,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
@@ -222,6 +223,23 @@ describe("boats desc codec", () => {
     expect(validateDesc(p, "1,1,1,1,1,1,1,1,1,1,1,")).toBe(DESC_TOO_SHORT);
     expect(validateDesc(p, "1,1,1,1,1,1,1,1,1,1,1,1,1,")).toBe(DESC_TOO_LONG);
     expect(validateDesc(p, "1,1,1,1,1,1,1,1,1,1,1,1,Q")).toBe(descBadCharacter("Q"));
+  });
+
+  it("reads exactly what the encoder writes", () => {
+    const v = (desc: string) => validateDesc(params(), desc);
+    const border = "1,1,1,1,1,1,1,1,1,1,1,1,";
+    expect(v(`${border}ziW`)).toBeNull(); // 26 + 9 empty squares, then a clue
+    expect(v(`${border}ziWS`)).toBe(DESC_TOO_LONG);
+    expect(v(`${border}zk`)).toBe(DESC_TOO_LONG);
+    expect(v(`${border}cW;`)).toBe(descBadCharacter(";"));
+    expect(v("1;1,1,1,1,1,1,1,1,1,1,1,")).toBe(descBadCharacter(";"));
+    expect(v("1,1,1,1,1,1,1,1,1,1,1,1")).toBe(DESC_TOO_SHORT);
+    expect(v("1,1,1,1,1,1,1,1,1,1,1 1,")).toBe(descBadCharacter(" "));
+    expect(v("1,a1,1,1,1,1,1,1,1,1,1,1,")).toBe(descBadCharacter("a"));
+    // A 6-square line cannot hold 7 ship squares.
+    expect(v("7,1,1,1,1,1,1,1,1,1,1,1,")).toBe(DESC_OUT_OF_RANGE);
+    expect(v("1,1,1,1,1,1,1,1,1,1,1,-,")).toBeNull();
+    expect(v("1,1,1,1,1,1,1,1,1,1,1,-1,")).toBe(descBadCharacter("1"));
   });
 
   it("decodes hidden border numbers", () => {

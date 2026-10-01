@@ -3,6 +3,7 @@
  * its desc is written in.
  */
 
+import type { DescReader } from "../../engine/desc-reader.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 
 // --- types ----------------------------------------------------------
@@ -53,12 +54,19 @@ export function encodeBitmap(bmp: Uint8Array, len: number): string {
   return out;
 }
 
-export function decodeBitmap(bmp: Uint8Array, len: number, hex: string): void {
-  const slen = (len + 3) >> 2;
-  for (let i = 0; i < slen; i++) {
-    const v = Number.parseInt(hex[i], 16) || 0;
-    for (let j = 0; j < 4; j++) {
-      if (i * 4 + j < len) bmp[i * 4 + j] = v & (8 >> j) ? 1 : 0;
-    }
+/**
+ * Read `len` bits exactly as {@link encodeBitmap} writes them: lowercase hex,
+ * four bits a digit, and the unused low bits of the last digit clear.
+ */
+export function readBitmap(r: DescReader, len: number): Uint8Array {
+  const bmp = new Uint8Array(len);
+  for (let i = 0; i * 4 < len; i++) {
+    const used = Math.min(4, len - i * 4);
+    const padding = (1 << (4 - used)) - 1;
+    const v = HEX.indexOf(
+      r.char((c) => HEX.includes(c) && (HEX.indexOf(c) & padding) === 0),
+    );
+    for (let j = 0; j < used; j++) bmp[i * 4 + j] = v & (8 >> j) ? 1 : 0;
   }
+  return bmp;
 }

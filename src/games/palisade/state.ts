@@ -15,8 +15,12 @@ import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   type DescError,
+  type DescParse,
   descBadCharacter,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import {
   AREA_TOO_LARGE,
@@ -192,37 +196,38 @@ export function encodeDesc(clues: Int8Array, wh: number): string {
   return encodeRunLength(wh, (i) => (clues[i] === EMPTY ? null : String(clues[i])));
 }
 
-export function validateDesc(p: PalisadeParams, desc: string): DescError | null {
+/**
+ * Each cell's clue, `EMPTY` where it has none. A desc may stop short of the
+ * last cell, because {@link encodeDesc} drops the trailing run; one that runs
+ * past it is refused.
+ */
+function parseDesc(p: PalisadeParams, desc: string): DescParse<Int8Array> {
   const wh = p.w * p.h;
-  let squares = 0;
-  for (const tok of scanRunLength(desc)) {
-    if ("blanks" in tok) {
-      squares += tok.blanks;
-    } else {
+  return readDesc(desc, (r) => {
+    const clues = new Int8Array(wh).fill(EMPTY);
+    let squares = 0;
+    for (const tok of scanRunLength(r.rest())) {
+      if ("blanks" in tok) {
+        squares += tok.blanks;
+        continue;
+      }
       const clue = digitValue(tok.value);
-      if (clue === null) return descBadCharacter(tok.value);
-      if (clue > 4) return DESC_OUT_OF_RANGE;
-      squares++;
+      if (clue === null) return r.fail(descBadCharacter(tok.value));
+      if (clue > 4) r.fail(DESC_OUT_OF_RANGE);
+      clues[squares++] = clue;
     }
-  }
-  if (squares > wh) return DESC_TOO_LONG;
-  return null;
+    if (squares > wh) r.fail(DESC_TOO_LONG);
+    return clues;
+  });
+}
+
+export function validateDesc(p: PalisadeParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: PalisadeParams, desc: string): PalisadeState {
   const { w, h, k } = p;
-  const wh = w * h;
-  const clues = new Int8Array(wh).fill(EMPTY);
-  let i = 0;
-  for (const tok of scanRunLength(desc)) {
-    if ("blanks" in tok) {
-      i += tok.blanks;
-      continue;
-    }
-    // Anything that is not a digit was rejected by validateDesc.
-    const clue = digitValue(tok.value);
-    if (clue !== null) clues[i++] = clue;
-  }
+  const clues = descValue(parseDesc(p, desc));
   return {
     w,
     h,

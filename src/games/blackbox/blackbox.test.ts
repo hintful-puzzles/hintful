@@ -10,7 +10,13 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { DESC_OUT_OF_RANGE, DESC_TOO_SHORT } from "../../engine/desc-error.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_REPEATED,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { bin2hex, obfuscateBitmap } from "../../engine/obfuscate.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -229,9 +235,42 @@ describe("Black Box — desc codec", () => {
     expect(s.h).toBe(p.h);
   });
 
+  /** The desc newDesc would write for `bytes`. */
+  const encode = (...bytes: number[]) => {
+    const bmp = Uint8Array.from(bytes);
+    obfuscateBitmap(bmp, bmp.length * 8, false);
+    return bin2hex(bmp);
+  };
+
   it("rejects a description of the wrong length", () => {
     const p = defaultParams();
     expect(validateDesc(p, "abc")).toBe(DESC_TOO_SHORT);
+    const two = { w: 3, h: 3, minballs: 1, maxballs: 2 };
+    const one = encode(3, 3, 0, 0);
+    const pair = encode(3, 3, 0, 0, 1, 1);
+    expect(validateDesc(two, one)).toBeNull();
+    expect(validateDesc(two, pair)).toBeNull();
+    // Part of a ball past one is a second ball cut short; past two, too many.
+    expect(validateDesc(two, `${one}ab`)).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(two, `${pair}a`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(two, encode(3, 3, 0, 0, 1, 1, 2, 2))).toBe(DESC_TOO_LONG);
+  });
+
+  it("reads only the lowercase hex its encoder writes", () => {
+    const p = { w: 3, h: 3, minballs: 1, maxballs: 1 };
+    const desc = encode(3, 3, 1, 2);
+    expect(validateDesc(p, desc)).toBeNull();
+    expect(validateDesc(p, `${desc.slice(0, 7)}g`)).toBe(descBadCharacter("g"));
+    const upper = desc.toUpperCase();
+    const at = [...upper].findIndex((c) => c !== c.toLowerCase());
+    expect(at).toBeGreaterThanOrEqual(0);
+    expect(validateDesc(p, upper)).toBe(descBadCharacter(upper[at]));
+  });
+
+  it("rejects two balls on one cell", () => {
+    const p = { w: 3, h: 3, minballs: 2, maxballs: 2 };
+    expect(validateDesc(p, encode(3, 3, 1, 2, 2, 1))).toBeNull();
+    expect(validateDesc(p, encode(3, 3, 1, 2, 1, 2))).toBe(DESC_REPEATED);
   });
 
   it("rejects a description whose balls fall outside the arena", () => {

@@ -3,7 +3,8 @@
 // semantics and immutability, win/lose status, and input mapping.
 import { describe, expect, it } from "vitest";
 import {
-  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
 } from "../../engine/desc-error.ts";
@@ -104,9 +105,12 @@ describe("Flood desc", () => {
     expect(validateDesc(p, "012")).toBe(DESC_TOO_SHORT); // 3 of 4 cells, no comma
     expect(validateDesc(p, "012!")).toBe(descBadCharacter("!"));
     expect(validateDesc(p, "0120")).toBe(DESC_TOO_SHORT); // grid, then nothing
-    expect(validateDesc(p, "01201")).toBe(DESC_MALFORMED); // no ',' after the grid
+    expect(validateDesc(p, "01201")).toBe(descBadCharacter("1")); // no ',' after the grid
     expect(validateDesc(p, "0120,5")).toBeNull();
-    expect(validateDesc(p, "0120,5x")).toBe(descBadCharacter("x"));
+    expect(validateDesc(p, "0120,5x")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, "0120,")).toBe(DESC_TOO_SHORT); // no move limit
+    expect(validateDesc(p, "0130,5")).toBe(DESC_OUT_OF_RANGE); // a fourth color
+    expect(validateDesc(p, "01A0,5")).toBe(descBadCharacter("A"));
   });
 });
 

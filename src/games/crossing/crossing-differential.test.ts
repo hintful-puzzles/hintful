@@ -25,7 +25,7 @@ import {
   type CrossingParams,
   collectRuns,
   makePuzzle,
-  readDesc,
+  newState,
   validateDesc,
 } from "./state.ts";
 
@@ -45,7 +45,7 @@ const params = (f: Fixture): CrossingParams => ({ w: f.w, h: f.h, sym: f.sym });
 /** Does the board have an open cell that lies in no run? */
 function hasIsolatedCell(f: Fixture): boolean {
   const p = params(f);
-  const { walls } = readDesc(p, f.desc);
+  const { walls } = newState(p, f.desc).puzzle;
   const covered = new Set<number>();
   for (const run of collectRuns(p.w, p.h, walls))
     for (const i of run.cells) covered.add(i);
@@ -64,7 +64,7 @@ describe("crossing frozen boards", () => {
     it(`${label(f)} loads and solves uniquely`, () => {
       const p = params(f);
       expect(validateDesc(p, f.desc)).toBeNull();
-      const { walls, numbers } = readDesc(p, f.desc);
+      const { walls, numbers } = newState(p, f.desc).puzzle;
       expect(collectRuns(p.w, p.h, walls)).toHaveLength(numbers.length);
       expect(solveCrossing(makePuzzle(p.w, p.h, walls, numbers)).status).toBe("valid");
     });

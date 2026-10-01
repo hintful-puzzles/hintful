@@ -36,7 +36,6 @@ import {
   blankGame,
   checkComplete,
   cloneState,
-  decodeGame,
   F_EDGE_SET,
   F_TILE_ASSOC,
   type GalaxiesState,
@@ -60,10 +59,8 @@ describe("Galaxies generator integration", () => {
       const rng = randomNew(`gen-${p.w}x${p.h}-normal`);
       const desc = newGameDesc(p, rng);
       // The desc must decode and round-trip.
-      const fresh = blankGame(p.w, p.h);
-      const err = decodeGame(fresh, desc);
-      expect(err).toBeNull();
-      fresh.dots = rebuildDots(fresh);
+      expect(galaxiesGame.validateDesc(p, desc)).toBeNull();
+      const fresh = galaxiesGame.newState(p, desc);
 
       // Solver run from clean state must complete at exactly the Easy tier.
       clearForSolve(fresh);
@@ -81,10 +78,8 @@ describe("Galaxies generator integration", () => {
     };
     const rng = randomNew("gen-7x7-unreasonable");
     const desc = newGameDesc(p, rng);
-    const fresh = blankGame(p.w, p.h);
-    const err = decodeGame(fresh, desc);
-    expect(err).toBeNull();
-    fresh.dots = rebuildDots(fresh);
+    expect(galaxiesGame.validateDesc(p, desc)).toBeNull();
+    const fresh = galaxiesGame.newState(p, desc);
     clearForSolve(fresh);
     const diff = solverState(fresh, GalaxiesDiff.Unreasonable);
     expect(diff).toBe(GalaxiesDiff.Unreasonable);

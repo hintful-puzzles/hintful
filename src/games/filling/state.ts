@@ -15,8 +15,12 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   type DescError,
+  type DescParse,
   descBadCharacter,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
@@ -99,38 +103,40 @@ export function validateParams(p: FillingParams, _full: boolean): string | null 
 // Run-length: a lowercase letter 'a'..'z' advances past a run of 1..26 empty
 // cells; a digit places a clue of that value. The decoded area is exactly w·h.
 
-export function validateDesc(p: FillingParams, desc: string): DescError | null {
+/** The clues, `EMPTY` where the desc has none. */
+function parseDesc(p: FillingParams, desc: string): DescParse<Uint8Array> {
   const sz = p.w * p.h;
   // Upstream `validate_desc`'s bound on a clue; generated clues never exceed 9.
+  // A `0` would be a second spelling of a blank, which {@link encodeDesc}
+  // never writes.
   const m = Math.max(p.w, p.h, 3);
-  let area = 0;
-  for (const tok of scanRunLength(desc)) {
-    if ("blanks" in tok) {
-      area += tok.blanks;
-    } else {
-      const v = digitValue(tok.value);
-      if (v === null) return descBadCharacter(tok.value);
-      if (v > m) return DESC_OUT_OF_RANGE;
-      area += 1;
+  return readDesc(desc, (r) => {
+    const clues = new Uint8Array(sz); // all EMPTY
+    let area = 0;
+    for (const tok of scanRunLength(r.rest())) {
+      if ("blanks" in tok) {
+        area += tok.blanks;
+      } else {
+        const v = digitValue(tok.value);
+        if (v === null) return r.fail(descBadCharacter(tok.value));
+        if (v < 1 || v > m) r.fail(DESC_OUT_OF_RANGE);
+        clues[area++] = v;
+      }
+      // Inside the loop, so an overlong desc is reported as such even when a
+      // later character is also invalid.
+      if (area > sz) r.fail(DESC_TOO_LONG);
     }
-    // Inside the loop, so an overlong desc is reported as such even when a
-    // later character is also invalid.
-    if (area > sz) return DESC_TOO_LONG;
-  }
-  return area < sz ? DESC_TOO_SHORT : null;
+    if (area < sz) r.fail(DESC_TOO_SHORT);
+    return clues;
+  });
+}
+
+export function validateDesc(p: FillingParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: FillingParams, desc: string): FillingState {
-  const sz = p.w * p.h;
-  const clues = new Uint8Array(sz); // all EMPTY
-  let i = 0;
-  for (const tok of scanRunLength(desc)) {
-    // A blank run just advances, leaving the empties as 0.
-    if ("blanks" in tok) i += tok.blanks;
-    // `validateDesc` rejects a non-digit. Should one arrive regardless, it is
-    // this array's own `EMPTY`, never a sentinel that wraps to 255 in a byte.
-    else clues[i++] = digitValue(tok.value) ?? EMPTY;
-  }
+  const clues = descValue(parseDesc(p, desc));
   return {
     w: p.w,
     h: p.h,

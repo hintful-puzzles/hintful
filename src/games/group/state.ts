@@ -22,14 +22,15 @@
 
 import { valuesOneTo } from "../../engine/candidate-bits.ts";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
-import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
+import { parseLeadingInt } from "../../engine/decimal.ts";
 import {
-  DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -304,69 +305,43 @@ export function encodeGrid(grid: Uint8Array, area: number): string {
   return out;
 }
 
-/** Parse the desc into `grid` in place (`spec_to_grid`), throwing on
- * malformed input. */
-function specToGrid(desc: string, grid: Uint8Array, area: number): void {
-  let i = 0;
-  let p = 0;
-  while (p < desc.length && desc[p] !== ",") {
-    const ch = desc[p];
-    const digit = digitValue(ch);
-    if (ch >= "a" && ch <= "z") {
-      let run = desc.charCodeAt(p) - 97 + 1;
-      p++;
-      if (i + run > area) throw new Error("Too much data to fit in grid");
-      while (run-- > 0) grid[i++] = 0;
-    } else if (ch === "_") {
-      p++;
-    } else if (digit !== null && digit >= 1) {
-      const num = parseLeadingInt(desc, p);
-      p = num.next;
-      if (i >= area) throw new Error("Too much data to fit in grid");
-      grid[i++] = num.value;
-    } else {
-      throw new Error("Invalid character in game description");
-    }
-  }
+/** Whether `c` is a run letter: `a`–`z` for 1–26 blanks. */
+function isRunLetter(c: string): boolean {
+  return c >= "a" && c <= "z";
 }
 
-/** Validate a grid desc without building the grid (`validate_grid_desc`):
- * distinguishes "not enough data" from "too much". `range` = `w`, `area` = `w²`. */
-function validateGridDesc(desc: string, range: number, area: number): DescError | null {
-  let squares = 0;
-  let p = 0;
-  while (p < desc.length && desc[p] !== ",") {
-    const ch = desc[p];
-    const digit = digitValue(ch);
-    if (ch >= "a" && ch <= "z") {
-      squares += desc.charCodeAt(p) - 97 + 1;
-      p++;
-    } else if (ch === "_") {
-      p++;
-    } else if (digit !== null && digit >= 1) {
-      const num = parseLeadingInt(desc, p);
-      p = num.next;
-      const val = num.value;
-      if (val < 1 || val > range) return DESC_OUT_OF_RANGE;
-      squares++;
-    } else {
-      return descBadCharacter(ch);
+/** Read the grid desc ({@link encodeGrid}'s output): element numbers `1..w`,
+ * run letters, and a `_` exactly between two adjacent numbers. */
+function parseDesc(p: GroupParams, desc: string): DescParse<Uint8Array> {
+  const area = p.w * p.w;
+  return readDesc(desc, (r) => {
+    const grid = new Uint8Array(area);
+    let i = 0;
+    let afterNumber = false;
+    while (i < area) {
+      if (r.peekIs(isRunLetter)) {
+        i += r.char().charCodeAt(0) - 96;
+        if (i > area) r.fail(DESC_TOO_LONG);
+        afterNumber = false;
+      } else {
+        if (afterNumber) r.expect("_");
+        grid[i++] = r.int(1, p.w);
+        afterNumber = true;
+      }
     }
-  }
-  if (squares < area) return DESC_TOO_SHORT;
-  if (squares > area) return DESC_TOO_LONG;
-  return null;
+    r.end();
+    return grid;
+  });
 }
 
 export function validateDesc(p: GroupParams, desc: string): DescError | null {
-  return validateGridDesc(desc, p.w, p.w * p.w);
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: GroupParams, desc: string): GroupState {
   const w = p.w;
   const a = w * w;
-  const grid = new Uint8Array(a);
-  specToGrid(desc, grid, a);
+  const grid = descValue(parseDesc(p, desc));
 
   const immutable = new Uint8Array(a);
   for (let i = 0; i < a; i++) if (grid[i] !== 0) immutable[i] = 1;

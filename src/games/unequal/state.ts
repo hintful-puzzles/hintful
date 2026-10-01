@@ -13,15 +13,16 @@
  */
 
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
-import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import { parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_CONTRADICTORY,
-  DESC_MALFORMED,
   DESC_OUT_OF_RANGE,
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import {
   digitOf,
@@ -293,75 +294,53 @@ export function newUi(_state: UnequalState): UnequalUi {
 
 // --- desc codec ------------------------------------------------------------
 
-/** Parse the per-cell desc into `(numbers, flags)`, or say why it cannot be. */
+/**
+ * What the generator writes: for each cell, its given (`0` for none), its
+ * direction letters each at most once in `ADJTHAN` order, and a comma. A flag
+ * must not point off the grid, and whether its neighbor flags back depends on
+ * the mode.
+ */
 function parseDesc(
-  order: number,
+  p: UnequalParams,
   desc: string,
-): { ok: true; nums: Int8Array; flags: Int32Array } | { ok: false; error: DescError } {
-  const a = order * order;
-  const nums = new Int8Array(a);
-  const flags = new Int32Array(a);
-  let i = 0; // cell index
-  let p = 0; // string index
-  const fail = (error: DescError) => ({ ok: false, error }) as const;
-
-  while (p < desc.length) {
-    while (p < desc.length && desc[p] >= "a" && desc[p] <= "z") {
-      i += desc.charCodeAt(p) - 97 + 1;
-      p++;
+): DescParse<{ nums: Int8Array; flags: Int32Array }> {
+  const o = p.order;
+  const a = o * o;
+  return readDesc(desc, (r) => {
+    const nums = new Int8Array(a);
+    const flags = new Int32Array(a);
+    for (let i = 0; i < a; i++) {
+      nums[i] = r.int(0, o);
+      for (let d = 0; d < 4; d++) if (r.accept("URDL"[d])) flags[i] |= ADJTHAN[d].f;
+      r.expect(",");
     }
-    if (i >= a) return fail(DESC_TOO_LONG);
-    if (p >= desc.length || !isDigit(desc[p])) return fail(DESC_MALFORMED);
-    const num = parseLeadingInt(desc, p);
-    p = num.next;
-    const n = num.value;
-    if (n < 0 || n > order) return fail(DESC_OUT_OF_RANGE);
-    nums[i] = n;
+    r.end();
 
-    // The direction letters, in `ADJTHAN` order.
-    while (p < desc.length && "URDL".includes(desc[p]))
-      flags[i] |= ADJTHAN["URDL".indexOf(desc[p++])].f;
-    i++;
-    if (i < a && desc[p] !== ",") return fail(DESC_MALFORMED);
-    if (desc[p] === ",") p++;
-  }
-  if (i < a) return fail(DESC_TOO_SHORT);
-  return { ok: true, nums, flags };
-}
-
-/** Cross-check the adjacency flags: a flag must not point off the grid, and the
- * reciprocal-flag rule depends on mode. */
-function checkFlags(order: number, mode: Mode, flags: Int32Array): DescError | null {
-  const o = order;
-  for (let y = 0; y < o; y++) {
-    for (let x = 0; x < o; x++) {
-      for (let n = 0; n < 4; n++) {
-        if (flags[y * o + x] & ADJTHAN[n].f) {
-          const nx = x + ADJTHAN[n].dx;
-          const ny = y + ADJTHAN[n].dy;
-          if (nx < 0 || ny < 0 || nx >= o || ny >= o) return DESC_OUT_OF_RANGE;
+    for (let y = 0; y < o; y++) {
+      for (let x = 0; x < o; x++) {
+        for (const dir of ADJTHAN) {
+          if (!(flags[y * o + x] & dir.f)) continue;
+          const nx = x + dir.dx;
+          const ny = y + dir.dy;
+          if (nx < 0 || ny < 0 || nx >= o || ny >= o) r.fail(DESC_OUT_OF_RANGE);
           // A bar is flagged from both ends; a sign from its greater end only.
-          const reciprocal = (flags[ny * o + nx] & ADJTHAN[n].fo) !== 0;
-          if (reciprocal !== (mode === "adjacent")) return DESC_CONTRADICTORY;
+          const reciprocal = (flags[ny * o + nx] & dir.fo) !== 0;
+          if (reciprocal !== (p.mode === "adjacent")) r.fail(DESC_CONTRADICTORY);
         }
       }
     }
-  }
-  return null;
+    return { nums, flags };
+  });
 }
 
 export function validateDesc(p: UnequalParams, desc: string): DescError | null {
-  const parsed = parseDesc(p.order, desc);
-  if (!parsed.ok) return parsed.error;
-  return checkFlags(p.order, p.mode, parsed.flags);
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: UnequalParams, desc: string): UnequalState {
   const o = p.order;
   const a = o * o;
-  const parsed = parseDesc(o, desc);
-  if (!parsed.ok) throw new Error(`unequal: invalid desc: ${parsed.error}`);
-  const { nums, flags } = parsed;
+  const { nums, flags } = descValue(parseDesc(p, desc));
 
   return {
     order: o,

@@ -9,7 +9,7 @@
  */
 
 import { parseLeadingInt } from "../../engine/decimal.ts";
-import type { DescError } from "../../engine/desc-error.ts";
+import { type DescError, descValue, descVerdict } from "../../engine/desc-error.ts";
 import { AREA_TOO_LARGE, atof, formatG } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
@@ -29,7 +29,6 @@ import {
   dirY,
   opposite,
   parseWireDesc,
-  validateWireDesc,
 } from "../../engine/wires.ts";
 
 /* ----------------------------------------------------------------------
@@ -224,7 +223,7 @@ export function slideCol(
  */
 
 export function validateDesc(p: NetslideParams, desc: string): DescError | null {
-  return validateWireDesc(p.w, p.h, desc);
+  return descVerdict(parseWireDesc(p.w, p.h, p.wrapping, desc));
 }
 
 /**
@@ -234,7 +233,7 @@ export function validateDesc(p: NetslideParams, desc: string): DescError | null 
  */
 export function newState(p: NetslideParams, desc: string): NetslideState {
   const { w, h } = p;
-  const { tiles, barriers } = parseWireDesc(w, h, desc);
+  const { tiles, barriers } = descValue(parseWireDesc(w, h, p.wrapping, desc));
 
   if (!p.wrapping) addBorderBarriers(barriers, w, h);
 

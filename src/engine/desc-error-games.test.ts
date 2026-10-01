@@ -56,21 +56,19 @@ const MUTANTS_PER_BOARD = 150;
 const accepted = new Map<string, number>();
 
 /*
- * Junk is refused before `newState` is reached, so it cannot show the two scans
- * of a desc disagreeing. A near miss can: a real desc broken by one small edit
- * (`testing/desc-mutants.ts`) is mostly well formed, and a validator loose about
- * one character lets it through to a parser that is strict about it. Every
- * near miss `validateDesc` accepts is loaded the way the dialog loads it, and
- * the board must build and draw.
+ * Junk is refused before `newState` is reached; a near miss is not. A real desc
+ * broken by one small edit (`testing/desc-mutants.ts`) is mostly well formed,
+ * so it reaches deep into a parser. Every desc the generator writes must load,
+ * and every near miss `validateDesc` accepts is loaded the way the dialog loads
+ * it, and the board must build and draw.
  *
  * **What this can see.** Only a `newState` or a `redraw` that throws. Measured
  * when it was written, with `validateDesc` replaced by one accepting
  * everything: 21 games' boards threw on some mutant, and the other 36 built and
- * drew every one, the empty desc included, because their parsers skip what they
- * do not recognize and a typed array swallows an out-of-range write. For those
- * 36 this test is blind to a loosened validator, and a desc the two scans read
- * differently builds a wrong board in silence (`docs/games/mechanics.md` § "The
- * two scans have to agree, and nothing makes them").
+ * drew every one, the empty desc included, because their parsers then skipped
+ * what they did not recognize and a typed array swallows an out-of-range write.
+ * Agreement between the verdict and the board is what reading a desc once
+ * guarantees (`docs/games/mechanics.md` § "Read a desc once"), not this test.
  *
  * **The cap.** One board per value of each preset axis, on the smallest board
  * offering it, and {@link MUTANTS_PER_BOARD} mutants of each. A mode changes the
@@ -97,6 +95,9 @@ describe("a near-miss game ID", () => {
       let tried = 0;
       let n = 0;
       for (const board of boards) {
+        // A parser made strict must still read what its own generator writes.
+        const own = game.validateDesc(game.decodeParams(board.params), board.desc);
+        if (own !== null) failures.push(`${board.params}:${board.desc}: ${own}`);
         const mutants = descMutants(board.desc, alphabet);
         const stride = SLOW_TESTS_ENABLED
           ? 1
@@ -136,10 +137,13 @@ describe("a near-miss game ID", () => {
 
   // How many accepted near misses reached `newState`, collection-wide. Several
   // games accept none (an exact validator refuses every one-edit change), so the
-  // floor is on the sum: a mutator or a slice that went blind would drop it.
+  // floor is on the sum: a mutator or a slice that went blind would drop it. It
+  // was 4,668 when written and 3,443 once every game read its desc strictly
+  // (`read-descs-through-one-cursor`), since a near miss a strict parser refuses
+  // never reaches `newState`.
   itOverWholeSweep("loaded enough accepted near misses to mean something", () => {
     expect(accepted.size).toBe(REGISTERED_GAME_COUNT);
     const total = [...accepted.values()].reduce((a, b) => a + b, 0);
-    expect(total).toBeGreaterThanOrEqual(4000);
+    expect(total).toBeGreaterThanOrEqual(3000);
   });
 });

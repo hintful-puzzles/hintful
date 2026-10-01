@@ -8,14 +8,9 @@
  * state immutably: `executeMove` clones, then mutates the copy.
  */
 
-import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
-import {
-  DESC_OUT_OF_RANGE,
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
-  type DescError,
-  descBadCharacter,
-} from "../../engine/desc-error.ts";
+import { isDigit } from "../../engine/decimal.ts";
+import { DESC_REPEATED, type DescParse } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 
@@ -504,34 +499,28 @@ export function generateDesc(s: SignpostState): string {
   return ret;
 }
 
-/** Parse a desc into a fresh state (upstream `unpick_desc`), or say why it
- * cannot be parsed. */
-export function unpickDesc(
+/** Parse a desc into a fresh state (upstream `unpick_desc`): per cell, its
+ * number if it has one, then its direction letter. The numbers are the
+ * solution's, so each lies in `1..n` and none is given twice. */
+export function parseDesc(
   params: SignpostParams,
   desc: string,
-): { state: SignpostState } | { error: DescError } {
-  const s = blankState(params);
-  let num = 0;
-  let i = 0;
-  let at = 0;
-  while (at < desc.length) {
-    if (i >= s.n) return { error: DESC_TOO_LONG };
-    if (isDigit(desc[at])) {
-      const r = parseLeadingInt(desc, at);
-      if (r.value > s.n) return { error: DESC_OUT_OF_RANGE };
-      num = r.value;
-      at = r.next;
-    } else {
-      const d = desc.charCodeAt(at) - 97; // 'a'
-      if (d < 0 || d >= DIR_MAX) return { error: descBadCharacter(desc[at]) };
+): DescParse<SignpostState> {
+  return readDesc(desc, (r) => {
+    const s = blankState(params);
+    const given = new Set<number>();
+    for (let i = 0; i < s.n; i++) {
+      const num = r.peekIs(isDigit) ? r.int(1, s.n) : 0;
+      if (num) {
+        if (given.has(num)) r.fail(DESC_REPEATED);
+        given.add(num);
+      }
+      const d = r.char((c) => c >= "a" && c.charCodeAt(0) - 97 < DIR_MAX);
       s.nums[i] = num;
       s.flags[i] = num ? FLAG_IMMUTABLE : 0;
-      num = 0;
-      s.dirs[i] = d;
-      i++;
-      at++;
+      s.dirs[i] = d.charCodeAt(0) - 97; // 'a'
     }
-  }
-  if (i < s.n) return { error: DESC_TOO_SHORT };
-  return { state: s };
+    r.end();
+    return s;
+  });
 }

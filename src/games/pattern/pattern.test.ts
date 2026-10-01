@@ -4,7 +4,12 @@
  * Tier 2.5 — a render scenario through a real Midend with a snapshot.
  */
 import { describe, expect, it } from "vitest";
-import { DESC_TOO_SHORT, descBadCharacter } from "../../engine/desc-error.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -92,8 +97,32 @@ describe("pattern desc codec", () => {
     expect(validateDesc({ w: 5, h: 5 }, "1/2/3")).toBe(DESC_TOO_SHORT);
     // Unrecognized character.
     expect(validateDesc({ w: 2, h: 2 }, "1/2/!/1")).toBe(descBadCharacter("!"));
-    // A clue that cannot fit its line.
-    expect(validateDesc({ w: 3, h: 3 }, "9/1/1/1/1/1")).toMatch(/a column whose clues/);
+    // A clue longer than its line, and clues that together overfill it.
+    expect(validateDesc({ w: 3, h: 3 }, "9/1/1/1/1/1")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc({ w: 3, h: 3 }, "2.2/1/1/1/1/1")).toMatch(
+      /a column whose clues/,
+    );
+    expect(validateDesc({ w: 3, h: 3 }, "1/1/1/1/1/2.2")).toMatch(/a row whose clues/);
+  });
+
+  it("reads exactly what the encoder writes, and upstream's clue squares", () => {
+    const v = (desc: string) => validateDesc({ w: 2, h: 2 }, desc);
+    expect(v("1/2//1")).toBeNull();
+    // A NUL is a character like any other, not the end of a line.
+    expect(v("1\0/2//1")).toBe(descBadCharacter("\0"));
+    expect(v("1/2//1x")).toBe(DESC_TOO_LONG);
+    expect(v("1/2//1/")).toBe(DESC_TOO_LONG);
+    expect(v("1/0//1")).toMatch(/a clue of 0/);
+    // Clue squares: `b` skips one square and places a white one at index 1;
+    // `c` lands on the end and is the tail.
+    expect(v("1/2//1,bc")).toBeNull();
+    expect(newState({ w: 2, h: 2 }, "1/2//1,Bc").common.immutable).toEqual(
+      Uint8Array.of(0, 1, 0, 0),
+    );
+    expect(v("1/2//1,bd")).toBe(DESC_TOO_LONG);
+    expect(v("1/2//1,b")).toBe(DESC_TOO_SHORT);
+    // The Kelvin sign lowercases to `k`, which is no reason to read it as one.
+    expect(v("1/2//1,K")).toBe(descBadCharacter("K"));
   });
 });
 

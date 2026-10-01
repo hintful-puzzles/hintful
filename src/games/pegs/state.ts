@@ -5,12 +5,13 @@
 
 import { rejectMove } from "../../engine/assert-never.ts";
 import {
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { AREA_TOO_LARGE, parseDimensions } from "../../engine/params.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import type { GameStatus } from "../../engine/types.ts";
@@ -120,39 +121,47 @@ export function validateParams(p: PegsParams, full: boolean): string | null {
   }
   return null;
 }
-// --- validateDesc ----------------------------------------------------
+// --- desc ------------------------------------------------------------
+
+/** The grid value each desc letter stands for. */
+const CELL_LETTERS: Record<string, number> = {
+  H: GRID_HOLE,
+  P: GRID_PEG,
+  O: GRID_OBST,
+};
+
+/** One letter per cell in reading order: `P` a peg, `H` a hole, `O` off the board. */
+function parseDesc(p: PegsParams, desc: string): DescParse<Uint8Array> {
+  const len = p.w * p.h;
+  return readDesc(desc, (r) => {
+    const grid = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      grid[i] = CELL_LETTERS[r.char((c) => Object.hasOwn(CELL_LETTERS, c))];
+    }
+    r.end();
+    const count = (v: number) => grid.reduce((k, g) => k + (g === v ? 1 : 0), 0);
+    if (count(GRID_PEG) < 2) {
+      r.fail(
+        puzzleDescError(
+          "This game ID has fewer than two pegs, so no peg could ever jump.",
+        ),
+      );
+    }
+    if (count(GRID_HOLE) < 1) {
+      r.fail(puzzleDescError("This game ID has no empty hole for a peg to jump into."));
+    }
+    return grid;
+  });
+}
 
 export function validateDesc(p: PegsParams, desc: string): DescError | null {
-  const len = p.w * p.h;
-  if (desc.length < len) return DESC_TOO_SHORT;
-  if (desc.length > len) return DESC_TOO_LONG;
-  let nPeg = 0;
-  let nHole = 0;
-  for (let i = 0; i < len; i++) {
-    const ch = desc[i];
-    if (ch !== "P" && ch !== "H" && ch !== "O") return descBadCharacter(ch);
-    if (ch === "P") nPeg++;
-    if (ch === "H") nHole++;
-  }
-  if (nPeg < 2) {
-    return puzzleDescError(
-      "This game ID has fewer than two pegs, so no peg could ever jump.",
-    );
-  }
-  if (nHole < 1) {
-    return puzzleDescError("This game ID has no empty hole for a peg to jump into.");
-  }
-  return null;
+  return descVerdict(parseDesc(p, desc));
 }
 
 // --- state -----------------------------------------------------------
 
 export function newState(p: PegsParams, desc: string): PegsState {
-  const grid = new Uint8Array(p.w * p.h);
-  for (let i = 0; i < desc.length; i++) {
-    grid[i] = desc[i] === "P" ? GRID_PEG : desc[i] === "H" ? GRID_HOLE : GRID_OBST;
-  }
-  return { w: p.w, h: p.h, grid };
+  return { w: p.w, h: p.h, grid: descValue(parseDesc(p, desc)) };
 }
 
 export function newUi(state: PegsState): PegsUi {

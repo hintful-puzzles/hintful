@@ -20,16 +20,16 @@
  */
 
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
-import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
+import { parseLeadingInt } from "../../engine/decimal.ts";
 import {
-  DESC_MALFORMED,
-  DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
+import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -343,67 +343,41 @@ export function encodeGrid(grid: ArrayLike<number>, area: number): string {
   return p;
 }
 
-/**
- * Decode a grid spec from `desc` at `start` into `grid`; returns the index just
- * past the spec (at the comma or end). Faithful to `spec_to_grid`.
- */
-export function specToGrid(
-  desc: string,
-  start: number,
-  grid: Int8Array | Int32Array,
-): number {
-  let i = start;
-  let idx = 0;
-  while (i < desc.length && desc[i] !== ",") {
-    const ch = desc[i];
-    const digit = digitValue(ch);
-    if (ch >= "a" && ch <= "z") {
-      let run = ch.charCodeAt(0) - "a".charCodeAt(0) + 1;
-      i++;
-      while (run-- > 0) grid[idx++] = 0;
-    } else if (ch === "_") {
-      i++;
-    } else if (digit !== null && digit >= 1) {
-      const n = parseLeadingInt(desc, i);
-      grid[idx++] = n.value;
-      i = n.next;
-    } else {
-      break;
-    }
-  }
-  return i;
+const isRunLetter = (c: string): boolean => c >= "a" && c <= "z";
+
+/** A section goes on past its board when anything but the comma that ends it
+ * comes next. */
+function sectionRunsOn(r: DescReader): void {
+  if (r.peekIs((c) => c !== ",")) r.fail(DESC_TOO_LONG);
 }
 
-/** Faithful to `validate_grid_desc`: returns `{ error, next }`. */
-function validateGridDesc(
-  desc: string,
-  start: number,
-  range: number,
+/**
+ * Read a grid section as {@link encodeGrid} writes it, numbers `1..max`: a run
+ * of blanks is a letter (`a` = 1 to `z` = 26, only a `z` followed by more), and
+ * `_` separates exactly two adjacent numbers.
+ */
+function readGrid(
+  r: DescReader,
   area: number,
-): { error: DescError | null; next: number } {
-  let i = start;
-  let squares = 0;
-  while (i < desc.length && desc[i] !== ",") {
-    const ch = desc[i];
-    const digit = digitValue(ch);
-    if (ch >= "a" && ch <= "z") {
-      squares += ch.charCodeAt(0) - "a".charCodeAt(0) + 1;
-      i++;
-    } else if (ch === "_") {
-      i++;
-    } else if (digit !== null && digit >= 1) {
-      const n = parseLeadingInt(desc, i);
-      const val = n.value;
-      i = n.next;
-      if (val < 1 || val > range) return { error: DESC_OUT_OF_RANGE, next: i };
-      squares++;
+  max: number,
+  grid: Int8Array | Int32Array,
+) {
+  let i = 0;
+  let prev: "number" | "run" | "z" | null = null;
+  while (i < area) {
+    if (r.peekIs(isRunLetter)) {
+      const ch = r.char(() => prev !== "run");
+      const run = ch.charCodeAt(0) - 96;
+      if (i + run > area) r.fail(DESC_TOO_LONG);
+      i += run;
+      prev = ch === "z" ? "z" : "run";
     } else {
-      return { error: descBadCharacter(ch), next: i };
+      if (prev === "number") r.expect("_");
+      grid[i++] = r.int(1, max);
+      prev = "number";
     }
   }
-  if (squares < area) return { error: DESC_TOO_SHORT, next: i };
-  if (squares > area) return { error: DESC_TOO_LONG, next: i };
-  return { error: null, next: i };
+  sectionRunsOn(r);
 }
 
 // --- block-structure codec -------------------------------------------------
@@ -446,81 +420,47 @@ export function encodeBlockStructureDesc(cr: number, blocks: BlockStructure): st
   return p;
 }
 
-/**
- * Build a Dsf from a block-structure spec in `desc` at `start`; returns the dsf,
- * an error, and the index past the spec. Faithful to `spec_to_dsf`.
- *
- * Quirk, transcribed verbatim: encode emits `'z'` for a run of **25** non-edges
- * (`while (currrun > 25)`), but decode reads `'z'` as 26 non-edges with no
- * following edge, so the codec is not an inverse for a non-edge run ≥ 26.
- * `solo.c` never produces one (sub-blocks and cages are compact, so runs stay
- * short). The asymmetry stays so descs match the C reference byte-for-byte: do
- * not "fix" decode to 25.
- */
-export function specToDsf(
-  desc: string,
-  start: number,
-  cr: number,
-): { dsf: Dsf | null; error: DescError | null; next: number } {
-  const area = cr * cr;
-  const dsf = new Dsf(area);
-  const A = "a".charCodeAt(0);
-  let i = start;
-  let pos = 0;
-  const limit = 2 * cr * (cr - 1);
-  while (i < desc.length && desc[i] !== ",") {
-    const ch = desc[i];
-    let c: number;
-    if (ch === "_") c = 0;
-    else if (ch >= "a" && ch <= "z") c = ch.charCodeAt(0) - A + 1;
-    else return { dsf: null, error: descBadCharacter(ch), next: i };
-    i++;
-
-    const adv = c !== 26; // 'z' has no following edge: the quirk above
-    while (c-- > 0) {
-      if (pos >= limit) return { dsf: null, error: DESC_TOO_LONG, next: i };
-      const [p0, p1] = edgeCells(pos, cr);
-      dsf.merge(p0, p1);
-      pos++;
-    }
-    if (adv) pos++;
-  }
-  if (pos !== limit + 1) return { dsf: null, error: DESC_TOO_SHORT, next: i };
-  return { dsf, error: null, next: i };
-}
-
 const WRONG_REGIONS = puzzleDescError(
   "This game ID divides its board into the wrong number or sizes of blocks or cages.",
 );
 
 /**
- * Validate a block-structure spec (faithful to `validate_block_desc`): build the
- * dsf, then check the region count is in `[minNr, maxNr]` and each region size
- * is in `[minSize, maxSize]`. Returns `{ error, next }`.
+ * Read a block-structure section as {@link encodeBlockStructureDesc} writes it
+ * (`_` = 0 and `a`..`y` = 1..25 non-edges before an edge, `z` = 25 with no edge
+ * after it, up to a terminating virtual edge), and check its regions number
+ * `[minNr, maxNr]` with each of `[minSize, maxSize]` cells.
  */
-function validateBlockDesc(
-  desc: string,
-  start: number,
+function readBlocks(
+  r: DescReader,
   cr: number,
   minNr: number,
   maxNr: number,
   minSize: number,
   maxSize: number,
-): { error: DescError | null; next: number } {
-  const { dsf, error, next } = specToDsf(desc, start, cr);
-  if (error || !dsf) return { error: error ?? DESC_MALFORMED, next };
-  const area = cr * cr;
-  // Count regions and sizes.
-  const sizeByRoot = new Map<number, number>();
-  for (let i = 0; i < area; i++) {
-    const root = dsf.canonify(i);
-    sizeByRoot.set(root, (sizeByRoot.get(root) ?? 0) + 1);
+): BlockStructure {
+  const dsf = new Dsf(cr * cr);
+  const limit = 2 * cr * (cr - 1);
+  let pos = 0;
+  while (pos < limit + 1) {
+    const ch = r.char((c) => c === "_" || isRunLetter(c));
+    for (
+      let run = ch === "_" ? 0 : Math.min(ch.charCodeAt(0) - 96, 25);
+      run > 0;
+      run--
+    ) {
+      if (pos >= limit) r.fail(DESC_TOO_LONG);
+      dsf.merge(...edgeCells(pos, cr));
+      pos++;
+    }
+    if (ch !== "z") pos++;
   }
-  const nr = sizeByRoot.size;
-  if (nr < minNr || nr > maxNr) return { error: WRONG_REGIONS, next };
-  for (const sz of sizeByRoot.values())
-    if (sz < minSize || sz > maxSize) return { error: WRONG_REGIONS, next };
-  return { error: null, next };
+  sectionRunsOn(r);
+
+  const blocks = blocksFromDsf(dsf, cr);
+  if (blocks.nrBlocks < minNr || blocks.nrBlocks > maxNr) r.fail(WRONG_REGIONS);
+  for (const cells of blocks.blocks)
+    if (cells.length < minSize || cells.length > maxSize) r.fail(WRONG_REGIONS);
+  return blocks;
 }
 
 // --- killer cages ----------------------------------------------------------
@@ -577,71 +517,54 @@ export function cloneState(s: SoloState): SoloState {
 
 // --- desc codec (assembly) -------------------------------------------------
 
-/** Faithful to `validate_desc`. */
-export function validateDesc(p: SoloParams, desc: string): DescError | null {
-  const cr = p.c * p.r;
-  const area = cr * cr;
-
-  let r = validateGridDesc(desc, 0, cr, area);
-  if (r.error) return r.error;
-  let i = r.next;
-
-  if (p.r === 1) {
-    if (desc[i] !== ",") return DESC_MALFORMED;
-    i++;
-    const b = validateBlockDesc(desc, i, cr, cr, cr, cr, cr);
-    if (b.error) return b.error;
-    i = b.next;
-  }
-  if (p.killer) {
-    if (desc[i] !== ",") return DESC_MALFORMED;
-    i++;
-    const b = validateBlockDesc(desc, i, cr, cr, area, 2, cr);
-    if (b.error) return b.error;
-    i = b.next;
-    if (desc[i] !== ",") return DESC_MALFORMED;
-    i++;
-    r = validateGridDesc(desc, i, cr * area, area);
-    if (r.error) return r.error;
-    i = r.next;
-  }
-  if (i < desc.length) return DESC_TOO_LONG;
-  return null;
+interface SoloDesc {
+  grid: Int8Array;
+  blocks: BlockStructure;
+  killerData: SoloKiller | null;
 }
 
-/** Faithful to `new_game`. */
+/**
+ * The givens; then, on a jigsaw board, its blocks; then, on a killer board, its
+ * cages and their sums — each section after the first behind a comma.
+ */
+function parseDesc(p: SoloParams, desc: string): DescParse<SoloDesc> {
+  const cr = p.c * p.r;
+  const area = cr * cr;
+  return readDesc(desc, (r) => {
+    const grid = new Int8Array(area);
+    readGrid(r, area, cr, grid);
+
+    let blocks = rectangularBlocks(p.c, p.r);
+    if (p.r === 1) {
+      r.expect(",");
+      blocks = readBlocks(r, cr, cr, cr, cr, cr);
+    }
+
+    let killerData: SoloKiller | null = null;
+    if (p.killer) {
+      r.expect(",");
+      const kblocks = readBlocks(r, cr, cr, area, 2, cr);
+      r.expect(",");
+      const kgrid = new Int32Array(area);
+      // A cage holds at most `cr` different digits, so its sum is at most 1 + … + cr.
+      readGrid(r, area, (cr * (cr + 1)) / 2, kgrid);
+      killerData = { kblocks, kgrid };
+    }
+    r.end();
+    return { grid, blocks, killerData };
+  });
+}
+
+export function validateDesc(p: SoloParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
+}
+
 export function newState(p: SoloParams, desc: string): SoloState {
   const cr = p.c * p.r;
   const area = cr * cr;
-
-  const grid = new Int8Array(area);
-  let i = specToGrid(desc, 0, grid);
+  const { grid, blocks, killerData } = descValue(parseDesc(p, desc));
   const immutable = new Uint8Array(area);
   for (let k = 0; k < area; k++) if (grid[k] !== 0) immutable[k] = 1;
-
-  let blocks: BlockStructure;
-  if (p.r === 1) {
-    i++; // skip comma
-    const { dsf, next } = specToDsf(desc, i, cr);
-    if (!dsf) throw new Error("solo: bad jigsaw block structure in newState");
-    blocks = blocksFromDsf(dsf, cr);
-    i = next;
-  } else {
-    blocks = rectangularBlocks(p.c, p.r);
-  }
-
-  let killerData: SoloKiller | null = null;
-  if (p.killer) {
-    i++; // skip comma
-    const { dsf, next } = specToDsf(desc, i, cr);
-    if (!dsf) throw new Error("solo: bad killer block structure in newState");
-    const kblocks = blocksFromDsf(dsf, cr);
-    i = next;
-    i++; // skip comma
-    const kgrid = new Int32Array(area);
-    i = specToGrid(desc, i, kgrid);
-    killerData = { kblocks, kgrid };
-  }
 
   return {
     params: p,

@@ -11,7 +11,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import fixtures from "./__fixtures__/tracks-c-reference.json" with { type: "json" };
 import { newDesc } from "./generator.ts";
 import { tracksSolve } from "./solver.ts";
-import { decodeDesc, type TracksParams } from "./state.ts";
+import { newState, stateToBoard, type TracksParams } from "./state.ts";
 
 interface Fixture {
   w: number;
@@ -39,12 +39,15 @@ describe("tracks generator differential (byte-match vs C)", () => {
     });
 
     it(`${f.seed}: TS solver grades the C board at difficulty ${f.gradeDiff}`, () => {
-      const board = decodeDesc(paramsOf(f), f.desc);
+      const board = stateToBoard(newState(paramsOf(f), f.desc));
       const graded = tracksSolve(board, 3 /* DIFF_COUNT */);
       expect(graded.ret).toBe(f.solveRet);
       expect(graded.maxDiff).toBe(f.gradeDiff);
       if (f.gradeDiff > 0) {
-        const easier = tracksSolve(decodeDesc(paramsOf(f), f.desc), f.gradeDiff - 1);
+        const easier = tracksSolve(
+          stateToBoard(newState(paramsOf(f), f.desc)),
+          f.gradeDiff - 1,
+        );
         expect(easier.ret).toBeLessThan(1); // one rung below cannot finish
       }
     });

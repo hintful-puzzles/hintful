@@ -50,8 +50,11 @@ import type { DeductionRecord } from "../../engine/deduction-record.ts";
 import {
   DESC_CONTRADICTORY,
   type DescError,
+  type DescParse,
+  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import {
   auditingPremises,
@@ -82,7 +85,8 @@ import {
   legalDirs,
   type RomeBoard,
   type RomeParams,
-  readDesc,
+  type RomeState,
+  readBoard,
   STATUS_COMPLETE,
   STATUS_INCOMPLETE,
   STATUS_INVALID,
@@ -244,26 +248,34 @@ export const GOAL_NOT_ALONE = puzzleDescError(
 );
 
 /**
- * Upstream `validate_desc`: decode, reject a description that is already
- * finished or already broken, then reject a region larger than the four
- * distinct arrows it could hold, or a goal outside a single-square region (the
- * last offending square decides which). Lives here rather than beside the
+ * Upstream `validate_desc` and `new_game` in one reading: decode, reject a
+ * description that is already finished or already broken, then reject a region
+ * larger than the four distinct arrows it could hold, or a goal outside a
+ * single-square region (the last offending square decides which). The board
+ * comes back with its validity bits set. Lives here rather than beside the
  * codec because its central assertion is a validity verdict.
  */
-export function validateDesc(p: RomeParams, desc: string): DescError | null {
-  const { board, error } = readDesc(p, desc);
-  if (error) return error;
-  const status = validateGame(board, true);
-  if (status === STATUS_COMPLETE) return ARROWS_ALREADY_SOLVED;
-  if (status !== STATUS_INCOMPLETE) return DESC_CONTRADICTORY;
+export function parseDesc(p: RomeParams, desc: string): DescParse<RomeState> {
+  return readDesc(desc, (r) => {
+    const board = readBoard(r, p);
+    r.end();
+    const status = validateGame(board, true);
+    if (status === STATUS_COMPLETE) r.fail(ARROWS_ALREADY_SOLVED);
+    if (status !== STATUS_INCOMPLETE) r.fail(DESC_CONTRADICTORY);
 
-  let result: DescError | null = null;
-  for (let i = 0; i < p.w * p.h; i++) {
-    const size = board.regions.size(i);
-    if (size > 4) result = REGION_TOO_LARGE;
-    if (board.grid[i] & FM_GOAL && size > 1) result = GOAL_NOT_ALONE;
-  }
-  return result;
+    let result: DescError | null = null;
+    for (let i = 0; i < p.w * p.h; i++) {
+      const size = board.regions.size(i);
+      if (size > 4) result = REGION_TOO_LARGE;
+      if (board.grid[i] & FM_GOAL && size > 1) result = GOAL_NOT_ALONE;
+    }
+    if (result) r.fail(result);
+    return board;
+  });
+}
+
+export function validateDesc(p: RomeParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
 }
 
 // --- the recording projection -----------------------------------------------

@@ -1,6 +1,8 @@
 # read-descs-through-one-cursor
 
-**Status: scaffolded, not started (2026-10-01). Measurement first.**
+**Status: done (2026-10-01).** Task 0 held on both counts; every game reads
+its desc once through `DescParse`, most through `engine/desc-reader.ts`'s
+cursor. `tasks.md` has the numbers.
 
 ## Why
 

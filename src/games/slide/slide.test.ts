@@ -286,13 +286,27 @@ describe("slide desc codec", () => {
       // ...and so does one more cell after a full board.
       ["w5ma14a,3,1", DESC_TOO_LONG],
       ["w5ma14", DESC_TOO_SHORT], // no target coordinates
-      ["w5ma14,x", DESC_MALFORMED],
-      ["w5ma13,3,1", DESC_TOO_SHORT], // 19 cells
+      ["w5ma14,x", descBadCharacter("x")],
+      ["w5ma13,3,1", descBadCharacter(",")], // 19 cells, then the tail
       ["w5mz13,3,1", descBadCharacter("z")],
-      ["w5md,3,1", DESC_MALFORMED], // no number after 'd'
+      ["w5md,3,1", descBadCharacter(",")], // no number after 'd'
       ["w5md9a12,3,1", DESC_OUT_OF_RANGE], // dist 9 > i 6
       ["w5maed1a11,3,1", DESC_MALFORMED], // links back to an EMPTY square
-      ["w5maf", DESC_MALFORMED], // nothing after 'f'
+      ["w5maf", DESC_TOO_SHORT], // nothing after 'f'
+      // Forms the encoder never writes: an uppercase letter, a forcefield on a
+      // block square, a count of 0 or 1, a signed or spaced coordinate, text
+      // after the tail.
+      ["w5Ma14,3,1", descBadCharacter("M")],
+      ["w5mafd1a12,3,1", descBadCharacter("d")],
+      ["w5ma1a13,3,1", DESC_OUT_OF_RANGE],
+      ["w5me0a14,3,1", DESC_OUT_OF_RANGE],
+      ["w5ma14,+3,1", descBadCharacter("+")],
+      ["w5ma14, 3,1", descBadCharacter(" ")],
+      ["w5ma14,3,1,-1", descBadCharacter("-")],
+      ["w5ma14,3,1,2x", DESC_TOO_LONG],
+      // The target lies on the board.
+      ["w5ma14,5,1", DESC_OUT_OF_RANGE],
+      ["w5ma14,3,4", DESC_OUT_OF_RANGE],
     ];
     for (const [desc, expected] of cases) {
       expect(validateDesc(p, desc), desc).toBe(expected);
@@ -305,20 +319,14 @@ describe("slide desc codec", () => {
     expect(validateDesc(P(5, 4, -1), "w5ma14,3,1")).toBeNull();
   });
 
-  it("accepts an uppercase F forcefield prefix, as the C's validator does", () => {
-    // Upstream's `validate_desc` accepts `F` while its `new_game` accepts only
-    // `f`, so a hand-typed `F…` validated and then silently decoded as a WALL.
-    // Accepting both aligns the pair; the generator never emits `F`.
+  it("refuses an uppercase F forcefield prefix, which the encoder never writes", () => {
     const p = P(FW, FH, -1);
     const { board, forcefield } = fixtureBoard();
     forcefield[idx(4, 1)] = 1;
     const lower = encodeDesc(FWH, board, forcefield, 2, 1, 2);
     const upper = lower.replace("f", "F");
     expect(upper).not.toBe(lower);
-    expect(validateDesc(p, upper)).toBeNull();
-    const s = newState(p, upper);
-    expect(s.forcefield[idx(4, 1)]).toBe(1);
-    expect([...s.board]).toEqual([...board]);
+    expect(validateDesc(p, upper)).toBe(descBadCharacter("F"));
   });
 });
 
@@ -994,9 +1002,10 @@ describe("slide solve", () => {
 
   it("reports an insoluble board", () => {
     const packed = packedBoard();
+    packed[idx(1, 1)] = MAINANCHOR;
     const s = newState(
       P(FW, FH, -1),
-      encodeDesc(FWH, packed, new Uint8Array(FWH), 3, 2, -1),
+      encodeDesc(FWH, packed, new Uint8Array(FWH), 3, 2, 0),
     );
     expect(slideGame.solve?.(s, s)).toEqual({
       ok: false,

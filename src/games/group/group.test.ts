@@ -319,3 +319,32 @@ describe("rendering smoke", () => {
     ).toBeGreaterThan(0);
   });
 });
+
+describe("Group desc parsing", () => {
+  const p = P(3, DIFF_NORMAL, true);
+
+  it("accepts what encodeGrid writes and builds that grid", () => {
+    const grid = Uint8Array.from([1, 2, 0, 0, 0, 0, 0, 0, 3]);
+    const desc = encodeGrid(grid, 9);
+    expect(desc).toBe("1_2f3");
+    expect(validateDesc(p, desc)).toBeNull();
+    expect(Array.from(newState(p, desc).grid)).toEqual(Array.from(grid));
+  });
+
+  it("refuses what encodeGrid never writes", () => {
+    const tooShort = validateDesc(p, "1_2f");
+    const tooLong = validateDesc(p, "1_2h");
+    expect(tooShort).toMatch(/too short/);
+    expect(tooLong).toMatch(/too long/);
+    // Text after the grid, including after a comma.
+    expect(validateDesc(p, "1_2f3,x")).toBe(tooLong);
+    // A `_` anywhere but between two numbers.
+    expect(validateDesc(p, "_1_2f3")).toMatch(/"_"/);
+    expect(validateDesc(p, "1__2f3")).toMatch(/"_"/);
+    expect(validateDesc(p, "1_2_f3")).toMatch(/"f"/);
+    // Two numbers run together read as one, out of range.
+    expect(validateDesc(p, "12f3")).toMatch(/out of range/);
+    expect(validateDesc(p, "1_2f0")).toMatch(/out of range/);
+    expect(validateDesc(p, "1_2f!")).toMatch(/"!"/);
+  });
+});

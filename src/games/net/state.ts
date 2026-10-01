@@ -1,7 +1,7 @@
 /** Types, bit vocabulary, params and pure state helpers for Net. */
 
 import { parseLeadingInt } from "../../engine/decimal.ts";
-import type { DescError } from "../../engine/desc-error.ts";
+import { type DescError, descValue, descVerdict } from "../../engine/desc-error.ts";
 import { AREA_TOO_LARGE, atof, formatG } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
@@ -15,7 +15,6 @@ import {
   parseWireDesc,
   R,
   U,
-  validateWireDesc,
 } from "../../engine/wires.ts";
 
 /* ----------------------------------------------------------------------
@@ -189,7 +188,7 @@ export interface NetState {
 }
 
 export function validateDesc(p: NetParams, desc: string): DescError | null {
-  return validateWireDesc(p.w, p.h, desc);
+  return descVerdict(parseWireDesc(p.w, p.h, p.wrapping, desc));
 }
 
 /**
@@ -199,7 +198,7 @@ export function validateDesc(p: NetParams, desc: string): DescError | null {
  */
 export function newState(p: NetParams, desc: string): NetState {
   const { w, h } = p;
-  const { tiles, barriers } = parseWireDesc(w, h, desc);
+  const { tiles, barriers } = descValue(parseWireDesc(w, h, p.wrapping, desc));
 
   let wrapping = false;
   if (!p.wrapping) {

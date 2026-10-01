@@ -31,13 +31,14 @@
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_MALFORMED,
-  DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
   descNeedsOne,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import { parseDimensions } from "../../engine/params.ts";
@@ -288,9 +289,8 @@ export type SlideMove =
 
 // --- desc codec -------------------------------------------------------
 
-/** The board byte each run-length letter stands for; the desc accepts either
- * case. */
-const CELL_OF_LETTER: Partial<Record<string, number>> = {
+/** The board byte each run-length letter stands for. */
+const CELL_OF_LETTER: Record<string, number> = {
   a: ANCHOR,
   m: MAINANCHOR,
   e: EMPTY,
@@ -339,141 +339,75 @@ export function encodeDesc(
   return `${out},${tx},${ty},${minmoves}`;
 }
 
-/**
- * Read the `,tx,ty[,minmoves]` tail, mirroring `sscanf(desc, ",%d,%d,%d", …)`:
- * returns the integers that converted, stopping at the first that doesn't.
- */
-function scanTargetCoords(s: string): number[] {
-  const values: number[] = [];
-  let i = 0;
-  while (values.length < 3 && s[i] === ",") {
-    i++;
-    let j = i;
-    while (j < s.length && (s[j] === " " || s[j] === "\t")) j++;
-    let sign = 1;
-    if (s[j] === "-") {
-      sign = -1;
-      j++;
-    } else if (s[j] === "+") {
-      j++;
-    }
-    const { value, next } = parseLeadingInt(s, j);
-    if (next === j) break;
-    values.push(sign * value);
-    i = next;
-  }
-  return values;
+interface SlideDesc {
+  board: Uint8Array;
+  forcefield: Uint8Array;
+  tx: number;
+  ty: number;
+  minmoves: number;
 }
 
-/** Upstream `validate_desc`. */
-export function validateDesc(p: SlideParams, desc: string): DescError | null {
-  const wh = p.w * p.h;
-  // Whether each square is the latest square so far of its block — the only
-  // square a later `d` may link back to.
-  const active = new Uint8Array(wh);
-  let mains = 0;
-  let i = 0;
-  let k = 0;
+/** The largest `minmoves` read. A solution length has no bound the board
+ * states cheaply; this one only keeps the number exact. */
+const MAX_MINMOVES = 1_000_000;
 
-  while (k < desc.length && desc[k] !== ",") {
-    if (i >= wh) return DESC_TOO_LONG;
-    if (desc[k] === "f" || desc[k] === "F") {
-      k++;
-      if (k >= desc.length) return DESC_MALFORMED;
-    }
-
-    if (desc[k] === "d" || desc[k] === "D") {
-      k++;
-      if (k >= desc.length || !isDigit(desc[k])) return DESC_MALFORMED;
-      const { value: dist, next } = parseLeadingInt(desc, k);
-      k = next;
-
-      if (dist <= 0 || dist > i) return DESC_OUT_OF_RANGE;
-      if (!active[i - dist]) return DESC_MALFORMED;
-
-      active[i - dist] = 0;
-      active[i] = 1;
-      i++;
-    } else {
-      const ch = desc[k];
-      const cell = CELL_OF_LETTER[ch.toLowerCase()];
-      k++;
-      if (cell === undefined) return descBadCharacter(ch);
-
-      let count = 1;
-      if (k < desc.length && isDigit(desc[k])) {
-        const parsed = parseLeadingInt(desc, k);
-        count = parsed.value;
-        k = parsed.next;
+/**
+ * What {@link encodeDesc} writes: the board's cells, then `,tx,ty` and an
+ * optional `,minmoves` (absent, it reads as unknown, `-1`).
+ */
+function parseDesc(p: SlideParams, desc: string): DescParse<SlideDesc> {
+  const { w, h } = p;
+  const wh = w * h;
+  return readDesc(desc, (r) => {
+    const board = new Uint8Array(wh);
+    const forcefield = new Uint8Array(wh);
+    // Whether each square is the latest square so far of its block — the only
+    // square a later `d` may link back to.
+    const active = new Uint8Array(wh);
+    let mains = 0;
+    let i = 0;
+    while (i < wh) {
+      if (r.accept("d")) {
+        const dist = r.int(1, Math.min(i, MAXDIST));
+        if (!active[i - dist]) r.fail(DESC_MALFORMED);
+        active[i - dist] = 0;
+        active[i] = 1;
+        board[i] = dist;
+        i++;
+        continue;
       }
-      if (i + count > wh) return DESC_TOO_LONG;
+      // A block square carries no forcefield, so `f` never precedes `d`.
+      const f = r.accept("f") ? 1 : 0;
+      const cell = CELL_OF_LETTER[r.char((c) => Object.hasOwn(CELL_OF_LETTER, c))];
+      // A single square is written without a count.
+      const count = r.peekIs(isDigit) ? r.int(2, wh) : 1;
+      if (i + count > wh) r.fail(DESC_TOO_LONG);
+      board.fill(cell, i, i + count);
+      forcefield.fill(f, i, i + count);
       active.fill(isAnchor(cell) ? 1 : 0, i, i + count);
       if (cell === MAINANCHOR) mains += count;
       i += count;
     }
-  }
-
-  if (mains !== 1) return descNeedsOne("main piece", mains);
-  if (i < wh) return DESC_TOO_SHORT;
-
-  // minmoves is optional.
-  if (scanTargetCoords(desc.slice(k)).length < 2)
-    return k === desc.length ? DESC_TOO_SHORT : DESC_MALFORMED;
-
-  return null;
+    // More cells after a full board.
+    if (r.peekIs((c) => c !== ",")) r.fail(DESC_TOO_LONG);
+    if (mains !== 1) r.fail(descNeedsOne("main piece", mains));
+    r.expect(",");
+    const tx = r.int(0, w - 1);
+    r.expect(",");
+    const ty = r.int(0, h - 1);
+    const minmoves = r.accept(",") ? r.int(0, MAX_MINMOVES) : -1;
+    r.end();
+    return { board, forcefield, tx, ty, minmoves };
+  });
 }
 
-/** Upstream `new_game`. */
+export function validateDesc(p: SlideParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
+}
+
 export function newState(p: SlideParams, desc: string): SlideState {
   const { w, h } = p;
-  const wh = w * h;
-  const board = new Uint8Array(wh);
-  const forcefield = new Uint8Array(wh);
-  let i = 0;
-  let k = 0;
-
-  while (k < desc.length && desc[k] !== ",") {
-    let f = false;
-
-    if (i >= wh) throw new Error("slide: too much data in game description");
-
-    // Upstream's `new_game` accepts only lowercase `f` here while its
-    // `validate_desc` accepts `F` too, so a hand-typed `F…` validates and
-    // then decodes as a WALL. Accepting both aligns the pair; the generator
-    // never emits `F`, so this cannot move a byte-matched desc.
-    if (desc[k] === "f" || desc[k] === "F") {
-      f = true;
-      k++;
-      if (k >= desc.length)
-        throw new Error("slide: 'f' at the end of a game description");
-    }
-
-    if (desc[k] === "d" || desc[k] === "D") {
-      const parsed = parseLeadingInt(desc, k + 1);
-      k = parsed.next;
-      board[i] = parsed.value;
-      forcefield[i] = f ? 1 : 0;
-      i++;
-    } else {
-      const cell = CELL_OF_LETTER[desc[k].toLowerCase()] ?? WALL;
-      k++;
-
-      let count = 1;
-      if (k < desc.length && isDigit(desc[k])) {
-        const parsed = parseLeadingInt(desc, k);
-        count = parsed.value;
-        k = parsed.next;
-      }
-      if (i + count > wh) throw new Error("slide: too much data in game description");
-
-      board.fill(cell, i, i + count);
-      forcefield.fill(f ? 1 : 0, i, i + count);
-      i += count;
-    }
-  }
-
-  const [tx = 0, ty = 0, minmoves = -1] = scanTargetCoords(desc.slice(k));
-
+  const { board, forcefield, tx, ty, minmoves } = descValue(parseDesc(p, desc));
   return {
     w,
     h,

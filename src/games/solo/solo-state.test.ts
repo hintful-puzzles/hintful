@@ -5,12 +5,16 @@
  * generator, render, and move handling are tested separately as they land.
  */
 import { describe, expect, it } from "vitest";
-import type { Dsf } from "../../engine/dsf.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { soloGame } from "./index.ts";
 import {
-  blocksFromDsf,
   checkValid,
   DIFF_BLOCK,
   DIFF_KINTERSECT,
@@ -23,14 +27,13 @@ import {
   encodeBlockStructureDesc,
   encodeGrid,
   encodeParams,
+  makeBlocksFromWhichblock,
   newState,
   rectangularBlocks,
   type SoloParams,
   SYMM_NONE,
   SYMM_REF4D,
   SYMM_ROT2,
-  specToDsf,
-  specToGrid,
   validateDesc,
 } from "./state.ts";
 
@@ -162,8 +165,26 @@ describe("solo params codec", () => {
   });
 });
 
+const STANDARD: SoloParams = {
+  c: 3,
+  r: 3,
+  symm: SYMM_ROT2,
+  diff: DIFF_SIMPLE,
+  kdiff: DIFF_KMINMAX,
+  xtype: false,
+  killer: false,
+};
+const KILLER: SoloParams = { ...STANDARD, symm: SYMM_NONE, killer: true };
+
+/** The same partition, whatever the blocks' numbering. */
+function expectSamePartition(a: Int32Array, b: Int32Array): void {
+  for (let i = 0; i < a.length; i++)
+    for (let j = i + 1; j < a.length; j++)
+      expect(a[i] === a[j], `${i},${j}`).toBe(b[i] === b[j]);
+}
+
 describe("solo grid codec", () => {
-  it("round-trips a grid through encode/specToGrid", () => {
+  it("round-trips a grid through encodeGrid and newState", () => {
     const area = 81;
     const grid = new Int8Array(area);
     // a scattering of givens, incl. the top-left and bottom-right corners
@@ -172,30 +193,76 @@ describe("solo grid codec", () => {
     grid[40] = 1;
     grid[80] = 7;
     grid[79] = 3;
-    const enc = encodeGrid(grid, area);
-    const out = new Int8Array(area);
-    const next = specToGrid(enc, 0, out);
-    expect(next).toBe(enc.length);
-    expect(Array.from(out)).toEqual(Array.from(grid));
+    const st = newState(STANDARD, encodeGrid(grid, area));
+    expect(Array.from(st.grid)).toEqual(Array.from(grid));
+  });
+
+  it("refuses what encodeGrid never writes, by what went wrong", () => {
+    const blanks = "z".repeat(3); // 78 blanks
+    expect(validateDesc(STANDARD, `${blanks}a1_2`)).toBeNull();
+    expect(validateDesc(STANDARD, `${blanks}a1_2_`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(STANDARD, `_${blanks}1_2`)).toBe(descBadCharacter("_"));
+    expect(validateDesc(STANDARD, `${blanks}1_a2`)).toBe(descBadCharacter("a"));
+    expect(validateDesc(STANDARD, `${blanks}ab`)).toBe(descBadCharacter("b"));
+    expect(validateDesc(STANDARD, `${blanks}a1_0`)).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(STANDARD, `${blanks}a1_10`)).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(STANDARD, `${blanks}a1`)).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(STANDARD, `${blanks}d`)).toBe(DESC_TOO_LONG);
   });
 });
 
 describe("solo block-structure codec", () => {
-  it("encode and specToDsf are mutual inverses (partition preserved)", () => {
-    const cr = 9;
+  it("round-trips a jigsaw's blocks through encodeBlockStructureDesc and newState", () => {
+    const p: SoloParams = { ...STANDARD, c: 9, r: 1 };
     const orig = rectangularBlocks(3, 3); // any cr-region partition
-    const enc = encodeBlockStructureDesc(cr, orig);
-    const { dsf, error, next } = specToDsf(enc, 0, cr);
-    expect(error).toBeNull();
-    expect(next).toBe(enc.length);
-    const round = blocksFromDsf(dsf as Dsf, cr);
-    // The block *numbering* may differ; the *partition* must be identical.
-    const area = cr * cr;
-    for (let i = 0; i < area; i++)
-      for (let j = i + 1; j < area; j++)
-        expect(orig.whichblock[i] === orig.whichblock[j]).toBe(
-          round.whichblock[i] === round.whichblock[j],
-        );
+    const desc = `${encodeGrid(new Int8Array(81), 81)},${encodeBlockStructureDesc(9, orig)}`;
+    expectSamePartition(orig.whichblock, newState(p, desc).blocks.whichblock);
+  });
+
+  it("reads 'z' as the 25 non-edges the encoder writes it for", () => {
+    // Full-row cages: all 72 horizontal neighbors share a cage, a run long
+    // enough to be written with 'z'.
+    const whichblock = new Int32Array(81);
+    for (let i = 0; i < 81; i++) whichblock[i] = Math.floor(i / 9);
+    const rows = makeBlocksFromWhichblock(9, 9, whichblock);
+    const blocks = encodeBlockStructureDesc(9, rows);
+    expect(blocks).toContain("z");
+    const kgrid = new Int32Array(81);
+    for (let y = 0; y < 9; y++) kgrid[y * 9] = 45;
+    const desc = `${encodeGrid(new Int8Array(81), 81)},${blocks},${encodeGrid(kgrid, 81)}`;
+    expect(validateDesc(KILLER, desc)).toBeNull();
+    expectSamePartition(
+      whichblock,
+      newState(KILLER, desc).killerData?.kblocks.whichblock ?? new Int32Array(81),
+    );
+  });
+
+  it("refuses a section cut short, run on, or of the wrong blocks", () => {
+    const p: SoloParams = { ...STANDARD, c: 9, r: 1 };
+    const grid = encodeGrid(new Int8Array(81), 81);
+    const blocks = encodeBlockStructureDesc(9, rectangularBlocks(3, 3));
+    expect(validateDesc(p, `${grid},${blocks}`)).toBeNull();
+    expect(validateDesc(p, grid)).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, `${grid},${blocks.slice(0, -1)}`)).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, `${grid},${blocks}_`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, `${grid},${blocks},`)).toBe(DESC_TOO_LONG);
+    const oneBlock = encodeBlockStructureDesc(
+      9,
+      makeBlocksFromWhichblock(9, 1, new Int32Array(81)),
+    );
+    expect(validateDesc(p, `${grid},${oneBlock}`)).toMatch(/blocks or cages/);
+  });
+
+  it("bounds a cage sum by the most its digits can add to", () => {
+    const kblocks = rectangularBlocks(3, 3);
+    const kgrid = new Int32Array(81);
+    for (const cells of kblocks.blocks) kgrid[cells[0]] = 45;
+    const head = `${encodeGrid(new Int8Array(81), 81)},${encodeBlockStructureDesc(9, kblocks)}`;
+    expect(validateDesc(KILLER, `${head},${encodeGrid(kgrid, 81)}`)).toBeNull();
+    kgrid[0] = 46;
+    expect(validateDesc(KILLER, `${head},${encodeGrid(kgrid, 81)}`)).toBe(
+      DESC_OUT_OF_RANGE,
+    );
   });
 });
 
@@ -264,9 +331,7 @@ describe("solo desc assembly (validateDesc + newState)", () => {
     const cr = 9;
     const area = cr * cr;
     const grid = new Int8Array(area); // killer puzzles ship no givens
-    // Cages: compact 3×3 blocks (size 9 = cr, the max). A realistic cage
-    // partition keeps non-edge runs short; full-row cages would exercise the
-    // `'z'` run-overflow path the real generator never produces (see state.ts).
+    // Cages: compact 3×3 blocks (size 9 = cr, the max).
     const kblocks = rectangularBlocks(3, 3);
     const kgrid = new Int32Array(area);
     for (let b = 0; b < kblocks.nrBlocks; b++) kgrid[kblocks.blocks[b][0]] = 45; // sum 1..9

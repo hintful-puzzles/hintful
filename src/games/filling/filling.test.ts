@@ -89,6 +89,10 @@ describe("filling desc codec", () => {
     expect(validateDesc({ w: 3, h: 1 }, "1@2")).toBe(descBadCharacter("@"));
     expect(validateDesc({ w: 3, h: 1 }, "14a")).toBe(DESC_OUT_OF_RANGE);
   });
+
+  it("refuses a 0 clue, which would spell a blank a second way", () => {
+    expect(validateDesc({ w: 3, h: 1 }, "1a0")).toBe(DESC_OUT_OF_RANGE);
+  });
 });
 
 describe("filling generator + solver", () => {

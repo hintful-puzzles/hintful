@@ -8,6 +8,12 @@
  * together.
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -122,6 +128,22 @@ describe("undead validateDesc", () => {
     expect(validateDesc(params, "0,2,6")).not.toBeNull(); // no grid/sightings
     // A grid character that overfills.
     expect(validateDesc(params, desc.replace(/^(\d+,\d+,\d+,)/, "$1z"))).not.toBeNull();
+  });
+
+  it("reads exactly what the encoder writes", () => {
+    const params: UndeadParams = { w: 3, h: 3, diff: "normal" };
+    const v = (desc: string) => validateDesc(params, desc);
+    const sightings = ",0,0,0,0,0,0,0,0,0,0,0,0";
+    expect(v(`1,1,1,LRLRLRc${sightings}`)).toBeNull();
+    expect(v("1,1,1,LRLRLRc,0,,0,0,0,0,0,0,0,0,0,0")).toBe(descBadCharacter(","));
+    // A path crosses each of the 9 squares at most twice.
+    expect(v("1,1,1,LRLRLRc,19,0,0,0,0,0,0,0,0,0,0,0")).toBe(DESC_OUT_OF_RANGE);
+    expect(v(`1,1,1,LRLRLRd${sightings}`)).toBe(DESC_TOO_LONG);
+    expect(v(`1,1,1,LRc${sightings}`)).toBe(descBadCharacter(","));
+    expect(v(`1,1,2,LRLRLRc${sightings}`)).toMatch(/don't add up/);
+    expect(v(`1,1,1,LRLRLRc${sightings},`)).toBe(DESC_TOO_LONG);
+    expect(v(`1,1,1,LRLRLRc${sightings}x`)).toBe(DESC_TOO_LONG);
+    expect(v("1,1,1,LRLRLRc,0,0")).toBe(DESC_TOO_SHORT);
   });
 });
 

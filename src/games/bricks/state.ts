@@ -17,13 +17,14 @@
  * and cursor flags upstream ORs into the same word never reach state here.
  */
 
-import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import {
-  DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
@@ -239,72 +240,50 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 // --- desc codec (upstream validate_desc / new_game) -------------------------
 
-/**
- * Validate the run-length desc (upstream `validate_desc`): a digit run is a
- * clue on the current cell (rejected if > 7), a lowercase letter advances the
- * playable-cell count by `(c - 'a') + 1`, anything else is inert. The decoded
- * count must equal exactly `params.w × params.h`.
- *
- * Upstream also counts `A`–`Z` as runs here while its `new_game` ignores them,
- * so a hand-typed desc using one would build a board with every later clue
- * shifted. The branch is dropped rather than mirrored into {@link newState},
- * because the encoder never writes an uppercase letter.
- */
-export function validateDesc(p: BricksParams, desc: string): DescError | null {
-  const s = p.w * p.h;
-  let i = 0;
-  let pos = 0;
-  while (i < desc.length) {
-    const c = desc[i];
-    if (isDigit(c)) {
-      const n = parseLeadingInt(desc, i);
-      if (n.value > 7) return DESC_OUT_OF_RANGE;
-      i = n.next;
-      pos++;
-      continue;
-    }
-    if (c >= "a" && c <= "z") pos += c.charCodeAt(0) - 97 + 1;
-    i++;
-  }
-  if (pos < s) return DESC_TOO_SHORT;
-  if (pos > s) return DESC_TOO_LONG;
-  return null;
+/** Whether `c` is a run letter: `a`–`z` for 1–26 blank cells. */
+function isRunLetter(c: string): boolean {
+  return c >= "a" && c <= "z";
 }
 
-/** Decode a validated desc into a fresh state (upstream `new_game`). Walks
- * the padded grid, skipping `F_BOUND` cells, filling clue numbers and leaving
- * blank runs as `F_EMPTY`. */
-export function newState(p: BricksParams, desc: string): BricksState {
+/**
+ * Read the desc {@link encodeDesc} writes over the playable cells in reading
+ * order, `F_BOUND` padding skipped: clues `0..7`, run letters for blanks, and
+ * a `_` exactly between two adjacent clues.
+ */
+function parseDesc(p: BricksParams, desc: string): DescParse<BricksState> {
   const { w, h } = gridSize(p);
-  const grid = new Uint16Array(w * h);
-  applyBounds(w, h, grid);
+  return readDesc(desc, (r) => {
+    const grid = new Uint16Array(w * h);
+    applyBounds(w, h, grid);
+    const playable: number[] = [];
+    for (let i = 0; i < w * h; i++) if (grid[i] !== F_BOUND) playable.push(i);
 
-  let i = 0; // padded-grid index
-  let j = 0; // blank-run cells still to skip
-  let dp = 0; // desc position
-  while (dp < desc.length) {
-    if (grid[i] === F_BOUND) {
-      i++;
-      continue;
+    let k = 0;
+    let afterClue = false;
+    while (k < playable.length) {
+      if (r.peekIs(isRunLetter)) {
+        k += r.char().charCodeAt(0) - 97 + 1;
+        if (k > playable.length) r.fail(DESC_TOO_LONG);
+        afterClue = false;
+      } else {
+        if (afterClue) r.expect("_");
+        grid[playable[k++]] = r.int(0, 7);
+        afterClue = true;
+      }
     }
-    if (j > 0) {
-      i++;
-      j--;
-      continue;
-    }
-    const c = desc[dp];
-    if (isDigit(c)) {
-      const n = parseLeadingInt(desc, dp);
-      grid[i] = n.value;
-      dp = n.next;
-      j++; // step past the clue on the next iteration
-      continue;
-    }
-    if (c >= "a" && c <= "z") j += c.charCodeAt(0) - 97 + 1;
-    dp++;
-  }
+    r.end();
+    return { w, h, pw: p.w, grid };
+  });
+}
 
-  return { w, h, pw: p.w, grid };
+export function validateDesc(p: BricksParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
+}
+
+/** Build a fresh state from a desc (upstream `new_game`): clue numbers on
+ * their cells, every other playable cell `F_EMPTY`. */
+export function newState(p: BricksParams, desc: string): BricksState {
+  return descValue(parseDesc(p, desc));
 }
 
 /**

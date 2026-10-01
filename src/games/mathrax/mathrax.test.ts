@@ -59,7 +59,6 @@ import {
   F_IMMUTABLE,
   FE_COUNT,
   FE_ERRORMASK,
-  loadGame,
   type MathraxDiff,
   type MathraxMove,
   type MathraxParams,
@@ -221,20 +220,44 @@ describe("mathrax desc codec", () => {
     const clues = new Int32Array(4);
     clues[0] = CLUE_SUB | setClueNum(0);
     expect(encodeDesc(3, new Uint8Array(9), clues)).toBe("i,S0c");
-    const back = loadGame({ o: 3, diff: "easy", options: OPTIONSMASK }, "i,S0c");
-    expect(back.ok && clueType(back.value.clues[0])).toBe(CLUE_SUB);
-    expect(back.ok && clueNum(back.value.clues[0])).toBe(0);
+    const back = newState({ o: 3, diff: "easy", options: OPTIONSMASK }, "i,S0c");
+    expect(clueType(back.clues[0])).toBe(CLUE_SUB);
+    expect(clueNum(back.clues[0])).toBe(0);
   });
 
   it("rejects the descriptions upstream rejects", () => {
     const p: MathraxParams = { o: 3, diff: "easy", options: OPTIONSMASK };
     expect(validateDesc(p, "1231231231,c")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(p, "12345678,d")).toBe(DESC_OUT_OF_RANGE); // 8 > o
+    expect(validateDesc(p, "12345678,d")).toBe(DESC_OUT_OF_RANGE); // 4 > o
     expect(validateDesc(p, "12?,d")).toBe(descBadCharacter("?"));
     expect(validateDesc(p, "12,d")).toBe(DESC_TOO_SHORT);
     expect(validateDesc(p, "i,A100")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(p, "i,A1")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, "i,A2")).toBe(DESC_TOO_SHORT);
     expect(validateDesc(p, "i,dA1")).toBe(DESC_TOO_LONG);
+  });
+
+  it("refuses what the encoder never writes", () => {
+    const p: MathraxParams = { o: 3, diff: "easy", options: OPTIONSMASK };
+    expect(validateDesc(p, "i,d")).toBeNull();
+    // A run past either part, and anything after the clues.
+    expect(validateDesc(p, "j,d")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, "i,e")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, "i,d!")).toBe(DESC_TOO_LONG);
+    // A character the clue part has no use for, where upstream skipped it.
+    expect(validateDesc(p, "i,c!E")).toBe(descBadCharacter("!"));
+    // An empty desc, an empty grid part, and a missing clue part.
+    expect(validateDesc(p, "")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, ",d")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, "i")).toBe(DESC_TOO_SHORT);
+    // An arithmetic clue without its number, and a parity clue with one.
+    expect(validateDesc(p, "i,Ac")).toBe(descBadCharacter("c"));
+    expect(validateDesc(p, "i,E5c")).toBe(descBadCharacter("5"));
+    // A number no two of the board's digits can make.
+    expect(validateDesc(p, "i,A7c")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, "i,S3c")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, "i,M10c")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, "i,D1c")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, "i,A6S2M9D3")).toBeNull();
   });
 });
 

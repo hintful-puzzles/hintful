@@ -15,15 +15,19 @@
  * guarantee.
  */
 
-import { digitValue, isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import { digitValue, isDigit } from "../../engine/decimal.ts";
 import {
+  DESC_CONTRADICTORY,
   DESC_OUT_OF_RANGE,
   DESC_REPEATED,
   DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
+  type DescParse,
   descBadCharacter,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import { dimensionParamConfig } from "../../engine/params.ts";
 import { dims, flag, paramsCodec } from "../../engine/params-codec.ts";
@@ -300,129 +304,85 @@ export function nextInRun(
  */
 export const MAX_NUMBER_LENGTH = 9;
 
-/** What {@link readDesc} found wrong with a desc, if anything. Upstream's
- * `crossing_read_desc` folds the first three into two, reporting a character
- * it cannot read as "too long". */
-export type DescVerdict =
-  | "valid"
-  | "too-short"
-  | "too-long"
-  | "bad-character"
-  | "duplicate"
-  | "number";
+const isRunLetter = (c: string): boolean => c >= "a" && c <= "z";
 
 /**
  * Decode `<walls>,<num>,<num>,…`.
  *
  * The wall section is a run-length encoding in which a **decimal number** is a
  * run of that many *open* cells and a **letter** `a`–`z` a run of `1`–`26`
- * *wall* cells; the two kinds alternate over the row-major cell order. The
- * number list is the clue numbers as decimal digits, comma-separated, and is
- * stored sorted (see {@link compareNumbers}).
- *
- * Deliberately as lenient as upstream, whose own TODO list names the checks it
- * omits: a *too short* description and invalid digit characters (e.g. `0`) are
- * **not** rejected. Numbers shorter than two digits are silently dropped.
+ * *wall* cells, a longer wall run being split into letters; the kinds
+ * alternate over the row-major cell order. The number list is one number per
+ * run, as its digits `1`–`9`, comma-separated, and is stored sorted (see
+ * {@link compareNumbers}).
  */
-export function readDesc(
-  p: CrossingParams,
-  desc: string,
-): { walls: Uint8Array; numbers: CrossingNumber[]; verdict: DescVerdict } {
+function parseDesc(p: CrossingParams, desc: string): DescParse<CrossingPuzzle> {
   const { w, h } = p;
-  const walls = new Uint8Array(w * h);
-  let verdict: DescVerdict = "valid";
-
-  // `wallRun` counts pending wall cells (from a letter), `openRun` pending open
-  // cells (from a decimal).
-  let wallRun = 0;
-  let openRun = 0;
-  let at = 0;
-  for (let i = 0; i < w * h; i++) {
-    if (wallRun === 0 && openRun === 0) {
-      const c = desc[at];
-      if (at < desc.length && isDigit(c)) {
-        const parsed = parseLeadingInt(desc, at);
-        openRun = parsed.value;
-        at = parsed.next;
-      } else if (c !== undefined && c >= "a" && c <= "z") {
-        wallRun = c.charCodeAt(0) - 96; // 'a' = 1 … 'z' = 26
-        at++;
+  const wh = w * h;
+  return readDesc(desc, (r) => {
+    const walls = new Uint8Array(wh);
+    let i = 0;
+    while (i < wh) {
+      if (r.peekIs(isRunLetter)) {
+        const run = r.char().charCodeAt(0) - 96;
+        if (i + run > wh) r.fail(DESC_TOO_LONG);
+        walls.fill(1, i, i + run);
+        i += run;
       } else {
-        // The wall section ran out before the board did, if the cursor sits
-        // on the ','; anything else is judged below.
-        verdict = "too-short";
+        i += r.int(1, wh);
+        if (i > wh) r.fail(DESC_TOO_LONG);
       }
     }
-    if (wallRun > 0) {
-      walls[i] = 1;
-      wallRun--;
-    } else if (openRun > 0) {
-      openRun--;
+    if (r.peekIs((c) => isDigit(c) || isRunLetter(c))) r.fail(DESC_TOO_LONG);
+    r.expect(",");
+
+    const numbers: CrossingNumber[] = [];
+    const digit = (): number => {
+      const c = r.char();
+      const d = digitValue(c);
+      if (d === null || d === 0) return r.fail(descBadCharacter(c));
+      return d;
+    };
+    do {
+      const number = [digit()];
+      while (r.peekIs(isDigit)) number.push(digit());
+      // A run needs two cells, and the format admits nine digits.
+      if (number.length < 2 || number.length > MAX_NUMBER_LENGTH)
+        r.fail(DESC_OUT_OF_RANGE);
+      numbers.push(number);
+    } while (r.accept(","));
+    r.end();
+
+    numbers.sort(compareNumbers);
+    for (let k = 0; k < numbers.length - 1; k++) {
+      if (compareNumbers(numbers[k], numbers[k + 1]) === 0) r.fail(DESC_REPEATED);
     }
-  }
-
-  // The cursor stops short of the ',' on more cell data than the board holds,
-  // on a character no run starts with, or at the end of a desc with no
-  // number section.
-  if (desc[at] !== ",") {
-    const c = desc[at];
-    const stop: DescVerdict =
-      c === undefined
-        ? "too-short"
-        : isDigit(c) || (c >= "a" && c <= "z")
-          ? "too-long"
-          : "bad-character";
-    return { walls, numbers: [], verdict: stop };
-  }
-  at++;
-
-  const numbers: CrossingNumber[] = [];
-  let end = at;
-  while (at < desc.length) {
-    end = parseLeadingInt(desc, end).next;
-    end++; // step over the ',' (or, on the last number, the terminator)
-    const len = end - (at + 1);
-    if (len > MAX_NUMBER_LENGTH) verdict = "number";
-    if (len >= 2) {
-      const digits = Array.from(desc.slice(at, at + len), digitValue);
-      // `len` spans exactly the run `parseLeadingInt` stopped at, so a
-      // non-digit here is a broken scan rather than a bad desc.
-      if (!digits.every((d) => d !== null)) {
-        throw new Error("crossing: a digit run held a non-digit");
-      }
-      numbers.push(digits);
-    }
-    at = end;
-  }
-
-  numbers.sort(compareNumbers);
-  for (let i = 0; i < numbers.length - 1; i++) {
-    if (compareNumbers(numbers[i], numbers[i + 1]) === 0) verdict = "duplicate";
-  }
-
-  return { walls, numbers, verdict };
+    const puzzle = makePuzzle(w, h, walls, numbers);
+    const runLengths = puzzle.runs.map((run) => run.cells.length).sort((a, b) => a - b);
+    if (
+      runLengths.length !== numbers.length ||
+      runLengths.some((len, k) => len !== numbers[k].length)
+    )
+      r.fail(DESC_CONTRADICTORY);
+    return puzzle;
+  });
 }
 
 export function validateDesc(p: CrossingParams, desc: string): DescError | null {
-  switch (readDesc(p, desc).verdict) {
-    case "too-short":
-      return DESC_TOO_SHORT;
-    case "too-long":
-      return DESC_TOO_LONG;
-    case "bad-character":
-      // Every character before the one the cursor stopped on started a run.
-      return descBadCharacter(/[^0-9a-z]/.exec(desc)?.[0]);
-    case "duplicate":
-      return DESC_REPEATED;
-    case "number":
-      return DESC_OUT_OF_RANGE;
-    default:
-      return null;
-  }
+  return descVerdict(parseDesc(p, desc));
 }
 
-/** The exact inverse of {@link readDesc}'s wall section plus the `,`-joined
- * number list — upstream's `new_game_desc` tail. */
+/** A wall run as letters, `z` (26) at a time, the way {@link parseDesc} reads
+ * consecutive letters. */
+function wallLetters(run: number): string {
+  return (
+    "z".repeat(Math.floor((run - 1) / 26)) + String.fromCharCode(97 + ((run - 1) % 26))
+  );
+}
+
+/** The exact inverse of {@link parseDesc}'s wall section plus the `,`-joined
+ * number list — upstream's `new_game_desc` tail, with wall runs over 26 split
+ * where upstream would write a character past `z`. */
 export function encodeDesc(
   w: number,
   h: number,
@@ -437,14 +397,14 @@ export function encodeDesc(
       out += String(openRun);
       openRun = 0;
     } else if (!walls[i] && wallRun > 0) {
-      out += String.fromCharCode(96 + wallRun);
+      out += wallLetters(wallRun);
       wallRun = 0;
     }
     if (walls[i]) wallRun++;
     else openRun++;
   }
   if (openRun > 0) out += String(openRun);
-  if (wallRun > 0) out += String.fromCharCode(96 + wallRun);
+  if (wallRun > 0) out += wallLetters(wallRun);
 
   // Upstream writes the ',' then every number with a trailing comma, then backs
   // up one character — so a (constructively unreachable) empty list yields no
@@ -467,10 +427,9 @@ export interface CrossingState {
 }
 
 export function newState(p: CrossingParams, desc: string): CrossingState {
-  const { walls, numbers } = readDesc(p, desc);
   return {
     params: p,
-    puzzle: makePuzzle(p.w, p.h, walls, numbers),
+    puzzle: descValue(parseDesc(p, desc)),
     grid: new Uint8Array(p.w * p.h),
     pencil: new Int32Array(p.w * p.h),
   };

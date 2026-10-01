@@ -20,11 +20,13 @@ import {
 import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import {
   DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
   puzzleDescError,
 } from "../../engine/desc-error.ts";
+import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -193,55 +195,30 @@ export function encodeBlockStructure(w: number, dsf: Dsf): string {
 }
 
 /**
- * Rebuild the cage dsf from the block-structure prefix of `desc`. Returns
- * `{ error, next }` where `next` is the index of the comma (or end) following
- * the block structure. Faithful to `parse_block_structure`.
+ * Read the block structure {@link encodeBlockStructure} writes into `dsf`:
+ * run letters, each optionally followed by a repeat count of at least 3 (two
+ * repeats are written as the letter twice), up to the terminating virtual edge.
  */
-function parseBlockStructure(
-  desc: string,
-  w: number,
-  dsf: Dsf,
-): { error: DescError | null; next: number } {
-  let i = 0;
-  let pos = 0;
-  let repc = 0;
-  let repn = 0;
+function readBlockStructure(r: DescReader, w: number, dsf: Dsf): void {
   const total = 2 * w * (w - 1);
-  dsf.reinit();
-
-  while (i < desc.length && (repn > 0 || desc[i] !== ",")) {
-    let c: number;
-    if (repn > 0) {
-      repn--;
-      c = repc;
-    } else if (desc[i] === "_" || (desc[i] >= "a" && desc[i] <= "z")) {
-      c = desc[i] === "_" ? 0 : desc.charCodeAt(i) - 97 + 1;
-      i++;
-      if (i < desc.length && isDigit(desc[i])) {
-        const count = parseLeadingInt(desc, i);
-        i = count.next;
-        repc = c;
-        repn = count.value - 1;
+  let pos = 0;
+  while (pos < total + 1) {
+    const letter = r.char((c) => c === "_" || (c >= "a" && c <= "z"));
+    const run = letter === "_" ? 0 : letter.charCodeAt(0) - 96;
+    const repeats = r.peekIs(isDigit) ? r.int(3, total + 1) : 1;
+    for (let k = 0; k < repeats; k++) {
+      for (let c = run; c > 0; c--) {
+        if (pos >= total) r.fail(DESC_TOO_LONG);
+        dsf.merge(...edgeCells(pos, w));
+        pos++;
       }
-    } else {
-      return { error: descBadCharacter(desc[i]), next: i };
-    }
-
-    const adv = c !== 25; // 'z' is the special "no following edge" case.
-
-    while (c-- > 0) {
-      if (pos >= total) return { error: DESC_TOO_LONG, next: i };
-      dsf.merge(...edgeCells(pos, w));
-      pos++;
-    }
-    if (adv) {
-      pos++;
-      if (pos > total + 1) return { error: DESC_TOO_LONG, next: i };
+      // 'z' is the run of 25 with no following edge.
+      if (run !== 25) {
+        pos++;
+        if (pos > total + 1) r.fail(DESC_TOO_LONG);
+      }
     }
   }
-
-  if (pos !== total + 1) return { error: DESC_TOO_SHORT, next: i };
-  return { error: null, next: i };
 }
 
 // --- clues -----------------------------------------------------------------
@@ -288,55 +265,54 @@ export const LETTER_OF_OP: Record<number, string> = {
 };
 const OP_OF_LETTER: Record<string, number> = { a: C_ADD, m: C_MUL, s: C_SUB, d: C_DIV };
 
-export function validateDesc(p: KeenParams, desc: string): DescError | null {
+/** The largest value a clue with operation `op` can have on a cage of `size`
+ * cells of a `w`-wide board. */
+function clueMax(op: number, size: number, w: number): number {
+  if (op === C_ADD) return size * w;
+  if (op === C_MUL) return Math.min(w ** size, C_MUL - 1);
+  if (op === C_SUB) return w - 1;
+  return w;
+}
+
+/** The block structure, a comma, then each cage's clue (an operation letter
+ * and its value) in the order of the cages' minimal cells. */
+function parseDesc(p: KeenParams, desc: string): DescParse<KeenClues> {
   const w = p.w;
   const a = w * w;
-  const dsf = new Dsf(a);
-  const { error, next } = parseBlockStructure(desc, w, dsf);
-  if (error) return error;
-  // The block structure ends only at a comma or at the end of the desc.
-  if (desc[next] !== ",") return DESC_TOO_SHORT;
-
-  let i = next + 1;
-  const minimal = buildMinimal(dsf, a);
-  for (let cell = 0; cell < a; cell++) {
-    if (minimal[cell] !== cell) continue;
-    if (i >= desc.length) return DESC_TOO_SHORT;
-    const op = OP_OF_LETTER[desc[i]];
-    if (op === undefined) return descBadCharacter(desc[i]);
-    if ((op === C_SUB || op === C_DIV) && dsf.size(cell) !== 2) {
-      return puzzleDescError(
-        "This game ID gives a subtraction or division clue to a block that isn't two cells.",
-      );
+  return readDesc(desc, (r) => {
+    const dsf = new Dsf(a);
+    readBlockStructure(r, w, dsf);
+    r.expect(",");
+    const minimal = buildMinimal(dsf, a);
+    const clues = new Int32Array(a);
+    for (let cell = 0; cell < a; cell++) {
+      if (minimal[cell] !== cell) continue;
+      const op = OP_OF_LETTER[r.char((c) => Object.hasOwn(OP_OF_LETTER, c))];
+      const size = dsf.size(cell);
+      if ((op === C_SUB || op === C_DIV) && size !== 2) {
+        r.fail(
+          puzzleDescError(
+            "This game ID gives a subtraction or division clue to a block that isn't two cells.",
+          ),
+        );
+      }
+      // Two different digits differ by at least 1, and divide to at least 2.
+      clues[cell] = op | r.int(op === C_DIV ? 2 : 1, clueMax(op, size, w));
     }
-    i = parseLeadingInt(desc, i + 1).next;
-  }
-  if (i < desc.length) return DESC_TOO_LONG;
-  return null;
+    r.end();
+    return { w, dsf, minimal, clues };
+  });
+}
+
+export function validateDesc(p: KeenParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: KeenParams, desc: string): KeenState {
-  const w = p.w;
-  const a = w * w;
-  const dsf = new Dsf(a);
-  const { next } = parseBlockStructure(desc, w, dsf);
-  const minimal = buildMinimal(dsf, a);
-
-  // `next` points at the comma.
-  let i = next + 1;
-  const clues = new Int32Array(a);
-  for (let cell = 0; cell < a; cell++) {
-    if (minimal[cell] !== cell) continue;
-    const op = OP_OF_LETTER[desc[i]];
-    if (op === undefined) throw new Error("keen: bad description in newState");
-    const value = parseLeadingInt(desc, i + 1);
-    i = value.next;
-    clues[cell] = op | value.value;
-  }
-
+  const a = p.w * p.w;
   return {
     params: p,
-    clues: { w, dsf, minimal, clues },
+    clues: descValue(parseDesc(p, desc)),
     grid: new Int8Array(a),
     pencil: new Int32Array(a),
   };

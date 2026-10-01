@@ -25,8 +25,11 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import type { Point } from "../../engine/types.ts";
@@ -338,91 +341,99 @@ interface LoadResult {
   clues: Int32Array;
 }
 
+/** `a`..`z`: a run of 1..26 empty entries. */
+function isRunLetter(c: string): boolean {
+  return c >= "a" && c <= "z";
+}
+
+/** A grid given's character: `1`..`9` (the board's own bound comes after). */
+function isGivenDigit(c: string): boolean {
+  const d = digitValue(c);
+  return d !== null && d >= 1;
+}
+
+function isClueLetter(c: string): boolean {
+  return CLUE_LETTERS.indexOf(c) > 0;
+}
+
 /**
- * Decode `desc` into the given/clue arrays, or return why it was rejected. The
- * exact inverse of {@link encodeDesc}, and a faithful port of
- * `load_game` — including its two quirks: a run may push the position past the
- * end without complaint (the bound is only checked before the *next* character),
- * and a character in the clue part that is neither `a`..`z` nor `A`..`Z` is
- * silently ignored rather than rejected.
+ * The numbers an arithmetic clue of `type` can show on an `o × o` board: a sum
+ * or product of two digits, a difference (`0` the equality clue), or a whole
+ * quotient other than 1.
  */
-export function loadGame(
-  p: MathraxParams,
-  desc: string,
-): { ok: true; value: LoadResult } | { ok: false; error: DescError } {
+function clueNumRange(type: number, o: number): [number, number] {
+  if (type === CLUE_ADD) return [2, 2 * o];
+  if (type === CLUE_SUB) return [0, o - 1];
+  if (type === CLUE_MUL) return [1, o * o];
+  return [2, o];
+}
+
+/** Read a run letter of at most `room` entries, or nothing; how many it covers. */
+function readRun(r: DescReader, room: number): number {
+  if (!r.peekIs(isRunLetter)) return 0;
+  const run = r.char().charCodeAt(0) - 96;
+  if (run > room) r.fail(DESC_TOO_LONG);
+  return run;
+}
+
+/**
+ * Read a description, which is exactly what {@link encodeDesc} writes: the
+ * `o²` grid givens, a `,`, then the `(o−1)²` clues, each part covering its
+ * entries exactly and a letter `a`..`z` standing for a run of empty ones.
+ * Every number is held to what the board can show.
+ */
+function parseDesc(p: MathraxParams, desc: string): DescParse<LoadResult> {
   const o = p.o;
   const s = o * o;
-  const co = o - 1;
-  const cs = co * co;
+  const cs = (o - 1) * (o - 1);
+  return readDesc(desc, (r) => {
+    const grid = new Uint8Array(s);
+    const flags = new Uint8Array(s);
+    const clues = new Int32Array(cs);
 
-  const grid = new Uint8Array(s);
-  const flags = new Uint8Array(s);
-  const clues = new Int32Array(cs);
-
-  let i = 0;
-  let pos = 0;
-  while (i < desc.length && desc[i] !== ",") {
-    const c = desc[i++];
-    let d = 0;
-    if (pos >= s) return { ok: false, error: DESC_TOO_LONG };
-
-    const digit = digitValue(c);
-    if (c >= "a" && c <= "z") pos += c.charCodeAt(0) - 97 + 1;
-    // `0` is not a clue here: the grid holds `1..order`.
-    else if (digit !== null && digit >= 1) d = digit;
-    else return { ok: false, error: descBadCharacter(c) };
-
-    if (d > 0 && d <= o) {
-      flags[pos] |= F_IMMUTABLE;
-      grid[pos] = d;
-      pos++;
-    } else if (d > o) {
-      return { ok: false, error: DESC_OUT_OF_RANGE };
-    }
-  }
-
-  if (pos > 0 && pos < s) return { ok: false, error: DESC_TOO_SHORT };
-
-  if (desc[i] === ",") {
-    i++;
-    pos = 0;
-    while (i < desc.length) {
-      if (pos >= cs) return { ok: false, error: DESC_TOO_LONG };
-      const c = desc[i++];
-
-      if (c >= "a" && c <= "z") pos += c.charCodeAt(0) - 97 + 1;
-      if (c >= "A" && c <= "Z") {
-        const type = CLUE_LETTERS.indexOf(c);
-        if (type < 0) return { ok: false, error: descBadCharacter(c) };
-        const r = parseLeadingInt(desc, i);
-        i = r.next;
-        const value = r.value;
-        if (value > 99) return { ok: false, error: DESC_OUT_OF_RANGE };
-        clues[pos++] = type | setClueNum(value);
+    for (let pos = 0; pos < s; ) {
+      if (r.peek() === ",") r.fail(DESC_TOO_SHORT);
+      const run = readRun(r, s - pos);
+      if (run) {
+        pos += run;
+        continue;
       }
-      // Anything else is silently skipped, exactly as upstream.
+      const d = digitValue(r.char(isGivenDigit)) ?? 0;
+      if (d > o) r.fail(DESC_OUT_OF_RANGE);
+      flags[pos] |= F_IMMUTABLE;
+      grid[pos++] = d;
     }
+    // Another given where the `,` belongs is a grid with one too many.
+    if (r.peekIs((c) => isRunLetter(c) || isGivenDigit(c))) r.fail(DESC_TOO_LONG);
+    r.expect(",");
 
-    if (pos > 0 && pos < cs) return { ok: false, error: DESC_TOO_SHORT };
-  }
-
-  return { ok: true, value: { grid, flags, clues } };
+    for (let pos = 0; pos < cs; ) {
+      const run = readRun(r, cs - pos);
+      if (run) {
+        pos += run;
+        continue;
+      }
+      const type = CLUE_LETTERS.indexOf(r.char(isClueLetter));
+      const n = type <= CLUE_DIV ? r.int(...clueNumRange(type, o)) : 0;
+      clues[pos++] = type | setClueNum(n);
+    }
+    r.end();
+    return { grid, flags, clues };
+  });
 }
 
 export function validateDesc(p: MathraxParams, desc: string): DescError | null {
-  const r = loadGame(p, desc);
-  return r.ok ? null : r.error;
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: MathraxParams, desc: string): MathraxState {
-  const r = loadGame(p, desc);
-  if (!r.ok) throw new Error(`mathrax: ${r.error}`);
+  const { grid, flags, clues } = descValue(parseDesc(p, desc));
   return {
     params: p,
-    grid: r.value.grid,
-    flags: r.value.flags,
+    grid,
+    flags,
     pencil: new Int32Array(p.o * p.o),
-    clues: r.value.clues,
+    clues,
   };
 }
 

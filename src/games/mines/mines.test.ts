@@ -8,7 +8,12 @@
  * and the change id is a citation the gate can resolve.
  */
 import { describe, expect, it } from "vitest";
-import { DESC_TOO_LONG, DESC_TOO_SHORT } from "../../engine/desc-error.ts";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descBadCharacter,
+} from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { paramsError } from "../../engine/params.ts";
 import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/pointer.ts";
@@ -128,7 +133,8 @@ describe("mines desc", () => {
 
   it("decodes r-form to a null (not-yet-generated) layout", () => {
     const p = decodeParams("9x9n10");
-    const { layout, openXY } = decodeDesc(p, "r10,u,00");
+    const { desc } = minesGame.newDesc(p, randomNew("desc-seed"));
+    const { layout, openXY } = decodeDesc(p, desc);
     expect(layout.mines).toBeNull();
     expect(layout.n).toBe(10);
     expect(layout.unique).toBe(true);
@@ -152,8 +158,39 @@ describe("mines desc", () => {
 
   it("rejects a wrong-length desc", () => {
     const p = decodeParams("9x9n10");
-    expect(validateDesc(p, "4,4,mtooshort")).toBe(DESC_TOO_SHORT);
+    expect(validateDesc(p, "4,4,mtooshort")).toBe(descBadCharacter("t"));
+    expect(validateDesc(p, `4,4,m${"0".repeat(20)}`)).toBe(DESC_TOO_SHORT);
     expect(validateDesc(p, `4,4,m${"0".repeat(22)}`)).toBe(DESC_TOO_LONG);
+  });
+
+  it("reads the layout exactly as the encoder writes it", () => {
+    const p = decodeParams("3x3n1");
+    expect(validateDesc(p, "1,1,u800")).toBeNull();
+    // The ninth bit is the last nibble's high bit; the other three are padding.
+    expect(validateDesc(p, "u801")).toBe(descBadCharacter("1"));
+    expect(validateDesc(p, "uA00")).toBe(descBadCharacter("A"));
+    // A layout without its `m` or `u`.
+    expect(validateDesc(p, "a00")).toBe(descBadCharacter("a"));
+    expect(validateDesc(p, "3,1,u800")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, "1,3,u800")).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, "1,1u800")).toBe(descBadCharacter("u"));
+  });
+
+  it("reads the r-form's RNG state exactly as the encoder writes it", () => {
+    const p = decodeParams("9x9n10");
+    const { desc } = minesGame.newDesc(p, randomNew("desc-seed"));
+    expect(validateDesc(p, `${desc}x`)).toBe(descBadCharacter("x"));
+    expect(validateDesc(p, `${desc}0`)).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, desc.slice(0, -1))).toBe(DESC_TOO_SHORT);
+    // The last byte is the read position, at most 20.
+    expect(validateDesc(p, `${desc.slice(0, -2)}ff`)).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, desc.replace(",u,", ",x,"))).toBe(descBadCharacter("x"));
+    const letter = desc.slice(6).search(/[a-f]/) + 6;
+    const upper = desc[letter].toUpperCase();
+    expect(letter).toBeGreaterThanOrEqual(6);
+    expect(
+      validateDesc(p, `${desc.slice(0, letter)}${upper}${desc.slice(letter + 1)}`),
+    ).toBe(descBadCharacter(upper));
   });
 });
 
@@ -230,6 +267,22 @@ describe("mines supersede + midend", () => {
     h.m.playMoves([openMove(4, 4)]);
     // …and after the first open it names the real board (x,y + masked layout).
     expect(h.gameId()).toMatch(/^9x9:4,4,m[0-9a-f]+$/);
+  });
+
+  it("validates both descs supersededDesc writes", () => {
+    const p = decodeParams("9x9n10");
+    const h = fresh(seedId("9x9n10", "sup-valid"));
+    h.m.playMoves([openMove(4, 4)]);
+    const publicDesc = (h.gameId() ?? "").replace(/^[^:]*:/, "");
+    const { privDesc } = decodeSave(h.m.saveGame());
+    expect(publicDesc).toMatch(/^4,4,m/);
+    expect(validateDesc(p, publicDesc)).toBeNull();
+    expect(privDesc).toMatch(/^m/);
+    expect(validateDesc(p, privDesc ?? "")).toBeNull();
+    const pub = decodeDesc(p, publicDesc).layout.mines;
+    const priv = decodeDesc(p, privDesc ?? "").layout.mines;
+    expect(Array.from(pub ?? []).reduce((a, b) => a + b, 0)).toBe(10);
+    expect(Array.from(priv ?? [])).toEqual(Array.from(pub ?? []));
   });
 
   it("does NOT reroll the layout after undo + click elsewhere (design D1)", () => {

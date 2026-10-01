@@ -12,7 +12,9 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
+  descValue,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import type { GridDot } from "../../engine/grid/index.ts";
 import { presetMenu, type TitledPresetMenu } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -39,7 +41,6 @@ import {
   AF_FIXED,
   AF_OFF,
   autofollowEdges,
-  decodeClues,
   encodeClues,
   forcedRuleOuts,
   LINE_NO,
@@ -50,11 +51,23 @@ import {
   NO_CLUE,
   newState,
   opp,
+  readClues,
   textFormat,
   validateDesc,
 } from "./state.ts";
 
 const squareParams = (w = 4, h = 4, diff = DIFF_EASY) => ({ w, h, diff, type: 0 });
+
+/** The clue part of a description alone, read over `numFaces` faces. */
+function decodeClues(clueDesc: string, numFaces: number): Int8Array {
+  return descValue(
+    readDesc(clueDesc, (r) => {
+      const clues = readClues(r, numFaces);
+      r.end();
+      return clues;
+    }),
+  );
+}
 
 /** A blank state over a freshly built grid, with no clues. */
 function blankState(w = 4, h = 4, type = 0): LoopyState {
@@ -159,6 +172,12 @@ describe("clue description codec", () => {
     expect(validateDesc(p, "z")).toBe(DESC_TOO_LONG); // a run of 26
     expect(validateDesc(p, "p")).toBeNull(); // 'p' is a run of 16
     expect(validateDesc(p, "!!!")).toBe(descBadCharacter("!"));
+    // A run past the last face, anything after it, and a character past `z`
+    // that upstream would have read as a run.
+    expect(validateDesc(p, "oc")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, "p0")).toBe(DESC_TOO_LONG);
+    expect(validateDesc(p, "{")).toBe(descBadCharacter("{"));
+    expect(validateDesc(p, "3o")).toBeNull();
   });
 });
 

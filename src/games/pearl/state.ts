@@ -9,8 +9,12 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   type DescError,
+  type DescParse,
   descBadCharacter,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { difficultyItem, tierNames } from "../../engine/difficulty.ts";
 import type { ParamConfigItem, PresetMenu } from "../../engine/game.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
@@ -169,17 +173,27 @@ export function encodeClues(clues: Uint8Array, sz: number): string {
   );
 }
 
-export function validateDesc(p: PearlParams, desc: string): DescError | null {
+/** Each cell's clue: `CORNER` for `B`, `STRAIGHT` for `W`, else `NOCLUE`. */
+function parseDesc(p: PearlParams, desc: string): DescParse<Uint8Array> {
   const total = p.w * p.h;
-  let sizeSoFar = 0;
-  for (const tok of scanRunLength(desc)) {
-    if ("blanks" in tok) sizeSoFar += tok.blanks;
-    else if (tok.value === "B" || tok.value === "W") sizeSoFar++;
-    else return descBadCharacter(tok.value);
-  }
-  if (sizeSoFar > total) return DESC_TOO_LONG;
-  if (sizeSoFar < total) return DESC_TOO_SHORT;
-  return null;
+  return readDesc(desc, (r) => {
+    // NOCLUE is 0, so a blank run just advances past cells already holding it.
+    const clues = new Uint8Array(total);
+    let sizeSoFar = 0;
+    for (const tok of scanRunLength(r.rest())) {
+      if ("blanks" in tok) sizeSoFar += tok.blanks;
+      else if (tok.value === "B") clues[sizeSoFar++] = CORNER;
+      else if (tok.value === "W") clues[sizeSoFar++] = STRAIGHT;
+      else r.fail(descBadCharacter(tok.value));
+    }
+    if (sizeSoFar > total) r.fail(DESC_TOO_LONG);
+    if (sizeSoFar < total) r.fail(DESC_TOO_SHORT);
+    return clues;
+  });
+}
+
+export function validateDesc(p: PearlParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
 }
 
 // --- state -----------------------------------------------------------------
@@ -198,14 +212,7 @@ export interface PearlState {
 
 export function newState(p: PearlParams, desc: string): PearlState {
   const sz = p.w * p.h;
-  const clues = new Uint8Array(sz);
-  let j = 0;
-  for (const tok of scanRunLength(desc)) {
-    // NOCLUE is 0, so a blank run just advances past cells already holding it.
-    if ("blanks" in tok) j += tok.blanks;
-    else if (tok.value === "B") clues[j++] = CORNER;
-    else if (tok.value === "W") clues[j++] = STRAIGHT;
-  }
+  const clues = descValue(parseDesc(p, desc));
   return {
     w: p.w,
     h: p.h,

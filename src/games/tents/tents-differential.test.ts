@@ -17,7 +17,7 @@ import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/tents-c-reference.json" with { type: "json" };
 import { newTentsDesc } from "./generator.ts";
 import { tentsSolve } from "./solver.ts";
-import { decodeDesc, type TentsParams, TREE } from "./state.ts";
+import { newState, type TentsParams, TREE } from "./state.ts";
 
 interface Fixture {
   seed: string;
@@ -38,7 +38,7 @@ describeDescDifferential<Fixture, TentsParams>({
   // Solver-agreement: the TS solver grades each C board at exactly its
   // difficulty — solves at diff, fails (ambiguous) one level below.
   extra: (f, p) => {
-    const { grid, numbers } = decodeDesc(p, f.desc);
+    const { grid, numbers } = newState(p, f.desc);
     const puzzle = Int8Array.from(grid, (v) => (v === TREE ? TREE : 0));
     expect(tentsSolve(p.w, p.h, puzzle, numbers, p.diff).ret).toBe(1);
     expect(tentsSolve(p.w, p.h, puzzle, numbers, p.diff - 1).ret).toBe(2);

@@ -49,7 +49,6 @@ import {
   NO_NUMBER,
   newState,
   newUi,
-  parseNumbers,
   validateDesc,
 } from "./state.ts";
 
@@ -203,7 +202,7 @@ describe("abcd desc codec", () => {
     const p = P(5, 5, 4);
     const { desc } = newAbcdDesc(p, randomNew("desc-1"));
     expect(validateDesc(p, desc)).toBeNull();
-    const numbers = parseNumbers(p, desc);
+    const numbers = newState(p, desc).numbers;
     expect(numbers.length).toBe((p.w + p.h) * p.n);
   });
 
@@ -213,7 +212,16 @@ describe("abcd desc codec", () => {
     expect(validateDesc(p, "1,".repeat(19))).toBe(DESC_TOO_LONG);
     expect(validateDesc(p, `${"1,".repeat(17)}Z,`)).toBe(descBadCharacter("Z"));
     // A row clue may not exceed 1 + w/2 = 2 for w=3.
-    expect(validateDesc(p, `9,${"1,".repeat(17)}`)).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(p, `9,${"1,".repeat(17)}`)).toBe(DESC_OUT_OF_RANGE); // A column clue may not exceed 1 + h/2 either.
+    expect(validateDesc(p, `${"1,".repeat(17)}3,`)).toBe(DESC_OUT_OF_RANGE);
+  });
+
+  it("refuses a clue without its comma, a stray comma and a missing last comma", () => {
+    const p = P(3, 3, 3);
+    expect(validateDesc(p, `-,${"1,".repeat(17)}`)).toBeNull();
+    expect(validateDesc(p, `-${"1,".repeat(17)}`)).toBe(descBadCharacter("1"));
+    expect(validateDesc(p, `,${"1,".repeat(18)}`)).toBe(descBadCharacter(","));
+    expect(validateDesc(p, "1,".repeat(18).slice(0, -1))).toBe(DESC_TOO_SHORT);
   });
 });
 
@@ -223,7 +231,7 @@ describe("abcd solver", () => {
   it("solves a generated board to a unique grid", () => {
     const p = P(5, 5, 4);
     const { desc } = newAbcdDesc(p, randomNew("solve-1"));
-    const res = solveAbcd(p, parseNumbers(p, desc));
+    const res = solveAbcd(p, newState(p, desc).numbers);
     expect(res.status).toBe("solved");
     // Every cell filled with a valid letter.
     for (const g of res.grid) expect(g).toBeGreaterThanOrEqual(1);
@@ -526,7 +534,7 @@ describe("abcd textFormat", () => {
     const p = P(19, 3, 4);
     const numbers = new Int32Array((p.w + p.h) * p.n);
     const st = {
-      ...newState(P(3, 3, 4), "0,".repeat(18)),
+      ...newState(P(3, 3, 4), "0,".repeat(24)),
       params: p,
       numbers,
     } as never;

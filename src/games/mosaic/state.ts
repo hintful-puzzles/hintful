@@ -10,8 +10,12 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   type DescError,
+  type DescParse,
   descBadCharacter,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import type { PresetMenu } from "../../engine/game.ts";
 import { parseDimensions } from "../../engine/params.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
@@ -149,31 +153,34 @@ export function encodeBoard(board: MosaicBoard): string {
   );
 }
 
+/** Each cell's clue, `-1` where it is hidden. */
+function parseDesc(p: MosaicParams, desc: string): DescParse<Int8Array> {
+  const size = p.width * p.height;
+  return readDesc(desc, (r) => {
+    const clues = new Int8Array(size).fill(-1);
+    let loc = 0;
+    for (const tok of scanRunLength(r.rest())) {
+      if ("blanks" in tok) {
+        loc += tok.blanks;
+        continue;
+      }
+      const clue = digitValue(tok.value);
+      if (clue === null) return r.fail(descBadCharacter(tok.value));
+      clues[loc++] = clue;
+    }
+    if (loc < size) r.fail(DESC_TOO_SHORT);
+    if (loc > size) r.fail(DESC_TOO_LONG);
+    return clues;
+  });
+}
+
 export function validateDesc(p: MosaicParams, desc: string): DescError | null {
-  let length = 0;
-  for (const tok of scanRunLength(desc)) {
-    if ("blanks" in tok) length += tok.blanks;
-    else if (digitValue(tok.value) !== null) length++;
-    else return descBadCharacter(tok.value);
-  }
-  if (length < p.width * p.height) return DESC_TOO_SHORT;
-  if (length > p.width * p.height) return DESC_TOO_LONG;
-  return null;
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: MosaicParams, desc: string): MosaicState {
   const size = p.width * p.height;
-  const clues = new Int8Array(size).fill(-1);
-  let loc = 0;
-  for (const tok of scanRunLength(desc)) {
-    if ("blanks" in tok) {
-      loc += tok.blanks; // hidden cells; already -1
-    } else {
-      const clue = digitValue(tok.value);
-      if (clue !== null) clues[loc] = clue;
-      loc++; // one cell per character; `validateDesc` rejects a non-digit
-    }
-  }
+  const clues = descValue(parseDesc(p, desc));
   const board: MosaicBoard = Object.freeze({
     width: p.width,
     height: p.height,

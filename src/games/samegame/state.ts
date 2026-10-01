@@ -1,12 +1,10 @@
-import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
 import {
-  DESC_MALFORMED,
-  DESC_OUT_OF_RANGE,
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
-  descBadCharacter,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import type { ParamConfigItem } from "../../engine/game.ts";
 import {
   AREA_TOO_LARGE,
@@ -419,34 +417,27 @@ export function newDesc(p: SamegameParams, rng: RandomState): { desc: string } {
   return { desc: tiles.join(",") };
 }
 
-export function validateDesc(p: SamegameParams, desc: string): DescError | null {
+/** The colors in reading order, comma-separated. A generated board is full, so
+ * a color is `1..ncols` and never the empty `0`. */
+function parseDesc(p: SamegameParams, desc: string): DescParse<number[]> {
   const area = p.w * p.h;
-  let i = 0;
-  for (let cell = 0; cell < area; cell++) {
-    if (i >= desc.length) return DESC_TOO_SHORT;
-    if (!isDigit(desc[i])) return descBadCharacter(desc[i]);
-    const { value: num, next } = parseLeadingInt(desc, i);
-    i = next;
-    if (cell < area - 1 && desc[i] !== ",") {
-      return i >= desc.length ? DESC_TOO_SHORT : DESC_MALFORMED;
+  return readDesc(desc, (r) => {
+    const tiles: number[] = [];
+    for (let i = 0; i < area; i++) {
+      if (i > 0) r.expect(",");
+      tiles.push(r.int(1, p.ncols));
     }
-    if (cell === area - 1 && i < desc.length) return DESC_TOO_LONG;
-    if (num < 0 || num > p.ncols) return DESC_OUT_OF_RANGE;
-    if (desc[i] === ",") i++;
-  }
-  return null;
+    r.end();
+    return tiles;
+  });
+}
+
+export function validateDesc(p: SamegameParams, desc: string): DescError | null {
+  return descVerdict(parseDesc(p, desc));
 }
 
 export function newState(p: SamegameParams, desc: string): SamegameState {
-  const area = p.w * p.h;
-  const tiles = new Array<number>(area).fill(0);
-  let i = 0;
-  for (let cell = 0; cell < area; cell++) {
-    const { value, next } = parseLeadingInt(desc, i);
-    tiles[cell] = value;
-    i = next;
-    if (desc[i] === ",") i++;
-  }
+  const tiles = descValue(parseDesc(p, desc));
   return {
     w: p.w,
     h: p.h,

@@ -5,11 +5,13 @@
  * only in their movement table, so nothing here knows any other geometry.
  */
 import {
-  DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
-  DESC_TOO_SHORT,
   type DescError,
+  type DescParse,
+  descValue,
+  descVerdict,
 } from "../../engine/desc-error.ts";
+import { readDesc } from "../../engine/desc-reader.ts";
 import { tierNames } from "../../engine/difficulty.ts";
 
 // --- number sentinels (upstream `NUMBER_*`) ------------------------
@@ -477,34 +479,61 @@ export function encodeGridDesc(grid: Int16Array, s: number): string {
   return out;
 }
 
-/** A desc's tokens: a clue number, a blank run or a wall run. Anything else
- * (the `_` between two numbers) is skipped. */
-const DESC_TOKEN = /(\d+)|([a-z])|([A-Z])/g;
-/** A run letter's length: `a`/`A` is 1, `z`/`Z` is 26. */
-const runLength = (c: string) => c.toLowerCase().charCodeAt(0) - "a".charCodeAt(0) + 1;
+/** Whether `c` is a blank-run letter, `a`–`z`. */
+const isBlankRun = (c: string) => c >= "a" && c <= "z";
+/** Whether `c` is a wall-run letter, `A`–`Z`. */
+const isWallRun = (c: string) => c >= "A" && c <= "Z";
+
+interface AscentDesc {
+  grid: Int16Array;
+  immutable: Uint8Array;
+  walls: number;
+}
+
+/**
+ * Read the padded grid {@link encodeGridDesc} writes: clue numbers as `n+1`
+ * (so `1..s`, `s` the padded area), a `_` exactly between two adjacent
+ * numbers, blank runs `a`–`z` and wall runs `A`–`Z`.
+ */
+function parseDesc(params: AscentParams, desc: string): DescParse<AscentDesc> {
+  const { w, h } = ascentGridSize(params);
+  const s = w * h;
+  return readDesc(desc, (r) => {
+    const grid = new Int16Array(s).fill(NUMBER_EMPTY);
+    const immutable = new Uint8Array(s);
+    let walls = 0;
+    let i = 0;
+    let afterNumber = false;
+    while (i < s) {
+      if (r.peekIs(isBlankRun)) {
+        i += r.char().charCodeAt(0) - "a".charCodeAt(0) + 1;
+        afterNumber = false;
+      } else if (r.peekIs(isWallRun)) {
+        const run = r.char().charCodeAt(0) - "A".charCodeAt(0) + 1;
+        grid.fill(NUMBER_WALL, i, i + run);
+        immutable.fill(1, i, i + run);
+        walls += run;
+        i += run;
+        afterNumber = false;
+      } else {
+        if (afterNumber) r.expect("_");
+        grid[i] = r.int(1, s) - 1;
+        immutable[i++] = 1;
+        afterNumber = true;
+      }
+      if (i > s) r.fail(DESC_TOO_LONG);
+    }
+    r.end();
+    return { grid, immutable, walls };
+  });
+}
 
 /** `null` when valid, else the rejection reason (upstream `validate_desc`). */
 export function validateAscentDesc(
   params: AscentParams,
   desc: string,
 ): DescError | null {
-  const { w, h } = ascentGridSize(params);
-  const s = w * h;
-  let last = 0;
-  let i = 0;
-  for (const [, num, blank, wall] of desc.matchAll(DESC_TOKEN)) {
-    if (num) {
-      last = Math.max(last, Number.parseInt(num, 10));
-      i++;
-    } else {
-      i += runLength(blank || wall);
-    }
-  }
-
-  if (last > s) return DESC_OUT_OF_RANGE;
-  if (i < s) return DESC_TOO_SHORT;
-  if (i > s) return DESC_TOO_LONG;
-  return null;
+  return descVerdict(parseDesc(params, desc));
 }
 
 // --- state construction --------------------------------------------
@@ -513,25 +542,8 @@ export function validateAscentDesc(
 export function newAscentState(params: AscentParams, desc: string): AscentState {
   const { w, h } = ascentGridSize(params);
   const mode = params.mode;
-  const grid = new Int16Array(w * h).fill(NUMBER_EMPTY);
-  const immutable = new Uint8Array(w * h);
-  let last = w * h - 1;
-
-  let i = 0;
-  for (const [, num, blank, wall] of desc.matchAll(DESC_TOKEN)) {
-    if (num) {
-      grid[i] = Number.parseInt(num, 10) - 1;
-      immutable[i++] = 1;
-    } else if (blank) {
-      i += runLength(blank);
-    } else {
-      const walls = runLength(wall);
-      grid.fill(NUMBER_WALL, i, i + walls);
-      immutable.fill(1, i, i + walls);
-      last -= walls;
-      i += walls;
-    }
-  }
+  const { grid, immutable, walls } = descValue(parseDesc(params, desc));
+  let last = w * h - 1 - walls;
 
   /* Edges mode: a number on the border is an arrow clue, not a path cell. */
   if (mode === MODE_EDGES) {

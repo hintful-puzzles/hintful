@@ -3,6 +3,13 @@
  * generator solvability, solver, findMistakes, and a render smoke.
  */
 import { describe, expect, it } from "vitest";
+import {
+  DESC_OUT_OF_RANGE,
+  DESC_REPEATED,
+  DESC_TOO_LONG,
+  DESC_TOO_SHORT,
+  descValue,
+} from "../../engine/desc-error.ts";
 import { describeParams } from "../../engine/param-label.ts";
 import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -15,8 +22,8 @@ import {
   cloneState,
   FLAG_IMMUTABLE,
   generateDesc,
+  parseDesc,
   stripNums,
-  unpickDesc,
 } from "./state.ts";
 
 const PRESETS = [
@@ -67,11 +74,7 @@ describe("signpost desc codec", () => {
   it("round-trips a generated desc through unpick + generateDesc", () => {
     const p = { w: 4, h: 4, forceCornerStart: true };
     const { desc } = newSignpostDesc(p, randomNew("signpost-desc-1"));
-    const r = unpickDesc(p, desc);
-    expect("state" in r).toBe(true);
-    if ("state" in r) {
-      expect(generateDesc(r.state)).toBe(desc);
-    }
+    expect(generateDesc(descValue(parseDesc(p, desc)))).toBe(desc);
   });
 
   it("validateDesc rejects an unknown direction char", () => {
@@ -84,6 +87,16 @@ describe("signpost desc codec", () => {
     const p = { w: 3, h: 3, forceCornerStart: false };
     expect(signpostGame.validateDesc(p, "1aae")).not.toBeNull();
   });
+
+  it("validateDesc refuses a number given twice, or a 0 no generated board writes", () => {
+    const p = { w: 2, h: 2, forceCornerStart: false };
+    expect(signpostGame.validateDesc(p, "1ca2a4a")).toBeNull();
+    expect(signpostGame.validateDesc(p, "1ca1a4a")).toBe(DESC_REPEATED);
+    expect(signpostGame.validateDesc(p, "1ca0a4a")).toBe(DESC_OUT_OF_RANGE);
+    expect(signpostGame.validateDesc(p, "1ca5a4a")).toBe(DESC_OUT_OF_RANGE);
+    expect(signpostGame.validateDesc(p, "1ca2a4ab")).toBe(DESC_TOO_LONG);
+    expect(signpostGame.validateDesc(p, "1ca2a4")).toBe(DESC_TOO_SHORT);
+  });
 });
 
 describe("signpost generator + solver", () => {
@@ -91,11 +104,8 @@ describe("signpost generator + solver", () => {
     for (const p of PRESETS) {
       for (let seed = 0; seed < 4; seed++) {
         const { desc } = newSignpostDesc(p, randomNew(`sp-${p.w}x${p.h}-${seed}`));
-        const r = unpickDesc(p, desc);
-        expect("state" in r).toBe(true);
-        if (!("state" in r)) continue;
         // The bare clued board must solve uniquely (solver reaches 1).
-        const solved = cloneState(r.state);
+        const solved = cloneState(descValue(parseDesc(p, desc)));
         stripNums(solved);
         expect(solveState(solved)).toBe(1);
       }
