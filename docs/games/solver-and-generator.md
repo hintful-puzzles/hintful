@@ -553,8 +553,9 @@ candidates (the `ts-migration` requirement of that name).
 
 **`solveAtCap` also runs whenever a board is loaded, not only while one is
 dealt.** The midend checks a loaded board's tier against it (`ts-engine` §
-"A loaded board carries the tier it needs"): a sharing id is graded outright,
-and a tier pinned by an id or a save is kept only if the board solves there,
+"A loaded board carries the tier it needs"): an id without a tier (upstream's
+game IDs omit it) is graded outright, and a tier pinned by an id or a save is
+kept only if the board solves there,
 because a build that once mislabeled a board wrote the wrong pin into the
 player's autosave and remembered board. So a `solveAtCap` that disagrees with
 the generator mislabels boards the player reopens, not just the boards it deals,

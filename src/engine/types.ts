@@ -69,17 +69,11 @@ export type DrawTextOptions = {
   size: number;
 };
 
-/**
- * Two ids for two jobs, and they are not interchangeable (see
- * `Midend.emitIdChange`): `currentGameId` shares a *board* and deliberately
- * omits difficulty; `restoreGameId` re-deals *this exact game*. Recording the
- * sharing id where the restoring one belongs reopens a tiered puzzle at its
- * default difficulty.
- */
+/** The board on screen as one id, `params:desc` with the full params, used for
+ * everything: showing, sharing, saving and reopening (`Midend.emitIdChange`). */
 export type NotifyGameIdChange = {
   type: "game-id-change";
   currentGameId: string;
-  restoreGameId: string;
 };
 
 export type NotifyGameStateChange = {

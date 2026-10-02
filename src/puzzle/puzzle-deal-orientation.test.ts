@@ -19,7 +19,7 @@ function magnetsPuzzle() {
   let board = "";
   adapter.setCallbacks(
     (n: ChangeNotification) => {
-      if (n.type === "game-id-change") board = n.restoreGameId.split(":")[0];
+      if (n.type === "game-id-change") board = n.currentGameId.split(":")[0];
     },
     () => {},
   );

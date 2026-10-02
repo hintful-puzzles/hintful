@@ -18,7 +18,7 @@ function engine(puzzleId: string) {
   const game = getTsGame(puzzleId);
   if (game === null) throw new Error(`no game registered as "${puzzleId}"`);
   const d = driveMidend(game);
-  const board = () => d.last("game-id-change")?.restoreGameId.split(":")[0] ?? "";
+  const board = () => d.last("game-id-change")?.currentGameId.split(":")[0] ?? "";
   return { m: d.midend, board };
 }
 

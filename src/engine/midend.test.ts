@@ -133,7 +133,7 @@ describe("Midend lifecycle + notifications", () => {
     const id = h.sent("game-id-change");
     expect(id.currentGameId).toMatch(/^t3:g3-\d+$/);
     // A seed names a board only through the generator, which can change.
-    expect(Object.keys(id).sort()).toEqual(["currentGameId", "restoreGameId", "type"]);
+    expect(Object.keys(id).sort()).toEqual(["currentGameId", "type"]);
   });
 });
 
@@ -473,40 +473,23 @@ describe("Midend params + presets", () => {
     expect(h.m.getParams()).toBe(before);
   });
 
-  it("each of the two ids encodes params for the job it is for", () => {
-    // A dealt board must be remembered by the restoring id, not by
-    // `currentGameId`, whose params are lossy on purpose: reopening a tiered
-    // puzzle by the latter drops it to its default difficulty.
+  it("the game id carries the tier, so reopening it keeps the difficulty", () => {
+    // One id for showing, sharing, saving and reopening: if it dropped the
+    // tier, every reopened tiered puzzle would come back at its default.
     const h = harness(tieredGame());
     expect(h.m.setParams("t3d1")).toBeNull();
     h.m.newGame();
-    const id = h.sent("game-id-change");
-    // Descriptive form ⇒ desc specifies the puzzle, suffix omitted.
-    expect(id.currentGameId).toMatch(/^t3:/);
-    expect(id.currentGameId).not.toContain("d1");
-    // Restore form ⇒ re-deals this game *here*, so it keeps the tier.
-    expect(id.restoreGameId).toMatch(/^t3d1:/);
-  });
+    const id = h.sent("game-id-change").currentGameId;
+    expect(id).toMatch(/^t3d1:/);
 
-  it("restoring from the remembered id keeps the difficulty; the shared id does not", () => {
-    // The property the app depends on, asserted end to end rather than by
-    // eyeballing the two encodings: `newGameFromId` sets `params` from whatever
-    // prefix it is handed, so *which id you remembered* decides whether the
-    // player's chosen tier survives reopening the puzzle. The `currentGameId`
-    // arm is here deliberately — it pins the sharing id's documented lossiness
-    // so the two ids cannot quietly converge and make the distinction dead.
-    const h = harness(tieredGame());
-    expect(h.m.setParams("t3d1")).toBeNull();
-    h.m.newGame();
-    const id = h.sent("game-id-change");
+    const reopened = harness(tieredGame());
+    expect(reopened.m.newGameFromId(id)).toBeNull();
+    expect(reopened.m.getParams()).toBe("t3d1");
 
-    const restored = harness(tieredGame());
-    expect(restored.m.newGameFromId(id.restoreGameId)).toBeNull();
-    expect(restored.m.getParams()).toBe("t3d1");
-
-    const shared = harness(tieredGame());
-    expect(shared.m.newGameFromId(id.currentGameId)).toBeNull();
-    expect(shared.m.getParams()).toBe("t3d0");
+    // Upstream's game IDs leave the tier out, and still open.
+    const upstream = harness(tieredGame());
+    expect(upstream.m.newGameFromId(id.replace("t3d1:", "t3:"))).toBeNull();
+    expect(upstream.m.getParams()).toBe("t3d0");
   });
 
   it("validates params with full=false when the id carries its own desc", () => {
@@ -1026,15 +1009,15 @@ describe("Midend: a board carries the tier it needs", () => {
     };
     return g as unknown as typeof fakeGame;
   }
-  const restoreId = (h: ReturnType<typeof harness>) =>
-    h.sent("game-id-change").restoreGameId;
+  const gameId = (h: ReturnType<typeof harness>) =>
+    h.sent("game-id-change").currentGameId;
 
   it("an id pinning a tier below the board's is raised to the tier it needs", () => {
     // What a build that mislabeled a board left in the remembered id.
     const h = harness(gradedGame());
     expect(h.m.newGameFromId("t3d0:g3-1")).toBeNull();
     expect(h.m.getParams()).toBe("t3d1");
-    expect(restoreId(h)).toBe("t3d1:g3-1");
+    expect(gameId(h)).toBe("t3d1:g3-1");
   });
 
   it("an id pinning a tier the board solves at keeps it, even above the one it needs", () => {
@@ -1070,10 +1053,10 @@ describe("Midend: a board carries the tier it needs", () => {
     expect(h.m.getParams()).toBe("t3d0");
     expect(decodeSave(h.m.saveGame()).params).toBe("t3d1");
     h.m.restartGame();
-    expect(restoreId(h)).toBe("t3d1:g3-1");
+    expect(gameId(h)).toBe("t3d1:g3-1");
     // And the next board is dealt at what was chosen.
     h.m.newGame();
-    expect(restoreId(h)).toMatch(/^t3d0:/);
+    expect(gameId(h)).toMatch(/^t3d0:/);
   });
 });
 

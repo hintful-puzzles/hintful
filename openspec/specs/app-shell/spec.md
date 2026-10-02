@@ -115,16 +115,11 @@ home screen reads to badge a puzzle as having a game in progress, so a row writt
 for a board the player has not touched would make that badge true for every puzzle
 they have merely opened.
 
-**The recorded game ID SHALL carry the full params encoding**, difficulty
-included, and SHALL NOT be the id offered for sharing. Those are different jobs:
-a shared `params:desc` id deliberately omits difficulty (upstream
-`midend_get_game_id`), because the desc already fixes the board, and loading it
-grades the board to the tier it needs (ts-engine, Requirement: A loaded board
-carries the tier it needs). Re-dealing a remembered board restores the tier the
-player chose, since a full id states it; the midend only checks that the board
-solves there, and raises a tier a mislabeling build recorded too low. Recording
-the sharing id here reset a tiered puzzle to its default difficulty on every
-reopen, and the settings write that followed made the reset permanent.
+The recorded game ID SHALL be the board's one game ID, which carries the full
+params encoding, difficulty included. Re-dealing a remembered board therefore
+restores the tier the player chose; the midend only checks that the board solves
+there, and raises a tier a mislabeling build recorded too low (ts-engine,
+Requirement: A loaded board carries the tier it needs).
 
 A recorded game ID that this build can no longer deal SHALL be discarded and
 replaced by a new game, without interrupting the player — they did not ask for
@@ -195,15 +190,10 @@ because that is the code the key map sends for Backspace, Delete and Clear.
 ### Requirement: The params a puzzle reports are the full params of the board on screen
 
 The params a puzzle reports for display SHALL be the **full** encoding of the
-board currently on screen, difficulty included — the same encoding a restore
-uses, never the lossy sharing form. They label the type control, describe the
-type in the share dialog, and key the keypad and view re-renders, and every one
-of those is wrong if the difficulty is missing.
-
-They SHALL be read from the restoring ID, and never from the sharing ID, whose
-params omit the difficulty by design. Unruly at 10x10 Normal, reopened and
-labeled from the sharing ID, came back as "10x10 Trivial", a type its preset
-menu does not offer.
+board currently on screen, difficulty included. They label the type control,
+describe the type in the share dialog, and key the keypad and view re-renders,
+and every one of those is wrong if the difficulty is missing. They SHALL be read
+from the board's game ID, which carries the full encoding.
 
 #### Scenario: A board with no seed still reports its difficulty
 
@@ -783,7 +773,7 @@ the game's reason. A page author writes nothing for it.
 
 ### Requirement: The app hands out boards, never seeds
 
-Everything the app shows a player as naming a game, or lets them copy or share, SHALL name the board itself as its game ID (`params:desc`), never a random seed. A seed names a board only through a generator, and this project's generators change, both against upstream and between versions of this app, so a seed handed out today can name a different board tomorrow. The midend's game-ID notification SHALL carry the sharing ID and the restoring ID and no seed, so that no part of the app can hand one out. A `#seed` ID arriving from a link, a paste or another collection SHALL still deal a game, the one the current generator deals for it.
+Everything the app shows a player as naming a game, or lets them copy or share, SHALL name the board itself as its game ID (`params:desc`, full params), never a random seed. A seed names a board only through a generator, and this project's generators change, both against upstream and between versions of this app, so a seed handed out today can name a different board tomorrow. The midend's game-ID notification SHALL carry the board's one game ID and no seed, so that no part of the app can hand one out. The same ID SHALL serve showing, sharing, saving and reopening the board. A `#seed` ID arriving from a link, a paste or another collection SHALL still deal a game, the one the current generator deals for it.
 
 #### Scenario: The link to this specific game
 
@@ -804,7 +794,7 @@ Everything the app shows a player as naming a game, or lets them copy or share, 
 #### Scenario: The notification carries no seed
 
 - **WHEN** the midend deals a board from a fresh seed or a `#seed` ID
-- **THEN** its game-ID notification carries exactly the sharing ID and the restoring ID
+- **THEN** its game-ID notification carries exactly the board's game ID
 
 #### Scenario: A seed ID still opens
 

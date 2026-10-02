@@ -207,7 +207,6 @@ export class Puzzle {
     switch (message.type) {
       case "game-id-change": {
         update(this._currentGameId, message.currentGameId);
-        update(this._restoreGameId, message.restoreGameId);
         break;
       }
       case "game-state-change":
@@ -298,12 +297,10 @@ export class Puzzle {
     () =>
       // The **full** params of the board on screen — difficulty included, which
       // is what every consumer wants: the type-menu label, the share dialog's
-      // type description, and the keypad/view re-render keys. Only
-      // `restoreGameId` carries them: `currentGameId`'s params are lossy.
-      this.restoreGameId?.split(":", 1).at(0) ?? null,
+      // type description, and the keypad/view re-render keys.
+      this.currentGameId?.split(":", 1).at(0) ?? null,
   );
   private _currentGameId = signal<string | null>(null);
-  private _restoreGameId = signal<string | null>(null);
   private _canFormatAsText = signal(false);
   private _statusbarText = signal<string>("");
   /** The solve timer, or `null` while the player has it switched off for this
@@ -460,18 +457,10 @@ export class Puzzle {
     return this._currentParams.get();
   }
 
+  /** The board on screen, `params:desc` with the full params: the one id to
+   * show, share, save and reopen it by (see `NotifyGameIdChange`). */
   public get currentGameId(): string | null {
     return this._currentGameId.get();
-  }
-
-  /**
-   * The current board addressed for **re-dealing it here** — `params:desc` with
-   * the full params, difficulty included. Use this to remember a board;
-   * {@link currentGameId} is the one to *show or share*, and its params are
-   * deliberately lossy (see `NotifyGameIdChange`).
-   */
-  public get restoreGameId(): string | null {
-    return this._restoreGameId.get();
   }
 
   public get canFormatAsText(): boolean {

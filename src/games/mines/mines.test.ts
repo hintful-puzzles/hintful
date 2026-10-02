@@ -266,7 +266,7 @@ describe("mines supersede + midend", () => {
     expect(h.gameId()).toContain("r10,u,");
     h.m.playMoves([openMove(4, 4)]);
     // …and after the first open it names the real board (x,y + masked layout).
-    expect(h.gameId()).toMatch(/^9x9:4,4,m[0-9a-f]+$/);
+    expect(h.gameId()).toMatch(/^9x9n10:4,4,m[0-9a-f]+$/);
   });
 
   it("validates both descs supersededDesc writes", () => {
@@ -295,7 +295,7 @@ describe("mines supersede + midend", () => {
     // Same layout box: the masked bitmap is identical, only the recorded first
     // click differs — the whole point of the shared box (no board reroll).
     expect(hex2).toBe(hex1);
-    expect(h.gameId()).toMatch(/^9x9:0,0,m/);
+    expect(h.gameId()).toMatch(/^9x9n10:0,0,m/);
   });
 
   it("a save after the first click carries both descs and the ui", () => {

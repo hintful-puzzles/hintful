@@ -1067,13 +1067,7 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
         // it: the handler fires on every state change, so an unguarded write
         // would put a DB round-trip behind every move to store a value that did
         // not change. Not an autosave — see `PuzzleSettings.lastGameId`.
-        //
-        // `restoreGameId`, NOT `currentGameId`: the latter is the id to share,
-        // and it omits difficulty by design, so remembering it re-opens every
-        // tiered puzzle at its default tier. `currentGameId` stays the
-        // change-detection key above, because it changes exactly when the board
-        // does.
-        await settings.setLastGameId(puzzle.puzzleId, puzzle.restoreGameId);
+        await settings.setLastGameId(puzzle.puzzleId, puzzle.currentGameId);
       }
       if (puzzle.totalMoves > 0 && !puzzle.isSolved) {
         // Wait to autosave until the user has made at least one actual move,

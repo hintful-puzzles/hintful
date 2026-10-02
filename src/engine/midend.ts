@@ -1825,19 +1825,12 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   private emitIdChange(): void {
     this.emit({
       type: "game-id-change",
-      // Shares the board: the desc fully specifies it, so the params omit the
-      // difficulty (upstream `midend_get_game_id` → `encode_params(..., FALSE)`).
-      currentGameId: `${this.game.encodeParams(this.boardParams, false)}:${this.desc}`,
-      // Re-deals this board here, so the params are FULL: reopening your own
-      // board restores the tier you chose as stated, where a shared id's is
-      // re-derived by grading (`withBoardTier`). Emitted here rather than
-      // assembled by the caller from `params` and a desc, two signals that
-      // could drift into a broken board.
-      restoreGameId: `${this.game.encodeParams(this.boardParams, true)}:${this.desc}`,
-      // No seed is emitted. A seed names a board only through the generator,
-      // which this project changes whenever a better game is worth it, so
-      // anything holding a seed would come to name a different board
-      // (`share-boards-not-seeds`).
+      // One id for every job (`one-game-id`). The params are FULL, so the tier
+      // travels with the board; an id without it (upstream's game IDs omit
+      // difficulty) is graded on the way in (`withBoardTier`). No seed is
+      // emitted: a seed names a board only through the generator, which this
+      // project changes (`share-boards-not-seeds`).
+      currentGameId: `${this.game.encodeParams(this.boardParams, true)}:${this.desc}`,
     });
   }
 
