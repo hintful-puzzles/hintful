@@ -1062,7 +1062,9 @@ describe("slide capabilities", () => {
     // or further from the exit — so Check & Save correctly degrades to a plain
     // quick-save, exactly as for the permutation games (docs/games/solver-and-generator.md § "The solvable-game contract").
     expect(slideGame.findMistakes).toBeUndefined();
-    expect(new Midend(slideGame).getStaticProperties().canFindMistakes).toBe(false);
+    const m = new Midend(slideGame);
+    m.newGame();
+    expect(m.check()).toMatchObject({ mistakesChecked: false });
   });
 
   it("ships no hint and no keypad", () => {

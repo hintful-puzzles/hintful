@@ -933,7 +933,8 @@ describe("seismic findMistakes", () => {
   it("is offered to the app, so Check & Save can hard-block on it", () => {
     const me = new Midend(seismicGame);
     expect(me.newGameFromId(idOf(SMALL))).toBeNull();
-    expect(me.getStaticProperties().canFindMistakes).toBe(true);
+    expect(me.getStaticProperties().canCheck).toBe(true);
+    expect(me.check()).toEqual({ kind: "sound", mistakesChecked: true });
   });
 });
 

@@ -9,12 +9,20 @@
 
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/game.ts";
+import { isDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
-import { bindingDefects } from "../../engine/testing/hint-binding.ts";
+import {
+  bindingDefects,
+  deadEndBindingDefects,
+} from "../../engine/testing/hint-binding.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import {
+  DEFAULT_BACKGROUND,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
 import { hint, hintKeepTrack } from "./hint.ts";
 import { HOLE, JUMP, type Marked, PEG } from "./hint-text.ts";
 import { pegsGame } from "./index.ts";
@@ -162,13 +170,43 @@ describe("pegs solver", () => {
 });
 
 describe("pegs hint", () => {
-  it("refuses a board with pegs cut off, counting them", () => {
-    const two = hint(load(TWO_CUT_OFF));
-    expect(two.ok).toBe(false);
-    if (!two.ok) expect(two.error).toMatch(/^2 pegs are cut off/);
-    const one = hint(load(ONE_CUT_OFF));
-    expect(one.ok).toBe(false);
-    if (!one.ok) expect(one.error).toMatch(/^A peg is cut off/);
+  it("refuses a board with pegs cut off, and outlines them", () => {
+    const outlined = (id: string, text: RegExp): number[] => {
+      const s = load(id);
+      const r = hint(s);
+      if (r.ok || !r.words) throw new Error(`${id}: expected a marked refusal`);
+      expect(r.error).toMatch(text);
+      expect(isDeadEnd(r.error)).toBe(true);
+      expect(deadEndBindingDefects(G, s, G.newUi(s), r)).toEqual([]);
+      return [...stepMarks(r).of("outline", PEG)];
+    };
+    expect(
+      outlined(TWO_CUT_OFF, /^The outlined pegs are cut off.* beside each\.$/),
+    ).toEqual(frozenPegs(load(TWO_CUT_OFF)));
+    expect(
+      outlined(ONE_CUT_OFF, /^The outlined peg is cut off.* beside it\.$/),
+    ).toEqual([6]);
+  });
+
+  it("marks a cut-off peg when the check refuses to save, until the next move", () => {
+    const { midend, recording } = renderScenario({ game: G, id: ONE_CUT_OFF });
+    const unmarked = JSON.stringify(recording.ops);
+    const verdict = midend.check();
+    expect(verdict.kind).toBe("dead-end");
+    if (verdict.kind === "dead-end")
+      expect(verdict.reason).toMatch(/^The outlined peg/);
+    const frame = (): string => {
+      const rec = new RecordingDrawing(midend.getColorPalette(DEFAULT_BACKGROUND));
+      midend.forceRedraw(rec);
+      return JSON.stringify(rec.ops);
+    };
+    expect(frame()).not.toBe(unmarked);
+    // The pair can still jump, and the move puts the outline away: the frame is
+    // the one that board paints with no check asked.
+    const moves: PegsMove[] = [{ type: "jump", sx: 0, sy: 0, tx: 2, ty: 0 }];
+    midend.playMoves(moves);
+    const fresh = renderScenario({ game: G, id: ONE_CUT_OFF, moves });
+    expect(frame()).toBe(JSON.stringify(fresh.recording.ops));
   });
 
   it("refuses a lost board with nothing frozen as one no solution leaves", () => {

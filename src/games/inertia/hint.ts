@@ -28,10 +28,14 @@
  */
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { NO_MOVE_WORTH_MAKING, puzzleHintRefusal } from "../../engine/hint-refusal.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import {
+  markedDeadEnd,
+  NO_MOVE_WORTH_MAKING,
+  puzzleDeadEnd,
+} from "../../engine/hint-refusal.ts";
+import { mark, type Narration, phrase } from "../../engine/hint-words.ts";
 import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
-import { gemsPhrase, say } from "./hint-text.ts";
+import { GEM, say } from "./hint-text.ts";
 import { solveRoute, unreachableGems } from "./solver.ts";
 import {
   type InertiaMove,
@@ -259,10 +263,11 @@ function firstLegOf(s: InertiaState, route: readonly number[]): number[] | null 
 // --- the plan --------------------------------------------------------
 
 export function hint(state: InertiaState): HintResult<InertiaMove> {
+  // The board already draws a dead ball as one, so there is nothing to mark.
   if (state.dead) {
     return {
       ok: false,
-      error: puzzleHintRefusal(
+      error: puzzleDeadEnd(
         "The ball is dead: no move can be played from here. Undo to bring it back.",
       ),
     };
@@ -270,15 +275,12 @@ export function hint(state: InertiaState): HintResult<InertiaMove> {
 
   // Inertia's one provable verdict, and a much better answer than the route
   // solver's shrug: a gem the ball can never reach again means the game is lost,
-  // and the move to make is undo.
+  // and the move to make is undo. The gems are anonymous, so they are circled.
   const stranded = unreachableGems(state);
   if (stranded.length > 0) {
-    return {
-      ok: false,
-      error: puzzleHintRefusal(
-        `The ball can no longer reach ${gemsPhrase(stranded.length)}. Undo to a position where it can.`,
-      ),
-    };
+    return markedDeadEnd(
+      phrase`The ball can no longer reach ${mark.the("outline", GEM, stranded, "gem")}. Undo to a position where it can.`,
+    );
   }
 
   // Not the plan — the *check* that one exists, and the fallback's witness if

@@ -17,7 +17,7 @@
 import type { DescError } from "./desc-error.ts";
 import type { DifficultyContract } from "./difficulty.ts";
 import type { PointerAction } from "./hint-gesture.ts";
-import type { HintRefusal } from "./hint-refusal.ts";
+import type { HintRefusal, MarkedDeadEnd } from "./hint-refusal.ts";
 import type { MarkRole, Narration } from "./hint-words.ts";
 import type { RandomState } from "./random/index.ts";
 import type { NotApplicableReasons } from "./sections.ts";
@@ -94,10 +94,12 @@ export interface HintStep<Move, Highlights = unknown> {
  *
  * The midend asks only about an unfinished board on which `findMistakes`
  * finds nothing, and refuses the rest itself; a game's error is the
- * collection's own ({@link HintRefusal}). */
+ * collection's own ({@link HintRefusal}), and a dead end of the game's own may
+ * carry the words that mark its cause ({@link MarkedDeadEnd}). */
 export type HintResult<Move, Highlights = unknown> =
   | { ok: true; steps: HintStep<Move, Highlights>[] }
-  | { ok: false; error: HintRefusal };
+  | { ok: false; error: HintRefusal; words?: never }
+  | MarkedDeadEnd;
 
 /** The hint plan currently being followed. Stored in the midend (not
  * in game state, never persisted); `steps[index]` is the step being
@@ -669,7 +671,10 @@ export interface Game<
    * is deliberately no counterpart to upstream's `game_set_size`, which resized
    * a live draw state. */
   newDrawState(s: State, tileSize: number): DrawState;
-  /** Paint the board. `ds` is never null — see {@link Game.newDrawState}. */
+  /** Paint the board. `ds` is never null — see {@link Game.newDrawState}.
+   * `deadEnd` is a displayed refusal whose words mark its cause, painted as a
+   * step's are (`stepMarks`); only a game whose hint makes one reads it, and it
+   * never comes with a `hint`. */
   redraw(
     dr: GameDrawing,
     ds: DrawState,
@@ -681,6 +686,7 @@ export interface Game<
     flashTime: number,
     hint?: HintStep<Move, Highlights>,
     mistakes?: readonly Mistake[],
+    deadEnd?: MarkedDeadEnd,
   ): void;
   animLength?(a: State, b: State, dir: number, ui: Ui): number;
   /** How long this game's win flash runs on the solved board `s`. When it

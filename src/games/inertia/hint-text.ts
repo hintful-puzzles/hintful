@@ -45,8 +45,8 @@ const DIR_NAMES = [
 
 const NUMBER_WORDS = ["no", "a", "two", "three", "four", "five", "six"] as const;
 
-/** "a gem", "three gems": also what the stranded-ball refusal says. */
-export const gemsPhrase = (n: number): string =>
+/** "a gem", "three gems". */
+const gemsPhrase = (n: number): string =>
   n === 1 ? "a gem" : `${NUMBER_WORDS[n] ?? n} gems`;
 
 /** What brings the ball to a halt — the rule the whole game turns on, so the

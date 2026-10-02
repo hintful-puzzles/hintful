@@ -21,10 +21,10 @@
  */
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { puzzleHintRefusal, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
-import type { Narration } from "../../engine/hint-words.ts";
+import { markedDeadEnd, SEARCH_OUT_OF_REACH } from "../../engine/hint-refusal.ts";
+import { mark, type Narration, phrase } from "../../engine/hint-words.ts";
 import { NO_SOLUTION_FROM_HERE } from "../../engine/solve-failure.ts";
-import { type Marked, type Package, say } from "./hint-text.ts";
+import { type Marked, type Package, PEG, say } from "./hint-text.ts";
 import { findFinish, frozenPegs, type Jump, judge, legalJumps } from "./solver.ts";
 import {
   GRID_HOLE,
@@ -122,23 +122,14 @@ function step(s: PegsState, j: Jump, words: Narration, continues = false): Step 
 }
 
 export function hint(state: PegsState): HintResult<PegsMove> {
-  // Pegs' one verdict a player can see at a glance: a peg nothing can reach.
+  // Pegs' one verdict a player can see at a glance: a peg nothing can reach,
+  // outlined so they can see which.
   const frozen = frozenPegs(state);
-  if (frozen.length === 1) {
-    return {
-      ok: false,
-      error: puzzleHintRefusal(
-        "A peg is cut off, so the game can never finish with one peg. Undo until a peg can still land beside it.",
-      ),
-    };
-  }
-  if (frozen.length > 1) {
-    return {
-      ok: false,
-      error: puzzleHintRefusal(
-        `${frozen.length} pegs are cut off, so the game can never finish with one peg. Undo until a peg can still land beside each.`,
-      ),
-    };
+  if (frozen.length > 0) {
+    const many = frozen.length > 1;
+    return markedDeadEnd(
+      phrase`${mark.the("outline", PEG, frozen, "peg").capitalized()} ${many ? "are" : "is"} cut off, so the game can never finish with one peg. Undo until a peg can still land beside ${many ? "each" : "it"}.`,
+    );
   }
 
   const finish = findFinish(state);

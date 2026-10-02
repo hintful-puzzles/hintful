@@ -17,7 +17,7 @@
  */
 
 import type { HintResult, HintStep, HintTrackVerdict } from "../../engine/game.ts";
-import { DEDUCTION_EXHAUSTED, puzzleHintRefusal } from "../../engine/hint-refusal.ts";
+import { DEDUCTION_EXHAUSTED, puzzleDeadEnd } from "../../engine/hint-refusal.ts";
 import { CELL, mark, Narration } from "../../engine/hint-words.ts";
 import type { Point } from "../../engine/types.ts";
 import { type Firing, learn, nextFiring, type Side } from "./deduce.ts";
@@ -55,7 +55,7 @@ type Step = HintStep<MinesMove, MinesHint>;
 type Execute = (s: MinesState, m: MinesMove) => MinesState;
 
 /** Said on a board whose last move opened a mine. */
-export const DEAD_BOARD = puzzleHintRefusal(
+export const DEAD_BOARD = puzzleDeadEnd(
   "You opened a mine. Undo that move to carry on from just before it.",
 );
 

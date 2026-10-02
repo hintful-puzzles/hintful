@@ -630,7 +630,7 @@ methods, so a game cannot claim a Solve button it has no `solve` behind:
 | `wantsStatusbar` | `statusbarText` | the timer is not in it; it has its own chrome |
 | `canSolve` | `solve` | test through a real `Midend` when `aux` matters |
 | `canHint` | `hint` | see [hints](./hints.md) |
-| `canFindMistakes` | `findMistakes` | |
+| `canCheck` | `findMistakes` or `hint` | a hint alone checks only for a dead end |
 | `hasReference` | `reference` | |
 
 Text export follows the same rule: `textFormat` present means a text panel,
@@ -836,9 +836,9 @@ the Marks key below, whatever the marks themselves look like.
 ### Mistake checking is part of "done"
 
 **A game with a unique solution MUST ship `findMistakes` — Check & Save
-depends on it.** The shell hard-blocks a bad save only when `canFindMistakes`
-is true, which is exactly `game.findMistakes !== undefined`; without it the
-control silently degrades to a plain quick-save and **blesses a wrong board**
+depends on it.** The midend's `check` blocks a save on a wrong entry only
+through `game.findMistakes`; the hint behind it catches only a position it
+calls a dead end, so without the hook the control **blesses a wrong board**
 (shipped in Unruly's first cut, caught on owner smoke-test). A game with no
 mistake to check (rearranging pieces, many solutions, a hidden answer) says so
 in `notApplicable.findMistakes`; see "Contract sections, and what makes a

@@ -617,8 +617,8 @@ stops. Measured: 13–17 of 20 Easy boards stuck at the maximum cap while
 solving fine at Easy.
 
 - **The consequence is severe and silent**: `findMistakes` re-solves, gets
-  stuck, returns `[]` — `canFindMistakes` stays true while Check & Save
-  checks nothing and blesses a wrong board (the exact failure the
+  stuck, returns `[]` — the game still offers mistake-checking while Check &
+  Save checks nothing and blesses a wrong board (the exact failure the
   [solvable-game contract](#the-solvable-game-contract) exists to prevent).
 - **Fix at the call site, not in the solver.** A false *abort* only makes a
   solver weaker, never wrong, and a solver-gated generator re-verified every
@@ -900,10 +900,10 @@ its divergence comment).
 
 **A game with a unique solution MUST ship `findMistakes` — Check & Save
 depends on it.** The shell's Check & Save control
-(`src/puzzle/quick-save-actions.ts`) hard-blocks a save only when
-`canFindMistakes` is true, which is exactly `game.findMistakes !== undefined`.
-A uniquely-solvable game without the hook silently degrades the control to a
-plain save that **saves a wrong board without complaint** (shipped in
+(`src/puzzle/quick-save-actions.ts`) blocks a save on a wrong entry only
+through `game.findMistakes` (`Midend.check`); the hint behind it refuses only a
+position it calls a dead end. A uniquely-solvable game without the hook
+degrades the control to a save that **saves a wrong board without complaint** (shipped in
 Unruly's first cut; caught on owner smoke-test). So for any game with a
 unique solution, `findMistakes(state)` is part of "done": re-solve from the
 fixed clues and return every player cell that contradicts the unique solution

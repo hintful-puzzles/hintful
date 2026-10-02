@@ -168,7 +168,7 @@ export class PuzzleRail extends SignalWatcher(LitElement) {
       this.puzzle.canHint ||
       this.puzzle.canMarkAll ||
       this.puzzle.hasReference ||
-      this.puzzle.canFindMistakes ||
+      this.puzzle.canCheck ||
       this.puzzle.canSolve;
     if (!anything) return nothing;
 
@@ -224,7 +224,7 @@ export class PuzzleRail extends SignalWatcher(LitElement) {
             : nothing
         }
         ${
-          this.puzzle.canFindMistakes
+          this.puzzle.canCheck
             ? this.renderRow({
                 command: "check-only",
                 icon: "check-only",

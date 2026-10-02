@@ -744,9 +744,12 @@ The refusal messages, so the same situation says the same thing in every game:
 `help/features.md` teaches "there is a mistake on the board" and "deduction has
 run out" as a pair calling for opposite responses, which only works if the
 wording is shared. `HintResult`'s error is `HintRefusal`, the union of these
-constants' literal types plus `puzzleHintRefusal(sentence)`, the one escape for
-a dead end only one puzzle has (Inertia's dead ball); `hint-refusal.test.ts`
-fails a sentence two games pass through it. Don't refuse a finished board or a
+constants' literal types plus `puzzleDeadEnd(sentence)`, the escape for a dead
+end only one puzzle has (Inertia's dead ball); `markedDeadEnd(phrase…)` is the
+same escape with words whose references mark the cause (Pegs' cut-off pegs).
+`hint-refusal.test.ts` fails a sentence two games pass through either. Every
+refusal says whether it is a dead end (`isDeadEnd`, its advice is to undo),
+which is what the midend's `check` refuses a save on. Don't refuse a finished board or a
 wrong one: the midend says `ALREADY_SOLVED` and `FIX_MISTAKES_FIRST` before it
 asks, so `FIX_MISTAKES_FIRST` is not a `HintRefusal` at all. A game says
 `ALREADY_SOLVED` only where its status would not call a finished board solved

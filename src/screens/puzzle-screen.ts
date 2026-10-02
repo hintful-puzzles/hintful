@@ -4,14 +4,17 @@ import { query } from "lit/decorators/query.js";
 import { customElement, property, state } from "lit/decorators.js";
 import { showAlert } from "../dialogs/alert-dialog.ts";
 import { showToast } from "../dialogs/toast.ts";
+import { assertNever } from "../engine/assert-never.ts";
 import { PENCIL_MODE_BUTTON } from "../engine/pointer.ts";
 import { type PuzzleData, puzzleDataMap } from "../puzzle/catalog.ts";
 import type { PuzzleEvent } from "../puzzle/components/context.ts";
 import type { PuzzleKeyUnhandledEvent } from "../puzzle/components/view-interactive.ts";
 import type { Puzzle } from "../puzzle/puzzle.ts";
 import {
+  CHECK_OUT_OF_REACH,
   checkAndSave,
   justSaved,
+  mistakesFound,
   quickLoadPuzzle,
 } from "../puzzle/quick-save-actions.ts";
 import { bareCommand, chordCommand } from "../puzzle/shortcuts.ts";
@@ -756,8 +759,8 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
   }
 
   /**
-   * `Check without saving` — the quiet sibling of Check & save, and the first
-   * caller of `findMistakes` other than it.
+   * `Check without saving` — the quiet sibling of Check & save: the same check
+   * (`Puzzle.check`), without the save.
    *
    * The combined command is deliberate and is what most players want: it
    * verifies first and refuses to save over a mistake, so a saved checkpoint is
@@ -767,30 +770,62 @@ export class PuzzleScreen extends SignalWatcher(Screen) {
    * checks while the board is still consistent, silently loses the position
    * they were keeping. That player wants this.
    *
-   * The engine has already highlighted the mistakes by the time this resolves,
-   * so the report is a non-blocking toast either way. An interrupting modal is
-   * what Check & save uses to say "and I did not save"; there is nothing here
-   * to not do, so there is nothing to interrupt for.
+   * The engine has already highlighted what it found by the time this
+   * resolves, so the report is a non-blocking toast either way. An
+   * interrupting modal is what Check & save uses to say "and I did not save";
+   * there is nothing here to not do, so there is nothing to interrupt for.
    */
   private async handleCheckOnly() {
     const puzzle = this.puzzle;
-    if (!puzzle?.canFindMistakes) return;
-    const n = await puzzle.findMistakes();
-    showToast(
-      n > 0
-        ? {
-            label: `${n} mistake${n === 1 ? "" : "s"} found`,
-            message:
-              `The problem ${n === 1 ? "cell is" : "cells are"} highlighted. ` +
-              "Your last save is untouched.",
-            type: "warning",
-          }
-        : {
-            label: "No mistakes",
-            message: "Nothing on the board is wrong so far.",
-            type: "success",
-          },
-    );
+    if (!puzzle?.canCheck) return;
+    const verdict = await puzzle.check();
+    switch (verdict.kind) {
+      case "mistakes": {
+        const n = verdict.count;
+        showToast({
+          label: mistakesFound(n),
+          message:
+            `The problem ${n === 1 ? "cell is" : "cells are"} highlighted. ` +
+            "Your last save is untouched.",
+          type: "warning",
+        });
+        return;
+      }
+      case "dead-end":
+        showToast({
+          label: "Dead end",
+          message: verdict.reason,
+          type: "warning",
+          duration: 6000,
+        });
+        return;
+      case "out-of-reach":
+        showToast({
+          label: "Couldn't tell",
+          message: CHECK_OUT_OF_REACH,
+          type: "info",
+          duration: 6000,
+        });
+        return;
+      case "sound":
+        showToast(
+          verdict.mistakesChecked
+            ? {
+                label: "No mistakes",
+                message: "Nothing on the board is wrong so far.",
+                type: "success",
+              }
+            : {
+                label: "Nothing wrong found",
+                message:
+                  "Nothing the check can see stops this position being finished.",
+                type: "success",
+              },
+        );
+        return;
+      default:
+        assertNever(verdict, "check without saving");
+    }
   }
 
   /** Inject the 'M' key (ASCII 77): the game's adaptive Mark-all press — fill

@@ -56,10 +56,17 @@ peg stranded is a habit worth having rather than a rule. Sometimes the
 winning line strands a peg for a while and comes back for it later.
 
 The hint refuses when there is nothing to search for: if a peg is
-already cut off, or the search proves no line of jumps from here leaves
-one peg, it asks you to undo. On the larger boards a position can also
-be too far from any finish for the search to settle, and the hint says
-so; *Show solution…* then shows a finish from the board as it was dealt.
+already cut off, it outlines the cut-off pegs and asks you to undo, and
+it asks the same when the search proves no line of jumps from here leaves
+one peg. On the larger boards a position can also be too far from any
+finish for the search to settle, and the hint says so; *Show solution…*
+then shows a finish from the board as it was dealt.
+
+**Check & save** asks the same question, since Pegs has no single answer
+to check your jumps against: it won't save a position the hint would
+ask you to undo from, and outlines any cut-off pegs. A position too far
+from a finish for the search to settle is saved, and the check says it
+couldn't tell.
 
 ## Pegs parameters
 

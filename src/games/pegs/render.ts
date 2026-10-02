@@ -16,6 +16,7 @@ import { drawRaisedBevel, raisedBevelWidth } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
+import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { HOLE, JUMP, type Marked, PEG } from "./hint-text.ts";
@@ -261,10 +262,12 @@ export function redraw(
   _animTime: number,
   flashTime: number,
   hint?: HintStep<PegsMove>,
+  _mistakes?: readonly unknown[],
+  deadEnd?: MarkedDeadEnd,
 ): void {
   const { w, h } = s;
   const ts = ds.tileSize;
-  const marks = stepMarks(hint);
+  const marks = stepMarks(hint ?? deadEnd);
   // A ring on a whole jump, named by words that do not spell the move out,
   // rings its peg and its hole as the two separate rings do.
   const ringed = new Set([

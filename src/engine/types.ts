@@ -192,6 +192,24 @@ export type ChangeNotification =
 
 export type GameStatus = NotifyGameStateChange["status"];
 
+/**
+ * What the check behind Check & save and Check without saving found
+ * (`EngineCore.check`), asked of `findMistakes` first and then of the hint:
+ *
+ * - mistakes: `count` entries are wrong, and they are highlighted.
+ * - a dead end: the hint says to go back from here, in `reason`'s words, and
+ *   marks the cause where its words name one.
+ * - out of reach: the hint's search could not settle the position, so the
+ *   check could not either.
+ * - sound: nothing found; `mistakesChecked` when `findMistakes` ran, so the
+ *   report may say "no mistakes".
+ */
+export type CheckVerdict =
+  | { kind: "mistakes"; count: number }
+  | { kind: "dead-end"; reason: string }
+  | { kind: "out-of-reach" }
+  | { kind: "sound"; mistakesChecked: boolean };
+
 export enum PuzzleButton {
   // The middle button's codes (0x0201, 0x0204, 0x0207) are left unused.
   LEFT_BUTTON = 0x0200,
@@ -238,8 +256,9 @@ export enum PuzzleButton {
 export interface PuzzleStaticAttributes {
   canSolve: boolean;
   canHint: boolean;
-  /** The game can check the board for mistakes (the `findMistakes` hook). */
-  canFindMistakes: boolean;
+  /** The board can be checked (`EngineCore.check`): the game finds mistakes,
+   * or has a hint to ask whether the position is a dead end. */
+  canCheck: boolean;
   /** The game supports "fill all pencil marks" (upstream's `M` key). Gates
    * the toolbar mark-all button. */
   canMarkAll: boolean;

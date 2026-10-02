@@ -660,8 +660,8 @@ no words would have no text file.
   across it" belongs beside it; why the arm fires stays with `narrate`.
 - **Refusals are not hint text in this sense.** They are `HintRefusal`s,
   worded once in `engine/hint-refusal.ts`, and a game's own dead end goes
-  through `puzzleHintRefusal`, whose test reads the call; wrapping one in a
-  `say` entry would hide its sentence from that test.
+  through `puzzleDeadEnd` or `markedDeadEnd`, whose test reads the call;
+  wrapping one in a `say` entry would hide its sentence from that test.
 - **Moving a sentence is not rewording it.** `extract-hint-strings` moved the
   collection's text with a census of every step spoken across every tier
   (16,059 steps across 31 games, byte-identical before and after) and a diff
@@ -1293,9 +1293,9 @@ draws it. That is why `FIX_MISTAKES_FIRST` is not a `HintRefusal`.
 
 **What a game still answers for itself is about the puzzle:**
 
-- **A board `findMistakes` passes that is still doomed.** Bricks, Clusters,
-  Subsets and Loopy check further and say `CONTRADICTION_UNLOCALIZED` when the
-  board is inconsistent with no entry provably wrong.
+- **A board `findMistakes` passes that is still doomed.** Bricks, Bridges,
+  Clusters, Subsets and Loopy check further and say `CONTRADICTION_UNLOCALIZED`
+  when the board is inconsistent with no entry provably wrong.
 - **A finished board its status does not call finished.** Fifteen, Sixteen and
   Netslide count a board solved from the move that sorts it, so a game ID typed
   already sorted is finished at move 0 while the status says ongoing; each
@@ -1306,13 +1306,29 @@ draws it. That is why `FIX_MISTAKES_FIRST` is not a `HintRefusal`.
   leads home. Guess's revealed answer and Flood's board flooded past the limit
   take no more moves, and say `GAME_OVER`.
 - **A dead end only this puzzle has**, in its own words, through
-  `puzzleHintRefusal(sentence)`. Inertia's dead ball and the gems it can no
-  longer reach are the case: naming the specific dead end *is* the hint's
-  value. `hint-refusal.test.ts` reads every call and fails a sentence two games
-  pass, since a situation two games share is a kind, and a sentence that spells
-  out a kind. Untangle once had such a refusal, telling the player to move a
+  `puzzleDeadEnd(sentence)`. Inertia's dead ball is the case: naming the
+  specific dead end *is* the hint's value. `hint-refusal.test.ts` reads every
+  call and fails a sentence two games pass, since a situation two games share is
+  a kind, and a sentence that spells out a kind, and one that does not tell the
+  player to undo. Untangle once had such a refusal, telling the player to move a
   tangled vertex themselves, the one thing the hint existed to do for them; it
   was replaced by a hint that never runs out on a solvable board.
+- **A dead end whose cause the game can point at** returns
+  `markedDeadEnd(phrase…)`, so its words name the elements that cause it and the
+  board marks them, held to the words by the binding walk
+  (`deadEndBindingDefects`). Pegs' cut-off pegs and Inertia's stranded gems are
+  outlined. The renderer reads `redraw`'s `deadEnd` beside `hint`
+  (`stepMarks(hint ?? deadEnd)`); one that reads only `hint` names marks it does
+  not paint, which the walk reports.
+
+**Every refusal is a verdict as well as a sentence.** `isDeadEnd` says whether
+its advice is to go back: a contradiction, a game that is over, nothing found
+that finishes from here, or a game's own dead end. Check & save asks the hint
+for that verdict after `findMistakes`, and refuses to save a dead end, because a
+save is a position to come back to. A search past its reach settles nothing, so
+the check saves and says so. `hint-refusal.test.ts` holds each kind's verdict to
+whether its sentence tells the player to undo, so a new kind's verdict and its
+words cannot disagree.
 
 **The shared builders are no exception**, and that is not a hypothetical:
 `candidate-hint.ts` builds the whole `hint()` of eleven candidate games and once

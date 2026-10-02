@@ -10,6 +10,7 @@
 
 import type {
   ChangeNotification,
+  CheckVerdict,
   Color,
   ConfigDescription,
   ConfigValues,
@@ -48,9 +49,9 @@ export interface PuzzleEngineSurface {
    * move `executeHint` just played), or 0 when nothing is animating. The
    * auto-hint loop paces each step by this. */
   currentAnimationMs(): number;
-  /** Display the current board's mistakes and return how many; 0 when
-   * the game has no mistake-checking. */
-  findMistakes(): number;
+  /** Check the board as Check & save does (`EngineCore.check`), displaying
+   * what the check finds. */
+  check(): CheckVerdict;
 
   /** The active game's reference-aid model (inventory checklist with found
    * status), or null when the game has no reference aid. */

@@ -333,7 +333,7 @@ export const inertiaGame: Game<
     roles: {
       ring: "the way to slide: an arrow on the ball, in the hint's color.",
       outline:
-        "the gem the hint is working on, circled in a second color: *the outlined gem*, in its words. It stays circled through every slide the hint spends working toward it.",
+        "the gem the hint is working on, circled in a second color: *the outlined gem*, in its words. It stays circled through every slide the hint spends working toward it. When the ball can no longer reach some gems and there is no hint to give, those are circled instead (*the outlined gems*).",
     },
   },
   hintKeepTrack,

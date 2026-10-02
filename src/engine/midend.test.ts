@@ -1660,7 +1660,7 @@ describe("Midend mistake overlay (findMistakes lifecycle)", () => {
   it("reports the capability and count, and displays then clears the overlay", () => {
     const h = harness(mistakeGame);
     h.m.newGame();
-    expect(h.m.getStaticProperties().canFindMistakes).toBe(true);
+    expect(h.m.getStaticProperties().canCheck).toBe(true);
 
     // count 0 → no mistakes.
     expect(h.m.findMistakes()).toBe(0);
@@ -1684,8 +1684,11 @@ describe("Midend mistake overlay (findMistakes lifecycle)", () => {
   it("a game without findMistakes reports no capability and zero", () => {
     const h = harness();
     h.m.newGame();
-    expect(h.m.getStaticProperties().canFindMistakes).toBe(false);
     expect(h.m.findMistakes()).toBe(0);
+    expect(h.m.check()).toEqual({ kind: "sound", mistakesChecked: false });
+    // A game with neither hook cannot check at all.
+    const bare = new Midend({ ...fakeGame, hint: undefined });
+    expect(bare.getStaticProperties().canCheck).toBe(false);
   });
 
   it("refuses a hint on a board with mistakes itself, and highlights them", () => {

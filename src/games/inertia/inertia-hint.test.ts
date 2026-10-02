@@ -8,6 +8,7 @@ import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
+import { deadEndBindingDefects } from "../../engine/testing/hint-binding.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newInertiaDesc } from "./generator.ts";
 import { hint } from "./hint.ts";
@@ -370,10 +371,16 @@ describe("inertia hint is a nudge; only Solve is a commitment", () => {
     expect(s.gems).toBe(1);
 
     const res = hint(s);
-    expect(res.ok).toBe(false);
-    if (res.ok) return;
-    expect(res.error).toContain("can no longer reach");
-    expect(res.error).toMatch(/undo/i);
+    if (res.ok || !res.words) throw new Error("expected a marked refusal");
+    expect(res.error).toBe(
+      "The ball can no longer reach the outlined gem. Undo to a position where it can.",
+    );
+    // The stranded gem, which is the one left, is the one circled.
+    const gems = s.board.gemSquares();
+    expect([...stepMarks(res).of("outline", GEM_MARK)]).toEqual(gems);
+    expect(deadEndBindingDefects(inertiaGame, s, inertiaGame.newUi(s), res)).toEqual(
+      [],
+    );
   });
 
   it("counts the last gem collected as finished, so the midend refuses a hint", () => {

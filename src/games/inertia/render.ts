@@ -24,6 +24,7 @@ import {
 import { drawRaisedBevel, raisedBevelWidth } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE } from "../../engine/geometry.ts";
+import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { ARROW, GEM as GEM_MARK } from "./hint-text.ts";
@@ -327,10 +328,12 @@ export function redraw(
   animTime: number,
   flashTime: number,
   hint?: HintStep<InertiaMove>,
+  _mistakes?: readonly unknown[],
+  deadEnd?: MarkedDeadEnd,
 ): void {
   const { w, h } = s.params;
   const ts = ds.tileSize;
-  const marks = stepMarks(hint);
+  const marks = stepMarks(hint ?? deadEnd);
   const goals = new Set(marks.of("outline", GEM_MARK));
 
   // The flash blinks over its length: on for the first and third of three

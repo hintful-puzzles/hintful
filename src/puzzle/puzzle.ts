@@ -5,6 +5,7 @@ import { assertNever } from "../engine/assert-never.ts";
 import { ALREADY_SOLVED } from "../engine/hint-refusal.ts";
 import type {
   ChangeNotification,
+  CheckVerdict,
   Color,
   ConfigDescription,
   ConfigValues,
@@ -143,7 +144,7 @@ export class Puzzle {
     {
       canSolve,
       canHint,
-      canFindMistakes,
+      canCheck,
       hasReference,
       canMarkAll,
       ignoresSecondaryButton,
@@ -157,7 +158,7 @@ export class Puzzle {
     this.displayName = puzzleDataMap[puzzleId]?.name ?? puzzleId;
     this.canSolve = canSolve;
     this.canHint = canHint;
-    this.canFindMistakes = canFindMistakes;
+    this.canCheck = canCheck;
     this.hasReference = hasReference;
     this.canMarkAll = canMarkAll;
     this.ignoresSecondaryButton = ignoresSecondaryButton;
@@ -264,7 +265,7 @@ export class Puzzle {
   public readonly displayName: string;
   public readonly canSolve: boolean;
   public readonly canHint: boolean;
-  public readonly canFindMistakes: boolean;
+  public readonly canCheck: boolean;
   public readonly hasReference: boolean;
   public readonly canMarkAll: boolean;
   public readonly ignoresSecondaryButton: boolean;
@@ -619,10 +620,10 @@ export class Puzzle {
     return this.enqueueInput(() => this.workerPuzzle.executeHint(hideAfter));
   }
 
-  /** Check the board for mistakes: display them and return how many.
-   * 0 for games without mistake-checking. */
-  public async findMistakes(): Promise<number> {
-    return this.workerPuzzle.findMistakes();
+  /** Check the board as Check & save does, displaying what the check finds:
+   * its mistakes, or the cause of a dead end. */
+  public async check(): Promise<CheckVerdict> {
+    return this.workerPuzzle.check();
   }
 
   /** The active game's reference-aid model (inventory checklist with found

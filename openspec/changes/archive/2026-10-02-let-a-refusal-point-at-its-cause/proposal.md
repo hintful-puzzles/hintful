@@ -1,6 +1,7 @@
 # let-a-refusal-point-at-its-cause
 
-**Status: scaffolded, not started (2026-10-02).** Found by `add-pegs-hint`; the
+**Status: implemented and archived (2026-10-02); `design.md` records where it
+departs from this proposal ("dead end" for "doomed", D1).** Found by `add-pegs-hint`; the
 Check & Save half is the owner's (2026-10-02: *"what I need from it in games
 like Pegs is that it would reject if there is no applicable hint. I think this
 needs to be engine functionality"*).

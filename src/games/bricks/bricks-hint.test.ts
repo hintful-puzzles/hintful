@@ -310,6 +310,17 @@ describe("bricks hint — refusals", () => {
     // Bricks' `findMistakes` is a rule validator and cannot see this mark, so
     // a message promising a highlight would promise one that never appears.
     if (r?.ok === false) expect(r.error).toBe(CONTRADICTION_UNLOCALIZED);
+
+    // And Check & save refuses to save it, which `findMistakes` alone did not.
+    const { midend } = renderScenario({
+      game: bricksGame,
+      id: `${encodeParams(FIX_PARAMS, true)}:${FIX.desc}`,
+      moves: [{ kind: "paint", cells: [{ index: cell, to: "unshade" }] }],
+    });
+    expect(midend.check()).toEqual({
+      kind: "dead-end",
+      reason: CONTRADICTION_UNLOCALIZED,
+    });
   });
 });
 

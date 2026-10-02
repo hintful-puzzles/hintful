@@ -4583,11 +4583,11 @@ hint (a player move, undo, redo, restart, new game, solve, and reaching
 the solved state). A game that does not implement `findMistakes` SHALL
 report it as unavailable.
 
-The engine surface SHALL expose `canFindMistakes` (true iff the game
-implements the hook) in its static attributes and `findMistakes(): number`
-(display the mistakes as a side effect, return how many). For a game
-that does not implement the hook, `canFindMistakes` SHALL be false and
-`findMistakes()` SHALL return 0.
+The engine surface SHALL expose `canCheck` (true iff the game implements the
+hook or has a hint) in its static attributes, and SHALL reach the hook through
+`check()`, which asks it first. For a game that does not implement the hook,
+the midend's `findMistakes()` SHALL return 0, and `check()` SHALL report that no
+mistakes were checked.
 
 #### Scenario: Checking a board with mistakes
 
@@ -4613,8 +4613,8 @@ that does not implement the hook, `canFindMistakes` SHALL be false and
 #### Scenario: A game without the hook reports no capability
 
 - **WHEN** the active game does not implement `findMistakes`
-- **THEN** `canFindMistakes` is false and `findMistakes()` returns 0,
-  and the app shell shows no mistake-checking control
+- **THEN** `findMistakes()` returns 0, `check()` reports no mistakes checked,
+  and `canCheck` is true only if the game has a hint to ask
 
 #### Scenario: A candidate annotation that excludes the solution is a mistake
 
@@ -7489,8 +7489,8 @@ and a hint to never leading the player into a mistake.
 ### Requirement: A hint refusal SHALL be one of the collection's own
 
 `HintResult`'s error SHALL be a `HintRefusal`: the union of the literal types of
-the collection's refusal constants, plus a sentence made by
-`puzzleHintRefusal`, the one named escape. A game SHALL NOT be able to return a
+the collection's refusal constants, plus a sentence made by `puzzleDeadEnd` or
+`markedDeadEnd`, the named escapes. A game SHALL NOT be able to return a
 sentence it typed. The set SHALL distinguish, at minimum: the board is
 inconsistent but **no individual entry can be shown to be wrong**;
 deduction has run out; a bounded search is past its reach; for a game that
@@ -7500,12 +7500,21 @@ This is required because the help teaches "there is a mistake on the board" and
 "deduction has run out" as a *pair* whose responses are opposite, and a player
 cannot learn a pair whose members are worded differently in each puzzle.
 
-The escape is for a dead end only one puzzle has, where naming it is the
-substance of the hint (Inertia's dead ball, and the gems its ball can no longer
-reach). A sentence two games pass through it is a situation the collection has,
-and SHALL become a kind; the conformance check SHALL find the escape's calls by
-their shape, read a template's words with each substitution as a hole, and fail
-a call whose sentence it cannot read.
+**Every refusal SHALL say whether it is a dead end** (`isDeadEnd`): whether its
+advice is to go back. The verdict of each kind SHALL be stated in a table typed
+over every kind, so a kind added without one fails the typecheck, and the
+conformance check SHALL hold each kind's verdict to whether its sentence tells
+the player to undo. A contradiction, a game that is over, and nothing found
+that finishes from here are dead ends; deduction run out, a search past its
+reach, no move worth making and a puzzle that cannot be reasoned about are not.
+
+The escapes are for a dead end only one puzzle has, where naming it is the
+substance of the hint (Inertia's dead ball, Pegs' cut-off pegs), and are dead
+ends by construction. A sentence two games pass through them is a situation the
+collection has, and SHALL become a kind; the conformance check SHALL find the
+escapes' calls by their shape, read a template's words with each substitution as
+a hole (a `markedDeadEnd`'s through its `phrase` template), and fail a call
+whose sentence it cannot read or which does not tell the player to undo.
 
 #### Scenario: Two games refuse for the same reason
 
@@ -7515,17 +7524,17 @@ a call whose sentence it cannot read.
 #### Scenario: A new phrasing cannot arrive unnoticed
 
 - **WHEN** a game's `hint` returns a sentence that is neither a refusal constant
-  nor made by `puzzleHintRefusal`
+  nor made by an escape
 - **THEN** the typecheck fails
 
 #### Scenario: A game's own dead end shared by a second game
 
-- **WHEN** two games pass the same sentence to `puzzleHintRefusal`
+- **WHEN** two games pass the same sentence to an escape
 - **THEN** the conformance check fails, asking for a kind
 
 #### Scenario: A kind spelled out through the escape
 
-- **WHEN** a game passes a refusal constant's text to `puzzleHintRefusal`
+- **WHEN** a game passes a refusal constant's text to an escape
 - **THEN** the conformance check fails
 
 #### Scenario: A board inconsistent with nothing to highlight
@@ -7534,6 +7543,12 @@ a call whose sentence it cannot read.
   provably wrong
 - **THEN** the game's `hint` refuses with the message that asks the player to
   undo, not with one pointing at a highlight
+
+#### Scenario: A kind whose verdict disagrees with its advice
+
+- **WHEN** a refusal kind is called a dead end while its sentence does not tell
+  the player to undo, or the reverse
+- **THEN** the conformance check fails
 
 ### Requirement: A game's status is judged from the board alone
 
@@ -7748,3 +7763,53 @@ cannot read as well as one that is not a sentence.
 - **WHEN** several games return `AREA_TOO_LARGE`
 - **THEN** the guard reads the constant's own text and names it once, where it
   is written
+
+### Requirement: The check asks the hint whether a position is a dead end
+
+The `Midend` SHALL offer `check()`, the one check behind Check & save and Check
+without saving. It SHALL ask `findMistakes` first, displaying any mistakes; on a
+board with none, it SHALL ask the game's `hint` for its verdict without showing
+a hint, and report a refusal that `isDeadEnd` calls a dead end with that
+refusal's sentence. A search past its reach (`SEARCH_OUT_OF_REACH`) SHALL be
+reported apart, since it settles nothing. Every other answer SHALL be reported
+sound, saying whether `findMistakes` ran. A solved board, and one a stored hint
+plan still leads on from, SHALL NOT cost a hint computation. The verdict, not
+the marks, SHALL cross the worker boundary: the canvas is painted in the worker.
+
+#### Scenario: A dead end findMistakes cannot see
+
+- **WHEN** `check()` runs on a board `findMistakes` passes and the game's hint
+  refuses it with a dead end (Bricks' wrong-but-legal mark, Pegs' cut-off peg)
+- **THEN** the verdict is a dead end, carrying the hint's sentence
+
+#### Scenario: Past the search's reach
+
+- **WHEN** the hint refuses with `SEARCH_OUT_OF_REACH`
+- **THEN** the verdict says the check could not settle the position
+
+#### Scenario: A sound board shows no hint
+
+- **WHEN** `check()` runs on a board the hint has a plan for
+- **THEN** the verdict is sound and no hint step is displayed
+
+### Requirement: A dead end may mark its cause
+
+A game's hint MAY return `markedDeadEnd(words)`: a dead end whose sentence is
+its words' text and whose references name the elements that cause it. While it
+is the answer on display, from a Hint press or a check, the midend SHALL pass it
+to `redraw` as `deadEnd`, never together with a hint step, and SHALL clear it on
+the transitions that clear the mistake overlay. The binding walk SHALL hold a
+marked dead end's words to the frame as it holds a step's: every element named
+is drawn and nothing else is.
+
+#### Scenario: A cut-off peg is outlined
+
+- **WHEN** Check & save runs on a Pegs board with a peg nothing can reach
+- **THEN** the save is refused with the hint's sentence and the cut-off peg is
+  outlined until the next move
+
+#### Scenario: A renderer that ignores the dead end
+
+- **WHEN** a game returns a marked dead end but its `redraw` paints marks only
+  from the hint step
+- **THEN** the binding walk reports each named element as not drawn

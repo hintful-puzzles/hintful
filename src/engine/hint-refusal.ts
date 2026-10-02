@@ -9,8 +9,14 @@
  * between games freely.
  *
  * **`HintResult`'s error is a {@link HintRefusal}**, so a game cannot return a
- * sentence of its own by accident: it says one of the kinds below, or passes a
- * sentence through {@link puzzleHintRefusal}, the one named escape.
+ * sentence of its own by accident: it says one of the kinds below, or names a
+ * dead end of its own through {@link puzzleDeadEnd} or {@link markedDeadEnd},
+ * the named escapes.
+ *
+ * **Every refusal says whether it is a dead end** ({@link isDeadEnd}): whether
+ * its advice is to go back. The check behind Check & save asks the hint for
+ * exactly that, and refuses to save a position the hint says to undo out of,
+ * since a save is somewhere to come back to.
  *
  * **The midend opens every hint with two refusals of its own**, before it asks
  * the game: {@link ALREADY_SOLVED} for a board whose status is solved, then
@@ -28,10 +34,13 @@
  * a reach rather than a deduction, and past it can only say so
  * ({@link SEARCH_OUT_OF_REACH}); a game that can be lost says so
  * ({@link GAME_OVER}); and a game with a genuinely game-shaped dead end says so
- * in its own words, through {@link puzzleHintRefusal} (Inertia's dead ball).
+ * in its own words, through {@link puzzleDeadEnd} (Inertia's dead ball), and
+ * points at its cause where it knows it, through {@link markedDeadEnd} (Pegs'
+ * cut-off pegs).
  */
 
-import type { NO_SOLUTION_FROM_HERE, SOLUTION_UNKNOWN } from "./solve-failure.ts";
+import type { Narration } from "./hint-words.ts";
+import { NO_SOLUTION_FROM_HERE, SOLUTION_UNKNOWN } from "./solve-failure.ts";
 
 /**
  * The board is finished. Nothing to hint.
@@ -140,22 +149,46 @@ export const PUZZLE_NOT_REASONABLE = "This puzzle's solution can't be determined
  */
 export const GAME_OVER = "This game is over. Undo to play on, or start a new one.";
 
-declare const puzzleHintRefusalBrand: unique symbol;
+declare const puzzleDeadEndBrand: unique symbol;
 
-/** A refusal in a game's own words, made only by {@link puzzleHintRefusal}. */
-type PuzzleHintRefusal = string & { readonly [puzzleHintRefusalBrand]: true };
+/** A dead end in a game's own words, made only by {@link puzzleDeadEnd}. */
+type PuzzleDeadEnd = string & { readonly [puzzleDeadEndBrand]: true };
 
 /**
  * A dead end only this puzzle has, in its words, where naming it is the whole
- * of what the hint can give: Inertia's dead ball, and the gems its ball can no
- * longer reach.
+ * of what the hint can give: Inertia's dead ball, Mines' opened mine. Always a
+ * dead end ({@link isDeadEnd}), so the sentence says how to go back.
+ *
+ * There is no escape for a game's own refusal that is *not* a dead end, because
+ * no game has needed one.
  *
  * `hint-refusal.test.ts` reads every call and fails a sentence two games pass,
  * since a situation two games share is a kind, and a sentence that spells out a
  * kind.
  */
-export function puzzleHintRefusal(sentence: string): PuzzleHintRefusal {
-  return sentence as PuzzleHintRefusal;
+export function puzzleDeadEnd(sentence: string): PuzzleDeadEnd {
+  return sentence as PuzzleDeadEnd;
+}
+
+/** A hint's refusal that points at its cause: the sentence, and the words it
+ * is made from, whose references the board marks while the refusal is shown. */
+export interface MarkedDeadEnd {
+  readonly ok: false;
+  readonly error: PuzzleDeadEnd;
+  readonly words: Narration;
+}
+
+/**
+ * A {@link puzzleDeadEnd} whose words name the elements that cause it (Pegs'
+ * cut-off pegs, Inertia's stranded gems), so the board marks them as it marks a
+ * step's. A whole `HintResult`, so that the sentence is the words' text and the
+ * two cannot disagree.
+ *
+ * Write the words as a `phrase` template at the call: `hint-refusal.test.ts`
+ * reads them there, as it reads a {@link puzzleDeadEnd}'s sentence.
+ */
+export function markedDeadEnd(words: Narration): MarkedDeadEnd {
+  return { ok: false, error: puzzleDeadEnd(words.text), words };
 }
 
 /**
@@ -173,4 +206,36 @@ export type HintRefusal =
   | typeof GAME_OVER
   | typeof NO_SOLUTION_FROM_HERE
   | typeof SOLUTION_UNKNOWN
-  | PuzzleHintRefusal;
+  | PuzzleDeadEnd;
+
+/**
+ * Whether each kind is a dead end: whether its advice is to go back. Typed over
+ * every kind, so a kind added without a verdict fails the typecheck, and
+ * `hint-refusal.test.ts` holds each verdict to its sentence.
+ *
+ * - **Dead ends**: the entries contradict each other, the game is over, or
+ *   nothing was found that finishes from here. That last may be a proof or a
+ *   heuristic's failure, and the sentence says only what was found; either way
+ *   its advice is undo.
+ * - **Not**: deduction ran out on a sound board, a search ran past its reach, no
+ *   move would help, or the puzzle itself cannot be reasoned about. None says
+ *   this position is worse than an earlier one.
+ */
+const DEAD_END: Record<Exclude<HintRefusal, PuzzleDeadEnd>, boolean> = {
+  [CONTRADICTION_UNLOCALIZED]: true,
+  [GAME_OVER]: true,
+  [NO_SOLUTION_FROM_HERE]: true,
+  [DEDUCTION_EXHAUSTED]: false,
+  [SEARCH_OUT_OF_REACH]: false,
+  [NO_MOVE_WORTH_MAKING]: false,
+  [PUZZLE_NOT_REASONABLE]: false,
+  [SOLUTION_UNKNOWN]: false,
+};
+
+/** Whether `refusal` says the position is a dead end. A sentence that is no
+ * kind's was made by {@link puzzleDeadEnd}, since the type admits no other. */
+export function isDeadEnd(refusal: HintRefusal): boolean {
+  return Object.hasOwn(DEAD_END, refusal)
+    ? DEAD_END[refusal as keyof typeof DEAD_END]
+    : true;
+}

@@ -34,12 +34,23 @@ function flashSaved(puzzleId: string): void {
   }, SAVED_FLASH_MS);
 }
 
+/** What the check says beside a save it could not settle: the hint's search
+ * ran past its reach, which establishes nothing, so the save goes ahead. */
+export const CHECK_OUT_OF_REACH =
+  "This position is further ahead than the check can search, so it couldn't tell whether it can still be finished.";
+
+/** "3 mistakes found", "1 mistake found". */
+export function mistakesFound(n: number): string {
+  return `${n} mistake${n === 1 ? "" : "s"} found`;
+}
+
 /**
- * Combined Check-&-Save. On a game with mistake-checking, validate first
- * and quick-save only a provably-clean board; on mistakes, leave the
- * previous quick-save intact and report them (the engine has already
- * highlighted them) via an interrupting modal. On a game without
- * mistake-checking, this is a plain quick-save.
+ * Combined Check-&-Save. On a game that can check (`Puzzle.canCheck`), check
+ * first (`Puzzle.check`) and quick-save only a board the check passes: on
+ * mistakes, or a position the hint calls a dead end, leave the previous
+ * quick-save intact and say why (the engine has already highlighted what it
+ * found) via an interrupting modal. On a game that cannot check, this is a
+ * plain quick-save.
  *
  * **Success is confirmed on the button itself** (owner, 2026-09-25: the save
  * "shouldn't be that special"): it reads "Saved" for a moment through
@@ -53,26 +64,48 @@ function flashSaved(puzzleId: string): void {
  * The spoken confirmation reports the *check*, not only the save, where there
  * was one to run: a player who pressed "Check and save" asked whether the board
  * is still sound, and the answer is the part they cannot see for themselves.
+ * A save the check could not settle says so in a toast, which is announced in
+ * its place (owner, 2026-10-02).
  */
 export async function checkAndSave(puzzle: Puzzle): Promise<void> {
-  const checked = puzzle.canFindMistakes;
-  if (checked) {
-    const n = await puzzle.findMistakes();
-    if (n > 0) {
-      await showAlert({
-        label: "Not saved",
-        message: `${n} mistake${n === 1 ? "" : "s"} found — the problem ${
-          n === 1 ? "cell is" : "cells are"
-        } highlighted. Fix ${n === 1 ? "it" : "them"} before quick-saving.`,
-        type: "warning",
-        lightDismiss: true,
-      });
-      return;
-    }
+  const verdict = puzzle.canCheck ? await puzzle.check() : null;
+  if (verdict?.kind === "mistakes") {
+    const n = verdict.count;
+    await showAlert({
+      label: "Not saved",
+      message: `${mistakesFound(n)} — the problem ${
+        n === 1 ? "cell is" : "cells are"
+      } highlighted. Fix ${n === 1 ? "it" : "them"} before quick-saving.`,
+      type: "warning",
+      lightDismiss: true,
+    });
+    return;
+  }
+  if (verdict?.kind === "dead-end") {
+    await showAlert({
+      label: "Not saved",
+      message: verdict.reason,
+      type: "warning",
+      lightDismiss: true,
+    });
+    return;
   }
   await savedGames.quickSave(puzzle);
   flashSaved(puzzle.puzzleId);
-  announce(checked ? "No mistakes. Saved." : "Saved.");
+  if (verdict?.kind === "out-of-reach") {
+    showToast({
+      label: "Saved",
+      message: CHECK_OUT_OF_REACH,
+      type: "info",
+      duration: 6000,
+    });
+  } else {
+    announce(
+      verdict?.kind === "sound" && verdict.mistakesChecked
+        ? "No mistakes. Saved."
+        : "Saved.",
+    );
+  }
 }
 
 /** Restore the quick-save slot for `puzzle`, confirming success with a

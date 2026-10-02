@@ -190,7 +190,7 @@ outline, separate from the live three-in-a-row / count error overlays.
 #### Scenario: Check & Save refuses a mistaken board
 
 - **WHEN** the board carries at least one contradicting mark
-- **THEN** the engine reports `canFindMistakes` true, `findMistakes` returns a
+- **THEN** the engine reports `canCheck` true, `findMistakes` returns a
   non-empty list, and the displayed mistake overlay renders the flagged cells in
   the error color
 

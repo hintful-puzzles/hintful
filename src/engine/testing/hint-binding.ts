@@ -1,6 +1,8 @@
 /**
  * The check a bound game's every hint step owes (`Game.hintMarks`): its words
  * and its marks say the same thing, measured on the frame `redraw` paints.
+ * A refusal that marks its cause (`markedDeadEnd`) owes the same, through
+ * `redraw`'s `deadEnd`.
  *
  * 1. The explanation is the words' text.
  * 2. Every element the words name is drawn: narrowing it out of the words
@@ -20,6 +22,7 @@
  */
 
 import type { HintStep } from "../game.ts";
+import type { MarkedDeadEnd } from "../hint-refusal.ts";
 import type { Narration } from "../hint-words.ts";
 import type { AnyGame } from "./enrollment.ts";
 import { RecordingDrawing } from "./recording-drawing.ts";
@@ -33,29 +36,60 @@ export function bindingDefects(
   ui: unknown,
   step: HintStep<unknown>,
 ): string[] {
+  if (!step.words) return ["the step has no words"];
+  return defects(game, state, ui, step.words, step.explanation, (w) => ({
+    hint: { ...step, words: w },
+  }));
+}
+
+/** What is wrong with a marked refusal, displayed over `state`; empty when it
+ * is bound. */
+export function deadEndBindingDefects(
+  game: AnyGame,
+  state: unknown,
+  ui: unknown,
+  deadEnd: MarkedDeadEnd,
+): string[] {
+  return defects(game, state, ui, deadEnd.words, deadEnd.error, (w) => ({
+    deadEnd: { ...deadEnd, words: w },
+  }));
+}
+
+/** What `redraw` is given to show `words`. */
+type Shown = (words: Narration) => {
+  hint?: HintStep<unknown>;
+  deadEnd?: MarkedDeadEnd;
+};
+
+function defects(
+  game: AnyGame,
+  state: unknown,
+  ui: unknown,
+  words: Narration,
+  explanation: string,
+  shown: Shown,
+): string[] {
   const legend = game.hintMarks;
   if (!legend) return ["the game declares no hintMarks"];
-  const { words } = step;
-  if (!words) return ["the step has no words"];
   const out: string[] = [];
-  if (words.text !== step.explanation)
-    out.push(`explanation "${step.explanation}" is not its words "${words.text}"`);
+  if (words.text !== explanation)
+    out.push(`explanation "${explanation}" is not its words "${words.text}"`);
   for (const r of words.refs)
     if (!(r.role in legend.roles))
       out.push(`names the ${r.role} role, which the legend does not list`);
 
   const palette = game.colors(DEFAULT_BACKGROUND);
   const tileSize = game.preferredTileSize ?? 32;
-  const frame = (shown?: HintStep<unknown>): string => {
+  const frame = (w?: Narration): string => {
     const rec = new RecordingDrawing(palette);
     const ds = game.newDrawState(state, tileSize);
-    game.redraw(rec, ds, null, state, 1, ui, 0, 0, shown);
+    const { hint, deadEnd } = w ? shown(w) : {};
+    game.redraw(rec, ds, null, state, 1, ui, 0, 0, hint, undefined, deadEnd);
     return JSON.stringify(rec.ops);
   };
-  const saying = (w: Narration): HintStep<unknown> => ({ ...step, words: w });
 
-  const full = frame(step);
-  if (frame(saying(words.narrow(() => false))) !== frame())
+  const full = frame(words);
+  if (frame(words.narrow(() => false)) !== frame())
     out.push(
       "draws a mark no word names (the frame without its references is not the unhinted one)",
     );
@@ -79,7 +113,7 @@ export function bindingDefects(
       const without = words.narrow(
         (role, kind, k) => !drop.has(`${role}|${kind}|${k}`),
       );
-      if (frame(saying(without)) === full) out.push(`names ${id}, which is not drawn`);
+      if (frame(without) === full) out.push(`names ${id}, which is not drawn`);
     }
   return out;
 }

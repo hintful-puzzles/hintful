@@ -20,6 +20,7 @@ import { transfer } from "comlink";
 import type { EngineCore } from "../engine/midend.ts";
 import type {
   ChangeNotification,
+  CheckVerdict,
   Color,
   ConfigDescription,
   ConfigValues,
@@ -100,8 +101,8 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
   currentAnimationMs(): number {
     return this.engine.currentAnimationMs();
   }
-  findMistakes(): number {
-    return this.engine.findMistakes();
+  check(): CheckVerdict {
+    return this.engine.check();
   }
   getReference(): ReferenceModel | null {
     return this.engine.getReference();

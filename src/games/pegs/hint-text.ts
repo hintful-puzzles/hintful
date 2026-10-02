@@ -41,7 +41,7 @@ export const HINT_MARKS: HintMarkLegend = {
   roles: {
     ring: "the jump to make: the peg that jumps, and the hole it lands in.",
     outline:
-      "a peg that is stranded, with no peg beside it, or that another jump would strand or cut off for good (*the outlined peg*); or, as arrows, the jumps that can still finish with one peg, the ringed one among them (*the jumps with arrows*).",
+      "a peg that is already cut off for good, when there is no hint to give; a peg that is stranded, with no peg beside it, or that another jump would strand or cut off for good (*the outlined peg*); or, as arrows, the jumps that can still finish with one peg, the ringed one among them (*the jumps with arrows*).",
     stripes:
       "another jump that would strand a peg or cut it off (*the striped jump*), or the pegs a short run of jumps clears while every other peg ends where it began (*the striped row*, *column* or *block*).",
   },

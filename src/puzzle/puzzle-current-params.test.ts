@@ -17,7 +17,7 @@ import type { RemoteWorkerPuzzle } from "./worker.ts";
 const ATTRS: PuzzleStaticAttributes = {
   canSolve: false,
   canHint: false,
-  canFindMistakes: false,
+  canCheck: false,
   hasReference: false,
   canMarkAll: false,
   ignoresSecondaryButton: false,

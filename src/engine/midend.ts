@@ -29,6 +29,7 @@ import {
   type ActiveHint,
   type Game,
   type GameDrawing,
+  type HintResult,
   type HintStep,
   UI_UPDATE,
 } from "./game.ts";
@@ -37,6 +38,9 @@ import {
   ALREADY_SOLVED,
   DEDUCTION_EXHAUSTED,
   FIX_MISTAKES_FIRST,
+  isDeadEnd,
+  type MarkedDeadEnd,
+  SEARCH_OUT_OF_REACH,
 } from "./hint-refusal.ts";
 import { pencilModeKey, takesNotes } from "./key-labels.ts";
 import { describeParams, presetMenu, type TitledPresetMenu } from "./param-label.ts";
@@ -55,6 +59,7 @@ import { randomNew } from "./random/index.ts";
 import { decodeSave, encodeSave, type SaveEnvelope } from "./save.ts";
 import type {
   ChangeNotification,
+  CheckVerdict,
   Color,
   ConfigDescription,
   ConfigValues,
@@ -117,6 +122,9 @@ export interface EngineCore {
    * many. 0 (and no display change) when the game has no
    * mistake-checking. */
   findMistakes(): number;
+  /** Check the board as Check & save does: its mistakes, then whether the
+   * hint calls it a dead end. Displays what it finds; never shows a hint. */
+  check(): CheckVerdict;
   /** The active game's reference-aid model, or null when it has none. */
   getReference(): ReferenceModel | null;
   /** Spotlight (or clear) a reference item by mutating Ui, repainting like
@@ -279,6 +287,9 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * data), or null. Midend-only, never in game state, never persisted;
    * shown until the next transition, exactly like a displayed hint. */
   private activeMistakes: readonly unknown[] | null = null;
+  /** The refusal whose words mark its cause, while it is the answer on
+   * display; cleared with the mistake overlay, on the same transitions. */
+  private activeDeadEnd: MarkedDeadEnd | null = null;
   private timerElapsed = 0;
   /** The `show-timer` preference. Every game has it, and it starts on: the
    * readout is small enough that a player who does not want it can switch it
@@ -333,7 +344,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     return {
       canSolve: this.game.solve !== undefined,
       canHint: this.game.hint !== undefined,
-      canFindMistakes: this.game.findMistakes !== undefined,
+      canCheck: this.game.findMistakes !== undefined || this.game.hint !== undefined,
       hasReference: this.game.reference !== undefined,
       canMarkAll: this.game.canMarkAll ?? false,
       ignoresSecondaryButton: this.game.ignoresSecondaryButton ?? false,
@@ -494,7 +505,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.drawState = this.freshDrawState(initial);
     this.cheated = false;
     this.clearHint();
-    this.clearMistakes();
+    this.clearOverlays();
     this.timerElapsed = 0;
     this.hinted = false;
     this.clearAnimation();
@@ -523,7 +534,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.stateReplaced(prev, this.state);
     this.cheated = false;
     this.clearHint();
-    this.clearMistakes();
+    this.clearOverlays();
     this.clearAnimation();
     this.emitStateChange();
     this.emitStatusBar();
@@ -806,11 +817,12 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.hintDisplayed = false;
   }
 
-  /** Drop the mistake overlay. Called on every transition (a move,
-   * undo, redo, new/restart game) so a stale "you were wrong here"
-   * highlight never outlives the move that might have fixed it. */
-  private clearMistakes(): void {
+  /** Drop the mistake overlay and a dead end's marks. Called on every
+   * transition (a move, undo, redo, new/restart game) so a stale "you were
+   * wrong here" highlight never outlives the move that might have fixed it. */
+  private clearOverlays(): void {
     this.activeMistakes = null;
+    this.activeDeadEnd = null;
   }
 
   findMistakes(): number {
@@ -819,6 +831,39 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     this.activeMistakes = mistakes.length > 0 ? mistakes : null;
     this.requestRedraw();
     return mistakes.length;
+  }
+
+  /**
+   * The check behind Check & save: mistakes first, as the hint asks them;
+   * otherwise the hint's verdict on the position, without showing a hint.
+   *
+   * A hint's refusal says whether it is a dead end (`isDeadEnd`), and that is
+   * the whole question: a save is a position to come back to, and a dead end is
+   * one the hint's own advice is to go back from. A search past its reach
+   * settles nothing either way. A finished board, and one a stored plan still
+   * leads on from, are not asked about, since the answer is already known.
+   */
+  check(): CheckVerdict {
+    const mistakesChecked = this.game.findMistakes !== undefined;
+    const count = this.findMistakes();
+    if (count > 0) return { kind: "mistakes", count };
+    const sound: CheckVerdict = { kind: "sound", mistakesChecked };
+    if (!this.game.hint || this.statusOf(this.state) === "solved") return sound;
+    this.refreshActiveHint();
+    if (this.activeHint) return sound;
+    const result = this.game.hint(this.state, this.aux, this.ui);
+    if (result.ok) return sound;
+    if (result.error === SEARCH_OUT_OF_REACH) return { kind: "out-of-reach" };
+    if (!isDeadEnd(result.error)) return sound;
+    this.showDeadEnd(result);
+    return { kind: "dead-end", reason: result.error };
+  }
+
+  /** Mark a dead end's cause, when its words name one. */
+  private showDeadEnd(result: HintResult<Move>): void {
+    if (result.ok || !result.words) return;
+    this.activeDeadEnd = result;
+    this.requestRedraw();
   }
 
   getReference(): ReferenceModel | null {
@@ -908,7 +953,10 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
         );
       }
     }
-    if (!result.ok) return result.error;
+    if (!result.ok) {
+      this.showDeadEnd(result);
+      return result.error;
+    }
     if (result.steps.length === 0) return "Game returned an empty hint plan";
     this.activeHint = { steps: result.steps, index: 0 };
     this.advanceHintOnAnimationEnd = false;
@@ -1102,7 +1150,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // Any transition (move/undo/redo/UI update/solve, and a hint
     // request) invalidates a displayed mistake overlay — the board has
     // changed, so the old "wrong here" marks no longer describe it.
-    this.clearMistakes();
+    this.clearOverlays();
     this.emitStateChange();
     this.emitStatusBar();
     // A non-animated transition paints immediately (the C frontend
@@ -1743,6 +1791,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       this.flashTime,
       this.displayedHintStep ?? undefined,
       this.activeMistakes ?? undefined,
+      this.activeDeadEnd ?? undefined,
     );
     dr.endDraw();
   }

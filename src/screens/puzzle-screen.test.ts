@@ -67,10 +67,14 @@ afterEach(() => {
 // that a remembered board survives a reload, and a mocked store would assert
 // only that this file's own fake was called — the shape of guard this repo keeps
 // catching (a check aimed at a neighbor of the thing it claims to check).
-import { justSaved } from "../puzzle/quick-save-actions.ts";
+import type { CheckVerdict } from "../engine/types.ts";
+import { CHECK_OUT_OF_REACH, justSaved } from "../puzzle/quick-save-actions.ts";
 import { settings } from "../store/settings.ts";
 import { sleep } from "../utils/timing.ts";
 import { PuzzleScreen } from "./puzzle-screen.ts";
+
+const SOUND: CheckVerdict = { kind: "sound", mistakesChecked: true };
+const mistakes = (count: number): CheckVerdict => ({ kind: "mistakes", count });
 
 interface CommandHost {
   commandMap: Record<string, (...args: unknown[]) => unknown>;
@@ -82,14 +86,15 @@ interface CommandHost {
 /** Build a screen with a fake puzzle injected, without scheduling a Lit
  * render (shadow the reactive accessors with own properties so no update
  * is requested — there is no render root in this detached element). */
-function makeScreen(opts: { canFindMistakes: boolean; mistakeCount: number }) {
-  const findMistakes = vi.fn(async () => opts.mistakeCount);
+function makeScreen(opts: { canCheck: boolean; verdict?: CheckVerdict }) {
+  const verdict = opts.verdict ?? SOUND;
+  const check = vi.fn(async () => verdict);
   const selectReference = vi.fn(async () => undefined);
   const solve = vi.fn(async () => undefined);
   const fakePuzzle = {
     puzzleId: "galaxies",
-    canFindMistakes: opts.canFindMistakes,
-    findMistakes,
+    canCheck: opts.canCheck,
+    check,
     selectReference,
     solve,
   };
@@ -106,7 +111,7 @@ function makeScreen(opts: { canFindMistakes: boolean; mistakeCount: number }) {
   return {
     screen,
     host: screen as unknown as CommandHost,
-    findMistakes,
+    check,
     selectReference,
     solve,
   };
@@ -130,13 +135,10 @@ describe("puzzle-screen: Check-&-Save command", () => {
   it("saves a clean board (0 mistakes) and confirms on the button, not in a popup", async () => {
     vi.useFakeTimers();
     try {
-      const { host, findMistakes } = makeScreen({
-        canFindMistakes: true,
-        mistakeCount: 0,
-      });
+      const { host, check } = makeScreen({ canCheck: true });
       expect(justSaved("galaxies")).toBe(false);
       await host.commandMap["check-and-save"].call(host);
-      expect(findMistakes).toHaveBeenCalledOnce();
+      expect(check).toHaveBeenCalledOnce();
       expect(quickSave).toHaveBeenCalledOnce();
       // Owner, 2026-09-25: success is not special. No toast, no modal — the
       // button reads "Saved" for a moment, and then it is Check & save again.
@@ -155,12 +157,9 @@ describe("puzzle-screen: Check-&-Save command", () => {
   });
 
   it("refuses to save when mistakes are present, and reports them in a modal", async () => {
-    const { host, findMistakes } = makeScreen({
-      canFindMistakes: true,
-      mistakeCount: 3,
-    });
+    const { host, check } = makeScreen({ canCheck: true, verdict: mistakes(3) });
     await host.commandMap["check-and-save"].call(host);
-    expect(findMistakes).toHaveBeenCalledOnce();
+    expect(check).toHaveBeenCalledOnce();
     expect(quickSave).not.toHaveBeenCalled();
     // A refused save must interrupt — modal, not toast.
     expect(showToast).not.toHaveBeenCalled();
@@ -173,13 +172,53 @@ describe("puzzle-screen: Check-&-Save command", () => {
     expect(String(showAlert.mock.calls[0]?.[0]?.message)).toContain("3 mistakes found");
   });
 
-  it("on a game without mistake-checking, Check-&-Save is a plain quick-save", async () => {
-    const { host, findMistakes } = makeScreen({
-      canFindMistakes: false,
-      mistakeCount: 99, // ignored — findMistakes must not be consulted
+  it("refuses to save a dead end, in the hint's words, in a modal", async () => {
+    const reason = "The outlined peg is cut off. Undo until it is not.";
+    const { host } = makeScreen({
+      canCheck: true,
+      verdict: { kind: "dead-end", reason },
     });
     await host.commandMap["check-and-save"].call(host);
-    expect(findMistakes).not.toHaveBeenCalled();
+    expect(quickSave).not.toHaveBeenCalled();
+    expect(showToast).not.toHaveBeenCalled();
+    expect(showAlert).toHaveBeenCalledOnce();
+    expect(showAlert.mock.calls[0]?.[0]).toMatchObject({
+      label: "Not saved",
+      message: reason,
+    });
+  });
+
+  it("saves a position the check could not settle, and says so", async () => {
+    // Owner, 2026-10-02: past the search's reach establishes nothing, so it
+    // saves; but "Saved." alone would hide that the check could not tell.
+    const { host } = makeScreen({ canCheck: true, verdict: { kind: "out-of-reach" } });
+    await host.commandMap["check-and-save"].call(host);
+    expect(quickSave).toHaveBeenCalledOnce();
+    expect(justSaved("galaxies")).toBe(true);
+    expect(showAlert).not.toHaveBeenCalled();
+    expect(showToast).toHaveBeenCalledOnce();
+    expect(showToast.mock.calls[0]?.[0]).toMatchObject({
+      label: "Saved",
+      message: CHECK_OUT_OF_REACH,
+    });
+    // The toast is announced; a second announcement would say it twice.
+    expect(announce).not.toHaveBeenCalled();
+  });
+
+  it("claims no mistakes only where findMistakes ran", async () => {
+    const { host } = makeScreen({
+      canCheck: true,
+      verdict: { kind: "sound", mistakesChecked: false },
+    });
+    await host.commandMap["check-and-save"].call(host);
+    expect(quickSave).toHaveBeenCalledOnce();
+    expect(announce).toHaveBeenCalledWith("Saved.");
+  });
+
+  it("on a game that cannot check, Check-&-Save is a plain quick-save", async () => {
+    const { host, check } = makeScreen({ canCheck: false, verdict: mistakes(99) });
+    await host.commandMap["check-and-save"].call(host);
+    expect(check).not.toHaveBeenCalled();
     expect(quickSave).toHaveBeenCalledOnce();
     // No check ran, so the announcement claims none.
     expect(announce).toHaveBeenCalledWith("Saved.");
@@ -187,7 +226,7 @@ describe("puzzle-screen: Check-&-Save command", () => {
   });
 
   it("Cmd/Ctrl+S routes to Check-&-Save and suppresses the browser default", async () => {
-    const { host } = makeScreen({ canFindMistakes: true, mistakeCount: 0 });
+    const { host } = makeScreen({ canCheck: true });
     const event = new KeyboardEvent("keydown", {
       key: "s",
       metaKey: true,
@@ -219,12 +258,9 @@ describe("puzzle-screen: Check without saving", () => {
    * asserting that the mock remembers what it was told.
    */
   it("checks and reports without touching the quick-save slot", async () => {
-    const { host, findMistakes } = makeScreen({
-      canFindMistakes: true,
-      mistakeCount: 2,
-    });
+    const { host, check } = makeScreen({ canCheck: true, verdict: mistakes(2) });
     await host.commandMap["check-only"].call(host);
-    expect(findMistakes).toHaveBeenCalledOnce();
+    expect(check).toHaveBeenCalledOnce();
     expect(quickSave).not.toHaveBeenCalled();
     expect(showToast).toHaveBeenCalledOnce();
     expect(showToast.mock.calls[0]?.[0]).toMatchObject({
@@ -240,7 +276,7 @@ describe("puzzle-screen: Check without saving", () => {
   });
 
   it("reports a clean board too", async () => {
-    const { host } = makeScreen({ canFindMistakes: true, mistakeCount: 0 });
+    const { host } = makeScreen({ canCheck: true });
     await host.commandMap["check-only"].call(host);
     expect(quickSave).not.toHaveBeenCalled();
     expect(showToast.mock.calls[0]?.[0]).toMatchObject({
@@ -249,26 +285,37 @@ describe("puzzle-screen: Check without saving", () => {
     });
   });
 
-  it("does nothing on a game that cannot check", async () => {
-    // Both commands are gated on `canFindMistakes` in the rail, so this arm is
-    // only ever reached by a shortcut or a stale surface — and it must not
-    // report a clean board it never examined.
-    const { host, findMistakes } = makeScreen({
-      canFindMistakes: false,
-      mistakeCount: 0,
+  it("reports a dead end in the hint's words, and what it could not settle", async () => {
+    const reason =
+      "The ball can no longer reach the outlined gem. Undo to where it can.";
+    const dead = makeScreen({ canCheck: true, verdict: { kind: "dead-end", reason } });
+    await dead.host.commandMap["check-only"].call(dead.host);
+    expect(showToast.mock.calls[0]?.[0]).toMatchObject({
+      label: "Dead end",
+      message: reason,
+      type: "warning",
     });
+    const far = makeScreen({ canCheck: true, verdict: { kind: "out-of-reach" } });
+    await far.host.commandMap["check-only"].call(far.host);
+    expect(showToast.mock.calls[1]?.[0]).toMatchObject({ message: CHECK_OUT_OF_REACH });
+    expect(quickSave).not.toHaveBeenCalled();
+    expect(showAlert).not.toHaveBeenCalled();
+  });
+
+  it("does nothing on a game that cannot check", async () => {
+    // The command is gated on `canCheck` in the rail, so this arm is only ever
+    // reached by a shortcut or a stale surface — and it must not report a
+    // clean board it never examined.
+    const { host, check } = makeScreen({ canCheck: false });
     await host.commandMap["check-only"].call(host);
-    expect(findMistakes).not.toHaveBeenCalled();
+    expect(check).not.toHaveBeenCalled();
     expect(showToast).not.toHaveBeenCalled();
   });
 });
 
 describe("puzzle-screen: reference panel toggle command", () => {
   it("toggle-reference flips the panel and keeps the spotlight on close", () => {
-    const { screen, host, selectReference } = makeScreen({
-      canFindMistakes: false,
-      mistakeCount: 0,
-    });
+    const { screen, host, selectReference } = makeScreen({ canCheck: false });
     // Shadow the reactive `referenceOpen` with a plain own property so toggling
     // it doesn't schedule a Lit render on this detached element (the same
     // technique makeScreen uses for `puzzle`/`puzzleId`).
@@ -298,10 +345,7 @@ describe("puzzle-screen: focus returns to the board after a command", () => {
   // but it swallowed the cursor keys in every keyboard-playable game.
 
   it("hands focus to the board once the command has run", async () => {
-    const { screen, host, solve } = makeScreen({
-      canFindMistakes: false,
-      mistakeCount: 0,
-    });
+    const { screen, host, solve } = makeScreen({ canCheck: false });
     const focus = stubBoard(screen);
 
     expect(host.handleCommand("solve")).toBe(true);
@@ -316,7 +360,7 @@ describe("puzzle-screen: focus returns to the board after a command", () => {
   });
 
   it("leaves focus alone when the command isn't one of ours", async () => {
-    const { screen, host } = makeScreen({ canFindMistakes: false, mistakeCount: 0 });
+    const { screen, host } = makeScreen({ canCheck: false });
     const focus = stubBoard(screen);
 
     // An unhandled command falls through to the browser (an ordinary link, say),
@@ -331,7 +375,7 @@ describe("puzzle-screen: focus returns to the board after a command", () => {
     // back, whether or not the control also went through the command bus — a
     // control may be both a `data-command` and a menu trigger, and only a real
     // event's composed path tells those apart.
-    const { screen, host } = makeScreen({ canFindMistakes: false, mistakeCount: 0 });
+    const { screen, host } = makeScreen({ canCheck: false });
     const focus = stubBoard(screen);
 
     host.handleChromeClick(new MouseEvent("click", { detail: 1 }));
@@ -343,7 +387,7 @@ describe("puzzle-screen: focus returns to the board after a command", () => {
     // Tab to the button, press Enter: that arrives as a click with detail 0. The
     // player is walking the tab order on purpose; throwing them out of it onto
     // the board would lose their place.
-    const { screen, host } = makeScreen({ canFindMistakes: false, mistakeCount: 0 });
+    const { screen, host } = makeScreen({ canCheck: false });
     const focus = stubBoard(screen);
 
     host.handleChromeClick(new MouseEvent("click", { detail: 0 }));

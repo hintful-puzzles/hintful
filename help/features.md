@@ -185,11 +185,22 @@ left exactly as it was, so a check you fail can never cost you the one you
 passed. Return to that saved position at any time with
 ::back-to-last-save:: **Back to last save**, directly beneath it.
 
+The check also asks the puzzle's [hint](#hints) whether there is any way on from
+here. A position can be past saving without a single square being wrong: a peg
+in *Pegs* that nothing can reach again, a gem in *Inertia* the ball can never get
+back to, or entries that contradict each other with none of them provably wrong.
+When the hint would ask you to undo, the check says why in the hint's own words,
+marks what it is about where it can, and **doesn't save**, so your saved position
+is always one you can still finish from. In the puzzles whose hint works by
+searching ahead, a position can be further from the finish than the search can
+see. The check can't settle that either way, so it saves, and tells you it
+couldn't tell.
+
 In a puzzle that can't check itself the button reads the same and simply saves —
 one name for the save in every puzzle.
 
 There is also a quieter ::check-only:: **Check without saving**, low in the
-*Help me play* group. It highlights and counts the mistakes exactly as above but
+*Help me play* group. It runs the same check and reports it exactly as above but
 writes nothing, which is what you want when you already saved a position you
 mean to keep: the save slot holds one position per puzzle, so checking-and-saving
 would replace it.
