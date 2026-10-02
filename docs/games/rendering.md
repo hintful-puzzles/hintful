@@ -216,6 +216,11 @@ cause has so far always been one of these:
   that square repainted for a hint mark beside it, it filled over the indicator,
   which `repaintPencilIndicator` draws only when the mode changes. A tile that
   repaints over a decoration must forget what the decoration showed.
+- **A cue erased on one event that another event also retires.** Guess erased
+  its "current move" marker when `nextGo` moved. A win keeps the winning row
+  at `nextGo`, so the marker stayed beside it on the won board. A fresh paint
+  of that board draws no marker. Erase on everything that retires the cue,
+  not only on the event that usually does.
 
 **A mark that crosses tiles goes into each tile's key in one of two ways**, and
 the choice is the game's:
@@ -240,27 +245,43 @@ frame the run never painted. So the run:
 - ticks the clock in 0.05 s steps after every event, painting each frame until
   one comes out still (`Midend.timer` takes seconds);
 - paints once mid-drag;
-- starts a hinted game by showing its hint and playing three steps.
+- starts a hinted game by showing its hint and playing three steps;
+- checks the board as Check & save does, so a marked dead end is painted;
+- then, on a draw state of its own, walks the hint's plan from the deal to its
+  end, and checks where it stopped. The walk paints where each event starts
+  and where it settles, not the frames between, because a slide puzzle's plan
+  is long and every step moves in slow motion.
 
-`RepaintRun.reached` counts animated, hinted and mistaken frames, and the test
-requires:
+`RepaintRun.reached` counts animated, hinted and mistaken frames. It also
+records the marks the frames painted (`marks`) and every mark the renderer
+asked for (`asked`), each as `role|kind`. The test requires:
 
 - an armed animation to have been painted part-way;
-- a hinted game to have painted a hint frame.
+- a hinted game to have painted every mark its renderer asks for, in a role
+  its legend (`hintMarks`) lists;
+- every role in the legend to be one its renderer asks for.
 
 Each requirement was proven red by planting its absence. Mistake frames are
 counted but not required, for the reason the next section gives.
 
-**A mark the seeded deal never shows needs a board that does.** The run deals
-one board per game and plays the opening of its hint, so a rarer mark never
-reaches it. Pegs' rival arrows and stripes did not, and a stale diamond on
-Bricks' edge, which the run once convicted, later fell out of its reach. In
-each case the planted defect passed the collection-wide run. Pass
-`repaintDifferential` a `board` (a game id) and pin the case in the game's own
-tests, as the board and the event seed, never as a deal seed. Then plant the
-defect and watch it fail. Exemplars: `pegs-hint.test.ts` ("takes the … away
-whole when the hint moves on") and `bricks.test.ts` ("takes an edge diamond
-away whole, ground included").
+**What a game can paint is what its renderer asks for.** A bound game reads
+its hint marks only through `StepMarks.of(role, kind)`, and asks on every
+frame whether or not the step has any. The differential records those reads,
+so the requirement does not depend on any run's reach. A pair whose role the
+legend does not list needs nothing, since no step may name it: Undead's shared
+`HintSidecar` asks for striped cells, and Undead never stripes anything.
+
+**A mark the seeded run never shows needs a board that does.** Name it in
+`warm-repaint.test.ts`'s `PINNED`, as the board itself (`params:desc`), never
+as a seed. Find one by walking deals across the presets until the plan paints
+the pair. A pin must paint something the seeded run does not, so a pin the
+run has caught up with fails and gets removed. A mark no board reaches goes in
+`UNREACHED` with its reason, and the test holds that ledger exact.
+
+A mark that is not a hint mark is not covered by that requirement. Bricks'
+edge diamond is a rule flag. The run once convicted it and later fell out of
+its reach, so Bricks pins its board and event seed in its own tests
+(`bricks.test.ts`, "takes an edge diamond away whole, ground included").
 
 Read the report before the code: it names the frame, the event before it, the
 first differing pixel, what each canvas shows there and which frame painted

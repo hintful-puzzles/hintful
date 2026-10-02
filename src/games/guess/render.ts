@@ -755,7 +755,10 @@ export function redraw(
   for (const gi of hintRows) dr.drawUpdate(rowBox(ds, gi));
 
   // The "current move" / "able to mark" marker beside the active row.
-  if (newMove) currmoveRedraw(dr, ds, ds.nextGo, COL_BACKGROUND);
+  // A win keeps the winning row at `nextGo`, so the marker beside it goes
+  // without a new move.
+  if (newMove || (solved !== 0 && ds.solved === 0))
+    currmoveRedraw(dr, ds, ds.nextGo, COL_BACKGROUND);
   if (!solved) currmoveRedraw(dr, ds, s.nextGo, COL_HOLD);
 
   // The solution box (or its reveal).

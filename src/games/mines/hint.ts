@@ -361,6 +361,8 @@ export function minesHintKeepTrack(
   const after = execute(state, m);
   if (after.dead) return "off";
   const targets = new Set(hl.targets.map((t) => t.y * state.w + t.x));
+  // A win flags every mine still covered, which the plan may not have proved.
+  const won = isWon(after);
   let hitTarget = false;
   for (let i = 0; i < state.grid.length; i++) {
     const before = state.grid[i];
@@ -370,7 +372,7 @@ export function minesHintKeepTrack(
       const t = { x: i % state.w, y: Math.floor(i / state.w) };
       if (!holds(after, hl.kind, t)) return "off";
       hitTarget = true;
-    } else if (!(hl.kind === "open" && isOpened(now))) {
+    } else if (!(hl.kind === "open" && isOpened(now)) && !(won && now === FLAG)) {
       return "off";
     }
   }

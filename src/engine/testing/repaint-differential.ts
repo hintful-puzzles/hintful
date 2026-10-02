@@ -32,6 +32,7 @@
  * Dev/test-only; never imported by production code.
  */
 
+import { StepMarks } from "../hint-words.ts";
 import { Midend } from "../midend.ts";
 import {
   CURSOR_DOWN,
@@ -326,6 +327,15 @@ export interface RepaintReach {
   hinted: number;
   /** Frames painted with a non-empty mistake overlay. */
   mistaken: number;
+  /** Every mark a painted frame carried, as `role|kind`: the references of
+   * the displayed hint step's words and of a marked dead end's. A bound game
+   * paints its hint marks from those words and from nowhere else
+   * (`hint-words.ts`'s `stepMarks`), so this is what the frames drew. */
+  marks: Set<string>;
+  /** Every `role|kind` the renderer asked the displayed marks for
+   * (`StepMarks.of`), whether or not the frame had any: what the game can
+   * paint, as its renderer says it, which no run's reach limits. */
+  asked: Set<string>;
 }
 
 export interface RepaintRun {
@@ -341,6 +351,8 @@ export interface RepaintRun {
 const TICK_S = 0.05;
 /** Ticks before the run stops waiting for a frame to settle (6 s). */
 const MAX_TICKS = 120;
+/** Hint steps the walk plays before it stops, solved or not. */
+const WALK_STEPS = 200;
 
 /**
  * Drive `game` through `events` seeded input events, comparing every frame
@@ -368,34 +380,55 @@ export function repaintDifferential(
   let frames = 0;
   let mismatch: RepaintMismatch | null = null;
   let lastEvent = "the first frame";
-  const reached: RepaintReach = { animated: 0, armed: 0, hinted: 0, mistaken: 0 };
+  const reached: RepaintReach = {
+    animated: 0,
+    armed: 0,
+    hinted: 0,
+    mistaken: 0,
+    marks: new Set(),
+    asked: new Set(),
+  };
+  const read = StepMarks.prototype.of;
   let moving = false;
 
   const spy: AnyGame = {
     ...game,
     // The midend's own drawing is a sink: the warm frame is recorded here.
-    redraw: (_dr, ds, prev, s, dir, ui, anim, flash, hint, mistakes) => {
+    redraw: (_dr, ds, prev, s, dir, ui, anim, flash, hint, mistakes, deadEnd) => {
       moving = anim > 0 || flash > 0;
       if (moving) reached.animated++;
       if (hint) reached.hinted++;
       if (mistakes && mistakes.length > 0) reached.mistaken++;
+      for (const r of [...(hint?.words?.refs ?? []), ...(deadEnd?.words.refs ?? [])])
+        reached.marks.add(`${r.role}|${r.kind.name}`);
       // The fresh twin runs first, on its own copy of the Ui, so neither call
       // can see what the other one wrote.
       const cold = new BlitterRecording(palette);
-      game.redraw(
-        cold,
-        game.newDrawState(s, tileSize),
-        prev,
-        s,
-        dir,
-        structuredClone(ui),
-        anim,
-        flash,
-        hint,
-        mistakes,
-      );
+      // A fresh draw state paints every tile, so the fresh twin asks for
+      // every pair its renderer reads.
+      StepMarks.prototype.of = function (this: StepMarks, role, kind) {
+        reached.asked.add(`${role}|${kind.name}`);
+        return read.call(this, role, kind);
+      } as typeof read;
+      try {
+        game.redraw(
+          cold,
+          game.newDrawState(s, tileSize),
+          prev,
+          s,
+          dir,
+          structuredClone(ui),
+          anim,
+          flash,
+          hint,
+          mistakes,
+          deadEnd,
+        );
+      } finally {
+        StepMarks.prototype.of = read;
+      }
       const hot = new BlitterRecording(palette);
-      game.redraw(hot, ds, prev, s, dir, ui, anim, flash, hint, mistakes);
+      game.redraw(hot, ds, prev, s, dir, ui, anim, flash, hint, mistakes, deadEnd);
       frames++;
       if (warm === null) warm = new BoxRaster(size.w, size.h);
       warm.apply(hot, frames);
@@ -423,40 +456,53 @@ export function repaintDifferential(
     },
   };
 
-  const m = new Midend(spy);
-  m.setCallbacks(
-    () => {},
-    () => {},
-    () => {},
-  );
-  const dealt = () => {
-    const desc = game.newDesc(params, randomNew(`repaint-${seed}`)).desc;
-    return `${game.encodeParams(params, true)}:${desc}`;
-  };
-  const error = m.newGameFromId(board ?? dealt());
-  if (error !== null) throw new Error(`${board}: ${error}`);
+  const id =
+    board ??
+    `${game.encodeParams(params, true)}:${game.newDesc(params, randomNew(`repaint-${seed}`)).desc}`;
   const sink = new RecordingDrawing(palette);
-  const paint = () => {
-    m.redraw(sink);
-    sink.ops.length = 0;
-  };
-  // Paint the frame an event left, then tick the clock and paint every frame
-  // until one comes out still, so an animation's and a flash's frames are
-  // compared and not only where they end. `Midend.timer` takes seconds, so a
-  // tick of a whole second or more ends every animation in the collection
-  // unseen inside it. The last tick settles anything longer than the cap.
-  const settle = () => {
-    paint();
-    if (m.currentAnimationMs() > 0) reached.armed++;
-    for (let t = 0; t < MAX_TICKS; t++) {
-      m.timer(TICK_S);
+  /** A midend on the board with a fresh draw state, and its first frame
+   * painted. */
+  const begin = () => {
+    warm = null;
+    const m = new Midend(spy);
+    m.setCallbacks(
+      () => {},
+      () => {},
+      () => {},
+    );
+    const error = m.newGameFromId(id);
+    if (error !== null) throw new Error(`${id}: ${error}`);
+    const paint = () => {
+      m.redraw(sink);
+      sink.ops.length = 0;
+    };
+    // Paint the frame an event left, then tick the clock and paint every frame
+    // until one comes out still, so an animation's and a flash's frames are
+    // compared and not only where they end. `Midend.timer` takes seconds, so a
+    // tick of a whole second or more ends every animation in the collection
+    // unseen inside it. The last tick settles anything longer than the cap.
+    const settle = () => {
       paint();
-      if (!moving) return;
-    }
-    m.timer(30);
+      if (m.currentAnimationMs() > 0) reached.armed++;
+      for (let t = 0; t < MAX_TICKS; t++) {
+        m.timer(TICK_S);
+        paint();
+        if (!moving) return;
+      }
+      m.timer(30);
+      paint();
+    };
+    /** Paint the frame an event left and the one it settles to, skipping the
+     * frames between. */
+    const jump = () => {
+      paint();
+      m.timer(30);
+      paint();
+    };
     paint();
+    return { m, paint, settle, jump };
   };
-  paint();
+  const { m, paint, settle } = begin();
 
   // A hinted game first shows its hint and plays a few of its steps: a random
   // run on an empty board rarely asks for one, and once its moves have made
@@ -536,8 +582,10 @@ export function repaintDifferential(
         else m.executeHint();
         break;
       case 10:
-        lastEvent = "check for mistakes";
-        m.findMistakes();
+        // Check & save's check: the mistakes, then whether the hint calls the
+        // board a dead end, which a game may mark.
+        lastEvent = "check";
+        m.check();
         break;
       case 11:
         lastEvent = pick(2) ? "undo" : "redo";
@@ -546,6 +594,29 @@ export function repaintDifferential(
         break;
     }
     settle();
+  }
+
+  // The walk: the hint's own plan followed from the deal to its end, on a
+  // draw state of its own, then a check of where it stopped. The opening
+  // steps above show a deal's first deductions only, and the marks a plan
+  // draws later (a rarer rung, a mark on another kind of element, a marked
+  // dead end) are what a tile key most easily leaves out, as is the frame a
+  // plan's last step wins on. The run above paints animations part-way, so
+  // the walk paints only where each event starts and settles: a slide
+  // puzzle's plan is long, and every step of it moves in slow motion.
+  if (typeof game.hint === "function" && mismatch === null) {
+    const walk = begin();
+    for (let s = 0; s < WALK_STEPS && mismatch === null; s++) {
+      lastEvent = "walk: hint";
+      if (walk.m.hint() !== null) break;
+      walk.jump();
+      lastEvent = "walk: next hint step";
+      walk.m.executeHint();
+      walk.jump();
+    }
+    lastEvent = "walk: check";
+    walk.m.check();
+    walk.jump();
   }
   return { frames, mismatch, reached };
 }

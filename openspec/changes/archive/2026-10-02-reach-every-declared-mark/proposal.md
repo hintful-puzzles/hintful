@@ -1,7 +1,6 @@
 # reach-every-declared-mark
 
-**Status: scaffolded, not started (2026-10-02).** Found by
-`share-marks-across-tiles`.
+**Status: implemented (2026-10-02).** Found by `share-marks-across-tiles`.
 
 ## Why
 
@@ -19,14 +18,18 @@ two games someone checked, not the population.
 ## What Changes
 
 `hintMarks` is already a declaration the engine consumes: each bound game says
-which roles its hint draws. Make it the population.
+which roles its hint draws. The renderer's own reads (`StepMarks.of`) say which
+`role|kind` pairs it can paint. Together they are the population (design.md
+D2).
 
-- The differential records which roles (and, if task 0 says it is worth it,
-  which role-and-kind pairs) its hint frames painted (`RepaintReach`).
-- Each hinted game must reach every role it declares, from the seeded run or
-  from pinned boards its own tests pass to the comparison. A role that cannot
-  be reached is named in a ledger with the reason, per AGENTS.md § "Where
-  intent genuinely cannot be observed".
+- The differential records the pairs its hint frames painted and the pairs
+  the renderer asked for (`RepaintReach`). It also walks the hint's plan to
+  its end, and passes a marked dead end to `redraw`.
+- Each hinted game must paint every pair its renderer asks for in a role its
+  legend lists. A pair can come from the seeded run or from a board pinned in
+  `warm-repaint.test.ts`. A pair that cannot be reached is named in a ledger
+  with the reason, per AGENTS.md § "Where intent genuinely cannot be
+  observed".
 
 ## Hints to pull in
 

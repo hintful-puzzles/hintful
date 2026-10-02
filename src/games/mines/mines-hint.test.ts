@@ -196,6 +196,22 @@ describe("Mines hint: following a step", () => {
     expect(minesGame.hintKeepTrack?.(flag, copy(), s1)).toBe("off");
   });
 
+  // The plan never proves some of this board's mines, so the open that wins
+  // leaves them covered and the win flags them. Judged "off", the step that
+  // finished the board could not be played.
+  it("keeps the winning open on track while the win flags the mines left", () => {
+    const p = minesGame.defaultParams();
+    const s0 = minesGame.newState(p, minesGame.newDesc(p, randomNew("census-2")).desc);
+    const { steps, end } = walk(s0);
+    expect(minesGame.status(end)).toBe("solved");
+    const [s, last] = steps[steps.length - 1];
+    const flagged = (b: MinesState) => b.grid.filter((v) => v === FLAG).length;
+    expect(last.highlights?.kind).toBe("open");
+    expect(flagged(end)).toBeGreaterThan(flagged(s));
+    const copy: Step = { ...last, move: structuredClone(last.move) };
+    expect(minesGame.hintKeepTrack?.(last.move, copy, s)).toBe("completed");
+  });
+
   it("drops the targets the board already shows done", () => {
     const s1 = minesGame.executeMove(fresh(9, 9, 35, "refresh"), open(4, 4));
     const step = plan(s1).find(
