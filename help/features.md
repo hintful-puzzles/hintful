@@ -407,17 +407,21 @@ To discard every game in progress, open the
 
 * **Game ID** and **random seed**: the game itself, without the link around
   it. Simon Tatham’s manual explains the format under
-  [*Specifying games with the game ID*][sgt-gameid].
+  [*Specifying games with the game ID*][sgt-gameid]. A game ID holds the board
+  itself, so it opens the same game in any compatible app. A random seed only
+  tells a generator what to deal, and some puzzles here generate differently
+  from the original, so a seed deals the same game in this app only.
 
 To open a game someone sent you, open its link, or paste the link into
 <command-link command="enter-gameid">*Open a shared game*</command-link> in
 *More…*, which is the way in from the installed app. Any puzzle’s link works
-from any puzzle, and so does a link to the same game on Simon Tatham’s
-website; a bare game ID opens a game of the puzzle you are on.
+from any puzzle, and so does a link to a game on Simon Tatham’s website,
+though a link there by random seed may deal a different board here; a bare
+game ID opens a game of the puzzle you are on.
 
 For puzzles that exist on Simon Tatham’s website, the share dialog also links
-the same game there, which is handy for comparing behavior when something
-looks wrong.
+the same game there, by its game ID, which is handy for comparing behavior
+when something looks wrong.
 
 ## Saving, loading, exporting and importing {#saved-games}
 

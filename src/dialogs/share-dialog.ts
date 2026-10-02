@@ -3,11 +3,11 @@ import { SignalWatcher } from "@lit-labs/signals";
 import { css, html, LitElement, nothing } from "lit";
 import { query } from "lit/decorators/query.js";
 import { customElement, property, state } from "lit/decorators.js";
-import { puzzleDataMap } from "../puzzle/catalog.ts";
 import { puzzleContext } from "../puzzle/contexts.ts";
 import type { Puzzle } from "../puzzle/puzzle.ts";
 import { puzzlePageUrl } from "../routing.ts";
 import { cssNative, cssWATweaks } from "../utils/css.ts";
+import { type UpstreamLink, upstreamLinks } from "./upstream-links.ts";
 
 // Register components
 import "@awesome.me/webawesome/dist/components/button/button.js";
@@ -129,15 +129,15 @@ export class ShareDialog extends SignalWatcher(LitElement) {
           ${this.renderCopyableInput({
             label: "Game ID",
             value: gameId,
+            hint: "Enter into any compatible portable puzzle collection app to play this same game",
           })}
           ${this.renderCopyableInput({
             label: "Random seed",
             value: randomSeed,
+            hint: "Deals this same game again in this app",
           })}
-          <div class="hint">Enter into any compatible portable puzzle collection 
-            app to play this same game</div>
-          
-          ${this.renderSGTLinks({ puzzleId, puzzleParams, gameId, randomSeed })}
+
+          ${this.renderSGTLinks(upstreamLinks({ puzzleId, puzzleParams, gameId }))}
         </wa-details>
         
       </wa-dialog>
@@ -169,68 +169,18 @@ export class ShareDialog extends SignalWatcher(LitElement) {
     `;
   }
 
-  private renderSGTLinks({
-    puzzleId,
-    puzzleParams,
-    gameId,
-    randomSeed,
-  }: {
-    puzzleId: string | null;
-    puzzleParams: string | null;
-    gameId: string | null;
-    randomSeed: string | null;
-  }) {
-    // Upstream's site carries its own games, so the link is offered for those
-    // and no others.
-    if (!puzzleId || puzzleDataMap[puzzleId]?.collection !== "original") {
-      return nothing;
-    }
-
-    const sgtBaseUrl = `https://www.chiark.greenend.org.uk/~sgtatham/puzzles/js/${encodeURIComponent(puzzleId)}.html`;
-    const links = [];
-    if (gameId) {
-      links.push(
-        this.renderOffsiteLink({
-          hint: "by game ID",
-          url: Object.assign(new URL(sgtBaseUrl), { hash: encodeURIComponent(gameId) }),
-        }),
-      );
-    }
-    if (randomSeed) {
-      links.push(
-        this.renderOffsiteLink({
-          hint: "by random seed",
-          url: Object.assign(new URL(sgtBaseUrl), {
-            hash: encodeURIComponent(randomSeed),
-          }),
-        }),
-      );
-    }
-    if (puzzleParams) {
-      links.push(
-        this.renderOffsiteLink({
-          hint: "by puzzle type",
-          url: Object.assign(new URL(sgtBaseUrl), {
-            hash: encodeURIComponent(puzzleParams),
-          }),
-        }),
-      );
-    }
-    if (links.length === 0) {
-      // Make sure we show *some* link even if gameId and randomSeed are missing.
-      links.push(this.renderOffsiteLink({ url: sgtBaseUrl }));
-    }
-
+  private renderSGTLinks(links: UpstreamLink[]) {
+    if (links.length === 0) return nothing;
     return html`
       <div>
         <wa-divider></wa-divider>
         Play this game at Simon Tatham’s website
-        ${links}
+        ${links.map((link) => this.renderOffsiteLink(link))}
       </div>
     `;
   }
 
-  private renderOffsiteLink({ hint, url }: { hint?: string; url: string | URL }) {
+  private renderOffsiteLink({ hint, url }: UpstreamLink) {
     return html`
       <div>
         <div class="link">
