@@ -63,9 +63,7 @@ export class PuzzleEndNotification extends SignalWatcher(LitElement) {
 
     // Use game id to select a "random" but fixed message/icon
     // (so the same game generates the same message on repeated solves).
-    const hashCode = hash(
-      this.puzzle.randomSeed ?? this.puzzle.currentGameId ?? "unknown",
-    );
+    const hashCode = hash(this.puzzle.currentGameId ?? "unknown");
     let message: string;
     let icon: string | null = null;
     const actions = [

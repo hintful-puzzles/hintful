@@ -249,7 +249,6 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * *generated* game,
    * never for a `:desc` id or a loaded save, as upstream. */
   private aux?: string;
-  private seed?: string;
   /** Immutable-state history; `pos` is the current index. */
   private history: State[] = [];
   /** Parallel to `history`: `moveLog[i]` turns `history[i]` into
@@ -364,8 +363,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   }
 
   newGame(fitTo?: Size): void {
-    this.seed = freshSeed();
-    const rng = randomNew(this.seed);
+    const rng = randomNew(freshSeed());
     const params = fitTo ? this.paramsToFit(fitTo) : this.params;
     const { desc, aux } = this.game.newDesc(params, rng);
     this.startFrom(params, desc, aux);
@@ -420,14 +418,12 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       const rng = randomNew(rest);
       const { desc, aux } = this.game.newDesc(params, rng);
       this.params = params;
-      this.seed = rest;
       this.startFrom(params, desc, aux);
       return null;
     }
     const dErr = this.game.validateDesc(params, rest);
     if (dErr) return dErr;
     this.params = this.withBoardTier(paramsStr, params, rest);
-    this.seed = undefined;
     this.startFrom(this.params, rest);
     return null;
   }
@@ -1644,7 +1640,6 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
     // A save pins the tier its board was labeled at, which a build that
     // mislabeled the board got wrong; `withBoardTier` checks it.
     this.params = this.withBoardTier(env.params, params, env.desc);
-    this.seed = undefined;
     // State 0 is rebuilt from the private desc when the save carries one — the
     // public desc bakes in the first click the move log is about to replay
     // (upstream midend.c:2663). The public desc is then restored over it, since
@@ -1839,12 +1834,10 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       // assembled by the caller from `params` and a desc, two signals that
       // could drift into a broken board.
       restoreGameId: `${this.game.encodeParams(this.boardParams, true)}:${this.desc}`,
-      // Shares the seed: regenerating needs the FULL params, difficulty
-      // included (upstream `midend_get_random_seed` → `encode_params(...,
-      // TRUE)`). The app's `currentParams`, and so the type-menu label, read it.
-      randomSeed: this.seed
-        ? `${this.game.encodeParams(this.boardParams, true)}#${this.seed}`
-        : undefined,
+      // No seed is emitted. A seed names a board only through the generator,
+      // which this project changes whenever a better game is worth it, so
+      // anything holding a seed would come to name a different board
+      // (`share-boards-not-seeds`).
     });
   }
 

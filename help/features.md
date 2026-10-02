@@ -393,7 +393,8 @@ To discard every game in progress, open the
 <command-link command="share:link">here</command-link>) offers:
 
 * **This specific game**: a link to the game you are playing, as it was dealt.
-  It doesn’t carry your progress; for that,
+  The link carries the board itself, so it opens the same game after the app
+  is updated. It doesn’t carry your progress; for that,
   [export a save file](#saved-games) or copy as text. Opening a link to a
   board you are already playing on this device picks up where you left off.
 
@@ -405,12 +406,12 @@ To discard every game in progress, open the
   post or a message. Use a fixed-width font (“format as code”). Not every
   puzzle can do this, and some of the renderings take a little imagination.
 
-* **Game ID** and **random seed**: the game itself, without the link around
-  it. Simon Tatham’s manual explains the format under
-  [*Specifying games with the game ID*][sgt-gameid]. A game ID holds the board
-  itself, so it opens the same game in any compatible app. A random seed only
-  tells a generator what to deal, and some puzzles here generate differently
-  from the original, so a seed deals the same game in this app only.
+* **Game ID**: the game itself, without the link around it, for any
+  compatible app. Simon Tatham’s manual explains the format under
+  [*Specifying games with the game ID*][sgt-gameid]. This app shares no random
+  seeds: a seed only tells a generator what to deal, and some puzzles here
+  generate differently from the original, and from earlier versions of this
+  app.
 
 To open a game someone sent you, open its link, or paste the link into
 <command-link command="enter-gameid">*Open a shared game*</command-link> in

@@ -70,16 +70,15 @@ export type DrawTextOptions = {
 };
 
 /**
- * Three ids for three jobs, and they are not interchangeable (see
+ * Two ids for two jobs, and they are not interchangeable (see
  * `Midend.emitIdChange`): `currentGameId` shares a *board* and deliberately
- * omits difficulty; `randomSeed` shares a *seed*; `restoreGameId` re-deals
- * *this exact game*. Recording the sharing id where the restoring one belongs
- * reopens a tiered puzzle at its default difficulty.
+ * omits difficulty; `restoreGameId` re-deals *this exact game*. Recording the
+ * sharing id where the restoring one belongs reopens a tiered puzzle at its
+ * default difficulty.
  */
 export type NotifyGameIdChange = {
   type: "game-id-change";
   currentGameId: string;
-  randomSeed?: string;
   restoreGameId: string;
 };
 

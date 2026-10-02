@@ -189,7 +189,6 @@ export class Puzzle {
         "Puzzle ID": this.puzzleId,
         Params: this.params,
         "Game ID": this.currentGameId,
-        "Random Seed": this.randomSeed,
         "Current Move": this.currentMove,
         "Total Moves": this.totalMoves,
         Size: this._size,
@@ -208,7 +207,6 @@ export class Puzzle {
     switch (message.type) {
       case "game-id-change": {
         update(this._currentGameId, message.currentGameId);
-        update(this._randomSeed, message.randomSeed ?? null);
         update(this._restoreGameId, message.restoreGameId);
         break;
       }
@@ -301,12 +299,10 @@ export class Puzzle {
       // The **full** params of the board on screen — difficulty included, which
       // is what every consumer wants: the type-menu label, the share dialog's
       // type description, and the keypad/view re-render keys. Only
-      // `restoreGameId` carries them unconditionally: `currentGameId`'s params
-      // are lossy, and a board restored from a descriptive id has no `randomSeed`.
+      // `restoreGameId` carries them: `currentGameId`'s params are lossy.
       this.restoreGameId?.split(":", 1).at(0) ?? null,
   );
   private _currentGameId = signal<string | null>(null);
-  private _randomSeed = signal<string | null>(null);
   private _restoreGameId = signal<string | null>(null);
   private _canFormatAsText = signal(false);
   private _statusbarText = signal<string>("");
@@ -476,10 +472,6 @@ export class Puzzle {
    */
   public get restoreGameId(): string | null {
     return this._restoreGameId.get();
-  }
-
-  public get randomSeed(): string | null {
-    return this._randomSeed.get();
   }
 
   public get canFormatAsText(): boolean {

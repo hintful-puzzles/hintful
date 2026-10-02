@@ -2,10 +2,8 @@
 // share dialog, and keys the keypad/view re-renders. It must therefore be the
 // **full** params of the board on screen, difficulty included.
 //
-// The trap is a board with no seed, which is every board restored from a
-// descriptive id, i.e. every reopened puzzle: read off the lossy game id instead,
-// Unruly at 10x10 Normal came back labeled with a tier its preset menu does not
-// offer.
+// The trap is the sharing id, whose params are lossy: read off it, Unruly at
+// 10x10 Normal came back labeled with a tier its preset menu does not offer.
 //
 // Drives the notification handler directly against a Puzzle built without a
 // worker, the way `puzzle-hint-stepper.test.ts` does.
@@ -45,37 +43,26 @@ function makePuzzle(): {
   return { puzzle, notify: (m) => notify(m) };
 }
 
-/** The three ids a dealt board produces, as `Midend.emitIdChange` builds them:
- * a lossy sharing id, a full-params restore id, and (only for a seeded game) a
- * full-params seed. */
+/** The two ids a dealt board produces, as `Midend.emitIdChange` builds them: a
+ * lossy sharing id and a full-params restore id. */
 function idChange(opts: {
   short: string;
   full: string;
   desc: string;
-  seed?: string;
 }): ChangeNotification {
   return {
     type: "game-id-change",
     currentGameId: `${opts.short}:${opts.desc}`,
     restoreGameId: `${opts.full}:${opts.desc}`,
-    randomSeed: opts.seed ? `${opts.full}#${opts.seed}` : undefined,
   };
 }
 
 describe("Puzzle.currentParams", () => {
-  it("keeps the difficulty on a board with no seed", async () => {
-    // A board restored from a descriptive id. Reading the short id reports
-    // "10x10", which the type menu renders as the default tier.
+  it("keeps the difficulty the sharing id drops", async () => {
+    // Reading the short id reports "10x10", which the type menu renders as the
+    // default tier.
     const { puzzle, notify } = makePuzzle();
     await notify(idChange({ short: "10x10", full: "10x10dn", desc: "board" }));
-    expect(puzzle.currentParams).toBe("10x10dn");
-  });
-
-  it("keeps the difficulty on a seeded board too", async () => {
-    const { puzzle, notify } = makePuzzle();
-    await notify(
-      idChange({ short: "10x10", full: "10x10dn", desc: "board", seed: "12345" }),
-    );
     expect(puzzle.currentParams).toBe("10x10dn");
   });
 

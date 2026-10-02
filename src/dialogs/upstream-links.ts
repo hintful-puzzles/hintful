@@ -9,10 +9,8 @@ export interface UpstreamLink {
  * Links to the board on screen in Simon Tatham's online collection, or `[]`
  * for a game his site does not carry.
  *
- * There is deliberately no link by random seed. A seed names a board only
- * through a generator, and ours diverge from upstream's wherever a better game
- * was worth it (`link-upstream-by-game-id-only`), so a seed link can open a
- * different board from the player's. A game ID carries the board itself.
+ * A link names the board by its game ID, which carries the board itself. The
+ * app shares no seed (`share-boards-not-seeds`).
  */
 export function upstreamLinks({
   puzzleId,

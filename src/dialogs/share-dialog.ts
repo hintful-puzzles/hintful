@@ -66,8 +66,6 @@ export class ShareDialog extends SignalWatcher(LitElement) {
     const puzzleName = this.puzzle?.displayName ?? "Unknown puzzle";
     const puzzleParams = this.puzzle?.currentParams ?? null;
     const gameId = this.puzzle?.currentGameId ?? null;
-    const randomSeed = this.puzzle?.randomSeed ?? null;
-    const preferredId = randomSeed ?? gameId;
     const puzzleId = this.puzzle?.puzzleId ?? null;
     const typeDescription = this.gameTypeDescription
       ? `type “${this.gameTypeDescription}”`
@@ -76,9 +74,7 @@ export class ShareDialog extends SignalWatcher(LitElement) {
     const puzzleTypeLink =
       puzzleId && puzzleParams ? puzzlePageUrl({ puzzleId, puzzleParams }).href : null;
     const currentGameLink =
-      puzzleId && preferredId
-        ? puzzlePageUrl({ puzzleId, puzzleGameId: preferredId })
-        : null;
+      puzzleId && gameId ? puzzlePageUrl({ puzzleId, puzzleGameId: gameId }) : null;
 
     return html`
       <wa-dialog 
@@ -130,11 +126,6 @@ export class ShareDialog extends SignalWatcher(LitElement) {
             label: "Game ID",
             value: gameId,
             hint: "Enter into any compatible portable puzzle collection app to play this same game",
-          })}
-          ${this.renderCopyableInput({
-            label: "Random seed",
-            value: randomSeed,
-            hint: "Deals this same game again in this app",
           })}
 
           ${this.renderSGTLinks(upstreamLinks({ puzzleId, puzzleParams, gameId }))}

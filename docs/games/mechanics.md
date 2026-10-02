@@ -206,7 +206,7 @@ admits a value. `formatG`/`atof` live in
 
 `presets()` returns the preset/difficulty menu tree; `defaultParams()` the
 start-up choice. Presets must encode **full** params (including difficulty) —
-the midend derives the type-menu label and the `#seed` id from
+the midend derives the type-menu label (through `restoreGameId`) from
 `encodeParams(_, true)`, and a preset that omits the suffix shows the default
 difficulty in the header even though the board generated correctly. If a new
 game's header ignores a suffix, check that first (it cost a dev-verify cycle

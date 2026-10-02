@@ -129,10 +129,11 @@ describe("Midend lifecycle + notifications", () => {
     });
   });
 
-  it("game id is the reproducible params:desc form with a seed", () => {
+  it("names the dealt board by its desc, and hands out no seed", () => {
     const id = h.sent("game-id-change");
     expect(id.currentGameId).toMatch(/^t3:g3-\d+$/);
-    expect(id.randomSeed).toMatch(/^t3#[0-9a-f]+$/);
+    // A seed names a board only through the generator, which can change.
+    expect(Object.keys(id).sort()).toEqual(["currentGameId", "restoreGameId", "type"]);
   });
 });
 
@@ -472,18 +473,14 @@ describe("Midend params + presets", () => {
     expect(h.m.getParams()).toBe(before);
   });
 
-  it("each of the three ids encodes params for the job it is for", () => {
-    // The seed must carry the full params: the app's `currentParams` prefers
-    // the seed form, so a short encoding drops the tier from the type-menu
-    // label. And a dealt board must be remembered by the restoring id, not by
+  it("each of the two ids encodes params for the job it is for", () => {
+    // A dealt board must be remembered by the restoring id, not by
     // `currentGameId`, whose params are lossy on purpose: reopening a tiered
     // puzzle by the latter drops it to its default difficulty.
     const h = harness(tieredGame());
     expect(h.m.setParams("t3d1")).toBeNull();
     h.m.newGame();
     const id = h.sent("game-id-change");
-    // Seed form regenerates the puzzle ⇒ must include the full suffix.
-    expect(id.randomSeed).toMatch(/^t3d1#[0-9a-f]+$/);
     // Descriptive form ⇒ desc specifies the puzzle, suffix omitted.
     expect(id.currentGameId).toMatch(/^t3:/);
     expect(id.currentGameId).not.toContain("d1");

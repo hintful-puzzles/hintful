@@ -228,6 +228,15 @@ would make a game refuse what upstream's generator writes is a compatibility
 break, so it is the owner's call. The Share dialog's links to the same game on
 Simon Tatham's site follow from the same decision.
 
+**The app hands out boards, never seeds** (owner, 2026-10-02: *"a fix is worth
+breaking compatibility"*). A seed names a board only through a generator, and
+generators here change whenever a better game is worth it, so anything a player
+keeps or shares names the board itself, as `params:desc`. The midend emits no
+seed, which makes this structural rather than a convention to remember. A
+`#seed` ID that arrives still deals, with whatever the generator deals today.
+So **changing which board a seed deals is not a compatibility break**, and a
+generator fix needs no ask on that account (`share-boards-not-seeds`).
+
 **The upstream MIT notices stay intact** — an obligation independent of tracking
 policy. They are `licenses/sgt-puzzles-LICENSE` and
 `licenses/puzzles-unreleased-LICENSE`, and the About dialog `?raw`-imports both,
